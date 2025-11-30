@@ -14,7 +14,6 @@ docs/.vitepress/dist
 
 # Node modules and dependencies
 node_modules/
-package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
