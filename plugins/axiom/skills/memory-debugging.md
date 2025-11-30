@@ -642,6 +642,204 @@ protocol CustomViewDelegate: AnyObject {  // AnyObject = weak by default
 }
 ```
 
+### Pattern 6: PhotoKit Image Request Leaks
+
+**❌ Leak - PHImageManager requests accumulate without cancellation**
+
+This pattern is specific to photo/media apps using PhotoKit or similar async image loading APIs.
+
+```swift
+// LEAK: Image requests not cancelled when cells scroll away
+class PhotoViewController: UIViewController {
+    let imageManager = PHImageManager.default()
+
+    func collectionView(_ collectionView: UICollectionView,
+                       cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath)
+        let asset = photos[indexPath.item]
+
+        // LEAK: Requests accumulate - never cancelled
+        imageManager.requestImage(
+            for: asset,
+            targetSize: thumbnailSize,
+            contentMode: .aspectFill,
+            options: nil
+        ) { [weak self] image, _ in
+            cell.imageView.image = image  // Still called even if cell scrolled away
+        }
+
+        return cell
+    }
+
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        // Each scroll triggers 50+ new image requests
+        // Previous requests still pending, accumulating in queue
+    }
+}
+```
+
+**Symptoms:**
+- Memory jumps 50MB+ when scrolling long photo lists
+- Crashes happen after scrolling through 100+ photos
+- Specific operation causes leak (photo scrolling, not other screens)
+- Works fine locally with 10 photos, crashes on user devices with 1000+ photos
+
+**Root cause:** `PHImageManager.requestImage()` returns a `PHImageRequestID` that must be explicitly cancelled. Without cancellation, pending requests queue up and hold memory.
+
+**✅ Fix: Store request ID and cancel in prepareForReuse()**
+
+```swift
+class PhotoCell: UICollectionViewCell {
+    @IBOutlet weak var imageView: UIImageView!
+    private var imageRequestID: PHImageRequestID = PHInvalidImageRequestID
+
+    func configure(with asset: PHAsset, imageManager: PHImageManager) {
+        // Cancel previous request before starting new one
+        if imageRequestID != PHInvalidImageRequestID {
+            imageManager.cancelImageRequest(imageRequestID)
+        }
+
+        imageRequestID = imageManager.requestImage(
+            for: asset,
+            targetSize: PHImageManagerMaximumSize,
+            contentMode: .aspectFill,
+            options: nil
+        ) { [weak self] image, _ in
+            self?.imageView.image = image
+        }
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+
+        // CRITICAL: Cancel pending request when cell is reused
+        if imageRequestID != PHInvalidImageRequestID {
+            PHImageManager.default().cancelImageRequest(imageRequestID)
+            imageRequestID = PHInvalidImageRequestID
+        }
+
+        imageView.image = nil  // Clear stale image
+    }
+
+    deinit {
+        // Safety check - shouldn't be needed if prepareForReuse called
+        if imageRequestID != PHInvalidImageRequestID {
+            PHImageManager.default().cancelImageRequest(imageRequestID)
+        }
+    }
+}
+
+// Controller
+class PhotoViewController: UIViewController, UICollectionViewDataSource {
+    let imageManager = PHImageManager.default()
+
+    func collectionView(_ collectionView: UICollectionView,
+                       cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoCell",
+                                                      for: indexPath) as! PhotoCell
+        let asset = photos[indexPath.item]
+        cell.configure(with: asset, imageManager: imageManager)
+        return cell
+    }
+}
+```
+
+**Key points:**
+- Store `PHImageRequestID` in cell (not in view controller)
+- Cancel BEFORE starting new request (prevents request storms)
+- Cancel in `prepareForReuse()` (critical for collection views)
+- Check `imageRequestID != PHInvalidImageRequestID` before cancelling
+
+**Other async APIs with similar patterns:**
+- `AVAssetImageGenerator.generateCGImagesAsynchronously()` → call `cancelAllCGImageGeneration()`
+- `URLSession.dataTask()` → call `cancel()` on task
+- Custom image caches → implement `invalidate()` or `cancel()` method
+
+## Debugging Non-Reproducible Memory Issues
+
+**Challenge:** Memory leak only happens with specific user data (large photo collections, complex data models) that you can't reproduce locally.
+
+### Step 1: Enable Remote Memory Diagnostics
+
+Add MetricKit diagnostics to your app:
+
+```swift
+import MetricKit
+
+class MemoryDiagnosticsManager {
+    static let shared = MemoryDiagnosticsManager()
+
+    private let metricManager = MXMetricManager.shared
+
+    func startMonitoring() {
+        metricManager.add(self)
+    }
+}
+
+extension MemoryDiagnosticsManager: MXMetricManagerSubscriber {
+    func didReceive(_ payloads: [MXMetricPayload]) {
+        for payload in payloads {
+            if let memoryMetrics = payload.memoryMetrics {
+                let peakMemory = memoryMetrics.peakMemoryUsage
+
+                // Log if exceeding threshold
+                if peakMemory > 400_000_000 {  // 400MB
+                    print("⚠️ High memory: \(peakMemory / 1_000_000)MB")
+                    // Send to analytics
+                }
+            }
+        }
+    }
+}
+```
+
+### Step 2: Ask Users for Device Logs
+
+When user reports crash:
+
+1. iPhone → Settings → Privacy & Security → Analytics → Analytics Data
+2. Look for latest crash log (named like `YourApp_2024-01-15-12-45-23`)
+3. Email or upload to your support system
+4. Xcode → Window → Devices & Simulators → select device → View Device Logs
+5. Search for "Memory" or "Jetsam" in logs
+
+### Step 3: TestFlight Beta Testing
+
+Before App Store release:
+
+```swift
+#if DEBUG
+// Add to AppDelegate
+import os.log
+let logger = os.log(subsystem: "com.yourapp.memory", category: "lifecycle")
+
+// Log memory milestones
+func logMemory(_ event: String) {
+    let memoryUsage = ProcessInfo.processInfo.physicalMemory / 1_000_000
+    os.log("🔍 [%s] Memory: %dMB", log: logger, type: .info, event, memoryUsage)
+}
+#endif
+```
+
+Send TestFlight build to affected users:
+1. Build → Archive → Distribute App
+2. Select TestFlight
+3. Add affected user email
+4. In TestFlight, ask user to:
+   - Reproduce the crash scenario
+   - Check if memory stabilizes (logs to system.log)
+   - Report if crash still happens
+
+### Step 4: Verify Fix Production Deployment
+
+After deploying fix:
+
+1. Monitor MetricKit metrics for 24-48 hours
+2. Check crash rate drop in App Analytics
+3. If still seeing high memory users:
+   - Add more diagnostic logging for next version
+   - Consider lower memory device testing (iPad with constrained memory)
+
 ## Systematic Debugging Workflow
 
 ### Phase 1: Confirm Leak (5 minutes)
