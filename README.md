@@ -29,24 +29,34 @@ Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) dev
 - Xcode 26+ (for Liquid Glass, Recording UI Automation, and other latest features)
 - iOS 26+ SDK (for latest platform features)
 
-### Installation
+### Installation (Recommended - From Marketplace)
+
+In Claude Code, run:
+
+```
+/plugin marketplace add https://charleswiltgen.github.io/Axiom/
+```
+
+Then search for "axiom" in the `/plugin` menu and install.
+
+### Installation (Alternative - From Local Repository)
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/Axiom.git
+git clone https://github.com/CharlesWiltgen/Axiom.git
 cd Axiom
 
 # Install the axiom plugin
-claude-code plugin add ./plugins/axiom
+claude --plugin-dir .
 ```
 
 ### Verify Installation
 
 ```bash
 # List installed plugins
-claude-code plugin list
+claude plugin list
 
-# You should see: axiom@0.1.2
+# You should see: axiom@0.1.3
 ```
 
 ### Using Skills
@@ -217,6 +227,16 @@ This is a preview release. Feedback is welcome!
 - [Apple Developer Documentation](https://developer.apple.com/)
   - [Liquid Glass Design System](https://developer.apple.com/design/human-interface-guidelines/)
   - [SwiftUI Performance](https://developer.apple.com/videos/)
+
+## Marketplace Discovery
+
+Axiom is available as a self-hosted Claude Code plugin marketplace. Users can add it via:
+
+```
+/plugin marketplace add https://charleswiltgen.github.io/Axiom/
+```
+
+This marketplace is also discoverable through community plugin registries and directories.
 
 ## License
 
