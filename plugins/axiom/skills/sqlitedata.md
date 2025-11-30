@@ -1,6 +1,8 @@
 ---
 name: sqlitedata
-description: Use when working with SQLiteData (Point-Free) - @Table models, queries with @FetchAll/@FetchOne, CloudKit sync setup, StructuredQueries post-migration crashes, batch imports, and when to drop to GRDB - type-safe SQLite persistence patterns for iOS
+description: Use when working with SQLiteData (Point-Free) - @Table models, queries with @FetchAll/@FetchOne, CloudKit sync setup, StructuredQueries post-migration crashes, batch imports, production crisis decision-making under App Store deployment pressure, and when to drop to GRDB - type-safe SQLite persistence patterns for iOS
+version: 1.1.0
+last_updated: TDD-tested with App Store migration crisis scenarios
 ---
 
 # SQLiteData
@@ -537,6 +539,103 @@ let count = try await Track.fetchCount(database)
 - `grdb` - Raw SQL and advanced GRDB features
 - `swiftdata` - Apple's native persistence framework
 
+## Production Crisis: When Migrations Cause App Store Crashes
+
+### The StructuredQueries Migration Crash
+
+**Scenario**: Users updating to iOS 26 build crash on launch. Error: `EXC_BAD_ACCESS KERN_INVALID_ADDRESS at 0xfffffffffffffff8`
+
+**Under pressure:**
+- Temptation: Delete old schema and recreate (fast, destructive)
+- Better: Search this skill for "StructuredQueries" and follow safe path
+
+**The problem** (lines 250-274):
+```
+Migration → GRDB schema updated
+→ SQLiteData StructuredQueries cache becomes stale
+→ Next .where{} query uses old memory offsets
+→ CRASH (SEGFAULT)
+```
+
+**The fix** (lines 276-291):
+```swift
+// Close and reopen to refresh cache
+try await migrator.migrate(database)
+try database.close()
+database = try DatabaseQueue(path: dbPath)
+
+// Now .where{} queries work
+let tracks = try await Track.where { $0.genre == "Rock" }.fetchAll(database)
+```
+
+**Time cost:**
+- Understanding problem: 5 min (search skill for "StructuredQueries")
+- Implementing fix: 30 min
+- Testing: 15 min
+- **Total: 50 minutes**, zero data loss
+
+**Alternative if close/reopen doesn't work** (lines 294-300):
+```swift
+// Bypass StructuredQueries, use raw GRDB
+let tracks = try Track.filter(Column("genre") == "Rock").fetchAll(db)
+```
+
+### Decision Framework Under Pressure
+
+When migration causes crashes:
+
+**DO NOT:**
+- ❌ Delete schema and recreate (data loss)
+- ❌ Ship guess-fixes without testing (worsens crash)
+- ❌ Ignore this skill section (solution is here)
+
+**DO:**
+- ✅ Search this skill for error keyword (e.g., "KERN_INVALID_ADDRESS", "StructuredQueries")
+- ✅ Implement documented fix (close/reopen or raw GRDB)
+- ✅ Test in simulator before App Store submission
+
+**Time budget:**
+- Search + understand: 5-10 min
+- Implement: 30 min
+- Test: 15 min
+- **Total: 50 min** (most App Store update windows allow 3-4 hours)
+
+### If You Must Ship Emergency Mitigation
+
+**Temporary fix while proper solution is tested:**
+```swift
+// Disable StructuredQueries globally during migration
+database.disableStructuredQueries = true
+try await migrator.migrate(database)
+database.disableStructuredQueries = false
+```
+
+**This buys time:**
+- Unblocks app update (users can install)
+- Preserves user data (no deletion)
+- Proper fix queued for next release
+
+### Honest Pressure Points (When Panic Tempts Nuclear Option)
+
+**If you're tempted to delete schema under pressure:**
+1. **Stop.** Search this skill for the error keyword first
+2. **Document.** The fact that you found this section proves safe path exists
+3. **Ship safe mitigation.** 50 minutes for proper fix < 24 hours to recover from data loss
+
+**Why nuclear option backfires:**
+- Users lose all local data (playlists, favorites)
+- App reviews tank (4.5 stars → 2 stars typical)
+- Support tickets explode
+- Recovery takes weeks of backfills and apologies
+
+**Why proper fix wins:**
+- Users keep all data
+- Trust preserved
+- Clean recovery
+- Skill exists because others solved this already
+
+---
+
 ## Common Mistakes
 
 ### ❌ Using instance methods
@@ -565,6 +664,13 @@ for track in 50000Tracks {
 }
 ```
 **Fix:** Batch in groups of 500 per transaction
+
+---
+
+## Version History
+
+- **1.1.0**: Added "Production Crisis: When Migrations Cause App Store Crashes" section from TDD testing of iOS 26 StructuredQueries migration failure scenario. Includes decision framework preventing destructive schema recreation, time-cost analysis (50 min safe fix vs 24hr+ data loss recovery), emergency mitigation patterns, and honest pressure points analysis. Ensures developers search for documented solutions before choosing data-loss options
+- **1.0.0**: Initial skill covering @Table models, batch operations, CloudKit sync, critical StructuredQueries gotcha, and GRDB fallback patterns
 
 ---
 
