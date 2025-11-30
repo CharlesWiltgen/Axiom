@@ -1,6 +1,8 @@
 ---
 name: grdb
-description: Use when writing raw SQL queries with GRDB, complex joins, ValueObservation for reactive queries, DatabaseMigrator patterns, or dropping down from SQLiteData for performance - direct SQLite access for iOS/macOS
+description: Use when writing raw SQL queries with GRDB, complex joins, ValueObservation for reactive queries, DatabaseMigrator patterns, query profiling under performance pressure, or dropping down from SQLiteData for performance - direct SQLite access for iOS/macOS
+version: 1.1.0
+last_updated: TDD-tested with complex query performance scenarios
 ---
 
 # GRDB
@@ -498,6 +500,123 @@ ite Documentation](https://www.sqlite.org/docs.html)
 - `sqlitedata` - Type-safe @Table models with CloudKit
 - `swiftdata` - Apple's native persistence
 
+## Production Performance: Query Optimization Under Pressure
+
+### Red Flags - When GRDB Queries Slow Down
+
+If you see ANY of these symptoms:
+- ❌ Complex JOIN query takes 10+ seconds
+- ❌ ValueObservation runs on every single change (battery drain)
+- ❌ Can't explain why migration ran twice on old version
+
+**DO NOT:**
+1. Blindly add indexes (don't know which columns help)
+2. Move logic to Swift (premature escape from database)
+3. Over-engineer migrations (distrust the system)
+
+**DO:**
+1. Profile with `database.trace`
+2. Use `EXPLAIN QUERY PLAN` to understand execution
+3. Trust GRDB's migration versioning system
+
+### Profiling Complex Queries
+
+**When query is slow (10+ seconds):**
+
+```swift
+var database = try DatabaseQueue(path: dbPath)
+
+// Enable tracing to see SQL execution
+database.trace { print($0) }
+
+// Run the slow query
+try database.read { db in
+    let results = try Track.fetchAll(db)  // Watch output for execution time
+}
+
+// Use EXPLAIN QUERY PLAN to understand execution:
+try database.read { db in
+    let plan = try String(fetching: db, sql: "EXPLAIN QUERY PLAN SELECT ...")
+    print(plan)
+    // Look for SCAN (slow, full table) vs SEARCH (fast, indexed)
+}
+```
+
+**Add indexes strategically:**
+
+```swift
+// Add index on frequently queried column
+try database.write { db in
+    try db.execute(sql: "CREATE INDEX idx_plays_track_id ON plays(track_id)")
+}
+```
+
+**Time cost:**
+- Profile: 10 min (enable trace, run query, read output)
+- Understand: 5 min (interpret EXPLAIN QUERY PLAN)
+- Fix: 5 min (add index)
+- **Total: 20 minutes** (vs 30+ min blindly trying solutions)
+
+### ValueObservation Performance
+
+**When using reactive queries, know the costs:**
+
+```swift
+// Re-evaluates query on ANY write to database
+ValueObservation.tracking { db in
+    try Track.fetchAll(db)
+}.start(in: database, onError: { }, onChange: { tracks in
+    // Called for every change - CPU spike!
+})
+```
+
+**Optimization patterns:**
+
+```swift
+// Coalesce rapid updates (recommended)
+ValueObservation.tracking { db in
+    try Track.fetchAll(db)
+}.removeDuplicates()  // Skip duplicate results
+ .debounce(for: 0.5, scheduler: DispatchQueue.main)  // Batch updates
+ .start(in: database, ...)
+```
+
+**Decision framework:**
+- Small datasets (<1000 records): Use plain `.tracking`
+- Medium datasets (1-10k records): Add `.removeDuplicates()` + `.debounce()`
+- Large datasets (10k+ records): Use explicit table dependencies or predicates
+
+### Migration Versioning Guarantees
+
+**Trust GRDB's DatabaseMigrator - it prevents re-running migrations:**
+
+```swift
+var migrator = DatabaseMigrator()
+
+migrator.registerMigration("v1_initial") { db in
+    try db.execute(sql: "CREATE TABLE tracks (...)")
+}
+
+migrator.registerMigration("v2_add_plays") { db in
+    try db.execute(sql: "CREATE TABLE plays (...)")
+}
+
+// GRDB guarantees:
+// - Each migration runs exactly ONCE
+// - In order (v1, then v2)
+// - Safe to call migrate() multiple times
+try migrator.migrate(dbQueue)
+```
+
+**You don't need defensive SQL (IF NOT EXISTS):**
+- GRDB tracks which migrations have run
+- Running `migrate()` twice only executes new ones
+- Over-engineering adds complexity without benefit
+
+**Trust it.**
+
+---
+
 ## Common Mistakes
 
 ### ❌ Not using transactions for batch writes
@@ -528,6 +647,13 @@ for track in tracks {
 }
 ```
 **Fix:** Use JOIN or batch fetch
+
+---
+
+## Version History
+
+- **1.1.0**: Added "Production Performance: Query Optimization Under Pressure" section from TDD testing of complex query performance scenarios. Includes profiling guidance (database.trace + EXPLAIN QUERY PLAN), ValueObservation optimization patterns with size-based decisions, migration versioning guarantees eliminating defensive SQL, and red flags for when to profile vs refactor. Prevents blind index creation and over-engineered migrations under performance pressure
+- **1.0.0**: Initial skill covering raw SQL queries, joins, ValueObservation, migrations, and GRDB-specific patterns
 
 ---
 
