@@ -18,6 +18,25 @@ Instruments decision trees and profiling workflows for CPU, memory, and battery 
 
 **Requirements**: Xcode 15+, iOS 14+
 
+## Example Prompts
+
+These are real questions developers ask that this skill answers:
+
+- **"Scrolling is slow and I need to know if it's Core Data or SwiftUI."**
+  → Shows how to use Time Profiler and Core Data instruments to pinpoint the bottleneck
+
+- **"My app feels slow but I don't know what to optimize first."**
+  → Provides decision tree for choosing the right profiling tool and interpreting results
+
+- **"I profiled with Time Profiler but Self Time and Total Time are confusing."**
+  → Explains the distinction and shows how to identify real hot spots vs call stacks
+
+- **"I have a deadline and my app feels slow. What should I optimize?"**
+  → Provides systematic profiling under pressure with professional guidance for trade-offs
+
+- **"Memory keeps growing. Is it a leak or normal? How do I tell?"**
+  → Covers Allocations instrument decision tree to distinguish caching from actual leaks
+
 ## Decision Tree
 
 ```

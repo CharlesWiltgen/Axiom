@@ -17,6 +17,25 @@ Diagnostic decision trees for SwiftUI view updates, preview crashes, and layout 
 
 **Requirements**: Xcode 15+, iOS 14+
 
+## Example Prompts
+
+These are real questions developers ask that this skill answers:
+
+- **"List item doesn't update even though the data changed."**
+  → Demonstrates struct mutation diagnosis with SwiftUI update cycle
+
+- **"Preview keeps crashing with mysterious dependency errors."**
+  → Covers preview crash decision tree: missing dependencies, state init failures, cache corruption
+
+- **"TextField value changes don't appear on screen."**
+  → Shows binding identity diagnosis and when to use @State vs @Binding correctly
+
+- **"Layout looks wrong. Elements are in the wrong positions."**
+  → Covers ZStack ordering, GeometryReader sizing, SafeArea, and modifier order issues
+
+- **"I'm getting intermittent rendering glitches under deadline pressure."**
+  → Provides systematic troubleshooting under App Store Review stress with professional push-back scripts
+
 ## Root Causes
 
 ### Struct Mutation

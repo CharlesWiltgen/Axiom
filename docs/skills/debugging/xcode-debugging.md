@@ -15,3 +15,22 @@ Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute r
 **Philosophy**: 80% of "mysterious" Xcode issues are environment problems, not code bugs. Check environment BEFORE debugging code.
 
 **TDD Tested**: 6 refinements from pressure testing with Superpowers framework
+
+## Example Prompts
+
+These are real questions developers ask that this skill answers:
+
+- **"My build is failing with 'BUILD FAILED' but no error details. I haven't changed anything."**
+  → Shows environment-first diagnostics: clean Derived Data, check simulator states, identify zombie processes
+
+- **"Tests passed yesterday with no code changes, but now they're failing."**
+  → Explains stale Derived Data and intermittent failures, shows the 2-5 minute fix
+
+- **"My app builds fine but it's running the old code from before my changes."**
+  → Demonstrates that Derived Data caches old builds, shows how deletion forces a clean rebuild
+
+- **"The simulator says 'Unable to boot simulator' and I can't run tests."**
+  → Covers simulator state diagnosis with simctl and safe recovery patterns
+
+- **"I'm getting 'No such module: SomePackage' errors after updating SPM dependencies."**
+  → Explains SPM caching issues and the clean Derived Data workflow

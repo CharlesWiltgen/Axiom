@@ -27,3 +27,22 @@ Master SwiftUI performance optimization using the new SwiftUI Instrument in Inst
 - [Optimize SwiftUI performance with Instruments – Session 306](https://developer.apple.com/videos/play/wwdc2025/306/)
 
 **Philosophy**: Ensure your view bodies update quickly and only when needed to achieve great SwiftUI performance.
+
+## Example Prompts
+
+These are real questions developers ask that this skill answers:
+
+- **"My app has janky scrolling and animations stutter."**
+  → Shows how to use the new SwiftUI Instrument to identify if SwiftUI is the bottleneck
+
+- **"I see orange/red bars in the SwiftUI Instrument showing long updates."**
+  → Covers Cause & Effect Graph patterns that show data flow and which state changes trigger expensive updates
+
+- **"Some views are updating way too often even though their data hasn't changed."**
+  → Demonstrates unnecessary update detection and Identity troubleshooting with visual timeline
+
+- **"I have large data structures and complex view hierarchies."**
+  → Covers performance patterns: breaking down hierarchies, minimizing body complexity, @Sendable optimization
+
+- **"We have a performance deadline. What's slow in SwiftUI?"**
+  → Provides decision tree for prioritizing optimizations with professional guidance for trade-offs

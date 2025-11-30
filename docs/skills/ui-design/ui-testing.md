@@ -26,3 +26,22 @@ Reliable UI testing with condition-based waiting patterns and new Recording UI A
 - [Recording UI Automation – Session 344](https://developer.apple.com/videos/play/wwdc2025/344/)
 
 **Philosophy**: Wait for conditions, not arbitrary timeouts. Flaky tests come from guessing how long operations take.
+
+## Example Prompts
+
+These are real questions developers ask that this skill answers:
+
+- **"My UI tests pass locally but fail in CI with no obvious reason."**
+  → Shows condition-based waiting patterns that work across devices/speeds, eliminating CI timing differences
+
+- **"My tests use sleep(2) and sleep(5) but they're still flaky."**
+  → Demonstrates waitForExistence, XCTestExpectation, and polling patterns for data loads and network requests
+
+- **"I just recorded a test using Xcode 26's Recording UI Automation. How do I debug failures?"**
+  → Covers video debugging workflows to analyze recordings and find exactly where tests fail
+
+- **"My test fails on iPad but passes on iPhone."**
+  → Explains multi-factor testing strategies and device-independent predicates for cross-device testing
+
+- **"I want tests that aren't flaky. What patterns should I use?"**
+  → Provides condition-based waiting templates, accessibility-first patterns, and reliable test architecture
