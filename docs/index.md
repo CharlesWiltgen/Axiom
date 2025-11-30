@@ -4,7 +4,7 @@ layout: home
 hero:
   name: Axiom
   text: Claude Code Skills for iOS Development
-  tagline: Comprehensive iOS development skills with the latest WWDC 2025 guidance - Liquid Glass, SwiftUI Performance, Recording UI Automation, and more
+  tagline: Battle-tested Claude Code skills for modern xOS development — Liquid Glass, SwiftUI Performance, Recording UI Automation, and more
   actions:
     - theme: brand
       text: Get Started
@@ -14,7 +14,7 @@ hero:
       link: /plugins/
 
 features:
-  - title: 🆕 WWDC 2025 Coverage
+  - title: 🎨 Latest Platform Features
     details: Liquid Glass material design system, new SwiftUI Instrument with Cause & Effect Graph, Recording UI Automation in Xcode 26
   - title: 🔧 Systematic Debugging
     details: Environment-first Xcode diagnostics, memory leak patterns, Swift 6 concurrency error resolution
@@ -30,4 +30,4 @@ features:
 
 ## Preview Release
 
-This is an early preview of Axiom. Feedback welcome on what's working well and what's missing. [Report issues or share feedback →](https://github.com/yourusername/Axiom/issues)
+This is an early preview of Axiom. Feedback welcome on what's working well and what's missing. [Report issues or share feedback →](https://github.com/CharlesWiltgen/Axiom/issues)
