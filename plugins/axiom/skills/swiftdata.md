@@ -99,6 +99,41 @@ final class Album {
 }
 ```
 
+### Many-to-Many Self-Referential Relationships
+
+```swift
+@Model
+final class User {
+    @Attribute(.unique) var id: String
+    var name: String
+
+    // Users following this user (inverse relationship)
+    @Relationship(deleteRule: .nullify, inverse: \User.following)
+    var followers: [User] = []
+
+    // Users this user is following
+    @Relationship(deleteRule: .nullify)
+    var following: [User] = []
+
+    init(id: String, name: String) {
+        self.id = id
+        self.name = name
+    }
+}
+```
+
+**Key pattern for self-referential relationships:**
+- Specify `inverse: \User.following` on one side ONLY
+- SwiftData automatically manages the relationship on both sides
+- Use `.nullify` to prevent cascading deletes when unfollowing
+
+**Adding a follower:**
+```swift
+user1.following.append(user2)  // user1 follows user2
+user2.followers.append(user1)  // user2 has user1 as follower
+try modelContext.save()
+```
+
 **Delete rules:**
 - `.cascade` - Delete related objects
 - `.nullify` - Set relationship to nil
