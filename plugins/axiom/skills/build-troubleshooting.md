@@ -11,6 +11,27 @@ last_updated: TDD-tested with production crisis scenarios
 
 Check dependencies BEFORE blaming code. **Core principle:** 80% of persistent build failures are dependency resolution issues (CocoaPods, SPM, framework conflicts), not code bugs.
 
+## Example Prompts
+
+These are real questions developers ask that this skill is designed to answer:
+
+**1. "I added a Swift Package but I'm getting 'No such module' errors. The package is in my Xcode project but won't compile."**
+→ The skill covers SPM resolution workflows, package cache clearing, and framework search path diagnostics
+
+**2. "The build is failing with 'Multiple commands produce' the same output file. How do I figure out which files are duplicated?"**
+→ The skill shows how to identify duplicate target membership and resolve file conflicts in build settings
+
+**3. "CocoaPods installed dependencies successfully but the build still fails. How do I debug CocoaPods issues?"**
+→ The skill covers Podfile.lock conflict resolution, linking errors, and version constraint debugging
+
+**4. "My build works on my Mac but fails on the CI server. Both machines have the latest Xcode. What's different?"**
+→ The skill explains dependency caching differences, environment-specific paths, and reproducible build strategies
+
+**5. "I'm getting framework version conflicts and I don't know which dependency is causing it. How do I resolve this?"**
+→ The skill demonstrates dependency graph analysis and version constraint resolution strategies for complex dependency trees
+
+---
+
 ## Red Flags - Dependency/Build Issues
 
 If you see ANY of these, suspect dependency problem:

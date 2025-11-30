@@ -35,6 +35,27 @@ Apple's native persistence framework using `@Model` classes and declarative quer
 
 **For migrations:** See the `database-migration` skill for safe schema evolution patterns.
 
+## Example Prompts
+
+These are real questions developers ask that this skill is designed to answer:
+
+**1. "I have a Todo app with tasks. I need to filter by completion status and sort by due date. How do I set up the @Query?"**
+→ The skill shows how to use `@Query` with predicates, sorting, and automatic view updates
+
+**2. "When a user deletes a playlist, the songs should auto-delete too. How do I set up the relationship?"**
+→ The skill explains `@Relationship` with `deleteRule: .cascade` and inverse relationships
+
+**3. "My notes app syncs to other devices via CloudKit. Sometimes changes conflict. How do I handle sync conflicts?"**
+→ The skill covers CloudKit integration, conflict resolution strategies, and sync patterns
+
+**4. "I have a relationship between User → Posts → Comments. How do I prevent orphaned data when deleting?"**
+→ The skill shows cascading deletes, inverse relationships, and safe deletion patterns
+
+**5. "I need to query 10,000 records but only display 20 at a time. How do I paginate efficiently?"**
+→ The skill covers performance patterns, batch fetching, and limiting queries
+
+---
+
 ## @Model Definitions
 
 ### Basic Model

@@ -26,6 +26,27 @@ description: Swift 6 strict concurrency patterns, fixes, and best practices - Qu
 - SwiftUI-specific patterns (different context)
 - API-specific patterns (use API documentation)
 
+## Example Prompts
+
+These are real questions developers ask that this skill is designed to answer:
+
+**1. "I'm getting 'Main actor-isolated property accessed from nonisolated context' errors in my delegate methods. How do I fix this?"**
+→ The skill covers the critical Pattern 2 (Value Capture Before Task) that shows when to capture delegate parameters before the Task context hop
+
+**2. "My code is throwing 'Type does not conform to Sendable' warnings when I try to pass data between background work and MainActor. What does this mean?"**
+→ The skill explains Sendable conformance requirements and shows patterns for enums, structs, and classes that cross actor boundaries
+
+**3. "I have a task that's stored as a property and it's causing memory leaks. How do I write it correctly with weak self?"**
+→ The skill demonstrates Pattern 3 (Weak Self in Tasks) showing the difference between stored and short-lived tasks
+
+**4. "I'm new to Swift 6 concurrency. What are the critical patterns I need to know to write safe concurrent code?"**
+→ The skill provides 6 copy-paste-ready patterns covering delegates, Sendable types, tasks, snapshots, MainActor, and background work
+
+**5. "How do I know when to use @MainActor vs nonisolated vs @concurrent? The rules aren't clear."**
+→ The skill clarifies actor isolation rules and provides a decision tree for each scenario with real-world examples
+
+---
+
 ## Quick Decision Tree
 
 ```

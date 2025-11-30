@@ -36,6 +36,27 @@ Direct SQLite access using [GRDB.swift](https://github.com/groue/GRDB.swift) - a
 
 **For migrations:** See the `database-migration` skill for safe schema evolution patterns.
 
+## Example Prompts
+
+These are real questions developers ask that this skill is designed to answer:
+
+**1. "I need to query albums with their artists and count of plays in one query. How do I write the JOIN?"**
+→ The skill shows complex JOIN queries with multiple tables and aggregations
+
+**2. "I want to observe a filtered list and update the UI whenever tracks matching a genre change."**
+→ The skill covers ValueObservation patterns for reactive query updates
+
+**3. "I'm importing thousands of records and need custom migration logic. How do I use DatabaseMigrator?"**
+→ The skill explains migration registration, data transforms, and safe rollback patterns
+
+**4. "My query is slow (takes 10+ seconds). How do I profile and optimize it?"**
+→ The skill covers EXPLAIN QUERY PLAN, database.trace for profiling, and index creation
+
+**5. "I need to fetch albums grouped by artist with play counts, ordered by popularity. Raw SQL seems easier than type-safe queries."**
+→ The skill demonstrates when GRDB's raw SQL is clearer than type-safe wrappers
+
+---
+
 ## Database Setup
 
 ### DatabaseQueue (Single Connection)

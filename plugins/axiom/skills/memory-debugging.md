@@ -9,6 +9,27 @@ description: Use when debugging retain cycles, memory leaks, crashes after 10+ m
 
 Memory issues manifest as crashes after prolonged use. **Core principle:** 90% of memory leaks follow 3 patterns (retain cycles, timer/observer leaks, collection growth). Diagnose systematically with Instruments, never guess.
 
+## Example Prompts
+
+These are real questions developers ask that this skill is designed to answer:
+
+**1. "My app crashes after 10-15 minutes of use, but there are no error messages. How do I figure out what's leaking?"**
+→ The skill covers systematic Instruments workflows to identify memory leaks vs normal memory pressure, with real diagnostic patterns
+
+**2. "I'm seeing memory jump from 50MB to 200MB+ when I perform a specific action. Is this a leak or normal caching behavior?"**
+→ The skill distinguishes between progressive leaks (continuous growth) and temporary spikes (caches that stabilize), with diagnostic criteria
+
+**3. "View controllers don't seem to be deallocating after I dismiss them. How do I find the retain cycle causing this?"**
+→ The skill demonstrates Memory Graph Debugger techniques to identify objects holding strong references and common retain cycle patterns
+
+**4. "I have timers/observers in my code and I think they're causing memory leaks. How do I verify and fix this?"**
+→ The skill covers the 5 diagnostic patterns, including specific timer and observer leak signatures with prevention strategies
+
+**5. "My app uses 200MB of memory and I don't know if that's normal or if I have multiple leaks. How do I diagnose?"**
+→ The skill provides the Instruments decision tree to distinguish normal memory use, expected caches, and actual leaks requiring fixes
+
+---
+
 ## Red Flags - Memory Leak Likely
 
 If you see ANY of these, suspect memory leak not just heavy memory use:
