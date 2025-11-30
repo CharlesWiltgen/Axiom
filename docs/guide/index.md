@@ -143,5 +143,5 @@ When adding database columns or changing schema:
 
 ## What's Next?
 
-- [View all skills →](/plugins/)
+- [View all skills →](/skills/)
 - [Contributing guide →](https://github.com/CharlesWiltgen/Axiom/blob/main/CONTRIBUTING.md)

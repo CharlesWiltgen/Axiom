@@ -11,7 +11,7 @@ hero:
       link: /guide/
     - theme: alt
       text: View Skills
-      link: /plugins/
+      link: /skills/
 
 features:
   - title: 🎨 Latest Platform Features
