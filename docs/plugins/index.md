@@ -9,7 +9,7 @@ Axiom provides 11 production-ready skills for xOS (iOS, iPadOS, watchOS, tvOS) d
 
 ## 🎨 UI & Design Skills
 
-### axiom:liquid-glass
+### `axiom:liquid-glass`
 
 Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid Glass visual properties, implementation patterns, and design principles.
 
@@ -37,7 +37,7 @@ Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid
 
 ---
 
-### axiom:swiftui-performance
+### `axiom:swiftui-performance`
 
 Master SwiftUI performance optimization using the new SwiftUI Instrument in Instruments 26.
 
@@ -67,7 +67,7 @@ Master SwiftUI performance optimization using the new SwiftUI Instrument in Inst
 
 ---
 
-### axiom:ui-testing
+### `axiom:ui-testing`
 
 Reliable UI testing with condition-based waiting patterns and new Recording UI Automation features from Xcode 26.
 
@@ -98,7 +98,7 @@ Reliable UI testing with condition-based waiting patterns and new Recording UI A
 
 ## 🔧 Debugging & Troubleshooting
 
-### axiom:xcode-debugging
+### `axiom:xcode-debugging`
 
 Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute rabbit holes by checking build environment before debugging code.
 
@@ -117,7 +117,7 @@ Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute r
 
 ---
 
-### axiom:memory-debugging
+### `axiom:memory-debugging`
 
 Systematic memory leak diagnosis with Instruments. 5 leak patterns covering 90% of real-world issues.
 
@@ -139,7 +139,7 @@ Systematic memory leak diagnosis with Instruments. 5 leak patterns covering 90% 
 
 ---
 
-### axiom:build-troubleshooting
+### `axiom:build-troubleshooting`
 
 Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
@@ -156,9 +156,9 @@ Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
 ## ⚡ Swift & Concurrency
 
-### axiom:swift-concurrency
+### `axiom:swift-concurrency`
 
-Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor isolation, and data race prevention.
+Swift 6 strict concurrency patterns – async/await, MainActor, Sendable, actor isolation, and data race prevention.
 
 **When to use**: Debugging Swift 6 concurrency errors (actor isolation, data races, Sendable warnings), implementing @MainActor classes, converting delegate callbacks to async-safe patterns
 
@@ -180,7 +180,7 @@ Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor is
 
 ## 💾 Persistence
 
-### axiom:database-migration
+### `axiom:database-migration`
 
 Safe database schema evolution for SQLite/GRDB/SwiftData. Prevents data loss with additive migrations and testing workflows.
 
@@ -199,7 +199,7 @@ Safe database schema evolution for SQLite/GRDB/SwiftData. Prevents data loss wit
 
 ---
 
-### axiom:sqlitedata
+### `axiom:sqlitedata`
 
 SQLiteData (Point-Free) patterns, critical gotchas, batch performance, and CloudKit sync.
 
@@ -215,7 +215,7 @@ SQLiteData (Point-Free) patterns, critical gotchas, batch performance, and Cloud
 
 ---
 
-### axiom:grdb
+### `axiom:grdb`
 
 Raw GRDB for complex queries, ValueObservation, DatabaseMigrator patterns.
 
@@ -231,7 +231,7 @@ Raw GRDB for complex queries, ValueObservation, DatabaseMigrator patterns.
 
 ---
 
-### axiom:swiftdata
+### `axiom:swiftdata`
 
 SwiftData with iOS 26+ features, @Model definitions, @Query patterns, Swift 6 concurrency with @MainActor.
 
