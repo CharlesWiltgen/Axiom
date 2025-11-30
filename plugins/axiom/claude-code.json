@@ -64,6 +64,10 @@
     {
       "name": "objc-block-retain-cycles",
       "description": "Use when debugging memory leaks from blocks, blocks assigned to self or properties, network callbacks, or crashes from deallocated objects - systematic weak-strong pattern diagnosis with mandatory diagnostic rules"
+    },
+    {
+      "name": "core-data-debugging",
+      "description": "Use when debugging schema migration crashes, concurrency thread-confinement errors, N+1 query performance, SwiftData to Core Data bridging, or testing migrations without data loss - systematic Core Data diagnostics with safety-first migration patterns"
     }
   ]
 }
