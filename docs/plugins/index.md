@@ -15,7 +15,8 @@ Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid
 
 **When to use**: Implementing Liquid Glass effects, reviewing UI for adoption, debugging visual artifacts, requesting expert review of implementations
 
-**Key Features**:
+#### Key Features
+
 - **Expert Review Checklist** – 7-section validation checklist for reviewing Liquid Glass implementations
   - Material appropriateness (navigation layer vs content layer)
   - Variant selection (Regular vs Clear decision criteria)
@@ -31,9 +32,10 @@ Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid
 
 **Requirements**: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+, Xcode 26+
 
-**WWDC References**:
-- [Meet Liquid Glass - Session 219](https://developer.apple.com/videos/play/wwdc2025/219/)
-- [Build a SwiftUI app with the new design - Session 323](https://developer.apple.com/videos/play/wwdc2025/323/)
+#### WWDC References
+
+- [Meet Liquid Glass – Session 219](https://developer.apple.com/videos/play/wwdc2025/219/)
+- [Build a SwiftUI app with the new design – Session 323](https://developer.apple.com/videos/play/wwdc2025/323/)
 
 ---
 
@@ -43,7 +45,8 @@ Master SwiftUI performance optimization using the new SwiftUI Instrument in Inst
 
 **When to use**: App feels less responsive, animations stutter, scrolling performance issues, profiling reveals SwiftUI bottlenecks
 
-**Key Features**:
+#### Key Features
+
 - **New SwiftUI Instrument walkthrough** – 4 track lanes, color-coding system, integration with Time Profiler
 - **Cause & Effect Graph** – Visualize data flow and dependencies to eliminate unnecessary updates
 - **Problem 1: Long View Body Updates**
@@ -60,8 +63,9 @@ Master SwiftUI performance optimization using the new SwiftUI Instrument in Inst
 
 **Requirements**: Xcode 26+, iOS 26+ SDK for profiling
 
-**WWDC References**:
-- [Optimize SwiftUI performance with Instruments - Session 306](https://developer.apple.com/videos/play/wwdc2025/306/)
+#### WWDC References
+
+- [Optimize SwiftUI performance with Instruments – Session 306](https://developer.apple.com/videos/play/wwdc2025/306/)
 
 **Philosophy**: Ensure your view bodies update quickly and only when needed to achieve great SwiftUI performance.
 
@@ -73,7 +77,8 @@ Reliable UI testing with condition-based waiting patterns and new Recording UI A
 
 **When to use**: Writing UI tests, recording interactions, tests have race conditions or timing dependencies, flaky tests
 
-**Key Features**:
+#### Key Features
+
 - **Recording UI Automation** – Record interactions as Swift code, replay across configurations, review video recordings
   - Three phases: Record → Replay → Review
   - Replay configurations (devices, languages, regions, orientations, accessibility)
@@ -89,8 +94,9 @@ Reliable UI testing with condition-based waiting patterns and new Recording UI A
 
 **Requirements**: Xcode 26+ for Recording UI Automation, original patterns work with earlier versions
 
-**WWDC References**:
-- [Recording UI Automation - Session 344](https://developer.apple.com/videos/play/wwdc2025/344/)
+#### WWDC References
+
+- [Recording UI Automation – Session 344](https://developer.apple.com/videos/play/wwdc2025/344/)
 
 **Philosophy**: Wait for conditions, not arbitrary timeouts. Flaky tests come from guessing how long operations take.
 
@@ -104,7 +110,8 @@ Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute r
 
 **When to use**: BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild processes, "Unable to boot simulator", "No such module" after SPM changes, mysterious test failures
 
-**Key Features**:
+#### Key Features
+
 - Mandatory environment checks (Derived Data, processes, simulators)
 - Quick fix workflows for common issues
 - Decision tree for diagnosing problems
@@ -123,7 +130,8 @@ Systematic memory leak diagnosis with Instruments. 5 leak patterns covering 90% 
 
 **When to use**: App memory grows over time, seeing multiple instances of same class, crashes with memory limit exceeded, Instruments shows retain cycles
 
-**Key Features**:
+#### Key Features
+
 - 5 comprehensive leak patterns
   - Delegate retain cycles
   - Closure capture cycles
@@ -145,7 +153,8 @@ Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
 **When to use**: Dependency conflicts, CocoaPods/SPM resolution failures, "Multiple commands produce" errors, framework version mismatches
 
-**Key Features**:
+#### Key Features
+
 - CocoaPods conflict resolution
 - SPM version resolution
 - Multiple commands produce errors
@@ -162,7 +171,8 @@ Swift 6 strict concurrency patterns – async/await, MainActor, Sendable, actor 
 
 **When to use**: Debugging Swift 6 concurrency errors (actor isolation, data races, Sendable warnings), implementing @MainActor classes, converting delegate callbacks to async-safe patterns
 
-**Key Features**:
+#### Key Features
+
 - Quick decision tree for concurrency errors
 - Copy-paste templates for common patterns
   - Delegate capture (weak self)
@@ -186,7 +196,8 @@ Safe database schema evolution for SQLite/GRDB/SwiftData. Prevents data loss wit
 
 **When to use**: Adding/modifying database columns, encountering "FOREIGN KEY constraint failed", "no such column", "cannot add NOT NULL column" errors, creating schema migrations for SQLite/GRDB/SwiftData
 
-**Key Features**:
+#### Key Features
+
 - Safe migration patterns (additive, idempotent, transactional)
 - Testing checklist (fresh install + migration paths)
 - Common errors and fixes
@@ -205,7 +216,8 @@ SQLiteData (Point-Free) patterns, critical gotchas, batch performance, and Cloud
 
 **When to use**: Working with SQLiteData @Table models, @FetchAll/@FetchOne queries, StructuredQueries post-migration crashes, batch imports, deciding when to drop to GRDB
 
-**Key Features**:
+#### Key Features
+
 - @Table model patterns
 - Query patterns with @FetchAll/@FetchOne
 - StructuredQueries crash prevention
@@ -221,7 +233,8 @@ Raw GRDB for complex queries, ValueObservation, DatabaseMigrator patterns.
 
 **When to use**: Writing raw SQL queries with GRDB, complex joins, ValueObservation for reactive queries, DatabaseMigrator patterns, dropping down from SQLiteData for performance
 
-**Key Features**:
+#### Key Features
+
 - Raw SQL query patterns
 - ValueObservation for reactive queries
 - DatabaseMigrator setup
@@ -237,7 +250,8 @@ SwiftData with iOS 26+ features, @Model definitions, @Query patterns, Swift 6 co
 
 **When to use**: Working with SwiftData @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ features, Swift 6 concurrency
 
-**Key Features**:
+#### Key Features
+
 - @Model definitions
 - @Query patterns in SwiftUI
 - @Relationship macros
@@ -259,10 +273,10 @@ Skills in Axiom are developed using rigorous quality standards:
 
 ### Reference Skills
 All persistence and WWDC 2025 skills reviewed against 4 quality criteria:
-1. **Accuracy** - Every claim cited to official sources, code tested
-2. **Completeness** - 80%+ coverage, edge cases documented, troubleshooting sections
-3. **Clarity** - Examples first, scannable structure, jargon defined
-4. **Practical Value** - Copy-paste ready, expert checklists, real-world impact
+1. **Accuracy** – Every claim cited to official sources, code tested
+2. **Completeness** – 80%+ coverage, edge cases documented, troubleshooting sections
+3. **Clarity** – Examples first, scannable structure, jargon defined
+4. **Practical Value** – Copy-paste ready, expert checklists, real-world impact
 
 ## Related Resources
 
