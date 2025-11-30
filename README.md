@@ -1,6 +1,6 @@
 # Axiom
 
-A comprehensive collection of Claude Code skills for iOS development, updated with the latest guidance from WWDC 2025.
+Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development, updated with the latest iOS 26.x guidance from Apple.
 
 > **Preview Release**: This is an early preview of Axiom. Feedback welcome on what's working well and what's missing. Report issues or suggestions at [GitHub Issues](https://github.com/yourusername/Axiom/issues).
 

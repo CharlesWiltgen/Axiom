@@ -1,6 +1,6 @@
 {
   "name": "axiom-marketplace",
-  "description": "Comprehensive iOS development skills and patterns for Claude Code - 11 production-ready plugins for iOS/macOS development",
+  "description": "Battle-tested Claude Code skills for modern xOS development - 11 production-ready plugins for iOS, iPadOS, watchOS, and tvOS",
   "owner": {
     "name": "Charles Wiltgen",
     "email": "charles@wiltgen.net"
@@ -9,7 +9,7 @@
     {
       "name": "axiom",
       "source": "./plugins/axiom",
-      "description": "Comprehensive iOS development plugin suite - 11 production-ready skills for Xcode, Swift concurrency, database migrations, memory debugging, UI testing, and persistence patterns (SQLiteData, GRDB, SwiftData). WWDC 2025 updated with Liquid Glass and SwiftUI Performance guidance.",
+      "description": "Battle-tested Claude Code skills for xOS development - systematic workflows for Xcode debugging, Swift 6 concurrency, database migrations, memory debugging, UI testing, and persistence (SQLiteData, GRDB, SwiftData). WWDC 2025 updated with Liquid Glass and SwiftUI Performance.",
       "version": "0.1.2",
       "author": {
         "name": "Charles Wiltgen"
