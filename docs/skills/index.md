@@ -48,6 +48,7 @@ Skills in Axiom are developed using rigorous quality standards:
 - **swift-concurrency** – Critical checklist contradiction found and fixed
 - **database-migration** – Already bulletproof, validated under pressure
 - **swiftdata** – Many-to-many relationships, unfollow patterns, CloudKit corruption recovery added during testing
+- **memory-debugging** – PhotoKit leak patterns and non-reproducible issue debugging added during testing
 
 ### Reference Skills
 
