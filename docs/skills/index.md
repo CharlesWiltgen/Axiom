@@ -50,7 +50,7 @@ Skills in Axiom are developed using rigorous quality standards:
 
 ### Reference Skills
 
-All persistence and WWDC 2025 skills reviewed against 4 quality criteria:
+All reference skills are reviewed against 4 quality criteria:
 
 1. **Accuracy** – Every claim cited to official sources, code tested
 2. **Completeness** – 80%+ coverage, edge cases documented, troubleshooting sections
