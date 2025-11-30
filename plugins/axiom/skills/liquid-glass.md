@@ -19,6 +19,27 @@ Use when:
 - Understanding when to use Regular vs Clear variants
 - Troubleshooting tinting, legibility, or adaptive behavior issues
 
+## Example Prompts
+
+These are real questions developers ask that this skill is designed to answer:
+
+**1. "I just saw Liquid Glass in WWDC videos. How is it different from blur effects I've used before? Should I adopt it?"**
+→ The skill explains Liquid Glass as a lensing-based material (not blur), shows design philosophy, and when adoption makes sense
+
+**2. "I'm implementing Liquid Glass in my app but the lensing effect doesn't look quite right. It looks like a regular blur. What am I missing?"**
+→ The skill covers the visual properties (lensing vs motion vs environment), Regular vs Clear variants, and debugging visual artifacts
+
+**3. "Liquid Glass works great on iPhone but looks odd on iPad. Should I adjust the implementation differently for different screen sizes?"**
+→ The skill demonstrates adaptive Liquid Glass patterns and platform-specific guidance (iOS 26+, macOS Tahoe+, visionOS 3+)
+
+**4. "I need to use Liquid Glass but still need legible text on top. How do I ensure text contrast while using Liquid Glass?"**
+→ The skill covers tinting strategies, adaptive color choices, and opacity patterns for maintaining readability across light/dark modes
+
+**5. "We want to do a design review of our Liquid Glass implementation. What are the expert criteria for a good Liquid Glass implementation?"**
+→ The skill provides the comprehensive review checklist and professional push-back frameworks for design review meetings
+
+---
+
 ## What is Liquid Glass?
 
 Liquid Glass is Apple's next-generation material design system introduced at WWDC 2025. It represents a significant evolution from previous materials (Aqua, iOS 7 blurs, Dynamic Island) by creating a new digital meta-material that:

@@ -9,6 +9,27 @@ description: Use when encountering BUILD FAILED, test crashes, simulator hangs, 
 
 Check build environment BEFORE debugging code. **Core principle:** 80% of "mysterious" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.
 
+## Example Prompts
+
+These are real questions developers ask that this skill is designed to answer:
+
+**1. "My build is failing with 'BUILD FAILED' but no error details. I haven't changed anything. What's going on?"**
+→ The skill shows environment-first diagnostics: check Derived Data, simulator states, and zombie processes before investigating code
+
+**2. "Tests passed yesterday with no code changes, but now they're failing. This is frustrating. How do I fix this?"**
+→ The skill explains stale Derived Data and intermittent failures, shows the 2-5 minute fix (clean Derived Data)
+
+**3. "My app builds fine but it's running the old code from before my changes. I restarted Xcode but it still happens."**
+→ The skill demonstrates that Derived Data caches old builds, shows how deletion forces a clean rebuild
+
+**4. "The simulator says 'Unable to boot simulator' and I can't run tests. How do I recover?"**
+→ The skill covers simulator state diagnosis with simctl and safe recovery patterns (erase/shutdown/reboot)
+
+**5. "I'm getting 'No such module: SomePackage' errors after updating SPM dependencies. How do I fix this?"**
+→ The skill explains SPM caching issues and the clean Derived Data workflow that resolves "phantom" module errors
+
+---
+
 ## Red Flags - Check Environment First
 
 If you see ANY of these, suspect environment not code:
