@@ -21,6 +21,25 @@ Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid
 
 **Requirements**: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+, Xcode 26+
 
+## Example Prompts
+
+These are real questions developers ask that this skill answers:
+
+- **"I just saw Liquid Glass in WWDC videos. How is it different from blur effects?"**
+  → Explains Liquid Glass as a lensing-based material (not blur), shows design philosophy and adoption criteria
+
+- **"I'm implementing Liquid Glass but the lensing effect looks like regular blur."**
+  → Covers visual properties (lensing vs motion vs environment), Regular vs Clear variants, debugging artifacts
+
+- **"Liquid Glass looks great on iPhone but odd on iPad."**
+  → Demonstrates adaptive patterns and platform-specific guidance (iOS 26+, macOS Tahoe+, visionOS 3+)
+
+- **"I need Liquid Glass but text legibility is terrible."**
+  → Covers tinting strategies, adaptive colors, and opacity patterns for maintaining readability
+
+- **"We want expert review of our Liquid Glass implementation."**
+  → Provides comprehensive review checklist and professional push-back frameworks for design reviews
+
 ## WWDC References
 
 - [Meet Liquid Glass – Session 219](https://developer.apple.com/videos/play/wwdc2025/219/)

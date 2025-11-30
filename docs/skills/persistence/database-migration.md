@@ -15,3 +15,22 @@ Safe database schema evolution for SQLite/GRDB/SwiftData. Prevents data loss wit
 **Philosophy**: Migrations are immutable after shipping. Make them additive, idempotent, and thoroughly tested to prevent data loss.
 
 **TDD Tested**: Already bulletproof, no changes needed during pressure testing
+
+## Example Prompts
+
+These are real questions developers ask that this skill answers:
+
+- **"I need to add a column to my live app without losing user data."**
+  → Covers safe additive patterns including idempotency checks and avoiding data loss
+
+- **"I'm getting 'cannot add NOT NULL column' errors when migrating."**
+  → Explains why NOT NULL fails with existing rows and shows the safe pattern (nullable first, backfill later)
+
+- **"I need to change a column from text to integer. Can I just ALTER the type?"**
+  → Demonstrates the safe pattern: add new column → migrate data → deprecate old (NEVER delete)
+
+- **"I'm adding a foreign key relationship. How do I add it without breaking existing data?"**
+  → Covers safe patterns: add column → populate data → add index (SQLite limitations explained)
+
+- **"Users reported crashes after the last update. I changed a migration in production."**
+  → Explains migrations are immutable after shipping and how to create a new migration to fix issues
