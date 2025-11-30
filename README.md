@@ -4,7 +4,7 @@ Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) dev
 
 > **Preview Release**: This is an early preview of Axiom. Feedback welcome on what's working well and what's missing. Report issues or suggestions at [GitHub Issues](https://github.com/yourusername/Axiom/issues).
 
-## What's New in 0.1.2 (WWDC 2025 Update)
+## What's New Recently
 
 ✨ **New Skills:**
 - **Liquid Glass** - Apple's new material design system (iOS 26+) with comprehensive design principles, API patterns, and expert review checklist for validating implementations
@@ -26,8 +26,8 @@ Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) dev
 
 - macOS (Darwin 25.2.0 or later recommended)
 - [Claude Code](https://claude.ai/download) installed
-- Xcode 26+ (for WWDC 2025 features like Liquid Glass, Recording UI Automation)
-- iOS 26+ SDK (for latest SwiftUI features)
+- Xcode 26+ (for Liquid Glass, Recording UI Automation, and other latest features)
+- iOS 26+ SDK (for latest platform features)
 
 ### Installation
 
@@ -96,7 +96,7 @@ Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid
 ---
 
 #### `swiftui-performance`
-Master SwiftUI performance optimization using the new SwiftUI Instrument in Instruments 26 (WWDC 2025).
+Master SwiftUI performance optimization using the new SwiftUI Instrument in Instruments 26.
 
 **Key Features:**
 - New SwiftUI Instrument walkthrough (4 track lanes, color-coding, integration with Time Profiler)
@@ -214,10 +214,9 @@ This is a preview release. Feedback is welcome!
 ## Related Resources
 
 - [Claude Code Documentation](https://docs.claude.ai/code)
-- [WWDC 2025 Sessions](https://developer.apple.com/videos/wwdc2025)
-  - [Meet Liquid Glass (Session 219)](https://developer.apple.com/videos/play/wwdc2025/219/)
-  - [Optimize SwiftUI performance with Instruments (Session 306)](https://developer.apple.com/videos/play/wwdc2025/306/)
-  - [Recording UI Automation (Session 344)](https://developer.apple.com/videos/play/wwdc2025/344/)
+- [Apple Developer Documentation](https://developer.apple.com/)
+  - [Liquid Glass Design System](https://developer.apple.com/design/human-interface-guidelines/)
+  - [SwiftUI Performance](https://developer.apple.com/videos/)
 
 ## License
 
@@ -225,4 +224,4 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
 
-Built with guidance from WWDC 2025 sessions and the iOS development community. Skills tested using the [Superpowers](https://github.com/superpowers-marketplace/superpowers) TDD framework for Claude Code skills.
+Built with guidance from Apple's latest platform documentation and the iOS development community. Skills tested using the [Superpowers](https://github.com/superpowers-marketplace/superpowers) TDD framework for Claude Code skills.
