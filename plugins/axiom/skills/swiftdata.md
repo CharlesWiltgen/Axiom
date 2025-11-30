@@ -102,6 +102,7 @@ final class Album {
 ### Many-to-Many Self-Referential Relationships
 
 ```swift
+@MainActor  // Required for Swift 6 strict concurrency
 @Model
 final class User {
     @Attribute(.unique) var id: String
@@ -122,16 +123,63 @@ final class User {
 }
 ```
 
-**Key pattern for self-referential relationships:**
-- Specify `inverse: \User.following` on one side ONLY
-- SwiftData automatically manages the relationship on both sides
-- Use `.nullify` to prevent cascading deletes when unfollowing
+**CRITICAL: SwiftData automatically manages BOTH sides when you modify ONE side.**
 
-**Adding a follower:**
+✅ **Correct - Only modify ONE side:**
 ```swift
-user1.following.append(user2)  // user1 follows user2
-user2.followers.append(user1)  // user2 has user1 as follower
+// user1 follows user2 (modifying ONE side)
+user1.following.append(user2)
 try modelContext.save()
+
+// SwiftData AUTOMATICALLY updates user2.followers
+// Don't manually append to both sides - causes duplicates!
+```
+
+❌ **Wrong - Don't manually update both sides:**
+```swift
+user1.following.append(user2)
+user2.followers.append(user1)  // Redundant! Creates duplicates in CloudKit sync
+```
+
+**Unfollowing (remove from ONE side only):**
+```swift
+user1.following.removeAll { $0.id == user2.id }
+try modelContext.save()
+// user2.followers automatically updated
+```
+
+**Verifying relationship integrity (for debugging):**
+```swift
+// Check if relationship is truly bidirectional
+let user1FollowsUser2 = user1.following.contains { $0.id == user2.id }
+let user2FollowedByUser1 = user2.followers.contains { $0.id == user1.id }
+
+// These MUST always match after save()
+assert(user1FollowsUser2 == user2FollowedByUser1, "Relationship corrupted!")
+```
+
+**CloudKit Sync Recovery (if relationships become corrupted):**
+```swift
+// If CloudKit sync creates duplicate/orphaned relationships:
+
+// 1. Backup current state
+let backup = user.following.map { $0.id }
+
+// 2. Clear relationships
+user.following.removeAll()
+user.followers.removeAll()
+try modelContext.save()
+
+// 3. Rebuild from source of truth (e.g., API)
+for followingId in backup {
+    if let followingUser = fetchUser(id: followingId) {
+        user.following.append(followingUser)
+    }
+}
+try modelContext.save()
+
+// 4. Force CloudKit resync (in ModelConfiguration)
+// Re-create ModelContainer to force full sync after corruption recovery
 ```
 
 **Delete rules:**
