@@ -1,8 +1,8 @@
 ---
 name: swiftui-debugging
 description: Use when debugging SwiftUI view updates, preview crashes, or layout issues - diagnostic decision trees to identify root causes quickly and avoid misdiagnosis under pressure
-version: 1.0.0
-last_updated: TDD-tested with production deadline and intermittent bug scenarios
+version: 1.2.0
+last_updated: TDD-tested with production deadline and intermittent bug scenarios, added 3 real-world examples
 ---
 
 # SwiftUI Debugging
@@ -713,6 +713,139 @@ ZStack { ... }.ignoresSafeArea()
 Text().cornerRadius(8).padding()  // Corners first
 ```
 
+## Real-World Examples
+
+### Example 1: List Item Doesn't Update When Tapped
+
+**Scenario**: You have a list of tasks. When you tap a task to mark it complete, the checkmark should appear, but it doesn't.
+
+**Code**:
+```swift
+struct TaskListView: View {
+    @State var tasks: [Task] = [...]
+
+    var body: some View {
+        List {
+            ForEach(tasks, id: \.id) { task in
+                HStack {
+                    Image(systemName: task.isComplete ? "checkmark.circle.fill" : "circle")
+                    Text(task.title)
+                    Spacer()
+                    Button("Done") {
+                        // ❌ WRONG: Direct mutation
+                        task.isComplete.toggle()
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+**Diagnosis using the skill**:
+1. Can you reproduce in preview? YES
+2. Are you modifying the struct directly? YES → **Struct Mutation** (Root Cause 1)
+
+**Fix**:
+```swift
+Button("Done") {
+    // ✅ RIGHT: Full reassignment
+    if let index = tasks.firstIndex(where: { $0.id == task.id }) {
+        tasks[index].isComplete.toggle()
+    }
+}
+```
+
+**Why this works**: SwiftUI detects the array reassignment, triggering a redraw. The task in the List updates.
+
+---
+
+### Example 2: Preview Crashes with "No Such Module"
+
+**Scenario**: You created a custom data model. It works fine in the app, but the preview crashes with "Cannot find 'CustomModel' in scope".
+
+**Code**:
+```swift
+import SwiftUI
+
+// ❌ WRONG: Preview missing the dependency
+#Preview {
+    TaskDetailView(task: Task(...))
+}
+
+struct TaskDetailView: View {
+    @Environment(\.modelContext) var modelContext
+    let task: Task  // Custom model
+
+    var body: some View {
+        Text(task.title)
+    }
+}
+```
+
+**Diagnosis using the skill**:
+1. What's the error? "Cannot find in scope" → **Missing Dependency** (Error Type 1)
+2. What does TaskDetailView need? The Task model and modelContext
+
+**Fix**:
+```swift
+#Preview {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Task.self, configurations: config)
+
+    return TaskDetailView(task: Task(title: "Sample"))
+        .modelContainer(container)
+}
+```
+
+**Why this works**: Providing the environment object and model container satisfies the view's dependencies. Preview loads successfully.
+
+---
+
+### Example 3: Text Field Value Changes Don't Appear
+
+**Scenario**: You have a search field. You type characters, but the text doesn't appear in the UI. However, the search results DO update.
+
+**Code**:
+```swift
+struct SearchView: View {
+    @State var searchText = ""
+
+    var body: some View {
+        VStack {
+            // ❌ WRONG: Passing constant binding
+            TextField("Search", text: .constant(searchText))
+
+            Text("Results for: \(searchText)")  // This updates
+            List {
+                ForEach(results(for: searchText), id: \.self) { result in
+                    Text(result)
+                }
+            }
+        }
+    }
+
+    func results(for text: String) -> [String] {
+        // Returns filtered results
+    }
+}
+```
+
+**Diagnosis using the skill**:
+1. Can you reproduce in preview? YES
+2. Are you passing a binding to a child view? YES (TextField)
+3. Is it a constant binding? YES → **Lost Binding Identity** (Root Cause 2)
+
+**Fix**:
+```swift
+// ✅ RIGHT: Pass the actual binding
+TextField("Search", text: $searchText)
+```
+
+**Why this works**: `$searchText` passes a two-way binding. TextField writes changes back to @State, triggering a redraw. Text field now shows typed characters.
+
+---
+
 ## External Resources
 
 **Apple Documentation:**
@@ -728,6 +861,7 @@ Text().cornerRadius(8).padding()  // Corners first
 
 - **1.0.0**: Initial skill covering view update diagnostics (struct mutation, binding identity, view recreation, missing observer), preview crash decision trees (missing dependencies, state init, cache corruption), layout quick reference (ZStack, GeometryReader, SafeArea, frame/fixedSize, modifier order), and pressure scenarios for common shortcuts
 - **1.1.0**: Added Scenario 2b (intermittent updates - 60-minute systematic diagnosis protocol with 4-step framework), extended pressure scenario for App Store Review deadline, added professional push-back script for co-leads suggesting shortcuts, verified under maximum pressure (App Store submission deadlines, cannot reproduce consistently, authority pressure from co-leads)
+- **1.2.0**: Added 3 real-world examples (List item doesn't update when tapped, Preview crashes with missing dependencies, TextField value changes don't appear) demonstrating struct mutation, missing dependencies, and binding identity issues with complete diagnosis workflows
 
 ---
 
