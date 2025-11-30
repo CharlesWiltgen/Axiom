@@ -1,6 +1,8 @@
 ---
 name: build-troubleshooting
-description: Use when encountering dependency conflicts, CocoaPods/SPM resolution failures, "Multiple commands produce" errors, or framework version mismatches - systematic dependency and build configuration debugging for iOS projects
+description: Use when encountering dependency conflicts, CocoaPods/SPM resolution failures, "Multiple commands produce" errors, or framework version mismatches - systematic dependency and build configuration debugging for iOS projects. Includes pressure scenario guidance for resisting quick fixes under time constraints
+version: 1.1.0
+last_updated: TDD-tested with production crisis scenarios
 ---
 
 # Build Troubleshooting
@@ -261,6 +263,116 @@ xcodebuild -workspace YourApp.xcworkspace -scheme YourScheme build
 xcodebuild -project YourApp.xcodeproj -scheme YourScheme build
 ```
 
+## Pressure Scenarios: When to Resist "Quick Fix" Advice
+
+### The Problem
+
+Under deadline pressure, senior engineers and teammates provide "quick fixes" based on pattern-matching:
+- "Just regenerate the lock file"
+- "Increment the build number"
+- "Delete DerivedData and rebuild"
+
+These feel safe because they come from experience. **But if the diagnosis is wrong, the fix wastes time you don't have.**
+
+**Critical insight:** Time pressure makes authority bias STRONGER. You're more likely to trust advice when stressed.
+
+### Red Flags - STOP Before Acting
+
+If you hear ANY of these, pause 5 minutes before executing:
+
+- ❌ **"This smells like..."** (pattern-matching, not diagnosis)
+- ❌ **"Just..."** (underestimating complexity)
+- ❌ **"This usually fixes it"** (worked once ≠ works always)
+- ❌ **"You have plenty of time"** (overconfidence about 24-hour turnaround)
+- ❌ **"This is safe"** (regenerating lock files CAN break things)
+
+**Your brain under pressure:** Trusts these phrases because they sound confident. Doesn't ask "but do they have evidence THIS is the root cause?"
+
+### Mandatory Diagnosis Before "Quick Fix"
+
+When someone senior suggests a fix under time pressure:
+
+**Step 1: Ask (Don't argue)**
+```
+"I understand the pressure. Before we regenerate lock files,
+can we spend 5 minutes comparing the broken build to our
+working build? I want to know what we're fixing."
+```
+
+**Step 2: Demand Evidence**
+- "What makes you think it's a lock file issue?"
+- "What changed between our last successful build and this failure?"
+- "Can we see the actual error from App Store build vs our build?"
+
+**Step 3: Document the Gamble**
+```
+If we try "pod install":
+- Time to execute: 10 minutes
+- Time to learn it failed: 24 hours (next submission cycle)
+- Remaining time if it fails: 6 days
+- Alternative: Spend 1-2 hours diagnosing first
+
+Cost of being wrong with quick fix: High
+Cost of spending 1 hour on diagnosis: Low
+```
+
+**Step 4: Push Back Professionally**
+```
+"I want to move fast too. A 1-hour diagnosis now means we
+won't waste another 24-hour cycle. Let's document what we're
+testing before we submit."
+```
+
+**Why this works:**
+- You're not questioning their expertise
+- You're asking for evidence (legitimate request)
+- You're showing you understand the pressure
+- You're making the time math visible
+
+### Real-World Example: App Store Review Blocker
+
+**Scenario:** App rejected in App Store build, passes locally.
+
+**Senior says:** "Regenerate lock file and resubmit (7 days buffer)"
+
+**What you do:**
+1. ❌ WRONG: Execute immediately, fail after 24 hours, now 6 days left
+2. ✅ RIGHT: Spend 1 hour comparing builds first
+
+**Comparison checklist:**
+```
+Local build that works:
+- Pod versions in Podfile.lock: [list them]
+- Xcode version: [version]
+- Derived Data: [timestamp]
+- CocoaPods version: [version]
+
+App Store build that fails:
+- Pod versions used: [from error message]
+- Build system: [App Store's environment]
+- Differences: [explicitly document]
+```
+
+**After comparison:**
+- If versions match: Lock file isn't the issue. Skip the quick fix.
+- If versions differ: Now you understand what to fix.
+
+**Time saved:** 24 hours of wasted iteration.
+
+### When to Trust Quick Fixes (Rare)
+
+Quick fixes are safe ONLY when:
+
+- [ ] You've seen this EXACT error before (not "similar")
+- [ ] You know the root cause (not "this usually works")
+- [ ] You can reproduce it locally (so you know if fix worked)
+- [ ] You have >48 hours buffer (so failure costs less)
+- [ ] You documented the fix in case you need to explain it later
+
+**In production crises, NONE of these are usually true.**
+
+---
+
 ## Testing Checklist
 
 ### When Adding Dependencies
@@ -377,3 +489,10 @@ xcodebuild -showBuildSettings  # Show all build settings
 - [Carthage](https://github.com/Carthage/Carthage)
 
 **Note**: For environment issues (Derived Data, simulators), see xcode-debugging skill.
+
+---
+
+## Version History
+
+- **1.1.0**: Added "Pressure Scenarios: When to Resist 'Quick Fix' Advice" section from TDD testing. Includes red flags for dangerous advice, 4-step framework for pushing back professionally, App Store review blocker example, and checklist for when quick fixes are safe. Prevents $10k+ mistakes from following bad advice under deadline pressure
+- **1.0.0**: Initial version with systematic dependency resolution and build configuration debugging

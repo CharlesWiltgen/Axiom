@@ -49,6 +49,9 @@ Skills in Axiom are developed using rigorous quality standards:
 - **database-migration** – Already bulletproof, validated under pressure
 - **swiftdata** – Many-to-many relationships, unfollow patterns, CloudKit corruption recovery added during testing
 - **memory-debugging** – PhotoKit leak patterns and non-reproducible issue debugging added during testing
+- **ui-testing** – Network conditioning, multi-factor device testing, crash debugging patterns added from App Store review blocker scenario
+- **build-troubleshooting** – Authority bias resistance, 4-step push-back framework, and pressure scenario guidance added from production crisis testing
+- **liquid-glass** – Design review pressure handling, professional push-back framework, Regular vs Clear variant decision defense patterns added from client-watching design review scenario
 
 ### Reference Skills
 

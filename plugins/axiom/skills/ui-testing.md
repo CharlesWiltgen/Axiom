@@ -1,8 +1,8 @@
 ---
 name: ui-testing
-description: Use when writing UI tests, recording interactions, tests have race conditions, timing dependencies, inconsistent pass/fail behavior, or XCTest UI tests are flaky - covers Recording UI Automation (WWDC 2025), condition-based waiting, and accessibility-first testing patterns
-version: 2.0.0
-last_updated: WWDC 2025
+description: Use when writing UI tests, recording interactions, tests have race conditions, timing dependencies, inconsistent pass/fail behavior, or XCTest UI tests are flaky - covers Recording UI Automation (WWDC 2025), condition-based waiting, network conditioning, multi-factor testing, crash debugging, and accessibility-first testing patterns
+version: 2.1.0
+last_updated: WWDC 2025 (Updated with production debugging patterns)
 ---
 
 # UI Testing
@@ -695,6 +695,436 @@ Click test diamond → Select configuration (e.g., Arabic) → Watch automation 
 - [ ] Run in Xcode Cloud for team visibility
 - [ ] Download and share videos if needed
 
+## Network Conditioning in Tests
+
+### Overview
+
+UI tests can pass on fast networks but fail on 3G/LTE. **Network Link Conditioner** simulates real-world network conditions to catch timing-sensitive crashes.
+
+**Critical scenarios**:
+- ❌ iPad Pro over Wi-Fi (fast) → pass
+- ❌ iPad Pro over 3G (slow) → crash
+- ✅ Test both to catch device-specific failures
+
+### Setup Network Link Conditioner
+
+**Install Network Link Conditioner**:
+1. Download from [Apple's Additional Tools for Xcode](https://developer.apple.com/download/all/)
+2. Search: "Network Link Conditioner"
+3. Install: `sudo open Network\ Link\ Conditioner.pkg`
+
+**Verify Installation**:
+```bash
+# Check if installed
+ls ~/Library/Application\ Support/Network\ Link\ Conditioner/
+```
+
+**Enable in Tests**:
+```swift
+override func setUpWithError() throws {
+    let app = XCUIApplication()
+
+    // Launch with network conditioning argument
+    app.launchArguments = ["-com.apple.CoreSimulator.CoreSimulatorService", "-networkShaping"]
+    app.launch()
+}
+```
+
+### Common Network Profiles
+
+**3G Profile** (most failures occur here):
+```swift
+override func setUpWithError() throws {
+    let app = XCUIApplication()
+
+    // Simulate 3G (type in launch arguments)
+    app.launchEnvironment = [
+        "SIMULATOR_UDID": ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "",
+        "NETWORK_PROFILE": "3G"
+    ]
+    app.launch()
+}
+```
+
+**Manual Network Conditioning** (macOS System Preferences):
+1. Open System Preferences → Network
+2. Click "Network Link Conditioner" (installed above)
+3. Select profile: 3G, LTE, WiFi
+4. Click "Start"
+5. Run tests (they'll use throttled network)
+
+### Real-World Example: Photo Upload with Network Throttling
+
+**❌ Without Network Conditioning**:
+```swift
+func testPhotoUpload() {
+    app.buttons["Upload Photo"].tap()
+
+    // Passes locally (fast network)
+    XCTAssertTrue(app.staticTexts["Upload complete"].waitForExistence(timeout: 5))
+}
+// ✅ Passes locally, ❌ FAILS on 3G with timeout
+```
+
+**✅ With Network Conditioning**:
+```swift
+func testPhotoUploadOn3G() {
+    let app = XCUIApplication()
+    // Network Link Conditioner running (3G profile)
+    app.launch()
+
+    app.buttons["Upload Photo"].tap()
+
+    // Increase timeout for 3G
+    XCTAssertTrue(app.staticTexts["Upload complete"].waitForExistence(timeout: 30))
+
+    // Verify no crash occurred
+    XCTAssertFalse(app.alerts.element.exists, "App should not crash on 3G")
+}
+```
+
+**Key differences**:
+- Longer timeout (30s instead of 5s)
+- Check for crashes
+- Run on slowest expected network
+
+---
+
+## Multi-Factor Testing: Device Size + Network Speed
+
+### The Problem
+
+Tests can pass on device A but fail on device B due to layout differences + network delays. **Multi-factor testing** catches these combinations.
+
+**Common failure patterns**:
+- ✅ iPhone 14 Pro (compact, fast network)
+- ❌ iPad Pro 12.9 (large, 3G network) → crashes
+- ✅ iPhone 15 (compact, LTE)
+- ❌ iPhone 12 (older GPU, 3G) → timeout
+
+### Test Plan Configuration for Multiple Devices
+
+**Create Test Plan in Xcode**:
+1. File → New → Test Plan
+2. Select tests to include
+3. Click "Configurations" tab
+4. Add configurations for each device/network combo
+
+**Example Configuration Matrix**:
+```
+Configurations:
+├─ iPhone 14 Pro + LTE
+├─ iPhone 14 Pro + 3G
+├─ iPad Pro 12.9 + LTE
+├─ iPad Pro 12.9 + 3G  (⚠️ Most failures here)
+└─ iPhone 12 + 3G      (⚠️ Older device)
+```
+
+**In Test Plan UI**:
+- Device: iPhone 14 Pro / iPad Pro 12.9
+- OS Version: Latest
+- Locale: English
+- Network Profile: LTE / 3G
+
+### Programmatic Device-Specific Testing
+
+```swift
+import XCTest
+
+final class MultiFactorUITests: XCTestCase {
+    var deviceModel: String { UIDevice.current.model }
+
+    override func setUpWithError() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        // Adjust timeouts based on device
+        switch deviceModel {
+        case "iPad" where UIScreen.main.bounds.width > 1000:
+            // iPad Pro - larger layout, slower rendering
+            app.launchEnvironment["TEST_TIMEOUT"] = "30"
+        case "iPhone":
+            // iPhone - compact, standard timeout
+            app.launchEnvironment["TEST_TIMEOUT"] = "10"
+        default:
+            app.launchEnvironment["TEST_TIMEOUT"] = "15"
+        }
+    }
+
+    func testListLoadingAcrossDevices() {
+        let app = XCUIApplication()
+        let timeout = Double(app.launchEnvironment["TEST_TIMEOUT"] ?? "10") ?? 10
+
+        app.buttons["Refresh"].tap()
+
+        // Wait for list to load (timeout varies by device)
+        XCTAssertTrue(
+            app.tables.cells.count > 0,
+            "List should load on \(deviceModel)"
+        )
+
+        // Verify no crashes
+        XCTAssertFalse(app.alerts.element.exists)
+    }
+}
+```
+
+### Real-World Example: iPad Pro + 3G Crash
+
+**Scenario**: App works on iPhone 14, crashes on iPad Pro over 3G.
+
+**Why it crashes**:
+1. iPad Pro has larger layout (landscape)
+2. 3G network is slow (latency 100ms+)
+3. Images don't load in time, layout engine crashes
+4. Single-device testing misses this combo
+
+**Test that catches it**:
+```swift
+func testLargeLayoutOn3G() {
+    let app = XCUIApplication()
+    // Running with Network Link Conditioner on 3G profile
+    app.launch()
+
+    // iPad Pro: Large grid of images
+    app.buttons["Browse"].tap()
+
+    // Wait longer for images on slow network
+    let firstImage = app.images["photoGrid-0"]
+    XCTAssertTrue(
+        firstImage.waitForExistence(timeout: 20),
+        "First image must load on slow network"
+    )
+
+    // Verify grid loaded without crash
+    let loadedCount = app.images.matching(identifier: NSPredicate(format: "identifier BEGINSWITH 'photoGrid'")).count
+    XCTAssertGreater(loadedCount, 5, "Multiple images should load on 3G")
+
+    // No alerts (no crashes)
+    XCTAssertFalse(app.alerts.element.exists, "App should not crash on large device + slow network")
+}
+```
+
+### Running Multi-Factor Tests in CI
+
+**In GitHub Actions or Xcode Cloud**:
+```yaml
+- name: Run tests across devices
+  run: |
+    xcodebuild -scheme MyApp \
+      -testPlan MultiDeviceTestPlan \
+      test
+```
+
+**Test Plan runs on**:
+- iPhone 14 Pro + LTE
+- iPhone 14 Pro + 3G
+- iPad Pro + LTE
+- iPad Pro + 3G
+
+**Result**: Catch device-specific crashes before App Store submission.
+
+---
+
+## Debugging Crashes Revealed by UI Tests
+
+### Overview
+
+UI tests sometimes reveal crashes that don't happen in manual testing. **Key insight:** Automated tests run faster, interact with app differently, and can expose concurrency/timing bugs.
+
+**When crashes happen**:
+- ❌ Manual testing: Can't reproduce (works when you run it)
+- ✅ UI Test: Crashes every time (automated repetition finds race condition)
+
+### Recognizing Test-Revealed Crashes
+
+**Signs in test output**:
+```
+Failing test: testPhotoUpload
+Error: The app crashed while responding to a UI event
+App died from an uncaught exception
+Stack trace: [EXC_BAD_ACCESS in PhotoViewController]
+```
+
+**Video shows**: App visibly crashes (black screen, immediate termination).
+
+### Systematic Debugging Approach
+
+#### Step 1: Capture Crash Details
+
+**Enable detailed logging**:
+```swift
+override func setUpWithError() throws {
+    let app = XCUIApplication()
+
+    // Enable all logging
+    app.launchEnvironment = [
+        "OS_ACTIVITY_MODE": "debug",
+        "DYLD_PRINT_STATISTICS": "1"
+    ]
+
+    // Enable test diagnostics
+    if #available(iOS 17, *) {
+        let options = XCUIApplicationLaunchOptions()
+        options.captureRawLogs = true
+        app.launch(options)
+    } else {
+        app.launch()
+    }
+}
+```
+
+#### Step 2: Reproduce Locally
+
+```swift
+func testReproduceCrash() {
+    let app = XCUIApplication()
+    app.launch()
+
+    // Run exact sequence that causes crash
+    app.buttons["Browse"].tap()
+    app.buttons["Photo Album"].tap()
+    app.buttons["Select All"].tap()
+    app.buttons["Upload"].tap()
+
+    // Should crash here
+    let uploadButton = app.buttons["Upload"]
+    XCTAssertFalse(uploadButton.exists, "App crashed (expected)")
+
+    // Don't assert - just let it crash and read logs
+}
+```
+
+**Run test with Console logs visible**:
+- Xcode: View → Navigators → Show Console
+- Watch for exception messages
+
+#### Step 3: Analyze Crash Logs
+
+**Locations**:
+1. Xcode Console (real-time, less detail)
+2. ~/Library/Logs/DiagnosticMessages/crash_*.log (full details)
+3. Device Settings → Privacy → Analytics → Analytics Data
+
+**Look for**:
+- Thread that crashed
+- Exception type (EXC_BAD_ACCESS, EXC_CRASH, etc.)
+- Stack trace showing which method crashed
+
+**Example crash log**:
+```
+Exception Type: EXC_BAD_ACCESS (SIGSEGV)
+Exception Codes: KERN_INVALID_ADDRESS at 0x0000000000000000
+Thread 0 Crashed:
+0  MyApp    0x0001a234 -[PhotoViewController reloadPhotos:] + 234
+1  MyApp    0x0001a123 -[PhotoViewController viewDidLoad] + 180
+```
+
+**This tells us**:
+- Crash in `PhotoViewController.reloadPhotos(_:)`
+- Likely null pointer dereference
+- Called from `viewDidLoad`
+
+#### Step 4: Connection to Swift Concurrency Issues
+
+**Most UI test crashes are concurrency bugs** (not specific to UI testing). Reference related skills:
+
+```swift
+// Common pattern: Race condition in async image loading
+class PhotoViewController: UIViewController {
+    var photos: [Photo] = []
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        // ❌ WRONG: Accessing photos array from multiple threads
+        Task {
+            let newPhotos = await fetchPhotos()
+            self.photos = newPhotos  // May crash if main thread access
+            reloadPhotos()  // ❌ Crash here
+        }
+    }
+}
+
+// ✅ CORRECT: Ensure main thread
+class PhotoViewController: UIViewController {
+    @MainActor
+    var photos: [Photo] = []
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        Task {
+            let newPhotos = await fetchPhotos()
+            await MainActor.run { [weak self] in
+                self?.photos = newPhotos
+                self?.reloadPhotos()  // ✅ Safe
+            }
+        }
+    }
+}
+```
+
+**For deep crash analysis**: See `swift-concurrency` skill for @MainActor patterns and `memory-debugging` skill for thread-safety issues.
+
+#### Step 5: Add Crash-Prevention Tests
+
+**After fixing**:
+```swift
+func testPhotosLoadWithoutCrash() {
+    let app = XCUIApplication()
+    app.launch()
+
+    // Rapid fire interactions that previously caused crash
+    app.buttons["Browse"].tap()
+    app.buttons["Photo Album"].tap()
+
+    // Load should complete without crash
+    let photoGrid = app.otherElements["photoGrid"]
+    XCTAssertTrue(photoGrid.waitForExistence(timeout: 10))
+
+    // No alerts (no crash dialogs)
+    XCTAssertFalse(app.alerts.element.exists)
+}
+```
+
+#### Step 6: Stress Test to Verify Fix
+
+```swift
+func testPhotosLoadUnderStress() {
+    let app = XCUIApplication()
+    app.launch()
+
+    // Repeat the crash-causing action multiple times
+    for iteration in 0..<10 {
+        app.buttons["Browse"].tap()
+
+        // Wait for load
+        let grid = app.otherElements["photoGrid"]
+        XCTAssertTrue(grid.waitForExistence(timeout: 10), "Iteration \(iteration)")
+
+        // Go back
+        app.navigationBars.buttons["Back"].tap()
+        app.buttons["Refresh"].tap()
+    }
+
+    // Completed without crash
+    XCTAssertTrue(true, "Stress test passed")
+}
+```
+
+### Prevention Checklist
+
+**Before releasing:**
+- [ ] Run UI tests on slowest network (3G)
+- [ ] Run on largest device (iPad Pro)
+- [ ] Run on oldest supported device (iPhone 12)
+- [ ] Record video of test runs (saves debugging time)
+- [ ] Check for crashes in logs
+- [ ] Run stress tests (10x repeated actions)
+- [ ] Verify @MainActor on UI properties
+- [ ] Check for race conditions in async code
+
 ---
 
 ## Reference
@@ -724,5 +1154,6 @@ Click test diamond → Select configuration (e.g., Arabic) → Watch automation 
 
 ## Version History
 
+- **2.1.0**: Added Network Conditioning, Multi-Factor Testing (device + network combinations), and Crash Debugging sections from TDD pressure testing (iPad Pro + 3G scenario). Prevents App Store review blockers by catching device-specific failures before submission
 - **2.0.0 (WWDC 2025)**: Added Recording UI Automation section with comprehensive guidance on recording, replaying, reviewing tests; test plans; video debugging; accessibility-first patterns from WWDC 2025 Session 344
 - **1.0.0**: Initial version focusing on condition-based waiting patterns

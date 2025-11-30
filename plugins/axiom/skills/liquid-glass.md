@@ -1,8 +1,8 @@
 ---
 name: liquid-glass
-description: Use when implementing Liquid Glass effects, reviewing UI for Liquid Glass adoption, debugging visual artifacts, optimizing performance, or requesting expert review of Liquid Glass implementation - provides comprehensive design principles, API patterns, and troubleshooting guidance from WWDC 2025
-version: 1.0.0
-last_updated: WWDC 2025
+description: Use when implementing Liquid Glass effects, reviewing UI for Liquid Glass adoption, debugging visual artifacts, optimizing performance, or requesting expert review of Liquid Glass implementation - provides comprehensive design principles, API patterns, and troubleshooting guidance from WWDC 2025. Includes design review pressure handling and professional push-back frameworks
+version: 1.1.0
+last_updated: TDD-tested with design review pressure scenarios
 apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+
 ---
 
@@ -504,6 +504,135 @@ func testLiquidGlassAccessibility() {
 
 ---
 
+## Design Review Pressure: Defending Your Implementation
+
+### The Problem
+
+Under design review pressure, you'll face requests to:
+- "Use Clear variant everywhere - Regular is too opaque"
+- "Glass on all controls for visual cohesion"
+- "More transparency to let content shine through"
+
+These sound reasonable. **But they violate the framework.** Your job: defend using evidence, not opinion.
+
+### Red Flags - Designer Requests That Violate Skill Guidelines
+
+If you hear ANY of these, **STOP and reference the skill**:
+
+- ❌ **"Use Clear everywhere"** – Clear requires three specific conditions, not design preference
+- ❌ **"Glass looks better than fills"** – Correct layer (navigation vs content) trumps aesthetics
+- ❌ **"Users won't notice the difference"** – Clear variant fails legibility tests in low-contrast scenarios
+- ❌ **"Stack glass on glass for consistency"** – Explicitly prohibited; use fills instead
+- ❌ **"Apply glass to Lists for sophistication"** – Lists are content layer; causes visual confusion
+
+### How to Push Back Professionally
+
+**Step 1: Show the Framework**
+
+```
+"I want to make this change, but let me show you Apple's guidance on Clear variant.
+It requires THREE conditions:
+
+1. Media-rich content background
+2. Dimming layer for legibility
+3. Bold, bright controls on top
+
+Let me show which screens meet all three..."
+```
+
+**Step 2: Demonstrate the Risk**
+
+Open the app on a device. Show:
+- Clear variant in low-contrast scenario (unreadable)
+- Regular variant in same scenario (legible)
+- Reference WWDC 219 session
+
+**Step 3: Offer Compromise**
+
+```
+"Clear can work beautifully in these 6 hero sections where all three conditions apply.
+Regular handles everything else with automatic legibility. Best of both worlds."
+```
+
+**Step 4: Document the Decision**
+
+If overruled (designer insists on Clear everywhere):
+
+```
+Slack message to PM + designer:
+
+"Design review decided to use Clear variant across all controls.
+Important: Clear variant requires legibility testing in low-contrast scenarios
+(bright sunlight, dark content). If we see accessibility issues after launch,
+we'll need an expedited follow-up. I'm flagging this proactively."
+```
+
+**Why this works:**
+- You're not questioning their taste (you like Clear too)
+- You're raising accessibility/legibility risk
+- You're offering a solution that preserves their vision in hero sections
+- You're documenting the decision (protects you post-launch)
+
+### Real-World Example: App Store Launch Blocker (36-Hour Deadline)
+
+**Scenario:**
+- 36 hours to launch
+- Chief designer says: "Clear variant everywhere"
+- Client watching the review meeting
+- You already implemented Regular per the skill
+
+**What to do:**
+
+```swift
+// In the meeting, demo side-by-side:
+
+// Regular variant (current implementation)
+NavigationBar()
+    .glassEffect() // Automatic legibility
+
+// Clear variant (requested)
+NavigationBar()
+    .glassEffect(.clear) // Requires dimming layer below
+
+// Show the three-condition checklist
+// Demonstrate which screens pass/fail
+// Offer: Clear in hero sections, Regular elsewhere
+```
+
+**Result:**
+- 30-minute compromise demo
+- 90 minutes to implement changes
+- Launch on schedule with optimal legibility
+- No post-launch accessibility complaints
+
+### When to Accept the Design Decision (Even If You Disagree)
+
+Sometimes designers have valid reasons to override the skill. Accept if:
+
+- [ ] They understand the three-condition framework
+- [ ] They're willing to accept legibility risks
+- [ ] You document the decision in writing
+- [ ] They commit to monitoring post-launch feedback
+
+**Document in Slack:**
+
+```
+"Design review decided to use Clear variant [in these locations].
+We understand this requires:
+- All three conditions met: [list them]
+- Potential legibility issues in low-contrast scenarios
+- Accessibility testing across brightness levels
+
+Monitoring plan:
+- Gather user feedback first 48 hours
+- Run accessibility audit
+- Have fallback to Regular variant ready for push if needed"
+```
+
+This protects both of you and shows you're not blocking - just de-risking.
+
+---
+
 ## Expert Review Checklist
 
 When reviewing Liquid Glass implementation (your code or others'), check:
@@ -841,6 +970,7 @@ enum ScrollEdgeStyle {
 
 ## Version History
 
+- **1.1.0**: Added "Design Review Pressure: Defending Your Implementation" section from TDD pressure testing. Includes red flags for designer requests that violate guidelines, 4-step push-back framework with demo and documentation steps, real-world App Store launch example (36-hour deadline), and guidance on when to accept design overrides. Enables developers to professionally defend Regular vs Clear variant decisions under deadline and client pressure
 - **1.0.0 (WWDC 2025)**: Initial skill based on Liquid Glass introduction at WWDC 2025, covering design principles, implementation patterns, variants, troubleshooting, and expert review capabilities.
 
 ---
