@@ -143,29 +143,28 @@ nonisolated func delegate(_ param: SomeType) {
 
 **Rule**: Capture all delegate parameter values before Task. Accessing `self` inside the Task is safe and expected.
 
-**Real-world example** (audio player delegate):
+**Real-world example** (chat message delegate):
 ```swift
-// Delegate method called from audio engine's thread
-nonisolated func audioPlayer(_ player: AudioPlayer, didFinishPlaying successfully: Bool) {
-    // ✅ Capture delegate parameter
-    let wasSuccessful = successfully
+// Delegate method called from network layer's thread
+nonisolated func didReceiveMessage(_ message: Message, fromUser user: User) {
+    // ✅ Capture delegate parameters
+    let messageText = message.content
+    let senderName = user.displayName
 
     Task { @MainActor in
         // ✅ Safe: accessing self properties (we're on MainActor now)
-        self.isPlaying = false
-        self.currentTrack = nil
+        self.messages.append(message)
+        self.unreadCount += 1
 
-        // ✅ Use captured delegate parameter
-        if wasSuccessful {
-            await self.playNextTrack()
-        }
+        // ✅ Use captured delegate parameters
+        self.showNotification(text: messageText, from: senderName)
     }
 }
 ```
 
 **Key distinction**:
-- Delegate parameters (`successfully`) → Must capture before Task
-- Self properties (`self.isPlaying`) → Safe to access inside `Task { @MainActor in }`
+- Delegate parameters (`message`, `user`) → Must capture before Task
+- Self properties (`self.messages`) → Safe to access inside `Task { @MainActor in }`
 
 ---
 

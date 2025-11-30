@@ -41,13 +41,13 @@ Type-safe SQLite persistence using [SQLiteData](https://pointfreeco.github.io/sq
 
 These are real questions developers ask that this skill is designed to answer:
 
-**1. "I'm building a music app with type-safe queries. How do I set up @Table models and filter tracks?"**
+**1. "I'm building a task app with type-safe queries. How do I set up @Table models and filter tasks by priority?"**
 → The skill shows `@Table` definitions, `@Query` with predicates, and type-safe filtering
 
-**2. "I need to sync user playlists to other devices via CloudKit. How do I set up sync with record sharing?"**
+**2. "I need to sync tasks to other devices via CloudKit. How do I set up sync with record sharing?"**
 → The skill covers CloudKit integration, record sharing, and sync conflict handling
 
-**3. "I'm importing 50,000 songs from an API. How do I batch insert efficiently without blocking the UI?"**
+**3. "I'm importing 50,000 notes from an API. How do I batch insert efficiently without blocking the UI?"**
 → The skill shows batch operations, background writes, and progress tracking patterns
 
 **4. "After updating the app, some queries are crashing with StructuredQueries errors. How do I fix it?"**
