@@ -2,7 +2,8 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: 'Axiom',
-  description: 'Claude Code plugins for iOS development',
+  description: 'Battle-tested Claude Code skills for xOS development',
+  base: '/Axiom/',
 
   themeConfig: {
     nav: [
@@ -32,7 +33,7 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/yourusername/Axiom' }
+      { icon: 'github', link: 'https://github.com/CharlesWiltgen/Axiom' }
     ]
   }
 })
