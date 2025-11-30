@@ -44,10 +44,10 @@ Skills in Axiom are developed using rigorous quality standards:
 
 ### TDD-Tested Skills
 
-- **xcode-debugging**: 6 refinements from pressure testing
-- **swift-concurrency**: Critical checklist contradiction found and fixed
-- **database-migration**: Already bulletproof, validated under pressure
-- **swiftdata**: Many-to-many relationships, unfollow patterns, CloudKit corruption recovery added during testing
+- **xcode-debugging** – 6 refinements from pressure testing
+- **swift-concurrency** – Critical checklist contradiction found and fixed
+- **database-migration** – Already bulletproof, validated under pressure
+- **swiftdata** – Many-to-many relationships, unfollow patterns, CloudKit corruption recovery added during testing
 
 ### Reference Skills
 
