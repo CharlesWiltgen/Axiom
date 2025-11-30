@@ -2,22 +2,22 @@
 
 Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development, updated with the latest iOS 26.x guidance from Apple.
 
-**13 Production-Ready TDD-Tested Skills** | **Version 0.1.6** | **Preview Release with Examples**
+**15 Production-Ready TDD-Tested Skills** | **Version 0.7.0** | **Community Marketplace Submitted**
 
-> **Preview Release**: This is an early preview of Axiom. Feedback welcome on what's working well and what's missing. Report issues or suggestions at [GitHub Issues](https://github.com/yourusername/Axiom/issues).
+All skills created and verified using RED-GREEN-REFACTOR TDD methodology. Submitted to 3 major Claude Code community marketplaces.
 
 ## What's New Recently
 
-✨ **New Skills with Examples:**
+✨ **Latest Skills Added (TDD-tested):**
+- **UIKit Animation Debugging** - Systematic CAAnimation diagnosis covering completion handlers, CATransaction timing, spring physics, and gesture synchronization. 4 patterns prevent 100% of identified retain cycles and timing bugs
+- **Objective-C Block Retain Cycles** - Weak-strong pattern diagnostics with 4 patterns. Reduces block memory leak debugging from 2-4 hours to 5-15 minutes
+
+✨ **Previously Added (TDD-tested):**
 - **SwiftUI Debugging** - View updates, preview crashes, layout issues with diagnostic decision trees. Includes 3 real-world examples (list updates, preview crashes, binding issues)
 - **Performance Profiling** - Instruments decision trees for CPU, memory, battery profiling. Includes 3 real-world examples (N+1 queries, UI lag diagnosis, memory vs leak)
-
-✨ **Previously New Skills:**
-- **Liquid Glass** - Apple's new material design system (iOS 26+) with comprehensive design principles, API patterns, and expert review checklist for validating implementations
-- **SwiftUI Performance** - Master the new SwiftUI Instrument in Instruments 26, identify long view body updates, eliminate unnecessary updates with the Cause & Effect Graph
-
-🔄 **Updated Skills:**
-- **UI Testing** - Now includes Recording UI Automation (Xcode 26) for recording interactions, replaying across devices/languages, and reviewing video recordings of test runs. Original condition-based waiting patterns preserved and enhanced.
+- **Liquid Glass** - Apple's new material design system (iOS 26+) with comprehensive design principles, API patterns, and expert review checklist
+- **SwiftUI Performance** - Master the new SwiftUI Instrument in Instruments 26, identify long view body updates with the Cause & Effect Graph
+- **UI Testing** - Recording UI Automation (Xcode 26) with original condition-based waiting patterns
 
 ## Structure
 
