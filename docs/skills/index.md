@@ -1,8 +1,8 @@
 # Skills
 
-Axiom provides 12 production-ready skills for xOS (iOS, iPadOS, watchOS, tvOS) development.
+Axiom provides 13 production-ready skills for xOS (iOS, iPadOS, watchOS, tvOS) development.
 
-**Version**: 0.1.4
+**Version**: 0.1.5
 **Status**: Preview Release
 
 ## Skill Categories
@@ -23,6 +23,7 @@ Systematic debugging strategies to solve issues faster and prevent common proble
 - [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics for mysterious issues
 - [Memory Debugging](/skills/debugging/memory-debugging) – Systematic leak diagnosis with proven patterns
 - [Build Troubleshooting](/skills/debugging/build-troubleshooting) – Dependency resolution for CocoaPods and SPM
+- [Performance Profiling](/skills/debugging/performance-profiling) – Instruments decision trees and profiling workflows for CPU, memory, battery
 
 ### Concurrency & Async
 
@@ -55,6 +56,7 @@ Skills in Axiom are developed using rigorous quality standards:
 - **liquid-glass** – Design review pressure handling, professional push-back framework, Regular vs Clear variant decision defense patterns added from client-watching design review scenario
 - **swiftui-performance** – Production crisis decision-making, 30-minute diagnostic protocol with time-cost analysis, deployment deadline pressure guidance, and 5-question verification framework added from App Store performance blocker scenario
 - **swiftui-debugging** – Intermittent update diagnosis (60-minute protocol), App Store Review deadline pressure handling, co-lead authority pressure resistance, and professional push-back scripts added from maximum pressure testing
+- **performance-profiling** – Self Time vs Total Time distinction under 4-hour App Store deadline, manager authority pressure resistance, misinterpretation prevention for confusing profiling results, and premature optimization shortcut resistance added from maximum pressure testing
 - **sqlitedata** – StructuredQueries migration crash decision framework, data-loss prevention patterns, emergency mitigation guidance, and honest pressure points analysis added from iOS 26 App Store update failure scenario
 - **grdb** – Query profiling guidance (database.trace + EXPLAIN QUERY PLAN), ValueObservation optimization patterns with size-based decisions, and migration versioning guarantees added from complex join query performance testing
 
