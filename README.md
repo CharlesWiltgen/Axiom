@@ -2,11 +2,17 @@
 
 Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development, updated with the latest iOS 26.x guidance from Apple.
 
+**13 Production-Ready TDD-Tested Skills** | **Version 0.1.6** | **Preview Release with Examples**
+
 > **Preview Release**: This is an early preview of Axiom. Feedback welcome on what's working well and what's missing. Report issues or suggestions at [GitHub Issues](https://github.com/yourusername/Axiom/issues).
 
 ## What's New Recently
 
-✨ **New Skills:**
+✨ **New Skills with Examples:**
+- **SwiftUI Debugging** - View updates, preview crashes, layout issues with diagnostic decision trees. Includes 3 real-world examples (list updates, preview crashes, binding issues)
+- **Performance Profiling** - Instruments decision trees for CPU, memory, battery profiling. Includes 3 real-world examples (N+1 queries, UI lag diagnosis, memory vs leak)
+
+✨ **Previously New Skills:**
 - **Liquid Glass** - Apple's new material design system (iOS 26+) with comprehensive design principles, API patterns, and expert review checklist for validating implementations
 - **SwiftUI Performance** - Master the new SwiftUI Instrument in Instruments 26, identify long view body updates, eliminate unnecessary updates with the Cause & Effect Graph
 
@@ -56,7 +62,7 @@ claude --plugin-dir .
 # List installed plugins
 claude plugin list
 
-# You should see: axiom@0.1.3
+# You should see: axiom@0.1.6
 ```
 
 ### Using Skills
@@ -67,12 +73,14 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 # UI & Design
 /skill axiom:liquid-glass
 /skill axiom:swiftui-performance
+/skill axiom:swiftui-debugging
 /skill axiom:ui-testing
 
 # Debugging & Performance
 /skill axiom:xcode-debugging
 /skill axiom:memory-debugging
 /skill axiom:build-troubleshooting
+/skill axiom:performance-profiling
 
 # Concurrency & Async
 /skill axiom:swift-concurrency
@@ -136,6 +144,39 @@ Reliable UI testing with condition-based waiting patterns and new Recording UI A
 **When to use:** Writing UI tests, recording interactions, tests have race conditions or timing dependencies, flaky tests
 
 **Requirements:** Xcode 26+ for Recording UI Automation, original patterns work with earlier versions
+
+---
+
+#### `swiftui-debugging`
+Diagnostic decision trees for SwiftUI view updates, preview crashes, and layout issues. Includes 3 real-world examples.
+
+**Key Features:**
+- **View Not Updating Decision Tree** - Diagnose struct mutation, binding identity, view recreation, missing observers
+- **Preview Crashes Decision Tree** - Identify missing dependencies, state init failures, cache corruption
+- **Layout Issues Quick Reference** - ZStack ordering, GeometryReader sizing, SafeArea, frame/fixedSize
+- **Real-World Examples** - List items, preview dependencies, text field bindings with complete diagnosis workflows
+- Pressure scenarios for intermittent bugs, App Store Review deadlines, authority pressure resistance
+
+**When to use:** View doesn't update, preview crashes, layout looks wrong, intermittent rendering issues
+
+**Requirements:** Xcode 15+, iOS 14+
+
+---
+
+#### `performance-profiling`
+Instruments decision trees and profiling workflows for CPU, memory, and battery optimization. Includes 3 real-world examples.
+
+**Key Features:**
+- **Performance Decision Tree** - Choose the right tool (Time Profiler, Allocations, Core Data, Energy Impact)
+- **Time Profiler Deep Dive** - CPU analysis, hot spots, Self Time vs Total Time distinction
+- **Allocations Deep Dive** - Memory growth diagnosis, object counts, leak vs caching
+- **Core Data Deep Dive** - N+1 query detection with SQL logging, prefetching, batch optimization
+- **Real-World Examples** - N+1 queries, UI lag diagnosis, memory vs leak with complete workflows
+- Pressure scenarios for App Store deadlines, manager authority pressure, misinterpretation prevention
+
+**When to use:** App feels slow, memory grows over time, battery drains fast, want to profile proactively
+
+**Requirements:** Xcode 15+, iOS 14+
 
 ---
 
