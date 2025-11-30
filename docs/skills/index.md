@@ -52,6 +52,7 @@ Skills in Axiom are developed using rigorous quality standards:
 - **ui-testing** – Network conditioning, multi-factor device testing, crash debugging patterns added from App Store review blocker scenario
 - **build-troubleshooting** – Authority bias resistance, 4-step push-back framework, and pressure scenario guidance added from production crisis testing
 - **liquid-glass** – Design review pressure handling, professional push-back framework, Regular vs Clear variant decision defense patterns added from client-watching design review scenario
+- **swiftui-performance** – Production crisis decision-making, 30-minute diagnostic protocol with time-cost analysis, deployment deadline pressure guidance, and 5-question verification framework added from App Store performance blocker scenario
 
 ### Reference Skills
 

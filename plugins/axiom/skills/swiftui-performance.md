@@ -1,8 +1,8 @@
 ---
 name: swiftui-performance
-description: Use when analyzing SwiftUI performance issues, identifying long view body updates, reducing unnecessary view updates, or optimizing SwiftUI rendering - covers the new SwiftUI Instrument in Instruments 26 and performance patterns from WWDC 2025
-version: 1.0.0
-last_updated: WWDC 2025
+description: Use when analyzing SwiftUI performance issues, identifying long view body updates, reducing unnecessary view updates, or optimizing SwiftUI rendering - covers the new SwiftUI Instrument in Instruments 26, performance patterns from WWDC 2025, and production crisis decision-making under deadline pressure
+version: 1.1.0
+last_updated: TDD-tested with production performance crisis scenarios
 apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+
 xcode_version: Xcode 26+
 ---
@@ -659,6 +659,158 @@ struct ContentView: View {
 
 ---
 
+## Production Pressure: When Performance Issues Hit Live
+
+### The Problem
+
+When performance issues appear in production, you face competing pressures:
+- **Engineering manager**: "Fix it ASAP"
+- **VP of Product**: "Users have been complaining for hours"
+- **Deployment window**: 6 hours before next App Store review window
+- **Temptation**: Quick fix (add `.compositingGroup()`, disable animation, simplify view)
+
+**The issue**: Quick fixes based on guesses fail 80% of the time and waste your deployment window.
+
+### Red Flags - Resist These Pressure Tactics
+
+If you hear ANY of these under deadline pressure, **STOP and use SwiftUI Instrument**:
+
+- ❌ **"Just add .compositingGroup()"** – Without profiling, you don't know if this helps
+- ❌ **"We can roll back if it doesn't work"** – App Store review takes 24 hours; rollback isn't fast
+- ❌ **"Other apps use this pattern"** – Doesn't mean it solves YOUR specific problem
+- ❌ **"Users will accept degradation for now"** – Once shipped, you're committed for 24 hours
+- ❌ **"We don't have time to profile"** – You have less time if you guess wrong
+
+### One SwiftUI Instrument Recording (30-Minute Protocol)
+
+Under production pressure, one good diagnostic recording beats random fixes:
+
+**Time Budget**:
+- Build in Release mode: 5 min
+- Launch and interact to trigger sluggishness: 3 min
+- Record SwiftUI Instrument trace: 5 min
+- Review Long View Body Updates lane: 5 min
+- Check Cause & Effect Graph: 5 min
+- Identify specific expensive view: 2 min
+
+**Total**: 25 minutes to know EXACTLY what's slow
+
+**Then**:
+- Apply targeted fix (15-30 min)
+- Test in Instruments again (5 min)
+- Ship with confidence
+
+**Total time**: 1 hour 15 minutes for diagnosis + fix, leaving 4+ hours for edge case testing.
+
+### Comparing Time Costs
+
+**Option A: Guess and Pray**
+- Time to implement: 30 min
+- Time to deploy: 20 min
+- Time to learn it failed: 24 hours (next App Store review)
+- Total delay: 24 hours minimum
+- User suffering: Continues through deployment window
+
+**Option B: One SwiftUI Instrument Recording**
+- Time to diagnose: 25 min
+- Time to apply targeted fix: 20 min
+- Time to verify: 5 min
+- Time to deploy: 20 min
+- Total time: 1.5 hours
+- User suffering: Stopped after 2 hours instead of 26+ hours
+
+**Time cost of being wrong**:
+- A: 24-hour delay + reputational damage + users suffering
+- B: 1.5 hours + you know the actual problem + confidence in the fix
+
+### Real-World Example: Tab Transition Sluggishness
+
+**Pressure scenario**:
+- iOS 26 build shipped
+- Users report "sluggish tab transitions"
+- VP asking for updates every hour
+- 6 hours until deployment window closes
+
+**Bad approach** (Option A):
+```
+Junior suggests: "Add .compositingGroup() to TabView"
+You: "Sure, let's try it"
+Result: Ships without profiling
+Outcome: Doesn't fix issue (compositing wasn't the problem)
+Next: 24 hours until next deploy window
+VP update: "Users still complaining"
+```
+
+**Good approach** (Option B):
+```
+"Running one SwiftUI Instrument recording of tab transition"
+[25 minutes later]
+"SwiftUI Instrument shows Long View Body Updates in ProductGridView during transition.
+Cause & Effect Graph shows ProductList rebuilding entire grid unnecessarily.
+Applying view identity fix (`.id()`) to prevent unnecessary updates"
+[30 minutes to implement and test]
+"Deployed at 1.5 hours. Verified with Instruments. Tab transitions now smooth."
+```
+
+### When to Accept the Pressure (And Still be Right)
+
+Sometimes managers are right to push for speed. Accept the pressure IF:
+
+- [ ] You've run ONE SwiftUI Instrument recording (25 minutes)
+- [ ] You know what specific view/operation is expensive
+- [ ] You have a targeted fix, not a guess
+- [ ] You've verified the fix in Instruments before shipping
+- [ ] You're shipping WITH profiling data, not hoping it works
+
+**Document your decision**:
+```
+Slack to VP + team:
+
+"Completed diagnostic: ProductGridView rebuilding unnecessarily during
+tab transitions (confirmed in SwiftUI Instrument, Long View Body Updates).
+Applied view identity fix. Verified in Instruments - transitions now 16.67ms.
+Deploying now."
+```
+
+This shows:
+- You diagnosed (not guessed)
+- You solved the right problem
+- You verified the fix
+- You're shipping with confidence
+
+### If You Still Get It Wrong After Profiling
+
+**Honest admission**:
+```
+"SwiftUI Instrument showed ProductGridView was the bottleneck.
+Applied view identity fix, but performance didn't improve as expected.
+Root cause is deeper than expected. Requiring architectural change.
+Shipping animation disable (.animation(nil) on TabView) as mitigation.
+Proper fix queued for next release cycle."
+```
+
+This is different from guessing:
+- You have **evidence** of the root cause
+- You **understand** why the quick fix didn't work
+- You're **buying time** with a known mitigation
+- You're **committed** to proper fix next cycle
+
+### Decision Framework Under Pressure
+
+**Before shipping ANY fix:**
+
+| Question | Answer Yes? | Action |
+|----------|-------------|--------|
+| Have you run SwiftUI Instrument? | No | STOP - 25 min diagnostic |
+| Do you know which view is expensive? | No | STOP - review Cause & Effect Graph |
+| Can you explain in one sentence why the fix helps? | No | STOP - you're guessing |
+| Have you verified the fix in Instruments? | No | STOP - test before shipping |
+| Did you consider simpler explanations? | No | STOP - check documentation first |
+
+**Answer YES to all five** → Ship with confidence
+
+---
+
 ## Common Patterns & Solutions
 
 ### Pattern 1: List Item Dependencies
@@ -863,6 +1015,7 @@ Problem likely elsewhere:
 
 ## Version History
 
+- **1.1.0**: Added "Production Pressure: When Performance Issues Hit Live" section from TDD testing of production crisis scenarios. Includes 30-minute diagnostic protocol with explicit time-cost analysis, red flags for dangerous pressure tactics, real-world tab transition sluggishness example, and 5-question decision framework before shipping. Prevents guessing under deployment deadline pressure and ensures diagnosis-driven fixes
 - **1.0.0 (WWDC 2025)**: Initial skill based on new SwiftUI Instrument in Instruments 26, covering long view body updates, unnecessary updates, Cause & Effect Graph, and performance optimization patterns from WWDC 2025 Session 306
 
 ---
