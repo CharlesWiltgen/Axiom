@@ -1,8 +1,8 @@
 ---
 name: performance-profiling
 description: Use when app feels slow, memory grows over time, battery drains fast, or you want to profile proactively - decision trees to choose the right Instruments tool, deep workflows for Time Profiler/Allocations/Core Data, and pressure scenarios for misinterpreting results
-version: 1.1.0
-last_updated: TDD-tested with deadline pressure, manager authority pressure, and Self Time vs Total Time misinterpretation scenarios
+version: 1.2.0
+last_updated: TDD-tested with deadline pressure, manager authority pressure, and Self Time vs Total Time misinterpretation scenarios, added 3 real-world examples
 ---
 
 # Performance Profiling
@@ -715,6 +715,167 @@ Performance problem?
 
 ---
 
+## Real-World Examples
+
+### Example 1: Identifying N+1 Query Problem in Core Data
+
+**Scenario**: Your app loads a list of albums with artist names. It's slow (5+ seconds for 100 albums). You suspect Core Data.
+
+**Setup**: Enable SQL logging first
+```bash
+# Edit Scheme → Run → Arguments Passed On Launch
+-com.apple.CoreData.SQLDebug 1
+```
+
+**What you see in console**:
+```
+CoreData: sql: SELECT ... FROM albums WHERE ... (time: 0.050s)
+CoreData: sql: SELECT ... FROM artists WHERE id = 1 (time: 0.003s)
+CoreData: sql: SELECT ... FROM artists WHERE id = 2 (time: 0.003s)
+... 98 more individual queries
+Total: 0.050s + (100 × 0.003s) = 0.350s
+```
+
+**Diagnosis using the skill**:
+- Fetching 100 albums, then individual query for each album's artist = **N+1 query problem** (Core Data Deep Dive, lines 302-325)
+
+**Fix**:
+```swift
+// ❌ WRONG: Each album access triggers separate artist query
+let request = Album.fetchRequest()
+let albums = try context.fetch(request)
+for album in albums {
+    print(album.artist.name)  // Extra query for each
+}
+
+// ✅ RIGHT: Prefetch the relationship
+let request = Album.fetchRequest()
+request.returnsObjectsAsFaults = false
+request.relationshipKeyPathsForPrefetching = ["artist"]
+let albums = try context.fetch(request)
+for album in albums {
+    print(album.artist.name)  // Already loaded
+}
+```
+
+**Result**: 0.350s → 0.050s (7x faster)
+
+---
+
+### Example 2: Finding Where UI Lag Really Comes From
+
+**Scenario**: Your app UI stalls for 1-2 seconds when loading a view. Your co-lead says "Add background threading everywhere." You want to measure first.
+
+**Workflow using the skill** (Time Profiler Deep Dive, lines 82-118):
+
+1. **Open Instruments**:
+```bash
+open -a Instruments
+# Select "Time Profiler"
+```
+
+2. **Record the stall**:
+```
+App launches
+Time Profiler records
+View loads
+Stall happens (observe the spike in Time Profiler)
+Stop recording
+```
+
+3. **Examine results**:
+```
+Call Stack shows:
+
+viewDidLoad() – 1500ms
+  ├─ loadJSON() – 1200ms (Self Time: 50ms)
+  │   └─ loadImages() – 1150ms (Self Time: 1150ms) ← HERE'S THE CULPRIT
+  ├─ parseData() – 200ms
+  └─ layoutUI() – 100ms
+```
+
+4. **Apply the skill** (lines 173-175):
+```
+loadJSON() has Self Time: 50ms, Total Time: 1200ms
+→ loadJSON() isn't slow, something it CALLS is slow
+→ loadImages() has Self Time: 1150ms
+→ loadImages() is the actual bottleneck
+```
+
+5. **Fix the right thing**:
+```swift
+// ❌ WRONG: Thread everything
+DispatchQueue.global().async { loadJSON() }
+
+// ✅ RIGHT: Thread only the slow part
+func loadJSON() {
+    let data = parseJSON()  // 50ms, fine on main
+
+    // Move ONLY the slow part to background
+    DispatchQueue.global().async {
+        let images = loadImages()  // 1150ms, now background
+        DispatchQueue.main.async {
+            updateUI(with: images)
+        }
+    }
+}
+```
+
+**Result**: 1500ms → 350ms (4x faster, main thread unblocked)
+
+**Why this matters**: You fixed the ACTUAL bottleneck (1150ms), not guessing blindly about threading.
+
+---
+
+### Example 3: Memory Growing vs Memory Leak
+
+**Scenario**: Allocations shows memory growing from 150MB to 600MB over 30 minutes of app use. Your manager says "Memory leak!" You need to know if it's real.
+
+**Workflow using the skill** (Allocations Deep Dive, lines 199-277):
+
+1. **Launch Allocations in Instruments**
+
+2. **Record normal app usage for 3 minutes**:
+```
+User loads data → memory grows to 400MB
+User navigates around → memory stays at 400MB
+User goes to Settings → memory at 400MB
+User comes back → memory at 400MB
+```
+
+3. **Check Allocations Statistics**:
+```
+Persistent Objects:
+- UIImage: 1200 instances (300MB) ← Large count
+- NSString: 5000 instances (4MB)
+- CustomDataModel: 800 instances (15MB)
+```
+
+4. **Ask the skill questions** (lines 220-240):
+- Are 1200 images legitimately loaded? (User loaded photo library with 1000 photos) → YES
+- Does memory drop if you trigger memory warning? (Simulate with Xcode) → YES, drops to 180MB
+- Is this caching working as designed? → YES
+
+**Diagnosis**: NOT a leak. This is **normal caching** (lines 235-248)
+```
+Memory growing = apps using data users asked for
+Memory dropping under pressure = cache working correctly
+Memory staying high indefinitely = possible leak
+```
+
+5. **Conclusion**:
+```swift
+// ✅ This is working correctly
+let imageCache = NSCache<NSString, UIImage>()
+// Holds up to 1200 images by design
+// Clears when system memory pressure happens
+// No leak
+```
+
+**Result**: No action needed. The "leak" is actually the cache doing its job.
+
+---
+
 ## External Resources
 
 **Apple Documentation:**
@@ -733,6 +894,7 @@ Performance problem?
 
 - **1.0.0**: Initial skill covering performance decision tree, Time Profiler workflow (CPU, hot spots, call stacks), Allocations workflow (memory growth, object counts, leak diagnosis), Core Data instrument (N+1 queries, prefetching, batch size), quick reference for Energy Impact/Network/System Trace, and pressure scenarios (misinterpreting results, conflicting tool signals, deadline profiling, variance in results)
 - **1.1.0**: Added manager authority pressure resistance, Self Time vs Total Time clarity under App Store deadline pressure, professional scripts for pushing back on premature optimization suggestions, verified bulletproof under 4-hour App Store launch deadline with confusing profiling results
+- **1.2.0**: Added 3 real-world examples (N+1 query diagnosis with SQL logging, Time Profiler workflow for UI lag, Allocations memory vs leak diagnosis) demonstrating Core Data optimization, measuring before threading, and distinguishing caching from leaks with complete workflows
 
 ---
 
