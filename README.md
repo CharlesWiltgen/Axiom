@@ -54,18 +54,20 @@ claude-code plugin list
 Skills are automatically suggested by Claude Code based on context, or invoke them directly:
 
 ```bash
-# WWDC 2025 skills
+# UI & Design
 /skill axiom:liquid-glass
 /skill axiom:swiftui-performance
-
-# Debugging & testing
-/skill axiom:xcode-debugging
 /skill axiom:ui-testing
 
-# Swift & concurrency
+# Debugging & Performance
+/skill axiom:xcode-debugging
+/skill axiom:memory-debugging
+/skill axiom:build-troubleshooting
+
+# Concurrency & Async
 /skill axiom:swift-concurrency
 
-# Persistence
+# Data & Persistence
 /skill axiom:database-migration
 /skill axiom:sqlitedata
 /skill axiom:grdb
@@ -74,7 +76,7 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 
 ## Skills Overview
 
-### 🆕 WWDC 2025 Skills
+### 🎨 UI & Design
 
 #### liquid-glass
 Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid Glass visual properties, implementation patterns, and design principles.
@@ -110,7 +112,7 @@ Master SwiftUI performance optimization using the new SwiftUI Instrument in Inst
 
 ---
 
-#### ui-testing (Updated for WWDC 2025)
+#### ui-testing
 Reliable UI testing with condition-based waiting patterns and new Recording UI Automation features from Xcode 26.
 
 **Key Features:**
@@ -127,7 +129,7 @@ Reliable UI testing with condition-based waiting patterns and new Recording UI A
 
 ---
 
-### 🔧 Debugging & Troubleshooting
+### 🐛 Debugging & Performance
 
 #### xcode-debugging
 Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute rabbit holes by checking build environment before debugging code.
@@ -150,7 +152,7 @@ Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
 ---
 
-### ⚡ Swift & Concurrency
+### ⚡ Concurrency & Async
 
 #### swift-concurrency
 Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor isolation, and data race prevention.
@@ -159,7 +161,7 @@ Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor is
 
 ---
 
-### 💾 Persistence
+### 💾 Data & Persistence
 
 #### database-migration
 Safe database schema evolution for SQLite/GRDB/SwiftData. Prevents data loss with additive migrations and testing workflows.
