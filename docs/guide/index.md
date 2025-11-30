@@ -1,25 +1,25 @@
 # Getting Started
 
-Welcome to Axiom, a comprehensive collection of Claude Code skills for iOS development with the latest WWDC 2025 guidance.
+Welcome to Axiom, battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development.
 
 ## What is Axiom?
 
 Axiom provides 11 production-ready skills covering:
 
-### 🆕 WWDC 2025 Skills
+### 🎨 UI & Design Skills
 - **Liquid Glass** - Apple's new material design system (iOS 26+) with expert review checklist
 - **SwiftUI Performance** - New SwiftUI Instrument in Instruments 26, Cause & Effect Graph
 - **UI Testing** - Recording UI Automation (Xcode 26) with video replay and review
 
-### 🔧 Debugging & Troubleshooting
+### 🐛 Debugging & Performance
 - **Xcode Debugging** - Environment-first diagnostics for BUILD FAILED, simulator hangs, zombie processes
 - **Memory Debugging** - Systematic leak diagnosis with 5 patterns covering 90% of real-world issues
 - **Build Troubleshooting** - Dependency conflicts, CocoaPods/SPM resolution failures
 
-### ⚡ Swift & Concurrency
+### ⚡ Concurrency & Async
 - **Swift Concurrency** - Swift 6 strict concurrency patterns, async/await, MainActor, Sendable
 
-### 💾 Persistence
+### 💾 Data & Persistence
 - **Database Migration** - Safe schema evolution for SQLite/GRDB/SwiftData
 - **SQLiteData** - Point-Free's SQLiteData patterns, batch imports, CloudKit sync
 - **GRDB** - Raw SQL queries, ValueObservation, DatabaseMigrator
@@ -29,50 +29,53 @@ Axiom provides 11 production-ready skills covering:
 
 - macOS (Darwin 25.2.0 or later recommended)
 - [Claude Code](https://claude.ai/download) installed
-- Xcode 26+ (for WWDC 2025 features)
-- iOS 26+ SDK (for latest SwiftUI features)
+- Xcode 26+ (for latest features)
+- iOS 26+ SDK (for latest platform features)
 
 ## Quick Start
 
-### 1. Install the Plugin
+### 1. Add the Marketplace
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/Axiom.git
-cd Axiom
+In Claude Code, run:
 
-# Install the axiom plugin
-claude-code plugin add ./plugins/axiom
+```
+/plugin marketplace add https://charleswiltgen.github.io/Axiom/
 ```
 
-### 2. Verify Installation
+### 2. Install the Plugin
+
+From the marketplace, search for "axiom" and install it, or use:
 
 ```bash
-# List installed plugins
-claude-code plugin list
-
-# You should see: axiom@0.1.2
+claude plugin install axiom@axiom-marketplace
 ```
 
-### 3. Use Skills
+### 3. Verify Installation
+
+```bash
+claude plugin list
+# You should see: axiom@0.1.3
+```
+
+### 4. Use Skills
 
 Skills are automatically suggested by Claude Code based on context, or invoke them directly:
 
 ```bash
-# WWDC 2025 skills
+# UI & Design
 /skill axiom:liquid-glass
 /skill axiom:swiftui-performance
 /skill axiom:ui-testing
 
-# Debugging
+# Debugging & Performance
 /skill axiom:xcode-debugging
 /skill axiom:memory-debugging
 /skill axiom:build-troubleshooting
 
-# Swift & Concurrency
+# Concurrency & Async
 /skill axiom:swift-concurrency
 
-# Persistence
+# Data & Persistence
 /skill axiom:database-migration
 /skill axiom:sqlitedata
 /skill axiom:grdb
@@ -81,7 +84,7 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 
 ## Common Workflows
 
-### Implementing Liquid Glass (WWDC 2025)
+### Implementing Liquid Glass
 
 When adding Liquid Glass to your app:
 
@@ -101,7 +104,7 @@ When app feels sluggish or animations stutter:
 4. Use Cause & Effect Graph to identify unnecessary updates
 5. Apply formatter caching or granular dependencies patterns
 
-### Recording UI Tests (WWDC 2025)
+### Recording UI Tests
 
 When writing UI tests for new features:
 
@@ -141,5 +144,4 @@ When adding database columns or changing schema:
 ## What's Next?
 
 - [View all skills →](/plugins/)
-- [WWDC 2025 coverage →](/plugins/#wwdc-2025-skills)
-- [Contributing guide →](https://github.com/yourusername/Axiom/blob/main/CONTRIBUTING.md)
+- [Contributing guide →](https://github.com/CharlesWiltgen/Axiom/blob/main/CONTRIBUTING.md)
