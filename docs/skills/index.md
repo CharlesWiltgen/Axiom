@@ -15,8 +15,6 @@ Build beautiful, performant interfaces with expert guidance on the latest Apple 
 - [SwiftUI Performance](/skills/ui-design/swiftui-performance) – Master the new SwiftUI Instrument in Instruments 26
 - [UI Testing](/skills/ui-design/ui-testing) – Recording UI Automation (Xcode 26) and condition-based waiting
 
-[Browse all UI & Design skills →](/skills/ui-design/)
-
 ### Debugging & Troubleshooting
 
 Systematic debugging strategies to solve issues faster and prevent common problems before they happen.
@@ -25,15 +23,11 @@ Systematic debugging strategies to solve issues faster and prevent common proble
 - [Memory Debugging](/skills/debugging/memory-debugging) – Systematic leak diagnosis with proven patterns
 - [Build Troubleshooting](/skills/debugging/build-troubleshooting) – Dependency resolution for CocoaPods and SPM
 
-[Browse all Debugging skills →](/skills/debugging/)
-
 ### Concurrency & Async
 
 Master Swift's concurrency model and catch data races at compile time with strict concurrency patterns.
 
 - [Swift Concurrency](/skills/concurrency/swift-concurrency) – Swift 6 strict concurrency, async/await, MainActor, Sendable
-
-[Browse all Concurrency skills →](/skills/concurrency/)
 
 ### Persistence
 
@@ -43,8 +37,6 @@ Comprehensive database patterns for safe schema evolution and choosing the right
 - [SQLiteData](/skills/persistence/sqlitedata) – Point-Free's SQLiteData patterns and CloudKit sync
 - [GRDB](/skills/persistence/grdb) – Raw SQL queries and ValueObservation patterns
 - [SwiftData](/skills/persistence/swiftdata) – iOS 26+ features, @Model definitions, and @Query patterns
-
-[Browse all Persistence skills →](/skills/persistence/)
 
 ## Skill Development Methodology
 
