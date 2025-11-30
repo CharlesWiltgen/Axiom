@@ -78,7 +78,7 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 
 ### 🎨 UI & Design
 
-#### liquid-glass
+#### `liquid-glass`
 Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid Glass visual properties, implementation patterns, and design principles.
 
 **Key Features:**
@@ -95,7 +95,7 @@ Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid
 
 ---
 
-#### swiftui-performance
+#### `swiftui-performance`
 Master SwiftUI performance optimization using the new SwiftUI Instrument in Instruments 26 (WWDC 2025).
 
 **Key Features:**
@@ -112,7 +112,7 @@ Master SwiftUI performance optimization using the new SwiftUI Instrument in Inst
 
 ---
 
-#### ui-testing
+#### `ui-testing`
 Reliable UI testing with condition-based waiting patterns and new Recording UI Automation features from Xcode 26.
 
 **Key Features:**
@@ -131,21 +131,21 @@ Reliable UI testing with condition-based waiting patterns and new Recording UI A
 
 ### 🐛 Debugging & Performance
 
-#### xcode-debugging
+#### `xcode-debugging`
 Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute rabbit holes by checking build environment before debugging code.
 
 **When to use:** BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild processes, "Unable to boot simulator", "No such module" after SPM changes
 
 ---
 
-#### memory-debugging
+#### `memory-debugging`
 Systematic memory leak diagnosis with Instruments. 5 leak patterns covering 90% of real-world issues.
 
 **When to use:** App memory grows over time, seeing multiple instances of same class, crashes with memory limit exceeded, Instruments shows retain cycles
 
 ---
 
-#### build-troubleshooting
+#### `build-troubleshooting`
 Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
 **When to use:** Dependency conflicts, CocoaPods/SPM resolution failures, "Multiple commands produce" errors, framework version mismatches
@@ -154,7 +154,7 @@ Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
 ### ⚡ Concurrency & Async
 
-#### swift-concurrency
+#### `swift-concurrency`
 Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor isolation, and data race prevention.
 
 **When to use:** Debugging Swift 6 concurrency errors, implementing @MainActor classes, converting delegate callbacks to async-safe patterns
@@ -163,28 +163,28 @@ Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor is
 
 ### 💾 Data & Persistence
 
-#### database-migration
+#### `database-migration`
 Safe database schema evolution for SQLite/GRDB/SwiftData. Prevents data loss with additive migrations and testing workflows.
 
 **When to use:** Adding/modifying database columns, encountering "FOREIGN KEY constraint failed", "no such column", "cannot add NOT NULL column" errors
 
 ---
 
-#### sqlitedata
+#### `sqlitedata`
 SQLiteData (Point-Free) patterns, critical gotchas, batch performance, and CloudKit sync.
 
 **When to use:** Working with SQLiteData @Table models, @FetchAll/@FetchOne queries, StructuredQueries crashes, batch imports
 
 ---
 
-#### grdb
+#### `grdb`
 Raw GRDB for complex queries, ValueObservation, DatabaseMigrator patterns.
 
 **When to use:** Writing raw SQL queries, complex joins, ValueObservation for reactive queries, dropping down from SQLiteData for performance
 
 ---
 
-#### swiftdata
+#### `swiftdata`
 SwiftData with iOS 26+ features, @Model definitions, @Query patterns, Swift 6 concurrency with @MainActor.
 
 **When to use:** Working with SwiftData @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration
