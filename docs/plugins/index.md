@@ -2,12 +2,12 @@
 
 ## Overview
 
-Axiom provides 11 production-ready skills for iOS development, including comprehensive WWDC 2025 coverage.
+Axiom provides 11 production-ready skills for xOS (iOS, iPadOS, watchOS, tvOS) development.
 
-**Version**: 0.1.2
+**Version**: 0.1.3
 **Status**: Preview Release
 
-## 🆕 WWDC 2025 Skills
+## 🎨 UI & Design Skills
 
 ### axiom:liquid-glass
 
@@ -16,7 +16,7 @@ Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid
 **When to use**: Implementing Liquid Glass effects, reviewing UI for adoption, debugging visual artifacts, requesting expert review of implementations
 
 **Key Features**:
-- **Expert Review Checklist** - 7-section validation checklist for reviewing Liquid Glass implementations
+- **Expert Review Checklist** – 7-section validation checklist for reviewing Liquid Glass implementations
   - Material appropriateness (navigation layer vs content layer)
   - Variant selection (Regular vs Clear decision criteria)
   - Legibility and contrast
@@ -39,13 +39,13 @@ Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid
 
 ### axiom:swiftui-performance
 
-Master SwiftUI performance optimization using the new SwiftUI Instrument in Instruments 26 (WWDC 2025).
+Master SwiftUI performance optimization using the new SwiftUI Instrument in Instruments 26.
 
 **When to use**: App feels less responsive, animations stutter, scrolling performance issues, profiling reveals SwiftUI bottlenecks
 
 **Key Features**:
-- **New SwiftUI Instrument walkthrough** - 4 track lanes, color-coding system, integration with Time Profiler
-- **Cause & Effect Graph** - Visualize data flow and dependencies to eliminate unnecessary updates
+- **New SwiftUI Instrument walkthrough** – 4 track lanes, color-coding system, integration with Time Profiler
+- **Cause & Effect Graph** – Visualize data flow and dependencies to eliminate unnecessary updates
 - **Problem 1: Long View Body Updates**
   - Identifying long updates with Instruments
   - Time Profiler integration for finding bottlenecks
@@ -55,7 +55,7 @@ Master SwiftUI performance optimization using the new SwiftUI Instrument in Inst
   - AttributeGraph and dependency tracking
   - Granular dependencies with per-item view models
   - Environment updates performance implications
-- **Performance Optimization Checklist** - Systematic approach from profiling setup through verification
+- **Performance Optimization Checklist** – Systematic approach from profiling setup through verification
 - Real-world impact examples from WWDC's Landmarks app
 
 **Requirements**: Xcode 26+, iOS 26+ SDK for profiling
@@ -74,11 +74,11 @@ Reliable UI testing with condition-based waiting patterns and new Recording UI A
 **When to use**: Writing UI tests, recording interactions, tests have race conditions or timing dependencies, flaky tests
 
 **Key Features**:
-- **Recording UI Automation (WWDC 2025)** - Record interactions as Swift code, replay across configurations, review video recordings
+- **Recording UI Automation** – Record interactions as Swift code, replay across configurations, review video recordings
   - Three phases: Record → Replay → Review
   - Replay configurations (devices, languages, regions, orientations, accessibility)
   - Video review with scrubbing, overlays, filters
-- **Condition-based waiting** - Eliminates flaky tests from sleep() timeouts
+- **Condition-based waiting** – Eliminates flaky tests from sleep() timeouts
   - waitForExistence patterns
   - NSPredicate expectations
   - Custom condition polling

@@ -7,23 +7,23 @@ Welcome to Axiom, battle-tested Claude Code skills for modern xOS (iOS, iPadOS, 
 Axiom provides 11 production-ready skills covering:
 
 ### 🎨 UI & Design Skills
-- **Liquid Glass** - Apple's new material design system (iOS 26+) with expert review checklist
-- **SwiftUI Performance** - New SwiftUI Instrument in Instruments 26, Cause & Effect Graph
-- **UI Testing** - Recording UI Automation (Xcode 26) with video replay and review
+- **Liquid Glass** – Apple's new material design system (iOS 26+) with expert review checklist
+- **SwiftUI Performance** – New SwiftUI Instrument in Instruments 26, Cause & Effect Graph
+- **UI Testing** – Recording UI Automation (Xcode 26) with video replay and review
 
 ### 🐛 Debugging & Performance
-- **Xcode Debugging** - Environment-first diagnostics for BUILD FAILED, simulator hangs, zombie processes
-- **Memory Debugging** - Systematic leak diagnosis with 5 patterns covering 90% of real-world issues
-- **Build Troubleshooting** - Dependency conflicts, CocoaPods/SPM resolution failures
+- **Xcode Debugging** – Environment-first diagnostics for BUILD FAILED, simulator hangs, zombie processes
+- **Memory Debugging** – Systematic leak diagnosis with 5 patterns covering 90% of real-world issues
+- **Build Troubleshooting** – Dependency conflicts, CocoaPods/SPM resolution failures
 
 ### ⚡ Concurrency & Async
-- **Swift Concurrency** - Swift 6 strict concurrency patterns, async/await, MainActor, Sendable
+- **Swift Concurrency** – Swift 6 strict concurrency patterns, async/await, MainActor, Sendable
 
 ### 💾 Data & Persistence
-- **Database Migration** - Safe schema evolution for SQLite/GRDB/SwiftData
-- **SQLiteData** - Point-Free's SQLiteData patterns, batch imports, CloudKit sync
-- **GRDB** - Raw SQL queries, ValueObservation, DatabaseMigrator
-- **SwiftData** - iOS 26+ features, @Model, @Query, Swift 6 concurrency
+- **Database Migration** – Safe schema evolution for SQLite/GRDB/SwiftData
+- **SQLiteData** – Point-Free's SQLiteData patterns, batch imports, CloudKit sync
+- **GRDB** – Raw SQL queries, ValueObservation, DatabaseMigrator
+- **SwiftData** – iOS 26+ features, @Model, @Query, Swift 6 concurrency
 
 ## Prerequisites
 
