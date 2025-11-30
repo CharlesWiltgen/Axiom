@@ -60,6 +60,10 @@
     {
       "name": "uikit-animation-debugging",
       "description": "Use when CAAnimation completion handler doesn't fire, spring physics look wrong on device, animation duration mismatches actual time, gesture + animation interaction causes jank, or timing differs between simulator and real hardware - systematic CAAnimation diagnosis with CATransaction patterns, frame rate awareness, and device-specific behavior"
+    },
+    {
+      "name": "objc-block-retain-cycles",
+      "description": "Use when debugging memory leaks from blocks, blocks assigned to self or properties, network callbacks, or crashes from deallocated objects - systematic weak-strong pattern diagnosis with mandatory diagnostic rules"
     }
   ]
 }
