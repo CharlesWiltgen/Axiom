@@ -7,7 +7,7 @@ Axiom provides 11 production-ready skills for xOS (iOS, iPadOS, watchOS, tvOS) d
 
 ## Skill Categories
 
-### 🎨 UI & Design
+### UI & Design
 
 Build beautiful, performant interfaces with expert guidance on the latest Apple design systems and testing practices.
 
@@ -17,7 +17,7 @@ Build beautiful, performant interfaces with expert guidance on the latest Apple 
 
 [Browse all UI & Design skills →](/skills/ui-design/)
 
-### 🔧 Debugging & Troubleshooting
+### Debugging & Troubleshooting
 
 Systematic debugging strategies to solve issues faster and prevent common problems before they happen.
 
@@ -27,7 +27,7 @@ Systematic debugging strategies to solve issues faster and prevent common proble
 
 [Browse all Debugging skills →](/skills/debugging/)
 
-### ⚡ Concurrency & Async
+### Concurrency & Async
 
 Master Swift's concurrency model and catch data races at compile time with strict concurrency patterns.
 
@@ -35,7 +35,7 @@ Master Swift's concurrency model and catch data races at compile time with stric
 
 [Browse all Concurrency skills →](/skills/concurrency/)
 
-### 💾 Persistence
+### Persistence
 
 Comprehensive database patterns for safe schema evolution and choosing the right persistence framework.
 

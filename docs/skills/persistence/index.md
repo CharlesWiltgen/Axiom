@@ -1,4 +1,4 @@
-# Persistence Skills
+# Persistence
 
 Comprehensive database patterns for safe schema evolution and choosing the right persistence framework for your needs.
 

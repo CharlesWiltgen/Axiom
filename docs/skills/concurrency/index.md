@@ -1,4 +1,4 @@
-# Concurrency & Async Skills
+# Concurrency & Async
 
 Master Swift's concurrency model and catch data races at compile time with strict concurrency patterns.
 

@@ -1,4 +1,4 @@
-# Debugging & Troubleshooting Skills
+# Debugging & Troubleshooting
 
 Systematic debugging strategies to solve issues faster and prevent common problems before they happen.
 

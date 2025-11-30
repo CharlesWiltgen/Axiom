@@ -30,7 +30,7 @@ export default defineConfig({
           ]
         },
         {
-          text: '🎨 UI & Design',
+          text: 'UI & Design',
           items: [
             { text: 'Overview', link: '/skills/ui-design/' },
             { text: 'Liquid Glass', link: '/skills/ui-design/liquid-glass' },
@@ -39,7 +39,7 @@ export default defineConfig({
           ]
         },
         {
-          text: '🔧 Debugging & Troubleshooting',
+          text: 'Debugging & Troubleshooting',
           items: [
             { text: 'Overview', link: '/skills/debugging/' },
             { text: 'Xcode Debugging', link: '/skills/debugging/xcode-debugging' },
@@ -48,14 +48,14 @@ export default defineConfig({
           ]
         },
         {
-          text: '⚡ Concurrency & Async',
+          text: 'Concurrency & Async',
           items: [
             { text: 'Overview', link: '/skills/concurrency/' },
             { text: 'Swift Concurrency', link: '/skills/concurrency/swift-concurrency' }
           ]
         },
         {
-          text: '💾 Persistence',
+          text: 'Persistence',
           items: [
             { text: 'Overview', link: '/skills/persistence/' },
             { text: 'Database Migration', link: '/skills/persistence/database-migration' },

@@ -1,4 +1,4 @@
-# UI & Design Skills
+# UI & Design
 
 Build beautiful, performant interfaces with expert guidance on the latest Apple design systems and testing practices.
 
