@@ -1,7 +1,7 @@
 {
   "name": "axiom",
-  "version": "0.1.3",
-  "description": "Comprehensive iOS development skills for Claude Code - WWDC 2025 updated with Liquid Glass, Recording UI Automation, SwiftUI Performance, plus systematic workflows for Xcode, Swift, testing, and persistence",
+  "version": "0.1.4",
+  "description": "Comprehensive iOS development skills for Claude Code - WWDC 2025 updated with Liquid Glass, Recording UI Automation, SwiftUI Performance, plus systematic workflows for Xcode, Swift, testing, debugging, and persistence",
   "author": "Charles Wiltgen",
   "license": "MIT",
   "skills": [
@@ -36,6 +36,10 @@
     {
       "name": "swiftui-performance",
       "description": "Use when analyzing SwiftUI performance (WWDC 2025), identifying long view body updates, reducing unnecessary updates, or optimizing rendering - covers new SwiftUI Instrument in Instruments 26, Cause & Effect Graph, and performance patterns for iOS 26+"
+    },
+    {
+      "name": "swiftui-debugging",
+      "description": "Use when debugging SwiftUI view updates, intermittent rendering issues, preview crashes, or layout problems - diagnostic decision trees for struct mutation, binding identity, view recreation, missing observers, and pressure scenarios for App Store deadlines"
     },
     {
       "name": "sqlitedata",

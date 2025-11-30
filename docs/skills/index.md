@@ -1,8 +1,8 @@
 # Skills
 
-Axiom provides 11 production-ready skills for xOS (iOS, iPadOS, watchOS, tvOS) development.
+Axiom provides 12 production-ready skills for xOS (iOS, iPadOS, watchOS, tvOS) development.
 
-**Version**: 0.1.3
+**Version**: 0.1.4
 **Status**: Preview Release
 
 ## Skill Categories
@@ -13,6 +13,7 @@ Build beautiful, performant interfaces with expert guidance on the latest Apple 
 
 - [Liquid Glass](/skills/ui-design/liquid-glass) – Apple's new material design system (iOS 26+)
 - [SwiftUI Performance](/skills/ui-design/swiftui-performance) – Master the new SwiftUI Instrument in Instruments 26
+- [SwiftUI Debugging](/skills/ui-design/swiftui-debugging) – View updates, preview crashes, and layout issues with decision trees
 - [UI Testing](/skills/ui-design/ui-testing) – Recording UI Automation (Xcode 26) and condition-based waiting
 
 ### Debugging & Troubleshooting
@@ -53,6 +54,7 @@ Skills in Axiom are developed using rigorous quality standards:
 - **build-troubleshooting** – Authority bias resistance, 4-step push-back framework, and pressure scenario guidance added from production crisis testing
 - **liquid-glass** – Design review pressure handling, professional push-back framework, Regular vs Clear variant decision defense patterns added from client-watching design review scenario
 - **swiftui-performance** – Production crisis decision-making, 30-minute diagnostic protocol with time-cost analysis, deployment deadline pressure guidance, and 5-question verification framework added from App Store performance blocker scenario
+- **swiftui-debugging** – Intermittent update diagnosis (60-minute protocol), App Store Review deadline pressure handling, co-lead authority pressure resistance, and professional push-back scripts added from maximum pressure testing
 - **sqlitedata** – StructuredQueries migration crash decision framework, data-loss prevention patterns, emergency mitigation guidance, and honest pressure points analysis added from iOS 26 App Store update failure scenario
 - **grdb** – Query profiling guidance (database.trace + EXPLAIN QUERY PLAN), ValueObservation optimization patterns with size-based decisions, and migration versioning guarantees added from complex join query performance testing
 
