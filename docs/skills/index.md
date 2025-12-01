@@ -1,10 +1,10 @@
 # Skills
 
-Axiom provides 18 skills and 3 commands for xOS (iOS, iPadOS, watchOS, tvOS) development.
+Axiom provides 19 skills and 3 commands for xOS (iOS, iPadOS, watchOS, tvOS) development.
 
 **Breakdown:**
 - **15 TDD-tested skills** – Discipline-enforcing workflows tested with RED-GREEN-REFACTOR methodology
-- **3 reference skills** – Comprehensive guides reviewed for accuracy, completeness, clarity, and practical value
+- **4 reference skills** – Comprehensive guides reviewed for accuracy, completeness, clarity, and practical value
 - **3 commands** – Quick automated scans for common issues
 
 ## Skill Categories
@@ -33,6 +33,12 @@ Systematic debugging strategies to solve issues faster and prevent common proble
 Master Swift's concurrency model and catch data races at compile time with strict concurrency patterns.
 
 - [Swift Concurrency](/skills/concurrency/swift-concurrency) – Swift 6 strict concurrency, async/await, MainActor, Sendable
+
+### Apple Intelligence & Integration
+
+Integrate your app with Siri, Apple Intelligence, Shortcuts, and other system experiences.
+
+- [App Intents Integration](/skills/integration/app-intents-integration) – Siri, Shortcuts, Spotlight, and Apple Intelligence integration
 
 ### Persistence
 

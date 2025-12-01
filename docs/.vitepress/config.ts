@@ -82,6 +82,12 @@ export default defineConfig({
           ]
         },
         {
+          text: 'Apple Intelligence & Integration',
+          items: [
+            { text: 'App Intents Integration', link: '/skills/integration/app-intents-integration' }
+          ]
+        },
+        {
           text: 'Persistence',
           items: [
             { text: 'Overview', link: '/skills/persistence/' },

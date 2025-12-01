@@ -225,6 +225,29 @@ SwiftData with iOS 26+ features, @Model definitions, @Query patterns, Swift 6 co
 
 ---
 
+### Apple Intelligence & Integration
+
+#### `app-intents-integration`
+Comprehensive guide to App Intents framework for Siri, Apple Intelligence, Shortcuts, and Spotlight integration. Covers AppIntent, AppEntity, parameter handling, entity queries, and debugging.
+
+**Key Features:**
+- Three building blocks: AppIntent, AppEntity, AppEnum
+- Parameter validation and natural language summaries
+- Entity queries for content discovery
+- Background vs foreground execution patterns
+- Authentication policies and security
+- Testing with Shortcuts app and Siri
+- Real-world examples (workouts, tasks, orders)
+- Assistant schemas for common app types
+
+**When to use:** Exposing app functionality to Siri/Apple Intelligence, Shortcuts automation, Spotlight search, Focus filters, debugging intent resolution failures
+
+**Requirements:** iOS 16+
+
+---
+
+### Data & Persistence (Continued)
+
 #### `realm-to-swiftdata-migration`
 Comprehensive migration guide for Realm users facing Device Sync sunset (Sept 30, 2025). Complete path from Realm to SwiftData with pattern equivalents, threading model conversion, schema strategies, and testing checklist.
 
