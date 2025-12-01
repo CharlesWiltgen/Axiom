@@ -9,7 +9,8 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide/' },
-      { text: 'Skills', link: '/skills/' }
+      { text: 'Skills', link: '/skills/' },
+      { text: 'Commands', link: '/commands/' }
     ],
 
     sidebar: {
@@ -18,6 +19,21 @@ export default defineConfig({
           text: 'Guide',
           items: [
             { text: 'Getting Started', link: '/guide/' }
+          ]
+        }
+      ],
+      '/commands/': [
+        {
+          text: 'Commands',
+          items: [
+            { text: 'Overview', link: '/commands/' }
+          ]
+        },
+        {
+          text: 'Concurrency & Async',
+          items: [
+            { text: 'Overview', link: '/commands/concurrency/' },
+            { text: 'audit-concurrency', link: '/commands/concurrency/audit-concurrency' }
           ]
         }
       ],
