@@ -89,39 +89,37 @@ Based on my audit of your codebase, here are the issues I found:
 1. **Missing @MainActor annotations**
    - These can cause data race crashes if accessed from background threads
    - Fix: Add `@MainActor` decorator to View and Observable classes
-   - See: `/skill axiom:swift-concurrency` → "When to Use @MainActor"
+   - See: swift-concurrency skill → "When to Use @MainActor"
 
 2. **Unsafe Task self captures**
    - These cause memory leaks and potential crashes
    - Fix: Use `Task { [weak self] in` pattern
-   - See: `/skill axiom:swift-concurrency` → Pattern 3: Weak Self in Tasks
+   - See: swift-concurrency skill → Pattern 3: Weak Self in Tasks
 
 ### Medium Priority Issues (Data Races)
 
 3. **Sendable violations**
    - Non-Sendable types crossing actor boundaries cause warnings, may crash at runtime
    - Fix: Implement `Sendable` conformance or use lightweight representations
-   - See: `/skill axiom:swift-concurrency` → Pattern 1: Sendable Enum/Struct
+   - See: swift-concurrency skill → Pattern 1: Sendable Enum/Struct
 
 4. **Improper actor isolation**
    - Data accessed without thread-safety verification
    - Fix: Use Pattern 4 (Atomic Snapshots) or lightweight representations
-   - See: `/skill axiom:swift-concurrency` → Pattern 4: Atomic Snapshots
+   - See: swift-concurrency skill → Pattern 4: Atomic Snapshots
 
 ### Low Priority Issues (Warnings)
 
 5. **Thread confinement concerns**
    - Potential issues with main thread access from background
    - Fix: Use lightweight representations before leaving actor context
-   - See: `/skill axiom:swift-concurrency` → Pattern 8: Core Data Thread-Safe Fetch
+   - See: swift-concurrency skill → Pattern 8: Core Data Thread-Safe Fetch
 
 ## Next Steps
 
-Now that you have a roadmap of concurrency issues, use the skill for patterns:
+Now that you have a roadmap of concurrency issues, ask about specific patterns.
 
-```
-/skill axiom:swift-concurrency
-```
+Simply say: "How do I fix these Swift concurrency issues?" and the skill activates automatically.
 
 The skill provides copy-paste templates for:
 - Pattern 1: Sendable types
