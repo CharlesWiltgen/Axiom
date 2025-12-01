@@ -225,4 +225,4 @@ Skill contributions should follow these standards:
 
 ## License
 
-MIT - see [LICENSE](../../LICENSE) file for details
+MIT - see [LICENSE](https://github.com/CharlesWiltgen/Axiom/blob/main/LICENSE) for details
