@@ -119,5 +119,5 @@ The command uses grep patterns to find:
 
 ## See Also
 
-- **[memory-debugging skill](/plugins/axiom#memory-debugging)** - Comprehensive leak diagnosis and fixes
+- **[memory-debugging skill](/skills/debugging/memory-debugging)** - Comprehensive leak diagnosis and fixes
 - **[/audit-concurrency](/commands/concurrency/audit-concurrency)** - Scan for Swift Concurrency issues
