@@ -32,7 +32,7 @@ Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) dev
 - **Xcode 26+** (for Liquid Glass, Recording UI Automation, and latest iOS features)
 - **iOS 26 SDK** (comes with Xcode 26)
 
-### Installation (Recommended - From Marketplace)
+### Installation
 
 In Claude Code, run:
 
@@ -222,16 +222,7 @@ Comprehensive migration guide for Realm users facing Device Sync sunset (Sept 30
 
 ## Documentation
 
-Full documentation available at [https://yourusername.github.io/Axiom](https://yourusername.github.io/Axiom)
-
-Run documentation locally:
-
-```bash
-npm install
-npm run docs:dev
-```
-
-Visit http://localhost:5173
+Full documentation available at [https://charleswiltgen.github.io/Axiom](https://charleswiltgen.github.io/Axiom)
 
 ## Contributing
 
@@ -247,20 +238,3 @@ This is a preview release. Feedback is welcome!
   - [Liquid Glass Design System](https://developer.apple.com/design/human-interface-guidelines/)
   - [SwiftUI Performance](https://developer.apple.com/videos/)
 
-## Marketplace Discovery
-
-Axiom is available as a self-hosted Claude Code plugin marketplace. Users can add it via:
-
-```
-/plugin marketplace add https://charleswiltgen.github.io/Axiom/
-```
-
-This marketplace is also discoverable through community plugin registries and directories.
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details
-
-## Acknowledgments
-
-Built with guidance from Apple's latest platform documentation and the iOS development community. Skills tested using the [Superpowers](https://github.com/superpowers-marketplace/superpowers) TDD framework for Claude Code skills.
