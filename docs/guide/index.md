@@ -7,36 +7,36 @@ Welcome to Axiom, battle-tested Claude Code skills for modern xOS (iOS, iPadOS, 
 Axiom provides 17 production-ready TDD-tested skills covering:
 
 ### 🎨 UI & Design Skills
-- **Liquid Glass** – Apple's new material design system (iOS 26+) with expert review checklist
-- **SwiftUI Performance** – New SwiftUI Instrument in Instruments 26, Cause & Effect Graph
-- **UI Testing** – Recording UI Automation (Xcode 26) with video replay and review
+- **Liquid Glass** – Implement Apple's glass effects correctly and get expert validation
+- **SwiftUI Performance** – Find what's making your views slow and fix it
+- **UI Testing** – Record tests that work reliably across devices and languages
 
 ### 🐛 Debugging & Performance
-- **Xcode Debugging** – Environment-first diagnostics for BUILD FAILED, simulator hangs, zombie processes
-- **Memory Debugging** – Systematic leak diagnosis with 5 patterns covering 90% of real-world issues
-- **Build Troubleshooting** – Dependency conflicts, CocoaPods/SPM resolution failures
+- **Xcode Debugging** – Fix mysterious build failures and zombie processes fast
+- **Memory Debugging** – Find memory leaks before users complain about crashes
+- **Build Troubleshooting** – Resolve dependency conflicts under production pressure
 
 ### ⚡ Concurrency & Async
-- **Swift Concurrency** – Swift 6 strict concurrency patterns, async/await, MainActor, Sendable
+- **Swift Concurrency** – Prevent data races and fix actor isolation errors in Swift 6
 
 ### 💾 Data & Persistence
-- **Database Migration** – Safe schema evolution for SQLite/GRDB/SwiftData
-- **SQLiteData** – Point-Free's SQLiteData patterns, batch imports, CloudKit sync
-- **GRDB** – Raw SQL queries, ValueObservation, DatabaseMigrator
-- **SwiftData** – iOS 26+ features, @Model, @Query, Swift 6 concurrency with CloudKit patterns
-- **Realm to SwiftData Migration** – Complete migration guide (Realm Device Sync sunset Sept 30, 2025)
-- **Core Data Debugging** – Schema migrations, thread-confinement, N+1 queries, SwiftData bridging
+- **Database Migration** – Add columns without losing user data
+- **SQLiteData** – Handle batch imports and CloudKit sync without performance issues
+- **GRDB** – Optimize complex queries and prevent N+1 query problems
+- **SwiftData** – Prevent CloudKit sync failures and handle concurrent access safely
+- **Realm to SwiftData Migration** – Migrate before Device Sync sunset (Sept 30, 2025) without breaking threading
+- **Core Data Debugging** – Fix migration crashes and thread-confinement errors
 
 ### 🔄 UIKit & Legacy
-- **UIKit Animation Debugging** – CAAnimation diagnostics, CATransaction timing, gesture synchronization
-- **Objective-C Block Retain Cycles** – Memory leak prevention, weak-strong pattern diagnostics
+- **UIKit Animation Debugging** – Fix animations that don't fire or behave differently on device
+- **Objective-C Block Retain Cycles** – Find and fix memory leaks from blocks
 
 ## Prerequisites
 
-- macOS (Darwin 25.2.0 or later recommended)
-- [Claude Code](https://claude.ai/download) installed
-- Xcode 26+ (for latest features)
-- iOS 26+ SDK (for latest platform features)
+- **macOS 15+** (Sequoia or later)
+- **Claude Code** ([download here](https://claude.ai/download))
+- **Xcode 26+** (for Liquid Glass, Recording UI Automation, and latest iOS features)
+- **iOS 26 SDK** (comes with Xcode 26)
 
 ## Quick Start
 

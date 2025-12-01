@@ -8,17 +8,17 @@ All skills created and verified using RED-GREEN-REFACTOR TDD methodology. Submit
 
 ## What's New Recently
 
-✨ **Latest Skills Added (TDD-tested with enhanced features):**
-- **Realm to SwiftData Migration Guide** - Comprehensive migration path for Realm users before Device Sync sunset (Sept 30, 2025). Includes pattern equivalents, threading model conversion, schema migration strategies for small/medium/enterprise apps, CloudKit sync transition, testing checklist, and real-world scenarios
-- **Enhanced SwiftData Skill** - Added CloudKit integration patterns (constraints, conflict resolution, sync monitoring, record sharing), performance optimization (N+1 prevention, batch operations, indexing), and migration strategies from Realm/Core Data
-- **Expanded Swift Concurrency Skill** - Added 6 data persistence concurrency patterns covering SwiftData, Core Data, GRDB, and CloudKit background operations with actor-based isolation
+✨ **Latest Skills:**
+- **Realm to SwiftData Migration** - Migrate before Device Sync sunset (Sept 30, 2025) without losing user data or breaking threading patterns
+- **SwiftData** - Prevents CloudKit sync failures that lose data, catches N+1 queries before they slow your app, safely migrates from Realm/Core Data
+- **Swift Concurrency** - Prevents data races when accessing databases in background, handles CloudKit sync without blocking UI
 
-✨ **Previously Added (TDD-tested):**
-- **SwiftUI Debugging** - View updates, preview crashes, layout issues with diagnostic decision trees. Includes 3 real-world examples (list updates, preview crashes, binding issues)
-- **Performance Profiling** - Instruments decision trees for CPU, memory, battery profiling. Includes 3 real-world examples (N+1 queries, UI lag diagnosis, memory vs leak)
-- **Liquid Glass** - Apple's new material design system (iOS 26+) with comprehensive design principles, API patterns, and expert review checklist
-- **SwiftUI Performance** - Master the new SwiftUI Instrument in Instruments 26, identify long view body updates with the Cause & Effect Graph
-- **UI Testing** - Recording UI Automation (Xcode 26) with original condition-based waiting patterns
+✨ **Recently Added:**
+- **SwiftUI Debugging** - Solve intermittent view updates and preview crashes with diagnostic decision trees
+- **Performance Profiling** - Find CPU bottlenecks, memory growth, and N+1 queries before users complain
+- **Liquid Glass** - Implement Apple's glass effects correctly and get expert validation
+- **SwiftUI Performance** - Find what's making your views slow and fix it
+- **UI Testing** - Record tests that work reliably across devices and languages
 
 ## Structure
 
@@ -31,10 +31,10 @@ All skills created and verified using RED-GREEN-REFACTOR TDD methodology. Submit
 
 ### Prerequisites
 
-- macOS (Darwin 25.2.0 or later recommended)
-- [Claude Code](https://claude.ai/download) installed
-- Xcode 26+ (for Liquid Glass, Recording UI Automation, and other latest features)
-- iOS 26+ SDK (for latest platform features)
+- **macOS 15+** (Sequoia or later)
+- **Claude Code** ([download here](https://claude.ai/download))
+- **Xcode 26+** (for Liquid Glass, Recording UI Automation, and latest iOS features)
+- **iOS 26 SDK** (comes with Xcode 26)
 
 ### Installation (Recommended - From Marketplace)
 
