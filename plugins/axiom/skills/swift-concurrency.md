@@ -30,6 +30,8 @@ description: Swift 6 strict concurrency patterns, fixes, and best practices - Qu
 
 These are real questions developers ask that this skill is designed to answer:
 
+**General Concurrency:**
+
 **1. "I'm getting 'Main actor-isolated property accessed from nonisolated context' errors in my delegate methods. How do I fix this?"**
 → The skill covers the critical Pattern 2 (Value Capture Before Task) that shows when to capture delegate parameters before the Task context hop
 
@@ -44,6 +46,23 @@ These are real questions developers ask that this skill is designed to answer:
 
 **5. "How do I know when to use @MainActor vs nonisolated vs @concurrent? The rules aren't clear."**
 → The skill clarifies actor isolation rules and provides a decision tree for each scenario with real-world examples
+
+**Data Persistence & Concurrency:**
+
+**6. "I'm fetching 10,000 records from SwiftData on a background thread, but I'm getting thread-confinement errors. How do I safely load data?"**
+→ The skill shows Pattern 7 (Background SwiftData Access) which demonstrates creating background ModelContext and safely passing data back to MainActor
+
+**7. "I have Core Data on a background thread and need to update the UI. I keep getting 'accessed from different thread' crashes."**
+→ The skill covers Pattern 8 (Core Data Thread-Safe Fetch) showing private queue contexts and lightweight representations for thread-safe access
+
+**8. "How do I batch-import 1 million records from an API without blocking the UI or causing memory bloat?"**
+→ The skill demonstrates Pattern 9 (Batch Import with Progress) using background actors, chunk-based processing, and periodic saves
+
+**9. "My GRDB queries are blocking the UI. How do I run complex SQL on a background thread safely?"**
+→ The skill shows Pattern 10 (GRDB Background Execution) with actor-based query execution and safe data transfer back to MainActor
+
+**10. "I need to sync data to CloudKit while keeping the UI responsive. How do I prevent the UI from freezing?"**
+→ The skill covers Pattern 11 (CloudKit Sync with Progress Reporting) showing structured concurrency for sync operations with UI feedback
 
 ---
 
@@ -301,6 +320,379 @@ let metadata = await extractMetadata(from: fileURL)
 ```
 
 **Note**: `@concurrent` requires Swift 6.2 (Xcode 16.2+, iOS 18.2+)
+
+---
+
+## Data Persistence Concurrency Patterns
+
+### Pattern 7: Background SwiftData Access
+
+**When**: Fetching large datasets from SwiftData without blocking UI
+
+```swift
+// ✅ Proper background SwiftData access
+actor DataFetcher {
+    let modelContainer: ModelContainer
+
+    func fetchAllTracks() async throws -> [Track] {
+        // ✅ Create background context (not on MainActor)
+        let context = ModelContext(modelContainer)
+
+        // ✅ Fetch on background thread (no UI blocking)
+        let descriptor = FetchDescriptor<Track>(
+            sortBy: [SortDescriptor(\.title)]
+        )
+        return try context.fetch(descriptor)
+    }
+}
+
+// Usage (on MainActor)
+@MainActor
+class TrackViewModel: ObservableObject {
+    @Published var tracks: [Track] = []
+    private let fetcher: DataFetcher
+
+    func loadTracks() async {
+        do {
+            // ✅ Fetch on background, then update UI
+            let fetchedTracks = try await fetcher.fetchAllTracks()
+            // Back on MainActor automatically after await
+            self.tracks = fetchedTracks
+        } catch {
+            print("Fetch failed: \(error)")
+        }
+    }
+}
+```
+
+**Why**: SwiftData models are not Sendable. Use actor to isolate database operations, fetch on background, then return lightweight representations to MainActor.
+
+**Key distinction**:
+- Database operations happen in actor (off MainActor)
+- Models fetched in background
+- Only final results passed back to MainActor
+- No blocking UI during fetch
+
+---
+
+### Pattern 8: Core Data Thread-Safe Fetch
+
+**When**: Fetching from Core Data on background thread with UI updates
+
+```swift
+// ✅ Thread-safe Core Data fetch pattern
+actor CoreDataFetcher {
+    let persistentContainer: NSPersistentContainer
+
+    func fetchTracksID(genre: String) async throws -> [String] {
+        // ✅ Create background context
+        let context = persistentContainer.newBackgroundContext()
+
+        // ✅ Lightweight representation (just IDs, Sendable)
+        var trackIDs: [String] = []
+
+        try await context.perform {
+            let request = NSFetchRequest<CDTrack>(entityName: "Track")
+            request.predicate = NSPredicate(format: "genre = %@", genre)
+
+            let results = try context.fetch(request)
+            // ✅ Extract IDs BEFORE leaving context
+            trackIDs = results.map { $0.id }
+        }
+
+        return trackIDs  // ✅ Return lightweight data
+    }
+
+    func fetchFullTracks(ids: [String]) async throws -> [Track] {
+        // ✅ On MainActor, fetch full objects using IDs
+        let mainContext = persistentContainer.viewContext
+
+        var tracks: [Track] = []
+        for id in ids {
+            let request = NSFetchRequest<CDTrack>(entityName: "Track")
+            request.predicate = NSPredicate(format: "id = %@", id)
+
+            if let cdTrack = try mainContext.fetch(request).first {
+                tracks.append(Track(from: cdTrack))
+            }
+        }
+
+        return tracks
+    }
+}
+```
+
+**Why**: NSManagedObjects are thread-confined. Always:
+1. Fetch on background context
+2. Extract lightweight data (IDs, strings) BEFORE leaving context
+3. Pass lightweight data back to MainActor
+4. Fetch full objects on MainActor if needed
+
+---
+
+### Pattern 9: Batch Import with Progress Reporting
+
+**When**: Importing large datasets (100k+ records) without UI freeze
+
+```swift
+// ✅ Batch import with progress feedback
+actor DataImporter {
+    let modelContainer: ModelContainer
+
+    typealias ProgressCallback = (Int, Int) -> Void  // current, total
+
+    func importRecords(_ records: [RawRecord], onProgress: @MainActor ProgressCallback) async throws {
+        let chunkSize = 1000
+        let context = ModelContext(modelContainer)
+
+        for (index, chunk) in records.chunked(into: chunkSize).enumerated() {
+            // ✅ Process chunk
+            for record in chunk {
+                let track = Track(
+                    id: record.id,
+                    title: record.title,
+                    artist: record.artist,
+                    duration: record.duration
+                )
+                context.insert(track)
+            }
+
+            // ✅ Save after chunk
+            try context.save()
+
+            // ✅ Report progress to MainActor UI
+            let processed = (index + 1) * chunkSize
+            await onProgress(min(processed, records.count), records.count)
+
+            // ✅ Check for cancellation
+            if Task.isCancelled {
+                throw CancellationError()
+            }
+        }
+    }
+}
+
+// Usage
+@MainActor
+class ImportViewModel: ObservableObject {
+    @Published var progress: Double = 0
+
+    func importData(_ records: [RawRecord]) async {
+        do {
+            try await importer.importRecords(records) { [weak self] current, total in
+                self?.progress = Double(current) / Double(total)
+            }
+        } catch {
+            print("Import failed: \(error)")
+        }
+    }
+}
+
+extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        stride(from: 0, to: count, by: size).map {
+            Array(self[$0..<Swift.min($0 + size, count)])
+        }
+    }
+}
+```
+
+**Why**:
+- Chunks prevent memory bloat
+- Periodic saves prevent data loss
+- Progress callbacks keep UI responsive
+- Cancellation support for user control
+
+---
+
+### Pattern 10: GRDB Background Query Execution
+
+**When**: Complex SQL queries that block UI
+
+```swift
+// ✅ GRDB queries on background thread
+actor DatabaseQueryExecutor {
+    let dbQueue: DatabaseQueue
+
+    func fetchUserWithPosts(userId: String) async throws -> (user: User, posts: [Post]) {
+        // ✅ Query happens on GRDB's background thread automatically
+        return try await dbQueue.read { db in
+            let user = try User.filter(Column("id") == userId).fetchOne(db)!
+
+            // ✅ Fetch related posts (complex join)
+            let posts = try Post
+                .filter(Column("userId") == userId)
+                .order(Column("createdAt").desc)
+                .limit(100)
+                .fetchAll(db)
+
+            return (user, posts)
+        }
+    }
+
+    func aggregateUserStats(userId: String) async throws -> UserStats {
+        // ✅ Complex SQL on background thread
+        return try await dbQueue.read { db in
+            let postCount = try Post
+                .filter(Column("userId") == userId)
+                .fetchCount(db)
+
+            let likeCount = try Like
+                .filter(Column("userId") == userId)
+                .fetchCount(db)
+
+            return UserStats(postCount: postCount, likeCount: likeCount)
+        }
+    }
+}
+
+// Usage (on MainActor)
+@MainActor
+class UserViewModel: ObservableObject {
+    @Published var user: User?
+    @Published var posts: [Post] = []
+
+    func loadUser(_ id: String) async {
+        do {
+            let (user, posts) = try await executor.fetchUserWithPosts(userId: id)
+            self.user = user
+            self.posts = posts
+        } catch {
+            print("Failed: \(error)")
+        }
+    }
+}
+```
+
+**Why**: GRDB's `read()` and `write()` methods automatically dispatch to background, so:
+1. Complex queries don't block MainActor
+2. Thread safety is automatic
+3. Results returned to caller (no threading needed)
+
+---
+
+### Pattern 11: CloudKit Sync with Progress Monitoring
+
+**When**: Syncing data to CloudKit while keeping UI responsive
+
+```swift
+// ✅ Structured concurrency for CloudKit sync
+@MainActor
+class CloudKitSyncManager: ObservableObject {
+    @Published var isSyncing = false
+    @Published var syncProgress: Double = 0
+    @Published var lastSyncDate: Date?
+
+    let modelContainer: ModelContainer
+
+    func syncToCloudKit() async {
+        isSyncing = true
+        syncProgress = 0
+
+        let syncTask = Task {
+            do {
+                // ✅ Run sync operation
+                try await performCloudKitSync()
+
+                // ✅ Update UI when complete
+                lastSyncDate = Date()
+                syncProgress = 1.0
+            } catch {
+                print("Sync failed: \(error)")
+            }
+        }
+
+        // ✅ Optional: Show progress updates
+        for try await _ in NotificationCenter.default
+            .notifications(named: NSNotification.Name("CloudKitSyncProgress")) {
+            // Update progress here
+        }
+
+        await syncTask.value  // Wait for completion
+        isSyncing = false
+    }
+
+    private func performCloudKitSync() async throws {
+        let context = ModelContext(modelContainer)
+
+        // ✅ Fetch local changes
+        let descriptor = FetchDescriptor<Track>(
+            predicate: #Predicate { $0.needsSync }
+        )
+        let unsyncedTracks = try context.fetch(descriptor)
+
+        // ✅ Upload in batches
+        for chunk in unsyncedTracks.chunked(into: 100) {
+            for track in chunk {
+                track.needsSync = false
+            }
+            try context.save()
+        }
+    }
+}
+
+extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        stride(from: 0, to: count, by: size).map {
+            Array(self[$0..<Swift.min($0 + size, count)])
+        }
+    }
+}
+```
+
+**Why**:
+- CloudKit sync happens off MainActor
+- UI remains responsive during sync
+- Progress reporting keeps user informed
+- Structured concurrency enables cancellation support
+
+---
+
+### Pattern 12: Main Thread Safety for Persistence Operations
+
+**When**: Ensuring persistence operations don't access UI state unsafely
+
+```swift
+// ❌ WRONG: Accessing @Published properties from background
+actor DataSaver {
+    func saveTrack(_ track: Track, viewModel: TrackViewModel) async throws {
+        // ❌ Unsafe: viewModel is @MainActor, can't access from background
+        let oldTrack = viewModel.currentTrack
+        viewModel.currentTrack = track  // ❌ Data race!
+    }
+}
+
+// ✅ CORRECT: Pass data, not references
+@MainActor
+class TrackViewModel: ObservableObject {
+    @Published var currentTrack: Track?
+
+    func saveTrack(_ track: Track, using saver: DataSaver) async {
+        do {
+            // ✅ Pass data, not self
+            try await saver.saveTrack(track)
+
+            // ✅ Back on MainActor, safe to update
+            self.currentTrack = track
+        } catch {
+            print("Save failed: \(error)")
+        }
+    }
+}
+
+actor DataSaver {
+    let modelContainer: ModelContainer
+
+    func saveTrack(_ track: Track) async throws {
+        let context = ModelContext(modelContainer)
+        context.insert(track)
+        try context.save()
+        // ✅ Return to MainActor caller
+    }
+}
+```
+
+**Key rule**: Never pass `@MainActor` objects or properties to background actors. Always extract the data you need first.
 
 ---
 
