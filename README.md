@@ -46,24 +46,13 @@ In Claude Code, run:
 
 Then search for "axiom" in the `/plugin` menu and install.
 
-### Installation (Alternative - From Local Repository)
-
-```bash
-# Clone the repository
-git clone https://github.com/CharlesWiltgen/Axiom.git
-cd Axiom
-
-# Install the axiom plugin from the plugins directory
-claude-code plugin add ./plugins/axiom
-```
-
 ### Verify Installation
 
-```bash
-# List installed plugins
-claude-code plugin list
+In Claude Code, use `/help` to see installed plugins and verify that Axiom is listed:
 
-# You should see: axiom@0.8.3
+```
+/help
+# You should see axiom's skills listed
 ```
 
 ### Using Skills

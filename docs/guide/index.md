@@ -58,9 +58,11 @@ Once you've added the marketplace in Claude Code:
 
 ### 3. Verify Installation
 
-```bash
-claude-code plugin list
-# You should see: axiom@0.8.3
+In Claude Code, use `/help` to see installed plugins and verify that Axiom is listed:
+
+```
+/help
+# You should see axiom's skills listed
 ```
 
 ### 4. Use Skills

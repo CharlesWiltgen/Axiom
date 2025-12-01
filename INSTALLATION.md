@@ -2,18 +2,25 @@
 
 ## Quick Start
 
-```bash
-# 1. Navigate to your projects directory
-cd /Users/you/Projects
+### 1. Add the Marketplace
 
-# 2. The Axiom directory already exists with the plugin
+In Claude Code, run:
 
-# 3. Install the plugin locally
-claude-code plugin add ./Axiom/plugins/axiom
+```
+/plugin marketplace add https://charleswiltgen.github.io/Axiom/
+```
 
-# 4. Verify installation
-claude-code plugin list
-# Should show: axiom@0.1.0
+### 2. Install the Plugin
+
+Use `/plugin` to open the plugin menu, search for "axiom", and click Install.
+
+### 3. Verify Installation
+
+In Claude Code, use `/help` to see installed plugins:
+
+```
+/help
+# You should see axiom's skills listed
 ```
 
 ## Skills Available
@@ -81,18 +88,16 @@ ls -la /Users/you/Projects/Axiom/plugins/axiom/
 ```
 
 ### Skills not loading
-```bash
-# Restart Claude Code
-# /restart
+```
+# Restart Claude Code by closing and reopening it
 
-# Or check plugin is enabled
-claude-code plugin list
+# Or check in Claude Code with /help to see installed plugins
+/help
 ```
 
 ### Need to update
-```bash
-# If you make changes to skills, reload the plugin
-claude-code plugin reload axiom
+```
+# If you make changes to skills, restart Claude Code for changes to take effect
 ```
 
 ## Development Setup
@@ -100,28 +105,19 @@ claude-code plugin reload axiom
 If you want to modify skills or contribute:
 
 ```bash
-# 1. Make changes to skill files
+# 1. Clone the repository
+git clone https://github.com/CharlesWiltgen/Axiom.git
+cd Axiom
+
+# 2. Make changes to skill files
 vim plugins/axiom/skills/xcode-debugging.md
 
-# 2. Test locally (skills reload automatically)
-# No rebuild needed - just edit and use
+# 3. Restart Claude Code to reload changes
 
-# 3. Commit changes
+# 4. Commit changes
 git add plugins/axiom/skills/
 git commit -m "Improve xcode-debugging skill"
-```
-
-## Publishing (Future)
-
-When ready to publish to a marketplace:
-
-```bash
-# 1. Update version in claude-code.json
-# 2. Create git tag
-git tag v0.1.0
-git push origin v0.1.0
-
-# 3. Publish to marketplace (TBD)
+git push
 ```
 
 ## Requirements
