@@ -4,7 +4,7 @@ layout: home
 hero:
   name: Axiom
   text: Claude Code Skills for iOS Development
-  tagline: Battle-tested Claude Code skills for modern xOS development — Liquid Glass, SwiftUI Performance, Recording UI Automation, and more
+  tagline: Battle-tested Claude Code skills, commands, and references for modern xOS development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more
   actions:
     - theme: brand
       text: Get Started
