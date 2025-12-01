@@ -30,6 +30,12 @@ export default defineConfig({
           ]
         },
         {
+          text: 'Accessibility',
+          items: [
+            { text: 'audit-accessibility', link: '/commands/accessibility/audit-accessibility' }
+          ]
+        },
+        {
           text: 'Concurrency & Async',
           items: [
             { text: 'audit-concurrency', link: '/commands/concurrency/audit-concurrency' }
@@ -62,6 +68,7 @@ export default defineConfig({
           text: 'Debugging & Troubleshooting',
           items: [
             { text: 'Overview', link: '/skills/debugging/' },
+            { text: 'Accessibility Debugging', link: '/skills/debugging/accessibility-debugging' },
             { text: 'Xcode Debugging', link: '/skills/debugging/xcode-debugging' },
             { text: 'Memory Debugging', link: '/skills/debugging/memory-debugging' },
             { text: 'Build Troubleshooting', link: '/skills/debugging/build-troubleshooting' }

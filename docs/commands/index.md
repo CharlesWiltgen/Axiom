@@ -4,6 +4,9 @@ Custom commands are user-invoked tools that perform automated scans and checks. 
 
 ## Available Commands
 
+### Accessibility
+- **[`/audit-accessibility`](./accessibility/audit-accessibility)** – Comprehensive accessibility audit (VoiceOver, Dynamic Type, color contrast, touch targets, WCAG compliance)
+
 ### Concurrency & Async
 - **[`/audit-concurrency`](./concurrency/audit-concurrency)** – Comprehensive concurrency analysis (Swift 6 strict mode, @MainActor, Sendable, actor isolation)
 
@@ -14,6 +17,7 @@ Custom commands are user-invoked tools that perform automated scans and checks. 
 
 ```bash
 # Run a command
+/audit-accessibility
 /audit-concurrency
 /prescan-memory
 

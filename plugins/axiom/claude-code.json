@@ -1,11 +1,12 @@
 {
   "name": "axiom",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
   "commands": [
     "./commands/audit-concurrency.md",
+    "./commands/audit-accessibility.md",
     "./commands/prescan-memory.md"
   ],
   "skills": [
@@ -76,6 +77,10 @@
     {
       "name": "realm-to-swiftdata-migration",
       "description": "Use when migrating from Realm to SwiftData (URGENT: Realm Device Sync sunset Sept 30, 2025) - comprehensive guide with pattern equivalents, threading model conversion from manual DispatchQueue to Swift Concurrency, schema migration strategies for small/medium/enterprise apps, CloudKit sync transition, testing/verification checklist, and real-world migration scenarios"
+    },
+    {
+      "name": "accessibility-debugging",
+      "description": "Use when fixing VoiceOver issues, Dynamic Type violations, color contrast failures, touch target problems, keyboard navigation gaps, or Reduce Motion support - comprehensive accessibility diagnostics with WCAG compliance, Accessibility Inspector workflows, and App Store Review preparation for iOS/macOS"
     }
   ]
 }
