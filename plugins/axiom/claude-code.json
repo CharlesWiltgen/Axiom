@@ -68,6 +68,10 @@
     {
       "name": "core-data-debugging",
       "description": "Use when debugging schema migration crashes, concurrency thread-confinement errors, N+1 query performance, SwiftData to Core Data bridging, or testing migrations without data loss - systematic Core Data diagnostics with safety-first migration patterns"
+    },
+    {
+      "name": "realm-to-swiftdata-migration",
+      "description": "Use when migrating from Realm to SwiftData (URGENT: Realm Device Sync sunset Sept 30, 2025) - comprehensive guide with pattern equivalents, threading model conversion from manual DispatchQueue to Swift Concurrency, schema migration strategies for small/medium/enterprise apps, CloudKit sync transition, testing/verification checklist, and real-world migration scenarios"
     }
   ]
 }
