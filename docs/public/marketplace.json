@@ -11,6 +11,7 @@
     {
       "name": "axiom",
       "version": "0.8.4",
+      "source": "https://charleswiltgen.github.io/Axiom/plugins/axiom",
       "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
       "author": "Charles Wiltgen",
       "license": "MIT",
