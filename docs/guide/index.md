@@ -52,7 +52,7 @@ In Claude Code, run:
 
 You can install Axiom in two ways:
 
-**Option A: From Your Custom Marketplace (After Adding It)**
+**Option A: From the Axiom Plug-In Marketplace (After Adding It)**
 1. You've already added the Axiom marketplace with `/plugin marketplace add` in step 1
 2. In Claude Code, use `/plugin` to open the plugin menu
 3. Search for "axiom"
