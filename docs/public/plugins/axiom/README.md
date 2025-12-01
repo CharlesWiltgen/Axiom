@@ -8,21 +8,13 @@ Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 g
 
 ## Installation
 
-### Option 1: Install from Local Path
+In Claude Code, run:
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/Axiom.git
-
-# Add as a local plugin
-claude-code plugin add /path/to/Axiom/plugins/axiom
+/plugin marketplace add https://charleswiltgen.github.io/Axiom/
 ```
 
-### Option 2: Install from GitHub (Future)
-
-```bash
-claude-code plugin add yourusername/Axiom
-```
+Then search for "axiom" in the `/plugin` menu and install.
 
 ## Skills
 
