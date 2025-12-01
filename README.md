@@ -2,16 +2,16 @@
 
 Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development, updated with the latest iOS 26.x guidance from Apple.
 
-**16 Production-Ready TDD-Tested Skills** | **Version 0.8.2** | **Community Marketplace Submitted**
+**17 Production-Ready TDD-Tested Skills** | **Version 0.8.3** | **Community Marketplace Submitted**
 
 All skills created and verified using RED-GREEN-REFACTOR TDD methodology. Submitted to 3 major Claude Code community marketplaces.
 
 ## What's New Recently
 
-✨ **Latest Skills Added (TDD-tested):**
-- **Core Data Debugging & Migration** - Schema migration safety-first patterns, thread-confinement diagnostics, N+1 query detection, SwiftData↔Core Data bridging. Complements SwiftData skill (SwiftData uses Core Data under the hood)
-- **UIKit Animation Debugging** - Systematic CAAnimation diagnosis covering completion handlers, CATransaction timing, spring physics, and gesture synchronization. 4 patterns prevent 100% of identified retain cycles and timing bugs
-- **Objective-C Block Retain Cycles** - Weak-strong pattern diagnostics with 4 patterns. Reduces block memory leak debugging from 2-4 hours to 5-15 minutes
+✨ **Latest Skills Added (TDD-tested with enhanced features):**
+- **Realm to SwiftData Migration Guide** - Comprehensive migration path for Realm users before Device Sync sunset (Sept 30, 2025). Includes pattern equivalents, threading model conversion, schema migration strategies for small/medium/enterprise apps, CloudKit sync transition, testing checklist, and real-world scenarios
+- **Enhanced SwiftData Skill** - Added CloudKit integration patterns (constraints, conflict resolution, sync monitoring, record sharing), performance optimization (N+1 prevention, batch operations, indexing), and migration strategies from Realm/Core Data
+- **Expanded Swift Concurrency Skill** - Added 6 data persistence concurrency patterns covering SwiftData, Core Data, GRDB, and CloudKit background operations with actor-based isolation
 
 ✨ **Previously Added (TDD-tested):**
 - **SwiftUI Debugging** - View updates, preview crashes, layout issues with diagnostic decision trees. Includes 3 real-world examples (list updates, preview crashes, binding issues)
@@ -53,17 +53,17 @@ Then search for "axiom" in the `/plugin` menu and install.
 git clone https://github.com/CharlesWiltgen/Axiom.git
 cd Axiom
 
-# Install the axiom plugin
-claude --plugin-dir .
+# Install the axiom plugin from the plugins directory
+claude-code plugin add ./plugins/axiom
 ```
 
 ### Verify Installation
 
 ```bash
 # List installed plugins
-claude plugin list
+claude-code plugin list
 
-# You should see: axiom@0.8.2
+# You should see: axiom@0.8.3
 ```
 
 ### Using Skills
@@ -237,9 +237,22 @@ Raw GRDB for complex queries, ValueObservation, DatabaseMigrator patterns.
 ---
 
 #### `swiftdata`
-SwiftData with iOS 26+ features, @Model definitions, @Query patterns, Swift 6 concurrency with @MainActor.
+SwiftData with iOS 26+ features, @Model definitions, @Query patterns, Swift 6 concurrency with @MainActor. Enhanced with CloudKit integration patterns, performance optimization, and migration strategies from Realm/Core Data.
 
-**When to use:** Working with SwiftData @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration
+**When to use:** Working with SwiftData @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, performance optimization
+
+**What's New**: CloudKit constraints & conflict resolution, N+1 query prevention, batch operations, indexes (iOS 26+), migration patterns from Realm and Core Data
+
+---
+
+#### `realm-to-swiftdata-migration`
+Comprehensive migration guide for Realm users facing Device Sync sunset (Sept 30, 2025). Complete path from Realm to SwiftData with pattern equivalents, threading model conversion, schema strategies, and testing checklist.
+
+**When to use:** Migrating from Realm to SwiftData, planning data migration, understanding threading differences, handling CloudKit sync transition, testing for production readiness
+
+**Urgency**: Realm Device Sync sunset September 30, 2025 - this skill is essential for affected developers
+
+**Timeline**: 2-8 weeks depending on app complexity
 
 ---
 

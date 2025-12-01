@@ -4,7 +4,7 @@ Welcome to Axiom, battle-tested Claude Code skills for modern xOS (iOS, iPadOS, 
 
 ## What is Axiom?
 
-Axiom provides 11 production-ready skills covering:
+Axiom provides 17 production-ready TDD-tested skills covering:
 
 ### 🎨 UI & Design Skills
 - **Liquid Glass** – Apple's new material design system (iOS 26+) with expert review checklist
@@ -23,7 +23,13 @@ Axiom provides 11 production-ready skills covering:
 - **Database Migration** – Safe schema evolution for SQLite/GRDB/SwiftData
 - **SQLiteData** – Point-Free's SQLiteData patterns, batch imports, CloudKit sync
 - **GRDB** – Raw SQL queries, ValueObservation, DatabaseMigrator
-- **SwiftData** – iOS 26+ features, @Model, @Query, Swift 6 concurrency
+- **SwiftData** – iOS 26+ features, @Model, @Query, Swift 6 concurrency with CloudKit patterns
+- **Realm to SwiftData Migration** – Complete migration guide (Realm Device Sync sunset Sept 30, 2025)
+- **Core Data Debugging** – Schema migrations, thread-confinement, N+1 queries, SwiftData bridging
+
+### 🔄 UIKit & Legacy
+- **UIKit Animation Debugging** – CAAnimation diagnostics, CATransaction timing, gesture synchronization
+- **Objective-C Block Retain Cycles** – Memory leak prevention, weak-strong pattern diagnostics
 
 ## Prerequisites
 
@@ -44,17 +50,25 @@ In Claude Code, run:
 
 ### 2. Install the Plugin
 
-From the marketplace, search for "axiom" and install it, or use:
+Once you've added the marketplace in Claude Code, you can install Axiom in two ways:
 
+**Option A: From Marketplace (Recommended)**
+1. In Claude Code, use `/plugin` to open the plugin menu
+2. Search for "axiom"
+3. Click "Install"
+
+**Option B: From Terminal (Local Development)**
 ```bash
-claude plugin install axiom@axiom-marketplace
+# Clone and install from local directory
+git clone https://github.com/CharlesWiltgen/Axiom.git
+claude-code plugin add ./Axiom/plugins/axiom
 ```
 
 ### 3. Verify Installation
 
 ```bash
-claude plugin list
-# You should see: axiom@0.1.3
+claude-code plugin list
+# You should see: axiom@0.8.3
 ```
 
 ### 4. Use Skills
@@ -66,11 +80,14 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 /skill axiom:liquid-glass
 /skill axiom:swiftui-performance
 /skill axiom:ui-testing
+/skill axiom:swiftui-debugging
 
 # Debugging & Performance
 /skill axiom:xcode-debugging
 /skill axiom:memory-debugging
 /skill axiom:build-troubleshooting
+/skill axiom:performance-profiling
+/skill axiom:uikit-animation-debugging
 
 # Concurrency & Async
 /skill axiom:swift-concurrency
@@ -80,6 +97,11 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 /skill axiom:sqlitedata
 /skill axiom:grdb
 /skill axiom:swiftdata
+/skill axiom:realm-to-swiftdata-migration
+/skill axiom:core-data-debugging
+
+# Legacy
+/skill axiom:objc-block-retain-cycles
 ```
 
 ## Common Workflows
