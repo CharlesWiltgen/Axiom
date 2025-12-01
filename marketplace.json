@@ -5,12 +5,12 @@
   },
   "metadata": {
     "description": "Battle-tested Claude Code skills for modern iOS/iPadOS/watchOS/tvOS development",
-    "version": "0.7.0"
+    "version": "0.8.2"
   },
   "plugins": [
     {
       "name": "axiom",
-      "version": "0.8.0",
+      "version": "0.8.2",
       "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
       "author": "Charles Wiltgen",
       "license": "MIT",

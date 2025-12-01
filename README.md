@@ -2,13 +2,14 @@
 
 Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development, updated with the latest iOS 26.x guidance from Apple.
 
-**15 Production-Ready TDD-Tested Skills** | **Version 0.7.0** | **Community Marketplace Submitted**
+**16 Production-Ready TDD-Tested Skills** | **Version 0.8.2** | **Community Marketplace Submitted**
 
 All skills created and verified using RED-GREEN-REFACTOR TDD methodology. Submitted to 3 major Claude Code community marketplaces.
 
 ## What's New Recently
 
 ✨ **Latest Skills Added (TDD-tested):**
+- **Core Data Debugging & Migration** - Schema migration safety-first patterns, thread-confinement diagnostics, N+1 query detection, SwiftData↔Core Data bridging. Complements SwiftData skill (SwiftData uses Core Data under the hood)
 - **UIKit Animation Debugging** - Systematic CAAnimation diagnosis covering completion handlers, CATransaction timing, spring physics, and gesture synchronization. 4 patterns prevent 100% of identified retain cycles and timing bugs
 - **Objective-C Block Retain Cycles** - Weak-strong pattern diagnostics with 4 patterns. Reduces block memory leak debugging from 2-4 hours to 5-15 minutes
 
@@ -62,7 +63,7 @@ claude --plugin-dir .
 # List installed plugins
 claude plugin list
 
-# You should see: axiom@0.1.6
+# You should see: axiom@0.8.2
 ```
 
 ### Using Skills
