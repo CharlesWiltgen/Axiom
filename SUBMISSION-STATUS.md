@@ -34,7 +34,7 @@ Users can install Axiom via:
 
 ```bash
 # From the Axiom marketplace
-/plugin marketplace add https://charleswiltgen.github.io/Axiom/
+/plugin marketplace add https://github.com/CharlesWiltgen/Axiom
 
 # Once listed in community marketplaces, they can add those marketplaces too
 /plugin marketplace add jeremylongshore/claude-code-plugins-plus
@@ -86,4 +86,4 @@ Users can install Axiom via:
 ---
 
 **Status:** ✅ Submitted to 3 major community marketplaces
-**Installation:** Available via `/plugin marketplace add https://charleswiltgen.github.io/Axiom/`
+**Installation:** Available via `/plugin marketplace add https://github.com/CharlesWiltgen/Axiom`
