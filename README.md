@@ -52,30 +52,14 @@ Use `/plugin` and select "Manage and install" to see installed plugins. Axiom sh
 
 ### Using Skills
 
-Skills are automatically suggested by Claude Code based on context, or invoke them directly:
+Skills are **automatically suggested by Claude Code** based on your questions and context. Simply ask questions that match the skill's purpose:
 
-```bash
-# UI & Design
-/skill axiom:liquid-glass
-/skill axiom:swiftui-performance
-/skill axiom:swiftui-debugging
-/skill axiom:ui-testing
-
-# Debugging & Performance
-/skill axiom:xcode-debugging
-/skill axiom:memory-debugging
-/skill axiom:build-troubleshooting
-/skill axiom:performance-profiling
-
-# Concurrency & Async
-/skill axiom:swift-concurrency
-
-# Data & Persistence
-/skill axiom:database-migration
-/skill axiom:sqlitedata
-/skill axiom:grdb
-/skill axiom:swiftdata
-```
+**Examples:**
+- "I'm getting BUILD FAILED in Xcode" → activates `xcode-debugging`
+- "How do I fix Swift 6 concurrency errors?" → activates `swift-concurrency`
+- "I need to add a database column safely" → activates `database-migration`
+- "My app has memory leaks" → activates `memory-debugging`
+- "Help me migrate from Realm to SwiftData" → activates `realm-to-swiftdata-migration`
 
 ## Skills Overview
 

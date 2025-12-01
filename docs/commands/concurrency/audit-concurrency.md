@@ -82,21 +82,21 @@ HIGH PRIORITY ISSUES (3 found)
    Class: ProfileViewController (inherits UIViewController)
    Severity: ERROR - Data race risk
    Fix: Add @MainActor decorator
-   See: /skill axiom:swift-concurrency
+   See: swift-concurrency skill (automatically suggested)
 
 2. Unsafe Task self capture
    File: Sources/Services/DataFetcher.swift:45
    Pattern: Task { self.updateUI() }
    Severity: ERROR - Memory leak risk
    Fix: Use Task { [weak self] in pattern
-   See: /skill axiom:swift-concurrency → Pattern 3: Weak Self in Tasks
+   See: swift-concurrency skill (automatically suggested) → Pattern 3: Weak Self in Tasks
 
 3. Sendable violation
    File: Sources/Models/UserModel.swift:78
    Type: NonSendableData passed to @MainActor closure
    Severity: WARNING - Data race risk
    Fix: Implement Sendable conformance
-   See: /skill axiom:swift-concurrency → Pattern 1: Sendable Enum/Struct
+   See: swift-concurrency skill (automatically suggested) → Pattern 1: Sendable Enum/Struct
 
 MEDIUM PRIORITY ISSUES (2 found)
 ─────────────────────────────────────────
@@ -107,7 +107,7 @@ SUMMARY
 ─────────────────────────────────────────
 ✓ Scanned 127 Swift files
 ✗ Found 5 issues (3 high, 2 medium)
-→ Next: /skill axiom:swift-concurrency
+→ Next: Ask about specific patterns (skill automatically activates)
 ```
 
 ## Next Steps
@@ -116,13 +116,11 @@ After the audit:
 
 1. **Review the issues** – Understand what patterns are problematic
 2. **Prioritize fixes** – Start with HIGH priority issues first
-3. **Run the skill** – Get detailed patterns and copy-paste templates
+3. **Ask about fixes** – Request help with specific patterns
 
-```
-/skill axiom:swift-concurrency
-```
+Simply ask: "How do I fix these Swift concurrency issues?" or "Show me Pattern 3: Weak Self in Tasks"
 
-The skill provides:
+The swift-concurrency skill (automatically activated) provides:
 - 12 copy-paste-ready patterns
 - Decision trees for each error
 - Real-world examples

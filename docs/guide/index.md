@@ -62,36 +62,20 @@ Use `/plugin` and select "Manage and install" to see installed plugins. Axiom sh
 
 ### 4. Use Skills
 
-Skills are automatically suggested by Claude Code based on context, or invoke them directly:
+Skills are **automatically suggested by Claude Code** based on your questions and context. Simply ask questions that match the skill's purpose:
 
-```bash
-# UI & Design
-/skill axiom:liquid-glass
-/skill axiom:swiftui-performance
-/skill axiom:ui-testing
-/skill axiom:swiftui-debugging
+**Examples:**
+- "I'm getting BUILD FAILED in Xcode with stale builds" → activates `xcode-debugging`
+- "How do I fix actor isolation errors in Swift 6?" → activates `swift-concurrency`
+- "I need to add a column to my database safely" → activates `database-migration`
+- "My app has memory leaks, where should I look?" → activates `memory-debugging`
 
-# Debugging & Performance
-/skill axiom:xcode-debugging
-/skill axiom:memory-debugging
-/skill axiom:build-troubleshooting
-/skill axiom:performance-profiling
-/skill axiom:uikit-animation-debugging
-
-# Concurrency & Async
-/skill axiom:swift-concurrency
-
-# Data & Persistence
-/skill axiom:database-migration
-/skill axiom:sqlitedata
-/skill axiom:grdb
-/skill axiom:swiftdata
-/skill axiom:realm-to-swiftdata-migration
-/skill axiom:core-data-debugging
-
-# Legacy
-/skill axiom:objc-block-retain-cycles
-```
+Skills available in Axiom:
+- **UI & Design**: liquid-glass, swiftui-performance, ui-testing, swiftui-debugging
+- **Debugging**: xcode-debugging, memory-debugging, build-troubleshooting, performance-profiling
+- **Concurrency**: swift-concurrency
+- **Data & Persistence**: database-migration, sqlitedata, grdb, swiftdata, realm-to-swiftdata-migration, core-data-debugging
+- **Legacy**: objc-block-retain-cycles, uikit-animation-debugging
 
 ## Common Workflows
 
