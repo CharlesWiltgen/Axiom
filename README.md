@@ -2,9 +2,7 @@
 
 Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development, updated with the latest iOS 26.x guidance from Apple.
 
-**17 Production-Ready TDD-Tested Skills** | **Version 0.8.3** | **Community Marketplace Submitted**
-
-All skills created and verified using RED-GREEN-REFACTOR TDD methodology. Submitted to 3 major Claude Code community marketplaces.
+All skills created and verified using RED-GREEN-REFACTOR TDD methodology.
 
 ## What's New Recently
 

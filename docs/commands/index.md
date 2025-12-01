@@ -8,34 +8,55 @@ Commands are different from skills:
 - **Skills** are model-suggested based on context (automatic)
 - **Commands** are user-invoked when you need them (explicit)
 
-Commands are organized by category to match your workflow:
+## Naming Convention
 
-### ⚡ Concurrency & Async
-- **[`/audit-concurrency`](./concurrency/audit-concurrency)** – Scan Swift code for concurrency issues before running the swift-concurrency skill
+Commands follow semantic prefixes that communicate their intensity and purpose:
+
+| Prefix | Purpose | Speed | Use When |
+|--------|---------|-------|----------|
+| `/prescan-*` | Quick heuristic scan | 30-60s | Fast triage before deep debugging |
+| `/audit-*` | Comprehensive analysis | 2-5min | Thorough review of entire codebase |
+| `/check-*` | Configuration validation | 10-30s | Verify environment setup |
+| `/validate-*` | Schema/model validation | 30-90s | Check data model correctness |
+| `/generate-*` | Code scaffolding | Instant | Create boilerplate code |
+
+**Two-tier workflow example:**
+1. `/prescan-memory` → Quick 30s scan finds 3 timer leaks
+2. Fix critical issues
+3. `/audit-memory` → Comprehensive 3min analysis (future command)
+4. Use `memory-debugging` skill for Instruments workflows
 
 ---
 
-## Future Commands
+## Available Commands
 
-Axiom has plans for more commands across other categories:
+Commands are organized by category to match your workflow:
 
-- **Persistence** – `/realm-readiness-check`, `/validate-cloudkit-schema`, `/generate-swiftdata-migration`
-- **Debugging** – `/memory-leak-prescan`
-- **Testing** – `/generate-ui-test-scaffold`
-- **Release** – `/ios-release-checklist`
+### ⚡ Concurrency & Async
+- **[`/audit-concurrency`](./concurrency/audit-concurrency)** – Comprehensive concurrency analysis (Swift 6 strict mode, @MainActor, Sendable, actor isolation)
 
-See [IDEAS.md](https://github.com/CharlesWiltgen/Axiom/blob/main/IDEAS.md) in the repository for the full roadmap.
+### 🐛 Debugging
+- **[`/prescan-memory`](./debugging/prescan-memory)** – Quick memory leak triage (timers, observers, closures, delegates, PhotoKit)
 
 ---
 
 ## Quick Reference
 
 ```bash
-# In Claude Code, invoke any command:
-/audit-concurrency
+# Comprehensive analysis (audit)
+/audit-concurrency              # Full concurrency scan (2-5 min)
 
-# Commands can accept arguments:
-/command-name argument1 argument2
+# Quick triage (prescan)
+/prescan-memory                 # Fast memory leak detection (30-60s)
+
+# Commands accept arguments
+/prescan-memory MyViewController.swift
 ```
 
-Commands run in your current project context and output results with file:line references.
+**Command workflow:**
+1. Run quick `/prescan-*` for fast triage
+2. Fix high-priority issues
+3. Run comprehensive `/audit-*` when needed
+4. Use skills for deep debugging with Instruments
+
+All commands output results with `file:line` references and link to relevant skills.

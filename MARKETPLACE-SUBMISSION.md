@@ -3,7 +3,6 @@
 ## Plugin Details
 
 **Plugin Name:** axiom
-**Version:** 0.1.6
 **Repository:** https://github.com/CharlesWiltgen/Axiom
 **License:** MIT
 

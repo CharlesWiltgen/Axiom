@@ -1,10 +1,14 @@
 # `/audit-concurrency`
 
-**Quick automated scan for Swift 6 concurrency issues and violations.**
+**Comprehensive analysis of Swift 6 concurrency issues and violations.**
 
 ## Purpose
 
-Scans your Swift code for common concurrency anti-patterns and violations before you run the `swift-concurrency` skill. Gives you a roadmap of issues with file:line references so you know exactly what to fix.
+Performs a thorough scan of your Swift codebase for concurrency anti-patterns and violations. This is a **comprehensive audit** that analyzes all Swift files for @MainActor usage, Sendable conformance, actor isolation, and data race prevention patterns.
+
+**Command Type:** `/audit-*` (comprehensive analysis, 2-5 minutes)
+
+Use before the `swift-concurrency` skill to get a complete roadmap of issues with file:line references.
 
 ## When to Use
 
