@@ -45,7 +45,7 @@ Axiom provides 17 production-ready TDD-tested skills covering:
 In Claude Code, run:
 
 ```
-/plugin marketplace add https://github.com/CharlesWiltgen/Axiom
+/plugin marketplace add CharlesWiltgen/Axiom
 ```
 
 ### 2. Install the Plugin

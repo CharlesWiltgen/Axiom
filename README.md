@@ -37,7 +37,7 @@ Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) dev
 In Claude Code, run:
 
 ```
-/plugin marketplace add https://github.com/CharlesWiltgen/Axiom
+/plugin marketplace add CharlesWiltgen/Axiom
 ```
 
 Then search for "axiom" in the `/plugin` menu and install.

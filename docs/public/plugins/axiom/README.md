@@ -11,7 +11,7 @@ Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 g
 In Claude Code, run:
 
 ```bash
-/plugin marketplace add https://github.com/CharlesWiltgen/Axiom
+/plugin marketplace add CharlesWiltgen/Axiom
 ```
 
 Then search for "axiom" in the `/plugin` menu and install.

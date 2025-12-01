@@ -13,7 +13,7 @@ Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) dev
 ## Installation
 
 ```bash
-/plugin marketplace add https://github.com/CharlesWiltgen/Axiom
+/plugin marketplace add CharlesWiltgen/Axiom
 ```
 
 Users can then install Axiom from the marketplace within Claude Code using `/plugin`.
