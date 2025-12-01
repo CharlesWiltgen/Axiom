@@ -58,11 +58,7 @@ Once you've added the marketplace in Claude Code:
 
 ### 3. Verify Installation
 
-Try invoking a skill in Claude Code. If installed, Axiom skills will be available:
-
-```
-/skill axiom:xcode-debugging
-```
+Use `/plugin` and select "Manage and install" to see installed plugins. Axiom should be listed.
 
 ### 4. Use Skills
 

@@ -48,11 +48,7 @@ Then search for "axiom" in the `/plugin` menu and install.
 
 ### Verify Installation
 
-Try invoking a skill in Claude Code. If installed, Axiom skills will be available:
-
-```
-/skill axiom:xcode-debugging
-```
+Use `/plugin` and select "Manage and install" to see installed plugins. Axiom should be listed.
 
 ### Using Skills
 
