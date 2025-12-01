@@ -50,12 +50,13 @@ In Claude Code, run:
 
 ### 2. Install the Plugin
 
-Once you've added the marketplace in Claude Code, you can install Axiom in two ways:
+You can install Axiom in two ways:
 
-**Option A: From Marketplace (Recommended)**
-1. In Claude Code, use `/plugin` to open the plugin menu
-2. Search for "axiom"
-3. Click "Install"
+**Option A: From Your Custom Marketplace (After Adding It)**
+1. You've already added the Axiom marketplace with `/plugin marketplace add` in step 1
+2. In Claude Code, use `/plugin` to open the plugin menu
+3. Search for "axiom"
+4. Click "Install"
 
 **Option B: From Terminal (Local Development)**
 ```bash
@@ -63,6 +64,8 @@ Once you've added the marketplace in Claude Code, you can install Axiom in two w
 git clone https://github.com/CharlesWiltgen/Axiom.git
 claude-code plugin add ./Axiom/plugins/axiom
 ```
+
+**Note:** Axiom is hosted on a self-hosted marketplace, not Anthropic's official marketplace. You must add the custom marketplace first (step 1) before you can install from the UI.
 
 ### 3. Verify Installation
 
