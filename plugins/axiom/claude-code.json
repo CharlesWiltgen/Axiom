@@ -4,6 +4,9 @@
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
+  "commands": [
+    "./commands/audit-concurrency.md"
+  ],
   "skills": [
     {
       "name": "xcode-debugging",
