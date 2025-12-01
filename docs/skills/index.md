@@ -1,8 +1,11 @@
 # Skills
 
-Axiom provides 18 production-ready skills for xOS (iOS, iPadOS, watchOS, tvOS) development.
+Axiom provides 18 skills and 3 commands for xOS (iOS, iPadOS, watchOS, tvOS) development.
 
-**Status**: All discipline-enforcing skills TDD-tested using RED-GREEN-REFACTOR methodology
+**Breakdown:**
+- **15 TDD-tested skills** – Discipline-enforcing workflows tested with RED-GREEN-REFACTOR methodology
+- **3 reference skills** – Comprehensive guides reviewed for accuracy, completeness, clarity, and practical value
+- **3 commands** – Quick automated scans for common issues
 
 ## Skill Categories
 
