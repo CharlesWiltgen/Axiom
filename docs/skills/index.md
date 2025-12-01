@@ -1,8 +1,8 @@
 # Skills
 
-Axiom provides 17 production-ready skills for xOS (iOS, iPadOS, watchOS, tvOS) development.
+Axiom provides 18 production-ready skills for xOS (iOS, iPadOS, watchOS, tvOS) development.
 
-**Status**: All skills TDD-tested using RED-GREEN-REFACTOR methodology
+**Status**: 15 core skills TDD-tested using RED-GREEN-REFACTOR methodology
 
 ## Skill Categories
 
@@ -19,6 +19,7 @@ Build beautiful, performant interfaces with expert guidance on the latest Apple 
 
 Systematic debugging strategies to solve issues faster and prevent common problems before they happen.
 
+- [Accessibility Debugging](/skills/debugging/accessibility-debugging) – WCAG compliance, VoiceOver testing, App Store Review prep
 - [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics for mysterious issues
 - [Memory Debugging](/skills/debugging/memory-debugging) – Systematic leak diagnosis with proven patterns
 - [Build Troubleshooting](/skills/debugging/build-troubleshooting) – Dependency resolution for CocoaPods and SPM

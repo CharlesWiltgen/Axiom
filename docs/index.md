@@ -16,12 +16,12 @@ hero:
 features:
   - title: 🎨 Build Modern UIs
     details: Implement Apple's latest design system, find what's slowing down your views, record UI tests that don't flake
+  - title: ♿ Ship Accessible Apps
+    details: Catch VoiceOver issues, validate WCAG compliance, fix Dynamic Type violations, pass App Store Review accessibility requirements
   - title: 🔧 Fix Problems Fast
     details: Solve mysterious build failures, find memory leaks before users complain, prevent data races in Swift 6
   - title: 💾 Protect User Data
     details: Add database columns without losing data, prevent CloudKit sync failures, safely migrate from Realm
-  - title: ✨ Ship with Confidence
-    details: Validate your Liquid Glass designs, catch performance issues before users complain, write tests that pass reliably
   - title: 📚 Copy-Paste Solutions
     details: Every skill shows working examples first, highlights what works vs what fails, provides ready-to-use patterns
   - title: 🎯 Battle-Tested

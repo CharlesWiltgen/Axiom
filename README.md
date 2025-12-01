@@ -4,17 +4,15 @@ Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) dev
 
 ## What's New Recently
 
-**Latest Skills**
-- **Realm to SwiftData Migration** - Migrate before Device Sync sunset (Sept 30, 2025) without losing user data or breaking threading patterns
-- **SwiftData** - Prevents CloudKit sync failures that lose data, catches N+1 queries before they slow your app, safely migrates from Realm/Core Data
-- **Swift Concurrency** - Prevents data races when accessing databases in background, handles CloudKit sync without blocking UI
+**Latest**
+- **Accessibility Audit & Debugging** - Comprehensive WCAG compliance scanning, VoiceOver testing, Dynamic Type support, color contrast validation, and App Store Review preparation
 
-**Recently Added**
+**Recent Skills**
+- **Realm to SwiftData Migration** - Migrate before Device Sync sunset (Sept 30, 2025) without losing user data or breaking threading patterns
 - **SwiftUI Debugging** - Solve intermittent view updates and preview crashes with diagnostic decision trees
 - **Performance Profiling** - Find CPU bottlenecks, memory growth, and N+1 queries before users complain
 - **Liquid Glass** - Implement Apple's glass effects correctly and get expert validation
 - **SwiftUI Performance** - Find what's making your views slow and fix it
-- **UI Testing** - Record tests that work reliably across devices and languages
 
 ## Structure
 
@@ -147,6 +145,22 @@ Instruments decision trees and profiling workflows for CPU, memory, and battery 
 
 ### Debugging & Performance
 
+#### `accessibility-debugging`
+Comprehensive accessibility diagnostics with WCAG compliance, VoiceOver testing, Dynamic Type support, color contrast validation, and App Store Review preparation.
+
+**Key Features:**
+- 7 critical accessibility issues (VoiceOver labels, Dynamic Type, color contrast, touch targets, keyboard navigation, Reduce Motion, common violations)
+- WCAG compliance levels (A, AA, AAA) with code examples
+- Accessibility Inspector workflows
+- VoiceOver testing checklist
+- App Store Review requirements
+
+**When to use:** Fixing VoiceOver issues, Dynamic Type violations, color contrast failures, touch target problems, preparing for App Store Review
+
+**Command:** `/audit-accessibility` for quick automated scanning
+
+---
+
 #### `xcode-debugging`
 Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute rabbit holes by checking build environment before debugging code.
 
@@ -158,6 +172,8 @@ Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute r
 Systematic memory leak diagnosis with Instruments. 5 leak patterns covering 90% of real-world issues.
 
 **When to use:** App memory grows over time, seeing multiple instances of same class, crashes with memory limit exceeded, Instruments shows retain cycles
+
+**Command:** `/prescan-memory` for quick triage scanning
 
 ---
 
