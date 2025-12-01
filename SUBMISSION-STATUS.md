@@ -30,14 +30,11 @@ Axiom has been successfully submitted to the major Claude Code plugin marketplac
 
 ## Installation
 
-Users can install Axiom immediately via:
+Users can install Axiom via:
 
 ```bash
-# Direct from GitHub
-claude-code plugin add CharlesWiltgen/Axiom
-
-# From your own marketplace
-/plugin marketplace add CharlesWiltgen/Axiom
+# From the Axiom marketplace
+/plugin marketplace add https://charleswiltgen.github.io/Axiom/
 
 # Once listed in community marketplaces, they can add those marketplaces too
 /plugin marketplace add jeremylongshore/claude-code-plugins-plus
@@ -89,4 +86,4 @@ claude-code plugin add CharlesWiltgen/Axiom
 ---
 
 **Status:** ✅ Submitted to 3 major community marketplaces
-**Direct Installation:** Available immediately via `claude-code plugin add CharlesWiltgen/Axiom`
+**Installation:** Available via `/plugin marketplace add https://charleswiltgen.github.io/Axiom/`
