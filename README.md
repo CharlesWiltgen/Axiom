@@ -2,16 +2,14 @@
 
 Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development, updated with the latest iOS 26.x guidance from Apple.
 
-All skills created and verified using RED-GREEN-REFACTOR TDD methodology.
-
 ## What's New Recently
 
-✨ **Latest Skills:**
+**Latest Skills**
 - **Realm to SwiftData Migration** - Migrate before Device Sync sunset (Sept 30, 2025) without losing user data or breaking threading patterns
 - **SwiftData** - Prevents CloudKit sync failures that lose data, catches N+1 queries before they slow your app, safely migrates from Realm/Core Data
 - **Swift Concurrency** - Prevents data races when accessing databases in background, handles CloudKit sync without blocking UI
 
-✨ **Recently Added:**
+**Recently Added**
 - **SwiftUI Debugging** - Solve intermittent view updates and preview crashes with diagnostic decision trees
 - **Performance Profiling** - Find CPU bottlenecks, memory growth, and N+1 queries before users complain
 - **Liquid Glass** - Implement Apple's glass effects correctly and get expert validation
@@ -61,7 +59,7 @@ Skills are **automatically suggested by Claude Code** based on your questions an
 
 ## Skills Overview
 
-### 🎨 UI & Design
+### UI & Design
 
 #### `liquid-glass`
 Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid Glass visual properties, implementation patterns, and design principles.
@@ -147,7 +145,7 @@ Instruments decision trees and profiling workflows for CPU, memory, and battery 
 
 ---
 
-### 🐛 Debugging & Performance
+### Debugging & Performance
 
 #### `xcode-debugging`
 Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute rabbit holes by checking build environment before debugging code.
@@ -170,7 +168,7 @@ Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
 ---
 
-### ⚡ Concurrency & Async
+### Concurrency & Async
 
 #### `swift-concurrency`
 Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor isolation, and data race prevention.
@@ -179,7 +177,7 @@ Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor is
 
 ---
 
-### 💾 Data & Persistence
+### Data & Persistence
 
 #### `database-migration`
 Safe database schema evolution for SQLite/GRDB/SwiftData. Prevents data loss with additive migrations and testing workflows.
