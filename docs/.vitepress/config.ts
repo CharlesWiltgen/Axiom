@@ -32,8 +32,13 @@ export default defineConfig({
         {
           text: 'Concurrency & Async',
           items: [
-            { text: 'Overview', link: '/commands/concurrency/' },
             { text: 'audit-concurrency', link: '/commands/concurrency/audit-concurrency' }
+          ]
+        },
+        {
+          text: 'Debugging',
+          items: [
+            { text: 'prescan-memory', link: '/commands/debugging/prescan-memory' }
           ]
         }
       ],

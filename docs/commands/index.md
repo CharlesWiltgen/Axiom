@@ -10,8 +10,6 @@ Custom commands are user-invoked tools that perform automated scans and checks. 
 ### Debugging
 - **[`/prescan-memory`](./debugging/prescan-memory)** – Quick memory leak triage (timers, observers, closures, delegates, PhotoKit)
 
----
-
 ## Usage
 
 ```bash
