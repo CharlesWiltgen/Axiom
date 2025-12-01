@@ -1,6 +1,6 @@
 # App Intents Integration
 
-Comprehensive guide to App Intents framework for integrating your app with Siri, Apple Intelligence, Shortcuts, Spotlight, and other system experiences.
+Comprehensive guide to App Intents framework for integrating your app with Siri, Apple Intelligence, Shortcuts, Spotlight, and other system experiences. **Enhanced with WWDC 2025 guidance on Apple Intelligence integration, IndexedEntity boilerplate reduction, and Spotlight/Automations on Mac.**
 
 ## When to Use
 
@@ -12,6 +12,10 @@ Comprehensive guide to App Intents framework for integrating your app with Siri,
 - Debugging intent resolution or parameter validation failures
 - Testing intents with Shortcuts app
 - Implementing entity queries for app content
+- **NEW:** Passing entities to Apple Intelligence models for reasoning
+- **NEW:** Reducing boilerplate with IndexedEntity
+- **NEW:** Running intents from Spotlight on Mac
+- **NEW:** Creating automated workflows with Automations on Mac
 
 ## What It Covers
 
@@ -29,6 +33,8 @@ Comprehensive guide to App Intents framework for integrating your app with Siri,
 - Entity queries for content discovery
 - Spotlight indexing integration
 - Separating entities from core data models
+- **NEW:** JSON representation for Apple Intelligence models
+- **NEW:** IndexedEntity automatic Find actions
 
 **3. AppEnum** - Enumeration types for parameters
 - Case display representations
@@ -40,13 +46,78 @@ Comprehensive guide to App Intents framework for integrating your app with Siri,
 App Intents integrate with:
 - Siri voice commands and Apple Intelligence
 - Shortcuts automation workflows
-- Spotlight search discovery
+- Spotlight search discovery (macOS Sequoia+)
 - Focus filters
 - Action button (Apple Watch Ultra)
 - Control Center shortcuts
 - WidgetKit interactive widgets
 - Live Activities
 - Visual Intelligence
+- **NEW:** Automations on Mac (folder, external drive, time, Bluetooth)
+
+### Apple Intelligence Integration (WWDC 2025-260)
+
+**Use Model Action:**
+- Pass app entities to language models for filtering and reasoning
+- Three output types: Text (AttributedString), Dictionary, App Entities
+- Automatic type conversion (e.g., Boolean for If actions)
+- Follow-up feature for iterative refinement
+
+**AttributedString Support:**
+- Preserve Rich Text formatting from AI models (bold, italic, lists, tables)
+- Lossless transfer from model to your app
+- Real example: Bear app diary templates with mood logging tables
+
+**Entity JSON Representation:**
+Models receive structured data including:
+- All @Property values (converted to strings)
+- Type display representation
+- Display representation (title, subtitle)
+
+### IndexedEntity Protocol (WWDC 2025-260)
+
+**Dramatic Boilerplate Reduction:**
+- Auto-generate Find actions from Spotlight integration
+- Map properties to Spotlight attribute keys
+- Automatic search and filtering support
+- Eliminates manual EntityQuery/EntityPropertyQuery implementation
+
+**Example:**
+```swift
+struct EventEntity: AppEntity, IndexedEntity {
+    @Property(title: "Title", indexingKey: \.eventTitle)
+    var title: String
+
+    @Property(title: "Notes", customIndexingKey: "eventNotes")
+    var notes: String?
+
+    // Auto-generates Find Events action in Shortcuts!
+}
+```
+
+### Spotlight on Mac (WWDC 2025-260)
+
+**Run Intents Directly from Spotlight:**
+- Parameter summary must include all required parameters
+- Provide suggestions for quick parameter filling
+- On-screen content tagging with appEntityIdentifier
+- Background/foreground intent pairing with opensIntent
+- PredictableIntent for usage-based suggestions
+
+**Visibility Requirements:**
+- All required params in parameter summary (or make optional/provide defaults)
+- Not hidden via isDiscoverable = false or assistantOnly = true
+- Must have perform() method (widget config-only intents excluded)
+
+### Automations on Mac (WWDC 2025-260)
+
+**Personal Automations Arrive on Mac:**
+- Folder automation - trigger when files added/removed
+- External drive automation - trigger on connect/disconnect
+- Time of Day, Bluetooth, and more from iOS
+
+**Automatic Availability:**
+"As long as your intent is available on macOS, they will also be available to use in Shortcuts to run as a part of Automations on Mac. This includes iOS apps that are installable on macOS." - WWDC 2025-260
 
 ### Parameter Handling
 
@@ -54,6 +125,7 @@ App Intents integrate with:
 - Parameter summaries for natural phrasing
 - RequestValueDialog for disambiguation
 - Validation and error messages
+- **NEW:** AttributedString for Rich Text from AI models
 
 ### Entity Queries
 
@@ -61,17 +133,22 @@ App Intents integrate with:
 - entities(for:) for ID-based lookup
 - suggestedEntities() for recommendations
 - EntityStringQuery for search
+- **NEW:** IndexedEntity for automatic Find actions
 
 ### Testing & Debugging
 
 - Testing with Shortcuts app
 - Xcode intent testing
 - Siri voice command testing
+- **NEW:** Testing in Spotlight on Mac
+- **NEW:** Testing automations with folder/drive triggers
 - Common issues:
   - Intent not appearing in Shortcuts
   - Parameter not resolving
   - Crashes in background execution
   - Empty entity query results
+  - **NEW:** Intent not showing in Spotlight (missing param in summary)
+  - **NEW:** Rich Text lost (using String instead of AttributedString)
 
 ## Key Features
 
@@ -96,7 +173,7 @@ iOS 16+
 ### WWDC Sessions
 - [Get to know App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/244/)
 - [Explore new advances in App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/275/)
-- [Develop for Shortcuts and Spotlight (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/260/)
+- **[Develop for Shortcuts and Spotlight (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/260/)** - Use Model action, IndexedEntity, Spotlight on Mac, Automations
 
 ## Example Patterns
 

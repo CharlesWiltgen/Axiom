@@ -430,6 +430,572 @@ struct DeleteTaskIntent: AppIntent {
 
 ---
 
+## Apple Intelligence: Use Model Action
+
+### Overview
+
+The **Use Model action** in Shortcuts (iOS 18.1+) allows users to incorporate Apple Intelligence models into their automation workflows. Your app's entities can be passed to language models for filtering, transformation, and reasoning.
+
+**Key capability:** "Under the hood, the action passes a JSON representation of your entity to the model, so you'll want to make sure to expose any information you want it to be able to reason over, in the entity definition." - WWDC 2025-260
+
+### Three Output Types
+
+**1. Text (AttributedString)**
+- Models often respond with Rich Text (bold, italic, lists, tables)
+- Use `AttributedString` type for text parameters to preserve formatting
+- Enables lossless transfer from model to your app
+
+**2. Dictionary**
+- Structured data extraction from unstructured input
+- Useful for parsing PDFs, emails, documents
+- Example: Extract vendor, amount, date from invoice
+
+**3. App Entities (Your Types)**
+- Pass lists of entities to models for filtering/reasoning
+- Model receives JSON representation of entities
+- Example: "Filter calendar events related to my trip"
+
+### Exposing Entities to Models
+
+Models receive a JSON representation of your entities including:
+
+**1. All exposed properties** (converted to strings)
+```swift
+struct EventEntity: AppEntity {
+    var id: UUID
+
+    @Property(title: "Title")
+    var title: String
+
+    @Property(title: "Start Date")
+    var startDate: Date
+
+    @Property(title: "End Date")
+    var endDate: Date
+
+    @Property(title: "Notes")
+    var notes: String?
+
+    // All @Property values included in JSON for model
+}
+```
+
+**2. Type display representation** (hints what entity represents)
+```swift
+static var typeDisplayRepresentation: TypeDisplayRepresentation = "Calendar Event"
+```
+
+**3. Display representation** (title and subtitle)
+```swift
+var displayRepresentation: DisplayRepresentation {
+    DisplayRepresentation(
+        title: "\(title)",
+        subtitle: "\(startDate.formatted())"
+    )
+}
+```
+
+**Example JSON sent to model:**
+```json
+{
+  "type": "Calendar Event",
+  "title": "Team Meeting",
+  "subtitle": "Jan 15, 2025 at 2:00 PM",
+  "properties": {
+    "Title": "Team Meeting",
+    "Start Date": "2025-01-15T14:00:00Z",
+    "End Date": "2025-01-15T15:00:00Z",
+    "Notes": "Discuss Q1 roadmap"
+  }
+}
+```
+
+### Supporting Rich Text with AttributedString
+
+**Why it matters:** "If your app supports Rich Text content, now is the time to make sure your app intents use the attributed string type for text parameters where appropriate." - WWDC 2025-260
+
+**❌ DON'T: Use plain String**
+```swift
+struct CreateNoteIntent: AppIntent {
+    @Parameter(title: "Content")
+    var content: String // Loses formatting from model
+}
+```
+
+**✅ DO: Use AttributedString**
+```swift
+struct CreateNoteIntent: AppIntent {
+    @Parameter(title: "Content")
+    var content: AttributedString // Preserves Rich Text
+
+    func perform() async throws -> some IntentResult {
+        let note = Note(content: content) // Rich Text preserved
+        try await NoteService.shared.save(note)
+        return .result()
+    }
+}
+```
+
+**Real-world example from WWDC:**
+Bear app's Create Note accepts AttributedString, allowing diary templates from ChatGPT to include:
+- Bold headings
+- Mood logging tables
+- Formatted lists
+- All preserved losslessly
+
+### Automatic Type Conversion
+
+When Use Model output connects to another action, the runtime automatically converts types:
+
+**Example: Boolean for If actions**
+```swift
+// User's shortcut:
+// 1. Get notes created today
+// 2. For each note:
+//    - Use Model: "Is this note related to developing features for Shortcuts?"
+//    - If [model output] = yes:
+//      - Add to Shortcuts Projects folder
+```
+
+Instead of returning verbose text like "Yes, this note seems to be about developing features for the Shortcuts app", the model automatically returns a Boolean (`true`/`false`) when connected to an If action.
+
+**Explicit output types available:**
+- Text (AttributedString)
+- Number
+- Boolean
+- Dictionary
+- Date
+- App Entities
+
+### Follow-Up Feature
+
+Enable iterative refinement before passing to next action:
+
+```swift
+// User runs shortcut:
+// 1. Get recipe from Safari
+// 2. Use Model: "Extract ingredients list"
+//    - Follow Up: enabled
+//    - User types: "Double the recipe"
+//    - Model adjusts: 800g flour instead of 400g
+// 3. Add to Grocery List in Things app
+```
+
+**When to use:**
+- Recipe modifications (scale servings, substitute ingredients)
+- Content refinement (adjust tone, length, style)
+- Data validation (confirm extracted values before saving)
+
+---
+
+## IndexedEntity: Automatic Find Actions
+
+### Overview
+
+**IndexedEntity** dramatically reduces boilerplate by auto-generating Find actions from your Spotlight integration. Instead of manually implementing `EntityQuery` and `EntityPropertyQuery`, adopt IndexedEntity to get:
+
+- Automatic Find action in Shortcuts
+- Property-based filtering
+- Search support
+- Minimal code required
+
+### Basic Implementation
+
+```swift
+struct EventEntity: AppEntity, IndexedEntity {
+    var id: UUID
+
+    // 1. Properties with indexing keys
+    @Property(title: "Title", indexingKey: \.eventTitle)
+    var title: String
+
+    @Property(title: "Start Date", indexingKey: \.startDate)
+    var startDate: Date
+
+    @Property(title: "End Date", indexingKey: \.endDate)
+    var endDate: Date
+
+    // 2. Custom key for properties without standard Spotlight attribute
+    @Property(title: "Notes", customIndexingKey: "eventNotes")
+    var notes: String?
+
+    // Display representation automatically maps to Spotlight
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(
+            title: "\(title)",
+            subtitle: "\(startDate.formatted())"
+            // title → kMDItemTitle
+            // subtitle → kMDItemDescription
+            // image → kMDItemContentType (if provided)
+        )
+    }
+
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Event"
+}
+```
+
+### Indexing Key Mapping
+
+**Standard Spotlight attribute keys:**
+```swift
+// Common Spotlight keys for events
+@Property(title: "Title", indexingKey: \.eventTitle)
+var title: String
+
+@Property(title: "Start Date", indexingKey: \.startDate)
+var startDate: Date
+
+@Property(title: "Location", indexingKey: \.eventLocation)
+var location: String?
+```
+
+**Custom keys for non-standard attributes:**
+```swift
+@Property(title: "Notes", customIndexingKey: "eventNotes")
+var notes: String?
+
+@Property(title: "Attendee Count", customIndexingKey: "attendeeCount")
+var attendeeCount: Int
+```
+
+### Auto-Generated Find Action
+
+With IndexedEntity conformance, users get this Find action automatically:
+
+**In Shortcuts app:**
+```
+Find Events where:
+  - Title contains "Team"
+  - Start Date is today
+  - Location is "San Francisco"
+```
+
+**Without IndexedEntity, you'd need to manually implement:**
+- `EnumerableEntityQuery` protocol
+- `EntityPropertyQuery` protocol
+- Property filters for each searchable field
+- Search/suggestion logic
+
+**With IndexedEntity:** Just add indexing keys, done!
+
+### Search Support
+
+Enable string-based search by implementing `EntityStringQuery`:
+
+```swift
+extension EventEntityQuery: EntityStringQuery {
+    func entities(matching string: String) async throws -> [EventEntity] {
+        return try await EventService.shared.search(query: string)
+    }
+}
+```
+
+Or rely on IndexedEntity + Spotlight for automatic search.
+
+### Example: Travel Tracking App
+
+Apple's sample code (App Intents Travel Tracking App) demonstrates IndexedEntity:
+
+```swift
+struct TripEntity: AppEntity, IndexedEntity {
+    var id: UUID
+
+    @Property(title: "Name", indexingKey: \.title)
+    var name: String
+
+    @Property(title: "Start Date", indexingKey: \.startDate)
+    var startDate: Date
+
+    @Property(title: "End Date", indexingKey: \.endDate)
+    var endDate: Date
+
+    @Property(title: "Destination", customIndexingKey: "destination")
+    var destination: String
+
+    // Auto-generated Find Trips action with filters for all properties
+}
+```
+
+---
+
+## Spotlight on Mac
+
+### Overview
+
+**Spotlight on Mac** (macOS Sequoia+) allows users to run your app's intents directly from system search. Intents that work in Shortcuts automatically work in Spotlight with proper configuration.
+
+**Key principle:** "Spotlight is all about running things quickly. To do that, people need to be able to provide all the information your intent needs to run directly in Spotlight." - WWDC 2025-260
+
+### Requirements for Spotlight Visibility
+
+**1. Parameter Summary Must Include All Required Parameters**
+
+"The parameter summary, which is what people will see in Spotlight UI, must contain all required parameters that don't have a default value." - WWDC 2025-260
+
+**❌ WON'T SHOW in Spotlight:**
+```swift
+struct CreateEventIntent: AppIntent {
+    static var title: LocalizedStringResource = "Create Event"
+
+    @Parameter(title: "Title")
+    var title: String
+
+    @Parameter(title: "Start Date")
+    var startDate: Date
+
+    @Parameter(title: "End Date")
+    var endDate: Date
+
+    @Parameter(title: "Notes") // Required, no default
+    var notes: String
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("Create '\(\.$title)' from \(\.$startDate) to \(\.$endDate)")
+        // Missing 'notes' parameter!
+    }
+}
+```
+
+**✅ WILL SHOW in Spotlight (Option 1: Make optional):**
+```swift
+@Parameter(title: "Notes")
+var notes: String? // Optional - can omit from summary
+```
+
+**✅ WILL SHOW in Spotlight (Option 2: Provide default):**
+```swift
+@Parameter(title: "Notes")
+var notes: String = "" // Has default - can omit from summary
+```
+
+**✅ WILL SHOW in Spotlight (Option 3: Include in summary):**
+```swift
+static var parameterSummary: some ParameterSummary {
+    Summary("Create '\(\.$title)' from \(\.$startDate) to \(\.$endDate)") {
+        \.$notes // All required params included
+    }
+}
+```
+
+**2. Intent Must Not Be Hidden**
+
+Intents hidden from Shortcuts won't appear in Spotlight:
+
+```swift
+// ❌ Hidden from Spotlight
+static var isDiscoverable: Bool = false
+
+// ❌ Hidden from Spotlight
+static var assistantOnly: Bool = true
+
+// ❌ Hidden from Spotlight
+// Intent with no perform() method (widget configuration only)
+```
+
+### Providing Suggestions
+
+Make parameter filling quick with suggestions:
+
+**Option 1: Suggested Entities (Subset of Large List)**
+```swift
+struct EventEntityQuery: EntityQuery {
+    func entities(for identifiers: [UUID]) async throws -> [EventEntity] {
+        return try await EventService.shared.fetchEvents(ids: identifiers)
+    }
+
+    // Provide upcoming events, not all past/present events
+    func suggestedEntities() async throws -> [EventEntity] {
+        return try await EventService.shared.upcomingEvents(limit: 10)
+    }
+}
+```
+
+**Option 2: All Entities (Small, Bounded List)**
+```swift
+struct TimezoneQuery: EnumerableEntityQuery {
+    func allEntities() async throws -> [TimezoneEntity] {
+        // Small list - provide all
+        return TimezoneEntity.allTimezones
+    }
+}
+```
+
+**Use suggested entities when:** List is large or unbounded (calendar events, notes, contacts)
+**Use all entities when:** List is small and bounded (timezones, priority levels, categories)
+
+### On-Screen Content Tagging
+
+Suggest currently active content:
+
+```swift
+// In your detail view controller
+func showEventDetail(_ event: Event) {
+    let activity = NSUserActivity(activityType: "com.myapp.viewEvent")
+    activity.persistentIdentifier = event.id.uuidString
+
+    // Spotlight suggests this event for parameters
+    activity.appEntityIdentifier = event.id.uuidString
+
+    userActivity = activity
+}
+```
+
+For details, see "Exploring New Advances in App Intents" (WWDC 2025).
+
+### Search Beyond Suggestions
+
+**Basic filtering** (automatic):
+If you provide suggestions, Spotlight automatically filters them as user types.
+
+**Deep search** (requires implementation):
+For searching beyond suggestions:
+
+**Option 1: EntityStringQuery**
+```swift
+extension EventQuery: EntityStringQuery {
+    func entities(matching string: String) async throws -> [EventEntity] {
+        return try await EventService.shared.search(query: string)
+    }
+}
+```
+
+**Option 2: IndexedEntity**
+```swift
+struct EventEntity: AppEntity, IndexedEntity {
+    // Spotlight search automatically supported
+}
+```
+
+### Background vs Foreground Intents
+
+**Pattern: Paired Intents with opensIntent**
+
+```swift
+// Background intent - runs without opening app
+struct CreateEventIntent: AppIntent {
+    static var openAppWhenRun: Bool = false
+
+    @Parameter(title: "Title")
+    var title: String
+
+    @Parameter(title: "Start Date")
+    var startDate: Date
+
+    func perform() async throws -> some IntentResult {
+        let event = try await EventService.shared.createEvent(
+            title: title,
+            startDate: startDate
+        )
+
+        // Optionally open app to view created event
+        return .result(
+            value: EventEntity(from: event),
+            opensIntent: OpenEventIntent(event: EventEntity(from: event))
+        )
+    }
+}
+
+// Foreground intent - opens app to specific event
+struct OpenEventIntent: AppIntent {
+    static var openAppWhenRun: Bool = true
+
+    @Parameter(title: "Event")
+    var event: EventEntity
+
+    func perform() async throws -> some IntentResult {
+        await MainActor.run {
+            EventCoordinator.shared.showEvent(id: event.id)
+        }
+        return .result()
+    }
+}
+```
+
+**User experience:**
+1. User runs "Create Event" in Spotlight (background)
+2. Event created without opening app
+3. Spotlight shows "Open in App" button (opensIntent)
+4. User taps button → App opens to event detail
+
+### Predictable Intent Protocol
+
+Enable Spotlight suggestions based on usage patterns:
+
+```swift
+struct OrderCoffeeIntent: AppIntent, PredictableIntent {
+    static var title: LocalizedStringResource = "Order Coffee"
+
+    @Parameter(title: "Coffee Type")
+    var coffeeType: CoffeeType
+
+    @Parameter(title: "Size")
+    var size: CoffeeSize
+
+    func perform() async throws -> some IntentResult {
+        // Order logic
+        return .result()
+    }
+}
+```
+
+Spotlight learns when/how user runs this intent and surfaces suggestions proactively.
+
+---
+
+## Automations on Mac
+
+### Overview
+
+**Personal Automations** arrive on macOS (macOS Sequoia+) with Mac-specific triggers:
+
+**New Mac Automation Types:**
+- **Folder Automation** - Trigger when files added/removed from folder
+- **External Drive Automation** - Trigger when drive connected/disconnected
+- Time of Day (from iOS)
+- Bluetooth (from iOS)
+- And more...
+
+**Example use case:** Invoice processing shortcut runs automatically every time a new invoice is added to ~/Documents/Invoices folder.
+
+### Automatic Availability
+
+"As long as your intent is available on macOS, they will also be available to use in Shortcuts to run as a part of Automations on Mac. This includes iOS apps that are installable on macOS." - WWDC 2025-260
+
+**No additional code required** - your existing intents work in automations automatically.
+
+### Platform Support
+
+```swift
+struct ProcessInvoiceIntent: AppIntent {
+    static var title: LocalizedStringResource = "Process Invoice"
+
+    // Available on macOS automatically
+    // Also works: iOS apps installed on Mac (Catalyst, Mac Catalyst)
+
+    @Parameter(title: "Invoice")
+    var invoice: FileEntity
+
+    func perform() async throws -> some IntentResult {
+        // Extract data, add to spreadsheet, etc.
+        return .result()
+    }
+}
+```
+
+### Additional System Integration Points
+
+With automations, your intents are now accessible from:
+- **Siri** - Voice commands
+- **Shortcuts app** - Manual workflows
+- **Spotlight** - Quick actions
+- **Automations** - Triggered workflows
+- **Action Button** - Hardware trigger (Apple Watch Ultra)
+- **Control Center** - Quick controls
+- **Widgets** - Interactive elements
+- **Live Activities** - Dynamic Island
+
+---
+
 ## Assistant Schemas (Pre-built Intents)
 
 Apple provides pre-built schemas for common app categories:
