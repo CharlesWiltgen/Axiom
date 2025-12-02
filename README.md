@@ -76,6 +76,8 @@ Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid
 
 **Requirements:** iOS 26+, Xcode 26+
 
+**Command:** `/audit-liquid-glass` for quick automated codebase scanning
+
 ---
 
 #### `swiftui-performance`

@@ -46,6 +46,12 @@ export default defineConfig({
           items: [
             { text: 'prescan-memory', link: '/commands/debugging/prescan-memory' }
           ]
+        },
+        {
+          text: 'UI & Design',
+          items: [
+            { text: 'audit-liquid-glass', link: '/commands/ui-design/audit-liquid-glass' }
+          ]
         }
       ],
       '/skills/': [

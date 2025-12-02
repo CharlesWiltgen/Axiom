@@ -13,12 +13,16 @@ Custom commands are user-invoked tools that perform automated scans and checks. 
 ### Debugging
 - **[`/prescan-memory`](./debugging/prescan-memory)** – Quick memory leak triage (timers, observers, closures, delegates, PhotoKit)
 
+### UI & Design
+- **[`/audit-liquid-glass`](./ui-design/audit-liquid-glass)** – Liquid Glass adoption opportunities (iOS 26+): glass effects, toolbar improvements, search patterns, migration from old blur effects
+
 ## Usage
 
 ```bash
 # Run a command
 /audit-accessibility
 /audit-concurrency
+/audit-liquid-glass
 /prescan-memory
 
 # Commands accept arguments
