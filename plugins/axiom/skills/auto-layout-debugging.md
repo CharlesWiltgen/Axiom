@@ -61,10 +61,10 @@ Will attempt to recover by breaking constraint
 ```
 
 **Key Components**:
-1. **Memory addresses** - `0x7f8b9c4...` identifies views and constraints
-2. **Visual Format** - Human-readable constraint description
-3. **`(active)` status** - Constraint is currently enforced
-4. **Recovery action** - Which constraint system will break (usually lowest priority)
+1. **Memory addresses** — `0x7f8b9c4...` identifies views and constraints
+2. **Visual Format** — Human-readable constraint description
+3. **`(active)` status** — Constraint is currently enforced
+4. **Recovery action** — Which constraint system will break (usually lowest priority)
 
 ### System-Generated Constraints
 
@@ -166,16 +166,16 @@ po [0x7f8b9c4... constraintsAffectingLayoutForAxis:1]
 **When to use**: Views positioned incorrectly, constraints not visible in code.
 
 **Workflow**:
-1. **Trigger the issue** - Navigate to screen with constraint problems
-2. **Pause execution** - Click "Debug View Hierarchy" button in debug bar (or Debug → View Debugging → Capture View Hierarchy)
-3. **Inspect 3D view** - Rotate view hierarchy to see layering
-4. **Enable "Show Constraints"** - Shows all constraints as lines
-5. **Select view** - Right panel shows all constraints affecting selected view
+1. **Trigger the issue** — Navigate to screen with constraint problems
+2. **Pause execution** — Click "Debug View Hierarchy" button in debug bar (or Debug → View Debugging → Capture View Hierarchy)
+3. **Inspect 3D view** — Rotate view hierarchy to see layering
+4. **Enable "Show Constraints"** — Shows all constraints as lines
+5. **Select view** — Right panel shows all constraints affecting selected view
 
 **Key Features**:
-- **Show Clipped Content** - Reveals views positioned off-screen
-- **Show Constraints** - Visualizes constraint relationships
-- **Filter Bar** - Search for specific views by class or memory address
+- **Show Clipped Content** — Reveals views positioned off-screen
+- **Show Constraints** — Visualizes constraint relationships
+- **Filter Bar** — Search for specific views by class or memory address
 
 **Finding Issues**:
 - Purple constraints = satisfied
@@ -395,9 +395,9 @@ minWidth.isActive = true
 ```
 
 **Priority levels** (higher = stronger):
-- `.required` (1000) - Must be satisfied
-- `.defaultHigh` (750) - Strong preference
-- `.defaultLow` (250) - Weak preference
+- `.required` (1000) — Must be satisfied
+- `.defaultHigh` (750) — Strong preference
+- `.defaultLow` (250) — Weak preference
 - Custom: any value 1-999
 
 ---
@@ -608,21 +608,21 @@ imageView.widthAnchor.constraint(equalToConstant: 100).isActive = true // Auto L
 
 ## References
 
-- [Apple Auto Layout Guide - Debugging](https://developer.apple.com/library/archive/documentation/UserExperience/Conceptual/AutolayoutPG/DebuggingTricksandTips.html)
-- [Stack Overflow - UIViewAlertForUnsatisfiableConstraints](https://stackoverflow.com/questions/26389273/how-to-trap-on-uiviewalertforunsatisfiableconstraints)
+- [Apple Auto Layout Guide — Debugging](https://developer.apple.com/library/archive/documentation/UserExperience/Conceptual/AutolayoutPG/DebuggingTricksandTips.html)
+- [Stack Overflow — UIViewAlertForUnsatisfiableConstraints](https://stackoverflow.com/questions/26389273/how-to-trap-on-uiviewalertforunsatisfiableconstraints)
 - [Auto Layout Debugging in Swift](https://medium.com/ios-os-x-development/auto-layout-debugging-in-swift-93bcd21a4abf)
 
 ---
 
 ## Key Takeaways
 
-1. **Name everything** - Constraints and views with identifiers save hours of debugging
-2. **Use symbolic breakpoint** - Catch constraint conflicts at source, not after recovery
-3. **Debug View Hierarchy** - Visualize constraints instead of guessing
-4. **Memory address → View** - Background color technique instantly identifies mystery views
-5. **Two constraints per axis** - Avoid over-constraining (leading + trailing + width = conflict)
-6. **Priorities matter** - Use .required (1000) for must-haves, .defaultHigh (750) for preferences
-7. **Systematic wins** - Following workflow saves 30-50 minutes per conflict
+1. **Name everything** — Constraints and views with identifiers save hours of debugging
+2. **Use symbolic breakpoint** — Catch constraint conflicts at source, not after recovery
+3. **Debug View Hierarchy** — Visualize constraints instead of guessing
+4. **Memory address → View** — Background color technique instantly identifies mystery views
+5. **Two constraints per axis** — Avoid over-constraining (leading + trailing + width = conflict)
+6. **Priorities matter** — Use .required (1000) for must-haves, .defaultHigh (750) for preferences
+7. **Systematic wins** — Following workflow saves 30-50 minutes per conflict
 
 ---
 

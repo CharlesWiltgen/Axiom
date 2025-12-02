@@ -82,10 +82,10 @@ class ImageModel {
 
 **Build Setting** (Xcode 26+):
 ```
-Build Settings → Swift Compiler - Language
+Build Settings → Swift Compiler — Language
 → "Default Actor Isolation" = Main Actor
 
-Build Settings → Swift Compiler - Upcoming Features
+Build Settings → Swift Compiler — Upcoming Features
 → "Approachable Concurrency" = Yes
 ```
 
@@ -832,11 +832,11 @@ Want to offload work to background?
 ## Build Settings (Xcode 16+)
 
 ```
-Build Settings → Swift Compiler - Language
+Build Settings → Swift Compiler — Language
 → "Default Actor Isolation" = Main Actor
 → "Approachable Concurrency" = Yes
 
-Build Settings → Swift Compiler - Concurrency
+Build Settings → Swift Compiler — Concurrency
 → "Strict Concurrency Checking" = Complete
 ```
 

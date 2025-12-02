@@ -260,13 +260,13 @@ ScrollView(.horizontal) {
 **New profiling tool in Xcode:**
 
 Available lanes:
-- **Long view body updates** - Identify expensive body computations
-- **Platform view updates** - Track UIKit/AppKit bridging performance
+- **Long view body updates** — Identify expensive body computations
+- **Platform view updates** — Track UIKit/AppKit bridging performance
 - Other performance problem areas
 
 **Reference:** "Optimize SwiftUI performance with instruments" (WWDC 2025)
 
-**Cross-reference:** [SwiftUI Performance](/skills/ui-design/swiftui-performance) - Master the SwiftUI Instrument
+**Cross-reference:** [SwiftUI Performance](/skills/ui-design/swiftui-performance) — Master the SwiftUI Instrument
 
 ---
 
@@ -292,7 +292,7 @@ class TripStore {
 - "Embracing Swift concurrency" (WWDC 2025)
 - "Explore concurrency in SwiftUI" (WWDC 2025)
 
-**Cross-reference:** [Swift Concurrency](/skills/concurrency/swift-concurrency) - Swift 6 strict concurrency patterns
+**Cross-reference:** [Swift Concurrency](/skills/concurrency/swift-concurrency) — Swift 6 strict concurrency patterns
 
 ---
 
@@ -617,7 +617,7 @@ struct BrowserView: View {
 **WebPage features:**
 - Programmatic navigation (`goBack()`, `goForward()`)
 - Access page properties (`title`, `url`, `canGoBack`, `canGoForward`)
-- Observable - SwiftUI views update automatically
+- Observable — SwiftUI views update automatically
 
 ### Advanced WebKit Features
 
@@ -666,7 +666,7 @@ struct CommentView: View {
 
 **Reference:** "Cook up a rich text experience in SwiftUI with AttributedString" (WWDC 2025)
 
-**Cross-reference:** [App Intents Integration](/skills/integration/app-intents-integration) - AttributedString for Apple Intelligence Use Model action
+**Cross-reference:** [App Intents Integration](/skills/integration/app-intents-integration) — AttributedString for Apple Intelligence Use Model action
 
 ---
 
@@ -1047,7 +1047,7 @@ TextEditor(text: $text) // Plain String loses formatting
 ## Related WWDC Sessions
 
 **Core SwiftUI:**
-- **What's new in SwiftUI** (WWDC 2025-256) - This skill's primary source
+- **What's new in SwiftUI** (WWDC 2025-256) — This skill's primary source
 - Build a SwiftUI app with the new design
 - Optimize SwiftUI performance with instruments
 - Explore concurrency in SwiftUI
@@ -1075,10 +1075,10 @@ TextEditor(text: $text) // Plain String loses formatting
 ## Cross-References
 
 **Axiom Skills:**
-- [SwiftUI Performance](/skills/ui-design/swiftui-performance) - Master the SwiftUI Instrument
-- [Liquid Glass](/skills/ui-design/liquid-glass) - Apple's material design system
-- [Swift Concurrency](/skills/concurrency/swift-concurrency) - Swift 6 strict concurrency
-- [App Intents Integration](/skills/integration/app-intents-integration) - AttributedString for Apple Intelligence
+- [SwiftUI Performance](/skills/ui-design/swiftui-performance) — Master the SwiftUI Instrument
+- [Liquid Glass](/skills/ui-design/liquid-glass) — Apple's material design system
+- [Swift Concurrency](/skills/concurrency/swift-concurrency) — Swift 6 strict concurrency
+- [App Intents Integration](/skills/integration/app-intents-integration) — AttributedString for Apple Intelligence
 
 ---
 

@@ -217,7 +217,7 @@ func $playlist() async throws -> [PlaylistEntity] {
 
 ## Related Skills
 
-- [swiftui-26-features](/reference/swiftui-26-features) - iOS 26 SwiftUI features including widget improvements
+- [swiftui-26-features](/reference/swiftui-26-features) — iOS 26 SwiftUI features including widget improvements
 
 ## WWDC 2025 Sessions
 
@@ -227,7 +227,7 @@ func $playlist() async throws -> [PlaylistEntity] {
 
 ## Documentation Scope
 
-This is a **reference skill** - comprehensive integration guide without mandatory workflows.
+This is a **reference skill** — comprehensive integration guide without mandatory workflows.
 
 **Reference includes:**
 - Complete API catalog

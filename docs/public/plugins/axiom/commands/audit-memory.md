@@ -222,8 +222,8 @@ These may be false positives or acceptable patterns. Review each case.
 
 ## Next Steps
 
-1. **Fix CRITICAL issues first** - Timer leaks cause crashes fastest
-2. **Review HIGH issues** - Observer and closure leaks accumulate
+1. **Fix CRITICAL issues first** — Timer leaks cause crashes fastest
+2. **Review HIGH issues** — Observer and closure leaks accumulate
 3. **Run the memory-debugging skill for detailed fixes:**
 
    Simply say: *"How do I fix these memory leaks?"*

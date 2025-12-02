@@ -76,13 +76,13 @@ TabView {
 
 ## Related Skills
 
-- [liquid-glass](/skills/ui-design/liquid-glass) - TDD-tested implementation skill with design review defense
-- [swiftui-26-features](/reference/swiftui-26-features) - All iOS 26 SwiftUI features including Liquid Glass
-- [audit-liquid-glass](/commands/ui-design/audit-liquid-glass) - Quick scan for adoption opportunities
+- [liquid-glass](/skills/ui-design/liquid-glass) — TDD-tested implementation skill with design review defense
+- [swiftui-26-features](/reference/swiftui-26-features) — All iOS 26 SwiftUI features including Liquid Glass
+- [audit-liquid-glass](/commands/ui-design/audit-liquid-glass) — Quick scan for adoption opportunities
 
 ## Documentation Scope
 
-This is a **reference skill** - comprehensive guide without mandatory workflows. For discipline-enforcing implementation guidance with pressure scenario defense, use the [liquid-glass skill](/skills/ui-design/liquid-glass).
+This is a **reference skill** — comprehensive guide without mandatory workflows. For discipline-enforcing implementation guidance with pressure scenario defense, use the [liquid-glass skill](/skills/ui-design/liquid-glass).
 
 **Reference includes:**
 - Complete API catalog

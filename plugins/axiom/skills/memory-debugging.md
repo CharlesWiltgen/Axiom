@@ -30,7 +30,7 @@ These are real questions developers ask that this skill is designed to answer:
 
 ---
 
-## Red Flags - Memory Leak Likely
+## Red Flags — Memory Leak Likely
 
 If you see ANY of these, suspect memory leak not just heavy memory use:
 
@@ -56,7 +56,7 @@ If you see ANY of these, suspect memory leak not just heavy memory use:
 # Look for: "Memory pressure critical", "Jetsam killed", "Low Memory"
 
 # 2. Check which objects are leaking
-# Use Memory Graph Debugger (below) - shows object count growth
+# Use Memory Graph Debugger (below) — shows object count growth
 
 # 3. Check instruments baseline
 # Xcode → Product → Profile → Memory
@@ -90,7 +90,7 @@ Memory growing?
    └─ Use Instruments Memory Graph (see below)
 ```
 
-## Detecting Leaks - Step by Step
+## Detecting Leaks — Step by Step
 
 ### Step 1: Memory Graph Debugger (Fastest Leak Detection)
 
@@ -207,7 +207,7 @@ class ViewModel: ObservableObject {
 
 ### Pattern 1: Timer Leaks (Most Common)
 
-**❌ Leak - Timer retains closure, closure retains self**
+**❌ Leak — Timer retains closure, closure retains self**
 ```swift
 @MainActor
 class PlayerViewModel: ObservableObject {
@@ -303,7 +303,7 @@ class PlayerViewModel: ObservableObject {
         currentTrack = nil
     }
 
-    // No need for deinit - Combine handles cleanup
+    // No need for deinit — Combine handles cleanup
 }
 ```
 
@@ -369,7 +369,7 @@ func testPlayerViewModelNotLeaked() {
 
 ### Pattern 2: Observer/Notification Leaks
 
-**❌ Leak - Observer holds strong reference to self**
+**❌ Leak — Observer holds strong reference to self**
 ```swift
 @MainActor
 class PlayerViewModel: ObservableObject {
@@ -454,7 +454,7 @@ class PlayerViewModel: ObservableObject {
 
 ### Pattern 3: Closure Capture Leaks (Collection/Array)
 
-**❌ Leak - Closure captured in array, captures self**
+**❌ Leak — Closure captured in array, captures self**
 ```swift
 @MainActor
 class PlaylistViewController: UIViewController {
@@ -566,7 +566,7 @@ func testCallbacksNotLeak() {
 
 ### Pattern 4: Strong Reference Cycles (Closures + Properties)
 
-**❌ Leak - Two objects strongly reference each other**
+**❌ Leak — Two objects strongly reference each other**
 ```swift
 @MainActor
 class Player: NSObject {
@@ -624,7 +624,7 @@ class PlaylistController: PlayerDelegate {
 
 ### Pattern 5: View/Layout Callback Leaks
 
-**❌ Leak - View layout callback retains view controller**
+**❌ Leak — View layout callback retains view controller**
 ```swift
 @MainActor
 class DetailViewController: UIViewController {
@@ -665,7 +665,7 @@ protocol CustomViewDelegate: AnyObject {  // AnyObject = weak by default
 
 ### Pattern 6: PhotoKit Image Request Leaks
 
-**❌ Leak - PHImageManager requests accumulate without cancellation**
+**❌ Leak — PHImageManager requests accumulate without cancellation**
 
 This pattern is specific to photo/media apps using PhotoKit or similar async image loading APIs.
 
@@ -940,7 +940,7 @@ Result: +15MB/minute → Crashes in 13 minutes
 5. Test each fix in isolation (revert one, test another)
 ```
 
-## Memory Leak Detection - Testing Checklist
+## Memory Leak Detection — Testing Checklist
 
 ```swift
 // Pattern 1: Verify object deallocates
@@ -1000,7 +1000,7 @@ Result: +15MB/minute → Crashes in 13 minutes
 
     for measurement in last5 {
         XCTAssertLessThan(
-            abs(Int(measurement) - Int(average)),
+            abs(Int(measurement) — Int(average)),
             Int(average / 10)  // 10% tolerance
         )
     }

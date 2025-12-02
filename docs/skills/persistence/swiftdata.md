@@ -1,6 +1,6 @@
 ---
 name: swiftdata
-description: Use when working with SwiftData — @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ features, and Swift 6 concurrency with @MainActor - Apple's native persistence framework
+description: Use when working with SwiftData — @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ features, and Swift 6 concurrency with @MainActor — Apple's native persistence framework
 ---
 
 # SwiftData
@@ -184,7 +184,7 @@ final class User {
 
 **CRITICAL: SwiftData automatically manages BOTH sides when you modify ONE side.**
 
-✅ **Correct - Only modify ONE side:**
+✅ **Correct — Only modify ONE side:**
 ```swift
 // user1 follows user2 (modifying ONE side)
 user1.following.append(user2)
@@ -194,7 +194,7 @@ try modelContext.save()
 // Don't manually append to both sides - causes duplicates!
 ```
 
-❌ **Wrong - Don't manually update both sides:**
+❌ **Wrong — Don't manually update both sides:**
 ```swift
 user1.following.append(user2)
 user2.followers.append(user1)  // Redundant! Creates duplicates in CloudKit sync
@@ -395,7 +395,7 @@ let rockTracks = try modelContext.fetch(descriptor)
 ### Update
 
 ```swift
-// Just modify properties - SwiftData tracks changes
+// Just modify properties — SwiftData tracks changes
 track.title = "Updated Title"
 
 // Save if needed immediately
@@ -1329,7 +1329,7 @@ class DualStackDataManager {
 
     // Phase 2: Cutover (mark Core Data as deprecated)
     func completeMigration() {
-        print("Migration complete - Core Data can be removed")
+        print("Migration complete — Core Data can be removed")
     }
 }
 ```

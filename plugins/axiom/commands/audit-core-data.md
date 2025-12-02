@@ -12,11 +12,11 @@ I'll scan your Swift codebase and Core Data models for the 5 most common Core Da
 
 Performs automated checks for:
 
-1. **Schema Migration Safety** - Missing lightweight migration options, schema version mismatches
-2. **Thread-Confinement Violations** - NSManagedObject accessed from wrong threads
-3. **N+1 Query Patterns** - Relationship access in loops without prefetching
-4. **Production Risk Patterns** - Delete store patterns, missing migration testing
-5. **Performance Issues** - Missing batch sizes, no faulting controls
+1. **Schema Migration Safety** — Missing lightweight migration options, schema version mismatches
+2. **Thread-Confinement Violations** — NSManagedObject accessed from wrong threads
+3. **N+1 Query Patterns** — Relationship access in loops without prefetching
+4. **Production Risk Patterns** — Delete store patterns, missing migration testing
+5. **Performance Issues** — Missing batch sizes, no faulting controls
 
 ## Scan Categories
 
@@ -47,7 +47,7 @@ let options = [
 ]
 ```
 
-**Severity:** 🔴 **CRITICAL** - Can cause 100% production crashes or data loss
+**Severity:** 🔴 **CRITICAL** — Can cause 100% production crashes or data loss
 
 ---
 
@@ -78,7 +78,7 @@ backgroundContext.perform {
 }
 ```
 
-**Severity:** 🔴 **CRITICAL** - Causes production crashes
+**Severity:** 🔴 **CRITICAL** — Causes production crashes
 
 ---
 
@@ -104,7 +104,7 @@ for user in users {
 }
 ```
 
-**Severity:** 🟡 **MEDIUM** - Causes performance degradation
+**Severity:** 🟡 **MEDIUM** — Causes performance degradation
 
 ---
 
@@ -139,7 +139,7 @@ do {
 }
 ```
 
-**Severity:** 🔴 **CRITICAL** - Causes permanent data loss
+**Severity:** 🔴 **CRITICAL** — Causes permanent data loss
 
 ---
 
@@ -161,7 +161,7 @@ fetchRequest.fetchBatchSize = 20
 // Loads 20 at a time - lower memory usage
 ```
 
-**Severity:** 🟢 **LOW** - Causes memory pressure but not crashes
+**Severity:** 🟢 **LOW** — Causes memory pressure but not crashes
 
 ---
 

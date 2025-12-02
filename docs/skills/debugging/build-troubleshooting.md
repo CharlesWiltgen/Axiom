@@ -32,7 +32,7 @@ These are real questions developers ask that this skill is designed to answer:
 
 ---
 
-## Red Flags - Dependency/Build Issues
+## Red Flags — Dependency/Build Issues
 
 If you see ANY of these, suspect dependency problem:
 - "No such module" after adding package
@@ -297,7 +297,7 @@ These feel safe because they come from experience. **But if the diagnosis is wro
 
 **Critical insight:** Time pressure makes authority bias STRONGER. You're more likely to trust advice when stressed.
 
-### Red Flags - STOP Before Acting
+### Red Flags — STOP Before Acting
 
 If you hear ANY of these, pause 5 minutes before executing:
 

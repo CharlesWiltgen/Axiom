@@ -552,8 +552,8 @@ let count = try await Track.fetchCount(database)
 - [Point-Free Episodes](https://www.pointfree.co) (video tutorials, subscription)
 
 **Dependencies:**
-- [swift-dependencies](https://github.com/pointfreeco/swift-dependencies) - Dependency injection (pairs well with SQLiteData)
-- [GRDB](https://github.com/groue/GRDB.swift) - Underlying database engine
+- [swift-dependencies](https://github.com/pointfreeco/swift-dependencies) — Dependency injection (pairs well with SQLiteData)
+- [GRDB](https://github.com/groue/GRDB.swift) — Underlying database engine
 
 **Related Axiom Skills:**
 - `database-migration` - Safe schema evolution patterns

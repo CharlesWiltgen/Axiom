@@ -116,8 +116,8 @@ Use this diagnostic when:
 **Scenario**: Migration crash affecting 500K users, 2-hour hotfix window
 
 **Emergency Protocol**:
-1. **Stop the rollout** - Halt app updates immediately
-2. **Triage severity** - Data loss vs crashes vs performance
+1. **Stop the rollout** — Halt app updates immediately
+2. **Triage severity** — Data loss vs crashes vs performance
 3. **Quick fixes only**:
    - Skip migration, use old schema (if possible)
    - Add migration options if missing
@@ -174,13 +174,13 @@ catch {
 
 ## Related Resources
 
-- [audit-core-data](/commands/debugging/audit-core-data) - Quick automated scan
-- [swiftdata](/skills/persistence/swiftdata) - Modern SwiftData patterns
-- [database-migration](/skills/persistence/database-migration) - Safe schema evolution
+- [audit-core-data](/commands/debugging/audit-core-data) — Quick automated scan
+- [swiftdata](/skills/persistence/swiftdata) — Modern SwiftData patterns
+- [database-migration](/skills/persistence/database-migration) — Safe schema evolution
 
 ## Documentation Scope
 
-This is a **diagnostic skill** - mandatory workflows with production crisis defense.
+This is a **diagnostic skill** — mandatory workflows with production crisis defense.
 
 **Diagnostic includes:**
 - Step-by-step troubleshooting

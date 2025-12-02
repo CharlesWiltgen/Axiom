@@ -317,11 +317,11 @@ ALTER TABLE albums ADD COLUMN rating INTEGER  // NULL allowed
 UPDATE albums SET rating = 0 WHERE rating IS NULL
 ```
 
-❌ **Forgetting to check for existence** - Always add `IF NOT EXISTS` or manual check
+❌ **Forgetting to check for existence** — Always add `IF NOT EXISTS` or manual check
 
-❌ **Modifying shipped migrations** - Create new migration instead
+❌ **Modifying shipped migrations** — Create new migration instead
 
-❌ **Not testing migration path** - Always test upgrade from previous version
+❌ **Not testing migration path** — Always test upgrade from previous version
 
 ## GRDB-Specific Patterns
 

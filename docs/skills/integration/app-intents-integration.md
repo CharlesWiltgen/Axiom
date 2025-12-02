@@ -21,14 +21,14 @@ Comprehensive guide to App Intents framework for integrating your app with Siri,
 
 ### Three Building Blocks
 
-**1. AppIntent** - Executable actions with parameters
+**1. AppIntent** — Executable actions with parameters
 - Define perform() method for action logic
 - Parameter validation and natural language summaries
 - Background vs foreground execution
 - Authentication policies
 - Error handling and confirmation dialogs
 
-**2. AppEntity** - Objects users interact with
+**2. AppEntity** — Objects users interact with
 - Entity identification and display representation
 - Entity queries for content discovery
 - Spotlight indexing integration
@@ -36,7 +36,7 @@ Comprehensive guide to App Intents framework for integrating your app with Siri,
 - **NEW:** JSON representation for Apple Intelligence models
 - **NEW:** IndexedEntity automatic Find actions
 
-**3. AppEnum** - Enumeration types for parameters
+**3. AppEnum** — Enumeration types for parameters
 - Case display representations
 - Type display names
 - Natural language phrasing
@@ -152,12 +152,12 @@ struct EventEntity: AppEntity, IndexedEntity {
 
 ## Key Features
 
-- **Assistant Schemas** - Pre-built intents for Books, Browser, Camera, Email, Photos, Presentations, Spreadsheets, Documents
-- **Authentication Policies** - alwaysAllowed, requiresAuthentication, requiresLocalDeviceAuthentication
-- **Confirmation Dialogs** - Request user confirmation before destructive actions
-- **Real-World Examples** - Start Workout, Add Task with entity queries
-- **Best Practices** - Naming conventions, error messages, entity suggestions
-- **App Store Checklist** - Preparation checklist before submission
+- **Assistant Schemas** — Pre-built intents for Books, Browser, Camera, Email, Photos, Presentations, Spreadsheets, Documents
+- **Authentication Policies** — alwaysAllowed, requiresAuthentication, requiresLocalDeviceAuthentication
+- **Confirmation Dialogs** — Request user confirmation before destructive actions
+- **Real-World Examples** — Start Workout, Add Task with entity queries
+- **Best Practices** — Naming conventions, error messages, entity suggestions
+- **App Store Checklist** — Preparation checklist before submission
 
 ## Requirements
 
@@ -173,7 +173,7 @@ iOS 16+
 ### WWDC Sessions
 - [Get to know App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/244/)
 - [Explore new advances in App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/275/)
-- **[Develop for Shortcuts and Spotlight (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/260/)** - Use Model action, IndexedEntity, Spotlight on Mac, Automations
+- **[Develop for Shortcuts and Spotlight (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/260/)** — Use Model action, IndexedEntity, Spotlight on Mac, Automations
 
 ## Example Patterns
 
@@ -228,4 +228,4 @@ struct BookQuery: EntityQuery {
 
 ## See Also
 
-- **[Apple Intelligence & Integration Category](/skills/integration/)** - All integration-related skills
+- **[Apple Intelligence & Integration Category](/skills/integration/)** — All integration-related skills

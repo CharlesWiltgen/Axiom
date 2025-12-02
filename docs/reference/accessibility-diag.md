@@ -136,13 +136,13 @@ Use this diagnostic when:
 
 ## Related Resources
 
-- [audit-accessibility](/commands/accessibility/audit-accessibility) - Quick automated scan
+- [audit-accessibility](/commands/accessibility/audit-accessibility) — Quick automated scan
 - [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
 - [Apple HIG - Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility)
 
 ## Documentation Scope
 
-This is a **diagnostic skill** - mandatory workflows with pressure defense scenarios.
+This is a **diagnostic skill** — mandatory workflows with pressure defense scenarios.
 
 **Diagnostic includes:**
 - Step-by-step troubleshooting

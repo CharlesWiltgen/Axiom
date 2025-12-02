@@ -6,7 +6,7 @@ last_updated: TDD-tested with design review pressure scenarios
 apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+
 ---
 
-# Liquid Glass - Apple's New Material Design System
+# Liquid Glass — Apple's New Material Design System
 
 ## When to Use This Skill
 
@@ -57,7 +57,7 @@ Liquid Glass is Apple's next-generation material design system introduced at WWD
 
 ### 1. Lensing (Primary Visual Characteristic)
 
-Liquid Glass defines itself through **lensing** - the warping and bending of light that communicates presence, motion, and form.
+Liquid Glass defines itself through **lensing** — the warping and bending of light that communicates presence, motion, and form.
 
 **How it works**:
 - Dynamically concentrates and shapes light in real-time
@@ -71,12 +71,12 @@ Liquid Glass defines itself through **lensing** - the warping and bending of lig
 
 Motion and visuals were designed as one unified experience:
 
-- **Instant flex and energize** - Responds to interaction by flexing with light
-- **Gel-like flexibility** - Communicates transient, malleable nature
-- **Moves in tandem** with interaction - Aligns with dynamism of thinking and movement
-- **Temporary lift** - Elements can lift into Liquid Glass on interaction (great for controls)
-- **Dynamic morphing** - Continuously shape-shifts between app states as a singular floating plane
-- **Lightweight transitions** - Menus pop open in-line, maintaining clear relationship to source
+- **Instant flex and energize** — Responds to interaction by flexing with light
+- **Gel-like flexibility** — Communicates transient, malleable nature
+- **Moves in tandem** with interaction — Aligns with dynamism of thinking and movement
+- **Temporary lift** — Elements can lift into Liquid Glass on interaction (great for controls)
+- **Dynamic morphing** — Continuously shape-shifts between app states as a singular floating plane
+- **Lightweight transitions** — Menus pop open in-line, maintaining clear relationship to source
 
 ### 3. Adaptive Behavior
 
@@ -125,7 +125,7 @@ Button("Tap Me") {
 
 **CRITICAL DECISION**: Never mix Regular and Clear in the same interface.
 
-#### Regular Variant (Default - Use Most Often)
+#### Regular Variant (Default — Use Most Often)
 
 **Characteristics**:
 - Most versatile, use in 95% of cases
@@ -207,9 +207,9 @@ Liquid Glass is composed of multiple layers working together:
 
 **Correct Usage**:
 ```
-[Content Layer - No Glass]
+[Content Layer — No Glass]
     ↓
-[Navigation Layer - Liquid Glass]
+[Navigation Layer — Liquid Glass]
     • Tab bars
     • Navigation bars
     • Toolbars
@@ -318,7 +318,7 @@ Button("Primary Action") {
 
 **✅ DO: Use for Primary Actions**
 ```swift
-// Good - Emphasizes primary action
+// Good — Emphasizes primary action
 Button("View Bag") {
     // action
 }
@@ -328,7 +328,7 @@ Button("View Bag") {
 
 **❌ DON'T: Tint Everything**
 ```swift
-// Wrong - When everything is tinted, nothing stands out
+// Wrong — When everything is tinted, nothing stands out
 VStack {
     Button("Action 1").tint(.blue).glassEffect()
     Button("Action 2").tint(.green).glassEffect()
@@ -530,13 +530,13 @@ func testLiquidGlassAccessibility() {
 ### The Problem
 
 Under design review pressure, you'll face requests to:
-- "Use Clear variant everywhere - Regular is too opaque"
+- "Use Clear variant everywhere — Regular is too opaque"
 - "Glass on all controls for visual cohesion"
 - "More transparency to let content shine through"
 
 These sound reasonable. **But they violate the framework.** Your job: defend using evidence, not opinion.
 
-### Red Flags - Designer Requests That Violate Skill Guidelines
+### Red Flags — Designer Requests That Violate Skill Guidelines
 
 If you hear ANY of these, **STOP and reference the skill**:
 
@@ -854,10 +854,10 @@ ZStack {
 
 If you've built custom translucent effects:
 
-1. **Try Liquid Glass first** - may provide desired effect automatically
-2. **Evaluate Regular vs Clear** - Clear may match custom transparency needs
-3. **Test across configurations** - Liquid Glass adapts automatically
-4. **Measure performance** - Likely improvement over custom implementations
+1. **Try Liquid Glass first** — may provide desired effect automatically
+2. **Evaluate Regular vs Clear** — Clear may match custom transparency needs
+3. **Test across configurations** — Liquid Glass adapts automatically
+4. **Measure performance** — Likely improvement over custom implementations
 
 **When to keep custom materials**:
 - Specific artistic effect not achievable with Liquid Glass
@@ -1027,7 +1027,7 @@ NavigationSplitView {
 // - Top trailing corner on iPad
 ```
 
-**No code changes required** - existing `.searchable()` modifier automatically adopts platform-specific placement.
+**No code changes required** — existing `.searchable()` modifier automatically adopts platform-specific placement.
 
 **Why bottom-aligned**: More ergonomic to reach on iPhone with thumb-based interaction.
 
@@ -1080,13 +1080,13 @@ enum ScrollEdgeStyle {
 ## WWDC 2025 References
 
 **Primary Session**:
-- [Meet Liquid Glass - WWDC25 Session 219](https://developer.apple.com/videos/play/wwdc2025/219/)
+- [Meet Liquid Glass — WWDC25 Session 219](https://developer.apple.com/videos/play/wwdc2025/219/)
   - Design principles and visual properties
   - Adaptive behavior and platform integration
   - Variants and usage guidelines
 
 **Related Sessions**:
-- [Build a SwiftUI app with the new design - WWDC25 Session 323](https://developer.apple.com/videos/play/wwdc2025/323/)
+- [Build a SwiftUI app with the new design — WWDC25 Session 323](https://developer.apple.com/videos/play/wwdc2025/323/)
   - Practical implementation patterns
 
 - [What's new in SwiftUI - WWDC25 Session 256](https://developer.apple.com/videos/play/wwdc2025/256/)

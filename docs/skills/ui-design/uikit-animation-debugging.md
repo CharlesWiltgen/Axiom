@@ -27,7 +27,7 @@ These are real questions developers ask that this skill is designed to answer:
 **4. "When I pan a gesture and trigger animation, it's janky. Works fine without gesture."**
 → The skill covers gesture-animation interaction patterns and RunLoop mode issues
 
-## Red Flags - Check Animation Layer First
+## Red Flags — Check Animation Layer First
 
 If you see ANY of these, suspect CAAnimation layer issues not code logic:
 - "Completion handler never fires"
@@ -207,13 +207,13 @@ Spring physics require device-specific tuning. Simulator testing is insufficient
 
 ## Common Mistakes
 
-❌ **Expecting CABasicAnimation to have completion closure** - Use CATransaction instead
+❌ **Expecting CABasicAnimation to have completion closure** — Use CATransaction instead
 
-❌ **Tuning spring physics in simulator only** - ProMotion devices need higher damping/stiffness
+❌ **Tuning spring physics in simulator only** — ProMotion devices need higher damping/stiffness
 
-❌ **Mixing UIView.animate and CAAnimation durations** - Use one animation system consistently
+❌ **Mixing UIView.animate and CAAnimation durations** — Use one animation system consistently
 
-❌ **Not updating model layer after animation** - Animation is presentation-only, update actual values
+❌ **Not updating model layer after animation** — Animation is presentation-only, update actual values
 
 ## Real-World Impact
 
@@ -224,8 +224,8 @@ Spring physics require device-specific tuning. Simulator testing is insufficient
 
 ## Related Skills
 
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) - For SwiftUI animation debugging
-- [performance-profiling](/skills/debugging/performance-profiling) - For animation performance issues
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — For SwiftUI animation debugging
+- [performance-profiling](/skills/debugging/performance-profiling) — For animation performance issues
 
 ## Size
 
