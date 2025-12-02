@@ -52,14 +52,14 @@ These are real questions developers ask that this skill is designed to answer:
 - Hangs and Hitches tracking
 
 **Key Performance Problems**:
-1. **Long View Body Updates** - View bodies taking too long to run
-2. **Unnecessary View Updates** - Views updating when data hasn't actually changed
+1. **Long View Body Updates** — View bodies taking too long to run
+2. **Unnecessary View Updates** — Views updating when data hasn't actually changed
 
 ---
 
 ## iOS 26 Framework Performance Improvements
 
-**"Performance improvements to the framework benefit apps across all of Apple's platforms, from our app to yours."** - WWDC 2025-256
+**"Performance improvements to the framework benefit apps across all of Apple's platforms, from our app to yours."** — WWDC 2025-256
 
 SwiftUI in iOS 26 includes major performance wins that benefit all apps automatically. These improvements work alongside the new profiling tools to make SwiftUI faster out of the box.
 
@@ -93,9 +93,9 @@ List(trips) { trip in // 100k+ items
 "SwiftUI has improved scheduling of user interface updates on iOS and macOS. This improves responsiveness and lets SwiftUI do even more work to prepare for upcoming frames. All in all, it reduces the chance of your app dropping a frame while scrolling quickly at high frame rates." - WWDC 2025-256
 
 **Key improvements:**
-1. **Better frame scheduling** - SwiftUI gets more time to prepare for upcoming frames
-2. **Improved responsiveness** - UI updates scheduled more efficiently
-3. **Fewer dropped frames** - Especially during quick scrolling at 120Hz (ProMotion)
+1. **Better frame scheduling** — SwiftUI gets more time to prepare for upcoming frames
+2. **Improved responsiveness** — UI updates scheduled more efficiently
+3. **Fewer dropped frames** — Especially during quick scrolling at 120Hz (ProMotion)
 
 **When you'll notice:**
 - Scrolling through image-heavy content
@@ -140,9 +140,9 @@ ScrollView(.horizontal) {
 
 The SwiftUI instrument now includes dedicated lanes for:
 
-1. **Long View Body Updates** - Identify expensive body computations
-2. **Platform View Updates** - Track UIKit/AppKit bridging performance (Long Representable Updates)
-3. **Other Long Updates** - All other types of long SwiftUI work
+1. **Long View Body Updates** — Identify expensive body computations
+2. **Platform View Updates** — Track UIKit/AppKit bridging performance (Long Representable Updates)
+3. **Other Long Updates** — All other types of long SwiftUI work
 
 These lanes are covered in detail in the next section.
 
@@ -155,9 +155,9 @@ These lanes are covered in detail in the next section.
 - ✅ Improved frame scheduling on iOS/macOS
 - ✅ Nested ScrollView lazy loading optimization
 
-**No code changes required** - rebuild with iOS 26 SDK to get these improvements.
+**No code changes required** — rebuild with iOS 26 SDK to get these improvements.
 
-**Cross-reference:** [SwiftUI 26 Features](/skills/ui-design/swiftui-26-features) - Comprehensive guide to all iOS 26 SwiftUI changes
+**Cross-reference:** [SwiftUI 26 Features](/skills/ui-design/swiftui-26-features) — Comprehensive guide to all iOS 26 SwiftUI changes
 
 ---
 
@@ -180,9 +180,9 @@ These lanes are covered in detail in the next section.
 
 The SwiftUI template includes three instruments:
 
-1. **SwiftUI Instrument** (NEW) - Identifies performance issues in SwiftUI code
-2. **Time Profiler** - Shows CPU work samples over time
-3. **Hangs and Hitches** - Tracks app responsiveness
+1. **SwiftUI Instrument** (NEW) — Identifies performance issues in SwiftUI code
+2. **Time Profiler** — Shows CPU work samples over time
+3. **Hangs and Hitches** — Tracks app responsiveness
 
 ### SwiftUI Instrument Track Lanes
 
@@ -192,7 +192,7 @@ The SwiftUI template includes three instruments:
 
 #### Lane 2: Long View Body Updates
 - Highlights when `body` property takes too long
-- **Most common performance issue** - start here
+- **Most common performance issue** — start here
 
 #### Lane 3: Long Representable Updates
 - Identifies slow UIViewRepresentable/NSViewRepresentable updates
@@ -205,9 +205,9 @@ The SwiftUI template includes three instruments:
 
 Updates shown in **orange** and **red** based on likelihood to cause hitches:
 
-- **Red** - Very likely to contribute to hitch/hang (investigate first)
-- **Orange** - Moderately likely to cause issues
-- **Gray** - Normal updates, not concerning
+- **Red** — Very likely to contribute to hitch/hang (investigate first)
+- **Orange** — Moderately likely to cause issues
+- **Gray** — Normal updates, not concerning
 
 **Note**: Whether updates actually result in hitches depends on device conditions, but red updates are the highest priority.
 
@@ -285,7 +285,7 @@ Frame 1:
 ### Identifying Long Updates
 
 1. **Record trace** in Instruments with SwiftUI template
-2. **Look at Long View Body Updates lane** - any orange/red bars?
+2. **Look at Long View Body Updates lane** — any orange/red bars?
 3. **Expand SwiftUI track** to see subtracks
 4. **Select View Body Updates subtrack**
 5. **Filter to long updates**:
@@ -469,7 +469,7 @@ After implementing fix:
 2. Check Long View Body Updates summary
 3. **Verify your view is gone from the list** (or significantly reduced)
 
-**Note**: Updates at app launch may still be long (building initial view hierarchy) - this is normal and won't cause hitches during scrolling.
+**Note**: Updates at app launch may still be long (building initial view hierarchy) — this is normal and won't cause hitches during scrolling.
 
 ---
 
@@ -496,7 +496,7 @@ Even if individual updates are fast, **too many updates add up**:
 1. Record trace with user interaction in mind
 2. Highlight relevant portion of timeline
 3. Expand hierarchy in detail pane
-4. **Count updates** - more than expected?
+4. **Count updates** — more than expected?
 
 ### Understanding SwiftUI's Data Model
 
@@ -515,11 +515,11 @@ struct OnOffView: View {
 ```
 
 **What SwiftUI creates**:
-1. **View attribute** - Stores view struct (recreated frequently)
-2. **State storage** - Keeps `isOn` value (persists entire view lifetime)
-3. **Signal attribute** - Tracks when state changes
-4. **View body attribute** - Depends on state signal
-5. **Text attributes** - Depend on view body
+1. **View attribute** — Stores view struct (recreated frequently)
+2. **State storage** — Keeps `isOn` value (persists entire view lifetime)
+3. **Signal attribute** — Tracks when state changes
+4. **View body attribute** — Depends on state signal
+5. **Text attributes** — Depend on view body
 
 **When state changes**:
 1. Create transaction (scheduled change for next frame)
@@ -542,10 +542,10 @@ struct OnOffView: View {
 ```
 
 **Node types**:
-- **Blue nodes** - Your code or actions (gestures, state changes, view bodies)
-- **System nodes** - SwiftUI/system work
-- **Arrows labeled "update"** - Caused update
-- **Arrows labeled "creation"** - Caused view to appear
+- **Blue nodes** — Your code or actions (gestures, state changes, view bodies)
+- **System nodes** — SwiftUI/system work
+- **Arrows labeled "update"** — Caused update
+- **Arrows labeled "creation"** — Caused view to appear
 
 **Selecting nodes**:
 - Click **State change node** → See backtrace of where value was updated
@@ -598,7 +598,7 @@ struct LandmarkListItemView: View {
 [Gesture] → [favoritesCollection.landmarks array change] → [All LandmarkListItemViews update]
 ```
 
-**✅ Solution - Granular Dependencies**:
+**✅ Solution — Granular Dependencies**:
 ```swift
 @Observable
 class LandmarkViewModel {
@@ -684,8 +684,8 @@ struct EnvironmentValues {
 
 Two types:
 
-1. **External Environment** - App-level changes from outside SwiftUI (color scheme, accessibility settings)
-2. **EnvironmentWriter** - Changes inside SwiftUI via `.environment()` modifier
+1. **External Environment** — App-level changes from outside SwiftUI (color scheme, accessibility settings)
+2. **EnvironmentWriter** — Changes inside SwiftUI via `.environment()` modifier
 
 **Example**:
 ```
@@ -796,7 +796,7 @@ When performance issues appear in production, you face competing pressures:
 
 **The issue**: Quick fixes based on guesses fail 80% of the time and waste your deployment window.
 
-### Red Flags - Resist These Pressure Tactics
+### Red Flags — Resist These Pressure Tactics
 
 If you hear ANY of these under deadline pressure, **STOP and use SwiftUI Instrument**:
 
@@ -1062,9 +1062,9 @@ ChildView(scrollPosition: scrollPosition)
 
 ### Step-by-Step Process
 
-1. **Reproduce issue** - Identify specific slow interaction
-2. **Profile with Instruments** - SwiftUI template
-3. **Check Update Groups lane** - SwiftUI doing work when slow?
+1. **Reproduce issue** — Identify specific slow interaction
+2. **Profile with Instruments** — SwiftUI template
+3. **Check Update Groups lane** — SwiftUI doing work when slow?
 4. **Identify problem type**:
    - Long View Body Updates? → Section on Long Updates
    - Too many updates? → Section on Unnecessary Updates
@@ -1114,7 +1114,7 @@ Problem likely elsewhere:
 ## Reference
 
 **WWDC 2025 Sessions**:
-- [Optimize SwiftUI performance with Instruments - WWDC25 Session 306](https://developer.apple.com/videos/play/wwdc2025/306/)
+- [Optimize SwiftUI performance with Instruments — WWDC25 Session 306](https://developer.apple.com/videos/play/wwdc2025/306/)
   - New SwiftUI instrument, long view bodies, unnecessary updates, Cause & Effect Graph
 
 **Related Documentation**:
@@ -1130,10 +1130,10 @@ Problem likely elsewhere:
 
 ## Key Takeaways
 
-1. **Fast view bodies** - Keep them quick so SwiftUI has time to get UI on screen without delay
-2. **Update only when needed** - Design data flow to update views only when necessary
-3. **Careful with environment** - Don't store frequently-changing values
-4. **Profile early and often** - Use Instruments during development, not just when problems arise
+1. **Fast view bodies** — Keep them quick so SwiftUI has time to get UI on screen without delay
+2. **Update only when needed** — Design data flow to update views only when necessary
+3. **Careful with environment** — Don't store frequently-changing values
+4. **Profile early and often** — Use Instruments during development, not just when problems arise
 5. **Greatest takeaway**: **Ensure your view bodies update quickly and only when needed to achieve great SwiftUI performance**
 
 ---

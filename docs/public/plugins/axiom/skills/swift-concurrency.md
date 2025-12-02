@@ -1,6 +1,6 @@
 ---
 name: swift-concurrency
-description: Swift 6 strict concurrency patterns, fixes, and best practices - Quick reference for actor isolation, Sendable, async/await, and data race prevention
+description: Swift 6 strict concurrency patterns, fixes, and best practices — Quick reference for actor isolation, Sendable, async/await, and data race prevention
 ---
 
 # Swift 6 Concurrency Guide
@@ -779,7 +779,7 @@ Task { [weak self] in  // ✅ Weak capture
 **Enable strict concurrency checking:**
 
 ```
-Build Settings → Swift Compiler - Concurrency
+Build Settings → Swift Compiler — Concurrency
 → "Strict Concurrency Checking" = Complete
 ```
 

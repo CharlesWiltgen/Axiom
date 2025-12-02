@@ -25,21 +25,21 @@ Comprehensive guide to App Intents framework for exposing app functionality to S
 ## System Experiences Supported
 
 App Intents integrate with:
-- **Siri** - Voice commands and Apple Intelligence
-- **Shortcuts** - Automation workflows
-- **Spotlight** - Search discovery
-- **Focus Filters** - Contextual filtering
-- **Action Button** - Quick actions (Apple Watch Ultra)
-- **Control Center** - Custom controls
-- **WidgetKit** - Interactive widgets
-- **Live Activities** - Dynamic Island updates
-- **Visual Intelligence** - Image-based interactions
+- **Siri** — Voice commands and Apple Intelligence
+- **Shortcuts** — Automation workflows
+- **Spotlight** — Search discovery
+- **Focus Filters** — Contextual filtering
+- **Action Button** — Quick actions (Apple Watch Ultra)
+- **Control Center** — Custom controls
+- **WidgetKit** — Interactive widgets
+- **Live Activities** — Dynamic Island updates
+- **Visual Intelligence** — Image-based interactions
 
 ## Core Concepts
 
 ### The Three Building Blocks
 
-**1. AppIntent** - Executable actions with parameters
+**1. AppIntent** — Executable actions with parameters
 ```swift
 struct OrderSoupIntent: AppIntent {
     static var title: LocalizedStringResource = "Order Soup"
@@ -62,7 +62,7 @@ struct OrderSoupIntent: AppIntent {
 }
 ```
 
-**2. AppEntity** - Objects users interact with
+**2. AppEntity** — Objects users interact with
 ```swift
 struct SoupEntity: AppEntity {
     var id: String
@@ -79,7 +79,7 @@ struct SoupEntity: AppEntity {
 }
 ```
 
-**3. AppEnum** - Enumeration types for parameters
+**3. AppEnum** — Enumeration types for parameters
 ```swift
 enum SoupSize: String, AppEnum {
     case small
@@ -949,8 +949,8 @@ Spotlight learns when/how user runs this intent and surfaces suggestions proacti
 **Personal Automations** arrive on macOS (macOS Sequoia+) with Mac-specific triggers:
 
 **New Mac Automation Types:**
-- **Folder Automation** - Trigger when files added/removed from folder
-- **External Drive Automation** - Trigger when drive connected/disconnected
+- **Folder Automation** — Trigger when files added/removed from folder
+- **External Drive Automation** — Trigger when drive connected/disconnected
 - Time of Day (from iOS)
 - Bluetooth (from iOS)
 - And more...
@@ -961,7 +961,7 @@ Spotlight learns when/how user runs this intent and surfaces suggestions proacti
 
 "As long as your intent is available on macOS, they will also be available to use in Shortcuts to run as a part of Automations on Mac. This includes iOS apps that are installable on macOS." - WWDC 2025-260
 
-**No additional code required** - your existing intents work in automations automatically.
+**No additional code required** — your existing intents work in automations automatically.
 
 ### Platform Support
 
@@ -985,14 +985,14 @@ struct ProcessInvoiceIntent: AppIntent {
 ### Additional System Integration Points
 
 With automations, your intents are now accessible from:
-- **Siri** - Voice commands
-- **Shortcuts app** - Manual workflows
-- **Spotlight** - Quick actions
-- **Automations** - Triggered workflows
-- **Action Button** - Hardware trigger (Apple Watch Ultra)
-- **Control Center** - Quick controls
-- **Widgets** - Interactive elements
-- **Live Activities** - Dynamic Island
+- **Siri** — Voice commands
+- **Shortcuts app** — Manual workflows
+- **Spotlight** — Quick actions
+- **Automations** — Triggered workflows
+- **Action Button** — Hardware trigger (Apple Watch Ultra)
+- **Control Center** — Quick controls
+- **Widgets** — Interactive elements
+- **Live Activities** — Dynamic Island
 
 ---
 
@@ -1021,14 +1021,14 @@ struct OpenBookIntent: BooksOpenBookIntent {
 
 ### Available Assistant Schemas
 
-- **BooksIntents** - Navigate pages, open books, play audiobooks, search
-- **BrowserIntents** - Bookmark tabs, clear history, manage windows
-- **CameraIntents** - Capture modes, device switching, start/stop
-- **EmailIntents** - Draft management, reply, forward, archive
-- **PhotosIntents** - Album/asset management, editing, filtering
-- **PresentationsIntents** - Slide creation, media insertion, playback
-- **SpreadsheetsIntents** - Sheet management, content addition
-- **DocumentsIntents** - File management, page manipulation, search
+- **BooksIntents** — Navigate pages, open books, play audiobooks, search
+- **BrowserIntents** — Bookmark tabs, clear history, manage windows
+- **CameraIntents** — Capture modes, device switching, start/stop
+- **EmailIntents** — Draft management, reply, forward, archive
+- **PhotosIntents** — Album/asset management, editing, filtering
+- **PresentationsIntents** — Slide creation, media insertion, playback
+- **SpreadsheetsIntents** — Sheet management, content addition
+- **DocumentsIntents** — File management, page manipulation, search
 
 ---
 
@@ -1380,17 +1380,17 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 ## Resources
 
 ### Apple Documentation
-- [App Intents Framework](https://sosumi.ai/documentation/appintents) - Framework overview
-- [AppIntent Protocol](https://sosumi.ai/documentation/appintents/appintent) - Intent definition
-- [AppEntity Protocol](https://sosumi.ai/documentation/appintents/appentity) - Entity representation
+- [App Intents Framework](https://sosumi.ai/documentation/appintents) — Framework overview
+- [AppIntent Protocol](https://sosumi.ai/documentation/appintents/appintent) — Intent definition
+- [AppEntity Protocol](https://sosumi.ai/documentation/appintents/appentity) — Entity representation
 
 ### WWDC Sessions
-- [Get to know App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/244/) - Foundational concepts
-- [Explore new advances in App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/275/) - Advanced features
-- [Develop for Shortcuts and Spotlight with App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/260/) - Integration patterns
+- [Get to know App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/244/) — Foundational concepts
+- [Explore new advances in App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/275/) — Advanced features
+- [Develop for Shortcuts and Spotlight with App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/260/) — Integration patterns
 
 ### Sample Code
-- [App Intents Sample Apps](https://developer.apple.com/documentation/appintents/making_your_app_s_functionality_available_to_siri) - Complete examples
+- [App Intents Sample Apps](https://developer.apple.com/documentation/appintents/making_your_app_s_functionality_available_to_siri) — Complete examples
 
 ---
 

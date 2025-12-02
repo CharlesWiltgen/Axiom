@@ -171,10 +171,10 @@ HStack {
 **Problem:** Low contrast text is unreadable for users with vision disabilities or in bright sunlight.
 
 **WCAG:**
-- **1.4.3 Contrast (Minimum)** - Level AA
+- **1.4.3 Contrast (Minimum)** — Level AA
   - Normal text (< 18pt): 4.5:1 contrast ratio
   - Large text (≥ 18pt or ≥ 14pt bold): 3:1 contrast ratio
-- **1.4.6 Contrast (Enhanced)** - Level AAA
+- **1.4.6 Contrast (Enhanced)** — Level AAA
   - Normal text: 7:1 contrast ratio
   - Large text: 4.5:1 contrast ratio
 
@@ -290,7 +290,7 @@ HStack(spacing: 12) {
 **Testing:**
 1. Accessibility Inspector: Xcode → Open Developer Tool → Accessibility Inspector
 2. Select "Audit" tab → Run audit → Check for "Small Text" and "Hit Region" warnings
-3. Manual: Tap with one finger (not stylus) - can you hit it reliably without mistakes?
+3. Manual: Tap with one finger (not stylus) — can you hit it reliably without mistakes?
 
 ---
 
@@ -552,11 +552,11 @@ Xcode → Open Developer Tool → Accessibility Inspector
 - Click "Audit" tab
 - Click "Run Audit" button
 - Review findings:
-  - **Contrast** - Color contrast issues
-  - **Hit Region** - Touch target size issues
-  - **Clipped Text** - Text truncation with Dynamic Type
-  - **Element Description** - Missing labels/hints
-  - **Traits** - Wrong accessibility traits
+  - **Contrast** — Color contrast issues
+  - **Hit Region** — Touch target size issues
+  - **Clipped Text** — Text truncation with Dynamic Type
+  - **Element Description** — Missing labels/hints
+  - **Traits** — Wrong accessibility traits
 
 ### 5. Fix and Re-Test
 
@@ -658,7 +658,7 @@ Under design review pressure, you'll face requests to:
 
 These sound like reasonable design preferences. **But they violate App Store requirements and exclude 15% of users.** Your job: defend using App Store guidelines and legal requirements, not opinion.
 
-### Red Flags - Designer Requests That Violate Accessibility
+### Red Flags — Designer Requests That Violate Accessibility
 
 If you hear ANY of these, **STOP and reference this skill**:
 
@@ -814,19 +814,19 @@ This protects both of you and shows you're not blocking - just de-risking.
 
 ## WCAG Compliance Levels
 
-### Level A (Minimum - Required for App Store)
-- 1.1.1 Non-text Content - Images have text alternatives
-- 2.1.1 Keyboard - All functionality via keyboard (iPadOS/macOS)
-- 4.1.2 Name, Role, Value - Elements have accessible names
+### Level A (Minimum — Required for App Store)
+- 1.1.1 Non-text Content — Images have text alternatives
+- 2.1.1 Keyboard — All functionality via keyboard (iPadOS/macOS)
+- 4.1.2 Name, Role, Value — Elements have accessible names
 
-### Level AA (Standard - Recommended)
-- 1.4.3 Contrast (Minimum) - 4.5:1 text, 3:1 UI
-- 1.4.4 Resize Text - Support 200% text scaling
-- 1.4.5 Images of Text - Use real text when possible
+### Level AA (Standard — Recommended)
+- 1.4.3 Contrast (Minimum) — 4.5:1 text, 3:1 UI
+- 1.4.4 Resize Text — Support 200% text scaling
+- 1.4.5 Images of Text — Use real text when possible
 
-### Level AAA (Enhanced - Best Practice)
-- 1.4.6 Contrast (Enhanced) - 7:1 text, 4.5:1 UI
-- 2.3.3 Animation from Interactions - Reduce Motion support
+### Level AAA (Enhanced — Best Practice)
+- 1.4.6 Contrast (Enhanced) — 7:1 text, 4.5:1 UI
+- 2.3.3 Animation from Interactions — Reduce Motion support
 - 2.5.5 Target Size - 44x44pt minimum targets
 
 **Goal:** Meet Level AA for all content, Level AAA where feasible.
@@ -846,7 +846,7 @@ After making fixes:
 ## Resources
 
 ### Apple Documentation
-- [Accessibility - Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/accessibility)
+- [Accessibility — Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/accessibility)
 - [Supporting VoiceOver](https://developer.apple.com/documentation/accessibility/voiceover)
 - [Supporting Dynamic Type](https://developer.apple.com/documentation/uikit/uifont/scaling_fonts_automatically)
 

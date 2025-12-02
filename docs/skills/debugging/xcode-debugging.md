@@ -30,7 +30,7 @@ These are real questions developers ask that this skill is designed to answer:
 
 ---
 
-## Red Flags - Check Environment First
+## Red Flags — Check Environment First
 
 If you see ANY of these, suspect environment not code:
 - "It works on my machine but not CI"
@@ -181,13 +181,13 @@ atos -o YourApp.app.dSYM/Contents/Resources/DWARF/YourApp \
 
 ## Common Mistakes
 
-❌ **Debugging code before checking environment** - Always run mandatory steps first
+❌ **Debugging code before checking environment** — Always run mandatory steps first
 
-❌ **Ignoring simulator states** - "Booting" can hang 10+ minutes, shutdown/reboot immediately
+❌ **Ignoring simulator states** — "Booting" can hang 10+ minutes, shutdown/reboot immediately
 
-❌ **Assuming git changes caused the problem** - Derived Data caches old builds despite code changes
+❌ **Assuming git changes caused the problem** — Derived Data caches old builds despite code changes
 
-❌ **Running full test suite when one test fails** - Use `-only-testing` to isolate
+❌ **Running full test suite when one test fails** — Use `-only-testing` to isolate
 
 ## Real-World Impact
 

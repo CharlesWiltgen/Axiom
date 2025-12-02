@@ -11,11 +11,11 @@ Scan your SwiftUI codebase for Liquid Glass adoption opportunities and potential
 
 Performs automated checks for:
 
-1. **Custom Views for Glass Effects** - Views that could benefit from `.glassBackgroundEffect()`
-2. **Toolbar Improvements** - Missing `.borderedProminent` buttons, opportunities for `Spacer(.fixed)`
-3. **Search Patterns** - `.searchable()` that could be bottom-aligned or use `.tabRole(.search)`
-4. **Migration Opportunities** - `UIBlurEffect`, `NSVisualEffectView`, old blur modifiers
-5. **Missing Tinting** - Toolbar buttons that could use `.tint()` for prominence
+1. **Custom Views for Glass Effects** — Views that could benefit from `.glassBackgroundEffect()`
+2. **Toolbar Improvements** — Missing `.borderedProminent` buttons, opportunities for `Spacer(.fixed)`
+3. **Search Patterns** — `.searchable()` that could be bottom-aligned or use `.tabRole(.search)`
+4. **Migration Opportunities** — `UIBlurEffect`, `NSVisualEffectView`, old blur modifiers
+5. **Missing Tinting** — Toolbar buttons that could use `.tint()` for prominence
 
 ## Scan Categories
 

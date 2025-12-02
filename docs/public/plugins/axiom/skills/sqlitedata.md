@@ -1,6 +1,6 @@
 ---
 name: sqlitedata
-description: Use when working with SQLiteData (Point-Free) - @Table models, queries with @FetchAll/@FetchOne, CloudKit sync setup, StructuredQueries post-migration crashes, batch imports, production crisis decision-making under App Store deployment pressure, and when to drop to GRDB - type-safe SQLite persistence patterns for iOS
+description: Use when working with SQLiteData (Point-Free) — @Table models, queries with @FetchAll/@FetchOne, CloudKit sync setup, StructuredQueries post-migration crashes, batch imports, production crisis decision-making under App Store deployment pressure, and when to drop to GRDB - type-safe SQLite persistence patterns for iOS
 version: 1.1.0
 last_updated: TDD-tested with App Store migration crisis scenarios
 ---
@@ -552,8 +552,8 @@ let count = try await Track.fetchCount(database)
 - [Point-Free Episodes](https://www.pointfree.co) (video tutorials, subscription)
 
 **Dependencies:**
-- [swift-dependencies](https://github.com/pointfreeco/swift-dependencies) - Dependency injection (pairs well with SQLiteData)
-- [GRDB](https://github.com/groue/GRDB.swift) - Underlying database engine
+- [swift-dependencies](https://github.com/pointfreeco/swift-dependencies) — Dependency injection (pairs well with SQLiteData)
+- [GRDB](https://github.com/groue/GRDB.swift) — Underlying database engine
 
 **Related Axiom Skills:**
 - `database-migration` - Safe schema evolution patterns

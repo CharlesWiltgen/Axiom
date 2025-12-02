@@ -91,11 +91,11 @@ Successfully created 9 production-ready iOS development skills for Claude Code. 
 - Instruments quick reference
 
 **Pattern coverage**:
-1. Timer leaks (50%) - invalidate() + nil in deinit
-2. Observer leaks (25%) - NotificationCenter cleanup
-3. Closure capture leaks (15%) - [weak self] patterns
-4. Strong delegate cycles (8%) - weak delegate
-5. View callback leaks (2%) - callback closures
+1. Timer leaks (50%) — invalidate() + nil in deinit
+2. Observer leaks (25%) — NotificationCenter cleanup
+3. Closure capture leaks (15%) — [weak self] patterns
+4. Strong delegate cycles (8%) — weak delegate
+5. View callback leaks (2%) — callback closures
 
 **Impact**: Reduces debugging from 2-3 hours to 15-30 minutes
 
@@ -157,9 +157,9 @@ Successfully created 9 production-ready iOS development skills for Claude Code. 
 - Critical framework gotchas
 
 **Critical gotchas documented**:
-1. **StructuredQueries post-migration crash** - Using `.where{}` after migrations causes SEGFAULT (close/reopen database fix)
-2. **Static .where{} in tests crash** - Static queries load before database exists (use computed properties)
-3. **Wrong insert pattern** - GRDB Active Record vs SQLiteData static methods
+1. **StructuredQueries post-migration crash** — Using `.where{}` after migrations causes SEGFAULT (close/reopen database fix)
+2. **Static .where{} in tests crash** — Static queries load before database exists (use computed properties)
+3. **Wrong insert pattern** — GRDB Active Record vs SQLiteData static methods
 
 **Key patterns**:
 - Batch inserts (500 records/transaction): 50k records in 30-45 seconds

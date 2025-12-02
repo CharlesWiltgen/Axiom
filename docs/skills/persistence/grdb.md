@@ -9,7 +9,7 @@ last_updated: TDD-tested with complex query performance scenarios
 
 ## Overview
 
-Direct SQLite access using [GRDB.swift](https://github.com/groue/GRDB.swift) - a toolkit for SQLite databases with type-safe queries, migrations, and reactive observation.
+Direct SQLite access using [GRDB.swift](https://github.com/groue/GRDB.swift) — a toolkit for SQLite databases with type-safe queries, migrations, and reactive observation.
 
 **Core principle:** Type-safe Swift wrapper around raw SQL with full SQLite power when you need it.
 
@@ -514,7 +514,7 @@ ValueObservation.tracking { db in
 ite Documentation](https://www.sqlite.org/docs.html)
 
 **SwiftUI Integration:**
-- [GRDBQuery](https://github.com/groue/GRDBQuery) - SwiftUI reactive bindings
+- [GRDBQuery](https://github.com/groue/GRDBQuery) — SwiftUI reactive bindings
 
 **Related Axiom Skills:**
 - `database-migration` - Safe schema evolution
@@ -523,7 +523,7 @@ ite Documentation](https://www.sqlite.org/docs.html)
 
 ## Production Performance: Query Optimization Under Pressure
 
-### Red Flags - When GRDB Queries Slow Down
+### Red Flags — When GRDB Queries Slow Down
 
 If you see ANY of these symptoms:
 - ❌ Complex JOIN query takes 10+ seconds
@@ -587,7 +587,7 @@ try database.write { db in
 ValueObservation.tracking { db in
     try Track.fetchAll(db)
 }.start(in: database, onError: { }, onChange: { tracks in
-    // Called for every change - CPU spike!
+    // Called for every change — CPU spike!
 })
 ```
 

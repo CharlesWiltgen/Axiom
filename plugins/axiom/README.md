@@ -1,6 +1,6 @@
 # Axiom Plugin
 
-Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance - Liquid Glass, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
+Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Liquid Glass, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
 
 **Version**: 0.1.2
 **Status**: Preview Release
@@ -183,13 +183,13 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 
 Skills follow core principles:
 
-1. **Examples first** - Working code before theory
-2. **WWDC guidance** - Latest official Apple recommendations
-3. **Expert review** - Built-in validation checklists
-4. **Environment-first debugging** - Check build environment before code
-5. **Safety by default** - Prevent data loss with tested patterns
-6. **Compile-time safety** - Catch bugs at compile time with Swift 6
-7. **Copy-paste ready** - Working templates, not just theory
+1. **Examples first** — Working code before theory
+2. **WWDC guidance** — Latest official Apple recommendations
+3. **Expert review** — Built-in validation checklists
+4. **Environment-first debugging** — Check build environment before code
+5. **Safety by default** — Prevent data loss with tested patterns
+6. **Compile-time safety** — Catch bugs at compile time with Swift 6
+7. **Copy-paste ready** — Working templates, not just theory
 
 ## Quality Standards
 

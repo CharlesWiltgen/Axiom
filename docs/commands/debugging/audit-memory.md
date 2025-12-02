@@ -10,12 +10,12 @@ Scan your Swift codebase for the 6 most common memory leak patterns that cause c
 
 ## What This Command Checks
 
-1. **Timer Leaks** - Repeating timers without `invalidate()`
-2. **Observer/Notification Leaks** - `addObserver` without `removeObserver`
-3. **Closure Capture Leaks** - Closures in arrays capturing self strongly
-4. **Delegate Cycle Leaks** - Strong delegate references
-5. **View Callback Leaks** - Completion handlers retaining view controllers
-6. **PhotoKit Accumulation** - Missing `stopCachingImages` calls
+1. **Timer Leaks** — Repeating timers without `invalidate()`
+2. **Observer/Notification Leaks** — `addObserver` without `removeObserver`
+3. **Closure Capture Leaks** — Closures in arrays capturing self strongly
+4. **Delegate Cycle Leaks** — Strong delegate references
+5. **View Callback Leaks** — Completion handlers retaining view controllers
+6. **PhotoKit Accumulation** — Missing `stopCachingImages` calls
 
 ## When to Use
 
@@ -157,9 +157,9 @@ The command will:
 
 After running the audit:
 
-1. **Fix Critical leaks immediately** - These cause production crashes
-2. **Profile with Instruments** - Verify leaks are gone
-3. **Add to CI/CD** - Run before each release
+1. **Fix Critical leaks immediately** — These cause production crashes
+2. **Profile with Instruments** — Verify leaks are gone
+3. **Add to CI/CD** — Run before each release
 
 For detailed fix patterns, use the [memory-debugging](/skills/debugging/memory-debugging) skill:
 

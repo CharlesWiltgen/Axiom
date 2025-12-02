@@ -7,7 +7,7 @@ apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, tvOS, watchOS, visionOS 3+
 skill_type: reference
 ---
 
-# Liquid Glass Adoption - Reference Guide
+# Liquid Glass Adoption — Reference Guide
 
 ## When to Use This Skill
 
@@ -142,7 +142,7 @@ struct ContentView: View {
                 }
             }
 
-            // Navigation layer - Liquid Glass
+            // Navigation layer — Liquid Glass
             VStack {
                 Spacer()
                 HStack {
@@ -1424,8 +1424,8 @@ Use this checklist when auditing app for Liquid Glass adoption:
 
 **WWDC Sessions:**
 - [Adopting Liquid Glass (documentation)](https://developer.apple.com/documentation/TechnologyOverviews/adopting-liquid-glass)
-- [Meet Liquid Glass - WWDC25 Session 219](https://developer.apple.com/videos/play/wwdc2025/219/)
-- [Build a SwiftUI app with the new design - WWDC25 Session 323](https://developer.apple.com/videos/play/wwdc2025/323/)
+- [Meet Liquid Glass — WWDC25 Session 219](https://developer.apple.com/videos/play/wwdc2025/219/)
+- [Build a SwiftUI app with the new design — WWDC25 Session 323](https://developer.apple.com/videos/play/wwdc2025/323/)
 
 **Related Skills:**
 - `liquid-glass` - Implementing Liquid Glass material, design review pressure
@@ -1436,7 +1436,7 @@ Use this checklist when auditing app for Liquid Glass adoption:
 **Design Resources:**
 - Icon Composer: https://developer.apple.com/design/resources/
 - App Icon Grids: https://developer.apple.com/design/resources/
-- Human Interface Guidelines - Materials: https://developer.apple.com/design/Human-Interface-Guidelines/materials
+- Human Interface Guidelines — Materials: https://developer.apple.com/design/Human-Interface-Guidelines/materials
 
 ---
 

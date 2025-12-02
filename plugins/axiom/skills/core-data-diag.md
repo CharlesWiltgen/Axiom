@@ -697,7 +697,7 @@ Under production crisis pressure, you'll face requests to:
 
 These sound like pragmatic crisis responses. **But they cause data loss and permanent user trust damage.** Your job: defend using data safety principles and customer impact, not fear of pressure.
 
-### Red Flags - PM/Manager Requests That Cause Data Loss
+### Red Flags — PM/Manager Requests That Cause Data Loss
 
 If you hear ANY of these during a production crisis, **STOP and reference this skill**:
 
@@ -834,7 +834,7 @@ do {
                                        options: options)
     // Migration succeeded - user data preserved
 } catch {
-    // Migration failed - NOW consider deleting with user communication
+    // Migration failed — NOW consider deleting with user communication
     print("Migration error: \(error)")
 }
 ```

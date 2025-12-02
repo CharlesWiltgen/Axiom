@@ -27,7 +27,7 @@ These are real questions developers ask that this skill is designed to answer:
 **4. "Block assigned to property never releases. Is there a pattern for this?"**
 → The skill shows copy vs strong property semantics and cleanup patterns
 
-## Red Flags - Check Block Capture
+## Red Flags — Check Block Capture
 
 If you see ANY of these, suspect block retain cycle not code logic:
 - View controller never deallocates (check with deinit log)
@@ -229,13 +229,13 @@ Product → Profile → Leaks
 
 ## Common Mistakes
 
-❌ **Using weak without strong** - Crashes when object deallocated mid-block
+❌ **Using weak without strong** — Crashes when object deallocated mid-block
 
-❌ **Forgetting to clear block properties in dealloc** - Leaves cycle intact
+❌ **Forgetting to clear block properties in dealloc** — Leaves cycle intact
 
-❌ **Not invalidating timers** - Timer keeps firing, retaining self
+❌ **Not invalidating timers** — Timer keeps firing, retaining self
 
-❌ **Thinking 'copy' property prevents cycles** - It doesn't, use weak-strong
+❌ **Thinking 'copy' property prevents cycles** — It doesn't, use weak-strong
 
 ## Real-World Impact
 
@@ -260,8 +260,8 @@ Swift handles the strong-weak dance automatically when you unwrap `self` after `
 
 ## Related Skills
 
-- [memory-debugging](/skills/debugging/memory-debugging) - For general memory leak diagnosis
-- [audit-memory](/commands/debugging/audit-memory) - Quick automated scan for leak patterns
+- [memory-debugging](/skills/debugging/memory-debugging) — For general memory leak diagnosis
+- [audit-memory](/commands/debugging/audit-memory) — Quick automated scan for leak patterns
 
 ## Size
 

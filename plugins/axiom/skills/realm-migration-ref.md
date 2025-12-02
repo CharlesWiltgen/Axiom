@@ -4,7 +4,7 @@ description: Comprehensive migration guide from Realm to SwiftData - pattern equ
 skill_type: reference
 ---
 
-# Realm to SwiftData Migration - Reference Guide
+# Realm to SwiftData Migration — Reference Guide
 
 **Purpose**: Complete migration path from Realm to SwiftData
 **Swift Version**: Swift 5.9+ (Swift 6 with strict concurrency recommended)

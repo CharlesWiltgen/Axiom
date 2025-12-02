@@ -209,10 +209,10 @@ Use this reference when:
 
 ## Related Skills
 
-- [liquid-glass](/skills/ui-design/liquid-glass) - Implementation skill for Liquid Glass
-- [swiftui-performance](/skills/ui-design/swiftui-performance) - Performance optimization
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) - Debugging view updates
-- [liquid-glass-ref](/reference/liquid-glass-ref) - Comprehensive Liquid Glass adoption
+- [liquid-glass](/skills/ui-design/liquid-glass) — Implementation skill for Liquid Glass
+- [swiftui-performance](/skills/ui-design/swiftui-performance) — Performance optimization
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — Debugging view updates
+- [liquid-glass-ref](/reference/liquid-glass-ref) — Comprehensive Liquid Glass adoption
 
 ## WWDC 2025 Sessions
 
@@ -222,7 +222,7 @@ Use this reference when:
 
 ## Documentation Scope
 
-This is a **reference skill** - comprehensive API catalog without mandatory workflows.
+This is a **reference skill** — comprehensive API catalog without mandatory workflows.
 
 **Reference includes:**
 - Complete feature list

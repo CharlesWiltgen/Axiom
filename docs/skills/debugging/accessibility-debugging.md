@@ -28,14 +28,14 @@ Fixed font sizes prevent users with vision disabilities from reading text.
 ### 3. Color Contrast (HIGH)
 Low contrast text is unreadable for users with vision disabilities or in bright sunlight.
 
-**WCAG:** 1.4.3 Contrast (Minimum) - Level AA
+**WCAG:** 1.4.3 Contrast (Minimum) — Level AA
 - Normal text: 4.5:1 contrast ratio
 - Large text: 3:1 contrast ratio
 
 ### 4. Touch Target Sizes (MEDIUM)
 Small tap targets are difficult or impossible for users with motor disabilities.
 
-**WCAG:** 2.5.5 Target Size (Level AAA) - 44x44pt minimum
+**WCAG:** 2.5.5 Target Size (Level AAA) — 44x44pt minimum
 
 ### 5. Keyboard Navigation (MEDIUM)
 Users who cannot use touch/mouse cannot navigate app.
@@ -55,13 +55,13 @@ Animations cause discomfort, nausea, or seizures for users with vestibular disor
 
 ## Key Features
 
-- **7 Critical Issue Categories** - Covers 95% of App Store accessibility rejections
-- **WCAG Compliance Levels** - Level A (required), AA (standard), AAA (enhanced)
-- **Accessibility Inspector Workflows** - Step-by-step tool usage
-- **VoiceOver Testing Checklist** - Complete testing protocol
-- **App Store Review Preparation** - What reviewers check
-- **Code Examples** - Wrong vs. correct patterns for every issue
-- **Testing Protocols** - How to verify fixes work
+- **7 Critical Issue Categories** — Covers 95% of App Store accessibility rejections
+- **WCAG Compliance Levels** — Level A (required), AA (standard), AAA (enhanced)
+- **Accessibility Inspector Workflows** — Step-by-step tool usage
+- **VoiceOver Testing Checklist** — Complete testing protocol
+- **App Store Review Preparation** — What reviewers check
+- **Code Examples** — Wrong vs. correct patterns for every issue
+- **Testing Protocols** — How to verify fixes work
 
 ## Testing Tools
 
@@ -85,17 +85,17 @@ Settings → Accessibility → Display & Text Size → Larger Text
 
 ## WCAG Compliance Reference
 
-### Level A (Minimum - Required)
+### Level A (Minimum — Required)
 - 1.1.1 Non-text Content
 - 2.1.1 Keyboard
 - 4.1.2 Name, Role, Value
 
-### Level AA (Standard - Recommended)
+### Level AA (Standard — Recommended)
 - 1.4.3 Contrast (Minimum)
 - 1.4.4 Resize Text
 - 1.4.5 Images of Text
 
-### Level AAA (Enhanced - Best Practice)
+### Level AAA (Enhanced — Best Practice)
 - 1.4.6 Contrast (Enhanced)
 - 2.3.3 Animation from Interactions
 - 2.5.5 Target Size
@@ -145,6 +145,6 @@ if !UIAccessibility.isReduceMotionEnabled {
 
 ## See Also
 
-- **[/audit-accessibility Command](/commands/accessibility/audit-accessibility)** - Quick automated scan
+- **[/audit-accessibility Command](/commands/accessibility/audit-accessibility)** — Quick automated scan
 - **[Apple Accessibility Guidelines](https://developer.apple.com/design/human-interface-guidelines/accessibility)**
 - **[WCAG 2.1 Quick Reference](https://www.w3.org/WAI/WCAG21/quickref/)**

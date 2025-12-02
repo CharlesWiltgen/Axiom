@@ -10,12 +10,12 @@ Scan your Swift codebase for common Swift 6 concurrency anti-patterns and violat
 
 ## What This Command Checks
 
-1. **Missing @MainActor on UI Classes** - View controllers and ObservableObjects without @MainActor
-2. **Unsafe Task Self Capture** - Tasks capturing self strongly without [weak self]
-3. **Sendable Violations** - Non-Sendable types crossing actor boundaries
-4. **Improper Actor Isolation** - Unsafe data access from actor contexts
-5. **Missing Weak Self in Stored Tasks** - Stored Task properties that leak memory
-6. **Thread Confinement Violations** - MainActor property access from background contexts
+1. **Missing @MainActor on UI Classes** — View controllers and ObservableObjects without @MainActor
+2. **Unsafe Task Self Capture** — Tasks capturing self strongly without [weak self]
+3. **Sendable Violations** — Non-Sendable types crossing actor boundaries
+4. **Improper Actor Isolation** — Unsafe data access from actor contexts
+5. **Missing Weak Self in Stored Tasks** — Stored Task properties that leak memory
+6. **Thread Confinement Violations** — MainActor property access from background contexts
 
 ## When to Use
 
@@ -146,9 +146,9 @@ The command will:
 
 After running the audit:
 
-1. **Fix Critical issues immediately** - These cause crashes and memory leaks
-2. **Address High priority issues** - Enable strict concurrency checking
-3. **Resolve Medium priority warnings** - Clean build before shipping
+1. **Fix Critical issues immediately** — These cause crashes and memory leaks
+2. **Address High priority issues** — Enable strict concurrency checking
+3. **Resolve Medium priority warnings** — Clean build before shipping
 
 For detailed fix patterns, use the [swift-concurrency](/skills/concurrency/swift-concurrency) skill:
 

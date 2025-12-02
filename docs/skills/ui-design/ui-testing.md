@@ -34,7 +34,7 @@ These are real questions developers ask that this skill is designed to answer:
 
 ---
 
-## Red Flags - Test Reliability Issues
+## Red Flags — Test Reliability Issues
 
 If you see ANY of these, suspect timing issues:
 - Tests pass locally, fail in CI (timing differences)
@@ -294,9 +294,9 @@ element.waitForExistence(timeout: 0.1)  // ❌ Too short
 **NEW in Xcode 26**: Record, replay, and review UI automation tests with video recordings.
 
 **Three Phases**:
-1. **Record** - Capture interactions (taps, swipes, hardware button presses) as Swift code
-2. **Replay** - Run across multiple devices, languages, regions, orientations
-3. **Review** - Watch video recordings, analyze failures, view UI element overlays
+1. **Record** — Capture interactions (taps, swipes, hardware button presses) as Swift code
+2. **Replay** — Run across multiple devices, languages, regions, orientations
+3. **Review** — Watch video recordings, analyze failures, view UI element overlays
 
 **Supported Platforms**: iOS, iPadOS, macOS, watchOS, tvOS, visionOS (Designed for iPad)
 
@@ -323,7 +323,7 @@ What accessibility sees:
 - Labels (visible text)
 - Values (current state for checkboxes, etc.)
 - Frames (element positions)
-- **Identifiers** (accessibility identifiers - NOT localized)
+- **Identifiers** (accessibility identifiers — NOT localized)
 
 **Best Practice**: Great accessibility experience = great UI automation experience.
 
@@ -377,9 +377,9 @@ Prompt: "Add accessibility identifiers to the relevant parts of this view"
 - Or: Launch from Spotlight
 
 **Features**:
-1. **Element Inspector** - List accessibility values for any view
-2. **Property details** - Click property name for documentation
-3. **Platform support** - Works on all Apple platforms
+1. **Element Inspector** — List accessibility values for any view
+2. **Property details** — Click property name for documentation
+3. **Platform support** — Works on all Apple platforms
 
 **What to check**:
 - Elements have labels
@@ -565,7 +565,7 @@ func testAccessibility() throws {
 }
 ```
 
-**Reference**: [Perform accessibility audits for your app - WWDC23](https://developer.apple.com/videos/play/wwdc2023/10035/)
+**Reference**: [Perform accessibility audits for your app — WWDC23](https://developer.apple.com/videos/play/wwdc2023/10035/)
 
 ### Test Plans for Multiple Configurations
 
@@ -611,7 +611,7 @@ Configurations:
 - Tutorials
 - Marketing materials
 
-**Reference**: [Author fast and reliable tests for Xcode Cloud - WWDC22](https://developer.apple.com/videos/play/wwdc2022/110371/)
+**Reference**: [Author fast and reliable tests for Xcode Cloud — WWDC22](https://developer.apple.com/videos/play/wwdc2022/110371/)
 
 ### Replaying Tests in Xcode Cloud
 
@@ -633,7 +633,7 @@ Configurations:
 
 **Team Access**: Entire team can see run history and download results/videos.
 
-**Reference**: [Create practical workflows in Xcode Cloud - WWDC23](https://developer.apple.com/videos/play/wwdc2023/10269/)
+**Reference**: [Create practical workflows in Xcode Cloud — WWDC23](https://developer.apple.com/videos/play/wwdc2023/10269/)
 
 ### Reviewing Test Results with Videos
 
@@ -643,11 +643,11 @@ Configurations:
 2. Double-click failing run to see video + description
 
 **Features**:
-- **Runs dropdown** - Switch between video recordings of different configurations (languages, devices)
-- **Save video** - Secondary click → Save
-- **Play/pause** - Video playback with UI interaction overlays
-- **Timeline dots** - UI interactions shown as dots on timeline
-- **Jump to failure** - Click failure diamond on timeline
+- **Runs dropdown** — Switch between video recordings of different configurations (languages, devices)
+- **Save video** — Secondary click → Save
+- **Play/pause** — Video playback with UI interaction overlays
+- **Timeline dots** — UI interactions shown as dots on timeline
+- **Jump to failure** — Click failure diamond on timeline
 
 #### UI Element Overlay at Failure
 
@@ -655,7 +655,7 @@ Configurations:
 - Click timeline failure point
 - **Overlay shows all UI elements** present on screen
 - Click any element to see code recommendations for addressing it
-- **Show All** - See alternative examples
+- **Show All** — See alternative examples
 
 **Workflow**:
 1. Identify what was actually present (vs what test expected)
@@ -679,7 +679,7 @@ Click test diamond → Select configuration (e.g., Arabic) → Watch automation 
 
 **Validates**: Same automation works across languages/layouts.
 
-**Reference**: [Fix failures faster with Xcode test reports - WWDC23](https://developer.apple.com/videos/play/wwdc2023/10175/)
+**Reference**: [Fix failures faster with Xcode test reports — WWDC23](https://developer.apple.com/videos/play/wwdc2023/10175/)
 
 ### Recording UI Automation Checklist
 
@@ -1151,15 +1151,15 @@ func testPhotosLoadUnderStress() {
 ## Reference
 
 **WWDC 2025 Sessions**:
-- [Record, replay, and review: UI automation with Xcode - WWDC25 Session 344](https://developer.apple.com/videos/play/wwdc2025/344/)
+- [Record, replay, and review: UI automation with Xcode — WWDC25 Session 344](https://developer.apple.com/videos/play/wwdc2025/344/)
   - Recording UI automation, test plans, video review
 
 **WWDC 2023 Sessions**:
-- [Fix failures faster with Xcode test reports - WWDC23](https://developer.apple.com/videos/play/wwdc2023/10175/)
-- [Perform accessibility audits for your app - WWDC23](https://developer.apple.com/videos/play/wwdc2023/10035/)
+- [Fix failures faster with Xcode test reports — WWDC23](https://developer.apple.com/videos/play/wwdc2023/10175/)
+- [Perform accessibility audits for your app — WWDC23](https://developer.apple.com/videos/play/wwdc2023/10035/)
 
 **WWDC 2024 Sessions**:
-- [Meet Swift Testing - WWDC24](https://developer.apple.com/videos/play/wwdc2024/10179/)
+- [Meet Swift Testing — WWDC24](https://developer.apple.com/videos/play/wwdc2024/10179/)
 
 **Apple Documentation**:
 - [XCTest Framework](https://developer.apple.com/documentation/xctest)
