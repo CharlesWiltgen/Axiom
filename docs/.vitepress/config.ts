@@ -91,6 +91,7 @@ export default defineConfig({
         {
           text: 'Apple Intelligence & Integration',
           items: [
+            { text: 'Overview', link: '/skills/integration/' },
             { text: 'App Intents Integration', link: '/skills/integration/app-intents-integration' }
           ]
         },
