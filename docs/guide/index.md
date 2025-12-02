@@ -1,6 +1,6 @@
 # Getting Started
 
-Welcome to Axiom, battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development.
+Welcome to Axiom — battle-tested Claude Code skills, commands, and references for modern xOS (iOS, iPadOS, tvOS, watchOS) development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more.
 
 ## What is Axiom?
 

@@ -1,11 +1,26 @@
 # Skills
 
-Axiom provides 20 skills and 3 commands for xOS (iOS, iPadOS, watchOS, tvOS) development.
+Discipline-enforcing workflows tested with RED-GREEN-REFACTOR methodology to prevent common mistakes under pressure.
 
-**Breakdown:**
-- **15 TDD-tested skills** – Discipline-enforcing workflows tested with RED-GREEN-REFACTOR methodology
-- **5 reference skills** – Comprehensive guides reviewed for accuracy, completeness, clarity, and practical value
-- **3 commands** – Quick automated scans for common issues
+## TDD-Tested Skills
+
+| Category | Skill | When to Use | Size |
+|----------|-------|-------------|------|
+| **UI & Design** | [**liquid-glass**](/skills/ui-design/liquid-glass) | Implementing Liquid Glass effects, debugging visual artifacts, design review pressure | 32 KB |
+| | [**swiftui-performance**](/skills/ui-design/swiftui-performance) | App feels sluggish, animations stutter, SwiftUI Instrument profiling | 24 KB |
+| | [**swiftui-debugging**](/skills/ui-design/swiftui-debugging) | View doesn't update, preview crashes, layout issues | 28 KB |
+| | [**ui-testing**](/skills/ui-design/ui-testing) | Recording UI tests, flaky tests, race conditions | 24 KB |
+| **Debugging** | [**xcode-debugging**](/skills/debugging/xcode-debugging) | BUILD FAILED, simulator hangs, zombie processes | 5 KB |
+| | [**memory-debugging**](/skills/debugging/memory-debugging) | Memory leaks, retain cycles, progressive memory growth | 24 KB |
+| | [**build-troubleshooting**](/skills/debugging/build-troubleshooting) | Dependency conflicts, CocoaPods/SPM failures | 10 KB |
+| | [**performance-profiling**](/skills/debugging/performance-profiling) | App feels slow, profiling with Instruments | 22 KB |
+| **Concurrency** | [**swift-concurrency**](/skills/concurrency/swift-concurrency) | Swift 6 actor isolation, Sendable errors, data races | 12 KB |
+| **Persistence** | [**database-migration**](/skills/persistence/database-migration) | Adding database columns, schema changes, migration errors | 11 KB |
+| | [**swiftdata**](/skills/persistence/swiftdata) | @Model, @Query, CloudKit integration | 26 KB |
+| | [**sqlitedata**](/skills/persistence/sqlitedata) | SQLiteData patterns, batch imports, CloudKit sync | 20 KB |
+| | [**grdb**](/skills/persistence/grdb) | Raw SQL queries, complex joins, ValueObservation | 18 KB |
+| **Legacy** | [**uikit-animation-debugging**](/skills/ui-design/uikit-animation-debugging) | CAAnimation issues, completion handlers, spring physics | 25 KB |
+| | [**objc-block-retain-cycles**](/skills/debugging/objc-block-retain-cycles) | Block memory leaks, weak-strong patterns | 30 KB |
 
 ## Skill Categories
 

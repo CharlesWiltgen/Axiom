@@ -1,9 +1,10 @@
 ---
-name: accessibility-debugging
+name: accessibility-diag
 description: Use when fixing VoiceOver issues, Dynamic Type violations, color contrast failures, touch target problems, keyboard navigation gaps, or Reduce Motion support - comprehensive accessibility diagnostics with WCAG compliance, Accessibility Inspector workflows, and App Store Review preparation for iOS/macOS
+skill_type: diagnostic
 ---
 
-# Accessibility Debugging
+# Accessibility Diagnostics
 
 ## Overview
 
@@ -643,6 +644,174 @@ When submitting:
    - UI elements fail 3:1 ratio
    - Color-only indicators
 
+---
+
+## Design Review Pressure: Defending Accessibility Requirements
+
+### The Problem
+
+Under design review pressure, you'll face requests to:
+- "Those VoiceOver labels make the code messy - can we skip them?"
+- "Dynamic Type breaks our carefully designed layout - let's lock font sizes"
+- "The high contrast requirement ruins our brand aesthetic"
+- "44pt touch targets are too big - make them smaller for a cleaner look"
+
+These sound like reasonable design preferences. **But they violate App Store requirements and exclude 15% of users.** Your job: defend using App Store guidelines and legal requirements, not opinion.
+
+### Red Flags - Designer Requests That Violate Accessibility
+
+If you hear ANY of these, **STOP and reference this skill**:
+
+- ❌ **"Skip VoiceOver labels on icon-only buttons"** – App Store rejection (Guideline 2.5.1)
+- ❌ **"Use fixed 14pt font for compact design"** – Excludes users with vision disabilities
+- ❌ **"3:1 contrast ratio is fine"** – Fails WCAG AA for text (needs 4.5:1)
+- ❌ **"Make buttons 36x36pt for clean aesthetic"** – Fails touch target requirement (44x44pt minimum)
+- ❌ **"Disable Dynamic Type in this screen"** – App Store rejection risk
+- ❌ **"Color-code without labels (red=error, green=success)"** – Excludes colorblind users (8% of men)
+
+### How to Push Back Professionally
+
+**Step 1: Show the Guideline**
+
+```
+"I want to support this design direction, but let me show you Apple's App Store
+Review Guideline 2.5.1:
+
+'Apps should support accessibility features such as VoiceOver and Dynamic Type.
+Failure to include sufficient accessibility features may result in rejection.'
+
+Here's what we need for approval:
+1. VoiceOver labels on all interactive elements
+2. Dynamic Type support (can't lock font sizes)
+3. 4.5:1 contrast ratio for text, 3:1 for UI
+4. 44x44pt minimum touch targets
+
+Let me show where our design currently falls short..."
+```
+
+**Step 2: Demonstrate the Risk**
+
+Open the app with accessibility features enabled:
+- **VoiceOver** (Cmd+F5): Show buttons announcing "Button" instead of purpose
+- **Largest Text Size**: Show layout breaking or text clipping
+- **Color Contrast Analyzer**: Show failing contrast ratios
+- **Touch target overlay**: Show targets < 44pt
+
+**Reference:**
+- App Store Review Guideline 2.5.1
+- WCAG 2.1 Level AA (industry standard)
+- ADA compliance requirements (legal risk in US)
+
+**Step 3: Offer Compromise**
+
+```
+"I can achieve your aesthetic goals while meeting accessibility requirements:
+
+1. VoiceOver labels: Add them programmatically (invisible in UI, required for approval)
+2. Dynamic Type: Use layout techniques that adapt (examples from Apple HIG)
+3. Contrast: Adjust colors slightly to meet 4.5:1 (I'll show options that preserve brand)
+4. Touch targets: Expand hit areas programmatically (visual size stays the same)
+
+These changes won't affect the visual design you're seeing, but they're required
+for App Store approval and legal compliance."
+```
+
+**Step 4: Document the Decision**
+
+If overruled (designer insists on violations):
+
+```
+Slack message to PM + designer:
+
+"Design review decided to proceed with:
+- Fixed font sizes (disabling Dynamic Type)
+- 38x38pt buttons (below 44pt requirement)
+- 3.8:1 text contrast (below 4.5:1 requirement)
+
+Important: These changes violate App Store Review Guideline 2.5.1 and WCAG AA.
+This creates three risks:
+
+1. App Store rejection during review (adds 1-2 week delay)
+2. ADA compliance issues if user files complaint (legal risk)
+3. 15% of potential users unable to use app effectively
+
+I'm flagging this proactively so we can prepare a response plan if rejected."
+```
+
+**Why this works:**
+- You're not questioning their design taste
+- You're raising App Store rejection risk (business impact)
+- You're citing specific guidelines (not opinion)
+- You're offering solutions that preserve visual design
+- You're documenting the decision (protects you post-rejection)
+
+### Real-World Example: App Store Rejection (48-Hour Resubmit Window)
+
+**Scenario:**
+- 48 hours until resubmit deadline after rejection
+- Apple cited: "2.5.1 - Insufficient VoiceOver support"
+- Designer says: "Just add generic labels quickly"
+- PM watching the meeting, wants fastest fix
+
+**What to do:**
+
+```swift
+// ❌ WRONG - Generic labels (will fail re-review)
+Button(action: addToCart) {
+    Image(systemName: "cart.badge.plus")
+}
+.accessibilityLabel("Button") // Apple will reject again
+
+// ✅ CORRECT - Descriptive labels (passes review)
+Button(action: addToCart) {
+    Image(systemName: "cart.badge.plus")
+}
+.accessibilityLabel("Add to cart")
+.accessibilityHint("Double-tap to add this item to your shopping cart")
+```
+
+**In the meeting, demonstrate:**
+1. Enable VoiceOver (Cmd+F5)
+2. Show "Button" announcement (generic - fails)
+3. Show "Add to cart" announcement (descriptive - passes)
+4. Reference Apple's rejection message: "Elements must have descriptive labels"
+
+**Time estimate:** 2-4 hours to audit all interactive elements and add proper labels.
+
+**Result:**
+- Honest time estimate prevents second rejection
+- Proper labels pass Apple review
+- Resubmit accepted within 48 hours
+
+### When to Accept the Design Decision (Even If You Disagree)
+
+Sometimes designers have valid reasons to override accessibility guidelines. Accept if:
+
+- [ ] They understand the App Store rejection risk
+- [ ] They're willing to delay launch if rejected
+- [ ] You document the decision in writing
+- [ ] They commit to fixing if rejected
+
+**Document in Slack:**
+
+```
+"Design review decided to proceed with [specific violations].
+
+We understand this creates:
+- App Store rejection risk (Guideline 2.5.1)
+- Potential 1-2 week delay if rejected
+- Need to audit and fix all instances if rejected
+
+Monitoring plan:
+- Submit for review with current design
+- If rejected, implement proper accessibility (estimated 2-4 hours)
+- Have accessibility-compliant version ready as backup"
+```
+
+This protects both of you and shows you're not blocking - just de-risking.
+
+---
+
 ## WCAG Compliance Levels
 
 ### Level A (Minimum - Required for App Store)
@@ -671,7 +840,7 @@ After making fixes:
 /axiom:audit-accessibility
 
 # Deep diagnosis for specific issues
-/skill axiom:accessibility-debugging
+/skill axiom:accessibility-diag
 ```
 
 ## Resources
