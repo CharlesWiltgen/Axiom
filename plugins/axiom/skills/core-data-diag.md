@@ -1,9 +1,10 @@
 ---
-name: core-data-debugging
+name: core-data-diag
 description: Use when debugging schema migration crashes, concurrency thread-confinement errors, N+1 query performance, SwiftData to Core Data bridging, or testing migrations without data loss - systematic Core Data diagnostics with safety-first migration patterns
+skill_type: diagnostic
 ---
 
-# Core Data Debugging & Migration
+# Core Data Diagnostics & Migration
 
 ## Overview
 
@@ -681,6 +682,214 @@ If you've spent >30 minutes and the Core Data issue persists:
 - ❌ FORBIDDEN: Users won't appreciate losing their data
 - Users uninstall and leave bad reviews
 - Fix: Invest in safe migration testing
+
+---
+
+## Production Crisis Pressure: Defending Safe Migration Patterns
+
+### The Problem
+
+Under production crisis pressure, you'll face requests to:
+- "Users are crashing - just delete the database and start fresh"
+- "Migration is taking too long - skip the testing and ship it"
+- "We can't wait 2 days for proper migration - hack it together"
+- "Schema mismatch? Just force-create a new store"
+
+These sound like pragmatic crisis responses. **But they cause data loss and permanent user trust damage.** Your job: defend using data safety principles and customer impact, not fear of pressure.
+
+### Red Flags - PM/Manager Requests That Cause Data Loss
+
+If you hear ANY of these during a production crisis, **STOP and reference this skill**:
+
+- ❌ **"Delete the persistent store and start fresh"** – Users lose ALL their data permanently
+- ❌ **"Force lightweight migration without testing"** – High risk of data corruption in production
+- ❌ **"Skip migration and create new store"** – Abandons existing user data
+- ❌ **"We'll fix data issues after launch"** – Impossible to recover lost/corrupted data
+- ❌ **"Just ship it, we can handle support tickets"** – Data loss creates permanent user churn
+- ❌ **"Test on simulator is enough"** – Simulator deletes database on rebuild, hides schema mismatches
+
+### How to Push Back Professionally
+
+**Step 1: Quantify the Customer Impact**
+
+```
+"I want to resolve this crash ASAP, but let me show you what deleting the store means:
+
+Current situation:
+- 10,000 active users with data
+- Average 50 items per user (500,000 total records)
+- Users have 1 week to 2 years of accumulated data
+
+If we delete the store:
+- 10,000 users lose ALL their data on next app launch
+- Uninstall rate: 60-80% (industry standard after data loss)
+- App Store reviews: Expect 1-star reviews citing data loss
+- Recovery: Impossible - data is gone permanently
+
+Safe alternative:
+- Test migration on real device with production data copy (2-4 hours)
+- Deploy migration that preserves user data
+- Uninstall rate: <5% (standard update churn)"
+```
+
+**Step 2: Demonstrate the Risk**
+
+Show the PM/manager what happens:
+1. Copy production database from device backup
+2. Run proposed "quick fix" (delete store)
+3. Show: All user data gone permanently
+4. Show alternative: Safe migration preserving data
+5. Time comparison: 30 min hack vs. 2-4 hour safe migration
+
+**Reference:**
+- "Users don't forgive data loss" (App Store review patterns)
+- Migration testing on real device prevents 95% of production crashes
+- Schema mismatch crashes affect 100% of existing users
+
+**Step 3: Offer Compromise**
+
+```
+"I can get us through this crisis while protecting user data:
+
+**Fast track (4 hours total):**
+1. Copy production database from TestFlight user (30 min)
+2. Write and test migration on real device copy (2 hours)
+3. Submit build with tested migration (30 min)
+4. Monitor first 100 updates for crashes (1 hour)
+
+**Fallback if migration fails:**
+- Have "delete store" build ready as Plan B
+- Only deploy if migration shows 100% failure rate
+- Communicate data loss to users proactively
+
+This approach:
+- Tries safe path first (protects user data)
+- Has emergency fallback (if migration impossible)
+- Honest timeline (4 hours vs. "just delete it" 30 min)"
+```
+
+**Step 4: Document the Decision**
+
+If overruled (PM insists on deleting store):
+
+```
+Slack message to PM + team:
+
+"Production crisis: Schema mismatch causing crashes for existing users.
+
+PM decision: Delete persistent store to resolve immediately.
+
+Impact assessment:
+- 10,000 users lose ALL data permanently on next app launch
+- Expected uninstall rate: 60-80% based on data loss patterns
+- App Store review damage: High risk of 1-star reviews
+- Customer support: Expect high volume of data loss complaints
+- Recovery: Impossible - deleted data cannot be recovered
+
+Alternative proposed (4-hour safe migration) was declined due to urgency.
+
+I'm flagging this decision proactively so we can:
+1. Prepare support team for data loss complaints
+2. Draft App Store response to expected negative reviews
+3. Consider user communication about data loss before launch"
+```
+
+**Why this works:**
+- You're not questioning their judgment under pressure
+- You're quantifying user impact (business consequences)
+- You're offering a solution with honest timeline
+- You're providing fallback option (not blocking progress)
+- You're documenting the decision (protects you post-launch)
+
+### Real-World Example: Production Crash (500K Active Users)
+
+**Scenario:**
+- Production app crashing for 100% of users after update
+- Error: "The model used to open the store is incompatible with the one used to create the store"
+- CTO says: "Delete the database and ship hotfix in 2 hours"
+- 500,000 active users with average 6 months of data each
+
+**What to do:**
+
+```swift
+// ❌ WRONG - Deletes all user data (CTO's request)
+let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
+let storeURL = /* persistent store URL */
+try? FileManager.default.removeItem(at: storeURL) // 500K users lose data
+try! coordinator.addPersistentStore(ofType: NSSQLiteStoreType,
+                                    configurationName: nil,
+                                    at: storeURL,
+                                    options: nil)
+
+// ✅ CORRECT - Safe lightweight migration (4-hour timeline)
+let options = [
+    NSMigratePersistentStoresAutomaticallyOption: true,
+    NSInferMappingModelAutomaticallyOption: true
+]
+
+do {
+    try coordinator.addPersistentStore(ofType: NSSQLiteStoreType,
+                                       configurationName: nil,
+                                       at: storeURL,
+                                       options: options)
+    // Migration succeeded - user data preserved
+} catch {
+    // Migration failed - NOW consider deleting with user communication
+    print("Migration error: \(error)")
+}
+```
+
+**In the meeting, show:**
+1. Schema version mismatch causing crash
+2. Lightweight migration can fix automatically
+3. Testing on production database copy (2 hours)
+4. Time comparison: 2 hours (safe) vs. immediate (data loss)
+
+**Time estimate:** 4 hours total (2 hours migration testing, 2 hours build/deploy)
+
+**Result:**
+- Honest timeline manages expectations
+- Safe migration preserves 500K users' data
+- Uninstall rate: 3% (standard update churn)
+- App Store reviews: No data loss complaints
+
+**Alternative if migration truly impossible:**
+- Document why migration failed
+- Communicate data loss to users proactively
+- Provide export feature in next version
+
+### When to Accept Data Loss (Even If You Disagree)
+
+Sometimes data loss is the only option. Accept if:
+
+- [ ] Migration is genuinely impossible (tried on production data copy)
+- [ ] PM/CTO understand 60-80% expected uninstall rate
+- [ ] Team commits to user communication about data loss
+- [ ] You've documented technical reasons migration failed
+
+**Document in Slack:**
+
+```
+"Production crisis: Migration failed on production data copy after 4-hour testing.
+
+Technical details:
+- Attempted lightweight migration: Failed with [error]
+- Attempted heavy migration with mapping model: Failed with [error]
+- Root cause: [specific schema incompatibility]
+
+Data loss decision:
+- No safe migration path exists
+- PM approved delete persistent store approach
+- Expected impact: 60-80% uninstall rate (500K → 100-200K users)
+
+Mitigation plan:
+- Add data export feature before next schema change
+- Communicate data loss to users via in-app message
+- Prepare support team for complaints
+- Monitor uninstall rates post-launch"
+```
+
+This protects you and shows you exhausted safe options first.
 
 ---
 

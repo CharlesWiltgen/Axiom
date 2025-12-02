@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: 'Axiom',
-  description: 'Battle-tested Claude Code skills for xOS development',
+  description: 'Battle-tested Claude Code skills, commands, and references for Apple platform development',
   base: '/Axiom/',
 
   themeConfig: {
@@ -10,6 +10,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide/' },
       { text: 'Skills', link: '/skills/' },
+      { text: 'Reference', link: '/reference/' },
       { text: 'Commands', link: '/commands/' }
     ],
 
@@ -103,6 +104,30 @@ export default defineConfig({
             { text: 'SQLiteData', link: '/skills/persistence/sqlitedata' },
             { text: 'GRDB', link: '/skills/persistence/grdb' },
             { text: 'SwiftData', link: '/skills/persistence/swiftdata' }
+          ]
+        }
+      ],
+      '/reference/': [
+        {
+          text: 'Reference',
+          items: [
+            { text: 'Overview', link: '/reference/' }
+          ]
+        },
+        {
+          text: 'Reference Skills',
+          items: [
+            { text: 'Liquid Glass Adoption', link: '/reference/liquid-glass-ref' },
+            { text: 'Realm Migration', link: '/reference/realm-migration-ref' },
+            { text: 'SwiftUI 26 Features', link: '/reference/swiftui-26-features' },
+            { text: 'App Intents Integration', link: '/reference/app-intents-integration' }
+          ]
+        },
+        {
+          text: 'Diagnostic Skills',
+          items: [
+            { text: 'Accessibility Diagnostics', link: '/reference/accessibility-diag' },
+            { text: 'Core Data Diagnostics', link: '/reference/core-data-diag' }
           ]
         }
       ]

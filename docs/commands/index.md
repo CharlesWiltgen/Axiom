@@ -1,20 +1,16 @@
-# Custom Commands
+# Commands
 
-Custom commands are user-invoked tools that perform automated scans and checks. Type `/command-name` in Claude Code to run them.
+Quick automated scans to identify issues in your codebase. Type `/command-name` in Claude Code to run.
 
 ## Available Commands
 
-### Accessibility
-- **[`/audit-accessibility`](./accessibility/audit-accessibility)** – Comprehensive accessibility audit (VoiceOver, Dynamic Type, color contrast, touch targets, WCAG compliance)
-
-### Concurrency & Async
-- **[`/audit-concurrency`](./concurrency/audit-concurrency)** – Comprehensive concurrency analysis (Swift 6 strict mode, @MainActor, Sendable, actor isolation)
-
-### Debugging
-- **[`/prescan-memory`](./debugging/prescan-memory)** – Quick memory leak triage (timers, observers, closures, delegates, PhotoKit)
-
-### UI & Design
-- **[`/audit-liquid-glass`](./ui-design/audit-liquid-glass)** – Liquid Glass adoption opportunities (iOS 26+): glass effects, toolbar improvements, search patterns, migration from old blur effects
+| Command | What It Checks | Output |
+|---------|----------------|--------|
+| [**`/audit-accessibility`**](./accessibility/audit-accessibility) | VoiceOver labels, Dynamic Type, color contrast, touch targets, WCAG compliance | Priority issues with fix recommendations |
+| [**`/audit-concurrency`**](./concurrency/audit-concurrency) | Swift 6 strict mode violations, @MainActor issues, Sendable conformance, actor isolation | Concurrency errors with migration patterns |
+| [**`/audit-core-data`**](./debugging/audit-core-data) | Schema migration safety, thread-confinement violations, N+1 queries, production risks | Risk score with immediate action items |
+| [**`/audit-liquid-glass`**](./ui-design/audit-liquid-glass) | Liquid Glass adoption opportunities, glass effects, toolbar improvements, migration from UIBlurEffect | Adoption recommendations with code examples |
+| [**`/audit-memory`**](./debugging/audit-memory) | Memory leak patterns: timers, observers, closures, delegates, PhotoKit | Leak candidates with Instruments guidance |
 
 ## Usage
 

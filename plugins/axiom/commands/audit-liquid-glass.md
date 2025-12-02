@@ -324,7 +324,8 @@ grep -n "\.borderedProminent" **/*.swift
 
 After audit, use these skills for implementation:
 
-- `/skill liquid-glass` - Comprehensive Liquid Glass implementation guide
+- `/skill liquid-glass` - Liquid Glass implementation with design review pressure defense
+- `/skill liquid-glass-ref` - Comprehensive app-wide adoption guide (app icons, controls, navigation, menus, windows)
 - `/skill swiftui-26-features` - All iOS 26 SwiftUI features including Liquid Glass APIs
 
 ---

@@ -1,8 +1,8 @@
 ---
 name: liquid-glass
 description: Use when implementing Liquid Glass effects, reviewing UI for Liquid Glass adoption, debugging visual artifacts, optimizing performance, or requesting expert review of Liquid Glass implementation - provides comprehensive design principles, API patterns, and troubleshooting guidance from WWDC 2025. Includes design review pressure handling and professional push-back frameworks
-version: 1.1.0
-last_updated: TDD-tested with design review pressure scenarios
+version: 1.2.0
+last_updated: Added new iOS 26 APIs and backward compatibility guidance
 apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+
 ---
 
@@ -18,6 +18,9 @@ Use when:
 - **Requesting expert review of Liquid Glass implementation**
 - Understanding when to use Regular vs Clear variants
 - Troubleshooting tinting, legibility, or adaptive behavior issues
+
+**Related Skills:**
+- Use `liquid-glass-ref` for comprehensive app-wide adoption guidance (app icons, controls, navigation, menus, windows, platform considerations)
 
 ## Example Prompts
 
@@ -942,6 +945,37 @@ ScrollView {
 .scrollEdgeEffect(.hard) // For pinned accessories
 ```
 
+#### `scrollEdgeEffectStyle(_:for:)` **NEW in iOS 26**
+
+Optimizes legibility for controls when content scrolls beneath them.
+
+```swift
+func scrollEdgeEffectStyle(_ style: ScrollEdgeStyle, for edges: Edge.Set) -> some View
+```
+
+**Parameters**:
+- `style`: `.hard`, `.soft`, or `.automatic`
+- `edges`: Which edges to apply effect (`.top`, `.bottom`, `.leading`, `.trailing`)
+
+**Use case**: Custom bars with controls, text, or icons that have content scrolling beneath them. System bars (toolbars, navigation bars) adopt this automatically.
+
+**Example**:
+```swift
+// Custom toolbar with controls
+CustomToolbar()
+    .scrollEdgeEffectStyle(.hard, for: .top) // Maintain legibility
+
+ScrollView {
+    LazyVStack {
+        ForEach(items) { item in
+            ItemRow(item)
+        }
+    }
+}
+```
+
+**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+
+
 #### `glassBackgroundEffect()` **NEW in iOS 26**
 
 Applies glass effect to custom views for reflecting surrounding content.
@@ -1054,6 +1088,59 @@ TabView {
 
 **Availability**: iOS 26+
 
+### Controls and Layout **NEW in iOS 26**
+
+#### `containerRelativeShape()`
+
+Aligns control shapes with container curvature for visual continuity.
+
+```swift
+func containerRelativeShape(_ shape: ContainerRelativeShape) -> some View
+```
+
+**Parameters**:
+- `shape`: Shape that aligns with container (e.g., `.roundedRectangle`)
+
+**Use case**: Create visual harmony by making controls concentric to their containers (sheets concentric to windows, controls concentric to sheets).
+
+**Example**:
+```swift
+// Control shape aligns with container curvature
+Button("Action") { }
+    .containerRelativeShape(.roundedRectangle)
+    .glassEffect()
+```
+
+**Visual Effect:** Nested elements feel visually harmonious, with curvature matching container shape.
+
+**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+
+
+#### `tabBarMinimizationBehavior(_:)` **NEW in iOS 26**
+
+Configures tab bar to minimize when scrolling to elevate underlying content.
+
+```swift
+func tabBarMinimizationBehavior(_ behavior: TabBarMinimizationBehavior) -> some View
+```
+
+**Parameters**:
+- `behavior`: `.onScrollDown`, `.onScrollUp`, `.automatic`, or `.never`
+
+**Use case**: Content-focused apps (reading, media) where tab bar should recede during scrolling.
+
+**Example**:
+```swift
+TabView {
+    ContentView()
+        .tabItem { Label("Home", systemImage: "house") }
+}
+.tabBarMinimizationBehavior(.onScrollDown) // Minimize when scrolling down
+```
+
+**Visual Effect:** Tab bar recedes when scrolling down, expands when scrolling up. Content gains more screen space.
+
+**Availability**: iOS 26+
+
 ### Types
 
 #### `GlassVariant`
@@ -1075,6 +1162,81 @@ enum ScrollEdgeStyle {
 }
 ```
 
+#### `GlassEffectContainer` **NEW in iOS 26**
+
+Container for combining multiple Liquid Glass effects with optimized rendering performance.
+
+```swift
+struct GlassEffectContainer<Content: View>: View {
+    init(@ViewBuilder content: () -> Content)
+}
+```
+
+**Use case:** When applying Liquid Glass effects to multiple custom elements. Optimizes performance and enables fluid morphing between glass shapes.
+
+**Example:**
+```swift
+// ✅ Combine effects in container for optimization
+GlassEffectContainer {
+    HStack {
+        Button("Action 1") { }
+            .glassEffect()
+
+        Button("Action 2") { }
+            .glassEffect()
+
+        Button("Action 3") { }
+            .glassEffect()
+    }
+}
+```
+
+**Benefits:**
+- Optimizes rendering performance
+- Fluidly morphs Liquid Glass shapes into each other
+- Reduces compositor overhead
+- Better animation performance
+
+**When to use:**
+- Multiple custom Liquid Glass elements
+- Morphing animations between glass shapes
+- Performance-critical interfaces
+
+**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+
+
+---
+
+## Backward Compatibility
+
+### UIDesignRequiresCompatibility Key **NEW in iOS 26**
+
+To ship with latest SDKs while maintaining previous appearance:
+
+**Add to Info.plist:**
+```xml
+<key>UIDesignRequiresCompatibility</key>
+<true/>
+```
+
+**Effect:**
+- App built with iOS 26 SDK
+- Appearance matches iOS 25 and earlier
+- Liquid Glass effects disabled
+- Previous blur/material styles used
+
+**When to use:**
+- Need time to audit interface changes
+- Gradual adoption strategy
+- Maintain exact appearance temporarily
+
+**Migration strategy:**
+1. Ship with `UIDesignRequiresCompatibility` enabled
+2. Audit interface changes in separate build
+3. Update interface incrementally
+4. Remove key when ready for Liquid Glass
+
+**Availability**: iOS 26+, iPadOS 26+
+
 ---
 
 ## WWDC 2025 References
@@ -1093,16 +1255,21 @@ enum ScrollEdgeStyle {
   - API overview and integration with SwiftUI ecosystem
 
 **Documentation**:
+- [Adopting Liquid Glass](https://developer.apple.com/documentation/TechnologyOverviews/adopting-liquid-glass)
 - [Landmarks: Building an app with Liquid Glass](https://developer.apple.com/documentation/SwiftUI/Landmarks-Building-an-app-with-Liquid-Glass)
 - [Applying Liquid Glass to custom views](https://developer.apple.com/documentation/SwiftUI/Applying-Liquid-Glass-to-custom-views)
 
 **Sample Code**:
 - Landmarks tutorial series (WWDC 2025)
 
+**Related Skills**:
+- `liquid-glass-ref` - Comprehensive app-wide adoption guide (app icons, controls, navigation, menus, windows, platform considerations)
+
 ---
 
 ## Version History
 
+- **1.2.0**: Added new iOS 26 APIs from "Adopting Liquid Glass" documentation: `scrollEdgeEffectStyle(_:for:)` for custom bars, `containerRelativeShape()` for visual continuity, `tabBarMinimizationBehavior(_:)` for tab bar minimization, `GlassEffectContainer` for performance optimization, and `UIDesignRequiresCompatibility` for backward compatibility. Added reference to new `adopting-liquid-glass` comprehensive adoption guide
 - **1.1.0**: Added "Design Review Pressure: Defending Your Implementation" section from TDD pressure testing. Includes red flags for designer requests that violate guidelines, 4-step push-back framework with demo and documentation steps, real-world App Store launch example (36-hour deadline), and guidance on when to accept design overrides. Enables developers to professionally defend Regular vs Clear variant decisions under deadline and client pressure
 - **1.0.0 (WWDC 2025)**: Initial skill based on Liquid Glass introduction at WWDC 2025, covering design principles, implementation patterns, variants, troubleshooting, and expert review capabilities.
 

@@ -1,6 +1,6 @@
 # Axiom
 
-Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development, updated with the latest iOS 26.x guidance from Apple.
+Battle-tested Claude Code skills, commands, and references for modern xOS (iOS, iPadOS, tvOS, watchOS) development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more.
 
 ## What's New Recently
 

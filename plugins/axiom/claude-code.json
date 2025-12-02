@@ -1,14 +1,15 @@
 {
   "name": "axiom",
-  "version": "0.8.9",
-  "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
+  "version": "0.8.11",
+  "description": "Battle-tested Claude Code skills, commands, and references for modern xOS (iOS, iPadOS, tvOS, watchOS) development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more",
   "author": "Charles Wiltgen",
   "license": "MIT",
   "commands": [
     "./commands/audit-concurrency.md",
     "./commands/audit-accessibility.md",
     "./commands/audit-liquid-glass.md",
-    "./commands/prescan-memory.md"
+    "./commands/audit-core-data.md",
+    "./commands/audit-memory.md"
   ],
   "skills": [
     {
@@ -38,6 +39,10 @@
     {
       "name": "liquid-glass",
       "description": "Use when implementing Liquid Glass effects (WWDC 2025), reviewing UI for adoption, debugging visual artifacts, or requesting expert review - Apple's new material design system with comprehensive design principles, API patterns, Regular vs Clear variants, tinting, and troubleshooting for iOS 26+"
+    },
+    {
+      "name": "liquid-glass-ref",
+      "description": "Reference: Comprehensive Liquid Glass adoption guide covering app icons, controls, navigation, menus, windows, search, and platform considerations for iOS 26+"
     },
     {
       "name": "swiftui-performance",
@@ -72,16 +77,16 @@
       "description": "Use when debugging memory leaks from blocks, blocks assigned to self or properties, network callbacks, or crashes from deallocated objects - systematic weak-strong pattern diagnosis with mandatory diagnostic rules"
     },
     {
-      "name": "core-data-debugging",
-      "description": "Use when debugging schema migration crashes, concurrency thread-confinement errors, N+1 query performance, SwiftData to Core Data bridging, or testing migrations without data loss - systematic Core Data diagnostics with safety-first migration patterns"
+      "name": "core-data-diag",
+      "description": "Diagnostic: Schema migration crashes, thread-confinement errors, N+1 query performance - systematic Core Data diagnostics with production crisis defense and safe migration patterns"
     },
     {
-      "name": "realm-to-swiftdata-migration",
-      "description": "Use when migrating from Realm to SwiftData (URGENT: Realm Device Sync sunset Sept 30, 2025) - comprehensive guide with pattern equivalents, threading model conversion from manual DispatchQueue to Swift Concurrency, schema migration strategies for small/medium/enterprise apps, CloudKit sync transition, testing/verification checklist, and real-world migration scenarios"
+      "name": "realm-migration-ref",
+      "description": "Reference: Comprehensive migration guide from Realm to SwiftData (URGENT: Realm Device Sync sunset Sept 30, 2025) - pattern equivalents, threading model conversion, schema migration strategies, CloudKit sync transition, and real-world scenarios"
     },
     {
-      "name": "accessibility-debugging",
-      "description": "Use when fixing VoiceOver issues, Dynamic Type violations, color contrast failures, touch target problems, keyboard navigation gaps, or Reduce Motion support - comprehensive accessibility diagnostics with WCAG compliance, Accessibility Inspector workflows, and App Store Review preparation for iOS/macOS"
+      "name": "accessibility-diag",
+      "description": "Diagnostic: VoiceOver, Dynamic Type, color contrast, touch targets - WCAG compliance with App Store rejection defense and design review push-back frameworks"
     },
     {
       "name": "app-intents-integration",

@@ -32,6 +32,10 @@ Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, w
 
 ## Liquid Glass Design System
 
+**For comprehensive Liquid Glass coverage, see:**
+- `liquid-glass` skill - Design principles, implementation, variants, design review pressure
+- `liquid-glass-ref` skill - App-wide adoption guide (app icons, controls, navigation, menus, windows)
+
 ### Overview
 
 The new design system provides "a bright and fluid experience that's consistent across Apple platforms." Apps automatically adopt the new appearance upon recompilation - navigation containers, tab bars, and toolbars update automatically.

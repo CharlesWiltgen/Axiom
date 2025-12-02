@@ -1,10 +1,10 @@
 ---
-name: prescan-memory
-description: Quick prescan for memory leaks - detects timer leaks, observer leaks, closure captures, delegate cycles, view callbacks, and PhotoKit accumulation with file:line references and severity ratings
+name: audit-memory
+description: Quick audit for memory leaks - detects timer leaks, observer leaks, closure captures, delegate cycles, view callbacks, and PhotoKit accumulation with file:line references and severity ratings
 allowed-tools: Glob(*.swift), Grep(*)
 ---
 
-# Memory Prescan
+# Memory Leak Audit
 
 I'll scan your Swift codebase for the 6 most common memory leak patterns that cause crashes and progressive memory growth.
 
