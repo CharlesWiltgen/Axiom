@@ -10,7 +10,7 @@
       "name": "axiom",
       "version": "0.8.11",
       "source": "./plugins/axiom",
-      "description": "Battle-tested Claude Code skills for xOS development - systematic workflows for Xcode debugging, Swift 6 concurrency, database migrations, memory debugging, UI testing, and persistence (SQLiteData, GRDB, SwiftData). WWDC 2025 updated with Liquid Glass and SwiftUI Performance.",
+      "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
       "author": {
         "name": "Charles Wiltgen"
       }

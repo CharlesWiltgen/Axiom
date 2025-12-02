@@ -4,7 +4,7 @@
     "name": "Charles Wiltgen"
   },
   "metadata": {
-    "description": "Battle-tested Claude Code skills for modern iOS/iPadOS/watchOS/tvOS development",
+    "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
     "version": "0.8.11"
   },
   "plugins": [
