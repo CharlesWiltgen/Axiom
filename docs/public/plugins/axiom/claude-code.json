@@ -7,7 +7,7 @@
   "commands": [
     "./commands/audit-concurrency.md",
     "./commands/audit-accessibility.md",
-    "./commands/prescan-memory.md"
+    "./commands/audit-memory.md"
   ],
   "skills": [
     {

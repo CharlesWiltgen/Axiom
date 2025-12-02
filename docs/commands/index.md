@@ -18,11 +18,12 @@ Quick automated scans to identify issues in your codebase. Type `/command-name` 
 # Run a command
 /audit-accessibility
 /audit-concurrency
+/audit-core-data
 /audit-liquid-glass
-/prescan-memory
+/audit-memory
 
 # Commands accept arguments
-/prescan-memory MyViewController.swift
+/audit-memory MyViewController.swift
 ```
 
 Commands output results with `file:line` references and link to relevant skills for deeper analysis.

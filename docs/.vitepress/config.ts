@@ -6,6 +6,10 @@ export default defineConfig({
   base: '/Axiom/',
 
   themeConfig: {
+    search: {
+      provider: 'local'
+    },
+
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide/' },
@@ -45,7 +49,8 @@ export default defineConfig({
         {
           text: 'Debugging',
           items: [
-            { text: 'prescan-memory', link: '/commands/debugging/prescan-memory' }
+            { text: 'audit-core-data', link: '/commands/debugging/audit-core-data' },
+            { text: 'audit-memory', link: '/commands/debugging/audit-memory' }
           ]
         },
         {
@@ -68,8 +73,10 @@ export default defineConfig({
             { text: 'Overview', link: '/skills/ui-design/' },
             { text: 'Liquid Glass', link: '/skills/ui-design/liquid-glass' },
             { text: 'SwiftUI Performance', link: '/skills/ui-design/swiftui-performance' },
+            { text: 'SwiftUI Debugging', link: '/skills/ui-design/swiftui-debugging' },
             { text: 'SwiftUI 26 Features', link: '/skills/ui-design/swiftui-26-features' },
-            { text: 'UI Testing', link: '/skills/ui-design/ui-testing' }
+            { text: 'UI Testing', link: '/skills/ui-design/ui-testing' },
+            { text: 'UIKit Animation Debugging', link: '/skills/ui-design/uikit-animation-debugging' }
           ]
         },
         {
@@ -79,7 +86,9 @@ export default defineConfig({
             { text: 'Accessibility Debugging', link: '/skills/debugging/accessibility-debugging' },
             { text: 'Xcode Debugging', link: '/skills/debugging/xcode-debugging' },
             { text: 'Memory Debugging', link: '/skills/debugging/memory-debugging' },
-            { text: 'Build Troubleshooting', link: '/skills/debugging/build-troubleshooting' }
+            { text: 'Build Troubleshooting', link: '/skills/debugging/build-troubleshooting' },
+            { text: 'Performance Profiling', link: '/skills/debugging/performance-profiling' },
+            { text: 'Objective-C Block Retain Cycles', link: '/skills/debugging/objc-block-retain-cycles' }
           ]
         },
         {

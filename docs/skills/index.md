@@ -1,69 +1,46 @@
 # Skills
 
-Discipline-enforcing workflows tested with RED-GREEN-REFACTOR methodology to prevent common mistakes under pressure.
-
-## TDD-Tested Skills
-
-| Category | Skill | When to Use | Size |
-|----------|-------|-------------|------|
-| **UI & Design** | [**liquid-glass**](/skills/ui-design/liquid-glass) | Implementing Liquid Glass effects, debugging visual artifacts, design review pressure | 32 KB |
-| | [**swiftui-performance**](/skills/ui-design/swiftui-performance) | App feels sluggish, animations stutter, SwiftUI Instrument profiling | 24 KB |
-| | [**swiftui-debugging**](/skills/ui-design/swiftui-debugging) | View doesn't update, preview crashes, layout issues | 28 KB |
-| | [**ui-testing**](/skills/ui-design/ui-testing) | Recording UI tests, flaky tests, race conditions | 24 KB |
-| **Debugging** | [**xcode-debugging**](/skills/debugging/xcode-debugging) | BUILD FAILED, simulator hangs, zombie processes | 5 KB |
-| | [**memory-debugging**](/skills/debugging/memory-debugging) | Memory leaks, retain cycles, progressive memory growth | 24 KB |
-| | [**build-troubleshooting**](/skills/debugging/build-troubleshooting) | Dependency conflicts, CocoaPods/SPM failures | 10 KB |
-| | [**performance-profiling**](/skills/debugging/performance-profiling) | App feels slow, profiling with Instruments | 22 KB |
-| **Concurrency** | [**swift-concurrency**](/skills/concurrency/swift-concurrency) | Swift 6 actor isolation, Sendable errors, data races | 12 KB |
-| **Persistence** | [**database-migration**](/skills/persistence/database-migration) | Adding database columns, schema changes, migration errors | 11 KB |
-| | [**swiftdata**](/skills/persistence/swiftdata) | @Model, @Query, CloudKit integration | 26 KB |
-| | [**sqlitedata**](/skills/persistence/sqlitedata) | SQLiteData patterns, batch imports, CloudKit sync | 20 KB |
-| | [**grdb**](/skills/persistence/grdb) | Raw SQL queries, complex joins, ValueObservation | 18 KB |
-| **Legacy** | [**uikit-animation-debugging**](/skills/ui-design/uikit-animation-debugging) | CAAnimation issues, completion handlers, spring physics | 25 KB |
-| | [**objc-block-retain-cycles**](/skills/debugging/objc-block-retain-cycles) | Block memory leaks, weak-strong patterns | 30 KB |
-
-## Skill Categories
+Discipline-enforcing workflows tested with ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development) to prevent common mistakes under pressure.
 
 ### UI & Design
 
-Build beautiful, performant interfaces with expert guidance on the latest Apple design systems and testing practices.
+| Skill | When to Use |
+|-------|-------------|
+| [**liquid-glass**](/skills/ui-design/liquid-glass) | Implementing Liquid Glass effects, debugging visual artifacts, design review pressure |
+| [**swiftui-performance**](/skills/ui-design/swiftui-performance) | App feels sluggish, animations stutter, SwiftUI Instrument profiling |
+| [**swiftui-debugging**](/skills/ui-design/swiftui-debugging) | View doesn't update, preview crashes, layout issues |
+| [**ui-testing**](/skills/ui-design/ui-testing) | Recording UI tests, flaky tests, race conditions |
 
-- [Liquid Glass](/skills/ui-design/liquid-glass) – Apple's new material design system (iOS 26+)
-- [SwiftUI Performance](/skills/ui-design/swiftui-performance) – Master the new SwiftUI Instrument in Instruments 26
-- [SwiftUI 26 Features](/skills/ui-design/swiftui-26-features) – Comprehensive guide to iOS 26 SwiftUI: @Animatable macro, WebView, rich text, 3D charts
-- [SwiftUI Debugging](/skills/ui-design/swiftui-debugging) – View updates, preview crashes, and layout issues with decision trees
-- [UI Testing](/skills/ui-design/ui-testing) – Recording UI Automation (Xcode 26) and condition-based waiting
+### Debugging
 
-### Debugging & Troubleshooting
+| Skill | When to Use |
+|-------|-------------|
+| [**xcode-debugging**](/skills/debugging/xcode-debugging) | BUILD FAILED, simulator hangs, zombie processes |
+| [**memory-debugging**](/skills/debugging/memory-debugging) | Memory leaks, retain cycles, progressive memory growth |
+| [**build-troubleshooting**](/skills/debugging/build-troubleshooting) | Dependency conflicts, CocoaPods/SPM failures |
+| [**performance-profiling**](/skills/debugging/performance-profiling) | App feels slow, profiling with Instruments |
 
-Systematic debugging strategies to solve issues faster and prevent common problems before they happen.
+### Concurrency
 
-- [Accessibility Debugging](/skills/debugging/accessibility-debugging) – WCAG compliance, VoiceOver testing, App Store Review prep
-- [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics for mysterious issues
-- [Memory Debugging](/skills/debugging/memory-debugging) – Systematic leak diagnosis with proven patterns
-- [Build Troubleshooting](/skills/debugging/build-troubleshooting) – Dependency resolution for CocoaPods and SPM
-- [Performance Profiling](/skills/debugging/performance-profiling) – Instruments decision trees and profiling workflows for CPU, memory, battery
-
-### Concurrency & Async
-
-Master Swift's concurrency model and catch data races at compile time with strict concurrency patterns.
-
-- [Swift Concurrency](/skills/concurrency/swift-concurrency) – Swift 6 strict concurrency, async/await, MainActor, Sendable
-
-### Apple Intelligence & Integration
-
-Integrate your app with Siri, Apple Intelligence, Shortcuts, and other system experiences.
-
-- [App Intents Integration](/skills/integration/app-intents-integration) – Siri, Shortcuts, Spotlight, and Apple Intelligence integration
+| Skill | When to Use |
+|-------|-------------|
+| [**swift-concurrency**](/skills/concurrency/swift-concurrency) | Swift 6 actor isolation, Sendable errors, data races |
 
 ### Persistence
 
-Comprehensive database patterns for safe schema evolution and choosing the right persistence framework.
+| Skill | When to Use |
+|-------|-------------|
+| [**database-migration**](/skills/persistence/database-migration) | Adding database columns, schema changes, migration errors |
+| [**swiftdata**](/skills/persistence/swiftdata) | @Model, @Query, CloudKit integration |
+| [**sqlitedata**](/skills/persistence/sqlitedata) | SQLiteData patterns, batch imports, CloudKit sync |
+| [**grdb**](/skills/persistence/grdb) | Raw SQL queries, complex joins, ValueObservation |
 
-- [Database Migration](/skills/persistence/database-migration) – Safe schema evolution for SQLite/GRDB/SwiftData
-- [SQLiteData](/skills/persistence/sqlitedata) – Point-Free's SQLiteData patterns and CloudKit sync
-- [GRDB](/skills/persistence/grdb) – Raw SQL queries and ValueObservation patterns
-- [SwiftData](/skills/persistence/swiftdata) – iOS 26+ features, @Model definitions, and @Query patterns
+### Legacy
+
+| Skill | When to Use |
+|-------|-------------|
+| [**uikit-animation-debugging**](/skills/ui-design/uikit-animation-debugging) | CAAnimation issues, completion handlers, spring physics |
+| [**objc-block-retain-cycles**](/skills/debugging/objc-block-retain-cycles) | Block memory leaks, weak-strong patterns |
 
 ## Skill Development Methodology
 
@@ -113,5 +90,5 @@ All reference skills are reviewed against 4 quality criteria:
 
 This is a preview release. Feedback welcome!
 
-- **Issues**: [Report bugs or request features](https://github.com/yourusername/Axiom/issues)
-- **Discussions**: [Share usage patterns and ask questions](https://github.com/yourusername/Axiom/discussions)
+- **Issues**: [Report bugs or request features](https://github.com/CharlesWiltgen/Axiom/issues)
+- **Discussions**: [Share usage patterns and ask questions](https://github.com/CharlesWiltgen/Axiom/discussions)

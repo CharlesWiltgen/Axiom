@@ -199,14 +199,14 @@ Skills follow core principles:
 
 ## Documentation
 
-Full documentation available at [https://yourusername.github.io/Axiom](https://yourusername.github.io/Axiom)
+Full documentation available at [https://CharlesWiltgen.github.io/Axiom](https://CharlesWiltgen.github.io/Axiom)
 
 ## Contributing
 
 This is a preview release. Feedback welcome!
 
-- **Issues**: [Report bugs or request features](https://github.com/yourusername/Axiom/issues)
-- **Discussions**: [Share usage patterns and ask questions](https://github.com/yourusername/Axiom/discussions)
+- **Issues**: [Report bugs or request features](https://github.com/CharlesWiltgen/Axiom/issues)
+- **Discussions**: [Share usage patterns and ask questions](https://github.com/CharlesWiltgen/Axiom/discussions)
 
 Skill contributions should follow these standards:
 - YAML frontmatter with `name` and `description`

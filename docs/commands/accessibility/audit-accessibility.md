@@ -1,114 +1,172 @@
-# /audit-accessibility
+---
+name: audit-accessibility
+description: Comprehensive accessibility audit — detects VoiceOver label issues, Dynamic Type violations, color contrast failures, touch target size problems, keyboard navigation gaps, and Reduce Motion support with file:line references and WCAG compliance ratings
+allowed-tools: Glob(*.swift), Grep(*)
+---
 
-Comprehensive accessibility audit detecting VoiceOver issues, Dynamic Type violations, color contrast failures, and WCAG compliance problems.
+# Accessibility Audit
 
-## Purpose
+I'll perform a comprehensive accessibility audit of your iOS/macOS codebase, checking for the most critical issues that affect users with disabilities and cause App Store rejections.
 
-Performs a **comprehensive automated scan** (60-90 seconds) to identify accessibility issues that affect users with disabilities and cause App Store rejections.
-
-**Command Type:** `/audit-*` (comprehensive analysis, 60-90 seconds)
-
-## What It Checks
+## What I'll Check
 
 ### 1. VoiceOver Labels & Hints (CRITICAL)
-- Missing `accessibilityLabel` on images, buttons, and custom controls
-- Generic labels ("Button", "Image") that don't describe purpose
-- Missing `accessibilityHint` for complex interactions
-- **WCAG:** 4.1.2 Name, Role, Value (Level A)
+**Pattern**: Missing `accessibilityLabel`, generic labels ("Button"), missing `accessibilityHint`
+**Impact**: Users with vision disabilities cannot understand UI purpose
+**WCAG**: 4.1.2 Name, Role, Value (Level A)
 
 ### 2. Dynamic Type Support (HIGH)
-- Fixed font sizes (`UIFont.systemFont(ofSize:)`)
-- Hardcoded `.font(.system(size:))` in SwiftUI
-- Missing font scaling with `UIFontMetrics`
-- **WCAG:** 1.4.4 Resize Text (Level AA)
+**Pattern**: Fixed font sizes, hardcoded `UIFont.systemFont(ofSize:)`, missing `.font(.body)` in SwiftUI
+**Impact**: Users with vision disabilities cannot read text
+**WCAG**: 1.4.4 Resize Text (Level AA)
 
 ### 3. Color Contrast (HIGH)
-- Low contrast text/background combinations
-- Missing color differentiation alternatives
-- **WCAG:** 1.4.3 Contrast (Minimum) - 4.5:1 for text, 3:1 for large text (Level AA)
+**Pattern**: Low contrast text/background combinations, missing `.accessibilityDifferentiateWithoutColor`
+**Impact**: Users with vision disabilities cannot read content
+**WCAG**: 1.4.3 Contrast (Minimum) (Level AA - 4.5:1 for text, 3:1 for large text)
 
 ### 4. Touch Target Sizes (MEDIUM)
-- Buttons/tappable elements smaller than 44x44pt
-- Inadequate spacing between interactive elements
-- **WCAG:** 2.5.5 Target Size (Level AAA)
+**Pattern**: Buttons/tappable areas smaller than 44x44pt
+**Impact**: Users with motor disabilities cannot tap accurately
+**WCAG**: 2.5.5 Target Size (Level AAA - 44x44pt)
 
-### 5. Keyboard Navigation (MEDIUM - iPadOS/macOS)
-- Missing keyboard shortcuts
-- Non-focusable interactive elements
-- **WCAG:** 2.1.1 Keyboard (Level A)
+### 5. Keyboard Navigation (iPadOS/macOS) (MEDIUM)
+**Pattern**: Missing keyboard shortcuts, non-focusable interactive elements
+**Impact**: Users who cannot use touch/mouse cannot navigate
+**WCAG**: 2.1.1 Keyboard (Level A)
 
 ### 6. Reduce Motion Support (MEDIUM)
-- Animations without `UIAccessibility.isReduceMotionEnabled` checks
-- **WCAG:** 2.3.3 Animation from Interactions (Level AAA)
+**Pattern**: Animations without `UIAccessibility.isReduceMotionEnabled` checks
+**Impact**: Users with vestibular disorders experience discomfort/nausea
+**WCAG**: 2.3.3 Animation from Interactions (Level AAA)
 
 ### 7. Common Violations (HIGH)
-- Images without labels
-- Buttons with wrong accessibility traits
-- Inaccessible custom controls
+**Pattern**: Images without labels, buttons with wrong traits, inaccessible custom controls
+**Impact**: VoiceOver users cannot understand or interact with UI
+**WCAG**: Multiple (1.1.1 Non-text Content, 4.1.2 Name Role Value)
 
-## Example Output
+## Audit Process
 
-\`\`\`
+1. **Glob** for all Swift files: `**/*.swift`
+2. **Search** for accessibility anti-patterns using regex
+3. **Report** findings with:
+   - `file:line` references
+   - Severity: CRITICAL/HIGH/MEDIUM/LOW
+   - WCAG guideline reference
+   - Fix recommendation
+   - Link to `axiom:accessibility-debugging` skill for detailed remediation
+
+## Output Format
+
+```
 === ACCESSIBILITY AUDIT RESULTS ===
 
-CRITICAL Issues (App Store Rejection Risk): 3
+CRITICAL Issues (App Store Rejection Risk):
 - src/Views/ProductCard.swift:42 - Missing accessibilityLabel on Button
   WCAG 4.1.2 (Level A)
   Fix: Add .accessibilityLabel("Add to cart")
 
-HIGH Issues (Major Usability Impact): 2
+HIGH Issues (Major Usability Impact):
 - src/Views/PriceLabel.swift:18 - Fixed font size (17pt)
   WCAG 1.4.4 (Level AA)
   Fix: Use .font(.body) or UIFontMetrics.default.scaledFont(for:)
 
-MEDIUM Issues (Moderate Usability Impact): 1
+MEDIUM Issues (Moderate Usability Impact):
 - src/Views/CloseButton.swift:25 - Touch target 32x32pt (should be 44x44pt)
   WCAG 2.5.5 (Level AAA)
-  Fix: Increase to .frame(minWidth: 44, minHeight: 44)
-
-=== WCAG COMPLIANCE ===
-Level A: ❌ (4 violations)
-Level AA: ❌ (2 violations)
-Level AAA: ⚠️ (1 violation)
+  Fix: Increase frame to 44x44pt or add .frame(minWidth: 44, minHeight: 44)
 
 === NEXT STEPS ===
-For detailed remediation: /skill axiom:accessibility-debugging
-\`\`\`
 
-## When to Use
+For detailed remediation guidance, use:
+  /skill axiom:accessibility-debugging
 
-- **Before App Store submission** - Catch rejections early
-- **After UI changes** - Verify accessibility wasn't broken
-- **Onboarding new developers** - Educate team on accessibility
-- **Regular audits** - Maintain accessibility as feature
+WCAG Compliance Level:
+- Level A: ❌ (4 violations)
+- Level AA: ❌ (2 violations)
+- Level AAA: ⚠️ (1 violation)
+```
 
-## Workflow
+## Detection Patterns
 
-1. **Run audit**: `/axiom:audit-accessibility`
-2. **Review findings**: Check CRITICAL issues first
-3. **Fix violations**: Apply recommended fixes
-4. **Deep diagnosis**: Use `/skill axiom:accessibility-debugging` for complex issues
-5. **Test with tools**:
-   - Accessibility Inspector (Xcode)
-   - VoiceOver (Cmd+F5 on simulator)
-   - Dynamic Type settings
-6. **Re-audit**: Verify fixes resolved issues
+### VoiceOver Labels
+```swift
+// BAD - No label
+Button(action: {}) {
+  Image(systemName: "plus")
+}
+
+// BAD - Generic label
+.accessibilityLabel("Button")
+
+// GOOD
+.accessibilityLabel("Add item to cart")
+```
+
+### Dynamic Type
+```swift
+// BAD - Fixed size
+.font(.system(size: 17))
+UIFont.systemFont(ofSize: 17)
+
+// GOOD
+.font(.body)
+UIFont.preferredFont(forTextStyle: .body)
+UIFontMetrics.default.scaledFont(for: customFont)
+```
+
+### Color Contrast
+```swift
+// BAD - Low contrast
+Text("Warning").foregroundColor(.yellow) // on white background
+
+// GOOD - High contrast or differentiator
+Text("Warning")
+  .foregroundColor(.orange) // 4.5:1+ contrast
+  .accessibilityShowsLargeContentViewer() // fallback
+```
+
+### Touch Targets
+```swift
+// BAD - Too small
+Button("X") {}.frame(width: 24, height: 24)
+
+// GOOD - 44x44pt minimum
+Button("X") {}.frame(minWidth: 44, minHeight: 44)
+```
+
+### Reduce Motion
+```swift
+// BAD - Always animates
+withAnimation(.spring()) { }
+
+// GOOD - Respects preference
+if !UIAccessibility.isReduceMotionEnabled {
+  withAnimation(.spring()) { }
+}
+```
+
+## Search Queries I'll Run
+
+1. **Missing Labels**: `Grep "Image\(|Button\(|Link\(" -A 5` (check for missing `.accessibilityLabel`)
+2. **Fixed Fonts**: `Grep "\.font\(\.system\(size:|UIFont\.systemFont\(ofSize:"`
+3. **Generic Labels**: `Grep "accessibilityLabel\(\"(Button|Image|Icon|View)\"\)"`
+4. **Small Targets**: `Grep "\.frame\((width|height):\s*([0-9]|[1-3][0-9])\)"` (< 44pt)
+5. **Missing Motion Check**: `Grep "withAnimation|\.animation\(" -B 5` (no `isReduceMotionEnabled` check)
+6. **Images Without Labels**: `Grep "Image\(" -A 3` (check for `.accessibilityLabel` or `.accessibilityHidden(true)`)
 
 ## Limitations
 
-**Cannot detect:**
-- Runtime-only issues (navigation order, actual rendered contrast)
-- Complex gesture accessibility
-- Screen reader context changes
+- **Cannot detect**: Runtime contrast issues, actual rendered sizes, VoiceOver navigation order
+- **False positives**: Decorative images (should be `.accessibilityHidden(true)`), spacer views
+- **Use Accessibility Inspector** for runtime validation after fixes
 
-**False positives:**
-- Decorative images (should use `.accessibilityHidden(true)`)
-- Intentional spacer views
+## Post-Audit
 
-**For runtime validation:** Use Accessibility Inspector and VoiceOver testing after fixes.
+After fixing issues:
+1. Run Accessibility Inspector (Xcode → Open Developer Tool)
+2. Test with VoiceOver (Cmd+F5 on simulator)
+3. Test with Dynamic Type (Settings → Accessibility → Display & Text Size)
+4. Test with Reduce Motion (Settings → Accessibility → Motion → Reduce Motion)
 
-## See Also
-
-- **[Accessibility Debugging Skill](/skills/debugging/accessibility-debugging)** - Comprehensive diagnostics and remediation
-- **[Apple Accessibility Guidelines](https://developer.apple.com/design/human-interface-guidelines/accessibility)** - Official guidance
-- **[WCAG 2.1 Quick Reference](https://www.w3.org/WAI/WCAG21/quickref/)** - Standards reference
+For comprehensive debugging: `/skill axiom:accessibility-debugging`

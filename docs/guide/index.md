@@ -4,7 +4,12 @@ Welcome to Axiom — battle-tested Claude Code skills, commands, and references 
 
 ## What is Axiom?
 
-Axiom provides 17 production-ready TDD-tested skills covering:
+Axiom provides comprehensive iOS development workflows:
+
+- **15 skills** — Discipline-enforcing workflows tested using ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development)
+- **4 reference skills** — Comprehensive guides without mandatory workflows
+- **2 diagnostic skills** — Systematic troubleshooting with pressure defense
+- **5 commands** — Quick automated scans for common issues
 
 ### 🎨 UI & Design Skills
 - **Liquid Glass** – Implement Apple's glass effects correctly and get expert validation
@@ -33,8 +38,7 @@ Axiom provides 17 production-ready TDD-tested skills covering:
 
 ## Prerequisites
 
-- **macOS 15+** (Sequoia or later)
-- **Claude Code** ([download here](https://claude.ai/download))
+- **Claude Code** ([download here](https://claude.com/product/claude-code))
 - **Xcode 26+** (for Liquid Glass, Recording UI Automation, and latest iOS features)
 - **iOS 26 SDK** (comes with Xcode 26)
 
@@ -135,6 +139,46 @@ When adding database columns or changing schema:
 2. Follow safe patterns (additive, idempotent, transactional)
 3. Write tests for both fresh install and migration paths
 4. Test manually on device before shipping
+
+## Troubleshooting
+
+### Plugin Not Showing in Claude Code
+
+If Axiom doesn't appear after installation:
+
+1. **Verify installation**: Run `/plugin` and check "Manage and install" list
+2. **Reload Claude Code**: Restart the application
+3. **Check marketplace**: Ensure you added the correct marketplace: `CharlesWiltgen/Axiom`
+
+### Skills Not Being Suggested
+
+If Claude Code isn't suggesting Axiom skills:
+
+1. **Be specific**: Use keywords from skill descriptions (e.g., "BUILD FAILED", "actor isolation", "memory leak")
+2. **Manual invocation**: Type `/skill axiom:` to see available skills
+3. **Check context**: Skills are suggested based on your question and code context
+
+### Skills Not Found
+
+If you get "skill not found" errors:
+
+1. **Use correct syntax**: `/skill axiom:skill-name` (not `/axiom:skill-name`)
+2. **Check spelling**: Skill names use dashes (e.g., `swift-concurrency`, not `swift_concurrency`)
+3. **List available skills**: Use `/plugin` to see which skills are installed
+
+### Commands Not Working
+
+If `/audit-*` commands don't execute:
+
+1. **Verify command syntax**: Commands start with `/audit-` or `/axiom:`
+2. **Check file access**: Ensure Claude Code has access to your project files
+3. **Run manually**: Try using the command via `/command` menu
+
+### Getting Help
+
+- **Issues**: [Report bugs on GitHub](https://github.com/CharlesWiltgen/Axiom/issues)
+- **Discussions**: [Ask questions and share patterns](https://github.com/CharlesWiltgen/Axiom/discussions)
+- **Claude Code docs**: [Official documentation](https://docs.claude.ai/code)
 
 ## What's Next?
 

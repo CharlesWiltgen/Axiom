@@ -16,7 +16,7 @@ Systematic debugging strategies to solve issues faster and prevent common proble
 - **[Memory Debugging](/skills/debugging/memory-debugging)** – Systematic leak diagnosis with 5 patterns covering 90% of real-world issues
   - *"My app crashes after 10-15 minutes of use with no error messages. How do I find the leak?"*
   - *"View controllers don't deallocate after dismiss. How do I find the retain cycle?"*
-  - **Command:** [`/prescan-memory`](/commands/debugging/prescan-memory) for quick triage scanning
+  - **Command:** [`/audit-memory`](/commands/debugging/audit-memory) for quick triage scanning
 
 - **[Build Troubleshooting](/skills/debugging/build-troubleshooting)** – Dependency resolution for CocoaPods and Swift Package Manager conflicts
   - *"I added a Swift Package but I'm getting 'No such module' errors."*
