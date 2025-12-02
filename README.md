@@ -4,15 +4,17 @@ Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) dev
 
 ## What's New Recently
 
-**Latest**
-- **Accessibility Audit & Debugging** - Comprehensive WCAG compliance scanning, VoiceOver testing, Dynamic Type support, color contrast validation, and App Store Review preparation
+**Latest (WWDC 2025 Updates)**
+- **SwiftUI 26 Features** - Comprehensive guide to iOS 26 SwiftUI: Liquid Glass, WebView, AttributedString rich text, @Animatable macro, 3D charts, scene bridging, and more
+- **SwiftUI Performance Enhancements** - iOS 26 framework improvements: 6x/16x faster lists, improved scrolling, nested ScrollView optimization
+- **Liquid Glass APIs** - New iOS 26 APIs: `.glassBackgroundEffect()`, toolbar spacers, bottom-aligned search, search tab role
+- **App Intents Integration** - Siri, Apple Intelligence, Shortcuts, Spotlight integration with WWDC 2025-260 guidance
 
 **Recent Skills**
+- **Accessibility Audit & Debugging** - Comprehensive WCAG compliance scanning, VoiceOver testing, Dynamic Type support, color contrast validation
 - **Realm to SwiftData Migration** - Migrate before Device Sync sunset (Sept 30, 2025) without losing user data or breaking threading patterns
 - **SwiftUI Debugging** - Solve intermittent view updates and preview crashes with diagnostic decision trees
 - **Performance Profiling** - Find CPU bottlenecks, memory growth, and N+1 queries before users complain
-- **Liquid Glass** - Implement Apple's glass effects correctly and get expert validation
-- **SwiftUI Performance** - Find what's making your views slow and fix it
 
 ## Structure
 
@@ -90,6 +92,27 @@ Master SwiftUI performance optimization using the new SwiftUI Instrument in Inst
 **When to use:** App feels less responsive, animations stutter, scrolling performance issues, profiling reveals SwiftUI bottlenecks
 
 **Requirements:** Xcode 26+, iOS 26+ SDK
+
+---
+
+#### `swiftui-26-features`
+Comprehensive reference guide to all iOS 26 SwiftUI features from WWDC 2025-256.
+
+**Key Features:**
+- **Liquid Glass Design System** - Toolbar spacers, tinted prominent buttons, glass effect for custom views, bottom-aligned search, search tab role
+- **Performance Improvements** - 6x/16x faster lists (macOS), improved scrolling, nested ScrollView optimization
+- **@Animatable Macro** - Automatic animatableData synthesis with @AnimatableIgnored
+- **WebView & WebPage** - Native web content, observable model for rich interaction
+- **TextEditor with AttributedString** - Rich text editing with built-in formatting controls
+- **Drag and Drop Enhancements** - Multi-item dragging, DragConfiguration, preview formations
+- **3D Charts** - Chart3D for three-dimensional plotting
+- **3D Spatial Layout** - Alignment3D, .spatialOverlay, .manipulable (visionOS)
+- **Scene Bridging** - UIKit/AppKit → SwiftUI scenes, RemoteImmersiveSpace
+- **Widgets & Controls** - visionOS widgets, CarPlay widgets, macOS/watchOS controls
+
+**When to use:** Implementing iOS 26 SwiftUI features, adopting Liquid Glass design, embedding web content, rich text editing, 3D charts/layouts
+
+**Requirements:** iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+
 
 ---
 
