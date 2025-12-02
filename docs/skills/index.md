@@ -1,10 +1,10 @@
 # Skills
 
-Axiom provides 19 skills and 3 commands for xOS (iOS, iPadOS, watchOS, tvOS) development.
+Axiom provides 20 skills and 3 commands for xOS (iOS, iPadOS, watchOS, tvOS) development.
 
 **Breakdown:**
 - **15 TDD-tested skills** – Discipline-enforcing workflows tested with RED-GREEN-REFACTOR methodology
-- **4 reference skills** – Comprehensive guides reviewed for accuracy, completeness, clarity, and practical value
+- **5 reference skills** – Comprehensive guides reviewed for accuracy, completeness, clarity, and practical value
 - **3 commands** – Quick automated scans for common issues
 
 ## Skill Categories
@@ -15,6 +15,7 @@ Build beautiful, performant interfaces with expert guidance on the latest Apple 
 
 - [Liquid Glass](/skills/ui-design/liquid-glass) – Apple's new material design system (iOS 26+)
 - [SwiftUI Performance](/skills/ui-design/swiftui-performance) – Master the new SwiftUI Instrument in Instruments 26
+- [SwiftUI 26 Features](/skills/ui-design/swiftui-26-features) – Comprehensive guide to iOS 26 SwiftUI: @Animatable macro, WebView, rich text, 3D charts
 - [SwiftUI Debugging](/skills/ui-design/swiftui-debugging) – View updates, preview crashes, and layout issues with decision trees
 - [UI Testing](/skills/ui-design/ui-testing) – Recording UI Automation (Xcode 26) and condition-based waiting
 
@@ -79,6 +80,13 @@ All reference skills are reviewed against 4 quality criteria:
 2. **Completeness** – 80%+ coverage, edge cases documented, troubleshooting sections
 3. **Clarity** – Examples first, scannable structure, jargon defined
 4. **Practical Value** – Copy-paste ready, expert checklists, real-world impact
+
+**Current reference skills:**
+- `accessibility-debugging` – WCAG compliance, VoiceOver testing, Accessibility Inspector workflows
+- `app-intents-integration` – Siri, Apple Intelligence, Shortcuts, Spotlight integration (WWDC 2025-260)
+- `swiftui-26-features` – iOS 26 SwiftUI: Liquid Glass, WebView, rich text, 3D charts (WWDC 2025-256)
+- `core-data-debugging` – Core Data troubleshooting and optimization
+- `realm-to-swiftdata-migration` – Migration patterns from Realm to SwiftData
 
 ## Related Resources
 
