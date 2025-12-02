@@ -1220,7 +1220,7 @@ To ship with latest SDKs while maintaining previous appearance:
 
 **Effect:**
 - App built with iOS 26 SDK
-- Appearance matches iOS 25 and earlier
+- Appearance matches iOS 18 and earlier
 - Liquid Glass effects disabled
 - Previous blur/material styles used
 

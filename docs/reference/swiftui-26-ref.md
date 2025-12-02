@@ -187,7 +187,7 @@ Use this reference when:
 
 ## Migration Checklist
 
-### From iOS 25 → iOS 26
+### From iOS 18 → iOS 26
 
 **Liquid Glass Adoption**
 - [ ] Replace `.blur()` with `.glassBackgroundEffect()`

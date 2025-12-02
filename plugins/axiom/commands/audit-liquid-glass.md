@@ -263,7 +263,7 @@ Line 67: Old blur effect detected
 
   Recommendation [HIGH - Migration]:
     .glassEffect() // iOS 26+ Liquid Glass
-    // Or keep .ultraThinMaterial for iOS 25 compatibility
+    // Or keep .ultraThinMaterial for iOS 18 compatibility
 
   Migration Note: If targeting iOS 26+, migrate to Liquid Glass for
   better visual consistency and performance.

@@ -1037,7 +1037,7 @@ List(items) { item in
 
 Section headers no longer render entirely in capital letters. They now respect title-style capitalization you provide.
 
-**Before (iOS 25 and earlier):**
+**Before (iOS 18 and earlier):**
 ```swift
 Section(header: Text("User settings")) {
     // Rendered as "USER SETTINGS"
@@ -1282,7 +1282,7 @@ To ship with latest SDKs while keeping app as it looked when built against previ
 
 **Effect:**
 - App built with iOS 26 SDK
-- Appearance matches iOS 25 and earlier
+- Appearance matches iOS 18 and earlier
 - Liquid Glass effects disabled
 - Previous blur/material styles used
 
