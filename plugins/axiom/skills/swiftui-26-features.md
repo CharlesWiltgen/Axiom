@@ -180,7 +180,7 @@ Controls now have the new design automatically:
 ```swift
 // MIGRATION REQUIRED:
 // Remove deprecated property list key in iPadOS 26:
-// UIRequiresFullscreen = NO (deprecated)
+// UIRequiresFullscreen (entire key deprecated, all values)
 
 // For split view navigation, system automatically shows/hides columns
 // based on available space during resize
@@ -630,11 +630,13 @@ struct BrowserView: View {
 
 ---
 
-## TextView with AttributedString
+## TextEditor with AttributedString
 
 ### Overview
 
 "SwiftUI's new support for rich text editing is great for experiences like [commenting on photos]. TextView now supports AttributedString!" - WWDC 2025-256
+
+**Note:** The WWDC transcript uses "TextView" as editorial language. The actual SwiftUI API is `TextEditor` which now supports `AttributedString` binding for rich text editing.
 
 ### Rich Text Editing
 
@@ -882,8 +884,9 @@ Live Activities now appear on CarPlay displays for glanceable information while 
 ### Deprecated APIs
 
 **❌ Remove in iPadOS 26:**
-```
-UIRequiresFullscreen = YES/NO (property list key)
+```xml
+<key>UIRequiresFullscreen</key>
+<!-- Entire property list key is deprecated (all values) -->
 ```
 
 Apps must support resizable windows on iPad.
