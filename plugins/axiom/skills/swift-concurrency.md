@@ -413,8 +413,9 @@ When data passes between actors or tasks, Swift checks it's **Sendable** (safe t
 // ✅ Value types copy when passed
 let url = URL(string: "https://swift.org")!
 
-Task { @concurrent in
+Task {
     // ✅ This is a COPY of url, not the original
+    // URLSession.shared.data runs on background automatically
     let data = try await URLSession.shared.data(from: url)
 }
 
@@ -482,12 +483,12 @@ image.scale(by: 0.5)  // ✅ Changes visible through otherImage!
 func scaleAndDisplay(imageName: String) {
     let image = loadImage(imageName)
 
-    Task { @concurrent in
-        image.scale(by: 0.5)  // Background thread modifying
+    Task {
+        image.scale(by: 0.5)  // Background task modifying
     }
 
     view.displayImage(image)  // Main thread reading
-    // ❌ DATA RACE! Both threads touching same object!
+    // ❌ DATA RACE! Both threads could touch same object!
 }
 ```
 
