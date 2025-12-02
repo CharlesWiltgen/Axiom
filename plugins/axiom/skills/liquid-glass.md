@@ -942,6 +942,118 @@ ScrollView {
 .scrollEdgeEffect(.hard) // For pinned accessories
 ```
 
+#### `glassBackgroundEffect()` **NEW in iOS 26**
+
+Applies glass effect to custom views for reflecting surrounding content.
+
+```swift
+func glassBackgroundEffect() -> some View
+```
+
+**Use case**: Apply Liquid Glass appearance to custom views (not buttons/controls) that should beautifully reflect surrounding content like photos.
+
+**Example**:
+```swift
+struct PhotoGalleryView: View {
+    var body: some View {
+        CustomPhotoGrid()
+            .glassBackgroundEffect() // Reflects surrounding photos
+    }
+}
+```
+
+**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+
+
+### Toolbar Modifiers **NEW in iOS 26**
+
+#### `.toolbar` with `Spacer(.fixed)`
+
+Separates toolbar button groups with fixed spacing.
+
+```swift
+.toolbar {
+    ToolbarItemGroup(placement: .topBarTrailing) {
+        Button("Up") { }
+        Button("Down") { }
+
+        Spacer(.fixed) // Fixed spacer separates groups
+
+        Button("Settings") { }
+    }
+}
+```
+
+**Why use `.fixed`**: Creates logical visual separation between button groups. Default `Spacer()` is flexible and adjusts based on available space; `.fixed` maintains consistent separation.
+
+**Common pattern**: Separate navigation buttons from action buttons, or primary actions from secondary actions.
+
+**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+
+
+#### `.buttonStyle(.borderedProminent)` + `.tint()` in Toolbars
+
+Makes toolbar items more prominent with Liquid Glass tinting.
+
+```swift
+.toolbar {
+    ToolbarItem(placement: .topBarTrailing) {
+        Button("Add Trip") {
+            addTrip()
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.blue) // Liquid Glass toolbars support tinting
+    }
+}
+```
+
+**Visual effect**: Button appears with bordered prominent style and custom tint color, making it stand out against Liquid Glass toolbar background.
+
+**Best practice**: Use for primary actions in toolbars. Don't over-tint - use for prominence, not decoration.
+
+**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+
+
+### Navigation & Search **NEW in iOS 26**
+
+#### Bottom-Aligned Search
+
+Search automatically appears bottom-aligned on iPhone (more ergonomic), top-trailing on iPad.
+
+```swift
+NavigationSplitView {
+    List { }
+        .searchable(text: $searchText)
+}
+// Placement on NavigationSplitView automatically:
+// - Bottom-aligned on iPhone
+// - Top trailing corner on iPad
+```
+
+**No code changes required** - existing `.searchable()` modifier automatically adopts platform-specific placement.
+
+**Why bottom-aligned**: More ergonomic to reach on iPhone with thumb-based interaction.
+
+**Availability**: iOS 26+, iPadOS 26+
+
+#### Search Tab Role
+
+Separates search tab from other tabs in tab bar, morphs into search field.
+
+```swift
+TabView {
+    SearchView()
+        .tabItem { Label("Search", systemImage: "magnifyingglass") }
+        .tabRole(.search) // Separated from other tabs, morphs into search
+
+    TripsView()
+        .tabItem { Label("Trips", systemImage: "map") }
+}
+```
+
+**Visual effect**: Search tab appears separated from other tabs in the tab bar. When tapped, morphs into the search field.
+
+**Use case**: Tab-based apps where search is a primary destination.
+
+**Availability**: iOS 26+
+
 ### Types
 
 #### `GlassVariant`

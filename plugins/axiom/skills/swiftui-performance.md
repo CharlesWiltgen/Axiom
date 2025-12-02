@@ -57,6 +57,110 @@ These are real questions developers ask that this skill is designed to answer:
 
 ---
 
+## iOS 26 Framework Performance Improvements
+
+**"Performance improvements to the framework benefit apps across all of Apple's platforms, from our app to yours."** - WWDC 2025-256
+
+SwiftUI in iOS 26 includes major performance wins that benefit all apps automatically. These improvements work alongside the new profiling tools to make SwiftUI faster out of the box.
+
+### List Performance (macOS Focus)
+
+**Massive gains for large lists:**
+
+- **6x faster loading** for lists of 100,000+ items on macOS
+- **16x faster updates** for large lists
+- **Even bigger gains** for larger lists
+- Improvements benefit **all platforms** (iOS, iPadOS, watchOS, not just macOS)
+
+```swift
+List(trips) { trip in // 100k+ items
+    TripRow(trip: trip)
+}
+// iOS 26: Loads 6x faster, updates 16x faster on macOS
+// All platforms benefit from performance improvements
+```
+
+**Impact on your app:**
+- Large datasets (10k+ items) see noticeable improvements
+- Filtering and sorting operations complete faster
+- Real-time updates to lists are more responsive
+- Benefits apps like file browsers, contact lists, data tables
+
+### Scrolling Performance
+
+**Reduced dropped frames during high-speed scrolling:**
+
+"SwiftUI has improved scheduling of user interface updates on iOS and macOS. This improves responsiveness and lets SwiftUI do even more work to prepare for upcoming frames. All in all, it reduces the chance of your app dropping a frame while scrolling quickly at high frame rates." - WWDC 2025-256
+
+**Key improvements:**
+1. **Better frame scheduling** - SwiftUI gets more time to prepare for upcoming frames
+2. **Improved responsiveness** - UI updates scheduled more efficiently
+3. **Fewer dropped frames** - Especially during quick scrolling at 120Hz (ProMotion)
+
+**When you'll notice:**
+- Scrolling through image-heavy content
+- High frame rate devices (iPhone Pro, iPad Pro with ProMotion)
+- Complex list rows with multiple views
+
+### Nested ScrollViews with Lazy Stacks
+
+**Photo carousels and multi-axis scrolling now properly optimize:**
+
+```swift
+ScrollView(.horizontal) {
+    LazyHStack {
+        ForEach(photoSets) { photoSet in
+            ScrollView(.vertical) {
+                LazyVStack {
+                    ForEach(photoSet.photos) { photo in
+                        PhotoView(photo: photo)
+                    }
+                }
+            }
+        }
+    }
+}
+// iOS 26: Nested scrollviews now properly delay loading with lazy stacks
+// Great for photo carousels, Netflix-style layouts, multi-axis content
+```
+
+**Before iOS 26:** Nested ScrollViews didn't properly delay loading lazy stack content, causing all nested content to load immediately.
+
+**After iOS 26:** Lazy stacks inside nested ScrollViews now delay loading until content is about to appear, matching the behavior of single-level ScrollViews.
+
+**Use cases:**
+- Photo galleries with horizontal/vertical scrolling
+- Netflix-style category rows
+- Multi-dimensional data browsers
+- Image carousels with vertical detail scrolling
+
+### SwiftUI Performance Instrument Enhancements
+
+**New lanes in Instruments 26:**
+
+The SwiftUI instrument now includes dedicated lanes for:
+
+1. **Long View Body Updates** - Identify expensive body computations
+2. **Platform View Updates** - Track UIKit/AppKit bridging performance (Long Representable Updates)
+3. **Other Long Updates** - All other types of long SwiftUI work
+
+These lanes are covered in detail in the next section.
+
+### Performance Improvement Summary
+
+**Automatic wins (recompile only):**
+- ✅ 6x faster list loading (100k+ items, macOS)
+- ✅ 16x faster list updates (macOS)
+- ✅ Reduced dropped frames during scrolling
+- ✅ Improved frame scheduling on iOS/macOS
+- ✅ Nested ScrollView lazy loading optimization
+
+**No code changes required** - rebuild with iOS 26 SDK to get these improvements.
+
+**Cross-reference:** [SwiftUI 26 Features](/skills/ui-design/swiftui-26-features) - Comprehensive guide to all iOS 26 SwiftUI changes
+
+---
+
 ## The SwiftUI Instrument (Instruments 26)
 
 ### Getting Started
