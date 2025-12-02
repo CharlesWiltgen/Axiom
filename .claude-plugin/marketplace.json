@@ -1,0 +1,19 @@
+{
+  "name": "axiom-marketplace",
+  "description": "Battle-tested Claude Code skills for modern xOS development",
+  "owner": {
+    "name": "Charles Wiltgen",
+    "email": "charles@wiltgen.net"
+  },
+  "plugins": [
+    {
+      "name": "axiom",
+      "version": "0.8.9",
+      "source": "./plugins/axiom",
+      "description": "Battle-tested Claude Code skills for xOS development - systematic workflows for Xcode debugging, Swift 6 concurrency, database migrations, memory debugging, UI testing, and persistence (SQLiteData, GRDB, SwiftData). WWDC 2025 updated with Liquid Glass and SwiftUI Performance.",
+      "author": {
+        "name": "Charles Wiltgen"
+      }
+    }
+  ]
+}
