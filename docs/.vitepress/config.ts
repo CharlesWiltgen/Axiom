@@ -61,6 +61,7 @@ export default defineConfig({
             { text: 'Overview', link: '/skills/ui-design/' },
             { text: 'Liquid Glass', link: '/skills/ui-design/liquid-glass' },
             { text: 'SwiftUI Performance', link: '/skills/ui-design/swiftui-performance' },
+            { text: 'SwiftUI 26 Features', link: '/skills/ui-design/swiftui-26-features' },
             { text: 'UI Testing', link: '/skills/ui-design/ui-testing' }
           ]
         },
