@@ -1,5 +1,5 @@
 ---
-name: swiftui-26-features
+name: swiftui-26-ref
 description: All iOS 26 SwiftUI features — Liquid Glass, @Animatable macro, WebView, rich text, 3D charts, spatial layout, scene bridging
 ---
 

@@ -326,7 +326,7 @@ After audit, use these skills for implementation:
 
 - `/skill liquid-glass` - Liquid Glass implementation with design review pressure defense
 - `/skill liquid-glass-ref` - Comprehensive app-wide adoption guide (app icons, controls, navigation, menus, windows)
-- `/skill swiftui-26-features` - All iOS 26 SwiftUI features including Liquid Glass APIs
+- `/skill swiftui-26-ref` - All iOS 26 SwiftUI features including Liquid Glass APIs
 
 ---
 

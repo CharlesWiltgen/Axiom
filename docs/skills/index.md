@@ -75,8 +75,8 @@ All reference skills are reviewed against 4 quality criteria:
 
 **Current reference skills:**
 - `accessibility-debugging` – WCAG compliance, VoiceOver testing, Accessibility Inspector workflows
-- `app-intents-integration` – Siri, Apple Intelligence, Shortcuts, Spotlight integration (WWDC 2025-260)
-- `swiftui-26-features` – iOS 26 SwiftUI: Liquid Glass, WebView, rich text, 3D charts (WWDC 2025-256)
+- `app-intents-ref` – Siri, Apple Intelligence, Shortcuts, Spotlight integration (WWDC 2025-260)
+- `swiftui-26-ref` – iOS 26 SwiftUI: Liquid Glass, WebView, rich text, 3D charts (WWDC 2025-256)
 - `core-data-debugging` – Core Data troubleshooting and optimization
 - `realm-to-swiftdata-migration` – Migration patterns from Realm to SwiftData
 

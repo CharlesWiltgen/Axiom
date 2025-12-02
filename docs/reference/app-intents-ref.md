@@ -1,5 +1,5 @@
 ---
-name: app-intents-integration
+name: app-intents-ref
 description: App Intents for Siri, Apple Intelligence, Shortcuts, Spotlight — AppIntent, AppEntity, parameters, queries, debugging
 ---
 
@@ -217,7 +217,7 @@ func $playlist() async throws -> [PlaylistEntity] {
 
 ## Related Skills
 
-- [swiftui-26-features](/reference/swiftui-26-features) — iOS 26 SwiftUI features including widget improvements
+- [swiftui-26-ref](/reference/swiftui-26-ref) — iOS 26 SwiftUI features including widget improvements
 
 ## WWDC 2025 Sessions
 
