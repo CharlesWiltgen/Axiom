@@ -29,7 +29,7 @@ Axiom provides comprehensive iOS development workflows:
 - **SQLiteData** – Handle batch imports and CloudKit sync without performance issues
 - **GRDB** – Optimize complex queries and prevent N+1 query problems
 - **SwiftData** – Prevent CloudKit sync failures and handle concurrent access safely
-- **Realm to SwiftData Migration** – Migrate before Device Sync sunset (Sept 30, 2025) without breaking threading
+- **Realm Migration** — Migrate from Realm to a supported data persistence system
 - **Core Data Debugging** – Fix migration crashes and thread-confinement errors
 
 ### 🌐 Networking
@@ -83,7 +83,7 @@ Skills available in Axiom:
 - **UI & Design**: liquid-glass, swiftui-performance, ui-testing, swiftui-debugging
 - **Debugging**: xcode-debugging, memory-debugging, build-troubleshooting, performance-profiling
 - **Concurrency**: swift-concurrency
-- **Data & Persistence**: database-migration, sqlitedata, grdb, swiftdata, realm-to-swiftdata-migration, core-data-debugging
+- **Data & Persistence**: database-migration, sqlitedata, grdb, swiftdata, realm-migration-ref, core-data-debugging
 - **Networking**: networking, networking-diag, network-framework-ref
 - **Legacy**: objc-block-retain-cycles, uikit-animation-debugging
 
