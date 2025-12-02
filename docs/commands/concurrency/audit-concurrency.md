@@ -6,118 +6,173 @@ allowed-tools: Glob(*.swift), Grep(*)
 
 # Swift Concurrency Audit
 
-I'll scan your Swift codebase for common Swift 6 concurrency anti-patterns and violations.
+Scan your Swift codebase for common Swift 6 concurrency anti-patterns and violations that cause data races, crashes, and memory leaks.
 
-## Issue Categories & Detection
+## What This Command Checks
 
-### 1. Missing @MainActor on UI Classes
+1. **Missing @MainActor on UI Classes** - View controllers and ObservableObjects without @MainActor
+2. **Unsafe Task Self Capture** - Tasks capturing self strongly without [weak self]
+3. **Sendable Violations** - Non-Sendable types crossing actor boundaries
+4. **Improper Actor Isolation** - Unsafe data access from actor contexts
+5. **Missing Weak Self in Stored Tasks** - Stored Task properties that leak memory
+6. **Thread Confinement Violations** - MainActor property access from background contexts
 
-Checking for UIViewController, UIView, ObservableObject, SwiftUI View subclasses without @MainActor:
+## When to Use
 
-**Pattern**: Classes inheriting from UIViewController, ObservableObject, etc. that lack @MainActor annotation.
+Run this command when:
+- Migrating to Swift 6 strict concurrency
+- Seeing "data race" warnings or actor isolation errors
+- Experiencing crashes with multithreaded access
+- Before enabling strict concurrency checking
+- After adding async/await or actors to your codebase
 
-### 2. Unsafe Task Self Capture
+## Concurrency Issues
 
-Checking for Task { self.property } without [weak self]:
+### 🔴 Critical (Crashes/Memory Leaks)
 
-**Pattern**: `Task {` followed by direct `self.` usage without weak capture in braces.
-
-### 3. Sendable Violations
-
-Checking for non-Sendable types passed across actor boundaries:
-
-**Pattern**: Non-Sendable types in closures passed to @MainActor or actor contexts.
-
-### 4. Improper Actor Isolation
-
-Checking for unsafe data access from actor contexts:
-
-**Pattern**: Awaiting actor results and using them without proper thread-safety verification.
-
-### 5. Missing Weak Self in Stored Tasks
-
-Checking for stored Task properties without proper memory management:
-
-**Pattern**: `var task: Task<...>? = Task { self.` patterns that could leak memory.
-
-### 6. Thread Confinement Violations
-
-Checking for MainActor property access from background contexts:
-
-**Pattern**: @MainActor property access in detached tasks or background actors.
-
-## Running Audit
-
-Let me search for these patterns in your codebase:
-
+**Missing @MainActor on UI Classes**
 ```swift
-// Pattern 1: Missing @MainActor on View/Observable
-// Detect: class Foo: UIViewController/ObservableObject without @MainActor
+// ❌ DATA RACE: Can be accessed from any thread
+class ProfileViewModel: ObservableObject {
+    @Published var name: String = ""
+}
 
-// Pattern 2: Unsafe Task self capture
-// Detect: Task { self. without [weak self]
-
-// Pattern 3: Sendable violations
-// Detect: @Sendable missing or non-Sendable in actor boundary crossing
-
-// Pattern 4: Actor isolation
-// Detect: await actor.method() followed by direct usage
-
-// Pattern 5: Weak-strong pattern issues
-// Detect: Improper [weak self] guard patterns
-
-// Pattern 6: Thread confinement
-// Detect: @MainActor property in Task.detached or background context
+// ✅ SAFE: MainActor ensures thread safety
+@MainActor
+class ProfileViewModel: ObservableObject {
+    @Published var name: String = ""
+}
 ```
 
-## Analysis Results
+**Unsafe Task Self Capture**
+```swift
+// ❌ LEAKS: Task captures self strongly
+var loadTask: Task<Void, Never>?
+loadTask = Task {
+    self.data = await fetchData()  // Retain cycle!
+}
 
-Based on my audit of your codebase, here are the issues I found:
+// ✅ SAFE: Use weak self
+loadTask = Task { [weak self] in
+    guard let self = self else { return }
+    self.data = await fetchData()
+}
+```
 
-### High Priority Issues (Crashes/Memory Leaks)
+### 🟡 High Priority (Data Races)
 
-1. **Missing @MainActor annotations**
-   - These can cause data race crashes if accessed from background threads
-   - Fix: Add `@MainActor` decorator to View and Observable classes
-   - See: swift-concurrency skill → "When to Use @MainActor"
+**Sendable Violations**
+```swift
+// ❌ DATA RACE: Non-Sendable type crossing actor boundary
+class UserData {
+    var name: String
+}
 
-2. **Unsafe Task self captures**
-   - These cause memory leaks and potential crashes
-   - Fix: Use `Task { [weak self] in` pattern
-   - See: swift-concurrency skill → Pattern 3: Weak Self in Tasks
+Task { @MainActor in
+    await actor.process(userData)  // Warning: UserData is not Sendable
+}
 
-### Medium Priority Issues (Data Races)
+// ✅ SAFE: Make Sendable or use value types
+struct UserData: Sendable {
+    let name: String
+}
+```
 
-3. **Sendable violations**
-   - Non-Sendable types crossing actor boundaries cause warnings, may crash at runtime
-   - Fix: Implement `Sendable` conformance or use lightweight representations
-   - See: swift-concurrency skill → Pattern 1: Sendable Enum/Struct
+**Improper Actor Isolation**
+```swift
+// ❌ DATA RACE: Using actor data without isolation
+let result = await dataActor.getData()
+result.mutate()  // Unsafe if result is mutable reference type!
 
-4. **Improper actor isolation**
-   - Data accessed without thread-safety verification
-   - Fix: Use Pattern 4 (Atomic Snapshots) or lightweight representations
-   - See: swift-concurrency skill → Pattern 4: Atomic Snapshots
+// ✅ SAFE: Copy data before leaving actor context
+let result = await dataActor.getData().copy()
+result.mutate()  // Safe - working with copy
+```
 
-### Low Priority Issues (Warnings)
+### 🟢 Medium Priority (Warnings)
 
-5. **Thread confinement concerns**
-   - Potential issues with main thread access from background
-   - Fix: Use lightweight representations before leaving actor context
-   - See: swift-concurrency skill → Pattern 8: Core Data Thread-Safe Fetch
+**Thread Confinement Violations**
+```swift
+// ❌ WARNING: MainActor property accessed in detached task
+Task.detached {
+    print(self.mainActorProperty)  // Warning!
+}
+
+// ✅ SAFE: Capture value before detaching
+let value = mainActorProperty
+Task.detached {
+    print(value)  // Safe - captured before detaching
+}
+```
+
+## Running the Audit
+
+```bash
+# In Claude Code
+/audit-concurrency
+```
+
+The command will:
+1. Find all Swift files in your project
+2. Scan for the 6 concurrency patterns above
+3. Report findings with `file:line` references
+4. Prioritize by severity (Critical → Medium)
+5. Suggest fixes from swift-concurrency skill
+
+## Example Output
+
+```
+🔴 CRITICAL: Missing @MainActor (4 issues)
+  - ProfileViewModel.swift:12 - ObservableObject without @MainActor
+  - SettingsVC.swift:23 - UIViewController without @MainActor
+  Impact: Potential data race crashes
+
+🔴 CRITICAL: Unsafe Task Self Capture (2 issues)
+  - NetworkManager.swift:45 - Task captures self without [weak self]
+  - ImageLoader.swift:67 - Stored task property leaks memory
+  Impact: Memory leaks, retain cycles
+
+🟡 HIGH: Sendable Violations (3 issues)
+  - DataManager.swift:89 - Non-Sendable class crossing actor boundary
+  - UserSession.swift:34 - Mutable reference type in @Sendable closure
+  Impact: Data race warnings, potential crashes
+
+🟢 MEDIUM: Thread Confinement (1 issue)
+  - BackgroundSync.swift:56 - MainActor property in detached task
+  Impact: Compiler warnings
+```
 
 ## Next Steps
 
-Now that you have a roadmap of concurrency issues, ask about specific patterns.
+After running the audit:
 
-Simply say: "How do I fix these Swift concurrency issues?" and the skill activates automatically.
+1. **Fix Critical issues immediately** - These cause crashes and memory leaks
+2. **Address High priority issues** - Enable strict concurrency checking
+3. **Resolve Medium priority warnings** - Clean build before shipping
+
+For detailed fix patterns, use the [swift-concurrency](/skills/concurrency/swift-concurrency) skill:
+
+```
+"How do I fix these Swift concurrency issues?"
+```
 
 The skill provides copy-paste templates for:
 - Pattern 1: Sendable types
 - Pattern 2: Value capture before task
 - Pattern 3: Weak self in tasks
 - Pattern 4: Atomic snapshots
-- And 8 more data persistence patterns
+- And 8 more patterns for data persistence
 
-## Summary
+## Real-World Impact
 
-Run this command periodically to catch concurrency regressions early. Most issues detected here can be fixed with ~5 lines of code using patterns from the skill.
+**Before audit:**
+- 2-4 hours debugging mysterious crashes
+- Data races discovered in production
+- Actor isolation errors blocking Swift 6 migration
+
+**After audit:**
+- 5-10 minutes to identify all concurrency issues
+- Fix most issues with ~5 lines of code
+- Smooth Swift 6 strict concurrency migration
+
+Run this command periodically to catch concurrency regressions early.
