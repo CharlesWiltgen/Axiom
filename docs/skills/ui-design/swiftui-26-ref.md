@@ -244,4 +244,4 @@ struct PhotoGrid: View {
 - **[SwiftUI Performance](/skills/ui-design/swiftui-performance)** — Master the SwiftUI Instrument
 - **[Liquid Glass](/skills/ui-design/liquid-glass)** — Apple's material design system
 - **[Swift Concurrency](/skills/concurrency/swift-concurrency)** — Swift 6 strict concurrency
-- **[App Intents Integration](/skills/integration/app-intents-integration)** — AttributedString for Apple Intelligence
+- **[App Intents Integration](/skills/integration/app-intents-ref)** — AttributedString for Apple Intelligence

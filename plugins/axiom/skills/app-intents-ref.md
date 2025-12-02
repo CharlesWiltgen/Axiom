@@ -1,5 +1,5 @@
 ---
-name: app-intents-integration
+name: app-intents-ref
 description: Use when integrating App Intents for Siri, Apple Intelligence, Shortcuts, Spotlight, or system experiences - covers AppIntent, AppEntity, parameter handling, entity queries, background execution, authentication, and debugging common integration issues for iOS 16+
 ---
 

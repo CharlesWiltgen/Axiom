@@ -4,7 +4,7 @@ Skills for integrating your app with Apple's system-level experiences: Siri, App
 
 ## Available Skills
 
-### [App Intents Integration](./app-intents-integration)
+### [App Intents Integration](./app-intents-ref)
 
 Comprehensive guide to the App Intents framework for exposing app functionality to:
 - **Siri & Apple Intelligence** — Voice commands and intelligent automation

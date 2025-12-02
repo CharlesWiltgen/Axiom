@@ -97,7 +97,7 @@ Master SwiftUI performance optimization using the new SwiftUI Instrument in Inst
 
 ---
 
-#### `swiftui-26-features`
+#### `swiftui-26-ref`
 Comprehensive reference guide to all iOS 26 SwiftUI features from WWDC 2025-256.
 
 **Key Features:**
@@ -262,7 +262,7 @@ SwiftData with iOS 26+ features, @Model definitions, @Query patterns, Swift 6 co
 
 ### Apple Intelligence & Integration
 
-#### `app-intents-integration`
+#### `app-intents-ref`
 Comprehensive guide to App Intents framework for Siri, Apple Intelligence, Shortcuts, and Spotlight integration. Covers AppIntent, AppEntity, parameter handling, entity queries, and debugging.
 
 **Key Features:**

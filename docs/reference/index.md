@@ -8,8 +8,8 @@ Comprehensive guides and documentation for Apple platform development. Reference
 |-------|-------------|
 | [**liquid-glass-ref**](./liquid-glass-ref) | Comprehensive Liquid Glass adoption guide — app icons, controls, navigation, menus, windows, search, platform considerations |
 | [**realm-migration-ref**](./realm-migration-ref) | Complete migration guide from Realm to SwiftData — pattern equivalents, threading models, schema strategies, CloudKit sync transition |
-| [**swiftui-26-features**](./swiftui-26-features) | All iOS 26 SwiftUI features — Liquid Glass, @Animatable macro, WebView, rich text, 3D charts, spatial layout, scene bridging |
-| [**app-intents-integration**](./app-intents-integration) | App Intents framework for Siri, Apple Intelligence, Shortcuts, Spotlight — AppIntent, AppEntity, parameters, queries, debugging |
+| [**swiftui-26-ref**](./swiftui-26-ref) | All iOS 26 SwiftUI features — Liquid Glass, @Animatable macro, WebView, rich text, 3D charts, spatial layout, scene bridging |
+| [**app-intents-ref**](./app-intents-ref) | App Intents framework for Siri, Apple Intelligence, Shortcuts, Spotlight — AppIntent, AppEntity, parameters, queries, debugging |
 
 ## Diagnostic Skills
 

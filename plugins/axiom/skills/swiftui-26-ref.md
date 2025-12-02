@@ -1,5 +1,5 @@
 ---
-name: swiftui-26-features
+name: swiftui-26-ref
 description: Use when implementing iOS 26 SwiftUI features - covers Liquid Glass design system, performance improvements, @Animatable macro, 3D spatial layout, scene bridging, WebView/WebPage, AttributedString rich text editing, drag and drop enhancements, and visionOS integration for iOS 26+
 ---
 
@@ -31,6 +31,10 @@ Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, w
 ---
 
 ## Liquid Glass Design System
+
+**For comprehensive Liquid Glass coverage, see:**
+- `liquid-glass` skill — Design principles, implementation, variants, design review pressure
+- `liquid-glass-ref` skill — App-wide adoption guide (app icons, controls, navigation, menus, windows)
 
 ### Overview
 
@@ -666,7 +670,7 @@ struct CommentView: View {
 
 **Reference:** "Cook up a rich text experience in SwiftUI with AttributedString" (WWDC 2025)
 
-**Cross-reference:** [App Intents Integration](/skills/integration/app-intents-integration) — AttributedString for Apple Intelligence Use Model action
+**Cross-reference:** [App Intents Integration](/skills/integration/app-intents-ref) — AttributedString for Apple Intelligence Use Model action
 
 ---
 
@@ -1078,7 +1082,7 @@ TextEditor(text: $text) // Plain String loses formatting
 - [SwiftUI Performance](/skills/ui-design/swiftui-performance) — Master the SwiftUI Instrument
 - [Liquid Glass](/skills/ui-design/liquid-glass) — Apple's material design system
 - [Swift Concurrency](/skills/concurrency/swift-concurrency) — Swift 6 strict concurrency
-- [App Intents Integration](/skills/integration/app-intents-integration) — AttributedString for Apple Intelligence
+- [App Intents Integration](/skills/integration/app-intents-ref) — AttributedString for Apple Intelligence
 
 ---
 
