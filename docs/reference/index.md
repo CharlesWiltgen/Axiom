@@ -8,6 +8,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 |-------|-------------|
 | [**liquid-glass-ref**](./liquid-glass-ref) | Comprehensive Liquid Glass adoption guide — app icons, controls, navigation, menus, windows, search, platform considerations |
 | [**realm-migration-ref**](./realm-migration-ref) | Complete migration guide from Realm to SwiftData — pattern equivalents, threading models, schema strategies, CloudKit sync transition |
+| [**network-framework-ref**](./network-framework-ref) | Comprehensive Network.framework API reference — NWConnection (iOS 12-25), NetworkConnection (iOS 26+), TLV framing, Coder protocol, migration strategies |
 | [**swiftui-26-ref**](./swiftui-26-ref) | All iOS 26 SwiftUI features — Liquid Glass, @Animatable macro, WebView, rich text, 3D charts, spatial layout, scene bridging |
 | [**app-intents-ref**](./app-intents-ref) | App Intents framework for Siri, Apple Intelligence, Shortcuts, Spotlight — AppIntent, AppEntity, parameters, queries, debugging |
 
@@ -17,6 +18,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 |-------|-------------|
 | [**accessibility-diag**](./accessibility-diag) | VoiceOver, Dynamic Type, color contrast, touch targets — WCAG compliance with App Store rejection defense |
 | [**core-data-diag**](./core-data-diag) | Schema migrations, thread-confinement, N+1 queries — Core Data diagnostics with production crisis defense |
+| [**networking-diag**](./networking-diag) | Connection timeouts, TLS failures, data arrival issues — Network.framework diagnostics with production crisis defense |
 
 ## Quality Standards
 

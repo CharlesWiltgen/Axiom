@@ -6,10 +6,10 @@ Welcome to Axiom — battle-tested Claude Code skills, commands, and references 
 
 Axiom provides comprehensive iOS development workflows:
 
-- **15 skills** — Discipline-enforcing workflows tested using ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development)
-- **4 reference skills** — Comprehensive guides without mandatory workflows
-- **2 diagnostic skills** — Systematic troubleshooting with pressure defense
-- **5 commands** — Quick automated scans for common issues
+- **16 skills** — Discipline-enforcing workflows tested using ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development)
+- **3 reference skills** — Comprehensive guides without mandatory workflows
+- **3 diagnostic skills** — Systematic troubleshooting with pressure defense
+- **6 commands** — Quick automated scans for common issues
 
 ### 🎨 UI & Design Skills
 - **Liquid Glass** – Implement Apple's glass effects correctly and get expert validation
@@ -31,6 +31,11 @@ Axiom provides comprehensive iOS development workflows:
 - **SwiftData** – Prevent CloudKit sync failures and handle concurrent access safely
 - **Realm to SwiftData Migration** – Migrate before Device Sync sunset (Sept 30, 2025) without breaking threading
 - **Core Data Debugging** – Fix migration crashes and thread-confinement errors
+
+### 🌐 Networking
+- **Networking** – Network.framework patterns for UDP/TCP with NWConnection (iOS 12-25) and NetworkConnection (iOS 26+)
+- **Networking Diagnostics** – Fix connection timeouts, TLS failures, data arrival issues
+- **Network.framework Reference** – Complete API guide covering iOS 12-26+ with all WWDC examples
 
 ### 🔄 UIKit & Legacy
 - **UIKit Animation Debugging** – Fix animations that don't fire or behave differently on device
@@ -79,6 +84,7 @@ Skills available in Axiom:
 - **Debugging**: xcode-debugging, memory-debugging, build-troubleshooting, performance-profiling
 - **Concurrency**: swift-concurrency
 - **Data & Persistence**: database-migration, sqlitedata, grdb, swiftdata, realm-to-swiftdata-migration, core-data-debugging
+- **Networking**: networking, networking-diag, network-framework-ref
 - **Legacy**: objc-block-retain-cycles, uikit-animation-debugging
 
 ## Common Workflows

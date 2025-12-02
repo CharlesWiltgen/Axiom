@@ -35,6 +35,12 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**sqlitedata**](/skills/persistence/sqlitedata) | SQLiteData patterns, batch imports, CloudKit sync |
 | [**grdb**](/skills/persistence/grdb) | Raw SQL queries, complex joins, ValueObservation |
 
+### Networking
+
+| Skill | When to Use |
+|-------|-------------|
+| [**networking**](/skills/integration/networking) | Implementing UDP/TCP connections, migrating from sockets, debugging connection failures |
+
 ### Legacy
 
 | Skill | When to Use |

@@ -2,9 +2,9 @@
 
 Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Liquid Glass, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
 
-**Version**: 0.1.2
+**Version**: 0.8.12
 **Status**: Preview Release
-**Skills**: 11
+**Skills**: 21 | **Commands**: 6
 
 ## Installation
 
@@ -154,6 +154,80 @@ SwiftData with iOS 26+ features, @Model definitions, Swift 6 concurrency.
 
 **Use when**: Working with SwiftData, @Query in SwiftUI, @Relationship macros, CloudKit integration
 
+---
+
+### 🌐 Networking
+
+#### `axiom:networking`
+Network.framework patterns for UDP/TCP with NWConnection (iOS 12-25) and NetworkConnection (iOS 26+) with structured concurrency.
+
+**Use when**: Implementing network connections, migrating from sockets/URLSession streams, debugging connection failures
+
+**Key features**:
+- 8 patterns covering both iOS 12-25 and iOS 26+ APIs
+- TLV framing and Coder protocol for iOS 26+
+- Prevents deprecated API usage (SCNetworkReachability, CFSocket)
+- Migration guides from BSD sockets
+
+---
+
+#### `axiom:networking-diag` (Diagnostic)
+Systematic Network.framework troubleshooting for connection timeouts, TLS failures, data arrival issues.
+
+**Use when**: Connection times out, TLS handshake fails, data not arriving, WiFi/cellular transitions
+
+**Key features**:
+- 8+ diagnostic patterns with symptom/diagnosis/fix
+- Production crisis scenario defense
+- Quick reference table for common errors
+- Network logging interpretation guide
+
+---
+
+#### `axiom:network-framework-ref` (Reference)
+Comprehensive Network.framework API reference covering all iOS 12-26+ networking APIs.
+
+**Use when**: Planning network implementation, understanding API differences, migrating between versions
+
+**Key features**:
+- All 12 WWDC 2025 code examples
+- Complete NWConnection and NetworkConnection coverage
+- Migration strategies and testing checklist
+
+---
+
+### 📋 Audit Commands
+
+#### `/axiom:audit-networking`
+Scan codebase for deprecated networking APIs and anti-patterns with file:line references.
+
+**Detects**: SCNetworkReachability, CFSocket, NSStream, hardcoded IPs, missing error handling
+
+---
+
+#### `/axiom:audit-concurrency`
+Scan for Swift concurrency violations and unsafe patterns.
+
+---
+
+#### `/axiom:audit-accessibility`
+Comprehensive accessibility audit for WCAG compliance.
+
+---
+
+#### `/axiom:audit-liquid-glass`
+Scan for Liquid Glass adoption opportunities in SwiftUI codebase.
+
+---
+
+#### `/axiom:audit-core-data`
+Quick Core Data safety audit for schema migrations, thread violations, N+1 queries.
+
+---
+
+#### `/axiom:audit-memory`
+Scan for memory leak patterns across timer leaks, observer leaks, closure captures.
+
 ## Usage
 
 Skills are automatically suggested by Claude Code based on context, or invoke them directly:
@@ -177,6 +251,19 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 /skill axiom:sqlitedata
 /skill axiom:grdb
 /skill axiom:swiftdata
+
+# Networking
+/skill axiom:networking
+/skill axiom:networking-diag
+/skill axiom:network-framework-ref
+
+# Audit commands
+/axiom:audit-networking
+/axiom:audit-concurrency
+/axiom:audit-accessibility
+/axiom:audit-liquid-glass
+/axiom:audit-core-data
+/axiom:audit-memory
 ```
 
 ## Philosophy

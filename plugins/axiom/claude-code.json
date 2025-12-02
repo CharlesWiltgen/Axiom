@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.8.11",
+  "version": "0.8.12",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -9,7 +9,8 @@
     "./commands/audit-accessibility.md",
     "./commands/audit-liquid-glass.md",
     "./commands/audit-core-data.md",
-    "./commands/audit-memory.md"
+    "./commands/audit-memory.md",
+    "./commands/audit-networking.md"
   ],
   "skills": [
     {
@@ -69,6 +70,10 @@
       "description": "Use when working with SwiftData - @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ features, and Swift 6 concurrency with @MainActor - Apple's native persistence framework"
     },
     {
+      "name": "networking",
+      "description": "Use when implementing Network.framework connections, debugging connection failures, migrating from sockets/URLSession streams, or adopting structured concurrency networking patterns - prevents deprecated API usage, reachability anti-patterns, and thread-safety violations with iOS 12-26+ APIs"
+    },
+    {
       "name": "uikit-animation-debugging",
       "description": "Use when CAAnimation completion handler doesn't fire, spring physics look wrong on device, animation duration mismatches actual time, gesture + animation interaction causes jank, or timing differs between simulator and real hardware - systematic CAAnimation diagnosis with CATransaction patterns, frame rate awareness, and device-specific behavior"
     },
@@ -89,12 +94,20 @@
       "description": "Diagnostic: VoiceOver, Dynamic Type, color contrast, touch targets - WCAG compliance with App Store rejection defense and design review push-back frameworks"
     },
     {
+      "name": "networking-diag",
+      "description": "Diagnostic: Use when debugging connection timeouts, TLS handshake failures, data not arriving, connection drops, performance issues, or proxy/VPN interference - systematic Network.framework diagnostics with production crisis defense"
+    },
+    {
       "name": "app-intents-ref",
       "description": "Reference: Comprehensive App Intents integration guide for Siri, Apple Intelligence, Shortcuts, Spotlight - covers AppIntent, AppEntity, parameter handling, entity queries, background execution, authentication, and debugging for iOS 16+"
     },
     {
       "name": "swiftui-26-ref",
       "description": "Reference: Comprehensive iOS 26 SwiftUI features guide - covers Liquid Glass design system, performance improvements, @Animatable macro, 3D spatial layout, scene bridging, WebView/WebPage, AttributedString rich text editing, drag and drop enhancements, and visionOS integration"
+    },
+    {
+      "name": "network-framework-ref",
+      "description": "Reference: Comprehensive Network.framework guide covering NetworkConnection (iOS 26+), NWConnection (iOS 12-25), TLV framing, Coder protocol, NetworkListener, NetworkBrowser, Wi-Fi Aware discovery, and migration strategies"
     }
   ]
 }

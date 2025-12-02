@@ -58,6 +58,12 @@ export default defineConfig({
           items: [
             { text: 'audit-liquid-glass', link: '/commands/ui-design/audit-liquid-glass' }
           ]
+        },
+        {
+          text: 'Networking',
+          items: [
+            { text: 'audit-networking', link: '/commands/integration/audit-networking' }
+          ]
         }
       ],
       '/skills/': [
@@ -99,9 +105,10 @@ export default defineConfig({
           ]
         },
         {
-          text: 'Apple Intelligence & Integration',
+          text: 'Networking & Integration',
           items: [
             { text: 'Overview', link: '/skills/integration/' },
+            { text: 'Networking', link: '/skills/integration/networking' },
             { text: 'App Intents Integration', link: '/skills/integration/app-intents-integration' }
           ]
         },
@@ -128,6 +135,7 @@ export default defineConfig({
           items: [
             { text: 'Liquid Glass Adoption', link: '/reference/liquid-glass-ref' },
             { text: 'Realm Migration', link: '/reference/realm-migration-ref' },
+            { text: 'Network.framework API', link: '/reference/network-framework-ref' },
             { text: 'SwiftUI 26 Features', link: '/reference/swiftui-26-features' },
             { text: 'App Intents Integration', link: '/reference/app-intents-integration' }
           ]
@@ -136,7 +144,8 @@ export default defineConfig({
           text: 'Diagnostic Skills',
           items: [
             { text: 'Accessibility Diagnostics', link: '/reference/accessibility-diag' },
-            { text: 'Core Data Diagnostics', link: '/reference/core-data-diag' }
+            { text: 'Core Data Diagnostics', link: '/reference/core-data-diag' },
+            { text: 'Networking Diagnostics', link: '/reference/networking-diag' }
           ]
         }
       ]
