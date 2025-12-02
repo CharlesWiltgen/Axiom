@@ -1,102 +1,539 @@
 ---
 name: swift-concurrency
-description: Swift 6 strict concurrency patterns, fixes, and best practices - Quick reference for actor isolation, Sendable, async/await, and data race prevention
+description: Swift 6 strict concurrency patterns - progressive journey from single-threaded to concurrent code with @concurrent attribute (WWDC 2025), actor isolation, Sendable, async/await, and data race prevention
 ---
 
 # Swift 6 Concurrency Guide
 
-**Purpose**: Quick reference for Swift 6 concurrency patterns
-**Swift Version**: Swift 6.0+ with strict concurrency
-**iOS Version**: iOS 17+ recommended
-**Context**: Helps navigate actor isolation, Sendable, and data race prevention
+**Purpose**: Progressive journey from single-threaded to concurrent Swift code
+**Swift Version**: Swift 6.0+, Swift 6.2+ for `@concurrent`
+**iOS Version**: iOS 17+ (iOS 18.2+ for `@concurrent`)
+**Xcode**: Xcode 16+ (Xcode 16.2+ for `@concurrent`)
+**Context**: WWDC 2025-268 "Embracing Swift concurrency" - approachable path to data-race safety
 
 ## When to Use This Skill
 
 ✅ **Use this skill when**:
+- Starting a new project and deciding concurrency strategy
 - Debugging Swift 6 concurrency errors (actor isolation, data races, Sendable warnings)
+- Deciding when to introduce async/await vs concurrency
 - Implementing `@MainActor` classes or async functions
 - Converting delegate callbacks to async-safe patterns
-- Deciding between `@MainActor`, `nonisolated`, or actor isolation
+- Deciding between `@MainActor`, `nonisolated`, `@concurrent`, or actor isolation
 - Resolving "Sending 'self' risks causing data races" errors
 - Making types conform to `Sendable`
 - Offloading CPU-intensive work to background threads
+- UI feels unresponsive and profiling shows main thread bottleneck
 
 ❌ **Do NOT use this skill for**:
 - General Swift syntax (use Swift documentation)
-- SwiftUI-specific patterns (different context)
+- SwiftUI-specific patterns (use `swiftui-debugging` or `swiftui-performance`)
 - API-specific patterns (use API documentation)
 
-## Example Prompts
+## Core Philosophy: Start Single-Threaded
 
-These are real questions developers ask that this skill is designed to answer:
+> **Apple's Guidance (WWDC 2025-268)**: "Your apps should start by running all of their code on the main thread, and you can get really far with single-threaded code."
 
-**General Concurrency:**
+### The Progressive Journey
 
-**1. "I'm getting 'Main actor-isolated property accessed from nonisolated context' errors in my delegate methods. How do I fix this?"**
-→ The skill covers the critical Pattern 2 (Value Capture Before Task) that shows when to capture delegate parameters before the Task context hop
+```
+Single-Threaded → Asynchronous → Concurrent → Actors
+     ↓                ↓             ↓           ↓
+   Start here    Hide latency   Background   Move data
+                 (network)      CPU work     off main
+```
 
-**2. "My code is throwing 'Type does not conform to Sendable' warnings when I try to pass data between background work and MainActor. What does this mean?"**
-→ The skill explains Sendable conformance requirements and shows patterns for enums, structs, and classes that cross actor boundaries
+**When to advance**:
+1. **Stay single-threaded** if UI is responsive and operations are fast
+2. **Add async/await** when high-latency operations (network, file I/O) block UI
+3. **Add concurrency** when CPU-intensive work (image processing, parsing) freezes UI
+4. **Add actors** when too much main actor code causes contention
 
-**3. "I have a task that's stored as a property and it's causing memory leaks. How do I write it correctly with weak self?"**
-→ The skill demonstrates Pattern 3 (Weak Self in Tasks) showing the difference between stored and short-lived tasks
-
-**4. "I'm new to Swift 6 concurrency. What are the critical patterns I need to know to write safe concurrent code?"**
-→ The skill provides 6 copy-paste-ready patterns covering delegates, Sendable types, tasks, snapshots, MainActor, and background work
-
-**5. "How do I know when to use @MainActor vs nonisolated vs @concurrent? The rules aren't clear."**
-→ The skill clarifies actor isolation rules and provides a decision tree for each scenario with real-world examples
-
-**Data Persistence & Concurrency:**
-
-**6. "I'm fetching 10,000 records from SwiftData on a background thread, but I'm getting thread-confinement errors. How do I safely load data?"**
-→ The skill shows Pattern 7 (Background SwiftData Access) which demonstrates creating background ModelContext and safely passing data back to MainActor
-
-**7. "I have Core Data on a background thread and need to update the UI. I keep getting 'accessed from different thread' crashes."**
-→ The skill covers Pattern 8 (Core Data Thread-Safe Fetch) showing private queue contexts and lightweight representations for thread-safe access
-
-**8. "How do I batch-import 1 million records from an API without blocking the UI or causing memory bloat?"**
-→ The skill demonstrates Pattern 9 (Batch Import with Progress) using background actors, chunk-based processing, and periodic saves
-
-**9. "My GRDB queries are blocking the UI. How do I run complex SQL on a background thread safely?"**
-→ The skill shows Pattern 10 (GRDB Background Execution) with actor-based query execution and safe data transfer back to MainActor
-
-**10. "I need to sync data to CloudKit while keeping the UI responsive. How do I prevent the UI from freezing?"**
-→ The skill covers Pattern 11 (CloudKit Sync with Progress Reporting) showing structured concurrency for sync operations with UI feedback
+**Key insight**: Concurrent code is more complex. Only introduce concurrency when profiling shows it's needed.
 
 ---
 
-## Quick Decision Tree
+## Step 1: Single-Threaded Code (Start Here)
+
+All code runs on the **main thread** by default in Swift 6.
+
+```swift
+// ✅ Simple, single-threaded
+class ImageModel {
+    var imageCache: [URL: Image] = [:]
+
+    func fetchAndDisplayImage(url: URL) throws {
+        let data = try Data(contentsOf: url)  // Reads local file
+        let image = decodeImage(data)
+        view.displayImage(image)
+    }
+
+    func decodeImage(_ data: Data) -> Image {
+        // Decode image data
+        return Image()
+    }
+}
+```
+
+**Main Actor Mode** (Xcode 26+):
+- Enabled by default for new projects
+- All code protected by `@MainActor` unless explicitly marked otherwise
+- Access shared state safely without worrying about concurrent access
+
+**Build Setting** (Xcode 26+):
+```
+Build Settings → Swift Compiler - Language
+→ "Default Actor Isolation" = Main Actor
+
+Build Settings → Swift Compiler - Upcoming Features
+→ "Approachable Concurrency" = Yes
+```
+
+**When this is enough**: If all operations are fast (<16ms for 60fps), stay single-threaded!
+
+---
+
+## Step 2: Asynchronous Tasks (Hide Latency)
+
+Add async/await when **waiting on data** (network, file I/O) would freeze UI.
+
+### Problem: Network Access Blocks UI
+
+```swift
+// ❌ Blocks main thread until network completes
+func fetchAndDisplayImage(url: URL) throws {
+    let (data, _) = try URLSession.shared.data(from: url)  // ❌ Freezes UI!
+    let image = decodeImage(data)
+    view.displayImage(image)
+}
+```
+
+### Solution: Async/Await
+
+```swift
+// ✅ Suspends without blocking main thread
+func fetchAndDisplayImage(url: URL) async throws {
+    let (data, _) = try await URLSession.shared.data(from: url)  // ✅ Suspends here
+    let image = decodeImage(data)  // ✅ Resumes here when data arrives
+    view.displayImage(image)
+}
+```
+
+**What happens**:
+1. Function starts on main thread
+2. `await` suspends function without blocking main thread
+3. URLSession fetches data on background thread (library handles this)
+4. Function resumes on main thread when data arrives
+5. UI stays responsive the entire time
+
+### Task Creation
+
+Create tasks in response to user events:
+
+```swift
+class ImageModel {
+    var url: URL = URL(string: "https://swift.org")!
+
+    func onTapEvent() {
+        Task {  // ✅ Create task for user action
+            do {
+                try await fetchAndDisplayImage(url: url)
+            } catch {
+                displayError(error)
+            }
+        }
+    }
+}
+```
+
+### Task Interleaving (Important Concept)
+
+Multiple async tasks can run on the **same thread** by taking turns:
 
 ```
-Error: "Main actor-isolated property accessed from nonisolated context"
-├─ In delegate method?
-│  └─ Use Pattern 2: Value Capture Before Task
-├─ In async function?
-│  └─ Add @MainActor or call from Task { @MainActor in }
-└─ In property getter?
-   └─ Use Pattern 4: Atomic Snapshots
+Task 1: [Fetch Image] → (suspend) → [Decode] → [Display]
+Task 2: [Fetch News]  → (suspend) → [Display News]
 
-Error: "Type does not conform to Sendable"
-├─ Is it an enum with no associated values?
-│  └─ Use Pattern 1: Add `: Sendable`
-├─ Is it a struct with all Sendable properties?
-│  └─ Implicit Sendable (do nothing) or explicit `: Sendable`
-└─ Is it a class?
-   └─ Make @MainActor or add manual Sendable conformance
-
-Error: "Static var requires concurrency annotation"
-└─ Use `nonisolated static let` (if immutable)
-
-Warning: Task may cause memory leak
-└─ Use Pattern 3: `Task { [weak self] in }`
+Main Thread Timeline:
+[Fetch Image] → [Fetch News] → [Decode Image] → [Display Image] → [Display News]
 ```
+
+**Benefits**:
+- Main thread never sits idle
+- Tasks make progress as soon as possible
+- No concurrency yet—still single-threaded!
+
+**When to use tasks**:
+- High-latency operations (network, file I/O)
+- Library APIs handle background work for you (URLSession, FileManager)
+- Your own code stays on main thread
+
+---
+
+## Step 3: Concurrent Code (Background Threads)
+
+Add concurrency when **CPU-intensive work** blocks UI.
+
+### Problem: Decoding Blocks UI
+
+Profiling shows `decodeImage()` takes 200ms, causing UI glitches:
+
+```swift
+func fetchAndDisplayImage(url: URL) async throws {
+    let (data, _) = try await URLSession.shared.data(from: url)
+    let image = decodeImage(data)  // ❌ 200ms on main thread!
+    view.displayImage(image)
+}
+```
+
+### Solution 1: `@concurrent` Attribute (Swift 6.2+)
+
+Forces function to **always run on background thread**:
+
+```swift
+func fetchAndDisplayImage(url: URL) async throws {
+    let (data, _) = try await URLSession.shared.data(from: url)
+    let image = await decodeImage(data)  // ✅ Runs on background thread
+    view.displayImage(image)
+}
+
+@concurrent
+func decodeImage(_ data: Data) async -> Image {
+    // ✅ Always runs on background thread pool
+    // Good for: image processing, file I/O, parsing
+    return Image()
+}
+```
+
+**What `@concurrent` does**:
+- Function always switches to background thread pool
+- Compiler highlights main actor data access (shows what you need to fix)
+- Cannot access `@MainActor` properties without `await`
+
+**Requirements**: Swift 6.2, Xcode 16.2+, iOS 18.2+
+
+### Solution 2: `nonisolated` (Library APIs)
+
+If providing a general-purpose API, use `nonisolated` instead:
+
+```swift
+// ✅ Stays on caller's actor
+nonisolated
+func decodeImage(_ data: Data) -> Image {
+    // Runs on whatever actor called it
+    // Main actor → stays on main actor
+    // Background → stays on background
+    return Image()
+}
+```
+
+**When to use `nonisolated`**:
+- Library APIs where **caller decides** where work happens
+- Small operations that might be OK on main thread
+- General-purpose code used in many contexts
+
+**When to use `@concurrent`**:
+- Operations that **should always** run on background (image processing, parsing)
+- Performance-critical work that shouldn't block UI
+
+### Breaking Ties to Main Actor
+
+When you mark a function `@concurrent`, compiler shows main actor access:
+
+```swift
+@MainActor
+class ImageModel {
+    var cachedImage: [URL: Image] = [:]  // Main actor data
+
+    @concurrent
+    func decodeImage(_ data: Data, at url: URL) async -> Image {
+        if let image = cachedImage[url] {  // ❌ Error: main actor access!
+            return image
+        }
+        // decode...
+    }
+}
+```
+
+**Strategy 1: Move to caller** (keep work synchronous):
+
+```swift
+func fetchAndDisplayImage(url: URL) async throws {
+    // ✅ Check cache on main actor BEFORE async work
+    if let image = cachedImage[url] {
+        view.displayImage(image)
+        return
+    }
+
+    let (data, _) = try await URLSession.shared.data(from: url)
+    let image = await decodeImage(data)  // No URL needed now
+    view.displayImage(image)
+}
+
+@concurrent
+func decodeImage(_ data: Data) async -> Image {
+    // ✅ No main actor access needed
+    return Image()
+}
+```
+
+**Strategy 2: Use await** (access main actor asynchronously):
+
+```swift
+@concurrent
+func decodeImage(_ data: Data, at url: URL) async -> Image {
+    // ✅ Await to access main actor data
+    if let image = await cachedImage[url] {
+        return image
+    }
+    // decode...
+}
+```
+
+**Strategy 3: Make nonisolated** (if doesn't need actor):
+
+```swift
+nonisolated
+func decodeImage(_ data: Data) -> Image {
+    // ✅ No actor isolation, can call from anywhere
+    return Image()
+}
+```
+
+### Concurrent Thread Pool
+
+When work runs on background:
+
+```
+Main Thread:    [UI] → (suspend) → [UI Update]
+                         ↓
+Background Pool: [Task A] → [Task B] → [Task A resumes]
+                 Thread 1    Thread 2    Thread 3
+```
+
+**Key points**:
+- System manages thread pool size (1-2 threads on Watch, many on Mac)
+- Task can resume on different thread than it started
+- You never specify which thread—system optimizes automatically
+
+---
+
+## Step 4: Actors (Move Data Off Main Thread)
+
+Add actors when **too much code runs on main actor** causing contention.
+
+### Problem: Main Actor Contention
+
+```swift
+@MainActor
+class ImageModel {
+    var cachedImage: [URL: Image] = [:]
+    let networkManager: NetworkManager = NetworkManager()  // ❌ Also @MainActor
+
+    func fetchAndDisplayImage(url: URL) async throws {
+        // ✅ Background work...
+        let connection = await networkManager.openConnection(for: url)  // ❌ Hops to main!
+        let data = try await connection.data(from: url)
+        await networkManager.closeConnection(connection, for: url)  // ❌ Hops to main!
+
+        let image = await decodeImage(data)
+        view.displayImage(image)
+    }
+}
+```
+
+**Issue**: Background task keeps hopping to main actor for network manager access.
+
+### Solution: Network Manager Actor
+
+```swift
+// ✅ Move network state off main actor
+actor NetworkManager {
+    var openConnections: [URL: Connection] = [:]
+
+    func openConnection(for url: URL) -> Connection {
+        if let connection = openConnections[url] {
+            return connection
+        }
+        let connection = Connection()
+        openConnections[url] = connection
+        return connection
+    }
+
+    func closeConnection(_ connection: Connection, for url: URL) {
+        openConnections.removeValue(forKey: url)
+    }
+}
+
+@MainActor
+class ImageModel {
+    let networkManager: NetworkManager = NetworkManager()
+
+    func fetchAndDisplayImage(url: URL) async throws {
+        // ✅ Now runs mostly on background
+        let connection = await networkManager.openConnection(for: url)
+        let data = try await connection.data(from: url)
+        await networkManager.closeConnection(connection, for: url)
+
+        let image = await decodeImage(data)
+        view.displayImage(image)
+    }
+}
+```
+
+**What changed**:
+- `NetworkManager` is now an `actor` instead of `@MainActor class`
+- Network state isolated in its own actor
+- Background code can access network manager without hopping to main actor
+- Main thread freed up for UI work
+
+### When to Use Actors
+
+✅ **Use actors for**:
+- Non-UI subsystems with independent state (network manager, cache, database)
+- Data that's causing main actor contention
+- Separating concerns from UI code
+
+❌ **Do NOT use actors for**:
+- UI-facing classes (ViewModels, View Controllers) → Use `@MainActor`
+- Model classes used by UI → Keep `@MainActor` or non-Sendable
+- Every class in your app (actors add complexity)
+
+**Guideline**: Profile first. If main actor has too much state causing bottlenecks, extract one subsystem at a time into actors.
+
+---
+
+## Sendable Types (Data Crossing Actor Boundaries)
+
+When data passes between actors or tasks, Swift checks it's **Sendable** (safe to share).
+
+### Value Types Are Sendable
+
+```swift
+// ✅ Value types copy when passed
+let url = URL(string: "https://swift.org")!
+
+Task { @concurrent in
+    // ✅ This is a COPY of url, not the original
+    let data = try await URLSession.shared.data(from: url)
+}
+
+// ✅ Original url unchanged by background task
+```
+
+**Why safe**: Each actor gets its own independent copy. Changes don't affect other copies.
+
+### What's Sendable?
+
+```swift
+// ✅ Basic types
+extension URL: Sendable {}
+extension String: Sendable {}
+extension Int: Sendable {}
+extension Date: Sendable {}
+
+// ✅ Collections of Sendable elements
+extension Array: Sendable where Element: Sendable {}
+extension Dictionary: Sendable where Key: Sendable, Value: Sendable {}
+
+// ✅ Structs/enums with Sendable storage
+struct Track: Sendable {
+    let id: String
+    let title: String
+    let duration: TimeInterval
+}
+
+enum PlaybackState: Sendable {
+    case stopped
+    case playing
+    case paused
+}
+
+// ✅ Main actor types
+@MainActor class ImageModel {}  // Implicitly Sendable (actor protects state)
+
+// ✅ Actor types
+actor NetworkManager {}  // Implicitly Sendable (actor protects state)
+```
+
+### Reference Types (Classes) and Sendable
+
+```swift
+// ❌ Classes are NOT Sendable by default
+class MyImage {
+    var width: Int
+    var height: Int
+    var pixels: [Color]
+
+    func scale(by factor: Double) {
+        // Mutates shared state
+    }
+}
+
+let image = MyImage()
+let otherImage = image  // ✅ Both reference SAME object
+
+image.scale(by: 0.5)  // ✅ Changes visible through otherImage!
+```
+
+**Problem with concurrency**:
+
+```swift
+func scaleAndDisplay(imageName: String) {
+    let image = loadImage(imageName)
+
+    Task { @concurrent in
+        image.scale(by: 0.5)  // Background thread modifying
+    }
+
+    view.displayImage(image)  // Main thread reading
+    // ❌ DATA RACE! Both threads touching same object!
+}
+```
+
+**Solution 1: Finish modifications before sending**:
+
+```swift
+@concurrent
+func scaleAndDisplay(imageName: String) async {
+    let image = loadImage(imageName)
+    image.scale(by: 0.5)  // ✅ All modifications on background
+    image.applyAnotherEffect()  // ✅ Still on background
+
+    await view.displayImage(image)  // ✅ Send to main actor AFTER modifications done
+    // ✅ Main actor now owns image exclusively
+}
+```
+
+**Solution 2: Don't share classes concurrently**:
+
+Keep model classes `@MainActor` or non-Sendable to prevent concurrent access.
+
+### Sendable Checking
+
+Happens automatically when:
+- Passing data into/out of actors
+- Passing data into/out of tasks
+- Crossing actor boundaries with `await`
+
+```swift
+func fetchAndDisplayImage(url: URL) async throws {
+    let (data, _) = try await URLSession.shared.data(from: url)
+    //  ↑ Sendable    ↑ Sendable (crosses to background)
+
+    let image = await decodeImage(data)
+    //          ↑ data crosses to background (must be Sendable)
+    //                            ↑ image returns to main (must be Sendable)
+}
+```
+
+---
 
 ## Common Patterns (Copy-Paste Templates)
 
 ### Pattern 1: Sendable Enum/Struct
 
-**When**: Type crosses actor boundaries (passed between @MainActor and background)
+**When**: Type crosses actor boundaries
 
 ```swift
 // ✅ Enum (no associated values)
@@ -120,28 +557,12 @@ enum Result: Sendable {
 }
 ```
 
-**Why**: Swift 6 requires types crossing actor boundaries to be `Sendable` to prevent data races.
-
 ---
 
 ### Pattern 2: Delegate Value Capture (CRITICAL)
 
-**When**: `nonisolated` delegate method needs to update @MainActor state
+**When**: `nonisolated` delegate method needs to update `@MainActor` state
 
-**Why `@MainActor` on delegate doesn't work**: Delegate protocols define methods as nonisolated by the framework. You can't change their isolation.
-
-**❌ WRONG (Accessing delegate parameters directly)**:
-```swift
-nonisolated func delegate(_ param: SomeType) {
-    Task { @MainActor in
-        // ❌ Accessing param.value crosses actor boundary unsafely
-        self.property = param.value
-        print("Status: \(param.status)")
-    }
-}
-```
-
-**✅ CORRECT (Capture Before Task)**:
 ```swift
 nonisolated func delegate(_ param: SomeType) {
     // ✅ Step 1: Capture delegate parameter values BEFORE Task
@@ -150,64 +571,21 @@ nonisolated func delegate(_ param: SomeType) {
 
     // ✅ Step 2: Task hop to MainActor
     Task { @MainActor in
-        // ✅ Step 3: Now safe to access self (we're on MainActor)
-        // ✅ Use captured values from delegate parameters
+        // ✅ Step 3: Safe to access self (we're on MainActor)
         self.property = value
         print("Status: \(status)")
     }
 }
 ```
 
-**Why**: Delegate methods are `nonisolated` (called from library's threads). Delegate parameters must be captured BEFORE the Task creates MainActor context. Once inside `Task { @MainActor in }`, accessing `self` is safe because you're on MainActor.
-
-**Rule**: Capture all delegate parameter values before Task. Accessing `self` inside the Task is safe and expected.
-
-**Real-world example** (chat message delegate):
-```swift
-// Delegate method called from network layer's thread
-nonisolated func didReceiveMessage(_ message: Message, fromUser user: User) {
-    // ✅ Capture delegate parameters
-    let messageText = message.content
-    let senderName = user.displayName
-
-    Task { @MainActor in
-        // ✅ Safe: accessing self properties (we're on MainActor now)
-        self.messages.append(message)
-        self.unreadCount += 1
-
-        // ✅ Use captured delegate parameters
-        self.showNotification(text: messageText, from: senderName)
-    }
-}
-```
-
-**Key distinction**:
-- Delegate parameters (`message`, `user`) → Must capture before Task
-- Self properties (`self.messages`) → Safe to access inside `Task { @MainActor in }`
+**Why**: Delegate methods are `nonisolated` (called from library's threads). Capture parameters before Task. Accessing `self` inside `Task { @MainActor in }` is safe.
 
 ---
 
 ### Pattern 3: Weak Self in Tasks
 
-**When**: Task is stored as a property OR runs for a long time
+**When**: Task is stored as property OR runs for long time
 
-**❌ WRONG (Memory Leak)**:
-```swift
-class MusicPlayer {
-    private var progressTask: Task<Void, Never>?
-
-    func startMonitoring() {
-        progressTask = Task {  // ❌ Strong capture of self
-            while !Task.isCancelled {
-                await self.updateProgress()
-            }
-        }
-    }
-}
-// MusicPlayer → progressTask → closure → self (CYCLE)
-```
-
-**✅ CORRECT (No Leak)**:
 ```swift
 class MusicPlayer {
     private var progressTask: Task<Void, Never>?
@@ -223,122 +601,109 @@ class MusicPlayer {
     }
 
     deinit {
-        progressTask?.cancel()  // Clean up
+        progressTask?.cancel()
     }
 }
 ```
 
-**Why**: Task strongly captures `self`, creating retain cycle if stored as property. Use `[weak self]` to break cycle.
-
-**Note**: Short-lived Tasks (not stored) can use strong captures:
-```swift
-// ✅ OK: Task executes immediately and completes
-func quickUpdate() {
-    Task {  // Strong capture OK (not stored)
-        await self.refresh()
-    }
-}
-```
+**Note**: Short-lived Tasks (not stored) can use strong captures.
 
 ---
 
-### Pattern 4: Atomic Snapshots
+### Pattern 4: Background Work with @concurrent
 
-**When**: Reading multiple properties from an object that could change mid-access
+**When**: CPU-intensive work should always run on background (Swift 6.2+)
 
-**❌ WRONG (Torn Reads)**:
 ```swift
-var currentTime: TimeInterval {
-    get async {
-        // ❌ If state changes between reads, torn read!
-        return player?.currentTime ?? 0
+@concurrent
+func decodeImage(_ data: Data) async -> Image {
+    // ✅ Always runs on background thread pool
+    // Good for: image processing, file I/O, JSON parsing
+    return Image()
+}
+
+// Usage
+let image = await decodeImage(data)  // Automatically offloads
+```
+
+**Requirements**: Swift 6.2, Xcode 16.2+, iOS 18.2+
+
+---
+
+### Pattern 5: Isolated Protocol Conformances (Swift 6.2+)
+
+**When**: Type needs to conform to protocol with specific actor isolation
+
+```swift
+protocol Exportable {
+    func export()
+}
+
+class PhotoProcessor {
+    @MainActor
+    func exportAsPNG() {
+        // Export logic requiring UI access
+    }
+}
+
+// ✅ Conform with explicit isolation
+extension StickerModel: @MainActor Exportable {
+    func export() {
+        photoProcessor.exportAsPNG()  // ✅ Safe: both on MainActor
     }
 }
 ```
 
-**✅ CORRECT (Atomic Snapshot)**:
+**When to use**: Protocol methods need specific actor context (main actor for UI, background for processing)
+
+---
+
+### Pattern 6: Atomic Snapshots
+
+**When**: Reading multiple properties that could change mid-access
+
 ```swift
 var currentTime: TimeInterval {
     get async {
-        // ✅ Cache reference first for atomic snapshot
+        // ✅ Cache reference for atomic snapshot
         guard let player = player else { return 0 }
         return player.currentTime
     }
 }
 ```
 
-**Why**: If state changes between reads, you could read inconsistent data. Caching ensures all properties come from the same instance.
-
 ---
 
-### Pattern 5: MainActor for UI Code
+### Pattern 7: MainActor for UI Code
 
-**When**: Code touches UI (views, view controllers, observable objects)
+**When**: Code touches UI
 
 ```swift
-// ✅ View models should be @MainActor
 @MainActor
 class PlayerViewModel: ObservableObject {
     @Published var currentTrack: Track?
     @Published var isPlaying: Bool = false
 
     func play(_ track: Track) async {
-        // Already on MainActor, can update @Published properties
+        // Already on MainActor
         self.currentTrack = track
         self.isPlaying = true
     }
 }
-
-// ✅ SwiftUI views are implicitly @MainActor
-struct PlayerView: View {
-    @StateObject var viewModel = PlayerViewModel()
-
-    var body: some View {
-        // UI code automatically on MainActor
-    }
-}
 ```
-
----
-
-### Pattern 6: Background Work with @concurrent (Swift 6.2+)
-
-**When**: CPU-intensive operations that should always run on background thread
-
-```swift
-// ✅ Force background execution
-@concurrent
-func extractMetadata(from url: URL) async -> Metadata {
-    // Always runs on background thread pool
-    // Good for: file I/O, image processing, parsing
-    let data = try? Data(contentsOf: url)
-    return parseMetadata(data)
-}
-
-// Usage (automatically offloads to background)
-let metadata = await extractMetadata(from: fileURL)
-```
-
-**Note**: `@concurrent` requires Swift 6.2 (Xcode 16.2+, iOS 18.2+)
 
 ---
 
 ## Data Persistence Concurrency Patterns
 
-### Pattern 7: Background SwiftData Access
-
-**When**: Fetching large datasets from SwiftData without blocking UI
+### Pattern 8: Background SwiftData Access
 
 ```swift
-// ✅ Proper background SwiftData access
 actor DataFetcher {
     let modelContainer: ModelContainer
 
     func fetchAllTracks() async throws -> [Track] {
-        // ✅ Create background context (not on MainActor)
         let context = ModelContext(modelContainer)
-
-        // ✅ Fetch on background thread (no UI blocking)
         let descriptor = FetchDescriptor<Track>(
             sortBy: [SortDescriptor(\.title)]
         )
@@ -346,494 +711,235 @@ actor DataFetcher {
     }
 }
 
-// Usage (on MainActor)
 @MainActor
 class TrackViewModel: ObservableObject {
     @Published var tracks: [Track] = []
-    private let fetcher: DataFetcher
 
     func loadTracks() async {
-        do {
-            // ✅ Fetch on background, then update UI
-            let fetchedTracks = try await fetcher.fetchAllTracks()
-            // Back on MainActor automatically after await
-            self.tracks = fetchedTracks
-        } catch {
-            print("Fetch failed: \(error)")
-        }
+        let fetchedTracks = try await fetcher.fetchAllTracks()
+        self.tracks = fetchedTracks  // Back on MainActor
     }
 }
 ```
 
-**Why**: SwiftData models are not Sendable. Use actor to isolate database operations, fetch on background, then return lightweight representations to MainActor.
-
-**Key distinction**:
-- Database operations happen in actor (off MainActor)
-- Models fetched in background
-- Only final results passed back to MainActor
-- No blocking UI during fetch
-
----
-
-### Pattern 8: Core Data Thread-Safe Fetch
-
-**When**: Fetching from Core Data on background thread with UI updates
+### Pattern 9: Core Data Thread-Safe Fetch
 
 ```swift
-// ✅ Thread-safe Core Data fetch pattern
 actor CoreDataFetcher {
-    let persistentContainer: NSPersistentContainer
-
     func fetchTracksID(genre: String) async throws -> [String] {
-        // ✅ Create background context
         let context = persistentContainer.newBackgroundContext()
-
-        // ✅ Lightweight representation (just IDs, Sendable)
         var trackIDs: [String] = []
 
         try await context.perform {
             let request = NSFetchRequest<CDTrack>(entityName: "Track")
             request.predicate = NSPredicate(format: "genre = %@", genre)
-
             let results = try context.fetch(request)
-            // ✅ Extract IDs BEFORE leaving context
-            trackIDs = results.map { $0.id }
+            trackIDs = results.map { $0.id }  // Extract IDs before leaving context
         }
 
-        return trackIDs  // ✅ Return lightweight data
-    }
-
-    func fetchFullTracks(ids: [String]) async throws -> [Track] {
-        // ✅ On MainActor, fetch full objects using IDs
-        let mainContext = persistentContainer.viewContext
-
-        var tracks: [Track] = []
-        for id in ids {
-            let request = NSFetchRequest<CDTrack>(entityName: "Track")
-            request.predicate = NSPredicate(format: "id = %@", id)
-
-            if let cdTrack = try mainContext.fetch(request).first {
-                tracks.append(Track(from: cdTrack))
-            }
-        }
-
-        return tracks
+        return trackIDs  // Lightweight, Sendable
     }
 }
 ```
 
-**Why**: NSManagedObjects are thread-confined. Always:
-1. Fetch on background context
-2. Extract lightweight data (IDs, strings) BEFORE leaving context
-3. Pass lightweight data back to MainActor
-4. Fetch full objects on MainActor if needed
-
----
-
-### Pattern 9: Batch Import with Progress Reporting
-
-**When**: Importing large datasets (100k+ records) without UI freeze
+### Pattern 10: Batch Import with Progress
 
 ```swift
-// ✅ Batch import with progress feedback
 actor DataImporter {
-    let modelContainer: ModelContainer
-
-    typealias ProgressCallback = (Int, Int) -> Void  // current, total
-
-    func importRecords(_ records: [RawRecord], onProgress: @MainActor ProgressCallback) async throws {
+    func importRecords(_ records: [RawRecord], onProgress: @MainActor (Int, Int) -> Void) async throws {
         let chunkSize = 1000
         let context = ModelContext(modelContainer)
 
         for (index, chunk) in records.chunked(into: chunkSize).enumerated() {
-            // ✅ Process chunk
             for record in chunk {
-                let track = Track(
-                    id: record.id,
-                    title: record.title,
-                    artist: record.artist,
-                    duration: record.duration
-                )
-                context.insert(track)
+                context.insert(Track(from: record))
             }
-
-            // ✅ Save after chunk
             try context.save()
 
-            // ✅ Report progress to MainActor UI
             let processed = (index + 1) * chunkSize
             await onProgress(min(processed, records.count), records.count)
 
-            // ✅ Check for cancellation
-            if Task.isCancelled {
-                throw CancellationError()
-            }
-        }
-    }
-}
-
-// Usage
-@MainActor
-class ImportViewModel: ObservableObject {
-    @Published var progress: Double = 0
-
-    func importData(_ records: [RawRecord]) async {
-        do {
-            try await importer.importRecords(records) { [weak self] current, total in
-                self?.progress = Double(current) / Double(total)
-            }
-        } catch {
-            print("Import failed: \(error)")
-        }
-    }
-}
-
-extension Array {
-    func chunked(into size: Int) -> [[Element]] {
-        stride(from: 0, to: count, by: size).map {
-            Array(self[$0..<Swift.min($0 + size, count)])
+            if Task.isCancelled { throw CancellationError() }
         }
     }
 }
 ```
 
-**Why**:
-- Chunks prevent memory bloat
-- Periodic saves prevent data loss
-- Progress callbacks keep UI responsive
-- Cancellation support for user control
-
----
-
-### Pattern 10: GRDB Background Query Execution
-
-**When**: Complex SQL queries that block UI
+### Pattern 11: GRDB Background Execution
 
 ```swift
-// ✅ GRDB queries on background thread
 actor DatabaseQueryExecutor {
     let dbQueue: DatabaseQueue
 
     func fetchUserWithPosts(userId: String) async throws -> (user: User, posts: [Post]) {
-        // ✅ Query happens on GRDB's background thread automatically
         return try await dbQueue.read { db in
             let user = try User.filter(Column("id") == userId).fetchOne(db)!
-
-            // ✅ Fetch related posts (complex join)
             let posts = try Post
                 .filter(Column("userId") == userId)
                 .order(Column("createdAt").desc)
                 .limit(100)
                 .fetchAll(db)
-
             return (user, posts)
         }
     }
-
-    func aggregateUserStats(userId: String) async throws -> UserStats {
-        // ✅ Complex SQL on background thread
-        return try await dbQueue.read { db in
-            let postCount = try Post
-                .filter(Column("userId") == userId)
-                .fetchCount(db)
-
-            let likeCount = try Like
-                .filter(Column("userId") == userId)
-                .fetchCount(db)
-
-            return UserStats(postCount: postCount, likeCount: likeCount)
-        }
-    }
-}
-
-// Usage (on MainActor)
-@MainActor
-class UserViewModel: ObservableObject {
-    @Published var user: User?
-    @Published var posts: [Post] = []
-
-    func loadUser(_ id: String) async {
-        do {
-            let (user, posts) = try await executor.fetchUserWithPosts(userId: id)
-            self.user = user
-            self.posts = posts
-        } catch {
-            print("Failed: \(error)")
-        }
-    }
 }
 ```
-
-**Why**: GRDB's `read()` and `write()` methods automatically dispatch to background, so:
-1. Complex queries don't block MainActor
-2. Thread safety is automatic
-3. Results returned to caller (no threading needed)
 
 ---
 
-### Pattern 11: CloudKit Sync with Progress Monitoring
+## Quick Decision Tree
 
-**When**: Syncing data to CloudKit while keeping UI responsive
-
-```swift
-// ✅ Structured concurrency for CloudKit sync
-@MainActor
-class CloudKitSyncManager: ObservableObject {
-    @Published var isSyncing = false
-    @Published var syncProgress: Double = 0
-    @Published var lastSyncDate: Date?
-
-    let modelContainer: ModelContainer
-
-    func syncToCloudKit() async {
-        isSyncing = true
-        syncProgress = 0
-
-        let syncTask = Task {
-            do {
-                // ✅ Run sync operation
-                try await performCloudKitSync()
-
-                // ✅ Update UI when complete
-                lastSyncDate = Date()
-                syncProgress = 1.0
-            } catch {
-                print("Sync failed: \(error)")
-            }
-        }
-
-        // ✅ Optional: Show progress updates
-        for try await _ in NotificationCenter.default
-            .notifications(named: NSNotification.Name("CloudKitSyncProgress")) {
-            // Update progress here
-        }
-
-        await syncTask.value  // Wait for completion
-        isSyncing = false
-    }
-
-    private func performCloudKitSync() async throws {
-        let context = ModelContext(modelContainer)
-
-        // ✅ Fetch local changes
-        let descriptor = FetchDescriptor<Track>(
-            predicate: #Predicate { $0.needsSync }
-        )
-        let unsyncedTracks = try context.fetch(descriptor)
-
-        // ✅ Upload in batches
-        for chunk in unsyncedTracks.chunked(into: 100) {
-            for track in chunk {
-                track.needsSync = false
-            }
-            try context.save()
-        }
-    }
-}
-
-extension Array {
-    func chunked(into size: Int) -> [[Element]] {
-        stride(from: 0, to: count, by: size).map {
-            Array(self[$0..<Swift.min($0 + size, count)])
-        }
-    }
-}
 ```
+Starting new feature?
+└─ Is UI responsive with all operations on main thread?
+   ├─ YES → Stay single-threaded (Step 1)
+   └─ NO → Continue...
+       └─ Do you have high-latency operations? (network, file I/O)
+          ├─ YES → Add async/await (Step 2)
+          └─ NO → Continue...
+              └─ Do you have CPU-intensive work? (Instruments shows main thread busy)
+                 ├─ YES → Add @concurrent or nonisolated (Step 3)
+                 └─ NO → Continue...
+                     └─ Is main actor contention causing slowdowns?
+                        └─ YES → Extract subsystem to actor (Step 4)
 
-**Why**:
-- CloudKit sync happens off MainActor
-- UI remains responsive during sync
-- Progress reporting keeps user informed
-- Structured concurrency enables cancellation support
+Error: "Main actor-isolated property accessed from nonisolated context"
+├─ In delegate method?
+│  └─ Pattern 2: Value Capture Before Task
+├─ In async function?
+│  └─ Add @MainActor or call from Task { @MainActor in }
+└─ In @concurrent function?
+   └─ Move access to caller, use await, or make nonisolated
+
+Error: "Type does not conform to Sendable"
+├─ Enum/struct with Sendable properties?
+│  └─ Add `: Sendable`
+└─ Class?
+   └─ Make @MainActor or keep non-Sendable (don't share concurrently)
+
+Want to offload work to background?
+├─ Always background (image processing)?
+│  └─ Use @concurrent (Swift 6.2+)
+├─ Caller decides?
+│  └─ Use nonisolated
+└─ Too much main actor state?
+   └─ Extract to actor
+```
 
 ---
 
-### Pattern 12: Main Thread Safety for Persistence Operations
+## Build Settings (Xcode 16+)
 
-**When**: Ensuring persistence operations don't access UI state unsafely
+```
+Build Settings → Swift Compiler - Language
+→ "Default Actor Isolation" = Main Actor
+→ "Approachable Concurrency" = Yes
 
-```swift
-// ❌ WRONG: Accessing @Published properties from background
-actor DataSaver {
-    func saveTrack(_ track: Track, viewModel: TrackViewModel) async throws {
-        // ❌ Unsafe: viewModel is @MainActor, can't access from background
-        let oldTrack = viewModel.currentTrack
-        viewModel.currentTrack = track  // ❌ Data race!
-    }
-}
-
-// ✅ CORRECT: Pass data, not references
-@MainActor
-class TrackViewModel: ObservableObject {
-    @Published var currentTrack: Track?
-
-    func saveTrack(_ track: Track, using saver: DataSaver) async {
-        do {
-            // ✅ Pass data, not self
-            try await saver.saveTrack(track)
-
-            // ✅ Back on MainActor, safe to update
-            self.currentTrack = track
-        } catch {
-            print("Save failed: \(error)")
-        }
-    }
-}
-
-actor DataSaver {
-    let modelContainer: ModelContainer
-
-    func saveTrack(_ track: Track) async throws {
-        let context = ModelContext(modelContainer)
-        context.insert(track)
-        try context.save()
-        // ✅ Return to MainActor caller
-    }
-}
+Build Settings → Swift Compiler - Concurrency
+→ "Strict Concurrency Checking" = Complete
 ```
 
-**Key rule**: Never pass `@MainActor` objects or properties to background actors. Always extract the data you need first.
+**What this enables**:
+- Main actor mode (all code @MainActor by default)
+- Compile-time data race prevention
+- Progressive concurrency adoption
 
 ---
 
 ## Anti-Patterns (DO NOT DO THIS)
 
-### Anti-Pattern 1: Accessing Self Before Task Hop
+### ❌ Using Concurrency When Not Needed
+
 ```swift
-// ❌ NEVER DO THIS
-nonisolated func delegate(_ param: Type) {
-    Task { @MainActor in
-        self.property = param.value  // ❌ WRONG: accessing self before hop
-    }
+// ❌ Premature optimization
+@concurrent
+func addNumbers(_ a: Int, _ b: Int) async -> Int {
+    return a + b  // ❌ Trivial work, concurrency adds overhead
+}
+
+// ✅ Keep simple
+func addNumbers(_ a: Int, _ b: Int) -> Int {
+    return a + b
 }
 ```
 
-### Anti-Pattern 2: Strong Self in Stored Tasks
+### ❌ Strong Self in Stored Tasks
+
 ```swift
-// ❌ NEVER DO THIS
-progressTask = Task {  // ❌ Memory leak!
+// ❌ Memory leak
+progressTask = Task {
     while true {
-        await self.update()
+        await self.update()  // ❌ Strong capture
     }
 }
-```
 
-### Anti-Pattern 3: Using nonisolated(unsafe) Without Justification
-```swift
-// ❌ DON'T DO THIS
-nonisolated(unsafe) var currentTrack: Track?  // ❌ Mutable! Data race possible!
-
-// ✅ DO THIS
-@MainActor var currentTrack: Track?  // ✅ Actor-isolated, safe
-```
-
-**Rule**: Only use `nonisolated(unsafe)` for:
-- Static immutable values you're certain are thread-safe
-- Legacy global state that can't be refactored (document why)
-
----
-
-## Common Swift 6 Errors & Fixes
-
-### Error: "Main actor-isolated property ... accessed from nonisolated context"
-
-**Fix**: Use Pattern 2 (Value Capture Before Task)
-
----
-
-### Error: "Type ... does not conform to the Sendable protocol"
-
-**Fix**: Add `Sendable` conformance to the type:
-```swift
-enum State: Sendable {  // ✅ Add Sendable
-    case idle
-    case active
-}
-```
-
----
-
-### Error: "Static property ... must be Sendable"
-
-**Fix**: Use `nonisolated static let` (for immutable data):
-```swift
-nonisolated static let defaultValue = "Hello"
-```
-
----
-
-### Warning: "Capture of 'self' with non-Sendable type in a @Sendable closure"
-
-**Fix**: Use `[weak self]` in Task:
-```swift
-Task { [weak self] in  // ✅ Weak capture
+// ✅ Weak capture
+progressTask = Task { [weak self] in
     guard let self = self else { return }
     // ...
 }
 ```
 
----
+### ❌ Making Every Class an Actor
 
-## Build Settings for Swift 6
+```swift
+// ❌ Don't do this
+actor MyViewModel: ObservableObject {  // ❌ UI code should be @MainActor!
+    @Published var state: State  // ❌ Won't work correctly
+}
 
-**Enable strict concurrency checking:**
-
+// ✅ Do this
+@MainActor
+class MyViewModel: ObservableObject {
+    @Published var state: State
+}
 ```
-Build Settings → Swift Compiler - Concurrency
-→ "Strict Concurrency Checking" = Complete
-```
-
-**What it does**:
-- Compile-time data race prevention
-- Enforces actor isolation
-- Requires explicit Sendable conformance
 
 ---
 
 ## Code Review Checklist
 
-Use this when reviewing new code or fixing concurrency warnings:
+### Before Adding Concurrency
+- [ ] Profiled and confirmed UI unresponsiveness
+- [ ] Identified specific slow operations (network, CPU, contention)
+- [ ] Started with simplest solution (async → concurrent → actors)
 
-### 1. Delegate Methods
-- [ ] All delegate methods marked `nonisolated`
-- [ ] Delegate parameter values captured **before** Task creation
-- [ ] Accessing `self` inside `Task { @MainActor in }` is safe and expected
-- [ ] Captured values used for delegate parameters only
+### Async/Await
+- [ ] Used for high-latency operations only
+- [ ] Task creation in response to events
+- [ ] Error handling with do-catch
 
-### 2. Types Crossing Actors
-- [ ] Enums have `: Sendable` if crossing actors
-- [ ] Structs have all Sendable properties
-- [ ] No classes crossing actors (use @MainActor or actors)
+### Background Work
+- [ ] `@concurrent` for always-background work (Swift 6.2+)
+- [ ] `nonisolated` for library APIs
+- [ ] No blocking operations on main actor
 
-### 3. Tasks
-- [ ] Stored Tasks use `[weak self]`
-- [ ] Short-lived Tasks can use strong self
-- [ ] Task inherits actor context from creation point
+### Sendable
+- [ ] Value types for data crossing actors
+- [ ] Classes stay @MainActor or non-Sendable
+- [ ] No concurrent modification of shared classes
 
-### 4. Property Access
-- [ ] Multi-property access uses cached reference
-- [ ] No torn reads from changing state
-- [ ] Optional unwrapping with `?? fallback`
-
-### 5. Actor Isolation
-- [ ] UI-touching code is @MainActor
-- [ ] Background work is nonisolated or uses @concurrent
-- [ ] No blocking operations on MainActor
+### Actors
+- [ ] Only for non-UI subsystems
+- [ ] UI code stays @MainActor
+- [ ] Model classes stay @MainActor or non-Sendable
 
 ---
 
 ## Real-World Impact
 
-**Before:** Random crashes, data races, "works on my machine" bugs
-**After:** Compile-time guarantees, no data races, predictable behavior
+**Before**: Random crashes, data races, "works on my machine" bugs, premature complexity
+**After**: Compile-time guarantees, progressive adoption, only use concurrency when needed
 
-**Key insight:** Swift 6's strict concurrency catches bugs at compile time instead of runtime crashes.
+**Key insight**: Swift 6's approach makes you prove code is safe before compilation succeeds. Start simple, add complexity only when profiling proves it's needed.
 
 ---
 
 ## Reference Documentation
 
 **Apple Resources**:
+- [WWDC 2025-268: Embracing Swift concurrency](https://developer.apple.com/videos/play/wwdc2025/268/)
+- [WWDC 2025-245: What's new in Swift](https://developer.apple.com/videos/play/wwdc2025/245/) (concurrency section)
 - [Swift Concurrency Documentation](https://docs.swift.org/swift-book/LanguageGuide/Concurrency.html)
 - [Adopting strict concurrency in Swift 6](https://developer.apple.com/documentation/swift/adoptingswift6)
 - [Sendable Protocol](https://developer.apple.com/documentation/swift/sendable)
@@ -842,5 +948,5 @@ Use this when reviewing new code or fixing concurrency warnings:
 
 ---
 
-**Last Updated**: 2025-11-28
-**Status**: Production-ready patterns for Swift 6 strict concurrency
+**Last Updated**: 2025-12-01
+**Status**: Enhanced with WWDC 2025-268 progressive journey, @concurrent attribute, isolated conformances, and approachable concurrency patterns

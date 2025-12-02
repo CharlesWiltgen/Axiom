@@ -212,9 +212,19 @@ Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 ### Concurrency & Async
 
 #### `swift-concurrency`
-Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor isolation, and data race prevention.
+Progressive journey from single-threaded to concurrent Swift code. **Enhanced with WWDC 2025-268** covering `@concurrent` attribute, isolated conformances, task interleaving, and approachable concurrency patterns.
 
-**When to use:** Debugging Swift 6 concurrency errors, implementing @MainActor classes, converting delegate callbacks to async-safe patterns
+**Key Features:**
+- **4-Step Progressive Journey** - Single-threaded → Async → Concurrent → Actors
+- **`@concurrent` attribute** (Swift 6.2+) - Force background execution
+- **Isolated conformances** - Protocol conformances with specific actor isolation
+- **Main actor mode** - Xcode 26 build settings for approachable concurrency
+- **11 copy-paste patterns** - Delegates, Sendable types, tasks, persistence
+- **Decision trees** - When to introduce async vs concurrency vs actors
+
+**When to use:** Starting new project, debugging Swift 6 concurrency errors, deciding when to add async/await vs concurrency, offloading CPU-intensive work, implementing @MainActor classes
+
+**Requirements:** Swift 6.0+ (Swift 6.2+ for `@concurrent`), Xcode 16+
 
 ---
 

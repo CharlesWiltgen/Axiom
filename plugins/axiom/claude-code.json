@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.8.8",
+  "version": "0.8.9",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -17,7 +17,7 @@
     },
     {
       "name": "swift-concurrency",
-      "description": "Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor isolation, and data race prevention"
+      "description": "Swift 6 strict concurrency patterns - progressive journey from single-threaded to concurrent code with @concurrent attribute (WWDC 2025), actor isolation, Sendable, async/await, and data race prevention"
     },
     {
       "name": "database-migration",
