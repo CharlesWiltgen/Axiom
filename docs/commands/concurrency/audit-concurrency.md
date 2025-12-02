@@ -8,16 +8,6 @@ allowed-tools: Glob(*.swift), Grep(*)
 
 I'll scan your Swift codebase for common Swift 6 concurrency anti-patterns and violations.
 
-## Scanning Project
-
-First, let me find all Swift files:
-
-```bash
-find . -name "*.swift" -type f | head -100
-```
-
-Now I'll run a comprehensive audit checking for these concurrency issues:
-
 ## Issue Categories & Detection
 
 ### 1. Missing @MainActor on UI Classes
