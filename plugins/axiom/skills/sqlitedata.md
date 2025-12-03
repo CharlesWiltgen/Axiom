@@ -1,8 +1,8 @@
 ---
 name: sqlitedata
-description: Use when working with SQLiteData (Point-Free) — @Table models, @FetchAll/@FetchOne queries, database.write with .Draft inserts, .find().update/.delete, CloudKit SyncEngine setup, batch imports, #sql macro, joins, and when to drop to raw GRDB
-version: 2.1.0
-last_updated: 2025-12-03 — Added SwiftData migration guide
+description: Use when working with SQLiteData (Point-Free) — @Table models, @FetchAll/@FetchOne queries, database.write with .Draft inserts, .find().update/.delete, CloudKit SyncEngine setup, batch imports, #sql macro, joins, @Selection for custom query results, database views with createTemporaryView, and when to drop to raw GRDB
+version: 2.2.0
+last_updated: 2025-12-03 — Added Database Views section
 ---
 
 # SQLiteData
@@ -894,6 +894,221 @@ nonisolated struct Reminder: Identifiable {
 
 ---
 
+## Database Views
+
+SQLiteData provides type-safe, schema-safe wrappers around [SQLite Views](https://www.sqlite.org/lang_createview.html) — pre-packaged SELECT statements that can be queried like tables.
+
+### Understanding @Selection
+
+The `@Selection` macro defines custom query result types. Use it for:
+
+1. **Custom query results** — Shape data from joins without a view
+2. **Combined with `@Table`** — Define a view-backed type
+
+#### @Selection for Custom Query Results
+
+```swift
+// Define a custom result shape for a join query
+@Selection
+struct ReminderWithList: Identifiable {
+    var id: Reminder.ID { reminder.id }
+    let reminder: Reminder
+    let remindersList: RemindersList
+    let isPastDue: Bool
+    let tags: String
+}
+
+// Use in a join query
+@FetchAll(
+    Reminder
+        .join(RemindersList.all) { $0.remindersListID.eq($1.id) }
+        .select {
+            ReminderWithList.Columns(
+                reminder: $0,
+                remindersList: $1,
+                isPastDue: $0.isPastDue,
+                tags: ""  // computed elsewhere
+            )
+        }
+)
+var reminders: [ReminderWithList]
+```
+
+**Key insight:** `@Selection` generates a `.Columns` type for use in `.select { }` closures, providing compile-time verification that your query results match your Swift type.
+
+#### @Selection for Aggregate Queries
+
+```swift
+@Selection
+struct Stats {
+    var allCount = 0
+    var flaggedCount = 0
+    var scheduledCount = 0
+    var todayCount = 0
+}
+
+// Single query returns all stats
+@FetchOne(
+    Reminder.select {
+        Stats.Columns(
+            allCount: $0.count(filter: !$0.isCompleted),
+            flaggedCount: $0.count(filter: $0.isFlagged && !$0.isCompleted),
+            scheduledCount: $0.count(filter: $0.isScheduled),
+            todayCount: $0.count(filter: $0.isToday)
+        )
+    }
+)
+var stats = Stats()
+```
+
+### Creating Temporary Views
+
+For complex queries you'll reuse, create an actual SQLite view using `@Table @Selection` together:
+
+```swift
+// 1. Define the view type with BOTH macros
+@Table @Selection
+private struct ReminderWithList {
+    let reminderTitle: String
+    let remindersListTitle: String
+}
+
+// 2. Create the temporary view
+try database.write { db in
+    try ReminderWithList.createTemporaryView(
+        as: Reminder
+            .join(RemindersList.all) { $0.remindersListID.eq($1.id) }
+            .select {
+                ReminderWithList.Columns(
+                    reminderTitle: $0.title,
+                    remindersListTitle: $1.title
+                )
+            }
+    )
+    .execute(db)
+}
+```
+
+**Generated SQL:**
+```sql
+CREATE TEMPORARY VIEW "reminderWithLists"
+("reminderTitle", "remindersListTitle")
+AS
+SELECT
+  "reminders"."title",
+  "remindersLists"."title"
+FROM "reminders"
+JOIN "remindersLists"
+  ON "reminders"."remindersListID" = "remindersLists"."id"
+```
+
+#### Querying Views
+
+Once created, query the view like any table — the JOIN is hidden:
+
+```swift
+// The join complexity is encapsulated in the view
+let results = try ReminderWithList
+    .order { ($0.remindersListTitle, $0.reminderTitle) }
+    .limit(10)
+    .fetchAll(db)
+```
+
+**Generated SQL:**
+```sql
+SELECT "reminderWithLists"."reminderTitle",
+       "reminderWithLists"."remindersListTitle"
+FROM "reminderWithLists"
+ORDER BY "reminderWithLists"."remindersListTitle",
+         "reminderWithLists"."reminderTitle"
+LIMIT 10
+```
+
+### Updatable Views with INSTEAD OF Triggers
+
+SQLite views are read-only by default. To enable INSERT/UPDATE/DELETE, use `INSTEAD OF` triggers that reroute operations to the underlying tables:
+
+```swift
+// Enable inserts on the view
+try database.write { db in
+    try ReminderWithList.createTemporaryTrigger(
+        insteadOf: .insert { new in
+            // Reroute insert to actual tables
+            Reminder.insert {
+                ($0.title, $0.remindersListID)
+            } values: {
+                (
+                    new.reminderTitle,
+                    // Find existing list by title
+                    RemindersList
+                        .select(\.id)
+                        .where { $0.title.eq(new.remindersListTitle) }
+                )
+            }
+        }
+    )
+    .execute(db)
+}
+
+// Now you can insert into the view!
+try ReminderWithList.insert {
+    ReminderWithList(
+        reminderTitle: "Morning sync",
+        remindersListTitle: "Business"  // Must match existing list
+    )
+}
+.execute(db)
+```
+
+**Key concepts:**
+- `INSTEAD OF` triggers intercept operations on the view
+- You define how to reroute to the real tables
+- The rerouting logic is application-specific (create new? find existing? fail?)
+
+### When to Use Views vs @Selection
+
+| Use Case | Approach |
+|----------|----------|
+| One-off join query | `@Selection` only |
+| Reusable complex query | `@Table @Selection` + `createTemporaryView` |
+| Need to insert/update via view | Add `createTemporaryTrigger(insteadOf:)` |
+| Simple aggregates | `@Selection` with `.select { }` |
+| Hide join complexity from callers | Temporary view |
+
+### Temporary vs Permanent Views
+
+SQLiteData creates **temporary** views that exist only for the database connection lifetime:
+
+```swift
+// Temporary view — gone when connection closes
+ReminderWithList.createTemporaryView(as: ...)
+
+// For permanent views, use raw SQL in migrations
+migrator.registerMigration("Create view") { db in
+    try #sql(
+        """
+        CREATE VIEW "reminderWithLists" AS
+        SELECT r.title as reminderTitle, l.title as remindersListTitle
+        FROM reminders r
+        JOIN remindersLists l ON r.remindersListID = l.id
+        """
+    )
+    .execute(db)
+}
+```
+
+**When to use permanent views:**
+- Query is used across app restarts
+- View definition rarely changes
+- Performance benefit from persistent query plan
+
+**When to use temporary views:**
+- Query varies by runtime conditions
+- Testing different view definitions
+- View needs to be dropped/recreated dynamically
+
+---
+
 ## When to Drop to GRDB
 
 Use raw GRDB for complex operations SQLiteData doesn't cover:
@@ -1068,6 +1283,7 @@ prepareDependencies {
 
 ## Version History
 
+- **2.2.0**: Added comprehensive "Database Views" section covering `@Selection` macro for custom query results, `@Table @Selection` for view-backed types, `createTemporaryView` for SQLite views, `INSTEAD OF` triggers for updatable views, decision guide for views vs @Selection, and temporary vs permanent view patterns.
 - **2.1.0**: Added comprehensive "Migrating from SwiftData" section — decision guide, pattern-by-pattern equivalents, full code migration example, CloudKit sharing deep dive (SwiftData's missing feature), performance benchmarks, gradual migration strategy, and gotchas.
 - **2.0.0**: Complete rewrite verified against official pointfreeco/sqlite-data repository. Fixed 15 major inaccuracies: @Column not @Attribute, .Draft insert pattern, .find() for updates/deletes, prepareDependencies setup, SyncEngine CloudKit config, @FetchAll without generics, .eq() comparison methods. Added 8 missing features: @Fetch, #sql macro, nonisolated, joins, FTS5, triggers, enum support, custom update logic.
 - **1.1.0**: Added production crisis section (retained concepts, updated syntax)
