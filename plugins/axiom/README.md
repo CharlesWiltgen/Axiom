@@ -1,10 +1,10 @@
 # Axiom Plugin
 
-Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Liquid Glass, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
+Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Apple Intelligence (Foundation Models), Liquid Glass, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
 
-**Version**: 0.8.12
+**Version**: 0.9.0
 **Status**: Preview Release
-**Skills**: 21 | **Commands**: 6
+**Skills**: 27 | **Commands**: 6
 
 ## Installation
 
@@ -196,6 +196,50 @@ Comprehensive Network.framework API reference covering all iOS 12-26+ networking
 
 ---
 
+### 🤖 Apple Intelligence
+
+#### `axiom:foundation-models`
+On-device AI with Apple's Foundation Models framework (iOS 26+) — @Generable structured output, streaming, tool calling.
+
+**Use when**: Implementing on-device AI features, text summarization, classification, extraction, creating structured output from LLM
+
+**Key features**:
+- 6 comprehensive patterns covering all key APIs
+- Anti-patterns preventing context overflow, blocking UI, manual JSON parsing
+- Tool calling for external data integration
+- Streaming with PartiallyGenerated for better UX
+- 3 pressure scenarios defending against wrong approaches
+
+**Requirements**: iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+
+
+---
+
+#### `axiom:foundation-models-diag` (Diagnostic)
+Systematic Foundation Models troubleshooting for context exceeded, guardrail violations, slow generation, availability issues.
+
+**Use when**: Generation fails, output wrong/hallucinated, too slow, UI frozen, context window exceeded
+
+**Key features**:
+- 12 diagnostic patterns with symptom/diagnosis/fix
+- Production crisis scenario defense
+- Decision tree covering 5 failure categories
+- Quick reference table for common errors
+
+---
+
+#### `axiom:foundation-models-ref` (Reference)
+Complete Foundation Models framework API reference with all WWDC 2025 code examples (26 total).
+
+**Use when**: Planning AI implementation, understanding API patterns, need complete code examples
+
+**Key features**:
+- All WWDC 2025 code examples (sessions 286, 259, 301)
+- Complete LanguageModelSession, @Generable, Tool protocol coverage
+- Dynamic schemas and generation options
+- Performance profiling with Instruments
+
+---
+
 ### 📋 Audit Commands
 
 #### `/axiom:audit-networking`
@@ -256,6 +300,11 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 /skill axiom:networking
 /skill axiom:networking-diag
 /skill axiom:network-framework-ref
+
+# Apple Intelligence
+/skill axiom:foundation-models
+/skill axiom:foundation-models-diag
+/skill axiom:foundation-models-ref
 
 # Audit commands
 /axiom:audit-networking

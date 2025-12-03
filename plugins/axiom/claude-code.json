@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.8.12",
+  "version": "0.9.0",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -74,6 +74,10 @@
       "description": "Use when implementing Network.framework connections, debugging connection failures, migrating from sockets/URLSession streams, or adopting structured concurrency networking patterns - prevents deprecated API usage, reachability anti-patterns, and thread-safety violations with iOS 12-26+ APIs"
     },
     {
+      "name": "foundation-models",
+      "description": "Use when implementing on-device AI with Apple's Foundation Models framework - prevents context overflow, blocking UI, wrong model use cases, and manual JSON parsing when @Generable should be used. Covers LanguageModelSession, @Generable structured output, streaming, tool calling, and context management for iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+"
+    },
+    {
       "name": "uikit-animation-debugging",
       "description": "Use when CAAnimation completion handler doesn't fire, spring physics look wrong on device, animation duration mismatches actual time, gesture + animation interaction causes jank, or timing differs between simulator and real hardware - systematic CAAnimation diagnosis with CATransaction patterns, frame rate awareness, and device-specific behavior"
     },
@@ -94,12 +98,20 @@
       "description": "Diagnostic: VoiceOver, Dynamic Type, color contrast, touch targets - WCAG compliance with App Store rejection defense and design review push-back frameworks"
     },
     {
+      "name": "foundation-models-diag",
+      "description": "Diagnostic: Use when debugging Foundation Models issues - context exceeded, guardrail violations, slow generation, availability problems, unsupported language, or unexpected output. Systematic diagnostics with production crisis defense"
+    },
+    {
       "name": "networking-diag",
       "description": "Diagnostic: Use when debugging connection timeouts, TLS handshake failures, data not arriving, connection drops, performance issues, or proxy/VPN interference - systematic Network.framework diagnostics with production crisis defense"
     },
     {
       "name": "app-intents-ref",
       "description": "Reference: Comprehensive App Intents integration guide for Siri, Apple Intelligence, Shortcuts, Spotlight - covers AppIntent, AppEntity, parameter handling, entity queries, background execution, authentication, and debugging for iOS 16+"
+    },
+    {
+      "name": "foundation-models-ref",
+      "description": "Reference: Complete Foundation Models framework guide covering LanguageModelSession, @Generable, @Guide, Tool protocol, streaming, dynamic schemas, built-in use cases, and all WWDC 2025 code examples for iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+"
     },
     {
       "name": "swiftui-26-ref",
