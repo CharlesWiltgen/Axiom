@@ -15,13 +15,13 @@ Diagnostic workflows for debugging Network.framework connections using NWConnect
 
 ### Connection State Issues
 
-**Never Reaches Ready**
+#### Never Reaches Ready
 - Stuck in preparing → DNS failure
 - Waiting state → No connectivity
 - Posix 61 error → Connection refused
 - Posix 50 error → Network down
 
-**Ready Then Fails**
+#### Ready Then Fails
 - After network change → Viability handler
 - TLS -9806 → Certificate invalid
 - Timeout → Receiver not processing
@@ -29,13 +29,13 @@ Diagnostic workflows for debugging Network.framework connections using NWConnect
 
 ### Data Transmission Problems
 
-**Data Missing or Corrupted**
+#### Data Missing or Corrupted
 - Not received → Framing problem
 - Partial data → Min/max bytes
 - Corrupted → TLS disabled
 - Intermittent → Race condition
 
-**Performance Issues**
+#### Performance Issues
 - High latency → TCP congestion
 - Low throughput → Network transition
 - High CPU → Missing batching
@@ -163,7 +163,7 @@ Workaround: [if available]."
 
 This is a **diagnostic skill** — mandatory workflows with production crisis defense.
 
-**Diagnostic includes**
+#### Diagnostic includes
 - 8+ diagnostic patterns with symptom/diagnosis/fix
 - Production crisis scenario with communication templates
 - Network logging interpretation guide

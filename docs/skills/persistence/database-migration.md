@@ -13,26 +13,26 @@ Safe database schema evolution for production apps with user data. **Core princi
 
 These are real questions developers ask that this skill is designed to answer:
 
-**1. "I need to add a new column to store user preferences, but the app is already live with user data. How do I do this safely?"**
+#### 1. "I need to add a new column to store user preferences, but the app is already live with user data. How do I do this safely?"
 → The skill covers safe additive patterns for adding columns without losing existing data, including idempotency checks
 
-**2. "I'm getting 'cannot add NOT NULL column' errors when I try to migrate. What does this mean and how do I fix it?"**
+#### 2. "I'm getting 'cannot add NOT NULL column' errors when I try to migrate. What does this mean and how do I fix it?"
 → The skill explains why NOT NULL columns fail with existing rows, and shows the safe pattern (nullable first, backfill later)
 
-**3. "I need to change a column from text to integer. Can I just ALTER the column type?"**
+#### 3. "I need to change a column from text to integer. Can I just ALTER the column type?"
 → The skill demonstrates the safe pattern: add new column → migrate data → deprecate old (NEVER delete)
 
-**4. "I'm adding a foreign key relationship between tables. How do I add the relationship without breaking existing data?"**
+#### 4. "I'm adding a foreign key relationship between tables. How do I add the relationship without breaking existing data?"
 → The skill covers safe foreign key patterns: add column → populate data → add index (SQLite limitations explained)
 
-**5. "Users are reporting crashes after the last update. I changed a migration but the app is already in production. What do I do?"**
+#### 5. "Users are reporting crashes after the last update. I changed a migration but the app is already in production. What do I do?"
 → The skill explains migrations are immutable after shipping; shows how to create a new migration to fix the issue rather than modifying the old one
 
 ---
 
 ## ⛔ NEVER Do These (Data Loss Risk)
 
-**These actions DESTROY user data in production**
+#### These actions DESTROY user data in production
 
 ❌ **NEVER use DROP TABLE** with user data
 ❌ **NEVER modify shipped migrations** (create new one instead)
@@ -40,11 +40,11 @@ These are real questions developers ask that this skill is designed to answer:
 ❌ **NEVER add NOT NULL column** without DEFAULT value
 ❌ **NEVER delete columns** (SQLite doesn't support DROP COLUMN safely)
 
-**If you're tempted to do any of these, STOP and use the safe patterns below.**
+#### If you're tempted to do any of these, STOP and use the safe patterns below.
 
 ## Mandatory Rules
 
-**ALWAYS follow these**
+#### ALWAYS follow these
 
 1. **Additive only** Add new columns/tables, never delete
 2. **Idempotent** Check existence before creating (safe to run twice)
@@ -76,7 +76,7 @@ func migration00X_AddNewColumn() throws {
 }
 ```
 
-**Why this works**
+#### Why this works
 - Nullable columns don't require DEFAULT
 - Existing rows get NULL automatically
 - No data transformation needed
@@ -203,7 +203,7 @@ func migration012_AddIndexes() throws {
 
 ## Testing Checklist
 
-**BEFORE deploying any migration**
+#### BEFORE deploying any migration
 
 ```swift
 // Test 1: Migration path (CRITICAL - tests data preservation)
@@ -267,7 +267,7 @@ func migration012_AddIndexes() throws {
 }
 ```
 
-**Manual testing (before TestFlight)**
+#### Manual testing (before TestFlight)
 1. Install v(n-1) build on device → add real user data
 2. Install v(n) build (with new migration)
 3. Verify: App launches, data visible, no crashes

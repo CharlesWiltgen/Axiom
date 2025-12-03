@@ -44,20 +44,20 @@ Users can install Axiom via:
 
 ## What's Included
 
-**13 Production-Ready Skills**
+#### 13 Production-Ready Skills
 - 5 Debugging & Troubleshooting skills
 - 1 Concurrency & Async skill
 - 4 UI & Design skills
 - 4 Persistence skills
 
-**Quality Assurance**
+#### Quality Assurance
 - ✅ TDD-tested core skills
 - ✅ WWDC 2025 validated
 - ✅ Pressure-tested under real scenarios
 - ✅ Battle-tested with real-world impact metrics
 - ✅ Comprehensive documentation and examples
 
-**Documentation**
+#### Documentation
 - GitHub README with installation instructions
 - Full VitePress website: https://charleswiltgen.github.io/Axiom/
 - 13 skill documentation pages with example prompts

@@ -30,7 +30,7 @@ Systematic accessibility diagnosis and remediation for iOS/macOS apps. Covers th
 
 **WCAG** 4.1.2 Name, Role, Value (Level A)
 
-**Common violations**
+#### Common violations
 ```swift
 // ❌ WRONG - No label (VoiceOver says "Button")
 Button(action: addToCart) {
@@ -54,12 +54,12 @@ Button(action: addToCart) {
 .accessibilityHint("Double-tap to add this item to your shopping cart")
 ```
 
-**When to use hints**
+#### When to use hints
 - Action is not obvious from label ("Add to cart" is obvious, no hint needed)
 - Multi-step interaction ("Swipe right to confirm, left to cancel")
 - State change ("Double-tap to toggle notifications on or off")
 
-**Decorative elements**
+#### Decorative elements
 ```swift
 // ✅ CORRECT - Hide decorative images from VoiceOver
 Image("decorative-pattern")
@@ -75,7 +75,7 @@ HStack {
 .accessibilityLabel("Rating: 4.5 stars from 234 reviews")
 ```
 
-**Testing**
+#### Testing
 - Enable VoiceOver: Cmd+F5 (simulator) or triple-click side button (device)
 - Navigate: Swipe right/left to move between elements
 - Listen: Does VoiceOver announce purpose clearly?
@@ -89,7 +89,7 @@ HStack {
 
 **WCAG** 1.4.4 Resize Text (Level AA - support 200% scaling without loss of content/functionality)
 
-**Common violations**
+#### Common violations
 ```swift
 // ❌ WRONG - Fixed size, won't scale
 Text("Price: $19.99")
@@ -117,7 +117,7 @@ label.font = UIFontMetrics.default.scaledFont(for: customFont)
 label.adjustsFontForContentSizeCategory = true
 ```
 
-**SwiftUI text styles**
+#### SwiftUI text styles
 - `.largeTitle` - 34pt (scales to 44pt at accessibility sizes)
 - `.title` - 28pt
 - `.title2` - 22pt
@@ -130,7 +130,7 @@ label.adjustsFontForContentSizeCategory = true
 - `.caption` - 12pt
 - `.caption2` - 11pt
 
-**Layout considerations**
+#### Layout considerations
 ```swift
 // ❌ WRONG - Fixed frame breaks with large text
 Text("Long product description...")
@@ -151,7 +151,7 @@ HStack {
 .dynamicTypeSize(...DynamicTypeSize.xxxLarge) // Limit maximum size if needed
 ```
 
-**Testing**
+#### Testing
 1. Xcode Preview: Environment override
    ```swift
    .environment(\.sizeCategory, .accessibilityExtraExtraExtraLarge)
@@ -169,7 +169,7 @@ HStack {
 
 **Problem** Low contrast text is unreadable for users with vision disabilities or in bright sunlight.
 
-**WCAG**
+#### WCAG
 - **1.4.3 Contrast (Minimum)** — Level AA
   - Normal text (< 18pt): 4.5:1 contrast ratio
   - Large text (≥ 18pt or ≥ 14pt bold): 3:1 contrast ratio
@@ -177,7 +177,7 @@ HStack {
   - Normal text: 7:1 contrast ratio
   - Large text: 4.5:1 contrast ratio
 
-**Common violations**
+#### Common violations
 ```swift
 // ❌ WRONG - Low contrast (1.8:1 - fails WCAG)
 Text("Warning")
@@ -199,7 +199,7 @@ Text("Secondary")
   .foregroundColor(.secondary) // Automatic high contrast
 ```
 
-**Differentiate Without Color**
+#### Differentiate Without Color
 ```swift
 // ❌ WRONG - Color alone indicates status
 Circle()
@@ -218,13 +218,13 @@ if UIAccessibility.shouldDifferentiateWithoutColor {
 }
 ```
 
-**Testing**
+#### Testing
 1. Use Color Contrast Analyzer tool (free download)
 2. Screenshot your UI, measure text vs background
 3. Check both light and dark mode
 4. Settings → Accessibility → Display & Text Size → Increase Contrast (test with this ON)
 
-**Quick reference**
+#### Quick reference
 - Black (#000000) on White (#FFFFFF): 21:1 ✅ AAA
 - Dark Gray (#595959) on White: 7:1 ✅ AAA
 - Medium Gray (#767676) on White: 4.5:1 ✅ AA
@@ -240,7 +240,7 @@ if UIAccessibility.shouldDifferentiateWithoutColor {
 
 **Apple HIG** 44x44pt minimum for all tappable elements
 
-**Common violations**
+#### Common violations
 ```swift
 // ❌ WRONG - Too small (24x24pt)
 Button("×") {
@@ -271,7 +271,7 @@ button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12
 // Total size: icon size + insets ≥ 44x44pt
 ```
 
-**Spacing between targets**
+#### Spacing between targets
 ```swift
 // ❌ WRONG - Targets too close (hard to tap accurately)
 HStack(spacing: 4) {
@@ -286,7 +286,7 @@ HStack(spacing: 12) {
 }
 ```
 
-**Testing**
+#### Testing
 1. Accessibility Inspector: Xcode → Open Developer Tool → Accessibility Inspector
 2. Select "Audit" tab → Run audit → Check for "Small Text" and "Hit Region" warnings
 3. Manual: Tap with one finger (not stylus) — can you hit it reliably without mistakes?
@@ -299,7 +299,7 @@ HStack(spacing: 12) {
 
 **WCAG** 2.1.1 Keyboard (Level A - all functionality available via keyboard)
 
-**Common violations**
+#### Common violations
 ```swift
 // ❌ WRONG - Custom gesture without keyboard alternative
 .onTapGesture {
@@ -329,7 +329,7 @@ struct CustomButton: View {
 }
 ```
 
-**Focus management**
+#### Focus management
 ```swift
 // ✅ CORRECT - Set initial focus
 .focusSection() // Group related controls
@@ -343,7 +343,7 @@ Button("Next") {
 }
 ```
 
-**Testing (iPadOS/macOS)**
+#### Testing (iPadOS/macOS)
 1. Connect keyboard to iPad or use Mac
 2. Press Tab - does focus move to interactive elements?
 3. Press Space/Return - does focused element activate?
@@ -358,7 +358,7 @@ Button("Next") {
 
 **WCAG** 2.3.3 Animation from Interactions (Level AAA - motion animation can be disabled)
 
-**Common violations**
+#### Common violations
 ```swift
 // ❌ WRONG - Always animates (can cause nausea)
 .onAppear {
@@ -400,7 +400,7 @@ if UIAccessibility.isReduceMotionEnabled {
 }
 ```
 
-**SwiftUI modifier**
+#### SwiftUI modifier
 ```swift
 // ✅ CORRECT - Automatic support
 .animation(.spring(), value: isExpanded)
@@ -411,7 +411,7 @@ if UIAccessibility.isReduceMotionEnabled {
 }
 ```
 
-**Testing**
+#### Testing
 1. Settings → Accessibility → Motion → Reduce Motion (toggle ON)
 2. Navigate app - are animations reduced or eliminated?
 3. Test: Transitions, scrolling effects, parallax, particle effects

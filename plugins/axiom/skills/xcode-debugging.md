@@ -13,19 +13,19 @@ Check build environment BEFORE debugging code. **Core principle** 80% of "myster
 
 These are real questions developers ask that this skill is designed to answer:
 
-**1. "My build is failing with 'BUILD FAILED' but no error details. I haven't changed anything. What's going on?"**
+#### 1. "My build is failing with 'BUILD FAILED' but no error details. I haven't changed anything. What's going on?"
 → The skill shows environment-first diagnostics: check Derived Data, simulator states, and zombie processes before investigating code
 
-**2. "Tests passed yesterday with no code changes, but now they're failing. This is frustrating. How do I fix this?"**
+#### 2. "Tests passed yesterday with no code changes, but now they're failing. This is frustrating. How do I fix this?"
 → The skill explains stale Derived Data and intermittent failures, shows the 2-5 minute fix (clean Derived Data)
 
-**3. "My app builds fine but it's running the old code from before my changes. I restarted Xcode but it still happens."**
+#### 3. "My app builds fine but it's running the old code from before my changes. I restarted Xcode but it still happens."
 → The skill demonstrates that Derived Data caches old builds, shows how deletion forces a clean rebuild
 
-**4. "The simulator says 'Unable to boot simulator' and I can't run tests. How do I recover?"**
+#### 4. "The simulator says 'Unable to boot simulator' and I can't run tests. How do I recover?"
 → The skill covers simulator state diagnosis with simctl and safe recovery patterns (erase/shutdown/reboot)
 
-**5. "I'm getting 'No such module: SomePackage' errors after updating SPM dependencies. How do I fix this?"**
+#### 5. "I'm getting 'No such module: SomePackage' errors after updating SPM dependencies. How do I fix this?"
 → The skill explains SPM caching issues and the clean Derived Data workflow that resolves "phantom" module errors
 
 ---
@@ -55,12 +55,12 @@ du -sh ~/Library/Developer/Xcode/DerivedData
 xcrun simctl list devices | grep -E "Booted|Booting|Shutting Down"
 ```
 
-**What these tell you**
+#### What these tell you
 - **0 processes + small Derived Data + no booted sims** → Environment clean, investigate code
 - **10+ processes OR >10GB Derived Data OR simulators stuck** → Environment problem, clean first
 - **Stale code executing OR intermittent failures** → Clean Derived Data regardless of size
 
-**Why environment first**
+#### Why environment first
 - Environment cleanup: 2-5 minutes → problem solved
 - Code debugging for environment issues: 30-120 minutes → wasted time
 

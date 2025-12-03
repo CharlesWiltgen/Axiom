@@ -19,26 +19,26 @@ Use when:
 - Understanding when to use Regular vs Clear variants
 - Troubleshooting tinting, legibility, or adaptive behavior issues
 
-**Related Skills**
+#### Related Skills
 - Use `liquid-glass-ref` for comprehensive app-wide adoption guidance (app icons, controls, navigation, menus, windows, platform considerations)
 
 ## Example Prompts
 
 These are real questions developers ask that this skill is designed to answer:
 
-**1. "I just saw Liquid Glass in WWDC videos. How is it different from blur effects I've used before? Should I adopt it?"**
+#### 1. "I just saw Liquid Glass in WWDC videos. How is it different from blur effects I've used before? Should I adopt it?"
 → The skill explains Liquid Glass as a lensing-based material (not blur), shows design philosophy, and when adoption makes sense
 
-**2. "I'm implementing Liquid Glass in my app but the lensing effect doesn't look quite right. It looks like a regular blur. What am I missing?"**
+#### 2. "I'm implementing Liquid Glass in my app but the lensing effect doesn't look quite right. It looks like a regular blur. What am I missing?"
 → The skill covers the visual properties (lensing vs motion vs environment), Regular vs Clear variants, and debugging visual artifacts
 
-**3. "Liquid Glass works great on iPhone but looks odd on iPad. Should I adjust the implementation differently for different screen sizes?"**
+#### 3. "Liquid Glass works great on iPhone but looks odd on iPad. Should I adjust the implementation differently for different screen sizes?"
 → The skill demonstrates adaptive Liquid Glass patterns and platform-specific guidance (iOS 26+, macOS Tahoe+, visionOS 3+)
 
-**4. "I need to use Liquid Glass but still need legible text on top. How do I ensure text contrast while using Liquid Glass?"**
+#### 4. "I need to use Liquid Glass but still need legible text on top. How do I ensure text contrast while using Liquid Glass?"
 → The skill covers tinting strategies, adaptive color choices, and opacity patterns for maintaining readability across light/dark modes
 
-**5. "We want to do a design review of our Liquid Glass implementation. What are the expert criteria for a good Liquid Glass implementation?"**
+#### 5. "We want to do a design review of our Liquid Glass implementation. What are the expert criteria for a good Liquid Glass implementation?"
 → The skill provides the comprehensive review checklist and professional push-back frameworks for design review meetings
 
 ---
@@ -319,7 +319,7 @@ Button("Primary Action") {
 
 ### Tinting Best Practices
 
-**✅ DO: Use for Primary Actions**
+#### ✅ DO: Use for Primary Actions
 ```swift
 // Good — Emphasizes primary action
 Button("View Bag") {
@@ -329,7 +329,7 @@ Button("View Bag") {
 .glassEffect()
 ```
 
-**❌ DON'T: Tint Everything**
+#### ❌ DON'T: Tint Everything
 ```swift
 // Wrong — When everything is tinted, nothing stands out
 VStack {
@@ -551,7 +551,7 @@ If you hear ANY of these, **STOP and reference the skill**:
 
 ### How to Push Back Professionally
 
-**Step 1: Show the Framework**
+#### Step 1: Show the Framework
 
 ```
 "I want to make this change, but let me show you Apple's guidance on Clear variant.
@@ -564,20 +564,20 @@ It requires THREE conditions:
 Let me show which screens meet all three..."
 ```
 
-**Step 2: Demonstrate the Risk**
+#### Step 2: Demonstrate the Risk
 
 Open the app on a device. Show:
 - Clear variant in low-contrast scenario (unreadable)
 - Regular variant in same scenario (legible)
 
-**Step 3: Offer Compromise**
+#### Step 3: Offer Compromise
 
 ```
 "Clear can work beautifully in these 6 hero sections where all three conditions apply.
 Regular handles everything else with automatic legibility. Best of both worlds."
 ```
 
-**Step 4: Document the Decision**
+#### Step 4: Document the Decision
 
 If overruled (designer insists on Clear everywhere):
 
@@ -590,7 +590,7 @@ Important: Clear variant requires legibility testing in low-contrast scenarios
 we'll need an expedited follow-up. I'm flagging this proactively."
 ```
 
-**Why this works**
+#### Why this works
 - You're not questioning their taste (you like Clear too)
 - You're raising accessibility/legibility risk
 - You're offering a solution that preserves their vision in hero sections
@@ -598,13 +598,13 @@ we'll need an expedited follow-up. I'm flagging this proactively."
 
 ### Real-World Example: App Store Launch Blocker (36-Hour Deadline)
 
-**Scenario**
+#### Scenario
 - 36 hours to launch
 - Chief designer says: "Clear variant everywhere"
 - Client watching the review meeting
 - You already implemented Regular per the skill
 
-**What to do**
+#### What to do
 
 ```swift
 // In the meeting, demo side-by-side:
@@ -622,7 +622,7 @@ NavigationBar()
 // Offer: Clear in hero sections, Regular elsewhere
 ```
 
-**Result**
+#### Result
 - 30-minute compromise demo
 - 90 minutes to implement changes
 - Launch on schedule with optimal legibility
@@ -637,7 +637,7 @@ Sometimes designers have valid reasons to override the skill. Accept if:
 - [ ] You document the decision in writing
 - [ ] They commit to monitoring post-launch feedback
 
-**Document in Slack**
+#### Document in Slack
 
 ```
 "Design review decided to use Clear variant [in these locations].
@@ -1173,7 +1173,7 @@ struct GlassEffectContainer<Content: View>: View {
 
 **Use case** When applying Liquid Glass effects to multiple custom elements. Optimizes performance and enables fluid morphing between glass shapes.
 
-**Example**
+#### Example
 ```swift
 // ✅ Combine effects in container for optimization
 GlassEffectContainer {
@@ -1190,13 +1190,13 @@ GlassEffectContainer {
 }
 ```
 
-**Benefits**
+#### Benefits
 - Optimizes rendering performance
 - Fluidly morphs Liquid Glass shapes into each other
 - Reduces compositor overhead
 - Better animation performance
 
-**When to use**
+#### When to use
 - Multiple custom Liquid Glass elements
 - Morphing animations between glass shapes
 - Performance-critical interfaces
@@ -1211,24 +1211,24 @@ GlassEffectContainer {
 
 To ship with latest SDKs while maintaining previous appearance:
 
-**Add to Info.plist**
+#### Add to Info.plist
 ```xml
 <key>UIDesignRequiresCompatibility</key>
 <true/>
 ```
 
-**Effect**
+#### Effect
 - App built with iOS 26 SDK
 - Appearance matches iOS 18 and earlier
 - Liquid Glass effects disabled
 - Previous blur/material styles used
 
-**When to use**
+#### When to use
 - Need time to audit interface changes
 - Gradual adoption strategy
 - Maintain exact appearance temporarily
 
-**Migration strategy**
+#### Migration strategy
 1. Ship with `UIDesignRequiresCompatibility` enabled
 2. Audit interface changes in separate build
 3. Update interface incrementally

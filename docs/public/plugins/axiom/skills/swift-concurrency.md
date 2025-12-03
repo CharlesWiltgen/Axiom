@@ -30,38 +30,38 @@ description: Swift 6 strict concurrency patterns, fixes, and best practices — 
 
 These are real questions developers ask that this skill is designed to answer:
 
-**General Concurrency**
+#### General Concurrency
 
-**1. "I'm getting 'Main actor-isolated property accessed from nonisolated context' errors in my delegate methods. How do I fix this?"**
+#### 1. "I'm getting 'Main actor-isolated property accessed from nonisolated context' errors in my delegate methods. How do I fix this?"
 → The skill covers the critical Pattern 2 (Value Capture Before Task) that shows when to capture delegate parameters before the Task context hop
 
-**2. "My code is throwing 'Type does not conform to Sendable' warnings when I try to pass data between background work and MainActor. What does this mean?"**
+#### 2. "My code is throwing 'Type does not conform to Sendable' warnings when I try to pass data between background work and MainActor. What does this mean?"
 → The skill explains Sendable conformance requirements and shows patterns for enums, structs, and classes that cross actor boundaries
 
-**3. "I have a task that's stored as a property and it's causing memory leaks. How do I write it correctly with weak self?"**
+#### 3. "I have a task that's stored as a property and it's causing memory leaks. How do I write it correctly with weak self?"
 → The skill demonstrates Pattern 3 (Weak Self in Tasks) showing the difference between stored and short-lived tasks
 
-**4. "I'm new to Swift 6 concurrency. What are the critical patterns I need to know to write safe concurrent code?"**
+#### 4. "I'm new to Swift 6 concurrency. What are the critical patterns I need to know to write safe concurrent code?"
 → The skill provides 6 copy-paste-ready patterns covering delegates, Sendable types, tasks, snapshots, MainActor, and background work
 
-**5. "How do I know when to use @MainActor vs nonisolated vs @concurrent? The rules aren't clear."**
+#### 5. "How do I know when to use @MainActor vs nonisolated vs @concurrent? The rules aren't clear."
 → The skill clarifies actor isolation rules and provides a decision tree for each scenario with real-world examples
 
-**Data Persistence & Concurrency**
+#### Data Persistence & Concurrency
 
-**6. "I'm fetching 10,000 records from SwiftData on a background thread, but I'm getting thread-confinement errors. How do I safely load data?"**
+#### 6. "I'm fetching 10,000 records from SwiftData on a background thread, but I'm getting thread-confinement errors. How do I safely load data?"
 → The skill shows Pattern 7 (Background SwiftData Access) which demonstrates creating background ModelContext and safely passing data back to MainActor
 
-**7. "I have Core Data on a background thread and need to update the UI. I keep getting 'accessed from different thread' crashes."**
+#### 7. "I have Core Data on a background thread and need to update the UI. I keep getting 'accessed from different thread' crashes."
 → The skill covers Pattern 8 (Core Data Thread-Safe Fetch) showing private queue contexts and lightweight representations for thread-safe access
 
-**8. "How do I batch-import 1 million records from an API without blocking the UI or causing memory bloat?"**
+#### 8. "How do I batch-import 1 million records from an API without blocking the UI or causing memory bloat?"
 → The skill demonstrates Pattern 9 (Batch Import with Progress) using background actors, chunk-based processing, and periodic saves
 
-**9. "My GRDB queries are blocking the UI. How do I run complex SQL on a background thread safely?"**
+#### 9. "My GRDB queries are blocking the UI. How do I run complex SQL on a background thread safely?"
 → The skill shows Pattern 10 (GRDB Background Execution) with actor-based query execution and safe data transfer back to MainActor
 
-**10. "I need to sync data to CloudKit while keeping the UI responsive. How do I prevent the UI from freezing?"**
+#### 10. "I need to sync data to CloudKit while keeping the UI responsive. How do I prevent the UI from freezing?"
 → The skill covers Pattern 11 (CloudKit Sync with Progress Reporting) showing structured concurrency for sync operations with UI feedback
 
 ---
@@ -776,7 +776,7 @@ Task { [weak self] in  // ✅ Weak capture
 
 ## Build Settings for Swift 6
 
-**Enable strict concurrency checking**
+#### Enable strict concurrency checking
 
 ```
 Build Settings → Swift Compiler — Concurrency

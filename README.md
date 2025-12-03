@@ -4,13 +4,13 @@ Battle-tested Claude Code skills, commands, and references for modern xOS (iOS, 
 
 ## What's New Recently
 
-**Latest (WWDC 2025 Updates)**
+#### Latest (WWDC 2025 Updates)
 - **SwiftUI 26 Features** — Comprehensive guide to iOS 26 SwiftUI: Liquid Glass, WebView, AttributedString rich text, @Animatable macro, 3D charts, scene bridging, and more
 - **SwiftUI Performance Enhancements** — iOS 26 framework improvements: 6x/16x faster lists, improved scrolling, nested ScrollView optimization
 - **Liquid Glass APIs** — New iOS 26 APIs: `.glassBackgroundEffect()`, toolbar spacers, bottom-aligned search, search tab role
 - **App Intents Integration** — Siri, Apple Intelligence, Shortcuts, Spotlight integration with WWDC 2025-260 guidance
 
-**Recent Skills**
+#### Recent Skills
 - **Accessibility Audit & Debugging** — Comprehensive WCAG compliance scanning, VoiceOver testing, Dynamic Type support, color contrast validation
 - **Realm to SwiftData Migration** — Migrate before Device Sync sunset (Sept 30, 2025) without losing user data or breaking threading patterns
 - **SwiftUI Debugging** — Solve intermittent view updates and preview crashes with diagnostic decision trees
@@ -50,7 +50,7 @@ Use `/plugin` and select "Manage and install" to see installed plugins. Axiom sh
 
 Skills are **automatically suggested by Claude Code** based on your questions and context. Simply ask questions that match the skill's purpose:
 
-**Examples**
+#### Examples
 - "I'm getting BUILD FAILED in Xcode" → activates `xcode-debugging`
 - "How do I fix Swift 6 concurrency errors?" → activates `swift-concurrency`
 - "I need to add a database column safely" → activates `database-migration`
@@ -64,7 +64,7 @@ Skills are **automatically suggested by Claude Code** based on your questions an
 #### `liquid-glass`
 Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid Glass visual properties, implementation patterns, and design principles.
 
-**Key Features**
+#### Key Features
 - **Expert Review Checklist** — 7-section validation checklist for reviewing Liquid Glass implementations (material appropriateness, variant selection, legibility, layering, accessibility, performance)
 - Regular vs Clear variant decision criteria
 - Layered system architecture (highlights, shadows, glow, tinting)
@@ -83,7 +83,7 @@ Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid
 #### `swiftui-performance`
 Master SwiftUI performance optimization using the new SwiftUI Instrument in Instruments 26.
 
-**Key Features**
+#### Key Features
 - New SwiftUI Instrument walkthrough (4 track lanes, color-coding, integration with Time Profiler)
 - **Cause & Effect Graph** — Visualize data flow and dependencies to eliminate unnecessary updates
 - Problem 1: Long View Body Updates (formatter caching, expensive operations)
@@ -100,7 +100,7 @@ Master SwiftUI performance optimization using the new SwiftUI Instrument in Inst
 #### `swiftui-26-ref`
 Comprehensive reference guide to all iOS 26 SwiftUI features from WWDC 2025-256.
 
-**Key Features**
+#### Key Features
 - **Liquid Glass Design System** — Toolbar spacers, tinted prominent buttons, glass effect for custom views, bottom-aligned search, search tab role
 - **Performance Improvements** — 6x/16x faster lists (macOS), improved scrolling, nested ScrollView optimization
 - **@Animatable Macro** — Automatic animatableData synthesis with @AnimatableIgnored
@@ -121,7 +121,7 @@ Comprehensive reference guide to all iOS 26 SwiftUI features from WWDC 2025-256.
 #### `ui-testing`
 Reliable UI testing with condition-based waiting patterns and new Recording UI Automation features from Xcode 26.
 
-**Key Features**
+#### Key Features
 - **Recording UI Automation** — Record interactions as Swift code, replay across devices/languages/configurations, review video recordings
 - Three phases: Record → Replay → Review
 - Condition-based waiting (eliminates flaky tests from sleep() timeouts)
@@ -138,7 +138,7 @@ Reliable UI testing with condition-based waiting patterns and new Recording UI A
 #### `swiftui-debugging`
 Diagnostic decision trees for SwiftUI view updates, preview crashes, and layout issues. Includes 3 real-world examples.
 
-**Key Features**
+#### Key Features
 - **View Not Updating Decision Tree** — Diagnose struct mutation, binding identity, view recreation, missing observers
 - **Preview Crashes Decision Tree** — Identify missing dependencies, state init failures, cache corruption
 - **Layout Issues Quick Reference** — ZStack ordering, GeometryReader sizing, SafeArea, frame/fixedSize
@@ -154,7 +154,7 @@ Diagnostic decision trees for SwiftUI view updates, preview crashes, and layout 
 #### `performance-profiling`
 Instruments decision trees and profiling workflows for CPU, memory, and battery optimization. Includes 3 real-world examples.
 
-**Key Features**
+#### Key Features
 - **Performance Decision Tree** — Choose the right tool (Time Profiler, Allocations, Core Data, Energy Impact)
 - **Time Profiler Deep Dive** — CPU analysis, hot spots, Self Time vs Total Time distinction
 - **Allocations Deep Dive** — Memory growth diagnosis, object counts, leak vs caching
@@ -173,7 +173,7 @@ Instruments decision trees and profiling workflows for CPU, memory, and battery 
 #### `accessibility-debugging`
 Comprehensive accessibility diagnostics with WCAG compliance, VoiceOver testing, Dynamic Type support, color contrast validation, and App Store Review preparation.
 
-**Key Features**
+#### Key Features
 - 7 critical accessibility issues (VoiceOver labels, Dynamic Type, color contrast, touch targets, keyboard navigation, Reduce Motion, common violations)
 - WCAG compliance levels (A, AA, AAA) with code examples
 - Accessibility Inspector workflows
@@ -214,7 +214,7 @@ Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 #### `swift-concurrency`
 Progressive journey from single-threaded to concurrent Swift code. **Enhanced with WWDC 2025-268** covering `@concurrent` attribute, isolated conformances, task interleaving, and approachable concurrency patterns.
 
-**Key Features**
+#### Key Features
 - **4-Step Progressive Journey** — Single-threaded → Async → Concurrent → Actors
 - **`@concurrent` attribute** (Swift 6.2+) — Force background execution
 - **Isolated conformances** — Protocol conformances with specific actor isolation
@@ -265,7 +265,7 @@ SwiftData with iOS 26+ features, @Model definitions, @Query patterns, Swift 6 co
 #### `app-intents-ref`
 Comprehensive guide to App Intents framework for Siri, Apple Intelligence, Shortcuts, and Spotlight integration. Covers AppIntent, AppEntity, parameter handling, entity queries, and debugging.
 
-**Key Features**
+#### Key Features
 - Three building blocks: AppIntent, AppEntity, AppEnum
 - Parameter validation and natural language summaries
 - Entity queries for content discovery

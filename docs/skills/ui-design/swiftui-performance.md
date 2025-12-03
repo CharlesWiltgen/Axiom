@@ -24,19 +24,19 @@ Use when:
 
 These are real questions developers ask that this skill is designed to answer:
 
-**1. "My app has janky scrolling and animations are stuttering. How do I figure out if SwiftUI is the cause?"**
+#### 1. "My app has janky scrolling and animations are stuttering. How do I figure out if SwiftUI is the cause?"
 → The skill shows how to use the new SwiftUI Instrument in Instruments 26 to identify if SwiftUI is the bottleneck vs other layers
 
-**2. "I'm using the new SwiftUI Instrument and I see orange/red bars showing long updates. How do I know what's causing them?"**
+#### 2. "I'm using the new SwiftUI Instrument and I see orange/red bars showing long updates. How do I know what's causing them?"
 → The skill covers the Cause & Effect Graph patterns that show data flow through your app and which state changes trigger expensive updates
 
-**3. "Some views are updating way too often even though their data hasn't changed. How do I find which views are the problem?"**
+#### 3. "Some views are updating way too often even though their data hasn't changed. How do I find which views are the problem?"
 → The skill demonstrates unnecessary update detection and Identity troubleshooting with the visual timeline
 
-**4. "I have large data structures and complex view hierarchies. How do I optimize them for SwiftUI performance?"**
+#### 4. "I have large data structures and complex view hierarchies. How do I optimize them for SwiftUI performance?"
 → The skill covers performance patterns: breaking down view hierarchies, minimizing body complexity, and using the @Sendable optimization checklist
 
-**5. "We have a performance deadline and I need to understand what's slow in SwiftUI. What are the critical metrics?"**
+#### 5. "We have a performance deadline and I need to understand what's slow in SwiftUI. What are the critical metrics?"
 → The skill provides the decision tree for prioritizing optimizations and understands pressure scenarios with professional guidance for trade-offs
 
 ---
@@ -65,7 +65,7 @@ SwiftUI in iOS 26 includes major performance wins that benefit all apps automati
 
 ### List Performance (macOS Focus)
 
-**Massive gains for large lists**
+#### Massive gains for large lists
 
 - **6x faster loading** for lists of 100,000+ items on macOS
 - **16x faster updates** for large lists
@@ -80,7 +80,7 @@ List(trips) { trip in // 100k+ items
 // All platforms benefit from performance improvements
 ```
 
-**Impact on your app**
+#### Impact on your app
 - Large datasets (10k+ items) see noticeable improvements
 - Filtering and sorting operations complete faster
 - Real-time updates to lists are more responsive
@@ -88,23 +88,23 @@ List(trips) { trip in // 100k+ items
 
 ### Scrolling Performance
 
-**Reduced dropped frames during high-speed scrolling**
+#### Reduced dropped frames during high-speed scrolling
 
 "SwiftUI has improved scheduling of user interface updates on iOS and macOS. This improves responsiveness and lets SwiftUI do even more work to prepare for upcoming frames. All in all, it reduces the chance of your app dropping a frame while scrolling quickly at high frame rates." - WWDC 2025-256
 
-**Key improvements**
+#### Key improvements
 1. **Better frame scheduling** — SwiftUI gets more time to prepare for upcoming frames
 2. **Improved responsiveness** — UI updates scheduled more efficiently
 3. **Fewer dropped frames** — Especially during quick scrolling at 120Hz (ProMotion)
 
-**When you'll notice**
+#### When you'll notice
 - Scrolling through image-heavy content
 - High frame rate devices (iPhone Pro, iPad Pro with ProMotion)
 - Complex list rows with multiple views
 
 ### Nested ScrollViews with Lazy Stacks
 
-**Photo carousels and multi-axis scrolling now properly optimize**
+#### Photo carousels and multi-axis scrolling now properly optimize
 
 ```swift
 ScrollView(.horizontal) {
@@ -128,7 +128,7 @@ ScrollView(.horizontal) {
 
 **After iOS 26** Lazy stacks inside nested ScrollViews now delay loading until content is about to appear, matching the behavior of single-level ScrollViews.
 
-**Use cases**
+#### Use cases
 - Photo galleries with horizontal/vertical scrolling
 - Netflix-style category rows
 - Multi-dimensional data browsers
@@ -136,7 +136,7 @@ ScrollView(.horizontal) {
 
 ### SwiftUI Performance Instrument Enhancements
 
-**New lanes in Instruments 26**
+#### New lanes in Instruments 26
 
 The SwiftUI instrument now includes dedicated lanes for:
 
@@ -148,7 +148,7 @@ These lanes are covered in detail in the next section.
 
 ### Performance Improvement Summary
 
-**Automatic wins (recompile only)**
+#### Automatic wins (recompile only)
 - ✅ 6x faster list loading (100k+ items, macOS)
 - ✅ 16x faster list updates (macOS)
 - ✅ Reduced dropped frames during scrolling
@@ -829,14 +829,14 @@ Under production pressure, one good diagnostic recording beats random fixes:
 
 ### Comparing Time Costs
 
-**Option A: Guess and Pray**
+#### Option A: Guess and Pray
 - Time to implement: 30 min
 - Time to deploy: 20 min
 - Time to learn it failed: 24 hours (next App Store review)
 - Total delay: 24 hours minimum
 - User suffering: Continues through deployment window
 
-**Option B: One SwiftUI Instrument Recording**
+#### Option B: One SwiftUI Instrument Recording
 - Time to diagnose: 25 min
 - Time to apply targeted fix: 20 min
 - Time to verify: 5 min
@@ -922,7 +922,7 @@ This is different from guessing:
 
 ### Decision Framework Under Pressure
 
-**Before shipping ANY fix**
+#### Before shipping ANY fix
 
 | Question | Answer Yes? | Action |
 |----------|-------------|--------|
@@ -1075,7 +1075,7 @@ ChildView(scrollPosition: scrollPosition)
 
 ### When SwiftUI Isn't the Problem
 
-**Update Groups lane empty during performance issue?**
+#### Update Groups lane empty during performance issue?
 
 Problem likely elsewhere:
 - Network requests
@@ -1092,7 +1092,7 @@ Problem likely elsewhere:
 
 ## Real-World Impact
 
-**Example: Landmarks App (from WWDC 2025)**
+#### Example: Landmarks App (from WWDC 2025)
 
 **Before optimization**:
 - Every favorite button tap updated ALL visible landmark views

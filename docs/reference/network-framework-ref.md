@@ -65,7 +65,7 @@ Use this reference when:
 
 ### iOS 26+ NetworkConnection
 
-**Basic TLS Connection**
+#### Basic TLS Connection
 ```swift
 let connection = NetworkConnection(
   to: .hostPort(host: "www.example.com", port: 1029)
@@ -74,7 +74,7 @@ let connection = NetworkConnection(
 }
 ```
 
-**TLV Framing for Messages**
+#### TLV Framing for Messages
 ```swift
 let connection = NetworkConnection(
   to: .hostPort(host: "www.example.com", port: 1029)
@@ -85,7 +85,7 @@ let connection = NetworkConnection(
 }
 ```
 
-**Coder Protocol for Codable**
+#### Coder Protocol for Codable
 ```swift
 let connection = NetworkConnection(
   to: .hostPort(host: "www.example.com", port: 1029)
@@ -96,7 +96,7 @@ let connection = NetworkConnection(
 }
 ```
 
-**NetworkListener for Incoming**
+#### NetworkListener for Incoming
 ```swift
 try await NetworkListener {
   Coder(GameMessage.self, using: .json) {
@@ -111,7 +111,7 @@ try await NetworkListener {
 
 ### iOS 12-25 NWConnection
 
-**Basic Connection**
+#### Basic Connection
 ```swift
 let endpoint = NWEndpoint.hostPort(
   host: "www.example.com",
@@ -132,7 +132,7 @@ connection.stateUpdateHandler = { state in
 connection.start(queue: .main)
 ```
 
-**Send/Receive**
+#### Send/Receive
 ```swift
 connection.send(
   content: data,
@@ -193,13 +193,13 @@ This reference includes:
 
 ## Performance Optimization
 
-**User-Space Networking**
+#### User-Space Networking
 - 30% CPU reduction for UDP
 - Batch operations with connection.batch
 - ECN (Explicit Congestion Notification)
 - Service class configuration
 
-**TCP Optimization**
+#### TCP Optimization
 - TCP Fast Open for reduced latency
 - Multipath TCP for redundancy
 - Connection viability monitoring
@@ -234,7 +234,7 @@ This reference includes:
 
 This is a **reference skill** — comprehensive API guide without mandatory workflows.
 
-**Reference includes**
+#### Reference includes
 - Complete API documentation for iOS 12-26+
 - All WWDC code examples
 - Migration strategies

@@ -85,7 +85,7 @@ let session = LanguageModelSession(instructions: """
 )
 ```
 
-**From WWDC 301:1:05**
+#### From WWDC 301:1:05
 
 **With Tools**:
 ```swift
@@ -95,7 +95,7 @@ let session = LanguageModelSession(
 )
 ```
 
-**From WWDC 286:15:03**
+#### From WWDC 286:15:03
 
 **With Specific Model/Use Case**:
 ```swift
@@ -104,7 +104,7 @@ let session = LanguageModelSession(
 )
 ```
 
-**From WWDC 286:18:39**
+#### From WWDC 286:18:39
 
 ### Instructions vs Prompts
 
@@ -141,7 +141,7 @@ func respond(userInput: String) async throws -> String {
 }
 ```
 
-**From WWDC 301:1:05**
+#### From WWDC 301:1:05
 
 **Return Type**: `Response<String>` with `.content` property
 
@@ -167,7 +167,7 @@ let response = try await session.respond(
 print(response.content) // SearchSuggestions instance
 ```
 
-**From WWDC 286:5:51**
+#### From WWDC 286:5:51
 
 **Return Type**: `Response<SearchSuggestions>` with `.content` property
 
@@ -181,7 +181,7 @@ let response = try await session.respond(
 )
 ```
 
-**From WWDC 301:6:14**
+#### From WWDC 301:6:14
 
 **Low Variance (Conservative)**:
 ```swift
@@ -199,7 +199,7 @@ let response = try await session.respond(
 )
 ```
 
-**From WWDC 301:6:14**
+#### From WWDC 301:6:14
 
 **Skip Schema in Prompt (Optimization)**:
 ```swift
@@ -238,7 +238,7 @@ print(secondHaiku.content)
 print(session.transcript) // Shows full history
 ```
 
-**From WWDC 286:17:46**
+#### From WWDC 286:17:46
 
 **How it works**:
 - Each `respond()` call adds entry to transcript
@@ -288,7 +288,7 @@ struct HaikuView: View {
 }
 ```
 
-**From WWDC 286:18:22**
+#### From WWDC 286:18:22
 
 **Why important**: Prevents multiple concurrent requests, which could cause errors or unexpected behavior.
 
@@ -318,7 +318,7 @@ let response = try await session.respond(
 let person = response.content // Type-safe Person instance
 ```
 
-**From WWDC 301:8:14**
+#### From WWDC 301:8:14
 
 **On Enums**:
 ```swift
@@ -335,7 +335,7 @@ struct NPC {
 }
 ```
 
-**From WWDC 301:10:49**
+#### From WWDC 301:10:49
 
 ### Supported Types
 
@@ -362,7 +362,7 @@ struct Itinerary {
 }
 ```
 
-**From WWDC 286:6:18**
+#### From WWDC 286:6:18
 
 ### @Guide Constraints
 
@@ -375,7 +375,7 @@ struct NPC {
 }
 ```
 
-**From WWDC 301:11:20**
+#### From WWDC 301:11:20
 
 **Numeric Range**:
 ```swift
@@ -386,7 +386,7 @@ struct Character {
 }
 ```
 
-**From WWDC 301:11:20**
+#### From WWDC 301:11:20
 
 **Array Count**:
 ```swift
@@ -397,7 +397,7 @@ struct Suggestions {
 }
 ```
 
-**From WWDC 301:11:20**
+#### From WWDC 301:11:20
 
 **Array Maximum Count**:
 ```swift
@@ -429,7 +429,7 @@ session.respond(to: "Generate a fun NPC", generating: NPC.self)
 // > {name: "Mrs. Brewster"}
 ```
 
-**From WWDC 301:13:40**
+#### From WWDC 301:13:40
 
 ### Constrained Decoding
 
@@ -466,7 +466,7 @@ struct Itinerary {
 - Better model quality: Summaries after content
 - Better streaming UX: Important properties first
 
-**From WWDC 286:11:00**
+#### From WWDC 286:11:00
 
 ---
 
@@ -496,7 +496,7 @@ extension Itinerary {
 }
 ```
 
-**From WWDC 286:9:20**
+#### From WWDC 286:9:20
 
 ### streamResponse Method
 
@@ -517,7 +517,7 @@ for try await partial in stream {
 }
 ```
 
-**From WWDC 286:9:40**
+#### From WWDC 286:9:40
 
 **Return Type**: `AsyncSequence<Itinerary.PartiallyGenerated>`
 
@@ -570,7 +570,7 @@ struct ItineraryView: View {
 }
 ```
 
-**From WWDC 286:10:05**
+#### From WWDC 286:10:05
 
 ### Best Practices
 
@@ -606,7 +606,7 @@ struct Article {
 }
 ```
 
-**From WWDC 286:11:00**
+#### From WWDC 286:11:00
 
 ---
 
@@ -662,7 +662,7 @@ struct GetWeatherTool: Tool {
 }
 ```
 
-**From WWDC 286:13:42**
+#### From WWDC 286:13:42
 
 ### Attaching Tools to Session
 
@@ -680,7 +680,7 @@ print(response.content)
 // It's 71˚F in Cupertino!
 ```
 
-**From WWDC 286:15:03**
+#### From WWDC 286:15:03
 
 **How it works**:
 1. Session initialized with tools
@@ -741,7 +741,7 @@ struct FindContactTool: Tool {
 }
 ```
 
-**From WWDC 301:18:47**
+#### From WWDC 301:18:47
 
 ### Stateful Tools
 
@@ -781,7 +781,7 @@ class FindContactTool: Tool {
 }
 ```
 
-**From WWDC 301:21:55**
+#### From WWDC 301:21:55
 
 **Why**: Tool instance persists for session lifetime. Can track what's been called.
 
@@ -813,7 +813,7 @@ struct GetContactEventTool: Tool {
 }
 ```
 
-**From WWDC 301:22:27**
+#### From WWDC 301:22:27
 
 ### ToolOutput
 
@@ -894,7 +894,7 @@ struct Riddle {
 }
 ```
 
-**From WWDC 301:14:50**
+#### From WWDC 301:14:50
 
 If this structure is only known at runtime:
 
@@ -950,7 +950,7 @@ let riddleDynamicSchema = riddleBuilder.root
 let answerDynamicSchema = answerBuilder.root
 ```
 
-**From WWDC 301:15:10**
+#### From WWDC 301:15:10
 
 ### Validating and Using Dynamic Schemas
 
@@ -971,7 +971,7 @@ let question = try generatedContent.value(String.self, forProperty: "question")
 let answers = try generatedContent.value([GeneratedContent].self, forProperty: "answers")
 ```
 
-**From WWDC 301:15:10**
+#### From WWDC 301:15:10
 
 ### Dynamic vs Static @Generable
 
@@ -1008,7 +1008,7 @@ let response = try await session.respond(
 // Same output for same prompt (given same model version)
 ```
 
-**From WWDC 301:6:14**
+#### From WWDC 301:6:14
 
 **Use greedy for**:
 - Unit tests
@@ -1037,7 +1037,7 @@ let response = try await session.respond(
 // Varied, creative output
 ```
 
-**From WWDC 301:6:14**
+#### From WWDC 301:6:14
 
 **Temperature scale**:
 - `0.1-0.5`: Very focused
@@ -1071,7 +1071,7 @@ let response = try await session.respond(
 )
 ```
 
-**From WWDC 286:19:19**
+#### From WWDC 286:19:19
 
 ### Custom Use Cases
 
@@ -1096,7 +1096,7 @@ let response = try await session.respond(
 )
 ```
 
-**From WWDC 286:19:35**
+#### From WWDC 286:19:35
 
 ---
 
@@ -1114,7 +1114,7 @@ do {
 }
 ```
 
-**From WWDC 301:3:37**
+#### From WWDC 301:3:37
 
 **guardrailViolation**:
 ```swift
@@ -1136,11 +1136,11 @@ do {
 }
 ```
 
-**From WWDC 301:7:06**
+#### From WWDC 301:7:06
 
 ### Context Window Management
 
-**Strategy 1: Fresh Session**
+#### Strategy 1: Fresh Session
 ```swift
 var session = LanguageModelSession()
 
@@ -1153,9 +1153,9 @@ do {
 }
 ```
 
-**From WWDC 301:3:37**
+#### From WWDC 301:3:37
 
-**Strategy 2: Condensed Session**
+#### Strategy 2: Condensed Session
 ```swift
 do {
     let response = try await session.respond(to: prompt)
@@ -1182,7 +1182,7 @@ private func newSession(previousSession: LanguageModelSession) -> LanguageModelS
 }
 ```
 
-**From WWDC 301:3:55**
+#### From WWDC 301:3:55
 
 ---
 
@@ -1206,7 +1206,7 @@ struct AvailabilityExample: View {
 }
 ```
 
-**From WWDC 286:19:56**
+#### From WWDC 286:19:56
 
 ### Supported Languages
 
@@ -1218,7 +1218,7 @@ guard supportedLanguages.contains(Locale.current.language) else {
 }
 ```
 
-**From WWDC 301:7:06**
+#### From WWDC 301:7:06
 
 ### Requirements
 
@@ -1358,7 +1358,7 @@ let data = try JSONEncoder().encode(feedback)
 // Attach to Feedback Assistant report
 ```
 
-**From WWDC 286:22:13**
+#### From WWDC 286:22:13
 
 **Use for**:
 - Reporting quality issues
@@ -1388,7 +1388,7 @@ import Playgrounds
 }
 ```
 
-**From WWDC 286:2:28**
+#### From WWDC 286:2:28
 
 ### Accessing App Types
 
@@ -1406,7 +1406,7 @@ import Playgrounds
 }
 ```
 
-**From WWDC 286:2:43**
+#### From WWDC 286:2:43
 
 **Benefit**: Can access types defined in your app (like @Generable structs)
 

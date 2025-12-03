@@ -30,7 +30,7 @@ Run this command when:
 
 ### 🔴 Critical (Crashes/Memory Leaks)
 
-**Missing @MainActor on UI Classes**
+#### Missing @MainActor on UI Classes
 ```swift
 // ❌ DATA RACE: Can be accessed from any thread
 class ProfileViewModel: ObservableObject {
@@ -44,7 +44,7 @@ class ProfileViewModel: ObservableObject {
 }
 ```
 
-**Unsafe Task Self Capture**
+#### Unsafe Task Self Capture
 ```swift
 // ❌ LEAKS: Task captures self strongly
 var loadTask: Task<Void, Never>?
@@ -61,7 +61,7 @@ loadTask = Task { [weak self] in
 
 ### 🟡 High Priority (Data Races)
 
-**Sendable Violations**
+#### Sendable Violations
 ```swift
 // ❌ DATA RACE: Non-Sendable type crossing actor boundary
 class UserData {
@@ -78,7 +78,7 @@ struct UserData: Sendable {
 }
 ```
 
-**Improper Actor Isolation**
+#### Improper Actor Isolation
 ```swift
 // ❌ DATA RACE: Using actor data without isolation
 let result = await dataActor.getData()
@@ -91,7 +91,7 @@ result.mutate()  // Safe - working with copy
 
 ### 🟢 Medium Priority (Warnings)
 
-**Thread Confinement Violations**
+#### Thread Confinement Violations
 ```swift
 // ❌ WARNING: MainActor property accessed in detached task
 Task.detached {
@@ -165,12 +165,12 @@ The skill provides copy-paste templates for:
 
 ## Real-World Impact
 
-**Before audit**
+#### Before audit
 - 2-4 hours debugging mysterious crashes
 - Data races discovered in production
 - Actor isolation errors blocking Swift 6 migration
 
-**After audit**
+#### After audit
 - 5-10 minutes to identify all concurrency issues
 - Fix most issues with ~5 lines of code
 - Smooth Swift 6 strict concurrency migration

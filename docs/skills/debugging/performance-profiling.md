@@ -18,7 +18,7 @@ iOS app performance problems fall into distinct categories, each with a specific
 
 ## When to Use Performance Profiling
 
-**Use this skill when**
+#### Use this skill when
 - ✅ App feels slow (UI lags, loads take 5+ seconds)
 - ✅ Memory grows over time (Xcode shows increasing memory usage)
 - ✅ Battery drains fast (device gets hot, battery depletes in hours)
@@ -26,11 +26,11 @@ iOS app performance problems fall into distinct categories, each with a specific
 - ✅ You're unsure which Instruments tool to use
 - ✅ Profiling results are confusing or contradictory
 
-**Use `memory-debugging` instead when**
+#### Use `memory-debugging` instead when
 - Investigating specific memory leaks with retain cycles
 - Using Instruments Allocations in detail mode
 
-**Use `swiftui-performance` instead when**
+#### Use `swiftui-performance` instead when
 - Analyzing SwiftUI view body updates
 - Using SwiftUI Instrument specifically
 
@@ -79,28 +79,28 @@ Use Time Profiler when your app feels slow or laggy. It measures CPU time spent 
 
 ### Workflow: Record and Analyze
 
-**Step 1: Launch Instruments**
+#### Step 1: Launch Instruments
 ```bash
 open -a Instruments
 ```
 
 Select "Time Profiler" template.
 
-**Step 2: Attach to Running App**
+#### Step 2: Attach to Running App
 1. Start your app in simulator or device
 2. In Instruments, select your app from the target dropdown
 3. Click Record (red circle)
 4. Interact with the slow part (scroll, tap buttons, load data)
 5. Stop recording after 10-30 seconds of interaction
 
-**Step 3: Read the Call Stack**
+#### Step 3: Read the Call Stack
 
 The top panel shows a timeline of CPU usage over time. Look for:
 - **Tall spikes** – Brief CPU-intensive operations
 - **Sustained high usage** – Continuous expensive work
 - **Main thread blocking** – UI thread doing work (causes UI lag)
 
-**Step 4: Drill Down to Hot Spots**
+#### Step 4: Drill Down to Hot Spots
 
 In the call tree, click "Heaviest Stack Trace" to see which functions use the most CPU:
 
@@ -200,21 +200,21 @@ Use Allocations when memory grows over time or you suspect memory pressure issue
 
 ### Workflow: Record and Analyze
 
-**Step 1: Launch Instruments**
+#### Step 1: Launch Instruments
 ```bash
 open -a Instruments
 ```
 
 Select "Allocations" template.
 
-**Step 2: Attach and Record**
+#### Step 2: Attach and Record
 1. Start your app
 2. In Instruments, select your app
 3. Click Record
 4. Perform actions that use memory (load data, display images, navigate)
 5. Stop recording after memory stabilizes or peaks
 
-**Step 3: Find Memory Growth**
+#### Step 3: Find Memory Growth
 
 Look at the main chart:
 - **Blue line** = Total allocations
@@ -222,7 +222,7 @@ Look at the main chart:
 - **Flat line** = Memory stable (good)
 - **No decline after stopping actions** = Possible leak (or caching)
 
-**Step 4: Identify Persistent Objects**
+#### Step 4: Identify Persistent Objects
 
 Under "Statistics":
 - Sort by "Persistent" (objects still alive)
@@ -328,7 +328,7 @@ Use Core Data instrument when your app uses Core Data and data loading is slow.
 
 ### Workflow: Enable SQL Debugging and Profile
 
-**Step 1: Enable Core Data SQL Logging**
+#### Step 1: Enable Core Data SQL Logging
 
 Add to your launch arguments in Xcode:
 
@@ -344,7 +344,7 @@ CoreData: sql: SELECT ... FROM tracks WHERE artist = ? (time: 0.015s)
 CoreData: sql: SELECT ... FROM albums WHERE id = ? (time: 0.002s)
 ```
 
-**Step 2: Identify N+1 Query Problem**
+#### Step 2: Identify N+1 Query Problem
 
 Watch the console during a typical user action (load list, scroll, filter):
 
@@ -364,7 +364,7 @@ LEFT JOIN albums ON tracks.albumId = albums.id
 Total: 0.050s
 ```
 
-**Step 3: Profile with Core Data Instrument**
+#### Step 3: Profile with Core Data Instrument
 
 ```bash
 open -a Instruments
@@ -878,12 +878,12 @@ let imageCache = NSCache<NSString, UIImage>()
 
 ## External Resources
 
-**Apple Documentation**
+#### Apple Documentation
 - [Instruments User Guide](https://help.apple.com/instruments/)
 - [Core Data Performance Tuning](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreDataPerformance/)
 - [Energy Impact Instrument](https://developer.apple.com/library/archive/technotes/tn2224/)
 
-**Related Axiom Skills**
+#### Related Axiom Skills
 - `memory-debugging` – Deep memory leak diagnosis
 - `swiftui-performance` – SwiftUI view profiling with Instruments 26
 - `swift-concurrency` – MainActor and thread safety patterns

@@ -15,14 +15,14 @@ Prevents deprecated API usage and anti-patterns when implementing UDP/TCP connec
 
 ### Anti-Patterns Prevented
 
-**Deprecated APIs**
+#### Deprecated APIs
 - SCNetworkReachability (race conditions)
 - CFSocket (replaced by NWConnection)
 - NSStream, CFStream (low-level issues)
 - NSNetService (replaced by NWBrowser)
 - Manual getaddrinfo() DNS resolution
 
-**Common Mistakes**
+#### Common Mistakes
 - Reachability checks before connecting
 - Hardcoded IP addresses
 - Blocking socket operations on main thread
@@ -32,13 +32,13 @@ Prevents deprecated API usage and anti-patterns when implementing UDP/TCP connec
 
 ### Patterns Provided
 
-**NetworkConnection (iOS 26+)**
+#### NetworkConnection (iOS 26+)
 - TLS connections with declarative stacks
 - UDP datagrams with batching
 - TLV framing for message boundaries
 - Coder protocol for Codable objects
 
-**NWConnection (iOS 12-25)**
+#### NWConnection (iOS 12-25)
 - TCP+TLS with stateUpdateHandler
 - UDP batch sending (30% CPU reduction)
 - NWListener for incoming connections
@@ -210,17 +210,17 @@ Before shipping:
 
 ## Real-World Impact
 
-**User-Space Networking**
+#### User-Space Networking
 - 30% CPU reduction for UDP workloads
 - Reduced battery drain
 - Better thermal performance
 
-**Smart Connection**
+#### Smart Connection
 - 50% faster connection establishment
 - Happy Eyeballs (IPv4/IPv6 racing)
 - Automatic proxy detection
 
-**Proper State Handling**
+#### Proper State Handling
 - 10x reduction in crashes
 - Better offline experience
 - Seamless WiFi/cellular transitions
@@ -237,7 +237,7 @@ Before shipping:
 
 This is a **discipline-enforcing skill** — TDD-tested workflows with pressure scenarios.
 
-**Skill includes**
+#### Skill includes
 - 8 patterns covering iOS 12-26+
 - 3 pressure scenarios with professional push-back
 - Decision trees for API selection

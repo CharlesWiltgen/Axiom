@@ -30,7 +30,7 @@ Run this command when:
 
 ### 🔴 Critical (Crashes in Minutes)
 
-**Timer Leaks**
+#### Timer Leaks
 ```swift
 // ❌ LEAKS: Timer never stops
 Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -47,7 +47,7 @@ deinit {
 
 ### 🟡 High Priority (Leaks Over Time)
 
-**Observer Leaks**
+#### Observer Leaks
 ```swift
 // ❌ LEAKS: Observer never removed
 NotificationCenter.default.addObserver(
@@ -63,7 +63,7 @@ deinit {
 }
 ```
 
-**Closure Capture Leaks**
+#### Closure Capture Leaks
 ```swift
 // ❌ LEAKS: Closure array captures self strongly
 var callbacks: [(Int) -> Void] = []
@@ -77,7 +77,7 @@ callbacks.append { [weak self] value in
 }
 ```
 
-**Delegate Cycles**
+#### Delegate Cycles
 ```swift
 // ❌ LEAKS: Parent holds child, child holds parent
 class Parent {
@@ -95,7 +95,7 @@ class Child {
 
 ### 🟢 Medium Priority (Accumulation)
 
-**View Callback Leaks**
+#### View Callback Leaks
 ```swift
 // ❌ LEAKS: Completion retains view controller
 present(picker, animated: true) { [self] in
@@ -108,7 +108,7 @@ present(picker, animated: true) { [weak self] in
 }
 ```
 
-**PhotoKit Accumulation**
+#### PhotoKit Accumulation
 ```swift
 // ❌ LEAKS: Images cached indefinitely
 imageManager.startCachingImages(for: assets, ...)
@@ -175,12 +175,12 @@ The skill provides:
 
 ## Real-World Impact
 
-**Before audit**
+#### Before audit
 - 2-3 hours with Instruments finding leaks
 - Crashes discovered in production
 - Non-reproducible memory issues
 
-**After audit**
+#### After audit
 - 2-5 minutes to identify leak candidates
 - Catch issues before Instruments needed
 - Proactive leak prevention

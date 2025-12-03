@@ -297,7 +297,7 @@ extension BookQuery: EntityStringQuery {
 
 ### Separating Entities from Models
 
-**❌ DON'T: Modify core data models**
+#### ❌ DON'T: Modify core data models
 ```swift
 // DON'T make your model conform to AppEntity
 struct Book: AppEntity { // Bad - couples model to intents
@@ -307,7 +307,7 @@ struct Book: AppEntity { // Bad - couples model to intents
 }
 ```
 
-**✅ DO: Create dedicated entities**
+#### ✅ DO: Create dedicated entities
 ```swift
 // Your core model
 struct Book {
@@ -440,17 +440,17 @@ The **Use Model action** in Shortcuts (iOS 18.1+) allows users to incorporate Ap
 
 ### Three Output Types
 
-**1. Text (AttributedString)**
+#### 1. Text (AttributedString)
 - Models often respond with Rich Text (bold, italic, lists, tables)
 - Use `AttributedString` type for text parameters to preserve formatting
 - Enables lossless transfer from model to your app
 
-**2. Dictionary**
+#### 2. Dictionary
 - Structured data extraction from unstructured input
 - Useful for parsing PDFs, emails, documents
 - Example: Extract vendor, amount, date from invoice
 
-**3. App Entities (Your Types)**
+#### 3. App Entities (Your Types)
 - Pass lists of entities to models for filtering/reasoning
 - Model receives JSON representation of entities
 - Example: "Filter calendar events related to my trip"
@@ -495,7 +495,7 @@ var displayRepresentation: DisplayRepresentation {
 }
 ```
 
-**Example JSON sent to model**
+#### Example JSON sent to model
 ```json
 {
   "type": "Calendar Event",
@@ -514,7 +514,7 @@ var displayRepresentation: DisplayRepresentation {
 
 **Why it matters** "If your app supports Rich Text content, now is the time to make sure your app intents use the attributed string type for text parameters where appropriate." - WWDC 2025-260
 
-**❌ DON'T: Use plain String**
+#### ❌ DON'T: Use plain String
 ```swift
 struct CreateNoteIntent: AppIntent {
     @Parameter(title: "Content")
@@ -522,7 +522,7 @@ struct CreateNoteIntent: AppIntent {
 }
 ```
 
-**✅ DO: Use AttributedString**
+#### ✅ DO: Use AttributedString
 ```swift
 struct CreateNoteIntent: AppIntent {
     @Parameter(title: "Content")
@@ -536,7 +536,7 @@ struct CreateNoteIntent: AppIntent {
 }
 ```
 
-**Real-world example from WWDC**
+#### Real-world example from WWDC
 Bear app's Create Note accepts AttributedString, allowing diary templates from ChatGPT to include:
 - Bold headings
 - Mood logging tables
@@ -547,7 +547,7 @@ Bear app's Create Note accepts AttributedString, allowing diary templates from C
 
 When Use Model output connects to another action, the runtime automatically converts types:
 
-**Example: Boolean for If actions**
+#### Example: Boolean for If actions
 ```swift
 // User's shortcut:
 // 1. Get notes created today
@@ -559,7 +559,7 @@ When Use Model output connects to another action, the runtime automatically conv
 
 Instead of returning verbose text like "Yes, this note seems to be about developing features for the Shortcuts app", the model automatically returns a Boolean (`true`/`false`) when connected to an If action.
 
-**Explicit output types available**
+#### Explicit output types available
 - Text (AttributedString)
 - Number
 - Boolean
@@ -581,7 +581,7 @@ Enable iterative refinement before passing to next action:
 // 3. Add to Grocery List in Things app
 ```
 
-**When to use**
+#### When to use
 - Recipe modifications (scale servings, substitute ingredients)
 - Content refinement (adjust tone, length, style)
 - Data validation (confirm extracted values before saving)
@@ -636,7 +636,7 @@ struct EventEntity: AppEntity, IndexedEntity {
 
 ### Indexing Key Mapping
 
-**Standard Spotlight attribute keys**
+#### Standard Spotlight attribute keys
 ```swift
 // Common Spotlight keys for events
 @Property(title: "Title", indexingKey: \.eventTitle)
@@ -649,7 +649,7 @@ var startDate: Date
 var location: String?
 ```
 
-**Custom keys for non-standard attributes**
+#### Custom keys for non-standard attributes
 ```swift
 @Property(title: "Notes", customIndexingKey: "eventNotes")
 var notes: String?
@@ -662,7 +662,7 @@ var attendeeCount: Int
 
 With IndexedEntity conformance, users get this Find action automatically:
 
-**In Shortcuts app**
+#### In Shortcuts app
 ```
 Find Events where:
   - Title contains "Team"
@@ -670,7 +670,7 @@ Find Events where:
   - Location is "San Francisco"
 ```
 
-**Without IndexedEntity, you'd need to manually implement**
+#### Without IndexedEntity, you'd need to manually implement
 - `EnumerableEntityQuery` protocol
 - `EntityPropertyQuery` protocol
 - Property filters for each searchable field
@@ -728,11 +728,11 @@ struct TripEntity: AppEntity, IndexedEntity {
 
 ### Requirements for Spotlight Visibility
 
-**1. Parameter Summary Must Include All Required Parameters**
+#### 1. Parameter Summary Must Include All Required Parameters
 
 "The parameter summary, which is what people will see in Spotlight UI, must contain all required parameters that don't have a default value." - WWDC 2025-260
 
-**❌ WON'T SHOW in Spotlight**
+#### ❌ WON'T SHOW in Spotlight
 ```swift
 struct CreateEventIntent: AppIntent {
     static var title: LocalizedStringResource = "Create Event"
@@ -756,19 +756,19 @@ struct CreateEventIntent: AppIntent {
 }
 ```
 
-**✅ WILL SHOW in Spotlight (Option 1: Make optional)**
+#### ✅ WILL SHOW in Spotlight (Option 1: Make optional)
 ```swift
 @Parameter(title: "Notes")
 var notes: String? // Optional - can omit from summary
 ```
 
-**✅ WILL SHOW in Spotlight (Option 2: Provide default)**
+#### ✅ WILL SHOW in Spotlight (Option 2: Provide default)
 ```swift
 @Parameter(title: "Notes")
 var notes: String = "" // Has default - can omit from summary
 ```
 
-**✅ WILL SHOW in Spotlight (Option 3: Include in summary)**
+#### ✅ WILL SHOW in Spotlight (Option 3: Include in summary)
 ```swift
 static var parameterSummary: some ParameterSummary {
     Summary("Create '\(\.$title)' from \(\.$startDate) to \(\.$endDate)") {
@@ -777,7 +777,7 @@ static var parameterSummary: some ParameterSummary {
 }
 ```
 
-**2. Intent Must Not Be Hidden**
+#### 2. Intent Must Not Be Hidden
 
 Intents hidden from Shortcuts won't appear in Spotlight:
 
@@ -796,7 +796,7 @@ static var assistantOnly: Bool = true
 
 Make parameter filling quick with suggestions:
 
-**Option 1: Suggested Entities (Subset of Large List)**
+#### Option 1: Suggested Entities (Subset of Large List)
 ```swift
 struct EventEntityQuery: EntityQuery {
     func entities(for identifiers: [UUID]) async throws -> [EventEntity] {
@@ -810,7 +810,7 @@ struct EventEntityQuery: EntityQuery {
 }
 ```
 
-**Option 2: All Entities (Small, Bounded List)**
+#### Option 2: All Entities (Small, Bounded List)
 ```swift
 struct TimezoneQuery: EnumerableEntityQuery {
     func allEntities() async throws -> [TimezoneEntity] {
@@ -850,7 +850,7 @@ If you provide suggestions, Spotlight automatically filters them as user types.
 **Deep search** (requires implementation):
 For searching beyond suggestions:
 
-**Option 1: EntityStringQuery**
+#### Option 1: EntityStringQuery
 ```swift
 extension EventQuery: EntityStringQuery {
     func entities(matching string: String) async throws -> [EventEntity] {
@@ -859,7 +859,7 @@ extension EventQuery: EntityStringQuery {
 }
 ```
 
-**Option 2: IndexedEntity**
+#### Option 2: IndexedEntity
 ```swift
 struct EventEntity: AppEntity, IndexedEntity {
     // Spotlight search automatically supported
@@ -868,7 +868,7 @@ struct EventEntity: AppEntity, IndexedEntity {
 
 ### Background vs Foreground Intents
 
-**Pattern: Paired Intents with opensIntent**
+#### Pattern: Paired Intents with opensIntent
 
 ```swift
 // Background intent - runs without opening app
@@ -911,7 +911,7 @@ struct OpenEventIntent: AppIntent {
 }
 ```
 
-**User experience**
+#### User experience
 1. User runs "Create Event" in Spotlight (background)
 2. Event created without opening app
 3. Spotlight shows "Open in App" button (opensIntent)
@@ -948,7 +948,7 @@ Spotlight learns when/how user runs this intent and surfaces suggestions proacti
 
 **Personal Automations** arrive on macOS (macOS Sequoia+) with Mac-specific triggers:
 
-**New Mac Automation Types**
+#### New Mac Automation Types
 - **Folder Automation** — Trigger when files added/removed from folder
 - **External Drive Automation** — Trigger when drive connected/disconnected
 - Time of Day (from iOS)
@@ -1072,7 +1072,7 @@ extension OrderSoupIntent {
 
 ### Common Debugging Issues
 
-**Issue 1: Intent not appearing in Shortcuts**
+#### Issue 1: Intent not appearing in Shortcuts
 ```swift
 // ❌ Problem: isDiscoverable = false or missing
 struct MyIntent: AppIntent {
@@ -1085,7 +1085,7 @@ struct MyIntent: AppIntent {
 }
 ```
 
-**Issue 2: Parameter not resolving**
+#### Issue 2: Parameter not resolving
 ```swift
 // ❌ Problem: Missing defaultQuery
 struct ProductEntity: AppEntity {
@@ -1100,7 +1100,7 @@ struct ProductEntity: AppEntity {
 }
 ```
 
-**Issue 3: Intent crashes in background**
+#### Issue 3: Intent crashes in background
 ```swift
 // ❌ Problem: Accessing MainActor from background
 func perform() async throws -> some IntentResult {
@@ -1117,7 +1117,7 @@ func perform() async throws -> some IntentResult {
 }
 ```
 
-**Issue 4: Entity query returns empty results**
+#### Issue 4: Entity query returns empty results
 ```swift
 // ❌ Problem: entities(for:) not implemented
 struct BookQuery: EntityQuery {
@@ -1142,13 +1142,13 @@ struct BookQuery: EntityQuery {
 
 ### 1. Intent Naming
 
-**❌ DON'T: Generic or unclear**
+#### ❌ DON'T: Generic or unclear
 ```swift
 static var title: LocalizedStringResource = "Do Thing"
 static var title: LocalizedStringResource = "Process"
 ```
 
-**✅ DO: Verb-noun, specific**
+#### ✅ DO: Verb-noun, specific
 ```swift
 static var title: LocalizedStringResource = "Send Message"
 static var title: LocalizedStringResource = "Book Appointment"
@@ -1157,14 +1157,14 @@ static var title: LocalizedStringResource = "Start Workout"
 
 ### 2. Parameter Summary
 
-**❌ DON'T: Technical or confusing**
+#### ❌ DON'T: Technical or confusing
 ```swift
 static var parameterSummary: some ParameterSummary {
     Summary("Execute \(\.$action) with \(\.$target)")
 }
 ```
 
-**✅ DO: Natural language**
+#### ✅ DO: Natural language
 ```swift
 static var parameterSummary: some ParameterSummary {
     Summary("Send \(\.$message) to \(\.$contact)")
@@ -1174,26 +1174,26 @@ static var parameterSummary: some ParameterSummary {
 
 ### 3. Error Messages
 
-**❌ DON'T: Technical jargon**
+#### ❌ DON'T: Technical jargon
 ```swift
 throw MyError.validationFailed("Invalid parameter state")
 ```
 
-**✅ DO: User-friendly**
+#### ✅ DO: User-friendly
 ```swift
 throw MyError.outOfStock("Sorry, this item is currently unavailable")
 ```
 
 ### 4. Entity Suggestions
 
-**❌ DON'T: Return all entities**
+#### ❌ DON'T: Return all entities
 ```swift
 func suggestedEntities() async throws -> [TaskEntity] {
     return try await TaskService.shared.allTasks() // Could be thousands!
 }
 ```
 
-**✅ DO: Limit to recent/relevant**
+#### ✅ DO: Limit to recent/relevant
 ```swift
 func suggestedEntities() async throws -> [TaskEntity] {
     return try await TaskService.shared.recentTasks(limit: 10)
@@ -1202,7 +1202,7 @@ func suggestedEntities() async throws -> [TaskEntity] {
 
 ### 5. Async Operations
 
-**❌ DON'T: Block main thread**
+#### ❌ DON'T: Block main thread
 ```swift
 func perform() async throws -> some IntentResult {
     let data = URLSession.shared.synchronousDataTask(url) // Blocks!
@@ -1210,7 +1210,7 @@ func perform() async throws -> some IntentResult {
 }
 ```
 
-**✅ DO: Use async/await**
+#### ✅ DO: Use async/await
 ```swift
 func perform() async throws -> some IntentResult {
     let data = try await URLSession.shared.data(from: url)

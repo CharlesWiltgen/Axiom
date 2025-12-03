@@ -15,25 +15,25 @@ App Intents framework enables your app to integrate deeply with iOS system featu
 
 ### Core Concepts
 
-**AppIntent Protocol**
+#### AppIntent Protocol
 - Defining user-facing actions
 - Parameter types and validation
 - Async/await perform methods
 - Error handling and user feedback
 
-**AppEntity Protocol**
+#### AppEntity Protocol
 - Representing app data objects
 - Display representations
 - Query protocols
 - Identity and uniqueness
 
-**Intent Parameters**
+#### Intent Parameters
 - Required vs optional parameters
 - Type-safe parameter definitions
 - Dynamic options (search, suggest)
 - Parameter summaries for Siri
 
-**Entity Queries**
+#### Entity Queries
 - Finding entities by identifier
 - Search suggestions
 - Filtering and sorting
@@ -41,25 +41,25 @@ App Intents framework enables your app to integrate deeply with iOS system featu
 
 ### Integration Points
 
-**Siri Integration**
+#### Siri Integration
 - Voice command handling
 - Disambiguation prompts
 - Confirmation dialogs
 - Error messages for voice
 
-**Apple Intelligence**
+#### Apple Intelligence
 - Smart suggestions
 - Contextual actions
 - Proactive recommendations
 - System integration
 
-**Shortcuts App**
+#### Shortcuts App
 - Action discovery
 - Parameter customization
 - Multi-step workflows
 - Sharing shortcuts
 
-**Spotlight Search**
+#### Spotlight Search
 - Intent indexing
 - Search result actions
 - Continue in app patterns
@@ -67,19 +67,19 @@ App Intents framework enables your app to integrate deeply with iOS system featu
 
 ### Advanced Features
 
-**Background Execution**
+#### Background Execution
 - Intent handlers in extensions
 - Data sharing with app groups
 - Network requests
 - State management
 
-**Authentication**
+#### Authentication
 - User authentication flows
 - Secure data access
 - Error handling for locked device
 - Biometric authentication
 
-**Debugging**
+#### Debugging
 - Intent testing in Xcode
 - Shortcuts app debugging
 - Siri transcript logging
@@ -191,25 +191,25 @@ func $playlist() async throws -> [PlaylistEntity] {
 
 ## Debugging Common Issues
 
-**Intent Not Appearing in Shortcuts**
+#### Intent Not Appearing in Shortcuts
 - Check Info.plist configuration
 - Verify intent is public (not internal)
 - Rebuild and reinstall app
 - Check Shortcuts app after 5-10 minute delay
 
-**Siri Can't Find Entity**
+#### Siri Can't Find Entity
 - Implement `suggestedEntities()` correctly
 - Check entity query fetch logic
 - Verify display representations
 - Test with Siri transcript logging
 
-**Background Execution Fails**
+#### Background Execution Fails
 - Use app groups for data sharing
 - Check background modes in capabilities
 - Verify intent handler extension setup
 - Test with device, not simulator
 
-**Authentication Errors**
+#### Authentication Errors
 - Handle locked device state
 - Provide clear error messages
 - Support biometric auth when needed
@@ -229,7 +229,7 @@ func $playlist() async throws -> [PlaylistEntity] {
 
 This is a **reference skill** — comprehensive integration guide without mandatory workflows.
 
-**Reference includes**
+#### Reference includes
 - Complete API catalog
 - Integration patterns
 - Debugging strategies

@@ -22,13 +22,13 @@ Performs automated checks for:
 
 ### 1. Schema Migration Safety (HIGH PRIORITY)
 
-**Looks for**
+#### Looks for
 - Missing `NSMigratePersistentStoresAutomaticallyOption`
 - Missing `NSInferMappingModelAutomaticallyOption`
 - Hard-coded store deletion (data loss risk)
 - Schema changes without version increments
 
-**Pattern**
+#### Pattern
 ```swift
 // ❌ DANGER: Missing migration options
 let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
@@ -53,12 +53,12 @@ let options = [
 
 ### 2. Thread-Confinement Violations (HIGH PRIORITY)
 
-**Looks for**
+#### Looks for
 - NSManagedObject accessed outside `perform/performAndWait`
 - Objects passed between threads
 - Background fetch without proper context usage
 
-**Pattern**
+#### Pattern
 ```swift
 // ❌ DANGER: Accessing object from wrong thread
 DispatchQueue.global().async {
@@ -84,12 +84,12 @@ backgroundContext.perform {
 
 ### 3. N+1 Query Patterns (MEDIUM PRIORITY)
 
-**Looks for**
+#### Looks for
 - Relationship access inside loops
 - Missing `relationshipKeyPathsForPrefetching`
 - Fetch requests without prefetching hints
 
-**Pattern**
+#### Pattern
 ```swift
 // ❌ N+1 PROBLEM: Accessing relationship in loop
 for user in users {
@@ -110,13 +110,13 @@ for user in users {
 
 ### 4. Production Risk Patterns (HIGH PRIORITY)
 
-**Looks for**
+#### Looks for
 - Delete store in production code paths
 - Missing migration testing
 - No error handling for store creation
 - Simulator-only testing patterns
 
-**Pattern**
+#### Pattern
 ```swift
 // ❌ DANGER: Delete store in production
 if let storeURL = container.persistentStoreDescriptions.first?.url {
@@ -145,12 +145,12 @@ do {
 
 ### 5. Performance Issues (LOW PRIORITY)
 
-**Looks for**
+#### Looks for
 - Missing `fetchBatchSize`
 - Missing `returnsObjectsAsFaults`
 - Large result sets without batching
 
-**Pattern**
+#### Pattern
 ```swift
 // ❌ PERFORMANCE ISSUE: No batch size
 let fetchRequest = NSFetchRequest<User>(entityName: "User")
@@ -175,7 +175,7 @@ fetchRequest.fetchBatchSize = 20
 
 2. **For each file, grep for patterns**
 
-**Schema migration safety**
+#### Schema migration safety
 ```regex
 NSPersistentStoreCoordinator
 addPersistentStore
@@ -184,7 +184,7 @@ NSInferMappingModelAutomaticallyOption
 FileManager.*removeItem.*storeURL
 ```
 
-**Thread-confinement**
+#### Thread-confinement
 ```regex
 DispatchQueue.*NSManagedObject
 Task.*NSManagedObject
@@ -192,21 +192,21 @@ context\.perform
 performAndWait
 ```
 
-**N+1 queries**
+#### N+1 queries
 ```regex
 for\s+\w+\s+in.*\{[\s\S]*?\.\w+\.count
 for\s+\w+\s+in.*\{[\s\S]*?\.\w+\.first
 relationshipKeyPathsForPrefetching
 ```
 
-**Production risks**
+#### Production risks
 ```regex
 FileManager.*removeItem.*persistent
 try!\s+.*addPersistentStore
 try!\s+.*coordinator
 ```
 
-**Performance**
+#### Performance
 ```regex
 fetchBatchSize
 returnsObjectsAsFaults
@@ -269,14 +269,14 @@ Next Steps:
 
 ## Output Format
 
-**For each issue**
+#### For each issue
 1. Severity indicator (🔴/🟡/🟢)
 2. File path and line number
 3. Code snippet showing problem
 4. Risk explanation
 5. Fix recommendation with example code
 
-**Summary at end**
+#### Summary at end
 - Risk score (0-10)
 - Prioritized action items
 - Links to relevant skills
@@ -360,18 +360,18 @@ For implementation details: /skill core-data-diag
 
 ## Implementation Notes
 
-**Risk Score Calculation**
+#### Risk Score Calculation
 - Each 🔴 CRITICAL issue: +3 points
 - Each 🟡 MEDIUM issue: +1 point
 - Each 🟢 LOW issue: +0.5 points
 - Maximum score: 10
 
-**Priority Levels**
+#### Priority Levels
 - **CRITICAL**: Must fix before production release (data loss, crashes)
 - **MEDIUM**: Fix in next sprint (performance degradation)
 - **LOW**: Optimize when convenient (memory pressure)
 
-**False Positive Handling**
+#### False Positive Handling
 - Thread-confinement: May flag intentional thread switches (verify with perform block)
 - N+1 queries: May flag small loops (< 10 iterations) that don't need optimization
 - Delete store: If behind debug flag or one-time migration, may be intentional

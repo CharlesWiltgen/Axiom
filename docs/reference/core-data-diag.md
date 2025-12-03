@@ -15,26 +15,26 @@ Diagnostic workflows for schema migration crashes, thread-confinement errors, N+
 
 ### Critical Production Issues
 
-**Schema Migration Crashes**
+#### Schema Migration Crashes
 - "Can't find model for source store" errors
 - Migration failures on 10% of devices
 - Data corruption after migration
 - Version mismatch crashes
 - Missing lightweight migration options
 
-**Thread-Confinement Errors**
+#### Thread-Confinement Errors
 - "Object was created in different context" crashes
 - Intermittent crashes when passing objects to tasks
 - Background fetch crashes
 - Main thread checker violations
 
-**N+1 Query Performance**
+#### N+1 Query Performance
 - App freezing when scrolling lists
 - Relationship access triggering hundreds of queries
 - Missing prefetching hints
 - Slow list rendering (>1s per row)
 
-**Production Crisis Scenarios**
+#### Production Crisis Scenarios
 - 500K+ users affected by migration crash
 - Data loss reports flooding support
 - App Store rating dropping from 4.8 → 2.3
@@ -140,7 +140,7 @@ Use this diagnostic when:
 
 ## Safety-First Migration Patterns
 
-**Pattern 1: Lightweight Migration Only**
+#### Pattern 1: Lightweight Migration Only
 ```swift
 let options = [
     NSMigratePersistentStoresAutomaticallyOption: true,
@@ -149,19 +149,19 @@ let options = [
 // NEVER delete store in production
 ```
 
-**Pattern 2: Additive Changes Only**
+#### Pattern 2: Additive Changes Only
 ```swift
 // ✅ SAFE: Add optional property
 // ❌ UNSAFE: Remove property, change type, add required property
 ```
 
-**Pattern 3: Test Migration Path**
+#### Pattern 3: Test Migration Path
 ```swift
 // Test v1 → v2, v1 → v3, v2 → v3
 // Users may skip versions
 ```
 
-**Pattern 4: Never Delete Store**
+#### Pattern 4: Never Delete Store
 ```swift
 // ❌ NEVER in production
 try? FileManager.default.removeItem(at: storeURL)
@@ -182,7 +182,7 @@ catch {
 
 This is a **diagnostic skill** — mandatory workflows with production crisis defense.
 
-**Diagnostic includes**
+#### Diagnostic includes
 - Step-by-step troubleshooting
 - Production crisis emergency protocols
 - Safety-first migration patterns

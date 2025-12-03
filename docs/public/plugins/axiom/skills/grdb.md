@@ -18,19 +18,19 @@ Direct SQLite access using [GRDB.swift](https://github.com/groue/GRDB.swift) —
 
 ## When to Use GRDB
 
-**Use raw GRDB when you need**
+#### Use raw GRDB when you need
 - ✅ Complex SQL joins across multiple tables
 - ✅ Custom aggregation queries (GROUP BY, HAVING)
 - ✅ Reactive queries with ValueObservation
 - ✅ Full control over SQL for performance
 - ✅ Advanced migration logic
 
-**Use SQLiteData instead when**
+#### Use SQLiteData instead when
 - Type-safe `@Table` models are sufficient
 - CloudKit sync needed
 - Prefer declarative queries over SQL
 
-**Use SwiftData when**
+#### Use SwiftData when
 - Simple CRUD with native Apple integration
 - Don't need raw SQL control
 
@@ -40,19 +40,19 @@ Direct SQLite access using [GRDB.swift](https://github.com/groue/GRDB.swift) —
 
 These are real questions developers ask that this skill is designed to answer:
 
-**1. "I need to query messages with their authors and count of reactions in one query. How do I write the JOIN?"**
+#### 1. "I need to query messages with their authors and count of reactions in one query. How do I write the JOIN?"
 → The skill shows complex JOIN queries with multiple tables and aggregations
 
-**2. "I want to observe a filtered list and update the UI whenever notes with a specific tag change."**
+#### 2. "I want to observe a filtered list and update the UI whenever notes with a specific tag change."
 → The skill covers ValueObservation patterns for reactive query updates
 
-**3. "I'm importing thousands of chat records and need custom migration logic. How do I use DatabaseMigrator?"**
+#### 3. "I'm importing thousands of chat records and need custom migration logic. How do I use DatabaseMigrator?"
 → The skill explains migration registration, data transforms, and safe rollback patterns
 
-**4. "My query is slow (takes 10+ seconds). How do I profile and optimize it?"**
+#### 4. "My query is slow (takes 10+ seconds). How do I profile and optimize it?"
 → The skill covers EXPLAIN QUERY PLAN, database.trace for profiling, and index creation
 
-**5. "I need to fetch tasks grouped by due date with completion counts, ordered by priority. Raw SQL seems easier than type-safe queries."**
+#### 5. "I need to fetch tasks grouped by due date with completion counts, ordered by priority. Raw SQL seems easier than type-safe queries."
 → The skill demonstrates when GRDB's raw SQL is clearer than type-safe wrappers
 
 ---
@@ -473,7 +473,7 @@ try await database.database.write { db in
 }
 ```
 
-**Common scenarios**
+#### Common scenarios
 - Complex JOIN queries
 - Custom migrations
 - Bulk SQL operations
@@ -506,17 +506,17 @@ ValueObservation.tracking { db in
 
 ## External Resources
 
-**GRDB**
+#### GRDB
 - [GitHub](https://github.com/groue/GRDB.swift)
 - [Documentation](https://swiftpackageindex.com/groue/GRDB.swift/documentation/grdb)
 - [SQL
 
 ite Documentation](https://www.sqlite.org/docs.html)
 
-**SwiftUI Integration**
+#### SwiftUI Integration
 - [GRDBQuery](https://github.com/groue/GRDBQuery) — SwiftUI reactive bindings
 
-**Related Axiom Skills**
+#### Related Axiom Skills
 - `database-migration` - Safe schema evolution
 - `sqlitedata` - Type-safe @Table models with CloudKit
 - `swiftdata` - Apple's native persistence
@@ -530,19 +530,19 @@ If you see ANY of these symptoms:
 - ❌ ValueObservation runs on every single change (battery drain)
 - ❌ Can't explain why migration ran twice on old version
 
-**DO NOT**
+#### DO NOT
 1. Blindly add indexes (don't know which columns help)
 2. Move logic to Swift (premature escape from database)
 3. Over-engineer migrations (distrust the system)
 
-**DO**
+#### DO
 1. Profile with `database.trace`
 2. Use `EXPLAIN QUERY PLAN` to understand execution
 3. Trust GRDB's migration versioning system
 
 ### Profiling Complex Queries
 
-**When query is slow (10+ seconds)**
+#### When query is slow (10+ seconds)
 
 ```swift
 var database = try DatabaseQueue(path: dbPath)
@@ -563,7 +563,7 @@ try database.read { db in
 }
 ```
 
-**Add indexes strategically**
+#### Add indexes strategically
 
 ```swift
 // Add index on frequently queried column
@@ -572,7 +572,7 @@ try database.write { db in
 }
 ```
 
-**Time cost**
+#### Time cost
 - Profile: 10 min (enable trace, run query, read output)
 - Understand: 5 min (interpret EXPLAIN QUERY PLAN)
 - Fix: 5 min (add index)
@@ -580,7 +580,7 @@ try database.write { db in
 
 ### ValueObservation Performance
 
-**When using reactive queries, know the costs**
+#### When using reactive queries, know the costs
 
 ```swift
 // Re-evaluates query on ANY write to database
@@ -591,7 +591,7 @@ ValueObservation.tracking { db in
 })
 ```
 
-**Optimization patterns**
+#### Optimization patterns
 
 ```swift
 // Coalesce rapid updates (recommended)
@@ -602,14 +602,14 @@ ValueObservation.tracking { db in
  .start(in: database, ...)
 ```
 
-**Decision framework**
+#### Decision framework
 - Small datasets (<1000 records): Use plain `.tracking`
 - Medium datasets (1-10k records): Add `.removeDuplicates()` + `.debounce()`
 - Large datasets (10k+ records): Use explicit table dependencies or predicates
 
 ### Migration Versioning Guarantees
 
-**Trust GRDB's DatabaseMigrator - it prevents re-running migrations**
+#### Trust GRDB's DatabaseMigrator - it prevents re-running migrations
 
 ```swift
 var migrator = DatabaseMigrator()
@@ -629,12 +629,12 @@ migrator.registerMigration("v2_add_plays") { db in
 try migrator.migrate(dbQueue)
 ```
 
-**You don't need defensive SQL (IF NOT EXISTS)**
+#### You don't need defensive SQL (IF NOT EXISTS)
 - GRDB tracks which migrations have run
 - Running `migrate()` twice only executes new ones
 - Over-engineering adds complexity without benefit
 
-**Trust it.**
+#### Trust it.
 
 ---
 

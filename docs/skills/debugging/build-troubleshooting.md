@@ -15,19 +15,19 @@ Check dependencies BEFORE blaming code. **Core principle** 80% of persistent bui
 
 These are real questions developers ask that this skill is designed to answer:
 
-**1. "I added a Swift Package but I'm getting 'No such module' errors. The package is in my Xcode project but won't compile."**
+#### 1. "I added a Swift Package but I'm getting 'No such module' errors. The package is in my Xcode project but won't compile."
 → The skill covers SPM resolution workflows, package cache clearing, and framework search path diagnostics
 
-**2. "The build is failing with 'Multiple commands produce' the same output file. How do I figure out which files are duplicated?"**
+#### 2. "The build is failing with 'Multiple commands produce' the same output file. How do I figure out which files are duplicated?"
 → The skill shows how to identify duplicate target membership and resolve file conflicts in build settings
 
-**3. "CocoaPods installed dependencies successfully but the build still fails. How do I debug CocoaPods issues?"**
+#### 3. "CocoaPods installed dependencies successfully but the build still fails. How do I debug CocoaPods issues?"
 → The skill covers Podfile.lock conflict resolution, linking errors, and version constraint debugging
 
-**4. "My build works on my Mac but fails on the CI server. Both machines have the latest Xcode. What's different?"**
+#### 4. "My build works on my Mac but fails on the CI server. Both machines have the latest Xcode. What's different?"
 → The skill explains dependency caching differences, environment-specific paths, and reproducible build strategies
 
-**5. "I'm getting framework version conflicts and I don't know which dependency is causing it. How do I resolve this?"**
+#### 5. "I'm getting framework version conflicts and I don't know which dependency is causing it. How do I resolve this?"
 → The skill demonstrates dependency graph analysis and version constraint resolution strategies for complex dependency trees
 
 ---
@@ -313,19 +313,19 @@ If you hear ANY of these, pause 5 minutes before executing:
 
 When someone senior suggests a fix under time pressure:
 
-**Step 1: Ask (Don't argue)**
+#### Step 1: Ask (Don't argue)
 ```
 "I understand the pressure. Before we regenerate lock files,
 can we spend 5 minutes comparing the broken build to our
 working build? I want to know what we're fixing."
 ```
 
-**Step 2: Demand Evidence**
+#### Step 2: Demand Evidence
 - "What makes you think it's a lock file issue?"
 - "What changed between our last successful build and this failure?"
 - "Can we see the actual error from App Store build vs our build?"
 
-**Step 3: Document the Gamble**
+#### Step 3: Document the Gamble
 ```
 If we try "pod install":
 - Time to execute: 10 minutes
@@ -337,14 +337,14 @@ Cost of being wrong with quick fix: High
 Cost of spending 1 hour on diagnosis: Low
 ```
 
-**Step 4: Push Back Professionally**
+#### Step 4: Push Back Professionally
 ```
 "I want to move fast too. A 1-hour diagnosis now means we
 won't waste another 24-hour cycle. Let's document what we're
 testing before we submit."
 ```
 
-**Why this works**
+#### Why this works
 - You're not questioning their expertise
 - You're asking for evidence (legitimate request)
 - You're showing you understand the pressure
@@ -356,11 +356,11 @@ testing before we submit."
 
 **Senior says** "Regenerate lock file and resubmit (7 days buffer)"
 
-**What you do**
+#### What you do
 1. ❌ WRONG: Execute immediately, fail after 24 hours, now 6 days left
 2. ✅ RIGHT: Spend 1 hour comparing builds first
 
-**Comparison checklist**
+#### Comparison checklist
 ```
 Local build that works:
 - Pod versions in Podfile.lock: [list them]
@@ -374,7 +374,7 @@ App Store build that fails:
 - Differences: [explicitly document]
 ```
 
-**After comparison**
+#### After comparison
 - If versions match: Lock file isn't the issue. Skip the quick fix.
 - If versions differ: Now you understand what to fix.
 
@@ -390,7 +390,7 @@ Quick fixes are safe ONLY when:
 - [ ] You have >48 hours buffer (so failure costs less)
 - [ ] You documented the fix in case you need to explain it later
 
-**In production crises, NONE of these are usually true.**
+#### In production crises, NONE of these are usually true.
 
 ---
 

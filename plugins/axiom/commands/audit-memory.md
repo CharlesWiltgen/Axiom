@@ -24,12 +24,12 @@ Now running comprehensive leak detection across all 6 patterns...
 
 Checking for `Timer.scheduledTimer` without corresponding `invalidate()`:
 
-**What I'm looking for**
+#### What I'm looking for
 - Timer.scheduledTimer with `repeats: true`
 - No matching `timer?.invalidate()` in same file
 - No cleanup in `deinit`
 
-**Why this crashes apps**
+#### Why this crashes apps
 - Timer retains closure, closure captures self
 - Even with `[weak self]`, timer keeps running
 - Memory grows 10-30MB/minute until crash
@@ -48,12 +48,12 @@ grep -rn "\.invalidate()" --include="*.swift" .
 
 Checking for `addObserver` without `removeObserver`:
 
-**What I'm looking for**
+#### What I'm looking for
 - NotificationCenter.default.addObserver(self, ...)
 - No matching removeObserver(self) in file
 - No cleanup in `deinit`
 
-**Why this leaks**
+#### Why this leaks
 - NotificationCenter holds strong reference to observer
 - Accumulates on each view controller creation
 - Multiple instances all listening
@@ -73,12 +73,12 @@ grep -rn "removeObserver\(self" --include="*.swift" .
 
 Checking for closures in arrays/collections capturing self:
 
-**What I'm looking for**
+#### What I'm looking for
 - Arrays or dictionaries storing closures
 - Closures with `[self]` or strong `self.` captures
 - Missing `[weak self]` capture lists
 
-**Why this leaks**
+#### Why this leaks
 - Array owns closures, closures capture self strongly
 - Self owns array → retain cycle
 - Common in callback/delegate patterns
@@ -98,11 +98,11 @@ grep -rn "\[weak self\]" --include="*.swift" .
 
 Checking for delegate properties without `weak`:
 
-**What I'm looking for**
+#### What I'm looking for
 - `var delegate: SomeDelegate?` without `weak` keyword
 - Protocol delegates that should be weak
 
-**Why this leaks**
+#### Why this leaks
 - If delegate owns the object with delegate property → cycle
 - Classic two-way strong reference
 - Common in custom view/controller communication
@@ -121,12 +121,12 @@ grep -rn "weak var.*delegate" --include="*.swift" .
 
 Checking for view callbacks with strong self capture:
 
-**What I'm looking for**
+#### What I'm looking for
 - Layout callbacks assigned with closures
 - UIView.animate closures without `[weak self]`
 - Custom view callbacks capturing self
 
-**Why this leaks**
+#### Why this leaks
 - View owns closure, closure captures view controller
 - Less common but hard to debug
 
@@ -144,12 +144,12 @@ grep -rn "layoutIfNeeded.*=" --include="*.swift" .
 
 Checking for PHImageManager requests without cancellation:
 
-**What I'm looking for**
+#### What I'm looking for
 - `imageManager.requestImage(...)` calls
 - No stored `PHImageRequestID`
 - No `cancelImageRequest()` in prepareForReuse
 
-**Why this leaks**
+#### Why this leaks
 - Pending requests accumulate during scrolling
 - Each request holds memory for image processing
 - Crashes after scrolling through 100+ photos
@@ -191,7 +191,7 @@ Based on the grep results above, here's what I found:
 ### CRITICAL Issues (Fix Immediately)
 Timer leaks crash apps fastest. Memory growth: 10-30MB/minute.
 
-**Quick fix**
+#### Quick fix
 ```swift
 deinit {
     timer?.invalidate()
@@ -202,7 +202,7 @@ deinit {
 ### HIGH Issues (Fix Soon)
 Observer and closure leaks accumulate over time. Multiple view controller creations compound the issue.
 
-**Quick fix**
+#### Quick fix
 ```swift
 // Observers
 deinit {

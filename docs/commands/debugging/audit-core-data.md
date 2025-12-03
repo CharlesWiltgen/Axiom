@@ -29,31 +29,31 @@ Run this command when:
 
 ### 🔴 Critical Issues (Crashes/Data Loss)
 
-**Schema Migration Safety**
+#### Schema Migration Safety
 - Missing `NSMigratePersistentStoresAutomaticallyOption`
 - Store deletion without migration path (100% data loss)
 - Schema changes without version increments
 
-**Thread-Confinement Violations**
+#### Thread-Confinement Violations
 - NSManagedObject accessed outside `perform/performAndWait`
 - Objects passed between threads or actors
 - Background fetch without proper context usage
 
 ### 🟡 Medium Priority (Performance)
 
-**N+1 Query Patterns**
+#### N+1 Query Patterns
 - Relationship access inside loops
 - Missing `relationshipKeyPathsForPrefetching`
 - Fetch requests that trigger hundreds of queries
 
-**Production Risk Patterns**
+#### Production Risk Patterns
 - Hard-coded store paths
 - Missing migration unit tests
 - No rollback strategy for failed migrations
 
 ### 🟢 Low Priority (Optimization)
 
-**Performance Issues**
+#### Performance Issues
 - Missing fetch batch sizes
 - No faulting controls on large datasets
 - Inefficient predicate patterns
@@ -110,12 +110,12 @@ The skill provides:
 
 ## Real-World Impact
 
-**Before audit**
+#### Before audit
 - 2-5 hours debugging intermittent crashes
 - Data loss discovered in production
 - Migration failures affecting 500K+ users
 
-**After audit**
+#### After audit
 - 2-5 minutes to identify issues
 - Catch problems before production
 - Proactive migration testing prevents data loss

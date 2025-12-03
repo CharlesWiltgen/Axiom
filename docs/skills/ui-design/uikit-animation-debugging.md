@@ -15,16 +15,16 @@ Debug UIKit animation issues including completion handlers that never fire, inco
 
 These are real questions developers ask that this skill is designed to answer:
 
-**1. "My CAAnimation completion handler never fires. The animation plays but the code after never executes. Why?"**
+#### 1. "My CAAnimation completion handler never fires. The animation plays but the code after never executes. Why?"
 → The skill shows CATransaction commit completion pattern and explains implicit vs explicit animations
 
-**2. "Spring animation looks perfect in simulator but bounces wrong on real iPhone. What's different?"**
+#### 2. "Spring animation looks perfect in simulator but bounces wrong on real iPhone. What's different?"
 → The skill demonstrates frame rate differences (120Hz ProMotion vs simulator) and device-specific tuning
 
-**3. "Animation duration is 0.3 seconds but actually takes 0.5 seconds. Where's the extra time coming from?"**
+#### 3. "Animation duration is 0.3 seconds but actually takes 0.5 seconds. Where's the extra time coming from?"
 → The skill reveals CATransaction duration wrapping and nested animation timing
 
-**4. "When I pan a gesture and trigger animation, it's janky. Works fine without gesture."**
+#### 4. "When I pan a gesture and trigger animation, it's janky. Works fine without gesture."
 → The skill covers gesture-animation interaction patterns and RunLoop mode issues
 
 ## Red Flags — Check Animation Layer First

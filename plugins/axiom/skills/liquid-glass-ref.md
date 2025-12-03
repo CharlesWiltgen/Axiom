@@ -20,7 +20,7 @@ Use when:
 - Ensuring accessibility compliance with Liquid Glass interfaces
 - Reviewing search, navigation, or organizational component updates
 
-**Related Skills**
+#### Related Skills
 - Use `liquid-glass` for implementing the Liquid Glass material itself and design review pressure scenarios
 - Use `swiftui-performance` for profiling Liquid Glass rendering performance
 - Use `accessibility-diag` for accessibility testing
@@ -31,7 +31,7 @@ Use when:
 
 Adopting Liquid Glass doesn't mean reinventing your app from the ground up. Start by building your app in the latest version of Xcode to see the changes. If your app uses standard components from SwiftUI, UIKit, or AppKit, your interface picks up the latest look and feel automatically on the latest platform releases.
 
-**Key Adoption Strategy**
+#### Key Adoption Strategy
 1. Build with latest Xcode SDKs
 2. Run on latest platform releases
 3. Review changes using this reference
@@ -43,13 +43,13 @@ Adopting Liquid Glass doesn't mean reinventing your app from the ground up. Star
 
 ### What Changes Automatically
 
-**Standard Components Get Liquid Glass**
+#### Standard Components Get Liquid Glass
 - Navigation bars, tab bars, toolbars
 - Sheets, popovers, action sheets
 - Buttons, sliders, toggles, and controls
 - Sidebars, split views, menus
 
-**How It Works**
+#### How It Works
 - Liquid Glass combines optical properties of glass with fluidity
 - Forms distinct functional layer for controls and navigation
 - Adapts in response to overlap, focus state, and environment
@@ -57,7 +57,7 @@ Adopting Liquid Glass doesn't mean reinventing your app from the ground up. Star
 
 ### Leverage System Frameworks
 
-**✅ DO: Use Standard Components**
+#### ✅ DO: Use Standard Components
 
 Standard components from SwiftUI, UIKit, and AppKit automatically adopt Liquid Glass with minimal code changes.
 
@@ -76,7 +76,7 @@ NavigationView {
 // Recompile with Xcode 26 → Liquid Glass applied
 ```
 
-**❌ DON'T: Override with Custom Backgrounds**
+#### ❌ DON'T: Override with Custom Backgrounds
 
 ```swift
 // ❌ Custom backgrounds interfere with Liquid Glass
@@ -88,7 +88,7 @@ NavigationView { }
     }
 ```
 
-**What to Audit**
+#### What to Audit
 - Split views
 - Tab bars
 - Toolbars
@@ -99,12 +99,12 @@ NavigationView { }
 
 ### Test with Accessibility Settings
 
-**Settings That Affect Liquid Glass**
+#### Settings That Affect Liquid Glass
 - Reduce Transparency (makes glass frostier)
 - Increase Contrast (makes elements predominantly black/white)
 - Reduce Motion (decreases animation intensity)
 
-**Testing Checklist**
+#### Testing Checklist
 - [ ] Enable Reduce Transparency → verify frosted appearance works
 - [ ] Enable Increase Contrast → verify contrasting borders appear
 - [ ] Enable Reduce Motion → verify elastic properties disabled
@@ -112,7 +112,7 @@ NavigationView { }
 - [ ] Standard components adapt automatically
 - [ ] Custom elements provide fallback experience
 
-**How to Test**
+#### How to Test
 ```swift
 // Launch arguments for accessibility testing
 app.launchArguments += [
@@ -124,11 +124,11 @@ app.launchArguments += [
 
 ### Avoid Overusing Liquid Glass
 
-**❌ DON'T: Apply to Every Custom Control**
+#### ❌ DON'T: Apply to Every Custom Control
 
 Liquid Glass seeks to bring attention to underlying content. Overusing this material in multiple custom controls distracts from content and provides subpar user experience.
 
-**✅ DO: Limit to Important Functional Elements**
+#### ✅ DO: Limit to Important Functional Elements
 
 ```swift
 // ✅ Selective application to navigation layer
@@ -167,13 +167,13 @@ App icons now take on a design that's dynamic and expressive. Updates to the ico
 
 ### Platform Support
 
-**Layered Icons**
+#### Layered Icons
 - iOS 26+
 - iPadOS 26+
 - macOS Tahoe+
 - watchOS (rounded rectangle → circular mask)
 
-**Appearance Variants**
+#### Appearance Variants
 - Default (light)
 - Dark
 - Clear
@@ -181,13 +181,13 @@ App icons now take on a design that's dynamic and expressive. Updates to the ico
 
 ### Design Principles
 
-**Key Principles**
+#### Key Principles
 1. **Visually consistent** across platforms
 2. **Optically balanced** design
 3. **Simplified design** with solid, filled, overlapping semi-transparent shapes
 4. **Let system handle effects** (masking, blurring, reflection, refraction)
 
-**❌ DON'T: Include System Effects in Design**
+#### ❌ DON'T: Include System Effects in Design
 
 ```
 ❌ Design includes:
@@ -197,7 +197,7 @@ App icons now take on a design that's dynamic and expressive. Updates to the ico
    - Fixed masking
 ```
 
-**✅ DO: Design Clean Layers**
+#### ✅ DO: Design Clean Layers
 
 ```
 ✅ Design includes:
@@ -214,12 +214,12 @@ App icons now take on a design that's dynamic and expressive. Updates to the ico
 
 ### Design Using Layers
 
-**Layer Structure**
+#### Layer Structure
 - **Foreground Layer**: Primary visual elements
 - **Middle Layer**: Supporting elements
 - **Background Layer**: Foundation elements
 
-**Export from Design App**
+#### Export from Design App
 ```
 Export settings:
 - Format: PNG or vector (SVG recommended)
@@ -228,7 +228,7 @@ Export settings:
 - One file per layer
 ```
 
-**System-Applied Effects**
+#### System-Applied Effects
 - Reflection (light bouncing off surface)
 - Refraction (light bending through material)
 - Shadow (depth and elevation)
@@ -237,7 +237,7 @@ Export settings:
 
 ### Icon Composer
 
-**Compose and Preview**
+#### Compose and Preview
 
 Icon Composer app (included in Xcode 26+):
 1. Drag and drop exported layers
@@ -246,11 +246,11 @@ Icon Composer app (included in Xcode 26+):
 4. Adjust layer attributes (opacity, position, scale)
 5. Preview with system effects and appearance variants
 
-**Download Icon Composer**
+#### Download Icon Composer
 - Included in Xcode 26+
 - Standalone: https://developer.apple.com/design/resources/
 
-**Capabilities**
+#### Capabilities
 - Real-time preview with system effects
 - Light/dark/clear/tinted appearance previews
 - Layer management (order, opacity, grouping)
@@ -258,26 +258,26 @@ Icon Composer app (included in Xcode 26+):
 
 ### Preview Against Updated Grids
 
-**Grid Updates**
+#### Grid Updates
 - iOS/iPadOS/macOS: Rounded rectangle mask
 - watchOS: Circular mask
 
-**What to Check**
+#### What to Check
 - Keep elements centered to avoid clipping
 - Irregular shapes receive system-provided background
 - Test at all sizes (small, medium, large)
 
-**Download Grids**
+#### Download Grids
 https://developer.apple.com/design/resources/
 
-**Testing Checklist**
+#### Testing Checklist
 - [ ] Icon centered within grid
 - [ ] No critical elements clipped by mask
 - [ ] Looks good at all sizes
 - [ ] Appears balanced with system-provided background (if irregular)
 - [ ] All appearance variants (light/dark/clear/tinted) look intentional
 
-**Example Issue**
+#### Example Issue
 ```
 ❌ Problem: Logo text clipped at edges
 ✅ Solution: Center design, reduce size to fit safe area
@@ -291,13 +291,13 @@ Controls have refreshed look across platforms and come to life during interactio
 
 ### Updated Appearance
 
-**What Changed**
+#### What Changed
 - Rounder forms (inspired by hardware curvature)
 - Knobs transform into Liquid Glass during interaction
 - Buttons morph into menus/popovers
 - Extra-large size option for labels and accents
 
-**Automatic Adoption**
+#### Automatic Adoption
 ```swift
 // ✅ Standard controls adopt changes automatically
 Slider(value: $volume)
@@ -305,7 +305,7 @@ Toggle("Enabled", isOn: $isEnabled)
 Button("Action") { }
 ```
 
-**If you hard-coded layout metrics**
+#### If you hard-coded layout metrics
 ```swift
 // ❌ Hard-coded dimensions may break
 Slider(value: $volume)
@@ -317,7 +317,7 @@ Slider(value: $volume)
 
 ### Review Updated Controls
 
-**Controls to Audit**
+#### Controls to Audit
 - Sliders (knob transforms to glass)
 - Toggles (knob transforms to glass)
 - Buttons (morph into menus/popovers)
@@ -326,7 +326,7 @@ Slider(value: $volume)
 - Segmented controls
 - Progress indicators
 
-**What to Check**
+#### What to Check
 - Appearance matches rest of interface
 - Spacing around controls looks natural
 - Controls not cropped by containers
@@ -334,7 +334,7 @@ Slider(value: $volume)
 
 ### Color in Controls
 
-**✅ DO: Use System Colors**
+#### ✅ DO: Use System Colors
 
 ```swift
 // ✅ System colors adapt to light/dark contexts
@@ -345,7 +345,7 @@ Toggle("Feature", isOn: $enabled)
     .tint(.blue) // System blue adapts
 ```
 
-**❌ DON'T: Hard-code Custom Colors**
+#### ❌ DON'T: Hard-code Custom Colors
 
 ```swift
 // ❌ May not adapt to context
@@ -353,7 +353,7 @@ Button("Primary") { }
     .foregroundColor(Color(red: 0.2, green: 0.4, blue: 0.8))
 ```
 
-**Legibility Guidelines**
+#### Legibility Guidelines
 - Be judicious with color in controls and navigation
 - Leverage system colors for automatic adaptation
 - Test in light and dark modes
@@ -361,7 +361,7 @@ Button("Primary") { }
 
 ### Check for Crowding or Overlapping
 
-**❌ AVOID: Crowding Controls**
+#### ❌ AVOID: Crowding Controls
 
 ```swift
 // ❌ Controls too close together
@@ -372,7 +372,7 @@ HStack(spacing: 4) { // Too tight
 }
 ```
 
-**✅ DO: Use Standard Spacing**
+#### ✅ DO: Use Standard Spacing
 
 ```swift
 // ✅ System spacing feels natural
@@ -403,12 +403,12 @@ ScrollView {
 .scrollEdgeEffectStyle(.hard, for: .top) // Maintain legibility at top edge
 ```
 
-**System bars adopt this automatically**
+#### System bars adopt this automatically
 - Toolbars
 - Navigation bars
 - Tab bars
 
-**Custom bars need registration**
+#### Custom bars need registration
 ```swift
 // Custom bar with controls/text/icons
 CustomToolbar()
@@ -419,7 +419,7 @@ CustomToolbar()
 
 **Principle** Shape of hardware informs curvature throughout interface.
 
-**Use `containerRelativeShape()`**
+#### Use `containerRelativeShape()`
 
 ```swift
 // ✅ Control shape aligns with container curvature
@@ -427,7 +427,7 @@ Button("Action") { }
     .containerRelativeShape(.roundedRectangle)
 ```
 
-**Creates visual continuity**
+#### Creates visual continuity
 - Controls → concentric to sheets
 - Sheets → concentric to windows
 - Windows → concentric to display
@@ -436,9 +436,9 @@ Button("Action") { }
 
 ### New Button Styles
 
-**Instead of custom Liquid Glass effects, use built-in styles**
+#### Instead of custom Liquid Glass effects, use built-in styles
 
-**`.borderedProminent`**
+#### `.borderedProminent`
 ```swift
 Button("Primary Action") { }
     .buttonStyle(.borderedProminent)
@@ -446,14 +446,14 @@ Button("Primary Action") { }
 // Filled button with Liquid Glass adaptation
 ```
 
-**`.bordered`**
+#### `.bordered`
 ```swift
 Button("Secondary Action") { }
     .buttonStyle(.bordered)
 // Bordered button with Liquid Glass effects
 ```
 
-**`.plain` with Liquid Glass**
+#### `.plain` with Liquid Glass
 ```swift
 Button("Tertiary") { }
     .buttonStyle(.plain)
@@ -471,7 +471,7 @@ Liquid Glass applies to topmost layer where you define navigation. Key navigatio
 
 ### Clear Navigation Hierarchy
 
-**✅ DO: Separate Content from Navigation**
+#### ✅ DO: Separate Content from Navigation
 
 ```
 ┌─────────────────────────────────┐
@@ -485,7 +485,7 @@ Liquid Glass applies to topmost layer where you define navigation. Key navigatio
 └─────────────────────────────────┘
 ```
 
-**❌ DON'T: Blur the Boundary**
+#### ❌ DON'T: Blur the Boundary
 
 ```swift
 // ❌ Content and navigation compete
@@ -499,7 +499,7 @@ List(items) { item in
 
 ### Tab Bar Adapting to Sidebar
 
-**Automatic Adaptation**
+#### Automatic Adaptation
 
 ```swift
 // ✅ Tab bar adapts to sidebar depending on context
@@ -513,20 +513,20 @@ TabView {
 .tabViewStyle(.sidebarAdaptable) // NEW in iOS 26
 ```
 
-**When it adapts**
+#### When it adapts
 - iPad: Can switch to sidebar for better space usage
 - iPhone: Remains tab bar
 - macOS: Sidebar preferred
 - Adaptive window sizes: Transitions fluidly
 
-**Benefits**
+#### Benefits
 - Consistent experience across platforms
 - Better space usage on larger screens
 - Automatic with minimal code
 
 ### Split Views for Sidebar + Inspector Layouts
 
-**Use split views for consistent layouts**
+#### Use split views for consistent layouts
 
 ```swift
 // ✅ Split view with sidebar + content + inspector
@@ -547,7 +547,7 @@ NavigationSplitView {
 }
 ```
 
-**Platform Optimization**
+#### Platform Optimization
 - iOS: Adaptive column visibility
 - iPadOS: All columns visible on large screens
 - macOS: Sidebar + content + inspector layout
@@ -557,7 +557,7 @@ NavigationSplitView {
 
 **Problem** Content might not peek through appropriately beneath sidebars/inspectors.
 
-**Solution: Audit Safe Areas**
+#### Solution: Audit Safe Areas
 
 ```swift
 // ✅ Respect safe areas for proper content peeking
@@ -574,7 +574,7 @@ ScrollView {
 }
 ```
 
-**What to Check**
+#### What to Check
 - Content visible beneath sidebar/inspector
 - Content not cropped inappropriately
 - Background peek-through looks intentional
@@ -582,16 +582,16 @@ ScrollView {
 
 ### Background Extension Effect
 
-**What It Is**
+#### What It Is
 Background extension effect creates impression of stretching content under sidebar/inspector without actually scrolling it there. Mirrors adjacent content + applies blur for legibility.
 
-**Perfect For**
+#### Perfect For
 - Hero images on product pages
 - Full-bleed photo galleries
 - Edge-to-edge content experiences
 - Apps using split views
 
-**How It Works**
+#### How It Works
 ```swift
 // ✅ Background extends under sidebar
 NavigationSplitView {
@@ -602,13 +602,13 @@ NavigationSplitView {
 }
 ```
 
-**Visual Effect**
+#### Visual Effect
 1. Content appears to extend beneath sidebar
 2. Mirrored content subtly visible
 3. Blur maintains sidebar legibility
 4. Creates immersive, edge-to-edge feel
 
-**When to Use**
+#### When to Use
 - Split view layouts
 - Sidebar/inspector UIs
 - Media-rich content
@@ -616,11 +616,11 @@ NavigationSplitView {
 
 ### Automatically Minimize Tab Bar (iOS)
 
-**New Behavior**
+#### New Behavior
 
 Tab bars can recede when scrolling to elevate underlying content.
 
-**How to Configure**
+#### How to Configure
 
 ```swift
 TabView {
@@ -630,13 +630,13 @@ TabView {
 .tabBarMinimizationBehavior(.onScrollDown) // NEW in iOS 26
 ```
 
-**Options**
+#### Options
 - `.onScrollDown` - Minimize when scrolling down
 - `.onScrollUp` - Minimize when scrolling up
 - `.automatic` - System determines
 - `.never` - Always visible
 
-**When minimized**
+#### When minimized
 - Tab bar recedes (smaller visual footprint)
 - Expands when scrolling in opposite direction
 - Content gains more screen space
@@ -651,7 +651,7 @@ Menus have refreshed look across platforms. They adopt Liquid Glass, and menu it
 
 ### Menu Icons for Standard Actions
 
-**Automatic Icon Adoption**
+#### Automatic Icon Adoption
 
 ```swift
 // ✅ Standard selectors get icons automatically
@@ -672,7 +672,7 @@ Menu("Actions") {
 // paste() → clipboard icon
 ```
 
-**Standard Selectors**
+#### Standard Selectors
 - `cut()` → ✂️ scissors
 - `copy()` → 📄 documents
 - `paste()` → 📋 clipboard
@@ -680,7 +680,7 @@ Menu("Actions") {
 - `share()` → ↗️ share arrow
 - Many more...
 
-**Custom Actions**
+#### Custom Actions
 ```swift
 // ✅ Provide icon for custom actions
 Button {
@@ -692,7 +692,7 @@ Button {
 
 ### Match Top Menu Actions to Swipe Actions
 
-**For consistency and predictability**
+#### For consistency and predictability
 
 ```swift
 // ✅ Swipe actions match contextual menu
@@ -729,7 +729,7 @@ List(emails) { email in
 
 ### Toolbar Item Grouping
 
-**Group items that share a background**
+#### Group items that share a background
 
 ```swift
 // ✅ Fixed spacer separates groups
@@ -747,19 +747,19 @@ List(emails) { email in
 }
 ```
 
-**Visual Effect**
+#### Visual Effect
 - Items within group share Liquid Glass background
 - `.fixed` spacer creates visual separation
 - Clear grouping of related actions
 
-**Best Practices**
+#### Best Practices
 - Group similar actions (navigation, formatting, settings)
 - Maintain consistent groupings across platforms
 - Use `.fixed` for logical separation
 
 ### Icons vs Text in Toolbars
 
-**✅ DO: Use Icons for Common Actions**
+#### ✅ DO: Use Icons for Common Actions
 
 ```swift
 // ✅ Icons declutter interface
@@ -774,7 +774,7 @@ List(emails) { email in
 }
 ```
 
-**❌ DON'T: Mix Icons and Text in Same Group**
+#### ❌ DON'T: Mix Icons and Text in Same Group
 
 ```swift
 // ❌ Inconsistent visual style
@@ -794,7 +794,7 @@ List(emails) { email in
 
 ### Provide Accessibility Labels for Icons
 
-**Always specify accessibility label**
+#### Always specify accessibility label
 
 ```swift
 // ✅ Icon has accessibility label
@@ -810,14 +810,14 @@ Button {
 
 ### Audit Toolbar Customizations
 
-**What to Check**
+#### What to Check
 - Custom fixed spacers → verify they work with new Liquid Glass backgrounds
 - Custom items → verify appearance consistent with system behavior
 - Toolbar visibility → verify hiding/showing works correctly
 
-**Common Issue: Empty Toolbar Items**
+#### Common Issue: Empty Toolbar Items
 
-**❌ Problem**
+#### ❌ Problem
 ```swift
 // ❌ Hiding view instead of item
 .toolbar {
@@ -831,7 +831,7 @@ Button {
 }
 ```
 
-**✅ Solution**
+#### ✅ Solution
 ```swift
 // ✅ Hide entire toolbar item
 .toolbar {
@@ -851,7 +851,7 @@ Windows adopt rounder corners to fit controls and navigation elements. iPadOS ap
 
 ### Arbitrary Window Sizes (iPadOS)
 
-**Support continuous resizing**
+#### Support continuous resizing
 
 ```swift
 // ✅ Content adapts to arbitrary window sizes
@@ -862,19 +862,19 @@ WindowGroup {
 .windowResizability(.contentSize) // NEW in iPadOS 26
 ```
 
-**What Changed**
+#### What Changed
 - No longer transitions between preset sizes
 - Windows resize fluidly down to minimum size
 - Content should reflow gracefully
 
-**Developer Action**
+#### Developer Action
 - Remove hard-coded size assumptions
 - Use flexible layouts (VStack, HStack, Grid)
 - Test at various window sizes
 
 ### Split Views for Fluid Column Resizing
 
-**Use split views for automatic reflow**
+#### Use split views for automatic reflow
 
 ```swift
 // ✅ Split view handles continuous resizing
@@ -885,20 +885,20 @@ NavigationSplitView(columnVisibility: $columnVisibility) {
 }
 ```
 
-**Benefits**
+#### Benefits
 - Automatic content reflow
 - Beautiful, fluid transitions
 - Minimal code
 - System-optimized animations
 
-**Without split views**
+#### Without split views
 - Manual layout calculations
 - Custom animation code
 - More complexity
 
 ### Use Layout Guides and Safe Areas
 
-**Specify safe areas for automatic adjustment**
+#### Specify safe areas for automatic adjustment
 
 ```swift
 // ✅ Content respects safe areas
@@ -911,29 +911,29 @@ VStack {
 }
 ```
 
-**System Automatically Adjusts**
+#### System Automatically Adjusts
 - Window controls position
 - Title bar layout
 - Content layout relative to chrome
 
 ### Sheets: Increased Corner Radius
 
-**What Changed**
+#### What Changed
 - Sheets have increased corner radius
 - Half sheets inset from edge (content peeks through)
 - Half sheets transitioning to full height become more opaque
 
-**Check Content Around Edges**
+#### Check Content Around Edges
 
-**Inside Sheet**
+#### Inside Sheet
 - Content too close to rounder corners?
 - Controls cropped by corner radius?
 
-**Outside Sheet**
+#### Outside Sheet
 - Content peeking through between inset sheet and edge looks intentional?
 - Background visible around half sheet edges?
 
-**Testing**
+#### Testing
 ```swift
 // Test half sheet presentation
 .sheet(isPresented: $showSheet) {
@@ -944,7 +944,7 @@ VStack {
 
 ### Audit Sheet/Popover Backgrounds
 
-**❌ REMOVE: Custom Background Views**
+#### ❌ REMOVE: Custom Background Views
 
 ```swift
 // ❌ Custom visual effect view in popover
@@ -956,7 +956,7 @@ VStack {
 }
 ```
 
-**✅ DO: Let System Handle Background**
+#### ✅ DO: Let System Handle Background
 
 ```swift
 // ✅ System applies Liquid Glass automatically
@@ -968,11 +968,11 @@ VStack {
 
 ### Action Sheets: Inline Appearance
 
-**What Changed**
+#### What Changed
 
 Action sheets originate from the element that initiates the action (not bottom edge of display). When active, action sheets let people interact with other parts of interface.
 
-**Specify Source of Action Sheet**
+#### Specify Source of Action Sheet
 
 ```swift
 // ✅ Action sheet anchored to source
@@ -987,7 +987,7 @@ Button("Options") {
 // System positions sheet next to button automatically
 ```
 
-**Benefits**
+#### Benefits
 - Clear relationship to source
 - Doesn't block entire interface
 - More flexible interaction
@@ -1001,13 +1001,13 @@ Lists, tables, and forms have larger row height and padding to give content room
 
 ### Larger Row Height and Padding
 
-**What Changed**
+#### What Changed
 - Lists: Larger row height
 - Tables: More padding
 - Forms: Increased spacing
 - Sections: Increased corner radius
 
-**Automatic Adoption**
+#### Automatic Adoption
 ```swift
 // ✅ Standard components adopt new metrics
 List(items) { item in
@@ -1015,7 +1015,7 @@ List(items) { item in
 }
 ```
 
-**If you hard-coded metrics**
+#### If you hard-coded metrics
 ```swift
 // ❌ May look cramped with new design
 List(items) { item in
@@ -1033,25 +1033,25 @@ List(items) { item in
 
 ### Section Header Capitalization
 
-**What Changed**
+#### What Changed
 
 Section headers no longer render entirely in capital letters. They now respect title-style capitalization you provide.
 
-**Before (iOS 18 and earlier)**
+#### Before (iOS 18 and earlier)
 ```swift
 Section(header: Text("User settings")) {
     // Rendered as "USER SETTINGS"
 }
 ```
 
-**After (iOS 26+)**
+#### After (iOS 26+)
 ```swift
 Section(header: Text("User Settings")) {
     // Rendered as "User Settings" (title-style)
 }
 ```
 
-**Action Required**
+#### Action Required
 
 Update section headers to title-style capitalization:
 
@@ -1069,7 +1069,7 @@ Section(header: Text("User Settings")) {
 
 ### Adopt Forms for Platform-Optimized Layouts
 
-**Use `.grouped` form style**
+#### Use `.grouped` form style
 
 ```swift
 // ✅ Form adopts platform-optimized layout
@@ -1091,7 +1091,7 @@ Form {
 .formStyle(.grouped) // Platform-optimized metrics
 ```
 
-**Benefits**
+#### Benefits
 - Automatic row height updates
 - Correct padding and spacing
 - Section corner radius matches controls
@@ -1105,17 +1105,17 @@ Platform conventions for search location and behavior optimize experience for ea
 
 ### Keyboard Layout When Activating Search
 
-**What Changed (iOS)**
+#### What Changed (iOS)
 
 When a person taps search field to give it focus, it slides upwards as keyboard appears.
 
-**Testing**
+#### Testing
 - Tap search field
 - Verify smooth upward slide
 - Keyboard appears without covering search field
 - Consistent with system search experiences (Spotlight, Safari)
 
-**No Code Changes Required**
+#### No Code Changes Required
 ```swift
 // ✅ Existing searchable modifier adopts new behavior
 List(items) { item in
@@ -1126,7 +1126,7 @@ List(items) { item in
 
 ### Semantic Search Tabs
 
-**Use `.tabRole(.search)` for search tabs**
+#### Use `.tabRole(.search)` for search tabs
 
 ```swift
 // ✅ Search tab separated and morphs into search field
@@ -1143,13 +1143,13 @@ TabView {
 }
 ```
 
-**Visual Effect**
+#### Visual Effect
 - Search tab appears separated from other tabs
 - Positioned at trailing end
 - When tapped, morphs into search field
 - Consistent with other apps (App Store, Maps)
 
-**Benefits**
+#### Benefits
 - Consistent experience across apps
 - People find content faster
 - Fluid morph animation
@@ -1163,11 +1163,11 @@ Liquid Glass can have distinct appearance and behavior across platforms, context
 
 ### watchOS
 
-**Minimal Changes**
+#### Minimal Changes
 
 Liquid Glass changes are minimal in watchOS. They appear automatically when you open app on latest release even without building against latest SDK.
 
-**To Ensure Proper Adoption**
+#### To Ensure Proper Adoption
 - Adopt standard toolbar APIs
 - Use standard button styles from watchOS 10
 
@@ -1179,15 +1179,15 @@ Button("Action") { }
 
 ### tvOS
 
-**Focus-Based Appearance**
+#### Focus-Based Appearance
 
 Standard buttons and controls take on Liquid Glass appearance when focus moves to them.
 
-**System Requirements**
+#### System Requirements
 - Apple TV 4K (2nd generation) and newer: Full Liquid Glass effects
 - Older devices: Maintains current appearance
 
-**Adopt Standard Focus APIs**
+#### Adopt Standard Focus APIs
 
 ```swift
 // ✅ Standard focus APIs for Liquid Glass on focus
@@ -1195,7 +1195,7 @@ Button("Action") { }
     .focusable()
 ```
 
-**For Custom Controls**
+#### For Custom Controls
 
 Apply Liquid Glass effects when they gain focus:
 
@@ -1215,7 +1215,7 @@ struct CustomControl: View {
 
 ### Combining Custom Liquid Glass Effects
 
-**Use `GlassEffectContainer` for Performance**
+#### Use `GlassEffectContainer` for Performance
 
 ```swift
 // ✅ Combine effects in container for optimization
@@ -1233,46 +1233,46 @@ GlassEffectContainer {
 }
 ```
 
-**Benefits**
+#### Benefits
 - Optimizes rendering performance
 - Fluidly morphs Liquid Glass shapes into each other
 - Better animation performance
 - Reduces compositor overhead
 
-**When to Use**
+#### When to Use
 - Multiple custom Liquid Glass elements
 - Morphing animations between glass shapes
 - Performance-critical interfaces
 
 ### Performance Testing
 
-**Profile Your App**
+#### Profile Your App
 
 Building with latest SDKs is opportunity to assess and improve performance.
 
-**Use Instruments**
+#### Use Instruments
 - Time Profiler (CPU usage)
 - SwiftUI (view updates - see `swiftui-performance` skill)
 - Allocations (memory usage)
 - Core Animation (rendering performance)
 
-**What to Check**
+#### What to Check
 - Scrolling performance with Liquid Glass
 - Animation smoothness
 - Memory usage patterns
 - CPU usage during interactions
 
-**See Related Skills**
+#### See Related Skills
 - `swiftui-performance` - SwiftUI Instrument workflows
 - `performance-profiling` - Instruments decision trees
 
 ### Backward Compatibility
 
-**Maintain Previous Appearance**
+#### Maintain Previous Appearance
 
 To ship with latest SDKs while keeping app as it looked when built against previous SDKs:
 
-**Add `UIDesignRequiresCompatibility` key**
+#### Add `UIDesignRequiresCompatibility` key
 
 ```xml
 <!-- Info.plist -->
@@ -1280,18 +1280,18 @@ To ship with latest SDKs while keeping app as it looked when built against previ
 <true/>
 ```
 
-**Effect**
+#### Effect
 - App built with iOS 26 SDK
 - Appearance matches iOS 18 and earlier
 - Liquid Glass effects disabled
 - Previous blur/material styles used
 
-**When to Use**
+#### When to Use
 - Need time to audit interface changes
 - Gradual adoption strategy
 - Maintain exact appearance temporarily
 
-**Migration Strategy**
+#### Migration Strategy
 1. Ship with `UIDesignRequiresCompatibility` enabled
 2. Audit interface changes in separate build
 3. Update interface incrementally
@@ -1422,18 +1422,18 @@ Use this checklist when auditing app for Liquid Glass adoption:
 
 ## Related Resources
 
-**WWDC Sessions**
+#### WWDC Sessions
 - [Adopting Liquid Glass (documentation)](https://developer.apple.com/documentation/TechnologyOverviews/adopting-liquid-glass)
 - [Meet Liquid Glass — WWDC25 Session 219](https://developer.apple.com/videos/play/wwdc2025/219/)
 - [Build a SwiftUI app with the new design — WWDC25 Session 323](https://developer.apple.com/videos/play/wwdc2025/323/)
 
-**Related Skills**
+#### Related Skills
 - `liquid-glass` - Implementing Liquid Glass material, design review pressure
 - `swiftui-performance` - Profiling Liquid Glass rendering performance
 - `swiftui-debugging` - Debugging view updates with Liquid Glass
 - `accessibility-diag` - Accessibility testing
 
-**Design Resources**
+#### Design Resources
 - Icon Composer: https://developer.apple.com/design/resources/
 - App Icon Grids: https://developer.apple.com/design/resources/
 - Human Interface Guidelines — Materials: https://developer.apple.com/design/Human-Interface-Guidelines/materials

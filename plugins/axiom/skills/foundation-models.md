@@ -19,7 +19,7 @@ Use when:
 - Debugging Foundation Models issues (context overflow, slow generation, wrong output)
 - Deciding between Foundation Models vs server LLMs (ChatGPT, Claude, etc.)
 
-**Related Skills**
+#### Related Skills
 - Use `foundation-models-diag` for systematic troubleshooting (context exceeded, guardrail violations, availability problems)
 - Use `foundation-models-ref` for complete API reference with all WWDC code examples
 
@@ -27,19 +27,19 @@ Use when:
 
 These are real questions developers ask that this skill is designed to answer:
 
-**1. "How do I get structured data from the on-device model? I tried prompting for JSON but get invalid output"**
+#### 1. "How do I get structured data from the on-device model? I tried prompting for JSON but get invalid output"
 → The skill explains @Generable macro for guaranteed structured output with constrained decoding
 
-**2. "My generation is too slow. Users wait 3-4 seconds before seeing anything"**
+#### 2. "My generation is too slow. Users wait 3-4 seconds before seeing anything"
 → The skill covers streaming with PartiallyGenerated, prewarming sessions, and performance optimization
 
-**3. "I'm getting 'context window exceeded' errors. How do I handle this?"**
+#### 3. "I'm getting 'context window exceeded' errors. How do I handle this?"
 → The skill demonstrates transcript condensing strategies and context management patterns
 
-**4. "Should I use Foundation Models or ChatGPT API for my feature?"**
+#### 4. "Should I use Foundation Models or ChatGPT API for my feature?"
 → The skill clarifies when each is appropriate (privacy, offline, world knowledge trade-offs)
 
-**5. "How do I call my app's APIs from the model? Like fetching weather data or contacts"**
+#### 5. "How do I call my app's APIs from the model? Like fetching weather data or contacts"
 → The skill demonstrates Tool protocol implementation with MapKit, WeatherKit, Contacts examples
 
 ---
@@ -1080,7 +1080,7 @@ for i in 1...100 {
 
 ### Handling Context Overflow
 
-**Basic: Start fresh session**
+#### Basic: Start fresh session
 ```swift
 var session = LanguageModelSession()
 

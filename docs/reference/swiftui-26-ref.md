@@ -15,33 +15,33 @@ Complete reference for new SwiftUI APIs, modifiers, and capabilities introduced 
 
 ### Liquid Glass Design System
 
-**Material Design Evolution**
+#### Material Design Evolution
 - `.glassBackgroundEffect()` - New glass material modifier
 - Regular vs Clear variants
 - Dynamic tinting and vibrancy
 - Replaces `UIVisualEffectView` and blur effects
 
-**Toolbar Enhancements**
+#### Toolbar Enhancements
 - `.toolbarRole(.navigationStack)` - Smart spacing
 - Bottom-aligned search fields
 - Drawer-style search placement
 - `.searchFieldPlacement(.navigationBarDrawer(displayMode: .always))`
 
-**Tab Bar Improvements**
+#### Tab Bar Improvements
 - `.tabRole(.search)` - Search tab role
 - Enhanced tab item customization
 - Material-aware tab backgrounds
 
 ### Performance Improvements
 
-**Framework Optimizations (WWDC 2025-256)**
+#### Framework Optimizations (WWDC 2025-256)
 - 6x faster simple lists
 - 16x faster complex lists
 - Improved scrolling performance
 - Nested ScrollView optimization
 - Reduced memory footprint
 
-**SwiftUI Instrument (Instruments 26)**
+#### SwiftUI Instrument (Instruments 26)
 - Long view body detection
 - Cause & Effect Graph
 - Per-view performance metrics
@@ -60,7 +60,7 @@ struct CustomView: View {
 }
 ```
 
-**Benefits**
+#### Benefits
 - Auto-generates animatable conformance
 - Eliminates boilerplate
 - Type-safe animation interpolation
@@ -68,7 +68,7 @@ struct CustomView: View {
 
 ### WebView Integration
 
-**Native WebView in SwiftUI**
+#### Native WebView in SwiftUI
 ```swift
 WebView(url: URL(string: "https://example.com")!)
     .onNavigationAction { action in
@@ -79,7 +79,7 @@ WebView(url: URL(string: "https://example.com")!)
     }
 ```
 
-**WebPage for Custom HTML**
+#### WebPage for Custom HTML
 ```swift
 WebPage(html: """
     <html><body>
@@ -90,14 +90,14 @@ WebPage(html: """
 
 ### Rich Text Editing
 
-**AttributedString Editing**
+#### AttributedString Editing
 ```swift
 TextEditor(text: $attributedString)
     .textFormatting([.bold, .italic, .underline])
     .textColor(\.foreground, color: .blue)
 ```
 
-**Features**
+#### Features
 - Inline formatting controls
 - Character-level styling
 - Markdown export
@@ -105,7 +105,7 @@ TextEditor(text: $attributedString)
 
 ### 3D Charts
 
-**Spatial Chart Types**
+#### Spatial Chart Types
 ```swift
 Chart3D {
     ForEach(data) { item in
@@ -117,7 +117,7 @@ Chart3D {
 .chartPerspective(.orthographic)
 ```
 
-**Supported Types**
+#### Supported Types
 - BarMark3D
 - LineMark3D
 - PointMark3D
@@ -125,7 +125,7 @@ Chart3D {
 
 ### Spatial Layout
 
-**3D Layout System**
+#### 3D Layout System
 ```swift
 SpatialStack {
     ForEach(items) { item in
@@ -136,7 +136,7 @@ SpatialStack {
 .perspective(.default)
 ```
 
-**Capabilities**
+#### Capabilities
 - True 3D positioning
 - Perspective transforms
 - Depth sorting
@@ -144,7 +144,7 @@ SpatialStack {
 
 ### Scene Bridging
 
-**UIKit-SwiftUI Integration**
+#### UIKit-SwiftUI Integration
 ```swift
 // Embed UIKit in SwiftUI
 UIViewControllerRepresenting {
@@ -156,7 +156,7 @@ UIViewControllerRepresenting {
 hostingController.view.sceneBridge = true
 ```
 
-**Benefits**
+#### Benefits
 - Seamless animation transitions
 - Shared state management
 - Reduced memory overhead
@@ -164,13 +164,13 @@ hostingController.view.sceneBridge = true
 
 ### Other Enhancements
 
-**Drag and Drop**
+#### Drag and Drop
 - Multi-item drag support
 - Custom drag previews
 - Drop destination customization
 - System integration
 
-**visionOS Integration**
+#### visionOS Integration
 - Window groups for spatial apps
 - Immersive spaces
 - RealityView enhancements
@@ -189,19 +189,19 @@ Use this reference when:
 
 ### From iOS 18 → iOS 26
 
-**Liquid Glass Adoption**
+#### Liquid Glass Adoption
 - [ ] Replace `.blur()` with `.glassBackgroundEffect()`
 - [ ] Update navigation bars with `.toolbarRole()`
 - [ ] Migrate search to drawer placement
 - [ ] Review tab bar for glass materials
 
-**Performance**
+#### Performance
 - [ ] Profile with new SwiftUI Instrument
 - [ ] Identify long view bodies
 - [ ] Optimize with `@Animatable` macro
 - [ ] Test nested ScrollView performance
 
-**New Capabilities**
+#### New Capabilities
 - [ ] Consider WebView for web content
 - [ ] Replace AttributedText with TextEditor enhancements
 - [ ] Explore 3D charts for data visualization
@@ -224,7 +224,7 @@ Use this reference when:
 
 This is a **reference skill** — comprehensive API catalog without mandatory workflows.
 
-**Reference includes**
+#### Reference includes
 - Complete feature list
 - API examples
 - Migration strategies

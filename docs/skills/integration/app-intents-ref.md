@@ -57,18 +57,18 @@ App Intents integrate with:
 
 ### Apple Intelligence Integration
 
-**Use Model Action**
+#### Use Model Action
 - Pass app entities to language models for filtering and reasoning
 - Three output types: Text (AttributedString), Dictionary, App Entities
 - Automatic type conversion (e.g., Boolean for If actions)
 - Follow-up feature for iterative refinement
 
-**AttributedString Support**
+#### AttributedString Support
 - Preserve Rich Text formatting from AI models (bold, italic, lists, tables)
 - Lossless transfer from model to your app
 - Real example: Bear app diary templates with mood logging tables
 
-**Entity JSON Representation**
+#### Entity JSON Representation
 Models receive structured data including:
 - All @Property values (converted to strings)
 - Type display representation
@@ -76,13 +76,13 @@ Models receive structured data including:
 
 ### IndexedEntity Protocol
 
-**Dramatic Boilerplate Reduction**
+#### Dramatic Boilerplate Reduction
 - Auto-generate Find actions from Spotlight integration
 - Map properties to Spotlight attribute keys
 - Automatic search and filtering support
 - Eliminates manual EntityQuery/EntityPropertyQuery implementation
 
-**Example**
+#### Example
 ```swift
 struct EventEntity: AppEntity, IndexedEntity {
     @Property(title: "Title", indexingKey: \.eventTitle)
@@ -97,26 +97,26 @@ struct EventEntity: AppEntity, IndexedEntity {
 
 ### Spotlight on Mac
 
-**Run Intents Directly from Spotlight**
+#### Run Intents Directly from Spotlight
 - Parameter summary must include all required parameters
 - Provide suggestions for quick parameter filling
 - On-screen content tagging with appEntityIdentifier
 - Background/foreground intent pairing with opensIntent
 - PredictableIntent for usage-based suggestions
 
-**Visibility Requirements**
+#### Visibility Requirements
 - All required params in parameter summary (or make optional/provide defaults)
 - Not hidden via isDiscoverable = false or assistantOnly = true
 - Must have perform() method (widget config-only intents excluded)
 
 ### Automations on Mac
 
-**Personal Automations Arrive on Mac**
+#### Personal Automations Arrive on Mac
 - Folder automation - trigger when files added/removed
 - External drive automation - trigger on connect/disconnect
 - Time of Day, Bluetooth, and more from iOS
 
-**Automatic Availability**
+#### Automatic Availability
 As long as your intent is available on macOS, they will also be available to use in Shortcuts to run as a part of Automations on Mac. This includes iOS apps that are installable on macOS.
 
 ### Parameter Handling

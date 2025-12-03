@@ -146,19 +146,19 @@ grep -rn "NWConnection\|NetworkConnection" --include="*.swift" .
 
 Each issue links to specific patterns in related skills:
 
-**SCNetworkReachability**
+#### SCNetworkReachability
 → `/skill axiom:networking` → Pattern 2a (NWConnection waiting state)
 
-**CFSocket**
+#### CFSocket
 → `/skill axiom:networking` → Pattern 1a (NWConnection TCP+TLS)
 
-**Hardcoded IP**
+#### Hardcoded IP
 → `/skill axiom:networking` → Pattern 1a (Use hostname)
 
-**Missing [weak self]**
+#### Missing [weak self]
 → `/skill axiom:networking` → Checklist item 4
 
-**Data framing issues**
+#### Data framing issues
 → `/skill axiom:networking-diag` → Pattern 3a (TLV framing)
 
 ## Limitations
@@ -208,7 +208,7 @@ Most issues fixable quickly:
 
 This is an **audit command** — automated scanning with file:line references.
 
-**Command provides**
+#### Command provides
 - 10 detection patterns
 - File:line references for all issues
 - Severity classification

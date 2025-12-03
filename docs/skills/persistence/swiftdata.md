@@ -17,19 +17,19 @@ Apple's native persistence framework using `@Model` classes and declarative quer
 
 ## When to Use SwiftData
 
-**Choose SwiftData when you need**
+#### Choose SwiftData when you need
 - ✅ Native Apple integration with SwiftUI
 - ✅ Simple CRUD operations
 - ✅ Automatic UI updates with `@Query`
 - ✅ CloudKit sync (iOS 17+)
 - ✅ Reference types (classes) with relationships
 
-**Use SQLiteData instead when**
+#### Use SQLiteData instead when
 - Need value types (structs)
 - CloudKit record sharing (not just sync)
 - Large datasets (50k+ records) with specific performance needs
 
-**Use GRDB when**
+#### Use GRDB when
 - Complex raw SQL required
 - Fine-grained migration control needed
 
@@ -39,57 +39,57 @@ Apple's native persistence framework using `@Model` classes and declarative quer
 
 These are real questions developers ask that this skill is designed to answer:
 
-**Basic Operations**
+#### Basic Operations
 
-**1. "I have a notes app with folders. I need to filter notes by folder and sort by last modified. How do I set up the @Query?"**
+#### 1. "I have a notes app with folders. I need to filter notes by folder and sort by last modified. How do I set up the @Query?"
 → The skill shows how to use `@Query` with predicates, sorting, and automatic view updates
 
-**2. "When a user deletes a task list, all tasks should auto-delete too. How do I set up the relationship?"**
+#### 2. "When a user deletes a task list, all tasks should auto-delete too. How do I set up the relationship?"
 → The skill explains `@Relationship` with `deleteRule: .cascade` and inverse relationships
 
-**3. "I have a relationship between User → Messages → Attachments. How do I prevent orphaned data when deleting?"**
+#### 3. "I have a relationship between User → Messages → Attachments. How do I prevent orphaned data when deleting?"
 → The skill shows cascading deletes, inverse relationships, and safe deletion patterns
 
-**CloudKit & Sync**
+#### CloudKit & Sync
 
-**4. "My chat app syncs messages to other devices via CloudKit. Sometimes messages conflict. How do I handle sync conflicts?"**
+#### 4. "My chat app syncs messages to other devices via CloudKit. Sometimes messages conflict. How do I handle sync conflicts?"
 → The skill covers CloudKit integration, conflict resolution strategies (last-write-wins, custom resolution), and sync patterns
 
-**5. "I'm adding CloudKit sync to my app, but I get 'Property must have a default value' error. What's wrong?"**
+#### 5. "I'm adding CloudKit sync to my app, but I get 'Property must have a default value' error. What's wrong?"
 → The skill explains CloudKit constraints: all properties must be optional or have defaults, explains why (network timing), and shows fixes
 
-**6. "I want to show users when their data is syncing to iCloud and what happens when they're offline."**
+#### 6. "I want to show users when their data is syncing to iCloud and what happens when they're offline."
 → The skill shows monitoring sync status with notifications, detecting network connectivity, and offline-aware UI patterns
 
-**7. "I need to share a playlist with other users. How do I implement CloudKit record sharing?"**
+#### 7. "I need to share a playlist with other users. How do I implement CloudKit record sharing?"
 → The skill covers CloudKit record sharing patterns (iOS 26+) with owner/permission tracking and sharing metadata
 
-**Performance & Optimization**
+#### Performance & Optimization
 
-**8. "I need to query 50,000 messages but only display 20 at a time. How do I paginate efficiently?"**
+#### 8. "I need to query 50,000 messages but only display 20 at a time. How do I paginate efficiently?"
 → The skill covers performance patterns, batch fetching, limiting queries, and preventing memory bloat with chunked imports
 
-**9. "My app loads 100 tasks with relationships, and displaying them is slow. I think it's N+1 queries."**
+#### 9. "My app loads 100 tasks with relationships, and displaying them is slow. I think it's N+1 queries."
 → The skill shows how to identify N+1 problems without prefetching, provides prefetching pattern, and shows 100x performance improvement
 
-**10. "I'm importing 1 million records from an API. What's the best way to batch them without running out of memory?"**
+#### 10. "I'm importing 1 million records from an API. What's the best way to batch them without running out of memory?"
 → The skill shows chunk-based importing with periodic saves, memory cleanup patterns, and batch operation optimization
 
-**11. "Which properties should I add indexes to? I'm worried about over-indexing slowing down writes."**
+#### 11. "Which properties should I add indexes to? I'm worried about over-indexing slowing down writes."
 → The skill explains index optimization patterns: when to index (frequently filtered/sorted properties), when to avoid (rarely used, frequently changing), maintenance costs
 
-**Migration from Legacy Frameworks**
+#### Migration from Legacy Frameworks
 
-**12. "We're migrating from Realm to SwiftData. What are the biggest differences in how we write code?"**
+#### 12. "We're migrating from Realm to SwiftData. What are the biggest differences in how we write code?"
 → The skill shows Realm → SwiftData pattern equivalents: @Persisted → @Attribute, threading model differences, relationship handling
 
-**13. "We have Core Data in production. What's the safest way to migrate to SwiftData while keeping both running?"**
+#### 13. "We have Core Data in production. What's the safest way to migrate to SwiftData while keeping both running?"
 → The skill covers dual-stack migration: reading Core Data, writing to SwiftData, marking migrated records, gradual cutover, validation
 
-**14. "Our Realm app uses background threads for all database operations. How do I convert to SwiftData's async/await model?"**
+#### 14. "Our Realm app uses background threads for all database operations. How do I convert to SwiftData's async/await model?"
 → The skill explains thread-confinement migration: actor-based safety, removing manual DispatchQueue, proper async context patterns, Swift 6 concurrency
 
-**15. "I need to migrate our CloudKit sync from Realm Sync (deprecated) to SwiftData CloudKit integration."**
+#### 15. "I need to migrate our CloudKit sync from Realm Sync (deprecated) to SwiftData CloudKit integration."
 → The skill shows Realm Sync → SwiftData CloudKit migration, addressing sync feature gaps, testing new sync implementation
 
 ---
@@ -119,7 +119,7 @@ final class Track {
 }
 ```
 
-**Key patterns**
+#### Key patterns
 - Use `final class`, not `struct`
 - Use `@Attribute(.unique)` for primary key-like behavior
 - Provide explicit `init` (SwiftData doesn't synthesize)
@@ -182,7 +182,7 @@ final class User {
 }
 ```
 
-**CRITICAL: SwiftData automatically manages BOTH sides when you modify ONE side.**
+#### CRITICAL: SwiftData automatically manages BOTH sides when you modify ONE side.
 
 ✅ **Correct — Only modify ONE side**
 ```swift
@@ -200,14 +200,14 @@ user1.following.append(user2)
 user2.followers.append(user1)  // Redundant! Creates duplicates in CloudKit sync
 ```
 
-**Unfollowing (remove from ONE side only)**
+#### Unfollowing (remove from ONE side only)
 ```swift
 user1.following.removeAll { $0.id == user2.id }
 try modelContext.save()
 // user2.followers automatically updated
 ```
 
-**Verifying relationship integrity (for debugging)**
+#### Verifying relationship integrity (for debugging)
 ```swift
 // Check if relationship is truly bidirectional
 let user1FollowsUser2 = user1.following.contains { $0.id == user2.id }
@@ -217,7 +217,7 @@ let user2FollowedByUser1 = user2.followers.contains { $0.id == user1.id }
 assert(user1FollowsUser2 == user2FollowedByUser1, "Relationship corrupted!")
 ```
 
-**CloudKit Sync Recovery (if relationships become corrupted)**
+#### CloudKit Sync Recovery (if relationships become corrupted)
 ```swift
 // If CloudKit sync creates duplicate/orphaned relationships:
 
@@ -241,7 +241,7 @@ try modelContext.save()
 // Re-create ModelContainer to force full sync after corruption recovery
 ```
 
-**Delete rules**
+#### Delete rules
 - `.cascade` - Delete related objects
 - `.nullify` - Set relationship to nil
 - `.deny` - Prevent deletion if relationship exists
@@ -553,7 +553,7 @@ let container = try ModelContainer(
 
 ### CloudKit Constraints (CRITICAL)
 
-**When using CloudKit sync, ALL properties must be optional or have default values**
+#### When using CloudKit sync, ALL properties must be optional or have default values
 
 ```swift
 @Model
@@ -743,7 +743,7 @@ actor PlaylistSharing {
 Property 'title' must be optional or have a default value for CloudKit synchronization
 ```
 
-**Solution**
+#### Solution
 ```swift
 // ❌ Wrong - required property
 @Model
@@ -775,7 +775,7 @@ let testConfig = ModelConfiguration(isStoredInMemoryOnly: true)
 let container = try ModelContainer(for: schema, configurations: testConfig)
 ```
 
-**For real CloudKit testing**
+#### For real CloudKit testing
 1. Sign in to iCloud on test device
 2. Enable CloudKit in Capabilities
 3. Use real device (simulator CloudKit is unreliable)
@@ -881,7 +881,7 @@ let albumTitle = track.album?.title
 // Album loaded on access (separate query)
 ```
 
-**Use faulting strategically**
+#### Use faulting strategically
 - ✅ Good when you access relationships in only 10-20% of cases
 - ✅ Good for large relationship graphs you partially use
 - ❌ Bad when you access relationships in loops → use prefetching instead
@@ -926,7 +926,7 @@ final class Track {
 @Query(filter: #Predicate { $0.releaseDate > Date() }) var upcomingTracks: [Track]
 ```
 
-**When to add indexes**
+#### When to add indexes
 - ✅ Properties used in `@Query` filters frequently
 - ✅ Properties used in sort operations
 - ✅ Properties used in relationships
@@ -1076,7 +1076,7 @@ struct ContentView: View {
 
 ### Migrating from Realm
 
-**Realm Pattern → SwiftData Equivalent**
+#### Realm Pattern → SwiftData Equivalent
 
 ```swift
 // REALM
@@ -1104,7 +1104,7 @@ final class Track {
 }
 ```
 
-**Thread Safety Migration (Realm → SwiftData)**
+#### Thread Safety Migration (Realm → SwiftData)
 
 ```swift
 // REALM: Required explicit threading model
@@ -1142,7 +1142,7 @@ class ViewController: UIViewController {
 }
 ```
 
-**Relationship Migration (Realm → SwiftData)**
+#### Relationship Migration (Realm → SwiftData)
 
 ```swift
 // REALM: Explicit linking
@@ -1170,7 +1170,7 @@ final class Track {
 }
 ```
 
-**Migration Scenario: Small App (< 10,000 records)**
+#### Migration Scenario: Small App (< 10,000 records)
 
 ```swift
 actor RealmToSwiftDataMigration {
@@ -1207,7 +1207,7 @@ actor RealmToSwiftDataMigration {
 
 ### Migrating from Core Data
 
-**Core Data Pattern → SwiftData Equivalent**
+#### Core Data Pattern → SwiftData Equivalent
 
 ```swift
 // CORE DATA
@@ -1228,7 +1228,7 @@ final class Track {
 }
 ```
 
-**Thread Confinement Migration (Core Data → SwiftData)**
+#### Thread Confinement Migration (Core Data → SwiftData)
 
 ```swift
 // CORE DATA: Manual thread handling
@@ -1260,7 +1260,7 @@ class SwiftDataManager {
 }
 ```
 
-**Batch Operations Migration (Core Data → SwiftData)**
+#### Batch Operations Migration (Core Data → SwiftData)
 
 ```swift
 // CORE DATA: Complex batch delete
@@ -1297,7 +1297,7 @@ actor SwiftDataBatchDelete {
 }
 ```
 
-**Migration Scenario: Enterprise App (Gradual Migration)**
+#### Migration Scenario: Enterprise App (Gradual Migration)
 
 ```swift
 // Phase 1: Parallel persistence (Core Data + SwiftData)
@@ -1437,12 +1437,12 @@ try modelContext.save()
 
 ## External Resources
 
-**SwiftData**
+#### SwiftData
 - [Apple Documentation](https://developer.apple.com/documentation/swiftdata)
 - [WWDC Sessions](https://developer.apple.com/videos/swiftdata)
 - [SwiftData by Example](https://www.hackingwithswift.com/quick-start/swiftdata)
 
-**Related Axiom Skills**
+#### Related Axiom Skills
 - `database-migration` - Safe schema evolution
 - `sqlitedata` - Value types with CloudKit sharing
 - `grdb` - Raw SQL when needed

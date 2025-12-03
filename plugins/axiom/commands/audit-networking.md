@@ -12,54 +12,54 @@ I'll scan your codebase for deprecated networking APIs and Network.framework ant
 
 ### Deprecated APIs (Apple deprecated in WWDC 2018)
 
-**1. SCNetworkReachability (DEPRECATED)**
+#### 1. SCNetworkReachability (DEPRECATED)
 - **Pattern** `SCNetworkReachability`, `SCNetworkReachabilityCreateWithName`, `SCNetworkReachabilityGetFlags`
 - **Impact** Race condition between check and connect, misses proxy/VPN, App Store review concern
 - **Fix** Use NWConnection waiting state or NWPathMonitor
 
-**2. CFSocket (DEPRECATED)**
+#### 2. CFSocket (DEPRECATED)
 - **Pattern** `CFSocketCreate`, `CFSocketConnectToAddress`, `CFSocketSend`
 - **Impact** Can't use user-space networking (30% CPU penalty), no smart connection establishment
 - **Fix** Use NWConnection or NetworkConnection
 
-**3. NSStream / CFStream (DEPRECATED)**
+#### 3. NSStream / CFStream (DEPRECATED)
 - **Pattern** `NSInputStream`, `NSOutputStream`, `CFStreamCreatePairWithSocket`, `CFReadStreamOpen`
 - **Impact** No TLS integration, manual buffer management, no proxy support
 - **Fix** Use NWConnection for TCP/TLS streams
 
-**4. NSNetService (DEPRECATED)**
+#### 4. NSNetService (DEPRECATED)
 - **Pattern** `NSNetService`, `NSNetServiceBrowser`, `netServiceDidResolveAddress`
 - **Impact** Legacy API, no structured concurrency support
 - **Fix** Use NWBrowser (iOS 12-25) or NetworkBrowser (iOS 26+)
 
-**5. Manual DNS Resolution (ANTI-PATTERN)**
+#### 5. Manual DNS Resolution (ANTI-PATTERN)
 - **Pattern** `getaddrinfo`, `gethostbyname`
 - **Impact** Misses Happy Eyeballs (IPv4/IPv6 racing), no proxy evaluation
 - **Fix** Let NWConnection/NetworkConnection handle DNS automatically
 
 ### Anti-Patterns
 
-**6. Reachability Check Before Connect (ANTI-PATTERN)**
+#### 6. Reachability Check Before Connect (ANTI-PATTERN)
 - **Pattern** `if SCNetworkReachability` followed by `connection.start()` or `socket()`
 - **Impact** Race condition—network changes between check and connect
 - **Fix** Use waiting state handler, let framework manage connectivity
 
-**7. Hardcoded IP Addresses (ANTI-PATTERN)**
+#### 7. Hardcoded IP Addresses (ANTI-PATTERN)
 - **Pattern** IP literals like `"192.168.1.1"`, `"10.0.0.1"`, IPv6 addresses
 - **Impact** Breaks proxy/VPN compatibility, no DNS-based load balancing
 - **Fix** Use hostnames, let Connect by Name resolve
 
-**8. Missing [weak self] in NWConnection Callbacks (MEMORY LEAK)**
+#### 8. Missing [weak self] in NWConnection Callbacks (MEMORY LEAK)
 - **Pattern** `connection.send` or `stateUpdateHandler` with `self.` but no `[weak self]`
 - **Impact** Retain cycle: connection → handler → self → connection
 - **Fix** Use `[weak self]` or migrate to NetworkConnection (iOS 26+)
 
-**9. Blocking Socket Calls (ANR RISK)**
+#### 9. Blocking Socket Calls (ANR RISK)
 - **Pattern** `connect()`, `send()`, `recv()` without async wrapper
 - **Impact** Main thread hang → App Store rejection, ANR crashes
 - **Fix** Use NWConnection (non-blocking) or background queue
 
-**10. Not Handling Waiting State (UX ISSUE)**
+#### 10. Not Handling Waiting State (UX ISSUE)
 - **Pattern** `stateUpdateHandler` without `.waiting` case
 - **Impact** Shows "Connection failed" instead of "Waiting for network", no automatic retry
 - **Fix** Handle `.waiting` state with user feedback
@@ -511,14 +511,14 @@ Here's how I'll perform the audit:
 
 ### False Positives
 
-**IP addresses in comments or strings**
+#### IP addresses in comments or strings
 ```swift
 // Example: "Connect to 192.168.1.1" ← Will be flagged
 let message = "Server moved from 192.168.1.1" ← Will be flagged
 ```
 *Fix:* Manually review flagged IP addresses. Not all IP literals are problems (test servers, documentation).
 
-**[weak self] in non-NWConnection callbacks**
+#### [weak self] in non-NWConnection callbacks
 ```swift
 URLSession.shared.dataTask { data, response, error in
     self.handleResponse(data) ← May be flagged but is fine (URLSession handles lifecycle)
@@ -539,23 +539,23 @@ After audit, manually review:
 
 ### If Issues Found
 
-**For deprecated API migrations**
+#### For deprecated API migrations
 1. Run: `/skill axiom:networking`
    - Pattern 2a: NWConnection with TLS (replaces SCNetworkReachability, CFSocket, NSStream)
    - Pattern 2d: NWBrowser (replaces NSNetService)
 2. Estimated time: 15-20 minutes per deprecated API
 
-**For anti-pattern fixes**
+#### For anti-pattern fixes
 1. **Hardcoded IPs** Replace with hostnames (5 minutes per occurrence)
 2. **Missing [weak self]** Add to capture lists (2 minutes per occurrence)
 3. **Reachability checks** Remove and use waiting state (10 minutes per occurrence)
 4. **Missing waiting state** Add case to stateUpdateHandler (5 minutes per occurrence)
 
-**For connection debugging**
+#### For connection debugging
 1. Run: `/skill axiom:networking-diag`
    - Systematic troubleshooting for connection timeouts, TLS failures, data not arriving
 
-**For API reference**
+#### For API reference
 1. Run: `/skill axiom:network-framework-ref`
    - All 12 WWDC 2025 code examples
    - Complete NWConnection and NetworkConnection API reference
@@ -564,7 +564,7 @@ After audit, manually review:
 
 ✅ Your codebase follows Network.framework best practices!
 
-**Optional improvements**
+#### Optional improvements
 - Consider migrating to NetworkConnection (iOS 26+) for async/await
 - Add TLV framing for message boundaries (Pattern 1c in networking skill)
 - Add Coder protocol for Codable send/receive (Pattern 1d in networking skill)
@@ -577,7 +577,7 @@ This audit scans for:
 - **5 deprecated APIs** that will cause App Store review concerns
 - **5 anti-patterns** that cause crashes, memory leaks, or poor UX
 
-**Most common findings**
+#### Most common findings
 1. SCNetworkReachability causing race conditions (found in 60% of audited codebases)
 2. Missing [weak self] causing memory leaks (found in 40% of audited codebases)
 3. Not handling waiting state causing poor UX (found in 70% of audited codebases)
@@ -611,4 +611,4 @@ This audit scans for:
 
 ---
 
-**Run this audit before every App Store submission to ensure networking code follows Apple's latest best practices.**
+#### Run this audit before every App Store submission to ensure networking code follows Apple's latest best practices.

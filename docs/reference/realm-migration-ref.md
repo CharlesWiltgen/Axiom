@@ -15,19 +15,19 @@ Comprehensive reference for migrating from Realm to SwiftData without losing use
 
 ### Pattern Equivalents
 
-**Model Definitions**
+#### Model Definitions
 - `Object` → `@Model`
 - `@Persisted` → `@Attribute` / `@Relationship`
 - Primary keys and indexing
 - Inverse relationships
 
-**Queries**
+#### Queries
 - `results(ofType:)` → `@Query` / `FetchDescriptor`
 - Predicates and sorting
 - Lazy loading vs eager fetching
 - Performance characteristics
 
-**Threading Models**
+#### Threading Models
 - Realm's thread-confined objects → SwiftData's ModelContext
 - Background writes → ModelContext on background actors
 - Freeze patterns → value snapshots
@@ -35,13 +35,13 @@ Comprehensive reference for migrating from Realm to SwiftData without losing use
 
 ### Schema Migration
 
-**Data Migration Strategies**
+#### Data Migration Strategies
 - Export Realm data to JSON/SQLite
 - Batch import into SwiftData
 - Validation and integrity checks
 - Rollback strategies
 
-**Schema Mapping**
+#### Schema Mapping
 - Property type conversions
 - Relationship restructuring
 - Embedded objects → nested models
@@ -49,7 +49,7 @@ Comprehensive reference for migrating from Realm to SwiftData without losing use
 
 ### CloudKit Sync Transition
 
-**From Realm Device Sync**
+#### From Realm Device Sync
 - Atlas Device Sync → CloudKit
 - Conflict resolution differences
 - Authentication changes
@@ -116,7 +116,7 @@ Use this reference when:
 
 This is a **reference skill** — comprehensive migration guide without mandatory workflows.
 
-**Reference includes**
+#### Reference includes
 - Pattern equivalents catalog
 - Threading model comparisons
 - Schema migration strategies
@@ -125,7 +125,7 @@ This is a **reference skill** — comprehensive migration guide without mandator
 
 ## Urgency
 
-**Realm Device Sync sunsets September 30, 2025**
+#### Realm Device Sync sunsets September 30, 2025
 
 After this date:
 - No new Device Sync apps accepted

@@ -96,7 +96,7 @@ for entry in session.transcript.entries {
 // Record: "Any unusual entries? Repeated content?"
 ```
 
-**What this tells you**
+#### What this tells you
 - **Unavailable** → Proceed to Pattern 1a/1b/1c (availability issues)
 - **Context exceeded** → Proceed to Pattern 2a (token limit)
 - **Guardrail error** → Proceed to Pattern 2b (content policy)
@@ -105,7 +105,7 @@ for entry in session.transcript.entries {
 - **Slow generation** → Proceed to Pattern 4a/4b/4c/4d (performance)
 - **UI frozen** → Proceed to Pattern 5a (main thread blocking)
 
-**MANDATORY INTERPRETATION**
+#### MANDATORY INTERPRETATION
 
 Before changing ANY code, identify ONE of these:
 
@@ -117,7 +117,7 @@ Before changing ANY code, identify ONE of these:
 6. If generation >5 seconds → Not streaming or need optimization
 7. If UI frozen → Calling on main thread (use Task {})
 
-**If diagnostics are contradictory or unclear**
+#### If diagnostics are contradictory or unclear
 - STOP. Do NOT proceed to patterns yet
 - Add detailed logging to every `respond()` call
 - Run with Instruments Foundation Models template
@@ -839,7 +839,7 @@ Button("Generate") {
 
 ### MANDATORY Protocol
 
-**Phase 1: Identify (5 minutes)**
+#### Phase 1: Identify (5 minutes)
 
 ```swift
 // Check error distribution
@@ -865,7 +865,7 @@ case .unavailable(let reason):
 
 ---
 
-**Phase 2: Confirm (5 minutes)**
+#### Phase 2: Confirm (5 minutes)
 
 ```swift
 // Check which devices affected
@@ -880,18 +880,18 @@ case .unavailable(let reason):
 
 ---
 
-**Phase 3: Device Requirements (5 minutes)**
+#### Phase 3: Device Requirements (5 minutes)
 
 Verify:
 - Apple Intelligence requires iPhone 15 Pro or later
 - Or iPad with M1+ chip
 - Or Mac with Apple silicon
 
-**20% of user base = older devices**
+#### 20% of user base = older devices
 
 ---
 
-**Phase 4: Implement Fix (15 minutes)**
+#### Phase 4: Implement Fix (15 minutes)
 
 ```swift
 // ✅ Add availability check + graceful UI
@@ -931,7 +931,7 @@ struct AIFeatureView: View {
 
 ---
 
-**Phase 5: Deploy (20 minutes)**
+#### Phase 5: Deploy (20 minutes)
 
 1. Test on multiple devices (15 min)
    - iPhone 15 Pro: ✅ Shows AI feature

@@ -68,7 +68,7 @@ print("Cipher suites: \(tlsParameters.tlsCipherSuites ?? [])")
 // - IPv6-only (some cellular carriers)
 ```
 
-**What this tells you**
+#### What this tells you
 
 | Observation | Diagnosis | Next Step |
 |-------------|-----------|-----------|
@@ -81,7 +81,7 @@ print("Cipher suites: \(tlsParameters.tlsCipherSuites ?? [])")
 | Works WiFi, fails cellular | IPv6-only network (hardcoded IPv4) | Pattern 5a |
 | Works without VPN, fails with VPN | Proxy interference or DNS override | Pattern 5b |
 
-**MANDATORY INTERPRETATION**
+#### MANDATORY INTERPRETATION
 
 Before changing ANY code, identify ONE of these:
 
@@ -91,7 +91,7 @@ Before changing ANY code, identify ONE of these:
 4. If .failed with TLS error -9806 → Certificate validation (check with openssl)
 5. If .ready but data not arriving → Framing or receiver issue (enable packet capture)
 
-**If diagnostics are contradictory or unclear**
+#### If diagnostics are contradictory or unclear
 - STOP. Do NOT proceed to patterns yet
 - Add timestamp logging to every send/receive call
 - Enable packet capture (Charles/Wireshark)
@@ -209,13 +209,13 @@ Before proceeding to a pattern:
 4. **Network-specific (works WiFi, fails cellular)** → Test on that exact network, Pattern 5
 5. **Performance degradation** → Profile with Instruments Network template, Pattern 4
 
-**Apply ONE pattern at a time**
+#### Apply ONE pattern at a time
 - Implement the fix from one pattern
 - Test thoroughly
 - Only if issue persists, try next pattern
 - DO NOT apply multiple patterns simultaneously (can't isolate cause)
 
-**FORBIDDEN**
+#### FORBIDDEN
 - Guessing at solutions without diagnostics
 - Changing multiple things at once
 - Assuming "just needs more timeout"
@@ -248,7 +248,7 @@ Before proceeding to a pattern:
 // "getaddrinfo failed: 8 (nodename nor servname provided)"
 ```
 
-**Common causes**
+#### Common causes
 1. DNS server unreachable (corporate network blocks external DNS)
 2. Hostname typo or doesn't exist
 3. DNS caching stale entry (rare, but happens)
@@ -283,12 +283,12 @@ let connection = NWConnection(
 // Or use IP address temporarily while investigating DNS server issue
 ```
 
-**Verification**
+#### Verification
 - Run `nslookup your-hostname.com` — should return IP in <1 second
 - Test on cellular (different DNS servers) — should work
 - Check corporate network DNS configuration
 
-**Prevention**
+#### Prevention
 - Use well-known hostnames (don't rely on internal DNS)
 - Test on multiple networks during development
 - Don't hardcode IPs (if DNS fails, you need to fix DNS, not bypass it)
@@ -321,7 +321,7 @@ openssl s_client -connect example.com:443 -showcerts | grep "CN="
 # Should show: Subject CN=example.com, Issuer CN=Trusted CA
 ```
 
-**Common causes**
+#### Common causes
 1. Self-signed certificate (dev/staging servers)
 2. Expired certificate
 3. Certificate hostname mismatch (cert for "example.com" but connecting to "www.example.com")
@@ -330,7 +330,7 @@ openssl s_client -connect example.com:443 -showcerts | grep "CN="
 
 #### Fix
 
-**For production servers with invalid certs**
+#### For production servers with invalid certs
 ```swift
 // ❌ WRONG — Never disable certificate validation in production
 /*
@@ -346,7 +346,7 @@ sec_protocol_options_set_verify_block(tlsOptions.securityProtocolOptions, { ... 
 // 4. Test with: openssl s_client -connect example.com:443
 ```
 
-**For development servers (temporary)**
+#### For development servers (temporary)
 ```swift
 // ⚠️ ONLY for development/staging
 #if DEBUG
@@ -366,7 +366,7 @@ let connection = NWConnection(host: "dev-server.example.com", port: 443, using: 
 #endif
 ```
 
-**For certificate pinning**
+#### For certificate pinning
 ```swift
 // Production-grade certificate pinning
 let tlsOptions = NWProtocolTLS.Options()
@@ -389,7 +389,7 @@ sec_protocol_options_set_verify_block(
 )
 ```
 
-**Verification**
+#### Verification
 - `openssl s_client -connect example.com:443` shows `Verify return code: 0 (ok)`
 - Certificate expiration > 30 days in future
 - Certificate CN matches hostname
@@ -431,7 +431,7 @@ connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { data, con
 
 **Common cause** Stream protocols (TCP/TLS) don't preserve message boundaries.
 
-**Example**
+#### Example
 ```swift
 // Sender sends 3 messages:
 send("Hello") // 5 bytes
@@ -449,7 +449,7 @@ receive() → "loWorld!" // 8 bytes
 
 #### Fix
 
-**Solution 1: Use TLV Framing (iOS 26+)**
+#### Solution 1: Use TLV Framing (iOS 26+)
 ```swift
 // NetworkConnection with TLV
 let connection = NetworkConnection(
@@ -476,7 +476,7 @@ if metadata.type == MessageType.chat.rawValue {
 }
 ```
 
-**Solution 2: Manual Length Prefix (iOS 12-25)**
+#### Solution 2: Manual Length Prefix (iOS 12-25)
 ```swift
 // Sender: Prefix message with UInt32 length
 func sendMessage(_ message: Data) {
@@ -507,7 +507,7 @@ func receiveMessage() {
 }
 ```
 
-**Verification**
+#### Verification
 - Send 10 messages, verify receiver gets exactly 10 messages
 - Send messages of varying sizes (1 byte, 1000 bytes, 64KB)
 - Test with packet loss simulation (Network Link Conditioner)
@@ -540,7 +540,7 @@ connection.send(content: data, completion: .contentProcessed { error in
 // Should be smooth line, not stepped/stalled
 ```
 
-**Common causes**
+#### Common causes
 1. Sender sending faster than receiver can process (back pressure)
 2. Network congestion (packet loss, retransmits)
 3. No pacing with contentProcessed callback
@@ -577,7 +577,7 @@ func sendFrameWithPacing() {
 sendFrameWithPacing()
 ```
 
-**Alternative: Async/await (iOS 26+)**
+#### Alternative: Async/await (iOS 26+)
 ```swift
 // NetworkConnection with natural back pressure
 func sendFrames() async throws {
@@ -589,7 +589,7 @@ func sendFrames() async throws {
 }
 ```
 
-**Verification**
+#### Verification
 - Send 1000 messages, monitor memory usage (should stay flat)
 - Monitor send completion time (should stay < 100ms)
 - Test with Network Link Conditioner (100ms latency, 3% packet loss)
@@ -621,7 +621,7 @@ dig AAAA example.com
 # Settings → Developer → Networking → DNS64/NAT64
 ```
 
-**Common causes**
+#### Common causes
 1. Hardcoded IPv4 address ("192.168.1.1")
 2. getaddrinfo with AF_INET only (filters out IPv6)
 3. Server has no IPv6 address (AAAA record)
@@ -655,7 +655,7 @@ let connection = NWConnection(
 // 4. Works on any network (IPv4, IPv6, dual-stack)
 ```
 
-**Verification**
+#### Verification
 - Test on real device with cellular (disable WiFi)
 - Test with multiple carriers (Verizon, AT&T, T-Mobile)
 - Enable DNS64/NAT64 in developer settings
@@ -667,7 +667,7 @@ let connection = NWConnection(
 
 ### Context: iOS Update Causes 15% Connection Failures
 
-**Situation**
+#### Situation
 - Your company releases iOS app update (v4.2) on Monday morning
 - By noon, Customer Support reports surge in "app doesn't work" tickets
 - Analytics show 15% of users experiencing connection failures (10,000+ users)
@@ -675,14 +675,14 @@ let connection = NWConnection(
 - Engineering manager asks for ETA
 - You're the networking engineer
 
-**Pressure signals**
+#### Pressure signals
 - 🚨 **Production outage** 10K+ users affected, revenue impact, negative App Store reviews incoming
 - ⏰ **Time pressure** "Need fix ASAP, trending on Twitter"
 - 👔 **Executive visibility** CEO personally asking for updates
 - 📊 **Public image** App Store rating dropping from 4.8 → 4.1 in 3 hours
 - 💸 **Financial impact** E-commerce app, each minute costs $5K in lost sales
 
-**Rationalization traps (DO NOT fall into these)**
+#### Rationalization traps (DO NOT fall into these)
 
 1. *"Just roll back to v4.1"*
    - Tempting but takes 1-2 hours for app review, another 24 hours for users to update
@@ -702,14 +702,14 @@ let connection = NWConnection(
    - Doesn't address root cause
    - Makes problem worse (more retries = more load on failing path)
 
-**MANDATORY Diagnostic Protocol**
+#### MANDATORY Diagnostic Protocol
 
 You have 1 hour to provide CEO with:
 1. Root cause
 2. Fix timeline
 3. Mitigation plan
 
-**Step 1: Establish Baseline (5 minutes)**
+#### Step 1: Establish Baseline (5 minutes)
 
 ```swift
 // Check what changed in v4.2
@@ -722,7 +722,7 @@ git diff v4.1 v4.2 -- NetworkClient.swift
 // - Updated hostname
 ```
 
-**Step 2: Reproduce in Production Environment (10 minutes)**
+#### Step 2: Reproduce in Production Environment (10 minutes)
 
 ```swift
 // Check failure pattern:
@@ -741,7 +741,7 @@ if UserDefaults.standard.bool(forKey: "EnableNetworkLogging") {
 // Check logs for specific error code
 ```
 
-**Step 3: Check Recent Code Changes (5 minutes)**
+#### Step 3: Check Recent Code Changes (5 minutes)
 
 ```swift
 // Found in git diff:
@@ -756,7 +756,7 @@ let parameters = NWParameters(tls: tlsOptions)
 
 **Root Cause Identified** Some users' backend infrastructure (load balancers, proxy servers) don't support TLS 1.3. v4.1 negotiated TLS 1.2, v4.2 requires TLS 1.3 → connection fails.
 
-**Step 4: Apply Targeted Fix (15 minutes)**
+#### Step 4: Apply Targeted Fix (15 minutes)
 
 ```swift
 // Fix: Support both TLS 1.2 and TLS 1.3
@@ -766,7 +766,7 @@ tlsOptions.minimumTLSProtocolVersion = .TLSv12 // ✅ Support older infrastructu
 let parameters = NWParameters(tls: tlsOptions)
 ```
 
-**Step 5: Deploy Hotfix (20 minutes)**
+#### Step 5: Deploy Hotfix (20 minutes)
 
 ```bash
 # Build hotfix v4.2.1
@@ -775,9 +775,9 @@ let parameters = NWParameters(tls: tlsOptions)
 # Explain: "Production outage affecting 15% of users"
 ```
 
-**Professional Communication Templates**
+#### Professional Communication Templates
 
-**To CEO (15 minutes after crisis starts)**
+#### To CEO (15 minutes after crisis starts)
 
 ```
 Found root cause: v4.2 requires TLS 1.3, but 15% of users on older infrastructure
@@ -791,7 +791,7 @@ Full rollout to users: 24 hours.
 Mitigation now: Telling affected users to update immediately when available.
 ```
 
-**To Engineering Manager**
+#### To Engineering Manager
 
 ```
 Root cause: TLS version requirement changed in v4.2 (TLS 1.3 only).
@@ -806,7 +806,7 @@ Deployment: Hotfix build in progress, ETA 30 minutes to submit.
 Prevention: Add TLS compatibility testing to pre-release checklist.
 ```
 
-**To Customer Support**
+#### To Customer Support
 
 ```
 Update: We've identified the issue and have a fix deploying within 1 hour.
@@ -820,7 +820,7 @@ Ask users to update immediately.
 Updates: I'll notify you every 30 minutes.
 ```
 
-**Time Saved**
+#### Time Saved
 
 | Approach | Time to Resolution | User Impact |
 |----------|-------------------|-------------|
@@ -829,7 +829,7 @@ Updates: I'll notify you every 30 minutes.
 | ❌ "Works for me" | Days of debugging wrong thing | Frustrated users, bad reviews |
 | ✅ Systematic diagnosis | 30 min diagnosis + 20 min fix + 1 hour review = 2 hours | 10K users down for 2 hours |
 
-**Lessons Learned**
+#### Lessons Learned
 
 1. **Test on diverse networks** Don't just test on your WiFi. Test on cellular, VPN, enterprise networks.
 2. **Monitor TLS compatibility** If you change TLS config, verify backend supports it.
@@ -867,7 +867,7 @@ Updates: I'll notify you every 30 minutes.
 
 **Why it fails** You're guessing what's happening. Logs show exact state transitions, error codes, timing.
 
-**Fix**
+#### Fix
 ```swift
 // Add to Xcode scheme BEFORE debugging:
 // -NWLoggingEnabled 1
@@ -885,7 +885,7 @@ ProcessInfo.processInfo.environment["NW_LOGGING_ENABLED"] = "1"
 
 **Why it fails** 40% of connection failures are network-specific. If you only test WiFi, you miss cellular issues.
 
-**Fix**
+#### Fix
 - Test on real device with WiFi OFF
 - Test on multiple carriers (Verizon, AT&T, T-Mobile have different configs)
 - Test with VPN active (enterprise users)
@@ -897,7 +897,7 @@ ProcessInfo.processInfo.environment["NW_LOGGING_ENABLED"] = "1"
 
 **Why it fails** Different error codes require different fixes. POSIX 61 = server issue, POSIX 50 = client network issue.
 
-**Fix**
+#### Fix
 ```swift
 if case .failed(let error) = state {
     let posixError = (error as NSError).code
@@ -920,7 +920,7 @@ if case .failed(let error) = state {
 
 **Why it fails** Real users experience network transitions (WiFi → cellular), Airplane Mode, weak signal.
 
-**Fix**
+#### Fix
 ```swift
 // Test with Network Link Conditioner:
 // 1. 100% Loss — verify .waiting state shows "Waiting for network"
@@ -934,7 +934,7 @@ if case .failed(let error) = state {
 
 **Why it fails** Simulator hides IPv6-only issues, doesn't simulate network transitions, has different DNS.
 
-**Fix**
+#### Fix
 - ALWAYS test on real device before shipping
 - Test with Airplane Mode toggle (simulate network transitions)
 - Test with cellular only (disable WiFi)

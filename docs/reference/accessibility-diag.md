@@ -15,27 +15,27 @@ Diagnostic workflows for VoiceOver testing, Dynamic Type support, color contrast
 
 ### Mandatory Accessibility Checks
 
-**VoiceOver Testing**
+#### VoiceOver Testing
 - Missing accessibility labels
 - Poor label quality (technical vs user-friendly)
 - Button vs image traits
 - Custom control announcements
 - Navigation order
 
-**Dynamic Type Support**
+#### Dynamic Type Support
 - Fixed font sizes blocking text scaling
 - Layout breaking at larger sizes
 - Missing `.minimumScaleFactor`
 - Text truncation issues
 - Horizontal scrolling required
 
-**Color Contrast**
+#### Color Contrast
 - WCAG AA compliance (4.5:1 for text)
 - WCAG AAA targets (7:1 for text)
 - Insufficient contrast in dark mode
 - Rely on color alone for information
 
-**Touch Targets**
+#### Touch Targets
 - Minimum 44×44pt hit areas (Apple HIG)
 - WCAG 2.5.5 Target Size (24×24pt minimum)
 - Spacing between tappable elements
@@ -43,7 +43,7 @@ Diagnostic workflows for VoiceOver testing, Dynamic Type support, color contrast
 
 ### App Store Rejection Defense
 
-**Guideline 2.5.2 - Accessibility**
+#### Guideline 2.5.2 - Accessibility
 
 Common rejection scenarios:
 - "App is not accessible to users with disabilities"
@@ -51,7 +51,7 @@ Common rejection scenarios:
 - "Text does not scale with Dynamic Type"
 - "Insufficient color contrast in UI"
 
-**48-Hour Resubmit Pressure**
+#### 48-Hour Resubmit Pressure
 - Systematic issue identification
 - Priority triage (blockers vs enhancements)
 - Compliance verification workflow
@@ -144,7 +144,7 @@ Use this diagnostic when:
 
 This is a **diagnostic skill** — mandatory workflows with pressure defense scenarios.
 
-**Diagnostic includes**
+#### Diagnostic includes
 - Step-by-step troubleshooting
 - App Store rejection defense
 - Design review push-back frameworks

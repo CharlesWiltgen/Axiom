@@ -15,16 +15,16 @@ Debug memory leaks from Objective-C blocks capturing self. **Core principle**: B
 
 These are real questions developers ask that this skill is designed to answer:
 
-**1. "My view controller never deallocates. Instruments shows a retain cycle with a block. How do I fix it?"**
+#### 1. "My view controller never deallocates. Instruments shows a retain cycle with a block. How do I fix it?"
 → The skill shows weak-strong pattern and explains block capture rules
 
-**2. "I used __weak self in the block but still getting crashes with 'message sent to deallocated instance'. What's wrong?"**
+#### 2. "I used __weak self in the block but still getting crashes with 'message sent to deallocated instance'. What's wrong?"
 → The skill demonstrates why weak alone isn't enough and shows proper strong-weak-strong pattern
 
-**3. "Network callback retains view controller. How do I prevent leak without canceling requests?"**
+#### 3. "Network callback retains view controller. How do I prevent leak without canceling requests?"
 → The skill covers network completion handler patterns with proper weak self
 
-**4. "Block assigned to property never releases. Is there a pattern for this?"**
+#### 4. "Block assigned to property never releases. Is there a pattern for this?"
 → The skill shows copy vs strong property semantics and cleanup patterns
 
 ## Red Flags — Check Block Capture
@@ -225,7 +225,7 @@ Product → Profile → Leaks
 
 **Rule 4**: Network callbacks to shared/singleton services MUST use weak-strong pattern.
 
-**Violating these rules = guaranteed memory leak.**
+#### Violating these rules = guaranteed memory leak.
 
 ## Common Mistakes
 

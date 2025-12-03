@@ -18,19 +18,19 @@ Type-safe SQLite persistence using [SQLiteData](https://pointfreeco.github.io/sq
 
 ## When to Use SQLiteData
 
-**Choose SQLiteData when you need**
+#### Choose SQLiteData when you need
 - ✅ Type-safe SQLite with compiler-checked queries
 - ✅ CloudKit sync with record sharing
 - ✅ Large datasets (50k+ records) with fast performance
 - ✅ Value types (structs) instead of classes
 - ✅ Swift 6 strict concurrency support
 
-**Use SwiftData instead when**
+#### Use SwiftData instead when
 - Simple CRUD with native Apple integration
 - Prefer `@Model` classes over structs
 - Don't need CloudKit record sharing
 
-**Use raw GRDB when**
+#### Use raw GRDB when
 - Complex SQL joins across multiple tables
 - Custom migration logic
 - Performance-critical batch operations
@@ -41,19 +41,19 @@ Type-safe SQLite persistence using [SQLiteData](https://pointfreeco.github.io/sq
 
 These are real questions developers ask that this skill is designed to answer:
 
-**1. "I'm building a task app with type-safe queries. How do I set up @Table models and filter tasks by priority?"**
+#### 1. "I'm building a task app with type-safe queries. How do I set up @Table models and filter tasks by priority?"
 → The skill shows `@Table` definitions, `@Query` with predicates, and type-safe filtering
 
-**2. "I need to sync tasks to other devices via CloudKit. How do I set up sync with record sharing?"**
+#### 2. "I need to sync tasks to other devices via CloudKit. How do I set up sync with record sharing?"
 → The skill covers CloudKit integration, record sharing, and sync conflict handling
 
-**3. "I'm importing 50,000 notes from an API. How do I batch insert efficiently without blocking the UI?"**
+#### 3. "I'm importing 50,000 notes from an API. How do I batch insert efficiently without blocking the UI?"
 → The skill shows batch operations, background writes, and progress tracking patterns
 
-**4. "After updating the app, some queries are crashing with StructuredQueries errors. How do I fix it?"**
+#### 4. "After updating the app, some queries are crashing with StructuredQueries errors. How do I fix it?"
 → The skill explains StructuredQueries migration issues, safe recovery, and prevention strategies
 
-**5. "I have complex queries with joins across 4 tables. Should I use SQLiteData or drop to GRDB?"**
+#### 5. "I have complex queries with joins across 4 tables. Should I use SQLiteData or drop to GRDB?"
 → The skill explains when to use SQLiteData vs raw GRDB for performance-critical queries
 
 ---
@@ -77,7 +77,7 @@ struct Track: Identifiable, Sendable {
 }
 ```
 
-**Key patterns**
+#### Key patterns
 - Use `struct`, not `class` (value types)
 - Conform to `Sendable` for Swift 6 concurrency
 - Use `@Attribute(.primaryKey)` for primary key
@@ -253,7 +253,7 @@ func importTracks(_ tracks: [Track]) async throws {
 }
 ```
 
-**Performance**
+#### Performance
 - 50,000 records in ~30-45 seconds
 - Batching reduces 50k transactions to 100 transactions (500 records each)
 - Each `database.write { }` block is ONE transaction
@@ -287,7 +287,7 @@ func testMigration() async throws {
 }
 ```
 
-**Error**
+#### Error
 ```
 Exception Type:    EXC_BAD_ACCESS (SIGSEGV)
 Exception Codes:   KERN_INVALID_ADDRESS at 0xfffffffffffffff8
@@ -338,7 +338,7 @@ func testRockTracks() async throws {
 }
 ```
 
-**Error**
+#### Error
 ```
 Exception Type:    EXC_BAD_ACCESS (SIGSEGV)
 Address:           0xfffffffffffffff8 (-8)
@@ -546,16 +546,16 @@ let count = try await Track.fetchCount(database)
 
 ## External Resources
 
-**SQLiteData**
+#### SQLiteData
 - [Documentation](https://pointfreeco.github.io/sqlite-data/)
 - [GitHub](https://github.com/pointfreeco/sqlite-data)
 - [Point-Free Episodes](https://www.pointfree.co) (video tutorials, subscription)
 
-**Dependencies**
+#### Dependencies
 - [swift-dependencies](https://github.com/pointfreeco/swift-dependencies) — Dependency injection (pairs well with SQLiteData)
 - [GRDB](https://github.com/groue/GRDB.swift) — Underlying database engine
 
-**Related Axiom Skills**
+#### Related Axiom Skills
 - `database-migration` - Safe schema evolution patterns
 - `grdb` - Raw SQL and advanced GRDB features
 - `swiftdata` - Apple's native persistence framework
@@ -566,7 +566,7 @@ let count = try await Track.fetchCount(database)
 
 **Scenario**: Users updating to iOS 26 build crash on launch. Error: `EXC_BAD_ACCESS KERN_INVALID_ADDRESS at 0xfffffffffffffff8`
 
-**Under pressure**
+#### Under pressure
 - Temptation: Delete old schema and recreate (fast, destructive)
 - Better: Search this skill for "StructuredQueries" and follow safe path
 
@@ -589,7 +589,7 @@ database = try DatabaseQueue(path: dbPath)
 let tracks = try await Track.where { $0.genre == "Rock" }.fetchAll(database)
 ```
 
-**Time cost**
+#### Time cost
 - Understanding problem: 5 min (search skill for "StructuredQueries")
 - Implementing fix: 30 min
 - Testing: 15 min
@@ -605,17 +605,17 @@ let tracks = try Track.filter(Column("genre") == "Rock").fetchAll(db)
 
 When migration causes crashes:
 
-**DO NOT**
+#### DO NOT
 - ❌ Delete schema and recreate (data loss)
 - ❌ Ship guess-fixes without testing (worsens crash)
 - ❌ Ignore this skill section (solution is here)
 
-**DO**
+#### DO
 - ✅ Search this skill for error keyword (e.g., "KERN_INVALID_ADDRESS", "StructuredQueries")
 - ✅ Implement documented fix (close/reopen or raw GRDB)
 - ✅ Test in simulator before App Store submission
 
-**Time budget**
+#### Time budget
 - Search + understand: 5-10 min
 - Implement: 30 min
 - Test: 15 min
@@ -623,7 +623,7 @@ When migration causes crashes:
 
 ### If You Must Ship Emergency Mitigation
 
-**Temporary fix while proper solution is tested**
+#### Temporary fix while proper solution is tested
 ```swift
 // Disable StructuredQueries globally during migration
 database.disableStructuredQueries = true
@@ -631,25 +631,25 @@ try await migrator.migrate(database)
 database.disableStructuredQueries = false
 ```
 
-**This buys time**
+#### This buys time
 - Unblocks app update (users can install)
 - Preserves user data (no deletion)
 - Proper fix queued for next release
 
 ### Honest Pressure Points (When Panic Tempts Nuclear Option)
 
-**If you're tempted to delete schema under pressure**
+#### If you're tempted to delete schema under pressure
 1. **Stop.** Search this skill for the error keyword first
 2. **Document.** The fact that you found this section proves safe path exists
 3. **Ship safe mitigation.** 50 minutes for proper fix < 24 hours to recover from data loss
 
-**Why nuclear option backfires**
+#### Why nuclear option backfires
 - Users lose all local data (playlists, favorites)
 - App reviews tank (4.5 stars → 2 stars typical)
 - Support tickets explode
 - Recovery takes weeks of backfills and apologies
 
-**Why proper fix wins**
+#### Why proper fix wins
 - Users keep all data
 - Trust preserved
 - Clean recovery

@@ -13,7 +13,7 @@ Comprehensive guide to the App Intents framework for exposing app functionality 
 - **Focus Filters** — Context-aware content filtering
 - **Widgets & Live Activities** — Dynamic system UI
 
-**Key Features**
+#### Key Features
 - Three building blocks: AppIntent, AppEntity, AppEnum
 - Parameter validation and natural language summaries
 - Entity queries for content discovery
