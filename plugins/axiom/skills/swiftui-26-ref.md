@@ -9,7 +9,7 @@ description: Use when implementing iOS 26 SwiftUI features - covers Liquid Glass
 
 Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, watchOS 26, and visionOS 26. From the Liquid Glass design system to rich text editing, these enhancements make SwiftUI more powerful across all Apple platforms.
 
-**Core principle:** "From low level performance improvements all the way up through the buttons in your user interface, there are some major improvements across the system." - WWDC 2025-256
+**Core principle:** From low level performance improvements all the way up through the buttons in your user interface, there are some major improvements across the system.
 
 ## When to Use This Skill
 
@@ -235,7 +235,7 @@ List(trips) { trip in // 100k+ items
 
 **Reduced dropped frames:**
 
-"SwiftUI has improved scheduling of user interface updates on iOS and macOS. This improves responsiveness and lets SwiftUI do even more work to prepare for upcoming frames. All in all, it reduces the chance of your app dropping a frame while scrolling quickly at high frame rates." - WWDC 2025-256
+SwiftUI has improved scheduling of user interface updates on iOS and macOS. This improves responsiveness and lets SwiftUI do even more work to prepare for upcoming frames. All in all, it reduces the chance of your app dropping a frame while scrolling quickly at high frame rates.
 
 ### Nested ScrollViews with Lazy Stacks
 
@@ -418,7 +418,7 @@ var body: some View {
 
 ### Overview
 
-"Scene bridging allows your UIKit and AppKit lifecycle apps to interoperate with SwiftUI scenes. Apps can use it to open SwiftUI-only scene types or use SwiftUI-exclusive features right from UIKit or AppKit code." - WWDC 2025-256
+Scene bridging allows your UIKit and AppKit lifecycle apps to interoperate with SwiftUI scenes. Apps can use it to open SwiftUI-only scene types or use SwiftUI-exclusive features right from UIKit or AppKit code.
 
 ### Supported Scene Types
 
@@ -638,7 +638,7 @@ struct BrowserView: View {
 
 ### Overview
 
-"SwiftUI's new support for rich text editing is great for experiences like [commenting on photos]. TextView now supports AttributedString!" - WWDC 2025-256
+SwiftUI's new support for rich text editing is great for experiences like commenting on photos. TextView now supports AttributedString!
 
 **Note:** The WWDC transcript uses "TextView" as editorial language. The actual SwiftUI API is `TextEditor` which now supports `AttributedString` binding for rich text editing.
 

@@ -436,7 +436,7 @@ struct DeleteTaskIntent: AppIntent {
 
 The **Use Model action** in Shortcuts (iOS 18.1+) allows users to incorporate Apple Intelligence models into their automation workflows. Your app's entities can be passed to language models for filtering, transformation, and reasoning.
 
-**Key capability:** "Under the hood, the action passes a JSON representation of your entity to the model, so you'll want to make sure to expose any information you want it to be able to reason over, in the entity definition." - WWDC 2025-260
+**Key capability:** Under the hood, the action passes a JSON representation of your entity to the model, so you'll want to make sure to expose any information you want it to be able to reason over, in the entity definition.
 
 ### Three Output Types
 
@@ -512,7 +512,7 @@ var displayRepresentation: DisplayRepresentation {
 
 ### Supporting Rich Text with AttributedString
 
-**Why it matters:** "If your app supports Rich Text content, now is the time to make sure your app intents use the attributed string type for text parameters where appropriate." - WWDC 2025-260
+**Why it matters:** If your app supports Rich Text content, now is the time to make sure your app intents use the attributed string type for text parameters where appropriate.
 
 **❌ DON'T: Use plain String**
 ```swift
@@ -724,13 +724,13 @@ struct TripEntity: AppEntity, IndexedEntity {
 
 **Spotlight on Mac** (macOS Sequoia+) allows users to run your app's intents directly from system search. Intents that work in Shortcuts automatically work in Spotlight with proper configuration.
 
-**Key principle:** "Spotlight is all about running things quickly. To do that, people need to be able to provide all the information your intent needs to run directly in Spotlight." - WWDC 2025-260
+**Key principle:** Spotlight is all about running things quickly. To do that, people need to be able to provide all the information your intent needs to run directly in Spotlight.
 
 ### Requirements for Spotlight Visibility
 
 **1. Parameter Summary Must Include All Required Parameters**
 
-"The parameter summary, which is what people will see in Spotlight UI, must contain all required parameters that don't have a default value." - WWDC 2025-260
+The parameter summary, which is what people will see in Spotlight UI, must contain all required parameters that don't have a default value.
 
 **❌ WON'T SHOW in Spotlight:**
 ```swift
@@ -840,7 +840,7 @@ func showEventDetail(_ event: Event) {
 }
 ```
 
-For details, see "Exploring New Advances in App Intents" (WWDC 2025).
+For more details on on-screen content tagging, see the "Exploring New Advances in App Intents" session.
 
 ### Search Beyond Suggestions
 
@@ -959,7 +959,7 @@ Spotlight learns when/how user runs this intent and surfaces suggestions proacti
 
 ### Automatic Availability
 
-"As long as your intent is available on macOS, they will also be available to use in Shortcuts to run as a part of Automations on Mac. This includes iOS apps that are installable on macOS." - WWDC 2025-260
+As long as your intent is available on macOS, they will also be available to use in Shortcuts to run as a part of Automations on Mac. This includes iOS apps that are installable on macOS.
 
 **No additional code required** — your existing intents work in automations automatically.
 

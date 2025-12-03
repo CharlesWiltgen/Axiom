@@ -90,7 +90,7 @@ List(trips) { trip in // 100k+ items
 
 **Reduced dropped frames during high-speed scrolling:**
 
-"SwiftUI has improved scheduling of user interface updates on iOS and macOS. This improves responsiveness and lets SwiftUI do even more work to prepare for upcoming frames. All in all, it reduces the chance of your app dropping a frame while scrolling quickly at high frame rates." - WWDC 2025-256
+SwiftUI has improved scheduling of user interface updates on iOS and macOS. This improves responsiveness and lets SwiftUI do even more work to prepare for upcoming frames. All in all, it reduces the chance of your app dropping a frame while scrolling quickly at high frame rates.
 
 **Key improvements:**
 1. **Better frame scheduling** — SwiftUI gets more time to prepare for upcoming frames

@@ -569,7 +569,6 @@ Let me show which screens meet all three..."
 Open the app on a device. Show:
 - Clear variant in low-contrast scenario (unreadable)
 - Regular variant in same scenario (legible)
-- Reference WWDC 219 session
 
 **Step 3: Offer Compromise**
 

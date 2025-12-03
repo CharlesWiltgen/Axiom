@@ -287,7 +287,7 @@ element.waitForExistence(timeout: 0.1)  // ❌ Too short
 
 ---
 
-## Recording UI Automation (WWDC 2025)
+## Recording UI Automation
 
 ### Overview
 

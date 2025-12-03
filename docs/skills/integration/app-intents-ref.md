@@ -117,7 +117,7 @@ struct EventEntity: AppEntity, IndexedEntity {
 - Time of Day, Bluetooth, and more from iOS
 
 **Automatic Availability:**
-"As long as your intent is available on macOS, they will also be available to use in Shortcuts to run as a part of Automations on Mac. This includes iOS apps that are installable on macOS." - WWDC 2025-260
+As long as your intent is available on macOS, they will also be available to use in Shortcuts to run as a part of Automations on Mac. This includes iOS apps that are installable on macOS.
 
 ### Parameter Handling
 
