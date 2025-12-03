@@ -890,14 +890,6 @@ let imageCache = NSCache<NSString, UIImage>()
 
 ---
 
-## Version History
-
-- **1.0.0**: Initial skill covering performance decision tree, Time Profiler workflow (CPU, hot spots, call stacks), Allocations workflow (memory growth, object counts, leak diagnosis), Core Data instrument (N+1 queries, prefetching, batch size), quick reference for Energy Impact/Network/System Trace, and pressure scenarios (misinterpreting results, conflicting tool signals, deadline profiling, variance in results)
-- **1.1.0**: Added manager authority pressure resistance, Self Time vs Total Time clarity under App Store deadline pressure, professional scripts for pushing back on premature optimization suggestions, verified bulletproof under 4-hour App Store launch deadline with confusing profiling results
-- **1.2.0**: Added 3 real-world examples (N+1 query diagnosis with SQL logging, Time Profiler workflow for UI lag, Allocations memory vs leak diagnosis) demonstrating Core Data optimization, measuring before threading, and distinguishing caching from leaks with complete workflows
-
----
-
-**Created** 2025-11-30
-**Targets** iOS 14+, Swift 5.5+
-**Framework** Instruments, Core Data
+**Targets:** iOS 14+, Swift 5.5+
+**Tools:** Instruments, Core Data
+**History:** See git log for changes

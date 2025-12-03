@@ -2538,22 +2538,6 @@ prepareDependencies {
 
 ---
 
-## Version History
-
-- **2.7.0**: Added Case expressions (simple CASE and searched CASE WHEN), non-recursive CTEs with `With {} query: {}`, self-joins with `TableAlias` protocol, string functions (upper, lower, trim, substr, replace, instr, like, hasPrefix, hasSuffix, contains, collate), null handling (?? coalesce, ifnull, is(nil), isNot(nil)), range and set membership (in, between, Swift ranges), `@Ephemeral` macro for non-persisted properties, result builders for conditional inserts, and explicit join types (INNER, LEFT, RIGHT, FULL).
-- **2.6.0**: Major expansion from swift-structured-queries analysis. Added RETURNING clause for INSERT/UPDATE/DELETE. Added Query Composition section with reusable scopes, chainable filters, and query helpers. Added Compound Selects (UNION, INTERSECT, EXCEPT). Added Recursive CTEs for hierarchical data (trees, org charts, threaded comments). Added distinct() and pagination patterns. Added groupConcat() for string aggregation. Added JSON aggregation (jsonGroupArray, jsonObject). Added FTS5 advanced features (highlight, snippet, bm25 ranking). Added aggregate functions with filter: parameter.
-- **2.5.0**: Added "Column Groups and Schema Composition" section covering `@Selection` for reusable column groups, `@CasePathable @Selection` enums for single-table inheritance, querying/inserting/updating enum tables, complex enum cases with nested groups, passing entire rows to `@DatabaseFunction`, and comparison with SwiftData class inheritance.
-- **2.4.0**: Added "Migrating Existing Databases to CloudKit" section covering `SyncEngine.migratePrimaryKeys` tool for converting integer auto-increment IDs to UUIDs, the problem it solves, manual vs automated migration comparison, and migration checklist.
-- **2.3.0**: Added "Custom Aggregate Functions" section covering `@DatabaseFunction` macro, function registration with `db.add(function:)`, using custom aggregates in queries, mode/median examples, and performance considerations.
-- **2.2.0**: Added comprehensive "Database Views" section covering `@Selection` macro for custom query results, `@Table @Selection` for view-backed types, `createTemporaryView` for SQLite views, `INSTEAD OF` triggers for updatable views, decision guide for views vs @Selection, and temporary vs permanent view patterns.
-- **2.1.0**: Added comprehensive "Migrating from SwiftData" section — decision guide, pattern-by-pattern equivalents, full code migration example, CloudKit sharing deep dive (SwiftData's missing feature), performance benchmarks, gradual migration strategy, and gotchas.
-- **2.0.0**: Complete rewrite verified against official pointfreeco/sqlite-data repository. Fixed 15 major inaccuracies: @Column not @Attribute, .Draft insert pattern, .find() for updates/deletes, prepareDependencies setup, SyncEngine CloudKit config, @FetchAll without generics, .eq() comparison methods. Added 8 missing features: @Fetch, #sql macro, nonisolated, joins, FTS5, triggers, enum support, custom update logic.
-- **1.1.0**: Added production crisis section (retained concepts, updated syntax)
-- **1.0.0**: Initial skill (contained significant API inaccuracies)
-
----
-
-**Created:** 2025-11-28
-**Rewritten:** 2025-12-03
 **Targets:** iOS 17+, Swift 6
 **Framework:** SQLiteData 1.0+ (Point-Free)
+**History:** See git log for changes

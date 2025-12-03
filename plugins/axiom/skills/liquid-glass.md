@@ -1266,14 +1266,6 @@ To ship with latest SDKs while maintaining previous appearance:
 
 ---
 
-## Version History
-
-- **1.2.0**: Added new iOS 26 APIs from "Adopting Liquid Glass" documentation: `scrollEdgeEffectStyle(_:for:)` for custom bars, `containerRelativeShape()` for visual continuity, `tabBarMinimizationBehavior(_:)` for tab bar minimization, `GlassEffectContainer` for performance optimization, and `UIDesignRequiresCompatibility` for backward compatibility. Added reference to new `adopting-liquid-glass` comprehensive adoption guide
-- **1.1.0**: Added "Design Review Pressure: Defending Your Implementation" section from TDD pressure testing. Includes red flags for designer requests that violate guidelines, 4-step push-back framework with demo and documentation steps, real-world App Store launch example (36-hour deadline), and guidance on when to accept design overrides. Enables developers to professionally defend Regular vs Clear variant decisions under deadline and client pressure
-- **1.0.0 (WWDC 2025)**: Initial skill based on Liquid Glass introduction at WWDC 2025, covering design principles, implementation patterns, variants, troubleshooting, and expert review capabilities.
-
----
-
-**Last Updated**: WWDC 2025
-**Minimum Platform**: iOS 26, iPadOS 26, macOS Tahoe, visionOS 3
-**Xcode Version**: Xcode 26+
+**Platforms:** iOS 26+, iPadOS 26+, macOS Tahoe, visionOS 3
+**Xcode:** 26+
+**History:** See git log for changes

@@ -671,13 +671,6 @@ for track in tracks {
 
 ---
 
-## Version History
-
-- **1.1.0**: Added "Production Performance: Query Optimization Under Pressure" section from TDD testing of complex query performance scenarios. Includes profiling guidance (database.trace + EXPLAIN QUERY PLAN), ValueObservation optimization patterns with size-based decisions, migration versioning guarantees eliminating defensive SQL, and red flags for when to profile vs refactor. Prevents blind index creation and over-engineered migrations under performance pressure
-- **1.0.0**: Initial skill covering raw SQL queries, joins, ValueObservation, migrations, and GRDB-specific patterns
-
----
-
-**Created** 2025-11-28
-**Targets** iOS 13+, Swift 5.7+
-**Framework** GRDB.swift 6.0+
+**Targets:** iOS 13+, Swift 5.7+
+**Framework:** GRDB.swift 6.0+
+**History:** See git log for changes

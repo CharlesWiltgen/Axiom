@@ -1173,8 +1173,4 @@ func testPhotosLoadUnderStress() {
 
 ---
 
-## Version History
-
-- **2.1.0**: Added Network Conditioning, Multi-Factor Testing (device + network combinations), and Crash Debugging sections from TDD pressure testing (iPad Pro + 3G scenario). Prevents App Store review blockers by catching device-specific failures before submission
-- **2.0.0 (WWDC 2025)**: Added Recording UI Automation section with comprehensive guidance on recording, replaying, reviewing tests; test plans; video debugging; accessibility-first patterns from WWDC 2025 Session 344
-- **1.0.0**: Initial version focusing on condition-based waiting patterns
+**History:** See git log for changes
