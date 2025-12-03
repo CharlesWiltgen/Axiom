@@ -9,6 +9,7 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**liquid-glass**](/skills/ui-design/liquid-glass) | Implementing Liquid Glass effects, debugging visual artifacts, design review pressure |
 | [**swiftui-performance**](/skills/ui-design/swiftui-performance) | App feels sluggish, animations stutter, SwiftUI Instrument profiling |
 | [**swiftui-debugging**](/skills/ui-design/swiftui-debugging) | View doesn't update, preview crashes, layout issues |
+| [**swiftui-layout**](/skills/ui-design/swiftui-layout) | Adaptive layouts, iPad multitasking, iOS 26 free-form windows |
 | [**ui-testing**](/skills/ui-design/ui-testing) | Recording UI tests, flaky tests, race conditions |
 
 ### Debugging
@@ -102,6 +103,7 @@ All reference skills are reviewed against 4 quality criteria:
 - `avfoundation-ref` – AVFoundation audio APIs, iOS 26+ spatial audio, bit-perfect DAC
 - `foundation-models-ref` – Apple Intelligence Foundation Models framework (iOS 26+)
 - `foundation-models-diag` – Foundation Models troubleshooting and diagnostics
+- `swiftui-layout-ref` – ViewThatFits, AnyLayout, Layout protocol, iOS 26 window APIs
 
 ## Related Resources
 
