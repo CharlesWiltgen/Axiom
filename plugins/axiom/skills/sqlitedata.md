@@ -1,8 +1,8 @@
 ---
 name: sqlitedata
-description: Use when working with SQLiteData (Point-Free) — @Table models, column groups with @Selection, single-table inheritance with @CasePathable enums, @FetchAll/@FetchOne queries, database.write with .Draft inserts, .find().update/.delete, CloudKit SyncEngine with migratePrimaryKeys, database views, @DatabaseFunction custom aggregates, and when to drop to raw GRDB
-version: 2.5.0
-last_updated: 2025-12-03 — Added Column Groups and Single-Table Inheritance
+description: Use when working with SQLiteData (Point-Free) — @Table models, column groups, single-table inheritance, @FetchAll/@FetchOne, query composition with reusable scopes, RETURNING clause, compound selects (UNION/INTERSECT/EXCEPT), recursive CTEs for hierarchical data, FTS5 search with highlight/snippet/bm25, JSON aggregation, CloudKit sync with migratePrimaryKeys, database views, @DatabaseFunction custom aggregates
+version: 2.6.0
+last_updated: 2025-12-03 — Added StructuredQueries advanced features
 ---
 
 # SQLiteData
@@ -523,6 +523,152 @@ struct Search: FetchKeyRequest {
 }
 ```
 
+### Distinct Results
+
+Remove duplicate rows from query results:
+
+```swift
+// Get unique categories
+let categories = try Item
+    .select(\.category)
+    .distinct()
+    .fetchAll(db)
+
+// Distinct with multiple columns
+let uniquePairs = try Item
+    .select { ($0.category, $0.status) }
+    .distinct()
+    .fetchAll(db)
+```
+
+### Pagination
+
+Use `limit()` and `offset()` for paged results:
+
+```swift
+let pageSize = 20
+let page = 3
+
+let items = try Item
+    .order(by: \.createdAt)
+    .limit(pageSize, offset: page * pageSize)
+    .fetchAll(db)
+```
+
+**Tip:** For large datasets, cursor-based pagination (using last item's ID) is more efficient than offset:
+
+```swift
+// Cursor-based: more efficient for deep pages
+let items = try Item
+    .where { $0.id > lastSeenId }
+    .order(by: \.id)
+    .limit(pageSize)
+    .fetchAll(db)
+```
+
+---
+
+## Query Composition
+
+Build reusable query components as static properties and methods on your tables.
+
+### Reusable Scopes
+
+```swift
+extension Item {
+    // Common filters as static properties
+    static let active = Item.where { !$0.isArchived && !$0.isDeleted }
+    static let inStock = Item.where(\.isInStock)
+    static let outOfStock = Item.where { !$0.isInStock }
+
+    // Parameterized scopes as static methods
+    static func createdAfter(_ date: Date) -> Where<Item> {
+        Item.where { $0.createdAt > date }
+    }
+
+    static func inCategory(_ category: String) -> Where<Item> {
+        Item.where { $0.category.eq(category) }
+    }
+}
+```
+
+### Using Scopes
+
+```swift
+// Chain scopes together
+let results = try Item.active
+    .inStock
+    .order(by: \.title)
+    .fetchAll(db)
+
+// Combine with additional filtering
+let recent = try Item.active
+    .createdAfter(lastWeek)
+    .inCategory("Electronics")
+    .fetchAll(db)
+```
+
+### Default Query Patterns
+
+```swift
+extension Item {
+    // Standard "all visible" query
+    static let visible = Item
+        .where { !$0.isDeleted }
+        .order(by: \.position)
+
+    // With eager-loaded relationships
+    static let withCategory = Item
+        .join(Category.all) { $0.categoryID.eq($1.id) }
+}
+
+// Use as base for all queries
+@FetchAll(Item.visible) var items
+```
+
+### Composing Where Clauses
+
+```swift
+extension Where<Item> {
+    // Add filters to existing queries
+    func onlyActive() -> Where<Item> {
+        self.where { !$0.isArchived }
+    }
+
+    func matching(_ search: String) -> Where<Item> {
+        self.where { $0.title.contains(search) || $0.notes.contains(search) }
+    }
+}
+
+// Chain compositions
+let results = try Item.inStock
+    .onlyActive()
+    .matching(searchText)
+    .fetchAll(db)
+```
+
+### Query Helpers for Common Operations
+
+```swift
+extension Item {
+    // Fetch with common options
+    static func search(
+        _ query: String,
+        category: String? = nil,
+        limit: Int = 50
+    ) -> some Statement<Item> {
+        var base = Item.active.where { $0.title.contains(query) }
+        if let category {
+            base = base.where { $0.category.eq(category) }
+        }
+        return base.order(by: \.title).limit(limit)
+    }
+}
+
+// Clean call sites
+let results = try Item.search("phone", category: "Electronics").fetchAll(db)
+```
+
 ---
 
 ## Insert / Update / Delete
@@ -618,6 +764,64 @@ func deleteItems(at indices: IndexSet) {
     }
 }
 ```
+
+### RETURNING Clause
+
+Fetch generated values from INSERT, UPDATE, or DELETE operations:
+
+#### Get Generated ID from Insert
+
+```swift
+// Insert and get the auto-generated UUID
+let newId = try Item.insert {
+    Item.Draft(title: "New Item")
+}
+.returning(\.id)
+.fetchOne(db)
+
+// Insert and get the full inserted record
+let newItem = try Item.insert {
+    Item.Draft(title: "New Item")
+}
+.returning(Item.self)
+.fetchOne(db)
+```
+
+#### Get Updated Values
+
+```swift
+// Update and return the new values
+let updatedTitles = try Item
+    .where { $0.isInStock }
+    .update { $0.title = "Updated: " + $0.title }
+    .returning(\.title)
+    .fetchAll(db)
+
+// Return multiple columns
+let updates = try Item.find(id)
+    .update { $0.count += 1 }
+    .returning { ($0.id, $0.count) }
+    .fetchOne(db)
+```
+
+#### Get Deleted Records
+
+```swift
+// Capture records before deletion
+let deleted = try Item
+    .where { $0.isArchived }
+    .delete()
+    .returning(Item.self)
+    .fetchAll(db)
+
+print("Deleted \(deleted.count) archived items")
+```
+
+**When to use RETURNING:**
+- Get auto-generated IDs without a second query
+- Audit deleted records before removal
+- Verify updated values match expectations
+- Batch operations that need result confirmation
 
 ---
 
@@ -1230,6 +1434,250 @@ nonisolated struct Reminder: Identifiable {
 }
 ```
 
+### Compound Selects (UNION, INTERSECT, EXCEPT)
+
+Combine multiple queries into a single result set:
+
+```swift
+// UNION — combine results, remove duplicates
+let allContacts = try Customer.select(\.email)
+    .union(Supplier.select(\.email))
+    .fetchAll(db)
+
+// UNION ALL — combine results, keep duplicates
+let allEmails = try Customer.select(\.email)
+    .union(all: true, Supplier.select(\.email))
+    .fetchAll(db)
+
+// INTERSECT — only rows in both queries
+let sharedEmails = try Customer.select(\.email)
+    .intersect(Supplier.select(\.email))
+    .fetchAll(db)
+
+// EXCEPT — rows in first but not second
+let customerOnlyEmails = try Customer.select(\.email)
+    .except(Supplier.select(\.email))
+    .fetchAll(db)
+```
+
+**Use cases:**
+- Combine data from multiple tables with same structure
+- Find common or unique values across tables
+- Build "all activity" feeds from different event types
+
+### Recursive CTEs (Common Table Expressions)
+
+Query hierarchical data like trees, org charts, or threaded comments:
+
+```swift
+// Define a tree structure
+@Table
+nonisolated struct Category: Identifiable {
+    let id: UUID
+    var name = ""
+    var parentID: UUID?  // Self-referential for hierarchy
+}
+
+// Recursive query to get all descendants
+let allDescendants = try With {
+    // Base case: start with root category
+    Category.where { $0.id.eq(rootCategoryId) }
+} recursiveUnion: { cte in
+    // Recursive case: join children to CTE
+    Category.all
+        .join(cte) { $0.parentID.eq($1.id) }
+        .select { $0 }
+} query: { cte in
+    // Final query from the CTE
+    cte.order(by: \.name)
+}
+.fetchAll(db)
+```
+
+#### Ancestor Path (Walking Up the Tree)
+
+```swift
+// Get all ancestors of a category
+let ancestors = try With {
+    Category.where { $0.id.eq(childCategoryId) }
+} recursiveUnion: { cte in
+    Category.all
+        .join(cte) { $0.id.eq($1.parentID) }
+        .select { $0 }
+} query: { cte in
+    cte.all
+}
+.fetchAll(db)
+```
+
+#### Threaded Comments
+
+```swift
+@Table
+nonisolated struct Comment: Identifiable {
+    let id: UUID
+    var body = ""
+    var parentID: UUID?
+    var depth = 0
+}
+
+// Get comment thread with depth
+let thread = try With {
+    Comment
+        .where { $0.parentID.is(nil) && $0.postID.eq(postId) }
+        .select { ($0, 0) }  // depth = 0 for root
+} recursiveUnion: { cte in
+    Comment.all
+        .join(cte) { $0.parentID.eq($1.id) }
+        .select { ($0, $1.depth + 1) }
+} query: { cte in
+    cte.order { ($0.depth, $0.createdAt) }
+}
+.fetchAll(db)
+```
+
+### String Aggregation (groupConcat)
+
+Concatenate values from multiple rows into a single string:
+
+```swift
+// Get comma-separated tags for each item
+let itemsWithTags = try Item
+    .group(by: \.id)
+    .leftJoin(ItemTag.all) { $0.id.eq($1.itemID) }
+    .leftJoin(Tag.all) { $1.tagID.eq($2.id) }
+    .select {
+        (
+            $0.title,
+            $2.name.groupConcat(separator: ", ")
+        )
+    }
+    .fetchAll(db)
+// ("iPhone", "electronics, mobile, apple")
+
+// With ordering within the aggregate
+let orderedTags = try Item
+    .group(by: \.id)
+    .leftJoin(Tag.all) { /* ... */ }
+    .select {
+        $2.name.groupConcat(separator: ", ", order: { $0.asc() })
+    }
+    .fetchAll(db)
+
+// Distinct values only
+let uniqueCategories = try Item
+    .group(by: \.storeID)
+    .select {
+        $0.category.groupConcat(distinct: true, separator: " | ")
+    }
+    .fetchAll(db)
+```
+
+### JSON Aggregation
+
+Build JSON arrays and objects directly in queries:
+
+```swift
+// Aggregate rows into JSON array
+let itemsJson = try Store
+    .group(by: \.id)
+    .leftJoin(Item.all) { $0.id.eq($1.storeID) }
+    .select {
+        (
+            $0.name,
+            $1.title.jsonGroupArray()  // ["item1", "item2", ...]
+        )
+    }
+    .fetchAll(db)
+
+// With filtering
+let activeItemsJson = try Store
+    .group(by: \.id)
+    .leftJoin(Item.all) { $0.id.eq($1.storeID) }
+    .select {
+        $1.title.jsonGroupArray(filter: $1.isActive)
+    }
+    .fetchAll(db)
+
+// Build JSON objects
+let storeData = try Store
+    .select {
+        jsonObject(
+            "id", $0.id,
+            "name", $0.name,
+            "itemCount", $0.itemCount
+        )
+    }
+    .fetchAll(db)
+```
+
+### FTS5 Advanced Features
+
+Beyond basic `match()`, FTS5 provides search UI helpers:
+
+```swift
+@Table
+struct ItemText: FTS5 {
+    let rowid: Int
+    let title: String
+    let description: String
+}
+
+// Highlight search terms in results
+let results = try ItemText
+    .where { $0.match(searchQuery) }
+    .select {
+        (
+            $0.rowid,
+            $0.title.highlight("<b>", "</b>"),      // <b>search</b> term
+            $0.description.highlight("<mark>", "</mark>")
+        )
+    }
+    .fetchAll(db)
+
+// Extract snippets with context
+let snippets = try ItemText
+    .where { $0.match(searchQuery) }
+    .select {
+        $0.description.snippet(
+            "<b>", "</b>",  // highlight markers
+            "...",          // ellipsis for truncation
+            64              // max tokens
+        )
+    }
+    .fetchAll(db)
+// "...the <b>search</b> term appears in context..."
+
+// BM25 ranking for relevance sorting
+let ranked = try ItemText
+    .where { $0.match(searchQuery) }
+    .order { $0.bm25().desc() }  // Most relevant first
+    .select {
+        ($0.title, $0.bm25())
+    }
+    .fetchAll(db)
+```
+
+### Aggregate Functions with Filters
+
+All aggregate functions support conditional aggregation:
+
+```swift
+let stats = try Item
+    .select {
+        Stats.Columns(
+            total: $0.count(),
+            activeCount: $0.count(filter: $0.isActive),
+            inStockCount: $0.count(filter: $0.isInStock),
+            avgPrice: $0.price.avg(),
+            avgActivePrice: $0.price.avg(filter: $0.isActive),
+            maxDiscount: $0.discount.max(filter: $0.isOnSale),
+            totalRevenue: $0.revenue.sum(filter: $0.status.eq(.completed))
+        )
+    }
+    .fetchOne(db)
+```
+
 ---
 
 ## Database Views
@@ -1741,6 +2189,7 @@ prepareDependencies {
 
 ## Version History
 
+- **2.6.0**: Major expansion from swift-structured-queries analysis. Added RETURNING clause for INSERT/UPDATE/DELETE. Added Query Composition section with reusable scopes, chainable filters, and query helpers. Added Compound Selects (UNION, INTERSECT, EXCEPT). Added Recursive CTEs for hierarchical data (trees, org charts, threaded comments). Added distinct() and pagination patterns. Added groupConcat() for string aggregation. Added JSON aggregation (jsonGroupArray, jsonObject). Added FTS5 advanced features (highlight, snippet, bm25 ranking). Added aggregate functions with filter: parameter.
 - **2.5.0**: Added "Column Groups and Schema Composition" section covering `@Selection` for reusable column groups, `@CasePathable @Selection` enums for single-table inheritance, querying/inserting/updating enum tables, complex enum cases with nested groups, passing entire rows to `@DatabaseFunction`, and comparison with SwiftData class inheritance.
 - **2.4.0**: Added "Migrating Existing Databases to CloudKit" section covering `SyncEngine.migratePrimaryKeys` tool for converting integer auto-increment IDs to UUIDs, the problem it solves, manual vs automated migration comparison, and migration checklist.
 - **2.3.0**: Added "Custom Aggregate Functions" section covering `@DatabaseFunction` macro, function registration with `db.add(function:)`, using custom aggregates in queries, mode/median examples, and performance considerations.
