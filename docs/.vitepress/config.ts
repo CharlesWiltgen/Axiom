@@ -80,7 +80,7 @@ export default defineConfig({
             { text: 'Liquid Glass', link: '/skills/ui-design/liquid-glass' },
             { text: 'SwiftUI Performance', link: '/skills/ui-design/swiftui-performance' },
             { text: 'SwiftUI Debugging', link: '/skills/ui-design/swiftui-debugging' },
-            { text: 'SwiftUI 26 Features', link: '/skills/ui-design/swiftui-26-features' },
+            { text: 'SwiftUI 26 Features', link: '/skills/ui-design/swiftui-26-ref' },
             { text: 'UI Testing', link: '/skills/ui-design/ui-testing' },
             { text: 'UIKit Animation Debugging', link: '/skills/ui-design/uikit-animation-debugging' }
           ]
@@ -109,7 +109,7 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/skills/integration/' },
             { text: 'Networking', link: '/skills/integration/networking' },
-            { text: 'App Intents Integration', link: '/skills/integration/app-intents-integration' }
+            { text: 'App Intents Integration', link: '/skills/integration/app-intents-ref' }
           ]
         },
         {
@@ -136,8 +136,8 @@ export default defineConfig({
             { text: 'Liquid Glass Adoption', link: '/reference/liquid-glass-ref' },
             { text: 'Realm Migration', link: '/reference/realm-migration-ref' },
             { text: 'Network.framework API', link: '/reference/network-framework-ref' },
-            { text: 'SwiftUI 26 Features', link: '/reference/swiftui-26-features' },
-            { text: 'App Intents Integration', link: '/reference/app-intents-integration' }
+            { text: 'SwiftUI 26 Features', link: '/reference/swiftui-26-ref' },
+            { text: 'App Intents Integration', link: '/reference/app-intents-ref' }
           ]
         },
         {
