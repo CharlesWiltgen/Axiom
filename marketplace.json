@@ -5,12 +5,12 @@
   },
   "metadata": {
     "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
-    "version": "0.9.9"
+    "version": "0.9.10"
   },
   "plugins": [
     {
       "name": "axiom",
-      "version": "0.9.9",
+      "version": "0.9.10",
       "source": "https://charleswiltgen.github.io/Axiom/plugins/axiom",
       "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
       "author": "Charles Wiltgen",
