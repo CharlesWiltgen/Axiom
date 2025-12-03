@@ -1,8 +1,8 @@
 ---
 name: sqlitedata
-description: Use when working with SQLiteData (Point-Free) — @Table models, @FetchAll/@FetchOne queries, database.write with .Draft inserts, .find().update/.delete, CloudKit SyncEngine setup with migratePrimaryKeys for existing apps, batch imports, #sql macro, joins, @Selection for custom query results, database views, @DatabaseFunction custom aggregates, and when to drop to raw GRDB
-version: 2.4.0
-last_updated: 2025-12-03 — Added CloudKit primary key migration tool
+description: Use when working with SQLiteData (Point-Free) — @Table models, column groups with @Selection, single-table inheritance with @CasePathable enums, @FetchAll/@FetchOne queries, database.write with .Draft inserts, .find().update/.delete, CloudKit SyncEngine with migratePrimaryKeys, database views, @DatabaseFunction custom aggregates, and when to drop to raw GRDB
+version: 2.5.0
+last_updated: 2025-12-03 — Added Column Groups and Single-Table Inheritance
 ---
 
 # SQLiteData
@@ -105,6 +105,233 @@ nonisolated struct Attendee: Hashable, Identifiable {
 ```
 
 **Note:** SQLiteData uses explicit foreign key columns. Relationships are expressed through joins, not `@Relationship` macros.
+
+---
+
+## Column Groups and Schema Composition
+
+SQLiteData provides powerful tools for composing schema types, enabling reuse, better organization, and single-table inheritance patterns.
+
+### Column Groups
+
+Group related columns into reusable types with `@Selection`:
+
+```swift
+// Define a reusable column group
+@Selection
+struct Timestamps {
+    let createdAt: Date
+    let updatedAt: Date?
+}
+
+// Use in multiple tables
+@Table
+nonisolated struct RemindersList: Identifiable {
+    let id: UUID
+    var title = ""
+    let timestamps: Timestamps  // Embedded column group
+}
+
+@Table
+nonisolated struct Reminder: Identifiable {
+    let id: UUID
+    var title = ""
+    var isCompleted = false
+    let timestamps: Timestamps  // Same group, reused
+}
+```
+
+**Important:** SQLite has no concept of grouped columns. Flatten all groupings in your CREATE TABLE:
+
+```sql
+CREATE TABLE "remindersLists" (
+    "id" TEXT PRIMARY KEY NOT NULL DEFAULT (uuid()),
+    "title" TEXT NOT NULL DEFAULT '',
+    "createdAt" TEXT NOT NULL,
+    "updatedAt" TEXT
+) STRICT
+```
+
+#### Querying Column Groups
+
+Access fields inside groups with dot syntax:
+
+```swift
+// Query a field inside the group
+RemindersList
+    .where { $0.timestamps.createdAt <= cutoffDate }
+    .fetchAll(db)
+
+// Compare entire group (flattens to tuple in SQL)
+RemindersList
+    .where {
+        $0.timestamps <= Timestamps(createdAt: date1, updatedAt: date2)
+    }
+```
+
+#### Nesting Groups in @Selection
+
+Use column groups in custom query results:
+
+```swift
+@Selection
+struct Row {
+    let reminderTitle: String
+    let listTitle: String
+    let timestamps: Timestamps  // Nested group
+}
+
+let results = try Reminder
+    .join(RemindersList.all) { $0.remindersListID.eq($1.id) }
+    .select {
+        Row.Columns(
+            reminderTitle: $0.title,
+            listTitle: $1.title,
+            timestamps: $0.timestamps  // Pass entire group
+        )
+    }
+    .fetchAll(db)
+```
+
+### Single-Table Inheritance with Enums
+
+Model polymorphic data using `@CasePathable @Selection` enums — a value-type alternative to class inheritance:
+
+```swift
+import CasePaths
+
+@Table
+nonisolated struct Attachment: Identifiable {
+    let id: UUID
+    let kind: Kind
+
+    @CasePathable @Selection
+    enum Kind {
+        case link(URL)
+        case note(String)
+        case image(URL)
+    }
+}
+```
+
+**Note:** `@CasePathable` is required and comes from Point-Free's [CasePaths](https://github.com/pointfreeco/swift-case-paths) library.
+
+#### SQL Schema for Enum Tables
+
+Flatten all cases into nullable columns:
+
+```sql
+CREATE TABLE "attachments" (
+    "id" TEXT PRIMARY KEY NOT NULL DEFAULT (uuid()),
+    "link" TEXT,
+    "note" TEXT,
+    "image" TEXT
+) STRICT
+```
+
+#### Querying Enum Tables
+
+```swift
+// Fetch all — decoding determines which case
+let attachments = try Attachment.all.fetchAll(db)
+
+// Filter by case
+let images = try Attachment
+    .where { $0.kind.image.isNot(nil) }
+    .fetchAll(db)
+```
+
+#### Inserting Enum Values
+
+```swift
+try Attachment.insert {
+    Attachment.Draft(kind: .note("Hello world!"))
+}
+.execute(db)
+// Inserts: (id, NULL, 'Hello world!', NULL)
+```
+
+#### Updating Enum Values
+
+```swift
+try Attachment.find(id).update {
+    $0.kind = .link(URL(string: "https://example.com")!)
+}
+.execute(db)
+// Sets link column, NULLs note and image columns
+```
+
+### Complex Enum Cases with Grouped Columns
+
+Enum cases can hold structured data using nested `@Selection` types:
+
+```swift
+@Table
+nonisolated struct Attachment: Identifiable {
+    let id: UUID
+    let kind: Kind
+
+    @CasePathable @Selection
+    enum Kind {
+        case link(URL)
+        case note(String)
+        case image(Attachment.Image)  // Fully qualify nested types
+    }
+
+    @Selection
+    struct Image {
+        var caption = ""
+        var url: URL
+    }
+}
+```
+
+SQL schema flattens all nested fields:
+
+```sql
+CREATE TABLE "attachments" (
+    "id" TEXT PRIMARY KEY NOT NULL DEFAULT (uuid()),
+    "link" TEXT,
+    "note" TEXT,
+    "caption" TEXT,
+    "url" TEXT
+) STRICT
+```
+
+### Passing Rows to Database Functions
+
+With column groups, `@DatabaseFunction` can accept entire table rows:
+
+```swift
+@DatabaseFunction
+func isPastDue(reminder: Reminder) -> Bool {
+    !reminder.isCompleted && reminder.dueDate < Date()
+}
+
+// Use in queries — columns are flattened/reconstituted automatically
+let pastDue = try Reminder
+    .where { $isPastDue(reminder: $0) }
+    .fetchAll(db)
+```
+
+### Column Groups vs SwiftData Inheritance
+
+| Approach | SQLiteData | SwiftData |
+|----------|-----------|-----------|
+| Type | Value types (enums/structs) | Reference types (classes) |
+| Exhaustivity | Compiler-enforced switch | Runtime type checking |
+| Verbosity | Concise enum cases | Verbose class hierarchy |
+| Inheritance | Single-table via enum | @Model class inheritance |
+| Reusable columns | `@Selection` groups | Manual repetition |
+
+**SwiftData equivalent (more verbose):**
+```swift
+@Model class Attachment { var isActive: Bool }
+@Model class Link: Attachment { var url: URL }
+@Model class Note: Attachment { var note: String }
+@Model class Image: Attachment { var url: URL }
+// Each needs explicit init calling super.init
+```
 
 ---
 
@@ -1514,6 +1741,7 @@ prepareDependencies {
 
 ## Version History
 
+- **2.5.0**: Added "Column Groups and Schema Composition" section covering `@Selection` for reusable column groups, `@CasePathable @Selection` enums for single-table inheritance, querying/inserting/updating enum tables, complex enum cases with nested groups, passing entire rows to `@DatabaseFunction`, and comparison with SwiftData class inheritance.
 - **2.4.0**: Added "Migrating Existing Databases to CloudKit" section covering `SyncEngine.migratePrimaryKeys` tool for converting integer auto-increment IDs to UUIDs, the problem it solves, manual vs automated migration comparison, and migration checklist.
 - **2.3.0**: Added "Custom Aggregate Functions" section covering `@DatabaseFunction` macro, function registration with `db.add(function:)`, using custom aggregates in queries, mode/median examples, and performance considerations.
 - **2.2.0**: Added comprehensive "Database Views" section covering `@Selection` macro for custom query results, `@Table @Selection` for view-backed types, `createTemporaryView` for SQLite views, `INSTEAD OF` triggers for updatable views, decision guide for views vs @Selection, and temporary vs permanent view patterns.
