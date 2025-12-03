@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -59,7 +59,7 @@
     },
     {
       "name": "sqlitedata",
-      "description": "Use when working with SQLiteData (Point-Free) — @Table models, @FetchAll/@FetchOne queries, database.write with .Draft inserts, .find().update/.delete, CloudKit SyncEngine setup, batch imports, #sql macro, joins, and when to drop to raw GRDB"
+      "description": "Use when working with SQLiteData (Point-Free) or migrating from SwiftData — @Table models, @FetchAll/@FetchOne queries, .Draft inserts, .find().update/.delete, CloudKit sharing (SwiftData can't), batch imports, and SwiftData-to-SQLiteData migration patterns"
     },
     {
       "name": "grdb",
