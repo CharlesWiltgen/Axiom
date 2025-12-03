@@ -14,6 +14,8 @@ hero:
       link: /skills/
 
 features:
+  - title: 🤖 Apple Intelligence
+    details: Implement on-device AI with Foundation Models framework — structured output with @Generable, streaming, tool calling, all WWDC 2025 examples
   - title: 🎨 Build Modern UIs
     details: Implement Apple's latest design system, find what's slowing down your views, record UI tests that don't flake
   - title: ♿ Ship Accessible Apps
