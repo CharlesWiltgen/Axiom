@@ -1,8 +1,8 @@
 ---
 name: sqlitedata
-description: Use when working with SQLiteData (Point-Free) — @Table models, column groups, single-table inheritance, @FetchAll/@FetchOne, query composition with reusable scopes, RETURNING clause, compound selects (UNION/INTERSECT/EXCEPT), recursive CTEs for hierarchical data, FTS5 search with highlight/snippet/bm25, JSON aggregation, CloudKit sync with migratePrimaryKeys, database views, @DatabaseFunction custom aggregates
-version: 2.6.0
-last_updated: 2025-12-03 — Added StructuredQueries advanced features
+description: Use when working with SQLiteData (Point-Free) — @Table models, query composition, RETURNING clause, recursive CTEs, compound selects, FTS5 search with highlight/snippet/bm25, JSON aggregation, CloudKit sync with migratePrimaryKeys, database views, @DatabaseFunction aggregates
+version: 2.7.0
+last_updated: 2025-12-03 — Added Case expressions, CTEs, self-joins, string functions, null handling, @Ephemeral
 ---
 
 # SQLiteData
@@ -105,6 +105,35 @@ nonisolated struct Attendee: Hashable, Identifiable {
 ```
 
 **Note:** SQLiteData uses explicit foreign key columns. Relationships are expressed through joins, not `@Relationship` macros.
+
+### @Ephemeral — Non-Persisted Properties
+
+Mark properties that exist in Swift but not in the database:
+
+```swift
+@Table
+nonisolated struct Item: Identifiable {
+    let id: UUID
+    var title = ""
+    var price: Decimal = 0
+
+    @Ephemeral
+    var isSelected = false  // Not stored in database
+
+    @Ephemeral
+    var formattedPrice: String {  // Computed, not stored
+        "$\(price)"
+    }
+}
+```
+
+**Use cases:**
+- UI state (selection, expansion, hover)
+- Computed properties derived from stored columns
+- Transient flags for business logic
+- Default values for properties not yet in schema
+
+**Important:** `@Ephemeral` properties must have default values since they won't be populated from the database.
 
 ---
 
@@ -490,6 +519,136 @@ Item.order(by: \.title)
 // Closure style with direction
 Item.order { $0.id.desc() }
 Item.order { $0.title.asc() }
+
+// Multiple columns
+Item.order { ($0.category, $0.title.asc()) }
+
+// Nulls positioning
+Item.order { $0.dueDate.asc(nulls: .last) }
+Item.order { $0.priority.desc(nulls: .first) }
+```
+
+### String Functions
+
+```swift
+// Case conversion
+let upper = try Item
+    .select { $0.title.upper() }
+    .fetchAll(db)
+
+let lower = try Item
+    .select { $0.title.lower() }
+    .fetchAll(db)
+
+// Trimming whitespace
+let trimmed = try Item
+    .select { $0.title.trim() }       // Both sides
+    .fetchAll(db)
+
+let leftTrimmed = try Item
+    .select { $0.title.ltrim() }      // Left only
+    .fetchAll(db)
+
+// Substring extraction
+let firstThree = try Item
+    .select { $0.title.substr(0, 3) }  // Start index, length
+    .fetchAll(db)
+
+// String replacement
+let cleaned = try Item
+    .select { $0.title.replace("old", "new") }
+    .fetchAll(db)
+
+// String length
+let lengths = try Item
+    .select { ($0.title, $0.title.length()) }
+    .fetchAll(db)
+
+// Find substring position (1-indexed, 0 if not found)
+let positions = try Item
+    .where { $0.title.instr("search") > 0 }
+    .fetchAll(db)
+
+// Pattern matching
+let matches = try Item
+    .where { $0.title.like("%phone%") }           // SQL LIKE
+    .fetchAll(db)
+
+let prefixed = try Item
+    .where { $0.title.hasPrefix("iPhone") }       // Starts with
+    .fetchAll(db)
+
+let suffixed = try Item
+    .where { $0.title.hasSuffix("Pro") }          // Ends with
+    .fetchAll(db)
+
+let containing = try Item
+    .where { $0.title.contains("Max") }           // Contains
+    .fetchAll(db)
+
+// Case-insensitive comparison
+let caseInsensitive = try Item
+    .where { $0.title.collate(.nocase).eq("IPHONE") }
+    .fetchAll(db)
+```
+
+### Null Handling
+
+```swift
+// Coalesce — return first non-null value
+let displayName = try User
+    .select { $0.nickname ?? $0.firstName ?? "Anonymous" }
+    .fetchAll(db)
+
+// ifnull — alternative if null
+let safePrice = try Item
+    .select { $0.discountPrice.ifnull($0.price) }
+    .fetchAll(db)
+
+// Check for null
+let withDueDate = try Reminder
+    .where { $0.dueDate.isNot(nil) }
+    .fetchAll(db)
+
+let noDueDate = try Reminder
+    .where { $0.dueDate.is(nil) }
+    .fetchAll(db)
+
+// Null-safe comparison in ordering
+let sorted = try Item
+    .order { $0.priority.desc(nulls: .last) }  // Nulls at end
+    .fetchAll(db)
+```
+
+### Range and Set Membership
+
+```swift
+// IN — check if value is in a set
+let selected = try Item
+    .where { $0.id.in(selectedIds) }
+    .fetchAll(db)
+
+// IN with subquery
+let itemsInActiveCategories = try Item
+    .where { $0.categoryID.in(
+        Category.where(\.isActive).select(\.id)
+    )}
+    .fetchAll(db)
+
+// NOT IN
+let excluded = try Item
+    .where { !$0.id.in(excludedIds) }
+    .fetchAll(db)
+
+// BETWEEN — range check
+let midRange = try Item
+    .where { $0.price.between(10, and: 100) }
+    .fetchAll(db)
+
+// Swift range syntax
+let inRange = try Item
+    .where { (10...100).contains($0.price) }
+    .fetchAll(db)
 ```
 
 ### Dynamic Queries
@@ -701,6 +860,43 @@ try database.write { db in
     }
     .execute(db)
 }
+```
+
+### Conditional Inserts with Result Builders
+
+Use Swift control flow inside insert blocks:
+
+```swift
+// Conditional values
+try Item.insert {
+    Item.Draft(
+        title: name,
+        category: if isPremium { "Premium" } else { "Standard" },
+        discount: if hasPromo { promoDiscount } else { nil }
+    )
+}
+.execute(db)
+
+// Batch insert with filtering
+try Item.insert {
+    for product in products where product.isValid {
+        Item.Draft(
+            title: product.name,
+            price: product.price
+        )
+    }
+}
+.execute(db)
+
+// Conditional batch insert
+try Item.insert {
+    for item in items {
+        if item.shouldImport {
+            Item.Draft(title: item.name)
+        }
+    }
+}
+.execute(db)
 ```
 
 ### Update — Single Record with .find()
@@ -1355,6 +1551,161 @@ extension Reminder {
         .leftJoin(Tag.all) { $1.tagID.eq($2.primaryKey) }
 }
 ```
+
+#### Join Types
+
+```swift
+// INNER JOIN — only matching rows
+let itemsWithCategories = try Item
+    .join(Category.all) { $0.categoryID.eq($1.id) }
+    .fetchAll(db)
+
+// LEFT JOIN — all from left, matching from right (nullable)
+let itemsWithOptionalCategory = try Item
+    .leftJoin(Category.all) { $0.categoryID.eq($1.id) }
+    .select { ($0, $1) }  // (Item, Category?)
+    .fetchAll(db)
+
+// RIGHT JOIN — all from right, matching from left
+let categoriesWithItems = try Item
+    .rightJoin(Category.all) { $0.categoryID.eq($1.id) }
+    .select { ($0, $1) }  // (Item?, Category)
+    .fetchAll(db)
+
+// FULL OUTER JOIN — all from both
+let allCombined = try Item
+    .fullJoin(Category.all) { $0.categoryID.eq($1.id) }
+    .select { ($0, $1) }  // (Item?, Category?)
+    .fetchAll(db)
+```
+
+#### Self-Joins with TableAlias
+
+Query the same table twice (e.g., employee/manager relationships):
+
+```swift
+// Define an alias for the second reference
+struct ManagerAlias: TableAlias {
+    typealias Table = Employee
+}
+
+// Employee with their manager's name
+let employeesWithManagers = try Employee
+    .leftJoin(Employee.all.as(ManagerAlias.self)) { $0.managerID.eq($1.id) }
+    .select {
+        (
+            employeeName: $0.name,
+            managerName: $1.name  // From aliased table
+        )
+    }
+    .fetchAll(db)
+
+// Find employees who manage others
+let managers = try Employee
+    .join(Employee.all.as(ManagerAlias.self)) { $0.id.eq($1.managerID) }
+    .select { $0 }
+    .distinct()
+    .fetchAll(db)
+```
+
+### Case Expressions
+
+CASE WHEN logic for conditional values in queries:
+
+```swift
+// Simple case — map values
+let labels = try Item
+    .select {
+        Case($0.priority)
+            .when(1, then: "Low")
+            .when(2, then: "Medium")
+            .when(3, then: "High")
+            .else("Unknown")
+    }
+    .fetchAll(db)
+
+// Searched case — boolean conditions
+let status = try Order
+    .select {
+        Case()
+            .when($0.shippedAt.isNot(nil), then: "Shipped")
+            .when($0.paidAt.isNot(nil), then: "Paid")
+            .when($0.createdAt.isNot(nil), then: "Pending")
+            .else("Unknown")
+    }
+    .fetchAll(db)
+
+// Case in updates (toggle pattern)
+try Reminder.find(id).update {
+    $0.status = Case($0.status)
+        .when(.incomplete, then: .completing)
+        .when(.completing, then: .completed)
+        .else(.incomplete)
+}
+.execute(db)
+
+// Case for computed columns
+let itemsWithTier = try Item
+    .select {
+        (
+            $0.title,
+            Case()
+                .when($0.price < 10, then: "Budget")
+                .when($0.price < 100, then: "Standard")
+                .else("Premium")
+        )
+    }
+    .fetchAll(db)
+```
+
+### Non-Recursive CTEs (Common Table Expressions)
+
+Simplify complex queries by breaking them into named subqueries:
+
+```swift
+// Define a CTE for expensive items
+let expensiveItems = try With {
+    Item.where { $0.price > 1000 }
+} query: { expensive in
+    // Use the CTE in the final query
+    expensive
+        .order(by: \.price)
+        .limit(10)
+}
+.fetchAll(db)
+
+// Multiple CTEs
+let report = try With {
+    // CTE 1: High-value customers
+    Customer.where { $0.totalSpent > 10000 }
+} with: {
+    // CTE 2: Recent orders
+    Order.where { $0.createdAt > lastMonth }
+} query: { highValue, recentOrders in
+    // Join the CTEs
+    highValue
+        .join(recentOrders) { $0.id.eq($1.customerID) }
+        .select { ($0.name, $1.total) }
+}
+.fetchAll(db)
+
+// CTE for deduplication
+let uniqueEmails = try With {
+    Customer
+        .group(by: \.email)
+        .select { ($0.email, $0.id.min()) }
+} query: { unique in
+    Customer
+        .where { $0.id.in(unique.select { $1 }) }
+}
+.fetchAll(db)
+```
+
+**When to use CTEs:**
+- Break complex queries into readable parts
+- Reuse a subquery multiple times
+- Improve query plan for complex joins
+- Self-documenting query structure
 
 ### Full-Text Search (FTS5)
 
@@ -2189,6 +2540,7 @@ prepareDependencies {
 
 ## Version History
 
+- **2.7.0**: Added Case expressions (simple CASE and searched CASE WHEN), non-recursive CTEs with `With {} query: {}`, self-joins with `TableAlias` protocol, string functions (upper, lower, trim, substr, replace, instr, like, hasPrefix, hasSuffix, contains, collate), null handling (?? coalesce, ifnull, is(nil), isNot(nil)), range and set membership (in, between, Swift ranges), `@Ephemeral` macro for non-persisted properties, result builders for conditional inserts, and explicit join types (INNER, LEFT, RIGHT, FULL).
 - **2.6.0**: Major expansion from swift-structured-queries analysis. Added RETURNING clause for INSERT/UPDATE/DELETE. Added Query Composition section with reusable scopes, chainable filters, and query helpers. Added Compound Selects (UNION, INTERSECT, EXCEPT). Added Recursive CTEs for hierarchical data (trees, org charts, threaded comments). Added distinct() and pagination patterns. Added groupConcat() for string aggregation. Added JSON aggregation (jsonGroupArray, jsonObject). Added FTS5 advanced features (highlight, snippet, bm25 ranking). Added aggregate functions with filter: parameter.
 - **2.5.0**: Added "Column Groups and Schema Composition" section covering `@Selection` for reusable column groups, `@CasePathable @Selection` enums for single-table inheritance, querying/inserting/updating enum tables, complex enum cases with nested groups, passing entire rows to `@DatabaseFunction`, and comparison with SwiftData class inheritance.
 - **2.4.0**: Added "Migrating Existing Databases to CloudKit" section covering `SyncEngine.migratePrimaryKeys` tool for converting integer auto-increment IDs to UUIDs, the problem it solves, manual vs automated migration comparison, and migration checklist.

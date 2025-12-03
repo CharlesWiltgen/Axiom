@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -59,7 +59,7 @@
     },
     {
       "name": "sqlitedata",
-      "description": "Use when working with SQLiteData (Point-Free) — @Table models, query composition, RETURNING clause, recursive CTEs, compound selects, FTS5 search with highlight/snippet/bm25, JSON aggregation, column groups, single-table inheritance, CloudKit sync with migratePrimaryKeys, database views, @DatabaseFunction aggregates"
+      "description": "Use when working with SQLiteData (Point-Free) — @Table models, query composition, RETURNING clause, recursive CTEs, compound selects, FTS5 search with highlight/snippet/bm25, JSON aggregation, column groups, single-table inheritance, CloudKit sync with migratePrimaryKeys, database views, @DatabaseFunction aggregates, Case expressions, self-joins with TableAlias, string functions, null handling, @Ephemeral"
     },
     {
       "name": "grdb",
