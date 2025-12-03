@@ -1,8 +1,8 @@
 ---
 name: sqlitedata
-description: Use when working with SQLiteData (Point-Free) — @Table models, @FetchAll/@FetchOne queries, database.write with .Draft inserts, .find().update/.delete, CloudKit SyncEngine setup, batch imports, #sql macro, joins, @Selection for custom query results, database views with createTemporaryView, @DatabaseFunction custom aggregates, and when to drop to raw GRDB
-version: 2.3.0
-last_updated: 2025-12-03 — Added Custom Aggregate Functions section
+description: Use when working with SQLiteData (Point-Free) — @Table models, @FetchAll/@FetchOne queries, database.write with .Draft inserts, .find().update/.delete, CloudKit SyncEngine setup with migratePrimaryKeys for existing apps, batch imports, #sql macro, joins, @Selection for custom query results, database views, @DatabaseFunction custom aggregates, and when to drop to raw GRDB
+version: 2.4.0
+last_updated: 2025-12-03 — Added CloudKit primary key migration tool
 ---
 
 # SQLiteData
@@ -492,6 +492,117 @@ func shareItem(_ item: Item) async throws -> SharedRecord {
     }
 }
 ```
+
+### Migrating Existing Databases to CloudKit
+
+CloudKit requires globally unique primary keys (UUIDs). If your existing database uses auto-incrementing integers, SQLiteData provides a dedicated migration tool.
+
+#### The Problem
+
+Existing apps often have integer primary keys:
+
+```swift
+// OLD: Integer auto-increment (NOT CloudKit compatible)
+@Table
+struct Reminder {
+    let id: Int  // Auto-increment integer
+    var title = ""
+}
+```
+
+CloudKit sync requires UUIDs:
+
+```swift
+// NEW: UUID primary key (CloudKit compatible)
+@Table
+nonisolated struct Reminder: Identifiable {
+    let id: UUID  // Globally unique
+    var title = ""
+}
+```
+
+#### Manual Migration (The Hard Way)
+
+Without the tool, you'd need complex SQL for each table:
+
+```swift
+// For EACH table, you'd need ~50+ lines like this:
+try #sql("""
+    CREATE TABLE "new_reminders" (
+        "id" TEXT PRIMARY KEY NOT NULL DEFAULT (uuid()),
+        "title" TEXT NOT NULL DEFAULT ''
+    ) STRICT
+""").execute(db)
+
+try #sql("""
+    INSERT INTO "new_reminders"
+    SELECT '00000000-0000-0000-0000-' || printf('%012x', "id"), "title"
+    FROM "reminders"
+""").execute(db)
+
+try #sql("DROP TABLE \"reminders\"").execute(db)
+try #sql("ALTER TABLE \"new_reminders\" RENAME TO \"reminders\"").execute(db)
+// Plus: recreate indices, triggers, foreign key checks...
+```
+
+This is error-prone and must handle foreign keys, indices, triggers, and data integrity checks.
+
+#### Using migratePrimaryKeys (The Easy Way)
+
+SQLiteData 1.1+ provides a single function that handles everything:
+
+```swift
+migrator.registerMigration("Migrate to UUID primary keys") { db in
+    try SyncEngine.migratePrimaryKeys(
+        db,
+        tables:
+            RemindersList.self,
+            Reminder.self,
+            Tag.self,
+            ReminderTag.self
+    )
+}
+```
+
+**This single call:**
+- Creates new tables with UUID primary keys
+- Converts existing integer IDs to valid UUIDs
+- Copies all data preserving relationships
+- Recreates affected indices and triggers
+- Runs foreign key integrity checks
+- Handles transactions and rollback on failure
+
+#### Migration Checklist
+
+1. **Update your models** to use `UUID` primary keys
+2. **Add the migration** with `SyncEngine.migratePrimaryKeys`
+3. **List ALL tables** that need migration (order matters for foreign keys)
+4. **Test thoroughly** — run on a copy of production data first
+5. **Enable CloudKit sync** after migration succeeds
+
+```swift
+// Complete setup after migration
+@main
+struct MyApp: App {
+    init() {
+        prepareDependencies {
+            $0.defaultDatabase = try! appDatabase()  // Includes migration
+            $0.defaultSyncEngine = try SyncEngine(
+                for: $0.defaultDatabase,
+                tables: RemindersList.self, Reminder.self, Tag.self
+            )
+        }
+    }
+}
+```
+
+#### When to Use This Tool
+
+| Situation | Approach |
+|-----------|----------|
+| New app | Use `UUID` primary keys from the start |
+| Existing app, integer IDs | Use `migratePrimaryKeys` before enabling sync |
+| Already using UUIDs | No migration needed, just add `SyncEngine` |
 
 ---
 
@@ -1403,6 +1514,7 @@ prepareDependencies {
 
 ## Version History
 
+- **2.4.0**: Added "Migrating Existing Databases to CloudKit" section covering `SyncEngine.migratePrimaryKeys` tool for converting integer auto-increment IDs to UUIDs, the problem it solves, manual vs automated migration comparison, and migration checklist.
 - **2.3.0**: Added "Custom Aggregate Functions" section covering `@DatabaseFunction` macro, function registration with `db.add(function:)`, using custom aggregates in queries, mode/median examples, and performance considerations.
 - **2.2.0**: Added comprehensive "Database Views" section covering `@Selection` macro for custom query results, `@Table @Selection` for view-backed types, `createTemporaryView` for SQLite views, `INSTEAD OF` triggers for updatable views, decision guide for views vs @Selection, and temporary vs permanent view patterns.
 - **2.1.0**: Added comprehensive "Migrating from SwiftData" section — decision guide, pattern-by-pattern equivalents, full code migration example, CloudKit sharing deep dive (SwiftData's missing feature), performance benchmarks, gradual migration strategy, and gotchas.
