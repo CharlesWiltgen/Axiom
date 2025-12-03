@@ -85,7 +85,13 @@
 
 ## Version Management
 
-See main CLAUDE.md for version increment rules. TL;DR: Always increment by **0.0.1** unless explicitly instructed otherwise.
+**NEVER update plugin or skill versions without explicit permission.** Version bumps are a release decision, not an automatic part of commits.
+
+When making changes:
+- Edit skills and code freely
+- Commit changes with descriptive messages
+- Do NOT update `version` in `claude-code.json` or skill frontmatter
+- Wait for explicit instruction to bump versions
 
 ---
 
