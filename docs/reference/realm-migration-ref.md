@@ -116,7 +116,7 @@ Use this reference when:
 
 This is a **reference skill** — comprehensive migration guide without mandatory workflows.
 
-**Reference includes:**
+**Reference includes**
 - Pattern equivalents catalog
 - Threading model comparisons
 - Schema migration strategies

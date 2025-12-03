@@ -9,7 +9,7 @@ description: Use when integrating App Intents for Siri, Apple Intelligence, Shor
 
 Comprehensive guide to App Intents framework for exposing app functionality to Siri, Apple Intelligence, Shortcuts, Spotlight, and other system experiences. Replaces older SiriKit custom intents with modern Swift-first API.
 
-**Core principle:** App Intents make your app's actions discoverable across Apple's ecosystem. Well-designed intents feel natural in Siri conversations, Shortcuts automation, and Spotlight search.
+**Core principle** App Intents make your app's actions discoverable across Apple's ecosystem. Well-designed intents feel natural in Siri conversations, Shortcuts automation, and Spotlight search.
 
 ## When to Use This Skill
 
@@ -436,7 +436,7 @@ struct DeleteTaskIntent: AppIntent {
 
 The **Use Model action** in Shortcuts (iOS 18.1+) allows users to incorporate Apple Intelligence models into their automation workflows. Your app's entities can be passed to language models for filtering, transformation, and reasoning.
 
-**Key capability:** "Under the hood, the action passes a JSON representation of your entity to the model, so you'll want to make sure to expose any information you want it to be able to reason over, in the entity definition." - WWDC 2025-260
+**Key capability** "Under the hood, the action passes a JSON representation of your entity to the model, so you'll want to make sure to expose any information you want it to be able to reason over, in the entity definition." - WWDC 2025-260
 
 ### Three Output Types
 
@@ -495,7 +495,7 @@ var displayRepresentation: DisplayRepresentation {
 }
 ```
 
-**Example JSON sent to model:**
+**Example JSON sent to model**
 ```json
 {
   "type": "Calendar Event",
@@ -512,7 +512,7 @@ var displayRepresentation: DisplayRepresentation {
 
 ### Supporting Rich Text with AttributedString
 
-**Why it matters:** "If your app supports Rich Text content, now is the time to make sure your app intents use the attributed string type for text parameters where appropriate." - WWDC 2025-260
+**Why it matters** "If your app supports Rich Text content, now is the time to make sure your app intents use the attributed string type for text parameters where appropriate." - WWDC 2025-260
 
 **❌ DON'T: Use plain String**
 ```swift
@@ -536,7 +536,7 @@ struct CreateNoteIntent: AppIntent {
 }
 ```
 
-**Real-world example from WWDC:**
+**Real-world example from WWDC**
 Bear app's Create Note accepts AttributedString, allowing diary templates from ChatGPT to include:
 - Bold headings
 - Mood logging tables
@@ -559,7 +559,7 @@ When Use Model output connects to another action, the runtime automatically conv
 
 Instead of returning verbose text like "Yes, this note seems to be about developing features for the Shortcuts app", the model automatically returns a Boolean (`true`/`false`) when connected to an If action.
 
-**Explicit output types available:**
+**Explicit output types available**
 - Text (AttributedString)
 - Number
 - Boolean
@@ -581,7 +581,7 @@ Enable iterative refinement before passing to next action:
 // 3. Add to Grocery List in Things app
 ```
 
-**When to use:**
+**When to use**
 - Recipe modifications (scale servings, substitute ingredients)
 - Content refinement (adjust tone, length, style)
 - Data validation (confirm extracted values before saving)
@@ -636,7 +636,7 @@ struct EventEntity: AppEntity, IndexedEntity {
 
 ### Indexing Key Mapping
 
-**Standard Spotlight attribute keys:**
+**Standard Spotlight attribute keys**
 ```swift
 // Common Spotlight keys for events
 @Property(title: "Title", indexingKey: \.eventTitle)
@@ -649,7 +649,7 @@ var startDate: Date
 var location: String?
 ```
 
-**Custom keys for non-standard attributes:**
+**Custom keys for non-standard attributes**
 ```swift
 @Property(title: "Notes", customIndexingKey: "eventNotes")
 var notes: String?
@@ -662,7 +662,7 @@ var attendeeCount: Int
 
 With IndexedEntity conformance, users get this Find action automatically:
 
-**In Shortcuts app:**
+**In Shortcuts app**
 ```
 Find Events where:
   - Title contains "Team"
@@ -670,13 +670,13 @@ Find Events where:
   - Location is "San Francisco"
 ```
 
-**Without IndexedEntity, you'd need to manually implement:**
+**Without IndexedEntity, you'd need to manually implement**
 - `EnumerableEntityQuery` protocol
 - `EntityPropertyQuery` protocol
 - Property filters for each searchable field
 - Search/suggestion logic
 
-**With IndexedEntity:** Just add indexing keys, done!
+**With IndexedEntity** Just add indexing keys, done!
 
 ### Search Support
 
@@ -724,7 +724,7 @@ struct TripEntity: AppEntity, IndexedEntity {
 
 **Spotlight on Mac** (macOS Sequoia+) allows users to run your app's intents directly from system search. Intents that work in Shortcuts automatically work in Spotlight with proper configuration.
 
-**Key principle:** "Spotlight is all about running things quickly. To do that, people need to be able to provide all the information your intent needs to run directly in Spotlight." - WWDC 2025-260
+**Key principle** "Spotlight is all about running things quickly. To do that, people need to be able to provide all the information your intent needs to run directly in Spotlight." - WWDC 2025-260
 
 ### Requirements for Spotlight Visibility
 
@@ -732,7 +732,7 @@ struct TripEntity: AppEntity, IndexedEntity {
 
 "The parameter summary, which is what people will see in Spotlight UI, must contain all required parameters that don't have a default value." - WWDC 2025-260
 
-**❌ WON'T SHOW in Spotlight:**
+**❌ WON'T SHOW in Spotlight**
 ```swift
 struct CreateEventIntent: AppIntent {
     static var title: LocalizedStringResource = "Create Event"
@@ -756,19 +756,19 @@ struct CreateEventIntent: AppIntent {
 }
 ```
 
-**✅ WILL SHOW in Spotlight (Option 1: Make optional):**
+**✅ WILL SHOW in Spotlight (Option 1: Make optional)**
 ```swift
 @Parameter(title: "Notes")
 var notes: String? // Optional - can omit from summary
 ```
 
-**✅ WILL SHOW in Spotlight (Option 2: Provide default):**
+**✅ WILL SHOW in Spotlight (Option 2: Provide default)**
 ```swift
 @Parameter(title: "Notes")
 var notes: String = "" // Has default - can omit from summary
 ```
 
-**✅ WILL SHOW in Spotlight (Option 3: Include in summary):**
+**✅ WILL SHOW in Spotlight (Option 3: Include in summary)**
 ```swift
 static var parameterSummary: some ParameterSummary {
     Summary("Create '\(\.$title)' from \(\.$startDate) to \(\.$endDate)") {
@@ -820,8 +820,8 @@ struct TimezoneQuery: EnumerableEntityQuery {
 }
 ```
 
-**Use suggested entities when:** List is large or unbounded (calendar events, notes, contacts)
-**Use all entities when:** List is small and bounded (timezones, priority levels, categories)
+**Use suggested entities when** List is large or unbounded (calendar events, notes, contacts)
+**Use all entities when** List is small and bounded (timezones, priority levels, categories)
 
 ### On-Screen Content Tagging
 
@@ -911,7 +911,7 @@ struct OpenEventIntent: AppIntent {
 }
 ```
 
-**User experience:**
+**User experience**
 1. User runs "Create Event" in Spotlight (background)
 2. Event created without opening app
 3. Spotlight shows "Open in App" button (opensIntent)
@@ -948,14 +948,14 @@ Spotlight learns when/how user runs this intent and surfaces suggestions proacti
 
 **Personal Automations** arrive on macOS (macOS Sequoia+) with Mac-specific triggers:
 
-**New Mac Automation Types:**
+**New Mac Automation Types**
 - **Folder Automation** — Trigger when files added/removed from folder
 - **External Drive Automation** — Trigger when drive connected/disconnected
 - Time of Day (from iOS)
 - Bluetooth (from iOS)
 - And more...
 
-**Example use case:** Invoice processing shortcut runs automatically every time a new invoice is added to ~/Documents/Invoices folder.
+**Example use case** Invoice processing shortcut runs automatically every time a new invoice is added to ~/Documents/Invoices folder.
 
 ### Automatic Availability
 
@@ -1394,4 +1394,4 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 
 ---
 
-**Remember:** App Intents are how users interact with your app through Siri, Shortcuts, and system features. Well-designed intents feel like a natural extension of your app's functionality and provide value across Apple's ecosystem.
+**Remember** App Intents are how users interact with your app through Siri, Shortcuts, and system features. Well-designed intents feel like a natural extension of your app's functionality and provide value across Apple's ecosystem.

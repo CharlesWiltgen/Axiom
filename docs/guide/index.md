@@ -85,7 +85,7 @@ Use `/plugin` and select "Manage and install" to see installed plugins. Axiom sh
 
 Skills are **automatically suggested by Claude Code** based on your questions and context. Simply ask questions that match the skill's purpose:
 
-**Examples:**
+**Examples**
 - "I'm getting BUILD FAILED in Xcode with stale builds" → activates `xcode-debugging`
 - "How do I fix actor isolation errors in Swift 6?" → activates `swift-concurrency`
 - "I need to add a column to my database safely" → activates `database-migration`

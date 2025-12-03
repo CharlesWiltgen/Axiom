@@ -21,9 +21,9 @@ Performs automated checks for:
 
 ### 1. Custom Views for Glass Background Effect
 
-**Looks for:** Custom view types (non-standard SwiftUI views) that might benefit from `.glassBackgroundEffect()`
+**Looks for** Custom view types (non-standard SwiftUI views) that might benefit from `.glassBackgroundEffect()`
 
-**Pattern:**
+**Pattern**
 ```swift
 // Search for custom views in galleries, overlays, cards
 struct CustomPhotoView: View { }
@@ -31,18 +31,18 @@ struct OverlayCard: View { }
 struct GalleryContainer: View { }
 ```
 
-**Recommendation:** Consider `.glassBackgroundEffect()` for custom views that should reflect surrounding content.
+**Recommendation** Consider `.glassBackgroundEffect()` for custom views that should reflect surrounding content.
 
 ---
 
 ### 2. Toolbar Button Improvements
 
-**Looks for:**
+**Looks for**
 - Toolbars with multiple buttons that lack `Spacer(.fixed)` for grouping
 - Primary action buttons missing `.buttonStyle(.borderedProminent)`
 - Prominent buttons missing `.tint()` for color
 
-**Pattern:**
+**Pattern**
 ```swift
 .toolbar {
     Button("Action1") { }
@@ -51,17 +51,17 @@ struct GalleryContainer: View { }
 }
 ```
 
-**Recommendation:** Use `Spacer(.fixed)` to separate button groups, `.borderedProminent` + `.tint()` for primary actions.
+**Recommendation** Use `Spacer(.fixed)` to separate button groups, `.borderedProminent` + `.tint()` for primary actions.
 
 ---
 
 ### 3. Search Pattern Opportunities
 
-**Looks for:**
+**Looks for**
 - `.searchable()` on views that aren't in `NavigationSplitView` (won't get automatic bottom-alignment)
 - `TabView` with search-related tabs missing `.tabRole(.search)`
 
-**Pattern:**
+**Pattern**
 ```swift
 // Check if searchable is properly placed
 NavigationSplitView {
@@ -78,13 +78,13 @@ List { }
 
 ### 4. Migration from Old Blur Effects
 
-**Looks for:**
+**Looks for**
 - `UIBlurEffect` usage (UIKit)
 - `NSVisualEffectView` usage (AppKit)
 - `.blur()` modifier on backgrounds
 - `Material` usage that could migrate to Liquid Glass
 
-**Pattern:**
+**Pattern**
 ```swift
 // Old patterns to migrate
 UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
@@ -92,17 +92,17 @@ UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
 .blur(radius: 10)
 ```
 
-**Recommendation:** Migrate to `.glassEffect()` or `.glassBackgroundEffect()` for iOS 26+.
+**Recommendation** Migrate to `.glassEffect()` or `.glassBackgroundEffect()` for iOS 26+.
 
 ---
 
 ### 5. Tinting Opportunities
 
-**Looks for:**
+**Looks for**
 - `.borderedProminent` buttons without `.tint()`
 - Toolbar buttons that could be more prominent
 
-**Pattern:**
+**Pattern**
 ```swift
 Button("Add") { }
     .buttonStyle(.borderedProminent)
@@ -113,34 +113,34 @@ Button("Add") { }
 
 ## Execution Steps
 
-1. **Glob for SwiftUI files:**
+1. **Glob for SwiftUI files**
 ```
 **/*.swift (exclude: Tests/, Previews/, Generated/)
 ```
 
-2. **For each file, grep for patterns:**
+2. **For each file, grep for patterns**
 
-**Custom views:**
+**Custom views**
 ```regex
 struct \w+View: View
 struct \w+(Card|Container|Overlay|Gallery): View
 ```
 
-**Toolbars:**
+**Toolbars**
 ```regex
 \.toolbar\s*\{
 ToolbarItem
 ToolbarItemGroup
 ```
 
-**Search:**
+**Search**
 ```regex
 \.searchable\(
 \.tabRole\(
 TabView\s*\{
 ```
 
-**Old blur effects:**
+**Old blur effects**
 ```regex
 UIBlurEffect
 NSVisualEffectView
@@ -148,18 +148,18 @@ NSVisualEffectView
 \.background\(.*Material
 ```
 
-**Tinting:**
+**Tinting**
 ```regex
 \.borderedProminent
 \.tint\(
 ```
 
-3. **Analyze findings:**
+3. **Analyze findings**
    - Count occurrences per category
    - Flag high-priority items (old blur effects, missing toolbar improvements)
    - Suggest next steps
 
-4. **Generate report:**
+4. **Generate report**
 
 ```
 Liquid Glass Adoption Audit Results
@@ -195,13 +195,13 @@ Next Steps:
 
 ## Output Format
 
-**For each category:**
+**For each category**
 1. File path and line number
 2. Code snippet showing current implementation
 3. Recommended improvement with example code
 4. Priority level (High/Medium/Low)
 
-**Summary at end:**
+**Summary at end**
 - Total opportunities found
 - Prioritized list of recommendations
 - Links to relevant skills for implementation
@@ -282,7 +282,7 @@ For implementation details, use: /skill liquid-glass
 
 ## Implementation Notes
 
-**Grep patterns to use:**
+**Grep patterns to use**
 
 ```bash
 # Custom views
@@ -304,7 +304,7 @@ grep -n "Material" **/*.swift
 grep -n "\.borderedProminent" **/*.swift
 ```
 
-**Analysis logic:**
+**Analysis logic**
 
 1. Custom views: Flag any struct with "View" suffix not in standard SwiftUI (List, HStack, etc.)
 2. Toolbars: Count buttons, check for `Spacer(.fixed)`, check for `.borderedProminent`
@@ -312,7 +312,7 @@ grep -n "\.borderedProminent" **/*.swift
 4. Migration: Flag all UIKit/AppKit blur effects as high priority
 5. Tinting: Flag `.borderedProminent` without `.tint()` nearby
 
-**Priority levels:**
+**Priority levels**
 
 - **HIGH**: Migration from old blur effects, missing primary action prominence
 - **MEDIUM**: Toolbar spacing, search placement, tinting opportunities

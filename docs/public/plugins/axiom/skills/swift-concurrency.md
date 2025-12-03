@@ -30,7 +30,7 @@ description: Swift 6 strict concurrency patterns, fixes, and best practices — 
 
 These are real questions developers ask that this skill is designed to answer:
 
-**General Concurrency:**
+**General Concurrency**
 
 **1. "I'm getting 'Main actor-isolated property accessed from nonisolated context' errors in my delegate methods. How do I fix this?"**
 → The skill covers the critical Pattern 2 (Value Capture Before Task) that shows when to capture delegate parameters before the Task context hop
@@ -47,7 +47,7 @@ These are real questions developers ask that this skill is designed to answer:
 **5. "How do I know when to use @MainActor vs nonisolated vs @concurrent? The rules aren't clear."**
 → The skill clarifies actor isolation rules and provides a decision tree for each scenario with real-world examples
 
-**Data Persistence & Concurrency:**
+**Data Persistence & Concurrency**
 
 **6. "I'm fetching 10,000 records from SwiftData on a background thread, but I'm getting thread-confinement errors. How do I safely load data?"**
 → The skill shows Pattern 7 (Background SwiftData Access) which demonstrates creating background ModelContext and safely passing data back to MainActor
@@ -776,7 +776,7 @@ Task { [weak self] in  // ✅ Weak capture
 
 ## Build Settings for Swift 6
 
-**Enable strict concurrency checking:**
+**Enable strict concurrency checking**
 
 ```
 Build Settings → Swift Compiler — Concurrency
@@ -824,10 +824,10 @@ Use this when reviewing new code or fixing concurrency warnings:
 
 ## Real-World Impact
 
-**Before:** Random crashes, data races, "works on my machine" bugs
-**After:** Compile-time guarantees, no data races, predictable behavior
+**Before** Random crashes, data races, "works on my machine" bugs
+**After** Compile-time guarantees, no data races, predictable behavior
 
-**Key insight:** Swift 6's strict concurrency catches bugs at compile time instead of runtime crashes.
+**Key insight** Swift 6's strict concurrency catches bugs at compile time instead of runtime crashes.
 
 ---
 

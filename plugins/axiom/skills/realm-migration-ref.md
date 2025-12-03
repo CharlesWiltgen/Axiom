@@ -15,7 +15,7 @@ skill_type: reference
 
 ## Critical Timeline
 
-**Realm Device Sync:** DEPRECATION DEADLINE = September 30, 2025
+**Realm Device Sync** DEPRECATION DEADLINE = September 30, 2025
 
 If your app uses Realm Sync:
 - ⚠️ You MUST migrate by September 30, 2025

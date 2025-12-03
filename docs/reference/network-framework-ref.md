@@ -234,7 +234,7 @@ This reference includes:
 
 This is a **reference skill** — comprehensive API guide without mandatory workflows.
 
-**Reference includes:**
+**Reference includes**
 - Complete API documentation for iOS 12-26+
 - All WWDC code examples
 - Migration strategies

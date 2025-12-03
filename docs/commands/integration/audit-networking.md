@@ -208,7 +208,7 @@ Most issues fixable quickly:
 
 This is an **audit command** — automated scanning with file:line references.
 
-**Command provides:**
+**Command provides**
 - 10 detection patterns
 - File:line references for all issues
 - Severity classification

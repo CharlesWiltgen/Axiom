@@ -7,7 +7,7 @@ description: Use when debugging memory leaks from blocks, blocks assigned to sel
 
 ## Overview
 
-Block retain cycles are the #1 cause of Objective-C memory leaks. When a block captures `self` and is stored on that same object (directly or indirectly through an operation/request), you create a circular reference: self → block → self. **Core principle:** 90% of block memory leaks stem from missing or incorrectly applied weak-strong patterns, not genuine Apple framework bugs.
+Block retain cycles are the #1 cause of Objective-C memory leaks. When a block captures `self` and is stored on that same object (directly or indirectly through an operation/request), you create a circular reference: self → block → self. **Core principle** 90% of block memory leaks stem from missing or incorrectly applied weak-strong patterns, not genuine Apple framework bugs.
 
 ## Red Flags — Suspect Block Retain Cycle
 
@@ -19,12 +19,12 @@ If you see ANY of these, suspect a block retain cycle, not something else:
 - Weak reference becomes nil unexpectedly in a block
 - NSLog, NSAssert, or string formatting hiding self references
 - Completion handler fires after the view controller "should be gone"
-- ❌ **FORBIDDEN:** Rationalizing as "It's probably normal memory usage"
+- ❌ **FORBIDDEN** Rationalizing as "It's probably normal memory usage"
   - Memory leaks are never "normal"
   - Apps should return to baseline memory after user dismisses a screen
   - Do not rationalize this as "good enough" or "monitor it later"
 
-**Critical distinction:** Block retain cycles accumulate silently. A single cycle might be 100KB, but after 50 screens viewed, you have 5MB of dead memory. **MANDATORY: Test on real device (oldest supported model) after fixes, not just simulator.**
+**Critical distinction** Block retain cycles accumulate silently. A single cycle might be 100KB, but after 50 screens viewed, you have 5MB of dead memory. **MANDATORY: Test on real device (oldest supported model) after fixes, not just simulator.**
 
 ## Mandatory First Steps
 
@@ -68,14 +68,14 @@ If you see ANY of these, suspect a block retain cycle, not something else:
 // → DIAGNOSIS: Block retain cycle confirmed
 ```
 
-**What this tells you:**
+**What this tells you**
 - **Memory stays high** → Leak confirmed, not false alarm
 - **ViewController retained by operation** → Block is the culprit
 - **Block references self** → Pattern: weak-strong needed
 - **Hidden self in NSLog/NSAssert** → Need to check ALL macro calls
 - **No self references found** → Maybe not a block cycle, investigate elsewhere
 
-**MANDATORY INTERPRETATION:**
+**MANDATORY INTERPRETATION**
 
 Before changing ANY code, you must confirm ONE of these:
 
@@ -84,7 +84,7 @@ Before changing ANY code, you must confirm ONE of these:
 3. If cycle exists but you can't find self references → Check for hidden references (macros, indirect property access)
 4. If you find the cycle but don't understand the chain → Trace backward through retained objects in Memory Graph
 
-**If diagnostics are contradictory or unclear:**
+**If diagnostics are contradictory or unclear**
 - STOP. Do NOT proceed to patterns yet
 - Add more diagnostics: Print the object graph, list retained objects
 - Ask: "If memory is low, why is the ViewController still allocated?"
@@ -135,7 +135,7 @@ Block memory leak suspected?
 
 ### Pattern Selection Rules (MANDATORY)
 
-**Apply ONE pattern at a time, in this order:**
+**Apply ONE pattern at a time, in this order**
 
 1. **Always start with Pattern 1** (Weak-Strong Basics)
    - If block assigned to self or self's properties → Pattern 1
@@ -157,7 +157,7 @@ Block memory leak suspected?
    - Check guard condition is correct
    - Verify strongSelf used everywhere
 
-**FORBIDDEN:**
+**FORBIDDEN**
 - ❌ Applying multiple patterns at once
 - ❌ Skipping Pattern 1 because "I already know weak-strong"
 - ❌ Using __unsafe_unretained as workaround
@@ -168,9 +168,9 @@ Block memory leak suspected?
 
 ### Pattern 1: Weak-Strong Pattern (MANDATORY)
 
-**PRINCIPLE:** Any block that captures `self` must use weak-strong pattern if block is retained by self (directly or transitively).
+**PRINCIPLE** Any block that captures `self` must use weak-strong pattern if block is retained by self (directly or transitively).
 
-**❌ WRONG (Creates retain cycle):**
+**❌ WRONG (Creates retain cycle)**
 ```objc
 [self.networkManager GET:@"url" success:^(id response) {
     self.data = response;  // self is retained by block
@@ -180,7 +180,7 @@ Block memory leak suspected?
 }];
 ```
 
-**✅ CORRECT (Breaks the cycle):**
+**✅ CORRECT (Breaks the cycle)**
 ```objc
 __weak typeof(self) weakSelf = self;
 [self.networkManager GET:@"url" success:^(id response) {
@@ -198,7 +198,7 @@ __weak typeof(self) weakSelf = self;
 }];
 ```
 
-**Why this works:**
+**Why this works**
 1. `__weak typeof(self) weakSelf = self;` creates a weak reference outside the block
 2. Block captures weakSelf (weak reference), not self (strong reference)
 3. When block executes, convert to strongSelf (temporary strong ref)
@@ -206,7 +206,7 @@ __weak typeof(self) weakSelf = self;
 5. Use strongSelf for the duration of the block
 6. strongSelf released when block exits → No cycle
 
-**Important details:**
+**Important details**
 - Declare weakSelf OUTSIDE the block, not inside
 - Use `typeof(self)` for type safety (works in both ARC and non-ARC)
 - Guard condition MUST use `if (strongSelf)`, not just declare it
@@ -220,7 +220,7 @@ __weak typeof(self) weakSelf = self;
   - If framework documentation says 'block is called immediately' → Still safe to use weak-strong (better practice)
   - If unsure about framework behavior → Always use weak-strong (doesn't hurt)
 
-**Capturing variables (avoiding indirect self references):**
+**Capturing variables (avoiding indirect self references)**
 ```objc
 // ✅ SAFE: Capture simple values extracted from self
 __weak typeof(self) weakSelf = self;
@@ -248,15 +248,15 @@ __weak typeof(self) weakSelf = self;
 
 When nesting blocks, extract simple values first, then pass them to the inner block. This avoids creating an indirect capture of self through property access.
 
-**Time cost:** 30 seconds per block
+**Time cost** 30 seconds per block
 
 ---
 
 ### Pattern 2: Hidden self in Macros
 
-**PRINCIPLE:** Macros like NSAssert, NSLog, and string formatting can secretly capture self. You must check them.
+**PRINCIPLE** Macros like NSAssert, NSLog, and string formatting can secretly capture self. You must check them.
 
-**❌ WRONG (NSAssert captures self):**
+**❌ WRONG (NSAssert captures self)**
 ```objc
 [self.button setTapAction:^{
     NSAssert(self.isValidState, @"State must be valid");  // self captured!
@@ -265,7 +265,7 @@ When nesting blocks, extract simple values first, then pass them to the inner bl
 // Leak exists even though you think only [self doWork] captures self
 ```
 
-**✅ CORRECT (Check for hidden captures):**
+**✅ CORRECT (Check for hidden captures)**
 ```objc
 __weak typeof(self) weakSelf = self;
 [self.button setTapAction:^{
@@ -278,28 +278,28 @@ __weak typeof(self) weakSelf = self;
 }];
 ```
 
-**Common hidden self references:**
+**Common hidden self references**
 - `NSAssert(self.condition, ...)` → Use strongSelf instead
 - `NSLog(@"Value: %@", self.property)` → Use strongSelf.property
 - `NSError *error = [NSError errorWithDomain:@"MyApp" ...]` → Safe, doesn't capture self
 - String formatting: `@"Name: %@", self.name` → Use strongSelf.name
 - Inline conditionals: `self.flag ? @"yes" : @"no"` → Use strongSelf.flag
 
-**How to find them:**
+**How to find them**
 1. Search block for all instances of `self.`
 2. Mark them: `[self method]`, `self.property`, `self->ivar`
 3. Check if any are inside macro calls (NSAssert, NSLog, etc.)
 4. Replace with strongSelf
 
-**Time cost:** 1 minute per block to audit
+**Time cost** 1 minute per block to audit
 
 ---
 
 ### Pattern 3: Nested Blocks (Each Needs Guard)
 
-**PRINCIPLE:** Nested blocks create a chain: outer block captures self, inner block captures outer block variable (which holds strongSelf), creating a new cycle. Each nested block needs its own weak-strong pattern.
+**PRINCIPLE** Nested blocks create a chain: outer block captures self, inner block captures outer block variable (which holds strongSelf), creating a new cycle. Each nested block needs its own weak-strong pattern.
 
-**❌ WRONG (Guarded outer block only):**
+**❌ WRONG (Guarded outer block only)**
 ```objc
 __weak typeof(self) weakSelf = self;
 [self.manager fetchData:^(NSArray *result) {
@@ -315,7 +315,7 @@ __weak typeof(self) weakSelf = self;
 }];
 ```
 
-**✅ CORRECT (Guard every nested block):**
+**✅ CORRECT (Guard every nested block)**
 ```objc
 __weak typeof(self) weakSelf = self;
 [self.manager fetchData:^(NSArray *result) {
@@ -336,19 +336,19 @@ __weak typeof(self) weakSelf = self;
 }];
 ```
 
-**Why this works:**
+**Why this works**
 - Each nesting level needs its own weakSelf/strongSelf pair
 - Outer block: weakSelf → strongSelf
 - Inner block: weakSelf2 → strongSelf2
 - Each level is independent and safe
 
-**Important details:**
+**Important details**
 - Don't reuse the same weakSelf variable in nested blocks
 - Each nesting level gets a new pair (weakSelf2, strongSelf2)
 - Guard condition MANDATORY for each level
 - Use consistent naming: weakSelf, weakSelf2, weakSelf3 (for readability)
 
-**Common nested block patterns that need Pattern 3:**
+**Common nested block patterns that need Pattern 3**
 - Completion handlers in callbacks
 - `dispatch_async(queue, ^{ ... })`
 - `dispatch_after(time, queue, ^{ ... })`
@@ -357,7 +357,7 @@ __weak typeof(self) weakSelf = self;
 
 Each of these is a block that might capture strongSelf, requiring its own weak-strong pattern.
 
-**Example with dispatch_async:**
+**Example with dispatch_async**
 ```objc
 __weak typeof(self) weakSelf = self;
 [self.manager fetchData:^(NSArray *result) {
@@ -376,15 +376,15 @@ __weak typeof(self) weakSelf = self;
 }];
 ```
 
-**Time cost:** 1 minute per nesting level
+**Time cost** 1 minute per nesting level
 
 ---
 
 ### Pattern 4: Guard Condition Edge Cases
 
-**PRINCIPLE:** The guard condition `if (strongSelf)` must be correct. Common mistakes: forgetting the guard, wrong condition, or mixing self and strongSelf.
+**PRINCIPLE** The guard condition `if (strongSelf)` must be correct. Common mistakes: forgetting the guard, wrong condition, or mixing self and strongSelf.
 
-**❌ WRONG (Multiple guard failures):**
+**❌ WRONG (Multiple guard failures)**
 ```objc
 __weak typeof(self) weakSelf = self;
 [self.button setTapAction:^{
@@ -405,7 +405,7 @@ __weak typeof(self) weakSelf = self;
 }];
 ```
 
-**✅ CORRECT (Proper guard and consistent usage):**
+**✅ CORRECT (Proper guard and consistent usage)**
 ```objc
 __weak typeof(self) weakSelf = self;
 [self.button setTapAction:^{
@@ -420,13 +420,13 @@ __weak typeof(self) weakSelf = self;
 }];
 ```
 
-**Why this works:**
+**Why this works**
 1. `if (strongSelf)` checks if object still exists
 2. If it does, strongSelf is a strong reference (safe)
 3. If it doesn't (object deallocated), block skips
 4. Using strongSelf everywhere prevents accidental self references
 
-**Critical rules (MANDATORY, no exceptions):**
+**Critical rules (MANDATORY, no exceptions)**
 - ✅ ALWAYS check `if (strongSelf)` before using it
 - ✅ ALWAYS use strongSelf inside the if block, NEVER direct self
 - ✅ strongSelf is guaranteed valid for the entire block scope
@@ -435,13 +435,13 @@ __weak typeof(self) weakSelf = self;
 - ❌ NEVER mix weakSelf and strongSelf access
 - ❌ NEVER use strongSelf without guard (GUARANTEED crash)
 
-**What happens if you get it wrong:**
+**What happens if you get it wrong**
 - No guard: Crashes with "Sending message to deallocated instance"
 - Wrong condition: Object still deallocated, still crashes
 - Mixed self/strongSelf: One accidental self defeats entire pattern
 - Using strongSelf without guard: GUARANTEED crash when object is deallocated
 
-**Inside the guard:**
+**Inside the guard**
 ```objc
 if (strongSelf) {
     strongSelf.data1 = value1;
@@ -452,7 +452,7 @@ if (strongSelf) {
 strongSelf.data = value2;  // CRASH! Outside guard
 ```
 
-**What NOT to do:**
+**What NOT to do**
 ```objc
 // ❌ FORBIDDEN: strongSelf without guard guarantees crash
 typeof(self) strongSelf = weakSelf;
@@ -464,7 +464,7 @@ if (strongSelf) {
 }
 ```
 
-**Time cost:** 10 seconds per block to verify guard is correct
+**Time cost** 10 seconds per block to verify guard is correct
 
 ---
 
@@ -485,14 +485,14 @@ if (strongSelf) {
 
 If you've spent >30 minutes and the leak still exists:
 
-**STOP. You either:**
+**STOP. You either**
 1. Skipped a mandatory diagnostic step (most common)
 2. Didn't apply weak-strong to ALL blocks (nested blocks missed)
 3. Have hidden self reference (NSAssert, NSLog, string format)
 4. Applied pattern but mixed in direct `self` references
 5. Have a different kind of leak (not block-related)
 
-**MANDATORY checklist before claiming "skill didn't work":**
+**MANDATORY checklist before claiming "skill didn't work"**
 
 - [ ] I ran all 4 diagnostic blocks (Allocations, Memory Graph, block search, self reference search)
 - [ ] I confirmed memory doesn't return to baseline in Instruments
@@ -507,19 +507,19 @@ If you've spent >30 minutes and the leak still exists:
 - [ ] I tested on real device, not just simulator
 - [ ] I cleared Xcode derived data between runs
 
-**If ALL boxes are checked and still leaking:**
+**If ALL boxes are checked and still leaking**
 - You have a non-block leak (Core Data, timer, delegate, notification)
 - Use Instruments > Leaks instrument to identify the actual cycle
 - Profile for 2-3 minutes: open screen, close screen, repeat 5 times
 - Look at "Leaks" panel—it shows exactly what's not being released
 - Time cost: 15-30 minutes to identify the real culprit
 
-**If you identify it's NOT a block leak:**
+**If you identify it's NOT a block leak**
 - Do not rationalize: "Maybe blocks are fine, I'll ship anyway"
 - Find the actual cycle (could be delegate, timer, property observer, notification)
 - Fix the real issue, not a false positive
 
-**Time cost transparency:**
+**Time cost transparency**
 - Pattern 1: 30 seconds per block
 - Pattern 2: 1 minute per block (audit for hidden self)
 - Pattern 3: 1 minute per nesting level
@@ -574,14 +574,14 @@ If you've spent >30 minutes and the leak still exists:
 
 ## Real-World Impact
 
-**Before:** Block memory leak debugging 2-3 hours per issue
+**Before** Block memory leak debugging 2-3 hours per issue
 - Run Allocations, not sure what to look at
 - Search everywhere, no clear diagnostic path
 - Try random fixes, hope one works
 - Ship anyway after sunk cost fallacy
 - Customer reports crashes or slowdown
 
-**After:** 5-10 minutes with systematic diagnosis
+**After** 5-10 minutes with systematic diagnosis
 - Run Allocations, confirm memory not returning to baseline
 - Memory Graph shows exactly what's retained
 - Find all blocks capturing self with global search
@@ -589,7 +589,7 @@ If you've spent >30 minutes and the leak still exists:
 - Test in Instruments, memory returns to baseline
 - Done
 
-**Key insight:** Block retain cycles are 100% preventable with weak-strong pattern. There are no exceptions, no "special cases" where strong self is acceptable.
+**Key insight** Block retain cycles are 100% preventable with weak-strong pattern. There are no exceptions, no "special cases" where strong self is acceptable.
 
 ---
 

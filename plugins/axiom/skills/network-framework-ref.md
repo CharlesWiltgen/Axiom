@@ -13,23 +13,23 @@ last_updated: 2025-12-02
 
 Network.framework is Apple's modern networking API that replaces Berkeley sockets, providing smart connection establishment, user-space networking, built-in TLS support, and seamless mobility. Introduced in iOS 12 (2018) with NWConnection and evolved in iOS 26 (2025) with NetworkConnection for structured concurrency.
 
-**Evolution timeline:**
-- **2018 (iOS 12):** NWConnection with completion handlers, deprecates CFSocket/NSStream/SCNetworkReachability
-- **2019 (iOS 13):** User-space networking (30% CPU reduction), TLS 1.3 default
-- **2025 (iOS 26):** NetworkConnection with async/await, TLV framing built-in, Coder protocol, Wi-Fi Aware discovery
+**Evolution timeline**
+- **2018 (iOS 12)** NWConnection with completion handlers, deprecates CFSocket/NSStream/SCNetworkReachability
+- **2019 (iOS 13)** User-space networking (30% CPU reduction), TLS 1.3 default
+- **2025 (iOS 26)** NetworkConnection with async/await, TLV framing built-in, Coder protocol, Wi-Fi Aware discovery
 
-**Key capabilities:**
-- **Smart connection establishment:** Happy Eyeballs (IPv4/IPv6 racing), proxy evaluation (PAC), VPN detection, WiFi Assist fallback
-- **User-space networking:** ~30% lower CPU usage vs sockets, memory-mapped regions, reduced context switches
-- **Built-in security:** TLS 1.3 by default, DTLS for UDP, certificate pinning support
-- **Mobility:** Automatic network transition handling (WiFi ↔ cellular), viability notifications, Multipath TCP
-- **Performance:** ECN (Explicit Congestion Notification), service class marking, TCP Fast Open, UDP batching
+**Key capabilities**
+- **Smart connection establishment** Happy Eyeballs (IPv4/IPv6 racing), proxy evaluation (PAC), VPN detection, WiFi Assist fallback
+- **User-space networking** ~30% lower CPU usage vs sockets, memory-mapped regions, reduced context switches
+- **Built-in security** TLS 1.3 by default, DTLS for UDP, certificate pinning support
+- **Mobility** Automatic network transition handling (WiFi ↔ cellular), viability notifications, Multipath TCP
+- **Performance** ECN (Explicit Congestion Notification), service class marking, TCP Fast Open, UDP batching
 
-**When to use vs URLSession:**
-- **URLSession:** HTTP, HTTPS, WebSocket, simple TCP/TLS streams → Use URLSession (optimized for these)
-- **Network.framework:** UDP, custom protocols, low-level control, peer-to-peer, gaming, streaming → Use Network.framework
+**When to use vs URLSession**
+- **URLSession** HTTP, HTTPS, WebSocket, simple TCP/TLS streams → Use URLSession (optimized for these)
+- **Network.framework** UDP, custom protocols, low-level control, peer-to-peer, gaming, streaming → Use Network.framework
 
-**Related Skills:**
+**Related Skills**
 - Use `networking` for anti-patterns, common patterns, pressure scenarios
 - Use `networking-diag` for systematic troubleshooting of connection failures
 
@@ -74,7 +74,7 @@ Use this skill when:
 | **State machine** | Callbacks on state changes | `for await state in connection.states` |
 | **Discovery** | NWBrowser (Bonjour only) | NetworkBrowser (Bonjour + Wi-Fi Aware) |
 
-**Recommendation:**
+**Recommendation**
 - New apps targeting iOS 26+: Use NetworkConnection (cleaner, safer)
 - Apps supporting iOS 12-25: Use NWConnection (backward compatible)
 - Migration: Both APIs coexist, migrate incrementally
@@ -109,7 +109,7 @@ public func sendAndReceiveWithTLS() async throws {
 }
 ```
 
-**Key points:**
+**Key points**
 - `TLS()` infers `TCP()` and `IP()` automatically
 - No explicit connection.start() needed (happens on first send/receive)
 - Async/await eliminates callback nesting
@@ -130,7 +130,7 @@ let connection = NetworkConnection(
 }
 ```
 
-**When to customize IP:**
+**When to customize IP**
 - `.fragmentationEnabled(false)` — For protocols that handle fragmentation themselves (QUIC)
 - `.ipVersion(.v6)` — Force IPv6 only (testing)
 
@@ -152,7 +152,7 @@ let connection = NetworkConnection(
 )
 ```
 
-**Common parameters:**
+**Common parameters**
 - `.constrainedPathsProhibited(true)` — Respect low data mode
 - `.expensivePathsProhibited(true)` — Don't use cellular/hotspot
 - `.multipathServiceType(.handover)` — Enable Multipath TCP
@@ -238,12 +238,12 @@ Task {
 }
 ```
 
-**Key states:**
-- **.preparing:** DNS lookup, TCP SYN, TLS handshake
-- **.waiting:** No network available, framework retries automatically
-- **.ready:** Connection established, can send/receive
-- **.failed:** Unrecoverable error (server refused, TLS failed, timeout)
-- **.cancelled:** Task cancelled or connection.cancel() called
+**Key states**
+- **.preparing** DNS lookup, TCP SYN, TLS handshake
+- **.waiting** No network available, framework retries automatically
+- **.ready** Connection established, can send/receive
+- **.failed** Unrecoverable error (server refused, TLS failed, timeout)
+- **.cancelled** Task cancelled or connection.cancel() called
 
 ---
 
@@ -278,7 +278,7 @@ while remaining > 0 {
 }
 ```
 
-**receive() variants:**
+**receive() variants**
 - `receive(exactly: n)` — Wait for exactly n bytes
 - `receive(atLeast: min, atMost: max)` — Get between min and max bytes
 - `receive(as: UInt32.self)` — Read fixed-size type (network byte order)
@@ -289,7 +289,7 @@ while remaining > 0 {
 
 **TLV (Type-Length-Value)** solves message boundary problem on stream protocols (TCP/TLS).
 
-**Format:**
+**Format**
 - Type: UInt32 (message identifier)
 - Length: UInt32 (message size, automatic)
 - Value: Message bytes
@@ -346,12 +346,12 @@ public func receiveWithTLV() async throws {
 }
 ```
 
-**Benefits:**
+**Benefits**
 - Message boundaries preserved (send 3 messages → receive exactly 3)
 - Type-safe message handling (enum-based routing)
 - Minimal overhead (8 bytes per message: type + length)
 
-**When to use:**
+**When to use**
 - Mixed message types (chat + presence + typing)
 - Existing protocols using TLV
 - Need message boundaries without heavy framing
@@ -401,21 +401,21 @@ public func receiveWithCoder() async throws {
 }
 ```
 
-**Supported formats:**
+**Supported formats**
 - `.json` — JSON encoding (human-readable, widely compatible)
 - `.propertyList` — Property list (faster, smaller)
 
-**Benefits:**
+**Benefits**
 - No JSON boilerplate (~50 lines → ~10 lines)
 - Type-safe (compiler catches message structure changes)
 - Automatic framing (handles message boundaries)
 
-**When to use:**
+**When to use**
 - App-to-app communication (you control both ends)
 - Prototyping (fastest time to working code)
 - Type-safe protocols
 
-**When NOT to use:**
+**When NOT to use**
 - Interoperating with non-Swift servers
 - Need custom wire format
 - Performance-critical (prefer manual encoding for control)
@@ -451,12 +451,12 @@ public func listenForIncomingConnections() async throws {
 }
 ```
 
-**Key features:**
+**Key features**
 - Automatic subtask per connection (no manual Task management)
 - Structured concurrency (all subtasks cancelled when listener exits)
 - `connection.messages` async sequence for receiving
 
-**Listener configuration:**
+**Listener configuration**
 
 ```swift
 // Specify port
@@ -498,13 +498,13 @@ public func findNearbyDevice() async throws {
 }
 ```
 
-**Wi-Fi Aware features:**
+**Wi-Fi Aware features**
 - Peer-to-peer without infrastructure (no WiFi router needed)
 - Automatic discovery of paired devices
 - Low latency, high throughput
 - iOS 26+ only
 
-**Browse descriptors:**
+**Browse descriptors**
 
 ```swift
 // Bonjour
@@ -563,7 +563,7 @@ connection.stateUpdateHandler = { [weak self] state in
 connection.start(queue: .main)
 ```
 
-**Critical:** Always use `[weak self]` in stateUpdateHandler to prevent retain cycles.
+**Critical** Always use `[weak self]` in stateUpdateHandler to prevent retain cycles.
 
 #### Custom Parameters
 
@@ -594,7 +594,7 @@ NWConnection state machine (same as NetworkConnection):
 setup → preparing → waiting/ready → failed/cancelled
 ```
 
-**State handling best practices:**
+**State handling best practices**
 
 ```swift
 connection.stateUpdateHandler = { [weak self] state in
@@ -655,7 +655,7 @@ func sendData() {
 }
 ```
 
-**contentProcessed callback:** Invoked when network stack consumes your data (equivalent to when blocking socket call would return). Use this for pacing to avoid buffering excessive data.
+**contentProcessed callback** Invoked when network stack consumes your data (equivalent to when blocking socket call would return). Use this for pacing to avoid buffering excessive data.
 
 #### Receive with Exact Byte Count
 
@@ -677,7 +677,7 @@ connection.receive(minimumIncompleteLength: 10, maximumLength: 10) { [weak self]
 }
 ```
 
-**Receive parameters:**
+**Receive parameters**
 - `minimumIncompleteLength`: Minimum bytes before callback (1 = return any data)
 - `maximumLength`: Maximum bytes per callback
 - For "exactly n bytes": Set both to n
@@ -714,8 +714,8 @@ func sendVideoFrames(_ frames: [Data]) {
 }
 ```
 
-**Without batch:** 100 datagrams = 100 syscalls = high CPU
-**With batch:** 100 datagrams = ~1 syscall = 30% lower CPU (measured with Instruments)
+**Without batch** 100 datagrams = 100 syscalls = high CPU
+**With batch** 100 datagrams = ~1 syscall = 30% lower CPU (measured with Instruments)
 
 ---
 
@@ -842,12 +842,12 @@ connection.viabilityUpdateHandler = { isViable in
 }
 ```
 
-**When viability changes:**
+**When viability changes**
 - Walk into elevator (WiFi signal lost) → not viable
 - Walk out of elevator (WiFi returns) → viable again
 - Switch WiFi → cellular → not viable briefly → viable on cellular
 
-**Best practice:** Don't tear down connection on viability loss. Framework will recover when network returns.
+**Best practice** Don't tear down connection on viability loss. Framework will recover when network returns.
 
 ### Better Path Available (WWDC 2018 lines 464-477)
 
@@ -863,11 +863,11 @@ connection.betterPathUpdateHandler = { betterPathAvailable in
 }
 ```
 
-**Scenarios:**
+**Scenarios**
 - Connected on cellular, walk into building with WiFi → better path available
 - Connected on WiFi, WiFi quality degrades, cellular available → better path available
 
-**Migration pattern:**
+**Migration pattern**
 
 ```swift
 func migrateToNewConnection() {
@@ -899,12 +899,12 @@ parameters.multipathServiceType = .handover // Seamless network transition
 let connection = NWConnection(host: "example.com", port: 443, using: parameters)
 ```
 
-**Multipath TCP modes:**
+**Multipath TCP modes**
 - `.handover` — Seamless handoff between networks (WiFi ↔ cellular)
 - `.interactive` — Use multiple paths simultaneously (lowest latency)
 - `.aggregate` — Use multiple paths simultaneously (highest throughput)
 
-**Benefits:**
+**Benefits**
 - Automatic network transition (no viability handlers needed)
 - No connection interruption when switching networks
 - Fallback to single-path if MPTCP unavailable
@@ -942,17 +942,17 @@ monitor.pathUpdateHandler = { path in
 monitor.start(queue: .main)
 ```
 
-**Use cases:**
+**Use cases**
 - Show "No network" UI when path.status == .unsatisfied
 - Disable high-bandwidth features when path.isExpensive
 - Adjust quality based on interface type
 
-**When to use:**
+**When to use**
 - Global network state monitoring
 - When "waiting for connectivity" isn't enough
 - Need to know available interfaces before connecting
 
-**When NOT to use:**
+**When NOT to use**
 - Checking before connecting (use waiting state instead)
 - Per-connection monitoring (use viability handlers instead)
 
@@ -1026,12 +1026,12 @@ tlsOptions.tlsCipherSuites = [
 
 **Automatic on iOS/tvOS.** Network.framework moves TCP/UDP stack into your app process.
 
-**Benefits:**
+**Benefits**
 - ~30% lower CPU usage (measured with Instruments)
 - No kernel→userspace copy (memory-mapped regions)
 - Reduced context switches
 
-**Legacy vs User-Space:**
+**Legacy vs User-Space**
 
 | Traditional Sockets | User-Space Networking |
 |---------------------|----------------------|
@@ -1039,7 +1039,7 @@ tlsOptions.tlsCipherSuites = [
 | 100 datagrams = 100 syscalls | 100 datagrams = ~1 syscall (with batching) |
 | ~30% higher CPU | Baseline CPU |
 
-**WWDC demo:** Live UDP video streaming showed 30% CPU difference (sockets vs Network.framework).
+**WWDC demo** Live UDP video streaming showed 30% CPU difference (sockets vs Network.framework).
 
 ### ECN for UDP (WWDC 2018 lines 365-378)
 
@@ -1059,11 +1059,11 @@ let context = NWConnection.ContentContext(
 connection.send(content: data, contentContext: context, completion: .contentProcessed { _ in })
 ```
 
-**ECN flags:**
+**ECN flags**
 - `.ect0` / `.ect1` — ECN-capable transport
 - `.congestionEncountered` — Congestion notification received
 
-**Benefits:** Network can signal congestion without dropping packets.
+**Benefits** Network can signal congestion without dropping packets.
 
 ### Service Class (WWDC 2018 lines 379-388)
 
@@ -1084,7 +1084,7 @@ let context = NWConnection.ContentContext(identifier: "voip", metadata: [ipMetad
 connection.send(content: audioData, contentContext: context, completion: .contentProcessed { _ in })
 ```
 
-**Service classes:**
+**Service classes**
 - `.background` — Low priority (large downloads, sync)
 - `.default` — Normal priority
 - `.responsiveData` — Interactive data (API calls)
@@ -1113,8 +1113,8 @@ connection.send(
 connection.start(queue: .main)
 ```
 
-**Benefits:** Reduces connection establishment time by 1 RTT.
-**Requirements:** Data must be idempotent (safe to replay if SYN retransmitted).
+**Benefits** Reduces connection establishment time by 1 RTT.
+**Requirements** Data must be idempotent (safe to replay if SYN retransmitted).
 
 ---
 
@@ -1133,16 +1133,16 @@ connection.start(queue: .main)
 | `SCNetworkReachability` | `connection.stateUpdateHandler` waiting state | No race conditions |
 | `setsockopt()` | `NWParameters` | Type-safe options |
 
-**Migration example:**
+**Migration example**
 
-**Before (blocking sockets):**
+**Before (blocking sockets)**
 ```c
 int sock = socket(AF_INET, SOCK_STREAM, 0);
 connect(sock, &addr, addrlen); // BLOCKS
 send(sock, data, len, 0);
 ```
 
-**After (NWConnection):**
+**After (NWConnection)**
 ```swift
 let connection = NWConnection(host: "example.com", port: 443, using: .tls)
 connection.stateUpdateHandler = { state in
@@ -1155,26 +1155,26 @@ connection.start(queue: .main)
 
 ### From URLSession StreamTask to NetworkConnection
 
-**When to migrate:**
+**When to migrate**
 - Need UDP (StreamTask only supports TCP)
 - Need custom protocols
 - Need low-level control
 
-**When to STAY with URLSession:**
+**When to STAY with URLSession**
 - HTTP/HTTPS (URLSession optimized for this)
 - WebSocket support
 - Built-in caching, cookies
 
-**Migration example:**
+**Migration example**
 
-**Before (URLSession StreamTask):**
+**Before (URLSession StreamTask)**
 ```swift
 let task = URLSession.shared.streamTask(withHostName: "example.com", port: 443)
 task.resume()
 task.write(Data("Hello".utf8), timeout: 10) { _ in }
 ```
 
-**After (NetworkConnection iOS 26+):**
+**After (NetworkConnection iOS 26+)**
 ```swift
 let connection = NetworkConnection(to: .hostPort(host: "example.com", port: 443)) { TLS() }
 try await connection.send(Data("Hello".utf8))
@@ -1182,13 +1182,13 @@ try await connection.send(Data("Hello".utf8))
 
 ### From NWConnection to NetworkConnection
 
-**Benefits of migration:**
+**Benefits of migration**
 - Async/await (no callback nesting)
 - No `[weak self]` needed
 - TLV framing built-in
 - Coder protocol for Codable types
 
-**Migration mapping:**
+**Migration mapping**
 
 | NWConnection | NetworkConnection |
 |--------------|-------------------|
@@ -1199,9 +1199,9 @@ try await connection.send(Data("Hello".utf8))
 | Custom framer | `TLV { TLS() }` |
 | `[weak self]` everywhere | No `[weak self]` needed |
 
-**Migration example:**
+**Migration example**
 
-**Before (NWConnection):**
+**Before (NWConnection)**
 ```swift
 connection.stateUpdateHandler = { [weak self] state in
     if case .ready = state {
@@ -1216,7 +1216,7 @@ func sendData() {
 }
 ```
 
-**After (NetworkConnection):**
+**After (NetworkConnection)**
 ```swift
 Task {
     for await state in connection.states {
@@ -1365,8 +1365,8 @@ monitor.start(queue: .main)
 ## Related Resources
 
 ### WWDC Sessions
-- **WWDC 2018/715:** "Introducing Network.framework: A modern alternative to Sockets" (NWConnection, user-space networking, deprecations)
-- **WWDC 2025/250:** "Use structured concurrency with Network framework" (NetworkConnection, TLV, Coder, Wi-Fi Aware)
+- **WWDC 2018/715** "Introducing Network.framework: A modern alternative to Sockets" (NWConnection, user-space networking, deprecations)
+- **WWDC 2025/250** "Use structured concurrency with Network framework" (NetworkConnection, TLV, Coder, Wi-Fi Aware)
 
 ### Apple Documentation
 - [Network Framework Documentation](https://developer.apple.com/documentation/network)
@@ -1380,6 +1380,6 @@ monitor.start(queue: .main)
 
 ---
 
-**Last Updated:** 2025-12-02
-**Status:** Production-ready reference from WWDC 2018 and WWDC 2025
-**Coverage:** NWConnection (iOS 12-25), NetworkConnection (iOS 26+), all 12 WWDC 2025 code examples
+**Last Updated** 2025-12-02
+**Status** Production-ready reference from WWDC 2018 and WWDC 2025
+**Coverage** NWConnection (iOS 12-25), NetworkConnection (iOS 26+), all 12 WWDC 2025 code examples

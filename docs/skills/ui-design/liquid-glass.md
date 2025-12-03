@@ -19,7 +19,7 @@ Use when:
 - Understanding when to use Regular vs Clear variants
 - Troubleshooting tinting, legibility, or adaptive behavior issues
 
-**Related Skills:**
+**Related Skills**
 - Use `liquid-glass-ref` for comprehensive app-wide adoption guidance (app icons, controls, navigation, menus, windows, platform considerations)
 
 ## Example Prompts
@@ -591,7 +591,7 @@ Important: Clear variant requires legibility testing in low-contrast scenarios
 we'll need an expedited follow-up. I'm flagging this proactively."
 ```
 
-**Why this works:**
+**Why this works**
 - You're not questioning their taste (you like Clear too)
 - You're raising accessibility/legibility risk
 - You're offering a solution that preserves their vision in hero sections
@@ -599,13 +599,13 @@ we'll need an expedited follow-up. I'm flagging this proactively."
 
 ### Real-World Example: App Store Launch Blocker (36-Hour Deadline)
 
-**Scenario:**
+**Scenario**
 - 36 hours to launch
 - Chief designer says: "Clear variant everywhere"
 - Client watching the review meeting
 - You already implemented Regular per the skill
 
-**What to do:**
+**What to do**
 
 ```swift
 // In the meeting, demo side-by-side:
@@ -623,7 +623,7 @@ NavigationBar()
 // Offer: Clear in hero sections, Regular elsewhere
 ```
 
-**Result:**
+**Result**
 - 30-minute compromise demo
 - 90 minutes to implement changes
 - Launch on schedule with optimal legibility
@@ -638,7 +638,7 @@ Sometimes designers have valid reasons to override the skill. Accept if:
 - [ ] You document the decision in writing
 - [ ] They commit to monitoring post-launch feedback
 
-**Document in Slack:**
+**Document in Slack**
 
 ```
 "Design review decided to use Clear variant [in these locations].
@@ -1111,7 +1111,7 @@ Button("Action") { }
     .glassEffect()
 ```
 
-**Visual Effect:** Nested elements feel visually harmonious, with curvature matching container shape.
+**Visual Effect** Nested elements feel visually harmonious, with curvature matching container shape.
 
 **Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+
 
@@ -1137,7 +1137,7 @@ TabView {
 .tabBarMinimizationBehavior(.onScrollDown) // Minimize when scrolling down
 ```
 
-**Visual Effect:** Tab bar recedes when scrolling down, expands when scrolling up. Content gains more screen space.
+**Visual Effect** Tab bar recedes when scrolling down, expands when scrolling up. Content gains more screen space.
 
 **Availability**: iOS 26+
 
@@ -1172,9 +1172,9 @@ struct GlassEffectContainer<Content: View>: View {
 }
 ```
 
-**Use case:** When applying Liquid Glass effects to multiple custom elements. Optimizes performance and enables fluid morphing between glass shapes.
+**Use case** When applying Liquid Glass effects to multiple custom elements. Optimizes performance and enables fluid morphing between glass shapes.
 
-**Example:**
+**Example**
 ```swift
 // ✅ Combine effects in container for optimization
 GlassEffectContainer {
@@ -1191,13 +1191,13 @@ GlassEffectContainer {
 }
 ```
 
-**Benefits:**
+**Benefits**
 - Optimizes rendering performance
 - Fluidly morphs Liquid Glass shapes into each other
 - Reduces compositor overhead
 - Better animation performance
 
-**When to use:**
+**When to use**
 - Multiple custom Liquid Glass elements
 - Morphing animations between glass shapes
 - Performance-critical interfaces
@@ -1212,24 +1212,24 @@ GlassEffectContainer {
 
 To ship with latest SDKs while maintaining previous appearance:
 
-**Add to Info.plist:**
+**Add to Info.plist**
 ```xml
 <key>UIDesignRequiresCompatibility</key>
 <true/>
 ```
 
-**Effect:**
+**Effect**
 - App built with iOS 26 SDK
 - Appearance matches iOS 18 and earlier
 - Liquid Glass effects disabled
 - Previous blur/material styles used
 
-**When to use:**
+**When to use**
 - Need time to audit interface changes
 - Gradual adoption strategy
 - Maintain exact appearance temporarily
 
-**Migration strategy:**
+**Migration strategy**
 1. Ship with `UIDesignRequiresCompatibility` enabled
 2. Audit interface changes in separate build
 3. Update interface incrementally

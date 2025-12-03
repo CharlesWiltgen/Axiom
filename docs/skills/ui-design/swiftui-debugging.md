@@ -22,18 +22,18 @@ SwiftUI debugging falls into three categories, each with a different diagnostic 
 
 ## When to Use SwiftUI Debugging
 
-**Use this skill when:**
+**Use this skill when**
 - ✅ A view isn't updating when you expect it to
 - ✅ Preview crashes or won't load
 - ✅ Layout looks wrong on specific devices
 - ✅ You're tempted to bandaid with @ObservedObject everywhere
 
-**Use `xcode-debugging` instead when:**
+**Use `xcode-debugging` instead when**
 - App crashes at runtime (not preview)
 - Build fails completely
 - You need environment diagnostics
 
-**Use `swift-concurrency` instead when:**
+**Use `swift-concurrency` instead when**
 - Questions about async/await or MainActor
 - Data race warnings
 
@@ -539,7 +539,7 @@ When you're under deadline pressure, you'll be tempted to shortcuts that hide pr
 
 ### Scenario 1: "Preview keeps crashing, we ship tomorrow"
 
-**Red flags you might hear:**
+**Red flags you might hear**
 - "Just rebuild everything"
 - "Delete derived data and don't worry about it"
 - "Ship without validating in preview"
@@ -562,7 +562,7 @@ When you're under deadline pressure, you'll be tempted to shortcuts that hide pr
 
 ### Scenario 2: "View won't update, let me just wrap it in @ObservedObject"
 
-**Red flags you might think:**
+**Red flags you might think**
 - "Adding @ObservedObject everywhere will fix it"
 - "Use ObservableObject as a band-aid"
 - "Add @Published to random properties"
@@ -585,7 +585,7 @@ When you're under deadline pressure, you'll be tempted to shortcuts that hide pr
 
 ### Scenario 2b: "Intermittent updates - it works sometimes, not always"
 
-**Red flags you might think:**
+**Red flags you might think**
 - "It must be a threading issue, let me add @MainActor everywhere"
 - "Let me try @ObservedObject, @State, and custom Binding until something works"
 - "Delete DerivedData and hope cache corruption fixes it"
@@ -630,7 +630,7 @@ Intermittent bugs are the MOST important to diagnose correctly. One wrong guess 
 
 **The decision principle**: Intermittent bugs require SYSTEMATIC diagnosis. The slower you go in diagnosis, the faster you get to the fix. Guessing is the fastest way to disaster.
 
-**Professional script for co-leads who suggest guessing:**
+**Professional script for co-leads who suggest guessing**
 
 > "I appreciate the suggestion. Adding @ObservedObject everywhere is treating the symptom, not the root cause. The skill says intermittent bugs create NEW bugs when we guess. I need 60 minutes for systematic diagnosis. If I can't find the root cause by then, we'll disable the feature and ship a clean v1.1. The math shows we have time — I can complete diagnosis, fix, AND verification before the deadline."
 
@@ -638,7 +638,7 @@ Intermittent bugs are the MOST important to diagnose correctly. One wrong guess 
 
 ### Scenario 3: "Layout looks wrong on iPad, we're out of time"
 
-**Red flags you might think:**
+**Red flags you might think**
 - "Add some padding and magic numbers"
 - "It's probably a safe area thing, let me just ignore it"
 - "Let's lock this to iPhone only"
@@ -848,12 +848,12 @@ TextField("Search", text: $searchText)
 
 ## External Resources
 
-**Apple Documentation:**
+**Apple Documentation**
 - [SwiftUI View Fundamentals](https://developer.apple.com/documentation/swiftui)
 - [State and Data Flow](https://developer.apple.com/documentation/swiftui/state-and-data-flow)
 - [Xcode Previews](https://developer.apple.com/documentation/xcode/previews)
 
-**Related Axiom Skills:**
+**Related Axiom Skills**
 - `xcode-debugging` – For Xcode cache corruption, build issues
 - `swift-concurrency` – For @MainActor and async/await patterns
 
@@ -865,7 +865,7 @@ TextField("Search", text: $searchText)
 
 ---
 
-**Created:** 2025-11-30
-**Targets:** iOS 14+, Swift 5.5+
-**Framework:** SwiftUI
+**Created** 2025-11-30
+**Targets** iOS 14+, Swift 5.5+
+**Framework** SwiftUI
 

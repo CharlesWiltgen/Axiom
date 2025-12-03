@@ -13,7 +13,7 @@ Comprehensive guide to the App Intents framework for exposing app functionality 
 - **Focus Filters** — Context-aware content filtering
 - **Widgets & Live Activities** — Dynamic system UI
 
-**Key Features:**
+**Key Features**
 - Three building blocks: AppIntent, AppEntity, AppEnum
 - Parameter validation and natural language summaries
 - Entity queries for content discovery
@@ -21,9 +21,9 @@ Comprehensive guide to the App Intents framework for exposing app functionality 
 - Authentication policies and security
 - WWDC 2025 updates: IndexedEntity, Apple Intelligence integration, Mac Automations
 
-**When to use:** Exposing app functionality to system experiences, implementing Shortcuts support, debugging intent resolution failures
+**When to use** Exposing app functionality to system experiences, implementing Shortcuts support, debugging intent resolution failures
 
-**Requirements:** iOS 16+
+**Requirements** iOS 16+
 
 ---
 

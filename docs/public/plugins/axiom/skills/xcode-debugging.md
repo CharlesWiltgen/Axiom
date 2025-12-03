@@ -7,7 +7,7 @@ description: Use when encountering BUILD FAILED, test crashes, simulator hangs, 
 
 ## Overview
 
-Check build environment BEFORE debugging code. **Core principle:** 80% of "mysterious" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.
+Check build environment BEFORE debugging code. **Core principle** 80% of "mysterious" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.
 
 ## Example Prompts
 
@@ -55,12 +55,12 @@ du -sh ~/Library/Developer/Xcode/DerivedData
 xcrun simctl list devices | grep -E "Booted|Booting|Shutting Down"
 ```
 
-**What these tell you:**
+**What these tell you**
 - **0 processes + small Derived Data + no booted sims** → Environment clean, investigate code
 - **10+ processes OR >10GB Derived Data OR simulators stuck** → Environment problem, clean first
 - **Stale code executing OR intermittent failures** → Clean Derived Data regardless of size
 
-**Why environment first:**
+**Why environment first**
 - Environment cleanup: 2-5 minutes → problem solved
 - Code debugging for environment issues: 30-120 minutes → wasted time
 
@@ -191,7 +191,7 @@ atos -o YourApp.app.dSYM/Contents/Resources/DWARF/YourApp \
 
 ## Real-World Impact
 
-**Before:** 30+ min debugging "why is old code running"
-**After:** 2 min environment check → clean Derived Data → problem solved
+**Before** 30+ min debugging "why is old code running"
+**After** 2 min environment check → clean Derived Data → problem solved
 
-**Key insight:** Check environment first, debug code second.
+**Key insight** Check environment first, debug code second.

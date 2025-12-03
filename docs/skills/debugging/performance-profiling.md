@@ -18,7 +18,7 @@ iOS app performance problems fall into distinct categories, each with a specific
 
 ## When to Use Performance Profiling
 
-**Use this skill when:**
+**Use this skill when**
 - ✅ App feels slow (UI lags, loads take 5+ seconds)
 - ✅ Memory grows over time (Xcode shows increasing memory usage)
 - ✅ Battery drains fast (device gets hot, battery depletes in hours)
@@ -26,11 +26,11 @@ iOS app performance problems fall into distinct categories, each with a specific
 - ✅ You're unsure which Instruments tool to use
 - ✅ Profiling results are confusing or contradictory
 
-**Use `memory-debugging` instead when:**
+**Use `memory-debugging` instead when**
 - Investigating specific memory leaks with retain cycles
 - Using Instruments Allocations in detail mode
 
-**Use `swiftui-performance` instead when:**
+**Use `swiftui-performance` instead when**
 - Analyzing SwiftUI view body updates
 - Using SwiftUI Instrument specifically
 
@@ -878,12 +878,12 @@ let imageCache = NSCache<NSString, UIImage>()
 
 ## External Resources
 
-**Apple Documentation:**
+**Apple Documentation**
 - [Instruments User Guide](https://help.apple.com/instruments/)
 - [Core Data Performance Tuning](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreDataPerformance/)
 - [Energy Impact Instrument](https://developer.apple.com/library/archive/technotes/tn2224/)
 
-**Related Axiom Skills:**
+**Related Axiom Skills**
 - `memory-debugging` – Deep memory leak diagnosis
 - `swiftui-performance` – SwiftUI view profiling with Instruments 26
 - `swift-concurrency` – MainActor and thread safety patterns
@@ -898,6 +898,6 @@ let imageCache = NSCache<NSString, UIImage>()
 
 ---
 
-**Created:** 2025-11-30
-**Targets:** iOS 14+, Swift 5.5+
-**Framework:** Instruments, Core Data
+**Created** 2025-11-30
+**Targets** iOS 14+, Swift 5.5+
+**Framework** Instruments, Core Data

@@ -182,7 +182,7 @@ catch {
 
 This is a **diagnostic skill** — mandatory workflows with production crisis defense.
 
-**Diagnostic includes:**
+**Diagnostic includes**
 - Step-by-step troubleshooting
 - Production crisis emergency protocols
 - Safety-first migration patterns

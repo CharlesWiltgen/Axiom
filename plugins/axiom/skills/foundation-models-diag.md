@@ -11,7 +11,7 @@ apple_platforms: iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+
 
 ## Overview
 
-Foundation Models issues manifest as context window exceeded errors, guardrail violations, slow generation, availability failures, and unexpected output. **Core principle:** 80% of Foundation Models problems stem from misunderstanding model capabilities (3B parameter device-scale model, not world knowledge), context limits (4096 tokens), or availability requirements—not framework bugs.
+Foundation Models issues manifest as context window exceeded errors, guardrail violations, slow generation, availability failures, and unexpected output. **Core principle** 80% of Foundation Models problems stem from misunderstanding model capabilities (3B parameter device-scale model, not world knowledge), context limits (4096 tokens), or availability requirements—not framework bugs.
 
 ## Red Flags — Suspect Foundation Models Issue
 
@@ -23,12 +23,12 @@ If you see ANY of these, suspect a Foundation Models misunderstanding, not frame
 - Model gives hallucinated/wrong output
 - UI freezes during generation
 - Feature works in simulator but not on device
-- ❌ **FORBIDDEN:** "Foundation Models is broken, we need a different AI"
+- ❌ **FORBIDDEN** "Foundation Models is broken, we need a different AI"
   - Foundation Models powers Apple Intelligence across millions of devices
   - Wrong output = wrong use case (world knowledge vs summarization)
   - Do not rationalize away the issue—diagnose it
 
-**Critical distinction:** Foundation Models is a **device-scale model** (3B parameters) optimized for summarization, extraction, classification—NOT world knowledge or complex reasoning. Using it for the wrong task guarantees poor results.
+**Critical distinction** Foundation Models is a **device-scale model** (3B parameters) optimized for summarization, extraction, classification—NOT world knowledge or complex reasoning. Using it for the wrong task guarantees poor results.
 
 ## Mandatory First Steps
 
@@ -96,7 +96,7 @@ for entry in session.transcript.entries {
 // Record: "Any unusual entries? Repeated content?"
 ```
 
-**What this tells you:**
+**What this tells you**
 - **Unavailable** → Proceed to Pattern 1a/1b/1c (availability issues)
 - **Context exceeded** → Proceed to Pattern 2a (token limit)
 - **Guardrail error** → Proceed to Pattern 2b (content policy)
@@ -105,7 +105,7 @@ for entry in session.transcript.entries {
 - **Slow generation** → Proceed to Pattern 4a/4b/4c/4d (performance)
 - **UI frozen** → Proceed to Pattern 5a (main thread blocking)
 
-**MANDATORY INTERPRETATION:**
+**MANDATORY INTERPRETATION**
 
 Before changing ANY code, identify ONE of these:
 
@@ -117,7 +117,7 @@ Before changing ANY code, identify ONE of these:
 6. If generation >5 seconds → Not streaming or need optimization
 7. If UI frozen → Calling on main thread (use Task {})
 
-**If diagnostics are contradictory or unclear:**
+**If diagnostics are contradictory or unclear**
 - STOP. Do NOT proceed to patterns yet
 - Add detailed logging to every `respond()` call
 - Run with Instruments Foundation Models template

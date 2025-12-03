@@ -237,7 +237,7 @@ Before shipping:
 
 This is a **discipline-enforcing skill** — TDD-tested workflows with pressure scenarios.
 
-**Skill includes:**
+**Skill includes**
 - 8 patterns covering iOS 12-26+
 - 3 pressure scenarios with professional push-back
 - Decision trees for API selection

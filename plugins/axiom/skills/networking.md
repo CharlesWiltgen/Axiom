@@ -19,7 +19,7 @@ Use when:
 - Implementing custom protocols over TLS/QUIC
 - Requesting code review of networking implementation before shipping
 
-**Related Skills:**
+**Related Skills**
 - Use `networking-diag` for systematic troubleshooting of connection failures, timeouts, and performance issues
 - Use `network-framework-ref` for comprehensive API reference with all WWDC examples
 
@@ -57,7 +57,7 @@ if SCNetworkReachabilityGetFlags(reachability, &flags) {
     connection.start() // Network may change between check and start
 }
 ```
-**Why this fails:** Network state changes between reachability check and connect(). You miss Network.framework's smart connection establishment (Happy Eyeballs, proxy handling, WiFi Assist). Apple deprecated this API in 2018.
+**Why this fails** Network state changes between reachability check and connect(). You miss Network.framework's smart connection establishment (Happy Eyeballs, proxy handling, WiFi Assist). Apple deprecated this API in 2018.
 
 **2. Blocking socket operations on main thread**
 ```swift
@@ -65,7 +65,7 @@ if SCNetworkReachabilityGetFlags(reachability, &flags) {
 let socket = socket(AF_INET, SOCK_STREAM, 0)
 connect(socket, &addr, addrlen) // Blocks main thread
 ```
-**Why this fails:** Main thread hang → frozen UI → App Store rejection for responsiveness. Even "quick" connects take 200-500ms.
+**Why this fails** Main thread hang → frozen UI → App Store rejection for responsiveness. Even "quick" connects take 200-500ms.
 
 **3. Manual DNS resolution with getaddrinfo**
 ```swift
@@ -74,14 +74,14 @@ var hints = addrinfo(...)
 getaddrinfo("example.com", "443", &hints, &results)
 // Now manually try each address...
 ```
-**Why this fails:** You reimplement 10+ years of Apple's connection logic poorly. Misses IPv4/IPv6 racing, proxy evaluation, VPN detection.
+**Why this fails** You reimplement 10+ years of Apple's connection logic poorly. Misses IPv4/IPv6 racing, proxy evaluation, VPN detection.
 
 **4. Hardcoded IP addresses instead of hostnames**
 ```swift
 // ❌ WRONG — Breaks proxy/VPN compatibility
 let host = "192.168.1.1" // or any IP literal
 ```
-**Why this fails:** Proxy auto-configuration (PAC) needs hostname to evaluate rules. VPNs can't route properly. DNS-based load balancing broken.
+**Why this fails** Proxy auto-configuration (PAC) needs hostname to evaluate rules. VPNs can't route properly. DNS-based load balancing broken.
 
 **5. Ignoring waiting state — not handling lack of connectivity**
 ```swift
@@ -93,7 +93,7 @@ connection.stateUpdateHandler = { state in
     // Missing: .waiting case
 }
 ```
-**Why this fails:** User sees "Connection failed" in Airplane Mode instead of "Waiting for network." No automatic retry when WiFi returns.
+**Why this fails** User sees "Connection failed" in Airplane Mode instead of "Waiting for network." No automatic retry when WiFi returns.
 
 **6. Not using [weak self] in NWConnection completion handlers**
 ```swift
@@ -102,7 +102,7 @@ connection.send(content: data, completion: .contentProcessed { error in
     self.handleSend(error) // Retain cycle: connection → handler → self → connection
 })
 ```
-**Why this fails:** Connection retains completion handler, handler captures self strongly, self retains connection → memory leak.
+**Why this fails** Connection retains completion handler, handler captures self strongly, self retains connection → memory leak.
 
 **7. Mixing async/await and completion handlers in NetworkConnection (iOS 26+)**
 ```swift
@@ -113,7 +113,7 @@ Task {
     connection.stateUpdateHandler = { ... } // completion handler — don't mix
 }
 ```
-**Why this fails:** NetworkConnection designed for pure async/await. Mixing paradigms creates difficult error propagation and cancellation issues.
+**Why this fails** NetworkConnection designed for pure async/await. Mixing paradigms creates difficult error propagation and cancellation issues.
 
 **8. Not supporting network transitions**
 ```swift
@@ -121,7 +121,7 @@ Task {
 // No viabilityUpdateHandler, no betterPathUpdateHandler
 // User walks out of building → connection dies
 ```
-**Why this fails:** Modern apps must handle network changes gracefully. 40% of connection failures happen during network transitions.
+**Why this fails** Modern apps must handle network changes gracefully. 40% of connection failures happen during network transitions.
 
 ---
 
@@ -163,7 +163,7 @@ if #available(iOS 26, *) {
 // grep -rn "SCNetworkReachability\|CFSocket\|NSStream\|getaddrinfo" .
 ```
 
-**What this tells you:**
+**What this tells you**
 - If HTTP/HTTPS: Use URLSession, not Network.framework
 - If iOS 26+ deployment: Use NetworkConnection with async/await
 - If iOS 12-25 support needed: Use NWConnection with completion handlers
@@ -226,7 +226,7 @@ Need networking?
             Time: 25-30 minutes
 ```
 
-**Quick selection guide:**
+**Quick selection guide**
 - Gaming (low latency, some loss OK) → UDP patterns (1b or 2b)
 - Messaging (reliable, ordered) → TLS patterns (1a or 2a)
 - Mixed message types → TLV or Coder (1c or 1d)
@@ -238,9 +238,9 @@ Need networking?
 
 ### Pattern 1a: NetworkConnection with TLS (iOS 26+)
 
-**Use when:** iOS 26+ deployment, need reliable TCP with TLS security, want async/await
+**Use when** iOS 26+ deployment, need reliable TCP with TLS security, want async/await
 
-**Time cost:** 10-15 minutes
+**Time cost** 10-15 minutes
 
 #### ❌ BAD: Manual DNS, Blocking Socket
 ```swift
@@ -293,7 +293,7 @@ Task {
 }
 ```
 
-**Custom parameters for low data mode:**
+**Custom parameters for low data mode**
 
 ```swift
 let connection = NetworkConnection(
@@ -310,17 +310,17 @@ let connection = NetworkConnection(
 )
 ```
 
-**When to use:**
+**When to use**
 - Secure messaging, email protocols (IMAP, SMTP)
 - Custom protocols requiring encryption
 - APIs using non-HTTP protocols
 
-**Performance characteristics:**
+**Performance characteristics**
 - Smart connection establishment: Happy Eyeballs (IPv4/IPv6 racing), proxy evaluation, VPN detection
 - TLS 1.3 by default (faster handshake)
 - User-space networking: ~30% lower CPU usage vs sockets
 
-**Debugging:**
+**Debugging**
 - Enable logging: `-NWLoggingEnabled 1 -NWConnectionLoggingEnabled 1`
 - Check connection.states async sequence for state transitions
 - Test on real device with Airplane Mode toggle
@@ -329,9 +329,9 @@ let connection = NetworkConnection(
 
 ### Pattern 1b: NetworkConnection UDP (iOS 26+)
 
-**Use when:** iOS 26+ deployment, need UDP datagrams for gaming or real-time streaming, want async/await
+**Use when** iOS 26+ deployment, need UDP datagrams for gaming or real-time streaming, want async/await
 
-**Time cost:** 10-15 minutes
+**Time cost** 10-15 minutes
 
 #### ❌ BAD: Blocking UDP Socket
 ```swift
@@ -375,17 +375,17 @@ public func sendMultipleUpdates(_ updates: [Data]) async throws {
 }
 ```
 
-**When to use:**
+**When to use**
 - Real-time gaming (player position, game state)
 - Live streaming (video/audio frames where some loss is acceptable)
 - IoT telemetry (sensor data)
 
-**Performance characteristics:**
+**Performance characteristics**
 - User-space networking: ~30% lower CPU vs sockets
 - Batching multiple sends reduces context switches
 - ECN (Explicit Congestion Notification) enabled automatically
 
-**Debugging:**
+**Debugging**
 - Use Instruments Network template to profile datagram throughput
 - Check for packet loss with receive timeouts
 - Test on cellular network (higher latency/loss)
@@ -394,11 +394,11 @@ public func sendMultipleUpdates(_ updates: [Data]) async throws {
 
 ### Pattern 1c: TLV Framing (iOS 26+)
 
-**Use when:** Need message boundaries on stream protocols (TCP/TLS), have mixed message types, want type-safe message handling
+**Use when** Need message boundaries on stream protocols (TCP/TLS), have mixed message types, want type-safe message handling
 
-**Time cost:** 15-20 minutes
+**Time cost** 15-20 minutes
 
-**Background:** Stream protocols (TCP/TLS) don't preserve message boundaries. If you send 3 chunks, receiver might get them 1 byte at a time, or all at once. TLV (Type-Length-Value) solves this by encoding each message with its type and length.
+**Background** Stream protocols (TCP/TLS) don't preserve message boundaries. If you send 3 chunks, receiver might get them 1 byte at a time, or all at once. TLV (Type-Length-Value) solves this by encoding each message with its type and length.
 
 #### ❌ BAD: Manual Length Prefix Parsing
 ```swift
@@ -461,17 +461,17 @@ public func receiveWithTLV() async throws {
 }
 ```
 
-**When to use:**
+**When to use**
 - Mixed message types in same connection (chat + presence + typing indicators)
 - Existing protocols using TLV (many custom protocols)
 - Need message boundaries without heavy framing overhead
 
-**How it works:**
+**How it works**
 - Type: UInt32 message identifier (your enum raw value)
 - Length: UInt32 message size (automatic)
 - Value: Actual message bytes
 
-**Performance characteristics:**
+**Performance characteristics**
 - Minimal overhead: 8 bytes per message (type + length)
 - No manual parsing: Framework handles framing
 - Type-safe: Compiler catches message type errors
@@ -480,11 +480,11 @@ public func receiveWithTLV() async throws {
 
 ### Pattern 1d: Coder Protocol (iOS 26+)
 
-**Use when:** Sending/receiving Codable types, want to eliminate JSON boilerplate, need type-safe message handling
+**Use when** Sending/receiving Codable types, want to eliminate JSON boilerplate, need type-safe message handling
 
-**Time cost:** 10-15 minutes
+**Time cost** 10-15 minutes
 
-**Background:** Most apps manually encode Codable types to JSON, send bytes, receive bytes, decode JSON. Coder protocol eliminates this boilerplate by handling serialization automatically.
+**Background** Most apps manually encode Codable types to JSON, send bytes, receive bytes, decode JSON. Coder protocol eliminates this boilerplate by handling serialization automatically.
 
 #### ❌ BAD: Manual JSON Encoding/Decoding
 ```swift
@@ -537,21 +537,21 @@ public func receiveWithCoder() async throws {
 }
 ```
 
-**Supported formats:**
+**Supported formats**
 - `.json` — JSON encoding (most common, human-readable)
 - `.propertyList` — Property list encoding (smaller, faster)
 
-**When to use:**
+**When to use**
 - App-to-app communication (you control both ends)
 - Prototyping (fastest time to working code)
 - Type-safe protocols (compiler catches message structure changes)
 
-**When NOT to use:**
+**When NOT to use**
 - Interoperating with non-Swift servers
 - Need custom wire format
 - Performance-critical (prefer TLV with manual encoding for control)
 
-**Benefits:**
+**Benefits**
 - No JSON boilerplate: ~50 lines → ~10 lines
 - Type-safe: Compiler catches message structure changes
 - Automatic framing: Handles message boundaries
@@ -560,9 +560,9 @@ public func receiveWithCoder() async throws {
 
 ### Pattern 2a: NWConnection with TLS (iOS 12-25)
 
-**Use when:** Supporting iOS 12-25, need completion handlers, want reliable TCP with TLS
+**Use when** Supporting iOS 12-25, need completion handlers, want reliable TCP with TLS
 
-**Time cost:** 15-20 minutes
+**Time cost** 15-20 minutes
 
 #### ❌ BAD: Blocking Socket with Manual TLS
 ```swift
@@ -636,17 +636,17 @@ func receiveData() {
 }
 ```
 
-**Key differences from NetworkConnection:**
+**Key differences from NetworkConnection**
 - Must use `[weak self]` in all completion handlers to prevent retain cycles
 - stateUpdateHandler receives state, not async sequence
 - send/receive use completion callbacks, not async/await
 
-**When to use:**
+**When to use**
 - Supporting iOS 12-15 (70% of devices as of 2024)
 - Codebases not yet using async/await
 - Libraries needing backward compatibility
 
-**Migration to NetworkConnection (iOS 26+):**
+**Migration to NetworkConnection (iOS 26+)**
 - stateUpdateHandler → connection.states async sequence
 - Completion handlers → try await calls
 - [weak self] → No longer needed (async/await handles cancellation)
@@ -655,11 +655,11 @@ func receiveData() {
 
 ### Pattern 2b: NWConnection UDP Batch (iOS 12-25)
 
-**Use when:** Supporting iOS 12-25, sending multiple UDP datagrams efficiently, need ~30% CPU reduction
+**Use when** Supporting iOS 12-25, sending multiple UDP datagrams efficiently, need ~30% CPU reduction
 
-**Time cost:** 10-15 minutes
+**Time cost** 10-15 minutes
 
-**Background:** Traditional UDP sockets send one datagram per syscall. If you're sending 100 small packets, that's 100 context switches. Batching reduces this to ~1 syscall.
+**Background** Traditional UDP sockets send one datagram per syscall. If you're sending 100 small packets, that's 100 context switches. Batching reduces this to ~1 syscall.
 
 #### ❌ BAD: Individual UDP Sends (High CPU)
 ```swift
@@ -722,25 +722,25 @@ func receiveFrames() {
 }
 ```
 
-**Performance characteristics:**
-- **Without batch:** 100 datagrams = 100 syscalls = 100 context switches
-- **With batch:** 100 datagrams = ~1 syscall = 1 context switch
-- **Result:** ~30% lower CPU usage (measured with Instruments)
+**Performance characteristics**
+- **Without batch** 100 datagrams = 100 syscalls = 100 context switches
+- **With batch** 100 datagrams = ~1 syscall = 1 context switch
+- **Result** ~30% lower CPU usage (measured with Instruments)
 
-**When to use:**
+**When to use**
 - Real-time video/audio streaming
 - Gaming with frequent updates (player position)
 - High-frequency sensor data (IoT)
 
-**WWDC 2018 demo:** Live video streaming showed 30% lower CPU on receiver with user-space networking + batching
+**WWDC 2018 demo** Live video streaming showed 30% lower CPU on receiver with user-space networking + batching
 
 ---
 
 ### Pattern 2c: NWListener (iOS 12-25)
 
-**Use when:** Need to accept incoming connections, building servers or peer-to-peer apps, supporting iOS 12-25
+**Use when** Need to accept incoming connections, building servers or peer-to-peer apps, supporting iOS 12-25
 
-**Time cost:** 20-25 minutes
+**Time cost** 20-25 minutes
 
 #### ❌ BAD: Manual Socket Listening
 ```swift
@@ -837,17 +837,17 @@ func handleClient(_ connection: NWConnection) {
 }
 ```
 
-**When to use:**
+**When to use**
 - Peer-to-peer apps (file sharing, messaging)
 - Local network services
 - Development/testing servers
 
-**Bonjour advertising:**
+**Bonjour advertising**
 - Automatic service discovery on local network
 - No hardcoded IPs needed
 - Works with NWBrowser for discovery
 
-**Security considerations:**
+**Security considerations**
 - Use TLS parameters for encryption: `NWListener(using: .tls, on: port)`
 - Validate client connections before processing data
 - Set connection limits to prevent DoS
@@ -856,9 +856,9 @@ func handleClient(_ connection: NWConnection) {
 
 ### Pattern 2d: Network Discovery (iOS 12-25)
 
-**Use when:** Discovering services on local network (Bonjour), building peer-to-peer apps, supporting iOS 12-25
+**Use when** Discovering services on local network (Bonjour), building peer-to-peer apps, supporting iOS 12-25
 
-**Time cost:** 25-30 minutes
+**Time cost** 25-30 minutes
 
 #### ❌ BAD: Hardcoded IP Addresses
 ```swift
@@ -918,17 +918,17 @@ func connectToService(_ endpoint: NWEndpoint) {
 }
 ```
 
-**When to use:**
+**When to use**
 - Peer-to-peer discovery (AirDrop-like features)
 - Local network printers, media servers
 - Development/testing (find test servers automatically)
 
-**Performance characteristics:**
+**Performance characteristics**
 - mDNS-based (multicast DNS, no central server)
 - Near-instant discovery on same subnet
 - Automatic updates when services appear/disappear
 
-**iOS 26+ alternative:**
+**iOS 26+ alternative**
 - Use NetworkBrowser with Wi-Fi Aware for peer-to-peer without infrastructure
 - See Pattern 1d in network-framework-ref skill
 
@@ -938,31 +938,31 @@ func connectToService(_ endpoint: NWEndpoint) {
 
 ### Scenario 1: Reachability Race Condition Under App Store Deadline
 
-**Context:**
+**Context**
 
 You're 3 days from App Store submission. QA reports connection failures on cellular networks (15% failure rate). Your PM reviews the code and suggests: "Just add a reachability check before connecting. If there's no network, show an error immediately instead of timing out."
 
-**Pressure signals:**
-- ⏰ **Deadline pressure:** "App Store deadline is Friday. We need this fixed by EOD Wednesday."
-- 👔 **Authority pressure:** PM (non-technical) suggesting specific implementation
-- 💸 **Sunk cost:** Already spent 2 hours debugging connection logs, found nothing obvious
-- 📊 **Customer impact:** "15% of users affected, mostly on cellular"
+**Pressure signals**
+- ⏰ **Deadline pressure** "App Store deadline is Friday. We need this fixed by EOD Wednesday."
+- 👔 **Authority pressure** PM (non-technical) suggesting specific implementation
+- 💸 **Sunk cost** Already spent 2 hours debugging connection logs, found nothing obvious
+- 📊 **Customer impact** "15% of users affected, mostly on cellular"
 
-**Rationalization trap:**
+**Rationalization trap**
 
 *"SCNetworkReachability is Apple's API, it must be correct. I've seen it in Stack Overflow answers with 500+ upvotes. Adding a quick reachability check will fix the issue today, and I can refactor it properly after launch. The deadline is more important than perfect code right now."*
 
-**Why this fails:**
+**Why this fails**
 
-1. **Race condition:** Network state changes between reachability check and connection start. You check "WiFi available" at 10:00:00.000, but WiFi disconnects at 10:00:00.050, then you call connection.start() at 10:00:00.100. Connection fails, but reachability said it was available.
+1. **Race condition** Network state changes between reachability check and connection start. You check "WiFi available" at 10:00:00.000, but WiFi disconnects at 10:00:00.050, then you call connection.start() at 10:00:00.100. Connection fails, but reachability said it was available.
 
-2. **Misses smart connection establishment:** Network.framework tries multiple strategies (IPv4, IPv6, proxies, WiFi Assist fallback to cellular). SCNetworkReachability gives you "yes/no" but doesn't tell you which strategy will work.
+2. **Misses smart connection establishment** Network.framework tries multiple strategies (IPv4, IPv6, proxies, WiFi Assist fallback to cellular). SCNetworkReachability gives you "yes/no" but doesn't tell you which strategy will work.
 
-3. **Deprecated API:** Apple explicitly deprecated SCNetworkReachability in WWDC 2018. App Store Review may flag this as using legacy APIs.
+3. **Deprecated API** Apple explicitly deprecated SCNetworkReachability in WWDC 2018. App Store Review may flag this as using legacy APIs.
 
-4. **Doesn't solve actual problem:** 15% cellular failures likely caused by not handling waiting state, not by absence of reachability check.
+4. **Doesn't solve actual problem** 15% cellular failures likely caused by not handling waiting state, not by absence of reachability check.
 
-**MANDATORY response:**
+**MANDATORY response**
 
 ```swift
 // ❌ NEVER check reachability before connecting
@@ -1018,7 +1018,7 @@ connection.stateUpdateHandler = { [weak self] state in
 connection.start(queue: .main)
 ```
 
-**Professional push-back template:**
+**Professional push-back template**
 
 *"I understand the deadline pressure. However, adding SCNetworkReachability will create a race condition that will make the 15% failure rate worse, not better. Apple deprecated this API in 2018 specifically because it causes these issues.*
 
@@ -1026,12 +1026,12 @@ connection.start(queue: .main)
 
 *Implementation time: 15 minutes to add waiting state handler vs 2-4 hours debugging reachability race conditions. The waiting state approach is both faster AND more reliable."*
 
-**Time saved:**
-- **Reachability approach:** 30 min to implement + 2-4 hours debugging race conditions + potential App Store rejection = 3-5 hours total
-- **Waiting state approach:** 15 minutes to implement + 0 hours debugging = 15 minutes total
-- **Savings:** 2.5-4.5 hours + avoiding App Store review issues
+**Time saved**
+- **Reachability approach** 30 min to implement + 2-4 hours debugging race conditions + potential App Store rejection = 3-5 hours total
+- **Waiting state approach** 15 minutes to implement + 0 hours debugging = 15 minutes total
+- **Savings** 2.5-4.5 hours + avoiding App Store review issues
 
-**Actual root cause of 15% cellular failures:**
+**Actual root cause of 15% cellular failures**
 
 Likely missing waiting state handler. When user is in area with weak cellular, connection moves to waiting state. Without handler, app shows "Connection failed" instead of "Waiting for network," so user force-quits and reports "doesn't work on cellular."
 
@@ -1039,31 +1039,31 @@ Likely missing waiting state handler. When user is in area with weak cellular, c
 
 ### Scenario 2: Blocking Socket Call Causing Main Thread Hang
 
-**Context:**
+**Context**
 
 Your app has 1-star reviews: "App freezes for 5-10 seconds randomly." After investigation, you find a "quick" socket connect() call on the main thread. Your tech lead says: "This is a legacy code path from 2015. It only connects to localhost (127.0.0.1), so it should be instant. The real fix is a 3-week refactor to move all networking to a background queue, but we don't have time. Just leave it for now."
 
-**Pressure signals:**
-- ⏰ **Time pressure:** "3-week refactor, we're in feature freeze for 2.0 launch"
-- 💸 **Sunk cost:** "This code has worked for 8 years, why change it now?"
-- 🎯 **Scope pressure:** "It's just localhost, not a real network call"
-- 📊 **Low frequency:** "Only 2% of users see this freeze"
+**Pressure signals**
+- ⏰ **Time pressure** "3-week refactor, we're in feature freeze for 2.0 launch"
+- 💸 **Sunk cost** "This code has worked for 8 years, why change it now?"
+- 🎯 **Scope pressure** "It's just localhost, not a real network call"
+- 📊 **Low frequency** "Only 2% of users see this freeze"
 
-**Rationalization trap:**
+**Rationalization trap**
 
 *"Connecting to localhost is basically instant. The freeze must be caused by something else. Besides, refactoring this legacy code is risky—what if I break something? Better to leave working code alone and focus on the new features for 2.0."*
 
-**Why this fails:**
+**Why this fails**
 
-1. **Even localhost can block:** If the app has many threads, the kernel may schedule other work before returning from connect(). Even 50-100ms is visible to users as a stutter.
+1. **Even localhost can block** If the app has many threads, the kernel may schedule other work before returning from connect(). Even 50-100ms is visible to users as a stutter.
 
-2. **ANR (Application Not Responding):** iOS watchdog will terminate your app if main thread blocks for >5 seconds. This explains "random" crashes.
+2. **ANR (Application Not Responding)** iOS watchdog will terminate your app if main thread blocks for >5 seconds. This explains "random" crashes.
 
-3. **Localhost isn't always available:** If VPN is active, localhost routing can be delayed. If device is under memory pressure, kernel scheduling is slower.
+3. **Localhost isn't always available** If VPN is active, localhost routing can be delayed. If device is under memory pressure, kernel scheduling is slower.
 
-4. **Guaranteed App Store rejection:** Apple's App Store Review Guidelines explicitly check for main thread blocking. This will fail App Review's performance tests.
+4. **Guaranteed App Store rejection** Apple's App Store Review Guidelines explicitly check for main thread blocking. This will fail App Review's performance tests.
 
-**MANDATORY response:**
+**MANDATORY response**
 
 ```swift
 // ❌ NEVER call blocking socket APIs on main thread
@@ -1097,7 +1097,7 @@ func connectToLocalhost() {
 }
 ```
 
-**Alternative: If you must keep legacy socket code (not recommended):**
+**Alternative: If you must keep legacy socket code (not recommended)**
 
 ```swift
 // Move blocking call to background queue (minimum viable fix)
@@ -1111,7 +1111,7 @@ DispatchQueue.global(qos: .userInitiated).async {
 }
 ```
 
-**Professional push-back template:**
+**Professional push-back template**
 
 *"I understand this code has been stable for 8 years. However, Apple's App Store Review now runs automated performance tests that will fail apps with main thread blocking. This will block our 2.0 release.*
 
@@ -1119,41 +1119,41 @@ DispatchQueue.global(qos: .userInitiated).async {
 
 *Neither approach requires touching other parts of the codebase. We can ship 2.0 on schedule AND fix the ANR crashes."*
 
-**Time saved:**
-- **Leave it alone:** 0 hours upfront + 4-8 hours when App Review rejects + user churn from 1-star reviews
-- **Background queue fix:** 30 minutes = main thread safe
-- **NWConnection fix:** 45 minutes = main thread safe + eliminates socket management
-- **Savings:** 3-7 hours + avoiding App Store rejection
+**Time saved**
+- **Leave it alone** 0 hours upfront + 4-8 hours when App Review rejects + user churn from 1-star reviews
+- **Background queue fix** 30 minutes = main thread safe
+- **NWConnection fix** 45 minutes = main thread safe + eliminates socket management
+- **Savings** 3-7 hours + avoiding App Store rejection
 
 ---
 
 ### Scenario 3: Design Review Pressure — "Use WebSockets for Everything"
 
-**Context:**
+**Context**
 
 Your team is building a multiplayer game with real-time player positions (20 updates/second). In architecture review, the senior architect says: "All our other apps use WebSockets for networking. We should use WebSockets here too for consistency. It's production-proven, and the backend team already knows how to deploy WebSocket servers."
 
-**Pressure signals:**
-- 👔 **Authority pressure:** Senior architect with 15 years experience
-- 🏢 **Org consistency:** "All other apps use WebSockets"
-- 💼 **Backend expertise:** "Backend team doesn't know UDP"
-- 📊 **Proven technology:** "WebSockets are battle-tested"
+**Pressure signals**
+- 👔 **Authority pressure** Senior architect with 15 years experience
+- 🏢 **Org consistency** "All other apps use WebSockets"
+- 💼 **Backend expertise** "Backend team doesn't know UDP"
+- 📊 **Proven technology** "WebSockets are battle-tested"
 
-**Rationalization trap:**
+**Rationalization trap**
 
 *"The architect has way more experience than me. If WebSockets work for the other apps, they'll work here too. UDP sounds complicated and risky. Better to stick with proven technology than introduce something new that might break in production."*
 
-**Why this fails for real-time gaming:**
+**Why this fails for real-time gaming**
 
-1. **Head-of-line blocking:** WebSockets use TCP. If one packet is lost, TCP blocks ALL subsequent packets until retransmission succeeds. In a game, this means old player position (frame 100) blocks new position (frame 120), causing stutter.
+1. **Head-of-line blocking** WebSockets use TCP. If one packet is lost, TCP blocks ALL subsequent packets until retransmission succeeds. In a game, this means old player position (frame 100) blocks new position (frame 120), causing stutter.
 
-2. **Latency overhead:** TCP requires 3-way handshake (SYN, SYN-ACK, ACK) before sending data. For 20 updates/second, this overhead adds 50-150ms latency.
+2. **Latency overhead** TCP requires 3-way handshake (SYN, SYN-ACK, ACK) before sending data. For 20 updates/second, this overhead adds 50-150ms latency.
 
-3. **Unnecessary reliability:** Game position updates don't need guaranteed delivery. If frame 100 is lost, frame 101 (5ms later) makes it obsolete. TCP retransmits frame 100, wasting bandwidth.
+3. **Unnecessary reliability** Game position updates don't need guaranteed delivery. If frame 100 is lost, frame 101 (5ms later) makes it obsolete. TCP retransmits frame 100, wasting bandwidth.
 
-4. **Connection establishment:** WebSockets require HTTP upgrade handshake (4 round trips) before data transfer. UDP starts sending immediately.
+4. **Connection establishment** WebSockets require HTTP upgrade handshake (4 round trips) before data transfer. UDP starts sending immediately.
 
-**MANDATORY response:**
+**MANDATORY response**
 
 ```swift
 // ❌ WRONG for real-time gaming
@@ -1191,7 +1191,7 @@ func sendPosition(_ position: PlayerPosition) {
 }
 ```
 
-**Technical comparison table:**
+**Technical comparison table**
 
 | Aspect | WebSocket (TCP) | UDP |
 |--------|----------------|-----|
@@ -1202,7 +1202,7 @@ func sendPosition(_ position: PlayerPosition) {
 | Bandwidth (20 updates/sec) | ~40 KB/s | ~20 KB/s |
 | Best for | Chat, API calls | Gaming, streaming |
 
-**Professional push-back template:**
+**Professional push-back template**
 
 *"I appreciate the concern about consistency and proven technology. WebSockets are excellent for our other apps because they're doing chat, notifications, and API calls—use cases where guaranteed delivery matters.*
 
@@ -1227,16 +1227,16 @@ func sendPosition(_ position: PlayerPosition) {
 
 *I'm happy to do a proof-of-concept this week showing latency comparison. We can measure both approaches with real data."*
 
-**When WebSockets ARE correct:**
+**When WebSockets ARE correct**
 - Chat applications (message delivery must be reliable)
 - Turn-based games (moves must arrive in order)
 - API calls over persistent connection
 - Live notifications/updates
 
-**Time saved:**
-- **WebSocket approach:** 2 days implementation + 1-2 weeks debugging stutter/lag issues + potential rewrite = 3-4 weeks
-- **UDP approach:** 2 days implementation + smooth gameplay = 2 days
-- **Savings:** 2-3 weeks + better user experience
+**Time saved**
+- **WebSocket approach** 2 days implementation + 1-2 weeks debugging stutter/lag issues + potential rewrite = 3-4 weeks
+- **UDP approach** 2 days implementation + smooth gameplay = 2 days
+- **Savings** 2-3 weeks + better user experience
 
 ---
 
@@ -1244,13 +1244,13 @@ func sendPosition(_ position: PlayerPosition) {
 
 ### Migration 1: From BSD Sockets to NWConnection
 
-**Why migrate:**
+**Why migrate**
 - SCNetworkReachability, CFSocket, getaddrinfo deprecated (WWDC 2018)
 - App Store Review flags legacy networking APIs
 - Missing Happy Eyeballs (IPv4/IPv6 racing), proxy support, VPN detection
 - ~30% higher CPU usage vs Network.framework user-space networking
 
-**Migration mapping:**
+**Migration mapping**
 
 | BSD Sockets | NWConnection | Notes |
 |-------------|--------------|-------|
@@ -1263,9 +1263,9 @@ func sendPosition(_ position: PlayerPosition) {
 | `SCNetworkReachability` | `connection.stateUpdateHandler` waiting state | No race conditions |
 | `setsockopt()` | `NWParameters` configuration | Type-safe options |
 
-**Example migration:**
+**Example migration**
 
-**Before (BSD Sockets):**
+**Before (BSD Sockets)**
 ```c
 // BEFORE — Blocking, manual DNS, error-prone
 var hints = addrinfo()
@@ -1284,7 +1284,7 @@ data.withUnsafeBytes { ptr in
 }
 ```
 
-**After (NWConnection):**
+**After (NWConnection)**
 ```swift
 // AFTER — Non-blocking, automatic DNS, type-safe
 let connection = NWConnection(
@@ -1307,7 +1307,7 @@ connection.stateUpdateHandler = { state in
 connection.start(queue: .main)
 ```
 
-**Benefits:**
+**Benefits**
 - 20 lines → 10 lines
 - No manual DNS, no blocking, no unsafe pointers
 - Automatic Happy Eyeballs, proxy support, WiFi Assist
@@ -1316,13 +1316,13 @@ connection.start(queue: .main)
 
 ### Migration 2: From NWConnection to NetworkConnection (iOS 26+)
 
-**Why migrate:**
+**Why migrate**
 - Async/await eliminates callback hell
 - TLV framing and Coder protocol built-in
 - No [weak self] needed (async/await handles cancellation)
 - State monitoring via async sequences
 
-**Migration mapping:**
+**Migration mapping**
 
 | NWConnection (iOS 12-25) | NetworkConnection (iOS 26+) | Notes |
 |-------------------------|----------------------------|-------|
@@ -1333,9 +1333,9 @@ connection.start(queue: .main)
 | Custom framer | `TLV { TLS() }` | Built-in Type-Length-Value |
 | `[weak self]` everywhere | No `[weak self]` needed | Task cancellation automatic |
 
-**Example migration:**
+**Example migration**
 
-**Before (NWConnection):**
+**Before (NWConnection)**
 ```swift
 // BEFORE — Completion handlers, manual memory management
 let connection = NWConnection(host: "example.com", port: 443, using: .tls)
@@ -1379,7 +1379,7 @@ func receiveData() {
 }
 ```
 
-**After (NetworkConnection):**
+**After (NetworkConnection)**
 ```swift
 // AFTER — Async/await, automatic memory management
 let connection = NetworkConnection(
@@ -1416,7 +1416,7 @@ func sendAndReceive() async throws {
 }
 ```
 
-**Benefits:**
+**Benefits**
 - 30 lines → 15 lines
 - No callback nesting, no [weak self]
 - Errors propagate naturally with throws
@@ -1426,19 +1426,19 @@ func sendAndReceive() async throws {
 
 ### Migration 3: From URLSession StreamTask to NetworkConnection
 
-**When to migrate:**
+**When to migrate**
 - Need UDP (StreamTask only supports TCP)
 - Need custom protocols beyond TCP/TLS
 - Need low-level control (packet pacing, ECN, service class)
 
-**When to STAY with URLSession:**
+**When to STAY with URLSession**
 - Doing HTTP/HTTPS (URLSession optimized for this)
 - Need WebSocket support
 - Need built-in caching, cookie handling
 
-**Example migration:**
+**Example migration**
 
-**Before (URLSession StreamTask):**
+**Before (URLSession StreamTask)**
 ```swift
 // BEFORE — URLSession for TCP/TLS stream
 let task = URLSession.shared.streamTask(withHostName: "example.com", port: 443)
@@ -1462,7 +1462,7 @@ task.readData(ofMinLength: 10, maxLength: 10, timeout: 10) { data, atEOF, error 
 }
 ```
 
-**After (NetworkConnection):**
+**After (NetworkConnection)**
 ```swift
 // AFTER — NetworkConnection for TCP/TLS
 let connection = NetworkConnection(
@@ -1540,60 +1540,60 @@ Before shipping networking code, verify:
 
 ### User-Space Networking: 30% CPU Reduction
 
-**WWDC 2018 Demo:** Live UDP video streaming comparison:
-- **BSD sockets:** ~30% higher CPU usage on receiver
-- **Network.framework:** ~30% lower CPU usage
+**WWDC 2018 Demo** Live UDP video streaming comparison:
+- **BSD sockets** ~30% higher CPU usage on receiver
+- **Network.framework** ~30% lower CPU usage
 
-**Why:** Traditional sockets copy data kernel → userspace. Network.framework uses memory-mapped regions (no copy) and reduces context switches from 100 syscalls → ~1 syscall (with batching).
+**Why** Traditional sockets copy data kernel → userspace. Network.framework uses memory-mapped regions (no copy) and reduces context switches from 100 syscalls → ~1 syscall (with batching).
 
-**Impact for your app:**
+**Impact for your app**
 - Lower battery drain (30% less CPU = longer battery life)
 - Smoother gameplay (more CPU for rendering)
 - Cooler device (less thermal throttling)
 
 ### Smart Connection Establishment: 50% Faster
 
-**Traditional approach:**
+**Traditional approach**
 1. Call getaddrinfo (100-300ms DNS lookup)
 2. Try first IPv6 address, wait 5 seconds for timeout
 3. Try IPv4 address, finally connects
 
-**Network.framework (Happy Eyeballs):**
+**Network.framework (Happy Eyeballs)**
 1. Start DNS lookup in background
 2. As soon as first address arrives, try connecting
 3. Start second connection attempt 50ms later
 4. Use whichever connects first
 
-**Result:** 50% faster connection establishment in dual-stack environments (measured by Apple)
+**Result** 50% faster connection establishment in dual-stack environments (measured by Apple)
 
 ### Proper State Handling: 10x Crash Reduction
 
-**Customer report:** App crash rate dropped from 5% → 0.5% after implementing waiting state handler.
+**Customer report** App crash rate dropped from 5% → 0.5% after implementing waiting state handler.
 
-**Before:** App showed "Connection failed" when no network, users force-quit app → crash report.
+**Before** App showed "Connection failed" when no network, users force-quit app → crash report.
 
-**After:** App showed "Waiting for network" and automatically retried when WiFi returned → users saw seamless reconnection.
+**After** App showed "Waiting for network" and automatically retried when WiFi returned → users saw seamless reconnection.
 
 ---
 
 ## Related Resources
 
 ### WWDC Sessions
-- **WWDC 2018/715:** "Introducing Network.framework: A modern alternative to Sockets"
+- **WWDC 2018/715** "Introducing Network.framework: A modern alternative to Sockets"
   - User-space networking demo (30% CPU reduction)
   - Deprecation of CFSocket, NSStream, SCNetworkReachability
   - Smart connection establishment, mobility support
 
-- **WWDC 2025/250:** "Use structured concurrency with Network framework"
+- **WWDC 2025/250** "Use structured concurrency with Network framework"
   - NetworkConnection with async/await (iOS 26+)
   - TLV framing and Coder protocol
   - NetworkListener and NetworkBrowser
   - Wi-Fi Aware peer-to-peer discovery
 
 ### Related Axiom Skills
-- **networking-diag:** Systematic troubleshooting for connection timeouts, TLS failures, data not arriving, performance issues
-- **network-framework-ref:** Comprehensive API reference with all 12 WWDC 2025 code examples, migration strategies, testing checklists
-- **swift-concurrency:** Async/await patterns, @MainActor usage, Task cancellation (needed for NetworkConnection)
+- **networking-diag** Systematic troubleshooting for connection timeouts, TLS failures, data not arriving, performance issues
+- **network-framework-ref** Comprehensive API reference with all 12 WWDC 2025 code examples, migration strategies, testing checklists
+- **swift-concurrency** Async/await patterns, @MainActor usage, Task cancellation (needed for NetworkConnection)
 
 ### Apple Documentation
 - [Network Framework Documentation](https://developer.apple.com/documentation/network)
@@ -1603,6 +1603,6 @@ Before shipping networking code, verify:
 
 ---
 
-**Last Updated:** 2025-12-02
-**Status:** Production-ready patterns from WWDC 2018 and WWDC 2025
-**Tested:** Patterns validated against Apple documentation and WWDC transcripts
+**Last Updated** 2025-12-02
+**Status** Production-ready patterns from WWDC 2018 and WWDC 2025
+**Tested** Patterns validated against Apple documentation and WWDC transcripts

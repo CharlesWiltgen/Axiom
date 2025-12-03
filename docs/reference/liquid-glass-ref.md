@@ -84,14 +84,14 @@ TabView {
 
 This is a **reference skill** — comprehensive guide without mandatory workflows. For discipline-enforcing implementation guidance with pressure scenario defense, use the [liquid-glass skill](/skills/ui-design/liquid-glass).
 
-**Reference includes:**
+**Reference includes**
 - Complete API catalog
 - Platform-specific patterns
 - Migration checklists
 - Accessibility considerations
 - Performance optimization
 
-**Skills include:**
+**Skills include**
 - Mandatory design review workflows
 - Pressure defense (tight deadlines, authority pressure)
 - Red flags and rationalizations

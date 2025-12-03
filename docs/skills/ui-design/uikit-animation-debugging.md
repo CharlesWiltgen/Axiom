@@ -217,10 +217,10 @@ Spring physics require device-specific tuning. Simulator testing is insufficient
 
 ## Real-World Impact
 
-**Before:** 2-4 hours debugging "why completion handler never fires"
-**After:** 5-15 minutes applying CATransaction pattern
+**Before** 2-4 hours debugging "why completion handler never fires"
+**After** 5-15 minutes applying CATransaction pattern
 
-**Key insight:** CAAnimation behavior differs dramatically between simulator and device. Test on real hardware.
+**Key insight** CAAnimation behavior differs dramatically between simulator and device. Test on real hardware.
 
 ## Related Skills
 

@@ -7,7 +7,7 @@ description: Use when debugging retain cycles, memory leaks, crashes after 10+ m
 
 ## Overview
 
-Memory issues manifest as crashes after prolonged use. **Core principle:** 90% of memory leaks follow 3 patterns (retain cycles, timer/observer leaks, collection growth). Diagnose systematically with Instruments, never guess.
+Memory issues manifest as crashes after prolonged use. **Core principle** 90% of memory leaks follow 3 patterns (retain cycles, timer/observer leaks, collection growth). Diagnose systematically with Instruments, never guess.
 
 ## Example Prompts
 
@@ -41,7 +41,7 @@ If you see ANY of these, suspect memory leak not just heavy memory use:
 - View controllers don't deallocate after dismiss (visible in Memory Graph Debugger)
 - Same operation run multiple times causes linear memory growth
 
-**Difference from normal memory use:**
+**Difference from normal memory use**
 - Normal: App uses 100MB, stays at 100MB (memory pressure handled by iOS)
 - Leak: App uses 50MB, becomes 100MB, 150MB, 200MB → CRASH
 
@@ -64,13 +64,13 @@ If you see ANY of these, suspect memory leak not just heavy memory use:
 # Perform operation 5 times, note if memory keeps growing
 ```
 
-**What this tells you:**
+**What this tells you**
 - **Memory stays flat** → Likely not a leak, check memory pressure handling
 - **Memory grows linearly** → Classic leak (timer, observer, closure capture)
 - **Sudden spikes then flattens** → Probably normal (caches, lazy loading)
 - **Spikes AND keeps growing** → Compound leak (multiple leaks stacking)
 
-**Why diagnostics first:**
+**Why diagnostics first**
 - Finding leak with Instruments: 5-15 minutes
 - Guessing and testing fixes: 45+ minutes
 
@@ -102,13 +102,13 @@ Memory growing?
 5. Click them → Xcode shows retain cycle chain
 ```
 
-**What you're looking for:**
+**What you're looking for**
 ```
 ✅ Object appears once
 ❌ Object appears 2+ times (means it's retained multiple times)
 ```
 
-**Example output (indicates leak):**
+**Example output (indicates leak)**
 ```
 PlayerViewModel
   ↑ strongRef from: progressTimer
@@ -128,13 +128,13 @@ PlayerViewModel
    - NO → Probably not a leak
 ```
 
-**Key instruments to check:**
+**Key instruments to check**
 - **Heap Allocations**: Shows object count
 - **Leaked Objects**: Direct leak detection
 - **VM Tracker**: Shows memory by type
 - **System Memory**: Shows OS pressure
 
-**How to read the graph:**
+**How to read the graph**
 ```
 Time ──→
 Memory
@@ -192,7 +192,7 @@ class ViewModel: ObservableObject {
 }
 ```
 
-**Test procedure:**
+**Test procedure**
 ```
 1. Add deinit logging above
 2. Launch app in Xcode
@@ -231,7 +231,7 @@ class PlayerViewModel: ObservableObject {
 }
 ```
 
-**Leak mechanism:**
+**Leak mechanism**
 ```
 ViewController → strongly retains ViewModel
                ↓
@@ -242,7 +242,7 @@ Timer → strongly retains closure
 Closure → captures [weak self] but still holds reference to Timer
 ```
 
-**Closure captures `self` weakly BUT:**
+**Closure captures `self` weakly BUT**
 - Timer is still strong reference in ViewModel
 - Timer is still running (repeats: true)
 - Even with [weak self], timer closure doesn't go away
@@ -343,13 +343,13 @@ class PlayerViewModel: ObservableObject {
 }
 ```
 
-**Why the fixes work:**
+**Why the fixes work**
 - `invalidate()`: Stops timer immediately, breaks retain cycle
 - `cancellable`: Automatically invalidates when released
 - `[weak self]`: If ViewModel released before timer, timer becomes no-op
 - `deinit cleanup`: Ensures timer always cleaned up
 
-**Test the fix:**
+**Test the fix**
 ```swift
 func testPlayerViewModelNotLeaked() {
     var viewModel: PlayerViewModel? = PlayerViewModel()
@@ -476,7 +476,7 @@ class PlaylistViewController: UIViewController {
 }
 ```
 
-**Leak mechanism:**
+**Leak mechanism**
 ```
 ViewController
   ↓ strongly owns
@@ -547,7 +547,7 @@ class PlaylistViewController: UIViewController {
 }
 ```
 
-**Test the fix:**
+**Test the fix**
 ```swift
 func testCallbacksNotLeak() {
     var viewController: PlaylistViewController? = PlaylistViewController()
@@ -699,13 +699,13 @@ class PhotoViewController: UIViewController {
 }
 ```
 
-**Symptoms:**
+**Symptoms**
 - Memory jumps 50MB+ when scrolling long photo lists
 - Crashes happen after scrolling through 100+ photos
 - Specific operation causes leak (photo scrolling, not other screens)
 - Works fine locally with 10 photos, crashes on user devices with 1000+ photos
 
-**Root cause:** `PHImageManager.requestImage()` returns a `PHImageRequestID` that must be explicitly cancelled. Without cancellation, pending requests queue up and hold memory.
+**Root cause** `PHImageManager.requestImage()` returns a `PHImageRequestID` that must be explicitly cancelled. Without cancellation, pending requests queue up and hold memory.
 
 **✅ Fix: Store request ID and cancel in prepareForReuse()**
 
@@ -765,20 +765,20 @@ class PhotoViewController: UIViewController, UICollectionViewDataSource {
 }
 ```
 
-**Key points:**
+**Key points**
 - Store `PHImageRequestID` in cell (not in view controller)
 - Cancel BEFORE starting new request (prevents request storms)
 - Cancel in `prepareForReuse()` (critical for collection views)
 - Check `imageRequestID != PHInvalidImageRequestID` before cancelling
 
-**Other async APIs with similar patterns:**
+**Other async APIs with similar patterns**
 - `AVAssetImageGenerator.generateCGImagesAsynchronously()` → call `cancelAllCGImageGeneration()`
 - `URLSession.dataTask()` → call `cancel()` on task
 - Custom image caches → implement `invalidate()` or `cancel()` method
 
 ## Debugging Non-Reproducible Memory Issues
 
-**Challenge:** Memory leak only happens with specific user data (large photo collections, complex data models) that you can't reproduce locally.
+**Challenge** Memory leak only happens with specific user data (large photo collections, complex data models) that you can't reproduce locally.
 
 ### Step 1: Enable Remote Memory Diagnostics
 
@@ -890,7 +890,7 @@ After deploying fix:
          ↑ retained by [self] capture
 ```
 
-**Common leak locations (in order of likelihood):**
+**Common leak locations (in order of likelihood)**
 - Timers (50% of leaks)
 - Notifications/KVO (25%)
 - Closures in arrays/collections (15%)
@@ -930,7 +930,7 @@ Leak 2: Observer in delegate (+5MB/minute)
 Result: +15MB/minute → Crashes in 13 minutes
 ```
 
-**How to find compound leaks:**
+**How to find compound leaks**
 
 ```
 1. Fix obvious leak (Timer)
@@ -1108,17 +1108,17 @@ deinit {
 
 ## Real-World Impact
 
-**Before:** 50+ PlayerViewModel instances created/destroyed
+**Before** 50+ PlayerViewModel instances created/destroyed
 - Each uncleared timer fires every second
 - Memory: 50MB → 100MB (1min) → 200MB (2min) → Crash (13min)
 - Developer spends 2+ hours debugging
 
-**After:** Timer properly invalidated in all view models
+**After** Timer properly invalidated in all view models
 - One instance created/destroyed = memory flat
 - No timer accumulation
 - Memory: 50MB → 50MB → 50MB (stable for hours)
 
-**Key insight:** 90% of leaks come from forgetting to stop timers, observers, or subscriptions. Always clean up in `deinit` or use reactive patterns that auto-cleanup.
+**Key insight** 90% of leaks come from forgetting to stop timers, observers, or subscriptions. Always clean up in `deinit` or use reactive patterns that auto-cleanup.
 
 ---
 

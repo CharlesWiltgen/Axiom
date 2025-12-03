@@ -19,13 +19,13 @@ Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, w
 
 ### Liquid Glass Design System
 
-**Automatic Adoption:**
+**Automatic Adoption**
 - Glassy sidebars on iPad/macOS
 - Compact tab bars on iPhone
 - Liquid Glass toolbar items with morphing transitions
 - Blur effects on scroll edges
 
-**Customization APIs:**
+**Customization APIs**
 - Toolbar spacer API (`.fixed`)
 - Tinted prominent buttons in toolbars
 - Glass effect for custom views (`.glassBackgroundEffect()`)
@@ -34,29 +34,29 @@ Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, w
 
 ### iPad & macOS Enhancements
 
-**iPad:**
+**iPad**
 - Menu bar with `.commands` API (swipe-down access)
 - Resizable windows (deprecates `UIRequiresFullscreen`)
 - Automatic column showing/hiding in split views
 
-**macOS:**
+**macOS**
 - Window resize anchor (`.windowResizeAnchor()`)
 - Synchronized content/window animations
 - 6x faster list loading, 16x faster updates (100k+ items)
 
 ### Performance Improvements
 
-**List Performance:**
+**List Performance**
 - 6x faster loading for 100,000+ item lists on macOS
 - 16x faster updates for large lists
 - Benefits all platforms (iOS, iPadOS, watchOS)
 
-**Scrolling:**
+**Scrolling**
 - Improved frame scheduling reduces dropped frames
 - Nested ScrollViews with lazy stacks now properly delay loading
 - Great for photo carousels and multi-axis scrolling
 
-**SwiftUI Performance Instrument:**
+**SwiftUI Performance Instrument**
 - New profiling tool in Xcode
 - Lanes for long view body updates, platform view updates
 
@@ -78,7 +78,7 @@ struct HikingRouteShape: Shape {
 
 ### 3D Spatial Layout (visionOS)
 
-**New APIs:**
+**New APIs**
 - `Alignment3D` for depth-based layouts
 - `.spatialOverlay()` modifier
 - `.manipulable()` for interactive 3D objects
@@ -86,14 +86,14 @@ struct HikingRouteShape: Shape {
 
 ### Scene Bridging
 
-**UIKit/AppKit → SwiftUI scenes:**
+**UIKit/AppKit → SwiftUI scenes**
 - Use `MenuBarExtra`, `ImmersiveSpace`, `RemoteImmersiveSpace`, `AssistiveAccess`
 - Apply scene modifiers like `.windowStyle()`, `.immersiveEnvironmentBehavior()`
 - RemoteImmersiveSpace: Mac app renders stereo content on Vision Pro
 
 ### WebView & WebPage
 
-**Native web content in SwiftUI:**
+**Native web content in SwiftUI**
 
 ```swift
 import WebKit
@@ -110,7 +110,7 @@ WebView(page: webPage)
 
 ### TextView with AttributedString
 
-**Rich text editing:**
+**Rich text editing**
 
 ```swift
 @State private var comment = AttributedString("Enter your comment")
@@ -121,7 +121,7 @@ TextEditor(text: $comment)
 
 ### Drag and Drop Enhancements
 
-**Multiple items:**
+**Multiple items**
 - `.dragContainer` for selection-based dragging
 - `DragConfiguration` for supported operations
 - `.onDragSessionUpdated` for event observation
@@ -146,12 +146,12 @@ Chart3D {
 
 ### Widgets & Controls
 
-**New platforms:**
+**New platforms**
 - Controls on watchOS 26 and macOS (Control Center)
 - Widgets on visionOS with `levelOfDetail` environment
 - Widgets on CarPlay with Live Activities
 
-**Additional features:**
+**Additional features**
 - Push-based updating API
 - New relevance APIs for watchOS
 

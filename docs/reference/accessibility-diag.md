@@ -144,7 +144,7 @@ Use this diagnostic when:
 
 This is a **diagnostic skill** — mandatory workflows with pressure defense scenarios.
 
-**Diagnostic includes:**
+**Diagnostic includes**
 - Step-by-step troubleshooting
 - App Store rejection defense
 - Design review push-back frameworks

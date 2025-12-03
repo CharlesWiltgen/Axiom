@@ -19,7 +19,7 @@ Use when:
 - Debugging Foundation Models issues (context overflow, slow generation, wrong output)
 - Deciding between Foundation Models vs server LLMs (ChatGPT, Claude, etc.)
 
-**Related Skills:**
+**Related Skills**
 - Use `foundation-models-diag` for systematic troubleshooting (context exceeded, guardrail violations, availability problems)
 - Use `foundation-models-ref` for complete API reference with all WWDC code examples
 

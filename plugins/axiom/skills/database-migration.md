@@ -7,7 +7,7 @@ description: Use when adding/modifying database columns, encountering "FOREIGN K
 
 ## Overview
 
-Safe database schema evolution for production apps with user data. **Core principle:** Migrations are immutable after shipping. Make them additive, idempotent, and thoroughly tested.
+Safe database schema evolution for production apps with user data. **Core principle** Migrations are immutable after shipping. Make them additive, idempotent, and thoroughly tested.
 
 ## Example Prompts
 
@@ -32,7 +32,7 @@ These are real questions developers ask that this skill is designed to answer:
 
 ## ⛔ NEVER Do These (Data Loss Risk)
 
-**These actions DESTROY user data in production:**
+**These actions DESTROY user data in production**
 
 ❌ **NEVER use DROP TABLE** with user data
 ❌ **NEVER modify shipped migrations** (create new one instead)
@@ -44,14 +44,14 @@ These are real questions developers ask that this skill is designed to answer:
 
 ## Mandatory Rules
 
-**ALWAYS follow these:**
+**ALWAYS follow these**
 
-1. **Additive only:** Add new columns/tables, never delete
-2. **Idempotent:** Check existence before creating (safe to run twice)
-3. **Transactional:** Wrap entire migration in single transaction
-4. **Test both paths:** Fresh install AND migration from previous version
-5. **Nullable first:** Add columns as NULL, backfill later if needed
-6. **Immutable:** Once shipped to users, migrations cannot be changed
+1. **Additive only** Add new columns/tables, never delete
+2. **Idempotent** Check existence before creating (safe to run twice)
+3. **Transactional** Wrap entire migration in single transaction
+4. **Test both paths** Fresh install AND migration from previous version
+5. **Nullable first** Add columns as NULL, backfill later if needed
+6. **Immutable** Once shipped to users, migrations cannot be changed
 
 ## Safe Patterns
 
@@ -76,7 +76,7 @@ func migration00X_AddNewColumn() throws {
 }
 ```
 
-**Why this works:**
+**Why this works**
 - Nullable columns don't require DEFAULT
 - Existing rows get NULL automatically
 - No data transformation needed
@@ -203,7 +203,7 @@ func migration012_AddIndexes() throws {
 
 ## Testing Checklist
 
-**BEFORE deploying any migration:**
+**BEFORE deploying any migration**
 
 ```swift
 // Test 1: Migration path (CRITICAL - tests data preservation)
@@ -230,7 +230,7 @@ func migration012_AddIndexes() throws {
 }
 ```
 
-**Test 2:** Fresh install (run all migrations, verify final schema)
+**Test 2** Fresh install (run all migrations, verify final schema)
 ```swift
 @Test func freshInstallCreatesCorrectSchema() async throws {
     let db = try Database(inMemory: true)
@@ -250,7 +250,7 @@ func migration012_AddIndexes() throws {
 }
 ```
 
-**Test 3:** Idempotency (run migrations twice, should not throw)
+**Test 3** Idempotency (run migrations twice, should not throw)
 ```swift
 @Test func migrationsAreIdempotent() async throws {
     let db = try Database(inMemory: true)
@@ -267,7 +267,7 @@ func migration012_AddIndexes() throws {
 }
 ```
 
-**Manual testing (before TestFlight):**
+**Manual testing (before TestFlight)**
 1. Install v(n-1) build on device → add real user data
 2. Install v(n) build (with new migration)
 3. Verify: App launches, data visible, no crashes
@@ -415,11 +415,11 @@ enum MyAppMigrationPlan: SchemaMigrationPlan {
 
 ## Real-World Impact
 
-**Before:** Developer adds NOT NULL column → migration fails for 50% of users → emergency rollback → data inconsistency
+**Before** Developer adds NOT NULL column → migration fails for 50% of users → emergency rollback → data inconsistency
 
-**After:** Developer adds nullable column → tests both paths → smooth deployment → backfills data in v2
+**After** Developer adds nullable column → tests both paths → smooth deployment → backfills data in v2
 
-**Key insight:** Migrations can't be rolled back in production. Get them right the first time through thorough testing.
+**Key insight** Migrations can't be rolled back in production. Get them right the first time through thorough testing.
 
 ---
 

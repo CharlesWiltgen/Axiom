@@ -43,7 +43,7 @@ deinit {
 }
 ```
 
-**Memory growth:** 10-30MB/minute until crash
+**Memory growth** 10-30MB/minute until crash
 
 ### 🟡 High Priority (Leaks Over Time)
 
@@ -175,12 +175,12 @@ The skill provides:
 
 ## Real-World Impact
 
-**Before audit:**
+**Before audit**
 - 2-3 hours with Instruments finding leaks
 - Crashes discovered in production
 - Non-reproducible memory issues
 
-**After audit:**
+**After audit**
 - 2-5 minutes to identify leak candidates
 - Catch issues before Instruments needed
 - Proactive leak prevention

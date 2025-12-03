@@ -163,7 +163,7 @@ Workaround: [if available]."
 
 This is a **diagnostic skill** — mandatory workflows with production crisis defense.
 
-**Diagnostic includes:**
+**Diagnostic includes**
 - 8+ diagnostic patterns with symptom/diagnosis/fix
 - Production crisis scenario with communication templates
 - Network logging interpretation guide

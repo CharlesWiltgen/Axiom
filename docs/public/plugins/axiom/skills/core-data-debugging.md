@@ -7,7 +7,7 @@ description: Use when debugging schema migration crashes, concurrency thread-con
 
 ## Overview
 
-Core Data issues manifest as production crashes from schema mismatches, mysterious concurrency errors, performance degradation under load, and data corruption from unsafe migrations. **Core principle:** 85% of Core Data problems stem from misunderstanding thread-confinement, schema migration requirements, and relationship query patterns—not Core Data defects.
+Core Data issues manifest as production crashes from schema mismatches, mysterious concurrency errors, performance degradation under load, and data corruption from unsafe migrations. **Core principle** 85% of Core Data problems stem from misunderstanding thread-confinement, schema migration requirements, and relationship query patterns—not Core Data defects.
 
 ## Red Flags — Suspect Core Data Issue
 
@@ -17,12 +17,12 @@ If you see ANY of these, suspect a Core Data misunderstanding, not framework bre
 - App suddenly slow after adding a User→Posts relationship
 - SwiftData app needs complex features; considering mixing Core Data alongside
 - Schema migration works in simulator but crashes on production
-- ❌ **FORBIDDEN:** "Core Data is broken, we need a different database"
+- ❌ **FORBIDDEN** "Core Data is broken, we need a different database"
   - Core Data handles trillions of records in production apps
   - Schema mismatches and thread errors are always developer code, not framework
   - Do not rationalize away the issue—diagnose it
 
-**Critical distinction:** Simulator deletes the database on each rebuild, hiding schema mismatch issues. Real devices keep persistent databases and crash immediately on schema mismatch. **MANDATORY: Test migrations on real device with real data before shipping.**
+**Critical distinction** Simulator deletes the database on each rebuild, hiding schema mismatch issues. Real devices keep persistent databases and crash immediately on schema mismatch. **MANDATORY: Test migrations on real device with real data before shipping.**
 
 ## Mandatory First Steps
 
@@ -86,14 +86,14 @@ if #available(iOS 17.0, *) {
 // Record: "Mixing SwiftData + Core Data? Yes/no"
 ```
 
-**What this tells you:**
+**What this tells you**
 - **Schema mismatch** → Proceed to Pattern 1 (lightweight migration decision)
 - **Thread-confinement error** → Proceed to Pattern 2 (async/await concurrency)
 - **N+1 queries** → Proceed to Pattern 3 (relationship prefetching)
 - **SwiftData + Core Data conflict** → Proceed to Pattern 4 (bridging)
 - **Slow after migration** → Proceed to Pattern 5 (testing safety)
 
-**MANDATORY INTERPRETATION:**
+**MANDATORY INTERPRETATION**
 
 Before changing ANY code, identify ONE of these:
 
@@ -103,7 +103,7 @@ Before changing ANY code, identify ONE of these:
 4. If SwiftData and Core Data code exist together → Conflicting data layers (architectural issue)
 5. If migration test passes but production fails → Edge case in real data (testing gap)
 
-**If diagnostics are contradictory or unclear:**
+**If diagnostics are contradictory or unclear**
 - STOP. Do NOT proceed to patterns yet
 - Add print statements to every NSManagedObject access (thread check)
 - Add `-com.apple.CoreData.SQLDebug 1` and count SQL queries
@@ -148,7 +148,7 @@ Core Data problem suspected?
 
 ### Pattern Selection Rules (MANDATORY)
 
-**Apply ONE pattern at a time, starting with diagnostics:**
+**Apply ONE pattern at a time, starting with diagnostics**
 
 1. **Always start with Mandatory First Steps** — Identify the actual problem
 2. **Run decision tree** — Narrow to specific pattern
@@ -156,7 +156,7 @@ Core Data problem suspected?
 4. **Test on real device** — Simulator hides issues
 5. **Verify with migration test** — Before deploying
 
-**FORBIDDEN:**
+**FORBIDDEN**
 - ❌ Changing code without diagnostics
 - ❌ Skipping real device testing
 - ❌ Using simulator success as proof of migration safety
@@ -167,15 +167,15 @@ Core Data problem suspected?
 
 ### Pattern 1a: Lightweight Migration (Simple Schema Changes)
 
-**PRINCIPLE:** Core Data can automatically migrate simple schemas (additive changes) without data loss if done correctly.
+**PRINCIPLE** Core Data can automatically migrate simple schemas (additive changes) without data loss if done correctly.
 
-**✅ SAFE Lightweight Migrations:**
+**✅ SAFE Lightweight Migrations**
 - Adding new optional field: `@NSManaged var nickname: String?`
 - Adding new required field WITH default: Create attribute with default value
 - Renaming entity or attribute: Use mapping model with automatic mapping
 - Removing unused field: Just delete from model (data stays on disk, ignored)
 
-**❌ WRONG (Crashes production):**
+**❌ WRONG (Crashes production)**
 ```swift
 // BAD: Adding required field without migration
 @NSManaged var userID: String  // Required, no default
@@ -188,7 +188,7 @@ Core Data problem suspected?
 // Core Data can't automatically convert
 ```
 
-**✅ CORRECT (Safe lightweight migration):**
+**✅ CORRECT (Safe lightweight migration)**
 ```swift
 // 1. In Xcode: Editor → Add Model Version
 // Creates new .xcdatamodel version file
@@ -207,27 +207,27 @@ Core Data problem suspected?
 // 5. Deploy when confident
 ```
 
-**When this works:**
+**When this works**
 - Adding optional fields (always safe)
 - Adding required fields WITH default values
 - Removing fields
 - Renaming entities/attributes with mapping model
 
-**When this FAILS (don't try lightweight):**
+**When this FAILS (don't try lightweight)**
 - Changing field type (String → Int)
 - Making optional field required (data has nulls, can't convert)
 - Complex relationship changes
 - Custom data transformations needed
 
-**Time cost:** 5-10 minutes for lightweight migration setup
+**Time cost** 5-10 minutes for lightweight migration setup
 
 ---
 
 ### Pattern 1b: Heavy Migration (Complex Schema Changes)
 
-**PRINCIPLE:** When lightweight migration won't work, use NSEntityMigrationPolicy for custom transformation logic.
+**PRINCIPLE** When lightweight migration won't work, use NSEntityMigrationPolicy for custom transformation logic.
 
-**Use when:**
+**Use when**
 - Changing field types (String → Date)
 - Making optional required (need to populate existing nulls)
 - Complex relationship restructuring
@@ -274,21 +274,21 @@ class DateMigrationPolicy: NSEntityMigrationPolicy {
 // 4. Test extensively with real data before shipping
 ```
 
-**Critical safety rules:**
+**Critical safety rules**
 - ALWAYS backup database before testing migration
 - Test migration on COPY of production data
 - Verify data integrity after migration (spot checks)
 - Create rollback plan if migration fails
 
-**Time cost:** 30-60 minutes per migration + testing
+**Time cost** 30-60 minutes per migration + testing
 
 ---
 
 ### Pattern 2a: Async Context for Background Fetching
 
-**PRINCIPLE:** Core Data objects are thread-confined. Fetch on background thread, convert to lightweight representations for main thread.
+**PRINCIPLE** Core Data objects are thread-confined. Fetch on background thread, convert to lightweight representations for main thread.
 
-**❌ WRONG (Thread-confinement crash):**
+**❌ WRONG (Thread-confinement crash)**
 ```swift
 DispatchQueue.global().async {
     let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
@@ -300,7 +300,7 @@ DispatchQueue.global().async {
 }
 ```
 
-**✅ CORRECT (Use private queue context for background work):**
+**✅ CORRECT (Use private queue context for background work)**
 ```swift
 // Create background context
 let backgroundContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
@@ -325,21 +325,21 @@ backgroundContext.perform {
 }
 ```
 
-**Why this works:**
+**Why this works**
 - Background context fetches on background thread (safe)
 - Converts heavy objects to lightweight values (safe to pass to main)
 - Main context fetches on main thread (safe)
 - No thread-confined objects crossing thread boundaries
 
-**Time cost:** 10 minutes to restructure
+**Time cost** 10 minutes to restructure
 
 ---
 
 ### Pattern 2b: Structured Concurrency (async/await with Core Data)
 
-**PRINCIPLE:** Use NSPersistentContainer or NSManagedObjectContext async methods for Swift Concurrency compatibility.
+**PRINCIPLE** Use NSPersistentContainer or NSManagedObjectContext async methods for Swift Concurrency compatibility.
 
-**✅ CORRECT (iOS 13+ async APIs):**
+**✅ CORRECT (iOS 13+ async APIs)**
 ```swift
 // iOS 13+: Use async perform
 let users = try await viewContext.perform {
@@ -357,7 +357,7 @@ let backgroundUsers = try await backgroundContext.perform {
 // Fetch happens on background queue, thread-safe
 ```
 
-**❌ WRONG (Mixing Swift Concurrency with DispatchQueue):**
+**❌ WRONG (Mixing Swift Concurrency with DispatchQueue)**
 ```swift
 async {
     DispatchQueue.global().async {
@@ -366,15 +366,15 @@ async {
 }
 ```
 
-**Time cost:** 5 minutes to convert from DispatchQueue to async/await
+**Time cost** 5 minutes to convert from DispatchQueue to async/await
 
 ---
 
 ### Pattern 3a: Relationship Prefetching (Prevent N+1)
 
-**PRINCIPLE:** Tell Core Data to fetch relationships eagerly instead of lazy-loading on access.
+**PRINCIPLE** Tell Core Data to fetch relationships eagerly instead of lazy-loading on access.
 
-**❌ WRONG (N+1 query pattern):**
+**❌ WRONG (N+1 query pattern)**
 ```swift
 let users = try context.fetch(userRequest)
 
@@ -384,7 +384,7 @@ for user in users {
 }
 ```
 
-**✅ CORRECT (Prefetch relationships):**
+**✅ CORRECT (Prefetch relationships)**
 ```swift
 var request = NSFetchRequest<User>(entityName: "User")
 
@@ -400,7 +400,7 @@ for user in users {
 }
 ```
 
-**Other optimization patterns:**
+**Other optimization patterns**
 ```swift
 // Batch size: fetch in chunks for large result sets
 request.fetchBatchSize = 100
@@ -413,13 +413,13 @@ request.returnsObjectsAsFaults = false  // Keep objects in memory
 request.returnsDistinctResults = true
 ```
 
-**Time cost:** 2-5 minutes to add prefetching
+**Time cost** 2-5 minutes to add prefetching
 
 ---
 
 ### Pattern 3b: Fetch Batch Sizing
 
-**PRINCIPLE:** For large result sets, fetch in batches to manage memory.
+**PRINCIPLE** For large result sets, fetch in batches to manage memory.
 
 **Example: Scrolling through 100,000 users**
 
@@ -440,15 +440,15 @@ for user in results {
 }
 ```
 
-**Time cost:** 3 minutes to tune batch size
+**Time cost** 3 minutes to tune batch size
 
 ---
 
 ### Pattern 4a: Core Data Features SwiftData Doesn't Have
 
-**Scenario:** You chose SwiftData, but need features it lacks.
+**Scenario** You chose SwiftData, but need features it lacks.
 
-**SwiftData lacks:**
+**SwiftData lacks**
 - Complex migrations (auto-migration only)
 - Custom validation (before save)
 - Relationship delete rules (cascade, deny, nullify)
@@ -456,14 +456,14 @@ for user in results {
 - Advanced prefetching
 - Faulting control
 
-**When to drop to Core Data from SwiftData:**
+**When to drop to Core Data from SwiftData**
 - Need custom migrations
 - Need validation logic
 - Need complex relationship rules
 - Need raw SQL for performance
 - Need fault tolerance patterns
 
-**✅ CORRECT (Hybrid approach when necessary):**
+**✅ CORRECT (Hybrid approach when necessary)**
 ```swift
 // Keep SwiftData for simple entities
 @Model final class Note {
@@ -481,53 +481,53 @@ let results = try backgroundContext.perform {
 }
 ```
 
-**CRITICAL:** Do NOT access the same entity from both SwiftData and Core Data simultaneously. One or the other, not both.
+**CRITICAL** Do NOT access the same entity from both SwiftData and Core Data simultaneously. One or the other, not both.
 
-**Time cost:** 30-60 minutes to create bridging layer
+**Time cost** 30-60 minutes to create bridging layer
 
 ---
 
 ### Pattern 4b: Stay in SwiftData (Recommended for New Projects)
 
-**Scenario:** You're in SwiftData and wondering if you need Core Data.
+**Scenario** You're in SwiftData and wondering if you need Core Data.
 
-**SwiftData provides 80% of Core Data functionality for modern apps:**
+**SwiftData provides 80% of Core Data functionality for modern apps**
 - Type-safe models (@Model)
 - Reactive queries (@Query)
 - CloudKit sync (built-in)
 - Automatic migrations (for simple changes)
 - Proper async/await integration
 
-**When SwiftData is sufficient:**
+**When SwiftData is sufficient**
 - Simple schemas (users, notes, todos)
 - Minimal relationship complexity
 - CloudKit sync needed
 - iOS 17+ requirement acceptable
 - No legacy Core Data code to maintain
 
-**Decision: Stay in SwiftData if you can answer YES to 3+ of these:**
+**Decision: Stay in SwiftData if you can answer YES to 3+ of these**
 - ✅ iOS 17+ only (no iOS 16 support needed)
 - ✅ Simple relationships (1-to-many, not many-to-many)
 - ✅ Standard migrations (add fields, remove fields)
 - ✅ CloudKit sync beneficial
 - ✅ Type safety important
 
-**Decision: Drop to Core Data if:**
+**Decision: Drop to Core Data if**
 - ❌ Need iOS 16 support (SwiftData iOS 17+ only)
 - ❌ Complex relationship rules (cascade rules, constraints)
 - ❌ Custom migrations required
 - ❌ Raw SQL needed for performance
 - ❌ Already have Core Data codebase
 
-**Time cost:** 0 minutes (decision only)
+**Time cost** 0 minutes (decision only)
 
 ---
 
 ### Pattern 5a: Safe Production Testing Before Migration
 
-**PRINCIPLE:** Never deploy a migration without testing against real data.
+**PRINCIPLE** Never deploy a migration without testing against real data.
 
-**MANDATORY Pre-Deployment Checklist:**
+**MANDATORY Pre-Deployment Checklist**
 
 ```swift
 // Step 1: Export production database
@@ -566,20 +566,20 @@ let results = try backgroundContext.perform {
 // Pass ✓ before shipping
 ```
 
-**Safety rules:**
+**Safety rules**
 - ❌ NEVER test migrations with simulator (simulator deletes DB)
 - ✅ ALWAYS test with copy of real production data
 - ✅ ALWAYS verify spot checks (specific records)
 - ✅ ALWAYS check relationships loaded correctly
 - ✅ ALWAYS have rollback plan documented
 
-**Time cost:** 15-30 minutes to create migration test
+**Time cost** 15-30 minutes to create migration test
 
 ---
 
 ### Pattern 5c: Pre-Deployment Verification Checklist
 
-**MANDATORY before shipping ANY Core Data change:**
+**MANDATORY before shipping ANY Core Data change**
 
 - [ ] Did you create a new .xcdatamodel version? (Not just editing the existing one)
 - [ ] Does the new version have a mapping model if needed?
@@ -591,12 +591,12 @@ let results = try backgroundContext.perform {
 - [ ] Does app launch with old data? (Migration path)
 - [ ] Is rollback plan documented? (In case production fails)
 
-**If you answer NO to any item:**
+**If you answer NO to any item**
 - ❌ DO NOT SHIP
 - Go back, fix the issue, re-test
 - One "NO" = data loss risk
 
-**Time cost:** 5 minutes checklist
+**Time cost** 5 minutes checklist
 
 ---
 
@@ -618,14 +618,14 @@ let results = try backgroundContext.perform {
 
 If you've spent >30 minutes and the Core Data issue persists:
 
-**STOP. You either:**
+**STOP. You either**
 1. Skipped mandatory diagnostics (most common)
 2. Misidentified the actual problem
 3. Applied wrong pattern for your symptom
 4. Haven't tested on real device/real data
 5. Have edge case requiring custom NSEntityMigrationPolicy
 
-**MANDATORY checklist before claiming "skill didn't work":**
+**MANDATORY checklist before claiming "skill didn't work"**
 
 - [ ] I ran all Mandatory First Steps diagnostics
 - [ ] I identified the problem type (schema, concurrency, performance, bridging, testing)
@@ -636,12 +636,12 @@ If you've spent >30 minutes and the Core Data issue persists:
 - [ ] I verified at least 3 specific records migrated correctly
 - [ ] I have a rollback plan documented
 
-**If ALL boxes are checked and still broken:**
+**If ALL boxes are checked and still broken**
 - You need custom NSEntityMigrationPolicy (not covered by basic patterns)
 - Time cost: 60-90 minutes for complex migration
 - Ask: "What data transformation is actually needed?" and implement custom policy
 
-**Time cost transparency:**
+**Time cost transparency**
 - Pattern 1 (lightweight migration): 5-10 minutes
 - Pattern 1 (heavy migration with custom policy): 60-90 minutes
 - Pattern 2 (concurrency): 5-10 minutes
@@ -686,20 +686,20 @@ If you've spent >30 minutes and the Core Data issue persists:
 
 ## Real-World Impact
 
-**Before:** Core Data debugging 3-8 hours per issue
+**Before** Core Data debugging 3-8 hours per issue
 - Crashes in production (schema mismatch)
 - Performance gradually degrades (N+1 queries)
 - Thread errors in background operations
 - Data corruption from unsafe migrations
 - Customer trust damaged
 
-**After:** 30 minutes to 2 hours with systematic diagnosis
+**After** 30 minutes to 2 hours with systematic diagnosis
 - Identify problem type with diagnostics (5 min)
 - Apply correct pattern (5-10 min)
 - Test on real device (varies)
 - Deploy with confidence
 
-**Key insight:** Core Data has well-established patterns for every common issue. The problem is developers don't know which pattern applies to their symptom.
+**Key insight** Core Data has well-established patterns for every common issue. The problem is developers don't know which pattern applies to their symptom.
 
 ---
 

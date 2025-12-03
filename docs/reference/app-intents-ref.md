@@ -229,7 +229,7 @@ func $playlist() async throws -> [PlaylistEntity] {
 
 This is a **reference skill** — comprehensive integration guide without mandatory workflows.
 
-**Reference includes:**
+**Reference includes**
 - Complete API catalog
 - Integration patterns
 - Debugging strategies

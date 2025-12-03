@@ -588,7 +588,7 @@ Important: Clear variant requires legibility testing in low-contrast scenarios
 we'll need an expedited follow-up. I'm flagging this proactively."
 ```
 
-**Why this works:**
+**Why this works**
 - You're not questioning their taste (you like Clear too)
 - You're raising accessibility/legibility risk
 - You're offering a solution that preserves their vision in hero sections
@@ -596,13 +596,13 @@ we'll need an expedited follow-up. I'm flagging this proactively."
 
 ### Real-World Example: App Store Launch Blocker (36-Hour Deadline)
 
-**Scenario:**
+**Scenario**
 - 36 hours to launch
 - Chief designer says: "Clear variant everywhere"
 - Client watching the review meeting
 - You already implemented Regular per the skill
 
-**What to do:**
+**What to do**
 
 ```swift
 // In the meeting, demo side-by-side:
@@ -620,7 +620,7 @@ NavigationBar()
 // Offer: Clear in hero sections, Regular elsewhere
 ```
 
-**Result:**
+**Result**
 - 30-minute compromise demo
 - 90 minutes to implement changes
 - Launch on schedule with optimal legibility
@@ -635,7 +635,7 @@ Sometimes designers have valid reasons to override the skill. Accept if:
 - [ ] You document the decision in writing
 - [ ] They commit to monitoring post-launch feedback
 
-**Document in Slack:**
+**Document in Slack**
 
 ```
 "Design review decided to use Clear variant [in these locations].

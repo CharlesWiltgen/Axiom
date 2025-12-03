@@ -18,34 +18,34 @@ Comprehensive accessibility diagnostics with WCAG compliance, Accessibility Insp
 ### 1. VoiceOver Labels & Hints (CRITICAL)
 Missing or generic accessibility labels prevent VoiceOver users from understanding UI purpose.
 
-**WCAG:** 4.1.2 Name, Role, Value (Level A)
+**WCAG** 4.1.2 Name, Role, Value (Level A)
 
 ### 2. Dynamic Type Support (HIGH)
 Fixed font sizes prevent users with vision disabilities from reading text.
 
-**WCAG:** 1.4.4 Resize Text (Level AA)
+**WCAG** 1.4.4 Resize Text (Level AA)
 
 ### 3. Color Contrast (HIGH)
 Low contrast text is unreadable for users with vision disabilities or in bright sunlight.
 
-**WCAG:** 1.4.3 Contrast (Minimum) — Level AA
+**WCAG** 1.4.3 Contrast (Minimum) — Level AA
 - Normal text: 4.5:1 contrast ratio
 - Large text: 3:1 contrast ratio
 
 ### 4. Touch Target Sizes (MEDIUM)
 Small tap targets are difficult or impossible for users with motor disabilities.
 
-**WCAG:** 2.5.5 Target Size (Level AAA) — 44x44pt minimum
+**WCAG** 2.5.5 Target Size (Level AAA) — 44x44pt minimum
 
 ### 5. Keyboard Navigation (MEDIUM)
 Users who cannot use touch/mouse cannot navigate app.
 
-**WCAG:** 2.1.1 Keyboard (Level A)
+**WCAG** 2.1.1 Keyboard (Level A)
 
 ### 6. Reduce Motion Support (MEDIUM)
 Animations cause discomfort, nausea, or seizures for users with vestibular disorders.
 
-**WCAG:** 2.3.3 Animation from Interactions (Level AAA)
+**WCAG** 2.3.3 Animation from Interactions (Level AAA)
 
 ### 7. Common Violations (HIGH)
 - Images without labels

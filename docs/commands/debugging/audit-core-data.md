@@ -110,12 +110,12 @@ The skill provides:
 
 ## Real-World Impact
 
-**Before audit:**
+**Before audit**
 - 2-5 hours debugging intermittent crashes
 - Data loss discovered in production
 - Migration failures affecting 500K+ users
 
-**After audit:**
+**After audit**
 - 2-5 minutes to identify issues
 - Catch problems before production
 - Proactive migration testing prevents data loss

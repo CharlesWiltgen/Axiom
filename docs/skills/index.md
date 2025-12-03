@@ -79,7 +79,7 @@ All reference skills are reviewed against 4 quality criteria:
 3. **Clarity** – Examples first, scannable structure, jargon defined
 4. **Practical Value** – Copy-paste ready, expert checklists, real-world impact
 
-**Current reference skills:**
+**Current reference skills**
 - `accessibility-debugging` – WCAG compliance, VoiceOver testing, Accessibility Inspector workflows
 - `app-intents-ref` – Siri, Apple Intelligence, Shortcuts, Spotlight integration (WWDC 2025-260)
 - `swiftui-26-ref` – iOS 26 SwiftUI: Liquid Glass, WebView, rich text, 3D charts (WWDC 2025-256)

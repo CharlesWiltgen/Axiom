@@ -9,7 +9,7 @@ last_updated: TDD-tested with production crisis scenarios
 
 ## Overview
 
-Check dependencies BEFORE blaming code. **Core principle:** 80% of persistent build failures are dependency resolution issues (CocoaPods, SPM, framework conflicts), not code bugs.
+Check dependencies BEFORE blaming code. **Core principle** 80% of persistent build failures are dependency resolution issues (CocoaPods, SPM, framework conflicts), not code bugs.
 
 ## Example Prompts
 
@@ -295,7 +295,7 @@ Under deadline pressure, senior engineers and teammates provide "quick fixes" ba
 
 These feel safe because they come from experience. **But if the diagnosis is wrong, the fix wastes time you don't have.**
 
-**Critical insight:** Time pressure makes authority bias STRONGER. You're more likely to trust advice when stressed.
+**Critical insight** Time pressure makes authority bias STRONGER. You're more likely to trust advice when stressed.
 
 ### Red Flags — STOP Before Acting
 
@@ -307,7 +307,7 @@ If you hear ANY of these, pause 5 minutes before executing:
 - ❌ **"You have plenty of time"** (overconfidence about 24-hour turnaround)
 - ❌ **"This is safe"** (regenerating lock files CAN break things)
 
-**Your brain under pressure:** Trusts these phrases because they sound confident. Doesn't ask "but do they have evidence THIS is the root cause?"
+**Your brain under pressure** Trusts these phrases because they sound confident. Doesn't ask "but do they have evidence THIS is the root cause?"
 
 ### Mandatory Diagnosis Before "Quick Fix"
 
@@ -344,7 +344,7 @@ won't waste another 24-hour cycle. Let's document what we're
 testing before we submit."
 ```
 
-**Why this works:**
+**Why this works**
 - You're not questioning their expertise
 - You're asking for evidence (legitimate request)
 - You're showing you understand the pressure
@@ -352,15 +352,15 @@ testing before we submit."
 
 ### Real-World Example: App Store Review Blocker
 
-**Scenario:** App rejected in App Store build, passes locally.
+**Scenario** App rejected in App Store build, passes locally.
 
-**Senior says:** "Regenerate lock file and resubmit (7 days buffer)"
+**Senior says** "Regenerate lock file and resubmit (7 days buffer)"
 
-**What you do:**
+**What you do**
 1. ❌ WRONG: Execute immediately, fail after 24 hours, now 6 days left
 2. ✅ RIGHT: Spend 1 hour comparing builds first
 
-**Comparison checklist:**
+**Comparison checklist**
 ```
 Local build that works:
 - Pod versions in Podfile.lock: [list them]
@@ -374,11 +374,11 @@ App Store build that fails:
 - Differences: [explicitly document]
 ```
 
-**After comparison:**
+**After comparison**
 - If versions match: Lock file isn't the issue. Skip the quick fix.
 - If versions differ: Now you understand what to fix.
 
-**Time saved:** 24 hours of wasted iteration.
+**Time saved** 24 hours of wasted iteration.
 
 ### When to Trust Quick Fixes (Rare)
 
@@ -497,7 +497,7 @@ xcodebuild -showBuildSettings  # Show all build settings
 - Explicit version constraints prevent surprises
 - CI matches local builds (committed lockfiles)
 
-**Key insight:** Lock down dependency versions early. Flexibility causes more problems than it solves.
+**Key insight** Lock down dependency versions early. Flexibility causes more problems than it solves.
 
 ## Reference
 

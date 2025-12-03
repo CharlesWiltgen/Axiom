@@ -9,7 +9,7 @@ last_updated: WWDC 2025 (Updated with production debugging patterns)
 
 ## Overview
 
-Wait for conditions, not arbitrary timeouts. **Core principle:** Flaky tests come from guessing how long operations take. Condition-based waiting eliminates race conditions.
+Wait for conditions, not arbitrary timeouts. **Core principle** Flaky tests come from guessing how long operations take. Condition-based waiting eliminates race conditions.
 
 **NEW in WWDC 2025**: Recording UI Automation allows you to record interactions, replay across devices/languages, and review video recordings of test runs.
 
@@ -283,7 +283,7 @@ element.waitForExistence(timeout: 0.1)  // ❌ Too short
 - Flaky tests: <2% failure rate
 - CI failures: <5% require retry
 
-**Key insight:** Tests finish faster AND are more reliable when waiting for actual conditions instead of guessing times.
+**Key insight** Tests finish faster AND are more reliable when waiting for actual conditions instead of guessing times.
 
 ---
 
@@ -951,7 +951,7 @@ func testLargeLayoutOn3G() {
 
 ### Overview
 
-UI tests sometimes reveal crashes that don't happen in manual testing. **Key insight:** Automated tests run faster, interact with app differently, and can expose concurrency/timing bugs.
+UI tests sometimes reveal crashes that don't happen in manual testing. **Key insight** Automated tests run faster, interact with app differently, and can expose concurrency/timing bugs.
 
 **When crashes happen**:
 - ❌ Manual testing: Can't reproduce (works when you run it)
@@ -1136,7 +1136,7 @@ func testPhotosLoadUnderStress() {
 
 ### Prevention Checklist
 
-**Before releasing:**
+**Before releasing**
 - [ ] Run UI tests on slowest network (3G)
 - [ ] Run on largest device (iPad Pro)
 - [ ] Run on oldest supported device (iPhone 12)

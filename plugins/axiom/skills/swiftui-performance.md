@@ -65,7 +65,7 @@ SwiftUI in iOS 26 includes major performance wins that benefit all apps automati
 
 ### List Performance (macOS Focus)
 
-**Massive gains for large lists:**
+**Massive gains for large lists**
 
 - **6x faster loading** for lists of 100,000+ items on macOS
 - **16x faster updates** for large lists
@@ -80,7 +80,7 @@ List(trips) { trip in // 100k+ items
 // All platforms benefit from performance improvements
 ```
 
-**Impact on your app:**
+**Impact on your app**
 - Large datasets (10k+ items) see noticeable improvements
 - Filtering and sorting operations complete faster
 - Real-time updates to lists are more responsive
@@ -88,23 +88,23 @@ List(trips) { trip in // 100k+ items
 
 ### Scrolling Performance
 
-**Reduced dropped frames during high-speed scrolling:**
+**Reduced dropped frames during high-speed scrolling**
 
 SwiftUI has improved scheduling of user interface updates on iOS and macOS. This improves responsiveness and lets SwiftUI do even more work to prepare for upcoming frames. All in all, it reduces the chance of your app dropping a frame while scrolling quickly at high frame rates.
 
-**Key improvements:**
+**Key improvements**
 1. **Better frame scheduling** — SwiftUI gets more time to prepare for upcoming frames
 2. **Improved responsiveness** — UI updates scheduled more efficiently
 3. **Fewer dropped frames** — Especially during quick scrolling at 120Hz (ProMotion)
 
-**When you'll notice:**
+**When you'll notice**
 - Scrolling through image-heavy content
 - High frame rate devices (iPhone Pro, iPad Pro with ProMotion)
 - Complex list rows with multiple views
 
 ### Nested ScrollViews with Lazy Stacks
 
-**Photo carousels and multi-axis scrolling now properly optimize:**
+**Photo carousels and multi-axis scrolling now properly optimize**
 
 ```swift
 ScrollView(.horizontal) {
@@ -124,11 +124,11 @@ ScrollView(.horizontal) {
 // Great for photo carousels, Netflix-style layouts, multi-axis content
 ```
 
-**Before iOS 26:** Nested ScrollViews didn't properly delay loading lazy stack content, causing all nested content to load immediately.
+**Before iOS 26** Nested ScrollViews didn't properly delay loading lazy stack content, causing all nested content to load immediately.
 
-**After iOS 26:** Lazy stacks inside nested ScrollViews now delay loading until content is about to appear, matching the behavior of single-level ScrollViews.
+**After iOS 26** Lazy stacks inside nested ScrollViews now delay loading until content is about to appear, matching the behavior of single-level ScrollViews.
 
-**Use cases:**
+**Use cases**
 - Photo galleries with horizontal/vertical scrolling
 - Netflix-style category rows
 - Multi-dimensional data browsers
@@ -136,7 +136,7 @@ ScrollView(.horizontal) {
 
 ### SwiftUI Performance Instrument Enhancements
 
-**New lanes in Instruments 26:**
+**New lanes in Instruments 26**
 
 The SwiftUI instrument now includes dedicated lanes for:
 
@@ -148,7 +148,7 @@ These lanes are covered in detail in the next section.
 
 ### Performance Improvement Summary
 
-**Automatic wins (recompile only):**
+**Automatic wins (recompile only)**
 - ✅ 6x faster list loading (100k+ items, macOS)
 - ✅ 16x faster list updates (macOS)
 - ✅ Reduced dropped frames during scrolling
@@ -157,7 +157,7 @@ These lanes are covered in detail in the next section.
 
 **No code changes required** — rebuild with iOS 26 SDK to get these improvements.
 
-**Cross-reference:** [SwiftUI 26 Features](/skills/ui-design/swiftui-26-ref) — Comprehensive guide to all iOS 26 SwiftUI changes
+**Cross-reference** [SwiftUI 26 Features](/skills/ui-design/swiftui-26-ref) — Comprehensive guide to all iOS 26 SwiftUI changes
 
 ---
 
@@ -922,7 +922,7 @@ This is different from guessing:
 
 ### Decision Framework Under Pressure
 
-**Before shipping ANY fix:**
+**Before shipping ANY fix**
 
 | Question | Answer Yes? | Action |
 |----------|-------------|--------|

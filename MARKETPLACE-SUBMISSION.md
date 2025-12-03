@@ -2,9 +2,9 @@
 
 ## Plugin Details
 
-**Plugin Name:** axiom
-**Repository:** https://github.com/CharlesWiltgen/Axiom
-**License:** MIT
+**Plugin Name** axiom
+**Repository** https://github.com/CharlesWiltgen/Axiom
+**License** MIT
 
 ## Description
 
@@ -47,16 +47,16 @@ Users can then install Axiom from the marketplace within Claude Code using `/plu
 ## Quality Assurance
 
 ### Testing Methodology
-- **TDD-Tested:** 3 core skills (xcode-debugging, swift-concurrency, database-migration) validated with RED-GREEN-REFACTOR cycles
-- **Pressure Testing:** Validated under App Store deadline pressure, authority pressure, misinterpretation scenarios
-- **Research-Validated:** WWDC 2025 skills (Liquid Glass, SwiftUI Performance, UI Testing) reviewed against official guidance
-- **Peer-Reviewed:** Reference skills (persistence) reviewed for accuracy and completeness
+- **TDD-Tested** 3 core skills (xcode-debugging, swift-concurrency, database-migration) validated with RED-GREEN-REFACTOR cycles
+- **Pressure Testing** Validated under App Store deadline pressure, authority pressure, misinterpretation scenarios
+- **Research-Validated** WWDC 2025 skills (Liquid Glass, SwiftUI Performance, UI Testing) reviewed against official guidance
+- **Peer-Reviewed** Reference skills (persistence) reviewed for accuracy and completeness
 
 ### Key Metrics
-- **Reduces debugging time:** 30+ min → 2-5 min (Xcode issues)
-- **Memory leak diagnosis:** 2-3 hours → 15-30 min
-- **Test reliability:** From flaky (50% CI failures) → reliable
-- **Performance:** Systematic optimization vs. guessing
+- **Reduces debugging time** 30+ min → 2-5 min (Xcode issues)
+- **Memory leak diagnosis** 2-3 hours → 15-30 min
+- **Test reliability** From flaky (50% CI failures) → reliable
+- **Performance** Systematic optimization vs. guessing
 
 ## Documentation
 
@@ -69,12 +69,12 @@ Users can then install Axiom from the marketplace within Claude Code using `/plu
 
 Consider submitting to established Claude Code marketplaces for broader discovery:
 
-1. **Popular Marketplaces:**
+1. **Popular Marketplaces**
    - [ananddtyagi/claude-code-marketplace](https://github.com/ananddtyagi/claude-code-marketplace)
    - [EveryInc/every-marketplace](https://github.com/EveryInc/every-marketplace)
    - [jeremylongshore/claude-code-plugins-plus](https://github.com/jeremylongshore/claude-code-plugins-plus)
 
-2. **Submission Process:**
+2. **Submission Process**
    - Open an issue on the marketplace repository
    - Provide:
      - Plugin name and description
@@ -84,9 +84,9 @@ Consider submitting to established Claude Code marketplaces for broader discover
 
 ## Support & Contributing
 
-- **GitHub Issues:** Report bugs and request features
-- **Contributing:** See CONTRIBUTING.md for guidelines
-- **Documentation:** Website at https://charleswiltgen.github.io/Axiom/
+- **GitHub Issues** Report bugs and request features
+- **Contributing** See CONTRIBUTING.md for guidelines
+- **Documentation** Website at https://charleswiltgen.github.io/Axiom/
 
 ## License
 
@@ -98,5 +98,5 @@ iOS, debugging, swift, claude-code, plugin, persistence, testing, performance, x
 
 ---
 
-**Status:** ✅ Ready for marketplace submission
-**Last Updated:** 2025-11-30
+**Status** ✅ Ready for marketplace submission
+**Last Updated** 2025-11-30

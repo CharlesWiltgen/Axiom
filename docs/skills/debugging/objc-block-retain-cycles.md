@@ -239,10 +239,10 @@ Product → Profile → Leaks
 
 ## Real-World Impact
 
-**Before:** 2-4 hours with Instruments finding leak
-**After:** 5-15 minutes applying one of 4 patterns
+**Before** 2-4 hours with Instruments finding leak
+**After** 5-15 minutes applying one of 4 patterns
 
-**Key insight:** All Objective-C block memory leaks fit into 4 patterns. Learn them once, fix any leak in minutes.
+**Key insight** All Objective-C block memory leaks fit into 4 patterns. Learn them once, fix any leak in minutes.
 
 ## Bridging to Swift
 

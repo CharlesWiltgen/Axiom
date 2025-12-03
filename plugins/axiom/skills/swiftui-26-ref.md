@@ -9,7 +9,7 @@ description: Use when implementing iOS 26 SwiftUI features - covers Liquid Glass
 
 Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, watchOS 26, and visionOS 26. From the Liquid Glass design system to rich text editing, these enhancements make SwiftUI more powerful across all Apple platforms.
 
-**Core principle:** From low level performance improvements all the way up through the buttons in your user interface, there are some major improvements across the system.
+**Core principle** From low level performance improvements all the way up through the buttons in your user interface, there are some major improvements across the system.
 
 ## When to Use This Skill
 
@@ -32,7 +32,7 @@ Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, w
 
 ## Liquid Glass Design System
 
-**For comprehensive Liquid Glass coverage, see:**
+**For comprehensive Liquid Glass coverage, see**
 - `liquid-glass` skill — Design principles, implementation, variants, design review pressure
 - `liquid-glass-ref` skill — App-wide adoption guide (app icons, controls, navigation, menus, windows)
 
@@ -40,7 +40,7 @@ Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, w
 
 The new design system provides "a bright and fluid experience that's consistent across Apple platforms." Apps automatically adopt the new appearance upon recompilation - navigation containers, tab bars, and toolbars update automatically.
 
-**Key visual elements:**
+**Key visual elements**
 - Glassy sidebars on iPad/macOS that reflect surrounding content
 - Compact tab bars on iPhone
 - Liquid Glass toolbar items with morphing transitions
@@ -66,7 +66,7 @@ TabView {
 
 ### Toolbar Customization
 
-**Toolbar Spacer API:**
+**Toolbar Spacer API**
 
 ```swift
 .toolbar {
@@ -82,7 +82,7 @@ TabView {
 }
 ```
 
-**Prominent Tinted Buttons in Liquid Glass:**
+**Prominent Tinted Buttons in Liquid Glass**
 
 ```swift
 Button("Add Trip") {
@@ -95,7 +95,7 @@ Button("Add Trip") {
 
 ### Scroll Edge Effects
 
-**Automatic blur on scroll edges:**
+**Automatic blur on scroll edges**
 
 ```swift
 ScrollView {
@@ -110,7 +110,7 @@ ScrollView {
 
 ### Bottom-Aligned Search
 
-**iPhone ergonomics:**
+**iPhone ergonomics**
 
 ```swift
 NavigationSplitView {
@@ -122,7 +122,7 @@ NavigationSplitView {
 // - Top trailing corner on iPad
 ```
 
-**Search Tab Role:**
+**Search Tab Role**
 
 ```swift
 TabView {
@@ -153,7 +153,7 @@ Controls now have the new design automatically:
 - Segmented pickers
 - Sliders
 
-**Reference:** "Build a SwiftUI app with the new design" (WWDC 2025) for adoption best practices and advanced customizations.
+**Reference** "Build a SwiftUI app with the new design" (WWDC 2025) for adoption best practices and advanced customizations.
 
 ---
 
@@ -161,7 +161,7 @@ Controls now have the new design automatically:
 
 ### Menu Bar
 
-**Access common actions via swipe-down menu:**
+**Access common actions via swipe-down menu**
 
 ```swift
 .commands {
@@ -179,7 +179,7 @@ Controls now have the new design automatically:
 
 ### Resizable Windows
 
-**Fluid resizing on iPad:**
+**Fluid resizing on iPad**
 
 ```swift
 // MIGRATION REQUIRED:
@@ -196,7 +196,7 @@ NavigationSplitView {
 // Adapts to resizing automatically
 ```
 
-**Reference:** "Elevate the design of your iPad app" (WWDC 2025)
+**Reference** "Elevate the design of your iPad app" (WWDC 2025)
 
 ---
 
@@ -217,7 +217,7 @@ NavigationSplitView {
 
 ### List Performance (macOS Focus)
 
-**Massive gains for large lists:**
+**Massive gains for large lists**
 
 - **6x faster loading** for lists of 100,000+ items on macOS
 - **16x faster updates** for large lists
@@ -233,13 +233,13 @@ List(trips) { trip in // 100k+ items
 
 ### Scrolling Performance
 
-**Reduced dropped frames:**
+**Reduced dropped frames**
 
 SwiftUI has improved scheduling of user interface updates on iOS and macOS. This improves responsiveness and lets SwiftUI do even more work to prepare for upcoming frames. All in all, it reduces the chance of your app dropping a frame while scrolling quickly at high frame rates.
 
 ### Nested ScrollViews with Lazy Stacks
 
-**Photo carousels and multi-axis scrolling:**
+**Photo carousels and multi-axis scrolling**
 
 ```swift
 ScrollView(.horizontal) {
@@ -261,16 +261,16 @@ ScrollView(.horizontal) {
 
 ### SwiftUI Performance Instrument
 
-**New profiling tool in Xcode:**
+**New profiling tool in Xcode**
 
 Available lanes:
 - **Long view body updates** — Identify expensive body computations
 - **Platform view updates** — Track UIKit/AppKit bridging performance
 - Other performance problem areas
 
-**Reference:** "Optimize SwiftUI performance with instruments" (WWDC 2025)
+**Reference** "Optimize SwiftUI performance with instruments" (WWDC 2025)
 
-**Cross-reference:** [SwiftUI Performance](/skills/ui-design/swiftui-performance) — Master the SwiftUI Instrument
+**Cross-reference** [SwiftUI Performance](/skills/ui-design/swiftui-performance) — Master the SwiftUI Instrument
 
 ---
 
@@ -290,13 +290,13 @@ class TripStore {
 }
 ```
 
-**Benefits:** Find bugs in concurrent code before they affect your app
+**Benefits** Find bugs in concurrent code before they affect your app
 
-**References:**
+**References**
 - "Embracing Swift concurrency" (WWDC 2025)
 - "Explore concurrency in SwiftUI" (WWDC 2025)
 
-**Cross-reference:** [Swift Concurrency](/skills/concurrency/swift-concurrency) — Swift 6 strict concurrency patterns
+**Cross-reference** [Swift Concurrency](/skills/concurrency/swift-concurrency) — Swift 6 strict concurrency patterns
 
 ---
 
@@ -306,7 +306,7 @@ class TripStore {
 
 Simplifies custom animations by automatically synthesizing `animatableData` property.
 
-**Before (@Animatable macro):**
+**Before (@Animatable macro)**
 
 ```swift
 struct HikingRouteShape: Shape {
@@ -331,7 +331,7 @@ struct HikingRouteShape: Shape {
 }
 ```
 
-**After (@Animatable macro):**
+**After (@Animatable macro)**
 
 ```swift
 @Animatable
@@ -347,7 +347,7 @@ struct HikingRouteShape: Shape {
 }
 ```
 
-**Key benefits:**
+**Key benefits**
 - Delete manual `animatableData` property
 - Use `@AnimatableIgnored` for properties to exclude
 - SwiftUI automatically synthesizes animation data
@@ -358,7 +358,7 @@ struct HikingRouteShape: Shape {
 
 ### Alignment3D
 
-**Depth-based layout:**
+**Depth-based layout**
 
 ```swift
 struct SunPositionView: View {
@@ -385,7 +385,7 @@ struct SunPositionView: View {
 
 ### Manipulable Modifier
 
-**Interactive 3D objects:**
+**Interactive 3D objects**
 
 ```swift
 Model3D(named: "WaterBottle")
@@ -407,7 +407,7 @@ var body: some View {
 }
 ```
 
-**References:**
+**References**
 - "Meet SwiftUI spatial layout" (WWDC 2025)
 - "Set the scene with SwiftUI in visionOS" (WWDC 2025)
 - "What's new in visionOS" (WWDC 2025)
@@ -422,7 +422,7 @@ Scene bridging allows your UIKit and AppKit lifecycle apps to interoperate with 
 
 ### Supported Scene Types
 
-**From UIKit/AppKit apps, you can now use:**
+**From UIKit/AppKit apps, you can now use**
 
 - `MenuBarExtra` (macOS)
 - `ImmersiveSpace` (visionOS)
@@ -437,7 +437,7 @@ Works with scene modifiers like:
 
 ### RemoteImmersiveSpace
 
-**Mac app renders stereo content on Vision Pro:**
+**Mac app renders stereo content on Vision Pro**
 
 ```swift
 // In your macOS app
@@ -456,16 +456,16 @@ struct MyMacApp: App {
 }
 ```
 
-**Features:**
+**Features**
 - Mac app renders stereo content on Vision Pro
 - Hover effects and input events supported
 - Uses CompositorServices and Metal
 
-**Reference:** "What's new in Metal rendering for immersive apps" (WWDC 2025)
+**Reference** "What's new in Metal rendering for immersive apps" (WWDC 2025)
 
 ### AssistiveAccess Scene
 
-**Special mode for users with cognitive disabilities:**
+**Special mode for users with cognitive disabilities**
 
 ```swift
 @main
@@ -482,7 +482,7 @@ struct MyApp: App {
 }
 ```
 
-**Reference:** "Customize your app for Assistive Access" (WWDC 2025)
+**Reference** "Customize your app for Assistive Access" (WWDC 2025)
 
 ---
 
@@ -559,7 +559,7 @@ entity.components[PopoverComponent.self] = PopoverComponent {
 - Binding to components
 - New sizing behaviors for RealityView
 
-**Reference:** "Better Together: SwiftUI & RealityKit" (WWDC 2025)
+**Reference** "Better Together: SwiftUI & RealityKit" (WWDC 2025)
 
 ---
 
@@ -571,7 +571,7 @@ WebKit now provides full SwiftUI APIs for embedding web content, eliminating the
 
 ### WebView
 
-**Display web content:**
+**Display web content**
 
 ```swift
 import WebKit
@@ -587,7 +587,7 @@ struct ArticleView: View {
 
 ### WebPage (Observable Model)
 
-**Rich interaction with web content:**
+**Rich interaction with web content**
 
 ```swift
 import WebKit
@@ -618,7 +618,7 @@ struct BrowserView: View {
 }
 ```
 
-**WebPage features:**
+**WebPage features**
 - Programmatic navigation (`goBack()`, `goForward()`)
 - Access page properties (`title`, `url`, `canGoBack`, `canGoForward`)
 - Observable — SwiftUI views update automatically
@@ -630,7 +630,7 @@ struct BrowserView: View {
 - Custom URL schemes
 - And more
 
-**Reference:** "Meet WebKit for SwiftUI" (WWDC 2025)
+**Reference** "Meet WebKit for SwiftUI" (WWDC 2025)
 
 ---
 
@@ -640,7 +640,7 @@ struct BrowserView: View {
 
 SwiftUI's new support for rich text editing is great for experiences like commenting on photos. TextView now supports AttributedString!
 
-**Note:** The WWDC transcript uses "TextView" as editorial language. The actual SwiftUI API is `TextEditor` which now supports `AttributedString` binding for rich text editing.
+**Note** The WWDC transcript uses "TextView" as editorial language. The actual SwiftUI API is `TextEditor` which now supports `AttributedString` binding for rich text editing.
 
 ### Rich Text Editing
 
@@ -656,21 +656,21 @@ struct CommentView: View {
 }
 ```
 
-**Features:**
+**Features**
 - Built-in text formatting controls (bold, italic, underline, colors, etc.)
 - Binding to `AttributedString` preserves formatting
 - Automatic toolbar with formatting options
 
 ### Advanced AttributedString Features
 
-**Customization options:**
+**Customization options**
 - Paragraph styles
 - Attribute transformations
 - Constrain which attributes users can apply
 
-**Reference:** "Cook up a rich text experience in SwiftUI with AttributedString" (WWDC 2025)
+**Reference** "Cook up a rich text experience in SwiftUI with AttributedString" (WWDC 2025)
 
-**Cross-reference:** [App Intents Integration](/skills/integration/app-intents-ref) — AttributedString for Apple Intelligence Use Model action
+**Cross-reference** [App Intents Integration](/skills/integration/app-intents-ref) — AttributedString for Apple Intelligence Use Model action
 
 ---
 
@@ -678,7 +678,7 @@ struct CommentView: View {
 
 ### Multiple Item Dragging
 
-**Drag multiple items based on selection:**
+**Drag multiple items based on selection**
 
 ```swift
 struct PhotoGrid: View {
@@ -717,7 +717,7 @@ struct PhotoGrid: View {
 
 ### DragConfiguration
 
-**Customize supported operations:**
+**Customize supported operations**
 
 ```swift
 .dragConfiguration(.init(supportedOperations: [.copy, .move, .delete]))
@@ -806,12 +806,12 @@ struct ElevationChart: View {
 }
 ```
 
-**Features:**
+**Features**
 - `Chart3D` container
 - Z-axis specific modifiers (`.chartZScale()`, `.chartZAxis()`, etc.)
 - All existing chart marks with 3D variants
 
-**Reference:** "Bring Swift Charts to the third dimension" (WWDC 2025)
+**Reference** "Bring Swift Charts to the third dimension" (WWDC 2025)
 
 ---
 
@@ -819,7 +819,7 @@ struct ElevationChart: View {
 
 ### Controls on watchOS and macOS
 
-**watchOS 26:**
+**watchOS 26**
 
 ```swift
 struct FavoriteLocationControl: ControlWidget {
@@ -834,13 +834,13 @@ struct FavoriteLocationControl: ControlWidget {
 // Access from watch face or Shortcuts
 ```
 
-**macOS:**
+**macOS**
 
 Controls now appear in Control Center on Mac.
 
 ### Widgets on visionOS
 
-**Level of detail customization:**
+**Level of detail customization**
 
 ```swift
 struct CountdownWidget: Widget {
@@ -870,7 +870,7 @@ struct CountdownView: View {
 
 ### Widgets on CarPlay
 
-**Live Activities on CarPlay:**
+**Live Activities on CarPlay**
 
 Live Activities now appear on CarPlay displays for glanceable information while driving.
 
@@ -879,7 +879,7 @@ Live Activities now appear on CarPlay displays for glanceable information while 
 - Push-based updating API
 - New relevance APIs for watchOS
 
-**Reference:** "What's new in widgets" (WWDC 2025)
+**Reference** "What's new in widgets" (WWDC 2025)
 
 ---
 
@@ -887,7 +887,7 @@ Live Activities now appear on CarPlay displays for glanceable information while 
 
 ### Deprecated APIs
 
-**❌ Remove in iPadOS 26:**
+**❌ Remove in iPadOS 26**
 ```xml
 <key>UIRequiresFullscreen</key>
 <!-- Entire property list key is deprecated (all values) -->
@@ -922,45 +922,45 @@ Apps must support resizable windows on iPad.
 
 ### Performance
 
-**DO:**
+**DO**
 - Profile with new SwiftUI performance instrument
 - Use lazy stacks in nested ScrollViews
 - Trust automatic list performance improvements
 
-**DON'T:**
+**DON'T**
 - Over-optimize - let framework improvements help first
 - Ignore long view body updates in profiler
 
 ### Liquid Glass Design
 
-**DO:**
+**DO**
 - Recompile and test automatic appearance
 - Use toolbar spacers for logical grouping
 - Apply glass effect to custom views that benefit from reflections
 
-**DON'T:**
+**DON'T**
 - Fight the automatic design - embrace consistency
 - Over-tint toolbars (use for prominence only)
 
 ### Rich Text
 
-**DO:**
+**DO**
 - Use `AttributedString` binding for `TextEditor`
 - Constrain attributes if needed for your use case
 - Consider localization with rich text
 
-**DON'T:**
+**DON'T**
 - Use plain `String` and lose formatting
 - Allow all attributes without considering UX
 
 ### Spatial Layout (visionOS)
 
-**DO:**
+**DO**
 - Use `Alignment3D` for depth-based layouts
 - Enable `.manipulable()` for objects users should interact with
 - Check scene snapping state for context-aware UI
 
-**DON'T:**
+**DON'T**
 - Use 2D alignment APIs for 3D layouts
 - Make all objects manipulable (only what makes sense)
 
@@ -970,18 +970,18 @@ Apps must support resizable windows on iPad.
 
 ### Issue: Liquid Glass appearance not showing
 
-**Symptom:** App still has old design after updating to iOS 26 SDK
+**Symptom** App still has old design after updating to iOS 26 SDK
 
-**Solution:**
+**Solution**
 1. Clean build folder (Shift-Cmd-K)
 2. Rebuild with Xcode 16+ targeting iOS 26 SDK
 3. Check deployment target is iOS 26+
 
 ### Issue: Bottom-aligned search not appearing on iPhone
 
-**Symptom:** Search remains at top on iPhone
+**Symptom** Search remains at top on iPhone
 
-**Solution:**
+**Solution**
 ```swift
 // ✅ CORRECT: searchable on NavigationSplitView
 NavigationSplitView {
@@ -996,9 +996,9 @@ List { }
 
 ### Issue: @Animatable macro not synthesizing animatableData
 
-**Symptom:** Compile error "Type does not conform to Animatable"
+**Symptom** Compile error "Type does not conform to Animatable"
 
-**Solution:**
+**Solution**
 ```swift
 // Ensure all properties are either:
 // 1. VectorArithmetic conforming types (Double, CGFloat, CGPoint, etc.)
@@ -1016,9 +1016,9 @@ struct MyShape: Shape {
 
 ### Issue: AttributedString formatting lost in TextEditor
 
-**Symptom:** Rich text formatting disappears
+**Symptom** Rich text formatting disappears
 
-**Solution:**
+**Solution**
 ```swift
 // ✅ CORRECT: Binding to AttributedString
 @State private var text = AttributedString("Hello")
@@ -1031,9 +1031,9 @@ TextEditor(text: $text) // Plain String loses formatting
 
 ### Issue: Drag and drop delete not working
 
-**Symptom:** Dragging to Dock trash doesn't delete items
+**Symptom** Dragging to Dock trash doesn't delete items
 
-**Solution:**
+**Solution**
 ```swift
 // Must include .delete in supported operations
 .dragConfiguration(.init(supportedOperations: [.copy, .delete]))
@@ -1050,25 +1050,25 @@ TextEditor(text: $text) // Plain String loses formatting
 
 ## Related WWDC Sessions
 
-**Core SwiftUI:**
+**Core SwiftUI**
 - **What's new in SwiftUI** (WWDC 2025-256) — This skill's primary source
 - Build a SwiftUI app with the new design
 - Optimize SwiftUI performance with instruments
 - Explore concurrency in SwiftUI
 
-**Platform-Specific:**
+**Platform-Specific**
 - Elevate the design of your iPad app
 - Meet SwiftUI spatial layout (visionOS)
 - Set the scene with SwiftUI in visionOS
 - What's new in visionOS
 
-**Integration:**
+**Integration**
 - Meet WebKit for SwiftUI
 - Better Together: SwiftUI & RealityKit
 - What's new in Metal rendering for immersive apps
 - Customize your app for Assistive Access
 
-**Advanced Topics:**
+**Advanced Topics**
 - Cook up a rich text experience in SwiftUI with AttributedString
 - Bring Swift Charts to the third dimension
 - What's new in widgets
@@ -1078,7 +1078,7 @@ TextEditor(text: $text) // Plain String loses formatting
 
 ## Cross-References
 
-**Axiom Skills:**
+**Axiom Skills**
 - [SwiftUI Performance](/skills/ui-design/swiftui-performance) — Master the SwiftUI Instrument
 - [Liquid Glass](/skills/ui-design/liquid-glass) — Apple's material design system
 - [Swift Concurrency](/skills/concurrency/swift-concurrency) — Swift 6 strict concurrency
@@ -1099,5 +1099,5 @@ TextEditor(text: $text) // Plain String loses formatting
 
 ---
 
-**Last Updated:** Based on WWDC 2025-256 "What's new in SwiftUI"
-**Version:** iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+
+**Last Updated** Based on WWDC 2025-256 "What's new in SwiftUI"
+**Version** iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+

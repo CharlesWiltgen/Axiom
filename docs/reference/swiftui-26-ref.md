@@ -60,7 +60,7 @@ struct CustomView: View {
 }
 ```
 
-**Benefits:**
+**Benefits**
 - Auto-generates animatable conformance
 - Eliminates boilerplate
 - Type-safe animation interpolation
@@ -97,7 +97,7 @@ TextEditor(text: $attributedString)
     .textColor(\.foreground, color: .blue)
 ```
 
-**Features:**
+**Features**
 - Inline formatting controls
 - Character-level styling
 - Markdown export
@@ -117,7 +117,7 @@ Chart3D {
 .chartPerspective(.orthographic)
 ```
 
-**Supported Types:**
+**Supported Types**
 - BarMark3D
 - LineMark3D
 - PointMark3D
@@ -136,7 +136,7 @@ SpatialStack {
 .perspective(.default)
 ```
 
-**Capabilities:**
+**Capabilities**
 - True 3D positioning
 - Perspective transforms
 - Depth sorting
@@ -156,7 +156,7 @@ UIViewControllerRepresenting {
 hostingController.view.sceneBridge = true
 ```
 
-**Benefits:**
+**Benefits**
 - Seamless animation transitions
 - Shared state management
 - Reduced memory overhead
@@ -224,7 +224,7 @@ Use this reference when:
 
 This is a **reference skill** — comprehensive API catalog without mandatory workflows.
 
-**Reference includes:**
+**Reference includes**
 - Complete feature list
 - API examples
 - Migration strategies

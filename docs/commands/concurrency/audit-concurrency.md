@@ -165,12 +165,12 @@ The skill provides copy-paste templates for:
 
 ## Real-World Impact
 
-**Before audit:**
+**Before audit**
 - 2-4 hours debugging mysterious crashes
 - Data races discovered in production
 - Actor isolation errors blocking Swift 6 migration
 
-**After audit:**
+**After audit**
 - 5-10 minutes to identify all concurrency issues
 - Fix most issues with ~5 lines of code
 - Smooth Swift 6 strict concurrency migration

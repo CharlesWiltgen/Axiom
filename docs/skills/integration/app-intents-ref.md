@@ -12,10 +12,10 @@ Comprehensive guide to App Intents framework for integrating your app with Siri,
 - Debugging intent resolution or parameter validation failures
 - Testing intents with Shortcuts app
 - Implementing entity queries for app content
-- **NEW:** Passing entities to Apple Intelligence models for reasoning
-- **NEW:** Reducing boilerplate with IndexedEntity
-- **NEW:** Running intents from Spotlight on Mac
-- **NEW:** Creating automated workflows with Automations on Mac
+- **NEW** Passing entities to Apple Intelligence models for reasoning
+- **NEW** Reducing boilerplate with IndexedEntity
+- **NEW** Running intents from Spotlight on Mac
+- **NEW** Creating automated workflows with Automations on Mac
 
 ## What It Covers
 
@@ -33,8 +33,8 @@ Comprehensive guide to App Intents framework for integrating your app with Siri,
 - Entity queries for content discovery
 - Spotlight indexing integration
 - Separating entities from core data models
-- **NEW:** JSON representation for Apple Intelligence models
-- **NEW:** IndexedEntity automatic Find actions
+- **NEW** JSON representation for Apple Intelligence models
+- **NEW** IndexedEntity automatic Find actions
 
 **3. AppEnum** — Enumeration types for parameters
 - Case display representations
@@ -53,22 +53,22 @@ App Intents integrate with:
 - WidgetKit interactive widgets
 - Live Activities
 - Visual Intelligence
-- **NEW:** Automations on Mac (folder, external drive, time, Bluetooth)
+- **NEW** Automations on Mac (folder, external drive, time, Bluetooth)
 
 ### Apple Intelligence Integration
 
-**Use Model Action:**
+**Use Model Action**
 - Pass app entities to language models for filtering and reasoning
 - Three output types: Text (AttributedString), Dictionary, App Entities
 - Automatic type conversion (e.g., Boolean for If actions)
 - Follow-up feature for iterative refinement
 
-**AttributedString Support:**
+**AttributedString Support**
 - Preserve Rich Text formatting from AI models (bold, italic, lists, tables)
 - Lossless transfer from model to your app
 - Real example: Bear app diary templates with mood logging tables
 
-**Entity JSON Representation:**
+**Entity JSON Representation**
 Models receive structured data including:
 - All @Property values (converted to strings)
 - Type display representation
@@ -76,13 +76,13 @@ Models receive structured data including:
 
 ### IndexedEntity Protocol
 
-**Dramatic Boilerplate Reduction:**
+**Dramatic Boilerplate Reduction**
 - Auto-generate Find actions from Spotlight integration
 - Map properties to Spotlight attribute keys
 - Automatic search and filtering support
 - Eliminates manual EntityQuery/EntityPropertyQuery implementation
 
-**Example:**
+**Example**
 ```swift
 struct EventEntity: AppEntity, IndexedEntity {
     @Property(title: "Title", indexingKey: \.eventTitle)
@@ -97,26 +97,26 @@ struct EventEntity: AppEntity, IndexedEntity {
 
 ### Spotlight on Mac
 
-**Run Intents Directly from Spotlight:**
+**Run Intents Directly from Spotlight**
 - Parameter summary must include all required parameters
 - Provide suggestions for quick parameter filling
 - On-screen content tagging with appEntityIdentifier
 - Background/foreground intent pairing with opensIntent
 - PredictableIntent for usage-based suggestions
 
-**Visibility Requirements:**
+**Visibility Requirements**
 - All required params in parameter summary (or make optional/provide defaults)
 - Not hidden via isDiscoverable = false or assistantOnly = true
 - Must have perform() method (widget config-only intents excluded)
 
 ### Automations on Mac
 
-**Personal Automations Arrive on Mac:**
+**Personal Automations Arrive on Mac**
 - Folder automation - trigger when files added/removed
 - External drive automation - trigger on connect/disconnect
 - Time of Day, Bluetooth, and more from iOS
 
-**Automatic Availability:**
+**Automatic Availability**
 As long as your intent is available on macOS, they will also be available to use in Shortcuts to run as a part of Automations on Mac. This includes iOS apps that are installable on macOS.
 
 ### Parameter Handling
@@ -125,7 +125,7 @@ As long as your intent is available on macOS, they will also be available to use
 - Parameter summaries for natural phrasing
 - RequestValueDialog for disambiguation
 - Validation and error messages
-- **NEW:** AttributedString for Rich Text from AI models
+- **NEW** AttributedString for Rich Text from AI models
 
 ### Entity Queries
 
@@ -133,22 +133,22 @@ As long as your intent is available on macOS, they will also be available to use
 - entities(for:) for ID-based lookup
 - suggestedEntities() for recommendations
 - EntityStringQuery for search
-- **NEW:** IndexedEntity for automatic Find actions
+- **NEW** IndexedEntity for automatic Find actions
 
 ### Testing & Debugging
 
 - Testing with Shortcuts app
 - Xcode intent testing
 - Siri voice command testing
-- **NEW:** Testing in Spotlight on Mac
-- **NEW:** Testing automations with folder/drive triggers
+- **NEW** Testing in Spotlight on Mac
+- **NEW** Testing automations with folder/drive triggers
 - Common issues:
   - Intent not appearing in Shortcuts
   - Parameter not resolving
   - Crashes in background execution
   - Empty entity query results
-  - **NEW:** Intent not showing in Spotlight (missing param in summary)
-  - **NEW:** Rich Text lost (using String instead of AttributedString)
+  - **NEW** Intent not showing in Spotlight (missing param in summary)
+  - **NEW** Rich Text lost (using String instead of AttributedString)
 
 ## Key Features
 
