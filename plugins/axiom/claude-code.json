@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -68,6 +68,10 @@
     {
       "name": "swiftdata",
       "description": "Use when working with SwiftData - @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ features, and Swift 6 concurrency with @MainActor - Apple's native persistence framework"
+    },
+    {
+      "name": "swiftdata-to-sqlitedata",
+      "description": "Use when migrating from SwiftData to SQLiteData — decision guide, pattern equivalents, code examples, CloudKit sharing (SwiftData can't), performance benchmarks, gradual migration strategy"
     },
     {
       "name": "networking",

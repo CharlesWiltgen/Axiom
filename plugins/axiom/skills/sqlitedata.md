@@ -1,8 +1,8 @@
 ---
 name: sqlitedata
-description: Use when working with SQLiteData (Point-Free) — @Table models, query composition, RETURNING clause, recursive CTEs, compound selects, FTS5 search with highlight/snippet/bm25, JSON aggregation, CloudKit sync with migratePrimaryKeys, database views, @DatabaseFunction aggregates
-version: 2.7.0
-last_updated: 2025-12-03 — Added Case expressions, CTEs, self-joins, string functions, null handling, @Ephemeral
+description: Use when working with SQLiteData (Point-Free) — Quick Reference at top, anti-patterns, @Table models, query composition, RETURNING, CTEs, FTS5, JSON aggregation, CloudKit sync, database views, @DatabaseFunction
+version: 2.8.0
+last_updated: 2025-12-03 — Added Quick Reference, Anti-patterns at top; extracted migration to separate skill
 ---
 
 # SQLiteData
@@ -34,6 +34,131 @@ Type-safe SQLite persistence using [SQLiteData](https://github.com/pointfreeco/s
 - Complex SQL joins across 4+ tables
 - Custom migration logic beyond schema changes
 - Performance-critical operations needing manual SQL
+
+---
+
+## Quick Reference
+
+```swift
+// MODEL
+@Table nonisolated struct Item: Identifiable {
+    let id: UUID                    // First let = auto primary key
+    var title = ""                  // Default = non-nullable
+    var notes: String?              // Optional = nullable
+    @Column(as: Color.Hex.self)
+    var color: Color = .blue        // Custom representation
+    @Ephemeral var isSelected = false  // Not persisted
+}
+
+// SETUP
+prepareDependencies { $0.defaultDatabase = try! appDatabase() }
+@Dependency(\.defaultDatabase) var database
+
+// FETCH
+@FetchAll var items: [Item]
+@FetchAll(Item.order(by: \.title).where(\.isInStock)) var items
+@FetchOne(Item.count()) var count = 0
+
+// INSERT
+try database.write { db in
+    try Item.insert { Item.Draft(title: "New") }.execute(db)
+}
+
+// UPDATE (single)
+try database.write { db in
+    try Item.find(id).update { $0.title = "Updated" }.execute(db)
+}
+
+// UPDATE (bulk)
+try database.write { db in
+    try Item.where(\.isInStock).update { $0.notes = "" }.execute(db)
+}
+
+// DELETE
+try database.write { db in
+    try Item.find(id).delete().execute(db)
+    try Item.where { $0.id.in(ids) }.delete().execute(db)  // bulk
+}
+
+// QUERY
+Item.where(\.isActive)                     // Keypath (simple)
+Item.where { $0.title.contains("phone") }  // Closure (complex)
+Item.where { $0.status.eq(#bind(.done)) }  // Enum comparison
+Item.order(by: \.title)                    // Sort
+Item.order { $0.createdAt.desc() }         // Sort descending
+Item.limit(10).offset(20)                  // Pagination
+
+// CLOUDKIT
+prepareDependencies {
+    $0.defaultSyncEngine = try SyncEngine(for: $0.defaultDatabase, tables: Item.self)
+}
+```
+
+---
+
+## Anti-Patterns (Common Mistakes)
+
+### ❌ Using `==` in predicates
+```swift
+// WRONG — may not work in all contexts
+.where { $0.status == .completed }
+
+// CORRECT — use comparison methods
+.where { $0.status.eq(#bind(.completed)) }
+```
+
+### ❌ Wrong update order
+```swift
+// WRONG — .update before .where
+Item.update { $0.title = "X" }.where { $0.id == id }
+
+// CORRECT — .find() for single, .where() before .update() for bulk
+Item.find(id).update { $0.title = "X" }.execute(db)
+Item.where(\.isOld).update { $0.archived = true }.execute(db)
+```
+
+### ❌ Instance methods for insert
+```swift
+// WRONG — no instance insert method
+let item = Item(id: UUID(), title: "Test")
+try item.insert(db)
+
+// CORRECT — static insert with .Draft
+try Item.insert { Item.Draft(title: "Test") }.execute(db)
+```
+
+### ❌ Missing `nonisolated`
+```swift
+// WRONG — Swift 6 concurrency warning
+@Table struct Item { ... }
+
+// CORRECT
+@Table nonisolated struct Item { ... }
+```
+
+### ❌ Awaiting inside write block
+```swift
+// WRONG — write block is synchronous
+try await database.write { db in ... }
+
+// CORRECT — no await inside the block
+try database.write { db in
+    try Item.insert { ... }.execute(db)
+}
+```
+
+### ❌ Forgetting `.execute(db)`
+```swift
+// WRONG — builds query but doesn't run it
+try database.write { db in
+    Item.insert { Item.Draft(title: "X") }  // Does nothing!
+}
+
+// CORRECT
+try database.write { db in
+    try Item.insert { Item.Draft(title: "X") }.execute(db)
+}
+```
 
 ---
 
@@ -1233,264 +1358,6 @@ struct MyApp: App {
 
 ---
 
-## Migrating from SwiftData
-
-### When to Switch
-
-```
-┌─────────────────────────────────────────────────────────┐
-│ Should I switch from SwiftData to SQLiteData?           │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  Performance problems with 10k+ records?                │
-│    YES → SQLiteData (10-50x faster for large datasets)  │
-│                                                         │
-│  Need CloudKit record SHARING (not just sync)?          │
-│    YES → SQLiteData (SwiftData cannot share records)    │
-│                                                         │
-│  Complex queries across multiple tables?                │
-│    YES → SQLiteData + raw GRDB when needed              │
-│                                                         │
-│  Need Sendable models for Swift 6 concurrency?          │
-│    YES → SQLiteData (value types, not classes)          │
-│                                                         │
-│  Testing @Model classes is painful?                     │
-│    YES → SQLiteData (pure structs, easy to mock)        │
-│                                                         │
-│  Happy with SwiftData for simple CRUD?                  │
-│    YES → Stay with SwiftData (simpler for basic apps)   │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Pattern-by-Pattern Equivalents
-
-| SwiftData | SQLiteData |
-|-----------|------------|
-| `@Model class Item` | `@Table nonisolated struct Item` |
-| `@Attribute(.unique)` | `@Column(primaryKey: true)` or SQL UNIQUE |
-| `@Relationship var tags: [Tag]` | `var tagIDs: [Tag.ID]` + join query |
-| `@Query var items: [Item]` | `@FetchAll var items: [Item]` |
-| `@Query(sort: \.title)` | `@FetchAll(Item.order(by: \.title))` |
-| `@Query(filter: #Predicate { $0.isActive })` | `@FetchAll(Item.where(\.isActive))` |
-| `@Environment(\.modelContext)` | `@Dependency(\.defaultDatabase)` |
-| `context.insert(item)` | `Item.insert { Item.Draft(...) }.execute(db)` |
-| `context.delete(item)` | `Item.find(id).delete().execute(db)` |
-| `try context.save()` | Automatic in `database.write { }` block |
-| `ModelContainer(for:)` | `prepareDependencies { $0.defaultDatabase = }` |
-
-### Code Migration Example
-
-**SwiftData (Before)**
-
-```swift
-import SwiftData
-
-@Model
-class Task {
-    var id: UUID
-    var title: String
-    var isCompleted: Bool
-    var project: Project?
-
-    init(title: String) {
-        self.id = UUID()
-        self.title = title
-        self.isCompleted = false
-    }
-}
-
-struct TaskListView: View {
-    @Environment(\.modelContext) private var context
-    @Query(sort: \.title) private var tasks: [Task]
-
-    var body: some View {
-        List(tasks) { task in
-            Text(task.title)
-        }
-    }
-
-    func addTask(_ title: String) {
-        let task = Task(title: title)
-        context.insert(task)
-    }
-
-    func deleteTask(_ task: Task) {
-        context.delete(task)
-    }
-}
-```
-
-**SQLiteData (After)**
-
-```swift
-import SQLiteData
-
-@Table
-nonisolated struct Task: Identifiable {
-    let id: UUID
-    var title = ""
-    var isCompleted = false
-    var projectID: Project.ID?
-}
-
-struct TaskListView: View {
-    @Dependency(\.defaultDatabase) var database
-    @FetchAll(Task.order(by: \.title)) var tasks
-
-    var body: some View {
-        List(tasks) { task in
-            Text(task.title)
-        }
-    }
-
-    func addTask(_ title: String) {
-        try database.write { db in
-            try Task.insert {
-                Task.Draft(title: title)
-            }
-            .execute(db)
-        }
-    }
-
-    func deleteTask(_ task: Task) {
-        try database.write { db in
-            try Task.find(task.id).delete().execute(db)
-        }
-    }
-}
-```
-
-**Key Differences:**
-- `class` → `struct` with `nonisolated`
-- `@Model` → `@Table`
-- `@Query` → `@FetchAll`
-- `@Environment(\.modelContext)` → `@Dependency(\.defaultDatabase)`
-- Implicit save → Explicit `database.write { }` block
-- Direct init → `.Draft` type for inserts
-- `@Relationship` → Explicit foreign key column + join
-
-### CloudKit Sharing (SwiftData Can't Do This)
-
-SwiftData supports CloudKit **sync** but NOT **sharing**. If you need users to share records with each other, SQLiteData is your only Apple-native option.
-
-```swift
-// 1. Setup SyncEngine with sharing support
-prepareDependencies {
-    $0.defaultDatabase = try! appDatabase()
-    $0.defaultSyncEngine = try SyncEngine(
-        for: $0.defaultDatabase,
-        tables: Task.self, Project.self
-    )
-}
-
-// 2. Share a record
-@Dependency(\.defaultSyncEngine) var syncEngine
-@State var sharedRecord: SharedRecord?
-
-func shareProject(_ project: Project) async throws {
-    sharedRecord = try await syncEngine.share(record: project) { share in
-        share[CKShare.SystemFieldKey.title] = "Join my project!"
-        share[CKShare.SystemFieldKey.shareType] = "Project"
-    }
-}
-
-// 3. Present native sharing UI
-.sheet(item: $sharedRecord) { record in
-    CloudSharingView(sharedRecord: record)
-}
-
-// 4. Handle incoming shares (in App)
-.onContinueUserActivity(CKShare.recordType) { activity in
-    // User tapped share link
-}
-
-// 5. Delete local data when removing shared access
-func leaveShare() async throws {
-    try await syncEngine.deleteLocalData()
-}
-```
-
-**Sharing enables:**
-- Collaborative lists (shopping, reminders, projects)
-- Shared workspaces with permissions
-- Family sharing of app data
-- Team collaboration features
-
-### Performance Comparison
-
-| Operation | SwiftData | SQLiteData | Improvement |
-|-----------|-----------|------------|-------------|
-| Insert 50k records | ~4 minutes | ~45 seconds | **5x faster** |
-| Query 10k with predicate | ~2 seconds | ~50ms | **40x faster** |
-| Memory (10k objects) | ~80MB (classes) | ~20MB (structs) | **4x smaller** |
-| Cold launch (large DB) | ~3 seconds | ~200ms | **15x faster** |
-| Complex join query | N+1 trap common | Single SQL query | **Orders of magnitude** |
-
-*Benchmarks approximate, vary by device and data shape.*
-
-### Gradual Migration Strategy
-
-You don't have to migrate everything at once:
-
-```swift
-// 1. Add SQLiteData for new high-performance features
-// Keep SwiftData for existing simple CRUD
-
-// 2. Migrate one model at a time
-// Start with the performance bottleneck
-
-// 3. Use separate databases initially
-// SQLiteData: heavy data, sharing
-// SwiftData: user preferences, simple state
-
-// 4. Eventually consolidate if needed
-// Or keep hybrid if it works
-```
-
-### Migration Gotchas
-
-**Watch out for:**
-
-1. **Relationships → Foreign Keys**
-   ```swift
-   // SwiftData: implicit relationship
-   @Relationship var tasks: [Task]
-
-   // SQLiteData: explicit column + query
-   // In parent: nothing special
-   // In child: var projectID: Project.ID
-   // To fetch: Task.where { $0.projectID == project.id }
-   ```
-
-2. **Optional Handling**
-   ```swift
-   // SwiftData: optionals just work
-   var dueDate: Date?
-
-   // SQLiteData: optionals map to nullable SQL columns (same)
-   var dueDate: Date?  // Works the same
-   ```
-
-3. **Cascade Deletes**
-   ```swift
-   // SwiftData: @Relationship(deleteRule: .cascade)
-
-   // SQLiteData: Define in SQL schema
-   // "REFERENCES parent(id) ON DELETE CASCADE"
-   ```
-
-4. **No Automatic Inverse**
-   ```swift
-   // SwiftData: @Relationship(inverse: \Task.project)
-
-   // SQLiteData: Query both directions manually
-   let tasks = Task.where { $0.projectID == project.id }
-   let project = Project.find(task.projectID)
-   ```
-
----
-
 ## Raw SQL with #sql Macro
 
 ### Create Tables
@@ -2407,131 +2274,14 @@ let cancellable = observation.start(in: database) { error in
 
 ---
 
-## Common Mistakes
-
-### Using instance methods for insert
-```swift
-// WRONG — won't compile
-let item = Item(id: UUID(), title: "Test")
-try item.insert(db)
-
-// CORRECT — use .Draft with static insert
-try Item.insert { Item.Draft(title: "Test") }.execute(db)
-```
-
-### Wrong update order
-```swift
-// WRONG — .update before .where
-try Item.update { $0.title = "New" }.where { $0.id == id }.execute(db)
-
-// CORRECT — .find for single record
-try Item.find(id).update { $0.title = "New" }.execute(db)
-
-// CORRECT — .where before .update for bulk
-try Item.where { $0.isInStock }.update { $0.notes = "" }.execute(db)
-```
-
-### Using == instead of .eq()
-```swift
-// WRONG — may not work in all contexts
-.where { $0.status == .completed }
-
-// CORRECT — use comparison methods
-.where { $0.status.eq(#bind(.completed)) }
-```
-
-### Missing nonisolated
-```swift
-// WRONG — Swift 6 concurrency warning
-@Table
-struct Item: Identifiable { ... }
-
-// CORRECT — add nonisolated
-@Table
-nonisolated struct Item: Identifiable { ... }
-```
-
-### Awaiting database.write
-```swift
-// WRONG — write block is synchronous inside
-try await database.write { db in ... }
-
-// CORRECT — await outside, sync inside
-try database.write { db in
-    try Item.insert { Item.Draft(...) }.execute(db)
-}
-```
-
----
-
-## Comparison: SQLiteData vs SwiftData
-
-| Feature | SQLiteData | SwiftData |
-|---------|-----------|-----------|
-| **Type** | Value types (struct) | Reference types (class) |
-| **Macro** | `@Table` | `@Model` |
-| **Queries** | `@FetchAll` / `@FetchOne` | `@Query` |
-| **Access** | `@Dependency(\.defaultDatabase)` | `@Environment(\.modelContext)` |
-| **Insert** | `Item.insert { .Draft(...) }` | `context.insert(item)` |
-| **CloudKit** | Full sync + sharing | Sync only (no sharing) |
-| **Performance** | Near raw SQLite | Core Data overhead |
-
----
-
-## Quick Reference
-
-```swift
-// Setup
-prepareDependencies { $0.defaultDatabase = try! appDatabase() }
-@Dependency(\.defaultDatabase) var database
-
-// Fetch
-@FetchAll var items: [Item]
-@FetchAll(Item.order(by: \.title)) var items
-@FetchOne(Item.count()) var count = 0
-
-// Insert
-try database.write { db in
-    try Item.insert { Item.Draft(title: "New") }.execute(db)
-}
-
-// Update single
-try database.write { db in
-    try Item.find(id).update { $0.title = "Updated" }.execute(db)
-}
-
-// Update bulk
-try database.write { db in
-    try Item.where(\.isInStock).update { $0.notes = "" }.execute(db)
-}
-
-// Delete
-try database.write { db in
-    try Item.find(id).delete().execute(db)
-}
-
-// Delete bulk
-try database.write { db in
-    try Item.where { $0.id.in(ids) }.delete().execute(db)
-}
-
-// CloudKit
-prepareDependencies {
-    $0.defaultSyncEngine = try SyncEngine(for: $0.defaultDatabase, tables: Item.self)
-}
-```
-
----
-
 ## External Resources
 
-- [SQLiteData Documentation](https://swiftpackageindex.com/pointfreeco/sqlite-data/documentation/sqlitedata)
-- [SQLiteData GitHub](https://github.com/pointfreeco/sqlite-data)
-- [StructuredQueries](https://github.com/pointfreeco/swift-structured-queries) — Query building library
-- [GRDB](https://github.com/groue/GRDB.swift) — Underlying SQLite wrapper
-- [Point-Free Episodes](https://www.pointfree.co) — Video tutorials (subscription)
+- [SQLiteData](https://github.com/pointfreeco/sqlite-data)
+- [StructuredQueries](https://github.com/pointfreeco/swift-structured-queries)
+- [GRDB](https://github.com/groue/GRDB.swift)
 
-**Related Axiom Skills:**
+**Related Skills:**
+- `swiftdata-to-sqlitedata` — Migration guide with pattern equivalents
 - `database-migration` — Safe schema evolution patterns
 - `grdb` — Raw SQL and advanced GRDB features
 - `swiftdata` — Apple's native persistence framework
