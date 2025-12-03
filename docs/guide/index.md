@@ -6,10 +6,19 @@ Welcome to Axiom — battle-tested Claude Code skills, commands, and references 
 
 Axiom provides comprehensive iOS development workflows:
 
-- **16 skills** — Discipline-enforcing workflows tested using ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development)
-- **3 reference skills** — Comprehensive guides without mandatory workflows
-- **3 diagnostic skills** — Systematic troubleshooting with pressure defense
+- **17 skills** — Discipline-enforcing workflows (15 TDD-tested using ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development))
+- **6 reference skills** — Comprehensive guides without mandatory workflows
+- **4 diagnostic skills** — Systematic troubleshooting with pressure defense
 - **6 commands** — Quick automated scans for common issues
+
+**Total: 27 skills + 6 commands**
+
+### 🤖 Apple Intelligence
+- **Foundation Models** – Implement on-device AI with structured output and tool calling
+- **Foundation Models Diagnostics** – Fix context exceeded, guardrail violations, and availability issues
+- **Foundation Models Reference** – Complete API guide with all 26 WWDC 2025 code examples
+- **App Intents Reference** – Integrate with Siri, Apple Intelligence, Shortcuts, and Spotlight
+- **SwiftUI 26 Reference** – iOS 26 SwiftUI features including Liquid Glass and performance improvements
 
 ### 🎨 UI & Design Skills
 - **Liquid Glass** – Implement Apple's glass effects correctly and get expert validation
@@ -29,8 +38,11 @@ Axiom provides comprehensive iOS development workflows:
 - **SQLiteData** – Handle batch imports and CloudKit sync without performance issues
 - **GRDB** – Optimize complex queries and prevent N+1 query problems
 - **SwiftData** – Prevent CloudKit sync failures and handle concurrent access safely
-- **Realm Migration** — Migrate from Realm to a supported data persistence system
-- **Core Data Debugging** – Fix migration crashes and thread-confinement errors
+- **Realm Migration Reference** – Migrate from Realm to a supported data persistence system
+- **Core Data Diagnostics** – Fix migration crashes and thread-confinement errors
+
+### ♿ Accessibility
+- **Accessibility Diagnostics** – Fix VoiceOver, Dynamic Type, color contrast, and touch target issues
 
 ### 🌐 Networking
 - **Networking** – Network.framework patterns for UDP/TCP with NWConnection (iOS 12-25) and NetworkConnection (iOS 26+)
@@ -80,14 +92,27 @@ Skills are **automatically suggested by Claude Code** based on your questions an
 - "My app has memory leaks, where should I look?" → activates `memory-debugging`
 
 Skills available in Axiom:
-- **UI & Design**: liquid-glass, swiftui-performance, ui-testing, swiftui-debugging
+- **Apple Intelligence**: foundation-models, foundation-models-diag, foundation-models-ref, app-intents-ref, swiftui-26-ref
+- **UI & Design**: liquid-glass, liquid-glass-ref, swiftui-performance, ui-testing, swiftui-debugging
 - **Debugging**: xcode-debugging, memory-debugging, build-troubleshooting, performance-profiling
 - **Concurrency**: swift-concurrency
-- **Data & Persistence**: database-migration, sqlitedata, grdb, swiftdata, realm-migration-ref, core-data-debugging
+- **Data & Persistence**: database-migration, sqlitedata, grdb, swiftdata, realm-migration-ref, core-data-diag
+- **Accessibility**: accessibility-diag
 - **Networking**: networking, networking-diag, network-framework-ref
 - **Legacy**: objc-block-retain-cycles, uikit-animation-debugging
 
 ## Common Workflows
+
+### Implementing On-Device AI with Foundation Models
+
+When adding Apple Intelligence features to your app:
+
+1. Use `axiom:foundation-models` skill
+2. Check device availability with `SystemLanguageModel.default.availability`
+3. Design `@Generable` schema for structured output
+4. Implement streaming with `PartiallyGenerated` for better UX
+5. Add tools for external data integration (MapKit, Contacts, etc.)
+6. Handle errors: context exceeded, guardrail violations, unsupported language
 
 ### Implementing Liquid Glass
 
