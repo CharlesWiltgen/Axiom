@@ -1,8 +1,8 @@
 ---
 name: sqlitedata
-description: Use when working with SQLiteData (Point-Free) — @Table models, @FetchAll/@FetchOne queries, database.write with .Draft inserts, .find().update/.delete, CloudKit SyncEngine setup, batch imports, #sql macro, joins, @Selection for custom query results, database views with createTemporaryView, and when to drop to raw GRDB
-version: 2.2.0
-last_updated: 2025-12-03 — Added Database Views section
+description: Use when working with SQLiteData (Point-Free) — @Table models, @FetchAll/@FetchOne queries, database.write with .Draft inserts, .find().update/.delete, CloudKit SyncEngine setup, batch imports, #sql macro, joins, @Selection for custom query results, database views with createTemporaryView, @DatabaseFunction custom aggregates, and when to drop to raw GRDB
+version: 2.3.0
+last_updated: 2025-12-03 — Added Custom Aggregate Functions section
 ---
 
 # SQLiteData
@@ -1109,6 +1109,126 @@ migrator.registerMigration("Create view") { db in
 
 ---
 
+## Custom Aggregate Functions
+
+SQLiteData lets you write complex aggregation logic in Swift using the `@DatabaseFunction` macro, then invoke it directly from SQL queries. This avoids contorted SQL subqueries for operations like mode, median, or custom statistics.
+
+### Defining a Custom Aggregate
+
+```swift
+import StructuredQueries
+
+// 1. Define the function with @DatabaseFunction macro
+@DatabaseFunction
+func mode(priority priorities: some Sequence<Reminder.Priority?>) -> Reminder.Priority? {
+    var occurrences: [Reminder.Priority: Int] = [:]
+    for priority in priorities {
+        guard let priority else { continue }
+        occurrences[priority, default: 0] += 1
+    }
+    return occurrences.max { $0.value < $1.value }?.key
+}
+```
+
+**Key points:**
+- Takes `some Sequence<T?>` as input (receives all values from the grouped rows)
+- Returns the aggregated result
+- The macro generates a `$mode` function for use in queries
+
+### Registering the Function
+
+Add the function to your database configuration:
+
+```swift
+func appDatabase() throws -> any DatabaseWriter {
+    var configuration = Configuration()
+    configuration.prepareDatabase { db in
+        db.add(function: $mode)  // Register the $mode function
+    }
+
+    let database = try DatabaseQueue(configuration: configuration)
+    // ... migrations
+    return database
+}
+```
+
+### Using in Queries
+
+Once registered, invoke with `$functionName(arg: $column)`:
+
+```swift
+// Find the most common priority per reminders list
+let results = try RemindersList
+    .group(by: \.id)
+    .leftJoin(Reminder.all) { $0.id.eq($1.remindersListID) }
+    .select { ($0.title, $mode(priority: $1.priority)) }
+    .fetchAll(db)
+```
+
+**Without custom aggregate (raw SQL):**
+```sql
+-- This messy subquery is what @DatabaseFunction replaces
+SELECT
+  remindersLists.title,
+  (
+    SELECT reminders.priority
+    FROM reminders
+    WHERE reminders.remindersListID = remindersLists.id
+      AND reminders.priority IS NOT NULL
+    GROUP BY reminders.priority
+    ORDER BY count(*) DESC
+    LIMIT 1
+  )
+FROM remindersLists;
+```
+
+### Common Use Cases
+
+| Aggregate | Description |
+|-----------|-------------|
+| Mode | Most frequently occurring value |
+| Median | Middle value in sorted sequence |
+| Weighted average | Average with per-row weights |
+| Custom filtering | Complex conditional aggregation |
+| String concatenation | Join strings with custom logic |
+
+### Example: Median Function
+
+```swift
+@DatabaseFunction
+func median(values: some Sequence<Double?>) -> Double? {
+    let sorted = values.compactMap { $0 }.sorted()
+    guard !sorted.isEmpty else { return nil }
+
+    let mid = sorted.count / 2
+    if sorted.count.isMultiple(of: 2) {
+        return (sorted[mid - 1] + sorted[mid]) / 2
+    } else {
+        return sorted[mid]
+    }
+}
+
+// Register
+configuration.prepareDatabase { db in
+    db.add(function: $median)
+}
+
+// Use
+let medianPrices = try Product
+    .group(by: \.categoryID)
+    .select { ($0.categoryID, $median(values: $0.price)) }
+    .fetchAll(db)
+```
+
+### Performance Considerations
+
+- **Swift execution:** The function runs in Swift, not SQLite's C engine
+- **Row iteration:** All grouped values are passed to your function
+- **Memory:** Large groups load all values into memory
+- **Use sparingly:** Best for complex logic that's awkward in SQL; use built-in aggregates (`count`, `sum`, `avg`, `min`, `max`) when possible
+
+---
+
 ## When to Drop to GRDB
 
 Use raw GRDB for complex operations SQLiteData doesn't cover:
@@ -1283,6 +1403,7 @@ prepareDependencies {
 
 ## Version History
 
+- **2.3.0**: Added "Custom Aggregate Functions" section covering `@DatabaseFunction` macro, function registration with `db.add(function:)`, using custom aggregates in queries, mode/median examples, and performance considerations.
 - **2.2.0**: Added comprehensive "Database Views" section covering `@Selection` macro for custom query results, `@Table @Selection` for view-backed types, `createTemporaryView` for SQLite views, `INSTEAD OF` triggers for updatable views, decision guide for views vs @Selection, and temporary vs permanent view patterns.
 - **2.1.0**: Added comprehensive "Migrating from SwiftData" section — decision guide, pattern-by-pattern equivalents, full code migration example, CloudKit sharing deep dive (SwiftData's missing feature), performance benchmarks, gradual migration strategy, and gotchas.
 - **2.0.0**: Complete rewrite verified against official pointfreeco/sqlite-data repository. Fixed 15 major inaccuracies: @Column not @Attribute, .Draft insert pattern, .find() for updates/deletes, prepareDependencies setup, SyncEngine CloudKit config, @FetchAll without generics, .eq() comparison methods. Added 8 missing features: @Fetch, #sql macro, nonisolated, joins, FTS5, triggers, enum support, custom update logic.
