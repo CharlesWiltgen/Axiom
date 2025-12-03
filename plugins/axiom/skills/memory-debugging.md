@@ -1011,7 +1011,7 @@ Result: +15MB/minute → Crashes in 13 minutes
 
 ```bash
 # Monitor memory in real-time
-# Connect device, then:
+# Connect device, then
 xcrun xctrace record --template "Memory" --output memory.trace
 
 # Analyze with command line
