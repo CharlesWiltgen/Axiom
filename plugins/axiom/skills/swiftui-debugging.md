@@ -857,15 +857,7 @@ TextField("Search", text: $searchText)
 - `xcode-debugging` – For Xcode cache corruption, build issues
 - `swift-concurrency` – For @MainActor and async/await patterns
 
-## Version History
-
-- **1.0.0**: Initial skill covering view update diagnostics (struct mutation, binding identity, view recreation, missing observer), preview crash decision trees (missing dependencies, state init, cache corruption), layout quick reference (ZStack, GeometryReader, SafeArea, frame/fixedSize, modifier order), and pressure scenarios for common shortcuts
-- **1.1.0**: Added Scenario 2b (intermittent updates - 60-minute systematic diagnosis protocol with 4-step framework), extended pressure scenario for App Store Review deadline, added professional push-back script for co-leads suggesting shortcuts, verified under maximum pressure (App Store submission deadlines, cannot reproduce consistently, authority pressure from co-leads)
-- **1.2.0**: Added 3 real-world examples (List item doesn't update when tapped, Preview crashes with missing dependencies, TextField value changes don't appear) demonstrating struct mutation, missing dependencies, and binding identity issues with complete diagnosis workflows
-
----
-
-**Created** 2025-11-30
-**Targets** iOS 14+, Swift 5.5+
-**Framework** SwiftUI
+**Targets:** iOS 14+, Swift 5.5+
+**Framework:** SwiftUI
+**History:** See git log for changes
 

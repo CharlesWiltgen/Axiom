@@ -1138,12 +1138,6 @@ Problem likely elsewhere:
 
 ---
 
-## Version History
-
-- **1.1.0**: Added "Production Pressure: When Performance Issues Hit Live" section from TDD testing of production crisis scenarios. Includes 30-minute diagnostic protocol with explicit time-cost analysis, red flags for dangerous pressure tactics, real-world tab transition sluggishness example, and 5-question decision framework before shipping. Prevents guessing under deployment deadline pressure and ensures diagnosis-driven fixes
-- **1.0.0 (WWDC 2025)**: Initial skill based on new SwiftUI Instrument in Instruments 26, covering long view body updates, unnecessary updates, Cause & Effect Graph, and performance optimization patterns from WWDC 2025 Session 306
-
----
-
-**Last Updated**: WWDC 2025
-**Minimum Requirements**: Xcode 26, iOS 26+/iPadOS 26+/macOS Tahoe+/visionOS 3+
+**Xcode:** 26+
+**Platforms:** iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+
+**History:** See git log for changes

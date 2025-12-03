@@ -513,7 +513,4 @@ xcodebuild -showBuildSettings  # Show all build settings
 
 ---
 
-## Version History
-
-- **1.1.0**: Added "Pressure Scenarios: When to Resist 'Quick Fix' Advice" section from TDD testing. Includes red flags for dangerous advice, 4-step framework for pushing back professionally, App Store review blocker example, and checklist for when quick fixes are safe. Prevents $10k+ mistakes from following bad advice under deadline pressure
-- **1.0.0**: Initial version with systematic dependency resolution and build configuration debugging
+**History:** See git log for changes
