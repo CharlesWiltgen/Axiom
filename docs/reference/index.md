@@ -13,6 +13,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**app-intents-ref**](./app-intents-ref) | App Intents framework for Siri, Apple Intelligence, Shortcuts, Spotlight — AppIntent, AppEntity, parameters, queries, debugging |
 | [**avfoundation-ref**](./avfoundation-ref) | AVFoundation audio APIs — AVAudioSession, AVAudioEngine, bit-perfect DAC output, iOS 26+ spatial audio capture, ASAF/APAC, Audio Mix |
 | [**foundation-models-ref**](./foundation-models-ref) | Apple Intelligence Foundation Models framework — LanguageModelSession, @Generable, streaming, tool calling, context management (iOS 26+) |
+| [**swiftui-layout-ref**](./swiftui-layout-ref) | Complete SwiftUI adaptive layout API guide — ViewThatFits, AnyLayout, Layout protocol, onGeometryChange, size classes, iOS 26 window APIs |
 
 ## Diagnostic Skills
 

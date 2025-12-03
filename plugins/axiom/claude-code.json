@@ -54,6 +54,14 @@
       "description": "Use when debugging SwiftUI view updates, intermittent rendering issues, preview crashes, or layout problems - diagnostic decision trees for struct mutation, binding identity, view recreation, missing observers, and pressure scenarios for App Store deadlines"
     },
     {
+      "name": "swiftui-layout",
+      "description": "Use when layouts need to adapt to different screen sizes, iPad multitasking, or iOS 26 free-form windows — decision trees for ViewThatFits vs AnyLayout vs onGeometryChange, size class limitations, and anti-patterns preventing device-based layout mistakes"
+    },
+    {
+      "name": "swiftui-layout-ref",
+      "description": "Reference: Complete SwiftUI adaptive layout API guide covering ViewThatFits, AnyLayout, Layout protocol, onGeometryChange, GeometryReader, size classes, and iOS 26 window APIs"
+    },
+    {
       "name": "performance-profiling",
       "description": "Use when app feels slow, memory grows over time, battery drains fast, or profiling proactively - decision trees to choose the right Instruments tool (Time Profiler, Allocations, Core Data, Energy Impact), deep workflows for each tool, and pressure scenarios for misinterpreting results under deadline"
     },
