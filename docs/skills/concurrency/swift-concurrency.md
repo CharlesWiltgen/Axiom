@@ -950,4 +950,4 @@ class MyViewModel: ObservableObject {
 ---
 
 **Last Updated**: 2025-12-01
-**Status**: Enhanced with WWDC 2025-268 progressive journey, @concurrent attribute, isolated conformances, and approachable concurrency patterns
+**Status**: Complete concurrency guide with progressive journey, @concurrent attribute, isolated conformances, and approachable concurrency patterns

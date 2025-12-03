@@ -1,6 +1,6 @@
 # App Intents Integration
 
-Comprehensive guide to App Intents framework for integrating your app with Siri, Apple Intelligence, Shortcuts, Spotlight, and other system experiences. **Enhanced with WWDC 2025 guidance on Apple Intelligence integration, IndexedEntity boilerplate reduction, and Spotlight/Automations on Mac.**
+Comprehensive guide to App Intents framework for integrating your app with Siri, Apple Intelligence, Shortcuts, Spotlight, and other system experiences.
 
 ## When to Use
 
@@ -55,7 +55,7 @@ App Intents integrate with:
 - Visual Intelligence
 - **NEW:** Automations on Mac (folder, external drive, time, Bluetooth)
 
-### Apple Intelligence Integration (WWDC 2025-260)
+### Apple Intelligence Integration
 
 **Use Model Action:**
 - Pass app entities to language models for filtering and reasoning
@@ -74,7 +74,7 @@ Models receive structured data including:
 - Type display representation
 - Display representation (title, subtitle)
 
-### IndexedEntity Protocol (WWDC 2025-260)
+### IndexedEntity Protocol
 
 **Dramatic Boilerplate Reduction:**
 - Auto-generate Find actions from Spotlight integration
@@ -95,7 +95,7 @@ struct EventEntity: AppEntity, IndexedEntity {
 }
 ```
 
-### Spotlight on Mac (WWDC 2025-260)
+### Spotlight on Mac
 
 **Run Intents Directly from Spotlight:**
 - Parameter summary must include all required parameters
@@ -109,7 +109,7 @@ struct EventEntity: AppEntity, IndexedEntity {
 - Not hidden via isDiscoverable = false or assistantOnly = true
 - Must have perform() method (widget config-only intents excluded)
 
-### Automations on Mac (WWDC 2025-260)
+### Automations on Mac
 
 **Personal Automations Arrive on Mac:**
 - Folder automation - trigger when files added/removed
