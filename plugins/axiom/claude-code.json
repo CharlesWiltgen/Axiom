@@ -124,6 +124,10 @@
     {
       "name": "network-framework-ref",
       "description": "Reference: Comprehensive Network.framework guide covering NetworkConnection (iOS 26+), NWConnection (iOS 12-25), TLV framing, Coder protocol, NetworkListener, NetworkBrowser, Wi-Fi Aware discovery, and migration strategies"
+    },
+    {
+      "name": "avfoundation-ref",
+      "description": "Reference: AVFoundation audio APIs — AVAudioSession categories/modes, AVAudioEngine pipelines, bit-perfect DAC output, iOS 26+ spatial audio capture with ASAF/APAC, AirPods high-quality recording, Audio Mix with Cinematic framework"
     }
   ]
 }
