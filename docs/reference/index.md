@@ -11,6 +11,8 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**network-framework-ref**](./network-framework-ref) | Comprehensive Network.framework API reference — NWConnection (iOS 12-25), NetworkConnection (iOS 26+), TLV framing, Coder protocol, migration strategies |
 | [**swiftui-26-ref**](./swiftui-26-ref) | All iOS 26 SwiftUI features — Liquid Glass, @Animatable macro, WebView, rich text, 3D charts, spatial layout, scene bridging |
 | [**app-intents-ref**](./app-intents-ref) | App Intents framework for Siri, Apple Intelligence, Shortcuts, Spotlight — AppIntent, AppEntity, parameters, queries, debugging |
+| [**avfoundation-ref**](./avfoundation-ref) | AVFoundation audio APIs — AVAudioSession, AVAudioEngine, bit-perfect DAC output, iOS 26+ spatial audio capture, ASAF/APAC, Audio Mix |
+| [**foundation-models-ref**](./foundation-models-ref) | Apple Intelligence Foundation Models framework — LanguageModelSession, @Generable, streaming, tool calling, context management (iOS 26+) |
 
 ## Diagnostic Skills
 
@@ -19,6 +21,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**accessibility-diag**](./accessibility-diag) | VoiceOver, Dynamic Type, color contrast, touch targets — WCAG compliance with App Store rejection defense |
 | [**core-data-diag**](./core-data-diag) | Schema migrations, thread-confinement, N+1 queries — Core Data diagnostics with production crisis defense |
 | [**networking-diag**](./networking-diag) | Connection timeouts, TLS failures, data arrival issues — Network.framework diagnostics with production crisis defense |
+| [**foundation-models-diag**](./foundation-models-diag) | Context exceeded, guardrail violations, slow generation — Foundation Models diagnostics with production crisis defense |
 
 ## Quality Standards
 

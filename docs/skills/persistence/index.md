@@ -12,6 +12,10 @@ Comprehensive database patterns for safe schema evolution and choosing the right
   - *"I'm building a task app with type-safe queries. How do I set up @Table models and filter by priority?"*
   - *"I'm importing 50,000 notes from an API. How do I batch insert efficiently without blocking the UI?"*
 
+- **[SwiftData to SQLiteData](/skills/persistence/swiftdata-to-sqlitedata)** – Migration guide from SwiftData to SQLiteData
+  - *"SwiftData's CloudKit sync is causing conflicts. Should I migrate to SQLiteData?"*
+  - *"How do I convert my @Model classes to @Table? What's the equivalent of @Relationship?"*
+
 - **[GRDB](/skills/persistence/grdb)** – Raw SQL queries, ValueObservation, and DatabaseMigrator patterns
   - *"I need to query messages with their authors and reaction counts in one query. How do I write the JOIN?"*
   - *"I want to observe notes with a specific tag and update the UI whenever they change."*

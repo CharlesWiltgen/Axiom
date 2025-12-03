@@ -4,6 +4,34 @@ Skills for integrating your app with Apple's system-level experiences: Siri, App
 
 ## Available Skills
 
+### [Foundation Models](./foundation-models)
+
+On-device AI with Apple's Foundation Models framework (iOS 26+):
+- **LanguageModelSession** — Text generation and conversations
+- **@Generable** — Structured output with Swift types
+- **Streaming** — Progressive response display
+- **Tool calling** — Extend model capabilities
+
+**When to use** Implementing on-device AI features, structured output, preventing context overflow
+
+**Requirements** iOS 26+, A17+ or M-series chip
+
+---
+
+### [Networking](./networking)
+
+Network.framework patterns for custom protocols:
+- **NWConnection** — iOS 12-25 completion-based API
+- **NetworkConnection** — iOS 26+ async/await API
+- **TLV Framing** — Message boundaries
+- **Service Discovery** — Bonjour and Wi-Fi Aware
+
+**When to use** UDP/TCP connections, peer-to-peer, custom protocols (NOT HTTP — use URLSession)
+
+**Requirements** iOS 12+
+
+---
+
 ### [App Intents Integration](./app-intents-ref)
 
 Comprehensive guide to the App Intents framework for exposing app functionality to:

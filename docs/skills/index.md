@@ -33,6 +33,7 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**database-migration**](/skills/persistence/database-migration) | Adding database columns, schema changes, migration errors |
 | [**swiftdata**](/skills/persistence/swiftdata) | @Model, @Query, CloudKit integration |
 | [**sqlitedata**](/skills/persistence/sqlitedata) | SQLiteData patterns, batch imports, CloudKit sync |
+| [**swiftdata-to-sqlitedata**](/skills/persistence/swiftdata-to-sqlitedata) | Migrating from SwiftData to SQLiteData |
 | [**grdb**](/skills/persistence/grdb) | Raw SQL queries, complex joins, ValueObservation |
 
 ### Networking
@@ -40,6 +41,18 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | Skill | When to Use |
 |-------|-------------|
 | [**networking**](/skills/integration/networking) | Implementing UDP/TCP connections, migrating from sockets, debugging connection failures |
+
+### Audio
+
+| Skill | When to Use |
+|-------|-------------|
+| [**avfoundation-ref**](/reference/avfoundation-ref) | AVAudioSession, AVAudioEngine, bit-perfect DAC output, iOS 26+ spatial audio capture |
+
+### Apple Intelligence
+
+| Skill | When to Use |
+|-------|-------------|
+| [**foundation-models**](/skills/integration/foundation-models) | On-device AI with Apple's Foundation Models framework (iOS 26+) |
 
 ### Legacy
 
@@ -80,11 +93,15 @@ All reference skills are reviewed against 4 quality criteria:
 4. **Practical Value** – Copy-paste ready, expert checklists, real-world impact
 
 #### Current reference skills
-- `accessibility-debugging` – WCAG compliance, VoiceOver testing, Accessibility Inspector workflows
-- `app-intents-ref` – Siri, Apple Intelligence, Shortcuts, Spotlight integration (WWDC 2025-260)
-- `swiftui-26-ref` – iOS 26 SwiftUI: Liquid Glass, WebView, rich text, 3D charts (WWDC 2025-256)
-- `core-data-debugging` – Core Data troubleshooting and optimization
-- `realm-to-swiftdata-migration` – Migration patterns from Realm to SwiftData
+- `accessibility-diag` – WCAG compliance, VoiceOver testing, Accessibility Inspector workflows
+- `app-intents-ref` – Siri, Apple Intelligence, Shortcuts, Spotlight integration
+- `swiftui-26-ref` – iOS 26 SwiftUI: Liquid Glass, WebView, rich text, 3D charts
+- `core-data-diag` – Core Data troubleshooting and optimization
+- `realm-migration-ref` – Migration patterns from Realm to SwiftData
+- `network-framework-ref` – Network.framework API reference (iOS 12-26+)
+- `avfoundation-ref` – AVFoundation audio APIs, iOS 26+ spatial audio, bit-perfect DAC
+- `foundation-models-ref` – Apple Intelligence Foundation Models framework (iOS 26+)
+- `foundation-models-diag` – Foundation Models troubleshooting and diagnostics
 
 ## Related Resources
 
