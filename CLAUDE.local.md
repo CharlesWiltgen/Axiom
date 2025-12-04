@@ -93,6 +93,15 @@ When making changes:
 - Do NOT update `version` in `claude-code.json` or skill frontmatter
 - Wait for explicit instruction to bump versions
 
+### Version Sync Rule
+
+**When updating versions, always sync all three files:**
+1. `plugins/axiom/claude-code.json` — Plugin manifest
+2. `marketplace.json` — Public marketplace listing
+3. `.claude-plugin/marketplace.json` — Local marketplace config
+
+All three must have the same version number to avoid user confusion.
+
 ---
 
 ## Git Workflow
