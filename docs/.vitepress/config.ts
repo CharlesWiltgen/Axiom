@@ -93,6 +93,7 @@ export default defineConfig({
             { text: 'Liquid Glass', link: '/skills/ui-design/liquid-glass' },
             { text: 'SwiftUI Performance', link: '/skills/ui-design/swiftui-performance' },
             { text: 'SwiftUI Debugging', link: '/skills/ui-design/swiftui-debugging' },
+            { text: 'SwiftUI Gestures', link: '/skills/ui-design/swiftui-gestures' },
             { text: 'SwiftUI 26 Features', link: '/skills/ui-design/swiftui-26-ref' },
             { text: 'UI Testing', link: '/skills/ui-design/ui-testing' },
             { text: 'UIKit Animation Debugging', link: '/skills/ui-design/uikit-animation-debugging' }

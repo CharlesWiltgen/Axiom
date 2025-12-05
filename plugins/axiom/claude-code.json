@@ -79,6 +79,10 @@
       "description": "Use when debugging SwiftUI view updates, intermittent rendering issues, preview crashes, or layout problems - diagnostic decision trees for struct mutation, binding identity, view recreation, missing observers, and pressure scenarios for App Store deadlines"
     },
     {
+      "name": "swiftui-gestures",
+      "description": "Use when implementing SwiftUI gestures (tap, drag, long press, magnification, rotation), composing gestures, managing gesture state, or debugging gesture conflicts - comprehensive patterns for gesture recognition, composition, accessibility, and cross-platform support"
+    },
+    {
       "name": "swiftui-layout",
       "description": "Use when layouts need to adapt to different screen sizes, iPad multitasking, or iOS 26 free-form windows — decision trees for ViewThatFits vs AnyLayout vs onGeometryChange, size class limitations, and anti-patterns preventing device-based layout mistakes"
     },

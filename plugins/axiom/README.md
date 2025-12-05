@@ -4,7 +4,7 @@ Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 g
 
 **Version**: 0.9.20
 **Status**: Preview Release
-**Skills**: 36 | **Commands**: 10 | **Agents**: 10 | **Hooks**: 4
+**Skills**: 37 | **Commands**: 10 | **Agents**: 10 | **Hooks**: 4
 
 ## Installation
 
@@ -330,6 +330,12 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 /skill axiom:liquid-glass
 /skill axiom:swiftui-performance
 /skill axiom:ui-testing
+
+# SwiftUI
+/skill axiom:swiftui-gestures
+/skill axiom:swiftui-debugging
+/skill axiom:swiftui-layout
+/skill axiom:swiftui-nav
 
 # Debugging
 /skill axiom:xcode-debugging
