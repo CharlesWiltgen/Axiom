@@ -1,0 +1,70 @@
+# Autonomous Agents
+
+Axiom includes 8 autonomous agents that automatically detect and diagnose common iOS development issues.
+
+## What Are Agents?
+
+Agents are autonomous problem-solvers that:
+- **Trigger automatically** based on keywords in your conversation
+- **Run independently** with their own model and tools
+- **Scan your codebase** for specific anti-patterns
+- **Provide actionable fixes** with file:line references and code examples
+
+## How to Use Agents
+
+Instead of remembering slash commands, just describe what you want:
+
+- "Check my code for accessibility issues" → **accessibility-auditor** triggers
+- "Scan for memory leaks" → **memory-audit-runner** triggers
+- "My SwiftUI app has janky scrolling" → **swiftui-performance-analyzer** triggers
+- "Review for Swift 6 concurrency violations" → **concurrency-validator** triggers
+- "Check Core Data safety" → **core-data-auditor** triggers
+- "Find Liquid Glass adoption opportunities" → **liquid-glass-auditor** triggers
+- "Scan for deprecated networking APIs" → **networking-auditor** triggers
+- "My build is failing" → **build-fixer** triggers
+
+## Agent Categories
+
+### Build & Environment
+**build-fixer** — Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics (zombie processes, Derived Data, simulator state, SPM cache)
+
+### Code Quality
+- **accessibility-auditor** — Scans for VoiceOver label issues, Dynamic Type violations, color contrast failures, touch target sizes, WCAG compliance problems
+- **concurrency-validator** — Detects Swift 6 strict concurrency violations (missing @MainActor, unsafe Task captures, Sendable violations, actor isolation problems)
+- **memory-audit-runner** — Finds 6 common memory leak patterns (timers, observers, closures, delegates, view callbacks, PhotoKit accumulation)
+
+### Persistence & Data
+**core-data-auditor** — Scans for schema migration risks, thread-confinement violations, N+1 query patterns, production data loss risks, performance issues
+
+### UI & Performance
+- **liquid-glass-auditor** — Identifies iOS 26+ Liquid Glass adoption opportunities (glass effects, toolbar improvements, search patterns, migration from old blur effects)
+- **swiftui-performance-analyzer** — Detects SwiftUI performance anti-patterns (expensive operations in view bodies, missing lazy loading, unnecessary updates)
+
+### Networking
+**networking-auditor** — Scans for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling)
+
+## Why Agents?
+
+**Before** (Commands):
+- User must remember `/axiom:audit-accessibility`
+- Manual invocation every time
+- Duplication between command and skill implementations
+
+**After** (Agents):
+- Natural language: "check accessibility"
+- Automatic triggering based on context
+- One source of truth, zero duplication
+- Scales better (15 agents = 15 files, not 30)
+
+## Agent Architecture
+
+All agents:
+- Use **haiku model** for fast execution (<1 second scans)
+- Provide **file:line references** for easy fixing
+- Include **severity ratings** (CRITICAL/HIGH/MEDIUM/LOW)
+- Show **before/after code examples**
+- Recommend **testing strategies** to verify fixes
+
+## Browse All Agents
+
+Select an agent from the sidebar to see its full documentation, detection patterns, and fix recommendations.
