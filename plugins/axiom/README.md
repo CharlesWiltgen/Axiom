@@ -2,9 +2,9 @@
 
 Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Apple Intelligence (Foundation Models), Liquid Glass, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
 
-**Version**: 0.9.0
+**Version**: 0.9.19
 **Status**: Preview Release
-**Skills**: 27 | **Commands**: 6
+**Skills**: 35 | **Commands**: 9 | **Agents**: 9 | **Hooks**: 4
 
 ## Installation
 
@@ -15,6 +15,34 @@ In Claude Code, run:
 ```
 
 Then search for "axiom" in the `/plugin` menu and install.
+
+## Hooks
+
+Axiom includes **4 automatic hooks** that trigger on specific events to enhance your workflow:
+
+### 1. Build Failure Auto-Trigger
+**Event**: After Bash command execution
+**Trigger**: When `xcodebuild` fails with non-zero exit
+**Action**: Suggests running `/axiom:fix-build` for automatic diagnostics
+
+### 2. Session Environment Check
+**Event**: Session start
+**Action**: Checks for common environment issues:
+- Zombie xcodebuild processes (warns if >5)
+- Large Derived Data (warns if >10GB)
+
+**Output**: Silent if no issues detected
+
+### 3. Core Data Model Protection
+**Event**: Before Edit/Write operations
+**Trigger**: Editing `.xcdatamodeld` files
+**Action**: Warns about migration planning risks, suggests running `/axiom:audit-core-data`
+
+### 4. Swift Auto-Format
+**Event**: After Write/Edit operations
+**Trigger**: Swift files modified
+**Action**: Runs `swiftformat` to ensure consistent code style
+**Requirement**: [swiftformat](https://github.com/nicklockwood/SwiftFormat) must be installed (`brew install swiftformat`)
 
 ## Skills
 
