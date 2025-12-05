@@ -14,6 +14,10 @@
   ],
   "skills": [
     {
+      "name": "getting-started",
+      "description": "Use when first installing Axiom, unsure which skill to use, want an overview of available skills, or need help finding the right skill for your situation — interactive onboarding that recommends skills based on your project and current focus"
+    },
+    {
       "name": "xcode-debugging",
       "description": "Use when encountering BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild processes, or mysterious Xcode issues - systematic environment-first diagnostics"
     },

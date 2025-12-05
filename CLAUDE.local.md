@@ -111,3 +111,4 @@ Always include VitePress build validation when committing documentation changes.
 ---
 
 **Last Updated** 2025-12-03
+- Use sosumi.ai to get developer.apple.com documentation, e.g. instead of https://developer.apple.com/documentation/swiftui/bringing_robust_navigation_structure_to_your_swiftui_app use https://sosumi.ai/documentation/swiftui/bringing_robust_navigation_structure_to_your_swiftui_app
