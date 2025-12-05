@@ -119,6 +119,44 @@ label.font = UIFontMetrics.default.scaledFont(for: customFont)
 label.adjustsFontForContentSizeCategory = true
 ```
 
+#### Custom sizes that scale with Dynamic Type
+```swift
+// ❌ WRONG - Fixed size, won't scale
+Text("Price: $19.99")
+  .font(.system(size: 17))
+
+// ⚠️ ACCEPTABLE - Custom font without scaling (accessibility violation)
+Text("Headline")
+  .font(Font.custom("CustomFont", size: 24))
+
+// ✅ GOOD - Custom size that scales with Dynamic Type
+Text("Large Title")
+  .font(.system(size: 60, design: .default, relativeTo: .largeTitle))
+
+Text("Custom Headline")
+  .font(.system(size: 24, design: .default, relativeTo: .title2))
+
+// ✅ BEST - Use semantic styles when possible
+Text("Headline")
+  .font(.headline)
+```
+
+**How `relativeTo:` works**
+- Base size: Your exact pixel size (24pt, 60pt, etc.)
+- Scales with: The text style you specify (`.title2`, `.largeTitle`, etc.)
+- Result: When user increases text size in Settings, your custom size grows proportionally
+
+**Example**
+- `.title2` base: ~22pt → Your custom: 24pt (1.09x larger)
+- User increases to "Extra Large" text
+- `.title2` grows to ~28pt → Your custom grows to ~30.5pt (maintains 1.09x ratio)
+
+**Fix hierarchy (best to worst)**
+1. **Best**: Use semantic styles (`.title`, `.body`, `.caption`)
+2. **Good**: Use `.system(size:relativeTo:)` for required custom sizes
+3. **Acceptable**: Custom font with `.dynamicTypeSize()` modifier
+4. **Unacceptable**: Fixed sizes that never scale
+
 #### SwiftUI text styles
 - `.largeTitle` - 34pt (scales to 44pt at accessibility sizes)
 - `.title` - 28pt
