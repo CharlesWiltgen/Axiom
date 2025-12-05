@@ -131,10 +131,10 @@ Text("Headline")
 
 // ✅ GOOD - Custom size that scales with Dynamic Type
 Text("Large Title")
-  .font(.system(size: 60, design: .default, relativeTo: Font.TextStyle.largeTitle))
+  .font(.system(size: 60).relativeTo(.largeTitle))
 
 Text("Custom Headline")
-  .font(.system(size: 24, design: .default, relativeTo: Font.TextStyle.title2))
+  .font(.system(size: 24).relativeTo(.title2))
 
 // ✅ BEST - Use semantic styles when possible
 Text("Headline")
@@ -153,7 +153,7 @@ Text("Headline")
 
 **Fix hierarchy (best to worst)**
 1. **Best**: Use semantic styles (`.title`, `.body`, `.caption`)
-2. **Good**: Use `.system(size:relativeTo:)` for required custom sizes
+2. **Good**: Use `.system(size:).relativeTo()` for required custom sizes
 3. **Acceptable**: Custom font with `.dynamicTypeSize()` modifier
 4. **Unacceptable**: Fixed sizes that never scale
 
