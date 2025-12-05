@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: 'Axiom',
-  description: 'Battle-tested Claude Code skills, commands, and references for Apple platform development',
+  description: 'Battle-tested Claude Code skills, autonomous agents, and references for Apple platform development',
   base: '/Axiom/',
 
   themeConfig: {
@@ -14,8 +14,8 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide/' },
       { text: 'Skills', link: '/skills/' },
-      { text: 'Reference', link: '/reference/' },
-      { text: 'Commands', link: '/commands/' }
+      { text: 'Agents', link: '/agents/' },
+      { text: 'Reference', link: '/reference/' }
     ],
 
     sidebar: {
@@ -27,42 +27,44 @@ export default defineConfig({
           ]
         }
       ],
-      '/commands/': [
+      '/agents/': [
         {
-          text: 'Commands',
+          text: 'Agents',
           items: [
-            { text: 'Overview', link: '/commands/' }
+            { text: 'Overview', link: '/agents/' }
           ]
         },
         {
-          text: 'Accessibility',
+          text: 'Build & Environment',
           items: [
-            { text: 'audit-accessibility', link: '/commands/accessibility/audit-accessibility' }
+            { text: 'build-fixer', link: '/agents/build-fixer' }
           ]
         },
         {
-          text: 'Concurrency & Async',
+          text: 'Code Quality',
           items: [
-            { text: 'audit-concurrency', link: '/commands/concurrency/audit-concurrency' }
+            { text: 'accessibility-auditor', link: '/agents/accessibility-auditor' },
+            { text: 'concurrency-validator', link: '/agents/concurrency-validator' },
+            { text: 'memory-audit-runner', link: '/agents/memory-audit-runner' }
           ]
         },
         {
-          text: 'Debugging',
+          text: 'Persistence & Data',
           items: [
-            { text: 'audit-core-data', link: '/commands/debugging/audit-core-data' },
-            { text: 'audit-memory', link: '/commands/debugging/audit-memory' }
+            { text: 'core-data-auditor', link: '/agents/core-data-auditor' }
           ]
         },
         {
-          text: 'UI & Design',
+          text: 'UI & Performance',
           items: [
-            { text: 'audit-liquid-glass', link: '/commands/ui-design/audit-liquid-glass' }
+            { text: 'liquid-glass-auditor', link: '/agents/liquid-glass-auditor' },
+            { text: 'swiftui-performance-analyzer', link: '/agents/swiftui-performance-analyzer' }
           ]
         },
         {
           text: 'Networking',
           items: [
-            { text: 'audit-networking', link: '/commands/integration/audit-networking' }
+            { text: 'networking-auditor', link: '/agents/networking-auditor' }
           ]
         }
       ],
