@@ -34,6 +34,8 @@ whenToUse: |
   user: "I just added new UI, can you scan for accessibility problems?"
   assistant: [Launches accessibility-auditor agent]
   </example>
+
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit-accessibility`
 ---
 
 # Accessibility Auditor Agent

@@ -34,6 +34,8 @@ whenToUse: |
   user: "Check for thread-confinement violations in my persistence layer"
   assistant: [Launches core-data-auditor agent]
   </example>
+
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit-core-data`
 ---
 
 # Core Data Auditor Agent

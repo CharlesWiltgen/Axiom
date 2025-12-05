@@ -34,6 +34,8 @@ whenToUse: |
   user: "I just added delegate pattern code, can you validate memory safety?"
   assistant: [Launches memory-audit-runner agent]
   </example>
+
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit-memory`
 ---
 
 # Memory Audit Runner Agent

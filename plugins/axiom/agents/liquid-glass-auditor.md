@@ -34,6 +34,8 @@ whenToUse: |
   user: "Check my toolbars for iOS 26 best practices"
   assistant: [Launches liquid-glass-auditor agent]
   </example>
+
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit-liquid-glass`
 ---
 
 # Liquid Glass Auditor Agent

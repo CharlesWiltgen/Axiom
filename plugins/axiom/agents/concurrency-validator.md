@@ -34,6 +34,8 @@ whenToUse: |
   user: "I just added async/await code, can you validate it?"
   assistant: [Launches concurrency-validator agent]
   </example>
+
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit-concurrency`
 ---
 
 # Concurrency Validator Agent

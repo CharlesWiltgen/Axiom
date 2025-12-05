@@ -34,6 +34,8 @@ whenToUse: |
   user: "App feels slow during scrolling, what's wrong?"
   assistant: [Launches swiftui-performance-analyzer agent]
   </example>
+
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit-swiftui-performance`
 ---
 
 # SwiftUI Performance Analyzer Agent

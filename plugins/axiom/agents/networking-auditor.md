@@ -34,6 +34,8 @@ whenToUse: |
   user: "Scan for networking anti-patterns before submission"
   assistant: [Launches networking-auditor agent]
   </example>
+
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit-networking`
 ---
 
 # Networking Auditor Agent

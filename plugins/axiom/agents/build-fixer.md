@@ -40,6 +40,8 @@ whenToUse: |
   user: "Build sometimes succeeds, sometimes fails"
   assistant: [Launches build-fixer agent]
   </example>
+
+  Explicit command: Users can also invoke this agent directly with `/axiom:fix-build`
 ---
 
 # Build Fixer Agent
