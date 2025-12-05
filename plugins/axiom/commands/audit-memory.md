@@ -1,6 +1,7 @@
 ---
 name: audit-memory
 description: Quick audit for memory leaks - detects timer leaks, observer leaks, closure captures, delegate cycles, view callbacks, and PhotoKit accumulation with file:line references and severity ratings
+version: 0.9
 allowed-tools: Glob(*.swift), Grep(*)
 ---
 

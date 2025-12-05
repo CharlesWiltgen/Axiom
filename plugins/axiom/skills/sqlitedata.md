@@ -1,6 +1,7 @@
 ---
 name: sqlitedata
 description: Use when working with SQLiteData (Point-Free) — Quick Reference at top, anti-patterns, @Table models, query composition, RETURNING, CTEs, FTS5, JSON aggregation, CloudKit sync, database views, @DatabaseFunction
+skill_type: discipline
 version: 2.8.0
 last_updated: 2025-12-03 — Added Quick Reference, Anti-patterns at top; extracted migration to separate skill
 ---

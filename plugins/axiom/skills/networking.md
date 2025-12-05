@@ -1,6 +1,7 @@
 ---
 name: networking
 description: Use when implementing Network.framework connections, debugging connection failures, migrating from sockets/URLSession streams, or adopting structured concurrency networking patterns - prevents deprecated API usage, reachability anti-patterns, and thread-safety violations with iOS 12-26+ APIs
+skill_type: discipline
 version: 1.0.0
 last_updated: 2025-12-02
 apple_platforms: iOS 12+ (NWConnection), iOS 26+ (NetworkConnection)

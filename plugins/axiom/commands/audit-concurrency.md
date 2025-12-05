@@ -1,6 +1,7 @@
 ---
 name: audit-concurrency
 description: Scan Swift code for concurrency issues and violations before running the swift-concurrency skill - detects unsafe tasks, missing @MainActor, Sendable violations, and actor isolation problems with file:line references
+version: 0.9
 allowed-tools: Glob(*.swift), Grep(*)
 ---
 

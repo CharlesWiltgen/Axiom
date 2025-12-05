@@ -1,6 +1,7 @@
 ---
 name: liquid-glass
 description: Use when implementing Liquid Glass effects, reviewing UI for Liquid Glass adoption, debugging visual artifacts, optimizing performance, or requesting expert review of Liquid Glass implementation - provides comprehensive design principles, API patterns, and troubleshooting guidance from WWDC 2025. Includes design review pressure handling and professional push-back frameworks
+skill_type: discipline
 version: 1.2.0
 last_updated: Added new iOS 26 APIs and backward compatibility guidance
 apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+

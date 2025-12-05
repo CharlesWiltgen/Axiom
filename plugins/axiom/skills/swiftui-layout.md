@@ -1,6 +1,7 @@
 ---
 name: swiftui-layout
 description: Use when layouts need to adapt to different screen sizes, iPad multitasking, or iOS 26 free-form windows — decision trees for ViewThatFits vs AnyLayout vs onGeometryChange, size class limitations, and anti-patterns preventing device-based layout mistakes
+skill_type: discipline
 version: 0.7
 ---
 

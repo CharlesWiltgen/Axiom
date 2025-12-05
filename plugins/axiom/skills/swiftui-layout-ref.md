@@ -1,6 +1,7 @@
 ---
 name: swiftui-layout-ref
 description: Reference — Complete SwiftUI adaptive layout API guide covering ViewThatFits, AnyLayout, Layout protocol, onGeometryChange, GeometryReader, size classes, and iOS 26 window APIs
+skill_type: reference
 version: 0.7
 ---
 

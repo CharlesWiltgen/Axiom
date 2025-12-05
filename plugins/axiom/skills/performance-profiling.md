@@ -1,6 +1,7 @@
 ---
 name: performance-profiling
 description: Use when app feels slow, memory grows over time, battery drains fast, or you want to profile proactively - decision trees to choose the right Instruments tool, deep workflows for Time Profiler/Allocations/Core Data, and pressure scenarios for misinterpreting results
+skill_type: discipline
 version: 1.2.0
 last_updated: TDD-tested with deadline pressure, manager authority pressure, and Self Time vs Total Time misinterpretation scenarios, added 3 real-world examples
 ---

@@ -2,6 +2,7 @@
 name: realm-migration-ref
 description: Comprehensive migration guide from Realm to SwiftData - pattern equivalents, threading model conversion, schema migration strategies, CloudKit sync transition, and real-world scenarios
 skill_type: reference
+version: 0.9
 ---
 
 # Realm to SwiftData Migration — Reference Guide

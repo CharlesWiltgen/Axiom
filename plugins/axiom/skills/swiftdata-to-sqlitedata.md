@@ -1,6 +1,7 @@
 ---
 name: swiftdata-to-sqlitedata
 description: Use when migrating from SwiftData to SQLiteData — decision guide, pattern equivalents, code examples, CloudKit sharing (SwiftData can't), performance benchmarks, gradual migration strategy
+skill_type: reference
 version: 1.0.0
 ---
 
