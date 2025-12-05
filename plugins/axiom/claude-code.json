@@ -1,22 +1,18 @@
 {
   "name": "axiom",
-  "version": "0.9.14",
+  "version": "0.9.15",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
-  "commands": [
-    "./commands/audit-concurrency.md",
-    "./commands/audit-accessibility.md",
-    "./commands/audit-liquid-glass.md",
-    "./commands/audit-core-data.md",
-    "./commands/audit-memory.md",
-    "./commands/audit-networking.md"
-  ],
+  "commands": [],
   "agents": [
     "./agents/build-fixer.md",
     "./agents/accessibility-auditor.md",
     "./agents/concurrency-validator.md",
-    "./agents/memory-audit-runner.md"
+    "./agents/memory-audit-runner.md",
+    "./agents/core-data-auditor.md",
+    "./agents/liquid-glass-auditor.md",
+    "./agents/networking-auditor.md"
   ],
   "skills": [
     {
