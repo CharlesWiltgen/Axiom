@@ -62,7 +62,7 @@ Run a comprehensive accessibility audit and report all issues with:
 - Hardcoded `UIFont.systemFont(ofSize:)` without scaling
 - Should use (best to good):
   1. Semantic styles: `.font(.body)` or `UIFont.preferredFont(forTextStyle:)`
-  2. Scaled custom sizes: `.font(.system(size: 24, relativeTo: .title2))`
+  2. Scaled custom sizes: `.font(.system(size: 24, relativeTo: Font.TextStyle.title2))`
 
 ### 3. Color Contrast (HIGH)
 - Low contrast text/background combinations
@@ -179,12 +179,12 @@ grep -rn "\.animation(" --include="*.swift" | grep -v "isReduceMotionEnabled"
 - `src/Views/PriceLabel.swift:18` - Uses `.font(.system(size: 17))` without `relativeTo:`
   - **WCAG**: 1.4.4 Resize Text (Level AA)
   - **Fix (best)**: Use `.font(.body)` or `.font(.callout)`
-  - **Fix (good)**: Use `.font(.system(size: 17, design: .default, relativeTo: .body))`
+  - **Fix (good)**: Use `.font(.system(size: 17, design: .default, relativeTo: Font.TextStyle.body))`
 
 - `src/Views/TitleView.swift:34` - Uses `UIFont.systemFont(ofSize: 24)` without scaling
   - **WCAG**: 1.4.4 Resize Text (Level AA)
   - **Fix (best)**: Use `UIFont.preferredFont(forTextStyle: .title1)`
-  - **Fix (good)**: Use `.font(.system(size: 24, design: .default, relativeTo: .title2))`
+  - **Fix (good)**: Use `.font(.system(size: 24, design: .default, relativeTo: Font.TextStyle.title2))`
 
 ### Generic Labels
 - `src/Views/SettingsView.swift:89` - accessibilityLabel("Button")

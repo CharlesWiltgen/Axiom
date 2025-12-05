@@ -131,10 +131,10 @@ Text("Headline")
 
 // ✅ GOOD - Custom size that scales with Dynamic Type
 Text("Large Title")
-  .font(.system(size: 60, design: .default, relativeTo: .largeTitle))
+  .font(.system(size: 60, design: .default, relativeTo: Font.TextStyle.largeTitle))
 
 Text("Custom Headline")
-  .font(.system(size: 24, design: .default, relativeTo: .title2))
+  .font(.system(size: 24, design: .default, relativeTo: Font.TextStyle.title2))
 
 // ✅ BEST - Use semantic styles when possible
 Text("Headline")

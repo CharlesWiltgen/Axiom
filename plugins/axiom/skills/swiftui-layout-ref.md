@@ -489,7 +489,7 @@ enum DynamicTypeSize: Comparable {
 
 ```swift
 @ScaledMetric var iconSize: CGFloat = 24
-@ScaledMetric(relativeTo: .largeTitle) var headerSize: CGFloat = 44
+@ScaledMetric(relativeTo: Font.TextStyle.largeTitle) var headerSize: CGFloat = 44
 
 Image(systemName: "star")
     .frame(width: iconSize, height: iconSize)
