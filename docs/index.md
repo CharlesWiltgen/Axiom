@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: Axiom
-  text: Claude Code Skills for iOS Development
-  tagline: Battle-tested Claude Code skills, autonomous agents, and references for modern xOS development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more
+  text: Claude Code Agents for iOS Development
+  tagline: Battle-tested Claude Code agents, skills, and references for modern xOS development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more
   actions:
     - theme: brand
       text: Get Started
