@@ -107,6 +107,7 @@ export default defineConfig({
             { text: 'Xcode Debugging', link: '/skills/debugging/xcode-debugging' },
             { text: 'Memory Debugging', link: '/skills/debugging/memory-debugging' },
             { text: 'Build Troubleshooting', link: '/skills/debugging/build-troubleshooting' },
+            { text: 'Build Performance', link: '/skills/debugging/build-performance' },
             { text: 'Performance Profiling', link: '/skills/debugging/performance-profiling' },
             { text: 'Objective-C Block Retain Cycles', link: '/skills/debugging/objc-block-retain-cycles' }
           ]
