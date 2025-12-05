@@ -12,6 +12,9 @@
     "./commands/audit-memory.md",
     "./commands/audit-networking.md"
   ],
+  "agents": [
+    "./agents/build-fixer.md"
+  ],
   "skills": [
     {
       "name": "getting-started",
