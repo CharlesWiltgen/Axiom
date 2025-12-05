@@ -15,6 +15,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/' },
       { text: 'Skills', link: '/skills/' },
       { text: 'Agents', link: '/agents/' },
+      { text: 'Hooks', link: '/hooks/' },
       { text: 'Reference', link: '/reference/' }
     ],
 
@@ -66,6 +67,14 @@ export default defineConfig({
           text: 'Networking',
           items: [
             { text: 'networking-auditor', link: '/agents/networking-auditor' }
+          ]
+        }
+      ],
+      '/hooks/': [
+        {
+          text: 'Hooks',
+          items: [
+            { text: 'Overview', link: '/hooks/' }
           ]
         }
       ],
