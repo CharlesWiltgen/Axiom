@@ -52,15 +52,15 @@ Run a comprehensive SwiftUI performance audit and report all issues with:
 
 ## What You Check
 
-### 1. Expensive Operations in View Body (CRITICAL)
-**Pattern**: DateFormatter, NumberFormatter, complex calculations, I/O operations in view body
-**Issue**: View bodies re-run frequently; expensive operations cause frame drops
-**Fix**: Move to @Observable model, cache results
-
-### 2. File I/O in View Body (CRITICAL)
+### 1. File I/O in View Body (CRITICAL)
 **Pattern**: `Data(contentsOf:)`, `String(contentsOf:)`, synchronous file operations
 **Issue**: Blocks main thread, guaranteed frame drops, potential ANR
 **Fix**: Use `.task` with async loading, store in @State
+
+### 2. Expensive Operations in View Body (CRITICAL)
+**Pattern**: DateFormatter, NumberFormatter, complex calculations in view body
+**Issue**: View bodies re-run frequently; expensive operations cause frame drops
+**Fix**: Move to @Observable model, cache results, use static formatters
 
 ### 3. Image Processing in View Body (HIGH)
 **Pattern**: Image resizing, filtering, or transformation in view body
@@ -87,7 +87,12 @@ Run a comprehensive SwiftUI performance audit and report all issues with:
 **Issue**: SwiftUI can't track which views to update, recreates all
 **Fix**: Use `ForEach(items, id: \.id)` or make items Identifiable
 
-### 8. Old ObservableObject Pattern (LOW)
+### 8. Navigation Performance Issues (HIGH)
+**Pattern**: NavigationPath recreation, large data models in navigation state, expensive path computations in view body
+**Issue**: Navigation state updates trigger view recreation, passing large models causes memory pressure
+**Fix**: Use stable path state, pass IDs not models, cache path computations
+
+### 9. Old ObservableObject Pattern (LOW)
 **Pattern**: `ObservableObject` + `@Published` instead of `@Observable` (iOS 17+)
 **Issue**: More allocations, less efficient updates
 **Fix**: Migrate to `@Observable` macro for better performance
@@ -171,6 +176,19 @@ grep -rn "@Published" --include="*.swift"
 
 # @Observable usage (new pattern - good)
 grep -rn "@Observable" --include="*.swift"
+```
+
+**Navigation Performance Issues**:
+```bash
+# NavigationPath recreation in view body
+grep -rn "NavigationPath()" --include="*.swift" -B 5 | grep "var body"
+grep -rn "\.map\|\.filter" --include="*.swift" -B 5 | grep "var body" -A 5 | grep -i "path\|navigation"
+
+# Large data models in navigation state (anti-pattern)
+grep -rn "navigationDestination.*:" --include="*.swift" -A 2 | grep "Item\|Model\|Entity" | grep -v "\.id"
+
+# Stable NavigationPath usage (good pattern)
+grep -rn "@State.*NavigationPath" --include="*.swift"
 ```
 
 ### Step 3: Categorize by Severity
@@ -381,6 +399,47 @@ grep -rn "@Observable" --include="*.swift"
   }
   ```
 
+## HIGH Issues
+
+### Navigation Performance Issues
+- `NavigationContainerView.swift:23` - NavigationPath recreated in view body
+  - **Issue**: Creates new path every view update, causes navigation hierarchy to rebuild
+  - **Impact**: Janky navigation transitions, unnecessary view recreation
+  - **Fix**: Use stable @State for NavigationPath
+  ```swift
+  // ❌ BAD: Recreates path every update
+  var body: some View {
+      NavigationStack(path: .constant(items.map { $0.id })) { // Recomputes every time!
+          ContentView()
+      }
+  }
+
+  // ✅ GOOD: Stable path state
+  @State private var path = NavigationPath()
+
+  var body: some View {
+      NavigationStack(path: $path) {
+          ContentView()
+      }
+  }
+  ```
+
+- `ItemDetailView.swift:45` - Passing entire model through navigation
+  - **Issue**: Large data models in navigation state cause memory pressure and updates
+  - **Impact**: Slower navigation, unnecessary memory usage
+  - **Fix**: Pass IDs, load model in destination
+  ```swift
+  // ❌ BAD: Passing entire model
+  .navigationDestination(for: Item.self) { item in // Entire object in state!
+      DetailView(item: item)
+  }
+
+  // ✅ GOOD: Pass ID, load in destination
+  .navigationDestination(for: Item.ID.self) { itemID in
+      DetailView(itemID: itemID) // Load item inside DetailView
+  }
+  ```
+
 ## Next Steps
 
 1. **Fix CRITICAL issues immediately** (blocks main thread)
@@ -492,7 +551,7 @@ After fixing anti-patterns:
 ## Summary
 
 This audit scans for:
-- **8 categories** covering most SwiftUI performance issues
+- **9 categories** covering most SwiftUI performance issues (including navigation)
 - **Static code analysis** to find common anti-patterns
 - **Actionable fixes** with before/after examples
 

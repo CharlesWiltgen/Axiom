@@ -2,12 +2,18 @@
 
 Automatically scans for deprecated networking APIs and anti-patterns that cause App Store rejections.
 
-## When It Triggers
+## How to Use This Agent
 
+**Natural language (automatic triggering):**
 - "Can you check my networking code for deprecated APIs?"
 - "Review my code for Network.framework best practices"
 - "I'm getting App Store review warnings about networking"
 - "Scan for networking anti-patterns before submission"
+
+**Explicit command:**
+```bash
+/axiom:audit-networking
+```
 
 ## What It Checks
 

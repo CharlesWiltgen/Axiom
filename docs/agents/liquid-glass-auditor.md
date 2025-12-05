@@ -2,12 +2,18 @@
 
 Automatically scans SwiftUI codebase for Liquid Glass adoption opportunities (iOS 26+).
 
-## When It Triggers
+## How to Use This Agent
 
+**Natural language (automatic triggering):**
 - "Can you check my app for Liquid Glass adoption opportunities?"
 - "I'm updating my app to iOS 26, what UI improvements can I make?"
 - "Review my SwiftUI code for Liquid Glass patterns"
 - "I have old UIBlurEffect code, should I migrate to Liquid Glass?"
+
+**Explicit command:**
+```bash
+/axiom:audit-liquid-glass
+```
 
 ## What It Checks
 

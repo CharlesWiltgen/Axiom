@@ -2,12 +2,18 @@
 
 Automatically scans Core Data code for safety violations that cause production crashes and permanent data loss.
 
-## When It Triggers
+## How to Use This Agent
 
+**Natural language (automatic triggering):**
 - "Can you check my Core Data code for safety issues?"
 - "I'm about to ship an app with Core Data, can you review it?"
 - "Review my code for Core Data migration risks"
 - "Check for thread-confinement violations in my persistence layer"
+
+**Explicit command:**
+```bash
+/axiom:audit-core-data
+```
 
 ## What It Checks
 

@@ -2,12 +2,18 @@
 
 Automatically scans Swift code for Swift 6 strict concurrency violations to prevent data races.
 
-## When It Triggers
+## How to Use This Agent
 
+**Natural language (automatic triggering):**
 - "Check my code for Swift 6 concurrency issues"
 - "I'm getting data race warnings, can you scan for concurrency violations?"
 - "Review my async code for concurrency safety"
 - "Check if my code is ready for Swift 6 strict concurrency"
+
+**Explicit command:**
+```bash
+/axiom:audit-concurrency
+```
 
 ## What It Checks
 

@@ -2,12 +2,18 @@
 
 Automatically scans for the 6 most common memory leak patterns to prevent crashes and progressive memory growth.
 
-## When It Triggers
+## How to Use This Agent
 
+**Natural language (automatic triggering):**
 - "Can you check my code for memory leaks?"
 - "Scan for potential memory leak patterns"
 - "Review my code for retain cycles"
 - "Before I ship, can you check for memory issues?"
+
+**Explicit command:**
+```bash
+/axiom:audit-memory
+```
 
 ## What It Checks
 

@@ -58,7 +58,8 @@ export default defineConfig({
           text: 'UI & Performance',
           items: [
             { text: 'liquid-glass-auditor', link: '/agents/liquid-glass-auditor' },
-            { text: 'swiftui-performance-analyzer', link: '/agents/swiftui-performance-analyzer' }
+            { text: 'swiftui-performance-analyzer', link: '/agents/swiftui-performance-analyzer' },
+            { text: 'swiftui-nav-auditor', link: '/agents/swiftui-nav-auditor' }
           ]
         },
         {

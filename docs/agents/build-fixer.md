@@ -2,13 +2,19 @@
 
 Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics.
 
-## When It Triggers
+## How to Use This Agent
 
+**Natural language (automatic triggering):**
 - "My build is failing"
 - "BUILD FAILED but no error details"
 - "Xcode says 'No such module'"
 - "Tests passed yesterday but now they're failing"
 - "Getting 'Unable to boot simulator' error"
+
+**Explicit command:**
+```bash
+/axiom:fix-build
+```
 
 ## What It Checks
 

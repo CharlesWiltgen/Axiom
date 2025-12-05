@@ -12,7 +12,8 @@
     "./commands/audit-core-data.md",
     "./commands/audit-liquid-glass.md",
     "./commands/audit-networking.md",
-    "./commands/audit-swiftui-performance.md"
+    "./commands/audit-swiftui-performance.md",
+    "./commands/audit-swiftui-nav.md"
   ],
   "agents": [
     "./agents/build-fixer.md",
@@ -22,7 +23,8 @@
     "./agents/core-data-auditor.md",
     "./agents/liquid-glass-auditor.md",
     "./agents/networking-auditor.md",
-    "./agents/swiftui-performance-analyzer.md"
+    "./agents/swiftui-performance-analyzer.md",
+    "./agents/swiftui-nav-auditor.md"
   ],
   "skills": [
     {

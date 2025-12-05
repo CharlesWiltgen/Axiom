@@ -1,6 +1,6 @@
 # Autonomous Agents
 
-Axiom includes 8 autonomous agents that automatically detect and diagnose common iOS development issues.
+Axiom includes 9 autonomous agents that automatically detect and diagnose common iOS development issues.
 
 ## What Are Agents?
 
@@ -12,7 +12,7 @@ Agents are autonomous problem-solvers that:
 
 ## How to Use Agents
 
-Instead of remembering slash commands, just describe what you want:
+**Natural language (recommended)** — Just describe what you want:
 
 - "Check my code for accessibility issues" → **accessibility-auditor** triggers
 - "Scan for memory leaks" → **memory-audit-runner** triggers
@@ -22,6 +22,21 @@ Instead of remembering slash commands, just describe what you want:
 - "Find Liquid Glass adoption opportunities" → **liquid-glass-auditor** triggers
 - "Scan for deprecated networking APIs" → **networking-auditor** triggers
 - "My build is failing" → **build-fixer** triggers
+- "Check my navigation architecture" → **swiftui-nav-auditor** triggers
+
+**Explicit commands** — For direct invocation:
+
+```bash
+/axiom:audit-accessibility
+/axiom:audit-memory
+/axiom:audit-swiftui-performance
+/axiom:audit-concurrency
+/axiom:audit-core-data
+/axiom:audit-liquid-glass
+/axiom:audit-networking
+/axiom:audit-swiftui-nav
+/axiom:fix-build
+```
 
 ## Agent Categories
 
@@ -38,7 +53,8 @@ Instead of remembering slash commands, just describe what you want:
 
 ### UI & Performance
 - **liquid-glass-auditor** — Identifies iOS 26+ Liquid Glass adoption opportunities (glass effects, toolbar improvements, search patterns, migration from old blur effects)
-- **swiftui-performance-analyzer** — Detects SwiftUI performance anti-patterns (expensive operations in view bodies, missing lazy loading, unnecessary updates)
+- **swiftui-performance-analyzer** — Detects SwiftUI performance anti-patterns (expensive operations in view bodies, missing lazy loading, unnecessary updates, navigation performance issues)
+- **swiftui-nav-auditor** — Scans SwiftUI navigation architecture (missing NavigationPath, deep link gaps, state restoration issues, wrong container usage, type safety problems)
 
 ### Networking
 **networking-auditor** — Scans for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling)
@@ -54,7 +70,7 @@ Instead of remembering slash commands, just describe what you want:
 - Natural language: "check accessibility"
 - Automatic triggering based on context
 - One source of truth, zero duplication
-- Scales better (15 agents = 15 files, not 30)
+- Scales better (9 agents = 9 files + 9 commands = 18 total, not 18 duplicated implementations)
 
 ## Agent Architecture
 

@@ -2,13 +2,19 @@
 
 Automatically scans SwiftUI code for performance anti-patterns that cause frame drops and poor scrolling performance.
 
-## When It Triggers
+## How to Use This Agent
 
+**Natural language (automatic triggering):**
 - "My SwiftUI app has janky scrolling"
 - "Check my code for performance issues"
 - "My views are updating too often"
 - "App feels slow during scrolling"
 - "Review my SwiftUI code for optimization opportunities"
+
+**Explicit command:**
+```bash
+/axiom:audit-swiftui-performance
+```
 
 ## What It Checks
 
@@ -19,7 +25,7 @@ Automatically scans SwiftUI code for performance anti-patterns that cause frame 
 ### High Priority (Likely Frame Drops)
 3. **Image processing in view body** — Resizing, filtering, transformations
 4. **Whole-collection dependencies** — .contains(), .filter() on arrays
-5. **Complex calculations in view body** — Expensive algorithms
+5. **Navigation performance issues** — NavigationPath recreation, large models in navigation state
 
 ### Medium Priority (Performance Degradation)
 6. **Missing lazy loading** — VStack with 100+ items instead of LazyVStack
@@ -92,6 +98,7 @@ From auditing 100+ SwiftUI apps:
 - 50% use VStack instead of LazyVStack for long lists
 - 40% have whole-collection dependencies
 - 30% do image processing in view body
+- 25% have navigation performance issues (NavigationPath recreation, large models)
 - 20% have file I/O in view body
 
 ## Model & Tools
