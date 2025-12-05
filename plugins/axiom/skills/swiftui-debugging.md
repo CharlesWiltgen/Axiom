@@ -1,6 +1,7 @@
 ---
 name: swiftui-debugging
 description: Use when debugging SwiftUI view updates, preview crashes, or layout issues - diagnostic decision trees to identify root causes quickly and avoid misdiagnosis under pressure
+skill_type: discipline
 version: 1.2.0
 last_updated: TDD-tested with production deadline and intermittent bug scenarios, added 3 real-world examples
 ---

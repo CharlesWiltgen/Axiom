@@ -1,6 +1,8 @@
 ---
 name: app-intents-ref
 description: Use when integrating App Intents for Siri, Apple Intelligence, Shortcuts, Spotlight, or system experiences - covers AppIntent, AppEntity, parameter handling, entity queries, background execution, authentication, and debugging common integration issues for iOS 16+
+skill_type: reference
+version: 0.9
 ---
 
 # App Intents Integration

@@ -1,6 +1,7 @@
 ---
 name: foundation-models
 description: Use when implementing on-device AI with Apple's Foundation Models framework — prevents context overflow, blocking UI, wrong model use cases, and manual JSON parsing when @Generable should be used. iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+
+skill_type: discipline
 version: 1.0.0
 last_updated: 2025-12-03
 apple_platforms: iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+

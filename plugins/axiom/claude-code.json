@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.9.11",
+  "version": "0.9.12",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -19,11 +19,11 @@
     },
     {
       "name": "swift-concurrency",
-      "description": "Swift 6 strict concurrency patterns - progressive journey from single-threaded to concurrent code with @concurrent attribute (WWDC 2025), actor isolation, Sendable, async/await, and data race prevention"
+      "description": "Use when working with Swift 6 strict concurrency - progressive journey from single-threaded to concurrent code with @concurrent attribute (WWDC 2025), actor isolation, Sendable, async/await, and data race prevention"
     },
     {
       "name": "database-migration",
-      "description": "Safe database schema evolution for SQLite/GRDB - prevents data loss with additive migrations and testing workflows"
+      "description": "Use when adding/modifying database columns or schema - safe database schema evolution for SQLite/GRDB that prevents data loss with additive migrations and testing workflows"
     },
     {
       "name": "memory-debugging",
@@ -60,6 +60,18 @@
     {
       "name": "swiftui-layout-ref",
       "description": "Reference: Complete SwiftUI adaptive layout API guide covering ViewThatFits, AnyLayout, Layout protocol, onGeometryChange, GeometryReader, size classes, and iOS 26 window APIs"
+    },
+    {
+      "name": "swiftui-nav",
+      "description": "Use when implementing navigation patterns, choosing between NavigationStack and NavigationSplitView, handling deep links, adopting coordinator patterns, or requesting code review of navigation implementation - prevents navigation state corruption, deep link failures, and state restoration bugs for iOS 18+"
+    },
+    {
+      "name": "swiftui-nav-ref",
+      "description": "Reference: Comprehensive SwiftUI navigation guide covering NavigationStack (iOS 16+), NavigationSplitView (iOS 16+), NavigationPath, deep linking, state restoration, Tab+Navigation integration (iOS 18+), Liquid Glass navigation (iOS 26+), and coordinator patterns"
+    },
+    {
+      "name": "swiftui-nav-diag",
+      "description": "Diagnostic: Use when debugging navigation not responding, unexpected pops, deep links showing wrong screen, state lost on tab switch or background, crashes in navigationDestination - systematic diagnostics with production crisis defense"
     },
     {
       "name": "performance-profiling",

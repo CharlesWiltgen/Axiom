@@ -1,6 +1,7 @@
 ---
 name: audit-accessibility
 description: Comprehensive accessibility audit - detects VoiceOver label issues, Dynamic Type violations, color contrast failures, touch target size problems, keyboard navigation gaps, and Reduce Motion support with file:line references and WCAG compliance ratings
+version: 0.9
 allowed-tools: Glob(*.swift), Grep(*)
 ---
 

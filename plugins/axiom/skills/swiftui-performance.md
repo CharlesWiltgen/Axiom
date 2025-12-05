@@ -1,6 +1,7 @@
 ---
 name: swiftui-performance
 description: Use when analyzing SwiftUI performance issues, identifying long view body updates, reducing unnecessary view updates, or optimizing SwiftUI rendering - covers the new SwiftUI Instrument in Instruments 26, performance patterns from WWDC 2025, and production crisis decision-making under deadline pressure
+skill_type: discipline
 version: 1.1.0
 last_updated: TDD-tested with production performance crisis scenarios
 apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+

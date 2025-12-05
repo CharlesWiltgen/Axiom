@@ -1,6 +1,8 @@
 ---
 name: uikit-animation-debugging
 description: Use when CAAnimation completion handler doesn't fire, spring physics look wrong on device, animation duration mismatches actual time, gesture + animation interaction causes jank, or timing differs between simulator and real hardware - systematic CAAnimation diagnosis with CATransaction patterns, frame rate awareness, and device-specific behavior
+skill_type: discipline
+version: 0.9
 ---
 
 # UIKit Animation Debugging

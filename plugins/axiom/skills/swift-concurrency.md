@@ -1,6 +1,8 @@
 ---
 name: swift-concurrency
 description: Swift 6 strict concurrency patterns - progressive journey from single-threaded to concurrent code with @concurrent attribute (WWDC 2025), actor isolation, Sendable, async/await, and data race prevention
+skill_type: discipline
+version: 0.9
 ---
 
 # Swift 6 Concurrency Guide

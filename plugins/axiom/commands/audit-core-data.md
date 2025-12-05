@@ -1,6 +1,7 @@
 ---
 name: audit-core-data
 description: Quick audit for Core Data safety violations - detects schema migration risks, thread-confinement violations, N+1 query patterns, missing lightweight migration options, and unsafe production patterns
+version: 0.9
 allowed-tools: Glob(*.swift, *.xcdatamodeld), Grep(*)
 ---
 

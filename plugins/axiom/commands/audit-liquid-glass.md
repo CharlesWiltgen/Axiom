@@ -1,6 +1,8 @@
 ---
 name: audit-liquid-glass
 description: Quick automated scan for Liquid Glass adoption opportunities in SwiftUI codebase - identifies views that could benefit from glass effects, toolbar improvements, search patterns, and migration opportunities from older blur effects
+version: 0.9
+allowed-tools: Glob(*.swift), Grep(*)
 ---
 
 # Liquid Glass Adoption Audit

@@ -1,6 +1,7 @@
 ---
 name: auto-layout-debugging
 description: Use when encountering "Unable to simultaneously satisfy constraints" errors, constraint conflicts, ambiguous layout warnings, or views positioned incorrectly - systematic debugging workflow for Auto Layout issues in iOS
+skill_type: discipline
 version: 1.0.0
 ---
 

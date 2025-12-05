@@ -1,6 +1,7 @@
 ---
 name: audit-networking
 description: Scan Swift/Objective-C for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling) with file:line references
+version: 0.9
 allowed-tools: Glob(*.swift, *.m, *.h), Grep(*)
 ---
 
