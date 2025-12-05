@@ -38,7 +38,8 @@ export default defineConfig({
         {
           text: 'Build & Environment',
           items: [
-            { text: 'build-fixer', link: '/agents/build-fixer' }
+            { text: 'build-fixer', link: '/agents/build-fixer' },
+            { text: 'build-optimizer', link: '/agents/build-optimizer' }
           ]
         },
         {

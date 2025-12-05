@@ -1,6 +1,6 @@
 # Autonomous Agents
 
-Axiom includes 9 autonomous agents that automatically detect and diagnose common iOS development issues.
+Axiom includes 10 autonomous agents that automatically detect and diagnose common iOS development issues.
 
 ## What Are Agents?
 
@@ -22,6 +22,7 @@ Agents are autonomous problem-solvers that:
 - "Find Liquid Glass adoption opportunities" → **liquid-glass-auditor** triggers
 - "Scan for deprecated networking APIs" → **networking-auditor** triggers
 - "My build is failing" → **build-fixer** triggers
+- "My builds are slow" → **build-optimizer** triggers
 - "Check my navigation architecture" → **swiftui-nav-auditor** triggers
 
 **Explicit commands** — For direct invocation:
@@ -36,12 +37,14 @@ Agents are autonomous problem-solvers that:
 /axiom:audit-networking
 /axiom:audit-swiftui-nav
 /axiom:fix-build
+/axiom:optimize-build
 ```
 
 ## Agent Categories
 
 ### Build & Environment
-**build-fixer** — Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics (zombie processes, Derived Data, simulator state, SPM cache)
+- **build-fixer** — Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics (zombie processes, Derived Data, simulator state, SPM cache)
+- **build-optimizer** — Scans for build performance optimizations (compilation mode, architecture settings, build phase scripts, type checking bottlenecks) with measurable time savings
 
 ### Code Quality
 - **accessibility-auditor** — Scans for VoiceOver label issues, Dynamic Type violations, color contrast failures, touch target sizes, WCAG compliance problems

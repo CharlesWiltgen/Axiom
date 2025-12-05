@@ -2,9 +2,9 @@
 
 Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Apple Intelligence (Foundation Models), Liquid Glass, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
 
-**Version**: 0.9.19
+**Version**: 0.9.20
 **Status**: Preview Release
-**Skills**: 35 | **Commands**: 9 | **Agents**: 9 | **Hooks**: 4
+**Skills**: 36 | **Commands**: 10 | **Agents**: 10 | **Hooks**: 4
 
 ## Installation
 
@@ -127,6 +127,27 @@ Systematic memory leak diagnosis with 5 patterns covering 90% of real-world issu
 Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
 **Use when**: Dependency conflicts, "Multiple commands produce" errors, framework version mismatches
+
+---
+
+#### `axiom:build-performance`
+Comprehensive build performance optimization with Build Timeline analysis, type checking improvements, and parallelization workflows.
+
+**Use when**: Build times are slow, investigating build performance, analyzing Build Timeline, identifying type checking bottlenecks, optimizing incremental builds
+
+**Key features**:
+- Build Timeline analysis and critical path optimization
+- Type checking performance improvements
+- Build phase script optimization
+- Compilation mode settings (incremental vs whole module)
+- Build parallelization patterns
+- Measurement and verification workflows
+
+**Based on**: WWDC 2018-408, WWDC 2022-110364
+
+**Quick win**: Use `/axiom:optimize-build` to scan for common issues automatically
+
+**Expected impact**: 30-50% faster incremental debug builds, 5-10 seconds saved per build from conditional scripts
 
 ---
 
@@ -314,6 +335,7 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 /skill axiom:xcode-debugging
 /skill axiom:memory-debugging
 /skill axiom:build-troubleshooting
+/skill axiom:build-performance
 
 # Swift & Concurrency
 /skill axiom:swift-concurrency
@@ -341,6 +363,9 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 /axiom:audit-liquid-glass
 /axiom:audit-core-data
 /axiom:audit-memory
+
+# Build & Performance
+/axiom:optimize-build
 ```
 
 ## Philosophy

@@ -1,12 +1,13 @@
 {
   "name": "axiom",
-  "version": "0.9.19",
+  "version": "0.9.20",
   "description": "Battle-tested Claude Code agents, skills, and references for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
   "hooks": "./hooks/hooks.json",
   "commands": [
     "./commands/fix-build.md",
+    "./commands/optimize-build.md",
     "./commands/audit-accessibility.md",
     "./commands/audit-concurrency.md",
     "./commands/audit-memory.md",
@@ -18,6 +19,7 @@
   ],
   "agents": [
     "./agents/build-fixer.md",
+    "./agents/build-optimizer.md",
     "./agents/accessibility-auditor.md",
     "./agents/concurrency-validator.md",
     "./agents/memory-audit-runner.md",
@@ -55,6 +57,10 @@
     {
       "name": "build-troubleshooting",
       "description": "Use when encountering dependency conflicts, CocoaPods/SPM resolution failures, Multiple commands produce errors, or framework version mismatches - systematic dependency and build configuration debugging"
+    },
+    {
+      "name": "build-performance",
+      "description": "Use when build times are slow, investigating build performance, analyzing Build Timeline, identifying type checking bottlenecks, or optimizing incremental builds - comprehensive build optimization workflows based on WWDC 2018/408, WWDC 2022/110364, with Build Timeline analysis, type checking optimization, and parallelization patterns"
     },
     {
       "name": "liquid-glass",
