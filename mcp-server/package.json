@@ -1,0 +1,38 @@
+{
+  "name": "@axiom-ios/mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for Axiom iOS development skills, agents, and commands",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "axiom-mcp-server": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "bundle": "node scripts/bundle.js"
+  },
+  "keywords": [
+    "mcp",
+    "ios",
+    "swift",
+    "swiftui",
+    "xcode",
+    "development",
+    "axiom"
+  ],
+  "author": "Charles Wiltgen",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
