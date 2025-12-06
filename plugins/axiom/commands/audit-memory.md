@@ -1,6 +1,16 @@
 ---
 name: audit-memory
 description: Scan for memory leaks (launches memory-audit-runner agent)
+# MCP annotations (ignored by Claude Code)
+mcp:
+  category: auditing
+  tags: [memory, leaks, audit, scan]
+  related: [memory-debugging, objc-block-retain-cycles]
+  arguments:
+    - name: path
+      description: File or directory to audit (default: current directory)
+      required: false
+      default: "."
 ---
 
 # Memory Leak Audit
