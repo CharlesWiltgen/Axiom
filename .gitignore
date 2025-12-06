@@ -13,6 +13,11 @@ CLAUDE.md
 docs/.vitepress/cache
 docs/.vitepress/dist
 
+# MCP Server build artifacts
+mcp-server/node_modules/
+mcp-server/dist/
+mcp-server/*.tsbuildinfo
+
 # Node modules and dependencies
 node_modules/
 yarn.lock

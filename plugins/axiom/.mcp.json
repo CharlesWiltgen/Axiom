@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "axiom": {
+      "command": "node",
+      "args": ["../../mcp-server/dist/index.js"],
+      "env": {
+        "AXIOM_MCP_MODE": "development",
+        "AXIOM_DEV_PATH": "${CLAUDE_PLUGIN_ROOT}",
+        "AXIOM_LOG_LEVEL": "info"
+      }
+    }
+  }
+}
