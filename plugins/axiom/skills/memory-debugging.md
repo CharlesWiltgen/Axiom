@@ -3,6 +3,11 @@ name: memory-debugging
 description: Use when debugging retain cycles, memory leaks, crashes after 10+ minutes, or progressive memory growth from 50MB → 200MB - provides systematic diagnosis, Instruments patterns, and production-ready fixes for iOS/macOS apps under time pressure
 skill_type: discipline
 version: 0.9
+# MCP annotations (ignored by Claude Code)
+mcp:
+  category: debugging
+  tags: [memory, leaks, instruments, retain-cycles, performance, allocations]
+  related: [performance-profiling, objc-block-retain-cycles]
 ---
 
 # Memory Debugging

@@ -5,6 +5,11 @@ skill_type: discipline
 version: 1.0.0
 last_updated: 2025-12-05
 apple_platforms: iOS 18+ (Tab/Sidebar), iOS 26+ (Liquid Glass)
+# MCP annotations (ignored by Claude Code)
+mcp:
+  category: swiftui
+  tags: [swiftui, navigation, navigationstack, navigationsplitview, deep-links, state-restoration, coordinator-pattern]
+  related: [swiftui-nav-diag, swiftui-nav-ref, swiftui-layout]
 ---
 
 # SwiftUI Navigation

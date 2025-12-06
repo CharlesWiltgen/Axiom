@@ -7,6 +7,25 @@ tools:
   - Glob
   - Grep
   - Read
+# MCP annotations (ignored by Claude Code)
+mcp:
+  category: auditing
+  tags: [accessibility, voiceover, wcag, a11y, app-store, audit]
+  related: [accessibility-diag]
+  inputSchema:
+    type: object
+    properties:
+      path:
+        type: string
+        description: Directory or file to audit for accessibility issues
+      severity:
+        type: string
+        enum: [critical, high, medium, low, all]
+        description: Minimum severity level to report
+        default: all
+    required: [path]
+  annotations:
+    readOnly: true
 whenToUse: |
   Trigger when user mentions accessibility checking, App Store submission, code review, or WCAG compliance.
 
