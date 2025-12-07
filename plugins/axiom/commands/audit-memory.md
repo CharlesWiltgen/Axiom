@@ -8,7 +8,7 @@ mcp:
   related: [memory-debugging, objc-block-retain-cycles]
   arguments:
     - name: path
-      description: File or directory to audit (default: current directory)
+      description: "File or directory to audit (default: current directory)"
       required: false
       default: "."
 ---
