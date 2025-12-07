@@ -574,11 +574,53 @@ ScrollView {
 }
 ```
 
+#### Padding with Liquid Glass Materials
+
+When implementing Liquid Glass effects that extend edge-to-edge, use `.safeAreaPadding()` instead of `.padding()` to ensure content respects device safe areas (notch, Dynamic Island, home indicator).
+
+```swift
+// ❌ WRONG - Content hits notch/home indicator with Liquid Glass background
+ZStack {
+    // Liquid Glass background extends edge-to-edge
+    RoundedRectangle(cornerRadius: 12)
+        .fill(.thinMaterial)
+        .ignoresSafeArea()
+
+    VStack {
+        content
+    }
+    .padding(.horizontal, 20)  // Doesn't account for safe areas!
+}
+
+// ✅ CORRECT - Content properly inset from safe areas + custom margin
+ZStack {
+    RoundedRectangle(cornerRadius: 12)
+        .fill(.thinMaterial)
+        .ignoresSafeArea()
+
+    VStack {
+        content
+    }
+    .safeAreaPadding(.horizontal, 20)  // 20pt beyond safe areas
+}
+```
+
+**Key pattern for Liquid Glass**: When your material extends edge-to-edge with `.ignoresSafeArea()`, always use `.safeAreaPadding()` on the content layer to maintain proper spacing from screen edges and device-specific features.
+
+**Common Liquid Glass scenarios requiring `.safeAreaPadding()`**:
+- Full-screen sheets with `.ultraThinMaterial` backgrounds
+- Edge-to-edge toolbars with glass effects
+- Floating panels that extend to screen edges
+- Custom navigation bars with Liquid Glass styling
+
+**Platform availability**: `.safeAreaPadding()` requires iOS 17+. For iOS 16 and earlier, use `.safeAreaInset()` or manual GeometryReader calculations. See `swiftui-layout-ref` skill for complete `.safeAreaPadding()` vs `.padding()` guidance.
+
 #### What to Check
 - Content visible beneath sidebar/inspector
 - Content not cropped inappropriately
 - Background peek-through looks intentional
 - Scrolling content visible through Liquid Glass
+- Content properly inset from notch, Dynamic Island, home indicator (use `.safeAreaPadding()` with edge-to-edge Liquid Glass)
 
 ### Background Extension Effect
 
