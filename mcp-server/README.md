@@ -407,7 +407,7 @@ node /full/path/to/dist/index.js
 - Multi-client testing
 
 ### Phase 6: Distribution
-- npm publish (@axiom-ios/mcp-server)
+- npm publish (@axiom-dev/mcp)
 - MCP Registry listing
 - Documentation site integration
 - Release automation

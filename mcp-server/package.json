@@ -1,11 +1,11 @@
 {
-  "name": "@axiom-ios/mcp-server",
+  "name": "@axiom-dev/mcp",
   "version": "0.1.0",
-  "description": "MCP server for Axiom iOS development skills, agents, and commands",
+  "description": "MCP server for Axiom development skills, agents, and commands",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "axiom-mcp-server": "dist/index.js"
+    "axiom-mcp": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",

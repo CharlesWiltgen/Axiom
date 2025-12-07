@@ -57,7 +57,7 @@ async function main() {
   // Create MCP server
   const server = new Server(
     {
-      name: 'axiom-mcp-server',
+      name: 'axiom-mcp',
       version: '0.1.0',
     },
     {
