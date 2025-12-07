@@ -5,11 +5,17 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
 import { loadConfig, Logger } from './config.js';
 import { DevLoader } from './loader/dev-loader.js';
 import { ResourcesHandler } from './resources/handler.js';
+import { PromptsHandler } from './prompts/handler.js';
+import { ToolsHandler } from './tools/handler.js';
 
 /**
  * Main entry point for Axiom MCP Server
@@ -38,6 +44,8 @@ async function main() {
 
   // Initialize handlers
   const resourcesHandler = new ResourcesHandler(loader, logger);
+  const promptsHandler = new PromptsHandler(loader, logger);
+  const toolsHandler = new ToolsHandler(loader, logger);
 
   // Create MCP server
   const server = new Server(
@@ -48,6 +56,8 @@ async function main() {
     {
       capabilities: {
         resources: {},
+        prompts: {},
+        tools: {},
       },
     }
   );
@@ -67,6 +77,50 @@ async function main() {
       return await resourcesHandler.readResource(request.params.uri);
     } catch (error) {
       logger.error('Error reading resource:', error);
+      throw error;
+    }
+  });
+
+  // Register prompts handlers
+  server.setRequestHandler(ListPromptsRequestSchema, async () => {
+    try {
+      return await promptsHandler.listPrompts();
+    } catch (error) {
+      logger.error('Error listing prompts:', error);
+      throw error;
+    }
+  });
+
+  server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+    try {
+      return await promptsHandler.getPrompt(
+        request.params.name,
+        request.params.arguments
+      );
+    } catch (error) {
+      logger.error('Error getting prompt:', error);
+      throw error;
+    }
+  });
+
+  // Register tools handlers
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
+    try {
+      return await toolsHandler.listTools();
+    } catch (error) {
+      logger.error('Error listing tools:', error);
+      throw error;
+    }
+  });
+
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    try {
+      return await toolsHandler.callTool(
+        request.params.name,
+        request.params.arguments || {}
+      );
+    } catch (error) {
+      logger.error('Error calling tool:', error);
       throw error;
     }
   });
