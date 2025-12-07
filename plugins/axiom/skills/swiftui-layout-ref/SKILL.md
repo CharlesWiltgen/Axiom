@@ -18,6 +18,7 @@ This reference covers all SwiftUI layout APIs for building adaptive interfaces:
 - **Layout Protocol** — Custom layout algorithms (iOS 16+)
 - **onGeometryChange** — Efficient geometry reading (iOS 16+ backported)
 - **GeometryReader** — Layout-phase geometry access (iOS 13+)
+- **Safe Area Padding** — .safeAreaPadding() vs .padding() (iOS 17+)
 - **Size Classes** — Trait-based adaptation
 - **iOS 26 Window APIs** — Free-form windows, menu bar, resize anchors
 
@@ -388,6 +389,252 @@ GeometryReader { geo in
         .frame(width: geo.size.width)  // Can cause infinite loop
 }
 ```
+
+---
+
+## Safe Area Padding
+
+SwiftUI provides two primary approaches for handling spacing around content: `.padding()` and `.safeAreaPadding()`. Understanding when to use each is critical for proper layout on devices with safe areas (notch, Dynamic Island, home indicator).
+
+### The Critical Difference
+
+```swift
+// ❌ WRONG - Ignores safe areas, content hits notch/home indicator
+ScrollView {
+    content
+}
+.padding(.horizontal, 20)
+
+// ✅ CORRECT - Respects safe areas, adds padding beyond them
+ScrollView {
+    content
+}
+.safeAreaPadding(.horizontal, 20)
+```
+
+**Key insight**: `.padding()` adds fixed spacing from the view's edges. `.safeAreaPadding()` adds spacing beyond the safe area insets.
+
+### When to Use Each
+
+#### Use `.padding()` when
+
+- Adding spacing between sibling views within a container
+- Creating internal spacing that should be consistent everywhere
+- Working with views that already respect safe areas (like List, Form)
+- Adding decorative spacing on macOS (no safe area concerns)
+
+```swift
+VStack(spacing: 0) {
+    header
+        .padding(.horizontal, 16)  // ✅ Internal spacing
+
+    Divider()
+
+    content
+        .padding(.horizontal, 16)  // ✅ Internal spacing
+}
+```
+
+#### Use `.safeAreaPadding()` when (iOS 17+)
+
+- Adding margin to full-width content that extends to screen edges
+- Implementing edge-to-edge scrolling with proper insets
+- Creating custom containers that need safe area awareness
+- Working with Liquid Glass or full-screen materials
+
+```swift
+// ✅ Edge-to-edge list with custom padding
+List(items) { item in
+    ItemRow(item)
+}
+.listStyle(.plain)
+.safeAreaPadding(.horizontal, 20)  // Adds 20pt beyond safe areas
+
+// ✅ Full-screen content with proper margins
+ZStack {
+    Color.blue.ignoresSafeArea()
+
+    VStack {
+        content
+    }
+    .safeAreaPadding(.all, 16)  // Respects notch, home indicator
+}
+```
+
+### Platform Availability
+
+**iOS 17+, iPadOS 17+, macOS 14+, visionOS 1.0+**
+
+For earlier iOS versions, use manual safe area handling:
+
+```swift
+// iOS 13-16 fallback
+GeometryReader { geo in
+    content
+        .padding(.horizontal, 20 + geo.safeAreaInsets.leading)
+}
+```
+
+Or conditional compilation:
+
+```swift
+if #available(iOS 17, *) {
+    content.safeAreaPadding(.horizontal, 20)
+} else {
+    content.padding(.horizontal, 20)
+        .padding(.leading, safeAreaInsets.leading)
+}
+```
+
+### Edge-Specific Usage
+
+```swift
+// Top only (below status bar/notch)
+.safeAreaPadding(.top, 8)
+
+// Bottom only (above home indicator)
+.safeAreaPadding(.bottom, 16)
+
+// Horizontal (left/right of safe areas)
+.safeAreaPadding(.horizontal, 20)
+
+// All edges
+.safeAreaPadding(.all, 16)
+
+// Individual edges
+.safeAreaPadding(EdgeInsets(top: 8, leading: 20, bottom: 16, trailing: 20))
+```
+
+### Common Patterns
+
+#### Edge-to-Edge ScrollView
+
+```swift
+ScrollView {
+    LazyVStack(spacing: 12) {
+        ForEach(items) { item in
+            ItemCard(item)
+        }
+    }
+}
+.safeAreaPadding(.horizontal, 16)  // Content inset from edges + safe areas
+.safeAreaPadding(.vertical, 8)
+```
+
+#### Full-Screen Background with Safe Content
+
+```swift
+ZStack {
+    // Background extends edge-to-edge
+    LinearGradient(...)
+        .ignoresSafeArea()
+
+    // Content respects safe areas + custom padding
+    VStack {
+        header
+        Spacer()
+        content
+        Spacer()
+        footer
+    }
+    .safeAreaPadding(.all, 20)
+}
+```
+
+#### Nested Padding (Combined Approach)
+
+```swift
+// Outer: Safe area padding for device insets
+VStack(spacing: 0) {
+    content
+}
+.safeAreaPadding(.horizontal, 16)  // Beyond safe areas
+
+// Inner: Regular padding for internal spacing
+VStack {
+    Text("Title")
+        .padding(.bottom, 8)  // Internal spacing
+    Text("Subtitle")
+}
+```
+
+### Decision Tree
+
+```
+Does your content extend to screen edges?
+├─ YES → Use .safeAreaPadding()
+│   ├─ Is it scrollable? → .safeAreaPadding(.horizontal/.vertical)
+│   └─ Is it full-screen? → .safeAreaPadding(.all)
+│
+└─ NO (contained within a safe container like List/Form)
+    └─ Use .padding() for internal spacing
+```
+
+### Visual Debugging
+
+```swift
+// Visualize safe area padding (iOS 17+)
+content
+    .safeAreaPadding(.horizontal, 20)
+    .background(.red.opacity(0.2))  // Shows padding area
+    .border(.blue)  // Shows content bounds
+```
+
+### Migration from Manual Safe Area Handling
+
+```swift
+// ❌ OLD: Manual calculation (iOS 13-16)
+GeometryReader { geo in
+    content
+        .padding(.top, geo.safeAreaInsets.top + 16)
+        .padding(.bottom, geo.safeAreaInsets.bottom + 16)
+        .padding(.horizontal, 20)
+}
+
+// ✅ NEW: .safeAreaPadding() (iOS 17+)
+content
+    .safeAreaPadding(.vertical, 16)
+    .safeAreaPadding(.horizontal, 20)
+```
+
+### Related APIs
+
+**`.safeAreaInset(edge:)`** - Adds persistent content that shrinks the safe area:
+```swift
+ScrollView {
+    content
+}
+.safeAreaInset(edge: .bottom) {
+    // This REDUCES the safe area, content scrolls under it
+    toolbarButtons
+        .padding()
+        .background(.ultraThinMaterial)
+}
+```
+
+**`.ignoresSafeArea()`** - Opts out of safe area completely:
+```swift
+Color.blue
+    .ignoresSafeArea()  // Extends to absolute screen edges
+```
+
+### Why It Matters
+
+**Before iOS 17**: Developers had to manually calculate safe area insets with GeometryReader, leading to:
+- Verbose code
+- Performance overhead (GeometryReader forces extra layout pass)
+- Easy mistakes (forgetting to check all edges)
+
+**iOS 17+**: `.safeAreaPadding()` provides:
+- Declarative API (matches SwiftUI philosophy)
+- Automatic safe area awareness
+- Better performance (no extra layout passes)
+- Type-safe edge specification
+
+**Real-world impact**: Using `.padding()` instead of `.safeAreaPadding()` on iPhone 15 Pro causes content to:
+- Hit the Dynamic Island (top)
+- Overlap the home indicator (bottom)
+- Get cut off by screen corners (rounded edges)
 
 ---
 

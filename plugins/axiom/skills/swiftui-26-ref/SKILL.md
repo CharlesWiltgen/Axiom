@@ -944,6 +944,19 @@ Apps must support resizable windows on iPad.
 - Fight the automatic design - embrace consistency
 - Over-tint toolbars (use for prominence only)
 
+### Layout & Spacing
+
+#### DO
+- Use `.safeAreaPadding()` for edge-to-edge content (iOS 17+)
+- Combine `.safeAreaPadding()` with Liquid Glass materials extending edge-to-edge
+- Use `.padding()` for internal spacing between views
+
+#### DON'T
+- Use `.padding()` when content extends to screen edges (ignores notch/home indicator)
+- Manually calculate safe area insets with GeometryReader on iOS 17+ (use `.safeAreaPadding()` instead)
+
+**Reference**: See `swiftui-layout-ref` skill for complete `.safeAreaPadding()` vs `.padding()` guide, or `liquid-glass-ref` for Liquid Glass-specific safe area patterns.
+
 ### Rich Text
 
 #### DO
