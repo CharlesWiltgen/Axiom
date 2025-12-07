@@ -2,6 +2,10 @@
 name: swiftui-gestures
 description: Use when implementing SwiftUI gestures (tap, drag, long press, magnification, rotation), composing gestures, managing gesture state, or debugging gesture conflicts - comprehensive patterns for gesture recognition, composition, accessibility, and cross-platform support
 skill_type: discipline
+version: 1.0.0
+last_updated: 2025-12-07
+apple_platforms: iOS 13+, macOS 10.15+, iPadOS 13+, visionOS 1.0+
+xcode_version: Xcode 16+
 ---
 
 # SwiftUI Gestures
@@ -17,6 +21,27 @@ Comprehensive guide to SwiftUI gesture recognition with composition patterns, st
 - Debugging gesture conflicts or unresponsive gestures
 - Making gestures accessible with VoiceOver
 - Cross-platform gesture handling (iOS, macOS, visionOS)
+
+## Example Prompts
+
+These are real questions developers ask that this skill is designed to answer:
+
+#### 1. "My drag gesture isn't working - the view doesn't move when I drag it. How do I debug this?"
+→ The skill covers DragGesture state management patterns and shows how to properly update view offset with @GestureState
+
+#### 2. "I have both a tap gesture and a drag gesture on the same view. The tap works but the drag doesn't. How do I fix this?"
+→ The skill demonstrates gesture composition with .simultaneously, .sequenced, and .exclusively to resolve gesture conflicts
+
+#### 3. "I want users to long press before they can drag an item. How do I chain gestures together?"
+→ The skill shows the .sequenced pattern for combining LongPressGesture with DragGesture in the correct order
+
+#### 4. "My gesture state isn't resetting when the gesture ends. The view stays in the wrong position."
+→ The skill covers @GestureState automatic reset behavior and the updating parameter for proper state management
+
+#### 5. "VoiceOver users can't access features that require gestures. How do I make gestures accessible?"
+→ The skill demonstrates .accessibilityAction patterns and providing alternative interactions for VoiceOver users
+
+---
 
 ## Choosing the Right Gesture (Decision Tree)
 
@@ -383,10 +408,6 @@ struct SwipeGesture: Gesture {
   init(minimumDistance: CGFloat = 50, coordinateSpace: CoordinateSpace = .local) {
     self.minimumDistance = minimumDistance
     self.coordinateSpace = coordinateSpace
-  }
-
-  func body(content: Content) -> some Gesture {
-    DragGesture(minimumDistance: minimumDistance, coordinateSpace: coordinateSpace)
   }
 
   // Value is the direction

@@ -3,6 +3,9 @@ name: build-performance
 description: Use when build times are slow, investigating build performance, analyzing Build Timeline, identifying type checking bottlenecks, or optimizing incremental builds - comprehensive build optimization workflows based on WWDC 2018/408, WWDC 2022/110364, and real-world optimization patterns
 skill_type: discipline
 version: 1.0
+last_updated: 2025-12-07
+apple_platforms: iOS 14+, macOS 11+, iPadOS 14+, tvOS 14+, watchOS 7+, visionOS 1.0+
+xcode_version: Xcode 14+
 wwdc_sessions: [2018-408, 2022-110364]
 ---
 
