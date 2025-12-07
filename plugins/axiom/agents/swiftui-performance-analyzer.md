@@ -1,14 +1,7 @@
 ---
-agent: swiftui-performance-analyzer
-description: Automatically scans SwiftUI code for performance anti-patterns - detects expensive operations in view bodies, unnecessary updates, missing lazy loading, and SwiftUI-specific issues that cause frame drops and poor scrolling performance
-model: haiku
-color: purple
-tools:
-  - Glob
-  - Grep
-  - Read
-whenToUse: |
-  Trigger when user mentions SwiftUI performance, janky scrolling, slow animations, or view update issues.
+name: swiftui-performance-analyzer
+description: |
+  Use this agent when the user mentions SwiftUI performance, janky scrolling, slow animations, or view update issues. Automatically scans SwiftUI code for performance anti-patterns - detects expensive operations in view bodies, unnecessary updates, missing lazy loading, and SwiftUI-specific issues that cause frame drops and poor scrolling performance.
 
   <example>
   user: "My SwiftUI app has janky scrolling, can you check for performance issues?"
@@ -36,6 +29,12 @@ whenToUse: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit-swiftui-performance`
+model: haiku
+color: purple
+tools:
+  - Glob
+  - Grep
+  - Read
 ---
 
 # SwiftUI Performance Analyzer Agent
@@ -92,7 +91,48 @@ Run a comprehensive SwiftUI performance audit and report all issues with:
 **Issue**: Navigation state updates trigger view recreation, passing large models causes memory pressure
 **Fix**: Use stable path state, pass IDs not models, cache path computations
 
-### 9. Old ObservableObject Pattern (LOW)
+### 9. SwiftUI Memory Leak Patterns (MEDIUM)
+**Pattern**: Timers, observers, or closures in SwiftUI views without cleanup
+**Issue**: Memory leaks cause cumulative performance degradation
+**Impact**: Each view instance leaked consumes memory, slows app over time
+**Fix**: Use `.onDisappear` for cleanup or Combine publishers with `.store(in:)`
+**Example**:
+```swift
+// ❌ BAD: Timer without cleanup
+struct ContentView: View {
+    @State private var timer: Timer?
+
+    var body: some View {
+        Text("Hello")
+            .onAppear {
+                timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+                    // Update UI
+                }
+            }
+        // Missing: .onDisappear { timer?.invalidate() }
+    }
+}
+
+// ✅ GOOD: Proper cleanup
+struct ContentView: View {
+    @State private var timer: Timer?
+
+    var body: some View {
+        Text("Hello")
+            .onAppear {
+                timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+                    // Update UI
+                }
+            }
+            .onDisappear {
+                timer?.invalidate()
+                timer = nil
+            }
+    }
+}
+```
+
+### 10. Old ObservableObject Pattern (LOW)
 **Pattern**: `ObservableObject` + `@Published` instead of `@Observable` (iOS 17+)
 **Issue**: More allocations, less efficient updates
 **Fix**: Migrate to `@Observable` macro for better performance
@@ -142,6 +182,12 @@ grep -rn "CIFilter" --include="*.swift" -B 5 | grep "var body"
 grep -rn "\.contains\(" --include="*.swift" -B 5 | grep "var body"
 grep -rn "\.first(where:" --include="*.swift" -B 5 | grep "var body"
 grep -rn "\.filter\(" --include="*.swift" -B 5 | grep "var body"
+
+# Note: False positives include:
+# - Sets (O(1) lookup, efficient)
+# - Small collections (<10 items, minimal impact)
+# - Usage in .task/.onAppear blocks (async context, acceptable)
+# Manual review recommended to verify actual performance impact
 ```
 
 **Missing Lazy Loading**:
@@ -163,9 +209,27 @@ grep -rn "\.environment(.*dragState\|gestureState" --include="*.swift"
 
 **Missing View Identity**:
 ```bash
-# ForEach without id parameter
+# ForEach without explicit id (may be false positive if type is Identifiable)
 grep -rn "ForEach(" --include="*.swift" | grep -v "id:"
-grep -rn "ForEach\(.*\) {" --include="*.swift" | grep -v "Identifiable"
+
+# Note: This check has limitations:
+# - False positives for ForEach on Identifiable types (which don't need explicit id)
+# - Cannot verify protocol conformance via static analysis
+# Recommend checking SwiftUI runtime warnings for actual identity issues
+```
+
+**SwiftUI Memory Leak Patterns**:
+```bash
+# Timer usage in SwiftUI views
+grep -rn "Timer\." --include="*.swift" -B 10 | grep "struct.*: View"
+
+# NotificationCenter in SwiftUI views
+grep -rn "NotificationCenter\.default\.addObserver" --include="*.swift" -B 10 | grep "struct.*: View"
+
+# Check for onDisappear cleanup (good pattern)
+grep -rn "\.onDisappear" --include="*.swift"
+
+# Cross-reference: Views with Timer/observers but no onDisappear cleanup
 ```
 
 **Old ObservableObject Pattern**:
@@ -206,6 +270,8 @@ grep -rn "@State.*NavigationPath" --include="*.swift"
 - Missing lazy loading for long lists
 - Frequently changing environment values
 - Missing view identity in ForEach
+- SwiftUI memory leak patterns (timers, observers without cleanup)
+- Navigation performance issues (path recreation, large models)
 
 **LOW** (Optimization opportunity):
 - Using ObservableObject instead of @Observable
@@ -287,8 +353,10 @@ grep -rn "@State.*NavigationPath" --include="*.swift"
   ```swift
   // ❌ BAD: Process every update
   var body: some View {
-      let thumbnail = image.resized(to: CGSize(width: 100, height: 100))
-      Image(uiImage: thumbnail)
+      let thumbnail = image.preparingThumbnail(of: CGSize(width: 100, height: 100))
+      if let thumbnail {
+          Image(uiImage: thumbnail)
+      }
   }
 
   // ✅ GOOD: Cache processed thumbnails
@@ -300,7 +368,7 @@ grep -rn "@State.*NavigationPath" --include="*.swift"
       }
   }
   .task {
-      thumbnail = await processThumbnail(image)
+      thumbnail = await image.byPreparingThumbnail(ofSize: CGSize(width: 100, height: 100))
   }
   ```
 
@@ -500,9 +568,11 @@ If NO issues found:
 These are acceptable (not issues):
 - Formatters in `@Observable` classes (good pattern)
 - Small collections (<10 items) with .contains()
+- Sets with .contains() (O(1) lookup, efficient)
 - VStack with few items (<20, no need for Lazy)
 - Image processing in `.task` or background queue
 - File I/O in `.task` or async contexts
+- ForEach on Identifiable types without explicit id parameter (automatic identity)
 
 ## Performance Risk Score
 

@@ -1,14 +1,7 @@
 ---
-agent: core-data-auditor
-description: Automatically scans Core Data code for the 5 most critical safety violations - schema migration risks, thread-confinement errors, N+1 query patterns, production data loss risks, and performance issues - prevents production crashes and permanent data loss
-model: haiku
-color: orange
-tools:
-  - Glob
-  - Grep
-  - Read
-whenToUse: |
-  Trigger when user mentions Core Data review, schema migration, production crashes, or data safety checking.
+name: core-data-auditor
+description: |
+  Use this agent when the user mentions Core Data review, schema migration, production crashes, or data safety checking. Automatically scans Core Data code for the 5 most critical safety violations - schema migration risks, thread-confinement errors, N+1 query patterns, production data loss risks, and performance issues - prevents production crashes and permanent data loss.
 
   <example>
   user: "Can you check my Core Data code for safety issues?"
@@ -36,6 +29,12 @@ whenToUse: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit-core-data`
+model: haiku
+color: orange
+tools:
+  - Glob
+  - Grep
+  - Read
 ---
 
 # Core Data Auditor Agent
@@ -112,19 +111,31 @@ grep -rn "FileManager.*removeItem.*persistent" --include="*.swift"
 grep -rn "DispatchQueue.*NSManagedObject" --include="*.swift"
 grep -rn "Task.*NSManagedObject" --include="*.swift"
 
+# Find async/await usage with managed objects (Swift 5.5+)
+grep -rn "async.*NSManagedObject" --include="*.swift"
+grep -rn "await.*\.save\(\)" --include="*.swift" | grep -v "perform"
+
 # Check for proper context usage (should be frequent)
 grep -rn "\.perform\s*{" --include="*.swift"
 grep -rn "\.performAndWait" --include="*.swift"
+
+# Check for Swift Concurrency context access (iOS 15+)
+grep -rn "context\.perform.*async" --include="*.swift"
 ```
 
 **N+1 Query Patterns**:
 ```bash
-# Find relationship access in loops
-grep -rn "for.*in.*{" --include="*.swift" -A 5 | grep "\.\w\+\."
+# Find relationship access in loops (more comprehensive)
+grep -rn "for.*in.*\." --include="*.swift" -A 3 | grep -E "\..*\?\..*|\..*\..*"
 
-# Check for prefetching (should match fetch requests)
+# Find fetch requests followed by loops without prefetching
+grep -rn "NSFetchRequest" --include="*.swift" -A 10 | grep "for.*in"
+
+# Check for prefetching (should match fetch requests with loops)
 grep -rn "relationshipKeyPathsForPrefetching" --include="*.swift"
-grep -rn "NSFetchRequest" --include="*.swift"
+
+# Check for batch faulting as alternative
+grep -rn "\.propertiesToFetch" --include="*.swift"
 ```
 
 **Production Risk Patterns**:
@@ -132,9 +143,14 @@ grep -rn "NSFetchRequest" --include="*.swift"
 # Find forced unwrapping/try! in Core Data
 grep -rn "try!\s*.*addPersistentStore" --include="*.swift"
 grep -rn "try!\s*.*coordinator" --include="*.swift"
+grep -rn "try!\s*.*context\.save" --include="*.swift"
 
 # Find store deletion patterns
 grep -rn "removeItem.*persistent" --include="*.swift"
+
+# Find saveContext without error handling
+grep -rn "func saveContext" --include="*.swift" -A 10 | grep -v "catch"
+grep -rn "context\.save\(\)" --include="*.swift" | grep -v "try" | grep -v "throws"
 ```
 
 **Performance Issues**:
@@ -338,7 +354,7 @@ Use `/skill core-data-diag` for:
 If CRITICAL issues found:
 - Emphasize crash risk and data loss
 - Recommend fixing before production release
-- Provide deinit or error handling code
+- Provide explicit error handling code examples
 - Calculate time to fix (usually 5-20 minutes per issue)
 
 If NO issues found:

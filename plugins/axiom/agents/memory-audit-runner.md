@@ -1,14 +1,7 @@
 ---
-agent: memory-audit-runner
-description: Automatically scans codebase for the 6 most common memory leak patterns - timer leaks, observer leaks, closure captures, delegate cycles, view callbacks, and PhotoKit accumulation to prevent crashes and progressive memory growth
-model: haiku
-color: red
-tools:
-  - Glob
-  - Grep
-  - Read
-whenToUse: |
-  Trigger when user mentions memory leak prevention, code review for memory issues, or proactive leak checking.
+name: memory-audit-runner
+description: |
+  Use this agent when the user mentions memory leak prevention, code review for memory issues, or proactive leak checking. Automatically scans codebase for the 6 most common memory leak patterns - timer leaks, observer leaks, closure captures, delegate cycles, view callbacks, and PhotoKit accumulation to prevent crashes and progressive memory growth.
 
   <example>
   user: "Can you check my code for memory leaks?"
@@ -36,6 +29,12 @@ whenToUse: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit-memory`
+model: haiku
+color: red
+tools:
+  - Glob
+  - Grep
+  - Read
 ---
 
 # Memory Audit Runner Agent
@@ -94,31 +93,52 @@ find . -name "*.swift" -type f
 
 **Pattern 1: Timer Leaks**:
 ```bash
-# Find Timer usage
+# Find Timer usage (multiple variants)
 grep -rn "Timer\.scheduledTimer.*repeats.*true" --include="*.swift"
+grep -rn "Timer\.scheduledTimer.*repeats:\s*true" --include="*.swift"
+grep -rn "Timer(timeInterval:.*repeats:\s*true" --include="*.swift"
+grep -rn "Timer\.publish" --include="*.swift"  # Combine timers
 
 # Check for invalidate() calls (should match timer count)
 grep -rn "\.invalidate()" --include="*.swift"
 ```
 
-**Pattern 2: Observer Leaks**:
+**Pattern 2: Observer/Subscription Leaks**:
 ```bash
-# Find addObserver calls
+# Find NotificationCenter addObserver calls
 grep -rn "addObserver\(self," --include="*.swift"
 grep -rn "NotificationCenter\.default\.addObserver" --include="*.swift"
 
 # Check for removeObserver cleanup
 grep -rn "removeObserver\(self" --include="*.swift"
+
+# Find Combine subscriptions without cancellation (iOS 13+)
+grep -rn "\.sink\s*{" --include="*.swift"
+grep -rn "\.assign\(to:" --include="*.swift"
+
+# Check for AnyCancellable storage (should match subscription count)
+grep -rn "AnyCancellable" --include="*.swift"
+grep -rn "Set<AnyCancellable>" --include="*.swift"
+
+# Find Timer.publish (Combine timers) - need cancellation
+grep -rn "Timer\.publish" --include="*.swift"
 ```
 
 **Pattern 3: Closure Capture Leaks**:
 ```bash
-# Find closures appended to arrays
+# Find closures appended to arrays/collections
 grep -rn "\.append.*{.*self\." --include="*.swift"
 grep -rn "\.append.*\[self\]" --include="*.swift"
 
-# Find closures without [weak self]
-grep -rn "\.append" --include="*.swift" | grep -v "\[weak self\]"
+# Find closures in stored properties (callbacks array, handlers)
+grep -rn "var.*:.*\[.*->.*\]" --include="*.swift"
+grep -rn "var.*callbacks.*=.*\[\]" --include="*.swift"
+
+# Find closures passed to async APIs without weak self
+grep -rn "DispatchQueue.*{.*self\." --include="*.swift" | grep -v "\[weak self\]"
+grep -rn "Task.*{.*self\." --include="*.swift" | grep -v "\[weak self\]"
+
+# Note: Not all closures need [weak self], only those stored or potentially outliving owner
 ```
 
 **Pattern 4: Strong Delegate Cycles**:
@@ -133,9 +153,14 @@ grep -rn "weak var.*delegate" --include="*.swift"
 
 **Pattern 5: View Callback Leaks**:
 ```bash
-# SwiftUI onAppear/onDisappear with self
-grep -rn "\.onAppear.*self\." --include="*.swift" | grep -v "\[weak self\]"
-grep -rn "\.onDisappear.*self\." --include="*.swift" | grep -v "\[weak self\]"
+# SwiftUI onAppear/onDisappear with self capturing closures
+grep -rn "\.onAppear\s*{" --include="*.swift" -A 3 | grep "self\." | grep -v "\[weak self\]"
+grep -rn "\.onDisappear\s*{" --include="*.swift" -A 3 | grep "self\." | grep -v "\[weak self\]"
+
+# Note: Most SwiftUI callbacks are safe because views are value types
+# Only flag if closure is stored or passed to async context
+# Check for stored closures in view properties
+grep -rn "var.*:.*\(\) -> Void" --include="*.swift" | grep -v "weak"
 ```
 
 **Pattern 6: PhotoKit Accumulation**:
@@ -266,6 +291,104 @@ After fixing leaks:
 # 4. Use malloc stack logging
 # Product → Scheme → Diagnostics → Malloc Stack
 ```
+
+## Memory Graph Debugger
+
+**When to use**: Identify specific retain cycles and strong reference chains causing leaks.
+
+### Accessing Memory Graph Debugger
+
+1. **Run your app in Xcode** (not Instruments)
+2. **Navigate to the leaked screen** (e.g., present modal, navigate to view)
+3. **Trigger the leak** (e.g., dismiss modal, pop view)
+4. **Click Debug Memory Graph button** in Debug Navigator (bottom toolbar, icon looks like nested rectangles)
+   - Or: Debug → View Memory Graph Hierarchy
+
+### Reading the Memory Graph
+
+**Left Panel**: All objects in memory
+- Filter by class name (e.g., "MyViewController")
+- Purple `!` icon = potential retain cycle detected
+- Look for objects that should be deallocated but aren't
+
+**Center Panel**: Visual graph showing object relationships
+- **Nodes** = objects in memory
+- **Edges** = references between objects
+- **Bold edges** = strong references
+- **Dashed edges** = weak references
+
+### Finding Retain Cycles
+
+1. **Find your leaked object** in left panel (e.g., MyViewController)
+2. **Right-click → Show Retain Cycle** if purple `!` appears
+3. **Trace the strong reference chain**:
+   - MyViewController → property → Closure → self (strong)
+   - Should be: MyViewController → property → Closure → self (weak)
+
+### Common Patterns in Memory Graph
+
+**Timer Leak**:
+```
+MyViewController → timer (strong) → target (strong) → MyViewController
+Fix: Call timer?.invalidate() in deinit
+```
+
+**Closure Leak**:
+```
+MyViewController → callbacks array → closure → self (strong)
+Fix: Use [weak self] in closure
+```
+
+**Delegate Cycle**:
+```
+ParentVC → childVC (strong) → delegate (strong) → ParentVC
+Fix: Mark delegate as weak
+```
+
+**Observer Leak**:
+```
+MyViewController → NotificationCenter → observer (strong) → MyViewController
+Fix: removeObserver(self) in deinit
+```
+
+### Memory Graph vs Instruments Leaks
+
+**Use Memory Graph when**:
+- You know which screen leaks
+- You want to see reference chains visually
+- You're debugging retain cycles
+- Quick verification during development
+
+**Use Instruments Leaks when**:
+- You don't know where leaks occur
+- You want historical memory growth data
+- You're profiling over time
+- You need exact allocation stack traces
+
+### Workflow Example
+
+1. **Reproduce leak**: Present SettingsViewController, dismiss it
+2. **Capture graph**: Click Memory Graph button
+3. **Filter objects**: Type "SettingsViewController" in left panel
+4. **Verify deallocation**: Should see 0 instances if no leak
+5. **If instance exists**: Right-click → Show Retain Cycle
+6. **Identify strong reference**: Follow bold edges in cycle
+7. **Fix code**: Add weak, invalidate(), or removeObserver()
+8. **Verify fix**: Repeat steps 1-4, confirm 0 instances
+
+### Tips
+
+- **Exclude system objects**: Focus on your app's classes
+- **Check after each dismissal**: Memory Graph shows current state only
+- **Compare before/after**: Capture graph before and after presenting view
+- **Export graphs**: File → Export Memory Graph for later analysis
+
+### Limitations
+
+- **Doesn't show historical trends** (use Instruments for that)
+- **Snapshots current state only** (not continuous monitoring)
+- **Can't detect abandoned memory** (memory without references, use Allocations instrument)
+- **Large apps = large graphs** (filter aggressively)
 
 ## Verification Checklist
 

@@ -1,14 +1,7 @@
 ---
-agent: swiftui-nav-auditor
-description: Automatically scans SwiftUI navigation code for architecture issues - detects missing NavigationPath, deep link gaps, state restoration problems, wrong container usage, and navigation correctness issues (not performance - see swiftui-performance-analyzer for that)
-model: haiku
-color: blue
-tools:
-  - Glob
-  - Grep
-  - Read
-whenToUse: |
-  Trigger when user mentions SwiftUI navigation issues, deep linking problems, state restoration bugs, or navigation architecture review.
+name: swiftui-nav-auditor
+description: |
+  Use this agent when the user mentions SwiftUI navigation issues, deep linking problems, state restoration bugs, or navigation architecture review. Automatically scans SwiftUI navigation code for architecture issues - detects missing NavigationPath, deep link gaps, state restoration problems, wrong container usage, and navigation correctness issues (not performance - see swiftui-performance-analyzer for that).
 
   <example>
   user: "Check my SwiftUI navigation for correctness issues"
@@ -31,6 +24,18 @@ whenToUse: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit-swiftui-nav`
+model: haiku
+color: blue
+tools:
+  - Glob
+  - Grep
+  - Read
+mcp:
+  category: auditing
+  tags: [swiftui, navigation, deep-links, state-restoration, architecture]
+  related: [swiftui-nav, swiftui-nav-diag, swiftui-nav-ref]
+  annotations:
+    readOnly: true
 ---
 
 # SwiftUI Navigation Auditor Agent
@@ -88,6 +93,16 @@ Run a comprehensive SwiftUI navigation audit focused on **correctness and archit
 **Pattern**: Navigation logic scattered across views, `@EnvironmentObject` path passed everywhere
 **Issue**: Hard to test, difficult to reason about navigation flow, tight coupling
 **Fix**: Centralize navigation in coordinator/router, use dependency injection
+
+### 9. Deprecated NavigationLink APIs (MEDIUM)
+**Pattern**: Using `NavigationLink(isActive:)` or `NavigationLink(tag:selection:)` (deprecated iOS 16+)
+**Issue**: Deprecated APIs, should migrate to NavigationStack with path-based navigation
+**Fix**: Replace with NavigationStack + NavigationPath pattern
+
+### 10. Missing NavigationSplitViewVisibility State (LOW)
+**Pattern**: NavigationSplitView without explicit `.navigationSplitViewVisibility` state management
+**Issue**: Can't programmatically control sidebar visibility (show/hide sidebar)
+**Fix**: Add `@State var visibility: NavigationSplitViewVisibility` and bind to view
 
 ## Audit Process
 
@@ -186,6 +201,24 @@ grep -rn "class.*Coordinator\|class.*Router\|class.*Navigator" --include="*.swif
 grep -rn "@EnvironmentObject.*path\|@EnvironmentObject.*navigation" --include="*.swift"
 ```
 
+**Deprecated NavigationLink APIs**:
+```bash
+# Deprecated NavigationLink(isActive:) pattern
+grep -rn "NavigationLink.*isActive:" --include="*.swift"
+
+# Deprecated NavigationLink(tag:selection:) pattern
+grep -rn "NavigationLink.*tag:.*selection:" --include="*.swift"
+```
+
+**Missing NavigationSplitViewVisibility State**:
+```bash
+# NavigationSplitView usage
+grep -rn "NavigationSplitView" --include="*.swift"
+
+# Check for explicit visibility state management
+grep -rn "NavigationSplitViewVisibility\|columnVisibility:" --include="*.swift"
+```
+
 ### Step 3: Categorize by Severity
 
 **CRITICAL** (Navigation broken):
@@ -200,9 +233,11 @@ grep -rn "@EnvironmentObject.*path\|@EnvironmentObject.*navigation" --include="*
 **MEDIUM** (Sub-optimal):
 - Wrong container (works but poor UX on larger screens)
 - Tab/Nav integration issues (works but not native iOS 18+ experience)
+- Deprecated NavigationLink APIs (deprecated iOS 16+, should migrate)
 
 **LOW** (Architecture/maintainability):
 - Coordinator pattern violations (harder to maintain)
+- Missing NavigationSplitViewVisibility state (can't control sidebar programmatically)
 
 ## Output Format
 
@@ -344,12 +379,13 @@ grep -rn "@EnvironmentObject.*path\|@EnvironmentObject.*navigation" --include="*
   var body: some View {
       NavigationStack(path: $path) { ... }
           .onAppear {
-              if let pathData, let restored = try? JSONDecoder().decode(NavigationPath.self, from: pathData) {
-                  path = restored
+              if let pathData,
+                 let representation = try? JSONDecoder().decode(NavigationPath.CodableRepresentation.self, from: pathData) {
+                  path = NavigationPath(representation)
               }
           }
           .onChange(of: path) { _, newPath in
-              pathData = try? JSONEncoder().encode(newPath)
+              pathData = try? JSONEncoder().encode(newPath.codable)
           }
   }
   ```
@@ -395,6 +431,34 @@ grep -rn "@EnvironmentObject.*path\|@EnvironmentObject.*navigation" --include="*
   .tabViewStyle(.sidebarAdaptable)
   ```
 
+### Deprecated NavigationLink APIs
+- `SettingsView.swift:45` - Using NavigationLink(isActive:) (deprecated iOS 16+)
+  - **Issue**: Deprecated API, should migrate to NavigationStack with path
+  - **Impact**: Won't be supported in future iOS versions
+  - **Fix**: Migrate to path-based navigation
+  ```swift
+  // ⚠️ DEPRECATED (iOS 16+):
+  @State private var isShowingDetail = false
+
+  NavigationLink(isActive: $isShowingDetail) {
+      DetailView()
+  } label: {
+      Text("Show Detail")
+  }
+
+  // ✅ MODERN: Path-based navigation
+  @State private var path = NavigationPath()
+
+  NavigationStack(path: $path) {
+      Button("Show Detail") {
+          path.append(DetailRoute.settings)
+      }
+      .navigationDestination(for: DetailRoute.self) { route in
+          DetailView()
+      }
+  }
+  ```
+
 ## LOW Issues
 
 ### Coordinator Pattern Violations
@@ -435,6 +499,34 @@ grep -rn "@EnvironmentObject.*path\|@EnvironmentObject.*navigation" --include="*
   }
   ```
 
+### Missing NavigationSplitViewVisibility State
+- `SplitView.swift:12` - No explicit sidebar visibility state
+  - **Issue**: Can't programmatically show/hide sidebar
+  - **Impact**: No control over sidebar visibility, can't implement custom UI controls
+  - **Fix**: Add NavigationSplitViewVisibility state
+  ```swift
+  // ⚠️ WORKS BUT LIMITED CONTROL:
+  NavigationSplitView {
+      Sidebar()
+  } detail: {
+      DetailView()
+  }
+
+  // ✅ BETTER: Explicit visibility control
+  @State private var visibility: NavigationSplitViewVisibility = .automatic
+
+  NavigationSplitView(columnVisibility: $visibility) {
+      Sidebar()
+  } detail: {
+      DetailView()
+  }
+  .toolbar {
+      Button("Toggle Sidebar") {
+          visibility = visibility == .all ? .detailOnly : .all
+      }
+  }
+  ```
+
 ## Next Steps
 
 1. **Fix CRITICAL issues immediately** (deep links broken)
@@ -467,7 +559,7 @@ Use related skills:
 
 ## Critical Rules
 
-1. **Always run all 8 pattern searches** - Don't skip categories
+1. **Always run all 10 pattern searches** - Don't skip categories
 2. **Provide file:line references** - Make issues easy to locate
 3. **Show before/after code** - Include fix examples
 4. **Categorize by severity** - Help prioritize fixes
@@ -501,7 +593,9 @@ Calculate risk score:
 - Each HIGH issue: +2 points
 - Each MEDIUM issue: +1 point
 - Each LOW issue: +0.5 points
-- Maximum: 10
+- **Calculation**: Sum all points, then cap at 10
+  - Formula: `score = min(total_points, 10)`
+  - Example: 3 CRITICAL (12 points) → capped at 10
 
 **Interpretation**:
 - 0-2: Low risk, solid architecture
@@ -516,8 +610,10 @@ From auditing 100+ SwiftUI apps:
 - 50% no deep link handling (.onOpenURL)
 - 40% missing state restoration (.navigationDestination gaps)
 - 30% wrong container (NavigationStack for master-detail)
+- 25% using deprecated NavigationLink APIs (isActive/tag patterns)
 - 20% type safety issues (multiple destinations with same type)
 - 15% no @SceneStorage (state lost on termination)
+- 10% no NavigationSplitViewVisibility control
 
 ## iOS Version Considerations
 
@@ -528,7 +624,7 @@ From auditing 100+ SwiftUI apps:
 ## Summary
 
 This audit scans for:
-- **8 categories** covering navigation architecture and correctness
+- **10 categories** covering navigation architecture and correctness
 - **Static code analysis** to find structural issues
 - **Actionable fixes** with before/after examples
 - **NOT performance** (that's handled by swiftui-performance-analyzer)

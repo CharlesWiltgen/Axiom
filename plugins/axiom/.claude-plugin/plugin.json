@@ -1,0 +1,32 @@
+{
+  "name": "axiom",
+  "version": "0.9.24",
+  "description": "Battle-tested Claude Code agents, skills, and references for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
+  "author": "Charles Wiltgen",
+  "license": "MIT",
+  "hooks": "./hooks/hooks.json",
+  "commands": [
+    "./commands/fix-build.md",
+    "./commands/optimize-build.md",
+    "./commands/audit-accessibility.md",
+    "./commands/audit-concurrency.md",
+    "./commands/audit-memory.md",
+    "./commands/audit-core-data.md",
+    "./commands/audit-liquid-glass.md",
+    "./commands/audit-networking.md",
+    "./commands/audit-swiftui-performance.md",
+    "./commands/audit-swiftui-nav.md"
+  ],
+  "agents": [
+    "./agents/build-fixer.md",
+    "./agents/build-optimizer.md",
+    "./agents/accessibility-auditor.md",
+    "./agents/concurrency-validator.md",
+    "./agents/memory-audit-runner.md",
+    "./agents/core-data-auditor.md",
+    "./agents/liquid-glass-auditor.md",
+    "./agents/networking-auditor.md",
+    "./agents/swiftui-performance-analyzer.md",
+    "./agents/swiftui-nav-auditor.md"
+  ]
+}

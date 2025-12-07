@@ -1,15 +1,7 @@
 ---
-agent: build-optimizer
-description: Automatically scans Xcode projects for build performance optimizations - identifies slow type checking, expensive build phase scripts, suboptimal build settings, and parallelization opportunities to reduce build times by 30-50%
-model: haiku
-color: green
-tools:
-  - Bash
-  - Read
-  - Grep
-  - Glob
-whenToUse: |
-  Automatically trigger when the user mentions slow builds, build performance, or build time optimization.
+name: build-optimizer
+description: |
+  Use this agent when the user mentions slow builds, build performance, or build time optimization. Automatically scans Xcode projects for build performance optimizations - identifies slow type checking, expensive build phase scripts, suboptimal build settings, and parallelization opportunities to reduce build times by 30-50%.
 
   <example>
   user: "My builds are taking forever, can you help optimize?"
@@ -32,6 +24,13 @@ whenToUse: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:optimize-build`
+model: haiku
+color: green
+tools:
+  - Bash
+  - Read
+  - Grep
+  - Glob
 ---
 
 # Build Optimizer Agent
@@ -74,6 +73,15 @@ Scan for these settings in Debug configuration:
 - `SWIFT_COMPILATION_MODE` should be `wholemodule`
 - `ONLY_ACTIVE_ARCH` should be `NO`
 - `SWIFT_OPTIMIZATION_LEVEL` should be `-O`
+
+**Modern Build Settings (WWDC 2022+)**:
+- `ENABLE_USER_SCRIPT_SANDBOXING` should be `YES` (Xcode 14+, improves build security and caching)
+- `FUSE_BUILD_SCRIPT_PHASES` should be `YES` (parallel script execution)
+
+**Link-Time Optimization (Release Only)**:
+- `LLVM_LTO` should be `YES` or `YES_THIN` for Release builds (reduces binary size, improves performance)
+- **Warning**: Increases Release build time significantly, only use for production
+- Check with: `grep "LLVM_LTO" project.pbxproj`
 
 ### 2. Build Phase Scripts (MEDIUM-HIGH IMPACT)
 
@@ -146,13 +154,33 @@ sysctl -n hw.ncpu
 
 Recommend setting "Build Active Architecture Only" to YES for debug to maximize parallelization.
 
+### 6. Build Timeline Analysis (Xcode 14+)
+
+**How to access Build Timeline**:
+1. Build your project in Xcode
+2. Open Report Navigator (Cmd+9)
+3. Select most recent build
+4. Click "Editor → Assistant" or View → Navigators → Reports
+5. Look for timeline view showing task duration
+
+**What to look for**:
+- Tasks taking >10 seconds (optimization candidates)
+- Sequential tasks that could be parallelized
+- Script phases blocking compilation
+- Redundant asset processing
+
+**Actionable fixes from Build Timeline**:
+- Move slow scripts to background (`.alwaysOutOfDate = false`)
+- Split large targets into smaller frameworks
+- Enable build phase parallelization
+
 ## Scan Process
 
 ### Step 1: Find Xcode Project
 
 ```bash
-# Find .xcodeproj or .xcworkspace
-find . -name "*.xcodeproj" -o -name "*.xcworkspace" -maxdepth 3
+# Find .xcodeproj or .xcworkspace (-maxdepth must come before -name)
+find . -maxdepth 3 -name "*.xcodeproj" -o -name "*.xcworkspace"
 ```
 
 ### Step 2: Locate project.pbxproj

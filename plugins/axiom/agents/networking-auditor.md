@@ -1,14 +1,7 @@
 ---
-agent: networking-auditor
-description: Automatically scans Swift/Objective-C for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling) - prevents App Store rejections and connection failures
-model: haiku
-color: blue
-tools:
-  - Glob
-  - Grep
-  - Read
-whenToUse: |
-  Trigger when user mentions networking review, deprecated APIs, connection issues, or App Store submission prep.
+name: networking-auditor
+description: |
+  Use this agent when the user mentions networking review, deprecated APIs, connection issues, or App Store submission prep. Automatically scans Swift/Objective-C for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling) - prevents App Store rejections and connection failures.
 
   <example>
   user: "Can you check my networking code for deprecated APIs?"
@@ -36,6 +29,12 @@ whenToUse: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit-networking`
+model: sonnet
+color: blue
+tools:
+  - Glob
+  - Grep
+  - Read
 ---
 
 # Networking Auditor Agent
@@ -79,32 +78,49 @@ Run a comprehensive networking audit and report all issues with:
 **Impact**: Misses Happy Eyeballs (IPv4/IPv6 racing), no proxy evaluation
 **Fix**: Let NWConnection/NetworkConnection handle DNS automatically
 
+### Modern API Recommendations
+
+#### 6. iOS 26+ NetworkConnection Opportunity (LOW)
+**Pattern**: Using NWConnection when targeting iOS 26+
+**Impact**: Missing structured concurrency benefits, unnecessary [weak self] complexity
+**Fix**: Migrate to NetworkConnection for iOS 26+ projects
+**Benefits**:
+- Structured concurrency with async/await
+- No [weak self] needed (value semantics)
+- Cleaner syntax, automatic lifecycle management
+- TLV framing with Coder protocol
+
 ### Anti-Patterns
 
-#### 6. Reachability Check Before Connect (ANTI-PATTERN - HIGH)
+#### 7. Reachability Check Before Connect (ANTI-PATTERN - HIGH)
 **Pattern**: `if SCNetworkReachability` followed by `connection.start()` or `socket()`
 **Impact**: Race condition—network changes between check and connect
 **Fix**: Use waiting state handler, let framework manage connectivity
 
-#### 7. Hardcoded IP Addresses (ANTI-PATTERN - MEDIUM)
+#### 8. Hardcoded IP Addresses (ANTI-PATTERN - MEDIUM)
 **Pattern**: IP literals like `"192.168.1.1"`, `"10.0.0.1"`, IPv6 addresses
 **Impact**: Breaks proxy/VPN compatibility, no DNS-based load balancing
 **Fix**: Use hostnames, let Connect by Name resolve
 
-#### 8. Missing [weak self] in NWConnection Callbacks (MEMORY LEAK - MEDIUM)
+#### 9. Missing [weak self] in NWConnection Callbacks (MEMORY LEAK - MEDIUM)
 **Pattern**: `connection.send` or `stateUpdateHandler` with `self.` but no `[weak self]`
 **Impact**: Retain cycle: connection → handler → self → connection
 **Fix**: Use `[weak self]` or migrate to NetworkConnection (iOS 26+)
 
-#### 9. Blocking Socket Calls (ANR RISK - HIGH)
+#### 10. Blocking Socket Calls (ANR RISK - HIGH)
 **Pattern**: `connect()`, `send()`, `recv()` without async wrapper
 **Impact**: Main thread hang → App Store rejection, ANR crashes
 **Fix**: Use NWConnection (non-blocking) or background queue
 
-#### 10. Not Handling Waiting State (UX ISSUE - LOW)
+#### 11. Not Handling Waiting State (UX ISSUE - LOW)
 **Pattern**: `stateUpdateHandler` without `.waiting` case
 **Impact**: Shows "Connection failed" instead of "Waiting for network", no automatic retry
 **Fix**: Handle `.waiting` state with user feedback
+
+#### 12. Missing Network Transition Handlers (UX ISSUE - LOW)
+**Pattern**: NWConnection without `viabilityUpdateHandler` or `betterPathUpdateHandler`
+**Impact**: App doesn't adapt to WiFi/cellular transitions, misses better network paths
+**Fix**: Implement handlers for network quality awareness and path optimization
 
 ## Audit Process
 
@@ -161,20 +177,18 @@ grep -rn "if.*SCNetworkReachability" --include="*.swift" --include="*.m"
 # IPv4 addresses (192.168.1.1, 10.0.0.1, etc.)
 grep -rn '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' --include="*.swift"
 
-# IPv6 addresses (2001:db8::1, etc.)
-grep -rn '\b[0-9a-fA-F:]\{10,\}' --include="*.swift"
+# Note: IPv6 detection removed - too many false positives in static analysis
+# Manual review recommended for IPv6 literals if needed
 ```
 
 **Missing [weak self]**:
 ```bash
-# stateUpdateHandler with self but no [weak self]
-grep -rn "stateUpdateHandler.*self\." --include="*.swift" | grep -v "\[weak self\]"
+# Note: Detecting missing [weak self] requires manual inspection
+# Static grep cannot reliably track closure scope across multiple lines
+# Recommended: Use Memory Graph Debugger or Instruments to detect retain cycles
 
-# send completion with self but no [weak self]
-grep -rn "send.*completion.*self\." --include="*.swift" | grep -v "\[weak self\]"
-
-# receive completion with self but no [weak self]
-grep -rn "receive.*completion.*self\." --include="*.swift" | grep -v "\[weak self\]"
+# Basic check: Look for NWConnection callbacks (manual review needed)
+grep -rn "stateUpdateHandler\|\.send.*completion\|\.receive.*completion" --include="*.swift"
 ```
 
 **Blocking Socket Calls**:
@@ -191,6 +205,20 @@ grep -rn "recv\(" --include="*.m"
 grep -rn "stateUpdateHandler" --include="*.swift" -A 10 | grep -v "\.waiting"
 ```
 
+**Missing Network Transition Handlers**:
+```bash
+# Check for NWConnection without viability handlers
+grep -rn "NWConnection(" --include="*.swift"
+
+# Check for viabilityUpdateHandler usage
+grep -rn "viabilityUpdateHandler" --include="*.swift"
+
+# Check for betterPathUpdateHandler usage
+grep -rn "betterPathUpdateHandler" --include="*.swift"
+
+# Cross-reference: Files with NWConnection but missing transition handlers
+```
+
 ### Step 4: Check for Good Patterns
 
 ```bash
@@ -204,7 +232,17 @@ grep -rn "NetworkConnection" --include="*.swift"
 grep -rn "URLSession" --include="*.swift"
 ```
 
-### Step 5: Categorize by Severity
+### Step 5: Check iOS 26+ Migration Opportunities
+
+```bash
+# Check deployment target
+grep -rn "IPHONEOS_DEPLOYMENT_TARGET" *.xcodeproj/project.pbxproj
+
+# If deployment target >= 18.0 (iOS 26 in 2025), recommend NetworkConnection
+# Cross-reference: Files with NWConnection could migrate to NetworkConnection
+```
+
+### Step 6: Categorize by Severity
 
 **HIGH** (App Store rejection risk):
 - SCNetworkReachability
@@ -220,6 +258,8 @@ grep -rn "URLSession" --include="*.swift"
 **LOW** (Technical debt):
 - NSNetService (has modern replacement)
 - Not handling waiting state (poor UX)
+- Missing network transition handlers (viability, betterPath)
+- NWConnection when targeting iOS 26+ (could use NetworkConnection)
 
 ## Output Format
 

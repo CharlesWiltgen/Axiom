@@ -1,33 +1,7 @@
 ---
-agent: accessibility-auditor
-description: Automatically runs comprehensive accessibility audit to detect VoiceOver issues, Dynamic Type violations, color contrast failures, and WCAG compliance problems - prevents App Store rejections and ensures usability for users with disabilities
-model: haiku
-color: purple
-tools:
-  - Glob
-  - Grep
-  - Read
-# MCP annotations (ignored by Claude Code)
-mcp:
-  category: auditing
-  tags: [accessibility, voiceover, wcag, a11y, app-store, audit]
-  related: [accessibility-diag]
-  inputSchema:
-    type: object
-    properties:
-      path:
-        type: string
-        description: Directory or file to audit for accessibility issues
-      severity:
-        type: string
-        enum: [critical, high, medium, low, all]
-        description: Minimum severity level to report
-        default: all
-    required: [path]
-  annotations:
-    readOnly: true
-whenToUse: |
-  Trigger when user mentions accessibility checking, App Store submission, code review, or WCAG compliance.
+name: accessibility-auditor
+description: |
+  Use this agent when the user mentions accessibility checking, App Store submission, code review, or WCAG compliance. Automatically runs comprehensive accessibility audit to detect VoiceOver issues, Dynamic Type violations, color contrast failures, and WCAG compliance problems - prevents App Store rejections and ensures usability for users with disabilities.
 
   <example>
   user: "Can you check my app for accessibility issues?"
@@ -55,6 +29,31 @@ whenToUse: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit-accessibility`
+model: haiku
+color: purple
+tools:
+  - Glob
+  - Grep
+  - Read
+# MCP annotations (ignored by Claude Code)
+mcp:
+  category: auditing
+  tags: [accessibility, voiceover, wcag, a11y, app-store, audit]
+  related: [accessibility-diag]
+  inputSchema:
+    type: object
+    properties:
+      path:
+        type: string
+        description: Directory or file to audit for accessibility issues
+      severity:
+        type: string
+        enum: [critical, high, medium, low, all]
+        description: Minimum severity level to report
+        default: all
+    required: [path]
+  annotations:
+    readOnly: true
 ---
 
 # Accessibility Auditor Agent
@@ -115,11 +114,15 @@ Run these grep searches:
 
 **Missing VoiceOver Labels**:
 ```bash
-# Images without labels
-grep -rn "Image(" --include="*.swift" | grep -v "accessibilityLabel" | grep -v "accessibilityHidden"
+# Images without labels (only custom images, not SF Symbols)
+grep -rn 'Image("' --include="*.swift" | grep -v "accessibilityLabel" | grep -v "accessibilityHidden"
+# Note: Image(systemName:) auto-generates VoiceOver labels, no need to check
 
 # Buttons without labels (icon-only buttons)
 grep -rn "Button.*systemName" --include="*.swift" | grep -v "accessibilityLabel"
+
+# AsyncImage without labels (network-loaded images)
+grep -rn "AsyncImage(" --include="*.swift" | grep -v "accessibilityLabel" | grep -v "accessibilityHidden"
 
 # Generic labels
 grep -rn 'accessibilityLabel("Button")' --include="*.swift"
@@ -129,18 +132,27 @@ grep -rn 'accessibilityLabel("Image")' --include="*.swift"
 **Fixed Font Sizes**:
 ```bash
 # SwiftUI fixed fonts (without relativeTo:)
-grep -rn "\.font(\.system(size:" --include="*.swift" | grep -v "relativeTo:"
+# Catches .font(.system(size: X)) without .relativeTo
+grep -rn "\.font.*\.system.*size:" --include="*.swift" | grep -v "relativeTo:"
+
+# Also catch Font(size:) initializers
+grep -rn "Font.*size:" --include="*.swift" | grep -v "relativeTo:" | grep -v "preferredFont"
 
 # UIKit fixed fonts (without scaling)
 grep -rn "UIFont\.systemFont(ofSize:" --include="*.swift"
 grep -rn "UIFont(name:.*size:" --include="*.swift" | grep -v "UIFontMetrics"
+grep -rn "\.withSize(" --include="*.swift" | grep -v "UIFontMetrics"
 ```
 
 **Small Touch Targets**:
 ```bash
-# Frames smaller than 44pt
-grep -rn "\.frame.*width.*[0-3][0-9]" --include="*.swift"
-grep -rn "\.frame.*height.*[0-3][0-9]" --include="*.swift"
+# Frames smaller than 44pt (catches 0-43, including single digits)
+grep -rn "\.frame.*width.*\b([0-9]|[1-3][0-9]|4[0-3])\b" --include="*.swift"
+grep -rn "\.frame.*height.*\b([0-9]|[1-3][0-9]|4[0-3])\b" --include="*.swift"
+
+# Simpler alternative (may have false positives but catches all cases)
+grep -rn "\.frame.*width:" --include="*.swift" | grep -E "width:.*[0-4][0-9]|width:.*\b[0-9]\b"
+grep -rn "\.frame.*height:" --include="*.swift" | grep -E "height:.*[0-4][0-9]|height:.*\b[0-9]\b"
 ```
 
 **Missing Reduce Motion Checks**:

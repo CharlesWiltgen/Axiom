@@ -1,14 +1,7 @@
 ---
-agent: concurrency-validator
-description: Automatically scans Swift code for Swift 6 strict concurrency violations - detects unsafe Task captures, missing @MainActor, Sendable violations, and actor isolation problems to prevent data races
-model: haiku
-color: green
-tools:
-  - Glob
-  - Grep
-  - Read
-whenToUse: |
-  Trigger when user mentions concurrency checking, Swift 6 compliance, data race prevention, or async code review.
+name: concurrency-validator
+description: |
+  Use this agent when the user mentions concurrency checking, Swift 6 compliance, data race prevention, or async code review. Automatically scans Swift code for Swift 6 strict concurrency violations - detects unsafe Task captures, missing @MainActor, Sendable violations, and actor isolation problems to prevent data races.
 
   <example>
   user: "Can you check my code for Swift 6 concurrency issues?"
@@ -36,6 +29,12 @@ whenToUse: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit-concurrency`
+model: haiku
+color: green
+tools:
+  - Glob
+  - Grep
+  - Read
 ---
 
 # Concurrency Validator Agent
@@ -53,9 +52,10 @@ Run a comprehensive concurrency audit and report all issues with:
 ## What You Check
 
 ### 1. Missing @MainActor on UI Classes (CRITICAL)
-**Pattern**: UIViewController, UIView, ObservableObject, SwiftUI View without @MainActor
+**Pattern**: UIViewController, UIView, ObservableObject without @MainActor
 **Issue**: Can cause crashes when UI is modified from background threads
 **Fix**: Add `@MainActor` to class declaration
+**Note**: SwiftUI Views are implicitly @MainActor and don't need explicit annotation
 
 ### 2. Unsafe Task Self Capture (HIGH)
 **Pattern**: `Task { self.property }` without `[weak self]`
@@ -63,9 +63,10 @@ Run a comprehensive concurrency audit and report all issues with:
 **Fix**: Use `Task { [weak self] in ... }`
 
 ### 3. Sendable Violations (HIGH)
-**Pattern**: Non-Sendable types passed across actor boundaries
+**Pattern**: Non-Sendable types passed across actor boundaries, closures without @Sendable
 **Issue**: Data races when mutable state crosses actors
 **Fix**: Conform to Sendable or restructure
+**Note**: Best detected via Swift 6 compiler warnings; static analysis has high false positive rate
 
 ### 4. Actor Isolation Problems (MEDIUM)
 **Pattern**: Accessing actor-isolated properties without await
@@ -77,10 +78,43 @@ Run a comprehensive concurrency audit and report all issues with:
 **Issue**: Retain cycles in long-running tasks
 **Fix**: Use `[weak self]` capture
 
-### 6. Thread Confinement Violations (HIGH)
+### 6. Missing @concurrent on CPU-Intensive Work (MEDIUM)
+**Pattern**: Image/video processing, parsing, compression without @concurrent attribute (Swift 6.2+)
+**Issue**: Blocks thread pool, reduces concurrency, can cause performance issues
+**Fix**: Add `@concurrent` attribute to CPU-intensive functions
+**Example**:
+```swift
+@concurrent func processImage(_ image: UIImage) -> UIImage {
+    // Heavy CPU work here
+}
+```
+
+### 7. Thread Confinement Violations (HIGH)
 **Pattern**: Accessing @MainActor properties from background contexts
 **Issue**: Crashes or data corruption
 **Fix**: Use `await MainActor.run { }` or mark context as @MainActor
+
+### 8. Unsafe Delegate Callback Pattern (CRITICAL)
+**Pattern**: Delegate methods using `self.property` inside Task without value capture first
+**Issue**: "Sending 'self' risks causing data races" error in Swift 6
+**Fix**: Capture values before Task, then use captured values inside
+**Example**:
+```swift
+// ❌ BAD: Captures self inside Task
+nonisolated func delegate(_ param: SomeType) {
+    Task { @MainActor in
+        self.property = param.value  // ERROR: Sending 'self' risks data race
+    }
+}
+
+// ✅ GOOD: Capture value before Task
+nonisolated func delegate(_ param: SomeType) {
+    let value = param.value  // Capture BEFORE Task
+    Task { @MainActor in
+        self.property = value  // Safe: value is Sendable
+    }
+}
+```
 
 ## Audit Process
 
@@ -101,8 +135,8 @@ grep -B5 "class.*UIViewController" --include="*.swift" -r . | grep -v "@MainActo
 # ObservableObject without @MainActor
 grep -B5 "class.*ObservableObject" --include="*.swift" -r . | grep -v "@MainActor"
 
-# SwiftUI View without @MainActor
-grep -B5 "struct.*: View" --include="*.swift" -r . | grep -v "@MainActor"
+# Note: SwiftUI Views are implicitly @MainActor via the View protocol
+# No need to check for explicit @MainActor annotation on View structs
 ```
 
 **Unsafe Task Captures**:
@@ -116,11 +150,17 @@ grep -rn "Task.*{" --include="*.swift" | grep -v "\[weak self\]"
 
 **Sendable Violations**:
 ```bash
-# Classes/structs that should be Sendable
-grep -rn "class.*{" --include="*.swift" | grep -v "Sendable" | grep -v "actor"
+# More targeted: Look for @Sendable requirements in function signatures
+grep -rn "func.*@Sendable" --include="*.swift"
+
+# Check for Sendable conformance attempts
+grep -rn ": Sendable" --include="*.swift"
 
 # Closures crossing actor boundaries without @Sendable
 grep -rn "@MainActor.*{" --include="*.swift" | grep -v "@Sendable"
+
+# Note: Broad class scanning creates too many false positives
+# Recommend using Swift 6 compiler warnings for accurate Sendable violation detection
 ```
 
 **Actor Isolation Issues**:
@@ -138,6 +178,27 @@ grep -rn "@MainActor.*var" --include="*.swift"
 grep -rn "var.*Task<" --include="*.swift" | grep -v "weak"
 ```
 
+**Missing @concurrent Attribute** (Swift 6.2+):
+```bash
+# Look for CPU-intensive functions that could benefit from @concurrent
+grep -rn "func.*process.*Image\|func.*parse.*Data\|func.*compress\|func.*decode\|func.*transform.*Video" --include="*.swift"
+
+# Check if @concurrent is used in the codebase
+grep -rn "@concurrent" --include="*.swift"
+
+# Cross-reference: Functions doing heavy work without @concurrent
+```
+
+**Unsafe Delegate Callback Pattern**:
+```bash
+# Find nonisolated functions with Task closures
+grep -rn "nonisolated func" --include="*.swift" -A 10 | grep "Task {"
+
+# Look for self. access inside Task in nonisolated contexts
+# Manual review needed: Check if value is captured before Task
+grep -rn "nonisolated" --include="*.swift" -A 15 | grep -E "Task.*{.*self\."
+```
+
 **Thread Confinement Violations**:
 ```bash
 # Detached tasks accessing MainActor
@@ -148,6 +209,7 @@ grep -rn "Task.detached" --include="*.swift" -A5 | grep "@MainActor"
 
 **CRITICAL**:
 - Missing @MainActor on UI classes (crash risk)
+- Unsafe delegate callback pattern (data race errors in Swift 6)
 
 **HIGH**:
 - Unsafe Task captures (memory leaks)
@@ -157,6 +219,7 @@ grep -rn "Task.detached" --include="*.swift" -A5 | grep "@MainActor"
 **MEDIUM**:
 - Actor isolation issues (compiler errors in Swift 6)
 - Missing weak self in stored tasks
+- Missing @concurrent on CPU-intensive work (performance)
 
 ## Output Format
 
