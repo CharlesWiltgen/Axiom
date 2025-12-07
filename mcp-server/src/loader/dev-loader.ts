@@ -2,11 +2,12 @@ import { readdir, readFile } from 'fs/promises';
 import { join } from 'path';
 import { parseSkill, parseCommand, parseAgent, Skill, Command, Agent } from './parser.js';
 import { Logger } from '../config.js';
+import { Loader } from './types.js';
 
 /**
  * Development mode loader - reads live files from Claude Code plugin directory
  */
-export class DevLoader {
+export class DevLoader implements Loader {
   private skillsCache = new Map<string, Skill>();
   private commandsCache = new Map<string, Command>();
   private agentsCache = new Map<string, Agent>();

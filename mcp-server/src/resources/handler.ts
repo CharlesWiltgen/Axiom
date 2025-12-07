@@ -1,4 +1,4 @@
-import { DevLoader } from '../loader/dev-loader.js';
+import { Loader } from '../loader/types.js';
 import { Logger } from '../config.js';
 import { Skill } from '../loader/parser.js';
 
@@ -18,7 +18,7 @@ export interface McpResource {
  */
 export class ResourcesHandler {
   constructor(
-    private loader: DevLoader,
+    private loader: Loader,
     private logger: Logger
   ) {}
 

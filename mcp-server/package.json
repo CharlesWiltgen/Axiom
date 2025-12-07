@@ -9,9 +9,10 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:bundle": "tsc && node dist/scripts/bundle.js",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
-    "bundle": "node scripts/bundle.js"
+    "prepublishOnly": "npm run build:bundle"
   },
   "keywords": [
     "mcp",

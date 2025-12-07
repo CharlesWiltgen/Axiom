@@ -5,8 +5,8 @@ Model Context Protocol (MCP) server for Axiom's iOS development skills, agents, 
 ## Features
 
 - **38 Skills** - iOS development expertise as MCP Resources (on-demand loading)
-- **10 Commands** - Structured prompts as MCP Prompts (coming in Phase 3)
-- **10 Agents** - Autonomous tools as MCP Tools (coming in Phase 3)
+- **10 Commands** - Structured prompts as MCP Prompts
+- **10 Agents** - Autonomous tools as MCP Tools
 - **Dual Distribution** - Works standalone or bundled with Claude Code plugin
 - **Hybrid Runtime** - Development mode (live files) or production mode (bundled)
 
@@ -151,13 +151,15 @@ AXIOM_MCP_MODE=development AXIOM_DEV_PATH=/path/to/plugin node dist/index.js
 #### Production Mode (Bundled Skills)
 
 ```bash
-AXIOM_MCP_MODE=production node dist/index.js
+# Default mode - no environment variables needed
+node dist/index.js
 ```
 
 - Reads pre-bundled snapshot from `dist/bundle.json`
+- Bundle contains all 38 skills, 10 commands, 10 agents
 - No file system access after initialization
 - Self-contained, distributable via npm
-- Coming in Phase 4
+- Bundle generated via `pnpm build:bundle`
 
 ## MCP Resources
 
@@ -222,12 +224,22 @@ mcp-server/
 │   ├── index.ts              # Entry point + stdio transport
 │   ├── config.ts             # Configuration + logging
 │   ├── loader/
+│   │   ├── types.ts          # Loader interface
 │   │   ├── parser.ts         # Frontmatter parsing
 │   │   ├── dev-loader.ts     # Live file reading
-│   │   └── prod-loader.ts    # Bundle reading (Phase 4)
-│   └── resources/
-│       └── handler.ts        # Resources protocol
+│   │   └── prod-loader.ts    # Bundle reading
+│   ├── resources/
+│   │   └── handler.ts        # Resources protocol
+│   ├── prompts/
+│   │   └── handler.ts        # Prompts protocol
+│   ├── tools/
+│   │   └── handler.ts        # Tools protocol
+│   └── scripts/
+│       └── bundle.ts         # Bundle generator
 └── dist/                     # Compiled output
+    ├── index.js              # Server entry point
+    ├── bundle.json           # Production bundle (1.15 MB)
+    └── ...
 ```
 
 ### Build Commands
@@ -239,12 +251,21 @@ pnpm install
 # Build once
 pnpm build
 
+# Build with production bundle
+pnpm build:bundle
+
 # Watch mode (rebuild on changes)
 pnpm dev
 
 # Run server
 pnpm start
 ```
+
+The `build:bundle` command:
+1. Compiles TypeScript (`tsc`)
+2. Generates `dist/bundle.json` from plugin files
+3. Bundle includes all skills, commands, and agents
+4. Required for production mode
 
 ### Adding Skills
 
@@ -357,36 +378,36 @@ node /full/path/to/dist/index.js
 
 ## Roadmap
 
-### Phase 1: Foundation ✅ (Current)
+### Phase 1: Foundation ✅
 - MCP server with stdio transport
 - Resources protocol (skills)
 - Development mode loader
 - Claude Code `.mcp.json` integration
 
-### Phase 2: MCP Annotations (Next)
-- Add MCP metadata to all skills
+### Phase 2: MCP Annotations ✅
+- Add MCP metadata to test skills
 - Enhanced skill categorization
 - Cross-references between skills
 
-### Phase 3: Full Primitives
+### Phase 3: Full Primitives ✅
 - Prompts protocol (commands)
 - Tools protocol (agents)
 - Complete MCP feature coverage
 
-### Phase 4: Production Bundle
+### Phase 4: Production Bundle ✅ (Current)
 - Pre-compiled skill snapshot
 - Production mode loader
-- npm distribution
-- Zero-dependency deployment
+- Bundle generator script
+- Dual-mode Loader interface
 
-### Phase 5: Full Coverage
+### Phase 5: Full Coverage (Next)
 - All 38 skills with MCP annotations
-- All 10 commands as prompts
-- All 10 agents as tools
+- All 10 commands with argument schemas
+- All 10 agents with input schemas
 - Multi-client testing
 
 ### Phase 6: Distribution
-- npm publish
+- npm publish (@axiom-ios/mcp-server)
 - MCP Registry listing
 - Documentation site integration
 - Release automation

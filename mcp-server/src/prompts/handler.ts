@@ -1,4 +1,4 @@
-import { DevLoader } from '../loader/dev-loader.js';
+import { Loader } from '../loader/types.js';
 import { Logger } from '../config.js';
 import { Command } from '../loader/parser.js';
 
@@ -21,7 +21,7 @@ export interface McpPrompt {
  */
 export class PromptsHandler {
   constructor(
-    private loader: DevLoader,
+    private loader: Loader,
     private logger: Logger
   ) {}
 

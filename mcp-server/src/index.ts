@@ -13,9 +13,16 @@ import {
 
 import { loadConfig, Logger } from './config.js';
 import { DevLoader } from './loader/dev-loader.js';
+import { ProdLoader } from './loader/prod-loader.js';
+import { Loader } from './loader/types.js';
 import { ResourcesHandler } from './resources/handler.js';
 import { PromptsHandler } from './prompts/handler.js';
 import { ToolsHandler } from './tools/handler.js';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Main entry point for Axiom MCP Server
@@ -134,12 +141,13 @@ async function main() {
 }
 
 /**
- * Load production bundle (Phase 4 - not yet implemented)
+ * Load production bundle
+ * Returns a loader compatible with Loader interface
  */
-async function loadProductionBundle(logger: Logger): Promise<DevLoader> {
-  logger.error('Production mode not yet implemented');
-  logger.error('Please use development mode: AXIOM_MCP_MODE=development AXIOM_DEV_PATH=/path/to/plugin');
-  process.exit(1);
+async function loadProductionBundle(logger: Logger): Promise<Loader> {
+  const bundlePath = join(__dirname, 'bundle.json');
+  logger.info(`Production mode: loading from ${bundlePath}`);
+  return new ProdLoader(bundlePath, logger);
 }
 
 // Start the server
