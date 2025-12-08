@@ -5,12 +5,12 @@
   },
   "metadata": {
     "description": "Battle-tested Claude Code agents, skills, and references for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
-    "version": "0.9.26"
+    "version": "0.9.27"
   },
   "plugins": [
     {
       "name": "axiom",
-      "version": "0.9.26",
+      "version": "0.9.27",
       "source": "https://charleswiltgen.github.io/Axiom/plugins/axiom",
       "description": "Battle-tested Claude Code agents, skills, and references for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
       "author": "Charles Wiltgen",

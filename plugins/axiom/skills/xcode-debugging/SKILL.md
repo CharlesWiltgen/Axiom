@@ -126,6 +126,57 @@ xcodebuild test -scheme YourScheme \
   -only-testing:YourTests/SpecificTestClass
 ```
 
+## Simulator Verification (Optional)
+
+After applying fixes, verify in simulator with visual confirmation.
+
+### Quick Screenshot Verification
+
+```bash
+# 1. Boot simulator (if not already)
+xcrun simctl boot "iPhone 16 Pro"
+
+# 2. Build and install app
+xcodebuild build -scheme YourScheme \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+
+# 3. Launch app
+xcrun simctl launch booted com.your.bundleid
+
+# 4. Wait for UI to stabilize
+sleep 2
+
+# 5. Capture screenshot
+xcrun simctl io booted screenshot /tmp/verify-build-$(date +%s).png
+```
+
+### Using Axiom Tools
+
+**Quick screenshot**:
+```bash
+/axiom:screenshot
+```
+
+**Full simulator testing** (with navigation, state setup):
+```bash
+/axiom:test-simulator
+```
+
+### When to Use Simulator Verification
+
+Use when:
+- **Visual fixes** — Layout changes, UI updates, styling tweaks
+- **State-dependent bugs** — "Only happens in this specific screen"
+- **Intermittent failures** — Need to reproduce specific conditions
+- **Before shipping** — Final verification that fix actually works
+
+**Pro tip**: If you have debug deep links (see `deep-link-debugging` skill), you can navigate directly to the screen that was broken:
+```bash
+xcrun simctl openurl booted "debug://problem-screen"
+sleep 1
+xcrun simctl io booted screenshot /tmp/fix-verification.png
+```
+
 ## Decision Tree
 
 ```

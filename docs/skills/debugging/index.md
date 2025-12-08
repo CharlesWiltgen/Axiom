@@ -25,3 +25,8 @@ Systematic debugging strategies to solve issues faster and prevent common proble
 - **[Performance Profiling](/skills/debugging/performance-profiling)** – Instruments decision trees for CPU, memory, battery profiling with 3 real-world examples
   - *"Scrolling is slow and I need to know if it's Core Data or SwiftUI."*
   - *"We have a deadline and my app feels slow. What should I optimize first?"*
+
+- **[Deep Link Debugging](/skills/debugging/deep-link-debugging)** – Add debug-only deep links for automated testing and closed-loop debugging (60-75% faster iteration)
+  - *"Claude Code can't navigate to specific screens for testing. How do I add debug deep links?"*
+  - *"I want to take screenshots of different screens automatically."*
+  - **Related** [`simulator-tester` agent](/agents/simulator-tester) for automated testing with deep links

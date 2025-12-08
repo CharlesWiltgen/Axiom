@@ -1129,6 +1129,91 @@ deinit {
 
 ---
 
+## Simulator Verification
+
+After fixing memory leaks, verify your app's UI still renders correctly and doesn't introduce visual regressions.
+
+### Why Verify After Memory Fixes
+
+Memory fixes can sometimes break functionality:
+- **Premature cleanup** — Object deallocated while still needed
+- **Broken bindings** — Weak references become nil unexpectedly
+- **State loss** — Data cleared too early in lifecycle
+
+**Always verify**:
+- UI still renders correctly
+- No blank screens or missing content
+- Animations still work
+- App doesn't crash on navigation
+
+### Quick Visual Verification
+
+```bash
+# 1. Build with memory fix
+xcodebuild build -scheme YourScheme
+
+# 2. Launch in simulator
+xcrun simctl launch booted com.your.bundleid
+
+# 3. Navigate to affected screen
+xcrun simctl openurl booted "debug://problem-screen"
+sleep 1
+
+# 4. Capture screenshot
+/axiom:screenshot
+
+# 5. Verify UI looks correct (no blank views, missing images, etc.)
+```
+
+### Stress Testing with Screenshots
+
+Test the screen that was leaking, repeatedly:
+
+```bash
+# Navigate to screen multiple times, capture at each iteration
+for i in {1..10}; do
+  xcrun simctl openurl booted "debug://player-screen?id=$i"
+  sleep 2
+  xcrun simctl io booted screenshot /tmp/stress-test-$i.png
+done
+
+# All screenshots should look correct (not degraded)
+```
+
+### Full Verification Workflow
+
+```bash
+/axiom:test-simulator
+```
+
+Then describe:
+- "Navigate to PlayerView 10 times and verify UI doesn't degrade"
+- "Open and close SettingsView repeatedly, screenshot each time"
+- "Check console logs for deallocation messages"
+
+### Before/After Example
+
+**Before fix** (timer leak):
+```bash
+# After navigating to PlayerView 20 times:
+# - Memory at 200MB
+# - UI sluggish
+# - Screenshot shows normal UI (but app will crash soon)
+```
+
+**After fix** (timer cleanup added):
+```bash
+# After navigating to PlayerView 20 times:
+# - Memory stable at 50MB
+# - UI responsive
+# - Screenshot shows normal UI
+# - Console logs show: "PlayerViewModel deinitialized" after each navigation
+```
+
+**Key verification**: Screenshots AND memory both stable = fix is correct
+
+---
+
 **Last Updated**: 2025-11-28
 **Frameworks**: UIKit, SwiftUI, Combine, Foundation
 **Status**: Production-ready patterns for leak detection and prevention

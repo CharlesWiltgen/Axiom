@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.9.26",
+  "version": "0.9.27",
   "description": "Battle-tested Claude Code agents, skills, and references for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": {
     "name": "Charles Wiltgen"
@@ -17,7 +17,9 @@
     "./commands/audit-liquid-glass.md",
     "./commands/audit-networking.md",
     "./commands/audit-swiftui-performance.md",
-    "./commands/audit-swiftui-nav.md"
+    "./commands/audit-swiftui-nav.md",
+    "./commands/screenshot.md",
+    "./commands/test-simulator.md"
   ],
   "agents": [
     "./agents/build-fixer.md",
@@ -29,6 +31,7 @@
     "./agents/liquid-glass-auditor.md",
     "./agents/networking-auditor.md",
     "./agents/swiftui-performance-analyzer.md",
-    "./agents/swiftui-nav-auditor.md"
+    "./agents/swiftui-nav-auditor.md",
+    "./agents/simulator-tester.md"
   ]
 }

@@ -1,6 +1,6 @@
 # Autonomous Agents
 
-Axiom includes 10 autonomous agents that automatically detect and diagnose common iOS development issues.
+Axiom includes 11 autonomous agents that automatically detect and diagnose common iOS development issues.
 
 ## What Are Agents?
 
@@ -24,6 +24,7 @@ Agents are autonomous problem-solvers that:
 - "My build is failing" → **build-fixer** triggers
 - "My builds are slow" → **build-optimizer** triggers
 - "Check my navigation architecture" → **swiftui-nav-auditor** triggers
+- "Take a screenshot to verify this fix" → **simulator-tester** triggers
 
 **Explicit commands** — For direct invocation:
 
@@ -38,6 +39,7 @@ Agents are autonomous problem-solvers that:
 /axiom:audit-swiftui-nav
 /axiom:fix-build
 /axiom:optimize-build
+/axiom:test-simulator
 ```
 
 ## Agent Categories
@@ -61,6 +63,9 @@ Agents are autonomous problem-solvers that:
 
 ### Networking
 **networking-auditor** — Scans for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling)
+
+### Testing & Verification
+**simulator-tester** — Automated simulator testing with visual verification (screenshots, video, location simulation, push notifications, permissions, deep links, log analysis) for closed-loop debugging
 
 ## Why Agents?
 

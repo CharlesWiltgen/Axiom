@@ -847,6 +847,91 @@ TextField("Search", text: $searchText)
 
 ---
 
+## Simulator Verification
+
+After fixing SwiftUI issues, verify with visual confirmation in the simulator.
+
+### Why Simulator Verification Matters
+
+SwiftUI previews don't always match simulator behavior:
+- **Different rendering** — Some visual effects only work on device/simulator
+- **Different timing** — Animations may behave differently
+- **Different state** — Full app lifecycle vs isolated preview
+
+**Use simulator verification for**:
+- Layout fixes (spacing, alignment, sizing)
+- View update fixes (state changes, bindings)
+- Animation and gesture issues
+- Before/after visual comparison
+
+### Quick Verification Workflow
+
+```bash
+# 1. Take "before" screenshot
+/axiom:screenshot
+
+# 2. Apply your fix
+
+# 3. Rebuild and relaunch
+xcodebuild build -scheme YourScheme
+
+# 4. Take "after" screenshot
+/axiom:screenshot
+
+# 5. Compare screenshots to verify fix
+```
+
+### Navigating to Problem Screens
+
+If the bug is deep in your app, use debug deep links to navigate directly:
+
+```bash
+# 1. Add debug deep links (see deep-link-debugging skill)
+# Example: debug://settings, debug://recipe-detail?id=123
+
+# 2. Navigate and capture
+xcrun simctl openurl booted "debug://problem-screen"
+sleep 1
+/axiom:screenshot
+```
+
+### Full Simulator Testing
+
+For complex scenarios (state setup, multiple steps, log analysis):
+
+```bash
+/axiom:test-simulator
+```
+
+Then describe what you want to test:
+- "Navigate to the recipe editor and verify the layout fix"
+- "Test the profile screen with empty state"
+- "Verify the animation doesn't stutter anymore"
+
+### Before/After Example
+
+**Before fix** (view not updating):
+```bash
+# 1. Reproduce bug
+xcrun simctl openurl booted "debug://recipe-list"
+sleep 1
+xcrun simctl io booted screenshot /tmp/before-fix.png
+# Screenshot shows: Tapping star doesn't update UI
+```
+
+**After fix** (added @State binding):
+```bash
+# 2. Test fix
+xcrun simctl openurl booted "debug://recipe-list"
+sleep 1
+xcrun simctl io booted screenshot /tmp/after-fix.png
+# Screenshot shows: Star updates immediately when tapped
+```
+
+**Time saved**: 60%+ faster iteration with visual verification vs manual navigation
+
+---
+
 ## External Resources
 
 #### Apple Documentation

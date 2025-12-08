@@ -2,9 +2,9 @@
 
 Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Apple Intelligence (Foundation Models), Liquid Glass, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
 
-**Version**: 0.9.21
+**Version**: 0.9.27
 **Status**: Preview Release
-**Skills**: 37 | **Commands**: 10 | **Agents**: 10 | **Hooks**: 4
+**Skills**: 38 | **Commands**: 12 | **Agents**: 11 | **Hooks**: 4
 
 ## Installation
 
@@ -148,6 +148,21 @@ Comprehensive build performance optimization with Build Timeline analysis, type 
 **Quick win**: Use `/axiom:optimize-build` to scan for common issues automatically
 
 **Expected impact**: 30-50% faster incremental debug builds, 5-10 seconds saved per build from conditional scripts
+
+---
+
+#### `axiom:deep-link-debugging`
+Add debug-only deep links for automated testing and closed-loop debugging with visual verification.
+
+**Use when**: Need to navigate to specific screens for testing, integrating with simulator automation, enabling visual debugging workflows
+
+**Key features**:
+- Debug-only URL scheme patterns for SwiftUI
+- NavigationPath integration for iOS 16+
+- Stripped from release builds automatically
+- Enables closed-loop debugging (60-75% faster iteration)
+
+**Requirements**: iOS 13+
 
 ---
 
@@ -321,6 +336,48 @@ Quick Core Data safety audit for schema migrations, thread violations, N+1 queri
 #### `/axiom:audit-memory`
 Scan for memory leak patterns across timer leaks, observer leaks, closure captures.
 
+---
+
+### 🎯 Simulator Testing
+
+#### `simulator-tester` Agent
+
+Automated simulator testing with visual verification for closed-loop debugging.
+
+**Natural language triggers**:
+- "Can you test my app with location simulation?"
+- "Take a screenshot to verify the fix"
+- "Check if the push notification handling works"
+- "Navigate to Settings and take a screenshot"
+
+**Explicit command**: `/axiom:test-simulator`
+
+**Capabilities**:
+- Screenshot capture for visual verification
+- Video recording for complex workflows
+- Location simulation for GPS-based features
+- Push notification testing without a server
+- Permission management without manual tapping
+- Deep link navigation to specific screens
+- Status bar override for clean screenshots
+- Log analysis for crash detection
+
+**Use when**: Visual debugging, automated testing, test scenario setup, verifying fixes with screenshots
+
+---
+
+#### `/axiom:screenshot`
+
+Quick screenshot capture from booted iOS Simulator.
+
+**What it does**: Captures screenshot, displays it (Claude is multimodal!), returns file path
+
+**Usage**: Simply run `/axiom:screenshot` and Claude will capture and analyze the current simulator state
+
+**Use when**: Quick visual verification, checking UI state, documenting bugs, verifying layout fixes
+
+---
+
 ## Usage
 
 Skills are automatically suggested by Claude Code based on context, or invoke them directly:
@@ -342,6 +399,7 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 /skill axiom:memory-debugging
 /skill axiom:build-troubleshooting
 /skill axiom:build-performance
+/skill axiom:deep-link-debugging
 
 # Swift & Concurrency
 /skill axiom:swift-concurrency
@@ -369,6 +427,10 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 /axiom:audit-liquid-glass
 /axiom:audit-core-data
 /axiom:audit-memory
+
+# Simulator Testing
+/axiom:screenshot               # Quick screenshot capture
+/axiom:test-simulator           # Full simulator testing with scenarios
 
 # Build & Performance
 /axiom:optimize-build
