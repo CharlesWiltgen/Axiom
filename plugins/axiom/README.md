@@ -2,9 +2,9 @@
 
 Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Apple Intelligence (Foundation Models), Liquid Glass, Widgets & Extensions, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
 
-**Version**: 0.9.28
+**Version**: 0.9.29
 **Status**: Preview Release
-**Skills**: 43 | **Commands**: 12 | **Agents**: 11 | **Hooks**: 4
+**Skills**: 45 | **Commands**: 12 | **Agents**: 13 | **Hooks**: 4
 
 ## Installation
 
@@ -354,6 +354,55 @@ Complete Foundation Models framework API reference with all WWDC 2025 code examp
 
 ---
 
+### 💰 In-App Purchases
+
+#### `axiom:in-app-purchases`
+Testing-first workflow for implementing in-app purchases with StoreKit 2 (iOS 15+). Prevents common IAP mistakes through .storekit configuration before code.
+
+**Use when**: Implementing consumables, subscriptions, non-consumables, or troubleshooting purchase flows
+
+**Key features**:
+- Testing-first workflow with .storekit configuration
+- Options A/B/C framework for pragmatic decision-making
+- Transaction verification and listener patterns
+- 6 comprehensive implementation patterns
+- Fresh start and sunk cost guidance
+
+**TDD Tested**: A-quality validated through pressure scenarios
+
+---
+
+#### `axiom:storekit-ref` (Reference)
+Complete StoreKit 2 API reference with iOS 18.4 latest features and all WWDC 2021-2025 patterns.
+
+**Use when**: API lookups, understanding Product/Transaction types, implementing purchase flows, subscription management
+
+**Key features**:
+- Complete Product, Transaction, AppTransaction, RenewalInfo coverage
+- iOS 18.4 new fields (appTransactionID, offerPeriod)
+- StoreKit Views for pre-built UI
+- App Store Server API integration
+- Testing with .storekit configuration
+- Migration from StoreKit 1 patterns
+
+**Platforms**: iOS 15+, macOS 12+, tvOS 15+, watchOS 8+, visionOS 1+
+
+---
+
+#### `iap-auditor` and `iap-implementation` Agents
+
+**Natural language triggers**:
+- "Audit my in-app purchase code"
+- "Implement StoreKit 2 subscriptions"
+- "Review IAP implementation"
+- "Add consumable purchases to my app"
+
+**iap-auditor**: Scans existing IAP code for missing transaction.finish() calls, weak verification, missing restore functionality
+
+**iap-implementation**: Implements IAP from scratch following testing-first workflow with StoreManager pattern
+
+---
+
 ### 📋 Audit Commands
 
 #### `/axiom:audit-networking`
@@ -469,6 +518,10 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 /skill axiom:foundation-models
 /skill axiom:foundation-models-diag
 /skill axiom:foundation-models-ref
+
+# In-App Purchases
+/skill axiom:in-app-purchases
+/skill axiom:storekit-ref
 
 # Audit commands
 /axiom:audit-networking
