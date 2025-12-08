@@ -1,10 +1,10 @@
 # Axiom Plugin
 
-Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Apple Intelligence (Foundation Models), Liquid Glass, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
+Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Apple Intelligence (Foundation Models), Liquid Glass, Widgets & Extensions, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
 
-**Version**: 0.9.27
+**Version**: 0.9.28
 **Status**: Preview Release
-**Skills**: 38 | **Commands**: 12 | **Agents**: 11 | **Hooks**: 4
+**Skills**: 43 | **Commands**: 12 | **Agents**: 11 | **Hooks**: 4
 
 ## Installation
 
@@ -91,6 +91,56 @@ Recording UI Automation (Xcode 26) with condition-based waiting patterns.
 - Real-world impact: 15 min → 5 min test suite
 
 **Requirements**: Xcode 26+ for Recording UI Automation
+
+---
+
+#### `axiom:apple-docs-research`
+Research methodology for Apple frameworks using Chrome browser WWDC transcript capture and sosumi.ai documentation.
+
+**Use when**: Researching Apple frameworks, retrieving WWDC transcripts, looking up API documentation, creating skills from Apple sources
+
+**Key features**:
+- Chrome auto-capture of full WWDC transcripts with timestamps
+- sosumi.ai URL patterns for clean markdown documentation
+- Complete workflows for feature research
+- Time saved: 30-40 min per WWDC session vs manual watching
+
+**Impact**: 3-4 hours saved per comprehensive research task
+
+---
+
+### 📱 Widgets & Extensions
+
+#### `axiom:extensions-widgets`
+Discipline-enforcing skill for widgets, Live Activities, and Control Center controls with anti-patterns and pressure scenarios.
+
+**Use when**: Implementing widgets, debugging refresh issues, sharing data between app and extension, Live Activity issues
+
+**Key features**:
+- 7 anti-patterns with time costs (2-4 hours debugging prevented)
+- Decision tree for symptom-based debugging
+- 3 pressure scenarios with phased strategies
+- Mandatory checklists (pre-release + post-release)
+- 80% rationalization prevention rate
+
+**TDD Tested**: Grade A+ from pressure testing
+
+---
+
+#### `axiom:extensions-widgets-ref` (Reference)
+Comprehensive API reference for WidgetKit, ActivityKit, Control Center widgets, and extension lifecycle (iOS 14+).
+
+**Use when**: API lookups, understanding widget families, timeline system details, Live Activities implementation, Control Center widgets
+
+**Key features**:
+- 11 parts covering all widget types (2250+ lines)
+- Troubleshooting section (10 common scenarios)
+- "Building Your First Widget" workflow (10 steps)
+- Expert review checklist (50+ items)
+- Complete testing guidance
+- Performance implications and optimization strategies
+
+**Platforms**: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, visionOS 2+
 
 ---
 
