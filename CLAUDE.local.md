@@ -110,5 +110,39 @@ Always include VitePress build validation when committing documentation changes.
 
 ---
 
-**Last Updated** 2025-12-03
-- Use sosumi.ai to get developer.apple.com documentation, e.g. instead of https://developer.apple.com/documentation/swiftui/bringing_robust_navigation_structure_to_your_swiftui_app use https://sosumi.ai/documentation/swiftui/bringing_robust_navigation_structure_to_your_swiftui_app
+## Apple Documentation Research
+
+### WWDC Session Transcripts
+
+Use Chrome browser to get **full verbatim transcripts + code samples** from WWDC sessions:
+
+1. Navigate to `https://developer.apple.com/videos/play/wwdc20XX/XXXXX/`
+2. Chrome auto-captures the page to `.md` file in the session directory
+3. The captured transcript includes:
+   - Full spoken content with timestamps
+   - All code examples shown in the session
+   - Chapter markers and resource links
+
+**Example**: When navigating to WWDC 2025-278, Chrome saves `001-navigate.md` with the complete transcript.
+
+**Session Directory**: `/Users/Charles/Library/Caches/superpowers/browser/YYYY-MM-DD/session-XXXXX/`
+
+### Apple Documentation via sosumi.ai
+
+Use sosumi.ai instead of developer.apple.com for markdown-formatted documentation:
+
+**Instead of**:
+```
+https://developer.apple.com/documentation/widgetkit
+```
+
+**Use**:
+```
+https://sosumi.ai/documentation/widgetkit
+```
+
+This provides cleaner markdown output that's easier to parse and reference.
+
+---
+
+**Last Updated** 2025-12-08
