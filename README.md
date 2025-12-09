@@ -302,8 +302,8 @@ Full documentation available at [https://charleswiltgen.github.io/Axiom](https:/
 
 This is a preview release. Feedback is welcome!
 
-- **Issues**: Report bugs or request features at [GitHub Issues](https://github.com/yourusername/Axiom/issues)
-- **Discussions**: Share usage patterns and ask questions at [GitHub Discussions](https://github.com/yourusername/Axiom/discussions)
+- **Issues**: Report bugs or request features at [GitHub Issues](https://github.com/CharlesWiltgen/Axiom/issues)
+- **Discussions**: Share usage patterns and ask questions at [GitHub Discussions](https://github.com/CharlesWiltgen/Axiom/discussions)
 
 ## Related Resources
 
