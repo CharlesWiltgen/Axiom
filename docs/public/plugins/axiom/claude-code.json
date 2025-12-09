@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.8.11",
+  "version": "0.9.32",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -44,7 +44,11 @@
     },
     {
       "name": "swiftui-debugging",
-      "description": "Use when debugging SwiftUI view updates, intermittent rendering issues, preview crashes, or layout problems - diagnostic decision trees for struct mutation, binding identity, view recreation, missing observers, and pressure scenarios for App Store deadlines"
+      "description": "Use when debugging SwiftUI view updates, preview crashes, or layout issues - decision trees with Self._printChanges() debugging, @Observable patterns (iOS 17+), @Bindable, view identity understanding, and cross-references to swiftui-performance for profiling"
+    },
+    {
+      "name": "swiftui-debugging-diag",
+      "description": "Use when SwiftUI debugging requires systematic investigation - view updates not working after basic troubleshooting, intermittent UI issues, complex state dependencies, or when Self._printChanges() shows unexpected patterns - 5 diagnostic patterns with Instruments integration and production crisis protocols"
     },
     {
       "name": "performance-profiling",

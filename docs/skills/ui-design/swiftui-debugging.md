@@ -1,8 +1,9 @@
 ---
 name: swiftui-debugging
-description: Use when debugging SwiftUI view updates, preview crashes, or layout issues — diagnostic decision trees to identify root causes quickly and avoid misdiagnosis under pressure
-version: 1.2.0
-last_updated: TDD-tested with production deadline and intermittent bug scenarios, added 3 real-world examples
+description: Use when debugging SwiftUI view updates, preview crashes, or layout issues - diagnostic decision trees to identify root causes quickly and avoid misdiagnosis under pressure
+skill_type: discipline
+version: 1.3.0
+last_updated: Added Self._printChanges() debugging, @Observable patterns (iOS 17+), @Bindable, view identity section, and cross-references to swiftui-performance
 ---
 
 # SwiftUI Debugging
@@ -17,8 +18,27 @@ SwiftUI debugging falls into three categories, each with a different diagnostic 
 
 **Core principle**: Start with observable symptoms, test systematically, eliminate causes one by one. Don't guess.
 
-**Requires**: Xcode 15+, iOS 14+
-**Related skills**: `xcode-debugging` (cache corruption diagnosis), `swift-concurrency` (observer patterns)
+**Requires**: Xcode 26+, iOS 17+ (iOS 14-16 patterns still valid, see notes)
+**Related skills**: `xcode-debugging` (cache corruption diagnosis), `swift-concurrency` (observer patterns), `swiftui-performance` (profiling with Instruments), `swiftui-layout` (adaptive layout patterns)
+
+## Example Prompts
+
+These are real questions developers ask that this skill is designed to answer:
+
+#### 1. "My list item doesn't update when I tap the favorite button, even though the data changed"
+→ The skill walks through the decision tree to identify struct mutation vs lost binding vs missing observer
+
+#### 2. "Preview crashes with 'Cannot find AppModel in scope' but it compiles fine"
+→ The skill shows how to provide missing dependencies with `.environment()` or `.environmentObject()`
+
+#### 3. "My counter resets to 0 every time I toggle a boolean, why?"
+→ The skill identifies accidental view recreation from conditionals and shows `.opacity()` fix
+
+#### 4. "I'm using @Observable but the view still doesn't update when I change the property"
+→ The skill explains when to use @State vs plain properties with @Observable objects
+
+#### 5. "Text field loses focus when I start typing, very frustrating"
+→ The skill identifies ForEach identity issues and shows how to use stable IDs
 
 ## When to Use SwiftUI Debugging
 
@@ -37,7 +57,55 @@ SwiftUI debugging falls into three categories, each with a different diagnostic 
 - Questions about async/await or MainActor
 - Data race warnings
 
-## View Not Updating – Decision Tree
+## Debugging Tools
+
+### Self._printChanges()
+
+SwiftUI provides a debug-only method to understand why a view's body was called.
+
+**Usage in LLDB**:
+```swift
+// Set breakpoint in view's body
+// In LLDB console:
+(lldb) expression Self._printChanges()
+```
+
+**Temporary in code** (remove before shipping):
+```swift
+var body: some View {
+    let _ = Self._printChanges() // Debug only
+
+    Text("Hello")
+}
+```
+
+**Output interpretation**:
+```
+MyView: @self changed
+  - Means the view value itself changed (parameters passed to view)
+
+MyView: count changed
+  - Means @State property "count" triggered the update
+
+MyView: (no output)
+  - Body not being called; view not updating at all
+```
+
+**⚠️ Important**:
+- Prefixed with underscore → May be removed in future releases
+- **NEVER submit to App Store** with _printChanges calls
+- Performance impact → Use only during debugging
+
+**When to use**:
+- Need to understand exact trigger for view update
+- Investigating unexpected updates
+- Verifying dependencies after refactoring
+
+**Cross-reference**: For complex update patterns, use SwiftUI Instrument → see `swiftui-performance` skill
+
+---
+
+## View Not Updating Decision Tree
 
 The most common frustration: you changed @State but the view didn't redraw. The root cause is always one of four things.
 
@@ -118,7 +186,34 @@ TextField("Name", text: Binding(
 
 ToggleChild(value: $isOn)
 
-// ✅ RIGHT: Create binding once, not in body
+// ✅ RIGHT (iOS 17+): Use @Bindable for @Observable objects
+@Observable class Book {
+    var title = "Sample"
+    var isAvailable = true
+}
+
+struct EditView: View {
+    @Bindable var book: Book  // Enables $book.title syntax
+
+    var body: some View {
+        TextField("Title", text: $book.title)
+        Toggle("Available", isOn: $book.isAvailable)
+    }
+}
+
+// ✅ ALSO RIGHT (iOS 17+): @Bindable as local variable
+struct ListView: View {
+    @State private var books = [Book(), Book()]
+
+    var body: some View {
+        List(books) { book in
+            @Bindable var book = book  // Inline binding
+            TextField("Title", text: $book.title)
+        }
+    }
+}
+
+// ✅ RIGHT (pre-iOS 17): Create binding once, not in body
 @State var name = ""
 @State var nameBinding: Binding<String>?
 
@@ -133,7 +228,7 @@ var body: some View {
 }
 ```
 
-**Fix it**: Pass `$state` directly when possible. If creating custom bindings, create them in `init` or cache them, not in `body`.
+**Fix it**: Pass `$state` directly when possible. For @Observable objects (iOS 17+), use `@Bindable`. If creating custom bindings (pre-iOS 17), create them in `init` or cache them, not in `body`.
 
 ---
 
@@ -197,16 +292,16 @@ var body: some View {
 
 **Symptom**: An object changed, but views observing it didn't update.
 
-**Why it happens**: You're not using @StateObject or @ObservedObject, so SwiftUI doesn't know to watch for changes.
+**Why it happens**: SwiftUI doesn't know to watch for changes in the object.
 
 ```swift
 // ❌ WRONG: Property changes don't trigger update
 class Model {
-    @Published var count = 0
+    var count = 0  // Not observable
 }
 
 struct ContentView: View {
-    let model = Model()  // New instance each render
+    let model = Model()  // New instance each render, not observable
 
     var body: some View {
         Text("\(model.count)")
@@ -216,9 +311,13 @@ struct ContentView: View {
     }
 }
 
-// ✅ RIGHT: Use @StateObject for owned instances
+// ✅ RIGHT (iOS 17+): Use @Observable with @State
+@Observable class Model {
+    var count = 0  // No @Published needed
+}
+
 struct ContentView: View {
-    @StateObject var model = Model()
+    @State private var model = Model()  // @State, not @StateObject
 
     var body: some View {
         Text("\(model.count)")
@@ -228,7 +327,57 @@ struct ContentView: View {
     }
 }
 
-// ✅ RIGHT: Use @ObservedObject for injected instances
+// ✅ RIGHT (iOS 17+): Injected @Observable objects
+struct ContentView: View {
+    var model: Model  // Just a plain property
+
+    var body: some View {
+        Text("\(model.count)")  // View updates when count changes
+    }
+}
+
+// ✅ RIGHT (iOS 17+): @Observable with environment
+@Observable class AppModel {
+    var count = 0
+}
+
+@main
+struct MyApp: App {
+    @State private var model = AppModel()
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environment(model)  // Add to environment
+        }
+    }
+}
+
+struct ContentView: View {
+    @Environment(AppModel.self) private var model  // Read from environment
+
+    var body: some View {
+        Text("\(model.count)")
+    }
+}
+
+// ✅ RIGHT (pre-iOS 17): Use @StateObject/ObservableObject
+class Model: ObservableObject {
+    @Published var count = 0
+}
+
+struct ContentView: View {
+    @StateObject var model = Model()  // For owned instances
+
+    var body: some View {
+        Text("\(model.count)")
+        Button("Increment") {
+            model.count += 1  // View updates
+        }
+    }
+}
+
+// ✅ RIGHT (pre-iOS 17): Use @ObservedObject for injected instances
 struct ContentView: View {
     @ObservedObject var model: Model  // Passed in from parent
 
@@ -238,7 +387,17 @@ struct ContentView: View {
 }
 ```
 
-**Fix it**: Use `@StateObject` if you own the object, `@ObservedObject` if it's injected, or `@EnvironmentObject` if it's shared across the tree.
+**Fix it (iOS 17+)**: Use `@Observable` macro on your class, then `@State` to store it. Views automatically track dependencies on properties they read.
+
+**Fix it (pre-iOS 17)**: Use `@StateObject` if you own the object, `@ObservedObject` if it's injected, or `@EnvironmentObject` if it's shared across the tree.
+
+**Why @Observable is better** (iOS 17+):
+- Automatic dependency tracking (only reads trigger updates)
+- No `@Published` wrapper needed
+- Works with `@State` instead of `@StateObject`
+- Can pass as plain property instead of `@ObservedObject`
+
+**See also**: [Managing model data in your app](https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app)
 
 ---
 
@@ -255,7 +414,7 @@ View not updating?
 │  └─ NO: Likely cache/Xcode state → See Preview Crashes
 ```
 
-## Preview Crashes – Decision Tree
+## Preview Crashes Decision Tree
 
 When your preview won't load or crashes immediately, the three root causes are distinct.
 
@@ -382,7 +541,7 @@ Preview crashes?
 └─ Try: Restart Preview → Restart Xcode → Nuke DerivedData
 ```
 
-## Layout Issues – Quick Reference
+## Layout Issues Quick Reference
 
 Layout problems are usually visually obvious. Match your symptom to the pattern.
 
@@ -533,7 +692,196 @@ Text("Hello")
     .frame(width: 100)
 ```
 
-## Pressure Scenarios & Real-World Constraints
+## View Identity
+
+### Understanding View Identity
+
+SwiftUI uses view identity to track views over time, preserve state, and animate transitions. Understanding identity is critical for debugging state preservation and animation issues.
+
+### Two Types of Identity
+
+#### 1. Structural Identity (Implicit)
+Position in view hierarchy determines identity:
+
+```swift
+VStack {
+    Text("First")   // Identity: VStack.child[0]
+    Text("Second")  // Identity: VStack.child[1]
+}
+```
+
+**When structural identity changes**:
+```swift
+if showDetails {
+    DetailView()  // Identity changes when condition changes
+    SummaryView()
+} else {
+    SummaryView()  // Same type, different position = different identity
+}
+```
+
+**Problem**: `SummaryView` gets recreated each time, losing @State values.
+
+#### 2. Explicit Identity
+You control identity with `.id()` modifier:
+
+```swift
+DetailView()
+    .id(item.id)  // Explicit identity tied to item
+
+// When item.id changes → SwiftUI treats as different view
+// → @State resets
+// → Animates transition
+```
+
+### Common Identity Issues
+
+#### Issue 1: State Resets Unexpectedly
+**Symptom**: @State values reset to initial values when you don't expect.
+
+**Cause**: View identity changed (position in hierarchy or .id() value changed).
+
+```swift
+// ❌ PROBLEM: Identity changes when showDetails toggles
+@State private var count = 0
+
+var body: some View {
+    VStack {
+        if showDetails {
+            CounterView(count: $count)  // Position changes
+        }
+        Button("Toggle") {
+            showDetails.toggle()
+        }
+    }
+}
+
+// ✅ FIX: Stable identity with .opacity()
+var body: some View {
+    VStack {
+        CounterView(count: $count)
+            .opacity(showDetails ? 1 : 0)  // Same identity always
+        Button("Toggle") {
+            showDetails.toggle()
+        }
+    }
+}
+
+// ✅ ALSO FIX: Explicit stable ID
+var body: some View {
+    VStack {
+        if showDetails {
+            CounterView(count: $count)
+                .id("counter")  // Stable ID
+        }
+        Button("Toggle") {
+            showDetails.toggle()
+        }
+    }
+}
+```
+
+#### Issue 2: Animations Don't Work
+**Symptom**: View changes but doesn't animate.
+
+**Cause**: Identity changed, SwiftUI treats as remove + add instead of update.
+
+```swift
+// ❌ PROBLEM: Identity changes with selection
+ForEach(items) { item in
+    ItemView(item: item)
+        .id(item.id + "-\(selectedID)")  // ID changes when selection changes
+}
+
+// ✅ FIX: Stable identity
+ForEach(items) { item in
+    ItemView(item: item, isSelected: item.id == selectedID)
+        .id(item.id)  // Stable ID
+}
+```
+
+#### Issue 3: ForEach with Changing Data
+**Symptom**: List items jump around or animate incorrectly.
+
+**Cause**: Non-unique or changing identifiers.
+
+```swift
+// ❌ WRONG: Index-based ID changes when array changes
+ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+    Text(item.name)
+}
+
+// ❌ WRONG: Non-unique IDs
+ForEach(items, id: \.category) { item in  // Multiple items per category
+    Text(item.name)
+}
+
+// ✅ RIGHT: Stable, unique IDs
+ForEach(items, id: \.id) { item in
+    Text(item.name)
+}
+
+// ✅ RIGHT: Make type Identifiable
+struct Item: Identifiable {
+    let id = UUID()
+    var name: String
+}
+
+ForEach(items) { item in  // id: \.id implicit
+    Text(item.name)
+}
+```
+
+### When to Use .id()
+
+**Use .id() to**:
+- Force view recreation when data changes fundamentally
+- Animate transitions between distinct states
+- Reset @State when external dependency changes
+
+**Example: Force recreation on data change**:
+```swift
+DetailView(item: item)
+    .id(item.id)  // New item → new view → @State resets
+```
+
+**Don't use .id() when**:
+- You just need to update view content (use bindings instead)
+- Trying to fix update issues (investigate root cause instead)
+- Identity is already stable
+
+### Debugging Identity Issues
+
+#### 1. Self._printChanges()
+```swift
+var body: some View {
+    let _ = Self._printChanges()
+    // Check if "@self changed" appears when you don't expect
+}
+```
+
+#### 2. Check .id() modifiers
+Search codebase for `.id()` - are IDs changing unexpectedly?
+
+#### 3. Check conditionals
+Views in `if/else` change position → different identity.
+
+**Fix**: Use `.opacity()` or stable `.id()` instead.
+
+### Identity Quick Reference
+
+| Symptom | Likely Cause | Fix |
+|---------|--------------|-----|
+| State resets | Identity change | Use `.opacity()` instead of `if` |
+| No animation | Identity change | Remove `.id()` or use stable ID |
+| ForEach jumps | Non-unique ID | Use unique, stable IDs |
+| Unexpected recreation | Conditional position | Add explicit `.id()` |
+
+**See also**: [WWDC21: Demystify SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10022/)
+
+---
+
+## Pressure Scenarios and Real-World Constraints
 
 When you're under deadline pressure, you'll be tempted to shortcuts that hide problems instead of fixing them.
 
@@ -632,7 +980,7 @@ Intermittent bugs are the MOST important to diagnose correctly. One wrong guess 
 
 #### Professional script for co-leads who suggest guessing
 
-> "I appreciate the suggestion. Adding @ObservedObject everywhere is treating the symptom, not the root cause. The skill says intermittent bugs create NEW bugs when we guess. I need 60 minutes for systematic diagnosis. If I can't find the root cause by then, we'll disable the feature and ship a clean v1.1. The math shows we have time — I can complete diagnosis, fix, AND verification before the deadline."
+> "I appreciate the suggestion. Adding @ObservedObject everywhere is treating the symptom, not the root cause. The skill says intermittent bugs create NEW bugs when we guess. I need 60 minutes for systematic diagnosis. If I can't find the root cause by then, we'll disable the feature and ship a clean v1.1. The math shows we have time—I can complete diagnosis, fix, AND verification before the deadline."
 
 ---
 
@@ -846,26 +1194,115 @@ TextField("Search", text: $searchText)
 
 ---
 
-## External Resources
+## Simulator Verification
 
-#### Apple Documentation
-- [SwiftUI View Fundamentals](https://developer.apple.com/documentation/swiftui)
-- [State and Data Flow](https://developer.apple.com/documentation/swiftui/state-and-data-flow)
-- [Xcode Previews](https://developer.apple.com/documentation/xcode/previews)
+After fixing SwiftUI issues, verify with visual confirmation in the simulator.
 
-#### Related Axiom Skills
-- `xcode-debugging` – For Xcode cache corruption, build issues
-- `swift-concurrency` – For @MainActor and async/await patterns
+### Why Simulator Verification Matters
 
-## Version History
+SwiftUI previews don't always match simulator behavior:
+- **Different rendering** — Some visual effects only work on device/simulator
+- **Different timing** — Animations may behave differently
+- **Different state** — Full app lifecycle vs isolated preview
 
-- **1.0.0**: Initial skill covering view update diagnostics (struct mutation, binding identity, view recreation, missing observer), preview crash decision trees (missing dependencies, state init, cache corruption), layout quick reference (ZStack, GeometryReader, SafeArea, frame/fixedSize, modifier order), and pressure scenarios for common shortcuts
-- **1.1.0**: Added Scenario 2b (intermittent updates - 60-minute systematic diagnosis protocol with 4-step framework), extended pressure scenario for App Store Review deadline, added professional push-back script for co-leads suggesting shortcuts, verified under maximum pressure (App Store submission deadlines, cannot reproduce consistently, authority pressure from co-leads)
-- **1.2.0**: Added 3 real-world examples (List item doesn't update when tapped, Preview crashes with missing dependencies, TextField value changes don't appear) demonstrating struct mutation, missing dependencies, and binding identity issues with complete diagnosis workflows
+**Use simulator verification for**:
+- Layout fixes (spacing, alignment, sizing)
+- View update fixes (state changes, bindings)
+- Animation and gesture issues
+- Before/after visual comparison
+
+### Quick Verification Workflow
+
+```bash
+# 1. Take "before" screenshot
+/axiom:screenshot
+
+# 2. Apply your fix
+
+# 3. Rebuild and relaunch
+xcodebuild build -scheme YourScheme
+
+# 4. Take "after" screenshot
+/axiom:screenshot
+
+# 5. Compare screenshots to verify fix
+```
+
+### Navigating to Problem Screens
+
+If the bug is deep in your app, use debug deep links to navigate directly:
+
+```bash
+# 1. Add debug deep links (see deep-link-debugging skill)
+# Example: debug://settings, debug://recipe-detail?id=123
+
+# 2. Navigate and capture
+xcrun simctl openurl booted "debug://problem-screen"
+sleep 1
+/axiom:screenshot
+```
+
+### Full Simulator Testing
+
+For complex scenarios (state setup, multiple steps, log analysis):
+
+```bash
+/axiom:test-simulator
+```
+
+Then describe what you want to test:
+- "Navigate to the recipe editor and verify the layout fix"
+- "Test the profile screen with empty state"
+- "Verify the animation doesn't stutter anymore"
+
+### Before/After Example
+
+**Before fix** (view not updating):
+```bash
+# 1. Reproduce bug
+xcrun simctl openurl booted "debug://recipe-list"
+sleep 1
+xcrun simctl io booted screenshot /tmp/before-fix.png
+# Screenshot shows: Tapping star doesn't update UI
+```
+
+**After fix** (added @State binding):
+```bash
+# 2. Test fix
+xcrun simctl openurl booted "debug://recipe-list"
+sleep 1
+xcrun simctl io booted screenshot /tmp/after-fix.png
+# Screenshot shows: Star updates immediately when tapped
+```
+
+**Time saved**: 60%+ faster iteration with visual verification vs manual navigation
 
 ---
 
-**Created** 2025-11-30
-**Targets** iOS 14+, Swift 5.5+
-**Framework** SwiftUI
+## External Resources
+
+#### Apple Documentation
+- [Managing model data in your app](https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app) — @Observable patterns
+- [SwiftUI View Fundamentals](https://developer.apple.com/documentation/swiftui)
+- [State and Data Flow](https://developer.apple.com/documentation/swiftui/state-and-data-flow)
+- [Xcode Previews](https://developer.apple.com/documentation/xcode/previews)
+- [Observation framework](https://developer.apple.com/documentation/observation)
+
+#### WWDC Sessions
+- [WWDC 2025-256: What's new in SwiftUI](https://developer.apple.com/videos/play/wwdc2025/256/) — Latest SwiftUI features
+- [WWDC 2025-306: Optimize SwiftUI performance with Instruments](https://developer.apple.com/videos/play/wwdc2025/306/) — New SwiftUI Instrument
+- [WWDC 2023-10160: Demystify SwiftUI performance](https://developer.apple.com/videos/play/wwdc2023/10160/) — Self._printChanges(), dependencies
+- [WWDC 2023-10149: Discover Observation in SwiftUI](https://developer.apple.com/videos/play/wwdc2023/10149/) — @Observable introduction
+- [WWDC 2021-10022: Demystify SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10022/) — View identity, lifetime
+
+#### Related Axiom Skills
+- `swiftui-performance` — For profiling with Instruments, Cause & Effect Graph
+- `swiftui-debugging-diag` — Systematic diagnostic workflows for complex cases
+- `xcode-debugging` — For Xcode cache corruption, build issues
+- `swift-concurrency` — For @MainActor and async/await patterns
+
+**Targets:** iOS 17+ (iOS 14-16 patterns still valid)
+**Xcode:** 26+
+**Framework:** SwiftUI
+**History:** See git log for changes
 
