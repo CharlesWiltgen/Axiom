@@ -35,7 +35,7 @@ Apple's native persistence framework using `@Model` classes and declarative quer
 - Complex raw SQL required
 - Fine-grained migration control needed
 
-**For migrations** See the `database-migration` skill for safe schema evolution patterns.
+**For migrations** See the `swiftdata-migration` skill for custom schema migrations with VersionedSchema and SchemaMigrationPlan. For migration debugging, see `swiftdata-migration-diag`.
 
 ## Example Prompts
 
@@ -1445,7 +1445,9 @@ try modelContext.save()
 - [SwiftData by Example](https://www.hackingwithswift.com/quick-start/swiftdata)
 
 #### Related Axiom Skills
-- `database-migration` - Safe schema evolution
+- `swiftdata-migration` - Custom schema migrations with VersionedSchema and SchemaMigrationPlan
+- `swiftdata-migration-diag` - Debugging failed SwiftData migrations
+- `database-migration` - General migration safety patterns (SQLite/GRDB)
 - `sqlitedata` - Value types with CloudKit sharing
 - `grdb` - Raw SQL when needed
 - `swift-concurrency` - @MainActor and actor patterns

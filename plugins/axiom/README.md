@@ -2,9 +2,9 @@
 
 Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Apple Intelligence (Foundation Models), Liquid Glass, Widgets & Extensions, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
 
-**Version**: 0.9.29
+**Version**: 0.9.31
 **Status**: Preview Release
-**Skills**: 45 | **Commands**: 12 | **Agents**: 13 | **Hooks**: 4
+**Skills**: 47 | **Commands**: 12 | **Agents**: 13 | **Hooks**: 4
 
 ## Installation
 
@@ -267,6 +267,33 @@ Raw GRDB for complex queries, ValueObservation, DatabaseMigrator patterns.
 SwiftData with iOS 26+ features, @Model definitions, Swift 6 concurrency.
 
 **Use when**: Working with SwiftData, @Query in SwiftUI, @Relationship macros, CloudKit integration
+
+---
+
+#### `axiom:swiftdata-migration`
+Custom SwiftData schema migrations with VersionedSchema and SchemaMigrationPlan for property type changes and relationship preservation.
+
+**Use when**: Creating SwiftData migrations, changing property types, preserving one-to-many/many-to-many relationships, two-stage migration patterns
+
+**Key features**:
+- willMigrate/didMigrate limitation explained
+- Two-stage migration pattern for type changes (String → AttributedString)
+- Relationship prefetching during migration
+- Many-to-many migration patterns
+- Real device testing requirements
+
+---
+
+#### `axiom:swiftdata-migration-diag` (Diagnostic)
+Systematic diagnostics for failed SwiftData migrations with relationship errors and schema version mismatches.
+
+**Use when**: "Expected only Arrays for Relationships" error, app crashes after schema change, migration works in simulator but fails on device
+
+**Key features**:
+- Error → Fix mapping for common migration failures
+- Debugging checklist with SwiftData debug logging
+- willMigrate/didMigrate troubleshooting
+- Real device testing workflow
 
 ---
 

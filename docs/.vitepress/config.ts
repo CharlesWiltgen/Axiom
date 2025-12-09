@@ -109,7 +109,8 @@ export default defineConfig({
             { text: 'Build Troubleshooting', link: '/skills/debugging/build-troubleshooting' },
             { text: 'Build Performance', link: '/skills/debugging/build-performance' },
             { text: 'Performance Profiling', link: '/skills/debugging/performance-profiling' },
-            { text: 'Objective-C Block Retain Cycles', link: '/skills/debugging/objc-block-retain-cycles' }
+            { text: 'Objective-C Block Retain Cycles', link: '/skills/debugging/objc-block-retain-cycles' },
+            { text: 'SwiftData Migration Diagnostics', link: '/skills/debugging/swiftdata-migration-diag' }
           ]
         },
         {
@@ -134,7 +135,8 @@ export default defineConfig({
             { text: 'Database Migration', link: '/skills/persistence/database-migration' },
             { text: 'SQLiteData', link: '/skills/persistence/sqlitedata' },
             { text: 'GRDB', link: '/skills/persistence/grdb' },
-            { text: 'SwiftData', link: '/skills/persistence/swiftdata' }
+            { text: 'SwiftData', link: '/skills/persistence/swiftdata' },
+            { text: 'SwiftData Migration', link: '/skills/persistence/swiftdata-migration' }
           ]
         }
       ],
