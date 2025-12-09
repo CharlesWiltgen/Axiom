@@ -1,6 +1,7 @@
 ---
 name: swiftui-performance
-description: Use when analyzing SwiftUI performance issues, identifying long view body updates, reducing unnecessary view updates, or optimizing SwiftUI rendering — covers the new SwiftUI Instrument in Instruments 26, performance patterns from WWDC 2025, and production crisis decision-making under deadline pressure
+description: Use when analyzing SwiftUI performance issues, identifying long view body updates, reducing unnecessary view updates, or optimizing SwiftUI rendering - covers the new SwiftUI Instrument in Instruments 26, performance patterns from WWDC 2025, and production crisis decision-making under deadline pressure
+skill_type: discipline
 version: 1.1.0
 last_updated: TDD-tested with production performance crisis scenarios
 apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+
@@ -90,7 +91,7 @@ List(trips) { trip in // 100k+ items
 
 #### Reduced dropped frames during high-speed scrolling
 
-"SwiftUI has improved scheduling of user interface updates on iOS and macOS. This improves responsiveness and lets SwiftUI do even more work to prepare for upcoming frames. All in all, it reduces the chance of your app dropping a frame while scrolling quickly at high frame rates." - WWDC 2025-256
+SwiftUI has improved scheduling of user interface updates on iOS and macOS. This improves responsiveness and lets SwiftUI do even more work to prepare for upcoming frames. All in all, it reduces the chance of your app dropping a frame while scrolling quickly at high frame rates.
 
 #### Key improvements
 1. **Better frame scheduling** — SwiftUI gets more time to prepare for upcoming frames
@@ -1123,6 +1124,8 @@ Problem likely elsewhere:
 - [Optimizing CPU performance with Instruments](https://developer.apple.com/documentation/xcode/optimizing-your-app-s-performance)
 
 **Other Skills**:
+- For systematic SwiftUI debugging: See `swiftui-debugging-diag` skill
+- For view update troubleshooting: See `swiftui-debugging` skill
 - For memory issues: See `memory-debugging` skill
 - For Xcode environment issues: See `xcode-debugging` skill
 
@@ -1138,12 +1141,6 @@ Problem likely elsewhere:
 
 ---
 
-## Version History
-
-- **1.1.0**: Added "Production Pressure: When Performance Issues Hit Live" section from TDD testing of production crisis scenarios. Includes 30-minute diagnostic protocol with explicit time-cost analysis, red flags for dangerous pressure tactics, real-world tab transition sluggishness example, and 5-question decision framework before shipping. Prevents guessing under deployment deadline pressure and ensures diagnosis-driven fixes
-- **1.0.0 (WWDC 2025)**: Initial skill based on new SwiftUI Instrument in Instruments 26, covering long view body updates, unnecessary updates, Cause & Effect Graph, and performance optimization patterns from WWDC 2025 Session 306
-
----
-
-**Last Updated**: WWDC 2025
-**Minimum Requirements**: Xcode 26, iOS 26+/iPadOS 26+/macOS Tahoe+/visionOS 3+
+**Xcode:** 26+
+**Platforms:** iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+
+**History:** See git log for changes

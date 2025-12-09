@@ -1124,6 +1124,8 @@ Problem likely elsewhere:
 - [Optimizing CPU performance with Instruments](https://developer.apple.com/documentation/xcode/optimizing-your-app-s-performance)
 
 **Other Skills**:
+- For systematic SwiftUI debugging: See `swiftui-debugging-diag` skill
+- For view update troubleshooting: See `swiftui-debugging` skill
 - For memory issues: See `memory-debugging` skill
 - For Xcode environment issues: See `xcode-debugging` skill
 

@@ -12,9 +12,10 @@ Build beautiful, performant interfaces with expert guidance on the latest Apple 
   - *"My animations stutter and scrolling is janky. How do I know if SwiftUI is the bottleneck?"*
   - *"Views are updating way too often even though their data hasn't changed."*
 
-- **[SwiftUI Debugging](/skills/ui-design/swiftui-debugging)** – View updates, preview crashes, layout issues with diagnostic decision trees and 3 real-world examples
+- **[SwiftUI Debugging](/skills/ui-design/swiftui-debugging)** – View updates, preview crashes, layout issues with Self._printChanges() debugging, @Observable patterns (iOS 17+), and view identity understanding
   - *"List item doesn't update even though the data changed."*
   - *"Preview keeps crashing with mysterious dependency errors."*
+  - **Advanced** [SwiftUI Debugging Diagnostics](/skills/debugging/swiftui-debugging-diag) for Instruments-based investigation
 
 - **[UI Testing](/skills/ui-design/ui-testing)** – Recording UI Automation (Xcode 26) and condition-based waiting for reliable tests
   - *"Tests pass locally but fail in CI with no obvious reason."*

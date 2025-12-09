@@ -30,3 +30,8 @@ Systematic debugging strategies to solve issues faster and prevent common proble
   - *"Claude Code can't navigate to specific screens for testing. How do I add debug deep links?"*
   - *"I want to take screenshots of different screens automatically."*
   - **Related** [`simulator-tester` agent](/agents/simulator-tester) for automated testing with deep links
+
+- **[SwiftUI Debugging Diagnostics](/skills/debugging/swiftui-debugging-diag)** – Systematic diagnostic workflows for complex SwiftUI issues with Instruments integration
+  - *"Self._printChanges() shows unexpected patterns and I need to trace the data flow."*
+  - *"View issues persist after basic troubleshooting. How do I diagnose with Instruments?"*
+  - **Cross-reference** [SwiftUI Debugging](/skills/ui-design/swiftui-debugging) for basic troubleshooting patterns
