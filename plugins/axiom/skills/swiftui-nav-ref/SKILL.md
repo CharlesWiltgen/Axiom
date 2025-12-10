@@ -658,7 +658,126 @@ TabView {
 .tabViewCustomization($customization)
 ```
 
-### 5.5 iOS 26+ Tab Features (WWDC 2025, 256)
+### 5.5 Programmatic Tab Visibility
+
+Use `.hidden(_:)` to show/hide tabs based on app state while preserving their navigation state.
+
+#### State-Driven Tab Visibility
+
+```swift
+enum AppContext { case home, browse }
+
+struct ContentView: View {
+    @State private var context: AppContext = .home
+    @State private var selection: TabID = .home
+
+    var body: some View {
+        TabView(selection: $selection) {
+            Tab("Home", systemImage: "house") {
+                HomeView()
+            }
+            .tag(TabID.home)
+
+            Tab("Libraries", systemImage: "square.stack") {
+                LibrariesView()
+            }
+            .tag(TabID.libraries)
+            .hidden(context == .browse)  // Hide in browse context
+
+            Tab("Playlists", systemImage: "music.note.list") {
+                PlaylistsView()
+            }
+            .tag(TabID.playlists)
+            .hidden(context == .browse)
+
+            Tab("Tracks", systemImage: "music.note") {
+                TracksView()
+            }
+            .tag(TabID.tracks)
+            .hidden(context == .home)    // Hide in home context
+        }
+        .tabViewStyle(.sidebarAdaptable)
+    }
+}
+```
+
+#### State Preservation
+
+**Key difference**: `.hidden(_:)` preserves tab state, conditional rendering does not.
+
+```swift
+// ✅ State preserved when hidden
+Tab("Settings", systemImage: "gear") {
+    SettingsView()  // Navigation stack preserved
+}
+.hidden(!showSettings)
+
+// ❌ State lost when condition changes
+if showSettings {
+    Tab("Settings", systemImage: "gear") {
+        SettingsView()  // Navigation stack recreated
+    }
+}
+```
+
+#### Common Patterns
+
+**Feature Flags**
+```swift
+Tab("Beta Features", systemImage: "flask") {
+    BetaView()
+}
+.hidden(!UserDefaults.standard.bool(forKey: "enableBetaFeatures"))
+```
+
+**Authentication State**
+```swift
+Tab("Profile", systemImage: "person.circle") {
+    ProfileView()
+}
+.hidden(!authManager.isAuthenticated)
+```
+
+**Purchase Status**
+```swift
+Tab("Pro Features", systemImage: "star.circle.fill") {
+    ProFeaturesView()
+}
+.hidden(!purchaseManager.isPro)
+```
+
+**Development Builds**
+```swift
+Tab("Debug", systemImage: "hammer") {
+    DebugView()
+}
+.hidden(!isDevelopmentBuild)
+
+private var isDevelopmentBuild: Bool {
+    #if DEBUG
+    return true
+    #else
+    return false
+    #endif
+}
+```
+
+#### Animated Transitions
+
+Wrap state changes in `withAnimation` for smooth tab bar layout transitions:
+
+```swift
+Button("Switch to Browse") {
+    withAnimation {
+        context = .browse
+        selection = .tracks  // Switch to first visible tab
+    }
+}
+// Tab bar animates as tabs appear/disappear
+// Uses system motion curves automatically
+```
+
+### 5.6 iOS 26+ Tab Features (WWDC 2025, 256)
 
 ```swift
 // Tab bar minimization on scroll
@@ -678,7 +797,7 @@ Tab(role: .search) {
 // Morphs into search field when selected
 ```
 
-### 5.6 Tab API Quick Reference
+### 5.7 Tab API Quick Reference
 
 | Modifier | Target | iOS | Purpose |
 |----------|--------|-----|---------|
@@ -688,6 +807,7 @@ Tab(role: .search) {
 | `.customizationID(_:)` | Tab | 18+ | Enable user customization |
 | `.customizationBehavior(_:for:)` | Tab | 18+ | Control hide/reorder permissions |
 | `.defaultVisibility(_:for:)` | Tab | 18+ | Set initial visibility state |
+| `.hidden(_:)` | Tab | 18+ | Programmatic visibility with state preservation |
 | `.tabViewStyle(.sidebarAdaptable)` | TabView | 18+ | Sidebar on iPad, tabs on iPhone |
 | `.tabViewCustomization($binding)` | TabView | 18+ | Persist user tab arrangement |
 | `.tabBarMinimizeBehavior(_:)` | TabView | 26+ | Auto-hide on scroll |
