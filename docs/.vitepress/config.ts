@@ -24,7 +24,9 @@ export default defineConfig({
         {
           text: 'Guide',
           items: [
-            { text: 'Getting Started', link: '/guide/' }
+            { text: 'Overview', link: '/guide/' },
+            { text: 'Quick Start', link: '/guide/quick-start' },
+            { text: 'Common Workflows', link: '/guide/workflows' }
           ]
         }
       ],
@@ -175,7 +177,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v0.9.33'
     }
   }
 })
