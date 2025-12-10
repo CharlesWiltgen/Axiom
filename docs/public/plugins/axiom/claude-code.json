@@ -5,94 +5,211 @@
   "author": "Charles Wiltgen",
   "license": "MIT",
   "commands": [
-    "./commands/audit-concurrency.md",
     "./commands/audit-accessibility.md",
-    "./commands/audit-memory.md"
+    "./commands/audit-concurrency.md",
+    "./commands/audit-core-data.md",
+    "./commands/audit-liquid-glass.md",
+    "./commands/audit-memory.md",
+    "./commands/audit-networking.md",
+    "./commands/audit-swiftui-nav.md",
+    "./commands/audit-swiftui-performance.md",
+    "./commands/fix-build.md",
+    "./commands/optimize-build.md",
+    "./commands/screenshot.md",
+    "./commands/test-simulator.md"
   ],
   "skills": [
     {
-      "name": "xcode-debugging",
-      "description": "Use when encountering BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild processes, or mysterious Xcode issues - systematic environment-first diagnostics"
+      "name": "accessibility-diag",
+      "description": "Use when fixing VoiceOver issues, Dynamic Type violations, color contrast failures, touch target problems, keyboard navigation gaps, or Reduce Motion support - comprehensive accessibility diagnostics with WCAG compliance, Accessibility Inspector workflows, and App Store Review preparation for iOS/macOS"
     },
     {
-      "name": "swift-concurrency",
-      "description": "Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor isolation, and data race prevention"
+      "name": "app-intents-ref",
+      "description": "Use when integrating App Intents for Siri, Apple Intelligence, Shortcuts, Spotlight, or system experiences - covers AppIntent, AppEntity, parameter handling, entity queries, background execution, authentication, and debugging common integration issues for iOS 16+"
     },
     {
-      "name": "database-migration",
-      "description": "Safe database schema evolution for SQLite/GRDB - prevents data loss with additive migrations and testing workflows"
+      "name": "apple-docs-research",
+      "description": "Use when researching Apple frameworks, APIs, or WWDC sessions - provides techniques for retrieving full transcripts, code samples, and documentation using Chrome browser and sosumi.ai"
     },
     {
-      "name": "memory-debugging",
-      "description": "Use when app memory grows over time, seeing multiple instances of same class, experiencing crashes with memory limit exceeded, or Instruments shows retain cycles - systematic diagnosis of memory leaks"
+      "name": "auto-layout-debugging",
+      "description": "Use when encountering \"Unable to simultaneously satisfy constraints\" errors, constraint conflicts, ambiguous layout warnings, or views positioned incorrectly - systematic debugging workflow for Auto Layout issues in iOS"
     },
     {
-      "name": "ui-testing",
-      "description": "Use when writing UI tests, recording interactions (WWDC 2025), tests have race conditions, timing dependencies, or are flaky - covers Recording UI Automation in Xcode 26, condition-based waiting, and accessibility-first testing patterns"
+      "name": "avfoundation-ref",
+      "description": "Reference \u2014 AVFoundation audio APIs, AVAudioSession categories/modes, AVAudioEngine pipelines, bit-perfect DAC output, iOS 26+ spatial audio capture, ASAF/APAC, Audio Mix with Cinematic framework"
+    },
+    {
+      "name": "build-performance",
+      "description": "Use when build times are slow, investigating build performance, analyzing Build Timeline, identifying type checking bottlenecks, or optimizing incremental builds - comprehensive build optimization workflows based on WWDC 2018/408, WWDC 2022/110364, and real-world optimization patterns"
     },
     {
       "name": "build-troubleshooting",
-      "description": "Use when encountering dependency conflicts, CocoaPods/SPM resolution failures, Multiple commands produce errors, or framework version mismatches - systematic dependency and build configuration debugging"
+      "description": "Use when encountering dependency conflicts, CocoaPods/SPM resolution failures, \"Multiple commands produce\" errors, or framework version mismatches - systematic dependency and build configuration debugging for iOS projects. Includes pressure scenario guidance for resisting quick fixes under time constraints"
     },
     {
-      "name": "liquid-glass",
-      "description": "Use when implementing Liquid Glass effects (WWDC 2025), reviewing UI for adoption, debugging visual artifacts, or requesting expert review - Apple's new material design system with comprehensive design principles, API patterns, Regular vs Clear variants, tinting, and troubleshooting for iOS 26+"
+      "name": "core-data-diag",
+      "description": "Use when debugging schema migration crashes, concurrency thread-confinement errors, N+1 query performance, SwiftData to Core Data bridging, or testing migrations without data loss - systematic Core Data diagnostics with safety-first migration patterns"
     },
     {
-      "name": "swiftui-performance",
-      "description": "Use when analyzing SwiftUI performance (WWDC 2025), identifying long view body updates, reducing unnecessary updates, or optimizing rendering - covers new SwiftUI Instrument in Instruments 26, Cause & Effect Graph, and performance patterns for iOS 26+"
+      "name": "database-migration",
+      "description": "Use when adding/modifying database columns, encountering \"FOREIGN KEY constraint failed\", \"no such column\", \"cannot add NOT NULL column\" errors, or creating schema migrations for SQLite/GRDB/SQLiteData - prevents data loss with safe migration patterns and testing workflows for iOS/macOS apps"
     },
     {
-      "name": "swiftui-debugging",
-      "description": "Use when debugging SwiftUI view updates, preview crashes, or layout issues - decision trees with Self._printChanges() debugging, @Observable patterns (iOS 17+), @Bindable, view identity understanding, and cross-references to swiftui-performance for profiling"
+      "name": "deep-link-debugging",
+      "description": "Use when adding debug-only deep links for testing, enabling simulator navigation to specific screens, or integrating with automated testing workflows - enables closed-loop debugging without production deep link implementation"
     },
     {
-      "name": "swiftui-debugging-diag",
-      "description": "Use when SwiftUI debugging requires systematic investigation - view updates not working after basic troubleshooting, intermittent UI issues, complex state dependencies, or when Self._printChanges() shows unexpected patterns - 5 diagnostic patterns with Instruments integration and production crisis protocols"
+      "name": "extensions-widgets",
+      "description": "Use when implementing widgets, Live Activities, or Control Center controls - enforces correct patterns for timeline management, data sharing, and extension lifecycle to prevent common crashes and memory issues"
     },
     {
-      "name": "performance-profiling",
-      "description": "Use when app feels slow, memory grows over time, battery drains fast, or profiling proactively - decision trees to choose the right Instruments tool (Time Profiler, Allocations, Core Data, Energy Impact), deep workflows for each tool, and pressure scenarios for misinterpreting results under deadline"
+      "name": "extensions-widgets-ref",
+      "description": "Use when implementing widgets, Live Activities, Control Center controls, or app extensions - comprehensive API reference for WidgetKit, ActivityKit, App Groups, and extension lifecycle for iOS 14+"
     },
     {
-      "name": "sqlitedata",
-      "description": "Use when working with SQLiteData (Point-Free) - @Table models, queries with @FetchAll/@FetchOne, CloudKit sync setup, StructuredQueries post-migration crashes, batch imports, and when to drop to GRDB - type-safe SQLite persistence patterns for iOS"
+      "name": "foundation-models",
+      "description": "Use when implementing on-device AI with Apple's Foundation Models framework \u2014 prevents context overflow, blocking UI, wrong model use cases, and manual JSON parsing when @Generable should be used. iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+"
+    },
+    {
+      "name": "foundation-models-diag",
+      "description": "Use when debugging Foundation Models issues \u2014 context exceeded, guardrail violations, slow generation, availability problems, unsupported language, or unexpected output. Systematic diagnostics with production crisis defense."
+    },
+    {
+      "name": "foundation-models-ref",
+      "description": "Reference \u2014 Complete Foundation Models framework guide covering LanguageModelSession, @Generable, @Guide, Tool protocol, streaming, dynamic schemas, built-in use cases, and all WWDC 2025 code examples"
+    },
+    {
+      "name": "getting-started",
+      "description": "Use when first installing Axiom, unsure which skill to use, want an overview of available skills, or need help finding the right skill for your situation \u2014 interactive onboarding that recommends skills based on your project and current focus"
     },
     {
       "name": "grdb",
-      "description": "Use when writing raw SQL queries with GRDB, complex joins, ValueObservation for reactive queries, DatabaseMigrator patterns, or dropping down from SQLiteData for performance - direct SQLite access for iOS/macOS"
+      "description": "Use when writing raw SQL queries with GRDB, complex joins, ValueObservation for reactive queries, DatabaseMigrator patterns, query profiling under performance pressure, or dropping down from SQLiteData for performance - direct SQLite access for iOS/macOS"
     },
     {
-      "name": "swiftdata",
-      "description": "Use when working with SwiftData - @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ features, and Swift 6 concurrency with @MainActor - Apple's native persistence framework"
+      "name": "in-app-purchases",
+      "description": "StoreKit 2 in-app purchase implementation guide - testing-first workflow with .storekit configuration, StoreManager architecture, transaction verification, subscription management, and restore purchases for consumables, non-consumables, and auto-renewable subscriptions"
     },
     {
-      "name": "uikit-animation-debugging",
-      "description": "Use when CAAnimation completion handler doesn't fire, spring physics look wrong on device, animation duration mismatches actual time, gesture + animation interaction causes jank, or timing differs between simulator and real hardware - systematic CAAnimation diagnosis with CATransaction patterns, frame rate awareness, and device-specific behavior"
+      "name": "liquid-glass",
+      "description": "Use when implementing Liquid Glass effects, reviewing UI for Liquid Glass adoption, debugging visual artifacts, optimizing performance, or requesting expert review of Liquid Glass implementation - provides comprehensive design principles, API patterns, and troubleshooting guidance from WWDC 2025. Includes design review pressure handling and professional push-back frameworks"
+    },
+    {
+      "name": "liquid-glass-ref",
+      "description": "Use when planning comprehensive Liquid Glass adoption across an app, auditing existing interfaces for Liquid Glass compatibility, implementing app icon updates, or understanding platform-specific Liquid Glass behavior - comprehensive reference guide covering all aspects of Liquid Glass adoption from WWDC 2025"
+    },
+    {
+      "name": "memory-debugging",
+      "description": "Use when debugging retain cycles, memory leaks, crashes after 10+ minutes, or progressive memory growth from 50MB \u2192 200MB - provides systematic diagnosis, Instruments patterns, and production-ready fixes for iOS/macOS apps under time pressure"
+    },
+    {
+      "name": "network-framework-ref",
+      "description": "Reference \u2014 Comprehensive Network.framework guide covering NetworkConnection (iOS 26+), NWConnection (iOS 12-25), TLV framing, Coder protocol, NetworkListener, NetworkBrowser, Wi-Fi Aware discovery, and migration strategies"
+    },
+    {
+      "name": "networking",
+      "description": "Use when implementing Network.framework connections, debugging connection failures, migrating from sockets/URLSession streams, or adopting structured concurrency networking patterns - prevents deprecated API usage, reachability anti-patterns, and thread-safety violations with iOS 12-26+ APIs"
+    },
+    {
+      "name": "networking-diag",
+      "description": "Use when debugging connection timeouts, TLS handshake failures, data not arriving, connection drops, performance issues, or proxy/VPN interference - systematic Network.framework diagnostics with production crisis defense"
+    },
+    {
+      "name": "now-playing",
+      "description": "Use when Now Playing metadata doesn't appear on Lock Screen/Control Center, remote commands (play/pause/skip) don't respond, artwork is missing/wrong/flickering, or playback state is out of sync - provides systematic diagnosis, correct patterns, and professional push-back for audio/video apps on iOS 18+"
     },
     {
       "name": "objc-block-retain-cycles",
       "description": "Use when debugging memory leaks from blocks, blocks assigned to self or properties, network callbacks, or crashes from deallocated objects - systematic weak-strong pattern diagnosis with mandatory diagnostic rules"
     },
     {
-      "name": "core-data-debugging",
-      "description": "Use when debugging schema migration crashes, concurrency thread-confinement errors, N+1 query performance, SwiftData to Core Data bridging, or testing migrations without data loss - systematic Core Data diagnostics with safety-first migration patterns"
+      "name": "performance-profiling",
+      "description": "Use when app feels slow, memory grows over time, battery drains fast, or you want to profile proactively - decision trees to choose the right Instruments tool, deep workflows for Time Profiler/Allocations/Core Data, and pressure scenarios for misinterpreting results"
     },
     {
-      "name": "realm-to-swiftdata-migration",
-      "description": "Use when migrating from Realm to SwiftData (URGENT: Realm Device Sync sunset Sept 30, 2025) - comprehensive guide with pattern equivalents, threading model conversion from manual DispatchQueue to Swift Concurrency, schema migration strategies for small/medium/enterprise apps, CloudKit sync transition, testing/verification checklist, and real-world migration scenarios"
+      "name": "realm-migration-ref",
+      "description": "Comprehensive migration guide from Realm to SwiftData - pattern equivalents, threading model conversion, schema migration strategies, CloudKit sync transition, and real-world scenarios"
     },
     {
-      "name": "accessibility-debugging",
-      "description": "Use when fixing VoiceOver issues, Dynamic Type violations, color contrast failures, touch target problems, keyboard navigation gaps, or Reduce Motion support - comprehensive accessibility diagnostics with WCAG compliance, Accessibility Inspector workflows, and App Store Review preparation for iOS/macOS"
+      "name": "sqlitedata",
+      "description": "Use when working with SQLiteData (Point-Free) \u2014 Quick Reference at top, anti-patterns, @Table models, query composition, RETURNING, CTEs, FTS5, JSON aggregation, CloudKit sync, database views, @DatabaseFunction"
     },
     {
-      "name": "app-intents-ref",
-      "description": "Reference: Comprehensive App Intents integration guide for Siri, Apple Intelligence, Shortcuts, Spotlight - covers AppIntent, AppEntity, parameter handling, entity queries, background execution, authentication, and debugging for iOS 16+"
+      "name": "storekit-ref",
+      "description": "Reference \u2014 Complete StoreKit 2 API guide covering Product, Transaction, AppTransaction, RenewalInfo, SubscriptionStatus, StoreKit Views, purchase options, server APIs, and all iOS 18.4 enhancements with WWDC 2025 code examples"
+    },
+    {
+      "name": "swift-concurrency",
+      "description": "Swift 6 strict concurrency patterns - progressive journey from single-threaded to concurrent code with @concurrent attribute (WWDC 2025), actor isolation, Sendable, async/await, and data race prevention"
+    },
+    {
+      "name": "swiftdata",
+      "description": "Use when working with SwiftData - @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ features, and Swift 6 concurrency with @MainActor \u2014 Apple's native persistence framework"
+    },
+    {
+      "name": "swiftdata-migration",
+      "description": "Use when creating SwiftData custom schema migrations with VersionedSchema and SchemaMigrationPlan - property type changes, relationship preservation (one-to-many, many-to-many), the willMigrate/didMigrate limitation, two-stage migration patterns, and testing migrations on real devices"
+    },
+    {
+      "name": "swiftdata-migration-diag",
+      "description": "Use when SwiftData migrations crash, fail to preserve relationships, lose data, or work in simulator but fail on device - systematic diagnostics for schema version mismatches, relationship errors, and migration testing gaps"
+    },
+    {
+      "name": "swiftdata-to-sqlitedata",
+      "description": "Use when migrating from SwiftData to SQLiteData \u2014 decision guide, pattern equivalents, code examples, CloudKit sharing (SwiftData can't), performance benchmarks, gradual migration strategy"
     },
     {
       "name": "swiftui-26-ref",
-      "description": "Reference: Comprehensive iOS 26 SwiftUI features guide - covers Liquid Glass design system, performance improvements, @Animatable macro, 3D spatial layout, scene bridging, WebView/WebPage, AttributedString rich text editing, drag and drop enhancements, and visionOS integration"
+      "description": "Use when implementing iOS 26 SwiftUI features - covers Liquid Glass design system, performance improvements, @Animatable macro, 3D spatial layout, scene bridging, WebView/WebPage, AttributedString rich text editing, drag and drop enhancements, and visionOS integration for iOS 26+"
+    },
+    {
+      "name": "swiftui-debugging",
+      "description": "Use when debugging SwiftUI view updates, preview crashes, or layout issues - diagnostic decision trees to identify root causes quickly and avoid misdiagnosis under pressure"
+    },
+    {
+      "name": "swiftui-debugging-diag",
+      "description": "Use when SwiftUI view debugging requires systematic investigation - view updates not working after basic troubleshooting, intermittent UI issues, complex state dependencies, or when Self._printChanges() shows unexpected update patterns - systematic diagnostic workflows with Instruments integration"
+    },
+    {
+      "name": "swiftui-gestures",
+      "description": "Use when implementing SwiftUI gestures (tap, drag, long press, magnification, rotation), composing gestures, managing gesture state, or debugging gesture conflicts - comprehensive patterns for gesture recognition, composition, accessibility, and cross-platform support"
+    },
+    {
+      "name": "swiftui-layout",
+      "description": "Use when layouts need to adapt to different screen sizes, iPad multitasking, or iOS 26 free-form windows \u2014 decision trees for ViewThatFits vs AnyLayout vs onGeometryChange, size class limitations, and anti-patterns preventing device-based layout mistakes"
+    },
+    {
+      "name": "swiftui-layout-ref",
+      "description": "Reference \u2014 Complete SwiftUI adaptive layout API guide covering ViewThatFits, AnyLayout, Layout protocol, onGeometryChange, GeometryReader, size classes, and iOS 26 window APIs"
+    },
+    {
+      "name": "swiftui-nav",
+      "description": "Use when implementing navigation patterns, choosing between NavigationStack and NavigationSplitView, handling deep links, adopting coordinator patterns, or requesting code review of navigation implementation - prevents navigation state corruption, deep link failures, and state restoration bugs for iOS 18+"
+    },
+    {
+      "name": "swiftui-nav-diag",
+      "description": "Use when debugging navigation not responding, unexpected pops, deep links showing wrong screen, state lost on tab switch or background, crashes in navigationDestination, or any SwiftUI navigation failure - systematic diagnostics with production crisis defense"
+    },
+    {
+      "name": "swiftui-nav-ref",
+      "description": "Reference \u2014 Comprehensive SwiftUI navigation guide covering NavigationStack (iOS 16+), NavigationSplitView (iOS 16+), NavigationPath, deep linking, state restoration, Tab+Navigation integration (iOS 18+), Liquid Glass navigation (iOS 26+), and coordinator patterns"
+    },
+    {
+      "name": "swiftui-performance",
+      "description": "Use when analyzing SwiftUI performance issues, identifying long view body updates, reducing unnecessary view updates, or optimizing SwiftUI rendering - covers the new SwiftUI Instrument in Instruments 26, performance patterns from WWDC 2025, and production crisis decision-making under deadline pressure"
+    },
+    {
+      "name": "ui-testing",
+      "description": "Use when writing UI tests, recording interactions, tests have race conditions, timing dependencies, inconsistent pass/fail behavior, or XCTest UI tests are flaky - covers Recording UI Automation (WWDC 2025), condition-based waiting, network conditioning, multi-factor testing, crash debugging, and accessibility-first testing patterns"
+    },
+    {
+      "name": "uikit-animation-debugging",
+      "description": "Use when CAAnimation completion handler doesn't fire, spring physics look wrong on device, animation duration mismatches actual time, gesture + animation interaction causes jank, or timing differs between simulator and real hardware - systematic CAAnimation diagnosis with CATransaction patterns, frame rate awareness, and device-specific behavior"
+    },
+    {
+      "name": "xcode-debugging",
+      "description": "Use when encountering BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild processes, \"Unable to boot simulator\", \"No such module\" after SPM changes, or mysterious test failures despite no code changes - systematic environment-first diagnostics for iOS/macOS projects"
     }
   ]
 }

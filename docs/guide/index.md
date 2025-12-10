@@ -6,12 +6,13 @@ Welcome to Axiom — battle-tested Claude Code skills, commands, and references 
 
 Axiom provides comprehensive iOS development workflows:
 
-- **17 skills** — Discipline-enforcing workflows (15 TDD-tested using ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development))
-- **6 reference skills** — Comprehensive guides without mandatory workflows
-- **4 diagnostic skills** — Systematic troubleshooting with pressure defense
-- **6 commands** — Quick automated scans for common issues
+- **30 discipline-enforcing skills** — Mandatory workflows (18 TDD-tested using ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development))
+- **11 reference skills** — Comprehensive guides without mandatory workflows
+- **7 diagnostic skills** — Systematic troubleshooting with pressure defense
+- **12 commands** — Quick automated scans for common issues
+- **13 agents** — Natural language triggered automation
 
-#### Total: 27 skills + 6 commands
+#### Total: 48 skills + 12 commands + 13 agents
 
 ### 🤖 Apple Intelligence
 - **Foundation Models** – Implement on-device AI with structured output and tool calling
