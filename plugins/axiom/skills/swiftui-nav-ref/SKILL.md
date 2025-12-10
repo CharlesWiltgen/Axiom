@@ -678,6 +678,21 @@ Tab(role: .search) {
 // Morphs into search field when selected
 ```
 
+### 5.6 Tab API Quick Reference
+
+| Modifier | Target | iOS | Purpose |
+|----------|--------|-----|---------|
+| `Tab(_:systemImage:value:content:)` | — | 18+ | New tab syntax with selection value |
+| `Tab(role: .search)` | — | 18+ | Semantic search tab with morph behavior |
+| `TabSection(_:content:)` | — | 18+ | Group tabs in sidebar view |
+| `.customizationID(_:)` | Tab | 18+ | Enable user customization |
+| `.customizationBehavior(_:for:)` | Tab | 18+ | Control hide/reorder permissions |
+| `.defaultVisibility(_:for:)` | Tab | 18+ | Set initial visibility state |
+| `.tabViewStyle(.sidebarAdaptable)` | TabView | 18+ | Sidebar on iPad, tabs on iPhone |
+| `.tabViewCustomization($binding)` | TabView | 18+ | Persist user tab arrangement |
+| `.tabBarMinimizeBehavior(_:)` | TabView | 26+ | Auto-hide on scroll |
+| `.tabViewBottomAccessory { }` | TabView | 26+ | Content below tab bar |
+
 ---
 
 ## iOS 26+ Navigation Features
