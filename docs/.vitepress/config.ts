@@ -26,7 +26,7 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/guide/' },
             { text: 'Quick Start', link: '/guide/quick-start' },
-            { text: 'Common Workflows', link: '/guide/workflows' }
+            { text: 'Example Workflows', link: '/guide/workflows' }
           ]
         }
       ],

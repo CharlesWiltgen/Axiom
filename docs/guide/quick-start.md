@@ -82,6 +82,6 @@ If `/audit-*` commands don't execute:
 
 ## What's Next?
 
-- [Common Workflows →](/guide/workflows)
+- [Example Workflows →](/guide/workflows)
 - [View all skills →](/skills/)
 - [Contributing guide →](https://github.com/CharlesWiltgen/Axiom/blob/main/CONTRIBUTING.md)
