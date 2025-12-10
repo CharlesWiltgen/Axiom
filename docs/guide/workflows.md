@@ -1,4 +1,4 @@
-# Common Workflows
+# Example Workflows
 
 ## Implementing On-Device AI with Foundation Models
 
