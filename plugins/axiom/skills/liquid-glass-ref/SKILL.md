@@ -1168,34 +1168,7 @@ List(items) { item in
 
 ### Semantic Search Tabs
 
-#### Use `.tabRole(.search)` for search tabs
-
-```swift
-// ✅ Search tab separated and morphs into search field
-TabView {
-    HomeView()
-        .tabItem { Label("Home", systemImage: "house") }
-
-    TripsView()
-        .tabItem { Label("Trips", systemImage: "map") }
-
-    SearchView()
-        .tabItem { Label("Search", systemImage: "magnifyingglass") }
-        .tabRole(.search) // NEW in iOS 26
-}
-```
-
-#### Visual Effect
-- Search tab appears separated from other tabs
-- Positioned at trailing end
-- When tapped, morphs into search field
-- Consistent with other apps (App Store, Maps)
-
-#### Benefits
-- Consistent experience across apps
-- People find content faster
-- Fluid morph animation
-- Platform-optimized placement
+For Tab API patterns including `.tabRole(.search)`, see [swiftui-nav-ref Section 5](/skills/ui-design/swiftui-nav-ref#tab-navigation-integration).
 
 ---
 

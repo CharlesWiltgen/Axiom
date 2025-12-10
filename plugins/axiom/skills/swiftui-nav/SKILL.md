@@ -27,7 +27,7 @@ Use when:
 
 #### Related Skills
 - Use `swiftui-nav-diag` for systematic troubleshooting of navigation failures
-- Use `swiftui-nav-ref` for comprehensive API reference with all WWDC examples
+- Use `swiftui-nav-ref` for comprehensive API reference (including Tab customization, iOS 26+ features) with all WWDC examples
 
 ## Example Prompts
 

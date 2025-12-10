@@ -126,16 +126,7 @@ NavigationSplitView {
 
 #### Search Tab Role
 
-```swift
-TabView {
-    SearchView()
-        .tabItem { Label("Search", systemImage: "magnifyingglass") }
-        .tabRole(.search) // Separated from other tabs, morphs into search field
-
-    TripsView()
-        .tabItem { Label("Trips", systemImage: "map") }
-}
-```
+See [swiftui-nav-ref Section 5.5](/skills/ui-design/swiftui-nav-ref#ios-26-tab-features) for `Tab(role: .search)` patterns.
 
 ### Glass Effect for Custom Views
 
