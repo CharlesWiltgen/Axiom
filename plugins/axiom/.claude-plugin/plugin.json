@@ -1,12 +1,11 @@
 {
   "name": "axiom",
-  "version": "0.9.31",
+  "version": "0.9.33",
   "description": "Battle-tested Claude Code agents, skills, and references for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": {
     "name": "Charles Wiltgen"
   },
   "license": "MIT",
-  "hooks": "./hooks/hooks.json",
   "commands": [
     "./commands/fix-build.md",
     "./commands/optimize-build.md",
