@@ -131,6 +131,82 @@ TabView {
 }
 ```
 
+### Tab API (iOS 18+)
+
+#### Modern tab declaration
+
+iOS 18 introduces the `Tab` container for cleaner, more powerful tab declarations.
+
+```swift
+// ✅ MODERN (iOS 18+): Tab with trailing closure
+TabView {
+    Tab("Trips", systemImage: "map") {
+        TripsView()
+    }
+
+    Tab("Search", systemImage: "magnifyingglass") {
+        SearchView()
+    }
+    .tabRole(.search)
+}
+
+// ❌ OLD: tabItem modifier
+TabView {
+    TripsView()
+        .tabItem {
+            Label("Trips", systemImage: "map")
+        }
+
+    SearchView()
+        .tabItem {
+            Label("Search", systemImage: "magnifyingglass")
+        }
+}
+```
+
+#### Benefits of Tab API
+
+**Type-safe selection**
+```swift
+enum AppTab {
+    case trips, search, settings
+}
+
+@State private var selectedTab: AppTab = .trips
+
+TabView(selection: $selectedTab) {
+    Tab("Trips", systemImage: "map", value: .trips) {
+        TripsView()
+    }
+
+    Tab("Search", systemImage: "magnifyingglass", value: .search) {
+        SearchView()
+    }
+
+    Tab("Settings", systemImage: "gear", value: .settings) {
+        SettingsView()
+    }
+}
+```
+
+**Programmatic tab control**
+```swift
+Button("Go to Search") {
+    selectedTab = .search
+}
+```
+
+#### Migration guide
+
+**When to use Tab**
+- New iOS 18+ projects
+- Apps targeting iOS 18 and later
+- Projects needing type-safe tab selection
+
+**When to keep tabItem**
+- Apps supporting iOS 17 or earlier
+- Incremental migration not yet complete
+
 ### Glass Effect for Custom Views
 
 ```swift
@@ -890,6 +966,42 @@ Live Activities now appear on CarPlay displays for glanceable information while 
 ```
 
 Apps must support resizable windows on iPad.
+
+#### ❌ NavigationView (Deprecated iOS 16)
+
+```swift
+// ❌ OLD: NavigationView (deprecated iOS 16)
+NavigationView {
+    List {
+        // Sidebar content
+    }
+    Text("Select an item")
+}
+
+// ✅ MODERN: NavigationStack (push navigation)
+NavigationStack {
+    List {
+        NavigationLink("Item", value: item)
+    }
+    .navigationDestination(for: Item.self) { item in
+        DetailView(item: item)
+    }
+}
+
+// ✅ MODERN: NavigationSplitView (split views)
+NavigationSplitView {
+    List {
+        // Sidebar content
+    }
+} detail: {
+    Text("Select an item")
+}
+```
+
+**Migration path**
+- **Push navigation** → Use `NavigationStack`
+- **Split views** → Use `NavigationSplitView`
+- **Exception**: iOS 15 support only justifies keeping `NavigationView`
 
 ### Automatic Adoptions (Recompile Only)
 

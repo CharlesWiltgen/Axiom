@@ -5,6 +5,8 @@
   "author": "Charles Wiltgen",
   "license": "MIT",
   "commands": [
+    "./commands/ask.md",
+    "./commands/audit.md",
     "./commands/audit-accessibility.md",
     "./commands/audit-concurrency.md",
     "./commands/audit-core-data.md",
@@ -16,6 +18,7 @@
     "./commands/fix-build.md",
     "./commands/optimize-build.md",
     "./commands/screenshot.md",
+    "./commands/status.md",
     "./commands/test-simulator.md"
   ],
   "skills": [
@@ -101,7 +104,7 @@
     },
     {
       "name": "memory-debugging",
-      "description": "Use when debugging retain cycles, memory leaks, crashes after 10+ minutes, or progressive memory growth from 50MB \u2192 200MB - provides systematic diagnosis, Instruments patterns, and production-ready fixes for iOS/macOS apps under time pressure"
+      "description": "Use when you see memory warnings, 'retain cycle', app crashes from memory pressure, or when asking 'why is my app using so much memory', 'how do I find memory leaks', 'my deinit is never called', 'Instruments shows memory growth', 'app crashes after 10 minutes' - systematic memory leak detection and fixes for iOS/macOS"
     },
     {
       "name": "network-framework-ref",
@@ -141,7 +144,7 @@
     },
     {
       "name": "swift-concurrency",
-      "description": "Swift 6 strict concurrency patterns - progressive journey from single-threaded to concurrent code with @concurrent attribute (WWDC 2025), actor isolation, Sendable, async/await, and data race prevention"
+      "description": "Use when you see 'actor-isolated', 'Sendable', 'data race', '@MainActor' errors, or when asking 'why is this not thread safe', 'how do I use async/await', 'what is @MainActor for', 'my app is crashing with concurrency errors', 'how do I fix data races' - Swift 6 strict concurrency patterns with actor isolation and async/await"
     },
     {
       "name": "swiftdata",
@@ -197,7 +200,7 @@
     },
     {
       "name": "swiftui-performance",
-      "description": "Use when analyzing SwiftUI performance issues, identifying long view body updates, reducing unnecessary view updates, or optimizing SwiftUI rendering - covers the new SwiftUI Instrument in Instruments 26, performance patterns from WWDC 2025, and production crisis decision-making under deadline pressure"
+      "description": "Use when UI is slow, scrolling lags, animations stutter, or when asking 'why is my SwiftUI view slow', 'how do I optimize List performance', 'my app drops frames', 'view body is called too often', 'List is laggy' - SwiftUI performance optimization with Instruments 26 and WWDC 2025 patterns"
     },
     {
       "name": "ui-testing",

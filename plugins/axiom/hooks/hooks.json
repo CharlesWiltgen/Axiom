@@ -7,6 +7,10 @@
           {
             "type": "prompt",
             "prompt": "If this bash command was xcodebuild/swift build and it failed (non-zero exit), suggest: 'Build failed. Run /axiom:fix-build for automatic diagnostics?'"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/error-pattern-suggester.sh"
           }
         ]
       },
@@ -37,6 +41,16 @@
           {
             "type": "prompt",
             "prompt": "If the file path contains .xcdatamodeld, add context: 'Warning: Core Data model changes require migration planning. Run /axiom:audit-core-data after changes to verify safety.'"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/ios-skill-suggester.sh"
           }
         ]
       }

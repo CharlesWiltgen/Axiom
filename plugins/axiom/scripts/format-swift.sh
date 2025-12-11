@@ -11,7 +11,7 @@ fi
 # Require swiftformat
 if ! command -v swiftformat &> /dev/null; then
   echo "⚠️ Axiom: swiftformat not found. Install with: brew install swiftformat"
-  exit 1
+  exit 0  # Don't block the edit operation
 fi
 
 swiftformat "$FILE_PATH" --quiet
