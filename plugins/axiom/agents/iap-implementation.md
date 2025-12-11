@@ -27,8 +27,6 @@ description: |
   user: "Implement restore purchases"
   assistant: [Launches iap-implementation agent]
   </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:implement-iap`
 model: sonnet
 color: blue
 tools:
@@ -551,7 +549,7 @@ Provide user with:
 
 ## Deliverables
 
-### Files Created/Modified:
+### Files Created/Modified
 
 1. ✅ `Products.storekit` - StoreKit configuration
 2. ✅ `StoreManager.swift` - Centralized IAP manager
@@ -560,7 +558,7 @@ Provide user with:
 5. ✅ `SettingsView.swift` - Restore purchases button
 6. ✅ `StoreManagerTests.swift` - Unit tests
 
-### Implementation Checklist:
+### Implementation Checklist
 
 - [ ] StoreKit configuration file created and tested
 - [ ] StoreManager implemented with transaction listener

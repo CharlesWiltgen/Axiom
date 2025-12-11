@@ -105,7 +105,7 @@ When breakpoint hits, console shows memory addresses like `UILabel:0x7f8b9c4...`
 
 #### Technique 1: Use %rbx Register (When Breakpoint Hits)
 
-```lldb
+```bash
 # Print all involved views and constraints
 po $arg1
 
@@ -117,7 +117,7 @@ po $rbx
 
 #### Technique 2: Set View Background Color
 
-```lldb
+```bash
 # Set background color on suspected view
 expr ((UIView *)0x7f8b9c4...).backgroundColor = [UIColor redColor]
 
@@ -129,12 +129,12 @@ expr ((UIView *)0x7f8b9c4...).backgroundColor = [UIColor redColor]
 #### Technique 3: Print View Hierarchy
 
 **Objective-C projects**:
-```lldb
+```bash
 po [[UIWindow keyWindow] _autolayoutTrace]
 ```
 
 **Swift projects**:
-```lldb
+```bash
 expr -l objc++ -O -- [[UIWindow keyWindow] _autolayoutTrace]
 ```
 
@@ -150,7 +150,7 @@ The `*` indicates this UIView has ambiguous constraints.
 
 #### Technique 4: Print Constraints for Specific View
 
-```lldb
+```bash
 # Horizontal constraints (axis: 0)
 po [0x7f8b9c4... constraintsAffectingLayoutForAxis:0]
 
@@ -509,18 +509,18 @@ imageView.transform = CGAffineTransform(rotationAngle: .pi / 4) // 45° rotation
 ### Issue: Can't Identify View from Memory Address
 
 **Solution 1**: Use background color technique
-```lldb
+```bash
 expr ((UIView *)0x7f8b9c4...).backgroundColor = [UIColor redColor]
 continue
 ```
 
 **Solution 2**: Print recursive description
-```lldb
+```bash
 po [0x7f8b9c4... recursiveDescription]
 ```
 
 **Solution 3**: Check view's class
-```lldb
+```bash
 po [0x7f8b9c4... class]
 ```
 

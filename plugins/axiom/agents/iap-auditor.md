@@ -27,8 +27,6 @@ description: |
   user: "My restore purchases isn't working properly"
   assistant: [Launches iap-auditor agent]
   </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit-iap`
 model: haiku
 color: green
 tools:
@@ -193,10 +191,9 @@ grep -rn "expirationReason\|didNotConsentToPriceIncrease" --include="*.swift"
 ### Step 4: Check Architecture
 
 **StoreKit configuration file**:
-```bash
-# Check for .storekit file
-find . -name "*.storekit" -type f
-```
+
+Use Glob to find StoreKit configuration:
+- Pattern: `**/*.storekit`
 
 **Centralized StoreManager**:
 ```bash
@@ -217,11 +214,11 @@ grep -rn "appAccountToken" --include="*.swift"
 ### Step 5: Check Testing
 
 **Unit tests**:
-```bash
-# Find test files
-find . -name "*Tests.swift" -type f
 
-# Check for IAP testing
+Use Glob to find test files:
+- Pattern: `**/*Tests.swift`
+
+Check for IAP testing
 grep -rn "StoreManager\|Purchase.*Test\|Transaction.*Test" *Tests.swift
 ```
 

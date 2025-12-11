@@ -141,10 +141,10 @@ struct ContentView: View {
 
 ### Step 1: Find All SwiftUI Files
 
-```bash
-# Find Swift files with SwiftUI views
-find . -name "*.swift" -type f ! -path "*/Tests/*" ! -path "*/Previews/*"
-```
+Use Glob tool to find Swift files:
+- Pattern: `**/*.swift`
+- Glob will return files sorted by modification time
+- Filter out test/preview files during analysis
 
 ### Step 2: Search for Performance Anti-Patterns
 
@@ -540,7 +540,6 @@ Use `/skill swiftui-performance` for:
 - Cause & Effect Graph analysis
 - Step-by-step optimization workflows
 - Production crisis decision-making under deadline pressure
-```
 
 ## Critical Rules
 

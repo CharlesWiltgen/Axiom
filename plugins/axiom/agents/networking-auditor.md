@@ -126,10 +126,10 @@ Run a comprehensive networking audit and report all issues with:
 
 ### Step 1: Find All Networking Files
 
-```bash
-# Find Swift and Objective-C files
-find . -name "*.swift" -o -name "*.m" -o -name "*.h"
-```
+Use Glob tool to find source files:
+- Swift files: `**/*.swift`
+- Objective-C implementation: `**/*.m`
+- Objective-C headers: `**/*.h`
 
 ### Step 2: Search for Deprecated APIs
 
@@ -283,7 +283,7 @@ grep -rn "IPHONEOS_DEPLOYMENT_TARGET" *.xcodeproj/project.pbxproj
 - `NetworkManager.swift:45`
   - **Issue**: Race condition between reachability check and connect
   - **Impact**: Network can change between check and start, misses proxy/VPN
-  - **App Store**: Review concern in 2024+
+  - **App Store**: Review concern (deprecated since WWDC 2018)
   - **Fix**: Replace with NWConnection waiting state
   ```swift
   // ❌ BAD: Race condition
@@ -545,4 +545,4 @@ This audit scans for:
 
 **When to run**: Before every App Store submission, after major networking changes, or quarterly for technical debt tracking.
 
-**Frequency**: Run before releases to catch regressions. Apple is increasingly strict about deprecated networking APIs in App Store review (2024+).
+**Frequency**: Run before releases to catch regressions. Apple is increasingly strict about deprecated networking APIs in App Store review.

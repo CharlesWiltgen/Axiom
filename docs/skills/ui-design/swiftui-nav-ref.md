@@ -316,7 +316,7 @@ NavigationSplitView {
 }
 ```
 
-### 2.3 NavigationSplitView with NavigationStack (WWDC 2022, 14:10)
+### 2.3 NavigationSplitView with NavigationStack
 
 Combine split view selection with stack-based drill-down:
 
@@ -376,7 +376,7 @@ NavigationSplitView automatically adapts:
 
 Selection changes automatically translate to push/pop on iPhone.
 
-### 2.6 iOS 26+ Liquid Glass Sidebar (WWDC 2025, 323)
+### 2.6 iOS 26+ Liquid Glass Sidebar
 
 ```swift
 NavigationSplitView {
@@ -477,7 +477,7 @@ func handleDeepLink(_ url: URL) {
 
 ## State Restoration
 
-### 4.1 Complete State Restoration (WWDC 2022, 18:12)
+### 4.1 Complete State Restoration
 
 ```swift
 struct UseSceneStorage: View {
@@ -565,7 +565,7 @@ class NavigationModel: ObservableObject, Codable {
 
 ## Tab + Navigation Integration
 
-### 5.1 Tab Syntax (iOS 18+) (WWDC 2024, 4:27)
+### 5.1 Tab Syntax (iOS 18+)
 
 ```swift
 TabView {
@@ -603,7 +603,7 @@ TabView {
 
 **Key pattern:** Each tab has its own NavigationStack to preserve navigation state when switching tabs.
 
-### 5.3 Sidebar-Adaptable TabView (WWDC 2024, 6:41)
+### 5.3 Sidebar-Adaptable TabView
 
 ```swift
 TabView {
@@ -636,7 +636,7 @@ TabView {
 - `.sidebarAdaptable` enables sidebar on iPad, tab bar on iPhone
 - Search tab with `.search` role gets special placement
 
-### 5.4 Tab Customization (WWDC 2024, 10:45)
+### 5.4 Tab Customization
 
 ```swift
 @AppStorage("MyTabViewCustomization")
@@ -658,7 +658,7 @@ TabView {
 .tabViewCustomization($customization)
 ```
 
-### 5.5 iOS 26+ Tab Features (WWDC 2025, 256)
+### 5.5 iOS 26+ Tab Features
 
 ```swift
 // Tab bar minimization on scroll
@@ -682,7 +682,7 @@ Tab(role: .search) {
 
 ## iOS 26+ Navigation Features
 
-### 6.1 Liquid Glass Navigation (WWDC 2025, 323)
+### 6.1 Liquid Glass Navigation
 
 Automatic adoption when building with Xcode 26:
 - Navigation bars become Liquid Glass
@@ -701,7 +701,7 @@ NavigationSplitView {
 }
 ```
 
-### 6.3 Bottom-Aligned Search (WWDC 2025, 256)
+### 6.3 Bottom-Aligned Search
 
 ```swift
 NavigationSplitView {

@@ -140,10 +140,10 @@ VideoPlayer()
 
 ### Step 1: Find All SwiftUI Files
 
-```bash
-# Find Swift files (exclude Tests, Previews, Generated)
-find . -name "*.swift" -type f ! -path "*/Tests/*" ! -path "*/Previews/*" ! -path "*/Generated/*"
-```
+Use Glob tool to find Swift files:
+- Pattern: `**/*.swift`
+- Glob will return files sorted by modification time
+- Filter out test/preview files during analysis
 
 ### Step 2: Search for Adoption Opportunities
 

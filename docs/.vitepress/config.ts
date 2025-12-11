@@ -15,6 +15,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/' },
       { text: 'Skills', link: '/skills/' },
       { text: 'Agents', link: '/agents/' },
+      { text: 'Commands', link: '/commands/' },
       { text: 'Hooks', link: '/hooks/' },
       { text: 'Reference', link: '/reference/' }
     ],
@@ -71,6 +72,19 @@ export default defineConfig({
           items: [
             { text: 'networking-auditor', link: '/agents/networking-auditor' }
           ]
+        },
+        {
+          text: 'In-App Purchases',
+          items: [
+            { text: 'iap-auditor', link: '/agents/iap-auditor' },
+            { text: 'iap-implementation', link: '/agents/iap-implementation' }
+          ]
+        },
+        {
+          text: 'Testing & Verification',
+          items: [
+            { text: 'simulator-tester', link: '/agents/simulator-tester' }
+          ]
         }
       ],
       '/hooks/': [
@@ -92,11 +106,13 @@ export default defineConfig({
           text: 'UI & Design',
           items: [
             { text: 'Overview', link: '/skills/ui-design/' },
+            { text: 'HIG (Human Interface Guidelines)', link: '/skills/ui-design/hig' },
             { text: 'Liquid Glass', link: '/skills/ui-design/liquid-glass' },
+            { text: 'SwiftUI Layout', link: '/skills/ui-design/swiftui-layout' },
+            { text: 'SwiftUI Navigation', link: '/skills/ui-design/swiftui-nav' },
             { text: 'SwiftUI Performance', link: '/skills/ui-design/swiftui-performance' },
             { text: 'SwiftUI Debugging', link: '/skills/ui-design/swiftui-debugging' },
             { text: 'SwiftUI Gestures', link: '/skills/ui-design/swiftui-gestures' },
-            { text: 'SwiftUI 26 Features', link: '/skills/ui-design/swiftui-26-ref' },
             { text: 'UI Testing', link: '/skills/ui-design/ui-testing' },
             { text: 'UIKit Animation Debugging', link: '/skills/ui-design/uikit-animation-debugging' }
           ]
@@ -106,6 +122,8 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/skills/debugging/' },
             { text: 'Accessibility Debugging', link: '/skills/debugging/accessibility-debugging' },
+            { text: 'Auto Layout Debugging', link: '/skills/debugging/auto-layout-debugging' },
+            { text: 'Deep Link Debugging', link: '/skills/debugging/deep-link-debugging' },
             { text: 'Xcode Debugging', link: '/skills/debugging/xcode-debugging' },
             { text: 'Memory Debugging', link: '/skills/debugging/memory-debugging' },
             { text: 'Build Troubleshooting', link: '/skills/debugging/build-troubleshooting' },
@@ -127,8 +145,12 @@ export default defineConfig({
           text: 'Networking & Integration',
           items: [
             { text: 'Overview', link: '/skills/integration/' },
+            { text: 'App Intents', link: '/skills/integration/app-intents-ref' },
+            { text: 'Extensions & Widgets', link: '/skills/integration/extensions-widgets' },
+            { text: 'Foundation Models (Apple Intelligence)', link: '/skills/integration/foundation-models' },
+            { text: 'In-App Purchases (StoreKit 2)', link: '/skills/integration/in-app-purchases' },
             { text: 'Networking', link: '/skills/integration/networking' },
-            { text: 'App Intents Integration', link: '/skills/integration/app-intents-ref' }
+            { text: 'Now Playing', link: '/skills/integration/now-playing' }
           ]
         },
         {
@@ -153,11 +175,18 @@ export default defineConfig({
         {
           text: 'Reference Skills',
           items: [
+            { text: 'App Intents Integration', link: '/reference/app-intents-ref' },
+            { text: 'AVFoundation', link: '/reference/avfoundation-ref' },
+            { text: 'Extensions & Widgets', link: '/reference/extensions-widgets-ref' },
+            { text: 'Foundation Models', link: '/reference/foundation-models-ref' },
+            { text: 'HIG (Human Interface Guidelines)', link: '/reference/hig-ref' },
             { text: 'Liquid Glass Adoption', link: '/reference/liquid-glass-ref' },
-            { text: 'Realm Migration', link: '/reference/realm-migration-ref' },
             { text: 'Network.framework API', link: '/reference/network-framework-ref' },
+            { text: 'Realm Migration', link: '/reference/realm-migration-ref' },
+            { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' },
             { text: 'SwiftUI 26 Features', link: '/reference/swiftui-26-ref' },
-            { text: 'App Intents Integration', link: '/reference/app-intents-ref' }
+            { text: 'SwiftUI Layout', link: '/reference/swiftui-layout-ref' },
+            { text: 'SwiftUI Navigation', link: '/reference/swiftui-nav-ref' }
           ]
         },
         {
@@ -165,7 +194,9 @@ export default defineConfig({
           items: [
             { text: 'Accessibility Diagnostics', link: '/reference/accessibility-diag' },
             { text: 'Core Data Diagnostics', link: '/reference/core-data-diag' },
-            { text: 'Networking Diagnostics', link: '/reference/networking-diag' }
+            { text: 'Foundation Models Diagnostics', link: '/reference/foundation-models-diag' },
+            { text: 'Networking Diagnostics', link: '/reference/networking-diag' },
+            { text: 'SwiftUI Navigation Diagnostics', link: '/reference/swiftui-nav-diag' }
           ]
         }
       ]
@@ -177,7 +208,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v0.9.33'
+      copyright: 'Copyright © 2025 Charles Wiltgen • v0.9.33'
     }
   }
 })

@@ -34,7 +34,7 @@ Complete reference for new SwiftUI APIs, modifiers, and capabilities introduced 
 
 ### Performance Improvements
 
-#### Framework Optimizations (WWDC 2025-256)
+#### Framework Optimizations
 - 6x faster simple lists
 - 16x faster complex lists
 - Improved scrolling performance
