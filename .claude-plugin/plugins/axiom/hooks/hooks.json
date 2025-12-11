@@ -10,7 +10,7 @@
           },
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/error-pattern-suggester.sh"
+            "command": "bash -c 'O=\"$CLAUDE_TOOL_OUTPUT\"; echo \"$O\" | grep -qE \"Unable to simultaneously satisfy constraints\" && echo \"💡 Auto Layout conflict. Try: skill auto-layout-debugging\"; echo \"$O\" | grep -qE \"Actor-isolated|Sendable|data race|@MainActor\" && echo \"💡 Concurrency issue. Try: skill swift-concurrency\"; echo \"$O\" | grep -qE \"no such column|FOREIGN KEY constraint|migration\" && echo \"💡 Database migration issue. Try: skill database-migration\"; echo \"$O\" | grep -qE \"retain cycle|memory leak|deinit.*never called\" && echo \"💡 Memory issue detected. Try: skill memory-debugging\"; echo \"$O\" | grep -qE \"CloudKit.*error|CKError|iCloud.*sync\" && echo \"💡 CloudKit issue. Try: skill swiftdata (CloudKit section)\"; echo \"$O\" | grep -qE \"error:.*module.*not found|linker command failed\" && echo \"💡 Build configuration issue. Try: /axiom:fix-build\"; exit 0'"
           }
         ]
       },
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/format-swift.sh"
+            "command": "bash -c 'if [[ \"$TOOL_INPUT_FILE_PATH\" == *.swift ]]; then if command -v swiftformat &>/dev/null; then swiftformat \"$TOOL_INPUT_FILE_PATH\" --quiet || true; else echo \"⚠️ Axiom: swiftformat not found. Install with: brew install swiftformat\"; fi; fi; exit 0'"
           }
         ]
       }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/environment-check.sh"
+            "command": "bash -c 'ZOMBIE=$(pgrep -f xcodebuild 2>/dev/null | wc -l | tr -d \" \"); DD=$(du -sh ~/Library/Developer/Xcode/DerivedData 2>/dev/null | cut -f1); [ \"${ZOMBIE:-0}\" -gt 5 ] 2>/dev/null && echo \"⚠️ $ZOMBIE xcodebuild processes running (consider: killall xcodebuild)\"; if [[ \"$DD\" == *G* ]]; then GB=$(echo \"$DD\" | tr -d G | cut -d. -f1); [ -n \"$GB\" ] && [ \"$GB\" -gt 10 ] 2>/dev/null && echo \"⚠️ Derived Data is $DD (consider cleaning)\"; fi; if ls *.xcodeproj *.xcworkspace 2>/dev/null >/dev/null; then echo \"📱 iOS project detected. Axiom skills available.\"; echo \"   Try: /axiom:ask <your question> or browse skills with /skill axiom:getting-started\"; fi; exit 0'"
           }
         ]
       }
@@ -45,15 +45,6 @@
         ]
       }
     ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/ios-skill-suggester.sh"
-          }
-        ]
-      }
-    ]
+    "UserPromptSubmit": []
   }
 }
