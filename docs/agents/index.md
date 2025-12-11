@@ -1,6 +1,6 @@
 # Autonomous Agents
 
-Axiom includes 11 autonomous agents that automatically detect and diagnose common iOS development issues.
+Axiom includes 13 autonomous agents that automatically detect and diagnose common iOS development issues.
 
 ## What Are Agents?
 
@@ -21,6 +21,8 @@ Agents are autonomous problem-solvers that:
 - "Check Core Data safety" → **core-data-auditor** triggers
 - "Find Liquid Glass adoption opportunities" → **liquid-glass-auditor** triggers
 - "Scan for deprecated networking APIs" → **networking-auditor** triggers
+- "Review my in-app purchase implementation" → **iap-auditor** triggers
+- "Implement in-app purchases" → **iap-implementation** triggers
 - "My build is failing" → **build-fixer** triggers
 - "My builds are slow" → **build-optimizer** triggers
 - "Check my navigation architecture" → **swiftui-nav-auditor** triggers
@@ -34,6 +36,7 @@ Agents are autonomous problem-solvers that:
 /axiom:audit-swiftui-performance
 /axiom:audit-concurrency
 /axiom:audit-core-data
+/axiom:audit-iap
 /axiom:audit-liquid-glass
 /axiom:audit-networking
 /axiom:audit-swiftui-nav
@@ -63,6 +66,10 @@ Agents are autonomous problem-solvers that:
 
 ### Networking
 **networking-auditor** — Scans for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling)
+
+### In-App Purchases
+- **iap-auditor** — Audits existing IAP code for missing transaction.finish() calls, weak receipt validation, missing restore functionality, subscription status tracking issues, and StoreKit testing configuration gaps
+- **iap-implementation** — Implements complete StoreKit 2 IAP solution with testing-first workflow (.storekit configuration, centralized StoreManager, transaction handling, subscription management, restore purchases)
 
 ### Testing & Verification
 **simulator-tester** — Automated simulator testing with visual verification (screenshots, video, location simulation, push notifications, permissions, deep links, log analysis) for closed-loop debugging

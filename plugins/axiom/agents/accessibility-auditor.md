@@ -103,10 +103,8 @@ Run a comprehensive accessibility audit and report all issues with:
 
 ### Step 1: Find All Swift Files
 
-```bash
-# Use Glob to find all Swift files
-find . -name "*.swift" -type f
-```
+Use Glob tool to find Swift files:
+- Pattern: `**/*.swift`
 
 ### Step 2: Search for Anti-Patterns
 

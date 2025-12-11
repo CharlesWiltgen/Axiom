@@ -120,10 +120,8 @@ nonisolated func delegate(_ param: SomeType) {
 
 ### Step 1: Find All Swift Files
 
-```bash
-# Find all Swift files in project
-find . -name "*.swift" -type f
-```
+Use Glob tool to find Swift files:
+- Pattern: `**/*.swift`
 
 ### Step 2: Search for Concurrency Anti-Patterns
 

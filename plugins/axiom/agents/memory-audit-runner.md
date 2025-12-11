@@ -85,9 +85,8 @@ Run a comprehensive memory leak audit across 6 common patterns and report all po
 
 ### Step 1: Find All Swift Files
 
-```bash
-find . -name "*.swift" -type f
-```
+Use Glob tool to find Swift files:
+- Pattern: `**/*.swift`
 
 ### Step 2: Search for Memory Leak Patterns
 

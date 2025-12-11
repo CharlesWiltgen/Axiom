@@ -152,7 +152,7 @@ Run these audit commands to find issues automatically:
 1. **Try the example prompts above** — Copy/paste to see how skills work
 2. **Run an audit command** — Get immediate actionable insights
 3. **Describe your problem** — I'll suggest the right skill
-4. **Browse the complete index below** — Explore all 34 skills
+4. **Browse the complete index below** — Explore all 50 skills
 
 ---
 
@@ -165,16 +165,16 @@ Include this reference section in every response for browsing:
 
 ### Debugging & Troubleshooting
 
-**Environment & Build Issues**
+#### Environment & Build Issues
 - **xcode-debugging** — BUILD FAILED, simulator hangs, zombie processes, environment-first diagnostics
 - **build-troubleshooting** — Dependency conflicts, CocoaPods/SPM failures, Multiple commands produce
 
-**Memory & Performance**
+#### Memory & Performance
 - **memory-debugging** — Memory growth, retain cycles, leak diagnosis with Instruments
 - **performance-profiling** — Decision trees for Instruments (Time Profiler, Allocations, Core Data, Energy)
 - **objc-block-retain-cycles** — Objective-C block memory leaks, weak-strong pattern
 
-**UI Debugging**
+#### UI Debugging
 - **swiftui-debugging** — View update issues, struct mutation, binding identity, view recreation
 - **swiftui-performance** — SwiftUI Instrument (iOS 26), long view bodies, Cause & Effect Graph
 - **uikit-animation-debugging** — CAAnimation completion, spring physics, gesture+animation jank
@@ -185,11 +185,11 @@ Include this reference section in every response for browsing:
 
 ### UI & Design (iOS 26+)
 
-**Liquid Glass (Material Design)**
+#### Liquid Glass (Material Design)
 - **liquid-glass** — Implementation, Regular vs Clear variants, design review defense
 - **liquid-glass-ref** — Complete app-wide adoption guide (icons, controls, navigation, windows)
 
-**Layout & Navigation**
+#### Layout & Navigation
 - **swiftui-layout** — ViewThatFits vs AnyLayout vs onGeometryChange, decision trees, iOS 26 free-form windows
 - **swiftui-layout-ref** — Complete layout API reference
 - **swiftui-nav** — NavigationStack vs NavigationSplitView, deep links, coordinator patterns, iOS 18+ Tab/Sidebar
@@ -201,13 +201,13 @@ Include this reference section in every response for browsing:
 
 ### Persistence
 
-**Frameworks**
+#### Frameworks
 - **swiftdata** — @Model, @Query, @Relationship, CloudKit, iOS 26 features, Swift 6 concurrency
 - **sqlitedata** — Point-Free SQLiteData, @Table, FTS5, CTEs, JSON aggregation, CloudKit sync
 - **grdb** — Raw SQL, complex joins, ValueObservation, DatabaseMigrator, performance
 - **database-migration** — Safe schema evolution for SQLite/GRDB, additive migrations, prevents data loss
 
-**Migration Guides**
+#### Migration Guides
 - **swiftdata-to-sqlitedata** — Decision guide, pattern equivalents, performance benchmarks
 - **realm-migration-ref** — Realm → SwiftData migration (Realm Device Sync sunset Sept 2025)
 
@@ -289,4 +289,4 @@ Include this reference section in every response for browsing:
 
 ---
 
-**Total**: 34 skills, 6 audit commands, covering the complete iOS development lifecycle
+**Total**: 50 skills, 12 commands, covering the complete iOS development lifecycle

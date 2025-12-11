@@ -58,10 +58,9 @@ For each finding, provide:
 ### 1. Build Settings (HIGH IMPACT)
 
 **Check Debug configuration**:
-```bash
-# Look for project.pbxproj
-find . -name "project.pbxproj" -type f
-```
+
+Use Glob to locate project file:
+- Pattern: `**/*.xcodeproj/project.pbxproj`
 
 Scan for these settings in Debug configuration:
 - `SWIFT_COMPILATION_MODE` should be `singlefile` (incremental)
@@ -178,17 +177,14 @@ Recommend setting "Build Active Architecture Only" to YES for debug to maximize 
 
 ### Step 1: Find Xcode Project
 
-```bash
-# Find .xcodeproj or .xcworkspace (-maxdepth must come before -name)
-find . -maxdepth 3 -name "*.xcodeproj" -o -name "*.xcworkspace"
-```
+Use Glob to find Xcode project files:
+- Workspaces: `**/*.xcworkspace`
+- Projects: `**/*.xcodeproj`
 
 ### Step 2: Locate project.pbxproj
 
-```bash
-# Read project file
-find . -name "project.pbxproj" -type f
-```
+Use Glob to find project configuration:
+- Pattern: `**/*.xcodeproj/project.pbxproj`
 
 ### Step 3: Scan Build Settings
 

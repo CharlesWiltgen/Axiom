@@ -80,13 +80,9 @@ Run a comprehensive Core Data safety audit and report all issues with:
 
 ### Step 1: Find All Core Data Files
 
-```bash
-# Find Swift files with Core Data code
-find . -name "*.swift" -type f
-
-# Find Core Data models
-find . -name "*.xcdatamodeld" -type f
-```
+Use Glob tool to find files:
+- Swift files: `**/*.swift`
+- Core Data models: `**/*.xcdatamodeld`
 
 ### Step 2: Search for Safety Violations
 

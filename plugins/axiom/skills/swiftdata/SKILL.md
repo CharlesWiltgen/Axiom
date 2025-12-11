@@ -282,7 +282,7 @@ let config = ModelConfiguration(
 let container = try ModelContainer(
     for: schema,
     configurations: config
-}
+)
 ```
 
 ### In-Memory (Tests)

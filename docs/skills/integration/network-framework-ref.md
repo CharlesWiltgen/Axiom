@@ -684,7 +684,7 @@ connection.receive(minimumIncompleteLength: 10, maximumLength: 10) { [weak self]
 
 ---
 
-### 5.4 UDP Batching (WWDC 2018 lines 343-347)
+### 5.4 UDP Batching
 
 #### Batch sending for 30% CPU reduction.
 
@@ -719,7 +719,7 @@ func sendVideoFrames(_ frames: [Data]) {
 
 ---
 
-### 5.5 NWListener (WWDC 2018 lines 233-293)
+### 5.5 NWListener
 
 Accept incoming connections.
 
@@ -826,7 +826,7 @@ browser.start(queue: .main)
 
 ## Mobility & Network Transitions
 
-### Connection Viability (WWDC 2018 lines 453-463)
+### Connection Viability
 
 Viability = connection can send/receive data (has valid route).
 
@@ -849,7 +849,7 @@ connection.viabilityUpdateHandler = { isViable in
 
 **Best practice** Don't tear down connection on viability loss. Framework will recover when network returns.
 
-### Better Path Available (WWDC 2018 lines 464-477)
+### Better Path Available
 
 Better path = alternative network with better characteristics.
 
@@ -888,7 +888,7 @@ func migrateToNewConnection() {
 }
 ```
 
-### Multipath TCP (WWDC 2018 lines 480-487)
+### Multipath TCP
 
 Automatically migrate between networks without application intervention.
 
@@ -909,7 +909,7 @@ let connection = NWConnection(host: "example.com", port: 443, using: parameters)
 - No connection interruption when switching networks
 - Fallback to single-path if MPTCP unavailable
 
-### NWPathMonitor (WWDC 2018 lines 489-496)
+### NWPathMonitor
 
 Monitor network state changes (replaces SCNetworkReachability).
 
@@ -1022,7 +1022,7 @@ tlsOptions.tlsCipherSuites = [
 
 ## Performance Optimization
 
-### User-Space Networking (WWDC 2018 lines 409-441)
+### User-Space Networking
 
 **Automatic on iOS/tvOS.** Network.framework moves TCP/UDP stack into your app process.
 
@@ -1041,7 +1041,7 @@ tlsOptions.tlsCipherSuites = [
 
 **WWDC demo** Live UDP video streaming showed 30% CPU difference (sockets vs Network.framework).
 
-### ECN for UDP (WWDC 2018 lines 365-378)
+### ECN for UDP
 
 Explicit Congestion Notification for smooth UDP transmission.
 
@@ -1065,7 +1065,7 @@ connection.send(content: data, contentContext: context, completion: .contentProc
 
 **Benefits** Network can signal congestion without dropping packets.
 
-### Service Class (WWDC 2018 lines 379-388)
+### Service Class
 
 Mark traffic priority.
 
@@ -1090,7 +1090,7 @@ connection.send(content: audioData, contentContext: context, completion: .conten
 - `.responsiveData` — Interactive data (API calls)
 - `.realTimeInteractive` — Time-sensitive (voice, gaming)
 
-### TCP Fast Open (WWDC 2018 lines 389-406)
+### TCP Fast Open
 
 Send initial data in TCP SYN packet (saves round trip).
 
