@@ -27,7 +27,7 @@
 **Rationale** Markdown headers already have visual weight and hierarchy from their size and formatting. Adding colons is redundant and creates visual clutter.
 
 **Scope** This applies to:
-- All skills in `plugins/axiom/skills/`
+- All skills in `.claude-plugin/plugins/axiom/skills/`
 - All documentation in `docs/`
 - README files
 - All markdown content
@@ -95,12 +95,11 @@ When making changes:
 
 ### Version Sync Rule
 
-**When updating versions, always sync all three files:**
-1. `plugins/axiom/claude-code.json` — Plugin manifest
-2. `marketplace.json` — Public marketplace listing
-3. `.claude-plugin/marketplace.json` — Local marketplace config
+**When updating versions, always sync both files:**
+1. `.claude-plugin/plugins/axiom/claude-code.json` — Plugin manifest
+2. `.claude-plugin/marketplace.json` — Marketplace config
 
-All three must have the same version number to avoid user confusion.
+Both must have the same version number to avoid user confusion.
 
 ---
 
