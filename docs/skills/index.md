@@ -6,6 +6,8 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 
 | Skill | When to Use |
 |-------|-------------|
+| [**hig**](/skills/ui-design/hig) | Quick design decisions, HIG compliance checklists, defending design choices |
+| [**hig-ref**](/skills/ui-design/hig-ref) | Comprehensive HIG reference with code examples and best practices |
 | [**liquid-glass**](/skills/ui-design/liquid-glass) | Implementing Liquid Glass effects, debugging visual artifacts, design review pressure |
 | [**swiftui-performance**](/skills/ui-design/swiftui-performance) | App feels sluggish, animations stutter, SwiftUI Instrument profiling |
 | [**swiftui-debugging**](/skills/ui-design/swiftui-debugging) | View doesn't update, preview crashes, layout issues |

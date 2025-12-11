@@ -95,6 +95,10 @@ Based on answers, recommend 3-5 skills using this matrix:
 
 ### If "Adding new features"
 
+**Design decisions**:
+- hig (quick design decisions, checklists)
+- hig-ref (comprehensive HIG reference)
+
 **iOS 26+ features**:
 - liquid-glass (material design system)
 - foundation-models (on-device AI)
@@ -221,6 +225,10 @@ Include this reference section in every response for browsing:
 - **foundation-models-diag** — Context exceeded, guardrails, slow generation, availability issues
 - **foundation-models-ref** — Complete API reference, all 26 WWDC examples
 
+### Design & UI Guidelines
+- **hig** — Quick design decisions, color/background/typography choices, HIG compliance checklists
+- **hig-ref** — Comprehensive Human Interface Guidelines reference with code examples
+
 ### Integrations
 - **app-intents-ref** — Siri, Apple Intelligence, Shortcuts, Spotlight (iOS 16+)
 - **swiftui-26-ref** — iOS 26 SwiftUI features, @Animatable, 3D layout, WebView, AttributedString
@@ -289,4 +297,4 @@ Include this reference section in every response for browsing:
 
 ---
 
-**Total**: 34 skills, 6 audit commands, covering the complete iOS development lifecycle
+**Total**: 50 skills, 12 audit commands, covering the complete iOS development lifecycle from design to deployment

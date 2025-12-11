@@ -32,7 +32,7 @@ Skills are **automatically suggested by Claude Code** based on your questions an
 
 Skills available in Axiom:
 - **Apple Intelligence**: foundation-models, foundation-models-diag, foundation-models-ref, app-intents-ref, swiftui-26-ref
-- **UI & Design**: liquid-glass, liquid-glass-ref, swiftui-performance, ui-testing, swiftui-debugging
+- **UI & Design**: hig, hig-ref, liquid-glass, liquid-glass-ref, swiftui-performance, ui-testing, swiftui-debugging
 - **Debugging**: xcode-debugging, memory-debugging, build-troubleshooting, performance-profiling
 - **Concurrency**: swift-concurrency
 - **Data & Persistence**: database-migration, sqlitedata, grdb, swiftdata, realm-migration-ref, core-data-diag

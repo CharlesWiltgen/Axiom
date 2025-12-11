@@ -4,7 +4,7 @@ Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 g
 
 **Version**: 0.9.33
 **Status**: Preview Release
-**Skills**: 48 | **Commands**: 12 | **Agents**: 13 | **Hooks**: 4
+**Skills**: 50 | **Commands**: 12 | **Agents**: 13 | **Hooks**: 4
 
 ## Installation
 
