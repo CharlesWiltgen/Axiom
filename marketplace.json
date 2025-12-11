@@ -11,7 +11,7 @@
     {
       "name": "axiom",
       "version": "0.9.35",
-      "source": "https://charleswiltgen.github.io/Axiom/plugins/axiom",
+      "source": "https://raw.githubusercontent.com/CharlesWiltgen/Axiom/main/docs/public/plugins/axiom",
       "description": "Battle-tested Claude Code agents, skills, and references for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
       "author": "Charles Wiltgen",
       "license": "MIT",
