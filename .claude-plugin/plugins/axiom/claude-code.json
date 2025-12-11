@@ -91,6 +91,14 @@
       "description": "Use when writing raw SQL queries with GRDB, complex joins, ValueObservation for reactive queries, DatabaseMigrator patterns, query profiling under performance pressure, or dropping down from SQLiteData for performance - direct SQLite access for iOS/macOS"
     },
     {
+      "name": "hig",
+      "description": "Use when making design decisions, reviewing UI for HIG compliance, choosing colors/backgrounds/typography, or defending design choices - quick decision frameworks and checklists for Apple Human Interface Guidelines"
+    },
+    {
+      "name": "hig-ref",
+      "description": "Reference — Comprehensive Apple Human Interface Guidelines covering colors (semantic, custom, patterns), backgrounds (material hierarchy, dynamic), typography (built-in styles, custom fonts, Dynamic Type), SF Symbols (rendering modes, color, localization), Dark Mode, accessibility, and platform-specific considerations"
+    },
+    {
       "name": "in-app-purchases",
       "description": "StoreKit 2 in-app purchase implementation guide - testing-first workflow with .storekit configuration, StoreManager architecture, transaction verification, subscription management, and restore purchases for consumables, non-consumables, and auto-renewable subscriptions"
     },
@@ -213,6 +221,73 @@
     {
       "name": "xcode-debugging",
       "description": "Use when encountering BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild processes, \"Unable to boot simulator\", \"No such module\" after SPM changes, or mysterious test failures despite no code changes - systematic environment-first diagnostics for iOS/macOS projects"
+    }
+  ],
+  "agents": [
+    {
+      "name": "accessibility-auditor",
+      "description": "Use this agent when the user mentions accessibility checking, App Store submission, code review, or WCAG compliance. Automatically runs comprehensive accessibility audit to detect VoiceOver issues, Dynamic Type violations, color contrast failures, and WCAG compliance problems - prevents App Store rejections and ensures usability for users with disabilities.",
+      "path": "./agents/accessibility-auditor.md"
+    },
+    {
+      "name": "build-fixer",
+      "description": "Use this agent when the user mentions Xcode build failures, build errors, or environment issues. Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics - saves 30+ minutes by checking zombie processes, Derived Data, SPM cache, and simulator state before code investigation.",
+      "path": "./agents/build-fixer.md"
+    },
+    {
+      "name": "build-optimizer",
+      "description": "Use this agent when the user mentions slow builds, build performance, or build time optimization. Automatically scans Xcode projects for build performance optimizations - identifies slow type checking, expensive build phase scripts, suboptimal build settings, and parallelization opportunities to reduce build times by 30-50%.",
+      "path": "./agents/build-optimizer.md"
+    },
+    {
+      "name": "concurrency-validator",
+      "description": "Use this agent when the user mentions concurrency checking, Swift 6 compliance, data race prevention, or async code review. Automatically scans Swift code for Swift 6 strict concurrency violations - detects unsafe Task captures, missing @MainActor, Sendable violations, and actor isolation problems to prevent data races.",
+      "path": "./agents/concurrency-validator.md"
+    },
+    {
+      "name": "core-data-auditor",
+      "description": "Use this agent when the user mentions Core Data review, schema migration, production crashes, or data safety checking. Automatically scans Core Data code for the 5 most critical safety violations - schema migration risks, thread-confinement errors, N+1 query patterns, production data loss risks, and performance issues - prevents production crashes and permanent data loss.",
+      "path": "./agents/core-data-auditor.md"
+    },
+    {
+      "name": "iap-auditor",
+      "description": "Use this agent when the user mentions in-app purchase review, IAP audit, StoreKit issues, purchase bugs, transaction problems, or subscription management. Automatically audits existing IAP code to detect missing transaction.finish() calls, weak receipt validation, missing restore functionality, subscription status tracking issues, and StoreKit testing configuration gaps - prevents revenue loss, App Store rejections, and customer support issues.",
+      "path": "./agents/iap-auditor.md"
+    },
+    {
+      "name": "iap-implementation",
+      "description": "Use this agent when the user wants to add in-app purchases, implement StoreKit 2, set up subscriptions, or add purchase functionality. Implements complete IAP solution following testing-first workflow with StoreKit configuration, centralized StoreManager, transaction handling, subscription management, and restore purchases - ensures best practices, prevents common pitfalls, and delivers production-ready code.",
+      "path": "./agents/iap-implementation.md"
+    },
+    {
+      "name": "liquid-glass-auditor",
+      "description": "Use this agent when the user mentions Liquid Glass review, iOS 26 UI updates, toolbar improvements, or visual effect migration. Automatically scans SwiftUI codebase for Liquid Glass adoption opportunities - identifies views for glass effects, toolbar improvements, search patterns, migration from old blur effects, and tinting opportunities for iOS 26+.",
+      "path": "./agents/liquid-glass-auditor.md"
+    },
+    {
+      "name": "memory-audit-runner",
+      "description": "Use this agent when the user mentions memory leak prevention, code review for memory issues, or proactive leak checking. Automatically scans codebase for the 6 most common memory leak patterns - timer leaks, observer leaks, closure captures, delegate cycles, view callbacks, and PhotoKit accumulation to prevent crashes and progressive memory growth.",
+      "path": "./agents/memory-audit-runner.md"
+    },
+    {
+      "name": "networking-auditor",
+      "description": "Use this agent when the user mentions networking review, deprecated APIs, connection issues, or App Store submission prep. Automatically scans Swift/Objective-C for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling) - prevents App Store rejections and connection failures.",
+      "path": "./agents/networking-auditor.md"
+    },
+    {
+      "name": "simulator-tester",
+      "description": "Use this agent when the user mentions simulator testing, test scenarios, visual verification, push notification testing, location simulation, screenshot capture, or automated testing workflows. Automatically sets up test scenarios, captures screenshots, checks logs for crashes/errors, and iterates on fixes - enables closed-loop debugging with visual verification.",
+      "path": "./agents/simulator-tester.md"
+    },
+    {
+      "name": "swiftui-nav-auditor",
+      "description": "Use this agent when the user mentions SwiftUI navigation issues, deep linking problems, state restoration bugs, or navigation architecture review. Automatically scans SwiftUI navigation code for architecture issues - detects missing NavigationPath, deep link gaps, state restoration problems, wrong container usage, and navigation correctness issues (not performance - see swiftui-performance-analyzer for that).",
+      "path": "./agents/swiftui-nav-auditor.md"
+    },
+    {
+      "name": "swiftui-performance-analyzer",
+      "description": "Use this agent when the user mentions SwiftUI performance, janky scrolling, slow animations, or view update issues. Automatically scans SwiftUI code for performance anti-patterns - detects expensive operations in view bodies, unnecessary updates, missing lazy loading, and SwiftUI-specific issues that cause frame drops and poor scrolling performance.",
+      "path": "./agents/swiftui-performance-analyzer.md"
     }
   ]
 }

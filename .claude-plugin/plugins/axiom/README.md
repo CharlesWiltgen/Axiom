@@ -2,7 +2,7 @@
 
 Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Apple Intelligence (Foundation Models), Liquid Glass, Widgets & Extensions, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
 
-**Version**: 0.9.33
+**Version**: 0.9.35
 **Status**: Preview Release
 **Skills**: 50 | **Commands**: 15 | **Agents**: 13 | **Hooks**: 4
 
