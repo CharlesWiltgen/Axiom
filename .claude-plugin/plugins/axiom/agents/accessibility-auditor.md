@@ -78,24 +78,37 @@ Run a comprehensive accessibility audit and report all issues with:
 ### 2. Dynamic Type (HIGH - Major Usability Impact)
 - Fixed font sizes: `.font(.system(size: 17))` without `relativeTo:`
 - Hardcoded `UIFont.systemFont(ofSize:)` without scaling
-- Should use (best to good):
+- Should use, in order of preference:
   1. Semantic styles: `.font(.body)` or `UIFont.preferredFont(forTextStyle:)`
   2. Scaled custom sizes: `.font(.system(size: 24).relativeTo(.title2))`
 
-### 3. Color Contrast (HIGH)
+### 3. Custom Font Scaling (HIGH - Major Usability Impact)
+- Custom UIFont without UIFontMetrics scaling
+- SwiftUI `.custom()` without `relativeTo:` parameter
+- Should use:
+  - UIKit: `UIFontMetrics(forTextStyle: .body).scaledFont(for: customFont)`
+  - SwiftUI: `.custom("FontName", size: X, relativeTo: .body)`
+
+### 4. Layout Scaling (MEDIUM - Moderate Usability Impact)
+- Fixed padding/spacing constants that don't scale with Dynamic Type
+- Should use:
+  - SwiftUI: `@ScaledMetric(relativeTo: .body) var spacing: CGFloat = 20`
+  - UIKit: `UIFontMetrics(forTextStyle: .body).scaledValue(for: 20.0)`
+
+### 5. Color Contrast (HIGH)
 - Low contrast text/background combinations
 - Missing `.accessibilityDifferentiateWithoutColor`
 - Should meet WCAG 4.5:1 ratio for text, 3:1 for large text
 
-### 4. Touch Target Sizes (MEDIUM)
+### 6. Touch Target Sizes (MEDIUM)
 - Buttons/tappable areas smaller than 44x44pt
 - Violates WCAG 2.5.5 (Level AAA)
 
-### 5. Reduce Motion Support (MEDIUM)
+### 7. Reduce Motion Support (MEDIUM)
 - Animations without `UIAccessibility.isReduceMotionEnabled` checks
 - Users with vestibular disorders need this
 
-### 6. Keyboard Navigation (MEDIUM - iPadOS/macOS)
+### 8. Keyboard Navigation (MEDIUM - iPadOS/macOS)
 - Missing keyboard shortcuts
 - Non-focusable interactive elements
 
@@ -142,6 +155,25 @@ grep -rn "UIFont(name:.*size:" --include="*.swift" | grep -v "UIFontMetrics"
 grep -rn "\.withSize(" --include="*.swift" | grep -v "UIFontMetrics"
 ```
 
+**Custom Fonts Without Scaling**:
+```bash
+# UIKit custom fonts without UIFontMetrics scaling
+grep -rn "UIFont(name:" --include="*.swift" | grep -v "UIFontMetrics"
+grep -rn "UIFont(descriptor:" --include="*.swift" | grep -v "UIFontMetrics"
+
+# SwiftUI custom fonts without relativeTo: parameter
+grep -rn "\.custom(" --include="*.swift" | grep -v "relativeTo:"
+```
+
+**Layout Constants Without Scaling**:
+```bash
+# Check if @ScaledMetric is used for spacing values
+grep -rn "@ScaledMetric" --include="*.swift"
+
+# UIKit equivalent (scaledValue for constants)
+grep -rn "scaledValue" --include="*.swift"
+```
+
 **Small Touch Targets**:
 ```bash
 # Frames smaller than 44pt (catches 0-43, including single digits)
@@ -168,10 +200,12 @@ grep -rn "\.animation(" --include="*.swift" | grep -v "isReduceMotionEnabled"
 
 **HIGH** (Major Usability Impact):
 - Fixed font sizes (breaks Dynamic Type)
+- Custom fonts without UIFontMetrics scaling
 - Low color contrast
 - Generic labels
 
 **MEDIUM** (Moderate Usability Impact):
+- Layout constants without scaling (@ScaledMetric, scaledValue)
 - Touch targets smaller than 44x44pt
 - Missing keyboard navigation
 - Missing Reduce Motion support
@@ -215,12 +249,54 @@ grep -rn "\.animation(" --include="*.swift" | grep -v "isReduceMotionEnabled"
   - **Fix (best)**: Use `UIFont.preferredFont(forTextStyle: .title1)`
   - **Fix (good)**: Use `.font(.system(size: 24).relativeTo(.title2))`
 
+### Custom Fonts Without Scaling (Breaks Dynamic Type)
+- `src/Views/CustomLabel.swift:23` - Uses `UIFont(name: "Avenir-Medium", size: 17)` without UIFontMetrics
+  - **WCAG**: 1.4.4 Resize Text (Level AA)
+  - **Fix**: Scale with UIFontMetrics
+  ```swift
+  let customFont = UIFont(name: "Avenir-Medium", size: 17)!
+  let metrics = UIFontMetrics(forTextStyle: .body)
+  label.font = metrics.scaledFont(for: customFont)
+  label.adjustsFontForContentSizeCategory = true
+  ```
+
+- `src/Views/HeaderView.swift:45` - Uses `.custom("Avenir", size: 24)` without relativeTo:
+  - **WCAG**: 1.4.4 Resize Text (Level AA)
+  - **Fix**: Add relativeTo: parameter
+  ```swift
+  Text("Header")
+      .font(.custom("Avenir", size: 24, relativeTo: .title2))
+  ```
+
 ### Generic Labels
 - `src/Views/SettingsView.swift:89` - accessibilityLabel("Button")
   - **WCAG**: 4.1.2 Name, Role, Value (Level A)
   - **Fix**: Use descriptive label like "Open settings"
 
 ## MEDIUM Issues
+
+### Layout Constants Without Scaling
+- `src/Views/CardView.swift:18` - Fixed padding value doesn't scale with Dynamic Type
+  - **WCAG**: 1.4.4 Resize Text (Level AA)
+  - **Fix**: Use @ScaledMetric for spacing
+  ```swift
+  struct CardView: View {
+      @ScaledMetric(relativeTo: .body) var padding: CGFloat = 20
+
+      var body: some View {
+          Text("Content")
+              .padding(padding)  // Scales with Dynamic Type
+      }
+  }
+  ```
+
+- `src/Views/CustomLayout.swift:45` - UIKit constraint with fixed constant
+  - **WCAG**: 1.4.4 Resize Text (Level AA)
+  - **Fix**: Use UIFontMetrics.scaledValue
+  ```swift
+  let metrics = UIFontMetrics(forTextStyle: .body)
+  constraint.constant = metrics.scaledValue(for: 20.0)
+  ```
 
 ### Touch Targets Too Small
 - `src/Views/CloseButton.swift:25` - Frame is 32x32pt (should be 44x44pt)

@@ -51,7 +51,8 @@ export default defineConfig({
           items: [
             { text: 'accessibility-auditor', link: '/agents/accessibility-auditor' },
             { text: 'concurrency-validator', link: '/agents/concurrency-validator' },
-            { text: 'memory-audit-runner', link: '/agents/memory-audit-runner' }
+            { text: 'memory-audit-runner', link: '/agents/memory-audit-runner' },
+            { text: 'textkit-auditor', link: '/agents/textkit-auditor' }
           ]
         },
         {
@@ -187,7 +188,9 @@ export default defineConfig({
             { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' },
             { text: 'SwiftUI 26 Features', link: '/reference/swiftui-26-ref' },
             { text: 'SwiftUI Layout', link: '/reference/swiftui-layout-ref' },
-            { text: 'SwiftUI Navigation', link: '/reference/swiftui-nav-ref' }
+            { text: 'SwiftUI Navigation', link: '/reference/swiftui-nav-ref' },
+            { text: 'TextKit 2', link: '/reference/textkit-ref' },
+            { text: 'Typography', link: '/reference/typography-ref' }
           ]
         },
         {
