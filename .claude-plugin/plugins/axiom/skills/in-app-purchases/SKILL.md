@@ -1,6 +1,6 @@
 ---
 name: in-app-purchases
-description: StoreKit 2 in-app purchase implementation guide - testing-first workflow with .storekit configuration, StoreManager architecture, transaction verification, subscription management, and restore purchases for consumables, non-consumables, and auto-renewable subscriptions
+description: Use when implementing in-app purchases, StoreKit 2, subscriptions, or transaction handling - testing-first workflow with .storekit configuration, StoreManager architecture, transaction verification, subscription management, and restore purchases for consumables, non-consumables, and auto-renewable subscriptions
 skill_type: discipline
 version: 1.0
 ---

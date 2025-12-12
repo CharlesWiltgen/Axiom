@@ -1,6 +1,6 @@
 ---
 name: hig-ref
-description: Use when implementing HIG patterns, looking up specific design guidance, understanding semantic colors, or learning Apple's design philosophy - comprehensive Human Interface Guidelines reference with code examples
+description: Reference — Comprehensive Apple Human Interface Guidelines covering colors (semantic, custom, patterns), backgrounds (material hierarchy, dynamic), typography (built-in styles, custom fonts, Dynamic Type), SF Symbols (rendering modes, color, localization), Dark Mode, accessibility, and platform-specific considerations
 skill_type: reference
 version: 1.0.0
 apple_platforms: iOS, iPadOS, macOS, watchOS, tvOS, visionOS

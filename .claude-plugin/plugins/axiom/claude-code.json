@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.9.36",
+  "version": "0.9.37",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -40,7 +40,7 @@
     },
     {
       "name": "avfoundation-ref",
-      "description": "Reference \u2014 AVFoundation audio APIs, AVAudioSession categories/modes, AVAudioEngine pipelines, bit-perfect DAC output, iOS 26+ spatial audio capture, ASAF/APAC, Audio Mix with Cinematic framework"
+      "description": "Reference — AVFoundation audio APIs, AVAudioSession categories/modes, AVAudioEngine pipelines, bit-perfect DAC output, iOS 26+ spatial audio capture, ASAF/APAC, Audio Mix with Cinematic framework"
     },
     {
       "name": "build-performance",
@@ -72,19 +72,19 @@
     },
     {
       "name": "foundation-models",
-      "description": "Use when implementing on-device AI with Apple's Foundation Models framework \u2014 prevents context overflow, blocking UI, wrong model use cases, and manual JSON parsing when @Generable should be used. iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+"
+      "description": "Use when implementing on-device AI with Apple's Foundation Models framework — prevents context overflow, blocking UI, wrong model use cases, and manual JSON parsing when @Generable should be used. iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+"
     },
     {
       "name": "foundation-models-diag",
-      "description": "Use when debugging Foundation Models issues \u2014 context exceeded, guardrail violations, slow generation, availability problems, unsupported language, or unexpected output. Systematic diagnostics with production crisis defense."
+      "description": "Use when debugging Foundation Models issues — context exceeded, guardrail violations, slow generation, availability problems, unsupported language, or unexpected output. Systematic diagnostics with production crisis defense."
     },
     {
       "name": "foundation-models-ref",
-      "description": "Reference \u2014 Complete Foundation Models framework guide covering LanguageModelSession, @Generable, @Guide, Tool protocol, streaming, dynamic schemas, built-in use cases, and all WWDC 2025 code examples"
+      "description": "Reference — Complete Foundation Models framework guide covering LanguageModelSession, @Generable, @Guide, Tool protocol, streaming, dynamic schemas, built-in use cases, and all WWDC 2025 code examples"
     },
     {
       "name": "getting-started",
-      "description": "Use when first installing Axiom, unsure which skill to use, want an overview of available skills, or need help finding the right skill for your situation \u2014 interactive onboarding that recommends skills based on your project and current focus"
+      "description": "Use when first installing Axiom, unsure which skill to use, want an overview of available skills, or need help finding the right skill for your situation — interactive onboarding that recommends skills based on your project and current focus"
     },
     {
       "name": "grdb",
@@ -100,7 +100,7 @@
     },
     {
       "name": "in-app-purchases",
-      "description": "StoreKit 2 in-app purchase implementation guide - testing-first workflow with .storekit configuration, StoreManager architecture, transaction verification, subscription management, and restore purchases for consumables, non-consumables, and auto-renewable subscriptions"
+      "description": "Use when implementing in-app purchases, StoreKit 2, subscriptions, or transaction handling - testing-first workflow with .storekit configuration, StoreManager architecture, transaction verification, subscription management, and restore purchases for consumables, non-consumables, and auto-renewable subscriptions"
     },
     {
       "name": "liquid-glass",
@@ -116,7 +116,7 @@
     },
     {
       "name": "network-framework-ref",
-      "description": "Reference \u2014 Comprehensive Network.framework guide covering NetworkConnection (iOS 26+), NWConnection (iOS 12-25), TLV framing, Coder protocol, NetworkListener, NetworkBrowser, Wi-Fi Aware discovery, and migration strategies"
+      "description": "Reference — Comprehensive Network.framework guide covering NetworkConnection (iOS 26+), NWConnection (iOS 12-25), TLV framing, Coder protocol, NetworkListener, NetworkBrowser, Wi-Fi Aware discovery, and migration strategies"
     },
     {
       "name": "networking",
@@ -140,15 +140,15 @@
     },
     {
       "name": "realm-migration-ref",
-      "description": "Comprehensive migration guide from Realm to SwiftData - pattern equivalents, threading model conversion, schema migration strategies, CloudKit sync transition, and real-world scenarios"
+      "description": "Use when migrating from Realm to SwiftData - comprehensive migration guide covering pattern equivalents, threading model conversion, schema migration strategies, CloudKit sync transition, and real-world scenarios"
     },
     {
       "name": "sqlitedata",
-      "description": "Use when working with SQLiteData (Point-Free) \u2014 Quick Reference at top, anti-patterns, @Table models, query composition, RETURNING, CTEs, FTS5, JSON aggregation, CloudKit sync, database views, @DatabaseFunction"
+      "description": "Use when working with SQLiteData (Point-Free) — Quick Reference at top, anti-patterns, @Table models, query composition, RETURNING, CTEs, FTS5, JSON aggregation, CloudKit sync, database views, @DatabaseFunction"
     },
     {
       "name": "storekit-ref",
-      "description": "Reference \u2014 Complete StoreKit 2 API guide covering Product, Transaction, AppTransaction, RenewalInfo, SubscriptionStatus, StoreKit Views, purchase options, server APIs, and all iOS 18.4 enhancements with WWDC 2025 code examples"
+      "description": "Reference — Complete StoreKit 2 API guide covering Product, Transaction, AppTransaction, RenewalInfo, SubscriptionStatus, StoreKit Views, purchase options, server APIs, and all iOS 18.4 enhancements with WWDC 2025 code examples"
     },
     {
       "name": "swift-concurrency",
@@ -156,7 +156,7 @@
     },
     {
       "name": "swiftdata",
-      "description": "Use when working with SwiftData - @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ features, and Swift 6 concurrency with @MainActor \u2014 Apple's native persistence framework"
+      "description": "Use when working with SwiftData - @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ features, and Swift 6 concurrency with @MainActor — Apple's native persistence framework"
     },
     {
       "name": "swiftdata-migration",
@@ -168,7 +168,7 @@
     },
     {
       "name": "swiftdata-to-sqlitedata",
-      "description": "Use when migrating from SwiftData to SQLiteData \u2014 decision guide, pattern equivalents, code examples, CloudKit sharing (SwiftData can't), performance benchmarks, gradual migration strategy"
+      "description": "Use when migrating from SwiftData to SQLiteData — decision guide, pattern equivalents, code examples, CloudKit sharing (SwiftData can't), performance benchmarks, gradual migration strategy"
     },
     {
       "name": "swiftui-26-ref",
@@ -188,11 +188,11 @@
     },
     {
       "name": "swiftui-layout",
-      "description": "Use when layouts need to adapt to different screen sizes, iPad multitasking, or iOS 26 free-form windows \u2014 decision trees for ViewThatFits vs AnyLayout vs onGeometryChange, size class limitations, and anti-patterns preventing device-based layout mistakes"
+      "description": "Use when layouts need to adapt to different screen sizes, iPad multitasking, or iOS 26 free-form windows — decision trees for ViewThatFits vs AnyLayout vs onGeometryChange, size class limitations, and anti-patterns preventing device-based layout mistakes"
     },
     {
       "name": "swiftui-layout-ref",
-      "description": "Reference \u2014 Complete SwiftUI adaptive layout API guide covering ViewThatFits, AnyLayout, Layout protocol, onGeometryChange, GeometryReader, size classes, and iOS 26 window APIs"
+      "description": "Reference — Complete SwiftUI adaptive layout API guide covering ViewThatFits, AnyLayout, Layout protocol, onGeometryChange, GeometryReader, size classes, and iOS 26 window APIs"
     },
     {
       "name": "swiftui-nav",
@@ -204,7 +204,7 @@
     },
     {
       "name": "swiftui-nav-ref",
-      "description": "Reference \u2014 Comprehensive SwiftUI navigation guide covering NavigationStack (iOS 16+), NavigationSplitView (iOS 16+), NavigationPath, deep linking, state restoration, Tab+Navigation integration (iOS 18+), Liquid Glass navigation (iOS 26+), and coordinator patterns"
+      "description": "Reference — Comprehensive SwiftUI navigation guide covering NavigationStack (iOS 16+), NavigationSplitView (iOS 16+), NavigationPath, deep linking, state restoration, Tab+Navigation integration (iOS 18+), Liquid Glass navigation (iOS 26+), and coordinator patterns"
     },
     {
       "name": "swiftui-performance",

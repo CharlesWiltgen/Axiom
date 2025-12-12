@@ -93,13 +93,29 @@ When making changes:
 - Do NOT update `version` in `claude-code.json` or skill frontmatter
 - Wait for explicit instruction to bump versions
 
-### Version Sync Rule
+### Version Update Process
 
-**When updating versions, always sync both files:**
-1. `.claude-plugin/plugins/axiom/claude-code.json` — Plugin manifest
-2. `.claude-plugin/marketplace.json` — Marketplace config
+**CRITICAL**: When the user asks to update the version, ALWAYS use the script:
 
-Both must have the same version number to avoid user confusion.
+```bash
+node scripts/set-version.js X.Y.Z
+```
+
+**NEVER manually edit version fields.** The script:
+- Auto-counts skills, agents, commands by scanning directories
+- Updates all 3 files atomically (claude-code.json, marketplace.json, metadata.txt)
+- Prevents version sync issues with atomic writes
+
+**Files updated by script:**
+1. `.claude-plugin/plugins/axiom/claude-code.json` — Plugin manifest version
+2. `.claude-plugin/marketplace.json` — Marketplace config version
+3. `.claude-plugin/plugins/axiom/hooks/metadata.txt` — Version + counts (4 lines)
+
+**Do not:**
+- Edit version in claude-code.json manually
+- Edit version in marketplace.json manually
+- Edit metadata.txt manually
+- Update counts manually (script auto-counts from directories)
 
 ---
 
@@ -144,4 +160,4 @@ This provides cleaner markdown output that's easier to parse and reference.
 
 ---
 
-**Last Updated** 2025-12-08
+**Last Updated** 2025-12-11

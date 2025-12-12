@@ -1,6 +1,6 @@
 ---
 name: swiftui-performance
-description: Use when analyzing SwiftUI performance issues, identifying long view body updates, reducing unnecessary view updates, or optimizing SwiftUI rendering - covers the new SwiftUI Instrument in Instruments 26, performance patterns from WWDC 2025, and production crisis decision-making under deadline pressure
+description: Use when UI is slow, scrolling lags, animations stutter, or when asking 'why is my SwiftUI view slow', 'how do I optimize List performance', 'my app drops frames', 'view body is called too often', 'List is laggy' - SwiftUI performance optimization with Instruments 26 and WWDC 2025 patterns
 skill_type: discipline
 version: 1.1.0
 last_updated: TDD-tested with production performance crisis scenarios
