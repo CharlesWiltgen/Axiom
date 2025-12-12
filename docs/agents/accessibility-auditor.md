@@ -19,10 +19,12 @@ Automatically scans for VoiceOver label issues, Dynamic Type violations, color c
 
 1. **VoiceOver Labels** (CRITICAL) — Missing accessibilityLabel, generic labels
 2. **Dynamic Type** (HIGH) — Fixed font sizes instead of .font(.body)
-3. **Color Contrast** (HIGH) — Low contrast text/background combinations
-4. **Touch Target Sizes** (MEDIUM) — Buttons smaller than 44x44pt
-5. **Reduce Motion Support** (MEDIUM) — Animations without checks
-6. **Keyboard Navigation** (MEDIUM) — Missing keyboard shortcuts
+3. **Custom Font Scaling** (HIGH) — Custom UIFont without UIFontMetrics, .custom() without relativeTo:
+4. **Layout Scaling** (MEDIUM) — Fixed padding/spacing without @ScaledMetric or scaledValue
+5. **Color Contrast** (HIGH) — Low contrast text/background combinations
+6. **Touch Target Sizes** (MEDIUM) — Buttons smaller than 44x44pt
+7. **Reduce Motion Support** (MEDIUM) — Animations without checks
+8. **Keyboard Navigation** (MEDIUM) — Missing keyboard shortcuts
 
 ## Model & Tools
 
@@ -33,4 +35,5 @@ Automatically scans for VoiceOver label issues, Dynamic Type violations, color c
 
 ## Related Skills
 
-- **accessibility-diag** skill — Comprehensive accessibility diagnostics with WCAG compliance
+- **accessibility-diag** — Comprehensive accessibility diagnostics with WCAG compliance
+- **typography-ref** — Typography and Dynamic Type reference guide
