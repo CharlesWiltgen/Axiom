@@ -2,7 +2,7 @@
 name: app-intents-ref
 description: Use when integrating App Intents for Siri, Apple Intelligence, Shortcuts, Spotlight, or system experiences - covers AppIntent, AppEntity, parameter handling, entity queries, background execution, authentication, and debugging common integration issues for iOS 16+
 skill_type: reference
-version: 0.9
+version: 1.0.0
 ---
 
 # App Intents Integration
@@ -24,11 +24,18 @@ Comprehensive guide to App Intents framework for exposing app functionality to S
 - Testing intents with Shortcuts app
 - Implementing entity queries for app content
 
+## Related Skills
+
+- **app-shortcuts-ref** — App Shortcuts for instant Siri/Spotlight availability without user setup
+- **core-spotlight-ref** — Core Spotlight and NSUserActivity integration for content indexing
+- **app-discoverability** — Strategic guide for making apps surface system-wide across all APIs
+
 ## System Experiences Supported
 
 App Intents integrate with:
 - **Siri** — Voice commands and Apple Intelligence
 - **Shortcuts** — Automation workflows
+- **App Shortcuts** — Pre-configured actions available instantly (see app-shortcuts-ref)
 - **Spotlight** — Search discovery
 - **Focus Filters** — Contextual filtering
 - **Action Button** — Quick actions (Apple Watch Ultra)
