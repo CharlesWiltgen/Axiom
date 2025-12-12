@@ -177,8 +177,11 @@ export default defineConfig({
         {
           text: 'Reference Skills',
           items: [
+            { text: 'App Discoverability', link: '/reference/app-discoverability' },
             { text: 'App Intents Integration', link: '/reference/app-intents-ref' },
+            { text: 'App Shortcuts', link: '/reference/app-shortcuts-ref' },
             { text: 'AVFoundation', link: '/reference/avfoundation-ref' },
+            { text: 'Core Spotlight & NSUserActivity', link: '/reference/core-spotlight-ref' },
             { text: 'Extensions & Widgets', link: '/reference/extensions-widgets-ref' },
             { text: 'Foundation Models', link: '/reference/foundation-models-ref' },
             { text: 'HIG (Human Interface Guidelines)', link: '/reference/hig-ref' },
