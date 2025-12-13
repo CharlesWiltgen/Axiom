@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -17,6 +17,7 @@
     "./commands/audit-storage.md",
     "./commands/audit-swiftui-nav.md",
     "./commands/audit-swiftui-performance.md",
+    "./commands/audit-textkit.md",
     "./commands/fix-build.md",
     "./commands/optimize-build.md",
     "./commands/screenshot.md",
@@ -29,8 +30,16 @@
       "description": "Use when fixing VoiceOver issues, Dynamic Type violations, color contrast failures, touch target problems, keyboard navigation gaps, or Reduce Motion support - comprehensive accessibility diagnostics with WCAG compliance, Accessibility Inspector workflows, and App Store Review preparation for iOS/macOS"
     },
     {
+      "name": "app-discoverability",
+      "description": "Use when making app surface in Spotlight search, Siri suggestions, or system experiences - covers the 6-step strategy combining App Intents, App Shortcuts, Core Spotlight, and NSUserActivity to feed the system metadata for iOS 16+"
+    },
+    {
       "name": "app-intents-ref",
       "description": "Use when integrating App Intents for Siri, Apple Intelligence, Shortcuts, Spotlight, or system experiences - covers AppIntent, AppEntity, parameter handling, entity queries, background execution, authentication, and debugging common integration issues for iOS 16+"
+    },
+    {
+      "name": "app-shortcuts-ref",
+      "description": "Use when implementing App Shortcuts for instant Siri/Spotlight availability, configuring AppShortcutsProvider, adding suggested phrases, or debugging shortcuts not appearing - covers complete App Shortcuts API for iOS 16+"
     },
     {
       "name": "apple-docs-research",
@@ -55,6 +64,10 @@
     {
       "name": "core-data-diag",
       "description": "Use when debugging schema migration crashes, concurrency thread-confinement errors, N+1 query performance, SwiftData to Core Data bridging, or testing migrations without data loss - systematic Core Data diagnostics with safety-first migration patterns"
+    },
+    {
+      "name": "core-spotlight-ref",
+      "description": "Use when indexing app content for Spotlight search, using NSUserActivity for prediction/handoff, or choosing between CSSearchableItem and IndexedEntity - covers Core Spotlight framework and NSUserActivity integration for iOS 9+"
     },
     {
       "name": "database-migration",
@@ -241,6 +254,14 @@
       "description": "Use when UI is slow, scrolling lags, animations stutter, or when asking 'why is my SwiftUI view slow', 'how do I optimize List performance', 'my app drops frames', 'view body is called too often', 'List is laggy' - SwiftUI performance optimization with Instruments 26 and WWDC 2025 patterns"
     },
     {
+      "name": "textkit-ref",
+      "description": "TextKit 2 complete reference (architecture, migration, Writing Tools, SwiftUI TextEditor) through iOS 26"
+    },
+    {
+      "name": "typography-ref",
+      "description": "Apple platform typography reference (San Francisco fonts, text styles, Dynamic Type, tracking, leading, internationalization) through iOS 26"
+    },
+    {
       "name": "ui-testing",
       "description": "Use when writing UI tests, recording interactions, tests have race conditions, timing dependencies, inconsistent pass/fail behavior, or XCTest UI tests are flaky - covers Recording UI Automation (WWDC 2025), condition-based waiting, network conditioning, multi-factor testing, crash debugging, and accessibility-first testing patterns"
     },
@@ -328,6 +349,11 @@
       "name": "swiftui-performance-analyzer",
       "description": "Use this agent when the user mentions SwiftUI performance, janky scrolling, slow animations, or view update issues. Automatically scans SwiftUI code for performance anti-patterns - detects expensive operations in view bodies, unnecessary updates, missing lazy loading, and SwiftUI-specific issues that cause frame drops and poor scrolling performance.",
       "path": "./agents/swiftui-performance-analyzer.md"
+    },
+    {
+      "name": "textkit-auditor",
+      "description": "Use this agent when the user mentions TextKit review, text layout issues, Writing Tools integration, or UITextView/NSTextView code review. Automatically scans for TextKit 1 fallback triggers, deprecated glyph APIs, and missing TextKit 2 features - prevents loss of Writing Tools support and ensures modern text handling for complex scripts.",
+      "path": "./agents/textkit-auditor.md"
     }
   ]
 }
