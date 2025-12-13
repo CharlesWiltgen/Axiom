@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -10,9 +10,11 @@
     "./commands/audit-accessibility.md",
     "./commands/audit-concurrency.md",
     "./commands/audit-core-data.md",
+    "./commands/audit-icloud.md",
     "./commands/audit-liquid-glass.md",
     "./commands/audit-memory.md",
     "./commands/audit-networking.md",
+    "./commands/audit-storage.md",
     "./commands/audit-swiftui-nav.md",
     "./commands/audit-swiftui-performance.md",
     "./commands/fix-build.md",
@@ -151,6 +153,34 @@
       "description": "Reference — Complete StoreKit 2 API guide covering Product, Transaction, AppTransaction, RenewalInfo, SubscriptionStatus, StoreKit Views, purchase options, server APIs, and all iOS 18.4 enhancements with WWDC 2025 code examples"
     },
     {
+      "name": "storage-strategy",
+      "description": "Use when asking 'where should I store this data', 'should I use SwiftData or files', 'CloudKit vs iCloud Drive', 'Documents vs Caches', 'local or cloud storage', 'how do I sync data', 'where do app files go' - comprehensive decision framework for all iOS storage options"
+    },
+    {
+      "name": "cloudkit-ref",
+      "description": "Use when implementing 'CloudKit sync', 'CKSyncEngine', 'CKRecord', 'CKDatabase', 'SwiftData CloudKit', 'shared database', 'public database', 'CloudKit zones', 'conflict resolution' - comprehensive CloudKit database APIs and modern sync patterns reference"
+    },
+    {
+      "name": "cloud-sync-diag",
+      "description": "Use when debugging 'file not syncing', 'CloudKit error', 'sync conflict', 'iCloud upload failed', 'ubiquitous item error', 'data not appearing on other devices', 'CKError', 'quota exceeded' - systematic iCloud sync diagnostics for both CloudKit and iCloud Drive"
+    },
+    {
+      "name": "file-protection-ref",
+      "description": "Use when asking about 'FileProtectionType', 'file encryption iOS', 'NSFileProtection', 'data protection', 'secure file storage', 'encrypt files at rest', 'complete protection', 'file security' - comprehensive reference for iOS file encryption and data protection APIs"
+    },
+    {
+      "name": "icloud-drive-ref",
+      "description": "Use when implementing 'iCloud Drive', 'ubiquitous container', 'file sync', 'NSFileCoordinator', 'NSFilePresenter', 'isUbiquitousItem', 'NSUbiquitousKeyValueStore', 'ubiquitous file sync' - comprehensive file-based iCloud sync reference"
+    },
+    {
+      "name": "storage-diag",
+      "description": "Use when debugging 'files disappeared', 'data missing after restart', 'backup too large', 'can't save file', 'file not found', 'storage full error', 'file inaccessible when locked' - systematic local file storage diagnostics"
+    },
+    {
+      "name": "storage-management-ref",
+      "description": "Use when asking about 'purge files', 'storage pressure', 'disk space iOS', 'isExcludedFromBackup', 'URL resource values', 'volumeAvailableCapacity', 'low storage', 'file purging priority', 'cache management' - comprehensive reference for iOS storage management and URL resource value APIs"
+    },
+    {
       "name": "swift-concurrency",
       "description": "Use when you see 'actor-isolated', 'Sendable', 'data race', '@MainActor' errors, or when asking 'why is this not thread safe', 'how do I use async/await', 'what is @MainActor for', 'my app is crashing with concurrency errors', 'how do I fix data races' - Swift 6 strict concurrency patterns with actor isolation and async/await"
     },
@@ -250,6 +280,11 @@
       "path": "./agents/core-data-auditor.md"
     },
     {
+      "name": "icloud-auditor",
+      "description": "Use this agent when the user mentions iCloud sync issues, CloudKit errors, ubiquitous container problems, or asks to audit cloud sync. Automatically runs comprehensive iCloud audit to detect missing entitlement checks, unsafe file coordination, missing error handling, and CloudKit anti-patterns - prevents sync failures and data conflicts.",
+      "path": "./agents/icloud-auditor.md"
+    },
+    {
       "name": "iap-auditor",
       "description": "Use this agent when the user mentions in-app purchase review, IAP audit, StoreKit issues, purchase bugs, transaction problems, or subscription management. Automatically audits existing IAP code to detect missing transaction.finish() calls, weak receipt validation, missing restore functionality, subscription status tracking issues, and StoreKit testing configuration gaps - prevents revenue loss, App Store rejections, and customer support issues.",
       "path": "./agents/iap-auditor.md"
@@ -278,6 +313,11 @@
       "name": "simulator-tester",
       "description": "Use this agent when the user mentions simulator testing, test scenarios, visual verification, push notification testing, location simulation, screenshot capture, or automated testing workflows. Automatically sets up test scenarios, captures screenshots, checks logs for crashes/errors, and iterates on fixes - enables closed-loop debugging with visual verification.",
       "path": "./agents/simulator-tester.md"
+    },
+    {
+      "name": "storage-auditor",
+      "description": "Use this agent when the user mentions file storage issues, data loss, backup bloat, or asks to audit storage usage. Automatically runs comprehensive storage audit to detect files in wrong locations, missing backup exclusions, missing file protection, and storage anti-patterns - prevents data loss and backup bloat.",
+      "path": "./agents/storage-auditor.md"
     },
     {
       "name": "swiftui-nav-auditor",
