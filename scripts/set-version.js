@@ -94,7 +94,24 @@ try {
     label: '.claude-plugin/marketplace.json'
   });
 
-  // 3. Prepare metadata.txt update
+  // 3. Prepare VitePress config.ts update
+  const configPath = path.join(root, 'docs/.vitepress/config.ts');
+  if (!fs.existsSync(configPath)) {
+    throw new Error(`VitePress config not found: ${configPath}`);
+  }
+  let configContent = fs.readFileSync(configPath, 'utf8');
+  const versionRegex = /(copyright: '[^']*• v)(\d+\.\d+\.\d+)(')/;
+  if (!versionRegex.test(configContent)) {
+    throw new Error('Version string not found in config.ts footer');
+  }
+  configContent = configContent.replace(versionRegex, `$1${version}$3`);
+  updates.push({
+    path: configPath,
+    content: configContent,
+    label: 'docs/.vitepress/config.ts'
+  });
+
+  // 4. Prepare metadata.txt update
   const metadataPath = path.join(pluginDir, 'hooks/metadata.txt');
   const hooksDir = path.dirname(metadataPath);
   if (!fs.existsSync(hooksDir)) {
