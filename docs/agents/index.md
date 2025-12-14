@@ -1,6 +1,6 @@
 # Autonomous Agents
 
-Axiom includes 13 autonomous agents that automatically detect and diagnose common iOS development issues.
+Axiom includes 17 autonomous agents that automatically detect and diagnose common iOS development issues.
 
 ## What Are Agents?
 
@@ -53,8 +53,10 @@ Agents are autonomous problem-solvers that:
 
 ### Code Quality
 - **accessibility-auditor** — Scans for VoiceOver label issues, Dynamic Type violations, color contrast failures, touch target sizes, WCAG compliance problems
+- **codable-auditor** — Detects Codable anti-patterns (manual JSON building, try? swallowing errors, JSONSerialization usage) and date handling issues
 - **concurrency-validator** — Detects Swift 6 strict concurrency violations (missing @MainActor, unsafe Task captures, Sendable violations, actor isolation problems)
 - **memory-audit-runner** — Finds 6 common memory leak patterns (timers, observers, closures, delegates, view callbacks, PhotoKit accumulation)
+- **textkit-auditor** — Scans for TextKit 1 fallback triggers, deprecated glyph APIs, missing Writing Tools support
 
 ### Persistence & Data
 **core-data-auditor** — Scans for schema migration risks, thread-confinement violations, N+1 query patterns, production data loss risks, performance issues

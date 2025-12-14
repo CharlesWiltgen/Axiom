@@ -50,6 +50,7 @@ export default defineConfig({
           text: 'Code Quality',
           items: [
             { text: 'accessibility-auditor', link: '/agents/accessibility-auditor' },
+            { text: 'codable-auditor', link: '/agents/codable-auditor' },
             { text: 'concurrency-validator', link: '/agents/concurrency-validator' },
             { text: 'memory-audit-runner', link: '/agents/memory-audit-runner' },
             { text: 'textkit-auditor', link: '/agents/textkit-auditor' }
@@ -156,9 +157,10 @@ export default defineConfig({
           ]
         },
         {
-          text: 'Persistence',
+          text: 'Persistence & Serialization',
           items: [
             { text: 'Overview', link: '/skills/persistence/' },
+            { text: 'Codable (JSON Encoding/Decoding)', link: '/skills/persistence/codable' },
             { text: 'Database Migration', link: '/skills/persistence/database-migration' },
             { text: 'SQLiteData', link: '/skills/persistence/sqlitedata' },
             { text: 'GRDB', link: '/skills/persistence/grdb' },
@@ -215,7 +217,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2025 Charles Wiltgen • v1.0.0'
+      copyright: 'Copyright © 2025 Charles Wiltgen • v1.0.1'
     }
   }
 })

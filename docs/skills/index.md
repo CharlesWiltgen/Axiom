@@ -29,10 +29,11 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 |-------|-------------|
 | [**swift-concurrency**](/skills/concurrency/swift-concurrency) | Swift 6 actor isolation, Sendable errors, data races |
 
-### Persistence
+### Persistence & Serialization
 
 | Skill | When to Use |
 |-------|-------------|
+| [**codable**](/skills/persistence/codable) | JSON encoding/decoding, Codable conformance, handling decode errors, date strategies |
 | [**database-migration**](/skills/persistence/database-migration) | Adding database columns, schema changes, migration errors |
 | [**swiftdata**](/skills/persistence/swiftdata) | @Model, @Query, CloudKit integration |
 | [**sqlitedata**](/skills/persistence/sqlitedata) | SQLiteData patterns, batch imports, CloudKit sync |
