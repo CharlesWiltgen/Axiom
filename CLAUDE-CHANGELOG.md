@@ -8,6 +8,9 @@
 
 ## Version History
 
+### v1.0.0 — SwiftUI Architecture Skill (TDD Tested - Grade A+)
+Comprehensive SwiftUI architecture skill covering Apple patterns, MVVM, TCA, and Coordinator approaches for iOS 26+. **swiftui-architecture** discipline skill (1,070 lines, Grade A+, full RED-GREEN-REFACTOR testing). Based on WWDC 2025/266, 2024/10150, 2023/10149. Covers State-as-Bridge pattern, @Observable models, property wrapper decision trees (3 questions), MVVM for complex presentation logic, TCA trade-offs analysis, Coordinator patterns for navigation, 4-step refactoring workflow, 5 anti-patterns with before/after code, 3 pressure scenarios, and code review checklist. **TDD Results**: Prevents "refactor later" rationalization under deadline pressure (Scenario 1 flip from FAIL to PASS), resists 9 pressure types (deadline, authority, sunk cost, existential threat, hybrid approaches, pattern purity), prevents both under-extraction AND over-extraction (balanced guidance). Test artifacts in `scratch/swiftui-architecture-test-results.md`. Documentation page at `docs/skills/ui-design/swiftui-architecture.md`. **First v1.0 release - production-ready comprehensive architecture guidance.**
+
 ### v0.9.27 — Extensions & Widgets Skills Suite
 Comprehensive widget development skills covering iOS 14-18+: **extensions-widgets** discipline skill (900+ lines, Grade A+, 7 anti-patterns with time costs, 3 pressure scenarios including phased push notification strategy, 80% rationalization prevention), **extensions-widgets-ref** reference skill (2250+ lines, 11 parts covering WidgetKit/ActivityKit/Control Center, troubleshooting section with 10 scenarios, "Building Your First Widget" workflow, expert review checklist with 50+ items, complete testing guidance), **apple-docs-research** methodology skill (500+ lines, Chrome WWDC transcript capture technique, sosumi.ai URL patterns, saves 3-4 hours per research task). Based on WWDC 2025/278, 2024/10157, 2024/10068, 2023/10028, 2023/10194. Covers standard widgets, interactive widgets (iOS 17+), Live Activities with Dynamic Island (iOS 16.1+), Control Center widgets (iOS 18+), watchOS integration, visionOS support. Tested by pressure-testing agents with all critical gaps fixed. **43 total skills.**
 
@@ -58,7 +61,7 @@ Accessibility audit command and debugging skill - comprehensive WCAG compliance,
 
 ## TDD Testing Methodology
 
-**Superpowers writing-skills TDD framework** applied to 15 skills:
+**Superpowers writing-skills TDD framework** applied to 16 skills:
 - RED-GREEN-REFACTOR cycles for each skill
 - Pressure scenarios: time constraints, authority pressure, sunk cost, deadline effects
 - Baseline testing without skill guidance documented
@@ -66,18 +69,20 @@ Accessibility audit command and debugging skill - comprehensive WCAG compliance,
 - Loophole identification and closure in REFACTOR phase
 
 ### TDD Testing Results Summary
-- **15/15 skills**: RED-GREEN-REFACTOR tested
+- **16/16 skills**: RED-GREEN-REFACTOR tested
 - **Key improvement**: Average issue resolution time reduced by 60-70%
   - Xcode debugging: 30+ min → 2-5 min
   - Memory leaks: 2-3 hours → 15-30 min
   - UIKit animation: 2-4 hours → 5-15 min
   - Block retain cycles: 2-4 hours → 5-15 min
+  - SwiftUI architecture: Prevents "refactor later" under deadline pressure
 
 ### Critical Findings from TDD Campaign
 1. **xcode-debugging**: Time cost transparency prevents 30+ minute rabbit holes
 2. **swift-concurrency**: Checklist contradicted pattern, critical fix applied
 3. **database-migration**: Multi-layered prevention works under extreme pressure
-4. **All other skills**: Verified to prevent identified rationalizations when tested
+4. **swiftui-architecture**: Grade A+, prevents both under-extraction AND over-extraction, resists 9 pressure types
+5. **All other skills**: Verified to prevent identified rationalizations when tested
 
 ### Testing Artifacts
 
@@ -85,6 +90,7 @@ Located in `scratch/` (gitignored):
 - **xcode-debugging-test-results.md** — Baseline vs with-skill comparison
 - **swift-concurrency-test-results.md** — Checklist contradiction found & fixed
 - **database-migration-test-results.md** — Prevented data corruption under pressure
+- **swiftui-architecture-test-results.md** — Grade A+ comprehensive architecture guidance (2025-12-14)
 
 ---
 

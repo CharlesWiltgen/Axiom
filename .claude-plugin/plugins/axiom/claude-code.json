@@ -203,6 +203,10 @@
       "description": "Use when you see 'actor-isolated', 'Sendable', 'data race', '@MainActor' errors, or when asking 'why is this not thread safe', 'how do I use async/await', 'what is @MainActor for', 'my app is crashing with concurrency errors', 'how do I fix data races' - Swift 6 strict concurrency patterns with actor isolation and async/await"
     },
     {
+      "name": "swiftui-architecture",
+      "description": "Use when separating logic from SwiftUI views, choosing architecture patterns (MVVM, TCA, Coordinator), refactoring view files, or asking 'where should this code go', 'how do I organize my SwiftUI app', 'MVVM vs TCA', 'how do I make SwiftUI testable' - comprehensive architecture patterns with refactoring workflows for iOS 26+"
+    },
+    {
       "name": "swiftdata",
       "description": "Use when working with SwiftData - @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ features, and Swift 6 concurrency with @MainActor — Apple's native persistence framework"
     },
