@@ -23,13 +23,30 @@ try {
   if (!fs.existsSync(skillsDir)) {
     throw new Error(`Skills directory not found: ${skillsDir}`);
   }
-  const skillsCount = fs.readdirSync(skillsDir)
+  const skillDirs = fs.readdirSync(skillsDir)
     .filter(name => {
       const stat = fs.statSync(path.join(skillsDir, name), { throwIfNoEntry: false });
       if (!stat?.isDirectory()) return false;
       const skillFile = path.join(skillsDir, name, 'SKILL.md');
       return fs.existsSync(skillFile);
-    }).length;
+    });
+
+  const skillsCount = skillDirs.length;
+
+  // Count skills by type
+  let disciplineCount = 0;
+  let referenceCount = 0;
+  let diagnosticCount = 0;
+
+  for (const skillName of skillDirs) {
+    if (skillName.endsWith('-ref')) {
+      referenceCount++;
+    } else if (skillName.endsWith('-diag')) {
+      diagnosticCount++;
+    } else {
+      disciplineCount++;
+    }
+  }
 
   const agentsDir = path.join(pluginDir, 'agents');
   if (!fs.existsSync(agentsDir)) {
@@ -51,8 +68,25 @@ try {
       return stat?.isFile() && name.endsWith('.md');
     }).length;
 
+  // Generate stats.json for VitePress
+  const statsPath = path.join(root, 'docs/.vitepress/theme/stats.json');
+  const statsData = {
+    disciplineSkills: disciplineCount,
+    referenceSkills: referenceCount,
+    diagnosticSkills: diagnosticCount,
+    commands: commandsCount,
+    agents: agentsCount
+  };
+
   // Prepare all updates
   const updates = [];
+
+  // Add stats.json to updates
+  updates.push({
+    path: statsPath,
+    content: JSON.stringify(statsData, null, 2) + '\n',
+    label: 'docs/.vitepress/theme/stats.json'
+  });
 
   // 1. Read and prepare claude-code.json update
   const claudeCodePath = path.join(pluginDir, 'claude-code.json');
@@ -147,7 +181,7 @@ try {
 
   // Success - print summary
   console.log(`✓ Version set to ${version}`);
-  console.log(`  Skills: ${skillsCount}`);
+  console.log(`  Skills: ${skillsCount} (${disciplineCount} discipline, ${referenceCount} reference, ${diagnosticCount} diagnostic)`);
   console.log(`  Agents: ${agentsCount}`);
   console.log(`  Commands: ${commandsCount}`);
   console.log();
