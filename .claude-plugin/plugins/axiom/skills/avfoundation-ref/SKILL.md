@@ -2,7 +2,7 @@
 name: avfoundation-ref
 description: Reference — AVFoundation audio APIs, AVAudioSession categories/modes, AVAudioEngine pipelines, bit-perfect DAC output, iOS 26+ spatial audio capture, ASAF/APAC, Audio Mix with Cinematic framework
 skill_type: reference
-version: 0.9
+version: 1.0.0
 ---
 
 # AVFoundation Audio Reference

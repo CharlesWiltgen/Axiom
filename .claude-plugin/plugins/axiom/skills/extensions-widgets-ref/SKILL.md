@@ -2,7 +2,7 @@
 name: extensions-widgets-ref
 description: Use when implementing widgets, Live Activities, Control Center controls, or app extensions - comprehensive API reference for WidgetKit, ActivityKit, App Groups, and extension lifecycle for iOS 14+
 skill_type: reference
-version: 0.9
+version: 1.0.0
 apple_platforms: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, visionOS 2+
 ---
 

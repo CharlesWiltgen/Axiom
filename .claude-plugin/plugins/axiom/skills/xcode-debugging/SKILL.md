@@ -2,7 +2,7 @@
 name: xcode-debugging
 description: Use when encountering BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild processes, "Unable to boot simulator", "No such module" after SPM changes, or mysterious test failures despite no code changes - systematic environment-first diagnostics for iOS/macOS projects
 skill_type: discipline
-version: 0.9
+version: 1.0.0
 # MCP annotations (ignored by Claude Code)
 mcp:
   category: debugging

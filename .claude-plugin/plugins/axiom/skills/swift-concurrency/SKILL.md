@@ -2,7 +2,7 @@
 name: swift-concurrency
 description: Use when you see 'actor-isolated', 'Sendable', 'data race', '@MainActor' errors, or when asking 'why is this not thread safe', 'how do I use async/await', 'what is @MainActor for', 'my app is crashing with concurrency errors', 'how do I fix data races' - Swift 6 strict concurrency patterns with actor isolation and async/await
 skill_type: discipline
-version: 0.9
+version: 1.0.0
 ---
 
 # Swift 6 Concurrency Guide

@@ -2,7 +2,7 @@
 name: getting-started
 description: Use when first installing Axiom, unsure which skill to use, want an overview of available skills, or need help finding the right skill for your situation — interactive onboarding that recommends skills based on your project and current focus
 skill_type: discipline
-version: 0.9
+version: 1.0.0
 ---
 
 # Getting Started with Axiom

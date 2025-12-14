@@ -2,7 +2,7 @@
 name: swiftdata-migration
 description: Use when creating SwiftData custom schema migrations with VersionedSchema and SchemaMigrationPlan - property type changes, relationship preservation (one-to-many, many-to-many), the willMigrate/didMigrate limitation, two-stage migration patterns, and testing migrations on real devices
 skill_type: discipline
-version: 0.9
+version: 1.0.0
 ---
 
 # SwiftData Custom Schema Migrations

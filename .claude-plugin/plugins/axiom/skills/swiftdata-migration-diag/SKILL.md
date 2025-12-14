@@ -2,7 +2,7 @@
 name: swiftdata-migration-diag
 description: Use when SwiftData migrations crash, fail to preserve relationships, lose data, or work in simulator but fail on device - systematic diagnostics for schema version mismatches, relationship errors, and migration testing gaps
 skill_type: diagnostic
-version: 0.9
+version: 1.0.0
 ---
 
 # SwiftData Migration Diagnostics

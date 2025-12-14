@@ -2,7 +2,7 @@
 name: swiftdata
 description: Use when working with SwiftData - @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ features, and Swift 6 concurrency with @MainActor — Apple's native persistence framework
 skill_type: discipline
-version: 0.9
+version: 1.0.0
 ---
 
 # SwiftData
