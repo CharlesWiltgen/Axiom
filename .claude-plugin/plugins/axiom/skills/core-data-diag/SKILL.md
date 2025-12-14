@@ -2,7 +2,7 @@
 name: core-data-diag
 description: Use when debugging schema migration crashes, concurrency thread-confinement errors, N+1 query performance, SwiftData to Core Data bridging, or testing migrations without data loss - systematic Core Data diagnostics with safety-first migration patterns
 skill_type: diagnostic
-version: 0.9
+version: 1.0.0
 ---
 
 # Core Data Diagnostics & Migration

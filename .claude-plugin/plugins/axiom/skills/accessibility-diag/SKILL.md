@@ -2,7 +2,7 @@
 name: accessibility-diag
 description: Use when fixing VoiceOver issues, Dynamic Type violations, color contrast failures, touch target problems, keyboard navigation gaps, or Reduce Motion support - comprehensive accessibility diagnostics with WCAG compliance, Accessibility Inspector workflows, and App Store Review preparation for iOS/macOS
 skill_type: diagnostic
-version: 0.9
+version: 1.0.0
 ---
 
 # Accessibility Diagnostics

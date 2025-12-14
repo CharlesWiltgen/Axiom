@@ -2,7 +2,7 @@
 name: extensions-widgets
 description: Use when implementing widgets, Live Activities, or Control Center controls - enforces correct patterns for timeline management, data sharing, and extension lifecycle to prevent common crashes and memory issues
 skill_type: discipline
-version: 0.9
+version: 1.0.0
 apple_platforms: iOS 14+, iPadOS 14+, watchOS 9+
 ---
 
