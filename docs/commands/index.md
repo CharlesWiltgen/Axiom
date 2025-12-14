@@ -7,6 +7,7 @@ Quick automated scans to identify issues in your codebase. Type `/command-name` 
 | Command | What It Checks | Output |
 |---------|----------------|--------|
 | [**`/axiom:audit-accessibility`**](./accessibility/audit-accessibility) | VoiceOver labels, Dynamic Type, color contrast, touch targets, WCAG compliance | Priority issues with fix recommendations |
+| [**`/axiom:audit-codable`**](./debugging/audit-codable) | Codable anti-patterns, try? swallowing errors, manual JSON building, date handling issues | File:line references with fix recommendations |
 | [**`/axiom:audit-concurrency`**](./concurrency/audit-concurrency) | Swift 6 strict mode violations, @MainActor issues, Sendable conformance, actor isolation | Concurrency errors with migration patterns |
 | [**`/axiom:audit-core-data`**](./debugging/audit-core-data) | Schema migration safety, thread-confinement violations, N+1 queries, production risks | Risk score with immediate action items |
 | [**`/axiom:audit-icloud`**](./storage/audit-icloud) | Missing NSFileCoordinator, CloudKit error handling, entitlement checks, SwiftData+CloudKit anti-patterns | Sync reliability issues with fix recommendations |
@@ -26,6 +27,7 @@ Quick automated scans to identify issues in your codebase. Type `/command-name` 
 ```bash
 # Run a command
 /axiom:audit-accessibility
+/axiom:audit-codable
 /axiom:audit-concurrency
 /axiom:audit-core-data
 /axiom:audit-icloud
@@ -57,6 +59,7 @@ Commands output results with `file:line` references and link to relevant skills 
 
 ### Auditing & Quality
 - `/axiom:audit-accessibility` — Accessibility compliance
+- `/axiom:audit-codable` — Codable anti-patterns and JSON serialization
 - `/axiom:audit-concurrency` — Swift 6 concurrency
 - `/axiom:audit-core-data` — Core Data safety
 - `/axiom:audit-icloud` — iCloud sync reliability

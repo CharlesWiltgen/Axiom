@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -8,6 +8,7 @@
     "./commands/ask.md",
     "./commands/audit.md",
     "./commands/audit-accessibility.md",
+    "./commands/audit-codable.md",
     "./commands/audit-concurrency.md",
     "./commands/audit-core-data.md",
     "./commands/audit-icloud.md",
@@ -60,6 +61,10 @@
     {
       "name": "build-troubleshooting",
       "description": "Use when encountering dependency conflicts, CocoaPods/SPM resolution failures, \"Multiple commands produce\" errors, or framework version mismatches - systematic dependency and build configuration debugging for iOS projects. Includes pressure scenario guidance for resisting quick fixes under time constraints"
+    },
+    {
+      "name": "codable",
+      "description": "Use when working with Codable protocol, JSON encoding/decoding, CodingKeys customization, enum serialization, date strategies, custom containers, or encountering \"Type does not conform to Decodable/Encodable\" errors - comprehensive Codable patterns and anti-patterns for Swift 6.x"
     },
     {
       "name": "core-data-diag",
@@ -289,6 +294,11 @@
       "name": "build-optimizer",
       "description": "Use this agent when the user mentions slow builds, build performance, or build time optimization. Automatically scans Xcode projects for build performance optimizations - identifies slow type checking, expensive build phase scripts, suboptimal build settings, and parallelization opportunities to reduce build times by 30-50%.",
       "path": "./agents/build-optimizer.md"
+    },
+    {
+      "name": "codable-auditor",
+      "description": "Use this agent when the user mentions Codable review, JSON encoding/decoding issues, data serialization audit, or modernizing legacy code. Automatically scans Swift/Objective-C for Codable anti-patterns (manual JSON building, try? swallowing errors, JSONSerialization usage) and date handling issues - prevents silent data loss and production bugs.",
+      "path": "./agents/codable-auditor.md"
     },
     {
       "name": "concurrency-validator",
