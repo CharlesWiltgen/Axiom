@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -18,6 +18,7 @@
     "./commands/audit-storage.md",
     "./commands/audit-swiftui-nav.md",
     "./commands/audit-swiftui-performance.md",
+    "./commands/audit-swiftui-architecture.md",
     "./commands/audit-textkit.md",
     "./commands/fix-build.md",
     "./commands/optimize-build.md",
@@ -363,6 +364,11 @@
       "name": "swiftui-performance-analyzer",
       "description": "Use this agent when the user mentions SwiftUI performance, janky scrolling, slow animations, or view update issues. Automatically scans SwiftUI code for performance anti-patterns - detects expensive operations in view bodies, unnecessary updates, missing lazy loading, and SwiftUI-specific issues that cause frame drops and poor scrolling performance.",
       "path": "./agents/swiftui-performance-analyzer.md"
+    },
+    {
+      "name": "swiftui-architecture-auditor",
+      "description": "Use this agent when the user mentions SwiftUI architecture review, separation of concerns, testability issues, or 'logic in view' problems. Automatically scans SwiftUI code for architectural anti-patterns - logic in view bodies, async boundary violations, property wrapper misuse, and testability gaps. Complements (but is distinct from) performance and navigation audits.",
+      "path": "./agents/swiftui-architecture-auditor.md"
     },
     {
       "name": "textkit-auditor",

@@ -20,6 +20,7 @@ Analyze the project and either:
 | Memory | /axiom:audit-memory | Retain cycles, leaks, Timer patterns |
 | SwiftUI Performance | /axiom:audit-swiftui-performance | Expensive body, missing lazy |
 | Navigation | /axiom:audit-swiftui-nav | Architecture issues |
+| Architecture | /axiom:audit-swiftui-architecture | Logic in view, boundary violations |
 | Core Data | /axiom:audit-core-data | Thread safety, migrations |
 | Networking | /axiom:audit-networking | Deprecated APIs |
 | Liquid Glass | /axiom:audit-liquid-glass | iOS 26 adoption opportunities |
@@ -28,7 +29,7 @@ Analyze the project and either:
 ## Project Analysis (if no area specified)
 
 1. Check for .xcodeproj/.xcworkspace → suggest build audit
-2. Find SwiftUI files → suggest swiftui-performance audit
+2. Find SwiftUI files → suggest swiftui-performance and swiftui-architecture audits
 3. Find .xcdatamodeld → suggest core-data audit
 4. Check deployment target → suggest relevant compatibility audits
 5. Find CloudKit entitlements → suggest swiftdata CloudKit review
