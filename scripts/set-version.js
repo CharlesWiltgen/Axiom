@@ -17,6 +17,164 @@ if (!version?.match(/^\d+\.\d+\.\d+$/)) {
 const root = path.join(__dirname, '..');
 const pluginDir = path.join(root, '.claude-plugin/plugins/axiom');
 
+// Category mapping patterns for skills
+// Ordered from most specific to least specific to prevent greedy matching
+const CATEGORY_PATTERNS = {
+  'Utility': ['getting-started'],
+  'Testing': ['testing', 'ui-testing', 'simulator'],
+  'Persistence & Storage': ['swiftdata', 'grdb', 'sqlite', 'cloudkit', 'icloud', 'storage', 'realm', 'core-data', 'database', 'cloud-sync'],
+  'Integration': ['networking', 'app-intent', 'storekit', 'in-app', 'foundation-model', 'extension', 'widget', 'avfoundation', 'now-playing', 'app-shortcut', 'core-spotlight', 'app-discovera', 'network-framework'],
+  'Build & Environment': ['build', 'xcode'],
+  'Code Quality': ['concurrency', 'codable'],
+  'UI & Design': ['swiftui', 'hig', 'liquid-glass', 'layout', 'nav', 'gesture', 'textkit', 'typography', 'animation', 'auto-layout', 'accessibility'],
+  'Debugging': ['debugging', 'profiling', 'memory', 'objc-block']
+};
+
+// Categorize a skill based on its name and description
+function categorizeSkill(skillName, description) {
+  const lowerName = skillName.toLowerCase();
+  const lowerDesc = description.toLowerCase();
+
+  // First pass: match by NAME only (more reliable)
+  for (const [category, patterns] of Object.entries(CATEGORY_PATTERNS)) {
+    for (const pattern of patterns) {
+      if (lowerName.includes(pattern)) {
+        return category;
+      }
+    }
+  }
+
+  // Second pass: match by description (fallback)
+  for (const [category, patterns] of Object.entries(CATEGORY_PATTERNS)) {
+    for (const pattern of patterns) {
+      if (lowerDesc.includes(pattern)) {
+        return category;
+      }
+    }
+  }
+
+  // Default to Debugging for diagnostic skills
+  if (skillName.endsWith('-diag')) {
+    return 'Debugging';
+  }
+
+  // Default category for unmatched skills
+  return 'Integration';
+}
+
+// Group skills by category
+function categorizeSkills(skills) {
+  const categories = {};
+
+  for (const skill of skills) {
+    const category = categorizeSkill(skill.name, skill.description);
+
+    if (!categories[category]) {
+      categories[category] = [];
+    }
+
+    categories[category].push(skill);
+  }
+
+  // Sort skills within each category by name
+  for (const category of Object.keys(categories)) {
+    categories[category].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  return categories;
+}
+
+// Generate skills section markdown
+function generateSkillsSection(categories) {
+  let markdown = '## Skills Reference\n\n';
+
+  // Define category order (matching our docs structure)
+  const categoryOrder = [
+    'Utility',
+    'Build & Environment',
+    'UI & Design',
+    'Code Quality',
+    'Debugging',
+    'Persistence & Storage',
+    'Integration',
+    'Testing'
+  ];
+
+  for (const category of categoryOrder) {
+    const skills = categories[category];
+    if (!skills || skills.length === 0) continue;
+
+    markdown += `### ${category}\n\n`;
+
+    for (const skill of skills) {
+      // Truncate description to first sentence or 120 chars
+      let desc = skill.description;
+      const firstSentence = desc.match(/^[^.!?]+[.!?]/);
+      if (firstSentence) {
+        desc = firstSentence[0];
+      } else if (desc.length > 120) {
+        desc = desc.substring(0, 120) + '...';
+      }
+
+      markdown += `- **${skill.name}** — ${desc}\n`;
+    }
+
+    markdown += '\n';
+  }
+
+  return markdown;
+}
+
+// Generate agents section markdown
+function generateAgentsSection(agents) {
+  let markdown = '## Agents Reference\n\n';
+  markdown += 'When user asks to "audit", "review", "scan", or "check" code, launch the appropriate agent:\n\n';
+
+  // Sort agents by name
+  const sortedAgents = [...agents].sort((a, b) => a.name.localeCompare(b.name));
+
+  for (const agent of sortedAgents) {
+    // Extract key phrase from description (first clause before dash or comma)
+    let desc = agent.description;
+    const match = desc.match(/^[^—,]+/);
+    if (match) {
+      desc = match[0].trim();
+      // Remove "Use this agent when" prefix if present
+      desc = desc.replace(/^Use this agent when (the user mentions )?/i, '');
+      desc = desc.replace(/^Automatically (runs|scans)/i, 'Scans for');
+    }
+
+    markdown += `- **${agent.name}** — ${desc}\n`;
+  }
+
+  markdown += '\n';
+
+  return markdown;
+}
+
+// Generate complete ask.md from template
+function generateAskMd(claudeCode) {
+  const skills = claudeCode.skills || [];
+  const agents = claudeCode.agents || [];
+
+  // Group skills by category
+  const categories = categorizeSkills(skills);
+
+  // Generate sections
+  const skillsSection = generateSkillsSection(categories);
+  const agentsSection = generateAgentsSection(agents);
+
+  // Read template and replace placeholders
+  const templatePath = path.join(__dirname, 'templates/ask.md.template');
+  const template = fs.readFileSync(templatePath, 'utf8');
+
+  return template
+    .replace('{{skillCount}}', skills.length)
+    .replace('{{agentCount}}', agents.length)
+    .replace('{{skillsSection}}', skillsSection)
+    .replace('{{agentsSection}}', agentsSection);
+}
+
 try {
   // Auto-count components
   const skillsDir = path.join(pluginDir, 'skills');
@@ -104,6 +262,15 @@ try {
     path: claudeCodePath,
     content: JSON.stringify(claudeCode, null, 2) + '\n',
     label: '.claude-plugin/plugins/axiom/claude-code.json'
+  });
+
+  // Generate ask.md from template + manifest data
+  const askMdPath = path.join(pluginDir, 'commands/ask.md');
+  const askMdContent = generateAskMd(claudeCode);
+  updates.push({
+    path: askMdPath,
+    content: askMdContent,
+    label: '.claude-plugin/plugins/axiom/commands/ask.md'
   });
 
   // 2. Read and prepare marketplace.json update
