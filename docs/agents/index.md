@@ -1,6 +1,6 @@
 # Autonomous Agents
 
-Axiom includes 17 autonomous agents that automatically detect and diagnose common iOS development issues.
+Axiom includes 18 autonomous agents that automatically detect and diagnose common iOS development issues.
 
 ## What Are Agents?
 
@@ -40,6 +40,8 @@ Agents are autonomous problem-solvers that:
 /axiom:audit-liquid-glass
 /axiom:audit-networking
 /axiom:audit-swiftui-nav
+/axiom:audit-icloud
+/axiom:audit-storage
 /axiom:fix-build
 /axiom:optimize-build
 /axiom:test-simulator
@@ -58,22 +60,23 @@ Agents are autonomous problem-solvers that:
 - **memory-audit-runner** — Finds 6 common memory leak patterns (timers, observers, closures, delegates, view callbacks, PhotoKit accumulation)
 - **textkit-auditor** — Scans for TextKit 1 fallback triggers, deprecated glyph APIs, missing Writing Tools support
 
-### Persistence & Data
-**core-data-auditor** — Scans for schema migration risks, thread-confinement violations, N+1 query patterns, production data loss risks, performance issues
-
-### UI & Performance
+### UI & Design
 - **liquid-glass-auditor** — Identifies iOS 26+ Liquid Glass adoption opportunities (glass effects, toolbar improvements, search patterns, migration from old blur effects)
+- **swiftui-architecture-auditor** — Scans SwiftUI architecture (logic in view bodies, async boundary violations, property wrapper misuse, testability gaps)
 - **swiftui-performance-analyzer** — Detects SwiftUI performance anti-patterns (expensive operations in view bodies, missing lazy loading, unnecessary updates, navigation performance issues)
 - **swiftui-nav-auditor** — Scans SwiftUI navigation architecture (missing NavigationPath, deep link gaps, state restoration issues, wrong container usage, type safety problems)
 
-### Networking
-**networking-auditor** — Scans for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling)
+### Persistence & Storage
+- **core-data-auditor** — Scans for schema migration risks, thread-confinement violations, N+1 query patterns, production data loss risks, performance issues
+- **icloud-auditor** — Scans for iCloud integration issues (missing NSFileCoordinator, unsafe CloudKit error handling, missing entitlement checks, SwiftData + CloudKit anti-patterns)
+- **storage-auditor** — Detects file storage mistakes (files in wrong locations, missing backup exclusions, missing file protection, storage anti-patterns causing data loss and backup bloat)
 
-### In-App Purchases
+### Integration
+- **networking-auditor** — Scans for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling)
 - **iap-auditor** — Audits existing IAP code for missing transaction.finish() calls, weak receipt validation, missing restore functionality, subscription status tracking issues, and StoreKit testing configuration gaps
 - **iap-implementation** — Implements complete StoreKit 2 IAP solution with testing-first workflow (.storekit configuration, centralized StoreManager, transaction handling, subscription management, restore purchases)
 
-### Testing & Verification
+### Testing
 **simulator-tester** — Automated simulator testing with visual verification (screenshots, video, location simulation, push notifications, permissions, deep links, log analysis) for closed-loop debugging
 
 ## Why Agents?

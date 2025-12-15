@@ -57,34 +57,32 @@ export default defineConfig({
           ]
         },
         {
-          text: 'Persistence & Data',
-          items: [
-            { text: 'core-data-auditor', link: '/agents/core-data-auditor' }
-          ]
-        },
-        {
-          text: 'UI & Performance',
+          text: 'UI & Design',
           items: [
             { text: 'liquid-glass-auditor', link: '/agents/liquid-glass-auditor' },
+            { text: 'swiftui-architecture-auditor', link: '/agents/swiftui-architecture-auditor' },
             { text: 'swiftui-performance-analyzer', link: '/agents/swiftui-performance-analyzer' },
             { text: 'swiftui-nav-auditor', link: '/agents/swiftui-nav-auditor' }
           ]
         },
         {
-          text: 'Networking',
+          text: 'Persistence & Storage',
           items: [
-            { text: 'networking-auditor', link: '/agents/networking-auditor' }
+            { text: 'core-data-auditor', link: '/agents/core-data-auditor' },
+            { text: 'icloud-auditor', link: '/agents/icloud-auditor' },
+            { text: 'storage-auditor', link: '/agents/storage-auditor' }
           ]
         },
         {
-          text: 'In-App Purchases',
+          text: 'Integration',
           items: [
+            { text: 'networking-auditor', link: '/agents/networking-auditor' },
             { text: 'iap-auditor', link: '/agents/iap-auditor' },
             { text: 'iap-implementation', link: '/agents/iap-implementation' }
           ]
         },
         {
-          text: 'Testing & Verification',
+          text: 'Testing',
           items: [
             { text: 'simulator-tester', link: '/agents/simulator-tester' }
           ]
@@ -111,20 +109,20 @@ export default defineConfig({
             { text: 'Overview', link: '/skills/ui-design/' },
             { text: 'HIG (Human Interface Guidelines)', link: '/skills/ui-design/hig' },
             { text: 'Liquid Glass', link: '/skills/ui-design/liquid-glass' },
+            { text: 'SwiftUI Architecture', link: '/skills/ui-design/swiftui-architecture' },
             { text: 'SwiftUI Layout', link: '/skills/ui-design/swiftui-layout' },
             { text: 'SwiftUI Navigation', link: '/skills/ui-design/swiftui-nav' },
             { text: 'SwiftUI Performance', link: '/skills/ui-design/swiftui-performance' },
             { text: 'SwiftUI Debugging', link: '/skills/ui-design/swiftui-debugging' },
             { text: 'SwiftUI Gestures', link: '/skills/ui-design/swiftui-gestures' },
-            { text: 'UI Testing', link: '/skills/ui-design/ui-testing' },
             { text: 'UIKit Animation Debugging', link: '/skills/ui-design/uikit-animation-debugging' }
           ]
         },
         {
-          text: 'Debugging & Troubleshooting',
+          text: 'Debugging',
           items: [
             { text: 'Overview', link: '/skills/debugging/' },
-            { text: 'Accessibility Debugging', link: '/skills/debugging/accessibility-debugging' },
+            { text: 'Accessibility Diagnostics', link: '/skills/debugging/accessibility-diag' },
             { text: 'Auto Layout Debugging', link: '/skills/debugging/auto-layout-debugging' },
             { text: 'Deep Link Debugging', link: '/skills/debugging/deep-link-debugging' },
             { text: 'Xcode Debugging', link: '/skills/debugging/xcode-debugging' },
@@ -138,14 +136,27 @@ export default defineConfig({
           ]
         },
         {
-          text: 'Concurrency & Async',
+          text: 'Concurrency',
           items: [
             { text: 'Overview', link: '/skills/concurrency/' },
             { text: 'Swift Concurrency', link: '/skills/concurrency/swift-concurrency' }
           ]
         },
         {
-          text: 'Networking & Integration',
+          text: 'Persistence & Storage',
+          items: [
+            { text: 'Overview', link: '/skills/persistence/' },
+            { text: 'Codable (JSON Encoding/Decoding)', link: '/skills/persistence/codable' },
+            { text: 'Database Migration', link: '/skills/persistence/database-migration' },
+            { text: 'SQLiteData', link: '/skills/persistence/sqlitedata' },
+            { text: 'GRDB', link: '/skills/persistence/grdb' },
+            { text: 'SwiftData', link: '/skills/persistence/swiftdata' },
+            { text: 'SwiftData Migration', link: '/skills/persistence/swiftdata-migration' },
+            { text: 'SwiftData to SQLiteData', link: '/skills/persistence/swiftdata-to-sqlitedata' }
+          ]
+        },
+        {
+          text: 'Integration',
           items: [
             { text: 'Overview', link: '/skills/integration/' },
             { text: 'App Intents', link: '/skills/integration/app-intents-ref' },
@@ -157,15 +168,9 @@ export default defineConfig({
           ]
         },
         {
-          text: 'Persistence & Serialization',
+          text: 'Testing',
           items: [
-            { text: 'Overview', link: '/skills/persistence/' },
-            { text: 'Codable (JSON Encoding/Decoding)', link: '/skills/persistence/codable' },
-            { text: 'Database Migration', link: '/skills/persistence/database-migration' },
-            { text: 'SQLiteData', link: '/skills/persistence/sqlitedata' },
-            { text: 'GRDB', link: '/skills/persistence/grdb' },
-            { text: 'SwiftData', link: '/skills/persistence/swiftdata' },
-            { text: 'SwiftData Migration', link: '/skills/persistence/swiftdata-migration' }
+            { text: 'UI Testing', link: '/skills/ui-design/ui-testing' }
           ]
         }
       ],
@@ -177,7 +182,40 @@ export default defineConfig({
           ]
         },
         {
-          text: 'Reference Skills',
+          text: 'UI & Design',
+          items: [
+            { text: 'HIG (Human Interface Guidelines)', link: '/reference/hig-ref' },
+            { text: 'Liquid Glass Adoption', link: '/reference/liquid-glass-ref' },
+            { text: 'SwiftUI 26 Features', link: '/reference/swiftui-26-ref' },
+            { text: 'SwiftUI Layout', link: '/reference/swiftui-layout-ref' },
+            { text: 'SwiftUI Navigation', link: '/reference/swiftui-nav-ref' },
+            { text: 'SwiftUI Navigation Diagnostics', link: '/reference/swiftui-nav-diag' },
+            { text: 'TextKit 2', link: '/reference/textkit-ref' },
+            { text: 'Typography', link: '/reference/typography-ref' }
+          ]
+        },
+        {
+          text: 'Debugging',
+          items: [
+            { text: 'Accessibility Diagnostics', link: '/reference/accessibility-diag' },
+            { text: 'Core Data Diagnostics', link: '/reference/core-data-diag' }
+          ]
+        },
+        {
+          text: 'Persistence & Storage',
+          items: [
+            { text: 'Storage Strategy', link: '/reference/storage-strategy' },
+            { text: 'CloudKit', link: '/reference/cloudkit-ref' },
+            { text: 'Cloud Sync Diagnostics', link: '/reference/cloud-sync-diag' },
+            { text: 'iCloud Drive', link: '/reference/icloud-drive-ref' },
+            { text: 'File Protection', link: '/reference/file-protection-ref' },
+            { text: 'Storage Diagnostics', link: '/reference/storage-diag' },
+            { text: 'Storage Management', link: '/reference/storage-management-ref' },
+            { text: 'Realm Migration', link: '/reference/realm-migration-ref' }
+          ]
+        },
+        {
+          text: 'Integration',
           items: [
             { text: 'App Discoverability', link: '/reference/app-discoverability' },
             { text: 'App Intents Integration', link: '/reference/app-intents-ref' },
@@ -186,26 +224,10 @@ export default defineConfig({
             { text: 'Core Spotlight & NSUserActivity', link: '/reference/core-spotlight-ref' },
             { text: 'Extensions & Widgets', link: '/reference/extensions-widgets-ref' },
             { text: 'Foundation Models', link: '/reference/foundation-models-ref' },
-            { text: 'HIG (Human Interface Guidelines)', link: '/reference/hig-ref' },
-            { text: 'Liquid Glass Adoption', link: '/reference/liquid-glass-ref' },
-            { text: 'Network.framework API', link: '/reference/network-framework-ref' },
-            { text: 'Realm Migration', link: '/reference/realm-migration-ref' },
-            { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' },
-            { text: 'SwiftUI 26 Features', link: '/reference/swiftui-26-ref' },
-            { text: 'SwiftUI Layout', link: '/reference/swiftui-layout-ref' },
-            { text: 'SwiftUI Navigation', link: '/reference/swiftui-nav-ref' },
-            { text: 'TextKit 2', link: '/reference/textkit-ref' },
-            { text: 'Typography', link: '/reference/typography-ref' }
-          ]
-        },
-        {
-          text: 'Diagnostic Skills',
-          items: [
-            { text: 'Accessibility Diagnostics', link: '/reference/accessibility-diag' },
-            { text: 'Core Data Diagnostics', link: '/reference/core-data-diag' },
             { text: 'Foundation Models Diagnostics', link: '/reference/foundation-models-diag' },
+            { text: 'Network.framework API', link: '/reference/network-framework-ref' },
             { text: 'Networking Diagnostics', link: '/reference/networking-diag' },
-            { text: 'SwiftUI Navigation Diagnostics', link: '/reference/swiftui-nav-diag' }
+            { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' }
           ]
         }
       ]
@@ -217,7 +239,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2025 Charles Wiltgen • v1.0.2'
+      copyright: 'Copyright © 2025 Charles Wiltgen • v1.0.3'
     }
   }
 })
