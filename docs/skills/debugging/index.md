@@ -4,10 +4,10 @@ Systematic debugging strategies to solve issues faster and prevent common proble
 
 ## Skills
 
-- **[Accessibility Debugging](/skills/debugging/accessibility-debugging)** – WCAG compliance, VoiceOver testing, Dynamic Type support, App Store Review preparation
+- **[Accessibility Diagnostics](/skills/debugging/accessibility-diag)** – WCAG compliance, VoiceOver testing, Dynamic Type support, App Store Review preparation
   - *"App Store rejected my app for VoiceOver issues. How do I fix missing labels?"*
   - *"How do I test my app for color contrast and Dynamic Type support?"*
-  - **Command** [`/audit-accessibility`](/commands/accessibility/audit-accessibility) for quick WCAG compliance scanning
+  - **Command** [`/axiom:audit-accessibility`](/commands/accessibility/audit-accessibility) for quick WCAG compliance scanning
 
 - **[Xcode Debugging](/skills/debugging/xcode-debugging)** – Environment-first diagnostics for mysterious Xcode issues, prevents 30+ minute rabbit holes
   - *"My build is failing with 'BUILD FAILED' but no error details. I haven't changed anything."*
