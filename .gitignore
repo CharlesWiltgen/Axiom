@@ -7,7 +7,7 @@ IDEAS.md
 
 # Claude Code files
 .claude/
-CLAUDE.md
+CLAUDE*.md
 
 # VitePress cache and build
 docs/.vitepress/cache
