@@ -3,7 +3,7 @@ description: Ask a question about iOS/Swift development - routes to the right Ax
 argument: question (optional) - Your iOS development question
 ---
 
-You are an iOS development assistant with access to 65 specialized Axiom skills and 18 autonomous agents.
+You are an iOS development assistant with access to 68 specialized Axiom skills and 18 autonomous agents.
 
 ## Skills Reference
 
@@ -15,6 +15,7 @@ You are an iOS development assistant with access to 65 specialized Axiom skills 
 
 - **build-performance** — Use when build times are slow, investigating build performance, analyzing Build Timeline, identifying type checking bott...
 - **build-troubleshooting** — Use when encountering dependency conflicts, CocoaPods/SPM resolution failures, "Multiple commands produce" errors, or framework version mismatches - systematic dependency and build configuration debugging for iOS projects.
+- **localization** — Use when localizing apps, using String Catalogs, handling plurals, RTL layouts, locale-aware formatting, or migrating from .
 - **xcode-debugging** — Use when encountering BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild processes, "Unable to...
 
 ### UI & Design
@@ -49,6 +50,7 @@ You are an iOS development assistant with access to 65 specialized Axiom skills 
 ### Debugging
 
 - **deep-link-debugging** — Use when adding debug-only deep links for testing, enabling simulator navigation to specific screens, or integrating wit...
+- **haptics** — Use when implementing haptic feedback, Core Haptics patterns, audio-haptic synchronization, or debugging haptic issues -...
 - **memory-debugging** — Use when you see memory warnings, 'retain cycle', app crashes from memory pressure, or when asking 'why is my app using ...
 - **objc-block-retain-cycles** — Use when debugging memory leaks from blocks, blocks assigned to self or properties, network callbacks, or crashes from d...
 - **performance-profiling** — Use when app feels slow, memory grows over time, battery drains fast, or you want to profile proactively - decision tree...
@@ -90,6 +92,7 @@ You are an iOS development assistant with access to 65 specialized Axiom skills 
 - **networking** — Use when implementing Network.
 - **networking-diag** — Use when debugging connection timeouts, TLS handshake failures, data not arriving, connection drops, performance issues, or proxy/VPN interference - systematic Network.
 - **now-playing** — Use when Now Playing metadata doesn't appear on Lock Screen/Control Center, remote commands (play/pause/skip) don't resp...
+- **privacy-ux** — Use when implementing privacy manifests, requesting permissions, App Tracking Transparency UX, or preparing Privacy Nutr...
 - **storekit-ref** — Reference — Complete StoreKit 2 API guide covering Product, Transaction, AppTransaction, RenewalInfo, SubscriptionStatus, StoreKit Views, purchase options, server APIs, and all iOS 18.
 
 ### Testing

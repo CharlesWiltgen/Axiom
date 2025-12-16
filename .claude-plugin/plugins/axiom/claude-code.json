@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -120,6 +120,10 @@
       "description": "Reference — Comprehensive Apple Human Interface Guidelines covering colors (semantic, custom, patterns), backgrounds (material hierarchy, dynamic), typography (built-in styles, custom fonts, Dynamic Type), SF Symbols (rendering modes, color, localization), Dark Mode, accessibility, and platform-specific considerations"
     },
     {
+      "name": "haptics",
+      "description": "Use when implementing haptic feedback, Core Haptics patterns, audio-haptic synchronization, or debugging haptic issues - covers UIFeedbackGenerator, CHHapticEngine, AHAP patterns, and Apple's Causality-Harmony-Utility design principles from WWDC 2021"
+    },
+    {
       "name": "in-app-purchases",
       "description": "Use when implementing in-app purchases, StoreKit 2, subscriptions, or transaction handling - testing-first workflow with .storekit configuration, StoreManager architecture, transaction verification, subscription management, and restore purchases for consumables, non-consumables, and auto-renewable subscriptions"
     },
@@ -130,6 +134,10 @@
     {
       "name": "liquid-glass-ref",
       "description": "Use when planning comprehensive Liquid Glass adoption across an app, auditing existing interfaces for Liquid Glass compatibility, implementing app icon updates, or understanding platform-specific Liquid Glass behavior - comprehensive reference guide covering all aspects of Liquid Glass adoption from WWDC 2025"
+    },
+    {
+      "name": "localization",
+      "description": "Use when localizing apps, using String Catalogs, handling plurals, RTL layouts, locale-aware formatting, or migrating from .strings files - comprehensive i18n patterns from WWDC 2023 for Xcode 15+"
     },
     {
       "name": "memory-debugging",
@@ -158,6 +166,10 @@
     {
       "name": "performance-profiling",
       "description": "Use when app feels slow, memory grows over time, battery drains fast, or you want to profile proactively - decision trees to choose the right Instruments tool, deep workflows for Time Profiler/Allocations/Core Data, and pressure scenarios for misinterpreting results"
+    },
+    {
+      "name": "privacy-ux",
+      "description": "Use when implementing privacy manifests, requesting permissions, App Tracking Transparency UX, or preparing Privacy Nutrition Labels - covers just-in-time permission requests, tracking domain management, and Required Reason APIs from WWDC 2023"
     },
     {
       "name": "realm-migration-ref",

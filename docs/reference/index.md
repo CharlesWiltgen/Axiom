@@ -17,6 +17,9 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**avfoundation-ref**](./avfoundation-ref) | AVFoundation audio APIs — AVAudioSession, AVAudioEngine, bit-perfect DAC output, iOS 26+ spatial audio capture, ASAF/APAC, Audio Mix |
 | [**core-spotlight-ref**](./core-spotlight-ref) | Core Spotlight indexing — CSSearchableItem, IndexedEntity, NSUserActivity integration, Spotlight search and prediction |
 | [**foundation-models-ref**](./foundation-models-ref) | Apple Intelligence Foundation Models framework — LanguageModelSession, @Generable, streaming, tool calling, context management (iOS 26+) |
+| [**haptics**](./haptics) | Haptic feedback and Core Haptics — UIFeedbackGenerator, CHHapticEngine, AHAP patterns, Causality-Harmony-Utility design principles (WWDC 2021) |
+| [**localization**](./localization) | App localization and i18n — String Catalogs (.xcstrings), plurals, RTL layouts, locale-aware formatting for Xcode 15+ |
+| [**privacy-ux**](./privacy-ux) | Privacy manifests and permission UX — just-in-time permissions, App Tracking Transparency, Required Reason APIs, Privacy Nutrition Labels |
 | [**swiftui-layout-ref**](./swiftui-layout-ref) | Complete SwiftUI adaptive layout API guide — ViewThatFits, AnyLayout, Layout protocol, onGeometryChange, size classes, iOS 26 window APIs |
 | [**storage-strategy**](./storage-strategy) | Complete iOS storage decision framework — database vs files, local vs cloud, SwiftData/CloudKit/iCloud Drive selection |
 | [**cloudkit-ref**](./cloudkit-ref) | Modern CloudKit sync — SwiftData integration, CKSyncEngine (WWDC 2023), database scopes, conflict resolution, monitoring |

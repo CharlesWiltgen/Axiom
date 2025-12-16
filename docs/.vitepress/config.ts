@@ -225,8 +225,11 @@ export default defineConfig({
             { text: 'Extensions & Widgets', link: '/reference/extensions-widgets-ref' },
             { text: 'Foundation Models', link: '/reference/foundation-models-ref' },
             { text: 'Foundation Models Diagnostics', link: '/reference/foundation-models-diag' },
+            { text: 'Haptics & Audio Feedback', link: '/reference/haptics' },
+            { text: 'Localization & Internationalization', link: '/reference/localization' },
             { text: 'Network.framework API', link: '/reference/network-framework-ref' },
             { text: 'Networking Diagnostics', link: '/reference/networking-diag' },
+            { text: 'Privacy UX Patterns', link: '/reference/privacy-ux' },
             { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' }
           ]
         }
@@ -239,7 +242,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2025 Charles Wiltgen • v1.0.5'
+      copyright: 'Copyright © 2025 Charles Wiltgen • v1.0.6'
     }
   }
 })
