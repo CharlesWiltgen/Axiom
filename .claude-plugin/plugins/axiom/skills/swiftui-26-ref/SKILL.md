@@ -25,6 +25,13 @@ Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, w
 - Implementing drag and drop with multiple items
 - Creating 3D charts with Chart3D
 - Adding widgets to visionOS or CarPlay
+- Customizing slider appearance for media controls
+- Creating sticky safe area bars with blur effects
+- Opening URLs in in-app browser
+- Using system-styled close and confirm buttons
+- Applying glass button styles (iOS 26.1+)
+- Controlling button sizing behavior
+- Implementing compact search toolbars
 
 ## System Requirements
 
@@ -147,6 +154,274 @@ Controls now have the new design automatically:
 - Sliders
 
 **Reference** "Build a SwiftUI app with the new design" (WWDC 2025) for adoption best practices and advanced customizations.
+
+---
+
+## New View Modifiers
+
+### sliderThumbVisibility
+
+#### Hide slider thumb for minimal interfaces
+
+```swift
+struct MediaControlView: View {
+    @State private var progress: CGFloat = 0.5
+
+    var body: some View {
+        Slider(value: $progress)
+            .sliderThumbVisibility(.hidden)
+            .padding(.horizontal, 16)
+    }
+}
+```
+
+**Use cases**
+- Media player progress indicators
+- Read-only value displays
+- Minimal UI designs where slider acts as progress view
+- Interactive sliders where visual focus should be on track, not thumb
+
+### safeAreaBar
+
+#### Sticky bars with progressive blur
+
+```swift
+struct ContentView: View {
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(1...20, id: \.self) { index in
+                    Text("\(index). Item")
+                }
+            }
+            .safeAreaBar(edge: .bottom) {
+                Text("Bottom Action Bar")
+                    .padding(.vertical, 15)
+            }
+            .scrollEdgeEffectStyle(.soft, for: .bottom)
+            // Alternative: .scrollEdgeEffectStyle(.hard, for: .bottom)
+        }
+    }
+}
+```
+
+**Features**
+- Works like `safeAreaInset` but with integrated blur
+- Progressive blur (`.soft`) or hard blur (`.hard`) via `scrollEdgeEffectStyle`
+- Automatically respects safe areas
+- Bar remains fixed while content scrolls beneath
+
+**Use cases**
+- Action bars that remain visible while scrolling
+- Fixed controls at screen edges
+- Bottom toolbars with scroll blur
+
+### onOpenURL Enhancement
+
+#### Open links in in-app browser
+
+```swift
+struct LinkView: View {
+    @Environment(\.openURL) var openURL
+
+    var body: some View {
+        let website = URL(string: "https://example.com")!
+
+        VStack {
+            // Old style - opens in Safari
+            Link(destination: website) {
+                Text("Open in Safari")
+            }
+
+            // New style - opens in-app (iOS 26+)
+            Button("Open In-App") {
+                openURL(website, prefersInApp: true)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+    }
+}
+```
+
+**Key difference**
+- Default `Link` opens in Safari app
+- `openURL(url, prefersInApp: true)` opens in SFSafariViewController-style in-app browser
+- Keeps users in your app
+- Preserves navigation flow
+
+### Button Roles (.close and .confirm)
+
+#### System-styled close and confirm buttons
+
+```swift
+struct ModalView: View {
+    @State private var showSheet = false
+
+    var body: some View {
+        Button("Show Sheet") {
+            showSheet.toggle()
+        }
+        .sheet(isPresented: $showSheet) {
+            NavigationStack {
+                VStack {}
+                    .navigationTitle("Info")
+                    .toolbar {
+                        ToolbarSpacer(.flexible, placement: .topBarTrailing)
+
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button(role: .close) {
+                                showSheet = false
+                            }
+                        }
+                    }
+            }
+            .presentationDetents([.medium])
+        }
+    }
+}
+```
+
+**Features**
+- `Button(role: .close)` renders as X icon with glass effect in toolbars
+- `Button(role: .confirm)` provides system-styled confirmation button
+- No custom label needed
+- Consistent with system modals and sheets
+
+**Use cases**
+- Modal dismissal
+- Sheet close buttons
+- Confirmation dialogs
+- Native-looking dismiss actions
+
+### GlassButtonStyle (iOS 26.1+)
+
+#### Glass button variations
+
+```swift
+struct GlassButtonExample: View {
+    var body: some View {
+        ZStack {
+            Image(.background)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .ignoresSafeArea()
+
+            VStack(spacing: 16) {
+                Button("Clear Glass") {}
+                    .buttonStyle(GlassButtonStyle(.clear))
+
+                Button("Regular Glass") {}
+                    .buttonStyle(GlassButtonStyle(.glass))
+
+                Button("Tinted Glass") {}
+                    .buttonStyle(GlassButtonStyle(.tint))
+                    .tint(.blue)
+            }
+            .fontWeight(.bold)
+            .foregroundStyle(.white)
+            .buttonSizing(.flexible)
+            .font(.title)
+            .padding()
+        }
+    }
+}
+```
+
+**Variants**
+- `.clear` — Transparent glass effect
+- `.glass` — Standard glass appearance
+- `.tint` — Colored glass (use with `.tint()` modifier)
+
+**Requires** iOS 26.1+ (not available in initial iOS 26.0 release)
+
+### buttonSizing
+
+#### Control button layout behavior
+
+```swift
+struct ButtonLayoutExample: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Button("Fit Content") {}
+                .buttonSizing(.fit)
+            // Button shrinks to label size
+
+            Button("Stretch Full Width") {}
+                .buttonSizing(.stretch)
+            // Button expands to fill available space
+
+            Button("Flexible") {}
+                .buttonSizing(.flexible)
+            // Balanced between fit and stretch
+        }
+        .padding()
+    }
+}
+```
+
+**Options**
+- `.fit` — Button fits label size
+- `.stretch` — Button fills available width
+- `.flexible` — Balanced sizing (context-dependent)
+
+**Works with**
+- Plain text buttons
+- Custom labels (icon + text, HStack/VStack)
+- All button styles
+
+### searchToolbarBehavior
+
+#### Compact search that expands on focus
+
+```swift
+struct SearchView: View {
+    @State private var searchText = ""
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Text("User 1")
+                Text("User 2")
+                Text("User 3")
+            }
+            .navigationTitle("Search Users")
+            .searchable(text: $searchText)
+            .searchToolbarBehavior(.minimize)
+            .toolbar {
+                ToolbarSpacer(.flexible, placement: .bottomBar)
+                DefaultToolbarItem(kind: .search, placement: .bottomBar)
+            }
+        }
+    }
+}
+```
+
+**Behavior**
+- `.minimize` — Search field compact when unfocused, expands on tap
+- Similar to Tab Bar search pattern
+- Saves toolbar space
+- Cleaner UI when search not in use
+
+**Use cases**
+- List/content-heavy screens
+- Crowded navigation bars
+- Tab bar style search on regular screens
+
+### searchPresentationToolbarBehavior (iOS 17.1+)
+
+#### Prevent title hiding during search
+
+```swift
+.searchable(text: $searchText)
+.searchPresentationToolbarBehavior(.avoidHidingContent)
+```
+
+**Behavior**
+- By default, navigation title hides when search becomes active
+- `.avoidHidingContent` keeps title visible during search
+- Maintains context while searching
+
+**Note** This modifier was introduced in iOS 17.1, not iOS 26, but complements the new `searchToolbarBehavior` modifier.
 
 ---
 
@@ -344,6 +619,8 @@ struct HikingRouteShape: Shape {
 - Delete manual `animatableData` property
 - Use `@AnimatableIgnored` for properties to exclude
 - SwiftUI automatically synthesizes animation data
+
+**Cross-reference** [SwiftUI Animation](/skills/ui-design/swiftui-animation-ref) — Comprehensive animation guide covering VectorArithmetic, Animatable protocol, @Animatable macro, animation types, Transaction system, and performance optimization
 
 ---
 
@@ -908,6 +1185,13 @@ Apps must support resizable windows on iPad.
 🔧 WebView for web content
 🔧 TextEditor with AttributedString binding
 🔧 Enhanced drag and drop with `.dragContainer`
+🔧 Slider thumb visibility (`.sliderThumbVisibility()`)
+🔧 Safe area bars with blur (`.safeAreaBar()` + `.scrollEdgeEffectStyle()`)
+🔧 In-app URL opening (`openURL(url, prefersInApp: true)`)
+🔧 Close and confirm button roles (`Button(role: .close)`)
+🔧 Glass button styles (`GlassButtonStyle` — iOS 26.1+)
+🔧 Button sizing control (`.buttonSizing()`)
+🔧 Compact search toolbar (`.searchToolbarBehavior(.minimize)`)
 
 ---
 

@@ -10,6 +10,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**realm-migration-ref**](./realm-migration-ref) | Complete migration guide from Realm to SwiftData — pattern equivalents, threading models, schema strategies, CloudKit sync transition |
 | [**network-framework-ref**](./network-framework-ref) | Comprehensive Network.framework API reference — NWConnection (iOS 12-25), NetworkConnection (iOS 26+), TLV framing, Coder protocol, migration strategies |
 | [**swiftui-26-ref**](./swiftui-26-ref) | All iOS 26 SwiftUI features — Liquid Glass, @Animatable macro, WebView, rich text, 3D charts, spatial layout, scene bridging |
+| [**swiftui-animation-ref**](./swiftui-animation-ref) | Complete SwiftUI animation reference — VectorArithmetic, Animatable protocol, @Animatable macro, springs vs timing curves, CustomAnimation, performance optimization (iOS 13-26) |
 | [**app-discoverability**](./app-discoverability) | Complete discoverability strategy — 6-step framework combining App Intents, App Shortcuts, Core Spotlight, NSUserActivity for Spotlight and Siri |
 | [**app-intents-ref**](./app-intents-ref) | App Intents framework for Siri, Apple Intelligence, Shortcuts, Spotlight — AppIntent, AppEntity, parameters, queries, debugging |
 | [**app-shortcuts-ref**](./app-shortcuts-ref) | App Shortcuts implementation guide — AppShortcutsProvider, suggested phrases, instant Siri/Spotlight availability, debugging |
