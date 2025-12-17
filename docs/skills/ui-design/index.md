@@ -9,7 +9,7 @@ Build beautiful, performant interfaces with expert guidance on the latest Apple 
   - *"What's the right background color for my list view?"*
   - *"How do I push back on design requests that violate HIG?"*
 
-- **[HIG Reference](/skills/ui-design/hig-ref)** – Comprehensive HIG coverage with code examples (color, typography, shapes, materials, accessibility, platform-specific)
+- **[HIG Reference](/reference/hig-ref)** – Comprehensive HIG coverage with code examples (color, typography, shapes, materials, accessibility, platform-specific)
   - *"What are Apple's semantic colors and when should I use them?"*
   - *"How do I implement Base vs Elevated backgrounds?"*
   - *"What's the concentricity principle for iOS 26 shape geometry?"*
@@ -25,7 +25,7 @@ Build beautiful, performant interfaces with expert guidance on the latest Apple 
 - **[SwiftUI Debugging](/skills/ui-design/swiftui-debugging)** – View updates, preview crashes, layout issues with Self._printChanges() debugging, @Observable patterns (iOS 17+), and view identity understanding
   - *"List item doesn't update even though the data changed."*
   - *"Preview keeps crashing with mysterious dependency errors."*
-  - **Advanced** [SwiftUI Debugging Diagnostics](/skills/debugging/swiftui-debugging-diag) for Instruments-based investigation
+  - **Advanced** [SwiftUI Debugging Diagnostics](/diagnostic/swiftui-debugging-diag) for Instruments-based investigation
 
 - **[UI Testing](/skills/ui-design/ui-testing)** – Recording UI Automation (Xcode 26) and condition-based waiting for reliable tests
   - *"Tests pass locally but fail in CI with no obvious reason."*

@@ -18,7 +18,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**core-spotlight-ref**](./core-spotlight-ref) | Core Spotlight indexing — CSSearchableItem, IndexedEntity, NSUserActivity integration, Spotlight search and prediction |
 | [**foundation-models-ref**](./foundation-models-ref) | Apple Intelligence Foundation Models framework — LanguageModelSession, @Generable, streaming, tool calling, context management (iOS 26+) |
 | [**haptics**](./haptics) | Haptic feedback and Core Haptics — UIFeedbackGenerator, CHHapticEngine, AHAP patterns, Causality-Harmony-Utility design principles (WWDC 2021) |
-| [**localization**](./localization) | App localization and i18n — String Catalogs (.xcstrings), plurals, RTL layouts, locale-aware formatting for Xcode 15+ |
+| [**localization**](./localization) | App localization and i18n — String Catalogs (.xcstrings), type-safe symbols (Xcode 26+), #bundle macro, plurals, RTL layouts, locale-aware formatting |
 | [**privacy-ux**](./privacy-ux) | Privacy manifests and permission UX — just-in-time permissions, App Tracking Transparency, Required Reason APIs, Privacy Nutrition Labels |
 | [**swiftui-layout-ref**](./swiftui-layout-ref) | Complete SwiftUI adaptive layout API guide — ViewThatFits, AnyLayout, Layout protocol, onGeometryChange, size classes, iOS 26 window APIs |
 | [**storage-strategy**](./storage-strategy) | Complete iOS storage decision framework — database vs files, local vs cloud, SwiftData/CloudKit/iCloud Drive selection |
@@ -29,17 +29,6 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**textkit-ref**](./textkit-ref) | TextKit 2 complete reference — architecture, migration from TextKit 1, Writing Tools integration, SwiftUI TextEditor support (iOS 26) |
 | [**typography-ref**](./typography-ref) | Apple platform typography — San Francisco fonts, text styles, Dynamic Type, tracking, leading, internationalization best practices |
 
-## Diagnostic Skills
-
-| Skill | Description |
-|-------|-------------|
-| [**accessibility-diag**](./accessibility-diag) | VoiceOver, Dynamic Type, color contrast, touch targets — WCAG compliance with App Store rejection defense |
-| [**cloud-sync-diag**](./cloud-sync-diag) | CloudKit errors, iCloud Drive sync failures, quota exceeded — systematic cloud sync diagnostics with production crisis defense |
-| [**core-data-diag**](./core-data-diag) | Schema migrations, thread-confinement, N+1 queries — Core Data diagnostics with production crisis defense |
-| [**foundation-models-diag**](./foundation-models-diag) | Context exceeded, guardrail violations, slow generation — Foundation Models diagnostics with production crisis defense |
-| [**networking-diag**](./networking-diag) | Connection timeouts, TLS failures, data arrival issues — Network.framework diagnostics with production crisis defense |
-| [**storage-diag**](./storage-diag) | Files disappeared, backup too large, file access errors — systematic local storage diagnostics with production crisis defense |
-
 ## Quality Standards
 
 All reference skills are reviewed against 4 criteria:
@@ -49,10 +38,9 @@ All reference skills are reviewed against 4 criteria:
 3. **Clarity** — Examples first, scannable structure, jargon defined
 4. **Practical Value** — Copy-paste ready, expert checklists, real-world impact
 
-Diagnostic skills add mandatory workflows and pressure scenario defense for production crisis situations.
-
 ## Related Resources
 
+- [Diagnostic](/diagnostic/) — Systematic diagnostics with mandatory workflows
 - [Skills](/skills/) — Discipline-enforcing TDD-tested workflows
 - [Commands](/commands/) — Quick automated scans
 - [WWDC 2025 Sessions](https://developer.apple.com/videos/wwdc2025)

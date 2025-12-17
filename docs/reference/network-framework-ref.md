@@ -225,7 +225,7 @@ This reference includes:
 ## Related Resources
 
 - [networking](/skills/integration/networking) — Discipline-enforcing skill with anti-patterns
-- [networking-diag](/reference/networking-diag) — Systematic troubleshooting
+- [networking-diag](/diagnostic/networking-diag) — Systematic troubleshooting
 - [audit-networking](/commands/integration/audit-networking) — Deprecated API scanner
 - [WWDC 2018/715](https://developer.apple.com/videos/play/wwdc2018/715/) — NWConnection introduction
 - [WWDC 2025/250](https://developer.apple.com/videos/play/wwdc2025/250/) — NetworkConnection with structured concurrency

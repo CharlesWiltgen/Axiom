@@ -110,7 +110,7 @@ Use this reference when:
 
 - [swiftdata](/skills/persistence/swiftdata) — SwiftData implementation patterns
 - [database-migration](/skills/persistence/database-migration) — Safe schema evolution
-- [core-data-diag](/reference/core-data-diag) — Core Data troubleshooting (if considering Core Data instead)
+- [core-data-diag](/diagnostic/core-data-diag) — Core Data troubleshooting (if considering Core Data instead)
 
 ## Documentation Scope
 

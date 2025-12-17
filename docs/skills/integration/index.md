@@ -32,7 +32,7 @@ Network.framework patterns for custom protocols:
 
 ---
 
-### [App Intents Integration](./app-intents-ref)
+### [App Intents Integration](/reference/app-intents-ref)
 
 Comprehensive guide to the App Intents framework for exposing app functionality to:
 - **Siri & Apple Intelligence** — Voice commands and intelligent automation

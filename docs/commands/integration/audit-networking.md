@@ -201,7 +201,7 @@ Most issues fixable quickly:
 ## Related Resources
 
 - [networking](/skills/integration/networking) — Patterns for each anti-pattern
-- [networking-diag](/reference/networking-diag) — Troubleshooting guide
+- [networking-diag](/diagnostic/networking-diag) — Troubleshooting guide
 - [network-framework-ref](/reference/network-framework-ref) — Complete API reference
 
 ## Command Scope

@@ -136,5 +136,5 @@ struct SearchTool: Tool {
 ## Related Resources
 
 - [foundation-models-ref](/reference/foundation-models-ref) — Complete API reference
-- [foundation-models-diag](/reference/foundation-models-diag) — Troubleshooting
+- [foundation-models-diag](/diagnostic/foundation-models-diag) — Troubleshooting
 - [WWDC 2025/286](https://developer.apple.com/videos/play/wwdc2025/286/) — Introduction

@@ -70,7 +70,7 @@ The command will:
 2. Scan for the 5 issue categories above
 3. Report findings with `file:line` references
 4. Prioritize by severity (Critical → Low)
-5. Link to relevant sections in the [core-data-diag](/reference/core-data-diag) skill
+5. Link to relevant sections in the [core-data-diag](/diagnostic/core-data-diag) skill
 
 ## Example Output
 
@@ -96,7 +96,7 @@ After running the audit:
 2. **Review Medium issues** — Address before next release
 3. **Document Low issues** — Add to technical debt backlog
 
-For detailed fix guidance, use the [core-data-diag](/reference/core-data-diag) skill:
+For detailed fix guidance, use the [core-data-diag](/diagnostic/core-data-diag) skill:
 
 ```
 "How do I fix these Core Data migration issues?"

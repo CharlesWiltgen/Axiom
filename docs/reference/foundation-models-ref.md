@@ -158,7 +158,7 @@ do {
 ## Related Resources
 
 - [foundation-models](/skills/integration/foundation-models) — Discipline-enforcing skill with anti-patterns
-- [foundation-models-diag](/reference/foundation-models-diag) — Systematic troubleshooting
+- [foundation-models-diag](/diagnostic/foundation-models-diag) — Systematic troubleshooting
 - [WWDC 2025/286](https://developer.apple.com/videos/play/wwdc2025/286/) — Introducing Foundation Models
 - [WWDC 2025/259](https://developer.apple.com/videos/play/wwdc2025/259/) — Build intelligent apps
 - [WWDC 2025/301](https://developer.apple.com/videos/play/wwdc2025/301/) — Advanced Foundation Models

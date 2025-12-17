@@ -1,8 +1,9 @@
 ---
 name: localization
-description: Use when localizing apps, using String Catalogs, handling plurals, RTL layouts, locale-aware formatting, or migrating from .strings files - comprehensive i18n patterns for Xcode 15+
+description: Use when localizing apps, using String Catalogs, generating type-safe symbols (Xcode 26+), handling plurals, RTL layouts, locale-aware formatting, or migrating from .strings files - comprehensive i18n patterns for Xcode 15-26
 skill_type: reference
-version: 1.0
+version: 1.1.0
+last_updated: 2025-12-16
 ---
 
 # Localization & Internationalization
@@ -23,6 +24,7 @@ This reference covers modern localization patterns for iOS apps:
 ## System Requirements
 
 - **Xcode 15+** for String Catalogs (.xcstrings)
+- **Xcode 26+** for automatic symbol generation and #bundle macro
 - **iOS 15+** for LocalizedStringResource (recommended)
 - **iOS 13+** for basic LocalizedStringKey support
 
@@ -250,6 +252,38 @@ Xcode 15+ can automatically convert legacy files:
 
 ---
 
+## Xcode 26 Type-Safe Localization
+
+Xcode 26 introduces type-safe localization with generated symbols that catch typos at compile time.
+
+### Generated Symbols
+
+Manually add strings to String Catalog, enable "Generate String Catalog Symbols" build setting, and use type-safe symbols:
+
+```swift
+// ✅ Type-safe - compiler catches typos
+Text(.appHomeScreenTitle)
+Text(.subtitle(friendsPosts: 42))  // With placeholders
+```
+
+### Automatic Comments
+
+Xcode 26 uses on-device AI to generate translator context automatically. Enable in Xcode Settings → Editing → "automatically generate string catalog comments".
+
+### Swift Package Localization
+
+Use the `#bundle` macro for automatic bundle resolution in Swift Packages and frameworks:
+
+```swift
+Text("My Collections", bundle: #bundle, comment: "Section title")
+```
+
+### Refactoring
+
+Convert string-based localization to symbols: Right-click → "Refactor > Convert Strings to Symbols"
+
+---
+
 ## App Shortcuts Localization
 
 For App Intents and Shortcuts:
@@ -271,6 +305,7 @@ String Catalogs automatically extract App Intent strings.
 
 ## WWDC Sessions
 
+- [Explore localization with Xcode (2025/225)](https://developer.apple.com/videos/play/wwdc2025/225/) — Xcode 26 type-safe symbols, #bundle macro
 - [Discover String Catalogs (2023/10155)](https://developer.apple.com/videos/play/wwdc2023/10155/) — Modern localization with .xcstrings
 
 ## Related Skills

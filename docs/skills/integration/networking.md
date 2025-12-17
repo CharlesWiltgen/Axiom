@@ -227,7 +227,7 @@ Before shipping:
 
 ## Related Resources
 
-- [networking-diag](/reference/networking-diag) — Systematic troubleshooting
+- [networking-diag](/diagnostic/networking-diag) — Systematic troubleshooting
 - [network-framework-ref](/reference/network-framework-ref) — Complete API reference
 - [audit-networking](/commands/integration/audit-networking) — Deprecated API scanner
 - [WWDC 2018/715](https://developer.apple.com/videos/play/wwdc2018/715/)

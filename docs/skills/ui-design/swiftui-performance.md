@@ -158,7 +158,7 @@ These lanes are covered in detail in the next section.
 
 **No code changes required** — rebuild with iOS 26 SDK to get these improvements.
 
-**Cross-reference** [SwiftUI 26 Features](/skills/ui-design/swiftui-26-ref) — Comprehensive guide to all iOS 26 SwiftUI changes
+**Cross-reference** [SwiftUI 26 Features](/reference/swiftui-26-ref) — Comprehensive guide to all iOS 26 SwiftUI changes
 
 ---
 

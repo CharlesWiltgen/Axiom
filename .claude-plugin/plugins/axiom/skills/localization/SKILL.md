@@ -1,8 +1,9 @@
 ---
 name: localization
-description: Use when localizing apps, using String Catalogs, handling plurals, RTL layouts, locale-aware formatting, or migrating from .strings files - comprehensive i18n patterns from WWDC 2023 for Xcode 15+
+description: Use when localizing apps, using String Catalogs, generating type-safe symbols (Xcode 26+), handling plurals, RTL layouts, locale-aware formatting, or migrating from .strings files - comprehensive i18n patterns for Xcode 15-26
 skill_type: reference
-version: 1.0.0
+version: 1.1.0
+last_updated: 2025-12-16
 ---
 
 # Localization & Internationalization
@@ -29,6 +30,7 @@ This skill covers String Catalogs, SwiftUI/UIKit localization APIs, plural handl
 ## System Requirements
 
 - **Xcode 15+** for String Catalogs (`.xcstrings`)
+- **Xcode 26+** for automatic symbol generation, `#bundle` macro, and AI-powered comment generation
 - **iOS 15+** for `LocalizedStringResource`
 - **iOS 16+** for App Shortcuts localization
 - Earlier iOS versions use legacy `.strings` files
@@ -755,12 +757,342 @@ Text(String.localizedStringWithFormat(NSLocalizedString("%d items", comment: "")
 1. Build Settings → "Localization Prefers String Catalogs" → Yes
 2. Export Localizations again
 
+### Generated symbols not appearing (Xcode 26+)
+
+**Cause 1**: Build setting not enabled
+
+**Solution**:
+1. Build Settings → "Generate String Catalog Symbols" → Yes
+2. Clean Build Folder (Cmd+Shift+K)
+3. Rebuild project
+
+**Cause 2**: String not manually added to catalog
+
+**Solution**: Symbols only generate for manually-added strings (+ button in String Catalog). Auto-extracted strings don't generate symbols.
+
+### #bundle macro not working (Xcode 26+)
+
+**Cause**: Wrong syntax or missing import
+
+**Solution**:
+```swift
+import Foundation  // Required for #bundle
+Text("My Collections", bundle: #bundle, comment: "Section title")
+```
+
+Verify you're using `#bundle` not `.module`.
+
+### Refactoring to symbols fails (Xcode 26+)
+
+**Cause 1**: String not in String Catalog
+1. Ensure string exists in `.xcstrings` file
+2. Build project to refresh catalog
+3. Try refactoring again
+
+**Cause 2**: Build setting not enabled
+- Enable "Generate String Catalog Symbols" in Build Settings
+- Clean and rebuild
+
+---
+
+## Part 10: Xcode 26 Localization Enhancements
+
+Xcode 26 introduces type-safe localization with generated symbols, automatic comment generation using on-device AI, and improved Swift Package support with the `#bundle` macro. Based on WWDC 2025 session 225 "Explore localization with Xcode".
+
+### Generated Symbols (Type-Safe Localization)
+
+**The problem**: String-based localization fails silently when typos occur.
+
+```swift
+// ❌ Typo - fails silently at runtime
+Text("App.HomeScren.Title")  // Missing 'e' in Screen
+```
+
+**The solution**: Xcode 26 generates type-safe symbols from manually-added strings.
+
+#### How It Works
+
+1. **Add strings manually** to String Catalog using the + button
+2. **Enable build setting**: "Generate String Catalog Symbols" (ON by default in new projects)
+3. **Use symbols** instead of strings
+
+```swift
+// ✅ Type-safe - compiler catches typos
+Text(.appHomeScreenTitle)
+```
+
+#### Symbol Generation Rules
+
+| String Type | Generated Symbol Type | Usage Example |
+|-------------|----------------------|---------------|
+| No placeholders | Static property | `Text(.introductionTitle)` |
+| With placeholders | Function with labeled arguments | `.subtitle(friendsPosts: 42)` |
+
+**Key naming conversion**:
+- `App.HomeScreen.Title` → `.appHomeScreenTitle`
+- Periods removed, camel-cased
+- Available on `LocalizedStringResource`
+
+#### Code Examples
+
+```swift
+// SwiftUI views
+struct ContentView: View {
+    var body: some View {
+        NavigationStack {
+            Text(.introductionTitle)
+                .navigationSubtitle(.subtitle(friendsPosts: 42))
+        }
+    }
+}
+
+// Foundation String
+let message = String(localized: .curatedCollection)
+
+// Custom views with LocalizedStringResource
+struct CollectionDetailEditingView: View {
+    let title: LocalizedStringResource
+
+    init(title: LocalizedStringResource) {
+        self.title = title
+    }
+
+    var body: some View {
+        Text(title)
+    }
+}
+
+CollectionDetailEditingView(title: .editingTitle)
+```
+
+---
+
+### Automatic Comment Generation
+
+Xcode 26 uses an **on-device model** to automatically generate contextual comments for localizable strings.
+
+#### Enabling the Feature
+
+1. Open Xcode Settings → Editing
+2. Enable "automatically generate string catalog comments"
+3. New strings added to code automatically receive generated comments
+
+#### Example
+
+For a button string, Xcode generates:
+
+> "The text label on a button to cancel the deletion of a collection"
+
+This context helps translators understand where and how the string is used.
+
+#### XLIFF Export
+
+Auto-generated comments are marked in exported XLIFF files:
+
+```xml
+<trans-unit id="Grand Canyon" xml:space="preserve">
+    <source>Grand Canyon</source>
+    <target state="new">Grand Canyon</target>
+    <note from="auto-generated">Suggestion for searching landmarks</note>
+</trans-unit>
+```
+
+**Benefits**:
+- Saves developer time writing translator context
+- Provides consistent, clear descriptions
+- Improves translation quality
+
+---
+
+### Swift Package & Framework Localization
+
+#### The Problem
+
+SwiftUI uses the `.main` bundle by default. Swift Packages and frameworks need to reference their own bundle:
+
+```swift
+// ❌ Wrong - uses main bundle, strings not found
+Text("My Collections", comment: "Section title")
+```
+
+#### The Solution: #bundle Macro (NEW in Xcode 26)
+
+The `#bundle` macro automatically references the correct bundle for the current target:
+
+```swift
+// ✅ Correct - automatically uses package/framework bundle
+Text("My Collections", bundle: #bundle, comment: "Section title")
+```
+
+**Key advantages**:
+- Works in main app, frameworks, and Swift Packages
+- Backwards-compatible with older OS versions
+- Eliminates manual `.module` bundle management
+
+#### With Custom Table Names
+
+```swift
+// Main app
+Text("My Collections",
+     tableName: "Discover",
+     comment: "Section title")
+
+// Framework or Swift Package
+Text("My Collections",
+     tableName: "Discover",
+     bundle: #bundle,
+     comment: "Section title")
+```
+
+---
+
+### Custom Table Symbol Access
+
+When using multiple String Catalogs for organization:
+
+#### Default "Localizable" Table
+
+Symbols are directly accessible on `LocalizedStringResource`:
+
+```swift
+Text(.welcomeMessage)  // From Localizable.xcstrings
+```
+
+**Note**: Xcode automatically resolves symbols from the default "Localizable" table. Explicit table selection is rarely needed—use it only for debugging or testing specific catalogs.
+
+#### Custom Tables
+
+Symbols are nested in the table namespace:
+
+```swift
+// From Discover.xcstrings
+Text(Discover.featuredCollection)
+
+// From Settings.xcstrings
+Text(Settings.privacyPolicy)
+```
+
+**Organization strategy for large apps**:
+- **Localizable.xcstrings** - Core app strings
+- **FeatureName.xcstrings** - Feature-specific strings (e.g., Onboarding, Settings, Discover)
+- Benefits: Easier to manage, clearer ownership, better XLIFF organization
+
+---
+
+### Two Localization Workflows
+
+Xcode 26 supports two complementary workflows:
+
+#### Workflow 1: String Extraction (Recommended for new projects)
+
+**Process**:
+1. Write strings directly in code
+2. Use SwiftUI views (`Text`, `Button`) and `String(localized:)`
+3. Xcode automatically extracts to String Catalog
+4. Leverage automatic comment generation
+
+**Pros**: Simple initial setup, immediate start
+
+**Cons**: Less control over string organization
+
+```swift
+// ✅ String extraction workflow
+Text("Welcome to WWDC!", comment: "Main welcome message")
+```
+
+#### Workflow 2: Generated Symbols (Recommended as complexity grows)
+
+**Process**:
+1. Manually add strings to String Catalog
+2. Reference via type-safe symbols
+3. Organize into custom tables
+
+**Pros**: Better control, type safety, easier to maintain across frameworks
+
+**Cons**: Requires planning string catalog structure upfront
+
+```swift
+// ✅ Generated symbols workflow
+Text(.welcomeMessage)
+```
+
+| Workflow | Best For | Trade-offs |
+|----------|----------|------------|
+| String Extraction | New projects, simple apps, prototyping | Automatic extraction, less control over organization |
+| Generated Symbols | Large apps, frameworks, multiple teams | Type safety, better organization, requires upfront planning |
+
+---
+
+### Refactoring Between Workflows
+
+Xcode 26 allows converting between workflows without manual rewriting.
+
+#### Converting Strings to Symbols
+
+1. **Right-click** on a string literal in code
+2. Select **"Refactor > Convert Strings to Symbols"**
+3. **Preview** all affected locations
+4. **Customize** symbol names before confirming
+5. **Apply** to entire table or individual strings
+
+**Example**:
+
+```swift
+// Before
+Text("Welcome to WWDC!", comment: "Main welcome message")
+
+// After refactoring
+Text(.welcomeToWWDC)
+```
+
+**Benefits**:
+- Batch conversion of entire String Catalogs
+- Preview changes before applying
+- Maintain localization without code rewrites
+
+---
+
+### Implementation Checklist
+
+After adopting Xcode 26 generated symbols, verify:
+
+**Build Configuration:**
+- [ ] "Generate String Catalog Symbols" build setting enabled
+- [ ] Project builds without "Cannot find 'symbolName' in scope" errors
+- [ ] Clean build succeeds (Cmd+Shift+K, then Cmd+B)
+
+**String Catalog Setup:**
+- [ ] Strings manually added to catalog using + button (not auto-extracted)
+- [ ] Symbol names follow conventions (camelCase, no periods)
+- [ ] Custom tables organized by feature (if using multiple catalogs)
+
+**Swift Package Integration:**
+- [ ] All `Text()` and `String(localized:)` calls in packages use `bundle: #bundle`
+- [ ] Import Foundation added where `#bundle` is used
+- [ ] Tested package builds independently and as dependency
+
+**Refactoring & Migration:**
+- [ ] Tested refactoring tool on sample strings
+- [ ] Preview showed expected changes before applying
+- [ ] Old string-based calls still work during transition period
+
+**Optional Features:**
+- [ ] Automatic comment generation enabled in Xcode Settings → Editing (optional)
+- [ ] Tested AI-generated comments for accuracy
+- [ ] XLIFF export includes auto-generated comments
+
+**Testing:**
+- [ ] Symbols resolve correctly in SwiftUI previews
+- [ ] Localization works across all supported languages
+- [ ] App runs on minimum supported iOS version
+
 ---
 
 ## Related Resources
 
 ### WWDC Sessions
-- [Discover String Catalogs (2023/10155)](https://developer.apple.com/videos/play/wwdc2023/10155/)
+- [Explore localization with Xcode (2025/225)](https://developer.apple.com/videos/play/wwdc2025/225/) — Xcode 26 features: generated symbols, #bundle macro, automatic comments
+- [Discover String Catalogs (2023/10155)](https://developer.apple.com/videos/play/wwdc2023/10155/) — String Catalog fundamentals
 - [Build global apps: Localization by example (2022/10110)](https://developer.apple.com/videos/play/wwdc2022/10110/)
 
 ### Documentation

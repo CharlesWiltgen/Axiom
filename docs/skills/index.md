@@ -7,19 +7,19 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | Skill | When to Use |
 |-------|-------------|
 | [**hig**](/skills/ui-design/hig) | Quick design decisions, HIG compliance checklists, defending design choices |
-| [**hig-ref**](/skills/ui-design/hig-ref) | Comprehensive HIG reference with code examples and best practices |
+| [**hig-ref**](/reference/hig-ref) | Comprehensive HIG reference with code examples and best practices |
 | [**liquid-glass**](/skills/ui-design/liquid-glass) | Implementing Liquid Glass effects, debugging visual artifacts, design review pressure |
 | [**liquid-glass-ref**](/reference/liquid-glass-ref) | Complete Liquid Glass adoption guide (icons, controls, navigation, windows) |
 | [**swiftui-architecture**](/skills/ui-design/swiftui-architecture) | Separating logic from views, choosing architecture patterns (MVVM, TCA, Coordinator) |
 | [**swiftui-performance**](/skills/ui-design/swiftui-performance) | App feels sluggish, animations stutter, SwiftUI Instrument profiling |
 | [**swiftui-debugging**](/skills/ui-design/swiftui-debugging) | View doesn't update, preview crashes, layout issues |
-| [**swiftui-debugging-diag**](/skills/debugging/swiftui-debugging-diag) | Systematic SwiftUI debugging, intermittent issues, complex state dependencies |
+| [**swiftui-debugging-diag**](/diagnostic/swiftui-debugging-diag) | Systematic SwiftUI debugging, intermittent issues, complex state dependencies |
 | [**swiftui-gestures**](/skills/ui-design/swiftui-gestures) | Implementing tap, drag, long press, magnification, rotation gestures |
 | [**swiftui-layout**](/skills/ui-design/swiftui-layout) | Adaptive layouts, iPad multitasking, iOS 26 free-form windows |
 | [**swiftui-layout-ref**](/reference/swiftui-layout-ref) | ViewThatFits, AnyLayout, Layout protocol, iOS 26 window APIs |
 | [**swiftui-nav**](/skills/ui-design/swiftui-nav) | NavigationStack vs NavigationSplitView, deep links, coordinator patterns |
-| [**swiftui-nav-diag**](/skills/ui-design/swiftui-nav-diag) | Navigation not responding, unexpected pops, deep link failures |
-| [**swiftui-nav-ref**](/skills/ui-design/swiftui-nav-ref) | Comprehensive SwiftUI navigation API reference (iOS 16-26) |
+| [**swiftui-nav-diag**](/diagnostic/swiftui-nav-diag) | Navigation not responding, unexpected pops, deep link failures |
+| [**swiftui-nav-ref**](/reference/swiftui-nav-ref) | Comprehensive SwiftUI navigation API reference (iOS 16-26) |
 | [**swiftui-26-ref**](/reference/swiftui-26-ref) | iOS 26 SwiftUI: Liquid Glass, WebView, AttributedString rich text, 3D charts |
 | [**textkit-ref**](/reference/textkit-ref) | TextKit 2 architecture, migration, Writing Tools support |
 | [**typography-ref**](/reference/typography-ref) | San Francisco fonts, text styles, Dynamic Type, tracking, leading |
@@ -29,11 +29,11 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 
 | Skill | When to Use |
 |-------|-------------|
-| [**accessibility-diag**](/reference/accessibility-diag) | VoiceOver issues, Dynamic Type violations, WCAG compliance, App Store Review prep |
+| [**accessibility-diag**](/diagnostic/accessibility-diag) | VoiceOver issues, Dynamic Type violations, WCAG compliance, App Store Review prep |
 | [**auto-layout-debugging**](/skills/debugging/auto-layout-debugging) | Constraint conflicts, ambiguous layout warnings, Auto Layout errors |
 | [**build-performance**](/skills/debugging/build-performance) | Slow builds, type checking bottlenecks, analyzing Build Timeline |
 | [**build-troubleshooting**](/skills/debugging/build-troubleshooting) | Dependency conflicts, CocoaPods/SPM failures |
-| [**core-data-diag**](/reference/core-data-diag) | Schema migration crashes, thread-confinement errors, N+1 query performance |
+| [**core-data-diag**](/diagnostic/core-data-diag) | Schema migration crashes, thread-confinement errors, N+1 query performance |
 | [**deep-link-debugging**](/skills/debugging/deep-link-debugging) | Debug-only deep links for testing, simulator navigation, automated testing |
 | [**memory-debugging**](/skills/debugging/memory-debugging) | Memory leaks, retain cycles, progressive memory growth |
 | [**objc-block-retain-cycles**](/skills/debugging/objc-block-retain-cycles) | Block memory leaks, weak-strong patterns |
@@ -51,7 +51,7 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | Skill | When to Use |
 |-------|-------------|
 | [**cloudkit-ref**](/reference/cloudkit-ref) | CloudKit sync, CKSyncEngine, CKRecord, shared database, conflict resolution |
-| [**cloud-sync-diag**](/reference/cloud-sync-diag) | File not syncing, CloudKit errors, sync conflicts, iCloud upload failures |
+| [**cloud-sync-diag**](/diagnostic/cloud-sync-diag) | File not syncing, CloudKit errors, sync conflicts, iCloud upload failures |
 | [**codable**](/skills/persistence/codable) | JSON encoding/decoding, Codable conformance, handling decode errors, date strategies |
 | [**database-migration**](/skills/persistence/database-migration) | Adding database columns, schema changes, migration errors |
 | [**file-protection-ref**](/reference/file-protection-ref) | FileProtectionType, file encryption, data protection, secure storage |
@@ -59,12 +59,12 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**icloud-drive-ref**](/reference/icloud-drive-ref) | iCloud Drive, ubiquitous containers, NSFileCoordinator, file sync |
 | [**realm-migration-ref**](/reference/realm-migration-ref) | Migrating from Realm to SwiftData (Device Sync sunset Sept 2025) |
 | [**sqlitedata**](/skills/persistence/sqlitedata) | SQLiteData patterns, batch imports, CloudKit sync |
-| [**storage-diag**](/reference/storage-diag) | Files disappeared, data missing, backup too large, file not found |
+| [**storage-diag**](/diagnostic/storage-diag) | Files disappeared, data missing, backup too large, file not found |
 | [**storage-management-ref**](/reference/storage-management-ref) | Purge files, storage pressure, isExcludedFromBackup, cache management |
 | [**storage-strategy**](/reference/storage-strategy) | Where to store data, SwiftData vs files, CloudKit vs iCloud Drive |
 | [**swiftdata**](/skills/persistence/swiftdata) | @Model, @Query, CloudKit integration |
 | [**swiftdata-migration**](/skills/persistence/swiftdata-migration) | SwiftData custom schema migrations, relationship preservation |
-| [**swiftdata-migration-diag**](/skills/debugging/swiftdata-migration-diag) | Migration crashes, relationship errors, device vs simulator failures |
+| [**swiftdata-migration-diag**](/diagnostic/swiftdata-migration-diag) | Migration crashes, relationship errors, device vs simulator failures |
 | [**swiftdata-to-sqlitedata**](/skills/persistence/swiftdata-to-sqlitedata) | Migrating from SwiftData to SQLiteData |
 
 ### Integration
@@ -78,16 +78,16 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**avfoundation-ref**](/reference/avfoundation-ref) | AVAudioSession, AVAudioEngine, bit-perfect DAC output, iOS 26+ spatial audio capture |
 | [**core-spotlight-ref**](/reference/core-spotlight-ref) | Core Spotlight search, NSUserActivity, CSSearchableItem, IndexedEntity |
 | [**extensions-widgets**](/skills/integration/extensions-widgets) | Implementing widgets, Live Activities, Control Center controls |
-| [**extensions-widgets-ref**](/skills/integration/extensions-widgets-ref) | Complete WidgetKit/ActivityKit API reference |
+| [**extensions-widgets-ref**](/reference/extensions-widgets-ref) | Complete WidgetKit/ActivityKit API reference |
 | [**foundation-models**](/skills/integration/foundation-models) | On-device AI with Apple's Foundation Models framework (iOS 26+) |
-| [**foundation-models-diag**](/reference/foundation-models-diag) | Foundation Models troubleshooting (context exceeded, guardrails, slow generation) |
+| [**foundation-models-diag**](/diagnostic/foundation-models-diag) | Foundation Models troubleshooting (context exceeded, guardrails, slow generation) |
 | [**foundation-models-ref**](/reference/foundation-models-ref) | Complete Foundation Models API reference with WWDC examples |
 | [**in-app-purchases**](/skills/integration/in-app-purchases) | StoreKit 2 implementation, subscriptions, transaction handling |
 | [**network-framework-ref**](/reference/network-framework-ref) | Network.framework API reference (iOS 12-26+), TLV framing, Wi-Fi Aware |
 | [**networking**](/skills/integration/networking) | Implementing UDP/TCP connections, migrating from sockets, debugging connection failures |
-| [**networking-diag**](/reference/networking-diag) | Connection timeouts, TLS failures, data not arriving, performance issues |
+| [**networking-diag**](/diagnostic/networking-diag) | Connection timeouts, TLS failures, data not arriving, performance issues |
 | [**now-playing**](/skills/integration/now-playing) | Now Playing metadata, Lock Screen/Control Center integration, remote commands |
-| [**storekit-ref**](/skills/integration/storekit-ref) | Complete StoreKit 2 API reference with iOS 18.4 enhancements |
+| [**storekit-ref**](/reference/storekit-ref) | Complete StoreKit 2 API reference with iOS 18.4 enhancements |
 
 ### Testing
 
