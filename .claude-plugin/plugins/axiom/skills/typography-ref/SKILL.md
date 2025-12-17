@@ -243,6 +243,137 @@ let descriptor = CTFontDescriptorCreateWithAttributes(attributes as CFDictionary
 let font = CTFontCreateWithFontDescriptor(descriptor, pointSize, nil)
 ```
 
+## SwiftUI AttributedString Typography
+
+### Font Environment Interaction
+
+**Critical Pattern** When using `AttributedString` with SwiftUI's `Text`, paragraph styles (like `lineHeightMultiple`) can be lost if fonts come from the environment instead of the attributed content.
+
+From WWDC 2025-280:
+> "TextEditor substitutes the default value calculated from the environment for any AttributedStringKeys with a value of nil."
+
+This same principle applies to `Text`—when your `AttributedString` doesn't specify a font, SwiftUI applies the environment font, which can cause it to rebuild text runs and drop or normalize paragraph style details.
+
+### The Problem
+
+```swift
+// ❌ WRONG - .font() modifier can override and drop paragraph styles
+var s = AttributedString(longString)
+
+// Set paragraph style
+var p = AttributedString.ParagraphStyle()
+p.lineHeightMultiple = 0.92
+s.paragraphStyle = p
+// ⚠️ No font set in AttributedString
+
+Text(s)
+    .font(.body) // ⚠️ May rebuild runs, lose lineHeightMultiple
+```
+
+**Why this fails:**
+1. `AttributedString` has no font attribute set (value is `nil`)
+2. SwiftUI's `.font(.body)` modifier tells it "use this font for the whole run"
+3. SwiftUI rebuilds text runs with the environment font
+4. Paragraph styles get dropped or normalized during rebuild
+
+### The Solution
+
+**Keep typography inside the AttributedString when you need fine control:**
+
+```swift
+// ✅ CORRECT - Font in AttributedString, no environment override
+var s = AttributedString(longString)
+
+// Set font INSIDE the attributed content
+s.font = .system(.body) // ✅ Typography inside AttributedString
+
+// Set paragraph style
+var p = AttributedString.ParagraphStyle()
+p.lineHeightMultiple = 0.92
+s.paragraphStyle = p
+
+Text(s) // ✅ No .font() modifier
+```
+
+**Why this works:**
+1. Font is part of the attributed content (not `nil`)
+2. No environment override from `.font()` modifier
+3. SwiftUI preserves both font AND paragraph styles
+4. Text runs remain intact with all attributes
+
+### When to Use Each Approach
+
+#### Use Font in AttributedString (Fine Control)
+
+```swift
+var s = AttributedString("Carefully styled text")
+s.font = .system(.body)
+
+var p = AttributedString.ParagraphStyle()
+p.lineHeightMultiple = 0.92
+p.alignment = .leading
+s.paragraphStyle = p
+
+Text(s) // No modifier
+```
+
+**When to use:**
+- Need precise paragraph styling (line height, alignment)
+- Mixing multiple fonts in one string
+- Content will be displayed in both `Text` and `TextEditor`
+- Preserving exact formatting from rich text editor
+
+#### Use .font() Modifier (Broad Override)
+
+```swift
+Text("Simple text")
+    .font(.body)
+    .lineSpacing(4.0) // SwiftUI-level spacing
+```
+
+**When to use:**
+- Simple text without paragraph styles
+- Want Dynamic Type automatic scaling
+- Need SwiftUI's semantic font behavior (Dark Mode, accessibility)
+- Intentionally overriding AttributedString fonts
+
+### Multiple Fonts in One String
+
+```swift
+var s = AttributedString("Title")
+s.font = .system(.title).bold()
+
+var body = AttributedString(" and body text")
+body.font = .system(.body)
+
+s.append(body)
+
+Text(s) // ✅ No .font() modifier preserves both fonts
+```
+
+### Common Mistake: Order Doesn't Matter
+
+```swift
+// ❌ WRONG mental model: "Create AttributedString first"
+var s = AttributedString(text)
+var p = AttributedString.ParagraphStyle()
+p.lineHeightMultiple = 0.92
+s.paragraphStyle = p
+s.font = .system(.body) // ⚠️ Setting font last doesn't help if you use .font() modifier
+
+Text(s).font(.body) // Still breaks!
+```
+
+The issue isn't **when** you set the font in `AttributedString`. The issue is **whether the attributed content carries its own font attributes** versus relying on SwiftUI's `.font(...)` environment.
+
+### Verification Checklist
+
+When using `AttributedString` with paragraph styles:
+- [ ] Font set inside `AttributedString` (not `nil`)
+- [ ] No `.font()` modifier on `Text` view (unless intentionally overriding)
+- [ ] Paragraph styles set after or before font (order doesn't matter)
+- [ ] Tested with actual content to verify line height/alignment preserved
+
 ## Internationalization
 
 ### Bidirectional Text
