@@ -152,7 +152,7 @@ Run these audit commands to find issues automatically:
 1. **Try the example prompts above** — Copy/paste to see how skills work
 2. **Run an audit command** — Get immediate actionable insights
 3. **Describe your problem** — I'll suggest the right skill
-4. **Browse the complete index below** — Explore all 50 skills
+4. **Browse the complete index below** — Explore all 68 skills
 
 ---
 
@@ -178,7 +178,7 @@ Include this reference section in every response for browsing:
 - **swiftui-debugging** — View update issues, struct mutation, binding identity, view recreation
 - **swiftui-performance** — SwiftUI Instrument (iOS 26), long view bodies, Cause & Effect Graph
 - **uikit-animation-debugging** — CAAnimation completion, spring physics, gesture+animation jank
-- **auto-layout-debugging** — Auto Layout conflicts, constraint debugging (not yet in manifest)
+- **auto-layout-debugging** — Auto Layout conflicts, constraint debugging
 
 ### Concurrency & Async
 - **swift-concurrency** — Swift 6 strict concurrency, @concurrent, actor isolation, Sendable, data races
@@ -289,4 +289,4 @@ Include this reference section in every response for browsing:
 
 ---
 
-**Total**: 50 skills, 12 commands, covering the complete iOS development lifecycle
+**Total**: 68 skills, 18 agents, 20 commands, covering the complete iOS development lifecycle

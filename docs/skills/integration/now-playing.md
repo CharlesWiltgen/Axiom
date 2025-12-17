@@ -2,8 +2,8 @@
 name: now-playing
 description: Use when Now Playing metadata doesn't appear on Lock Screen/Control Center, remote commands (play/pause/skip) don't respond, artwork is missing/wrong/flickering, or playback state is out of sync - provides systematic diagnosis, correct patterns, and professional push-back for audio/video apps on iOS 18+
 skill_type: discipline
-version: 1.0.0
-apple_platforms: iOS 18+, iPadOS 18+
+version: 1.1.0
+apple_platforms: iOS 18+, iPadOS 18+, CarPlay (iOS 14+)
 ---
 
 # Now Playing Integration Guide
@@ -32,11 +32,15 @@ apple_platforms: iOS 18+, iPadOS 18+
 - Apple Music or other apps "steal" Now Playing status
 - Implementing Now Playing for the first time
 - Debugging Now Playing issues in existing implementation
+- Integrating CarPlay Now Playing (covered in Pattern 6)
+- Working with MusicKit/Apple Music content (covered in Pattern 7)
+
+### iOS 26 Note
+
+iOS 26 introduces **Liquid Glass visual design** for Lock Screen and Control Center Now Playing widgets. This is **automatic system behavior** — no code changes required. The patterns in this skill remain valid for iOS 26.
 
 ❌ **Do NOT use this skill for**:
-- CarPlay integration (see separate CarPlay skill)
 - Background audio configuration details (see AVFoundation skill)
-- MusicKit Apple Music integration (see MusicKit skill)
 
 ## Related Skills
 
@@ -170,13 +174,29 @@ Now Playing not working?
 │  └─ Artwork flickering?
 │     └─ Multiple updates in rapid succession → Pattern 3d
 │
-└─ State sync issues?
-   ├─ Shows "Playing" when paused?
-   │  └─ playbackRate not updated → Pattern 4a
-   ├─ Progress bar stuck or jumping?
-   │  └─ elapsedTime not updated at right moments → Pattern 4b
-   └─ Duration wrong?
-      └─ Not setting playbackDuration → Pattern 4c
+├─ State sync issues?
+│  ├─ Shows "Playing" when paused?
+│  │  └─ playbackRate not updated → Pattern 4a
+│  ├─ Progress bar stuck or jumping?
+│  │  └─ elapsedTime not updated at right moments → Pattern 4b
+│  └─ Duration wrong?
+│     └─ Not setting playbackDuration → Pattern 4c
+│
+├─ CarPlay specific issues?
+│  ├─ App doesn't appear in CarPlay at all?
+│  │  └─ Missing entitlement → Pattern 6 (Add com.apple.developer.carplay-audio)
+│  ├─ Now Playing blank in CarPlay but works on iOS?
+│  │  └─ Same root cause as iOS → Check Patterns 1-4
+│  ├─ Custom buttons don't appear in CarPlay?
+│  │  └─ Wrong configuration timing → Pattern 6 (Configure at templateApplicationScene)
+│  └─ Works on device but not CarPlay simulator?
+│     └─ Debugger interference → Pattern 6 (Run without debugger)
+│
+└─ Using MusicKit (ApplicationMusicPlayer)?
+   ├─ Now Playing shows wrong info?
+   │  └─ Overwriting automatic data → Pattern 7 (Don't set nowPlayingInfo manually)
+   └─ Mixing MusicKit + own content?
+      └─ Hybrid approach needed → Pattern 7 (Switch between players)
 ```
 
 ---
@@ -726,6 +746,255 @@ session.remoteCommandCenter.playCommand.addTarget { _ in }
 
 ---
 
+## Pattern 6: CarPlay Integration
+
+**Time cost**: 15-20 minutes (if MPNowPlayingInfoCenter already working)
+
+### Key Insight
+
+**CarPlay uses the SAME MPNowPlayingInfoCenter and MPRemoteCommandCenter as Lock Screen and Control Center.** If your Now Playing integration works on iOS, it automatically works in CarPlay with zero additional code.
+
+### What CarPlay Reads
+
+| iOS Component | CarPlay Display |
+|---------------|-----------------|
+| `MPNowPlayingInfoCenter.nowPlayingInfo` | CPNowPlayingTemplate metadata (title, artist, artwork) |
+| `MPRemoteCommandCenter` handlers | CPNowPlayingTemplate button responses |
+| Artwork from `nowPlayingInfo` | Album art in CarPlay UI |
+
+No CarPlay-specific metadata needed. Your existing code works.
+
+### CPNowPlayingTemplate Customization (iOS 14+)
+
+For custom playback controls beyond standard play/pause/skip:
+
+```swift
+import CarPlay
+
+@MainActor
+class SceneDelegate: UIResponder, UIWindowSceneDelegate, CPTemplateApplicationSceneDelegate {
+
+    func templateApplicationScene(
+        _ templateApplicationScene: CPTemplateApplicationScene,
+        didConnect interfaceController: CPInterfaceController
+    ) {
+        // ✅ Configure CPNowPlayingTemplate at connection time (not when pushed)
+        let nowPlayingTemplate = CPNowPlayingTemplate.shared
+
+        // Enable Album/Artist browsing (shows button that navigates to album/artist view in your app)
+        nowPlayingTemplate.isAlbumArtistButtonEnabled = true
+
+        // Enable Up Next queue (shows button that displays upcoming tracks)
+        nowPlayingTemplate.isUpNextButtonEnabled = true
+
+        // Add custom buttons (iOS 14+)
+        setupCustomButtons(for: nowPlayingTemplate)
+    }
+
+    private func setupCustomButtons(for template: CPNowPlayingTemplate) {
+        var buttons: [CPNowPlayingButton] = []
+
+        // Playback rate button
+        let rateButton = CPNowPlayingPlaybackRateButton { [weak self] button in
+            self?.cyclePlaybackRate()
+        }
+        buttons.append(rateButton)
+
+        // Shuffle button
+        let shuffleButton = CPNowPlayingShuffleButton { [weak self] button in
+            self?.toggleShuffle()
+        }
+        buttons.append(shuffleButton)
+
+        // Repeat button
+        let repeatButton = CPNowPlayingRepeatButton { [weak self] button in
+            self?.cycleRepeatMode()
+        }
+        buttons.append(repeatButton)
+
+        // Update template with custom buttons
+        template.updateNowPlayingButtons(buttons)
+    }
+}
+```
+
+### Entitlement Requirement
+
+CarPlay requires an entitlement in your Xcode project:
+
+**Info.plist:**
+```xml
+<key>UIBackgroundModes</key>
+<array>
+    <string>audio</string>
+</array>
+```
+
+**Entitlements file:**
+```xml
+<key>com.apple.developer.carplay-audio</key>
+<true/>
+```
+
+Without the entitlement, CarPlay won't show your app at all.
+
+### CarPlay-Specific Gotchas
+
+| Issue | Cause | Fix | Time |
+|-------|-------|-----|------|
+| CarPlay doesn't show app | Missing entitlement | Add `com.apple.developer.carplay-audio` | 5 min |
+| Now Playing blank in CarPlay | MPNowPlayingInfoCenter not set | Same fix as Lock Screen (Pattern 1) | 10 min |
+| Custom buttons don't appear | Configured after push | Configure at `templateApplicationScene(_:didConnect:)` | 5 min |
+| Buttons work on device, not CarPlay simulator | Debugger interference | Test without debugger attached | 1 min |
+| Album art missing | Same as iOS issue | Fix MPMediaItemArtwork (Pattern 3) | 15 min |
+
+### Testing CarPlay
+
+**Simulator (Xcode 12+):**
+1. I/O → External Displays → CarPlay
+2. Tap CarPlay display
+3. Find your app in Audio section
+4. **Important**: Run without debugger for reliable testing (debugger can interfere with CarPlay audio session activation)
+
+**Real Vehicle:**
+Requires entitlement approval from Apple (automatic for apps with `UIBackgroundModes` audio; no manual request needed).
+
+### Verification
+
+- [ ] App appears in CarPlay Audio section
+- [ ] Now Playing shows correct metadata
+- [ ] Album artwork displays
+- [ ] Play/pause/skip buttons respond
+- [ ] Custom buttons (if any) appear and work
+- [ ] Tested both with and without debugger
+
+---
+
+## Pattern 7: MusicKit Integration (Apple Music)
+
+**Time cost**: 5-10 minutes
+
+### Key Insight
+
+**MusicKit's ApplicationMusicPlayer automatically publishes to MPNowPlayingInfoCenter.** You don't need to manually update Now Playing info when playing Apple Music content.
+
+### What's Automatic
+
+When using `ApplicationMusicPlayer`:
+- Track title, artist, album
+- Artwork (Apple's album art)
+- Duration and elapsed time
+- Playback rate (playing/paused state)
+
+The system handles all MPNowPlayingInfoCenter updates for you.
+
+### What's NOT Automatic
+
+- Custom metadata (chapter markers, custom artist notes)
+- Remote command customization beyond standard controls
+- Mixing MusicKit content with your own content
+
+### GOOD Code (MusicKit Content)
+
+```swift
+import MusicKit
+
+@MainActor
+class MusicKitPlayer {
+    private let player = ApplicationMusicPlayer.shared
+
+    func play(song: Song) async throws {
+        // ✅ Just play - MPNowPlayingInfoCenter updates automatically
+        player.queue = [song]
+        try await player.play()
+
+        // ❌ DO NOT manually set nowPlayingInfo here
+        // MPNowPlayingInfoCenter.default().nowPlayingInfo = [...] // WRONG!
+    }
+}
+```
+
+### Hybrid Apps (Own Content + Apple Music)
+
+If your app plays both Apple Music and your own content:
+
+```swift
+import MusicKit
+
+@MainActor
+class HybridPlayer {
+    private let musicKitPlayer = ApplicationMusicPlayer.shared
+    private var avPlayer: AVPlayer?
+    private var currentSource: ContentSource = .none
+
+    enum ContentSource {
+        case none
+        case appleMusic      // MusicKit handles Now Playing
+        case ownContent  // We handle Now Playing
+    }
+
+    func playAppleMusicSong(_ song: Song) async throws {
+        // Switch to MusicKit
+        avPlayer?.pause()
+        currentSource = .appleMusic
+
+        musicKitPlayer.queue = [song]
+        try await musicKitPlayer.play()
+        // ✅ MusicKit handles Now Playing automatically
+    }
+
+    func playOwnContent(_ url: URL) {
+        // Switch to AVPlayer
+        musicKitPlayer.pause()
+        currentSource = .ownContent
+
+        avPlayer = AVPlayer(url: url)
+        avPlayer?.play()
+
+        // ✅ Manually update Now Playing (Patterns 1-4)
+        updateNowPlayingForOwnContent()
+    }
+
+    private func updateNowPlayingForOwnContent() {
+        var nowPlayingInfo = [String: Any]()
+        nowPlayingInfo[MPMediaItemPropertyTitle] = "My Track"
+        // ... rest of manual setup from Patterns 1-4
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    }
+}
+```
+
+### Common Mistake
+
+```swift
+// ❌ WRONG - Overwrites MusicKit's automatic Now Playing data
+func playAppleMusicSong(_ song: Song) async throws {
+    try await ApplicationMusicPlayer.shared.play()
+
+    // ❌ This clears MusicKit's Now Playing info!
+    var nowPlayingInfo = [String: Any]()
+    nowPlayingInfo[MPMediaItemPropertyTitle] = song.title
+    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+}
+
+// ✅ CORRECT - Let MusicKit handle it
+func playAppleMusicSong(_ song: Song) async throws {
+    try await ApplicationMusicPlayer.shared.play()
+    // That's it! MusicKit publishes Now Playing automatically.
+}
+```
+
+### When to Use Manual Updates with MusicKit
+
+Only override MPNowPlayingInfoCenter if:
+- You're mixing in additional metadata (e.g., podcast chapter markers)
+- You're displaying custom content alongside Apple Music
+- You have a specific reason to replace MusicKit's automatic behavior
+
+**Default**: Let MusicKit manage Now Playing automatically.
+
+---
+
 ## Pressure Scenarios
 
 ### Scenario 1: Apple Music Keeps Taking Over (24-Hour Launch Deadline)
@@ -899,6 +1168,10 @@ Testing: Verified with 10 track changes, zero flicker.
 | Loses Now Playing to other apps | Session not reactivated on foreground | Call `becomeActiveIfPossible()` on foreground | 15 min |
 | `playbackState` doesn't work | iOS-only app | `playbackState` is macOS only; use `playbackRate` on iOS | 10 min |
 | Siri skip ignores preferredIntervals | Hardcoded interval in handler | Use `event.interval` from MPSkipIntervalCommandEvent | 5 min |
+| **CarPlay**: App doesn't appear | Missing entitlement | Add `com.apple.developer.carplay-audio` to entitlements | 5 min |
+| **CarPlay**: Custom buttons don't appear | Configured at wrong time | Configure at `templateApplicationScene(_:didConnect:)` | 5 min |
+| **CarPlay**: Works on device, not simulator | Debugger attached | Run without debugger for reliable testing | 1 min |
+| **MusicKit**: Now Playing wrong | Overwriting automatic data | Don't set `nowPlayingInfo` when using ApplicationMusicPlayer | 5 min |
 
 ---
 
@@ -952,6 +1225,14 @@ Testing: Verified with 10 track changes, zero flicker.
 - [ ] Tested with Apple Music conflict
 - [ ] Tested with Spotify conflict
 
+### CarPlay (if applicable)
+- [ ] Added `com.apple.developer.carplay-audio` entitlement
+- [ ] CPNowPlayingTemplate configured at `templateApplicationScene(_:didConnect:)`
+- [ ] Custom buttons (if any) configured with CPNowPlayingButton
+- [ ] Tested on CarPlay simulator (I/O → External Displays → CarPlay)
+- [ ] Tested in real vehicle (if available)
+- [ ] Tested both with and without debugger attached
+
 ---
 
 ## WWDC Sessions
@@ -969,6 +1250,6 @@ Testing: Verified with 10 track changes, zero flicker.
 
 ---
 
-**Last Updated**: 2025-12-07
-**Status**: iOS 18+ discipline skill covering all 4 common Now Playing issues
+**Last Updated**: 2025-12-17
+**Status**: iOS 18+ discipline skill covering Now Playing, CarPlay, and MusicKit integration
 **Tested**: Based on WWDC 2019/501, WWDC 2022/110338 patterns
