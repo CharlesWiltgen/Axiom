@@ -369,7 +369,7 @@ func processAll(_ objects: [MyClass]) {
 
 ### Observable Object Lifetimes
 
-**From WWDC 2021/10216**: Object lifetimes end at **last use**, not at closing brace.
+**From WWDC 2021-10216**: Object lifetimes end at **last use**, not at closing brace.
 
 ```swift
 // ❌ Relying on observed lifetime is fragile
@@ -460,7 +460,7 @@ func drawAll<T: Drawable>(shapes: [T]) {
 
 ### Existential Container Internals
 
-**From WWDC 2016/416**: `any Protocol` uses an existential container with specific performance characteristics.
+**From WWDC 2016-416**: `any Protocol` uses an existential container with specific performance characteristics.
 
 ```swift
 // Existential container layout:
@@ -1198,10 +1198,10 @@ func render<S: Shape>(shapes: [S]) { }
 
 | Session | Title | Key Topics |
 |---------|-------|------------|
-| WWDC 2024/10217 | Explore Swift performance | Function calls, memory allocation, layout, copying |
-| WWDC 2016/416 | Understanding Swift Performance | Value vs reference, protocol witness tables, COW |
-| WWDC 2021/10216 | ARC in Swift: Basics and beyond | Object lifetimes, weak/unowned, withExtendedLifetime |
-| WWDC 2024/10170 | Consume noncopyable types in Swift | ~Copyable, ownership, consuming/borrowing |
+| WWDC 2024-10217 | Explore Swift performance | Function calls, memory allocation, layout, copying |
+| WWDC 2016-416 | Understanding Swift Performance | Value vs reference, protocol witness tables, COW |
+| WWDC 2021-10216 | ARC in Swift: Basics and beyond | Object lifetimes, weak/unowned, withExtendedLifetime |
+| WWDC 2024-10170 | Consume noncopyable types in Swift | ~Copyable, ownership, consuming/borrowing |
 
 ### Documentation
 
