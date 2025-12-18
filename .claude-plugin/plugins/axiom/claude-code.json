@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -16,6 +16,7 @@
     "./commands/audit-memory.md",
     "./commands/audit-networking.md",
     "./commands/audit-storage.md",
+    "./commands/audit-swift-performance.md",
     "./commands/audit-swiftui-nav.md",
     "./commands/audit-swiftui-performance.md",
     "./commands/audit-swiftui-architecture.md",
@@ -216,6 +217,10 @@
       "description": "Swift 6 concurrency, thread safety, async/await, @MainActor, data races, actor-isolated, Sendable, concurrency crashes, actor isolation"
     },
     {
+      "name": "swift-performance",
+      "description": "Swift 6 performance, ~Copyable, COW, value vs reference, ARC overhead, generics specialization, collection optimization, async/await costs, memory layout"
+    },
+    {
       "name": "swiftui-animation-ref",
       "description": "SwiftUI animations, property not animating, VectorArithmetic, Int vs Float animation, spring vs timing curve, @Animatable macro, Animatable protocol, Transaction system"
     },
@@ -370,6 +375,11 @@
       "name": "storage-auditor",
       "description": "File storage issues, data loss, backup bloat audit. Detects files in wrong locations, missing backup exclusions, missing file protection, storage anti-patterns. Prevents data loss.",
       "path": "./agents/storage-auditor.md"
+    },
+    {
+      "name": "swift-performance-analyzer",
+      "description": "Swift performance audit, code optimization. Detects unnecessary copies, ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs. Prevents performance regressions.",
+      "path": "./agents/swift-performance-analyzer.md"
     },
     {
       "name": "swiftui-nav-auditor",
