@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -29,366 +29,366 @@
   "skills": [
     {
       "name": "accessibility-diag",
-      "description": "This skill should be used when the user asks \"VoiceOver skips my button\", \"text doesn't scale with Dynamic Type\", \"color contrast is failing\", \"touch targets too small\", \"keyboard navigation broken\", \"how do I make my app accessible\", \"app rejected for accessibility\", or mentions WCAG compliance, Accessibility Inspector, App Store accessibility review. Provides comprehensive accessibility diagnostics for iOS/macOS."
+      "description": "VoiceOver issues, Dynamic Type scaling, color contrast failures, touch targets, keyboard navigation, WCAG compliance, accessibility rejection, Accessibility Inspector"
     },
     {
       "name": "app-discoverability",
-      "description": "This skill should be used when the user asks \"my app doesn't appear in Spotlight\", \"Siri can't find my app\", \"how do I make my app discoverable\", \"app not in system suggestions\", \"Spotlight integration\", or mentions App Intents discovery, App Shortcuts, Core Spotlight indexing. Provides 6-step discoverability strategy for iOS 16+."
+      "description": "Spotlight search missing app, Siri can't find app, app discoverability, App Intents discovery, App Shortcuts, Core Spotlight indexing, system suggestions"
     },
     {
       "name": "app-intents-ref",
-      "description": "This skill should be used when the user asks \"Siri doesn't respond to my command\", \"how do I add Shortcuts support\", \"AppIntent example\", \"AppEntity setup\", \"App Intents parameters\", \"entity queries not working\", or mentions background execution, Siri integration, Apple Intelligence intents. Provides comprehensive App Intents API reference for iOS 16+."
+      "description": "Siri commands not working, Shortcuts support, AppIntent, AppEntity, App Intents parameters, entity queries, Apple Intelligence intents, background execution"
     },
     {
       "name": "app-shortcuts-ref",
-      "description": "This skill should be used when the user asks \"my shortcut isn't appearing\", \"Siri doesn't know my phrase\", \"AppShortcutsProvider setup\", \"how to add suggested phrases\", \"shortcuts not in Spotlight\", or mentions App Shortcuts instant availability. Provides complete App Shortcuts API reference for iOS 16+."
+      "description": "App Shortcuts not appearing, Siri phrase recognition, AppShortcutsProvider, suggested phrases, Spotlight integration, instant availability"
     },
     {
       "name": "apple-docs-research",
-      "description": "This skill should be used when the user asks \"where do I find WWDC transcripts\", \"how to get Apple documentation\", \"WWDC session full transcript\", \"sosumi.ai usage\", \"Chrome WWDC capture\", or mentions researching Apple frameworks, retrieving code samples. Provides Apple documentation research techniques."
+      "description": "WWDC transcripts, Apple documentation research, sosumi.ai, Chrome WWDC capture, framework documentation, code samples"
     },
     {
       "name": "auto-layout-debugging",
-      "description": "This skill should be used when the user encounters \"Unable to simultaneously satisfy constraints\" errors, constraint conflicts, ambiguous layout warnings, or views positioned incorrectly. Provides systematic debugging workflow for Auto Layout issues in iOS."
+      "description": "\"Unable to simultaneously satisfy constraints\", constraint conflicts, ambiguous layout, Auto Layout errors, view positioning issues"
     },
     {
       "name": "avfoundation-ref",
-      "description": "This skill should be used when the user asks \"how do I play audio in iOS\", \"AVAudioSession setup\", \"audio stops when app backgrounds\", \"how to use AVAudioEngine\", \"bit-perfect audio output\", \"spatial audio capture iOS 26\", or mentions audio session categories, audio modes, ASAF/APAC. Provides complete AVFoundation audio API reference."
+      "description": "AVFoundation audio, AVAudioSession, audio backgrounding, AVAudioEngine, bit-perfect output, spatial audio iOS 26, audio session categories, ASAF/APAC"
     },
     {
       "name": "build-performance",
-      "description": "This skill should be used when the user asks \"my builds take forever\", \"why is Xcode so slow\", \"speed up compilation\", \"build time optimization\", \"type checking bottlenecks\", \"analyze Build Timeline\", or mentions incremental build issues, slow Xcode builds. Provides comprehensive build optimization workflows."
+      "description": "slow Xcode builds, compilation speed, build time optimization, type checking bottlenecks, Build Timeline analysis, incremental build issues"
     },
     {
       "name": "build-troubleshooting",
-      "description": "This skill should be used when the user encounters dependency conflicts, CocoaPods/SPM resolution failures, \"Multiple commands produce\" errors, or framework version mismatches. Provides systematic dependency and build configuration debugging for iOS projects with pressure scenario guidance for resisting quick fixes under time constraints."
+      "description": "dependency conflicts, CocoaPods/SPM failures, \"Multiple commands produce\", framework version mismatches, build configuration debugging"
     },
     {
       "name": "codable",
-      "description": "This skill should be used when the user is working with Codable protocol, JSON encoding/decoding, CodingKeys customization, enum serialization, date strategies, custom containers, or encountering \"Type does not conform to Decodable/Encodable\" errors. Provides comprehensive Codable patterns and anti-patterns for Swift 6.x."
+      "description": "Codable protocol, JSON encoding/decoding, CodingKeys, enum serialization, date strategies, \"Type does not conform to Decodable/Encodable\", custom containers"
     },
     {
       "name": "core-data-diag",
-      "description": "This skill should be used when the user asks \"Core Data crashed after update\", \"migration failed\", \"NSManagedObjectContext crash\", \"thread-confinement error\", \"N+1 query performance\", \"test Core Data migration\", or mentions SwiftData bridging, migration data loss. Provides systematic Core Data diagnostics with safety-first migration patterns."
+      "description": "Core Data crashes, migration failures, NSManagedObjectContext errors, thread-confinement, N+1 queries, SwiftData bridging, migration data loss"
     },
     {
       "name": "core-spotlight-ref",
-      "description": "This skill should be used when the user asks \"content not appearing in Spotlight\", \"NSUserActivity not working\", \"CSSearchableItem example\", \"how to index for Spotlight\", \"IndexedEntity vs CSSearchableItem\", or mentions Spotlight indexing, handoff integration. Provides Core Spotlight framework reference for iOS 9+."
+      "description": "Spotlight indexing, NSUserActivity, CSSearchableItem, IndexedEntity, Core Spotlight framework, handoff integration"
     },
     {
       "name": "database-migration",
-      "description": "This skill should be used when the user is adding/modifying database columns, encountering \"FOREIGN KEY constraint failed\", \"no such column\", \"cannot add NOT NULL column\" errors, or creating schema migrations for SQLite/GRDB/SQLiteData. Prevents data loss with safe migration patterns and testing workflows for iOS/macOS apps."
+      "description": "database schema migrations, \"FOREIGN KEY constraint failed\", \"no such column\", \"cannot add NOT NULL column\", SQLite/GRDB/SQLiteData migrations, data loss prevention"
     },
     {
       "name": "deep-link-debugging",
-      "description": "This skill should be used when the user asks \"how do I test deep links in simulator\", \"debug-only navigation\", \"deep link testing without production implementation\", \"simulator screen navigation\", or mentions automated testing workflows, closed-loop debugging. Provides debug-only deep link patterns."
+      "description": "deep link testing, simulator navigation, debug-only deep links, automated testing workflows, closed-loop debugging"
     },
     {
       "name": "extensions-widgets",
-      "description": "This skill should be used when the user asks \"my widget doesn't update\", \"Live Activity isn't showing\", \"widget crashes\", \"timeline management\", \"widget data sharing\", \"Control Center widget\", or mentions extension lifecycle, widget memory issues. Enforces correct widget implementation patterns."
+      "description": "widget not updating, Live Activity issues, widget crashes, timeline management, widget data sharing, Control Center widgets, extension lifecycle"
     },
     {
       "name": "extensions-widgets-ref",
-      "description": "This skill should be used when the user asks \"how do I create a widget\", \"WidgetKit timeline not refreshing\", \"Live Activity API\", \"App Groups setup\", \"ActivityKit example\", \"Control Center control API\", or mentions extension lifecycle, widget configuration. Provides comprehensive WidgetKit/ActivityKit API reference for iOS 14+."
+      "description": "WidgetKit, timeline refreshing, Live Activity API, App Groups, ActivityKit, Control Center controls, widget configuration, iOS 14+ widgets"
     },
     {
       "name": "foundation-models",
-      "description": "This skill should be used when the user asks \"how do I use Apple Intelligence\", \"on-device AI in my app\", \"Foundation Models framework example\", \"@Generable not working\", \"AI blocking my UI\", \"context too long for model\", or mentions LanguageModelSession, on-device generation, Apple Intelligence integration. Provides Foundation Models patterns for iOS 26+."
+      "description": "Apple Intelligence, on-device AI, Foundation Models, @Generable, LanguageModelSession, AI blocking UI, context limits, iOS 26 AI integration"
     },
     {
       "name": "foundation-models-diag",
-      "description": "This skill should be used when the user asks \"AI response was blocked\", \"generation is too slow\", \"guardrail violation\", \"Foundation Models context exceeded\", \"model not available\", \"unexpected AI output\", or mentions unsupported language, generation failures. Provides systematic Foundation Models diagnostics with production crisis defense."
+      "description": "AI response blocked, generation slow, guardrail violations, Foundation Models context exceeded, model unavailable, unexpected AI output, generation failures"
     },
     {
       "name": "foundation-models-ref",
-      "description": "This skill should be used when the user asks \"LanguageModelSession API\", \"@Generable struct example\", \"Foundation Models Tool protocol\", \"streaming generation API\", \"dynamic schema generation\", or mentions built-in use cases, WWDC 2025 code examples. Provides complete Foundation Models framework API reference."
+      "description": "LanguageModelSession API, @Generable examples, Foundation Models Tool protocol, streaming generation, dynamic schema, WWDC 2025 AI examples"
     },
     {
       "name": "getting-started",
-      "description": "This skill should be used when first installing Axiom, unsure which skill to use, want an overview of available skills, or need help finding the right skill for your situation. Provides interactive onboarding that recommends skills based on your project and current focus."
+      "description": "Axiom onboarding, skill overview, finding right skill, available skills, skill recommendations"
     },
     {
       "name": "grdb",
-      "description": "This skill should be used when the user asks \"how do I do complex SQL joins\", \"ValueObservation not updating\", \"GRDB query example\", \"DatabaseMigrator setup\", \"GRDB performance profiling\", \"drop down from SQLiteData\", or mentions raw SQL queries, reactive queries. Provides direct SQLite access patterns for iOS/macOS."
+      "description": "GRDB, complex SQL joins, ValueObservation, DatabaseMigrator, raw SQL queries, reactive queries, SQLite performance profiling"
     },
     {
       "name": "hig",
-      "description": "This skill should be used when the user asks \"does this follow Apple guidelines\", \"is this the right design\", \"HIG color choice\", \"should I use this background\", \"typography decision\", \"defend design to stakeholders\", or mentions HIG compliance review. Provides quick HIG decision frameworks and checklists."
+      "description": "Human Interface Guidelines, HIG compliance, Apple design guidelines, color choices, typography decisions, defending design to stakeholders"
     },
     {
       "name": "hig-ref",
-      "description": "This skill should be used when the user asks \"Apple color guidelines\", \"SF Symbols rendering modes\", \"Dark Mode design principles\", \"semantic colors iOS\", \"Dynamic Type guidelines\", \"material hierarchy backgrounds\", or mentions HIG typography, accessibility design, platform-specific design. Provides comprehensive Human Interface Guidelines reference."
+      "description": "Apple color guidelines, SF Symbols rendering modes, Dark Mode design, semantic colors, Dynamic Type guidelines, material hierarchy, HIG typography"
     },
     {
       "name": "haptics",
-      "description": "This skill should be used when the user asks \"haptics aren't working\", \"how do I sync haptics with audio\", \"Core Haptics example\", \"UIFeedbackGenerator usage\", \"AHAP pattern creation\", \"haptic design principles\", or mentions CHHapticEngine, Causality-Harmony-Utility design. Provides haptic feedback implementation for iOS."
+      "description": "haptics not working, Core Haptics, UIFeedbackGenerator, AHAP patterns, CHHapticEngine, haptic-audio sync, Causality-Harmony-Utility design"
     },
     {
       "name": "in-app-purchases",
-      "description": "This skill should be used when the user asks \"purchases aren't working\", \"subscription status wrong\", \"restore not working\", \"how to implement StoreKit 2\", \"transaction verification\", \".storekit testing\", or mentions StoreManager, consumables, non-consumables, auto-renewable subscriptions. Provides testing-first IAP implementation workflow."
+      "description": "purchases not working, subscription status, restore purchases, StoreKit 2, transaction verification, .storekit testing, IAP implementation"
     },
     {
       "name": "liquid-glass",
-      "description": "This skill should be used when the user asks \"how do I add Liquid Glass\", \"glass effect looks wrong\", \"Liquid Glass performance issues\", \"when to use regular vs clear variant\", \"migrate from UIBlurEffect\", \"Liquid Glass dark mode broken\", or mentions .glassBackgroundEffect, iOS 26 visual design, toolbar glass effects. Provides Liquid Glass implementation patterns for iOS 26+."
+      "description": "Liquid Glass effects, .glassBackgroundEffect, glass visual artifacts, regular vs clear variant, UIBlurEffect migration, iOS 26 glass design"
     },
     {
       "name": "liquid-glass-ref",
-      "description": "This skill should be used when the user asks \"planning Liquid Glass adoption\", \"iOS 26 UI update strategy\", \"Liquid Glass app icon\", \"platform-specific Liquid Glass\", \"comprehensive glass effects guide\", or mentions auditing for Liquid Glass compatibility, adoption strategy. Provides comprehensive Liquid Glass adoption reference from WWDC 2025."
+      "description": "Liquid Glass adoption, iOS 26 UI strategy, glass app icon, platform-specific glass, Liquid Glass auditing, WWDC 2025 glass design"
     },
     {
       "name": "localization",
-      "description": "This skill should be used when the user asks \"strings aren't translated\", \"RTL layout broken\", \"plurals not working\", \"String Catalog setup\", \"migrate from .strings files\", \"locale-aware formatting\", or mentions i18n patterns, Xcode 15 localization. Provides comprehensive localization patterns from WWDC 2023."
+      "description": "strings not translated, RTL layout, plurals, String Catalog, .strings migration, locale-aware formatting, i18n patterns, Xcode 15 localization"
     },
     {
       "name": "memory-debugging",
-      "description": "This skill should be used when the user asks 'why is my app using so much memory', 'how do I find memory leaks', 'my deinit is never called', 'Instruments shows memory growth', 'app crashes after 10 minutes', or mentions memory warnings, retain cycles, memory pressure. Provides systematic memory leak detection and fixes for iOS/macOS."
+      "description": "memory leaks, deinit not called, Instruments memory growth, app crashes, memory warnings, retain cycles, memory pressure, memory leak detection"
     },
     {
       "name": "network-framework-ref",
-      "description": "This skill should be used when the user asks \"NWConnection example\", \"NetworkConnection API\", \"Network.framework migration\", \"TCP connection iOS\", \"TLV framing protocol\", \"NetworkListener setup\", or mentions Coder protocol, Wi-Fi Aware discovery, iOS 26 networking. Provides comprehensive Network.framework API reference."
+      "description": "NWConnection, NetworkConnection API, Network.framework, TCP connections, TLV framing, NetworkListener, Coder protocol, Wi-Fi Aware, iOS 26 networking"
     },
     {
       "name": "networking",
-      "description": "This skill should be used when the user asks \"connection keeps failing\", \"how do I replace URLSession streams\", \"Network.framework example\", \"migrate from sockets\", \"structured concurrency networking\", \"NWConnection setup\", or mentions deprecated networking APIs, reachability anti-patterns. Provides Network.framework patterns for iOS 12-26+."
+      "description": "connection failures, URLSession streams, Network.framework, socket migration, structured concurrency networking, NWConnection, deprecated networking APIs"
     },
     {
       "name": "networking-diag",
-      "description": "This skill should be used when the user asks \"why does my connection timeout\", \"TLS handshake fails\", \"data not arriving\", \"connection drops randomly\", \"network performance issues\", \"proxy interference\", or mentions VPN problems, connection diagnostics. Provides systematic Network.framework diagnostics with production crisis defense."
+      "description": "connection timeouts, TLS handshake failures, data not arriving, connection drops, network performance, proxy interference, VPN problems, connection diagnostics"
     },
     {
       "name": "now-playing",
-      "description": "This skill should be used when Now Playing metadata doesn't appear on Lock Screen/Control Center, remote commands (play/pause/skip) don't respond, artwork is missing/wrong/flickering, or playback state is out of sync. Provides systematic diagnosis, correct patterns, and professional push-back for audio/video apps on iOS 18+."
+      "description": "Now Playing metadata missing, Lock Screen controls, remote commands not responding, artwork issues, playback state sync, MPNowPlayingInfoCenter, audio/video apps"
     },
     {
       "name": "objc-block-retain-cycles",
-      "description": "This skill should be used when the user asks \"block is leaking memory\", \"object deallocated unexpectedly\", \"weak-strong pattern\", \"network callback leak\", \"block retain cycle\", or mentions blocks assigned to self, mandatory diagnostic rules. Provides systematic Objective-C block memory leak diagnosis."
+      "description": "Objective-C block memory leaks, object deallocated unexpectedly, weak-strong pattern, network callback leaks, block retain cycles, blocks assigned to self"
     },
     {
       "name": "performance-profiling",
-      "description": "This skill should be used when app feels slow, memory grows over time, battery drains fast, or you want to profile proactively. Provides decision trees to choose the right Instruments tool, deep workflows for Time Profiler/Allocations/Core Data, and pressure scenarios for misinterpreting results."
+      "description": "app feels slow, memory grows, battery drains, Time Profiler, Allocations, Core Data profiling, Instruments workflows, performance optimization"
     },
     {
       "name": "privacy-ux",
-      "description": "This skill should be used when the user asks \"how do I request permissions properly\", \"tracking prompt timing\", \"privacy manifest setup\", \"App Tracking Transparency UX\", \"Privacy Nutrition Labels\", \"Required Reason API\", or mentions just-in-time permissions, tracking domains. Provides privacy UX patterns from WWDC 2023."
+      "description": "permission requests, tracking prompts, privacy manifest, App Tracking Transparency, Privacy Nutrition Labels, Required Reason API, just-in-time permissions"
     },
     {
       "name": "realm-migration-ref",
-      "description": "This skill should be used when the user asks \"migrate from Realm to SwiftData\", \"Realm Device Sync sunset\", \"Realm vs SwiftData\", \"Realm threading to Swift concurrency\", \"CloudKit sync after Realm\", or mentions September 2025 deadline, Realm pattern equivalents. Provides comprehensive Realm to SwiftData migration guide."
+      "description": "Realm to SwiftData migration, Realm Device Sync sunset, Realm vs SwiftData, Realm threading, CloudKit sync, September 2025 deadline"
     },
     {
       "name": "sqlitedata",
-      "description": "This skill should be used when the user asks \"SQLiteData query example\", \"@Table model setup\", \"Point-Free SQLite\", \"SQLiteData RETURNING clause\", \"FTS5 full-text search\", \"SQLiteData CloudKit sync\", or mentions CTEs, JSON aggregation, database views, @DatabaseFunction. Provides SQLiteData framework reference and anti-patterns."
+      "description": "SQLiteData queries, @Table models, Point-Free SQLite, RETURNING clause, FTS5 full-text search, CloudKit sync, CTEs, JSON aggregation, @DatabaseFunction"
     },
     {
       "name": "storekit-ref",
-      "description": "This skill should be used when the user asks \"StoreKit 2 API\", \"Product struct usage\", \"Transaction handling API\", \"SubscriptionStatus check\", \"StoreKit Views examples\", \"AppTransaction verification\", or mentions RenewalInfo, purchase options, iOS 18.4 enhancements. Provides complete StoreKit 2 API reference."
+      "description": "StoreKit 2 API, Product struct, Transaction handling, SubscriptionStatus, StoreKit Views, AppTransaction verification, RenewalInfo, iOS 18.4 purchases"
     },
     {
       "name": "storage-strategy",
-      "description": "This skill should be used when the user asks 'where should I store this data', 'should I use SwiftData or files', 'CloudKit vs iCloud Drive', 'Documents vs Caches', 'local or cloud storage', 'how do I sync data', 'where do app files go'. Provides comprehensive decision framework for all iOS storage options."
+      "description": "storage decisions, SwiftData vs files, CloudKit vs iCloud Drive, Documents vs Caches, local vs cloud storage, data sync strategies"
     },
     {
       "name": "cloudkit-ref",
-      "description": "This skill should be used when the user asks 'CloudKit sync', 'CKSyncEngine', 'CKRecord', 'CKDatabase', 'SwiftData CloudKit', 'shared database', 'public database', 'CloudKit zones', 'conflict resolution'. Provides comprehensive CloudKit database APIs and modern sync patterns reference."
+      "description": "CloudKit sync, CKSyncEngine, CKRecord, CKDatabase, SwiftData CloudKit, shared database, public database, CloudKit zones, conflict resolution"
     },
     {
       "name": "cloud-sync-diag",
-      "description": "This skill should be used when the user asks 'file not syncing', 'CloudKit error', 'sync conflict', 'iCloud upload failed', 'ubiquitous item error', 'data not appearing on other devices', 'CKError', 'quota exceeded'. Provides systematic iCloud sync diagnostics for both CloudKit and iCloud Drive."
+      "description": "file not syncing, CloudKit errors, sync conflicts, iCloud upload failures, ubiquitous item errors, data not appearing on devices, CKError, quota exceeded"
     },
     {
       "name": "file-protection-ref",
-      "description": "This skill should be used when the user asks 'FileProtectionType', 'file encryption iOS', 'NSFileProtection', 'data protection', 'secure file storage', 'encrypt files at rest', 'complete protection', 'file security'. Provides comprehensive reference for iOS file encryption and data protection APIs."
+      "description": "FileProtectionType, file encryption iOS, NSFileProtection, data protection, secure file storage, encrypt files at rest, complete protection"
     },
     {
       "name": "icloud-drive-ref",
-      "description": "This skill should be used when the user asks 'iCloud Drive', 'ubiquitous container', 'file sync', 'NSFileCoordinator', 'NSFilePresenter', 'isUbiquitousItem', 'NSUbiquitousKeyValueStore', 'ubiquitous file sync'. Provides comprehensive file-based iCloud sync reference."
+      "description": "iCloud Drive, ubiquitous container, file sync, NSFileCoordinator, NSFilePresenter, isUbiquitousItem, NSUbiquitousKeyValueStore"
     },
     {
       "name": "storage-diag",
-      "description": "This skill should be used when the user asks 'files disappeared', 'data missing after restart', 'backup too large', 'can't save file', 'file not found', 'storage full error', 'file inaccessible when locked'. Provides systematic local file storage diagnostics."
+      "description": "files disappeared, data missing after restart, backup too large, can't save file, file not found, storage full errors, file inaccessible when locked"
     },
     {
       "name": "storage-management-ref",
-      "description": "This skill should be used when the user asks 'purge files', 'storage pressure', 'disk space iOS', 'isExcludedFromBackup', 'URL resource values', 'volumeAvailableCapacity', 'low storage', 'file purging priority', 'cache management'. Provides comprehensive reference for iOS storage management and URL resource value APIs."
+      "description": "purge files, storage pressure, disk space, isExcludedFromBackup, URL resource values, volumeAvailableCapacity, cache management, file purging priority"
     },
     {
       "name": "swift-concurrency",
-      "description": "This skill should be used when the user asks 'why is this not thread safe', 'how do I use async/await', 'what is @MainActor for', 'my app is crashing with concurrency errors', 'how do I fix data races', or mentions 'actor-isolated', 'Sendable', 'data race', '@MainActor' errors. Provides Swift 6 strict concurrency patterns with actor isolation and async/await."
+      "description": "Swift 6 concurrency, thread safety, async/await, @MainActor, data races, actor-isolated, Sendable, concurrency crashes, actor isolation"
     },
     {
       "name": "swiftui-animation-ref",
-      "description": "This skill should be used when the user asks 'how do I animate this view', 'why doesn't my property animate', 'what is VectorArithmetic', 'Int vs Float for animation', 'spring vs timing curve', 'how to use @Animatable macro', 'custom animation algorithms', or mentions implementing SwiftUI animations. Provides comprehensive reference covering Animatable protocol, @Animatable macro, animation types, Transaction system, and troubleshooting from iOS 13 through iOS 26."
+      "description": "SwiftUI animations, property not animating, VectorArithmetic, Int vs Float animation, spring vs timing curve, @Animatable macro, Animatable protocol, Transaction system"
     },
     {
       "name": "swiftui-architecture",
-      "description": "This skill should be used when the user asks 'where should this code go', 'how do I organize my SwiftUI app', 'MVVM vs TCA', 'how do I make SwiftUI testable', or mentions separating logic from SwiftUI views, choosing architecture patterns (MVVM, TCA, Coordinator), refactoring view files. Provides comprehensive architecture patterns with refactoring workflows for iOS 26+."
+      "description": "SwiftUI app organization, MVVM vs TCA, SwiftUI testability, separating logic from views, architecture patterns, Coordinator pattern, refactoring views"
     },
     {
       "name": "swiftdata",
-      "description": "This skill should be used when the user asks \"SwiftData @Model example\", \"@Query not updating\", \"ModelContext usage\", \"@Relationship setup\", \"SwiftData CloudKit integration\", \"SwiftData iOS 26 features\", or mentions @MainActor patterns, SwiftData persistence. Provides Apple's native persistence framework reference."
+      "description": "SwiftData, @Model, @Query not updating, ModelContext, @Relationship, SwiftData CloudKit, @MainActor patterns, iOS 26 SwiftData"
     },
     {
       "name": "swiftdata-migration",
-      "description": "This skill should be used when the user asks \"SwiftData schema migration\", \"VersionedSchema example\", \"SchemaMigrationPlan setup\", \"migrate SwiftData relationships\", \"willMigrate vs didMigrate\", \"test SwiftData migration\", or mentions property type changes, two-stage migrations. Provides custom SwiftData migration patterns."
+      "description": "SwiftData schema migration, VersionedSchema, SchemaMigrationPlan, migrate relationships, willMigrate vs didMigrate, property type changes, two-stage migrations"
     },
     {
       "name": "swiftdata-migration-diag",
-      "description": "This skill should be used when the user asks \"SwiftData migration crashed\", \"schema version mismatch\", \"migration works in simulator fails on device\", \"SwiftData relationships lost after migration\", \"migration data loss\", or mentions migration testing failures. Provides systematic SwiftData migration diagnostics."
+      "description": "SwiftData migration crashed, schema version mismatch, migration simulator vs device, relationships lost after migration, migration data loss, testing failures"
     },
     {
       "name": "swiftdata-to-sqlitedata",
-      "description": "This skill should be used when the user asks \"should I switch from SwiftData to SQLiteData\", \"SwiftData vs SQLiteData performance\", \"SQLiteData CloudKit sharing\", \"migrate SwiftData to SQLiteData\", \"SwiftData limitations\", or mentions pattern equivalents, performance benchmarks. Provides SwiftData to SQLiteData migration guide."
+      "description": "SwiftData to SQLiteData migration, SwiftData vs SQLiteData performance, CloudKit sharing, SwiftData limitations, pattern equivalents, performance benchmarks"
     },
     {
       "name": "swiftui-26-ref",
-      "description": "This skill should be used when the user asks \"iOS 26 SwiftUI features\", \"new in SwiftUI 26\", \"WebView SwiftUI\", \"@Animatable macro iOS 26\", \"AttributedString text editor\", \"3D spatial layout\", or mentions scene bridging, drag and drop iOS 26, visionOS integration. Provides complete iOS 26 SwiftUI feature reference."
+      "description": "iOS 26 SwiftUI, WebView SwiftUI, @Animatable macro, AttributedString text editor, 3D spatial layout, scene bridging, drag and drop iOS 26, visionOS integration"
     },
     {
       "name": "swiftui-debugging",
-      "description": "This skill should be used when the user asks \"view isn't updating\", \"preview keeps crashing\", \"SwiftUI layout issues\", \"why doesn't my view refresh\", \"preview won't load\", or mentions SwiftUI diagnostic decision trees. Provides SwiftUI debugging decision trees to identify root causes quickly."
+      "description": "view not updating, preview crashing, SwiftUI layout issues, view not refreshing, preview won't load, SwiftUI diagnostic decision trees"
     },
     {
       "name": "swiftui-debugging-diag",
-      "description": "This skill should be used when the user asks \"Self._printChanges shows unexpected updates\", \"view updates mysteriously\", \"intermittent SwiftUI UI issues\", \"complex state dependencies not working\", \"systematic SwiftUI investigation\", or mentions Instruments view debugging. Provides systematic SwiftUI diagnostic workflows."
+      "description": "Self._printChanges unexpected, view updates mysteriously, intermittent SwiftUI issues, complex state dependencies, systematic SwiftUI investigation, Instruments view debugging"
     },
     {
       "name": "swiftui-gestures",
-      "description": "This skill should be used when the user asks \"gestures aren't working together\", \"drag conflicts with scroll\", \"gesture state management\", \"compose multiple gestures\", \"gesture accessibility\", or mentions tap, long press, magnification, rotation gestures. Provides comprehensive SwiftUI gesture patterns."
+      "description": "gestures not working together, drag conflicts with scroll, gesture state management, compose gestures, gesture accessibility, tap, long press, magnification, rotation"
     },
     {
       "name": "swiftui-layout",
-      "description": "This skill should be used when the user asks \"layout adapts to screen size\", \"ViewThatFits vs AnyLayout\", \"iPad multitasking layout\", \"iOS 26 free-form windows\", \"onGeometryChange when to use\", \"size class limitations\", or mentions adaptive layout decisions. Provides SwiftUI adaptive layout decision trees."
+      "description": "adaptive layout, ViewThatFits vs AnyLayout, iPad multitasking, iOS 26 free-form windows, onGeometryChange, size class limitations, screen size adaptation"
     },
     {
       "name": "swiftui-layout-ref",
-      "description": "This skill should be used when the user asks \"GeometryReader usage\", \"size classes SwiftUI\", \"adaptive layout API\", \"ViewThatFits documentation\", \"AnyLayout protocol\", \"Layout protocol example\", or mentions onGeometryChange API, iOS 26 window APIs. Provides complete SwiftUI adaptive layout API reference."
+      "description": "GeometryReader, size classes, adaptive layout API, ViewThatFits, AnyLayout protocol, Layout protocol, onGeometryChange API, iOS 26 window APIs"
     },
     {
       "name": "swiftui-nav",
-      "description": "This skill should be used when the user asks \"NavigationStack not working\", \"NavigationStack vs NavigationSplitView\", \"deep links not opening right screen\", \"navigation state lost on background\", \"how do I implement coordinator pattern\", \"navigation pops back unexpectedly\", or mentions NavigationPath, state restoration. Provides SwiftUI navigation patterns for iOS 18+."
+      "description": "NavigationStack issues, NavigationStack vs NavigationSplitView, deep links wrong screen, state lost, coordinator pattern, pops unexpectedly, NavigationPath"
     },
     {
       "name": "swiftui-nav-diag",
-      "description": "This skill should be used when the user asks \"navigation pops unexpectedly\", \"navigationDestination crash\", \"deep link shows wrong screen\", \"navigation state lost on tab switch\", \"NavigationStack not responding\", or mentions navigation failure diagnostics. Provides systematic SwiftUI navigation diagnostics with production crisis defense."
+      "description": "navigation pops unexpectedly, navigationDestination crash, deep link wrong screen, navigation state lost on tab switch, NavigationStack not responding"
     },
     {
       "name": "swiftui-nav-ref",
-      "description": "This skill should be used when the user asks \"NavigationPath example\", \"NavigationSplitView setup\", \"deep linking API SwiftUI\", \"state restoration navigation\", \"Tab integration iOS 18\", \"Liquid Glass navigation iOS 26\", or mentions coordinator patterns, NavigationStack API. Provides comprehensive SwiftUI navigation API reference."
+      "description": "NavigationPath, NavigationSplitView, deep linking API, state restoration navigation, Tab integration iOS 18, Liquid Glass navigation iOS 26, NavigationStack API"
     },
     {
       "name": "swiftui-performance",
-      "description": "This skill should be used when the user asks 'why is my SwiftUI view slow', 'how do I optimize List performance', 'my app drops frames', 'view body is called too often', 'List is laggy', or mentions UI is slow, scrolling lags, animations stutter. Provides SwiftUI performance optimization with Instruments 26 and WWDC 2025 patterns."
+      "description": "SwiftUI view slow, List performance, app drops frames, view body called too often, List laggy, scrolling lags, animations stutter, Instruments 26, WWDC 2025 performance"
     },
     {
       "name": "textkit-ref",
-      "description": "This skill should be used when the user asks \"TextKit 2 migration\", \"Writing Tools integration\", \"NSTextLayoutManager example\", \"TextKit 2 architecture\", \"SwiftUI TextEditor TextKit\", or mentions TextKit 1 to TextKit 2, complex text layout. Provides complete TextKit 2 reference through iOS 26."
+      "description": "TextKit 2 migration, Writing Tools integration, NSTextLayoutManager, TextKit 2 architecture, SwiftUI TextEditor, TextKit 1 to 2, complex text layout"
     },
     {
       "name": "typography-ref",
-      "description": "This skill should be used when the user asks \"San Francisco font usage\", \"Dynamic Type setup\", \"text styles iOS\", \"typography tracking and leading\", \"font internationalization\", or mentions Apple typography guidelines, text style API. Provides Apple platform typography reference through iOS 26."
+      "description": "San Francisco font, Dynamic Type, text styles iOS, typography tracking and leading, font internationalization, Apple typography guidelines, text style API"
     },
     {
       "name": "ui-testing",
-      "description": "This skill should be used when the user asks \"tests are flaky\", \"how do I wait for element\", \"XCUITest timing issues\", \"Recording UI Automation\", \"condition-based waiting\", \"test race conditions\", or mentions network conditioning, accessibility-first testing. Provides UI testing patterns from WWDC 2025."
+      "description": "flaky tests, XCUITest, wait for element, timing issues, Recording UI Automation, condition-based waiting, test race conditions, accessibility-first testing"
     },
     {
       "name": "uikit-animation-debugging",
-      "description": "This skill should be used when CAAnimation completion handler doesn't fire, spring physics look wrong on device, animation duration mismatches actual time, gesture + animation interaction causes jank, or timing differs between simulator and real hardware. Provides systematic CAAnimation diagnosis with CATransaction patterns, frame rate awareness, and device-specific behavior."
+      "description": "CAAnimation completion not firing, spring physics wrong on device, duration mismatch, gesture animation jank, simulator vs device timing, CATransaction patterns"
     },
     {
       "name": "xcode-debugging",
-      "description": "This skill should be used when the user encounters BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild processes, \"Unable to boot simulator\", \"No such module\" after SPM changes, or mysterious test failures despite no code changes. Provides systematic environment-first diagnostics for iOS/macOS projects."
+      "description": "BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild, \"Unable to boot simulator\", \"No such module\", SPM changes, environment-first diagnostics"
     }
   ],
   "agents": [
     {
       "name": "accessibility-auditor",
-      "description": "Use this agent when the user mentions accessibility checking, App Store submission, code review, or WCAG compliance. Automatically runs comprehensive accessibility audit to detect VoiceOver issues, Dynamic Type violations, color contrast failures, and WCAG compliance problems - prevents App Store rejections and ensures usability for users with disabilities.",
+      "description": "Accessibility checking, App Store submission, WCAG compliance audit. Detects VoiceOver issues, Dynamic Type violations, color contrast failures. Prevents App Store rejections.",
       "path": "./agents/accessibility-auditor.md"
     },
     {
       "name": "build-fixer",
-      "description": "Use this agent when the user mentions Xcode build failures, build errors, or environment issues. Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics - saves 30+ minutes by checking zombie processes, Derived Data, SPM cache, and simulator state before code investigation.",
+      "description": "Xcode build failures, build errors, environment issues. Diagnoses zombie processes, Derived Data, SPM cache, simulator state. Saves 30+ minutes environment-first diagnostics.",
       "path": "./agents/build-fixer.md"
     },
     {
       "name": "build-optimizer",
-      "description": "Use this agent when the user mentions slow builds, build performance, or build time optimization. Automatically scans Xcode projects for build performance optimizations - identifies slow type checking, expensive build phase scripts, suboptimal build settings, and parallelization opportunities to reduce build times by 30-50%.",
+      "description": "Slow builds, build performance optimization. Identifies slow type checking, expensive scripts, suboptimal settings, parallelization gaps. Reduces build times 30-50%.",
       "path": "./agents/build-optimizer.md"
     },
     {
       "name": "codable-auditor",
-      "description": "Use this agent when the user mentions Codable review, JSON encoding/decoding issues, data serialization audit, or modernizing legacy code. Automatically scans Swift/Objective-C for Codable anti-patterns (manual JSON building, try? swallowing errors, JSONSerialization usage) and date handling issues - prevents silent data loss and production bugs.",
+      "description": "Codable review, JSON serialization audit, legacy code modernization. Detects manual JSON building, try? swallowing errors, JSONSerialization usage. Prevents silent data loss.",
       "path": "./agents/codable-auditor.md"
     },
     {
       "name": "concurrency-validator",
-      "description": "Use this agent when the user mentions concurrency checking, Swift 6 compliance, data race prevention, or async code review. Automatically scans Swift code for Swift 6 strict concurrency violations - detects unsafe Task captures, missing @MainActor, Sendable violations, and actor isolation problems to prevent data races.",
+      "description": "Swift 6 concurrency checking, data race prevention. Detects unsafe Task captures, missing @MainActor, Sendable violations, actor isolation problems. Prevents data races.",
       "path": "./agents/concurrency-validator.md"
     },
     {
       "name": "core-data-auditor",
-      "description": "Use this agent when the user mentions Core Data review, schema migration, production crashes, or data safety checking. Automatically scans Core Data code for the 5 most critical safety violations - schema migration risks, thread-confinement errors, N+1 query patterns, production data loss risks, and performance issues - prevents production crashes and permanent data loss.",
+      "description": "Core Data review, schema migration safety, production crash prevention. Detects migration risks, thread-confinement errors, N+1 queries, data loss risks. Critical safety violations.",
       "path": "./agents/core-data-auditor.md"
     },
     {
       "name": "icloud-auditor",
-      "description": "Use this agent when the user mentions iCloud sync issues, CloudKit errors, ubiquitous container problems, or asks to audit cloud sync. Automatically runs comprehensive iCloud audit to detect missing entitlement checks, unsafe file coordination, missing error handling, and CloudKit anti-patterns - prevents sync failures and data conflicts.",
+      "description": "iCloud sync issues, CloudKit errors, ubiquitous container problems. Detects missing entitlements, unsafe file coordination, error handling gaps, CloudKit anti-patterns. Prevents sync failures.",
       "path": "./agents/icloud-auditor.md"
     },
     {
       "name": "iap-auditor",
-      "description": "Use this agent when the user mentions in-app purchase review, IAP audit, StoreKit issues, purchase bugs, transaction problems, or subscription management. Automatically audits existing IAP code to detect missing transaction.finish() calls, weak receipt validation, missing restore functionality, subscription status tracking issues, and StoreKit testing configuration gaps - prevents revenue loss, App Store rejections, and customer support issues.",
+      "description": "In-app purchase review, StoreKit issues, transaction problems. Detects missing transaction.finish(), weak validation, missing restore, subscription tracking gaps. Prevents revenue loss and rejections.",
       "path": "./agents/iap-auditor.md"
     },
     {
       "name": "iap-implementation",
-      "description": "Use this agent when the user wants to add in-app purchases, implement StoreKit 2, set up subscriptions, or add purchase functionality. Implements complete IAP solution following testing-first workflow with StoreKit configuration, centralized StoreManager, transaction handling, subscription management, and restore purchases - ensures best practices, prevents common pitfalls, and delivers production-ready code.",
+      "description": "Add in-app purchases, StoreKit 2, subscriptions. Implements testing-first IAP with StoreKit config, StoreManager, transactions, subscription management, restore. Production-ready.",
       "path": "./agents/iap-implementation.md"
     },
     {
       "name": "liquid-glass-auditor",
-      "description": "Use this agent when the user mentions Liquid Glass review, iOS 26 UI updates, toolbar improvements, or visual effect migration. Automatically scans SwiftUI codebase for Liquid Glass adoption opportunities - identifies views for glass effects, toolbar improvements, search patterns, migration from old blur effects, and tinting opportunities for iOS 26+.",
+      "description": "Liquid Glass review, iOS 26 UI updates, toolbar improvements. Identifies glass effect opportunities, toolbar upgrades, search patterns, blur effect migrations, tinting opportunities for iOS 26+.",
       "path": "./agents/liquid-glass-auditor.md"
     },
     {
       "name": "memory-audit-runner",
-      "description": "Use this agent when the user mentions memory leak prevention, code review for memory issues, or proactive leak checking. Automatically scans codebase for the 6 most common memory leak patterns - timer leaks, observer leaks, closure captures, delegate cycles, view callbacks, and PhotoKit accumulation to prevent crashes and progressive memory growth.",
+      "description": "Memory leak prevention, proactive leak checking. Detects 6 common patterns: timer leaks, observer leaks, closure captures, delegate cycles, view callbacks, PhotoKit accumulation. Prevents crashes.",
       "path": "./agents/memory-audit-runner.md"
     },
     {
       "name": "networking-auditor",
-      "description": "Use this agent when the user mentions networking review, deprecated APIs, connection issues, or App Store submission prep. Automatically scans Swift/Objective-C for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling) - prevents App Store rejections and connection failures.",
+      "description": "Networking review, deprecated APIs, App Store prep. Detects SCNetworkReachability, CFSocket, NSStream, reachability checks, hardcoded IPs, missing error handling. Prevents rejections.",
       "path": "./agents/networking-auditor.md"
     },
     {
       "name": "simulator-tester",
-      "description": "Use this agent when the user mentions simulator testing, test scenarios, visual verification, push notification testing, location simulation, screenshot capture, or automated testing workflows. Automatically sets up test scenarios, captures screenshots, checks logs for crashes/errors, and iterates on fixes - enables closed-loop debugging with visual verification.",
+      "description": "Simulator testing, test scenarios, visual verification. Sets up scenarios, captures screenshots, checks logs for crashes/errors, iterates on fixes. Closed-loop debugging with visual verification.",
       "path": "./agents/simulator-tester.md"
     },
     {
       "name": "storage-auditor",
-      "description": "Use this agent when the user mentions file storage issues, data loss, backup bloat, or asks to audit storage usage. Automatically runs comprehensive storage audit to detect files in wrong locations, missing backup exclusions, missing file protection, and storage anti-patterns - prevents data loss and backup bloat.",
+      "description": "File storage issues, data loss, backup bloat audit. Detects files in wrong locations, missing backup exclusions, missing file protection, storage anti-patterns. Prevents data loss.",
       "path": "./agents/storage-auditor.md"
     },
     {
       "name": "swiftui-nav-auditor",
-      "description": "Use this agent when the user mentions SwiftUI navigation issues, deep linking problems, state restoration bugs, or navigation architecture review. Automatically scans SwiftUI navigation code for architecture issues - detects missing NavigationPath, deep link gaps, state restoration problems, wrong container usage, and navigation correctness issues (not performance - see swiftui-performance-analyzer for that).",
+      "description": "SwiftUI navigation issues, deep linking, state restoration, architecture review. Detects missing NavigationPath, deep link gaps, wrong container usage, navigation correctness issues (not performance).",
       "path": "./agents/swiftui-nav-auditor.md"
     },
     {
       "name": "swiftui-performance-analyzer",
-      "description": "Use this agent when the user mentions SwiftUI performance, janky scrolling, slow animations, or view update issues. Automatically scans SwiftUI code for performance anti-patterns - detects expensive operations in view bodies, unnecessary updates, missing lazy loading, and SwiftUI-specific issues that cause frame drops and poor scrolling performance.",
+      "description": "SwiftUI performance, janky scrolling, slow animations. Detects expensive view body operations, unnecessary updates, missing lazy loading, SwiftUI-specific frame drops and scrolling issues.",
       "path": "./agents/swiftui-performance-analyzer.md"
     },
     {
       "name": "swiftui-architecture-auditor",
-      "description": "Use this agent when the user mentions SwiftUI architecture review, separation of concerns, testability issues, or 'logic in view' problems. Automatically scans SwiftUI code for architectural anti-patterns - logic in view bodies, async boundary violations, property wrapper misuse, and testability gaps. Complements (but is distinct from) performance and navigation audits.",
+      "description": "SwiftUI architecture, separation of concerns, testability. Detects logic in view bodies, async boundary violations, property wrapper misuse, testability gaps. Complements performance/nav audits.",
       "path": "./agents/swiftui-architecture-auditor.md"
     },
     {
       "name": "textkit-auditor",
-      "description": "Use this agent when the user mentions TextKit review, text layout issues, Writing Tools integration, or UITextView/NSTextView code review. Automatically scans for TextKit 1 fallback triggers, deprecated glyph APIs, and missing TextKit 2 features - prevents loss of Writing Tools support and ensures modern text handling for complex scripts.",
+      "description": "TextKit review, Writing Tools integration, UITextView/NSTextView code review. Detects TextKit 1 fallback triggers, deprecated glyph APIs, missing TextKit 2 features. Prevents Writing Tools loss.",
       "path": "./agents/textkit-auditor.md"
     }
   ]
