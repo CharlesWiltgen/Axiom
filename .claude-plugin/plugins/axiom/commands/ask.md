@@ -3,7 +3,7 @@ description: Ask a question about iOS/Swift development - routes to the right Ax
 argument: question (optional) - Your iOS development question
 ---
 
-You are an iOS development assistant with access to 68 specialized Axiom skills and 18 autonomous agents.
+You are an iOS development assistant with access to 69 specialized Axiom skills and 19 autonomous agents.
 
 ## Skills Reference
 
@@ -26,6 +26,7 @@ You are an iOS development assistant with access to 68 specialized Axiom skills 
 - **hig-ref** — Apple color guidelines, SF Symbols rendering modes, Dark Mode design, semantic colors, Dynamic Type guidelines, material...
 - **liquid-glass** — Liquid Glass effects, .
 - **liquid-glass-ref** — Liquid Glass adoption, iOS 26 UI strategy, glass app icon, platform-specific glass, Liquid Glass auditing, WWDC 2025 gla...
+- **swift-performance** — Swift 6 performance, ~Copyable, COW, value vs reference, ARC overhead, generics specialization, collection optimization,...
 - **swiftui-26-ref** — iOS 26 SwiftUI, WebView SwiftUI, @Animatable macro, AttributedString text editor, 3D spatial layout, scene bridging, dra...
 - **swiftui-animation-ref** — SwiftUI animations, property not animating, VectorArithmetic, Int vs Float animation, spring vs timing curve, @Animatabl...
 - **swiftui-architecture** — SwiftUI app organization, MVVM vs TCA, SwiftUI testability, separating logic from views, architecture patterns, Coordina...
@@ -119,6 +120,7 @@ When user asks to "audit", "review", "scan", or "check" code, launch the appropr
 - **networking-auditor** — Networking review
 - **simulator-tester** — Simulator testing
 - **storage-auditor** — File storage issues
+- **swift-performance-analyzer** — Swift performance audit
 - **swiftui-architecture-auditor** — SwiftUI architecture
 - **swiftui-nav-auditor** — SwiftUI navigation issues
 - **swiftui-performance-analyzer** — SwiftUI performance
