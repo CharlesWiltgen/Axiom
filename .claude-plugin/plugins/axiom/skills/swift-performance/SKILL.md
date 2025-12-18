@@ -2,7 +2,7 @@
 name: swift-performance
 description: Use when optimizing Swift code performance, reducing memory usage, improving runtime efficiency, dealing with COW, ARC overhead, generics specialization, or collection optimization
 skill_type: discipline
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Swift Performance Optimization
@@ -367,6 +367,54 @@ func processAll(_ objects: [MyClass]) {
 }
 ```
 
+### Observable Object Lifetimes
+
+**From WWDC 2021/10216**: Object lifetimes end at **last use**, not at closing brace.
+
+```swift
+// ❌ Relying on observed lifetime is fragile
+class Traveler {
+    weak var account: Account?
+
+    deinit {
+        print("Deinitialized")  // May run BEFORE expected with ARC optimizations!
+    }
+}
+
+func test() {
+    let traveler = Traveler()
+    let account = Account(traveler: traveler)
+    // traveler's last use is above - may deallocate here!
+    account.printSummary()  // weak reference may be nil!
+}
+
+// ✅ Explicitly extend lifetime when needed
+func test() {
+    let traveler = Traveler()
+    let account = Account(traveler: traveler)
+
+    withExtendedLifetime(traveler) {
+        account.printSummary()  // traveler guaranteed to live
+    }
+}
+
+// Alternative: defer at end of scope
+func test() {
+    let traveler = Traveler()
+    defer { withExtendedLifetime(traveler) {} }
+
+    let account = Account(traveler: traveler)
+    account.printSummary()
+}
+```
+
+**Why This Matters**: Observed object lifetimes are an emergent property of compiler optimizations and can change between:
+- Xcode versions
+- Build configurations (Debug vs Release)
+- Unrelated code changes that enable new optimizations
+
+**Build Setting**: Enable "Optimize Object Lifetimes" (Xcode 13+) during development to expose hidden lifetime bugs early.
+
 ---
 
 ## Part 5: Generics & Specialization
@@ -409,6 +457,45 @@ func drawAll<T: Drawable>(shapes: [T]) {
 ```
 
 **Performance**: Generic version ~10x faster (eliminates witness table overhead).
+
+### Existential Container Internals
+
+**From WWDC 2016/416**: `any Protocol` uses an existential container with specific performance characteristics.
+
+```swift
+// Existential container layout:
+// ┌─────────────────────────────┐
+// │ 3 words inline storage      │ ← 24 bytes for small types
+// │ (or pointer to heap buffer) │
+// ├─────────────────────────────┤
+// │ Value Witness Table pointer │ ← How to copy/destroy value
+// ├─────────────────────────────┤
+// │ Protocol Witness Table ptr  │ ← Protocol method implementations
+// └─────────────────────────────┘
+
+// Small types (≤24 bytes) - stored inline, no heap allocation
+struct Point: Drawable {
+    var x, y, z: Double  // 24 bytes - fits inline!
+}
+
+let drawable: any Drawable = Point(x: 1, y: 2, z: 3)
+// Point stored directly in container (no heap)
+
+// Large types (>24 bytes) - heap allocated
+struct Rectangle: Drawable {
+    var x, y, width, height: Double  // 32 bytes - exceeds inline buffer
+}
+
+let drawable: any Drawable = Rectangle(x: 0, y: 0, width: 10, height: 20)
+// Rectangle allocated on heap, container stores pointer
+
+// Performance implications:
+// - Small existentials (≤24 bytes): Fast - no heap allocation
+// - Large existentials (>24 bytes): Slow - heap allocation + indirection
+// - Generic `some Drawable`: Always fast - no container overhead
+```
+
+**Design Tip**: Keep protocol-conforming types ≤24 bytes when used as `any Protocol` for best performance.
 
 ### `@_specialize` Attribute
 
@@ -1111,11 +1198,10 @@ func render<S: Shape>(shapes: [S]) { }
 
 | Session | Title | Key Topics |
 |---------|-------|------------|
-| WWDC 2024/10229 | Explore Swift performance | Generic specialization, inlining |
-| WWDC 2023/10227 | What's new in Swift | Ownership, noncopyable types |
-| WWDC 2022/110363 | Eliminate data races using Swift Concurrency | Actor isolation, Sendable |
-| WWDC 2021/10103 | Meet Swift Concurrency | async/await performance |
-| WWDC 2016/416 | Understanding Swift Performance | Value vs reference, protocol witness tables |
+| WWDC 2024/10217 | Explore Swift performance | Function calls, memory allocation, layout, copying |
+| WWDC 2016/416 | Understanding Swift Performance | Value vs reference, protocol witness tables, COW |
+| WWDC 2021/10216 | ARC in Swift: Basics and beyond | Object lifetimes, weak/unowned, withExtendedLifetime |
+| WWDC 2024/10170 | Consume noncopyable types in Swift | ~Copyable, ownership, consuming/borrowing |
 
 ### Documentation
 
