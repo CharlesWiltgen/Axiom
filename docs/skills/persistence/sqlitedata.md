@@ -1,60 +1,189 @@
 ---
 name: sqlitedata
-description: Use when working with SQLiteData (Point-Free) — @Table models, queries with @FetchAll/@FetchOne, CloudKit sync setup, StructuredQueries post-migration crashes, batch imports, production crisis decision-making under App Store deployment pressure, and when to drop to GRDB - type-safe SQLite persistence patterns for iOS
-version: 1.1.0
-last_updated: TDD-tested with App Store migration crisis scenarios
+description: SQLiteData queries, @Table models, Point-Free SQLite, RETURNING clause, FTS5 full-text search, CloudKit sync, CTEs, JSON aggregation, @DatabaseFunction
+skill_type: discipline
+version: 3.0.0
+last_updated: 2025-12-19 — Split from single skill, added v1.2-1.4 APIs
 ---
 
 # SQLiteData
 
 ## Overview
 
-Type-safe SQLite persistence using [SQLiteData](https://pointfreeco.github.io/sqlite-data/) ([GitHub](https://github.com/pointfreeco/sqlite-data)) by Point-Free. Built on [GRDB](https://github.com/groue/GRDB.swift), providing SwiftData-like ergonomics with CloudKit sync support.
+Type-safe SQLite persistence using [SQLiteData](https://github.com/pointfreeco/sqlite-data) by Point-Free. A fast, lightweight replacement for SwiftData with CloudKit synchronization support, built on [GRDB](https://github.com/groue/GRDB.swift) and [StructuredQueries](https://github.com/pointfreeco/swift-structured-queries).
 
-**Core principle** Value types (`struct`) + `@Table` macros + static methods for type-safe database operations.
+**Core principle:** Value types (`struct`) + `@Table` macro + `database.write { }` blocks for all mutations.
 
-**Requires** iOS 17+, Swift 6 concurrency
-**License** MIT (free and open source)
+**For advanced patterns** (CTEs, views, custom aggregates, schema composition), see the `sqlitedata-ref` reference skill.
+
+**Requires:** iOS 17+, Swift 6 strict concurrency
+**License:** MIT
 
 ## When to Use SQLiteData
 
-#### Choose SQLiteData when you need
-- ✅ Type-safe SQLite with compiler-checked queries
-- ✅ CloudKit sync with record sharing
-- ✅ Large datasets (50k+ records) with fast performance
-- ✅ Value types (structs) instead of classes
-- ✅ Swift 6 strict concurrency support
+**Choose SQLiteData when you need:**
+- Type-safe SQLite with compiler-checked queries
+- CloudKit sync with record sharing
+- Large datasets (50k+ records) with near-raw-SQLite performance
+- Value types (structs) instead of classes
+- Swift 6 strict concurrency support
 
-#### Use SwiftData instead when
+**Use SwiftData instead when:**
 - Simple CRUD with native Apple integration
 - Prefer `@Model` classes over structs
 - Don't need CloudKit record sharing
 
-#### Use raw GRDB when
-- Complex SQL joins across multiple tables
-- Custom migration logic
-- Performance-critical batch operations
+**Use raw GRDB when:**
+- Complex SQL joins across 4+ tables
+- Custom migration logic beyond schema changes
+- Performance-critical operations needing manual SQL
 
-**For migrations** See the `database-migration` skill for safe schema evolution patterns.
+---
 
-## Example Prompts
+## Quick Reference
 
-These are real questions developers ask that this skill is designed to answer:
+```swift
+// MODEL
+@Table nonisolated struct Item: Identifiable {
+    let id: UUID                    // First let = auto primary key
+    var title = ""                  // Default = non-nullable
+    var notes: String?              // Optional = nullable
+    @Column(as: Color.Hex.self)
+    var color: Color = .blue        // Custom representation
+    @Ephemeral var isSelected = false  // Not persisted
+}
 
-#### 1. "I'm building a task app with type-safe queries. How do I set up @Table models and filter tasks by priority?"
-→ The skill shows `@Table` definitions, `@Query` with predicates, and type-safe filtering
+// SETUP
+prepareDependencies { $0.defaultDatabase = try! appDatabase() }
+@Dependency(\.defaultDatabase) var database
 
-#### 2. "I need to sync tasks to other devices via CloudKit. How do I set up sync with record sharing?"
-→ The skill covers CloudKit integration, record sharing, and sync conflict handling
+// FETCH
+@FetchAll var items: [Item]
+@FetchAll(Item.order(by: \.title).where(\.isInStock)) var items
+@FetchOne(Item.count()) var count = 0
 
-#### 3. "I'm importing 50,000 notes from an API. How do I batch insert efficiently without blocking the UI?"
-→ The skill shows batch operations, background writes, and progress tracking patterns
+// FETCH (static helpers - v1.4.0+)
+try Item.fetchAll(db)              // vs Item.all.fetchAll(db)
+try Item.find(db, key: id)         // returns non-optional Item
 
-#### 4. "After updating the app, some queries are crashing with StructuredQueries errors. How do I fix it?"
-→ The skill explains StructuredQueries migration issues, safe recovery, and prevention strategies
+// INSERT
+try database.write { db in
+    try Item.insert { Item.Draft(title: "New") }.execute(db)
+}
 
-#### 5. "I have complex queries with joins across 4 tables. Should I use SQLiteData or drop to GRDB?"
-→ The skill explains when to use SQLiteData vs raw GRDB for performance-critical queries
+// UPDATE (single)
+try database.write { db in
+    try Item.find(id).update { $0.title = "Updated" }.execute(db)
+}
+
+// UPDATE (bulk)
+try database.write { db in
+    try Item.where(\.isInStock).update { $0.notes = "" }.execute(db)
+}
+
+// DELETE
+try database.write { db in
+    try Item.find(id).delete().execute(db)
+    try Item.where { $0.id.in(ids) }.delete().execute(db)  // bulk
+}
+
+// QUERY
+Item.where(\.isActive)                     // Keypath (simple)
+Item.where { $0.title.contains("phone") }  // Closure (complex)
+Item.where { $0.status.eq(#bind(.done)) }  // Enum comparison
+Item.order(by: \.title)                    // Sort
+Item.order { $0.createdAt.desc() }         // Sort descending
+Item.limit(10).offset(20)                  // Pagination
+
+// RAW SQL (#sql macro)
+#sql("SELECT * FROM items WHERE price > 100")  // Type-safe raw SQL
+#sql("coalesce(date(\(dueDate)) = date(\(now)), 0)")  // Custom expressions
+
+// CLOUDKIT (v1.2-1.4+)
+prepareDependencies {
+    $0.defaultSyncEngine = try SyncEngine(
+        for: $0.defaultDatabase,
+        tables: Item.self
+    )
+}
+@Dependency(\.defaultSyncEngine) var syncEngine
+
+// Manual sync control (v1.3.0+)
+try await syncEngine.fetchChanges()  // Pull from CloudKit
+try await syncEngine.sendChanges()   // Push to CloudKit
+try await syncEngine.syncChanges()   // Bidirectional
+
+// Sync state observation (v1.2.0+)
+syncEngine.isSendingChanges    // true during upload
+syncEngine.isFetchingChanges   // true during download
+syncEngine.isSynchronizing     // either sending or fetching
+```
+
+---
+
+## Anti-Patterns (Common Mistakes)
+
+### ❌ Using `==` in predicates
+```swift
+// WRONG — may not work in all contexts
+.where { $0.status == .completed }
+
+// CORRECT — use comparison methods
+.where { $0.status.eq(#bind(.completed)) }
+```
+
+### ❌ Wrong update order
+```swift
+// WRONG — .update before .where
+Item.update { $0.title = "X" }.where { $0.id == id }
+
+// CORRECT — .find() for single, .where() before .update() for bulk
+Item.find(id).update { $0.title = "X" }.execute(db)
+Item.where(\.isOld).update { $0.archived = true }.execute(db)
+```
+
+### ❌ Instance methods for insert
+```swift
+// WRONG — no instance insert method
+let item = Item(id: UUID(), title: "Test")
+try item.insert(db)
+
+// CORRECT — static insert with .Draft
+try Item.insert { Item.Draft(title: "Test") }.execute(db)
+```
+
+### ❌ Missing `nonisolated`
+```swift
+// WRONG — Swift 6 concurrency warning
+@Table struct Item { ... }
+
+// CORRECT
+@Table nonisolated struct Item { ... }
+```
+
+### ❌ Awaiting inside write block
+```swift
+// WRONG — write block is synchronous
+try await database.write { db in ... }
+
+// CORRECT — no await inside the block
+try database.write { db in
+    try Item.insert { ... }.execute(db)
+}
+```
+
+### ❌ Forgetting `.execute(db)`
+```swift
+// WRONG — builds query but doesn't run it
+try database.write { db in
+    Item.insert { Item.Draft(title: "X") }  // Does nothing!
+}
+
+// CORRECT
+try database.write { db in
+    try Item.insert { Item.Draft(title: "X") }.execute(db)
+}
+```
 
 ---
 
@@ -66,635 +195,604 @@ These are real questions developers ask that this skill is designed to answer:
 import SQLiteData
 
 @Table
-struct Track: Identifiable, Sendable {
-    @Attribute(.primaryKey)
-    var id: String
-
-    var title: String
-    var artist: String
-    var duration: TimeInterval
-    var genre: String?  // Optional columns are nullable
+nonisolated struct Item: Identifiable {
+    let id: UUID           // First `let` = auto primary key
+    var title = ""
+    var isInStock = true
+    var notes = ""
 }
 ```
 
-#### Key patterns
+**Key patterns:**
 - Use `struct`, not `class` (value types)
-- Conform to `Sendable` for Swift 6 concurrency
-- Use `@Attribute(.primaryKey)` for primary key
+- Add `nonisolated` for Swift 6 concurrency
+- First `let` property is automatically the primary key
+- Use defaults (`= ""`, `= true`) for non-nullable columns
 - Optional properties (`String?`) map to nullable SQL columns
+
+### Custom Primary Key
+
+```swift
+@Table
+nonisolated struct Tag: Hashable, Identifiable {
+    @Column(primaryKey: true)
+    var title: String      // Custom primary key
+    var id: String { title }
+}
+```
+
+### Column Customization
+
+```swift
+@Table
+nonisolated struct RemindersList: Hashable, Identifiable {
+    let id: UUID
+
+    @Column(as: Color.HexRepresentation.self)  // Custom type representation
+    var color: Color = .blue
+
+    var position = 0
+    var title = ""
+}
+```
 
 ### Foreign Keys
 
 ```swift
 @Table
-struct Track: Identifiable, Sendable {
-    @Attribute(.primaryKey)
-    var id: String
-
-    var title: String
-    var albumId: String  // Foreign key (explicit, not @Relationship)
+nonisolated struct Reminder: Hashable, Identifiable {
+    let id: UUID
+    var title = ""
+    var remindersListID: RemindersList.ID  // Foreign key (explicit column)
 }
 
 @Table
-struct Album: Identifiable, Sendable {
-    @Attribute(.primaryKey)
-    var id: String
-
-    var title: String
-    var artist: String
+nonisolated struct Attendee: Hashable, Identifiable {
+    let id: UUID
+    var name = ""
+    var syncUpID: SyncUp.ID  // References parent
 }
 ```
 
-**Important** SQLiteData uses explicit foreign key columns, not `@Relationship` macros like SwiftData.
+**Note:** SQLiteData uses explicit foreign key columns. Relationships are expressed through joins, not `@Relationship` macros.
+
+### @Ephemeral — Non-Persisted Properties
+
+Mark properties that exist in Swift but not in the database:
+
+```swift
+@Table
+nonisolated struct Item: Identifiable {
+    let id: UUID
+    var title = ""
+    var price: Decimal = 0
+
+    @Ephemeral
+    var isSelected = false  // Not stored in database
+
+    @Ephemeral
+    var formattedPrice: String {  // Computed, not stored
+        "$\(price)"
+    }
+}
+```
+
+**Use cases:**
+- UI state (selection, expansion, hover)
+- Computed properties derived from stored columns
+- Transient flags for business logic
+- Default values for properties not yet in schema
+
+**Important:** `@Ephemeral` properties must have default values since they won't be populated from the database.
+
+---
 
 ## Database Setup
 
-```swift
-import SQLiteData
-import Dependencies
+### Create Database
 
-// 1. Create database dependency
+```swift
+import Dependencies
+import SQLiteData
+import GRDB
+
+func appDatabase() throws -> any DatabaseWriter {
+    var configuration = Configuration()
+    configuration.prepareDatabase { db in
+        // Configure database behavior
+        db.trace { print("SQL: \($0)") }  // Optional SQL logging
+    }
+
+    let database = try DatabaseQueue(configuration: configuration)
+
+    var migrator = DatabaseMigrator()
+
+    // Register migrations
+    migrator.registerMigration("v1") { db in
+        try #sql(
+            """
+            CREATE TABLE "items" (
+                "id" TEXT PRIMARY KEY NOT NULL DEFAULT (uuid()),
+                "title" TEXT NOT NULL DEFAULT '',
+                "isInStock" INTEGER NOT NULL DEFAULT 1,
+                "notes" TEXT NOT NULL DEFAULT ''
+            ) STRICT
+            """
+        )
+        .execute(db)
+    }
+
+    try migrator.migrate(database)
+    return database
+}
+```
+
+### Register in Dependencies
+
+```swift
 extension DependencyValues {
-    var musicDatabase: Database {
-        get { self[DatabaseKey.self] }
-        set { self[DatabaseKey.self] = newValue }
+    var defaultDatabase: any DatabaseWriter {
+        get { self[DefaultDatabaseKey.self] }
+        set { self[DefaultDatabaseKey.self] = newValue }
     }
 }
 
-private struct DatabaseKey: DependencyKey {
-    static let liveValue: Database = {
-        let path = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
-        let dbPath = "\(path)/music.db"
-        return try! DatabaseQueue(path: dbPath)
+private enum DefaultDatabaseKey: DependencyKey {
+    static let liveValue: any DatabaseWriter = {
+        try! appDatabase()
     }()
 }
 
-// 2. Use in your code
-struct MusicRepository {
-    @Dependency(\.musicDatabase) var database
+// In app init or @main
+prepareDependencies {
+    $0.defaultDatabase = try! appDatabase()
+}
+```
 
-    func fetchTracks() async throws -> [Track] {
-        try await Track.fetchAll(database)
+---
+
+## Query Patterns
+
+### Property Wrappers (@FetchAll, @FetchOne)
+
+The primary way to observe database changes in SwiftUI:
+
+```swift
+struct ItemsList: View {
+    @FetchAll(Item.order(by: \.title)) var items
+
+    var body: some View {
+        List(items) { item in
+            Text(item.title)
+        }
     }
 }
 ```
 
-**Pattern** SQLiteData works well with [swift-dependencies](https://github.com/pointfreeco/swift-dependencies) for dependency injection.
+**Key behaviors:**
+- Automatically subscribes to database changes
+- Updates when any `Item` changes
+- Runs on the main thread
+- Cancels observation when view disappears (iOS 17+)
 
-## Query Patterns
-
-### Fetch All
+### @FetchOne for Aggregates
 
 ```swift
-// Fetch all tracks
-let tracks = try await Track.fetchAll(database)
+struct StatsView: View {
+    @FetchOne(Item.count()) var totalCount = 0
+    @FetchOne(Item.where(\.isInStock).count()) var inStockCount = 0
 
-// With @FetchAll property wrapper (SwiftUI)
-@FetchAll<Track>
-var tracks: [Track]
+    var body: some View {
+        Text("Total: \(totalCount), In Stock: \(inStockCount)")
+    }
+}
 ```
 
-### Fetch One
+### Lifecycle-Aware Fetching (v1.4.0+)
+
+Use `.task` to automatically cancel observation when view disappears:
 
 ```swift
-// Fetch by primary key
-let track = try await Track.fetchOne(database, key: "track123")
+struct ItemsList: View {
+    @Fetch(Item.all, animation: .default)
+    private var items = [Item]()
 
-// With @FetchOne property wrapper
-@FetchOne<Track>
-var track: Track?
+    @State var searchQuery = ""
+
+    var body: some View {
+        List(items) { item in
+            Text(item.title)
+        }
+        .searchable(text: $searchQuery)
+        .task(id: searchQuery) {
+            // Automatically cancels when view disappears or searchQuery changes
+            try? await $items.load(
+                Item.where { $0.title.contains(searchQuery) }
+                    .order(by: \.title)
+            ).task  // ← .task for auto-cancellation
+        }
+    }
+}
+```
+
+**Before v1.4.0** (manual cleanup):
+```swift
+.task {
+    try? await $items.load(query)
+}
+.onDisappear {
+    Task { try await $items.load(Item.none) }
+}
+```
+
+**With v1.4.0** (automatic):
+```swift
+.task {
+    try? await $items.load(query).task  // Auto-cancels
+}
 ```
 
 ### Filtering
 
 ```swift
-// Type-safe where clause
-let rockTracks = try await Track
-    .where { $0.genre == "Rock" }
-    .fetchAll(database)
+// Simple keypath filter
+let active = Item.where(\.isActive)
 
-// Multiple conditions
-let results = try await Track
-    .where { $0.genre == "Rock" && $0.duration > 180 }
-    .fetchAll(database)
+// Complex closure filter
+let recent = Item.where { $0.createdAt > lastWeek && !$0.isArchived }
+
+// Contains/prefix/suffix
+let matches = Item.where { $0.title.contains("phone") }
+let starts = Item.where { $0.title.hasPrefix("iPhone") }
 ```
 
 ### Sorting
 
 ```swift
-let sorted = try await Track
-    .order { $0.title.ascending }
-    .fetchAll(database)
+// Single column
+let sorted = Item.order(by: \.title)
+
+// Descending
+let descending = Item.order { $0.createdAt.desc() }
+
+// Multiple columns
+let multiSort = Item.order { ($0.priority, $0.createdAt.desc()) }
 ```
 
-## Insert/Update/Delete
+### Static Fetch Helpers (v1.4.0+)
+
+Cleaner syntax for fetching:
+
+```swift
+// OLD (verbose)
+let items = try Item.all.fetchAll(db)
+let item = try Item.find(id).fetchOne(db)  // returns Optional<Item>
+
+// NEW (concise)
+let items = try Item.fetchAll(db)
+let item = try Item.find(db, key: id)      // returns Item (non-optional)
+
+// Works with where clauses too
+let active = try Item.where(\.isActive).find(db, key: id)
+```
+
+**Key improvement:** `.find(db, key:)` returns non-optional, throwing an error if not found.
+
+---
+
+## Insert / Update / Delete
 
 ### Insert
 
 ```swift
-let track = Track(
-    id: "track1",
-    title: "Song Name",
-    artist: "Artist",
-    duration: 240,
-    genre: "Rock"
-)
-
-// ✅ CORRECT: Static method pattern
-try await Track.insert { track }.execute(database)
-
-// ❌ WRONG: GRDB Active Record pattern (doesn't work with @Table)
-try track.insert(database)  // Won't compile
+try database.write { db in
+    try Item.insert {
+        Item.Draft(title: "New Item", isInStock: true)
+    }
+    .execute(db)
+}
 ```
 
-**Critical** SQLiteData uses **static methods**, not instance methods. This is different from GRDB's Active Record pattern.
-
-### Update
+### Insert with RETURNING (get generated ID)
 
 ```swift
-try await Track
-    .update { $0.genre = "Pop" }
-    .where { $0.id == "track1" }
-    .execute(database)
+let newId = try database.write { db in
+    try Item.insert {
+        Item.Draft(title: "New Item")
+    }
+    .returning(\.id)
+    .fetchOne(db)
+}
+```
+
+### Update Single Record
+
+```swift
+try database.write { db in
+    try Item.find(itemId)
+        .update { $0.title = "Updated Title" }
+        .execute(db)
+}
+```
+
+### Update Multiple Records
+
+```swift
+try database.write { db in
+    try Item.where(\.isArchived)
+        .update { $0.isDeleted = true }
+        .execute(db)
+}
 ```
 
 ### Delete
 
 ```swift
-try await Track
-    .delete()
-    .where { $0.id == "track1" }
-    .execute(database)
+// Delete single
+try database.write { db in
+    try Item.find(id).delete().execute(db)
+}
+
+// Delete multiple
+try database.write { db in
+    try Item.where { $0.createdAt < cutoffDate }
+        .delete()
+        .execute(db)
+}
 ```
+
+---
 
 ## Batch Operations
 
-### Batch Insert (Fast)
-
-For large datasets (50k+ records):
+### Batch Insert
 
 ```swift
-func importTracks(_ tracks: [Track]) async throws {
-    let batchSize = 500  // Optimal for GRDB
-
-    for i in stride(from: 0, to: tracks.count, by: batchSize) {
-        let batchEnd = min(i + batchSize, tracks.count)
-        let batch = Array(tracks[i..<batchEnd])
-
-        // Single transaction per batch
-        try await database.write { db in
-            for track in batch {
-                try Track.insert { track }.execute(db)
-            }
-        }
-
-        print("Imported \(batchEnd)/\(tracks.count)")
+try database.write { db in
+    try Item.insert {
+        ($0.title, $0.isInStock)
+    } values: {
+        items.map { ($0.title, $0.isInStock) }
     }
+    .execute(db)
 }
 ```
 
-#### Performance
-- 50,000 records in ~30-45 seconds
-- Batching reduces 50k transactions to 100 transactions (500 records each)
-- Each `database.write { }` block is ONE transaction
+### Transaction Safety
 
-### Why Batching Matters
-
-| Pattern | Transactions | Time for 50k records |
-|---------|--------------|---------------------|
-| One-by-one | 50,000 | ~4 hours |
-| Batched (500 each) | 100 | ~45 seconds |
-| Single transaction | 1 | ~20 seconds (risky) |
-
-**Recommendation** Use batch size 500 for resilience. Single transaction is faster but rolls back entirely on any failure.
-
-## ⚠️ Critical Gotchas
-
-### 1. StructuredQueries Post-Migration Crash
-
-**Problem** Using `.where{}` queries immediately after running a migration causes SEGFAULT.
+All mutations inside `database.write { }` are wrapped in a transaction:
 
 ```swift
-// ❌ THIS WILL CRASH
-func testMigration() async throws {
-    // Run migration that adds column
-    try await migrator.migrate(database)
-
-    // CRASH: StructuredQueries keypath cache is stale
-    let tracks = try await Track
-        .where { $0.genre == "Rock" }  // SEGFAULT here
-        .fetchAll(database)
+try database.write { db in
+    // These all succeed or all fail together
+    try Item.insert { ... }.execute(db)
+    try Item.find(id).update { ... }.execute(db)
+    try OtherTable.find(otherId).delete().execute(db)
 }
 ```
 
-#### Error
-```
-Exception Type:    EXC_BAD_ACCESS (SIGSEGV)
-Exception Codes:   KERN_INVALID_ADDRESS at 0xfffffffffffffff8
-Triggered by:      GRDB.DatabaseQueue
-```
+If any operation throws, the entire transaction rolls back.
 
-**Root Cause** Migration updates GRDB schema, but StructuredQueries keypath cache remains stale. Next `.where{}` query uses old memory offsets → SEGFAULT.
+---
 
-**Solution** Close and reopen database after migrations:
+## Raw SQL with #sql Macro
 
-```swift
-// ✅ CORRECT
-func testMigration() async throws {
-    try await migrator.migrate(database)
+When you need custom SQL expressions beyond the type-safe query builder, use the `#sql` macro from [StructuredQueries](https://github.com/pointfreeco/swift-structured-queries):
 
-    // Close and reopen to refresh schema cache
-    try database.close()
-    database = try DatabaseQueue(path: dbPath)
-
-    // Now queries work
-    let tracks = try await Track
-        .where { $0.genre == "Rock" }
-        .fetchAll(database)
-}
-```
-
-**Alternative** Use raw GRDB filter (bypasses StructuredQueries):
+### Custom Query Expressions
 
 ```swift
-import GRDB
-
-// Works immediately after migration (no cache)
-let tracks = try Track.filter(Column("genre") == "Rock").fetchAll(db)
-```
-
-### 2. Static .where{} in Tests Crash
-
-**Problem** Using `static let` for `.where{}` queries in tests causes crashes.
-
-```swift
-// ❌ THIS CRASHES IN TESTS
-extension Track {
-    static let rockTracks = Track.where { $0.genre == "Rock" }
-}
-
-func testRockTracks() async throws {
-    let tracks = try await Track.rockTracks.fetchAll(database)  // CRASH
-}
-```
-
-#### Error
-```
-Exception Type:    EXC_BAD_ACCESS (SIGSEGV)
-Address:           0xfffffffffffffff8 (-8)
-Location:          static Table.where(_:) + 200 (Where.swift:51)
-```
-
-**Root Cause** Schema loads before database exists in test setup → keypath cache has invalid offsets.
-
-**Solution** Use computed properties or functions:
-
-```swift
-// ✅ CORRECT: Computed property
-extension Track {
-    static var rockTracks: some Query<Track> {
-        Track.where { $0.genre == "Rock" }
+nonisolated extension Item.TableColumns {
+    var isPastDue: some QueryExpression<Bool> {
+        @Dependency(\.date.now) var now
+        return !isCompleted && #sql("coalesce(date(\(dueDate)) < date(\(now)), 0)")
     }
 }
 
-// ✅ CORRECT: Function
-extension Track {
-    static func genre(_ name: String) -> some Query<Track> {
-        Track.where { $0.genre == name }
-    }
-}
+// Use in queries
+let overdue = try Item.where { $0.isPastDue }.fetchAll(db)
 ```
 
-### 3. Wrong Insert Pattern
-
-**Problem** Using GRDB's Active Record pattern with `@Table` structs.
+### Raw SQL Queries
 
 ```swift
-let track = Track(...)
+// Direct SQL with parameter interpolation
+try #sql("SELECT * FROM items WHERE price > \(minPrice)").execute(db)
 
-// ❌ WRONG: Active Record (instance method)
-try track.insert(database)  // Won't compile
-
-// ✅ CORRECT: SQLiteData static method
-try Track.insert { track }.execute(database)
+// Using \(raw:) for literal values
+let tableName = "items"
+try #sql("SELECT * FROM \(raw: tableName)").execute(db)
 ```
 
-**Why** `@Table` macro generates static methods, not instance methods. This is intentional to work with value types (structs).
+**Why `#sql`?**
+- Type-safe parameter binding (prevents SQL injection)
+- Compile-time syntax checking
+- Seamless integration with query builder
+- Parameter interpolation automatically escapes values
+
+**For schema creation** (CREATE TABLE, migrations), see the `sqlitedata-ref` reference skill for complete examples.
+
+---
 
 ## CloudKit Sync
 
 ### Basic Setup
 
 ```swift
-import SQLiteData
 import CloudKit
 
-// 1. Configure database with CloudKit
-let container = CKContainer.default()
-let database = try DatabaseQueue(
-    path: dbPath,
-    cloudKit: .init(
-        container: container,
-        recordZone: CKRecordZone(zoneName: "MusicLibrary")
-    )
-)
-
-// 2. Mark tables for sync
-@Table(.cloudKit)  // Sync this table
-struct Track: Identifiable, Sendable {
-    @Attribute(.primaryKey)
-    var id: String
-    var title: String
+extension DependencyValues {
+    var defaultSyncEngine: SyncEngine {
+        get { self[DefaultSyncEngineKey.self] }
+        set { self[DefaultSyncEngineKey.self] = newValue }
+    }
 }
 
-// 3. Start sync engine
-try await database.startCloudKitSync()
+private enum DefaultSyncEngineKey: DependencyKey {
+    static let liveValue = {
+        @Dependency(\.defaultDatabase) var database
+        return try! SyncEngine(
+            for: database,
+            tables: Item.self,
+            privateTables: SensitiveItem.self,  // Private database
+            startImmediately: true
+        )
+    }()
+}
+
+// In app init
+prepareDependencies {
+    $0.defaultDatabase = try! appDatabase()
+    $0.defaultSyncEngine = try! SyncEngine(
+        for: $0.defaultDatabase,
+        tables: Item.self
+    )
+}
 ```
 
-### Conflict Resolution
+### Manual Sync Control (v1.3.0+)
+
+Control when sync happens instead of automatic background sync:
 
 ```swift
-database.cloudKitConflictResolver = { serverRecord, clientRecord in
-    // Last-write-wins strategy
-    return serverRecord.modificationDate > clientRecord.modificationDate
-        ? .useServer
-        : .useClient
+@Dependency(\.defaultSyncEngine) var syncEngine
+
+// Pull changes from CloudKit
+try await syncEngine.fetchChanges()
+
+// Push local changes to CloudKit
+try await syncEngine.sendChanges()
+
+// Bidirectional sync
+try await syncEngine.syncChanges()
+```
+
+**Use cases:**
+- User-triggered "Refresh" button
+- Sync after critical operations
+- Custom sync scheduling
+- Testing sync behavior
+
+### Sync State Observation (v1.2.0+)
+
+Show UI feedback during sync:
+
+```swift
+struct SyncStatusView: View {
+    @Dependency(\.defaultSyncEngine) var syncEngine
+
+    var body: some View {
+        HStack {
+            if syncEngine.isSynchronizing {
+                ProgressView()
+                if syncEngine.isSendingChanges {
+                    Text("Uploading...")
+                } else if syncEngine.isFetchingChanges {
+                    Text("Downloading...")
+                }
+            } else {
+                Image(systemName: "checkmark.circle")
+                Text("Synced")
+            }
+        }
+    }
 }
 ```
 
-**For detailed CloudKit sync patterns** See [SQLiteData CloudKit docs](https://pointfreeco.github.io/sqlite-data/documentation/sqlitedata/cloudkit)
+**Observable properties:**
+- `isSendingChanges: Bool` — True during CloudKit upload
+- `isFetchingChanges: Bool` — True during CloudKit download
+- `isSynchronizing: Bool` — True if either sending or fetching
+- `isRunning: Bool` — True if sync engine is active
+
+### Query Sync Metadata (v1.3.0+)
+
+Access CloudKit sync information for records:
+
+```swift
+import CloudKit
+
+// Get sync metadata for a record
+let metadata = try SyncMetadata.find(item.syncMetadataID).fetchOne(db)
+
+// Join items with their sync metadata
+let itemsWithSync = try Item.all
+    .leftJoin(SyncMetadata.all) { $0.syncMetadataID.eq($1.id) }
+    .select { (item: $0, metadata: $1) }
+    .fetchAll(db)
+
+// Check if record is shared
+let sharedItems = try Item.all
+    .join(SyncMetadata.all) { $0.syncMetadataID.eq($1.id) }
+    .where { $1.isShared }
+    .fetchAll(db)
+```
+
+### Migration Helpers
+
+Migrate primary keys when switching sync strategies:
+
+```swift
+try await syncEngine.migratePrimaryKeys(
+    from: OldItem.self,
+    to: NewItem.self
+)
+```
+
+---
 
 ## When to Drop to GRDB
 
-Use raw GRDB for:
+SQLiteData is built on GRDB. Use raw GRDB when you need:
 
-### Complex Joins
-
+**Complex joins:**
 ```swift
-import GRDB
-
-let sql = """
-    SELECT tracks.*, albums.title as album_title
-    FROM tracks
-    JOIN albums ON tracks.albumId = albums.id
-    WHERE albums.artist = ?
-    """
-
-let results = try database.read { db in
-    try Row.fetchAll(db, sql: sql, arguments: ["Artist Name"])
+let sql = try database.read { db in
+    try Row.fetchAll(db, sql:
+        """
+        SELECT items.*, categories.name as categoryName
+        FROM items
+        JOIN categories ON items.categoryID = categories.id
+        JOIN tags ON items.id = tags.itemID
+        WHERE tags.name IN (?, ?)
+        """,
+        arguments: ["electronics", "sale"]
+    )
 }
 ```
 
-### Custom Migrations
-
+**Window functions:**
 ```swift
-import GRDB
-
-var migrator = DatabaseMigrator()
-
-migrator.registerMigration("v1_complex_migration") { db in
-    // Full GRDB power for complex schema changes
-    try db.execute(sql: "...")
+let ranked = try database.read { db in
+    try Row.fetchAll(db, sql:
+        """
+        SELECT *,
+               ROW_NUMBER() OVER (PARTITION BY category ORDER BY price DESC) as rank
+        FROM items
+        """
+    )
 }
 ```
 
-### ValueObservation (Reactive Queries)
+**Performance-critical paths:**
+When you've profiled and confirmed SQLiteData's query builder is the bottleneck, drop to raw SQL.
 
-```swift
-import GRDB
-
-let observation = ValueObservation.tracking { db in
-    try Track.fetchAll(db)
-}
-
-let cancellable = observation.start(in: database) { tracks in
-    print("Tracks updated: \(tracks.count)")
-}
-```
-
-**For GRDB patterns** See the `grdb` skill for raw SQL and advanced database operations.
-
-## Performance Tips
-
-### Use Indexes
-
-```swift
-migrator.registerMigration("v2_add_indexes") { db in
-    try db.create(index: "idx_tracks_genre", on: "Track", columns: ["genre"])
-    try db.create(index: "idx_tracks_artist", on: "Track", columns: ["artist"])
-}
-```
-
-### Batch Writes
-
-Always batch large operations (use 500 records per transaction as baseline).
-
-### Avoid N+1 Queries
-
-```swift
-// ❌ BAD: N+1 queries
-for track in tracks {
-    let album = try await Album.fetchOne(database, key: track.albumId)
-}
-
-// ✅ GOOD: Single query with join or batch fetch
-let albumIds = tracks.map(\.albumId)
-let albums = try await Album
-    .where { albumIds.contains($0.id) }
-    .fetchAll(database)
-```
-
-## Comparison: SQLiteData vs SwiftData
-
-| Feature | SQLiteData | SwiftData |
-|---------|-----------|-----------|
-| **Type** | Value types (struct) | Reference types (class) |
-| **Macro** | `@Table` | `@Model` |
-| **Primary Key** | `@Attribute(.primaryKey)` | `@Attribute(.unique)` |
-| **Queries** | `@FetchAll` / `@FetchOne` | `@Query` |
-| **Injection** | `@Dependency(\.database)` | `@Environment(\.modelContext)` |
-| **CloudKit** | Full sync + sharing | Sync only (no sharing) |
-| **Performance** | Excellent (raw SQL) | Good (Core Data) |
-| **Learning Curve** | Moderate | Easy |
-
-## Quick Reference
-
-### Common Operations
-
-```swift
-// Fetch all
-let all = try await Track.fetchAll(database)
-
-// Fetch one by key
-let one = try await Track.fetchOne(database, key: "id")
-
-// Filter
-let filtered = try await Track.where { $0.genre == "Rock" }.fetchAll(database)
-
-// Insert
-try await Track.insert { track }.execute(database)
-
-// Update
-try await Track.update { $0.genre = "Pop" }.where { $0.id == "id" }.execute(database)
-
-// Delete
-try await Track.delete().where { $0.id == "id" }.execute(database)
-
-// Count
-let count = try await Track.fetchCount(database)
-```
+---
 
 ## External Resources
 
-#### SQLiteData
-- [Documentation](https://pointfreeco.github.io/sqlite-data/)
-- [GitHub](https://github.com/pointfreeco/sqlite-data)
-- [Point-Free Episodes](https://www.pointfree.co) (video tutorials, subscription)
+- [SQLiteData](https://github.com/pointfreeco/sqlite-data) — Official repository
+- [StructuredQueries](https://github.com/pointfreeco/swift-structured-queries) — Query builder
+- [GRDB](https://github.com/groue/GRDB.swift) — Underlying database layer
 
-#### Dependencies
-- [swift-dependencies](https://github.com/pointfreeco/swift-dependencies) — Dependency injection (pairs well with SQLiteData)
-- [GRDB](https://github.com/groue/GRDB.swift) — Underlying database engine
-
-#### Related Axiom Skills
-- `database-migration` - Safe schema evolution patterns
-- `grdb` - Raw SQL and advanced GRDB features
-- `swiftdata` - Apple's native persistence framework
-
-## Production Crisis: When Migrations Cause App Store Crashes
-
-### The StructuredQueries Migration Crash
-
-**Scenario**: Users updating to iOS 26 build crash on launch. Error: `EXC_BAD_ACCESS KERN_INVALID_ADDRESS at 0xfffffffffffffff8`
-
-#### Under pressure
-- Temptation: Delete old schema and recreate (fast, destructive)
-- Better: Search this skill for "StructuredQueries" and follow safe path
-
-**The problem** (lines 250-274):
-```
-Migration → GRDB schema updated
-→ SQLiteData StructuredQueries cache becomes stale
-→ Next .where{} query uses old memory offsets
-→ CRASH (SEGFAULT)
-```
-
-**The fix** (lines 276-291):
-```swift
-// Close and reopen to refresh cache
-try await migrator.migrate(database)
-try database.close()
-database = try DatabaseQueue(path: dbPath)
-
-// Now .where{} queries work
-let tracks = try await Track.where { $0.genre == "Rock" }.fetchAll(database)
-```
-
-#### Time cost
-- Understanding problem: 5 min (search skill for "StructuredQueries")
-- Implementing fix: 30 min
-- Testing: 15 min
-- **Total: 50 minutes**, zero data loss
-
-**Alternative if close/reopen doesn't work** (lines 294-300):
-```swift
-// Bypass StructuredQueries, use raw GRDB
-let tracks = try Track.filter(Column("genre") == "Rock").fetchAll(db)
-```
-
-### Decision Framework Under Pressure
-
-When migration causes crashes:
-
-#### DO NOT
-- ❌ Delete schema and recreate (data loss)
-- ❌ Ship guess-fixes without testing (worsens crash)
-- ❌ Ignore this skill section (solution is here)
-
-#### DO
-- ✅ Search this skill for error keyword (e.g., "KERN_INVALID_ADDRESS", "StructuredQueries")
-- ✅ Implement documented fix (close/reopen or raw GRDB)
-- ✅ Test in simulator before App Store submission
-
-#### Time budget
-- Search + understand: 5-10 min
-- Implement: 30 min
-- Test: 15 min
-- **Total: 50 min** (most App Store update windows allow 3-4 hours)
-
-### If You Must Ship Emergency Mitigation
-
-#### Temporary fix while proper solution is tested
-```swift
-// Disable StructuredQueries globally during migration
-database.disableStructuredQueries = true
-try await migrator.migrate(database)
-database.disableStructuredQueries = false
-```
-
-#### This buys time
-- Unblocks app update (users can install)
-- Preserves user data (no deletion)
-- Proper fix queued for next release
-
-### Honest Pressure Points (When Panic Tempts Nuclear Option)
-
-#### If you're tempted to delete schema under pressure
-1. **Stop.** Search this skill for the error keyword first
-2. **Document.** The fact that you found this section proves safe path exists
-3. **Ship safe mitigation.** 50 minutes for proper fix < 24 hours to recover from data loss
-
-#### Why nuclear option backfires
-- Users lose all local data (playlists, favorites)
-- App reviews tank (4.5 stars → 2 stars typical)
-- Support tickets explode
-- Recovery takes weeks of backfills and apologies
-
-#### Why proper fix wins
-- Users keep all data
-- Trust preserved
-- Clean recovery
-- Skill exists because others solved this already
+**Related Skills:**
+- `sqlitedata-ref` — Advanced patterns (CTEs, views, aggregates, schema composition)
+- `swiftdata-to-sqlitedata` — Migration guide with pattern equivalents
+- `database-migration` — Safe schema evolution patterns
+- `grdb` — Raw SQL and GRDB-specific features
 
 ---
 
-## Common Mistakes
-
-### ❌ Using instance methods
-```swift
-try track.insert(database)  // Won't compile
-```
-**Fix** Use static methods: `try Track.insert { track }.execute(database)`
-
-### ❌ Querying immediately after migration
-```swift
-try migrator.migrate(database)
-let tracks = try Track.where { ... }.fetchAll(database)  // CRASH
-```
-**Fix** Close/reopen database or use raw GRDB filter
-
-### ❌ Static queries in tests
-```swift
-static let rockTracks = Track.where { $0.genre == "Rock" }  // CRASH
-```
-**Fix** Use computed properties or functions
-
-### ❌ Single-record inserts for large datasets
-```swift
-for track in 50000Tracks {
-    try Track.insert { track }.execute(database)  // 4 hours!
-}
-```
-**Fix** Batch in groups of 500 per transaction
-
----
-
-## Version History
-
-- **1.1.0**: Added "Production Crisis: When Migrations Cause App Store Crashes" section from TDD testing of iOS 26 StructuredQueries migration failure scenario. Includes decision framework preventing destructive schema recreation, time-cost analysis (50 min safe fix vs 24hr+ data loss recovery), emergency mitigation patterns, and honest pressure points analysis. Ensures developers search for documented solutions before choosing data-loss options
-- **1.0.0**: Initial skill covering @Table models, batch operations, CloudKit sync, critical StructuredQueries gotcha, and GRDB fallback patterns
-
----
-
-**Created** 2025-11-28
-**Targets** iOS 17+, Swift 6
-**Framework** SQLiteData 1.0+ (Point-Free)
+**Targets:** iOS 17+, Swift 6
+**Framework:** SQLiteData 1.4+
+**History:** See git log for changes
