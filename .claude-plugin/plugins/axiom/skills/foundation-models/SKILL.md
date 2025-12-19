@@ -24,25 +24,6 @@ Use when:
 - Use `foundation-models-diag` for systematic troubleshooting (context exceeded, guardrail violations, availability problems)
 - Use `foundation-models-ref` for complete API reference with all WWDC code examples
 
-## Example Prompts
-
-These are real questions developers ask that this skill is designed to answer:
-
-#### 1. "How do I get structured data from the on-device model? I tried prompting for JSON but get invalid output"
-→ The skill explains @Generable macro for guaranteed structured output with constrained decoding
-
-#### 2. "My generation is too slow. Users wait 3-4 seconds before seeing anything"
-→ The skill covers streaming with PartiallyGenerated, prewarming sessions, and performance optimization
-
-#### 3. "I'm getting 'context window exceeded' errors. How do I handle this?"
-→ The skill demonstrates transcript condensing strategies and context management patterns
-
-#### 4. "Should I use Foundation Models or ChatGPT API for my feature?"
-→ The skill clarifies when each is appropriate (privacy, offline, world knowledge trade-offs)
-
-#### 5. "How do I call my app's APIs from the model? Like fetching weather data or contacts"
-→ The skill demonstrates Tool protocol implementation with MapKit, WeatherKit, Contacts examples
-
 ---
 
 ## Red Flags — Anti-Patterns That Will Fail
@@ -370,7 +351,7 @@ func respond(userInput: String) async throws -> String {
 }
 ```
 
-**Code from**: WWDC 301:1:05
+// WWDC 301:1:05
 
 ### Key Points
 
@@ -401,7 +382,7 @@ print(second.content)
 print(session.transcript)
 ```
 
-**Code from**: WWDC 286:17:46
+// WWDC 286:17:46
 
 **Why this works**: Session retains transcript automatically. Model uses context from previous turns.
 
@@ -483,7 +464,7 @@ let response = try await session.respond(
 let person = response.content // Type-safe Person instance!
 ```
 
-**Code from**: WWDC 301:8:14
+// WWDC 301:8:14
 
 ### How It Works (Constrained Decoding)
 
@@ -493,7 +474,7 @@ let person = response.content // Type-safe Person instance!
 4. Framework parses output into Swift type
 5. **Guaranteed structural correctness** — No hallucinated keys, no parsing errors
 
-**From WWDC 286**: "Constrained decoding masks out invalid tokens. Model can only pick tokens valid according to schema."
+"Constrained decoding masks out invalid tokens. Model can only pick tokens valid according to schema."
 
 ### Supported Types
 
@@ -522,7 +503,7 @@ struct DayPlan {
 }
 ```
 
-**Code from**: WWDC 286:6:18
+// WWDC 286:6:18
 
 **Enums with Associated Values**:
 ```swift
@@ -539,7 +520,7 @@ struct NPC {
 }
 ```
 
-**Code from**: WWDC 301:10:49
+// WWDC 301:10:49
 
 **Recursive Types**:
 ```swift
@@ -572,7 +553,7 @@ struct Character {
 }
 ```
 
-**Code from**: WWDC 301:11:20
+// WWDC 301:11:20
 
 **Array Count**:
 ```swift
@@ -583,7 +564,7 @@ struct Suggestions {
 }
 ```
 
-**Code from**: WWDC 286:5:32
+// WWDC 286:5:32
 
 **Maximum Count**:
 ```swift
@@ -614,7 +595,7 @@ struct NPC {
 // Output: {name: "Mrs. Brewster"}
 ```
 
-**Code from**: WWDC 301:13:40
+// WWDC 301:13:40
 
 ### Property Order Matters
 
@@ -628,7 +609,7 @@ struct Itinerary {
 }
 ```
 
-**From WWDC 286**: "You may find model produces best summaries when they're last property."
+"You may find model produces best summaries when they're last property."
 
 **Why**: Later properties can reference earlier ones. Put most important properties first for streaming.
 
@@ -668,7 +649,7 @@ for try await partial in stream {
 }
 ```
 
-**Code from**: WWDC 286:9:40
+// WWDC 286:9:40
 
 ### PartiallyGenerated Type
 
@@ -722,7 +703,7 @@ struct ItineraryView: View {
 }
 ```
 
-**Code from**: WWDC 286:10:05
+// WWDC 286:10:05
 
 ### Animations & Transitions
 
@@ -741,7 +722,7 @@ if let days = itinerary?.days {
 }
 ```
 
-**From WWDC 286**: "Get creative with SwiftUI animations to hide latency. Turn waiting into delight."
+"Get creative with SwiftUI animations to hide latency. Turn waiting into delight."
 
 ### View Identity
 
@@ -777,7 +758,7 @@ struct Itinerary {
 }
 ```
 
-**Code from**: WWDC 286:11:00
+// WWDC 286:11:00
 
 ### When to Use Streaming
 
@@ -844,7 +825,7 @@ struct GetWeatherTool: Tool {
 }
 ```
 
-**Code from**: WWDC 286:13:42
+// WWDC 286:13:42
 
 ### Attaching Tool to Session
 
@@ -862,7 +843,7 @@ print(response.content)
 // "It's 71°F in Cupertino!"
 ```
 
-**Code from**: WWDC 286:15:03
+// WWDC 286:15:03
 
 **Model autonomously**:
 1. Recognizes it needs weather data
@@ -966,7 +947,7 @@ class FindContactTool: Tool {
 }
 ```
 
-**Code from**: WWDC 301:21:55
+// WWDC 301:21:55
 
 **Why class, not struct**: Need to mutate state from `call` method.
 
@@ -983,7 +964,7 @@ class FindContactTool: Tool {
 8. Model generates final response using tool output
 ```
 
-**From WWDC 301**: "Model decides autonomously when and how often to call tools. Can call multiple tools per request, even in parallel."
+"Model decides autonomously when and how often to call tools. Can call multiple tools per request, even in parallel."
 
 ### Tool Calling Guarantees
 
@@ -1094,7 +1075,7 @@ do {
 }
 ```
 
-**Code from**: WWDC 301:3:37
+// WWDC 301:3:37
 
 **Problem**: Loses entire conversation history.
 
@@ -1129,7 +1110,7 @@ func condensedSession(from previous: LanguageModelSession) -> LanguageModelSessi
 }
 ```
 
-**Code from**: WWDC 301:3:55
+// WWDC 301:3:55
 
 **Why this works**:
 - Instructions always preserved
@@ -1169,7 +1150,7 @@ func condensedSession(from previous: LanguageModelSession) -> LanguageModelSessi
 }
 ```
 
-**From WWDC 301**: "You could summarize parts of transcript with Foundation Models itself."
+"You could summarize parts of transcript with Foundation Models itself."
 
 ### Preventing Context Overflow
 
@@ -1205,7 +1186,7 @@ for day in 1...7 {
 
 ### Monitoring Context Usage
 
-**From WWDC 286**: "Each token in instructions and prompt adds latency. Longer outputs take longer."
+"Each token in instructions and prompt adds latency. Longer outputs take longer."
 
 **Use Instruments** (Foundation Models template) to:
 - See token counts
@@ -1243,7 +1224,7 @@ let response = try await session.respond(
 )
 ```
 
-**Code from**: WWDC 301:6:14
+// WWDC 301:6:14
 
 **Use cases**:
 - Repeatable demos
@@ -1270,7 +1251,7 @@ let response = try await session.respond(
 )
 ```
 
-**Code from**: WWDC 301:6:14
+// WWDC 301:6:14
 
 **Temperature scale**:
 - `0.1-0.5`: Very focused, predictable
@@ -1573,7 +1554,7 @@ class ViewModel: ObservableObject {
 }
 ```
 
-**From WWDC 259**: "Prewarming session before user interaction reduces initial latency."
+"Prewarming session before user interaction reduces initial latency."
 
 **Time saved**: 1-2 seconds off first generation
 
@@ -1600,7 +1581,7 @@ let secondResponse = try await session.respond(
 )
 ```
 
-**From WWDC 259**: "Setting includeSchemaInPrompt to false decreases token count and latency for subsequent requests."
+"Setting includeSchemaInPrompt to false decreases token count and latency for subsequent requests."
 
 **When to use**: Multi-turn with same @Generable type
 
@@ -1644,7 +1625,7 @@ struct Article {
 - Identify optimization opportunities
 - Quantify improvements
 
-**From WWDC 286**: "New Instruments profiling template lets you observe areas of optimization and quantify improvements."
+"New Instruments profiling template lets you observe areas of optimization and quantify improvements."
 
 **Access**: Instruments → Create → Foundation Models template
 
@@ -1684,21 +1665,11 @@ Before shipping Foundation Models features:
 
 ---
 
-## Related Resources
+## Resources
 
-**WWDC 2025 Sessions**:
-- Session 286: Meet the Foundation Models framework
-- Session 259: Code-along: Bring on-device AI to your app
-- Session 301: Deep dive into the Foundation Models framework
+Based on: WWDC 2025-286, 2025-259, 2025-301.
 
-**Related Axiom Skills**:
-- `foundation-models-diag` — Systematic troubleshooting for context exceeded, guardrail violations, availability problems
-- `foundation-models-ref` — Complete API reference with all code examples, dynamic schemas, tool calling details
-
-**Apple Documentation**:
-- Foundation Models Framework Documentation
-- SystemLanguageModel API Reference
-- @Generable Macro Documentation
+For detailed WWDC session descriptions, related Axiom skills, and Apple documentation links, see [REFERENCES.md](REFERENCES.md).
 
 ---
 

@@ -48,22 +48,7 @@ iOS 26 introduces **Liquid Glass visual design** for Lock Screen and Control Cen
 - **memory-debugging** - For retain cycles in command handlers
 - **avfoundation-ref** - For AVAudioSession configuration details
 
-## Example Prompts
-
-1. **"Now Playing info shows briefly when playback starts, then disappears when I lock the screen. What's wrong?"**
-   - Skill covers: AVAudioSession not remaining active, background mode not configured, session deactivated too early
-
-2. **"Play/pause buttons in Control Center are grayed out or don't respond to taps when my app is playing audio."**
-   - Skill covers: Command handlers not registered, commands not enabled, wrong command center (should use session's not shared)
-
-3. **"Album artwork never appears, or shows wrong artwork, or flickers between different images."**
-   - Skill covers: MPMediaItemArtwork initialization, image size requirements, race conditions with multiple artwork sources
-
-4. **"Control Center shows 'Playing' when my app is actually paused, or vice versa. How do I keep them in sync?"**
-   - Skill covers: playbackRate updates, when to update nowPlayingInfo, race conditions with partial dictionary updates
-
-5. **"I'm using MPNowPlayingInfoCenter but sometimes Apple Music takes over and my app loses Now Playing control."**
-   - Skill covers: Session eligibility requirements, AVAudioSession category conflicts, becomeActiveIfPossible()
+---
 
 ## Red Flags / Anti-Patterns
 
@@ -748,250 +733,17 @@ session.remoteCommandCenter.playCommand.addTarget { _ in }
 
 ## Pattern 6: CarPlay Integration
 
-**Time cost**: 15-20 minutes (if MPNowPlayingInfoCenter already working)
+For CarPlay-specific integration patterns, see [CARPLAY.md](CARPLAY.md).
 
-### Key Insight
-
-**CarPlay uses the SAME MPNowPlayingInfoCenter and MPRemoteCommandCenter as Lock Screen and Control Center.** If your Now Playing integration works on iOS, it automatically works in CarPlay with zero additional code.
-
-### What CarPlay Reads
-
-| iOS Component | CarPlay Display |
-|---------------|-----------------|
-| `MPNowPlayingInfoCenter.nowPlayingInfo` | CPNowPlayingTemplate metadata (title, artist, artwork) |
-| `MPRemoteCommandCenter` handlers | CPNowPlayingTemplate button responses |
-| Artwork from `nowPlayingInfo` | Album art in CarPlay UI |
-
-No CarPlay-specific metadata needed. Your existing code works.
-
-### CPNowPlayingTemplate Customization (iOS 14+)
-
-For custom playback controls beyond standard play/pause/skip:
-
-```swift
-import CarPlay
-
-@MainActor
-class SceneDelegate: UIResponder, UIWindowSceneDelegate, CPTemplateApplicationSceneDelegate {
-
-    func templateApplicationScene(
-        _ templateApplicationScene: CPTemplateApplicationScene,
-        didConnect interfaceController: CPInterfaceController
-    ) {
-        // ✅ Configure CPNowPlayingTemplate at connection time (not when pushed)
-        let nowPlayingTemplate = CPNowPlayingTemplate.shared
-
-        // Enable Album/Artist browsing (shows button that navigates to album/artist view in your app)
-        nowPlayingTemplate.isAlbumArtistButtonEnabled = true
-
-        // Enable Up Next queue (shows button that displays upcoming tracks)
-        nowPlayingTemplate.isUpNextButtonEnabled = true
-
-        // Add custom buttons (iOS 14+)
-        setupCustomButtons(for: nowPlayingTemplate)
-    }
-
-    private func setupCustomButtons(for template: CPNowPlayingTemplate) {
-        var buttons: [CPNowPlayingButton] = []
-
-        // Playback rate button
-        let rateButton = CPNowPlayingPlaybackRateButton { [weak self] button in
-            self?.cyclePlaybackRate()
-        }
-        buttons.append(rateButton)
-
-        // Shuffle button
-        let shuffleButton = CPNowPlayingShuffleButton { [weak self] button in
-            self?.toggleShuffle()
-        }
-        buttons.append(shuffleButton)
-
-        // Repeat button
-        let repeatButton = CPNowPlayingRepeatButton { [weak self] button in
-            self?.cycleRepeatMode()
-        }
-        buttons.append(repeatButton)
-
-        // Update template with custom buttons
-        template.updateNowPlayingButtons(buttons)
-    }
-}
-```
-
-### Entitlement Requirement
-
-CarPlay requires an entitlement in your Xcode project:
-
-**Info.plist:**
-```xml
-<key>UIBackgroundModes</key>
-<array>
-    <string>audio</string>
-</array>
-```
-
-**Entitlements file:**
-```xml
-<key>com.apple.developer.carplay-audio</key>
-<true/>
-```
-
-Without the entitlement, CarPlay won't show your app at all.
-
-### CarPlay-Specific Gotchas
-
-| Issue | Cause | Fix | Time |
-|-------|-------|-----|------|
-| CarPlay doesn't show app | Missing entitlement | Add `com.apple.developer.carplay-audio` | 5 min |
-| Now Playing blank in CarPlay | MPNowPlayingInfoCenter not set | Same fix as Lock Screen (Pattern 1) | 10 min |
-| Custom buttons don't appear | Configured after push | Configure at `templateApplicationScene(_:didConnect:)` | 5 min |
-| Buttons work on device, not CarPlay simulator | Debugger interference | Test without debugger attached | 1 min |
-| Album art missing | Same as iOS issue | Fix MPMediaItemArtwork (Pattern 3) | 15 min |
-
-### Testing CarPlay
-
-**Simulator (Xcode 12+):**
-1. I/O → External Displays → CarPlay
-2. Tap CarPlay display
-3. Find your app in Audio section
-4. **Important**: Run without debugger for reliable testing (debugger can interfere with CarPlay audio session activation)
-
-**Real Vehicle:**
-Requires entitlement approval from Apple (automatic for apps with `UIBackgroundModes` audio; no manual request needed).
-
-### Verification
-
-- [ ] App appears in CarPlay Audio section
-- [ ] Now Playing shows correct metadata
-- [ ] Album artwork displays
-- [ ] Play/pause/skip buttons respond
-- [ ] Custom buttons (if any) appear and work
-- [ ] Tested both with and without debugger
+**Key insight**: CarPlay uses the SAME MPNowPlayingInfoCenter and MPRemoteCommandCenter as iOS. If your Now Playing works on iOS, it works in CarPlay with zero additional code.
 
 ---
 
 ## Pattern 7: MusicKit Integration (Apple Music)
 
-**Time cost**: 5-10 minutes
+For MusicKit-specific integration patterns and hybrid app examples, see [MUSICKIT.md](MUSICKIT.md).
 
-### Key Insight
-
-**MusicKit's ApplicationMusicPlayer automatically publishes to MPNowPlayingInfoCenter.** You don't need to manually update Now Playing info when playing Apple Music content.
-
-### What's Automatic
-
-When using `ApplicationMusicPlayer`:
-- Track title, artist, album
-- Artwork (Apple's album art)
-- Duration and elapsed time
-- Playback rate (playing/paused state)
-
-The system handles all MPNowPlayingInfoCenter updates for you.
-
-### What's NOT Automatic
-
-- Custom metadata (chapter markers, custom artist notes)
-- Remote command customization beyond standard controls
-- Mixing MusicKit content with your own content
-
-### GOOD Code (MusicKit Content)
-
-```swift
-import MusicKit
-
-@MainActor
-class MusicKitPlayer {
-    private let player = ApplicationMusicPlayer.shared
-
-    func play(song: Song) async throws {
-        // ✅ Just play - MPNowPlayingInfoCenter updates automatically
-        player.queue = [song]
-        try await player.play()
-
-        // ❌ DO NOT manually set nowPlayingInfo here
-        // MPNowPlayingInfoCenter.default().nowPlayingInfo = [...] // WRONG!
-    }
-}
-```
-
-### Hybrid Apps (Own Content + Apple Music)
-
-If your app plays both Apple Music and your own content:
-
-```swift
-import MusicKit
-
-@MainActor
-class HybridPlayer {
-    private let musicKitPlayer = ApplicationMusicPlayer.shared
-    private var avPlayer: AVPlayer?
-    private var currentSource: ContentSource = .none
-
-    enum ContentSource {
-        case none
-        case appleMusic      // MusicKit handles Now Playing
-        case ownContent  // We handle Now Playing
-    }
-
-    func playAppleMusicSong(_ song: Song) async throws {
-        // Switch to MusicKit
-        avPlayer?.pause()
-        currentSource = .appleMusic
-
-        musicKitPlayer.queue = [song]
-        try await musicKitPlayer.play()
-        // ✅ MusicKit handles Now Playing automatically
-    }
-
-    func playOwnContent(_ url: URL) {
-        // Switch to AVPlayer
-        musicKitPlayer.pause()
-        currentSource = .ownContent
-
-        avPlayer = AVPlayer(url: url)
-        avPlayer?.play()
-
-        // ✅ Manually update Now Playing (Patterns 1-4)
-        updateNowPlayingForOwnContent()
-    }
-
-    private func updateNowPlayingForOwnContent() {
-        var nowPlayingInfo = [String: Any]()
-        nowPlayingInfo[MPMediaItemPropertyTitle] = "My Track"
-        // ... rest of manual setup from Patterns 1-4
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
-    }
-}
-```
-
-### Common Mistake
-
-```swift
-// ❌ WRONG - Overwrites MusicKit's automatic Now Playing data
-func playAppleMusicSong(_ song: Song) async throws {
-    try await ApplicationMusicPlayer.shared.play()
-
-    // ❌ This clears MusicKit's Now Playing info!
-    var nowPlayingInfo = [String: Any]()
-    nowPlayingInfo[MPMediaItemPropertyTitle] = song.title
-    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
-}
-
-// ✅ CORRECT - Let MusicKit handle it
-func playAppleMusicSong(_ song: Song) async throws {
-    try await ApplicationMusicPlayer.shared.play()
-    // That's it! MusicKit publishes Now Playing automatically.
-}
-```
-
-### When to Use Manual Updates with MusicKit
-
-Only override MPNowPlayingInfoCenter if:
-- You're mixing in additional metadata (e.g., podcast chapter markers)
-- You're displaying custom content alongside Apple Music
-- You have a specific reason to replace MusicKit's automatic behavior
-
-**Default**: Let MusicKit manage Now Playing automatically.
+**Key insight**: MusicKit's ApplicationMusicPlayer automatically publishes to MPNowPlayingInfoCenter. You don't need to manually update Now Playing info when playing Apple Music content.
 
 ---
 
@@ -1235,21 +987,14 @@ Testing: Verified with 10 track changes, zero flicker.
 
 ---
 
-## WWDC Sessions
+## Resources
 
-- [WWDC 2022/110338: Explore media metadata publishing and playback interactions](https://developer.apple.com/videos/play/wwdc2022/110338/) - MPNowPlayingSession (iOS 16+)
-- [WWDC 2017/251: Now Playing and Remote Commands on tvOS](https://developer.apple.com/videos/play/wwdc2017/251/) - Fundamentals
-- [WWDC 2019/501: Delivering Intuitive Media Playback with AVKit](https://developer.apple.com/videos/play/wwdc2019/501/) - AVKit integration
+Based on: WWDC 2022-110338, 2017-251, 2019-501.
 
-## Apple Documentation
-
-- [Becoming a Now Playable App](https://developer.apple.com/documentation/mediaplayer/becoming-a-now-playable-app)
-- [MPNowPlayingInfoCenter](https://developer.apple.com/documentation/mediaplayer/mpnowplayinginfocenter)
-- [MPRemoteCommandCenter](https://developer.apple.com/documentation/mediaplayer/mpremotecommandcenter)
-- [MPNowPlayingSession](https://developer.apple.com/documentation/mediaplayer/mpnowplayingsession)
+For detailed WWDC session descriptions and Apple documentation links, see [REFERENCES.md](REFERENCES.md).
 
 ---
 
 **Last Updated**: 2025-12-17
 **Status**: iOS 18+ discipline skill covering Now Playing, CarPlay, and MusicKit integration
-**Tested**: Based on WWDC 2019/501, WWDC 2022/110338 patterns
+**Tested**: Based on WWDC 2019-501, WWDC 2022-110338 patterns
