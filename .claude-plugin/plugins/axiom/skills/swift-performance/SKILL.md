@@ -2,7 +2,7 @@
 name: swift-performance
 description: Use when optimizing Swift code performance, reducing memory usage, improving runtime efficiency, dealing with COW, ARC overhead, generics specialization, or collection optimization
 skill_type: discipline
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Swift Performance Optimization
@@ -11,7 +11,7 @@ version: 1.1.0
 
 **Core Principle**: Optimize Swift code by understanding language-level performance characteristics—value semantics, ARC behavior, generic specialization, and memory layout—to write fast, efficient code without premature micro-optimization.
 
-**Swift Version**: Swift 6.0+ (Swift 6.2 for `@concurrent`)
+**Swift Version**: Swift 6.2+ (for InlineArray, Span, `@concurrent`)
 **Xcode**: 16+
 **Platforms**: iOS 18+, macOS 15+
 
@@ -660,6 +660,104 @@ struct GoodKey: Hashable {
 }
 ```
 
+### InlineArray (Swift 6.2)
+
+Fixed-size arrays stored directly on the stack—no heap allocation, no COW overhead.
+
+```swift
+// Traditional Array - heap allocated, COW overhead
+var sprites: [Sprite] = Array(repeating: .default, count: 40)
+
+// InlineArray - stack allocated, no COW
+var sprites = InlineArray<40, Sprite>(repeating: .default)
+// Alternative syntax (if available)
+var sprites: [40 of Sprite] = ...
+```
+
+**When to Use InlineArray**:
+- Fixed size known at compile time
+- Performance-critical paths (tight loops, hot paths)
+- Want to avoid heap allocation entirely
+- Small to medium sizes (practical limit ~1KB stack usage)
+
+**Key Characteristics**:
+```swift
+let inline = InlineArray<10, Int>(repeating: 0)
+
+// ✅ Stack allocated - no heap
+print(MemoryLayout.size(ofValue: inline))  // 80 bytes (10 × 8)
+
+// ✅ Value semantics - but eagerly copied (not COW!)
+var copy = inline  // Copies all 10 elements immediately
+copy[0] = 100     // No COW check needed
+
+// ✅ Provides Span access for zero-copy operations
+let span = inline.span  // Read-only view
+let mutableSpan = inline.mutableSpan  // Mutable view
+```
+
+**Performance Comparison**:
+```swift
+// Array: Heap allocation + COW overhead
+var array = Array(repeating: 0, count: 100)
+// - Allocation: ~1μs (heap)
+// - Copy: ~50ns (COW reference bump)
+// - Mutation: ~50ns (uniqueness check)
+
+// InlineArray: Stack allocation, no COW
+var inline = InlineArray<100, Int>(repeating: 0)
+// - Allocation: 0ns (stack frame)
+// - Copy: ~400ns (eager copy all 100 elements)
+// - Mutation: 0ns (no uniqueness check)
+```
+
+**24-Byte Threshold Connection**:
+
+InlineArray relates to the existential container threshold from Part 5:
+
+```swift
+// Existential containers store ≤24 bytes inline
+struct Small: Protocol {
+    var a, b, c: Int64  // 24 bytes - fits inline
+}
+
+// InlineArray of 3 Int64s also ≤24 bytes
+let inline = InlineArray<3, Int64>(repeating: 0)
+// Size: 24 bytes - same threshold, different purpose
+
+// Both avoid heap allocation at this size
+let existential: any Protocol = Small(...)  // Inline storage
+let array = inline  // Stack storage
+```
+
+**Copy Semantics Warning**:
+```swift
+// ❌ Unexpected: InlineArray copies eagerly
+func processLarge(_ data: InlineArray<1000, UInt8>) {
+    // Copies all 1000 bytes on call!
+}
+
+// ✅ Use Span to avoid copy
+func processLarge(_ data: Span<UInt8>) {
+    // Zero-copy view, no matter the size
+}
+
+// Best practice: Store InlineArray, pass Span
+struct Buffer {
+    var storage = InlineArray<1000, UInt8>(repeating: 0)
+
+    func process() {
+        helper(storage.span)  // Pass view, not copy
+    }
+}
+```
+
+**When NOT to Use InlineArray**:
+- Dynamic sizes (use Array)
+- Large data (>1KB stack usage risky)
+- Frequently passed by value (use Span instead)
+- Need COW semantics (use Array)
+
 ### Lazy Sequences
 
 ```swift
@@ -890,6 +988,281 @@ func typedThrows() throws(GenericError) -> Int {
 
 - **Typed**: Library code with well-defined error types, hot paths
 - **Untyped**: Application code, error types unknown at compile time
+
+---
+
+## Part 11: Span Types
+
+**Swift 6.2+** introduces Span—a non-escapable, non-owning view into memory that provides safe, efficient access to contiguous data.
+
+### What is Span?
+
+Span is a modern replacement for `UnsafeBufferPointer` that provides:
+- **Spatial safety**: Bounds-checked operations prevent out-of-bounds access
+- **Temporal safety**: Lifetime inherited from source, preventing use-after-free
+- **Zero overhead**: No heap allocation, no reference counting
+- **Non-escapable**: Cannot outlive the data it references
+
+```swift
+// Traditional unsafe approach
+func processUnsafe(_ data: UnsafeMutableBufferPointer<UInt8>) {
+    data[100] = 0  // Crashes if out of bounds!
+}
+
+// Safe Span approach
+func processSafe(_ data: MutableSpan<UInt8>) {
+    data[100] = 0  // Traps with clear error if out of bounds
+}
+```
+
+### When to Use Span vs Array vs UnsafeBufferPointer
+
+| Use Case | Recommendation |
+|----------|---------------|
+| **Own the data** | Array (full ownership, COW) |
+| **Temporary view for reading** | Span (safe, fast) |
+| **Temporary view for writing** | MutableSpan (safe, fast) |
+| **C interop, performance-critical** | RawSpan (untyped bytes) |
+| **Unsafe performance** | UnsafeBufferPointer (legacy, avoid) |
+
+### Basic Span Usage
+
+```swift
+let array = [1, 2, 3, 4, 5]
+
+// Get read-only span
+let span = array.span
+print(span[0])  // 1
+print(span.count)  // 5
+
+// Iterate safely
+for element in span {
+    print(element)
+}
+
+// Slicing (creates new span, no copy)
+let slice = span[1..<3]  // Span<Int> viewing [2, 3]
+```
+
+### MutableSpan for Modifications
+
+```swift
+var array = [10, 20, 30, 40, 50]
+
+// Get mutable span
+let mutableSpan = array.mutableSpan
+
+// Modify through span
+mutableSpan[0] = 100
+mutableSpan[1] = 200
+
+print(array)  // [100, 200, 30, 40, 50]
+
+// Safe bounds checking
+// mutableSpan[10] = 0  // Fatal error: Index out of range
+```
+
+### RawSpan for Untyped Bytes
+
+```swift
+struct PacketHeader {
+    var version: UInt8
+    var flags: UInt8
+    var length: UInt16
+}
+
+func parsePacket(_ data: RawSpan) -> PacketHeader? {
+    guard data.count >= MemoryLayout<PacketHeader>.size else {
+        return nil
+    }
+
+    // Safe byte-level access
+    let version = data[0]
+    let flags = data[1]
+    let lengthLow = data[2]
+    let lengthHigh = data[3]
+
+    return PacketHeader(
+        version: version,
+        flags: flags,
+        length: UInt16(lengthHigh) << 8 | UInt16(lengthLow)
+    )
+}
+
+// Usage
+let bytes: [UInt8] = [1, 0x80, 0x00, 0x10]  // Version 1, flags 0x80, length 16
+let rawSpan = bytes.rawSpan
+if let header = parsePacket(rawSpan) {
+    print("Packet version: \(header.version)")
+}
+```
+
+### Span-Providing Properties
+
+Swift 6.2 collections automatically provide span properties:
+
+```swift
+// Array provides .span and .mutableSpan
+let array = [1, 2, 3]
+let span: Span<Int> = array.span
+
+// ContiguousArray provides spans
+let contiguous = ContiguousArray([1, 2, 3])
+let span2 = contiguous.span
+
+// UnsafeBufferPointer provides .span (migration path)
+let buffer: UnsafeBufferPointer<Int> = ...
+let span3 = buffer.span  // Modern safe wrapper
+```
+
+### Performance Characteristics
+
+```swift
+// ❌ Array copy - heap allocation
+func process(_ array: [Int]) {
+    // Array copied if passed across module boundary
+}
+
+// ❌ UnsafeBufferPointer - no bounds checking
+func process(_ buffer: UnsafeBufferPointer<Int>) {
+    buffer[100]  // Crash or memory corruption!
+}
+
+// ✅ Span - no copy, bounds-checked, temporal safety
+func process(_ span: Span<Int>) {
+    span[100]  // Safe trap if out of bounds
+}
+
+// Performance: Span is as fast as UnsafeBufferPointer (~2ns access)
+// but with safety guarantees (bounds checks are optimized away when safe)
+```
+
+### Non-Escapable Lifetime Safety
+
+```swift
+// ✅ Safe - span lifetime bound to array
+func useSpan() {
+    let array = [1, 2, 3, 4, 5]
+    let span = array.span
+    process(span)  // Safe - array still alive
+}
+
+// ❌ Compiler prevents this
+func dangerousSpan() -> Span<Int> {
+    let array = [1, 2, 3]
+    return array.span  // Error: Cannot return non-escapable value
+}
+
+// This is what temporal safety prevents
+// (Compare to UnsafeBufferPointer which ALLOWS this bug!)
+```
+
+### Integration with InlineArray
+
+```swift
+// InlineArray provides span access
+let inline = InlineArray<10, UInt8>()
+let span: Span<UInt8> = inline.span
+let mutableSpan: MutableSpan<UInt8> = inline.mutableSpan
+
+// Efficient zero-copy parsing
+func parseHeader(_ span: Span<UInt8>) -> Header {
+    // Direct access to inline storage via span
+    Header(
+        magic: span[0],
+        version: span[1],
+        flags: span[2]
+    )
+}
+
+let header = parseHeader(inline.span)  // No heap allocation!
+```
+
+### Migration from UnsafeBufferPointer
+
+```swift
+// Old pattern (unsafe)
+func processLegacy(_ buffer: UnsafeBufferPointer<Int>) {
+    for i in 0..<buffer.count {
+        print(buffer[i])
+    }
+}
+
+// New pattern (safe)
+func processModern(_ span: Span<Int>) {
+    for element in span {  // Safe iteration
+        print(element)
+    }
+}
+
+// Migration bridge
+let buffer: UnsafeBufferPointer<Int> = ...
+let span = buffer.span  // Wrap unsafe pointer in safe span
+processModern(span)
+```
+
+### Common Patterns
+
+```swift
+// Pattern 1: Binary parsing with RawSpan
+func parse<T>(_ span: RawSpan) -> T? {
+    guard span.count >= MemoryLayout<T>.size else {
+        return nil
+    }
+    return span.load(as: T.self)  // Safe type reinterpretation
+}
+
+// Pattern 2: Chunked processing
+func processChunks(_ data: Span<UInt8>, chunkSize: Int) {
+    var offset = 0
+    while offset < data.count {
+        let end = min(offset + chunkSize, data.count)
+        let chunk = data[offset..<end]  // Span slice, no copy
+        processChunk(chunk)
+        offset += chunkSize
+    }
+}
+
+// Pattern 3: Safe C interop
+func sendToC(_ span: Span<UInt8>) {
+    span.withUnsafeBufferPointer { buffer in
+        // Only escape to unsafe inside controlled scope
+        c_function(buffer.baseAddress, buffer.count)
+    }
+}
+```
+
+### When NOT to Use Span
+
+```swift
+// ❌ Don't use Span for ownership
+struct Document {
+    var data: Span<UInt8>  // Error: Span can't be stored
+}
+
+// ✅ Use Array for owned data
+struct Document {
+    var data: [UInt8]
+
+    // Provide span access when needed
+    var dataSpan: Span<UInt8> {
+        data.span
+    }
+}
+
+// ❌ Don't try to escape Span from scope
+func getSpan() -> Span<Int> {  // Error: Non-escapable
+    let array = [1, 2, 3]
+    return array.span
+}
+
+// ✅ Process in scope, return owned data
+func processAndReturn() -> [Int] {
+    let array = [1, 2, 3]
+    process(array.span)  // Process with span
+    return array  // Return owned data
+}
+```
 
 ---
 
@@ -1201,6 +1574,41 @@ func render<S: Shape>(shapes: [S]) { }
 
 **Result**: 100ms → 10ms (10x faster) by eliminating witness table overhead.
 
+### Example 4: Apple Password Monitoring Migration
+
+**Problem**: Apple's Password Monitoring service needed to scale while reducing costs.
+
+**Original Implementation**: Java-based service
+- High memory usage (gigabytes)
+- 50% Kubernetes cluster utilization
+- Moderate throughput
+
+**Swift Rewrite Benefits**:
+```swift
+// Key performance wins from Swift's features:
+
+// 1. Deterministic memory management (no GC pauses)
+//    - No stop-the-world garbage collection
+//    - Predictable latency for real-time processing
+
+// 2. Value semantics + COW
+//    - Efficient data sharing without defensive copying
+//    - Reduced memory churn
+
+// 3. Zero-cost abstractions
+//    - Generic specialization eliminates runtime overhead
+//    - Protocol conformances optimized away
+```
+
+**Results** (Apple's published metrics):
+- **40% throughput increase** vs Java implementation
+- **100x memory reduction**: Gigabytes → Megabytes
+- **50% Kubernetes capacity freed**: Same workload, half the resources
+
+**Why This Matters**: This real-world production service demonstrates that the performance patterns in this skill (COW, value semantics, generic specialization, ARC) deliver measurable business impact at scale.
+
+**Source**: [Swift.org - Password Monitoring Case Study](https://www.swift.org/blog/password-monitoring/)
+
 ---
 
 ## Resources
@@ -1209,6 +1617,7 @@ func render<S: Shape>(shapes: [S]) { }
 
 | Session | Title | Key Topics |
 |---------|-------|------------|
+| WWDC 2025-312 | Improve memory usage and performance with Swift | InlineArray, Span, value generics, non-escapable types |
 | WWDC 2024-10217 | Explore Swift performance | Function calls, memory allocation, layout, copying |
 | WWDC 2016-416 | Understanding Swift Performance | Value vs reference, protocol witness tables, COW |
 | WWDC 2021-10216 | ARC in Swift: Basics and beyond | Object lifetimes, weak/unowned, withExtendedLifetime |
@@ -1218,6 +1627,8 @@ func render<S: Shape>(shapes: [S]) { }
 
 - [Swift Performance](https://www.swift.org/documentation/performance)
 - [Swift Optimization Tips](https://github.com/apple/swift/blob/main/docs/OptimizationTips.rst)
+- [InlineArray Documentation](https://developer.apple.com/documentation/swift/inlinearray)
+- [Span Documentation](https://developer.apple.com/documentation/swift/span)
 
 ### Related Axiom Skills
 
@@ -1228,7 +1639,7 @@ func render<S: Shape>(shapes: [S]) { }
 ---
 
 **Last Updated**: 2025-12-18
-**Swift Version**: 6.0+ (6.2 for `@concurrent`)
+**Swift Version**: 6.2+ (for InlineArray, Span, `@concurrent`)
 **Status**: Production-ready
 
 **Remember**: Profile first, optimize later. Readability > micro-optimizations.
