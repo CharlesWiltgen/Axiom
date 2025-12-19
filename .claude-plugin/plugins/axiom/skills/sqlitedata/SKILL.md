@@ -2,8 +2,8 @@
 name: sqlitedata
 description: Use when working with SQLiteData (Point-Free) — Quick Reference at top, anti-patterns, @Table models, query composition, RETURNING, CTEs, FTS5, JSON aggregation, CloudKit sync, database views, @DatabaseFunction
 skill_type: discipline
-version: 2.8.0
-last_updated: 2025-12-03 — Added Quick Reference, Anti-patterns at top; extracted migration to separate skill
+version: 2.8.1
+last_updated: 2025-12-18 — Removed deprecated insert(or:) syntax
 ---
 
 # SQLiteData
@@ -981,10 +981,12 @@ func addItem(title: String) {
 
 ```swift
 try database.write { db in
-    try Tag.insert(or: .ignore) {
+    // Note: insert(or:) API deprecated - use onConflictDoUpdate for upsert patterns
+    try Tag.insert {
         Tag(title: "existing-tag")
     }
     .execute(db)
+    // For conflict handling, use .onConflictDoUpdate or .onConflictDoNothing
 }
 ```
 
