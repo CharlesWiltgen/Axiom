@@ -1,0 +1,62 @@
+---
+name: ios-accessibility
+description: Use when fixing or auditing ANY accessibility issue - VoiceOver, Dynamic Type, color contrast, touch targets, WCAG compliance, App Store accessibility review.
+---
+
+# iOS Accessibility Router
+
+**You MUST use this skill for ANY accessibility work including VoiceOver, Dynamic Type, color contrast, and WCAG compliance.**
+
+## When to Use
+
+Use this router when:
+- Fixing VoiceOver issues
+- Implementing Dynamic Type
+- Checking color contrast
+- Ensuring touch target sizes
+- Preparing for App Store accessibility review
+- WCAG compliance auditing
+
+## Routing Logic
+
+### Accessibility Issues
+
+**All accessibility work** → `/skill accessibility-diag`
+- VoiceOver labels and hints
+- Dynamic Type scaling
+- Color contrast (WCAG)
+- Touch target sizes
+- Keyboard navigation
+- Reduce Motion support
+- Accessibility Inspector usage
+- App Store Review preparation
+
+## Decision Tree
+
+```
+User asks about accessibility
+  └─ ANY accessibility issue → accessibility-diag
+```
+
+## Critical Pattern
+
+**accessibility-diag** covers:
+- 7 critical accessibility issues
+- WCAG compliance levels (A, AA, AAA)
+- Accessibility Inspector workflows
+- VoiceOver testing checklist
+- App Store Review requirements
+
+## Example Invocations
+
+User: "My button isn't being read by VoiceOver"
+→ Invoke: `/skill accessibility-diag`
+
+User: "How do I support Dynamic Type?"
+→ Invoke: `/skill accessibility-diag`
+
+User: "Check my app for accessibility issues"
+→ Invoke: `/skill accessibility-diag`
+
+User: "Prepare for App Store accessibility review"
+→ Invoke: `/skill accessibility-diag`

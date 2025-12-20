@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -29,393 +29,44 @@
   ],
   "skills": [
     {
-      "name": "accessibility-diag",
-      "description": "VoiceOver issues, Dynamic Type scaling, color contrast failures, touch targets, keyboard navigation, WCAG compliance, accessibility rejection, Accessibility Inspector"
+      "name": "ios-build",
+      "description": "Use when ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code. Covers build failures, compilation errors, dependency conflicts, simulator problems, environment-first diagnostics."
     },
     {
-      "name": "app-discoverability",
-      "description": "Spotlight search missing app, Siri can't find app, app discoverability, App Intents discovery, App Shortcuts, Core Spotlight indexing, system suggestions"
+      "name": "ios-ui",
+      "description": "Use when building, fixing, or improving ANY iOS UI including SwiftUI, UIKit, layout, navigation, animations, design guidelines. Covers view updates, layout bugs, navigation issues, performance, architecture, Apple design compliance."
     },
     {
-      "name": "app-intents-ref",
-      "description": "Siri commands not working, Shortcuts support, AppIntent, AppEntity, App Intents parameters, entity queries, Apple Intelligence intents, background execution"
+      "name": "ios-data",
+      "description": "Use when working with ANY data persistence, database, storage, CloudKit, migration, or serialization. Covers SwiftData, Core Data, GRDB, SQLite, CloudKit sync, file storage, Codable, migrations."
     },
     {
-      "name": "app-shortcuts-ref",
-      "description": "App Shortcuts not appearing, Siri phrase recognition, AppShortcutsProvider, suggested phrases, Spotlight integration, instant availability"
+      "name": "ios-concurrency",
+      "description": "Use when writing ANY code with async, actors, threads, or seeing ANY concurrency error. Covers Swift 6 concurrency, @MainActor, Sendable, data races, async/await patterns, performance optimization."
     },
     {
-      "name": "apple-docs-research",
-      "description": "WWDC transcripts, Apple documentation research, sosumi.ai, Chrome WWDC capture, framework documentation, code samples"
+      "name": "ios-performance",
+      "description": "Use when app feels slow, memory grows, battery drains, or diagnosing ANY performance issue. Covers memory leaks, profiling, Instruments workflows, retain cycles, performance optimization."
     },
     {
-      "name": "auto-layout-debugging",
-      "description": "\"Unable to simultaneously satisfy constraints\", constraint conflicts, ambiguous layout, Auto Layout errors, view positioning issues"
+      "name": "ios-networking",
+      "description": "Use when implementing or debugging ANY network connection, API call, or socket. Covers URLSession, Network.framework, NetworkConnection, deprecated APIs, connection diagnostics, structured concurrency networking."
     },
     {
-      "name": "avfoundation-ref",
-      "description": "AVFoundation audio, AVAudioSession, audio backgrounding, AVAudioEngine, bit-perfect output, spatial audio iOS 26, audio session categories, ASAF/APAC"
+      "name": "ios-integration",
+      "description": "Use when integrating ANY iOS system feature: Siri, Shortcuts, Apple Intelligence, widgets, IAP, audio, haptics, localization, privacy. Covers App Intents, WidgetKit, StoreKit, AVFoundation, Core Haptics, App Shortcuts, Spotlight."
     },
     {
-      "name": "build-performance",
-      "description": "slow Xcode builds, compilation speed, build time optimization, type checking bottlenecks, Build Timeline analysis, incremental build issues"
+      "name": "ios-accessibility",
+      "description": "Use when fixing or auditing ANY accessibility issue: VoiceOver, Dynamic Type, color contrast, touch targets, WCAG compliance, App Store accessibility review."
     },
     {
-      "name": "build-troubleshooting",
-      "description": "dependency conflicts, CocoaPods/SPM failures, \"Multiple commands produce\", framework version mismatches, build configuration debugging"
+      "name": "ios-ai",
+      "description": "Use when implementing ANY Apple Intelligence or on-device AI feature. Covers Foundation Models, @Generable, LanguageModelSession, structured output, Tool protocol, iOS 26 AI integration."
     },
     {
-      "name": "codable",
-      "description": "Codable protocol, JSON encoding/decoding, CodingKeys, enum serialization, date strategies, \"Type does not conform to Decodable/Encodable\", custom containers"
-    },
-    {
-      "name": "core-data-diag",
-      "description": "Core Data crashes, migration failures, NSManagedObjectContext errors, thread-confinement, N+1 queries, SwiftData bridging, migration data loss"
-    },
-    {
-      "name": "core-spotlight-ref",
-      "description": "Spotlight indexing, NSUserActivity, CSSearchableItem, IndexedEntity, Core Spotlight framework, handoff integration"
-    },
-    {
-      "name": "database-migration",
-      "description": "database schema migrations, \"FOREIGN KEY constraint failed\", \"no such column\", \"cannot add NOT NULL column\", SQLite/GRDB/SQLiteData migrations, data loss prevention"
-    },
-    {
-      "name": "deep-link-debugging",
-      "description": "deep link testing, simulator navigation, debug-only deep links, automated testing workflows, closed-loop debugging"
-    },
-    {
-      "name": "extensions-widgets",
-      "description": "widget not updating, Live Activity issues, widget crashes, timeline management, widget data sharing, Control Center widgets, extension lifecycle"
-    },
-    {
-      "name": "extensions-widgets-ref",
-      "description": "WidgetKit, timeline refreshing, Live Activity API, App Groups, ActivityKit, Control Center controls, widget configuration, iOS 14+ widgets"
-    },
-    {
-      "name": "foundation-models",
-      "description": "Apple Intelligence, on-device AI, Foundation Models, @Generable, LanguageModelSession, AI blocking UI, context limits, iOS 26 AI integration"
-    },
-    {
-      "name": "foundation-models-diag",
-      "description": "AI response blocked, generation slow, guardrail violations, Foundation Models context exceeded, model unavailable, unexpected AI output, generation failures"
-    },
-    {
-      "name": "foundation-models-ref",
-      "description": "LanguageModelSession API, @Generable examples, Foundation Models Tool protocol, streaming generation, dynamic schema, WWDC 2025 AI examples"
-    },
-    {
-      "name": "getting-started",
-      "description": "Axiom onboarding, skill overview, finding right skill, available skills, skill recommendations"
-    },
-    {
-      "name": "grdb",
-      "description": "GRDB, complex SQL joins, ValueObservation, DatabaseMigrator, raw SQL queries, reactive queries, SQLite performance profiling"
-    },
-    {
-      "name": "hig",
-      "description": "Human Interface Guidelines, HIG compliance, Apple design guidelines, color choices, typography decisions, defending design to stakeholders"
-    },
-    {
-      "name": "hig-ref",
-      "description": "Apple color guidelines, SF Symbols rendering modes, Dark Mode design, semantic colors, Dynamic Type guidelines, material hierarchy, HIG typography"
-    },
-    {
-      "name": "haptics",
-      "description": "haptics not working, Core Haptics, UIFeedbackGenerator, AHAP patterns, CHHapticEngine, haptic-audio sync, Causality-Harmony-Utility design"
-    },
-    {
-      "name": "in-app-purchases",
-      "description": "purchases not working, subscription status, restore purchases, StoreKit 2, transaction verification, .storekit testing, IAP implementation"
-    },
-    {
-      "name": "liquid-glass",
-      "description": "Liquid Glass effects, .glassBackgroundEffect, glass visual artifacts, regular vs clear variant, UIBlurEffect migration, iOS 26 glass design"
-    },
-    {
-      "name": "liquid-glass-ref",
-      "description": "Liquid Glass adoption, iOS 26 UI strategy, glass app icon, platform-specific glass, Liquid Glass auditing, WWDC 2025 glass design"
-    },
-    {
-      "name": "localization",
-      "description": "strings not translated, RTL layout, plurals, String Catalog, .strings migration, locale-aware formatting, i18n patterns, Xcode 15 localization"
-    },
-    {
-      "name": "memory-debugging",
-      "description": "memory leaks, deinit not called, Instruments memory growth, app crashes, memory warnings, retain cycles, memory pressure, memory leak detection"
-    },
-    {
-      "name": "network-framework-ref",
-      "description": "NWConnection, NetworkConnection API, Network.framework, TCP connections, TLV framing, NetworkListener, Coder protocol, Wi-Fi Aware, iOS 26 networking"
-    },
-    {
-      "name": "networking",
-      "description": "connection failures, URLSession streams, Network.framework, socket migration, structured concurrency networking, NWConnection, deprecated networking APIs"
-    },
-    {
-      "name": "networking-diag",
-      "description": "connection timeouts, TLS handshake failures, data not arriving, connection drops, network performance, proxy interference, VPN problems, connection diagnostics"
-    },
-    {
-      "name": "now-playing",
-      "description": "Now Playing metadata missing, Lock Screen controls, remote commands not responding, artwork issues, playback state sync, MPNowPlayingInfoCenter, audio/video apps"
-    },
-    {
-      "name": "objc-block-retain-cycles",
-      "description": "Objective-C block memory leaks, object deallocated unexpectedly, weak-strong pattern, network callback leaks, block retain cycles, blocks assigned to self"
-    },
-    {
-      "name": "performance-profiling",
-      "description": "app feels slow, memory grows, battery drains, Time Profiler, Allocations, Core Data profiling, Instruments workflows, performance optimization"
-    },
-    {
-      "name": "privacy-ux",
-      "description": "permission requests, tracking prompts, privacy manifest, App Tracking Transparency, Privacy Nutrition Labels, Required Reason API, just-in-time permissions"
-    },
-    {
-      "name": "realm-migration-ref",
-      "description": "Realm to SwiftData migration, Realm Device Sync sunset, Realm vs SwiftData, Realm threading, CloudKit sync, September 2025 deadline"
-    },
-    {
-      "name": "sqlitedata",
-      "description": "SQLiteData queries, @Table models, Point-Free SQLite, RETURNING clause, FTS5 full-text search, CloudKit sync, CTEs, JSON aggregation, @DatabaseFunction"
-    },
-    {
-      "name": "sqlitedata-ref",
-      "description": "SQLiteData advanced patterns, @Selection column groups, single-table inheritance, recursive CTEs, database views, custom aggregates, TableAlias self-joins, JSON/string aggregation"
-    },
-    {
-      "name": "storekit-ref",
-      "description": "StoreKit 2 API, Product struct, Transaction handling, SubscriptionStatus, StoreKit Views, AppTransaction verification, RenewalInfo, iOS 18.4 purchases"
-    },
-    {
-      "name": "storage-strategy",
-      "description": "storage decisions, SwiftData vs files, CloudKit vs iCloud Drive, Documents vs Caches, local vs cloud storage, data sync strategies"
-    },
-    {
-      "name": "cloudkit-ref",
-      "description": "CloudKit sync, CKSyncEngine, CKRecord, CKDatabase, SwiftData CloudKit, shared database, public database, CloudKit zones, conflict resolution"
-    },
-    {
-      "name": "cloud-sync-diag",
-      "description": "file not syncing, CloudKit errors, sync conflicts, iCloud upload failures, ubiquitous item errors, data not appearing on devices, CKError, quota exceeded"
-    },
-    {
-      "name": "file-protection-ref",
-      "description": "FileProtectionType, file encryption iOS, NSFileProtection, data protection, secure file storage, encrypt files at rest, complete protection"
-    },
-    {
-      "name": "icloud-drive-ref",
-      "description": "iCloud Drive, ubiquitous container, file sync, NSFileCoordinator, NSFilePresenter, isUbiquitousItem, NSUbiquitousKeyValueStore"
-    },
-    {
-      "name": "storage-diag",
-      "description": "files disappeared, data missing after restart, backup too large, can't save file, file not found, storage full errors, file inaccessible when locked"
-    },
-    {
-      "name": "storage-management-ref",
-      "description": "purge files, storage pressure, disk space, isExcludedFromBackup, URL resource values, volumeAvailableCapacity, cache management, file purging priority"
-    },
-    {
-      "name": "swift-concurrency",
-      "description": "Swift 6 concurrency, thread safety, async/await, @MainActor, data races, actor-isolated, Sendable, concurrency crashes, actor isolation"
-    },
-    {
-      "name": "swift-performance",
-      "description": "Swift 6 performance, ~Copyable, COW, value vs reference, ARC overhead, generics specialization, collection optimization, async/await costs, memory layout"
-    },
-    {
-      "name": "swiftui-animation-ref",
-      "description": "SwiftUI animations, property not animating, VectorArithmetic, Int vs Float animation, spring vs timing curve, @Animatable macro, Animatable protocol, Transaction system"
-    },
-    {
-      "name": "swiftui-architecture",
-      "description": "SwiftUI app organization, MVVM vs TCA, SwiftUI testability, separating logic from views, architecture patterns, Coordinator pattern, refactoring views"
-    },
-    {
-      "name": "swiftdata",
-      "description": "SwiftData, @Model, @Query not updating, ModelContext, @Relationship, SwiftData CloudKit, @MainActor patterns, iOS 26 SwiftData"
-    },
-    {
-      "name": "swiftdata-migration",
-      "description": "SwiftData schema migration, VersionedSchema, SchemaMigrationPlan, migrate relationships, willMigrate vs didMigrate, property type changes, two-stage migrations"
-    },
-    {
-      "name": "swiftdata-migration-diag",
-      "description": "SwiftData migration crashed, schema version mismatch, migration simulator vs device, relationships lost after migration, migration data loss, testing failures"
-    },
-    {
-      "name": "swiftdata-to-sqlitedata",
-      "description": "SwiftData to SQLiteData migration, SwiftData vs SQLiteData performance, CloudKit sharing, SwiftData limitations, pattern equivalents, performance benchmarks"
-    },
-    {
-      "name": "swiftui-26-ref",
-      "description": "iOS 26 SwiftUI, WebView SwiftUI, @Animatable macro, AttributedString text editor, 3D spatial layout, scene bridging, drag and drop iOS 26, visionOS integration"
-    },
-    {
-      "name": "swiftui-debugging",
-      "description": "view not updating, preview crashing, SwiftUI layout issues, view not refreshing, preview won't load, SwiftUI diagnostic decision trees"
-    },
-    {
-      "name": "swiftui-debugging-diag",
-      "description": "Self._printChanges unexpected, view updates mysteriously, intermittent SwiftUI issues, complex state dependencies, systematic SwiftUI investigation, Instruments view debugging"
-    },
-    {
-      "name": "swiftui-gestures",
-      "description": "gestures not working together, drag conflicts with scroll, gesture state management, compose gestures, gesture accessibility, tap, long press, magnification, rotation"
-    },
-    {
-      "name": "swiftui-layout",
-      "description": "adaptive layout, ViewThatFits vs AnyLayout, iPad multitasking, iOS 26 free-form windows, onGeometryChange, size class limitations, screen size adaptation"
-    },
-    {
-      "name": "swiftui-layout-ref",
-      "description": "GeometryReader, size classes, adaptive layout API, ViewThatFits, AnyLayout protocol, Layout protocol, onGeometryChange API, iOS 26 window APIs"
-    },
-    {
-      "name": "swiftui-nav",
-      "description": "NavigationStack issues, NavigationStack vs NavigationSplitView, deep links wrong screen, state lost, coordinator pattern, pops unexpectedly, NavigationPath"
-    },
-    {
-      "name": "swiftui-nav-diag",
-      "description": "navigation pops unexpectedly, navigationDestination crash, deep link wrong screen, navigation state lost on tab switch, NavigationStack not responding"
-    },
-    {
-      "name": "swiftui-nav-ref",
-      "description": "NavigationPath, NavigationSplitView, deep linking API, state restoration navigation, Tab integration iOS 18, Liquid Glass navigation iOS 26, NavigationStack API"
-    },
-    {
-      "name": "swiftui-performance",
-      "description": "SwiftUI view slow, List performance, app drops frames, view body called too often, List laggy, scrolling lags, animations stutter, Instruments 26, WWDC 2025 performance"
-    },
-    {
-      "name": "textkit-ref",
-      "description": "TextKit 2 migration, Writing Tools integration, NSTextLayoutManager, TextKit 2 architecture, SwiftUI TextEditor, TextKit 1 to 2, complex text layout"
-    },
-    {
-      "name": "typography-ref",
-      "description": "San Francisco font, Dynamic Type, text styles iOS, typography tracking and leading, font internationalization, Apple typography guidelines, text style API"
-    },
-    {
-      "name": "ui-testing",
-      "description": "flaky tests, XCUITest, wait for element, timing issues, Recording UI Automation, condition-based waiting, test race conditions, accessibility-first testing"
-    },
-    {
-      "name": "uikit-animation-debugging",
-      "description": "CAAnimation completion not firing, spring physics wrong on device, duration mismatch, gesture animation jank, simulator vs device timing, CATransaction patterns"
-    },
-    {
-      "name": "vision",
-      "description": "subject segmentation, VNGenerateForegroundInstanceMaskRequest, isolate object from hand, VisionKit subject lifting, image foreground detection, instance masks, class-agnostic segmentation"
-    },
-    {
-      "name": "vision-diag",
-      "description": "subject not detected, hand pose missing landmarks, low confidence observations, Vision performance, coordinate conversion, VisionKit errors, observation nil"
-    },
-    {
-      "name": "vision-ref",
-      "description": "Vision framework API, VNDetectHumanHandPoseRequest, VNDetectHumanBodyPoseRequest, person segmentation, face detection, VNImageRequestHandler, recognized points, joint landmarks"
-    },
-    {
-      "name": "xcode-debugging",
-      "description": "BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild, \"Unable to boot simulator\", \"No such module\", SPM changes, environment-first diagnostics"
-    }
-  ],
-  "agents": [
-    {
-      "name": "accessibility-auditor",
-      "description": "Accessibility checking, App Store submission, WCAG compliance audit. Detects VoiceOver issues, Dynamic Type violations, color contrast failures. Prevents App Store rejections.",
-      "path": "./agents/accessibility-auditor.md"
-    },
-    {
-      "name": "build-fixer",
-      "description": "Xcode build failures, build errors, environment issues. Diagnoses zombie processes, Derived Data, SPM cache, simulator state. Saves 30+ minutes environment-first diagnostics.",
-      "path": "./agents/build-fixer.md"
-    },
-    {
-      "name": "build-optimizer",
-      "description": "Slow builds, build performance optimization. Identifies slow type checking, expensive scripts, suboptimal settings, parallelization gaps. Reduces build times 30-50%.",
-      "path": "./agents/build-optimizer.md"
-    },
-    {
-      "name": "codable-auditor",
-      "description": "Codable review, JSON serialization audit, legacy code modernization. Detects manual JSON building, try? swallowing errors, JSONSerialization usage. Prevents silent data loss.",
-      "path": "./agents/codable-auditor.md"
-    },
-    {
-      "name": "concurrency-validator",
-      "description": "Swift 6 concurrency checking, data race prevention. Detects unsafe Task captures, missing @MainActor, Sendable violations, actor isolation problems. Prevents data races.",
-      "path": "./agents/concurrency-validator.md"
-    },
-    {
-      "name": "core-data-auditor",
-      "description": "Core Data review, schema migration safety, production crash prevention. Detects migration risks, thread-confinement errors, N+1 queries, data loss risks. Critical safety violations.",
-      "path": "./agents/core-data-auditor.md"
-    },
-    {
-      "name": "icloud-auditor",
-      "description": "iCloud sync issues, CloudKit errors, ubiquitous container problems. Detects missing entitlements, unsafe file coordination, error handling gaps, CloudKit anti-patterns. Prevents sync failures.",
-      "path": "./agents/icloud-auditor.md"
-    },
-    {
-      "name": "iap-auditor",
-      "description": "In-app purchase review, StoreKit issues, transaction problems. Detects missing transaction.finish(), weak validation, missing restore, subscription tracking gaps. Prevents revenue loss and rejections.",
-      "path": "./agents/iap-auditor.md"
-    },
-    {
-      "name": "iap-implementation",
-      "description": "Add in-app purchases, StoreKit 2, subscriptions. Implements testing-first IAP with StoreKit config, StoreManager, transactions, subscription management, restore. Production-ready.",
-      "path": "./agents/iap-implementation.md"
-    },
-    {
-      "name": "liquid-glass-auditor",
-      "description": "Liquid Glass review, iOS 26 UI updates, toolbar improvements. Identifies glass effect opportunities, toolbar upgrades, search patterns, blur effect migrations, tinting opportunities for iOS 26+.",
-      "path": "./agents/liquid-glass-auditor.md"
-    },
-    {
-      "name": "memory-audit-runner",
-      "description": "Memory leak prevention, proactive leak checking. Detects 6 common patterns: timer leaks, observer leaks, closure captures, delegate cycles, view callbacks, PhotoKit accumulation. Prevents crashes.",
-      "path": "./agents/memory-audit-runner.md"
-    },
-    {
-      "name": "networking-auditor",
-      "description": "Networking review, deprecated APIs, App Store prep. Detects SCNetworkReachability, CFSocket, NSStream, reachability checks, hardcoded IPs, missing error handling. Prevents rejections.",
-      "path": "./agents/networking-auditor.md"
-    },
-    {
-      "name": "simulator-tester",
-      "description": "Simulator testing, test scenarios, visual verification. Sets up scenarios, captures screenshots, checks logs for crashes/errors, iterates on fixes. Closed-loop debugging with visual verification.",
-      "path": "./agents/simulator-tester.md"
-    },
-    {
-      "name": "storage-auditor",
-      "description": "File storage issues, data loss, backup bloat audit. Detects files in wrong locations, missing backup exclusions, missing file protection, storage anti-patterns. Prevents data loss.",
-      "path": "./agents/storage-auditor.md"
-    },
-    {
-      "name": "swift-performance-analyzer",
-      "description": "Swift performance audit, code optimization. Detects unnecessary copies, ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs. Prevents performance regressions.",
-      "path": "./agents/swift-performance-analyzer.md"
-    },
-    {
-      "name": "swiftui-nav-auditor",
-      "description": "SwiftUI navigation issues, deep linking, state restoration, architecture review. Detects missing NavigationPath, deep link gaps, wrong container usage, navigation correctness issues (not performance).",
-      "path": "./agents/swiftui-nav-auditor.md"
-    },
-    {
-      "name": "swiftui-performance-analyzer",
-      "description": "SwiftUI performance, janky scrolling, slow animations. Detects expensive view body operations, unnecessary updates, missing lazy loading, SwiftUI-specific frame drops and scrolling issues.",
-      "path": "./agents/swiftui-performance-analyzer.md"
-    },
-    {
-      "name": "swiftui-architecture-auditor",
-      "description": "SwiftUI architecture, separation of concerns, testability. Detects logic in view bodies, async boundary violations, property wrapper misuse, testability gaps. Complements performance/nav audits.",
-      "path": "./agents/swiftui-architecture-auditor.md"
-    },
-    {
-      "name": "textkit-auditor",
-      "description": "TextKit review, Writing Tools integration, UITextView/NSTextView code review. Detects TextKit 1 fallback triggers, deprecated glyph APIs, missing TextKit 2 features. Prevents Writing Tools loss.",
-      "path": "./agents/textkit-auditor.md"
+      "name": "ios-vision",
+      "description": "Use when implementing ANY computer vision feature: image analysis, object detection, pose detection, person segmentation, subject lifting, hand/body pose tracking."
     }
   ]
 }

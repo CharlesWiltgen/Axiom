@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'META=$(find ~/.claude/plugins -path \"*/axiom/hooks/metadata.txt\" 2>/dev/null | head -1); if [ -f \"$META\" ]; then { read VER; read SKILLS; read AGENTS; read CMDS; } < \"$META\"; if [[ \"$VER\" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+$ ]]; then LAST=$(cat ~/.claude/axiom-version 2>/dev/null); if [ -z \"$LAST\" ]; then echo \"✓ Axiom v$VER installed ($SKILLS skills, $AGENTS agents, $CMDS commands)\"; elif [ \"$LAST\" != \"$VER\" ]; then echo \"✓ Axiom updated to v$VER ($SKILLS skills, $AGENTS agents, $CMDS commands)\"; fi; mkdir -p ~/.claude 2>/dev/null && echo \"$VER\" > ~/.claude/axiom-version; fi; fi; ZOMBIE=$(pgrep -f xcodebuild 2>/dev/null | wc -l | tr -d \" \"); DD=$(du -sh ~/Library/Developer/Xcode/DerivedData 2>/dev/null | cut -f1); [ \"${ZOMBIE:-0}\" -gt 5 ] 2>/dev/null && echo \"⚠️ $ZOMBIE xcodebuild processes running (consider: killall xcodebuild)\"; if [[ \"$DD\" == *G* ]]; then GB=$(echo \"$DD\" | tr -d G | cut -d. -f1); [ -n \"$GB\" ] && [ \"$GB\" -gt 10 ] 2>/dev/null && echo \"⚠️ Derived Data is $DD (consider cleaning)\"; fi; if ls *.xcodeproj *.xcworkspace 2>/dev/null >/dev/null; then echo \"📱 iOS project detected. Axiom skills available.\"; echo \"   Try: /axiom:ask <your question> or browse skills with /skill axiom:getting-started\"; fi; exit 0'"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\""
           }
         ]
       }
