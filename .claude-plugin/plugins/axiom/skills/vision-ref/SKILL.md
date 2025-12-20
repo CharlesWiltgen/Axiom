@@ -1,0 +1,649 @@
+---
+name: vision-ref
+description: Vision framework API, VNDetectHumanHandPoseRequest, VNDetectHumanBodyPoseRequest, person segmentation, face detection, VNImageRequestHandler, recognized points, joint landmarks
+skill_type: reference
+version: 1.0.0
+last_updated: 2025-12-20
+apple_platforms: iOS 14+, iPadOS 14+, macOS 11+, tvOS 14+, visionOS 1+
+---
+
+# Vision Framework API Reference
+
+Comprehensive reference for Vision framework people-focused computer vision: subject segmentation, hand/body pose detection, person detection, and face analysis.
+
+## When to Use This Reference
+
+- **Implementing subject lifting** using VisionKit or Vision
+- **Detecting hand/body poses** for gesture recognition or fitness apps
+- **Segmenting people** from backgrounds or separating multiple individuals
+- **Face detection and landmarks** for AR effects or authentication
+- **Combining Vision APIs** to solve complex computer vision problems
+- **Looking up specific API signatures** and parameter meanings
+
+**Related skills**: See `vision` for decision trees and patterns, `vision-diag` for troubleshooting
+
+## Vision Framework Overview
+
+Vision provides computer vision algorithms for still images and video:
+
+**Core workflow**:
+1. Create request (e.g., `VNDetectHumanHandPoseRequest()`)
+2. Create handler with image (`VNImageRequestHandler(cgImage: image)`)
+3. Perform request (`try handler.perform([request])`)
+4. Access observations from `request.results`
+
+**Coordinate system**: Lower-left origin, normalized (0.0-1.0) coordinates
+
+**Performance**: Run on background queue - resource intensive, blocks UI if on main thread
+
+## Subject Segmentation APIs
+
+### VNGenerateForegroundInstanceMaskRequest
+
+**Availability**: iOS 17+, macOS 14+, tvOS 17+, visionOS 1+
+
+Generates class-agnostic instance mask of foreground objects (people, pets, buildings, food, shoes, etc.)
+
+#### Basic Usage
+
+```swift
+let request = VNGenerateForegroundInstanceMaskRequest()
+let handler = VNImageRequestHandler(cgImage: image)
+
+try handler.perform([request])
+
+guard let observation = request.results?.first as? VNInstanceMaskObservation else {
+    return
+}
+```
+
+#### InstanceMaskObservation
+
+**allInstances**: `IndexSet` containing all foreground instance indices (excludes background 0)
+
+**instanceMask**: `CVPixelBuffer` with UInt8 labels (0 = background, 1+ = instance indices)
+
+**instanceAtPoint(_:)**: Returns instance index at normalized point
+
+```swift
+let point = CGPoint(x: 0.5, y: 0.5)  // Center of image
+let instance = observation.instanceAtPoint(point)
+
+if instance == 0 {
+    print("Background tapped")
+} else {
+    print("Instance \(instance) tapped")
+}
+```
+
+#### Generating Masks
+
+**createScaledMask(for:croppedToInstancesContent:)**
+
+Parameters:
+- `for`: `IndexSet` of instances to include
+- `croppedToInstancesContent`:
+  - `false` = Output matches input resolution (for compositing)
+  - `true` = Tight crop around selected instances
+
+Returns: Single-channel floating-point `CVPixelBuffer` (soft segmentation mask)
+
+```swift
+// All instances, full resolution
+let mask = try observation.createScaledMask(
+    for: observation.allInstances,
+    croppedToInstancesContent: false
+)
+
+// Single instance, cropped
+let instances = IndexSet(integer: 1)
+let croppedMask = try observation.createScaledMask(
+    for: instances,
+    croppedToInstancesContent: true
+)
+```
+
+#### Instance Mask Hit Testing
+
+Access raw pixel buffer to map tap coordinates to instance labels:
+
+```swift
+let instanceMask = observation.instanceMask
+
+CVPixelBufferLockBaseAddress(instanceMask, .readOnly)
+defer { CVPixelBufferUnlockBaseAddress(instanceMask, .readOnly) }
+
+let baseAddress = CVPixelBufferGetBaseAddress(instanceMask)
+let width = CVPixelBufferGetWidth(instanceMask)
+let bytesPerRow = CVPixelBufferGetBytesPerRow(instanceMask)
+
+// Convert normalized tap to pixel coordinates
+let pixelPoint = VNImagePointForNormalizedPoint(
+    CGPoint(x: normalizedX, y: normalizedY),
+    width: imageWidth,
+    height: imageHeight
+)
+
+// Calculate byte offset
+let offset = Int(pixelPoint.y) * bytesPerRow + Int(pixelPoint.x)
+
+// Read instance label
+let label = UnsafeRawPointer(baseAddress!).load(
+    fromByteOffset: offset,
+    as: UInt8.self
+)
+
+let instances = label == 0 ? observation.allInstances : IndexSet(integer: Int(label))
+```
+
+## VisionKit Subject Lifting
+
+### ImageAnalysisInteraction (iOS)
+
+**Availability**: iOS 16+, iPadOS 16+
+
+Adds system-like subject lifting UI to views:
+
+```swift
+let interaction = ImageAnalysisInteraction()
+interaction.preferredInteractionTypes = .imageSubject  // Or .automatic
+imageView.addInteraction(interaction)
+```
+
+**Interaction types**:
+- `.automatic`: Subject lifting + Live Text + data detectors
+- `.imageSubject`: Subject lifting only (no interactive text)
+
+### ImageAnalysisOverlayView (macOS)
+
+**Availability**: macOS 13+
+
+```swift
+let overlayView = ImageAnalysisOverlayView()
+overlayView.preferredInteractionTypes = .imageSubject
+nsView.addSubview(overlayView)
+```
+
+### Programmatic Access
+
+#### ImageAnalyzer
+
+```swift
+let analyzer = ImageAnalyzer()
+let configuration = ImageAnalyzer.Configuration([.text, .visualLookUp])
+
+let analysis = try await analyzer.analyze(image, configuration: configuration)
+```
+
+#### ImageAnalysis
+
+**subjects**: `[Subject]` - All subjects in image
+
+**highlightedSubjects**: `Set<Subject>` - Currently highlighted (user long-pressed)
+
+**subject(at:)**: Async lookup of subject at normalized point (returns `nil` if none)
+
+```swift
+// Get all subjects
+let subjects = analysis.subjects
+
+// Look up subject at tap
+if let subject = try await analysis.subject(at: tapPoint) {
+    // Process subject
+}
+
+// Change highlight state
+analysis.highlightedSubjects = Set([subjects[0], subjects[1]])
+```
+
+#### Subject Struct
+
+**image**: `UIImage`/`NSImage` - Extracted subject with transparency
+
+**bounds**: `CGRect` - Subject boundaries in image coordinates
+
+```swift
+// Single subject image
+let subjectImage = subject.image
+
+// Composite multiple subjects
+let compositeImage = try await analysis.image(for: [subject1, subject2])
+```
+
+**Out-of-process**: VisionKit analysis happens out-of-process (performance benefit, image size limited)
+
+## Person Segmentation APIs
+
+### VNGeneratePersonSegmentationRequest
+
+**Availability**: iOS 15+, macOS 12+
+
+Returns single mask containing **all people** in image:
+
+```swift
+let request = VNGeneratePersonSegmentationRequest()
+// Configure quality level if needed
+try handler.perform([request])
+
+guard let observation = request.results?.first as? VNPixelBufferObservation else {
+    return
+}
+
+let personMask = observation.pixelBuffer  // CVPixelBuffer
+```
+
+### VNGeneratePersonInstanceMaskRequest
+
+**Availability**: iOS 17+, macOS 14+
+
+Returns **separate masks for up to 4 people**:
+
+```swift
+let request = VNGeneratePersonInstanceMaskRequest()
+try handler.perform([request])
+
+guard let observation = request.results?.first as? VNInstanceMaskObservation else {
+    return
+}
+
+// Same InstanceMaskObservation API as foreground instance masks
+let allPeople = observation.allInstances  // Up to 4 people (1-4)
+
+// Get mask for person 1
+let person1Mask = try observation.createScaledMask(
+    for: IndexSet(integer: 1),
+    croppedToInstancesContent: false
+)
+```
+
+**Limitations**:
+- Segments up to 4 people
+- With >4 people: may miss people or combine them (typically background people)
+- Use `VNDetectFaceRectanglesRequest` to count faces if you need to handle crowded scenes
+
+## Hand Pose Detection
+
+### VNDetectHumanHandPoseRequest
+
+**Availability**: iOS 14+, macOS 11+
+
+Detects **21 hand landmarks** per hand:
+
+```swift
+let request = VNDetectHumanHandPoseRequest()
+request.maximumHandCount = 2  // Default: 2, increase if needed
+
+let handler = VNImageRequestHandler(cgImage: image)
+try handler.perform([request])
+
+for observation in request.results as? [VNHumanHandPoseObservation] ?? [] {
+    // Process each hand
+}
+```
+
+**Performance note**: `maximumHandCount` affects latency. Pose computed only for hands ≤ maximum. Set to lowest acceptable value.
+
+### Hand Landmarks (21 points)
+
+**Wrist**: 1 landmark
+
+**Thumb** (4 landmarks):
+- `.thumbTip`
+- `.thumbIP` (interphalangeal joint)
+- `.thumbMP` (metacarpophalangeal joint)
+- `.thumbCMC` (carpometacarpal joint)
+
+**Fingers** (4 landmarks each):
+- Tip (`.indexTip`, `.middleTip`, `.ringTip`, `.littleTip`)
+- DIP (distal interphalangeal joint)
+- PIP (proximal interphalangeal joint)
+- MCP (metacarpophalangeal joint)
+
+### Group Keys
+
+Access landmark groups:
+
+| Group Key | Points |
+|-----------|--------|
+| `.all` | All 21 landmarks |
+| `.thumb` | 4 thumb joints |
+| `.indexFinger` | 4 index finger joints |
+| `.middleFinger` | 4 middle finger joints |
+| `.ringFinger` | 4 ring finger joints |
+| `.littleFinger` | 4 little finger joints |
+
+```swift
+// Get all points
+let allPoints = try observation.recognizedPoints(.all)
+
+// Get index finger points only
+let indexPoints = try observation.recognizedPoints(.indexFinger)
+
+// Get specific point
+let thumbTip = try observation.recognizedPoint(.thumbTip)
+let indexTip = try observation.recognizedPoint(.indexTip)
+
+// Check confidence
+guard thumbTip.confidence > 0.5 else { return }
+
+// Access location (normalized coordinates, lower-left origin)
+let location = thumbTip.location  // CGPoint
+```
+
+### Gesture Recognition Example (Pinch)
+
+```swift
+let thumbTip = try observation.recognizedPoint(.thumbTip)
+let indexTip = try observation.recognizedPoint(.indexTip)
+
+guard thumbTip.confidence > 0.5, indexTip.confidence > 0.5 else {
+    return
+}
+
+let distance = hypot(
+    thumbTip.location.x - indexTip.location.x,
+    thumbTip.location.y - indexTip.location.y
+)
+
+let isPinching = distance < 0.05  // Normalized threshold
+```
+
+### Chirality (Handedness)
+
+```swift
+let chirality = observation.chirality  // .left or .right or .unknown
+```
+
+## Body Pose Detection
+
+### VNDetectHumanBodyPoseRequest (2D)
+
+**Availability**: iOS 14+, macOS 11+
+
+Detects **18 body landmarks** (2D normalized coordinates):
+
+```swift
+let request = VNDetectHumanBodyPoseRequest()
+try handler.perform([request])
+
+for observation in request.results as? [VNHumanBodyPoseObservation] ?? [] {
+    // Process each person
+}
+```
+
+### Body Landmarks (18 points)
+
+**Face** (5 landmarks):
+- `.nose`, `.leftEye`, `.rightEye`, `.leftEar`, `.rightEar`
+
+**Arms** (6 landmarks):
+- Left: `.leftShoulder`, `.leftElbow`, `.leftWrist`
+- Right: `.rightShoulder`, `.rightElbow`, `.rightWrist`
+
+**Torso** (7 landmarks):
+- `.neck` (between shoulders)
+- `.leftShoulder`, `.rightShoulder` (also in arm groups)
+- `.leftHip`, `.rightHip`
+- `.root` (between hips)
+
+**Legs** (6 landmarks):
+- Left: `.leftHip`, `.leftKnee`, `.leftAnkle`
+- Right: `.rightHip`, `.rightKnee`, `.rightAnkle`
+
+**Note**: Shoulders and hips appear in multiple groups
+
+### Group Keys (Body)
+
+| Group Key | Points |
+|-----------|--------|
+| `.all` | All 18 landmarks |
+| `.face` | 5 face landmarks |
+| `.leftArm` | shoulder, elbow, wrist |
+| `.rightArm` | shoulder, elbow, wrist |
+| `.torso` | neck, shoulders, hips, root |
+| `.leftLeg` | hip, knee, ankle |
+| `.rightLeg` | hip, knee, ankle |
+
+```swift
+// Get all body points
+let allPoints = try observation.recognizedPoints(.all)
+
+// Get left arm only
+let leftArmPoints = try observation.recognizedPoints(.leftArm)
+
+// Get specific joint
+let leftWrist = try observation.recognizedPoint(.leftWrist)
+```
+
+### VNDetectHumanBodyPose3DRequest (3D)
+
+**Availability**: iOS 17+, macOS 14+
+
+Returns **3D skeleton with 17 joints** in meters (real-world coordinates):
+
+```swift
+let request = VNDetectHumanBodyPose3DRequest()
+try handler.perform([request])
+
+guard let observation = request.results?.first as? VNHumanBodyPose3DObservation else {
+    return
+}
+
+// Get 3D joint position
+let leftWrist = try observation.recognizedPoint(.leftWrist)
+let position = leftWrist.position  // simd_float4x4 matrix
+let localPosition = leftWrist.localPosition  // Relative to parent joint
+```
+
+**3D Body Landmarks** (17 points): Same as 2D except no ears (15 vs 18 2D landmarks)
+
+#### 3D Observation Properties
+
+**bodyHeight**: Estimated height in meters
+- With depth data: Measured height
+- Without depth data: Reference height (1.8m)
+
+**heightEstimation**: `.measured` or `.reference`
+
+**cameraOriginMatrix**: `simd_float4x4` camera position/orientation relative to subject
+
+**pointInImage(\_:)**: Project 3D joint back to 2D image coordinates
+
+```swift
+let wrist2D = try observation.pointInImage(leftWrist)
+```
+
+#### 3D Point Classes
+
+**VNPoint3D**: Base class with `simd_float4x4` position matrix
+
+**VNRecognizedPoint3D**: Adds identifier (joint name)
+
+**VNHumanBodyRecognizedPoint3D**: Adds `localPosition` and `parentJoint`
+
+```swift
+// Position relative to skeleton root (center of hip)
+let modelPosition = leftWrist.position
+
+// Position relative to parent joint (left elbow)
+let relativePosition = leftWrist.localPosition
+```
+
+#### Depth Input
+
+Vision accepts depth data alongside images:
+
+```swift
+// From AVDepthData
+let handler = VNImageRequestHandler(
+    cvPixelBuffer: imageBuffer,
+    depthData: depthData,
+    orientation: orientation
+)
+
+// From file (automatic depth extraction)
+let handler = VNImageRequestHandler(url: imageURL)  // Depth auto-fetched
+```
+
+**Depth formats**: Disparity or Depth (interchangeable via AVFoundation)
+
+**LiDAR**: Use in live capture sessions for accurate scale/measurement
+
+## Face Detection & Landmarks
+
+### VNDetectFaceRectanglesRequest
+
+**Availability**: iOS 11+
+
+Detects face bounding boxes:
+
+```swift
+let request = VNDetectFaceRectanglesRequest()
+try handler.perform([request])
+
+for observation in request.results as? [VNFaceObservation] ?? [] {
+    let faceBounds = observation.boundingBox  // Normalized rect
+}
+```
+
+### VNDetectFaceLandmarksRequest
+
+**Availability**: iOS 11+
+
+Detects face with detailed landmarks:
+
+```swift
+let request = VNDetectFaceLandmarksRequest()
+try handler.perform([request])
+
+for observation in request.results as? [VNFaceObservation] ?? [] {
+    if let landmarks = observation.landmarks {
+        let leftEye = landmarks.leftEye
+        let nose = landmarks.nose
+        let leftPupil = landmarks.leftPupil  // Revision 2+
+    }
+}
+```
+
+**Revisions**:
+- Revision 1: Basic landmarks
+- Revision 2: Detects upside-down faces
+- Revision 3+: Pupil locations
+
+## Person Detection
+
+### VNDetectHumanRectanglesRequest
+
+**Availability**: iOS 13+
+
+Detects human bounding boxes (torso detection):
+
+```swift
+let request = VNDetectHumanRectanglesRequest()
+try handler.perform([request])
+
+for observation in request.results as? [VNHumanObservation] ?? [] {
+    let humanBounds = observation.boundingBox  // Normalized rect
+}
+```
+
+**Use case**: Faster than pose detection when you only need location
+
+## CoreImage Integration
+
+### CIBlendWithMask Filter
+
+Composite subject on new background using Vision mask:
+
+```swift
+// 1. Get mask from Vision
+let observation = request.results?.first as? VNInstanceMaskObservation
+let visionMask = try observation.createScaledMask(
+    for: observation.allInstances,
+    croppedToInstancesContent: false
+)
+
+// 2. Convert to CIImage
+let maskImage = CIImage(cvPixelBuffer: visionMask)
+
+// 3. Apply filter
+let filter = CIFilter(name: "CIBlendWithMask")!
+filter.setValue(sourceImage, forKey: kCIInputImageKey)
+filter.setValue(maskImage, forKey: kCIInputMaskImageKey)
+filter.setValue(newBackground, forKey: kCIInputBackgroundImageKey)
+
+let output = filter.outputImage  // Composited result
+```
+
+**Parameters**:
+- **Input image**: Original image to mask
+- **Mask image**: Vision's soft segmentation mask
+- **Background image**: New background (or empty image for transparency)
+
+**HDR preservation**: CoreImage preserves high dynamic range from input (Vision/VisionKit output is SDR)
+
+## API Quick Reference
+
+### Subject Segmentation
+
+| API | Platform | Purpose |
+|-----|----------|---------|
+| `VNGenerateForegroundInstanceMaskRequest` | iOS 17+ | Class-agnostic subject instances |
+| `VNGeneratePersonInstanceMaskRequest` | iOS 17+ | Up to 4 people separately |
+| `VNGeneratePersonSegmentationRequest` | iOS 15+ | All people (single mask) |
+| `ImageAnalysisInteraction` (VisionKit) | iOS 16+ | UI for subject lifting |
+
+### Pose Detection
+
+| API | Platform | Landmarks | Coordinates |
+|-----|----------|-----------|-------------|
+| `VNDetectHumanHandPoseRequest` | iOS 14+ | 21 per hand | 2D normalized |
+| `VNDetectHumanBodyPoseRequest` | iOS 14+ | 18 body joints | 2D normalized |
+| `VNDetectHumanBodyPose3DRequest` | iOS 17+ | 17 body joints | 3D meters |
+
+### Face & Person Detection
+
+| API | Platform | Purpose |
+|-----|----------|---------|
+| `VNDetectFaceRectanglesRequest` | iOS 11+ | Face bounding boxes |
+| `VNDetectFaceLandmarksRequest` | iOS 11+ | Face with detailed landmarks |
+| `VNDetectHumanRectanglesRequest` | iOS 13+ | Human torso bounding boxes |
+
+### Observation Types
+
+| Observation | Returned By |
+|-------------|-------------|
+| `VNInstanceMaskObservation` | Foreground/person instance masks |
+| `VNPixelBufferObservation` | Person segmentation (single mask) |
+| `VNHumanHandPoseObservation` | Hand pose |
+| `VNHumanBodyPoseObservation` | Body pose (2D) |
+| `VNHumanBodyPose3DObservation` | Body pose (3D) |
+| `VNFaceObservation` | Face detection/landmarks |
+| `VNHumanObservation` | Human rectangles |
+
+## WWDC Sessions
+
+**WWDC 2023**:
+- [10176: Lift subjects from images in your app](https://developer.apple.com/videos/play/wwdc2023/10176/)
+- [111241: Explore 3D body pose and person segmentation in Vision](https://developer.apple.com/videos/play/wwdc2023/111241/)
+- [10048: What's new in VisionKit](https://developer.apple.com/videos/play/wwdc2023/10048/)
+
+**WWDC 2022**:
+- [10024: What's new in Vision](https://developer.apple.com/videos/play/wwdc2022/10024/)
+
+**WWDC 2020**:
+- [10653: Detect Body and Hand Pose with Vision](https://developer.apple.com/videos/play/wwdc2020/10653/)
+- [10043: Build an Action Classifier with Create ML](https://developer.apple.com/videos/play/wwdc2020/10043/)
+- [10099: Explore the Action & Vision app](https://developer.apple.com/videos/play/wwdc2020/10099/)
+
+## Apple Documentation
+
+- [Vision Framework](https://developer.apple.com/documentation/vision)
+- [VisionKit Framework](https://developer.apple.com/documentation/visionkit)
+- [Detecting Hand Poses with Vision](https://developer.apple.com/documentation/vision/detecting-hand-poses-with-vision)
+- [CoreImage Filter Reference](https://developer.apple.com/library/archive/documentation/GraphicsImaging/Reference/CoreImageFilterReference/)
+
+## Related Axiom Skills
+
+- `vision` — Decision trees, patterns, anti-patterns
+- `vision-diag` — Troubleshooting when things go wrong

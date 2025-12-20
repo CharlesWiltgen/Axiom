@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -303,6 +303,18 @@
     {
       "name": "uikit-animation-debugging",
       "description": "CAAnimation completion not firing, spring physics wrong on device, duration mismatch, gesture animation jank, simulator vs device timing, CATransaction patterns"
+    },
+    {
+      "name": "vision",
+      "description": "subject segmentation, VNGenerateForegroundInstanceMaskRequest, isolate object from hand, VisionKit subject lifting, image foreground detection, instance masks, class-agnostic segmentation"
+    },
+    {
+      "name": "vision-diag",
+      "description": "subject not detected, hand pose missing landmarks, low confidence observations, Vision performance, coordinate conversion, VisionKit errors, observation nil"
+    },
+    {
+      "name": "vision-ref",
+      "description": "Vision framework API, VNDetectHumanHandPoseRequest, VNDetectHumanBodyPoseRequest, person segmentation, face detection, VNImageRequestHandler, recognized points, joint landmarks"
     },
     {
       "name": "xcode-debugging",

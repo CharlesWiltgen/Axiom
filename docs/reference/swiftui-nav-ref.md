@@ -665,11 +665,20 @@ TabView {
 TabView { ... }
     .tabBarMinimizeBehavior(.onScrollDown)
 
-// Bottom accessory view
+// Bottom accessory view (always visible)
 TabView { ... }
     .tabViewBottomAccessory {
         PlaybackControls()
     }
+
+// Dynamic visibility (recommended for mini-players)
+TabView { ... }
+    .tabViewBottomAccessory(isEnabled: showMiniPlayer) {
+        MiniPlayerView()
+            .transition(.opacity)
+    }
+// isEnabled: true = shows accessory
+// isEnabled: false = hides AND removes reserved space
 
 // Search tab with dedicated search field
 Tab(role: .search) {
@@ -973,6 +982,7 @@ NavigationPath(codableRepresentation)  // For decoding
 .searchable(text: $query)
 .tabViewStyle(.sidebarAdaptable)
 .tabBarMinimizeBehavior(.onScrollDown)
+.tabViewBottomAccessory(isEnabled:content:)
 .backgroundExtensionEffect()
 ```
 

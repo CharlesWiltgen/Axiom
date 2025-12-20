@@ -25,6 +25,14 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**typography-ref**](/reference/typography-ref) | San Francisco fonts, text styles, Dynamic Type, tracking, leading |
 | [**uikit-animation-debugging**](/skills/ui-design/uikit-animation-debugging) | CAAnimation issues, completion handlers, spring physics |
 
+### Computer Vision
+
+| Skill | When to Use |
+|-------|-------------|
+| [**vision**](/skills/computer-vision/vision) | Subject segmentation, hand/body pose detection, excluding hands from objects, VisionKit vs Vision |
+| [**vision-ref**](/reference/vision-ref) | Complete Vision framework API reference with code examples |
+| [**vision-diag**](/reference/vision-diag) | Subject not detected, low confidence landmarks, performance issues, coordinate conversion |
+
 ### Debugging
 
 | Skill | When to Use |

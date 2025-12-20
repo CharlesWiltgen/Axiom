@@ -784,11 +784,20 @@ Button("Switch to Browse") {
 TabView { ... }
     .tabBarMinimizeBehavior(.onScrollDown)
 
-// Bottom accessory view
+// Bottom accessory view (always visible)
 TabView { ... }
     .tabViewBottomAccessory {
         PlaybackControls()
     }
+
+// Dynamic visibility (recommended for mini-players)
+TabView { ... }
+    .tabViewBottomAccessory(isEnabled: showMiniPlayer) {
+        MiniPlayerView()
+            .transition(.opacity)
+    }
+// isEnabled: true = shows accessory
+// isEnabled: false = hides AND removes reserved space
 
 // Search tab with dedicated search field
 Tab(role: .search) {
@@ -811,7 +820,7 @@ Tab(role: .search) {
 | `.tabViewStyle(.sidebarAdaptable)` | TabView | 18+ | Sidebar on iPad, tabs on iPhone |
 | `.tabViewCustomization($binding)` | TabView | 18+ | Persist user tab arrangement |
 | `.tabBarMinimizeBehavior(_:)` | TabView | 26+ | Auto-hide on scroll |
-| `.tabViewBottomAccessory { }` | TabView | 26+ | Content below tab bar |
+| `.tabViewBottomAccessory(isEnabled:content:)` | TabView | 26+ | Dynamic content below tab bar |
 
 ---
 
