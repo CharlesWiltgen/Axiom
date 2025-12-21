@@ -30,7 +30,7 @@ These thoughts mean STOP—you're rationalizing:
 | "I'll debug the memory leak manually" | Leak patterns are documented. Check ios-performance first. |
 | "Let me explore the Xcode project first" | Axiom skills tell you HOW to explore. Check first. |
 | "I remember how to do this from last time" | iOS changes constantly. Skills are up-to-date. |
-| "This iOS/platform version doesn't exist" | Your training has a cutoff. Trust project documentation for current versions. |
+| "This iOS/platform version doesn't exist" | Your training ended January 2025. Invoke Axiom skills for post-cutoff facts. |
 | "The user just wants a quick answer" | Quick answers without patterns create tech debt. Check skills first. |
 | "This doesn't need a formal workflow" | If an Axiom skill exists for it, use it. |
 | "I'll gather info first, then check skills" | Skills tell you WHAT info to gather. Check first. |
