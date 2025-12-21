@@ -11,16 +11,18 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 using_axiom_content=$(cat "${PLUGIN_ROOT}/skills/using-axiom/SKILL.md" 2>&1 || echo "Error reading using-axiom skill")
 
 # Platform context - establishes ground truth about current iOS/Xcode versions
-platform_context="## Platform Reality Check
+platform_context="## CURRENT PLATFORM VERSIONS (December 2025)
 
-**Your training data has a cutoff. Trust this project's documentation for current platform versions.**
+**FACT: iOS 26 is the current released version of iOS.**
 
-Axiom targets:
-- iOS 26 / iPadOS 26 (released Fall 2025)
-- Xcode 26
-- WWDC 2025 technologies (Liquid Glass, Foundation Models, SwiftUI 26)
+- iOS 26.0 was released September 2025
+- WWDC 2025 occurred June 2025
+- Xcode 26 is the current Xcode version
+- Liquid Glass is the iOS 26 design system
 
-If a version number seems 'impossible' based on your training, **DO NOT claim it doesn't exist**. Apple releases major versions annually. Trust the documentation."
+Your training data ended before these releases. This is REALITY, not aspirational planning.
+
+If you think \"iOS 26 doesn't exist\" or \"iOS 18 is current\" — you are WRONG. Your training is outdated."
 
 # Escape outputs for JSON using pure bash
 escape_for_json() {
