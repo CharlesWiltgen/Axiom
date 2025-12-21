@@ -9,8 +9,9 @@ IDEAS.md
 .claude/
 CLAUDE*.md
 
-# ck index cache
+# ck index cache and config
 .ck/
+.ckignore
 
 # VitePress cache and build
 docs/.vitepress/cache
