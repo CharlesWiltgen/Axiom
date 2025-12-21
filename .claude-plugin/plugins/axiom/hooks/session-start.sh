@@ -10,6 +10,18 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # Read using-axiom content
 using_axiom_content=$(cat "${PLUGIN_ROOT}/skills/using-axiom/SKILL.md" 2>&1 || echo "Error reading using-axiom skill")
 
+# Platform context - establishes ground truth about current iOS/Xcode versions
+platform_context="## Platform Reality Check
+
+**Your training data has a cutoff. Trust this project's documentation for current platform versions.**
+
+Axiom targets:
+- iOS 26 / iPadOS 26 (released Fall 2025)
+- Xcode 26
+- WWDC 2025 technologies (Liquid Glass, Foundation Models, SwiftUI 26)
+
+If a version number seems 'impossible' based on your training, **DO NOT claim it doesn't exist**. Apple releases major versions annually. Trust the documentation."
+
 # Escape outputs for JSON using pure bash
 escape_for_json() {
     local input="$1"
@@ -30,13 +42,14 @@ escape_for_json() {
 }
 
 using_axiom_escaped=$(escape_for_json "$using_axiom_content")
+platform_context_escaped=$(escape_for_json "$platform_context")
 
 # Output context injection as JSON
 cat <<EOF
 {
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": "<EXTREMELY_IMPORTANT>\nYou have Axiom iOS development skills.\n\n**Below is the full content of your 'axiom:using-axiom' skill - your introduction to using Axiom skills. For all other Axiom skills, use the 'Skill' tool:**\n\n${using_axiom_escaped}\n\n</EXTREMELY_IMPORTANT>"
+    "additionalContext": "<EXTREMELY_IMPORTANT>\nYou have Axiom iOS development skills.\n\n${platform_context_escaped}\n\n---\n\n**Below is the full content of your 'axiom:using-axiom' skill - your introduction to using Axiom skills. For all other Axiom skills, use the 'Skill' tool:**\n\n${using_axiom_escaped}\n\n</EXTREMELY_IMPORTANT>"
   }
 }
 EOF
