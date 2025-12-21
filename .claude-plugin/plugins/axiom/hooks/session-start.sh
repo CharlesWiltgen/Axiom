@@ -3,9 +3,14 @@
 
 set -euo pipefail
 
+# DEBUG: Log that hook is executing
+echo "[DEBUG SessionStart] Hook executing at $(date)" >&2
+
 # Determine plugin root directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+echo "[DEBUG SessionStart] Plugin root: $PLUGIN_ROOT" >&2
 
 # Read using-axiom content
 using_axiom_content=$(cat "${PLUGIN_ROOT}/skills/using-axiom/SKILL.md" 2>&1 || echo "Error reading using-axiom skill")
@@ -47,6 +52,8 @@ escape_for_json() {
 
 using_axiom_escaped=$(escape_for_json "$using_axiom_content")
 platform_context_escaped=$(escape_for_json "$platform_context")
+
+echo "[DEBUG SessionStart] Outputting JSON with platform context and using-axiom skill" >&2
 
 # Output context injection as JSON
 cat <<EOF
