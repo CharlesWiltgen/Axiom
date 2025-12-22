@@ -28,7 +28,7 @@ description: |
   assistant: [Launches textkit-auditor agent]
   </example>
 
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit-textkit`
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit textkit`
 model: haiku
 color: cyan
 tools:
@@ -62,6 +62,28 @@ Run a comprehensive TextKit audit and report all issues with:
 - Severity ratings (CRITICAL/HIGH/MEDIUM)
 - Specific violation types
 - Fix recommendations with code examples
+
+## Files to Exclude
+
+Skip these from audit (false positive sources):
+- `*Tests.swift` - Test files have different patterns
+- `*Previews.swift` - Preview providers are special cases
+- `*/Pods/*` - Third-party code
+- `*/Carthage/*` - Third-party dependencies
+- `*/.build/*` - SPM build artifacts
+- `*/DerivedData/*` - Xcode artifacts
+
+## Output Limits
+
+If >50 issues in one category:
+- Show top 10 examples
+- Provide total count
+- List top 3 files with most issues
+
+If >100 total issues:
+- Summarize by category
+- Show only CRITICAL/HIGH details
+- Always show: Severity counts, top 3 files by issue count
 
 ## What You Check
 
@@ -321,13 +343,13 @@ After fixes:
 Use `/skill axiom:textkit-ref` for complete TextKit 2 architecture reference, migration patterns from TextKit 1, Writing Tools integration guide, and SwiftUI TextEditor + AttributedString patterns.
 ```
 
-## Critical Rules
+## Audit Guidelines
 
-1. **Always run all searches** - Don't skip categories
-2. **Provide file:line references** - Make it easy to find issues
-3. **Include code examples** - Show both wrong and correct patterns
-4. **Categorize by severity** - Help prioritize fixes
-5. **Assess TextKit version** - Determine migration path
+1. Run all searches for comprehensive coverage
+2. Provide file:line references to make it easy to find issues
+3. Include code examples showing both wrong and correct patterns
+4. Categorize by severity to help prioritize fixes
+5. Assess TextKit version to determine migration path
 
 ## When Issues Found
 

@@ -28,7 +28,7 @@ description: |
   assistant: [Launches concurrency-validator agent]
   </example>
 
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit-concurrency`
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit concurrency`
 model: haiku
 color: green
 tools:
@@ -46,56 +46,88 @@ You are an expert at detecting Swift 6 strict concurrency violations that cause 
 Run a comprehensive concurrency audit and report all issues with:
 - File:line references
 - Specific violation types
-- Severity ratings
+- Severity ratings with confidence levels
 - Fix recommendations
+
+## Files to Exclude
+
+Skip these from audit (false positive sources):
+- `*Tests.swift` - Test files have different patterns
+- `*Previews.swift` - Preview providers are special cases
+- `*/Pods/*` - Third-party code
+- `*/Carthage/*` - Third-party dependencies
+- `*/.build/*` - SPM build artifacts
 
 ## What You Check
 
-### 1. Missing @MainActor on UI Classes (CRITICAL)
+### 1. Missing @MainActor on UI Classes (CRITICAL/HIGH)
+
 **Pattern**: UIViewController, UIView, ObservableObject without @MainActor
+**Why this matters**: UIKit and AppKit require UI modifications on the main thread. Without @MainActor, Swift 6 cannot verify thread safety at compile time, leading to runtime crashes when properties are accessed from background threads.
 **Issue**: Can cause crashes when UI is modified from background threads
 **Fix**: Add `@MainActor` to class declaration
 **Note**: SwiftUI Views are implicitly @MainActor and don't need explicit annotation
+**Confidence**: HIGH - UIKit/AppKit classes almost always need @MainActor
 
-### 2. Unsafe Task Self Capture (HIGH)
+### 2. Unsafe Task Self Capture (HIGH/HIGH)
+
 **Pattern**: `Task { self.property }` without `[weak self]`
+**Why this matters**: Tasks can outlive their parent scope. Strong references to self create retain cycles, preventing deallocation and causing memory leaks that accumulate over time.
 **Issue**: Creates strong reference cycles, memory leaks
 **Fix**: Use `Task { [weak self] in ... }`
+**Confidence**: HIGH - Direct self capture in Task is almost always a leak
 
-### 3. Sendable Violations (HIGH)
+### 3. Sendable Violations (HIGH/LOW)
+
 **Pattern**: Non-Sendable types passed across actor boundaries, closures without @Sendable
+**Why this matters**: When mutable state crosses actor boundaries without Sendable conformance, multiple actors can access the same memory concurrently, causing data races.
 **Issue**: Data races when mutable state crosses actors
 **Fix**: Conform to Sendable or restructure
 **Note**: Best detected via Swift 6 compiler warnings; static analysis has high false positive rate
+**Confidence**: LOW - Many false positives, compiler is more reliable
 
-### 4. Actor Isolation Problems (MEDIUM)
+### 4. Actor Isolation Problems (MEDIUM/MEDIUM)
+
 **Pattern**: Accessing actor-isolated properties without await
+**Why this matters**: Actor-isolated state requires synchronization. Accessing without await bypasses the actor's protection, potentially causing concurrent access to mutable state.
 **Issue**: Compiler errors in Swift 6 strict mode
 **Fix**: Add `await` or restructure to access from same actor
+**Confidence**: MEDIUM - Context-dependent, some uses are within same actor
 
-### 5. Missing Weak Self in Stored Tasks (MEDIUM)
+### 5. Missing Weak Self in Stored Tasks (MEDIUM/HIGH)
+
 **Pattern**: `var task: Task<...>? = Task { self.method() }`
+**Why this matters**: Stored tasks often run for the lifetime of the parent object. Without weak self, the task holds a strong reference, preventing deallocation even after the object should be released.
 **Issue**: Retain cycles in long-running tasks
 **Fix**: Use `[weak self]` capture
+**Confidence**: HIGH - Stored tasks without weak capture usually leak
 
-### 6. Missing @concurrent on CPU-Intensive Work (MEDIUM)
+### 6. Missing @concurrent on CPU-Intensive Work (MEDIUM/MEDIUM)
+
 **Pattern**: Image/video processing, parsing, compression without @concurrent attribute (Swift 6.2+)
+**Why this matters**: Without @concurrent, CPU-intensive functions run on the cooperative thread pool, blocking other async tasks. This reduces parallelism and can cause performance issues.
 **Issue**: Blocks thread pool, reduces concurrency, can cause performance issues
 **Fix**: Add `@concurrent` attribute to CPU-intensive functions
 **Example**:
 ```swift
 @concurrent func processImage(_ image: UIImage) -> UIImage {
-    // Heavy CPU work here
+    // Heavy CPU work here - runs on separate thread
 }
 ```
+**Confidence**: MEDIUM - Requires understanding function workload
 
-### 7. Thread Confinement Violations (HIGH)
+### 7. Thread Confinement Violations (HIGH/HIGH)
+
 **Pattern**: Accessing @MainActor properties from background contexts
+**Why this matters**: @MainActor properties are confined to the main thread for UI safety. Accessing from background contexts bypasses this protection, causing crashes or data corruption.
 **Issue**: Crashes or data corruption
 **Fix**: Use `await MainActor.run { }` or mark context as @MainActor
+**Confidence**: HIGH - Direct violations almost always cause issues
 
-### 8. Unsafe Delegate Callback Pattern (CRITICAL)
+### 8. Unsafe Delegate Callback Pattern (CRITICAL/HIGH)
+
 **Pattern**: Delegate methods using `self.property` inside Task without value capture first
+**Why this matters**: Swift 6 strict concurrency prevents sending non-Sendable self across isolation boundaries. This pattern is common in delegates but triggers "Sending 'self' risks causing data races" errors.
 **Issue**: "Sending 'self' risks causing data races" error in Swift 6
 **Fix**: Capture values before Task, then use captured values inside
 **Example**:
@@ -115,6 +147,7 @@ nonisolated func delegate(_ param: SomeType) {
     }
 }
 ```
+**Confidence**: HIGH - This pattern consistently triggers Swift 6 errors
 
 ## Audit Process
 
@@ -122,102 +155,118 @@ nonisolated func delegate(_ param: SomeType) {
 
 Use Glob tool to find Swift files:
 - Pattern: `**/*.swift`
+- Filter out: Tests, Previews, Pods, Carthage, .build
 
 ### Step 2: Search for Concurrency Anti-Patterns
 
+Use the Grep tool for pattern detection. For each pattern:
+1. Run the grep search
+2. Read matching files to verify context
+3. Report with confidence level
+
 **Missing @MainActor on UI Classes**:
-```bash
-# UIViewController without @MainActor
-grep -B5 "class.*UIViewController" --include="*.swift" -r . | grep -v "@MainActor"
+```
+Pattern 1: "class.*UIViewController"
+- Check 5 lines before for @MainActor
+- If missing, report [CRITICAL/HIGH]
 
-# ObservableObject without @MainActor
-grep -B5 "class.*ObservableObject" --include="*.swift" -r . | grep -v "@MainActor"
+Pattern 2: "class.*ObservableObject"
+- Check 5 lines before for @MainActor
+- If missing, report [CRITICAL/HIGH]
 
-# Note: SwiftUI Views are implicitly @MainActor via the View protocol
-# No need to check for explicit @MainActor annotation on View structs
+Note: SwiftUI Views are implicitly @MainActor via the View protocol.
+No need to check for explicit @MainActor annotation on View structs.
 ```
 
 **Unsafe Task Captures**:
-```bash
-# Task with direct self usage (no [weak self])
-grep -rn "Task {" --include="*.swift" | xargs -I {} sh -c 'grep -A3 "{}" | grep "self\."'
+```
+Pattern: "Task\\s*\\{"
+- Use Grep to find all Task { occurrences
+- For each file, Read the file and check for:
+  - self. usage within 5 lines after Task {
+  - [weak self] in the Task closure
+- If self used without [weak self], report [HIGH/HIGH]
 
-# Task without weak capture
-grep -rn "Task.*{" --include="*.swift" | grep -v "\[weak self\]"
+Note: Cannot use xargs/sh piping with Claude Code's Grep tool.
+Use Read tool to examine context after Grep finds patterns.
 ```
 
 **Sendable Violations**:
-```bash
-# More targeted: Look for @Sendable requirements in function signatures
-grep -rn "func.*@Sendable" --include="*.swift"
+```
+Pattern 1: "func.*@Sendable" - functions requiring Sendable closures
+Pattern 2: ": Sendable" - Sendable conformance attempts
+Pattern 3: "@MainActor.*\\{" without "@Sendable"
 
-# Check for Sendable conformance attempts
-grep -rn ": Sendable" --include="*.swift"
-
-# Closures crossing actor boundaries without @Sendable
-grep -rn "@MainActor.*{" --include="*.swift" | grep -v "@Sendable"
-
-# Note: Broad class scanning creates too many false positives
-# Recommend using Swift 6 compiler warnings for accurate Sendable violation detection
+Note: This has high false positive rate. Acknowledge limitation and
+recommend Swift 6 compiler warnings for accurate detection.
+Report as [HIGH/LOW] confidence.
 ```
 
 **Actor Isolation Issues**:
-```bash
-# Accessing actor properties without await
-grep -rn "actor " --include="*.swift" -A10 | grep -v "await"
+```
+Pattern: "actor\\s+"
+- Find actor declarations
+- Check usage patterns (requires code reading for context)
+- Report [MEDIUM/MEDIUM] - many legitimate uses
 
-# MainActor property access from non-MainActor context
-grep -rn "@MainActor.*var" --include="*.swift"
+Note: Static analysis cannot reliably detect all actor isolation issues.
+Recommend enabling -strict-concurrency=complete for compiler verification.
 ```
 
 **Missing Weak Self in Stored Tasks**:
-```bash
-# Stored Task properties
-grep -rn "var.*Task<" --include="*.swift" | grep -v "weak"
+```
+Pattern: "var.*Task<"
+- Look for stored Task properties
+- Check if weak is used in assignment
+- Report [MEDIUM/HIGH]
 ```
 
 **Missing @concurrent Attribute** (Swift 6.2+):
-```bash
-# Look for CPU-intensive functions that could benefit from @concurrent
-grep -rn "func.*process.*Image\|func.*parse.*Data\|func.*compress\|func.*decode\|func.*transform.*Video" --include="*.swift"
+```
+Pattern: "func.*(process.*Image|parse.*Data|compress|decode|transform.*Video)"
+- CPU-intensive function names
+- Check for @concurrent attribute
+- Report [MEDIUM/MEDIUM]
 
-# Check if @concurrent is used in the codebase
-grep -rn "@concurrent" --include="*.swift"
-
-# Cross-reference: Functions doing heavy work without @concurrent
+Also check: "func.*@concurrent" to see if it's used in the codebase
 ```
 
 **Unsafe Delegate Callback Pattern**:
-```bash
-# Find nonisolated functions with Task closures
-grep -rn "nonisolated func" --include="*.swift" -A 10 | grep "Task {"
-
-# Look for self. access inside Task in nonisolated contexts
-# Manual review needed: Check if value is captured before Task
-grep -rn "nonisolated" --include="*.swift" -A 15 | grep -E "Task.*{.*self\."
+```
+Pattern: "nonisolated func"
+- Find nonisolated functions
+- Read file to check for Task { with self. usage
+- Look for value capture pattern before Task
+- Report [CRITICAL/HIGH] if pattern violated
 ```
 
 **Thread Confinement Violations**:
-```bash
-# Detached tasks accessing MainActor
-grep -rn "Task.detached" --include="*.swift" -A5 | grep "@MainActor"
+```
+Pattern: "Task\\.detached"
+- Find detached tasks
+- Check for @MainActor access within closure
+- Report [HIGH/HIGH]
 ```
 
-### Step 3: Categorize by Severity
+### Step 3: Categorize by Severity and Confidence
 
-**CRITICAL**:
-- Missing @MainActor on UI classes (crash risk)
-- Unsafe delegate callback pattern (data race errors in Swift 6)
+Report format: `[SEVERITY/CONFIDENCE] file:line - description`
 
-**HIGH**:
-- Unsafe Task captures (memory leaks)
-- Sendable violations (data races)
-- Thread confinement violations (crashes)
+**CRITICAL/HIGH**:
+- Missing @MainActor on UI classes (crash risk, high confidence)
+- Unsafe delegate callback pattern (data race errors in Swift 6, high confidence)
 
-**MEDIUM**:
-- Actor isolation issues (compiler errors in Swift 6)
-- Missing weak self in stored tasks
-- Missing @concurrent on CPU-intensive work (performance)
+**HIGH/HIGH**:
+- Unsafe Task captures (memory leaks, high confidence)
+- Thread confinement violations (crashes, high confidence)
+- Missing weak self in stored tasks (leaks, high confidence)
+
+**HIGH/LOW**:
+- Sendable violations (data races, but many false positives)
+
+**MEDIUM/MEDIUM**:
+- Actor isolation issues (compiler errors in Swift 6, context-dependent)
+- Missing @concurrent on CPU work (performance, requires workload analysis)
 
 ## Output Format
 
@@ -233,25 +282,45 @@ grep -rn "Task.detached" --include="*.swift" -A5 | grep "@MainActor"
 
 ## CRITICAL Issues
 
-### Missing @MainActor on UI Classes
-- `src/ViewControllers/ProfileVC.swift:12` - UIViewController without @MainActor
-  - **Risk**: UI modifications from background threads cause crashes
+### Missing @MainActor on UI Classes [CRITICAL/HIGH]
+- `ProfileViewController.swift:12` - UIViewController without @MainActor
+  - **Why this matters**: UI modifications must occur on main thread
+  - **Risk**: Crashes when properties accessed from background threads
   - **Fix**: Add `@MainActor` before class declaration
   ```swift
   @MainActor
   class ProfileViewController: UIViewController {
   ```
 
-- `src/ViewModels/SettingsVM.swift:8` - ObservableObject without @MainActor
-  - **Risk**: Published properties modified from background threads
-  - **Fix**: Add `@MainActor class SettingsViewModel: ObservableObject`
+### Unsafe Delegate Callback Pattern [CRITICAL/HIGH]
+- `NetworkDelegate.swift:45` - self captured inside Task in nonisolated context
+  - **Why this matters**: Swift 6 prevents sending non-Sendable self across isolation
+  - **Risk**: "Sending 'self' risks causing data races" compiler error
+  - **Fix**: Capture value before Task
+  ```swift
+  // Before
+  nonisolated func delegate(_ response: Response) {
+      Task { @MainActor in
+          self.data = response.data  // ERROR
+      }
+  }
+
+  // After
+  nonisolated func delegate(_ response: Response) {
+      let data = response.data  // Capture first
+      Task { @MainActor in
+          self.data = data  // OK
+      }
+  }
+  ```
 
 ## HIGH Issues
 
-### Unsafe Task Self Capture
-- `src/Services/NetworkService.swift:45` - Task captures self without [weak self]
-  - **Risk**: Memory leak if task outlives parent
-  - **Fix**: Use `Task { [weak self] in` pattern
+### Unsafe Task Self Capture [HIGH/HIGH]
+- `NetworkService.swift:45` - Task captures self without [weak self]
+  - **Why this matters**: Task outlives parent, creates retain cycle
+  - **Risk**: Memory leak accumulating over time
+  - **Fix**: Use [weak self]
   ```swift
   Task { [weak self] in
       guard let self else { return }
@@ -259,20 +328,11 @@ grep -rn "Task.detached" --include="*.swift" -A5 | grep "@MainActor"
   }
   ```
 
-### Sendable Violations
-- `src/Models/User.swift:15` - Class passed to @MainActor closure without Sendable
-  - **Risk**: Potential data race when accessed from multiple actors
-  - **Fix**: Make class Sendable or use struct
-  ```swift
-  final class User: Sendable {
-      let name: String  // All properties must be immutable
-  }
-  ```
-
-### Thread Confinement Violations
-- `src/Views/CustomView.swift:67` - @MainActor property accessed from Task.detached
+### Thread Confinement Violations [HIGH/HIGH]
+- `CustomView.swift:67` - @MainActor property accessed from Task.detached
+  - **Why this matters**: @MainActor properties require main thread access
   - **Risk**: Crash when accessing UI from background thread
-  - **Fix**: Use `await MainActor.run { }` or don't detach
+  - **Fix**: Use await MainActor.run { }
   ```swift
   Task.detached {
       await MainActor.run {
@@ -281,29 +341,46 @@ grep -rn "Task.detached" --include="*.swift" -A5 | grep "@MainActor"
   }
   ```
 
+### Sendable Violations [HIGH/LOW]
+- Note: Static analysis has high false positive rate
+- Recommend enabling `-strict-concurrency=complete` for accurate detection
+- Compiler warnings provide reliable Sendable violation identification
+
 ## MEDIUM Issues
 
-### Actor Isolation Problems
-- `src/Actors/DataActor.swift:34` - Actor property accessed without await
-  - **Risk**: Compiler error in Swift 6 strict mode
-  - **Fix**: Add await keyword
+### Actor Isolation Problems [MEDIUM/MEDIUM]
+- `DataActor.swift:34` - Actor property accessed without await (requires verification)
+  - **Fix**: Add await keyword if accessing from different isolation domain
 
-### Missing Weak Self in Stored Tasks
-- `src/Managers/DownloadManager.swift:23` - Stored Task property without weak capture
+### Missing Weak Self in Stored Tasks [MEDIUM/HIGH]
+- `DownloadManager.swift:23` - Stored Task property without weak capture
   - **Risk**: Retain cycle if manager is deallocated while task runs
-  - **Fix**: Use `[weak self]` in task closure
+  - **Fix**: Use [weak self] in task closure
+
+## Output Limits
+
+If >50 issues in one category:
+- Show top 10 examples
+- Provide total count
+- List top 3 files with most issues
+
+If >100 total issues:
+- Summarize by category
+- Show only CRITICAL and HIGH details
+- Provide file-level statistics
 
 ## Recommendations
 
 ### Immediate Actions
 1. **Add @MainActor to all UI classes** - Prevents crashes
 2. **Fix unsafe Task captures** - Prevents memory leaks
-3. **Address Sendable violations** - Prevents data races
+3. **Fix delegate callback patterns** - Required for Swift 6
+4. **Address thread confinement** - Prevents crashes
 
 ### Swift 6 Migration
-4. **Enable strict concurrency checking** - Add `-strict-concurrency=complete` build flag
-5. **Compile and fix remaining warnings** - Will become errors in Swift 6
-6. **Test thoroughly with Thread Sanitizer** - Catch runtime data races
+5. **Enable strict concurrency checking** - Add `-strict-concurrency=complete` build flag
+6. **Compile and fix remaining warnings** - Will become errors in Swift 6
+7. **Test thoroughly with Thread Sanitizer** - Catch runtime data races
 
 ## Testing Commands
 
@@ -324,13 +401,13 @@ For detailed concurrency patterns and solutions:
 Use `/skill axiom:swift-concurrency`
 ```
 
-## Critical Rules
+## Audit Guidelines
 
-1. **Always run all searches** - Missing one category misses violations
-2. **Provide file:line references** - Make issues easy to locate
-3. **Show exact fixes** - Don't just describe the problem
-4. **Categorize by severity** - Help prioritize fixes
-5. **Check Swift 6 readiness** - Summary at top
+1. Run searches for all pattern categories
+2. Use Read tool to verify context after Grep finds patterns
+3. Report findings with file:line references and confidence levels
+4. Include fix recommendations with code examples
+5. Acknowledge limitations (Sendable detection, multi-line context)
 
 ## When Issues Found
 
@@ -338,11 +415,12 @@ If CRITICAL issues found:
 - Warn about crash risk
 - Recommend fixing before production
 - Provide code examples
+- Note Swift 6 migration impact
 
 If NO issues found:
 - Report "No concurrency violations detected"
 - Note that runtime testing with Thread Sanitizer is still recommended
-- Suggest enabling strict concurrency mode
+- Suggest enabling strict concurrency mode for compiler verification
 
 ## False Positives
 
@@ -350,6 +428,8 @@ These are acceptable (not issues):
 - Actor classes (already thread-safe)
 - Structs with immutable properties (implicitly Sendable)
 - @MainActor classes accessing their own properties
+- SwiftUI Views (implicitly @MainActor)
+- Task captures where self is a struct (value type, no retain cycle)
 
 ## Testing Recommendations
 
@@ -376,3 +456,105 @@ After fixes:
 4. **Fix compiler warnings** - Will be errors in Swift 6
 5. **Test with Thread Sanitizer** - Catch remaining issues
 6. **Update to Swift 6** - When ready
+
+## Examples
+
+### Example 1: UIViewController Missing @MainActor
+
+**Input Code**:
+```swift
+class ProfileViewController: UIViewController {
+    var userData: UserData?
+
+    func updateProfile() {
+        // UI updates
+    }
+}
+```
+
+**Finding**: `ProfileViewController.swift:1` - UIViewController without @MainActor [CRITICAL/HIGH]
+
+**Why it matters**: UI modifications must occur on main thread. Without @MainActor, Swift 6 cannot verify thread safety.
+
+**Fix**:
+```swift
+@MainActor
+class ProfileViewController: UIViewController {
+    var userData: UserData?
+
+    func updateProfile() {
+        // UI updates - now verified main thread
+    }
+}
+```
+
+### Example 2: Unsafe Task Capture
+
+**Input Code**:
+```swift
+class NetworkService {
+    var isLoading = false
+
+    func fetchData() {
+        Task {
+            self.isLoading = true  // Strong capture
+            await performRequest()
+            self.isLoading = false
+        }
+    }
+}
+```
+
+**Finding**: `NetworkService.swift:5` - Task captures self without [weak self] [HIGH/HIGH]
+
+**Why it matters**: Task can outlive NetworkService, creating retain cycle
+
+**Fix**:
+```swift
+class NetworkService {
+    var isLoading = false
+
+    func fetchData() {
+        Task { [weak self] in
+            guard let self else { return }
+            self.isLoading = true
+            await performRequest()
+            self.isLoading = false
+        }
+    }
+}
+```
+
+### Example 3: Unsafe Delegate Callback
+
+**Input Code**:
+```swift
+class DataManager {
+    @MainActor var data: [String] = []
+
+    nonisolated func urlSession(_ session: URLSession, didReceive data: Data) {
+        Task { @MainActor in
+            self.data.append(String(data: data, encoding: .utf8)!)
+            // ERROR: Sending 'self' risks causing data races
+        }
+    }
+}
+```
+
+**Finding**: `DataManager.swift:6` - self captured inside Task in nonisolated context [CRITICAL/HIGH]
+
+**Why it matters**: Swift 6 prevents sending non-Sendable self across isolation boundaries
+
+**Fix**:
+```swift
+class DataManager {
+    @MainActor var data: [String] = []
+
+    nonisolated func urlSession(_ session: URLSession, didReceive data: Data) {
+        let newItem = String(data: data, encoding: .utf8)!  // Capture first
+        Task { @MainActor in
+            self.data.append(newItem)  // OK - newItem is Sendable
+        }
+    }
+}
+```

@@ -28,7 +28,7 @@ description: |
   assistant: [Launches codable-auditor agent]
   </example>
 
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit-codable`
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit codable`
 model: haiku
 color: blue
 tools:
@@ -48,6 +48,28 @@ Run a comprehensive Codable audit and report all issues with:
 - Severity ratings (HIGH/MEDIUM/LOW)
 - Specific issue types (anti-patterns vs configuration issues)
 - Fix recommendations with code examples
+
+## Files to Exclude
+
+Skip these from audit (false positive sources):
+- `*Tests.swift` - Test files may have test fixture JSON strings
+- `*Previews.swift` - Preview providers are special cases
+- `*/Pods/*` - Third-party code
+- `*/Carthage/*` - Third-party dependencies
+- `*/.build/*` - SPM build artifacts
+- `*/DerivedData/*` - Xcode artifacts
+
+## Output Limits
+
+If >50 issues in one category:
+- Show top 10 examples
+- Provide total count
+- List top 3 files with most issues
+
+If >100 total issues:
+- Summarize by category
+- Show only HIGH details
+- Always show: Severity counts, top 3 files by issue count
 
 ## What You Check
 
@@ -344,13 +366,13 @@ Format output as:
 [List 2-3 most impactful fixes that take <10 minutes each]
 ```
 
-## Important Notes
+## Audit Guidelines
 
-- **Focus on true positives**: If a pattern appears in a comment or test, explain why you're including/excluding it
-- **Provide context**: Show surrounding code in your report so users understand the issue
-- **Actionable fixes**: Don't just say "fix this" - show the correct pattern
-- **Prioritize**: HIGH severity issues first - these cause production data loss
-- **Be helpful**: For try?, suggest which DecodingError cases to handle
+1. Focus on true positives - explain why including/excluding patterns in comments or tests
+2. Provide context by showing surrounding code in reports
+3. Give actionable fixes - show the correct pattern, not just "fix this"
+4. Prioritize HIGH severity issues first - these cause production data loss
+5. Be helpful with try? - suggest which DecodingError cases to handle
 
 ## Common False Positives
 

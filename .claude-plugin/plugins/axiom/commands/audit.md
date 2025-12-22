@@ -1,39 +1,93 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: area (optional) - Specific area to audit (performance, accessibility, concurrency, etc.)
+argument: area (optional) - Which audit to run: memory, concurrency, accessibility, swiftui-performance, swiftui-architecture, swiftui-nav, swift-performance, core-data, networking, codable, icloud, storage, liquid-glass, textkit, build
 ---
 
 You are an iOS project auditor with access to specialized Axiom audit agents.
 
 ## Your Task
 
-Analyze the project and either:
-1. If user specified an area → run that specific audit
-2. If no area specified → scan project and suggest relevant audits
+If user specified an area → launch that specific audit agent
+If no area specified → analyze project and suggest relevant audits
 
 ## Available Audits
 
-| Area | Command | Detects |
-|------|---------|---------|
-| Accessibility | /axiom:audit-accessibility | VoiceOver, Dynamic Type, contrast |
-| Concurrency | /axiom:audit-concurrency | Swift 6 data races, actor issues |
-| Memory | /axiom:audit-memory | Retain cycles, leaks, Timer patterns |
-| SwiftUI Performance | /axiom:audit-swiftui-performance | Expensive body, missing lazy |
-| Navigation | /axiom:audit-swiftui-nav | Architecture issues |
-| Architecture | /axiom:audit-swiftui-architecture | Logic in view, boundary violations |
-| Core Data | /axiom:audit-core-data | Thread safety, migrations |
-| Networking | /axiom:audit-networking | Deprecated APIs |
-| Liquid Glass | /axiom:audit-liquid-glass | iOS 26 adoption opportunities |
-| Build | /axiom:optimize-build | Build time optimization |
+| Area | Agent | Detects |
+|------|-------|---------|
+| accessibility | accessibility-auditor | VoiceOver labels, Dynamic Type, color contrast, WCAG compliance |
+| concurrency | concurrency-validator | Swift 6 data races, unsafe Task captures, actor isolation |
+| memory | memory-audit-runner | Retain cycles, leaks, Timer/observer patterns |
+| swiftui-performance | swiftui-performance-analyzer | Expensive body, formatters, whole-collection dependencies, missing lazy |
+| swiftui-architecture | swiftui-architecture-auditor | Logic in view, MVVM/TCA patterns, boundary violations |
+| swiftui-nav | swiftui-nav-auditor | NavigationStack issues, path management, deep linking |
+| swift-performance | swift-performance-analyzer | ARC issues, allocation patterns, generic specialization |
+| core-data | core-data-auditor | Thread safety, schema migrations, N+1 queries |
+| networking | networking-auditor | Deprecated APIs (SCNetworkReachability), anti-patterns |
+| codable | codable-auditor | JSON serialization issues, Sendable violations |
+| icloud | icloud-auditor | iCloud integration issues, entitlements |
+| storage | storage-auditor | File protection, storage strategies, data management |
+| liquid-glass | liquid-glass-auditor | iOS 26 adoption opportunities, toolbar improvements |
+| textkit | textkit-auditor | TextKit issues, text rendering problems |
+| build | build-optimizer | Build time optimization opportunities |
 
-## Project Analysis (if no area specified)
+## Direct Dispatch
 
-1. Check for .xcodeproj/.xcworkspace → suggest build audit
-2. Find SwiftUI files → suggest swiftui-performance and swiftui-architecture audits
-3. Find .xcdatamodeld → suggest core-data audit
-4. Check deployment target → suggest relevant compatibility audits
-5. Find CloudKit entitlements → suggest swiftdata CloudKit review
+If area argument provided ($ARGUMENTS contains an area):
+1. Look up the agent name from the table above
+2. Launch that agent using the Task tool with subagent_type set to the agent name
+3. Pass the current directory path to the agent
 
-Ask user: "Based on your project, I suggest these audits: [list]. Which would you like to run?"
+**Example:**
+- User runs `/axiom:audit memory` → Launch memory-audit-runner agent
+- User runs `/axiom:audit concurrency` → Launch concurrency-validator agent
+
+## Batch Execution Guidance
+
+When running multiple audits (either user-requested or from smart suggestions):
+
+**Priority Order:**
+1. **CRITICAL audits** (data corruption/loss risk):
+   - core-data → Schema safety, thread violations
+   - storage → Files in wrong locations
+   - icloud → NSFileCoordinator violations
+
+2. **HIGH audits** (production crashes, App Store rejection):
+   - concurrency → Swift 6 data races
+   - memory → Retain cycles, leaks
+   - networking → Deprecated APIs, ANR risk
+
+3. **MEDIUM audits** (architecture, performance):
+   - swiftui-architecture → Logic in views, testability
+   - swiftui-performance → Expensive operations, missing lazy
+   - swift-performance → ARC overhead, allocations
+
+4. **LOW audits** (enhancement opportunities):
+   - accessibility → WCAG compliance, VoiceOver
+   - liquid-glass → iOS 26 adoption
+   - codable → JSON best practices
+
+**Batch Recommendations:**
+- For pre-release: Run CRITICAL + HIGH audits
+- For architecture review: Run swiftui-architecture + swiftui-nav + swiftui-performance
+- For performance tuning: Run swift-performance + swiftui-performance + memory
+- For App Store prep: Run accessibility + networking + storage
+
+**Note:** Agents have built-in output limits (>50 issues → top 10 shown) to prevent overwhelming output on large codebases.
+
+## Project Analysis (No Area Specified)
+
+If no area argument:
+1. Analyze project structure:
+   - Check for .xcodeproj/.xcworkspace → suggest build audit
+   - Find SwiftUI files (*.swift with "import SwiftUI") → suggest swiftui-performance, swiftui-architecture
+   - Find .xcdatamodeld → suggest core-data audit
+   - Check deployment target in .xcodeproj → suggest compatibility audits
+   - Find CloudKit entitlements → suggest icloud audit
+   - Find async/await usage → suggest concurrency audit
+   - Find Timer/NotificationCenter → suggest memory audit
+
+2. Present findings and ask: "Based on your project, I suggest these audits: [list]. Which would you like to run?"
+
+3. After user selects, launch the corresponding agent(s)
 
 $ARGUMENTS

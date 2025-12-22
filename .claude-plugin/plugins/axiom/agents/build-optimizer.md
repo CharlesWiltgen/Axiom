@@ -323,7 +323,7 @@ Use the `build-performance` skill:
 This provides comprehensive build timeline analysis, type checking deep dive, and incremental vs clean build comparison.
 ```
 
-## Critical Rules
+## Audit Guidelines
 
 1. **Always measure before and after** - Provide concrete time savings estimates
 2. **Prioritize by impact** - HIGH → MEDIUM → LOW

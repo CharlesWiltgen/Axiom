@@ -1162,7 +1162,7 @@ See **Animation Merging Behavior** section above for detailed explanation of mer
 ## Cross-References
 
 ### Axiom Skills
-- [SwiftUI 26 Features](/skills/ui-design/swiftui-26-ref) — @Animatable macro iOS 26 introduction
+- SwiftUI 26 Features (swiftui-26-ref skill) — @Animatable macro iOS 26 introduction
 - [SwiftUI Performance](/skills/ui-design/swiftui-performance) — Animation performance optimization
 - [SwiftUI Debugging](/skills/ui-design/swiftui-debugging) — Debugging view updates
 

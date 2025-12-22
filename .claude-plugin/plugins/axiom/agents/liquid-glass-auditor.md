@@ -28,7 +28,7 @@ description: |
   assistant: [Launches liquid-glass-auditor agent]
   </example>
 
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit-liquid-glass`
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit liquid-glass`
 model: haiku
 color: cyan
 tools:
@@ -48,6 +48,28 @@ Run a comprehensive Liquid Glass adoption audit and report all opportunities wit
 - Priority ratings (HIGH/MEDIUM/LOW)
 - Specific improvement types
 - Example code for each recommendation
+
+## Files to Exclude
+
+Skip these from audit (false positive sources):
+- `*Tests.swift` - Test files have different patterns
+- `*Previews.swift` - Preview providers are special cases
+- `*/Pods/*` - Third-party code
+- `*/Carthage/*` - Third-party dependencies
+- `*/.build/*` - SPM build artifacts
+- `*/DerivedData/*` - Xcode artifacts
+
+## Output Limits
+
+If >50 opportunities in one category:
+- Show top 10 examples
+- Provide total count
+- List top 3 files with most opportunities
+
+If >100 total opportunities:
+- Summarize by category
+- Show only HIGH/MEDIUM details
+- Always show: Priority counts, top 3 files by opportunity count
 
 ## What You Check
 
@@ -504,13 +526,13 @@ After adopting Liquid Glass:
 ```
 ```
 
-## Critical Rules
+## Audit Guidelines
 
-1. **Always run all 7 category searches** - Don't skip pattern types
-2. **Provide file:line references** - Make opportunities easy to find
-3. **Show before/after code** - Help visualize improvements
-4. **Categorize by priority** - Help focus on high-impact changes
-5. **Note iOS 26+ requirement** - Liquid Glass needs iOS 26+
+1. Run all 7 category searches for comprehensive coverage
+2. Provide file:line references to make opportunities easy to find
+3. Show before/after code to help visualize improvements
+4. Categorize by priority to help focus on high-impact changes
+5. Note iOS 26+ requirement - Liquid Glass needs iOS 26+
 
 ## When Opportunities Found
 

@@ -23,7 +23,7 @@ description: |
   assistant: [Launches swiftui-nav-auditor agent]
   </example>
 
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit-swiftui-nav`
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit swiftui-nav`
 model: haiku
 color: blue
 tools:
@@ -51,6 +51,28 @@ Run a comprehensive SwiftUI navigation audit focused on **correctness and archit
 - Fix recommendations with code examples
 
 **IMPORTANT**: This agent checks navigation **architecture**. For navigation **performance** issues (NavigationPath recreation, large models in state), those are handled by the `swiftui-performance-analyzer` agent.
+
+## Files to Exclude
+
+Skip these from audit (false positive sources):
+- `*Tests.swift` - Test files have different patterns
+- `*Previews.swift` - Preview providers are special cases
+- `*/Pods/*` - Third-party code
+- `*/Carthage/*` - Third-party dependencies
+- `*/.build/*` - SPM build artifacts
+- `*/DerivedData/*` - Xcode artifacts
+
+## Output Limits
+
+If >50 issues in one category:
+- Show top 10 examples
+- Provide total count
+- List top 3 files with most issues
+
+If >100 total issues:
+- Summarize by category
+- Show only CRITICAL/HIGH details
+- Always show: Severity counts, top 3 files by issue count
 
 ## What You Check
 
@@ -557,13 +579,13 @@ Use related skills:
 - `/skill swiftui-nav-ref` - Complete API reference with WWDC code examples
 ```
 
-## Critical Rules
+## Audit Guidelines
 
-1. **Always run all 10 pattern searches** - Don't skip categories
-2. **Provide file:line references** - Make issues easy to locate
-3. **Show before/after code** - Include fix examples
-4. **Categorize by severity** - Help prioritize fixes
-5. **Distinguish from performance** - This is architecture, not performance (that's swiftui-performance-analyzer's job)
+1. Run all 10 pattern searches for comprehensive coverage
+2. Provide file:line references to make issues easy to locate
+3. Show before/after code with fix examples
+4. Categorize by severity to help prioritize fixes
+5. Distinguish from performance - this is architecture, not performance (swiftui-performance-analyzer handles performance)
 
 ## When Issues Found
 

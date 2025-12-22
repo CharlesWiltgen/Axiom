@@ -553,7 +553,7 @@ Provide a clear, structured test report:
 
 ---
 
-## Critical Rules
+## Audit Guidelines
 
 1. **ALWAYS check simulator state first** - verify booted before operations
 2. **Use descriptive file names** - Include timestamp and scenario name

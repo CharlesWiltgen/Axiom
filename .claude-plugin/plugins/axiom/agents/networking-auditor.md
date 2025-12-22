@@ -28,7 +28,7 @@ description: |
   assistant: [Launches networking-auditor agent]
   </example>
 
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit-networking`
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit networking`
 model: sonnet
 color: blue
 tools:
@@ -48,6 +48,28 @@ Run a comprehensive networking audit and report all issues with:
 - Severity ratings (HIGH/MEDIUM/LOW)
 - Specific issue types (deprecated APIs vs anti-patterns)
 - Fix recommendations with code examples
+
+## Files to Exclude
+
+Skip these from audit (false positive sources):
+- `*Tests.swift` - Test files have different patterns
+- `*Previews.swift` - Preview providers are special cases
+- `*/Pods/*` - Third-party code
+- `*/Carthage/*` - Third-party dependencies
+- `*/.build/*` - SPM build artifacts
+- `*/DerivedData/*` - Xcode artifacts
+
+## Output Limits
+
+If >50 issues in one category:
+- Show top 10 examples
+- Provide total count
+- List top 3 files with most issues
+
+If >100 total issues:
+- Summarize by category
+- Show only HIGH details
+- Always show: Severity counts, top 3 files by issue count
 
 ## What You Check
 
@@ -455,13 +477,13 @@ grep -rn "IPHONEOS_DEPLOYMENT_TARGET" *.xcodeproj/project.pbxproj
 5. **Use `/skill network-framework-ref`** for complete API reference
 ```
 
-## Critical Rules
+## Audit Guidelines
 
-1. **Always run all 10 pattern searches** - Don't skip categories
-2. **Provide file:line references** - Make issues easy to locate
-3. **Show before/after code** - Include fix examples for each issue
-4. **Categorize by severity** - Help prioritize fixes
-5. **Calculate fix time** - Help plan remediation effort
+1. Run all 10 pattern searches for comprehensive coverage
+2. Provide file:line references to make issues easy to locate
+3. Show before/after code with fix examples for each issue
+4. Categorize by severity to help prioritize fixes
+5. Calculate fix time to help plan remediation effort
 
 ## When Issues Found
 

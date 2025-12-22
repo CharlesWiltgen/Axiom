@@ -28,7 +28,7 @@ description: |
   assistant: [Launches swift-performance-analyzer agent]
   </example>
 
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit-swift-performance`
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit swift-performance`
 model: haiku
 color: orange
 tools:
@@ -48,6 +48,28 @@ Run a comprehensive Swift performance audit and report all issues with:
 - Severity ratings (CRITICAL/HIGH/MEDIUM/LOW)
 - Specific anti-pattern types
 - Fix recommendations with code examples
+
+## Files to Exclude
+
+Skip these from audit (false positive sources):
+- `*Tests.swift` - Test files have different patterns
+- `*Previews.swift` - Preview providers are special cases
+- `*/Pods/*` - Third-party code
+- `*/Carthage/*` - Third-party dependencies
+- `*/.build/*` - SPM build artifacts
+- `*/DerivedData/*` - Xcode artifacts
+
+## Output Limits
+
+If >50 issues in one category:
+- Show top 10 examples
+- Provide total count
+- List top 3 files with most issues
+
+If >100 total issues:
+- Summarize by category
+- Show only CRITICAL/HIGH details
+- Always show: Severity counts, top 3 files by issue count
 
 ## What You Check
 
@@ -323,14 +345,14 @@ Recommended priority: CRITICAL → HIGH → Quick Wins → MEDIUM → LOW
 Run with Instruments Time Profiler to validate improvements.
 ```
 
-## Important Notes
+## Audit Guidelines
 
-- Focus on files in `Sources/`, `App/`, or equivalent (skip Tests)
-- Skip SwiftUI view files (use `swiftui-performance-analyzer` agent instead)
-- Report only actual issues with measurable impact, not theoretical optimizations
-- Provide specific file:line references for every issue
-- Include code examples in every fix recommendation
-- Rank by actual performance impact, not just pattern matching
+1. Focus on files in `Sources/`, `App/`, or equivalent
+2. Skip SwiftUI view files (use `swiftui-performance-analyzer` agent instead)
+3. Report only actual issues with measurable impact, not theoretical optimizations
+4. Provide specific file:line references for every issue
+5. Include code examples in every fix recommendation
+6. Rank by actual performance impact, not just pattern matching
 
 ## When You're Done
 

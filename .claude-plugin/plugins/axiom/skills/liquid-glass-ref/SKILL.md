@@ -1168,7 +1168,7 @@ List(items) { item in
 
 ### Semantic Search Tabs
 
-For Tab API patterns including `.tabRole(.search)`, see [swiftui-nav-ref Section 5](/skills/ui-design/swiftui-nav-ref#tab-navigation-integration).
+For Tab API patterns including `.tabRole(.search)`, see swiftui-nav-ref skill Section 5 (Tab Navigation Integration).
 
 ---
 

@@ -28,7 +28,7 @@ description: |
   assistant: [Launches icloud-auditor agent]
   </example>
 
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit-icloud`
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit icloud`
 model: haiku
 color: cyan
 tools:
@@ -62,6 +62,28 @@ Run a comprehensive iCloud audit and report all issues with:
 - Severity ratings (CRITICAL/HIGH/MEDIUM/LOW)
 - Specific fix recommendations
 - Impact on sync reliability
+
+## Files to Exclude
+
+Skip these from audit (false positive sources):
+- `*Tests.swift` - Test files may have mock CloudKit
+- `*Previews.swift` - Preview providers are special cases
+- `*/Pods/*` - Third-party code
+- `*/Carthage/*` - Third-party dependencies
+- `*/.build/*` - SPM build artifacts
+- `*/DerivedData/*` - Xcode artifacts
+
+## Output Limits
+
+If >50 issues in one category:
+- Show top 10 examples
+- Provide total count
+- List top 3 files with most issues
+
+If >100 total issues:
+- Summarize by category
+- Show only CRITICAL/HIGH details
+- Always show: Severity counts, top 3 files by issue count
 
 ## What You Check
 
@@ -377,13 +399,13 @@ For comprehensive iCloud debugging:
 - Use `/skill axiom:icloud-drive-ref` for file coordination details
 ```
 
-## Critical Rules
+## Audit Guidelines
 
-1. **Always run all searches** - Don't skip categories
-2. **Provide file:line references** - Make it easy to find issues
-3. **Categorize by severity** - Help prioritize fixes
-4. **Show specific fixes** - Don't just report problems
-5. **Explain sync impact** - Data corruption vs sync failures
+1. Run all searches for comprehensive coverage
+2. Provide file:line references to make it easy to find issues
+3. Categorize by severity to help prioritize fixes
+4. Show specific fixes - don't just report problems
+5. Explain sync impact - data corruption vs sync failures
 
 ## When Issues Found
 

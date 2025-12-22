@@ -23,7 +23,7 @@ description: |
   assistant: [Launches swiftui-architecture-auditor agent]
   </example>
 
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit-swiftui-architecture`
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit swiftui-architecture`
 model: haiku
 color: blue
 tools:
@@ -45,6 +45,28 @@ Report issues with:
 - Severity ratings (CRITICAL/HIGH/MEDIUM/LOW)
 - Fix recommendations that align with the `swiftui-architecture` skill
 - **Explicit links** to the `swiftui-performance-analyzer` if you see heavy performance issues
+
+## Files to Exclude
+
+Skip these from audit (false positive sources):
+- `*Tests.swift` - Test files have different patterns
+- `*Previews.swift` - Preview providers are special cases
+- `*/Pods/*` - Third-party code
+- `*/Carthage/*` - Third-party dependencies
+- `*/.build/*` - SPM build artifacts
+- `*/DerivedData/*` - Xcode artifacts
+
+## Output Limits
+
+If >50 issues in one category:
+- Show top 10 examples
+- Provide total count
+- List top 3 files with most issues
+
+If >100 total issues:
+- Summarize by category
+- Show only CRITICAL/HIGH details
+- Always show: Severity counts, top 3 files by issue count
 
 ## What You Check
 
@@ -166,18 +188,17 @@ grep -rn "import SwiftUI" --include="*.swift"
 - `OrderList.swift:88` - Filtering and sorting in `body`
   - **Issue**: Business logic hidden in View; untestable and re-runs on every render
   - **Fix**: Move to ViewModel or `@Observable` model computed property
-  - **Note**: This also impacts performance (see `/axiom:audit-swiftui-performance`)
+  - **Note**: This also impacts performance (see `/axiom:audit swiftui-performance`)
 
 ## Recommendations
 1. Fix CRITICAL issues first (bugs)
 2. Extract logic from views to models (testability)
-3. If performance is a concern, run `/axiom:audit-swiftui-performance`
+3. If performance is a concern, run `/axiom:audit swiftui-performance`
 ```
 
-## Critical Rules
-1. **Distinguish from Performance**: If you find logic in views, flag it as an **architecture/testability** issue first. Mention performance only as a secondary effect.
-2. **Be Specific**: Don't just say "refactor." Say "Move `.filter` logic to a computed property on your model."
-3. **Verify Context**: For God ViewModels, check if the class actually has many properties before flagging. Don't flag small classes.
-4. **Ignore False Positives**:
-   - `Task { await viewModel.load() }` is fine (delegating to model).
-   - `@State` on private properties is fine.
+## Audit Guidelines
+
+1. Distinguish from Performance - flag logic in views as architecture/testability issues first, mention performance only as secondary effect
+2. Be Specific - say "Move `.filter` logic to a computed property on your model" not just "refactor"
+3. Verify Context - for God ViewModels, check if class actually has many properties before flagging
+4. Ignore False Positives - `Task { await viewModel.load() }` is fine (delegating to model), `@State` on private properties is fine

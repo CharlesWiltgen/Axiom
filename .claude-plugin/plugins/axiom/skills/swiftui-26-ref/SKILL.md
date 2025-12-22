@@ -133,7 +133,7 @@ NavigationSplitView {
 
 #### Search Tab Role
 
-See [swiftui-nav-ref Section 5.5](/skills/ui-design/swiftui-nav-ref#ios-26-tab-features) for `Tab(role: .search)` patterns.
+See swiftui-nav-ref skill Section 5.5 (iOS 26 Tab Features) for `Tab(role: .search)` patterns.
 
 ### Glass Effect for Custom Views
 
@@ -620,7 +620,7 @@ struct HikingRouteShape: Shape {
 - Use `@AnimatableIgnored` for properties to exclude
 - SwiftUI automatically synthesizes animation data
 
-**Cross-reference** [SwiftUI Animation](/skills/ui-design/swiftui-animation-ref) — Comprehensive animation guide covering VectorArithmetic, Animatable protocol, @Animatable macro, animation types, Transaction system, and performance optimization
+**Cross-reference** SwiftUI Animation (swiftui-animation-ref skill) — Comprehensive animation guide covering VectorArithmetic, Animatable protocol, @Animatable macro, animation types, Transaction system, and performance optimization
 
 ---
 
@@ -940,7 +940,7 @@ struct CommentView: View {
 
 **Reference** "Cook up a rich text experience in SwiftUI with AttributedString" (WWDC 2025)
 
-**Cross-reference** [App Intents Integration](/skills/integration/app-intents-ref) — AttributedString for Apple Intelligence Use Model action
+**Cross-reference** App Intents Integration (app-intents-ref skill) — AttributedString for Apple Intelligence Use Model action
 
 ---
 
@@ -1372,7 +1372,7 @@ TextEditor(text: $text) // Plain String loses formatting
 - [SwiftUI Performance](/skills/ui-design/swiftui-performance) — Master the SwiftUI Instrument
 - [Liquid Glass](/skills/ui-design/liquid-glass) — Apple's material design system
 - [Swift Concurrency](/skills/concurrency/swift-concurrency) — Swift 6 strict concurrency
-- [App Intents Integration](/skills/integration/app-intents-ref) — AttributedString for Apple Intelligence
+- App Intents Integration (app-intents-ref skill) — AttributedString for Apple Intelligence
 
 ---
 

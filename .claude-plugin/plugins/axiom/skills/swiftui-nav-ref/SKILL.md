@@ -1141,10 +1141,10 @@ NavigationPath(codableRepresentation)  // For decoding
 ## Cross-References
 
 #### Axiom Skills
-- [swiftui-nav](/skills/swiftui-nav) — Decision trees, anti-patterns, pressure scenarios
-- [swiftui-nav-diag](/skills/swiftui-nav-diag) — Systematic troubleshooting
-- [swiftui-26-ref](/skills/swiftui-26-ref) — Comprehensive iOS 26 features
-- [liquid-glass](/skills/liquid-glass) — Liquid Glass design system
+- [swiftui-nav](/skills/ui-design/swiftui-nav) — Decision trees, anti-patterns, pressure scenarios
+- swiftui-nav-diag — Systematic troubleshooting
+- swiftui-26-ref — Comprehensive iOS 26 features
+- [liquid-glass](/skills/ui-design/liquid-glass) — Liquid Glass design system
 
 ---
 

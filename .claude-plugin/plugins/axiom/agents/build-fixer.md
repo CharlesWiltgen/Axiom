@@ -354,7 +354,7 @@ Provide a clear, structured report:
 [What user should do next]
 ```
 
-## Critical Rules
+## Audit Guidelines
 
 1. **ALWAYS run the 4 mandatory checks first** - never skip (directory, processes, Derived Data, simulators)
 2. **Detect CI/CD context** - check for CI environment variables and adjust diagnostics
