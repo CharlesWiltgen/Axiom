@@ -15,9 +15,9 @@ Agents are autonomous problem-solvers that:
 **Natural language (recommended)** — Just describe what you want:
 
 - "Check my code for accessibility issues" → **accessibility-auditor** triggers
-- "Scan for memory leaks" → **memory-audit-runner** triggers
+- "Scan for memory leaks" → **memory-auditor** triggers
 - "My SwiftUI app has janky scrolling" → **swiftui-performance-analyzer** triggers
-- "Review for Swift 6 concurrency violations" → **concurrency-validator** triggers
+- "Review for Swift 6 concurrency violations" → **concurrency-auditor** triggers
 - "Check Core Data safety" → **core-data-auditor** triggers
 - "Find Liquid Glass adoption opportunities" → **liquid-glass-auditor** triggers
 - "Scan for deprecated networking APIs" → **networking-auditor** triggers
@@ -56,8 +56,8 @@ Agents are autonomous problem-solvers that:
 ### Code Quality
 - **accessibility-auditor** — Scans for VoiceOver label issues, Dynamic Type violations, color contrast failures, touch target sizes, WCAG compliance problems
 - **codable-auditor** — Detects Codable anti-patterns (manual JSON building, try? swallowing errors, JSONSerialization usage) and date handling issues
-- **concurrency-validator** — Detects Swift 6 strict concurrency violations (missing @MainActor, unsafe Task captures, Sendable violations, actor isolation problems)
-- **memory-audit-runner** — Finds 6 common memory leak patterns (timers, observers, closures, delegates, view callbacks, PhotoKit accumulation)
+- **concurrency-auditor** — Detects Swift 6 strict concurrency violations (missing @MainActor, unsafe Task captures, Sendable violations, actor isolation problems)
+- **memory-auditor** — Finds 6 common memory leak patterns (timers, observers, closures, delegates, view callbacks, PhotoKit accumulation)
 - **textkit-auditor** — Scans for TextKit 1 fallback triggers, deprecated glyph APIs, missing Writing Tools support
 
 ### UI & Design

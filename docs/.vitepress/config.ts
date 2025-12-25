@@ -52,8 +52,8 @@ export default defineConfig({
           items: [
             { text: 'accessibility-auditor', link: '/agents/accessibility-auditor' },
             { text: 'codable-auditor', link: '/agents/codable-auditor' },
-            { text: 'concurrency-validator', link: '/agents/concurrency-validator' },
-            { text: 'memory-audit-runner', link: '/agents/memory-audit-runner' },
+            { text: 'concurrency-auditor', link: '/agents/concurrency-auditor' },
+            { text: 'memory-auditor', link: '/agents/memory-auditor' },
             { text: 'textkit-auditor', link: '/agents/textkit-auditor' }
           ]
         },
