@@ -54,6 +54,7 @@ export default defineConfig({
             { text: 'codable-auditor', link: '/agents/codable-auditor' },
             { text: 'concurrency-auditor', link: '/agents/concurrency-auditor' },
             { text: 'memory-auditor', link: '/agents/memory-auditor' },
+            { text: 'swift-performance-analyzer', link: '/agents/swift-performance-analyzer' },
             { text: 'textkit-auditor', link: '/agents/textkit-auditor' }
           ]
         },
@@ -85,7 +86,8 @@ export default defineConfig({
         {
           text: 'Testing',
           items: [
-            { text: 'simulator-tester', link: '/agents/simulator-tester' }
+            { text: 'simulator-tester', link: '/agents/simulator-tester' },
+            { text: 'testing-auditor', link: '/agents/testing-auditor' }
           ]
         }
       ],
@@ -254,7 +256,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2025 Charles Wiltgen • v2.1.1'
+      copyright: 'Copyright © 2025 Charles Wiltgen • v2.2.0'
     }
   }
 })
