@@ -168,6 +168,8 @@ export default defineConfig({
         {
           text: 'Testing',
           items: [
+            { text: 'Overview', link: '/skills/testing/' },
+            { text: 'Swift Testing', link: '/skills/testing/swift-testing' },
             { text: 'UI Testing', link: '/skills/ui-design/ui-testing' }
           ]
         }
