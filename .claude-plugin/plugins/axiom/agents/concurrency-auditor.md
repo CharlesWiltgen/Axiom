@@ -1,31 +1,31 @@
 ---
-name: concurrency-validator
+name: concurrency-auditor
 description: |
   Use this agent when the user mentions concurrency checking, Swift 6 compliance, data race prevention, or async code review. Automatically scans Swift code for Swift 6 strict concurrency violations - detects unsafe Task captures, missing @MainActor, Sendable violations, and actor isolation problems to prevent data races.
 
   <example>
   user: "Can you check my code for Swift 6 concurrency issues?"
-  assistant: [Launches concurrency-validator agent]
+  assistant: [Launches concurrency-auditor agent]
   </example>
 
   <example>
   user: "I'm getting data race warnings, can you scan for concurrency violations?"
-  assistant: [Launches concurrency-validator agent]
+  assistant: [Launches concurrency-auditor agent]
   </example>
 
   <example>
   user: "Review my async code for concurrency safety"
-  assistant: [Launches concurrency-validator agent]
+  assistant: [Launches concurrency-auditor agent]
   </example>
 
   <example>
   user: "Check if my code is ready for Swift 6 strict concurrency"
-  assistant: [Launches concurrency-validator agent]
+  assistant: [Launches concurrency-auditor agent]
   </example>
 
   <example>
   user: "I just added async/await code, can you validate it?"
-  assistant: [Launches concurrency-validator agent]
+  assistant: [Launches concurrency-auditor agent]
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit concurrency`
@@ -37,7 +37,7 @@ tools:
   - Read
 ---
 
-# Concurrency Validator Agent
+# Concurrency Auditor Agent
 
 You are an expert at detecting Swift 6 strict concurrency violations that cause data races and crashes.
 

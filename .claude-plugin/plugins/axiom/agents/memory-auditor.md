@@ -1,31 +1,31 @@
 ---
-name: memory-audit-runner
+name: memory-auditor
 description: |
   Use this agent when the user mentions memory leak prevention, code review for memory issues, or proactive leak checking. Automatically scans codebase for the 6 most common memory leak patterns - timer leaks, observer leaks, closure captures, delegate cycles, view callbacks, and PhotoKit accumulation to prevent crashes and progressive memory growth.
 
   <example>
   user: "Can you check my code for memory leaks?"
-  assistant: [Launches memory-audit-runner agent]
+  assistant: [Launches memory-auditor agent]
   </example>
 
   <example>
   user: "Scan for potential memory leak patterns"
-  assistant: [Launches memory-audit-runner agent]
+  assistant: [Launches memory-auditor agent]
   </example>
 
   <example>
   user: "Review my code for retain cycles"
-  assistant: [Launches memory-audit-runner agent]
+  assistant: [Launches memory-auditor agent]
   </example>
 
   <example>
   user: "Before I ship, can you check for memory issues?"
-  assistant: [Launches memory-audit-runner agent]
+  assistant: [Launches memory-auditor agent]
   </example>
 
   <example>
   user: "I just added delegate pattern code, can you validate memory safety?"
-  assistant: [Launches memory-audit-runner agent]
+  assistant: [Launches memory-auditor agent]
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit memory`
@@ -37,7 +37,7 @@ tools:
   - Read
 ---
 
-# Memory Audit Runner Agent
+# Memory Auditor Agent
 
 You are an expert at detecting memory leak patterns that cause progressive memory growth and crashes.
 

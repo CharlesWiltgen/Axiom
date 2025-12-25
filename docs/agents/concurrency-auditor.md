@@ -1,4 +1,4 @@
-# concurrency-validator
+# concurrency-auditor
 
 Automatically scans Swift code for Swift 6 strict concurrency violations to prevent data races.
 
@@ -12,7 +12,7 @@ Automatically scans Swift code for Swift 6 strict concurrency violations to prev
 
 **Explicit command:**
 ```bash
-/axiom:audit-concurrency
+/axiom:audit concurrency
 ```
 
 ## What It Checks

@@ -1,4 +1,4 @@
-# memory-audit-runner
+# memory-auditor
 
 Automatically scans for the 6 most common memory leak patterns to prevent crashes and progressive memory growth.
 
@@ -12,7 +12,7 @@ Automatically scans for the 6 most common memory leak patterns to prevent crashe
 
 **Explicit command:**
 ```bash
-/axiom:audit-memory
+/axiom:audit memory
 ```
 
 ## What It Checks

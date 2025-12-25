@@ -15,8 +15,8 @@ If no area specified → analyze project and suggest relevant audits
 | Area | Agent | Detects |
 |------|-------|---------|
 | accessibility | accessibility-auditor | VoiceOver labels, Dynamic Type, color contrast, WCAG compliance |
-| concurrency | concurrency-validator | Swift 6 data races, unsafe Task captures, actor isolation |
-| memory | memory-audit-runner | Retain cycles, leaks, Timer/observer patterns |
+| concurrency | concurrency-auditor | Swift 6 data races, unsafe Task captures, actor isolation |
+| memory | memory-auditor | Retain cycles, leaks, Timer/observer patterns |
 | swiftui-performance | swiftui-performance-analyzer | Expensive body, formatters, whole-collection dependencies, missing lazy |
 | swiftui-architecture | swiftui-architecture-auditor | Logic in view, MVVM/TCA patterns, boundary violations |
 | swiftui-nav | swiftui-nav-auditor | NavigationStack issues, path management, deep linking |
@@ -39,8 +39,8 @@ If area argument provided ($ARGUMENTS contains an area):
 3. Pass the current directory path to the agent
 
 **Example:**
-- User runs `/axiom:audit memory` → Launch memory-audit-runner agent
-- User runs `/axiom:audit concurrency` → Launch concurrency-validator agent
+- User runs `/axiom:audit memory` → Launch memory-auditor agent
+- User runs `/axiom:audit concurrency` → Launch concurrency-auditor agent
 
 ## Batch Execution Guidance
 
