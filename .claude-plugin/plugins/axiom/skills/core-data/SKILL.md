@@ -12,7 +12,7 @@ related: [core-data-diag, swiftdata, database-migration]
 
 ## Overview
 
-**Core principle**: Core Data is a mature object graph and persistence framework. Use it when you need features SwiftData doesn't support, or when targeting older iOS versions.
+**Core principle**: Core Data is a mature object graph and persistence framework. Use it when needing features SwiftData doesn't support, or when targeting older iOS versions.
 
 **When to use Core Data vs SwiftData**:
 - **SwiftData** (iOS 17+) — New apps, simpler API, Swift-native
@@ -37,7 +37,7 @@ Which persistence framework?
 
 ## Red Flags
 
-If you see ANY of these, STOP:
+If ANY of these appear, STOP:
 
 - ❌ "Access managed objects on any thread" — Thread-confinement violation
 - ❌ "Skip migration testing on real device" — Simulator hides schema issues
@@ -298,7 +298,7 @@ description.shouldMigrateStoreAutomatically = true
 description.shouldInferMappingModelAutomatically = true
 ```
 
-### When You Need Mapping Model
+### When Mapping Model Is Needed
 
 - Changing attribute types
 - Splitting/merging entities
@@ -379,10 +379,10 @@ context.automaticallyMergesChangesFromParent = true
 ## Performance Tips
 
 1. **Use fetchBatchSize** for large result sets
-2. **Prefetch relationships** you'll access
+2. **Prefetch relationships** that will be accessed
 3. **Use background contexts** for imports/exports
 4. **Batch save** — don't save after each insert
-5. **Use fetchLimit** when you only need first N results
+5. **Use fetchLimit** when only first N results are needed
 6. **Profile with SQL debug**: `-com.apple.CoreData.SQLDebug 1`
 
 ## Pressure Scenarios

@@ -12,7 +12,7 @@ related: [cloudkit-ref, icloud-drive-ref, cloud-sync-diag, storage]
 
 ## Overview
 
-**Core principle**: Choose the right sync technology for your data shape, then implement offline-first patterns that handle network failures gracefully.
+**Core principle**: Choose the right sync technology for the data shape, then implement offline-first patterns that handle network failures gracefully.
 
 Two fundamentally different sync approaches:
 - **CloudKit** — Structured data (records with fields and relationships)
@@ -21,7 +21,7 @@ Two fundamentally different sync approaches:
 ## Quick Decision Tree
 
 ```
-What are you syncing?
+What needs syncing?
 
 ├─ Structured data (records, relationships)?
 │  ├─ Using SwiftData? → SwiftData + CloudKit (easiest, iOS 17+)
@@ -53,7 +53,7 @@ What are you syncing?
 
 ## Red Flags
 
-If you see ANY of these, STOP and reconsider:
+If ANY of these appear, STOP and reconsider:
 
 - ❌ "Store JSON files in CloudKit" — Wrong tool. Use iCloud Drive for files
 - ❌ "Build relationships manually in iCloud Drive" — Wrong tool. Use CloudKit
