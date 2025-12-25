@@ -33,7 +33,7 @@ Automatically scans for file storage mistakes: files in wrong locations, missing
 
 ## Related Skills
 
-- **storage-strategy** — Storage decision framework (where to store what)
+- **storage** — Storage decision framework (where to store what)
 - **storage-diag** — Debugging missing files and data loss
 - **file-protection-ref** — FileProtectionType and encryption details
 - **storage-management-ref** — Purging policies and URL resource values

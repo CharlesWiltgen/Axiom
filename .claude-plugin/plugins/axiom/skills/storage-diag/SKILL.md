@@ -339,7 +339,7 @@ func diagnoseStorageIssue(fileURL: URL) {
 
 ## Related Skills
 
-- `storage-strategy` — Correct storage location decisions
+- `storage` — Correct storage location decisions
 - `file-protection-ref` — Understanding protection levels
 - `storage-management-ref` — Purge behavior and capacity APIs
 

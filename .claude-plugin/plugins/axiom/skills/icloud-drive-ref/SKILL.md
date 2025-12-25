@@ -484,7 +484,7 @@ class ICloudMonitor {
 
 ## Related Skills
 
-- `storage-strategy` — Choose iCloud Drive vs CloudKit
+- `storage` — Choose iCloud Drive vs CloudKit
 - `cloudkit-ref` — For structured data sync
 - `cloud-sync-diag` — Debug iCloud sync issues
 

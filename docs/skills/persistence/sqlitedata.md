@@ -787,7 +787,7 @@ When you've profiled and confirmed SQLiteData's query builder is the bottleneck,
 
 **Related Skills:**
 - `sqlitedata-ref` — Advanced patterns (CTEs, views, aggregates, schema composition)
-- `swiftdata-to-sqlitedata` — Migration guide with pattern equivalents
+- `sqlitedata-migration` — Migration guide with pattern equivalents
 - `database-migration` — Safe schema evolution patterns
 - `grdb` — Raw SQL and GRDB-specific features
 

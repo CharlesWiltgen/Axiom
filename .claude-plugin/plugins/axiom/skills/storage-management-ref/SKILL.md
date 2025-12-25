@@ -572,7 +572,7 @@ func findLargeFiles(in directory: URL) {
 
 ## Related Skills
 
-- `storage-strategy` — Decide where to store files
+- `storage` — Decide where to store files
 - `file-protection-ref` — File encryption and security
 - `storage-diag` — Debug storage-related issues
 

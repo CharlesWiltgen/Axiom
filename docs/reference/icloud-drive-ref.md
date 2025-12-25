@@ -190,4 +190,4 @@ query.start()
 - Handling iCloud file conflicts
 - Syncing small preferences
 
-**Related**: storage-strategy, cloudkit-ref, cloud-sync-diag
+**Related**: storage, cloudkit-ref, cloud-sync-diag

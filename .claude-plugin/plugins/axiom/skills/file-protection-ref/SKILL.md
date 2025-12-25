@@ -528,7 +528,7 @@ File protection generally works without special entitlements, but some features 
 
 ## Related Skills
 
-- `storage-strategy` — Decide when to use file protection vs other security measures
+- `storage` — Decide when to use file protection vs other security measures
 - `storage-management-ref` — File lifecycle, purging, and disk management
 - `storage-diag` — Debug file access issues
 

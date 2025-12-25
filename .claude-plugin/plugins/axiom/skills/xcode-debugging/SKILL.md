@@ -7,7 +7,7 @@ version: 1.0.0
 mcp:
   category: debugging
   tags: [xcode, build, simulator, environment, diagnostics]
-  related: [build-troubleshooting, swift-concurrency]
+  related: [build-debugging, swift-concurrency]
 ---
 
 # Xcode Debugging

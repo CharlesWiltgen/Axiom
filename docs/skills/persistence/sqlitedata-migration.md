@@ -1,9 +1,9 @@
 ---
-name: swiftdata-to-sqlitedata
+name: sqlitedata-migration
 description: Migration guide from SwiftData to SQLiteData — decision guide, pattern equivalents, CloudKit sharing, performance benchmarks
 ---
 
-# SwiftData to SQLiteData Migration
+# SQLiteData Migration
 
 Complete migration guide from Apple's SwiftData to Point-Free's SQLiteData, covering when to migrate, pattern equivalents, and gradual migration strategies.
 

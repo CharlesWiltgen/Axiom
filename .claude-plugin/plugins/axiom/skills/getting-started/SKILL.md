@@ -72,11 +72,11 @@ Based on answers, recommend 3-5 skills using this matrix:
 **Always recommend**: axiom:xcode-debugging (universal starting point)
 
 **Then add based on pain points**:
-- Xcode/build → xcode-debugging, build-troubleshooting
+- Xcode/build → xcode-debugging, build-debugging
 - Memory leaks → memory-debugging, objc-block-retain-cycles
 - UI/animation (SwiftUI) → swiftui-debugging, swiftui-performance
 - UI/animation (UIKit) → uikit-animation-debugging, auto-layout-debugging
-- Database → database-migration, swiftdata-to-sqlitedata (decision guide)
+- Database → database-migration, sqlitedata-migration (decision guide)
 - Networking → networking, networking-diag
 - Concurrency → swift-concurrency
 - Accessibility → accessibility-diag
@@ -114,7 +114,7 @@ Based on answers, recommend 3-5 skills using this matrix:
 
 **Data persistence**:
 - Ask: "Which persistence framework?" → swiftdata, sqlitedata, or grdb
-- Migration: swiftdata-to-sqlitedata, realm-migration-ref
+- Migration: sqlitedata-migration, realm-migration-ref
 
 ### If "Code review / quality check"
 
@@ -171,7 +171,7 @@ Include this reference section in every response for browsing:
 
 **Environment & Build Issues**
 - **xcode-debugging** — BUILD FAILED, simulator hangs, zombie processes, environment-first diagnostics
-- **build-troubleshooting** — Dependency conflicts, CocoaPods/SPM failures, Multiple commands produce
+- **build-debugging** — Dependency conflicts, CocoaPods/SPM failures, Multiple commands produce
 
 **Memory & Performance**
 - **memory-debugging** — Memory growth, retain cycles, leak diagnosis with Instruments
@@ -212,7 +212,7 @@ Include this reference section in every response for browsing:
 - **database-migration** — Safe schema evolution for SQLite/GRDB, additive migrations, prevents data loss
 
 **Migration Guides**
-- **swiftdata-to-sqlitedata** — Decision guide, pattern equivalents, performance benchmarks
+- **sqlitedata-migration** — Decision guide, pattern equivalents, performance benchmarks
 - **realm-migration-ref** — Realm → SwiftData migration (Realm Device Sync sunset Sept 2025)
 
 ### Networking
@@ -256,7 +256,7 @@ Include this reference section in every response for browsing:
 
 **"My build is failing"**
 → Start: axiom:xcode-debugging
-→ If dependency issue: axiom:build-troubleshooting
+→ If dependency issue: axiom:build-debugging
 
 **"App is slow"**
 → Start: axiom:performance-profiling (decision trees)
@@ -276,7 +276,7 @@ Include this reference section in every response for browsing:
 → For patterns: axiom:swiftui-nav
 
 **"Which database?"**
-→ Decision guide: axiom:swiftdata-to-sqlitedata
+→ Decision guide: axiom:sqlitedata-migration
 → Then: axiom:swiftdata, axiom:sqlitedata, or axiom:grdb
 
 **"iOS 26 design"**

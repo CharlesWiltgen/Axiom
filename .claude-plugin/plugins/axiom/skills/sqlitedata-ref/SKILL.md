@@ -1733,7 +1733,7 @@ let customerOnlyEmails = try Customer.select(\.email)
 
 **Related Skills:**
 - `sqlitedata` — Core patterns, CRUD, CloudKit setup, anti-patterns
-- `swiftdata-to-sqlitedata` — Migration guide with pattern equivalents
+- `sqlitedata-migration` — Migration guide with pattern equivalents
 - `database-migration` — Safe schema evolution patterns
 - `grdb` — Raw SQL and advanced GRDB features
 

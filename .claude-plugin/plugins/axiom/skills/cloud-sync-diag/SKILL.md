@@ -507,7 +507,7 @@ func diagnoseCloudSyncIssue() async {
 
 - `cloudkit-ref` — CloudKit implementation details
 - `icloud-drive-ref` — iCloud Drive implementation details
-- `storage-strategy` — Choose sync approach
+- `storage` — Choose sync approach
 
 ---
 

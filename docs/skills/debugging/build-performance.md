@@ -116,7 +116,7 @@ fi
 
 ## Related
 
-- **build-troubleshooting** — Fixing broken builds
+- **build-debugging** — Fixing broken builds
 - **xcode-debugging** — Environment-first Xcode diagnostics
 - `/axiom:optimize-build` — Automated scanning for quick wins
 

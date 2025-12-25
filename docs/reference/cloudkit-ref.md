@@ -139,4 +139,4 @@ if error.code == .serverRecordChanged {
 - Debugging CloudKit sync
 - Monitoring CloudKit performance
 
-**Related**: swiftdata, storage-strategy, icloud-drive-ref, cloud-sync-diag
+**Related**: swiftdata, storage, icloud-drive-ref, cloud-sync-diag

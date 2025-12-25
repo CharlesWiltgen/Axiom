@@ -21,7 +21,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**localization**](./localization) | App localization and i18n — String Catalogs (.xcstrings), type-safe symbols (Xcode 26+), #bundle macro, plurals, RTL layouts, locale-aware formatting |
 | [**privacy-ux**](./privacy-ux) | Privacy manifests and permission UX — just-in-time permissions, App Tracking Transparency, Required Reason APIs, Privacy Nutrition Labels |
 | [**swiftui-layout-ref**](./swiftui-layout-ref) | Complete SwiftUI adaptive layout API guide — ViewThatFits, AnyLayout, Layout protocol, onGeometryChange, size classes, iOS 26 window APIs |
-| [**storage-strategy**](./storage-strategy) | Complete iOS storage decision framework — database vs files, local vs cloud, SwiftData/CloudKit/iCloud Drive selection |
+| [**storage**](./storage) | Complete iOS storage decision framework — database vs files, local vs cloud, SwiftData/CloudKit/iCloud Drive selection |
 | [**cloudkit-ref**](./cloudkit-ref) | Modern CloudKit sync — SwiftData integration, CKSyncEngine (WWDC 2023), database scopes, conflict resolution, monitoring |
 | [**icloud-drive-ref**](./icloud-drive-ref) | File-based iCloud sync — ubiquitous containers, NSFileCoordinator, conflict resolution, NSUbiquitousKeyValueStore |
 | [**file-protection-ref**](./file-protection-ref) | iOS file encryption and data protection — FileProtectionType levels, background access, Keychain comparison |

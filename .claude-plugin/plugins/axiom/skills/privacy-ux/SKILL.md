@@ -933,4 +933,4 @@ UserDefaults.standard.set(value, forKey: "setting")
 
 - **app-intents-ref** — Privacy considerations for App Intents
 - **cloudkit-ref** — Privacy and CloudKit data handling
-- **storage-strategy** — Privacy implications of different storage options
+- **storage** — Privacy implications of different storage options

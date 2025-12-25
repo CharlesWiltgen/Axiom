@@ -1,5 +1,5 @@
 ---
-name: storage-strategy
+name: storage
 description: Use when asking 'where should I store this data', 'should I use SwiftData or files', 'CloudKit vs iCloud Drive', 'Documents vs Caches', 'local or cloud storage', 'how do I sync data', 'where do app files go' - comprehensive decision framework for all iOS storage options
 skill_type: discipline
 version: 1.0.0
@@ -7,7 +7,7 @@ last_updated: 2025-12-12
 apple_platforms: iOS 17+, iPadOS 17+, macOS Sonoma+
 ---
 
-# iOS Storage Strategy Guide
+# iOS Storage Guide
 
 **Purpose**: Navigation hub for ALL storage decisions — database vs files, local vs cloud, specific locations
 **iOS Version**: iOS 17+ (iOS 26+ for latest features)

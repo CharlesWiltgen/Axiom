@@ -1,9 +1,9 @@
 ---
-name: storage-strategy
+name: storage
 description: Complete decision framework for iOS storage — database vs files, local vs cloud, specific locations
 ---
 
-# Storage Strategy Guide
+# Storage Guide
 
 Navigation hub for ALL storage decisions — where to store data, which technology to use, local vs cloud.
 

@@ -47,7 +47,7 @@ I'll perform a comprehensive file storage audit of your iOS/macOS codebase, chec
    - Severity: CRITICAL/HIGH/MEDIUM/LOW
    - Risk description
    - Fix recommendation
-   - Link to `axiom:storage-strategy` skill for decision framework
+   - Link to `axiom:storage` skill for decision framework
 
 ## Output Format
 
@@ -76,7 +76,7 @@ MEDIUM Issues (Security / Performance):
 === NEXT STEPS ===
 
 For storage decision framework:
-  /skill axiom:storage-strategy
+  /skill axiom:storage
 
 For debugging missing files:
   /skill axiom:storage-diag
@@ -186,6 +186,6 @@ After fixing issues:
 4. Verify file locations with Files app
 
 For comprehensive storage guidance:
-- `/skill axiom:storage-strategy` — Storage decision framework
+- `/skill axiom:storage` — Storage decision framework
 - `/skill axiom:file-protection-ref` — Encryption details
 - `/skill axiom:storage-management-ref` — Purging policies

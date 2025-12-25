@@ -149,4 +149,4 @@ func diagnoseBackup(_ url: URL) throws {
 - Files inaccessible when locked
 - Background access failures
 
-**Related**: storage-strategy, file-protection-ref, storage-management-ref
+**Related**: storage, file-protection-ref, storage-management-ref

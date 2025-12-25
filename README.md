@@ -202,7 +202,7 @@ Systematic memory leak diagnosis with Instruments. 5 leak patterns covering 90% 
 
 ---
 
-#### `build-troubleshooting`
+#### `build-debugging`
 Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
 **When to use** Dependency conflicts, CocoaPods/SPM resolution failures, "Multiple commands produce" errors, framework version mismatches

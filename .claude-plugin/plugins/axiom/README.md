@@ -173,7 +173,7 @@ Systematic memory leak diagnosis with 5 patterns covering 90% of real-world issu
 
 ---
 
-#### `axiom:build-troubleshooting`
+#### `axiom:build-debugging`
 Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
 **Use when**: Dependency conflicts, "Multiple commands produce" errors, framework version mismatches
@@ -524,7 +524,7 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 # Debugging
 /skill axiom:xcode-debugging
 /skill axiom:memory-debugging
-/skill axiom:build-troubleshooting
+/skill axiom:build-debugging
 /skill axiom:build-performance
 /skill axiom:deep-link-debugging
 

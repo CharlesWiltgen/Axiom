@@ -18,7 +18,7 @@ Systematic debugging strategies to solve issues faster and prevent common proble
   - *"View controllers don't deallocate after dismiss. How do I find the retain cycle?"*
   - **Command** [`/audit-memory`](/commands/debugging/audit-memory) for quick triage scanning
 
-- **[Build Troubleshooting](/skills/debugging/build-troubleshooting)** – Dependency resolution for CocoaPods and Swift Package Manager conflicts
+- **[Build Debugging](/skills/debugging/build-debugging)** – Dependency resolution for CocoaPods and Swift Package Manager conflicts
   - *"I added a Swift Package but I'm getting 'No such module' errors."*
   - *"Build works on my Mac but fails on CI. Both have the latest Xcode."*
 

@@ -39,7 +39,7 @@ tools:
 mcp:
   category: auditing
   tags: [storage, files, backup, data-loss, file-protection, caches, documents]
-  related: [storage-diag, storage-strategy, file-protection-ref, storage-management-ref]
+  related: [storage-diag, storage, file-protection-ref, storage-management-ref]
   inputSchema:
     type: object
     properties:
@@ -299,7 +299,7 @@ Truly temporary (<1 hour lifetime)?
 ## Related Skills
 
 For comprehensive storage guidance:
-- Use `/skill axiom:storage-strategy` for storage decision framework
+- Use `/skill axiom:storage` for storage decision framework
 - Use `/skill axiom:storage-diag` for debugging missing files
 - Use `/skill axiom:file-protection-ref` for encryption details
 - Use `/skill axiom:storage-management-ref` for purging policies

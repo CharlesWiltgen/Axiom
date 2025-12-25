@@ -127,7 +127,7 @@ export default defineConfig({
             { text: 'Deep Link Debugging', link: '/skills/debugging/deep-link-debugging' },
             { text: 'Xcode Debugging', link: '/skills/debugging/xcode-debugging' },
             { text: 'Memory Debugging', link: '/skills/debugging/memory-debugging' },
-            { text: 'Build Troubleshooting', link: '/skills/debugging/build-troubleshooting' },
+            { text: 'Build Debugging', link: '/skills/debugging/build-debugging' },
             { text: 'Build Performance', link: '/skills/debugging/build-performance' },
             { text: 'Performance Profiling', link: '/skills/debugging/performance-profiling' },
             { text: 'Objective-C Block Retain Cycles', link: '/skills/debugging/objc-block-retain-cycles' }
@@ -147,10 +147,12 @@ export default defineConfig({
             { text: 'Codable (JSON Encoding/Decoding)', link: '/skills/persistence/codable' },
             { text: 'Database Migration', link: '/skills/persistence/database-migration' },
             { text: 'SQLiteData', link: '/skills/persistence/sqlitedata' },
+            { text: 'Cloud Sync', link: '/skills/persistence/cloud-sync' },
+            { text: 'Core Data', link: '/skills/persistence/core-data' },
             { text: 'GRDB', link: '/skills/persistence/grdb' },
             { text: 'SwiftData', link: '/skills/persistence/swiftdata' },
             { text: 'SwiftData Migration', link: '/skills/persistence/swiftdata-migration' },
-            { text: 'SwiftData to SQLiteData', link: '/skills/persistence/swiftdata-to-sqlitedata' }
+            { text: 'SQLiteData Migration', link: '/skills/persistence/sqlitedata-migration' }
           ]
         },
         {
@@ -196,7 +198,7 @@ export default defineConfig({
         {
           text: 'Persistence & Storage',
           items: [
-            { text: 'Storage Strategy', link: '/reference/storage-strategy' },
+            { text: 'Storage', link: '/reference/storage' },
             { text: 'CloudKit', link: '/reference/cloudkit-ref' },
             { text: 'iCloud Drive', link: '/reference/icloud-drive-ref' },
             { text: 'File Protection', link: '/reference/file-protection-ref' },

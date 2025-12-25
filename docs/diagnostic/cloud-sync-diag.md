@@ -205,4 +205,4 @@ let values = try? homeURL.resourceValues(forKeys: [
 - Persistent sync conflicts
 - Quota exceeded errors
 
-**Related**: cloudkit-ref, icloud-drive-ref, storage-strategy
+**Related**: cloudkit-ref, icloud-drive-ref, storage

@@ -443,7 +443,7 @@ Required entitlements in Xcode:
 ## Related Skills
 
 - `swiftdata` — SwiftData implementation details
-- `storage-strategy` — Choose CloudKit vs iCloud Drive
+- `storage` — Choose CloudKit vs iCloud Drive
 - `icloud-drive-ref` — File-based iCloud sync
 - `cloud-sync-diag` — Debug CloudKit sync issues
 

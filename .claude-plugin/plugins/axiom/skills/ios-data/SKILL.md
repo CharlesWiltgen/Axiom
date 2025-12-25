@@ -25,7 +25,7 @@ Use this router when working with:
 **Schema migration** → `/skill swiftdata-migration`
 **Migration issues** → `/skill swiftdata-migration-diag`
 **Migrating from Realm** → `/skill realm-migration-ref`
-**SwiftData vs SQLiteData** → `/skill swiftdata-to-sqlitedata`
+**SwiftData vs SQLiteData** → `/skill sqlitedata-migration`
 
 ### Other Databases
 
@@ -50,7 +50,7 @@ Use this router when working with:
 
 ### File Storage
 
-**Storage strategy** → `/skill storage-strategy`
+**Storage strategy** → `/skill storage`
 **Storage issues** → `/skill storage-diag`
 **Storage management** → `/skill storage-management-ref`
 **File protection** → `/skill file-protection-ref`
@@ -74,7 +74,7 @@ User asks about data/storage
   │
   ├─ Serialization? → codable
   │
-  └─ File storage? → storage-strategy, storage-diag, storage-management-ref
+  └─ File storage? → storage, storage-diag, storage-management-ref
 ```
 
 ## Critical Pattern: Migrations
@@ -98,4 +98,4 @@ User: "CloudKit sync isn't working"
 → Invoke: `/skill cloud-sync-diag`
 
 User: "Should I use SwiftData or SQLiteData?"
-→ Invoke: `/skill swiftdata-to-sqlitedata`
+→ Invoke: `/skill sqlitedata-migration`

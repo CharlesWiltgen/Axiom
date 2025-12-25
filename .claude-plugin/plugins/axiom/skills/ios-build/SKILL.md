@@ -49,14 +49,14 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
-### 3. Dependency Conflicts → **build-troubleshooting**
+### 3. Dependency Conflicts → **build-debugging**
 **Triggers**:
 - CocoaPods/SPM resolution failures
 - "Multiple commands produce" errors
 - Framework version mismatches
 - Dependency graph conflicts
 
-**Invoke**: `/skill build-troubleshooting`
+**Invoke**: `/skill build-debugging`
 
 ---
 
@@ -68,7 +68,7 @@ User reports build/environment issue
   │  └─ YES → xcode-debugging (environment-first)
   │
   ├─ Is it dependency conflict?
-  │  └─ YES → build-troubleshooting
+  │  └─ YES → build-debugging
   │
   └─ Is it slow build time?
      └─ YES → build-performance
@@ -92,4 +92,4 @@ User: "Builds are taking 10 minutes"
 → Invoke: `/skill build-performance`
 
 User: "SPM won't resolve dependencies"
-→ Invoke: `/skill build-troubleshooting`
+→ Invoke: `/skill build-debugging`

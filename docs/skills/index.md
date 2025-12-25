@@ -40,7 +40,7 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**accessibility-diag**](/diagnostic/accessibility-diag) | VoiceOver issues, Dynamic Type violations, WCAG compliance, App Store Review prep |
 | [**auto-layout-debugging**](/skills/debugging/auto-layout-debugging) | Constraint conflicts, ambiguous layout warnings, Auto Layout errors |
 | [**build-performance**](/skills/debugging/build-performance) | Slow builds, type checking bottlenecks, analyzing Build Timeline |
-| [**build-troubleshooting**](/skills/debugging/build-troubleshooting) | Dependency conflicts, CocoaPods/SPM failures |
+| [**build-debugging**](/skills/debugging/build-debugging) | Dependency conflicts, CocoaPods/SPM failures |
 | [**core-data-diag**](/diagnostic/core-data-diag) | Schema migration crashes, thread-confinement errors, N+1 query performance |
 | [**deep-link-debugging**](/skills/debugging/deep-link-debugging) | Debug-only deep links for testing, simulator navigation, automated testing |
 | [**memory-debugging**](/skills/debugging/memory-debugging) | Memory leaks, retain cycles, progressive memory growth |
@@ -58,9 +58,11 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 
 | Skill | When to Use |
 |-------|-------------|
+| [**cloud-sync**](/skills/persistence/cloud-sync) | CloudKit vs iCloud Drive, offline-first sync, conflict resolution |
 | [**cloudkit-ref**](/reference/cloudkit-ref) | CloudKit sync, CKSyncEngine, CKRecord, shared database, conflict resolution |
 | [**cloud-sync-diag**](/diagnostic/cloud-sync-diag) | File not syncing, CloudKit errors, sync conflicts, iCloud upload failures |
 | [**codable**](/skills/persistence/codable) | JSON encoding/decoding, Codable conformance, handling decode errors, date strategies |
+| [**core-data**](/skills/persistence/core-data) | Core Data stack, concurrency patterns, relationship modeling, iOS 16 support |
 | [**database-migration**](/skills/persistence/database-migration) | Adding database columns, schema changes, migration errors |
 | [**file-protection-ref**](/reference/file-protection-ref) | FileProtectionType, file encryption, data protection, secure storage |
 | [**grdb**](/skills/persistence/grdb) | Raw SQL queries, complex joins, ValueObservation |
@@ -69,11 +71,11 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**sqlitedata**](/skills/persistence/sqlitedata) | SQLiteData patterns, batch imports, CloudKit sync |
 | [**storage-diag**](/diagnostic/storage-diag) | Files disappeared, data missing, backup too large, file not found |
 | [**storage-management-ref**](/reference/storage-management-ref) | Purge files, storage pressure, isExcludedFromBackup, cache management |
-| [**storage-strategy**](/reference/storage-strategy) | Where to store data, SwiftData vs files, CloudKit vs iCloud Drive |
+| [**storage**](/reference/storage) | Where to store data, SwiftData vs files, CloudKit vs iCloud Drive |
 | [**swiftdata**](/skills/persistence/swiftdata) | @Model, @Query, CloudKit integration |
 | [**swiftdata-migration**](/skills/persistence/swiftdata-migration) | SwiftData custom schema migrations, relationship preservation |
 | [**swiftdata-migration-diag**](/diagnostic/swiftdata-migration-diag) | Migration crashes, relationship errors, device vs simulator failures |
-| [**swiftdata-to-sqlitedata**](/skills/persistence/swiftdata-to-sqlitedata) | Migrating from SwiftData to SQLiteData |
+| [**sqlitedata-migration**](/skills/persistence/sqlitedata-migration) | Migrating from SwiftData to SQLiteData |
 
 ### Integration
 
@@ -117,7 +119,7 @@ Battle-tested against real-world scenarios and pressure conditions:
 - `swiftdata` – Handles CloudKit corruption, many-to-many relationships, and unfollow patterns
 - `memory-debugging` – Finds PhotoKit leaks and diagnoses non-reproducible memory issues
 - `ui-testing` – Handles flaky tests, network conditions, and App Store review blockers
-- `build-troubleshooting` – Resolves dependency conflicts under production crisis pressure
+- `build-debugging` – Resolves dependency conflicts under production crisis pressure
 - `liquid-glass` – Navigates design review pressure and variant decision conflicts
 - `swiftui-performance` – Diagnoses performance issues under App Store deadline pressure
 - `swiftui-debugging` – Solves intermittent view updates and preview crashes

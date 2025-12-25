@@ -130,4 +130,4 @@ func cleanupIfNeeded() {
 - Handling storage pressure
 - Implementing cache management
 
-**Related**: storage-strategy, storage-diag, file-protection-ref
+**Related**: storage, storage-diag, file-protection-ref
