@@ -32,6 +32,7 @@ Use this router when working with:
 **GRDB queries** → `/skill grdb`
 **SQLiteData** → `/skill sqlitedata`
 **Advanced SQLiteData** → `/skill sqlitedata-ref`
+**Core Data patterns** → `/skill core-data`
 **Core Data issues** → `/skill core-data-diag`
 
 ### Migrations
@@ -44,6 +45,7 @@ Use this router when working with:
 
 ### Cloud Storage
 
+**Cloud sync patterns** → `/skill cloud-sync`
 **CloudKit** → `/skill cloudkit-ref`
 **iCloud Drive** → `/skill icloud-drive-ref`
 **Cloud sync errors** → `/skill cloud-sync-diag`
@@ -61,13 +63,14 @@ Use this router when working with:
 User asks about data/storage
   ├─ Database?
   │  ├─ SwiftData? → swiftdata, swiftdata-migration
-  │  ├─ Core Data? → core-data-diag
+  │  ├─ Core Data? → core-data, core-data-diag
   │  ├─ GRDB? → grdb
   │  └─ SQLiteData? → sqlitedata
   │
   ├─ Migration? → database-migration (ALWAYS - prevents data loss)
   │
   ├─ Cloud storage?
+  │  ├─ Sync architecture? → cloud-sync
   │  ├─ CloudKit? → cloudkit-ref
   │  ├─ iCloud Drive? → icloud-drive-ref
   │  └─ Sync errors? → cloud-sync-diag
