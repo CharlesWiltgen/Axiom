@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: area (optional) - Which audit to run: memory, concurrency, accessibility, swiftui-performance, swiftui-architecture, swiftui-nav, swift-performance, core-data, networking, codable, icloud, storage, liquid-glass, textkit, build
+argument: area (optional) - Which audit to run: memory, concurrency, accessibility, swiftui-performance, swiftui-architecture, swiftui-nav, swift-performance, core-data, networking, codable, icloud, storage, liquid-glass, textkit, testing, build
 ---
 
 You are an iOS project auditor with access to specialized Axiom audit agents.
@@ -28,6 +28,7 @@ If no area specified → analyze project and suggest relevant audits
 | storage | storage-auditor | File protection, storage strategies, data management |
 | liquid-glass | liquid-glass-auditor | iOS 26 adoption opportunities, toolbar improvements |
 | textkit | textkit-auditor | TextKit issues, text rendering problems |
+| testing | testing-auditor | Flaky tests, slow tests, Swift Testing migration, test quality |
 | build | build-optimizer | Build time optimization opportunities |
 
 ## Direct Dispatch
@@ -55,6 +56,7 @@ When running multiple audits (either user-requested or from smart suggestions):
    - concurrency → Swift 6 data races
    - memory → Retain cycles, leaks
    - networking → Deprecated APIs, ANR risk
+   - testing → Flaky tests, slow CI
 
 3. **MEDIUM audits** (architecture, performance):
    - swiftui-architecture → Logic in views, testability
@@ -71,6 +73,7 @@ When running multiple audits (either user-requested or from smart suggestions):
 - For architecture review: Run swiftui-architecture + swiftui-nav + swiftui-performance
 - For performance tuning: Run swift-performance + swiftui-performance + memory
 - For App Store prep: Run accessibility + networking + storage
+- For CI reliability: Run testing + concurrency + memory
 
 **Note:** Agents have built-in output limits (>50 issues → top 10 shown) to prevent overwhelming output on large codebases.
 
@@ -85,6 +88,7 @@ If no area argument:
    - Find CloudKit entitlements → suggest icloud audit
    - Find async/await usage → suggest concurrency audit
    - Find Timer/NotificationCenter → suggest memory audit
+   - Find *Tests.swift files → suggest testing audit
 
 2. Present findings and ask: "Based on your project, I suggest these audits: [list]. Which would you like to run?"
 
