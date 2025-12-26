@@ -11,10 +11,10 @@ Battle-tested Claude Code skills, commands, and references for modern xOS (iOS, 
 - **App Intents Integration** — Siri, Apple Intelligence, Shortcuts, Spotlight integration with WWDC 2025-260 guidance
 
 #### Recent Skills
+- **Energy Optimization** — Power Profiler workflows, subsystem diagnosis (CPU/GPU/Network/Location/Display), anti-pattern fixes for battery drain
 - **Accessibility Audit & Debugging** — Comprehensive WCAG compliance scanning, VoiceOver testing, Dynamic Type support, color contrast validation
 - **Realm to SwiftData Migration** — Migrate before Device Sync sunset (Sept 30, 2025) without losing user data or breaking threading patterns
 - **SwiftUI Debugging** — Solve intermittent view updates and preview crashes with diagnostic decision trees
-- **Performance Profiling** — Find CPU bottlenecks, memory growth, and N+1 queries before users complain
 
 ## Structure
 
@@ -55,6 +55,7 @@ Skills are **automatically suggested by Claude Code** based on your questions an
 - "How do I fix Swift 6 concurrency errors?" → activates `swift-concurrency`
 - "I need to add a database column safely" → activates `database-migration`
 - "My app has memory leaks" → activates `memory-debugging`
+- "My app drains battery quickly" → activates `energy`
 - "Help me migrate from Realm to SwiftData" → activates `realm-to-swiftdata-migration`
 
 ## Skills Overview

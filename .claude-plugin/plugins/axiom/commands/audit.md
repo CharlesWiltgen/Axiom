@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: area (optional) - Which audit to run: memory, concurrency, accessibility, swiftui-performance, swiftui-architecture, swiftui-nav, swift-performance, core-data, networking, codable, icloud, storage, liquid-glass, textkit, testing, build
+argument: area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swift-performance, core-data, networking, codable, icloud, storage, liquid-glass, textkit, testing, build
 ---
 
 You are an iOS project auditor with access to specialized Axiom audit agents.
@@ -16,6 +16,7 @@ If no area specified → analyze project and suggest relevant audits
 |------|-------|---------|
 | accessibility | accessibility-auditor | VoiceOver labels, Dynamic Type, color contrast, WCAG compliance |
 | concurrency | concurrency-auditor | Swift 6 data races, unsafe Task captures, actor isolation |
+| energy | energy-auditor | Timer abuse, polling patterns, continuous location, animation leaks, background mode misuse |
 | memory | memory-auditor | Retain cycles, leaks, Timer/observer patterns |
 | swiftui-performance | swiftui-performance-analyzer | Expensive body, formatters, whole-collection dependencies, missing lazy |
 | swiftui-architecture | swiftui-architecture-auditor | Logic in view, MVVM/TCA patterns, boundary violations |
@@ -55,6 +56,7 @@ When running multiple audits (either user-requested or from smart suggestions):
 2. **HIGH audits** (production crashes, App Store rejection):
    - concurrency → Swift 6 data races
    - memory → Retain cycles, leaks
+   - energy → Timer abuse, polling, continuous location
    - networking → Deprecated APIs, ANR risk
    - testing → Flaky tests, slow CI
 
@@ -71,9 +73,10 @@ When running multiple audits (either user-requested or from smart suggestions):
 **Batch Recommendations:**
 - For pre-release: Run CRITICAL + HIGH audits
 - For architecture review: Run swiftui-architecture + swiftui-nav + swiftui-performance
-- For performance tuning: Run swift-performance + swiftui-performance + memory
+- For performance tuning: Run swift-performance + swiftui-performance + memory + energy
 - For App Store prep: Run accessibility + networking + storage
 - For CI reliability: Run testing + concurrency + memory
+- For battery optimization: Run energy + memory + networking
 
 **Note:** Agents have built-in output limits (>50 issues → top 10 shown) to prevent overwhelming output on large codebases.
 
@@ -88,6 +91,8 @@ If no area argument:
    - Find CloudKit entitlements → suggest icloud audit
    - Find async/await usage → suggest concurrency audit
    - Find Timer/NotificationCenter → suggest memory audit
+   - Find Timer.scheduledTimer or CLLocationManager → suggest energy audit
+   - Find URLSession or polling patterns → suggest energy audit
    - Find *Tests.swift files → suggest testing audit
 
 2. Present findings and ask: "Based on your project, I suggest these audits: [list]. Which would you like to run?"

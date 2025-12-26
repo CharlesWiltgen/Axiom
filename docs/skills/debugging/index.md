@@ -26,6 +26,11 @@ Systematic debugging strategies to solve issues faster and prevent common proble
   - *"Scrolling is slow and I need to know if it's Core Data or SwiftUI."*
   - *"We have a deadline and my app feels slow. What should I optimize first?"*
 
+- **[Energy Optimization](/skills/debugging/energy)** – Power Profiler workflows, subsystem diagnosis, anti-pattern fixes for battery drain
+  - *"My app drains battery quickly. Where do I even start?"*
+  - *"Users report the device gets hot when using my app."*
+  - **Command** [`/axiom:audit energy`](/commands/utility/audit) for quick energy anti-pattern scanning
+
 - **[Deep Link Debugging](/skills/debugging/deep-link-debugging)** – Add debug-only deep links for automated testing and closed-loop debugging (60-75% faster iteration)
   - *"Claude Code can't navigate to specific screens for testing. How do I add debug deep links?"*
   - *"I want to take screenshots of different screens automatically."*

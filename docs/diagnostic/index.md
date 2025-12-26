@@ -9,6 +9,7 @@ Systematic diagnostics for production issues with mandatory workflows and pressu
 | [**accessibility-diag**](./accessibility-diag) | VoiceOver, Dynamic Type, color contrast, touch targets — WCAG compliance with App Store rejection defense |
 | [**cloud-sync-diag**](./cloud-sync-diag) | CloudKit errors, iCloud Drive sync failures, quota exceeded — systematic cloud sync diagnostics with production crisis defense |
 | [**core-data-diag**](./core-data-diag) | Schema migrations, thread-confinement, N+1 queries — Core Data diagnostics with production crisis defense |
+| [**energy-diag**](./energy-diag) | Battery drain, device hot, background drain, cellular usage — symptom-based decision trees with time-cost analysis |
 | [**foundation-models-diag**](./foundation-models-diag) | Context exceeded, guardrail violations, slow generation — Foundation Models diagnostics with production crisis defense |
 | [**networking-diag**](./networking-diag) | Connection timeouts, TLS failures, data arrival issues — Network.framework diagnostics with production crisis defense |
 | [**storage-diag**](./storage-diag) | Files disappeared, backup too large, file access errors — systematic local storage diagnostics with production crisis defense |
