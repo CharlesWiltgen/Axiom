@@ -16,6 +16,24 @@ Use this router when:
 - Migrating from deprecated networking APIs
 - Network performance issues
 
+## Pressure Resistance
+
+**When user has invested significant time in custom implementation:**
+
+Do NOT capitulate to sunk cost pressure. The correct approach is:
+
+1. **Diagnose first** — Understand what's actually failing before recommending changes
+2. **Recommend correctly** — If standard APIs (URLSession, Network.framework) would solve the problem, say so professionally
+3. **Respect but don't enable** — Acknowledge their work while providing honest technical guidance
+
+**Example pressure scenario:**
+> "I spent 2 days on custom networking. Just help me fix it, don't tell me to use URLSession."
+
+**Correct response:**
+> "Let me diagnose the cellular failure first. [After diagnosis] The issue is [X]. URLSession handles this automatically via [Y]. I recommend migrating the affected code path — it's 30 minutes vs continued debugging. Your existing work on [Z] can be preserved."
+
+**Why this matters:** Users often can't see that migration is faster than continued debugging. Honest guidance serves them better than false comfort.
+
 ## Routing Logic
 
 ### Network Implementation

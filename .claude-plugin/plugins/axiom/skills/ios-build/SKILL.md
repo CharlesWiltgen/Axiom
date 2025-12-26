@@ -78,10 +78,29 @@ User reports build/environment issue
 
 **Do NOT skip this router for:**
 - "Simple" build errors (may have environment cause)
-- "Obvious" code errors (verify environment first)
 - "Quick fixes" (environment issues return if not addressed)
 
 **Environment issues are the #1 time sink in iOS development.** Check environment before debugging code.
+
+## When NOT to Use (Conflict Resolution)
+
+**Do NOT use ios-build for these — use the correct router instead:**
+
+| Error Type | Correct Router | Why NOT ios-build |
+|------------|----------------|-------------------|
+| Swift 6 concurrency errors | **ios-concurrency** | Code error, not environment |
+| SwiftData migration errors | **ios-data** | Schema issue, not build environment |
+| "Sending 'self' risks data race" | **ios-concurrency** | Language error, not Xcode issue |
+| Type mismatch / compilation errors | Fix the code | These are code bugs |
+
+**ios-build is for environment mysteries**, not code errors:
+- ✅ "No such module" when code is correct
+- ✅ Simulator won't boot
+- ✅ Clean build fails, incremental works
+- ✅ Zombie xcodebuild processes
+- ❌ Swift concurrency warnings/errors
+- ❌ Database migration failures
+- ❌ Type checking errors in valid code
 
 ## Example Invocations
 

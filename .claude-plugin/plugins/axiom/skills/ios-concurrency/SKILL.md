@@ -16,6 +16,19 @@ Use this router when:
 - Dealing with Sendable conformance
 - Optimizing Swift performance
 - Migrating to Swift 6 concurrency
+- **App freezes during loading** (likely main thread blocking)
+
+## Conflict Resolution
+
+**ios-concurrency vs ios-performance**: When app freezes or feels slow:
+1. **Try ios-concurrency FIRST** — Main thread blocking is the #1 cause of UI freezes. Check for synchronous work on @MainActor before profiling.
+2. **Only use ios-performance** if concurrency fixes don't help — Profile after ruling out obvious blocking.
+
+**ios-concurrency vs ios-build**: When seeing Swift 6 concurrency errors:
+- **Use ios-concurrency, NOT ios-build** — Concurrency errors are CODE issues, not environment issues
+- ios-build is for "No such module", simulator issues, build failures unrelated to Swift language errors
+
+**Rationale**: A 2-second freeze during data loading is almost always `await` on main thread or missing background dispatch. Domain knowledge solves this faster than Time Profiler.
 
 ## Routing Logic
 
