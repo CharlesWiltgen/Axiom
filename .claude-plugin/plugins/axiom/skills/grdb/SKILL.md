@@ -20,11 +20,13 @@ Direct SQLite access using [GRDB.swift](https://github.com/groue/GRDB.swift) —
 ## When to Use GRDB
 
 #### Use raw GRDB when you need
-- ✅ Complex SQL joins across multiple tables
-- ✅ Custom aggregation queries (GROUP BY, HAVING)
+- ✅ Complex SQL joins across 4+ tables
+- ✅ Window functions (ROW_NUMBER, RANK, LAG/LEAD)
 - ✅ Reactive queries with ValueObservation
 - ✅ Full control over SQL for performance
-- ✅ Advanced migration logic
+- ✅ Advanced migration logic beyond schema changes
+
+**Note:** SQLiteData now supports GROUP BY (`.group(by:)`) and HAVING (`.having()`) via the query builder — see the `sqlitedata-ref` skill.
 
 #### Use SQLiteData instead when
 - Type-safe `@Table` models are sufficient

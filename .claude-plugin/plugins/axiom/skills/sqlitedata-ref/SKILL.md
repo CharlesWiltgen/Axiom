@@ -1154,6 +1154,42 @@ let stats = try Item
     .fetchOne(db)
 ```
 
+### HAVING Clause
+
+Filter grouped results after aggregation with `.having()`:
+
+```swift
+// Customers with more than 5 orders
+let frequentCustomers = try Customer
+    .group(by: \.id)
+    .leftJoin(Order.all) { $0.id.eq($1.customerID) }
+    .having { $1.count() > 5 }
+    .select { ($0.name, $1.count()) }
+    .fetchAll(db)
+
+// Categories with total sales over threshold
+let topCategories = try Category
+    .group(by: \.id)
+    .leftJoin(Item.all) { $0.id.eq($1.categoryID) }
+    .having { $1.price.sum() > 10000 }
+    .select { ($0.name, $1.price.sum()) }
+    .fetchAll(db)
+
+// Combined WHERE and HAVING
+// WHERE filters rows before grouping, HAVING filters after
+let activeHighVolume = try Store
+    .where(\.isActive)                          // Before grouping
+    .group(by: \.id)
+    .leftJoin(Order.all) { $0.id.eq($1.storeID) }
+    .having { $1.count() >= 100 }               // After grouping
+    .select { ($0.name, $1.count()) }
+    .fetchAll(db)
+```
+
+**When to use:**
+- `.where()` — Filter individual rows before grouping
+- `.having()` — Filter groups after aggregation based on aggregate values
+
 ---
 
 ## Schema Creation with #sql Macro
