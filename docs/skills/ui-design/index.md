@@ -30,3 +30,12 @@ Build beautiful, performant interfaces with expert guidance on the latest Apple 
 - **[UI Testing](/skills/ui-design/ui-testing)** – Recording UI Automation (Xcode 26) and condition-based waiting for reliable tests
   - *"Tests pass locally but fail in CI with no obvious reason."*
   - *"How do I replace sleep() timeouts with reliable condition-based waiting?"*
+
+- **[SwiftUI Architecture](/skills/ui-design/swiftui-architecture)** – Feature-level patterns (MVVM, TCA, Coordinator), property wrapper decisions, refactoring workflows
+  - *"Should I use MVVM, TCA, or Apple's vanilla patterns?"*
+  - *"How do I make my SwiftUI code testable?"*
+
+- **[App Composition](/skills/ui-design/app-composition)** – App-level patterns: @main structure, root view switching, scene lifecycle, modularization
+  - *"How do I switch between login and main screens without flicker?"*
+  - *"Where should auth state live in my app?"*
+  - *"When should I split my app into modules?"*

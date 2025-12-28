@@ -39,6 +39,7 @@ Use this router when working with:
 **Animation issues** → `/skill swiftui-animation-ref`
 **Gesture conflicts** → `/skill swiftui-gestures`
 **Architecture/testability** → `/skill swiftui-architecture`
+**App-level composition** → `/skill app-composition`
 **iOS 26 features** → `/skill swiftui-26-ref`
 
 ### UIKit Issues
@@ -70,7 +71,9 @@ User asks about UI
   │  ├─ Navigation? → swiftui-nav
   │  ├─ Performance? → swiftui-performance
   │  ├─ Layout? → swiftui-layout
-  │  ├─ Architecture? → swiftui-architecture
+  │  ├─ Feature-level architecture? → swiftui-architecture
+  │  ├─ App-level composition? → app-composition
+  │  │  (root view switching, auth flows, scene lifecycle, modularization)
   │  └─ Animations/gestures? → swiftui-animation-ref or swiftui-gestures
   │
   ├─ UIKit?
@@ -98,3 +101,9 @@ User: "NavigationStack is popping unexpectedly"
 
 User: "Should I use MVVM for this SwiftUI app?"
 → Invoke: `/skill swiftui-architecture`
+
+User: "How do I switch between login and main screens?"
+→ Invoke: `/skill app-composition`
+
+User: "Where should auth state live in my app?"
+→ Invoke: `/skill app-composition`
