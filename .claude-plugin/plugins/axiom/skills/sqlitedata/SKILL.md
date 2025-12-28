@@ -541,6 +541,103 @@ try database.write { db in
 }
 ```
 
+### Upsert (Insert or Update)
+
+SQLite's UPSERT (`INSERT ... ON CONFLICT ... DO UPDATE`) expresses "insert if missing, otherwise update" in one statement.
+
+```swift
+try database.write { db in
+    try Item.insert {
+        item
+    } onConflict: { cols in
+        (cols.libraryID, cols.remoteID)   // Conflict target columns
+    } doUpdate: { row, excluded in
+        row.name = excluded.name           // Merge semantics
+        row.notes = excluded.notes
+    }
+    .execute(db)
+}
+```
+
+**Parameters:**
+- `onConflict:` — Columns defining "same row" (must match UNIQUE constraint/index)
+- `doUpdate:` — What to update on conflict
+  - `row` = existing database row
+  - `excluded` = proposed insert values (SQLite's `excluded` table)
+
+#### With Partial Unique Index
+
+When your UNIQUE index has a `WHERE` clause, add a conflict filter:
+
+```swift
+try Item.insert {
+    item
+} onConflict: { cols in
+    (cols.libraryID, cols.remoteID)
+} where: { cols in
+    cols.remoteID.isNot(nil)          // Match partial index condition
+} doUpdate: { row, excluded in
+    row.name = excluded.name
+}
+.execute(db)
+```
+
+**Schema requirement:**
+```sql
+CREATE UNIQUE INDEX idx_items_sync_identity
+ON items (libraryID, remoteID)
+WHERE remoteID IS NOT NULL
+```
+
+#### Merge Strategies
+
+**Replace all mutable fields** (sync mirror):
+```swift
+doUpdate: { row, excluded in
+    row.name = excluded.name
+    row.notes = excluded.notes
+    row.updatedAt = excluded.updatedAt
+}
+```
+
+**Merge without clobbering** (keep existing if new is NULL):
+```swift
+doUpdate: { row, excluded in
+    row.name = excluded.name.ifnull(row.name)
+    row.notes = excluded.notes.ifnull(row.notes)
+}
+```
+
+**Last-write-wins** (only update if newer) — use raw SQL:
+```swift
+try db.execute(sql: """
+    INSERT INTO items (id, name, updatedAt) VALUES (?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        updatedAt = excluded.updatedAt
+    WHERE excluded.updatedAt >= items.updatedAt
+    """, arguments: [item.id, item.name, item.updatedAt])
+// Use >= to handle timestamp ties (last arrival wins)
+```
+
+#### ❌ Common Upsert Mistakes
+
+**Missing UNIQUE constraint:**
+```swift
+// WRONG — no index to conflict against
+onConflict: { ($0.libraryID, $0.remoteID) }
+// but table has no UNIQUE(libraryID, remoteID)
+```
+
+**Using INSERT OR REPLACE:**
+```swift
+// WRONG — REPLACE deletes then inserts, breaking FK relationships
+try db.execute(sql: "INSERT OR REPLACE INTO items ...")
+
+// CORRECT — use ON CONFLICT for true upsert
+try Item.insert { ... } onConflict: { ... } doUpdate: { ... }
+```
+
 ---
 
 ## Batch Operations

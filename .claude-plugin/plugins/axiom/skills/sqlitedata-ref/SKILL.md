@@ -1671,6 +1671,104 @@ let medianPrices = try Product
 
 ---
 
+## Batch Upsert Performance
+
+For high-volume sync (50K+ records), the type-safe upsert API may be too slow. Use raw SQL with cached statements for maximum throughput.
+
+### Cached Statement Upsert
+
+```swift
+func batchUpsert(_ items: [Item], in db: Database) throws {
+    let statement = try db.cachedStatement(sql: """
+        INSERT INTO items (id, name, libraryID, remoteID, updatedAt)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(libraryID, remoteID) DO UPDATE SET
+            name = excluded.name,
+            updatedAt = excluded.updatedAt
+        WHERE excluded.updatedAt >= items.updatedAt
+        """)
+
+    for item in items {
+        try statement.execute(arguments: [
+            item.id, item.name, item.libraryID,
+            item.remoteID, item.updatedAt
+        ])
+    }
+}
+```
+
+**Why this is faster:**
+- Statement compiled once, reused for all rows
+- No Swift type-checking overhead per row
+- `cachedStatement` reuses prepared statements across calls
+
+### Multi-Row Batch Upsert
+
+Reduce statement count further with multi-row VALUES:
+
+```swift
+import SQLite3  // Required for sqlite3_limit
+
+func batchUpsert(_ items: [Item], in db: Database) throws {
+    guard !items.isEmpty else { return }
+
+    // Query SQLite variable limit at runtime (requires import SQLite3)
+    let maxVars = Int(sqlite3_limit(db.sqliteConnection, SQLITE_LIMIT_VARIABLE_NUMBER, -1))
+    let columnsPerRow = 5  // id, name, libraryID, remoteID, updatedAt
+    let maxRowsPerBatch = max(1, maxVars / columnsPerRow)
+
+    for batchStart in stride(from: 0, to: items.count, by: maxRowsPerBatch) {
+        let batchEnd = min(batchStart + maxRowsPerBatch, items.count)
+        let batch = Array(items[batchStart..<batchEnd])
+
+        // Build multi-row VALUES clause
+        let placeholders = Array(repeating: "(?, ?, ?, ?, ?)", count: batch.count)
+            .joined(separator: ", ")
+
+        let sql = """
+            INSERT INTO items (id, name, libraryID, remoteID, updatedAt)
+            VALUES \(placeholders)
+            ON CONFLICT(libraryID, remoteID) DO UPDATE SET
+                name = excluded.name,
+                updatedAt = excluded.updatedAt
+            WHERE excluded.updatedAt >= items.updatedAt
+            """
+
+        var arguments: [DatabaseValueConvertible?] = []
+        for item in batch {
+            arguments.append(contentsOf: [
+                item.id, item.name, item.libraryID,
+                item.remoteID, item.updatedAt
+            ] as [DatabaseValueConvertible?])
+        }
+
+        try db.execute(sql: sql, arguments: StatementArguments(arguments))
+    }
+}
+```
+
+**SQLite variable limits:**
+- iOS 14+: 32,766 variables (SQLite 3.32+)
+- iOS 13 and earlier: 999 variables
+- Query at runtime: `sqlite3_limit(db.sqliteConnection, SQLITE_LIMIT_VARIABLE_NUMBER, -1)`
+
+### When to Use Each Pattern
+
+| Pattern | Use Case | Throughput |
+|---------|----------|------------|
+| Type-safe upsert | Small batches, type safety priority | ~1K rows/sec |
+| Cached statement | Medium batches (1K-10K rows) | ~10K rows/sec |
+| Multi-row VALUES | Large batches (10K+ rows) | ~50K rows/sec |
+
+**Note:** Throughput varies by device, row size, and index count. Profile your workload.
+
+**Trade-offs:**
+- Type-safe: Best DX, compile-time checks, slowest
+- Cached statement: Good balance, manual column maintenance
+- Multi-row: Fastest, most complex, requires variable limit handling
+
+---
+
 ## Miscellaneous Advanced Patterns
 
 ### Database Triggers
