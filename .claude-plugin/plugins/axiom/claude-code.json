@@ -57,6 +57,10 @@
     {
       "name": "ios-vision",
       "description": "Use when implementing ANY computer vision feature: image analysis, object detection, pose detection, person segmentation, subject lifting, hand/body pose tracking."
+    },
+    {
+      "name": "ios-graphics",
+      "description": "Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, or graphics programming. Covers Metal migration from OpenGL/DirectX, shader conversion, GPU debugging, translation layers."
     }
   ]
 }
