@@ -1667,9 +1667,9 @@ Before shipping Foundation Models features:
 
 ## Resources
 
-Based on: WWDC 2025-286, 2025-259, 2025-301.
+**WWDC**: 286, 259, 301
 
-For detailed WWDC session descriptions, related Axiom skills, and Apple documentation links, see [REFERENCES.md](REFERENCES.md).
+**Skills**: foundation-models-diag, foundation-models-ref
 
 ---
 

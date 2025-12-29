@@ -844,26 +844,10 @@ grep -r "\.id(" --include="*.swift" .
 
 ---
 
-## External Resources
+## Resources
 
-### WWDC Sessions
-- [WWDC 2025-306: Optimize SwiftUI performance with Instruments](https://developer.apple.com/videos/play/wwdc2025/306/) — SwiftUI Instrument, Cause & Effect Graph
-- [WWDC 2023-10160: Demystify SwiftUI performance](https://developer.apple.com/videos/play/wwdc2023/10160/) — Self._printChanges(), dependency tracking
-- [WWDC 2023-10149: Discover Observation in SwiftUI](https://developer.apple.com/videos/play/wwdc2023/10149/) — @Observable framework
-- [WWDC 2021-10022: Demystify SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10022/) — View identity, lifetime
+**WWDC**: 2025-306, 2023-10160, 2023-10149, 2021-10022
 
-### Apple Documentation
-- [Understanding hitches in your app](https://developer.apple.com/documentation/xcode/understanding-hitches-in-your-app)
-- [Analyzing hangs with Instruments](https://developer.apple.com/documentation/xcode/analyzing-hangs-in-your-app)
-- [Managing model data in your app](https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app)
+**Docs**: /xcode/understanding-hitches-in-your-app, /xcode/analyzing-hangs-in-your-app, /swiftui/managing-model-data-in-your-app
 
-### Related Axiom Skills
-- `swiftui-debugging` — Basic troubleshooting for view updates, previews, layout
-- `swiftui-performance` — Detailed Instruments workflows, optimization patterns
-- `swiftui-layout` — Adaptive layout patterns, ViewThatFits, AnyLayout
-- `xcode-debugging` — Environment diagnostics, build issues
-
-**Xcode**: 26+
-**Platforms**: iOS 17+, macOS Tahoe+
-**Framework**: SwiftUI + Instruments
-**History**: See git log for changes
+**Skills**: swiftui-debugging, swiftui-performance, swiftui-layout, xcode-debugging

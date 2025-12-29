@@ -507,22 +507,13 @@ ValueObservation.tracking { db in
 }.publisher(in: dbQueue)
 ```
 
-## External Resources
+## Resources
 
-#### GRDB
-- [GitHub](https://github.com/groue/GRDB.swift)
-- [Documentation](https://swiftpackageindex.com/groue/GRDB.swift/documentation/grdb)
-- [SQL
+**GitHub**: groue/GRDB.swift, groue/GRDBQuery
 
-ite Documentation](https://www.sqlite.org/docs.html)
+**Docs**: sqlite.org/docs.html
 
-#### SwiftUI Integration
-- [GRDBQuery](https://github.com/groue/GRDBQuery) — SwiftUI reactive bindings
-
-#### Related Axiom Skills
-- `database-migration` - Safe schema evolution
-- `sqlitedata` - Type-safe @Table models with CloudKit
-- `swiftdata` - Apple's native persistence
+**Skills**: database-migration, sqlitedata, swiftdata
 
 ## Production Performance: Query Optimization Under Pressure
 

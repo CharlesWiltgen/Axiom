@@ -1149,26 +1149,11 @@ func testPhotosLoadUnderStress() {
 
 ---
 
-## Reference
+## Resources
 
-**WWDC 2025 Sessions**:
-- [Record, replay, and review: UI automation with Xcode — WWDC25 Session 344](https://developer.apple.com/videos/play/wwdc2025/344/)
-  - Recording UI automation, test plans, video review
+**WWDC**: 2025-344, 2024-10179, 2023-10175, 2023-10035
 
-**WWDC 2023 Sessions**:
-- [Fix failures faster with Xcode test reports — WWDC23](https://developer.apple.com/videos/play/wwdc2023/10175/)
-- [Perform accessibility audits for your app — WWDC23](https://developer.apple.com/videos/play/wwdc2023/10035/)
-
-**WWDC 2024 Sessions**:
-- [Meet Swift Testing — WWDC24](https://developer.apple.com/videos/play/wwdc2024/10179/)
-
-**Apple Documentation**:
-- [XCTest Framework](https://developer.apple.com/documentation/xctest)
-- [Recording UI automation for testing](https://developer.apple.com/documentation/XCUIAutomation/recording-ui-automation-for-testing)
-- [UI Testing in Xcode](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/testing_with_xcode/chapters/09-ui_testing.html)
-- [XCTWaiter](https://developer.apple.com/documentation/xctest/xctwaiter)
-- [Delivering an exceptional accessibility experience](https://developer.apple.com/documentation/accessibility/delivering_an_exceptional_accessibility_experience)
-- [Performing accessibility testing for your app](https://developer.apple.com/documentation/accessibility/performing_accessibility_testing_for_your_app)
+**Docs**: /xctest, /xcuiautomation/recording-ui-automation-for-testing, /xctest/xctwaiter, /accessibility/delivering_an_exceptional_accessibility_experience, /accessibility/performing_accessibility_testing_for_your_app
 
 **Note**: This skill focuses on reliability patterns and Recording UI Automation. For TDD workflow, see superpowers:test-driven-development.
 

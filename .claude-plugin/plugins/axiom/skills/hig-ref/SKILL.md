@@ -1367,56 +1367,13 @@ HStack {
 
 ---
 
-## WWDC Sessions & Resources
+## Resources
 
-### Primary WWDC Sessions
+**WWDC**: 356, 2019-808
 
-**WWDC25-356: "Get to know the new design system"**
-- Design language fundamentals
-- Color system updates
-- Typography (bolder, left-aligned)
-- Shape types (fixed, capsule, concentric)
-- Concentricity principle
-- Structure with Liquid Glass
-- Navigation focus and depth
-- Bar organization
-- Tab bars with Search
-- Scroll edge effects
-- Continuity across devices
+**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/materials, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/accessibility, /design/human-interface-guidelines/icons
 
-[Watch Session](https://developer.apple.com/videos/play/wwdc2025/356/)
-
-**WWDC19-808: "What's New in iOS Design"**
-- Dark Mode fundamentals
-- Semantic colors explained
-- Base vs elevated backgrounds
-- Material thickness options
-- Vibrancy with materials
-- SF Symbols introduction
-- Modal presentations (sheets)
-- Contextual menus
-
-[Watch Session](https://developer.apple.com/videos/play/wwdc2019/808/)
-
-### Official Documentation
-
-- [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines)
-- [Apple HIG: Color](https://developer.apple.com/design/human-interface-guidelines/color)
-- [Apple HIG: Dark Mode](https://developer.apple.com/design/human-interface-guidelines/dark-mode)
-- [Apple HIG: Materials](https://developer.apple.com/design/human-interface-guidelines/materials)
-- [Apple HIG: Typography](https://developer.apple.com/design/human-interface-guidelines/typography)
-- [Apple HIG: Layout](https://developer.apple.com/design/human-interface-guidelines/layout)
-- [Apple HIG: Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility)
-- [Apple HIG: Icons](https://developer.apple.com/design/human-interface-guidelines/icons)
-- [SF Symbols App](https://developer.apple.com/sf-symbols/)
-
-### Related Axiom Skills
-
-- `hig` — Quick decisions, checklists, design review pressure scenarios
-- `liquid-glass` — iOS 26 material design system implementation
-- `liquid-glass-ref` — iOS 26 app-wide adoption guide
-- `swiftui-layout-ref` — Layout implementation details
-- `accessibility-diag` — Accessibility troubleshooting workflows
+**Skills**: hig, liquid-glass, liquid-glass-ref, swiftui-layout-ref, accessibility-diag
 
 ---
 

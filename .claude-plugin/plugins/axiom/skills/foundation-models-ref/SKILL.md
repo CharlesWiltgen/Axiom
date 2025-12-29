@@ -1514,21 +1514,11 @@ let response = try await session.respond(
 
 ---
 
-## Related Resources
+## Resources
 
-**WWDC 2025 Sessions**:
-- Session 286: Meet the Foundation Models framework
-- Session 259: Code-along: Bring on-device AI to your app
-- Session 301: Deep dive into the Foundation Models framework
+**WWDC**: 286, 259, 301
 
-**Apple Documentation**:
-- Foundation Models Framework Documentation
-- SystemLanguageModel API Reference
-- @Generable Macro Documentation
-
-**Axiom Skills**:
-- `foundation-models` — Discipline skill with anti-patterns, pressure scenarios
-- `foundation-models-diag` — Diagnostic skill for troubleshooting
+**Skills**: foundation-models, foundation-models-diag
 
 ---
 

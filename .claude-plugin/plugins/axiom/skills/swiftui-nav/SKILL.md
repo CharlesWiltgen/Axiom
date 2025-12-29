@@ -828,12 +828,11 @@ checks and fallback UI for older devices."
 
 ---
 
-## WWDC References
+## Resources
 
-- [The SwiftUI cookbook for navigation (WWDC 2022, 10054)](https://developer.apple.com/videos/play/wwdc2022/10054/)
-- [Elevate your tab and sidebar experience (WWDC 2024, 10147)](https://developer.apple.com/videos/play/wwdc2024/10147/)
-- [What's new in SwiftUI (WWDC 2025, 256)](https://developer.apple.com/videos/play/wwdc2025/256/)
-- [Build a SwiftUI app with the new design (WWDC 2025, 323)](https://developer.apple.com/videos/play/wwdc2025/323/)
+**WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323
+
+**Skills**: swiftui-nav-diag, swiftui-nav-ref
 
 ---
 

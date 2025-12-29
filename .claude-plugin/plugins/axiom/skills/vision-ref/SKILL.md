@@ -621,29 +621,10 @@ let output = filter.outputImage  // Composited result
 | `VNFaceObservation` | Face detection/landmarks |
 | `VNHumanObservation` | Human rectangles |
 
-## WWDC Sessions
+## Resources
 
-**WWDC 2023**:
-- [10176: Lift subjects from images in your app](https://developer.apple.com/videos/play/wwdc2023/10176/)
-- [111241: Explore 3D body pose and person segmentation in Vision](https://developer.apple.com/videos/play/wwdc2023/111241/)
-- [10048: What's new in VisionKit](https://developer.apple.com/videos/play/wwdc2023/10048/)
+**WWDC**: 2023-10176, 2023-111241, 2023-10048, 2022-10024, 2020-10653, 2020-10043, 2020-10099
 
-**WWDC 2022**:
-- [10024: What's new in Vision](https://developer.apple.com/videos/play/wwdc2022/10024/)
+**Docs**: /vision, /visionkit, /vision/detecting-hand-poses-with-vision
 
-**WWDC 2020**:
-- [10653: Detect Body and Hand Pose with Vision](https://developer.apple.com/videos/play/wwdc2020/10653/)
-- [10043: Build an Action Classifier with Create ML](https://developer.apple.com/videos/play/wwdc2020/10043/)
-- [10099: Explore the Action & Vision app](https://developer.apple.com/videos/play/wwdc2020/10099/)
-
-## Apple Documentation
-
-- [Vision Framework](https://developer.apple.com/documentation/vision)
-- [VisionKit Framework](https://developer.apple.com/documentation/visionkit)
-- [Detecting Hand Poses with Vision](https://developer.apple.com/documentation/vision/detecting-hand-poses-with-vision)
-- [CoreImage Filter Reference](https://developer.apple.com/library/archive/documentation/GraphicsImaging/Reference/CoreImageFilterReference/)
-
-## Related Axiom Skills
-
-- `vision` — Decision trees, patterns, anti-patterns
-- `vision-diag` — Troubleshooting when things go wrong
+**Skills**: vision, vision-diag

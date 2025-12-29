@@ -36,6 +36,7 @@ Use this router when working with:
 **Navigation issues** → `/skill swiftui-nav`
 **Performance/lag** → `/skill swiftui-performance`
 **Layout problems** → `/skill swiftui-layout`
+**Stacks/grids/outlines** → `/skill swiftui-containers-ref`
 **Animation issues** → `/skill swiftui-animation-ref`
 **Gesture conflicts** → `/skill swiftui-gestures`
 **Architecture/testability** → `/skill swiftui-architecture`
@@ -70,7 +71,9 @@ User asks about UI
   │  ├─ View not updating? → swiftui-debugging
   │  ├─ Navigation? → swiftui-nav
   │  ├─ Performance? → swiftui-performance
-  │  ├─ Layout? → swiftui-layout
+  │  ├─ Layout (adaptive)? → swiftui-layout
+  │  ├─ Stacks/grids/outlines? → swiftui-containers-ref
+  │  │  (VStack, HStack, LazyVGrid, LazyHGrid, OutlineGroup, DisclosureGroup)
   │  ├─ Feature-level architecture? → swiftui-architecture
   │  ├─ App-level composition? → app-composition
   │  │  (root view switching, auth flows, scene lifecycle, modularization)
@@ -107,3 +110,12 @@ User: "How do I switch between login and main screens?"
 
 User: "Where should auth state live in my app?"
 → Invoke: `/skill app-composition`
+
+User: "How do I create a grid layout with LazyVGrid?"
+→ Invoke: `/skill swiftui-containers-ref`
+
+User: "What's the difference between VStack and LazyVStack?"
+→ Invoke: `/skill swiftui-containers-ref`
+
+User: "How do I display hierarchical data with OutlineGroup?"
+→ Invoke: `/skill swiftui-containers-ref`

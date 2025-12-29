@@ -804,25 +804,10 @@ func playCoordinated() {
 
 ---
 
-## Related Resources
+## Resources
 
-### WWDC Sessions
-- [Practice audio haptic design (2021/10278)](https://developer.apple.com/videos/play/wwdc2021/10278/)
-- [Introducing Core Haptics (2019/520)](https://developer.apple.com/videos/play/wwdc2019/520/)
-- [Expanding the Sensory Experience (2019/223)](https://developer.apple.com/videos/play/wwdc2019/223/)
+**WWDC**: 2021-10278, 2019-520, 2019-223
 
-### Documentation
-- [Core Haptics Framework](https://developer.apple.com/documentation/corehaptics)
-- [CHHapticEngine](https://developer.apple.com/documentation/corehaptics/chhapticengine)
-- [Human Interface Guidelines: Playing Haptics](https://developer.apple.com/design/human-interface-guidelines/playing-haptics)
+**Docs**: /corehaptics, /corehaptics/chhapticengine
 
-### Sample Code
-- [HapticRicochet](https://developer.apple.com/documentation/CoreHaptics/delivering-rich-app-experiences-with-haptics) - WWDC 2021 demo app
-
----
-
-## See Also
-
-- **swiftui-animation-ref** — Synchronizing haptics with SwiftUI animations
-- **ui-testing** — Testing haptic feedback in UI tests
-- **accessibility-diag** — Haptics and accessibility considerations
+**Skills**: swiftui-animation-ref, ui-testing, accessibility-diag

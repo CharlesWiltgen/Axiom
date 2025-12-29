@@ -1239,31 +1239,13 @@ To ship with latest SDKs while maintaining previous appearance:
 
 ---
 
-## WWDC 2025 References
+## Resources
 
-**Primary Session**:
-- [Meet Liquid Glass — WWDC25 Session 219](https://developer.apple.com/videos/play/wwdc2025/219/)
-  - Design principles and visual properties
-  - Adaptive behavior and platform integration
-  - Variants and usage guidelines
+**WWDC**: 2025-219, 2025-323, 2025-256
 
-**Related Sessions**:
-- [Build a SwiftUI app with the new design — WWDC25 Session 323](https://developer.apple.com/videos/play/wwdc2025/323/)
-  - Practical implementation patterns
+**Docs**: /technologyoverviews/adopting-liquid-glass, /swiftui/landmarks-building-an-app-with-liquid-glass, /swiftui/applying-liquid-glass-to-custom-views
 
-- [What's new in SwiftUI - WWDC25 Session 256](https://developer.apple.com/videos/play/wwdc2025/256/)
-  - API overview and integration with SwiftUI ecosystem
-
-**Documentation**:
-- [Adopting Liquid Glass](https://developer.apple.com/documentation/TechnologyOverviews/adopting-liquid-glass)
-- [Landmarks: Building an app with Liquid Glass](https://developer.apple.com/documentation/SwiftUI/Landmarks-Building-an-app-with-Liquid-Glass)
-- [Applying Liquid Glass to custom views](https://developer.apple.com/documentation/SwiftUI/Applying-Liquid-Glass-to-custom-views)
-
-**Sample Code**:
-- Landmarks tutorial series (WWDC 2025)
-
-**Related Skills**:
-- `liquid-glass-ref` - Comprehensive app-wide adoption guide (app icons, controls, navigation, menus, windows, platform considerations)
+**Skills**: liquid-glass-ref
 
 ---
 

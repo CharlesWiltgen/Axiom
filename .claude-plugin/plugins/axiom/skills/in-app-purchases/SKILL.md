@@ -872,17 +872,8 @@ rg "AppStore\.sync|Transaction\.all" --type swift
 
 ## Resources
 
-### WWDC Sessions
-- WWDC 2025-241: What's new in StoreKit and In-App Purchase
-- WWDC 2025-249: Dive into App Store server APIs for In-App Purchase
-- WWDC 2023-10013: Meet StoreKit for SwiftUI
-- WWDC 2021-10114: Meet StoreKit 2
+**WWDC**: 2025-241, 2025-249, 2023-10013, 2021-10114
 
-### Apple Documentation
-- [StoreKit Documentation](https://developer.apple.com/documentation/storekit)
-- [Implementing a store in your app using the StoreKit API](https://developer.apple.com/documentation/storekit/implementing-a-store-in-your-app-using-the-storekit-api)
-- [App Store Server API](https://developer.apple.com/documentation/appstoreserverapi)
+**Docs**: /storekit, /appstoreserverapi
 
-### App Store Review
-- [In-App Purchase Guidelines](https://developer.apple.com/app-store/review/guidelines/#in-app-purchase)
-- Restore purchases is **REQUIRED** for non-consumables and subscriptions
+**Skills**: storekit-ref

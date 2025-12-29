@@ -967,9 +967,9 @@ Before shipping networking code, verify:
 
 ## Resources
 
-Based on: WWDC 2018-715, WWDC 2025-250.
+**WWDC**: 2018-715, 2025-250
 
-For detailed WWDC session descriptions, Apple documentation links, and related Axiom skills, see [REFERENCES.md](REFERENCES.md).
+**Skills**: networking-diag, network-framework-ref
 
 ---
 

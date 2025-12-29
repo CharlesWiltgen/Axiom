@@ -1437,20 +1437,11 @@ modelContext.delete(track)
 try modelContext.save()
 ```
 
-## External Resources
+## Resources
 
-#### SwiftData
-- [Apple Documentation](https://developer.apple.com/documentation/swiftdata)
-- [WWDC Sessions](https://developer.apple.com/videos/swiftdata)
-- [SwiftData by Example](https://www.hackingwithswift.com/quick-start/swiftdata)
+**Docs**: /swiftdata
 
-#### Related Axiom Skills
-- `swiftdata-migration` - Custom schema migrations with VersionedSchema and SchemaMigrationPlan
-- `swiftdata-migration-diag` - Debugging failed SwiftData migrations
-- `database-migration` - General migration safety patterns (SQLite/GRDB)
-- `sqlitedata` - Value types with CloudKit sharing
-- `grdb` - Raw SQL when needed
-- `swift-concurrency` - @MainActor and actor patterns
+**Skills**: swiftdata-migration, swiftdata-migration-diag, database-migration, sqlitedata, grdb, swift-concurrency
 
 ## Common Mistakes
 

@@ -1279,30 +1279,11 @@ xcrun simctl io booted screenshot /tmp/after-fix.png
 
 ---
 
-## External Resources
+## Resources
 
-#### Apple Documentation
-- [Managing model data in your app](https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app) — @Observable patterns
-- [SwiftUI View Fundamentals](https://developer.apple.com/documentation/swiftui)
-- [State and Data Flow](https://developer.apple.com/documentation/swiftui/state-and-data-flow)
-- [Xcode Previews](https://developer.apple.com/documentation/xcode/previews)
-- [Observation framework](https://developer.apple.com/documentation/observation)
+**WWDC**: 2025-256, 2025-306, 2023-10160, 2023-10149, 2021-10022
 
-#### WWDC Sessions
-- [WWDC 2025-256: What's new in SwiftUI](https://developer.apple.com/videos/play/wwdc2025/256/) — Latest SwiftUI features
-- [WWDC 2025-306: Optimize SwiftUI performance with Instruments](https://developer.apple.com/videos/play/wwdc2025/306/) — New SwiftUI Instrument
-- [WWDC 2023-10160: Demystify SwiftUI performance](https://developer.apple.com/videos/play/wwdc2023/10160/) — Self._printChanges(), dependencies
-- [WWDC 2023-10149: Discover Observation in SwiftUI](https://developer.apple.com/videos/play/wwdc2023/10149/) — @Observable introduction
-- [WWDC 2021-10022: Demystify SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10022/) — View identity, lifetime
+**Docs**: /swiftui/managing-model-data-in-your-app, /swiftui, /swiftui/state-and-data-flow, /xcode/previews, /observation
 
-#### Related Axiom Skills
-- `swiftui-performance` — For profiling with Instruments, Cause & Effect Graph
-- `swiftui-debugging-diag` — Systematic diagnostic workflows for complex cases
-- `xcode-debugging` — For Xcode cache corruption, build issues
-- `swift-concurrency` — For @MainActor and async/await patterns
-
-**Targets:** iOS 17+ (iOS 14-16 patterns still valid)
-**Xcode:** 26+
-**Framework:** SwiftUI
-**History:** See git log for changes
+**Skills**: swiftui-performance, swiftui-debugging-diag, xcode-debugging, swift-concurrency
 

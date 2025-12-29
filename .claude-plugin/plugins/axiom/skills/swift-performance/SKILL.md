@@ -1613,28 +1613,11 @@ func render<S: Shape>(shapes: [S]) { }
 
 ## Resources
 
-### WWDC Sessions
+**WWDC**: 2025-312, 2024-10217, 2024-10170, 2021-10216, 2016-416
 
-| Session | Title | Key Topics |
-|---------|-------|------------|
-| WWDC 2025-312 | Improve memory usage and performance with Swift | InlineArray, Span, value generics, non-escapable types |
-| WWDC 2024-10217 | Explore Swift performance | Function calls, memory allocation, layout, copying |
-| WWDC 2016-416 | Understanding Swift Performance | Value vs reference, protocol witness tables, COW |
-| WWDC 2021-10216 | ARC in Swift: Basics and beyond | Object lifetimes, weak/unowned, withExtendedLifetime |
-| WWDC 2024-10170 | Consume noncopyable types in Swift | ~Copyable, ownership, consuming/borrowing |
+**Docs**: /swift/inlinearray, /swift/span
 
-### Documentation
-
-- [Swift Performance](https://www.swift.org/documentation/performance)
-- [Swift Optimization Tips](https://github.com/apple/swift/blob/main/docs/OptimizationTips.rst)
-- [InlineArray Documentation](https://developer.apple.com/documentation/swift/inlinearray)
-- [Span Documentation](https://developer.apple.com/documentation/swift/span)
-
-### Related Axiom Skills
-
-- `performance-profiling` — Instruments workflows
-- `swift-concurrency` — Correctness-focused concurrency
-- `swiftui-performance` — SwiftUI-specific optimizations
+**Skills**: performance-profiling, swift-concurrency, swiftui-performance
 
 ---
 

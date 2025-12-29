@@ -712,37 +712,13 @@ Run Script phases without defined inputs/outputs cause full rebuilds. Always spe
 
 ---
 
-## Reference
+## Resources
 
-**WWDC 2024 Sessions**:
-- [Meet Swift Testing](https://developer.apple.com/videos/play/wwdc2024/10179/) — Building blocks, migration
-- [Go further with Swift Testing](https://developer.apple.com/videos/play/wwdc2024/10195/) — Tags, parameterization, parallelism
+**WWDC**: 2024-10179, 2024-10195
 
-**Apple Documentation**:
-- [Swift Testing](https://developer.apple.com/documentation/testing)
-- [Migrating from XCTest](https://developer.apple.com/documentation/testing/migratingfromxctest)
-- [Testing asynchronous code](https://developer.apple.com/documentation/testing/testing-asynchronous-code)
-- [Parallelization](https://developer.apple.com/documentation/testing/parallelization)
+**Docs**: /testing, /testing/migratingfromxctest, /testing/testing-asynchronous-code, /testing/parallelization
 
-**Point-Free (Async & Time Testing)**:
-- [Reliably testing async code](https://www.pointfree.co/blog/posts/110-reliably-testing-async-code-in-swift)
-- [swift-concurrency-extras](https://github.com/pointfreeco/swift-concurrency-extras) — withMainSerialExecutor, LockIsolated
-- [swift-clocks](https://github.com/pointfreeco/swift-clocks) — TestClock, ImmediateClock
-
-**Fast Testing (No Simulator)**:
-- [Quality Coding: Bypass SwiftUI app launch](https://qualitycoding.org/bypass-swiftui-app-launch-unit-testing/)
-- [Quality Coding: Optimize Xcode for fast tests](https://qualitycoding.org/optimize-xcode-for-fast-tests/)
-- [xp123: Run tests without an app](https://xp123.com/run-tests-without-an-app-step-by-step-with-xcode/)
-- [SwiftPM swift test](https://docs.swift.org/swiftpm/documentation/packagemanagerdocs/swifttest/)
-
-**Swift 6 Concurrency**:
-- [Quality Coding: XCTest meets @MainActor](https://qualitycoding.org/xctest-mainactor/)
-- [Swift Forums: XCTestCase + Swift 6.2 isolation](https://forums.swift.org/t/xctestcase-compiler-error-with-swift-6-2-default-actor-isolation-mainactor/83418)
-- [Swift by Sundell: Unit testing async/await](https://www.swiftbysundell.com/articles/unit-testing-code-that-uses-async-await)
-
-**Additional Expert Content**:
-- [SwiftLee: Using traits](https://www.avanderlee.com/swift-testing/using-traits-to-annotate-and-customize-test-behavior/)
-- [Fatbobman: Mastering Swift Testing](https://fatbobman.com/en/posts/mastering-the-swift-testing-framework/)
+**GitHub**: pointfreeco/swift-concurrency-extras, pointfreeco/swift-clocks
 
 ---
 

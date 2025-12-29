@@ -893,12 +893,10 @@ ScrollView {
 
 ---
 
-## Related Resources
+## Resources
 
-- [swiftui-layout](/skills/ui-design/swiftui-layout) — Decision guidance and anti-patterns
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — View update diagnostics
-- [WWDC 2025: Elevate the design of your iPad app](https://developer.apple.com/videos/play/wwdc2025/208/)
-- [WWDC 2024: Get started with Dynamic Type](https://developer.apple.com/videos/play/wwdc2024/10074/)
-- [WWDC 2022: Compose custom layouts with SwiftUI](https://developer.apple.com/videos/play/wwdc2022/10056/)
-- [Apple Documentation: Layout Protocol](https://developer.apple.com/documentation/swiftui/layout)
-- [Apple Documentation: ViewThatFits](https://developer.apple.com/documentation/swiftui/viewthatfits)
+**WWDC**: 2025-208, 2024-10074, 2022-10056
+
+**Docs**: /swiftui/layout, /swiftui/viewthatfits
+
+**Skills**: swiftui-layout, swiftui-debugging

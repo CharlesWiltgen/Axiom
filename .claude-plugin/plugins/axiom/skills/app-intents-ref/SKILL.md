@@ -1388,18 +1388,11 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 
 ## Resources
 
-### Apple Documentation
-- [App Intents Framework](https://sosumi.ai/documentation/appintents) — Framework overview
-- [AppIntent Protocol](https://sosumi.ai/documentation/appintents/appintent) — Intent definition
-- [AppEntity Protocol](https://sosumi.ai/documentation/appintents/appentity) — Entity representation
+**WWDC**: 244, 275, 260
 
-### WWDC Sessions
-- [Get to know App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/244/) — Foundational concepts
-- [Explore new advances in App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/275/) — Advanced features
-- [Develop for Shortcuts and Spotlight with App Intents (WWDC 2025)](https://developer.apple.com/videos/play/wwdc2025/260/) — Integration patterns
+**Docs**: /appintents, /appintents/appintent, /appintents/appentity
 
-### Sample Code
-- [App Intents Sample Apps](https://developer.apple.com/documentation/appintents/making_your_app_s_functionality_available_to_siri) — Complete examples
+**Skills**: app-shortcuts-ref, core-spotlight-ref, app-discoverability
 
 ---
 

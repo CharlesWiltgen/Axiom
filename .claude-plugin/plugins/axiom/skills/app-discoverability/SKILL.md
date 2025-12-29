@@ -462,14 +462,11 @@ When reviewing discoverability implementation, verify:
 
 ## Resources
 
-### Apple Documentation
-- [Making App Functionality Available to Siri](https://developer.apple.com/documentation/appintents/making-your-app-s-functionality-available-to-siri)
-- [Core Spotlight Framework](https://developer.apple.com/documentation/corespotlight)
+**WWDC**: 260, 275, 2022-10170
 
-### WWDC Sessions
-- WWDC 2025-260: Develop for Shortcuts and Spotlight with App Intents
-- WWDC 2025-275: Explore new advances in App Intents
-- WWDC 2022-10170: Implement App Shortcuts with App Intents
+**Docs**: /appintents/making-your-app-s-functionality-available-to-siri, /corespotlight
+
+**Skills**: app-intents-ref, app-shortcuts-ref, core-spotlight-ref
 
 ---
 

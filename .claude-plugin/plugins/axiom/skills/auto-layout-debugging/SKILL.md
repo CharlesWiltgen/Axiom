@@ -607,11 +607,9 @@ imageView.widthAnchor.constraint(equalToConstant: 100).isActive = true // Auto L
 
 ---
 
-## References
+## Resources
 
-- [Apple Auto Layout Guide — Debugging](https://developer.apple.com/library/archive/documentation/UserExperience/Conceptual/AutolayoutPG/DebuggingTricksandTips.html)
-- [Stack Overflow — UIViewAlertForUnsatisfiableConstraints](https://stackoverflow.com/questions/26389273/how-to-trap-on-uiviewalertforunsatisfiableconstraints)
-- [Auto Layout Debugging in Swift](https://medium.com/ios-os-x-development/auto-layout-debugging-in-swift-93bcd21a4abf)
+**Docs**: /library/archive/documentation/userexperience/conceptual/autolayoutpg/debuggingtricksandtips
 
 ---
 

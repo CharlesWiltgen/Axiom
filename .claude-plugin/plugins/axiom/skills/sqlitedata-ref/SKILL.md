@@ -1859,17 +1859,11 @@ let customerOnlyEmails = try Customer.select(\.email)
 
 ---
 
-## External Resources
+## Resources
 
-- [SQLiteData](https://github.com/pointfreeco/sqlite-data)
-- [StructuredQueries](https://github.com/pointfreeco/swift-structured-queries)
-- [GRDB](https://github.com/groue/GRDB.swift)
+**GitHub**: pointfreeco/sqlite-data, pointfreeco/swift-structured-queries, groue/GRDB.swift
 
-**Related Skills:**
-- `sqlitedata` — Core patterns, CRUD, CloudKit setup, anti-patterns
-- `sqlitedata-migration` — Migration guide with pattern equivalents
-- `database-migration` — Safe schema evolution patterns
-- `grdb` — Raw SQL and advanced GRDB features
+**Skills**: sqlitedata, sqlitedata-migration, database-migration, grdb
 
 ---
 

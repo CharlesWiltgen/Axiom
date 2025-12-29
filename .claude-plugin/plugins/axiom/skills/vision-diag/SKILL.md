@@ -592,14 +592,8 @@ interaction.preferredInteractionTypes = .imageSubject
 
 ## Resources
 
-**Related Axiom skills**:
-- `vision` — Decision trees and implementation patterns
-- `vision-ref` — Complete API reference
+**WWDC**: 2023-10176, 2020-10653
 
-**WWDC debugging sessions**:
-- WWDC23-10176: Subject lifting troubleshooting
-- WWDC20-10653: Hand/body pose accuracy considerations
+**Docs**: /vision, /vision/applying_mps_graphs_to_vision_requests
 
-**Apple documentation**:
-- [Vision Framework](https://developer.apple.com/documentation/vision)
-- [Performance Best Practices](https://developer.apple.com/documentation/vision/applying_mps_graphs_to_vision_requests)
+**Skills**: vision, vision-ref
