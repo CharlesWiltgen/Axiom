@@ -1341,26 +1341,10 @@ class OrderCoordinator { }     // Order flow, history, details
 
 ---
 
-# Resources
+## Resources
 
-## WWDC Sessions
+**WWDC**: 2025-266, 2024-10150, 2023-10149, 2025-256, 2022-10054
 
-- [Explore concurrency in SwiftUI](https://developer.apple.com/videos/play/wwdc2025/266/) (WWDC 2025/266) — State-as-Bridge pattern, @MainActor isolation
-- [SwiftUI essentials](https://developer.apple.com/videos/play/wwdc2024/10150/) (WWDC 2024/10150) — @Observable models, app structure
-- [Discover Observation in SwiftUI](https://developer.apple.com/videos/play/wwdc2023/10149/) (WWDC 2023/10149) — @Observable macro
-- [What's new in SwiftUI](https://developer.apple.com/videos/play/wwdc2025/256/) (WWDC 2025/256) — Scene bridging
-- [The SwiftUI cookbook for navigation](https://developer.apple.com/videos/play/wwdc2022/10054/) (WWDC 2022/10054) — NavigationStack, state restoration
+**Docs**: /swiftui/scenephase, /swiftui/scene, /swiftui/scenestorage, /swiftui/windowgroup, /observation/observable()
 
-## Apple Documentation
-
-- [ScenePhase](https://developer.apple.com/documentation/swiftui/scenephase) — Scene operational state
-- [Scene](https://developer.apple.com/documentation/swiftui/scene) — Scene protocol and lifecycle
-- [SceneStorage](https://developer.apple.com/documentation/swiftui/scenestorage) — Per-scene state persistence
-- [WindowGroup](https://developer.apple.com/documentation/swiftui/windowgroup) — Multi-window apps
-- [Observable](https://developer.apple.com/documentation/observation/observable()) — Observable macro
-
-## Related Skills
-
-- **swiftui-architecture** — Feature-level patterns (MVVM, TCA, property wrappers)
-- **swiftui-nav** — Navigation patterns (NavigationStack, deep linking)
-- **swift-concurrency** — Async/await patterns, @MainActor
+**Skills**: swiftui-architecture, swiftui-nav, swift-concurrency

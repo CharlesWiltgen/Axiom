@@ -883,26 +883,6 @@ Unsupported in TextKit 2:
 
 ## Resources
 
-### WWDC Sessions
-- [WWDC 2021-10061: Meet TextKit 2](https://developer.apple.com/videos/play/wwdc2021/10061/)
-- [WWDC 2022-10090: What's new in TextKit and text views](https://developer.apple.com/videos/play/wwdc2022/10090/)
-- [WWDC 2023-10058: What's new with text and text interactions](https://developer.apple.com/videos/play/wwdc2023/10058/)
-- [WWDC 2024-10168: Get started with Writing Tools](https://developer.apple.com/videos/play/wwdc2024/10168/)
-- [WWDC 2025-265: Dive deeper into Writing Tools](https://developer.apple.com/videos/play/wwdc2025/265/)
-- [WWDC 2025-280: Cook up a rich text experience in SwiftUI](https://developer.apple.com/videos/play/wwdc2025/280/)
+**WWDC**: 2021-10061, 2022-10090, 2023-10058, 2024-10168, 2025-265, 2025-280
 
-### Documentation
-- [NSTextLayoutManager](https://developer.apple.com/documentation/uikit/nstextlayoutmanager)
-- [Using TextKit 2 to interact with text](https://developer.apple.com/documentation/appkit/textkit/using_textkit_2_to_interact_with_text)
-- [Display text with a custom layout](https://developer.apple.com/documentation/uikit/display-text-with-a-custom-layout)
-- [Building rich SwiftUI text experiences](https://developer.apple.com/documentation/SwiftUI/building-rich-swiftui-text-experiences)
-- [AttributedString](https://developer.apple.com/documentation/foundation/attributedstring)
-- [Writing Tools](https://developer.apple.com/documentation/UIKit/writing-tools)
-
-### Expert Articles
-- [krzyzanowskim: TextKit 2 - The Promised Land](https://blog.krzyzanowskim.com/2025/08/14/textkit-2-the-promised-land/)
-- [shadowfacts: Adopting TextKit 2](https://shadowfacts.net/2022/textkit-2/)
-- [christiantietze: TextKit 2 Example](https://christiantietze.de/posts/2022/05/textkit2-example/)
-
-### Sample Code
-- [Enhancing your custom text engine with Writing Tools](https://developer.apple.com/documentation/AppKit/enhancing-your-custom-text-engine-with-writing-tools)
+**Docs**: /uikit/nstextlayoutmanager, /appkit/textkit/using_textkit_2_to_interact_with_text, /uikit/display-text-with-a-custom-layout, /swiftui/building-rich-swiftui-text-experiences, /foundation/attributedstring, /uikit/writing-tools, /appkit/enhancing-your-custom-text-engine-with-writing-tools

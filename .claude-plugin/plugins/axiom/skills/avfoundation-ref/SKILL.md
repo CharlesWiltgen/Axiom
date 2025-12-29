@@ -629,16 +629,11 @@ try AVAudioSession.sharedInstance().setActive(true)
 
 ---
 
-## WWDC Sessions
+## Resources
 
-- [Enhance your app's audio recording capabilities](https://developer.apple.com/videos/play/wwdc2025/251/) — WWDC 2025
-- [Learn about Apple Immersive Video technologies](https://developer.apple.com/videos/play/wwdc2025/403/) — WWDC 2025
-- [What's new in AVAudioEngine](https://developer.apple.com/videos/play/wwdc2019/510/) — WWDC 2019
+**WWDC**: 2025-251, 2025-403, 2019-510
 
-## Sample Code
-
-- [Capturing Spatial Audio in your iOS app](https://developer.apple.com/documentation/avfoundation/audio_capture/capturing_spatial_audio_in_your_ios_app) — Apple
-- [Editing Spatial Audio with an audio mix](https://developer.apple.com/documentation/cinematic/editing_spatial_audio_with_an_audio_mix) — Apple
+**Docs**: /avfoundation, /avkit, /cinematic
 
 ---
 

@@ -430,23 +430,13 @@ Every design decision should support these principles:
 
 ---
 
-## Related Resources
+## Resources
 
-### Apple Documentation
-- [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines)
-- [Apple HIG: Color](https://developer.apple.com/design/human-interface-guidelines/color)
-- [Apple HIG: Dark Mode](https://developer.apple.com/design/human-interface-guidelines/dark-mode)
-- [Apple HIG: Typography](https://developer.apple.com/design/human-interface-guidelines/typography)
+**WWDC**: 356, 2019-808
 
-### WWDC Sessions
-- [WWDC25-356: Get to know the new design system](https://developer.apple.com/videos/play/wwdc2025/356/)
-- [WWDC19-808: What's New in iOS Design](https://developer.apple.com/videos/play/wwdc2019/808/)
+**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/typography
 
-### Related Axiom Skills
-- `hig-ref` — Comprehensive HIG reference with code examples
-- `liquid-glass` — iOS 26 material design system implementation
-- `liquid-glass-ref` — iOS 26 app-wide adoption guide
-- `accessibility-diag` — Accessibility troubleshooting workflows
+**Skills**: hig-ref, liquid-glass, liquid-glass-ref, accessibility-diag
 
 ---
 

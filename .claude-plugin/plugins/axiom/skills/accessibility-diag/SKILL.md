@@ -884,19 +884,7 @@ After making fixes:
 
 ## Resources
 
-### Apple Documentation
-- [Accessibility — Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/accessibility)
-- [Supporting VoiceOver](https://developer.apple.com/documentation/accessibility/voiceover)
-- [Supporting Dynamic Type](https://developer.apple.com/documentation/uikit/uifont/scaling_fonts_automatically)
-
-### WCAG Guidelines
-- [WCAG 2.1 Quick Reference](https://www.w3.org/WAI/WCAG21/quickref/)
-- [Understanding WCAG 2.1](https://www.w3.org/WAI/WCAG21/Understanding/)
-
-### Testing Tools
-- Accessibility Inspector (Xcode)
-- [Color Contrast Analyzer](https://www.tpgi.com/color-contrast-checker/)
-- VoiceOver (built into iOS/macOS)
+**Docs**: /accessibility/voiceover, /uikit/uifont/scaling_fonts_automatically
 
 ---
 

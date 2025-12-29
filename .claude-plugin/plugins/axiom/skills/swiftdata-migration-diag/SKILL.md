@@ -574,13 +574,13 @@ If you've spent >30 minutes and the migration issue persists:
 
 ---
 
-## Related Resources
+## Resources
 
-- **swiftdata-migration** skill - Full migration patterns (two-stage, relationships, testing)
-- **swiftdata** skill - Basic SwiftData patterns, @Query, CloudKit sync
-- **database-migration** skill - General migration safety patterns (SQLite/GRDB)
-- [WWDC 2025-291: SwiftData Inheritance and Migration](https://developer.apple.com/videos/play/wwdc2025/291/)
-- [WWDC 2023-10195: Model your Schema](https://developer.apple.com/videos/play/wwdc2023/10195/)
+**WWDC**: 2025-291, 2023-10195
+
+**Docs**: /swiftdata
+
+**Skills**: swiftdata-migration, swiftdata, database-migration
 
 ---
 

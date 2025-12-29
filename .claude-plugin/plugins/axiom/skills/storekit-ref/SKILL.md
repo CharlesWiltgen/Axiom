@@ -1443,18 +1443,13 @@ let products = try await Product.products(for: productIDs)
 
 ---
 
-## WWDC Sessions
+## Resources
 
-- WWDC 2025-241: What's new in StoreKit and In-App Purchase
-- WWDC 2025-249: Dive into App Store server APIs for In-App Purchase
-- WWDC 2024-10061: What's new in StoreKit and In-App Purchase
-- WWDC 2024-10062: Explore App Store server APIs for In-App Purchase
-- WWDC 2024-10110: Implement App Store Offers
-- WWDC 2023-10013: Meet StoreKit for SwiftUI
-- WWDC 2023-10140: What's new in StoreKit 2 and StoreKit Testing in Xcode
-- WWDC 2022-10007: What's new with in-app purchase
-- WWDC 2022-110404: Implement proactive in-app purchase restore
-- WWDC 2021-10114: Meet StoreKit 2
+**WWDC**: 2025-241, 2025-249, 2024-10061, 2024-10062, 2024-10110, 2023-10013, 2023-10140, 2022-10007, 2022-110404, 2021-10114
+
+**Docs**: /storekit
+
+**Skills**: in-app-purchases
 
 ---
 

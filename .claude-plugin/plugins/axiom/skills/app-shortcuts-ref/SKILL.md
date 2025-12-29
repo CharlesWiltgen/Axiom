@@ -816,15 +816,11 @@ systemImageName: "cup.and.saucer.fill"
 
 ## Resources
 
-### Apple Documentation
-- [AppShortcutsProvider](https://developer.apple.com/documentation/appintents/appshortcutsprovider)
-- [AppShortcut](https://developer.apple.com/documentation/appintents/appshortcut)
-- [App Shortcuts Overview](https://developer.apple.com/documentation/appintents/app-shortcuts)
+**WWDC**: 2022-10170, 2022-10169, 260
 
-### WWDC Sessions
-- WWDC 2022-10170: Implement App Shortcuts with App Intents
-- WWDC 2022-10169: Design App Shortcuts
-- WWDC 2025-260: Develop for Shortcuts and Spotlight with App Intents
+**Docs**: /appintents/appshortcutsprovider, /appintents/appshortcut, /appintents/app-shortcuts
+
+**Skills**: app-intents-ref, app-discoverability, core-spotlight-ref
 
 ---
 

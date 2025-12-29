@@ -1112,22 +1112,13 @@ Problem likely elsewhere:
 
 ---
 
-## Reference
+## Resources
 
-**WWDC 2025 Sessions**:
-- [Optimize SwiftUI performance with Instruments — WWDC25 Session 306](https://developer.apple.com/videos/play/wwdc2025/306/)
-  - New SwiftUI instrument, long view bodies, unnecessary updates, Cause & Effect Graph
+**WWDC**: 2025-306
 
-**Related Documentation**:
-- [Understanding hitches in your app](https://developer.apple.com/documentation/xcode/understanding-hitches-in-your-app)
-- [Analyzing hangs with Instruments](https://developer.apple.com/documentation/xcode/analyzing-hangs-in-your-app)
-- [Optimizing CPU performance with Instruments](https://developer.apple.com/documentation/xcode/optimizing-your-app-s-performance)
+**Docs**: /xcode/understanding-hitches-in-your-app, /xcode/analyzing-hangs-in-your-app, /xcode/optimizing-your-app-s-performance
 
-**Other Skills**:
-- For systematic SwiftUI debugging: See `swiftui-debugging-diag` skill
-- For view update troubleshooting: See `swiftui-debugging` skill
-- For memory issues: See `memory-debugging` skill
-- For Xcode environment issues: See `xcode-debugging` skill
+**Skills**: swiftui-debugging-diag, swiftui-debugging, memory-debugging, xcode-debugging
 
 ---
 

@@ -383,11 +383,8 @@ var isLandscape: Bool {
 
 ---
 
-## Related Resources
+## Resources
 
-- [swiftui-layout-ref](/reference/swiftui-layout-ref) — Complete API reference
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — View update diagnostics
-- [liquid-glass](/skills/ui-design/liquid-glass) — iOS 26 design system
-- [WWDC 2025: Elevate the design of your iPad app](https://developer.apple.com/videos/play/wwdc2025/208/)
-- [WWDC 2024: Get started with Dynamic Type](https://developer.apple.com/videos/play/wwdc2024/10074/)
-- [WWDC 2022: Compose custom layouts with SwiftUI](https://developer.apple.com/videos/play/wwdc2022/10056/)
+**WWDC**: 2025-208, 2024-10074, 2022-10056
+
+**Skills**: swiftui-layout-ref, swiftui-debugging, liquid-glass

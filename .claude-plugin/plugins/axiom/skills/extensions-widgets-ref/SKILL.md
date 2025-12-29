@@ -1975,11 +1975,13 @@ let entries = (0..<100).map { offset in
 
 ---
 
-# Part 12: Resources
+## Resources
 
-Based on: WWDC 2025-278, 2024-10157, 2024-10068, 2024-10098, 2023-10028, 2023-10194, 2022-10184, 2022-10185.
+**WWDC**: 2025-278, 2024-10157, 2024-10068, 2024-10098, 2023-10028, 2023-10194, 2022-10184, 2022-10185
 
-For detailed WWDC session descriptions, Apple documentation links, sample code, and HIG references, see [REFERENCES.md](REFERENCES.md).
+**Docs**: /widgetkit, /activitykit, /appintents
+
+**Skills**: app-intents-ref, swift-concurrency, swiftui-performance, swiftui-layout, extensions-widgets
 
 ---
 

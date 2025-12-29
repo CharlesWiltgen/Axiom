@@ -500,17 +500,13 @@ xcodebuild -showBuildSettings  # Show all build settings
 
 **Key insight** Lock down dependency versions early. Flexibility causes more problems than it solves.
 
-## Reference
+## Resources
 
-**Apple Documentation**:
-- [Swift Package Manager](https://swift.org/package-manager/)
-- [Xcode Build System](https://developer.apple.com/documentation/xcode/build-system)
+**Docs**: swift.org/package-manager, /xcode/build-system
 
-**Package Managers**:
-- [CocoaPods](https://cocoapods.org/)
-- [Carthage](https://github.com/Carthage/Carthage)
+**GitHub**: Carthage/Carthage
 
-**Note**: For environment issues (Derived Data, simulators), see xcode-debugging skill.
+**Skills**: xcode-debugging
 
 ---
 

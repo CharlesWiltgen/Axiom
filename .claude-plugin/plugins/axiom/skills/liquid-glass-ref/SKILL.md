@@ -1435,23 +1435,13 @@ Use this checklist when auditing app for Liquid Glass adoption:
 
 ---
 
-## Related Resources
+## Resources
 
-#### WWDC Sessions
-- [Adopting Liquid Glass (documentation)](https://developer.apple.com/documentation/TechnologyOverviews/adopting-liquid-glass)
-- [Meet Liquid Glass — WWDC25 Session 219](https://developer.apple.com/videos/play/wwdc2025/219/)
-- [Build a SwiftUI app with the new design — WWDC25 Session 323](https://developer.apple.com/videos/play/wwdc2025/323/)
+**WWDC**: 219, 323
 
-#### Related Skills
-- `liquid-glass` - Implementing Liquid Glass material, design review pressure
-- `swiftui-performance` - Profiling Liquid Glass rendering performance
-- `swiftui-debugging` - Debugging view updates with Liquid Glass
-- `accessibility-diag` - Accessibility testing
+**Docs**: /TechnologyOverviews/adopting-liquid-glass, /design/Human-Interface-Guidelines/materials
 
-#### Design Resources
-- Icon Composer: https://developer.apple.com/design/resources/
-- App Icon Grids: https://developer.apple.com/design/resources/
-- Human Interface Guidelines — Materials: https://developer.apple.com/design/Human-Interface-Guidelines/materials
+**Skills**: liquid-glass, swiftui-performance, swiftui-debugging, accessibility-diag
 
 ---
 

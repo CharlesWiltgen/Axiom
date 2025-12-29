@@ -1500,22 +1500,13 @@ final class OrderViewModelTests: XCTestCase {
 
 ---
 
-# WWDC Sessions
+## Resources
 
-## Required Viewing
+**WWDC**: 2025-266, 2024-10150, 2023-10149, 2023-10160
 
-| Session | Year | Why Watch |
-|---------|------|-----------|
-| [Explore concurrency in SwiftUI](https://developer.apple.com/videos/play/wwdc2025/266/) | 2025 | State-as-Bridge pattern, async boundaries, synchronous mutations |
-| [SwiftUI essentials](https://developer.apple.com/videos/play/wwdc2024/10150/) | 2024 | @Observable models, ViewModel adapters, compositional views |
-| [Discover Observation in SwiftUI](https://developer.apple.com/videos/play/wwdc2023/10149/) | 2023 | @Observable macro, property wrapper decision tree, performance |
-| [Demystify SwiftUI performance](https://developer.apple.com/videos/play/wwdc2023/10160/) | 2023 | SwiftUI Instrument, Cause & Effect graph, view update tracking |
+**Docs**: /swiftui/managing-model-data-in-your-app
 
-## Additional Resources
-
-- [Managing model data in your app](https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app) — Apple's official guidance
-- [The Composable Architecture](https://github.com/pointfreeco/swift-composable-architecture) — TCA documentation
-- [Swift Concurrency](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/concurrency/) — Async/await, actors, @MainActor
+**External**: github.com/pointfreeco/swift-composable-architecture
 
 ---
 

@@ -1362,21 +1362,13 @@ monitor.start(queue: .main)
 
 ---
 
-## Related Resources
+## Resources
 
-### WWDC Sessions
-- **WWDC 2018/715** "Introducing Network.framework: A modern alternative to Sockets" (NWConnection, user-space networking, deprecations)
-- **WWDC 2025/250** "Use structured concurrency with Network framework" (NetworkConnection, TLV, Coder, Wi-Fi Aware)
+**WWDC**: 2018-715, 2025-250
 
-### Apple Documentation
-- [Network Framework Documentation](https://developer.apple.com/documentation/network)
-- [NWConnection](https://developer.apple.com/documentation/network/nwconnection)
-- [NetworkConnection (iOS 26+)](https://developer.apple.com/documentation/Network/NetworkConnection)
-- [Building a Custom Peer-to-Peer Protocol](https://developer.apple.com/documentation/Network/building-a-custom-peer-to-peer-protocol)
+**Docs**: /network, /network/nwconnection, /network/networkconnection
 
-### Related Axiom Skills
-- **networking** — Discipline-enforcing patterns with anti-patterns, pressure scenarios
-- **networking-diag** — Systematic troubleshooting for connection failures, timeouts, performance issues
+**Skills**: networking, networking-diag
 
 ---
 

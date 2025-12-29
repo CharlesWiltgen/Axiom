@@ -944,20 +944,11 @@ func testDragGesture() throws {
 
 ## Resources
 
-### Apple Documentation
-- [Composing SwiftUI Gestures](https://developer.apple.com/documentation/swiftui/composing-swiftui-gestures)
-- [GestureState Documentation](https://developer.apple.com/documentation/swiftui/gesturestate)
-- [Gesture Protocol](https://developer.apple.com/documentation/swiftui/gesture)
+**WWDC**: 2019-237, 2020-10043, 2021-10018
 
-### WWDC Sessions
-- WWDC 2019-237: Building Custom Views with SwiftUI
-- WWDC 2020-10043: Stacks, Grids, and Outlines in SwiftUI
-- WWDC 2021-10018: Add Rich Graphics to Your SwiftUI App
+**Docs**: /swiftui/composing-swiftui-gestures, /swiftui/gesturestate, /swiftui/gesture
 
-### Related Skills
-- **accessibility-diag** — Making gestures accessible
-- **swiftui-performance** — Optimizing gesture performance
-- **ui-testing** — Testing gesture interactions
+**Skills**: accessibility-diag, swiftui-performance, ui-testing
 
 ---
 

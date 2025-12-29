@@ -646,15 +646,8 @@ Before shipping Vision features:
 
 ## Resources
 
-**Related Axiom skills**:
-- `vision-ref` — Complete API reference with code examples
-- `vision-diag` — Troubleshooting when Vision doesn't work
+**WWDC**: 2023-10176, 2023-111241, 2020-10653
 
-**WWDC sessions**:
-- WWDC23-10176: Lift subjects from images in your app
-- WWDC23-111241: 3D body pose and person segmentation
-- WWDC20-10653: Detect Body and Hand Pose with Vision
+**Docs**: /vision, /visionkit
 
-**Apple documentation**:
-- [Vision Framework](https://developer.apple.com/documentation/vision)
-- [VisionKit Framework](https://developer.apple.com/documentation/visionkit)
+**Skills**: vision-ref, vision-diag

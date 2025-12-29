@@ -1338,54 +1338,13 @@ TextEditor(text: $text) // Plain String loses formatting
 
 ---
 
-## Related WWDC Sessions
-
-#### Core SwiftUI
-- **What's new in SwiftUI** (WWDC 2025-256) — This skill's primary source
-- Build a SwiftUI app with the new design
-- Optimize SwiftUI performance with instruments
-- Explore concurrency in SwiftUI
-
-#### Platform-Specific
-- Elevate the design of your iPad app
-- Meet SwiftUI spatial layout (visionOS)
-- Set the scene with SwiftUI in visionOS
-- What's new in visionOS
-
-#### Integration
-- Meet WebKit for SwiftUI
-- Better Together: SwiftUI & RealityKit
-- What's new in Metal rendering for immersive apps
-- Customize your app for Assistive Access
-
-#### Advanced Topics
-- Cook up a rich text experience in SwiftUI with AttributedString
-- Bring Swift Charts to the third dimension
-- What's new in widgets
-- Embracing Swift concurrency
-
----
-
-## Cross-References
-
-#### Axiom Skills
-- [SwiftUI Performance](/skills/ui-design/swiftui-performance) — Master the SwiftUI Instrument
-- [Liquid Glass](/skills/ui-design/liquid-glass) — Apple's material design system
-- [Swift Concurrency](/skills/concurrency/swift-concurrency) — Swift 6 strict concurrency
-- App Intents Integration (app-intents-ref skill) — AttributedString for Apple Intelligence
-
----
-
 ## Resources
 
-### Apple Documentation
-- [SwiftUI Overview](https://developer.apple.com/documentation/swiftui)
-- [WebKit Framework](https://developer.apple.com/documentation/webkit)
-- [AttributedString](https://developer.apple.com/documentation/foundation/attributedstring)
-- [Swift Charts](https://developer.apple.com/documentation/charts)
+**WWDC**: 2025-256
 
-### WWDC 2025 Sessions
-- [What's new in SwiftUI (Session 256)](https://developer.apple.com/videos/play/wwdc2025/256/)
+**Docs**: /swiftui, /webkit, /foundation/attributedstring, /charts
+
+**Skills**: swiftui-performance, liquid-glass, swift-concurrency, app-intents-ref
 
 ---
 

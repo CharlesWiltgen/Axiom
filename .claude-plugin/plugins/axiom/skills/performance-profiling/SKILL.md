@@ -877,17 +877,11 @@ let imageCache = NSCache<NSString, UIImage>()
 
 ---
 
-## External Resources
+## Resources
 
-#### Apple Documentation
-- [Instruments User Guide](https://help.apple.com/instruments/)
-- [Core Data Performance Tuning](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreDataPerformance/)
-- [Energy Impact Instrument](https://developer.apple.com/library/archive/technotes/tn2224/)
+**Docs**: /library/archive/documentation/cocoa/conceptual/coredataperformance, /library/archive/technotes/tn2224
 
-#### Related Axiom Skills
-- `memory-debugging` – Deep memory leak diagnosis
-- `swiftui-performance` – SwiftUI view profiling with Instruments 26
-- `swift-concurrency` – MainActor and thread safety patterns
+**Skills**: memory-debugging, swiftui-performance, swift-concurrency
 
 ---
 

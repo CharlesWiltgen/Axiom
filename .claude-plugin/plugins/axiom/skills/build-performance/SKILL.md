@@ -619,17 +619,9 @@ Before considering your build optimized:
 
 ## Resources
 
-### WWDC Sessions
-- [WWDC 2018-408: Building Faster in Xcode](https://developer.apple.com/videos/play/wwdc2018/408/)
-- [WWDC 2022-110364: Demystify parallelization in Xcode builds](https://developer.apple.com/videos/play/wwdc2022/110364/)
+**WWDC**: 2018-408, 2022-110364
 
-### Tools
-- Xcode Build Timeline (Xcode 14+)
-- Build with Timing Summary (Product → Perform Action)
-- Instruments: Time Profiler (for runtime, not build time)
-
-### Articles
-- [Analyzing Build Performance - Antoine van der Lee](https://www.avanderlee.com/optimization/analysing-build-performance-xcode/)
+**Tools**: Xcode Build Timeline (Xcode 14+), Build with Timing Summary (Product → Perform Action), Instruments Time Profiler
 
 ---
 

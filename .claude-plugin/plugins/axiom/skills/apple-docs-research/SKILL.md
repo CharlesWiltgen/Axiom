@@ -317,20 +317,9 @@ Before using captured content:
 - ☐ Multiple speakers properly attributed
 - ☐ Code syntax highlighting preserved
 
-## Related Resources
+## Resources
 
-### Chrome Browser Integration
-- **superpowers-chrome plugin** - Browser control for Claude Code
-- **auto-capture** - Automatic `.md` file generation on navigation
-
-### Apple Developer Resources
-- **WWDC Videos** - https://developer.apple.com/videos/
-- **Documentation** - https://sosumi.ai/documentation/
-- **Sample Code** - https://developer.apple.com/documentation/samplecode
-
-### Skill Development
-- **writing-skills** - How to structure Apple documentation into skills
-- **reviewing-reference-skills** - Quality check for reference skills
+**Skills**: superpowers-chrome:browsing, writing-skills, reviewing-reference-skills
 
 ---
 

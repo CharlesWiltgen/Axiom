@@ -776,14 +776,13 @@ Settings → [Your Name] → iCloud → Check CloudKit status
 
 ---
 
-## Related Resources
+## Resources
 
-- **SwiftData Skill**: patterns for CloudKit, performance, migrations
-- **Swift Concurrency Skill**: async/await patterns for background operations
-- **Database Migration Skill**: schema evolution safety patterns
-- [Apple SwiftData Documentation](https://developer.apple.com/documentation/swiftdata)
-- [Realm Swift to SwiftData Migration](https://www.mongodb.com/docs/realm/sdk/swift/)
-- [WWDC 2024: What's New in SwiftData](https://developer.apple.com/videos/play/wwdc2024/10137/)
+**WWDC**: 2024-10137
+
+**Docs**: /swiftdata
+
+**Skills**: swiftdata, swift-concurrency, database-migration
 
 ---
 

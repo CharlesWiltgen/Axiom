@@ -895,14 +895,11 @@ struct OrderDetailView: View {
 
 ## Resources
 
-### Apple Documentation
-- [Core Spotlight Framework](https://developer.apple.com/documentation/corespotlight)
-- [CSSearchableItem](https://developer.apple.com/documentation/corespotlight/cssearchableitem)
-- [NSUserActivity](https://developer.apple.com/documentation/foundation/nsuseractivity)
+**WWDC**: 260, 2015-709
 
-### WWDC Sessions
-- WWDC 2025-260: Develop for Shortcuts and Spotlight with App Intents
-- WWDC 2015-709: Introducing Search APIs
+**Docs**: /corespotlight, /corespotlight/cssearchableitem, /foundation/nsuseractivity
+
+**Skills**: app-intents-ref, app-discoverability, app-shortcuts-ref
 
 ---
 

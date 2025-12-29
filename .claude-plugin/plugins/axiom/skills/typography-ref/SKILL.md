@@ -472,16 +472,6 @@ struct RecipeView: View {
 
 ## Resources
 
-### WWDC Sessions
-- [WWDC 2020-10175: The details of UI typography](https://developer.apple.com/videos/play/wwdc2020/10175/)
-- [WWDC 2022-110381: Meet the expanded San Francisco font family](https://developer.apple.com/videos/play/wwdc2022/110381/)
-- [WWDC 2023-10058: What's new with text and text interactions](https://developer.apple.com/videos/play/wwdc2023/10058/)
+**WWDC**: 2020-10175, 2022-110381, 2023-10058
 
-### Documentation
-- [HIG: Typography](https://developer.apple.com/design/human-interface-guidelines/typography)
-- [UIFontDescriptor](https://developer.apple.com/documentation/uikit/uifontdescriptor)
-- [UIFontMetrics](https://developer.apple.com/documentation/uikit/uifontmetrics)
-- [Font (SwiftUI)](https://developer.apple.com/documentation/swiftui/font)
-
-### Design Resources
-- [Apple Design Resources](https://developer.apple.com/design/resources/) — tracking tables, SF Pro specimen
+**Docs**: /uikit/uifontdescriptor, /uikit/uifontmetrics, /swiftui/font

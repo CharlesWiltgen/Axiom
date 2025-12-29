@@ -1147,38 +1147,13 @@ See **Animation Merging Behavior** section above for detailed explanation of mer
 
 ---
 
-## Related WWDC Sessions
-
-### Primary Source
-- **Explore SwiftUI animation** (WWDC 2023/10156) — Comprehensive animation architecture
-
-### Complementary
-- **Animate with springs** (WWDC 2023/10158) — Spring animation deep dive
-- **Wind your way through advanced animations** (WWDC 2023/10157) — Multi-step animations
-- **What's new in SwiftUI** (WWDC 2025/256) — @Animatable macro introduction
-
----
-
-## Cross-References
-
-### Axiom Skills
-- SwiftUI 26 Features (swiftui-26-ref skill) — @Animatable macro iOS 26 introduction
-- [SwiftUI Performance](/skills/ui-design/swiftui-performance) — Animation performance optimization
-- [SwiftUI Debugging](/skills/ui-design/swiftui-debugging) — Debugging view updates
-
----
-
 ## Resources
 
-### Apple Documentation
-- [Animatable Protocol](https://developer.apple.com/documentation/swiftui/animatable)
-- [Animation Structure](https://developer.apple.com/documentation/swiftui/animation)
-- [VectorArithmetic Protocol](https://developer.apple.com/documentation/swiftui/vectorarithmetic)
-- [Transaction Structure](https://developer.apple.com/documentation/swiftui/transaction)
+**WWDC**: 2023-10156, 2023-10158, 2023-10157, 2025-256
 
-### WWDC 2023 Sessions
-- [Explore SwiftUI animation (Session 10156)](https://developer.apple.com/videos/play/wwdc2023/10156/)
-- [Animate with springs (Session 10158)](https://developer.apple.com/videos/play/wwdc2023/10158/)
+**Docs**: /swiftui/animatable, /swiftui/animation, /swiftui/vectorarithmetic, /swiftui/transaction
+
+**Skills**: swiftui-26-ref, swiftui-performance, swiftui-debugging
 
 ---
 

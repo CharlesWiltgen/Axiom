@@ -876,17 +876,11 @@ When you've profiled and confirmed SQLiteData's query builder is the bottleneck,
 
 ---
 
-## External Resources
+## Resources
 
-- [SQLiteData](https://github.com/pointfreeco/sqlite-data) — Official repository
-- [StructuredQueries](https://github.com/pointfreeco/swift-structured-queries) — Query builder
-- [GRDB](https://github.com/groue/GRDB.swift) — Underlying database layer
+**GitHub**: pointfreeco/sqlite-data, pointfreeco/swift-structured-queries, groue/GRDB.swift
 
-**Related Skills:**
-- `sqlitedata-ref` — Advanced patterns (CTEs, views, aggregates, schema composition)
-- `sqlitedata-migration` — Migration guide with pattern equivalents
-- `database-migration` — Safe schema evolution patterns
-- `grdb` — Raw SQL and GRDB-specific features
+**Skills**: sqlitedata-ref, sqlitedata-migration, database-migration, grdb
 
 ---
 

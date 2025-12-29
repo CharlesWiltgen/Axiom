@@ -938,16 +938,11 @@ class MyViewModel: ObservableObject {
 
 ---
 
-## Reference Documentation
+## Resources
 
-**Apple Resources**:
-- [WWDC 2025-268: Embracing Swift concurrency](https://developer.apple.com/videos/play/wwdc2025/268/)
-- [WWDC 2025-245: What's new in Swift](https://developer.apple.com/videos/play/wwdc2025/245/) (concurrency section)
-- [Swift Concurrency Documentation](https://docs.swift.org/swift-book/LanguageGuide/Concurrency.html)
-- [Adopting strict concurrency in Swift 6](https://developer.apple.com/documentation/swift/adoptingswift6)
-- [Sendable Protocol](https://developer.apple.com/documentation/swift/sendable)
-- [WWDC 2022: Eliminate data races using Swift Concurrency](https://developer.apple.com/videos/play/wwdc2022/110351/)
-- [WWDC 2021: Protect mutable state with Swift actors](https://developer.apple.com/videos/play/wwdc2021/10133/)
+**WWDC**: 2025-268, 2025-245, 2022-110351, 2021-10133
+
+**Docs**: /swift/adoptingswift6, /swift/sendable
 
 ---
 

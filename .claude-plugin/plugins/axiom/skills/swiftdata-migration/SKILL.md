@@ -944,13 +944,13 @@ let container = try ModelContainer(
 
 ---
 
-## Related Resources
+## Resources
 
-- **swiftdata** skill - Basic SwiftData patterns, @Query, CloudKit sync
-- **swiftdata-migration-diag** skill - Diagnostic patterns for failed migrations
-- **database-migration** skill - General migration safety patterns (SQLite/GRDB)
-- [WWDC 2025-291: SwiftData Inheritance and Migration](https://developer.apple.com/videos/play/wwdc2025/291/)
-- [WWDC 2023-10195: Model your Schema](https://developer.apple.com/videos/play/wwdc2023/10195/)
+**WWDC**: 2025-291, 2023-10195
+
+**Docs**: /swiftdata
+
+**Skills**: swiftdata, swiftdata-migration-diag, database-migration
 
 ---
 

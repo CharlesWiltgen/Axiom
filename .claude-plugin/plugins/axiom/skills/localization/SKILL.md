@@ -1088,26 +1088,10 @@ After adopting Xcode 26 generated symbols, verify:
 
 ---
 
-## Related Resources
+## Resources
 
-### WWDC Sessions
-- [Explore localization with Xcode (2025/225)](https://developer.apple.com/videos/play/wwdc2025/225/) — Xcode 26 features: generated symbols, #bundle macro, automatic comments
-- [Discover String Catalogs (2023/10155)](https://developer.apple.com/videos/play/wwdc2023/10155/) — String Catalog fundamentals
-- [Build global apps: Localization by example (2022/10110)](https://developer.apple.com/videos/play/wwdc2022/10110/)
+**WWDC**: 2025-225, 2023-10155, 2022-10110
 
-### Documentation
-- [Localization](https://developer.apple.com/documentation/Xcode/localization)
-- [Localizing and varying text with a string catalog](https://developer.apple.com/documentation/xcode/localizing-and-varying-text-with-a-string-catalog)
-- [Expanding Your App to New Markets](https://developer.apple.com/localization/)
+**Docs**: /xcode/localization, /xcode/localizing-and-varying-text-with-a-string-catalog
 
-### Tools
-- [Xcode Localization Catalog Editor](https://developer.apple.com/documentation/xcode/localization)
-- [XLIFF](https://developer.apple.com/documentation/xcode/localizing-and-varying-text-with-a-string-catalog#Export-localizations-for-translation) - Translation exchange format
-
----
-
-## See Also
-
-- **app-intents-ref** — Localizing App Intents and App Shortcuts
-- **hig** — Localization design guidelines
-- **accessibility-diag** — Locale-aware accessibility
+**Skills**: app-intents-ref, hig, accessibility-diag

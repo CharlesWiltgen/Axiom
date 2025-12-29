@@ -192,6 +192,7 @@ export default defineConfig({
             { text: 'Liquid Glass Adoption', link: '/reference/liquid-glass-ref' },
             { text: 'SwiftUI 26 Features', link: '/reference/swiftui-26-ref' },
             { text: 'SwiftUI Animation', link: '/reference/swiftui-animation-ref' },
+            { text: 'SwiftUI Containers', link: '/reference/swiftui-containers-ref' },
             { text: 'SwiftUI Layout', link: '/reference/swiftui-layout-ref' },
             { text: 'TextKit 2', link: '/reference/textkit-ref' },
             { text: 'Typography', link: '/reference/typography-ref' }
@@ -256,7 +257,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2025 Charles Wiltgen • v2.3.3'
+      copyright: 'Copyright © 2025 Charles Wiltgen • v2.4.0'
     }
   }
 })

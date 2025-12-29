@@ -911,26 +911,10 @@ UserDefaults.standard.set(value, forKey: "setting")
 
 ---
 
-## Related Resources
+## Resources
 
-### WWDC Sessions
-- [Get started with privacy manifests (2023/10060)](https://developer.apple.com/videos/play/wwdc2023/10060/)
-- [What's new in privacy (2023/10053)](https://developer.apple.com/videos/play/wwdc2023/10053/)
+**WWDC**: 2023-10060, 2023-10053
 
-### Documentation
-- [Privacy manifest files](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files)
-- [Describing use of required reason API](https://developer.apple.com/documentation/bundleresources/describing-use-of-required-reason-api)
-- [App privacy details on the App Store](https://developer.apple.com/app-store/app-privacy-details/)
-- [User Privacy and Data Use](https://developer.apple.com/app-store/user-privacy-and-data-use/)
+**Docs**: /bundleresources/privacy_manifest_files, /bundleresources/describing-use-of-required-reason-api, /app-store/app-privacy-details, /app-store/user-privacy-and-data-use
 
-### Tools
-- [Xcode Privacy Report](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files#4284009)
-- [Points of Interest Instrument](https://developer.apple.com/videos/play/wwdc2023/10060/?time=720)
-
----
-
-## See Also
-
-- **app-intents-ref** — Privacy considerations for App Intents
-- **cloudkit-ref** — Privacy and CloudKit data handling
-- **storage** — Privacy implications of different storage options
+**Skills**: app-intents-ref, cloudkit-ref, storage

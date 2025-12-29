@@ -1122,29 +1122,11 @@ NavigationPath(codableRepresentation)  // For decoding
 
 ---
 
-## WWDC Sessions
+## Resources
 
-### Primary Sources
-- [The SwiftUI cookbook for navigation (WWDC 2022, 10054)](https://developer.apple.com/videos/play/wwdc2022/10054/)
-- [Elevate your tab and sidebar experience in iPadOS (WWDC 2024, 10147)](https://developer.apple.com/videos/play/wwdc2024/10147/)
-- [What's new in SwiftUI (WWDC 2025, 256)](https://developer.apple.com/videos/play/wwdc2025/256/)
-- [Build a SwiftUI app with the new design (WWDC 2025, 323)](https://developer.apple.com/videos/play/wwdc2025/323/)
+**WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323
 
-### Related Sessions
-- SwiftUI on iPad: Organize your interface (WWDC 2022)
-- Bring multiple windows to your SwiftUI app (WWDC 2022)
-- Meet Liquid Glass (WWDC 2025)
-- Get to know the new design system (WWDC 2025)
-
----
-
-## Cross-References
-
-#### Axiom Skills
-- [swiftui-nav](/skills/ui-design/swiftui-nav) — Decision trees, anti-patterns, pressure scenarios
-- swiftui-nav-diag — Systematic troubleshooting
-- swiftui-26-ref — Comprehensive iOS 26 features
-- [liquid-glass](/skills/ui-design/liquid-glass) — Liquid Glass design system
+**Skills**: swiftui-nav, swiftui-nav-diag, swiftui-26-ref, liquid-glass
 
 ---
 
