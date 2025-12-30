@@ -25,7 +25,9 @@ Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, w
 - Implementing drag and drop with multiple items
 - Creating 3D charts with Chart3D
 - Adding widgets to visionOS or CarPlay
-- Customizing slider appearance for media controls
+- Adding custom tick marks to sliders (chapter markers, value indicators)
+- Constraining slider selection ranges with `enabledBounds`
+- Customizing slider appearance (thumb visibility, current value labels)
 - Creating sticky safe area bars with blur effects
 - Opening URLs in in-app browser
 - Using system-styled close and confirm buttons
@@ -157,7 +159,185 @@ Controls now have the new design automatically:
 
 ---
 
-## New View Modifiers
+## Slider Enhancements
+
+iOS 26 introduces major enhancements to `Slider`: custom tick marks, constrained selection ranges, current value labels, and thumb visibility control.
+
+### Slider Ticks API
+
+#### Core Types
+
+| Type | Purpose |
+|------|---------|
+| `SliderTick<V>` | Individual tick at a specific value with optional label |
+| `SliderTickContentForEach` | Iterate over collection to create multiple ticks |
+| `SliderTickBuilder` | Result builder for composing tick content |
+| `TupleSliderTickContent` | Internal type for multiple inline ticks |
+| `SliderTickContent` | Protocol that all tick types conform to |
+
+### Basic Ticks
+
+#### Static tick marks
+
+```swift
+struct SpeedSlider: View {
+    @State private var speed: Double = 0.5
+
+    var body: some View {
+        Slider(value: $speed) {
+            Text("Speed")
+        } ticks: {
+            SliderTick(0.2)
+            SliderTick(0.5)
+            SliderTick(0.8)
+        }
+    }
+}
+```
+
+### Labeled Ticks
+
+#### Ticks with custom labels
+
+```swift
+Slider(value: $value, in: 0...10) {
+    Text("Rating")
+} ticks: {
+    SliderTick(0) { Text("Min") }
+    SliderTick(5) { Text("Mid") }
+    SliderTick(10) { Text("Max") }
+}
+```
+
+### Dynamic Ticks with SliderTickContentForEach
+
+#### Iterate over values to create ticks
+
+```swift
+struct TemperatureSlider: View {
+    @State private var temp: Float = 70
+
+    var body: some View {
+        let stops: [Float] = stride(from: 60, through: 80, by: 5).map { Float($0) }
+
+        Slider(value: $temp, in: 60...80) {
+            Text("Temperature")
+        } ticks: {
+            SliderTickContentForEach(stops, id: \.self) { value in
+                SliderTick(value) {
+                    Text("\(Int(value))°")
+                        .font(.caption2)
+                }
+            }
+        }
+    }
+}
+```
+
+### Custom Data with Ticks (API Constraint)
+
+**Important** `SliderTickContentForEach` requires `Data.Element` to match the `SliderTick<V>` value type. You cannot iterate directly over custom structs.
+
+#### ❌ This won't compile
+
+```swift
+struct Chapter {
+    let time: Double
+    let name: String
+    let id: UUID
+}
+
+// ERROR: Data.Element (Chapter) doesn't match SliderTick value type (Double)
+SliderTickContentForEach(chapters, id: \.id) { chapter in
+    SliderTick(chapter.time) { Text(chapter.name) }
+}
+```
+
+#### ✅ Workaround: Extract values, look up labels
+
+```swift
+struct ChapterSlider: View {
+    @Binding var currentTime: Double
+    let chapters: [Chapter]
+    let duration: Double
+
+    var body: some View {
+        Slider(value: $currentTime, in: 0...duration) {
+            Text("Time")
+        } ticks: {
+            // Iterate over Double values, not Chapter structs
+            SliderTickContentForEach(chapters.map(\.time), id: \.self) { time in
+                SliderTick(time) {
+                    // Look up chapter name for label
+                    if let chapter = chapters.first(where: { $0.time == time }) {
+                        Text(chapter.name)
+                            .font(.caption2)
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+**Why** The API ties tick positions to slider values (`BinaryFloatingPoint`). The type system enforces this so ticks align correctly with the slider's value range.
+
+### Advanced Slider Initializers
+
+#### Full-featured slider with ticks
+
+```swift
+Slider(
+    value: $rating,
+    in: 0...100,
+    neutralValue: 50,           // Starting point / center value
+    enabledBounds: 20...80,     // Restrict selectable range
+    label: { Text("Rating") },
+    currentValueLabel: { Text("\(Int(rating))") },
+    minimumValueLabel: { Text("0") },
+    maximumValueLabel: { Text("100") },
+    ticks: {
+        SliderTick(20) { Text("Min") }
+        SliderTick(50) { Text("Neutral") }
+        SliderTick(80) { Text("Max") }
+    },
+    onEditingChanged: { editing in
+        print(editing ? "Started" : "Ended")
+    }
+)
+```
+
+#### Parameters
+
+| Parameter | Type | Purpose |
+|-----------|------|---------|
+| `value` | `Binding<V>` | Current slider value |
+| `bounds` | `ClosedRange<V>` | Full value range (default: `0...1`) |
+| `step` | `V.Stride` | Increment between valid values |
+| `neutralValue` | `V?` | Starting/center point |
+| `enabledBounds` | `ClosedRange<V>?` | Restrict which values are selectable |
+| `ticks` | `@SliderTickBuilder` | Custom tick marks |
+| `currentValueLabel` | `@ViewBuilder` | Shows current value |
+| `onEditingChanged` | `(Bool) -> Void` | Called when editing starts/ends |
+
+### Step-Based Ticks
+
+#### Automatic ticks at each step
+
+```swift
+Slider(
+    value: $volume,
+    in: 0...10,
+    step: 2,
+    label: { Text("Volume") },
+    tick: { value in
+        // Called for each step value (0, 2, 4, 6, 8, 10)
+        SliderTick(value) {
+            Text("\(Int(value))")
+        }
+    }
+)
+```
 
 ### sliderThumbVisibility
 
@@ -175,11 +355,80 @@ struct MediaControlView: View {
 }
 ```
 
+**Visibility options**
+- `.automatic` — System default (usually visible)
+- `.visible` — Always show thumb
+- `.hidden` — Hide thumb
+
 **Use cases**
 - Media player progress indicators
 - Read-only value displays
 - Minimal UI designs where slider acts as progress view
 - Interactive sliders where visual focus should be on track, not thumb
+
+**Note** On watchOS, the slider thumb is always visible regardless of this setting.
+
+### Complete Media Player Example
+
+```swift
+struct MediaPlayerControls: View {
+    @State private var currentTime: Double = 0
+    let duration: Double = 300 // 5 minutes
+    let chapters: [Chapter] = [
+        Chapter(time: 0, name: "Intro", id: UUID()),
+        Chapter(time: 60, name: "Verse 1", id: UUID()),
+        Chapter(time: 120, name: "Chorus", id: UUID()),
+        Chapter(time: 180, name: "Verse 2", id: UUID()),
+        Chapter(time: 240, name: "Outro", id: UUID())
+    ]
+
+    var body: some View {
+        VStack {
+            // Time display
+            HStack {
+                Text(formatTime(currentTime))
+                Spacer()
+                Text(formatTime(duration))
+            }
+            .font(.caption)
+
+            // Slider with chapter ticks
+            Slider(
+                value: $currentTime,
+                in: 0...duration,
+                label: { Text("Playback") },
+                currentValueLabel: {
+                    if let chapter = currentChapter {
+                        Text(chapter.name)
+                            .font(.caption)
+                    }
+                },
+                ticks: {
+                    SliderTickContentForEach(chapters.map(\.time), id: \.self) { time in
+                        SliderTick(time)
+                    }
+                }
+            )
+            .sliderThumbVisibility(.hidden)
+        }
+        .padding()
+    }
+
+    var currentChapter: Chapter? {
+        chapters.last { $0.time <= currentTime }
+    }
+
+    func formatTime(_ seconds: Double) -> String {
+        let mins = Int(seconds) / 60
+        let secs = Int(seconds) % 60
+        return String(format: "%d:%02d", mins, secs)
+    }
+}
+```
+
+---
+
+## New View Modifiers
 
 ### safeAreaBar
 
@@ -1185,6 +1434,7 @@ Apps must support resizable windows on iPad.
 🔧 WebView for web content
 🔧 TextEditor with AttributedString binding
 🔧 Enhanced drag and drop with `.dragContainer`
+🔧 Slider ticks (`SliderTick`, `SliderTickContentForEach`)
 🔧 Slider thumb visibility (`.sliderThumbVisibility()`)
 🔧 Safe area bars with blur (`.safeAreaBar()` + `.scrollEdgeEffectStyle()`)
 🔧 In-app URL opening (`openURL(url, prefersInApp: true)`)
@@ -1336,13 +1586,41 @@ TextEditor(text: $text) // Plain String loses formatting
 }
 ```
 
+### Issue: SliderTickContentForEach won't compile with custom structs
+
+**Symptom** Compile error when iterating over custom types like `[Chapter]`
+
+```swift
+// ERROR: Cannot convert value of type 'Chapter' to expected argument type
+SliderTickContentForEach(chapters, id: \.id) { chapter in
+    SliderTick(chapter.time) { ... }
+}
+```
+
+#### Solution
+
+`SliderTickContentForEach` requires `Data.Element` to match the `SliderTick<V>` value type. Extract the numeric values and look up metadata separately:
+
+```swift
+// ✅ CORRECT: Iterate over Double values
+SliderTickContentForEach(chapters.map(\.time), id: \.self) { time in
+    SliderTick(time) {
+        if let chapter = chapters.first(where: { $0.time == time }) {
+            Text(chapter.name)
+        }
+    }
+}
+```
+
+**Why** The API enforces type safety between tick positions and slider values. This is an API design constraint, not a bug.
+
 ---
 
 ## Resources
 
 **WWDC**: 2025-256
 
-**Docs**: /swiftui, /webkit, /foundation/attributedstring, /charts
+**Docs**: /swiftui, /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts
 
 **Skills**: swiftui-performance, liquid-glass, swift-concurrency, app-intents-ref
 
