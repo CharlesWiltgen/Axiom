@@ -19,6 +19,7 @@ Use this router for:
 - Privacy & permissions
 - Spotlight search
 - App discoverability
+- Background processing (BGTaskScheduler)
 
 ## Routing Logic
 
@@ -50,6 +51,12 @@ Use this router for:
 **Localization** → `/skill localization`
 **Privacy UX** → `/skill privacy-ux`
 
+### Background Processing
+
+**BGTaskScheduler implementation** → `/skill background-processing`
+**Background task debugging** → `/skill background-processing-diag`
+**Background task API reference** → `/skill background-processing-ref`
+
 ## Decision Tree
 
 ```
@@ -71,7 +78,12 @@ User asks about system integration
   │
   ├─ Localization? → localization
   │
-  └─ Privacy? → privacy-ux
+  ├─ Privacy? → privacy-ux
+  │
+  └─ Background processing?
+     ├─ Implementation patterns? → background-processing
+     ├─ Task not running/debugging? → background-processing-diag
+     └─ API reference? → background-processing-ref
 ```
 
 ## Example Invocations
@@ -90,3 +102,12 @@ User: "How do I localize my app strings?"
 
 User: "Implement haptic feedback for button taps"
 → Invoke: `/skill haptics`
+
+User: "My background task never runs"
+→ Invoke: `/skill background-processing-diag`
+
+User: "How do I implement BGTaskScheduler?"
+→ Invoke: `/skill background-processing`
+
+User: "What's the difference between BGAppRefreshTask and BGProcessingTask?"
+→ Invoke: `/skill background-processing-ref`

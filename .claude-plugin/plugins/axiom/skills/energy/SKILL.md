@@ -832,6 +832,7 @@ Check **Battery Usage** pane in Xcode Organizer for field data:
 ### Related Skills
 - `energy-ref` — Complete API reference with all code examples
 - `energy-diag` — Symptom-based troubleshooting decision trees
+- `background-processing` — Background task mechanics (why tasks don't run)
 - `performance-profiling` — General Instruments workflows
 - `memory-debugging` — Memory leak diagnosis (often related to energy)
 - `networking` — Network optimization patterns
