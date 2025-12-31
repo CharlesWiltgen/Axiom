@@ -18,6 +18,20 @@ On-device AI with Apple's Foundation Models framework (iOS 26+):
 
 ---
 
+### [Background Processing](./background-processing)
+
+BGTaskScheduler implementation and debugging:
+- **BGAppRefreshTask** — Keep content fresh (~30s)
+- **BGProcessingTask** — Maintenance work (overnight, charging)
+- **BGContinuedProcessingTask** — User-initiated continuation (iOS 26+)
+- **Debugging** — "Task never runs" decision trees, LLDB commands
+
+**When to use** Implementing background tasks, debugging execution issues, understanding scheduling factors
+
+**Requirements** iOS 13+, iOS 26+ for BGContinuedProcessingTask
+
+---
+
 ### [Networking](./networking)
 
 Network.framework patterns for custom protocols:
@@ -62,6 +76,7 @@ Comprehensive guide to the App Intents framework for exposing app functionality 
 - **Apple Intelligence** — AI-powered automation and reasoning
 - **Shortcuts** — Custom workflow creation
 - **Spotlight** — System-wide search
+- **Background Processing** — BGTaskScheduler, background URLSession
 
 ### Context & Personalization
 - **Focus Filters** — Context-aware content filtering
