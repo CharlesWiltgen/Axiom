@@ -1,13 +1,13 @@
 ---
 name: swiftui-animation-ref
-description: Use when implementing SwiftUI animations, understanding VectorArithmetic, using @Animatable macro, choosing between spring and timing curve animations, or debugging animation behavior - comprehensive animation reference from iOS 13 through iOS 26
+description: Use when implementing SwiftUI animations, understanding VectorArithmetic, using @Animatable macro, zoom transitions, UIKit/AppKit animation bridging, choosing between spring and timing curve animations, or debugging animation behavior - comprehensive animation reference from iOS 13 through iOS 26
 skill_type: reference
-version: 1.0
+version: 1.1
 ---
 
 # SwiftUI Animation API Reference
 
-Comprehensive API reference for SwiftUI animation from iOS 13 through iOS 26. Covers the Animatable protocol, @Animatable macro, animation types, and advanced patterns.
+Comprehensive API reference for SwiftUI animation from iOS 13 through iOS 26. Covers the Animatable protocol, @Animatable macro, animation types, zoom transitions, UIKit bridging, and advanced patterns.
 
 ## Overview
 
@@ -19,6 +19,9 @@ This reference covers all SwiftUI animation APIs and patterns:
 - **Animation Types** — Springs, timing curves, and higher-order animations
 - **Transaction System** — withAnimation, scoped animations (iOS 17+)
 - **CustomAnimation Protocol** — Build custom animation algorithms
+- **Zoom Transitions** — Fluid navigation/presentation transitions (iOS 18+)
+- **UIKit/AppKit Bridging** — SwiftUI animations for UIView/NSView (iOS 18+)
+- **Gesture-Driven Animations** — Automatic velocity preservation (iOS 18+)
 - **Performance** — Off-main-thread optimization patterns
 
 ---
@@ -384,6 +387,101 @@ struct LinearAnimation: CustomAnimation {
 
 ---
 
+## Zoom Transitions (iOS 18+)
+
+Morph a tapped cell into the incoming view with continuous interactivity.
+
+### SwiftUI
+
+```swift
+@Namespace private var namespace
+
+NavigationLink {
+    DetailView()
+        .navigationTransition(.zoom(sourceID: item.id, in: namespace))
+} label: {
+    ItemPreview(item)
+}
+.matchedTransitionSource(id: item.id, in: namespace)
+```
+
+### UIKit
+
+```swift
+let detailVC = DetailViewController(item: item)
+detailVC.preferredTransition = .zoom { context in
+    let detail = context.zoomedViewController as! DetailViewController
+    return self.cell(for: detail.item)
+}
+navigationController?.pushViewController(detailVC, animated: true)
+```
+
+**Key points**:
+- Works with `NavigationStack`, `sheet`, `fullScreenCover`
+- Continuously interactive (drag during transition)
+- Push transitions cannot be cancelled—they convert to pop when interrupted
+
+---
+
+## UIKit/AppKit Animation Bridging (iOS 18+)
+
+Use SwiftUI `Animation` types with UIKit views:
+
+```swift
+// Old way
+UIView.animate(withDuration: 0.5,
+               usingSpringWithDamping: 0.7,
+               initialSpringVelocity: 0.5) {
+    view.center = newCenter
+}
+
+// New way
+UIView.animate(.spring(duration: 0.5)) {
+    view.center = newCenter
+}
+```
+
+**All animation types work**: `.linear`, `.easeInOut`, `.spring`, `.bouncy`, `.smooth`, `.snappy`, `.repeatForever()`
+
+**Implementation note**: New API animates presentation values directly (no `CAAnimation` generated).
+
+### UIViewRepresentable Bridging
+
+Bridge SwiftUI animations through representables:
+
+```swift
+func updateUIView(_ view: MyUIView, context: Context) {
+    context.animate {
+        view.property = newValue  // Uses Transaction's animation
+    }
+}
+```
+
+---
+
+## Gesture-Driven Animations (iOS 18+)
+
+Automatic velocity preservation with SwiftUI animations:
+
+```swift
+func handlePan(_ gesture: UIPanGestureRecognizer) {
+    switch gesture.state {
+    case .changed:
+        UIView.animate(.interactiveSpring) {
+            view.center = gesture.location(in: self.view)
+        }
+    case .ended:
+        UIView.animate(.spring) {
+            view.center = finalPosition  // Inherits velocity automatically
+        }
+    }
+}
+```
+
+**No manual velocity calculation needed**—springs merge and preserve momentum.
+
+---
+
 ## Troubleshooting
 
 ### Property Doesn't Animate
@@ -447,6 +545,7 @@ withAnimation(.easeInOut(duration: 0.5)) { scale = 1.0 }
 - [Animate with springs (2023/10158)](https://developer.apple.com/videos/play/wwdc2023/10158/) — Spring animation deep dive
 - [Demystify SwiftUI performance (2023/10160)](https://developer.apple.com/videos/play/wwdc2023/10160/) — Animation performance patterns
 - [What's new in SwiftUI (2023/10156)](https://developer.apple.com/videos/play/wwdc2023/10156/) — Animatable protocol, @Animatable macro preview
+- [Enhance your UI animations and transitions (2024/10145)](https://developer.apple.com/videos/play/wwdc2024/10145/) — Zoom transitions, UIKit animation bridging
 - [What's new in SwiftUI (2025/256)](https://developer.apple.com/videos/play/wwdc2025/256/) — @Animatable macro release
 
 ---
@@ -454,5 +553,6 @@ withAnimation(.easeInOut(duration: 0.5)) { scale = 1.0 }
 ## See Also
 
 - **swiftui-26-ref** — iOS 26 SwiftUI features including @Animatable macro
+- **swiftui-nav-ref** — SwiftUI navigation patterns including zoom transition integration
 - **swiftui-performance** — SwiftUI performance optimization with Instruments
 - **swiftui-debugging** — Debugging SwiftUI view updates and animation issues

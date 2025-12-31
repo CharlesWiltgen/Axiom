@@ -1,8 +1,8 @@
 ---
 name: swiftui-animation-ref
-description: Use when implementing SwiftUI animations, understanding VectorArithmetic, using @Animatable macro, choosing between spring and timing curve animations, or debugging animation behavior - comprehensive animation reference from iOS 13 through iOS 26
+description: Use when implementing SwiftUI animations, understanding VectorArithmetic, using @Animatable macro, zoom transitions, UIKit/AppKit animation bridging, choosing between spring and timing curve animations, or debugging animation behavior - comprehensive animation reference from iOS 13 through iOS 26
 skill_type: reference
-version: 1.0.0
+version: 1.1.0
 ---
 
 # SwiftUI Animation
@@ -25,11 +25,16 @@ Comprehensive guide to SwiftUI's animation system, from foundational concepts to
 - Creating multi-step or complex animations
 - Understanding model vs presentation values
 - Implementing custom animation algorithms
+- Adding zoom transitions for navigation/presentation (iOS 18+)
+- Animating UIKit/AppKit views with SwiftUI animations (iOS 18+)
+- Bridging animations through UIViewRepresentable (iOS 18+)
+- Building gesture-driven animations with velocity preservation
 
 ## System Requirements
 
 #### iOS 13+ for Animatable protocol
 #### iOS 17+ for default spring animations, scoped animations
+#### iOS 18+ for zoom transitions, UIKit/AppKit animation bridging
 #### iOS 26+ for @Animatable macro
 
 ---
@@ -945,6 +950,447 @@ func shouldMerge(...) -> Bool {
 
 **Why springs feel more natural**: They preserve momentum when interrupted.
 
+---
+
+## Part 7: Zoom Transitions (iOS 18+)
+
+### Overview
+
+iOS 18 introduces the zoom transition, where a tapped cell morphs into the incoming view. This transition is continuously interactive—users can grab and drag the view during or after the transition begins.
+
+**Key benefit** In parts of your app where you transition from a large cell, zoom transitions increase visual continuity by keeping the same UI elements on screen across the transition.
+
+### SwiftUI Implementation
+
+Two steps to adopt zoom transitions:
+
+#### Step 1: Declare the transition style on the destination
+
+```swift
+NavigationLink {
+    BraceletEditor(bracelet)
+        .navigationTransition(.zoom(sourceID: bracelet.id, in: namespace))
+} label: {
+    BraceletPreview(bracelet)
+}
+```
+
+#### Step 2: Mark the source view
+
+```swift
+BraceletPreview(bracelet)
+    .matchedTransitionSource(id: bracelet.id, in: namespace)
+```
+
+#### Complete example
+
+```swift
+struct BraceletListView: View {
+    @Namespace private var braceletList
+    let bracelets: [Bracelet]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))]) {
+                    ForEach(bracelets) { bracelet in
+                        NavigationLink {
+                            BraceletEditor(bracelet: bracelet)
+                                .navigationTransition(
+                                    .zoom(sourceID: bracelet.id, in: braceletList)
+                                )
+                        } label: {
+                            BraceletPreview(bracelet: bracelet)
+                        }
+                        .matchedTransitionSource(id: bracelet.id, in: braceletList)
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+### UIKit Implementation
+
+```swift
+func showEditor(for bracelet: Bracelet) {
+    let braceletEditor = BraceletEditorViewController(bracelet: bracelet)
+
+    // Step 1: Specify zoom transition on the pushed view controller
+    braceletEditor.preferredTransition = .zoom { context in
+        // Step 2: Return the source view
+        let editor = context.zoomedViewController as! BraceletEditorViewController
+        return self.cell(for: editor.bracelet)
+    }
+
+    navigationController?.pushViewController(braceletEditor, animated: true)
+}
+```
+
+**Critical detail** The closure is called on both zoom in and zoom out. Capture a stable identifier (like the model object), not a view directly—the source view may get reused in a collection view.
+
+#### Handling content changes during presentation
+
+If the editor's content can change (e.g., swiping between items), use the context to retrieve the current item:
+
+```swift
+braceletEditor.preferredTransition = .zoom { context in
+    let editor = context.zoomedViewController as! BraceletEditorViewController
+    // Use current bracelet, not the one captured at push time
+    return self.cell(for: editor.bracelet)
+}
+```
+
+### Presentations (Sheets and Full Screen Covers)
+
+Zoom transitions work with `fullScreenCover` and `sheet` in both SwiftUI and UIKit:
+
+```swift
+.fullScreenCover(item: $selectedBracelet) { bracelet in
+    BraceletEditor(bracelet: bracelet)
+        .navigationTransition(.zoom(sourceID: bracelet.id, in: namespace))
+}
+```
+
+### Styling the Source View
+
+Use the configuration closure to style the source during transition:
+
+```swift
+.matchedTransitionSource(id: bracelet.id, in: namespace) { source in
+    source
+        .cornerRadius(8.0)
+        .shadow(radius: 4)
+}
+```
+
+Modifiers applied here are smoothly interpolated during the zoom transition.
+
+### View Controller Lifecycle with Fluid Transitions
+
+**Key insight** Push transitions cannot be cancelled. When interrupted, they convert to pop transitions.
+
+#### Normal push (no interaction)
+
+```
+Disappeared → [viewWillAppear] → Appearing → [viewIsAppearing] → [viewDidAppear] → Appeared
+```
+
+#### Interrupted push (user starts pop during push)
+
+```
+Appearing → Appeared → Disappearing → ...
+```
+
+The push completes immediately, then the pop begins. The view controller **always** reaches the Appeared state—callbacks complete their full cycle for consistency.
+
+### UIKit Best Practices for Fluid Transitions
+
+```swift
+// ❌ DON'T: Block actions during transitions
+func handleTap() {
+    guard !isTransitioning else { return }  // Don't do this
+    pushViewController(...)
+}
+
+// ✅ DO: Always allow the action
+func handleTap() {
+    pushViewController(...)  // System handles overlapping transitions
+}
+```
+
+**Guidelines**
+- Be ready for a new transition to start at any time
+- Keep temporary transition state to a minimum
+- Reset transition state in `viewDidAppear` or `viewDidDisappear`
+- Consider adopting SwiftUI for complex transition logic
+
+---
+
+## Part 8: UIKit/AppKit Animation Bridging (iOS 18+)
+
+### Overview
+
+iOS 18 enables using SwiftUI `Animation` types to animate UIKit and AppKit views. This provides access to the full suite of SwiftUI animations, including custom animations.
+
+### API Signature
+
+```swift
+@MainActor static func animate(
+    _ animation: Animation,
+    changes: () -> Void,
+    completion: (() -> Void)? = nil
+)
+```
+
+### Basic Usage
+
+```swift
+// Old way: Describe spring in parameters
+UIView.animate(withDuration: 0.5,
+               delay: 0,
+               usingSpringWithDamping: 0.7,
+               initialSpringVelocity: 0.5) {
+    bead.center = endOfBracelet
+}
+
+// New way: Use SwiftUI Animation type
+UIView.animate(.spring(duration: 0.5)) {
+    bead.center = endOfBracelet
+}
+```
+
+### Available Animation Types
+
+All SwiftUI animations work with UIKit views:
+
+```swift
+// Timing curves
+UIView.animate(.linear(duration: 0.3)) { ... }
+UIView.animate(.easeIn(duration: 0.3)) { ... }
+UIView.animate(.easeOut(duration: 0.3)) { ... }
+UIView.animate(.easeInOut(duration: 0.3)) { ... }
+
+// Springs
+UIView.animate(.spring) { ... }
+UIView.animate(.spring(duration: 0.6, bounce: 0.3)) { ... }
+UIView.animate(.smooth) { ... }
+UIView.animate(.snappy) { ... }
+UIView.animate(.bouncy) { ... }
+
+// Repeating
+UIView.animate(.linear(duration: 1.3).repeatForever()) { ... }
+
+// Custom animations
+UIView.animate(myCustomAnimation) { ... }
+```
+
+### Implementation Detail: No CAAnimation
+
+**Important architectural difference**:
+
+| Old UIKit API | New SwiftUI Animation API |
+|--------------|---------------------------|
+| Generates a `CAAnimation` | No `CAAnimation` generated |
+| Animation added to layer | Animates presentation values directly |
+| Animation in layer's `animations` dict | Presentation values in presentation layer |
+
+Both approaches reflect values in the presentation layer, but the mechanism differs.
+
+### Complete Example
+
+```swift
+class BeadViewController: UIViewController {
+    private var animatingView: UIImageView!
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        animatingView = UIImageView(image: UIImage(systemName: "circle.fill"))
+        animatingView.tintColor = .systemPink
+        animatingView.frame = CGRect(x: 0, y: 0, width: 80, height: 80)
+        view.addSubview(animatingView)
+        animatingView.center = view.center
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        startAnimating()
+    }
+
+    private func startAnimating() {
+        let animation = Animation
+            .linear(duration: 1.3)
+            .repeatForever()
+
+        UIView.animate(animation) { [weak self] in
+            self?.animatingView.transform = CGAffineTransform(scaleX: 2, y: 2)
+        }
+    }
+}
+```
+
+---
+
+## Part 9: UIViewRepresentable Animation Bridging (iOS 18+)
+
+### The Problem
+
+When wrapping UIKit views in SwiftUI, animations don't automatically bridge:
+
+```swift
+struct BeadBoxWrapper: UIViewRepresentable {
+    @Binding var isOpen: Bool
+
+    func updateUIView(_ box: BeadBox, context: Context) {
+        // ❌ Animation on binding doesn't affect UIKit
+        box.lid.center.y = isOpen ? -100 : 100
+    }
+}
+
+// Usage
+BeadBoxWrapper(isOpen: $isOpen)
+    .animation(.spring, value: isOpen)  // No effect on UIKit view
+```
+
+### The Solution: context.animate()
+
+Use `context.animate()` to bridge SwiftUI animations:
+
+```swift
+struct BeadBoxWrapper: UIViewRepresentable {
+    @Binding var isOpen: Bool
+
+    func makeUIView(context: Context) -> BeadBox {
+        BeadBox()
+    }
+
+    func updateUIView(_ box: BeadBox, context: Context) {
+        // ✅ Bridges animation from Transaction to UIKit
+        context.animate {
+            box.lid.center.y = isOpen ? -100 : 100
+        }
+    }
+}
+```
+
+### How It Works
+
+1. SwiftUI stores animation info in the current `Transaction`
+2. `context.animate()` reads the Transaction's animation
+3. Applies that animation to UIView changes in the closure
+4. If no animation in Transaction, changes happen immediately (no animation)
+
+### Key Behavior
+
+```swift
+context.animate {
+    // Changes here
+} completion: {
+    // Called when animation completes
+    // If not animated, called immediately inline
+}
+```
+
+**Works whether animated or not** — safe to always use this pattern.
+
+### Perfect Synchronization
+
+A single animation running across SwiftUI Views and UIViews runs **perfectly in sync**. This enables seamless mixed hierarchies.
+
+---
+
+## Part 10: Gesture-Driven Animations (iOS 18+)
+
+### The Problem with Manual Velocity
+
+Traditional UIKit gesture animations require manual velocity calculation:
+
+```swift
+// Old way: Manual velocity computation
+func handlePan(_ gesture: UIPanGestureRecognizer) {
+    switch gesture.state {
+    case .changed:
+        bead.center = gesture.location(in: view)
+
+    case .ended:
+        let velocity = gesture.velocity(in: view)
+        let distance = endOfBracelet.distance(to: bead.center)
+
+        // 😫 Convert to unit velocity manually
+        let unitVelocity = CGVector(
+            dx: velocity.x / distance,
+            dy: velocity.y / distance
+        )
+
+        UIView.animate(withDuration: 0.5,
+                       delay: 0,
+                       usingSpringWithDamping: 0.7,
+                       initialSpringVelocity: unitVelocity.length) {
+            bead.center = endOfBracelet
+        }
+    }
+}
+```
+
+### SwiftUI Solution: Automatic Velocity Preservation
+
+SwiftUI animations automatically preserve velocity through animation merging:
+
+```swift
+// New way: Automatic velocity preservation
+func handlePan(_ gesture: UIPanGestureRecognizer) {
+    switch gesture.state {
+    case .changed:
+        // Interactive spring during drag
+        UIView.animate(.interactiveSpring) {
+            bead.center = gesture.location(in: view)
+        }
+
+    case .ended:
+        // Final spring uses velocity from interactiveSprings
+        UIView.animate(.spring) {
+            bead.center = endOfBracelet
+        }
+    }
+}
+```
+
+### How Velocity Preservation Works
+
+```
+[Drag starts]
+    ↓
+[.changed] → interactiveSpring animation (retargets previous)
+    ↓
+[.changed] → interactiveSpring animation (retargets previous)
+    ↓
+[.changed] → interactiveSpring animation (retargets previous)
+    ↓
+[.ended] → .spring animation inherits velocity from interactiveSprings
+    ↓
+[Smooth deceleration to final position]
+```
+
+**No velocity calculation needed** — SwiftUI handles it automatically.
+
+### SwiftUI Equivalent
+
+```swift
+struct DraggableBead: View {
+    @State private var position: CGPoint = .zero
+    @State private var isDragging = false
+
+    var body: some View {
+        Circle()
+            .position(position)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        withAnimation(.interactiveSpring) {
+                            position = value.location
+                        }
+                    }
+                    .onEnded { value in
+                        withAnimation(.spring) {
+                            position = targetPosition
+                        }
+                    }
+            )
+    }
+}
+```
+
+### Why This Matters
+
+**Continuous velocity** creates natural, physical-feeling interactions:
+- No jarring velocity discontinuities
+- Momentum carries through gesture end
+- Spring animations feel connected to user input
+
+---
+
 ### Off-Main-Thread Performance
 
 Built-in animatable attributes run efficiently:
@@ -1149,13 +1595,13 @@ See **Animation Merging Behavior** section above for detailed explanation of mer
 
 ## Resources
 
-**WWDC**: 2023-10156, 2023-10158, 2023-10157, 2025-256
+**WWDC**: 2023-10156, 2023-10157, 2023-10158, 2024-10145, 2025-256
 
-**Docs**: /swiftui/animatable, /swiftui/animation, /swiftui/vectorarithmetic, /swiftui/transaction
+**Docs**: /swiftui/animatable, /swiftui/animation, /swiftui/vectorarithmetic, /swiftui/transaction, /swiftui/view/navigationtransition(_:), /swiftui/view/matchedtransitionsource(id:in:configuration:), /uikit/uiview/animate(_:changes:completion:)
 
-**Skills**: swiftui-26-ref, swiftui-performance, swiftui-debugging
+**Skills**: swiftui-26-ref, swiftui-nav-ref, swiftui-performance, swiftui-debugging
 
 ---
 
-**Last Updated** Based on WWDC 2023/10156, WWDC 2025/256, and iOS 26 Beta
-**Version** iOS 13+ (Animatable protocol), iOS 17+ (scoped animations), iOS 26+ (@Animatable macro)
+**Last Updated** Based on WWDC 2023/10156-10158, WWDC 2024/10145, WWDC 2025/256
+**Version** iOS 13+ (Animatable), iOS 17+ (scoped animations), iOS 18+ (zoom transitions, UIKit bridging), iOS 26+ (@Animatable)
