@@ -5,6 +5,7 @@ export default defineConfig({
   description: 'Battle-tested Claude Code skills, autonomous agents, and references for Apple platform development',
   base: '/Axiom/',
   srcExclude: ['**/public/plugins/**'],
+  cleanUrls: true,
 
   themeConfig: {
     search: {
