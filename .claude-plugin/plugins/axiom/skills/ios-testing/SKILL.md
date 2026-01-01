@@ -62,7 +62,42 @@ This router invokes specialized skills based on the specific testing need:
 
 ---
 
-### 3. Test Crashes / Environment Issues → **xcode-debugging**
+### 3. Flaky Tests / Race Conditions → **test-failure-analyzer** (Agent)
+
+**Triggers**:
+- Tests fail randomly in CI
+- Tests pass locally but fail in CI
+- Flaky tests (pass sometimes, fail sometimes)
+- Race conditions in Swift Testing
+- Missing `await confirmation` for async callbacks
+- Missing `@MainActor` on UI tests
+- Shared mutable state in `@Suite`
+- Tests pass individually, fail when run together
+
+**Why test-failure-analyzer**: Specialized agent that scans for patterns causing intermittent failures in Swift Testing.
+
+**Invoke**: Launch `test-failure-analyzer` agent
+
+---
+
+### 4. Async Testing Patterns → **testing-async**
+
+**Triggers**:
+- Testing async/await functions
+- `confirmation` for callbacks (Swift Testing)
+- `expectedCount` for multiple callbacks
+- Testing MainActor code with `@MainActor @Test`
+- Migrating XCTestExpectation → confirmation
+- Parallel test execution concerns
+- Test timeout configuration
+
+**Why testing-async**: Dedicated patterns for async code in Swift Testing framework.
+
+**Invoke**: Read the `testing-async` skill
+
+---
+
+### 5. Test Crashes / Environment Issues → **xcode-debugging**
 
 **Triggers**:
 - Tests crash before assertions run
@@ -88,14 +123,19 @@ User has testing question
   ├─ Writing UI tests or debugging XCUITest?
   │  └─ YES → ui-testing
   │
+  ├─ Testing async/await code patterns?
+  │  ├─ confirmation, expectedCount, @MainActor @Test? → testing-async
+  │  └─ General async questions? → testing-async
+  │
+  ├─ Tests fail randomly / flaky in CI / race conditions?
+  │  ├─ Check: Uses XCUIApplication/XCUIElement? → ui-testing
+  │  └─ Check: Uses @Test/#expect? → test-failure-analyzer (Agent)
+  │
   ├─ Tests crash or environment seems wrong?
   │  └─ YES → xcode-debugging (via ios-build)
   │
-  ├─ Tests are slow, want to speed them up?
-  │  └─ YES → swift-testing (Fast Tests section)
-  │
-  └─ Testing async code, seeing flaky failures?
-     └─ YES → swift-testing (Async Testing section)
+  └─ Tests are slow, want to speed them up?
+     └─ YES → swift-testing (Fast Tests section)
 ```
 
 ## Swift Testing vs XCTest Quick Guide
@@ -124,10 +164,26 @@ User: "How do I write a unit test in Swift?"
 → Invoke: swift-testing
 
 User: "My UI tests are flaky in CI"
-→ Invoke: ui-testing
+→ Check codebase: XCUIApplication/XCUIElement patterns? → ui-testing
+→ Check codebase: @Test/#expect patterns? → test-failure-analyzer
+
+User: "Tests fail randomly, pass sometimes fail sometimes"
+→ Invoke: test-failure-analyzer (Agent)
+
+User: "Tests pass locally but fail in CI"
+→ Invoke: test-failure-analyzer (Agent)
 
 User: "How do I test async code without flakiness?"
-→ Invoke: swift-testing (Async Testing section)
+→ Invoke: testing-async
+
+User: "How do I test callback-based APIs with Swift Testing?"
+→ Invoke: testing-async
+
+User: "What's the Swift Testing equivalent of XCTestExpectation?"
+→ Invoke: testing-async
+
+User: "How do I use confirmation with expectedCount?"
+→ Invoke: testing-async
 
 User: "I want my tests to run faster"
 → Invoke: swift-testing (Fast Tests section)

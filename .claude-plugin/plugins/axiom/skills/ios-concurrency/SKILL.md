@@ -49,6 +49,30 @@ Use this router when:
 - Generic specialization
 - Collection performance
 
+**Synchronous actor access** → `/skill assume-isolated`
+- MainActor.assumeIsolated
+- @preconcurrency protocol conformances
+- Legacy delegate callbacks
+- Testing MainActor code synchronously
+
+**Thread-safe primitives** → `/skill synchronization`
+- Mutex (iOS 18+)
+- OSAllocatedUnfairLock (iOS 16+)
+- Atomic types
+- Lock vs actor decision
+
+**Parameter ownership** → `/skill ownership-conventions`
+- borrowing/consuming modifiers
+- Noncopyable types (~Copyable)
+- ARC traffic reduction
+- consume operator
+
+**Concurrency profiling** → `/skill concurrency-profiling`
+- Swift Concurrency Instruments template
+- Actor contention diagnosis
+- Thread pool exhaustion
+- Task visualization
+
 ## Decision Tree
 
 ```
@@ -60,6 +84,14 @@ User asks about concurrency
   │  └─ Sendable? → swift-concurrency
   │
   ├─ Writing async code? → swift-concurrency
+  │
+  ├─ assumeIsolated questions? → assume-isolated
+  │
+  ├─ Mutex/lock/synchronization? → synchronization
+  │
+  ├─ borrowing/consuming/ownership? → ownership-conventions
+  │
+  ├─ Profile async performance? → concurrency-profiling
   │
   └─ Performance optimization? → swift-performance
 ```
@@ -93,3 +125,27 @@ User: "My app is slow due to unnecessary copying"
 
 User: "Should I use async/await for this network call?"
 → Invoke: `/skill swift-concurrency`
+
+User: "How do I use assumeIsolated?"
+→ Invoke: `/skill assume-isolated`
+
+User: "My delegate callback runs on main thread, how do I access MainActor state?"
+→ Invoke: `/skill assume-isolated`
+
+User: "Should I use Mutex or actor?"
+→ Invoke: `/skill synchronization`
+
+User: "What's the difference between os_unfair_lock and OSAllocatedUnfairLock?"
+→ Invoke: `/skill synchronization`
+
+User: "What does borrowing do in Swift?"
+→ Invoke: `/skill ownership-conventions`
+
+User: "How do I use ~Copyable types?"
+→ Invoke: `/skill ownership-conventions`
+
+User: "My async code is slow, how do I profile it?"
+→ Invoke: `/skill concurrency-profiling`
+
+User: "I think I have actor contention, how do I diagnose it?"
+→ Invoke: `/skill concurrency-profiling`

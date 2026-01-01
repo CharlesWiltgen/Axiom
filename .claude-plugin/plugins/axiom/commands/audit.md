@@ -80,6 +80,30 @@ When running multiple audits (either user-requested or from smart suggestions):
 
 **Note:** Agents have built-in output limits (>50 issues → top 10 shown) to prevent overwhelming output on large codebases.
 
+## Multi-Audit Execution
+
+When running multiple audits (user selected 2+ areas):
+
+1. **Launch each agent in background**: Use the Task tool with `run_in_background: true` parameter
+2. **Instruct each agent to write full results to file**:
+   - Path: `scratch/audit-{area}-{date}.md`
+   - Example: `scratch/audit-memory-2025-01-01.md`
+   - Include in agent prompt: "Write your full detailed report to {path}. Return only a summary with issue counts."
+3. **Collect results**: Use TaskOutput tool to retrieve each agent's summary
+4. **Present combined summary table**:
+   | Audit | Status | CRITICAL | HIGH | MEDIUM | LOW | File |
+   |-------|--------|----------|------|--------|-----|------|
+   | memory | ✓ | 1 | 3 | 5 | 2 | scratch/audit-memory-2025-01-01.md |
+   | concurrency | ✓ | 0 | 2 | 8 | 0 | scratch/audit-concurrency-2025-01-01.md |
+5. **User reviews files** for full details
+
+**Why this approach:**
+- Each audit remains fully thorough (no shortcuts)
+- Combined output doesn't exceed token limits
+- User gets quick summary + detailed files for review
+
+**Single audit**: When only one audit is requested, run it normally (foreground, full output to conversation).
+
 ## Project Analysis (No Area Specified)
 
 If no area argument:

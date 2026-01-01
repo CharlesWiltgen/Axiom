@@ -32,4 +32,4 @@ features:
 
 ## Preview Release
 
-This is an early preview of Axiom. Feedback welcome on what's working well and what's missing. [Report issues or share feedback →](https://github.com/CharlesWiltgen/Axiom/issues)
+Is Axiom helping you? Is it missing anything that would make it even more helpful? [Report issues or share feedback →](https://github.com/CharlesWiltgen/Axiom/issues)

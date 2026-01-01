@@ -49,12 +49,56 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
-### 3. Dependency Conflicts → **build-debugging**
+### 3. SPM Dependency Conflicts → **spm-conflict-resolver** (Agent)
 **Triggers**:
-- CocoaPods/SPM resolution failures
+- SPM resolution failures
+- "No such module" after adding package
+- Duplicate symbol linker errors
+- Version conflicts between packages
+- Swift 6 package compatibility issues
+- Package.swift / Package.resolved conflicts
+
+**Why spm-conflict-resolver**: Specialized agent that analyzes Package.swift and Package.resolved to diagnose and resolve Swift Package Manager conflicts.
+
+**Invoke**: Launch `spm-conflict-resolver` agent
+
+---
+
+### 4. Security & Privacy Audit → **security-privacy-scanner** (Agent)
+**Triggers**:
+- App Store submission prep
+- Privacy Manifest requirements (iOS 17+)
+- Hardcoded credentials in code
+- Sensitive data storage concerns
+- ATS violations
+- Required Reason API declarations
+
+**Why security-privacy-scanner**: Specialized agent that scans for security vulnerabilities and privacy compliance issues.
+
+**Invoke**: Launch `security-privacy-scanner` agent or `/axiom:audit security`
+
+---
+
+### 5. iOS 17→18 Modernization → **modernization-helper** (Agent)
+**Triggers**:
+- Migrate ObservableObject to @Observable
+- Update @StateObject to @State
+- Adopt modern SwiftUI patterns
+- Deprecated API cleanup
+- iOS 17+ migration
+
+**Why modernization-helper**: Specialized agent that scans for legacy patterns and provides migration paths with code examples.
+
+**Invoke**: Launch `modernization-helper` agent or `/axiom:audit modernization`
+
+---
+
+### 6. General Dependency Issues → **build-debugging**
+**Triggers**:
+- CocoaPods resolution failures
 - "Multiple commands produce" errors
 - Framework version mismatches
-- Dependency graph conflicts
+- Non-SPM dependency graph conflicts
 
 **Invoke**: `/skill build-debugging`
 
@@ -67,11 +111,20 @@ User reports build/environment issue
   ├─ Is it mysterious/intermittent/clean build fails?
   │  └─ YES → xcode-debugging (environment-first)
   │
-  ├─ Is it dependency conflict?
-  │  └─ YES → build-debugging
+  ├─ Is it SPM dependency conflict?
+  │  └─ YES → spm-conflict-resolver (Agent)
   │
-  └─ Is it slow build time?
-     └─ YES → build-performance
+  ├─ Is it CocoaPods/other dependency conflict? (legacy)
+  │  └─ YES → build-debugging (note: CocoaPods is legacy; prefer SPM)
+  │
+  ├─ Is it slow build time?
+  │  └─ YES → build-performance
+  │
+  ├─ Is it security/privacy/App Store prep?
+  │  └─ YES → security-privacy-scanner (Agent)
+  │
+  └─ Is it modernization/deprecated APIs/iOS 17+ migration?
+     └─ YES → modernization-helper (Agent)
 ```
 
 ## Anti-Rationalization
@@ -111,4 +164,28 @@ User: "Builds are taking 10 minutes"
 → Invoke: `/skill build-performance`
 
 User: "SPM won't resolve dependencies"
-→ Invoke: `/skill build-debugging`
+→ Invoke: `spm-conflict-resolver` agent
+
+User: "Two packages require different versions of the same dependency"
+→ Invoke: `spm-conflict-resolver` agent
+
+User: "Duplicate symbol linker error"
+→ Invoke: `spm-conflict-resolver` agent
+
+User: "I need to prepare for App Store security review"
+→ Invoke: `security-privacy-scanner` agent
+
+User: "Do I need a Privacy Manifest?"
+→ Invoke: `security-privacy-scanner` agent
+
+User: "Are there hardcoded credentials in my code?"
+→ Invoke: `security-privacy-scanner` agent
+
+User: "How do I migrate from ObservableObject to @Observable?"
+→ Invoke: `modernization-helper` agent
+
+User: "Update my code to use modern SwiftUI patterns"
+→ Invoke: `modernization-helper` agent
+
+User: "Should I still use @StateObject?"
+→ Invoke: `modernization-helper` agent
