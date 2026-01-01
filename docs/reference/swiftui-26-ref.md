@@ -1,74 +1,115 @@
 ---
 name: swiftui-26-ref
-description: All iOS 26 SwiftUI features — Liquid Glass, @Animatable macro, WebView, rich text, 3D charts, spatial layout, scene bridging
+description: iOS 26 SwiftUI features — Liquid Glass, @Animatable, WebView, rich text, 3D charts
 ---
 
-# SwiftUI 26 Features Reference
+# SwiftUI 26 Reference
 
-Comprehensive guide to iOS 26 SwiftUI features from WWDC 2025-256.
+Complete API reference for iOS 26 SwiftUI features. Covers Liquid Glass design system, performance improvements, @Animatable macro, WebView, rich text editing, 3D charts, and spatial layout.
 
-## Overview
+## When to Use This Reference
 
-Complete reference for new SwiftUI APIs, modifiers, and capabilities introduced in iOS 26. Covers Liquid Glass design system, performance improvements, WebView integration, rich text editing, 3D charts, and more.
+Use this reference when you need:
+- Liquid Glass APIs and toolbar patterns
+- Performance improvements in iOS 26
+- @Animatable macro for custom animation
+- WebView and WebPage integration
+- TextEditor with AttributedString
+- Chart3D for 3D data visualization
+- Spatial layout and scene bridging
 
-## What's New in iOS 26
+**For Liquid Glass implementation:** See [liquid-glass](/skills/ui-design/liquid-glass) for adoption patterns.
 
-### Liquid Glass Design System
+## Example Prompts
 
-#### Material Design Evolution
-- `.glassBackgroundEffect()` - New glass material modifier
-- Regular vs Clear variants
-- Dynamic tinting and vibrancy
-- Replaces `UIVisualEffectView` and blur effects
+Questions you can ask Claude that will draw from this reference:
 
-#### Toolbar Enhancements
-- `.toolbarRole(.navigationStack)` - Smart spacing
+- "What Liquid Glass APIs are available in iOS 26?"
+- "How do I use the @Animatable macro?"
+- "How do I embed web content with WebView in SwiftUI?"
+- "How do I use TextEditor with AttributedString?"
+- "How do I create 3D charts in SwiftUI?"
+- "What performance improvements does iOS 26 bring to SwiftUI?"
+
+## What's Covered
+
+### Liquid Glass Design
+- .glassBackgroundEffect() modifier
+- Toolbar spacers and roles
 - Bottom-aligned search fields
-- Drawer-style search placement
-- `.searchFieldPlacement(.navigationBarDrawer(displayMode: .always))`
-
-#### Tab Bar Improvements
-- `.tabRole(.search)` - Search tab role
-- Enhanced tab item customization
-- Material-aware tab backgrounds
+- Tab bar with .tabRole(.search)
+- Material-aware backgrounds
 
 ### Performance Improvements
-
-#### Framework Optimizations
 - 6x faster simple lists
 - 16x faster complex lists
-- Improved scrolling performance
 - Nested ScrollView optimization
-- Reduced memory footprint
-
-#### SwiftUI Instrument (Instruments 26)
-- Long view body detection
+- SwiftUI Instrument in Instruments 26
 - Cause & Effect Graph
-- Per-view performance metrics
-- Update frequency tracking
 
-### @Animatable Macro (iOS 26+)
+### @Animatable Macro
+- Automatic animatableData synthesis
+- @AnimatableIgnored for excluded properties
+- Custom animation interpolation
+
+### WebView Integration
+- WebView for URL content
+- WebPage for custom HTML
+- Navigation and load status handling
+- JavaScript interaction
+
+### Rich Text Editing
+- TextEditor with AttributedString
+- .textFormatting() modifier
+- Character-level styling
+- Markdown export
+
+### 3D Charts
+- Chart3D container
+- BarMark3D, LineMark3D, PointMark3D
+- Perspective options
+- Data visualization in 3D
+
+### Scene Bridging
+- UIKit ↔ SwiftUI transitions
+- .sceneBridge() modifier
+- Shared state management
+
+## Key Pattern
+
+### Liquid Glass Navigation
+
+```swift
+NavigationStack {
+    ContentView()
+        .navigationTitle("Home")
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button("Add", systemImage: "plus") { }
+            }
+        }
+        .searchable(text: $searchText)
+        .searchFieldPlacement(.navigationBarDrawer(displayMode: .always))
+}
+```
+
+### @Animatable Macro
 
 ```swift
 @Animatable
-struct CustomView: View {
-    var progress: Double  // Auto-animatable!
+struct ProgressView: View {
+    var progress: Double  // Automatically animatable
 
     var body: some View {
-        // View updates smoothly with .animation()
+        Circle()
+            .trim(from: 0, to: progress)
+            .stroke(lineWidth: 4)
     }
 }
 ```
 
-#### Benefits
-- Auto-generates animatable conformance
-- Eliminates boilerplate
-- Type-safe animation interpolation
-- Works with custom property wrappers
+### WebView
 
-### WebView Integration
-
-#### Native WebView in SwiftUI
 ```swift
 WebView(url: URL(string: "https://example.com")!)
     .onNavigationAction { action in
@@ -79,158 +120,23 @@ WebView(url: URL(string: "https://example.com")!)
     }
 ```
 
-#### WebPage for Custom HTML
-```swift
-WebPage(html: """
-    <html><body>
-        <h1>Hello SwiftUI</h1>
-    </body></html>
-""")
-```
-
-### Rich Text Editing
-
-#### AttributedString Editing
-```swift
-TextEditor(text: $attributedString)
-    .textFormatting([.bold, .italic, .underline])
-    .textColor(\.foreground, color: .blue)
-```
-
-#### Features
-- Inline formatting controls
-- Character-level styling
-- Markdown export
-- Custom attributes
-
-### 3D Charts
-
-#### Spatial Chart Types
-```swift
-Chart3D {
-    ForEach(data) { item in
-        BarMark3D(x: .value("X", item.x),
-                  y: .value("Y", item.y),
-                  z: .value("Z", item.z))
-    }
-}
-.chartPerspective(.orthographic)
-```
-
-#### Supported Types
-- BarMark3D
-- LineMark3D
-- PointMark3D
-- SurfaceMark3D
-
-### Spatial Layout
-
-#### 3D Layout System
-```swift
-SpatialStack {
-    ForEach(items) { item in
-        CardView(item)
-            .offset3D(x: item.x, y: item.y, z: item.z)
-    }
-}
-.perspective(.default)
-```
-
-#### Capabilities
-- True 3D positioning
-- Perspective transforms
-- Depth sorting
-- Touch interaction in 3D space
-
-### Scene Bridging
-
-#### UIKit-SwiftUI Integration
-```swift
-// Embed UIKit in SwiftUI
-UIViewControllerRepresenting {
-    MyViewController()
-}
-.sceneBridge()  // Smoother transitions
-
-// Embed SwiftUI in UIKit
-hostingController.view.sceneBridge = true
-```
-
-#### Benefits
-- Seamless animation transitions
-- Shared state management
-- Reduced memory overhead
-- Better gesture handling
-
-### Other Enhancements
-
-#### Drag and Drop
-- Multi-item drag support
-- Custom drag previews
-- Drop destination customization
-- System integration
-
-#### visionOS Integration
-- Window groups for spatial apps
-- Immersive spaces
-- RealityView enhancements
-- Hand tracking support
-
-## When to Use This Reference
-
-Use this reference when:
-- Adopting iOS 26 features
-- Planning modern SwiftUI architecture
-- Migrating from UIKit to SwiftUI
-- Reviewing new API capabilities
-- Building iOS 26+ exclusive features
-
-## Migration Checklist
-
-### From iOS 18 → iOS 26
-
-#### Liquid Glass Adoption
-- [ ] Replace `.blur()` with `.glassBackgroundEffect()`
-- [ ] Update navigation bars with `.toolbarRole()`
-- [ ] Migrate search to drawer placement
-- [ ] Review tab bar for glass materials
-
-#### Performance
-- [ ] Profile with new SwiftUI Instrument
-- [ ] Identify long view bodies
-- [ ] Optimize with `@Animatable` macro
-- [ ] Test nested ScrollView performance
-
-#### New Capabilities
-- [ ] Consider WebView for web content
-- [ ] Replace AttributedText with TextEditor enhancements
-- [ ] Explore 3D charts for data visualization
-- [ ] Review spatial layout opportunities
-
-## Related Skills
-
-- [liquid-glass](/skills/ui-design/liquid-glass) — Implementation skill for Liquid Glass
-- [swiftui-performance](/skills/ui-design/swiftui-performance) — Performance optimization
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — Debugging view updates
-- [liquid-glass-ref](/reference/liquid-glass-ref) — Comprehensive Liquid Glass adoption
-
-## WWDC 2025 Sessions
-
-- WWDC 2025-256: What's New in SwiftUI
-- WWDC 2025-268: Swift Concurrency Updates
-- WWDC 2025-260: App Intents Integration
-
 ## Documentation Scope
 
-This is a **reference skill** — comprehensive API catalog without mandatory workflows.
+This page documents the `swiftui-26-ref` reference skill—complete API coverage Claude uses when you need specific iOS 26 SwiftUI APIs or feature details.
 
-#### Reference includes
-- Complete feature list
-- API examples
-- Migration strategies
-- Performance characteristics
-- Platform considerations
+**For Liquid Glass adoption:** See [liquid-glass](/skills/ui-design/liquid-glass) for implementation workflows.
 
-## Size
+**For performance profiling:** See [swiftui-performance](/skills/ui-design/swiftui-performance) for Instruments workflows.
 
-32 KB - Complete iOS 26 SwiftUI reference
+## Related
+
+- [liquid-glass](/skills/ui-design/liquid-glass) — Liquid Glass implementation patterns
+- [swiftui-performance](/skills/ui-design/swiftui-performance) — Performance optimization
+- [swiftui-animation-ref](/reference/swiftui-animation-ref) — Animation API reference
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — View update debugging
+
+## Resources
+
+**WWDC**: 2025-256 (What's New in SwiftUI), 2025-268 (Swift Concurrency)
+
+**Docs**: /swiftui, /swiftui/animation

@@ -1,20 +1,20 @@
 ---
 name: swiftui-architecture
-description: Use when separating logic from SwiftUI views, choosing architecture patterns (MVVM, TCA, Coordinator), refactoring view files, or asking 'where should this code go', 'how do I organize my SwiftUI app', 'MVVM vs TCA', 'how do I make SwiftUI testable' - comprehensive architecture patterns with refactoring workflows for iOS 26+
+description: Architecture patterns for SwiftUI — Apple patterns, MVVM, TCA, and Coordinator
 skill_type: discipline
 version: 1.0
-last_updated: Based on WWDC 2023-2025 sessions
-apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+
-xcode_version: Xcode 26+
+apple_platforms: iOS 26+
 ---
 
 # SwiftUI Architecture
 
+Architecture patterns for modern SwiftUI. Covers Apple's native patterns (@Observable, State-as-Bridge), MVVM, TCA, and Coordinator approaches with decision frameworks for choosing between them.
+
 ## When to Use This Skill
 
-Use when:
-- You have logic in your SwiftUI view files and want to extract it
-- Choosing between MVVM, TCA, vanilla SwiftUI patterns, or Coordinator
+Use this skill when you're:
+- Logic in SwiftUI view files that you want to extract
+- Choosing between MVVM, TCA, vanilla SwiftUI, or Coordinator
 - Refactoring views to separate concerns
 - Making SwiftUI code testable
 - Asking "where should this code go?"
@@ -23,331 +23,136 @@ Use when:
 
 ## Example Prompts
 
-These are real questions developers ask that this skill is designed to answer:
+Questions you can ask Claude that will draw from this skill:
 
-#### 1. "There's quite a bit of code in my model view files about logic things. How do I extract it?"
-→ The skill provides a refactoring workflow with decision trees for where logic belongs (Model vs ViewModel vs Service)
+- "There's quite a bit of code in my view files about logic things. How do I extract it?"
+- "Should I use MVVM, TCA, or Apple's vanilla patterns?"
+- "How do I make my SwiftUI code testable?"
+- "Where should formatters and calculations go?"
+- "Which property wrapper do I use?"
 
-#### 2. "Should I use MVVM, TCA, or Apple's vanilla patterns?"
-→ The skill offers decision criteria based on app complexity, team size, testability needs, and iteration speed
+## What's Covered
 
-#### 3. "How do I make my SwiftUI code testable?"
-→ The skill shows separation patterns that enable testing without SwiftUI imports, with concrete examples
+### Apple's Native Patterns
+- @Observable for data models (replaces ObservableObject)
+- State-as-Bridge for async boundaries (WWDC 2025)
+- Three property wrappers: @State, @Environment, @Bindable
+- Synchronous UI updates for animations
 
-#### 4. "Where should formatters and calculations go?"
-→ The skill's anti-patterns section prevents logic in view bodies with before/after code comparisons
+### MVVM Pattern
+- When MVVM adds value (complex presentation logic)
+- ViewModel responsibilities
+- Testing strategies
 
-#### 5. "Which property wrapper do I use?"
-→ The skill provides a decision tree for @State, @Environment, @Bindable, or plain properties from WWDC 2023
+### TCA (The Composable Architecture)
+- When TCA is appropriate
+- Complexity trade-offs
+- Team onboarding considerations
 
----
+### Coordinator Pattern
+- When coordinators help
+- Navigation separation from views
+- State restoration
 
-## Overview
+### Property Wrapper Decision Tree
+- @State for view-local state
+- @Environment for dependencies
+- @Bindable for two-way binding to @Observable
+- Plain properties for read-only data
 
-**Core Principle**: "A data model provides separation between the data and the views that interact with the data. This separation promotes modularity, improves testability, and helps make it easier to reason about how the app works." — Apple Developer Documentation
+### Refactoring Workflow
+- Identifying logic in views
+- Extracting to model layer
+- Testing extracted code
 
-**Based on**: WWDC 2023-2025 sessions covering modern SwiftUI architecture
+## Key Pattern
 
-Apple's modern SwiftUI patterns (WWDC 2023-2025) center on:
-1. **@Observable** for data models (replaces ObservableObject)
-2. **State-as-Bridge** for async boundaries (WWDC 2025)
-3. **Three property wrappers**: @State, @Environment, @Bindable
-4. **Synchronous UI updates** for animations
-
----
-
-## Part 1: Apple's Native Patterns
-
-### The State-as-Bridge Pattern (WWDC 2025/266)
-
-From WWDC 2025's "Explore concurrency in SwiftUI":
-
-> "Find the boundaries between UI code that requires time-sensitive changes, and long-running async logic."
-
-**Key insight**: UI logic stays synchronous (for animations), async code lives in models (testable without SwiftUI), and state bridges the two.
+### State-as-Bridge Pattern (WWDC 2025)
 
 ```swift
-// ✅ Correct: State bridges UI and async code
+// UI logic stays synchronous (for animations)
+// Async code lives in models (testable without SwiftUI)
+// State bridges the two
+
 @Observable
 class ColorExtractor {
     var isLoading = false
     var colors: [Color] = []
 
     func extract(from image: UIImage) async {
+        isLoading = true
         let extracted = await heavyComputation(image)
-        self.colors = extracted  // Synchronous mutation
+        colors = extracted  // Synchronous mutation triggers UI update
+        isLoading = false
     }
 }
 
-struct ColorExtractorView: View {
-    let extractor: ColorExtractor
+struct ColorView: View {
+    @State private var extractor = ColorExtractor()
 
     var body: some View {
-        Button("Extract Colors") {
-            withAnimation {
-                extractor.isLoading = true  // ✅ Synchronous
-            }
-
-            Task {
-                await extractor.extract(from: currentImage)
-
-                withAnimation {
-                    extractor.isLoading = false  // ✅ Synchronous
-                }
+        VStack {
+            if extractor.isLoading {
+                ProgressView()
+            } else {
+                // Display colors with animation
             }
         }
-        .scaleEffect(extractor.isLoading ? 1.5 : 1.0)
+        .task { await extractor.extract(from: selectedImage) }
     }
 }
+```
+
+### Architecture Decision Tree
+
+```
+How complex is your presentation logic?
+├─ Simple (mostly data display)?
+│  └─ Use Apple's vanilla @Observable patterns
+│
+├─ Medium (some formatting, validation)?
+│  └─ Extract to @Observable model classes
+│
+├─ Complex (multiple async flows, complex state)?
+│  ├─ Small team familiar with Swift?
+│  │  └─ MVVM with @Observable
+│  └─ Large team, need strict patterns?
+│     └─ Consider TCA
+│
+└─ Complex navigation between features?
+   └─ Add Coordinator pattern
 ```
 
 ### Property Wrapper Decision Tree
 
-From WWDC 2023/10149, there are only **3 questions** to answer:
-
-| Question | Answer |
-|----------|--------|
-| Does this model need to be STATE OF THE VIEW ITSELF? | Use @State |
-| Does this model need to be part of the GLOBAL ENVIRONMENT? | Use @Environment |
-| Does this model JUST NEED BINDINGS? | Use @Bindable |
-| NONE OF THE ABOVE? | Use as plain property |
-
----
-
-## Part 2: MVVM Pattern
-
-### When to Use MVVM
-
-MVVM is appropriate when:
-
-✅ You're familiar with it from UIKit — Easier onboarding for team
-✅ You want explicit View/ViewModel separation — Clear contracts
-✅ You have complex presentation logic — Multiple filtering/sorting operations
-✅ You're migrating from UIKit — Familiar mental model
-
-❌ Avoid MVVM when:
-- Views are simple (just displaying data)
-- You're starting fresh with SwiftUI (Apple's patterns are simpler)
-- You're creating unnecessary abstraction layers
-
----
-
-## Part 3: TCA (Composable Architecture)
-
-### When to Consider TCA
-
-TCA is a third-party architecture from Point-Free. Consider it when:
-
-✅ Rigorous testability is critical — TestStore makes testing deterministic
-✅ Large team needs consistency — Strict patterns reduce variation
-✅ Complex state management — Side effects, dependencies, composition
-✅ You value Redux-like patterns — Unidirectional data flow
-
-❌ Avoid TCA when:
-- Small app or prototype (too much overhead)
-- Team unfamiliar with functional programming
-- You need rapid iteration (boilerplate slows development)
-- You want minimal dependencies
-
-### TCA Trade-offs
-
-**✅ Benefits**:
-- Excellent testability with TestStore
-- Consistency across features
-- Composition of reducers
-- Structured effect management
-
-**❌ Costs**:
-- Boilerplate (State/Action/Reducer for every feature)
-- Learning curve (functional programming concepts)
-- Third-party dependency (not Apple-supported)
-- Slower iteration speed
-
----
-
-## Part 4: Coordinator Pattern
-
-Coordinators extract navigation logic from views. Use when:
-
-✅ Complex navigation — Multiple paths, conditional flows
-✅ Deep linking — URL-driven navigation to any screen
-✅ Multiple entry points — Same screen from different contexts
-✅ Testable navigation — Isolate navigation from UI
-
-```swift
-// Coordinator manages navigation state
-@Observable
-class AppCoordinator {
-    var path: [Route] = []
-
-    func showDetail(for pet: Pet) {
-        path.append(.detail(pet))
-    }
-
-    func handleDeepLink(_ url: URL) {
-        // Parse URL and build path
-        if url.path == "/pets/123" {
-            let pet = loadPet(id: "123")
-            path = [.detail(pet)]
-        }
-    }
-}
+```
+Where does this data come from?
+├─ View-local, temporary?
+│  └─ @State
+├─ Shared dependency (database, services)?
+│  └─ @Environment
+├─ Need two-way binding to @Observable?
+│  └─ @Bindable
+└─ Read-only data from parent?
+   └─ Plain property (no wrapper)
 ```
 
----
+## Documentation Scope
 
-## Refactoring Workflow
+This page documents the `swiftui-architecture` skill—architecture patterns Claude uses when you're organizing SwiftUI code, extracting logic from views, or choosing between patterns.
 
-### Step 1: Identify Logic in Views
+**For navigation:** See [swiftui-nav](/skills/ui-design/swiftui-nav) for NavigationStack and deep linking patterns.
 
-Run this checklist on your views:
+**For app-level composition:** See [app-composition](/skills/ui-design/app-composition) for @main, root switching, and scene lifecycle.
 
-- DateFormatter, NumberFormatter creation
-- Calculations or data transformations
-- API calls or async operations
-- Business rules (discounts, validation, etc.)
-- Data filtering or sorting
-- Heavy string manipulation
-- Task { } with complex logic inside
+## Related
 
-If you checked ANY box, that logic should likely move out.
+- [swiftui-nav](/skills/ui-design/swiftui-nav) — Navigation patterns (NavigationStack, deep linking)
+- [app-composition](/skills/ui-design/app-composition) — App-level patterns (@main, root switching)
+- [swift-concurrency](/skills/concurrency/swift-concurrency) — Async patterns for models
 
-### Step 2: Extract to Appropriate Layer
+## Resources
 
-| Logic Type | Extract To | Example |
-|-----------|-----------|---------|
-| Pure domain logic | Model | Order.calculateDiscount() |
-| Presentation logic | ViewModel | filteredItems, displayPrice |
-| External side effects | Service | APIClient, DatabaseManager |
-| Expensive computation | Cache | let formatter = DateFormatter() |
+**WWDC**: 2025-266, 2024-10150, 2023-10149
 
-### Step 3: Verify Testability
-
-Your refactoring succeeded if:
-
-```swift
-// ✅ Can test without importing SwiftUI
-import XCTest
-
-final class OrderTests: XCTestCase {
-    func testDiscountCalculation() {
-        let order = Order(id: UUID(), total: 100)
-        XCTAssertEqual(order.discount, 10)
-    }
-}
-```
-
----
-
-## Common Anti-Patterns
-
-### ❌ Logic in View Body
-
-**Problem**: Formatters created every render, calculations repeated, business logic untestable
-
-```swift
-// ❌ Don't do this
-struct ProductListView: View {
-    var body: some View {
-        let formatter = NumberFormatter()  // ❌ Created every render!
-        let sorted = products.sorted { $0.price > $1.price }  // ❌ Sorted every render!
-        // ...
-    }
-}
-```
-
-**Solution**: Extract to ViewModel
-
-```swift
-// ✅ Correct
-@Observable
-class ProductListViewModel {
-    private let formatter = NumberFormatter()  // ✅ Created once
-
-    var sortedProducts: [Product] {
-        products.sorted { $0.price > $1.price }
-    }
-}
-```
-
-### ❌ Async Code Without Boundaries
-
-**Problem**: Suspension points can break animation timing
-
-```swift
-// ❌ Don't do this
-Button("Extract") {
-    Task {
-        isLoading = true
-        await heavyExtraction()  // ⚠️ Suspension point
-        isLoading = false  // ❌ Animation might break
-    }
-}
-```
-
-**Solution**: State-as-Bridge pattern (see Part 1)
-
----
-
-## Pressure Scenarios
-
-### Scenario 1: "Just put it in the view for now"
-
-**Manager**: "We need this feature by Friday. Just put the logic in the view for now, we'll refactor later."
-
-**Time Cost Comparison**:
-
-| Option | Time | Outcome |
-|--------|------|---------|
-| Logic in view | 5 hours | No tests, untestable |
-| Extract properly | 3.5 hours | Full test coverage |
-
-**How to Push Back**:
-> "Putting logic in views takes 5 hours with no tests. Extracting it properly takes 3.5 hours with full tests. We save 1.5 hours AND get tests."
-
-### Scenario 2: "TCA is overkill"
-
-Use the decision matrix:
-
-| App Size | Team Experience | Testability Need | Recommendation |
-|----------|----------------|------------------|----------------|
-| < 5 screens | Any | Any | Apple patterns |
-| 5-20 screens | FP experience | Critical | TCA |
-| 5-20 screens | No FP | Normal | Apple/MVVM |
-| 20+ screens | Any | Critical | TCA |
-
----
-
-## Real-World Impact
-
-**Before**: 200-line view with logic
-**After**: 40-line view + 60-line ViewModel + tests
-
-**Benefits**:
-- View: 40 lines (was 200)
-- ViewModel: Fully testable without SwiftUI
-- Model: Pure business logic
-- Formatters: Created once, not every render
-- Error handling: Proper with alerts
-- Tests: 10+ tests covering all logic
-
----
-
-## WWDC Sessions
-
-**Required Viewing**:
-
-- [Explore concurrency in SwiftUI](https://developer.apple.com/videos/play/wwdc2025/266/) (2025) — State-as-Bridge pattern
-- [SwiftUI essentials](https://developer.apple.com/videos/play/wwdc2024/10150/) (2024) — @Observable models, ViewModel adapters
-- [Discover Observation in SwiftUI](https://developer.apple.com/videos/play/wwdc2023/10149/) (2023) — @Observable macro, property wrappers
-- [Demystify SwiftUI performance](https://developer.apple.com/videos/play/wwdc2023/10160/) (2023) — Performance optimization
-
-**Additional Resources**:
-
-- [Managing model data in your app](https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app) — Apple's official guidance
-- [The Composable Architecture](https://github.com/pointfreeco/swift-composable-architecture) — TCA documentation
-
----
-
-**Status**: Production-ready (v1.0)
-**Source**: Full skill at `.claude-plugin/plugins/axiom/skills/swiftui-architecture/skill.md`
+**Docs**: /swiftui/model-data, /observation

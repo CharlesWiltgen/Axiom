@@ -1,208 +1,116 @@
 ---
 name: cloud-sync-diag
-description: CloudKit errors, iCloud Drive sync failures, quota exceeded — systematic cloud sync diagnostics
+description: Systematic diagnostics for CloudKit errors, iCloud Drive sync failures, and quota issues
 ---
 
 # Cloud Sync Diagnostics
 
-Systematic diagnostics for iCloud sync issues covering both CloudKit and iCloud Drive.
+Systematic troubleshooting for iCloud sync issues covering both CloudKit and iCloud Drive.
 
-## Overview
+## Symptoms This Diagnoses
 
-90% of cloud sync problems stem from account/entitlement issues, network connectivity, or misunderstanding sync timing—not iCloud infrastructure bugs.
-
-## Red Flags
-
-If you see:
+Use when you're experiencing:
 - Files/data not appearing on other devices
 - "iCloud account not available" errors
 - Persistent sync conflicts
-- CloudKit quota exceeded
+- CloudKit quota exceeded (CKError.quotaExceeded)
 - Upload/download stuck at 0%
 - Works on WiFi but not cellular
+- SwiftData not syncing to CloudKit
 
-## Decision Trees
+## Example Prompts
 
-### CloudKit Sync Issues
+- "Data isn't syncing between my devices"
+- "Getting 'iCloud account not available' error"
+- "CloudKit quota exceeded — what do I tell users?"
+- "How do I handle CKError.serverRecordChanged?"
+- "SwiftData CloudKit sync stopped working"
+- "iCloud Drive files won't upload"
 
-```
-CloudKit data not syncing?
+## Diagnostic Workflow
 
-Account unavailable?
-  Check: await container.accountStatus()
-  .noAccount → User not signed into iCloud
-  .restricted → Parental controls
-  .temporarilyUnavailable → Network/iCloud outage
+Claude guides you through systematic diagnosis:
 
-CKError.quotaExceeded?
-  → User exceeded iCloud storage quota
-  → Prompt to purchase more storage
-
-CKError.networkUnavailable?
-  → No internet connection
-  → Test on different network
-
-CKError.serverRecordChanged?
-  → Concurrent modifications (conflict)
-  → Implement conflict resolution
-
-SwiftData not syncing?
-  → Check ModelConfiguration CloudKit setup
-  → Verify private database only
-  → Check for @Attribute(.unique) (not supported)
-```
-
-### iCloud Drive Sync Issues
+### CloudKit Issues
 
 ```
-iCloud Drive files not syncing?
+Check account status first:
+  await container.accountStatus()
+  ├─ .noAccount → User not signed into iCloud
+  ├─ .restricted → Parental controls
+  └─ .temporarilyUnavailable → Network/iCloud outage
 
-File not uploading?
-  Check: url.resourceValues(.ubiquitousItemUploadingErrorKey)
-  → Error details indicate issue
-
-File not downloading?
-  Check: url.resourceValues(.ubiquitousItemDownloadingErrorKey)
-  → May need manual download trigger
-
-File has conflicts?
-  Check: url.resourceValues(.ubiquitousItemHasUnresolvedConflictsKey)
-  → Resolve with NSFileVersion
-
-Files not appearing on other device?
-  → Same iCloud account on both devices?
-  → Entitlements match on both?
-  → Wait (sync takes minutes, not instant)
-  → Check Settings → iCloud → iCloud Drive → [App]
+CKError handling:
+  ├─ .quotaExceeded → Prompt user to buy storage
+  ├─ .networkUnavailable → Queue for retry
+  └─ .serverRecordChanged → Merge and retry
 ```
 
-## Common CloudKit Errors
+### iCloud Drive Issues
 
-### CKError.quotaExceeded
+```
+File not syncing:
+  ├─ Check upload error: ubiquitousItemUploadingErrorKey
+  ├─ Check download error: ubiquitousItemDownloadingErrorKey
+  └─ Check conflicts: ubiquitousItemHasUnresolvedConflictsKey
 
-**Cause**: User's iCloud storage full
+Files not appearing on other device:
+  ├─ Same iCloud account on both devices?
+  ├─ Entitlements match?
+  └─ Wait (sync takes minutes, not instant)
+```
 
-**Fix**: Show alert to free up space in Settings
+### SwiftData CloudKit
 
-### CKError.serverRecordChanged
+```
+SwiftData not syncing:
+  ├─ ModelConfiguration has CloudKit container?
+  ├─ Using private database only?
+  └─ No @Attribute(.unique)? (not supported)
+```
 
-**Cause**: Conflict - record modified since fetch
-
-**Fix**: Merge records and retry
+## Key Diagnostic Checks
 
 ```swift
-if error.code == .serverRecordChanged,
-   let serverRecord = error.serverRecord,
-   let clientRecord = error.clientRecord {
-    let merged = mergeRecords(server: serverRecord,
-                              client: clientRecord)
-    try await database.save(merged)
-}
-```
-
-### CKError.networkUnavailable
-
-**Cause**: No internet connection
-
-**Fix**: Queue for retry when online
-
-## Common iCloud Drive Errors
-
-### Upload Errors
-
-```swift
-let values = try? url.resourceValues(forKeys: [
-    .ubiquitousItemUploadingErrorKey
-])
-
-if let error = values?.ubiquitousItemUploadingError {
-    // Common: iCloud storage full
-}
-```
-
-### Download Errors
-
-```swift
-let values = try? url.resourceValues(forKeys: [
-    .ubiquitousItemDownloadingErrorKey
-])
-
-if let error = values?.ubiquitousItemDownloadingError {
-    // Common: Network unavailable, file deleted on server
-}
-```
-
-## Diagnostic Checklist
-
-### Run These First
-
-```swift
-// 1. Check iCloud account status
-let status = FileManager.default.ubiquityIdentityToken
-if status == nil {
+// 1. Check iCloud availability
+let token = FileManager.default.ubiquityIdentityToken
+if token == nil {
     print("❌ Not signed into iCloud")
 }
 
 // 2. Check CloudKit account
-let container = CKContainer.default()
-let ckStatus = try await container.accountStatus()
-// .available, .noAccount, .restricted, etc.
+let status = try await CKContainer.default().accountStatus()
+// .available, .noAccount, .restricted
 
-// 3. Check entitlements
-if let containerURL = FileManager.default.url(
+// 3. Check container access
+if let url = FileManager.default.url(
     forUbiquityContainerIdentifier: nil
 ) {
-    print("✅ iCloud container: \(containerURL)")
-} else {
-    print("❌ No iCloud container")
+    print("✅ Container: \(url)")
 }
-
-// 4. Check network connectivity
-// Use NWPathMonitor
-
-// 5. Check device storage
-let values = try? homeURL.resourceValues(forKeys: [
-    .volumeAvailableCapacityKey
-])
 ```
 
-## CloudKit Console Monitoring
+## Common CloudKit Errors
 
-**Access**: https://icloud.developer.apple.com/dashboard
+| Error | Cause | Fix |
+|-------|-------|-----|
+| quotaExceeded | iCloud storage full | Prompt user to free space |
+| serverRecordChanged | Conflict | Merge records and retry |
+| networkUnavailable | No connection | Queue for retry |
 
-**Monitor**:
-- Error rates by type
-- Latency percentiles
-- Quota usage
-- Request volume
+## Documentation Scope
 
-**Set Alerts**:
-- High error rate (>5%)
-- Quota approaching limit (>80%)
+This page documents the `cloud-sync-diag` diagnostic skill—systematic troubleshooting Claude uses when you report iCloud sync problems.
 
-## Production Crisis Scenario
+**For SwiftData CloudKit:** See [swiftdata](/skills/persistence/swiftdata) for integration patterns.
 
-**Symptom**: Users report data not syncing after app update
+## Related
 
-**Diagnosis Steps**:
+- [swiftdata](/skills/persistence/swiftdata) — SwiftData with CloudKit integration
+- [networking](/skills/integration/networking) — Network connectivity patterns
 
-1. Check account status (2 min)
-2. Verify entitlements unchanged (5 min)
-3. Check for breaking changes (10 min)
-4. Test on clean device (15 min)
+## Resources
 
-**Root Causes** (90%):
-- Entitlements changed/corrupted
-- CloudKit container ID mismatch
-- Breaking schema changes
-- Account restrictions
+**Docs**: /cloudkit, /icloud, /swiftdata
 
-## Use This Skill When
-
-- Debugging "data not syncing"
-- CloudKit errors (CKError)
-- iCloud Drive upload/download failures
-- Persistent sync conflicts
-- Quota exceeded errors
-
-**Related**: cloudkit-ref, icloud-drive-ref, storage
+**Console**: https://icloud.developer.apple.com/dashboard

@@ -5,193 +5,107 @@ description: Use when encountering BUILD FAILED, test crashes, simulator hangs, 
 
 # Xcode Debugging
 
-## Overview
+Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute rabbit holes by checking build environment before debugging code.
 
-Check build environment BEFORE debugging code. **Core principle** 80% of "mysterious" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.
+## When to Use This Skill
+
+Use this skill when you're:
+- Getting BUILD FAILED with no clear error
+- Tests passed yesterday, failing today with no code changes
+- Build succeeds but old code executes
+- Simulator says "Unable to boot" or stuck at splash screen
+- Getting "No such module" after SPM updates
+- Experiencing intermittent build failures
+
+**Core principle:** 80% of "mysterious" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.
 
 ## Example Prompts
 
-These are real questions developers ask that this skill is designed to answer:
+Questions you can ask Claude that will draw from this skill:
 
-#### 1. "My build is failing with 'BUILD FAILED' but no error details. I haven't changed anything. What's going on?"
-→ The skill shows environment-first diagnostics: check Derived Data, simulator states, and zombie processes before investigating code
+- "My build fails with 'BUILD FAILED' but no error details. I haven't changed anything."
+- "Tests passed yesterday, failing today with no code changes. What's going on?"
+- "My app builds but runs old code from before my changes."
+- "Simulator says 'Unable to boot simulator'. How do I recover?"
+- "I'm getting 'No such module' errors after updating SPM dependencies."
+- "Build sometimes succeeds, sometimes fails. Why?"
+- "I have 20 xcodebuild processes running. Is that normal?"
 
-#### 2. "Tests passed yesterday with no code changes, but now they're failing. This is frustrating. How do I fix this?"
-→ The skill explains stale Derived Data and intermittent failures, shows the 2-5 minute fix (clean Derived Data)
+## What's Covered
 
-#### 3. "My app builds fine but it's running the old code from before my changes. I restarted Xcode but it still happens."
-→ The skill demonstrates that Derived Data caches old builds, shows how deletion forces a clean rebuild
-
-#### 4. "The simulator says 'Unable to boot simulator' and I can't run tests. How do I recover?"
-→ The skill covers simulator state diagnosis with simctl and safe recovery patterns (erase/shutdown/reboot)
-
-#### 5. "I'm getting 'No such module: SomePackage' errors after updating SPM dependencies. How do I fix this?"
-→ The skill explains SPM caching issues and the clean Derived Data workflow that resolves "phantom" module errors
-
----
-
-## Red Flags — Check Environment First
-
-If you see ANY of these, suspect environment not code:
+### Red Flags (Check Environment First)
 - "It works on my machine but not CI"
-- "Tests passed yesterday, failing today with no code changes"
+- "Tests passed yesterday, failing today"
 - "Build succeeds but old code executes"
-- "Build sometimes succeeds, sometimes fails" (intermittent failures)
-- "Simulator stuck at splash screen" or "Unable to install app"
-- Multiple xcodebuild processes (10+) older than 30 minutes
+- Intermittent success/failure
+- Simulator stuck or unresponsive
+- Multiple zombie xcodebuild processes
 
-## Mandatory First Steps
+### Environment Diagnostics
+- Derived Data state and cleanup
+- Simulator health checks with simctl
+- Zombie process detection and cleanup
+- SPM cache verification
 
-**ALWAYS run these commands FIRST** (before reading code):
+### Recovery Commands
+- Safe Derived Data deletion
+- Simulator reset and recovery
+- Process cleanup without reboot
+- SPM cache refresh
+
+### Time Cost Transparency
+- 2-5 minutes: Derived Data cleanup
+- 5-10 minutes: Full environment reset
+- 30+ minutes: Debugging code when problem is environment
+
+## Key Pattern
+
+### The Environment-First Checklist
 
 ```bash
-# 1. Check processes (zombie xcodebuild?)
+# 1. Check for zombie processes (10+ or older than 30 min = problem)
 ps aux | grep -E "xcodebuild|Simulator" | grep -v grep
 
-# 2. Check Derived Data size (>10GB = stale)
-du -sh ~/Library/Developer/Xcode/DerivedData
+# 2. Kill zombies if found
+killall xcodebuild 2>/dev/null
+killall Simulator 2>/dev/null
 
-# 3. Check simulator states (stuck Booting?)
-xcrun simctl list devices | grep -E "Booted|Booting|Shutting Down"
-```
+# 3. Clean Derived Data
+rm -rf ~/Library/Developer/Xcode/DerivedData
 
-#### What these tell you
-- **0 processes + small Derived Data + no booted sims** → Environment clean, investigate code
-- **10+ processes OR >10GB Derived Data OR simulators stuck** → Environment problem, clean first
-- **Stale code executing OR intermittent failures** → Clean Derived Data regardless of size
-
-#### Why environment first
-- Environment cleanup: 2-5 minutes → problem solved
-- Code debugging for environment issues: 30-120 minutes → wasted time
-
-## Quick Fix Workflow
-
-### Finding Your Scheme Name
-
-If you don't know your scheme name:
-```bash
-# List available schemes
-xcodebuild -list
-```
-
-### For Stale Builds / "No such module" Errors
-```bash
-# Clean everything
-xcodebuild clean -scheme YourScheme
-rm -rf ~/Library/Developer/Xcode/DerivedData/*
-rm -rf .build/ build/
-
-# Rebuild
-xcodebuild build -scheme YourScheme \
-  -destination 'platform=iOS Simulator,name=iPhone 16'
-```
-
-### For Simulator Issues
-```bash
-# Shutdown all simulators
+# 4. Reset simulators if needed
 xcrun simctl shutdown all
+xcrun simctl erase all  # Nuclear option - erases all simulator data
 
-# If simctl command fails, shutdown and retry
-xcrun simctl shutdown all
-xcrun simctl list devices
-
-# If still stuck, erase specific simulator
-xcrun simctl erase <device-uuid>
-
-# Nuclear option: force-quit Simulator.app
-killall -9 Simulator
+# 5. Clean SPM cache if module errors persist
+rm -rf ~/Library/Caches/org.swift.swiftpm
 ```
 
-### For Zombie Processes
-```bash
-# Kill all xcodebuild (use cautiously)
-killall -9 xcodebuild
+### When to Use Each Step
 
-# Check they're gone
-ps aux | grep xcodebuild | grep -v grep
-```
+| Symptom | Fix | Time |
+|---------|-----|------|
+| Stale builds, old code runs | Delete Derived Data | 2 min |
+| "No such module" | Delete Derived Data + SPM cache | 3 min |
+| Simulator stuck | simctl shutdown + reboot | 2 min |
+| Zombie processes | killall | 1 min |
+| All of the above | Full reset + reboot | 10 min |
 
-### For Test Failures
-```bash
-# Isolate failing test
-xcodebuild test -scheme YourScheme \
-  -destination 'platform=iOS Simulator,name=iPhone 16' \
-  -only-testing:YourTests/SpecificTestClass
-```
+## Documentation Scope
 
-## Decision Tree
+This page documents the `xcode-debugging` skill—environment-first diagnostics Claude uses before investigating code issues. The skill contains complete command sequences, decision trees, and time-cost analysis.
 
-```
-Test/build failing?
-├─ BUILD FAILED with no details?
-│  └─ Clean Derived Data → rebuild
-├─ Build intermittent (sometimes succeeds/fails)?
-│  └─ Clean Derived Data → rebuild
-├─ Build succeeds but old code executes?
-│  └─ Delete Derived Data → rebuild (2-5 min fix)
-├─ "Unable to boot simulator"?
-│  └─ xcrun simctl shutdown all → erase simulator
-├─ "No such module PackageName"?
-│  └─ Clean + delete Derived Data → rebuild
-├─ Tests hang indefinitely?
-│  └─ Check simctl list → reboot simulator
-├─ Tests crash?
-│  └─ Check ~/Library/Logs/DiagnosticReports/*.crash
-└─ Code logic bug?
-   └─ Use systematic-debugging skill instead
-```
+**For build failures specifically:** Use [/axiom:fix-build](/commands/build/fix-build) for automated diagnosis and fixes.
 
-## Common Error Patterns
+## Related
 
-| Error | Fix |
-|-------|-----|
-| `BUILD FAILED` (no details) | Delete Derived Data |
-| `Unable to boot simulator` | `xcrun simctl erase <uuid>` |
-| `No such module` | Clean + delete Derived Data |
-| Tests hang | Check simctl list, reboot simulator |
-| Stale code executing | Delete Derived Data |
+- [/axiom:fix-build](/commands/build/fix-build) — Automated build failure diagnosis
+- [build-fixer](/agents/build-fixer) — Autonomous agent that diagnoses and fixes build issues
+- [build-debugging](/skills/debugging/build-debugging) — Dependency resolution for CocoaPods/SPM
+- [performance-profiling](/skills/debugging/performance-profiling) — When issue is performance, not environment
 
-## Useful Flags
+## Resources
 
-```bash
-# Show build settings
-xcodebuild -showBuildSettings -scheme YourScheme
+**WWDC**: 2021-10209, 2023-10164
 
-# List schemes/targets
-xcodebuild -list
-
-# Verbose output
-xcodebuild -verbose build -scheme YourScheme
-
-# Build without testing (faster)
-xcodebuild build-for-testing -scheme YourScheme
-xcodebuild test-without-building -scheme YourScheme
-```
-
-## Crash Log Analysis
-
-```bash
-# Recent crashes
-ls -lt ~/Library/Logs/DiagnosticReports/*.crash | head -5
-
-# Symbolicate address (if you have .dSYM)
-atos -o YourApp.app.dSYM/Contents/Resources/DWARF/YourApp \
-  -arch arm64 0x<address>
-```
-
-## Common Mistakes
-
-❌ **Debugging code before checking environment** — Always run mandatory steps first
-
-❌ **Ignoring simulator states** — "Booting" can hang 10+ minutes, shutdown/reboot immediately
-
-❌ **Assuming git changes caused the problem** — Derived Data caches old builds despite code changes
-
-❌ **Running full test suite when one test fails** — Use `-only-testing` to isolate
-
-## Real-World Impact
-
-**Before** 30+ min debugging "why is old code running"
-**After** 2 min environment check → clean Derived Data → problem solved
-
-**Key insight** Check environment first, debug code second.
+**Docs**: /xcode/debugging-and-testing

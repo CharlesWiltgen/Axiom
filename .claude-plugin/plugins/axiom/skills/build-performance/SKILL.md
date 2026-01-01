@@ -1,12 +1,12 @@
 ---
 name: build-performance
-description: Use when build times are slow, investigating build performance, analyzing Build Timeline, identifying type checking bottlenecks, or optimizing incremental builds - comprehensive build optimization workflows based on WWDC 2018/408, WWDC 2022/110364, and real-world optimization patterns
+description: Use when build times are slow, investigating build performance, analyzing Build Timeline, identifying type checking bottlenecks, enabling compilation caching, or optimizing incremental builds - comprehensive build optimization workflows including Xcode 26 compilation caching
 skill_type: discipline
-version: 1.0
-last_updated: 2025-12-07
+version: 2.0
+last_updated: 2026-01-01
 apple_platforms: iOS 14+, macOS 11+, iPadOS 14+, tvOS 14+, watchOS 7+, visionOS 1.0+
-xcode_version: Xcode 14+
-wwdc_sessions: [2018-408, 2022-110364]
+xcode_version: Xcode 14+ (Xcode 26+ for compilation caching and explicit modules)
+wwdc_sessions: [2018-408, 2022-110364, 2024-10171, 2025-247]
 ---
 
 # Build Performance Optimization
@@ -23,6 +23,9 @@ Systematic Xcode build performance analysis and optimization. **Core principle**
 - Need to identify slow-compiling Swift code
 - Optimizing CI/CD build times
 - Build performance regression investigation
+- Enabling Xcode 26 compilation caching
+- Reducing module variants in explicitly built modules
+- Understanding the three-phase build process (scan → modules → compile)
 
 ## Quick Win: Run the Agent First
 
@@ -400,6 +403,131 @@ App:       ░░░░░░███████████
 
 ---
 
+### Pattern 9: Compilation Caching (Xcode 26+, CRITICAL)
+
+**What it is**: Xcode 26 introduces compilation caching that reuses previously compiled artifacts across clean builds.
+
+**Build Settings**:
+
+```
+Build Settings → COMPILATION_CACHE_ENABLE_CACHING → YES
+```
+
+**How it works**:
+- Caches compilation results based on input file content and compiler flags
+- Works across clean builds — even after `xcodebuild clean`, cached artifacts can be reused
+- Significantly reduces CI/CD build times where clean builds are common
+
+**When to enable**:
+- CI/CD pipelines with frequent clean builds
+- Teams sharing build artifacts
+- Projects with stable dependencies
+
+**Verification**:
+```bash
+# Build with caching enabled
+xcodebuild build -scheme YourScheme \
+  COMPILATION_CACHE_ENABLE_CACHING=YES
+
+# Check build log for cache information
+```
+
+**Current limitations** (Xcode 26):
+- Swift Package Manager dependencies not yet cacheable
+- CompileStoryboard, CompileXIB, DataModelCompile, Ld tasks not cacheable
+- Cache requires time to populate on first run
+
+**Expected impact**: 20-40% faster clean builds after initial cache population (up to 70%+ for favorable projects).
+
+---
+
+### Pattern 10: Explicitly Built Modules (Xcode 16+, HIGH IMPACT)
+
+**What it is**: Xcode splits module compilation into explicit build tasks instead of implicit on-demand compilation. **Enabled by default for Swift in Xcode 26.**
+
+**The Problem with Implicit Modules (Pre-Xcode 16)**:
+
+When a compiler encounters an import, it builds the module on-demand:
+```
+Compile A.swift ─── needs UIKit ───→ (builds UIKit.pcm) ───→ continues
+Compile B.swift ─── needs UIKit ───→ (waits for A to finish) ───→ uses cached
+Compile C.swift ─── needs UIKit ───→ (waits) ───→ uses cached
+```
+
+Problems:
+- One task blocks others waiting for the same module
+- Non-deterministic: whoever gets there first builds it
+- Build failures hard to reproduce (depends on task order)
+
+**Explicitly Built Modules Solution**:
+
+Xcode now separates compilation into three phases:
+
+```
+Phase 1: SCAN          Phase 2: BUILD MODULES    Phase 3: COMPILE
+┌──────────────────┐   ┌──────────────────────┐   ┌──────────────────┐
+│ Scan A.swift     │   │ Build UIKit.pcm      │   │ Compile A.swift  │
+│ Scan B.swift     │ → │ Build Foundation.pcm │ → │ Compile B.swift  │
+│ Scan C.swift     │   │ Build SwiftUI.pcm    │   │ Compile C.swift  │
+└──────────────────┘   └──────────────────────┘   └──────────────────┘
+     (fast)                 (parallel)                (parallel)
+```
+
+**Benefits**:
+- **More reliable builds**: Precise dependencies, deterministic build graphs
+- **More efficient scheduling**: Build system knows exactly what's needed
+- **Better debugging**: Debugger reuses built modules (no separate rebuild)
+- **Visible module tasks**: See "Compile Clang Module" and "Compile Swift Module" in build log
+
+**Enable/Disable** (if needed):
+```
+Build Settings → Explicitly Built Modules → YES (default in Xcode 26 for Swift)
+```
+
+**Module Variants** (WWDC 2024-10171)
+
+The same module may be built multiple times with different settings:
+
+```
+Build Log:
+  Compile Clang module 'UIKit' (hash: abc123)   ← Variant 1
+  Compile Clang module 'UIKit' (hash: def456)   ← Variant 2
+  Compile Swift module 'UIKit' (hash: ghi789)   ← Variant 3
+```
+
+**Common causes of variants**:
+- Different preprocessor macros between targets
+- Mixed C and Objective-C language modes
+- Different C language versions (C11 vs C17)
+- Disabling ARC on some targets
+
+**Diagnose variants**:
+1. Build with Timing Summary: `Product → Perform Action → Build with Timing Summary`
+2. Filter build log: Type "modules report" in filter box
+3. View Clang and Swift module reports showing variant counts
+
+**Reduce variants** (unify settings at project/workspace level):
+```bash
+# Check for macro differences
+grep "GCC_PREPROCESSOR_DEFINITIONS" project.pbxproj
+
+# Move target-specific macros to project level where possible
+Project → Build Settings → Preprocessor Macros → [unify here]
+```
+
+**Example** (from WWDC 2024-10171):
+```
+Before: 4 UIKit variants (2 Swift × 2 Clang)
+After:  2 UIKit variants (unified settings)
+Impact: Fewer module builds = faster incremental builds
+```
+
+**Expected impact**: 10-30% faster builds by reducing duplicate module compilation.
+
+**Note: Swift Build** (Xcode 26+): Xcode now uses Swift Build, Apple's open-source build engine. This provides more predictable builds, better SPM integration, and cross-platform support (Linux, Windows, Android). No configuration needed.
+
+---
+
 ## Measurement & Verification
 
 ### Before and After Comparison
@@ -602,26 +730,39 @@ Build target 'MyApp' (project 'MyApp')
 
 Before considering your build optimized:
 
+**Measurement**
 - [ ] Measured baseline (clean + incremental)
+- [ ] Verified improvement in Build Timeline
+- [ ] Documented baseline → optimized comparison
+
+**Compilation Settings**
 - [ ] Debug uses incremental compilation
 - [ ] Build Active Architecture = YES (Debug only)
 - [ ] Debug uses DWARF (not dSYM)
-- [ ] Build phase scripts are conditional (skip in Debug when possible)
-- [ ] Enabled script sandboxing if using parallel scripts
-- [ ] Parallelize Build enabled in scheme
-- [ ] No unnecessary target dependencies
 - [ ] Type checking warnings enabled
 - [ ] Fixed slow type-checking functions (>100ms)
-- [ ] Verified improvement in Build Timeline
-- [ ] Documented baseline → optimized comparison
+
+**Parallelization**
+- [ ] Parallelize Build enabled in scheme
+- [ ] No unnecessary target dependencies
+- [ ] Build phase scripts are conditional (skip in Debug when possible)
+- [ ] Enabled script sandboxing if using parallel scripts
+
+**Xcode 26+ (if applicable)**
+- [ ] Compilation caching enabled for CI/CD (`COMPILATION_CACHE_ENABLE_CACHING`)
+- [ ] Checked module variants (Modules Report in build log, see Pattern 10)
+- [ ] Unified build settings at project level to reduce module variants
+- [ ] Explicitly Built Modules enabled (default for Swift in Xcode 26)
 
 ---
 
 ## Resources
 
-**WWDC**: 2018-408, 2022-110364
+**WWDC**: 2018-408, 2022-110364, 2024-10171, 2025-247
 
-**Tools**: Xcode Build Timeline (Xcode 14+), Build with Timing Summary (Product → Perform Action), Instruments Time Profiler
+**Docs**: /xcode/improving-the-speed-of-incremental-builds, /xcode/building-your-project-with-explicit-module-dependencies
+
+**Tools**: Xcode Build Timeline (Xcode 14+), Build with Timing Summary (Product → Perform Action), Modules Report (Xcode 16+), Instruments Time Profiler
 
 ---
 

@@ -1,103 +1,75 @@
 ---
 name: app-intents-ref
-description: App Intents for Siri, Apple Intelligence, Shortcuts, Spotlight — AppIntent, AppEntity, parameters, queries, debugging
+description: App Intents for Siri, Apple Intelligence, Shortcuts, Spotlight integration
 ---
 
-# App Intents Integration Reference
+# App Intents Reference
 
-Comprehensive guide to integrating App Intents for Siri, Apple Intelligence, Shortcuts, Spotlight, and system experiences.
+Complete API reference for App Intents framework. Covers AppIntent protocol, AppEntity, parameter handling, entity queries, and integration with Siri, Apple Intelligence, Shortcuts, and Spotlight.
 
-## Overview
+## When to Use This Reference
 
-App Intents framework enables your app to integrate deeply with iOS system features including Siri, Apple Intelligence, Shortcuts, Spotlight, and widgets. This reference covers intent definition, parameter handling, entity queries, and debugging common integration issues.
+Use this reference when you need:
+- AppIntent and AppEntity protocol implementation
+- Parameter types and validation patterns
+- Entity queries for Siri disambiguation
+- Siri voice command integration
+- Shortcuts app action creation
+- Spotlight search indexing
+- Apple Intelligence integration
+
+**For quick start:** Define an AppIntent, add parameters, implement perform().
+
+## Example Prompts
+
+Questions you can ask Claude that will draw from this reference:
+
+- "How do I create an AppIntent for Siri?"
+- "How do I implement an AppEntity with queries?"
+- "How do I add dynamic options for Siri disambiguation?"
+- "Why isn't my intent showing up in Shortcuts?"
+- "How do I handle authentication in App Intents?"
+- "How do I index my intents for Spotlight search?"
 
 ## What's Covered
 
-### Core Concepts
-
-#### AppIntent Protocol
-- Defining user-facing actions
+### Core Protocols
+- AppIntent definition and perform()
+- AppEntity with display representations
+- EntityQuery for finding entities
 - Parameter types and validation
-- Async/await perform methods
-- Error handling and user feedback
 
-#### AppEntity Protocol
-- Representing app data objects
-- Display representations
-- Query protocols
-- Identity and uniqueness
-
-#### Intent Parameters
-- Required vs optional parameters
-- Type-safe parameter definitions
-- Dynamic options (search, suggest)
-- Parameter summaries for Siri
-
-#### Entity Queries
-- Finding entities by identifier
-- Search suggestions
-- Filtering and sorting
-- Performance considerations
-
-### Integration Points
-
-#### Siri Integration
+### Siri Integration
 - Voice command handling
 - Disambiguation prompts
 - Confirmation dialogs
 - Error messages for voice
 
-#### Apple Intelligence
+### Apple Intelligence
 - Smart suggestions
 - Contextual actions
 - Proactive recommendations
 - System integration
 
-#### Shortcuts App
+### Shortcuts App
 - Action discovery
 - Parameter customization
 - Multi-step workflows
-- Sharing shortcuts
+- Background execution
 
-#### Spotlight Search
+### Spotlight Search
 - Intent indexing
 - Search result actions
-- Continue in app patterns
-- Deep linking
+- Deep linking patterns
 
-### Advanced Features
-
-#### Background Execution
-- Intent handlers in extensions
-- Data sharing with app groups
-- Network requests
-- State management
-
-#### Authentication
-- User authentication flows
-- Secure data access
-- Error handling for locked device
-- Biometric authentication
-
-#### Debugging
+### Debugging
 - Intent testing in Xcode
 - Shortcuts app debugging
 - Siri transcript logging
-- Console logging best practices
 
-## When to Use This Reference
+## Key Pattern
 
-Use this reference when:
-- Adding Siri support to your app
-- Integrating with Apple Intelligence
-- Creating Shortcuts actions
-- Making app content searchable in Spotlight
-- Building widgets that perform actions
-- Implementing system integration features
-
-## Common Patterns
-
-### Simple Intent
+### Simple AppIntent
 
 ```swift
 struct OrderCoffeeIntent: AppIntent {
@@ -113,21 +85,9 @@ struct OrderCoffeeIntent: AppIntent {
 }
 ```
 
-### Intent with Entity Query
+### AppEntity with Query
 
 ```swift
-struct PlaySongIntent: AppIntent {
-    static var title: LocalizedStringResource = "Play Song"
-
-    @Parameter(title: "Song")
-    var song: SongEntity
-
-    func perform() async throws -> some IntentResult {
-        // Play the song
-        return .result()
-    }
-}
-
 struct SongEntity: AppEntity {
     var id: String
     var title: String
@@ -137,6 +97,8 @@ struct SongEntity: AppEntity {
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(title)")
     }
+
+    static var defaultQuery = SongEntityQuery()
 }
 
 struct SongEntityQuery: EntityQuery {
@@ -145,97 +107,24 @@ struct SongEntityQuery: EntityQuery {
     }
 
     func suggestedEntities() async throws -> [SongEntity] {
-        // Return popular songs
+        // Return popular songs for Siri
     }
 }
 ```
 
-### Dynamic Options
-
-```swift
-@Parameter(title: "Playlist")
-var playlist: PlaylistEntity
-
-func $playlist() async throws -> [PlaylistEntity] {
-    // Return user's playlists for Siri disambiguation
-}
-```
-
-## Integration Checklist
-
-### Siri Setup
-- [ ] Add `NSUserActivityTypes` to Info.plist
-- [ ] Implement AppIntent protocols
-- [ ] Test voice commands with Siri
-- [ ] Handle disambiguation gracefully
-- [ ] Add error messages for voice feedback
-
-### Shortcuts Setup
-- [ ] Define intent metadata
-- [ ] Add parameter summaries
-- [ ] Test in Shortcuts app
-- [ ] Handle background execution
-- [ ] Support multi-step workflows
-
-### Spotlight Setup
-- [ ] Index intents with CoreSpotlight
-- [ ] Provide meaningful titles/descriptions
-- [ ] Handle deep links from search results
-- [ ] Update index when data changes
-
-### Apple Intelligence
-- [ ] Tag intents with appropriate categories
-- [ ] Provide contextual metadata
-- [ ] Test proactive suggestions
-- [ ] Monitor adoption metrics
-
-## Debugging Common Issues
-
-#### Intent Not Appearing in Shortcuts
-- Check Info.plist configuration
-- Verify intent is public (not internal)
-- Rebuild and reinstall app
-- Check Shortcuts app after 5-10 minute delay
-
-#### Siri Can't Find Entity
-- Implement `suggestedEntities()` correctly
-- Check entity query fetch logic
-- Verify display representations
-- Test with Siri transcript logging
-
-#### Background Execution Fails
-- Use app groups for data sharing
-- Check background modes in capabilities
-- Verify intent handler extension setup
-- Test with device, not simulator
-
-#### Authentication Errors
-- Handle locked device state
-- Provide clear error messages
-- Support biometric auth when needed
-- Test with device locked
-
-## Related Skills
-
-- [swiftui-26-ref](/reference/swiftui-26-ref) — iOS 26 SwiftUI features including widget improvements
-
-## WWDC 2025 Sessions
-
-- WWDC 2025-260: App Intents Integration
-- WWDC 2023: Dive into App Intents
-- WWDC 2022: Implement App Shortcuts with App Intents
-
 ## Documentation Scope
 
-This is a **reference skill** — comprehensive integration guide without mandatory workflows.
+This page documents the `app-intents-ref` reference skill—complete API coverage Claude uses when you need specific App Intents APIs or integration patterns.
 
-#### Reference includes
-- Complete API catalog
-- Integration patterns
-- Debugging strategies
-- Best practices
-- Real-world examples
+**For troubleshooting:** Check Info.plist, rebuild app, wait 5-10 minutes for Shortcuts discovery.
 
-## Size
+## Related
 
-30 KB - Comprehensive App Intents integration reference
+- [swiftui-26-ref](/reference/swiftui-26-ref) — iOS 26 SwiftUI features
+- [extensions-widgets](/skills/integration/extensions-widgets) — Widget development
+
+## Resources
+
+**WWDC**: 2025-260 (App Intents), 2023-10103 (Dive into App Intents), 2022-10170 (App Shortcuts)
+
+**Docs**: /appintents, /appintents/appintent, /appintents/appentity
