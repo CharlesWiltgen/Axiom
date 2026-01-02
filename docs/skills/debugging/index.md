@@ -31,6 +31,11 @@ Systematic debugging strategies to solve issues faster and prevent common proble
   - *"Users report the device gets hot when using my app."*
   - **Command** [`/axiom:audit energy`](/commands/utility/audit) for quick energy anti-pattern scanning
 
+- **[Display Performance](/skills/debugging/display-performance)** – Variable refresh rate diagnosis for ProMotion, MTKView, CADisplayLink, system caps
+  - *"My Metal app is stuck at 60fps on iPhone Pro. Why?"*
+  - *"How do I configure MTKView for 120Hz?"*
+  - *"UIScreen says 120 but I'm measuring 60fps. What's wrong?"*
+
 - **[Deep Link Debugging](/skills/debugging/deep-link-debugging)** – Add debug-only deep links for automated testing and closed-loop debugging (60-75% faster iteration)
   - *"Claude Code can't navigate to specific screens for testing. How do I add debug deep links?"*
   - *"I want to take screenshots of different screens automatically."*
