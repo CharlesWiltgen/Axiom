@@ -1,11 +1,11 @@
 ---
 name: ios-graphics
-description: Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, or graphics programming. Covers Metal migration from OpenGL/DirectX, shader conversion, GPU debugging, translation layers.
+description: Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, frame rate, or display performance. Covers Metal migration, shader conversion, variable refresh rate, ProMotion, render loops.
 ---
 
 # iOS Graphics Router
 
-**You MUST use this skill for ANY GPU rendering or graphics programming work.**
+**You MUST use this skill for ANY GPU rendering, graphics programming, or display performance work.**
 
 ## When to Use
 
@@ -17,6 +17,9 @@ Use this router when:
 - Debugging GPU rendering issues (black screen, wrong colors, crashes)
 - Evaluating translation layers (MetalANGLE, MoltenVK)
 - Optimizing GPU performance or fixing thermal throttling
+- App stuck at 60fps on ProMotion device
+- Configuring CADisplayLink or render loops
+- Variable refresh rate display issues
 
 ## Routing Logic
 
@@ -42,15 +45,29 @@ Use this router when:
 - Performance regressions
 - Time-cost analysis per diagnostic path
 
+### Display Performance
+
+**Frame rate & render loops** → `/skill display-performance`
+- App stuck at 60fps on ProMotion (120Hz) device
+- MTKView or CADisplayLink configuration
+- Variable refresh rate optimization
+- System caps (Low Power Mode, Limit Frame Rate, Adaptive Power)
+- Frame budget math (8.33ms for 120Hz)
+- Measuring actual vs reported frame rate
+
 ## Decision Tree
 
 ```
-User asks about GPU/graphics/Metal
+User asks about GPU/graphics/Metal/display
   ├─ "Should I use translation layer or native?" → metal-migration
   ├─ "How do I migrate/port/convert?" → metal-migration
   ├─ "Show me the API/code/example" → metal-migration-ref
   ├─ "How do I set up MTKView?" → metal-migration-ref
-  └─ "Something's broken/wrong/slow" → metal-migration-diag
+  ├─ "Something's broken/wrong/slow" → metal-migration-diag
+  ├─ "Stuck at 60fps on ProMotion" → display-performance
+  ├─ "CADisplayLink setup/configuration" → display-performance
+  ├─ "Variable refresh rate issues" → display-performance
+  └─ "Frame rate not what I expect" → display-performance
 ```
 
 ## Critical Patterns
@@ -73,6 +90,13 @@ User asks about GPU/graphics/Metal
 - Metal validation layer for API misuse
 - Performance regression diagnosis
 
+**display-performance**:
+- MTKView defaults to 60fps (must set preferredFramesPerSecond = 120)
+- CADisplayLink preferredFrameRateRange for explicit rate control
+- System caps: Low Power Mode, Limit Frame Rate, Thermal, Adaptive Power (iOS 26)
+- 8.33ms frame budget for 120Hz
+- UIScreen.maximumFramesPerSecond lies; CADisplayLink tells truth
+
 ## Example Invocations
 
 User: "Should I use MetalANGLE or rewrite in native Metal?"
@@ -92,3 +116,12 @@ User: "My ported app shows a black screen"
 
 User: "Performance is worse after porting to Metal"
 → Invoke: `/skill metal-migration-diag`
+
+User: "My app is stuck at 60fps on iPhone Pro"
+→ Invoke: `/skill display-performance`
+
+User: "How do I configure CADisplayLink for 120Hz?"
+→ Invoke: `/skill display-performance`
+
+User: "ProMotion not working in my Metal app"
+→ Invoke: `/skill display-performance`
