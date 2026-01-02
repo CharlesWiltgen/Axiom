@@ -12,13 +12,24 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 echo "[DEBUG SessionStart] Plugin root: $PLUGIN_ROOT" >&2
 
-# Read using-axiom content
-using_axiom_content=$(cat "${PLUGIN_ROOT}/skills/using-axiom/SKILL.md" 2>&1 || echo "Error reading using-axiom skill")
+# Use Python for reliable JSON generation (bash heredocs + escaping = pain)
+python3 - "$PLUGIN_ROOT" <<'PYTHON_SCRIPT'
+import json
+import sys
+from datetime import datetime
 
-# Platform context - behavioral rules for handling iOS version uncertainty
-current_date=$(date '+%A, %Y-%m-%d')
-platform_context=$(cat <<'PLATFORM_EOF'
-## iOS VERSION UNCERTAINTY (Current date: CURRENT_DATE_PLACEHOLDER)
+plugin_root = sys.argv[1]
+
+# Read using-axiom content
+try:
+    with open(f"{plugin_root}/skills/using-axiom/SKILL.md", "r") as f:
+        using_axiom_content = f.read()
+except Exception as e:
+    using_axiom_content = f"Error reading using-axiom skill: {e}"
+
+# Platform context
+current_date = datetime.now().strftime("%A, %Y-%m-%d")
+platform_context = f"""## iOS VERSION UNCERTAINTY (Current date: {current_date})
 
 Your training ended January 2025 (iOS 18 was current then).
 iOS 19, 20, 21, 22, 23, 24, 25, 26+ may exist now - you simply don't know.
@@ -30,43 +41,31 @@ BEHAVIORAL RULES (not factual claims):
 4. Defer to Axiom skills for post-cutoff iOS/Xcode facts
 5. If Axiom skills don't have the answer, use web search with https://support.apple.com/en-us/123075
 
-This is a BEHAVIORAL INSTRUCTION, not a factual claim.
-PLATFORM_EOF
-)
-platform_context="${platform_context//CURRENT_DATE_PLACEHOLDER/$current_date}"
+This is a BEHAVIORAL INSTRUCTION, not a factual claim."""
 
-# Escape outputs for JSON using pure bash
-escape_for_json() {
-    local input="$1"
-    local output=""
-    local i char
-    for (( i=0; i<${#input}; i++ )); do
-        char="${input:$i:1}"
-        case "$char" in
-            $'\\') output+='\\\\' ;;
-            '"') output+='\\"' ;;
-            $'\n') output+='\\n' ;;
-            $'\r') output+='\\r' ;;
-            $'\t') output+='\\t' ;;
-            *) output+="$char" ;;
-        esac
-    done
-    printf '%s' "$output"
+# Build the context message
+additional_context = f"""<EXTREMELY_IMPORTANT>
+You have Axiom iOS development skills.
+
+{platform_context}
+
+---
+
+**Below is the full content of your 'axiom:using-axiom' skill - your introduction to using Axiom skills. For all other Axiom skills, use the 'Skill' tool:**
+
+{using_axiom_content}
+
+</EXTREMELY_IMPORTANT>"""
+
+# Output valid JSON (json.dumps handles all escaping correctly)
+output = {
+    "hookSpecificOutput": {
+        "hookEventName": "SessionStart",
+        "additionalContext": additional_context
+    }
 }
 
-using_axiom_escaped=$(escape_for_json "$using_axiom_content")
-platform_context_escaped=$(escape_for_json "$platform_context")
-
-echo "[DEBUG SessionStart] Outputting JSON with platform context and using-axiom skill" >&2
-
-# Output context injection as JSON
-cat <<EOF
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "<EXTREMELY_IMPORTANT>\nYou have Axiom iOS development skills.\n\n${platform_context_escaped}\n\n---\n\n**Below is the full content of your 'axiom:using-axiom' skill - your introduction to using Axiom skills. For all other Axiom skills, use the 'Skill' tool:**\n\n${using_axiom_escaped}\n\n</EXTREMELY_IMPORTANT>"
-  }
-}
-EOF
+print(json.dumps(output, indent=2))
+PYTHON_SCRIPT
 
 exit 0
