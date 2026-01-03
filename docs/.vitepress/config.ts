@@ -167,7 +167,8 @@ export default defineConfig({
             { text: 'Foundation Models (Apple Intelligence)', link: '/skills/integration/foundation-models' },
             { text: 'In-App Purchases (StoreKit 2)', link: '/skills/integration/in-app-purchases' },
             { text: 'Networking', link: '/skills/integration/networking' },
-            { text: 'Now Playing', link: '/skills/integration/now-playing' }
+            { text: 'Now Playing', link: '/skills/integration/now-playing' },
+            { text: 'Core Location', link: '/skills/integration/core-location' }
           ]
         },
         {
@@ -223,6 +224,7 @@ export default defineConfig({
             { text: 'Haptics & Audio Feedback', link: '/reference/haptics' },
             { text: 'Localization & Internationalization', link: '/reference/localization' },
             { text: 'Network.framework API', link: '/reference/network-framework-ref' },
+            { text: 'Core Location API', link: '/reference/core-location-ref' },
             { text: 'Privacy UX Patterns', link: '/reference/privacy-ux' },
             { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' }
           ]
@@ -243,6 +245,7 @@ export default defineConfig({
             { text: 'Core Data Diagnostics', link: '/diagnostic/core-data-diag' },
             { text: 'Foundation Models Diagnostics', link: '/diagnostic/foundation-models-diag' },
             { text: 'Networking Diagnostics', link: '/diagnostic/networking-diag' },
+            { text: 'Core Location Diagnostics', link: '/diagnostic/core-location-diag' },
             { text: 'Storage Diagnostics', link: '/diagnostic/storage-diag' },
             { text: 'SwiftData Migration Diagnostics', link: '/diagnostic/swiftdata-migration-diag' },
             { text: 'SwiftUI Debugging Diagnostics', link: '/diagnostic/swiftui-debugging-diag' },

@@ -20,6 +20,7 @@ Use this router for:
 - Spotlight search
 - App discoverability
 - Background processing (BGTaskScheduler)
+- Location services (Core Location)
 
 ## Routing Logic
 
@@ -57,6 +58,12 @@ Use this router for:
 **Background task debugging** → `/skill background-processing-diag`
 **Background task API reference** → `/skill background-processing-ref`
 
+### Location Services
+
+**Implementation patterns** → `/skill core-location`
+**API reference** → `/skill core-location-ref`
+**Debugging location issues** → `/skill core-location-diag`
+
 ## Decision Tree
 
 ```
@@ -80,10 +87,15 @@ User asks about system integration
   │
   ├─ Privacy? → privacy-ux
   │
-  └─ Background processing?
-     ├─ Implementation patterns? → background-processing
-     ├─ Task not running/debugging? → background-processing-diag
-     └─ API reference? → background-processing-ref
+  ├─ Background processing?
+  │  ├─ Implementation patterns? → background-processing
+  │  ├─ Task not running/debugging? → background-processing-diag
+  │  └─ API reference? → background-processing-ref
+  │
+  └─ Location services?
+     ├─ Implementation patterns? → core-location
+     ├─ Not working/debugging? → core-location-diag
+     └─ API reference? → core-location-ref
 ```
 
 ## Example Invocations
@@ -111,3 +123,12 @@ User: "How do I implement BGTaskScheduler?"
 
 User: "What's the difference between BGAppRefreshTask and BGProcessingTask?"
 → Invoke: `/skill background-processing-ref`
+
+User: "How do I implement geofencing?"
+→ Invoke: `/skill core-location`
+
+User: "Location updates not working in background"
+→ Invoke: `/skill core-location-diag`
+
+User: "What is CLServiceSession?"
+→ Invoke: `/skill core-location-ref`

@@ -46,6 +46,20 @@ Network.framework patterns for custom protocols:
 
 ---
 
+### [Core Location](./core-location)
+
+Implementation patterns for location services:
+- **Authorization Strategy** — When In Use vs Always, progressive upgrade
+- **Monitoring Approach** — CLLocationUpdate, CLMonitor, significant-change
+- **Background Location** — CLBackgroundActivitySession, relaunch recovery
+- **Geofencing** — 20-condition limit, radius requirements
+
+**When to use** Implementing location features, choosing authorization strategy, debugging background location, geofencing
+
+**Requirements** iOS 14+ (iOS 17+ for modern APIs)
+
+---
+
 ### [App Intents Integration](/reference/app-intents-ref)
 
 Comprehensive guide to the App Intents framework for exposing app functionality to:

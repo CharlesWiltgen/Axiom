@@ -12,6 +12,7 @@ Systematic diagnostics for production issues with mandatory workflows and pressu
 | [**energy-diag**](./energy-diag) | Battery drain, device hot, background drain, cellular usage — symptom-based decision trees with time-cost analysis |
 | [**foundation-models-diag**](./foundation-models-diag) | Context exceeded, guardrail violations, slow generation — Foundation Models diagnostics with production crisis defense |
 | [**networking-diag**](./networking-diag) | Connection timeouts, TLS failures, data arrival issues — Network.framework diagnostics with production crisis defense |
+| [**core-location-diag**](./core-location-diag) | Location updates not arriving, background location broken, authorization denied, geofence not triggering — Core Location diagnostics |
 | [**storage-diag**](./storage-diag) | Files disappeared, backup too large, file access errors — systematic local storage diagnostics with production crisis defense |
 | [**swiftdata-migration-diag**](./swiftdata-migration-diag) | SwiftData migration crashes, relationship preservation failures, device vs simulator issues — schema migration diagnostics with testing workflows |
 | [**swiftui-debugging-diag**](./swiftui-debugging-diag) | Intermittent view updates, complex state dependencies, Self._printChanges() analysis — systematic SwiftUI debugging with Instruments integration |
