@@ -11,7 +11,18 @@ Systematic Core Location troubleshooting for location failures, background issue
 
 Diagnostic workflows for debugging Core Location using CLLocationUpdate (iOS 17+) and CLMonitor (iOS 17+). Includes systematic troubleshooting, decision trees, and common mistake patterns.
 
-## What This Diagnostic Covers
+## Example Prompts
+
+Questions you can ask Claude that will invoke this diagnostic:
+
+- "Why aren't my location updates arriving?"
+- "Location stops working when my app goes to background"
+- "Users are always denying location permission"
+- "My geofence events never fire"
+- "The location arrow icon won't go away"
+- "How do I debug CLMonitor not triggering?"
+
+## Symptoms This Diagnoses
 
 ### Location Update Issues
 - Updates never arrive — authorization, Info.plist, iteration
@@ -110,7 +121,7 @@ Use this diagnostic when:
 | Geofence silent | condition count | Stay under 20 |
 | Icon persists | Task/session state | Cancel/invalidate |
 
-## Related Resources
+## Related
 
 - [core-location](/skills/integration/core-location) — Implementation patterns and decision trees
 - [core-location-ref](/reference/core-location-ref) — Complete API reference

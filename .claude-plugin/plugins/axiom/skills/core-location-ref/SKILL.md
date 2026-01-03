@@ -53,12 +53,18 @@ Four key classes replace legacy CLLocationManager patterns:
 ```swift
 import CoreLocation
 
-for try await update in CLLocationUpdate.liveUpdates() {
-    if let location = update.location {
-        // Process location
-    }
-    if update.isStationary {
-        break // Stop when user stops moving
+Task {
+    do {
+        for try await update in CLLocationUpdate.liveUpdates() {
+            if let location = update.location {
+                // Process location
+            }
+            if update.isStationary {
+                break // Stop when user stops moving
+            }
+        }
+    } catch {
+        // Handle location errors
     }
 }
 ```
@@ -133,6 +139,8 @@ for try await event in monitor.events {
     case .unsatisfied:  // User exited region
         handleExit(event.identifier)
     case .unknown:
+        break
+    @unknown default:
         break
     }
 }

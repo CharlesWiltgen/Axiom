@@ -3,7 +3,7 @@ name: core-location
 description: Use for Core Location implementation patterns - authorization strategy, monitoring strategy, accuracy selection, background location
 skill_type: discipline
 version: 1.0.0
-apple_platforms: iOS 14+, iPadOS 14+, macOS 11+, watchOS 7+
+apple_platforms: iOS 17+, iPadOS 17+, macOS 14+, watchOS 10+
 last_updated: 2026-01-03
 ---
 
@@ -96,10 +96,10 @@ for try await update in CLLocationUpdate.liveUpdates() {
     if let location = update.location {
         processLocation(location)
     }
-    if update.isStationary {
+    if update.isStationary, let location = update.location {
         // Device stopped moving - updates pause automatically
         // Will resume when device moves again
-        saveLastKnownLocation(update.location)
+        saveLastKnownLocation(location)
     }
 }
 ```

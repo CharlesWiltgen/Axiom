@@ -3,7 +3,7 @@ name: core-location-diag
 description: Use for Core Location troubleshooting - no location updates, background location broken, authorization denied, geofence not triggering
 skill_type: diagnostic
 version: 1.0.0
-apple_platforms: iOS 14+, iPadOS 14+, macOS 11+, watchOS 7+
+apple_platforms: iOS 17+, iPadOS 17+, macOS 14+, watchOS 10+
 last_updated: 2026-01-03
 ---
 
@@ -398,6 +398,7 @@ Task {
         case .satisfied: handleEntry(event.identifier)
         case .unsatisfied: handleExit(event.identifier)
         case .unknown: break
+        @unknown default: break
         }
     }
 }
