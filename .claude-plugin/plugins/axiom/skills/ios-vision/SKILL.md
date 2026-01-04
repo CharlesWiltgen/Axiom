@@ -15,7 +15,10 @@ Use this router when:
 - Tracking hand or body pose
 - Segmenting people or subjects
 - Lifting subjects from backgrounds
-- Using VisionKit
+- Recognizing text in images (OCR)
+- Detecting barcodes or QR codes
+- Scanning documents
+- Using VisionKit or DataScannerViewController
 
 ## Routing Logic
 
@@ -28,12 +31,21 @@ Use this router when:
 - Person segmentation
 - Face detection
 - Isolating objects while excluding hands
+- Text recognition (VNRecognizeTextRequest)
+- Barcode/QR detection (VNDetectBarcodesRequest)
+- Document scanning (VNDocumentCameraViewController)
+- Live scanning (DataScannerViewController)
+- Structured document extraction (RecognizeDocumentsRequest, iOS 26+)
 
 **API reference** → `/skill vision-ref`
 - Complete Vision framework API
 - VNDetectHumanHandPoseRequest
 - VNDetectHumanBodyPoseRequest
 - VNGenerateForegroundInstanceMaskRequest
+- VNRecognizeTextRequest (fast/accurate modes)
+- VNDetectBarcodesRequest (symbologies)
+- DataScannerViewController delegates
+- RecognizeDocumentsRequest (iOS 26+)
 - Coordinate conversion patterns
 
 **Diagnostics** → `/skill vision-diag`
@@ -42,12 +54,22 @@ Use this router when:
 - Low confidence observations
 - Performance issues
 - Coordinate conversion bugs
+- Text not recognized or wrong characters
+- Barcodes not detected
+- DataScanner showing blank or no items
+- Document edges not detected
 
 ## Decision Tree
 
 ```
 User asks about computer vision
-  ├─ Implementing? → vision
+  ├─ Implementing?
+  │   ├─ Pose detection (hand/body)? → vision
+  │   ├─ Subject segmentation? → vision
+  │   ├─ Text recognition/OCR? → vision
+  │   ├─ Barcode/QR scanning? → vision
+  │   ├─ Document scanning? → vision
+  │   └─ Live camera scanning? → vision (DataScannerViewController)
   ├─ Need API reference? → vision-ref
   └─ Debugging issues? → vision-diag
 ```
@@ -60,12 +82,21 @@ User asks about computer vision
 - Body pose detection (2D/3D, up to 4 people)
 - Isolating objects while excluding hands
 - CoreImage HDR compositing
+- Text recognition (fast vs accurate modes)
+- Barcode detection (symbology selection)
+- Document scanning with perspective correction
+- Live scanning with DataScannerViewController
+- Structured document extraction (iOS 26+)
 
 **vision-diag**:
 - Subject detection failures
 - Landmark tracking issues
 - Performance optimization
 - Observation confidence thresholds
+- Text recognition failures (language, contrast)
+- Barcode detection issues (symbology, distance)
+- DataScanner troubleshooting
+- Document edge detection problems
 
 ## Example Invocations
 
@@ -75,8 +106,32 @@ User: "How do I detect hand pose in an image?"
 User: "Isolate a subject but exclude the user's hands"
 → Invoke: `/skill vision`
 
+User: "How do I read text from an image?"
+→ Invoke: `/skill vision`
+
+User: "Scan QR codes with the camera"
+→ Invoke: `/skill vision`
+
+User: "How do I implement document scanning?"
+→ Invoke: `/skill vision`
+
+User: "Use DataScannerViewController for live text"
+→ Invoke: `/skill vision`
+
 User: "Subject detection isn't working"
 → Invoke: `/skill vision-diag`
 
+User: "Text recognition returns wrong characters"
+→ Invoke: `/skill vision-diag`
+
+User: "Barcode not being detected"
+→ Invoke: `/skill vision-diag`
+
 User: "Show me VNDetectHumanBodyPoseRequest examples"
+→ Invoke: `/skill vision-ref`
+
+User: "What symbologies does VNDetectBarcodesRequest support?"
+→ Invoke: `/skill vision-ref`
+
+User: "RecognizeDocumentsRequest API reference"
 → Invoke: `/skill vision-ref`

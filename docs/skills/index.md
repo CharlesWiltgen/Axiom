@@ -29,9 +29,18 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 
 | Skill | When to Use |
 |-------|-------------|
-| [**vision**](/skills/computer-vision/vision) | Subject segmentation, hand/body pose detection, excluding hands from objects, VisionKit vs Vision |
+| [**vision**](/skills/computer-vision/vision) | Subject segmentation, hand/body pose, text recognition (OCR), barcode/QR scanning, document scanning |
 | [**vision-ref**](/reference/vision-ref) | Complete Vision framework API reference with code examples |
-| [**vision-diag**](/reference/vision-diag) | Subject not detected, low confidence landmarks, performance issues, coordinate conversion |
+| [**vision-diag**](/reference/vision-diag) | Subject not detected, text not recognized, barcode issues, performance problems |
+
+### Machine Learning
+
+| Skill | When to Use |
+|-------|-------------|
+| [**coreml**](/skills/machine-learning/coreml) | Deploy custom ML models, model conversion, compression, LLM inference with KV-cache |
+| [**coreml-ref**](/reference/coreml-ref) | CoreML API reference, MLTensor, coremltools, state management |
+| [**coreml-diag**](/diagnostic/coreml-diag) | Model load failures, slow inference, compression accuracy loss |
+| [**speech**](/skills/machine-learning/speech) | Speech-to-text with SpeechAnalyzer (iOS 26+), live transcription, file transcription |
 
 ### Debugging
 

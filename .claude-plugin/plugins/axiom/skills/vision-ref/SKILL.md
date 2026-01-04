@@ -1,15 +1,15 @@
 ---
 name: vision-ref
-description: Vision framework API, VNDetectHumanHandPoseRequest, VNDetectHumanBodyPoseRequest, person segmentation, face detection, VNImageRequestHandler, recognized points, joint landmarks
+description: Vision framework API, VNDetectHumanHandPoseRequest, VNDetectHumanBodyPoseRequest, person segmentation, face detection, VNImageRequestHandler, recognized points, joint landmarks, VNRecognizeTextRequest, VNDetectBarcodesRequest, DataScannerViewController, VNDocumentCameraViewController, RecognizeDocumentsRequest
 skill_type: reference
-version: 1.0.0
-last_updated: 2025-12-20
-apple_platforms: iOS 14+, iPadOS 14+, macOS 11+, tvOS 14+, visionOS 1+
+version: 1.1.0
+last_updated: 2026-01-03
+apple_platforms: iOS 11+, iPadOS 11+, macOS 10.13+, tvOS 11+, visionOS 1+
 ---
 
 # Vision Framework API Reference
 
-Comprehensive reference for Vision framework people-focused computer vision: subject segmentation, hand/body pose detection, person detection, and face analysis.
+Comprehensive reference for Vision framework computer vision: subject segmentation, hand/body pose detection, person detection, face analysis, text recognition (OCR), barcode detection, and document scanning.
 
 ## When to Use This Reference
 
@@ -19,6 +19,11 @@ Comprehensive reference for Vision framework people-focused computer vision: sub
 - **Face detection and landmarks** for AR effects or authentication
 - **Combining Vision APIs** to solve complex computer vision problems
 - **Looking up specific API signatures** and parameter meanings
+- **Recognizing text** in images (OCR) with VNRecognizeTextRequest
+- **Detecting barcodes** and QR codes with VNDetectBarcodesRequest
+- **Building live scanners** with DataScannerViewController
+- **Scanning documents** with VNDocumentCameraViewController
+- **Extracting structured document data** with RecognizeDocumentsRequest (iOS 26+)
 
 **Related skills**: See `vision` for decision trees and patterns, `vision-diag` for troubleshooting
 
@@ -582,6 +587,428 @@ let output = filter.outputImage  // Composited result
 
 **HDR preservation**: CoreImage preserves high dynamic range from input (Vision/VisionKit output is SDR)
 
+## Text Recognition APIs
+
+### VNRecognizeTextRequest
+
+**Availability**: iOS 13+, macOS 10.15+
+
+Recognizes text in images with configurable accuracy/speed trade-off.
+
+#### Basic Usage
+
+```swift
+let request = VNRecognizeTextRequest()
+request.recognitionLevel = .accurate  // Or .fast
+request.recognitionLanguages = ["en-US", "de-DE"]  // Order matters
+request.usesLanguageCorrection = true
+
+let handler = VNImageRequestHandler(cgImage: image)
+try handler.perform([request])
+
+for observation in request.results as? [VNRecognizedTextObservation] ?? [] {
+    // Get top candidates
+    let candidates = observation.topCandidates(3)
+    let bestText = candidates.first?.string ?? ""
+}
+```
+
+#### Recognition Levels
+
+| Level | Performance | Accuracy | Best For |
+|-------|-------------|----------|----------|
+| `.fast` | Real-time | Good | Camera feed, large text, signs |
+| `.accurate` | Slower | Excellent | Documents, receipts, handwriting |
+
+**Fast path**: Character-by-character recognition (Neural Network → Character Detection)
+
+**Accurate path**: Full-line ML recognition (Neural Network → Line/Word Recognition)
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `recognitionLevel` | `VNRequestTextRecognitionLevel` | `.fast` or `.accurate` |
+| `recognitionLanguages` | `[String]` | BCP 47 language codes, order = priority |
+| `usesLanguageCorrection` | `Bool` | Use language model for correction |
+| `customWords` | `[String]` | Domain-specific vocabulary |
+| `automaticallyDetectsLanguage` | `Bool` | Auto-detect language (iOS 16+) |
+| `minimumTextHeight` | `Float` | Min text height as fraction of image (0-1) |
+| `revision` | `Int` | API version (affects supported languages) |
+
+#### Language Support
+
+```swift
+// Check supported languages for current settings
+let languages = try VNRecognizeTextRequest.supportedRecognitionLanguages(
+    for: .accurate,
+    revision: VNRecognizeTextRequestRevision3
+)
+```
+
+**Language correction**: Improves accuracy but takes processing time. Disable for codes/serial numbers.
+
+**Custom words**: Add domain-specific vocabulary for better recognition (medical terms, product codes).
+
+#### VNRecognizedTextObservation
+
+**boundingBox**: Normalized rect containing recognized text
+
+**topCandidates(_:)**: Returns `[VNRecognizedText]` ordered by confidence
+
+#### VNRecognizedText
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `string` | `String` | Recognized text |
+| `confidence` | `VNConfidence` | 0.0-1.0 |
+| `boundingBox(for:)` | `VNRectangleObservation?` | Box for substring range |
+
+```swift
+// Get bounding box for substring
+let text = candidate.string
+if let range = text.range(of: "invoice") {
+    let box = try candidate.boundingBox(for: range)
+}
+```
+
+## Barcode Detection APIs
+
+### VNDetectBarcodesRequest
+
+**Availability**: iOS 11+, macOS 10.13+
+
+Detects and decodes barcodes and QR codes.
+
+#### Basic Usage
+
+```swift
+let request = VNDetectBarcodesRequest()
+request.symbologies = [.qr, .ean13, .code128]  // Specific codes
+
+let handler = VNImageRequestHandler(cgImage: image)
+try handler.perform([request])
+
+for barcode in request.results as? [VNBarcodeObservation] ?? [] {
+    let payload = barcode.payloadStringValue
+    let type = barcode.symbology
+    let bounds = barcode.boundingBox
+}
+```
+
+#### Symbologies
+
+**1D Barcodes**:
+- `.codabar` (iOS 15+)
+- `.code39`, `.code39Checksum`, `.code39FullASCII`, `.code39FullASCIIChecksum`
+- `.code93`, `.code93i`
+- `.code128`
+- `.ean8`, `.ean13`
+- `.gs1DataBar`, `.gs1DataBarExpanded`, `.gs1DataBarLimited` (iOS 15+)
+- `.i2of5`, `.i2of5Checksum`
+- `.itf14`
+- `.upce`
+
+**2D Codes**:
+- `.aztec`
+- `.dataMatrix`
+- `.microPDF417` (iOS 15+)
+- `.microQR` (iOS 15+)
+- `.pdf417`
+- `.qr`
+
+**Performance**: Specifying fewer symbologies = faster detection
+
+#### Revisions
+
+| Revision | iOS | Features |
+|----------|-----|----------|
+| 1 | 11+ | Basic detection, one code at a time |
+| 2 | 15+ | Codabar, GS1, MicroPDF, MicroQR, better ROI |
+| 3 | 16+ | ML-based, multiple codes, better bounding boxes |
+
+#### VNBarcodeObservation
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `payloadStringValue` | `String?` | Decoded content |
+| `symbology` | `VNBarcodeSymbology` | Barcode type |
+| `boundingBox` | `CGRect` | Normalized bounds |
+| `topLeft/topRight/bottomLeft/bottomRight` | `CGPoint` | Corner points |
+
+## VisionKit Scanner APIs
+
+### DataScannerViewController
+
+**Availability**: iOS 16+
+
+Camera-based live scanner with built-in UI for text and barcodes.
+
+#### Check Availability
+
+```swift
+// Hardware support
+DataScannerViewController.isSupported
+
+// Runtime availability (camera access, parental controls)
+DataScannerViewController.isAvailable
+```
+
+#### Configuration
+
+```swift
+import VisionKit
+
+let dataTypes: Set<DataScannerViewController.RecognizedDataType> = [
+    .barcode(symbologies: [.qr, .ean13]),
+    .text(textContentType: .URL),  // Or nil for all text
+    // .text(languages: ["ja"])  // Filter by language
+]
+
+let scanner = DataScannerViewController(
+    recognizedDataTypes: dataTypes,
+    qualityLevel: .balanced,  // .fast, .balanced, .accurate
+    recognizesMultipleItems: true,
+    isHighFrameRateTrackingEnabled: true,
+    isPinchToZoomEnabled: true,
+    isGuidanceEnabled: true,
+    isHighlightingEnabled: true
+)
+
+scanner.delegate = self
+present(scanner, animated: true) {
+    try? scanner.startScanning()
+}
+```
+
+#### RecognizedDataType
+
+| Type | Description |
+|------|-------------|
+| `.barcode(symbologies:)` | Specific barcode types |
+| `.text()` | All text |
+| `.text(languages:)` | Text filtered by language |
+| `.text(textContentType:)` | Text filtered by type (URL, phone, email) |
+
+#### Delegate Protocol
+
+```swift
+protocol DataScannerViewControllerDelegate {
+    func dataScanner(_ dataScanner: DataScannerViewController,
+                     didTapOn item: RecognizedItem)
+
+    func dataScanner(_ dataScanner: DataScannerViewController,
+                     didAdd addedItems: [RecognizedItem],
+                     allItems: [RecognizedItem])
+
+    func dataScanner(_ dataScanner: DataScannerViewController,
+                     didUpdate updatedItems: [RecognizedItem],
+                     allItems: [RecognizedItem])
+
+    func dataScanner(_ dataScanner: DataScannerViewController,
+                     didRemove removedItems: [RecognizedItem],
+                     allItems: [RecognizedItem])
+
+    func dataScanner(_ dataScanner: DataScannerViewController,
+                     becameUnavailableWithError error: DataScannerViewController.ScanningUnavailable)
+}
+```
+
+#### RecognizedItem
+
+```swift
+enum RecognizedItem {
+    case text(RecognizedItem.Text)
+    case barcode(RecognizedItem.Barcode)
+
+    var id: UUID { get }
+    var bounds: RecognizedItem.Bounds { get }
+}
+
+// Text item
+struct Text {
+    let transcript: String
+}
+
+// Barcode item
+struct Barcode {
+    let payloadStringValue: String?
+    let observation: VNBarcodeObservation
+}
+```
+
+#### Async Stream
+
+```swift
+// Alternative to delegate
+for await items in scanner.recognizedItems {
+    // Current recognized items
+}
+```
+
+#### Custom Highlights
+
+```swift
+// Add custom views over recognized items
+scanner.overlayContainerView.addSubview(customHighlight)
+
+// Capture still photo
+let photo = try await scanner.capturePhoto()
+```
+
+### VNDocumentCameraViewController
+
+**Availability**: iOS 13+
+
+Document scanning with automatic edge detection, perspective correction, and lighting adjustment.
+
+#### Basic Usage
+
+```swift
+import VisionKit
+
+let camera = VNDocumentCameraViewController()
+camera.delegate = self
+present(camera, animated: true)
+```
+
+#### Delegate Protocol
+
+```swift
+protocol VNDocumentCameraViewControllerDelegate {
+    func documentCameraViewController(_ controller: VNDocumentCameraViewController,
+                                       didFinishWith scan: VNDocumentCameraScan)
+
+    func documentCameraViewControllerDidCancel(_ controller: VNDocumentCameraViewController)
+
+    func documentCameraViewController(_ controller: VNDocumentCameraViewController,
+                                       didFailWithError error: Error)
+}
+```
+
+#### VNDocumentCameraScan
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `pageCount` | `Int` | Number of scanned pages |
+| `imageOfPage(at:)` | `UIImage` | Get page image at index |
+| `title` | `String` | User-editable title |
+
+```swift
+func documentCameraViewController(_ controller: VNDocumentCameraViewController,
+                                   didFinishWith scan: VNDocumentCameraScan) {
+    controller.dismiss(animated: true)
+
+    for i in 0..<scan.pageCount {
+        let pageImage = scan.imageOfPage(at: i)
+        // Process with VNRecognizeTextRequest
+    }
+}
+```
+
+## Document Analysis APIs
+
+### VNDetectDocumentSegmentationRequest
+
+**Availability**: iOS 15+, macOS 12+
+
+Detects document boundaries for custom camera UIs or post-processing.
+
+```swift
+let request = VNDetectDocumentSegmentationRequest()
+let handler = VNImageRequestHandler(ciImage: image)
+try handler.perform([request])
+
+guard let observation = request.results?.first as? VNRectangleObservation else {
+    return  // No document found
+}
+
+// Get corner points (normalized)
+let corners = [
+    observation.topLeft,
+    observation.topRight,
+    observation.bottomLeft,
+    observation.bottomRight
+]
+```
+
+**vs VNDetectRectanglesRequest**:
+- Document: ML-based, trained specifically on documents
+- Rectangle: Edge-based, finds any quadrilateral
+
+### RecognizeDocumentsRequest (iOS 26+)
+
+**Availability**: iOS 26+, macOS 26+
+
+Structured document understanding with semantic parsing.
+
+#### Basic Usage
+
+```swift
+let request = RecognizeDocumentsRequest()
+let observations = try await request.perform(on: imageData)
+
+guard let document = observations.first?.document else {
+    return
+}
+```
+
+#### DocumentObservation Hierarchy
+
+```
+DocumentObservation
+└── document: DocumentObservation.Document
+    ├── text: TextObservation
+    ├── tables: [Container.Table]
+    ├── lists: [Container.List]
+    └── barcodes: [Container.Barcode]
+```
+
+#### Table Extraction
+
+```swift
+for table in document.tables {
+    for row in table.rows {
+        for cell in row {
+            let text = cell.content.text.transcript
+            let detectedData = cell.content.text.detectedData
+        }
+    }
+}
+```
+
+#### Detected Data Types
+
+```swift
+for data in document.text.detectedData {
+    switch data.match.details {
+    case .emailAddress(let email):
+        let address = email.emailAddress
+    case .phoneNumber(let phone):
+        let number = phone.phoneNumber
+    case .link(let url):
+        let link = url
+    case .address(let address):
+        let components = address
+    case .date(let date):
+        let dateValue = date
+    default:
+        break
+    }
+}
+```
+
+#### TextObservation Hierarchy
+
+```
+TextObservation
+├── transcript: String
+├── lines: [TextObservation.Line]
+├── paragraphs: [TextObservation.Paragraph]
+├── words: [TextObservation.Word]
+└── detectedData: [DetectedDataObservation]
+```
+
 ## API Quick Reference
 
 ### Subject Segmentation
@@ -609,6 +1036,17 @@ let output = filter.outputImage  // Composited result
 | `VNDetectFaceLandmarksRequest` | iOS 11+ | Face with detailed landmarks |
 | `VNDetectHumanRectanglesRequest` | iOS 13+ | Human torso bounding boxes |
 
+### Text & Barcode
+
+| API | Platform | Purpose |
+|-----|----------|---------|
+| `VNRecognizeTextRequest` | iOS 13+ | Text recognition (OCR) |
+| `VNDetectBarcodesRequest` | iOS 11+ | Barcode/QR detection |
+| `DataScannerViewController` | iOS 16+ | Live camera scanner (text + barcodes) |
+| `VNDocumentCameraViewController` | iOS 13+ | Document scanning with perspective correction |
+| `VNDetectDocumentSegmentationRequest` | iOS 15+ | Programmatic document edge detection |
+| `RecognizeDocumentsRequest` | iOS 26+ | Structured document extraction |
+
 ### Observation Types
 
 | Observation | Returned By |
@@ -620,11 +1058,15 @@ let output = filter.outputImage  // Composited result
 | `VNHumanBodyPose3DObservation` | Body pose (3D) |
 | `VNFaceObservation` | Face detection/landmarks |
 | `VNHumanObservation` | Human rectangles |
+| `VNRecognizedTextObservation` | Text recognition |
+| `VNBarcodeObservation` | Barcode detection |
+| `VNRectangleObservation` | Document segmentation |
+| `DocumentObservation` | Structured document (iOS 26+) |
 
 ## Resources
 
-**WWDC**: 2023-10176, 2023-111241, 2023-10048, 2022-10024, 2020-10653, 2020-10043, 2020-10099
+**WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2023-111241, 2023-10048, 2020-10653, 2020-10043, 2020-10099
 
-**Docs**: /vision, /visionkit, /vision/detecting-hand-poses-with-vision
+**Docs**: /vision, /visionkit, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest
 
 **Skills**: vision, vision-diag
