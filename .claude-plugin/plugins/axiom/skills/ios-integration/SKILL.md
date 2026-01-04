@@ -1,11 +1,11 @@
 ---
 name: ios-integration
-description: Use when integrating ANY iOS system feature - Siri, Shortcuts, Apple Intelligence, widgets, IAP, audio, haptics, localization, privacy. Covers App Intents, WidgetKit, StoreKit, AVFoundation, Core Haptics, App Shortcuts, Spotlight.
+description: Use when integrating ANY iOS system feature - Siri, Shortcuts, Apple Intelligence, widgets, IAP, camera, photo library, photos picker, audio, haptics, localization, privacy. Covers App Intents, WidgetKit, StoreKit, AVFoundation, PHPicker, PhotosPicker, Core Haptics, App Shortcuts, Spotlight.
 ---
 
 # iOS System Integration Router
 
-**You MUST use this skill for ANY iOS system integration including Siri, Shortcuts, widgets, in-app purchases, audio, haptics, and more.**
+**You MUST use this skill for ANY iOS system integration including Siri, Shortcuts, widgets, in-app purchases, camera, photo library, audio, haptics, and more.**
 
 ## When to Use
 
@@ -14,6 +14,8 @@ Use this router for:
 - Apple Intelligence integration
 - Widgets & Live Activities
 - In-app purchases (StoreKit)
+- Camera capture (AVCaptureSession)
+- Photo library & pickers (PHPicker, PhotosPicker)
 - Audio & haptics
 - Localization
 - Privacy & permissions
@@ -40,6 +42,14 @@ Use this router for:
 
 **IAP implementation** → `/skill in-app-purchases`
 **StoreKit 2 reference** → `/skill storekit-ref`
+
+### Camera & Photos
+
+**Camera capture implementation** → `/skill camera-capture`
+**Camera API reference** → `/skill camera-capture-ref`
+**Camera debugging** → `/skill camera-capture-diag`
+**Photo pickers & library** → `/skill photo-library`
+**Photo library API reference** → `/skill photo-library-ref`
 
 ### Audio & Haptics
 
@@ -76,6 +86,15 @@ User asks about system integration
   ├─ Widgets/Extensions? → extensions-widgets
   │
   ├─ In-app purchases? → in-app-purchases
+  │
+  ├─ Camera/Photos?
+  │  ├─ Camera capture (AVCaptureSession)?
+  │  │  ├─ Implementation patterns? → camera-capture
+  │  │  ├─ Not working/debugging? → camera-capture-diag
+  │  │  └─ API reference? → camera-capture-ref
+  │  └─ Photo picking/library?
+  │     ├─ Implementation patterns? → photo-library
+  │     └─ API reference? → photo-library-ref
   │
   ├─ Audio?
   │  ├─ AVFoundation? → avfoundation-ref
@@ -114,6 +133,24 @@ User: "How do I localize my app strings?"
 
 User: "Implement haptic feedback for button taps"
 → Invoke: `/skill haptics`
+
+User: "How do I set up a camera preview?"
+→ Invoke: `/skill camera-capture`
+
+User: "Camera freezes when I get a phone call"
+→ Invoke: `/skill camera-capture-diag`
+
+User: "What is RotationCoordinator?"
+→ Invoke: `/skill camera-capture-ref`
+
+User: "How do I let users pick photos in SwiftUI?"
+→ Invoke: `/skill photo-library`
+
+User: "User can't see their photos after granting access"
+→ Invoke: `/skill photo-library`
+
+User: "How do I save a photo to the camera roll?"
+→ Invoke: `/skill photo-library`
 
 User: "My background task never runs"
 → Invoke: `/skill background-processing-diag`
