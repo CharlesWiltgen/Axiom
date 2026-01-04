@@ -1,15 +1,15 @@
 ---
 name: vision
-description: subject segmentation, VNGenerateForegroundInstanceMaskRequest, isolate object from hand, VisionKit subject lifting, image foreground detection, instance masks, class-agnostic segmentation
+description: subject segmentation, VNGenerateForegroundInstanceMaskRequest, isolate object from hand, VisionKit subject lifting, image foreground detection, instance masks, class-agnostic segmentation, VNRecognizeTextRequest, OCR, VNDetectBarcodesRequest, DataScannerViewController, document scanning, RecognizeDocumentsRequest
 skill_type: discipline
-version: 1.0.0
-last_updated: 2025-12-20
+version: 1.1.0
+last_updated: 2026-01-03
 apple_platforms: iOS 14+, iPadOS 14+, macOS 11+, tvOS 14+, visionOS 1+
 ---
 
 # Vision Framework Computer Vision
 
-Guides you through implementing people-focused computer vision: subject segmentation, hand/body pose detection, person detection, and combining Vision APIs to solve complex problems.
+Guides you through implementing computer vision: subject segmentation, hand/body pose detection, person detection, text recognition, barcode detection, document scanning, and combining Vision APIs to solve complex problems.
 
 ## When to Use This Skill
 
@@ -22,6 +22,11 @@ Use when you need to:
 - ☑ Choose between VisionKit and Vision framework
 - ☑ Combine Vision with CoreImage for compositing
 - ☑ Decide which Vision API solves your problem
+- ☑ Recognize text in images (OCR)
+- ☑ Detect barcodes and QR codes
+- ☑ Scan documents with perspective correction
+- ☑ Extract structured data from documents (iOS 26+)
+- ☑ Build live scanning experiences (DataScannerViewController)
 
 ## Example Prompts
 
@@ -32,6 +37,12 @@ Use when you need to:
 "How do I segment multiple people separately?"
 "I need to detect body poses for a fitness app"
 "How do I preserve HDR when compositing subjects on new backgrounds?"
+"How do I recognize text in an image?"
+"I need to scan QR codes from camera"
+"How do I extract data from a receipt?"
+"Should I use DataScannerViewController or Vision directly?"
+"How do I scan documents and correct perspective?"
+"I need to extract table data from a document"
 
 ## Red Flags
 
@@ -43,6 +54,11 @@ Signs you're making this harder than it needs to be:
 - ❌ Training custom models when Vision APIs already exist
 - ❌ Not checking confidence scores (low confidence = unreliable landmarks)
 - ❌ Forgetting to convert coordinates (lower-left origin vs UIKit top-left)
+- ❌ Building custom text recognizer when VNRecognizeTextRequest exists
+- ❌ Using AVFoundation + Vision when DataScannerViewController suffices
+- ❌ Processing every camera frame for scanning (skip frames, use region of interest)
+- ❌ Enabling all barcode symbologies when you only need one (performance hit)
+- ❌ Ignoring RecognizeDocumentsRequest when you need table/list structure (iOS 26+)
 
 ## Mandatory First Steps
 
@@ -80,8 +96,24 @@ What do you need to do?
 │  ├─ Just bounding boxes → VNDetectFaceRectanglesRequest
 │  └─ Detailed landmarks → VNDetectFaceLandmarksRequest
 │
-└─ Person detection (location only)?
-   └─ VNDetectHumanRectanglesRequest
+├─ Person detection (location only)?
+│  └─ VNDetectHumanRectanglesRequest
+│
+├─ Recognize text in images?
+│  ├─ Real-time from camera + need UI → DataScannerViewController (iOS 16+)
+│  ├─ Processing captured image → VNRecognizeTextRequest
+│  │  ├─ Need speed (real-time camera) → recognitionLevel = .fast
+│  │  └─ Need accuracy (documents) → recognitionLevel = .accurate
+│  └─ Need structured documents (iOS 26+) → RecognizeDocumentsRequest
+│
+├─ Detect barcodes/QR codes?
+│  ├─ Real-time camera + need UI → DataScannerViewController (iOS 16+)
+│  └─ Processing image → VNDetectBarcodesRequest
+│
+└─ Scan documents?
+   ├─ Need built-in UI + perspective correction → VNDocumentCameraViewController
+   ├─ Need structured data (tables, lists) → RecognizeDocumentsRequest (iOS 26+)
+   └─ Custom pipeline → VNDetectDocumentSegmentationRequest + perspective correction
 ```
 
 ### 2. Set Up Background Processing
@@ -118,6 +150,15 @@ processingQueue.async {
 | Body pose (2D) | iOS 14+ |
 | Body pose (3D) | iOS 17+ |
 | Person instance segmentation | iOS 17+ |
+| VNRecognizeTextRequest (basic) | iOS 13+ |
+| VNRecognizeTextRequest (accurate, multi-lang) | iOS 14+ |
+| VNDetectBarcodesRequest | iOS 11+ |
+| VNDetectBarcodesRequest (revision 2: Codabar, MicroQR) | iOS 15+ |
+| VNDetectBarcodesRequest (revision 3: ML-based) | iOS 16+ |
+| DataScannerViewController | iOS 16+ |
+| VNDocumentCameraViewController | iOS 13+ |
+| VNDetectDocumentSegmentationRequest | iOS 15+ |
+| RecognizeDocumentsRequest | iOS 26+ |
 
 ## Common Patterns
 
@@ -459,6 +500,317 @@ if poseObservations.count == 60 {
 
 **Cost**: 3-4 hours implementation, 1 hour ongoing
 
+### Pattern 9: Text Recognition (OCR)
+
+**Use case**: Extract text from images, receipts, signs, documents.
+
+```swift
+let request = VNRecognizeTextRequest()
+request.recognitionLevel = .accurate  // Or .fast for real-time
+request.recognitionLanguages = ["en-US"]  // Specify known languages
+request.usesLanguageCorrection = true  // Helps accuracy
+
+let handler = VNImageRequestHandler(cgImage: image)
+try handler.perform([request])
+
+guard let observations = request.results as? [VNRecognizedTextObservation] else {
+    return
+}
+
+for observation in observations {
+    // Get top candidate (most likely)
+    guard let candidate = observation.topCandidates(1).first else { continue }
+
+    let text = candidate.string
+    let confidence = candidate.confidence
+
+    // Get bounding box for specific substring
+    if let range = text.range(of: searchTerm) {
+        if let boundingBox = try? candidate.boundingBox(for: range) {
+            // Use for highlighting
+        }
+    }
+}
+```
+
+**Fast vs Accurate**:
+- **Fast**: Real-time camera, large legible text (signs, billboards), character-by-character
+- **Accurate**: Documents, receipts, small text, handwriting, ML-based word/line recognition
+
+**Language tips**:
+- Order matters: first language determines ML model for accurate path
+- Use `automaticallyDetectsLanguage = true` only when language unknown
+- Query `supportedRecognitionLanguages` for current revision
+
+**Cost**: 30 min basic implementation, 2 hours with language handling
+
+### Pattern 10: Barcode/QR Code Detection
+
+**Use case**: Scan product barcodes, QR codes, healthcare codes.
+
+```swift
+let request = VNDetectBarcodesRequest()
+request.revision = VNDetectBarcodesRequestRevision3  // ML-based, iOS 16+
+request.symbologies = [.qr, .ean13]  // Specify only what you need!
+
+let handler = VNImageRequestHandler(cgImage: image)
+try handler.perform([request])
+
+guard let observations = request.results as? [VNBarcodeObservation] else {
+    return
+}
+
+for barcode in observations {
+    let payload = barcode.payloadStringValue  // Decoded content
+    let symbology = barcode.symbology  // Type of barcode
+    let bounds = barcode.boundingBox  // Location (normalized)
+
+    print("Found \(symbology): \(payload ?? "no string")")
+}
+```
+
+**Performance tip**: Specifying fewer symbologies = faster scanning
+
+**Revision differences**:
+- **Revision 1**: One code at a time, 1D codes return lines
+- **Revision 2**: Codabar, GS1Databar, MicroPDF, MicroQR, better with ROI
+- **Revision 3**: ML-based, multiple codes at once, better bounding boxes, fewer duplicates
+
+**Cost**: 15 min implementation
+
+### Pattern 11: DataScannerViewController (Live Scanning)
+
+**Use case**: Camera-based text/barcode scanning with built-in UI (iOS 16+).
+
+```swift
+import VisionKit
+
+// Check support
+guard DataScannerViewController.isSupported,
+      DataScannerViewController.isAvailable else {
+    // Not supported or camera access denied
+    return
+}
+
+// Configure what to scan
+let recognizedDataTypes: Set<DataScannerViewController.RecognizedDataType> = [
+    .barcode(symbologies: [.qr]),
+    .text(textContentType: .URL)  // Or nil for all text
+]
+
+// Create and present
+let scanner = DataScannerViewController(
+    recognizedDataTypes: recognizedDataTypes,
+    qualityLevel: .balanced,  // Or .fast, .accurate
+    recognizesMultipleItems: false,  // Center-most if false
+    isHighFrameRateTrackingEnabled: true,  // For smooth highlights
+    isPinchToZoomEnabled: true,
+    isGuidanceEnabled: true,
+    isHighlightingEnabled: true
+)
+
+scanner.delegate = self
+present(scanner, animated: true) {
+    try? scanner.startScanning()
+}
+```
+
+**Delegate methods**:
+```swift
+func dataScanner(_ scanner: DataScannerViewController,
+                 didTapOn item: RecognizedItem) {
+    switch item {
+    case .text(let text):
+        print("Tapped text: \(text.transcript)")
+    case .barcode(let barcode):
+        print("Tapped barcode: \(barcode.payloadStringValue ?? "")")
+    @unknown default: break
+    }
+}
+
+// For custom highlights
+func dataScanner(_ scanner: DataScannerViewController,
+                 didAdd addedItems: [RecognizedItem],
+                 allItems: [RecognizedItem]) {
+    for item in addedItems {
+        let highlight = createHighlight(for: item)
+        scanner.overlayContainerView.addSubview(highlight)
+    }
+}
+```
+
+**Async stream alternative**:
+```swift
+for await items in scanner.recognizedItems {
+    // Process current items
+}
+```
+
+**Cost**: 45 min implementation with custom highlights
+
+### Pattern 12: Document Scanning with VNDocumentCameraViewController
+
+**Use case**: Scan paper documents with automatic edge detection and perspective correction.
+
+```swift
+import VisionKit
+
+let documentCamera = VNDocumentCameraViewController()
+documentCamera.delegate = self
+present(documentCamera, animated: true)
+
+// In delegate
+func documentCameraViewController(_ controller: VNDocumentCameraViewController,
+                                   didFinishWith scan: VNDocumentCameraScan) {
+    controller.dismiss(animated: true)
+
+    // Process each page
+    for pageIndex in 0..<scan.pageCount {
+        let image = scan.imageOfPage(at: pageIndex)
+
+        // Now run text recognition on the corrected image
+        let handler = VNImageRequestHandler(cgImage: image.cgImage!)
+        let textRequest = VNRecognizeTextRequest()
+        try? handler.perform([textRequest])
+    }
+}
+```
+
+**Cost**: 30 min implementation
+
+### Pattern 13: Document Segmentation (Custom Pipeline)
+
+**Use case**: Detect document edges programmatically for custom camera UI.
+
+```swift
+let request = VNDetectDocumentSegmentationRequest()
+let handler = VNImageRequestHandler(ciImage: inputImage)
+try handler.perform([request])
+
+guard let observation = request.results?.first,
+      let document = observation as? VNRectangleObservation else {
+    return
+}
+
+// Get corner points (normalized coordinates)
+let topLeft = document.topLeft
+let topRight = document.topRight
+let bottomLeft = document.bottomLeft
+let bottomRight = document.bottomRight
+
+// Apply perspective correction with CoreImage
+let correctedImage = inputImage
+    .cropped(to: document.boundingBox.scaled(to: imageSize))
+    .applyingFilter("CIPerspectiveCorrection", parameters: [
+        "inputTopLeft": CIVector(cgPoint: topLeft.scaled(to: imageSize)),
+        "inputTopRight": CIVector(cgPoint: topRight.scaled(to: imageSize)),
+        "inputBottomLeft": CIVector(cgPoint: bottomLeft.scaled(to: imageSize)),
+        "inputBottomRight": CIVector(cgPoint: bottomRight.scaled(to: imageSize))
+    ])
+```
+
+**VNDetectDocumentSegmentationRequest vs VNDetectRectanglesRequest**:
+- Document: ML-based, trained on documents, handles non-rectangles, returns one document
+- Rectangle: Edge-based, finds any quadrilateral, returns multiple, CPU-only
+
+**Cost**: 1-2 hours implementation
+
+### Pattern 14: Structured Document Extraction (iOS 26+)
+
+**Use case**: Extract tables, lists, paragraphs with semantic understanding.
+
+```swift
+// iOS 26+
+let request = RecognizeDocumentsRequest()
+let observations = try await request.perform(on: imageData)
+
+guard let document = observations.first?.document else {
+    return
+}
+
+// Extract tables
+for table in document.tables {
+    for row in table.rows {
+        for cell in row {
+            let text = cell.content.text.transcript
+            print("Cell: \(text)")
+        }
+    }
+}
+
+// Get detected data (emails, phones, URLs, dates)
+let allDetectedData = document.text.detectedData
+for data in allDetectedData {
+    switch data.match.details {
+    case .emailAddress(let email):
+        print("Email: \(email.emailAddress)")
+    case .phoneNumber(let phone):
+        print("Phone: \(phone.phoneNumber)")
+    case .link(let url):
+        print("URL: \(url)")
+    default: break
+    }
+}
+```
+
+**Document hierarchy**:
+- Document → containers (text, tables, lists, barcodes)
+- Table → rows → cells → content
+- Content → text (transcript, lines, paragraphs, words, detectedData)
+
+**Cost**: 1 hour implementation
+
+### Pattern 15: Real-time Phone Number Scanner
+
+**Use case**: Scan phone numbers from camera like barcode scanner (from WWDC 2019).
+
+```swift
+// 1. Use region of interest to guide user
+let textRequest = VNRecognizeTextRequest { request, error in
+    guard let observations = request.results as? [VNRecognizedTextObservation] else { return }
+
+    for observation in observations {
+        guard let candidate = observation.topCandidates(1).first else { continue }
+
+        // Use domain knowledge to filter
+        if let phoneNumber = self.extractPhoneNumber(from: candidate.string) {
+            self.stringTracker.add(phoneNumber)
+        }
+    }
+
+    // Build evidence over frames
+    if let stableNumber = self.stringTracker.getStableString(threshold: 10) {
+        self.foundPhoneNumber(stableNumber)
+    }
+}
+
+textRequest.recognitionLevel = .fast  // Real-time
+textRequest.usesLanguageCorrection = false  // Codes, not natural text
+textRequest.regionOfInterest = guidanceBox  // Crop to user's focus area
+
+// 2. String tracker for stability
+class StringTracker {
+    private var seenStrings: [String: Int] = [:]
+
+    func add(_ string: String) {
+        seenStrings[string, default: 0] += 1
+    }
+
+    func getStableString(threshold: Int) -> String? {
+        seenStrings.first { $0.value >= threshold }?.key
+    }
+}
+```
+
+**Key techniques from WWDC 2019**:
+- Use `.fast` recognition level for real-time
+- Disable language correction for codes/numbers
+- Use region of interest to improve speed and focus
+- Build evidence over multiple frames (string tracker)
+- Apply domain knowledge (phone number regex)
+
+**Cost**: 2 hours implementation
+
 ## Anti-Patterns
 
 ### Anti-Pattern 1: Processing on Main Thread
@@ -644,10 +996,19 @@ Before shipping Vision features:
 - ☑ Mask resolution matches source image
 - ☑ `croppedToInstancesContent` set appropriately (false for compositing)
 
+**Text/Barcode Recognition** (if applicable):
+- ☑ Recognition level matches use case (fast for real-time, accurate for documents)
+- ☑ Language correction disabled for codes/serial numbers
+- ☑ Barcode symbologies limited to actual needs (performance)
+- ☑ Region of interest used to focus scanning area
+- ☑ Multiple candidates checked (not just top candidate)
+- ☑ Evidence accumulated over frames for real-time (string tracker)
+- ☑ DataScannerViewController availability checked before presenting
+
 ## Resources
 
-**WWDC**: 2023-10176, 2023-111241, 2020-10653
+**WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2023-111241, 2020-10653
 
-**Docs**: /vision, /visionkit
+**Docs**: /vision, /visionkit, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest
 
 **Skills**: vision-ref, vision-diag

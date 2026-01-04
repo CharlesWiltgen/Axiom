@@ -1,6 +1,6 @@
 # Vision Framework Computer Vision
 
-Guides you through implementing people-focused computer vision: subject segmentation, hand/body pose detection, person detection, and combining Vision APIs to solve complex problems.
+Guides you through implementing computer vision: subject segmentation, hand/body pose detection, person detection, text recognition (OCR), barcode/QR scanning, document scanning, and combining Vision APIs to solve complex problems.
 
 ## Overview
 
@@ -10,6 +10,10 @@ The Vision framework provides computer vision capabilities for:
 - **Body pose detection** - 18 joints (2D) or 17 joints (3D) for fitness/action classification
 - **Person segmentation** - Separate masks for up to 4 people
 - **Face detection** - Bounding boxes and detailed landmarks
+- **Text recognition** - Fast or accurate OCR with language support
+- **Barcode/QR detection** - 20+ symbologies with revision history
+- **Document scanning** - Edge detection, perspective correction, structured extraction (iOS 26+)
+- **Live scanning** - DataScannerViewController for real-time text/barcode (iOS 16+)
 
 ## When to Use This Skill
 
@@ -21,6 +25,10 @@ Use when you need to:
 - ☑ **Exclude hands from object bounding boxes** (combining APIs)
 - ☑ Choose between VisionKit and Vision framework
 - ☑ Combine Vision with CoreImage for compositing
+- ☑ **Recognize text in images** (OCR)
+- ☑ **Scan barcodes and QR codes**
+- ☑ **Scan documents with perspective correction**
+- ☑ **Build live camera scanning** (DataScannerViewController)
 
 ## Key Decision Trees
 
@@ -45,6 +53,21 @@ Detect body pose?
 ├─ 2D normalized landmarks → VNDetectHumanBodyPoseRequest
 ├─ 3D real-world coordinates → VNDetectHumanBodyPose3DRequest
 └─ Action classification → Body pose + CreateML model
+
+Recognize text?
+├─ Static image → VNRecognizeTextRequest (fast or accurate)
+├─ Live camera → DataScannerViewController (iOS 16+)
+└─ Need custom words → VNRecognizeTextRequest.customWords
+
+Detect barcodes?
+├─ Static image → VNDetectBarcodesRequest
+├─ Live camera → DataScannerViewController (iOS 16+)
+└─ Need specific symbologies → Set .symbologies property
+
+Scan documents?
+├─ Need system UI → VNDocumentCameraViewController (iOS 13+)
+├─ Need structured data (iOS 26+) → RecognizeDocumentsRequest
+└─ Programmatic edges → VNDetectDocumentSegmentationRequest
 ```
 
 ## Common Use Cases
@@ -86,6 +109,42 @@ let distance = hypot(
 let isPinching = distance < 0.05  // Threshold
 ```
 
+### Text Recognition (OCR)
+
+Recognize text in images with fast or accurate modes:
+
+```swift
+let request = VNRecognizeTextRequest()
+request.recognitionLevel = .accurate  // or .fast
+request.recognitionLanguages = ["en-US"]
+request.usesLanguageCorrection = true
+
+let handler = VNImageRequestHandler(cgImage: image)
+try handler.perform([request])
+
+let observations = request.results ?? []
+let text = observations.compactMap { $0.topCandidates(1).first?.string }
+```
+
+### Live Camera Scanning (DataScannerViewController)
+
+Scan barcodes and text in real-time with iOS 16+ VisionKit:
+
+```swift
+let scanner = DataScannerViewController(
+    recognizedDataTypes: [
+        .barcode(symbologies: [.qr, .ean13]),
+        .text(textContentType: .URL)
+    ],
+    qualityLevel: .balanced
+)
+
+scanner.delegate = self
+present(scanner, animated: true) {
+    try? scanner.startScanning()
+}
+```
+
 ## Common Pitfalls
 
 - ❌ Processing on main thread (blocks UI)
@@ -93,6 +152,9 @@ let isPinching = distance < 0.05  // Threshold
 - ❌ Forgetting to convert coordinates (lower-left vs top-left origin)
 - ❌ Setting `maximumHandCount` too high (performance impact)
 - ❌ Using ARKit when Vision suffices (offline processing)
+- ❌ Using `.fast` text recognition when accuracy matters
+- ❌ Not checking `DataScannerViewController.isSupported` before using
+- ❌ Processing every video frame (use frame skipping for performance)
 
 ## Platform Support
 
@@ -104,6 +166,11 @@ let isPinching = distance < 0.05  // Threshold
 | Body pose (2D) | iOS 14+ |
 | Body pose (3D) | iOS 17+ |
 | Person instance segmentation | iOS 17+ |
+| Text recognition (VNRecognizeTextRequest) | iOS 13+ |
+| Barcode detection (VNDetectBarcodesRequest) | iOS 11+ |
+| DataScannerViewController | iOS 16+ |
+| Document camera (VNDocumentCameraViewController) | iOS 13+ |
+| RecognizeDocumentsRequest (structured) | iOS 26+ |
 
 ## Related Resources
 
@@ -115,6 +182,11 @@ let isPinching = distance < 0.05  // Threshold
 - [WWDC23-10176: Lift subjects from images in your app](https://developer.apple.com/videos/play/wwdc2023/10176/)
 - [WWDC23-111241: 3D body pose and person segmentation](https://developer.apple.com/videos/play/wwdc2023/111241/)
 - [WWDC20-10653: Detect Body and Hand Pose with Vision](https://developer.apple.com/videos/play/wwdc2020/10653/)
+- [WWDC19-234: Text Recognition in Vision Framework](https://developer.apple.com/videos/play/wwdc2019/234/)
+- [WWDC21-10041: Extract document data using Vision](https://developer.apple.com/videos/play/wwdc2021/10041/)
+- [WWDC22-10024: What's new in Vision](https://developer.apple.com/videos/play/wwdc2022/10024/)
+- [WWDC22-10025: Capture machine-readable codes and text](https://developer.apple.com/videos/play/wwdc2022/10025/)
+- [WWDC25-272: Read documents using the Vision framework](https://developer.apple.com/videos/play/wwdc2025/272/)
 
 ### Apple Documentation
 

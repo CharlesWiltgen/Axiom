@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "2.11.0",
+  "version": "2.12.0",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -55,8 +55,12 @@
       "description": "Use when implementing ANY Apple Intelligence or on-device AI feature. Covers Foundation Models, @Generable, LanguageModelSession, structured output, Tool protocol, iOS 26 AI integration."
     },
     {
+      "name": "ios-ml",
+      "description": "Use when deploying ANY custom ML model on-device, converting PyTorch models, compressing models, or implementing speech-to-text. Covers CoreML conversion, MLTensor, quantization, palettization, stateful models, KV-cache, SpeechAnalyzer."
+    },
+    {
       "name": "ios-vision",
-      "description": "Use when implementing ANY computer vision feature: image analysis, object detection, pose detection, person segmentation, subject lifting, hand/body pose tracking."
+      "description": "Use when implementing ANY computer vision feature: image analysis, text recognition (OCR), barcode/QR scanning, document scanning, pose detection, person segmentation, subject lifting, DataScannerViewController."
     },
     {
       "name": "ios-graphics",

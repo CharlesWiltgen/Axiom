@@ -1,15 +1,15 @@
 ---
 name: vision-diag
-description: subject not detected, hand pose missing landmarks, low confidence observations, Vision performance, coordinate conversion, VisionKit errors, observation nil
+description: subject not detected, hand pose missing landmarks, low confidence observations, Vision performance, coordinate conversion, VisionKit errors, observation nil, text not recognized, barcode not detected, DataScannerViewController not working, document scan issues
 skill_type: diagnostic
-version: 1.0.0
-last_updated: 2025-12-20
-apple_platforms: iOS 14+, iPadOS 14+, macOS 11+, tvOS 14+, visionOS 1+
+version: 1.1.0
+last_updated: 2026-01-03
+apple_platforms: iOS 11+, iPadOS 11+, macOS 10.13+, tvOS 11+, visionOS 1+
 ---
 
 # Vision Framework Diagnostics
 
-Systematic troubleshooting for Vision framework issues: subjects not detected, missing landmarks, low confidence, performance problems, and coordinate mismatches.
+Systematic troubleshooting for Vision framework issues: subjects not detected, missing landmarks, low confidence, performance problems, coordinate mismatches, text recognition failures, barcode detection issues, and document scanning problems.
 
 ## Overview
 
@@ -36,6 +36,12 @@ Symptoms that indicate Vision-specific issues:
 | Crash on older devices | Using iOS 17+ APIs without `@available` check |
 | Person segmentation misses people | >4 people in scene (instance mask limit) |
 | Low FPS in camera feed | `maximumHandCount` too high, not dropping frames |
+| Text not recognized at all | Blurry image, stylized font, wrong recognition level |
+| Text misread (wrong characters) | Language correction disabled, missing custom words |
+| Barcode not detected | Wrong symbology, code too small, glare/reflection |
+| DataScanner shows blank screen | Camera access denied, device not supported |
+| Document edges not detected | Low contrast, non-rectangular, glare |
+| Real-time scanning too slow | Processing every frame, region too large |
 
 ## Mandatory First Steps
 
@@ -135,8 +141,25 @@ Vision not working as expected?
 ├─ Person segmentation missing people?
 │  └─ See Pattern 7 (crowded scenes)
 │
-└─ VisionKit not working?
-   └─ See Pattern 8 (VisionKit specific)
+├─ VisionKit not working?
+│  └─ See Pattern 8 (VisionKit specific)
+│
+├─ Text recognition issues?
+│  ├─ No text detected → See Pattern 9a (image quality)
+│  ├─ Wrong characters → See Pattern 9b (language/correction)
+│  └─ Too slow → See Pattern 9c (recognition level)
+│
+├─ Barcode detection issues?
+│  ├─ Barcode not detected → See Pattern 10a (symbology/size)
+│  └─ Wrong payload → See Pattern 10b (barcode quality)
+│
+├─ DataScannerViewController issues?
+│  ├─ Blank screen → See Pattern 11a (availability check)
+│  └─ Items not detected → See Pattern 11b (data types)
+│
+└─ Document scanning issues?
+   ├─ Edges not detected → See Pattern 12a (contrast/shape)
+   └─ Perspective wrong → See Pattern 12b (corner points)
 ```
 
 ## Diagnostic Patterns
@@ -547,6 +570,350 @@ interaction.preferredInteractionTypes = .imageSubject
 
 **Time to fix**: 20 min
 
+### Pattern 9a: Text Not Detected (Image Quality)
+
+**Symptom**: `VNRecognizeTextRequest` returns no results or empty strings
+
+**Diagnostic**:
+
+```swift
+let request = VNRecognizeTextRequest()
+request.recognitionLevel = .accurate
+
+try handler.perform([request])
+
+if request.results?.isEmpty ?? true {
+    print("❌ No text detected")
+
+    // Check image quality
+    print("Image size: \(image.size)")
+    print("Minimum text height: \(request.minimumTextHeight)")
+}
+
+for obs in request.results as? [VNRecognizedTextObservation] ?? [] {
+    let top = obs.topCandidates(3)
+    for candidate in top {
+        print("'\(candidate.string)' confidence: \(candidate.confidence)")
+    }
+}
+```
+
+**Common causes**:
+
+| Cause | Symptom | Fix |
+|-------|---------|-----|
+| Blurry image | No results | Improve lighting, stabilize camera |
+| Text too small | No results | Lower `minimumTextHeight` or crop closer |
+| Stylized font | Misread or no results | Try `.accurate` recognition level |
+| Low contrast | Partial results | Improve lighting, increase image contrast |
+| Rotated text | No results with `.fast` | Use `.accurate` (handles rotation) |
+
+**Fix for small text**:
+
+```swift
+// Lower minimum text height (default ignores very small text)
+request.minimumTextHeight = 0.02  // 2% of image height
+```
+
+**Time to fix**: 30 min
+
+### Pattern 9b: Wrong Characters (Language/Correction)
+
+**Symptom**: Text is detected but characters are wrong (e.g., "C001" → "COOL")
+
+**Diagnostic**:
+
+```swift
+// Check all candidates, not just first
+for observation in results {
+    let candidates = observation.topCandidates(5)
+    for (i, candidate) in candidates.enumerated() {
+        print("Candidate \(i): '\(candidate.string)' (\(candidate.confidence))")
+    }
+}
+```
+
+**Common causes**:
+
+| Input Type | Problem | Fix |
+|------------|---------|-----|
+| Serial numbers | Language correction "fixes" them | Disable `usesLanguageCorrection` |
+| Technical codes | Misread as words | Add to `customWords` |
+| Non-English | Wrong ML model | Set correct `recognitionLanguages` |
+| House numbers | Stylized → misread | Check all candidates, not just top |
+
+**Fix for codes/serial numbers**:
+
+```swift
+let request = VNRecognizeTextRequest()
+request.usesLanguageCorrection = false  // Don't "fix" codes
+
+// Post-process with domain knowledge
+func correctSerialNumber(_ text: String) -> String {
+    text.replacingOccurrences(of: "O", with: "0")
+        .replacingOccurrences(of: "l", with: "1")
+        .replacingOccurrences(of: "S", with: "5")
+}
+```
+
+**Time to fix**: 30 min
+
+### Pattern 9c: Text Recognition Too Slow
+
+**Symptom**: Text recognition takes >500ms, real-time camera drops frames
+
+**Diagnostic**:
+
+```swift
+let start = CFAbsoluteTimeGetCurrent()
+try handler.perform([request])
+let elapsed = CFAbsoluteTimeGetCurrent() - start
+
+print("Recognition took \(elapsed * 1000)ms")
+print("Recognition level: \(request.recognitionLevel == .fast ? "fast" : "accurate")")
+print("Language correction: \(request.usesLanguageCorrection)")
+```
+
+**Common causes & fixes**:
+
+| Cause | Fix | Speedup |
+|-------|-----|---------|
+| Using `.accurate` for real-time | Switch to `.fast` | 3-5x |
+| Language correction enabled | Disable for codes | 20-30% |
+| Full image processing | Use `regionOfInterest` | 2-4x |
+| Processing every frame | Skip frames | 50-70% |
+
+**Fix for real-time**:
+
+```swift
+request.recognitionLevel = .fast
+request.usesLanguageCorrection = false
+request.regionOfInterest = CGRect(x: 0.1, y: 0.3, width: 0.8, height: 0.4)
+
+// Skip frames
+frameCount += 1
+guard frameCount % 3 == 0 else { return }
+```
+
+**Time to fix**: 30 min
+
+### Pattern 10a: Barcode Not Detected (Symbology/Size)
+
+**Symptom**: `VNDetectBarcodesRequest` returns no results
+
+**Diagnostic**:
+
+```swift
+let request = VNDetectBarcodesRequest()
+// Don't specify symbologies to detect all types
+try handler.perform([request])
+
+if let results = request.results as? [VNBarcodeObservation] {
+    print("Found \(results.count) barcodes")
+    for barcode in results {
+        print("Type: \(barcode.symbology)")
+        print("Payload: \(barcode.payloadStringValue ?? "nil")")
+        print("Bounds: \(barcode.boundingBox)")
+    }
+} else {
+    print("❌ No barcodes detected")
+}
+```
+
+**Common causes**:
+
+| Cause | Symptom | Fix |
+|-------|---------|-----|
+| Wrong symbology | Not detected | Don't filter, or add correct type |
+| Barcode too small | Not detected | Move camera closer, crop image |
+| Glare/reflection | Not detected | Change angle, improve lighting |
+| Damaged barcode | Partial/no detection | Clean barcode, improve image |
+| Using revision 1 | Only one code | Use revision 2+ for multiple |
+
+**Fix for small barcodes**:
+
+```swift
+// Crop to barcode region for better detection
+let croppedHandler = VNImageRequestHandler(
+    cgImage: croppedImage,
+    options: [:]
+)
+```
+
+**Time to fix**: 20 min
+
+### Pattern 10b: Wrong Barcode Payload
+
+**Symptom**: Barcode detected but `payloadStringValue` is wrong or nil
+
+**Diagnostic**:
+
+```swift
+if let barcode = results.first {
+    print("String payload: \(barcode.payloadStringValue ?? "nil")")
+    print("Raw payload: \(barcode.payloadData ?? Data())")
+    print("Symbology: \(barcode.symbology)")
+    print("Confidence: Implicit (always 1.0 for barcodes)")
+}
+```
+
+**Common causes**:
+
+| Cause | Fix |
+|-------|-----|
+| Binary barcode (not string) | Use `payloadData` instead |
+| Damaged code | Re-scan or clean barcode |
+| Wrong symbology assumed | Check actual `symbology` value |
+
+**Time to fix**: 15 min
+
+### Pattern 11a: DataScanner Blank Screen
+
+**Symptom**: `DataScannerViewController` shows black/blank when presented
+
+**Diagnostic**:
+
+```swift
+// Check support first
+print("isSupported: \(DataScannerViewController.isSupported)")
+print("isAvailable: \(DataScannerViewController.isAvailable)")
+
+// Check camera permission
+let status = AVCaptureDevice.authorizationStatus(for: .video)
+print("Camera access: \(status.rawValue)")
+```
+
+**Common causes**:
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `isSupported = false` | Device lacks camera/chip | Check before presenting |
+| `isAvailable = false` | Parental controls or access denied | Request camera permission |
+| Black screen | Camera in use by another app | Ensure exclusive access |
+| Crash on present | Missing entitlements | Add camera usage description |
+
+**Fix**:
+
+```swift
+guard DataScannerViewController.isSupported else {
+    showError("Scanning not supported on this device")
+    return
+}
+
+guard DataScannerViewController.isAvailable else {
+    // Request camera access
+    AVCaptureDevice.requestAccess(for: .video) { granted in
+        // Retry after access granted
+    }
+    return
+}
+```
+
+**Time to fix**: 15 min
+
+### Pattern 11b: DataScanner Items Not Detected
+
+**Symptom**: DataScanner shows camera but doesn't recognize items
+
+**Diagnostic**:
+
+```swift
+// Check recognized data types
+print("Data types: \(scanner.recognizedDataTypes)")
+
+// Add delegate to see what's happening
+func dataScanner(_ scanner: DataScannerViewController,
+                 didAdd items: [RecognizedItem],
+                 allItems: [RecognizedItem]) {
+    print("Added \(items.count) items, total: \(allItems.count)")
+    for item in items {
+        switch item {
+        case .text(let text): print("Text: \(text.transcript)")
+        case .barcode(let barcode): print("Barcode: \(barcode.payloadStringValue ?? "")")
+        @unknown default: break
+        }
+    }
+}
+```
+
+**Common causes**:
+
+| Cause | Fix |
+|-------|-----|
+| Wrong data types | Add correct `.barcode(symbologies:)` or `.text()` |
+| Text content type filter | Remove filter or use correct type |
+| Camera too close/far | Adjust distance |
+| Poor lighting | Improve lighting |
+
+**Time to fix**: 20 min
+
+### Pattern 12a: Document Edges Not Detected
+
+**Symptom**: `VNDetectDocumentSegmentationRequest` returns no results
+
+**Diagnostic**:
+
+```swift
+let request = VNDetectDocumentSegmentationRequest()
+try handler.perform([request])
+
+if let observation = request.results?.first {
+    print("Document found at: \(observation.boundingBox)")
+    print("Corners: TL=\(observation.topLeft), TR=\(observation.topRight)")
+} else {
+    print("❌ No document detected")
+}
+```
+
+**Common causes**:
+
+| Cause | Fix |
+|-------|-----|
+| Low contrast | Use contrasting background |
+| Non-rectangular | ML expects rectangular documents |
+| Glare/reflection | Change lighting angle |
+| Document fills frame | Need some background visible |
+
+**Fix**: Use VNDocumentCameraViewController for guided user experience with live feedback.
+
+**Time to fix**: 15 min
+
+### Pattern 12b: Perspective Correction Wrong
+
+**Symptom**: Document extracted but distorted
+
+**Diagnostic**:
+
+```swift
+// Verify corner order
+print("TopLeft: \(observation.topLeft)")
+print("TopRight: \(observation.topRight)")
+print("BottomLeft: \(observation.bottomLeft)")
+print("BottomRight: \(observation.bottomRight)")
+
+// Check if corners are in expected positions
+// TopLeft should have larger Y than BottomLeft (Vision uses lower-left origin)
+```
+
+**Common causes**:
+
+| Cause | Fix |
+|-------|-----|
+| Corner order wrong | Vision uses counterclockwise from top-left |
+| Coordinate system | Convert normalized to pixel coordinates |
+| Filter parameters wrong | Check CIPerspectiveCorrection parameters |
+
+**Fix**:
+
+```swift
+// Scale normalized to image coordinates
+func scaled(_ point: CGPoint, to size: CGSize) -> CGPoint {
+    CGPoint(x: point.x * size.width, y: point.y * size.height)
+}
+```
+
+**Time to fix**: 20 min
+
 ## Production Crisis Scenario
 
 **Situation**: App Store review rejected for "app freezes when tapping analyze button"
@@ -589,11 +956,20 @@ interaction.preferredInteractionTypes = .imageSubject
 | Wrong overlay position | Coordinates | Print points | 6 | 20 min |
 | Missing people (>4) | Crowded scene | Face count | 7 | 30 min |
 | VisionKit no UI | Analysis not set | Interaction state | 8 | 20 min |
+| Text not detected | Image quality | Results count | 9a | 30 min |
+| Wrong characters | Language settings | Candidates list | 9b | 30 min |
+| Text recognition slow | Recognition level | Timing | 9c | 30 min |
+| Barcode not detected | Symbology/size | Results dump | 10a | 20 min |
+| Wrong barcode payload | Damaged/binary | Payload data | 10b | 15 min |
+| DataScanner blank | Availability | isSupported/isAvailable | 11a | 15 min |
+| DataScanner no items | Data types | recognizedDataTypes | 11b | 20 min |
+| Document edges missing | Contrast/shape | Results check | 12a | 15 min |
+| Perspective wrong | Corner order | Corner positions | 12b | 20 min |
 
 ## Resources
 
-**WWDC**: 2023-10176, 2020-10653
+**WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2020-10653
 
-**Docs**: /vision, /vision/applying_mps_graphs_to_vision_requests
+**Docs**: /vision, /vision/vnrecognizetextrequest, /visionkit
 
 **Skills**: vision, vision-ref
