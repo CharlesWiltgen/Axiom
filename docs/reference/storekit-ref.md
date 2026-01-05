@@ -126,7 +126,7 @@ for status in statuses {
 
 ## Documentation Scope
 
-This page documents the `storekit-ref` reference skill—complete API coverage Claude uses when you need specific StoreKit 2 API details.
+This page documents the `axiom-storekit-ref` reference skill—complete API coverage Claude uses when you need specific StoreKit 2 API details.
 
 **For implementation patterns:** See [in-app-purchases](/skills/integration/in-app-purchases) for testing-first workflow and architecture patterns.
 

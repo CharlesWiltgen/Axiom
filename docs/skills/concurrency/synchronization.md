@@ -82,4 +82,4 @@ mutex.withLock { $0 = result }
 ## Resources
 
 - **Swift Evolution**: [SE-0433: Mutex](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0433-mutex.md)
-- **Docs**: [Synchronization Framework](https://developer.apple.com/documentation/synchronization)
+- **Docs**: [Synchronization Framework](https://developer.apple.com/documentation/axiom-synchronization)

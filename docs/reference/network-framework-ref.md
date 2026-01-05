@@ -100,7 +100,7 @@ connection.start(queue: .main)
 
 ## Documentation Scope
 
-This page documents the `network-framework-ref` reference skill—complete API coverage Claude uses when you need specific Network.framework APIs or implementation patterns.
+This page documents the `axiom-network-framework-ref` reference skill—complete API coverage Claude uses when you need specific Network.framework APIs or implementation patterns.
 
 **For troubleshooting:** See [networking-diag](/diagnostic/networking-diag) for connection failures.
 

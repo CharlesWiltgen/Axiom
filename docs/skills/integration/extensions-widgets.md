@@ -118,7 +118,7 @@ struct WidgetView: View {
 
 ## Documentation Scope
 
-This page documents the `extensions-widgets` skill—widget development patterns Claude uses when you're implementing Home Screen widgets, Live Activities, or Control Center controls.
+This page documents the `axiom-extensions-widgets` skill—widget development patterns Claude uses when you're implementing Home Screen widgets, Live Activities, or Control Center controls.
 
 **For comprehensive API reference:** See [extensions-widgets-ref](/reference/extensions-widgets-ref) for complete API coverage, troubleshooting, and expert review checklist.
 

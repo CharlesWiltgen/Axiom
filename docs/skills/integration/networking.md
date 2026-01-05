@@ -108,7 +108,7 @@ connection.start(queue: .main)
 
 ## Documentation Scope
 
-This page documents the `networking` skill—Network.framework patterns Claude uses when helping you implement UDP/TCP connections. The skill contains complete connection patterns, TLS configuration, and migration guides from deprecated APIs.
+This page documents the `axiom-networking` skill—Network.framework patterns Claude uses when helping you implement UDP/TCP connections. The skill contains complete connection patterns, TLS configuration, and migration guides from deprecated APIs.
 
 **For diagnostics:** See [networking-diag](/diagnostic/networking-diag) for troubleshooting connection failures.
 

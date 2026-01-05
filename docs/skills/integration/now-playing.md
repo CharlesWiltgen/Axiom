@@ -118,7 +118,7 @@ Now Playing not working?
 
 ## Documentation Scope
 
-This page documents the `now-playing` skill—MediaPlayer framework patterns Claude uses when you're implementing or debugging Lock Screen and Control Center integration for audio/video apps.
+This page documents the `axiom-now-playing` skill—MediaPlayer framework patterns Claude uses when you're implementing or debugging Lock Screen and Control Center integration for audio/video apps.
 
 **For AVAudioSession details:** See [avfoundation-ref](/reference/avfoundation-ref) for audio session configuration beyond Now Playing.
 

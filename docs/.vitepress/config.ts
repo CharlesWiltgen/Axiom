@@ -261,7 +261,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v2.13.0'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v2.13.1'
     }
   }
 })

@@ -77,7 +77,7 @@ let navSession = CLServiceSession(
 
 ## Documentation Scope
 
-This page documents the `core-location` skill—implementation patterns and decision frameworks Claude uses when helping you design location features.
+This page documents the `axiom-core-location` skill—implementation patterns and decision frameworks Claude uses when helping you design location features.
 
 **For API reference:** See [core-location-ref](/reference/core-location-ref) for CLLocationUpdate, CLMonitor, CLServiceSession APIs.
 

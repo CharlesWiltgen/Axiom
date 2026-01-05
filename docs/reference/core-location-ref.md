@@ -107,7 +107,7 @@ for try await event in monitor.events {
 
 ## Documentation Scope
 
-This page documents the `core-location-ref` reference skill—complete API coverage Claude uses when you need specific Core Location APIs or implementation patterns.
+This page documents the `axiom-core-location-ref` reference skill—complete API coverage Claude uses when you need specific Core Location APIs or implementation patterns.
 
 **For architecture decisions:** See [core-location](/skills/integration/core-location) for when to use different monitoring approaches.
 

@@ -122,7 +122,7 @@ WebView(url: URL(string: "https://example.com")!)
 
 ## Documentation Scope
 
-This page documents the `swiftui-26-ref` reference skill—complete API coverage Claude uses when you need specific iOS 26 SwiftUI APIs or feature details.
+This page documents the `axiom-swiftui-26-ref` reference skill—complete API coverage Claude uses when you need specific iOS 26 SwiftUI APIs or feature details.
 
 **For Liquid Glass adoption:** See [liquid-glass](/skills/ui-design/liquid-glass) for implementation workflows.
 

@@ -87,7 +87,7 @@ var body: some View {
 
 ## Documentation Scope
 
-This page documents the `swiftui-debugging` skill—diagnostic decision trees Claude uses when you encounter SwiftUI view update failures, preview crashes, or layout issues.
+This page documents the `axiom-swiftui-debugging` skill—diagnostic decision trees Claude uses when you encounter SwiftUI view update failures, preview crashes, or layout issues.
 
 **For performance profiling:** Use [swiftui-performance](/skills/ui-design/swiftui-performance) when the view updates but performance is slow.
 

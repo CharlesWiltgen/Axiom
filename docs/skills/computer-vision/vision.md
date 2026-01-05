@@ -190,5 +190,5 @@ present(scanner, animated: true) {
 
 ### Apple Documentation
 
-- [Vision Framework](https://developer.apple.com/documentation/vision)
+- [Vision Framework](https://developer.apple.com/documentation/axiom-vision)
 - [VisionKit Framework](https://developer.apple.com/documentation/visionkit)

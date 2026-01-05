@@ -166,5 +166,5 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For SwiftUI Instrument workflows: `swiftui-performance` skill
-For view update debugging: `swiftui-debugging` skill
+For SwiftUI Instrument workflows: `axiom-swiftui-performance` skill
+For view update debugging: `axiom-swiftui-debugging` skill

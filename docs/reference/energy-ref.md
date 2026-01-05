@@ -121,7 +121,7 @@ config.allowsCellularAccess = false
 
 ## Documentation Scope
 
-This page documents the `energy-ref` reference skill—complete API coverage Claude uses when you need specific energy optimization APIs and patterns.
+This page documents the `axiom-energy-ref` reference skill—complete API coverage Claude uses when you need specific energy optimization APIs and patterns.
 
 **For discipline patterns:** See [energy](/skills/debugging/energy) for Power Profiler workflows and decision trees.
 

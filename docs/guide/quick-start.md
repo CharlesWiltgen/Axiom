@@ -25,10 +25,10 @@ Use `/plugin` and select "Manage and install" to see installed plugins. Axiom sh
 Skills are **automatically suggested by Claude Code** based on your questions and context. Simply ask questions that match the skill's purpose:
 
 ### Examples
-- "I'm getting BUILD FAILED in Xcode with stale builds" → activates `xcode-debugging`
-- "How do I fix actor isolation errors in Swift 6?" → activates `swift-concurrency`
-- "I need to add a column to my database safely" → activates `database-migration`
-- "My app has memory leaks, where should I look?" → activates `memory-debugging`
+- "I'm getting BUILD FAILED in Xcode with stale builds" → activates `axiom-xcode-debugging`
+- "How do I fix actor isolation errors in Swift 6?" → activates `axiom-swift-concurrency`
+- "I need to add a column to my database safely" → activates `axiom-database-migration`
+- "My app has memory leaks, where should I look?" → activates `axiom-memory-debugging`
 
 Skills available in Axiom:
 - **Apple Intelligence**: foundation-models, foundation-models-diag, foundation-models-ref, app-intents-ref, swiftui-26-ref
@@ -63,7 +63,7 @@ If Claude Code isn't suggesting Axiom skills:
 If you get "skill not found" errors:
 
 1. **Use correct syntax**: `/skill axiom:skill-name` (not `/axiom:skill-name`)
-2. **Check spelling**: Skill names use dashes (e.g., `swift-concurrency`, not `swift_concurrency`)
+2. **Check spelling**: Skill names use dashes (e.g., `axiom-swift-concurrency`, not `swift_concurrency`)
 3. **List available skills**: Use `/plugin` to see which skills are installed
 
 ### Commands Not Working

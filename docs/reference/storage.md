@@ -35,19 +35,19 @@ Comprehensive decision framework integrating SwiftData (WWDC 2023), CKSyncEngine
 ### Cross-References
 
 **Database Skills**:
-- `swiftdata` — Modern persistence (iOS 17+)
-- `sqlitedata` — Advanced SQLite control
-- `grdb` — Reactive queries, migrations
+- `axiom-swiftdata` — Modern persistence (iOS 17+)
+- `axiom-sqlitedata` — Advanced SQLite control
+- `axiom-grdb` — Reactive queries, migrations
 
 **File Skills**:
-- `file-protection-ref` — Encryption, security
-- `storage-management-ref` — Purging, disk space
-- `storage-diag` — Debug file issues
+- `axiom-file-protection-ref` — Encryption, security
+- `axiom-storage-management-ref` — Purging, disk space
+- `axiom-storage-diag` — Debug file issues
 
 **Cloud Skills**:
-- `cloudkit-ref` — Database sync
-- `icloud-drive-ref` — File sync
-- `cloud-sync-diag` — Debug sync issues
+- `axiom-cloudkit-ref` — Database sync
+- `axiom-icloud-drive-ref` — File sync
+- `axiom-cloud-sync-diag` — Debug sync issues
 
 ## Common Patterns
 

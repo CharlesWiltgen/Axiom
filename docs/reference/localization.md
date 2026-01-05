@@ -104,7 +104,7 @@ Text("My Collections", bundle: #bundle, comment: "Section title")
 
 ## Documentation Scope
 
-This page documents the `localization` reference skill—complete API coverage Claude uses when you need specific localization APIs, String Catalog patterns, or internationalization details.
+This page documents the `axiom-localization` reference skill—complete API coverage Claude uses when you need specific localization APIs, String Catalog patterns, or internationalization details.
 
 **For RTL testing:** Use Xcode scheme → Right-to-Left Pseudolanguage.
 

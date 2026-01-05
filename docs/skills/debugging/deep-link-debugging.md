@@ -115,7 +115,7 @@ xcrun simctl openurl booted "debug://profile?id=12345"
 
 ## Documentation Scope
 
-This page documents the `deep-link-debugging` skill—debug-only deep link patterns Claude uses for automated testing and simulator verification.
+This page documents the `axiom-deep-link-debugging` skill—debug-only deep link patterns Claude uses for automated testing and simulator verification.
 
 **For production deep links:** See [swiftui-nav](/skills/ui-design/swiftui-nav) for NavigationStack deep linking patterns.
 

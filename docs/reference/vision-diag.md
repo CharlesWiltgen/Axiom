@@ -153,5 +153,5 @@ print("Request took \(elapsed * 1000)ms")
 
 ### Apple Documentation
 
-- [Vision Framework](https://developer.apple.com/documentation/vision)
+- [Vision Framework](https://developer.apple.com/documentation/axiom-vision)
 - [Vision Performance Best Practices](https://developer.apple.com/documentation/vision/applying_mps_graphs_to_vision_requests)

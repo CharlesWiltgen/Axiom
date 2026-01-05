@@ -127,7 +127,7 @@ func listenForTransactions() -> Task<Void, Never> {
 
 ## Documentation Scope
 
-This page documents the `in-app-purchases` skill—StoreKit 2 implementation patterns Claude uses when you're adding purchase functionality to your app.
+This page documents the `axiom-in-app-purchases` skill—StoreKit 2 implementation patterns Claude uses when you're adding purchase functionality to your app.
 
 **For comprehensive API reference:** See [storekit-ref](/reference/storekit-ref) for complete API coverage, edge cases, and server-side patterns.
 

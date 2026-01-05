@@ -118,7 +118,7 @@ class LandmarkViewModel {
 
 ## Documentation Scope
 
-This page documents the `swiftui-performance` skill—SwiftUI performance optimization patterns Claude uses when you're diagnosing hitches, long view body updates, or unnecessary re-renders.
+This page documents the `axiom-swiftui-performance` skill—SwiftUI performance optimization patterns Claude uses when you're diagnosing hitches, long view body updates, or unnecessary re-renders.
 
 **For view update debugging:** Use [swiftui-debugging](/skills/ui-design/swiftui-debugging) when views aren't updating at all (not slow, just not updating).
 

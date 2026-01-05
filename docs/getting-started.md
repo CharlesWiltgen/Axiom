@@ -68,9 +68,9 @@ Run audit commands:
 
 ## Skill Naming
 
-- **No suffix** — Discipline skills with workflows (e.g., `liquid-glass`)
-- **-diag suffix** — Diagnostic skills for troubleshooting (e.g., `swiftui-nav-diag`)
-- **-ref suffix** — Reference skills with comprehensive APIs (e.g., `storekit-ref`)
+- **No suffix** — Discipline skills with workflows (e.g., `axiom-liquid-glass`)
+- **-diag suffix** — Diagnostic skills for troubleshooting (e.g., `axiom-swiftui-nav-diag`)
+- **-ref suffix** — Reference skills with comprehensive APIs (e.g., `axiom-storekit-ref`)
 
 ## Tips
 

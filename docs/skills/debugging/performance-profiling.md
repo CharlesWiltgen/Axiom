@@ -107,7 +107,7 @@ Example reading:
 
 ## Documentation Scope
 
-This page documents the `performance-profiling` skill—Instruments decision trees and workflows Claude uses when helping you profile performance issues. The skill contains complete tool tutorials, real-world examples, and pressure scenario handling.
+This page documents the `axiom-performance-profiling` skill—Instruments decision trees and workflows Claude uses when helping you profile performance issues. The skill contains complete tool tutorials, real-world examples, and pressure scenario handling.
 
 **For SwiftUI-specific profiling:** See [swiftui-performance](/skills/ui-design/swiftui-performance) for the new SwiftUI Instrument in Instruments 26.
 

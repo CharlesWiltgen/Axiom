@@ -93,7 +93,7 @@ rm -rf ~/Library/Caches/org.swift.swiftpm
 
 ## Documentation Scope
 
-This page documents the `xcode-debugging` skill—environment-first diagnostics Claude uses before investigating code issues. The skill contains complete command sequences, decision trees, and time-cost analysis.
+This page documents the `axiom-xcode-debugging` skill—environment-first diagnostics Claude uses before investigating code issues. The skill contains complete command sequences, decision trees, and time-cost analysis.
 
 **For build failures specifically:** Use [/axiom:fix-build](/commands/build/fix-build) for automated diagnosis and fixes.
 

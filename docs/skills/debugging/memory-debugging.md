@@ -86,7 +86,7 @@ deinit {
 
 ## Documentation Scope
 
-This page documents the `memory-debugging` skill—systematic leak diagnosis workflows Claude uses when helping you debug memory issues. The skill contains complete Instruments setup, pattern recognition, heap analysis techniques, and production crisis handling.
+This page documents the `axiom-memory-debugging` skill—systematic leak diagnosis workflows Claude uses when helping you debug memory issues. The skill contains complete Instruments setup, pattern recognition, heap analysis techniques, and production crisis handling.
 
 **For quick scanning:** Use [/axiom:audit-memory](/commands/debugging/audit-memory) to scan your codebase for the 6 most common leak patterns automatically.
 

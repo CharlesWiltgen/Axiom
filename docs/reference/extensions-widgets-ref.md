@@ -123,7 +123,7 @@ struct Provider: TimelineProvider {
 
 ## Documentation Scope
 
-This page documents the `extensions-widgets-ref` reference skill—comprehensive API coverage Claude uses when you need specific API details for widgets and extensions.
+This page documents the `axiom-extensions-widgets-ref` reference skill—comprehensive API coverage Claude uses when you need specific API details for widgets and extensions.
 
 **For patterns and troubleshooting:** See [extensions-widgets](/skills/integration/extensions-widgets) for discipline patterns, anti-patterns, and debugging workflows.
 

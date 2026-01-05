@@ -111,7 +111,7 @@ didMigrate: { context in
 
 ## Documentation Scope
 
-This page documents the `swiftdata-migration` skill—custom SwiftData migration patterns Claude uses when you need migrations beyond what lightweight migration handles.
+This page documents the `axiom-swiftdata-migration` skill—custom SwiftData migration patterns Claude uses when you need migrations beyond what lightweight migration handles.
 
 **For SwiftData basics:** See [swiftdata](/skills/persistence/swiftdata) for @Model, @Query, and ModelContext patterns.
 

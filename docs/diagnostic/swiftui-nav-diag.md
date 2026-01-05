@@ -108,7 +108,7 @@ var body: some View {
 
 ## Documentation Scope
 
-This page documents the `swiftui-nav-diag` diagnostic skill—systematic troubleshooting Claude uses when you report SwiftUI navigation problems.
+This page documents the `axiom-swiftui-nav-diag` diagnostic skill—systematic troubleshooting Claude uses when you report SwiftUI navigation problems.
 
 **For patterns:** See [swiftui-nav](/skills/ui-design/swiftui-nav) for implementation guidance.
 

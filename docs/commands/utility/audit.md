@@ -32,29 +32,29 @@ When run without arguments, analyzes your project and recommends relevant audits
 | Area | What It Checks |
 |------|----------------|
 | `accessibility` | VoiceOver, Dynamic Type, WCAG compliance |
-| `liquid-glass` | iOS 26 adoption opportunities |
-| `swiftui-architecture` | Logic in views, testability |
-| `swiftui-nav` | NavigationStack issues, deep linking |
-| `swiftui-performance` | Expensive operations in view bodies |
+| `axiom-liquid-glass` | iOS 26 adoption opportunities |
+| `axiom-swiftui-architecture` | Logic in views, testability |
+| `axiom-swiftui-nav` | NavigationStack issues, deep linking |
+| `axiom-swiftui-performance` | Expensive operations in view bodies |
 
 ### Code Quality
 | Area | What It Checks |
 |------|----------------|
 | `concurrency` | Swift 6 data races, @MainActor violations |
 | `memory` | Retain cycles, Timer leaks, closure captures |
-| `codable` | Manual JSON building, error swallowing |
+| `axiom-codable` | Manual JSON building, error swallowing |
 
 ### Persistence & Storage
 | Area | What It Checks |
 |------|----------------|
-| `core-data` | Thread violations, N+1 queries |
+| `axiom-core-data` | Thread violations, N+1 queries |
 | `icloud` | File coordination, CloudKit errors |
-| `storage` | File protection, backup exclusions |
+| `axiom-storage` | File protection, backup exclusions |
 
 ### Integration
 | Area | What It Checks |
 |------|----------------|
-| `networking` | Deprecated APIs, anti-patterns |
+| `axiom-networking` | Deprecated APIs, anti-patterns |
 
 ## Priority Levels
 

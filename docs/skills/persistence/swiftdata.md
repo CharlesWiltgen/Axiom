@@ -85,7 +85,7 @@ for track in tracks {
 
 ## Documentation Scope
 
-This page documents the `swiftdata` skill—comprehensive SwiftData guidance Claude uses when answering your questions. The skill contains detailed API patterns, code examples, CloudKit configuration, and migration workflows.
+This page documents the `axiom-swiftdata` skill—comprehensive SwiftData guidance Claude uses when answering your questions. The skill contains detailed API patterns, code examples, CloudKit configuration, and migration workflows.
 
 **For schema migrations:** Use [database-migration](/skills/persistence/database-migration) when adding or modifying database columns safely.
 

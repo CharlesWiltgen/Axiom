@@ -167,5 +167,5 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For detailed optimization patterns: `energy` skill
-For Power Profiler workflows: `energy-ref` skill
+For detailed optimization patterns: `axiom-energy` skill
+For Power Profiler workflows: `axiom-energy-ref` skill

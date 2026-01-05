@@ -416,8 +416,8 @@ For each potential issue:
 4. LOW issues as time permits
 
 For detailed testing guidance:
-- Unit tests: `/skill swift-testing`
-- UI tests: `/skill ui-testing`
+- Unit tests: `/skill axiom-swift-testing`
+- UI tests: `/skill axiom-ui-testing`
 ```
 
 ---

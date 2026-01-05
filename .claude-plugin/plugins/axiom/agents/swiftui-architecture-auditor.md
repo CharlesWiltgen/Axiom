@@ -43,7 +43,7 @@ Run a static analysis audit focused on **architectural boundaries** and **correc
 Report issues with:
 - File:line references
 - Severity ratings (CRITICAL/HIGH/MEDIUM/LOW)
-- Fix recommendations that align with the `swiftui-architecture` skill
+- Fix recommendations that align with the `axiom-swiftui-architecture` skill
 - **Explicit links** to the `swiftui-performance-analyzer` if you see heavy performance issues
 
 ## Files to Exclude
@@ -175,7 +175,7 @@ grep -rn "import SwiftUI" --include="*.swift"
 - `FeatureView.swift:45` - `withAnimation` crossing `await`
   - **Issue**: Animation timing is unpredictable when wrapping async work
   - **Fix**: Use State-as-Bridge: mutate state synchronously, run async work separately
-  - **Reference**: `/skill swiftui-architecture` (Part 1)
+  - **Reference**: `/skill axiom-swiftui-architecture` (Part 1)
 
 ### Property Wrapper Misuse
 - `DetailView.swift:12` - `@State var item: Item` (non-private)

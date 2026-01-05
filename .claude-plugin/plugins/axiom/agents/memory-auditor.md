@@ -138,5 +138,5 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For Instruments workflows: `memory-debugging` skill
-For Memory Graph Debugger: `memory-debugging` skill
+For Instruments workflows: `axiom-memory-debugging` skill
+For Memory Graph Debugger: `axiom-memory-debugging` skill

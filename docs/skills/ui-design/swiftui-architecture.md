@@ -139,7 +139,7 @@ Where does this data come from?
 
 ## Documentation Scope
 
-This page documents the `swiftui-architecture` skill—architecture patterns Claude uses when you're organizing SwiftUI code, extracting logic from views, or choosing between patterns.
+This page documents the `axiom-swiftui-architecture` skill—architecture patterns Claude uses when you're organizing SwiftUI code, extracting logic from views, or choosing between patterns.
 
 **For navigation:** See [swiftui-nav](/skills/ui-design/swiftui-nav) for NavigationStack and deep linking patterns.
 

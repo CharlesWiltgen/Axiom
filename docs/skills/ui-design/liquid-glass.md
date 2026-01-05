@@ -92,7 +92,7 @@ ZStack {
 
 ## Documentation Scope
 
-This page documents the `liquid-glass` skill—comprehensive Liquid Glass guidance Claude uses when answering your questions. The skill contains design principles, API patterns, expert review checklists, and pressure scenario handling.
+This page documents the `axiom-liquid-glass` skill—comprehensive Liquid Glass guidance Claude uses when answering your questions. The skill contains design principles, API patterns, expert review checklists, and pressure scenario handling.
 
 **For automated scanning:** Use the [liquid-glass-auditor](/agents/liquid-glass-auditor) agent to scan your codebase for Liquid Glass adoption opportunities and migration from UIBlurEffect.
 

@@ -88,7 +88,7 @@ https://sosumi.ai/documentation/widgetkit
 
 ## Documentation Scope
 
-This page documents the `apple-docs-research` skill—research techniques Claude uses when you need to investigate Apple frameworks, APIs, or WWDC sessions.
+This page documents the `axiom-apple-docs-research` skill—research techniques Claude uses when you need to investigate Apple frameworks, APIs, or WWDC sessions.
 
 **For writing skills from research:** See the superpowers:writing-skills skill for creating skills from documentation.
 

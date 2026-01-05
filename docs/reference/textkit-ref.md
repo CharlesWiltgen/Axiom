@@ -56,7 +56,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `textkit-ref` skill—a comprehensive reference Claude uses when answering TextKit 2 questions. The skill contains detailed API documentation, code examples, and migration patterns.
+This page documents the `axiom-textkit-ref` skill—a comprehensive reference Claude uses when answering TextKit 2 questions. The skill contains detailed API documentation, code examples, and migration patterns.
 
 **For automated scanning:** Use the [textkit-auditor](/agents/textkit-auditor) agent to scan your codebase for TextKit 1 fallback triggers and migration opportunities.
 

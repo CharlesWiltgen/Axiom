@@ -100,7 +100,7 @@ if let url = FileManager.default.url(
 
 ## Documentation Scope
 
-This page documents the `cloud-sync-diag` diagnostic skill—systematic troubleshooting Claude uses when you report iCloud sync problems.
+This page documents the `axiom-cloud-sync-diag` diagnostic skill—systematic troubleshooting Claude uses when you report iCloud sync problems.
 
 **For SwiftData CloudKit:** See [swiftdata](/skills/persistence/swiftdata) for integration patterns.
 

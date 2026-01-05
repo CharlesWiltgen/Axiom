@@ -160,6 +160,6 @@ If >100 total issues: Summarize by category, show only HIGH details
 
 ## Related
 
-For implementation patterns: `networking` skill
-For connection troubleshooting: `networking-diag` skill
-For API reference: `network-framework-ref` skill
+For implementation patterns: `axiom-networking` skill
+For connection troubleshooting: `axiom-networking-diag` skill
+For API reference: `axiom-network-framework-ref` skill

@@ -188,5 +188,5 @@ ls -lt "$HOME/Library/Logs/DiagnosticReports/"*.crash 2>/dev/null | head -5
 
 ## Related
 
-For deep link debugging: `deep-link-debugging` skill
+For deep link debugging: `axiom-deep-link-debugging` skill
 For build issues: `build-fixer` agent

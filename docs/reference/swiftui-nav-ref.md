@@ -139,7 +139,7 @@ path.removeLast(path.count - 2)  // Keep first 2 items
 
 ## Documentation Scope
 
-This page documents the `swiftui-nav-ref` reference skill—comprehensive API coverage Claude uses when you need specific navigation API details.
+This page documents the `axiom-swiftui-nav-ref` reference skill—comprehensive API coverage Claude uses when you need specific navigation API details.
 
 **For patterns and decisions:** See [swiftui-nav](/skills/ui-design/swiftui-nav) for architecture decisions and anti-patterns.
 

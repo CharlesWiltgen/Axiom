@@ -123,7 +123,7 @@ Item.limit(10).offset(20)                  // Pagination
 
 ## Documentation Scope
 
-This page documents the `sqlitedata` skill—SQLiteData patterns Claude uses when you're working with Point-Free's SQLite framework.
+This page documents the `axiom-sqlitedata` skill—SQLiteData patterns Claude uses when you're working with Point-Free's SQLite framework.
 
 **For advanced patterns:** See [sqlitedata-ref](/skills/persistence/sqlitedata-ref) for CTEs, views, custom aggregates, schema composition, and TableAlias.
 

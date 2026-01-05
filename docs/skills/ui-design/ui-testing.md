@@ -117,7 +117,7 @@ Test failing?
 
 ## Documentation Scope
 
-This page documents the `ui-testing` skill—reliable UI testing patterns Claude uses when you're writing or debugging XCTest UI tests. Covers condition-based waiting, Recording UI Automation (Xcode 26), accessibility-first testing, and multi-configuration testing.
+This page documents the `axiom-ui-testing` skill—reliable UI testing patterns Claude uses when you're writing or debugging XCTest UI tests. Covers condition-based waiting, Recording UI Automation (Xcode 26), accessibility-first testing, and multi-configuration testing.
 
 **For TDD workflow:** See the superpowers:test-driven-development skill for test-driven development methodology.
 

@@ -147,7 +147,7 @@ struct ContentView: View {
 
 ## Documentation Scope
 
-This page documents the `app-composition` skill—app-level patterns Claude uses when you're structuring @main, managing authentication flows, or handling scene lifecycle.
+This page documents the `axiom-app-composition` skill—app-level patterns Claude uses when you're structuring @main, managing authentication flows, or handling scene lifecycle.
 
 **For feature architecture:** See [swiftui-architecture](/skills/ui-design/swiftui-architecture) for MVVM, TCA, and property wrapper patterns.
 

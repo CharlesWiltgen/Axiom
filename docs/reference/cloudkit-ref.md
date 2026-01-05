@@ -30,7 +30,7 @@ let container = try ModelContainer(
 )
 ```
 
-**See Also**: `swiftdata` skill for details
+**See Also**: `axiom-swiftdata` skill for details
 
 ### 2. CKSyncEngine (Modern, iOS 17+)
 

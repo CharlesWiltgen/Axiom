@@ -84,22 +84,22 @@ The `/axiom:audit` command supports these areas:
 
 ### UI & Design
 - `accessibility` — VoiceOver, Dynamic Type, WCAG compliance
-- `liquid-glass` — Liquid Glass adoption opportunities
-- `swiftui-architecture` — SwiftUI architecture and testability
-- `swiftui-nav` — Navigation architecture
-- `swiftui-performance` — Performance anti-patterns
+- `axiom-liquid-glass` — Liquid Glass adoption opportunities
+- `axiom-swiftui-architecture` — SwiftUI architecture and testability
+- `axiom-swiftui-nav` — Navigation architecture
+- `axiom-swiftui-performance` — Performance anti-patterns
 - `textkit` — TextKit 1 vs 2 modernization
 
 ### Code Quality
-- `codable` — JSON serialization anti-patterns
+- `axiom-codable` — JSON serialization anti-patterns
 - `concurrency` — Swift 6 strict concurrency
 - `memory` — Memory leak detection
-- `swift-performance` — ARC and allocation issues
+- `axiom-swift-performance` — ARC and allocation issues
 
 ### Persistence & Storage
-- `core-data` — Core Data safety and migrations
+- `axiom-core-data` — Core Data safety and migrations
 - `icloud` — iCloud sync reliability
-- `storage` — File storage safety
+- `axiom-storage` — File storage safety
 
 ### Integration
-- `networking` — Deprecated networking APIs
+- `axiom-networking` — Deprecated networking APIs

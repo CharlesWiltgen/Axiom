@@ -136,7 +136,7 @@ NavigationStack {
 
 ## Documentation Scope
 
-This page documents the `swiftui-animation-ref` reference skill—comprehensive animation API coverage Claude uses when you need specific animation implementation details.
+This page documents the `axiom-swiftui-animation-ref` reference skill—comprehensive animation API coverage Claude uses when you need specific animation implementation details.
 
 **For debugging:** See [swiftui-debugging](/skills/ui-design/swiftui-debugging) for animation-related issues.
 

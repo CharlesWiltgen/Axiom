@@ -12,7 +12,7 @@ Ask a question about iOS/Swift development to get routed to the right Axiom skil
 - Analyzes your natural language question
 - Matches it to one of 50+ specialized Axiom skills or 16 agents
 - Automatically invokes the matching tool for you
-- Falls back to `getting-started` skill if no clear match is found
+- Falls back to `axiom-getting-started` skill if no clear match is found
 - Answers directly if the question is trivial
 
 ## Examples

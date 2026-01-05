@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "2.13.0",
+  "version": "2.13.1",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -15,55 +15,55 @@
   ],
   "skills": [
     {
-      "name": "ios-build",
+      "name": "axiom-ios-build",
       "description": "Use when ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code. Covers build failures, compilation errors, dependency conflicts, simulator problems, environment-first diagnostics."
     },
     {
-      "name": "ios-testing",
+      "name": "axiom-ios-testing",
       "description": "Use when writing ANY test, debugging flaky tests, making tests faster, or asking about Swift Testing vs XCTest. Covers unit tests, UI tests, fast tests without simulator, async testing, test architecture."
     },
     {
-      "name": "ios-ui",
+      "name": "axiom-ios-ui",
       "description": "Use when building, fixing, or improving ANY iOS UI including SwiftUI, UIKit, layout, navigation, animations, design guidelines. Covers view updates, layout bugs, navigation issues, performance, architecture, Apple design compliance."
     },
     {
-      "name": "ios-data",
+      "name": "axiom-ios-data",
       "description": "Use when working with ANY data persistence, database, storage, CloudKit, migration, or serialization. Covers SwiftData, Core Data, GRDB, SQLite, Realm, CloudKit sync, file storage, Codable, migrations."
     },
     {
-      "name": "ios-concurrency",
+      "name": "axiom-ios-concurrency",
       "description": "Use when writing ANY code with async, actors, threads, or seeing ANY concurrency error. Covers Swift 6 concurrency, @MainActor, Sendable, data races, async/await patterns, performance optimization."
     },
     {
-      "name": "ios-performance",
+      "name": "axiom-ios-performance",
       "description": "Use when app feels slow, memory grows, battery drains, or diagnosing ANY performance issue. Covers memory leaks, profiling, Instruments workflows, retain cycles, performance optimization."
     },
     {
-      "name": "ios-networking",
+      "name": "axiom-ios-networking",
       "description": "Use when implementing or debugging ANY network connection, API call, or socket. Covers URLSession, Network.framework, NetworkConnection, deprecated APIs, connection diagnostics, structured concurrency networking."
     },
     {
-      "name": "ios-integration",
+      "name": "axiom-ios-integration",
       "description": "Use when integrating ANY iOS system feature: Siri, Shortcuts, Apple Intelligence, widgets, IAP, audio, haptics, localization, privacy. Covers App Intents, WidgetKit, StoreKit, AVFoundation, Core Haptics, App Shortcuts, Spotlight."
     },
     {
-      "name": "ios-accessibility",
+      "name": "axiom-ios-accessibility",
       "description": "Use when fixing or auditing ANY accessibility issue: VoiceOver, Dynamic Type, color contrast, touch targets, WCAG compliance, App Store accessibility review."
     },
     {
-      "name": "ios-ai",
+      "name": "axiom-ios-ai",
       "description": "Use when implementing ANY Apple Intelligence or on-device AI feature. Covers Foundation Models, @Generable, LanguageModelSession, structured output, Tool protocol, iOS 26 AI integration."
     },
     {
-      "name": "ios-ml",
+      "name": "axiom-ios-ml",
       "description": "Use when deploying ANY custom ML model on-device, converting PyTorch models, compressing models, or implementing speech-to-text. Covers CoreML conversion, MLTensor, quantization, palettization, stateful models, KV-cache, SpeechAnalyzer."
     },
     {
-      "name": "ios-vision",
+      "name": "axiom-ios-vision",
       "description": "Use when implementing ANY computer vision feature: image analysis, text recognition (OCR), barcode/QR scanning, document scanning, pose detection, person segmentation, subject lifting, DataScannerViewController."
     },
     {
-      "name": "ios-graphics",
+      "name": "axiom-ios-graphics",
       "description": "Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, or graphics programming. Covers Metal migration from OpenGL/DirectX, shader conversion, GPU debugging, translation layers."
     }
   ]

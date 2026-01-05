@@ -101,7 +101,7 @@ class ImageLoader {
 
 ## Documentation Scope
 
-This page documents the `swift-concurrency` skill—comprehensive Swift 6 concurrency guidance Claude uses when answering your questions. The skill contains the complete progressive journey, 11 copy-paste patterns, error resolution guides, and decision trees.
+This page documents the `axiom-swift-concurrency` skill—comprehensive Swift 6 concurrency guidance Claude uses when answering your questions. The skill contains the complete progressive journey, 11 copy-paste patterns, error resolution guides, and decision trees.
 
 **For concurrency audits:** Use the [concurrency-auditor](/agents/concurrency-auditor) agent to scan for Swift 6 strict concurrency violations automatically.
 

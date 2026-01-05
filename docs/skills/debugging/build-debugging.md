@@ -96,7 +96,7 @@ rm -rf ~/Library/Caches/org.swift.swiftpm
 
 ## Documentation Scope
 
-This page documents the `build-debugging` skill—dependency and build configuration debugging patterns Claude uses when you encounter persistent build failures.
+This page documents the `axiom-build-debugging` skill—dependency and build configuration debugging patterns Claude uses when you encounter persistent build failures.
 
 **For environment issues:** See [xcode-debugging](/skills/debugging/xcode-debugging) for Derived Data, simulator, and zombie process diagnostics.
 

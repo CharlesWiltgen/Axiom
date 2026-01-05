@@ -352,7 +352,7 @@ After fixes:
 
 ## For Detailed Diagnosis
 
-Use `/skill core-data-diag` for:
+Use `/skill axiom-core-data-diag` for:
 - Comprehensive Core Data diagnostics
 - Production crisis defense scenarios
 - Safe migration patterns

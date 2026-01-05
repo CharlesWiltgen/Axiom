@@ -103,7 +103,7 @@ Do you need a specific color value?
 
 ## Documentation Scope
 
-This page documents the `hig` skill—quick HIG decision frameworks Claude uses when you're making design decisions or reviewing UI for compliance.
+This page documents the `axiom-hig` skill—quick HIG decision frameworks Claude uses when you're making design decisions or reviewing UI for compliance.
 
 **For comprehensive reference:** See [hig-ref](/reference/hig-ref) for complete API coverage, code examples, and detailed guidelines.
 

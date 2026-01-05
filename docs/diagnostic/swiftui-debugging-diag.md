@@ -81,7 +81,7 @@ For cascading updates:
 
 ## Documentation Scope
 
-This page documents the `swiftui-debugging-diag` diagnostic skill—advanced troubleshooting Claude uses when basic SwiftUI debugging doesn't resolve the issue.
+This page documents the `axiom-swiftui-debugging-diag` diagnostic skill—advanced troubleshooting Claude uses when basic SwiftUI debugging doesn't resolve the issue.
 
 **For basic troubleshooting:** See [swiftui-debugging](/skills/ui-design/swiftui-debugging) for common issues.
 

@@ -51,18 +51,18 @@ Use `/plugin` and select "Manage and install" to see installed plugins. Axiom sh
 Skills are **automatically suggested by Claude Code** based on your questions and context. Simply ask questions that match the skill's purpose:
 
 #### Examples
-- "I'm getting BUILD FAILED in Xcode" → activates `xcode-debugging`
-- "How do I fix Swift 6 concurrency errors?" → activates `swift-concurrency`
-- "I need to add a database column safely" → activates `database-migration`
-- "My app has memory leaks" → activates `memory-debugging`
-- "My app drains battery quickly" → activates `energy`
+- "I'm getting BUILD FAILED in Xcode" → activates `axiom-xcode-debugging`
+- "How do I fix Swift 6 concurrency errors?" → activates `axiom-swift-concurrency`
+- "I need to add a database column safely" → activates `axiom-database-migration`
+- "My app has memory leaks" → activates `axiom-memory-debugging`
+- "My app drains battery quickly" → activates `axiom-energy`
 - "Help me migrate from Realm to SwiftData" → activates `realm-to-swiftdata-migration`
 
 ## Skills Overview
 
 ### UI & Design
 
-#### `liquid-glass`
+#### `axiom-liquid-glass`
 Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid Glass visual properties, implementation patterns, and design principles.
 
 #### Key Features
@@ -81,7 +81,7 @@ Apple's new material design system for iOS 26+. Comprehensive coverage of Liquid
 
 ---
 
-#### `swiftui-performance`
+#### `axiom-swiftui-performance`
 Master SwiftUI performance optimization using the new SwiftUI Instrument in Instruments 26.
 
 #### Key Features
@@ -98,7 +98,7 @@ Master SwiftUI performance optimization using the new SwiftUI Instrument in Inst
 
 ---
 
-#### `swiftui-26-ref`
+#### `axiom-swiftui-26-ref`
 Comprehensive reference guide to all iOS 26 SwiftUI features from WWDC 2025-256.
 
 #### Key Features
@@ -119,7 +119,7 @@ Comprehensive reference guide to all iOS 26 SwiftUI features from WWDC 2025-256.
 
 ---
 
-#### `ui-testing`
+#### `axiom-ui-testing`
 Reliable UI testing with condition-based waiting patterns and new Recording UI Automation features from Xcode 26.
 
 #### Key Features
@@ -136,7 +136,7 @@ Reliable UI testing with condition-based waiting patterns and new Recording UI A
 
 ---
 
-#### `swiftui-debugging`
+#### `axiom-swiftui-debugging`
 Diagnostic decision trees for SwiftUI view updates, preview crashes, and layout issues. Includes 3 real-world examples.
 
 #### Key Features
@@ -152,7 +152,7 @@ Diagnostic decision trees for SwiftUI view updates, preview crashes, and layout 
 
 ---
 
-#### `performance-profiling`
+#### `axiom-performance-profiling`
 Instruments decision trees and profiling workflows for CPU, memory, and battery optimization. Includes 3 real-world examples.
 
 #### Key Features
@@ -187,14 +187,14 @@ Comprehensive accessibility diagnostics with WCAG compliance, VoiceOver testing,
 
 ---
 
-#### `xcode-debugging`
+#### `axiom-xcode-debugging`
 Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute rabbit holes by checking build environment before debugging code.
 
 **When to use** BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild processes, "Unable to boot simulator", "No such module" after SPM changes
 
 ---
 
-#### `memory-debugging`
+#### `axiom-memory-debugging`
 Systematic memory leak diagnosis with Instruments. 5 leak patterns covering 90% of real-world issues.
 
 **When to use** App memory grows over time, seeing multiple instances of same class, crashes with memory limit exceeded, Instruments shows retain cycles
@@ -203,7 +203,7 @@ Systematic memory leak diagnosis with Instruments. 5 leak patterns covering 90% 
 
 ---
 
-#### `build-debugging`
+#### `axiom-build-debugging`
 Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
 **When to use** Dependency conflicts, CocoaPods/SPM resolution failures, "Multiple commands produce" errors, framework version mismatches
@@ -212,7 +212,7 @@ Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
 ### Concurrency & Async
 
-#### `swift-concurrency`
+#### `axiom-swift-concurrency`
 Progressive journey from single-threaded to concurrent Swift code. **Enhanced with WWDC 2025-268** covering `@concurrent` attribute, isolated conformances, task interleaving, and approachable concurrency patterns.
 
 #### Key Features
@@ -231,28 +231,28 @@ Progressive journey from single-threaded to concurrent Swift code. **Enhanced wi
 
 ### Data & Persistence
 
-#### `database-migration`
+#### `axiom-database-migration`
 Safe database schema evolution for SQLite/GRDB/SwiftData. Prevents data loss with additive migrations and testing workflows.
 
 **When to use** Adding/modifying database columns, encountering "FOREIGN KEY constraint failed", "no such column", "cannot add NOT NULL column" errors
 
 ---
 
-#### `sqlitedata`
+#### `axiom-sqlitedata`
 SQLiteData (Point-Free) patterns, critical gotchas, batch performance, and CloudKit sync.
 
 **When to use** Working with SQLiteData @Table models, @FetchAll/@FetchOne queries, StructuredQueries crashes, batch imports
 
 ---
 
-#### `grdb`
+#### `axiom-grdb`
 Raw GRDB for complex queries, ValueObservation, DatabaseMigrator patterns.
 
 **When to use** Writing raw SQL queries, complex joins, ValueObservation for reactive queries, dropping down from SQLiteData for performance
 
 ---
 
-#### `swiftdata`
+#### `axiom-swiftdata`
 SwiftData with iOS 26+ features, @Model definitions, @Query patterns, Swift 6 concurrency with @MainActor. Enhanced with CloudKit integration patterns, performance optimization, and migration strategies from Realm/Core Data.
 
 **When to use** Working with SwiftData @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, performance optimization
@@ -263,7 +263,7 @@ SwiftData with iOS 26+ features, @Model definitions, @Query patterns, Swift 6 co
 
 ### Apple Intelligence & Integration
 
-#### `app-intents-ref`
+#### `axiom-app-intents-ref`
 Comprehensive guide to App Intents framework for Siri, Apple Intelligence, Shortcuts, and Spotlight integration. Covers AppIntent, AppEntity, parameter handling, entity queries, and debugging.
 
 #### Key Features

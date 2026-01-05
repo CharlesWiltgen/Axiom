@@ -287,7 +287,7 @@ After listing all issues, provide a summary:
 ## Related Skills
 
 For detailed patterns and solutions, refer developers to:
-- `camera-capture` - Session setup, rotation, interruption handling
-- `camera-capture-diag` - Troubleshooting decision trees
-- `camera-capture-ref` - API reference
-- `photo-library` - Photo picker and library patterns
+- `axiom-camera-capture` - Session setup, rotation, interruption handling
+- `axiom-camera-capture-diag` - Troubleshooting decision trees
+- `axiom-camera-capture-ref` - API reference
+- `axiom-photo-library` - Photo picker and library patterns

@@ -122,7 +122,7 @@ Text("Caption").font(.caption)          // 12pt
 
 ## Documentation Scope
 
-This page documents the `hig-ref` reference skill—comprehensive HIG coverage Claude uses when you need specific design values, color names, or implementation details.
+This page documents the `axiom-hig-ref` reference skill—comprehensive HIG coverage Claude uses when you need specific design values, color names, or implementation details.
 
 **For quick decisions:** See [hig](/skills/ui-design/hig) for decision frameworks and quick lookups.
 

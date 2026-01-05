@@ -133,7 +133,7 @@ try migrator.migrate(dbQueue)
 
 ## Documentation Scope
 
-This page documents the `grdb` skill—raw GRDB patterns Claude uses when you need maximum SQL control beyond what SQLiteData provides.
+This page documents the `axiom-grdb` skill—raw GRDB patterns Claude uses when you need maximum SQL control beyond what SQLiteData provides.
 
 **For SQLiteData:** See [sqlitedata](/skills/persistence/sqlitedata) for type-safe @Table models with less boilerplate.
 

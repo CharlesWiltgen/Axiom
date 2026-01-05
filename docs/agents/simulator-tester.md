@@ -108,7 +108,7 @@ Automated simulator testing with visual verification for closed-loop debugging.
 
 ### Integration
 - Works with `/axiom:screenshot` for quick captures
-- Integrates with `deep-link-debugging` skill for navigation
+- Integrates with `axiom-deep-link-debugging` skill for navigation
 - Referenced in enhanced debugging skills
 
 ## Common Scenarios
@@ -126,15 +126,15 @@ Automated simulator testing with visual verification for closed-loop debugging.
 
 - Xcode with iOS Simulator installed
 - App built for simulator
-- Optionally: Deep links for navigation (see `deep-link-debugging` skill)
+- Optionally: Deep links for navigation (see `axiom-deep-link-debugging` skill)
 
 ## Related Tools
 
 - **`/axiom:screenshot`** — Quick screenshot capture without full testing
-- **`deep-link-debugging` skill** — Add debug-only deep links for navigation
-- **`xcode-debugging` skill** — Environment-first debugging
-- **`swiftui-debugging` skill** — SwiftUI-specific debugging with simulator verification
-- **`memory-debugging` skill** — Memory leak detection with visual verification
+- **`axiom-deep-link-debugging` skill** — Add debug-only deep links for navigation
+- **`axiom-xcode-debugging` skill** — Environment-first debugging
+- **`axiom-swiftui-debugging` skill** — SwiftUI-specific debugging with simulator verification
+- **`axiom-memory-debugging` skill** — Memory leak detection with visual verification
 
 ## Real-World Impact
 

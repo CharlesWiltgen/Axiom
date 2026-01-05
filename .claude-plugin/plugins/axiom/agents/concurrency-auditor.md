@@ -151,5 +151,5 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For detailed patterns: `swift-concurrency` skill
+For detailed patterns: `axiom-swift-concurrency` skill
 For migration guidance: Enable `-strict-concurrency=complete` and fix warnings

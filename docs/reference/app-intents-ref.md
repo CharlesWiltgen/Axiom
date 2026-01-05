@@ -114,7 +114,7 @@ struct SongEntityQuery: EntityQuery {
 
 ## Documentation Scope
 
-This page documents the `app-intents-ref` reference skill—complete API coverage Claude uses when you need specific App Intents APIs or integration patterns.
+This page documents the `axiom-app-intents-ref` reference skill—complete API coverage Claude uses when you need specific App Intents APIs or integration patterns.
 
 **For troubleshooting:** Check Info.plist, rebuild app, wait 5-10 minutes for Shortcuts discovery.
 

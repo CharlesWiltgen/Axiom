@@ -105,7 +105,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `privacy-ux` reference skill—complete API coverage Claude uses when you need specific privacy manifest structures, permission patterns, or ATT implementation details.
+This page documents the `axiom-privacy-ux` reference skill—complete API coverage Claude uses when you need specific privacy manifest structures, permission patterns, or ATT implementation details.
 
 **For UX patterns:** See [hig](/skills/ui-design/hig) for permission request best practices.
 
