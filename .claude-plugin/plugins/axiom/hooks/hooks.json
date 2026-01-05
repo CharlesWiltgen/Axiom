@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'if [[ \"$TOOL_INPUT_FILE_PATH\" == *.swift ]]; then if command -v swiftformat &>/dev/null; then swiftformat \"$TOOL_INPUT_FILE_PATH\" --quiet || true; else echo \"⚠️ Axiom: swiftformat not found. Install with: brew install swiftformat\"; fi; fi; exit 0'"
+            "command": "bash -c 'if [[ \"$TOOL_INPUT_FILE_PATH\" == *.swift ]] && command -v swiftformat &>/dev/null; then swiftformat \"$TOOL_INPUT_FILE_PATH\" --quiet || true; fi; exit 0'"
           }
         ]
       }
