@@ -420,25 +420,21 @@ func loadArtwork(from url: URL) {
 ### GOOD Code
 
 ```swift
-// ✅ CORRECT — Proper MPMediaItemArtwork with size handling
+// ✅ CORRECT — Proper MPMediaItemArtwork with value capture (Swift 6 compliant)
 @MainActor
 class NowPlayingService {
     private var currentArtworkURL: URL?
-    private var artworkImage: UIImage?
 
     func updateNowPlayingArtwork(_ image: UIImage, for trackURL: URL) {
         // ✅ Prevent race conditions - only update if still current track
         guard trackURL == currentArtworkURL else { return }
 
-        artworkImage = image
-
-        // ✅ Create MPMediaItemArtwork with proper size handler
-        let artwork = MPMediaItemArtwork(boundsSize: image.size) { [weak self] requestedSize in
-            // ✅ System calls this block with various sizes (300x300, 600x600, etc.)
-            guard let image = self?.artworkImage else { return UIImage() }
-
-            // ✅ Return image at requested size (or let system scale)
-            // For best quality, pre-render at common sizes
+        // ✅ Create MPMediaItemArtwork with VALUE CAPTURE (not stored property)
+        // This is Swift 6 strict concurrency compliant — UIImage is immutable
+        // and safe to capture across isolation domains
+        let artwork = MPMediaItemArtwork(boundsSize: image.size) { [image] requestedSize in
+            // ✅ System calls this block from any thread
+            // Captured value avoids "Main actor-isolated property" error
             return image
         }
 
@@ -472,6 +468,8 @@ class NowPlayingService {
     }
 }
 ```
+
+**Why value capture, not `nonisolated(unsafe)`**: The closure passed to `MPMediaItemArtwork` may be called by the system from any thread. Under Swift 6 strict concurrency, accessing `@MainActor`-isolated stored properties from this closure would cause a compile error. Capturing the image value directly is cleaner than using `nonisolated(unsafe)` because UIImage is immutable and thread-safe for reads.
 
 ### Artwork Size Guidelines
 - Lock Screen: 300x300 points (600x600 @2x, 900x900 @3x)
@@ -995,6 +993,6 @@ For detailed WWDC session descriptions and Apple documentation links, see [REFER
 
 ---
 
-**Last Updated**: 2025-12-17
+**Last Updated**: 2026-01-04
 **Status**: iOS 18+ discipline skill covering Now Playing, CarPlay, and MusicKit integration
 **Tested**: Based on WWDC 2019-501, WWDC 2022-110338 patterns

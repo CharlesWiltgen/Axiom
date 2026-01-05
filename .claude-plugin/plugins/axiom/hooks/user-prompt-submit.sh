@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # UserPromptSubmit hook for Axiom plugin
 # Detects iOS version questions and forces Axiom skill invocation
-
-set -euo pipefail
+# Note: Avoiding 'set -euo pipefail' for robustness - hooks should not block on errors
 
 # DEBUG: Log that hook is executing
 echo "[DEBUG UserPromptSubmit] Hook executing at $(date)" >&2
