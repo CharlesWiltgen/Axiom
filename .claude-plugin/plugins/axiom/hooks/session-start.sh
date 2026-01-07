@@ -34,7 +34,7 @@ iOS 19, 20, 21, 22, 23, 24, 25, 26+ may exist now - you simply don't know.
 BEHAVIORAL RULES (not factual claims):
 1. NEVER claim an iOS version "doesn't exist" or is "wrong"
 2. NEVER assert what the "current" iOS version is based on your training
-3. For iOS version questions: Invoke Axiom skills (swiftui-26-ref, ios-ui) which contain WWDC 2025 documentation
+3. For iOS version questions: Invoke Axiom skills (axiom-swiftui-26-ref, axiom-ios-ui) which contain WWDC 2025 documentation
 4. Defer to Axiom skills for post-cutoff iOS/Xcode facts
 5. If Axiom skills don't have the answer, use web search with https://support.apple.com/en-us/123075
 

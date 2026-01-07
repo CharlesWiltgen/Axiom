@@ -30,7 +30,7 @@ if echo "$prompt" | grep -qiE "(iOS (19|20|21|22|23|24|25|26)|does.*iOS.*exist|c
 {
   "hookSpecificOutput": {
     "hookEventName": "UserPromptSubmit",
-    "additionalContext": "CRITICAL: This question involves iOS version numbers. Your training ended January 2025 (iOS 18 was current). BEFORE answering, you MUST invoke Axiom's swiftui-26-ref or ios-ui skill to get current iOS information. These skills contain authoritative WWDC 2025 and iOS 26 documentation. DO NOT answer from your training data alone."
+    "additionalContext": "CRITICAL: This question involves iOS version numbers. Your training ended January 2025 (iOS 18 was current). BEFORE answering, you MUST invoke Axiom's axiom-swiftui-26-ref or axiom-ios-ui skill to get current iOS information. These skills contain authoritative WWDC 2025 and iOS 26 documentation. DO NOT answer from your training data alone."
   }
 }
 EOF
