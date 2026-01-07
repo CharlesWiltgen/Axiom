@@ -6,7 +6,11 @@
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "test": "npm run test:lint && npm run test:json && npm run test:budget && npm run docs:build",
+    "test:lint": "shellcheck .claude-plugin/plugins/axiom/hooks/*.sh",
+    "test:json": "node -e \"require('./.claude-plugin/plugins/axiom/claude-code.json'); require('./.claude-plugin/marketplace.json'); console.log('✓ JSON valid')\"",
+    "test:budget": "node -e \"const d=require('./.claude-plugin/plugins/axiom/claude-code.json'); let t=0; d.skills.forEach(s=>t+=s.description.length); if(t>15000){console.error('✗ Budget exceeded:',t,'/15000'); process.exit(1)} console.log('✓ Budget OK:',t,'/15000')\""
   },
   "devDependencies": {
     "vitepress": "2.0.0-alpha.15"
