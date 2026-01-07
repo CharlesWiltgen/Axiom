@@ -17,6 +17,12 @@ Axiom provides skills, agents, and commands that enhance Claude's iOS developmen
 
 **You don't need to memorize anything.** Just describe your problem — Claude will use the right skill automatically.
 
+## Updating Axiom
+
+To update Axiom, use `/plugin marketplace update axiom-marketplace`, then restart Claude Code to activate.
+
+Or, enable auto-updates for `axiom-marketplace` and restart Claude Code twice — once to check for and download updates (which takes several seconds), and again to activate.
+
 ## Quick Start
 
 ### Debugging Something?
