@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "axiom",
-      "version": "2.14.1",
+      "version": "2.14.2",
       "source": "./.claude-plugin/plugins/axiom",
       "description": "Battle-tested Claude Code agents, skills, and references for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
       "author": {
