@@ -1,3 +1,9 @@
+---
+name: axiom-now-playing-musickit
+description: MusicKit Now Playing integration patterns. Use when playing Apple Music content with ApplicationMusicPlayer and understanding automatic vs manual Now Playing info updates.
+user-invocable: false
+---
+
 # MusicKit Integration (Apple Music)
 
 **Time cost**: 5-10 minutes
@@ -121,6 +127,6 @@ Only override MPNowPlayingInfoCenter if:
 
 **Default**: Let MusicKit manage Now Playing automatically.
 
----
+## Resources
 
-Return to [main Now Playing skill](SKILL.md).
+**Skills**: axiom-now-playing, axiom-now-playing-carplay

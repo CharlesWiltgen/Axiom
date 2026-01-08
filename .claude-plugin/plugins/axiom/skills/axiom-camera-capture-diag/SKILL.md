@@ -1,6 +1,7 @@
 ---
 name: axiom-camera-capture-diag
 description: camera freezes, preview rotated wrong, capture slow, session interrupted, black preview, front camera mirrored, camera not starting, AVCaptureSession errors, startRunning blocks, phone call interrupts camera
+user-invocable: false
 skill_type: diagnostic
 version: 1.0.0
 last_updated: 2026-01-03

@@ -45,6 +45,8 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 - Deprecated API migration
 
 **Network.framework reference** → `/skill axiom-network-framework-ref`
+**Legacy iOS 12-25 patterns** → `/skill axiom-networking-legacy`
+**Migration guides** → `/skill axiom-networking-migration`
 - NWConnection (iOS 12-25)
 - NetworkConnection (iOS 26+)
 - TCP connections
@@ -67,7 +69,9 @@ User asks about networking
   ├─ Implementing?
   │  ├─ URLSession? → networking
   │  ├─ Network.framework? → network-framework-ref
-  │  └─ iOS 26+ NetworkConnection? → network-framework-ref
+  │  ├─ iOS 26+ NetworkConnection? → network-framework-ref
+  │  ├─ iOS 12-25 NWConnection? → networking-legacy
+  │  └─ Migrating from sockets/URLSession? → networking-migration
   │
   └─ Debugging? → networking-diag
 ```

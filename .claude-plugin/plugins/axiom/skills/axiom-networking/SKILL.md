@@ -548,7 +548,7 @@ public func receiveWithCoder() async throws {
 
 ## Legacy iOS 12-25 Patterns
 
-For apps supporting iOS 12-25 that can't use async/await yet, see [LEGACY-IOS12-25.md](LEGACY-IOS12-25.md):
+For apps supporting iOS 12-25 that can't use async/await yet, invoke `/skill axiom-networking-legacy`:
 - Pattern 2a: NWConnection with TLS (completion handlers)
 - Pattern 2b: NWConnection UDP Batch (30% CPU reduction)
 - Pattern 2c: NWListener (accepting connections, Bonjour)
@@ -863,7 +863,7 @@ func sendPosition(_ position: PlayerPosition) {
 
 ## Migration Guides
 
-For detailed migration guides from legacy networking APIs, see [MIGRATION.md](MIGRATION.md):
+For detailed migration guides from legacy networking APIs, invoke `/skill axiom-networking-migration`:
 - Migration 1: BSD Sockets → NWConnection
 - Migration 2: NWConnection → NetworkConnection (iOS 26+)
 - Migration 3: URLSession StreamTask → NetworkConnection

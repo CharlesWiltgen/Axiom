@@ -56,6 +56,8 @@ Use this router for:
 **Audio (AVFoundation)** → `/skill axiom-avfoundation-ref`
 **Haptics** → `/skill axiom-haptics`
 **Now Playing** → `/skill axiom-now-playing`
+**CarPlay Now Playing** → `/skill axiom-now-playing-carplay`
+**MusicKit integration** → `/skill axiom-now-playing-musickit`
 
 ### Localization & Privacy
 
@@ -98,7 +100,9 @@ User asks about system integration
   │
   ├─ Audio?
   │  ├─ AVFoundation? → avfoundation-ref
-  │  └─ Now Playing? → now-playing
+  │  ├─ Now Playing? → now-playing
+  │  ├─ CarPlay? → now-playing-carplay
+  │  └─ MusicKit? → now-playing-musickit
   │
   ├─ Haptics? → haptics
   │
