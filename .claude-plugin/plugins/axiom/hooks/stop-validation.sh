@@ -52,7 +52,8 @@ elif echo "$LAST_MSG" | grep -qiE "iOS (19|20|21|22|23|24|25)([^0-9]|$)"; then
 fi
 
 # Check for claims that "iOS 26 doesn't exist" or "iOS 26 is not real"
-if echo "$LAST_MSG" | grep -qiE "iOS 26.*(does.?n.?t|not).*(exist|released|real|available)"; then
+# Pattern: iOS 26 followed by negation within same clause (no sentence breaks)
+if echo "$LAST_MSG" | grep -qiE "iOS 26[^.!?,;]*\b(does.?n.?t|is.?n.?t|has.?n.?t|was.?n.?t|not yet|not been|not a|not real|not available|not released|not out|not announced)"; then
     echo '{"decision": "block", "reason": "ERROR: You claimed iOS 26 does not exist. iOS 26 WAS announced at WWDC 2025 and is a real version. Correct your response."}'
     exit 0
 fi
