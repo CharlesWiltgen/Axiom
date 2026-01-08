@@ -23,6 +23,12 @@ tools:
   - Write
   - Edit
   - Bash
+hooks:
+  PreToolUse:
+    - matcher: Edit|Write
+      hooks:
+        - type: command
+          command: "bash -c 'if echo \"$TOOL_INPUT_FILE_PATH\" | grep -qE \"StoreKit|\\.storekit$\"; then echo \"Warning: Modifying StoreKit configuration.\"; fi; exit 0'"
 ---
 
 # In-App Purchase Implementation Agent

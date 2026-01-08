@@ -1,6 +1,7 @@
 ---
 name: axiom-accessibility-diag
 description: Use when fixing VoiceOver issues, Dynamic Type violations, color contrast failures, touch target problems, keyboard navigation gaps, or Reduce Motion support - comprehensive accessibility diagnostics with WCAG compliance, Accessibility Inspector workflows, and App Store Review preparation for iOS/macOS
+user-invocable: false
 skill_type: diagnostic
 version: 1.0.0
 ---

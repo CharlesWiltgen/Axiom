@@ -1,6 +1,7 @@
 ---
 name: axiom-foundation-models-diag
 description: Use when debugging Foundation Models issues — context exceeded, guardrail violations, slow generation, availability problems, unsupported language, or unexpected output. Systematic diagnostics with production crisis defense.
+user-invocable: false
 skill_type: diagnostic
 version: 1.0.0
 last_updated: 2025-12-03

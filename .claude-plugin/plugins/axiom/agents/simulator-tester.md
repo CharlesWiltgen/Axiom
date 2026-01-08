@@ -21,6 +21,12 @@ tools:
   - Glob
   - Grep
   - Read
+hooks:
+  PreToolUse:
+    - matcher: Bash
+      hooks:
+        - type: command
+          command: "bash -c 'if echo \"$TOOL_INPUT_COMMAND\" | grep -qE \"simctl.*(erase|delete|shutdown|boot)\"; then echo \"Warning: Simulator state change command.\"; fi; exit 0'"
 ---
 
 # Simulator Tester Agent

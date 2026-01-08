@@ -1,6 +1,7 @@
 ---
 name: axiom-metal-migration-diag
 description: Use when ANY Metal porting issue occurs - black screen, rendering artifacts, shader errors, wrong colors, performance regressions, GPU crashes
+user-invocable: false
 skill_type: diagnostic
 version: 1.0.0
 apple_platforms: [iOS 12+, macOS 10.14+, tvOS 12+]

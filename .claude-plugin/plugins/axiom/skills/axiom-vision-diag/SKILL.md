@@ -1,6 +1,7 @@
 ---
 name: axiom-vision-diag
 description: subject not detected, hand pose missing landmarks, low confidence observations, Vision performance, coordinate conversion, VisionKit errors, observation nil, text not recognized, barcode not detected, DataScannerViewController not working, document scan issues
+user-invocable: false
 skill_type: diagnostic
 version: 1.1.0
 last_updated: 2026-01-03

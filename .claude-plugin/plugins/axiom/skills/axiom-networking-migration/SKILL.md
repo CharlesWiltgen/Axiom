@@ -1,3 +1,9 @@
+---
+name: axiom-networking-migration
+description: Network framework migration guides. Use when migrating from BSD sockets to NWConnection, NWConnection to NetworkConnection (iOS 26+), or URLSession StreamTask to NetworkConnection.
+user-invocable: false
+---
+
 # Network Framework Migration Guides
 
 ## Migration 1: From BSD Sockets to NWConnection
@@ -230,6 +236,6 @@ func sendAndReceive() async throws {
 }
 ```
 
----
+## Resources
 
-Return to [main networking skill](SKILL.md).
+**Skills**: axiom-ios-networking, axiom-networking-legacy

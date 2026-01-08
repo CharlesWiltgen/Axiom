@@ -41,6 +41,12 @@ tools:
   - Read
   - Grep
   - Glob
+hooks:
+  PreToolUse:
+    - matcher: Bash
+      hooks:
+        - type: command
+          command: "bash -c 'if echo \"$TOOL_INPUT_COMMAND\" | grep -qE \"killall|rm -rf.*DerivedData|xcrun simctl erase\"; then echo \"Warning: Destructive command detected.\"; fi; exit 0'"
 ---
 
 # Build Fixer Agent

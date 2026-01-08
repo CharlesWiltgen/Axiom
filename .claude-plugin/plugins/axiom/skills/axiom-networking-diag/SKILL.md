@@ -1,6 +1,7 @@
 ---
 name: axiom-networking-diag
 description: Use when debugging connection timeouts, TLS handshake failures, data not arriving, connection drops, performance issues, or proxy/VPN interference - systematic Network.framework diagnostics with production crisis defense
+user-invocable: false
 skill_type: diagnostic
 version: 1.0.0
 ---

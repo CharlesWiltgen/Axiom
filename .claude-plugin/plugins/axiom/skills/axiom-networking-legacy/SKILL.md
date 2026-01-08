@@ -1,8 +1,12 @@
+---
+name: axiom-networking-legacy
+description: This skill should be used when working with NWConnection patterns for iOS 12-25, supporting apps that can't use async/await yet, or maintaining backward compatibility with completion handler networking.
+user-invocable: false
+---
+
 # Legacy iOS 12-25 NWConnection Patterns
 
-These patterns use NWConnection with completion handlers for apps supporting iOS 12-25. If your app targets iOS 26+, use NetworkConnection with async/await instead (see main SKILL.md).
-
----
+These patterns use NWConnection with completion handlers for apps supporting iOS 12-25. If your app targets iOS 26+, use NetworkConnection with async/await instead (see axiom-network-framework-ref skill).
 
 ## Pattern 2a: NWConnection with TLS (iOS 12-25)
 
@@ -10,7 +14,7 @@ These patterns use NWConnection with completion handlers for apps supporting iOS
 
 **Time cost** 10-15 minutes
 
-#### ✅ GOOD: NWConnection with Completion Handlers
+### GOOD: NWConnection with Completion Handlers
 
 ```swift
 import Network
@@ -74,22 +78,20 @@ func receiveData() {
 }
 ```
 
-#### Key differences from NetworkConnection
+### Key differences from NetworkConnection
 - Must use `[weak self]` in all completion handlers to prevent retain cycles
 - stateUpdateHandler receives state, not async sequence
 - send/receive use completion callbacks, not async/await
 
-#### When to use
+### When to use
 - Supporting iOS 12-15 (70% of devices as of 2024)
 - Codebases not yet using async/await
 - Libraries needing backward compatibility
 
-#### Migration to NetworkConnection (iOS 26+)
-- stateUpdateHandler → connection.states async sequence
-- Completion handlers → try await calls
-- [weak self] → No longer needed (async/await handles cancellation)
-
----
+### Migration to NetworkConnection (iOS 26+)
+- stateUpdateHandler -> connection.states async sequence
+- Completion handlers -> try await calls
+- [weak self] -> No longer needed (async/await handles cancellation)
 
 ## Pattern 2b: NWConnection UDP Batch (iOS 12-25)
 
@@ -99,7 +101,7 @@ func receiveData() {
 
 **Background** Traditional UDP sockets send one datagram per syscall. If you're sending 100 small packets, that's 100 context switches. Batching reduces this to ~1 syscall.
 
-#### ❌ BAD: Individual UDP Sends (High CPU)
+### BAD: Individual UDP Sends (High CPU)
 ```swift
 // WRONG — 100 context switches for 100 packets
 for frame in videoFrames {
@@ -108,7 +110,7 @@ for frame in videoFrames {
 }
 ```
 
-#### ✅ GOOD: Batched UDP Sends (30% Lower CPU)
+### GOOD: Batched UDP Sends (30% Lower CPU)
 
 ```swift
 import Network
@@ -160,19 +162,17 @@ func receiveFrames() {
 }
 ```
 
-#### Performance characteristics
+### Performance characteristics
 - **Without batch** 100 datagrams = 100 syscalls = 100 context switches
 - **With batch** 100 datagrams = ~1 syscall = 1 context switch
 - **Result** ~30% lower CPU usage (measured with Instruments)
 
-#### When to use
+### When to use
 - Real-time video/audio streaming
 - Gaming with frequent updates (player position)
 - High-frequency sensor data (IoT)
 
 **WWDC 2018 demo** Live video streaming showed 30% lower CPU on receiver with user-space networking + batching
-
----
 
 ## Pattern 2c: NWListener (iOS 12-25)
 
@@ -180,7 +180,7 @@ func receiveFrames() {
 
 **Time cost** 20-25 minutes
 
-#### ❌ BAD: Manual Socket Listening
+### BAD: Manual Socket Listening
 ```swift
 // WRONG — Manual socket management
 let sock = socket(AF_INET, SOCK_STREAM, 0)
@@ -192,7 +192,7 @@ while true {
 }
 ```
 
-#### ✅ GOOD: NWListener with Automatic Connection Handling
+### GOOD: NWListener with Automatic Connection Handling
 
 ```swift
 import Network
@@ -275,22 +275,20 @@ func handleClient(_ connection: NWConnection) {
 }
 ```
 
-#### When to use
+### When to use
 - Peer-to-peer apps (file sharing, messaging)
 - Local network services
 - Development/testing servers
 
-#### Bonjour advertising
+### Bonjour advertising
 - Automatic service discovery on local network
 - No hardcoded IPs needed
 - Works with NWBrowser for discovery
 
-#### Security considerations
+### Security considerations
 - Use TLS parameters for encryption: `NWListener(using: .tls, on: port)`
 - Validate client connections before processing data
 - Set connection limits to prevent DoS
-
----
 
 ## Pattern 2d: Network Discovery (iOS 12-25)
 
@@ -298,14 +296,14 @@ func handleClient(_ connection: NWConnection) {
 
 **Time cost** 25-30 minutes
 
-#### ❌ BAD: Hardcoded IP Addresses
+### BAD: Hardcoded IP Addresses
 ```swift
 // WRONG — Brittle, requires manual configuration
 let connection = NWConnection(host: "192.168.1.100", port: 9000, using: .tcp)
 // What if IP changes? What if multiple devices?
 ```
 
-#### ✅ GOOD: NWBrowser for Service Discovery
+### GOOD: NWBrowser for Service Discovery
 
 ```swift
 import Network
@@ -356,20 +354,20 @@ func connectToService(_ endpoint: NWEndpoint) {
 }
 ```
 
-#### When to use
+### When to use
 - Peer-to-peer discovery (AirDrop-like features)
 - Local network printers, media servers
 - Development/testing (find test servers automatically)
 
-#### Performance characteristics
+### Performance characteristics
 - mDNS-based (multicast DNS, no central server)
 - Near-instant discovery on same subnet
 - Automatic updates when services appear/disappear
 
-#### iOS 26+ alternative
+### iOS 26+ alternative
 - Use NetworkBrowser with Wi-Fi Aware for peer-to-peer without infrastructure
-- See Pattern 1d in network-framework-ref skill
+- See Pattern 1d in axiom-network-framework-ref skill
 
----
+## Resources
 
-Return to [main networking skill](SKILL.md).
+**Skills**: axiom-networking, axiom-network-framework-ref, axiom-networking-migration

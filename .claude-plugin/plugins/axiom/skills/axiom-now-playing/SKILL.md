@@ -731,7 +731,7 @@ session.remoteCommandCenter.playCommand.addTarget { _ in }
 
 ## Pattern 6: CarPlay Integration
 
-For CarPlay-specific integration patterns, see [CARPLAY.md](CARPLAY.md).
+For CarPlay-specific integration patterns, invoke `/skill axiom-now-playing-carplay`.
 
 **Key insight**: CarPlay uses the SAME MPNowPlayingInfoCenter and MPRemoteCommandCenter as iOS. If your Now Playing works on iOS, it works in CarPlay with zero additional code.
 
@@ -739,7 +739,7 @@ For CarPlay-specific integration patterns, see [CARPLAY.md](CARPLAY.md).
 
 ## Pattern 7: MusicKit Integration (Apple Music)
 
-For MusicKit-specific integration patterns and hybrid app examples, see [MUSICKIT.md](MUSICKIT.md).
+For MusicKit-specific integration patterns and hybrid app examples, invoke `/skill axiom-now-playing-musickit`.
 
 **Key insight**: MusicKit's ApplicationMusicPlayer automatically publishes to MPNowPlayingInfoCenter. You don't need to manually update Now Playing info when playing Apple Music content.
 
@@ -987,9 +987,11 @@ Testing: Verified with 10 track changes, zero flicker.
 
 ## Resources
 
-Based on: WWDC 2022-110338, 2017-251, 2019-501.
+**WWDC**: 2022-110338, 2017-251, 2019-501
 
-For detailed WWDC session descriptions and Apple documentation links, see [REFERENCES.md](REFERENCES.md).
+**Docs**: /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpremotecommandcenter, /mediaplayer/mpnowplayingsession
+
+**Skills**: axiom-avfoundation-ref, axiom-now-playing-carplay, axiom-now-playing-musickit
 
 ---
 

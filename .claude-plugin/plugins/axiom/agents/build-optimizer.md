@@ -21,6 +21,12 @@ tools:
   - Read
   - Grep
   - Glob
+hooks:
+  PreToolUse:
+    - matcher: Edit|Write
+      hooks:
+        - type: command
+          command: "bash -c 'if echo \"$TOOL_INPUT_FILE_PATH\" | grep -qE \"\\.pbxproj$\"; then echo \"Warning: Modifying Xcode project file. Ensure backup exists.\"; fi; exit 0'"
 ---
 
 # Build Optimizer Agent
