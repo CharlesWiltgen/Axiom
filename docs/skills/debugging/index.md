@@ -13,6 +13,11 @@ Systematic debugging strategies to solve issues faster and prevent common proble
   - *"My build is failing with 'BUILD FAILED' but no error details. I haven't changed anything."*
   - *"Build succeeds but old code is executing. I restarted Xcode but it still happens."*
 
+- **[TestFlight Triage](/skills/debugging/testflight-triage)** – Crash investigation and beta feedback review using Xcode Organizer
+  - *"A beta tester said my app crashed. How do I find and understand the crash?"*
+  - *"My crash logs aren't symbolicated. How do I fix that?"*
+  - *"What does EXC_BAD_ACCESS mean and how do I fix it?"*
+
 - **[Memory Debugging](/skills/debugging/memory-debugging)** – Systematic leak diagnosis with 5 patterns covering 90% of real-world issues
   - *"My app crashes after 10-15 minutes of use with no error messages. How do I find the leak?"*
   - *"View controllers don't deallocate after dismiss. How do I find the retain cycle?"*

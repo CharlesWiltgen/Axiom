@@ -102,6 +102,7 @@ This page documents the `axiom-xcode-debugging` skill—environment-first diagno
 - [/axiom:fix-build](/commands/build/fix-build) — Automated build failure diagnosis
 - [build-fixer](/agents/build-fixer) — Autonomous agent that diagnoses and fixes build issues
 - [build-debugging](/skills/debugging/build-debugging) — Dependency resolution for CocoaPods/SPM
+- [testflight-triage](/skills/debugging/testflight-triage) — Use when issue is TestFlight crash, not build environment
 - [performance-profiling](/skills/debugging/performance-profiling) — When issue is performance, not environment
 
 ## Resources
