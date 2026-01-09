@@ -1,6 +1,7 @@
 ---
 name: axiom-ios-networking
 description: Use when implementing or debugging ANY network connection, API call, or socket. Covers URLSession, Network.framework, NetworkConnection, deprecated APIs, connection diagnostics, structured concurrency networking.
+user-invocable: false
 ---
 
 # iOS Networking Router

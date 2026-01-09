@@ -1,6 +1,7 @@
 ---
 name: axiom-ios-vision
 description: Use when implementing ANY computer vision feature - image analysis, object detection, pose detection, person segmentation, subject lifting, hand/body pose tracking.
+user-invocable: false
 ---
 
 # iOS Computer Vision Router

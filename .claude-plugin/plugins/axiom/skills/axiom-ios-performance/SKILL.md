@@ -1,6 +1,7 @@
 ---
 name: axiom-ios-performance
 description: Use when app feels slow, memory grows, battery drains, or diagnosing ANY performance issue. Covers memory leaks, profiling, Instruments workflows, retain cycles, performance optimization.
+user-invocable: false
 ---
 
 # iOS Performance Router
