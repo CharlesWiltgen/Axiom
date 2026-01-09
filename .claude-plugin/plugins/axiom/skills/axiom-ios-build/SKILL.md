@@ -105,6 +105,21 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
+### 7. TestFlight Crash Triage → **testflight-triage**
+**Triggers**:
+- Beta tester reported a crash
+- Crash reports in Xcode Organizer
+- Crash logs aren't symbolicated
+- App Store Connect shows crash metrics
+- TestFlight feedback with screenshots
+- App was killed but no crash report
+
+**Why testflight-triage**: Systematic workflow for investigating TestFlight crashes and reviewing beta feedback. Covers symbolication, crash interpretation, common patterns, and Claude-assisted analysis.
+
+**Invoke**: `/skill axiom-testflight-triage`
+
+---
+
 ## Decision Tree
 
 ```
@@ -124,8 +139,11 @@ User reports build/environment issue
   ├─ Is it security/privacy/App Store prep?
   │  └─ YES → security-privacy-scanner (Agent)
   │
-  └─ Is it modernization/deprecated APIs/iOS 17+ migration?
-     └─ YES → modernization-helper (Agent)
+  ├─ Is it modernization/deprecated APIs/iOS 17+ migration?
+  │  └─ YES → modernization-helper (Agent)
+  │
+  └─ Is it TestFlight crash/feedback triage?
+     └─ YES → testflight-triage
 ```
 
 ## Anti-Rationalization
@@ -190,3 +208,15 @@ User: "Update my code to use modern SwiftUI patterns"
 
 User: "Should I still use @StateObject?"
 → Invoke: `modernization-helper` agent
+
+User: "A beta tester said my app crashed"
+→ Invoke: `/skill axiom-testflight-triage`
+
+User: "I see crashes in App Store Connect but don't know how to investigate"
+→ Invoke: `/skill axiom-testflight-triage`
+
+User: "My crash logs aren't symbolicated"
+→ Invoke: `/skill axiom-testflight-triage`
+
+User: "I need to review TestFlight feedback"
+→ Invoke: `/skill axiom-testflight-triage`
