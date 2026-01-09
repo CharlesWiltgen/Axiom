@@ -7,6 +7,18 @@ export default defineConfig({
   srcExclude: ['**/public/plugins/**'],
   cleanUrls: true,
 
+  head: [
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:title', content: 'Axiom — Claude Code Agents for iOS Development' }],
+    ['meta', { property: 'og:description', content: 'Battle-tested Claude Code agents, skills, and references for modern xOS development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more' }],
+    ['meta', { property: 'og:image', content: 'https://charleswiltgen.github.io/Axiom/og-image.png' }],
+    ['meta', { property: 'og:url', content: 'https://charleswiltgen.github.io/Axiom/' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: 'Axiom — Claude Code Agents for iOS Development' }],
+    ['meta', { name: 'twitter:description', content: 'Battle-tested Claude Code agents, skills, and references for modern xOS development' }],
+    ['meta', { name: 'twitter:image', content: 'https://charleswiltgen.github.io/Axiom/og-image.png' }],
+  ],
+
   themeConfig: {
     search: {
       provider: 'local'
