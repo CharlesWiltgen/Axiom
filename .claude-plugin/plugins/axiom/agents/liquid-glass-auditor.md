@@ -20,6 +20,8 @@ tools:
   - Glob
   - Grep
   - Read
+skills:
+  - axiom-ios-ui
 ---
 
 # Liquid Glass Auditor Agent
