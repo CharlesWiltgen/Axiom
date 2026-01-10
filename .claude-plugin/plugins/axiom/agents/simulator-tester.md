@@ -21,6 +21,8 @@ tools:
   - Glob
   - Grep
   - Read
+skills:
+  - axiom-ios-testing
 hooks:
   PreToolUse:
     - matcher: Bash

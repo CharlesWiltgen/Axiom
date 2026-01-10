@@ -23,6 +23,8 @@ tools:
   - Write
   - Edit
   - Bash
+skills:
+  - axiom-ios-integration
 hooks:
   PreToolUse:
     - matcher: Edit|Write

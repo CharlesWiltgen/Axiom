@@ -21,6 +21,8 @@ tools:
   - Read
   - Grep
   - Glob
+skills:
+  - axiom-ios-build
 hooks:
   PreToolUse:
     - matcher: Edit|Write
