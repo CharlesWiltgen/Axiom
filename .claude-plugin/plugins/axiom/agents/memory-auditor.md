@@ -20,6 +20,8 @@ tools:
   - Glob
   - Grep
   - Read
+skills:
+  - axiom-ios-performance
 ---
 
 # Memory Auditor Agent

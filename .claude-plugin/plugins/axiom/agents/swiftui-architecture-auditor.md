@@ -30,6 +30,8 @@ tools:
   - Glob
   - Grep
   - Read
+skills:
+  - axiom-ios-ui
 ---
 
 # SwiftUI Architecture Auditor Agent

@@ -36,6 +36,8 @@ tools:
   - Grep
   - Read
   - Bash
+skills:
+  - axiom-ios-build
 ---
 
 # SPM Conflict Resolver Agent

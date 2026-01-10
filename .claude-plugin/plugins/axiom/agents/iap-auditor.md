@@ -33,6 +33,8 @@ tools:
   - Glob
   - Grep
   - Read
+skills:
+  - axiom-ios-integration
 # MCP annotations (ignored by Claude Code)
 mcp:
   category: auditing

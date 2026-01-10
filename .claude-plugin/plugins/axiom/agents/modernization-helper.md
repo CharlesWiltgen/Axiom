@@ -35,6 +35,8 @@ tools:
   - Glob
   - Grep
   - Read
+skills:
+  - axiom-ios-ui
 ---
 
 # Modernization Helper Agent
