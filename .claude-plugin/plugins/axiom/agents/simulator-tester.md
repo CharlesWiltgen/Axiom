@@ -23,6 +23,7 @@ tools:
   - Read
 skills:
   - axiom-ios-testing
+  - axiom-axe-ref
 hooks:
   PreToolUse:
     - matcher: Bash
@@ -44,20 +45,34 @@ You are an expert at using the iOS Simulator for automated testing and closed-lo
 
 ## Mandatory First Steps
 
-**ALWAYS run these checks FIRST**:
+**ALWAYS run these checks FIRST** (using JSON for reliable parsing):
 
 ```bash
-# List available simulators
-xcrun simctl list devices available | grep -E "iPhone|iPad"
+# List available simulators with structured output
+xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.isAvailable == true) | {name, udid, state}'
 
 # Check booted simulators
-xcrun simctl list devices | grep Booted
+xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.state == "Booted") | {name, udid}'
 
-# Boot if needed
+# Get specific device UDID for commands
+UDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booted") | .udid' | head -1)
+
+# Boot if needed (get UDID first, then boot)
 xcrun simctl boot "iPhone 16 Pro"
+
+# Check for AXe (enables UI automation if available)
+if command -v axe &> /dev/null; then
+  echo "AXe available - UI automation enabled (tap, swipe, type, describe-ui)"
+  AXE_AVAILABLE=true
+else
+  echo "AXe not installed - using simctl only (install: brew install cameroncooke/axe/axe)"
+  AXE_AVAILABLE=false
+fi
 ```
 
 **Common fix**: "Unable to boot" → `xcrun simctl shutdown all && killall -9 Simulator`
+
+**Why JSON?** Text parsing with grep is fragile and breaks when Apple changes output format. JSON output (`-j`) is stable and machine-readable.
 
 ## Capabilities
 
@@ -140,6 +155,102 @@ xcrun simctl spawn booted log stream --predicate 'subsystem == "com.example.Your
 ls -lt "$HOME/Library/Logs/DiagnosticReports/"*.crash 2>/dev/null | head -5
 ```
 
+### 10. App Inventory & Diagnostics
+```bash
+# List all installed apps on booted simulator
+xcrun simctl listapps booted
+
+# Get app container path (useful for inspecting sandbox)
+xcrun simctl get_app_container booted com.example.YourApp data
+xcrun simctl get_app_container booted com.example.YourApp app
+
+# Get detailed app info
+xcrun simctl appinfo booted com.example.YourApp
+
+# Comprehensive system diagnostics (no archive = faster)
+xcrun simctl diagnose --no-archive
+```
+**Use for**: Verifying app installation, inspecting app data, deep debugging
+
+### 11. Simulator Management
+```bash
+# Clone simulator for test variants
+xcrun simctl clone <source-udid> "Test Variant - Dark Mode"
+
+# List available runtimes
+xcrun simctl list runtimes -j | jq '.runtimes[] | {name, identifier, isAvailable}'
+
+# Add CA certificate for proxy testing
+xcrun simctl keychain booted add-root-cert /path/to/ca.pem
+```
+
+### 12. UI Automation with AXe (Optional)
+
+**Installation:**
+
+```bash
+# Install AXe via Homebrew
+brew install cameroncooke/axe/axe
+
+# Verify installation
+axe --version
+```
+
+**Check availability:** `command -v axe`
+
+```bash
+# Discover UI elements first (get accessibility identifiers)
+axe describe-ui --udid $UDID
+
+# Tap by accessibility identifier (RECOMMENDED - stable)
+axe tap --id "loginButton" --udid $UDID
+
+# Tap by label
+axe tap --label "Submit" --udid $UDID
+
+# Tap at coordinates (less stable)
+axe tap -x 200 -y 400 --udid $UDID
+
+# Long press
+axe tap -x 200 -y 400 --duration 1.0 --udid $UDID
+
+# Gesture presets
+axe gesture scroll-down --udid $UDID     # Scroll content down
+axe gesture scroll-up --udid $UDID       # Scroll content up
+axe gesture swipe-from-left-edge --udid $UDID  # Back navigation
+
+# Custom swipe
+axe swipe --start-x 200 --start-y 600 --end-x 200 --end-y 200 --udid $UDID
+
+# Type text (field must be focused first)
+axe tap --id "emailTextField" --udid $UDID
+axe type "user@example.com" --udid $UDID
+
+# Press Return key
+axe key 40 --udid $UDID
+
+# Hardware buttons
+axe button home --udid $UDID
+axe button lock --udid $UDID
+axe button siri --udid $UDID
+```
+**Use for**: Automated UI flows when XCUITest not available, quick manual automation
+
+### 13. Video Streaming with AXe (Optional)
+
+```bash
+# Stream video at 10 FPS (for monitoring)
+axe stream-video --fps 10 --udid $UDID
+
+# Record video (H.264)
+axe record-video --output /tmp/recording.mp4 --udid $UDID
+# Press Ctrl+C to stop
+
+# Screenshot (alternative to simctl)
+axe screenshot --output /tmp/screenshot.png --udid $UDID
+```
+**Use for**: Live monitoring, recording test flows, capturing evidence
+
 ## Test Workflow
 
 1. **Setup**: Check simulator state, boot if needed
@@ -184,6 +295,49 @@ ls -lt "$HOME/Library/Logs/DiagnosticReports/"*.crash 2>/dev/null | head -5
 5. Read and analyze screenshots (you're multimodal)
 6. Ask for bundle ID if not provided
 
+## Comprehensive Diagnostics (simctl diagnose)
+
+For deep troubleshooting and bug reports, use `simctl diagnose` to collect logs and system state.
+
+```bash
+# Basic diagnostic collection (opens archive in Finder when done)
+xcrun simctl diagnose
+
+# Faster collection without archive (useful for quick inspection)
+xcrun simctl diagnose --no-archive --output /tmp/sim-diag
+
+# Collect from specific device only
+xcrun simctl diagnose --udid $UDID
+
+# Include app data containers (warning: may include private data)
+xcrun simctl diagnose --data-container
+
+# Full collection with no timeout (for complex issues)
+xcrun simctl diagnose -X --all-logs
+```
+
+### Best Practices for Diagnostic Collection
+
+1. **Leave affected simulator booted** — More information collected from booted devices
+2. **Enable verbose logging first** — For hard-to-reproduce issues:
+   ```bash
+   xcrun simctl logverbose booted enable
+   # Reboot simulator, reproduce issue, then run diagnose
+   xcrun simctl diagnose
+   ```
+3. **Collect right after reproducing** — Logs rotate, so capture immediately
+4. **Use --no-archive for quick inspection** — Faster when you just need to check logs
+
+### What's Collected
+
+- System logs and crash reports
+- Simulator configuration and state
+- Device logs from booted simulators
+- CoreSimulator service logs
+- Optionally: app data containers (--data-container)
+
+**Use for**: Filing Apple bug reports, debugging simulator infrastructure issues, investigating crashes that happen before your code runs
+
 ## Error Quick Reference
 
 | Symptom | Fix |
@@ -194,7 +348,34 @@ ls -lt "$HOME/Library/Logs/DiagnosticReports/"*.crash 2>/dev/null | head -5
 | Deep link doesn't work | Check URL scheme in Info.plist |
 | Push fails | Validate JSON: `python -m json.tool < push.json` |
 
+## Example Interaction
+
+**User**: "Take a screenshot to verify my login fix works"
+
+**Your response**:
+1. Check simulator state: `xcrun simctl list devices -j | jq '...'`
+2. Boot if needed or confirm booted simulator
+3. Wait for UI to stabilize: `sleep 2`
+4. Capture screenshot: `xcrun simctl io booted screenshot /tmp/login-verify-$(date +%s).png`
+5. Read and analyze the screenshot (you're multimodal)
+6. Report findings:
+   - Screenshot shows login screen loaded correctly
+   - "Login" button is visible and enabled
+   - No error messages displayed
+   - Result: ✅ Fix verified
+
+## Resources
+
+**WWDC**: 2020-10647 (Become a Simulator expert)
+
+**Docs**: /xcode/running-your-app-in-simulator-or-on-a-device
+
 ## Related
+
+**Optional Tools:**
+- **AXe**: `brew install cameroncooke/axe/axe` — UI automation CLI
 
 For deep link debugging: `axiom-deep-link-debugging` skill
 For build issues: `build-fixer` agent
+For AXe reference: `axiom-axe-ref` skill
+For running tests: `test-runner` agent

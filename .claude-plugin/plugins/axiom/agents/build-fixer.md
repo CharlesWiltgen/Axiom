@@ -91,8 +91,8 @@ ps -eo pid,etime,command | grep -E "xcodebuild|Simulator" | grep -v grep
 # 2. Check Derived Data size (>10GB = stale)
 du -sh ~/Library/Developer/Xcode/DerivedData
 
-# 3. Check simulator states (stuck Booting?)
-xcrun simctl list devices | grep -E "Booted|Booting|Shutting Down"
+# 3. Check simulator states (stuck Booting?) - JSON for reliable parsing
+xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.state == "Booted" or .state == "Booting" or .state == "Shutting Down") | {name, udid, state}'
 ```
 
 ### Interpreting Results
@@ -163,6 +163,42 @@ xcodebuild clean build -scheme <ACTUAL_SCHEME_NAME> \
   -destination 'platform=iOS Simulator,name=iPhone 16' \
   -allowProvisioningUpdates
 ```
+
+**Downloading Simulator Runtimes (CI/CD Setup):**
+
+For CI/CD environments that need specific simulator runtimes:
+
+```bash
+# Download iOS simulator runtime for current Xcode
+xcodebuild -downloadPlatform iOS
+
+# Download specific iOS version
+xcodebuild -downloadPlatform iOS -buildVersion 18.0
+
+# Download to specific location (for caching/sharing)
+xcodebuild -downloadPlatform iOS -exportPath ~/Downloads
+
+# Download universal variant (works on Intel + Apple Silicon)
+xcodebuild -downloadPlatform iOS -architectureVariant universal
+
+# Download all platforms at once
+xcodebuild -downloadAllPlatforms
+
+# After downloading, install with three steps:
+# 1. Select Xcode version
+xcode-select -s /Applications/Xcode.app
+
+# 2. Run first launch setup
+xcodebuild -runFirstLaunch
+
+# 3. Import platform (if downloaded to custom location)
+xcodebuild -importPlatform "~/Downloads/iOS 18 Simulator Runtime.dmg"
+
+# Check for newer components between releases
+xcodebuild -runFirstLaunch -checkForNewerComponents
+```
+
+**Use for**: CI/CD initial setup, missing simulator errors, version-specific testing
 
 **Red Flags for CI/CD:**
 - "Works locally but fails in CI" → Usually SPM cache or Xcode version mismatch
@@ -263,18 +299,26 @@ If user reports "Unable to boot simulator" or simulators stuck:
 # Shutdown all simulators
 xcrun simctl shutdown all
 
-# List devices to verify
-xcrun simctl list devices
+# List devices with JSON for reliable parsing
+xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.isAvailable == true) | {name, udid, state}'
 
-# If specific simulator is stuck, get its UUID from the list above
-# Example output: iPhone 16 (12345678-ABCD-EFGH-IJKL-123456789ABC) (Booted)
-# The UUID is the part in first parentheses: 12345678-ABCD-EFGH-IJKL-123456789ABC
+# Get UUID for a specific device (e.g., iPhone 16) using JSON
+UDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.name | contains("iPhone 16")) | select(.isAvailable == true) | .udid' | head -1)
 
-# Extract UUID for a specific device (e.g., iPhone 16)
-xcrun simctl list devices | grep "iPhone 16" | grep -o -E '([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12})'
+if [ -z "$UDID" ]; then
+  echo "No iPhone 16 simulator found. Available simulators:"
+  xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.isAvailable == true) | {name, udid}'
+else
+  echo "iPhone 16 UUID: $UDID"
+  # Erase the stuck simulator using the extracted UUID
+  xcrun simctl erase "$UDID"
+fi
 
-# Or manually copy UUID from the list, then erase it
-xcrun simctl erase <UUID>
+# Find and erase all simulators stuck in Booting state
+xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booting") | .udid' | while read UDID; do
+  echo "Erasing stuck simulator: $UDID"
+  xcrun simctl erase "$UDID"
+done
 
 # Nuclear option if nothing works
 killall -9 Simulator
@@ -419,3 +463,18 @@ Common errors and their fixes:
 - Skip the verification step
 - Leave user without clear next steps
 - Use placeholder scheme names in commands
+
+## Resources
+
+**WWDC**: 2019-413 (Testing in Xcode)
+
+**Docs**: /xcode/downloading-and-installing-additional-xcode-components, /xcode/troubleshooting-simulator
+
+**Tech Notes**: TN2339 (Building from Command Line with Xcode)
+
+## Related
+
+For test execution: `test-runner` agent
+For test debugging: `test-debugger` agent
+For simulator testing: `simulator-tester` agent
+For SPM conflicts: `spm-conflict-resolver` agent

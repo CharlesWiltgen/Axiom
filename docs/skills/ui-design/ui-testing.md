@@ -103,16 +103,18 @@ XCTAssertTrue(submitButton.waitForExistence(timeout: 5))
 
 ### Decision Tree
 
-```
-Test failing?
-├─ Element not found?
-│  └─ Use waitForExistence(timeout:) not sleep()
-├─ Passes locally, fails CI?
-│  └─ Replace sleep() with condition polling
-├─ Animation causing issues?
-│  └─ Wait for animation completion, don't disable
-└─ Network request timing?
-   └─ Use XCTestExpectation or waitForExistence
+```mermaid
+flowchart TD
+    A[Test failing?] --> B{Symptom}
+    B -->|Element not found| C["Use waitForExistence(timeout:)<br/>not sleep()"]
+    B -->|Passes locally, fails CI| D["Replace sleep() with<br/>condition polling"]
+    B -->|Animation causing issues| E["Wait for animation completion<br/>don't disable"]
+    B -->|Network request timing| F["Use XCTestExpectation<br/>or waitForExistence"]
+
+    style C fill:#d4edda
+    style D fill:#d4edda
+    style E fill:#d4edda
+    style F fill:#d4edda
 ```
 
 ## Documentation Scope

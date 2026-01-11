@@ -16,8 +16,12 @@ pgrep -f xcodebuild | wc -l
 # Derived Data size
 du -sh ~/Library/Developer/Xcode/DerivedData 2>/dev/null
 
-# Simulator status
-xcrun simctl list devices booted 2>/dev/null | head -5
+# Simulator status (JSON for reliable parsing)
+xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.state == "Booted") | {name, udid}'
+
+# Tool availability
+echo "jq: $(command -v jq &>/dev/null && echo 'installed' || echo 'NOT INSTALLED')"
+echo "axe: $(command -v axe &>/dev/null && echo 'installed (UI automation available)' || echo 'not installed (optional)')"
 ```
 
 ### Project Analysis
@@ -35,19 +39,23 @@ grep -r "IPHONEOS_DEPLOYMENT_TARGET" *.xcodeproj/project.pbxproj 2>/dev/null | h
 ### Format as Dashboard
 
 ```
-📊 Axiom Project Status
-═══════════════════════
+Axiom Project Status
+=====================
 
-🔧 Environment
-   Xcodebuild processes: [count] [⚠️ if > 3]
-   Derived Data: [size] [⚠️ if > 10GB]
+Environment
+   Xcodebuild processes: [count] [warning if > 3]
+   Derived Data: [size] [warning if > 10GB]
    Simulators running: [count]
+   jq: [installed/NOT INSTALLED]
+   axe: [installed/not installed (optional)]
 
-📱 Project Analysis
+Project Analysis
    SwiftUI views: [count]
-   Potential memory patterns: [count] [⚠️ if > 0]
+   Potential memory patterns: [count] [warning if > 0]
    Deployment target: iOS [version]
 
-💡 Suggested Actions
+Suggested Actions
    [Based on findings, suggest 2-3 most relevant audits or skills]
+   [If jq not installed: "Install jq for reliable simulator control: brew install jq"]
+   [If axe installed: "AXe UI automation available for simulator-tester agent"]
 ```

@@ -61,30 +61,36 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Background Color Decision Tree
 
-```
-Is your app media-focused (photos, videos, music)?
-├─ Yes → Consider permanent dark appearance
-│        .preferredColorScheme(.dark) on root view
-│        EXAMPLES: Apple Music, Photos, Clock
-│
-└─ No → Use system backgrounds (respects user preference)
-         systemBackground (adapts automatically)
-         systemGroupedBackground (iOS Settings-style lists)
+```mermaid
+flowchart TD
+    A["Is your app media-focused?<br/>(photos, videos, music)"] --> B{Answer}
+    B -->|Yes| C["Consider permanent dark appearance<br/>.preferredColorScheme(.dark)"]
+    B -->|No| D["Use system backgrounds<br/>(respects user preference)"]
+
+    C --> E["EXAMPLES:<br/>Apple Music, Photos, Clock"]
+    D --> F["systemBackground (adapts automatically)<br/>systemGroupedBackground (Settings-style)"]
+
+    style C fill:#1a1a2e,color:#fff
+    style D fill:#d4edda
+    style E fill:#2d2d44,color:#fff
+    style F fill:#d4edda
 ```
 
 ### Color Selection Decision Tree
 
-```
-Do you need a specific color value?
-├─ No → Use semantic colors
-│        label, secondaryLabel, tertiaryLabel
-│        systemBackground, secondarySystemBackground
-│        WHY: Adapts to light/dark/high contrast
-│
-└─ Yes → Create Color Set in asset catalog
-         1. Open Assets.xcassets
-         2. Add Color Set
-         3. Configure light/dark/high contrast variants
+```mermaid
+flowchart TD
+    A[Do you need a specific color value?] --> B{Answer}
+    B -->|No| C["Use semantic colors<br/>label, secondaryLabel, tertiaryLabel<br/>systemBackground, secondarySystemBackground"]
+    B -->|Yes| D["Create Color Set in asset catalog"]
+
+    C --> E["WHY: Adapts to<br/>light/dark/high contrast"]
+    D --> F["1. Open Assets.xcassets<br/>2. Add Color Set<br/>3. Configure variants"]
+
+    style C fill:#d4edda
+    style D fill:#cce5ff
+    style E fill:#d4edda
+    style F fill:#cce5ff
 ```
 
 ### Font Weight Decision

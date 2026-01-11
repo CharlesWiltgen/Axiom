@@ -105,36 +105,37 @@ struct ColorView: View {
 
 ### Architecture Decision Tree
 
-```
-How complex is your presentation logic?
-├─ Simple (mostly data display)?
-│  └─ Use Apple's vanilla @Observable patterns
-│
-├─ Medium (some formatting, validation)?
-│  └─ Extract to @Observable model classes
-│
-├─ Complex (multiple async flows, complex state)?
-│  ├─ Small team familiar with Swift?
-│  │  └─ MVVM with @Observable
-│  └─ Large team, need strict patterns?
-│     └─ Consider TCA
-│
-└─ Complex navigation between features?
-   └─ Add Coordinator pattern
+```mermaid
+flowchart TD
+    A[How complex is your<br/>presentation logic?] --> B{Complexity}
+    B -->|Simple| C[Use Apple's vanilla<br/>@Observable patterns]
+    B -->|Medium| D[Extract to @Observable<br/>model classes]
+    B -->|Complex state| E{Team size?}
+    B -->|Complex navigation| F[Add Coordinator pattern]
+    E -->|Small team| G[MVVM with @Observable]
+    E -->|Large team| H[Consider TCA]
+
+    style C fill:#d4edda
+    style D fill:#d4edda
+    style G fill:#d4edda
+    style H fill:#fff3cd
+    style F fill:#d4edda
 ```
 
 ### Property Wrapper Decision Tree
 
-```
-Where does this data come from?
-├─ View-local, temporary?
-│  └─ @State
-├─ Shared dependency (database, services)?
-│  └─ @Environment
-├─ Need two-way binding to @Observable?
-│  └─ @Bindable
-└─ Read-only data from parent?
-   └─ Plain property (no wrapper)
+```mermaid
+flowchart TD
+    A[Where does this<br/>data come from?] --> B{Source}
+    B -->|View-local, temporary| C["@State"]
+    B -->|Shared dependency| D["@Environment"]
+    B -->|Two-way binding<br/>to @Observable| E["@Bindable"]
+    B -->|Read-only from parent| F[Plain property<br/>no wrapper]
+
+    style C fill:#cce5ff
+    style D fill:#cce5ff
+    style E fill:#cce5ff
+    style F fill:#e2e3e5
 ```
 
 ## Documentation Scope
