@@ -15,15 +15,24 @@ Use this skill when:
 
 ## Quick Decision Tree
 
-```
-Has your type...
-├─ All properties Codable? → Automatic synthesis (add : Codable)
-├─ Property names differ from JSON? → CodingKeys customization
-├─ Needs to exclude properties? → CodingKeys customization
-├─ Enum with associated values? → Check enum synthesis patterns
-├─ Needs structural transformation? → Manual implementation + bridge types
-├─ Needs data not in JSON? → DecodableWithConfiguration (iOS 15+)
-└─ Complex nested JSON? → Manual implementation + nested containers
+```mermaid
+flowchart TD
+    A[Has your type...] --> B{Characteristic}
+    B -->|All properties Codable| C["Automatic synthesis<br/>add : Codable"]
+    B -->|Property names differ from JSON| D[CodingKeys customization]
+    B -->|Needs to exclude properties| E[CodingKeys customization]
+    B -->|Enum with associated values| F[Check enum synthesis patterns]
+    B -->|Needs structural transformation| G[Manual implementation +<br/>bridge types]
+    B -->|Needs data not in JSON| H["DecodableWithConfiguration<br/>(iOS 15+)"]
+    B -->|Complex nested JSON| I[Manual implementation +<br/>nested containers]
+
+    style C fill:#d4edda
+    style D fill:#cce5ff
+    style E fill:#cce5ff
+    style F fill:#fff3cd
+    style G fill:#f8d7da
+    style H fill:#fff3cd
+    style I fill:#f8d7da
 ```
 
 ## What This Skill Covers

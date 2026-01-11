@@ -63,16 +63,18 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Decision Tree
 
-```
-Constraint error in console?
-├─ Can't identify which views?
-│  └─ Use Symbolic Breakpoint + Memory Address Identification
-├─ Constraint conflicts shown?
-│  └─ Use Constraint Priority Resolution
-├─ Ambiguous layout (multiple solutions)?
-│  └─ Use _autolayoutTrace to find missing constraints
-└─ Views positioned incorrectly but no errors?
-   └─ Use Debug View Hierarchy + Show Constraints
+```mermaid
+flowchart TD
+    A[Constraint error in console?] --> B{Symptom}
+    B -->|Can't identify which views| C[Use Symbolic Breakpoint +<br/>Memory Address Identification]
+    B -->|Constraint conflicts shown| D[Use Constraint Priority Resolution]
+    B -->|Ambiguous layout<br/>multiple solutions| E[Use _autolayoutTrace to<br/>find missing constraints]
+    B -->|Views positioned incorrectly<br/>but no errors| F[Use Debug View Hierarchy +<br/>Show Constraints]
+
+    style C fill:#cce5ff
+    style D fill:#cce5ff
+    style E fill:#cce5ff
+    style F fill:#cce5ff
 ```
 
 ### Symbolic Breakpoint Setup (One-Time)

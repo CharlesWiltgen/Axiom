@@ -113,6 +113,66 @@ This router invokes specialized skills based on the specific testing need:
 
 ---
 
+### 6. Running XCUITests from Command Line → **test-runner** (Agent)
+
+**Triggers**:
+- Run tests with xcodebuild
+- Parse xcresult bundles
+- Export failure screenshots/videos
+- Code coverage reports
+- CI/CD test execution
+
+**Why test-runner**: Specialized agent for command-line test execution with xcresulttool parsing.
+
+**Invoke**: Launch `test-runner` agent
+
+---
+
+### 7. Closed-Loop Test Debugging → **test-debugger** (Agent)
+
+**Triggers**:
+- Fix failing tests automatically
+- Debug persistent test failures
+- Run → analyze → fix → verify cycle
+- Need to iterate until tests pass
+- Analyze failure screenshots
+
+**Why test-debugger**: Automated cycle of running tests, analyzing failures, suggesting fixes, and re-running.
+
+**Invoke**: Launch `test-debugger` agent
+
+---
+
+### 8. Recording UI Automation (Xcode 26) → **ui-recording**
+
+**Triggers**:
+- Record user interactions in Xcode
+- Test plans for multi-config replay
+- Video review of test runs
+- Xcode 26 recording workflow
+- Enhancing recorded test code
+
+**Why ui-recording**: Focused guide for Xcode 26's Record/Replay/Review workflow.
+
+**Invoke**: Read the `axiom-ui-recording` skill
+
+---
+
+### 9. UI Automation Without XCUITest → **simulator-tester** + **axe-ref**
+
+**Triggers**:
+- Automate app without test target
+- AXe CLI usage (tap, swipe, type)
+- describe-ui for accessibility tree
+- Quick automation outside XCUITest
+- Scripted simulator interactions
+
+**Why simulator-tester + axe-ref**: AXe provides accessibility-based UI automation when XCUITest isn't available.
+
+**Invoke**: Launch `simulator-tester` agent (uses axiom-axe-ref)
+
+---
+
 ## Decision Tree
 
 ```
@@ -135,8 +195,20 @@ User has testing question
   ├─ Tests crash or environment seems wrong?
   │  └─ YES → xcode-debugging (via ios-build)
   │
-  └─ Tests are slow, want to speed them up?
-     └─ YES → swift-testing (Fast Tests section)
+  ├─ Tests are slow, want to speed them up?
+  │  └─ YES → swift-testing (Fast Tests section)
+  │
+  ├─ Run tests from command line / CI / parse results?
+  │  └─ YES → test-runner (Agent)
+  │
+  ├─ Fix failing tests automatically / closed-loop debugging?
+  │  └─ YES → test-debugger (Agent)
+  │
+  ├─ Record UI interactions in Xcode 26?
+  │  └─ YES → ui-recording
+  │
+  └─ Automate without XCUITest / use AXe CLI?
+     └─ YES → simulator-tester + axe-ref
 ```
 
 ## Swift Testing vs XCTest Quick Guide
@@ -194,3 +266,27 @@ User: "Should I use Swift Testing or XCTest?"
 
 User: "Tests crash before any assertions"
 → Invoke: axiom-xcode-debugging
+
+User: "Run my tests and show me what failed"
+→ Invoke: test-runner (Agent)
+
+User: "Help me fix these failing tests"
+→ Invoke: test-debugger (Agent)
+
+User: "Parse the xcresult from my last test run"
+→ Invoke: test-runner (Agent)
+
+User: "Export failure screenshots from my tests"
+→ Invoke: test-runner (Agent)
+
+User: "How do I record UI automation in Xcode 26?"
+→ Invoke: axiom-ui-recording
+
+User: "How do I use test plans for multi-language testing?"
+→ Invoke: axiom-ui-recording
+
+User: "Can I automate my app without writing XCUITests?"
+→ Invoke: simulator-tester (Agent) + axiom-axe-ref
+
+User: "How do I tap a button using AXe?"
+→ Invoke: axiom-axe-ref (via simulator-tester)

@@ -13,7 +13,9 @@
     "test:budget": "node -e \"const d=require('./.claude-plugin/plugins/axiom/claude-code.json'); let t=0; d.skills.forEach(s=>t+=s.description.length); if(t>15000){console.error('✗ Budget exceeded:',t,'/15000'); process.exit(1)} console.log('✓ Budget OK:',t,'/15000')\""
   },
   "devDependencies": {
-    "vitepress": "2.0.0-alpha.15"
+    "mermaid": "^11.12.2",
+    "vitepress": "2.0.0-alpha.15",
+    "vitepress-plugin-mermaid": "^2.0.17"
   },
   "keywords": [
     "claude-code",

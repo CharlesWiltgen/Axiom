@@ -102,18 +102,24 @@ MPNowPlayingInfoCenter.default().nowPlayingInfo = [
 
 ### Decision Tree
 
-```
-Now Playing not working?
-├─ Info never appears?
-│  ├─ Category .ambient or .mixWithOthers? → Remove .mixWithOthers
-│  ├─ No command handlers? → Add target + isEnabled
-│  └─ Background mode missing? → Add "audio" to Info.plist
-├─ Commands grayed out?
-│  └─ isEnabled = false → Set to true
-├─ Artwork missing/flickering?
-│  └─ MPMediaItemArtwork block issues → Single source + cancellation
-└─ State out of sync?
-   └─ Using playbackState? → Use playbackRate (iOS ignores playbackState)
+```mermaid
+flowchart TD
+    A[Now Playing not working?] --> B{Symptom}
+    B -->|Info never appears| C{Check}
+    B -->|Commands grayed out| D["isEnabled = false<br/>→ Set to true"]
+    B -->|Artwork missing/flickering| E["MPMediaItemArtwork block issues<br/>→ Single source + cancellation"]
+    B -->|State out of sync| F["Using playbackState?<br/>→ Use playbackRate"]
+
+    C -->|Category .ambient<br/>or .mixWithOthers| G[Remove .mixWithOthers]
+    C -->|No command handlers| H[Add target + isEnabled]
+    C -->|Background mode missing| I["Add 'audio' to Info.plist"]
+
+    style D fill:#d4edda
+    style E fill:#d4edda
+    style F fill:#fff3cd
+    style G fill:#d4edda
+    style H fill:#d4edda
+    style I fill:#d4edda
 ```
 
 ## Documentation Scope

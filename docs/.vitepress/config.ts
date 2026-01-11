@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
 
-export default defineConfig({
+export default withMermaid(defineConfig({
   title: 'Axiom',
   description: 'Battle-tested Claude Code skills, autonomous agents, and references for Apple platform development',
   base: '/Axiom/',
@@ -273,7 +274,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v2.16.0'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v2.17.0'
     }
   }
-})
+}))
