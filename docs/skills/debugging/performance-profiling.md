@@ -36,18 +36,20 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Decision Tree
 
-```
-App performance problem?
-├─ App feels slow or lags
-│  └─ → Time Profiler (CPU usage)
-├─ Memory grows over time
-│  └─ → Allocations (object creation)
-├─ Data loading is slow
-│  └─ → Core Data instrument (if using Core Data)
-├─ Battery drains fast
-│  └─ → Energy Impact
-└─ Scrolling stutters
-   └─ → Time Profiler + SwiftUI Instrument
+```mermaid
+flowchart TD
+    A[App performance problem?] --> B{Symptom}
+    B -->|App feels slow or lags| C[Time Profiler<br/>CPU usage]
+    B -->|Memory grows over time| D[Allocations<br/>object creation]
+    B -->|Data loading is slow| E[Core Data instrument<br/>if using Core Data]
+    B -->|Battery drains fast| F[Energy Impact]
+    B -->|Scrolling stutters| G[Time Profiler +<br/>SwiftUI Instrument]
+
+    style C fill:#cce5ff
+    style D fill:#cce5ff
+    style E fill:#cce5ff
+    style F fill:#cce5ff
+    style G fill:#cce5ff
 ```
 
 ### Time Profiler Deep Dive

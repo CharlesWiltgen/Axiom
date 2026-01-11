@@ -74,30 +74,46 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Energy Decision Tree
 
-```
-Power Profiler shows high impact in:
-├─ CPU lane?
-│  ├─ Continuous processing → Timer leak or polling loop
-│  ├─ Spikes during actions → Eager loading or repeated parsing
-│  └─ Background CPU → BGTasks running too long
-│
-├─ GPU lane?
-│  ├─ Animations running → Check visibility, frame rate
-│  ├─ Blur effects → Over dynamic content
-│  └─ Shadows/masks → Complex compositing
-│
-├─ Network lane?
-│  ├─ Frequent activity → Polling instead of push
-│  ├─ Many small requests → Batching issue
-│  └─ Background network → Missing discretionary flag
-│
-├─ Location lane?
-│  ├─ Continuous updates → Use significant-change monitoring
-│  └─ High accuracy always → Reduce when not needed
-│
-└─ Display lane?
-   ├─ Light backgrounds on OLED → Consider dark mode
-   └─ Always-on features → Reduce refresh
+```mermaid
+flowchart TD
+    A[Power Profiler shows<br/>high impact in:] --> B{Lane}
+
+    B -->|CPU| C{Pattern}
+    C -->|Continuous processing| C1[Timer leak or<br/>polling loop]
+    C -->|Spikes during actions| C2[Eager loading or<br/>repeated parsing]
+    C -->|Background CPU| C3[BGTasks running<br/>too long]
+
+    B -->|GPU| D{Pattern}
+    D -->|Animations running| D1[Check visibility,<br/>frame rate]
+    D -->|Blur effects| D2[Over dynamic content]
+    D -->|Shadows/masks| D3[Complex compositing]
+
+    B -->|Network| E{Pattern}
+    E -->|Frequent activity| E1[Polling instead<br/>of push]
+    E -->|Many small requests| E2[Batching issue]
+    E -->|Background network| E3[Missing discretionary<br/>flag]
+
+    B -->|Location| F{Pattern}
+    F -->|Continuous updates| F1[Use significant-change<br/>monitoring]
+    F -->|High accuracy always| F2[Reduce when<br/>not needed]
+
+    B -->|Display| G{Pattern}
+    G -->|Light backgrounds on OLED| G1[Consider dark mode]
+    G -->|Always-on features| G2[Reduce refresh]
+
+    style C1 fill:#f8d7da
+    style C2 fill:#f8d7da
+    style C3 fill:#f8d7da
+    style D1 fill:#fff3cd
+    style D2 fill:#fff3cd
+    style D3 fill:#fff3cd
+    style E1 fill:#cce5ff
+    style E2 fill:#cce5ff
+    style E3 fill:#cce5ff
+    style F1 fill:#d4edda
+    style F2 fill:#d4edda
+    style G1 fill:#e2e3e5
+    style G2 fill:#e2e3e5
 ```
 
 ### Quick Power Profiler Workflow

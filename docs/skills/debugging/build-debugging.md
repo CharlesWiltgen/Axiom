@@ -59,21 +59,27 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Decision Tree
 
-```
-Build failing?
-├─ "No such module XYZ"?
-│  ├─ After adding SPM package?
-│  │  └─ Clean build folder + reset package caches
-│  ├─ After pod install?
-│  │  └─ Check Podfile.lock conflicts
-│  └─ Framework not found?
-│     └─ Check FRAMEWORK_SEARCH_PATHS
-├─ "Multiple commands produce"?
-│  └─ Duplicate files in target membership
-├─ SPM resolution hangs?
-│  └─ Clear package caches + derived data
-└─ Version conflicts?
-   └─ Use dependency resolution strategies
+```mermaid
+flowchart TD
+    A[Build failing?] --> B{"No such module XYZ"?}
+    A --> C{"Multiple commands produce"?}
+    A --> D{SPM resolution hangs?}
+    A --> E{Version conflicts?}
+
+    B -->|After adding SPM package| F[Clean build folder +<br/>reset package caches]
+    B -->|After pod install| G[Check Podfile.lock conflicts]
+    B -->|Framework not found| H[Check FRAMEWORK_SEARCH_PATHS]
+
+    C --> I[Duplicate files in<br/>target membership]
+    D --> J[Clear package caches +<br/>derived data]
+    E --> K[Use dependency<br/>resolution strategies]
+
+    style F fill:#d4edda
+    style G fill:#d4edda
+    style H fill:#d4edda
+    style I fill:#d4edda
+    style J fill:#d4edda
+    style K fill:#d4edda
 ```
 
 ### SPM Package Not Found Fix

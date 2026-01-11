@@ -64,15 +64,23 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Diagnosing View Not Updating
 
-```
-View not updating?
-├─ Can reproduce in preview?
-│  ├─ YES: Problem is in code
-│  │  ├─ Modified struct directly? → Struct Mutation
-│  │  ├─ Passed binding to child? → Lost Binding Identity
-│  │  ├─ View inside conditional? → Accidental Recreation
-│  │  └─ Object changed but view didn't? → Missing Observer
-│  └─ NO: Likely cache/Xcode state → See Preview Crashes
+```mermaid
+flowchart TD
+    A[View not updating?] --> B{Can reproduce<br/>in preview?}
+    B -->|YES| C[Problem is in code]
+    B -->|NO| D[Likely cache/Xcode state<br/>See Preview Crashes]
+
+    C --> E{Check pattern}
+    E -->|Modified struct directly?| F[Struct Mutation]
+    E -->|Passed binding to child?| G[Lost Binding Identity]
+    E -->|View inside conditional?| H[Accidental Recreation]
+    E -->|Object changed but view didn't?| I[Missing Observer]
+
+    style F fill:#f8d7da
+    style G fill:#f8d7da
+    style H fill:#f8d7da
+    style I fill:#f8d7da
+    style D fill:#fff3cd
 ```
 
 ```swift
