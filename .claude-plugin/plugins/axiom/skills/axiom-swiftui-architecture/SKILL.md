@@ -926,7 +926,7 @@ struct ProductListView: View {
 - `formatter` created on every render (performance)
 - `sorted` computed on every render (performance)
 - Business logic (`sorted`) lives in view (not testable)
-- Force unwrap (`!`) can crash
+- Force unwrap operator `!` can crash
 
 ```swift
 // ✅ Correct
