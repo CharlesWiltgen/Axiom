@@ -247,7 +247,7 @@ func testViewModel() {
 **Fix**: Extract to helper methods, use factory patterns
 
 #### 5.3 Force Unwrapping in Tests
-**Issue**: Excessive `!` in test code
+**Issue**: Excessive '!' in test code
 **Why**: Crashes obscure actual test failures
 **Impact**: Hard to debug, noisy failures
 **Fix**: Use `XCTUnwrap` or `try #require`
@@ -399,7 +399,7 @@ For each potential issue:
   - **Fix**: Add meaningful assertions or remove test
 
 #### Force Unwrapping
-- `Tests/DecodingTests.swift:12` - Uses `try!` and `!`
+- `Tests/DecodingTests.swift:12` - Uses 'try!' and '!'
   - **Fix**: Use `XCTUnwrap` or `try #require`
 
 ---
