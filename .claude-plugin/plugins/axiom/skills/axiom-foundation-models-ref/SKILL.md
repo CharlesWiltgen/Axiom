@@ -1,6 +1,7 @@
 ---
 name: axiom-foundation-models-ref
 description: Reference — Complete Foundation Models framework guide covering LanguageModelSession, @Generable, @Guide, Tool protocol, streaming, dynamic schemas, built-in use cases, and all WWDC 2025 code examples
+user-invocable: true
 skill_type: reference
 version: 1.0.0
 last_updated: 2025-12-03

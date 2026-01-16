@@ -1,6 +1,7 @@
 ---
 name: axiom-grdb
 description: Use when writing raw SQL queries with GRDB, complex joins, ValueObservation for reactive queries, DatabaseMigrator patterns, query profiling under performance pressure, or dropping down from SQLiteData for performance - direct SQLite access for iOS/macOS
+user-invocable: true
 skill_type: discipline
 version: 1.1.0
 last_updated: TDD-tested with complex query performance scenarios
