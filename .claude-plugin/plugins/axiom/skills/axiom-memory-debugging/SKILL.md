@@ -211,6 +211,237 @@ class ViewModel: ObservableObject {
    - NO → Object is retained somewhere
 ```
 
+## Jetsam (Memory Pressure Termination)
+
+**Jetsam is not a bug in your app** — it's the system reclaiming memory from background apps to keep foreground apps responsive. However, frequent jetsam kills hurt user experience.
+
+### What Is Jetsam
+
+When system memory is low, iOS terminates background apps to free memory. This is called **jetsam** (memory pressure exit).
+
+**Key characteristics**:
+- Most common termination reason (more than crashes)
+- Not a crash — no crash log generated
+- User sees app restart when returning to it
+- No debugger notification (only MetricKit/Organizer)
+
+### Jetsam vs Memory Limit Exceeded
+
+| Termination | Cause | Solution |
+|-------------|-------|----------|
+| **Memory Limit Exceeded** | Your app used too much memory (foreground OR background) | Reduce peak memory footprint |
+| **Jetsam** | System needed memory for other apps | Reduce background memory to <50MB |
+
+Both show as "memory" terminations but have different causes and fixes.
+
+### Device Memory Limits
+
+Memory limits vary by device. Older devices have stricter limits:
+
+| Device | Approx. Memory Limit | Safe Target |
+|--------|---------------------|-------------|
+| iPhone 6s | ~200MB | 150MB |
+| iPhone X | ~400MB | 300MB |
+| iPhone 12 | ~500MB | 400MB |
+| iPhone 14 Pro | ~600MB | 500MB |
+| iPad (varies) | ~300-800MB | Check device |
+
+**Note**: Limits are NOT documented by Apple and vary by iOS version. Test on oldest supported device.
+
+### Monitoring Jetsam with MetricKit
+
+```swift
+import MetricKit
+
+class JetsamMonitor: NSObject, MXMetricManagerSubscriber {
+    func didReceive(_ payloads: [MXMetricPayload]) {
+        for payload in payloads {
+            guard let exitData = payload.applicationExitMetrics else { continue }
+
+            // Background exits (jetsam happens here)
+            let bgData = exitData.backgroundExitData
+
+            let jetsamCount = bgData.cumulativeMemoryPressureExitCount
+            let memoryLimitCount = bgData.cumulativeMemoryResourceLimitExitCount
+
+            if jetsamCount > 0 {
+                print("⚠️ Jetsam kills: \(jetsamCount)")
+                // Send to analytics
+            }
+
+            if memoryLimitCount > 0 {
+                print("⚠️ Memory limit exceeded: \(memoryLimitCount)")
+                // This is YOUR app using too much memory
+            }
+        }
+    }
+}
+```
+
+### Reducing Jetsam Rate
+
+**Goal**: Keep background memory under 50MB.
+
+#### Upon Backgrounding
+
+```swift
+class AppDelegate: UIResponder, UIApplicationDelegate {
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        // 1. Flush state to disk
+        saveApplicationState()
+
+        // 2. Clear image caches
+        URLCache.shared.removeAllCachedResponses()
+        imageCache.removeAllObjects()
+
+        // 3. Release large data structures
+        largeDataStore.flush()
+
+        // 4. Clear view controllers not visible
+        releaseOffscreenViewControllers()
+
+        // 5. Log memory after cleanup
+        logMemoryUsage("Background cleanup complete")
+    }
+
+    private func logMemoryUsage(_ context: String) {
+        var info = mach_task_basic_info()
+        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
+        let result = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
+                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+            }
+        }
+        if result == KERN_SUCCESS {
+            let memoryMB = Double(info.resident_size) / 1_000_000
+            print("📊 [\(context)] Memory: \(String(format: "%.1f", memoryMB))MB")
+        }
+    }
+}
+```
+
+#### SwiftUI: Clearing State on Background
+
+```swift
+@main
+struct MyApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var imageCache = ImageCache()
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environmentObject(imageCache)
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .background {
+                // Clear caches to reduce jetsam
+                imageCache.clearAll()
+            }
+        }
+    }
+}
+```
+
+### Recovering from Jetsam
+
+Users shouldn't notice your app was terminated. Implement state restoration:
+
+#### UIKit State Restoration
+
+```swift
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    func stateRestorationActivity(for scene: UIScene) -> NSUserActivity? {
+        // Save state when backgrounding
+        let activity = NSUserActivity(activityType: "com.app.state")
+        activity.userInfo = [
+            "currentTab": tabController.selectedIndex,
+            "scrollPosition": tableView.contentOffset.y,
+            "draftText": textField.text ?? ""
+        ]
+        return activity
+    }
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession,
+               options connectionOptions: UIScene.ConnectionOptions) {
+        // Restore state on launch
+        if let activity = connectionOptions.userActivities.first {
+            restoreState(from: activity)
+        }
+    }
+
+    private func restoreState(from activity: NSUserActivity) {
+        guard let userInfo = activity.userInfo else { return }
+
+        if let tabIndex = userInfo["currentTab"] as? Int {
+            tabController.selectedIndex = tabIndex
+        }
+        if let scrollY = userInfo["scrollPosition"] as? CGFloat {
+            tableView.setContentOffset(CGPoint(x: 0, y: scrollY), animated: false)
+        }
+        if let draftText = userInfo["draftText"] as? String {
+            textField.text = draftText
+        }
+    }
+}
+```
+
+#### SwiftUI State Restoration
+
+```swift
+struct ContentView: View {
+    @SceneStorage("selectedTab") private var selectedTab = 0
+    @SceneStorage("draftText") private var draftText = ""
+    @SceneStorage("scrollPosition") private var scrollPosition: Double = 0
+
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            // Tabs...
+        }
+    }
+}
+```
+
+### What to Restore After Jetsam
+
+| State | Priority | Example |
+|-------|----------|---------|
+| **Navigation position** | High | Current tab, navigation stack |
+| **User input (drafts)** | High | Text field content, unsent messages |
+| **Media playback position** | High | Video/audio timestamp |
+| **Scroll position** | Medium | Table/collection scroll offset |
+| **Search query** | Medium | Active search text |
+| **Filter selections** | Low | Sort order, filter toggles |
+
+### Jetsam Debugging Checklist
+
+- [ ] Check Organizer > Terminations > Memory Pressure for jetsam rate
+- [ ] Add MetricKit to track background exits
+- [ ] Profile background memory (should be <50MB)
+- [ ] Clear caches in `applicationDidEnterBackground`
+- [ ] Release images and large data structures
+- [ ] Implement state restoration (users shouldn't notice restart)
+- [ ] Test on oldest supported device (lowest memory limits)
+- [ ] Verify restoration works after simulated memory pressure
+
+### Simulating Memory Pressure
+
+```bash
+# In Simulator
+# Debug > Simulate Memory Warning
+
+# On device (Instruments)
+# Use Memory template, trigger warnings manually
+```
+
+### Jetsam vs Leak Quick Distinction
+
+```
+App memory grows while in USE?
+├─ YES → Memory leak (fix retention)
+└─ NO, but app killed in BACKGROUND → Jetsam (reduce bg memory)
+```
+
 ## Common Memory Leak Patterns (With Fixes)
 
 ### Pattern 1: Timer Leaks (Most Common)
@@ -1008,7 +1239,7 @@ Result: +15MB/minute → Crashes in 13 minutes
 
     for measurement in last5 {
         XCTAssertLessThan(
-            abs(Int(measurement) — Int(average)),
+            abs(Int(measurement) - Int(average)),
             Int(average / 10)  // 10% tolerance
         )
     }
@@ -1215,6 +1446,16 @@ Then describe:
 
 ---
 
-**Last Updated**: 2025-11-28
-**Frameworks**: UIKit, SwiftUI, Combine, Foundation
-**Status**: Production-ready patterns for leak detection and prevention
+## Resources
+
+**WWDC**: 2021-10180, 2020-10078, 2018-416
+
+**Docs**: /xcode/gathering-information-about-memory-use, /metrickit/mxbackgroundexitdata
+
+**Skills**: axiom-performance-profiling, axiom-objc-block-retain-cycles, axiom-metrickit-ref
+
+---
+
+**Last Updated**: 2026-01-16
+**Frameworks**: UIKit, SwiftUI, Combine, Foundation, MetricKit
+**Status**: Production-ready patterns for leak detection, prevention, and jetsam handling
