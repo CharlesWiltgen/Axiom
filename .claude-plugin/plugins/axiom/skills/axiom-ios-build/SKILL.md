@@ -110,13 +110,71 @@ This router invokes specialized skills based on the specific issue:
 - Beta tester reported a crash
 - Crash reports in Xcode Organizer
 - Crash logs aren't symbolicated
-- App Store Connect shows crash metrics
 - TestFlight feedback with screenshots
 - App was killed but no crash report
 
 **Why testflight-triage**: Systematic workflow for investigating TestFlight crashes and reviewing beta feedback. Covers symbolication, crash interpretation, common patterns, and Claude-assisted analysis.
 
 **Invoke**: `/skill axiom-testflight-triage`
+
+---
+
+### 8. App Store Connect Navigation → **app-store-connect-ref**
+**Triggers**:
+- How to find crashes in App Store Connect
+- ASC metrics dashboard navigation
+- Understanding crash-free users percentage
+- Comparing crash rates between versions
+- Exporting crash data from ASC
+- App Store Connect API for crash data
+
+**Why app-store-connect-ref**: Reference for navigating ASC crash analysis, metrics dashboards, and data export workflows.
+
+**Invoke**: `/skill axiom-app-store-connect-ref`
+
+---
+
+### 9. Crash Log Analysis → **crash-analyzer** (Agent)
+**Triggers**:
+- User has .ips or .crash file to analyze
+- User pasted crash report text
+- Need to parse crash log programmatically
+- Identify crash pattern from exception type
+- Check symbolication status
+
+**Why crash-analyzer**: Autonomous agent that parses crash reports, identifies patterns (null pointer, Swift runtime, watchdog, jetsam), and generates actionable analysis.
+
+**Invoke**: Launch `crash-analyzer` agent or `/axiom:analyze-crash`
+
+---
+
+### 10. MetricKit API Reference → **metrickit-ref**
+**Triggers**:
+- MetricKit setup and subscription
+- MXMetricPayload parsing (CPU, memory, launches, hitches)
+- MXDiagnosticPayload parsing (crashes, hangs, disk writes)
+- MXCallStackTree decoding and symbolication
+- Field crash/hang collection
+- Background exit metrics
+
+**Why metrickit-ref**: Complete MetricKit API reference with setup patterns, payload parsing, and integration with crash reporting systems.
+
+**Invoke**: `/skill axiom-metrickit-ref`
+
+---
+
+### 11. Hang Diagnostics → **hang-diagnostics**
+**Triggers**:
+- App hangs or freezes
+- Main thread blocked for >1 second
+- UI unresponsive to touches
+- Xcode Organizer shows hang diagnostics
+- MXHangDiagnostic from MetricKit
+- Watchdog terminations (app killed during launch/background transition)
+
+**Why hang-diagnostics**: Systematic diagnosis of hangs with decision tree for busy vs blocked main thread, tool selection (Time Profiler, System Trace), and 8 common hang patterns with fixes.
+
+**Invoke**: `/skill axiom-hang-diagnostics`
 
 ---
 
@@ -142,8 +200,20 @@ User reports build/environment issue
   ├─ Is it modernization/deprecated APIs/iOS 17+ migration?
   │  └─ YES → modernization-helper (Agent)
   │
-  └─ Is it TestFlight crash/feedback triage?
-     └─ YES → testflight-triage
+  ├─ Is it TestFlight crash/feedback triage?
+  │  └─ YES → testflight-triage
+  │
+  ├─ Is it navigating App Store Connect for crashes/metrics?
+  │  └─ YES → app-store-connect-ref
+  │
+  ├─ Do they have a crash log (.ips/.crash) to analyze?
+  │  └─ YES → crash-analyzer (Agent)
+  │
+  ├─ Is it MetricKit setup or payload parsing?
+  │  └─ YES → metrickit-ref
+  │
+  └─ Is it app hang/freeze/watchdog termination?
+     └─ YES → hang-diagnostics
 ```
 
 ## Anti-Rationalization
@@ -220,3 +290,42 @@ User: "My crash logs aren't symbolicated"
 
 User: "I need to review TestFlight feedback"
 → Invoke: `/skill axiom-testflight-triage`
+
+User: "How do I find crashes in App Store Connect?"
+→ Invoke: `/skill axiom-app-store-connect-ref`
+
+User: "Where's the crash-free users metric in ASC?"
+→ Invoke: `/skill axiom-app-store-connect-ref`
+
+User: "How do I export crash data from App Store Connect?"
+→ Invoke: `/skill axiom-app-store-connect-ref`
+
+User: "Analyze this crash log" [pastes .ips content]
+→ Invoke: `crash-analyzer` agent or `/axiom:analyze-crash`
+
+User: "Parse this .ips file: ~/Library/Logs/DiagnosticReports/MyApp.ips"
+→ Invoke: `crash-analyzer` agent or `/axiom:analyze-crash`
+
+User: "Why did my app crash? Here's the report..."
+→ Invoke: `crash-analyzer` agent or `/axiom:analyze-crash`
+
+User: "How do I set up MetricKit to collect crash data?"
+→ Invoke: `/skill axiom-metrickit-ref`
+
+User: "How do I parse MXDiagnosticPayload?"
+→ Invoke: `/skill axiom-metrickit-ref`
+
+User: "What's in MXCallStackTree and how do I decode it?"
+→ Invoke: `/skill axiom-metrickit-ref`
+
+User: "My app hangs sometimes"
+→ Invoke: `/skill axiom-hang-diagnostics`
+
+User: "The main thread is blocked and UI is unresponsive"
+→ Invoke: `/skill axiom-hang-diagnostics`
+
+User: "Xcode Organizer shows hang diagnostics for my app"
+→ Invoke: `/skill axiom-hang-diagnostics`
+
+User: "My app was killed by watchdog during launch"
+→ Invoke: `/skill axiom-hang-diagnostics`

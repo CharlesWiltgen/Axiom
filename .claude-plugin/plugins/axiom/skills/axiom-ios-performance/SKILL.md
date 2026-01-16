@@ -37,15 +37,36 @@ Use this router when:
 
 ### Performance Profiling
 
-**Performance profiling** → `/skill axiom-performance-profiling`
+**Performance profiling (GUI)** → `/skill axiom-performance-profiling`
 - Time Profiler (CPU)
 - Allocations (memory growth)
 - Core Data profiling (N+1 queries)
 - Decision trees for tool selection
 
+**Automated profiling (CLI)** → `/skill axiom-xctrace-ref`
+- Headless xctrace profiling
+- CI/CD integration patterns
+- Command-line trace recording
+- Programmatic trace analysis
+
+**Run automated profile** → Use `performance-profiler` agent or `/axiom:profile`
+- Records trace via xctrace
+- Exports and analyzes data
+- Reports findings with severity
+
+### Hang/Freeze Issues
+
+**App hangs or freezes** → `/skill axiom-hang-diagnostics`
+- UI unresponsive for >1 second
+- Main thread blocked (busy or waiting)
+- Decision tree: busy vs blocked diagnosis
+- Time Profiler vs System Trace selection
+- 8 common hang patterns with fixes
+- Watchdog terminations
+
 ### Energy Issues
 
-**Battery drain, axiom-high energy** → `/skill axiom-energy`
+**Battery drain, high energy** → `/skill axiom-energy`
 - Power Profiler workflow
 - Subsystem diagnosis (CPU/GPU/Network/Location/Display)
 - Anti-pattern fixes
@@ -63,6 +84,14 @@ Use this router when:
 - BGContinuedProcessingTask (iOS 26)
 - MetricKit setup
 
+### MetricKit Integration
+
+**MetricKit API reference** → `/skill axiom-metrickit-ref`
+- MXMetricPayload parsing
+- MXDiagnosticPayload (crashes, hangs)
+- Field performance data collection
+- Integration with crash reporting
+
 ## Decision Tree
 
 ```
@@ -71,13 +100,22 @@ User reports performance issue
   │  ├─ Swift code? → memory-debugging
   │  └─ Objective-C blocks? → objc-block-retain-cycles
   │
+  ├─ Hang/Freeze (UI unresponsive >1 second)?
+  │  └─ YES → hang-diagnostics
+  │
   ├─ Energy/Battery?
   │  ├─ Know the symptom? → energy-diag
   │  ├─ Need API reference? → energy-ref
   │  └─ General battery drain? → energy
   │
+  ├─ MetricKit setup/parsing?
+  │  └─ YES → metrickit-ref
+  │
   ├─ Want to profile?
-  │  └─ YES → performance-profiling
+  │  ├─ GUI workflow? → performance-profiling
+  │  ├─ CLI/automation? → xctrace-ref
+  │  ├─ Run profile now? → performance-profiler agent
+  │  └─ Unsure → performance-profiling
   │
   └─ General slow/lag? → performance-profiling
 ```
@@ -123,3 +161,27 @@ User: "Users say the device gets hot when using my app"
 
 User: "What's the best way to implement location tracking efficiently?"
 → Invoke: `/skill axiom-energy-ref`
+
+User: "Profile my app's CPU usage"
+→ Use: `performance-profiler` agent (or `/axiom:profile`)
+
+User: "How do I run xctrace from the command line?"
+→ Invoke: `/skill axiom-xctrace-ref`
+
+User: "I need headless profiling for CI/CD"
+→ Invoke: `/skill axiom-xctrace-ref`
+
+User: "My app hangs sometimes"
+→ Invoke: `/skill axiom-hang-diagnostics`
+
+User: "The UI freezes and becomes unresponsive"
+→ Invoke: `/skill axiom-hang-diagnostics`
+
+User: "Main thread is blocked, how do I diagnose?"
+→ Invoke: `/skill axiom-hang-diagnostics`
+
+User: "How do I set up MetricKit?"
+→ Invoke: `/skill axiom-metrickit-ref`
+
+User: "How do I parse MXMetricPayload?"
+→ Invoke: `/skill axiom-metrickit-ref`
