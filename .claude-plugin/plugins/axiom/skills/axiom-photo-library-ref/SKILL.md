@@ -1,6 +1,7 @@
 ---
 name: axiom-photo-library-ref
 description: Reference — PHPickerViewController, PHPickerConfiguration, PhotosPicker, PhotosPickerItem, Transferable, PHPhotoLibrary, PHAsset, PHAssetCreationRequest, PHFetchResult, PHAuthorizationStatus, limited library APIs
+user-invocable: true
 skill_type: reference
 version: 1.0.0
 ---

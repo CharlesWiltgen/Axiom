@@ -1,6 +1,7 @@
 ---
 name: axiom-camera-capture
 description: AVCaptureSession, camera preview, photo capture, video recording, RotationCoordinator, session interruptions, deferred processing, capture responsiveness, zero-shutter-lag, photoQualityPrioritization, front camera mirroring
+user-invocable: true
 skill_type: discipline
 version: 1.0.0
 last_updated: 2026-01-03

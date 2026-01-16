@@ -1,6 +1,7 @@
 ---
 name: axiom-energy
 description: Use when app drains battery, device gets hot, users report energy issues, or auditing power consumption - systematic Power Profiler diagnosis, subsystem identification (CPU/GPU/Network/Location/Display), anti-pattern fixes for iOS/iPadOS
+user-invocable: true
 skill_type: discipline
 version: 1.0.0
 # MCP annotations (ignored by Claude Code)

@@ -1,6 +1,7 @@
 ---
 name: axiom-hig
 description: Use when making design decisions, reviewing UI for HIG compliance, choosing colors/backgrounds/typography, or defending design choices - quick decision frameworks and checklists for Apple Human Interface Guidelines
+user-invocable: true
 skill_type: discipline
 version: 1.0.0
 apple_platforms: iOS, iPadOS, macOS, watchOS, tvOS, axiom-visionOS

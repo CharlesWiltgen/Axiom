@@ -1,6 +1,7 @@
 ---
 name: axiom-vision
 description: subject segmentation, VNGenerateForegroundInstanceMaskRequest, isolate object from hand, VisionKit subject lifting, image foreground detection, instance masks, class-agnostic segmentation, VNRecognizeTextRequest, OCR, VNDetectBarcodesRequest, DataScannerViewController, document scanning, RecognizeDocumentsRequest
+user-invocable: true
 skill_type: discipline
 version: 1.1.0
 last_updated: 2026-01-03

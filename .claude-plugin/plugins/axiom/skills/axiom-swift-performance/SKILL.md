@@ -1,6 +1,7 @@
 ---
 name: axiom-swift-performance
 description: Use when optimizing Swift code performance, reducing memory usage, improving runtime efficiency, dealing with COW, ARC overhead, generics specialization, or collection optimization
+user-invocable: true
 skill_type: discipline
 version: 1.2.0
 ---

@@ -1,6 +1,7 @@
 ---
 name: axiom-objc-block-retain-cycles
 description: Use when debugging memory leaks from blocks, blocks assigned to self or properties, network callbacks, or crashes from deallocated objects - systematic weak-strong pattern diagnosis with mandatory diagnostic rules
+user-invocable: true
 skill_type: discipline
 version: 1.0.0
 ---

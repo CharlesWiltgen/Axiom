@@ -1,6 +1,7 @@
 ---
 name: axiom-swiftui-containers-ref
 description: Reference — SwiftUI stacks, grids, outlines, and scroll enhancements through iOS 26
+user-invocable: true
 skill_type: reference
 version: 1.2.0
 ---

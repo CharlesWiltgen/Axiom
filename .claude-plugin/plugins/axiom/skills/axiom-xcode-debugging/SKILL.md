@@ -1,6 +1,7 @@
 ---
 name: axiom-xcode-debugging
 description: Use when encountering BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild processes, "Unable to boot simulator", "No such module" after SPM changes, or mysterious test failures despite no code changes - systematic environment-first diagnostics for iOS/macOS projects
+user-invocable: true
 skill_type: discipline
 version: 1.0.0
 # MCP annotations (ignored by Claude Code)
