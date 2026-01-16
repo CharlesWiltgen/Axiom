@@ -489,6 +489,25 @@ class MetricsManager: NSObject, MXMetricManagerSubscriber {
 
 ## Claude-Assisted Interpretation
 
+### Using the Crash Analyzer Agent
+
+For **automated crash analysis**, use the **crash-analyzer** agent:
+
+```
+/axiom:analyze-crash
+```
+
+Or trigger naturally:
+- "Analyze this crash log"
+- "Parse this .ips file: ~/Library/Logs/DiagnosticReports/MyApp.ips"
+- "Why did my app crash? Here's the report..."
+
+The agent will:
+1. Parse the crash report (JSON .ips or text .crash format)
+2. Check symbolication status
+3. Categorize by crash pattern (null pointer, Swift runtime, watchdog, jetsam, etc.)
+4. Generate actionable analysis with specific next steps
+
 ### Effective Prompts
 
 **Basic interpretation:**
@@ -697,3 +716,5 @@ func suspectFunction() {
 **Docs:** /xcode/diagnosing-issues-using-crash-reports-and-device-logs, /xcode/examining-the-fields-in-a-crash-report, /xcode/adding-identifiable-symbol-names-to-a-crash-report, /xcode/identifying-the-cause-of-common-crashes, /xcode/identifying-high-memory-use-with-jetsam-event-reports
 
 **Skills:** axiom-memory-debugging, axiom-xcode-debugging, axiom-swift-concurrency
+
+**Agents:** crash-analyzer (automated crash log parsing and analysis)
