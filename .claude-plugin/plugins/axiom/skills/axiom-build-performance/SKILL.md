@@ -1,6 +1,7 @@
 ---
 name: axiom-build-performance
 description: Use when build times are slow, investigating build performance, analyzing Build Timeline, identifying type checking bottlenecks, enabling compilation caching, or optimizing incremental builds - comprehensive build optimization workflows including Xcode 26 compilation caching
+user-invocable: true
 skill_type: discipline
 version: 2.0
 last_updated: 2026-01-01

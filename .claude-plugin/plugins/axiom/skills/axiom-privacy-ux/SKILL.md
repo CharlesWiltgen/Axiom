@@ -1,6 +1,7 @@
 ---
 name: axiom-privacy-ux
 description: Use when implementing privacy manifests, requesting permissions, App Tracking Transparency UX, or preparing Privacy Nutrition Labels - covers just-in-time permission requests, tracking domain management, and Required Reason APIs from WWDC 2023
+user-invocable: true
 skill_type: reference
 version: 1.0.0
 ---

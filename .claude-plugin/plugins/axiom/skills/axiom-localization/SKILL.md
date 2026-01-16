@@ -1,6 +1,7 @@
 ---
 name: axiom-localization
 description: Use when localizing apps, using String Catalogs, generating type-safe symbols (Xcode 26+), handling plurals, RTL layouts, locale-aware formatting, or migrating from .strings files - comprehensive i18n patterns for Xcode 15-26
+user-invocable: true
 skill_type: reference
 version: 1.1.0
 last_updated: 2025-12-16

@@ -1,6 +1,7 @@
 ---
 name: axiom-swiftui-layout
 description: Use when layouts need to adapt to different screen sizes, iPad multitasking, or iOS 26 free-form windows — decision trees for ViewThatFits vs AnyLayout vs onGeometryChange, size class limitations, and anti-patterns preventing device-based layout mistakes
+user-invocable: true
 skill_type: discipline
 version: 1.0.0
 ---

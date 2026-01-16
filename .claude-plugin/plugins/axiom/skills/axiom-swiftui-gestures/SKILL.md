@@ -1,6 +1,7 @@
 ---
 name: axiom-swiftui-gestures
 description: Use when implementing SwiftUI gestures (tap, drag, long press, magnification, rotation), composing gestures, managing gesture state, or debugging gesture conflicts - comprehensive patterns for gesture recognition, composition, accessibility, and cross-platform support
+user-invocable: true
 skill_type: discipline
 version: 1.0.0
 last_updated: 2025-12-07

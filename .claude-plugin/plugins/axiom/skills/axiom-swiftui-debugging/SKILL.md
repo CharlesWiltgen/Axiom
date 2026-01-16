@@ -1,6 +1,7 @@
 ---
 name: axiom-swiftui-debugging
 description: Use when debugging SwiftUI view updates, preview crashes, or layout issues - diagnostic decision trees to identify root causes quickly and avoid misdiagnosis under pressure
+user-invocable: true
 skill_type: discipline
 version: 1.3.0
 last_updated: Added Self._printChanges() debugging, @Observable patterns (iOS 17+), @Bindable, view identity section, and cross-references to swiftui-performance
