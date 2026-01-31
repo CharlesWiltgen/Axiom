@@ -944,7 +944,11 @@ TabView {
 
 ### 6.6 Sheet Presentations with Zoom Transition
 
+In iOS 26, sheets can morph directly out of the buttons that present them. Make the presenting toolbar item a source for a navigation zoom transition, and mark the sheet content as the destination:
+
 ```swift
+@Namespace private var namespace
+
 // Sheet morphs out of presenting button
 .toolbar {
     ToolbarItem {
@@ -957,6 +961,10 @@ TabView {
         .navigationTransition(.zoom(sourceID: "settings", in: namespace))
 }
 ```
+
+Other presentations also flow smoothly out of Liquid Glass controls — menus, alerts, and popovers. Dialogs automatically morph out of the buttons that present them without additional code.
+
+**Audit tip**: If you've used `presentationBackground` to apply custom backgrounds to sheets, consider removing it and let the new Liquid Glass sheet material shine. Partial height sheets are now inset with glass background by default.
 
 ### 6.7 Toolbar Morphing Transitions
 
@@ -1191,7 +1199,7 @@ NavigationPath(codableRepresentation)  // For decoding
 
 ## Resources
 
-**WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323
+**WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323 (Build a SwiftUI app with the new design)
 
 **Docs**: /swiftui/tabrole/search, /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:)
 
@@ -1199,5 +1207,5 @@ NavigationPath(codableRepresentation)  // For decoding
 
 ---
 
-**Last Updated** Based on WWDC 2022-10054, WWDC 2024-10147, WWDC 2025-256, WWDC 2025-323
+**Last Updated** Based on WWDC 2022-10054, WWDC 2024-10147, WWDC 2025-256, WWDC 2025-323 (Build a SwiftUI app with the new design)
 **Platforms** iOS 16+, iPadOS 16+, macOS 13+, watchOS 9+, tvOS 16+
