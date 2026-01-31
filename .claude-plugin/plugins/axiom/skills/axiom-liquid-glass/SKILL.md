@@ -361,6 +361,10 @@ Button("Action") {}
 
 ## Legibility & Contrast
 
+### Vibrant Text and Tint Colors
+
+SwiftUI automatically uses a **vibrant text color** within glass effects that adapts to maintain legibility against colorful backgrounds. Tints applied to glass elements also use vibrant color that adapts to the content behind them. You do not need to manually adjust text or tint colors — the system handles this.
+
 ### Automatic Legibility Features
 
 Small elements (navbars, tabbars):
@@ -1211,7 +1215,7 @@ enum ScrollEdgeStyle {
 
 #### `GlassEffectContainer` **NEW in iOS 26**
 
-Container for combining multiple Liquid Glass effects with optimized rendering performance.
+Container for combining multiple Liquid Glass effects with correct visual behavior.
 
 ```swift
 struct GlassEffectContainer<Content: View>: View {
@@ -1219,11 +1223,11 @@ struct GlassEffectContainer<Content: View>: View {
 }
 ```
 
-**Use case** When applying Liquid Glass effects to multiple custom elements. Optimizes performance and enables fluid morphing between glass shapes.
+**Why this is essential**: Glass samples content from an area larger than itself to produce its reflections and refractions. However, **glass cannot sample other glass** — nearby glass elements in different containers will produce inconsistent visual behavior. Using a `GlassEffectContainer` allows elements to share their sampling region, providing a consistent visual result.
 
 #### Example
 ```swift
-// ✅ Combine effects in container for optimization
+// ✅ Shared sampling region — consistent visual result
 GlassEffectContainer {
     HStack {
         Button("Action 1") { }
@@ -1236,20 +1240,52 @@ GlassEffectContainer {
             .glassEffect()
     }
 }
+
+// ❌ Separate containers — inconsistent glass behavior
+HStack {
+    Button("Action 1") { }.glassEffect()  // Samples independently
+    Button("Action 2") { }.glassEffect()  // Can't sample neighbor's glass
+}
 ```
 
 #### Benefits
-- Optimizes rendering performance
+- Correct visual behavior (shared sampling region)
 - Fluidly morphs Liquid Glass shapes into each other
+- Optimizes rendering performance
 - Reduces compositor overhead
-- Better animation performance
 
 #### When to use
-- Multiple custom Liquid Glass elements
+- Multiple custom Liquid Glass elements near each other
 - Morphing animations between glass shapes
-- Performance-critical interfaces
+- Any time glass elements are visually adjacent
 
 **Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+, axiom-visionOS 3+
+
+#### `glassEffectID` **NEW in iOS 26**
+
+Enables fluid morphing transitions between glass elements using a namespace. When elements share a namespace and transition between states, glass morphs fluidly between shapes.
+
+```swift
+@Namespace private var glassNamespace
+
+// Associate glass elements with IDs in the namespace
+ForEach(badges) { badge in
+    BadgeView(badge: badge)
+        .glassEffect()
+        .glassEffectID(badge.id, in: glassNamespace)
+}
+
+// A toolbar button with the same namespace absorbs/expands badges
+Button("Awards", systemImage: "star.fill") {
+    toggleBadges()
+}
+.glassEffect()
+.glassEffectID("awards", in: glassNamespace)
+```
+
+**Use case**: Award badges expanding from a toolbar button, controls morphing between states, expanding/collapsing glass elements.
+
+**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+
 
 ---
 
@@ -1288,7 +1324,7 @@ To ship with latest SDKs while maintaining previous appearance:
 
 ## Resources
 
-**WWDC**: 2025-219, 2025-323, 2025-256
+**WWDC**: 2025-219, 2025-256, 2025-323 (Build a SwiftUI app with the new design)
 
 **Docs**: /technologyoverviews/adopting-liquid-glass, /swiftui/landmarks-building-an-app-with-liquid-glass, /swiftui/applying-liquid-glass-to-custom-views
 
