@@ -139,6 +139,24 @@ ToolbarItem(placement: .confirmationAction) {
 }
 ```
 
+#### Removing Items from Group Background
+
+Some toolbar items should appear without the shared group background, like an avatar or standalone icon. Apply `sharedBackgroundVisibility(.hidden)` to separate an item visually:
+
+```swift
+.toolbar {
+    ToolbarItem(placement: .topBarTrailing) {
+        // Avatar appears without glass background pill
+        Image(systemName: "person.crop.circle")
+            .sharedBackgroundVisibility(.hidden)
+    }
+}
+```
+
+#### Monochrome Icon Rendering
+
+Icons use monochrome rendering in more places, including toolbars. This reduces visual noise, emphasizes content, and maintains legibility. You can still tint icons with `.tint()`, but use it to convey meaning (call to action, next step) — not just for visual effect.
+
 ### Toolbar Transitions & Morphing
 
 iOS 26 toolbars automatically morph between screens during NavigationStack push/pop transitions. The key insight: attach `.toolbar {}` to individual views inside NavigationStack, not to NavigationStack itself.
@@ -451,9 +469,31 @@ NavigationSplitView {
 }
 ```
 
+#### System Auto-Minimization
+
+Depending on device size, number of toolbar buttons, and other factors, the system may choose to minimize the search field into a toolbar button automatically. When tapped, a full-width search field appears above the keyboard. Use `searchToolbarBehavior(.minimize)` to explicitly opt in to this behavior when search isn't the main part of your experience.
+
 #### Search Tab Role
 
-See swiftui-nav-ref skill Section 5.5 (iOS 26 Tab Features) for `Tab(role: .search)` patterns.
+Searching in multi-tab apps is often done as a dedicated page. Set a search role on one of your tabs and place `.searchable` on the TabView:
+
+```swift
+TabView {
+    BrowseView()
+        .tabItem { Label("Browse", systemImage: "square.grid.2x2") }
+
+    Tab(role: .search) {
+        SearchView()
+    }
+}
+.searchable(text: $searchText)
+```
+
+When someone selects the search tab, the search field takes the place of the tab bar. People can interact with browsing suggestions or tap the search field to bring up the keyboard.
+
+On iPad and Mac, when someone selects the search tab, the search field appears **centered above the app's browsing suggestions** — a different layout than iPhone's tab-bar replacement.
+
+See swiftui-nav-ref skill Section 5.5 (iOS 26 Tab Features) for full `Tab(role: .search)` patterns.
 
 ### Glass Effect for Custom Views
 
@@ -471,6 +511,99 @@ struct ToTopButton: View {
 }
 ```
 
+SwiftUI automatically uses a **vibrant text color** that adapts to maintain legibility against colorful backgrounds. Tints also use vibrant color that adapts to the content behind them.
+
+On iOS, add the `.interactive` modifier to the glass effect for custom controls or containers with interactive elements. Glass reacts to user interaction by scaling, bouncing, and shimmering.
+
+#### GlassEffectContainer
+
+Combine multiple glass elements with `GlassEffectContainer`. This is **essential for visual correctness** — glass samples content from an area larger than itself, but glass cannot sample other glass. Nearby glass elements in different containers produce inconsistent behavior:
+
+```swift
+GlassEffectContainer {
+    HStack(spacing: 12) {
+        ForEach(badges) { badge in
+            BadgeView(badge: badge)
+                .glassEffect()
+        }
+    }
+}
+```
+
+#### glassEffectID for Morphing Transitions
+
+Use `glassEffectID` with a namespace to create fluid morphing transitions between glass elements:
+
+```swift
+@Namespace private var badgeNamespace
+
+var body: some View {
+    if isExpanded {
+        // Expanded badge stack
+        GlassEffectContainer {
+            VStack {
+                ForEach(badges) { badge in
+                    BadgeView(badge: badge)
+                        .glassEffect()
+                        .glassEffectID(badge.id, in: badgeNamespace)
+                }
+            }
+        }
+    } else {
+        // Collapsed into toolbar button
+        Button("Badges", systemImage: "star.fill") {
+            isExpanded.toggle()
+        }
+        .glassEffect()
+        .glassEffectID("collapsed", in: badgeNamespace)
+    }
+}
+// Tapping the button expands badges with fluid glass morphing;
+// tapping again re-absorbs them into the button
+```
+
+### Sheets with Liquid Glass
+
+#### Remove presentationBackground
+
+Partial height sheets are inset by default with a Liquid Glass background. At smaller heights, bottom edges pull in, nesting in the curved edges of the display. When transitioning to full height, the glass gradually becomes opaque and anchors to the screen edge.
+
+If you've used `presentationBackground` to apply a custom background to sheets, consider removing it and let the new material shine:
+
+```swift
+// ❌ Custom background interferes with Liquid Glass sheet material
+.sheet(isPresented: $showDetail) {
+    DetailView()
+        .presentationBackground(.thinMaterial)  // Remove this
+}
+
+// ✅ System applies Liquid Glass automatically
+.sheet(isPresented: $showDetail) {
+    DetailView()
+}
+```
+
+#### Sheet Morphing from Buttons
+
+Sheets can morph directly out of the buttons that present them. Use `navigationZoomTransition` to connect the source view to the sheet content:
+
+```swift
+.toolbar {
+    ToolbarItem(placement: .topBarTrailing) {
+        Button("Details", systemImage: "info.circle") {
+            showDetails = true
+        }
+        .matchedTransitionSource(id: "details", in: namespace)
+    }
+}
+.sheet(isPresented: $showDetails) {
+    DetailsSheet()
+        .navigationTransition(.zoom(sourceID: "details", in: namespace))
+}
+```
+
+Menus, alerts, and popovers also flow smoothly out of Liquid Glass controls. Dialogs automatically morph out of the buttons that present them — no additional code needed.
+
 ### System Controls Updates
 
 Controls now have the new design automatically:
@@ -478,7 +611,72 @@ Controls now have the new design automatically:
 - Segmented pickers
 - Sliders
 
-**Reference** "Build a SwiftUI app with the new design" (WWDC 2025) for adoption best practices and advanced customizations.
+**Reference** "Build a SwiftUI app with the new design" (WWDC 2025-323) for adoption best practices and advanced customizations.
+
+### Button Shape Changes
+
+Bordered buttons now have a **capsule shape** by default, harmonious with the curved corners of the new design. On macOS, mini, small, and medium size controls retain a rounded-rectangle shape to preserve horizontal density.
+
+```swift
+// Capsule is now the default bordered shape on iOS
+Button("Action") { }
+    .buttonStyle(.bordered)  // Capsule shape on iOS 26
+
+// Override with buttonBorderShape if needed
+Button("Action") { }
+    .buttonStyle(.bordered)
+    .buttonBorderShape(.roundedRectangle)  // Force rounded rectangle
+```
+
+#### Extra Large Buttons
+
+For prominent actions, iOS 26 adds support for extra large sized buttons:
+
+```swift
+Button("Get Started") { startOnboarding() }
+    .buttonStyle(.borderedProminent)
+    .controlSize(.extraLarge)  // New extra-large size
+```
+
+### Updated Control Heights
+
+Control heights are updated for the new design. Most controls on macOS are slightly taller, providing more breathing room around labels and enhancing click targets.
+
+For compatibility with existing high-density layouts (complex inspectors, popovers), apply `controlSize` to a single control or an entire container:
+
+```swift
+// Preserve density in complex inspectors
+Form {
+    // controls here
+}
+.controlSize(.small)  // Maintains pre-iOS 26 density
+```
+
+### Menu Cross-Platform Consistency
+
+Menus across platforms have a new design and more consistent layout. Icons are consistently on the leading edge and are now used on macOS too. The same API using `Label` or standard control initializers now creates the same result on both platforms:
+
+```swift
+Menu("Actions") {
+    Button("Copy", systemImage: "doc.on.doc") { copy() }
+    Button("Paste", systemImage: "doc.on.clipboard") { paste() }
+    Button("Delete", systemImage: "trash", role: .destructive) { delete() }
+}
+// Same result on iOS and macOS — icons on leading edge
+```
+
+### Concentric Rectangle Shape
+
+Controls align their corners perfectly within their containers — even the device itself. This is **corner concentricity**. A button at the bottom of a sheet should share the same corner center with the sheet.
+
+```swift
+// Automatic concentricity with container
+Button("Confirm") { confirm() }
+    .clipShape(.rect(cornerRadius: 12, style: .containerConcentric))
+    // Shape automatically matches container across displays and window shapes
+```
+
+**Use case**: Buttons positioned at the edges of sheets, popovers, or cards that need their corners to feel visually nested within the container.
 
 ---
 
@@ -1757,13 +1955,33 @@ Apps must support resizable windows on iPad.
 ✅ List performance improvements (6x loading, 16x updating)
 ✅ Scrolling performance improvements
 ✅ System controls (toggles, pickers, sliders) new appearance
+✅ Bordered buttons default to capsule shape
+✅ Updated control heights (slightly taller on macOS)
+✅ Monochrome icon rendering in toolbars
+✅ Menus: icons on leading edge, consistent across iOS and macOS
+✅ Sheets morph out of dialogs automatically
+✅ Scroll edge blur/fade under system toolbars
+
+### Audit Items (Remove Old Customizations)
+
+⚠️ Remove `presentationBackground` from sheets (let Liquid Glass material shine)
+⚠️ Remove extra backgrounds/darkening effects behind toolbar areas
+⚠️ Remove hard-coded control heights (use automatic sizing)
+⚠️ Update section headers to title-style capitalization (no longer auto-uppercased)
 
 ### Manual Adoptions (Code Changes)
 
 🔧 Toolbar spacers (`.fixed`)
 🔧 Tinted prominent buttons in toolbars
 🔧 Glass effect for custom views (`.glassEffect()`)
-🔧 Search tab role (`.tabRole(.search)`)
+🔧 `glassEffectID` for morphing transitions between glass elements
+🔧 `GlassEffectContainer` for multiple nearby glass elements
+🔧 `sharedBackgroundVisibility(.hidden)` to remove toolbar item from group background
+🔧 Sheet morphing from buttons (`navigationZoomTransition`)
+🔧 Search tab role (`Tab(role: .search)`)
+🔧 Compact search toolbar (`.searchToolbarBehavior(.minimize)`)
+🔧 Extra large buttons (`.controlSize(.extraLarge)`)
+🔧 Concentric rectangle shape (`.containerConcentric`)
 🔧 iPad menu bar (`.commands`)
 🔧 Window resize anchor (`.windowResizeAnchor()`)
 🔧 @Animatable macro for custom shapes/modifiers
@@ -1777,7 +1995,6 @@ Apps must support resizable windows on iPad.
 🔧 Close and confirm button roles (`Button(role: .close)`)
 🔧 Glass button styles (`GlassButtonStyle` — iOS 26.1+)
 🔧 Button sizing control (`.buttonSizing()`)
-🔧 Compact search toolbar (`.searchToolbarBehavior(.minimize)`)
 🔧 Toolbar morphing transitions (per-view `.toolbar {}` inside NavigationStack)
 🔧 DefaultToolbarItem for system components in toolbars
 🔧 Stable toolbar items (`toolbar(id:)` with matched IDs across screens)
@@ -1811,8 +2028,11 @@ Apps must support resizable windows on iPad.
 
 #### DON'T
 - Fight the automatic design - embrace consistency
-- Over-tint toolbars (use for prominence only)
+- Over-tint toolbars (use for prominence only, not decoration)
 - Attach the toolbar to NavigationStack and expect morphing (attach to views inside it)
+- Apply `presentationBackground` to sheets (remove it for Liquid Glass material)
+- Place nearby glass elements in separate containers (use `GlassEffectContainer`)
+- Add extra backgrounds or darkening effects behind system toolbar areas
 
 ### Layout & Spacing
 
@@ -1994,7 +2214,7 @@ Move `.toolbar {}` from the NavigationStack to each view inside it. iOS 26 morph
 
 ## Resources
 
-**WWDC**: 2025-256, 2025-287 (Build a SwiftUI app with the new design), 2025-278 (What's new in widgets), 2025-323 (Meet WebKit for SwiftUI), 2025-310 (Optimize SwiftUI performance with instruments), 2025-325 (Bring Swift Charts to the third dimension), 2025-341 (Cook up a rich text experience in SwiftUI with AttributedString)
+**WWDC**: 2025-256, 2025-278 (What's new in widgets), 2025-287 (Meet WebKit for SwiftUI), 2025-310 (Optimize SwiftUI performance with instruments), 2025-323 (Build a SwiftUI app with the new design), 2025-325 (Bring Swift Charts to the third dimension), 2025-341 (Cook up a rich text experience in SwiftUI with AttributedString)
 
 **Docs**: /swiftui, /swiftui/defaulttoolbaritem, /swiftui/toolbarspacer, /swiftui/searchtoolbarbehavior, /swiftui/view/toolbar(id:content:), /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts, /realitykit/presentationcomponent, /swiftui/chart3d
 
@@ -2002,5 +2222,5 @@ Move `.toolbar {}` from the NavigationStack to each view inside it. iOS 26 morph
 
 ---
 
-**Primary source** WWDC 2025-256 "What's new in SwiftUI". Additional content from 2025-287, 2025-323, and Apple documentation.
+**Primary source** WWDC 2025-256 "What's new in SwiftUI". Additional content from 2025-323 (Build a SwiftUI app with the new design), 2025-287 (Meet WebKit for SwiftUI), and Apple documentation.
 **Version** iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+

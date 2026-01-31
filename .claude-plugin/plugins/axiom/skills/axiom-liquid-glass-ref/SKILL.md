@@ -292,10 +292,13 @@ Controls have refreshed look across platforms and come to life during interactio
 ### Updated Appearance
 
 #### What Changed
+- Bordered buttons default to **capsule shape** (mini/small/medium on macOS retain rounded-rectangle for density)
 - Rounder forms (inspired by hardware curvature)
 - Knobs transform into Liquid Glass during interaction
 - Buttons morph into menus/popovers
-- Extra-large size option for labels and accents
+- Extra-large size option for labels and accents (`controlSize(.extraLarge)`)
+- Control heights slightly taller on macOS (more breathing room, larger click targets)
+- Use `controlSize(.small)` for backward compatibility in high-density layouts (inspectors, popovers)
 
 #### Automatic Adoption
 ```swift
@@ -640,7 +643,7 @@ NavigationSplitView {
     SidebarView()
 } detail: {
     DetailView()
-        .backgroundExtension(.enabled) // NEW API (placeholder)
+        .backgroundExtensionEffect()  // Mirrors and blurs content outside safe area
 }
 ```
 
@@ -690,6 +693,10 @@ TabView {
 ## Menus and Toolbars
 
 Menus have refreshed look across platforms. They adopt Liquid Glass, and menu items for common actions use icons to help people quickly scan and identify actions. iPadOS now has menu bar for faster access to common commands.
+
+### Cross-Platform Menu Consistency
+
+Menus have a new design with more consistent layout across platforms. Icons are consistently on the leading edge and are now used on macOS too. The same API using `Label` or standard control initializers creates the same visual result on both iOS and macOS.
 
 ### Menu Icons for Standard Actions
 
@@ -798,6 +805,24 @@ List(emails) { email in
 - Group similar actions (navigation, formatting, settings)
 - Maintain consistent groupings across platforms
 - Use `.fixed` for logical separation
+
+### Monochrome Icon Rendering
+
+Icons use monochrome rendering in more places, including toolbars. The monochrome palette reduces visual noise, emphasizes your app's content, and maintains legibility. You can still tint icons with `.tint()`, but use it to convey meaning (call to action, next step) — not just for visual effect.
+
+### Removing Items from Group Background
+
+Some toolbar items should appear without the shared Liquid Glass background, like standalone avatars or status indicators:
+
+```swift
+.toolbar {
+    ToolbarItem(placement: .topBarTrailing) {
+        Image(systemName: "person.crop.circle")
+            .sharedBackgroundVisibility(.hidden)
+            // Item appears without glass background pill
+    }
+}
+```
 
 ### Icons vs Text in Toolbars
 
@@ -1036,6 +1061,23 @@ VStack {
 .sheet(isPresented: $showSheet) {
     SheetContent()
         .presentationDetents([.medium, .large])
+}
+```
+
+### Remove presentationBackground
+
+If you've used `presentationBackground` to apply a custom background to sheets, consider removing it and let the new Liquid Glass material shine:
+
+```swift
+// ❌ Custom background interferes with new sheet material
+.sheet(isPresented: $showDetail) {
+    DetailView()
+        .presentationBackground(.thinMaterial)  // Remove this
+}
+
+// ✅ System applies Liquid Glass sheet material automatically
+.sheet(isPresented: $showDetail) {
+    DetailView()
 }
 ```
 
@@ -1437,13 +1479,15 @@ Use this checklist when auditing app for Liquid Glass adoption:
 - [ ] Elements centered to avoid clipping
 
 ### Controls
-- [ ] Updated appearance reviewed
-- [ ] Hard-coded layout metrics removed
+- [ ] Updated appearance reviewed (capsule default for bordered buttons)
+- [ ] Hard-coded layout metrics removed (control heights changed)
+- [ ] `controlSize(.small)` for backward-compatible high-density layouts
 - [ ] System colors used for adaptation
 - [ ] Controls not crowded or overlapping
 - [ ] Scroll edge effects applied where needed
-- [ ] Control shapes aligned with containers (if desired)
+- [ ] Control shapes aligned with containers (`.containerConcentric` if desired)
 - [ ] New button styles adopted (`.borderedProminent`, `.bordered`)
+- [ ] Extra large buttons used for prominent actions where appropriate
 
 ### Navigation
 - [ ] Clear hierarchy (navigation layer vs content layer)
@@ -1458,6 +1502,8 @@ Use this checklist when auditing app for Liquid Glass adoption:
 - [ ] Top menu actions match swipe actions
 - [ ] Toolbar items grouped logically with `ToolbarSpacer(.fixed)`
 - [ ] Icons OR text used per group (not mixed)
+- [ ] Monochrome icon rendering embraced (tint only for meaning)
+- [ ] `sharedBackgroundVisibility(.hidden)` for standalone items (avatars, status)
 - [ ] Accessibility labels provided for all icons
 - [ ] Custom toolbar items audited for compatibility
 
@@ -1467,6 +1513,7 @@ Use this checklist when auditing app for Liquid Glass adoption:
 - [ ] Layout guides and safe areas specified
 - [ ] Sheet content checked around rounder corners
 - [ ] Content peeking through half sheets reviewed
+- [ ] `presentationBackground` removed from sheets (let Liquid Glass material shine)
 - [ ] Custom sheet/popover backgrounds removed
 - [ ] Action sheets specify source element
 
@@ -1492,7 +1539,7 @@ Use this checklist when auditing app for Liquid Glass adoption:
 
 ## Resources
 
-**WWDC**: 219, 323
+**WWDC**: 2025-219, 2025-323 (Build a SwiftUI app with the new design)
 
 **Docs**: /TechnologyOverviews/liquid-glass, /TechnologyOverviews/adopting-liquid-glass, /design/Human-Interface-Guidelines/materials
 
