@@ -76,26 +76,24 @@ Use this router when:
 
 ## Decision Tree
 
-```
-User asks about concurrency
-  ├─ Concurrency errors?
-  │  ├─ Data races? → swift-concurrency
-  │  ├─ Actor isolation? → swift-concurrency
-  │  ├─ @MainActor? → swift-concurrency
-  │  └─ Sendable? → swift-concurrency
-  │
-  ├─ Writing async code? → swift-concurrency
-  │
-  ├─ assumeIsolated questions? → assume-isolated
-  │
-  ├─ Mutex/lock/synchronization? → synchronization
-  │
-  ├─ borrowing/consuming/ownership? → ownership-conventions
-  │
-  ├─ Profile async performance? → concurrency-profiling
-  │
-  └─ Performance optimization? → swift-performance
-```
+1. Data races / actor isolation / @MainActor / Sendable? → swift-concurrency
+2. Writing async/await code? → swift-concurrency
+3. Swift 6 migration? → swift-concurrency
+4. assumeIsolated / @preconcurrency? → assume-isolated
+5. Mutex / lock / synchronization? → synchronization
+6. borrowing / consuming / ~Copyable? → ownership-conventions
+7. Profile async performance / actor contention? → concurrency-profiling
+8. Value type / ARC / generic optimization? → swift-performance
+
+## Anti-Rationalization
+
+| Thought | Reality |
+|---------|---------|
+| "Just add @MainActor and it'll work" | @MainActor has isolation inheritance rules. swift-concurrency covers all patterns. |
+| "I'll use nonisolated(unsafe) to silence the warning" | Silencing warnings hides data races. swift-concurrency shows the safe pattern. |
+| "It's just one async call" | Even single async calls have cancellation and isolation implications. swift-concurrency covers them. |
+| "I know how actors work" | Actor reentrancy and isolation rules changed in Swift 6.2. swift-concurrency is current. |
+| "I'll fix the Sendable warnings later" | Sendable violations cause runtime crashes. swift-concurrency fixes them correctly now. |
 
 ## Critical Patterns
 

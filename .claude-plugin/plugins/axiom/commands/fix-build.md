@@ -1,6 +1,7 @@
 ---
 name: fix-build
 description: Diagnose and fix Xcode build failures (launches build-fixer agent)
+disable-model-invocation: true
 ---
 
 # Fix Build Issues

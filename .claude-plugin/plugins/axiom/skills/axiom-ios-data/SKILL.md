@@ -60,26 +60,30 @@ Use this router when working with:
 
 ## Decision Tree
 
-```
-User asks about data/storage
-  ├─ Database?
-  │  ├─ SwiftData? → swiftdata, axiom-swiftdata-migration
-  │  ├─ Core Data? → core-data, axiom-core-data-diag
-  │  ├─ GRDB? → grdb
-  │  └─ SQLiteData? → sqlitedata
-  │
-  ├─ Migration? → database-migration (ALWAYS - prevents data loss)
-  │
-  ├─ Cloud storage?
-  │  ├─ Sync architecture? → cloud-sync
-  │  ├─ CloudKit? → cloudkit-ref
-  │  ├─ iCloud Drive? → icloud-drive-ref
-  │  └─ Sync errors? → cloud-sync-diag
-  │
-  ├─ Serialization? → codable
-  │
-  └─ File storage? → storage, axiom-storage-diag, axiom-storage-management-ref
-```
+1. SwiftData? → swiftdata, swiftdata-migration
+2. Core Data? → core-data, core-data-diag
+3. GRDB? → grdb
+4. SQLiteData? → sqlitedata, sqlitedata-ref
+5. ANY schema migration? → database-migration (ALWAYS — prevents data loss)
+6. Realm migration? → realm-migration-ref
+7. SwiftData vs SQLiteData? → sqlitedata-migration
+8. Cloud sync architecture? → cloud-sync
+9. CloudKit? → cloudkit-ref
+10. iCloud Drive? → icloud-drive-ref
+11. Cloud sync errors? → cloud-sync-diag
+12. Codable/JSON serialization? → codable
+13. File storage strategy? → storage, storage-diag, storage-management-ref
+14. File protection? → file-protection-ref
+
+## Anti-Rationalization
+
+| Thought | Reality |
+|---------|---------|
+| "Just adding a column, no migration needed" | Schema changes without migration crash users. database-migration prevents data loss. |
+| "I'll handle the migration manually" | Manual migrations miss edge cases. database-migration covers rollback and testing. |
+| "Simple query, I don't need the skill" | Query patterns prevent N+1 and thread-safety issues. The skill has copy-paste solutions. |
+| "CloudKit sync is straightforward" | CloudKit has 15+ failure modes. cloud-sync-diag diagnoses them systematically. |
+| "I know Codable well enough" | Codable has silent data loss traps (try? swallows errors). codable skill prevents production bugs. |
 
 ## Critical Pattern: Migrations
 

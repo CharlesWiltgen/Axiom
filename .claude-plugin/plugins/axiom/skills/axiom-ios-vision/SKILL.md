@@ -62,18 +62,17 @@ Use this router when:
 
 ## Decision Tree
 
-```
-User asks about computer vision
-  ├─ Implementing?
-  │   ├─ Pose detection (hand/body)? → vision
-  │   ├─ Subject segmentation? → vision
-  │   ├─ Text recognition/OCR? → vision
-  │   ├─ Barcode/QR scanning? → vision
-  │   ├─ Document scanning? → vision
-  │   └─ Live camera scanning? → vision (DataScannerViewController)
-  ├─ Need API reference? → vision-ref
-  └─ Debugging issues? → vision-diag
-```
+1. Implementing (pose, segmentation, OCR, barcodes, documents, live scanning)? → vision
+2. Need API reference / code examples? → vision-ref
+3. Debugging issues (detection failures, confidence, coordinates)? → vision-diag
+
+## Anti-Rationalization
+
+| Thought | Reality |
+|---------|---------|
+| "Vision framework is just a request/handler pattern" | Vision has coordinate conversion, confidence thresholds, and performance gotchas. vision covers them. |
+| "I'll handle text recognition without the skill" | VNRecognizeTextRequest has fast/accurate modes and language-specific settings. vision has the patterns. |
+| "Subject segmentation is straightforward" | Instance masks have HDR compositing and hand-exclusion patterns. vision covers complex scenarios. |
 
 ## Critical Patterns
 

@@ -45,12 +45,17 @@ Use this router when:
 
 ## Decision Tree
 
-```
-User asks about Apple Intelligence
-  ├─ Implementing? → foundation-models
-  ├─ Need API reference? → foundation-models-ref
-  └─ Debugging issues? → foundation-models-diag
-```
+1. Implementing Foundation Models / @Generable / Tool protocol? → foundation-models
+2. Need API reference / code examples? → foundation-models-ref
+3. Debugging AI issues (blocked, slow, guardrails)? → foundation-models-diag
+
+## Anti-Rationalization
+
+| Thought | Reality |
+|---------|---------|
+| "Foundation Models is just LanguageModelSession" | Foundation Models has @Generable, Tool protocol, streaming, and guardrails. foundation-models covers all. |
+| "I'll figure out the AI patterns as I go" | AI APIs have specific error handling and fallback requirements. foundation-models prevents runtime failures. |
+| "I've used LLMs before, this is similar" | Apple's on-device models have unique constraints (guardrails, context limits). foundation-models is Apple-specific. |
 
 ## Critical Patterns
 

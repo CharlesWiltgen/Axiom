@@ -58,18 +58,23 @@ Use this router when:
 
 ## Decision Tree
 
-```
-User asks about GPU/graphics/Metal/display
-  ├─ "Should I use translation layer or native?" → metal-migration
-  ├─ "How do I migrate/port/convert?" → metal-migration
-  ├─ "Show me the API/code/example" → metal-migration-ref
-  ├─ "How do I set up MTKView?" → metal-migration-ref
-  ├─ "Something's broken/wrong/slow" → metal-migration-diag
-  ├─ "Stuck at 60fps on ProMotion" → display-performance
-  ├─ "CADisplayLink setup/configuration" → display-performance
-  ├─ "Variable refresh rate issues" → display-performance
-  └─ "Frame rate not what I expect" → display-performance
-```
+1. Translation layer vs native rewrite? → metal-migration
+2. Porting / converting code to Metal? → metal-migration
+3. API reference / shader conversion tables? → metal-migration-ref
+4. MTKView / render pipeline setup? → metal-migration-ref
+5. Something broken after porting (black screen, wrong colors)? → metal-migration-diag
+6. Stuck at 60fps on ProMotion device? → display-performance
+7. CADisplayLink / variable refresh rate? → display-performance
+8. Frame rate not as expected? → display-performance
+
+## Anti-Rationalization
+
+| Thought | Reality |
+|---------|---------|
+| "I'll just translate the shaders line by line" | GLSL→MSL has type, coordinate, and precision differences. metal-migration-ref has conversion tables. |
+| "MetalANGLE will handle everything" | Translation layers have significant limitations for production. metal-migration evaluates the trade-offs. |
+| "It's just a black screen, probably a simple bug" | Black screen has 6 distinct causes. metal-migration-diag diagnoses in 5 min vs 30+ min. |
+| "My app runs at 60fps, that's fine" | ProMotion devices support 120Hz. display-performance configures the correct frame rate. |
 
 ## Critical Patterns
 

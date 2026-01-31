@@ -59,15 +59,18 @@ Use this router when:
 
 ## Decision Tree
 
-```
-User asks about on-device ML or speech
-  ├─ Machine learning?
-  │   ├─ Implementing/converting? → coreml
-  │   ├─ Need API reference? → coreml-ref
-  │   └─ Debugging issues? → coreml-diag
-  └─ Speech-to-text?
-      └─ Any speech work → speech
-```
+1. Implementing / converting ML models? → coreml
+2. CoreML API reference? → coreml-ref
+3. Debugging ML issues (load, inference, compression)? → coreml-diag
+4. Speech-to-text / transcription? → speech
+
+## Anti-Rationalization
+
+| Thought | Reality |
+|---------|---------|
+| "CoreML is just load and predict" | CoreML has compression, stateful models, compute unit selection, and async prediction. coreml covers all. |
+| "My model is small, no optimization needed" | Even small models benefit from compute unit selection and async prediction. coreml has the patterns. |
+| "I'll just use SFSpeechRecognizer" | iOS 26 has SpeechAnalyzer with better accuracy and offline support. speech skill covers the modern API. |
 
 ## Critical Patterns
 
