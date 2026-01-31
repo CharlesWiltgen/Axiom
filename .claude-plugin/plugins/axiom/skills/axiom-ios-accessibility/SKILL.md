@@ -34,10 +34,16 @@ Use this router when:
 
 ## Decision Tree
 
-```
-User asks about accessibility
-  └─ ANY accessibility issue → accessibility-diag
-```
+1. ANY accessibility issue → accessibility-diag
+
+## Anti-Rationalization
+
+| Thought | Reality |
+|---------|---------|
+| "I'll add VoiceOver labels when I'm done building" | Accessibility is foundational, not polish. accessibility-diag prevents App Store rejection. |
+| "My app doesn't need accessibility" | All apps need accessibility. It's required by App Store guidelines and benefits all users. |
+| "Dynamic Type just needs .scaledFont" | Dynamic Type has 7 common violations. accessibility-diag catches them all. |
+| "Color contrast looks fine to me" | Visual assessment is unreliable. WCAG ratios require measurement. accessibility-diag validates. |
 
 ## Critical Pattern
 

@@ -1,6 +1,7 @@
 ---
 name: optimize-build
 description: Scan Xcode project for build performance optimizations (launches build-optimizer agent)
+disable-model-invocation: true
 ---
 
 # Optimize Build Performance

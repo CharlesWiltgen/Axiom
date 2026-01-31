@@ -1,6 +1,7 @@
 ---
 name: run-tests
 description: Run XCUITests and parse results using the test-runner agent
+disable-model-invocation: true
 arguments:
   - name: scheme
     description: Test scheme name (optional - will discover available schemes if not provided)

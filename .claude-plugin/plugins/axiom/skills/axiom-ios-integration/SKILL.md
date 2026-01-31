@@ -79,48 +79,30 @@ Use this router for:
 
 ## Decision Tree
 
-```
-User asks about system integration
-  ├─ Siri/Shortcuts?
-  │  ├─ App Intents? → app-intents-ref
-  │  ├─ App Shortcuts? → app-shortcuts-ref
-  │  └─ Discovery? → app-discoverability
-  │
-  ├─ Widgets/Extensions? → extensions-widgets
-  │
-  ├─ In-app purchases? → in-app-purchases
-  │
-  ├─ Camera/Photos?
-  │  ├─ Camera capture (AVCaptureSession)?
-  │  │  ├─ Implementation patterns? → camera-capture
-  │  │  ├─ Not working/debugging? → camera-capture-diag
-  │  │  └─ API reference? → camera-capture-ref
-  │  └─ Photo picking/library?
-  │     ├─ Implementation patterns? → photo-library
-  │     └─ API reference? → photo-library-ref
-  │
-  ├─ Audio?
-  │  ├─ AVFoundation? → avfoundation-ref
-  │  ├─ Now Playing? → now-playing
-  │  ├─ CarPlay? → now-playing-carplay
-  │  └─ MusicKit? → now-playing-musickit
-  │
-  ├─ Haptics? → haptics
-  │
-  ├─ Localization? → localization
-  │
-  ├─ Privacy? → privacy-ux
-  │
-  ├─ Background processing?
-  │  ├─ Implementation patterns? → background-processing
-  │  ├─ Task not running/debugging? → background-processing-diag
-  │  └─ API reference? → background-processing-ref
-  │
-  └─ Location services?
-     ├─ Implementation patterns? → core-location
-     ├─ Not working/debugging? → core-location-diag
-     └─ API reference? → core-location-ref
-```
+1. App Intents / Siri / Apple Intelligence? → app-intents-ref
+2. App Shortcuts? → app-shortcuts-ref
+3. App discoverability / Spotlight? → app-discoverability, core-spotlight-ref
+4. Widgets / Live Activities? → extensions-widgets, extensions-widgets-ref
+5. In-app purchases / StoreKit? → in-app-purchases, storekit-ref
+6. Camera capture? → camera-capture (patterns), camera-capture-diag (debugging), camera-capture-ref (API)
+7. Photo pickers / library? → photo-library (patterns), photo-library-ref (API)
+8. Audio / AVFoundation? → avfoundation-ref
+9. Now Playing? → now-playing, now-playing-carplay, now-playing-musickit
+10. Haptics? → haptics
+11. Localization? → localization
+12. Privacy / permissions? → privacy-ux
+13. Background processing? → background-processing (patterns), background-processing-diag (debugging), background-processing-ref (API)
+14. Location services? → core-location (patterns), core-location-diag (debugging), core-location-ref (API)
+
+## Anti-Rationalization
+
+| Thought | Reality |
+|---------|---------|
+| "App Intents are just a protocol conformance" | App Intents have parameter validation, entity queries, and background execution. app-intents-ref covers all. |
+| "Widgets are simple, I've done them before" | Widgets have timeline, interactivity, and Live Activity patterns that evolve yearly. extensions-widgets is current. |
+| "I'll add haptics with a simple API call" | Haptic design has patterns for each interaction type. haptics skill matches HIG guidelines. |
+| "Localization is just String Catalogs" | Xcode 26 has type-safe localization, generated symbols, and #bundle macro. localization skill is current. |
+| "Camera capture is just AVCaptureSession setup" | Camera has interruption handlers, rotation, and threading requirements. camera-capture covers all. |
 
 ## Example Invocations
 

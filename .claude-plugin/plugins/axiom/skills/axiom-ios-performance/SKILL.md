@@ -94,31 +94,27 @@ Use this router when:
 
 ## Decision Tree
 
-```
-User reports performance issue
-  ├─ Memory?
-  │  ├─ Swift code? → memory-debugging
-  │  └─ Objective-C blocks? → objc-block-retain-cycles
-  │
-  ├─ Hang/Freeze (UI unresponsive >1 second)?
-  │  └─ YES → hang-diagnostics
-  │
-  ├─ Energy/Battery?
-  │  ├─ Know the symptom? → energy-diag
-  │  ├─ Need API reference? → energy-ref
-  │  └─ General battery drain? → energy
-  │
-  ├─ MetricKit setup/parsing?
-  │  └─ YES → metrickit-ref
-  │
-  ├─ Want to profile?
-  │  ├─ GUI workflow? → performance-profiling
-  │  ├─ CLI/automation? → xctrace-ref
-  │  ├─ Run profile now? → performance-profiler agent
-  │  └─ Unsure → performance-profiling
-  │
-  └─ General slow/lag? → performance-profiling
-```
+1. Memory leak (Swift)? → memory-debugging
+2. Memory leak (Objective-C blocks)? → objc-block-retain-cycles
+3. App hang/freeze (UI unresponsive >1s)? → hang-diagnostics
+4. Battery drain (know the symptom)? → energy-diag
+5. Battery drain (need API reference)? → energy-ref
+6. Battery drain (general)? → energy
+7. MetricKit setup/parsing? → metrickit-ref
+8. Profile with GUI (Instruments)? → performance-profiling
+9. Profile with CLI (xctrace)? → xctrace-ref
+10. Run automated profile now? → performance-profiler agent
+11. General slow/lag? → performance-profiling
+
+## Anti-Rationalization
+
+| Thought | Reality |
+|---------|---------|
+| "I know it's a memory leak, let me find it" | Memory leaks have 6 patterns. memory-debugging diagnoses the right one in 15 min vs 2 hours. |
+| "I'll just run Time Profiler" | Wrong Instruments template wastes time. performance-profiling selects the right tool first. |
+| "Battery drain is probably the network layer" | Energy issues span 8 subsystems. energy skill diagnoses the actual cause. |
+| "App feels slow, I'll optimize later" | Performance issues compound. Profiling now saves exponentially more time later. |
+| "It's just a UI freeze, probably a slow API call" | Freezes have busy vs blocked causes. hang-diagnostics has a decision tree for both. |
 
 ## Critical Patterns
 

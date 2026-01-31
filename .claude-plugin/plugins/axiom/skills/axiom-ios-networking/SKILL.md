@@ -65,17 +65,20 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 
 ## Decision Tree
 
-```
-User asks about networking
-  ├─ Implementing?
-  │  ├─ URLSession? → networking
-  │  ├─ Network.framework? → network-framework-ref
-  │  ├─ iOS 26+ NetworkConnection? → network-framework-ref
-  │  ├─ iOS 12-25 NWConnection? → networking-legacy
-  │  └─ Migrating from sockets/URLSession? → networking-migration
-  │
-  └─ Debugging? → networking-diag
-```
+1. URLSession with structured concurrency? → networking
+2. Network.framework / NetworkConnection (iOS 26+)? → network-framework-ref
+3. NWConnection (iOS 12-25)? → networking-legacy
+4. Migrating from sockets/URLSession? → networking-migration
+5. Connection issues / debugging? → networking-diag
+
+## Anti-Rationalization
+
+| Thought | Reality |
+|---------|---------|
+| "URLSession is simple, I don't need a skill" | URLSession with structured concurrency has async/cancellation patterns. networking skill covers them. |
+| "I'll debug the connection timeout myself" | Connection failures have 8 causes (DNS, TLS, proxy, cellular). networking-diag diagnoses systematically. |
+| "I just need a basic HTTP request" | Even basic requests need error handling, retry, and cancellation patterns. networking has them. |
+| "My custom networking layer works fine" | Custom layers miss cellular/proxy edge cases. Standard APIs handle them automatically. |
 
 ## Critical Patterns
 
