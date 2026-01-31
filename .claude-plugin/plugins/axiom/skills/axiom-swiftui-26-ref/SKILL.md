@@ -38,7 +38,7 @@ Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, w
 
 ## System Requirements
 
-#### iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, axiom-visionOS 26+
+#### iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+
 
 ---
 
@@ -458,11 +458,16 @@ See swiftui-nav-ref skill Section 5.5 (iOS 26 Tab Features) for `Tab(role: .sear
 ### Glass Effect for Custom Views
 
 ```swift
-struct PhotoGalleryView: View {
+struct ToTopButton: View {
     var body: some View {
-        CustomPhotoGrid()
-            .glassBackgroundEffect() // Reflects surrounding content
+        Button("To Top", systemImage: "chevron.up") {
+            scrollToTop()
+        }
+        .padding()
+        .glassEffect() // Reflects surrounding content
     }
+
+    func scrollToTop() { }
 }
 ```
 
@@ -1250,18 +1255,19 @@ Model3D(named: "WaterBottle")
     .manipulable() // People can pick up and move the object
 ```
 
-### Scene Snapping APIs
+### Surface Snapping APIs
 
 ```swift
-@Environment(\.sceneSnapping) var sceneSnapping
+@Environment(\.surfaceSnappingInfo) var snappingInfo: SurfaceSnappingInfo
 
 var body: some View {
-    Model3D(named: item.modelName)
-        .overlay(alignment: .bottom) {
-            if sceneSnapping.isSnapped {
-                Pedestal() // Show pedestal for items snapped to table
-            }
-        }
+    VStackLayout().depthAlignment(.center) {
+        Model3D(named: "waterBottle")
+            .manipulable()
+
+        Pedestal()
+            .opacity(snappingInfo.classification == .table ? 1.0 : 0.0)
+    }
 }
 ```
 
@@ -1397,24 +1403,27 @@ struct MyView: View {
 }
 ```
 
-### SwiftUI Popovers from RealityKit
+### PresentationComponent
+
+Present SwiftUI popovers, alerts, and sheets directly from RealityKit entities.
 
 ```swift
-// New component allows presenting SwiftUI popovers from RealityKit entities
-entity.components[PopoverComponent.self] = PopoverComponent {
-    VStack {
-        Text("Next photo location")
-        Button("Mark Favorite") { }
-    }
-}
+// Present SwiftUI popovers from RealityKit entities
+let popover = Entity()
+mapEntity.addChild(popover)
+popover.components[PresentationComponent.self] = PresentationComponent(
+    isPresented: $popoverPresented,
+    configuration: .popover(arrowEdge: .bottom),
+    content: DetailsView()
+)
 ```
 
 ### Additional Improvements
 
+- `ViewAttachmentComponent` — add SwiftUI views to entities
+- `GestureComponent` — entity touch and gesture responsiveness
 - Enhanced coordinate conversion API
-- Attachment components
-- Synchronizing animations
-- Binding to components
+- Synchronizing animations, binding to components
 - New sizing behaviors for RealityView
 
 **Reference** "Better Together: SwiftUI & RealityKit" (WWDC 2025)
@@ -1450,26 +1459,24 @@ struct ArticleView: View {
 ```swift
 import WebKit
 
-struct BrowserView: View {
-    @State private var webPage = WebPage()
+struct InAppBrowser: View {
+    @State private var page = WebPage()
 
     var body: some View {
         VStack {
-            // Show page title
-            Text(webPage.title ?? "Loading...")
+            Text(page.title ?? "Loading...")
 
-            WebView(page: webPage)
+            WebView(page)
+                .ignoresSafeArea()
+                .onAppear {
+                    page.load(URLRequest(url: articleURL))
+                }
 
             HStack {
-                Button("Back") {
-                    webPage.goBack()
-                }
-                .disabled(!webPage.canGoBack)
-
-                Button("Forward") {
-                    webPage.goForward()
-                }
-                .disabled(!webPage.canGoForward)
+                Button("Back") { page.goBack() }
+                    .disabled(!page.canGoBack)
+                Button("Forward") { page.goForward() }
+                    .disabled(!page.canGoForward)
             }
         }
     }
@@ -1540,55 +1547,44 @@ struct CommentView: View {
 
 ```swift
 struct PhotoGrid: View {
-    @State private var selection: Set<Photo.ID> = []
-    let photos: [Photo]
+    @State private var selectedPhotos: [Photo.ID] = []
 
     var body: some View {
-        LazyVGrid(columns: columns) {
-            ForEach(photos) { photo in
-                PhotoCell(photo: photo)
-                    .draggable(photo) // Individual item
+        ScrollView {
+            LazyVGrid(columns: gridColumns) {
+                ForEach(model.photos) { photo in
+                    view(photo: photo)
+                        .draggable(containerItemID: photo.id)
+                }
             }
         }
-        .dragContainer { // Container for multiple items
-            // Return items based on selection
-            selection.map { id in
-                photos.first { $0.id == id }
-            }
-            .compactMap { $0 }
+        .dragContainer(for: Photo.self, selection: selectedPhotos) { draggedIDs in
+            photos(ids: draggedIDs)
         }
     }
 }
 ```
 
-### Lazy Drag Item Loading
-
-```swift
-.dragContainer {
-    // Items loaded lazily when drop occurs
-    // Great for expensive operations like image encoding
-    selectedPhotos.map { photo in
-        photo.transferRepresentation
-    }
-}
-```
+**Key APIs**:
+- `.draggable(containerItemID:containerNamespace:)` marks each item as part of a drag container (namespace defaults to `nil`)
+- `.dragContainer(for:selection:)` provides the typed items lazily when a drop occurs
 
 ### DragConfiguration
 
 #### Customize supported operations
 
 ```swift
-.dragConfiguration(.init(supportedOperations: [.copy, .move, .delete]))
+.dragConfiguration(DragConfiguration(allowMove: false, allowDelete: true))
 ```
 
 ### Observing Drag Events
 
 ```swift
 .onDragSessionUpdated { session in
-    if case .ended(let operation) = session.phase {
-        if operation == .delete {
-            deleteSelectedPhotos()
-        }
+    let ids = session.draggedItemIDs(for: Photo.ID.self)
+    if session.phase == .ended(.delete) {
+        trash(ids)
+        deletePhotos(ids)
     }
 }
 ```
@@ -1596,7 +1592,7 @@ struct PhotoGrid: View {
 ### Drag Preview Formations
 
 ```swift
-.dragPreviewFormation(.stack) // Items stack nicely on top of one another
+.dragPreviewsFormation(.stack) // Items stack nicely on top of one another
 
 // Other formations:
 // - .default
@@ -1608,23 +1604,27 @@ struct PhotoGrid: View {
 
 ```swift
 struct PhotoLibrary: View {
-    @State private var selection: Set<Photo.ID> = []
-    let photos: [Photo]
+    @State private var selectedPhotos: [Photo.ID] = []
 
     var body: some View {
-        LazyVGrid(columns: columns) {
-            ForEach(photos) { photo in
-                PhotoCell(photo: photo)
+        ScrollView {
+            LazyVGrid(columns: gridColumns) {
+                ForEach(model.photos) { photo in
+                    view(photo: photo)
+                        .draggable(containerItemID: photo.id)
+                }
             }
         }
-        .dragContainer {
-            selectedPhotos
+        .dragContainer(for: Photo.self, selection: selectedPhotos) { draggedIDs in
+            photos(ids: draggedIDs)
         }
-        .dragConfiguration(.init(supportedOperations: [.copy, .delete]))
-        .dragPreviewFormation(.stack)
+        .dragConfiguration(DragConfiguration(allowMove: false, allowDelete: true))
+        .dragPreviewsFormation(.stack)
         .onDragSessionUpdated { session in
-            if case .ended(.delete) = session.phase {
-                deleteSelectedPhotos()
+            let ids = session.draggedItemIDs(for: Photo.ID.self)
+            if session.phase == .ended(.delete) {
+                trash(ids)
+                deletePhotos(ids)
             }
         }
     }
@@ -1641,33 +1641,31 @@ Swift Charts now supports three-dimensional plotting with `Chart3D`.
 
 ### Basic Usage
 
+#### From WWDC 256:21:35
+
 ```swift
 import Charts
 
-struct ElevationChart: View {
-    let hikingData: [HikeDataPoint]
-
+struct HikePlotView: View {
     var body: some View {
         Chart3D {
-            ForEach(hikingData) { point in
-                LineMark3D(
-                    x: .value("Distance", point.distance),
-                    y: .value("Elevation", point.elevation),
-                    z: .value("Time", point.timestamp)
-                )
+            SurfacePlot(x: "x", y: "y", z: "z") { x, y in
+                sin(x) * cos(y)
             }
+            .foregroundStyle(Gradient(colors: [.orange, .pink]))
         }
-        .chartXScale(domain: 0...10)
-        .chartYScale(domain: 0...3000)
-        .chartZScale(domain: startTime...endTime) // Z-specific modifier
+        .chartXScale(domain: -3...3)
+        .chartYScale(domain: -3...3)
+        .chartZScale(domain: -3...3)
     }
 }
 ```
 
 #### Features
 - `Chart3D` container
+- `SurfacePlot` for continuous surface rendering from a function
 - Z-axis specific modifiers (`.chartZScale()`, `.chartZAxis()`, etc.)
-- All existing chart marks with 3D variants
+- All existing chart marks with 3D variants (e.g., `LineMark3D`)
 
 **Reference** "Bring Swift Charts to the third dimension" (WWDC 2025)
 
@@ -1709,18 +1707,17 @@ struct CountdownWidget: Widget {
     }
 }
 
-struct CountdownView: View {
-    @Environment(\.levelOfDetail) var levelOfDetail
-    let entry: CountdownEntry
+struct PhotoCountdownView: View {
+    @Environment(\.levelOfDetail) var levelOfDetail: LevelOfDetail
 
     var body: some View {
-        VStack {
-            Text(entry.date, style: .timer)
-
-            if levelOfDetail == .expanded {
-                // Show photos when close to widget
-                PhotoCarousel(photos: entry.recentPhotos)
-            }
+        switch levelOfDetail {
+        case .default:
+            RecentPhotosView() // Full detail when close
+        case .simplified:
+            CountdownView()   // Simplified when further away
+        default:
+            CountdownView()
         }
     }
 }
@@ -1765,7 +1762,7 @@ Apps must support resizable windows on iPad.
 
 🔧 Toolbar spacers (`.fixed`)
 🔧 Tinted prominent buttons in toolbars
-🔧 Glass effect for custom views (`.glassBackgroundEffect()`)
+🔧 Glass effect for custom views (`.glassEffect()`)
 🔧 Search tab role (`.tabRole(.search)`)
 🔧 iPad menu bar (`.commands`)
 🔧 Window resize anchor (`.windowResizeAnchor()`)
@@ -1846,7 +1843,7 @@ Apps must support resizable windows on iPad.
 #### DO
 - Use `Alignment3D` for depth-based layouts
 - Enable `.manipulable()` for objects users should interact with
-- Check scene snapping state for context-aware UI
+- Check surface snapping state for context-aware UI
 
 #### DON'T
 - Use 2D alignment APIs for 3D layouts
@@ -1923,12 +1920,12 @@ TextEditor(text: $text) // Plain String loses formatting
 
 #### Solution
 ```swift
-// Must include .delete in supported operations
-.dragConfiguration(.init(supportedOperations: [.copy, .delete]))
+// Must enable delete in drag configuration
+.dragConfiguration(DragConfiguration(allowMove: false, allowDelete: true))
 
 // And observe the delete event
 .onDragSessionUpdated { session in
-    if case .ended(.delete) = session.phase {
+    if session.phase == .ended(.delete) {
         deleteItems()
     }
 }
@@ -1997,13 +1994,13 @@ Move `.toolbar {}` from the NavigationStack to each view inside it. iOS 26 morph
 
 ## Resources
 
-**WWDC**: 2025-256
+**WWDC**: 2025-256, 2025-287 (Build a SwiftUI app with the new design), 2025-278 (What's new in widgets), 2025-323 (Meet WebKit for SwiftUI), 2025-310 (Optimize SwiftUI performance with instruments), 2025-325 (Bring Swift Charts to the third dimension), 2025-341 (Cook up a rich text experience in SwiftUI with AttributedString)
 
-**Docs**: /swiftui, /swiftui/defaulttoolbaritem, /swiftui/toolbarspacer, /swiftui/searchtoolbarbehavior, /swiftui/view/toolbar(id:content:), /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts
+**Docs**: /swiftui, /swiftui/defaulttoolbaritem, /swiftui/toolbarspacer, /swiftui/searchtoolbarbehavior, /swiftui/view/toolbar(id:content:), /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts, /realitykit/presentationcomponent, /swiftui/chart3d
 
 **Skills**: axiom-swiftui-performance, axiom-liquid-glass, axiom-swift-concurrency, axiom-app-intents-ref, axiom-swiftui-search-ref
 
 ---
 
-**Last Updated** Based on WWDC 2025-256 "What's new in SwiftUI"
-**Version** iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, axiom-visionOS 26+
+**Primary source** WWDC 2025-256 "What's new in SwiftUI". Additional content from 2025-287, 2025-323, and Apple documentation.
+**Version** iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+
