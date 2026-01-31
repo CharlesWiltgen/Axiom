@@ -427,6 +427,8 @@ ScrollView {
 
 ### Bottom-Aligned Search
 
+**Foundational search APIs** For `.searchable`, `isSearching`, suggestions, scopes, tokens, and programmatic search control, see `axiom-swiftui-search-ref`. This section covers iOS 26 refinements only.
+
 #### iPhone ergonomics
 
 ```swift
@@ -935,6 +937,8 @@ struct ButtonLayoutExample: View {
 - All button styles
 
 ### searchToolbarBehavior
+
+**Foundational search APIs** For the `.searchable` modifier, placement options, and search suggestions that `.searchToolbarBehavior` builds upon, see `axiom-swiftui-search-ref`.
 
 #### Compact search that expands on focus
 
@@ -1997,7 +2001,7 @@ Move `.toolbar {}` from the NavigationStack to each view inside it. iOS 26 morph
 
 **Docs**: /swiftui, /swiftui/defaulttoolbaritem, /swiftui/toolbarspacer, /swiftui/searchtoolbarbehavior, /swiftui/view/toolbar(id:content:), /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts
 
-**Skills**: axiom-swiftui-performance, axiom-liquid-glass, axiom-swift-concurrency, axiom-app-intents-ref
+**Skills**: axiom-swiftui-performance, axiom-liquid-glass, axiom-swift-concurrency, axiom-app-intents-ref, axiom-swiftui-search-ref
 
 ---
 
