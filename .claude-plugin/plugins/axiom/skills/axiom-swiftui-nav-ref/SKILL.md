@@ -585,7 +585,7 @@ TabView {
 }
 ```
 
-**Search tab requirement**: Contents of a search-role tab must be wrapped in `NavigationStack` with `.searchable()` applied to the stack. Without `NavigationStack`, the search field will not appear.
+**Search tab requirement**: Contents of a search-role tab must be wrapped in `NavigationStack` with `.searchable()` applied to the stack. Without `NavigationStack`, the search field will not appear. For foundational `.searchable` patterns (suggestions, scopes, tokens, programmatic control), see `axiom-swiftui-search-ref`.
 
 ### 5.2 TabView with NavigationStack Per Tab
 
@@ -904,6 +904,8 @@ NavigationSplitView {
 
 ### 6.3 Bottom-Aligned Search (WWDC 2025, 256)
 
+**Foundational search APIs** For `.searchable`, `isSearching`, suggestions, scopes, tokens, and programmatic control, see `axiom-swiftui-search-ref`. This section covers iOS 26 bottom-aligned refinement only.
+
 ```swift
 NavigationSplitView {
     Sidebar()
@@ -1193,7 +1195,7 @@ NavigationPath(codableRepresentation)  // For decoding
 
 **Docs**: /swiftui/tabrole/search, /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:)
 
-**Skills**: axiom-swiftui-nav, axiom-swiftui-nav-diag, axiom-swiftui-26-ref, axiom-liquid-glass
+**Skills**: axiom-swiftui-nav, axiom-swiftui-nav-diag, axiom-swiftui-26-ref, axiom-liquid-glass, axiom-swiftui-search-ref
 
 ---
 
