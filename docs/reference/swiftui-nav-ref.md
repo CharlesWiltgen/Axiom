@@ -76,6 +76,9 @@ Questions you can ask Claude that will draw from this reference:
 - backgroundExtensionEffect
 - tabBarMinimizeBehavior
 - Bottom-aligned search
+- Search tab role (requires NavigationStack wrapper)
+- Dynamic tabViewBottomAccessory patterns (iOS 26.1+, with tabViewBottomAccessoryPlacement)
+- Toolbar morphing transitions (cross-ref to [swiftui-26-ref](/reference/swiftui-26-ref))
 
 ### API Evolution
 - NavigationView (deprecated iOS 16)

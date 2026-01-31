@@ -11,6 +11,7 @@ Complete API reference for iOS 26 SwiftUI features. Covers Liquid Glass design s
 
 Use this reference when you need:
 - Liquid Glass APIs and toolbar patterns
+- Toolbar transitions and morphing during navigation
 - Performance improvements in iOS 26
 - @Animatable macro for custom animation
 - WebView and WebPage integration
@@ -30,14 +31,24 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I use TextEditor with AttributedString?"
 - "How do I create 3D charts in SwiftUI?"
 - "What performance improvements does iOS 26 bring to SwiftUI?"
+- "How do I make toolbars morph during navigation transitions?"
+- "Why isn't my toolbar morphing when I push a new view?"
 
 ## What's Covered
 
 ### Liquid Glass Design
 - .glassBackgroundEffect() modifier
 - Toolbar spacers and roles
-- Bottom-aligned search fields
+- ToolbarItemGroup visual grouping (shared glass backgrounds)
+- Toolbar transitions and morphing during NavigationStack push/pop
+- DefaultToolbarItem, toolbar(id:) stable items, ToolbarSpacer patterns
+- Combined DefaultToolbarItem + ToolbarSpacer bottom bar patterns
+- Bottom-aligned search fields (with .sidebar placement escape hatch)
+- searchToolbarBehavior(.minimize) with backward-compat wrapper
 - Tab bar with .tabRole(.search)
+- .badge() and .tint() on Liquid Glass toolbar items
+- User-customizable toolbars (CustomizableToolbarContent, ToolbarCustomizationBehavior)
+- SearchToolbarBehavior type (.minimize, .automatic)
 - Material-aware backgrounds
 
 ### Performance Improvements
