@@ -1001,7 +1001,7 @@ struct PhotoGalleryView: View {
 
 ### Toolbar Modifiers **NEW in iOS 26**
 
-#### `.toolbar` with `Spacer(.fixed)`
+#### `.toolbar` with `ToolbarSpacer(.fixed)`
 
 Separates toolbar button groups with fixed spacing.
 
@@ -1011,7 +1011,7 @@ Separates toolbar button groups with fixed spacing.
         Button("Up") { }
         Button("Down") { }
 
-        Spacer(.fixed) // Fixed spacer separates groups
+        ToolbarSpacer(.fixed) // Fixed spacer separates groups
 
         Button("Settings") { }
     }
@@ -1116,12 +1116,12 @@ Button("Action") { }
 
 **Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+
 
-#### `tabBarMinimizationBehavior(_:)` **NEW in iOS 26**
+#### `tabBarMinimizeBehavior(_:)` **NEW in iOS 26**
 
 Configures tab bar to minimize when scrolling to elevate underlying content.
 
 ```swift
-func tabBarMinimizationBehavior(_ behavior: TabBarMinimizationBehavior) -> some View
+func tabBarMinimizeBehavior(_ behavior: TabBarMinimizeBehavior) -> some View
 ```
 
 **Parameters**:
@@ -1135,10 +1135,56 @@ TabView {
     ContentView()
         .tabItem { Label("Home", systemImage: "house") }
 }
-.tabBarMinimizationBehavior(.onScrollDown) // Minimize when scrolling down
+.tabBarMinimizeBehavior(.onScrollDown) // Minimize when scrolling down
 ```
 
 **Visual Effect** Tab bar recedes when scrolling down, expands when scrolling up. Content gains more screen space.
+
+**Gotcha**: Tab bar blur only activates when the tab bar overlays scrollable content. If non-scrollable views (buttons, fixed VStacks) sit between your list and the tab bar, you get a solid background instead of blur. Ensure your primary scrollable view is the outermost content layer.
+
+```swift
+// ❌ Solid background — Button breaks scrollable overlay
+VStack {
+    List { /* items */ }
+    Button("Add") { }  // Sits between list and tab bar
+}
+
+// ✅ Blurred background — List extends under tab bar
+ZStack(alignment: .bottomTrailing) {
+    List { /* items */ }  // Scrollable content under tab bar
+    Button(action: { }) {
+        Label("Add", systemImage: "plus")
+            .labelStyle(.iconOnly).padding()
+    }
+    .glassEffect(.regular.interactive())
+    .padding([.bottom, .trailing], 12)
+}
+```
+
+**Availability**: iOS 26+
+
+#### Floating Glass Buttons
+
+Liquid Glass replaces bottom-anchored action buttons with floating glass buttons. Use `.glassEffect(.regular.interactive())` on a `ZStack`-overlaid button:
+
+```swift
+ZStack(alignment: .bottomTrailing) {
+    ScrollView {
+        // Main content
+    }
+
+    Button(action: { addItem() }) {
+        Label("Add Item", systemImage: "plus")
+            .bold()
+            .labelStyle(.iconOnly)
+            .padding()
+    }
+    .glassEffect(.regular.interactive())
+    .padding([.bottom, .trailing], 12)
+}
+```
+
+**When to use**: Replace pre-iOS 26 bottom-bar action buttons that no longer fit the layered Liquid Glass design.
 
 **Availability**: iOS 26+
 

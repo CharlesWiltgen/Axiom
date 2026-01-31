@@ -669,7 +669,7 @@ TabView {
     ContentView()
         .tabItem { Label("Home", systemImage: "house") }
 }
-.tabBarMinimizationBehavior(.onScrollDown) // NEW in iOS 26
+.tabBarMinimizeBehavior(.onScrollDown) // NEW in iOS 26
 ```
 
 #### Options
@@ -781,7 +781,7 @@ List(emails) { email in
         Button("Up") { }
         Button("Down") { }
 
-        Spacer(.fixed) // NEW in iOS 26 - separates groups
+        ToolbarSpacer(.fixed) // NEW in iOS 26 - separates groups
 
         // Action group
         Button("Settings") { }
@@ -833,6 +833,61 @@ List(emails) { email in
 ```
 
 **Guideline** Pick one style (icons OR text) per background group, not both.
+
+### Backward-Compatible Toolbar Labels (iOS 18+26)
+
+Liquid Glass moves toolbars from text-based to symbol-based items. For apps supporting both iOS 18 and 26, use a custom `LabelStyle` that shows text on older versions and icons on iOS 26:
+
+```swift
+struct ToolbarLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        if #available(iOS 26, *) {
+            Label(configuration)  // Icon + text (system shows icon)
+        } else {
+            Label(configuration)
+                .labelStyle(.titleOnly)  // Text-only on older OS
+        }
+    }
+}
+
+@available(iOS, introduced: 18, obsoleted: 26,
+           message: "Remove — iOS 26 uses icon-based toolbars natively")
+extension LabelStyle where Self == ToolbarLabelStyle {
+    static var toolbar: Self { .init() }
+}
+```
+
+Apply to toolbar buttons:
+
+```swift
+ToolbarItem(placement: .confirmationAction) {
+    Button("Done", systemImage: "checkmark") { }
+        .labelStyle(.toolbar)
+}
+```
+
+The `obsoleted: 26` annotation generates a compiler error when you raise your minimum target to iOS 26, reminding you to remove the compatibility shim.
+
+### Floating Glass Buttons
+
+Liquid Glass replaces bottom-anchored action buttons with floating glass overlays. Use `.glassEffect(.regular.interactive())` for buttons that float above scrollable content:
+
+```swift
+ZStack(alignment: .bottomTrailing) {
+    List { /* content */ }
+
+    Button(action: { }) {
+        Label("Add", systemImage: "plus")
+            .bold()
+            .labelStyle(.iconOnly)
+            .padding()
+    }
+    .glassEffect(.regular.interactive())
+    .padding([.bottom, .trailing], 12)
+}
+```
+
+**When to use**: Replace pre-iOS 26 full-width bottom buttons that break tab bar blur (non-scrollable views between list and tab bar produce solid backgrounds instead of blur).
 
 ### Provide Accessibility Labels for Icons
 
@@ -1335,12 +1390,12 @@ To ship with latest SDKs while keeping app as it looked when built against previ
 
 ### Navigation
 - [ ] `.tabViewStyle(.sidebarAdaptable)` - Tab bar adapts to sidebar
-- [ ] `.tabBarMinimizationBehavior(_:)` - Minimize on scroll
+- [ ] `.tabBarMinimizeBehavior(_:)` - Minimize on scroll
 - [ ] `.tabRole(.search)` - Semantic search tabs
 - [ ] `NavigationSplitView` for sidebar + inspector layouts
 
 ### Toolbars and Menus
-- [ ] `Spacer(.fixed)` - Separate toolbar groups
+- [ ] `ToolbarSpacer(.fixed)` - Separate toolbar groups
 - [ ] Standard selectors for automatic menu icons
 - [ ] Match contextual menu actions to swipe actions
 
@@ -1401,7 +1456,7 @@ Use this checklist when auditing app for Liquid Glass adoption:
 ### Menus and Toolbars
 - [ ] Standard selectors used for automatic menu icons
 - [ ] Top menu actions match swipe actions
-- [ ] Toolbar items grouped logically with `Spacer(.fixed)`
+- [ ] Toolbar items grouped logically with `ToolbarSpacer(.fixed)`
 - [ ] Icons OR text used per group (not mixed)
 - [ ] Accessibility labels provided for all icons
 - [ ] Custom toolbar items audited for compatibility
@@ -1439,7 +1494,9 @@ Use this checklist when auditing app for Liquid Glass adoption:
 
 **WWDC**: 219, 323
 
-**Docs**: /TechnologyOverviews/adopting-liquid-glass, /design/Human-Interface-Guidelines/materials
+**Docs**: /TechnologyOverviews/liquid-glass, /TechnologyOverviews/adopting-liquid-glass, /design/Human-Interface-Guidelines/materials
+
+**Sample Code**: /SwiftUI/Landmarks-Building-an-app-with-Liquid-Glass
 
 **Skills**: axiom-liquid-glass, axiom-swiftui-performance, axiom-swiftui-debugging, axiom-accessibility-diag
 
