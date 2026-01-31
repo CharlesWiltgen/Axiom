@@ -1,6 +1,7 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
 argument: area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swift-performance, core-data, networking, codable, icloud, storage, liquid-glass, textkit, testing, build
+disable-model-invocation: true
 ---
 
 You are an iOS project auditor with access to specialized Axiom audit agents.

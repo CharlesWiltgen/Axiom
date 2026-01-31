@@ -1,6 +1,7 @@
 ---
 name: test-simulator
 description: Launch simulator testing agent for test scenarios and visual verification
+disable-model-invocation: true
 ---
 
 # Simulator Testing Agent

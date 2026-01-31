@@ -175,41 +175,17 @@ This router invokes specialized skills based on the specific testing need:
 
 ## Decision Tree
 
-```
-User has testing question
-  │
-  ├─ Writing unit tests or asking about Swift Testing?
-  │  └─ YES → swift-testing
-  │
-  ├─ Writing UI tests or debugging XCUITest?
-  │  └─ YES → ui-testing
-  │
-  ├─ Testing async/await code patterns?
-  │  ├─ confirmation, expectedCount, @MainActor @Test? → testing-async
-  │  └─ General async questions? → testing-async
-  │
-  ├─ Tests fail randomly / flaky in CI / race conditions?
-  │  ├─ Check: Uses XCUIApplication/XCUIElement? → ui-testing
-  │  └─ Check: Uses @Test/#expect? → test-failure-analyzer (Agent)
-  │
-  ├─ Tests crash or environment seems wrong?
-  │  └─ YES → xcode-debugging (via ios-build)
-  │
-  ├─ Tests are slow, want to speed them up?
-  │  └─ YES → swift-testing (Fast Tests section)
-  │
-  ├─ Run tests from command line / CI / parse results?
-  │  └─ YES → test-runner (Agent)
-  │
-  ├─ Fix failing tests automatically / closed-loop debugging?
-  │  └─ YES → test-debugger (Agent)
-  │
-  ├─ Record UI interactions in Xcode 26?
-  │  └─ YES → ui-recording
-  │
-  └─ Automate without XCUITest / use AXe CLI?
-     └─ YES → simulator-tester + axe-ref
-```
+1. Writing unit tests / Swift Testing? → swift-testing
+2. Writing UI tests / XCUITest? → ui-testing
+3. Testing async/await code? → testing-async
+4. Flaky tests / race conditions (XCUITest)? → ui-testing
+5. Flaky tests / race conditions (Swift Testing)? → test-failure-analyzer (Agent)
+6. Tests crash / environment wrong? → xcode-debugging (via ios-build)
+7. Tests are slow? → swift-testing (Fast Tests section)
+8. Run tests from CLI / parse results? → test-runner (Agent)
+9. Fix failing tests automatically? → test-debugger (Agent)
+10. Record UI interactions (Xcode 26)? → ui-recording
+11. Automate without XCUITest / AXe CLI? → simulator-tester + axe-ref
 
 ## Swift Testing vs XCTest Quick Guide
 
@@ -224,12 +200,13 @@ User has testing question
 
 ## Anti-Rationalization
 
-**Do NOT skip this router for:**
-- "Simple" test questions (proper patterns prevent future pain)
-- "I know XCTest" (Swift Testing is significantly better for unit tests)
-- "Tests are slow but it's fine" (fast tests enable TDD and better feedback)
-
-**Fast, reliable tests are foundational to code quality.**
+| Thought | Reality |
+|---------|---------|
+| "Simple test question, I don't need the skill" | Proper patterns prevent test debt. swift-testing has copy-paste solutions. |
+| "I know XCTest well enough" | Swift Testing is significantly better for unit tests. swift-testing covers migration. |
+| "Tests are slow but it's fine" | Fast tests enable TDD. swift-testing shows how to run without simulator. |
+| "I'll fix the flaky test with a sleep()" | sleep() makes tests slower AND flakier. ui-testing has condition-based waiting patterns. |
+| "I'll add tests later" | Tests written after implementation miss edge cases. swift-testing makes writing tests first easy. |
 
 ## Example Invocations
 

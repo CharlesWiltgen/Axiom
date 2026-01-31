@@ -1,6 +1,7 @@
 ---
 name: screenshot
 description: Capture screenshot from booted iOS Simulator
+disable-model-invocation: true
 ---
 
 # Capture Simulator Screenshot

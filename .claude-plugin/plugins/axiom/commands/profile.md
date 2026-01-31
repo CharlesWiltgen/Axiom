@@ -1,6 +1,7 @@
 ---
 name: profile
 description: Run automated performance profiling via xctrace CLI (launches performance-profiler agent)
+disable-model-invocation: true
 ---
 
 # Profile Performance

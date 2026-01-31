@@ -1,6 +1,7 @@
 ---
 name: analyze-crash
 description: Parse and analyze iOS/macOS crash logs (.ips, .crash, or pasted text) to identify root cause
+disable-model-invocation: true
 ---
 
 # Analyze Crash Log

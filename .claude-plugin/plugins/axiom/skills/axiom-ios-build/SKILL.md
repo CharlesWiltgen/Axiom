@@ -180,49 +180,27 @@ This router invokes specialized skills based on the specific issue:
 
 ## Decision Tree
 
-```
-User reports build/environment issue
-  ├─ Is it mysterious/intermittent/clean build fails?
-  │  └─ YES → xcode-debugging (environment-first)
-  │
-  ├─ Is it SPM dependency conflict?
-  │  └─ YES → spm-conflict-resolver (Agent)
-  │
-  ├─ Is it CocoaPods/other dependency conflict? (legacy)
-  │  └─ YES → build-debugging (note: CocoaPods is legacy; prefer SPM)
-  │
-  ├─ Is it slow build time?
-  │  └─ YES → build-performance
-  │
-  ├─ Is it security/privacy/App Store prep?
-  │  └─ YES → security-privacy-scanner (Agent)
-  │
-  ├─ Is it modernization/deprecated APIs/iOS 17+ migration?
-  │  └─ YES → modernization-helper (Agent)
-  │
-  ├─ Is it TestFlight crash/feedback triage?
-  │  └─ YES → testflight-triage
-  │
-  ├─ Is it navigating App Store Connect for crashes/metrics?
-  │  └─ YES → app-store-connect-ref
-  │
-  ├─ Do they have a crash log (.ips/.crash) to analyze?
-  │  └─ YES → crash-analyzer (Agent)
-  │
-  ├─ Is it MetricKit setup or payload parsing?
-  │  └─ YES → metrickit-ref
-  │
-  └─ Is it app hang/freeze/watchdog termination?
-     └─ YES → hang-diagnostics
-```
+1. Mysterious/intermittent/clean build fails? → xcode-debugging (environment-first)
+2. SPM dependency conflict? → spm-conflict-resolver (Agent)
+3. CocoaPods/other dependency conflict? → build-debugging
+4. Slow build time? → build-performance
+5. Security/privacy/App Store prep? → security-privacy-scanner (Agent)
+6. Modernization/deprecated APIs? → modernization-helper (Agent)
+7. TestFlight crash/feedback? → testflight-triage
+8. Navigating App Store Connect? → app-store-connect-ref
+9. Have a crash log (.ips/.crash)? → crash-analyzer (Agent)
+10. MetricKit setup/parsing? → metrickit-ref
+11. App hang/freeze/watchdog? → hang-diagnostics
 
 ## Anti-Rationalization
 
-**Do NOT skip this router for:**
-- "Simple" build errors (may have environment cause)
-- "Quick fixes" (environment issues return if not addressed)
-
-**Environment issues are the #1 time sink in iOS development.** Check environment before debugging code.
+| Thought | Reality |
+|---------|---------|
+| "I know how to fix this linker error" | Linker errors have 4+ root causes. xcode-debugging diagnoses all in 2 min. |
+| "Let me just clean the build folder" | Clean builds mask the real issue. xcode-debugging finds the root cause. |
+| "It's just an SPM issue, I'll fix Package.swift" | SPM conflicts cascade. spm-conflict-resolver analyzes the full dependency graph. |
+| "The simulator is just slow today" | Simulator issues indicate environment corruption. xcode-debugging checks systematically. |
+| "I'll skip environment checks, it compiles locally" | Environment-first saves 30+ min. Every time. |
 
 ## When NOT to Use (Conflict Resolution)
 
