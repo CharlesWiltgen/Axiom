@@ -87,12 +87,37 @@ TabView {
         Button("Down") { }
 
         // Fixed spacer separates button groups
-        Spacer(.fixed)
+        ToolbarSpacer(.fixed)
 
         Button("Settings") { }
     }
 }
 ```
+
+#### ToolbarItemGroup for Visual Grouping
+
+Items within a `ToolbarItemGroup` share a single Liquid Glass background, creating a visual "pill" for related actions:
+
+```swift
+.toolbar {
+    ToolbarItem(placement: .cancellationAction) {
+        Button("Cancel", systemImage: "xmark") {}
+    }
+
+    ToolbarItemGroup(placement: .primaryAction) {
+        Button("Draw", systemImage: "pencil") {}
+        Button("Erase", systemImage: "eraser") {}
+    }
+
+    ToolbarSpacer(.flexible)
+
+    ToolbarItem(placement: .confirmationAction) {
+        Button("Save", systemImage: "checkmark") {}
+    }
+}
+```
+
+**Key insight**: `ToolbarItemPlacement` now controls visual appearance, not just position. `confirmationAction` automatically applies `glassProminent` styling; `cancellationAction` uses standard glass.
 
 #### Prominent Tinted Buttons in Liquid Glass
 
@@ -103,6 +128,286 @@ Button("Add Trip") {
 .buttonStyle(.borderedProminent)
 .tint(.blue)
 // Liquid Glass toolbars support tinting for prominence
+```
+
+Toolbar items also support `.badge()` for notification counts:
+
+```swift
+ToolbarItem(placement: .confirmationAction) {
+    Button("Done", systemImage: "checkmark") { }
+        .badge(3)  // Badge count on glass toolbar item
+}
+```
+
+### Toolbar Transitions & Morphing
+
+iOS 26 toolbars automatically morph between screens during NavigationStack push/pop transitions. The key insight: attach `.toolbar {}` to individual views inside NavigationStack, not to NavigationStack itself.
+
+#### DefaultToolbarItem
+
+**iOS 26+**. A toolbar item representing a system component. Use it to reposition system-provided items (like search) within your toolbar layout.
+
+```swift
+struct DefaultToolbarItem {
+    init(kind: ToolbarDefaultItemKind, placement: ToolbarItemPlacement = .automatic)
+}
+```
+
+**Key semantic**: If the system has already placed a matching item `kind` in the toolbar, `DefaultToolbarItem` implicitly replaces the default-placed instance. This lets you move system items to different placements or reposition them relative to your own toolbar content.
+
+##### Repositioning search between toolbar items
+
+```swift
+NavigationSplitView {
+    AllCalendarsView()
+} detail: {
+    SelectedCalendarView()
+        .searchable(text: $query)
+        .toolbar {
+            ToolbarItem(placement: .bottomBar) {
+                CalendarPicker()
+            }
+            ToolbarItem(placement: .bottomBar) {
+                Invites()
+            }
+            DefaultToolbarItem(kind: .search, placement: .bottomBar)
+            ToolbarSpacer(placement: .bottomBar)
+            ToolbarItem(placement: .bottomBar) { NewEventButton() }
+        }
+}
+```
+
+##### Specifying search column in collapsed NavigationSplitView
+
+Place `DefaultToolbarItem` with `.search` kind in the column that should display search when the split view collapses to compact (iPhone):
+
+```swift
+NavigationSplitView {
+    SidebarView()
+        .toolbar {
+            DefaultToolbarItem(kind: .search, placement: .bottomBar)
+        }
+} content: {
+    ContentView()
+} detail: {
+    DetailView()
+}
+.searchable(text: $text)
+```
+
+This only applies when `.searchable()` is placed on the `NavigationSplitView` itself (not a child view).
+
+##### Availability check for backward compatibility
+
+```swift
+.toolbar {
+    if #available(iOS 26.0, *) {
+        DefaultToolbarItem(kind: .search, placement: .bottomBar)
+        ToolbarSpacer(.flexible, placement: .bottomBar)
+    }
+    ToolbarItem(placement: .bottomBar) {
+        NewNoteButton()
+    }
+}
+.searchable(text: $searchText)
+```
+
+#### Basic Morphing Setup
+
+Each view declares its own toolbar. iOS 26 morphs between them during navigation:
+
+```swift
+struct MailboxList: View {
+    var body: some View {
+        List(mailboxes) { mailbox in
+            NavigationLink(mailbox.name, value: mailbox)
+        }
+        .toolbar {  // ← Attached to this view, not NavigationStack
+            ToolbarItem(placement: .bottomBar) {
+                Button("Filter", systemImage: "line.3.horizontal.decrease") { }
+            }
+            ToolbarSpacer(.flexible, placement: .bottomBar)
+            ToolbarItem(placement: .bottomBar) {
+                Button("New Message", systemImage: "square.and.pencil") { }
+            }
+        }
+    }
+}
+
+struct MessageList: View {
+    let mailbox: Mailbox
+
+    var body: some View {
+        List(mailbox.messages) { message in
+            MessageRow(message: message)
+        }
+        .toolbar {  // ← Different toolbar — iOS 26 morphs between them
+            ToolbarSpacer(.flexible, placement: .bottomBar)
+            ToolbarItem(placement: .bottomBar) {
+                Button("New Message", systemImage: "square.and.pencil") { }
+            }
+        }
+    }
+}
+```
+
+**#1 gotcha**: If you attach `.toolbar {}` to the NavigationStack itself, iOS 26 has nothing to morph between — the toolbar stays static across all pushes.
+
+#### Stable Items with `toolbar(id:)` and `ToolbarItem(id:)`
+
+Items with matching IDs across screens stay in place during morphing (no bounce). Unmatched items animate in/out:
+
+```swift
+struct MailboxList: View {
+    var body: some View {
+        List(mailboxes) { mailbox in
+            NavigationLink(mailbox.name, value: mailbox)
+        }
+        .toolbar(id: "main") {
+            ToolbarItem(id: "filter", placement: .bottomBar) {
+                Button("Filter", systemImage: "line.3.horizontal.decrease") { }
+            }
+            ToolbarSpacer(.flexible, placement: .bottomBar)
+            ToolbarItem(id: "compose", placement: .bottomBar) {
+                Button("New Message", systemImage: "square.and.pencil") { }
+            }
+        }
+    }
+}
+
+struct MessageList: View {
+    let mailbox: Mailbox
+
+    var body: some View {
+        List(mailbox.messages) { message in
+            MessageRow(message: message)
+        }
+        .toolbar(id: "main") {
+            // "filter" absent — animates out during push
+            ToolbarSpacer(.flexible, placement: .bottomBar)
+            ToolbarItem(id: "compose", placement: .bottomBar) {
+                // Same ID as MailboxList — stays stable during morph
+                Button("New Message", systemImage: "square.and.pencil") { }
+            }
+        }
+    }
+}
+```
+
+#### Complete Mail-Style Example
+
+Combines DefaultToolbarItem, ToolbarSpacer, and stable compose button:
+
+```swift
+struct MailApp: View {
+    var body: some View {
+        NavigationStack {
+            MailboxList()
+                .navigationDestination(for: Mailbox.self) { mailbox in
+                    MessageList(mailbox: mailbox)
+                }
+                .navigationDestination(for: Message.self) { message in
+                    MessageDetail(message: message)
+                }
+        }
+    }
+}
+
+// Each destination defines its own toolbar — NavigationStack morphs between them
+```
+
+#### ToolbarSpacer(.flexible)
+
+Pushes toolbar items apart (like Spacer in HStack). Complements `.fixed` for visual separation:
+
+```swift
+.toolbar {
+    ToolbarItem(placement: .bottomBar) {
+        Button("Archive", systemImage: "archivebox") { }
+    }
+    ToolbarSpacer(.flexible, placement: .bottomBar)  // Push apart
+    ToolbarItem(placement: .bottomBar) {
+        Button("Compose", systemImage: "square.and.pencil") { }
+    }
+}
+```
+
+#### .navigationSubtitle()
+
+Add a secondary line below the navigation title:
+
+```swift
+.navigationTitle("Inbox")
+.navigationSubtitle("3 unread messages")
+```
+
+### User-Customizable Toolbars
+
+`toolbar(id:content:)` also enables **user customization** — letting people rearrange, show, and hide toolbar items. This is the original purpose of the identified toolbar API (iOS 14+, iPadOS 16+ for customization).
+
+#### Setup
+
+```swift
+TextEditor(text: $text)
+    .toolbar(id: "editingtools") {
+        ToolbarItem(id: "bold", placement: .secondaryAction) {
+            Toggle(isOn: $bold) { Image(systemName: "bold") }
+        }
+        ToolbarItem(id: "italic", placement: .secondaryAction) {
+            Toggle(isOn: $italic) { Image(systemName: "italic") }
+        }
+    }
+```
+
+**Platform constraint**: Only `.secondaryAction` items support customization on iPadOS. Other placements follow normal rules and cannot be customized by the user.
+
+#### Controlling visibility
+
+```swift
+ToolbarItem(id: "advanced", placement: .secondaryAction, showsByDefault: false) {
+    // Hidden by default — user can add from customization editor
+    AdvancedFormattingControls()
+}
+```
+
+#### macOS toolbar customization menu
+
+Add `ToolbarCommands()` to enable the Customize Toolbar menu item:
+
+```swift
+@main
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+        .commands {
+            ToolbarCommands()
+        }
+    }
+}
+```
+
+Users can also Control-click the toolbar to access the customization editor.
+
+#### Related types
+
+- `CustomizableToolbarContent` — Protocol for content that supports customization
+- `ToolbarCustomizationBehavior` — Control whether items can be added/removed
+- `ToolbarCustomizationOptions` — Options for the customization experience
+
+#### ToolbarSpacer in customizable toolbars
+
+Spacers are customizable items too — users can add, remove, and rearrange them from the customization panel. If a customizable toolbar supports a spacer of a given type, users can also add multiple copies:
+
+```swift
+ContentView()
+    .toolbar(id: "main-toolbar") {
+        ToolbarItem(id: "tag") { TagButton() }
+        ToolbarItem(id: "share") { ShareButton() }
+        ToolbarSpacer(.fixed)
+        ToolbarItem(id: "more") { MoreButton() }
+    }
 ```
 
 ### Scroll Edge Effects
@@ -132,6 +437,16 @@ NavigationSplitView {
 // Placement on NavigationSplitView automatically:
 // - Bottom-aligned on iPhone (more ergonomic)
 // - Top trailing corner on iPad
+```
+
+To restore pre-iOS 26 sidebar-embedded search on iPad, specify `placement: .sidebar`:
+
+```swift
+NavigationSplitView {
+    List { }
+        .searchable(text: $searchText, placement: .sidebar)
+        // Search field embedded in sidebar instead of floating glass container
+}
 ```
 
 #### Search Tab Role
@@ -646,8 +961,11 @@ struct SearchView: View {
 }
 ```
 
+**`SearchToolbarBehavior` options**:
+- `.minimize` — Search field compact (button-like) when unfocused, expands on tap
+- `.automatic` — System default behavior (full search field)
+
 **Behavior**
-- `.minimize` — Search field compact when unfocused, expands on tap
 - Similar to Tab Bar search pattern
 - Saves toolbar space
 - Cleaner UI when search not in use
@@ -656,6 +974,22 @@ struct SearchView: View {
 - List/content-heavy screens
 - Crowded navigation bars
 - Tab bar style search on regular screens
+
+**Backward-compatible wrapper** for apps targeting iOS 18+26:
+
+```swift
+extension View {
+    @ViewBuilder func minimizedSearch() -> some View {
+        if #available(iOS 26.0, *) {
+            self.searchToolbarBehavior(.minimize)
+        } else { self }
+    }
+}
+
+// Usage
+.searchable(text: $searchText)
+.minimizedSearch()
+```
 
 ### searchPresentationToolbarBehavior (iOS 17.1+)
 
@@ -1443,6 +1777,12 @@ Apps must support resizable windows on iPad.
 🔧 Glass button styles (`GlassButtonStyle` — iOS 26.1+)
 🔧 Button sizing control (`.buttonSizing()`)
 🔧 Compact search toolbar (`.searchToolbarBehavior(.minimize)`)
+🔧 Toolbar morphing transitions (per-view `.toolbar {}` inside NavigationStack)
+🔧 DefaultToolbarItem for system components in toolbars
+🔧 Stable toolbar items (`toolbar(id:)` with matched IDs across screens)
+🔧 User-customizable toolbars (`toolbar(id:)` with `CustomizableToolbarContent`)
+🔧 Tab bar minimization (`.tabBarMinimizeBehavior(.onScrollDown)`)
+🔧 Tab view bottom accessory (`.tabViewBottomAccessory(isEnabled:content:)` — iOS 26.1+)
 
 ---
 
@@ -1465,10 +1805,13 @@ Apps must support resizable windows on iPad.
 - Recompile and test automatic appearance
 - Use toolbar spacers for logical grouping
 - Apply glass effect to custom views that benefit from reflections
+- Attach toolbars to individual views for automatic morphing transitions
+- Use `toolbar(id:)` with matching IDs for items that should stay stable across screens
 
 #### DON'T
 - Fight the automatic design - embrace consistency
 - Over-tint toolbars (use for prominence only)
+- Attach the toolbar to NavigationStack and expect morphing (attach to views inside it)
 
 ### Layout & Spacing
 
@@ -1615,13 +1958,44 @@ SliderTickContentForEach(chapters.map(\.time), id: \.self) { time in
 
 **Why** The API enforces type safety between tick positions and slider values. This is an API design constraint, not a bug.
 
+### Issue: Toolbar morphing not working
+
+**Symptom** Toolbar stays static during NavigationStack push/pop — no morphing animation
+
+#### Solution
+```swift
+// ❌ WRONG: Toolbar on NavigationStack — nothing to morph between
+NavigationStack {
+    ContentView()
+}
+.toolbar {
+    ToolbarItem { Button("Action") { } }
+}
+
+// ✅ CORRECT: Toolbar on each destination view — iOS 26 morphs between them
+NavigationStack {
+    ListView()
+        .toolbar {
+            ToolbarItem { Button("Filter") { } }
+        }
+        .navigationDestination(for: Item.self) { item in
+            DetailView(item: item)
+                .toolbar {
+                    ToolbarItem { Button("Edit") { } }
+                }
+        }
+}
+```
+
+Move `.toolbar {}` from the NavigationStack to each view inside it. iOS 26 morphs between per-view toolbars during navigation transitions.
+
 ---
 
 ## Resources
 
 **WWDC**: 2025-256
 
-**Docs**: /swiftui, /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts
+**Docs**: /swiftui, /swiftui/defaulttoolbaritem, /swiftui/toolbarspacer, /swiftui/searchtoolbarbehavior, /swiftui/view/toolbar(id:content:), /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts
 
 **Skills**: axiom-swiftui-performance, axiom-liquid-glass, axiom-swift-concurrency, axiom-app-intents-ref
 
