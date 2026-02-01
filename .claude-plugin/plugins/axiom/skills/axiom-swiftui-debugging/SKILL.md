@@ -41,6 +41,9 @@ These are real questions developers ask that this skill is designed to answer:
 #### 5. "Text field loses focus when I start typing, very frustrating"
 → The skill identifies ForEach identity issues and shows how to use stable IDs
 
+#### 6. "My sheet/modal always skips its loading animation and shows the completed state"
+→ The skill identifies @ViewBuilder closure re-initialization from parent state changes causing init params to change
+
 ## When to Use SwiftUI Debugging
 
 #### Use this skill when
@@ -402,6 +405,62 @@ struct ContentView: View {
 
 ---
 
+#### Root Cause 5: @ViewBuilder Closure Re-Initialization
+
+**Symptom**: A child view in a `.sheet`, `.fullScreenCover`, `.popover`, or `NavigationStack` destination never shows expected loading states or animations — it always appears in the "completed" state. A callback updates parent state, and the child behaves as if data was already loaded.
+
+**Why it happens**: Any `@ViewBuilder` closure re-evaluates when the parent body re-evaluates. If you pass parent `@State` as a child init parameter, and a callback mutates that same state, the closure re-evaluates with the new value. The child `@State` is preserved (WWDC 2021 "Demystify SwiftUI" — identity-based lifetime), but init parameters are recomputed.
+
+```swift
+// ❌ WRONG: Parent state passed to child, then mutated by child callback
+.sheet(item: $sheetData) { data in
+    ChildView(
+        savedResponse: cachedResponse,      // Parent state as init param
+        onSuccess: { cachedResponse = $0 }  // Callback mutates same state
+    )
+}
+// 1. Sheet opens → ChildView(savedResponse: nil)
+// 2. Async completes → onSuccess fires → cachedResponse set
+// 3. Parent body re-evaluates → closure re-evaluates
+// 4. New ChildView(savedResponse: cachedResponse) — now non-nil
+// 5. Child takes "pre-loaded" path → animations always skipped
+```
+
+**Diagnosis**: Add `let _ = Self._printChanges()` to both parent and child. If the child's init params change after its own callback fires, this is the cause.
+
+**Fixes** (simplest first):
+1. **Don't pass it back**: Remove the mutated state from init params — let the callback update parent without flowing it back
+2. **Separate state**: Use a different `@State` for the child's display logic vs the parent's cache
+3. **Child-owned lookup**: Child queries its own data source instead of receiving parent state
+
+```swift
+// ✅ Fix 1: Don't pass the mutated state back as init param
+.sheet(item: $sheetData) { data in
+    ChildView(
+        onSuccess: { cachedResponse = $0 }  // Updates parent, doesn't flow back
+    )
+}
+
+// ✅ Fix 2: Separate state for display vs cache
+@State private var cachedResponse: Response?    // Parent's cache
+@State private var childInitResponse: Response? // Captured at sheet open time
+
+Button("Open") {
+    childInitResponse = cachedResponse  // Snapshot once
+    sheetData = SheetData()
+}
+.sheet(item: $sheetData) { data in
+    ChildView(
+        savedResponse: childInitResponse,       // Stable — not mutated by callback
+        onSuccess: { cachedResponse = $0 }
+    )
+}
+```
+
+**Key insight**: This is not sheet-specific — it applies to any `@ViewBuilder` closure. The child's `@State` persists across re-evaluations, but init parameters are recomputed with current parent state.
+
+---
+
 ### Decision Tree Summary
 
 ```dot
@@ -418,6 +477,7 @@ digraph view_not_updating {
     cause -> "Lost Binding Identity" [label="passed binding to child"];
     cause -> "Accidental Recreation" [label="view inside conditional"];
     cause -> "Missing Observer" [label="object changed, view didn't"];
+    cause -> "Sheet/Closure Re-Init" [label="closure re-evaluated with changed parent state"];
 }
 ```
 
