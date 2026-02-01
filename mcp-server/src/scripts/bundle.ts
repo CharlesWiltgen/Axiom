@@ -11,39 +11,55 @@
  *   node scripts/bundle.js /path/to/plugin
  */
 
-import { readdir, readFile, writeFile } from 'fs/promises';
+import { readdir, readFile, writeFile, mkdir, stat } from 'fs/promises';
 import { join } from 'path';
-import { parseSkill, parseCommand, parseAgent } from '../loader/parser.js';
+import { parseSkill, parseCommand, parseAgent, Skill } from '../loader/parser.js';
+import { buildIndex, serializeIndex } from '../search/index.js';
+import { buildCatalog } from '../catalog/index.js';
 
-interface Bundle {
+interface BundleV2 {
   version: string;
   generatedAt: string;
   skills: Record<string, any>;
   commands: Record<string, any>;
   agents: Record<string, any>;
+  catalog: any;
+  searchIndex: any;
 }
 
-async function generateBundle(pluginPath: string): Promise<Bundle> {
+async function generateBundle(pluginPath: string): Promise<BundleV2> {
   console.log(`Reading plugin from: ${pluginPath}`);
 
-  const bundle: Bundle = {
-    version: '0.1.0', // TODO: Read from package.json
+  const bundle: BundleV2 = {
+    version: '0.2.0',
     generatedAt: new Date().toISOString(),
     skills: {},
     commands: {},
-    agents: {}
+    agents: {},
+    catalog: null,
+    searchIndex: null,
   };
 
-  // Load skills
+  // Load skills (subdirectories: skills/<name>/SKILL.md)
   const skillsDir = join(pluginPath, 'skills');
-  const skillFiles = (await readdir(skillsDir)).filter(f => f.endsWith('.md'));
-  console.log(`Found ${skillFiles.length} skill files`);
+  const skillEntries = await readdir(skillsDir);
 
-  for (const file of skillFiles) {
-    const content = await readFile(join(skillsDir, file), 'utf-8');
-    const skill = parseSkill(content, file);
-    bundle.skills[skill.name] = skill;
+  for (const entry of skillEntries) {
+    const entryPath = join(skillsDir, entry);
+    const entryStat = await stat(entryPath);
+
+    if (entryStat.isDirectory()) {
+      const skillFile = join(entryPath, 'SKILL.md');
+      try {
+        const content = await readFile(skillFile, 'utf-8');
+        const skill = parseSkill(content, entry);
+        bundle.skills[skill.name] = skill;
+      } catch {
+        // No SKILL.md in this directory, skip
+      }
+    }
   }
+  console.log(`Found ${Object.keys(bundle.skills).length} skills`);
 
   // Load commands
   const commandsDir = join(pluginPath, 'commands');
@@ -51,9 +67,13 @@ async function generateBundle(pluginPath: string): Promise<Bundle> {
   console.log(`Found ${commandFiles.length} command files`);
 
   for (const file of commandFiles) {
-    const content = await readFile(join(commandsDir, file), 'utf-8');
-    const command = parseCommand(content, file);
-    bundle.commands[command.name] = command;
+    try {
+      const content = await readFile(join(commandsDir, file), 'utf-8');
+      const command = parseCommand(content, file);
+      bundle.commands[command.name] = command;
+    } catch (err) {
+      console.warn(`Warning: Failed to parse command ${file}, skipping: ${(err as Error).message?.slice(0, 100)}`);
+    }
   }
 
   // Load agents
@@ -62,23 +82,50 @@ async function generateBundle(pluginPath: string): Promise<Bundle> {
   console.log(`Found ${agentFiles.length} agent files`);
 
   for (const file of agentFiles) {
-    const content = await readFile(join(agentsDir, file), 'utf-8');
-    const agent = parseAgent(content, file);
-    bundle.agents[agent.name] = agent;
+    try {
+      const content = await readFile(join(agentsDir, file), 'utf-8');
+      const agent = parseAgent(content, file);
+      bundle.agents[agent.name] = agent;
+    } catch (err) {
+      console.warn(`Warning: Failed to parse agent ${file}, skipping: ${(err as Error).message?.slice(0, 100)}`);
+    }
   }
+
+  // Build search index
+  const skillsMap = new Map<string, Skill>();
+  for (const [name, skill] of Object.entries(bundle.skills)) {
+    skillsMap.set(name, skill as Skill);
+  }
+
+  const agentsMap = new Map(Object.entries(bundle.agents).map(([name, agent]) => [name, agent as any]));
+
+  console.log('Building search index...');
+  const searchIndex = buildIndex(skillsMap);
+  bundle.searchIndex = serializeIndex(searchIndex);
+  console.log(`Search index: ${searchIndex.docCount} documents`);
+
+  // Build catalog
+  console.log('Building catalog...');
+  const catalog = buildCatalog(skillsMap, agentsMap);
+  bundle.catalog = catalog;
+  console.log(`Catalog: ${Object.keys(catalog.categories).length} categories`);
 
   return bundle;
 }
 
 async function main() {
-  const pluginPath = process.argv[2] || join(process.cwd(), '../plugins/axiom');
-  const outputPath = join(process.cwd(), 'dist', 'bundle.json');
+  const pluginPath = process.argv[2] || join(process.cwd(), '../.claude-plugin/plugins/axiom');
+  const outputDir = join(process.cwd(), 'dist');
+  const outputPath = join(outputDir, 'bundle.json');
 
-  console.log('Axiom MCP Server - Bundle Generator');
-  console.log('===================================');
+  console.log('Axiom MCP Server - Bundle Generator v2');
+  console.log('======================================');
   console.log();
 
   try {
+    // Ensure dist/ exists
+    await mkdir(outputDir, { recursive: true });
+
     const bundle = await generateBundle(pluginPath);
 
     console.log();
@@ -86,17 +133,18 @@ async function main() {
     console.log(`- Skills: ${Object.keys(bundle.skills).length}`);
     console.log(`- Commands: ${Object.keys(bundle.commands).length}`);
     console.log(`- Agents: ${Object.keys(bundle.agents).length}`);
+    console.log(`- Search Index: ${bundle.searchIndex.docCount} documents`);
+    console.log(`- Catalog Categories: ${Object.keys(bundle.catalog.categories).length}`);
     console.log(`- Generated: ${bundle.generatedAt}`);
 
     await writeFile(outputPath, JSON.stringify(bundle, null, 2), 'utf-8');
 
     console.log();
-    console.log(`✅ Bundle written to: ${outputPath}`);
+    console.log(`Bundle written to: ${outputPath}`);
 
-    // Calculate size
     const stats = await import('fs').then(fs => fs.promises.stat(outputPath));
     const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
-    console.log(`   Size: ${sizeMB} MB`);
+    console.log(`Size: ${sizeMB} MB`);
 
   } catch (error) {
     console.error('Error generating bundle:', error);

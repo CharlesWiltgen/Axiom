@@ -17,7 +17,7 @@ import { ProdLoader } from './loader/prod-loader.js';
 import { Loader } from './loader/types.js';
 import { ResourcesHandler } from './resources/handler.js';
 import { PromptsHandler } from './prompts/handler.js';
-import { ToolsHandler } from './tools/handler.js';
+import { DynamicToolsHandler } from './tools/handler.js';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -52,7 +52,7 @@ async function main() {
   // Initialize handlers
   const resourcesHandler = new ResourcesHandler(loader, logger);
   const promptsHandler = new PromptsHandler(loader, logger);
-  const toolsHandler = new ToolsHandler(loader, logger);
+  const toolsHandler = new DynamicToolsHandler(loader, logger);
 
   // Create MCP server
   const server = new Server(
