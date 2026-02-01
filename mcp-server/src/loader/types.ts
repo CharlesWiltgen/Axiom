@@ -1,4 +1,6 @@
-import { Skill, Command, Agent } from './parser.js';
+import { Skill, Command, Agent, SkillSection } from './parser.js';
+import type { SearchResult } from '../search/index.js';
+import type { CatalogResult } from '../catalog/index.js';
 
 /**
  * Common interface for both DevLoader and ProdLoader
@@ -34,4 +36,19 @@ export interface Loader {
    * Get a specific agent by name
    */
   getAgent(name: string): Promise<Agent | undefined>;
+
+  /**
+   * Get skill content filtered to specific sections
+   */
+  getSkillSections(name: string, sectionNames?: string[]): Promise<{ skill: Skill; content: string; sections: SkillSection[] } | undefined>;
+
+  /**
+   * Search skills using BM25
+   */
+  searchSkills(query: string, options?: { limit?: number; skillType?: string; category?: string }): Promise<SearchResult[]>;
+
+  /**
+   * Get the catalog (skills organized by category)
+   */
+  getCatalog(category?: string): Promise<CatalogResult>;
 }
