@@ -1,11 +1,11 @@
 ---
 name: axiom-vision-diag
 description: subject not detected, hand pose missing landmarks, low confidence observations, Vision performance, coordinate conversion, VisionKit errors, observation nil, text not recognized, barcode not detected, DataScannerViewController not working, document scan issues
-user-invocable: false
-skill_type: diagnostic
-version: 1.1.0
-last_updated: 2026-01-03
-apple_platforms: iOS 11+, iPadOS 11+, macOS 10.13+, tvOS 11+, axiom-visionOS 1+
+license: MIT
+compatibility: iOS 11+, iPadOS 11+, macOS 10.13+, tvOS 11+, axiom-visionOS 1+
+metadata:
+  version: "1.1.0"
+  last-updated: "2026-01-03"
 ---
 
 # Vision Framework Diagnostics

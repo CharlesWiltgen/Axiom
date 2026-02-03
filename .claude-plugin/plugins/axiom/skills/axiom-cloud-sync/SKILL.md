@@ -1,12 +1,11 @@
 ---
 name: axiom-cloud-sync
 description: Use when choosing between CloudKit vs iCloud Drive, implementing reliable sync, handling offline-first patterns, or designing sync architecture - prevents common sync mistakes that cause data loss
-user-invocable: true
-skill_type: discipline
-version: 1.0.0
-last_updated: 2025-12-25
-apple_platforms: iOS 10+, macOS 10.12+
-related: [cloudkit-ref, axiom-icloud-drive-ref, axiom-cloud-sync-diag, axiom-storage]
+license: MIT
+compatibility: iOS 10+, macOS 10.12+
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-25"
 ---
 
 # Cloud Sync

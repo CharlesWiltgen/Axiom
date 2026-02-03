@@ -1,10 +1,10 @@
 ---
 name: axiom-sqlitedata
 description: SQLiteData queries, @Table models, Point-Free SQLite, RETURNING clause, FTS5 full-text search, CloudKit sync, CTEs, JSON aggregation, @DatabaseFunction
-user-invocable: true
-skill_type: discipline
-version: 3.0.0
-last_updated: 2025-12-19 — Split from single skill, added v1.2-1.4 APIs
+license: MIT
+metadata:
+  version: "3.0.0"
+  last-updated: "2025-12-19 — Split from single skill, added v1.2-1.4 APIs"
 ---
 
 # SQLiteData

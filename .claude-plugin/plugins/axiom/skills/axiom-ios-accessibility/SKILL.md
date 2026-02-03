@@ -1,7 +1,7 @@
 ---
 name: axiom-ios-accessibility
 description: Use when fixing or auditing ANY accessibility issue - VoiceOver, Dynamic Type, color contrast, touch targets, WCAG compliance, App Store accessibility review.
-user-invocable: false
+license: MIT
 ---
 
 # iOS Accessibility Router

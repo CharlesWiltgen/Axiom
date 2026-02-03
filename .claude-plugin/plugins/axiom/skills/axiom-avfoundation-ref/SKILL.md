@@ -1,9 +1,9 @@
 ---
 name: axiom-avfoundation-ref
 description: Reference — AVFoundation audio APIs, AVAudioSession categories/modes, AVAudioEngine pipelines, bit-perfect DAC output, iOS 26+ spatial audio capture, ASAF/APAC, Audio Mix with Cinematic framework
-user-invocable: true
-skill_type: reference
-version: 1.0.0
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # AVFoundation Audio Reference

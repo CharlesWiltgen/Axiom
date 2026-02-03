@@ -1,9 +1,9 @@
 ---
 name: axiom-ownership-conventions
 description: Use when optimizing large value type performance, working with noncopyable types, or reducing ARC traffic. Covers borrowing, consuming, inout modifiers, consume operator, ~Copyable types.
-user-invocable: true
-skill_type: discipline
-version: 1.0.0
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # borrowing & consuming — Parameter Ownership

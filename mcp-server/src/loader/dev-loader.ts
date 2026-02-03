@@ -1,6 +1,6 @@
 import { readdir, readFile, stat } from 'fs/promises';
 import { join } from 'path';
-import { parseSkill, parseCommand, parseAgent, Skill, Command, Agent, SkillSection } from './parser.js';
+import { parseSkill, parseCommand, parseAgent, applyAnnotations, Skill, Command, Agent, SkillSection, SkillAnnotations } from './parser.js';
 import { Config, Logger } from '../config.js';
 import { Loader } from './types.js';
 import { buildIndex, search, SearchIndex, SearchResult } from '../search/index.js';
@@ -23,6 +23,30 @@ export class DevLoader implements Loader {
   ) {}
 
   /**
+   * Load MCP annotations from skill-annotations.json (co-located with mcp-server/)
+   */
+  private async loadAnnotations(): Promise<SkillAnnotations> {
+    // Try multiple resolution strategies for skill-annotations.json
+    const candidates = [
+      join(this.pluginPath, '..', '..', 'mcp-server', 'skill-annotations.json'),
+      join(process.cwd(), 'skill-annotations.json'),
+    ];
+
+    for (const annotationsPath of candidates) {
+      try {
+        const content = await readFile(annotationsPath, 'utf-8');
+        this.logger.debug(`Loaded annotations from: ${annotationsPath}`);
+        return JSON.parse(content) as SkillAnnotations;
+      } catch {
+        // Try next candidate
+      }
+    }
+
+    this.logger.debug('No skill-annotations.json found, using defaults');
+    return {};
+  }
+
+  /**
    * Load all skills from the plugin directory
    * Skills live in subdirectories: skills/<name>/SKILL.md
    */
@@ -34,6 +58,7 @@ export class DevLoader implements Loader {
     this.searchIndex = null;
 
     try {
+      const annotations = await this.loadAnnotations();
       const entries = await readdir(skillsDir);
       let loadedCount = 0;
 
@@ -45,7 +70,7 @@ export class DevLoader implements Loader {
           const skillFile = join(entryPath, 'SKILL.md');
           try {
             const content = await readFile(skillFile, 'utf-8');
-            const skill = parseSkill(content, entry);
+            const skill = applyAnnotations(parseSkill(content, entry), annotations);
             this.skillsCache.set(skill.name, skill);
             this.logger.debug(`Loaded skill: ${skill.name}`);
             loadedCount++;

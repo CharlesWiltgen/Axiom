@@ -1,10 +1,10 @@
 ---
 name: axiom-cloud-sync-diag
 description: Use when debugging 'file not syncing', 'CloudKit error', 'sync conflict', 'iCloud upload failed', 'ubiquitous item error', 'data not appearing on other devices', 'CKError', 'quota exceeded' - systematic iCloud sync diagnostics for both CloudKit and iCloud Drive
-user-invocable: false
-skill_type: diagnostic
-version: 1.0.0
-last_updated: 2025-12-12
+license: MIT
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-12"
 ---
 
 # iCloud Sync Diagnostics

@@ -1,7 +1,7 @@
 ---
 name: axiom-networking-migration
 description: Network framework migration guides. Use when migrating from BSD sockets to NWConnection, NWConnection to NetworkConnection (iOS 26+), or URLSession StreamTask to NetworkConnection.
-user-invocable: false
+license: MIT
 ---
 
 # Network Framework Migration Guides

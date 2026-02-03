@@ -1,12 +1,11 @@
 ---
 name: axiom-swiftui-performance
 description: Use when UI is slow, scrolling lags, animations stutter, or when asking 'why is my SwiftUI view slow', 'how do I optimize List performance', 'my app drops frames', 'view body is called too often', 'List is laggy' - SwiftUI performance optimization with Instruments 26 and WWDC 2025 patterns
-user-invocable: true
-skill_type: discipline
-version: 1.1.0
-last_updated: TDD-tested with production performance crisis scenarios
-apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, axiom-visionOS 3+
-xcode_version: Xcode 26+
+license: MIT
+compatibility: iOS 26+, iPadOS 26+, macOS Tahoe+, axiom-visionOS 3+. Xcode 26+
+metadata:
+  version: "1.1.0"
+  last-updated: "TDD-tested with production performance crisis scenarios"
 ---
 
 # SwiftUI Performance Optimization

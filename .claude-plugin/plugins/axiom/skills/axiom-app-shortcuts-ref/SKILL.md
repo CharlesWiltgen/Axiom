@@ -1,9 +1,9 @@
 ---
 name: axiom-app-shortcuts-ref
 description: Use when implementing App Shortcuts for instant Siri/Spotlight availability, configuring AppShortcutsProvider, adding suggested phrases, or debugging shortcuts not appearing - covers complete App Shortcuts API for iOS 16+
-user-invocable: true
-skill_type: reference
-version: 1.0.0
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # App Shortcuts Reference

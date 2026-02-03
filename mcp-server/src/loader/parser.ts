@@ -145,38 +145,78 @@ export function parseSections(content: string): SkillSection[] {
 }
 
 /**
- * Infer skill type from frontmatter or name conventions
+ * Skills whose type can't be inferred from name conventions alone.
+ * Maintained here so SKILL.md frontmatter doesn't need a non-standard skill_type field.
  */
-function inferSkillType(data: Record<string, any>, name: string): SkillType {
-  if (data.skill_type) {
-    return data.skill_type as SkillType;
-  }
+const SKILL_TYPE_OVERRIDES: Record<string, SkillType> = {
+  'axiom-apple-docs': 'router',
+  'axiom-getting-started': 'discipline',
+  'axiom-haptics': 'reference',
+  'axiom-localization': 'reference',
+  'axiom-privacy-ux': 'reference',
+  'axiom-sqlitedata-migration': 'reference',
+};
+
+/**
+ * Infer skill type from name conventions, with explicit overrides for edge cases
+ */
+function inferSkillType(name: string): SkillType {
+  if (SKILL_TYPE_OVERRIDES[name]) return SKILL_TYPE_OVERRIDES[name];
   if (name.match(/^axiom-ios-/)) return 'router';
-  if (name === 'axiom-using-axiom' || name === 'axiom-getting-started') return 'meta';
+  if (name === 'axiom-using-axiom') return 'meta';
   if (name.endsWith('-ref')) return 'reference';
   if (name.endsWith('-diag')) return 'diagnostic';
   return 'discipline';
 }
 
 /**
- * Parse a skill markdown file
+ * Parse a skill markdown file.
+ * MCP annotations (category, tags, related) are merged externally via applyAnnotations().
  */
 export function parseSkill(content: string, filename: string): Skill {
   const parsed = matter(content);
   const data = parsed.data;
   const name = data.name || extractNameFromFilename(filename);
 
+  // Support both spec-compliant frontmatter and legacy mcp: block (backward-compatible)
+  const mcp = data.mcp as SkillMcpAnnotation | undefined;
+
   return {
     name,
     description: data.description || '',
     content: parsed.content,
-    skillType: inferSkillType(data, name),
+    skillType: inferSkillType(name),
     source: 'axiom',
-    category: data.mcp?.category,
-    tags: data.mcp?.tags || [],
-    related: data.mcp?.related || [],
+    category: mcp?.category,
+    tags: mcp?.tags || [],
+    related: mcp?.related || [],
     sections: parseSections(parsed.content),
-    mcp: data.mcp,
+    mcp,
+  };
+}
+
+/**
+ * MCP annotations for skills that need explicit search/catalog metadata.
+ * Loaded from skill-annotations.json to keep SKILL.md files spec-compliant.
+ */
+export interface SkillAnnotations {
+  [skillName: string]: SkillMcpAnnotation;
+}
+
+/**
+ * Apply external MCP annotations to a parsed skill.
+ * Annotations from the file override any existing values.
+ */
+export function applyAnnotations(skill: Skill, annotations: SkillAnnotations): Skill {
+  const ann = annotations[skill.name];
+  if (!ann) return skill;
+
+  return {
+    ...skill,
+    category: ann.category ?? skill.category,
+    tags: ann.tags ?? skill.tags,
+    related: ann.related ?? skill.related,
+    mcp: ann,
   };
 }
 

@@ -1,15 +1,11 @@
 ---
 name: axiom-deep-link-debugging
 description: Use when adding debug-only deep links for testing, enabling simulator navigation to specific screens, or integrating with automated testing workflows - enables closed-loop debugging without production deep link implementation
-skill_type: discipline
-version: 1.0.0
-last_updated: 2025-12-08
-apple_platforms: iOS 13+
-# MCP annotations (ignored by Claude Code)
-mcp:
-  category: debugging
-  tags: [deep-linking, url-schemes, simulator, testing, debugging, navigation]
-  related: [simulator-tester, axiom-xcode-debugging, axiom-swiftui-nav]
+license: MIT
+compatibility: iOS 13+
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-08"
 ---
 
 # Deep Link Debugging

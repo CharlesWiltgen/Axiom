@@ -1,11 +1,11 @@
 ---
 name: axiom-file-protection-ref
 description: Use when asking about 'FileProtectionType', 'file encryption iOS', 'NSFileProtection', 'data protection', 'secure file storage', 'encrypt files at rest', 'complete protection', 'file security' - comprehensive reference for iOS file encryption and data protection APIs
-user-invocable: true
-skill_type: reference
-version: 1.0.0
-last_updated: 2025-12-12
-apple_platforms: iOS 4.0+, iPadOS 4.0+, macOS 10.0+
+license: MIT
+compatibility: iOS 4.0+, iPadOS 4.0+, macOS 10.0+
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-12"
 ---
 
 # iOS File Protection Reference

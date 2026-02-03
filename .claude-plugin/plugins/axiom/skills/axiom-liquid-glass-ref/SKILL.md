@@ -1,10 +1,11 @@
 ---
 name: axiom-liquid-glass-ref
 description: Use when planning comprehensive Liquid Glass adoption across an app, auditing existing interfaces for Liquid Glass compatibility, implementing app icon updates, or understanding platform-specific Liquid Glass behavior - comprehensive reference guide covering all aspects of Liquid Glass adoption from WWDC 2025
-version: 1.0.0
-last_updated: 2025-12-01
-apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, tvOS, watchOS, axiom-visionOS 3+
-skill_type: reference
+license: MIT
+compatibility: iOS 26+, iPadOS 26+, macOS Tahoe+, tvOS, watchOS, axiom-visionOS 3+
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-01"
 ---
 
 # Liquid Glass Adoption — Reference Guide

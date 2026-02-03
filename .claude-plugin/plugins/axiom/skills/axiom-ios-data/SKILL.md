@@ -1,7 +1,7 @@
 ---
 name: axiom-ios-data
 description: Use when working with ANY data persistence, database, axiom-storage, CloudKit, migration, or serialization. Covers SwiftData, Core Data, GRDB, SQLite, CloudKit sync, file storage, Codable, migrations.
-user-invocable: false
+license: MIT
 ---
 
 # iOS Data & Persistence Router

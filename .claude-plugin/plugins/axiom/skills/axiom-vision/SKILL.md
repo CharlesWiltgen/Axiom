@@ -1,11 +1,11 @@
 ---
 name: axiom-vision
 description: subject segmentation, VNGenerateForegroundInstanceMaskRequest, isolate object from hand, VisionKit subject lifting, image foreground detection, instance masks, class-agnostic segmentation, VNRecognizeTextRequest, OCR, VNDetectBarcodesRequest, DataScannerViewController, document scanning, RecognizeDocumentsRequest
-user-invocable: true
-skill_type: discipline
-version: 1.1.0
-last_updated: 2026-01-03
-apple_platforms: iOS 14+, iPadOS 14+, macOS 11+, tvOS 14+, axiom-visionOS 1+
+license: MIT
+compatibility: iOS 14+, iPadOS 14+, macOS 11+, tvOS 14+, axiom-visionOS 1+
+metadata:
+  version: "1.1.0"
+  last-updated: "2026-01-03"
 ---
 
 # Vision Framework Computer Vision

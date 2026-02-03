@@ -1,9 +1,9 @@
 ---
 name: axiom-axe-ref
 description: Use when automating iOS Simulator UI interactions beyond simctl capabilities. Reference for AXe CLI covering accessibility-based tapping, gestures, text input, screenshots, video recording, and UI tree inspection.
-version: 1.0.0
-category: reference
-user-invocable: false
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # AXe Reference (iOS Simulator UI Automation)
