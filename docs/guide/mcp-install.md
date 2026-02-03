@@ -36,7 +36,7 @@ This compiles the TypeScript source and produces `dist/index.js`, the server ent
 
 ## Installation by Tool
 
-Each tool needs a configuration snippet that tells it how to launch the Axiom MCP server. Replace `/Users/YourName/Projects/Axiom` with your actual clone path.
+Each tool needs a configuration snippet that tells it how to launch the Axiom MCP server. Replace `/path/to/Axiom` with your actual clone path.
 
 ### VS Code + GitHub Copilot
 
@@ -47,10 +47,10 @@ Add to your VS Code `settings.json`:
   "github.copilot.chat.mcp.servers": {
     "axiom": {
       "command": "node",
-      "args": ["/Users/YourName/Projects/Axiom/mcp-server/dist/index.js"],
+      "args": ["/path/to/Axiom/mcp-server/dist/index.js"],
       "env": {
         "AXIOM_MCP_MODE": "development",
-        "AXIOM_DEV_PATH": "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
+        "AXIOM_DEV_PATH": "/path/to/Axiom/.claude-plugin/plugins/axiom"
       }
     }
   }
@@ -66,10 +66,10 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "axiom": {
       "command": "node",
-      "args": ["/Users/YourName/Projects/Axiom/mcp-server/dist/index.js"],
+      "args": ["/path/to/Axiom/mcp-server/dist/index.js"],
       "env": {
         "AXIOM_MCP_MODE": "development",
-        "AXIOM_DEV_PATH": "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
+        "AXIOM_DEV_PATH": "/path/to/Axiom/.claude-plugin/plugins/axiom"
       }
     }
   }
@@ -85,10 +85,10 @@ Add to `.cursor/mcp.json` in your workspace:
   "mcpServers": {
     "axiom": {
       "command": "node",
-      "args": ["/Users/YourName/Projects/Axiom/mcp-server/dist/index.js"],
+      "args": ["/path/to/Axiom/mcp-server/dist/index.js"],
       "env": {
         "AXIOM_MCP_MODE": "development",
-        "AXIOM_DEV_PATH": "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
+        "AXIOM_DEV_PATH": "/path/to/Axiom/.claude-plugin/plugins/axiom"
       }
     }
   }
@@ -103,11 +103,11 @@ Add to `~/.gemini/config.toml`:
 [[mcp_servers]]
 name = "axiom"
 command = "node"
-args = ["/Users/YourName/Projects/Axiom/mcp-server/dist/index.js"]
+args = ["/path/to/Axiom/mcp-server/dist/index.js"]
 
 [mcp_servers.env]
 AXIOM_MCP_MODE = "development"
-AXIOM_DEV_PATH = "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
+AXIOM_DEV_PATH = "/path/to/Axiom/.claude-plugin/plugins/axiom"
 ```
 
 ## Configuration
@@ -211,7 +211,7 @@ MCP uses stdin/stdout for communication. Common issues:
 
 Test the command from your config manually:
 ```bash
-node /full/path/to/Axiom/mcp-server/dist/index.js
+node /path/to/Axiom/mcp-server/dist/index.js
 # Should start without errors, waiting for stdin
 ```
 
