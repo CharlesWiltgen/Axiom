@@ -26,6 +26,8 @@ features:
     details: Add database columns without losing data, prevent CloudKit sync failures, safely migrate from Realm
   - title: 📚 Copy-Paste Solutions
     details: Every skill shows working examples first, highlights what works vs what fails, provides ready-to-use patterns
+  - title: 📖 Apple Documentation
+    details: Direct access to 20 official Apple guides and 32 Swift compiler diagnostics from Xcode — Liquid Glass, Foundation Models, concurrency, authoritative API references
   - title: 🎯 Battle-Tested
     details: Validated under App Store deadline pressure, tested with production crisis scenarios, handles edge cases you'll actually encounter
 ---
