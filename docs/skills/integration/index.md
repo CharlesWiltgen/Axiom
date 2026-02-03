@@ -83,6 +83,19 @@ Comprehensive guide to the App Intents framework for exposing app functionality 
 
 ---
 
+### [Apple Documentation Access](./apple-docs)
+
+Direct access to Apple's official for-LLM markdown documentation bundled in Xcode:
+- **20 Guide Topics** -- Liquid Glass, Foundation Models, Swift Charts 3D, SwiftData, concurrency
+- **32 Compiler Diagnostics** -- Swift compiler errors with official explanations and code fixes
+- **MCP Integration** -- Auto-detected from Xcode, stays current with updates
+
+**When to use** Authoritative API details, Swift compiler error explanations, official code examples
+
+**Requirements** Xcode installed locally
+
+---
+
 ## Integration Categories
 
 ### System Services

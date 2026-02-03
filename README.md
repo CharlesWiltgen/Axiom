@@ -4,7 +4,10 @@ Battle-tested Claude Code skills, commands, and references for modern xOS (iOS, 
 
 ## What's New Recently
 
-#### Latest (WWDC 2025 Updates)
+#### Latest
+- **Apple Documentation Access** — Direct access to 20 official Apple guides + 32 Swift compiler diagnostics bundled in Xcode, read at runtime via MCP server
+
+#### WWDC 2025 Updates
 - **SwiftUI 26 Features** — Comprehensive guide to iOS 26 SwiftUI: Liquid Glass, WebView, AttributedString rich text, @Animatable macro, 3D charts, scene bridging, and more
 - **SwiftUI Performance Enhancements** — iOS 26 framework improvements: 6x/16x faster lists, improved scrolling, nested ScrollView optimization
 - **Liquid Glass APIs** — New iOS 26 APIs: `.glassBackgroundEffect()`, toolbar spacers, bottom-aligned search, search tab role
@@ -258,6 +261,23 @@ SwiftData with iOS 26+ features, @Model definitions, @Query patterns, Swift 6 co
 **When to use** Working with SwiftData @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, performance optimization
 
 **What's New**: CloudKit constraints & conflict resolution, N+1 query prevention, batch operations, indexes (iOS 26+), migration patterns from Realm and Core Data
+
+---
+
+### Apple Documentation Access
+
+#### `axiom-apple-docs`
+Direct access to Apple's official for-LLM markdown documentation bundled inside Xcode. Reads 20 guide topics and 32 Swift compiler diagnostics at runtime.
+
+#### Key Features
+- **20 Guide Topics** -- Liquid Glass (SwiftUI/UIKit/AppKit/WidgetKit), Foundation Models, Swift Charts 3D, SwiftData, Swift 6.2 concurrency, App Intents, StoreKit, MapKit, Accessibility
+- **32 Swift Compiler Diagnostics** -- Actor isolation, Sendable, data races, type system, ownership -- with official explanations and code fixes from Apple engineers
+- **Runtime Reading** -- Stays current when Xcode updates, no manual maintenance
+- **MCP Integration** -- Searchable alongside Axiom skills with source filtering
+
+**When to use** Authoritative API details, Swift compiler error explanations, official code examples alongside Axiom's opinionated guidance
+
+**Requirements** Xcode installed locally
 
 ---
 

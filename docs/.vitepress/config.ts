@@ -175,6 +175,7 @@ export default withMermaid(defineConfig({
           text: 'Integration',
           items: [
             { text: 'Overview', link: '/skills/integration/' },
+            { text: 'Apple Documentation Access', link: '/skills/integration/apple-docs' },
             { text: 'App Intents', link: '/skills/integration/app-intents-ref' },
             { text: 'Extensions & Widgets', link: '/skills/integration/extensions-widgets' },
             { text: 'Foundation Models (Apple Intelligence)', link: '/skills/integration/foundation-models' },
