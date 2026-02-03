@@ -80,8 +80,9 @@ If `/audit-*` commands don't execute:
 - **Discussions**: [Ask questions and share patterns](https://github.com/CharlesWiltgen/Axiom/discussions)
 - **Claude Code docs**: [Official documentation](https://docs.claude.ai/code)
 
-## What's Next?
+## What's Next
 
 - [Example Workflows →](/guide/workflows)
+- [MCP Server →](/guide/mcp-install) — Use Axiom in VS Code, Cursor, Claude Desktop, or Gemini CLI
 - [View all skills →](/skills/)
 - [Contributing guide →](https://github.com/CharlesWiltgen/Axiom/blob/main/CONTRIBUTING.md)
