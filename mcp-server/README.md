@@ -4,9 +4,9 @@ Model Context Protocol (MCP) server for Axiom's iOS development skills, agents, 
 
 ## Features
 
-- **38 Skills** - iOS development expertise as MCP Resources (on-demand loading)
+- **129 Skills** - iOS development expertise as MCP Resources (on-demand loading)
 - **10 Commands** - Structured prompts as MCP Prompts
-- **10 Agents** - Autonomous tools as MCP Tools
+- **30 Agents** - Autonomous tools as MCP Tools
 - **Dual Distribution** - Works standalone or bundled with Claude Code plugin
 - **Hybrid Runtime** - Development mode (live files) or production mode (bundled)
 
@@ -51,7 +51,7 @@ Add to your VS Code `settings.json`:
       "args": ["/Users/YourName/Projects/Axiom/mcp-server/dist/index.js"],
       "env": {
         "AXIOM_MCP_MODE": "development",
-        "AXIOM_DEV_PATH": "/Users/YourName/Projects/Axiom/plugins/axiom"
+        "AXIOM_DEV_PATH": "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
       }
     }
   }
@@ -84,7 +84,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
       "args": ["/Users/YourName/Projects/Axiom/mcp-server/dist/index.js"],
       "env": {
         "AXIOM_MCP_MODE": "development",
-        "AXIOM_DEV_PATH": "/Users/YourName/Projects/Axiom/plugins/axiom"
+        "AXIOM_DEV_PATH": "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
       }
     }
   }
@@ -103,7 +103,7 @@ Add to Cursor's MCP settings (`.cursor/mcp.json` in your workspace):
       "args": ["/Users/YourName/Projects/Axiom/mcp-server/dist/index.js"],
       "env": {
         "AXIOM_MCP_MODE": "development",
-        "AXIOM_DEV_PATH": "/Users/YourName/Projects/Axiom/plugins/axiom"
+        "AXIOM_DEV_PATH": "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
       }
     }
   }
@@ -122,7 +122,7 @@ args = ["/Users/YourName/Projects/Axiom/mcp-server/dist/index.js"]
 
 [mcp_servers.env]
 AXIOM_MCP_MODE = "development"
-AXIOM_DEV_PATH = "/Users/YourName/Projects/Axiom/plugins/axiom"
+AXIOM_DEV_PATH = "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
 ```
 
 ## Configuration
@@ -132,7 +132,7 @@ AXIOM_DEV_PATH = "/Users/YourName/Projects/Axiom/plugins/axiom"
 | Variable | Values | Default | Description |
 |----------|--------|---------|-------------|
 | `AXIOM_MCP_MODE` | `development`, `production` | `production` | Runtime mode |
-| `AXIOM_DEV_PATH` | File path | `~/Projects/Axiom/plugins/axiom` | Plugin directory for dev mode |
+| `AXIOM_DEV_PATH` | File path | `~/Projects/Axiom/.claude-plugin/plugins/axiom` | Plugin directory for dev mode |
 | `AXIOM_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `info` | Logging verbosity |
 
 ### Modes
@@ -156,7 +156,7 @@ node dist/index.js
 ```
 
 - Reads pre-bundled snapshot from `dist/bundle.json`
-- Bundle contains all 38 skills, 10 commands, 10 agents
+- Bundle contains all 129 skills, 10 commands, 30 agents
 - No file system access after initialization
 - Self-contained, distributable via npm
 - Bundle generated via `pnpm build:bundle`
@@ -220,6 +220,7 @@ Examples:
 mcp-server/
 ├── package.json              # npm package config
 ├── tsconfig.json             # TypeScript config
+├── skill-annotations.json    # MCP search/catalog metadata
 ├── src/
 │   ├── index.ts              # Entry point + stdio transport
 │   ├── config.ts             # Configuration + logging
@@ -269,20 +270,28 @@ The `build:bundle` command:
 
 ### Adding Skills
 
-Skills are automatically discovered from `{AXIOM_DEV_PATH}/skills/*.md`.
+Skills are automatically discovered from `{AXIOM_DEV_PATH}/skills/<name>/SKILL.md`.
 
-To add MCP metadata to a skill, add an `mcp:` block to the frontmatter:
+Skill frontmatter follows the Agent Skills spec:
 
 ```yaml
 ---
 name: my-skill
 description: Use when...
-# MCP annotations (ignored by Claude Code)
-mcp:
-  category: debugging
-  tags: [xcode, swift, performance]
-  related: [other-skill, another-skill]
+license: MIT
 ---
+```
+
+MCP search/catalog annotations (category, tags, related) are stored separately in `skill-annotations.json`:
+
+```json
+{
+  "my-skill": {
+    "category": "debugging",
+    "tags": ["xcode", "swift", "performance"],
+    "related": ["other-skill", "another-skill"]
+  }
+}
 ```
 
 Changes are picked up automatically in development mode.
@@ -294,7 +303,7 @@ Changes are picked up automatically in development mode.
 ```bash
 # Terminal 1: Start server
 AXIOM_MCP_MODE=development \
-AXIOM_DEV_PATH=../plugins/axiom \
+AXIOM_DEV_PATH=../.claude-plugin/plugins/axiom \
 AXIOM_LOG_LEVEL=debug \
 node dist/index.js
 
@@ -357,7 +366,7 @@ AXIOM_LOG_LEVEL=debug node dist/index.js 2>&1 | grep -i skill
 node -e "
 const matter = require('gray-matter');
 const fs = require('fs');
-const content = fs.readFileSync('$AXIOM_DEV_PATH/skills/xcode-debugging.md', 'utf-8');
+const content = fs.readFileSync('$AXIOM_DEV_PATH/skills/axiom-xcode-debugging/SKILL.md', 'utf-8');
 console.log(matter(content).data);
 "
 ```
@@ -401,9 +410,9 @@ node /full/path/to/dist/index.js
 - Dual-mode Loader interface
 
 ### Phase 5: Full Coverage (Next)
-- All 38 skills with MCP annotations
+- All 129 skills with MCP annotations
 - All 10 commands with argument schemas
-- All 10 agents with input schemas
+- All 30 agents with input schemas
 - Multi-client testing
 
 ### Phase 6: Distribution
