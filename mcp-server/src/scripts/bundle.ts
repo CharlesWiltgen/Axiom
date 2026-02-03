@@ -13,7 +13,7 @@
 
 import { readdir, readFile, writeFile, mkdir, stat } from 'fs/promises';
 import { join } from 'path';
-import { parseSkill, parseCommand, parseAgent, Skill } from '../loader/parser.js';
+import { parseSkill, parseCommand, parseAgent, applyAnnotations, Skill, SkillAnnotations } from '../loader/parser.js';
 import { buildIndex, serializeIndex } from '../search/index.js';
 import { buildCatalog } from '../catalog/index.js';
 
@@ -25,6 +25,17 @@ interface BundleV2 {
   agents: Record<string, any>;
   catalog: any;
   searchIndex: any;
+}
+
+async function loadAnnotations(): Promise<SkillAnnotations> {
+  try {
+    const annotationsPath = join(process.cwd(), 'skill-annotations.json');
+    const content = await readFile(annotationsPath, 'utf-8');
+    return JSON.parse(content) as SkillAnnotations;
+  } catch {
+    console.warn('Warning: skill-annotations.json not found, using defaults');
+    return {};
+  }
 }
 
 async function generateBundle(pluginPath: string): Promise<BundleV2> {
@@ -40,6 +51,9 @@ async function generateBundle(pluginPath: string): Promise<BundleV2> {
     searchIndex: null,
   };
 
+  // Load annotations for MCP metadata
+  const annotations = await loadAnnotations();
+
   // Load skills (subdirectories: skills/<name>/SKILL.md)
   const skillsDir = join(pluginPath, 'skills');
   const skillEntries = await readdir(skillsDir);
@@ -52,7 +66,7 @@ async function generateBundle(pluginPath: string): Promise<BundleV2> {
       const skillFile = join(entryPath, 'SKILL.md');
       try {
         const content = await readFile(skillFile, 'utf-8');
-        const skill = parseSkill(content, entry);
+        const skill = applyAnnotations(parseSkill(content, entry), annotations);
         bundle.skills[skill.name] = skill;
       } catch {
         // No SKILL.md in this directory, skip

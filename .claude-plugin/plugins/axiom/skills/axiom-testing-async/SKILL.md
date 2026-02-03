@@ -1,8 +1,9 @@
 ---
 name: axiom-testing-async
 description: Use when testing async code with Swift Testing. Covers confirmation for callbacks, @MainActor tests, async/await patterns, timeout control, XCTest migration, parallel test execution.
-skill_type: discipline
-version: 1.0.0
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # Testing Async Code — Swift Testing Patterns

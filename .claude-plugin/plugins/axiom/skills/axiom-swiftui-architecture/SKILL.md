@@ -1,11 +1,10 @@
 ---
 name: axiom-swiftui-architecture
 description: Use when separating logic from SwiftUI views, choosing architecture patterns, refactoring view files, or asking 'where should this code go', 'how do I organize my SwiftUI app', 'MVVM vs TCA vs vanilla SwiftUI', 'how do I make SwiftUI testable' - comprehensive architecture patterns with refactoring workflows for iOS 26+
-user-invocable: true
-skill_type: discipline
-version: 1.0
-apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, axiom-visionOS 26+
-xcode_version: Xcode 26+
+license: MIT
+compatibility: iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, axiom-visionOS 26+. Xcode 26+
+metadata:
+  version: "1.0"
 ---
 
 # SwiftUI Architecture

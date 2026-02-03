@@ -1,8 +1,7 @@
 ---
 name: axiom-apple-docs
 description: Use when ANY question involves Apple framework APIs, Swift compiler errors, or Xcode-bundled documentation. Covers Liquid Glass, Swift 6.2 concurrency, Foundation Models, SwiftData, StoreKit, 32 Swift compiler diagnostics.
-skill_type: router
-user-invocable: false
+license: MIT
 ---
 
 # Apple Documentation Router

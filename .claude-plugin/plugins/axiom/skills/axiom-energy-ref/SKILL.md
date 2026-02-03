@@ -1,9 +1,9 @@
 ---
 name: axiom-energy-ref
 description: Complete energy optimization API reference - Power Profiler workflows, timer/network/location/background APIs, iOS 26 BGContinuedProcessingTask, MetricKit monitoring, with all WWDC code examples
-user-invocable: true
-skill_type: reference
-version: 1.0.0
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # Energy Optimization Reference

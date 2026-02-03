@@ -1,10 +1,10 @@
 ---
 name: axiom-build-debugging
 description: Use when encountering dependency conflicts, CocoaPods/SPM resolution failures, "Multiple commands produce" errors, or framework version mismatches - systematic dependency and build configuration debugging for iOS projects. Includes pressure scenario guidance for resisting quick fixes under time constraints
-user-invocable: true
-skill_type: discipline
-version: 1.1.0
-last_updated: TDD-tested with production crisis scenarios
+license: MIT
+metadata:
+  version: "1.1.0"
+  last-updated: "TDD-tested with production crisis scenarios"
 ---
 
 # Build Debugging

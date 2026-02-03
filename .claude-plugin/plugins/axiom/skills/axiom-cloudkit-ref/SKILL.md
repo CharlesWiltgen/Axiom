@@ -1,11 +1,11 @@
 ---
 name: axiom-cloudkit-ref
 description: Use when implementing 'CloudKit sync', 'CKSyncEngine', 'CKRecord', 'CKDatabase', 'SwiftData CloudKit', 'shared database', 'public database', 'CloudKit zones', 'conflict resolution' - comprehensive CloudKit database APIs and modern sync patterns reference
-user-invocable: true
-skill_type: reference
-version: 1.0.0
-last_updated: 2025-12-12
-apple_platforms: iOS 10.0+, iPadOS 13.0+, macOS 10.12+
+license: MIT
+compatibility: iOS 10.0+, iPadOS 13.0+, macOS 10.12+
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-12"
 ---
 
 # CloudKit Reference

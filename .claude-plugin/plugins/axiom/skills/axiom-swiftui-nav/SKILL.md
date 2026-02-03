@@ -1,16 +1,11 @@
 ---
 name: axiom-swiftui-nav
 description: Use when implementing navigation patterns, choosing between NavigationStack and NavigationSplitView, handling deep links, adopting coordinator patterns, or requesting code review of navigation implementation - prevents navigation state corruption, deep link failures, and state restoration bugs for iOS 18+
-user-invocable: true
-skill_type: discipline
-version: 1.0.0
-last_updated: 2025-12-05
-apple_platforms: iOS 18+ (Tab/Sidebar), iOS 26+ (Liquid Glass)
-# MCP annotations (ignored by Claude Code)
-mcp:
-  category: swiftui
-  tags: [swiftui, navigation, navigationstack, navigationsplitview, deep-links, state-restoration, coordinator-pattern]
-  related: [swiftui-nav-diag, axiom-swiftui-nav-ref, axiom-swiftui-layout]
+license: MIT
+compatibility: iOS 18+ (Tab/Sidebar), iOS 26+ (Liquid Glass)
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-05"
 ---
 
 # SwiftUI Navigation

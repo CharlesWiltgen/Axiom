@@ -92,7 +92,19 @@ else
 fi
 echo ""
 
-# 6. Frontmatter Validation (check for colons in headers)
+# 6. Frontmatter Spec Compliance (no non-standard fields)
+echo "📝 Checking SKILL.md frontmatter for non-standard fields..."
+NONSTANDARD=$(grep -rn "^skill_type:\|^user-invocable:\|^apple_platforms:\|^xcode_version:" .claude-plugin/plugins/axiom/skills --include="*.md" 2>/dev/null || true)
+if [ -z "$NONSTANDARD" ]; then
+    echo -e "${GREEN}✓${NC} All SKILL.md files use spec-compliant frontmatter"
+else
+    echo -e "${YELLOW}⚠${NC} Found non-standard frontmatter fields (should use metadata: or compatibility:):"
+    echo "$NONSTANDARD" | head -5
+    ((WARNINGS++))
+fi
+echo ""
+
+# 7. Frontmatter Validation (check for colons in headers)
 echo "📝 Checking for colons in markdown headers..."
 COLON_HEADERS=$(grep -rn "^##.*:$" .claude-plugin/plugins/axiom --include="*.md" 2>/dev/null || true)
 if [ -z "$COLON_HEADERS" ]; then
@@ -104,7 +116,7 @@ else
 fi
 echo ""
 
-# 7. Check for Critical Rules sections (should be Audit Guidelines)
+# 8. Check for Critical Rules sections (should be Audit Guidelines)
 echo "📋 Checking for outdated 'Critical Rules' sections..."
 CRITICAL_RULES=$(grep -rn "^## Critical Rules" .claude-plugin/plugins/axiom/agents --include="*.md" 2>/dev/null || true)
 if [ -z "$CRITICAL_RULES" ]; then
@@ -116,7 +128,7 @@ else
 fi
 echo ""
 
-# 8. VitePress Build
+# 9. VitePress Build
 echo "🏗️  Building VitePress docs..."
 if npm run docs:build > /tmp/axiom-docs-build.log 2>&1; then
     echo -e "${GREEN}✓${NC} VitePress build successful"
@@ -126,7 +138,7 @@ else
 fi
 echo ""
 
-# 9. Check for shell piping in agents (deprecated patterns)
+# 10. Check for shell piping in agents (deprecated patterns)
 echo "🔍 Checking for deprecated shell piping in agents..."
 # Exclude documentation about what NOT to do (grep -v "Note:")
 SHELL_PIPING=$(grep -rn "xargs\|sh -c" .claude-plugin/plugins/axiom/agents --include="*.md" 2>/dev/null | grep -v "Note: Cannot use" || true)
@@ -139,7 +151,7 @@ else
 fi
 echo ""
 
-# 10. Check for WWDC session numbers in feature headers (exclude resource sections)
+# 11. Check for WWDC session numbers in feature headers (exclude resource sections)
 echo "📺 Checking for WWDC session numbers in feature headers..."
 # Exclude legitimate resource sections like "## WWDC 2025 Sessions", "## WWDC 2025 References"
 # Also exclude parenthetical WWDC references like "(WWDC 2025)"

@@ -1,9 +1,9 @@
 ---
 name: axiom-xctest-automation
 description: Use when writing, running, or debugging XCUITests. Covers element queries, waiting strategies, accessibility identifiers, test plans, and CI/CD test execution patterns.
-version: 1.0.0
-category: testing
-user-invocable: false
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # XCUITest Automation Patterns

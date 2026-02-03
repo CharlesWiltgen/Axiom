@@ -1,9 +1,9 @@
 ---
 name: axiom-swiftui-animation-ref
 description: Use when implementing SwiftUI animations, understanding VectorArithmetic, using @Animatable macro, zoom transitions, UIKit/AppKit animation bridging, choosing between spring and timing curve animations, or debugging animation behavior - comprehensive animation reference from iOS 13 through iOS 26
-user-invocable: true
-skill_type: reference
-version: 1.1.0
+license: MIT
+metadata:
+  version: "1.1.0"
 ---
 
 # SwiftUI Animation

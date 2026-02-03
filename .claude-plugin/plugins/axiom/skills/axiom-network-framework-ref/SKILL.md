@@ -1,11 +1,11 @@
 ---
 name: axiom-network-framework-ref
 description: Reference — Comprehensive Network.framework guide covering NetworkConnection (iOS 26+), NWConnection (iOS 12-25), TLV framing, Coder protocol, NetworkListener, NetworkBrowser, Wi-Fi Aware discovery, and migration strategies
-user-invocable: true
-version: 1.0.0
-skill_type: reference
-apple_platforms: iOS 12+ (NWConnection), iOS 26+ (NetworkConnection)
-last_updated: 2025-12-02
+license: MIT
+compatibility: iOS 12+ (NWConnection), iOS 26+ (NetworkConnection)
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-02"
 ---
 
 # Network.framework API Reference

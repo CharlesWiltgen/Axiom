@@ -1,10 +1,10 @@
 ---
 name: axiom-sqlitedata-ref
 description: SQLiteData advanced patterns, @Selection column groups, single-table inheritance, recursive CTEs, database views, custom aggregates, TableAlias self-joins, JSON/string aggregation
-user-invocable: true
-skill_type: reference
-version: 1.0.0
-last_updated: 2025-12-19 — Split from sqlitedata discipline skill
+license: MIT
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-19 — Split from sqlitedata discipline skill"
 ---
 
 # SQLiteData Advanced Reference

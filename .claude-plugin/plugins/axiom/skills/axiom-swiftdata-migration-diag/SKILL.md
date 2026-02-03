@@ -1,9 +1,9 @@
 ---
 name: axiom-swiftdata-migration-diag
 description: Use when SwiftData migrations crash, fail to preserve relationships, lose data, or work in simulator but fail on device - systematic diagnostics for schema version mismatches, relationship errors, and migration testing gaps
-user-invocable: false
-skill_type: diagnostic
-version: 1.0.0
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # SwiftData Migration Diagnostics

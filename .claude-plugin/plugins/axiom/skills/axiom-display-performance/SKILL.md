@@ -1,9 +1,9 @@
 ---
 name: axiom-display-performance
 description: Use when app runs at unexpected frame rate, stuck at 60fps on ProMotion, frame pacing issues, or configuring render loops. Covers MTKView, CADisplayLink, CAMetalDisplayLink, frame pacing, hitches, system caps.
-user-invocable: true
-skill_type: discipline
-version: 1.0.0
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # Display Performance

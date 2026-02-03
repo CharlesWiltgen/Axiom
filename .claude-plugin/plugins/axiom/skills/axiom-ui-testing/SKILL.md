@@ -1,10 +1,10 @@
 ---
 name: axiom-ui-testing
 description: Use when writing UI tests, recording interactions, tests have race conditions, timing dependencies, inconsistent pass/fail behavior, or XCTest UI tests are flaky - covers Recording UI Automation (WWDC 2025), condition-based waiting, network conditioning, multi-factor testing, crash debugging, and accessibility-first testing patterns
-user-invocable: true
-skill_type: discipline
-version: 2.1.0
-last_updated: WWDC 2025 (Updated with production debugging patterns)
+license: MIT
+metadata:
+  version: "2.1.0"
+  last-updated: "WWDC 2025 (Updated with production debugging patterns)"
 ---
 
 # UI Testing

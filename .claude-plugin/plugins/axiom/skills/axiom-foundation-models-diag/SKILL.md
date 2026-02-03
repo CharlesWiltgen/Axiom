@@ -1,11 +1,11 @@
 ---
 name: axiom-foundation-models-diag
 description: Use when debugging Foundation Models issues — context exceeded, guardrail violations, slow generation, availability problems, unsupported language, or unexpected output. Systematic diagnostics with production crisis defense.
-user-invocable: false
-skill_type: diagnostic
-version: 1.0.0
-last_updated: 2025-12-03
-apple_platforms: iOS 26+, macOS 26+, iPadOS 26+, axiom-visionOS 26+
+license: MIT
+compatibility: iOS 26+, macOS 26+, iPadOS 26+, axiom-visionOS 26+
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-03"
 ---
 
 # Foundation Models Diagnostics
