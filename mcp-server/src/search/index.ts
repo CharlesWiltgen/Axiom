@@ -1,4 +1,4 @@
-import { Skill, SkillType } from '../loader/parser.js';
+import { Skill, SkillType, SkillSource } from '../loader/parser.js';
 
 const STOPWORDS = new Set([
   'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
@@ -23,6 +23,7 @@ export interface SearchResult {
   name: string;
   score: number;
   skillType: SkillType;
+  source: SkillSource;
   category?: string;
   description: string;
   matchingSections: string[];
@@ -157,7 +158,7 @@ export function buildIndex(skills: Map<string, Skill>): SearchIndex {
 export function search(
   index: SearchIndex,
   query: string,
-  options?: { limit?: number; skillType?: string; category?: string },
+  options?: { limit?: number; skillType?: string; category?: string; source?: string },
   skills?: Map<string, Skill>,
 ): SearchResult[] {
   const queryTerms = tokenize(query);
@@ -208,11 +209,13 @@ export function search(
 
     if (options?.skillType && skill?.skillType !== options.skillType) continue;
     if (options?.category && skill?.category !== options.category) continue;
+    if (options?.source && skill?.source !== options.source) continue;
 
     results.push({
       name,
       score,
       skillType: skill?.skillType || 'discipline',
+      source: skill?.source || 'axiom',
       category: skill?.category,
       description: skill?.description || '',
       matchingSections: Array.from(matchedSections.get(name) || []),

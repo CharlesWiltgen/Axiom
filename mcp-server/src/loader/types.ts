@@ -45,7 +45,7 @@ export interface Loader {
   /**
    * Search skills using BM25
    */
-  searchSkills(query: string, options?: { limit?: number; skillType?: string; category?: string }): Promise<SearchResult[]>;
+  searchSkills(query: string, options?: { limit?: number; skillType?: string; category?: string; source?: string }): Promise<SearchResult[]>;
 
   /**
    * Get the catalog (skills organized by category)

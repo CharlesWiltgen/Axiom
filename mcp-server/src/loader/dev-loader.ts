@@ -1,10 +1,11 @@
 import { readdir, readFile, stat } from 'fs/promises';
 import { join } from 'path';
 import { parseSkill, parseCommand, parseAgent, Skill, Command, Agent, SkillSection } from './parser.js';
-import { Logger } from '../config.js';
+import { Config, Logger } from '../config.js';
 import { Loader } from './types.js';
 import { buildIndex, search, SearchIndex, SearchResult } from '../search/index.js';
 import { buildCatalog, CatalogResult } from '../catalog/index.js';
+import { detectXcode, loadAppleDocs } from './xcode-docs.js';
 
 /**
  * Development mode loader - reads live files from Claude Code plugin directory
@@ -17,7 +18,8 @@ export class DevLoader implements Loader {
 
   constructor(
     private pluginPath: string,
-    private logger: Logger
+    private logger: Logger,
+    private config?: Config,
   ) {}
 
   /**
@@ -27,6 +29,9 @@ export class DevLoader implements Loader {
   async loadSkills(): Promise<Map<string, Skill>> {
     const skillsDir = join(this.pluginPath, 'skills');
     this.logger.debug(`Loading skills from: ${skillsDir}`);
+
+    // Invalidate search index so it rebuilds with the new skill set
+    this.searchIndex = null;
 
     try {
       const entries = await readdir(skillsDir);
@@ -51,11 +56,31 @@ export class DevLoader implements Loader {
       }
 
       this.logger.info(`Found ${loadedCount} skills`);
+
+      // Load Apple docs from Xcode (runtime, not bundled)
+      if (this.config?.enableAppleDocs !== false) {
+        await this.loadAppleDocsIntoCache();
+      }
+
       return this.skillsCache;
     } catch (error) {
       this.logger.error(`Failed to load skills:`, error);
       throw error;
     }
+  }
+
+  private async loadAppleDocsIntoCache(): Promise<void> {
+    const xcodeConfig = await detectXcode(this.config?.xcodePath);
+    if (!xcodeConfig) {
+      this.logger.info('Xcode not found, skipping Apple docs');
+      return;
+    }
+
+    const appleDocs = await loadAppleDocs(xcodeConfig, this.logger);
+    for (const [name, skill] of appleDocs) {
+      this.skillsCache.set(name, skill);
+    }
+    this.logger.info(`Loaded ${appleDocs.size} Apple docs from Xcode`);
   }
 
   /**
@@ -174,7 +199,7 @@ export class DevLoader implements Loader {
 
   async searchSkills(
     query: string,
-    options?: { limit?: number; skillType?: string; category?: string },
+    options?: { limit?: number; skillType?: string; category?: string; source?: string },
   ): Promise<SearchResult[]> {
     if (this.skillsCache.size === 0) {
       await this.loadSkills();

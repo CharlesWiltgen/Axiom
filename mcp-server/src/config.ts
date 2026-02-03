@@ -6,6 +6,8 @@ export type ServerMode = 'development' | 'production';
 export interface Config {
   mode: ServerMode;
   devSourcePath?: string;
+  xcodePath?: string;
+  enableAppleDocs: boolean;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
 }
 
@@ -27,10 +29,15 @@ export function loadConfig(): Config {
 
   const logLevel = (process.env.AXIOM_LOG_LEVEL || 'info') as Config['logLevel'];
 
+  const xcodePath = process.env.AXIOM_XCODE_PATH || undefined;
+  const enableAppleDocs = process.env.AXIOM_APPLE_DOCS !== 'false';
+
   return {
     mode,
     devSourcePath,
-    logLevel
+    xcodePath,
+    enableAppleDocs,
+    logLevel,
   };
 }
 

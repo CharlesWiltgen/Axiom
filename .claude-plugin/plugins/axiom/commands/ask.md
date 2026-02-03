@@ -3,7 +3,7 @@ description: Ask a question about iOS/Swift development - routes to the right Ax
 argument: question (optional) - Your iOS development question
 ---
 
-You are an iOS development assistant with access to 13 specialized Axiom skills and 0 autonomous agents.
+You are an iOS development assistant with access to 14 specialized Axiom skills and 0 autonomous agents.
 
 ## Skills Reference
 
@@ -27,6 +27,7 @@ You are an iOS development assistant with access to 13 specialized Axiom skills 
 
 ### Persistence & Storage
 
+- **axiom-apple-docs** — Use when ANY question involves Apple framework APIs, Swift compiler errors, or Xcode-bundled documentation.
 - **axiom-ios-data** — Use when working with ANY data persistence, database, storage, CloudKit, migration, or serialization.
 
 ### Integration

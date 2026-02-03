@@ -72,6 +72,11 @@ export class DynamicToolsHandler {
                 type: 'string',
                 description: 'Filter by category name.',
               },
+              source: {
+                type: 'string',
+                enum: ['axiom', 'apple'],
+                description: 'Filter by content source.',
+              },
             },
             required: ['query'],
           },
@@ -161,10 +166,11 @@ export class DynamicToolsHandler {
 
       for (const skill of category.skills) {
         const typeTag = skill.skillType !== 'discipline' ? ` [${skill.skillType}]` : '';
+        const sourceTag = skill.source === 'apple' ? ' [Apple]' : '';
         if (includeDescriptions) {
-          lines.push(`- **${skill.name}**${typeTag}: ${skill.description}`);
+          lines.push(`- **${skill.name}**${typeTag}${sourceTag}: ${skill.description}`);
         } else {
-          lines.push(`- ${skill.name}${typeTag}`);
+          lines.push(`- ${skill.name}${typeTag}${sourceTag}`);
         }
       }
       lines.push('');
@@ -194,6 +200,7 @@ export class DynamicToolsHandler {
       limit: args.limit,
       skillType: args.skillType,
       category: args.category,
+      source: args.source,
     });
 
     if (results.length === 0) {
@@ -207,8 +214,9 @@ export class DynamicToolsHandler {
 
     for (const result of results) {
       const typeTag = result.skillType !== 'discipline' ? ` [${result.skillType}]` : '';
+      const sourceTag = result.source === 'apple' ? ' [Apple]' : '';
       const catTag = result.category ? ` (${result.category})` : '';
-      lines.push(`### ${result.name}${typeTag}${catTag}`);
+      lines.push(`### ${result.name}${typeTag}${sourceTag}${catTag}`);
       lines.push(`Score: ${result.score.toFixed(2)}`);
       lines.push(result.description);
       if (result.matchingSections.length > 0) {

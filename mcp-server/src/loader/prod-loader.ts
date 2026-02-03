@@ -1,10 +1,11 @@
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { Skill, Command, Agent, SkillSection } from './parser.js';
-import { Logger } from '../config.js';
+import { Config, Logger } from '../config.js';
 import { Loader } from './types.js';
 import { SearchIndex, deserializeIndex, search, buildIndex, serializeIndex, SearchResult } from '../search/index.js';
 import { buildCatalog, CatalogResult } from '../catalog/index.js';
+import { detectXcode, loadAppleDocs } from './xcode-docs.js';
 
 interface BundleV2 {
   version: string;
@@ -28,7 +29,8 @@ export class ProdLoader implements Loader {
 
   constructor(
     private bundlePath: string,
-    private logger: Logger
+    private logger: Logger,
+    private config?: Config,
   ) {}
 
   private async ensureLoaded(): Promise<void> {
@@ -44,6 +46,8 @@ export class ProdLoader implements Loader {
       this.logger.info(`Bundle generated: ${bundle.generatedAt}`);
 
       for (const [name, skill] of Object.entries(bundle.skills)) {
+        // Default source for bundles generated before source tracking was added
+        if (!skill.source) skill.source = 'axiom';
         this.skillsCache.set(name, skill);
       }
 
@@ -67,6 +71,22 @@ export class ProdLoader implements Loader {
       this.logger.info(`Loaded ${this.skillsCache.size} skills`);
       this.logger.info(`Loaded ${this.commandsCache.size} commands`);
       this.logger.info(`Loaded ${this.agentsCache.size} agents`);
+
+      // Overlay Apple docs at runtime (not bundled)
+      if (this.config?.enableAppleDocs !== false) {
+        const xcodeConfig = await detectXcode(this.config?.xcodePath);
+        if (xcodeConfig) {
+          const appleDocs = await loadAppleDocs(xcodeConfig, this.logger);
+          for (const [name, skill] of appleDocs) {
+            this.skillsCache.set(name, skill);
+          }
+          // Rebuild search index to include Apple docs
+          this.searchIdx = buildIndex(this.skillsCache);
+          this.logger.info(`Loaded ${appleDocs.size} Apple docs, search index rebuilt`);
+        } else {
+          this.logger.info('Xcode not found, skipping Apple docs');
+        }
+      }
 
       this.loaded = true;
     } catch (error) {
@@ -141,7 +161,7 @@ export class ProdLoader implements Loader {
 
   async searchSkills(
     query: string,
-    options?: { limit?: number; skillType?: string; category?: string },
+    options?: { limit?: number; skillType?: string; category?: string; source?: string },
   ): Promise<SearchResult[]> {
     await this.ensureLoaded();
     return search(this.searchIdx!, query, options, this.skillsCache);
