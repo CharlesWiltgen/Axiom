@@ -31,7 +31,7 @@ Skills are **automatically suggested by Claude Code** based on your questions an
 - "My app has memory leaks, where should I look?" → activates `axiom-memory-debugging`
 
 Skills available in Axiom:
-- **Apple Intelligence**: foundation-models, foundation-models-diag, foundation-models-ref, app-intents-ref, swiftui-26-ref
+- **Apple Intelligence**: foundation-models, foundation-models-diag, foundation-models-ref, app-intents-ref, swiftui-26-ref, apple-docs
 - **UI & Design**: hig, hig-ref, liquid-glass, liquid-glass-ref, swiftui-performance, ui-testing, swiftui-debugging
 - **Debugging**: xcode-debugging, memory-debugging, build-debugging, performance-profiling
 - **Concurrency**: swift-concurrency
