@@ -22,7 +22,7 @@ const ROUTER_CATEGORIES: Record<string, string> = {
 
 interface CatalogCategory {
   label: string;
-  skills: { name: string; description: string; skillType: string }[];
+  skills: { name: string; description: string; skillType: string; source: string }[];
 }
 
 export interface CatalogResult {
@@ -72,9 +72,47 @@ function buildRouterCategoryMap(skills: Map<string, Skill>): Map<string, string>
 }
 
 /**
+ * Map Apple doc filename patterns to existing categories.
+ */
+const APPLE_DOC_CATEGORIES: Record<string, string> = {
+  'swiftui': 'UI & Design',
+  'uikit': 'UI & Design',
+  'appkit': 'UI & Design',
+  'widgetkit': 'System Integration',
+  'swift-concurrency': 'Concurrency & Async',
+  'swift-inlinearray': 'Performance',
+  'swiftdata': 'Data & Persistence',
+  'storekit': 'System Integration',
+  'foundationmodels': 'Apple Intelligence',
+  'appintents': 'System Integration',
+  'mapkit': 'System Integration',
+  'swift-charts': 'UI & Design',
+  'implementing-visual': 'Computer Vision',
+  'implementing-assistive': 'Accessibility',
+  'widgets-for-visionos': 'System Integration',
+  'foundation-attributedstring': 'UI & Design',
+  'alarmkit': 'System Integration',
+  'webkit': 'UI & Design',
+  'toolbar': 'UI & Design',
+  'styled-text': 'UI & Design',
+  'liquid-glass': 'UI & Design',
+};
+
+/**
  * Infer category from skill name when no router reference exists.
  */
 function inferCategoryFromName(name: string): string {
+  // Apple diagnostics go to Build & Environment
+  if (name.startsWith('apple-diag-')) return 'Build & Environment';
+
+  // Apple guides: match against known patterns
+  if (name.startsWith('apple-guide-')) {
+    for (const [pattern, category] of Object.entries(APPLE_DOC_CATEGORIES)) {
+      if (name.includes(pattern)) return category;
+    }
+    return 'General';
+  }
+
   if (name.includes('build') || name.includes('xcode') || name.includes('spm')) return 'Build & Environment';
   if (name.includes('swiftui') || name.includes('uikit') || name.includes('layout') || name.includes('liquid-glass') || name.includes('hig') || name.includes('typography') || name.includes('textkit') || name.includes('animation') || name.includes('ui-recording') || name.includes('ui-testing')) return 'UI & Design';
   if (name.includes('data') || name.includes('sqlite') || name.includes('grdb') || name.includes('realm') || name.includes('codable') || name.includes('cloud') || name.includes('storage') || name.includes('migration') || name.includes('icloud')) return 'Data & Persistence';
@@ -126,6 +164,7 @@ export function buildCatalog(
       name: skill.name,
       description: skill.description,
       skillType: skill.skillType,
+      source: skill.source || 'axiom',
     });
     totalSkills++;
   }
