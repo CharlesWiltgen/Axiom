@@ -1,0 +1,52 @@
+{
+  "axiom-memory-debugging": {
+    "category": "debugging",
+    "tags": ["memory", "leaks", "instruments", "retain-cycles", "performance", "allocations"],
+    "related": ["performance-profiling", "axiom-objc-block-retain-cycles"]
+  },
+  "axiom-app-store-connect-ref": {
+    "category": "debugging",
+    "tags": ["app-store-connect", "crashes", "testflight", "metrics", "feedback", "analytics"],
+    "related": ["axiom-testflight-triage", "crash-analyzer"]
+  },
+  "axiom-testflight-triage": {
+    "category": "debugging",
+    "tags": ["testflight", "crash", "organizer", "symbolication", "feedback", "triage"],
+    "related": ["axiom-memory-debugging", "axiom-xcode-debugging", "axiom-swift-concurrency"]
+  },
+  "axiom-xcode-debugging": {
+    "category": "debugging",
+    "tags": ["xcode", "build", "simulator", "environment", "diagnostics"],
+    "related": ["build-debugging", "axiom-swift-concurrency"]
+  },
+  "axiom-swiftui-nav": {
+    "category": "swiftui",
+    "tags": ["swiftui", "navigation", "navigationstack", "navigationsplitview", "deep-links", "state-restoration", "coordinator-pattern"],
+    "related": ["swiftui-nav-diag", "axiom-swiftui-nav-ref", "axiom-swiftui-layout"]
+  },
+  "axiom-energy": {
+    "category": "performance",
+    "tags": ["energy", "battery", "power", "instruments", "profiling", "optimization"],
+    "related": ["performance-profiling", "axiom-memory-debugging", "axiom-networking"]
+  },
+  "axiom-deep-link-debugging": {
+    "category": "debugging",
+    "tags": ["deep-linking", "url-schemes", "simulator", "testing", "debugging", "navigation"],
+    "related": ["simulator-tester", "axiom-xcode-debugging", "axiom-swiftui-nav"]
+  },
+  "axiom-axe-ref": {
+    "category": "reference"
+  },
+  "axiom-ui-recording": {
+    "category": "testing"
+  },
+  "axiom-xctest-automation": {
+    "category": "testing"
+  },
+  "axiom-cloud-sync": {
+    "related": ["cloudkit-ref", "axiom-icloud-drive-ref", "axiom-cloud-sync-diag", "axiom-storage"]
+  },
+  "axiom-core-data": {
+    "related": ["core-data-diag", "axiom-swiftdata", "axiom-database-migration"]
+  }
+}

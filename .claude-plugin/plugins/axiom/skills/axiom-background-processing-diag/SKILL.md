@@ -1,9 +1,9 @@
 ---
 name: axiom-background-processing-diag
 description: Symptom-based background task troubleshooting - decision trees for 'task never runs', 'task terminates early', 'works in dev not prod', 'handler not called', with time-cost analysis for each diagnosis path
-user-invocable: false
-skill_type: diagnostic
-version: 1.0.0
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # Background Processing Diagnostics

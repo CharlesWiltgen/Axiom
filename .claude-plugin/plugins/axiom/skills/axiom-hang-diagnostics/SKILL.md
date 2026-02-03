@@ -1,7 +1,7 @@
 ---
 name: axiom-hang-diagnostics
 description: Use when app freezes, UI unresponsive, main thread blocked, watchdog termination, or diagnosing hang reports from Xcode Organizer or MetricKit
-user-invocable: false
+license: MIT
 ---
 
 # Hang Diagnostics

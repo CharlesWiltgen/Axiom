@@ -1,11 +1,11 @@
 ---
 name: axiom-storage-management-ref
 description: Use when asking about 'purge files', 'storage pressure', 'disk space iOS', 'isExcludedFromBackup', 'URL resource values', 'volumeAvailableCapacity', 'low storage', 'file purging priority', 'cache management' - comprehensive reference for iOS storage management and URL resource value APIs
-user-invocable: true
-skill_type: reference
-version: 1.0.0
-last_updated: 2025-12-12
-apple_platforms: iOS 5.0+, iPadOS 5.0+, macOS 10.7+
+license: MIT
+compatibility: iOS 5.0+, iPadOS 5.0+, macOS 10.7+
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-12"
 ---
 
 # iOS Storage Management Reference

@@ -1,10 +1,10 @@
 ---
 name: axiom-storage-diag
 description: Use when debugging 'files disappeared', 'data missing after restart', 'backup too large', 'can't save file', 'file not found', 'storage full error', 'file inaccessible when locked' - systematic local file storage diagnostics
-user-invocable: false
-skill_type: diagnostic
-version: 1.0.0
-last_updated: 2025-12-12
+license: MIT
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-12"
 ---
 
 # Local File Storage Diagnostics

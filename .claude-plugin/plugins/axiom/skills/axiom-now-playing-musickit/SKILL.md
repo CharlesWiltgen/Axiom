@@ -1,7 +1,7 @@
 ---
 name: axiom-now-playing-musickit
 description: MusicKit Now Playing integration patterns. Use when playing Apple Music content with ApplicationMusicPlayer and understanding automatic vs manual Now Playing info updates.
-user-invocable: false
+license: MIT
 ---
 
 # MusicKit Integration (Apple Music)

@@ -1,9 +1,9 @@
 ---
 name: axiom-background-processing
 description: Use when implementing BGTaskScheduler, debugging background tasks that never run, understanding why tasks terminate early, or testing background execution - systematic task lifecycle management with proper registration, expiration handling, and Swift 6 cancellation patterns
-user-invocable: true
-skill_type: discipline
-version: 1.0.0
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # Background Processing

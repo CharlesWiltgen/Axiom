@@ -1,11 +1,11 @@
 ---
 name: axiom-storekit-ref
 description: Reference — Complete StoreKit 2 API guide covering Product, Transaction, AppTransaction, RenewalInfo, SubscriptionStatus, StoreKit Views, purchase options, server APIs, and all iOS 18.4 enhancements with WWDC 2025 code examples
-user-invocable: true
-skill_type: reference
-version: 1.0.0
-last_updated: 2025-12-08
-apple_platforms: iOS 15+ (iOS 18.4+ for latest features)
+license: MIT
+compatibility: iOS 15+ (iOS 18.4+ for latest features)
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-08"
 ---
 
 # StoreKit 2 — Complete API Reference

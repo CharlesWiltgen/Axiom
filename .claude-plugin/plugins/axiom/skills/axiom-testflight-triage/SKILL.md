@@ -1,13 +1,9 @@
 ---
 name: axiom-testflight-triage
 description: Use when ANY beta tester reports a crash, ANY crash appears in Organizer or App Store Connect, crash logs need symbolication, app was killed without crash report, or you need to triage TestFlight feedback
-user-invocable: true
-skill_type: discipline
-version: 1.0.0
-mcp:
-  category: debugging
-  tags: [testflight, crash, organizer, symbolication, feedback, triage]
-  related: [axiom-memory-debugging, axiom-xcode-debugging, axiom-swift-concurrency]
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # TestFlight Crash & Feedback Triage

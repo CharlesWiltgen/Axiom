@@ -1,11 +1,11 @@
 ---
 name: axiom-vision-ref
 description: Vision framework API, VNDetectHumanHandPoseRequest, VNDetectHumanBodyPoseRequest, person segmentation, face detection, VNImageRequestHandler, recognized points, joint landmarks, VNRecognizeTextRequest, VNDetectBarcodesRequest, DataScannerViewController, VNDocumentCameraViewController, RecognizeDocumentsRequest
-user-invocable: true
-skill_type: reference
-version: 1.1.0
-last_updated: 2026-01-03
-apple_platforms: iOS 11+, iPadOS 11+, macOS 10.13+, tvOS 11+, axiom-visionOS 1+
+license: MIT
+compatibility: iOS 11+, iPadOS 11+, macOS 10.13+, tvOS 11+, axiom-visionOS 1+
+metadata:
+  version: "1.1.0"
+  last-updated: "2026-01-03"
 ---
 
 # Vision Framework API Reference

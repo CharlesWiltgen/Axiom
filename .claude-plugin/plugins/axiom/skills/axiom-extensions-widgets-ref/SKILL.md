@@ -1,10 +1,10 @@
 ---
 name: axiom-extensions-widgets-ref
 description: Use when implementing widgets, Live Activities, Control Center controls, or app extensions - comprehensive API reference for WidgetKit, ActivityKit, App Groups, and extension lifecycle for iOS 14+
-user-invocable: true
-skill_type: reference
-version: 1.0.0
-apple_platforms: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, axiom-visionOS 2+
+license: MIT
+compatibility: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, axiom-visionOS 2+
+metadata:
+  version: "1.0.0"
 ---
 
 # Extensions & Widgets API Reference

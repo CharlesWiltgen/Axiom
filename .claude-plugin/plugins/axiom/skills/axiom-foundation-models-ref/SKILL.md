@@ -1,11 +1,11 @@
 ---
 name: axiom-foundation-models-ref
 description: Reference — Complete Foundation Models framework guide covering LanguageModelSession, @Generable, @Guide, Tool protocol, streaming, dynamic schemas, built-in use cases, and all WWDC 2025 code examples
-user-invocable: true
-skill_type: reference
-version: 1.0.0
-last_updated: 2025-12-03
-apple_platforms: iOS 26+, macOS 26+, iPadOS 26+, axiom-visionOS 26+
+license: MIT
+compatibility: iOS 26+, macOS 26+, iPadOS 26+, axiom-visionOS 26+
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-03"
 ---
 
 # Foundation Models Framework — Complete API Reference

@@ -1,7 +1,7 @@
 ---
 name: axiom-ios-testing
 description: Use when writing ANY test, debugging flaky tests, making tests faster, or asking about Swift Testing vs XCTest. Covers unit tests, UI tests, fast tests without simulator, async testing, test architecture.
-user-invocable: false
+license: MIT
 ---
 
 # iOS Testing Router

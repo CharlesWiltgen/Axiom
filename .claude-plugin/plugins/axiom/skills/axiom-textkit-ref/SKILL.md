@@ -1,7 +1,7 @@
 ---
 name: axiom-textkit-ref
 description: TextKit 2 complete reference (architecture, migration, Writing Tools, SwiftUI TextEditor) through iOS 26
-user-invocable: true
+license: MIT
 ---
 
 # TextKit 2 Reference

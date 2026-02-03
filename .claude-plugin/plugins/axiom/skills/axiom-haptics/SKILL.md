@@ -1,9 +1,9 @@
 ---
 name: axiom-haptics
 description: Use when implementing haptic feedback, Core Haptics patterns, audio-haptic synchronization, or debugging haptic issues - covers UIFeedbackGenerator, CHHapticEngine, AHAP patterns, and Apple's Causality-Harmony-Utility design principles from WWDC 2021
-user-invocable: true
-skill_type: reference
-version: 1.0.0
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # Haptics & Audio Feedback

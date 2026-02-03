@@ -1,12 +1,11 @@
 ---
 name: axiom-core-data
 description: Use when choosing Core Data vs SwiftData, setting up the Core Data stack, modeling relationships, or implementing concurrency patterns - prevents thread-confinement errors and migration crashes
-user-invocable: true
-skill_type: discipline
-version: 1.0.0
-last_updated: 2025-12-25
-apple_platforms: iOS 3+, macOS 10.4+
-related: [core-data-diag, axiom-swiftdata, axiom-database-migration]
+license: MIT
+compatibility: iOS 3+, macOS 10.4+
+metadata:
+  version: "1.0.0"
+  last-updated: "2025-12-25"
 ---
 
 # Core Data

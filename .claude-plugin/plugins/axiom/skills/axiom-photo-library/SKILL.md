@@ -1,11 +1,11 @@
 ---
 name: axiom-photo-library
 description: PHPicker, PhotosPicker, photo selection, limited library access, presentLimitedLibraryPicker, save to camera roll, PHPhotoLibrary, PHAssetCreationRequest, Transferable, PhotosPickerItem, photo permissions
-user-invocable: true
-skill_type: discipline
-version: 1.0.0
-last_updated: 2026-01-03
-apple_platforms: iOS 14+, iPadOS 14+, macOS 13+
+license: MIT
+compatibility: iOS 14+, iPadOS 14+, macOS 13+
+metadata:
+  version: "1.0.0"
+  last-updated: "2026-01-03"
 ---
 
 # Photo Library Access with PhotoKit

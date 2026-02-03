@@ -1,10 +1,10 @@
 ---
 name: axiom-now-playing
 description: Use when Now Playing metadata doesn't appear on Lock Screen/Control Center, remote commands (play/pause/skip) don't respond, artwork is missing/wrong/flickering, or playback state is out of sync - provides systematic diagnosis, correct patterns, and professional push-back for audio/video apps on iOS 18+
-user-invocable: true
-skill_type: discipline
-version: 1.1.0
-apple_platforms: iOS 18+, iPadOS 18+, CarPlay (iOS 14+)
+license: MIT
+compatibility: iOS 18+, iPadOS 18+, CarPlay (iOS 14+)
+metadata:
+  version: "1.1.0"
 ---
 
 # Now Playing Integration Guide

@@ -1,9 +1,9 @@
 ---
 name: axiom-in-app-purchases
 description: Use when implementing in-app purchases, StoreKit 2, subscriptions, or transaction handling - testing-first workflow with .storekit configuration, StoreManager architecture, transaction verification, subscription management, and restore purchases for consumables, non-consumables, and auto-renewable subscriptions
-user-invocable: true
-skill_type: discipline
-version: 1.0
+license: MIT
+metadata:
+  version: "1.0"
 ---
 
 # StoreKit 2 In-App Purchase Implementation

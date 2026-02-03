@@ -1,10 +1,10 @@
 ---
 name: axiom-extensions-widgets
 description: Use when implementing widgets, Live Activities, or Control Center controls - enforces correct patterns for timeline management, data sharing, and extension lifecycle to prevent common crashes and memory issues
-user-invocable: true
-skill_type: discipline
-version: 1.0.0
-apple_platforms: iOS 14+, iPadOS 14+, watchOS 9+
+license: MIT
+compatibility: iOS 14+, iPadOS 14+, watchOS 9+
+metadata:
+  version: "1.0.0"
 ---
 
 # Extensions & Widgets — Discipline

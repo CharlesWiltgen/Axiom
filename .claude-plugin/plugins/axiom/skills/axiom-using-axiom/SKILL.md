@@ -1,7 +1,7 @@
 ---
 name: axiom-using-axiom
 description: Use when starting any iOS/Swift conversation - establishes how to find and use Axiom skills, requiring Skill tool invocation before ANY response including clarifying questions
-user-invocable: false
+license: MIT
 ---
 
 <EXTREMELY-IMPORTANT>

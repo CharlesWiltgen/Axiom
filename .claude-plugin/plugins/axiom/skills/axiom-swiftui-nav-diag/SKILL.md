@@ -1,9 +1,9 @@
 ---
 name: axiom-swiftui-nav-diag
 description: Use when debugging navigation not responding, unexpected pops, deep links showing wrong screen, state lost on tab switch or background, crashes in navigationDestination, or any SwiftUI navigation failure - systematic diagnostics with production crisis defense
-user-invocable: false
-skill_type: diagnostic
-version: 1.0.0
+license: MIT
+metadata:
+  version: "1.0.0"
 ---
 
 # SwiftUI Navigation Diagnostics

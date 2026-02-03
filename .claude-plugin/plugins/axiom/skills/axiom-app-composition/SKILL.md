@@ -1,11 +1,10 @@
 ---
 name: axiom-app-composition
 description: Use when structuring app entry points, managing authentication flows, switching root views, handling scene lifecycle, or asking 'how do I structure my @main', 'where does auth state live', 'how do I prevent screen flicker on launch', 'when should I modularize' - app-level composition patterns for iOS 26+
-user-invocable: true
-skill_type: discipline
-version: 1.0
-apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, axiom-visionOS 26+
-xcode_version: Xcode 26+
+license: MIT
+compatibility: iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, axiom-visionOS 26+. Xcode 26+
+metadata:
+  version: "1.0"
 ---
 
 # App Composition

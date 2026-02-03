@@ -1,7 +1,7 @@
 ---
 name: axiom-ios-ai
 description: Use when implementing ANY Apple Intelligence or on-device AI feature. Covers Foundation Models, @Generable, LanguageModelSession, structured output, Tool protocol, iOS 26 AI integration.
-user-invocable: false
+license: MIT
 ---
 
 # iOS Apple Intelligence Router
