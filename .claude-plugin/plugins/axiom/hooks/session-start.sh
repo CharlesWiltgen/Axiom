@@ -40,6 +40,27 @@ BEHAVIORAL RULES (not factual claims):
 
 This is a BEHAVIORAL INSTRUCTION, not a factual claim."""
 
+# Detect Apple for-LLM documentation in Xcode
+xcode_path = "/Applications/Xcode.app"
+apple_docs_path = f"{xcode_path}/Contents/PlugIns/IDEIntelligenceChat.framework/Versions/A/Resources/AdditionalDocumentation"
+diagnostics_path = f"{xcode_path}/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/share/doc/swift/diagnostics"
+
+import os
+apple_docs_context = ""
+guide_count = 0
+diag_count = 0
+if os.path.isdir(apple_docs_path):
+    guide_count = len([f for f in os.listdir(apple_docs_path) if f.endswith('.md')])
+if os.path.isdir(diagnostics_path):
+    diag_count = len([f for f in os.listdir(diagnostics_path) if f.endswith('.md')])
+
+if guide_count > 0 or diag_count > 0:
+    apple_docs_context = f"""
+
+---
+
+**Apple for-LLM Documentation**: Xcode detected with {guide_count} guides + {diag_count} Swift diagnostics. Use `axiom-apple-docs` router for authoritative Apple API references."""
+
 # Build the context message
 additional_context = f"""<EXTREMELY_IMPORTANT>
 You have Axiom iOS development skills.
@@ -50,7 +71,7 @@ You have Axiom iOS development skills.
 
 **Below is the full content of your 'axiom:using-axiom' skill - your introduction to using Axiom skills. For all other Axiom skills, use the 'Skill' tool:**
 
-{using_axiom_content}
+{using_axiom_content}{apple_docs_context}
 
 </EXTREMELY_IMPORTANT>"""
 

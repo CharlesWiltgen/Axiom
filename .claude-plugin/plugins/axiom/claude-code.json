@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "2.19.3",
+  "version": "2.19.4",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -68,6 +68,10 @@
     {
       "name": "axiom-ios-graphics",
       "description": "Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, or graphics programming. Covers Metal migration from OpenGL/DirectX, shader conversion, GPU debugging, translation layers."
+    },
+    {
+      "name": "axiom-apple-docs",
+      "description": "Use when ANY question involves Apple framework APIs, Swift compiler errors, or Xcode-bundled documentation. Covers Liquid Glass, Swift 6.2 concurrency, Foundation Models, SwiftData, StoreKit, 32 Swift compiler diagnostics."
     }
   ]
 }

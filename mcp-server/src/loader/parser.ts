@@ -51,6 +51,8 @@ export interface SkillSection {
 
 export type SkillType = 'discipline' | 'reference' | 'diagnostic' | 'router' | 'meta';
 
+export type SkillSource = 'axiom' | 'apple';
+
 /**
  * Parsed skill metadata
  */
@@ -59,6 +61,7 @@ export interface Skill {
   description: string;
   content: string;
   skillType: SkillType;
+  source: SkillSource;
   category?: string;
   tags: string[];
   related: string[];
@@ -168,6 +171,7 @@ export function parseSkill(content: string, filename: string): Skill {
     description: data.description || '',
     content: parsed.content,
     skillType: inferSkillType(data, name),
+    source: 'axiom',
     category: data.mcp?.category,
     tags: data.mcp?.tags || [],
     related: data.mcp?.related || [],
@@ -204,6 +208,65 @@ export function parseAgent(content: string, filename: string): Agent {
     model: data.model,
     content: parsed.content,
     mcp: data.mcp
+  };
+}
+
+/**
+ * Parse an Apple documentation markdown file (no frontmatter).
+ * Used for Xcode-bundled AdditionalDocumentation and Swift diagnostics.
+ */
+export function parseAppleDoc(
+  content: string,
+  filename: string,
+  docType: 'guide' | 'diagnostic',
+): Skill {
+  const baseName = filename.replace(/\.md$/, '');
+
+  // Build a normalized skill name from the filename
+  const slug = baseName
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase();
+  const prefix = docType === 'guide' ? 'apple-guide' : 'apple-diag';
+  const name = `${prefix}-${slug}`;
+
+  // Extract title from first # heading
+  const titleMatch = content.match(/^#\s+(.+)$/m);
+  const title = titleMatch ? titleMatch[1].trim() : baseName.replace(/-/g, ' ');
+
+  // Extract description from first paragraph after the title
+  const lines = content.split('\n');
+  let description = '';
+  let pastTitle = false;
+  for (const line of lines) {
+    if (!pastTitle) {
+      if (line.match(/^#\s+/)) {
+        pastTitle = true;
+      }
+      continue;
+    }
+    const trimmed = line.trim();
+    if (trimmed === '') continue;
+    if (trimmed.startsWith('#')) break;
+    description = trimmed;
+    break;
+  }
+
+  // Infer tags from filename components
+  const tags = baseName
+    .split(/[-_]/)
+    .filter(t => t.length > 2)
+    .map(t => t.toLowerCase());
+
+  return {
+    name,
+    description: description || title,
+    content,
+    skillType: docType === 'diagnostic' ? 'diagnostic' : 'reference',
+    source: 'apple',
+    tags,
+    related: [],
+    sections: parseSections(content),
   };
 }
 

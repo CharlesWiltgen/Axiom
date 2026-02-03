@@ -11,7 +11,7 @@ import {
   CallToolRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-import { loadConfig, Logger } from './config.js';
+import { loadConfig, Config, Logger } from './config.js';
 import { DevLoader } from './loader/dev-loader.js';
 import { ProdLoader } from './loader/prod-loader.js';
 import { Loader } from './loader/types.js';
@@ -46,8 +46,8 @@ async function main() {
 
   // Initialize loader
   const loader = config.mode === 'development'
-    ? new DevLoader(config.devSourcePath!, logger)
-    : await loadProductionBundle(logger);
+    ? new DevLoader(config.devSourcePath!, logger, config)
+    : await loadProductionBundle(config, logger);
 
   // Initialize handlers
   const resourcesHandler = new ResourcesHandler(loader, logger);
@@ -144,10 +144,10 @@ async function main() {
  * Load production bundle
  * Returns a loader compatible with Loader interface
  */
-async function loadProductionBundle(logger: Logger): Promise<Loader> {
+async function loadProductionBundle(config: Config, logger: Logger): Promise<Loader> {
   const bundlePath = join(__dirname, 'bundle.json');
   logger.info(`Production mode: loading from ${bundlePath}`);
-  return new ProdLoader(bundlePath, logger);
+  return new ProdLoader(bundlePath, logger, config);
 }
 
 // Start the server
