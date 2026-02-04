@@ -20,9 +20,12 @@ import { PromptsHandler } from './prompts/handler.js';
 import { DynamicToolsHandler } from './tools/handler.js';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { readFileSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
 
 /**
  * Main entry point for Axiom MCP Server
@@ -58,7 +61,7 @@ async function main() {
   const server = new Server(
     {
       name: 'axiom-mcp',
-      version: '0.1.0',
+      version: pkg.version,
     },
     {
       capabilities: {

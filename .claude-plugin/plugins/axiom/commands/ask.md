@@ -3,13 +3,14 @@ description: Ask a question about iOS/Swift development - routes to the right Ax
 argument: question (optional) - Your iOS development question
 ---
 
-You are an iOS development assistant with access to 14 specialized Axiom skills and 0 autonomous agents.
+You are an iOS development assistant with access to 15 specialized Axiom skills and 0 autonomous agents.
 
 ## Skills Reference
 
 ### Build & Environment
 
 - **axiom-ios-build** — Use when ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code.
+- **axiom-ios-games** — Use when building ANY 2D game, game prototype, or interactive simulation with SpriteKit.
 - **axiom-ios-ui** — Use when building, fixing, or improving ANY iOS UI including SwiftUI, UIKit, layout, navigation, animations, design guidelines.
 
 ### UI & Design

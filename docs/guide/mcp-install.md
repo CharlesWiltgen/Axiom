@@ -1,42 +1,24 @@
-# MCP Server (Experimental)
+# MCP Server
 
 Axiom includes an MCP (Model Context Protocol) server that brings its iOS development skills to any MCP-compatible AI coding tool — VS Code with GitHub Copilot, Claude Desktop, Cursor, Gemini CLI, and more.
-
-::: warning Experimental
-The MCP server is functional but pre-npm-publish. Installation currently requires cloning the repository and building from source. An `npm install` workflow is planned for a future release.
-:::
 
 ## What You Get
 
 The MCP server exposes Axiom's full catalog through the MCP protocol:
 
-- **129 skills** as MCP Resources (on-demand loading)
-- **30 agents** as MCP Tools (autonomous scanning and fixing)
+- **133 skills** as MCP Resources (on-demand loading)
+- **31 agents** as MCP Tools (autonomous scanning and fixing)
 - **10 commands** as MCP Prompts (structured workflows)
 
 ## Prerequisites
 
 - **Node.js 18+** — check with `node --version`
-- **pnpm** (or npm) — for installing dependencies
-- **Clone the Axiom repository:**
 
-```bash
-git clone https://github.com/CharlesWiltgen/Axiom.git
-cd Axiom/mcp-server
-```
-
-- **Build the MCP server:**
-
-```bash
-pnpm install
-pnpm build
-```
-
-This compiles the TypeScript source and produces `dist/index.js`, the server entry point.
+That's it. No cloning, no building.
 
 ## Installation by Tool
 
-Each tool needs a configuration snippet that tells it how to launch the Axiom MCP server. Replace `/path/to/Axiom` with your actual clone path.
+Each tool needs a configuration snippet that tells it how to launch the Axiom MCP server.
 
 ### VS Code + GitHub Copilot
 
@@ -46,12 +28,8 @@ Add to your VS Code `settings.json`:
 {
   "github.copilot.chat.mcp.servers": {
     "axiom": {
-      "command": "node",
-      "args": ["/path/to/Axiom/mcp-server/dist/index.js"],
-      "env": {
-        "AXIOM_MCP_MODE": "development",
-        "AXIOM_DEV_PATH": "/path/to/Axiom/.claude-plugin/plugins/axiom"
-      }
+      "command": "npx",
+      "args": ["-y", "axiom-mcp"]
     }
   }
 }
@@ -65,12 +43,8 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 {
   "mcpServers": {
     "axiom": {
-      "command": "node",
-      "args": ["/path/to/Axiom/mcp-server/dist/index.js"],
-      "env": {
-        "AXIOM_MCP_MODE": "development",
-        "AXIOM_DEV_PATH": "/path/to/Axiom/.claude-plugin/plugins/axiom"
-      }
+      "command": "npx",
+      "args": ["-y", "axiom-mcp"]
     }
   }
 }
@@ -84,12 +58,8 @@ Add to `.cursor/mcp.json` in your workspace:
 {
   "mcpServers": {
     "axiom": {
-      "command": "node",
-      "args": ["/path/to/Axiom/mcp-server/dist/index.js"],
-      "env": {
-        "AXIOM_MCP_MODE": "development",
-        "AXIOM_DEV_PATH": "/path/to/Axiom/.claude-plugin/plugins/axiom"
-      }
+      "command": "npx",
+      "args": ["-y", "axiom-mcp"]
     }
   }
 }
@@ -102,12 +72,8 @@ Add to `~/.gemini/config.toml`:
 ```toml
 [[mcp_servers]]
 name = "axiom"
-command = "node"
-args = ["/path/to/Axiom/mcp-server/dist/index.js"]
-
-[mcp_servers.env]
-AXIOM_MCP_MODE = "development"
-AXIOM_DEV_PATH = "/path/to/Axiom/.claude-plugin/plugins/axiom"
+command = "npx"
+args = ["-y", "axiom-mcp"]
 ```
 
 ## Configuration
@@ -122,34 +88,32 @@ AXIOM_DEV_PATH = "/path/to/Axiom/.claude-plugin/plugins/axiom"
 
 ### Development Mode (Live Skills)
 
-Reads skills directly from the Claude Code plugin directory. Changes to skill files are reflected immediately — no rebuild needed. This is the recommended mode when you've cloned the repo.
+For Axiom contributors who want live-reloading skills during development:
 
 ```bash
 AXIOM_MCP_MODE=development \
 AXIOM_DEV_PATH=/path/to/Axiom/.claude-plugin/plugins/axiom \
-node dist/index.js
+node /path/to/Axiom/mcp-server/dist/index.js
 ```
+
+Changes to skill files are reflected immediately — no rebuild needed.
 
 ### Production Mode (Bundled)
 
-Reads from a pre-compiled snapshot (`dist/bundle.json`). Self-contained with no file system access after initialization. Build the bundle first:
+The default when installed via npm. Reads from a pre-compiled snapshot with no file system access after initialization.
 
 ```bash
-pnpm build:bundle
-node dist/index.js
+npx axiom-mcp
 ```
 
 ## Verify It Works
 
 ### Quick Test
 
-Start the server manually to confirm it launches without errors:
+Run the server directly to confirm it launches without errors:
 
 ```bash
-cd /path/to/Axiom/mcp-server
-AXIOM_MCP_MODE=development \
-AXIOM_DEV_PATH=../.claude-plugin/plugins/axiom \
-node dist/index.js
+npx axiom-mcp
 ```
 
 The server should start and wait for stdin input (MCP uses stdio transport). Press `Ctrl+C` to stop.
@@ -159,7 +123,7 @@ The server should start and wait for stdin input (MCP uses stdio transport). Pre
 For interactive testing, use the official MCP Inspector:
 
 ```bash
-npx @modelcontextprotocol/inspector node dist/index.js
+npx @modelcontextprotocol/inspector npx axiom-mcp
 ```
 
 This opens a web UI where you can browse resources, test prompts, and invoke tools.
@@ -181,37 +145,23 @@ It should list Axiom's available skills via the MCP resources protocol.
 node --version
 ```
 
-**Verify the build completed** — `dist/index.js` should exist:
-```bash
-ls /path/to/Axiom/mcp-server/dist/index.js
-```
-
-**Check environment variables** — in development mode, `AXIOM_DEV_PATH` must point to a valid plugin directory:
-```bash
-ls /path/to/Axiom/.claude-plugin/plugins/axiom/skills
-```
-
 ### Skills Not Appearing
 
 **Enable debug logging** to see what the server loads:
 ```bash
-AXIOM_LOG_LEVEL=debug \
-AXIOM_MCP_MODE=development \
-AXIOM_DEV_PATH=../.claude-plugin/plugins/axiom \
-node dist/index.js 2>&1 | grep -i skill
+AXIOM_LOG_LEVEL=debug npx axiom-mcp 2>&1 | grep -i skill
 ```
 
 ### Client Can't Connect
 
 MCP uses stdin/stdout for communication. Common issues:
 
-- **Wrong path** in your tool's config — double-check the absolute path to `dist/index.js`
-- **Missing build** — run `pnpm build` if `dist/index.js` doesn't exist
+- **Wrong config** — ensure `command` is `"npx"` and `args` is `["-y", "axiom-mcp"]`
 - **Other stdout writers** — make sure nothing else writes to stdout; logs go to stderr only
 
 Test the command from your config manually:
 ```bash
-node /path/to/Axiom/mcp-server/dist/index.js
+npx axiom-mcp
 # Should start without errors, waiting for stdin
 ```
 
