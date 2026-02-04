@@ -1,12 +1,17 @@
 {
-  "name": "@axiom-dev/mcp",
-  "version": "0.1.0",
+  "name": "axiom-mcp",
+  "version": "2.20.0",
   "description": "MCP server for Axiom development skills, agents, and commands",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "axiom-mcp": "dist/index.js"
+    "axiom-mcp": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "build:bundle": "tsc && node dist/scripts/bundle.js",
@@ -25,6 +30,15 @@
   ],
   "author": "Charles Wiltgen",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CharlesWiltgen/Axiom.git",
+    "directory": "mcp-server"
+  },
+  "homepage": "https://charleswiltgen.github.io/Axiom/guide/mcp-install",
+  "bugs": {
+    "url": "https://github.com/CharlesWiltgen/Axiom/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "gray-matter": "^4.0.3"

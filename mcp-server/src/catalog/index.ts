@@ -17,6 +17,7 @@ const ROUTER_CATEGORIES: Record<string, string> = {
   'axiom-ios-ml': 'Machine Learning',
   'axiom-ios-vision': 'Computer Vision',
   'axiom-ios-graphics': 'Graphics & Metal',
+  'axiom-ios-games': 'Games',
   'axiom-ios-testing': 'Testing',
 };
 
@@ -124,6 +125,7 @@ function inferCategoryFromName(name: string): string {
   if (name.includes('vision') || name.includes('photo') || name.includes('camera')) return 'Computer Vision';
   if (name.includes('foundation-model') || name.includes('intelligence')) return 'Apple Intelligence';
   if (name.includes('metal') || name.includes('graphics')) return 'Graphics & Metal';
+  if (name.includes('spritekit') || name.includes('scenekit') || name.includes('game')) return 'Games';
   if (name.includes('debug')) return 'Build & Environment';
   if (name.includes('triage') || name.includes('app-store-connect')) return 'Build & Environment';
   if (name.includes('intent') || name.includes('shortcut') || name.includes('widget') || name.includes('extension') || name.includes('haptic') || name.includes('storekit') || name.includes('iap') || name.includes('now-playing') || name.includes('localization') || name.includes('spotlight') || name.includes('privacy') || name.includes('deep-link') || name.includes('app-store') || name.includes('background-process')) return 'System Integration';
