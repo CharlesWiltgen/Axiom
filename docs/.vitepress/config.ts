@@ -43,7 +43,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/guide/' },
             { text: 'Quick Start', link: '/guide/quick-start' },
-            { text: 'MCP Server (Experimental)', link: '/guide/mcp-install' },
+            { text: 'MCP Server', link: '/guide/mcp-install' },
             { text: 'Example Workflows', link: '/guide/workflows' }
           ]
         }
@@ -103,6 +103,12 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'simulator-tester', link: '/agents/simulator-tester' },
             { text: 'testing-auditor', link: '/agents/testing-auditor' }
+          ]
+        },
+        {
+          text: 'Games',
+          items: [
+            { text: 'spritekit-auditor', link: '/agents/spritekit-auditor' }
           ]
         }
       ],
@@ -193,6 +199,13 @@ export default withMermaid(defineConfig({
             { text: 'Swift Testing', link: '/skills/testing/swift-testing' },
             { text: 'UI Testing', link: '/skills/ui-design/ui-testing' }
           ]
+        },
+        {
+          text: 'Games',
+          items: [
+            { text: 'Overview', link: '/skills/games/' },
+            { text: 'SpriteKit', link: '/skills/games/spritekit' }
+          ]
         }
       ],
       '/reference/': [
@@ -243,6 +256,12 @@ export default withMermaid(defineConfig({
             { text: 'Privacy UX Patterns', link: '/reference/privacy-ux' },
             { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' }
           ]
+        },
+        {
+          text: 'Games',
+          items: [
+            { text: 'SpriteKit API', link: '/reference/spritekit-ref' }
+          ]
         }
       ],
       '/diagnostic/': [
@@ -264,7 +283,8 @@ export default withMermaid(defineConfig({
             { text: 'Storage Diagnostics', link: '/diagnostic/storage-diag' },
             { text: 'SwiftData Migration Diagnostics', link: '/diagnostic/swiftdata-migration-diag' },
             { text: 'SwiftUI Debugging Diagnostics', link: '/diagnostic/swiftui-debugging-diag' },
-            { text: 'SwiftUI Navigation Diagnostics', link: '/diagnostic/swiftui-nav-diag' }
+            { text: 'SwiftUI Navigation Diagnostics', link: '/diagnostic/swiftui-nav-diag' },
+            { text: 'SpriteKit Diagnostics', link: '/diagnostic/spritekit-diag' }
           ]
         }
       ]
@@ -276,7 +296,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v2.19.6'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v2.20.0'
     }
   }
 }))

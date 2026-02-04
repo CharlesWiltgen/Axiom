@@ -4,13 +4,30 @@ Model Context Protocol (MCP) server for Axiom's iOS development skills, agents, 
 
 ## Features
 
-- **129 Skills** - iOS development expertise as MCP Resources (on-demand loading)
-- **10 Commands** - Structured prompts as MCP Prompts
-- **30 Agents** - Autonomous tools as MCP Tools
-- **Dual Distribution** - Works standalone or bundled with Claude Code plugin
-- **Hybrid Runtime** - Development mode (live files) or production mode (bundled)
+- **133 Skills** — iOS development expertise as MCP Resources (on-demand loading)
+- **10 Commands** — Structured prompts as MCP Prompts
+- **31 Agents** — Autonomous tools as MCP Tools
+- **Dual Distribution** — Works standalone or bundled with Claude Code plugin
+- **Hybrid Runtime** — Development mode (live files) or production mode (bundled)
 
 ## Installation
+
+### Quick Start (npm)
+
+No clone or build step needed. Add to your tool's MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "axiom": {
+      "command": "npx",
+      "args": ["-y", "axiom-mcp"]
+    }
+  }
+}
+```
+
+This downloads and runs the server in production mode with all skills bundled.
 
 ### For Claude Code Users (Bundled)
 
@@ -20,22 +37,7 @@ The MCP server starts automatically when you install the Axiom plugin:
 claude-code plugin add axiom@axiom-marketplace
 ```
 
-No additional configuration needed! The plugin's `.mcp.json` launches the server in development mode.
-
-### For Other Tools (Standalone)
-
-Install via pnpm (or npm):
-
-```bash
-# Install dependencies
-pnpm install
-
-# Build the server
-pnpm build
-
-# Run in development mode
-AXIOM_MCP_MODE=development AXIOM_DEV_PATH=/path/to/axiom/plugin node dist/index.js
-```
+No additional configuration needed — the plugin's `.mcp.json` launches the server in development mode.
 
 ## Usage
 
@@ -47,29 +49,11 @@ Add to your VS Code `settings.json`:
 {
   "github.copilot.chat.mcp.servers": {
     "axiom": {
-      "command": "node",
-      "args": ["/Users/YourName/Projects/Axiom/mcp-server/dist/index.js"],
-      "env": {
-        "AXIOM_MCP_MODE": "development",
-        "AXIOM_DEV_PATH": "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
-      }
+      "command": "npx",
+      "args": ["-y", "axiom-mcp"]
     }
   }
 }
-```
-
-Then in GitHub Copilot Chat:
-
-```
-User: What iOS debugging skills do you have?
-
-Copilot: [calls resources/list]
-I have access to Axiom's iOS development skills:
-
-**Debugging & Troubleshooting**
-- xcode-debugging: Environment-first diagnostics
-- memory-debugging: Leak diagnosis (5 patterns)
-...
 ```
 
 ### Claude Desktop
@@ -80,12 +64,8 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 {
   "mcpServers": {
     "axiom": {
-      "command": "node",
-      "args": ["/Users/YourName/Projects/Axiom/mcp-server/dist/index.js"],
-      "env": {
-        "AXIOM_MCP_MODE": "development",
-        "AXIOM_DEV_PATH": "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
-      }
+      "command": "npx",
+      "args": ["-y", "axiom-mcp"]
     }
   }
 }
@@ -93,18 +73,14 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ### Cursor
 
-Add to Cursor's MCP settings (`.cursor/mcp.json` in your workspace):
+Add to `.cursor/mcp.json` in your workspace:
 
 ```json
 {
   "mcpServers": {
     "axiom": {
-      "command": "node",
-      "args": ["/Users/YourName/Projects/Axiom/mcp-server/dist/index.js"],
-      "env": {
-        "AXIOM_MCP_MODE": "development",
-        "AXIOM_DEV_PATH": "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
-      }
+      "command": "npx",
+      "args": ["-y", "axiom-mcp"]
     }
   }
 }
@@ -117,12 +93,8 @@ Configure MCP server in `~/.gemini/config.toml`:
 ```toml
 [[mcp_servers]]
 name = "axiom"
-command = "node"
-args = ["/Users/YourName/Projects/Axiom/mcp-server/dist/index.js"]
-
-[mcp_servers.env]
-AXIOM_MCP_MODE = "development"
-AXIOM_DEV_PATH = "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
+command = "npx"
+args = ["-y", "axiom-mcp"]
 ```
 
 ## Configuration
@@ -132,7 +104,7 @@ AXIOM_DEV_PATH = "/Users/YourName/Projects/Axiom/.claude-plugin/plugins/axiom"
 | Variable | Values | Default | Description |
 |----------|--------|---------|-------------|
 | `AXIOM_MCP_MODE` | `development`, `production` | `production` | Runtime mode |
-| `AXIOM_DEV_PATH` | File path | `~/Projects/Axiom/.claude-plugin/plugins/axiom` | Plugin directory for dev mode |
+| `AXIOM_DEV_PATH` | File path | — | Plugin directory for dev mode |
 | `AXIOM_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `info` | Logging verbosity |
 
 ### Modes
@@ -151,15 +123,14 @@ AXIOM_MCP_MODE=development AXIOM_DEV_PATH=/path/to/plugin node dist/index.js
 #### Production Mode (Bundled Skills)
 
 ```bash
-# Default mode - no environment variables needed
-node dist/index.js
+# Default mode — no environment variables needed
+npx axiom-mcp
 ```
 
 - Reads pre-bundled snapshot from `dist/bundle.json`
-- Bundle contains all 129 skills, 10 commands, 30 agents
+- Bundle contains all 133 skills, 10 commands, 31 agents
 - No file system access after initialization
-- Self-contained, distributable via npm
-- Bundle generated via `pnpm build:bundle`
+- Self-contained, distributed via npm
 
 ## MCP Resources
 
@@ -235,11 +206,15 @@ mcp-server/
 │   │   └── handler.ts        # Prompts protocol
 │   ├── tools/
 │   │   └── handler.ts        # Tools protocol
+│   ├── catalog/
+│   │   └── index.ts          # Skill catalog + search
+│   ├── search/
+│   │   └── index.ts          # BM25 search engine
 │   └── scripts/
 │       └── bundle.ts         # Bundle generator
 └── dist/                     # Compiled output
     ├── index.js              # Server entry point
-    ├── bundle.json           # Production bundle (1.15 MB)
+    ├── bundle.json           # Production bundle
     └── ...
 ```
 
@@ -247,19 +222,19 @@ mcp-server/
 
 ```bash
 # Install dependencies
-pnpm install
+npm install
 
 # Build once
-pnpm build
+npm run build
 
 # Build with production bundle
-pnpm build:bundle
+npm run build:bundle
 
 # Watch mode (rebuild on changes)
-pnpm dev
+npm run dev
 
 # Run server
-pnpm start
+npm start
 ```
 
 The `build:bundle` command:
@@ -316,7 +291,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"resources/list"}' | node dist/index.js
 Install the official MCP Inspector:
 
 ```bash
-npx @modelcontextprotocol/inspector node dist/index.js
+npx @modelcontextprotocol/inspector npx axiom-mcp
 ```
 
 Opens a web UI for testing MCP protocol interactions.
@@ -333,7 +308,7 @@ claude-code plugin reload axiom
 
 ## Troubleshooting
 
-### Server won't start
+### Server Won't Start
 
 **Check Node version:**
 ```bash
@@ -347,41 +322,29 @@ echo $AXIOM_MCP_MODE
 echo $AXIOM_DEV_PATH
 ```
 
-**Verify plugin path exists:**
+**Verify plugin path exists (dev mode):**
 ```bash
 ls $AXIOM_DEV_PATH/skills
-# Should show .md files
+# Should show skill directories
 ```
 
-### Skills not appearing
+### Skills Not Appearing
 
 **Check log output (stderr):**
 ```bash
-AXIOM_LOG_LEVEL=debug node dist/index.js 2>&1 | grep -i skill
+AXIOM_LOG_LEVEL=debug npx axiom-mcp 2>&1 | grep -i skill
 ```
 
-**Verify frontmatter parsing:**
+### MCP Client Can't Connect
+
+MCP uses stdin/stdout for communication. Common issues:
+
+- **Wrong command** in your tool's config — use `npx` with args `["-y", "axiom-mcp"]`
+- **Other stdout writers** — make sure nothing else writes to stdout; logs go to stderr only
+
+Test the command from your config manually:
 ```bash
-# Test parser directly
-node -e "
-const matter = require('gray-matter');
-const fs = require('fs');
-const content = fs.readFileSync('$AXIOM_DEV_PATH/skills/axiom-xcode-debugging/SKILL.md', 'utf-8');
-console.log(matter(content).data);
-"
-```
-
-### MCP client can't connect
-
-**Check stdio transport:**
-- MCP uses stdin/stdout for communication
-- Make sure nothing else writes to stdout
-- Logs must go to stderr only
-
-**Verify command in client config:**
-```bash
-# Test command manually
-node /full/path/to/dist/index.js
+npx axiom-mcp
 # Should start without errors, waiting for stdin
 ```
 
@@ -403,23 +366,16 @@ node /full/path/to/dist/index.js
 - Tools protocol (agents)
 - Complete MCP feature coverage
 
-### Phase 4: Production Bundle ✅ (Current)
+### Phase 4: Production Bundle ✅
 - Pre-compiled skill snapshot
 - Production mode loader
 - Bundle generator script
 - Dual-mode Loader interface
 
-### Phase 5: Full Coverage (Next)
-- All 129 skills with MCP annotations
-- All 10 commands with argument schemas
-- All 30 agents with input schemas
-- Multi-client testing
-
-### Phase 6: Distribution
-- npm publish (@axiom-dev/mcp)
-- MCP Registry listing
-- Documentation site integration
-- Release automation
+### Phase 5: npm Distribution ✅
+- Published as `axiom-mcp` on npm
+- Zero-config install via `npx axiom-mcp`
+- Multi-client configuration guides
 
 ## Architecture
 
@@ -432,7 +388,7 @@ User installs plugin → .mcp.json → MCP server (dev mode) → Live skills
 
 **Standalone (Other Tools)**
 ```
-User configures MCP → Server (prod mode) → Bundled skills
+npx axiom-mcp → Server (prod mode) → Bundled skills
 ```
 
 **Key Insight:** Same codebase, different entry points. Development mode for rapid iteration, production mode for distribution.
@@ -450,4 +406,4 @@ See the main Axiom repository for contribution guidelines.
 
 ## License
 
-MIT License - See LICENSE file in main repository
+MIT License — See [LICENSE](LICENSE)

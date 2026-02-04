@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "2.19.6",
+  "version": "2.20.0",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -68,6 +68,10 @@
     {
       "name": "axiom-ios-graphics",
       "description": "Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, or graphics programming. Covers Metal migration from OpenGL/DirectX, shader conversion, GPU debugging, translation layers."
+    },
+    {
+      "name": "axiom-ios-games",
+      "description": "Use when building ANY 2D game, game prototype, or interactive simulation with SpriteKit. Covers scene graphs, physics, actions, game loops, rendering performance, SwiftUI integration."
     },
     {
       "name": "axiom-apple-docs",

@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swift-performance, core-data, networking, codable, icloud, storage, liquid-glass, textkit, testing, build
+argument: area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swift-performance, core-data, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit
 disable-model-invocation: true
 ---
 
@@ -32,6 +32,7 @@ If no area specified → analyze project and suggest relevant audits
 | textkit | textkit-auditor | TextKit issues, text rendering problems |
 | testing | testing-auditor | Flaky tests, slow tests, Swift Testing migration, test quality |
 | build | build-optimizer | Build time optimization opportunities |
+| spritekit | spritekit-auditor | Physics bitmask issues, draw call waste, node accumulation, action leaks |
 
 ## Direct Dispatch
 
@@ -119,6 +120,7 @@ If no area argument:
    - Find Timer.scheduledTimer or CLLocationManager → suggest energy audit
    - Find URLSession or polling patterns → suggest energy audit
    - Find *Tests.swift files → suggest testing audit
+   - Find SpriteKit imports (import SpriteKit, SKScene, SKSpriteNode) → suggest spritekit audit
 
 2. Present findings and ask: "Based on your project, I suggest these audits: [list]. Which would you like to run?"
 
