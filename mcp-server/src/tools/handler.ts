@@ -1,3 +1,4 @@
+import type { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { Loader } from '../loader/types.js';
 import { Logger } from '../config.js';
 
@@ -9,6 +10,7 @@ export interface McpTool {
     properties?: Record<string, any>;
     required?: string[];
   };
+  annotations?: ToolAnnotations;
 }
 
 interface ToolResponse {
@@ -48,6 +50,13 @@ export class DynamicToolsHandler {
               },
             },
           },
+          annotations: {
+            title: 'Browse Axiom Skills Catalog',
+            readOnlyHint: true,
+            destructiveHint: false,
+            idempotentHint: true,
+            openWorldHint: false,
+          },
         },
         {
           name: 'axiom_search_skills',
@@ -79,6 +88,13 @@ export class DynamicToolsHandler {
               },
             },
             required: ['query'],
+          },
+          annotations: {
+            title: 'Search Axiom Skills',
+            readOnlyHint: true,
+            destructiveHint: false,
+            idempotentHint: true,
+            openWorldHint: false,
           },
         },
         {
@@ -113,6 +129,13 @@ export class DynamicToolsHandler {
             },
             required: ['skills'],
           },
+          annotations: {
+            title: 'Read Axiom Skill Content',
+            readOnlyHint: true,
+            destructiveHint: false,
+            idempotentHint: true,
+            openWorldHint: false,
+          },
         },
         {
           name: 'axiom_run_agent',
@@ -126,6 +149,13 @@ export class DynamicToolsHandler {
               },
             },
             required: ['agent'],
+          },
+          annotations: {
+            title: 'Get Axiom Agent Instructions',
+            readOnlyHint: true,
+            destructiveHint: false,
+            idempotentHint: true,
+            openWorldHint: false,
           },
         },
       ],
