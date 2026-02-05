@@ -51,17 +51,12 @@ export interface SerializedSearchIndex {
   sectionTerms: Record<string, Record<string, string[]>>;
 }
 
-// Technical terms that should not be suffix-stripped
-const PRESERVE_TERMS = new Set([
-  'sendable', 'observable', 'identifiable', 'hashable', 'equatable',
-  'codable', 'decodable', 'encodable', 'comparable', 'transferable',
-  'copyable', 'escapable', 'noncopyable',
-]);
-
 /**
  * Tokenize text into normalized terms.
  * Simple suffix stripping instead of Porter stemmer to preserve
  * technical terms like NavigationStack, Sendable.
+ * Avoids -able/-ible stripping since Swift protocols (Sendable,
+ * Observable, Codable, Identifiable) collide with those suffixes.
  */
 export function tokenize(text: string): string[] {
   return text
@@ -71,14 +66,10 @@ export function tokenize(text: string): string[] {
     .split(/[^a-z0-9@]+/)
     .filter(t => t.length > 1 && !STOPWORDS.has(t))
     .map(t => {
-      if (PRESERVE_TERMS.has(t)) return t;
-      // Simple suffix stripping — only common English suffixes
       if (t.endsWith('ing') && t.length > 5) return t.slice(0, -3);
       if (t.endsWith('tion') && t.length > 6) return t.slice(0, -4);
       if (t.endsWith('ness') && t.length > 6) return t.slice(0, -4);
       if (t.endsWith('ment') && t.length > 6) return t.slice(0, -4);
-      if (t.endsWith('able') && t.length > 6) return t.slice(0, -4);
-      if (t.endsWith('ible') && t.length > 6) return t.slice(0, -4);
       return t;
     });
 }
