@@ -33,9 +33,16 @@ describe('tokenize', () => {
   });
 
   it('preserves short tokens that look like suffixed words', () => {
-    // "ing" alone is 3 chars, filtered by length > 1 but the suffix strip
-    // only applies when length > 5
+    // "doing" is 5 chars, suffix strip only applies when length > 5
     expect(tokenize('doing')).toEqual(['doing']);
+  });
+
+  it('preserves Swift technical terms from suffix stripping', () => {
+    expect(tokenize('Sendable')).toEqual(['sendable']);
+    expect(tokenize('Observable')).toEqual(['observable']);
+    expect(tokenize('Codable')).toEqual(['codable']);
+    expect(tokenize('Identifiable')).toEqual(['identifiable']);
+    expect(tokenize('Hashable')).toEqual(['hashable']);
   });
 
   it('splits camelCase into separate tokens', () => {
