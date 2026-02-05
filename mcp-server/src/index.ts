@@ -69,6 +69,13 @@ async function main() {
         prompts: {},
         tools: {},
       },
+      instructions: [
+        'Axiom is a read-only iOS/Swift development knowledge base with 68+ skills covering SwiftUI, Swift concurrency, data persistence, performance, accessibility, networking, Apple Intelligence, and more.',
+        'All tools are read-only documentation lookups — they never modify files or state.',
+        'Recommended workflow: axiom_get_catalog (browse categories) → axiom_search_skills (find by keyword) → axiom_read_skill (read full content).',
+        'Common triggers: build failures, memory leaks, data races, SwiftUI layout bugs, database migrations, concurrency errors, accessibility issues, energy optimization.',
+        'Use axiom_run_agent for autonomous agent instructions (build-fixer, accessibility-auditor, etc.).',
+      ].join(' '),
     }
   );
 
