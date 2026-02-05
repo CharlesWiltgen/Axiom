@@ -103,6 +103,50 @@ describe('DynamicToolsHandler', () => {
     });
   });
 
+  describe('tool annotations', () => {
+    it('all tools have annotations with title', async () => {
+      const handler = new DynamicToolsHandler(makeMockLoader(), mockLogger);
+      const { tools } = await handler.listTools();
+
+      for (const tool of tools) {
+        expect(tool.annotations, `${tool.name} missing annotations`).toBeDefined();
+        expect(tool.annotations!.title, `${tool.name} missing title`).toBeDefined();
+        expect(typeof tool.annotations!.title).toBe('string');
+      }
+    });
+
+    it('all tools are marked read-only', async () => {
+      const handler = new DynamicToolsHandler(makeMockLoader(), mockLogger);
+      const { tools } = await handler.listTools();
+
+      for (const tool of tools) {
+        expect(tool.annotations!.readOnlyHint, `${tool.name} should be readOnlyHint: true`).toBe(true);
+      }
+    });
+
+    it('all tools are marked closed-world', async () => {
+      const handler = new DynamicToolsHandler(makeMockLoader(), mockLogger);
+      const { tools } = await handler.listTools();
+
+      for (const tool of tools) {
+        expect(tool.annotations!.openWorldHint, `${tool.name} should be openWorldHint: false`).toBe(false);
+      }
+    });
+
+    it('has expected titles for each tool', async () => {
+      const handler = new DynamicToolsHandler(makeMockLoader(), mockLogger);
+      const { tools } = await handler.listTools();
+
+      const titles = Object.fromEntries(tools.map(t => [t.name, t.annotations!.title]));
+      expect(titles).toEqual({
+        axiom_get_catalog: 'Browse Axiom Skills Catalog',
+        axiom_search_skills: 'Search Axiom Skills',
+        axiom_read_skill: 'Read Axiom Skill Content',
+        axiom_run_agent: 'Get Axiom Agent Instructions',
+      });
+    });
+  });
+
   describe('unknown tool', () => {
     it('throws for unknown tool name', async () => {
       const handler = new DynamicToolsHandler(makeMockLoader(), mockLogger);
