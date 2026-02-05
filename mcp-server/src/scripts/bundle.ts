@@ -116,6 +116,33 @@ async function generateBundle(pluginPath: string): Promise<BundleV2> {
   return bundle;
 }
 
+export interface BundleStats {
+  totalBytes: number;
+  skills: { count: number; bytes: number };
+  commands: { count: number; bytes: number };
+  agents: { count: number; bytes: number };
+  searchIndex: { bytes: number };
+  generatedAt: string;
+}
+
+export function computeBundleStats(bundle: BundleV2): BundleStats {
+  const jsonSize = (obj: unknown) => Buffer.byteLength(JSON.stringify(obj), 'utf-8');
+
+  const skillsBytes = Object.keys(bundle.skills).length > 0 ? jsonSize(bundle.skills) : 0;
+  const commandsBytes = Object.keys(bundle.commands).length > 0 ? jsonSize(bundle.commands) : 0;
+  const agentsBytes = Object.keys(bundle.agents).length > 0 ? jsonSize(bundle.agents) : 0;
+  const searchIndexBytes = bundle.searchIndex ? jsonSize(bundle.searchIndex) : 0;
+
+  return {
+    totalBytes: skillsBytes + commandsBytes + agentsBytes + searchIndexBytes,
+    skills: { count: Object.keys(bundle.skills).length, bytes: skillsBytes },
+    commands: { count: Object.keys(bundle.commands).length, bytes: commandsBytes },
+    agents: { count: Object.keys(bundle.agents).length, bytes: agentsBytes },
+    searchIndex: { bytes: searchIndexBytes },
+    generatedAt: bundle.generatedAt,
+  };
+}
+
 async function main() {
   const pluginPath = process.argv[2] || join(process.cwd(), '../.claude-plugin/plugins/axiom');
   const outputDir = join(process.cwd(), 'dist');
@@ -145,9 +172,22 @@ async function main() {
     console.log();
     console.log(`Bundle written to: ${outputPath}`);
 
-    const stats = await import('fs').then(fs => fs.promises.stat(outputPath));
-    const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
+    const fileStats = await import('fs').then(fs => fs.promises.stat(outputPath));
+    const sizeMB = (fileStats.size / 1024 / 1024).toFixed(2);
     console.log(`Size: ${sizeMB} MB`);
+
+    // Write bundle stats for tracking/regression testing
+    const bundleStats = computeBundleStats(bundle);
+    const statsPath = join(outputDir, 'bundle-stats.json');
+    await writeFile(statsPath, JSON.stringify(bundleStats, null, 2), 'utf-8');
+    console.log();
+    console.log('Size Breakdown:');
+    console.log(`  Skills:       ${(bundleStats.skills.bytes / 1024).toFixed(1)} KB (${bundleStats.skills.count} files)`);
+    console.log(`  Commands:     ${(bundleStats.commands.bytes / 1024).toFixed(1)} KB (${bundleStats.commands.count} files)`);
+    console.log(`  Agents:       ${(bundleStats.agents.bytes / 1024).toFixed(1)} KB (${bundleStats.agents.count} files)`);
+    console.log(`  Search Index: ${(bundleStats.searchIndex.bytes / 1024).toFixed(1)} KB`);
+    console.log(`  Total:        ${(bundleStats.totalBytes / 1024).toFixed(1)} KB`);
+    console.log(`Stats written to: ${statsPath}`);
 
   } catch (error) {
     console.error('Error generating bundle:', error);
@@ -155,4 +195,8 @@ async function main() {
   }
 }
 
-main();
+// Only run when executed directly (not when imported by tests)
+const isDirectExecution = process.argv[1]?.endsWith('bundle.js') || process.argv[1]?.endsWith('bundle.ts');
+if (isDirectExecution) {
+  main();
+}
