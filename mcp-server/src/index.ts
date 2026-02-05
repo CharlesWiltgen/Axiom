@@ -151,11 +151,19 @@ async function main() {
   // Wire file watcher to listChanged notifications in dev mode
   if (devLoader) {
     devLoader.onChange((kind) => {
-      logger.info(`Sending tools/list_changed notification (${kind} changed)`);
+      if (kind !== 'skills') return;
+      logger.info('Sending tools/list_changed notification (skills changed)');
       server.sendToolListChanged().catch((err) => {
         logger.debug(`Could not send listChanged: ${err}`);
       });
     });
+
+    const cleanup = () => {
+      devLoader!.stopWatching();
+      process.exit(0);
+    };
+    process.on('SIGINT', cleanup);
+    process.on('SIGTERM', cleanup);
   }
 
   // Connect to stdio transport

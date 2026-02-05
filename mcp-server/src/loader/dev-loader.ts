@@ -245,6 +245,7 @@ export class DevLoader implements Loader {
 
   private watchAbort: AbortController | null = null;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingKinds = new Set<Exclude<ChangeKind, null>>();
   private onChangeCallback: ((kind: ChangeKind) => void) | null = null;
 
   onChange(callback: (kind: ChangeKind) => void): void {
@@ -267,10 +268,14 @@ export class DevLoader implements Loader {
           const kind = classifyChange(event.filename);
           if (!kind) continue;
 
-          // Debounce: wait 200ms after last change before invalidating
+          // Accumulate changed kinds during debounce window
+          this.pendingKinds.add(kind);
           if (this.debounceTimer) clearTimeout(this.debounceTimer);
           this.debounceTimer = setTimeout(() => {
-            this.invalidate(kind, event.filename!);
+            for (const k of this.pendingKinds) {
+              this.invalidate(k);
+            }
+            this.pendingKinds.clear();
           }, 200);
         }
       } catch (err: any) {
@@ -285,14 +290,15 @@ export class DevLoader implements Loader {
       clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
+    this.pendingKinds.clear();
     if (this.watchAbort) {
       this.watchAbort.abort();
       this.watchAbort = null;
     }
   }
 
-  private invalidate(kind: ChangeKind, filename: string): void {
-    this.logger.info(`File changed: ${filename} → invalidating ${kind}`);
+  private invalidate(kind: Exclude<ChangeKind, null>): void {
+    this.logger.info(`Invalidating ${kind} cache`);
 
     switch (kind) {
       case 'skills':

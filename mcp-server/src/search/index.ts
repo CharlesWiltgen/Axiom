@@ -97,6 +97,30 @@ const MINISEARCH_OPTIONS = {
   },
 };
 
+function toDocument(name: string, skill: Skill): SkillDocument {
+  return {
+    name,
+    nameText: skill.name.replace(/[-_]/g, ' '),
+    description: skill.description,
+    tags: skill.tags.join(' '),
+    sectionHeadings: skill.sections.map(s => s.heading).join(' '),
+    body: skill.content,
+    skillType: skill.skillType,
+    source: skill.source,
+    category: skill.category || '',
+  };
+}
+
+function buildSectionTerms(skill: Skill): Map<string, Set<string>> {
+  const docSections = new Map<string, Set<string>>();
+  for (const section of skill.sections) {
+    const lines = skill.content.split('\n').slice(section.startLine, section.endLine + 1);
+    const sectionText = section.heading + ' ' + lines.join(' ');
+    docSections.set(section.heading, new Set(tokenize(sectionText)));
+  }
+  return docSections;
+}
+
 /**
  * Build a search index from a collection of skills.
  */
@@ -107,27 +131,8 @@ export function buildIndex(skills: Map<string, Skill>): SearchIndex {
 
   for (const [name, skill] of skills) {
     if (skill.skillType === 'router') continue;
-
-    documents.push({
-      name,
-      nameText: skill.name.replace(/[-_]/g, ' '),
-      description: skill.description,
-      tags: skill.tags.join(' '),
-      sectionHeadings: skill.sections.map(s => s.heading).join(' '),
-      body: skill.content,
-      skillType: skill.skillType,
-      source: skill.source,
-      category: skill.category || '',
-    });
-
-    const docSections = new Map<string, Set<string>>();
-    for (const section of skill.sections) {
-      const lines = skill.content.split('\n').slice(section.startLine, section.endLine + 1);
-      const sectionText = section.heading + ' ' + lines.join(' ');
-      const terms = new Set(tokenize(sectionText));
-      docSections.set(section.heading, terms);
-    }
-    sectionTerms.set(name, docSections);
+    documents.push(toDocument(name, skill));
+    sectionTerms.set(name, buildSectionTerms(skill));
   }
 
   engine.addAll(documents);
@@ -148,27 +153,9 @@ export function addSkills(index: SearchIndex, skills: Map<string, Skill>): void 
 
   for (const [name, skill] of skills) {
     if (skill.skillType === 'router') continue;
-
-    documents.push({
-      name,
-      nameText: skill.name.replace(/[-_]/g, ' '),
-      description: skill.description,
-      tags: skill.tags.join(' '),
-      sectionHeadings: skill.sections.map(s => s.heading).join(' '),
-      body: skill.content,
-      skillType: skill.skillType,
-      source: skill.source,
-      category: skill.category || '',
-    });
-
-    const docSections = new Map<string, Set<string>>();
-    for (const section of skill.sections) {
-      const lines = skill.content.split('\n').slice(section.startLine, section.endLine + 1);
-      const sectionText = section.heading + ' ' + lines.join(' ');
-      const terms = new Set(tokenize(sectionText));
-      docSections.set(section.heading, terms);
-    }
-    index._sectionTerms.set(name, docSections);
+    if (index._engine.has(name)) continue;
+    documents.push(toDocument(name, skill));
+    index._sectionTerms.set(name, buildSectionTerms(skill));
   }
 
   index._engine.addAll(documents);

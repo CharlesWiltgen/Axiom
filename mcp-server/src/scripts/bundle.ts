@@ -13,6 +13,7 @@
 
 import { readdir, readFile, writeFile, mkdir, stat } from 'fs/promises';
 import { join } from 'path';
+import { fileURLToPath } from 'url';
 import { parseSkill, parseCommand, parseAgent, applyAnnotations, Skill, Command, Agent, SkillAnnotations } from '../loader/parser.js';
 import type { BundleV2 } from '../loader/types.js';
 import { buildIndex, serializeIndex } from '../search/index.js';
@@ -196,7 +197,6 @@ async function main() {
 }
 
 // Only run when executed directly (not when imported by tests)
-const isDirectExecution = process.argv[1]?.endsWith('bundle.js') || process.argv[1]?.endsWith('bundle.ts');
-if (isDirectExecution) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main();
 }
