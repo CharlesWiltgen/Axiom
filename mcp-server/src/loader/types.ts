@@ -1,6 +1,16 @@
 import { Skill, Command, Agent, SkillSection } from './parser.js';
-import type { SearchResult } from '../search/index.js';
+import type { SearchResult, SerializedSearchIndex } from '../search/index.js';
 import type { CatalogResult } from '../catalog/index.js';
+
+export interface BundleV2 {
+  version: string;
+  generatedAt: string;
+  skills: Record<string, Skill>;
+  commands: Record<string, Command>;
+  agents: Record<string, Agent>;
+  catalog?: CatalogResult;
+  searchIndex?: SerializedSearchIndex;
+}
 
 /**
  * Common interface for both DevLoader and ProdLoader
