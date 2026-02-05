@@ -23,7 +23,7 @@ interface ToolResponse {
  * - axiom_get_catalog: Structured taxonomy of skills by category
  * - axiom_search_skills: BM25 text search with ranked results
  * - axiom_read_skill: Section-filtered content delivery
- * - axiom_run_agent: Agent instructions and metadata
+ * - axiom_get_agent: Agent instructions and metadata
  */
 export class DynamicToolsHandler {
   constructor(
@@ -138,7 +138,7 @@ export class DynamicToolsHandler {
           },
         },
         {
-          name: 'axiom_run_agent',
+          name: 'axiom_get_agent',
           description: 'Get agent instructions and metadata for an Axiom agent. Returns the agent\'s full prompt and configuration.',
           inputSchema: {
             type: 'object',
@@ -172,8 +172,8 @@ export class DynamicToolsHandler {
         return this.handleSearchSkills(args);
       case 'axiom_read_skill':
         return this.handleReadSkill(args);
-      case 'axiom_run_agent':
-        return this.handleRunAgent(args);
+      case 'axiom_get_agent':
+        return this.handleGetAgent(args);
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
@@ -316,7 +316,7 @@ export class DynamicToolsHandler {
   }
 
   // Validation errors (bad input) throw; not-found errors (valid input, missing data) return inline
-  private async handleRunAgent(args: Record<string, any>): Promise<ToolResponse> {
+  private async handleGetAgent(args: Record<string, any>): Promise<ToolResponse> {
     if (!args.agent || typeof args.agent !== 'string') {
       throw new Error('Required parameter "agent" must be a non-empty string');
     }

@@ -48,9 +48,15 @@ async function main() {
   }
 
   // Initialize loader
-  const loader = config.mode === 'development'
-    ? new DevLoader(config.devSourcePath!, logger, config)
-    : await loadProductionBundle(config, logger);
+  let loader: Loader;
+  let devLoader: DevLoader | null = null;
+  if (config.mode === 'development') {
+    devLoader = new DevLoader(config.devSourcePath!, logger, config);
+    devLoader.startWatching();
+    loader = devLoader;
+  } else {
+    loader = await loadProductionBundle(config, logger);
+  }
 
   // Initialize handlers
   const resourcesHandler = new ResourcesHandler(loader, logger);
@@ -67,14 +73,14 @@ async function main() {
       capabilities: {
         resources: {},
         prompts: {},
-        tools: {},
+        tools: { listChanged: config.mode === 'development' },
       },
       instructions: [
         'Axiom is a read-only iOS/Swift development knowledge base with 68+ skills covering SwiftUI, Swift concurrency, data persistence, performance, accessibility, networking, Apple Intelligence, and more.',
         'All tools are read-only documentation lookups — they never modify files or state.',
         'Recommended workflow: axiom_get_catalog (browse categories) → axiom_search_skills (find by keyword) → axiom_read_skill (read full content).',
         'Common triggers: build failures, memory leaks, data races, SwiftUI layout bugs, database migrations, concurrency errors, accessibility issues, energy optimization.',
-        'Use axiom_run_agent for autonomous agent instructions (build-fixer, accessibility-auditor, etc.).',
+        'Use axiom_get_agent for autonomous agent instructions (build-fixer, accessibility-auditor, etc.).',
       ].join(' '),
     }
   );
@@ -141,6 +147,16 @@ async function main() {
       throw error;
     }
   });
+
+  // Wire file watcher to listChanged notifications in dev mode
+  if (devLoader) {
+    devLoader.onChange((kind) => {
+      logger.info(`Sending tools/list_changed notification (${kind} changed)`);
+      server.sendToolListChanged().catch((err) => {
+        logger.debug(`Could not send listChanged: ${err}`);
+      });
+    });
+  }
 
   // Connect to stdio transport
   const transport = new StdioServerTransport();

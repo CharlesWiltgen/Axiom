@@ -1,27 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildCatalog } from './index.js';
 import type { Skill, Agent } from '../loader/parser.js';
-
-function makeSkill(overrides: Partial<Skill> & { name: string }): Skill {
-  return {
-    description: '',
-    content: '',
-    skillType: 'discipline',
-    source: 'axiom',
-    tags: [],
-    related: [],
-    sections: [],
-    ...overrides,
-  };
-}
-
-function makeAgent(overrides: Partial<Agent> & { name: string }): Agent {
-  return {
-    description: '',
-    content: '',
-    ...overrides,
-  };
-}
+import { makeSkill, makeAgent } from '../test-helpers.js';
 
 describe('buildCatalog', () => {
   it('categorizes skills and includes agents', () => {

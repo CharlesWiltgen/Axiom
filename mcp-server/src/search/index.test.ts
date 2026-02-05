@@ -1,19 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { tokenize, buildIndex, search, serializeIndex, deserializeIndex } from './index.js';
+import { tokenize, buildIndex, addSkills, search, serializeIndex, deserializeIndex } from './index.js';
 import type { Skill } from '../loader/parser.js';
-
-function makeSkill(overrides: Partial<Skill> & { name: string }): Skill {
-  return {
-    description: '',
-    content: '',
-    skillType: 'discipline',
-    source: 'axiom',
-    tags: [],
-    related: [],
-    sections: [],
-    ...overrides,
-  };
-}
+import { makeSkill } from '../test-helpers.js';
 
 describe('tokenize', () => {
   it('splits on non-alphanumeric characters and removes stopwords', () => {
@@ -211,6 +199,73 @@ describe('search', () => {
     // "swift concurrency" should strongly prefer the skill with both terms
     const results = search(index, 'swift concurrency', {}, skills);
     expect(results[0].name).toBe('axiom-swift-concurrency');
+  });
+});
+
+describe('addSkills', () => {
+  it('incrementally adds new skills to an existing index', () => {
+    const originalSkills = new Map<string, Skill>([
+      ['skill-a', makeSkill({ name: 'skill-a', description: 'concurrency patterns', content: 'async await actors' })],
+    ]);
+    const index = buildIndex(originalSkills);
+    expect(index.docCount).toBe(1);
+
+    const newSkills = new Map<string, Skill>([
+      ['skill-b', makeSkill({ name: 'skill-b', description: 'navigation patterns', content: 'NavigationStack deep linking' })],
+    ]);
+    addSkills(index, newSkills);
+
+    expect(index.docCount).toBe(2);
+    const results = search(index, 'navigation', {}, new Map([...originalSkills, ...newSkills]));
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].name).toBe('skill-b');
+  });
+
+  it('preserves existing index entries after adding', () => {
+    const originalSkills = new Map<string, Skill>([
+      ['skill-a', makeSkill({ name: 'skill-a', description: 'concurrency patterns', content: 'async await actors' })],
+    ]);
+    const index = buildIndex(originalSkills);
+
+    const newSkills = new Map<string, Skill>([
+      ['skill-b', makeSkill({ name: 'skill-b', description: 'navigation', content: 'NavigationStack' })],
+    ]);
+    addSkills(index, newSkills);
+
+    const results = search(index, 'concurrency async', {}, new Map([...originalSkills, ...newSkills]));
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].name).toBe('skill-a');
+  });
+
+  it('skips router skills', () => {
+    const index = buildIndex(new Map());
+    const newSkills = new Map<string, Skill>([
+      ['my-router', makeSkill({ name: 'my-router', skillType: 'router', description: 'routes things' })],
+      ['real-skill', makeSkill({ name: 'real-skill', description: 'does real work' })],
+    ]);
+    addSkills(index, newSkills);
+
+    expect(index.docCount).toBe(1);
+  });
+
+  it('builds section terms for new skills', () => {
+    const index = buildIndex(new Map());
+    const newSkills = new Map<string, Skill>([
+      ['skill-a', makeSkill({
+        name: 'skill-a',
+        description: 'test skill',
+        content: '# Overview\nSome overview content\n# Details\nDetailed content here',
+        sections: [
+          { heading: 'Overview', level: 1, startLine: 0, endLine: 1, charCount: 25 },
+          { heading: 'Details', level: 1, startLine: 2, endLine: 3, charCount: 25 },
+        ],
+      })],
+    ]);
+    addSkills(index, newSkills);
+
+    const results = search(index, 'overview', {}, newSkills);
+    expect(results.length).toBe(1);
+    expect(results[0].matchingSections).toContain('Overview');
   });
 });
 
