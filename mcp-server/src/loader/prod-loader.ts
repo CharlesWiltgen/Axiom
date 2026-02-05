@@ -1,9 +1,9 @@
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { Skill, Command, Agent, SkillSection } from './parser.js';
+import { Skill, Command, Agent, SkillSection, filterSkillSections } from './parser.js';
 import { Config, Logger } from '../config.js';
 import { Loader } from './types.js';
-import { SearchIndex, deserializeIndex, search, buildIndex, serializeIndex, SearchResult } from '../search/index.js';
+import { SearchIndex, deserializeIndex, search, buildIndex, SerializedSearchIndex, SearchResult } from '../search/index.js';
 import { buildCatalog, CatalogResult } from '../catalog/index.js';
 import { detectXcode, loadAppleDocs } from './xcode-docs.js';
 
@@ -13,8 +13,8 @@ interface BundleV2 {
   skills: Record<string, Skill>;
   commands: Record<string, Command>;
   agents: Record<string, Agent>;
-  catalog?: any;
-  searchIndex?: any;
+  catalog?: CatalogResult;
+  searchIndex?: SerializedSearchIndex;
 }
 
 /**
@@ -25,6 +25,7 @@ export class ProdLoader implements Loader {
   private commandsCache = new Map<string, Command>();
   private agentsCache = new Map<string, Agent>();
   private searchIdx: SearchIndex | null = null;
+  private catalogCache: CatalogResult | null = null;
   private loaded = false;
 
   constructor(
@@ -134,29 +135,7 @@ export class ProdLoader implements Loader {
     const skill = this.skillsCache.get(name);
     if (!skill) return undefined;
 
-    if (!sectionNames || sectionNames.length === 0) {
-      return { skill, content: skill.content, sections: skill.sections };
-    }
-
-    const lines = skill.content.split('\n');
-    const matchedSections: SkillSection[] = [];
-    const contentParts: string[] = [];
-
-    for (const section of skill.sections) {
-      const matches = sectionNames.some(filter =>
-        section.heading.toLowerCase().includes(filter.toLowerCase()),
-      );
-      if (matches) {
-        matchedSections.push(section);
-        contentParts.push(lines.slice(section.startLine, section.endLine + 1).join('\n'));
-      }
-    }
-
-    return {
-      skill,
-      content: contentParts.join('\n\n'),
-      sections: matchedSections,
-    };
+    return filterSkillSections(skill, sectionNames);
   }
 
   async searchSkills(
@@ -169,6 +148,15 @@ export class ProdLoader implements Loader {
 
   async getCatalog(category?: string): Promise<CatalogResult> {
     await this.ensureLoaded();
+
+    // Cache unfiltered catalog; filtered calls bypass cache (different result shape)
+    if (!category) {
+      if (!this.catalogCache) {
+        this.catalogCache = buildCatalog(this.skillsCache, this.agentsCache);
+      }
+      return this.catalogCache;
+    }
+
     return buildCatalog(this.skillsCache, this.agentsCache, category);
   }
 
