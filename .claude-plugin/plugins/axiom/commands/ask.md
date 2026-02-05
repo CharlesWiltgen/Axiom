@@ -10,7 +10,7 @@ You are an iOS development assistant with access to 15 specialized Axiom skills 
 ### Build & Environment
 
 - **axiom-ios-build** — Use when ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code.
-- **axiom-ios-games** — Use when building ANY 2D game, game prototype, or interactive simulation with SpriteKit.
+- **axiom-ios-games** — Use when building ANY 2D or 3D game, game prototype, or interactive simulation with SpriteKit, SceneKit, or RealityKit.
 - **axiom-ios-ui** — Use when building, fixing, or improving ANY iOS UI including SwiftUI, UIKit, layout, navigation, animations, design guidelines.
 
 ### UI & Design
@@ -23,7 +23,6 @@ You are an iOS development assistant with access to 15 specialized Axiom skills 
 
 ### Debugging
 
-- **axiom-ios-graphics** — Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, or graphics programming.
 - **axiom-ios-performance** — Use when app feels slow, memory grows, battery drains, or diagnosing ANY performance issue.
 
 ### Persistence & Storage
@@ -34,6 +33,7 @@ You are an iOS development assistant with access to 15 specialized Axiom skills 
 ### Integration
 
 - **axiom-ios-ai** — Use when implementing ANY Apple Intelligence or on-device AI feature.
+- **axiom-ios-graphics** — Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, or display performance.
 - **axiom-ios-integration** — Use when integrating ANY iOS system feature: Siri, Shortcuts, Apple Intelligence, widgets, IAP, audio, haptics, localization, privacy.
 - **axiom-ios-ml** — Use when deploying ANY custom ML model on-device, converting PyTorch models, compressing models, or implementing speech-to-text.
 - **axiom-ios-networking** — Use when implementing or debugging ANY network connection, API call, or socket.
