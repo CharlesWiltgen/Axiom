@@ -1,6 +1,6 @@
 import { readdir, readFile, stat } from 'fs/promises';
 import { join } from 'path';
-import { parseSkill, parseCommand, parseAgent, applyAnnotations, Skill, Command, Agent, SkillSection, SkillAnnotations } from './parser.js';
+import { parseSkill, parseCommand, parseAgent, applyAnnotations, filterSkillSections, Skill, Command, Agent, SkillSection, SkillAnnotations } from './parser.js';
 import { Config, Logger } from '../config.js';
 import { Loader } from './types.js';
 import { buildIndex, search, SearchIndex, SearchResult } from '../search/index.js';
@@ -68,14 +68,20 @@ export class DevLoader implements Loader {
 
         if (entryStat.isDirectory()) {
           const skillFile = join(entryPath, 'SKILL.md');
+          let content: string;
           try {
-            const content = await readFile(skillFile, 'utf-8');
+            content = await readFile(skillFile, 'utf-8');
+          } catch {
+            this.logger.debug(`No SKILL.md in ${entry}, skipping`);
+            continue;
+          }
+          try {
             const skill = applyAnnotations(parseSkill(content, entry), annotations);
             this.skillsCache.set(skill.name, skill);
             this.logger.debug(`Loaded skill: ${skill.name}`);
             loadedCount++;
-          } catch {
-            this.logger.debug(`No SKILL.md in ${entry}, skipping`);
+          } catch (err) {
+            this.logger.warn(`Failed to parse skill ${entry}: ${(err as Error).message}`);
           }
         }
       }
@@ -197,29 +203,7 @@ export class DevLoader implements Loader {
     const skill = await this.getSkill(name);
     if (!skill) return undefined;
 
-    if (!sectionNames || sectionNames.length === 0) {
-      return { skill, content: skill.content, sections: skill.sections };
-    }
-
-    const lines = skill.content.split('\n');
-    const matchedSections: SkillSection[] = [];
-    const contentParts: string[] = [];
-
-    for (const section of skill.sections) {
-      const matches = sectionNames.some(filter =>
-        section.heading.toLowerCase().includes(filter.toLowerCase()),
-      );
-      if (matches) {
-        matchedSections.push(section);
-        contentParts.push(lines.slice(section.startLine, section.endLine + 1).join('\n'));
-      }
-    }
-
-    return {
-      skill,
-      content: contentParts.join('\n\n'),
-      sections: matchedSections,
-    };
+    return filterSkillSections(skill, sectionNames);
   }
 
   async searchSkills(
