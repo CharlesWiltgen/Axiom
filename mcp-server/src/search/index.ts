@@ -1,4 +1,4 @@
-import MiniSearch from 'minisearch';
+import MiniSearch, { type AsPlainObject } from 'minisearch';
 import { Skill, SkillType, SkillSource } from '../loader/parser.js';
 
 const STOPWORDS = new Set([
@@ -36,7 +36,7 @@ export interface SearchIndex {
 }
 
 export interface SerializedSearchIndex {
-  engine: string;
+  engine: AsPlainObject;
   sectionTerms: Record<string, Record<string, string[]>>;
   docCount: number;
 }
@@ -82,9 +82,13 @@ export function tokenize(text: string): string[] {
     .filter((t): t is string => t !== null);
 }
 
+// Keys stored in MiniSearch index for filtering/display without needing the skills Map.
+// Typed to SkillDocument keys so a rename is caught at compile time.
+const STORED_FIELDS: (keyof SkillDocument)[] = ['skillType', 'source', 'category', 'description'];
+
 const MINISEARCH_OPTIONS = {
   fields: ['nameText', 'description', 'tags', 'sectionHeadings', 'body'],
-  storeFields: ['skillType', 'source', 'category', 'description'] as string[],
+  storeFields: STORED_FIELDS as string[],
   idField: 'name',
   tokenize: tokenizeField,
   processTerm: processTermField,
@@ -199,7 +203,7 @@ export function serializeIndex(index: SearchIndex): SerializedSearchIndex {
   }
 
   return {
-    engine: JSON.stringify(index._engine),
+    engine: index._engine.toJSON(),
     sectionTerms,
     docCount: index.docCount,
   };
@@ -207,9 +211,12 @@ export function serializeIndex(index: SearchIndex): SerializedSearchIndex {
 
 /**
  * Deserialize a bundled SearchIndex back into the runtime format.
+ * Returns null if the data is an incompatible format (e.g. pre-MiniSearch bundle).
  */
-export function deserializeIndex(data: SerializedSearchIndex): SearchIndex {
-  const engine = MiniSearch.loadJSON<SkillDocument>(data.engine, MINISEARCH_OPTIONS);
+export function deserializeIndex(data: SerializedSearchIndex): SearchIndex | null {
+  if (!data.engine || typeof data.engine.serializationVersion !== 'number') return null;
+
+  const engine = MiniSearch.loadJS<SkillDocument>(data.engine, MINISEARCH_OPTIONS);
 
   const sectionTerms = new Map<string, Map<string, Set<string>>>();
   for (const [doc, sections] of Object.entries(data.sectionTerms)) {
