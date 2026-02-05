@@ -60,9 +60,11 @@ export class ProdLoader implements Loader {
         this.agentsCache.set(name, agent);
       }
 
-      // Load pre-computed search index or build one
+      // Load pre-computed search index or build one (deserialize returns null for incompatible bundles)
       if (bundle.searchIndex) {
         this.searchIdx = deserializeIndex(bundle.searchIndex);
+      }
+      if (this.searchIdx) {
         this.logger.info(`Search index loaded from bundle: ${this.searchIdx.docCount} documents`);
       } else {
         this.searchIdx = buildIndex(this.skillsCache);
