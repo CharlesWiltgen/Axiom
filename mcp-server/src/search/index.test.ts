@@ -153,6 +153,21 @@ describe('search', () => {
     expect(results.length).toBe(0);
   });
 
+  it('filters by category', () => {
+    const catSkills = new Map<string, Skill>([
+      ['skill-a', makeSkill({ name: 'skill-a', description: 'swift patterns', category: 'concurrency' })],
+      ['skill-b', makeSkill({ name: 'skill-b', description: 'swift layouts', category: 'ui-design' })],
+    ]);
+    const catIndex = buildIndex(catSkills);
+
+    const all = search(catIndex, 'swift', {}, catSkills);
+    expect(all.length).toBe(2);
+
+    const filtered = search(catIndex, 'swift', { category: 'concurrency' }, catSkills);
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].name).toBe('skill-a');
+  });
+
   it('returns empty for no-match query', () => {
     const results = search(index, 'xyznonexistent', {}, skills);
     expect(results).toEqual([]);
@@ -190,6 +205,40 @@ describe('serializeIndex / deserializeIndex roundtrip', () => {
     const restoredResults = search(restored, 'test description', {}, skills);
     expect(restoredResults.map(r => r.name)).toEqual(originalResults.map(r => r.name));
     expect(restoredResults.length).toBeGreaterThan(0);
+  });
+
+  it('preserves stored fields (skillType, source, category, description) through roundtrip', () => {
+    const skills = new Map<string, Skill>([
+      ['test-skill', makeSkill({
+        name: 'test-skill',
+        description: 'specific description text',
+        skillType: 'reference',
+        source: 'apple',
+        category: 'concurrency',
+        content: '# Test\nSome body',
+        sections: [{ heading: 'Test', level: 1, startLine: 0, endLine: 1, charCount: 15 }],
+      })],
+    ]);
+
+    const index = buildIndex(skills);
+    const restored = deserializeIndex(serializeIndex(index));
+
+    // Search without skills map — result metadata must come from stored fields alone
+    const results = search(restored!, 'specific description');
+    expect(results.length).toBe(1);
+    expect(results[0]).toMatchObject({
+      name: 'test-skill',
+      skillType: 'reference',
+      source: 'apple',
+      category: 'concurrency',
+      description: 'specific description text',
+    });
+  });
+
+  it('returns null for incompatible serialized data', () => {
+    const oldFormat = { invertedIndex: {}, docLengths: {}, avgDocLength: 0, docCount: 0, sectionTerms: {} };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(deserializeIndex(oldFormat as any)).toBeNull();
   });
 
   it('produces identical search results after roundtrip', () => {
