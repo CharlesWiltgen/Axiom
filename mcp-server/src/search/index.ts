@@ -154,6 +154,9 @@ export function search(
   const limit = options?.limit ?? 10;
 
   const miniResults = index._engine.search(query, {
+    fuzzy: 0.2,
+    prefix: true,
+    combineWith: 'AND',
     filter: (result) => {
       if (options?.skillType && result.skillType !== options.skillType) return false;
       if (options?.category && result.category !== options.category) return false;

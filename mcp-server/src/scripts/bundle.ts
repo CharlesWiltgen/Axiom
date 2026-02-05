@@ -14,18 +14,9 @@
 import { readdir, readFile, writeFile, mkdir, stat } from 'fs/promises';
 import { join } from 'path';
 import { parseSkill, parseCommand, parseAgent, applyAnnotations, Skill, Command, Agent, SkillAnnotations } from '../loader/parser.js';
-import { buildIndex, serializeIndex, SerializedSearchIndex } from '../search/index.js';
-import { buildCatalog, CatalogResult } from '../catalog/index.js';
-
-interface BundleV2 {
-  version: string;
-  generatedAt: string;
-  skills: Record<string, Skill>;
-  commands: Record<string, Command>;
-  agents: Record<string, Agent>;
-  catalog: CatalogResult | null;
-  searchIndex: SerializedSearchIndex | null;
-}
+import type { BundleV2 } from '../loader/types.js';
+import { buildIndex, serializeIndex } from '../search/index.js';
+import { buildCatalog } from '../catalog/index.js';
 
 async function loadAnnotations(): Promise<SkillAnnotations> {
   try {
@@ -47,8 +38,6 @@ async function generateBundle(pluginPath: string): Promise<BundleV2> {
     skills: {},
     commands: {},
     agents: {},
-    catalog: null,
-    searchIndex: null,
   };
 
   // Load annotations for MCP metadata
