@@ -43,7 +43,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "gray-matter": "^4.0.3"
+    "gray-matter": "^4.0.3",
+    "minisearch": "^7.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
