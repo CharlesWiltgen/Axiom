@@ -32,12 +32,18 @@ describe('tokenize', () => {
     expect(tokenize('running navigation darkness')).toEqual(['runn', 'naviga', 'dark']);
   });
 
+  it('does not strip -able/-ible suffixes (Swift protocol names)', () => {
+    expect(tokenize('Sendable Observable Codable flexible')).toEqual([
+      'sendable', 'observable', 'codable', 'flexible',
+    ]);
+  });
+
   it('preserves short tokens that look like suffixed words', () => {
     // "doing" is 5 chars, suffix strip only applies when length > 5
     expect(tokenize('doing')).toEqual(['doing']);
   });
 
-  it('preserves Swift technical terms from suffix stripping', () => {
+  it('preserves Swift protocol names ending in -able', () => {
     expect(tokenize('Sendable')).toEqual(['sendable']);
     expect(tokenize('Observable')).toEqual(['observable']);
     expect(tokenize('Codable')).toEqual(['codable']);
