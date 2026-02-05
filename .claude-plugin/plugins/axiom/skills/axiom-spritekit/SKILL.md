@@ -26,8 +26,8 @@ Use this skill when:
 - Fixing coordinate system confusion
 
 Do NOT use this skill for:
-- SceneKit 3D rendering (future skill)
-- GameplayKit entity-component systems (future skill)
+- SceneKit 3D rendering (`axiom-scenekit`)
+- GameplayKit entity-component systems
 - Metal shader programming (`axiom-metal-migration-ref`)
 - General SwiftUI layout (`axiom-swiftui-layout`)
 
