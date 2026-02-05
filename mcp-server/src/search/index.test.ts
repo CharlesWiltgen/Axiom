@@ -77,7 +77,7 @@ describe('tokenize', () => {
 });
 
 describe('buildIndex', () => {
-  it('creates an index from skills', () => {
+  it('creates a searchable index from skills', () => {
     const skills = new Map<string, Skill>([
       ['test-skill', makeSkill({ name: 'test-skill', description: 'a test skill', content: 'some content here' })],
     ]);
@@ -85,25 +85,29 @@ describe('buildIndex', () => {
     const index = buildIndex(skills);
 
     expect(index.docCount).toBe(1);
-    expect(index.avgDocLength).toBeGreaterThan(0);
-    expect(index.invertedIndex.size).toBeGreaterThan(0);
+    const results = search(index, 'test skill', {}, skills);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].name).toBe('test-skill');
   });
 
   it('excludes router skills from the index', () => {
     const skills = new Map<string, Skill>([
-      ['my-router', makeSkill({ name: 'my-router', skillType: 'router', description: 'routes things' })],
+      ['my-router', makeSkill({ name: 'my-router', skillType: 'router', description: 'routes things uniquely' })],
       ['real-skill', makeSkill({ name: 'real-skill', description: 'does real work' })],
     ]);
 
     const index = buildIndex(skills);
 
     expect(index.docCount).toBe(1);
+    const results = search(index, 'routes uniquely', {}, skills);
+    expect(results.length).toBe(0);
   });
 
   it('handles empty skills map', () => {
     const index = buildIndex(new Map());
     expect(index.docCount).toBe(0);
-    expect(index.avgDocLength).toBe(0);
+    const results = search(index, 'anything', {});
+    expect(results).toEqual([]);
   });
 });
 
@@ -166,7 +170,7 @@ describe('search', () => {
 });
 
 describe('serializeIndex / deserializeIndex roundtrip', () => {
-  it('preserves index data through serialization', () => {
+  it('preserves search behavior through serialization', () => {
     const skills = new Map<string, Skill>([
       ['test-skill', makeSkill({
         name: 'test-skill',
@@ -181,10 +185,11 @@ describe('serializeIndex / deserializeIndex roundtrip', () => {
     const restored = deserializeIndex(serialized);
 
     expect(restored.docCount).toBe(original.docCount);
-    expect(restored.avgDocLength).toBe(original.avgDocLength);
-    expect(restored.invertedIndex.size).toBe(original.invertedIndex.size);
-    expect(restored.docLengths.size).toBe(original.docLengths.size);
-    expect(restored.sectionTerms.size).toBe(original.sectionTerms.size);
+
+    const originalResults = search(original, 'test description', {}, skills);
+    const restoredResults = search(restored, 'test description', {}, skills);
+    expect(restoredResults.map(r => r.name)).toEqual(originalResults.map(r => r.name));
+    expect(restoredResults.length).toBeGreaterThan(0);
   });
 
   it('produces identical search results after roundtrip', () => {
