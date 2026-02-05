@@ -196,8 +196,10 @@ export class DynamicToolsHandler {
       throw new Error('Required parameter "query" must be a non-empty string');
     }
 
+    const limit = Math.max(1, Math.min(args.limit ?? 10, 50));
+
     const results = await this.loader.searchSkills(args.query, {
-      limit: args.limit,
+      limit,
       skillType: args.skillType,
       category: args.category,
       source: args.source,
@@ -231,6 +233,10 @@ export class DynamicToolsHandler {
   private async handleReadSkill(args: Record<string, any>): Promise<ToolResponse> {
     if (!args.skills || !Array.isArray(args.skills) || args.skills.length === 0) {
       throw new Error('Required parameter "skills" must be a non-empty array');
+    }
+
+    if (args.skills.length > 10) {
+      return { content: [{ type: 'text', text: `Too many skills requested (${args.skills.length}). Maximum is 10 per call.` }] };
     }
 
     const listSections = args.listSections === true;
@@ -286,7 +292,7 @@ export class DynamicToolsHandler {
 
     const agent = await this.loader.getAgent(args.agent);
     if (!agent) {
-      throw new Error(`Agent not found: ${args.agent}`);
+      return { content: [{ type: 'text', text: `Agent not found: "${args.agent}". Use axiom_get_catalog to see available agents.` }] };
     }
 
     const lines: string[] = [];
