@@ -182,6 +182,36 @@ describe('search', () => {
     const results = search(index, 'concurrency', {}, skills);
     expect(results[0].matchingSections).toContain('Concurrency');
   });
+
+  it('matches despite typos via fuzzy search', () => {
+    // "Navagation" (typo: extra 'a') has no exact-matching token in the index.
+    // After tokenize+process: "navaga" (suffix strip -tion).
+    // Indexed term is "naviga". Distance("navaga","naviga") = 1, fuzzy 0.2 * 6 = 1.2 → allows 1.
+    // Without fuzzy, this returns 0 results.
+    const results = search(index, 'Navagation', {}, skills);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].name).toBe('axiom-swiftui-nav');
+  });
+
+  it('matches prefix queries', () => {
+    // "Navig" tokenizes to "navig" — prefix should match "naviga" in the index
+    const results = search(index, 'Navig', {}, skills);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].name).toBe('axiom-swiftui-nav');
+  });
+
+  it('still returns exact matches with high relevance', () => {
+    // Exact queries should not lose precision from fuzzy/prefix
+    const results = search(index, 'NavigationStack', {}, skills);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].name).toBe('axiom-swiftui-nav');
+  });
+
+  it('uses AND for multi-word queries', () => {
+    // "swift concurrency" should strongly prefer the skill with both terms
+    const results = search(index, 'swift concurrency', {}, skills);
+    expect(results[0].name).toBe('axiom-swift-concurrency');
+  });
 });
 
 describe('serializeIndex / deserializeIndex roundtrip', () => {

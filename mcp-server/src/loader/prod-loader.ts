@@ -2,20 +2,10 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { Skill, Command, Agent, SkillSection, filterSkillSections } from './parser.js';
 import { Config, Logger } from '../config.js';
-import { Loader } from './types.js';
-import { SearchIndex, deserializeIndex, search, buildIndex, SerializedSearchIndex, SearchResult } from '../search/index.js';
+import { Loader, type BundleV2 } from './types.js';
+import { SearchIndex, deserializeIndex, search, buildIndex, SearchResult } from '../search/index.js';
 import { buildCatalog, CatalogResult } from '../catalog/index.js';
 import { detectXcode, loadAppleDocs } from './xcode-docs.js';
-
-interface BundleV2 {
-  version: string;
-  generatedAt: string;
-  skills: Record<string, Skill>;
-  commands: Record<string, Command>;
-  agents: Record<string, Agent>;
-  catalog?: CatalogResult;
-  searchIndex?: SerializedSearchIndex;
-}
 
 /**
  * Production mode loader - reads from pre-generated bundle.json
