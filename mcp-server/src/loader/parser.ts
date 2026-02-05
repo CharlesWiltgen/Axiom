@@ -311,6 +311,39 @@ export function parseAppleDoc(
 }
 
 /**
+ * Filter a skill's content to only matching sections.
+ * Returns full content if no sectionNames provided.
+ */
+export function filterSkillSections(
+  skill: Skill,
+  sectionNames?: string[],
+): { skill: Skill; content: string; sections: SkillSection[] } {
+  if (!sectionNames || sectionNames.length === 0) {
+    return { skill, content: skill.content, sections: skill.sections };
+  }
+
+  const lines = skill.content.split('\n');
+  const matchedSections: SkillSection[] = [];
+  const contentParts: string[] = [];
+
+  for (const section of skill.sections) {
+    const matches = sectionNames.some(filter =>
+      section.heading.toLowerCase().includes(filter.toLowerCase()),
+    );
+    if (matches) {
+      matchedSections.push(section);
+      contentParts.push(lines.slice(section.startLine, section.endLine + 1).join('\n'));
+    }
+  }
+
+  return {
+    skill,
+    content: contentParts.join('\n\n'),
+    sections: matchedSections,
+  };
+}
+
+/**
  * Extract name from filename (remove extension)
  */
 function extractNameFromFilename(filename: string): string {
