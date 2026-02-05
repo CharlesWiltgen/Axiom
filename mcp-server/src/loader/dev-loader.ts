@@ -1,4 +1,4 @@
-import { readdir, readFile, stat } from 'fs/promises';
+import { readdir, readFile, stat, watch } from 'fs/promises';
 import { join } from 'path';
 import { parseSkill, parseCommand, parseAgent, applyAnnotations, filterSkillSections, Skill, Command, Agent, SkillSection, SkillAnnotations } from './parser.js';
 import { Config, Logger } from '../config.js';
@@ -6,6 +6,15 @@ import { Loader } from './types.js';
 import { buildIndex, search, SearchIndex, SearchResult } from '../search/index.js';
 import { buildCatalog, CatalogResult } from '../catalog/index.js';
 import { detectXcode, loadAppleDocs } from './xcode-docs.js';
+
+export type ChangeKind = 'skills' | 'commands' | 'agents' | null;
+
+export function classifyChange(relativePath: string): ChangeKind {
+  if (/^skills\//.test(relativePath)) return 'skills';
+  if (/^commands\//.test(relativePath)) return 'commands';
+  if (/^agents\//.test(relativePath)) return 'agents';
+  return null;
+}
 
 /**
  * Development mode loader - reads live files from Claude Code plugin directory
@@ -234,15 +243,70 @@ export class DevLoader implements Loader {
     return buildCatalog(this.skillsCache, this.agentsCache, category);
   }
 
-  getSkills(): Map<string, Skill> {
-    return this.skillsCache;
+  private watchAbort: AbortController | null = null;
+  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private onChangeCallback: ((kind: ChangeKind) => void) | null = null;
+
+  onChange(callback: (kind: ChangeKind) => void): void {
+    this.onChangeCallback = callback;
   }
 
-  getCommands(): Map<string, Command> {
-    return this.commandsCache;
+  startWatching(): void {
+    if (this.watchAbort) return;
+
+    this.watchAbort = new AbortController();
+    const signal = this.watchAbort.signal;
+
+    this.logger.info(`Watching for file changes in: ${this.pluginPath}`);
+
+    (async () => {
+      try {
+        const watcher = watch(this.pluginPath, { recursive: true, signal });
+        for await (const event of watcher) {
+          if (!event.filename) continue;
+          const kind = classifyChange(event.filename);
+          if (!kind) continue;
+
+          // Debounce: wait 200ms after last change before invalidating
+          if (this.debounceTimer) clearTimeout(this.debounceTimer);
+          this.debounceTimer = setTimeout(() => {
+            this.invalidate(kind, event.filename!);
+          }, 200);
+        }
+      } catch (err: any) {
+        if (err.name === 'AbortError') return;
+        this.logger.error('File watcher error:', err);
+      }
+    })();
   }
 
-  getAgents(): Map<string, Agent> {
-    return this.agentsCache;
+  stopWatching(): void {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+    if (this.watchAbort) {
+      this.watchAbort.abort();
+      this.watchAbort = null;
+    }
+  }
+
+  private invalidate(kind: ChangeKind, filename: string): void {
+    this.logger.info(`File changed: ${filename} → invalidating ${kind}`);
+
+    switch (kind) {
+      case 'skills':
+        this.skillsCache.clear();
+        this.searchIndex = null;
+        break;
+      case 'commands':
+        this.commandsCache.clear();
+        break;
+      case 'agents':
+        this.agentsCache.clear();
+        break;
+    }
+
+    this.onChangeCallback?.(kind);
   }
 }

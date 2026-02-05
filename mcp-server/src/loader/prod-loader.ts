@@ -3,7 +3,7 @@ import { join } from 'path';
 import { Skill, Command, Agent, SkillSection, filterSkillSections } from './parser.js';
 import { Config, Logger } from '../config.js';
 import { Loader, type BundleV2 } from './types.js';
-import { SearchIndex, deserializeIndex, search, buildIndex, SearchResult } from '../search/index.js';
+import { SearchIndex, deserializeIndex, search, buildIndex, addSkills, SearchResult } from '../search/index.js';
 import { buildCatalog, CatalogResult } from '../catalog/index.js';
 import { detectXcode, loadAppleDocs } from './xcode-docs.js';
 
@@ -73,9 +73,9 @@ export class ProdLoader implements Loader {
           for (const [name, skill] of appleDocs) {
             this.skillsCache.set(name, skill);
           }
-          // Rebuild search index to include Apple docs
-          this.searchIdx = buildIndex(this.skillsCache);
-          this.logger.info(`Loaded ${appleDocs.size} Apple docs, search index rebuilt`);
+          // Incrementally add Apple docs to existing index
+          addSkills(this.searchIdx!, appleDocs);
+          this.logger.info(`Loaded ${appleDocs.size} Apple docs, search index updated incrementally`);
         } else {
           this.logger.info('Xcode not found, skipping Apple docs');
         }
@@ -150,17 +150,5 @@ export class ProdLoader implements Loader {
     }
 
     return buildCatalog(this.skillsCache, this.agentsCache, category);
-  }
-
-  getSkills(): Map<string, Skill> {
-    return this.skillsCache;
-  }
-
-  getCommands(): Map<string, Command> {
-    return this.commandsCache;
-  }
-
-  getAgents(): Map<string, Agent> {
-    return this.agentsCache;
   }
 }

@@ -21,12 +21,12 @@ function makeMockLoader(overrides: Partial<Loader> = {}): Loader {
 const mockLogger = new Logger({ mode: 'production', enableAppleDocs: false, logLevel: 'error' } satisfies Config);
 
 describe('DynamicToolsHandler', () => {
-  describe('handleRunAgent', () => {
+  describe('handleGetAgent', () => {
     it('returns inline error for missing agent instead of throwing', async () => {
       const loader = makeMockLoader({ getAgent: vi.fn().mockResolvedValue(undefined) });
       const handler = new DynamicToolsHandler(loader, mockLogger);
 
-      const result = await handler.callTool('axiom_run_agent', { agent: 'nonexistent' });
+      const result = await handler.callTool('axiom_get_agent', { agent: 'nonexistent' });
 
       expect(result.content[0].text).toContain('Agent not found');
       expect(result.content[0].text).toContain('nonexistent');
@@ -42,10 +42,70 @@ describe('DynamicToolsHandler', () => {
       });
       const handler = new DynamicToolsHandler(loader, mockLogger);
 
-      const result = await handler.callTool('axiom_run_agent', { agent: 'build-fixer' });
+      const result = await handler.callTool('axiom_get_agent', { agent: 'build-fixer' });
 
       expect(result.content[0].text).toContain('build-fixer');
       expect(result.content[0].text).toContain('Instructions here');
+    });
+  });
+
+  describe('handleGetCatalog', () => {
+    const catalogWithSkills = {
+      categories: {
+        'ui-design': {
+          label: 'UI & Design',
+          skills: [
+            { name: 'axiom-swiftui-nav', description: 'Navigation patterns', skillType: 'discipline', source: 'axiom' },
+            { name: 'axiom-swiftui-nav-ref', description: 'Navigation reference', skillType: 'reference', source: 'axiom' },
+          ],
+        },
+        'apple-docs': {
+          label: 'Apple Documentation',
+          skills: [
+            { name: 'liquid-glass-swiftui', description: 'Liquid Glass guide', skillType: 'reference', source: 'apple' },
+          ],
+        },
+      },
+      agents: [{ name: 'build-fixer', description: 'Fixes builds' }],
+      totalSkills: 3,
+      totalAgents: 1,
+    };
+
+    it('returns formatted catalog with skill names', async () => {
+      const loader = makeMockLoader({ getCatalog: vi.fn().mockResolvedValue(catalogWithSkills) });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_get_catalog', {});
+      const text = result.content[0].text;
+
+      expect(text).toContain('3 skills, 1 agents');
+      expect(text).toContain('## UI & Design (2)');
+      expect(text).toContain('- axiom-swiftui-nav');
+      expect(text).toContain('- axiom-swiftui-nav-ref [reference]');
+      expect(text).toContain('- liquid-glass-swiftui [reference] [Apple]');
+      expect(text).toContain('## Agents (1)');
+      expect(text).toContain('- build-fixer');
+    });
+
+    it('includes descriptions when includeDescriptions is true', async () => {
+      const loader = makeMockLoader({ getCatalog: vi.fn().mockResolvedValue(catalogWithSkills) });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_get_catalog', { includeDescriptions: true });
+      const text = result.content[0].text;
+
+      expect(text).toContain('**axiom-swiftui-nav**: Navigation patterns');
+      expect(text).toContain('**build-fixer**: Fixes builds');
+    });
+
+    it('passes category filter to loader', async () => {
+      const getCatalogFn = vi.fn().mockResolvedValue({ categories: {}, agents: [], totalSkills: 0, totalAgents: 0 });
+      const loader = makeMockLoader({ getCatalog: getCatalogFn });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      await handler.callTool('axiom_get_catalog', { category: 'UI & Design' });
+
+      expect(getCatalogFn).toHaveBeenCalledWith('UI & Design');
     });
   });
 
@@ -63,6 +123,41 @@ describe('DynamicToolsHandler', () => {
 
       await handler.callTool('axiom_search_skills', { query: 'test' });
       expect(searchFn).toHaveBeenCalledWith('test', expect.objectContaining({ limit: 10 }));
+    });
+
+    it('returns formatted results with scores and sections', async () => {
+      const results = [
+        { name: 'axiom-swift-concurrency', score: 12.5, skillType: 'discipline' as const, source: 'axiom' as const, category: 'Concurrency', description: 'Swift 6 concurrency', matchingSections: ['@MainActor', 'Sendable'] },
+        { name: 'concurrency-guide', score: 8.2, skillType: 'reference' as const, source: 'apple' as const, category: undefined, description: 'Apple guide', matchingSections: [] },
+      ];
+      const loader = makeMockLoader({ searchSkills: vi.fn().mockResolvedValue(results) });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_search_skills', { query: 'concurrency' });
+      const text = result.content[0].text;
+
+      expect(text).toContain('Search Results for "concurrency"');
+      expect(text).toContain('2 results');
+      expect(text).toContain('### axiom-swift-concurrency (Concurrency)');
+      expect(text).toContain('Score: 12.50');
+      expect(text).toContain('Matching sections: @MainActor, Sendable');
+      expect(text).toContain('### concurrency-guide [reference] [Apple]');
+    });
+
+    it('returns empty message when no results found', async () => {
+      const loader = makeMockLoader({ searchSkills: vi.fn().mockResolvedValue([]) });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_search_skills', { query: 'xyznonexistent' });
+
+      expect(result.content[0].text).toContain('No skills found');
+      expect(result.content[0].text).toContain('xyznonexistent');
+    });
+
+    it('throws for missing query parameter', async () => {
+      const handler = new DynamicToolsHandler(makeMockLoader(), mockLogger);
+
+      await expect(handler.callTool('axiom_search_skills', {})).rejects.toThrow('query');
     });
   });
 
@@ -100,6 +195,73 @@ describe('DynamicToolsHandler', () => {
       const result = await handler.callTool('axiom_read_skill', { skills: [{ name: 'nope' }] });
 
       expect(result.content[0].text).toContain('Skill not found');
+    });
+
+    it('returns section TOC when listSections is true', async () => {
+      const skill = {
+        name: 'axiom-swift-concurrency',
+        description: 'Concurrency patterns',
+        content: 'full content here',
+        skillType: 'discipline',
+        source: 'axiom',
+        sections: [
+          { heading: 'Overview', level: 2, startLine: 1, endLine: 10, charCount: 500 },
+          { heading: '@MainActor', level: 2, startLine: 11, endLine: 30, charCount: 1200 },
+        ],
+        tags: [],
+        related: [],
+      };
+      const loader = makeMockLoader({ getSkill: vi.fn().mockResolvedValue(skill) });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', {
+        skills: [{ name: 'axiom-swift-concurrency' }],
+        listSections: true,
+      });
+      const text = result.content[0].text;
+
+      expect(text).toContain('axiom-swift-concurrency — Sections');
+      expect(text).toContain('| Overview | 500 |');
+      expect(text).toContain('| @MainActor | 1200 |');
+    });
+
+    it('returns filtered content when sections specified', async () => {
+      const loader = makeMockLoader({
+        getSkillSections: vi.fn().mockResolvedValue({
+          skill: { name: 'axiom-swift-concurrency', skillType: 'discipline' },
+          content: 'Filtered content about MainActor',
+          sections: [{ heading: '@MainActor', level: 2, startLine: 11, endLine: 30, charCount: 1200 }],
+        }),
+      });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', {
+        skills: [{ name: 'axiom-swift-concurrency', sections: ['MainActor'] }],
+      });
+      const text = result.content[0].text;
+
+      expect(text).toContain('axiom-swift-concurrency (filtered: @MainActor)');
+      expect(text).toContain('Filtered content about MainActor');
+    });
+
+    it('returns full content when no sections filter', async () => {
+      const loader = makeMockLoader({
+        getSkillSections: vi.fn().mockResolvedValue({
+          skill: { name: 'axiom-swift-concurrency', skillType: 'discipline' },
+          content: 'Full skill content',
+          sections: [],
+        }),
+      });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', {
+        skills: [{ name: 'axiom-swift-concurrency' }],
+      });
+      const text = result.content[0].text;
+
+      expect(text).toContain('## axiom-swift-concurrency');
+      expect(text).not.toContain('filtered');
+      expect(text).toContain('Full skill content');
     });
   });
 
@@ -142,7 +304,7 @@ describe('DynamicToolsHandler', () => {
         axiom_get_catalog: 'Browse Axiom Skills Catalog',
         axiom_search_skills: 'Search Axiom Skills',
         axiom_read_skill: 'Read Axiom Skill Content',
-        axiom_run_agent: 'Get Axiom Agent Instructions',
+        axiom_get_agent: 'Get Axiom Agent Instructions',
       });
     });
   });

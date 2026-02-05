@@ -140,6 +140,42 @@ export function buildIndex(skills: Map<string, Skill>): SearchIndex {
 }
 
 /**
+ * Incrementally add new skills to an existing search index.
+ * Mutates the index in place — avoids rebuilding the entire MiniSearch index.
+ */
+export function addSkills(index: SearchIndex, skills: Map<string, Skill>): void {
+  const documents: SkillDocument[] = [];
+
+  for (const [name, skill] of skills) {
+    if (skill.skillType === 'router') continue;
+
+    documents.push({
+      name,
+      nameText: skill.name.replace(/[-_]/g, ' '),
+      description: skill.description,
+      tags: skill.tags.join(' '),
+      sectionHeadings: skill.sections.map(s => s.heading).join(' '),
+      body: skill.content,
+      skillType: skill.skillType,
+      source: skill.source,
+      category: skill.category || '',
+    });
+
+    const docSections = new Map<string, Set<string>>();
+    for (const section of skill.sections) {
+      const lines = skill.content.split('\n').slice(section.startLine, section.endLine + 1);
+      const sectionText = section.heading + ' ' + lines.join(' ');
+      const terms = new Set(tokenize(sectionText));
+      docSections.set(section.heading, terms);
+    }
+    index._sectionTerms.set(name, docSections);
+  }
+
+  index._engine.addAll(documents);
+  index.docCount += documents.length;
+}
+
+/**
  * Search the index using MiniSearch BM25+ scoring with field weights.
  */
 export function search(
