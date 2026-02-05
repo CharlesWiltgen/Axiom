@@ -248,6 +248,22 @@ describe('addSkills', () => {
     expect(index.docCount).toBe(1);
   });
 
+  it('silently skips skills already in the index', () => {
+    const skills = new Map<string, Skill>([
+      ['skill-a', makeSkill({ name: 'skill-a', description: 'original description', content: 'original content' })],
+    ]);
+    const index = buildIndex(skills);
+    expect(index.docCount).toBe(1);
+
+    const duplicateSkills = new Map<string, Skill>([
+      ['skill-a', makeSkill({ name: 'skill-a', description: 'updated description', content: 'updated content' })],
+      ['skill-b', makeSkill({ name: 'skill-b', description: 'brand new skill', content: 'new content' })],
+    ]);
+    addSkills(index, duplicateSkills);
+
+    expect(index.docCount).toBe(2);
+  });
+
   it('builds section terms for new skills', () => {
     const index = buildIndex(new Map());
     const newSkills = new Map<string, Skill>([
