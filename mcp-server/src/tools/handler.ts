@@ -285,6 +285,7 @@ export class DynamicToolsHandler {
     return { content: [{ type: 'text', text: parts.join('\n') }] };
   }
 
+  // Validation errors (bad input) throw; not-found errors (valid input, missing data) return inline
   private async handleRunAgent(args: Record<string, any>): Promise<ToolResponse> {
     if (!args.agent || typeof args.agent !== 'string') {
       throw new Error('Required parameter "agent" must be a non-empty string');
