@@ -17,7 +17,9 @@
     "build:bundle": "tsc && node dist/scripts/bundle.js",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
-    "prepublishOnly": "npm run build:bundle"
+    "prepublishOnly": "npm run build:bundle",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "mcp",
@@ -45,7 +47,8 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.17"
   },
   "engines": {
     "node": ">=18.0.0"
