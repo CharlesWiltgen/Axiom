@@ -13,18 +13,18 @@
 
 import { readdir, readFile, writeFile, mkdir, stat } from 'fs/promises';
 import { join } from 'path';
-import { parseSkill, parseCommand, parseAgent, applyAnnotations, Skill, SkillAnnotations } from '../loader/parser.js';
-import { buildIndex, serializeIndex } from '../search/index.js';
-import { buildCatalog } from '../catalog/index.js';
+import { parseSkill, parseCommand, parseAgent, applyAnnotations, Skill, Command, Agent, SkillAnnotations } from '../loader/parser.js';
+import { buildIndex, serializeIndex, SerializedSearchIndex } from '../search/index.js';
+import { buildCatalog, CatalogResult } from '../catalog/index.js';
 
 interface BundleV2 {
   version: string;
   generatedAt: string;
-  skills: Record<string, any>;
-  commands: Record<string, any>;
-  agents: Record<string, any>;
-  catalog: any;
-  searchIndex: any;
+  skills: Record<string, Skill>;
+  commands: Record<string, Command>;
+  agents: Record<string, Agent>;
+  catalog: CatalogResult | null;
+  searchIndex: SerializedSearchIndex | null;
 }
 
 async function loadAnnotations(): Promise<SkillAnnotations> {
@@ -111,7 +111,7 @@ async function generateBundle(pluginPath: string): Promise<BundleV2> {
     skillsMap.set(name, skill as Skill);
   }
 
-  const agentsMap = new Map(Object.entries(bundle.agents).map(([name, agent]) => [name, agent as any]));
+  const agentsMap = new Map(Object.entries(bundle.agents));
 
   console.log('Building search index...');
   const searchIndex = buildIndex(skillsMap);
@@ -147,8 +147,8 @@ async function main() {
     console.log(`- Skills: ${Object.keys(bundle.skills).length}`);
     console.log(`- Commands: ${Object.keys(bundle.commands).length}`);
     console.log(`- Agents: ${Object.keys(bundle.agents).length}`);
-    console.log(`- Search Index: ${bundle.searchIndex.docCount} documents`);
-    console.log(`- Catalog Categories: ${Object.keys(bundle.catalog.categories).length}`);
+    console.log(`- Search Index: ${bundle.searchIndex?.docCount ?? 0} documents`);
+    console.log(`- Catalog Categories: ${Object.keys(bundle.catalog?.categories ?? {}).length}`);
     console.log(`- Generated: ${bundle.generatedAt}`);
 
     await writeFile(outputPath, JSON.stringify(bundle, null, 2), 'utf-8');

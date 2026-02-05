@@ -43,7 +43,7 @@ export interface SearchIndex {
   sectionTerms: Map<string, Map<string, Set<string>>>; // docName -> sectionHeading -> terms
 }
 
-interface SerializedSearchIndex {
+export interface SerializedSearchIndex {
   invertedIndex: Record<string, TermEntry[]>;
   docLengths: Record<string, number>;
   avgDocLength: number;
@@ -58,6 +58,8 @@ interface SerializedSearchIndex {
  */
 export function tokenize(text: string): string[] {
   return text
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
     .toLowerCase()
     .split(/[^a-z0-9@]+/)
     .filter(t => t.length > 1 && !STOPWORDS.has(t))
