@@ -67,11 +67,11 @@
     },
     {
       "name": "axiom-ios-graphics",
-      "description": "Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, or graphics programming. Covers Metal migration from OpenGL/DirectX, shader conversion, GPU debugging, translation layers."
+      "description": "Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, or display performance. Covers Metal migration, shader conversion, RealityKit ECS, RealityView, variable refresh rate, ProMotion."
     },
     {
       "name": "axiom-ios-games",
-      "description": "Use when building ANY 2D game, game prototype, or interactive simulation with SpriteKit. Covers scene graphs, physics, actions, game loops, rendering performance, SwiftUI integration."
+      "description": "Use when building ANY 2D or 3D game, game prototype, or interactive simulation with SpriteKit, SceneKit, or RealityKit. Covers scene graphs, ECS architecture, physics, actions, game loops, rendering, SwiftUI integration, SceneKit migration."
     },
     {
       "name": "axiom-apple-docs",
