@@ -440,7 +440,7 @@ To enable Draw animations on custom symbols, annotate paths in the SF Symbols ap
 |---------|---------|-----|
 | Palette with 1 color | Equivalent to Monochrome, wasted API call | Use Monochrome or provide multiple colors |
 | Multicolor for branded icons | Can't customize Apple's fixed colors | Use Palette with brand colors |
-| Hardcoded `.foregroundColor(.blue)` | Ignores Dark Mode, Dynamic Type, accessibility | Use semantic colors or `.tint` |
+| Hardcoded `.foregroundColor(.blue)` | Ignores Dark Mode, Dynamic Type, accessibility | Use `.foregroundStyle()` with semantic colors |
 | Hierarchical for status indicators | Layers don't carry distinct meaning | Use Palette with semantic colors |
 
 ### Wrong Effect Choice

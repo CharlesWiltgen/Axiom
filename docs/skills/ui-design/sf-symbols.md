@@ -31,37 +31,14 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I create a symbol that changes from play to pause with a smooth animation?"
 - "I need my symbol effects to work on iOS 17 but I want Wiggle on iOS 18+."
 
-## What's Covered
+## What This Skill Provides
 
-### Rendering Mode Decision Tree
-- Monochrome vs Hierarchical vs Palette vs Multicolor
-- When to use each mode with visual and semantic criteria
-- Common mistakes (wrong mode for context, missing layer colors)
-
-### Symbol Effects System
-- 12+ effects organized by behavior: Discrete, Indefinite, Transition, Content Transition
-- Which effect for which UX purpose (tap feedback, loading, show/hide, symbol swap)
-- `SymbolEffectOptions` for speed, repeat count, and timing
-
-### SF Symbols 7: Draw Animations (iOS 26+)
-- Draw On / Draw Off for pen-stroke-style appearing/disappearing
-- Playback modes: By Layer, Whole Symbol, Individually
-- Variable Draw for progress indication
-- Gradient rendering for rich symbol coloring
-- Magic Replace with Draw transitions
-
-### Custom Symbol Authoring
-- SF Symbols app workflow for templates and weight interpolation
-- Draw annotation with guide points (start, end, corner, bidirectional, attachment)
-
-### Anti-Patterns and Troubleshooting
-- Wrong rendering mode, wrong effect choice, missing iOS version checks
-- Effect not playing, wrong colors, custom symbol weight mismatch
-- Draw annotation issues on custom symbols
-
-### Pressure Scenarios
-- "Just use static images" (why SF Symbols save hours)
-- "We'll add animations later" (why effects are one line, retrofitting is a refactor)
+- **Rendering mode decision tree** — which of the 4 modes (Monochrome, Hierarchical, Palette, Multicolor) fits your design
+- **Effect selection guide** — 12+ effects mapped to UX purposes (tap feedback, loading, show/hide, symbol swap)
+- **SF Symbols 7 Draw animations** (iOS 26+) — Draw On/Off, playback modes, Variable Draw, gradient rendering
+- **Custom symbol authoring** — Draw annotation with guide points in SF Symbols app
+- **Anti-patterns and troubleshooting** — wrong mode, effect not playing, weight mismatches, version checks
+- **Pressure scenarios** — pushing back on "just use PNGs" and "add animations later"
 
 ## Key Pattern
 
