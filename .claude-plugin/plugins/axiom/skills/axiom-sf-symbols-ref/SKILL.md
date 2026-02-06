@@ -56,8 +56,7 @@ Image(systemName: "person")
     .symbolVariant(.circle.fill) // Renders person.circle.fill
 
 // Variable value — 0.0 to 1.0, controls symbol fill level
-Image(systemName: "speaker.wave.3.fill")
-    .symbolVariableValue(0.5) // Half-filled
+Image(systemName: "speaker.wave.3.fill", variableValue: 0.5)
 ```
 
 ### UIKit
@@ -93,8 +92,7 @@ let image = NSImage(systemSymbolName: "star.fill", accessibilityDescription: "Fa
 
 // Configuration
 let config = NSImage.SymbolConfiguration(pointSize: 24, weight: .bold)
-let image = NSImage(systemSymbolName: "star.fill", accessibilityDescription: "Favorite")?
-    .withSymbolConfiguration(config)
+let configured = image?.withSymbolConfiguration(config)
 ```
 
 ---
@@ -712,7 +710,7 @@ The system interpolates between these for intermediate weights (Thin, Light, Med
 1. In Xcode, open Asset Catalog
 2. Click **+** > **Symbol Image Set**
 3. Drag exported `.svg` from SF Symbols app
-4. Symbol is available via `Image(systemName: "custom.symbol.name")` if using the `Bundle` parameter, or `Image("custom.symbol.name")` if in the asset catalog
+4. Asset catalog symbols: `Image("custom.symbol.name")`. For symbols loaded from a bundle: `Image(systemName: "custom.symbol.name", bundle: .module)`
 
 ---
 
@@ -741,7 +739,7 @@ The system interpolates between these for intermediate weights (Thin, Light, Med
 | Replace | Content Transition | 17+ | 14+ | 10+ | 17+ | 1+ |
 | Wiggle | Discrete/Indefinite | 18+ | 15+ | 11+ | 18+ | 2+ |
 | Rotate | Discrete/Indefinite | 18+ | 15+ | 11+ | 18+ | 2+ |
-| Breathe | Indefinite | 18+ | 15+ | 11+ | 18+ | 2+ |
+| Breathe | Discrete/Indefinite | 18+ | 15+ | 11+ | 18+ | 2+ |
 | Draw On | Indefinite | 26+ | Tahoe+ | 26+ | 26+ | 26+ |
 | Draw Off | Indefinite | 26+ | Tahoe+ | 26+ | 26+ | 26+ |
 | Variable Draw | Value-based | 26+ | Tahoe+ | 26+ | 26+ | 26+ |
@@ -909,8 +907,7 @@ struct WiFiIndicator: View {
     let isSearching: Bool
 
     var body: some View {
-        Image(systemName: "wifi")
-            .symbolVariableValue(strength)
+        Image(systemName: "wifi", variableValue: strength)
             .symbolEffect(.variableColor.iterative, isActive: isSearching)
             .symbolRenderingMode(.hierarchical)
             .accessibilityLabel(

@@ -29,53 +29,14 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-### Symbol Display
-- SwiftUI `Image(systemName:)`, `Label`, font sizing, image scale, weight, variable values
-- UIKit `UIImage.SymbolConfiguration` — point size, weight, scale, text style
-- AppKit `NSImage.SymbolConfiguration`
-
-### Rendering Modes
-- Monochrome, Hierarchical, Palette, Multicolor — SwiftUI and UIKit APIs
-- Combining configurations in UIKit
-- `SymbolRenderingMode` enum values
-
-### Symbol Effects (Complete)
-- **Bounce** — `DiscreteSymbolEffect`, directional options
-- **Pulse** — `DiscreteSymbolEffect` + `IndefiniteSymbolEffect`
-- **Variable Color** — iterative, cumulative, reversing, hide/dim inactive
-- **Scale** — up/down, by layer
-- **Wiggle** (iOS 18+) — 8 directional options + custom angle
-- **Rotate** (iOS 18+) — clockwise/counterClockwise, by layer
-- **Breathe** (iOS 18+) — plain/pulse variants
-- **Appear/Disappear** — transition effects, directional
-- **Replace** — content transition, Magic Replace, directional variants
-- **Draw On/Off** (iOS 26+) — playback modes, Variable Draw, gradient rendering
-
-### Configuration
-- `SymbolEffectOptions` — speed, repeat count, continuous, nonRepeating
-- Effect protocol hierarchy (Discrete, Indefinite, Transition, ContentTransition)
-
-### UIKit Complete Reference
-- `addSymbolEffect()`, `removeSymbolEffect()`, `setSymbolImage()`
-- `UIBarButtonItem` effect support
-- Completion handlers
-
-### Custom Symbols
-- Template structure and layer annotations
-- Draw annotation guide points
-- Weight interpolation
-- Importing to Xcode
-
-### Platform Availability Matrix
-- Rendering modes: iOS 13+ through iOS 26+
-- Effects: iOS 17+ through iOS 26+
-- Cross-platform (macOS, watchOS, tvOS, visionOS)
-
-### Accessibility
-- Labels, Reduce Motion, Bold Text, Dynamic Type interactions
-
-### Common Patterns
-- Notification badge, WiFi strength, animated toggle, task checkbox, play/pause, download progress
+- **Symbol display** — SwiftUI, UIKit, and AppKit configuration APIs
+- **Rendering modes** — All 4 modes with complete SwiftUI and UIKit signatures
+- **Symbol effects** — 12+ effects (Bounce through Draw On/Off) with options and protocols
+- **UIKit reference** — `addSymbolEffect()`, `removeSymbolEffect()`, `setSymbolImage()`, completion handlers
+- **Custom symbols** — Template structure, Draw annotation, weight interpolation
+- **Platform availability matrix** — iOS 13+ through iOS 26+, cross-platform
+- **Accessibility** — Labels, Reduce Motion, Bold Text, Dynamic Type
+- **Common patterns** — Notification badge, WiFi strength, play/pause, download progress
 
 ## Documentation Scope
 
