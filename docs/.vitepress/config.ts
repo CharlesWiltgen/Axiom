@@ -133,6 +133,7 @@ export default withMermaid(defineConfig({
             { text: 'Overview', link: '/skills/ui-design/' },
             { text: 'HIG (Human Interface Guidelines)', link: '/skills/ui-design/hig' },
             { text: 'Liquid Glass', link: '/skills/ui-design/liquid-glass' },
+            { text: 'SF Symbols', link: '/skills/ui-design/sf-symbols' },
             { text: 'SwiftUI Architecture', link: '/skills/ui-design/swiftui-architecture' },
             { text: 'SwiftUI Layout', link: '/skills/ui-design/swiftui-layout' },
             { text: 'SwiftUI Navigation', link: '/skills/ui-design/swiftui-nav' },
@@ -220,6 +221,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'HIG (Human Interface Guidelines)', link: '/reference/hig-ref' },
             { text: 'Liquid Glass Adoption', link: '/reference/liquid-glass-ref' },
+            { text: 'SF Symbols', link: '/reference/sf-symbols-ref' },
             { text: 'SwiftUI 26 Features', link: '/reference/swiftui-26-ref' },
             { text: 'SwiftUI Animation', link: '/reference/swiftui-animation-ref' },
             { text: 'SwiftUI Containers', link: '/reference/swiftui-containers-ref' },

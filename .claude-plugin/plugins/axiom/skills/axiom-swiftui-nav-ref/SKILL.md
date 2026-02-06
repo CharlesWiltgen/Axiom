@@ -665,7 +665,82 @@ TabView {
 .tabViewCustomization($customization)
 ```
 
-### 5.5 Programmatic Tab Visibility
+### 5.5 Tab Context Menus
+
+Use `.contextMenu(menuItems:)` on a `Tab` to add a context menu to its sidebar representation (e.g., right-click on Mac, long-press on iPad sidebar).
+
+```swift
+Tab("Currently Reading", systemImage: "book") {
+    CurrentBooksList()
+}
+.contextMenu {
+    Button {
+        pinnedTabs.insert(.reading)
+    } label: {
+        Label("Pin", systemImage: "pin")
+    }
+    Button {
+        showShareSheet = true
+    } label: {
+        Label("Share", systemImage: "square.and.arrow.up")
+    }
+}
+```
+
+Return an empty closure to deactivate the context menu conditionally:
+
+```swift
+.contextMenu {
+    if canPin {
+        Button("Pin", systemImage: "pin") { pin() }
+    }
+}
+```
+
+#### iPhone Tab Bar Long-Press
+
+`.contextMenu` on `Tab` only applies to the sidebar representation (iPad/Mac). On iPhone's bottom tab bar, detect long-press by adding a gesture recognizer to the underlying `UITabBar`:
+
+```swift
+// UIKit: In your UITabBarController subclass
+override func viewDidLoad() {
+    super.viewDidLoad()
+    let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+    tabBar.addGestureRecognizer(longPress)
+}
+
+@objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+    guard gesture.state == .began else { return }
+    let location = gesture.location(in: tabBar)
+
+    let buttons = tabBar.subviews
+        .filter { String(describing: type(of: $0)).contains("Button") }
+        .sorted { $0.frame.minX < $1.frame.minX }
+
+    for (index, button) in buttons.enumerated() {
+        if button.frame.contains(location) {
+            handleTabLongPress(at: index, sourceView: button)
+            break
+        }
+    }
+}
+```
+
+```swift
+// SwiftUI: Use SwiftUI-Introspect to access the UITabBar
+TabView(selection: $selectedTab) { /* tabs */ }
+    .introspect(.tabView, on: .iOS(.v18, .v26)) { controller in
+        guard controller.tabBar.gestureRecognizers?.contains(where: { $0 is UILongPressGestureRecognizer }) != true else { return }
+        let longPress = UILongPressGestureRecognizer(target: coordinator, action: #selector(Coordinator.handleLongPress(_:)))
+        controller.tabBar.addGestureRecognizer(longPress)
+    }
+```
+
+**How it works**: `tabBar.subviews` contains private `UITabBarButton` views (one per tab, ordered left-to-right). Filtering for "Button" in the type name isolates them from `UITabBarBackground`. This doesn't interfere with normal tap-to-switch behavior.
+
+**Caveat**: `UITabBarButton` is a private class — the string-based filter is fragile across iOS versions. This is a widely-used pattern (Instagram uses it for account switching on long-press of the profile tab) but is not a public API guarantee.
+
+### 5.6 Programmatic Tab Visibility
 
 Use `.hidden(_:)` to show/hide tabs based on app state while preserving their navigation state.
 
@@ -784,7 +859,7 @@ Button("Switch to Browse") {
 // Uses system motion curves automatically
 ```
 
-### 5.6 iOS 26+ Tab Features (WWDC 2025, 256)
+### 5.7 iOS 26+ Tab Features (WWDC 2025, 256)
 
 ```swift
 // Tab bar minimization on scroll
@@ -864,13 +939,14 @@ struct AdaptiveAccessory: View {
 
 **Best practice**: Reserve `tabViewBottomAccessory` for content relevant across all tabs (playback controls, status indicators). For tab-specific actions, prefer floating glass buttons within the tab's content view.
 
-### 5.7 Tab API Quick Reference
+### 5.8 Tab API Quick Reference
 
 | Modifier | Target | iOS | Purpose |
 |----------|--------|-----|---------|
 | `Tab(_:systemImage:value:content:)` | — | 18+ | New tab syntax with selection value |
 | `Tab(role: .search)` | — | 18+ | Semantic search tab with morph behavior |
 | `TabSection(_:content:)` | — | 18+ | Group tabs in sidebar view |
+| `.contextMenu(menuItems:)` | Tab | 18+ | Add context menu to tab's sidebar representation |
 | `.customizationID(_:)` | Tab | 18+ | Enable user customization |
 | `.customizationBehavior(_:for:)` | Tab | 18+ | Control hide/reorder permissions |
 | `.defaultVisibility(_:for:)` | Tab | 18+ | Set initial visibility state |
