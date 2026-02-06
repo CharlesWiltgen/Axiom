@@ -1600,7 +1600,7 @@ See **Animation Merging Behavior** section above for detailed explanation of mer
 
 **Docs**: /swiftui/animatable, /swiftui/animation, /swiftui/vectorarithmetic, /swiftui/transaction, /swiftui/view/navigationtransition(_:), /swiftui/view/matchedtransitionsource(id:in:configuration:), /uikit/uiview/animate(_:changes:completion:)
 
-**Skills**: axiom-swiftui-26-ref, axiom-swiftui-nav-ref, axiom-swiftui-performance, axiom-swiftui-debugging
+**Skills**: axiom-swiftui-26-ref, axiom-swiftui-nav-ref, axiom-swiftui-performance, axiom-swiftui-debugging, axiom-sf-symbols-ref
 
 ---
 

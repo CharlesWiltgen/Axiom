@@ -493,7 +493,7 @@ When someone selects the search tab, the search field takes the place of the tab
 
 On iPad and Mac, when someone selects the search tab, the search field appears **centered above the app's browsing suggestions** — a different layout than iPhone's tab-bar replacement.
 
-See swiftui-nav-ref skill Section 5.5 (iOS 26 Tab Features) for full `Tab(role: .search)` patterns.
+See swiftui-nav-ref skill Section 5.7 (iOS 26 Tab Features) for full `Tab(role: .search)` patterns.
 
 ### Glass Effect for Custom Views
 

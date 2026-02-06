@@ -18,6 +18,12 @@ Build beautiful, performant interfaces with expert guidance on the latest Apple 
   - *"I'm implementing Liquid Glass but the lensing effect looks like regular blur. What am I missing?"*
   - *"How do I ensure text contrast and legibility while using Liquid Glass?"*
 
+- **[SF Symbols](/skills/ui-design/sf-symbols)** – Rendering modes, symbol effects, Draw animations (iOS 26+), custom symbol authoring
+  - *"My SF Symbol shows as a flat color but I want it to have depth."*
+  - *"How do I use the new SF Symbols 7 Draw animations?"*
+  - *"Which symbol effect should I use for a loading indicator?"*
+  - **Reference** [SF Symbols Reference](/reference/sf-symbols-ref) for complete API with UIKit equivalents
+
 - **[SwiftUI Performance](/skills/ui-design/swiftui-performance)** – Master the new SwiftUI Instrument in Instruments 26, identify bottlenecks with Cause & Effect Graph
   - *"My animations stutter and scrolling is janky. How do I know if SwiftUI is the bottleneck?"*
   - *"Views are updating way too often even though their data hasn't changed."*

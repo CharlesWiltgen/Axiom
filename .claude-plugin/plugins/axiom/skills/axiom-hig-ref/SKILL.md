@@ -744,24 +744,15 @@ SwiftUI provides animation capabilities; WatchKit offers `WKInterfaceImage` for 
 
 ### SF Symbols
 
-**Advantages:**
-- **5,000+ symbols** included with system (SF Symbols 5)
-- Match San Francisco font visual characteristics
-- Can be typed inline with text
-- Embedded baseline values for proper vertical alignment
-- Small, medium, and large-scale variants
-- Nine weights matching SF font
-- Vector-based — scale with text and Dynamic Type
-- Become bolder when Bold Text accessibility enabled
-- Automatic light/dark adaptation
+6,900+ vector symbols that match San Francisco font, scale with Dynamic Type, and adapt to Bold Text and Dark Mode automatically. Nine weights, three scales, four rendering modes, and 12+ animation effects.
 
-**Usage:**
 ```swift
 Label("Settings", systemImage: "gear")
-
 Image(systemName: "star.fill")
     .font(.title) // Scales with text size
 ```
+
+> **For comprehensive coverage** of rendering modes (Monochrome, Hierarchical, Palette, Multicolor), symbol effects (Bounce, Pulse, Wiggle, Draw On/Off), and custom symbol authoring, see `axiom-sf-symbols` (decision trees) and `axiom-sf-symbols-ref` (complete API).
 
 ### Custom Interface Icons
 
