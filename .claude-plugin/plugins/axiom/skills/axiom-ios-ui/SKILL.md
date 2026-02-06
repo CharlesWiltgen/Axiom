@@ -53,6 +53,7 @@ Use this router when working with:
 ### Design & Guidelines
 
 **Liquid Glass adoption** → `/skill axiom-liquid-glass`
+**SF Symbols (effects, rendering, custom)** → `/skill axiom-sf-symbols`
 **Design decisions** → `/skill axiom-hig`
 **Typography** → `/skill axiom-typography-ref`
 **TextKit/rich text** → `/skill axiom-textkit-ref`
@@ -80,10 +81,11 @@ Use this router when working with:
 11. Auto Layout? → auto-layout-debugging
 12. UIKit animations? → uikit-animation-debugging
 13. Liquid Glass? → liquid-glass
-14. HIG compliance? → hig
-15. Typography? → typography-ref
-16. TextKit/rich text? → textkit-ref
-17. Accessibility? → accessibility-diag
+14. SF Symbols effects/rendering/custom? → sf-symbols
+15. HIG compliance? → hig
+16. Typography? → typography-ref
+17. TextKit/rich text? → textkit-ref
+18. Accessibility? → accessibility-diag
 
 ## Anti-Rationalization
 
@@ -95,6 +97,7 @@ Use this router when working with:
 | "I'll just add .animation() and fix later" | Animation issues compound. swiftui-animation-ref has the correct patterns. |
 | "This UI is simple, no architecture needed" | Even small features benefit from separation. swiftui-architecture prevents refactoring debt. |
 | "I know how .searchable works" | Search has 6 gotchas (navigation container, isSearching level, suggestion completion). swiftui-search-ref covers all of them. |
+| "I know SF Symbols, it's just Image(systemName:)" | 4 rendering modes, 12+ effects, 3 Draw playback modes, custom symbol authoring. sf-symbols has decision trees for all of them. |
 
 ## Example Invocations
 
@@ -130,3 +133,12 @@ User: "How do I add search to my SwiftUI list?"
 
 User: "My search suggestions aren't working"
 → Invoke: `/skill axiom-swiftui-search-ref`
+
+User: "How do I animate an SF Symbol when tapped?"
+→ Invoke: `/skill axiom-sf-symbols`
+
+User: "My SF Symbol Draw animation isn't working on my custom symbol"
+→ Invoke: `/skill axiom-sf-symbols`
+
+User: "Which rendering mode should I use for my toolbar icons?"
+→ Invoke: `/skill axiom-sf-symbols`
