@@ -404,15 +404,21 @@ struct ContentView: View {
 
 ### Decision Tree Summary
 
-```
-View not updating?
-├─ Can reproduce in preview?
-│  ├─ YES: Problem is in code
-│  │  ├─ Modified struct directly? → Struct Mutation
-│  │  ├─ Passed binding to child? → Lost Binding Identity
-│  │  ├─ View inside conditional? → Accidental Recreation
-│  │  └─ Object changed but view didn't? → Missing Observer
-│  └─ NO: Likely cache/Xcode state → See Preview Crashes
+```dot
+digraph view_not_updating {
+    start [label="View not updating?" shape=diamond];
+    reproduce [label="Can reproduce in preview?" shape=diamond];
+    cause [label="What changed?" shape=diamond];
+
+    start -> reproduce;
+    reproduce -> cause [label="yes: bug in code"];
+    reproduce -> "Cache/Xcode state → Preview Crashes" [label="no"];
+
+    cause -> "Struct Mutation" [label="modified struct directly"];
+    cause -> "Lost Binding Identity" [label="passed binding to child"];
+    cause -> "Accidental Recreation" [label="view inside conditional"];
+    cause -> "Missing Observer" [label="object changed, view didn't"];
+}
 ```
 
 ## Preview Crashes Decision Tree
@@ -533,13 +539,17 @@ If still broken after all four steps: It's not cache, see Error Types 1 or 2.
 
 ### Decision Tree Summary
 
-```
-Preview crashes?
-├─ Error message visible?
-│  ├─ "Cannot find in scope" → Missing Dependency
-│  ├─ "Fatal error" or silent crash → State Init Failure
-│  └─ No error → Likely Cache Corruption
-└─ Try: Restart Preview → Restart Xcode → Nuke DerivedData
+```dot
+digraph preview_crashes {
+    start [label="Preview crashes?" shape=diamond];
+    error [label="Error message visible?" shape=diamond];
+
+    start -> error;
+    error -> "Missing Dependency" [label="'Cannot find in scope'"];
+    error -> "State Init Failure" [label="'Fatal error' or silent crash"];
+    error -> "Cache Corruption" [label="no error"];
+    "Cache Corruption" -> "Restart Preview → Restart Xcode → Nuke DerivedData";
+}
 ```
 
 ## Layout Issues Quick Reference
