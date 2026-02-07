@@ -26,22 +26,11 @@ Use when:
 
 ## Example Prompts
 
-These are real questions developers ask that this skill is designed to answer:
-
-#### 1. "I just saw Liquid Glass in WWDC videos. How is it different from blur effects I've used before? Should I adopt it?"
-→ The skill explains Liquid Glass as a lensing-based material (not blur), shows design philosophy, and when adoption makes sense
-
-#### 2. "I'm implementing Liquid Glass in my app but the lensing effect doesn't look quite right. It looks like a regular blur. What am I missing?"
-→ The skill covers the visual properties (lensing vs motion vs environment), Regular vs Clear variants, and debugging visual artifacts
-
-#### 3. "Liquid Glass works great on iPhone but looks odd on iPad. Should I adjust the implementation differently for different screen sizes?"
-→ The skill demonstrates adaptive Liquid Glass patterns and platform-specific guidance (iOS 26+, macOS Tahoe+, axiom-visionOS 3+)
-
-#### 4. "I need to use Liquid Glass but still need legible text on top. How do I ensure text contrast while using Liquid Glass?"
-→ The skill covers tinting strategies, adaptive color choices, and opacity patterns for maintaining readability across light/dark modes
-
-#### 5. "We want to do a design review of our Liquid Glass implementation. What are the expert criteria for a good Liquid Glass implementation?"
-→ The skill provides the comprehensive review checklist and professional push-back frameworks for design review meetings
+- "How is Liquid Glass different from blur effects? Should I adopt it?"
+- "My lensing effect looks like a regular blur. What am I missing?"
+- "Liquid Glass looks odd on iPad vs iPhone. How do I adjust?"
+- "How do I ensure text contrast on top of Liquid Glass?"
+- "What are the expert criteria for reviewing a Liquid Glass implementation?"
 
 ---
 
@@ -62,42 +51,21 @@ Liquid Glass is Apple's next-generation material design system introduced at WWD
 
 ### 1. Lensing (Primary Visual Characteristic)
 
-Liquid Glass defines itself through **lensing** — the warping and bending of light that communicates presence, motion, and form.
-
-**How it works**:
-- Dynamically concentrates and shapes light in real-time
-- Provides definition against background while feeling visually grounded
-- Controls feel ultra-lightweight and transparent while visually distinguishable
-- Elements materialize in/out by modulating light bending (not fading)
-
-**Design Implication**: Unlike previous materials that scattered light, Liquid Glass uses instinctive visual cues from the natural world to provide separation.
+Liquid Glass defines itself through **lensing** — warping and bending light to communicate presence, motion, and form. Elements materialize in/out by modulating light bending (not fading). Controls feel ultra-lightweight yet visually distinguishable.
 
 ### 2. Motion & Fluidity
 
-Motion and visuals were designed as one unified experience:
-
-- **Instant flex and energize** — Responds to interaction by flexing with light
-- **Gel-like flexibility** — Communicates transient, malleable nature
-- **Moves in tandem** with interaction — Aligns with dynamism of thinking and movement
-- **Temporary lift** — Elements can lift into Liquid Glass on interaction (great for controls)
-- **Dynamic morphing** — Continuously shape-shifts between app states as a singular floating plane
-- **Lightweight transitions** — Menus pop open in-line, maintaining clear relationship to source
+- Responds to interaction by flexing with light
+- Gel-like flexibility communicates transient, malleable nature
+- Elements lift into Liquid Glass on interaction (controls)
+- Dynamic morphing between app states as a singular floating plane
 
 ### 3. Adaptive Behavior
 
 Liquid Glass **continuously adapts** without fixed light/dark appearance:
-
-**Content-aware adaptation**:
-- Shadows become more prominent when text scrolls underneath
-- Tint and dynamic range shift to ensure legibility
-- Independently switches light/dark to feel at home in any context
-- Larger elements (menus, sidebars) simulate thicker material with deeper shadows and richer lensing
-
-**Platform adaptation**:
-- Nests perfectly into rounded corners of windows
-- Forms distinct functional layer for controls/navigation
-- Ambient environment (colorful content nearby) subtly spills onto surface
-- Light reflects, scatters, and bleeds into shadows
+- Shadows intensify when text scrolls underneath; tint shifts for legibility
+- Small elements (navbars) independently flip light/dark; large elements (menus, sidebars) don't flip but adapt depth
+- Ambient environment subtly spills onto surface
 
 ---
 
@@ -130,276 +98,72 @@ Button("Tap Me") {
 
 **CRITICAL DECISION**: Never mix Regular and Clear in the same interface.
 
-#### Regular Variant (Default — Use Most Often)
+#### Regular Variant (Default — 95% of Cases)
 
-**Characteristics**:
-- Most versatile, use in 95% of cases
-- Full visual and adaptive effects
-- Provides legibility regardless of context
-- Works in any size, over any content
-- Anything can be placed on top
-
-**When to use**: Navigation bars, tab bars, toolbars, buttons, menus, sidebars
-
-```swift
-// Regular is the default
-NavigationView {
-    // Content
-}
-.glassEffect() // Uses Regular variant
-```
+Most versatile. Full adaptive effects, automatic legibility, works in any size over any content. Use for navigation bars, tab bars, toolbars, buttons, menus, sidebars.
 
 #### Clear Variant (Special Cases Only)
 
-**Characteristics**:
-- Permanently more transparent
-- No adaptive behaviors
-- Allows content richness to interact with glass
-- **Requires dimming layer** for legibility
+Permanently more transparent, no adaptive behaviors. **Requires dimming layer** for legibility.
 
 **Use ONLY when ALL three conditions are met**:
-1. ✅ Element is over **media-rich content**
-2. ✅ Content layer won't be negatively affected by **dimming layer**
-3. ✅ Content above glass is **bold and bright**
+1. Element is over **media-rich content**
+2. Content layer won't be negatively affected by **dimming layer**
+3. Content above glass is **bold and bright**
 
-```swift
-// Clear variant with localized dimming for small footprints
-ZStack {
-    MediaRichBackground()
-        .overlay(.black.opacity(0.3)) // Dimming layer
-
-    BoldBrightControl()
-        .glassEffect(.clear)
-}
-```
-
-**⚠️ WARNING**: Using Clear without meeting all three conditions results in poor legibility.
+Using Clear without meeting all three conditions results in poor legibility. See `axiom-liquid-glass-ref` for implementation examples.
 
 ---
 
 ## Layered System Architecture
 
-Liquid Glass is composed of multiple layers working together:
+Liquid Glass is composed of four layers working together:
 
-### 1. Highlights Layer
-- Light sources shine on material, producing highlights responding to geometry
-- Lights move during interactions (lock/unlock), defining silhouette
-- Some cases respond to device motion (feels aware of position in real world)
-
-### 2. Shadows Layer
-- Aware of background content
-- Increases shadow opacity over text for separation
-- Lowers shadow opacity over solid light backgrounds
-- Ensures elements are always easy to spot
-
-### 3. Internal Glow (Interaction Feedback)
-- Material illuminates from within on interaction
-- Glow starts under fingertips, spreads throughout element
-- Spreads to nearby Liquid Glass elements
-- Interacts with flexible properties - feels natural and fluid
-- Makes interface feel alive and connected to physical world
-
-### 4. Adaptive Tinting Layer
-- Multiple layers adapt together to maintain hierarchy
-- Windows losing focus visually recede (Mac/iPad)
-- All behaviors come built-in automatically
-
----
-
-## Design Principles & Best Practices
-
-### ✅ DO: Reserve for Navigation Layer
-
-**Correct Usage**:
-```
-[Content Layer — No Glass]
-    ↓
-[Navigation Layer — Liquid Glass]
-    • Tab bars
-    • Navigation bars
-    • Toolbars
-    • Floating controls
-```
-
-**Why**: Liquid Glass floats above content, creating clear hierarchy.
-
-### ❌ DON'T: Use on Content Layer
-
-**Wrong**:
-```swift
-// DON'T apply to table views, lists, or content
-List(items) { item in
-    Text(item.name)
-}
-.glassEffect() // ❌ Competes with navigation, muddy hierarchy
-```
-
-**Why**: Makes elements compete, creates visual confusion.
-
-### ❌ DON'T: Stack Glass on Glass
-
-**Wrong**:
-```swift
-ZStack {
-    NavigationBar()
-        .glassEffect() // ❌
-
-    FloatingButton()
-        .glassEffect() // ❌ Glass on glass
-}
-```
-
-**Correct**:
-```swift
-ZStack {
-    NavigationBar()
-        .glassEffect()
-
-    FloatingButton()
-        .foregroundStyle(.primary) // Use fills, transparency, vibrancy
-        // Feels like thin overlay part of the material
-}
-```
-
-### ✅ DO: Avoid Content Intersections in Steady State
-
-**Wrong**: Content intersects with Liquid Glass when app launches
-
-**Correct**: Reposition or scale content to maintain separation in steady states
-
-**Why**: Prevents unwanted visual noise; intersections acceptable during scrolling/transitions.
+1. **Highlights** — Light sources produce highlights responding to geometry; some respond to device motion
+2. **Shadows** — Content-aware: stronger over text, weaker over light backgrounds
+3. **Internal Glow** — Material illuminates from within on interaction; spreads to nearby glass elements
+4. **Adaptive Tinting** — Multiple layers adapt together to maintain hierarchy; all built-in automatically
 
 ---
 
 ## Scroll Edge Effects
 
-Work in concert with Liquid Glass to maintain separation and legibility with scrolling content.
-
-**How they work**:
-- Content begins scrolling → effect gently dissolves content into background
-- Lifts glass visually above moving content
-- Floating elements (titles) remain clear
-- Darker content triggers dark style → subtle dimming for contrast
-
-### Hard Style Effect
-
-Use when pinned accessory views exist (e.g., column headers):
-
-```swift
-ScrollView {
-    // Content
-}
-.scrollEdgeEffect(.hard) // Uniform across toolbar + pinned accessories
-```
-
-**When to use**: Extra visual separation between floating elements in accessory view and scrolling content.
+Scroll edge effects dissolve content into background as it scrolls, lifting glass above moving content. Use `.scrollEdgeEffect(.hard)` when pinned accessory views exist (e.g., column headers) for extra visual separation. See `axiom-liquid-glass-ref` for full API details.
 
 ---
 
 ## Tinting & Color
 
-### New Tinting System
+Liquid Glass introduces **adaptive tinting** — selecting a color generates tones mapped to content brightness underneath, inspired by colored glass in reality. Compatible with all glass behaviors (morphing, adaptation, interaction).
 
-Liquid Glass introduces **adaptive tinting** that respects material principles and maximizes legibility.
-
-**How it works**:
-1. Selecting color generates range of tones
-2. Tones mapped to content brightness underneath element
-3. Inspired by colored glass in reality
-4. Changes hue, brightness, saturation based on background
-5. Doesn't deviate too much from intended color
-
-**Compatible with all glass behaviors** (morphing, adaptation, interaction).
+### Tinting Rules
 
 ```swift
-Button("Primary Action") {
-    // action
-}
-.tint(.red) // Adaptive tinting automatically applied
-.glassEffect()
-```
+// ✅ Tint primary actions only
+Button("View Bag") { }.tint(.red).glassEffect()
 
-### Tinting Best Practices
-
-#### ✅ DO: Use for Primary Actions
-```swift
-// Good — Emphasizes primary action
-Button("View Bag") {
-    // action
-}
-.tint(.red)
-.glassEffect()
-```
-
-#### ❌ DON'T: Tint Everything
-```swift
-// Wrong — When everything is tinted, nothing stands out
+// ❌ Don't tint everything — when everything is tinted, nothing stands out
 VStack {
     Button("Action 1").tint(.blue).glassEffect()
-    Button("Action 2").tint(.green).glassEffect()
-    Button("Action 3").tint(.purple).glassEffect()
-} // ❌ Confusing, no hierarchy
+    Button("Action 2").tint(.green).glassEffect()  // No hierarchy
+}
+
+// ❌ Solid fills break Liquid Glass character
+Button("Action") { }.background(.red)  // Opaque, wrong
+
+// ✅ Use .tint() instead of solid fills
+Button("Action") { }.tint(.red).glassEffect()  // Grounded in environment
 ```
 
-**Solution**: Use color in content layer instead, reserve tinting for primary UI actions.
-
-### Solid Fills vs Tinting
-
-**Solid fills break Liquid Glass character**:
-```swift
-// ❌ Opaque, breaks visual character
-Button("Action") {}
-    .background(.red) // Solid, opaque
-
-// ✅ Transparent, grounded in environment
-Button("Action") {}
-    .tint(.red)
-    .glassEffect()
-```
+Reserve tinting for primary UI actions. Use color in the content layer for overall app color scheme.
 
 ---
 
 ## Legibility & Contrast
 
-### Vibrant Text and Tint Colors
+SwiftUI automatically uses **vibrant text and tint colors** within glass effects — no manual adjustment needed. Small elements (navbars, tabbars) flip light/dark for discernibility. Large elements (menus, sidebars) adapt but don't flip (too distracting for large surface area). Symbols/glyphs mirror glass behavior and maximize contrast automatically.
 
-SwiftUI automatically uses a **vibrant text color** within glass effects that adapts to maintain legibility against colorful backgrounds. Tints applied to glass elements also use vibrant color that adapts to the content behind them. You do not need to manually adjust text or tint colors — the system handles this.
-
-### Automatic Legibility Features
-
-Small elements (navbars, tabbars):
-- Constantly adapt appearance based on background
-- Flip light/dark for discernibility
-
-Large elements (menus, sidebars):
-- Adapt based on context
-- **Don't flip light/dark** (too distracting for large surface area)
-
-Symbols/glyphs:
-- Mirror glass behavior (flip light/dark)
-- Maximize contrast automatically
-- All content on Regular variant receives this treatment
-
-### Custom Colors
-
-Use selectively for distinct functional purpose:
-
-```swift
-// Selective tinting for emphasis
-NavigationView {
-    List {
-        // Content
-    }
-    .toolbar {
-        ToolbarItem {
-            Button("Important") {}
-                .tint(.orange) // Brings attention
-        }
-    }
-}
-```
-
-**Applies to**: Labels, text, fully tinted buttons, time on lock screen, etc.
+Use custom tint colors selectively for distinct functional purpose (e.g., `.tint(.orange)` on a single toolbar button for emphasis).
 
 ---
 
@@ -477,60 +241,16 @@ VStack {
 
 ## Testing Liquid Glass
 
-### Visual Regression Testing
+Test across these configurations:
+- Light/dark modes
+- Reduced Transparency enabled
+- Increased Contrast enabled
+- Reduced Motion enabled
+- Dynamic Type (larger text sizes)
+- Content scrolling (verify scroll edge effects)
+- Right-to-left languages
 
-Capture screenshots in multiple states:
-
-```swift
-func testLiquidGlassAppearance() {
-    let app = XCUIApplication()
-    app.launch()
-
-    // Test light mode
-    XCTContext.runActivity(named: "Light Mode Glass") { _ in
-        let screenshot = app.screenshot()
-        // Compare with baseline
-    }
-
-    // Test dark mode
-    app.launchArguments = ["-UIUserInterfaceStyle", "dark"]
-    app.launch()
-
-    XCTContext.runActivity(named: "Dark Mode Glass") { _ in
-        let screenshot = app.screenshot()
-        // Compare with baseline
-    }
-}
-```
-
-### Test Across Configurations
-
-Critical test cases:
-- ✅ Light mode vs dark mode
-- ✅ Different color schemes (environment)
-- ✅ Reduced Transparency enabled
-- ✅ Increased Contrast enabled
-- ✅ Reduced Motion enabled
-- ✅ Dynamic Type (larger text sizes)
-- ✅ Content scrolling (verify scroll edge effects)
-- ✅ Right-to-left languages
-
-### Accessibility Testing
-
-```swift
-func testLiquidGlassAccessibility() {
-    // Enable accessibility features via launch arguments
-    app.launchArguments += [
-        "-UIAccessibilityIsReduceTransparencyEnabled", "1",
-        "-UIAccessibilityButtonShapesEnabled", "1",
-        "-UIAccessibilityIsReduceMotionEnabled", "1"
-    ]
-
-    // Verify glass still functional and legible
-    XCTAssertTrue(glassElement.exists)
-    XCTAssertTrue(glassElement.isHittable)
-}
-```
+See `axiom-ui-testing` for comprehensive UI testing patterns including visual regression and accessibility testing.
 
 ---
 
@@ -709,68 +429,40 @@ When reviewing Liquid Glass implementation (your code or others'), check:
 
 ## Common Mistakes & Solutions
 
-### Mistake 1: Using Glass Everywhere
+### Glass Placement Errors
 
-**Wrong**:
 ```swift
+// ❌ Glass on content layer — competes with navigation
 List(landmarks) { landmark in
-    LandmarkRow(landmark)
-        .glassEffect() // ❌
+    LandmarkRow(landmark).glassEffect()
 }
-.glassEffect() // ❌
-```
 
-**Correct**:
-```swift
-NavigationView {
-    List(landmarks) { landmark in
-        LandmarkRow(landmark) // No glass
-    }
-}
+// ✅ Glass on navigation layer only
 .toolbar {
-    ToolbarItem {
-        Button("Add") {}
-            .glassEffect() // ✅ Navigation layer only
-    }
+    ToolbarItem { Button("Add") { }.glassEffect() }
 }
-```
 
-**Why**: Content layer should defer to Liquid Glass navigation layer.
-
-### Mistake 2: Clear Variant Without Dimming
-
-**Wrong**:
-```swift
+// ❌ Clear without dimming — poor legibility
 ZStack {
     VideoPlayer(player: player)
-
-    PlayButton()
-        .glassEffect(.clear) // ❌ No dimming, poor legibility
+    PlayButton().glassEffect(.clear)
 }
-```
 
-**Correct**:
-```swift
+// ✅ Clear with dimming layer
 ZStack {
     VideoPlayer(player: player)
-        .overlay(.black.opacity(0.4)) // Dimming layer
-
-    PlayButton()
-        .glassEffect(.clear) // ✅
+        .overlay(.black.opacity(0.4))
+    PlayButton().glassEffect(.clear)
 }
 ```
 
-### Mistake 3: Over-Tinting
+### Over-Tinting
 
-**Wrong**: All buttons tinted different colors
+Tint primary action only. When everything is tinted, nothing stands out.
 
-**Correct**: Primary action tinted, others use standard appearance
+### Static Material Expectations
 
-### Mistake 4: Static Material Expectations
-
-**Wrong**: Assuming glass always looks the same (e.g., hardcoded shadows, fixed opacity)
-
-**Correct**: Embrace adaptive behavior, test across light/dark modes and backgrounds
+Don't hardcode shadows or fixed opacity. Embrace adaptive behavior — test across light/dark modes and backgrounds.
 
 ---
 
@@ -835,490 +527,17 @@ Text("Label")
 
 ## Migration from Previous Materials
 
-### From UIBlurEffect / NSVisualEffectView
+**From UIBlurEffect/NSVisualEffectView**: Replace with `.glassEffect()` — gains automatic adaptation, interaction feedback, platform-appropriate appearance, and built-in accessibility.
 
-**Before** (UIKit):
-```swift
-let blurEffect = UIBlurEffect(style: .systemMaterial)
-let blurView = UIVisualEffectView(effect: blurEffect)
-view.addSubview(blurView)
-```
+**From custom translucent effects**: Try Liquid Glass first. Keep custom materials only for artistic effects not achievable with Liquid Glass, backward compatibility with iOS < 26, or non-standard UI paradigms.
 
-**After** (SwiftUI with Liquid Glass):
-```swift
-ZStack {
-    // Content
-}
-.glassEffect()
-```
-
-**Benefits**:
-- Automatic adaptation (no manual style switching)
-- Built-in interaction feedback
-- Platform-appropriate appearance
-- Accessibility features included
-
-### From Custom Materials
-
-If you've built custom translucent effects:
-
-1. **Try Liquid Glass first** — may provide desired effect automatically
-2. **Evaluate Regular vs Clear** — Clear may match custom transparency needs
-3. **Test across configurations** — Liquid Glass adapts automatically
-4. **Measure performance** — Likely improvement over custom implementations
-
-**When to keep custom materials**:
-- Specific artistic effect not achievable with Liquid Glass
-- Backward compatibility with iOS < 26 required
-- Non-standard UI paradigm incompatible with Liquid Glass principles
+See `axiom-liquid-glass-ref` for detailed migration patterns.
 
 ---
 
 ## API Reference
 
-### SwiftUI Modifiers
-
-#### `glassEffect(in:isInteractive:)`
-
-Applies Liquid Glass effect to view.
-
-```swift
-func glassEffect<S: Shape>(
-    in shape: S = Capsule(),
-    isInteractive: Bool = false
-) -> some View
-```
-
-**Parameters**:
-- `shape`: Shape defining glass bounds (default: `Capsule()`)
-- `isInteractive`: On iOS, enables interactive mode for custom controls (default: `false`)
-
-**Returns**: View with Liquid Glass effect applied
-
-**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+, axiom-visionOS 3+
-
-**Example**:
-```swift
-// Default capsule shape
-Text("Hello").glassEffect()
-
-// Custom shape
-Text("Hello").glassEffect(in: RoundedRectangle(cornerRadius: 16))
-
-// Interactive (iOS)
-Button("Tap") {}.glassEffect(isInteractive: true)
-```
-
-#### `glassEffect(_:in:isInteractive:)`
-
-Applies specific Liquid Glass variant.
-
-```swift
-func glassEffect<S: Shape>(
-    _ variant: GlassVariant,
-    in shape: S = Capsule(),
-    isInteractive: Bool = false
-) -> some View
-```
-
-**Parameters**:
-- `variant`: `.regular` or `.clear`
-- `shape`: Shape defining glass bounds
-- `isInteractive`: Interactive mode for custom controls (iOS)
-
-**Example**:
-```swift
-Text("Hello").glassEffect(.clear, in: Circle())
-```
-
-#### `scrollEdgeEffect(_:)`
-
-Configures scroll edge appearance with Liquid Glass.
-
-```swift
-func scrollEdgeEffect(_ style: ScrollEdgeStyle) -> some View
-```
-
-**Parameters**:
-- `style`: `.automatic`, `.soft`, or `.hard`
-
-**Example**:
-```swift
-ScrollView {
-    // Content
-}
-.scrollEdgeEffect(.hard) // For pinned accessories
-```
-
-#### `scrollEdgeEffectStyle(_:for:)` **NEW in iOS 26**
-
-Optimizes legibility for controls when content scrolls beneath them.
-
-```swift
-func scrollEdgeEffectStyle(_ style: ScrollEdgeStyle, for edges: Edge.Set) -> some View
-```
-
-**Parameters**:
-- `style`: `.hard`, `.soft`, or `.automatic`
-- `edges`: Which edges to apply effect (`.top`, `.bottom`, `.leading`, `.trailing`)
-
-**Use case**: Custom bars with controls, text, or icons that have content scrolling beneath them. System bars (toolbars, navigation bars) adopt this automatically.
-
-**Example**:
-```swift
-// Custom toolbar with controls
-CustomToolbar()
-    .scrollEdgeEffectStyle(.hard, for: .top) // Maintain legibility
-
-ScrollView {
-    LazyVStack {
-        ForEach(items) { item in
-            ItemRow(item)
-        }
-    }
-}
-```
-
-**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+
-
-#### `glassBackgroundEffect()` **NEW in iOS 26**
-
-Applies glass effect to custom views for reflecting surrounding content.
-
-```swift
-func glassBackgroundEffect() -> some View
-```
-
-**Use case**: Apply Liquid Glass appearance to custom views (not buttons/controls) that should beautifully reflect surrounding content like photos.
-
-**Example**:
-```swift
-struct PhotoGalleryView: View {
-    var body: some View {
-        CustomPhotoGrid()
-            .glassBackgroundEffect() // Reflects surrounding photos
-    }
-}
-```
-
-**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+, axiom-visionOS 3+
-
-### Toolbar Modifiers **NEW in iOS 26**
-
-#### `.toolbar` with `ToolbarSpacer(.fixed)`
-
-Separates toolbar button groups with fixed spacing.
-
-```swift
-.toolbar {
-    ToolbarItemGroup(placement: .topBarTrailing) {
-        Button("Up") { }
-        Button("Down") { }
-
-        ToolbarSpacer(.fixed) // Fixed spacer separates groups
-
-        Button("Settings") { }
-    }
-}
-```
-
-**Why use `.fixed`**: Creates logical visual separation between button groups. Default `Spacer()` is flexible and adjusts based on available space; `.fixed` maintains consistent separation.
-
-**Common pattern**: Separate navigation buttons from action buttons, or primary actions from secondary actions.
-
-**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+
-
-#### `.buttonStyle(.borderedProminent)` + `.tint()` in Toolbars
-
-Makes toolbar items more prominent with Liquid Glass tinting.
-
-```swift
-.toolbar {
-    ToolbarItem(placement: .topBarTrailing) {
-        Button("Add Trip") {
-            addTrip()
-        }
-        .buttonStyle(.borderedProminent)
-        .tint(.blue) // Liquid Glass toolbars support tinting
-    }
-}
-```
-
-**Visual effect**: Button appears with bordered prominent style and custom tint color, making it stand out against Liquid Glass toolbar background.
-
-**Best practice**: Use for primary actions in toolbars. Don't over-tint - use for prominence, not decoration.
-
-**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+
-
-### Navigation & Search **NEW in iOS 26**
-
-#### Bottom-Aligned Search
-
-Search automatically appears bottom-aligned on iPhone (more ergonomic), top-trailing on iPad.
-
-```swift
-NavigationSplitView {
-    List { }
-        .searchable(text: $searchText)
-}
-// Placement on NavigationSplitView automatically:
-// - Bottom-aligned on iPhone
-// - Top trailing corner on iPad
-```
-
-**No code changes required** — existing `.searchable()` modifier automatically adopts platform-specific placement.
-
-**Why bottom-aligned**: More ergonomic to reach on iPhone with thumb-based interaction.
-
-**Availability**: iOS 26+, iPadOS 26+
-
-#### Search Tab Role
-
-Separates search tab from other tabs in tab bar, morphs into search field.
-
-```swift
-TabView {
-    SearchView()
-        .tabItem { Label("Search", systemImage: "magnifyingglass") }
-        .tabRole(.search) // Separated from other tabs, morphs into search
-
-    TripsView()
-        .tabItem { Label("Trips", systemImage: "map") }
-}
-```
-
-**Visual effect**: Search tab appears separated from other tabs in the tab bar. When tapped, morphs into the search field.
-
-**Use case**: Tab-based apps where search is a primary destination.
-
-**Availability**: iOS 26+
-
-### Controls and Layout **NEW in iOS 26**
-
-#### `containerRelativeShape()`
-
-Aligns control shapes with container curvature for visual continuity.
-
-```swift
-func containerRelativeShape(_ shape: ContainerRelativeShape) -> some View
-```
-
-**Parameters**:
-- `shape`: Shape that aligns with container (e.g., `.roundedRectangle`)
-
-**Use case**: Create visual harmony by making controls concentric to their containers (sheets concentric to windows, controls concentric to sheets).
-
-**Example**:
-```swift
-// Control shape aligns with container curvature
-Button("Action") { }
-    .containerRelativeShape(.roundedRectangle)
-    .glassEffect()
-```
-
-**Visual Effect** Nested elements feel visually harmonious, with curvature matching container shape.
-
-**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+
-
-#### `tabBarMinimizeBehavior(_:)` **NEW in iOS 26**
-
-Configures tab bar to minimize when scrolling to elevate underlying content.
-
-```swift
-func tabBarMinimizeBehavior(_ behavior: TabBarMinimizeBehavior) -> some View
-```
-
-**Parameters**:
-- `behavior`: `.onScrollDown`, `.onScrollUp`, `.automatic`, or `.never`
-
-**Use case**: Content-focused apps (reading, media) where tab bar should recede during scrolling.
-
-**Example**:
-```swift
-TabView {
-    ContentView()
-        .tabItem { Label("Home", systemImage: "house") }
-}
-.tabBarMinimizeBehavior(.onScrollDown) // Minimize when scrolling down
-```
-
-**Visual Effect** Tab bar recedes when scrolling down, expands when scrolling up. Content gains more screen space.
-
-**Gotcha**: Tab bar blur only activates when the tab bar overlays scrollable content. If non-scrollable views (buttons, fixed VStacks) sit between your list and the tab bar, you get a solid background instead of blur. Ensure your primary scrollable view is the outermost content layer.
-
-```swift
-// ❌ Solid background — Button breaks scrollable overlay
-VStack {
-    List { /* items */ }
-    Button("Add") { }  // Sits between list and tab bar
-}
-
-// ✅ Blurred background — List extends under tab bar
-ZStack(alignment: .bottomTrailing) {
-    List { /* items */ }  // Scrollable content under tab bar
-    Button(action: { }) {
-        Label("Add", systemImage: "plus")
-            .labelStyle(.iconOnly).padding()
-    }
-    .glassEffect(.regular.interactive())
-    .padding([.bottom, .trailing], 12)
-}
-```
-
-**Availability**: iOS 26+
-
-#### Floating Glass Buttons
-
-Liquid Glass replaces bottom-anchored action buttons with floating glass buttons. Use `.glassEffect(.regular.interactive())` on a `ZStack`-overlaid button:
-
-```swift
-ZStack(alignment: .bottomTrailing) {
-    ScrollView {
-        // Main content
-    }
-
-    Button(action: { addItem() }) {
-        Label("Add Item", systemImage: "plus")
-            .bold()
-            .labelStyle(.iconOnly)
-            .padding()
-    }
-    .glassEffect(.regular.interactive())
-    .padding([.bottom, .trailing], 12)
-}
-```
-
-**When to use**: Replace pre-iOS 26 bottom-bar action buttons that no longer fit the layered Liquid Glass design.
-
-**Availability**: iOS 26+
-
-### Types
-
-#### `GlassVariant`
-
-```swift
-enum GlassVariant {
-    case regular  // Default - full adaptive behavior
-    case clear    // More transparent, no adaptation
-}
-```
-
-#### `ScrollEdgeStyle`
-
-```swift
-enum ScrollEdgeStyle {
-    case automatic  // System determines style
-    case soft       // Gradual fade
-    case hard       // Uniform effect across toolbar height
-}
-```
-
-#### `GlassEffectContainer` **NEW in iOS 26**
-
-Container for combining multiple Liquid Glass effects with correct visual behavior.
-
-```swift
-struct GlassEffectContainer<Content: View>: View {
-    init(@ViewBuilder content: () -> Content)
-}
-```
-
-**Why this is essential**: Glass samples content from an area larger than itself to produce its reflections and refractions. However, **glass cannot sample other glass** — nearby glass elements in different containers will produce inconsistent visual behavior. Using a `GlassEffectContainer` allows elements to share their sampling region, providing a consistent visual result.
-
-#### Example
-```swift
-// ✅ Shared sampling region — consistent visual result
-GlassEffectContainer {
-    HStack {
-        Button("Action 1") { }
-            .glassEffect()
-
-        Button("Action 2") { }
-            .glassEffect()
-
-        Button("Action 3") { }
-            .glassEffect()
-    }
-}
-
-// ❌ Separate containers — inconsistent glass behavior
-HStack {
-    Button("Action 1") { }.glassEffect()  // Samples independently
-    Button("Action 2") { }.glassEffect()  // Can't sample neighbor's glass
-}
-```
-
-#### Benefits
-- Correct visual behavior (shared sampling region)
-- Fluidly morphs Liquid Glass shapes into each other
-- Optimizes rendering performance
-- Reduces compositor overhead
-
-#### When to use
-- Multiple custom Liquid Glass elements near each other
-- Morphing animations between glass shapes
-- Any time glass elements are visually adjacent
-
-**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+, axiom-visionOS 3+
-
-#### `glassEffectID` **NEW in iOS 26**
-
-Enables fluid morphing transitions between glass elements using a namespace. When elements share a namespace and transition between states, glass morphs fluidly between shapes.
-
-```swift
-@Namespace private var glassNamespace
-
-// Associate glass elements with IDs in the namespace
-ForEach(badges) { badge in
-    BadgeView(badge: badge)
-        .glassEffect()
-        .glassEffectID(badge.id, in: glassNamespace)
-}
-
-// A toolbar button with the same namespace absorbs/expands badges
-Button("Awards", systemImage: "star.fill") {
-    toggleBadges()
-}
-.glassEffect()
-.glassEffectID("awards", in: glassNamespace)
-```
-
-**Use case**: Award badges expanding from a toolbar button, controls morphing between states, expanding/collapsing glass elements.
-
-**Availability**: iOS 26+, iPadOS 26+, macOS Tahoe+
-
----
-
-## Backward Compatibility
-
-### UIDesignRequiresCompatibility Key **NEW in iOS 26**
-
-To ship with latest SDKs while maintaining previous appearance:
-
-#### Add to Info.plist
-```xml
-<key>UIDesignRequiresCompatibility</key>
-<true/>
-```
-
-#### Effect
-- App built with iOS 26 SDK
-- Appearance matches iOS 18 and earlier
-- Liquid Glass effects disabled
-- Previous blur/material styles used
-
-#### When to use
-- Need time to audit interface changes
-- Gradual adoption strategy
-- Maintain exact appearance temporarily
-
-#### Migration strategy
-1. Ship with `UIDesignRequiresCompatibility` enabled
-2. Audit interface changes in separate build
-3. Update interface incrementally
-4. Remove key when ready for Liquid Glass
-
-**Availability**: iOS 26+, iPadOS 26+
+For complete API reference including `glassEffect()`, `glassBackgroundEffect()`, toolbar modifiers, scroll edge effects, navigation/search APIs, controls/layout, `GlassEffectContainer`, `glassEffectID`, types, and backward compatibility, see `axiom-liquid-glass-ref`.
 
 ---
 
