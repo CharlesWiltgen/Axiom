@@ -457,6 +457,70 @@ Liquid Glass can have distinct appearance and behavior across platforms, context
 | watchOS | Automatic on latest release, even without latest SDK | Use standard toolbar APIs and `.buttonStyle(.bordered)` from watchOS 10 |
 | tvOS | Focus-based — glass appears when controls gain focus (Apple TV 4K 2nd gen+) | Use `.focusable()` on standard controls; for custom controls, apply `.glassEffect()` with `@FocusState`-driven opacity |
 
+### glassBackgroundEffect()
+
+For custom views that need to reflect content behind them (not just apply glass material on top), use `.glassBackgroundEffect()`. This creates a glass-like background that shows through underlying content, distinct from `.glassEffect()` which applies glass as an overlay material.
+
+```swift
+// Custom floating panel with glass background reflecting content behind it
+struct FloatingPanel: View {
+    var body: some View {
+        VStack {
+            Text("Panel Content")
+            // ...
+        }
+        .padding()
+        .glassBackgroundEffect() // Reflects content beneath, not on top
+    }
+}
+```
+
+**`.glassEffect()` vs `.glassBackgroundEffect()`**: Use `.glassEffect()` for controls and navigation elements (buttons, toolbars). Use `.glassBackgroundEffect()` for content containers that should show through to underlying layers (panels, cards that need depth).
+
+### ScrollView + Glass Interaction
+
+When Liquid Glass elements overlay scrollable content, handle clipping and visibility carefully:
+
+```swift
+ZStack {
+    ScrollView {
+        LazyVStack {
+            ForEach(items) { item in
+                ItemRow(item)
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: 80) // Space for floating glass controls
+        }
+    }
+
+    VStack {
+        Spacer()
+        HStack {
+            Button("Action") { }
+                .glassEffect()
+        }
+        .padding()
+    }
+}
+```
+
+**Common issue**: Glass elements can clip or lose their effect at scroll view bounds. Use `.clipped()` on the scroll content (not the glass element) and ensure glass elements are outside the scroll view's hierarchy, not inside it.
+
+### UIBlurEffect Migration Mapping
+
+| Legacy (Pre-iOS 26) | Liquid Glass Equivalent |
+|---------------------|------------------------|
+| `UIBlurEffect(style: .systemMaterial)` | `.glassEffect()` (standard) |
+| `UIBlurEffect(style: .systemUltraThinMaterial)` | `.glassEffect(.clear)` (with conditions) |
+| `UIBlurEffect(style: .systemChromeMaterial)` | System toolbar/navigation glass (automatic) |
+| `UIVisualEffectView` with blur | Remove entirely — use `.glassEffect()` on SwiftUI view |
+| `.background(.thinMaterial)` | `.glassEffect()` or keep material (adapts automatically) |
+| `.background(.ultraThinMaterial)` | `.glassBackgroundEffect()` for content containers |
+| Custom `NSVisualEffectView` (macOS) | `.glassEffect()` or system components |
+
+**Migration steps**: (1) Remove `UIVisualEffectView`/`NSVisualEffectView` wrappers, (2) Replace with `.glassEffect()` on the SwiftUI view, (3) Test with Reduce Transparency to verify fallback, (4) Profile performance — glass effects use GPU compositing.
+
 ### Combining Custom Liquid Glass Effects
 
 Wrap multiple `.glassEffect()` views in `GlassEffectContainer { }` to optimize rendering, enable fluid morphing between glass shapes, and reduce compositor overhead. Use for nearby glass elements, morphing animations, and performance-critical interfaces.
