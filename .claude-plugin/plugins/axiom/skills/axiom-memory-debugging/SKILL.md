@@ -129,13 +129,14 @@ App killed in BACKGROUND? → Jetsam (reduce bg memory)
 
 ### Pattern 1: Timer Leaks (Most Common — 50% of leaks)
 
+**Why `[weak self]` alone doesn't fix timer leaks**: The RunLoop retains scheduled timers. `[weak self]` only prevents the closure from retaining `self` — the Timer object itself continues to exist and fire. You must explicitly `invalidate()` to break the RunLoop's retention.
+
 #### ❌ Leak — Timer never invalidated
 ```swift
 progressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
     self?.updateProgress()
 }
-// Even with [weak self], the Timer itself is a strong ref in ViewModel
-// Timer never stopped → keeps firing forever
+// Timer never stopped → RunLoop keeps it alive and firing forever
 ```
 
 #### ✅ Best fix: Combine (auto-cleanup)
@@ -146,7 +147,7 @@ cancellable = Timer.publish(every: 1.0, tolerance: 0.1, on: .main, in: .default)
 // No deinit needed — cancellable auto-cleans when released
 ```
 
-**Alternative**: Call `timer?.invalidate(); timer = nil` in both `stopPlayback()` AND `deinit`.
+**Alternative**: Call `timer?.invalidate(); timer = nil` in both the appropriate teardown method (`viewWillDisappear`, stop method, etc.) AND `deinit`.
 
 ### Pattern 2: Observer/Notification Leaks (25% of leaks)
 
@@ -251,6 +252,19 @@ Apply fix from patterns above. Add `deinit { print("✅ deallocated") }`. Run In
 ### Compound Leaks
 
 Real apps often have 2-3 leaks stacking. Fix the largest first, re-run Instruments, repeat until flat.
+
+## Non-Reproducible / Intermittent Leaks
+
+When Instruments prevents reproduction (Heisenbug) or leaks only happen with specific user data:
+
+**Lightweight diagnostics** (when Instruments can't be attached):
+1. **deinit logging as primary diagnostic** — Add `deinit { print("✅ ClassName deallocated") }` to all suspect classes. Run 20+ sessions. When the leak occurs (e.g., 1 in 5 runs), missing deinit messages reveal which objects are retained.
+2. **Isolate the trigger** — Test each navigation path independently. Rapidly toggle background/foreground if timing-dependent. Narrow to the specific path that leaks.
+3. **MetricKit for field diagnostics** — Monitor peak memory in production via `MXMetricPayload.memoryMetrics.peakMemoryUsage`. Alert when exceeding threshold (e.g., 400MB). This catches leaks that only manifest with real user data volumes.
+
+**Common cause of intermittent leaks**: Notification observers added on lifecycle events (`viewWillAppear`, `applicationDidBecomeActive`) without removing duplicates first. Each re-registration accumulates a listener — timing determines whether the duplicate fires.
+
+**TestFlight verification**: Ship diagnostic build to affected users. Add `os_log` memory milestones. Monitor MetricKit for 24-48 hours after fix deployment.
 
 ## Common Mistakes
 
