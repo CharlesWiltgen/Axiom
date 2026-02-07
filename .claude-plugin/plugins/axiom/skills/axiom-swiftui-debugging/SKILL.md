@@ -41,6 +41,9 @@ These are real questions developers ask that this skill is designed to answer:
 #### 5. "Text field loses focus when I start typing, very frustrating"
 → The skill identifies ForEach identity issues and shows how to use stable IDs
 
+#### 6. "My scroll reveal animation never works - it shows the revealed state immediately instead of peeking"
+→ The skill identifies sheet content re-initialization from parent state changes causing init params to change
+
 ## When to Use SwiftUI Debugging
 
 #### Use this skill when
@@ -402,6 +405,87 @@ struct ContentView: View {
 
 ---
 
+#### Root Cause 5: Sheet Content Re-Initialization
+
+**Symptom**: A presented sheet view never shows expected animations or loading states—it always appears in the "completed" or "pre-loaded" state. The feature works in isolation but fails when integrated. You added a callback that updates parent state, and now the view behaves as if data was already loaded.
+
+**Why it happens**: Parent state changes cause sheet content closures to re-evaluate. If you pass parent `@State` as a child init parameter, and a callback in that child mutates the same parent state, the sheet content closure re-evaluates with the new value.
+
+```swift
+// ❌ WRONG: Parent state passed to child, then mutated by child callback
+struct ParentView: View {
+    @State private var cachedResponse: Response?
+    @State private var sheetData: SheetData?
+
+    var body: some View {
+        Button("Open Sheet") { sheetData = SheetData() }
+            .sheet(item: $sheetData) { data in
+                ChildView(
+                    savedResponse: cachedResponse,      // Parent state as init param
+                    onSuccess: { cachedResponse = $0 }  // Callback mutates same state
+                )
+            }
+    }
+}
+
+// What happens (feature NEVER works, not "works then breaks"):
+// 1. Sheet opens → ChildView created with savedResponse: nil
+// 2. Async work completes → onSuccess fires → cachedResponse = response
+// 3. SwiftUI sees @State mutation → re-evaluates ParentView.body
+// 4. Sheet content closure re-evaluates → NEW ChildView struct created
+// 5. New struct has savedResponse: cachedResponse (now non-nil!)
+// 6. Child sees savedResponse != nil → takes "pre-loaded" path → ALWAYS skips animations
+//
+// The timing means the feature is broken from the start—you never see
+// the loading/animation state because by the time the view checks, the
+// parent state has already been set by the callback.
+
+// ✅ RIGHT: Don't pass mutable parent state as child init param
+struct ParentView: View {
+    @State private var cachedResponse: Response?
+    @State private var sheetData: SheetData?
+
+    var body: some View {
+        Button("Open Sheet") { sheetData = SheetData() }
+            .sheet(item: $sheetData) { data in
+                ChildView(
+                    savedResponse: nil,                 // Or only pass for explicit "replay"
+                    onSuccess: { cachedResponse = $0 }  // Can still update parent
+                )
+            }
+    }
+}
+
+// ✅ ALSO RIGHT: Child queries its own cache instead of relying on parent
+struct ChildView: View {
+    let savedResponse: Response?  // Only set for explicit "replay" scenarios
+    var onSuccess: ((Response) -> Void)?
+
+    @Environment(\.modelContext) private var modelContext
+
+    var body: some View {
+        // Check persistent store for existing data
+        if let existing = findExistingInDatabase() {
+            // Show pre-loaded UI
+        } else if let saved = savedResponse {
+            // Explicit replay scenario
+        } else {
+            // Normal loading flow with animations
+        }
+    }
+
+    private func findExistingInDatabase() -> Response? {
+        // Query SwiftData/CoreData for matching data
+    }
+}
+```
+
+**Fix it**: Distinguish between "replay parameters" (explicitly passed for viewing saved data) and "in-session caching" (should be handled by the child view itself via database lookup). Don't pass parent state that callbacks will mutate as child init parameters.
+
+**Key insight**: Sheet content closures are **re-evaluated** on parent state changes. The sheet stays open, child `@State` may be preserved, but **init parameters** are re-computed with current parent state values.
+
+---
+
 ### Decision Tree Summary
 
 ```
@@ -411,7 +495,8 @@ View not updating?
 │  │  ├─ Modified struct directly? → Struct Mutation
 │  │  ├─ Passed binding to child? → Lost Binding Identity
 │  │  ├─ View inside conditional? → Accidental Recreation
-│  │  └─ Object changed but view didn't? → Missing Observer
+│  │  ├─ Object changed but view didn't? → Missing Observer
+│  │  └─ Sheet child init params changed mid-lifecycle? → Sheet Re-Init
 │  └─ NO: Likely cache/Xcode state → See Preview Crashes
 ```
 

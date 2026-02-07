@@ -1084,6 +1084,70 @@ class AppViewModel {
 @Observable class FeedViewModel { }
 ```
 
+## ❌ Anti-Pattern 5: Passing Mutable Parent State as Sheet Init Params
+
+```swift
+// ❌ Don't pass parent state that callbacks will mutate as child init params
+struct ParentView: View {
+    @State private var cachedResponse: Response?
+    @State private var sheetItem: SheetItem?
+
+    var body: some View {
+        Button("Open") { sheetItem = SheetItem() }
+            .sheet(item: $sheetItem) { item in
+                ChildView(
+                    savedResponse: cachedResponse,      // ❌ Parent state
+                    onSuccess: { cachedResponse = $0 }  // ❌ Mutates same state
+                )
+            }
+    }
+}
+// Result: ChildView NEVER sees nil for savedResponse because:
+// 1. onSuccess fires → cachedResponse set
+// 2. Parent body re-evaluates → sheet content closure re-evaluates
+// 3. New ChildView created with savedResponse: cachedResponse (now non-nil!)
+// Feature is broken from the start, not "works then breaks"
+```
+
+**Why it's wrong**:
+- Sheet content closures **re-evaluate** on parent state changes
+- Child init params are recomputed with current parent state
+- If callback sets the same state passed as init param, child sees changed value immediately
+- Loading states, animations, reveal effects are **always** bypassed
+
+```swift
+// ✅ Correct: Child queries its own cache, parent state only for other uses
+struct ParentView: View {
+    @State private var cachedResponse: Response?  // For analytics, not for child init
+    @State private var sheetItem: SheetItem?
+
+    var body: some View {
+        Button("Open") { sheetItem = SheetItem() }
+            .sheet(item: $sheetItem) { item in
+                ChildView(
+                    savedResponse: nil,                 // Or explicit "replay" scenarios only
+                    onSuccess: { cachedResponse = $0 }  // Can still update parent
+                )
+            }
+    }
+}
+
+// ✅ Also correct: Child manages its own caching via database lookup
+struct ChildView: View {
+    @Environment(\.modelContext) private var modelContext
+
+    var body: some View {
+        if let existing = findExistingInDatabase() {
+            // Pre-loaded path
+        } else {
+            // Normal loading/animation path
+        }
+    }
+}
+```
+
+**Key insight**: Distinguish "replay parameters" (viewing saved data) from "in-session caching" (child should handle via database lookup).
+
 ---
 
 # Code Review Checklist
