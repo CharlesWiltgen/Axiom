@@ -17,7 +17,7 @@ Comprehensive guide to SwiftUI's animation system, from foundational concepts to
 ## System Requirements
 
 - iOS 13+: Animatable protocol, timing/spring animations
-- iOS 17+: Default spring animations, scoped animations
+- iOS 17+: Default spring animations, scoped animations, PhaseAnimator, KeyframeAnimator
 - iOS 18+: Zoom transitions, UIKit/AppKit animation bridging
 - iOS 26+: @Animatable macro
 
@@ -638,7 +638,131 @@ func shouldMerge(...) -> Bool {
 
 ---
 
-## Part 7: Zoom Transitions (iOS 18+)
+## Part 7: Multi-Step Animations (iOS 17+)
+
+### PhaseAnimator
+
+Cycles through a sequence of phases, applying different modifiers at each phase. Each phase transition is independently animated.
+
+```swift
+PhaseAnimator([false, true]) { phase in
+    Image(systemName: "star.fill")
+        .scaleEffect(phase ? 1.5 : 1.0)
+        .opacity(phase ? 1.0 : 0.5)
+        .rotationEffect(.degrees(phase ? 360 : 0))
+} animation: { phase in
+    phase ? .spring(duration: 0.8, bounce: 0.3) : .easeInOut(duration: 0.4)
+}
+```
+
+**How it works**: Begins at first phase, animates to second, then loops. The `animation` closure returns the animation used to transition INTO that phase. Phases can be any `Equatable` type — use an enum for complex multi-step sequences:
+
+```swift
+enum PulsePhase: CaseIterable { case idle, expand, contract }
+
+PhaseAnimator(PulsePhase.allCases) { phase in
+    Circle()
+        .scaleEffect(phase == .expand ? 1.3 : phase == .contract ? 0.9 : 1.0)
+}
+```
+
+**Trigger**: Add a `trigger` parameter to run the animation only when a value changes (instead of looping continuously).
+
+### KeyframeAnimator
+
+Provides per-property keyframe tracks for precise, timeline-based animations. More control than PhaseAnimator.
+
+```swift
+struct AnimationValues {
+    var scale: Double = 1.0
+    var rotation: Angle = .zero
+    var yOffset: Double = 0
+}
+
+KeyframeAnimator(initialValue: AnimationValues()) { values in
+    Image(systemName: "heart.fill")
+        .scaleEffect(values.scale)
+        .rotationEffect(values.rotation)
+        .offset(y: values.yOffset)
+} keyframes: { _ in
+    KeyframeTrack(\.scale) {
+        SpringKeyframe(1.5, duration: 0.3)
+        SpringKeyframe(1.0, duration: 0.3)
+    }
+    KeyframeTrack(\.rotation) {
+        LinearKeyframe(.degrees(15), duration: 0.15)
+        LinearKeyframe(.degrees(-15), duration: 0.3)
+        LinearKeyframe(.zero, duration: 0.15)
+    }
+    KeyframeTrack(\.yOffset) {
+        CubicKeyframe(-20, duration: 0.3)
+        CubicKeyframe(0, duration: 0.3)
+    }
+}
+```
+
+**Keyframe types**: `LinearKeyframe` (constant velocity), `SpringKeyframe` (spring physics), `CubicKeyframe` (bezier curves), `MoveKeyframe` (instant jump, no interpolation).
+
+**vs PhaseAnimator**: Use PhaseAnimator for simple state cycling. Use KeyframeAnimator when different properties need independent timing.
+
+### .transition()
+
+Defines how a view animates when inserted/removed from the view hierarchy.
+
+```swift
+if showDetail {
+    DetailView()
+        .transition(.slide)                          // Slide in/out
+        .transition(.scale.combined(with: .opacity)) // Combine transitions
+        .transition(.move(edge: .bottom))            // Move from edge
+        .transition(.asymmetric(                     // Different in/out
+            insertion: .scale.combined(with: .opacity),
+            removal: .opacity
+        ))
+}
+```
+
+**Requires animation context** — wrap the state change in `withAnimation` or use `.animation()` modifier. Without animation, the view appears/disappears instantly.
+
+### matchedGeometryEffect
+
+Smoothly animate a view's frame between two positions in the hierarchy. Commonly used for hero transitions and shared element animations.
+
+```swift
+@Namespace private var animation
+
+// Source
+if !isExpanded {
+    RoundedRectangle(cornerRadius: 10)
+        .matchedGeometryEffect(id: "card", in: animation)
+        .frame(width: 100, height: 100)
+}
+
+// Destination
+if isExpanded {
+    RoundedRectangle(cornerRadius: 20)
+        .matchedGeometryEffect(id: "card", in: animation)
+        .frame(width: 300, height: 400)
+}
+```
+
+**Key rules**: Same `id` + same `Namespace` = matched pair. Only one view with a given ID should be `isSource: true` (default) at a time. Wrap state change in `withAnimation` for smooth interpolation.
+
+### contentTransition
+
+Animates changes to text and symbol content within a view (iOS 16+).
+
+```swift
+Text(value, format: .number)
+    .contentTransition(.numericText(countsDown: value < previous))
+
+Image(systemName: isFavorite ? "heart.fill" : "heart")
+    .contentTransition(.symbolEffect(.replace))
+```
+
+---
+
+## Part 8: Zoom Transitions (iOS 18+)
 
 ### Overview
 
@@ -726,7 +850,7 @@ Push transitions cannot be cancelled — when interrupted, they convert to pop t
 
 ---
 
-## Part 8: UIKit/AppKit Animation Bridging (iOS 18+)
+## Part 9: UIKit/AppKit Animation Bridging (iOS 18+)
 
 ### Overview
 
@@ -753,7 +877,7 @@ All SwiftUI animations work: `.linear`, `.easeIn/Out`, `.spring`, `.smooth`, `.s
 
 ---
 
-## Part 9: UIViewRepresentable Animation Bridging (iOS 18+)
+## Part 10: UIViewRepresentable Animation Bridging (iOS 18+)
 
 ### The Problem
 
@@ -821,7 +945,7 @@ A single animation running across SwiftUI Views and UIViews runs **perfectly in 
 
 ---
 
-## Part 10: Gesture-Driven Animations (iOS 18+)
+## Part 11: Gesture-Driven Animations (iOS 18+)
 
 ### Automatic Velocity Preservation
 
