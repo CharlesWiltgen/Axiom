@@ -16,33 +16,7 @@ The Foundation Models framework provides access to Apple's on-device Large Langu
 
 ### Model Specifications
 
-**Technical Details**:
-- **Parameters**: 3 billion (3B)
-- **Quantization**: 2-bit
-- **Context Window**: 4096 tokens (combined input + output)
-- **Supported Languages**: English + additional languages via `SystemLanguageModel.default.supportedLanguages`
-- **Platforms**: iOS 26+, macOS 26+, iPadOS 26+, axiom-visionOS 26+
-
-**Optimized For**:
-- Text summarization
-- Information extraction
-- Content classification
-- Content generation
-- Tag generation
-- Entity detection
-
-**NOT Optimized For**:
-- World knowledge queries
-- Complex multi-step reasoning
-- Mathematical computation
-- Translation (use dedicated translation models)
-
-**Privacy & Performance**:
-- Runs entirely on-device
-- No network required (works offline)
-- Data never leaves device
-- No per-request costs
-- Integrated into OS (doesn't increase app size)
+3B parameter model, 2-bit quantized, 4096 token context (input + output combined). Optimized for on-device summarization, extraction, classification, and generation. NOT suited for world knowledge, complex reasoning, math, or translation. Runs entirely on-device — no network, no cost, no data leaves device.
 
 ---
 
@@ -174,44 +148,7 @@ print(response.content) // SearchSuggestions instance
 
 ### Generation Options
 
-**Deterministic Output (Greedy Sampling)**:
-```swift
-let response = try await session.respond(
-    to: prompt,
-    options: GenerationOptions(sampling: .greedy)
-)
-```
-
-#### From WWDC 301:6:14
-
-**Low Variance (Conservative)**:
-```swift
-let response = try await session.respond(
-    to: prompt,
-    options: GenerationOptions(temperature: 0.5)
-)
-```
-
-**High Variance (Creative)**:
-```swift
-let response = try await session.respond(
-    to: prompt,
-    options: GenerationOptions(temperature: 2.0)
-)
-```
-
-#### From WWDC 301:6:14
-
-**Skip Schema in Prompt (Optimization)**:
-```swift
-let response = try await session.respond(
-    to: prompt,
-    generating: Person.self,
-    options: GenerationOptions(includeSchemaInPrompt: false)
-)
-```
-
-**Use when**: Subsequent requests with same @Generable type. Reduces token count and latency.
+See [Sampling & Generation Options](#sampling--generation-options) for `GenerationOptions` including `sampling:`, `temperature:`, and `includeSchemaInPrompt:`.
 
 ---
 
@@ -266,32 +203,16 @@ for entry in transcript.entries {
 
 ## isResponding Property
 
+Gate UI on `session.isResponding` to prevent concurrent requests:
+
 ```swift
-struct HaikuView: View {
-    @State private var session = LanguageModelSession()
-    @State private var haiku: String?
-
-    var body: some View {
-        if let haiku {
-            Text(haiku)
-        }
-
-        Button("Go!") {
-            Task {
-                haiku = try await session.respond(
-                    to: "Write a haiku about something you haven't yet"
-                ).content
-            }
-        }
-        // Gate on `isResponding`
-        .disabled(session.isResponding)
-    }
+Button("Go!") {
+    Task { haiku = try await session.respond(to: prompt).content }
 }
+.disabled(session.isResponding)
 ```
 
 #### From WWDC 286:18:22
-
-**Why important**: Prevents multiple concurrent requests, which could cause errors or unexpected behavior.
 
 ---
 
@@ -367,70 +288,23 @@ struct Itinerary {
 
 ### @Guide Constraints
 
-**Natural Language Description**:
+`@Guide` constrains generated properties. Supports `description:` (natural language), `.range()` (numeric bounds), `.count()` / `.maximumCount()` (array length), and `Regex` (pattern matching).
+
 ```swift
 @Generable
 struct NPC {
     @Guide(description: "A full name")
     let name: String
-}
-```
 
-#### From WWDC 301:11:20
-
-**Numeric Range**:
-```swift
-@Generable
-struct Character {
     @Guide(.range(1...10))
     let level: Int
-}
-```
 
-#### From WWDC 301:11:20
-
-**Array Count**:
-```swift
-@Generable
-struct Suggestions {
     @Guide(.count(3))
-    let attributes: [Attribute]
+    let attributes: [String]
 }
 ```
 
 #### From WWDC 301:11:20
-
-**Array Maximum Count**:
-```swift
-@Generable
-struct Result {
-    @Guide(.maximumCount(3))
-    let topics: [String]
-}
-```
-
-**Regex Patterns**:
-```swift
-@Generable
-struct NPC {
-    @Guide(Regex {
-        Capture {
-            ChoiceOf {
-                "Mr"
-                "Mrs"
-            }
-        }
-        ". "
-        OneOrMore(.word)
-    })
-    let name: String
-}
-
-session.respond(to: "Generate a fun NPC", generating: NPC.self)
-// > {name: "Mrs. Brewster"}
-```
-
-#### From WWDC 301:13:40
 
 ### Constrained Decoding
 
@@ -695,126 +569,32 @@ print(response.content)
 
 **From WWDC 301**: "Model autonomously decides when and how often to call tools. Can call multiple tools per request, even in parallel."
 
-### Example: FindContactTool
-
-```swift
-import FoundationModels
-import Contacts
-
-struct FindContactTool: Tool {
-    let name = "findContact"
-    let description = "Finds a contact from a specified age generation."
-
-    @Generable
-    struct Arguments {
-        let generation: Generation
-
-        @Generable
-        enum Generation {
-            case babyBoomers
-            case genX
-            case millennial
-            case genZ
-        }
-    }
-
-    func call(arguments: Arguments) async throws -> ToolOutput {
-        let store = CNContactStore()
-
-        let keysToFetch = [CNContactGivenNameKey, CNContactBirthdayKey] as [CNKeyDescriptor]
-        let request = CNContactFetchRequest(keysToFetch: keysToFetch)
-
-        var contacts: [CNContact] = []
-        try store.enumerateContacts(with: request) { contact, stop in
-            if let year = contact.birthday?.year {
-                if arguments.generation.yearRange.contains(year) {
-                    contacts.append(contact)
-                }
-            }
-        }
-
-        guard let pickedContact = contacts.randomElement() else {
-            return ToolOutput("Could not find a contact.")
-        }
-
-        return ToolOutput(pickedContact.givenName)
-    }
-}
-```
-
-#### From WWDC 301:18:47
-
 ### Stateful Tools
 
-Tools can maintain state across calls using `class` instead of `struct`:
+Use `class` instead of `struct` to maintain state across tool calls. The tool instance persists for the session lifetime, enabling patterns like tracking previously returned results:
 
 ```swift
 class FindContactTool: Tool {
     let name = "findContact"
     let description = "Finds a contact from a specified age generation."
-
-    var pickedContacts = Set<String>() // State!
+    var pickedContacts = Set<String>()
 
     @Generable
     struct Arguments {
         let generation: Generation
-
         @Generable
-        enum Generation {
-            case babyBoomers
-            case genX
-            case millennial
-            case genZ
-        }
+        enum Generation { case babyBoomers, genX, millennial, genZ }
     }
 
     func call(arguments: Arguments) async throws -> ToolOutput {
-        // Fetch contacts...
-        contacts.removeAll(where: { pickedContacts.contains($0.givenName) })
-
-        guard let pickedContact = contacts.randomElement() else {
-            return ToolOutput("Could not find a contact.")
-        }
-
-        pickedContacts.insert(pickedContact.givenName) // Update state
+        // Fetch, filter out already-picked, return new contact
+        pickedContacts.insert(pickedContact.givenName)
         return ToolOutput(pickedContact.givenName)
     }
 }
 ```
 
-#### From WWDC 301:21:55
-
-**Why**: Tool instance persists for session lifetime. Can track what's been called.
-
-### Example: GetContactEventTool
-
-```swift
-import FoundationModels
-import EventKit
-
-struct GetContactEventTool: Tool {
-    let name = "getContactEvent"
-    let description = "Get an event with a contact."
-
-    let contactName: String
-
-    @Generable
-    struct Arguments {
-        let day: Int
-        let month: Int
-        let year: Int
-    }
-
-    func call(arguments: Arguments) async throws -> ToolOutput {
-        // Fetch events from Calendar...
-        let eventStore = EKEventStore()
-        // ... implementation ...
-        return ToolOutput(/* event details */)
-    }
-}
-```
-
-#### From WWDC 301:22:27
+#### From WWDC 301:18:47, 301:21:55
 
 ### ToolOutput
 
@@ -879,100 +659,32 @@ let session = LanguageModelSession(
 
 `DynamicGenerationSchema` enables creating schemas at runtime instead of compile-time. Useful for user-defined structures, level creators, or dynamic forms.
 
-### Creating Dynamic Schemas
+### Creating and Using Dynamic Schemas
+
+Build properties with `DynamicGenerationSchema.Property`, compose into schemas, then validate with `GenerationSchema`:
 
 ```swift
-@Generable
-struct Riddle {
-    let question: String
-    let answers: [Answer]
-
-    @Generable
-    struct Answer {
-        let text: String
-        let isCorrect: Bool
-    }
-}
-```
-
-#### From WWDC 301:14:50
-
-If this structure is only known at runtime:
-
-```swift
-struct LevelObjectCreator {
-    var properties: [DynamicGenerationSchema.Property] = []
-
-    mutating func addStringProperty(name: String) {
-        let property = DynamicGenerationSchema.Property(
-            name: name,
-            schema: DynamicGenerationSchema(type: String.self)
-        )
-        properties.append(property)
-    }
-
-    mutating func addBoolProperty(name: String) {
-        let property = DynamicGenerationSchema.Property(
-            name: name,
-            schema: DynamicGenerationSchema(type: Bool.self)
-        )
-        properties.append(property)
-    }
-
-    mutating func addArrayProperty(name: String, customType: String) {
-        let property = DynamicGenerationSchema.Property(
-            name: name,
-            schema: DynamicGenerationSchema(
-                arrayOf: DynamicGenerationSchema(referenceTo: customType)
-            )
-        )
-        properties.append(property)
-    }
-
-    var root: DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: name,
-            properties: properties
-        )
-    }
-}
-
-// Create riddle schema
-var riddleBuilder = LevelObjectCreator(name: "Riddle")
-riddleBuilder.addStringProperty(name: "question")
-riddleBuilder.addArrayProperty(name: "answers", customType: "Answer")
-
-// Create answer schema
-var answerBuilder = LevelObjectCreator(name: "Answer")
-answerBuilder.addStringProperty(name: "text")
-answerBuilder.addBoolProperty(name: "isCorrect")
-
-let riddleDynamicSchema = riddleBuilder.root
-let answerDynamicSchema = answerBuilder.root
-```
-
-#### From WWDC 301:15:10
-
-### Validating and Using Dynamic Schemas
-
-```swift
-let schema = try GenerationSchema(
-    root: riddleDynamicSchema,
-    dependencies: [answerDynamicSchema]
+// Build schema at runtime
+let questionProp = DynamicGenerationSchema.Property(
+    name: "question", schema: DynamicGenerationSchema(type: String.self)
+)
+let answersProp = DynamicGenerationSchema.Property(
+    name: "answers", schema: DynamicGenerationSchema(
+        arrayOf: DynamicGenerationSchema(referenceTo: "Answer")
+    )
 )
 
-let session = LanguageModelSession()
-let response = try await session.respond(
-    to: "Generate a fun riddle about coffee",
-    schema: schema
-)
+let riddleSchema = DynamicGenerationSchema(name: "Riddle", properties: [questionProp, answersProp])
+let answerSchema = DynamicGenerationSchema(name: "Answer", properties: [/* text, isCorrect */])
 
-let generatedContent = response.content // GeneratedContent
-let question = try generatedContent.value(String.self, forProperty: "question")
-let answers = try generatedContent.value([GeneratedContent].self, forProperty: "answers")
+// Validate and use
+let schema = try GenerationSchema(root: riddleSchema, dependencies: [answerSchema])
+let response = try await session.respond(to: "Generate a riddle", schema: schema)
+
+let question = try response.content.value(String.self, forProperty: "question")
 ```
 
-#### From WWDC 301:15:10
+#### From WWDC 301:14:50, 301:15:10
 
 ### Dynamic vs Static @Generable
 
@@ -992,58 +704,23 @@ let answers = try generatedContent.value([GeneratedContent].self, forProperty: "
 
 ## Sampling & Generation Options
 
-### Sampling Methods
-
-**Random Sampling (Default)**:
-```swift
-let response = try await session.respond(to: prompt)
-// Different output each time
-```
-
-**Greedy Sampling (Deterministic)**:
+**Greedy (deterministic)** — use for tests and demos. Only deterministic within same model version:
 ```swift
 let response = try await session.respond(
     to: prompt,
     options: GenerationOptions(sampling: .greedy)
 )
-// Same output for same prompt (given same model version)
 ```
 
-#### From WWDC 301:6:14
-
-**Use greedy for**:
-- Unit tests
-- Demos that need repeatability
-- When consistency critical
-
-**Caveat**: Only deterministic for same model version. OS updates may change model, changing output.
-
-### Temperature Control
-
-**Low variance** (focused, conservative):
+**Temperature** — controls variance. `0.1-0.5` focused, `1.0` default, `1.5-2.0` creative:
 ```swift
 let response = try await session.respond(
     to: prompt,
     options: GenerationOptions(temperature: 0.5)
 )
-// Predictable, focused output
-```
-
-**High variance** (creative, diverse):
-```swift
-let response = try await session.respond(
-    to: prompt,
-    options: GenerationOptions(temperature: 2.0)
-)
-// Varied, creative output
 ```
 
 #### From WWDC 301:6:14
-
-**Temperature scale**:
-- `0.1-0.5`: Very focused
-- `1.0` (default): Balanced
-- `1.5-2.0`: Very creative
 
 ---
 
@@ -1105,39 +782,12 @@ let response = try await session.respond(
 
 ### GenerationError Types
 
-**exceededContextWindowSize**:
-```swift
-do {
-    let response = try await session.respond(to: prompt)
-} catch LanguageModelSession.GenerationError.exceededContextWindowSize {
-    // Context limit (4096 tokens) exceeded
-    // Solution: Condense transcript, create new session
-}
-```
+Catch `LanguageModelSession.GenerationError` cases:
+- **`.exceededContextWindowSize`** — Context limit (4096 tokens) exceeded. Condense transcript or create new session.
+- **`.guardrailViolation`** — Content policy triggered. Show graceful message.
+- **`.unsupportedLanguageOrLocale`** — Language not supported. Check `supportedLanguages`.
 
-#### From WWDC 301:3:37
-
-**guardrailViolation**:
-```swift
-do {
-    let response = try await session.respond(to: userInput)
-} catch LanguageModelSession.GenerationError.guardrailViolation {
-    // Content policy triggered
-    // Solution: Show graceful message, don't generate
-}
-```
-
-**unsupportedLanguageOrLocale**:
-```swift
-do {
-    let response = try await session.respond(to: userInput)
-} catch LanguageModelSession.GenerationError.unsupportedLanguageOrLocale {
-    // Language not supported
-    // Solution: Check supported languages, show message
-}
-```
-
-#### From WWDC 301:7:06
+#### From WWDC 301:3:37, 301:7:06
 
 ### Context Window Management
 
@@ -1307,65 +957,15 @@ let second = try await session.respond(
 
 ### Optimization: Property Order
 
-```swift
-// ✅ GOOD - Important properties first
-@Generable
-struct Article {
-    var title: String      // Shows in 0.2s (streaming)
-    var summary: String    // Shows in 0.8s
-    var fullText: String   // Shows in 2.5s
-}
-
-// ❌ BAD - Important properties last
-@Generable
-struct Article {
-    var fullText: String   // User waits 2.5s
-    var summary: String
-    var title: String
-}
-```
-
-**UX impact**: Perceived latency drops from 2.5s to 0.2s with streaming
+Declare important properties first in `@Generable` structs. With streaming, perceived latency drops from 2.5s to 0.2s when title appears before full text. See [Streaming Best Practices](#best-practices) for examples.
 
 ---
 
 ## Feedback & Analytics
 
-### LanguageModelFeedbackAttachment
-
-```swift
-let feedback = LanguageModelFeedbackAttachment(
-    input: [
-        // Input tokens/prompts
-    ],
-    output: [
-        // Output tokens/content
-    ],
-    sentiment: .negative,
-    issues: [
-        LanguageModelFeedbackAttachment.Issue(
-            category: .incorrect,
-            explanation: "Model hallucinated facts"
-        )
-    ],
-    desiredOutputExamples: [
-        [
-            // Example of desired output
-        ]
-    ]
-)
-
-let data = try JSONEncoder().encode(feedback)
-// Attach to Feedback Assistant report
-```
+`LanguageModelFeedbackAttachment` lets you report model quality issues to Apple via Feedback Assistant. Create with `input`, `output`, `sentiment` (`.positive`/`.negative`), `issues` (category + explanation), and `desiredOutputExamples`. Encode as JSON and attach to a Feedback Assistant report.
 
 #### From WWDC 286:22:13
-
-**Use for**:
-- Reporting quality issues
-- Providing examples of desired behavior
-- Helping Apple improve models
-- Tracking sentiment
 
 ---
 
@@ -1391,80 +991,20 @@ import Playgrounds
 
 #### From WWDC 286:2:28
 
-### Accessing App Types
-
-```swift
-import FoundationModels
-import Playgrounds
-
-#Playground {
-    let session = LanguageModelSession()
-    for landmark in ModelData.shared.landmarks {
-        let response = try await session.respond(
-            to: "What's a good name for a trip to \(landmark.name)? Respond only with a title"
-        )
-    }
-}
-```
-
-#### From WWDC 286:2:43
-
-**Benefit**: Can access types defined in your app (like @Generable structs)
+Playgrounds can also access types defined in your app (like @Generable structs).
 
 ---
 
 ## API Quick Reference
 
-### Classes
-
-| Class | Purpose |
-|-------|---------|
-| `LanguageModelSession` | Main interface for model interaction |
-| `SystemLanguageModel` | Access to model availability and use cases |
-| `GenerationOptions` | Configure sampling, temperature, schema inclusion |
-| `ToolOutput` | Return value from Tool.call() |
-| `GeneratedContent` | Dynamic structured output |
-| `DynamicGenerationSchema` | Runtime schema definition |
-| `Transcript` | Conversation history |
-
-### Protocols
-
-| Protocol | Purpose |
-|----------|---------|
-| `Tool` | Define custom tools for model to call |
-| `Generable` | (Not direct protocol) Macro-generated conformance |
-
-### Macros
-
-| Macro | Purpose |
-|-------|---------|
-| `@Generable` | Enable structured output for types |
-| `@Guide` | Add constraints to @Generable properties |
-
-### Enums
-
-| Enum | Purpose |
-|------|---------|
-| `SystemLanguageModel.Availability` | `.available` or `.unavailable(reason)` |
-| `GenerationError` | Error types (context exceeded, guardrail, language) |
-| `SamplingMethod` | `.greedy` or `.random` |
-
-### Key Methods
-
-| Method | Return | Purpose |
-|--------|--------|---------|
-| `session.respond(to:)` | `Response<String>` | Generate text |
-| `session.respond(to:generating:)` | `Response<T>` | Generate structured output |
-| `session.streamResponse(to:generating:)` | `AsyncSequence<T.PartiallyGenerated>` | Stream structured output |
-
-### Properties
-
-| Property | Type | Purpose |
-|----------|------|---------|
-| `session.transcript` | `Transcript` | Conversation history |
-| `session.isResponding` | `Bool` | Whether currently generating |
-| `SystemLanguageModel.default.availability` | `Availability` | Model availability status |
-| `SystemLanguageModel.default.supportedLanguages` | `[Language]` | Supported languages |
+- **`LanguageModelSession`** — Main interface: `respond(to:)` → `Response<String>`, `respond(to:generating:)` → `Response<T>`, `streamResponse(to:generating:)` → `AsyncSequence<T.PartiallyGenerated>`. Properties: `transcript`, `isResponding`.
+- **`SystemLanguageModel`** — `default.availability` (`.available`/`.unavailable(reason)`), `default.supportedLanguages`, `init(useCase:)`
+- **`GenerationOptions`** — `sampling` (`.greedy`/`.random`), `temperature`, `includeSchemaInPrompt`
+- **`@Generable`** — Macro enabling structured output with constrained decoding
+- **`@Guide`** — Property constraints: `description:`, `.range()`, `.count()`, `.maximumCount()`, `Regex`
+- **`Tool` protocol** — `name`, `description`, `Arguments: Generable`, `call(arguments:) → ToolOutput`
+- **`DynamicGenerationSchema`** — Runtime schema definition with `GeneratedContent` output
+- **`GenerationError`** — `.exceededContextWindowSize`, `.guardrailViolation`, `.unsupportedLanguageOrLocale`
 
 ---
 
@@ -1472,46 +1012,12 @@ import Playgrounds
 
 ### From Server LLMs
 
-**When to migrate**:
-- Privacy concerns (data leaving device)
-- Offline requirements
-- Cost concerns (per-request fees)
-- Use case is summarization/extraction/classification
-
-**When NOT to migrate**:
-- Need world knowledge
-- Need complex reasoning
-- Need very long context (>4096 tokens)
+- **Migrate when**: Privacy required, offline needed, per-request costs are a concern, and use case fits (summarization/extraction/classification)
+- **Stay on server when**: Need world knowledge, complex reasoning, or >4096 token context
 
 ### From Manual JSON Parsing
 
-**Before**:
-```swift
-let prompt = "Generate person as JSON"
-let response = try await session.respond(to: prompt)
-let data = response.content.data(using: .utf8)!
-let person = try JSONDecoder().decode(Person.self, from: data)
-```
-
-**After**:
-```swift
-@Generable
-struct Person {
-    let name: String
-    let age: Int
-}
-
-let response = try await session.respond(
-    to: "Generate a person",
-    generating: Person.self
-)
-```
-
-**Benefits**:
-- No parsing code
-- Guaranteed structure
-- Type safety
-- No crashes from invalid JSON
+Use `@Generable` with `respond(to:generating:)` instead of prompting for JSON and parsing manually. See `axiom-foundation-models` Scenario 2 for the complete migration pattern.
 
 ---
 
