@@ -411,11 +411,19 @@ Control generated values with `@Guide`. Supports descriptions, numeric ranges, a
 
 ```swift
 @Generable
-struct Suggestions {
-    @Guide(description: "Suggested search terms", .count(4))
-    var searchTerms: [String]
+struct NPC {
+    @Guide(description: "A full name")
+    let name: String
+
+    @Guide(.range(1...10))
+    let level: Int
+
+    @Guide(.count(3))
+    let attributes: [String]
 }
 ```
+
+**Runtime validation**: `@Guide` constraints are enforced during generation via constrained decoding — the model cannot produce out-of-range values. However, always validate business logic on the result since the model may produce semantically wrong but structurally valid output.
 
 See `axiom-foundation-models-ref` for complete `@Guide` reference (ranges, regex, maximum counts).
 
@@ -539,6 +547,24 @@ ForEach(days.indices, id: \.self) { index in
 - Simple Q&A (< 1 sentence)
 - Quick classification
 - Content tagging
+
+### Streaming Error Handling
+
+Handle errors during streaming gracefully — partial results may already be displayed:
+
+```swift
+do {
+    for try await partial in stream {
+        self.itinerary = partial
+    }
+} catch LanguageModelSession.GenerationError.guardrailViolation {
+    // Partial content may be visible — show non-disruptive error
+    self.errorMessage = "Generation stopped by content policy"
+} catch LanguageModelSession.GenerationError.exceededContextWindowSize {
+    // Too much context — create fresh session and retry
+    session = LanguageModelSession()
+}
+```
 
 ---
 
