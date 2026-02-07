@@ -143,47 +143,21 @@ let prompt = """
 
 ---
 
-### ❌ Not Handling Context Overflow
-**Why it fails**: Multi-turn conversations grow transcript. Eventually exceeds 4096 tokens, throws error, conversation ends.
+### ❌ Not Handling Generation Errors
+**Why it fails**: Three errors MUST be handled or your app will crash in production.
 
-**Must handle**:
 ```swift
-// ✅ GOOD - Handle overflow
 do {
     let response = try await session.respond(to: prompt)
 } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
-    // Condense transcript and create new session
-    session = condensedSession(from: session)
-}
-```
-
----
-
-### ❌ Not Handling Guardrail Violations
-**Why it fails**: Model has content policy. Certain prompts trigger guardrails, throw error.
-
-**Must handle**:
-```swift
-// ✅ GOOD - Handle guardrails
-do {
-    let response = try await session.respond(to: userInput)
+    // Multi-turn transcript grew beyond 4096 tokens
+    // → Condense transcript and create new session (see Pattern 5)
 } catch LanguageModelSession.GenerationError.guardrailViolation {
-    // Show message: "I can't help with that request"
-}
-```
-
----
-
-### ❌ Not Handling Unsupported Language
-**Why it fails**: Model supports specific languages. User input might be unsupported, throws error.
-
-**Must check**:
-```swift
-// ✅ GOOD - Check supported languages
-let supported = SystemLanguageModel.default.supportedLanguages
-guard supported.contains(Locale.current.language) else {
-    // Show disclaimer
-    return
+    // Content policy triggered
+    // → Show graceful message: "I can't help with that request"
+} catch LanguageModelSession.GenerationError.unsupportedLanguageOrLocale {
+    // User input in unsupported language
+    // → Show disclaimer, check SystemLanguageModel.default.supportedLanguages
 }
 ```
 
@@ -194,23 +168,8 @@ guard supported.contains(Locale.current.language) else {
 Before writing any Foundation Models code, complete these steps:
 
 ### 1. Check Availability
-```swift
-switch SystemLanguageModel.default.availability {
-case .available:
-    // Proceed with implementation
-    print("✅ Foundation Models available")
-case .unavailable(let reason):
-    // Handle gracefully - show UI message
-    print("❌ Unavailable: \(reason)")
-}
-```
 
-**Why**: Foundation Models requires:
-- Apple Intelligence-enabled device
-- Supported region
-- User opted in to Apple Intelligence
-
-**Failure mode**: App crashes or shows confusing errors without check.
+See "Ignoring Availability Check" in Red Flags above for the required pattern. Foundation Models requires Apple Intelligence-enabled device, supported region, and user opt-in.
 
 ---
 
@@ -323,7 +282,7 @@ Need on-device AI?
 
 ---
 
-## Pattern 1: Basic Session (~1500 words)
+## Pattern 1: Basic Session
 
 **Use when**: Simple text generation, summarization, or content analysis.
 
@@ -351,8 +310,6 @@ func respond(userInput: String) async throws -> String {
     return response.content
 }
 ```
-
-// WWDC 301:1:05
 
 ### Key Points
 
@@ -383,33 +340,7 @@ print(second.content)
 print(session.transcript)
 ```
 
-// WWDC 286:17:46
-
 **Why this works**: Session retains transcript automatically. Model uses context from previous turns.
-
-### Transcript Inspection
-
-```swift
-let transcript = session.transcript
-// Use for:
-// - Debugging generation issues
-// - Showing conversation history in UI
-// - Exporting chat logs
-```
-
-### Error Handling (Basic)
-
-```swift
-do {
-    let response = try await session.respond(to: prompt)
-} catch LanguageModelSession.GenerationError.guardrailViolation {
-    // Content policy triggered
-    print("Cannot generate that content")
-} catch LanguageModelSession.GenerationError.unsupportedLanguageOrLocale {
-    // Language not supported
-    print("Please use English or another supported language")
-}
-```
 
 ### When to Use This Pattern
 
@@ -424,14 +355,9 @@ do {
 - Long conversations (will hit context limit)
 - External data needs (use Pattern 4)
 
-### Time Cost
-
-**Implementation**: 10-15 minutes for basic usage
-**Debugging**: +5-10 minutes if hitting errors
-
 ---
 
-## Pattern 2: @Generable Structured Output (~2000 words)
+## Pattern 2: @Generable Structured Output
 
 **Use when**: You need structured data from model, not just plain text.
 
@@ -465,8 +391,6 @@ let response = try await session.respond(
 let person = response.content // Type-safe Person instance!
 ```
 
-// WWDC 301:8:14
-
 ### How It Works (Constrained Decoding)
 
 1. `@Generable` macro generates schema at compile-time
@@ -479,84 +403,12 @@ let person = response.content // Type-safe Person instance!
 
 ### Supported Types
 
-**Primitives**:
-- `String`, `Int`, `Float`, `Double`, `Bool`
-
-**Arrays**:
-```swift
-@Generable
-struct SearchSuggestions {
-    var searchTerms: [String]
-}
-```
-
-**Nested/Composed**:
-```swift
-@Generable
-struct Itinerary {
-    var destination: String
-    var days: [DayPlan] // Composed type
-}
-
-@Generable
-struct DayPlan {
-    var activities: [String]
-}
-```
-
-// WWDC 286:6:18
-
-**Enums with Associated Values**:
-```swift
-@Generable
-struct NPC {
-    let name: String
-    let encounter: Encounter
-
-    @Generable
-    enum Encounter {
-        case orderCoffee(String)
-        case wantToTalkToManager(complaint: String)
-    }
-}
-```
-
-// WWDC 301:10:49
-
-**Recursive Types**:
-```swift
-@Generable
-struct Itinerary {
-    var destination: String
-    var relatedItineraries: [Itinerary] // Recursive!
-}
-```
+Supports `String`, `Int`, `Float`, `Double`, `Bool`, arrays, nested `@Generable` types, enums with associated values, and recursive types. See `axiom-foundation-models-ref` for complete list with examples.
 
 ### @Guide Constraints
 
-Control generated values with @Guide:
+Control generated values with `@Guide`. Supports descriptions, numeric ranges, array counts, and regex patterns:
 
-**Natural Language Description**:
-```swift
-@Generable
-struct NPC {
-    @Guide(description: "A full name with first and last")
-    let name: String
-}
-```
-
-**Numeric Ranges**:
-```swift
-@Generable
-struct Character {
-    @Guide(.range(1...10))
-    let level: Int
-}
-```
-
-// WWDC 301:11:20
-
-**Array Count**:
 ```swift
 @Generable
 struct Suggestions {
@@ -565,38 +417,7 @@ struct Suggestions {
 }
 ```
 
-// WWDC 286:5:32
-
-**Maximum Count**:
-```swift
-@Generable
-struct Result {
-    @Guide(.maximumCount(3))
-    let topics: [String]
-}
-```
-
-**Regex Patterns**:
-```swift
-@Generable
-struct NPC {
-    @Guide(Regex {
-        Capture {
-            ChoiceOf {
-                "Mr"
-                "Mrs"
-            }
-        }
-        ". "
-        OneOrMore(.word)
-    })
-    let name: String
-}
-
-// Output: {name: "Mrs. Brewster"}
-```
-
-// WWDC 301:13:40
+See `axiom-foundation-models-ref` for complete `@Guide` reference (ranges, regex, maximum counts).
 
 ### Property Order Matters
 
@@ -616,7 +437,7 @@ struct Itinerary {
 
 ---
 
-## Pattern 3: Streaming with PartiallyGenerated (~1500 words)
+## Pattern 3: Streaming with PartiallyGenerated
 
 **Use when**: Generation takes >1 second and you want progressive UI updates.
 
@@ -650,22 +471,9 @@ for try await partial in stream {
 }
 ```
 
-// WWDC 286:9:40
-
 ### PartiallyGenerated Type
 
-`@Generable` macro automatically creates `PartiallyGenerated` type:
-```swift
-// Compiler generates:
-extension Itinerary {
-    struct PartiallyGenerated {
-        var name: String?        // All properties optional!
-        var days: [DayPlan]?
-    }
-}
-```
-
-**Why optional**: Properties fill in as model generates them.
+`@Generable` macro automatically creates a `PartiallyGenerated` type where all properties are optional (they fill in as the model generates them). See `axiom-foundation-models-ref` for details.
 
 ### SwiftUI Integration
 
@@ -704,27 +512,6 @@ struct ItineraryView: View {
 }
 ```
 
-// WWDC 286:10:05
-
-### Animations & Transitions
-
-**Add polish**:
-```swift
-if let name = itinerary?.name {
-    Text(name)
-        .transition(.opacity)
-}
-
-if let days = itinerary?.days {
-    ForEach(days, id: \.self) { day in
-        DayView(day: day)
-            .transition(.slide)
-    }
-}
-```
-
-"Get creative with SwiftUI animations to hide latency. Turn waiting into delight."
-
 ### View Identity
 
 **Critical for arrays**:
@@ -740,27 +527,6 @@ ForEach(days.indices, id: \.self) { index in
 }
 ```
 
-### Property Order for Streaming UX
-
-```swift
-// ✅ GOOD - Title appears first, summary last
-@Generable
-struct Itinerary {
-    var name: String        // Shows first
-    var days: [DayPlan]     // Shows second
-    var summary: String     // Shows last (can reference days)
-}
-
-// ❌ BAD - Summary before content
-@Generable
-struct Itinerary {
-    var summary: String     // Doesn't make sense before days!
-    var days: [DayPlan]
-}
-```
-
-// WWDC 286:11:00
-
 ### When to Use Streaming
 
 ✅ **Use for**:
@@ -774,14 +540,9 @@ struct Itinerary {
 - Quick classification
 - Content tagging
 
-### Time Cost
-
-**Implementation**: 15-20 minutes with SwiftUI
-**Polish (animations)**: +5-10 minutes
-
 ---
 
-## Pattern 4: Tool Calling (~2000 words)
+## Pattern 4: Tool Calling
 
 **Use when**: Model needs external data (weather, locations, contacts) to generate response.
 
@@ -826,8 +587,6 @@ struct GetWeatherTool: Tool {
 }
 ```
 
-// WWDC 286:13:42
-
 ### Attaching Tool to Session
 
 ```swift
@@ -844,113 +603,20 @@ print(response.content)
 // "It's 71°F in Cupertino!"
 ```
 
-// WWDC 286:15:03
-
 **Model autonomously**:
 1. Recognizes it needs weather data
 2. Calls `GetWeatherTool`
 3. Receives real temperature
 4. Incorporates into natural response
 
-### Tool Protocol Requirements
+### Key Concepts
 
-```swift
-protocol Tool {
-    var name: String { get }
-    var description: String { get }
+- **Tool protocol**: Requires `name`, `description`, `@Generable Arguments`, and `call()` method
+- **ToolOutput**: Return `String` (natural language) or `GeneratedContent` (structured)
+- **Multiple tools**: Session accepts array of tools; model autonomously decides which to call
+- **Stateful tools**: Use `class` (not `struct`) when tools need to maintain state across calls
 
-    associatedtype Arguments: Generable
-
-    func call(arguments: Arguments) async throws -> ToolOutput
-}
-```
-
-**Name**: Short, verb-based (e.g. `getWeather`, `findContact`)
-**Description**: One sentence explaining purpose
-**Arguments**: Must be `@Generable` (guarantees valid input)
-**call**: Your code — fetch data, process, return
-
-### ToolOutput
-
-**Two forms**:
-
-1. **Natural language** (String):
-```swift
-return ToolOutput("Temperature is 71°F")
-```
-
-2. **Structured** (GeneratedContent):
-```swift
-let content = GeneratedContent(properties: ["temperature": 71])
-return ToolOutput(content)
-```
-
-### Multiple Tools Example
-
-```swift
-let session = LanguageModelSession(
-    tools: [
-        GetWeatherTool(),
-        FindRestaurantTool(),
-        FindHotelTool()
-    ],
-    instructions: "Plan travel itineraries."
-)
-
-let response = try await session.respond(
-    to: "Create a 2-day plan for Tokyo"
-)
-
-// Model autonomously decides:
-// - Calls FindRestaurantTool for dining
-// - Calls FindHotelTool for accommodation
-// - Calls GetWeatherTool to suggest activities
-```
-
-### Stateful Tools
-
-Tools can maintain state across calls:
-
-```swift
-class FindContactTool: Tool {
-    let name = "findContact"
-    let description = "Find contact from age generation"
-
-    var pickedContacts = Set<String>() // State!
-
-    @Generable
-    struct Arguments {
-        let generation: Generation
-
-        @Generable
-        enum Generation {
-            case babyBoomers
-            case genX
-            case millennial
-            case genZ
-        }
-    }
-
-    func call(arguments: Arguments) async throws -> ToolOutput {
-        // Use Contacts API
-        var contacts = fetchContacts(for: arguments.generation)
-
-        // Remove already picked
-        contacts.removeAll(where: { pickedContacts.contains($0.name) })
-
-        guard let picked = contacts.randomElement() else {
-            return ToolOutput("No more contacts")
-        }
-
-        pickedContacts.insert(picked.name) // Update state
-        return ToolOutput(picked.name)
-    }
-}
-```
-
-// WWDC 301:21:55
-
-**Why class, not struct**: Need to mutate state from `call` method.
+See `axiom-foundation-models-ref` for `Tool` protocol reference, `ToolOutput` forms, stateful tool patterns, and additional examples.
 
 ### Tool Calling Flow
 
@@ -978,44 +644,6 @@ class FindContactTool: Tool {
 - Tool will be called (model might not need it)
 - Specific argument values (model decides based on context)
 
-### Real-World Example: Itinerary Planner
-
-```swift
-struct FindPointsOfInterestTool: Tool {
-    let name = "findPointsOfInterest"
-    let description = "Find restaurants, museums, parks near a landmark"
-
-    let landmark: String
-
-    @Generable
-    struct Arguments {
-        let category: Category
-
-        @Generable
-        enum Category {
-            case restaurant
-            case museum
-            case park
-            case marina
-        }
-    }
-
-    func call(arguments: Arguments) async throws -> ToolOutput {
-        // Use MapKit
-        let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = "\(arguments.category) near \(landmark)"
-
-        let search = MKLocalSearch(request: request)
-        let response = try await search.start()
-
-        let names = response.mapItems.prefix(5).map { $0.name ?? "" }
-        return ToolOutput(names.joined(separator: ", "))
-    }
-}
-```
-
-**From WWDC 259 summary**: "Tool fetches points of interest from MapKit. Model uses world knowledge to determine promising categories."
-
 ### When to Use Tools
 
 ✅ **Use for**:
@@ -1030,14 +658,9 @@ struct FindPointsOfInterestTool: Tool {
 - Information in prompt/instructions
 - Simple calculations (model can do these)
 
-### Time Cost
-
-**Simple tool**: 20-25 minutes
-**Complex tool with state**: 30-40 minutes
-
 ---
 
-## Pattern 5: Context Management (~1500 words)
+## Pattern 5: Context Management
 
 **Use when**: Multi-turn conversations that might exceed 4096 token limit.
 
@@ -1076,8 +699,6 @@ do {
 }
 ```
 
-// WWDC 301:3:37
-
 **Problem**: Loses entire conversation history.
 
 ### Better: Condense Transcript
@@ -1111,47 +732,12 @@ func condensedSession(from previous: LanguageModelSession) -> LanguageModelSessi
 }
 ```
 
-// WWDC 301:3:55
-
 **Why this works**:
 - Instructions always preserved
 - Recent context retained
 - Total tokens drastically reduced
 
-### Advanced: Summarize Middle Entries
-
-For long conversations where recent context isn't enough:
-
-```swift
-func condensedSession(from previous: LanguageModelSession) -> LanguageModelSession {
-    let entries = previous.transcript.entries
-
-    guard entries.count > 3 else {
-        return LanguageModelSession(transcript: previous.transcript)
-    }
-
-    // Keep first (instructions) and last (recent)
-    var condensedEntries = [entries.first!]
-
-    // Summarize middle entries
-    let middleEntries = Array(entries[1..<entries.count-1])
-    let summaryPrompt = """
-        Summarize this conversation in 2-3 sentences:
-        \(middleEntries.map { $0.content }.joined(separator: "\n"))
-        """
-
-    // Use Foundation Models itself to summarize!
-    let summarySession = LanguageModelSession()
-    let summary = try await summarySession.respond(to: summaryPrompt)
-
-    condensedEntries.append(Transcript.Entry(content: summary.content))
-    condensedEntries.append(entries.last!)
-
-    return LanguageModelSession(transcript: Transcript(entries: condensedEntries))
-}
-```
-
-"You could summarize parts of transcript with Foundation Models itself."
+For advanced strategies (summarizing middle entries with Foundation Models itself), see `axiom-foundation-models-ref`.
 
 ### Preventing Context Overflow
 
@@ -1185,110 +771,31 @@ for day in 1...7 {
 }
 ```
 
-### Monitoring Context Usage
-
-"Each token in instructions and prompt adds latency. Longer outputs take longer."
-
-**Use Instruments** (Foundation Models template) to:
-- See token counts
-- Identify verbose prompts
-- Optimize context usage
-
-### Time Cost
-
-**Basic overflow handling**: 5-10 minutes
-**Condensing strategy**: 15-20 minutes
-**Advanced summarization**: 30-40 minutes
-
 ---
 
-## Pattern 6: Sampling & Generation Options (~1000 words)
+## Pattern 6: Sampling & Generation Options
 
 **Use when**: You need control over output randomness/determinism.
 
-### Understanding Sampling
-
-Model generates output **one token at a time**:
-1. Creates probability distribution for next token
-2. Samples from distribution
-3. Picks token
-4. Repeats
-
-**Default**: Random sampling → Different output each time
-
-### Deterministic Output (Greedy)
-
-```swift
-let response = try await session.respond(
-    to: prompt,
-    options: GenerationOptions(sampling: .greedy)
-)
-```
-
-// WWDC 301:6:14
-
-**Use cases**:
-- Repeatable demos
-- Testing/debugging
-- Consistent results required
-
-**Caveat**: Only holds for same model version. OS updates may change output.
-
-### Temperature Control
-
-**Low variance** (conservative, focused):
-```swift
-let response = try await session.respond(
-    to: prompt,
-    options: GenerationOptions(temperature: 0.5)
-)
-```
-
-**High variance** (creative, diverse):
-```swift
-let response = try await session.respond(
-    to: prompt,
-    options: GenerationOptions(temperature: 2.0)
-)
-```
-
-// WWDC 301:6:14
-
-**Temperature scale**:
-- `0.1-0.5`: Very focused, predictable
-- `1.0` (default): Balanced
-- `1.5-2.0`: Creative, varied
-
-**Example use cases**:
-- **Low temp**: Fact extraction, classification
-- **High temp**: Creative writing, brainstorming
-
 ### When to Adjust Sampling
 
-✅ **Greedy for**:
-- Unit tests
-- Demos
-- Consistency critical
+| Goal | Setting | Use Cases |
+|------|---------|-----------|
+| Deterministic | `GenerationOptions(sampling: .greedy)` | Unit tests, demos, consistency-critical |
+| Focused | `GenerationOptions(temperature: 0.5)` | Fact extraction, classification |
+| Creative | `GenerationOptions(temperature: 2.0)` | Story generation, brainstorming, varied NPC dialog |
 
-✅ **Low temperature for**:
-- Factual tasks
-- Classification
-- Extraction
+**Default**: Random sampling (temperature 1.0) gives balanced results.
 
-✅ **High temperature for**:
-- Creative content
-- Story generation
-- Varied NPC dialog
+**Caveat**: Greedy determinism only holds for same model version. OS updates may change output.
 
-### Time Cost
-
-**Implementation**: 2-3 minutes (one line change)
+See `axiom-foundation-models-ref` for complete `GenerationOptions` API reference.
 
 ---
 
 ## Pressure Scenarios
 
-### Scenario 1: "Just Use ChatGPT API" (~1000 words)
+### Scenario 1: "Just Use ChatGPT API"
 
 **Context**: You're implementing a new AI feature. PM suggests using ChatGPT API for "better results."
 
@@ -1353,7 +860,7 @@ Privacy compliance review for ChatGPT: 2-4 weeks."
 
 ---
 
-### Scenario 2: "Parse JSON Manually" (~1000 words)
+### Scenario 2: "Parse JSON Manually"
 
 **Context**: Teammate suggests prompting for JSON, parsing with JSONDecoder. Claims it's "simple and familiar."
 
@@ -1437,7 +944,7 @@ Swift's type safety prevents entire categories of bugs."
 
 ---
 
-### Scenario 3: "One Big Prompt" (~1000 words)
+### Scenario 3: "One Big Prompt"
 
 **Context**: Feature requires extracting name, date, amount, category from invoice. Teammate suggests one prompt: "Extract all information."
 
@@ -1531,104 +1038,17 @@ prompt takes 2-3 hours debugging why it hits context limit and produces poor res
 
 ## Performance Optimization
 
-### 1. Prewarm Session (~200 words)
+### Key Optimizations
 
-**Problem**: First generation takes 1-2 seconds just to load model.
+1. **Prewarm session**: Create `LanguageModelSession` at init, not when user taps button. Saves 1-2 seconds off first generation.
 
-**Solution**: Create session **before** user interaction.
+2. **`includeSchemaInPrompt: false`**: For subsequent requests with the same `@Generable` type, set this in `GenerationOptions` to reduce token count by 10-20%.
 
-```swift
-class ViewModel: ObservableObject {
-    private var session: LanguageModelSession?
+3. **Property order for streaming**: Put most important properties first in `@Generable` structs. User sees title in 0.2s instead of waiting 2.5s for full generation.
 
-    init() {
-        // Prewarm on init, not when user taps button
-        Task {
-            self.session = LanguageModelSession(instructions: "...")
-        }
-    }
+4. **Foundation Models Instrument**: Use `Instruments > Foundation Models` template to profile latency, see token counts, and identify optimization opportunities.
 
-    func generate(prompt: String) async throws -> String {
-        let response = try await session!.respond(to: prompt)
-        return response.content
-    }
-}
-```
-
-"Prewarming session before user interaction reduces initial latency."
-
-**Time saved**: 1-2 seconds off first generation
-
----
-
-### 2. includeSchemaInPrompt: false (~200 words)
-
-**Problem**: @Generable schemas inserted into prompt, increases token count.
-
-**Solution**: For **subsequent requests** with same schema, skip insertion.
-
-```swift
-let firstResponse = try await session.respond(
-    to: "Generate first person",
-    generating: Person.self
-    // Schema inserted automatically
-)
-
-// Subsequent requests with SAME schema
-let secondResponse = try await session.respond(
-    to: "Generate another person",
-    generating: Person.self,
-    options: GenerationOptions(includeSchemaInPrompt: false)
-)
-```
-
-"Setting includeSchemaInPrompt to false decreases token count and latency for subsequent requests."
-
-**When to use**: Multi-turn with same @Generable type
-
-**Time saved**: 10-20% latency reduction per request
-
----
-
-### 3. Property Order for Streaming UX (~200 words)
-
-**Problem**: User waits for entire generation.
-
-**Solution**: Put important properties first, stream to show early.
-
-```swift
-// ✅ GOOD - Title shows immediately
-@Generable
-struct Article {
-    var title: String      // Shows in 0.2s
-    var summary: String    // Shows in 0.8s
-    var fullText: String   // Shows in 2.5s
-}
-
-// ❌ BAD - Wait for everything
-@Generable
-struct Article {
-    var fullText: String   // User waits 2.5s
-    var title: String
-    var summary: String
-}
-```
-
-**UX impact**: Perceived latency drops from 2.5s to 0.2s
-
----
-
-### 4. Foundation Models Instrument (~100 words)
-
-**Use Instruments app** with Foundation Models template to:
-- Profile latency of each request
-- See token counts (input/output)
-- Identify optimization opportunities
-- Quantify improvements
-
-"New Instruments profiling template lets you observe areas of optimization and quantify improvements."
-
-**Access**: Instruments → Create → Foundation Models template
+See `axiom-foundation-models-ref` for code examples of each optimization.
 
 ---
 

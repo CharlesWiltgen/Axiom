@@ -68,24 +68,46 @@ Use this router when working with:
 
 ## Decision Tree
 
-1. SwiftUI view not updating? → swiftui-debugging
-2. SwiftUI navigation? → swiftui-nav
-3. SwiftUI performance/lag? → swiftui-performance
-4. SwiftUI adaptive layout? → swiftui-layout
-5. Stacks/grids/outlines (VStack, LazyVGrid, OutlineGroup)? → swiftui-containers-ref
-6. Feature-level architecture? → swiftui-architecture
-7. App-level composition (root view, auth flows, scenes)? → app-composition
-8. Animations/gestures? → swiftui-animation-ref or swiftui-gestures
-9. SwiftUI search? → swiftui-search-ref
-10. iOS 26 features? → swiftui-26-ref
-11. Auto Layout? → auto-layout-debugging
-12. UIKit animations? → uikit-animation-debugging
-13. Liquid Glass? → liquid-glass
-14. SF Symbols effects/rendering/custom? → sf-symbols
-15. HIG compliance? → hig
-16. Typography? → typography-ref
-17. TextKit/rich text? → textkit-ref
-18. Accessibility? → accessibility-diag
+```dot
+digraph ios_ui {
+    start [label="UI issue" shape=ellipse];
+    is_swiftui [label="SwiftUI?" shape=diamond];
+    is_uikit [label="UIKit?" shape=diamond];
+    is_design [label="Design/guidelines?" shape=diamond];
+
+    start -> is_swiftui;
+    is_swiftui -> swiftui_type [label="yes"];
+    is_swiftui -> is_uikit [label="no"];
+    is_uikit -> uikit_type [label="yes"];
+    is_uikit -> is_design [label="no"];
+    is_design -> design_type [label="yes"];
+    is_design -> "accessibility-diag" [label="accessibility"];
+
+    swiftui_type [label="What's wrong?" shape=diamond];
+    swiftui_type -> "swiftui-debugging" [label="view not updating"];
+    swiftui_type -> "swiftui-nav" [label="navigation"];
+    swiftui_type -> "swiftui-performance" [label="slow/lag"];
+    swiftui_type -> "swiftui-layout" [label="adaptive layout"];
+    swiftui_type -> "swiftui-containers-ref" [label="stacks/grids/outlines"];
+    swiftui_type -> "swiftui-architecture" [label="feature architecture"];
+    swiftui_type -> "app-composition" [label="app-level (root, auth, scenes)"];
+    swiftui_type -> "swiftui-animation-ref" [label="animations"];
+    swiftui_type -> "swiftui-gestures" [label="gestures"];
+    swiftui_type -> "swiftui-search-ref" [label="search"];
+    swiftui_type -> "swiftui-26-ref" [label="iOS 26 features"];
+
+    uikit_type [label="UIKit issue?" shape=diamond];
+    uikit_type -> "auto-layout-debugging" [label="Auto Layout"];
+    uikit_type -> "uikit-animation-debugging" [label="animations"];
+
+    design_type [label="Design topic?" shape=diamond];
+    design_type -> "liquid-glass" [label="Liquid Glass"];
+    design_type -> "sf-symbols" [label="SF Symbols"];
+    design_type -> "hig" [label="HIG compliance"];
+    design_type -> "typography-ref" [label="typography"];
+    design_type -> "textkit-ref" [label="TextKit/rich text"];
+}
+```
 
 ## Anti-Rationalization
 

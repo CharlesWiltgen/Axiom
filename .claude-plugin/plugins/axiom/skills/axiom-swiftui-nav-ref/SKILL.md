@@ -39,13 +39,10 @@ SwiftUI's navigation APIs provide data-driven, programmatic navigation that scal
 ## When to Use This Skill
 
 Use this skill when:
-- **Learning navigation APIs** from NavigationStack to NavigationSplitView to NavigationPath
-- **Implementing WWDC examples** (all 4 sessions with code examples included)
-- **Planning deep linking** with URL routing and NavigationPath manipulation
-- **Setting up state restoration** with Codable NavigationPath and SceneStorage
+- **Implementing navigation APIs** NavigationStack, NavigationSplitView, NavigationPath, Tab+Navigation
+- **Deep linking or state restoration** URL routing, Codable NavigationPath, SceneStorage
 - **Adopting iOS 26+ features** Liquid Glass navigation, bottom-aligned search, tab bar minimization
-- **Choosing navigation architecture** Stack vs SplitView vs Tab+Navigation patterns
-- **Implementing coordinator/router patterns** alongside SwiftUI's built-in navigation
+- **Choosing navigation architecture** Stack vs SplitView vs coordinator patterns
 
 ---
 
@@ -60,21 +57,9 @@ Use this skill when:
 | 2024 | iOS 18 | Tab/Sidebar unification, sidebarAdaptable, TabSection, zoom transitions |
 | 2025 | iOS 26 | Liquid Glass navigation, backgroundExtensionEffect, tabBarMinimizeBehavior |
 
-### NavigationView (Deprecated) vs NavigationStack/SplitView
+### NavigationView (Deprecated)
 
-| Feature | NavigationView (iOS 13-15) | NavigationStack/SplitView (iOS 16+) |
-|---------|---------------------------|-------------------------------------|
-| **Programmatic navigation** | Per-link `isActive` bindings | Single NavigationPath for entire stack |
-| **Deep linking** | Complex, error-prone | Simple path manipulation |
-| **Type safety** | View-based, runtime checks | Value-based, compile-time checks |
-| **State restoration** | Manual, difficult | Built-in Codable support |
-| **Multi-column** | NavigationStyle enum | Dedicated NavigationSplitView |
-| **Status** | Deprecated iOS 16 | Current API |
-
-#### Recommendation
-- New apps: Use NavigationStack and NavigationSplitView exclusively
-- Existing apps: Migrate from NavigationView (deprecated)
-- See "Migrating to new navigation types" documentation
+NavigationView is deprecated as of iOS 16. Use NavigationStack (single-column push/pop) or NavigationSplitView (multi-column) exclusively in new code. Key improvements: single NavigationPath replaces per-link `isActive` bindings, value-based type safety, built-in Codable state restoration. See "Migrating to new navigation types" documentation.
 
 ---
 
@@ -124,10 +109,7 @@ struct PushableStack: View {
 }
 ```
 
-**Key points:**
-- `path: $path` binds the navigation state to a collection
-- Value-presenting `NavigationLink` appends values to the path
-- `navigationDestination(for:)` maps values to views
+Path binding + value-presenting NavigationLink + `navigationDestination(for:)` form the core data-driven navigation pattern.
 
 ### 1.2 NavigationLink (Value-Based)
 
@@ -296,57 +278,38 @@ struct MultipleColumns: View {
 
 ### 2.2 Three-Column Layout
 
-#### Three-Column with Content Column
+Add a `content:` closure between sidebar and detail for a middle column:
 
 ```swift
 NavigationSplitView {
-    // Sidebar
     List(Category.allCases, selection: $selectedCategory) { category in
         NavigationLink(category.localizedName, value: category)
     }
-    .navigationTitle("Categories")
 } content: {
-    // Content column
     List(dataModel.recipes(in: selectedCategory), selection: $selectedRecipe) { recipe in
         NavigationLink(recipe.name, value: recipe)
     }
-    .navigationTitle(selectedCategory?.localizedName ?? "Recipes")
 } detail: {
-    // Detail column
     RecipeDetail(recipe: selectedRecipe)
 }
 ```
 
-### 2.3 NavigationSplitView with NavigationStack (WWDC 2022, 14:10)
+### 2.3 NavigationSplitView with NavigationStack
 
-Combine split view selection with stack-based drill-down:
+Place a `NavigationStack(path:)` inside the detail column for grid-to-detail drill-down while preserving sidebar selection:
 
 ```swift
-struct MultipleColumnsWithStack: View {
-    @State private var selectedCategory: Category?
-    @State private var path: [Recipe] = []
-    @StateObject private var dataModel = DataModel()
-
-    var body: some View {
-        NavigationSplitView {
-            List(Category.allCases, selection: $selectedCategory) { category in
-                NavigationLink(category.localizedName, value: category)
+NavigationSplitView {
+    List(Category.allCases, selection: $selectedCategory) { ... }
+} detail: {
+    NavigationStack(path: $path) {
+        RecipeGrid(category: selectedCategory)
+            .navigationDestination(for: Recipe.self) { recipe in
+                RecipeDetail(recipe: recipe)
             }
-            .navigationTitle("Categories")
-        } detail: {
-            NavigationStack(path: $path) {
-                RecipeGrid(category: selectedCategory)
-                    .navigationDestination(for: Recipe.self) { recipe in
-                        RecipeDetail(recipe: recipe)
-                    }
-            }
-        }
-        .environmentObject(dataModel)
     }
 }
 ```
-
-**Key pattern:** NavigationStack inside NavigationSplitView detail column enables grid-to-detail drill-down while preserving sidebar selection.
 
 ### 2.4 Column Visibility
 
@@ -395,84 +358,22 @@ NavigationSplitView {
 
 ## Deep Linking and URL Routing
 
-### 3.1 Basic Deep Link Handling
+### 3.1 Deep Link Pattern
+
+Use `.onOpenURL` to receive URLs, parse with `URLComponents`, then manipulate `NavigationPath`:
 
 ```swift
-struct ContentView: View {
-    @State private var path = NavigationPath()
-
-    var body: some View {
-        NavigationStack(path: $path) {
-            HomeView()
-                .navigationDestination(for: Recipe.self) { recipe in
-                    RecipeDetail(recipe: recipe)
-                }
-                .navigationDestination(for: Category.self) { category in
-                    CategoryView(category: category)
-                }
-        }
-        .onOpenURL { url in
-            handleDeepLink(url)
-        }
-    }
-
-    func handleDeepLink(_ url: URL) {
-        // Parse URL: myapp://recipe/apple-pie
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              let host = components.host else { return }
-
-        switch host {
-        case "recipe":
-            if let recipeName = components.path.dropFirst().description,
-               let recipe = dataModel.recipe(named: recipeName) {
-                path.removeLast(path.count)  // Pop to root
-                path.append(recipe)           // Push recipe
-            }
-        case "category":
-            if let categoryName = components.path.dropFirst().description,
-               let category = Category(rawValue: categoryName) {
-                path.removeLast(path.count)
-                path.append(category)
-            }
-        default:
-            break
-        }
-    }
+.onOpenURL { url in
+    guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+          let host = components.host else { return }
+    path.removeLast(path.count)  // Pop to root first
+    // Parse host/path to determine destination, then path.append(value)
 }
 ```
 
-### 3.2 Multi-Step Deep Links
+For multi-step deep links (`myapp://category/desserts/recipe/apple-pie`), iterate URL path components and append each resolved value to build the full navigation stack.
 
-```swift
-// URL: myapp://category/desserts/recipe/apple-pie
-func handleDeepLink(_ url: URL) {
-    let pathComponents = url.pathComponents.filter { $0 != "/" }
-
-    path.removeLast(path.count)  // Reset to root
-
-    var index = 0
-    while index < pathComponents.count {
-        let component = pathComponents[index]
-
-        switch component {
-        case "category":
-            if index + 1 < pathComponents.count,
-               let category = Category(rawValue: pathComponents[index + 1]) {
-                path.append(category)
-                index += 2
-            }
-        case "recipe":
-            if index + 1 < pathComponents.count,
-               let recipe = dataModel.recipe(named: pathComponents[index + 1]) {
-                path.append(recipe)
-                index += 2
-            }
-        default:
-            index += 1
-        }
-    }
-}
-```
+For comprehensive deep linking examples, error diagnosis, and testing workflows, see `axiom-swiftui-nav-diag` (Pattern 3).
 
 ---
 
@@ -535,32 +436,13 @@ class NavigationModel: ObservableObject, Codable {
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.selectedCategory = try container.decodeIfPresent(Category.self, forKey: .selectedCategory)
-
-        // Convert IDs back to objects, discarding deleted items
         let recipePathIds = try container.decode([Recipe.ID].self, forKey: .recipePathIds)
-        self.recipePath = recipePathIds.compactMap { DataModel.shared[$0] }
-    }
-
-    var jsonData: Data? {
-        get { try? JSONEncoder().encode(self) }
-        set {
-            guard let data = newValue,
-                  let model = try? JSONDecoder().decode(NavigationModel.self, from: data)
-            else { return }
-            self.selectedCategory = model.selectedCategory
-            self.recipePath = model.recipePath
-        }
-    }
-
-    var objectWillChangeSequence: AsyncPublisher<Publishers.Buffer<ObservableObjectPublisher>> {
-        objectWillChange
-            .buffer(size: 1, prefetch: .byRequest, whenFull: .dropOldest)
-            .values
+        self.recipePath = recipePathIds.compactMap { DataModel.shared[$0] } // Discard deleted items
     }
 }
 ```
 
-**Key pattern:** Store IDs, not full model objects. Use `compactMap` to handle deleted items gracefully.
+Store IDs (not full model objects) and use `compactMap` to handle deleted items gracefully. Add `jsonData` computed property and `objectWillChangeSequence` for SceneStorage integration as shown in 4.1.
 
 ---
 
@@ -608,7 +490,7 @@ TabView {
 }
 ```
 
-**Key pattern:** Each tab has its own NavigationStack to preserve navigation state when switching tabs.
+Each tab has its own NavigationStack to preserve navigation state when switching tabs.
 
 ### 5.3 Sidebar-Adaptable TabView (WWDC 2024, 6:41)
 
@@ -638,10 +520,7 @@ TabView {
 .tabViewStyle(.sidebarAdaptable)
 ```
 
-**Key features:**
-- `TabSection` creates groups visible in sidebar
-- `.sidebarAdaptable` enables sidebar on iPad, tab bar on iPhone
-- Search tab with `.search` role gets special placement
+`TabSection` creates sidebar groups. `.sidebarAdaptable` enables sidebar on iPad, tab bar on iPhone. Search tab with `.search` role gets special placement.
 
 ### 5.4 Tab Customization (WWDC 2024, 10:45)
 
@@ -699,46 +578,9 @@ Return an empty closure to deactivate the context menu conditionally:
 
 #### iPhone Tab Bar Long-Press
 
-`.contextMenu` on `Tab` only applies to the sidebar representation (iPad/Mac). On iPhone's bottom tab bar, detect long-press by adding a gesture recognizer to the underlying `UITabBar`:
+`.contextMenu` on `Tab` only applies to the sidebar representation (iPad/Mac). iPhone tab bar context menus require UIKit interop (adding `UILongPressGestureRecognizer` to `UITabBar` via Introspect or a `UITabBarController` subclass). See `axiom-swiftui-nav-diag` for workaround patterns.
 
-```swift
-// UIKit: In your UITabBarController subclass
-override func viewDidLoad() {
-    super.viewDidLoad()
-    let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
-    tabBar.addGestureRecognizer(longPress)
-}
-
-@objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
-    guard gesture.state == .began else { return }
-    let location = gesture.location(in: tabBar)
-
-    let buttons = tabBar.subviews
-        .filter { String(describing: type(of: $0)).contains("Button") }
-        .sorted { $0.frame.minX < $1.frame.minX }
-
-    for (index, button) in buttons.enumerated() {
-        if button.frame.contains(location) {
-            handleTabLongPress(at: index, sourceView: button)
-            break
-        }
-    }
-}
-```
-
-```swift
-// SwiftUI: Use SwiftUI-Introspect to access the UITabBar
-TabView(selection: $selectedTab) { /* tabs */ }
-    .introspect(.tabView, on: .iOS(.v18, .v26)) { controller in
-        guard controller.tabBar.gestureRecognizers?.contains(where: { $0 is UILongPressGestureRecognizer }) != true else { return }
-        let longPress = UILongPressGestureRecognizer(target: coordinator, action: #selector(Coordinator.handleLongPress(_:)))
-        controller.tabBar.addGestureRecognizer(longPress)
-    }
-```
-
-**How it works**: `tabBar.subviews` contains private `UITabBarButton` views (one per tab, ordered left-to-right). Filtering for "Button" in the type name isolates them from `UITabBarBackground`. This doesn't interfere with normal tap-to-switch behavior.
-
-**Caveat**: `UITabBarButton` is a private class — the string-based filter is fragile across iOS versions. This is a widely-used pattern (Instagram uses it for account switching on long-press of the profile tab) but is not a public API guarantee.
+**Caveat**: Relies on private `UITabBarButton` subviews — fragile across iOS versions, not a public API guarantee.
 
 ### 5.6 Programmatic Tab Visibility
 
@@ -747,41 +589,11 @@ Use `.hidden(_:)` to show/hide tabs based on app state while preserving their na
 #### State-Driven Tab Visibility
 
 ```swift
-enum AppContext { case home, browse }
-
-struct ContentView: View {
-    @State private var context: AppContext = .home
-    @State private var selection: TabID = .home
-
-    var body: some View {
-        TabView(selection: $selection) {
-            Tab("Home", systemImage: "house") {
-                HomeView()
-            }
-            .tag(TabID.home)
-
-            Tab("Libraries", systemImage: "square.stack") {
-                LibrariesView()
-            }
-            .tag(TabID.libraries)
-            .hidden(context == .browse)  // Hide in browse context
-
-            Tab("Playlists", systemImage: "music.note.list") {
-                PlaylistsView()
-            }
-            .tag(TabID.playlists)
-            .hidden(context == .browse)
-
-            Tab("Tracks", systemImage: "music.note") {
-                TracksView()
-            }
-            .tag(TabID.tracks)
-            .hidden(context == .home)    // Hide in home context
-        }
-        .tabViewStyle(.sidebarAdaptable)
-    }
-}
+Tab("Libraries", systemImage: "square.stack") { LibrariesView() }
+    .hidden(context == .browse)  // Hide based on app state
 ```
+
+Apply `.hidden(condition)` to each tab. Tabs hidden this way preserve their navigation state (unlike conditional `if` rendering which destroys and recreates them).
 
 #### State Preservation
 
@@ -804,45 +616,12 @@ if showSettings {
 
 #### Common Patterns
 
-**Feature Flags**
 ```swift
-Tab("Beta Features", systemImage: "flask") {
-    BetaView()
-}
-.hidden(!UserDefaults.standard.bool(forKey: "enableBetaFeatures"))
+Tab("Beta Features", systemImage: "flask") { BetaView() }
+    .hidden(!UserDefaults.standard.bool(forKey: "enableBetaFeatures"))
 ```
 
-**Authentication State**
-```swift
-Tab("Profile", systemImage: "person.circle") {
-    ProfileView()
-}
-.hidden(!authManager.isAuthenticated)
-```
-
-**Purchase Status**
-```swift
-Tab("Pro Features", systemImage: "star.circle.fill") {
-    ProFeaturesView()
-}
-.hidden(!purchaseManager.isPro)
-```
-
-**Development Builds**
-```swift
-Tab("Debug", systemImage: "hammer") {
-    DebugView()
-}
-.hidden(!isDevelopmentBuild)
-
-private var isDevelopmentBuild: Bool {
-    #if DEBUG
-    return true
-    #else
-    return false
-    #endif
-}
-```
+Same pattern applies to authentication state, purchase status, and debug builds — bind `.hidden()` to any boolean condition.
 
 #### Animated Transitions
 
@@ -898,46 +677,9 @@ Tab(role: .search) {
 
 #### Dynamic Bottom Accessory
 
-The accessory view can change based on the active tab, though Apple's own usage (Music mini-player) keeps it global:
+The accessory can switch on `activeTab` for per-tab content, though Apple's usage (Music mini-player) keeps it global. Read `@Environment(\.tabViewBottomAccessoryPlacement)` to adapt layout: `.bar` when above tab bar (full controls), other values when inline with collapsed tab bar (compact).
 
-```swift
-@State private var activeTab: TabID = .workouts
-
-TabView(selection: $activeTab) { /* tabs */ }
-    .tabViewBottomAccessory {
-        switch activeTab {
-        case .workouts:
-            Button("Start Workout") { }
-        case .exercises:
-            Button("Add Exercise") { }
-        default:
-            EmptyView()
-        }
-    }
-```
-
-**Accessory placement**: On iPhone, the bottom accessory position depends on tab bar state. When the tab bar is normal size, the accessory appears above it; when the tab bar is collapsed (via `tabBarMinimizeBehavior`), the accessory displays inline. Read the `tabViewBottomAccessoryPlacement` environment value to adjust content:
-
-```swift
-struct AdaptiveAccessory: View {
-    @Environment(\.tabViewBottomAccessoryPlacement) var placement
-
-    var body: some View {
-        HStack {
-            NowPlayingInfo()
-            if placement == .bar {
-                // Full controls when above tab bar
-                PlaybackControls()
-            } else {
-                // Compact when inline with collapsed tab bar
-                PlayPauseButton()
-            }
-        }
-    }
-}
-```
-
-**Best practice**: Reserve `tabViewBottomAccessory` for content relevant across all tabs (playback controls, status indicators). For tab-specific actions, prefer floating glass buttons within the tab's content view.
+Reserve `tabViewBottomAccessory` for cross-tab content (playback, status). For tab-specific actions, prefer floating glass buttons within the tab's content view.
 
 ### 5.8 Tab API Quick Reference
 
@@ -1004,22 +746,7 @@ ScrollView { ... }
     .scrollEdgeEffectStyle(.soft)  // .sharp, .soft
 ```
 
-### 6.5 Tab Bar Minimization
-
-```swift
-TabView {
-    Tab("Home", systemImage: "house") {
-        NavigationStack {
-            ScrollView {
-                // Content
-            }
-        }
-    }
-}
-.tabBarMinimizeBehavior(.onScrollDown)  // Minimizes on scroll
-```
-
-### 6.6 Sheet Presentations with Zoom Transition
+### 6.5 Sheet Presentations with Zoom Transition
 
 In iOS 26, sheets can morph directly out of the buttons that present them. Make the presenting toolbar item a source for a navigation zoom transition, and mark the sheet content as the destination:
 
@@ -1043,7 +770,7 @@ Other presentations also flow smoothly out of Liquid Glass controls — menus, a
 
 **Audit tip**: If you've used `presentationBackground` to apply custom backgrounds to sheets, consider removing it and let the new Liquid Glass sheet material shine. Partial height sheets are now inset with glass background by default.
 
-### 6.7 Toolbar Morphing Transitions
+### 6.6 Toolbar Morphing Transitions
 
 iOS 26 automatically morphs toolbars during NavigationStack push/pop when each destination view declares its own `.toolbar {}`. Items with matching `toolbar(id:)` and `ToolbarItem(id:)` IDs stay stable during the transition (no bounce), while unmatched items animate in/out.
 
@@ -1139,37 +866,7 @@ struct RecipeCard: View {
 
 ### 7.3 Coordinator Pattern with Protocol
 
-```swift
-protocol Coordinator {
-    associatedtype Route: Hashable
-    var path: NavigationPath { get set }
-    func navigate(to route: Route)
-}
-
-@Observable
-class RecipeCoordinator: Coordinator {
-    typealias Route = RecipeRoute
-    var path = NavigationPath()
-
-    enum RecipeRoute: Hashable {
-        case list(Category)
-        case detail(Recipe)
-        case edit(Recipe)
-        case relatedRecipes(Recipe)
-    }
-
-    func navigate(to route: RecipeRoute) {
-        path.append(route)
-    }
-
-    func showRecipeOfTheDay() {
-        path.removeLast(path.count)
-        if let recipe = DataModel.shared.recipeOfTheDay {
-            path.append(RecipeRoute.detail(recipe))
-        }
-    }
-}
-```
+For larger apps, extract a `Coordinator` protocol with `associatedtype Route: Hashable` and `var path: NavigationPath`. Each feature area gets its own coordinator conformance with domain-specific routes and convenience methods (e.g., `showRecipeOfTheDay()` that resets path and navigates).
 
 ### 7.4 Testing Navigation
 
@@ -1199,30 +896,12 @@ func testPopToRoot() {
 
 ## Testing Checklist
 
-### Navigation Flow Testing
-- [ ] All NavigationLinks navigate to correct destination
-- [ ] Back button returns to previous view
+- [ ] Deep links navigate correctly from cold start AND while running
 - [ ] Pop to root clears entire stack
-- [ ] Deep links navigate correctly from cold start
-- [ ] Deep links navigate correctly when app is running
-
-### State Restoration Testing
-- [ ] Navigation state persists when app backgrounds
-- [ ] Navigation state restores on app launch
-- [ ] Deleted items handled gracefully (compactMap)
-- [ ] SceneStorage key is unique per scene
-
-### Multi-Platform Testing
-- [ ] NavigationSplitView collapses correctly on iPhone
-- [ ] Selection in sidebar pushes on iPhone
-- [ ] Tab bar visible and functional on all platforms
-- [ ] Sidebar toggle works on iPad
-
-### iOS 26+ Testing
-- [ ] Liquid Glass appearance correct
-- [ ] Bottom-aligned search on iPhone
-- [ ] Tab bar minimization works
-- [ ] Scroll edge effect not interfering with custom backgrounds
+- [ ] State restores on app relaunch (SceneStorage key unique per scene)
+- [ ] Deleted items handled gracefully in restoration (compactMap)
+- [ ] NavigationSplitView collapses correctly on iPhone (selection pushes)
+- [ ] iOS 26+: Liquid Glass appearance, bottom-aligned search, tab bar minimization
 
 ---
 
