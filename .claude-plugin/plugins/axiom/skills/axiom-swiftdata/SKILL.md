@@ -556,12 +556,22 @@ let container = try ModelContainer(
 
 ### CloudKit Constraints (CRITICAL)
 
-#### When using CloudKit sync, ALL properties must be optional or have default values
+> ⚠️ **WARNING: @Attribute(.unique) is NOT supported with CloudKit!**
+> CloudKit cannot enforce unique constraints across devices due to its distributed, asynchronous sync model. Using `@Attribute(.unique)` with CloudKit sync will cause crashes or be silently ignored. Use regular properties with default values instead.
+
+#### All properties must be optional or have default values
 
 ```swift
+// ❌ WRONG - @Attribute(.unique) will crash with CloudKit
 @Model
 final class Track {
-    @Attribute(.unique) var id: String = UUID().uuidString  // ✅ Has default
+    @Attribute(.unique) var id: String = UUID().uuidString  // CloudKit can't enforce!
+}
+
+// ✅ CORRECT - regular property with default value
+@Model
+final class Track {
+    var id: String = UUID().uuidString  // Works with CloudKit
     var title: String = ""  // ✅ Has default
     var duration: TimeInterval = 0  // ✅ Has default
     var genre: String? = nil  // ✅ Optional
@@ -571,7 +581,18 @@ final class Track {
 }
 ```
 
-**Why** CloudKit only syncs to private zones, and network delays mean new records may not have all fields populated yet.
+**Deduplication Strategy**: Since CloudKit won't enforce uniqueness, check for existing records before inserting:
+```swift
+// Before inserting a new record
+let existing = try context.fetch(FetchDescriptor<Track>(
+    predicate: #Predicate { $0.id == newId }
+))
+if existing.isEmpty {
+    context.insert(newTrack)
+}
+```
+
+**Why** CloudKit syncs asynchronously - new records may arrive without all fields populated yet, and uniqueness can't be guaranteed across devices.
 
 **Relationship Constraint** All relationships must be optional
 ```swift
