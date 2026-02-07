@@ -661,6 +661,47 @@ try #sql("""ALTER TABLE "items" ADD COLUMN "notes" TEXT NOT NULL DEFAULT ''""").
 
 Use `#sql` for DDL (CREATE, ALTER, indexes, triggers). Use the query builder for regular CRUD.
 
+### Foreign Key Relationships
+
+```swift
+migrator.registerMigration("Create tables with foreign keys") { db in
+    try #sql("""
+        CREATE TABLE "itemCategories" (
+            "itemID" TEXT NOT NULL REFERENCES "items"("id") ON DELETE CASCADE,
+            "categoryID" TEXT NOT NULL REFERENCES "categories"("id") ON DELETE CASCADE,
+            PRIMARY KEY ("itemID", "categoryID")
+        ) STRICT
+        """).execute(db)
+}
+```
+
+**Critical**: Enable foreign key enforcement — SQLite disables it by default:
+
+```swift
+var configuration = Configuration()
+configuration.prepareDatabase { db in
+    try db.execute(sql: "PRAGMA foreign_keys = ON")
+}
+```
+
+Without `PRAGMA foreign_keys = ON`, `REFERENCES` and `ON DELETE CASCADE` are silently ignored.
+
+### Transaction Context for Batch Operations
+
+Wrap batch operations in explicit transactions for atomicity and performance:
+
+```swift
+try database.write { db in
+    // All operations share one transaction
+    for item in items {
+        try Item.insert { Item.Draft(title: item.title) }.execute(db)
+    }
+}
+// Commits once on success, rolls back entirely on failure
+```
+
+The `database.write { }` block is already a transaction. For read-heavy batch analysis, use `database.read { }` which provides a consistent snapshot.
+
 ---
 
 ## Database Views

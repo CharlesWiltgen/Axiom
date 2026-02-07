@@ -1071,6 +1071,37 @@ let entries = (0..<100).map { offset in
 
 ---
 
+## Debugging Widgets
+
+### Simulator vs Device
+
+- **Simulator**: Widgets refresh immediately; no budget limits apply. Useful for layout testing but misleading for refresh behavior.
+- **Device**: Budget-limited (40-70 reloads/day). Test on device before shipping to verify real-world refresh timing.
+- **Xcode Previews**: Work for layout but skip `getTimeline()`. Test timeline logic with unit tests or device runs.
+
+### Common Debugging Workflow
+
+1. Add `print()` in `getTimeline()` — verify it's called and data loads
+2. Check Console.app filtered by widget extension process name
+3. Use `WidgetCenter.shared.getCurrentConfigurations()` to verify registration
+4. If widget shows old data after app update, verify App Groups container paths match
+
+### Data Sharing Patterns
+
+**SwiftData in Widgets** (iOS 17+):
+- Create `ModelContainer` in widget with same schema as main app
+- Use shared App Groups container: `ModelConfiguration(url: containerURL)`
+- Widget reads only — never write from widget to avoid conflicts
+- Main app calls `WidgetCenter.shared.reloadAllTimelines()` after writes
+
+**GRDB/SQLite in Widgets**:
+- Share database file via App Groups container
+- Use `DatabasePool` (not `DatabaseQueue`) for concurrent reads
+- Widget opens read-only connection: `try DatabasePool(path: dbPath, configuration: readOnlyConfig)`
+- Set `configuration.readonly = true` in widget to prevent accidental writes
+
+---
+
 ## Resources
 
 **WWDC**: 2025-278, 2024-10157, 2024-10068, 2024-10098, 2023-10028, 2023-10194, 2022-10184, 2022-10185

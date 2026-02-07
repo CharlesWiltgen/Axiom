@@ -835,6 +835,60 @@ private func newSession(previousSession: LanguageModelSession) -> LanguageModelS
 
 #### From WWDC 301:3:55
 
+### Fallback Architecture
+
+When Foundation Models is unavailable (older device, user opted out, unsupported region), provide graceful degradation:
+
+```swift
+func summarize(_ text: String) async throws -> String {
+    let model = SystemLanguageModel.default
+    switch model.availability {
+    case .available:
+        let session = LanguageModelSession()
+        let response = try await session.respond(to: "Summarize: \(text)")
+        return response.content
+    case .unavailable:
+        // Fallback: truncate with ellipsis, or call server API
+        return String(text.prefix(200)) + "..."
+    }
+}
+```
+
+**Architecture pattern**: Wrap Foundation Models behind a protocol so you can swap implementations:
+
+```swift
+protocol TextSummarizer {
+    func summarize(_ text: String) async throws -> String
+}
+
+struct OnDeviceSummarizer: TextSummarizer { /* Foundation Models */ }
+struct ServerSummarizer: TextSummarizer { /* Server API fallback */ }
+struct TruncationSummarizer: TextSummarizer { /* Simple truncation */ }
+```
+
+### Nested @Generable Troubleshooting
+
+Nested `@Generable` types must each independently conform to `@Generable`:
+
+```swift
+// ✅ Both types marked @Generable
+@Generable struct Itinerary {
+    var days: [DayPlan]
+}
+
+@Generable struct DayPlan {
+    var activities: [String]
+}
+
+// ❌ Will fail — nested type not @Generable
+@Generable struct Itinerary {
+    var days: [DayPlan]  // DayPlan must also be @Generable
+}
+struct DayPlan { var activities: [String] }
+```
+
+**Common issue**: Arrays of non-Generable types compile but fail at runtime. Check all types in the graph.
+
 ---
 
 ## Availability
