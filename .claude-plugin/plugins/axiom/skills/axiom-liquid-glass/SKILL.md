@@ -527,11 +527,64 @@ Text("Label")
 
 ## Migration from Previous Materials
 
-**From UIBlurEffect/NSVisualEffectView**: Replace with `.glassEffect()` — gains automatic adaptation, interaction feedback, platform-appropriate appearance, and built-in accessibility.
+### From UIBlurEffect / NSVisualEffectView
 
-**From custom translucent effects**: Try Liquid Glass first. Keep custom materials only for artistic effects not achievable with Liquid Glass, backward compatibility with iOS < 26, or non-standard UI paradigms.
+**Before** (UIKit):
+```swift
+let blurEffect = UIBlurEffect(style: .systemMaterial)
+let blurView = UIVisualEffectView(effect: blurEffect)
+view.addSubview(blurView)
+```
 
-See `axiom-liquid-glass-ref` for detailed migration patterns.
+**After** (SwiftUI with Liquid Glass):
+```swift
+ZStack {
+    // Content
+}
+.glassEffect()
+```
+
+**Benefits**: Automatic adaptation (no manual style switching), built-in interaction feedback, platform-appropriate appearance, accessibility features included.
+
+### From Custom Materials
+
+1. **Try Liquid Glass first** — may provide desired effect automatically
+2. **Evaluate Regular vs Clear** — Clear may match custom transparency needs
+3. **Test across configurations** — Liquid Glass adapts automatically
+
+**When to keep custom materials**: Specific artistic effect not achievable with Liquid Glass, backward compatibility with iOS < 26 required, or non-standard UI paradigm incompatible with Liquid Glass principles.
+
+### UIKit + SwiftUI Interop
+
+When migrating incrementally, glass effects apply per-framework:
+- SwiftUI views get `.glassEffect()` / `.glassBackgroundEffect()`
+- UIKit views use the UIKit Liquid Glass APIs (see `axiom-liquid-glass-ref` for migration mapping)
+- Hosted SwiftUI views inside `UIHostingController` get glass effects independently
+
+See `axiom-liquid-glass-ref` for complete UIBlurEffect migration mapping table.
+
+---
+
+## Backward Compatibility
+
+### UIDesignRequiresCompatibility Key (iOS 26)
+
+To ship with latest SDKs while maintaining previous appearance:
+
+```xml
+<key>UIDesignRequiresCompatibility</key>
+<true/>
+```
+
+**Effect**: App built with iOS 26 SDK, appearance matches iOS 18 and earlier, Liquid Glass effects disabled, previous blur/material styles used.
+
+**When to use**: Need time to audit interface changes, gradual adoption strategy, or maintain exact appearance temporarily.
+
+**Migration strategy**:
+1. Ship with `UIDesignRequiresCompatibility` enabled
+2. Audit interface changes in separate build
+3. Update interface incrementally
+4. Remove key when ready for Liquid Glass
 
 ---
 

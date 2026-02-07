@@ -237,6 +237,37 @@ See `axiom-swiftui-search-ref` for foundational `.searchable` APIs. iOS 26 adds:
 
 Also: `.searchPresentationToolbarBehavior(.avoidHidingContent)` (iOS 17.1+) keeps title visible during search.
 
+**Backward-compatible wrapper** for apps targeting iOS 18+26:
+
+```swift
+extension View {
+    @ViewBuilder func minimizedSearch() -> some View {
+        if #available(iOS 26.0, *) {
+            self.searchToolbarBehavior(.minimize)
+        } else { self }
+    }
+}
+
+// Usage
+.searchable(text: $searchText)
+.minimizedSearch()
+```
+
+**Availability pattern for toolbar items**:
+
+```swift
+.toolbar {
+    if #available(iOS 26.0, *) {
+        DefaultToolbarItem(kind: .search, placement: .bottomBar)
+        ToolbarSpacer(.flexible, placement: .bottomBar)
+    }
+    ToolbarItem(placement: .bottomBar) {
+        NewNoteButton()
+    }
+}
+.searchable(text: $searchText)
+```
+
 **Button roles, GlassButtonStyle, buttonSizing** — See Liquid Glass Design System section above.
 
 ---
