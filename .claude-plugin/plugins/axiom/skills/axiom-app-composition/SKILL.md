@@ -1178,6 +1178,105 @@ class OrderCoordinator { }     // Order flow, history, details
 
 ---
 
+# Part 5b: UIKit Integration (Incremental Adoption)
+
+## When This Applies
+
+Most production iOS apps have existing UIKit code. Rewriting everything in SwiftUI is rarely practical. Use these patterns for incremental adoption.
+
+## UIHostingController — SwiftUI Inside UIKit
+
+Embed SwiftUI views in an existing UIKit navigation hierarchy:
+
+```swift
+// Present a SwiftUI view from a UIKit view controller
+let settingsView = SettingsView(store: store)
+let hostingController = UIHostingController(rootView: settingsView)
+navigationController?.pushViewController(hostingController, animated: true)
+```
+
+**Key rules**:
+- `UIHostingController` owns the SwiftUI view's lifecycle — don't store the root view separately
+- Use `sizingOptions: .intrinsicContentSize` when embedding as a child for correct Auto Layout sizing
+- For sheets: `hostingController.modalPresentationStyle = .pageSheet` works naturally
+- SwiftUI environment doesn't bridge automatically — inject dependencies through the root view's initializer
+
+## UIViewControllerRepresentable — UIKit Inside SwiftUI
+
+Wrap existing UIKit view controllers for use in SwiftUI:
+
+```swift
+struct DocumentPickerView: UIViewControllerRepresentable {
+    @Binding var selectedURL: URL?
+
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.pdf])
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) { }
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    class Coordinator: NSObject, UIDocumentPickerDelegate {
+        let parent: DocumentPickerView
+        init(_ parent: DocumentPickerView) { self.parent = parent }
+
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            parent.selectedURL = urls.first
+        }
+    }
+}
+```
+
+**When to use**: Camera UI, document pickers, mail compose, any UIKit controller without a SwiftUI equivalent.
+
+## AppDelegate + SwiftUI @main
+
+Bridge `UIApplicationDelegate` callbacks into a SwiftUI app:
+
+```swift
+@main
+struct MyApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
+    var body: some Scene {
+        WindowGroup {
+            RootView()
+        }
+    }
+}
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Push notification registration, third-party SDK init, etc.
+        return true
+    }
+
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        // Forward to push notification service
+    }
+}
+```
+
+**When to use**: Push notifications, third-party SDKs requiring AppDelegate, background URL sessions, Handoff.
+
+## Migration Priority
+
+When incrementally adopting SwiftUI in a UIKit app:
+
+1. **Leaf screens first** — Settings, About, detail views (no navigation complexity)
+2. **New features in SwiftUI** — Don't rewrite, but build new screens in SwiftUI
+3. **Shared components** — Build reusable SwiftUI components, wrap in `UIHostingController`
+4. **Navigation last** — Don't mix `UINavigationController` with `NavigationStack` in the same flow; migrate entire navigation subtrees
+
+**Don't**: Replace `UINavigationController` with `NavigationStack` for half the app. Either a flow is fully SwiftUI navigation or fully UIKit navigation.
+
+---
+
 # Part 6: Pressure Scenarios
 
 ## Scenario 1: "Just hardcode the root for now"

@@ -463,6 +463,41 @@ VStack {
 
 **Cross-reference:** See `axiom-liquid-glass` skill for implementation details and `axiom-liquid-glass-ref` for comprehensive adoption guide.
 
+### Modals, Sheets, and Alerts (iOS 26+)
+
+Presented content (sheets, alerts, popovers, action sheets) automatically adopts Liquid Glass when building with Xcode 26.
+
+**Sheets**:
+- Increased corner radius; half sheets are inset from edge with content peek-through
+- System applies Liquid Glass sheet material automatically — **remove** any `.presentationBackground()` modifiers
+- Remove custom `VisualEffectView`/`UIBlurEffect` backgrounds from sheets and popovers
+- Corner radius follows concentricity: sheet corners are concentric to the window, card corners concentric to the sheet
+
+**Alerts**:
+- System alerts get Liquid Glass automatically, no code changes
+- Custom alert views should use `.glassEffect()` for consistency with system alerts
+- Avoid time-based auto-dismissing alerts (cognitive accessibility concern)
+- Destructive actions must use `.destructive` button role for red tinting
+
+**Action Sheets / Confirmation Dialogs**:
+- Now originate from the source element (not bottom edge) and allow interaction with other parts of the interface
+- Use `.confirmationDialog()` attached to the triggering button — system positions it automatically
+- Don't force bottom-edge positioning; let the system adapt to context
+
+**Popovers**:
+- Remove custom background modifiers — system applies Liquid Glass automatically
+- Arrow edges adapt to available space; don't hard-code arrow positions
+
+**Sheet Morphing Transitions** (iOS 26):
+- Sheets morph directly out of buttons using `.matchedTransitionSource()` and `.navigationTransition(.zoom())`
+- Menus, alerts, and popovers also flow smoothly out of Liquid Glass controls
+
+**Design Rules for Modal Content**:
+- Use elevated semantic colors (`.systemGroupedBackground`) for modal backgrounds
+- Respect safe areas and layout guides inside modals
+- Provide clear dismissal paths: swipe-to-dismiss, cancel button, or both
+- For VoiceOver: ensure focus moves to the modal on presentation and returns on dismissal
+
 ---
 
 ## Layout Principles
@@ -949,6 +984,24 @@ Onboarding is a **separate experience** that follows the launch phase. Provides 
 
 **Content hierarchy:**
 - "Limit the number of onscreen controls while making secondary details and actions discoverable with minimal interaction"
+
+**Tab Bar Guidelines:**
+- Maximum 5 tabs on iPhone (6th+ items go in "More" tab automatically)
+- Every tab must have an icon AND a text label — icon-only tabs violate HIG
+- Use SF Symbols for tab icons (25x25 pt @1x, automatic scaling)
+- Tab bar is always visible — don't hide it during navigation within a tab
+- Tab order should reflect usage frequency (most-used tabs on left)
+- Maintain tab state: switching tabs and returning should preserve scroll position and navigation state
+- On iOS 26, tab bar uses Liquid Glass automatically — don't add custom blur/material backgrounds
+- iPad: tab bar transforms into a sidebar in landscape; use `TabView` with `Tab` for automatic adaptation
+- Badge values: keep badges short (numbers or single dot); clear when user addresses the notification
+
+**Navigation Bar Guidelines:**
+- Always use a back button (system-provided chevron) — don't replace with custom "X" or text-only
+- Title should describe the current view's content, not the app name
+- Large titles (`prefersLargeTitles`) for top-level views only; inline titles for pushed views
+- Toolbar items: 1-3 actions maximum; use `...` menu for additional actions
+- On iOS 26, navigation bar uses Liquid Glass with toolbar morphing between views
 
 **System integration:**
 - Widgets
