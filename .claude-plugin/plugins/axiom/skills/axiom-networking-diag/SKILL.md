@@ -194,10 +194,15 @@ Network problem?
    │  ├─ Outbound only? → Pattern 5c (NATing)
    │  └─ Works on port 443, not 8080? → Pattern 5c (Port Scanning)
    │
-   └─ Peer-to-peer connection failing?
-      ├─ NAT traversal issue? → Pattern 5d (STUN/TURN)
-      ├─ Symmetric NAT? → Pattern 5d (NAT Type)
-      └─ Local network only? → Pattern 5d (Bonjour/mDNS)
+   ├─ Peer-to-peer connection failing?
+   │  ├─ NAT traversal issue? → Pattern 5d (STUN/TURN)
+   │  ├─ Symmetric NAT? → Pattern 5d (NAT Type)
+   │  └─ Local network only? → Pattern 5d (Bonjour/mDNS)
+   │
+   └─ URLSession fails but NWConnection works?
+      ├─ HTTP URL blocked? → Pattern 6a (ATS HTTP Block)
+      ├─ "SSL error" on HTTPS? → Pattern 6b (ATS TLS Version)
+      └─ Works on older iOS? → Pattern 6a/6b (ATS enforcement)
 ```
 
 ## Pattern Selection Rules (MANDATORY)
@@ -857,6 +862,95 @@ Updates: I'll notify you every 30 minutes.
 | Works WiFi, fails cellular | IPv6-only network | `dig AAAA hostname` | 5a | 10-15 min |
 | Works without VPN, fails with VPN | Proxy interference | Test PAC file | 5b | 20-30 min |
 | Port blocked | Firewall | Try 443 vs 8080 | 5c | 10 min |
+| HTTP URL blocked silently | ATS enforcement | Check Info.plist | 6a | 5-10 min |
+| "An SSL error has occurred" | ATS TLS requirements | Check server TLS version | 6b | 10-15 min |
+
+---
+
+## Pattern 6: App Transport Security (ATS) Failures
+
+**Time cost** 5-15 minutes
+
+ATS enforces HTTPS for all connections by default (iOS 9+). ATS failures are silent — connections fail with generic errors, no ATS-specific message in console.
+
+### Pattern 6a: HTTP Blocked by ATS
+
+#### Symptom
+- URLSession request fails with `NSURLErrorSecureConnectionFailed` (-1200) or `NSURLErrorAppTransportSecurityRequiresSecureConnection` (-1022)
+- Network.framework connection works but URLSession doesn't
+- Works in older iOS versions, fails in newer ones
+- No clear error message — just "connection failed"
+
+#### Diagnosis
+
+```bash
+# Check if ATS is blocking the connection
+nscurl --ats-diagnostics https://yourserver.com
+# Shows exactly which ATS policy the server fails
+```
+
+```swift
+// In console, look for:
+// "App Transport Security has blocked a cleartext HTTP (http://) resource load"
+// This only appears if OS-level logging is enabled
+```
+
+#### Fix — Allow Specific HTTP Domain (Preferred)
+
+```xml
+<!-- Info.plist — exception for specific domain only -->
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSExceptionDomains</key>
+    <dict>
+        <key>api.legacy-server.com</key>
+        <dict>
+            <key>NSExceptionAllowsInsecureHTTPLoads</key>
+            <true/>
+        </dict>
+    </dict>
+</dict>
+```
+
+**Do NOT use `NSAllowsArbitraryLoads`** — disables ATS entirely. App Store Review flags this and may reject. Use domain-specific exceptions.
+
+### Pattern 6b: ATS TLS Version Requirements
+
+#### Symptom
+- HTTPS connection fails with "SSL error" despite valid certificate
+- Server uses TLS 1.0 or 1.1 (ATS requires TLS 1.2+)
+- `nscurl --ats-diagnostics` shows TLS version failure
+
+#### Diagnosis
+
+```bash
+# Check server's TLS version
+openssl s_client -connect yourserver.com:443 -tls1_2
+# If this fails but -tls1 succeeds → server doesn't support TLS 1.2
+```
+
+#### Fix — Upgrade Server (Preferred) or Add Exception
+
+```xml
+<!-- Info.plist — allow TLS 1.0 for specific domain (temporary) -->
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSExceptionDomains</key>
+    <dict>
+        <key>legacy-api.example.com</key>
+        <dict>
+            <key>NSExceptionMinimumTLSVersion</key>
+            <string>TLSv1.0</string>
+        </dict>
+    </dict>
+</dict>
+```
+
+**Better fix**: Upgrade the server to TLS 1.2+. ATS exceptions for TLS downgrade trigger App Store Review scrutiny.
+
+### ATS vs Network.framework Distinction
+
+ATS applies to **URLSession** and **WKWebView** connections. **Network.framework** (NWConnection/NetworkConnection) is NOT subject to ATS — it handles TLS configuration directly via `tlsOptions`. If URLSession fails but NWConnection succeeds for the same server, ATS is almost certainly the cause.
 
 ---
 
