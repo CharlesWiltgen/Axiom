@@ -1005,6 +1005,41 @@ sec_protocol_options_set_verify_block(
 let parameters = NWParameters(tls: tlsOptions)
 ```
 
+### Certificate Pinning + Corporate Proxies
+
+Corporate networks often use TLS inspection proxies that present their own certificates. Strict pinning breaks these environments.
+
+**Strategy**: Pin against the public key (SPKI) rather than the full certificate, and provide a configuration escape hatch:
+
+```swift
+sec_protocol_options_set_verify_block(
+    tlsOptions.securityProtocolOptions,
+    { (metadata, trust, complete) in
+        // 1. Check if system trusts the certificate chain (handles corporate CAs)
+        let secTrust = sec_trust_copy_ref(trust).takeRetainedValue()
+        SecTrustEvaluateAsyncWithError(secTrust, .main) { _, result, _ in
+            guard result else { complete(false); return }
+
+            // 2. If pinning enabled, also verify public key
+            if PinningConfig.isEnabled {
+                let serverKey = SecTrustCopyKey(secTrust)
+                let matches = pinnedKeys.contains { $0 == serverKey }
+                complete(matches)
+            } else {
+                complete(true) // System trust only (enterprise mode)
+            }
+        }
+    },
+    .main
+)
+```
+
+**Rules**:
+- Always validate system trust first (`SecTrustEvaluateAsyncWithError`) — this respects enterprise-installed root CAs
+- Use public key pinning over certificate pinning (survives cert rotation)
+- Provide a managed configuration (MDM profile or app config) to disable pinning in enterprise environments
+- Pin at least 2 keys (current + backup) to survive rotation
+
 ### Cipher Suites
 
 ```swift
