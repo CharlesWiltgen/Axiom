@@ -167,6 +167,18 @@ Navigation problem?
 │  └─ Lost on rotation/size change?
 │     └─ → Pattern 4d (Layout Recreation)
 │
+├─ NavigationSplitView issue?
+│  ├─ Sidebar not visible on iPad?
+│  │  ├─ columnVisibility not set? → Pattern 6a (Column Visibility)
+│  │  └─ Compact size class? → Pattern 6a (Automatic Adaptation)
+│  │
+│  ├─ Detail shows blank on iPad?
+│  │  ├─ No default detail view? → Pattern 6b (Missing Detail)
+│  │  └─ Selection binding nil? → Pattern 6b (Selection State)
+│  │
+│  └─ Works on iPhone, broken on iPad?
+│     └─ → Pattern 6c (Platform Adaptation)
+│
 └─ Crash?
    ├─ EXC_BAD_ACCESS in navigation code?
    │  └─ → Pattern 5a (Memory Issue)
@@ -1006,6 +1018,94 @@ Testing needed:
 
 ---
 
+## Pattern 6: NavigationSplitView Platform Issues
+
+**Time cost** 10-20 minutes
+
+NavigationSplitView adapts automatically between compact (iPhone) and regular (iPad) size classes. Most issues arise because developers test only on iPhone, where it collapses to a NavigationStack.
+
+### Pattern 6a: Sidebar/Column Not Visible
+
+#### Symptom
+- Sidebar doesn't appear on iPad
+- App shows detail view only, no way to navigate back
+- Works fine on iPhone (collapses to single column)
+
+#### Diagnosis
+```swift
+// Check 1: Is columnVisibility controlling visibility?
+@State private var columnVisibility: NavigationSplitViewVisibility = .all
+
+NavigationSplitView(columnVisibility: $columnVisibility) {
+    // sidebar
+} detail: {
+    // detail
+}
+
+// Check 2: Are you in compact size class? (iPhone or iPad slide-over)
+// In compact, NavigationSplitView collapses to NavigationStack automatically
+// The sidebar becomes the root of the stack
+```
+
+#### Fix
+- Bind `columnVisibility` to control initial state (`.all`, `.doubleColumn`, `.detailOnly`)
+- Test on iPad in full screen AND slide-over (compact)
+- Use `navigationSplitViewStyle(.balanced)` or `.prominentDetail` to control column proportions
+
+### Pattern 6b: Blank Detail View on iPad
+
+#### Symptom
+- iPad launches to blank right panel
+- Sidebar shows list but detail area is empty
+- iPhone works fine (no detail visible until selection)
+
+#### Fix — Provide Default Detail
+```swift
+NavigationSplitView {
+    List(items, selection: $selectedItem) { item in
+        Text(item.name)
+    }
+} detail: {
+    if let selectedItem {
+        ItemDetailView(item: selectedItem)
+    } else {
+        ContentUnavailableView("Select an Item",
+            systemImage: "sidebar.left",
+            description: Text("Choose an item from the sidebar"))
+    }
+}
+```
+
+**Key insight**: iPad shows the detail column immediately on launch. Without a default view, it's blank. iPhone doesn't show this because it starts on the sidebar.
+
+### Pattern 6c: Platform Adaptation Issues
+
+#### Symptom
+- Navigation works on one platform, broken on another
+- List selection behaves differently on iPhone vs iPad
+
+#### Diagnosis
+NavigationSplitView uses different navigation models per size class:
+- **Regular** (iPad full screen): Side-by-side columns, selection drives detail
+- **Compact** (iPhone, iPad slide-over): Collapses to NavigationStack, selection pushes
+
+```swift
+// Common mistake: using NavigationLink inside NavigationSplitView sidebar
+// This creates DOUBLE navigation on iPad (link push + selection)
+// Fix: Use List(selection:) binding, not NavigationLink
+NavigationSplitView {
+    List(items, selection: $selectedID) { item in  // ✅ selection binding
+        Text(item.name)
+    }
+} detail: {
+    // driven by selectedID
+}
+```
+
+**Test on both iPhone AND iPad before shipping.** Most NavigationSplitView bugs are platform-specific.
+
+---
+
 ## Quick Reference Table
 
 | Symptom | Likely Cause | First Check | Pattern | Fix Time |
@@ -1023,6 +1123,9 @@ Testing needed:
 | State lost on background | No persistence | Add SceneStorage | 4b | 20-25 min |
 | Crash on launch (decode) | Force unwrap decode | Error handling | 5c | 15-20 min |
 | "No destination found" crash | Missing registration | List all types | 5b | 10-15 min |
+| Sidebar missing on iPad | columnVisibility | Check binding | 6a | 10-15 min |
+| Blank detail on iPad | No default detail | Add ContentUnavailableView | 6b | 10 min |
+| Works iPhone, broken iPad | Platform adaptation | Test both size classes | 6c | 15-20 min |
 
 ---
 
