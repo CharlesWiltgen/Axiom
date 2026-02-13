@@ -72,6 +72,21 @@ Performance issue identified?
 
 ---
 
+## The Four Principles of Swift Performance
+
+From WWDC 2024-10217: Swift's low-level performance characteristics come down to four areas. Each maps to a Part in this skill.
+
+| Principle | What It Costs | Skill Coverage |
+|-----------|--------------|----------------|
+| **Function Calls** | Dispatch overhead, optimization barriers | Part 5 (Generics), Part 6 (Inlining) |
+| **Memory Allocation** | Stack vs heap, allocation frequency | Part 3 (Value vs Reference), Part 7 (Collections) |
+| **Memory Layout** | Cache locality, padding, contiguity | Part 9 (Memory Layout), Part 11 (Span) |
+| **Value Copying** | COW triggers, defensive copies, ARC traffic | Part 1 (Noncopyable), Part 2 (COW), Part 4 (ARC) |
+
+Understanding which principle is causing your bottleneck determines which Part to use.
+
+---
+
 ## Part 1: Noncopyable Types (~Copyable)
 
 **Swift 6.0+** introduces noncopyable types for performance-critical scenarios where you want to avoid implicit copies.
@@ -212,6 +227,44 @@ array.append(3)
 array.reserveCapacity(array.count + 3)
 array.append(contentsOf: [1, 2, 3])
 ```
+
+### Defensive Copies
+
+From WWDC 2024-10217: Swift sometimes inserts *defensive copies* when it cannot prove a value won't be mutated through a shared reference.
+
+```swift
+class DataStore {
+    var items: [Item] = []  // COW type stored in class
+}
+
+func process(_ store: DataStore) {
+    for item in store.items {
+        // Swift may defensively copy `items` because:
+        // 1. store.items is a class property (another reference could mutate it)
+        // 2. The loop needs a stable snapshot
+        handle(item)
+    }
+}
+```
+
+**How to avoid**:
+
+```swift
+// ✅ Copy to local variable first (single defensive copy, explicit)
+func process(_ store: DataStore) {
+    let items = store.items  // One copy
+    for item in items {
+        handle(item)  // No more defensive copies
+    }
+}
+
+// ✅ Or use borrowing/consuming for ownership control
+func process(_ items: borrowing [Item]) {
+    // Compiler knows nobody else can mutate during borrow
+}
+```
+
+**In profiler**: Defensive copies appear as unexpected `swift_retain`/`swift_release` pairs or `Array.__allocating_init` calls when you didn't expect allocation.
 
 ---
 
@@ -367,6 +420,28 @@ func processAll(_ objects: [MyClass]) {
     }
 }
 ```
+
+### Closure Capture Costs
+
+From WWDC 2024-10217: Closures have different performance profiles depending on whether they escape.
+
+```swift
+// Non-escaping closure — stack-allocated context, zero ARC overhead
+func processItems(_ items: [Item], using transform: (Item) -> Result) -> [Result] {
+    items.map(transform)  // Closure context lives on stack
+}
+
+// Escaping closure — heap-allocated context, ARC on every captured reference
+func processItemsLater(_ items: [Item], transform: @escaping (Item) -> Result) {
+    // Closure context heap-allocated as anonymous class instance
+    // Each captured reference gets retain/release
+    self.pending = { items.map(transform) }
+}
+```
+
+**Why this matters**: `@Sendable` closures are always escaping, meaning every Task closure heap-allocates its capture context.
+
+**In hot paths**: Prefer non-escaping closures. If you see `swift_allocObject` in Time Profiler for closure contexts, look for escaping closures that could be non-escaping.
 
 ### Observable Object Lifetimes
 
@@ -663,17 +738,17 @@ struct GoodKey: Hashable {
 
 ### InlineArray (Swift 6.2)
 
-Fixed-size arrays stored directly on the stack—no heap allocation, no COW overhead.
+Fixed-size arrays stored directly on the stack—no heap allocation, no COW overhead. Uses value generics to encode size in the type.
 
 ```swift
 // Traditional Array - heap allocated, COW overhead
 var sprites: [Sprite] = Array(repeating: .default, count: 40)
 
-// InlineArray - stack allocated, no COW
+// InlineArray - stack allocated, no COW (value generic syntax)
 var sprites = InlineArray<40, Sprite>(repeating: .default)
-// Alternative syntax (if available)
-var sprites: [40 of Sprite] = ...
 ```
+
+**Conformances**: `RandomAccessCollection`, `MutableCollection`, `BitwiseCopyable`, `Sendable`. Supports `~Copyable` element types.
 
 **When to Use InlineArray**:
 - Fixed size known at compile time
@@ -872,6 +947,8 @@ func updateUI() async {
 }
 ```
 
+**Async allocation detail**: Async functions use slab allocators (not individual heap allocations). Each Task holds a memory slab; local state allocations come from the current slab, with new slabs allocated via malloc only when needed. This makes async function overhead lower than individual malloc calls suggest, but still more than synchronous stack frames.
+
 ### nonisolated Performance
 
 ```swift
@@ -947,6 +1024,40 @@ struct ArrayBased {
 
 // Array iteration ~10x faster due to cache prefetching
 ```
+
+### Exclusivity Checks
+
+From WWDC 2025-312: Runtime exclusivity enforcement (`swift_beginAccess`/`swift_endAccess`) appears in Time Profiler when the compiler cannot prove memory safety statically.
+
+**What they are**: Swift enforces that no two accesses to the same variable overlap if one is a write. For struct properties, this is checked at compile time. For class stored properties, runtime checks are inserted.
+
+**How to identify**: Look for `swift_beginAccess` and `swift_endAccess` in Time Profiler or Processor Trace flame graphs.
+
+```swift
+// ❌ Class properties require runtime exclusivity checks
+class Parser {
+    var state: ParserState
+    var cache: [Int: Pixel]
+
+    func parse() {
+        state.advance()         // swift_beginAccess / swift_endAccess
+        cache[key] = pixel      // swift_beginAccess / swift_endAccess
+    }
+}
+
+// ✅ Struct properties checked at compile time — zero runtime cost
+struct Parser {
+    var state: ParserState
+    var cache: InlineArray<64, Pixel>
+
+    mutating func parse() {
+        state.advance()         // No runtime check
+        cache[key] = pixel      // No runtime check
+    }
+}
+```
+
+**Real-world impact**: In WWDC 2025-312's QOI image parser, moving properties from a class to a struct eliminated all runtime exclusivity checks, contributing to a measurable speedup as part of a >700x total improvement.
 
 ---
 
@@ -1232,6 +1343,27 @@ func sendToC(_ span: Span<UInt8>) {
     }
 }
 ```
+
+### OutputSpan — Safe Initialization of Uninitialized Memory
+
+OutputSpan and OutputRawSpan replace `UnsafeMutableBufferPointer` for initializing new collections without intermediate allocations.
+
+```swift
+// OutputRawSpan for writing raw byte data
+extension Pixel {
+    @lifetime(&output)
+    func write(to output: inout OutputRawSpan, channels: Channels) {
+        output.append(r)
+        output.append(g)
+        output.append(b)
+        if channels == .rgba { output.append(a) }
+    }
+}
+```
+
+**When to use**: Building byte arrays, binary serialization, image pixel data — anywhere you'd use `UnsafeMutableBufferPointer` to fill an array.
+
+**Real-world example**: The [Swift Binary Parsing](https://github.com/apple/swift-binary-parsing) library (open-source from Apple) is built entirely on Span types, providing safe binary data parsing with `ParserSpan`.
 
 ### When NOT to Use Span
 
@@ -1616,7 +1748,7 @@ func render<S: Shape>(shapes: [S]) { }
 
 **WWDC**: 2025-312, 2024-10217, 2024-10170, 2021-10216, 2016-416
 
-**Docs**: /swift/inlinearray, /swift/span
+**Docs**: /swift/inlinearray, /swift/span, /swift/outputspan
 
 **Skills**: axiom-performance-profiling, axiom-swift-concurrency, axiom-swiftui-performance
 

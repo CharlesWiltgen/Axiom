@@ -552,6 +552,57 @@ Redesigning the schema is the LAST thing to try.
 
 ---
 
+## OSSignposter — Custom Performance Instrumentation
+
+While Time Profiler shows where CPU time goes generally, OSSignposter lets you measure specific operations you define. It's the primary tool for custom performance instrumentation on Apple platforms.
+
+### When to Use
+
+- Measuring duration of specific operations (data load, image processing, sync cycle)
+- Creating custom Instruments lanes for your app's operations
+- Bridging to automated performance testing (XCTOSSignpostMetric)
+- Measuring operations that span multiple threads or await points
+
+### Basic API
+
+```swift
+import os
+
+let signposter = OSSignposter(subsystem: "com.app", category: "DataLoad")
+
+// Interval measurement (start → end)
+func loadData() async throws -> [Item] {
+    let signpostID = signposter.makeSignpostID()
+    let state = signposter.beginInterval("Load Items", id: signpostID)
+    defer { signposter.endInterval("Load Items", state) }
+
+    return try await fetchItems()
+}
+
+// Point of interest (single event)
+func cacheHit(for key: String) {
+    signposter.emitEvent("Cache Hit")
+}
+```
+
+### Integration with Instruments
+
+1. Launch Instruments → add "os_signpost" or "Points of Interest" instrument
+2. Record your app performing the instrumented operations
+3. Signpost intervals appear as colored bars in the timeline
+4. Filter by subsystem/category to focus on your operations
+
+### When to Use Signposts vs Time Profiler
+
+| Need | Tool |
+|------|------|
+| General CPU hotspots | Time Profiler |
+| Specific operation duration | OSSignposter |
+| Cross-thread operation timing | OSSignposter |
+| Automated regression testing | OSSignposter + XCTOSSignpostMetric |
+
+---
+
 ## Pressure Scenarios
 
 ### Scenario 1: "Profiling Shows Different Results Each Run"
@@ -878,11 +929,109 @@ let imageCache = NSCache<NSString, UIImage>()
 
 ---
 
+## Regression-Proofing Pipeline
+
+Performance work isn't done when the fix ships. Without regression detection, optimizations quietly degrade over time. The three-stage pipeline catches regressions at every phase.
+
+### The Three Stages
+
+| Stage | Tool | When | Catches |
+|-------|------|------|---------|
+| Dev | OSSignposter | Writing code | Specific operation timing |
+| CI | XCTest performance tests | Every PR | Regression vs baseline |
+| Production | MetricKit | After release | Real-world degradation |
+
+### Stage 1: Instrument Your Code (OSSignposter)
+
+See OSSignposter section above. Add signpost intervals to performance-critical code paths.
+
+### Stage 2: Automate with XCTest Performance Tests
+
+```swift
+func testDataLoadPerformance() throws {
+    let options = XCTMeasureOptions()
+    options.iterationCount = 10
+
+    measure(metrics: [
+        XCTClockMetric(),        // Wall clock time
+        XCTCPUMetric(),          // CPU time and cycles
+        XCTMemoryMetric(),       // Peak physical memory
+    ], options: options) {
+        loadData()
+    }
+}
+```
+
+#### Available XCTMetric Types
+
+- **XCTClockMetric** — Wall clock duration
+- **XCTCPUMetric** — CPU time, instructions retired, cycles
+- **XCTMemoryMetric** — Peak physical memory during test
+- **XCTStorageMetric** — Logical writes to storage
+- **XCTOSSignpostMetric** — Duration of signposted intervals (bridges Stage 1 → Stage 2)
+- **XCTApplicationLaunchMetric** — App launch time (cold/warm/optimized)
+- **XCTHitchMetric** — Hitch time ratio (scrolling and animation hitches)
+
+#### Setting Baselines
+
+After running once, click the value in Xcode's test results → "Set Baseline". Subsequent runs compare against baseline and fail if regression exceeds tolerance (default 10%).
+
+#### Anti-Pattern: Baseline-Less Performance Tests
+
+```swift
+// ❌ Test always passes — no baseline set
+func testPerformance() {
+    measure { doWork() }
+}
+
+// ✅ Set baseline in Xcode after first run
+// Tests fail when performance regresses beyond tolerance
+```
+
+#### Bridging Signposts to Tests (XCTOSSignpostMetric)
+
+```swift
+// In production code
+let signposter = OSSignposter(subsystem: "com.app", category: "Sync")
+
+func syncData() {
+    let id = signposter.makeSignpostID()
+    let state = signposter.beginInterval("Full Sync", id: id)
+    defer { signposter.endInterval("Full Sync", state) }
+    // ... sync logic
+}
+
+// In test
+func testSyncPerformance() {
+    let metric = XCTOSSignpostMetric(
+        subsystem: "com.app",
+        category: "Sync",
+        name: "Full Sync"
+    )
+    measure(metrics: [metric]) {
+        syncData()
+    }
+}
+```
+
+### Stage 3: Monitor in Production (MetricKit)
+
+See `axiom-metrickit-ref` for comprehensive MetricKit integration. Key metrics to monitor:
+
+- `MXAppLaunchMetric` — Launch time regression
+- `MXAppResponsivenessMetric` — Hang rate increase
+- `MXCPUMetric` — CPU time per foreground session
+- `MXMemoryMetric` — Peak memory growth across versions
+
+---
+
 ## Resources
 
-**Docs**: /library/archive/documentation/cocoa/conceptual/coredataperformance, /library/archive/technotes/tn2224
+**WWDC**: 2023-10160, 2024-10217, 2025-308, 2025-312
 
-**Skills**: axiom-memory-debugging, axiom-swiftui-performance, axiom-swift-concurrency
+**Docs**: /library/archive/documentation/cocoa/conceptual/coredataperformance, /library/archive/technotes/tn2224, /os/ossignposter, /xctest/xctestcase/measure
+
+**Skills**: axiom-memory-debugging, axiom-swiftui-performance, axiom-swift-concurrency, axiom-metrickit-ref
 
 ---
 

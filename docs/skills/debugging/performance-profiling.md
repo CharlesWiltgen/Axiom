@@ -30,7 +30,8 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I find N+1 queries with Core Data instrument?"
 - "My app drains battery. How do I profile energy usage?"
 - "Time Profiler shows a hot spot but fixing it didn't help. What did I miss?"
-- "How do I profile a specific user interaction?"
+- "How do I add custom signposts to measure my own code paths?"
+- "How do I set up automated performance regression tests?"
 
 ## What's Covered
 
@@ -73,6 +74,17 @@ flowchart TD
 - CPU/GPU/Network subsystem analysis
 - Background activity auditing
 - Location services impact
+
+### OSSignposter
+- Custom performance instrumentation with `beginInterval`/`endInterval`
+- Integration with Instruments Points of Interest lane
+- When to use signposts vs Time Profiler
+
+### Regression-Proofing Pipeline
+- Three stages: OSSignposter (dev) → XCTest perf tests (CI) → MetricKit (production)
+- All 7 XCTMetric types (clock, CPU, memory, storage, signpost, launch, hitch)
+- Performance baselines and tolerance in Xcode
+- Bridging signposts to automated tests with XCTOSSignpostMetric
 
 ### Pressure Scenarios
 - Deadline pressure handling
@@ -121,9 +133,10 @@ This page documents the `axiom-performance-profiling` skill—Instruments decisi
 - [memory-debugging](/skills/debugging/memory-debugging) — Retain cycle and leak diagnosis
 - [xcode-debugging](/skills/debugging/xcode-debugging) — Environment-first diagnostics before profiling
 - [swift-concurrency](/skills/concurrency/swift-concurrency) — Background thread patterns for CPU work
+- [swift-performance](/skills/concurrency/swift-performance) — Language-level optimization after identifying bottlenecks
 
 ## Resources
 
-**WWDC**: 2023-10160, 2024-10159, 2025-239
+**WWDC**: 2023-10160, 2024-10217, 2025-308, 2025-312
 
-**Docs**: /instruments, /xcode/performance
+**Docs**: /instruments, /xcode/performance, /os/ossignposter, /xctest/performance-tests
