@@ -186,7 +186,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/skills/integration/' },
             { text: 'Apple Documentation Access', link: '/skills/integration/apple-docs' },
-            { text: 'App Intents', link: '/skills/integration/app-intents-ref' },
+            { text: 'App Intents', link: '/reference/app-intents-ref' },
             { text: 'Extensions & Widgets', link: '/skills/integration/extensions-widgets' },
             { text: 'Foundation Models (Apple Intelligence)', link: '/skills/integration/foundation-models' },
             { text: 'In-App Purchases (StoreKit 2)', link: '/skills/integration/in-app-purchases' },
@@ -309,7 +309,9 @@ export default withMermaid(defineConfig({
             { text: 'Camera Capture Diagnostics', link: '/diagnostic/camera-capture-diag' },
             { text: 'Cloud Sync Diagnostics', link: '/diagnostic/cloud-sync-diag' },
             { text: 'Core Data Diagnostics', link: '/diagnostic/core-data-diag' },
+            { text: 'CoreML Diagnostics', link: '/diagnostic/coreml-diag' },
             { text: 'Core Location Diagnostics', link: '/diagnostic/core-location-diag' },
+            { text: 'Energy Diagnostics', link: '/diagnostic/energy-diag' },
             { text: 'Foundation Models Diagnostics', link: '/diagnostic/foundation-models-diag' },
             { text: 'Metal Migration Diagnostics', link: '/diagnostic/metal-migration-diag' },
             { text: 'Networking Diagnostics', link: '/diagnostic/networking-diag' },
