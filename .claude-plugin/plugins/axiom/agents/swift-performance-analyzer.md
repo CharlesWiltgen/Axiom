@@ -29,7 +29,7 @@ description: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit swift-performance`
-model: haiku
+model: sonnet
 color: orange
 tools:
   - Glob

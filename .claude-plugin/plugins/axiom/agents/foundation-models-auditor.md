@@ -29,7 +29,7 @@ description: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit foundation-models`
-model: haiku
+model: sonnet
 color: cyan
 tools:
   - Glob

@@ -29,7 +29,7 @@ description: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit core-data`
-model: haiku
+model: sonnet
 color: orange
 tools:
   - Glob

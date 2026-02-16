@@ -24,7 +24,7 @@ description: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit swiftui-architecture`
-model: haiku
+model: sonnet
 color: blue
 tools:
   - Glob
