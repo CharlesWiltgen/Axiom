@@ -124,7 +124,8 @@ export default withMermaid(defineConfig({
         {
           text: 'Skills',
           items: [
-            { text: 'Overview', link: '/skills/' }
+            { text: 'Overview', link: '/skills/' },
+            { text: 'Getting Started', link: '/skills/getting-started' }
           ]
         },
         {
@@ -154,7 +155,8 @@ export default withMermaid(defineConfig({
             { text: 'Build Debugging', link: '/skills/debugging/build-debugging' },
             { text: 'Build Performance', link: '/skills/debugging/build-performance' },
             { text: 'Performance Profiling', link: '/skills/debugging/performance-profiling' },
-            { text: 'Objective-C Block Retain Cycles', link: '/skills/debugging/objc-block-retain-cycles' }
+            { text: 'Objective-C Block Retain Cycles', link: '/skills/debugging/objc-block-retain-cycles' },
+            { text: 'Hang Diagnostics', link: '/skills/debugging/hang-diagnostics' }
           ]
         },
         {
@@ -189,7 +191,10 @@ export default withMermaid(defineConfig({
             { text: 'Foundation Models (Apple Intelligence)', link: '/skills/integration/foundation-models' },
             { text: 'In-App Purchases (StoreKit 2)', link: '/skills/integration/in-app-purchases' },
             { text: 'Networking', link: '/skills/integration/networking' },
+            { text: 'Networking (Legacy iOS 12-25)', link: '/skills/integration/networking-legacy' },
             { text: 'Now Playing', link: '/skills/integration/now-playing' },
+            { text: 'Camera Capture', link: '/skills/integration/camera-capture' },
+            { text: 'Photo Library', link: '/skills/integration/photo-library' },
             { text: 'Core Location', link: '/skills/integration/core-location' }
           ]
         },
@@ -198,14 +203,19 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/skills/testing/' },
             { text: 'Swift Testing', link: '/skills/testing/swift-testing' },
-            { text: 'UI Testing', link: '/skills/ui-design/ui-testing' }
+            { text: 'UI Testing', link: '/skills/ui-design/ui-testing' },
+            { text: 'Recording UI Automation', link: '/skills/testing/ui-recording' },
+            { text: 'XCUITest Automation', link: '/skills/testing/xctest-automation' }
           ]
         },
         {
           text: 'Games',
           items: [
             { text: 'Overview', link: '/skills/games/' },
-            { text: 'SpriteKit', link: '/skills/games/spritekit' }
+            { text: 'SpriteKit', link: '/skills/games/spritekit' },
+            { text: 'Metal Migration', link: '/skills/games/metal-migration' },
+            { text: 'RealityKit', link: '/skills/games/realitykit' },
+            { text: 'SceneKit', link: '/skills/games/scenekit' }
           ]
         }
       ],
@@ -254,6 +264,12 @@ export default withMermaid(defineConfig({
             { text: 'Haptics & Audio Feedback', link: '/reference/haptics' },
             { text: 'Localization & Internationalization', link: '/reference/localization' },
             { text: 'Network.framework API', link: '/reference/network-framework-ref' },
+            { text: 'Networking Migration', link: '/reference/networking-migration' },
+            { text: 'Background Processing API', link: '/reference/background-processing-ref' },
+            { text: 'Camera Capture', link: '/reference/camera-capture-ref' },
+            { text: 'Photo Library', link: '/reference/photo-library-ref' },
+            { text: 'Now Playing: CarPlay', link: '/reference/now-playing-carplay' },
+            { text: 'Now Playing: MusicKit', link: '/reference/now-playing-musickit' },
             { text: 'Core Location API', link: '/reference/core-location-ref' },
             { text: 'Privacy UX Patterns', link: '/reference/privacy-ux' },
             { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' }
@@ -262,7 +278,19 @@ export default withMermaid(defineConfig({
         {
           text: 'Games',
           items: [
-            { text: 'SpriteKit API', link: '/reference/spritekit-ref' }
+            { text: 'SpriteKit API', link: '/reference/spritekit-ref' },
+            { text: 'Metal Migration API', link: '/reference/metal-migration-ref' },
+            { text: 'RealityKit API', link: '/reference/realitykit-ref' },
+            { text: 'SceneKit API', link: '/reference/scenekit-ref' }
+          ]
+        },
+        {
+          text: 'Tools & Profiling',
+          items: [
+            { text: 'App Store Connect', link: '/reference/app-store-connect-ref' },
+            { text: 'AXe (Simulator Automation)', link: '/reference/axe-ref' },
+            { text: 'MetricKit', link: '/reference/metrickit-ref' },
+            { text: 'xctrace', link: '/reference/xctrace-ref' }
           ]
         }
       ],
@@ -277,16 +305,20 @@ export default withMermaid(defineConfig({
           text: 'Diagnostic Skills',
           items: [
             { text: 'Accessibility Diagnostics', link: '/diagnostic/accessibility-diag' },
+            { text: 'Background Processing Diagnostics', link: '/diagnostic/background-processing-diag' },
+            { text: 'Camera Capture Diagnostics', link: '/diagnostic/camera-capture-diag' },
             { text: 'Cloud Sync Diagnostics', link: '/diagnostic/cloud-sync-diag' },
             { text: 'Core Data Diagnostics', link: '/diagnostic/core-data-diag' },
-            { text: 'Foundation Models Diagnostics', link: '/diagnostic/foundation-models-diag' },
-            { text: 'Networking Diagnostics', link: '/diagnostic/networking-diag' },
             { text: 'Core Location Diagnostics', link: '/diagnostic/core-location-diag' },
+            { text: 'Foundation Models Diagnostics', link: '/diagnostic/foundation-models-diag' },
+            { text: 'Metal Migration Diagnostics', link: '/diagnostic/metal-migration-diag' },
+            { text: 'Networking Diagnostics', link: '/diagnostic/networking-diag' },
+            { text: 'RealityKit Diagnostics', link: '/diagnostic/realitykit-diag' },
+            { text: 'SpriteKit Diagnostics', link: '/diagnostic/spritekit-diag' },
             { text: 'Storage Diagnostics', link: '/diagnostic/storage-diag' },
             { text: 'SwiftData Migration Diagnostics', link: '/diagnostic/swiftdata-migration-diag' },
             { text: 'SwiftUI Debugging Diagnostics', link: '/diagnostic/swiftui-debugging-diag' },
-            { text: 'SwiftUI Navigation Diagnostics', link: '/diagnostic/swiftui-nav-diag' },
-            { text: 'SpriteKit Diagnostics', link: '/diagnostic/spritekit-diag' }
+            { text: 'SwiftUI Navigation Diagnostics', link: '/diagnostic/swiftui-nav-diag' }
           ]
         }
       ]
