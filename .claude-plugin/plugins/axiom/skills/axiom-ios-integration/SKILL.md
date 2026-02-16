@@ -51,7 +51,7 @@ Use this router for:
 **Camera capture implementation** → `/skill axiom-camera-capture`
 **Camera API reference** → `/skill axiom-camera-capture-ref`
 **Camera debugging** → `/skill axiom-camera-capture-diag`
-**Camera audit** → Launch `camera-auditor` agent (deprecated APIs, missing interruption handlers, threading violations, permission anti-patterns)
+**Camera audit** → Launch `camera-auditor` agent or `/axiom:audit camera` (deprecated APIs, missing interruption handlers, threading violations, permission anti-patterns)
 **Photo pickers & library** → `/skill axiom-photo-library`
 **Photo library API reference** → `/skill axiom-photo-library-ref`
 

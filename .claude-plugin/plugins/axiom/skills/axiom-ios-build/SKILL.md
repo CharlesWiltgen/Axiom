@@ -76,7 +76,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why security-privacy-scanner**: Specialized agent that scans for security vulnerabilities and privacy compliance issues.
 
-**Invoke**: Launch `security-privacy-scanner` agent
+**Invoke**: Launch `security-privacy-scanner` agent or `/axiom:audit security`
 
 ---
 
@@ -90,7 +90,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why modernization-helper**: Specialized agent that scans for legacy patterns and provides migration paths with code examples.
 
-**Invoke**: Launch `modernization-helper` agent
+**Invoke**: Launch `modernization-helper` agent or `/axiom:audit modernization`
 
 ---
 

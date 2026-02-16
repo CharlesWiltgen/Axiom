@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swift-performance, core-data, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit
+argument: area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swift-performance, core-data, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera
 disable-model-invocation: true
 ---
 
@@ -33,6 +33,9 @@ If no area specified → analyze project and suggest relevant audits
 | testing | testing-auditor | Flaky tests, slow tests, Swift Testing migration, test quality |
 | build | build-optimizer | Build time optimization opportunities |
 | spritekit | spritekit-auditor | Physics bitmask issues, draw call waste, node accumulation, action leaks |
+| security | security-privacy-scanner | API keys in code, insecure storage, Privacy Manifests, ATS violations |
+| modernization | modernization-helper | ObservableObject→@Observable, @StateObject→@State, deprecated APIs |
+| camera | camera-auditor | Deprecated camera APIs, missing interruption handlers, threading violations |
 
 ## Direct Dispatch
 
@@ -60,6 +63,7 @@ When running multiple audits (either user-requested or from smart suggestions):
    - memory → Retain cycles, leaks
    - energy → Timer abuse, polling, continuous location
    - networking → Deprecated APIs, ANR risk
+   - security → Hardcoded credentials, Privacy Manifests, ATS
    - testing → Flaky tests, slow CI
 
 3. **MEDIUM audits** (architecture, performance):
@@ -71,12 +75,14 @@ When running multiple audits (either user-requested or from smart suggestions):
    - accessibility → WCAG compliance, VoiceOver
    - liquid-glass → iOS 26 adoption
    - codable → JSON best practices
+   - modernization → Legacy API migration
+   - camera → Deprecated capture APIs
 
 **Batch Recommendations:**
 - For pre-release: Run CRITICAL + HIGH audits
 - For architecture review: Run swiftui-architecture + swiftui-nav + swiftui-performance
 - For performance tuning: Run swift-performance + swiftui-performance + memory + energy
-- For App Store prep: Run accessibility + networking + storage
+- For App Store prep: Run accessibility + networking + storage + security
 - For CI reliability: Run testing + concurrency + memory
 - For battery optimization: Run energy + memory + networking
 
@@ -121,6 +127,9 @@ If no area argument:
    - Find URLSession or polling patterns → suggest energy audit
    - Find *Tests.swift files → suggest testing audit
    - Find SpriteKit imports (import SpriteKit, SKScene, SKSpriteNode) → suggest spritekit audit
+   - Find hardcoded strings matching API key patterns → suggest security audit
+   - Find ObservableObject/StateObject usage → suggest modernization audit
+   - Find AVCaptureSession imports → suggest camera audit
 
 2. Present findings and ask: "Based on your project, I suggest these audits: [list]. Which would you like to run?"
 
