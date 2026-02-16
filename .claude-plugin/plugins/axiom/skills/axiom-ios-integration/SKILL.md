@@ -43,12 +43,15 @@ Use this router for:
 
 **IAP implementation** → `/skill axiom-in-app-purchases`
 **StoreKit 2 reference** → `/skill axiom-storekit-ref`
+**IAP audit** → Launch `iap-auditor` agent (missing transaction.finish(), weak receipt validation, missing restore, subscription tracking)
+**IAP full implementation** → Launch `iap-implementation` agent (StoreKit config, StoreManager, transaction handling, restore purchases)
 
 ### Camera & Photos
 
 **Camera capture implementation** → `/skill axiom-camera-capture`
 **Camera API reference** → `/skill axiom-camera-capture-ref`
 **Camera debugging** → `/skill axiom-camera-capture-diag`
+**Camera audit** → Launch `camera-auditor` agent or `/axiom:audit camera` (deprecated APIs, missing interruption handlers, threading violations, permission anti-patterns)
 **Photo pickers & library** → `/skill axiom-photo-library`
 **Photo library API reference** → `/skill axiom-photo-library-ref`
 
@@ -84,15 +87,18 @@ Use this router for:
 3. App discoverability / Spotlight? → app-discoverability, core-spotlight-ref
 4. Widgets / Live Activities? → extensions-widgets, extensions-widgets-ref
 5. In-app purchases / StoreKit? → in-app-purchases, storekit-ref
-6. Camera capture? → camera-capture (patterns), camera-capture-diag (debugging), camera-capture-ref (API)
-7. Photo pickers / library? → photo-library (patterns), photo-library-ref (API)
-8. Audio / AVFoundation? → avfoundation-ref
-9. Now Playing? → now-playing, now-playing-carplay, now-playing-musickit
-10. Haptics? → haptics
-11. Localization? → localization
-12. Privacy / permissions? → privacy-ux
-13. Background processing? → background-processing (patterns), background-processing-diag (debugging), background-processing-ref (API)
-14. Location services? → core-location (patterns), core-location-diag (debugging), core-location-ref (API)
+6. Want IAP audit (missing finish, receipt validation)? → iap-auditor (Agent)
+7. Want full IAP implementation? → iap-implementation (Agent)
+8. Camera capture? → camera-capture (patterns), camera-capture-diag (debugging), camera-capture-ref (API)
+9. Want camera code audit? → camera-auditor (Agent)
+10. Photo pickers / library? → photo-library (patterns), photo-library-ref (API)
+11. Audio / AVFoundation? → avfoundation-ref
+12. Now Playing? → now-playing, now-playing-carplay, now-playing-musickit
+13. Haptics? → haptics
+14. Localization? → localization
+15. Privacy / permissions? → privacy-ux
+16. Background processing? → background-processing (patterns), background-processing-diag (debugging), background-processing-ref (API)
+17. Location services? → core-location (patterns), core-location-diag (debugging), core-location-ref (API)
 
 ## Anti-Rationalization
 
@@ -156,3 +162,12 @@ User: "Location updates not working in background"
 
 User: "What is CLServiceSession?"
 → Invoke: `/skill axiom-core-location-ref`
+
+User: "Review my in-app purchase implementation"
+→ Invoke: `iap-auditor` agent
+
+User: "Implement in-app purchases for my app"
+→ Invoke: `iap-implementation` agent
+
+User: "Check my camera code for issues"
+→ Invoke: `camera-auditor` agent

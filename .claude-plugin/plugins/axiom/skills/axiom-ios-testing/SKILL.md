@@ -158,7 +158,22 @@ This router invokes specialized skills based on the specific testing need:
 
 ---
 
-### 9. UI Automation Without XCUITest → **simulator-tester** + **axe-ref**
+### 10. Test Quality Audit → **testing-auditor** (Agent)
+
+**Triggers**:
+- Want to audit test quality
+- Find flaky test patterns (sleep calls, shared mutable state)
+- Speed up test execution
+- Migrate from XCTest to Swift Testing
+- Check tests for Swift 6 concurrency issues
+
+**Why testing-auditor**: Scans for sleep() calls, shared mutable state, missing assertions, XCTest to Swift Testing migration opportunities, and Swift 6 concurrency issues in tests.
+
+**Invoke**: Launch `testing-auditor` agent or `/axiom:audit testing`
+
+---
+
+### 11. UI Automation Without XCUITest → **simulator-tester** + **axe-ref**
 
 **Triggers**:
 - Automate app without test target
@@ -184,8 +199,9 @@ This router invokes specialized skills based on the specific testing need:
 7. Tests are slow? → swift-testing (Fast Tests section)
 8. Run tests from CLI / parse results? → test-runner (Agent)
 9. Fix failing tests automatically? → test-debugger (Agent)
-10. Record UI interactions (Xcode 26)? → ui-recording
-11. Automate without XCUITest / AXe CLI? → simulator-tester + axe-ref
+10. Want test quality audit (flaky patterns, migration)? → testing-auditor (Agent)
+11. Record UI interactions (Xcode 26)? → ui-recording
+12. Automate without XCUITest / AXe CLI? → simulator-tester + axe-ref
 
 ## Swift Testing vs XCTest Quick Guide
 
@@ -267,3 +283,9 @@ User: "Can I automate my app without writing XCUITests?"
 
 User: "How do I tap a button using AXe?"
 → Invoke: axiom-axe-ref (via simulator-tester)
+
+User: "Audit my tests for quality issues"
+→ Invoke: `testing-auditor` agent
+
+User: "Should I migrate to Swift Testing?"
+→ Invoke: `testing-auditor` agent

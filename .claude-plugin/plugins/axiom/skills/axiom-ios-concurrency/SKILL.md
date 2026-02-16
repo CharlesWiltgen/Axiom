@@ -74,6 +74,10 @@ Use this router when:
 - Thread pool exhaustion
 - Task visualization
 
+### Automated Scanning
+
+**Concurrency audit** → Launch `concurrency-auditor` agent or `/axiom:audit concurrency` (Swift 6 strict concurrency violations, unsafe Task captures, missing @MainActor, Sendable violations, actor isolation problems)
+
 ## Decision Tree
 
 1. Data races / actor isolation / @MainActor / Sendable? → swift-concurrency
@@ -84,6 +88,7 @@ Use this router when:
 6. borrowing / consuming / ~Copyable? → ownership-conventions
 7. Profile async performance / actor contention? → concurrency-profiling
 8. Value type / ARC / generic optimization? → swift-performance
+9. Want automated concurrency scan? → concurrency-auditor (Agent)
 
 ## Anti-Rationalization
 
@@ -148,3 +153,6 @@ User: "My async code is slow, how do I profile it?"
 
 User: "I think I have actor contention, how do I diagnose it?"
 → Invoke: `/skill axiom-concurrency-profiling`
+
+User: "Check my code for Swift 6 concurrency issues"
+→ Invoke: `concurrency-auditor` agent

@@ -63,6 +63,10 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 - Connection drops
 - VPN/proxy problems
 
+### Automated Scanning
+
+**Networking audit** → Launch `networking-auditor` agent or `/axiom:audit networking` (deprecated APIs like SCNetworkReachability, CFSocket, NSStream; anti-patterns like reachability checks, hardcoded IPs, missing error handling)
+
 ## Decision Tree
 
 1. URLSession with structured concurrency? → networking
@@ -70,6 +74,7 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 3. NWConnection (iOS 12-25)? → networking-legacy
 4. Migrating from sockets/URLSession? → networking-migration
 5. Connection issues / debugging? → networking-diag
+6. Want deprecated API / anti-pattern scan? → networking-auditor (Agent)
 
 ## Anti-Rationalization
 
@@ -110,3 +115,6 @@ User: "I need to implement a TCP connection"
 
 User: "Should I use NWConnection or NetworkConnection?"
 → Invoke: `/skill axiom-network-framework-ref`
+
+User: "Check my networking code for deprecated APIs"
+→ Invoke: `networking-auditor` agent

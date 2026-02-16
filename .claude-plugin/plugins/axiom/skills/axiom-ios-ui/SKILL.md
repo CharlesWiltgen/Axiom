@@ -66,6 +66,14 @@ Use this router when working with:
 
 **UI test flakiness** → `/skill axiom-ui-testing`
 
+### Automated Scanning
+
+**Architecture audit** → Launch `swiftui-architecture-auditor` agent (separation of concerns, logic in views, testability)
+**Performance scan** → Launch `swiftui-performance-analyzer` agent or `/axiom:audit swiftui-performance` (expensive view body ops, unnecessary updates)
+**Navigation audit** → Launch `swiftui-nav-auditor` agent or `/axiom:audit swiftui-nav` (deep link gaps, state restoration, wrong containers)
+**Liquid Glass scan** → Launch `liquid-glass-auditor` agent or `/axiom:audit liquid-glass` (adoption opportunities, toolbar improvements)
+**TextKit scan** → Launch `textkit-auditor` agent or `/axiom:audit textkit` (TextKit 1 fallbacks, deprecated glyph APIs, Writing Tools)
+
 ## Decision Tree
 
 ```dot
@@ -108,6 +116,13 @@ digraph ios_ui {
     design_type -> "textkit-ref" [label="TextKit/rich text"];
 }
 ```
+
+**Automated scanning agents:**
+- Want architecture audit (separation of concerns, testability)? → swiftui-architecture-auditor (Agent)
+- Want SwiftUI performance scan (view body ops, unnecessary updates)? → swiftui-performance-analyzer (Agent)
+- Want navigation audit (deep links, state restoration)? → swiftui-nav-auditor (Agent)
+- Want Liquid Glass adoption scan? → liquid-glass-auditor (Agent)
+- Want TextKit scan (Writing Tools, deprecated APIs)? → textkit-auditor (Agent)
 
 ## Anti-Rationalization
 
@@ -164,3 +179,18 @@ User: "My SF Symbol Draw animation isn't working on my custom symbol"
 
 User: "Which rendering mode should I use for my toolbar icons?"
 → Invoke: `/skill axiom-sf-symbols`
+
+User: "Check my SwiftUI architecture for separation of concerns"
+→ Invoke: `swiftui-architecture-auditor` agent
+
+User: "Scan my SwiftUI views for performance issues"
+→ Invoke: `swiftui-performance-analyzer` agent
+
+User: "Audit my navigation for deep link gaps"
+→ Invoke: `swiftui-nav-auditor` agent
+
+User: "Check my app for Liquid Glass adoption opportunities"
+→ Invoke: `liquid-glass-auditor` agent
+
+User: "Why isn't Writing Tools appearing in my text view?"
+→ Invoke: `textkit-auditor` agent
