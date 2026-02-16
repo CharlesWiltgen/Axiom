@@ -29,7 +29,7 @@ description: |
   </example>
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit test-failures`
-model: haiku
+model: sonnet
 color: yellow
 tools:
   - Glob
