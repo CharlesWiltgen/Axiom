@@ -392,28 +392,14 @@ struct PetListView: View {
 ### ❌ Mistake 1: Duplicating @Observable in View and ViewModel
 
 ```swift
-// ❌ Don't do this
-@Observable
-class MyViewModel {
-    var data: String = ""
-}
-
+// ❌ @State + @Observable is redundant — @State creates its own storage
 struct MyView: View {
-    @State private var viewModel = MyViewModel()  // ❌ Redundant
-    // ...
-}
-```
-
-```swift
-// ✅ Correct: Just use @Observable
-@Observable
-class MyViewModel {
-    var data: String = ""
+    @State private var viewModel = MyViewModel()  // ❌ Redundant wrapper
 }
 
+// ✅ Pass @Observable directly — use @State only if the view OWNS the lifecycle
 struct MyView: View {
-    let viewModel: MyViewModel  // ✅ Or @State if view owns it
-    // ...
+    let viewModel: MyViewModel  // ✅ Or @State if view creates it
 }
 ```
 
@@ -461,31 +447,19 @@ class FeedViewModel {
 ### ❌ Mistake 3: Business Logic in ViewModel
 
 ```swift
-// ❌ Business logic shouldn't be in ViewModel
-@Observable
-class OrderViewModel {
-    func calculateDiscount(for order: Order) -> Double {
-        // Complex business rules...
-        return discount
-    }
+// ❌ Business rules belong in the Model, not the ViewModel
+@Observable class OrderViewModel {
+    func calculateDiscount(for order: Order) -> Double { /* ... */ }  // ❌ Business logic
 }
-```
 
-```swift
-// ✅ Business logic in Model
+// ✅ Model owns business logic; ViewModel only formats for display
 struct Order {
-    func calculateDiscount() -> Double {
-        // Complex business rules...
-        return discount
-    }
+    func calculateDiscount() -> Double { /* business rules */ }
 }
-
-@Observable
-class OrderViewModel {
+@Observable class OrderViewModel {
     let order: Order
-
     var displayDiscount: String {
-        "$\(order.calculateDiscount(), specifier: "%.2f")"  // Just formatting
+        "$\(order.calculateDiscount(), specifier: "%.2f")"  // ✅ Just formatting
     }
 }
 ```
@@ -511,37 +485,26 @@ TCA is a third-party architecture from Point-Free. Consider it when:
 
 ## TCA Core Concepts
 
-### State
-
-Data your feature needs to perform logic and render UI:
+TCA has 4 building blocks — **State** (data), **Action** (events), **Reducer** (state evolution), and **Store** (runtime engine). Here they are in a single feature:
 
 ```swift
+// STATE — Data your feature needs
 @ObservableState
 struct CounterFeature {
     var count = 0
     var fact: String?
     var isLoading = false
 }
-```
 
-### Action
-
-All possible events in your feature:
-
-```swift
+// ACTION — All possible events
 enum Action {
     case incrementButtonTapped
     case decrementButtonTapped
     case factButtonTapped
     case factResponse(String)
 }
-```
 
-### Reducer
-
-Describes how state evolves in response to actions:
-
-```swift
+// REDUCER — How state evolves in response to actions
 struct CounterFeature: Reducer {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -549,18 +512,15 @@ struct CounterFeature: Reducer {
             case .incrementButtonTapped:
                 state.count += 1
                 return .none
-
             case .decrementButtonTapped:
                 state.count -= 1
                 return .none
-
             case .factButtonTapped:
                 state.isLoading = true
                 return .run { [count = state.count] send in
                     let fact = try await numberFact(count)
                     await send(.factResponse(fact))
                 }
-
             case let .factResponse(fact):
                 state.isLoading = false
                 state.fact = fact
@@ -569,22 +529,15 @@ struct CounterFeature: Reducer {
         }
     }
 }
-```
 
-### Store
-
-Runtime engine that receives actions, executes reducer, handles effects:
-
-```swift
+// STORE — Runtime that receives actions and executes reducer
 struct CounterView: View {
     let store: StoreOf<CounterFeature>
 
     var body: some View {
         VStack {
             Text("\(store.count)")
-            Button("Increment") {
-                store.send(.incrementButtonTapped)
-            }
+            Button("Increment") { store.send(.incrementButtonTapped) }
         }
     }
 }
@@ -636,40 +589,21 @@ Coordinators extract navigation logic from views. Use when:
 ## SwiftUI Coordinator Implementation
 
 ```swift
-// Navigation destinations
+// Minimal coordinator — Route enum + @Observable coordinator + NavigationStack binding
 enum Route: Hashable {
     case detail(Pet)
     case settings
-    case profile(User)
 }
 
-// Coordinator manages navigation state
 @Observable
 class AppCoordinator {
     var path: [Route] = []
 
-    func showDetail(for pet: Pet) {
-        path.append(.detail(pet))
-    }
-
-    func showSettings() {
-        path.append(.settings)
-    }
-
-    func popToRoot() {
-        path.removeAll()
-    }
-
-    func handleDeepLink(_ url: URL) {
-        // Parse URL and build path
-        if url.path == "/pets/123" {
-            let pet = loadPet(id: "123")
-            path = [.detail(pet)]
-        }
-    }
+    func showDetail(for pet: Pet) { path.append(.detail(pet)) }
+    func popToRoot() { path.removeAll() }
 }
 
-// Root view with NavigationStack
+// Root view binds NavigationStack to coordinator's path
 struct AppView: View {
     @State private var coordinator = AppCoordinator()
 
@@ -678,35 +612,42 @@ struct AppView: View {
             PetListView(coordinator: coordinator)
                 .navigationDestination(for: Route.self) { route in
                     switch route {
-                    case .detail(let pet):
-                        PetDetailView(pet: pet, coordinator: coordinator)
-                    case .settings:
-                        SettingsView(coordinator: coordinator)
-                    case .profile(let user):
-                        ProfileView(user: user, coordinator: coordinator)
+                    case .detail(let pet): PetDetailView(pet: pet, coordinator: coordinator)
+                    case .settings: SettingsView(coordinator: coordinator)
                     }
                 }
-        }
-        .onOpenURL { url in
-            coordinator.handleDeepLink(url)
-        }
-    }
-}
-
-// Views use coordinator instead of NavigationLink
-struct PetListView: View {
-    let coordinator: AppCoordinator
-    let pets: [Pet]
-
-    var body: some View {
-        List(pets) { pet in
-            Button(pet.name) {
-                coordinator.showDetail(for: pet)
-            }
         }
     }
 }
 ```
+
+Add deep linking with `.onOpenURL` and URL-to-route parsing:
+
+```swift
+// Add to AppCoordinator
+func handleDeepLink(_ url: URL) {
+    guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
+    // Parse URL path into routes
+    if components.path.hasPrefix("/pets/"), let id = components.path.split(separator: "/").last {
+        path = [.detail(loadPet(id: String(id)))]
+    }
+}
+
+// Add to AppView's body
+.onOpenURL { url in coordinator.handleDeepLink(url) }
+```
+
+Coordinators are testable without SwiftUI — assert path state directly:
+
+```swift
+func testDeepLink() {
+    let coordinator = AppCoordinator()
+    coordinator.handleDeepLink(URL(string: "myapp://pets/123")!)
+    XCTAssertEqual(coordinator.path.count, 1)  // Navigated to detail
+}
+```
+
+For state restoration, advanced URL routing, and tab-based coordination, see `axiom-swiftui-nav` — Pattern 7 (Coordinator) for structure, Pattern 1b for URL-based deep linking.
 
 ## Coordinator + Architecture Combinations
 
@@ -962,66 +903,7 @@ struct ProductListView: View {
 
 ## ❌ Anti-Pattern 2: Async Code Without Boundaries
 
-"Synchronous updates are important for a good user experience."
-
-```swift
-// ❌ Don't do this
-struct ColorExtractorView: View {
-    @State private var colors: [Color] = []
-    @State private var isLoading = false
-
-    var body: some View {
-        Button("Extract") {
-            Task {
-                isLoading = true
-                await heavyExtraction()  // ⚠️ Suspension point
-                isLoading = false  // ❌ Animation might break
-            }
-        }
-        .scaleEffect(isLoading ? 1.5 : 1.0)  // ⚠️ Timing issues
-    }
-}
-```
-
-**Why it's wrong**:
-- `await` creates suspension point
-- `isLoading = false` might happen after frame deadline
-- Animation timing is unpredictable
-
-```swift
-// ✅ Correct: State-as-Bridge pattern
-@Observable
-class ColorExtractor {
-    var isLoading = false
-    var colors: [Color] = []
-
-    func extract(from image: UIImage) async {
-        let extracted = await heavyComputation(image)
-        self.colors = extracted  // Synchronous mutation
-    }
-}
-
-struct ColorExtractorView: View {
-    let extractor: ColorExtractor
-
-    var body: some View {
-        Button("Extract") {
-            withAnimation {
-                extractor.isLoading = true  // ✅ Synchronous
-            }
-
-            Task {
-                await extractor.extract(from: currentImage)
-
-                withAnimation {
-                    extractor.isLoading = false  // ✅ Synchronous
-                }
-            }
-        }
-        .scaleEffect(extractor.isLoading ? 1.5 : 1.0)
-    }
-}
-```
+See the State-as-Bridge pattern in Part 1 above — keep UI state changes synchronous (inside `withAnimation`), launch async work separately via `Task`.
 
 ## ❌ Anti-Pattern 3: Wrong Property Wrapper
 
@@ -1051,38 +933,7 @@ struct FormView: View {
 
 ## ❌ Anti-Pattern 4: God ViewModel
 
-```swift
-// ❌ Don't create massive ViewModels
-@Observable
-class AppViewModel {
-    // User stuff
-    var userName: String
-    var userEmail: String
-
-    // Settings stuff
-    var isDarkMode: Bool
-    var notificationsEnabled: Bool
-
-    // Content stuff
-    var posts: [Post]
-    var comments: [Comment]
-
-    // ... 50 more properties
-}
-```
-
-**Why it's wrong**:
-- Violates Single Responsibility Principle
-- Hard to test
-- Poor performance (changes anywhere update all views)
-- Difficult to reason about
-
-```swift
-// ✅ Correct: Separate ViewModels by concern
-@Observable class UserViewModel { }
-@Observable class SettingsViewModel { }
-@Observable class FeedViewModel { }
-```
+See MVVM Mistake 2 in Part 2 above — split by concern into separate ViewModels.
 
 ---
 
