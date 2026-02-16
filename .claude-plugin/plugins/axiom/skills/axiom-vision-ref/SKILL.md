@@ -42,6 +42,75 @@ Vision provides computer vision algorithms for still images and video:
 
 **Performance**: Run on background queue - resource intensive, blocks UI if on main thread
 
+## Request Handlers
+
+Vision provides two request handlers for different scenarios.
+
+### VNImageRequestHandler
+
+Analyzes a **single image**. Initialize with the image, perform requests against it, discard.
+
+```swift
+let handler = VNImageRequestHandler(cgImage: image)
+try handler.perform([request1, request2])  // Multiple requests, one image
+```
+
+**Initialize with**: `CGImage`, `CIImage`, `CVPixelBuffer`, `Data`, or `URL`
+
+**Rule**: One handler per image. Reusing a handler with a different image is unsupported.
+
+### VNSequenceRequestHandler
+
+Analyzes a **sequence of frames** (video, camera feed). Initialize empty, pass each frame to `perform()`. Maintains inter-frame state for temporal smoothing.
+
+```swift
+let sequenceHandler = VNSequenceRequestHandler()
+
+// In your camera/video frame callback:
+func processFrame(_ pixelBuffer: CVPixelBuffer) throws {
+    try sequenceHandler.perform([request], on: pixelBuffer)
+}
+```
+
+**Rule**: Create once, reuse across frames. The handler tracks state between calls.
+
+### When to Use Which
+
+| Use Case | Handler |
+|----------|---------|
+| Single photo or screenshot | `VNImageRequestHandler` |
+| Video stream or camera frames | `VNSequenceRequestHandler` |
+| Temporal smoothing (pose, segmentation) | `VNSequenceRequestHandler` |
+| One-off analysis of a CVPixelBuffer | `VNImageRequestHandler` |
+
+### Requests That Benefit from Sequence Handling
+
+These requests use inter-frame state when run through `VNSequenceRequestHandler`:
+- `VNDetectHumanBodyPoseRequest` — Smoother joint tracking
+- `VNDetectHumanHandPoseRequest` — Smoother landmark tracking
+- `VNGeneratePersonSegmentationRequest` — Temporally consistent masks
+- `VNGeneratePersonInstanceMaskRequest` — Stable person identity across frames
+- `VNDetectDocumentSegmentationRequest` — Stable document edges
+- Any `VNStatefulRequest` subclass — Designed for sequences
+
+### Common Mistake
+
+Creating a new `VNImageRequestHandler` per video frame discards temporal context. Pose landmarks jitter, segmentation masks flicker, and you lose the smoothing that sequence handling provides.
+
+```swift
+// Wrong — loses temporal context every frame
+func processFrame(_ buffer: CVPixelBuffer) throws {
+    let handler = VNImageRequestHandler(cvPixelBuffer: buffer)
+    try handler.perform([poseRequest])
+}
+
+// Right — maintains inter-frame state
+let sequenceHandler = VNSequenceRequestHandler()
+func processFrame(_ buffer: CVPixelBuffer) throws {
+    try sequenceHandler.perform([poseRequest], on: buffer)
+}
+```
+
 ## Subject Segmentation APIs
 
 ### VNGenerateForegroundInstanceMaskRequest

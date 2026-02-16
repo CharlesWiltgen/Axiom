@@ -141,7 +141,11 @@ processingQueue.async {
 }
 ```
 
-### 3. Verify Platform Availability
+### 3. Choose the Right Request Handler
+
+Processing video frames? Use `VNSequenceRequestHandler` (maintains inter-frame state for temporal smoothing). For single images, use `VNImageRequestHandler`. Creating a new `VNImageRequestHandler` per frame discards temporal context and causes jittery results. See `axiom-vision-ref` for full comparison and code examples.
+
+### 4. Verify Platform Availability
 
 | API | Minimum Version |
 |-----|-----------------|
