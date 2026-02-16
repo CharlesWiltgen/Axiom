@@ -9,6 +9,9 @@ IDEAS.md
 .claude/
 CLAUDE*.md
 
+# Beads issue tracker
+.beads/
+
 # ck index cache and config
 .ck/
 .ckignore
