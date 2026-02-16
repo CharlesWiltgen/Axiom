@@ -61,6 +61,8 @@ Use this router when:
 - Coordinate confusion (5-branch)
 - Scene transition crashes (5-branch)
 
+**Automated scanning** → Launch `spritekit-auditor` agent or `/axiom:audit spritekit` (physics bitmasks, draw call waste, node accumulation, action memory leaks, coordinate confusion, touch handling, missing object pooling, missing debug overlays)
+
 ### SceneKit (3D — Deprecated)
 
 **SceneKit is soft-deprecated as of iOS 26.** Use for maintenance of existing code only. New 3D projects should use RealityKit.
@@ -149,6 +151,7 @@ Use this router when:
 15. Physics body setup reference? → axiom-spritekit-ref (Part 2)
 16. Entity not visible (RealityKit)? → axiom-realitykit-diag (Symptom 1)
 17. Gesture not responding (RealityKit)? → axiom-realitykit-diag (Symptom 3)
+18. Want automated SpriteKit code scan? → spritekit-auditor (Agent)
 
 ## Anti-Rationalization
 
@@ -280,3 +283,6 @@ User: "Memory keeps growing during gameplay"
 
 User: "What particle emitter settings should I use for fire?"
 → Invoke: `/skill axiom-spritekit-ref`
+
+User: "Can you scan my SpriteKit code for common issues?"
+→ Invoke: `spritekit-auditor` agent

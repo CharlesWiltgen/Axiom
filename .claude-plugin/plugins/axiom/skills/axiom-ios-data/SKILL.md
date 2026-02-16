@@ -58,6 +58,13 @@ Use this router when working with:
 **Storage management** → `/skill axiom-storage-management-ref`
 **File protection** → `/skill axiom-file-protection-ref`
 
+### Automated Scanning
+
+**Core Data audit** → Launch `core-data-auditor` agent or `/axiom:audit core-data` (migration risks, thread-confinement, N+1 queries, production data loss)
+**Codable audit** → Launch `codable-auditor` agent or `/axiom:audit codable` (try? swallowing errors, JSONSerialization, date handling)
+**iCloud audit** → Launch `icloud-auditor` agent or `/axiom:audit icloud` (entitlement checks, file coordination, CloudKit anti-patterns)
+**Storage audit** → Launch `storage-auditor` agent or `/axiom:audit storage` (wrong file locations, missing backup exclusions, data loss risks)
+
 ## Decision Tree
 
 1. SwiftData? → swiftdata, swiftdata-migration
@@ -74,6 +81,10 @@ Use this router when working with:
 12. Codable/JSON serialization? → codable
 13. File storage strategy? → storage, storage-diag, storage-management-ref
 14. File protection? → file-protection-ref
+15. Want Core Data safety scan? → core-data-auditor (Agent)
+16. Want Codable anti-pattern scan? → codable-auditor (Agent)
+17. Want iCloud sync audit? → icloud-auditor (Agent)
+18. Want storage location audit? → storage-auditor (Agent)
 
 ## Anti-Rationalization
 
@@ -107,3 +118,15 @@ User: "CloudKit sync isn't working"
 
 User: "Should I use SwiftData or SQLiteData?"
 → Invoke: `/skill axiom-sqlitedata-migration`
+
+User: "Check my Core Data code for safety issues"
+→ Invoke: `core-data-auditor` agent
+
+User: "Scan for Codable anti-patterns before release"
+→ Invoke: `codable-auditor` agent
+
+User: "Audit my iCloud sync implementation"
+→ Invoke: `icloud-auditor` agent
+
+User: "Check if my files are stored in the right locations"
+→ Invoke: `storage-auditor` agent
