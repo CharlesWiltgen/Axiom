@@ -470,6 +470,23 @@ actor DataImporter {
 
 **Pattern** Use `ModelContext(modelContainer)` for background operations, not `@Environment(\.modelContext)` which is main-actor bound.
 
+#### Calling from SwiftUI
+
+```swift
+struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+
+    var body: some View {
+        Button("Import") {
+            Task {
+                let importer = DataImporter(container: modelContext.container)
+                try await importer.importTracks(data)
+            }
+        }
+    }
+}
+```
+
 ## CloudKit Integration
 
 ### Enable CloudKit Sync
