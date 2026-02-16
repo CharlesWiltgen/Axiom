@@ -83,17 +83,8 @@ These are real questions developers ask that this skill is designed to answer:
 
 #### Migration from Legacy Frameworks
 
-#### 12. "We're migrating from Realm to SwiftData. What are the biggest differences in how we write code?"
-→ The skill shows Realm → SwiftData pattern equivalents: @Persisted → @Attribute, threading model differences, relationship handling
-
-#### 13. "We have Core Data in production. What's the safest way to migrate to SwiftData while keeping both running?"
-→ The skill covers dual-stack migration: reading Core Data, writing to SwiftData, marking migrated records, gradual cutover, validation
-
-#### 14. "Our Realm app uses background threads for all database operations. How do I convert to SwiftData's async/await model?"
-→ The skill explains thread-confinement migration: actor-based safety, removing manual DispatchQueue, proper async context patterns, Swift 6 concurrency
-
-#### 15. "I need to migrate our CloudKit sync from Realm Sync (deprecated) to SwiftData CloudKit integration."
-→ The skill shows Realm Sync → SwiftData CloudKit migration, addressing sync feature gaps, testing new sync implementation
+#### 12. "We're migrating from Realm/Core Data to SwiftData"
+→ See the comparison table in Migration section below, then follow `realm-to-swiftdata-migration` or `axiom-swiftdata-migration` for detailed guides
 
 ---
 
@@ -317,41 +308,20 @@ struct TracksView: View {
 
 **Automatic updates** View refreshes when data changes.
 
-### Filtered Query
+### Filtered, Sorted, Combined
 
 ```swift
-struct RockTracksView: View {
-    @Query(filter: #Predicate<Track> { track in
-        track.genre == "Rock"
-    }) var rockTracks: [Track]
+// Filtered
+@Query(filter: #Predicate<Track> { $0.genre == "Rock" }) var rockTracks: [Track]
 
-    var body: some View {
-        List(rockTracks) { track in
-            Text(track.title)
-        }
-    }
-}
-```
-
-### Sorted Query
-
-```swift
+// Sorted (single)
 @Query(sort: \.title, order: .forward) var tracks: [Track]
 
-// Multiple sort descriptors
-@Query(sort: [
-    SortDescriptor(\.artist),
-    SortDescriptor(\.title)
-]) var tracks: [Track]
-```
+// Sorted (multiple descriptors)
+@Query(sort: [SortDescriptor(\.artist), SortDescriptor(\.title)]) var tracks: [Track]
 
-### Combined Filter + Sort
-
-```swift
-@Query(
-    filter: #Predicate<Track> { $0.duration > 180 },
-    sort: \.title
-) var longTracks: [Track]
+// Combined filter + sort
+@Query(filter: #Predicate<Track> { $0.duration > 180 }, sort: \.title) var longTracks: [Track]
 ```
 
 ## ModelContext Operations
@@ -361,63 +331,35 @@ struct RockTracksView: View {
 ```swift
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-
-    func addTrack() {
-        let track = Track(
-            id: UUID().uuidString,
-            title: "New Song",
-            artist: "Artist",
-            duration: 240
-        )
-        modelContext.insert(track)
-    }
+    // ...
 }
 ```
 
-### Insert
+### CRUD Operations
 
 ```swift
+// Insert
 let track = Track(id: "1", title: "Song", artist: "Artist", duration: 240)
 modelContext.insert(track)
 
-// Save immediately (optional - auto-saves on view disappear)
-try modelContext.save()
-```
-
-### Fetch
-
-```swift
+// Fetch
 let descriptor = FetchDescriptor<Track>(
     predicate: #Predicate { $0.genre == "Rock" },
     sortBy: [SortDescriptor(\.title)]
 )
-
 let rockTracks = try modelContext.fetch(descriptor)
-```
 
-### Update
-
-```swift
-// Just modify properties — SwiftData tracks changes
+// Update — just modify properties, SwiftData tracks changes
 track.title = "Updated Title"
 
-// Save if needed immediately
-try modelContext.save()
-```
-
-### Delete
-
-```swift
+// Delete
 modelContext.delete(track)
+
+// Batch delete
+try modelContext.delete(model: Track.self, where: #Predicate { $0.genre == "Classical" })
+
+// Save (optional — auto-saves on view disappear)
 try modelContext.save()
-```
-
-### Batch Delete
-
-```swift
-try modelContext.delete(model: Track.self, where: #Predicate { track in
-    track.genre == "Classical"
-})
 ```
 
 ## Predicates
@@ -582,162 +524,9 @@ final class Track {
 }
 ```
 
-### Monitoring Sync Status (iOS 26+)
+### Sync Status, Conflicts, Offline Handling
 
-```swift
-struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @State private var isSyncing = false
-
-    var body: some View {
-        VStack {
-            if isSyncing {
-                Label("Syncing with iCloud...", systemImage: "icloud.and.arrow.up.fill")
-                    .foregroundColor(.blue)
-            }
-
-            List {
-                // Your content
-            }
-        }
-        .task {
-            // Monitor sync notifications
-            for await notification in NotificationCenter.default
-                .notifications(named: NSNotification.Name("CloudKitSyncDidComplete")) {
-                isSyncing = false
-            }
-        }
-    }
-}
-```
-
-### Handling CloudKit Sync Conflicts
-
-SwiftData uses **last-write-wins** by default. If you need custom resolution:
-
-```swift
-@MainActor
-@Model
-final class Track {
-    @Attribute(.unique) var id: String = UUID().uuidString
-    var title: String = ""
-    var lastModified: Date = Date()  // Track modification time
-    var deviceID: String = ""  // Track which device modified
-
-    init(id: String = UUID().uuidString, title: String = "", deviceID: String) {
-        self.id = id
-        self.title = title
-        self.deviceID = deviceID
-        self.lastModified = Date()
-    }
-}
-
-// Conflict resolution pattern: Keep newest version
-actor ConflictResolver {
-    let modelContext: ModelContext
-
-    init(context: ModelContext) {
-        self.modelContext = context
-    }
-
-    func resolveTrackConflict(_ local: Track, _ remote: Track) {
-        // Remote is newer
-        if remote.lastModified > local.lastModified {
-            local.title = remote.title
-            local.lastModified = remote.lastModified
-            local.deviceID = remote.deviceID
-        }
-        // Local is newer - keep local (do nothing)
-    }
-}
-```
-
-### Offline Handling & Network Status
-
-```swift
-import Network
-
-@MainActor
-class NetworkMonitor: ObservableObject {
-    @Published var isConnected = false
-    private let monitor = NWPathMonitor()
-
-    init() {
-        monitor.pathUpdateHandler = { [weak self] path in
-            DispatchQueue.main.async {
-                self?.isConnected = path.status == .satisfied
-            }
-        }
-        monitor.start(queue: DispatchQueue.global())
-    }
-}
-
-struct OfflineAwareView: View {
-    @StateObject private var networkMonitor = NetworkMonitor()
-    @Query var tracks: [Track]
-
-    var body: some View {
-        VStack {
-            if !networkMonitor.isConnected {
-                Label("You're offline. Changes will sync when online.", systemImage: "wifi.slash")
-                    .font(.caption)
-                    .foregroundColor(.orange)
-            }
-
-            List(tracks) { track in
-                Text(track.title)
-            }
-        }
-    }
-}
-```
-
-### CloudKit Record Sharing (iOS 26+)
-
-```swift
-@MainActor
-@Model
-final class SharedPlaylist {
-    @Attribute(.unique) var id: String = UUID().uuidString
-    var name: String = ""
-    var ownerID: String = ""  // CloudKit User ID of owner
-
-    @Relationship(deleteRule: .cascade, inverse: \Track.playlist)
-    var tracks: [Track] = []
-
-    // Share metadata
-    var sharedWith: [String] = []  // Array of shared user IDs
-    var sharePermission: SharePermission = .readOnly
-
-    init(name: String, ownerID: String) {
-        self.name = name
-        self.ownerID = ownerID
-    }
-}
-
-enum SharePermission: String, Codable {
-    case readOnly
-    case readWrite
-}
-
-// Share a playlist with another user
-actor PlaylistSharing {
-    let modelContainer: ModelContainer
-
-    func sharePlaylist(_ playlist: SharedPlaylist, with userID: String) async throws {
-        let context = ModelContext(modelContainer)
-
-        // Add user to shared list
-        if !playlist.sharedWith.contains(userID) {
-            playlist.sharedWith.append(userID)
-            try context.save()
-        }
-
-        // Note: Actual CloudKit share URL generation requires CKShare
-        // This is handled by system frameworks
-    }
-}
-```
+SwiftData CloudKit sync uses **last-write-wins** by default. For sync status monitoring, custom conflict resolution, and offline-aware UI patterns, see `axiom-cloud-sync`. For CKShare-based record sharing, see `axiom-cloudkit-ref`.
 
 ### Resolving "Property must be optional or have default value" Error
 
@@ -1075,295 +864,25 @@ struct ContentView: View {
 }
 ```
 
-## Migration Strategies: From Realm & Core Data
+## Migration from Realm & Core Data
 
-### Migrating from Realm
+### Key Differences at a Glance
 
-#### Realm Pattern → SwiftData Equivalent
+| Concept | Realm | Core Data | SwiftData |
+|---|---|---|---|
+| Model definition | `Object` subclass + `@Persisted` | `NSManagedObject` + `@NSManaged` | `final class` + `@Model` |
+| Primary key | `@Persisted(primaryKey:)` | Entity inspector | `@Attribute(.unique)` |
+| Threading | Manual per-thread Realm instances | `context.perform {}` blocks | Actor isolation + `ModelContext(container)` |
+| Relationships | `RealmSwiftCollection<T>` | Entity editor + `@NSManaged` | `@Relationship` with automatic inverses |
+| Background work | `DispatchQueue` + thread-local Realm | `newBackgroundContext()` | `actor` + `ModelContext(modelContainer)` |
+| Batch delete | Loop + `realm.delete()` | `NSBatchDeleteRequest` | `context.delete(model:where:)` |
+| CloudKit sync | Realm Sync (deprecated Sept 2025) | `NSPersistentCloudKitContainer` | `ModelConfiguration(cloudKitDatabase:)` |
 
-```swift
-// REALM
-class RealmTrack: Object {
-    @Persisted(primaryKey: true) var id: String
-    @Persisted var title: String
-    @Persisted var artist: String
-    @Persisted var duration: TimeInterval
-}
+### Detailed Migration Guides
 
-// SWIFTDATA
-@Model
-final class Track {
-    @Attribute(.unique) var id: String = ""
-    var title: String = ""
-    var artist: String = ""
-    var duration: TimeInterval = 0
-
-    init(id: String, title: String, artist: String, duration: TimeInterval) {
-        self.id = id
-        self.title = title
-        self.artist = artist
-        self.duration = duration
-    }
-}
-```
-
-#### Thread Safety Migration (Realm → SwiftData)
-
-```swift
-// REALM: Required explicit threading model
-class RealmDataManager {
-    func fetchTracksOnBackground() {
-        DispatchQueue.global().async {
-            let realm = try! Realm()  // Must get Realm on each thread
-            let tracks = realm.objects(RealmTrack.self)
-            DispatchQueue.main.async {
-                self.updateUI(tracks: Array(tracks))
-            }
-        }
-    }
-}
-
-// SWIFTDATA: Actor-based safety (Swift 6)
-actor SwiftDataManager {
-    let modelContainer: ModelContainer
-
-    func fetchTracks() async -> [Track] {
-        let context = ModelContext(modelContainer)
-        let descriptor = FetchDescriptor<Track>()
-        return try! context.fetch(descriptor)
-    }
-}
-
-// Usage (no manual threading needed)
-@MainActor
-class ViewController: UIViewController {
-    @State private var tracks: [Track] = []
-
-    func loadTracks() async {
-        tracks = await dataManager.fetchTracks()
-    }
-}
-```
-
-#### Relationship Migration (Realm → SwiftData)
-
-```swift
-// REALM: Explicit linking
-class RealmAlbum: Object {
-    @Persisted(primaryKey: true) var id: String
-    @Persisted var title: String
-    @Persisted var tracks: RealmSwiftCollection<RealmTrack>  // Explicit collection
-}
-
-// SWIFTDATA: Inverse relationships automatic
-@Model
-final class Album {
-    @Attribute(.unique) var id: String = ""
-    var title: String = ""
-
-    @Relationship(deleteRule: .cascade, inverse: \Track.album)
-    var tracks: [Track] = []
-}
-
-@Model
-final class Track {
-    @Attribute(.unique) var id: String = ""
-    var title: String = ""
-    var album: Album?  // Inverse automatically maintained
-}
-```
-
-#### Migration Scenario: Small App (< 10,000 records)
-
-```swift
-actor RealmToSwiftDataMigration {
-    let modelContainer: ModelContainer
-
-    func migrateFromRealm(_ realmPath: String) async throws {
-        // 1. Read from Realm database file
-        let realmConfig = Realm.Configuration(fileURL: URL(fileURLWithPath: realmPath))
-        let realm = try await Realm(configuration: realmConfig)
-
-        // 2. Create SwiftData models
-        let context = ModelContext(modelContainer)
-
-        try realm.objects(RealmTrack.self).forEach { realmTrack in
-            let track = Track(
-                id: realmTrack.id,
-                title: realmTrack.title,
-                artist: realmTrack.artist,
-                duration: realmTrack.duration
-            )
-            context.insert(track)
-        }
-
-        // 3. Save to SwiftData
-        try context.save()
-
-        // 4. Verify migration
-        let descriptor = FetchDescriptor<Track>()
-        let tracks = try context.fetch(descriptor)
-        print("Migrated \(tracks.count) tracks")
-    }
-}
-```
-
-### Migrating from Core Data
-
-#### Core Data Pattern → SwiftData Equivalent
-
-```swift
-// CORE DATA
-@NSManaged class CDTrack: NSManagedObject {
-    @NSManaged var id: String
-    @NSManaged var title: String
-    @NSManaged var duration: TimeInterval
-    @NSManaged var album: CDAlbum?
-}
-
-// SWIFTDATA
-@Model
-final class Track {
-    @Attribute(.unique) var id: String = ""
-    var title: String = ""
-    var duration: TimeInterval = 0
-    var album: Album?
-}
-```
-
-#### Thread Confinement Migration (Core Data → SwiftData)
-
-```swift
-// CORE DATA: Manual thread handling
-class CoreDataManager {
-    var persistentContainer: NSPersistentContainer
-
-    func fetchTracks(completion: @escaping ([CDTrack]) -> Void) {
-        let context = persistentContainer.newBackgroundContext()
-        context.perform {
-            let request = NSFetchRequest<CDTrack>(entityName: "Track")
-            let results = try! context.fetch(request)
-
-            DispatchQueue.main.async {
-                completion(results)  // ❌ Can't cross thread boundary with NSManagedObject
-            }
-        }
-    }
-}
-
-// SWIFTDATA: Safe async/await
-class SwiftDataManager {
-    let modelContainer: ModelContainer
-
-    func fetchTracks() async -> [Track] {
-        let context = ModelContext(modelContainer)
-        let descriptor = FetchDescriptor<Track>()
-        return (try? context.fetch(descriptor)) ?? []
-    }
-}
-```
-
-#### Batch Operations Migration (Core Data → SwiftData)
-
-```swift
-// CORE DATA: Complex batch delete
-class CoreDataBatchDelete {
-    var persistentContainer: NSPersistentContainer
-
-    func deleteOldTracks(olderThan date: Date) {
-        let context = persistentContainer.newBackgroundContext()
-        let request = NSFetchRequest<CDTrack>(entityName: "Track")
-        request.predicate = NSPredicate(format: "createdAt < %@", date as NSDate)
-
-        let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
-        deleteRequest.resultType = .resultTypeCount
-
-        do {
-            let result = try context.execute(deleteRequest) as? NSBatchDeleteResult
-            print("Deleted \(result?.result ?? 0) tracks")
-        } catch {
-            print("Delete failed: \(error)")
-        }
-    }
-}
-
-// SWIFTDATA: Simple and safe
-actor SwiftDataBatchDelete {
-    let modelContainer: ModelContainer
-
-    func deleteOldTracks(olderThan date: Date) async throws {
-        let context = ModelContext(modelContainer)
-        try context.delete(model: Track.self, where: #Predicate { track in
-            track.createdAt < date
-        })
-    }
-}
-```
-
-#### Migration Scenario: Enterprise App (Gradual Migration)
-
-```swift
-// Phase 1: Parallel persistence (Core Data + SwiftData)
-class DualStackDataManager {
-    let coreDataStack: CoreDataStack
-    let swiftDataContainer: ModelContainer
-
-    func migrateRecord(coreDataTrack: CDTrack) async throws {
-        // 1. Read from Core Data
-        let id = coreDataTrack.id
-        let title = coreDataTrack.title
-        let artist = coreDataTrack.artist
-        let duration = coreDataTrack.duration
-
-        // 2. Write to SwiftData
-        let context = ModelContext(swiftDataContainer)
-        let track = Track(
-            id: id,
-            title: title,
-            artist: artist,
-            duration: duration
-        )
-        context.insert(track)
-        try context.save()
-
-        // 3. Mark as migrated in Core Data
-        coreDataTrack.isMigratedToSwiftData = true
-    }
-
-    // Phase 2: Cutover (mark Core Data as deprecated)
-    func completeMigration() {
-        print("Migration complete — Core Data can be removed")
-    }
-}
-```
-
-### CloudKit Sync Migration (Realm → SwiftData)
-
-```swift
-// Realm uses Realm Sync (now deprecated)
-// SwiftData uses CloudKit directly
-
-@Model
-final class SyncedTrack {
-    @Attribute(.unique) var id: String = UUID().uuidString
-    var title: String = ""
-    var syncedAt: Date = Date()
-
-    init(id: String = UUID().uuidString, title: String) {
-        self.id = id
-        self.title = title
-    }
-}
-
-// Enable CloudKit sync in ModelConfiguration
-let schema = Schema([SyncedTrack.self])
-let config = ModelConfiguration(
-    schema: schema,
-    cloudKitDatabase: .private("iCloud.com.example.MusicApp")
-)
-
-let container = try ModelContainer(for: schema, configurations: config)
-```
+- **`realm-to-swiftdata-migration`** — Complete Realm migration: pattern equivalents, thread safety conversion, relationship migration, CloudKit sync transition, timeline planning
+- **`axiom-swiftdata-migration`** — SwiftData schema evolution: VersionedSchema, SchemaMigrationPlan, lightweight vs custom migrations
+- **`axiom-database-migration`** — Safe additive migration patterns applicable to any persistence framework
 
 ## Testing
 
@@ -1409,34 +928,6 @@ final class TrackTests: XCTestCase {
 | **Backend** | Core Data | GRDB + SQLite |
 | **Learning Curve** | Easy (native) | Moderate |
 | **Performance** | Good | Excellent (raw SQL) |
-
-## Quick Reference
-
-### Common Operations
-
-```swift
-// Insert
-let track = Track(id: "1", title: "Song", artist: "Artist", duration: 240)
-modelContext.insert(track)
-
-// Fetch all
-@Query var tracks: [Track]
-
-// Fetch filtered
-@Query(filter: #Predicate { $0.genre == "Rock" }) var rockTracks: [Track]
-
-// Fetch sorted
-@Query(sort: \.title) var sortedTracks: [Track]
-
-// Update
-track.title = "Updated"
-
-// Delete
-modelContext.delete(track)
-
-// Save
-try modelContext.save()
-```
 
 ## Resources
 
