@@ -217,6 +217,12 @@ export default withMermaid(defineConfig({
             { text: 'RealityKit', link: '/skills/games/realitykit' },
             { text: 'SceneKit', link: '/skills/games/scenekit' }
           ]
+        },
+        {
+          text: 'Xcode MCP',
+          items: [
+            { text: 'Xcode MCP Integration', link: '/skills/xcode-mcp/' }
+          ]
         }
       ],
       '/reference/': [
@@ -332,7 +338,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v2.22.1'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v2.23.0'
     }
   }
 }))
