@@ -434,7 +434,22 @@ func drawAll<T: Drawable>(shapes: [T]) {
 
 **When `some` isn't available** (heterogeneous collections require `any`):
 - **Reduce type sizes to ≤24 bytes** — keep protocol-conforming types small enough for inline storage (3 words: e.g., `Point { x, y, z: Double }` fits exactly)
-- **Use enum dispatch instead** — `enum Shape { case circle(Circle), rect(Rect) }` with `switch` eliminates containers entirely, trades flexibility for performance
+- **Use enum dispatch instead** — eliminates containers entirely, trades open extensibility for performance:
+
+```swift
+// ❌ Existential: 40 bytes/element, witness table dispatch
+let shapes: [any Drawable] = [circle, rect]
+
+// ✅ Enum: value-sized, static dispatch via switch
+enum Shape { case circle(Circle), rect(Rect) }
+func draw(_ shape: Shape) {
+    switch shape {
+    case .circle(let c): c.draw()
+    case .rect(let r): r.draw()
+    }
+}
+```
+
 - **Batch operations** — amortize per-element existential overhead by processing in chunks rather than one-at-a-time
 - **Measure first** — existential overhead (~10ns/access) only matters in tight loops; for UI-level code it's negligible
 
