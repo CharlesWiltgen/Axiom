@@ -34,14 +34,6 @@ metadata:
 - Dealing with large data structures or collections
 - Code review identifying performance anti-patterns
 
-### ❌ Do NOT use this skill for
-
-- **First step optimization** — Use `axiom-performance-profiling` first to measure
-- **SwiftUI performance** — Use `axiom-swiftui-performance` skill instead
-- **Build time optimization** — Use `axiom-build-performance` skill instead
-- **Premature optimization** — Profile first, optimize later
-- **Readability trade-offs** — Don't sacrifice clarity for micro-optimizations
-
 ## Quick Decision Tree
 
 ```
@@ -167,42 +159,7 @@ var array2 = array1     // Share storage (no copy)
 array2.append(4)        // Now copies (array1 modified array2)
 ```
 
-### Custom COW Implementation
-
-```swift
-final class Storage<T> {
-    var data: [T]
-    init(_ data: [T]) { self.data = data }
-}
-
-struct COWArray<T> {
-    private var storage: Storage<T>
-
-    init(_ data: [T]) {
-        self.storage = Storage(data)
-    }
-
-    // COW check before mutation
-    private mutating func ensureUnique() {
-        if !isKnownUniquelyReferenced(&storage) {
-            storage = Storage(storage.data)
-        }
-    }
-
-    mutating func append(_ element: T) {
-        ensureUnique()  // Copy if shared
-        storage.data.append(element)
-    }
-
-    subscript(index: Int) -> T {
-        get { storage.data[index] }
-        set {
-            ensureUnique()  // Copy before mutation
-            storage.data[index] = newValue
-        }
-    }
-}
-```
+For custom COW implementation, see Copy-Paste Pattern 1 (COW Wrapper) below.
 
 ### Performance Tips
 
@@ -247,20 +204,14 @@ func process(_ store: DataStore) {
 }
 ```
 
-**How to avoid**:
+**How to avoid**: Copy to a local variable first — one explicit copy instead of repeated defensive copies:
 
 ```swift
-// ✅ Copy to local variable first (single defensive copy, explicit)
 func process(_ store: DataStore) {
     let items = store.items  // One copy
     for item in items {
         handle(item)  // No more defensive copies
     }
-}
-
-// ✅ Or use borrowing/consuming for ownership control
-func process(_ items: borrowing [Item]) {
-    // Compiler knows nobody else can mutate during borrow
 }
 ```
 
@@ -322,33 +273,7 @@ func process(_ data: HugeData) {  // Only copies pointer (8 bytes)
 
 ### Indirect Storage for Flexibility
 
-```swift
-// Best of both worlds
-struct LargeDataWrapper {
-    private final class Storage {
-        var largeBuffer: [UInt8]
-        init(_ buffer: [UInt8]) { self.largeBuffer = buffer }
-    }
-
-    private var storage: Storage
-
-    init(buffer: [UInt8]) {
-        self.storage = Storage(buffer)
-    }
-
-    // Value semantics externally, reference internally
-    var buffer: [UInt8] {
-        get { storage.largeBuffer }
-        set {
-            if !isKnownUniquelyReferenced(&storage) {
-                storage = Storage(newValue)
-            } else {
-                storage.largeBuffer = newValue
-            }
-        }
-    }
-}
-```
+For large data that needs value semantics externally with reference storage internally, use the COW Wrapper pattern — see Copy-Paste Pattern 1 below.
 
 ---
 
@@ -400,23 +325,6 @@ class DataProcessor {
             data.forEach { print($0) }  // No self captured
             completion()
         }
-    }
-}
-```
-
-### Reducing Retain/Release Traffic
-
-```swift
-// ❌ Multiple retain/release pairs
-for object in objects {
-    process(object)  // retain, release
-}
-
-// ✅ Single retain for entire loop
-func processAll(_ objects: [MyClass]) {
-    // Compiler optimizes to single retain/release
-    for object in objects {
-        process(object)
     }
 }
 ```
@@ -473,23 +381,9 @@ func test() {
         account.printSummary()  // traveler guaranteed to live
     }
 }
-
-// Alternative: defer at end of scope
-func test() {
-    let traveler = Traveler()
-    defer { withExtendedLifetime(traveler) {} }
-
-    let account = Account(traveler: traveler)
-    account.printSummary()
-}
 ```
 
-**Why This Matters**: Observed object lifetimes are an emergent property of compiler optimizations and can change between:
-- Xcode versions
-- Build configurations (Debug vs Release)
-- Unrelated code changes that enable new optimizations
-
-**Build Setting**: Enable "Optimize Object Lifetimes" (Xcode 13+) during development to expose hidden lifetime bugs early.
+Object lifetimes can change between Xcode versions, Debug vs Release, and unrelated code changes. Enable "Optimize Object Lifetimes" (Xcode 13+) during development to expose hidden lifetime bugs early.
 
 ---
 
@@ -534,85 +428,25 @@ func drawAll<T: Drawable>(shapes: [T]) {
 
 **Performance**: Generic version ~10x faster (eliminates witness table overhead).
 
-### Existential Container Internals
+### Existential Container Overhead
 
-**From WWDC 2016-416**: `any Protocol` uses an existential container with specific performance characteristics.
+**From WWDC 2016-416**: `any Protocol` uses a 40-byte existential container (5 words on 64-bit). The container stores type metadata + protocol witness table (16 bytes) plus a 24-byte inline value buffer. Types ≤24 bytes are stored directly in the buffer (fast, ~5ns access); larger types require a heap allocation with pointer indirection (slower, ~15ns). `some Protocol` eliminates all container overhead (~2ns).
 
-```swift
-// Existential Container Memory Layout (64-bit systems)
-//
-// Small Type (≤24 bytes):
-// ┌──────────────────┬──────────────┬────────────────┐
-// │ Value (inline)   │ Type         │ Protocol       │
-// │ 3 words max      │ Metadata     │ Witness Table  │
-// │ (24 bytes)       │ (8 bytes)    │ (8 bytes)      │
-// └──────────────────┴──────────────┴────────────────┘
-//   ↑ No heap allocation - value stored directly
-//
-// Large Type (>24 bytes):
-// ┌──────────────────┬──────────────┬────────────────┐
-// │ Heap Pointer →   │ Type         │ Protocol       │
-// │ (8 bytes)        │ Metadata     │ Witness Table  │
-// │                  │ (8 bytes)    │ (8 bytes)      │
-// └──────────────────┴──────────────┴────────────────┘
-//   ↑ Heap allocation required - pointer to actual value
-//
-// Total container size: 40 bytes (5 words on 64-bit)
-// Threshold: 3 words (24 bytes) determines inline vs heap
-
-// Small type example - stored inline (FAST)
-struct Point: Drawable {
-    var x, y, z: Double  // 24 bytes - fits inline!
-}
-
-let drawable: any Drawable = Point(x: 1, y: 2, z: 3)
-// ✅ Point stored directly in container (no heap allocation)
-
-// Large type example - heap allocated (SLOWER)
-struct Rectangle: Drawable {
-    var x, y, width, height: Double  // 32 bytes - exceeds inline buffer
-}
-
-let drawable: any Drawable = Rectangle(x: 0, y: 0, width: 10, height: 20)
-// ❌ Rectangle allocated on heap, container stores pointer
-
-// Performance comparison:
-// - Small existential (≤24 bytes): ~5ns access time
-// - Large existential (>24 bytes): ~15ns access time (heap indirection)
-// - Generic `some Drawable`: ~2ns access time (no container)
-```
-
-**Design Tip**: Keep protocol-conforming types ≤24 bytes when used as `any Protocol` for best performance. Use `some Protocol` instead of `any Protocol` when possible to eliminate all container overhead.
+**When `some` isn't available** (heterogeneous collections require `any`):
+- **Reduce type sizes to ≤24 bytes** — keep protocol-conforming types small enough for inline storage (3 words: e.g., `Point { x, y, z: Double }` fits exactly)
+- **Use enum dispatch instead** — `enum Shape { case circle(Circle), rect(Rect) }` with `switch` eliminates containers entirely, trades flexibility for performance
+- **Batch operations** — amortize per-element existential overhead by processing in chunks rather than one-at-a-time
+- **Measure first** — existential overhead (~10ns/access) only matters in tight loops; for UI-level code it's negligible
 
 ### `@_specialize` Attribute
 
+Force specialization for common types when the compiler doesn't do it automatically:
+
 ```swift
-// Force specialization for common types
 @_specialize(where T == Int)
 @_specialize(where T == String)
-func process<T: Comparable>(_ value: T) -> T {
-    // Expensive generic operation
-    return value
-}
-
-// Compiler generates:
-// - func process_Int(_ value: Int) -> Int
-// - func process_String(_ value: String) -> String
-// - Generic fallback for other types
-```
-
-### `any` vs `some`
-
-```swift
-// ❌ any - existential, runtime overhead
-func makeDrawable() -> any Drawable {
-    return Circle()  // Heap allocation
-}
-
-// ✅ some - opaque type, compile-time type
-func makeDrawable() -> some Drawable {
-    return Circle()  // No overhead, type known at compile time
-}
+func process<T: Comparable>(_ value: T) -> T { value }
+// Generates specialized versions + generic fallback
 ```
 
 ---
@@ -756,55 +590,7 @@ var sprites = InlineArray<40, Sprite>(repeating: .default)
 - Want to avoid heap allocation entirely
 - Small to medium sizes (practical limit ~1KB stack usage)
 
-**Key Characteristics**:
-```swift
-let inline = InlineArray<10, Int>(repeating: 0)
-
-// ✅ Stack allocated - no heap
-print(MemoryLayout.size(ofValue: inline))  // 80 bytes (10 × 8)
-
-// ✅ Value semantics - but eagerly copied (not COW!)
-var copy = inline  // Copies all 10 elements immediately
-copy[0] = 100     // No COW check needed
-
-// ✅ Provides Span access for zero-copy operations
-let span = inline.span  // Read-only view
-let mutableSpan = inline.mutableSpan  // Mutable view
-```
-
-**Performance Comparison**:
-```swift
-// Array: Heap allocation + COW overhead
-var array = Array(repeating: 0, count: 100)
-// - Allocation: ~1μs (heap)
-// - Copy: ~50ns (COW reference bump)
-// - Mutation: ~50ns (uniqueness check)
-
-// InlineArray: Stack allocation, no COW
-var inline = InlineArray<100, Int>(repeating: 0)
-// - Allocation: 0ns (stack frame)
-// - Copy: ~400ns (eager copy all 100 elements)
-// - Mutation: 0ns (no uniqueness check)
-```
-
-**24-Byte Threshold Connection**:
-
-InlineArray relates to the existential container threshold from Part 5:
-
-```swift
-// Existential containers store ≤24 bytes inline
-struct Small: Protocol {
-    var a, b, c: Int64  // 24 bytes - fits inline
-}
-
-// InlineArray of 3 Int64s also ≤24 bytes
-let inline = InlineArray<3, Int64>(repeating: 0)
-// Size: 24 bytes - same threshold, different purpose
-
-// Both avoid heap allocation at this size
-let existential: any Protocol = Small(...)  // Inline storage
-let array = inline  // Stack storage
-```
+InlineArray is stack-allocated (no heap), eagerly copied (not COW), and provides `.span`/`.mutableSpan` for zero-copy access. Measure your own benchmarks for allocation/copy/mutation trade-offs vs Array.
 
 **Copy Semantics Warning**:
 ```swift
@@ -886,21 +672,9 @@ actor Counter {
 await counter.incrementBatch(10000)  // Single actor hop
 ```
 
-### async/await vs Completion Handlers
+### Async Overhead
 
-```swift
-// async/await overhead: ~20-30μs per suspension point
-
-// ❌ Unnecessary async for fast synchronous operation
-func compute() async -> Int {
-    return 42  // Instant, but pays async overhead
-}
-
-// ✅ Keep synchronous operations synchronous
-func compute() -> Int {
-    return 42  // No overhead
-}
-```
+Each async suspension costs ~20-30μs. Keep synchronous operations synchronous—don't mark a function `async` if it doesn't need to await.
 
 ### Task Creation Cost
 
@@ -947,26 +721,7 @@ func updateUI() async {
 }
 ```
 
-**Async allocation detail**: Async functions use slab allocators (not individual heap allocations). Each Task holds a memory slab; local state allocations come from the current slab, with new slabs allocated via malloc only when needed. This makes async function overhead lower than individual malloc calls suggest, but still more than synchronous stack frames.
-
-### nonisolated Performance
-
-```swift
-actor DataStore {
-    private var data: [Int] = []
-
-    // ❌ Isolated - actor overhead even for read-only
-    func getCount() -> Int {
-        data.count
-    }
-
-    // ✅ nonisolated for immutable state
-    nonisolated var storedCount: Int {
-        // Must be immutable
-        return data.count  // Error: cannot access isolated property
-    }
-}
-```
+For `nonisolated` performance patterns and detailed actor isolation guidance, see `axiom-swift-concurrency`.
 
 ---
 
@@ -1141,261 +896,71 @@ func processSafe(_ data: MutableSpan<UInt8>) {
 
 ```swift
 let array = [1, 2, 3, 4, 5]
-
-// Get read-only span
-let span = array.span
-print(span[0])  // 1
-print(span.count)  // 5
-
-// Iterate safely
-for element in span {
-    print(element)
-}
-
-// Slicing (creates new span, no copy)
-let slice = span[1..<3]  // Span<Int> viewing [2, 3]
+let span = array.span        // Read-only view
+print(span[0])               // Subscript access
+for element in span { }      // Safe iteration
+let slice = span[1..<3]      // Span slice, no copy
 ```
 
 ### MutableSpan for Modifications
 
 ```swift
 var array = [10, 20, 30, 40, 50]
-
-// Get mutable span
 let mutableSpan = array.mutableSpan
-
-// Modify through span
-mutableSpan[0] = 100
-mutableSpan[1] = 200
-
-print(array)  // [100, 200, 30, 40, 50]
-
-// Safe bounds checking
-// mutableSpan[10] = 0  // Fatal error: Index out of range
+mutableSpan[0] = 100  // Modifies array in-place, bounds-checked
 ```
 
 ### RawSpan for Untyped Bytes
 
 ```swift
-struct PacketHeader {
-    var version: UInt8
-    var flags: UInt8
-    var length: UInt16
-}
-
 func parsePacket(_ data: RawSpan) -> PacketHeader? {
-    guard data.count >= MemoryLayout<PacketHeader>.size else {
-        return nil
-    }
-
-    // Safe byte-level access
-    let version = data[0]
-    let flags = data[1]
-    let lengthLow = data[2]
-    let lengthHigh = data[3]
-
-    return PacketHeader(
-        version: version,
-        flags: flags,
-        length: UInt16(lengthHigh) << 8 | UInt16(lengthLow)
-    )
+    guard data.count >= MemoryLayout<PacketHeader>.size else { return nil }
+    // Safe byte-level access via subscript
+    return PacketHeader(version: data[0], flags: data[1],
+        length: UInt16(data[3]) << 8 | UInt16(data[2]))
 }
 
-// Usage
-let bytes: [UInt8] = [1, 0x80, 0x00, 0x10]  // Version 1, flags 0x80, length 16
-let rawSpan = bytes.rawSpan
-if let header = parsePacket(rawSpan) {
-    print("Packet version: \(header.version)")
-}
+let header = parsePacket(bytes.rawSpan)  // .rawSpan on any [UInt8]
 ```
 
-### Span-Providing Properties
-
-Swift 6.2 collections automatically provide span properties:
-
-```swift
-// Array provides .span and .mutableSpan
-let array = [1, 2, 3]
-let span: Span<Int> = array.span
-
-// ContiguousArray provides spans
-let contiguous = ContiguousArray([1, 2, 3])
-let span2 = contiguous.span
-
-// UnsafeBufferPointer provides .span (migration path)
-let buffer: UnsafeBufferPointer<Int> = ...
-let span3 = buffer.span  // Modern safe wrapper
-```
-
-### Performance Characteristics
-
-```swift
-// ❌ Array copy - heap allocation
-func process(_ array: [Int]) {
-    // Array copied if passed across module boundary
-}
-
-// ❌ UnsafeBufferPointer - no bounds checking
-func process(_ buffer: UnsafeBufferPointer<Int>) {
-    buffer[100]  // Crash or memory corruption!
-}
-
-// ✅ Span - no copy, bounds-checked, temporal safety
-func process(_ span: Span<Int>) {
-    span[100]  // Safe trap if out of bounds
-}
-
-// Performance: Span is as fast as UnsafeBufferPointer (~2ns access)
-// but with safety guarantees (bounds checks are optimized away when safe)
-```
+All Swift 6.2 collections provide `.span` and `.mutableSpan` properties, including `Array`, `ContiguousArray`, and `UnsafeBufferPointer` (migration path). Span access speed matches `UnsafeBufferPointer` (~2ns) with bounds checking.
 
 ### Non-Escapable Lifetime Safety
 
-```swift
-// ✅ Safe - span lifetime bound to array
-func useSpan() {
-    let array = [1, 2, 3, 4, 5]
-    let span = array.span
-    process(span)  // Safe - array still alive
-}
+Span's lifetime is bound to its source. The compiler prevents returning a Span from a function where the source would be deallocated — unlike `UnsafeBufferPointer`, which allows this bug silently.
 
-// ❌ Compiler prevents this
+```swift
 func dangerousSpan() -> Span<Int> {
     let array = [1, 2, 3]
-    return array.span  // Error: Cannot return non-escapable value
+    return array.span  // ❌ Error: Cannot return non-escapable value
 }
-
-// This is what temporal safety prevents
-// (Compare to UnsafeBufferPointer which ALLOWS this bug!)
 ```
 
-### Integration with InlineArray
-
-```swift
-// InlineArray provides span access
-let inline = InlineArray<10, UInt8>()
-let span: Span<UInt8> = inline.span
-let mutableSpan: MutableSpan<UInt8> = inline.mutableSpan
-
-// Efficient zero-copy parsing
-func parseHeader(_ span: Span<UInt8>) -> Header {
-    // Direct access to inline storage via span
-    Header(
-        magic: span[0],
-        version: span[1],
-        flags: span[2]
-    )
-}
-
-let header = parseHeader(inline.span)  // No heap allocation!
-```
+InlineArray also provides `.span`/`.mutableSpan` — see Part 7 for InlineArray usage and copy-avoidance via Span.
 
 ### Migration from UnsafeBufferPointer
 
 ```swift
-// Old pattern (unsafe)
-func processLegacy(_ buffer: UnsafeBufferPointer<Int>) {
-    for i in 0..<buffer.count {
-        print(buffer[i])
-    }
-}
+// Migration bridge: wrap unsafe in safe span
+let buffer: UnsafeBufferPointer<Int> = ...
+let span = buffer.span  // UnsafeBufferPointer provides .span
 
-// New pattern (safe)
 func processModern(_ span: Span<Int>) {
-    for element in span {  // Safe iteration
+    for element in span {  // Safe iteration, bounds-checked
         print(element)
     }
 }
-
-// Migration bridge
-let buffer: UnsafeBufferPointer<Int> = ...
-let span = buffer.span  // Wrap unsafe pointer in safe span
-processModern(span)
 ```
 
-### Common Patterns
+### OutputSpan — Safe Initialization
 
-```swift
-// Pattern 1: Binary parsing with RawSpan
-func parse<T>(_ span: RawSpan) -> T? {
-    guard span.count >= MemoryLayout<T>.size else {
-        return nil
-    }
-    return span.load(as: T.self)  // Safe type reinterpretation
-}
-
-// Pattern 2: Chunked processing
-func processChunks(_ data: Span<UInt8>, chunkSize: Int) {
-    var offset = 0
-    while offset < data.count {
-        let end = min(offset + chunkSize, data.count)
-        let chunk = data[offset..<end]  // Span slice, no copy
-        processChunk(chunk)
-        offset += chunkSize
-    }
-}
-
-// Pattern 3: Safe C interop
-func sendToC(_ span: Span<UInt8>) {
-    span.withUnsafeBufferPointer { buffer in
-        // Only escape to unsafe inside controlled scope
-        c_function(buffer.baseAddress, buffer.count)
-    }
-}
-```
-
-### OutputSpan — Safe Initialization of Uninitialized Memory
-
-OutputSpan and OutputRawSpan replace `UnsafeMutableBufferPointer` for initializing new collections without intermediate allocations.
-
-```swift
-// OutputRawSpan for writing raw byte data
-extension Pixel {
-    @lifetime(&output)
-    func write(to output: inout OutputRawSpan, channels: Channels) {
-        output.append(r)
-        output.append(g)
-        output.append(b)
-        if channels == .rgba { output.append(a) }
-    }
-}
-```
-
-**When to use**: Building byte arrays, binary serialization, image pixel data — anywhere you'd use `UnsafeMutableBufferPointer` to fill an array.
-
-**Real-world example**: The [Swift Binary Parsing](https://github.com/apple/swift-binary-parsing) library (open-source from Apple) is built entirely on Span types, providing safe binary data parsing with `ParserSpan`.
+OutputSpan/OutputRawSpan replace `UnsafeMutableBufferPointer` for initializing new collections without intermediate allocations. Use for building byte arrays, binary serialization, image pixel data. Apple's open-source [Swift Binary Parsing](https://github.com/apple/swift-binary-parsing) library is built entirely on Span types.
 
 ### When NOT to Use Span
 
-```swift
-// ❌ Don't use Span for ownership
-struct Document {
-    var data: Span<UInt8>  // Error: Span can't be stored
-}
-
-// ✅ Use Array for owned data
-struct Document {
-    var data: [UInt8]
-
-    // Provide span access when needed
-    var dataSpan: Span<UInt8> {
-        data.span
-    }
-}
-
-// ❌ Don't try to escape Span from scope
-func getSpan() -> Span<Int> {  // Error: Non-escapable
-    let array = [1, 2, 3]
-    return array.span
-}
-
-// ✅ Process in scope, return owned data
-func processAndReturn() -> [Int] {
-    let array = [1, 2, 3]
-    process(array.span)  // Process with span
-    return array  // Return owned data
-}
-```
+- **Ownership**: Span can't be stored in structs/classes — use Array for owned data, provide `.span` access via computed property
+- **Return values**: Span is non-escapable — process in scope, return owned data
+- **Long-lived references**: Span lifetime is bound to source — use Array if data must outlive the current scope
 
 ---
 
@@ -1459,63 +1024,11 @@ func getCached(_ key: Key) -> Value? {
 
 ## Anti-Patterns
 
-### ❌ Anti-Pattern 1: Premature Optimization
-
-```swift
-// Don't optimize without measuring first!
-
-// ❌ Complex optimization with no measurement
-struct OverEngineered {
-    @usableFromInline var data: ContiguousArray<UInt8>
-    // 100 lines of COW logic...
-}
-
-// ✅ Start simple, measure, then optimize
-struct Simple {
-    var data: [UInt8]
-}
-// Profile → Optimize if needed
-```
-
-### ❌ Anti-Pattern 2: Weak Everywhere
-
-```swift
-class Manager {
-    // ❌ Unnecessary weak reference overhead
-    weak var delegate: Delegate?
-    weak var dataSource: DataSource?
-    weak var observer: Observer?
-}
-
-// ✅ Use unowned when lifetime is guaranteed
-class Manager {
-    unowned let delegate: Delegate  // Delegate outlives Manager
-    weak var dataSource: DataSource?  // Optional, may be nil
-}
-```
-
-### ❌ Anti-Pattern 3: Actor for Everything
-
-```swift
-// ❌ Actor overhead for simple synchronous data
-actor SimpleCounter {
-    private var count = 0
-
-    func increment() {
-        count += 1
-    }
-}
-
-// ✅ Use lock-free atomics or @unchecked Sendable
-import Atomics
-struct AtomicCounter: @unchecked Sendable {
-    private let count = ManagedAtomic<Int>(0)
-
-    func increment() {
-        count.wrappingIncrement(ordering: .relaxed)
-    }
-}
-```
+| Anti-Pattern | Problem | Fix |
+|---|---|---|
+| **Premature optimization** | Complex COW/ContiguousArray with no profiling data | Start simple, profile, optimize what matters |
+| **Weak everywhere** | `weak` on every delegate (atomic overhead) | Use `unowned` when lifetime is guaranteed (see Part 4) |
+| **Actor for everything** | Actor isolation on simple counters (~100μs/call) | Use lock-free atomics (`ManagedAtomic`) for simple sync data |
 
 ---
 
@@ -1648,35 +1161,7 @@ func processImages(_ images: [UIImage]) -> [ProcessedImage] {
 
 **Result**: 30s → 8s (73% faster) by eliminating reallocations.
 
-### Example 2: Actor Batching for Counter
-
-**Problem**: Actor counter in tight loop causes UI jank.
-
-**Investigation**:
-```swift
-// Original - 10,000 actor hops
-for _ in 0..<10000 {
-    await counter.increment()  // ~100μs each = 1 second total!
-}
-```
-
-**Solution**:
-```swift
-// Batch operations
-actor Counter {
-    private var value = 0
-
-    func incrementBatch(_ count: Int) {
-        value += count
-    }
-}
-
-await counter.incrementBatch(10000)  // Single actor hop
-```
-
-**Result**: 1000ms → 0.1ms (10,000x faster) by batching.
-
-### Example 3: Generic Specialization
+### Example 2: Generic Specialization
 
 **Problem**: Protocol-based rendering is slow.
 
@@ -1707,41 +1192,6 @@ func render<S: Shape>(shapes: [S]) { }
 
 **Result**: 100ms → 10ms (10x faster) by eliminating witness table overhead.
 
-### Example 4: Apple Password Monitoring Migration
-
-**Problem**: Apple's Password Monitoring service needed to scale while reducing costs.
-
-**Original Implementation**: Java-based service
-- High memory usage (gigabytes)
-- 50% Kubernetes cluster utilization
-- Moderate throughput
-
-**Swift Rewrite Benefits**:
-```swift
-// Key performance wins from Swift's features:
-
-// 1. Deterministic memory management (no GC pauses)
-//    - No stop-the-world garbage collection
-//    - Predictable latency for real-time processing
-
-// 2. Value semantics + COW
-//    - Efficient data sharing without defensive copying
-//    - Reduced memory churn
-
-// 3. Zero-cost abstractions
-//    - Generic specialization eliminates runtime overhead
-//    - Protocol conformances optimized away
-```
-
-**Results** (Apple's published metrics):
-- **40% throughput increase** vs Java implementation
-- **100x memory reduction**: Gigabytes → Megabytes
-- **50% Kubernetes capacity freed**: Same workload, half the resources
-
-**Why This Matters**: This real-world production service demonstrates that the performance patterns in this skill (COW, value semantics, generic specialization, ARC) deliver measurable business impact at scale.
-
-**Source**: [Swift.org - Password Monitoring Case Study](https://www.swift.org/blog/password-monitoring/)
-
 ---
 
 ## Resources
@@ -1753,9 +1203,3 @@ func render<S: Shape>(shapes: [S]) { }
 **Skills**: axiom-performance-profiling, axiom-swift-concurrency, axiom-swiftui-performance
 
 ---
-
-**Last Updated**: 2025-12-18
-**Swift Version**: 6.2+ (for InlineArray, Span, `@concurrent`)
-**Status**: Production-ready
-
-**Remember**: Profile first, optimize later. Readability > micro-optimizations.
