@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "2.22.1",
+  "version": "2.23.0",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -76,6 +76,10 @@
     {
       "name": "axiom-apple-docs",
       "description": "Use when ANY question involves Apple framework APIs, Swift compiler errors, or Xcode-bundled documentation. Covers Liquid Glass, Swift 6.2 concurrency, Foundation Models, SwiftData, StoreKit, 32 Swift compiler diagnostics."
+    },
+    {
+      "name": "axiom-xcode-mcp",
+      "description": "Use when connecting to Xcode via MCP, using xcrun mcpbridge, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunTests, RenderPreview). Covers setup, tool reference, workflow patterns, troubleshooting."
     }
   ]
 }
