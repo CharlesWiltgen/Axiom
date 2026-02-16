@@ -32,9 +32,14 @@ Use this router when:
 - Accessibility Inspector usage
 - App Store Review preparation
 
+### Automated Scanning
+
+**Accessibility audit** → Launch `accessibility-auditor` agent or `/axiom:audit accessibility` (VoiceOver issues, Dynamic Type violations, color contrast failures, WCAG compliance scanning)
+
 ## Decision Tree
 
 1. ANY accessibility issue → accessibility-diag
+2. Want automated accessibility scan? → accessibility-auditor (Agent)
 
 ## Anti-Rationalization
 
@@ -67,3 +72,6 @@ User: "Check my app for accessibility issues"
 
 User: "Prepare for App Store accessibility review"
 → Invoke: `/skill axiom-accessibility-diag`
+
+User: "Scan my app for accessibility issues automatically"
+→ Invoke: `accessibility-auditor` agent

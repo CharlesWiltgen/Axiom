@@ -30,6 +30,8 @@ Use this router when:
 - Instruments workflows
 - deinit not called
 
+**Memory leak scan** → Launch `memory-auditor` agent or `/axiom:audit memory` (6 common patterns: timers, observers, closures, delegates, view callbacks, PhotoKit)
+
 **Memory leaks (Objective-C blocks)** → `/skill axiom-objc-block-retain-cycles`
 - Block retain cycles
 - Weak-strong pattern
@@ -84,6 +86,17 @@ Use this router when:
 - BGContinuedProcessingTask (iOS 26)
 - MetricKit setup
 
+**Energy scan** → Launch `energy-auditor` agent or `/axiom:audit energy` (8 anti-patterns: timer abuse, polling, continuous location, animation leaks, background mode misuse, network inefficiency, GPU waste, disk I/O)
+
+### Swift Performance
+
+**Swift performance optimization** → `/skill axiom-swift-performance`
+- Value vs reference types, copy-on-write
+- ARC overhead, generic specialization
+- Collection performance
+
+**Swift performance scan** → Launch `swift-performance-analyzer` agent or `/axiom:audit swift-performance` (unnecessary copies, ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs, memory layout)
+
 ### MetricKit Integration
 
 **MetricKit API reference** → `/skill axiom-metrickit-ref`
@@ -105,6 +118,9 @@ Use this router when:
 9. Profile with CLI (xctrace)? → xctrace-ref
 10. Run automated profile now? → performance-profiler agent
 11. General slow/lag? → performance-profiling
+12. Want proactive memory leak scan? → memory-auditor (Agent)
+13. Want energy anti-pattern scan? → energy-auditor (Agent)
+14. Want Swift performance audit (ARC, generics, collections)? → swift-performance-analyzer (Agent)
 
 ## Anti-Rationalization
 
@@ -181,3 +197,12 @@ User: "How do I set up MetricKit?"
 
 User: "How do I parse MXMetricPayload?"
 → Invoke: `/skill axiom-metrickit-ref`
+
+User: "Scan my code for memory leaks"
+→ Invoke: `memory-auditor` agent
+
+User: "Check my app for battery drain issues"
+→ Invoke: `energy-auditor` agent
+
+User: "Audit my Swift code for performance anti-patterns"
+→ Invoke: `swift-performance-analyzer` agent

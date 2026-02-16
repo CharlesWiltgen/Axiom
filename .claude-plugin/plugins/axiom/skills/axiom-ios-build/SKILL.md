@@ -94,7 +94,35 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
-### 6. General Dependency Issues → **build-debugging**
+### 6. Build Failure Auto-Fix → **build-fixer** (Agent)
+**Triggers**:
+- BUILD FAILED with no clear error details
+- Build sometimes succeeds, sometimes fails
+- App builds but runs old code
+- "Unable to boot simulator" error
+- Want automated environment-first diagnostics
+
+**Why build-fixer**: Autonomous agent that checks zombie processes, Derived Data, SPM cache, and simulator state before investigating code. Saves 30+ minutes on environment issues.
+
+**Invoke**: Launch `build-fixer` agent or `/axiom:fix-build`
+
+---
+
+### 7. Slow Build Optimization → **build-optimizer** (Agent)
+**Triggers**:
+- Builds take too long
+- Want to identify slow type checking
+- Expensive build phase scripts
+- Suboptimal build settings
+- Want parallelization opportunities
+
+**Why build-optimizer**: Scans Xcode projects for build performance optimizations — slow type checking, expensive scripts, suboptimal settings — to reduce build times by 30-50%.
+
+**Invoke**: Launch `build-optimizer` agent or `/axiom:optimize-build`
+
+---
+
+### 8. General Dependency Issues → **build-debugging**
 **Triggers**:
 - CocoaPods resolution failures
 - "Multiple commands produce" errors
@@ -105,7 +133,7 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
-### 7. TestFlight Crash Triage → **testflight-triage**
+### 9. TestFlight Crash Triage → **testflight-triage**
 **Triggers**:
 - Beta tester reported a crash
 - Crash reports in Xcode Organizer
@@ -119,7 +147,7 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
-### 8. App Store Connect Navigation → **app-store-connect-ref**
+### 10. App Store Connect Navigation → **app-store-connect-ref**
 **Triggers**:
 - How to find crashes in App Store Connect
 - ASC metrics dashboard navigation
@@ -134,7 +162,7 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
-### 9. Crash Log Analysis → **crash-analyzer** (Agent)
+### 11. Crash Log Analysis → **crash-analyzer** (Agent)
 **Triggers**:
 - User has .ips or .crash file to analyze
 - User pasted crash report text
@@ -148,7 +176,7 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
-### 10. MetricKit API Reference → **metrickit-ref**
+### 12. MetricKit API Reference → **metrickit-ref**
 **Triggers**:
 - MetricKit setup and subscription
 - MXMetricPayload parsing (CPU, memory, launches, hitches)
@@ -163,7 +191,7 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
-### 11. Hang Diagnostics → **hang-diagnostics**
+### 13. Hang Diagnostics → **hang-diagnostics**
 **Triggers**:
 - App hangs or freezes
 - Main thread blocked for >1 second
@@ -185,12 +213,14 @@ This router invokes specialized skills based on the specific issue:
 3. CocoaPods/other dependency conflict? → build-debugging
 4. Slow build time? → build-performance
 5. Security/privacy/App Store prep? → security-privacy-scanner (Agent)
-6. Modernization/deprecated APIs? → modernization-helper (Agent)
-7. TestFlight crash/feedback? → testflight-triage
-8. Navigating App Store Connect? → app-store-connect-ref
-9. Have a crash log (.ips/.crash)? → crash-analyzer (Agent)
-10. MetricKit setup/parsing? → metrickit-ref
-11. App hang/freeze/watchdog? → hang-diagnostics
+6. Want automated build fix (environment-first diagnostics)? → build-fixer (Agent)
+7. Want build time optimization scan? → build-optimizer (Agent)
+8. Modernization/deprecated APIs? → modernization-helper (Agent)
+9. TestFlight crash/feedback? → testflight-triage
+10. Navigating App Store Connect? → app-store-connect-ref
+11. Have a crash log (.ips/.crash)? → crash-analyzer (Agent)
+12. MetricKit setup/parsing? → metrickit-ref
+13. App hang/freeze/watchdog? → hang-diagnostics
 
 ## Anti-Rationalization
 
@@ -307,3 +337,12 @@ User: "Xcode Organizer shows hang diagnostics for my app"
 
 User: "My app was killed by watchdog during launch"
 → Invoke: `/skill axiom-hang-diagnostics`
+
+User: "My build is failing with BUILD FAILED but no error details"
+→ Invoke: `build-fixer` agent or `/axiom:fix-build`
+
+User: "Build sometimes succeeds, sometimes fails"
+→ Invoke: `build-fixer` agent or `/axiom:fix-build`
+
+User: "How can I speed up my Xcode build times?"
+→ Invoke: `build-optimizer` agent or `/axiom:optimize-build`
