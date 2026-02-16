@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swift-performance, core-data, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera
+argument: area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models
 disable-model-invocation: true
 ---
 
@@ -36,6 +36,10 @@ If no area specified → analyze project and suggest relevant audits
 | security | security-privacy-scanner | API keys in code, insecure storage, Privacy Manifests, ATS violations |
 | modernization | modernization-helper | ObservableObject→@Observable, @StateObject→@State, deprecated APIs |
 | camera | camera-auditor | Deprecated camera APIs, missing interruption handlers, threading violations |
+| swiftdata | swiftdata-auditor | @Model struct, missing VersionedSchema models, relationship defaults, migration timing, N+1 |
+| foundation-models | foundation-models-auditor | Missing availability checks, main thread blocking, manual JSON parsing, guardrail handling |
+| swiftui-layout | swiftui-layout-auditor | GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss |
+| database-schema | database-schema-auditor | Unsafe ALTER TABLE, DROP operations, missing idempotency, FK misuse, transaction safety |
 
 ## Direct Dispatch
 
@@ -55,6 +59,8 @@ When running multiple audits (either user-requested or from smart suggestions):
 **Priority Order:**
 1. **CRITICAL audits** (data corruption/loss risk):
    - core-data → Schema safety, thread violations
+   - swiftdata → @Model correctness, migration safety, relationship defaults
+   - database-schema → Unsafe ALTER TABLE, DROP operations, FK integrity
    - storage → Files in wrong locations
    - icloud → NSFileCoordinator violations
 
@@ -69,7 +75,9 @@ When running multiple audits (either user-requested or from smart suggestions):
 3. **MEDIUM audits** (architecture, performance):
    - swiftui-architecture → Logic in views, testability
    - swiftui-performance → Expensive operations, missing lazy
+   - swiftui-layout → GeometryReader misuse, hardcoded breakpoints, identity loss
    - swift-performance → ARC overhead, allocations
+   - foundation-models → Availability checks, error handling, session lifecycle
 
 4. **LOW audits** (enhancement opportunities):
    - accessibility → WCAG compliance, VoiceOver
@@ -80,11 +88,13 @@ When running multiple audits (either user-requested or from smart suggestions):
 
 **Batch Recommendations:**
 - For pre-release: Run CRITICAL + HIGH audits
-- For architecture review: Run swiftui-architecture + swiftui-nav + swiftui-performance
+- For architecture review: Run swiftui-architecture + swiftui-nav + swiftui-layout + swiftui-performance
 - For performance tuning: Run swift-performance + swiftui-performance + memory + energy
 - For App Store prep: Run accessibility + networking + storage + security
 - For CI reliability: Run testing + concurrency + memory
 - For battery optimization: Run energy + memory + networking
+- For data layer review: Run swiftdata + database-schema + core-data + storage
+- For AI integration: Run foundation-models + concurrency
 
 **Note:** Agents have built-in output limits (>50 issues → top 10 shown) to prevent overwhelming output on large codebases.
 
@@ -130,6 +140,10 @@ If no area argument:
    - Find hardcoded strings matching API key patterns → suggest security audit
    - Find ObservableObject/StateObject usage → suggest modernization audit
    - Find AVCaptureSession imports → suggest camera audit
+   - Find @Model classes → suggest swiftdata audit
+   - Find LanguageModelSession / @Generable / FoundationModels imports → suggest foundation-models audit
+   - Find GeometryReader / layout patterns → suggest swiftui-layout audit
+   - Find registerMigration / ALTER TABLE / DatabaseMigrator → suggest database-schema audit
 
 2. Present findings and ask: "Based on your project, I suggest these audits: [list]. Which would you like to run?"
 
