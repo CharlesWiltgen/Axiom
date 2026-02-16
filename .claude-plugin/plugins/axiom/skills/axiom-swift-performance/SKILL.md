@@ -956,20 +956,36 @@ InlineArray also provides `.span`/`.mutableSpan` — see Part 7 for InlineArray 
 ### Migration from UnsafeBufferPointer
 
 ```swift
-// Migration bridge: wrap unsafe in safe span
-let buffer: UnsafeBufferPointer<Int> = ...
-let span = buffer.span  // UnsafeBufferPointer provides .span
-
-func processModern(_ span: Span<Int>) {
-    for element in span {  // Safe iteration, bounds-checked
-        print(element)
-    }
+// ❌ Old: unsafe, no bounds checking
+func parseLegacy(_ buffer: UnsafeBufferPointer<UInt8>) -> Header {
+    Header(magic: buffer[0], version: buffer[1])  // Silent OOB crash
 }
+
+// ✅ New: safe, bounds-checked, same performance
+func parseModern(_ span: Span<UInt8>) -> Header {
+    Header(magic: span[0], version: span[1])  // Traps on OOB
+}
+
+// Bridge: existing UnsafeBufferPointer → Span
+let span = buffer.span  // Wrap unsafe in safe span
+parseModern(span)
 ```
 
 ### OutputSpan — Safe Initialization
 
-OutputSpan/OutputRawSpan replace `UnsafeMutableBufferPointer` for initializing new collections without intermediate allocations. Use for building byte arrays, binary serialization, image pixel data. Apple's open-source [Swift Binary Parsing](https://github.com/apple/swift-binary-parsing) library is built entirely on Span types.
+OutputSpan/OutputRawSpan replace `UnsafeMutableBufferPointer` for initializing new collections without intermediate allocations.
+
+```swift
+// Binary serialization: write header bytes safely
+@lifetime(&output)
+func writeHeader(to output: inout OutputRawSpan) {
+    output.append(0x01)       // version
+    output.append(0x00)       // flags
+    output.append(UInt16(42)) // length (type-safe)
+}
+```
+
+Use for building byte arrays, binary serialization, image pixel data. Apple's open-source [Swift Binary Parsing](https://github.com/apple/swift-binary-parsing) library is built entirely on Span types.
 
 ### When NOT to Use Span
 
