@@ -158,7 +158,7 @@ This router invokes specialized skills based on the specific testing need:
 
 ---
 
-### 10. Test Quality Audit → **testing-auditor** (Agent)
+### 9. Test Quality Audit → **testing-auditor** (Agent)
 
 **Triggers**:
 - Want to audit test quality
@@ -173,7 +173,7 @@ This router invokes specialized skills based on the specific testing need:
 
 ---
 
-### 11. UI Automation Without XCUITest → **simulator-tester** + **axe-ref**
+### 10. UI Automation Without XCUITest → **simulator-tester** + **axe-ref**
 
 **Triggers**:
 - Automate app without test target
