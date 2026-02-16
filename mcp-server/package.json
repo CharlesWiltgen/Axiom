@@ -1,6 +1,6 @@
 {
   "name": "axiom-mcp",
-  "version": "2.23.4",
+  "version": "2.23.5",
   "description": "MCP server for Axiom development skills, agents, and commands",
   "type": "module",
   "main": "dist/index.js",
