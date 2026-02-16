@@ -107,20 +107,25 @@ Use this router when:
 
 ## Decision Tree
 
-1. Memory leak (Swift)? → memory-debugging
-2. Memory leak (Objective-C blocks)? → objc-block-retain-cycles
-3. App hang/freeze (UI unresponsive >1s)? → hang-diagnostics
-4. Battery drain (know the symptom)? → energy-diag
-5. Battery drain (need API reference)? → energy-ref
-6. Battery drain (general)? → energy
-7. MetricKit setup/parsing? → metrickit-ref
-8. Profile with GUI (Instruments)? → performance-profiling
-9. Profile with CLI (xctrace)? → xctrace-ref
-10. Run automated profile now? → performance-profiler agent
-11. General slow/lag? → performance-profiling
-12. Want proactive memory leak scan? → memory-auditor (Agent)
-13. Want energy anti-pattern scan? → energy-auditor (Agent)
-14. Want Swift performance audit (ARC, generics, collections)? → swift-performance-analyzer (Agent)
+1. Memory climbing + UI stutter/jank? → memory-debugging FIRST (memory pressure causes GC pauses that drop frames), then performance-profiling if memory is fixed but stutter remains
+2. Memory leak (Swift)? → memory-debugging
+3. Memory leak (Objective-C blocks)? → objc-block-retain-cycles
+4. App hang/freeze — is UI completely unresponsive (can't tap, no feedback)?
+   - YES → hang-diagnostics (busy vs blocked diagnosis)
+   - NO, just slow → performance-profiling (Time Profiler)
+   - First launch only? → Also check for synchronous I/O or lazy initialization in hang-diagnostics
+5. Slowdown when multiple async operations complete at once? → Cross-route to `axiom-ios-concurrency` (callback contention, not profiling)
+6. Battery drain (know the symptom)? → energy-diag
+7. Battery drain (need API reference)? → energy-ref
+8. Battery drain (general)? → energy
+9. MetricKit setup/parsing? → metrickit-ref
+10. Profile with GUI (Instruments)? → performance-profiling
+11. Profile with CLI (xctrace)? → xctrace-ref
+12. Run automated profile now? → performance-profiler agent
+13. General slow/lag? → performance-profiling
+14. Want proactive memory leak scan? → memory-auditor (Agent)
+15. Want energy anti-pattern scan? → energy-auditor (Agent)
+16. Want Swift performance audit (ARC, generics, collections)? → swift-performance-analyzer (Agent)
 
 ## Anti-Rationalization
 
@@ -131,6 +136,9 @@ Use this router when:
 | "Battery drain is probably the network layer" | Energy issues span 8 subsystems. energy skill diagnoses the actual cause. |
 | "App feels slow, I'll optimize later" | Performance issues compound. Profiling now saves exponentially more time later. |
 | "It's just a UI freeze, probably a slow API call" | Freezes have busy vs blocked causes. hang-diagnostics has a decision tree for both. |
+| "Memory is climbing AND scrolling stutters — two separate bugs" | Memory pressure causes GC pauses that drop frames. Fix the leak first, then re-check scroll performance. |
+| "It only freezes on first launch, must be loading something" | First-launch hangs have 3 patterns: synchronous I/O, lazy initialization, main thread contention. hang-diagnostics diagnoses which. |
+| "UI locks up when network requests finish — that's slow" | Multiple callbacks completing at once = main thread contention = concurrency issue. Cross-route to ios-concurrency. |
 
 ## Critical Patterns
 
@@ -206,3 +214,12 @@ User: "Check my app for battery drain issues"
 
 User: "Audit my Swift code for performance anti-patterns"
 → Invoke: `swift-performance-analyzer` agent
+
+User: "My list scrolls slowly and memory keeps growing"
+→ Invoke: `/skill axiom-memory-debugging` first, then `/skill axiom-performance-profiling` if stutter remains
+
+User: "App freezes for a few seconds on first launch then works fine"
+→ Invoke: `/skill axiom-hang-diagnostics`
+
+User: "UI locks up when multiple API calls return at the same time"
+→ Cross-route: `/skill axiom-ios-concurrency` (callback contention)
