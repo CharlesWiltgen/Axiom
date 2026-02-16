@@ -50,84 +50,40 @@ Instead of hardcoded color values, use **semantic colors** that describe the *pu
 
 ### Label Colors (Foreground Content)
 
-Use label colors for text and symbols:
+Four semantic label levels for text and symbols, each progressively less prominent:
+
+| Style | Semantic Color | Usage |
+|---|---|---|
+| `.primary` | `label` | Titles, most prominent text |
+| `.secondary` | `secondaryLabel` | Subtitles, less prominent |
+| `.tertiary` | `tertiaryLabel` | Placeholder text |
+| `.quaternary` | `quaternaryLabel` | Disabled text |
 
 ```swift
-// Primary content (most prominent)
-Text("Title")
-    .foregroundStyle(.primary)
-// Uses `label` color - black in Light Mode, white in Dark Mode
-
-// Secondary content (subtitles, less prominent)
-Text("Subtitle")
-    .foregroundStyle(.secondary)
-// Uses `secondaryLabel` - gray tone
-
-// Tertiary content (placeholder text)
-Text("Placeholder")
-    .foregroundStyle(.tertiary)
-// Uses `tertiaryLabel` - lighter gray
-
-// Quaternary content (disabled text)
-Text("Disabled")
-    .foregroundStyle(.quaternary)
-// Uses `quaternaryLabel` - very light gray
+Text("Title").foregroundStyle(.primary)    // Black in Light, white in Dark
+Text("Subtitle").foregroundStyle(.secondary)
 ```
-
-**Hierarchy:** `label` → `secondaryLabel` → `tertiaryLabel` → `quaternaryLabel`
 
 ### Background Colors (Primary → Tertiary)
 
-Background colors come in two sets: **ungrouped** and **grouped**.
+Background colors come in two sets — **ungrouped** (standard lists) and **grouped** (iOS Settings style):
 
-#### Ungrouped Backgrounds
+| Level | Ungrouped | Grouped |
+|---|---|---|
+| Primary | `.systemBackground` | `.systemGroupedBackground` |
+| Secondary | `.secondarySystemBackground` | `.secondarySystemGroupedBackground` |
+| Tertiary | `.tertiarySystemBackground` | `.tertiarySystemGroupedBackground` |
 
-For standard lists and views:
-
-```swift
-// Primary background (main background)
-Color(.systemBackground)
-// Pure white in Light Mode, pure black in Dark Mode
-
-// Secondary background (information structure)
-Color(.secondarySystemBackground)
-// Light gray in Light Mode, dark gray in Dark Mode
-
-// Tertiary background (further layering)
-Color(.tertiarySystemBackground)
-// Lighter than secondary, darker in Dark Mode
-```
-
-#### Grouped Backgrounds
-
-For grouped table views (iOS Settings style):
+Ungrouped: pure white/black in Light/Dark. Grouped: light gray/dark in Light/Dark.
 
 ```swift
-// Primary grouped background
-Color(.systemGroupedBackground)
+// Standard list → ungrouped backgrounds
+List { Text("Item") }
+    .background(Color(.systemBackground))
 
-// Secondary grouped background
-Color(.secondarySystemGroupedBackground)
-
-// Tertiary grouped background
-Color(.tertiarySystemGroupedBackground)
-```
-
-**Usage:**
-```swift
-// Standard list
-List {
-    Text("Item")
-}
-.background(Color(.systemBackground))
-
-// Grouped list (Settings style)
-List {
-    Section("Section 1") {
-        Text("Item")
-    }
-}
-.listStyle(.grouped)
+// Settings-style list → grouped backgrounds
+List { Section("Section") { Text("Item") } }
+    .listStyle(.grouped)
 ```
 
 ### Base vs Elevated Backgrounds
@@ -273,18 +229,13 @@ Text("Caption")
 Use built-in text styles for automatic hierarchy and Dynamic Type support:
 
 ```swift
-.font(.largeTitle)    // Largest
-.font(.title)         // Page titles
-.font(.title2)        // Section headers
-.font(.title3)        // Sub-section headers
-.font(.headline)      // Emphasized body
-.font(.body)          // Default body text
-.font(.callout)       // Slightly emphasized
-.font(.subheadline)   // Less prominent
-.font(.footnote)      // Auxiliary info
-.font(.caption)       // Minimal emphasis
-.font(.caption2)      // Smallest
+.font(.largeTitle)  .font(.title)       .font(.title2)
+.font(.title3)      .font(.headline)    .font(.body)
+.font(.callout)     .font(.subheadline) .font(.footnote)
+.font(.caption)     .font(.caption2)
 ```
+
+All text styles scale automatically with Dynamic Type.
 
 ### Dynamic Type Support
 
@@ -461,42 +412,9 @@ VStack {
    - **Only use for components over visually rich backgrounds** (photos, videos)
    - Requires dimming layer for legibility
 
-**Cross-reference:** See `axiom-liquid-glass` skill for implementation details and `axiom-liquid-glass-ref` for comprehensive adoption guide.
+**Modals & Sheets (iOS 26+):** Sheets, alerts, and popovers automatically adopt Liquid Glass with Xcode 26 — remove custom `.presentationBackground()` or `UIBlurEffect` backgrounds. System handles material, concentric corner radius, and morphing transitions. Use elevated semantic colors for modal content backgrounds, not Liquid Glass on the sheet body.
 
-### Modals, Sheets, and Alerts (iOS 26+)
-
-Presented content (sheets, alerts, popovers, action sheets) automatically adopts Liquid Glass when building with Xcode 26.
-
-**Sheets**:
-- Increased corner radius; half sheets are inset from edge with content peek-through
-- System applies Liquid Glass sheet material automatically — **remove** any `.presentationBackground()` modifiers
-- Remove custom `VisualEffectView`/`UIBlurEffect` backgrounds from sheets and popovers
-- Corner radius follows concentricity: sheet corners are concentric to the window, card corners concentric to the sheet
-
-**Alerts**:
-- System alerts get Liquid Glass automatically, no code changes
-- Custom alert views should use `.glassEffect()` for consistency with system alerts
-- Avoid time-based auto-dismissing alerts (cognitive accessibility concern)
-- Destructive actions must use `.destructive` button role for red tinting
-
-**Action Sheets / Confirmation Dialogs**:
-- Now originate from the source element (not bottom edge) and allow interaction with other parts of the interface
-- Use `.confirmationDialog()` attached to the triggering button — system positions it automatically
-- Don't force bottom-edge positioning; let the system adapt to context
-
-**Popovers**:
-- Remove custom background modifiers — system applies Liquid Glass automatically
-- Arrow edges adapt to available space; don't hard-code arrow positions
-
-**Sheet Morphing Transitions** (iOS 26):
-- Sheets morph directly out of buttons using `.matchedTransitionSource()` and `.navigationTransition(.zoom())`
-- Menus, alerts, and popovers also flow smoothly out of Liquid Glass controls
-
-**Design Rules for Modal Content**:
-- Use elevated semantic colors (`.systemGroupedBackground`) for modal backgrounds
-- Respect safe areas and layout guides inside modals
-- Provide clear dismissal paths: swipe-to-dismiss, cancel button, or both
-- For VoiceOver: ensure focus moves to the modal on presentation and returns on dismissal
+**Cross-reference:** For full Liquid Glass implementation patterns (sheets, alerts, popovers, morphing transitions), see `axiom-liquid-glass-ref`. For decision trees, see `axiom-liquid-glass`.
 
 ---
 
@@ -781,35 +699,13 @@ SwiftUI provides animation capabilities; WatchKit offers `WKInterfaceImage` for 
 
 6,900+ vector symbols that match San Francisco font, scale with Dynamic Type, and adapt to Bold Text and Dark Mode automatically. Nine weights, three scales, four rendering modes, and 12+ animation effects.
 
-```swift
-Label("Settings", systemImage: "gear")
-Image(systemName: "star.fill")
-    .font(.title) // Scales with text size
-```
-
 > **For comprehensive coverage** of rendering modes (Monochrome, Hierarchical, Palette, Multicolor), symbol effects (Bounce, Pulse, Wiggle, Draw On/Off), and custom symbol authoring, see `axiom-sf-symbols` (decision trees) and `axiom-sf-symbols-ref` (complete API).
 
 ### Custom Interface Icons
 
-**Key design principles:**
+**Design principles:** Recognizable, simplified designs with familiar visual metaphors. Maintain uniform size, detail level, stroke thickness, and perspective. Match icon weight with adjacent text. Adjust padding for optical centering when visual weight is asymmetric.
 
-**Simplification & Recognition:** Create "recognizable, axiom-highly simplified design[s]" to avoid confusion. Icons work best with familiar visual metaphors directly connected to their actions or content.
-
-**Visual Consistency:** Maintain uniform:
-- Size
-- Detail level
-- Stroke thickness
-- Perspective across all interface icons
-
-**Weight Matching:** Align interface icon weights with adjacent text for consistent emphasis unless deliberately emphasizing one element.
-
-**Optical Alignment:** Asymmetric icons may need padding adjustments for optical centering rather than geometric centering, particularly when visual weight concentrates on one area.
-
-### Format & Implementation
-
-**Vector formats required:** Use **PDF or SVG** for custom interface icons to enable automatic scaling across display resolutions. PNG requires multiple versions for each icon.
-
-**Selected states:** System components (toolbars, tab bars, buttons) automatically handle selected appearances—custom versions aren't necessary.
+**Format:** Use **PDF or SVG** for automatic scaling. System components handle selected states automatically.
 
 ### When to Use Icons vs Text
 
@@ -963,130 +859,45 @@ Onboarding is a **separate experience** that follows the launch phase. Provides 
 
 ### iOS
 
-**Device characteristics:**
-- Medium-size, axiom-high-resolution display
-- One or two-handed interaction
-- Portrait/landscape switching
-- Viewing distance: 1-2 feet
-
-**Input methods:**
-- Multi-Touch gestures
-- Virtual keyboards
-- Voice control
-- Gyroscope/accelerometer
-- Spatial interactions
-
-**Design patterns:**
-- Swiping for back navigation
-- List actions positioned in middle or bottom areas
-- Multiple simultaneous apps
-- Frequent app switching
-
-**Content hierarchy:**
-- "Limit the number of onscreen controls while making secondary details and actions discoverable with minimal interaction"
-
 **Tab Bar Guidelines:**
-- Maximum 5 tabs on iPhone (6th+ items go in "More" tab automatically)
-- Every tab must have an icon AND a text label — icon-only tabs violate HIG
-- Use SF Symbols for tab icons (25x25 pt @1x, automatic scaling)
-- Tab bar is always visible — don't hide it during navigation within a tab
-- Tab order should reflect usage frequency (most-used tabs on left)
-- Maintain tab state: switching tabs and returning should preserve scroll position and navigation state
-- On iOS 26, tab bar uses Liquid Glass automatically — don't add custom blur/material backgrounds
-- iPad: tab bar transforms into a sidebar in landscape; use `TabView` with `Tab` for automatic adaptation
-- Badge values: keep badges short (numbers or single dot); clear when user addresses the notification
+- Maximum 5 tabs on iPhone (6th+ go in "More" automatically)
+- Every tab must have icon AND text label — icon-only violates HIG
+- Always visible — don't hide during navigation within a tab
+- Tab order reflects usage frequency (most-used on left)
+- Maintain tab state: preserve scroll position and navigation state when switching
+- iOS 26: Liquid Glass automatic — don't add custom blur/material backgrounds
+- iPad: tab bar → sidebar in landscape; use `TabView` with `Tab` for adaptation
 
 **Navigation Bar Guidelines:**
-- Always use a back button (system-provided chevron) — don't replace with custom "X" or text-only
-- Title should describe the current view's content, not the app name
-- Large titles (`prefersLargeTitles`) for top-level views only; inline titles for pushed views
-- Toolbar items: 1-3 actions maximum; use `...` menu for additional actions
-- On iOS 26, navigation bar uses Liquid Glass with toolbar morphing between views
+- Always use system back button (chevron) — don't replace with custom "X"
+- Title describes current view content, not app name
+- Large titles (`prefersLargeTitles`) for top-level views only; inline for pushed views
+- 1-3 toolbar actions max; use `...` menu for additional
+- iOS 26: Liquid Glass with toolbar morphing between views
 
-**System integration:**
-- Widgets
-- Home Screen quick actions
-- Spotlight search
-- Shortcuts
-- Activity views
+**System integration:** Widgets, Home Screen quick actions, Spotlight, Shortcuts, Activity views
 
 ### iPadOS
 
-**Extends iOS with:**
-- Larger display (more content simultaneously)
-- Sidebar-adaptable layouts
-- Split view multitasking
-- Pointer/trackpad support
-- Arbitrary window sizing (iOS 26+)
-- Menu bar (swiping down from top)
-
-**Design considerations:**
-- Don't just scale iOS layouts
-- Leverage sidebars for navigation
-- Support split view
-- Optimize for pointer interactions
+Extends iOS with larger display, sidebar navigation, split view, pointer/trackpad, arbitrary windows (iOS 26+). Don't just scale iOS layouts — leverage sidebars and split views.
 
 ### macOS
 
-**Characteristics:**
-- Large, axiom-high-resolution display
-- Pointer-first interactions
-- Keyboard-centric workflows
-- Multiple windows
-- Menu bar for commands
-
-**Design patterns:**
-- Dense layouts acceptable
-- Smaller controls (vs iOS)
-- Window chrome and controls
-- Contextual menus expected
-- Keyboard shortcuts essential
-
-**Control sizes:**
-- Mini, Small, Medium → Rounded rectangles
-- Large, X-Large → Capsules (iOS 26+)
+Pointer-first, keyboard-centric. Dense layouts, smaller controls than iOS. Multiple windows, menu bar, contextual menus, keyboard shortcuts essential. Controls: Mini/Small/Medium → rounded rectangles, Large/X-Large → capsules.
 
 ### watchOS
 
-**Constraints:**
-- Very small display
-- Glanceable interfaces
-- Minimal interaction time
-- Always-on consideration
+Very small display — glanceable, minimal interaction. Full-bleed content, minimal padding, Digital Crown interactions, complications for watch faces. Always-on display consideration.
 
-**Design principles:**
-- Full-bleed content
-- Minimal padding
-- Digital Crown interactions
-- Complications for watch faces
+**Adapting from iPad/iOS:** Replace sidebars with page-based flow. Convert swipe/pinch to Digital Crown rotation. Use opacity/spacing for hierarchy (no materials/Liquid Glass). Complications replace dashboards. `@State`/`@Environment` reuse well; view hierarchy must be rewritten.
 
 ### tvOS
 
-**Characteristics:**
-- Large display
-- 10-foot viewing distance
-- Focus-based navigation
-- Gestural remote
-
-**Design requirements:**
-- Large touch targets
-- Focus states clear and prominent
-- Limited text input
-- Spatial navigation (up/down/left/right)
+10-foot viewing distance, focus-based navigation, gestural remote. Large touch targets, prominent focus states, limited text input, directional navigation.
 
 ### visionOS
 
-**Unique aspects:**
-- Spatial computing
-- Glass materials
-- 3D layouts
-- Depth and layering
-
-**Design principles:**
-- Comfortable viewing depth
-- Avoid head-anchored content
-- Center important content in field of view
-- Use depth deliberately for large, important elements
+Spatial computing with glass materials, 3D layouts, depth. Comfortable viewing depth, avoid head-anchored content, center content in field of view.
 
 ---
 
@@ -1197,23 +1008,18 @@ Apple trademarks cannot appear in your app name or images—consult Apple's offi
 
 **Symptom:** App Store rejection for accessibility violations, or colors don't meet WCAG standards.
 
-**Diagnosis:**
-1. Test with Xcode Accessibility Inspector
-2. Use online contrast calculators
-3. Check in both Light and Dark modes
-4. Test with Increase Contrast enabled
+**Diagnosis:** Test with Accessibility Inspector, contrast calculators, both Light/Dark modes, and Increase Contrast enabled. See Accessibility > Vision section above for contrast ratio requirements.
 
 **Solution:**
 ```swift
-// ❌ PROBLEM: Custom gray fails contrast
-Text("Label").foregroundStyle(.gray) // May fail 4.5:1 requirement
+// ❌ Custom gray may fail contrast
+Text("Label").foregroundStyle(.gray)
 
-// ✅ SOLUTION 1: Use semantic colors (automatic compliance)
+// ✅ Semantic colors (automatic compliance)
 Text("Label").foregroundStyle(.secondary)
 
-// ✅ SOLUTION 2: Use darker custom color with verified contrast
+// ✅ Verified custom color (~8:1 on white, WCAG AAA)
 Text("Label").foregroundStyle(Color(red: 0.25, green: 0.25, blue: 0.25))
-// This achieves ~8:1 contrast on white background (WCAG AAA)
 ```
 
 ### Touch Targets Too Small
@@ -1285,17 +1091,13 @@ Text("Headline")
 
 ### Dynamic Type Not Working
 
-**Symptom:** Text doesn't scale when user increases text size in Settings.
+**Symptom:** Text doesn't scale when user changes text size in Settings.
 
-**Diagnosis:**
 ```swift
 // ❌ Fixed size doesn't scale
 Text("Label").font(.system(size: 17))
-```
 
-**Solution:**
-```swift
-// ✅ Use text styles for automatic scaling
+// ✅ Text styles scale automatically
 Text("Label").font(.body)
 
 // ✅ Custom font with scaling
