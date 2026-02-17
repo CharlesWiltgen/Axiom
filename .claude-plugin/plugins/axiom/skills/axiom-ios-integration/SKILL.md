@@ -25,6 +25,25 @@ Use this router for:
 - Background processing (BGTaskScheduler)
 - Location services (Core Location)
 
+## Cross-Domain Routing
+
+When integration issues overlap with other domains:
+
+**Widget + data sync issues** (widget not showing updated data):
+- Widget timeline not refreshing → **stay in ios-integration** (extensions-widgets)
+- SwiftData/Core Data not shared with extension → **also invoke ios-data** — App Groups and shared containers are data-layer concerns
+- Background refresh timing → **also invoke ios-concurrency** if async patterns are involved
+
+**Live Activity + push notification issues**:
+- ActivityKit push token setup, Live Activity not updating → **stay in ios-integration** (extensions-widgets)
+- Push notification delivery failures, APNs errors → **also invoke ios-networking** (networking-diag)
+- Entitlements/certificates misconfigured → **also invoke ios-build** (xcode-debugging)
+
+**Camera + permissions + privacy**:
+- Camera code issues → **stay in ios-integration** (camera-capture)
+- Privacy manifest or Info.plist issues → **stay in ios-integration** (privacy-ux)
+- Build/entitlement errors → **also invoke ios-build**
+
 ## Routing Logic
 
 ### Apple Intelligence & Siri
@@ -117,6 +136,12 @@ User: "How do I add Siri support for my app?"
 
 User: "My widget isn't updating"
 → Invoke: `/skill axiom-extensions-widgets`
+
+User: "My widget isn't showing updated SwiftData content"
+→ Invoke: `/skill axiom-extensions-widgets` + also invoke `ios-data` router for App Group/shared container setup
+
+User: "My Live Activity isn't updating and I'm getting push notification errors"
+→ Invoke: `/skill axiom-extensions-widgets` for ActivityKit + also invoke `ios-networking` router for push delivery
 
 User: "Implement in-app purchases with StoreKit 2"
 → Invoke: `/skill axiom-in-app-purchases`
