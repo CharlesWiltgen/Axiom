@@ -219,6 +219,13 @@ export default withMermaid(defineConfig({
           ]
         },
         {
+          text: 'Shipping',
+          items: [
+            { text: 'Overview', link: '/skills/shipping/' },
+            { text: 'App Store Submission', link: '/skills/shipping/app-store-submission' }
+          ]
+        },
+        {
           text: 'Xcode MCP',
           items: [
             { text: 'Xcode MCP Integration', link: '/skills/xcode-mcp/' }
@@ -294,6 +301,7 @@ export default withMermaid(defineConfig({
           text: 'Tools & Profiling',
           items: [
             { text: 'App Store Connect', link: '/reference/app-store-connect-ref' },
+            { text: 'App Store Submission', link: '/reference/app-store-ref' },
             { text: 'AXe (Simulator Automation)', link: '/reference/axe-ref' },
             { text: 'MetricKit', link: '/reference/metrickit-ref' },
             { text: 'xctrace', link: '/reference/xctrace-ref' }
@@ -311,6 +319,7 @@ export default withMermaid(defineConfig({
           text: 'Diagnostic Skills',
           items: [
             { text: 'Accessibility Diagnostics', link: '/diagnostic/accessibility-diag' },
+            { text: 'App Store Diagnostics', link: '/diagnostic/app-store-diag' },
             { text: 'Background Processing Diagnostics', link: '/diagnostic/background-processing-diag' },
             { text: 'Camera Capture Diagnostics', link: '/diagnostic/camera-capture-diag' },
             { text: 'Cloud Sync Diagnostics', link: '/diagnostic/cloud-sync-diag' },
