@@ -29,7 +29,12 @@ Use this router when:
 - **Use ios-concurrency, NOT ios-build** — Concurrency errors are CODE issues, not environment issues
 - ios-build is for "No such module", simulator issues, build failures unrelated to Swift language errors
 
-**Rationale**: A 2-second freeze during data loading is almost always `await` on main thread or missing background dispatch. Domain knowledge solves this faster than Time Profiler.
+**ios-concurrency vs ios-data**: When concurrency errors involve Core Data or SwiftData:
+- Core Data threading (NSManagedObjectContext thread confinement, performBackgroundTask) → **use ios-data first** — Core Data has its own threading model distinct from Swift concurrency
+- SwiftData + @MainActor ModelContext → **use ios-concurrency** — This is Swift concurrency isolation
+- General "background saves losing data" → **use ios-data first** — Framework-specific threading rules take priority
+
+**Rationale**: A 2-second freeze during data loading is almost always `await` on main thread or missing background dispatch. Domain knowledge solves this faster than Time Profiler. Core Data threading violations need Core Data-specific fixes, not generic concurrency patterns.
 
 ## Routing Logic
 
@@ -153,6 +158,9 @@ User: "My async code is slow, how do I profile it?"
 
 User: "I think I have actor contention, how do I diagnose it?"
 → Invoke: `/skill axiom-concurrency-profiling`
+
+User: "My Core Data saves lose data from background tasks"
+→ Route to: `ios-data` router (Core Data threading is framework-specific)
 
 User: "Check my code for Swift 6 concurrency issues"
 → Invoke: `concurrency-auditor` agent

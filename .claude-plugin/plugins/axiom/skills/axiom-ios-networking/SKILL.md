@@ -54,6 +54,19 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 - TLV framing
 - Wi-Fi Aware
 
+### App Store Compliance
+
+**ATS / HTTP security** → `/skill axiom-networking-diag`
+- App Transport Security (ATS) configuration
+- HTTP → HTTPS migration
+- App Store rejection for insecure connections
+- NSAllowsArbitraryLoads exceptions
+
+**Deprecated API rejection** → Launch `networking-auditor` agent
+- UIWebView → WKWebView migration
+- SCNetworkReachability → NWPathMonitor
+- CFSocket → Network.framework
+
 ### Network Debugging
 
 **Connection issues** → `/skill axiom-networking-diag`
@@ -74,7 +87,9 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 3. NWConnection (iOS 12-25)? → networking-legacy
 4. Migrating from sockets/URLSession? → networking-migration
 5. Connection issues / debugging? → networking-diag
-6. Want deprecated API / anti-pattern scan? → networking-auditor (Agent)
+6. ATS / HTTP / App Store rejection for networking? → networking-diag + networking-auditor
+7. UIWebView or deprecated API rejection? → networking-auditor (Agent)
+8. Want deprecated API / anti-pattern scan? → networking-auditor (Agent)
 
 ## Anti-Rationalization
 
@@ -115,6 +130,12 @@ User: "I need to implement a TCP connection"
 
 User: "Should I use NWConnection or NetworkConnection?"
 → Invoke: `/skill axiom-network-framework-ref`
+
+User: "My app was rejected for using HTTP connections"
+→ Invoke: `/skill axiom-networking-diag` (ATS compliance)
+
+User: "App Store says I'm using UIWebView"
+→ Invoke: `networking-auditor` agent (deprecated API scan)
 
 User: "Check my networking code for deprecated APIs"
 → Invoke: `networking-auditor` agent
