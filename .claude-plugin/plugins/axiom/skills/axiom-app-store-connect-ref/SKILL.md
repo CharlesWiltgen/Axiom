@@ -316,22 +316,115 @@ After each release:
 
 ### Why are crashes unsymbolicated?
 
-ASC crashes should auto-symbolicate if:
-- You uploaded dSYMs during distribution
-- "Upload debug symbols" was enabled
+ASC crashes should auto-symbolicate if you uploaded dSYMs during distribution. **dSYM files** contain the debug symbols that map memory addresses back to function names and line numbers.
 
-If still unsymbolicated:
-1. Download .ips file from ASC
-2. Use `mdfind` to locate dSYM by UUID
-3. Symbolicate with `atos`
+**Verify dSYMs were uploaded:**
+1. Xcode → Window → Organizer → Archives → select build
+2. Right-click → "Show in Finder" → right-click `.xcarchive` → "Show Package Contents"
+3. Check `dSYMs/` folder contains `.dSYM` bundles
 
-See `crash-analyzer` agent: `/axiom:analyze-crash`
+**Manual symbolication workflow:**
+```bash
+# 1. Download .ips file from ASC (Crashes → signature → Download Logs)
+
+# 2. Find the binary UUID from the crash report
+grep --after-context=2 "Binary Images" crash.ips
+# Look for: 0x100000000 - 0x100ffffff MyApp arm64 <UUID>
+
+# 3. Locate matching dSYM on your machine
+mdfind "com_apple_xcode_dsym_uuids == <UUID>"
+
+# 4. Symbolicate an address
+atos -arch arm64 -o MyApp.app.dSYM/Contents/Resources/DWARF/MyApp \
+     -l 0x100000000 0x100045abc
+# Output: -[UserManager currentUser] (UserManager.m:42)
+```
+
+**Common symbolication failures:**
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| All addresses unsymbolicated | dSYMs not uploaded | Re-upload from Xcode Organizer |
+| Only your code unsymbolicated | dSYM UUID mismatch | Rebuild from same commit |
+| System frameworks unsymbolicated | Normal for device-specific | Use `atos` with device support files |
+| Bitcode builds unsymbolicated | Apple recompiled binary | Download dSYMs from ASC: Xcode → Organizer → Download Debug Symbols |
+
+See `crash-analyzer` agent for automated parsing: `/axiom:analyze-crash`
 
 ### ASC vs Organizer: Which stack trace is better?
 
 Both show the same data, but:
 - **Organizer** integrates with Xcode projects (click to jump to code)
 - **ASC** better for team-wide visibility and historical trends
+
+---
+
+## Field Diagnostics with MetricKit
+
+ASC dashboards show aggregated data. For granular, device-level diagnostics, use **MetricKit** to collect crash reports and performance data programmatically.
+
+### Setup
+
+```swift
+import MetricKit
+
+class MetricsManager: NSObject, MXMetricManagerSubscriber {
+    static let shared = MetricsManager()
+
+    func start() {
+        MXMetricManager.shared.add(self)
+    }
+
+    // Called ~once per day with accumulated metrics
+    func didReceive(_ payloads: [MXMetricPayload]) {
+        for payload in payloads {
+            // Performance metrics
+            if let launchTime = payload.applicationLaunchMetrics {
+                print("Median launch: \(launchTime.histogrammedTimeToFirstDraw)")
+            }
+            if let hangRate = payload.applicationResponsivenessMetrics {
+                print("Hang rate: \(hangRate.histogrammedApplicationHangTime)")
+            }
+        }
+    }
+
+    // Crash and hang diagnostics (iOS 14+)
+    func didReceive(_ payloads: [MXDiagnosticPayload]) {
+        for payload in payloads {
+            // Crash diagnostics with full stack traces
+            if let crashes = payload.crashDiagnostics {
+                for crash in crashes {
+                    print("Crash: \(crash.callStackTree)")
+                    print("Signal: \(crash.signal)")
+                    print("Exception: \(crash.exceptionType)")
+                }
+            }
+            // Hang diagnostics (iOS 16+)
+            if let hangs = payload.hangDiagnostics {
+                for hang in hangs {
+                    print("Hang: \(hang.hangDuration) — \(hang.callStackTree)")
+                }
+            }
+        }
+    }
+}
+```
+
+### What MetricKit Provides Beyond ASC
+
+| Data | ASC Dashboard | MetricKit |
+|------|--------------|-----------|
+| Crash stack traces | Aggregated signatures | Per-device, full call stacks |
+| Hang diagnostics | Hang rate percentage | Individual hang call stacks with duration |
+| CPU/memory metrics | Aggregated histograms | Per-device histograms |
+| Disk write exceptions | Total write count | Individual write spike call stacks |
+| Custom data correlation | No | Combine with your own telemetry |
+| Delivery timing | 24-48 hour delay | ~once daily on device |
+
+### When to Use MetricKit vs ASC
+
+- **ASC**: Team visibility, historical trends, version comparison, triage
+- **MetricKit**: Device-specific debugging, correlating crashes with app state, custom dashboards, field diagnostics for non-reproducible issues
 
 ---
 
