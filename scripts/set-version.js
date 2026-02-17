@@ -181,22 +181,31 @@ try {
   if (!fs.existsSync(skillsDir)) {
     throw new Error(`Skills directory not found: ${skillsDir}`);
   }
-  const skillDirs = fs.readdirSync(skillsDir)
-    .filter(name => {
-      const stat = fs.statSync(path.join(skillsDir, name), { throwIfNoEntry: false });
-      if (!stat?.isDirectory()) return false;
-      const skillFile = path.join(skillsDir, name, 'SKILL.md');
-      return fs.existsSync(skillFile);
-    });
+  // Recursively find all directories containing SKILL.md
+  const skillNames = [];
+  function findSkills(dir) {
+    for (const name of fs.readdirSync(dir)) {
+      const fullPath = path.join(dir, name);
+      const stat = fs.statSync(fullPath, { throwIfNoEntry: false });
+      if (!stat?.isDirectory()) continue;
+      const skillFile = path.join(fullPath, 'SKILL.md');
+      if (fs.existsSync(skillFile)) {
+        skillNames.push(name);
+      }
+      // Recurse into subdirectories (e.g., axiom-ios-ml/coreml/)
+      findSkills(fullPath);
+    }
+  }
+  findSkills(skillsDir);
 
-  const skillsCount = skillDirs.length;
+  const skillsCount = skillNames.length;
 
   // Count skills by type
   let disciplineCount = 0;
   let referenceCount = 0;
   let diagnosticCount = 0;
 
-  for (const skillName of skillDirs) {
+  for (const skillName of skillNames) {
     if (skillName.endsWith('-ref')) {
       referenceCount++;
     } else if (skillName.endsWith('-diag')) {
