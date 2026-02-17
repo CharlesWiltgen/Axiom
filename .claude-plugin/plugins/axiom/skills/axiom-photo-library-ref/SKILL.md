@@ -544,6 +544,40 @@ try await PHPhotoLibrary.shared().performChanges {
 }
 ```
 
+### Custom Albums
+
+```swift
+// Create a custom album
+func getOrCreateAlbum(named title: String) async throws -> PHAssetCollection {
+    // Check if album already exists
+    let fetchOptions = PHFetchOptions()
+    fetchOptions.predicate = NSPredicate(format: "title = %@", title)
+    let existing = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
+    if let album = existing.firstObject { return album }
+
+    // Create new album
+    var placeholder: PHObjectPlaceholder?
+    try await PHPhotoLibrary.shared().performChanges {
+        let request = PHAssetCollectionChangeRequest.creationRequestForAssetCollection(withTitle: title)
+        placeholder = request.placeholderForCreatedAssetCollection
+    }
+    guard let id = placeholder?.localIdentifier,
+          let album = PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: [id], options: nil).firstObject
+    else { throw PhotoError.albumCreationFailed }
+    return album
+}
+
+// Save photo to custom album
+func saveToAlbum(_ image: UIImage, album: PHAssetCollection) async throws {
+    try await PHPhotoLibrary.shared().performChanges {
+        let assetRequest = PHAssetCreationRequest.creationRequestForAsset(from: image)
+        guard let placeholder = assetRequest.placeholderForCreatedAsset,
+              let albumRequest = PHAssetCollectionChangeRequest(for: album) else { return }
+        albumRequest.addAssets([placeholder] as NSFastEnumeration)
+    }
+}
+```
+
 ---
 
 ## PHFetchResult
