@@ -68,6 +68,18 @@ Axiom uses **router skills** for progressive disclosure:
 
 **Do not skip the router.** Routers have decision logic to select the right specialized skill.
 
+### Multi-Domain Questions
+
+When a question spans multiple domains, **invoke ALL relevant routers — don't stop after the first one.**
+
+Examples:
+- "My SwiftUI view doesn't update when SwiftData changes" → invoke **both** ios-ui AND ios-data
+- "My widget isn't showing updated data from SwiftData" → invoke **both** ios-integration AND ios-data
+- "My Foundation Models session freezes the UI" → invoke **both** ios-ai AND ios-concurrency
+- "My Core Data saves lose data from background tasks" → invoke **both** ios-data AND ios-concurrency
+
+**How to tell**: If the question mentions symptoms from two different domains, or involves two different frameworks, invoke both routers. Each router has cross-domain routing guidance for common overlaps.
+
 ## Backward Compatibility
 
 - Direct skill invocation still works: `/skill axiom-swift-concurrency`
