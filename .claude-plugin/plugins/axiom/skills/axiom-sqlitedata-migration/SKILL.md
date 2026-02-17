@@ -196,6 +196,47 @@ func shareProject(_ project: Project) async throws {
 
 ---
 
+## Migrating Existing User Data
+
+**Critical**: Schema migration alone loses all user data. You must export from SwiftData and import into SQLiteData.
+
+```swift
+// 1. Read all records from SwiftData's backing store
+func migrateExistingData(from modelContext: ModelContext, to database: any DatabaseWriter) throws {
+    // Fetch all SwiftData records
+    let descriptor = FetchDescriptor<SwiftDataTask>()
+    let existingTasks = try modelContext.fetch(descriptor)
+
+    // 2. Bulk insert into SQLiteData
+    try database.write { db in
+        for task in existingTasks {
+            try SQLiteTask.insert {
+                SQLiteTask.Draft(
+                    id: task.id,
+                    title: task.title,
+                    isCompleted: task.isCompleted,
+                    projectID: task.project?.id
+                )
+            }
+            .execute(db)
+        }
+    }
+
+    // 3. Verify migration
+    let count = try database.read { db in
+        try SQLiteTask.fetchCount(db)
+    }
+    assert(count == existingTasks.count, "Migration count mismatch!")
+}
+```
+
+**Migration checklist:**
+- [ ] Export all models before deleting SwiftData container
+- [ ] Migrate relationships (fetch parent IDs for foreign keys)
+- [ ] Verify record counts match after migration
+- [ ] Keep SwiftData container as backup until confirmed working
+- [ ] Run migration on first launch with a version flag in UserDefaults
+
 ## Gradual Migration Strategy
 
 You don't have to migrate everything at once:
