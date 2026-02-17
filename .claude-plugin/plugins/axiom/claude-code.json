@@ -80,6 +80,10 @@
     {
       "name": "axiom-xcode-mcp",
       "description": "Use when connecting to Xcode via MCP, using xcrun mcpbridge, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunTests, RenderPreview). Covers setup, tool reference, workflow patterns, troubleshooting."
+    },
+    {
+      "name": "axiom-shipping",
+      "description": "Use when preparing ANY app for submission, handling App Store rejections, managing code signing, or setting up CI/CD. Covers App Store submission, rejection troubleshooting, metadata requirements, privacy manifests, age ratings, export compliance."
     }
   ]
 }
