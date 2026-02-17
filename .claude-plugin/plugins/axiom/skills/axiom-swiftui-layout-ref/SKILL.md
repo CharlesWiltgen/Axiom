@@ -894,6 +894,42 @@ ScrollView {
 
 ---
 
+## Lazy Container Gotchas
+
+### Recycling Behavior
+
+`LazyVStack` and `LazyHStack` create views **on demand** and recycle them when off-screen. This means:
+
+- **View identity matters**: If cells flash/disappear during fast scrolling, the view identity is unstable. Use explicit `.id()` on items.
+- **onAppear/onDisappear fire repeatedly**: Views are created and destroyed as you scroll. Don't use these for one-time setup.
+- **State resets on recycle**: `@State` in lazy items resets when recycled. Lift state to the model layer.
+
+```swift
+// ❌ Items flash during fast scroll — unstable identity
+LazyVStack {
+    ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+        ItemRow(item: item)  // Identity changes when array mutates
+    }
+}
+
+// ✅ Stable identity prevents flash/disappear
+LazyVStack {
+    ForEach(items) { item in  // Uses item.id (Identifiable)
+        ItemRow(item: item)
+    }
+}
+```
+
+### When NOT to Use Lazy Containers
+
+| Scenario | Use Instead | Why |
+|----------|-------------|-----|
+| < 50 items | `VStack` / `HStack` | No recycling overhead, simpler |
+| Nested in another lazy container | `VStack` (inner) | Nested lazy causes layout issues |
+| Need all items measured upfront | `VStack` | Lazy containers don't know total size |
+
+---
+
 ## Resources
 
 **WWDC**: 2025-208, 2024-10074, 2022-10056
