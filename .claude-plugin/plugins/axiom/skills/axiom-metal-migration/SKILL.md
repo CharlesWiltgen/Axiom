@@ -139,6 +139,71 @@ Phase 3: Optimization (1-2 weeks)
 └─ Remove GL backend entirely
 ```
 
+### GLSL to Metal Shading Language (MSL) Conversion
+
+| GLSL | MSL | Notes |
+|------|-----|-------|
+| `attribute` / `varying` | `[[stage_in]]` struct | Vertex attributes via struct |
+| `uniform` | `[[buffer(N)]]` parameter | Explicit binding index |
+| `gl_Position` | Return `float4` from vertex | Vertex function return value |
+| `gl_FragColor` | Return `float4` from fragment | Fragment function return value |
+| `texture2D(tex, uv)` | `tex.sample(sampler, uv)` | Separate sampler object |
+| `vec2/3/4` | `float2/3/4` | Type names differ |
+| `mat4` | `float4x4` | Matrix types differ |
+| `mix()` | `mix()` | Same name |
+| `precision mediump float` | (not needed) | Metal infers precision |
+| `#version 300 es` | `#include <metal_stdlib>` | Different preamble |
+
+**Example conversion:**
+
+```glsl
+// GLSL vertex shader
+#version 300 es
+uniform mat4 u_mvp;
+in vec3 a_position;
+in vec2 a_texCoord;
+out vec2 v_texCoord;
+
+void main() {
+    v_texCoord = a_texCoord;
+    gl_Position = u_mvp * vec4(a_position, 1.0);
+}
+```
+
+```metal
+// Equivalent MSL vertex shader
+#include <metal_stdlib>
+using namespace metal;
+
+struct VertexIn {
+    float3 position [[attribute(0)]];
+    float2 texCoord [[attribute(1)]];
+};
+
+struct VertexOut {
+    float4 position [[position]];
+    float2 texCoord;
+};
+
+struct Uniforms {
+    float4x4 mvp;
+};
+
+vertex VertexOut vertexShader(VertexIn in [[stage_in]],
+                              constant Uniforms &uniforms [[buffer(1)]]) {
+    VertexOut out;
+    out.texCoord = in.texCoord;
+    out.position = uniforms.mvp * float4(in.position, 1.0);
+    return out;
+}
+```
+
+**Key differences to watch:**
+- GLSL globals → MSL function parameters with `[[attribute]]` qualifiers
+- Implicit uniform binding → explicit `[[buffer(N)]]` indices
+- `sampler2D` combines texture+sampler → Metal separates `texture2d` and `sampler`
+- GLSL preprocessor → Metal uses C++ `#include` and `using namespace metal`
+
 ### Core Architecture Differences
 
 | Concept | OpenGL | Metal |
