@@ -407,6 +407,42 @@ Entities not appearing on other devices
 | Wrong colors | Has lighting? Metallic value? | 15-45 min |
 | No collision | Both have CollisionComponent? Same anchor? | 20-40 min |
 | No sync | SynchronizationComponent? Codable? | 30-60 min |
+| Sim OK, device crash | Metal features? Texture format? | 15-30 min |
+
+---
+
+## Symptom 8: Works in Simulator, Crashes on Device
+
+**Time cost**: 15-30 min (often misdiagnosed as model issue)
+
+```
+Q1: Is the crash a Metal error (MTLCommandBuffer, shader compilation)?
+├─ YES → Simulator uses software rendering, device uses real GPU
+│   Common causes:
+│   - Custom Metal shaders with unsupported features
+│   - Texture formats not supported on device GPU
+│   - Exceeding device texture size limits (max 8192x8192 on older)
+│   Fix: Check device GPU family, use supported formats
+│
+└─ NO → Check next
+
+Q2: Is it an out-of-memory crash?
+├─ YES → Simulator has more RAM available
+│   Common: Large USDZ files with uncompressed textures
+│   Fix: Compress textures, reduce polygon count, use LOD
+│   Check: USDZ file size (keep < 50MB for reliable loading)
+│
+└─ NO → Check next
+
+Q3: Is it an AR-related crash (camera, tracking)?
+├─ YES → Simulator has no real camera/sensors
+│   Fix: Test AR features on device only, use simulator for UI/layout
+│
+└─ NO → Check device capabilities
+    - A12+ required for RealityKit
+    - LiDAR for scene reconstruction
+    - TrueDepth for face tracking
+```
 
 ---
 
