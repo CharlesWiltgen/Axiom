@@ -213,6 +213,49 @@ func validate(_ data: borrowing Data) -> Bool {
 }
 ```
 
+## ~Copyable Limitations
+
+**Know the constraints before adopting ~Copyable:**
+
+| Limitation | Impact | Workaround |
+|-----------|--------|------------|
+| Can't store in `Array`, `Dictionary`, `Set` | Collections require `Copyable` | Use `Optional<T>` wrapper or manage manually |
+| Can't use with most generics | `<T>` implicitly means `<T: Copyable>` | Use `<T: ~Copyable>` (requires library support) |
+| Protocol conformance restricted | Most protocols require `Copyable` | Use `~Copyable` protocol definitions |
+| Can't capture in closures by default | Closures copy captured values | Use `borrowing` closure parameters |
+| No existential support | `any ~Copyable` doesn't work | Use generics instead |
+
+**Common compiler errors when adopting ownership modifiers:**
+
+```swift
+// Error: "Cannot implicitly copy a borrowing parameter"
+// Fix: Add explicit `copy` or change to consuming
+func store(_ v: borrowing LargeValue) {
+    self.cached = copy v  // ✅ Explicit copy
+}
+
+// Error: "Noncopyable type cannot be used with generic"
+// Fix: Constrain generic to ~Copyable
+func use<T: ~Copyable>(_ value: borrowing T) { }  // ✅
+
+// Error: "Cannot consume a borrowing parameter"
+// Fix: Change to consuming if you need ownership transfer
+func takeOwnership(_ v: consuming FileHandle) { }  // ✅
+
+// Error: "Missing 'consuming' or 'borrowing' modifier"
+// Fix: ~Copyable types require explicit ownership on all methods
+struct Token: ~Copyable {
+    borrowing func peek() -> String { ... }   // ✅ Explicit
+    consuming func redeem() { ... }           // ✅ Explicit
+}
+```
+
+**When NOT to use ~Copyable:**
+- If you need collection storage (arrays, dictionaries)
+- If you need to work with existing generic APIs
+- If the type needs broad protocol conformance
+- Prefer `consuming func` on regular types as a lighter alternative for "use once" semantics
+
 ## Performance Considerations
 
 ### When Ownership Modifiers Help

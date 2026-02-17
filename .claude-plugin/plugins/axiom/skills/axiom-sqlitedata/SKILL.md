@@ -257,6 +257,40 @@ nonisolated struct Attendee: Hashable, Identifiable {
 
 **Note:** SQLiteData uses explicit foreign key columns. Relationships are expressed through joins, not `@Relationship` macros.
 
+### Querying Related Tables (Joins)
+
+**Don't fetch all records and filter in Swift** — push filtering to the database:
+
+```swift
+// ❌ Anti-pattern: Fetch all, filter in Swift
+let allReminders = try database.read { try Reminder.all.fetch($0) }
+let filtered = allReminders.filter { $0.remindersListID == listID }
+
+// ✅ Filter at database level
+let filtered = try database.read {
+    try Reminder.all
+        .filter { $0.remindersListID.eq(listID) }
+        .fetch($0)
+}
+
+// ✅ Join across tables with filtering
+let remindersWithList = try database.read {
+    try Reminder.all
+        .join(RemindersList.all) { $0.remindersListID.eq($1.id) }
+        .filter { $1.name.eq("Shopping") }
+        .fetch($0)
+}
+
+// ✅ Left join (include reminders even if no list)
+let allWithOptionalList = try database.read {
+    try Reminder.all
+        .leftJoin(RemindersList.all) { $0.remindersListID.eq($1.id) }
+        .fetch($0)
+}
+```
+
+For complex joins across 4+ tables, drop down to raw GRDB (see `axiom-grdb`).
+
 ### @Ephemeral — Non-Persisted Properties
 
 Mark properties that exist in Swift but not in the database:

@@ -21,9 +21,12 @@ Use when:
 
 #### Related Skills
 - Use `axiom-hig-ref` for comprehensive details and code examples
-- Use `axiom-liquid-glass` for iOS 26 material design implementation
-- Use `axiom-liquid-glass-ref` for iOS 26 app-wide adoption guide
+- Use `axiom-liquid-glass` for iOS 26 material design implementation and version-conditional design (supporting both pre-Liquid Glass and Liquid Glass in the same app)
+- Use `axiom-liquid-glass-ref` for iOS 26 app-wide adoption guide with backward compatibility strategy
 - Use `axiom-accessibility-diag` for accessibility troubleshooting
+
+#### Version-Conditional Design
+When supporting both iOS 25 (pre-Liquid Glass) and iOS 26+, see `axiom-liquid-glass` for the adoption strategy — it covers when to use `#available(iOS 26, *)`, how to degrade gracefully, and which system components adopt Liquid Glass automatically vs which need explicit opt-in.
 
 ---
 
