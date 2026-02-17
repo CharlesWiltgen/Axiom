@@ -285,7 +285,7 @@ Declare honestly:
 - Unrestricted web access (WebView with open URLs)
 ```
 
-**New age ratings (July 2025)**: Apple expanded from 4+/9+/12+/17+ to include 13+, 16+, 18+. All developers must complete the updated questionnaire by January 31, 2026, or app updates will be blocked.
+**New age ratings (January 31, 2026)**: Apple expanded from 4+/9+/12+/17+ to 5 tiers (4+/9+/13+/16+/18+) with new capability declarations for messaging, UGC, advertising, and parental controls. All developers must complete the updated questionnaire or app updates will be blocked.
 
 **Why it works**: Mismatched ratings violate Guideline 2.3.6. Apple compares your questionnaire answers against observed app behavior. UGC and web access are the most commonly missed declarations.
 
@@ -409,7 +409,7 @@ Run this entire checklist before every submission. Check every item, not just th
 
 ### 1. Build Configuration
 
-- [ ] Built with current required SDK (iOS 18 SDK / Xcode 16 as of 2025; iOS 26 SDK / Xcode 26 required starting April 2026)
+- [ ] Built with current required SDK (iOS 18 SDK / Xcode 16 as of 2025; iOS 26 SDK / Xcode 26 required starting April 28, 2026)
 - [ ] `ITSAppUsesNonExemptEncryption` set in Info.plist (`NO` if only HTTPS)
 - [ ] App tested on physical device with latest shipping iOS version
 - [ ] App works over IPv6-only network (Apple review network is IPv6)
@@ -494,7 +494,7 @@ Run this entire checklist before every submission. Check every item, not just th
 - [ ] Updated age rating questionnaire completed (deadline: January 31, 2026)
 - [ ] Accessibility Nutrition Labels declared (becoming required for new submissions)
 - [ ] External AI service consent modal (if app sends personal data to external AI)
-- [ ] SDK minimum version met (Xcode 16/iOS 18 SDK now; Xcode 26/iOS 26 SDK starting April 2026)
+- [ ] SDK minimum version met (Xcode 16/iOS 18 SDK now; Xcode 26/iOS 26 SDK starting April 28, 2026)
 
 ---
 
