@@ -332,6 +332,50 @@ Before sync will work:
    - ✓ Signed into iCloud
    - ✓ iCloud Drive enabled (Settings → [Name] → iCloud)
 
+## Large Dataset Sync
+
+When syncing 10,000+ records, naive approaches cause timeouts and launch slowdowns.
+
+### Initial Sync Strategy
+
+```swift
+// ❌ WRONG: Fetch everything at once
+let allRecords = try await database.fetchAll()
+syncEngine.state.add(pendingRecordZoneChanges: allRecords.map { .saveRecord($0.recordID) })
+
+// ✅ CORRECT: Batch initial sync
+func performInitialSync(batchSize: Int = 200) async throws {
+    var cursor: CKQueryOperation.Cursor? = nil
+
+    repeat {
+        let (results, nextCursor) = try await database.records(
+            matching: query,
+            resultsLimit: batchSize,
+            desiredKeys: nil,
+            continuationCursor: cursor
+        )
+        // Process batch
+        try await localStore.saveBatch(results.compactMap { try? $0.1.get() })
+        cursor = nextCursor
+    } while cursor != nil
+}
+```
+
+### Incremental Sync (After Initial)
+
+CKSyncEngine handles incremental sync automatically — it fetches only changes since the last sync token. Ensure you persist `stateSerialization` so the engine doesn't re-fetch everything on next launch.
+
+### Performance Guidelines
+
+| Dataset Size | Strategy | Notes |
+|-------------|----------|-------|
+| < 1,000 records | Default CKSyncEngine | Works out of the box |
+| 1,000–10,000 | Batch initial sync | 200-record batches, show progress UI |
+| 10,000+ | Pagination + background | Use BGProcessingTask for initial sync |
+| 100,000+ | Server-side filtering | Only sync what user needs, lazy-load rest |
+
+**Key insight**: Initial sync is the bottleneck. After initial sync, CKSyncEngine's incremental approach handles large datasets efficiently because it only fetches deltas.
+
 ## Pressure Scenarios
 
 ### Scenario 1: "Just skip conflict handling for v1"
