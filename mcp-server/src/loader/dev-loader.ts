@@ -68,33 +68,40 @@ export class DevLoader implements Loader {
 
     try {
       const annotations = await this.loadAnnotations();
-      const entries = await readdir(skillsDir);
       let loadedCount = 0;
 
-      for (const entry of entries) {
-        const entryPath = join(skillsDir, entry);
-        const entryStat = await stat(entryPath);
+      // Recursively load skills from directory and subdirectories
+      const loadFromDir = async (dir: string): Promise<void> => {
+        const entries = await readdir(dir);
+        for (const entry of entries) {
+          const entryPath = join(dir, entry);
+          const entryStat = await stat(entryPath);
 
-        if (entryStat.isDirectory()) {
-          const skillFile = join(entryPath, 'SKILL.md');
-          let content: string;
-          try {
-            content = await readFile(skillFile, 'utf-8');
-          } catch {
-            this.logger.debug(`No SKILL.md in ${entry}, skipping`);
-            continue;
-          }
-          try {
-            const skill = applyAnnotations(parseSkill(content, entry), annotations);
-            this.skillsCache.set(skill.name, skill);
-            this.logger.debug(`Loaded skill: ${skill.name}`);
-            loadedCount++;
-          } catch (err) {
-            this.logger.warn(`Failed to parse skill ${entry}: ${(err as Error).message}`);
+          if (entryStat.isDirectory()) {
+            const skillFile = join(entryPath, 'SKILL.md');
+            let content: string | null = null;
+            try {
+              content = await readFile(skillFile, 'utf-8');
+            } catch {
+              this.logger.debug(`No SKILL.md in ${entry}, skipping`);
+            }
+            if (content) {
+              try {
+                const skill = applyAnnotations(parseSkill(content, entry), annotations);
+                this.skillsCache.set(skill.name, skill);
+                this.logger.debug(`Loaded skill: ${skill.name}`);
+                loadedCount++;
+              } catch (err) {
+                this.logger.warn(`Failed to parse skill ${entry}: ${(err as Error).message}`);
+              }
+            }
+            // Recurse into subdirectories (e.g., axiom-ios-ml/coreml/)
+            await loadFromDir(entryPath);
           }
         }
-      }
+      };
 
+      await loadFromDir(skillsDir);
       this.logger.info(`Found ${loadedCount} skills`);
 
       // Load Apple docs from Xcode (runtime, not bundled)
