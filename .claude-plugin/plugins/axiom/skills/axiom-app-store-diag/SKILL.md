@@ -68,7 +68,7 @@ Before changing ANY code, identify ONE of these:
 1. If "App Rejected" with guideline number → Map to specific pattern (1-5)
 2. If "Metadata Rejected" → Fix in ASC, no build required (Pattern 2)
 3. If "Binary Rejected" → Technical gate failure (Pattern 6)
-4. If multiple guidelines cited → Fix ALL cited issues, not just the first one
+4. If multiple guidelines cited → Fix ALL cited issues, not just the first one. Both binary AND metadata can be rejected simultaneously — binary issues need a new build, metadata issues can be fixed in ASC. Fix both before resubmitting.
 5. If reviewer asks for information → Reply in ASC before making code changes
 
 #### If rejection reason is unclear or contradictory
@@ -212,8 +212,9 @@ Text("Welcome to YourApp. Get started by creating your first project.")
 - Submit to TestFlight first, test every screen on multiple devices
 - Verify ALL URLs load successfully (including privacy policy from within the app)
 - Ensure demo credentials work and won't expire
-- Test on the specific iOS version mentioned in rejection
+- Test on the specific iOS version mentioned in rejection (check rejection message or ASC Activity → Build → review device info)
 - Monitor backend uptime during review window (don't deploy during review)
+- Check ASC crash logs (Xcode Organizer → Crashes) for the specific device and OS version the reviewer used
 
 ---
 
@@ -627,8 +628,18 @@ security cms -D -i embedded.mobileprovision 2>/dev/null | head -20
 <!-- If app uses custom encryption beyond HTTPS -->
 <key>ITSAppUsesNonExemptEncryption</key>
 <true/>
-<!-- Then file encryption registration with BIS (export compliance) -->
+<!-- Then upload export compliance documentation in ASC:
+     App Store Connect → My Apps → [App] → App Information →
+     Export Compliance Information → Upload documentation
+     You may also need to file an annual self-classification
+     report with the US Bureau of Industry and Security (BIS) -->
 ```
+
+**Encryption decision flow**:
+1. Does your app use ONLY standard OS-provided HTTPS (URLSession, Alamofire)? → Set `false`, done
+2. Does your app call OpenSSL, libsodium, or custom crypto directly? → Set `true`, upload BIS docs
+3. Does your app implement proprietary encryption protocols? → Set `true`, upload BIS docs
+4. Unsure? → Run `strings YourApp | grep -i "openssl\|libcrypto\|CCCrypt"` to check
 
 ```bash
 # Validate before submitting

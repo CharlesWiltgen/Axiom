@@ -113,6 +113,8 @@ Privacy Policy: "We respect your privacy" (generic, no specifics)
    - How to request deletion
 ```
 
+**Three-way consistency**: Apple compares (a) your app's actual behavior, (b) your privacy policy content, and (c) your Privacy Nutrition Labels in ASC. All three must agree. If any of these three disagree, you get a 5.1.1 rejection. Check each SDK's documentation for its privacy manifest and data collection disclosure — your app's total data collection is your code PLUS all SDK data collection.
+
 **Why it works**: Guideline 5.1.1(i) requires privacy policy accessible BOTH in ASC metadata AND within the app. The policy must specifically describe your app's data practices, not a generic template.
 
 ---
@@ -813,7 +815,7 @@ See `axiom-accessibility-diag` for systematic auditing before declaring labels.
 
 ## First-Time Developer Checklist
 
-For developers submitting their first app, these are additional items often missed.
+For developers submitting their first app, these are additional items often missed. If you need to create a privacy policy from scratch, use a privacy policy generator (many free options exist) and customize it to match your app's actual data practices — a generic template will be rejected.
 
 ### Apple Developer Program
 
