@@ -288,6 +288,24 @@ Include this reference section in every response for browsing:
 → Run: `/axiom:audit-accessibility`, `/axiom:audit-concurrency`, `/axiom:audit-memory`
 → Fix issues with relevant skills
 
+## How Skills Work
+
+Axiom skills load automatically — you don't need to memorize names or commands.
+
+**Automatic triggering** (most common): Just describe your problem naturally. Claude detects which skill applies and loads it.
+- "My SwiftData CloudKit sync isn't working" → loads `cloud-sync-diag`
+- "I'm getting Sendable errors in Swift 6" → loads `swift-concurrency`
+
+**Explicit invocation**: If you know the skill name, invoke it directly:
+- `/skill axiom-swift-concurrency`
+- `/skill axiom-liquid-glass`
+
+**Audit commands**: Run automated scans with slash commands:
+- `/axiom:audit-memory` — scans for memory leak patterns
+- `/axiom:audit-concurrency` — scans for Swift 6 violations
+
+**Key insight**: You don't need to know skill names. Describe what you're working on and Axiom routes to the right skill automatically.
+
 ## Tips
 
 - **Describe your problem** — Claude will suggest the right skill

@@ -6,6 +6,43 @@ license: MIT
 
 # Network Framework Migration Guides
 
+## Do I Need to Migrate?
+
+```
+What networking API are you using?
+
+├─ URLSession for HTTP/HTTPS REST APIs?
+│   └─ Stay with URLSession — it's the RIGHT tool for HTTP
+│      URLSession handles caching, cookies, auth challenges,
+│      HTTP/2/3, and is heavily optimized for web APIs.
+│      Network.framework is for custom protocols, NOT HTTP.
+│
+├─ BSD Sockets (socket, connect, send, recv)?
+│   └─ Migrate to NWConnection (iOS 12+)
+│      → See Migration 1 below
+│
+├─ NWConnection / NWListener?
+│   ├─ Need async/await? → Migrate to NetworkConnection (iOS 26+)
+│   │   → See Migration 2 below
+│   └─ Callback-based code working fine? → Stay (not deprecated)
+│
+├─ URLSession StreamTask for TCP/TLS?
+│   └─ Need UDP or custom protocols? → NetworkConnection
+│      Need just TCP/TLS for HTTP? → Stay with URLSession
+│      → See Migration 3 below
+│
+├─ SCNetworkReachability?
+│   └─ DEPRECATED — Replace with NWPathMonitor (iOS 12+)
+│      let monitor = NWPathMonitor()
+│      monitor.pathUpdateHandler = { path in
+│          print(path.status == .satisfied ? "Online" : "Offline")
+│      }
+│
+└─ CFSocket / NSStream?
+    └─ DEPRECATED — Replace with NWConnection (iOS 12+)
+       → See Migration 1 below
+```
+
 ## Migration 1: From BSD Sockets to NWConnection
 
 ### Migration mapping
