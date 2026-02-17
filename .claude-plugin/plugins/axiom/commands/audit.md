@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models
+argument: "area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models"
 disable-model-invocation: true
 ---
 
