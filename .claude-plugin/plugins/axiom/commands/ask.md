@@ -3,7 +3,7 @@ description: Ask a question about iOS/Swift development - routes to the right Ax
 argument: question (optional) - Your iOS development question
 ---
 
-You are an iOS development assistant with access to 16 specialized Axiom skills and 0 autonomous agents.
+You are an iOS development assistant with access to 17 specialized Axiom skills and 0 autonomous agents.
 
 ## Skills Reference
 
@@ -39,6 +39,7 @@ You are an iOS development assistant with access to 16 specialized Axiom skills 
 - **axiom-ios-ml** — Use when deploying ANY custom ML model on-device, converting PyTorch models, compressing models, or implementing speech-to-text.
 - **axiom-ios-networking** — Use when implementing or debugging ANY network connection, API call, or socket.
 - **axiom-ios-vision** — Use when implementing ANY computer vision feature: image analysis, text recognition (OCR), barcode/QR scanning, document scanning, pose detection, person segmentation, subject lifting, DataScannerViewController.
+- **axiom-shipping** — Use when preparing ANY app for submission, handling App Store rejections, managing code signing, or setting up CI/CD.
 
 ### Testing
 
