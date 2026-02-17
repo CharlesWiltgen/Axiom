@@ -211,6 +211,29 @@ for result in matchResults {
 try await privateDatabase.deleteRecord(withID: recordID)
 ```
 
+### Update Record
+
+```swift
+// ✅ Fetch-then-modify-then-save (prevents serverRecordChanged errors)
+let record = try await privateDatabase.record(for: recordID)
+record["title"] = "Updated title"
+record["isCompleted"] = true
+try await privateDatabase.save(record)
+
+// ✅ Batch modify (save + delete in one operation)
+let operation = CKModifyRecordsOperation(
+    recordsToSave: [updatedRecord1, updatedRecord2],
+    recordIDsToDelete: [deletedID]
+)
+operation.perRecordSaveBlock = { recordID, result in
+    switch result {
+    case .success: print("Saved: \(recordID)")
+    case .failure(let error): print("Failed: \(recordID) — \(error)")
+    }
+}
+try await privateDatabase.add(operation)
+```
+
 ### Conflict Resolution
 
 ```swift
@@ -426,6 +449,156 @@ Required entitlements in Xcode:
 2. "+ Capability" → iCloud
 3. Check "CloudKit"
 4. Select or create container
+
+---
+
+## Subscriptions (Push Notifications)
+
+### Database Subscription
+
+```swift
+// ✅ Get notified of ANY change in private database
+let subscription = CKDatabaseSubscription(subscriptionID: "all-changes")
+
+let notificationInfo = CKSubscription.NotificationInfo()
+notificationInfo.shouldSendContentAvailable = true  // Silent push
+subscription.notificationInfo = notificationInfo
+
+try await privateDatabase.save(subscription)
+```
+
+### Query Subscription
+
+```swift
+// ✅ Get notified when records matching a query change
+let predicate = NSPredicate(format: "priority > 3")
+let subscription = CKQuerySubscription(
+    recordType: "Task",
+    predicate: predicate,
+    subscriptionID: "high-priority-tasks",
+    options: [.firesOnRecordCreation, .firesOnRecordUpdate, .firesOnRecordDeletion]
+)
+
+let notificationInfo = CKSubscription.NotificationInfo()
+notificationInfo.alertBody = "High priority task changed"
+notificationInfo.shouldBadge = true
+subscription.notificationInfo = notificationInfo
+
+try await privateDatabase.save(subscription)
+```
+
+### Zone Subscription
+
+```swift
+// ✅ Get notified of any change in a specific zone
+let zoneID = CKRecordZone.ID(zoneName: "Tasks")
+let subscription = CKRecordZoneSubscription(
+    zoneID: zoneID,
+    subscriptionID: "tasks-zone"
+)
+
+let notificationInfo = CKSubscription.NotificationInfo()
+notificationInfo.shouldSendContentAvailable = true
+subscription.notificationInfo = notificationInfo
+
+try await privateDatabase.save(subscription)
+```
+
+### Handling Push Notifications
+
+```swift
+// In AppDelegate
+func application(_ application: UIApplication,
+                 didReceiveRemoteNotification userInfo: [AnyHashable: Any]) async -> UIBackgroundFetchResult {
+    let notification = CKNotification(fromRemoteNotificationDictionary: userInfo)
+
+    if notification.subscriptionID == "all-changes" {
+        try? await fetchChanges(since: savedChangeToken)
+        return .newData
+    }
+    return .noData
+}
+```
+
+---
+
+## Sharing Records
+
+### Create a Share
+
+```swift
+// ✅ Share a record with other users
+let record = try await privateDatabase.record(for: recordID)
+
+// Record must be in a custom zone (not default zone)
+let share = CKShare(rootRecord: record)
+share[CKShare.SystemFieldKey.title] = "Shared Task List"
+share.publicPermission = .none  // Invite-only
+
+// Save both the record and share together
+let operation = CKModifyRecordsOperation(
+    recordsToSave: [record, share],
+    recordIDsToDelete: nil
+)
+try await privateDatabase.add(operation)
+```
+
+### Present Sharing UI
+
+```swift
+import CloudKit
+import UIKit
+
+// ✅ UIKit sharing controller
+let sharingController = UICloudSharingController(share: share, container: container)
+sharingController.delegate = self
+present(sharingController, animated: true)
+
+// Delegate methods
+extension ViewController: UICloudSharingControllerDelegate {
+    func cloudSharingController(_ csc: UICloudSharingController,
+                                failedToSaveShareWithError error: Error) {
+        print("Share failed: \(error)")
+    }
+
+    func itemTitle(for csc: UICloudSharingController) -> String? {
+        return "My Shared List"
+    }
+}
+```
+
+### Manage Participants
+
+```swift
+// ✅ Check participants
+for participant in share.participants {
+    print("\(participant.userIdentity.nameComponents?.givenName ?? "Unknown")")
+    print("  Acceptance: \(participant.acceptanceStatus)")
+    print("  Permission: \(participant.permission)")
+    // .readOnly, .readWrite, .none
+}
+
+// ✅ Remove participant
+share.removeParticipant(participant)
+try await privateDatabase.save(share)
+```
+
+### Accept a Share
+
+```swift
+// In SceneDelegate or AppDelegate
+func userDidAcceptCloudKitShareWith(_ cloudKitShareMetadata: CKShare.Metadata) {
+    let operation = CKAcceptSharesOperation(shareMetadatas: [cloudKitShareMetadata])
+    operation.acceptSharesResultBlock = { result in
+        switch result {
+        case .success: print("Share accepted")
+        case .failure(let error): print("Accept failed: \(error)")
+        }
+    }
+    CKContainer(identifier: cloudKitShareMetadata.containerIdentifier)
+        .add(operation)
+}
+```
 
 ---
 
