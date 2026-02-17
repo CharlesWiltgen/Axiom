@@ -44,25 +44,31 @@ async function generateBundle(pluginPath: string): Promise<BundleV2> {
   // Load annotations for MCP metadata
   const annotations = await loadAnnotations();
 
-  // Load skills (subdirectories: skills/<name>/SKILL.md)
+  // Load skills recursively (skills/<name>/SKILL.md and skills/<parent>/<name>/SKILL.md)
   const skillsDir = join(pluginPath, 'skills');
-  const skillEntries = await readdir(skillsDir);
 
-  for (const entry of skillEntries) {
-    const entryPath = join(skillsDir, entry);
-    const entryStat = await stat(entryPath);
+  async function loadSkillsFromDir(dir: string): Promise<void> {
+    const entries = await readdir(dir);
+    for (const entry of entries) {
+      const entryPath = join(dir, entry);
+      const entryStat = await stat(entryPath);
 
-    if (entryStat.isDirectory()) {
-      const skillFile = join(entryPath, 'SKILL.md');
-      try {
-        const content = await readFile(skillFile, 'utf-8');
-        const skill = applyAnnotations(parseSkill(content, entry), annotations);
-        bundle.skills[skill.name] = skill;
-      } catch {
-        // No SKILL.md in this directory, skip
+      if (entryStat.isDirectory()) {
+        const skillFile = join(entryPath, 'SKILL.md');
+        try {
+          const content = await readFile(skillFile, 'utf-8');
+          const skill = applyAnnotations(parseSkill(content, entry), annotations);
+          bundle.skills[skill.name] = skill;
+        } catch {
+          // No SKILL.md in this directory
+        }
+        // Recurse into subdirectories (e.g., axiom-ios-ml/coreml/)
+        await loadSkillsFromDir(entryPath);
       }
     }
   }
+
+  await loadSkillsFromDir(skillsDir);
   console.log(`Found ${Object.keys(bundle.skills).length} skills`);
 
   // Load commands
