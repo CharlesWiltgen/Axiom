@@ -605,6 +605,103 @@ shader.uniforms = [
 // SKAttribute for per-node values
 ```
 
+## Part 7: SwiftUI Integration
+
+### SpriteView
+
+```swift
+import SpriteKit
+import SwiftUI
+
+// Basic embedding
+struct GameView: View {
+    var body: some View {
+        SpriteView(scene: makeScene())
+            .ignoresSafeArea()
+    }
+
+    func makeScene() -> SKScene {
+        let scene = GameScene(size: CGSize(width: 1024, height: 768))
+        scene.scaleMode = .aspectFill
+        return scene
+    }
+}
+
+// With options
+SpriteView(
+    scene: scene,
+    transition: .fade(withDuration: 0.5),       // Scene transition
+    isPaused: false,                              // Pause control
+    preferredFramesPerSecond: 60,                 // Frame rate
+    options: [.ignoresSiblingOrder, .shouldCullNonVisibleNodes],
+    debugOptions: [.showsFPS, .showsNodeCount]    // Debug overlays
+)
+```
+
+### SpriteView Options
+
+| Option | Purpose |
+|--------|---------|
+| `.ignoresSiblingOrder` | Enable draw order batching optimization |
+| `.shouldCullNonVisibleNodes` | Auto-hide offscreen nodes |
+| `.allowsTransparency` | Allow transparent background (slower) |
+
+### Debug Options
+
+| Option | Shows |
+|--------|-------|
+| `.showsFPS` | Frames per second |
+| `.showsNodeCount` | Total visible nodes |
+| `.showsDrawCount` | Draw calls per frame |
+| `.showsPhysics` | Physics body outlines |
+| `.showsFields` | Physics field regions |
+| `.showsQuadCount` | Quad subdivisions |
+
+### Communicating Between SwiftUI and SpriteKit
+
+```swift
+// Observable model shared between SwiftUI and scene
+@Observable
+class GameState {
+    var score = 0
+    var isPaused = false
+    var lives = 3
+}
+
+// Scene reads/writes the shared model
+class GameScene: SKScene {
+    var gameState: GameState?
+
+    override func update(_ currentTime: TimeInterval) {
+        guard let state = gameState, !state.isPaused else { return }
+        // Game logic updates state.score, state.lives, etc.
+    }
+}
+
+// SwiftUI view owns the model
+struct GameContainerView: View {
+    @State private var gameState = GameState()
+    @State private var scene: GameScene = {
+        let s = GameScene(size: CGSize(width: 1024, height: 768))
+        s.scaleMode = .aspectFill
+        return s
+    }()
+
+    var body: some View {
+        VStack {
+            Text("Score: \(gameState.score)")
+            SpriteView(scene: scene, isPaused: gameState.isPaused)
+                .ignoresSafeArea()
+        }
+        .onAppear { scene.gameState = gameState }
+    }
+}
+```
+
+**Key pattern**: Use `@Observable` model as bridge. Scene mutates it; SwiftUI observes changes. Avoid recreating scenes in view body — use `@State` to persist the scene instance.
+
+---
+
 ## Resources
 
 **WWDC**: 2014-608, 2016-610, 2017-609
