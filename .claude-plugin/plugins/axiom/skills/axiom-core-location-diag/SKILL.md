@@ -268,6 +268,11 @@ Q1: What is accuracyAuthorization?
 └─ .fullAccuracy → Check environment and configuration
 
 Q2: What is horizontalAccuracy on locations?
+├─ < 0 (typically -1) → INVALID location, do not use
+│   Meaning: System could not determine accuracy (no valid fix)
+│   Fix: Filter out: guard location.horizontalAccuracy >= 0 else { continue }
+│   Common when: Indoors with no WiFi, airplane mode, immediately after cold start
+│
 ├─ > 100m → Likely using WiFi/cell only (no GPS)
 │   Causes: Indoors, airplane mode, dense urban canyon
 │   Fix: User needs to move to better location, or wait for GPS lock
