@@ -653,6 +653,77 @@ Task {
 
 ---
 
+## Part 11: Geocoding
+
+### CLGeocoder — Forward Geocoding (Address → Coordinate)
+
+```swift
+let geocoder = CLGeocoder()
+
+func geocodeAddress(_ address: String) async throws -> CLLocation? {
+    let placemarks = try await geocoder.geocodeAddressString(address)
+    return placemarks.first?.location
+}
+
+// With locale for localized results
+let placemarks = try await geocoder.geocodeAddressString(
+    "1 Apple Park Way",
+    in: nil,  // CLRegion hint (optional)
+    preferredLocale: Locale(identifier: "en_US")
+)
+```
+
+### CLGeocoder — Reverse Geocoding (Coordinate → Address)
+
+```swift
+func reverseGeocode(_ location: CLLocation) async throws -> CLPlacemark? {
+    let placemarks = try await geocoder.reverseGeocodeLocation(location)
+    return placemarks.first
+}
+
+// Usage
+if let placemark = try await reverseGeocode(location) {
+    let street = placemark.thoroughfare          // "Apple Park Way"
+    let city = placemark.locality                // "Cupertino"
+    let state = placemark.administrativeArea     // "CA"
+    let zip = placemark.postalCode               // "95014"
+    let country = placemark.country              // "United States"
+    let isoCountry = placemark.isoCountryCode    // "US"
+}
+```
+
+### CLPlacemark Key Properties
+
+| Property | Example | Notes |
+|----------|---------|-------|
+| `name` | "Apple Park" | Location name |
+| `thoroughfare` | "Apple Park Way" | Street name |
+| `subThoroughfare` | "1" | Street number |
+| `locality` | "Cupertino" | City |
+| `subLocality` | "Silicon Valley" | Neighborhood |
+| `administrativeArea` | "CA" | State/province |
+| `postalCode` | "95014" | ZIP/postal code |
+| `country` | "United States" | Country name |
+| `isoCountryCode` | "US" | ISO country code |
+| `timeZone` | America/Los_Angeles | Time zone |
+| `location` | CLLocation | Coordinate |
+
+### Geocoding Rate Limits
+
+- **One request at a time** — CLGeocoder throws if a request is in progress
+- **Apple rate-limits** — Throttle to avoid `kCLErrorGeocodeCanceled`
+- **Cache results** — Don't re-geocode the same address/coordinate
+- **Batch carefully** — Add delays between sequential geocode requests
+
+```swift
+// Check if geocoder is busy
+if geocoder.isGeocoding {
+    geocoder.cancelGeocode()  // Cancel previous before starting new
+}
+```
+
+---
+
 ## Troubleshooting Quick Reference
 
 | Symptom | Check |
