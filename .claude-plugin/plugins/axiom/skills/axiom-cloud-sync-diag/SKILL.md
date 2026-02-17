@@ -205,17 +205,29 @@ if error.code == .quotaExceeded {
 
 ### CKError.serverRecordChanged
 
-**Cause**: Conflict - record modified on server since fetch
+**Cause**: Record modified on server since your last fetch. **Most common root cause**: saving a stale record without fetching the latest version first.
 
-**Fix**:
+**Diagnosis — check the simple fix FIRST**:
+```swift
+// ❌ WRONG: Saving without fetching latest version
+// This causes serverRecordChanged on EVERY concurrent edit
+let record = CKRecord(recordType: "Note", recordID: existingID)
+record["title"] = "Updated"
+try await database.save(record)  // Overwrites server version → conflict
+
+// ✅ FIX: Fetch-then-modify-then-save (fixes 80% of cases)
+let record = try await database.record(for: existingID)  // Get latest
+record["title"] = "Updated"  // Modify the fetched record
+try await database.save(record)  // Save with correct changeTag
+```
+
+**If fetch-then-save doesn't fix it** (true concurrent edits from multiple devices):
 ```swift
 if error.code == .serverRecordChanged,
    let serverRecord = error.serverRecord,
    let clientRecord = error.clientRecord {
-    // Merge records
+    // Merge records — only needed for real multi-device conflicts
     let merged = mergeRecords(server: serverRecord, client: clientRecord)
-
-    // Retry with merged version
     try await database.save(merged)
 }
 ```
@@ -232,6 +244,40 @@ if error.code == .networkUnavailable {
 
     // Or show offline indicator
     showOfflineIndicator()
+}
+```
+
+### Silent Data Loss in Batch Operations
+
+**Symptom**: Sync appears to work but records silently disappear or fail to save.
+
+**Common causes**:
+
+| Cause | Symptom | Fix |
+|-------|---------|-----|
+| Record size > 1 MB | Individual records silently dropped from batch | Split large data into CKAsset |
+| Batch partial failure | Some records save, others fail silently | Check `perRecordSaveBlock` for per-record errors |
+| Conflict auto-resolution | Last-writer-wins overwrites valid data | Implement merge-based conflict resolution |
+| Asset download not triggered | Record syncs but CKAsset content missing | Call `fetchRecordZoneChanges` with `desiredKeys` |
+
+**Diagnosis**:
+```swift
+// ❌ WRONG: Batch save with no per-record error handling
+let operation = CKModifyRecordsOperation(recordsToSave: records)
+operation.modifyRecordsResultBlock = { result in
+    // Only catches operation-level failures — misses per-record errors
+}
+
+// ✅ CORRECT: Check each record individually
+let operation = CKModifyRecordsOperation(recordsToSave: records)
+operation.perRecordSaveBlock = { recordID, result in
+    switch result {
+    case .success(let record):
+        print("✅ Saved: \(recordID)")
+    case .failure(let error):
+        print("❌ Failed: \(recordID) — \(error)")
+        // Log for retry — this record was silently lost otherwise
+    }
 }
 ```
 
