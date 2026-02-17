@@ -217,6 +217,34 @@ do {
 }
 ```
 
+### Switching Cameras
+
+```swift
+// Switch between front and back during active session
+func switchCamera() {
+    sessionQueue.async { [self] in
+        session.beginConfiguration()
+        defer { session.commitConfiguration() }
+
+        // Remove current camera input
+        if let currentInput = session.inputs.first(where: { ($0 as? AVCaptureDeviceInput)?.device.hasMediaType(.video) == true }) as? AVCaptureDeviceInput {
+            session.removeInput(currentInput)
+
+            // Get opposite camera
+            let newPosition: AVCaptureDevice.Position = currentInput.device.position == .back ? .front : .back
+            guard let newDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition),
+                  let newInput = try? AVCaptureDeviceInput(device: newDevice) else { return }
+
+            if session.canAddInput(newInput) {
+                session.addInput(newInput)
+            }
+        }
+    }
+}
+```
+
+**Important**: Always switch on the session queue, within beginConfiguration/commitConfiguration.
+
 ### Authorization
 
 ```swift
@@ -424,6 +452,32 @@ settings.photoQualityPrioritization = .speed
 ```swift
 settings.flashMode = .auto  // .off, .on, .auto
 ```
+
+### Apple ProRAW and HDR
+
+```swift
+// Check ProRAW support
+if photoOutput.isAppleProRAWSupported {
+    photoOutput.isAppleProRAWEnabled = true
+
+    // Capture ProRAW
+    let query = photoOutput.isAppleProRAWEnabled
+        ? AVCapturePhotoOutput.AppleProRAWQuery(photoOutput)
+        : nil
+    if let rawType = query?.availableRawPixelFormatTypes.first {
+        let settings = AVCapturePhotoSettings(
+            rawPixelFormatType: rawType,
+            processedFormat: [AVVideoCodecKey: AVVideoCodecType.hevc]
+        )
+    }
+}
+
+// HDR configuration
+settings.photoQualityPrioritization = .quality  // Enables computational photography/HDR
+// HDR is automatic with .balanced or .quality — no separate toggle needed
+```
+
+**Note**: ProRAW requires iPhone 12 Pro or later. HDR is automatic with quality prioritization — Apple's Deep Fusion and Smart HDR are controlled by the system based on the quality setting.
 
 ### Resolution
 
