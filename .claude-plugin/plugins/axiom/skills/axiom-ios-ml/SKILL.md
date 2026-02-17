@@ -20,6 +20,21 @@ Use this router when:
 - Building speech-to-text features
 - Transcribing audio (live or recorded)
 
+## Boundary with ios-ai
+
+**ios-ml vs ios-ai — know the difference:**
+
+| Developer Intent | Router |
+|-----------------|--------|
+| "Use Apple Intelligence / Foundation Models" | **ios-ai** — Apple's on-device LLM |
+| "Run my own ML model on device" | **ios-ml** — CoreML conversion + deployment |
+| "Add text generation with @Generable" | **ios-ai** — Foundation Models structured output |
+| "Deploy a custom LLM with KV-cache" | **ios-ml** — Custom model optimization |
+| "Use Vision framework for image analysis" | **ios-vision** — Not ML deployment |
+| "Use pre-trained Apple NLP models" | **ios-ai** — Apple's models, not custom |
+
+**Rule of thumb**: If the developer is converting/compressing/deploying their own model → ios-ml. If they're using Apple's built-in AI → ios-ai. If they're doing computer vision → ios-vision.
+
 ## Routing Logic
 
 ### CoreML Work
