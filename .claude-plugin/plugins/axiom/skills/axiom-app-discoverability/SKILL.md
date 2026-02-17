@@ -315,6 +315,74 @@ self.userActivity = activity
 
 ---
 
+## Batch Indexing for Large Content Libraries
+
+When indexing 1,000+ items, index in batches to avoid launch slowdowns:
+
+```swift
+func indexAllContent() async {
+    let allItems = try await ContentService.shared.all()
+    let batchSize = 100
+
+    for batch in stride(from: 0, to: allItems.count, by: batchSize) {
+        let slice = Array(allItems[batch..<min(batch + batchSize, allItems.count)])
+        let searchableItems = slice.map { createSearchableItem(from: $0) }
+
+        CSSearchableIndex.default().indexSearchableItems(searchableItems) { error in
+            if let error { print("Batch index error: \(error)") }
+        }
+
+        // Yield between batches to avoid blocking
+        try? await Task.sleep(for: .milliseconds(50))
+    }
+}
+```
+
+**Best practices**:
+- Index in batches of 100 during background processing, not at launch
+- Use `domainIdentifier` to group content for efficient bulk deletion
+- Re-index incrementally when content changes (don't re-index everything)
+- For 50,000+ items, use `CSSearchableIndex.beginBatch()` / `endBatch()` for atomic updates
+
+## Spotlight Debugging
+
+When indexed content doesn't appear in Spotlight:
+
+### Verification Checklist
+
+1. **Check indexing succeeded** — Add completion handler logging to `indexSearchableItems`
+2. **Wait for processing** — Spotlight may take 10-30 seconds to process new items
+3. **Search by exact title** — Spotlight may not match partial keywords initially
+4. **Check `contentType`** — Use `.item` for general content; wrong type may affect ranking
+
+### Common Indexing Mistakes
+
+| Problem | Cause | Fix |
+|---------|-------|-----|
+| Content not appearing | Missing `title` attribute | Always set `attributeSet.title` |
+| Low ranking | No keywords | Add relevant `keywords` array |
+| Stale results | Not deleting removed items | Call `deleteSearchableItems(withIdentifiers:)` |
+| Duplicate results | Unstable unique identifiers | Use persistent IDs (UUID, database primary key) |
+| Quota exceeded | Indexing too many items | Limit to user-relevant content (recent, favorited) |
+
+### Testing Spotlight Indexing
+
+```swift
+// Verify items are indexed
+CSSearchableIndex.default().fetchLastClientState { state, error in
+    print("Last client state: \(String(describing: state))")
+}
+
+// Search programmatically to verify
+let query = CSSearchQuery(queryString: "title == 'My Item'*", attributes: ["title"])
+query.foundItemsHandler = { items in
+    print("Found \(items.count) items")
+}
+query.start()
+```
+
+---
+
 ## Anti-Patterns (What NOT to Do)
 
 ### ❌ ANTI-PATTERN 1: Implementing just App Intents without App Shortcuts
