@@ -221,6 +221,58 @@ Each dictionary in the array contains:
 | `NSPrivacyAccessedAPIType` | String | API category identifier |
 | `NSPrivacyAccessedAPITypeReasons` | Array&lt;String&gt; | Approved reason codes for usage |
 
+#### Complete PrivacyInfo.xcprivacy Example
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSPrivacyTracking</key>
+    <false/>
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array>
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeEmailAddress</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+    </array>
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>CA92.1</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>
+```
+
+#### API Category Identifiers
+
+| Category | Identifier String |
+|----------|------------------|
+| File timestamp | `NSPrivacyAccessedAPICategoryFileTimestamp` |
+| System boot time | `NSPrivacyAccessedAPICategorySystemBootTime` |
+| Disk space | `NSPrivacyAccessedAPICategoryDiskSpace` |
+| Active keyboard | `NSPrivacyAccessedAPICategoryActiveKeyboards` |
+| User defaults | `NSPrivacyAccessedAPICategoryUserDefaults` |
+
 #### Generating Aggregate Privacy Report
 
 ```
@@ -237,7 +289,7 @@ This produces a PDF summarizing privacy manifests from your app and all embedded
 | System boot time | `systemUptime`, `mach_absolute_time` | 35F9.1 (measure elapsed time) |
 | Disk space | `NSFileSystemFreeSize`, `NSFileSystemSize`, `volumeAvailableCapacityKey` | E174.1 (check before writing), 85F4.1 (display to user) |
 | Active keyboard | `activeInputModes` | 54BD.1 (customize UI for keyboard) |
-| User defaults | `UserDefaults` (when accessed by non-owning app via App Groups) | CA92.1 (access within app group), 1C8F.1 (access within same app) |
+| User defaults | `UserDefaults` (all access requires declaration) | CA92.1 (access within app group), 1C8F.1 (access within same app) |
 
 ### App Privacy Details (Nutrition Labels)
 
