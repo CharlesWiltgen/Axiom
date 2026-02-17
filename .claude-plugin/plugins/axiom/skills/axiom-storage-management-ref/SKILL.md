@@ -571,6 +571,35 @@ func findLargeFiles(in directory: URL) {
 
 ---
 
+## File Protection Quick Reference
+
+Set encryption level per file. See `axiom-file-protection-ref` for full guide.
+
+| Level | When Accessible | Use For |
+|-------|----------------|---------|
+| `.complete` | Only while unlocked | Passwords, tokens, health data |
+| `.completeUnlessOpen` | After first unlock if already open | Active downloads, media recording |
+| `.completeUntilFirstUserAuthentication` | After first unlock (default) | Most app data |
+| `.none` | Always, even before unlock | Background fetch data, push payloads |
+
+```swift
+// Set protection on file
+try data.write(to: url, options: .completeFileProtection)
+
+// Set protection on directory
+try FileManager.default.createDirectory(
+    at: url,
+    withIntermediateDirectories: true,
+    attributes: [.protectionKey: FileProtectionType.complete]
+)
+
+// Check current protection
+let values = try url.resourceValues(forKeys: [.fileProtectionKey])
+print("Protection: \(values.fileProtection ?? .none)")
+```
+
+---
+
 ## Related Skills
 
 - `axiom-storage` — Decide where to store files
