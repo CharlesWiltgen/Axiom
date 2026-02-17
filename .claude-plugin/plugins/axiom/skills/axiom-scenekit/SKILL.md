@@ -439,6 +439,32 @@ If you need custom render pipelines, build on Metal directly or use `RealityRend
 
 Track `SceneView` deprecation warnings and plan UIViewRepresentable fallback or RealityKit migration.
 
+### Anti-Pattern 6: Creating Hundreds of Nodes in a Loop
+
+**Time cost**: 2-4 hours debugging frame drops, often misdiagnosed as GPU issue
+
+```swift
+// ❌ WRONG: Each SCNNode has overhead (transform, bounding box, hit test)
+for i in 0..<500 {
+    let node = SCNNode(geometry: SCNSphere(radius: 0.05))
+    node.position = randomPosition()
+    scene.rootNode.addChildNode(node)  // 500 nodes = terrible frame rate
+}
+
+// ✅ RIGHT: Use SCNParticleSystem for particle-like effects
+let particles = SCNParticleSystem()
+particles.birthRate = 500
+particles.particleSize = 0.05
+particles.emitterShape = SCNBox(width: 5, height: 5, length: 5, chamferRadius: 0)
+particleNode.addParticleSystem(particles)
+
+// ✅ RIGHT: Use geometry instancing for identical objects
+let source = SCNGeometrySource(/* instance transforms */)
+geometry.levelsOfDetail = [SCNLevelOfDetail(geometry: lowPoly, screenSpaceRadius: 20)]
+```
+
+**Rule**: If >50 identical objects, use SCNParticleSystem or flatten geometry. If different objects, use `SCNNode.flattenedClone()` to reduce draw calls.
+
 ---
 
 ## 11. Migration Decision Tree
