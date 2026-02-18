@@ -226,7 +226,7 @@ Switch to another thread to inspect its state.
 
 ### When to Use Each
 
-**Start with `v`** — it's fastest and most reliable:
+**Start with `v`** — it's fastest and most reliable for stored properties:
 
 ```
 (lldb) v self.userName
@@ -235,6 +235,8 @@ Switch to another thread to inspect its state.
 ```
 
 `v` works by reading memory directly. It doesn't compile anything, so it can't fail due to expression compilation errors.
+
+**`v` limitation:** It only reads stored properties — computed properties, `lazy var` (before first access), and property wrapper projected values (`$binding`) won't show meaningful values. If a field looks wrong or missing with `v`, try `p` instead.
 
 **Use `p` when `v` can't reach it:**
 
@@ -262,7 +264,7 @@ Switch to another thread to inspect its state.
 |--------------|-----|-----|
 | `<uninitialized>` | `po` failed; variable hasn't been populated by optimizer | Use `v` instead |
 | `expression failed to parse, unknown type name` | Swift expression parser can't resolve the type | Try `expr -l objc -- (id)0x12345` for ObjC objects, or use `v` |
-| `<variable not available>` | Compiler optimized it out (Release build) | Rebuild with Debug configuration, or use `-Onone` |
+| `<variable not available>` | Compiler optimized it out (Release build) | Rebuild with Debug, per-file `-Onone`, or `register read` as last resort |
 | `error: Couldn't apply expression side effects` | Expression had side effects LLDB couldn't reverse | Try a simpler expression; avoid mutating state |
 | `po` shows memory address instead of value | Object doesn't conform to `CustomDebugStringConvertible` | Use `v` for raw value, or implement the protocol |
 | `cannot find 'self' in scope` | Breakpoint is in a context without `self` (static, closure) | Use `v` with the explicit variable name |
@@ -447,6 +449,8 @@ Break once, then auto-delete:
 
 ### Identifying Async Frames
 
+Swift concurrency backtraces are noisy — expect `swift_task_switch`, `_dispatch_call_block_and_release`, and executor internals mixed in with your code. Don't be discouraged by 40+ frames of runtime noise. Focus on frames from YOUR module.
+
 In Swift concurrency backtraces, look for `swift-task` frames:
 
 ```
@@ -456,7 +460,7 @@ frame #1: swift_task_switch
 frame #2: MyApp`closure #1 in ViewController.loadData()
 ```
 
-The `swift_task_switch` frame indicates an async suspension point.
+The `swift_task_switch` frame indicates an async suspension point. Your code frames are the ones prefixed with your module name (`MyApp` above).
 
 ### Inspecting Task State
 
@@ -513,6 +517,12 @@ Each child task runs on its own thread. Use `bt all` to see them.
    ```
 5. If variable shows `<optimized out>`, reduce optimization for that one file:
    - Build Settings → Per-file flags → `-Onone` for the specific file
+6. Last resort — read register values directly (variables live in registers before being optimized out):
+   ```
+   (lldb) register read
+   (lldb) register read x0 x1 x2
+   ```
+   On ARM64: `x0` = self, `x1`-`x7` = first 7 arguments. Check `/skill axiom-lldb-ref` Part 1 for details.
 
 ### Scenario 2: "Just Add Print Statements"
 
@@ -532,11 +542,13 @@ Each child task runs on its own thread. Use `bt all` to see them.
 4. Modify variables at runtime to test theories: `expr self.debugMode = true`
 5. **One breakpoint session replaces 5-10 print-debug cycles.**
 
-**Time comparison:**
+**Time comparison** (typical control-flow debugging):
 | Approach | Per investigation | 5 variables |
 |----------|-------------------|-------------|
 | print() statements | 3-5 min (build + run) | 15-25 min |
 | LLDB breakpoint | 30 sec (set + inspect) | 2.5 min |
+
+**Exception:** In tight loops (thousands of hits/sec), logpoints add per-hit overhead. Use `-i` to skip to the iteration you care about, or use a temporary `print()` for that specific loop.
 
 ### Scenario 3: "po Doesn't Work So LLDB Is Broken"
 
