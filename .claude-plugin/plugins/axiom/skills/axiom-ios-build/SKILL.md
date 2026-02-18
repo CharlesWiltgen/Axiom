@@ -206,6 +206,19 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
+### 14. Live Debugging → **axiom-lldb**
+**Triggers**:
+- Need to reproduce a crash interactively
+- Want to set breakpoints and inspect state
+- Crash report analyzed, now need live investigation
+- Need to attach debugger to running app
+
+**Why axiom-lldb**: Crash reports tell you WHAT crashed. LLDB tells you WHY.
+
+**Invoke**: `/skill axiom-lldb`
+
+---
+
 ## Decision Tree
 
 1. Mysterious/intermittent/clean build fails? → xcode-debugging (environment-first)
@@ -221,6 +234,7 @@ This router invokes specialized skills based on the specific issue:
 11. Have a crash log (.ips/.crash)? → crash-analyzer (Agent)
 12. MetricKit setup/parsing? → metrickit-ref
 13. App hang/freeze/watchdog? → hang-diagnostics
+14. Need to reproduce crash interactively / inspect runtime state? → axiom-lldb
 
 ## Anti-Rationalization
 
@@ -337,6 +351,12 @@ User: "Xcode Organizer shows hang diagnostics for my app"
 
 User: "My app was killed by watchdog during launch"
 → Invoke: `/skill axiom-hang-diagnostics`
+
+User: "I have a crash report and need to reproduce it in the debugger"
+→ Invoke: `/skill axiom-lldb`
+
+User: "How do I set breakpoints to catch this crash?"
+→ Invoke: `/skill axiom-lldb`
 
 User: "My build is failing with BUILD FAILED but no error details"
 → Invoke: `build-fixer` agent or `/axiom:fix-build`
