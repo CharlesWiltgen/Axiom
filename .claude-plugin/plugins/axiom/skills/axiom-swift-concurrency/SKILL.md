@@ -945,6 +945,8 @@ class MyViewModel: ObservableObject {
 
 **Docs**: /swift/adoptingswift6, /swift/sendable
 
+**Skills**: axiom-lldb (debug actor/task state in the debugger)
+
 ---
 
 **Last Updated**: 2025-12-01

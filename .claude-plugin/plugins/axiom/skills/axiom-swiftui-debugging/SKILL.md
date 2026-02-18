@@ -1296,5 +1296,5 @@ xcrun simctl io booted screenshot /tmp/after-fix.png
 
 **Docs**: /swiftui/managing-model-data-in-your-app, /swiftui, /swiftui/state-and-data-flow, /xcode/previews, /observation
 
-**Skills**: axiom-swiftui-performance, axiom-swiftui-debugging-diag, axiom-xcode-debugging, axiom-swift-concurrency
+**Skills**: axiom-swiftui-performance, axiom-swiftui-debugging-diag, axiom-xcode-debugging, axiom-swift-concurrency, axiom-lldb-ref (LLDB workflows beyond Self._printChanges)
 

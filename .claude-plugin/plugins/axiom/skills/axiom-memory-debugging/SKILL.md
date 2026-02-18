@@ -307,4 +307,4 @@ leaks -atExit -excludeNoise YourApp
 
 **Docs**: /xcode/gathering-information-about-memory-use, /metrickit/mxbackgroundexitdata
 
-**Skills**: axiom-performance-profiling, axiom-objc-block-retain-cycles, axiom-metrickit-ref
+**Skills**: axiom-performance-profiling, axiom-objc-block-retain-cycles, axiom-metrickit-ref, axiom-lldb (inspect retain cycles interactively)
