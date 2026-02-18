@@ -308,6 +308,14 @@ For `@Observable` models:
 (lldb) v self.viewModel.propertyName
 ```
 
+**Diagnosing "view doesn't update":** If a property changes (confirmed with `v`) but the SwiftUI view doesn't re-render, check which thread the mutation happens on with `bt`. `@Observable` mutations must happen on `@MainActor` for SwiftUI to observe them — mutations on a background actor won't trigger view updates. Use `Self._printChanges()` inside a view body to see which property triggered (or didn't trigger) a re-render:
+
+```
+(lldb) expr Self._printChanges()
+```
+
+For the full observation diagnostic tree → `/skill axiom-swiftui-debugging`
+
 ### Inspecting Actors
 
 Actor state is best inspected with `v`, which reads memory directly without isolation concerns:
