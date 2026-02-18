@@ -245,6 +245,7 @@ This router invokes specialized skills based on the specific issue:
 | "It's just an SPM issue, I'll fix Package.swift" | SPM conflicts cascade. spm-conflict-resolver analyzes the full dependency graph. |
 | "The simulator is just slow today" | Simulator issues indicate environment corruption. xcode-debugging checks systematically. |
 | "I'll skip environment checks, it compiles locally" | Environment-first saves 30+ min. Every time. |
+| "I'll read the crash report more carefully instead of reproducing" | Crash reports show WHAT crashed, not WHY. Reproducing in LLDB with breakpoints reveals the actual state. axiom-lldb has the workflow. |
 
 ## When NOT to Use (Conflict Resolution)
 

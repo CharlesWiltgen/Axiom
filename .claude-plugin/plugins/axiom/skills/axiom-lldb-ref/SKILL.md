@@ -24,7 +24,7 @@ Reads memory directly. No compilation. Most reliable for Swift values.
 (lldb) v self.propertyName            # Specific property
 (lldb) v localVariable                # Local variable
 (lldb) v self.array[0]               # Collection element
-(lldb) v self._stateBacking          # SwiftUI @State backing store
+(lldb) v self._showDetails            # SwiftUI @State backing store (underscore prefix)
 ```
 
 **Flags:**
@@ -95,7 +95,7 @@ Full expression evaluation with all options.
 | `-l objc` | Evaluate as Objective-C |
 | `-l swift` | Evaluate as Swift (default) |
 | `-O` | Object description (same as `po`) |
-| `-i false` | Don't auto-import modules |
+| `-i false` | Stop on breakpoints hit during evaluation (default: ignore) |
 | `--` | Separator between flags and expression |
 
 **ObjC expressions for Swift debugging:**
@@ -175,7 +175,7 @@ Or in one line:
 ```
 (lldb) breakpoint set -E swift                            # All Swift errors
 (lldb) breakpoint set -E objc                             # All ObjC exceptions
-(lldb) breakpoint set -E objc -w NSInternalInconsistencyException  # Specific
+# Filtering by exception name requires Xcode's GUI (Edit Breakpoint → Exception field)
 ```
 
 ### Symbolic Breakpoints
@@ -239,9 +239,7 @@ Break when a variable's memory changes:
 ```
 (lldb) frame info                      # Current frame details
 (lldb) frame select 5                  # Jump to frame 5
-(lldb) frame select -r 1               # Go up one frame (toward caller)
-(lldb) frame select -r -1              # Go down one frame (toward callee)
-(lldb) up                              # Shortcut: go up one frame
+(lldb) up                              # Go up one frame (toward caller)
 (lldb) down                            # Shortcut: go down one frame
 ```
 
@@ -283,15 +281,13 @@ Switch to ObjC when Swift expression parser fails:
 
 ```
 (lldb) expr -l objc -- (void)[[[UIApplication sharedApplication] keyWindow] recursiveDescription]
-(lldb) expr -l objc -- (void)[[UIView appearance] _accessibilityAudit]
 (lldb) po UIApplication.shared.windows.first?.rootViewController?.view.recursiveDescription()
 ```
 
 ### SwiftUI Debugging
 
 ```
-(lldb) expr Self._printChanges()                # Print what triggered body re-eval
-(lldb) expr _openURL                             # Check environment values
+(lldb) expr Self._printChanges()                # Print what triggered body re-eval (inside view body only)
 ```
 
 ### Runtime Type Information
@@ -406,7 +402,7 @@ type summary add CLLocationCoordinate2D --summary-string "${var.latitude}, ${var
 
 ### Per-Project .lldbinit
 
-In Xcode: Edit Scheme → Run → Info → "LLDB Init File" field.
+In Xcode: Edit Scheme → Run → Options → "LLDB Init File" field.
 
 Put project-specific aliases and breakpoints in a `.lldbinit` file in your project root.
 
