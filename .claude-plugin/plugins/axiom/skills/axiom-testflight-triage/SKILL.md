@@ -711,6 +711,6 @@ func suspectFunction() {
 
 **Docs:** /xcode/diagnosing-issues-using-crash-reports-and-device-logs, /xcode/examining-the-fields-in-a-crash-report, /xcode/adding-identifiable-symbol-names-to-a-crash-report, /xcode/identifying-the-cause-of-common-crashes, /xcode/identifying-high-memory-use-with-jetsam-event-reports
 
-**Skills:** axiom-memory-debugging, axiom-xcode-debugging, axiom-swift-concurrency
+**Skills:** axiom-memory-debugging, axiom-xcode-debugging, axiom-swift-concurrency, axiom-lldb (reproduce and investigate interactively)
 
 **Agents:** crash-analyzer (automated crash log parsing and analysis)

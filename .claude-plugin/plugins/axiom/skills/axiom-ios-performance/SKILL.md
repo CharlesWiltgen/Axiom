@@ -105,6 +105,19 @@ Use this router when:
 - Field performance data collection
 - Integration with crash reporting
 
+### Runtime State Inspection
+
+**LLDB interactive debugging** → `/skill axiom-lldb`
+- Set breakpoints, inspect variables at runtime
+- Crash reproduction from crash logs
+- Thread state analysis for hangs
+- Swift value inspection (po vs v)
+
+**LLDB command reference** → `/skill axiom-lldb-ref`
+- Complete command syntax
+- Breakpoint recipes
+- Expression evaluation patterns
+
 ## Decision Tree
 
 1. Memory climbing + UI stutter/jank? → memory-debugging FIRST (memory pressure causes GC pauses that drop frames), then performance-profiling if memory is fixed but stutter remains
@@ -126,6 +139,8 @@ Use this router when:
 14. Want proactive memory leak scan? → memory-auditor (Agent)
 15. Want energy anti-pattern scan? → energy-auditor (Agent)
 16. Want Swift performance audit (ARC, generics, collections)? → swift-performance-analyzer (Agent)
+17. Need to inspect variable/thread state at runtime? → axiom-lldb
+18. Need exact LLDB command syntax? → axiom-lldb-ref
 
 ## Anti-Rationalization
 
@@ -139,6 +154,7 @@ Use this router when:
 | "Memory is climbing AND scrolling stutters — two separate bugs" | Memory pressure causes GC pauses that drop frames. Fix the leak first, then re-check scroll performance. |
 | "It only freezes on first launch, must be loading something" | First-launch hangs have 3 patterns: synchronous I/O, lazy initialization, main thread contention. hang-diagnostics diagnoses which. |
 | "UI locks up when network requests finish — that's slow" | Multiple callbacks completing at once = main thread contention = concurrency issue. Cross-route to ios-concurrency. |
+| "I'll just add print statements to debug this" | Print-debug cycles cost 3-5 min each (build + run + reproduce). An LLDB breakpoint costs 30 seconds. axiom-lldb has the commands. |
 
 ## Critical Patterns
 
@@ -214,6 +230,15 @@ User: "Check my app for battery drain issues"
 
 User: "Audit my Swift code for performance anti-patterns"
 → Invoke: `swift-performance-analyzer` agent
+
+User: "How do I inspect this variable in the debugger?"
+→ Invoke: `/skill axiom-lldb`
+
+User: "What's the LLDB command for conditional breakpoints?"
+→ Invoke: `/skill axiom-lldb-ref`
+
+User: "I need to reproduce this crash in the debugger"
+→ Invoke: `/skill axiom-lldb`
 
 User: "My list scrolls slowly and memory keeps growing"
 → Invoke: `/skill axiom-memory-debugging` first, then `/skill axiom-performance-profiling` if stutter remains
