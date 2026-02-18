@@ -8,6 +8,14 @@
 
 ## Version History
 
+### LLDB Debugging Skill Suite (2026-02-18)
+
+**New LLDB debugging skills** — Complete LLDB debugging support with discipline + reference skill pair:
+- `axiom-lldb` (discipline) — 6 playbooks for crash triage, state inspection, `po` alternatives, breakpoint strategy, expression evaluation, and thread analysis. Includes LLDB-vs-other-tools decision tree and anti-rationalization for print-statement debugging
+- `axiom-lldb-ref` (reference) — Complete LLDB command reference organized by task: variable inspection (`v`/`p`/`po` with flags), breakpoints (conditional, symbolic, exception, regex), thread navigation, expression evaluation, memory commands, and `.lldbinit` customization
+
+Routed via `axiom-ios-performance` router.
+
 ### v2.20 — MCP Server + Games/3D Skills (2026-02-05)
 
 **Axiom MCP server** — Axiom now includes an [MCP (Model Context Protocol) server](https://charleswiltgen.github.io/Axiom/guide/mcp-install) that brings its iOS development skills to any MCP-compatible AI coding tool — VS Code with GitHub Copilot, Claude Desktop, Cursor, Gemini CLI, and more. The server includes MCP tool annotations (read-only hints, titles) and server-level instructions so MCP clients can discover Axiom's capabilities automatically. Supports BM25 with fuzzy matching and prefix search.

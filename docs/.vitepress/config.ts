@@ -156,7 +156,8 @@ export default withMermaid(defineConfig({
             { text: 'Build Performance', link: '/skills/debugging/build-performance' },
             { text: 'Performance Profiling', link: '/skills/debugging/performance-profiling' },
             { text: 'Objective-C Block Retain Cycles', link: '/skills/debugging/objc-block-retain-cycles' },
-            { text: 'Hang Diagnostics', link: '/skills/debugging/hang-diagnostics' }
+            { text: 'Hang Diagnostics', link: '/skills/debugging/hang-diagnostics' },
+            { text: 'LLDB Debugging', link: '/skills/debugging/lldb' }
           ]
         },
         {
@@ -304,6 +305,7 @@ export default withMermaid(defineConfig({
             { text: 'App Store Submission', link: '/reference/app-store-ref' },
             { text: 'AXe (Simulator Automation)', link: '/reference/axe-ref' },
             { text: 'MetricKit', link: '/reference/metrickit-ref' },
+            { text: 'LLDB Command Reference', link: '/reference/lldb-ref' },
             { text: 'xctrace', link: '/reference/xctrace-ref' }
           ]
         }
