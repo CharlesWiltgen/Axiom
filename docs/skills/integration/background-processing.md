@@ -38,7 +38,7 @@ Background execution is a privilege, not a right. iOS actively limits background
 
 ### LLDB Debugging Commands
 
-```lldb
+```text
 // Trigger task launch
 e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"IDENTIFIER"]
 

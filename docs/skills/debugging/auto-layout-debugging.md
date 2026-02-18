@@ -87,7 +87,7 @@ flowchart TD
 
 ### Identifying Views from Memory Address
 
-```lldb
+```text
 (lldb) po 0x7f8b9c4...
 <UILabel: 0x7f8b9c4; frame = ...; text = 'Hello'>
 ```
