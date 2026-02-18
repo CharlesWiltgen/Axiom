@@ -54,7 +54,7 @@ Use when you're experiencing:
 
 ### LLDB Quick Test
 
-```lldb
+```text
 // Trigger task launch
 e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"com.yourapp.refresh"]
 
