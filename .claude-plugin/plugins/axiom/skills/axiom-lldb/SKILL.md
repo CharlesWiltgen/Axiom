@@ -1,6 +1,6 @@
 ---
 name: axiom-lldb
-description: Use when debugging at runtime — setting breakpoints, inspecting variables, evaluating expressions, analyzing threads, or reproducing crashes interactively with LLDB
+description: Use when ANY runtime debugging is needed — setting breakpoints, inspecting variables, evaluating expressions, analyzing threads, or reproducing crashes interactively with LLDB
 license: MIT
 ---
 
@@ -374,12 +374,12 @@ Log without stopping — like a print statement but no rebuild needed:
 ```
 (lldb) breakpoint set -f MyFile.swift -l 42
 (lldb) breakpoint command add 1
-> p "Reached line 42, value = \(self.value)"
+> v self.value
 > continue
 > DONE
 ```
 
-Or in Xcode: Edit breakpoint → Add Action → "Log Message" → Check "Automatically continue"
+Or in Xcode: Edit breakpoint → Add Action → "Log Message" → use `@self.value@` token syntax → Check "Automatically continue"
 
 ### Symbolic Breakpoints
 
@@ -487,7 +487,7 @@ When debugging task groups, break inside the group closure and inspect:
 
 Each child task runs on its own thread. Use `bt all` to see them.
 
-**Cross-reference:** For Swift concurrency patterns and fix strategies → `/skill axiom-swift-concurrency`
+**Cross-reference:** For Swift concurrency patterns and fix strategies → `/skill axiom-swift-concurrency`. For profiling async performance → `/skill axiom-concurrency-profiling`
 
 ---
 
@@ -608,4 +608,4 @@ After finding the issue:
 
 **Docs**: /xcode/stepping-through-code-and-inspecting-variables-to-isolate-bugs, /xcode/setting-breakpoints-to-pause-your-running-app, /xcode/diagnosing-memory-thread-and-crash-issues-early
 
-**Skills**: axiom-lldb-ref, axiom-testflight-triage, axiom-hang-diagnostics, axiom-memory-debugging, axiom-swift-concurrency
+**Skills**: axiom-lldb-ref, axiom-testflight-triage, axiom-hang-diagnostics, axiom-memory-debugging, axiom-swift-concurrency, axiom-concurrency-profiling
