@@ -30,6 +30,7 @@ description: |
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit test-failures`
 model: sonnet
+background: true
 color: yellow
 tools:
   - Glob
