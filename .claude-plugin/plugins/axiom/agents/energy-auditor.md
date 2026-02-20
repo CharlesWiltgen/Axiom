@@ -15,6 +15,7 @@ description: |
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit energy`
 model: sonnet
+background: true
 color: yellow
 tools:
   - Glob

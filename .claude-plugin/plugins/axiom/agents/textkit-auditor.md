@@ -30,6 +30,7 @@ description: |
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit textkit`
 model: haiku
+background: true
 color: cyan
 tools:
   - Glob

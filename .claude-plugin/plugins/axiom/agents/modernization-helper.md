@@ -30,6 +30,7 @@ description: |
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit modernization` or `/axiom:modernize`
 model: haiku
+background: true
 color: cyan
 tools:
   - Glob

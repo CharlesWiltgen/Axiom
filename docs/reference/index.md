@@ -29,6 +29,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**icloud-drive-ref**](./icloud-drive-ref) | File-based iCloud sync — ubiquitous containers, NSFileCoordinator, conflict resolution, NSUbiquitousKeyValueStore |
 | [**file-protection-ref**](./file-protection-ref) | iOS file encryption and data protection — FileProtectionType levels, background access, Keychain comparison |
 | [**storage-management-ref**](./storage-management-ref) | Storage management and purge priorities — disk space APIs, backup exclusion, cache management, URL resource values |
+| [**transferable-ref**](./transferable-ref) | CoreTransferable framework — Transferable protocol, TransferRepresentation types, ShareLink, drag and drop, copy/paste, UTType declarations, NSItemProvider bridging (iOS 16+) |
 | [**textkit-ref**](./textkit-ref) | TextKit 2 complete reference — architecture, migration from TextKit 1, Writing Tools integration, SwiftUI TextEditor support (iOS 26) |
 | [**typography-ref**](./typography-ref) | Apple platform typography — San Francisco fonts, text styles, Dynamic Type, tracking, leading, internationalization best practices |
 

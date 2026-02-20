@@ -28,6 +28,7 @@ description: |
   assistant: [Launches iap-auditor agent]
   </example>
 model: haiku
+background: true
 color: green
 tools:
   - Glob

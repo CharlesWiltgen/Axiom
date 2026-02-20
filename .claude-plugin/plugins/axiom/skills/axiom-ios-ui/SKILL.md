@@ -40,6 +40,7 @@ Use this router when working with:
 **Stacks/grids/outlines** → `/skill axiom-swiftui-containers-ref`
 **Animation issues** → `/skill axiom-swiftui-animation-ref`
 **Gesture conflicts** → `/skill axiom-swiftui-gestures`
+**Drag/drop, copy/paste, sharing** → `/skill axiom-transferable-ref`
 **Architecture/testability** → `/skill axiom-swiftui-architecture`
 **App-level composition** → `/skill axiom-app-composition`
 **Search implementation** → `/skill axiom-swiftui-search-ref`
@@ -101,6 +102,7 @@ digraph ios_ui {
     swiftui_type -> "app-composition" [label="app-level (root, auth, scenes)"];
     swiftui_type -> "swiftui-animation-ref" [label="animations"];
     swiftui_type -> "swiftui-gestures" [label="gestures"];
+    swiftui_type -> "transferable-ref" [label="drag/drop, sharing, copy/paste"];
     swiftui_type -> "swiftui-search-ref" [label="search"];
     swiftui_type -> "swiftui-26-ref" [label="iOS 26 features"];
 
@@ -135,6 +137,7 @@ digraph ios_ui {
 | "This UI is simple, no architecture needed" | Even small features benefit from separation. swiftui-architecture prevents refactoring debt. |
 | "I know how .searchable works" | Search has 6 gotchas (navigation container, isSearching level, suggestion completion). swiftui-search-ref covers all of them. |
 | "I know SF Symbols, it's just Image(systemName:)" | 4 rendering modes, 12+ effects, 3 Draw playback modes, custom symbol authoring. sf-symbols has decision trees for all of them. |
+| "Drag and drop is just .draggable and .dropDestination" | UTType declarations, representation ordering, file lifecycle, cross-app transfer gotchas. transferable-ref covers all of them. |
 
 ## Example Invocations
 
@@ -179,6 +182,12 @@ User: "My SF Symbol Draw animation isn't working on my custom symbol"
 
 User: "Which rendering mode should I use for my toolbar icons?"
 → Invoke: `/skill axiom-sf-symbols`
+
+User: "How do I make my model draggable in SwiftUI?"
+→ Invoke: `/skill axiom-transferable-ref`
+
+User: "How do I add ShareLink with a custom preview?"
+→ Invoke: `/skill axiom-transferable-ref`
 
 User: "Check my SwiftUI architecture for separation of concerns"
 → Invoke: `swiftui-architecture-auditor` agent

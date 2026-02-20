@@ -251,6 +251,7 @@ export default withMermaid(defineConfig({
             { text: 'SwiftUI Containers', link: '/reference/swiftui-containers-ref' },
             { text: 'SwiftUI Layout', link: '/reference/swiftui-layout-ref' },
             { text: 'TextKit 2', link: '/reference/textkit-ref' },
+            { text: 'Transferable & Sharing', link: '/reference/transferable-ref' },
             { text: 'Typography', link: '/reference/typography-ref' }
           ]
         },
@@ -349,7 +350,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v2.26.0'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v2.27.0'
     }
   }
 }))
