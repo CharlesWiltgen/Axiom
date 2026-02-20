@@ -30,6 +30,7 @@ description: |
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit core-data`
 model: sonnet
+background: true
 color: orange
 tools:
   - Glob

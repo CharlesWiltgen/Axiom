@@ -30,6 +30,7 @@ description: |
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit security` or `/axiom:audit privacy`
 model: haiku
+background: true
 color: red
 tools:
   - Glob
