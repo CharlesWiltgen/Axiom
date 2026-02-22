@@ -141,6 +141,7 @@ export default withMermaid(defineConfig({
             { text: 'SwiftUI Performance', link: '/skills/ui-design/swiftui-performance' },
             { text: 'SwiftUI Debugging', link: '/skills/ui-design/swiftui-debugging' },
             { text: 'SwiftUI Gestures', link: '/skills/ui-design/swiftui-gestures' },
+            { text: 'UIKit-SwiftUI Bridging', link: '/skills/ui-design/uikit-bridging' },
             { text: 'UIKit Animation Debugging', link: '/skills/ui-design/uikit-animation-debugging' }
           ]
         },
@@ -223,7 +224,8 @@ export default withMermaid(defineConfig({
           text: 'Shipping',
           items: [
             { text: 'Overview', link: '/skills/shipping/' },
-            { text: 'App Store Submission', link: '/skills/shipping/app-store-submission' }
+            { text: 'App Store Submission', link: '/skills/shipping/app-store-submission' },
+            { text: 'App Store Connect MCP', link: '/skills/shipping/asc-mcp' }
           ]
         },
         {
@@ -303,6 +305,7 @@ export default withMermaid(defineConfig({
           text: 'Tools & Profiling',
           items: [
             { text: 'App Store Connect', link: '/reference/app-store-connect-ref' },
+            { text: 'App Store Connect MCP', link: '/reference/asc-mcp-ref' },
             { text: 'App Store Submission', link: '/reference/app-store-ref' },
             { text: 'AXe (Simulator Automation)', link: '/reference/axe-ref' },
             { text: 'MetricKit', link: '/reference/metrickit-ref' },
@@ -350,7 +353,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v2.27.0'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v2.28.0'
     }
   }
 }))
