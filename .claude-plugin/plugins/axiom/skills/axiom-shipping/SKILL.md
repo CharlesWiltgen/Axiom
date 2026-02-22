@@ -111,12 +111,30 @@ Use this router when you encounter:
 
 ---
 
+### 6. Programmatic ASC Access → **asc-mcp**
+
+**Triggers**:
+- "Automate App Store Connect"
+- "Submit build programmatically"
+- "Manage TestFlight from Claude"
+- "Respond to reviews via API"
+- "Set up asc-mcp"
+- "Distribute to TestFlight groups via MCP"
+- "Create a new version without opening ASC"
+
+**Why asc-mcp**: Workflow-focused skill teaching Claude to use asc-mcp MCP tools for release pipelines, TestFlight distribution, review management, and feedback triage — all without leaving Claude Code.
+
+**Invoke**: `/skill axiom-asc-mcp`
+
+---
+
 ## Decision Tree
 
 ```dot
 digraph shipping {
     "Shipping question?" [shape=diamond];
     "Rejected?" [shape=diamond];
+    "Automate via MCP?" [shape=diamond];
     "Need specific specs?" [shape=diamond];
     "IAP issue?" [shape=diamond];
     "Want code scan?" [shape=diamond];
@@ -126,10 +144,13 @@ digraph shipping {
     "app-store-diag" [shape=box, label="app-store-diag\n(rejection troubleshooting)"];
     "security-privacy-scanner" [shape=box, label="security-privacy-scanner\n(Agent)"];
     "iap-auditor" [shape=box, label="iap-auditor\n(Agent)"];
+    "asc-mcp" [shape=box, label="asc-mcp\n(MCP tool workflows)"];
 
     "Shipping question?" -> "Rejected?" [label="yes, about to submit or general"];
     "Rejected?" -> "app-store-diag" [label="yes, app was rejected"];
-    "Rejected?" -> "Need specific specs?" [label="no"];
+    "Rejected?" -> "Automate via MCP?" [label="no"];
+    "Automate via MCP?" -> "asc-mcp" [label="yes, programmatic ASC access"];
+    "Automate via MCP?" -> "Need specific specs?" [label="no"];
     "Need specific specs?" -> "app-store-ref" [label="yes, looking up field/guideline"];
     "Need specific specs?" -> "IAP issue?" [label="no"];
     "IAP issue?" -> "iap-auditor" [label="yes"];
@@ -142,10 +163,11 @@ digraph shipping {
 Simplified:
 
 1. App was rejected? → app-store-diag
-2. Need specific metadata/guideline specs? → app-store-ref
-3. IAP submission issue? → iap-auditor (Agent)
-4. Want pre-submission code scan? → security-privacy-scanner (Agent)
-5. General submission preparation? → app-store-submission
+2. Automate ASC via MCP tools? → asc-mcp
+3. Need specific metadata/guideline specs? → app-store-ref
+4. IAP submission issue? → iap-auditor (Agent)
+5. Want pre-submission code scan? → security-privacy-scanner (Agent)
+6. General submission preparation? → app-store-submission
 
 ## Anti-Rationalization
 
@@ -157,6 +179,7 @@ Simplified:
 | "Privacy manifests are only for big apps" | Every app using Required Reason APIs needs a manifest since May 2024. Missing = automatic rejection. |
 | "I'll add the metadata later" | Missing metadata blocks submission entirely. app-store-ref has the complete field list. |
 | "It's just a bug fix, I don't need a full checklist" | Bug fix updates still need What's New text, correct screenshots, and valid build. app-store-submission covers it. |
+| "I'll just do it in the ASC web dashboard" | If asc-mcp is configured, MCP tools are faster for bulk operations — distributing builds, responding to reviews, creating versions. asc-mcp has the workflow. |
 
 ## When NOT to Use (Conflict Resolution)
 
@@ -220,3 +243,15 @@ User: "What are Accessibility Nutrition Labels?"
 
 User: "This is my first app submission ever"
 → Invoke: `/skill axiom-app-store-submission`
+
+User: "Submit this build to App Store programmatically"
+→ Invoke: `/skill axiom-asc-mcp`
+
+User: "Set up asc-mcp for App Store Connect"
+→ Invoke: `/skill axiom-asc-mcp`
+
+User: "Distribute build 42 to my beta testers via MCP"
+→ Invoke: `/skill axiom-asc-mcp`
+
+User: "Respond to negative App Store reviews from Claude"
+→ Invoke: `/skill axiom-asc-mcp`

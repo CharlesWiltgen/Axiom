@@ -265,6 +265,22 @@ GET /v1/apps/{id}/perfPowerMetrics
 | `betaTesters` | TestFlight tester info |
 | `betaFeedback` | TestFlight feedback entries |
 
+### MCP-Powered Access
+
+If **asc-mcp** is configured, you can access ASC data programmatically from Claude Code:
+
+| Manual ASC Action | asc-mcp Tool |
+|-------------------|-------------|
+| View crash metrics | `metrics_app_perf`, `metrics_build_diagnostics` |
+| Download crash logs | `metrics_get_diagnostic_logs` |
+| List TestFlight testers | `builds_get_beta_testers` |
+| View app reviews | `reviews_list`, `reviews_stats` |
+| Respond to reviews | `reviews_create_response` |
+| Check build status | `builds_get_processing_state` |
+| Export sales data | `analytics_sales_report` (requires vendor_number) |
+
+**Setup and workflows**: `/skill axiom-asc-mcp`
+
 ### Xcode Cloud Integration
 
 If using Xcode Cloud, crash data integrates with CI/CD:
@@ -430,11 +446,11 @@ class MetricsManager: NSObject, MXMetricManagerSubscriber {
 
 ## Related
 
-**Skills:** axiom-testflight-triage (Xcode Organizer workflows)
+**Skills**: axiom-testflight-triage (Xcode Organizer workflows), axiom-asc-mcp (programmatic ASC access via MCP)
 
-**Agents:** crash-analyzer (automated crash log parsing)
+**Agents**: crash-analyzer (automated crash log parsing)
 
-**Commands:** `/axiom:analyze-crash`
+**Commands**: `/axiom:analyze-crash`
 
 ---
 

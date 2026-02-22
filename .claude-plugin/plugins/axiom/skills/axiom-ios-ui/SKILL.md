@@ -45,11 +45,13 @@ Use this router when working with:
 **App-level composition** → `/skill axiom-app-composition`
 **Search implementation** → `/skill axiom-swiftui-search-ref`
 **iOS 26 features** → `/skill axiom-swiftui-26-ref`
+**UIKit bridging (Representable, HostingController)** → `/skill axiom-uikit-bridging`
 
 ### UIKit Issues
 
 **Auto Layout conflicts** → `/skill axiom-auto-layout-debugging`
 **Animation timing issues** → `/skill axiom-uikit-animation-debugging`
+**SwiftUI embedding (HostingController, HostingConfiguration)** → `/skill axiom-uikit-bridging`
 
 ### Design & Guidelines
 
@@ -105,10 +107,12 @@ digraph ios_ui {
     swiftui_type -> "transferable-ref" [label="drag/drop, sharing, copy/paste"];
     swiftui_type -> "swiftui-search-ref" [label="search"];
     swiftui_type -> "swiftui-26-ref" [label="iOS 26 features"];
+    swiftui_type -> "uikit-bridging" [label="UIKit interop"];
 
     uikit_type [label="UIKit issue?" shape=diamond];
     uikit_type -> "auto-layout-debugging" [label="Auto Layout"];
     uikit_type -> "uikit-animation-debugging" [label="animations"];
+    uikit_type -> "uikit-bridging" [label="SwiftUI embedding"];
 
     design_type [label="Design topic?" shape=diamond];
     design_type -> "liquid-glass" [label="Liquid Glass"];
@@ -138,6 +142,7 @@ digraph ios_ui {
 | "I know how .searchable works" | Search has 6 gotchas (navigation container, isSearching level, suggestion completion). swiftui-search-ref covers all of them. |
 | "I know SF Symbols, it's just Image(systemName:)" | 4 rendering modes, 12+ effects, 3 Draw playback modes, custom symbol authoring. sf-symbols has decision trees for all of them. |
 | "Drag and drop is just .draggable and .dropDestination" | UTType declarations, representation ordering, file lifecycle, cross-app transfer gotchas. transferable-ref covers all of them. |
+| "I'll just wrap this UIView real quick" | UIViewRepresentable has lifecycle, coordinator, sizing, and memory gotchas. uikit-bridging prevents 1-2 hour debugging sessions. |
 
 ## Example Invocations
 
@@ -188,6 +193,18 @@ User: "How do I make my model draggable in SwiftUI?"
 
 User: "How do I add ShareLink with a custom preview?"
 → Invoke: `/skill axiom-transferable-ref`
+
+User: "How do I wrap a UIKit view in SwiftUI?"
+→ Invoke: `/skill axiom-uikit-bridging`
+
+User: "How do I embed SwiftUI in my UIKit app?"
+→ Invoke: `/skill axiom-uikit-bridging`
+
+User: "My UIViewRepresentable isn't updating correctly"
+→ Invoke: `/skill axiom-uikit-bridging`
+
+User: "How do I use UIHostingConfiguration for collection view cells?"
+→ Invoke: `/skill axiom-uikit-bridging`
 
 User: "Check my SwiftUI architecture for separation of concerns"
 → Invoke: `swiftui-architecture-auditor` agent

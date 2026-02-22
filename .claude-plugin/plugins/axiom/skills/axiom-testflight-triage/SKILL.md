@@ -599,6 +599,23 @@ My Apps → [App] → TestFlight → Feedback
 - **Screenshots only** — No video recordings
 - **Limited context** — Users often don't explain what they were trying to do
 
+### MCP-Powered Feedback Access
+
+If **asc-mcp** is configured, you can access crash diagnostics and tester data programmatically:
+
+| Task | asc-mcp Tool | Worker |
+|------|-------------|--------|
+| List recent builds | `builds_list` | builds |
+| See who tested a build | `builds_get_beta_testers` | build_beta |
+| Get crash signatures for a build | `metrics_build_diagnostics` | metrics |
+| Download crash logs | `metrics_get_diagnostic_logs` | metrics |
+| Distribute fix to testers | `beta_groups_add_builds` | beta_groups |
+| Notify testers of new build | `builds_send_beta_notification` | build_beta |
+
+**Limitation**: TestFlight text feedback and screenshots are NOT available via the App Store Connect API. Use Xcode Organizer or the ASC web dashboard for feedback content.
+
+**Setup**: `/skill axiom-asc-mcp`
+
 ### Getting More Context
 
 If feedback is unclear and the tester is reachable:
@@ -711,6 +728,6 @@ func suspectFunction() {
 
 **Docs:** /xcode/diagnosing-issues-using-crash-reports-and-device-logs, /xcode/examining-the-fields-in-a-crash-report, /xcode/adding-identifiable-symbol-names-to-a-crash-report, /xcode/identifying-the-cause-of-common-crashes, /xcode/identifying-high-memory-use-with-jetsam-event-reports
 
-**Skills:** axiom-memory-debugging, axiom-xcode-debugging, axiom-swift-concurrency, axiom-lldb (reproduce and investigate interactively)
+**Skills**: axiom-memory-debugging, axiom-xcode-debugging, axiom-swift-concurrency, axiom-lldb (reproduce and investigate interactively), axiom-asc-mcp (programmatic ASC access)
 
 **Agents:** crash-analyzer (automated crash log parsing and analysis)
