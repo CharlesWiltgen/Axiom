@@ -424,6 +424,17 @@ enum MyAppMigrationPlan: SchemaMigrationPlan {
 
 **Key insight** Migrations can't be rolled back in production. Get them right the first time through thorough testing.
 
+## tvOS
+
+**tvOS migrations may run against a fresh database.** The system deletes local storage under pressure, so your app may launch with no database at all. Migrations must handle this gracefully — they effectively become both "create" and "upgrade" operations.
+
+**Key implications**:
+- Migrations must be idempotent (already a best practice, but critical here)
+- Don't assume previous data exists for backfill operations
+- Test the "fresh install" path as often as the "upgrade" path
+
+See `axiom-tvos` for full tvOS storage constraints.
+
 ---
 
 **Last Updated**: 2025-11-28

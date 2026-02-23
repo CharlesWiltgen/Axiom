@@ -493,6 +493,24 @@ try data.write(to: iCloudDocumentsURL.appendingPathComponent("doc.pdf"))
 
 ---
 
+## tvOS Storage
+
+**tvOS has no persistent local storage.** This catches every iOS developer.
+
+| Directory | tvOS Behavior |
+|-----------|--------------|
+| Documents | Does not exist |
+| Application Support | System can delete when app is not running |
+| Caches | System deletes at any time |
+| tmp | System deletes at any time |
+| UserDefaults | 500 KB limit (vs ~4 MB on iOS) |
+
+**Every local file can vanish between app launches.** Your tvOS app must survive starting from zero.
+
+**Recommended**: Use iCloud (CloudKit, NSUbiquitousKeyValueStore, or iCloud Drive) as primary storage. Treat local files as cache only. See `axiom-tvos` for full tvOS storage patterns.
+
+---
+
 ## Debugging: Data Missing or Not Syncing?
 
 **Files disappeared**:

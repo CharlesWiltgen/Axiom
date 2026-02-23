@@ -742,6 +742,8 @@ struct InAppBrowser: View {
 - Access page properties (`title`, `url`, `canGoBack`, `canGoForward`)
 - Observable — SwiftUI views update automatically
 
+**tvOS**: WebView and WebPage are **not available on tvOS**. tvOS has no WKWebView at all. For web content parsing on tvOS, use JavaScriptCore. See `axiom-tvos` for alternatives.
+
 ### Advanced WebKit Features
 
 - Custom user agents
