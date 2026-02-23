@@ -1,4 +1,9 @@
 {
+  "axiom-tvos": {
+    "category": "platform",
+    "tags": ["tvos", "apple-tv", "focus-engine", "siri-remote", "tvuikit", "avplayer", "storage", "no-webview", "javascriptcore"],
+    "related": ["axiom-storage", "axiom-hig-ref", "axiom-avfoundation-ref", "axiom-sqlitedata"]
+  },
   "axiom-memory-debugging": {
     "category": "debugging",
     "tags": ["memory", "leaks", "instruments", "retain-cycles", "performance", "allocations"],
