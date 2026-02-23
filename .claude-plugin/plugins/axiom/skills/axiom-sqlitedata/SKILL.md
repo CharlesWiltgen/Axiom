@@ -911,6 +911,12 @@ When you've profiled and confirmed SQLiteData's query builder is the bottleneck,
 
 ---
 
+## tvOS
+
+SQLiteData with CloudKit SyncEngine is the **recommended tvOS data solution**. tvOS has no persistent local storage — the system deletes Caches (including Application Support) under storage pressure. With SyncEngine, iCloud is your persistent store and the local database is just a cache that rebuilds automatically after deletion. See `axiom-tvos` for full tvOS storage constraints.
+
+---
+
 ## Resources
 
 **GitHub**: pointfreeco/sqlite-data, pointfreeco/swift-structured-queries, groue/GRDB.swift

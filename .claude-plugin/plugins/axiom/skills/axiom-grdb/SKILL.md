@@ -664,6 +664,12 @@ for track in tracks {
 ```
 **Fix** Use JOIN or batch fetch
 
+## tvOS
+
+**Local GRDB databases are not persistent on tvOS.** The system deletes Caches (including Application Support) under storage pressure. A local-only GRDB database will lose all data between app launches.
+
+**If targeting tvOS**, pair GRDB with CloudKit sync (via CKSyncEngine or SQLiteData's SyncEngine) so iCloud is the persistent store and the local database is a rebuildable cache. See `axiom-tvos` for full tvOS storage constraints.
+
 ---
 
 **Targets:** iOS 13+, Swift 5.7+

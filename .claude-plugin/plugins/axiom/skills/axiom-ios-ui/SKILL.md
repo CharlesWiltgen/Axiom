@@ -61,6 +61,10 @@ Use this router when working with:
 **Typography** → `/skill axiom-typography-ref`
 **TextKit/rich text** → `/skill axiom-textkit-ref`
 
+### tvOS
+
+**Focus Engine, remote input, TVUIKit, text input** → `/skill axiom-tvos`
+
 ### Accessibility
 
 **VoiceOver, Dynamic Type** → `/skill axiom-accessibility-diag`
@@ -82,11 +86,14 @@ Use this router when working with:
 ```dot
 digraph ios_ui {
     start [label="UI issue" shape=ellipse];
+    is_tvos [label="tvOS?" shape=diamond];
     is_swiftui [label="SwiftUI?" shape=diamond];
     is_uikit [label="UIKit?" shape=diamond];
     is_design [label="Design/guidelines?" shape=diamond];
 
-    start -> is_swiftui;
+    start -> is_tvos;
+    is_tvos -> "axiom-tvos" [label="focus, remote, TVUIKit, text input, storage"];
+    is_tvos -> is_swiftui [label="no"];
     is_swiftui -> swiftui_type [label="yes"];
     is_swiftui -> is_uikit [label="no"];
     is_uikit -> uikit_type [label="yes"];
@@ -143,6 +150,7 @@ digraph ios_ui {
 | "I know SF Symbols, it's just Image(systemName:)" | 4 rendering modes, 12+ effects, 3 Draw playback modes, custom symbol authoring. sf-symbols has decision trees for all of them. |
 | "Drag and drop is just .draggable and .dropDestination" | UTType declarations, representation ordering, file lifecycle, cross-app transfer gotchas. transferable-ref covers all of them. |
 | "I'll just wrap this UIView real quick" | UIViewRepresentable has lifecycle, coordinator, sizing, and memory gotchas. uikit-bridging prevents 1-2 hour debugging sessions. |
+| "tvOS is just iOS on a TV" | tvOS has no persistent storage, no WebView, a dual focus system, and two remote generations. axiom-tvos covers all the traps. |
 
 ## Example Invocations
 
@@ -205,6 +213,12 @@ User: "My UIViewRepresentable isn't updating correctly"
 
 User: "How do I use UIHostingConfiguration for collection view cells?"
 → Invoke: `/skill axiom-uikit-bridging`
+
+User: "I'm building a tvOS app and focus navigation isn't working"
+→ Invoke: `/skill axiom-tvos`
+
+User: "How do I handle text input on tvOS?"
+→ Invoke: `/skill axiom-tvos`
 
 User: "Check my SwiftUI architecture for separation of concerns"
 → Invoke: `swiftui-architecture-auditor` agent

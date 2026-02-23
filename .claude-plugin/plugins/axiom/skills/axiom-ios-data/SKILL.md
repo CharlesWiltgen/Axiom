@@ -58,6 +58,11 @@ Use this router when working with:
 **Storage management** → `/skill axiom-storage-management-ref`
 **File protection** → `/skill axiom-file-protection-ref`
 
+### tvOS Storage
+
+**tvOS data persistence** → `/skill axiom-tvos` (CRITICAL: no persistent local storage on tvOS)
+**tvOS + CloudKit** → `/skill axiom-sqlitedata` (recommended: SyncEngine as persistent store)
+
 ### Automated Scanning
 
 **Core Data audit** → Launch `core-data-auditor` agent or `/axiom:audit core-data` (migration risks, thread-confinement, N+1 queries, production data loss)
@@ -85,6 +90,7 @@ Use this router when working with:
 16. Want Codable anti-pattern scan? → codable-auditor (Agent)
 17. Want iCloud sync audit? → icloud-auditor (Agent)
 18. Want storage location audit? → storage-auditor (Agent)
+19. tvOS data persistence? → axiom-tvos (CRITICAL: no persistent local storage) + axiom-sqlitedata (CloudKit SyncEngine)
 
 ## Anti-Rationalization
 
@@ -95,6 +101,7 @@ Use this router when working with:
 | "Simple query, I don't need the skill" | Query patterns prevent N+1 and thread-safety issues. The skill has copy-paste solutions. |
 | "CloudKit sync is straightforward" | CloudKit has 15+ failure modes. cloud-sync-diag diagnoses them systematically. |
 | "I know Codable well enough" | Codable has silent data loss traps (try? swallows errors). codable skill prevents production bugs. |
+| "I'll use local storage on tvOS" | tvOS has NO persistent local storage. System deletes Caches at any time. axiom-tvos explains the iCloud-first pattern. |
 
 ## Critical Pattern: Migrations
 
@@ -130,3 +137,9 @@ User: "Audit my iCloud sync implementation"
 
 User: "Check if my files are stored in the right locations"
 → Invoke: `storage-auditor` agent
+
+User: "How do I persist data on tvOS?"
+→ Invoke: `/skill axiom-tvos` + `/skill axiom-sqlitedata`
+
+User: "My tvOS app loses data between launches"
+→ Invoke: `/skill axiom-tvos`

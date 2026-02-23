@@ -895,6 +895,14 @@ Very small display — glanceable, minimal interaction. Full-bleed content, mini
 
 10-foot viewing distance, focus-based navigation, gestural remote. Large touch targets, prominent focus states, limited text input, directional navigation.
 
+**Focus Engine**: tvOS uses a UIKit Focus Engine for hardware navigation that coexists with SwiftUI's @FocusState. The Focus Engine is the ultimate authority — @FocusState assignments are ignored if the Focus Engine considers a view unfocusable. Use UIFocusGuide to bridge navigation gaps between isolated views.
+
+**TVUIKit**: tvOS-exclusive components — TVPosterView (parallax focus effects), TVDigitEntryViewController (PIN entry). No SwiftUI equivalents exist; bridge via UIViewRepresentable.
+
+**Text input**: Standard text fields trigger a fullscreen system keyboard. For better UX, use the shadow input pattern (Button UI + hidden CocoaTextField). See `axiom-tvos` for implementation details.
+
+**Storage**: No persistent local storage. All local files are cache that the system deletes. See `axiom-tvos` for data strategy.
+
 ### visionOS
 
 Spatial computing with glass materials, 3D layouts, depth. Comfortable viewing depth, avoid head-anchored content, center content in field of view.
@@ -1220,7 +1228,7 @@ HStack {
 
 **Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/materials, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/accessibility, /design/human-interface-guidelines/icons
 
-**Skills**: axiom-hig, axiom-liquid-glass, axiom-liquid-glass-ref, axiom-swiftui-layout-ref, axiom-accessibility-diag
+**Skills**: axiom-hig, axiom-liquid-glass, axiom-liquid-glass-ref, axiom-swiftui-layout-ref, axiom-accessibility-diag, axiom-tvos
 
 ---
 
