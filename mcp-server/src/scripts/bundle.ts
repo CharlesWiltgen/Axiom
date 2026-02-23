@@ -71,6 +71,15 @@ async function generateBundle(pluginPath: string): Promise<BundleV2> {
   await loadSkillsFromDir(skillsDir);
   console.log(`Found ${Object.keys(bundle.skills).length} skills`);
 
+  // Warn about orphaned annotation entries (typos, renames, deletions)
+  const orphanedAnnotations = Object.keys(annotations).filter(name => !bundle.skills[name]);
+  if (orphanedAnnotations.length > 0) {
+    console.warn(`Warning: ${orphanedAnnotations.length} annotation(s) have no matching skill:`);
+    for (const name of orphanedAnnotations) {
+      console.warn(`  - ${name}`);
+    }
+  }
+
   // Load commands
   const commandsDir = join(pluginPath, 'commands');
   const commandFiles = (await readdir(commandsDir)).filter(f => f.endsWith('.md'));

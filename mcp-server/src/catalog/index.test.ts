@@ -110,6 +110,32 @@ describe('buildCatalog', () => {
     expect(buildSkills.some(s => s.name === 'apple-diag-actor-isolation')).toBe(true);
   });
 
+  it('uses annotation category slug over name heuristic', () => {
+    // axiom-metal-migration would normally match "migration" → Data & Persistence,
+    // but annotation category "graphics" should map to "Graphics & Metal"
+    const skills = new Map<string, Skill>([
+      ['axiom-metal-migration', makeSkill({
+        name: 'axiom-metal-migration',
+        category: 'graphics',
+      })],
+    ]);
+
+    const result = buildCatalog(skills, new Map());
+
+    expect(result.categories['Graphics & Metal']?.skills[0]?.name).toBe('axiom-metal-migration');
+    expect(result.categories['Data & Persistence']).toBeUndefined();
+  });
+
+  it('falls back to name heuristic when no annotation category', () => {
+    const skills = new Map<string, Skill>([
+      ['axiom-swiftui-nav', makeSkill({ name: 'axiom-swiftui-nav' })],
+    ]);
+
+    const result = buildCatalog(skills, new Map());
+
+    expect(result.categories['UI & Design']?.skills[0]?.name).toBe('axiom-swiftui-nav');
+  });
+
   it('returns empty catalog for no skills and agents', () => {
     const result = buildCatalog(new Map(), new Map());
 

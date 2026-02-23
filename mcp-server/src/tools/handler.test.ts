@@ -223,6 +223,33 @@ describe('DynamicToolsHandler', () => {
       expect(text).toContain('axiom-swift-concurrency — Sections');
       expect(text).toContain('| Overview | 500 |');
       expect(text).toContain('| @MainActor | 1200 |');
+      expect(text).not.toContain('Related Skills');
+    });
+
+    it('listSections mode omits related skills even when present', async () => {
+      const skill = {
+        name: 'axiom-memory-debugging',
+        description: 'Memory debugging',
+        content: 'full content here',
+        skillType: 'discipline',
+        source: 'axiom',
+        sections: [
+          { heading: 'Overview', level: 2, startLine: 1, endLine: 10, charCount: 500 },
+        ],
+        tags: [],
+        related: ['axiom-performance-profiling', 'axiom-objc-block-retain-cycles'],
+      };
+      const loader = makeMockLoader({ getSkill: vi.fn().mockResolvedValue(skill) });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', {
+        skills: [{ name: 'axiom-memory-debugging' }],
+        listSections: true,
+      });
+      const text = result.content[0].text;
+
+      expect(text).toContain('axiom-memory-debugging — Sections');
+      expect(text).not.toContain('Related Skills');
     });
 
     it('returns filtered content when sections specified', async () => {
@@ -262,6 +289,46 @@ describe('DynamicToolsHandler', () => {
       expect(text).toContain('## axiom-swift-concurrency');
       expect(text).not.toContain('filtered');
       expect(text).toContain('Full skill content');
+    });
+
+    it('includes related skills when present', async () => {
+      const loader = makeMockLoader({
+        getSkillSections: vi.fn().mockResolvedValue({
+          skill: {
+            name: 'axiom-memory-debugging',
+            skillType: 'discipline',
+            related: ['axiom-performance-profiling', 'axiom-objc-block-retain-cycles'],
+          },
+          content: 'Memory debugging content',
+          sections: [],
+        }),
+      });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', {
+        skills: [{ name: 'axiom-memory-debugging' }],
+      });
+      const text = result.content[0].text;
+
+      expect(text).toContain('**Related Skills**: axiom-performance-profiling, axiom-objc-block-retain-cycles');
+    });
+
+    it('omits related skills line when none present', async () => {
+      const loader = makeMockLoader({
+        getSkillSections: vi.fn().mockResolvedValue({
+          skill: { name: 'axiom-swift-concurrency', skillType: 'discipline', related: [] },
+          content: 'Full skill content',
+          sections: [],
+        }),
+      });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', {
+        skills: [{ name: 'axiom-swift-concurrency' }],
+      });
+      const text = result.content[0].text;
+
+      expect(text).not.toContain('Related Skills');
     });
   });
 
