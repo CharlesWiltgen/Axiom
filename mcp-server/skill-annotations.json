@@ -1,57 +1,1594 @@
 {
-  "axiom-tvos": {
-    "category": "platform",
-    "tags": ["tvos", "apple-tv", "focus-engine", "siri-remote", "tvuikit", "avplayer", "storage", "no-webview", "javascriptcore"],
-    "related": ["axiom-storage", "axiom-hig-ref", "axiom-avfoundation-ref", "axiom-sqlitedata"]
+  "axiom-accessibility-diag": {
+    "category": "accessibility",
+    "tags": [
+      "diagnostic",
+      "voiceover",
+      "dynamic-type",
+      "color-contrast",
+      "wcag",
+      "touch-targets",
+      "screen-reader"
+    ]
   },
-  "axiom-memory-debugging": {
-    "category": "debugging",
-    "tags": ["memory", "leaks", "instruments", "retain-cycles", "performance", "allocations"],
-    "related": ["performance-profiling", "axiom-objc-block-retain-cycles"]
+  "axiom-app-composition": {
+    "category": "ui",
+    "tags": [
+      "@main"
+    ],
+    "related": [
+      "axiom-uikit-bridging"
+    ]
+  },
+  "axiom-app-discoverability": {
+    "category": "integration",
+    "tags": ["spotlight", "siri-suggestions", "handoff", "universal-links"]
+  },
+  "axiom-app-intents-ref": {
+    "category": "integration",
+    "tags": [
+      "appentity",
+      "appintent",
+      "reference"
+    ]
+  },
+  "axiom-app-shortcuts-ref": {
+    "category": "integration",
+    "tags": [
+      "appshortcutsprovider",
+      "reference"
+    ]
   },
   "axiom-app-store-connect-ref": {
-    "category": "debugging",
-    "tags": ["app-store-connect", "crashes", "testflight", "metrics", "feedback", "analytics"],
-    "related": ["axiom-testflight-triage", "crash-analyzer"]
+    "category": "integration",
+    "tags": [
+      "app-store-connect",
+      "crashes",
+      "testflight",
+      "metrics",
+      "feedback",
+      "analytics"
+    ],
+    "related": [
+      "axiom-testflight-triage"
+    ]
   },
-  "axiom-testflight-triage": {
-    "category": "debugging",
-    "tags": ["testflight", "crash", "organizer", "symbolication", "feedback", "triage"],
-    "related": ["axiom-memory-debugging", "axiom-xcode-debugging", "axiom-swift-concurrency"]
+  "axiom-app-store-diag": {
+    "category": "integration",
+    "tags": [
+      "diagnostic"
+    ],
+    "related": [
+      "axiom-app-store-ref"
+    ]
   },
-  "axiom-xcode-debugging": {
-    "category": "debugging",
-    "tags": ["xcode", "build", "simulator", "environment", "diagnostics"],
-    "related": ["build-debugging", "axiom-swift-concurrency"]
+  "axiom-app-store-ref": {
+    "category": "integration",
+    "tags": [
+      "dsa",
+      "eu",
+      "iap",
+      "reference"
+    ],
+    "related": [
+      "axiom-app-store-diag"
+    ]
   },
-  "axiom-swiftui-nav": {
-    "category": "swiftui",
-    "tags": ["swiftui", "navigation", "navigationstack", "navigationsplitview", "deep-links", "state-restoration", "coordinator-pattern"],
-    "related": ["swiftui-nav-diag", "axiom-swiftui-nav-ref", "axiom-swiftui-layout"]
+  "axiom-app-store-submission": {
+    "category": "integration",
+    "tags": ["rejection", "review-guidelines", "metadata", "privacy-manifest", "export-compliance"],
+    "related": [
+      "axiom-accessibility-diag",
+      "axiom-app-store-connect-ref",
+      "axiom-privacy-ux",
+      "axiom-storekit-ref",
+      "axiom-testflight-triage",
+      "axiom-xcode-debugging"
+    ]
+  },
+  "axiom-apple-docs-research": {
+    "category": "general",
+    "related": [
+      "axiom-core-data"
+    ]
+  },
+  "axiom-asc-mcp": {
+    "category": "build",
+    "tags": [
+      "testflight"
+    ],
+    "related": [
+      "axiom-app-store-connect-ref",
+      "axiom-testflight-triage"
+    ]
+  },
+  "axiom-assume-isolated": {
+    "category": "concurrency",
+    "tags": [
+      "@preconcurrency",
+      "mainactor"
+    ]
+  },
+  "axiom-auto-layout-debugging": {
+    "category": "ui",
+    "tags": ["constraint-conflict", "unable-to-simultaneously-satisfy", "ambiguous-layout", "nslayoutconstraint"],
+    "related": [
+      "axiom-swiftui-performance",
+      "axiom-ui-testing",
+      "axiom-xcode-debugging"
+    ]
+  },
+  "axiom-avfoundation-ref": {
+    "category": "integration",
+    "tags": [
+      "apac",
+      "asaf",
+      "dac",
+      "reference"
+    ]
+  },
+  "axiom-axe-ref": {
+    "category": "testing",
+    "tags": ["reference", "simulator", "screenshot", "xcrun-simctl", "automation"]
+  },
+  "axiom-background-processing": {
+    "category": "integration",
+    "tags": ["bgtaskscheduler", "background-fetch", "background-refresh", "silent-push"],
+    "related": [
+      "axiom-background-processing-diag",
+      "axiom-background-processing-ref",
+      "axiom-energy"
+    ]
+  },
+  "axiom-background-processing-diag": {
+    "category": "integration",
+    "tags": [
+      "diagnostic",
+      "handler-not-called",
+      "task-never-runs",
+      "task-terminates-early",
+      "works-in-dev-not-prod"
+    ],
+    "related": [
+      "axiom-background-processing",
+      "axiom-background-processing-ref"
+    ]
+  },
+  "axiom-background-processing-ref": {
+    "category": "integration",
+    "tags": [
+      "reference"
+    ],
+    "related": [
+      "axiom-background-processing",
+      "axiom-background-processing-diag"
+    ]
+  },
+  "axiom-build-debugging": {
+    "category": "build",
+    "tags": [
+      "cocoapods",
+      "multiple-commands-produce",
+      "spm"
+    ]
+  },
+  "axiom-build-performance": {
+    "category": "build",
+    "tags": ["slow-build", "compilation-time", "type-checking", "parallelization"]
+  },
+  "axiom-camera-capture": {
+    "category": "vision",
+    "tags": [
+      "avcapture",
+      "avcapturesession",
+      "photo",
+      "video",
+      "session",
+      "rotationcoordinator"
+    ],
+    "related": [
+      "axiom-camera-capture-diag",
+      "axiom-camera-capture-ref",
+      "axiom-photo-library"
+    ]
+  },
+  "axiom-camera-capture-diag": {
+    "category": "vision",
+    "tags": [
+      "diagnostic"
+    ],
+    "related": [
+      "axiom-camera-capture",
+      "axiom-camera-capture-ref"
+    ]
+  },
+  "axiom-camera-capture-ref": {
+    "category": "vision",
+    "tags": [
+      "reference",
+      "rotationcoordinator"
+    ],
+    "related": [
+      "axiom-camera-capture",
+      "axiom-camera-capture-diag"
+    ]
+  },
+  "axiom-cloud-sync": {
+    "category": "data",
+    "tags": ["cloudkit", "icloud", "sync-conflict", "ckrecord"],
+    "related": [
+      "axiom-cloudkit-ref",
+      "axiom-icloud-drive-ref",
+      "axiom-cloud-sync-diag",
+      "axiom-storage"
+    ]
+  },
+  "axiom-cloud-sync-diag": {
+    "category": "data",
+    "tags": [
+      "ckerror",
+      "cloudkit",
+      "cloudkit-error",
+      "data-not-appearing-on-other-devices",
+      "diagnostic",
+      "file-not-syncing",
+      "icloud-upload-failed",
+      "quota-exceeded",
+      "sync-conflict",
+      "ubiquitous-item-error"
+    ],
+    "related": [
+      "axiom-cloud-sync",
+      "axiom-cloudkit-ref",
+      "axiom-icloud-drive-ref",
+      "axiom-storage"
+    ]
+  },
+  "axiom-cloudkit-ref": {
+    "category": "data",
+    "tags": [
+      "ckdatabase",
+      "ckrecord",
+      "cksyncengine",
+      "cloudkit-sync",
+      "cloudkit-zones",
+      "conflict-resolution",
+      "public-database",
+      "reference",
+      "shared-database",
+      "swiftdata",
+      "swiftdata-cloudkit"
+    ],
+    "related": [
+      "axiom-cloud-sync-diag",
+      "axiom-icloud-drive-ref",
+      "axiom-storage",
+      "axiom-swiftdata"
+    ]
+  },
+  "axiom-codable": {
+    "category": "data",
+    "tags": [
+      "codingkeys",
+      "json",
+      "encoder",
+      "decoder",
+      "serialization"
+    ]
+  },
+  "axiom-concurrency-profiling": {
+    "category": "concurrency",
+    "tags": ["instruments", "swift-concurrency-instrument", "task-graph", "actor-contention"]
+  },
+  "axiom-core-data": {
+    "category": "data",
+    "tags": ["nsmanagedobject", "nspersistentcontainer", "fetch-request", "nsfetchedresultscontroller"],
+    "related": [
+      "axiom-core-data-diag",
+      "axiom-swiftdata",
+      "axiom-database-migration"
+    ]
+  },
+  "axiom-core-data-diag": {
+    "category": "data",
+    "tags": [
+      "diagnostic",
+      "swiftdata"
+    ],
+    "related": [
+      "axiom-core-data"
+    ]
+  },
+  "axiom-core-location": {
+    "category": "integration",
+    "tags": ["gps", "cllocationmanager", "geofencing", "clmonitor", "significant-change"],
+    "related": [
+      "axiom-core-location-diag",
+      "axiom-core-location-ref",
+      "axiom-energy"
+    ]
+  },
+  "axiom-core-location-diag": {
+    "category": "integration",
+    "tags": [
+      "diagnostic"
+    ],
+    "related": [
+      "axiom-core-location",
+      "axiom-core-location-ref",
+      "axiom-energy-diag"
+    ]
+  },
+  "axiom-core-location-ref": {
+    "category": "integration",
+    "tags": [
+      "reference"
+    ],
+    "related": [
+      "axiom-core-location",
+      "axiom-core-location-diag",
+      "axiom-energy-ref"
+    ]
+  },
+  "axiom-core-spotlight-ref": {
+    "category": "integration",
+    "tags": [
+      "indexedentity",
+      "reference"
+    ]
+  },
+  "axiom-database-migration": {
+    "category": "data",
+    "tags": [
+      "schema",
+      "data-loss",
+      "alter-table",
+      "not-null",
+      "cannot-add-not-null-column",
+      "foreign-key-constraint-failed",
+      "grdb",
+      "no-such-column",
+      "rollback"
+    ],
+    "related": [
+      "axiom-grdb",
+      "axiom-swiftdata-migration",
+      "axiom-sqlitedata",
+      "axiom-core-data"
+    ]
+  },
+  "axiom-deep-link-debugging": {
+    "category": "build",
+    "tags": [
+      "deep-linking",
+      "url-schemes",
+      "simulator",
+      "testing",
+      "debugging",
+      "navigation"
+    ],
+    "related": [
+      "axiom-xcode-debugging",
+      "axiom-swiftui-nav"
+    ]
+  },
+  "axiom-display-performance": {
+    "category": "performance",
+    "tags": [
+      "promotion-display"
+    ]
   },
   "axiom-energy": {
     "category": "performance",
-    "tags": ["energy", "battery", "power", "instruments", "profiling", "optimization"],
-    "related": ["performance-profiling", "axiom-memory-debugging", "axiom-networking"]
+    "tags": [
+      "energy",
+      "battery",
+      "power",
+      "instruments",
+      "profiling",
+      "optimization"
+    ],
+    "related": [
+      "axiom-performance-profiling",
+      "axiom-memory-debugging",
+      "axiom-networking"
+    ]
   },
-  "axiom-deep-link-debugging": {
-    "category": "debugging",
-    "tags": ["deep-linking", "url-schemes", "simulator", "testing", "debugging", "navigation"],
-    "related": ["simulator-tester", "axiom-xcode-debugging", "axiom-swiftui-nav"]
+  "axiom-energy-diag": {
+    "category": "performance",
+    "tags": [
+      "app-at-top-of-battery-settings",
+      "background-drain",
+      "diagnostic",
+      "high-cellular-usage",
+      "phone-gets-hot"
+    ],
+    "related": [
+      "axiom-energy",
+      "axiom-energy-ref"
+    ]
   },
-  "axiom-axe-ref": {
-    "category": "reference"
+  "axiom-energy-ref": {
+    "category": "performance",
+    "tags": [
+      "metrickit",
+      "reference"
+    ],
+    "related": [
+      "axiom-energy",
+      "axiom-energy-diag"
+    ]
+  },
+  "axiom-extensions-widgets": {
+    "category": "integration",
+    "tags": ["widgetkit", "live-activity", "dynamic-island", "timeline-provider", "control-center"],
+    "related": [
+      "axiom-extensions-widgets-ref"
+    ]
+  },
+  "axiom-extensions-widgets-ref": {
+    "category": "integration",
+    "tags": [
+      "activitykit",
+      "reference",
+      "widgetkit"
+    ],
+    "related": [
+      "axiom-extensions-widgets"
+    ]
+  },
+  "axiom-file-protection-ref": {
+    "category": "data",
+    "tags": [
+      "complete-protection",
+      "data-protection",
+      "encrypt-files-at-rest",
+      "file-encryption-ios",
+      "file-security",
+      "fileprotectiontype",
+      "nsfileprotection",
+      "reference",
+      "secure-file-storage"
+    ],
+    "related": [
+      "axiom-storage",
+      "axiom-storage-diag",
+      "axiom-storage-management-ref"
+    ]
+  },
+  "axiom-foundation-models": {
+    "category": "ai",
+    "tags": [
+      "@generable",
+      "language-model",
+      "on-device",
+      "structured-output",
+      "languagemodelsession",
+      "streaming"
+    ],
+    "related": [
+      "axiom-foundation-models-diag",
+      "axiom-foundation-models-ref"
+    ]
+  },
+  "axiom-foundation-models-diag": {
+    "category": "ai",
+    "tags": [
+      "diagnostic"
+    ],
+    "related": [
+      "axiom-foundation-models",
+      "axiom-foundation-models-ref"
+    ]
+  },
+  "axiom-foundation-models-ref": {
+    "category": "ai",
+    "tags": [
+      "@generable",
+      "@guide",
+      "languagemodelsession",
+      "reference"
+    ],
+    "related": [
+      "axiom-foundation-models",
+      "axiom-foundation-models-diag"
+    ]
+  },
+  "axiom-getting-started": {
+    "category": "general",
+    "related": [
+      "axiom-liquid-glass",
+      "axiom-swift-concurrency"
+    ]
+  },
+  "axiom-grdb": {
+    "category": "data",
+    "tags": [
+      "databasemigrator",
+      "sql",
+      "valueobservation"
+    ],
+    "related": [
+      "axiom-database-migration",
+      "axiom-sqlitedata-ref"
+    ]
+  },
+  "axiom-hang-diagnostics": {
+    "category": "performance",
+    "tags": [
+      "freeze",
+      "unresponsive",
+      "main-thread",
+      "metrickit"
+    ],
+    "related": [
+      "axiom-performance-profiling",
+      "axiom-swiftui-performance"
+    ]
+  },
+  "axiom-haptics": {
+    "category": "integration",
+    "tags": [
+      "ahap",
+      "reference"
+    ]
+  },
+  "axiom-hig": {
+    "category": "ui",
+    "tags": ["human-interface-guidelines", "design-patterns", "apple-design", "spacing", "color-palette"],
+    "related": [
+      "axiom-accessibility-diag",
+      "axiom-hig-ref",
+      "axiom-liquid-glass",
+      "axiom-liquid-glass-ref"
+    ]
+  },
+  "axiom-hig-ref": {
+    "category": "ui",
+    "tags": [
+      "reference",
+      "sf"
+    ],
+    "related": [
+      "axiom-accessibility-diag",
+      "axiom-hig",
+      "axiom-liquid-glass",
+      "axiom-liquid-glass-ref",
+      "axiom-sf-symbols",
+      "axiom-sf-symbols-ref"
+    ]
+  },
+  "axiom-icloud-drive-ref": {
+    "category": "data",
+    "tags": [
+      "file-sync",
+      "icloud-drive",
+      "isubiquitousitem",
+      "nsfilecoordinator",
+      "nsfilepresenter",
+      "nsubiquitouskeyvaluestore",
+      "reference",
+      "ubiquitous-container",
+      "ubiquitous-file-sync"
+    ],
+    "related": [
+      "axiom-cloud-sync-diag",
+      "axiom-cloudkit-ref",
+      "axiom-storage"
+    ]
+  },
+  "axiom-in-app-purchases": {
+    "category": "integration",
+    "tags": [
+      "storekit",
+      "subscription",
+      "transaction",
+      "receipt",
+      "iap",
+      "purchase",
+      "storemanager"
+    ]
+  },
+  "axiom-liquid-glass": {
+    "category": "ui",
+    "tags": [
+      "glass-effect",
+      "material",
+      "blur",
+      "ios-26",
+      "glassbackgroundeffect"
+    ],
+    "related": [
+      "axiom-liquid-glass-ref",
+      "axiom-swiftui-performance",
+      "axiom-ui-testing"
+    ]
+  },
+  "axiom-liquid-glass-ref": {
+    "category": "ui",
+    "tags": [
+      "reference"
+    ],
+    "related": [
+      "axiom-accessibility-diag",
+      "axiom-liquid-glass",
+      "axiom-performance-profiling",
+      "axiom-swiftui-26-ref",
+      "axiom-swiftui-layout-ref",
+      "axiom-swiftui-performance"
+    ]
+  },
+  "axiom-lldb": {
+    "category": "performance",
+    "tags": [
+      "debugger",
+      "breakpoint",
+      "po",
+      "expression",
+      "crash-triage"
+    ],
+    "related": [
+      "axiom-concurrency-profiling",
+      "axiom-hang-diagnostics",
+      "axiom-lldb-ref",
+      "axiom-swift-concurrency",
+      "axiom-swiftui-debugging"
+    ]
+  },
+  "axiom-lldb-ref": {
+    "category": "performance",
+    "tags": [
+      "reference"
+    ],
+    "related": [
+      "axiom-lldb"
+    ]
+  },
+  "axiom-localization": {
+    "category": "integration",
+    "tags": [
+      "reference",
+      "rtl"
+    ]
+  },
+  "axiom-memory-debugging": {
+    "category": "performance",
+    "tags": [
+      "memory",
+      "leaks",
+      "instruments",
+      "retain-cycles",
+      "allocations"
+    ],
+    "related": [
+      "axiom-performance-profiling",
+      "axiom-objc-block-retain-cycles"
+    ]
+  },
+  "axiom-metal-migration": {
+    "category": "graphics",
+    "tags": [
+      "directx",
+      "opengl"
+    ],
+    "related": [
+      "axiom-metal-migration-diag"
+    ]
+  },
+  "axiom-metal-migration-diag": {
+    "category": "graphics",
+    "tags": [
+      "diagnostic",
+      "gpu"
+    ],
+    "related": [
+      "axiom-metal-migration"
+    ]
+  },
+  "axiom-metal-migration-ref": {
+    "category": "graphics",
+    "tags": [
+      "directx",
+      "gl",
+      "glsl",
+      "hlsl",
+      "msl",
+      "reference"
+    ],
+    "related": [
+      "axiom-metal-migration",
+      "axiom-metal-migration-diag"
+    ]
+  },
+  "axiom-metrickit-ref": {
+    "category": "performance",
+    "tags": [
+      "reference"
+    ],
+    "related": [
+      "axiom-hang-diagnostics",
+      "axiom-memory-debugging",
+      "axiom-performance-profiling"
+    ]
+  },
+  "axiom-network-framework-ref": {
+    "category": "networking",
+    "tags": [
+      "networkbrowser",
+      "networkconnection",
+      "networklistener",
+      "reference",
+      "tlv"
+    ],
+    "related": [
+      "axiom-networking",
+      "axiom-networking-diag"
+    ]
+  },
+  "axiom-networking": {
+    "category": "networking",
+    "tags": [
+      "urlsession",
+      "nwconnection",
+      "timeout",
+      "tls",
+      "http"
+    ],
+    "related": [
+      "axiom-network-framework-ref",
+      "axiom-networking-diag",
+      "axiom-networking-legacy",
+      "axiom-networking-migration"
+    ]
+  },
+  "axiom-networking-diag": {
+    "category": "networking",
+    "tags": [
+      "diagnostic",
+      "tls",
+      "vpn"
+    ],
+    "related": [
+      "axiom-networking",
+      "axiom-networking-migration"
+    ]
+  },
+  "axiom-networking-legacy": {
+    "category": "networking",
+    "tags": ["urlsession", "nsurlsession", "alamofire", "cfnetwork"]
+  },
+  "axiom-networking-migration": {
+    "category": "networking",
+    "tags": [
+      "bsd",
+      "networkconnection",
+      "streamtask"
+    ],
+    "related": [
+      "axiom-networking",
+      "axiom-networking-diag"
+    ]
+  },
+  "axiom-now-playing": {
+    "category": "integration",
+    "tags": [
+      "lock-screen",
+      "control-center",
+      "mpnowplaying",
+      "remote-commands",
+      "media-player"
+    ],
+    "related": [
+      "axiom-now-playing-carplay",
+      "axiom-now-playing-musickit"
+    ]
+  },
+  "axiom-now-playing-carplay": {
+    "category": "integration",
+    "related": [
+      "axiom-now-playing",
+      "axiom-now-playing-musickit"
+    ]
+  },
+  "axiom-now-playing-musickit": {
+    "category": "integration",
+    "tags": [
+      "applicationmusicplayer"
+    ],
+    "related": [
+      "axiom-now-playing",
+      "axiom-now-playing-carplay"
+    ]
+  },
+  "axiom-objc-block-retain-cycles": {
+    "category": "performance",
+    "tags": [
+      "closure",
+      "retain-cycle",
+      "memory-leak",
+      "weak-self",
+      "block"
+    ]
+  },
+  "axiom-ownership-conventions": {
+    "category": "concurrency",
+    "tags": [
+      "arc"
+    ]
+  },
+  "axiom-performance-profiling": {
+    "category": "performance",
+    "tags": ["instruments", "time-profiler", "allocations", "leaks", "cpu-usage"],
+    "related": [
+      "axiom-memory-debugging",
+      "axiom-metrickit-ref",
+      "axiom-swiftui-performance"
+    ]
+  },
+  "axiom-photo-library": {
+    "category": "vision",
+    "tags": [
+      "photospicker",
+      "photospickeritem"
+    ],
+    "related": [
+      "axiom-photo-library-ref"
+    ]
+  },
+  "axiom-photo-library-ref": {
+    "category": "vision",
+    "tags": [
+      "photospicker",
+      "photospickeritem",
+      "reference"
+    ],
+    "related": [
+      "axiom-photo-library"
+    ]
+  },
+  "axiom-privacy-ux": {
+    "category": "integration",
+    "tags": [
+      "reference",
+      "ux"
+    ]
+  },
+  "axiom-realitykit": {
+    "category": "games",
+    "tags": [
+      "ar",
+      "ecs",
+      "entity",
+      "component",
+      "realityview",
+      "3d",
+      "swiftui"
+    ],
+    "related": [
+      "axiom-metal-migration-ref",
+      "axiom-realitykit-diag",
+      "axiom-realitykit-ref",
+      "axiom-scenekit",
+      "axiom-spritekit"
+    ]
+  },
+  "axiom-realitykit-diag": {
+    "category": "games",
+    "tags": [
+      "diagnostic"
+    ],
+    "related": [
+      "axiom-realitykit",
+      "axiom-realitykit-ref"
+    ]
+  },
+  "axiom-realitykit-ref": {
+    "category": "games",
+    "tags": [
+      "realityview",
+      "reference"
+    ],
+    "related": [
+      "axiom-realitykit",
+      "axiom-realitykit-diag"
+    ]
+  },
+  "axiom-realm-migration-ref": {
+    "category": "data",
+    "tags": [
+      "cloudkit",
+      "reference",
+      "swiftdata"
+    ]
+  },
+  "axiom-scenekit": {
+    "category": "games",
+    "tags": [
+      "realitykit",
+      "swiftui"
+    ],
+    "related": [
+      "axiom-metal-migration-ref",
+      "axiom-realitykit",
+      "axiom-scenekit-ref",
+      "axiom-spritekit"
+    ]
+  },
+  "axiom-scenekit-ref": {
+    "category": "games",
+    "tags": [
+      "realitykit",
+      "reference"
+    ],
+    "related": [
+      "axiom-scenekit"
+    ]
+  },
+  "axiom-sf-symbols": {
+    "category": "ui",
+    "tags": [
+      "sf"
+    ],
+    "related": [
+      "axiom-hig-ref",
+      "axiom-sf-symbols-ref",
+      "axiom-swiftui-animation-ref"
+    ]
+  },
+  "axiom-sf-symbols-ref": {
+    "category": "ui",
+    "tags": [
+      "reference",
+      "sf"
+    ],
+    "related": [
+      "axiom-sf-symbols",
+      "axiom-swiftui-animation-ref"
+    ]
+  },
+  "axiom-shipping": {
+    "category": "integration",
+    "tags": [
+      "cd",
+      "ci"
+    ],
+    "related": [
+      "axiom-app-store-diag",
+      "axiom-app-store-ref",
+      "axiom-app-store-submission",
+      "axiom-asc-mcp"
+    ]
+  },
+  "axiom-spritekit": {
+    "category": "games",
+    "tags": [
+      "physics",
+      "actions",
+      "scene",
+      "2d-game",
+      "skscene"
+    ],
+    "related": [
+      "axiom-metal-migration-ref",
+      "axiom-scenekit",
+      "axiom-spritekit-diag",
+      "axiom-spritekit-ref",
+      "axiom-swiftui-layout"
+    ]
+  },
+  "axiom-spritekit-diag": {
+    "category": "games",
+    "tags": [
+      "diagnostic"
+    ],
+    "related": [
+      "axiom-spritekit",
+      "axiom-spritekit-ref"
+    ]
+  },
+  "axiom-spritekit-ref": {
+    "category": "games",
+    "tags": [
+      "reference"
+    ],
+    "related": [
+      "axiom-spritekit",
+      "axiom-spritekit-diag"
+    ]
+  },
+  "axiom-sqlitedata": {
+    "category": "data",
+    "tags": [
+      "@databasefunction",
+      "@table",
+      "cloudkit",
+      "json",
+      "returning"
+    ],
+    "related": [
+      "axiom-grdb",
+      "axiom-sqlitedata-migration",
+      "axiom-sqlitedata-ref"
+    ]
+  },
+  "axiom-sqlitedata-migration": {
+    "category": "data",
+    "tags": [
+      "cloudkit",
+      "reference",
+      "swiftdata"
+    ],
+    "related": [
+      "axiom-grdb",
+      "axiom-sqlitedata",
+      "axiom-sqlitedata-ref",
+      "axiom-swiftdata"
+    ]
+  },
+  "axiom-sqlitedata-ref": {
+    "category": "data",
+    "tags": [
+      "@selection",
+      "json",
+      "reference",
+      "tablealias"
+    ],
+    "related": [
+      "axiom-sqlitedata",
+      "axiom-sqlitedata-migration"
+    ]
+  },
+  "axiom-storage": {
+    "category": "data",
+    "tags": [
+      "cloudkit",
+      "cloudkit-vs-icloud-drive",
+      "documents-vs-caches",
+      "local-or-cloud-storage",
+      "swiftdata"
+    ],
+    "related": [
+      "axiom-cloud-sync-diag",
+      "axiom-cloudkit-ref",
+      "axiom-file-protection-ref",
+      "axiom-grdb",
+      "axiom-icloud-drive-ref",
+      "axiom-sqlitedata"
+    ]
+  },
+  "axiom-storage-diag": {
+    "category": "data",
+    "tags": [
+      "backup-too-large",
+      "data-missing-after-restart",
+      "diagnostic",
+      "files-disappeared"
+    ],
+    "related": [
+      "axiom-file-protection-ref",
+      "axiom-storage",
+      "axiom-storage-management-ref"
+    ]
+  },
+  "axiom-storage-management-ref": {
+    "category": "data",
+    "tags": [
+      "cache-management",
+      "disk-space-ios",
+      "file-purging-priority",
+      "isexcludedfrombackup",
+      "low-storage",
+      "purge-files",
+      "reference",
+      "storage-pressure",
+      "url",
+      "url-resource-values",
+      "volumeavailablecapacity"
+    ],
+    "related": [
+      "axiom-file-protection-ref",
+      "axiom-storage",
+      "axiom-storage-diag"
+    ]
+  },
+  "axiom-storekit-ref": {
+    "category": "integration",
+    "tags": [
+      "apptransaction",
+      "reference",
+      "renewalinfo",
+      "subscriptionstatus"
+    ],
+    "related": [
+      "axiom-in-app-purchases"
+    ]
+  },
+  "axiom-swift-concurrency": {
+    "category": "concurrency",
+    "tags": [
+      "@mainactor",
+      "sendable",
+      "data-race",
+      "thread-safe",
+      "actor-isolated",
+      "@concurrent",
+      "async-await"
+    ],
+    "related": [
+      "axiom-swiftui-debugging",
+      "axiom-swiftui-performance"
+    ]
+  },
+  "axiom-swift-performance": {
+    "category": "performance",
+    "tags": [
+      "arc",
+      "cow"
+    ],
+    "related": [
+      "axiom-build-performance",
+      "axiom-performance-profiling",
+      "axiom-swift-concurrency",
+      "axiom-swiftui-performance"
+    ]
+  },
+  "axiom-swift-testing": {
+    "category": "testing",
+    "tags": [
+      "@test",
+      "#expect",
+      "swift-testing",
+      "parameterized",
+      "@suite",
+      "confirmation",
+      "trait"
+    ]
+  },
+  "axiom-swiftdata": {
+    "category": "data",
+    "tags": [
+      "@model",
+      "@query",
+      "modelcontainer",
+      "cloudkit",
+      "@relationship",
+      "modelcontext",
+      "swiftui",
+      "predicate",
+      "fetch"
+    ],
+    "related": [
+      "axiom-cloud-sync",
+      "axiom-cloudkit-ref",
+      "axiom-database-migration",
+      "axiom-swiftdata-migration",
+      "axiom-swiftdata-migration-diag"
+    ]
+  },
+  "axiom-swiftdata-migration": {
+    "category": "data",
+    "tags": [
+      "schemamigrationplan",
+      "versionedschema"
+    ],
+    "related": [
+      "axiom-swiftdata",
+      "axiom-swiftdata-migration-diag"
+    ]
+  },
+  "axiom-swiftdata-migration-diag": {
+    "category": "data",
+    "tags": [
+      "diagnostic"
+    ],
+    "related": [
+      "axiom-swiftdata",
+      "axiom-swiftdata-migration"
+    ]
+  },
+  "axiom-swiftui-26-ref": {
+    "category": "ui",
+    "tags": [
+      "@animatable",
+      "attributedstring",
+      "reference",
+      "webpage",
+      "webview"
+    ],
+    "related": [
+      "axiom-liquid-glass",
+      "axiom-liquid-glass-ref",
+      "axiom-swiftui-layout-ref",
+      "axiom-swiftui-search-ref",
+      "axiom-tvos"
+    ]
+  },
+  "axiom-swiftui-animation-ref": {
+    "category": "ui",
+    "tags": [
+      "@animatable",
+      "appkit",
+      "reference",
+      "vectorarithmetic"
+    ]
+  },
+  "axiom-swiftui-architecture": {
+    "category": "ui",
+    "tags": [
+      "mvvm",
+      "tca"
+    ],
+    "related": [
+      "axiom-swiftui-nav"
+    ]
+  },
+  "axiom-swiftui-containers-ref": {
+    "category": "ui",
+    "tags": [
+      "reference"
+    ]
+  },
+  "axiom-swiftui-debugging": {
+    "category": "ui",
+    "tags": [
+      "not-updating",
+      "preview-crash",
+      "@state",
+      "@binding",
+      "view-body"
+    ],
+    "related": [
+      "axiom-swift-concurrency",
+      "axiom-swiftui-debugging-diag",
+      "axiom-swiftui-layout",
+      "axiom-swiftui-performance",
+      "axiom-xcode-debugging"
+    ]
+  },
+  "axiom-swiftui-debugging-diag": {
+    "category": "ui",
+    "tags": [
+      "diagnostic"
+    ],
+    "related": [
+      "axiom-swiftui-debugging",
+      "axiom-swiftui-performance"
+    ]
+  },
+  "axiom-swiftui-gestures": {
+    "category": "ui",
+    "tags": ["drag-gesture", "tap-gesture", "long-press", "simultaneous-gesture", "gesture-mask"]
+  },
+  "axiom-swiftui-layout": {
+    "category": "ui",
+    "tags": [
+      "anylayout",
+      "viewthatfits"
+    ],
+    "related": [
+      "axiom-swiftui-layout-ref"
+    ]
+  },
+  "axiom-swiftui-layout-ref": {
+    "category": "ui",
+    "tags": [
+      "anylayout",
+      "geometryreader",
+      "reference",
+      "viewthatfits"
+    ],
+    "related": [
+      "axiom-swiftui-layout"
+    ]
+  },
+  "axiom-swiftui-nav": {
+    "category": "ui",
+    "tags": [
+      "navigation",
+      "navigationstack",
+      "navigationsplitview",
+      "deep-links",
+      "state-restoration",
+      "coordinator-pattern"
+    ],
+    "related": [
+      "axiom-swiftui-nav-diag",
+      "axiom-swiftui-nav-ref",
+      "axiom-swiftui-layout"
+    ]
+  },
+  "axiom-swiftui-nav-diag": {
+    "category": "ui",
+    "tags": [
+      "diagnostic"
+    ],
+    "related": [
+      "axiom-swiftui-nav",
+      "axiom-swiftui-nav-ref"
+    ]
+  },
+  "axiom-swiftui-nav-ref": {
+    "category": "ui",
+    "tags": [
+      "navigationpath",
+      "navigationsplitview",
+      "navigationstack",
+      "reference"
+    ],
+    "related": [
+      "axiom-swiftui-26-ref",
+      "axiom-swiftui-nav",
+      "axiom-swiftui-nav-diag",
+      "axiom-swiftui-search-ref"
+    ]
+  },
+  "axiom-swiftui-performance": {
+    "category": "ui",
+    "tags": [
+      "list-is-laggy",
+      "view-body-is-called-too-often"
+    ]
+  },
+  "axiom-swiftui-search-ref": {
+    "category": "ui",
+    "tags": [
+      "reference"
+    ],
+    "related": [
+      "axiom-swiftui-26-ref"
+    ]
+  },
+  "axiom-synchronization": {
+    "category": "concurrency",
+    "tags": [
+      "mutex",
+      "atomic",
+      "lock",
+      "thread-safe"
+    ]
+  },
+  "axiom-testflight-triage": {
+    "category": "integration",
+    "tags": [
+      "testflight",
+      "crash",
+      "organizer",
+      "symbolication",
+      "feedback",
+      "triage"
+    ],
+    "related": [
+      "axiom-memory-debugging",
+      "axiom-xcode-debugging",
+      "axiom-swift-concurrency"
+    ]
+  },
+  "axiom-testing-async": {
+    "category": "concurrency",
+    "tags": [
+      "@mainactor",
+      "async-testing"
+    ]
+  },
+  "axiom-textkit-ref": {
+    "category": "ui",
+    "tags": [
+      "reference",
+      "swiftui",
+      "texteditor"
+    ]
+  },
+  "axiom-transferable-ref": {
+    "category": "ui",
+    "tags": [
+      "reference",
+      "sharelink",
+      "swiftui",
+      "transferrepresentation"
+    ]
+  },
+  "axiom-tvos": {
+    "category": "ui",
+    "tags": [
+      "tvos",
+      "apple-tv",
+      "focus-engine",
+      "siri-remote",
+      "tvuikit",
+      "avplayer",
+      "storage",
+      "no-webview",
+      "javascriptcore"
+    ],
+    "related": [
+      "axiom-storage",
+      "axiom-hig-ref",
+      "axiom-avfoundation-ref",
+      "axiom-sqlitedata"
+    ]
+  },
+  "axiom-typography-ref": {
+    "category": "ui",
+    "tags": [
+      "reference"
+    ]
   },
   "axiom-ui-recording": {
-    "category": "testing"
+    "category": "testing",
+    "tags": ["record-interaction", "replay", "xcode-26", "recording-ui-automation"]
+  },
+  "axiom-ui-testing": {
+    "category": "ui",
+    "tags": ["xcuiapplication", "xcuielement", "accessibility-identifier", "condition-based-waiting"],
+    "related": [
+      "axiom-memory-debugging",
+      "axiom-swift-concurrency"
+    ]
+  },
+  "axiom-uikit-animation-debugging": {
+    "category": "ui",
+    "tags": ["caanimation", "uiview-animate", "completion-not-called", "layer-animation"]
+  },
+  "axiom-uikit-bridging": {
+    "category": "ui",
+    "tags": [
+      "swiftui"
+    ],
+    "related": [
+      "axiom-swiftui-animation-ref"
+    ]
+  },
+  "axiom-vision": {
+    "category": "vision",
+    "tags": [
+      "datascannerviewcontroller",
+      "ocr",
+      "recognizedocumentsrequest",
+      "visionkit"
+    ],
+    "related": [
+      "axiom-vision-diag",
+      "axiom-vision-ref"
+    ]
+  },
+  "axiom-vision-diag": {
+    "category": "vision",
+    "tags": [
+      "datascannerviewcontroller",
+      "diagnostic",
+      "visionkit"
+    ],
+    "related": [
+      "axiom-vision",
+      "axiom-vision-ref"
+    ]
+  },
+  "axiom-vision-ref": {
+    "category": "vision",
+    "tags": [
+      "datascannerviewcontroller",
+      "recognizedocumentsrequest",
+      "reference"
+    ],
+    "related": [
+      "axiom-vision",
+      "axiom-vision-diag"
+    ]
+  },
+  "axiom-xcode-debugging": {
+    "category": "build",
+    "tags": [
+      "xcode",
+      "simulator",
+      "environment",
+      "diagnostics"
+    ],
+    "related": [
+      "axiom-build-debugging",
+      "axiom-swift-concurrency"
+    ]
+  },
+  "axiom-xcode-mcp": {
+    "category": "build",
+    "tags": [
+      "buildproject",
+      "renderpreview",
+      "runtests",
+      "xcoderead"
+    ],
+    "related": [
+      "axiom-xcode-mcp-ref",
+      "axiom-xcode-mcp-setup",
+      "axiom-xcode-mcp-tools"
+    ]
+  },
+  "axiom-xcode-mcp-ref": {
+    "category": "build",
+    "tags": [
+      "reference"
+    ],
+    "related": [
+      "axiom-xcode-mcp",
+      "axiom-xcode-mcp-setup",
+      "axiom-xcode-mcp-tools"
+    ]
+  },
+  "axiom-xcode-mcp-setup": {
+    "category": "build",
+    "related": [
+      "axiom-xcode-mcp",
+      "axiom-xcode-mcp-ref",
+      "axiom-xcode-mcp-tools"
+    ]
+  },
+  "axiom-xcode-mcp-tools": {
+    "category": "build",
+    "tags": [
+      "buildfix",
+      "testfix"
+    ],
+    "related": [
+      "axiom-xcode-debugging",
+      "axiom-xcode-mcp",
+      "axiom-xcode-mcp-ref",
+      "axiom-xcode-mcp-setup"
+    ]
   },
   "axiom-xctest-automation": {
-    "category": "testing"
+    "category": "testing",
+    "tags": ["xcodebuild-test", "test-plan", "parallel-testing", "ci-cd"]
   },
-  "axiom-cloud-sync": {
-    "related": ["cloudkit-ref", "axiom-icloud-drive-ref", "axiom-cloud-sync-diag", "axiom-storage"]
+  "axiom-xctrace-ref": {
+    "category": "testing",
+    "tags": [
+      "cd",
+      "ci",
+      "cli",
+      "reference"
+    ]
   },
-  "axiom-core-data": {
-    "related": ["core-data-diag", "axiom-swiftdata", "axiom-database-migration"]
+  "coreml": {
+    "category": "ai",
+    "tags": [
+      "kv",
+      "llm",
+      "ml",
+      "pytorch"
+    ],
+    "related": [
+      "coreml-diag",
+      "coreml-ref"
+    ]
+  },
+  "coreml-diag": {
+    "category": "ai",
+    "tags": [
+      "diagnostic"
+    ],
+    "related": [
+      "coreml",
+      "coreml-ref"
+    ]
+  },
+  "coreml-ref": {
+    "category": "ai",
+    "tags": [
+      "reference"
+    ],
+    "related": [
+      "coreml",
+      "coreml-diag"
+    ]
+  },
+  "speech": {
+    "category": "ai",
+    "tags": [
+      "assetinventory",
+      "speechanalyzer",
+      "speechtranscriber"
+    ],
+    "related": [
+      "coreml"
+    ]
   }
 }

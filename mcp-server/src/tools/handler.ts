@@ -308,6 +308,11 @@ export class DynamicToolsHandler {
         parts.push(`Type: ${result.skill.skillType} | ${result.content.length} chars`);
         parts.push('');
         parts.push(result.content);
+
+        if (result.skill.related && result.skill.related.length > 0) {
+          parts.push('');
+          parts.push(`**Related Skills**: ${result.skill.related.join(', ')}`);
+        }
         parts.push('');
       }
     }

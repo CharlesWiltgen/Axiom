@@ -1,6 +1,28 @@
 import { Skill, Agent } from '../loader/parser.js';
 
 /**
+ * Map annotation category slugs to human-readable catalog labels.
+ * This is the single source of truth for slug → label mapping.
+ */
+export const SLUG_TO_LABEL: Record<string, string> = {
+  'build': 'Build & Environment',
+  'ui': 'UI & Design',
+  'data': 'Data & Persistence',
+  'concurrency': 'Concurrency & Async',
+  'performance': 'Performance',
+  'networking': 'Networking',
+  'integration': 'System Integration',
+  'accessibility': 'Accessibility',
+  'ai': 'Apple Intelligence',
+  'ml': 'Machine Learning',
+  'vision': 'Computer Vision',
+  'graphics': 'Graphics & Metal',
+  'games': 'Games',
+  'testing': 'Testing',
+  'general': 'General',
+};
+
+/**
  * Categories derived from the 13 router skills.
  * Each maps a router name to a human-readable category label.
  */
@@ -74,6 +96,7 @@ function buildRouterCategoryMap(skills: Map<string, Skill>): Map<string, string>
 
 /**
  * Map Apple doc filename patterns to existing categories.
+ * NOTE: Duplicated in scripts/generate-annotations.ts — keep both in sync.
  */
 const APPLE_DOC_CATEGORIES: Record<string, string> = {
   'swiftui': 'UI & Design',
@@ -100,7 +123,8 @@ const APPLE_DOC_CATEGORIES: Record<string, string> = {
 };
 
 /**
- * Infer category from skill name when no router reference exists.
+ * Infer category from skill name when no annotation or router reference exists.
+ * NOTE: Duplicated in scripts/generate-annotations.ts (with CATEGORY_OVERRIDES) — keep both in sync.
  */
 function inferCategoryFromName(name: string): string {
   // Apple diagnostics go to Build & Environment
@@ -150,10 +174,10 @@ export function buildCatalog(
     // Exclude routers and meta skills from catalog
     if (skill.skillType === 'router' || skill.skillType === 'meta') continue;
 
-    // Priority chain: router reference > name heuristic
-    // Explicit mcp.category values from skill frontmatter are freeform labels
-    // that don't match normalized catalog categories, so we skip them.
-    const category = routerCategoryMap.get(name)
+    // Priority chain: annotation slug > router reference > name heuristic
+    const annotationLabel = skill.category ? SLUG_TO_LABEL[skill.category] : undefined;
+    const category = annotationLabel
+      || routerCategoryMap.get(name)
       || inferCategoryFromName(name);
 
     if (filterCategory && category !== filterCategory) continue;
