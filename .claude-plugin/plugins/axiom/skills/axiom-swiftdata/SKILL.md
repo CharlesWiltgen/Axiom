@@ -946,6 +946,14 @@ final class TrackTests: XCTestCase {
 | **Learning Curve** | Easy (native) | Moderate |
 | **Performance** | Good | Excellent (raw SQL) |
 
+## tvOS
+
+**SwiftData on tvOS has no persistent local storage.** tvOS has no Document directory, and Application Support maps to Caches — the system deletes files under storage pressure. A local-only SwiftData store will lose all data.
+
+**You must use CloudKit sync** (`cloudKitDatabase: .private(...)`) for tvOS SwiftData apps. Without iCloud, user data does not survive between app launches. See `axiom-tvos` for full tvOS storage constraints.
+
+---
+
 ## Resources
 
 **Docs**: /swiftdata
