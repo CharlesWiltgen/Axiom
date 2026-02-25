@@ -1,6 +1,6 @@
 ---
 name: axiom-shipping
-description: Use when preparing ANY app for submission, handling App Store rejections, managing code signing, or setting up CI/CD. Covers App Store submission, rejection troubleshooting, metadata requirements, privacy manifests, age ratings, export compliance.
+description: Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect. Covers submission checklists, rejection troubleshooting, metadata requirements, privacy manifests, age ratings, export compliance.
 license: MIT
 ---
 
@@ -70,13 +70,15 @@ Use this router when you encounter:
 - "My app was rejected"
 - "Guideline 2.1 rejection"
 - "Binary was rejected"
+- Guideline 4.2 or 4.3 rejection (app too simple, web wrapper, spam, duplicate)
+- Guideline 1.x rejection (objectionable content, UGC moderation, Kids category)
 - How to respond to a rejection
 - Writing an appeal
 - Understanding rejection messages
 - Third or repeated rejection
 - Resolution Center communication
 
-**Why app-store-diag**: 7 diagnostic patterns mapping rejection types to root causes and fixes. Includes appeal writing guidance and crisis scenario for repeated rejections.
+**Why app-store-diag**: 9 diagnostic patterns mapping rejection types to root causes and fixes, including subjective rejections (4.2/4.3, 1.x). Includes appeal writing guidance and crisis scenario for repeated rejections.
 
 **Invoke**: `/skill axiom-app-store-diag`
 
@@ -111,7 +113,22 @@ Use this router when you encounter:
 
 ---
 
-### 6. Programmatic ASC Access → **asc-mcp**
+### 6. Screenshot Validation → **screenshot-validator** (Agent)
+
+**Triggers**:
+- "Check my App Store screenshots"
+- "Are my screenshots the right dimensions?"
+- "Validate screenshots before submission"
+- "Review my marketing screenshots"
+- Screenshot content or dimension questions
+
+**Why screenshot-validator**: Multimodal agent that visually inspects each screenshot for placeholder text, wrong dimensions, debug artifacts, broken UI, and competitor references. Catches issues that manual review misses.
+
+**Invoke**: Launch `screenshot-validator` agent or `/axiom:audit screenshots`
+
+---
+
+### 7. Programmatic ASC Access → **asc-mcp**
 
 **Triggers**:
 - "Automate App Store Connect"
@@ -128,13 +145,30 @@ Use this router when you encounter:
 
 ---
 
+### 8. Post-Submission Monitoring → **app-store-connect-ref**
+
+**Triggers**:
+- "How do I view crash data in App Store Connect?"
+- "Where are my TestFlight crash reports?"
+- "How do I read ASC metrics dashboards?"
+- Post-release crash investigation
+- Downloading crash logs from ASC
+
+**Why app-store-connect-ref**: ASC navigation for crash dashboards, TestFlight feedback, performance metrics, and data export workflows.
+
+**Invoke**: `/skill axiom-app-store-connect-ref`
+
+---
+
 ## Decision Tree
 
 ```dot
 digraph shipping {
     "Shipping question?" [shape=diamond];
     "Rejected?" [shape=diamond];
+    "Post-submission monitoring?" [shape=diamond];
     "Automate via MCP?" [shape=diamond];
+    "Screenshot review?" [shape=diamond];
     "Need specific specs?" [shape=diamond];
     "IAP issue?" [shape=diamond];
     "Want code scan?" [shape=diamond];
@@ -142,15 +176,21 @@ digraph shipping {
     "app-store-submission" [shape=box, label="app-store-submission\n(pre-flight checklist)"];
     "app-store-ref" [shape=box, label="app-store-ref\n(metadata/guideline specs)"];
     "app-store-diag" [shape=box, label="app-store-diag\n(rejection troubleshooting)"];
+    "app-store-connect-ref" [shape=box, label="app-store-connect-ref\n(ASC dashboards/metrics)"];
     "security-privacy-scanner" [shape=box, label="security-privacy-scanner\n(Agent)"];
     "iap-auditor" [shape=box, label="iap-auditor\n(Agent)"];
+    "screenshot-validator" [shape=box, label="screenshot-validator\n(Agent)"];
     "asc-mcp" [shape=box, label="asc-mcp\n(MCP tool workflows)"];
 
     "Shipping question?" -> "Rejected?" [label="yes, about to submit or general"];
     "Rejected?" -> "app-store-diag" [label="yes, app was rejected"];
-    "Rejected?" -> "Automate via MCP?" [label="no"];
+    "Rejected?" -> "Post-submission monitoring?" [label="no"];
+    "Post-submission monitoring?" -> "app-store-connect-ref" [label="yes, crash data/metrics/TestFlight"];
+    "Post-submission monitoring?" -> "Automate via MCP?" [label="no"];
     "Automate via MCP?" -> "asc-mcp" [label="yes, programmatic ASC access"];
-    "Automate via MCP?" -> "Need specific specs?" [label="no"];
+    "Automate via MCP?" -> "Screenshot review?" [label="no"];
+    "Screenshot review?" -> "screenshot-validator" [label="yes, validate screenshots"];
+    "Screenshot review?" -> "Need specific specs?" [label="no"];
     "Need specific specs?" -> "app-store-ref" [label="yes, looking up field/guideline"];
     "Need specific specs?" -> "IAP issue?" [label="no"];
     "IAP issue?" -> "iap-auditor" [label="yes"];
@@ -163,11 +203,13 @@ digraph shipping {
 Simplified:
 
 1. App was rejected? → app-store-diag
-2. Automate ASC via MCP tools? → asc-mcp
-3. Need specific metadata/guideline specs? → app-store-ref
-4. IAP submission issue? → iap-auditor (Agent)
-5. Want pre-submission code scan? → security-privacy-scanner (Agent)
-6. General submission preparation? → app-store-submission
+2. Post-submission crash data/metrics/TestFlight? → app-store-connect-ref
+3. Automate ASC via MCP tools? → asc-mcp
+4. Validate screenshots? → screenshot-validator (Agent)
+5. Need specific metadata/guideline specs? → app-store-ref
+6. IAP submission issue? → iap-auditor (Agent)
+7. Want pre-submission code scan? → security-privacy-scanner (Agent)
+8. General submission preparation? → app-store-submission
 
 ## Anti-Rationalization
 
@@ -179,6 +221,7 @@ Simplified:
 | "Privacy manifests are only for big apps" | Every app using Required Reason APIs needs a manifest since May 2024. Missing = automatic rejection. |
 | "I'll add the metadata later" | Missing metadata blocks submission entirely. app-store-ref has the complete field list. |
 | "It's just a bug fix, I don't need a full checklist" | Bug fix updates still need What's New text, correct screenshots, and valid build. app-store-submission covers it. |
+| "I'll just eyeball the screenshots myself" | Human review misses dimension mismatches (even 1px off = rejection), subtle placeholder text, and debug indicators. A single missed issue costs 24-48 hours in resubmission. screenshot-validator catches it in 2 minutes. |
 | "I'll just do it in the ASC web dashboard" | If asc-mcp is configured, MCP tools are faster for bulk operations — distributing builds, responding to reviews, creating versions. asc-mcp has the workflow. |
 
 ## When NOT to Use (Conflict Resolution)
@@ -226,11 +269,35 @@ User: "My app keeps getting rejected, what do I do?"
 User: "How do I appeal an App Store rejection?"
 → Invoke: `/skill axiom-app-store-diag`
 
+User: "My app was rejected for Guideline 4.2 minimum functionality"
+→ Invoke: `/skill axiom-app-store-diag`
+
+User: "Rejected for being a web wrapper / duplicate app"
+→ Invoke: `/skill axiom-app-store-diag`
+
+User: "Rejection for user-generated content without moderation"
+→ Invoke: `/skill axiom-app-store-diag`
+
+User: "Kids category compliance rejection"
+→ Invoke: `/skill axiom-app-store-diag`
+
 User: "Scan my code for App Store compliance issues"
 → Invoke: `security-privacy-scanner` agent
 
 User: "Check my IAP implementation before submission"
 → Invoke: `iap-auditor` agent
+
+User: "Check my App Store screenshots in ~/Screenshots"
+→ Invoke: `screenshot-validator` agent
+
+User: "Are my screenshots the right dimensions?"
+→ Invoke: `screenshot-validator` agent
+
+User: "How do I find crash data in App Store Connect?"
+→ Invoke: `/skill axiom-app-store-connect-ref`
+
+User: "Where are my TestFlight crash reports in ASC?"
+→ Invoke: `/skill axiom-app-store-connect-ref`
 
 User: "What's new in App Store Connect for 2025?"
 → Invoke: `/skill axiom-app-store-ref`

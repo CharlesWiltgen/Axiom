@@ -25,7 +25,7 @@ Complete reference for every App Store submission requirement:
 
 ## When to Use This Skill
 
-**Use when:**
+#### Use when
 - Looking up specific metadata field requirements or character limits
 - Checking App Review guideline numbers for a specific topic
 - Verifying privacy manifest schema fields or Required Reason API categories
@@ -34,7 +34,7 @@ Complete reference for every App Store submission requirement:
 - Understanding IAP submission pipeline and review flow
 - Preparing builds for upload (SDK requirements, encryption, signing)
 
-**Do NOT use when:**
+#### Do NOT use when
 - Deciding if your app is ready to submit (use **app-store-submission**)
 - Troubleshooting a rejection (use **app-store-diag**)
 - Implementing in-app purchases (use **storekit-ref**)
@@ -384,134 +384,7 @@ If a third-party SDK does not include a privacy manifest, you must declare its d
 
 ## Part 3: App Review Guidelines Quick Reference
 
-### Section 1: Safety
-
-| Guideline | Topic |
-|-----------|-------|
-| 1.1 | Objectionable Content |
-| 1.1.1 | Defamatory, discriminatory, or mean-spirited content |
-| 1.1.2 | Realistic portrayals of people or animals being harmed |
-| 1.1.3 | Content depicting violence against children |
-| 1.1.4 | Animal abuse, targeted group abuse |
-| 1.1.5 | Religious, cultural, or ethnic group commentary risks |
-| 1.1.6 | False info, harassment features |
-| 1.1.7 | Virus/malware distribution |
-| 1.2 | User-Generated Content |
-| 1.2.1 | UGC apps must have content filtering, reporting, blocking, contact info, age verification |
-| 1.3 | Kids Category |
-| 1.3.1 | No third-party analytics, advertising, or links out of the app |
-| 1.4 | Physical Harm |
-| 1.4.1 | Medical apps must disclose limitations and link to real help |
-| 1.4.2 | Drug dosage calculators must come from recognized institutions |
-| 1.4.3 | Illegal drug use encouragement |
-| 1.4.4 | Apps primarily for illegal file sharing |
-| 1.4.5 | Body modification tools, eating disorder encouragement |
-| 1.5 | Developer Information |
-| 1.5.1 | Developer Program must be kept current |
-| 1.6 | Data Security |
-| 1.6.1 | App Transport Security; exceptions must be justified |
-| 1.6.2 | Data collected must have a purpose |
-| 1.6.3 | Local laws on data collection/storage |
-| 1.6.4 | Apps using backgrounding must behave appropriately |
-
-### Section 2: Performance
-
-| Guideline | Topic |
-|-----------|-------|
-| 2.1 | App Completeness |
-| 2.1.1 | No crashes, bugs, broken links, placeholder content |
-| 2.2 | Beta, Demo, Trial Apps |
-| 2.2.1 | No "beta", "demo", "trial" in bundle ID or name (use TestFlight) |
-| 2.3 | Accurate Metadata |
-| 2.3.1 | Don't include pricing, platform names, or misleading info |
-| 2.3.2 | No concealed features |
-| 2.3.3 | Screenshots must reflect actual app experience |
-| 2.3.7 | Must use accurate App Store category |
-| 2.3.8 | Must have unique app name |
-| 2.3.10 | Don't include irrelevant search content |
-| 2.3.11 | Keywords >2 chars, max 100, no trademarks |
-| 2.3.12 | "For Kids"/"For Children" reserved for Kids category |
-| 2.4 | Hardware Compatibility |
-| 2.4.1 | Must work with current OS, not just prior version |
-| 2.5 | Software Requirements |
-| 2.5.1 | Only use public APIs |
-| 2.5.2 | Must be self-contained, no installer other than App Store |
-| 2.5.3 | Apps transmitting viruses, code injection |
-| 2.5.4 | Multitasking must use proper background modes |
-| 2.5.6 | No changing primary function after review |
-| 2.5.9 | Request only necessary permissions |
-| 2.5.11 | SiriKit, HealthKit must actually use the feature |
-| 2.5.18 | No remote mirrors or proxies of other software |
-
-### Section 3: Business
-
-| Guideline | Topic |
-|-----------|-------|
-| 3.1 | Payments |
-| 3.1.1 | In-App Purchase: digital goods/services must use IAP. Disclose loot box odds |
-| 3.1.2 | Subscriptions: ongoing value, 7-day minimum, cross-device, transparent terms |
-| 3.1.3 | Permitted External Payments |
-| 3.1.3(a) | Reader apps (previously purchased content) |
-| 3.1.3(b) | Multiplatform services (cross-platform subscriptions) |
-| 3.1.3(c) | Enterprise services (organizations only) |
-| 3.1.3(d) | Person-to-person services (real-time individual services) |
-| 3.1.3(e) | Physical goods/services (consumed outside app) |
-| 3.1.4 | No artificial barriers between IAP and web purchase options |
-| 3.1.5(a) | Non-subscription apps can offer free → paid upgrade |
-| 3.1.7 | No direct appeals to users about pricing within app |
-| 3.2 | Other Business Model Issues |
-| 3.2.1 | No apps that are essentially simple websites |
-| 3.2.2 | No paid app that is also free elsewhere |
-
-### Section 4: Design
-
-| Guideline | Topic |
-|-----------|-------|
-| 4.0 | General design requirements and Apple design standards |
-| 4.1 | Copycats: apps that look confusingly similar to existing Apple or third-party apps |
-| 4.2 | Minimum Functionality |
-| 4.2.1 | No apps that are essentially repackaged web content |
-| 4.2.2 | No single-song, -movie, -book apps |
-| 4.2.3 | Must have sufficient utility beyond a simple website |
-| 4.2.6 | No app-as-marketing, app-as-ad |
-| 4.3 | Spam |
-| 4.3.0 | No duplicate apps from same developer |
-| 4.4 | Extensions |
-| 4.4.1 | Keyboard extensions must have a way to switch to next keyboard |
-| 4.5 | Apple Sites and Services |
-| 4.5.4 | Push notifications: no advertising, marketing, spam |
-| 4.7 | HTML5 Games/Bots in WebView |
-| 4.8 | Sign in with Apple: required when any third-party/social login offered |
-
-### Section 5: Legal
-
-| Guideline | Topic |
-|-----------|-------|
-| 5.1 | Privacy |
-| 5.1.1 | Data Collection and Storage |
-| 5.1.1(i) | Privacy policy required in app and in App Store Connect |
-| 5.1.1(ii) | Permission requests must explain purpose |
-| 5.1.1(iii) | Don't require unnecessary personal info for functionality |
-| 5.1.1(v) | Account must be deletable |
-| 5.1.2 | Data Use and Sharing |
-| 5.1.2(i) | No sharing with third parties without consent |
-| 5.1.3 | Health and Health Research |
-| 5.1.4 | Kids Category requirements |
-| 5.1.5 | Location Services must have clear purpose |
-| 5.2 | Intellectual Property |
-| 5.2.1 | No unauthorized use of copyrighted material |
-| 5.2.2 | Third-party content requires permission |
-| 5.2.3 | Audio/video must respect content rights |
-| 5.3 | Gaming, Gambling, Lotteries |
-| 5.3.1 | No real-money gambling without proper licensing |
-| 5.3.2 | Lotteries, contests must comply with local law |
-| 5.3.3 | Charitable fundraising must be registered nonprofit |
-| 5.4 | VPN Apps |
-| 5.4.1 | Must use NEVPNManager API |
-| 5.5 | Developer Code of Conduct |
-| 5.6 | Telecommunications |
-| 5.6.1 | Voice over IP |
-| 5.6.3 | Stickers/iMessage apps |
+For the complete guideline index (Sections 1-5), see `references/app-review-guidelines.md`.
 
 ### Most Common Rejection Reasons
 
@@ -694,7 +567,7 @@ Failing to revoke SIWA tokens during account deletion is a common rejection reas
 
 **Required when:** Your app offers ANY third-party or social login option (Google, Facebook, Twitter, email/password via third-party provider).
 
-**Exceptions — SIWA not required when:**
+#### Exceptions — SIWA not required when
 - App is for company employees only (internal enterprise app)
 - App is for education or enterprise with existing institutional auth
 - App uses government or industry-backed citizen ID systems
@@ -1080,97 +953,8 @@ Custom product pages allow different App Store presentations for different audie
 
 ## Expert Review Checklist
 
-### Build
-
-- [ ] Built with required SDK version (currently Xcode 16, iOS 18 SDK)
-- [ ] Export compliance answered (`ITSAppUsesNonExemptEncryption`)
-- [ ] Encryption documentation uploaded (if custom encryption)
-- [ ] IPv6-only network compatible
-- [ ] Signed with distribution certificate and provisioning profile
-- [ ] Correct bundle ID for target environment (production, not development)
-- [ ] Build string unique for this version
-- [ ] Binary under 200 MB OTA cellular limit (or warn users)
-- [ ] All required architectures included (arm64)
-- [ ] No private API usage
-
-### Privacy
-
-- [ ] `PrivacyInfo.xcprivacy` present and complete
-- [ ] Privacy policy URL set in App Store Connect
-- [ ] Privacy policy accessible within the app
-- [ ] All purpose strings (`NS*UsageDescription`) present for requested permissions
-- [ ] ATT implemented if app tracks users
-- [ ] Required Reason APIs declared with approved reasons
-- [ ] Privacy Nutrition Labels match actual data collection
-- [ ] Third-party SDK privacy manifests included
-- [ ] Privacy report generated and reviewed (`Product > Archive > Generate Privacy Report`)
-
-### Metadata
-
-- [ ] App name unique, max 30 characters
-- [ ] Description complete, max 4000 characters, plain text
-- [ ] Keywords set, max 100 bytes, no trademarked terms
-- [ ] Screenshots provided for all supported device sizes
-- [ ] Screenshots show app in actual use (not title art or splash screens)
-- [ ] What's New text updated for this version
-- [ ] Copyright field current year
-- [ ] Support URL links to real contact information
-- [ ] Privacy Policy URL is HTTPS and publicly accessible
-- [ ] Promotional Text set (editable without submission)
-- [ ] App category accurate
-- [ ] All metadata localized for target markets
-
-### Account
-
-- [ ] Account deletion implemented and easy to find
-- [ ] SIWA token revocation on account deletion
-- [ ] Sign in with Apple offered if any third-party login exists
-- [ ] SIWA given equal visual prominence to other login options
-- [ ] Demo credentials provided in App Review Information (if login required)
-- [ ] Demo credentials will not expire during review period
-
-### Content
-
-- [ ] No placeholder content ("Lorem ipsum", "Coming Soon", etc.)
-- [ ] All links functional and leading to real content
-- [ ] Final production assets (not development/staging URLs)
-- [ ] No test data visible in screenshots or app
-- [ ] No references to other mobile platforms in metadata
-
-### Age Rating
-
-- [ ] Age rating questionnaire completed
-- [ ] New capability declarations answered (messaging, UGC, advertising, parental, age assurance)
-- [ ] UGC moderation implemented if applicable
-- [ ] Content filtering in place for web views (or accept 16+ minimum)
-- [ ] Loot box odds disclosed if applicable
-
-### Monetization
-
-- [ ] All IAPs configured and in "Ready to Submit" status
-- [ ] IAP screenshots uploaded
-- [ ] Subscription terms clear (price, duration, auto-renewal, cancellation)
-- [ ] Loot box odds displayed before purchase
-- [ ] Restore Purchases functionality working
-- [ ] No removing paid features to force new purchases
-- [ ] Subscription grace period supported
-- [ ] Offer codes configured if planned
-
-### EU Compliance
-
-- [ ] DSA trader status declared for all EU-distributed apps
-- [ ] Trader email verified via 2FA
-- [ ] Trader phone verified via 2FA
-- [ ] Contact information accurate and current
-- [ ] Labels and markings complete (if applicable for product category)
-
-### App Review
-
-- [ ] Contact information complete (name, email, phone)
-- [ ] Demo account credentials provided (if login required)
-- [ ] Notes for Review explain any non-obvious features
-- [ ] Attachment uploaded for features requiring special hardware or setup
-- [ ] Review contact email actively monitored
+For the comprehensive 9-section submission checklist, see `references/expert-review-checklist.md`.
+For the discipline-focused pre-flight workflow, see `app-store-submission`.
 
 ---
 
