@@ -37,7 +37,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-integration
+  - axiom-shipping
 ---
 
 # Security & Privacy Scanner Agent
@@ -237,7 +237,33 @@ logger.info("User authenticated: \(userId, privacy: .public)")
 logger.debug("Token received: [REDACTED]")
 ```
 
-### Pattern 6: Missing SSL Pinning (MEDIUM)
+### Pattern 6: Missing ATT Usage Description (HIGH)
+
+**Issue**: App uses ATTrackingManager but missing NSUserTrackingUsageDescription in Info.plist
+**App Store Risk**: Automatic rejection — ATT prompt cannot display without the description string
+**Impact**: App crashes or silently fails to show tracking prompt
+
+**Detection**:
+```
+# Check for ATT usage
+Grep: ATTrackingManager|requestTrackingAuthorization|trackingAuthorizationStatus
+
+# If ATT found, check for the plist key
+Grep: NSUserTrackingUsageDescription
+# Also check Info.plist directly
+```
+
+```swift
+// ❌ MISSING - ATT prompt will fail
+ATTrackingManager.requestTrackingAuthorization { status in ... }
+// But no NSUserTrackingUsageDescription in Info.plist
+
+// ✅ CORRECT - Info.plist has:
+// <key>NSUserTrackingUsageDescription</key>
+// <string>We use this to show you relevant ads.</string>
+```
+
+### Pattern 7: Missing SSL Pinning (MEDIUM)
 
 **Issue**: No certificate/public key pinning for sensitive APIs
 **App Store Risk**: Usually not flagged, but security best practice
@@ -291,7 +317,18 @@ Grep: UserDefaults.*set.*token
 Grep: UserDefaults.*set.*password
 ```
 
-### Step 5: Check Network Security
+### Step 5: Check ATT Compliance
+
+```
+# Check for ATT usage
+Grep: ATTrackingManager|requestTrackingAuthorization
+
+# If found, verify NSUserTrackingUsageDescription exists in Info.plist
+Glob: **/Info.plist
+# Read each Info.plist and check for NSUserTrackingUsageDescription
+```
+
+### Step 6: Check Network Security
 
 ```
 Grep: http://
@@ -299,7 +336,7 @@ Grep: http://
 Read: Info.plist (check NSAppTransportSecurity)
 ```
 
-### Step 6: Check Logging
+### Step 7: Check Logging
 
 ```
 Grep: print\(.*password\|print\(.*token

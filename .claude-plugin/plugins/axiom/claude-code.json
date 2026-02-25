@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "2.29.0",
+  "version": "2.29.1",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -83,7 +83,7 @@
     },
     {
       "name": "axiom-shipping",
-      "description": "Use when preparing ANY app for submission, handling App Store rejections, managing code signing, or setting up CI/CD. Covers App Store submission, rejection troubleshooting, metadata requirements, privacy manifests, age ratings, export compliance."
+      "description": "Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect. Covers submission checklists, rejection troubleshooting, metadata requirements, privacy manifests, age ratings, export compliance."
     }
   ]
 }

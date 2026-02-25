@@ -116,7 +116,17 @@ Run a comprehensive IAP audit and report all issues with:
 - No retry logic for network errors
 - Generic "purchase failed" messages
 
-### 10. Testing Coverage (MEDIUM)
+### 10. Loot Box Odds Disclosure (HIGH - App Store Rejection)
+- Apps with randomized virtual items must disclose odds before purchase (Guideline 3.1.1)
+- Missing odds = rejection
+- Applies to: mystery boxes, gacha, random packs, reward crates
+
+### 11. Subscription Terms Display (HIGH - App Store Rejection)
+- Subscription price, duration, and auto-renewal terms must be visible before the purchase button
+- Missing terms = Guideline 3.1.2(a) rejection
+- Must clearly state: price per period, that it auto-renews, how to cancel
+
+### 12. Testing Coverage (MEDIUM)
 - No unit tests for purchase logic
 - No StoreKit testing in CI
 - Bugs reach production
@@ -191,7 +201,29 @@ grep -rn "RenewalInfo\|renewalInfo" --include="*.swift"
 grep -rn "expirationReason\|didNotConsentToPriceIncrease" --include="*.swift"
 ```
 
-### Step 4: Check Architecture
+### Step 4: Check Loot Box and Subscription Terms
+
+**Loot box odds disclosure (Guideline 3.1.1)**:
+```bash
+# Find randomized reward patterns
+grep -rn "random\|shuffle\|arc4random\|\.random\|loot\|mystery\|gacha\|crate\|pack\|reward.*box" --include="*.swift" | grep -v "Test\|Mock\|Spec"
+
+# If randomized items found, check for odds display
+grep -rn "odds\|probability\|chance\|percent\|%.*drop\|drop.*rate" --include="*.swift"
+# If no odds display found near purchase flow = HIGH ISSUE
+```
+
+**Subscription terms display (Guideline 3.1.2(a))**:
+```bash
+# Find subscription purchase UI
+grep -rn "subscribe\|subscription\|\.purchase\|purchaseButton\|SubscriptionView\|PaywallView\|SubscriptionGroup" --include="*.swift"
+
+# Check for terms display near purchase
+grep -rn "auto.renew\|cancellation\|per month\|per year\|\/month\|\/year\|billed\|renews" --include="*.swift"
+# If subscriptions exist but no terms text found = HIGH ISSUE
+```
+
+### Step 5: Check Architecture
 
 **StoreKit configuration file**:
 
@@ -214,14 +246,15 @@ grep -rn "product\.purchase\|Product\.purchase" --include="*.swift"
 grep -rn "appAccountToken" --include="*.swift"
 ```
 
-### Step 5: Check Testing
+### Step 6: Check Testing
 
 **Unit tests**:
 
 Use Glob to find test files:
 - Pattern: `**/*Tests.swift`
 
-Check for IAP testing
+Check for IAP testing:
+```bash
 grep -rn "StoreManager\|Purchase.*Test\|Transaction.*Test" *Tests.swift
 ```
 
@@ -243,6 +276,8 @@ Generate a detailed report with:
 
 ### High Priority Issues
 - Missing subscription status tracking
+- Missing loot box odds disclosure
+- Missing subscription terms display
 - No StoreKit configuration file
 - No server integration (appAccountToken)
 

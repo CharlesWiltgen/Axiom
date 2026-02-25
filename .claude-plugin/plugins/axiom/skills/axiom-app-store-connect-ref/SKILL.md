@@ -12,7 +12,7 @@ metadata:
 
 App Store Connect (ASC) provides crash reports, TestFlight feedback, and performance metrics for your apps. This reference covers how to navigate ASC to find and export crash data for analysis.
 
-**When to use ASC vs Xcode Organizer:**
+#### ASC vs Xcode Organizer
 
 | Task | Best Tool |
 |------|-----------|
@@ -39,36 +39,12 @@ App Store Connect
 
 **Direct URL pattern:** `https://appstoreconnect.apple.com/analytics/app/[APP_ID]/crashes`
 
-### Crashes Dashboard Layout
+### Crashes Dashboard Sections
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ [Filters: Platform ▼] [Version ▼] [Date Range ▼] [Compare ▼]           │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  Crash-Free Users Graph                                                 │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │  99.5% ─────────────────────────────────────────────────────    │   │
-│  │  99.0% ─────────────────────────────────────────────────────    │   │
-│  │  98.5% ─────────────────────────────────────────────────────    │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
-│  Crash Count by Version                                                 │
-│  ┌───────────────────────────────────────────────────────────────────┐ │
-│  │ v2.1.0  ████████████ 1,234 crashes                                │ │
-│  │ v2.0.5  ████████ 892 crashes                                      │ │
-│  │ v2.0.4  ███ 156 crashes                                           │ │
-│  └───────────────────────────────────────────────────────────────────┘ │
-│                                                                         │
-├─────────────────────────────────────────────────────────────────────────┤
-│  Top Crash Signatures                                                   │
-│  ┌───────────────────────────────────────────────────────────────────┐ │
-│  │ 1. EXC_BAD_ACCESS in UserManager.currentUser.getter    45% share  │ │
-│  │ 2. EXC_CRASH in NetworkService.fetchData()             23% share  │ │
-│  │ 3. EXC_BREAKPOINT in Array subscript                   12% share  │ │
-│  └───────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+1. **Filters bar** — Platform, Version, Date Range, Compare
+2. **Crash-Free Users graph** — Daily percentage trend line
+3. **Crash Count by Version** — Bar chart comparing versions
+4. **Top Crash Signatures** — Ranked by share percentage, shows exception type and function name
 
 ### Key Metrics Explained
 
@@ -95,42 +71,13 @@ App Store Connect
 
 ## Viewing Individual Crash Reports
 
-### Crash Signature Detail View
+### Crash Signature Detail
 
-Click a crash signature to see:
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ EXC_BAD_ACCESS in UserManager.currentUser.getter                        │
-├─────────────────────────────────────────────────────────────────────────┤
-│ Affected: 234 devices • 45% of crashes • First seen: Jan 10            │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│ Exception Information                                                   │
-│ ───────────────────                                                     │
-│ Type: EXC_BAD_ACCESS (SIGSEGV)                                         │
-│ Codes: KERN_INVALID_ADDRESS at 0x0000000000000010                       │
-│                                                                         │
-│ Crashed Thread (0)                                                      │
-│ ─────────────────                                                       │
-│ 0  MyApp         UserManager.currentUser.getter + 45                    │
-│ 1  MyApp         ProfileViewController.viewDidLoad() + 123              │
-│ 2  UIKitCore     -[UIViewController loadView] + 89                      │
-│ 3  UIKitCore     -[UIViewController view] + 27                          │
-│                                                                         │
-├─────────────────────────────────────────────────────────────────────────┤
-│ Distribution                                                            │
-│ ───────────────                                                         │
-│ iOS 17.2: ████████ 65%                                                  │
-│ iOS 17.1: ████ 25%                                                      │
-│ iOS 16.4: ██ 10%                                                        │
-│                                                                         │
-│ iPhone 15 Pro: ████████ 45%                                             │
-│ iPhone 14:     ████ 30%                                                 │
-│ iPhone 13:     ██ 15%                                                   │
-│ Other:         █ 10%                                                    │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+Each crash signature shows:
+- **Header** — Exception type and affected device/crash share counts, first seen date
+- **Exception Information** — Type (e.g., EXC_BAD_ACCESS), codes, address
+- **Crashed Thread** — Stack frames with binary, function, and offset
+- **Distribution** — Breakdown by iOS version and device model
 
 ### Downloading Crash Logs
 
@@ -377,70 +324,9 @@ Both show the same data, but:
 
 ## Field Diagnostics with MetricKit
 
-ASC dashboards show aggregated data. For granular, device-level diagnostics, use **MetricKit** to collect crash reports and performance data programmatically.
+For device-level crash diagnostics, hang call stacks, and custom telemetry beyond ASC's aggregated dashboards, see `axiom-metrickit-ref`.
 
-### Setup
-
-```swift
-import MetricKit
-
-class MetricsManager: NSObject, MXMetricManagerSubscriber {
-    static let shared = MetricsManager()
-
-    func start() {
-        MXMetricManager.shared.add(self)
-    }
-
-    // Called ~once per day with accumulated metrics
-    func didReceive(_ payloads: [MXMetricPayload]) {
-        for payload in payloads {
-            // Performance metrics
-            if let launchTime = payload.applicationLaunchMetrics {
-                print("Median launch: \(launchTime.histogrammedTimeToFirstDraw)")
-            }
-            if let hangRate = payload.applicationResponsivenessMetrics {
-                print("Hang rate: \(hangRate.histogrammedApplicationHangTime)")
-            }
-        }
-    }
-
-    // Crash and hang diagnostics (iOS 14+)
-    func didReceive(_ payloads: [MXDiagnosticPayload]) {
-        for payload in payloads {
-            // Crash diagnostics with full stack traces
-            if let crashes = payload.crashDiagnostics {
-                for crash in crashes {
-                    print("Crash: \(crash.callStackTree)")
-                    print("Signal: \(crash.signal)")
-                    print("Exception: \(crash.exceptionType)")
-                }
-            }
-            // Hang diagnostics (iOS 16+)
-            if let hangs = payload.hangDiagnostics {
-                for hang in hangs {
-                    print("Hang: \(hang.hangDuration) — \(hang.callStackTree)")
-                }
-            }
-        }
-    }
-}
-```
-
-### What MetricKit Provides Beyond ASC
-
-| Data | ASC Dashboard | MetricKit |
-|------|--------------|-----------|
-| Crash stack traces | Aggregated signatures | Per-device, full call stacks |
-| Hang diagnostics | Hang rate percentage | Individual hang call stacks with duration |
-| CPU/memory metrics | Aggregated histograms | Per-device histograms |
-| Disk write exceptions | Total write count | Individual write spike call stacks |
-| Custom data correlation | No | Combine with your own telemetry |
-| Delivery timing | 24-48 hour delay | ~once daily on device |
-
-### When to Use MetricKit vs ASC
-
-- **ASC**: Team visibility, historical trends, version comparison, triage
-- **MetricKit**: Device-specific debugging, correlating crashes with app state, custom dashboards, field diagnostics for non-reproducible issues
+**Key difference**: ASC shows aggregated trends for team visibility. MetricKit provides per-device diagnostics you can correlate with your own telemetry.
 
 ---
 
