@@ -2,6 +2,30 @@
 
 Master Swift's concurrency model and catch data races at compile time with strict concurrency patterns.
 
+```mermaid
+flowchart LR
+    classDef router fill:#6f42c1,stroke:#5a32a3,color:#fff
+    classDef discipline fill:#d4edda,stroke:#28a745,color:#1b4332
+    classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
+
+    axiom_ios_concurrency["ios-concurrency router"]:::router
+
+    subgraph skills_d["Skills"]
+        swift_concurrency["swift-concurrency"]:::discipline
+        swift_performance["swift-performance"]:::discipline
+        assume_isolated["assume-isolated"]:::discipline
+        synchronization["synchronization"]:::discipline
+        ownership_conventions["ownership-conventions"]:::discipline
+        concurrency_profiling["concurrency-profiling"]:::discipline
+    end
+    axiom_ios_concurrency --> skills_d
+
+    subgraph agents_sg["Agents"]
+        agent_ca["concurrency-auditor"]:::agent
+    end
+    axiom_ios_concurrency --> agents_sg
+```
+
 ## Skills
 
 - **[Swift Concurrency](/skills/concurrency/swift-concurrency)** – Swift 6 strict concurrency patterns, async/await, MainActor, Sendable, and actor isolation

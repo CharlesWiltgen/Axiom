@@ -2,6 +2,26 @@
 
 Xcode 26.3 ships a built-in MCP (Model Context Protocol) server that exposes 20 IDE tools to external AI clients. This skill suite teaches Claude how to set up, connect, and use Xcode's MCP tools effectively — from building and testing to rendering SwiftUI previews programmatically.
 
+```mermaid
+flowchart LR
+    classDef router fill:#6f42c1,stroke:#5a32a3,color:#fff
+    classDef discipline fill:#d4edda,stroke:#28a745,color:#1b4332
+    classDef reference fill:#cce5ff,stroke:#0d6efd,color:#003366
+
+    axiom_xcode_mcp["xcode-mcp router"]:::router
+
+    subgraph skills_d["Skills"]
+        xcode_mcp_setup["xcode-mcp-setup"]:::discipline
+        xcode_mcp_tools["xcode-mcp-tools"]:::discipline
+    end
+    axiom_xcode_mcp --> skills_d
+
+    subgraph skills_r["References"]
+        xcode_mcp_ref["xcode-mcp-ref"]:::reference
+    end
+    axiom_xcode_mcp --> skills_r
+```
+
 ## When to Use
 
 Use these skills when:

@@ -2,6 +2,45 @@
 
 Comprehensive database patterns for safe schema evolution and choosing the right persistence framework for your needs.
 
+```mermaid
+flowchart LR
+    classDef router fill:#6f42c1,stroke:#5a32a3,color:#fff
+    classDef discipline fill:#d4edda,stroke:#28a745,color:#1b4332
+    classDef reference fill:#cce5ff,stroke:#0d6efd,color:#003366
+    classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
+    classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
+
+    axiom_ios_data["ios-data router"]:::router
+
+    subgraph skills_d["Skills"]
+        swiftdata["swiftdata"]:::discipline
+        core_data["core-data"]:::discipline
+        grdb["grdb"]:::discipline
+        sqlitedata["sqlitedata"]:::discipline
+        database_migration["database-migration"]:::discipline
+        codable["codable"]:::discipline
+        cloud_sync["cloud-sync"]:::discipline
+        storage["storage"]:::discipline
+    end
+    axiom_ios_data --> skills_d
+
+    subgraph skills_r["References"]
+        cloudkit_ref["cloudkit-ref"]:::reference
+        icloud_drive_ref["icloud-drive-ref"]:::reference
+        realm_migration_ref["realm-migration-ref"]:::reference
+        sqlitedata_ref["sqlitedata-ref"]:::reference
+    end
+    axiom_ios_data --> skills_r
+
+    subgraph agents_sg["Agents"]
+        agent_cda["core-data-auditor"]:::agent
+        agent_cod["codable-auditor"]:::agent
+        agent_ic["icloud-auditor"]:::agent
+        agent_sa["storage-auditor"]:::agent
+    end
+    axiom_ios_data --> agents_sg
+```
+
 ## Skills
 
 - **[Database Migration](/skills/persistence/database-migration)** – Safe schema evolution for SQLite/GRDB/SwiftData, prevents data loss

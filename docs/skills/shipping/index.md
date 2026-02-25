@@ -2,6 +2,39 @@
 
 Skills for preparing, submitting, and troubleshooting App Store submissions. Covers pre-flight checklists, metadata requirements, rejection diagnosis, and appeal processes.
 
+```mermaid
+flowchart LR
+    classDef router fill:#6f42c1,stroke:#5a32a3,color:#fff
+    classDef discipline fill:#d4edda,stroke:#28a745,color:#1b4332
+    classDef reference fill:#cce5ff,stroke:#0d6efd,color:#003366
+    classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
+    classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
+
+    axiom_shipping["shipping router"]:::router
+
+    subgraph skills_d["Skills"]
+        app_store_submission["app-store-submission"]:::discipline
+        asc_mcp["asc-mcp"]:::discipline
+    end
+    axiom_shipping --> skills_d
+
+    subgraph skills_r["References"]
+        app_store_ref["app-store-ref"]:::reference
+    end
+    axiom_shipping --> skills_r
+
+    subgraph skills_diag["Diagnostics"]
+        app_store_diag["app-store-diag"]:::diagnostic
+    end
+    axiom_shipping --> skills_diag
+
+    subgraph agents_sg["Agents"]
+        agent_sps["security-privacy-scanner"]:::agent
+        agent_iap["iap-auditor"]:::agent
+    end
+    axiom_shipping --> agents_sg
+```
+
 ## Available Skills
 
 ### [App Store Submission](./app-store-submission)
