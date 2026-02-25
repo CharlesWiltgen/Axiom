@@ -109,7 +109,8 @@ xcrun xcresulttool get test-results tests --path "$RESULT_PATH" > "$ATTACHMENTS_
 
 | Pattern | Error Message | Root Cause | Fix |
 |---------|---------------|------------|-----|
-| **Element Not Found** | `Failed to find element` | Missing accessibilityIdentifier | Add identifier to element |
+| **Element Not Found (test bug)** | `Failed to find element` | Wrong query or missing accessibilityIdentifier | Fix query or add identifier |
+| **Element Not Found (app bug)** | `Failed to find element` | Element never implemented or in wrong view | Report: app code needs this element — do NOT rewrite test |
 | **Timeout** | `Timed out waiting for element` | Slow app, short timeout | Increase timeout, optimize app |
 | **State Mismatch** | `Expected X, got Y` | Race condition | Add explicit wait |
 | **Not Hittable** | `Element exists but not hittable` | Element obscured | Dismiss keyboard/sheet, scroll |
@@ -119,24 +120,39 @@ xcrun xcresulttool get test-results tests --path "$RESULT_PATH" > "$ATTACHMENTS_
 ### Analysis Workflow
 
 ```bash
-# 1. Check error message
+# 1. Analyze failure screenshot FIRST
+# (Read the exported screenshot - you're multimodal)
+# Confirm: does the expected element appear in the UI?
+
+# 2. Check error message
 grep -A5 "Failure:" /tmp/xcodebuild-debug.log
 
-# 2. Find file and line
+# 3. Find file and line
 grep -E "\.swift:[0-9]+" /tmp/xcodebuild-debug.log
 
-# 3. Read the test code
+# 4. Read the test code
 # (Use Read tool on the file:line from above)
-
-# 4. Analyze screenshot
-# (Read the exported screenshot - you're multimodal)
 ```
+
+### Element Not Found Triage
+
+When a test can't find a UI element, determine whether the problem is in the test or the app BEFORE suggesting fixes:
+
+1. **Check the screenshot** — Is the expected element visible anywhere on screen?
+2. **If element is NOT visible**: Search the app source code for the element (grep for the expected text, identifier, or view name)
+   - Element not in source → **App bug**: element was never implemented. Report this — do NOT rewrite test queries. Do not search for partial matches or alternative element names. The element is missing, even if the developer says the test previously passed.
+   - Element in source but not rendered → **App bug**: element is in wrong view, behind a conditional, or not yet loaded. Report the specific issue. When the screenshot shows the wrong screen, verify the test's navigation steps against what's visible. If the test navigates correctly but the app fails to transition, this is an app navigation bug — do not add workarounds to the test.
+3. **If element IS visible**: The test query is wrong. Check accessibilityIdentifier, label text, element type.
+
+**Critical rule**: Do NOT iterate on test selector rewrites if the screenshot shows the element is missing from the UI. The test is correct — the app is incomplete.
 
 ## Phase 4: Suggest Fixes
 
 Based on pattern analysis, suggest specific code changes:
 
 ### Element Not Found Fix
+
+**If triage identified a test bug** (element visible but query wrong):
 
 ```swift
 // BEFORE (missing identifier)
@@ -146,6 +162,8 @@ Button("Login") { ... }
 Button("Login") { ... }
     .accessibilityIdentifier("loginButton")
 ```
+
+**If triage identified an app bug** (element not in UI): Skip to Phase 7 — report the missing element as an app issue. Do not modify test code.
 
 ### Timeout Fix
 
@@ -260,12 +278,16 @@ Check result:
 ├─ Tests passed → Report success
 └─ Tests failed:
     ├─ Export failure attachments
+    ├─ Read failure screenshot FIRST (multimodal analysis)
     ├─ Analyze error pattern:
-    │   ├─ Element not found → Check for accessibilityIdentifier
+    │   ├─ Element not found:
+    │   │   ├─ Screenshot shows element → Fix test query/identifier
+    │   │   └─ Screenshot missing element → Search app source
+    │   │       ├─ Not implemented → Report: app needs this element
+    │   │       └─ Wrong view/conditional → Report: app code bug
     │   ├─ Timeout → Check wait/timeout values
     │   ├─ Not hittable → Check for obscuring elements
     │   └─ State mismatch → Check for race conditions
-    ├─ Read failure screenshot (multimodal analysis)
     ├─ Read test source code
     ├─ Suggest specific fix
     ├─ Get user approval
@@ -303,7 +325,7 @@ When analyzing failures, consider:
 
 | Symptom | Quick Check | Likely Fix |
 |---------|-------------|------------|
-| "Failed to find element" | Screenshot shows element? | Add accessibilityIdentifier |
+| "Failed to find element" | Screenshot shows element? | YES: Add identifier. NO: Check app source — element may not exist |
 | "Timed out" | Check app loading | Increase timeout or optimize |
 | "Not hittable" | Keyboard visible? | Dismiss keyboard |
 | "Multiple matches" | Generic query? | Use specific identifier |
