@@ -44,7 +44,8 @@ export default withMermaid(defineConfig({
             { text: 'Overview', link: '/guide/' },
             { text: 'Quick Start', link: '/guide/quick-start' },
             { text: 'MCP Server', link: '/guide/mcp-install' },
-            { text: 'Example Workflows', link: '/guide/workflows' }
+            { text: 'Example Workflows', link: '/guide/workflows' },
+            { text: 'Skill Map', link: '/guide/skill-map' }
           ]
         }
       ],

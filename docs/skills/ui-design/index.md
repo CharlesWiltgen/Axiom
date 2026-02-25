@@ -2,6 +2,53 @@
 
 Build beautiful, performant interfaces with expert guidance on the latest Apple design systems and testing practices.
 
+```mermaid
+flowchart LR
+    classDef router fill:#6f42c1,stroke:#5a32a3,color:#fff
+    classDef discipline fill:#d4edda,stroke:#28a745,color:#1b4332
+    classDef reference fill:#cce5ff,stroke:#0d6efd,color:#003366
+    classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
+    classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
+
+    axiom_ios_ui["ios-ui router"]:::router
+
+    subgraph skills_d["Skills"]
+        swiftui_debugging["swiftui-debugging"]:::discipline
+        swiftui_nav["swiftui-nav"]:::discipline
+        swiftui_performance["swiftui-performance"]:::discipline
+        swiftui_layout["swiftui-layout"]:::discipline
+        swiftui_gestures["swiftui-gestures"]:::discipline
+        swiftui_architecture["swiftui-architecture"]:::discipline
+        app_composition["app-composition"]:::discipline
+        liquid_glass["liquid-glass"]:::discipline
+        sf_symbols["sf-symbols"]:::discipline
+        hig["hig"]:::discipline
+        uikit_bridging["uikit-bridging"]:::discipline
+        ui_testing["ui-testing"]:::discipline
+    end
+    axiom_ios_ui --> skills_d
+
+    subgraph skills_r["References"]
+        swiftui_containers_ref["swiftui-containers-ref"]:::reference
+        swiftui_animation_ref["swiftui-animation-ref"]:::reference
+        swiftui_26_ref["swiftui-26-ref"]:::reference
+        transferable_ref["transferable-ref"]:::reference
+        swiftui_search_ref["swiftui-search-ref"]:::reference
+        typography_ref["typography-ref"]:::reference
+        textkit_ref["textkit-ref"]:::reference
+    end
+    axiom_ios_ui --> skills_r
+
+    subgraph agents_sg["Agents"]
+        agent_arch["swiftui-architecture-auditor"]:::agent
+        agent_perf["swiftui-performance-analyzer"]:::agent
+        agent_nav["swiftui-nav-auditor"]:::agent
+        agent_lg["liquid-glass-auditor"]:::agent
+        agent_tk["textkit-auditor"]:::agent
+    end
+    axiom_ios_ui --> agents_sg
+```
+
 ## Skills
 
 - **[Human Interface Guidelines](/skills/ui-design/hig)** – Quick design decisions, compliance checklists, defending design choices

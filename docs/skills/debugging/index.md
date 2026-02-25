@@ -2,6 +2,47 @@
 
 Systematic debugging strategies to solve issues faster and prevent common problems before they happen.
 
+```mermaid
+flowchart LR
+    classDef router fill:#6f42c1,stroke:#5a32a3,color:#fff
+    classDef discipline fill:#d4edda,stroke:#28a745,color:#1b4332
+    classDef reference fill:#cce5ff,stroke:#0d6efd,color:#003366
+    classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
+    classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
+
+    build_router["ios-build router"]:::router
+    perf_router["ios-performance router"]:::router
+
+    subgraph build_skills["Build & Environment"]
+        xcode_debugging["xcode-debugging"]:::discipline
+        build_debugging["build-debugging"]:::discipline
+        build_performance["build-performance"]:::discipline
+        testflight_triage["testflight-triage"]:::discipline
+        hang_diagnostics["hang-diagnostics"]:::discipline
+        lldb["lldb"]:::discipline
+    end
+    build_router --> build_skills
+
+    subgraph perf_skills["Performance & Memory"]
+        memory_debugging["memory-debugging"]:::discipline
+        performance_profiling["performance-profiling"]:::discipline
+        energy["energy"]:::discipline
+        display_performance["display-performance"]:::discipline
+        objc_retain["objc-block-retain-cycles"]:::discipline
+    end
+    perf_router --> perf_skills
+
+    subgraph agents_sg["Agents"]
+        agent_bf["build-fixer"]:::agent
+        agent_bo["build-optimizer"]:::agent
+        agent_ma["memory-auditor"]:::agent
+        agent_pp["performance-profiler"]:::agent
+        agent_ca["crash-analyzer"]:::agent
+    end
+    build_router --> agents_sg
+    perf_router --> agents_sg
+```
+
 ## Skills
 
 - **[Accessibility Diagnostics](/diagnostic/accessibility-diag)** – WCAG compliance, VoiceOver testing, Dynamic Type support, App Store Review preparation
@@ -21,7 +62,7 @@ Systematic debugging strategies to solve issues faster and prevent common proble
 - **[Memory Debugging](/skills/debugging/memory-debugging)** – Systematic leak diagnosis with 5 patterns covering 90% of real-world issues
   - *"My app crashes after 10-15 minutes of use with no error messages. How do I find the leak?"*
   - *"View controllers don't deallocate after dismiss. How do I find the retain cycle?"*
-  - **Command** [`/audit-memory`](/commands/debugging/audit-memory) for quick triage scanning
+  - **Command** [`/axiom:audit-memory`](/commands/debugging/audit-memory) for quick triage scanning
 
 - **[Build Debugging](/skills/debugging/build-debugging)** – Dependency resolution for CocoaPods and Swift Package Manager conflicts
   - *"I added a Swift Package but I'm getting 'No such module' errors."*
