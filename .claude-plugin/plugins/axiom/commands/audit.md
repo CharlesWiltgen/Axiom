@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: "area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models"
+argument: "area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models, screenshots"
 disable-model-invocation: true
 ---
 
@@ -40,6 +40,7 @@ If no area specified → analyze project and suggest relevant audits
 | foundation-models | foundation-models-auditor | Missing availability checks, main thread blocking, manual JSON parsing, guardrail handling |
 | swiftui-layout | swiftui-layout-auditor | GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss |
 | database-schema | database-schema-auditor | Unsafe ALTER TABLE, DROP operations, missing idempotency, FK misuse, transaction safety |
+| screenshots | screenshot-validator | Placeholder text, wrong dimensions, debug indicators, broken UI, competitor references |
 
 ## Direct Dispatch
 
@@ -85,12 +86,13 @@ When running multiple audits (either user-requested or from smart suggestions):
    - codable → JSON best practices
    - modernization → Legacy API migration
    - camera → Deprecated capture APIs
+   - screenshots → App Store screenshot compliance
 
 **Batch Recommendations:**
 - For pre-release: Run CRITICAL + HIGH audits
 - For architecture review: Run swiftui-architecture + swiftui-nav + swiftui-layout + swiftui-performance
 - For performance tuning: Run swift-performance + swiftui-performance + memory + energy
-- For App Store prep: Run accessibility + networking + storage + security
+- For App Store prep: Run accessibility + networking + storage + security + screenshots
 - For CI reliability: Run testing + concurrency + memory
 - For battery optimization: Run energy + memory + networking
 - For data layer review: Run swiftdata + database-schema + core-data + storage
@@ -144,6 +146,7 @@ If no area argument:
    - Find LanguageModelSession / @Generable / FoundationModels imports → suggest foundation-models audit
    - Find GeometryReader / layout patterns → suggest swiftui-layout audit
    - Find registerMigration / ALTER TABLE / DatabaseMigrator → suggest database-schema audit
+   - Find screenshots folder (Screenshots/, screenshots/, marketing/) → suggest screenshots audit
 
 2. Present findings and ask: "Based on your project, I suggest these audits: [list]. Which would you like to run?"
 

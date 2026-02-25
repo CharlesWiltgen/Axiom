@@ -100,6 +100,12 @@ export default withMermaid(defineConfig({
           ]
         },
         {
+          text: 'Shipping',
+          items: [
+            { text: 'screenshot-validator', link: '/agents/screenshot-validator' }
+          ]
+        },
+        {
           text: 'Testing',
           items: [
             { text: 'simulator-tester', link: '/agents/simulator-tester' },
@@ -354,7 +360,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v2.29.0'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v2.29.1'
     }
   }
 }))

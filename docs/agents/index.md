@@ -26,6 +26,7 @@ Agents are autonomous problem-solvers that:
 - "My build is failing" → **build-fixer** triggers
 - "My builds are slow" → **build-optimizer** triggers
 - "Check my navigation architecture" → **swiftui-nav-auditor** triggers
+- "Validate my App Store screenshots" → **screenshot-validator** triggers
 - "Take a screenshot to verify this fix" → **simulator-tester** triggers
 
 **Explicit commands** — For direct invocation:
@@ -44,6 +45,7 @@ Agents are autonomous problem-solvers that:
 /axiom:audit-storage
 /axiom:fix-build
 /axiom:optimize-build
+/axiom:audit screenshots
 /axiom:test-simulator
 ```
 
@@ -75,6 +77,9 @@ Agents are autonomous problem-solvers that:
 - **networking-auditor** — Scans for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling)
 - **iap-auditor** — Audits existing IAP code for missing transaction.finish() calls, weak receipt validation, missing restore functionality, subscription status tracking issues, and StoreKit testing configuration gaps
 - **iap-implementation** — Implements complete StoreKit 2 IAP solution with testing-first workflow (.storekit configuration, centralized StoreManager, transaction handling, subscription management, restore purchases)
+
+### Shipping
+- **screenshot-validator** — AI-powered visual inspection of App Store screenshots for dimension validation, placeholder text detection, debug artifact scanning, competitor references, and content completeness
 
 ### Testing
 **simulator-tester** — Automated simulator testing with visual verification (screenshots, video, location simulation, push notifications, permissions, deep links, log analysis) for closed-loop debugging

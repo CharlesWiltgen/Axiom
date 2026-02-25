@@ -562,49 +562,7 @@ Run the pre-flight checklist every time. Requirements that didn't exist when you
 
 ## Screenshot Requirements
 
-Screenshots are a top rejection cause under Guideline 2.3 (Accurate Metadata). Screenshots must match the current app UI.
-
-### Required Device Sizes (iPhone)
-
-| Display Size | Devices | Required? |
-|-------------|---------|-----------|
-| 6.9" | iPhone 16 Pro Max | Required for new apps |
-| 6.7" | iPhone 16 Plus, 15 Plus, 14 Plus | Required |
-| 6.5" | iPhone 11 Pro Max, XS Max | Optional (falls back to 6.7") |
-| 5.5" | iPhone 8 Plus, 7 Plus | Required for apps supporting older devices |
-
-### Required Device Sizes (iPad)
-
-| Display Size | Devices | Required? |
-|-------------|---------|-----------|
-| 13" | iPad Pro (M4) | Required if universal app |
-| 12.9" | iPad Pro (5th gen) | Optional (falls back to 13") |
-| 11" | iPad Air, iPad Pro 11" | Optional |
-
-### Screenshot Rules
-
-```
-DO:
-- Show actual app UI (not mockups or renders)
-- Include text that matches current app content
-- Show the app running on the device (can include device frames)
-- Update screenshots when UI changes significantly
-- Use all available screenshot slots (up to 10) for better conversion
-
-DON'T:
-- Show UI from a different version of the app
-- Include misleading features or content not in the app
-- Use competitor names or logos
-- Show pricing that doesn't match actual IAP prices
-- Include iPhone status bar showing incorrect carrier/time
-```
-
-### App Preview Videos
-
-- Maximum 30 seconds
-- Must show actual app functionality (not pre-rendered marketing)
-- Audio is muted by default on the App Store
-- Required sizes mirror screenshot requirements
+Screenshots must match current app UI. See `app-store-ref` Part 1 for required sizes, dimensions, and rules.
 
 ---
 
@@ -705,111 +663,19 @@ IAP items require separate review. Missing or broken IAP is a top rejection caus
 
 ## App Store Connect Submission Workflow
 
-### Step-by-step for a clean submission
-
-```
-1. Create new version in ASC
-2. Set version number and "What's New" text
-3. Upload screenshots (all required sizes)
-4. Complete App Review Information section
-   - Contact info
-   - Demo credentials (if login required)
-   - Notes for reviewer
-5. Verify Privacy Nutrition Labels
-6. Verify age rating questionnaire
-7. Upload build from Xcode (Product → Archive → Distribute)
-8. Wait for build processing (5-30 minutes)
-9. Select processed build in ASC
-10. Submit for Review
-```
-
-### Build upload checklist
-
-```bash
-# Before archiving
-xcodebuild -showBuildSettings -scheme YourApp | grep -E "PRODUCT_BUNDLE_IDENTIFIER|MARKETING_VERSION|CURRENT_PROJECT_VERSION"
-
-# Verify signing
-xcodebuild -scheme YourApp -showBuildSettings | grep "CODE_SIGN"
-
-# Archive
-xcodebuild archive -scheme YourApp \
-  -archivePath ./build/YourApp.xcarchive
-
-# Or use Xcode: Product → Archive → Distribute → App Store Connect
-```
-
-### After submission
-
-- **Review time**: ~90% reviewed within 24 hours
-- **Check status**: ASC → My Apps → your app → App Store tab
-- **If rejected**: Read FULL rejection text, fix ALL cited issues, run pre-flight again
-- **If "Metadata Rejected"**: Can fix metadata without new build upload
-- **If "Binary Rejected"**: Need new build upload
+See `app-store-ref` Part 9 for the ASC upload workflow and build processing details.
 
 ---
 
 ## Encryption Export Compliance
 
-### Quick determination
-
-Most apps only use HTTPS (URLSession, Alamofire, etc.). This is standard encryption that's exempt from documentation requirements but still requires declaration.
-
-```xml
-<!-- Info.plist — Add this to skip the compliance question on every upload -->
-<key>ITSAppUsesNonExemptEncryption</key>
-<false/>
-```
-
-Set to `true` only if your app uses:
-- Custom encryption algorithms
-- Encryption beyond what the OS provides
-- Proprietary cryptographic protocols
-- Direct calls to OpenSSL or similar libraries
-
-If `true`, you must upload export compliance documentation in ASC.
-
-**Note**: Even with `ITSAppUsesNonExemptEncryption = false`, if you make HTTPS calls you must submit an annual self-classification report to the US Bureau of Industry and Security. Apple provides guidance on this in App Store Connect.
+Most apps need `ITSAppUsesNonExemptEncryption = false`. See `app-store-ref` Part 5 for the full decision tree.
 
 ---
 
 ## Accessibility Nutrition Labels (New 2025)
 
-Declared per-device in App Store Connect. Initially optional but becoming required for new submissions and updates.
-
-### Available Labels
-
-| Label | What it means | How to verify |
-|-------|--------------|---------------|
-| VoiceOver | All common tasks completable with VoiceOver | Test every screen with VoiceOver enabled |
-| Voice Control | All common tasks completable with voice commands | Test navigation and input with Voice Control |
-| Larger Text | UI adapts to Dynamic Type sizes up to AX5 | Test with largest Accessibility text size |
-| Dark Interface | Full dark mode support | Test every screen in dark mode |
-| Sufficient Contrast | Text and controls meet WCAG AA contrast ratios | Audit with Accessibility Inspector |
-| Differentiation Without Color | Information not conveyed by color alone | Check all status indicators, errors, states |
-| Reduced Motion | Animations respect Reduce Motion setting | Enable Reduce Motion, verify all transitions |
-
-### Declaration Rules
-
-- Declare per device (iPhone, iPad, Apple Watch separately)
-- Each declaration means users can complete ALL common tasks using that feature
-- Do not declare partial support — all-or-nothing per feature
-- Labels are saved as drafts first, published when ready
-- Can publish individual device declarations separately
-
-### Before Declaring
-
-Run an accessibility audit of your app:
-```
-1. Enable VoiceOver → Navigate every screen → Complete core flows
-2. Enable Voice Control → Same test
-3. Set text size to AX5 → Check all screens for truncation/overlap
-4. Switch to Dark Mode → Check all screens for legibility
-5. Run Accessibility Inspector → Check contrast ratios
-6. Enable Reduce Motion → Verify animations are reduced/removed
-```
-
-See `axiom-accessibility-diag` for systematic auditing before declaring labels.
+Accessibility Nutrition Labels are becoming required for new submissions. See `app-store-ref` Part 10 for the full label list and declaration rules. Run `axiom-accessibility-diag` before declaring.
 
 ---
 
@@ -857,27 +723,10 @@ For developers submitting their first app, these are additional items often miss
 
 ---
 
-## Related Skills
-
-- `axiom-privacy-ux` — Deep implementation of privacy manifests, ATT, Required Reason APIs
-- `axiom-storekit-ref` — IAP and subscription implementation
-- `axiom-accessibility-diag` — Accessibility audit before declaring Nutrition Labels
-- `axiom-testflight-triage` — TestFlight crash and feedback triage
-- `axiom-app-store-connect-ref` — ASC navigation, crash data, metrics
-- `axiom-xcode-debugging` — Build failures and environment issues
-
----
-
 ## Resources
 
 **WWDC**: 2022-10166, 2025-328, 2025-224, 2025-241
 
 **Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details, /support/offering-account-deletion-in-your-app, /documentation/security/complying-with-encryption-export-regulations
 
-**Skills**: axiom-privacy-ux, axiom-storekit-ref, axiom-accessibility-diag, axiom-testflight-triage
-
----
-
-**Last Updated**: 2026-02-17
-**Platforms**: iOS, iPadOS, tvOS, watchOS, visionOS
-**Status**: Production-ready pre-flight checklist for App Store submissions
+**Skills**: axiom-privacy-ux, axiom-storekit-ref, axiom-accessibility-diag, axiom-testflight-triage, axiom-app-store-connect-ref
