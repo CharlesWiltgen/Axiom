@@ -2,6 +2,47 @@
 
 Skills for integrating your app with Apple's system-level experiences: Siri, Apple Intelligence, Shortcuts, Spotlight, and more.
 
+```mermaid
+flowchart LR
+    classDef router fill:#6f42c1,stroke:#5a32a3,color:#fff
+    classDef discipline fill:#d4edda,stroke:#28a745,color:#1b4332
+    classDef reference fill:#cce5ff,stroke:#0d6efd,color:#003366
+    classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
+    classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
+
+    axiom_ios_integration["ios-integration router"]:::router
+
+    subgraph skills_d["Skills"]
+        extensions_widgets["extensions-widgets"]:::discipline
+        in_app_purchases["in-app-purchases"]:::discipline
+        camera_capture["camera-capture"]:::discipline
+        photo_library["photo-library"]:::discipline
+        now_playing["now-playing"]:::discipline
+        background_processing["background-processing"]:::discipline
+        core_location["core-location"]:::discipline
+        haptics["haptics"]:::discipline
+        localization["localization"]:::discipline
+        privacy_ux["privacy-ux"]:::discipline
+    end
+    axiom_ios_integration --> skills_d
+
+    subgraph skills_r["References"]
+        app_intents_ref["app-intents-ref"]:::reference
+        storekit_ref["storekit-ref"]:::reference
+        avfoundation_ref["avfoundation-ref"]:::reference
+        extensions_widgets_ref["extensions-widgets-ref"]:::reference
+        core_location_ref["core-location-ref"]:::reference
+    end
+    axiom_ios_integration --> skills_r
+
+    subgraph agents_sg["Agents"]
+        agent_iap["iap-auditor"]:::agent
+        agent_iapi["iap-implementation"]:::agent
+        agent_cam["camera-auditor"]:::agent
+    end
+    axiom_ios_integration --> agents_sg
+```
+
 ## Available Skills
 
 ### [Foundation Models](./foundation-models)
