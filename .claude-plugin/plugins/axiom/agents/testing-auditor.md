@@ -141,9 +141,7 @@ class MyTests: XCTestCase {
 - Test models, services, utilities (no UI assertions)
 - Don't use XCUIApplication
 
-**Recommendation**: Extract testable logic into a Swift Package. This is the single highest-impact test speed improvement.
-
-**Quick steps**:
+**Fix**: Extract testable logic into a Swift Package — the single highest-impact test speed improvement:
 1. Create `MyAppCore/` package alongside `.xcodeproj`
 2. Move models/services/utilities to the package
 3. App target becomes thin shell importing the package
