@@ -28,12 +28,6 @@ Scans database migration and schema code for the 10 most critical violations —
 9. **Batch Insert Outside Transaction** (MEDIUM) — 30x slower without wrapping
 10. **CREATE Without IF NOT EXISTS** (MEDIUM) — Breaks migration idempotency
 
-## Model & Tools
-
-- **Model**: sonnet
-- **Tools**: Glob, Grep, Read
-- **Color**: orange
-
 ## Related
 
 - **database-migration** — Safe schema evolution patterns for SQLite/GRDB/SwiftData

@@ -15,7 +15,7 @@ Automatically scans for TextKit 1 fallback triggers, deprecated glyph APIs, and 
 /axiom:audit-textkit
 ```
 
-## What It Checks
+## What It Does
 
 1. **TextKit 1 Fallback Triggers** (CRITICAL) — Direct `.layoutManager` access, NSLayoutManager usage
 2. **Deprecated Glyph APIs** (CRITICAL) — `numberOfGlyphs`, `glyphRange`, `glyphIndex` (breaks with Arabic, Kannada)
@@ -23,13 +23,6 @@ Automatically scans for TextKit 1 fallback triggers, deprecated glyph APIs, and 
 4. **Missing Writing Tools** (MEDIUM) — No `writingToolsBehavior` property (iOS 18+)
 5. **Missing State Checks** (MEDIUM) — Text mutations without `isWritingToolsActive` check
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Glob, Grep, Read
-- **Color**: cyan
-- **Scan Time**: <1 second
-
-## Related Skills
+## Related
 
 - **textkit-ref** skill — Complete TextKit 2 architecture, migration patterns, and Writing Tools integration guide

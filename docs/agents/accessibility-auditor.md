@@ -15,7 +15,7 @@ Automatically scans for VoiceOver label issues, Dynamic Type violations, color c
 /axiom:audit-accessibility
 ```
 
-## What It Checks
+## What It Does
 
 1. **VoiceOver Labels** (CRITICAL) — Missing accessibilityLabel, generic labels
 2. **Dynamic Type** (HIGH) — Fixed font sizes instead of .font(.body)
@@ -26,14 +26,7 @@ Automatically scans for VoiceOver label issues, Dynamic Type violations, color c
 7. **Reduce Motion Support** (MEDIUM) — Animations without checks
 8. **Keyboard Navigation** (MEDIUM) — Missing keyboard shortcuts
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Glob, Grep, Read
-- **Color**: purple
-- **Scan Time**: <1 second
-
-## Related Skills
+## Related
 
 - **accessibility-diag** — Comprehensive accessibility diagnostics with WCAG compliance
 - **typography-ref** — Typography and Dynamic Type reference guide

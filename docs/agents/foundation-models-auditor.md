@@ -28,12 +28,6 @@ Scans Foundation Models (Apple Intelligence) code for the 10 most critical viola
 9. **Nested Type Without @Generable** (MEDIUM) — Compilation or runtime failure
 10. **No Fallback UI When Unavailable** (LOW) — Broken UI on unsupported devices
 
-## Model & Tools
-
-- **Model**: sonnet
-- **Tools**: Glob, Grep, Read
-- **Color**: cyan
-
 ## Related
 
 - **foundation-models** — On-device AI implementation patterns (iOS 26+)

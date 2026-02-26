@@ -16,7 +16,7 @@ Automatically scans for iCloud integration issues: missing NSFileCoordinator, un
 /axiom:audit-icloud
 ```
 
-## What It Checks
+## What It Does
 
 1. **Missing NSFileCoordinator** (CRITICAL) — Reading/writing iCloud Drive files without coordination → data corruption
 2. **Missing CloudKit Error Handling** (HIGH) — CloudKit operations without proper CKError handling → silent failures
@@ -25,14 +25,7 @@ Automatically scans for iCloud integration issues: missing NSFileCoordinator, un
 5. **Missing Conflict Resolution** (MEDIUM) — Not handling ubiquitousItemHasUnresolvedConflicts → data loss from concurrent edits
 6. **CKSyncEngine Migration** (MEDIUM) — Using legacy CKDatabase APIs instead of CKSyncEngine (iOS 17+)
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Glob, Grep, Read
-- **Color**: cyan
-- **Scan Time**: <2 seconds
-
-## Related Skills
+## Related
 
 - **cloud-sync-diag** — Systematic iCloud sync troubleshooting
 - **cloudkit-ref** — Modern CloudKit patterns and CKSyncEngine reference

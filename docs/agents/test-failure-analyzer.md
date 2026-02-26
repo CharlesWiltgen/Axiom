@@ -16,7 +16,7 @@ Diagnoses WHY tests fail, especially intermittent/flaky failures in Swift Testin
 /axiom:audit test-failures
 ```
 
-## What It Checks
+## What It Does
 
 ### Critical (Will Cause Intermittent Failures)
 - **Missing `await confirmation`** — Async callback without proper waiting
@@ -71,12 +71,6 @@ swift test --parallel --num-workers 8
 # Run specific test repeatedly
 swift test --filter "TestName" --iterations 100
 ```
-
-## Model & Tools
-
-- **Model**: haiku (fast pattern scanning)
-- **Tools**: Glob, Grep, Read
-- **Color**: yellow
 
 ## Related
 

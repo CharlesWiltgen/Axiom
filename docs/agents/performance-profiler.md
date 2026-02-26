@@ -34,12 +34,6 @@ Automated performance profiling via xctrace CLI — records traces, exports data
 | "launch", "startup" | Launch workflow | varies |
 | "concurrency", "actors" | Swift Tasks + Actors | 10s |
 
-## Model & Tools
-
-- **Model**: sonnet
-- **Tools**: Bash, Read, Grep, Glob
-- **Color**: orange
-
 ## Related
 
 - **performance-profiling** — Manual Instruments decision trees and workflows
