@@ -24,6 +24,14 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**localization**](./localization) | App localization and i18n — String Catalogs (.xcstrings), type-safe symbols (Xcode 26+), #bundle macro, plurals, RTL layouts, locale-aware formatting |
 | [**privacy-ux**](./privacy-ux) | Privacy manifests and permission UX — just-in-time permissions, App Tracking Transparency, Required Reason APIs, Privacy Nutrition Labels |
 | [**swiftui-layout-ref**](./swiftui-layout-ref) | Complete SwiftUI adaptive layout API guide — ViewThatFits, AnyLayout, Layout protocol, onGeometryChange, size classes, iOS 26 window APIs |
+| [**swiftui-nav-ref**](./swiftui-nav-ref) | Comprehensive SwiftUI navigation API reference — NavigationStack, NavigationSplitView, NavigationPath, deep linking (iOS 16-26) |
+| [**swiftui-search-ref**](./swiftui-search-ref) | SwiftUI search APIs — .searchable, isSearching, suggestions, scopes, tokens, programmatic control (iOS 15-18) |
+| [**swift-concurrency-ref**](./swift-concurrency-ref) | Swift concurrency API reference — actors, Sendable, Task/TaskGroup, AsyncStream, continuations, migration patterns |
+| [**sqlitedata-ref**](./sqlitedata-ref) | SQLiteData advanced patterns — @Select, @Join, batch operations, CloudKit sync, query optimization |
+| [**vision-ref**](./vision-ref) | Vision framework API reference — subject segmentation, hand/body pose, text recognition, barcode scanning |
+| [**coreml-ref**](./coreml-ref) | CoreML API reference — MLTensor, coremltools conversion, model compression, state management |
+| [**timer-patterns-ref**](./timer-patterns-ref) | Timer implementation patterns — invalidation, memory-safe usage, dispatch timers, CADisplayLink |
+| [**mapkit-ref**](./mapkit-ref) | MapKit API reference — SwiftUI Map, MKMapView, annotations, search, directions |
 | [**storage**](./storage) | Complete iOS storage decision framework — database vs files, local vs cloud, SwiftData/CloudKit/iCloud Drive selection |
 | [**cloudkit-ref**](./cloudkit-ref) | Modern CloudKit sync — SwiftData integration, CKSyncEngine (WWDC 2023), database scopes, conflict resolution, monitoring |
 | [**icloud-drive-ref**](./icloud-drive-ref) | File-based iCloud sync — ubiquitous containers, NSFileCoordinator, conflict resolution, NSUbiquitousKeyValueStore |

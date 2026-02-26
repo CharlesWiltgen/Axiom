@@ -22,8 +22,11 @@ This routes your question to the right Axiom skill or agent automatically.
 |---------|----------------|--------|
 | [**`/axiom:ask`**](./utility/ask) | Natural language entry point to all Axiom skills | Triggers the right skill or agent |
 | [**`/axiom:audit`**](./utility/audit) | Unified audit command - smart selector or direct area targeting | Suggestions or specific audit execution |
+| [**`/axiom:analyze-crash`**](./debugging/analyze-crash) | Parse and analyze crash logs (.ips, .crash) to identify root cause | Crash pattern categorization and actionable diagnostics |
 | [**`/axiom:fix-build`**](./build/fix-build) | Xcode build failures, environment issues, zombie processes, Derived Data, SPM cache, simulator state | Automatic diagnostics and fixes with verification |
 | [**`/axiom:optimize-build`**](./build/optimize-build) | Build performance bottlenecks, compilation settings, build phase scripts, type checking issues | Optimization recommendations with time savings estimates |
+| [**`/axiom:profile`**](./debugging/profile) | Automated performance profiling via xctrace CLI (CPU, memory, leaks, SwiftUI) | Trace recording, export, and analysis summary |
+| [**`/axiom:run-tests`**](./testing/run-tests) | Run XCUITests and parse .xcresult bundles for structured results | Test results with failure analysis and attachment export |
 | [**`/axiom:screenshot`**](./testing/screenshot) | Quick screenshot capture from booted iOS Simulator | Screenshot file path + visual analysis |
 | [**`/axiom:status`**](./utility/status) | Environment health, zombie processes, Derived Data size, simulator status, project stats | Dashboard with quick health metrics |
 | [**`/axiom:test-simulator`**](./testing/test-simulator) | Automated simulator testing with visual verification (screenshots, location, push, permissions, logs) | Test results with evidence (screenshots, logs) |

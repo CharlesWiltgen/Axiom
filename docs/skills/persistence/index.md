@@ -67,6 +67,14 @@ flowchart LR
   - *"I'm targeting iOS 16. How do I set up Core Data with CloudKit sync?"*
   - *"I'm getting thread-confinement errors. How do I use background contexts correctly?"*
 
+- **[Codable](/skills/persistence/codable)** – JSON encoding/decoding, Codable conformance, handling decode errors, date strategies
+  - *"How do I handle a JSON field that could be a string or a number?"*
+  - *"What's the best way to handle date formatting with Codable?"*
+
 - **[Cloud Sync](/skills/persistence/cloud-sync)** – CloudKit vs iCloud Drive, offline-first patterns, conflict resolution
   - *"Should I use CloudKit or iCloud Drive for my app's data?"*
   - *"How do I handle sync conflicts when users edit on multiple devices?"*
+
+- **[SwiftData Migration](/skills/persistence/swiftdata-migration)** – Custom schema migration strategies for SwiftData
+  - *"How do I create a custom SwiftData migration?"*
+  - *"My SwiftData migration is crashing on device"*

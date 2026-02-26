@@ -183,6 +183,22 @@ Direct access to Apple's official for-LLM markdown documentation bundled in Xcod
 
 ---
 
+### [Apple Docs Research](./apple-docs-research)
+
+Methodology for researching Apple frameworks using WWDC transcripts and sosumi.ai.
+
+**When to use** Getting WWDC session transcripts, finding Apple documentation, researching framework APIs
+
+---
+
+### [tvOS](./tvos)
+
+tvOS app development patterns — focus engine, top shelf, platform differences from iOS.
+
+**When to use** Building a tvOS app, adapting an iOS app for Apple TV, implementing focus behavior
+
+---
+
 ## See Also
 
 - [Apple App Intents Documentation](https://developer.apple.com/documentation/appintents)

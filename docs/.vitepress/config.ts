@@ -60,7 +60,8 @@ export default withMermaid(defineConfig({
           text: 'Build & Environment',
           items: [
             { text: 'build-fixer', link: '/agents/build-fixer' },
-            { text: 'build-optimizer', link: '/agents/build-optimizer' }
+            { text: 'build-optimizer', link: '/agents/build-optimizer' },
+            { text: 'spm-conflict-resolver', link: '/agents/spm-conflict-resolver' }
           ]
         },
         {
@@ -69,6 +70,7 @@ export default withMermaid(defineConfig({
             { text: 'accessibility-auditor', link: '/agents/accessibility-auditor' },
             { text: 'codable-auditor', link: '/agents/codable-auditor' },
             { text: 'concurrency-auditor', link: '/agents/concurrency-auditor' },
+            { text: 'energy-auditor', link: '/agents/energy-auditor' },
             { text: 'memory-auditor', link: '/agents/memory-auditor' },
             { text: 'swift-performance-analyzer', link: '/agents/swift-performance-analyzer' },
             { text: 'textkit-auditor', link: '/agents/textkit-auditor' }
@@ -79,6 +81,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'liquid-glass-auditor', link: '/agents/liquid-glass-auditor' },
             { text: 'swiftui-architecture-auditor', link: '/agents/swiftui-architecture-auditor' },
+            { text: 'swiftui-layout-auditor', link: '/agents/swiftui-layout-auditor' },
             { text: 'swiftui-performance-analyzer', link: '/agents/swiftui-performance-analyzer' },
             { text: 'swiftui-nav-auditor', link: '/agents/swiftui-nav-auditor' }
           ]
@@ -87,13 +90,17 @@ export default withMermaid(defineConfig({
           text: 'Persistence & Storage',
           items: [
             { text: 'core-data-auditor', link: '/agents/core-data-auditor' },
+            { text: 'database-schema-auditor', link: '/agents/database-schema-auditor' },
             { text: 'icloud-auditor', link: '/agents/icloud-auditor' },
-            { text: 'storage-auditor', link: '/agents/storage-auditor' }
+            { text: 'storage-auditor', link: '/agents/storage-auditor' },
+            { text: 'swiftdata-auditor', link: '/agents/swiftdata-auditor' }
           ]
         },
         {
           text: 'Integration',
           items: [
+            { text: 'camera-auditor', link: '/agents/camera-auditor' },
+            { text: 'foundation-models-auditor', link: '/agents/foundation-models-auditor' },
             { text: 'networking-auditor', link: '/agents/networking-auditor' },
             { text: 'iap-auditor', link: '/agents/iap-auditor' },
             { text: 'iap-implementation', link: '/agents/iap-implementation' }
@@ -102,14 +109,26 @@ export default withMermaid(defineConfig({
         {
           text: 'Shipping',
           items: [
-            { text: 'screenshot-validator', link: '/agents/screenshot-validator' }
+            { text: 'screenshot-validator', link: '/agents/screenshot-validator' },
+            { text: 'security-privacy-scanner', link: '/agents/security-privacy-scanner' }
           ]
         },
         {
           text: 'Testing',
           items: [
+            { text: 'performance-profiler', link: '/agents/performance-profiler' },
             { text: 'simulator-tester', link: '/agents/simulator-tester' },
+            { text: 'test-debugger', link: '/agents/test-debugger' },
+            { text: 'test-failure-analyzer', link: '/agents/test-failure-analyzer' },
+            { text: 'test-runner', link: '/agents/test-runner' },
             { text: 'testing-auditor', link: '/agents/testing-auditor' }
+          ]
+        },
+        {
+          text: 'Misc',
+          items: [
+            { text: 'crash-analyzer', link: '/agents/crash-analyzer' },
+            { text: 'modernization-helper', link: '/agents/modernization-helper' }
           ]
         },
         {
@@ -127,6 +146,47 @@ export default withMermaid(defineConfig({
           ]
         }
       ],
+      '/commands/': [
+        {
+          text: 'Commands',
+          items: [
+            { text: 'Overview', link: '/commands/' }
+          ]
+        },
+        {
+          text: 'Build',
+          items: [
+            { text: '/axiom:fix-build', link: '/commands/build/fix-build' },
+            { text: '/axiom:optimize-build', link: '/commands/build/optimize-build' }
+          ]
+        },
+        {
+          text: 'Debugging',
+          items: [
+            { text: '/axiom:analyze-crash', link: '/commands/debugging/analyze-crash' },
+            { text: '/axiom:audit codable', link: '/commands/debugging/audit-codable' },
+            { text: '/axiom:audit core-data', link: '/commands/debugging/audit-core-data' },
+            { text: '/axiom:audit memory', link: '/commands/debugging/audit-memory' },
+            { text: '/axiom:profile', link: '/commands/debugging/profile' }
+          ]
+        },
+        {
+          text: 'Testing',
+          items: [
+            { text: '/axiom:run-tests', link: '/commands/testing/run-tests' },
+            { text: '/axiom:screenshot', link: '/commands/testing/screenshot' },
+            { text: '/axiom:test-simulator', link: '/commands/testing/test-simulator' }
+          ]
+        },
+        {
+          text: 'Utility',
+          items: [
+            { text: '/axiom:ask', link: '/commands/utility/ask' },
+            { text: '/axiom:audit', link: '/commands/utility/audit' },
+            { text: '/axiom:status', link: '/commands/utility/status' }
+          ]
+        }
+      ],
       '/skills/': [
         {
           text: 'Skills',
@@ -139,6 +199,7 @@ export default withMermaid(defineConfig({
           text: 'UI & Design',
           items: [
             { text: 'Overview', link: '/skills/ui-design/' },
+            { text: 'App Composition', link: '/skills/ui-design/app-composition' },
             { text: 'HIG (Human Interface Guidelines)', link: '/skills/ui-design/hig' },
             { text: 'Liquid Glass', link: '/skills/ui-design/liquid-glass' },
             { text: 'SF Symbols', link: '/skills/ui-design/sf-symbols' },
@@ -158,15 +219,18 @@ export default withMermaid(defineConfig({
             { text: 'Overview', link: '/skills/debugging/' },
             { text: 'Auto Layout Debugging', link: '/skills/debugging/auto-layout-debugging' },
             { text: 'Deep Link Debugging', link: '/skills/debugging/deep-link-debugging' },
-            { text: 'Xcode Debugging', link: '/skills/debugging/xcode-debugging' },
+            { text: 'Display Performance', link: '/skills/debugging/display-performance' },
+            { text: 'Energy Optimization', link: '/skills/debugging/energy' },
+            { text: 'Hang Diagnostics', link: '/skills/debugging/hang-diagnostics' },
+            { text: 'LLDB Debugging', link: '/skills/debugging/lldb' },
             { text: 'Memory Debugging', link: '/skills/debugging/memory-debugging' },
             { text: 'Build Debugging', link: '/skills/debugging/build-debugging' },
             { text: 'Build Performance', link: '/skills/debugging/build-performance' },
-            { text: 'Performance Profiling', link: '/skills/debugging/performance-profiling' },
             { text: 'Objective-C Block Retain Cycles', link: '/skills/debugging/objc-block-retain-cycles' },
-            { text: 'Hang Diagnostics', link: '/skills/debugging/hang-diagnostics' },
-            { text: 'LLDB Debugging', link: '/skills/debugging/lldb' },
-            { text: 'Timer Safety Patterns', link: '/skills/debugging/timer-patterns' }
+            { text: 'Performance Profiling', link: '/skills/debugging/performance-profiling' },
+            { text: 'TestFlight Triage', link: '/skills/debugging/testflight-triage' },
+            { text: 'Timer Safety Patterns', link: '/skills/debugging/timer-patterns' },
+            { text: 'Xcode Debugging', link: '/skills/debugging/xcode-debugging' }
           ]
         },
         {
@@ -174,7 +238,11 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/skills/concurrency/' },
             { text: 'Swift Concurrency', link: '/skills/concurrency/swift-concurrency' },
-            { text: 'Swift Concurrency Reference', link: '/skills/concurrency/swift-concurrency-ref' }
+            { text: 'assumeIsolated', link: '/skills/concurrency/assume-isolated' },
+            { text: 'Concurrency Profiling', link: '/skills/concurrency/concurrency-profiling' },
+            { text: 'Ownership Conventions', link: '/skills/concurrency/ownership-conventions' },
+            { text: 'Swift Performance', link: '/skills/concurrency/swift-performance' },
+            { text: 'Synchronization', link: '/skills/concurrency/synchronization' }
           ]
         },
         {
@@ -182,14 +250,14 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/skills/persistence/' },
             { text: 'Codable (JSON Encoding/Decoding)', link: '/skills/persistence/codable' },
-            { text: 'Database Migration', link: '/skills/persistence/database-migration' },
-            { text: 'SQLiteData', link: '/skills/persistence/sqlitedata' },
             { text: 'Cloud Sync', link: '/skills/persistence/cloud-sync' },
             { text: 'Core Data', link: '/skills/persistence/core-data' },
+            { text: 'Database Migration', link: '/skills/persistence/database-migration' },
             { text: 'GRDB', link: '/skills/persistence/grdb' },
+            { text: 'SQLiteData', link: '/skills/persistence/sqlitedata' },
+            { text: 'SQLiteData Migration', link: '/skills/persistence/sqlitedata-migration' },
             { text: 'SwiftData', link: '/skills/persistence/swiftdata' },
-            { text: 'SwiftData Migration', link: '/skills/persistence/swiftdata-migration' },
-            { text: 'SQLiteData Migration', link: '/skills/persistence/sqlitedata-migration' }
+            { text: 'SwiftData Migration', link: '/skills/persistence/swiftdata-migration' }
           ]
         },
         {
@@ -197,17 +265,20 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/skills/integration/' },
             { text: 'Apple Documentation Access', link: '/skills/integration/apple-docs' },
+            { text: 'Apple Docs Research', link: '/skills/integration/apple-docs-research' },
             { text: 'App Intents', link: '/reference/app-intents-ref' },
+            { text: 'Background Processing', link: '/skills/integration/background-processing' },
+            { text: 'Camera Capture', link: '/skills/integration/camera-capture' },
+            { text: 'Core Location', link: '/skills/integration/core-location' },
             { text: 'Extensions & Widgets', link: '/skills/integration/extensions-widgets' },
             { text: 'Foundation Models (Apple Intelligence)', link: '/skills/integration/foundation-models' },
             { text: 'In-App Purchases (StoreKit 2)', link: '/skills/integration/in-app-purchases' },
+            { text: 'MapKit', link: '/skills/integration/mapkit' },
             { text: 'Networking', link: '/skills/integration/networking' },
             { text: 'Networking (Legacy iOS 12-25)', link: '/skills/integration/networking-legacy' },
             { text: 'Now Playing', link: '/skills/integration/now-playing' },
-            { text: 'Camera Capture', link: '/skills/integration/camera-capture' },
             { text: 'Photo Library', link: '/skills/integration/photo-library' },
-            { text: 'Core Location', link: '/skills/integration/core-location' },
-            { text: 'MapKit', link: '/skills/integration/mapkit' }
+            { text: 'tvOS', link: '/skills/integration/tvos' }
           ]
         },
         {
@@ -215,9 +286,25 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/skills/testing/' },
             { text: 'Swift Testing', link: '/skills/testing/swift-testing' },
+            { text: 'Testing Async Code', link: '/skills/testing/testing-async' },
             { text: 'UI Testing', link: '/skills/ui-design/ui-testing' },
             { text: 'Recording UI Automation', link: '/skills/testing/ui-recording' },
             { text: 'XCUITest Automation', link: '/skills/testing/xctest-automation' }
+          ]
+        },
+        {
+          text: 'Computer Vision',
+          items: [
+            { text: 'Overview', link: '/skills/computer-vision/' },
+            { text: 'Vision', link: '/skills/computer-vision/vision' }
+          ]
+        },
+        {
+          text: 'Machine Learning',
+          items: [
+            { text: 'Overview', link: '/skills/machine-learning/' },
+            { text: 'CoreML', link: '/skills/machine-learning/coreml' },
+            { text: 'Speech', link: '/skills/machine-learning/speech' }
           ]
         },
         {
@@ -262,6 +349,8 @@ export default withMermaid(defineConfig({
             { text: 'SwiftUI Animation', link: '/reference/swiftui-animation-ref' },
             { text: 'SwiftUI Containers', link: '/reference/swiftui-containers-ref' },
             { text: 'SwiftUI Layout', link: '/reference/swiftui-layout-ref' },
+            { text: 'SwiftUI Navigation', link: '/reference/swiftui-nav-ref' },
+            { text: 'SwiftUI Search', link: '/reference/swiftui-search-ref' },
             { text: 'TextKit 2', link: '/reference/textkit-ref' },
             { text: 'Transferable & Sharing', link: '/reference/transferable-ref' },
             { text: 'Typography', link: '/reference/typography-ref' }
@@ -274,8 +363,16 @@ export default withMermaid(defineConfig({
             { text: 'CloudKit', link: '/reference/cloudkit-ref' },
             { text: 'iCloud Drive', link: '/reference/icloud-drive-ref' },
             { text: 'File Protection', link: '/reference/file-protection-ref' },
+            { text: 'SQLiteData', link: '/reference/sqlitedata-ref' },
             { text: 'Storage Management', link: '/reference/storage-management-ref' },
             { text: 'Realm Migration', link: '/reference/realm-migration-ref' }
+          ]
+        },
+        {
+          text: 'Concurrency',
+          items: [
+            { text: 'Swift Concurrency', link: '/reference/swift-concurrency-ref' },
+            { text: 'Energy Optimization', link: '/reference/energy-ref' }
           ]
         },
         {
@@ -301,6 +398,18 @@ export default withMermaid(defineConfig({
             { text: 'MapKit API', link: '/reference/mapkit-ref' },
             { text: 'Privacy UX Patterns', link: '/reference/privacy-ux' },
             { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' }
+          ]
+        },
+        {
+          text: 'Computer Vision',
+          items: [
+            { text: 'Vision Framework', link: '/reference/vision-ref' }
+          ]
+        },
+        {
+          text: 'Machine Learning',
+          items: [
+            { text: 'CoreML API', link: '/reference/coreml-ref' }
           ]
         },
         {
@@ -354,7 +463,8 @@ export default withMermaid(defineConfig({
             { text: 'Storage Diagnostics', link: '/diagnostic/storage-diag' },
             { text: 'SwiftData Migration Diagnostics', link: '/diagnostic/swiftdata-migration-diag' },
             { text: 'SwiftUI Debugging Diagnostics', link: '/diagnostic/swiftui-debugging-diag' },
-            { text: 'SwiftUI Navigation Diagnostics', link: '/diagnostic/swiftui-nav-diag' }
+            { text: 'SwiftUI Navigation Diagnostics', link: '/diagnostic/swiftui-nav-diag' },
+            { text: 'Vision Diagnostics', link: '/diagnostic/vision-diag' }
           ]
         }
       ]

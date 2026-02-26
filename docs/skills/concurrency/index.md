@@ -35,10 +35,14 @@ flowchart LR
   - *"My code is throwing 'Type does not conform to Sendable' warnings when passing data between threads."*
   - *"I have a stored task causing memory leaks. How do I write it correctly with weak self?"*
 
-- **[Swift Concurrency Reference](/skills/concurrency/swift-concurrency-ref)** – API reference for actors, Sendable, Task/TaskGroup, AsyncStream, continuations, migration patterns
+- **[Swift Concurrency Reference](/reference/swift-concurrency-ref)** – API reference for actors, Sendable, Task/TaskGroup, AsyncStream, continuations, migration patterns
   - *"How do I create a TaskGroup?"*
   - *"What's the AsyncStream continuation API?"*
   - *"How do I convert completion handlers to async?"*
+
+- **[Swift Performance](/skills/concurrency/swift-performance)** – Optimizing Swift code performance: ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs
+  - *"My Swift code is allocating too much memory"*
+  - *"How do I reduce ARC overhead in hot loops?"*
 
 - **[assumeIsolated](/skills/concurrency/assume-isolated)** – Synchronous actor access for tests, legacy callbacks, and performance-critical code
   - *"How do I access MainActor state from a delegate callback that runs on main thread?"*

@@ -6,10 +6,12 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 
 | Skill | When to Use |
 |-------|-------------|
+| [**app-composition**](/skills/ui-design/app-composition) | Structuring app entry points, @main, App/Scene/View lifecycle |
 | [**hig**](/skills/ui-design/hig) | Quick design decisions, HIG compliance checklists, defending design choices |
 | [**hig-ref**](/reference/hig-ref) | Comprehensive HIG reference with code examples and best practices |
 | [**liquid-glass**](/skills/ui-design/liquid-glass) | Implementing Liquid Glass effects, debugging visual artifacts, design review pressure |
 | [**liquid-glass-ref**](/reference/liquid-glass-ref) | Complete Liquid Glass adoption guide (icons, controls, navigation, windows) |
+| [**sf-symbols**](/skills/ui-design/sf-symbols) | SF Symbols rendering, variable values, symbol effects, color modes |
 | [**swiftui-architecture**](/skills/ui-design/swiftui-architecture) | Separating logic from views, choosing architecture patterns (MVVM, TCA, Coordinator) |
 | [**swiftui-performance**](/skills/ui-design/swiftui-performance) | App feels sluggish, animations stutter, SwiftUI Instrument profiling |
 | [**swiftui-debugging**](/skills/ui-design/swiftui-debugging) | View doesn't update, preview crashes, layout issues |
@@ -23,6 +25,7 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**swiftui-26-ref**](/reference/swiftui-26-ref) | iOS 26 SwiftUI: Liquid Glass, WebView, AttributedString rich text, 3D charts |
 | [**textkit-ref**](/reference/textkit-ref) | TextKit 2 architecture, migration, Writing Tools support |
 | [**typography-ref**](/reference/typography-ref) | San Francisco fonts, text styles, Dynamic Type, tracking, leading |
+| [**uikit-bridging**](/skills/ui-design/uikit-bridging) | Wrapping UIKit views/controllers in SwiftUI with UIViewRepresentable |
 | [**uikit-animation-debugging**](/skills/ui-design/uikit-animation-debugging) | CAAnimation issues, completion handlers, spring physics |
 
 ### Computer Vision
@@ -31,7 +34,7 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 |-------|-------------|
 | [**vision**](/skills/computer-vision/vision) | Subject segmentation, hand/body pose, text recognition (OCR), barcode/QR scanning, document scanning |
 | [**vision-ref**](/reference/vision-ref) | Complete Vision framework API reference with code examples |
-| [**vision-diag**](/reference/vision-diag) | Subject not detected, text not recognized, barcode issues, performance problems |
+| [**vision-diag**](/diagnostic/vision-diag) | Subject not detected, text not recognized, barcode issues, performance problems |
 
 ### Machine Learning
 
@@ -52,16 +55,28 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**build-debugging**](/skills/debugging/build-debugging) | Dependency conflicts, CocoaPods/SPM failures |
 | [**core-data-diag**](/diagnostic/core-data-diag) | Schema migration crashes, thread-confinement errors, N+1 query performance |
 | [**deep-link-debugging**](/skills/debugging/deep-link-debugging) | Debug-only deep links for testing, simulator navigation, automated testing |
+| [**display-performance**](/skills/debugging/display-performance) | Variable refresh rate, ProMotion, MTKView, CADisplayLink |
+| [**energy**](/skills/debugging/energy) | Battery drain, device hot, Power Profiler workflows, energy anti-patterns |
+| [**hang-diagnostics**](/skills/debugging/hang-diagnostics) | App hangs, UI freezes, main thread blocking |
+| [**lldb**](/skills/debugging/lldb) | LLDB playbooks for crash triage, state inspection, breakpoint strategy |
 | [**memory-debugging**](/skills/debugging/memory-debugging) | Memory leaks, retain cycles, progressive memory growth |
 | [**objc-block-retain-cycles**](/skills/debugging/objc-block-retain-cycles) | Block memory leaks, weak-strong patterns |
 | [**performance-profiling**](/skills/debugging/performance-profiling) | App feels slow, profiling with Instruments |
+| [**testflight-triage**](/skills/debugging/testflight-triage) | Crash investigation, beta feedback, Xcode Organizer |
+| [**timer-patterns**](/skills/debugging/timer-patterns) | Timer safety, invalidation patterns, memory-safe timer usage |
 | [**xcode-debugging**](/skills/debugging/xcode-debugging) | BUILD FAILED, simulator hangs, zombie processes |
 
 ### Concurrency
 
 | Skill | When to Use |
 |-------|-------------|
+| [**assume-isolated**](/skills/concurrency/assume-isolated) | Synchronous actor access for tests, legacy callbacks, performance-critical code |
+| [**concurrency-profiling**](/skills/concurrency/concurrency-profiling) | Profiling async/await performance, actor contention diagnosis |
+| [**ownership-conventions**](/skills/concurrency/ownership-conventions) | borrowing/consuming modifiers, noncopyable types |
 | [**swift-concurrency**](/skills/concurrency/swift-concurrency) | Swift 6 actor isolation, Sendable errors, data races |
+| [**swift-concurrency-ref**](/reference/swift-concurrency-ref) | Actor, Sendable, Task/TaskGroup, AsyncStream API reference |
+| [**swift-performance**](/skills/concurrency/swift-performance) | ARC overhead, unspecialized generics, allocation optimization |
+| [**synchronization**](/skills/concurrency/synchronization) | Thread-safe primitives: Mutex (iOS 18+), OSAllocatedUnfairLock, Atomic |
 
 ### Persistence & Storage
 
@@ -91,11 +106,14 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | Skill | When to Use |
 |-------|-------------|
 | [**apple-docs**](/skills/integration/apple-docs) | Apple's official for-LLM guides and Swift compiler diagnostics from Xcode |
+| [**apple-docs-research**](/skills/integration/apple-docs-research) | Researching Apple frameworks, getting WWDC transcripts, using sosumi.ai |
 | [**app-discoverability**](/reference/app-discoverability) | App Intents, App Shortcuts, Core Spotlight, NSUserActivity for Spotlight/Siri suggestions |
 | [**app-intents-ref**](/reference/app-intents-ref) | Siri, Apple Intelligence, Shortcuts, Spotlight integration (iOS 16+) |
 | [**app-shortcuts-ref**](/reference/app-shortcuts-ref) | App Shortcuts, instant Siri availability, suggested phrases |
-| [**apple-docs-research**](/skills/integration/apple-docs-research) | Researching Apple frameworks, getting WWDC transcripts, using sosumi.ai |
 | [**avfoundation-ref**](/reference/avfoundation-ref) | AVAudioSession, AVAudioEngine, bit-perfect DAC output, iOS 26+ spatial audio capture |
+| [**background-processing**](/skills/integration/background-processing) | BGTaskScheduler, background URLSession, BGContinuedProcessingTask (iOS 26+) |
+| [**camera-capture**](/skills/integration/camera-capture) | AVCaptureSession, camera preview, photo/video recording |
+| [**core-location**](/skills/integration/core-location) | CLLocationUpdate, CLMonitor, geofencing, background location |
 | [**core-spotlight-ref**](/reference/core-spotlight-ref) | Core Spotlight search, NSUserActivity, CSSearchableItem, IndexedEntity |
 | [**extensions-widgets**](/skills/integration/extensions-widgets) | Implementing widgets, Live Activities, Control Center controls |
 | [**extensions-widgets-ref**](/reference/extensions-widgets-ref) | Complete WidgetKit/ActivityKit API reference |
@@ -103,17 +121,24 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**foundation-models-diag**](/diagnostic/foundation-models-diag) | Foundation Models troubleshooting (context exceeded, guardrails, slow generation) |
 | [**foundation-models-ref**](/reference/foundation-models-ref) | Complete Foundation Models API reference with WWDC examples |
 | [**in-app-purchases**](/skills/integration/in-app-purchases) | StoreKit 2 implementation, subscriptions, transaction handling |
+| [**mapkit**](/skills/integration/mapkit) | SwiftUI Map, MKMapView, annotations, search, directions |
 | [**network-framework-ref**](/reference/network-framework-ref) | Network.framework API reference (iOS 12-26+), TLV framing, Wi-Fi Aware |
 | [**networking**](/skills/integration/networking) | Implementing UDP/TCP connections, migrating from sockets, debugging connection failures |
 | [**networking-diag**](/diagnostic/networking-diag) | Connection timeouts, TLS failures, data not arriving, performance issues |
 | [**now-playing**](/skills/integration/now-playing) | Now Playing metadata, Lock Screen/Control Center integration, remote commands |
+| [**photo-library**](/skills/integration/photo-library) | PHPicker, PhotosPicker, photo selection and access |
 | [**storekit-ref**](/reference/storekit-ref) | Complete StoreKit 2 API reference with iOS 18.4 enhancements |
+| [**tvos**](/skills/integration/tvos) | tvOS development — focus engine, top shelf, platform differences |
 
 ### Testing
 
 | Skill | When to Use |
 |-------|-------------|
+| [**swift-testing**](/skills/testing/swift-testing) | Modern Swift Testing framework, @Test, #expect, parameterized tests |
+| [**testing-async**](/skills/testing/testing-async) | Testing async/await with Swift Testing, confirmation patterns |
 | [**ui-testing**](/skills/ui-design/ui-testing) | Recording UI tests, flaky tests, race conditions |
+| [**ui-recording**](/skills/testing/ui-recording) | Recording UI Automation (Xcode 26), replay across configurations |
+| [**xctest-automation**](/skills/testing/xctest-automation) | XCUITest automation, condition-based waiting patterns |
 
 ## Skill Development Methodology
 
