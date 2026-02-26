@@ -101,9 +101,9 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'camera-auditor', link: '/agents/camera-auditor' },
             { text: 'foundation-models-auditor', link: '/agents/foundation-models-auditor' },
-            { text: 'networking-auditor', link: '/agents/networking-auditor' },
             { text: 'iap-auditor', link: '/agents/iap-auditor' },
-            { text: 'iap-implementation', link: '/agents/iap-implementation' }
+            { text: 'iap-implementation', link: '/agents/iap-implementation' },
+            { text: 'networking-auditor', link: '/agents/networking-auditor' }
           ]
         },
         {
@@ -176,6 +176,41 @@ export default withMermaid(defineConfig({
             { text: '/axiom:run-tests', link: '/commands/testing/run-tests' },
             { text: '/axiom:screenshot', link: '/commands/testing/screenshot' },
             { text: '/axiom:test-simulator', link: '/commands/testing/test-simulator' }
+          ]
+        },
+        {
+          text: 'Concurrency',
+          items: [
+            { text: '/axiom:audit concurrency', link: '/commands/concurrency/audit-concurrency' }
+          ]
+        },
+        {
+          text: 'UI & Design',
+          items: [
+            { text: '/axiom:audit liquid-glass', link: '/commands/ui-design/audit-liquid-glass' },
+            { text: '/axiom:audit swiftui-architecture', link: '/commands/ui-design/audit-swiftui-architecture' },
+            { text: '/axiom:audit swiftui-nav', link: '/commands/ui-design/audit-swiftui-nav' },
+            { text: '/axiom:audit swiftui-performance', link: '/commands/ui-design/audit-swiftui-performance' },
+            { text: '/axiom:audit textkit', link: '/commands/ui-design/audit-textkit' }
+          ]
+        },
+        {
+          text: 'Integration',
+          items: [
+            { text: '/axiom:audit networking', link: '/commands/integration/audit-networking' }
+          ]
+        },
+        {
+          text: 'Storage',
+          items: [
+            { text: '/axiom:audit icloud', link: '/commands/storage/audit-icloud' },
+            { text: '/axiom:audit storage', link: '/commands/storage/audit-storage' }
+          ]
+        },
+        {
+          text: 'Accessibility',
+          items: [
+            { text: '/axiom:audit accessibility', link: '/commands/accessibility/audit-accessibility' }
           ]
         },
         {
@@ -391,10 +426,10 @@ export default withMermaid(defineConfig({
             { text: 'Networking Migration', link: '/reference/networking-migration' },
             { text: 'Background Processing API', link: '/reference/background-processing-ref' },
             { text: 'Camera Capture', link: '/reference/camera-capture-ref' },
-            { text: 'Photo Library', link: '/reference/photo-library-ref' },
+            { text: 'Core Location API', link: '/reference/core-location-ref' },
             { text: 'Now Playing: CarPlay', link: '/reference/now-playing-carplay' },
             { text: 'Now Playing: MusicKit', link: '/reference/now-playing-musickit' },
-            { text: 'Core Location API', link: '/reference/core-location-ref' },
+            { text: 'Photo Library', link: '/reference/photo-library-ref' },
             { text: 'MapKit API', link: '/reference/mapkit-ref' },
             { text: 'Privacy UX Patterns', link: '/reference/privacy-ux' },
             { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' }

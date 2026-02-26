@@ -15,7 +15,7 @@ Scans Foundation Models (Apple Intelligence) code for the 10 most critical viola
 /axiom:audit foundation-models
 ```
 
-## What It Checks
+## What It Does
 
 1. **No Availability Check** (CRITICAL) — Crash on devices without Apple Intelligence
 2. **Synchronous respond() on Main Thread** (CRITICAL) — UI freeze and watchdog kill
@@ -34,7 +34,7 @@ Scans Foundation Models (Apple Intelligence) code for the 10 most critical viola
 - **Tools**: Glob, Grep, Read
 - **Color**: cyan
 
-## Related Skills
+## Related
 
 - **foundation-models** — On-device AI implementation patterns (iOS 26+)
 - **foundation-models-diag** — Foundation Models troubleshooting

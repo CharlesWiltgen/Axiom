@@ -15,7 +15,7 @@ Scans SwiftData code for the 10 most critical violations — struct models, miss
 /axiom:audit swiftdata
 ```
 
-## What It Checks
+## What It Does
 
 1. **Struct models** (CRITICAL) — @Model requires class, not struct
 2. **Missing VersionedSchema** (CRITICAL) — Required for safe schema migration
@@ -32,9 +32,9 @@ Scans SwiftData code for the 10 most critical violations — struct models, miss
 
 - **Model**: sonnet
 - **Tools**: Glob, Grep, Read
-- **Color**: green
+- **Color**: orange
 
-## Related Skills
+## Related
 
 - **swiftdata** — SwiftData @Model, @Query, and CloudKit integration patterns
 - **swiftdata-migration** — Custom schema migration strategies

@@ -77,7 +77,12 @@ Commands output results with `file:line` references and link to relevant skills 
 - `/axiom:fix-build` — Automatic build failure diagnosis and fixes
 - `/axiom:optimize-build` — Build performance optimization
 
+### Debugging
+- `/axiom:analyze-crash` — Parse and analyze crash logs
+- `/axiom:profile` — Automated performance profiling via xctrace CLI
+
 ### Testing
+- `/axiom:run-tests` — Run XCUITests and parse results
 - `/axiom:screenshot` — Quick simulator screenshot
 - `/axiom:test-simulator` — Full simulator testing capabilities
 

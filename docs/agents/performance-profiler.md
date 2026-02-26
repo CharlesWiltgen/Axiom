@@ -40,7 +40,7 @@ Automated performance profiling via xctrace CLI — records traces, exports data
 - **Tools**: Bash, Read, Grep, Glob
 - **Color**: orange
 
-## Related Skills
+## Related
 
 - **performance-profiling** — Manual Instruments decision trees and workflows
 - **xctrace-ref** — Full xctrace CLI reference
