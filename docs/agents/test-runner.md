@@ -29,7 +29,7 @@ Runs XCUITests, parses .xcresult bundles using xcresulttool, and provides struct
 - **Tools**: Bash, Read, Grep, Glob
 - **Color**: cyan
 
-## Related Skills
+## Related
 
 - **swift-testing** — Modern Swift Testing framework patterns
 - **ui-testing** — XCUITest patterns and condition-based waiting

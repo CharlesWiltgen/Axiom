@@ -15,7 +15,7 @@ Scans database migration and schema code for the 10 most critical violations —
 /axiom:audit database-schema
 ```
 
-## What It Checks
+## What It Does
 
 1. **ADD COLUMN NOT NULL Without DEFAULT** (CRITICAL) — Crashes for all users with existing data
 2. **DROP TABLE on User Data** (CRITICAL) — Permanent data deletion
@@ -34,7 +34,7 @@ Scans database migration and schema code for the 10 most critical violations —
 - **Tools**: Glob, Grep, Read
 - **Color**: orange
 
-## Related Skills
+## Related
 
 - **database-migration** — Safe schema evolution patterns for SQLite/GRDB/SwiftData
 - **grdb** — GRDB patterns and DatabaseMigrator reference

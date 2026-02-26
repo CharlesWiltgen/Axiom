@@ -25,7 +25,6 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**privacy-ux**](./privacy-ux) | Privacy manifests and permission UX — just-in-time permissions, App Tracking Transparency, Required Reason APIs, Privacy Nutrition Labels |
 | [**swiftui-layout-ref**](./swiftui-layout-ref) | Complete SwiftUI adaptive layout API guide — ViewThatFits, AnyLayout, Layout protocol, onGeometryChange, size classes, iOS 26 window APIs |
 | [**swiftui-nav-ref**](./swiftui-nav-ref) | Comprehensive SwiftUI navigation API reference — NavigationStack, NavigationSplitView, NavigationPath, deep linking (iOS 16-26) |
-| [**swiftui-search-ref**](./swiftui-search-ref) | SwiftUI search APIs — .searchable, isSearching, suggestions, scopes, tokens, programmatic control (iOS 15-18) |
 | [**swift-concurrency-ref**](./swift-concurrency-ref) | Swift concurrency API reference — actors, Sendable, Task/TaskGroup, AsyncStream, continuations, migration patterns |
 | [**sqlitedata-ref**](./sqlitedata-ref) | SQLiteData advanced patterns — @Select, @Join, batch operations, CloudKit sync, query optimization |
 | [**vision-ref**](./vision-ref) | Vision framework API reference — subject segmentation, hand/body pose, text recognition, barcode scanning |

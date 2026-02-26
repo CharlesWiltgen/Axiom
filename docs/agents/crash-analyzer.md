@@ -29,7 +29,7 @@ Parses crash reports (.ips, .crash, or pasted text), checks symbolication status
 - **Tools**: Bash, Read, Grep, Glob
 - **Color**: red
 
-## Related Skills
+## Related
 
 - **testflight-triage** — Crash investigation using Xcode Organizer
 - **performance-profiling** — Instruments workflows for diagnosing performance crashes

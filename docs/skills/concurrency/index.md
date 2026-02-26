@@ -13,7 +13,6 @@ flowchart LR
 
     subgraph skills_d["Skills"]
         swift_concurrency["swift-concurrency"]:::discipline
-        swift_concurrency_ref["swift-concurrency-ref"]:::reference
         swift_performance["swift-performance"]:::discipline
         assume_isolated["assume-isolated"]:::discipline
         synchronization["synchronization"]:::discipline
@@ -21,6 +20,11 @@ flowchart LR
         concurrency_profiling["concurrency-profiling"]:::discipline
     end
     axiom_ios_concurrency --> skills_d
+
+    subgraph skills_r["References"]
+        swift_concurrency_ref["swift-concurrency-ref"]:::reference
+    end
+    axiom_ios_concurrency --> skills_r
 
     subgraph agents_sg["Agents"]
         agent_ca["concurrency-auditor"]:::agent

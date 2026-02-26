@@ -15,7 +15,7 @@ Scans SwiftUI layout code for the 10 most critical violations — GeometryReader
 /axiom:audit swiftui-layout
 ```
 
-## What It Checks
+## What It Does
 
 1. **GeometryReader in Stacks Without .frame()** (CRITICAL) — Collapses sibling views
 2. **UIScreen.main / UIDevice.current** (CRITICAL) — Deprecated, unreliable in SwiftUI
@@ -34,7 +34,7 @@ Scans SwiftUI layout code for the 10 most critical violations — GeometryReader
 - **Tools**: Glob, Grep, Read
 - **Color**: blue
 
-## Related Skills
+## Related
 
 - **swiftui-layout** — Adaptive layout decision trees (ViewThatFits, AnyLayout)
 - **swiftui-layout-ref** — Complete SwiftUI layout API reference
