@@ -340,6 +340,32 @@ case "${1:-unit}" in
 esac
 ```
 
+### Progressive Extraction for Existing Projects
+
+For apps that can't extract everything at once, move modules incrementally:
+
+#### Phase 1: Leaf Modules First
+Start with code that has no dependencies on the app target:
+- Data models and DTOs
+- Networking layer (API clients, request builders)
+- Business logic and validation rules
+- Utility extensions
+
+#### Phase 2: Break Circular Dependencies
+If app code references types that reference the app back:
+1. Define protocols in the package
+2. Keep implementations in the app target initially
+3. Move implementations to the package once dependencies resolve
+
+#### Phase 3: Maintain Both Test Targets
+During transition, keep two test targets:
+- `MyAppCoreTests` — runs with `swift test` (extracted logic)
+- `MyAppTests` — runs with `xcodebuild test` (remaining app-level tests)
+
+Gradually migrate tests from `MyAppTests` to `MyAppCoreTests` as you extract their source files.
+
+**Goal**: Each extraction should leave the app building and all tests passing. Never extract more than one module boundary at a time.
+
 ### Strategy 2: Framework with No Host Application
 
 For code that must stay in the app project:

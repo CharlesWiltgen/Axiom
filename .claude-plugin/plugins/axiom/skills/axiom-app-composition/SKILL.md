@@ -365,6 +365,17 @@ struct MyApp: App {
 - Conditional rendering
 - Navigation decisions
 
+## Testability Benefit
+
+The thin-shell pattern enables 60x faster tests. When app logic lives in a Swift Package instead of the app target, tests run with `swift test` (~0.4s) vs `xcodebuild test` (~25s) — no simulator, no app launch.
+
+| Component | Location | Tested With |
+|-----------|----------|-------------|
+| Business logic, models, services | Swift Package (`MyAppCore`) | `swift test` (0.4s) |
+| Root view composition | App target (thin shell) | `xcodebuild test` (25s) |
+
+See `axiom-swift-testing` Strategy 1 for the complete package extraction walkthrough.
+
 ## RootView: The State Switch
 
 ```swift
