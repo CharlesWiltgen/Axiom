@@ -240,26 +240,104 @@ func pairedValues(number: Int, name: String) {
 
 ### Strategy 1: Swift Package for Logic (Fastest)
 
-Move pure logic into a Swift Package:
+Extract app logic into a Swift Package. Tests run with `swift test` (~0.4s) instead of `xcodebuild test` (~25s) — no simulator, no app launch. This is the key enabler for TDD in Claude Code hooks.
 
-```
-MyApp/
-├── MyApp/                    # App target (UI, app lifecycle)
-├── MyAppCore/                # Swift Package (testable logic)
-│   ├── Package.swift
-│   └── Sources/
-│       └── MyAppCore/
-│           ├── Models/
-│           ├── Services/
-│           └── Utilities/
-└── MyAppCoreTests/           # Package tests
+#### Step 1: Create Package.swift
+
+Create the package directory alongside your `.xcodeproj`:
+
+```swift
+// MyAppCore/Package.swift
+// swift-tools-version: 6.0
+import PackageDescription
+
+let package = Package(
+    name: "MyAppCore",
+    platforms: [.iOS(.v18), .macOS(.v15)],
+    products: [
+        .library(name: "MyAppCore", targets: ["MyAppCore"]),
+    ],
+    targets: [
+        .target(name: "MyAppCore"),
+        .testTarget(name: "MyAppCoreTests", dependencies: ["MyAppCore"]),
+    ]
+)
 ```
 
-Run with `swift test` — no simulator, no app launch:
+#### Step 2: Link Package to App
+
+Create an `.xcworkspace` containing both the app project and the package:
+1. File → New → Workspace
+2. Drag your `.xcodeproj` into the workspace
+3. File → Add Package Dependencies → Add Local → select `MyAppCore/`
+4. Add `MyAppCore` framework to your app target's "Frameworks, Libraries, and Embedded Content"
+
+#### Step 3: Move Logic, Expose Root View
+
+Move models, services, and view models into `MyAppCore/Sources/MyAppCore/`. Types used by the app must be `public`. Create a public root view that accepts dependencies via injection:
+
+```swift
+// In MyAppCore
+public struct MyAppRootView: View {
+    @State private var appState: AppStateController
+
+    public init(modelContainer: ModelContainer) {
+        _appState = State(initialValue: AppStateController(container: modelContainer))
+    }
+
+    public var body: some View { /* ... */ }
+}
+```
+
+#### Step 4: Thin-Shell App.swift
+
+The app target becomes a thin shell that imports the package and delegates (see `axiom-app-composition` for the full thin-shell principle):
+
+```swift
+import SwiftUI
+import MyAppCore
+
+@main
+struct MyApp: App {
+    let container = try! ModelContainer(for: /* schemas */)
+
+    var body: some Scene {
+        WindowGroup {
+            MyAppRootView(modelContainer: container)
+        }
+    }
+}
+```
+
+#### What Stays vs What Moves
+
+| Stays in App Target | Moves to Package |
+|---------------------|------------------|
+| `@main` App.swift (thin shell) | Models, view models, services |
+| Asset catalogs, resources | Business logic, algorithms |
+| Info.plist, entitlements | Navigation, state management |
+| Launch screen | Utilities, extensions |
+
+Tests use `@testable import MyAppCore` for internal access.
+
+#### Running Tests
 
 ```bash
 cd MyAppCore
-swift test  # Runs in ~0.1 seconds
+swift test                              # All tests (~0.4s)
+swift test --filter MyAppCoreTests.UserTests  # Single suite
+```
+
+For project-level scripts separating unit from UI tests:
+
+```bash
+# script/test
+#!/bin/bash
+case "${1:-unit}" in
+    unit) cd MyAppCore && swift test ;;
+    ui)   xcodebuild test -workspace MyApp.xcworkspace \
+            -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 16' ;;
+esac
 ```
 
 ### Strategy 2: Framework with No Host Application
