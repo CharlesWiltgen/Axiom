@@ -213,6 +213,7 @@ List(items) { item in
     Text(item.title)
 }
 // List navigation works automatically with remote
+// Note: First item receives focus by default on tvOS — use .defaultFocus() to override
 ```
 
 ### Gesture Recognizers (UIKit)
@@ -329,7 +330,7 @@ From Apple's App Programming Guide for tvOS: "Every app developed for the new Ap
 ### Size Limits
 
 - **App bundle**: 4 GB maximum
-- **NSUserDefaults**: 500 KB maximum (Apple docs; not the 4 MB iOS gets)
+- **NSUserDefaults / UserDefaults**: 500 KB maximum (Apple docs; not the 4 MB iOS gets). Available but subject to system purge — not guaranteed persistent between sessions
 - **On-demand resources**: Available for read-only assets the OS manages
 - **Local cache**: No guaranteed size; system can purge while app is not running
 
@@ -655,6 +656,7 @@ State: In submenu/settings overlay
 
 ```swift
 enum PlayerState {
+    case loading        // Buffering / loading content
     case playing        // Controls hidden
     case controlsShown  // Controls visible
     case submenu        // Settings/subtitles overlay
@@ -671,6 +673,10 @@ func handleMenuPress(in state: PlayerState) -> PlayerState {
     case .playing:
         dismiss(animated: true)
         return .playing
+    case .loading:
+        cancelLoading()
+        dismiss(animated: true)
+        return .loading
     }
 }
 ```

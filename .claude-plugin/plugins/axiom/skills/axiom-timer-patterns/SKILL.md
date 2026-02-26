@@ -83,6 +83,20 @@ let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
 RunLoop.current.add(timer, forMode: .common)
 ```
 
+### ✅ Fixed — Combine Timer survives scrolling
+
+```swift
+// GOOD: Timer.publish with .common mode — survives scrolling in SwiftUI
+Timer.publish(every: 1.0, tolerance: 0.1, on: .main, in: .common)
+    .autoconnect()
+    .sink { [weak self] _ in
+        self?.updateProgress()
+    }
+    .store(in: &cancellables)
+```
+
+**Key**: The `in:` parameter defaults to `.default` if omitted — always specify `.common` explicitly.
+
 ### RunLoop Modes
 
 | Mode | When Active | Timer Fires? |
@@ -96,6 +110,17 @@ RunLoop.current.add(timer, forMode: .common)
 ## Part 3: The 4 DispatchSourceTimer Crash Patterns
 
 Each of these causes **EXC_BAD_INSTRUCTION** — a crash that points to GCD internals, making it hard to trace back to your timer code.
+
+### Crash Frame → Pattern Mapping
+
+When you see EXC_BAD_INSTRUCTION in a crash log, match the top frame:
+
+| Top Crash Frame | Crash Pattern | Fix |
+|---|---|---|
+| `dispatch_source_cancel` | Crash 2: Cancel while suspended | `resume()` before `cancel()` |
+| `_dispatch_source_dispose` | Crash 3: Dealloc while suspended | Resume + cancel before releasing |
+| `dispatch_resume` | Crash 4: Resume after cancel | Check `isCancelled` before operating |
+| `_dispatch_source_refs_t` / `suspend count` | Crash 1: Unbalanced suspend | Track state, only suspend if running |
 
 ### DispatchSourceTimer State Machine
 
@@ -390,6 +415,7 @@ timer.setEventHandler { [weak self] in
 | Not clearing event handler before cancel | Potential retain cycle | `timer.setEventHandler(handler: nil)` then cancel |
 | Timer retains target (selector API) | Memory leak — deinit never called | Use block API with `[weak self]` |
 | Creating timer without invalidating previous | Timer accumulation, CPU waste | Always invalidate/cancel before creating new |
+| Timer on background thread without RunLoop | Timer silently never fires | Timer requires a RunLoop — use DispatchSourceTimer or AsyncTimerSequence for background work |
 
 ---
 

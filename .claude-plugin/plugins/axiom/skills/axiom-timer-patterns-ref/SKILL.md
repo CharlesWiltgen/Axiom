@@ -193,6 +193,33 @@ timer.schedule(deadline: .now(), repeating: 1.0, leeway: .never)  // Strict — 
 
 Leeway is the DispatchSourceTimer equivalent of `Timer.tolerance`. Allows system to coalesce timer firings for energy efficiency.
 
+### End-to-End Example
+
+Complete DispatchSourceTimer lifecycle in one block:
+
+```swift
+let queue = DispatchQueue(label: "com.app.polling")
+let timer = DispatchSource.makeTimerSource(queue: queue)
+timer.schedule(deadline: .now() + 1.0, repeating: .seconds(5), leeway: .milliseconds(500))
+timer.setEventHandler { [weak self] in
+    self?.fetchUpdates()
+}
+timer.activate()  // idle → running
+
+// Later — pause:
+timer.suspend()   // running → suspended
+
+// Later — resume:
+timer.resume()    // suspended → running
+
+// Cleanup — MUST resume before cancel if suspended:
+timer.setEventHandler(handler: nil)  // Break retain cycles
+timer.resume()    // Ensure non-suspended state
+timer.cancel()    // running → cancelled (terminal)
+```
+
+For a safe wrapper that prevents all crash patterns, see `axiom-timer-patterns` Part 4: SafeDispatchTimer.
+
 ---
 
 ## Part 3: Combine Timer

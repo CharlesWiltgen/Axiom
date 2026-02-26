@@ -103,6 +103,40 @@ Annotation count?
     MKMapView with view reuse is preferred for very large datasets
 ```
 
+#### Visible-Region Filtering (SwiftUI)
+
+Only load annotations within the visible map region. Prevents loading all 10K+ annotations at once:
+
+```swift
+struct MapView: View {
+    @State private var cameraPosition: MapCameraPosition = .automatic
+    @State private var visibleAnnotations: [Location] = []
+
+    let allLocations: [Location]  // Full dataset
+
+    var body: some View {
+        Map(position: $cameraPosition) {
+            ForEach(visibleAnnotations) { location in
+                Marker(location.name, coordinate: location.coordinate)
+            }
+        }
+        .onMapCameraChange(frequency: .onEnd) { context in
+            visibleAnnotations = allLocations.filter { location in
+                context.region.contains(location.coordinate)
+            }
+        }
+    }
+}
+
+extension MKCoordinateRegion {
+    func contains(_ coordinate: CLLocationCoordinate2D) -> Bool {
+        let latRange = (center.latitude - span.latitudeDelta / 2)...(center.latitude + span.latitudeDelta / 2)
+        let lngRange = (center.longitude - span.longitudeDelta / 2)...(center.longitude + span.longitudeDelta / 2)
+        return latRange.contains(coordinate.latitude) && lngRange.contains(coordinate.longitude)
+    }
+}
+```
+
 #### Why Clustering Matters
 
 Without clustering at 500 annotations:
