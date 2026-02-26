@@ -133,9 +133,23 @@ class MyTests: XCTestCase {
 
 #### 2.2 Tests in App Target
 **Issue**: Logic tests in app target instead of package/framework
-**Why**: App tests require simulator launch
+**Why**: App tests require simulator launch — 60x slower
 **Impact**: 0.1s (package) vs 20-60s (app) per run
-**Fix**: Move testable logic to Swift Package
+
+**Detection**: Look for test files that:
+- Import only the app module (`@testable import MyApp`)
+- Test models, services, utilities (no UI assertions)
+- Don't use XCUIApplication
+
+**Recommendation**: Extract testable logic into a Swift Package. This is the single highest-impact test speed improvement.
+
+**Quick steps**:
+1. Create `MyAppCore/` package alongside `.xcodeproj`
+2. Move models/services/utilities to the package
+3. App target becomes thin shell importing the package
+4. Tests run with `swift test` (~0.4s) instead of `xcodebuild test` (~25s)
+
+See `axiom-swift-testing` Strategy 1 for complete Package.swift template and workspace setup.
 
 #### 2.3 Unnecessary UI Test Overhead
 **Issue**: Unit tests in UI test target

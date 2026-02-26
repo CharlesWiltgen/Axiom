@@ -38,6 +38,8 @@ This router invokes specialized skills based on the specific testing need:
 - Tags and traits
 - Host Application: None configuration
 - Swift Package tests (`swift test`)
+- Tests take >5 seconds for pure logic
+- Want TDD with fast feedback loop
 
 **Why swift-testing**: Modern Swift Testing framework with parallel execution, better async support, and the ability to run without launching simulator.
 
@@ -196,7 +198,7 @@ This router invokes specialized skills based on the specific testing need:
 4. Flaky tests / race conditions (XCUITest)? → ui-testing
 5. Flaky tests / race conditions (Swift Testing)? → test-failure-analyzer (Agent)
 6. Tests crash / environment wrong? → xcode-debugging (via ios-build)
-7. Tests are slow? → swift-testing (Fast Tests section)
+7. Tests are slow / want swift test? → swift-testing (Strategy 1: Package extraction)
 8. Run tests from CLI / parse results? → test-runner (Agent)
 9. Fix failing tests automatically? → test-debugger (Agent)
 10. Want test quality audit (flaky patterns, migration)? → testing-auditor (Agent)
@@ -252,6 +254,12 @@ User: "How do I use confirmation with expectedCount?"
 → Invoke: testing-async
 
 User: "I want my tests to run faster"
+→ Invoke: axiom-swift-testing (Fast Tests section)
+
+User: "My unit tests take 25 seconds to run"
+→ Invoke: axiom-swift-testing (Strategy 1: Package extraction)
+
+User: "How do I use swift test instead of xcodebuild test?"
 → Invoke: axiom-swift-testing (Fast Tests section)
 
 User: "Should I use Swift Testing or XCTest?"
