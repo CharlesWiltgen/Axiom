@@ -6,12 +6,14 @@ Master Swift's concurrency model and catch data races at compile time with stric
 flowchart LR
     classDef router fill:#6f42c1,stroke:#5a32a3,color:#fff
     classDef discipline fill:#d4edda,stroke:#28a745,color:#1b4332
+    classDef reference fill:#cce5ff,stroke:#0d6efd,color:#003366
     classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
 
     axiom_ios_concurrency["ios-concurrency router"]:::router
 
     subgraph skills_d["Skills"]
         swift_concurrency["swift-concurrency"]:::discipline
+        swift_concurrency_ref["swift-concurrency-ref"]:::reference
         swift_performance["swift-performance"]:::discipline
         assume_isolated["assume-isolated"]:::discipline
         synchronization["synchronization"]:::discipline
@@ -32,6 +34,11 @@ flowchart LR
   - *"I'm getting 'Main actor-isolated property accessed from nonisolated context' errors everywhere."*
   - *"My code is throwing 'Type does not conform to Sendable' warnings when passing data between threads."*
   - *"I have a stored task causing memory leaks. How do I write it correctly with weak self?"*
+
+- **[Swift Concurrency Reference](/skills/concurrency/swift-concurrency-ref)** – API reference for actors, Sendable, Task/TaskGroup, AsyncStream, continuations, migration patterns
+  - *"How do I create a TaskGroup?"*
+  - *"What's the AsyncStream continuation API?"*
+  - *"How do I convert completion handlers to async?"*
 
 - **[assumeIsolated](/skills/concurrency/assume-isolated)** – Synchronous actor access for tests, legacy callbacks, and performance-critical code
   - *"How do I access MainActor state from a delegate callback that runs on main thread?"*

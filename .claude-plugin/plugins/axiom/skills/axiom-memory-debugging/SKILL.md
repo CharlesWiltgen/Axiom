@@ -149,6 +149,8 @@ cancellable = Timer.publish(every: 1.0, tolerance: 0.1, on: .main, in: .default)
 
 **Alternative**: Call `timer?.invalidate(); timer = nil` in both the appropriate teardown method (`viewWillDisappear`, stop method, etc.) AND `deinit`.
 
+> For timer crash patterns (EXC_BAD_INSTRUCTION) and RunLoop mode issues, see `axiom-timer-patterns`.
+
 ### Pattern 2: Observer/Notification Leaks (25% of leaks)
 
 #### ❌ Leak — No removeObserver

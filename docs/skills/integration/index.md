@@ -101,6 +101,20 @@ Implementation patterns for location services:
 
 ---
 
+### [MapKit](./mapkit)
+
+Map implementation patterns for SwiftUI and UIKit:
+- **SwiftUI Map vs MKMapView** — Decision tree based on requirements
+- **Annotation Strategy** — Direct, clustering, or server-side by count
+- **Search & Directions** — MKLocalSearch, MKLocalSearchCompleter, MKDirections
+- **8 Anti-Patterns** — Common mistakes with time costs
+
+**When to use** Adding maps, implementing annotations, search, directions, debugging map issues
+
+**Requirements** iOS 17+ for SwiftUI Map, iOS 3+ for MKMapView
+
+---
+
 ### [App Intents Integration](/reference/app-intents-ref)
 
 Comprehensive guide to the App Intents framework for exposing app functionality to:

@@ -24,6 +24,7 @@ Use this router for:
 - App discoverability
 - Background processing (BGTaskScheduler)
 - Location services (Core Location)
+- Maps & MapKit (Map, MKMapView, annotations, search, directions)
 
 ## Cross-Domain Routing
 
@@ -43,6 +44,11 @@ When integration issues overlap with other domains:
 - Camera code issues → **stay in ios-integration** (camera-capture)
 - Privacy manifest or Info.plist issues → **stay in ios-integration** (privacy-ux)
 - Build/entitlement errors → **also invoke ios-build**
+
+**MapKit + location issues** (user location not showing on map):
+- Map display, annotations, search → **stay in ios-integration** (mapkit)
+- Location authorization, monitoring, background location → **also invoke ios-performance** or **ios-integration** (core-location)
+- Map performance with many annotations → **also invoke ios-performance** if profiling needed
 
 ## Routing Logic
 
@@ -99,6 +105,26 @@ When integration issues overlap with other domains:
 **API reference** → `/skill axiom-core-location-ref`
 **Debugging location issues** → `/skill axiom-core-location-diag`
 
+### Maps & MapKit
+
+**MapKit implementation patterns** → `/skill axiom-mapkit`
+- SwiftUI Map vs MKMapView decision
+- Annotation strategies by count
+- Search and directions
+- 8 anti-patterns
+
+**MapKit API reference** → `/skill axiom-mapkit-ref`
+- SwiftUI Map API
+- MKMapView delegates
+- MKLocalSearch, MKDirections, Look Around
+- Platform availability matrix
+
+**MapKit troubleshooting** → `/skill axiom-mapkit-diag`
+- Annotations not appearing
+- Region jumping / infinite loops
+- Clustering issues
+- Search failures
+
 ## Decision Tree
 
 1. App Intents / Siri / Apple Intelligence? → app-intents-ref
@@ -118,6 +144,7 @@ When integration issues overlap with other domains:
 15. Privacy / permissions? → privacy-ux
 16. Background processing? → background-processing (patterns), background-processing-diag (debugging), background-processing-ref (API)
 17. Location services? → core-location (patterns), core-location-diag (debugging), core-location-ref (API)
+18. Maps / MapKit / annotations / directions? → mapkit (patterns), mapkit-ref (API), mapkit-diag (debugging)
 
 ## Anti-Rationalization
 
@@ -128,6 +155,8 @@ When integration issues overlap with other domains:
 | "I'll add haptics with a simple API call" | Haptic design has patterns for each interaction type. haptics skill matches HIG guidelines. |
 | "Localization is just String Catalogs" | Xcode 26 has type-safe localization, generated symbols, and #bundle macro. localization skill is current. |
 | "Camera capture is just AVCaptureSession setup" | Camera has interruption handlers, rotation, and threading requirements. camera-capture covers all. |
+| "I'll just use MKMapView, I know it already" | SwiftUI Map is 10x less code for standard map features. mapkit has the decision tree. |
+| "MapKit search doesn't work, I'll use Google Maps SDK" | MapKit search needs region bias and resultTypes configuration. mapkit-diag fixes this in 5 minutes. |
 
 ## Example Invocations
 
@@ -196,3 +225,18 @@ User: "Implement in-app purchases for my app"
 
 User: "Check my camera code for issues"
 → Invoke: `camera-auditor` agent
+
+User: "How do I add a map to my SwiftUI app?"
+→ Invoke: `/skill axiom-mapkit`
+
+User: "My annotations aren't showing on the map"
+→ Invoke: `/skill axiom-mapkit-diag`
+
+User: "How do I implement search with autocomplete on a map?"
+→ Invoke: `/skill axiom-mapkit-ref`
+
+User: "My map region keeps jumping when I scroll"
+→ Invoke: `/skill axiom-mapkit-diag`
+
+User: "How do I add directions between two points?"
+→ Invoke: `/skill axiom-mapkit-ref`
