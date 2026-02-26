@@ -28,7 +28,7 @@ Closed-loop test debugging — automatically analyzes test failures, suggests fi
 - **Tools**: Bash, Read, Grep, Glob, Edit
 - **Color**: magenta
 
-## Related Skills
+## Related
 
 - **swift-testing** — Modern Swift Testing framework patterns
 - **ui-testing** — XCUITest patterns and condition-based waiting
