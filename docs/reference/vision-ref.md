@@ -175,7 +175,7 @@ let uiPoint = CGPoint(
 ## Resources
 
 - [Vision Framework (Main Skill)](/skills/computer-vision/vision) - Decision trees and patterns
-- [Vision Diagnostics](/reference/vision-diag) - Troubleshooting guide
+- [Vision Diagnostics](/diagnostic/vision-diag) - Troubleshooting guide
 
 ### WWDC Sessions
 
