@@ -174,6 +174,8 @@ timer.resume()
 timer.cancel()
 ```
 
+> For DispatchSourceTimer lifecycle safety and crash prevention, see `axiom-timer-patterns`.
+
 ### Event-Driven Alternative to Timers
 
 From Energy Efficiency Guide: Prefer dispatch sources over polling.

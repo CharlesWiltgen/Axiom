@@ -832,6 +832,7 @@ Check **Battery Usage** pane in Xcode Organizer for field data:
 - `axiom-performance-profiling` — General Instruments workflows
 - `axiom-memory-debugging` — Memory leak diagnosis (often related to energy)
 - `axiom-networking` — Network optimization patterns
+- `axiom-timer-patterns` — Timer crash prevention and lifecycle safety
 
 ---
 

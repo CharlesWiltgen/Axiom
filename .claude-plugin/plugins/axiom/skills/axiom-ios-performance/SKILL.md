@@ -88,6 +88,19 @@ Use this router when:
 
 **Energy scan** → Launch `energy-auditor` agent or `/axiom:audit energy` (8 anti-patterns: timer abuse, polling, continuous location, animation leaks, background mode misuse, network inefficiency, GPU waste, disk I/O)
 
+### Timer Safety
+
+**Timer crash patterns (DispatchSourceTimer)** → `/skill axiom-timer-patterns`
+- 4 crash scenarios causing EXC_BAD_INSTRUCTION
+- RunLoop mode gotcha (Timer stops during scroll)
+- SafeDispatchTimer wrapper
+- Timer vs DispatchSourceTimer decision
+
+**Timer API reference** → `/skill axiom-timer-patterns-ref`
+- Timer, DispatchSourceTimer, Combine, AsyncTimerSequence APIs
+- Lifecycle diagrams
+- Platform availability
+
 ### Swift Performance
 
 **Swift performance optimization** → `/skill axiom-swift-performance`
@@ -141,6 +154,10 @@ Use this router when:
 16. Want Swift performance audit (ARC, generics, collections)? → swift-performance-analyzer (Agent)
 17. Need to inspect variable/thread state at runtime? → axiom-lldb
 18. Need exact LLDB command syntax? → axiom-lldb-ref
+19. Timer stops during scrolling? → timer-patterns (RunLoop mode)
+20. EXC_BAD_INSTRUCTION crash with DispatchSourceTimer? → timer-patterns (4 crash patterns)
+21. Choosing between Timer, DispatchSourceTimer, Combine timer, async timer? → timer-patterns
+22. Need timer API syntax/lifecycle? → timer-patterns-ref
 
 ## Anti-Rationalization
 
@@ -155,6 +172,8 @@ Use this router when:
 | "It only freezes on first launch, must be loading something" | First-launch hangs have 3 patterns: synchronous I/O, lazy initialization, main thread contention. hang-diagnostics diagnoses which. |
 | "UI locks up when network requests finish — that's slow" | Multiple callbacks completing at once = main thread contention = concurrency issue. Cross-route to ios-concurrency. |
 | "I'll just add print statements to debug this" | Print-debug cycles cost 3-5 min each (build + run + reproduce). An LLDB breakpoint costs 30 seconds. axiom-lldb has the commands. |
+| "I'll just use Timer.scheduledTimer, it's simpler" | Timer stops during scrolling (`.default` mode), retains its target (leak). timer-patterns has the decision tree. |
+| "DispatchSourceTimer crashed but it's intermittent, let's ship" | DispatchSourceTimer has 4 crash patterns that are ALL deterministic. timer-patterns diagnoses which one. |
 
 ## Critical Patterns
 
@@ -248,3 +267,15 @@ User: "App freezes for a few seconds on first launch then works fine"
 
 User: "UI locks up when multiple API calls return at the same time"
 → Cross-route: `/skill axiom-ios-concurrency` (callback contention)
+
+User: "My timer stops when the user scrolls"
+→ Invoke: `/skill axiom-timer-patterns`
+
+User: "EXC_BAD_INSTRUCTION crash in my timer code"
+→ Invoke: `/skill axiom-timer-patterns`
+
+User: "Should I use Timer or DispatchSourceTimer?"
+→ Invoke: `/skill axiom-timer-patterns`
+
+User: "How do I create an AsyncTimerSequence?"
+→ Invoke: `/skill axiom-timer-patterns-ref`

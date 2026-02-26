@@ -165,14 +165,16 @@ export default withMermaid(defineConfig({
             { text: 'Performance Profiling', link: '/skills/debugging/performance-profiling' },
             { text: 'Objective-C Block Retain Cycles', link: '/skills/debugging/objc-block-retain-cycles' },
             { text: 'Hang Diagnostics', link: '/skills/debugging/hang-diagnostics' },
-            { text: 'LLDB Debugging', link: '/skills/debugging/lldb' }
+            { text: 'LLDB Debugging', link: '/skills/debugging/lldb' },
+            { text: 'Timer Safety Patterns', link: '/skills/debugging/timer-patterns' }
           ]
         },
         {
           text: 'Concurrency',
           items: [
             { text: 'Overview', link: '/skills/concurrency/' },
-            { text: 'Swift Concurrency', link: '/skills/concurrency/swift-concurrency' }
+            { text: 'Swift Concurrency', link: '/skills/concurrency/swift-concurrency' },
+            { text: 'Swift Concurrency Reference', link: '/skills/concurrency/swift-concurrency-ref' }
           ]
         },
         {
@@ -204,7 +206,8 @@ export default withMermaid(defineConfig({
             { text: 'Now Playing', link: '/skills/integration/now-playing' },
             { text: 'Camera Capture', link: '/skills/integration/camera-capture' },
             { text: 'Photo Library', link: '/skills/integration/photo-library' },
-            { text: 'Core Location', link: '/skills/integration/core-location' }
+            { text: 'Core Location', link: '/skills/integration/core-location' },
+            { text: 'MapKit', link: '/skills/integration/mapkit' }
           ]
         },
         {
@@ -295,6 +298,7 @@ export default withMermaid(defineConfig({
             { text: 'Now Playing: CarPlay', link: '/reference/now-playing-carplay' },
             { text: 'Now Playing: MusicKit', link: '/reference/now-playing-musickit' },
             { text: 'Core Location API', link: '/reference/core-location-ref' },
+            { text: 'MapKit API', link: '/reference/mapkit-ref' },
             { text: 'Privacy UX Patterns', link: '/reference/privacy-ux' },
             { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' }
           ]
@@ -317,6 +321,7 @@ export default withMermaid(defineConfig({
             { text: 'AXe (Simulator Automation)', link: '/reference/axe-ref' },
             { text: 'MetricKit', link: '/reference/metrickit-ref' },
             { text: 'LLDB Command Reference', link: '/reference/lldb-ref' },
+            { text: 'Timer Patterns', link: '/reference/timer-patterns-ref' },
             { text: 'xctrace', link: '/reference/xctrace-ref' }
           ]
         }
@@ -341,6 +346,7 @@ export default withMermaid(defineConfig({
             { text: 'Core Location Diagnostics', link: '/diagnostic/core-location-diag' },
             { text: 'Energy Diagnostics', link: '/diagnostic/energy-diag' },
             { text: 'Foundation Models Diagnostics', link: '/diagnostic/foundation-models-diag' },
+            { text: 'MapKit Diagnostics', link: '/diagnostic/mapkit-diag' },
             { text: 'Metal Migration Diagnostics', link: '/diagnostic/metal-migration-diag' },
             { text: 'Networking Diagnostics', link: '/diagnostic/networking-diag' },
             { text: 'RealityKit Diagnostics', link: '/diagnostic/realitykit-diag' },

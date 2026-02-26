@@ -26,6 +26,7 @@ Symptom-based troubleshooting for Core Location issues.
 - `axiom-core-location` — Implementation patterns, decision trees
 - `axiom-core-location-ref` — API reference, code examples
 - `axiom-energy-diag` — Battery drain from location
+- `axiom-mapkit-diag` — For map-specific location display issues (Symptom 7)
 
 ---
 
