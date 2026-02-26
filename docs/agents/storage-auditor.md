@@ -16,7 +16,7 @@ Automatically scans for file storage mistakes: files in wrong locations, missing
 /axiom:audit-storage
 ```
 
-## What It Checks
+## What It Does
 
 1. **Files in tmp/ Directory** (CRITICAL) — Anything in NSTemporaryDirectory() that isn't truly temporary → iOS purges tmp/, users lose data
 2. **Large Files Missing isExcludedFromBackup** (HIGH) — Files >1MB in Documents/ without backup exclusion → wastes user's iCloud quota
@@ -24,14 +24,7 @@ Automatically scans for file storage mistakes: files in wrong locations, missing
 4. **Wrong Storage Location** (HIGH) — User content in Application Support/, re-downloadable content in Documents/, app data in tmp/
 5. **UserDefaults Abuse** (MEDIUM) — Storing >1MB data in UserDefaults → performance degradation
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Glob, Grep, Read
-- **Color**: blue
-- **Scan Time**: <2 seconds
-
-## Related Skills
+## Related
 
 - **storage** — Storage decision framework (where to store what)
 - **storage-diag** — Debugging missing files and data loss

@@ -15,7 +15,7 @@ Automatically scans for deprecated networking APIs and anti-patterns that cause 
 /axiom:audit-networking
 ```
 
-## What It Checks
+## What It Does
 
 ### Deprecated APIs
 1. **SCNetworkReachability** (HIGH) — Race conditions, App Store concern
@@ -31,13 +31,7 @@ Automatically scans for deprecated networking APIs and anti-patterns that cause 
 9. **Blocking Socket Calls** (HIGH) — ANR risk
 10. **Not Handling Waiting State** (LOW) — Poor UX
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Glob, Grep, Read
-- **Color**: blue
-
-## Related Skills
+## Related
 
 - **networking** skill — Network.framework patterns (NWConnection, NetworkConnection)
 - **networking-diag** skill — Systematic networking troubleshooting

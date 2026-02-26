@@ -15,7 +15,7 @@ Automatically scans SwiftUI navigation code for architecture and correctness iss
 /axiom:audit-swiftui-nav
 ```
 
-## What It Checks
+## What It Does
 
 **IMPORTANT**: This agent checks navigation **architecture and correctness**. For navigation **performance** issues (NavigationPath recreation, large models in state), use the **swiftui-performance-analyzer** agent instead.
 
@@ -30,14 +30,7 @@ Automatically scans SwiftUI navigation code for architecture and correctness iss
 7. **Missing State Preservation** (HIGH) — No `@SceneStorage` for navigation path, state lost on termination
 8. **Coordinator Pattern Violations** (LOW) — Navigation logic scattered across views
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Glob, Grep, Read
-- **Color**: blue
-- **Scan Time**: <1 second
-
-## Related Skills
+## Related
 
 - **swiftui-nav** skill — NavigationStack vs NavigationSplitView decision trees, deep linking, coordinator patterns
 - **swiftui-nav-diag** skill — Systematic navigation debugging (not responding, unexpected pops, deep link failures)

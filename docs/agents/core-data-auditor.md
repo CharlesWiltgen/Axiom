@@ -15,7 +15,7 @@ Automatically scans Core Data code for safety violations that cause production c
 /axiom:audit-core-data
 ```
 
-## What It Checks
+## What It Does
 
 1. **Schema Migration Safety** (CRITICAL) — Missing lightweight migration options
 2. **Thread-Confinement Violations** (CRITICAL) — NSManagedObject accessed from wrong threads
@@ -23,12 +23,6 @@ Automatically scans Core Data code for safety violations that cause production c
 4. **Production Risk Patterns** (CRITICAL) — Hard-coded store deletion, try! on migration
 5. **Performance Issues** (LOW) — Missing fetchBatchSize, no faulting controls
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Glob, Grep, Read
-- **Color**: orange
-
-## Related Skills
+## Related
 
 - **core-data-diag** skill — Comprehensive Core Data diagnostics with production crisis defense

@@ -18,7 +18,7 @@ Scans for security vulnerabilities and privacy compliance issues including hardc
 /axiom:audit privacy
 ```
 
-## What It Checks
+## What It Does
 
 ### Critical (App Store Rejection Risk)
 - **Hardcoded API keys** — AWS keys, OpenAI keys, GitHub tokens in source
@@ -56,12 +56,6 @@ Scans for security vulnerabilities and privacy compliance issues including hardc
   let apiKey = "sk-1234..."  // EXPOSED
   ```
 ```
-
-## Model & Tools
-
-- **Model**: haiku (fast credential scanning)
-- **Tools**: Glob, Grep, Read
-- **Color**: red
 
 ## Related
 

@@ -16,7 +16,7 @@ Automatically scans SwiftUI code for performance anti-patterns that cause frame 
 /axiom:audit-swiftui-performance
 ```
 
-## What It Checks
+## What It Does
 
 ### Critical Issues (Frame Drops Guaranteed)
 1. **File I/O in view body** — Data(contentsOf:), String(contentsOf:)
@@ -101,14 +101,7 @@ From auditing 100+ SwiftUI apps:
 - 25% have navigation performance issues (NavigationPath recreation, large models)
 - 20% have file I/O in view body
 
-## Model & Tools
-
-- **Model**: haiku (pattern matching)
-- **Tools**: Glob, Grep, Read
-- **Color**: purple
-- **Scan Time**: <1 second
-
-## Related Skills
+## Related
 
 For detailed SwiftUI performance optimization:
 - **swiftui-performance** skill — Step-by-step profiling with Instruments 26

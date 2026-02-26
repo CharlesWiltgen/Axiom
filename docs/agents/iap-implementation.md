@@ -50,14 +50,7 @@ Implements complete StoreKit 2 IAP solution following testing-first workflow wit
 - Manual testing instructions
 - Edge case validation
 
-## Model & Tools
-
-- **Model**: sonnet
-- **Tools**: Glob, Grep, Read, Write, Edit, Bash
-- **Color**: blue
-- **Implementation Time**: 10-15 minutes
-
-## Related Skills
+## Related
 
 - **in-app-purchases** skill — Complete StoreKit 2 implementation guide
 - **storekit-ref** reference — Comprehensive StoreKit 2 API reference

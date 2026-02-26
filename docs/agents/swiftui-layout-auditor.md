@@ -28,12 +28,6 @@ Scans SwiftUI layout code for the 10 most critical violations — GeometryReader
 9. **Non-Lazy ForEach in Stacks** (MEDIUM) — Launch lag with 100+ items
 10. **Missing containerRelativeFrame** (LOW) — Modernization opportunity (iOS 17+)
 
-## Model & Tools
-
-- **Model**: sonnet
-- **Tools**: Glob, Grep, Read
-- **Color**: blue
-
 ## Related
 
 - **swiftui-layout** — Adaptive layout decision trees (ViewThatFits, AnyLayout)

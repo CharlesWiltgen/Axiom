@@ -16,7 +16,7 @@ Analyzes Package.swift and Package.resolved to diagnose and resolve Swift Packag
 /axiom:resolve-deps
 ```
 
-## What It Checks
+## What It Does
 
 ### Critical Issues
 - **Version range conflicts** — Two packages require incompatible versions of shared dependency
@@ -57,12 +57,6 @@ rm Package.resolved
 swift package resolve
 ```
 ```
-
-## Model & Tools
-
-- **Model**: haiku (fast dependency analysis)
-- **Tools**: Glob, Grep, Read, Bash
-- **Color**: blue
 
 ## Related
 
