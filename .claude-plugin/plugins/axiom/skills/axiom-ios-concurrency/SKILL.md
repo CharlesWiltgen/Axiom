@@ -48,6 +48,13 @@ Use this router when:
 - Data race prevention
 - Swift 6 migration
 
+**Swift concurrency API reference** → `/skill axiom-swift-concurrency-ref`
+- Actor definition, reentrancy, global actors
+- Sendable patterns, @unchecked Sendable
+- Task/TaskGroup/cancellation API
+- AsyncStream, continuations
+- DispatchQueue → actor migration
+
 **Swift performance** → `/skill axiom-swift-performance`
 - Value vs reference types
 - Copy-on-write optimization
@@ -86,6 +93,7 @@ Use this router when:
 ## Decision Tree
 
 1. Data races / actor isolation / @MainActor / Sendable? → swift-concurrency
+1a. Need specific API syntax (actor definition, TaskGroup, AsyncStream, continuation)? → swift-concurrency-ref
 2. Writing async/await code? → swift-concurrency
 3. Swift 6 migration? → swift-concurrency
 4. assumeIsolated / @preconcurrency? → assume-isolated
@@ -161,6 +169,21 @@ User: "I think I have actor contention, how do I diagnose it?"
 
 User: "My Core Data saves lose data from background tasks"
 → Route to: `ios-data` router (Core Data threading is framework-specific)
+
+User: "How do I create a TaskGroup?"
+→ Invoke: `/skill axiom-swift-concurrency-ref`
+
+User: "What's the AsyncStream API?"
+→ Invoke: `/skill axiom-swift-concurrency-ref`
+
+User: "How do I create a custom global actor?"
+→ Invoke: `/skill axiom-swift-concurrency-ref`
+
+User: "How do I convert a completion handler to async?"
+→ Invoke: `/skill axiom-swift-concurrency-ref`
+
+User: "What are the actor reentrancy rules?"
+→ Invoke: `/skill axiom-swift-concurrency-ref`
 
 User: "Check my code for Swift 6 concurrency issues"
 → Invoke: `concurrency-auditor` agent
