@@ -28,12 +28,6 @@ Scans SwiftData code for the 10 most critical violations — struct models, miss
 9. **Missing cascade rules** (MEDIUM) — Orphaned related objects
 10. **Fetch descriptor issues** (LOW) — Suboptimal predicate patterns
 
-## Model & Tools
-
-- **Model**: sonnet
-- **Tools**: Glob, Grep, Read
-- **Color**: orange
-
 ## Related
 
 - **swiftdata** — SwiftData @Model, @Query, and CloudKit integration patterns

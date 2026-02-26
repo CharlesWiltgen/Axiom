@@ -15,7 +15,7 @@ Automatically scans SwiftUI codebase for Liquid Glass adoption opportunities (iO
 /axiom:audit-liquid-glass
 ```
 
-## What It Checks
+## What It Does
 
 1. **Custom Views for Glass Effects** (MEDIUM) — Views that could use .glassBackgroundEffect()
 2. **Toolbar Improvements** (HIGH) — Missing .borderedProminent, Spacer(.fixed)
@@ -23,13 +23,7 @@ Automatically scans SwiftUI codebase for Liquid Glass adoption opportunities (iO
 4. **Migration from Old Blur Effects** (HIGH) — UIBlurEffect, NSVisualEffectView, .material
 5. **Tinting Opportunities** (LOW) — Prominent buttons missing .tint()
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Glob, Grep, Read
-- **Color**: cyan
-
-## Related Skills
+## Related
 
 - **liquid-glass** skill — Liquid Glass implementation with design review defense
 - **liquid-glass-ref** skill — Comprehensive app-wide adoption guide

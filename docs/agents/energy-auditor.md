@@ -15,7 +15,7 @@ Scans codebase for the 8 most common energy anti-patterns that cause excessive b
 /axiom:audit energy
 ```
 
-## What It Checks
+## What It Does
 
 ### Critical (10-40% battery drain/hour)
 - **Timer abuse** — Timers without tolerance, high-frequency repeating timers
@@ -49,12 +49,6 @@ Scans codebase for the 8 most common energy anti-patterns that cause excessive b
 **Impact**: CPU stays awake, ~15% drain/hour
 **Fix**: Add 10% tolerance minimum
 ```
-
-## Model & Tools
-
-- **Model**: sonnet (needs reasoning for pattern analysis)
-- **Tools**: Glob, Grep, Read
-- **Color**: yellow
 
 ## Related
 

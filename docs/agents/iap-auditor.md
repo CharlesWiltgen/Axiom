@@ -16,7 +16,7 @@ Automatically audits existing IAP code to detect missing transaction.finish() ca
 /axiom:audit-iap
 ```
 
-## What It Checks
+## What It Does
 
 1. **Transaction Finishing** (CRITICAL) — Missing transaction.finish() calls, stuck transactions
 2. **Transaction Verification** (CRITICAL) — Not checking VerificationResult, security risks
@@ -25,14 +25,7 @@ Automatically audits existing IAP code to detect missing transaction.finish() ca
 5. **Subscription Status** (HIGH) — Not tracking subscription state, grace period handling
 6. **StoreKit Configuration** (HIGH) — Missing .storekit file for testing
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Glob, Grep, Read
-- **Color**: green
-- **Scan Time**: <1 second
-
-## Related Skills
+## Related
 
 - **in-app-purchases** skill — Complete StoreKit 2 implementation guide
 - **storekit-ref** reference — Comprehensive StoreKit 2 API reference

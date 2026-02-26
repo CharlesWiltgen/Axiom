@@ -16,7 +16,7 @@ Automatically scans for Codable anti-patterns and JSON serialization issues that
 /axiom:audit-codable
 ```
 
-## What It Checks
+## What It Does
 
 ### High-Severity Anti-Patterns
 1. **Manual JSON String Building** (HIGH) — String interpolation in JSON, injection vulnerabilities, escaping bugs
@@ -52,14 +52,7 @@ Automatically scans for Codable anti-patterns and JSON serialization issues that
   Fix: Migrate to Codable
 ```
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Glob, Grep, Read
-- **Color**: blue
-- **Scan Time**: <2 seconds
-
-## Related Skills
+## Related
 
 - **codable** — Comprehensive Codable patterns and anti-patterns
 - **swift-concurrency** — Codable + Sendable for crossing actor boundaries

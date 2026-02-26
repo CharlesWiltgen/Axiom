@@ -16,7 +16,7 @@ Scans Swift code for camera, video, and audio capture issues including deprecate
 /axiom:audit camera
 ```
 
-## What It Checks
+## What It Does
 
 ### Critical Issues
 - **Main thread session work** — `startRunning()` on main thread causes UI freezes
@@ -50,12 +50,6 @@ Scans Swift code for camera, video, and audio capture issues including deprecate
 2. Add AVCaptureSession interruption observers
 3. Replace deprecated videoOrientation with RotationCoordinator
 ```
-
-## Model & Tools
-
-- **Model**: haiku (fast pattern scanning)
-- **Tools**: Glob, Grep, Read
-- **Color**: blue
 
 ## Related
 

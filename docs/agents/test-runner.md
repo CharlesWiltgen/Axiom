@@ -23,12 +23,6 @@ Runs XCUITests, parses .xcresult bundles using xcresulttool, and provides struct
 4. **Report failures** — Shows failure messages, file:line locations, and screenshots
 5. **Export attachments** — Saves failure screenshots and logs for review
 
-## Model & Tools
-
-- **Model**: sonnet
-- **Tools**: Bash, Read, Grep, Glob
-- **Color**: cyan
-
 ## Related
 
 - **swift-testing** — Modern Swift Testing framework patterns

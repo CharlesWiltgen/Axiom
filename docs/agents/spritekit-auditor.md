@@ -15,7 +15,7 @@ Scans SpriteKit game code for the 8 most common anti-patterns that cause physics
 /axiom:audit spritekit
 ```
 
-## What It Checks
+## What It Does
 
 ### Critical
 - **Physics bitmask issues** — Default `0xFFFFFFFF` masks, missing `contactTestBitMask`, magic number bitmasks without named constants
@@ -49,12 +49,6 @@ Scans SpriteKit game code for the 8 most common anti-patterns that cause physics
 **Impact**: Body collides with everything, causing phantom collisions
 **Fix**: Set explicit collisionBitMask using PhysicsCategory struct
 ```
-
-## Model & Tools
-
-- **Model**: sonnet (needs code understanding for pattern analysis)
-- **Tools**: Glob, Grep, Read
-- **Color**: green
 
 ## Related
 

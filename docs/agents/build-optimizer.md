@@ -16,7 +16,7 @@ Automatically scans Xcode projects for build performance optimizations and provi
 /axiom:optimize-build
 ```
 
-## What It Checks
+## What It Does
 
 1. **Build Settings** (HIGH) — Compilation mode, architecture settings, debug info format
 2. **Build Phase Scripts** (HIGH) — Conditional execution, sandboxing, unnecessary scripts in Debug
@@ -30,13 +30,6 @@ Based on typical findings:
 - **5-10 seconds saved** per build from conditional scripts
 - **Measurable improvements** in Build Timeline
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Bash, Read, Grep, Glob
-- **Color**: green
-- **Scan Time**: <5 seconds
-
-## Related Skills
+## Related
 
 - **build-performance** skill — Comprehensive build optimization workflows with Build Timeline analysis, WWDC 2018-408 and WWDC 2022-110364 guidance

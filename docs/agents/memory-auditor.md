@@ -15,7 +15,7 @@ Automatically scans for the 6 most common memory leak patterns to prevent crashe
 /axiom:audit memory
 ```
 
-## What It Checks
+## What It Does
 
 1. **Timer Leaks** (CRITICAL) — Timer.scheduledTimer(repeats: true) without .invalidate()
 2. **Observer/Notification Leaks** (HIGH) — addObserver without removeObserver
@@ -24,12 +24,6 @@ Automatically scans for the 6 most common memory leak patterns to prevent crashe
 5. **View Callback Leaks** (MEDIUM) — SwiftUI callbacks capturing self
 6. **PhotoKit Accumulation** (LOW) — PHImageManager requests without cancellation
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Glob, Grep, Read
-- **Color**: red
-
-## Related Skills
+## Related
 
 - **memory-debugging** skill — Systematic memory leak diagnosis with Instruments
