@@ -54,35 +54,53 @@ Agents are autonomous problem-solvers that:
 ### Build & Environment
 - **build-fixer** — Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics (zombie processes, Derived Data, simulator state, SPM cache)
 - **build-optimizer** — Scans for build performance optimizations (compilation mode, architecture settings, build phase scripts, type checking bottlenecks) with measurable time savings
+- **spm-conflict-resolver** — Analyzes Package.swift and Package.resolved to diagnose and resolve Swift Package Manager dependency conflicts
 
 ### Code Quality
 - **accessibility-auditor** — Scans for VoiceOver label issues, Dynamic Type violations, color contrast failures, touch target sizes, WCAG compliance problems
 - **codable-auditor** — Detects Codable anti-patterns (manual JSON building, try? swallowing errors, JSONSerialization usage) and date handling issues
 - **concurrency-auditor** — Detects Swift 6 strict concurrency violations (missing @MainActor, unsafe Task captures, Sendable violations, actor isolation problems)
+- **energy-auditor** — Scans for energy anti-patterns (timer abuse, polling, continuous location, animation leaks, background mode misuse)
 - **memory-auditor** — Finds 6 common memory leak patterns (timers, observers, closures, delegates, view callbacks, PhotoKit accumulation)
+- **swift-performance-analyzer** — Detects Swift performance anti-patterns (ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs)
 - **textkit-auditor** — Scans for TextKit 1 fallback triggers, deprecated glyph APIs, missing Writing Tools support
 
 ### UI & Design
 - **liquid-glass-auditor** — Identifies iOS 26+ Liquid Glass adoption opportunities (glass effects, toolbar improvements, search patterns, migration from old blur effects)
 - **swiftui-architecture-auditor** — Scans SwiftUI architecture (logic in view bodies, async boundary violations, property wrapper misuse, testability gaps)
+- **swiftui-layout-auditor** — Scans SwiftUI layout code for GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss, missing lazy containers
 - **swiftui-performance-analyzer** — Detects SwiftUI performance anti-patterns (expensive operations in view bodies, missing lazy loading, unnecessary updates, navigation performance issues)
 - **swiftui-nav-auditor** — Scans SwiftUI navigation architecture (missing NavigationPath, deep link gaps, state restoration issues, wrong container usage, type safety problems)
 
 ### Persistence & Storage
 - **core-data-auditor** — Scans for schema migration risks, thread-confinement violations, N+1 query patterns, production data loss risks, performance issues
+- **database-schema-auditor** — Scans database migration and schema code for unsafe ALTER TABLE patterns, DROP operations, missing idempotency, foreign key misuse
 - **icloud-auditor** — Scans for iCloud integration issues (missing NSFileCoordinator, unsafe CloudKit error handling, missing entitlement checks, SwiftData + CloudKit anti-patterns)
 - **storage-auditor** — Detects file storage mistakes (files in wrong locations, missing backup exclusions, missing file protection, storage anti-patterns causing data loss and backup bloat)
+- **swiftdata-auditor** — Scans SwiftData code for struct models, missing VersionedSchema, relationship defaults, background context misuse, N+1 patterns
 
 ### Integration
+- **camera-auditor** — Scans for camera, video, and audio capture issues including deprecated APIs, missing interruption handlers, threading violations
+- **foundation-models-auditor** — Scans Foundation Models code for missing availability checks, main thread blocking, manual JSON parsing, session lifecycle issues
 - **networking-auditor** — Scans for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling)
 - **iap-auditor** — Audits existing IAP code for missing transaction.finish() calls, weak receipt validation, missing restore functionality, subscription status tracking issues, and StoreKit testing configuration gaps
 - **iap-implementation** — Implements complete StoreKit 2 IAP solution with testing-first workflow (.storekit configuration, centralized StoreManager, transaction handling, subscription management, restore purchases)
 
 ### Shipping
 - **screenshot-validator** — AI-powered visual inspection of App Store screenshots for dimension validation, placeholder text detection, debug artifact scanning, competitor references, and content completeness
+- **security-privacy-scanner** — Scans for API keys in code, insecure @AppStorage usage, missing Privacy Manifests, ATS violations, and logging sensitive data
 
 ### Testing
-**simulator-tester** — Automated simulator testing with visual verification (screenshots, video, location simulation, push notifications, permissions, deep links, log analysis) for closed-loop debugging
+- **performance-profiler** — Automated performance profiling via xctrace CLI (CPU Profiler, Allocations, Leaks, SwiftUI, Swift Tasks)
+- **simulator-tester** — Automated simulator testing with visual verification (screenshots, video, location simulation, push notifications, permissions, deep links, log analysis) for closed-loop debugging
+- **test-debugger** — Closed-loop test debugging: analyzes failures, suggests fixes, re-runs tests until passing
+- **test-failure-analyzer** — Diagnoses flaky tests, race conditions, and tests that pass locally but fail in CI
+- **test-runner** — Runs XCUITests, parses .xcresult bundles, provides structured results with failure analysis
+- **testing-auditor** — Scans for flaky test patterns, shared mutable state, missing assertions, Swift Testing migration opportunities
+
+### Misc
+- **crash-analyzer** — Parses crash reports (.ips, .crash), checks symbolication, categorizes by crash pattern, generates actionable diagnostics
+- **modernization-helper** — Scans for legacy patterns and provides migration paths to iOS 17/18 (ObservableObject to @Observable, etc.)
 
 ## Why Agents?
 

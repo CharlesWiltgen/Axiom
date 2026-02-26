@@ -87,6 +87,14 @@ flowchart LR
   - *"I want to take screenshots of different screens automatically."*
   - **Related** [`simulator-tester` agent](/agents/simulator-tester) for automated testing with deep links
 
+- **[LLDB Debugging](/skills/debugging/lldb)** – 6 playbooks for crash triage, state inspection, `po` alternatives, breakpoint strategy, expression evaluation, and thread analysis
+  - *"How do I use LLDB to debug a crash?"*
+  - *"What's faster than po for inspecting variables?"*
+
+- **[Timer Safety Patterns](/skills/debugging/timer-patterns)** – Timer invalidation, memory-safe usage, dispatch timers, CADisplayLink
+  - *"My timer is causing a memory leak"*
+  - *"What's the best way to implement a repeating timer?"*
+
 - **[SwiftUI Debugging Diagnostics](/diagnostic/swiftui-debugging-diag)** – Systematic diagnostic workflows for complex SwiftUI issues with Instruments integration
   - *"Self._printChanges() shows unexpected patterns and I need to trace the data flow."*
   - *"View issues persist after basic troubleshooting. How do I diagnose with Instruments?"*

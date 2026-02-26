@@ -42,6 +42,12 @@ Modern Swift Testing framework with `@Test`, `#expect`, parameterized tests, and
 ### [Testing Async Code](./testing-async)
 Patterns for testing async/await with Swift Testing — confirmation for callbacks, @MainActor tests, parallel execution, XCTest migration.
 
+### [Recording UI Automation](./ui-recording)
+Recording interactions as Swift code with Xcode 26. Record, replay across devices and configurations, review video recordings.
+
+### [XCUITest Automation](./xctest-automation)
+XCUITest patterns for running, writing, and debugging UI tests with xcodebuild and xcresulttool.
+
 ### [UI Testing](/skills/ui-design/ui-testing)
 XCUITest patterns for reliable UI tests. Condition-based waiting, Recording UI Automation (WWDC 2025), cross-device testing.
 

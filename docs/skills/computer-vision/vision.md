@@ -175,7 +175,7 @@ present(scanner, animated: true) {
 ## Related Resources
 
 - [Vision Framework API Reference](/reference/vision-ref) - Complete API docs with code examples
-- [Vision Framework Diagnostics](/reference/vision-diag) - Troubleshooting when things go wrong
+- [Vision Framework Diagnostics](/diagnostic/vision-diag) - Troubleshooting when things go wrong
 
 ### WWDC Sessions
 
