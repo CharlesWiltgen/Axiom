@@ -18,7 +18,7 @@ Scans for legacy iOS patterns and provides migration paths to modern iOS 17/18+ 
 /axiom:modernize
 ```
 
-## What It Checks
+## What It Does
 
 ### High Priority (Significant Benefits)
 - **ObservableObject to @Observable** — Better performance, simpler syntax
@@ -52,12 +52,6 @@ Scans for legacy iOS patterns and provides migration paths to modern iOS 17/18+ 
 ## Breaking Changes Warning
 Full migration requires iOS 17+
 ```
-
-## Model & Tools
-
-- **Model**: haiku (fast pattern scanning)
-- **Tools**: Glob, Grep, Read
-- **Color**: cyan
 
 ## Related
 

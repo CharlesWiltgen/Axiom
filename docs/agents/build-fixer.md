@@ -16,7 +16,7 @@ Automatically diagnoses and fixes Xcode build failures using environment-first d
 /axiom:fix-build
 ```
 
-## What It Checks
+## What It Does
 
 ### Environment Diagnostics (Mandatory)
 1. **Zombie xcodebuild processes** — 10+ processes = stuck builds
@@ -72,13 +72,7 @@ Estimated 30-45 minutes of manual debugging avoided
 - **Without agent**: 30-120 minutes debugging environment issues
 - **With agent**: 2-5 minutes automated diagnosis and fixes
 
-## Model & Tools
-
-- **Model**: sonnet (needs reasoning for environment diagnosis)
-- **Tools**: Bash, Read, Grep, Glob
-- **Color**: blue
-
-## Related Skills
+## Related
 
 For detailed understanding of environment-first debugging:
 - **xcode-debugging** skill — Step-by-step diagnostic workflows

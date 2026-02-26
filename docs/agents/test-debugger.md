@@ -9,10 +9,7 @@ Closed-loop test debugging — automatically analyzes test failures, suggests fi
 - "Debug why testCheckout keeps timing out"
 - "Fix my flaky UI tests"
 
-**Explicit command:**
-```bash
-/axiom:run-tests
-```
+**Explicit command:** Use natural language ("fix my failing tests") to trigger test-debugger. The `/axiom:run-tests` command invokes test-runner for execution only — test-debugger adds the fix-and-retry loop.
 
 ## What It Does
 
@@ -21,12 +18,6 @@ Closed-loop test debugging — automatically analyzes test failures, suggests fi
 3. **Suggest fixes** — Identifies root cause using screenshots, logs, and patterns
 4. **Apply fixes** — Edits test code to resolve issues
 5. **Re-run tests** — Verifies fixes pass, repeats if needed
-
-## Model & Tools
-
-- **Model**: sonnet
-- **Tools**: Bash, Read, Grep, Glob, Edit
-- **Color**: magenta
 
 ## Related
 

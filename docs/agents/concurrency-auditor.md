@@ -15,7 +15,7 @@ Automatically scans Swift code for Swift 6 strict concurrency violations to prev
 /axiom:audit concurrency
 ```
 
-## What It Checks
+## What It Does
 
 1. **Missing @MainActor** (CRITICAL) — UIViewController, UIView, ObservableObject without @MainActor
 2. **Unsafe Task Captures** (HIGH) — Task { self.property } without [weak self]
@@ -23,12 +23,6 @@ Automatically scans Swift code for Swift 6 strict concurrency violations to prev
 4. **Actor Isolation Problems** (MEDIUM) — Accessing actor properties without await
 5. **Thread Confinement Violations** (HIGH) — @MainActor properties accessed from background
 
-## Model & Tools
-
-- **Model**: haiku
-- **Tools**: Glob, Grep, Read
-- **Color**: green
-
-## Related Skills
+## Related
 
 - **swift-concurrency** skill — Comprehensive Swift 6 concurrency patterns

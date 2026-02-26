@@ -23,12 +23,6 @@ Parses crash reports (.ips, .crash, or pasted text), checks symbolication status
 4. **Categorize by crash pattern** — Null pointer, Swift runtime, watchdog, jetsam, etc.
 5. **Generate actionable analysis** — Specific next steps for fixing
 
-## Model & Tools
-
-- **Model**: sonnet
-- **Tools**: Bash, Read, Grep, Glob
-- **Color**: red
-
 ## Related
 
 - **testflight-triage** — Crash investigation using Xcode Organizer
