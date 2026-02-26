@@ -340,7 +340,7 @@ case "${1:-unit}" in
 esac
 ```
 
-### Progressive Extraction for Existing Projects
+#### Progressive Extraction for Existing Projects
 
 For apps that can't extract everything at once, move modules incrementally:
 
@@ -352,10 +352,10 @@ Start with code that has no dependencies on the app target:
 - Utility extensions
 
 #### Phase 2: Break Circular Dependencies
-If app code references types that reference the app back:
-1. Define protocols in the package
-2. Keep implementations in the app target initially
-3. Move implementations to the package once dependencies resolve
+If package code needs to call back into app-owned types:
+1. Define a protocol in the package (the package owns the abstraction)
+2. Inject a conforming implementation from the app target at startup
+3. Move the implementation into the package once all its dependencies are in the package
 
 #### Phase 3: Maintain Both Test Targets
 During transition, keep two test targets:

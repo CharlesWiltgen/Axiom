@@ -254,7 +254,7 @@ User: "How do I use confirmation with expectedCount?"
 → Invoke: testing-async
 
 User: "I want my tests to run faster"
-→ Invoke: axiom-swift-testing (Fast Tests section)
+→ Invoke: axiom-swift-testing (Strategy 1: Package extraction)
 
 User: "My unit tests take 25 seconds to run"
 → Invoke: axiom-swift-testing (Strategy 1: Package extraction)
