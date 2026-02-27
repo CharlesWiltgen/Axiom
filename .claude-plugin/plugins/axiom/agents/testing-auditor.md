@@ -54,17 +54,8 @@ Run a comprehensive test quality audit and report all issues with:
 
 ## Files to Scan
 
-Include:
-- `*Tests.swift` - Test files
-- `*Test.swift` - Test files (singular naming)
-- `*Spec.swift` - Spec files
-- Test target directories
-
-Exclude:
-- `*/Pods/*` - Third-party code
-- `*/Carthage/*` - Third-party dependencies
-- `*/.build/*` - SPM build artifacts
-- `*/DerivedData/*` - Xcode build cache
+Include: `*Tests.swift`, `*Test.swift`, `*Spec.swift`
+Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## What You Check
 

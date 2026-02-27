@@ -1,6 +1,6 @@
 ---
 name: axiom-ios-integration
-description: Use when integrating ANY iOS system feature - Siri, Shortcuts, Apple Intelligence, widgets, IAP, camera, photo library, photos picker, audio, axiom-haptics, axiom-localization, privacy. Covers App Intents, WidgetKit, StoreKit, AVFoundation, PHPicker, PhotosPicker, Core Haptics, App Shortcuts, Spotlight.
+description: Use when integrating ANY iOS system feature - Siri, Shortcuts, Apple Intelligence, widgets, IAP, camera, photo library, photos picker, audio, axiom-haptics, axiom-localization, privacy, alarms. Covers App Intents, WidgetKit, StoreKit, AVFoundation, PHPicker, PhotosPicker, Core Haptics, App Shortcuts, Spotlight, AlarmKit.
 license: MIT
 ---
 
@@ -22,6 +22,7 @@ Use this router for:
 - Privacy & permissions
 - Spotlight search
 - App discoverability
+- Alarms (AlarmKit)
 - Background processing (BGTaskScheduler)
 - Location services (Core Location)
 - Maps & MapKit (Map, MKMapView, annotations, search, directions)
@@ -93,6 +94,13 @@ When integration issues overlap with other domains:
 **Localization** → `/skill axiom-localization`
 **Privacy UX** → `/skill axiom-privacy-ux`
 
+### Alarms
+
+**AlarmKit (iOS 26+)** → `/skill axiom-alarmkit-ref`
+- Alarm scheduling and authorization
+- Live Activity integration
+- SwiftUI alarm management views
+
 ### Background Processing
 
 **BGTaskScheduler implementation** → `/skill axiom-background-processing`
@@ -145,6 +153,7 @@ When integration issues overlap with other domains:
 16. Background processing? → background-processing (patterns), background-processing-diag (debugging), background-processing-ref (API)
 17. Location services? → core-location (patterns), core-location-diag (debugging), core-location-ref (API)
 18. Maps / MapKit / annotations / directions? → mapkit (patterns), mapkit-ref (API), mapkit-diag (debugging)
+19. Alarms / AlarmKit? → alarmkit-ref
 
 ## Anti-Rationalization
 
@@ -157,6 +166,7 @@ When integration issues overlap with other domains:
 | "Camera capture is just AVCaptureSession setup" | Camera has interruption handlers, rotation, and threading requirements. camera-capture covers all. |
 | "I'll just use MKMapView, I know it already" | SwiftUI Map is 10x less code for standard map features. mapkit has the decision tree. |
 | "MapKit search doesn't work, I'll use Google Maps SDK" | MapKit search needs region bias and resultTypes configuration. mapkit-diag fixes this in 5 minutes. |
+| "Alarm scheduling is just UNNotificationRequest" | AlarmKit (iOS 26+) has dedicated alarm UI, authorization, and Live Activity integration. alarmkit-ref covers the framework. |
 
 ## Example Invocations
 
@@ -240,3 +250,9 @@ User: "My map region keeps jumping when I scroll"
 
 User: "How do I add directions between two points?"
 → Invoke: `/skill axiom-mapkit-ref`
+
+User: "How do I schedule alarms in iOS 26?"
+→ Invoke: `/skill axiom-alarmkit-ref`
+
+User: "How do I integrate AlarmKit with Live Activities?"
+→ Invoke: `/skill axiom-alarmkit-ref`

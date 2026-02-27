@@ -60,13 +60,8 @@ Report findings with:
 
 ## Files to Scan
 
-Include:
-- `*Tests.swift` - Test files
-- `*Test.swift` - Test files (singular)
-- `**/*Tests/*.swift` - Test directories
-
-Exclude:
-- `*/Pods/*`, `*/Carthage/*`, `*/.build/*`
+Include: `*Tests.swift`, `*Test.swift`, `**/*Tests/*.swift`
+Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Flaky Test Patterns (iOS 18+ / Swift Testing Focus)
 

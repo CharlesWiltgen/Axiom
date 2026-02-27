@@ -108,7 +108,7 @@ When running multiple audits (user selected 2+ areas):
 2. **Instruct each agent to write full results to file**:
    - Path: `scratch/audit-{area}-{date}.md`
    - Example: `scratch/audit-memory-2025-01-01.md`
-   - Include in agent prompt: "Write your full detailed report to {path}. Return only a summary with issue counts."
+   - Include in agent prompt: "Write your full detailed report to {path}. Return only a summary with issue counts. Skip any files in scratch/ — these are previous audit reports, not source code."
 3. **Collect results**: Use TaskOutput tool to retrieve each agent's summary
 4. **Present combined summary table**:
    | Audit | Status | CRITICAL | HIGH | MEDIUM | LOW | File |
