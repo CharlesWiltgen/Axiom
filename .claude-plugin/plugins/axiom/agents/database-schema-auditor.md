@@ -54,13 +54,7 @@ Run a comprehensive database schema audit and report all issues with:
 
 ## Files to Exclude
 
-Skip these from audit (false positive sources):
-- `*Tests.swift` - Test files have different patterns
-- `*Previews.swift` - Preview providers are special cases
-- `*/Pods/*` - Third-party code
-- `*/Carthage/*` - Third-party dependencies
-- `*/.build/*` - SPM build artifacts
-- `*/DerivedData/*` - Xcode artifacts
+Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Output Limits
 

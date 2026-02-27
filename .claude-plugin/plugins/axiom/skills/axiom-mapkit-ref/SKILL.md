@@ -1,6 +1,6 @@
 ---
 name: axiom-mapkit-ref
-description: MapKit API reference — SwiftUI Map, MKMapView, Marker, Annotation, MKLocalSearch, MKDirections, Look Around, MKMapSnapshotter, clustering, overlays
+description: MapKit API reference — SwiftUI Map, MKMapView, Marker, Annotation, MKLocalSearch, MKDirections, Look Around, MKMapSnapshotter, clustering, overlays, GeoToolbox PlaceDescriptor, geocoding
 license: MIT
 metadata:
   version: "1.0.0"
@@ -781,6 +781,128 @@ let isVisible = CGRect(origin: .zero, size: snapshot.image.size).contains(point)
 | MapScaleView | 17.0+ |
 | .mapInteractionModes | 17.0+ |
 | MKLocalSearch.ResultType.query | 18.0+ |
+| GeoToolbox / PlaceDescriptor | 26.0+ |
+| MKGeocodingRequest | 26.0+ |
+| MKReverseGeocodingRequest | 26.0+ |
+| MKAddress | 26.0+ |
+
+---
+
+## Part 12: GeoToolbox and Geocoding
+
+### GeoToolbox Framework
+
+`GeoToolbox` provides `PlaceDescriptor` — a standardized representation of physical locations that works across MapKit and third-party mapping services.
+
+```swift
+import GeoToolbox
+
+// From address
+let fountain = PlaceDescriptor(
+    representations: [.address("121-122 James's St \n Dublin 8 \n D08 ET27 \n Ireland")],
+    commonName: "Obelisk Fountain"
+)
+
+// From coordinates
+let tower = PlaceDescriptor(
+    representations: [.coordinate(CLLocationCoordinate2D(latitude: 48.8584, longitude: 2.2945))],
+    commonName: "Eiffel Tower"
+)
+
+// Multiple representations
+let statue = PlaceDescriptor(
+    representations: [
+        .coordinate(CLLocationCoordinate2D(latitude: 40.6892, longitude: -74.0445)),
+        .address("Liberty Island, New York, NY 10004, United States")
+    ],
+    commonName: "Statue of Liberty"
+)
+
+// From MKMapItem
+let descriptor = PlaceDescriptor(item: mapItem)  // Returns optional
+```
+
+### PlaceRepresentation
+
+Enum representing a place using common mapping concepts:
+
+| Case | Usage |
+|---|---|
+| `.coordinate(CLLocationCoordinate2D)` | Latitude/longitude |
+| `.address(String)` | Full address string |
+
+Convenience accessors on `PlaceDescriptor`:
+
+```swift
+descriptor.coordinate  // CLLocationCoordinate2D?
+descriptor.address     // String?
+descriptor.commonName  // String?
+```
+
+### SupportingPlaceRepresentation
+
+Proprietary identifiers for places from different mapping services:
+
+```swift
+let place = PlaceDescriptor(
+    representations: [.coordinate(CLLocationCoordinate2D(latitude: 51.5074, longitude: -0.1278))],
+    commonName: "London Eye",
+    supportingRepresentations: [
+        .serviceIdentifiers([
+            "com.apple.maps": "AppleMapsID123",
+            "com.google.maps": "GoogleMapsID456"
+        ])
+    ]
+)
+
+// Retrieve a specific service identifier
+let appleID = place.serviceIdentifier(for: "com.apple.maps")
+```
+
+### MKGeocodingRequest — Forward Geocoding
+
+Convert an address string to map items (address to coordinates):
+
+```swift
+guard let request = MKGeocodingRequest(addressString: "1 Apple Park Way, Cupertino, CA") else {
+    return
+}
+let mapItems = try await request.mapItems
+```
+
+### MKReverseGeocodingRequest — Reverse Geocoding
+
+Convert coordinates to map items (coordinates to address):
+
+```swift
+let location = CLLocation(latitude: 37.3349, longitude: -122.0090)
+guard let request = MKReverseGeocodingRequest(location: location) else {
+    return
+}
+let mapItems = try await request.mapItems
+```
+
+### MKAddress
+
+Structured address type used when creating `MKMapItem` from a `PlaceDescriptor`:
+
+```swift
+if let coordinate = descriptor.coordinate {
+    let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+    let address = MKAddress()
+    let mapItem = MKMapItem(location: location, address: address)
+}
+```
+
+### Geocoding vs MKLocalSearch
+
+| Need | Use |
+|---|---|
+| Address string to coordinates | `MKGeocodingRequest` |
+| Coordinates to address | `MKReverseGeocodingRequest` |
+| Natural language place search | `MKLocalSearch` |
+| Autocomplete suggestions | `MKLocalSearchCompleter` |
+| Cross-service place identifiers | `PlaceDescriptor` with `SupportingPlaceRepresentation` |
 
 ---
 
@@ -788,6 +910,6 @@ let isVisible = CGRect(origin: .zero, size: snapshot.image.size).contains(point)
 
 **WWDC**: 2023-10043, 2024-10094
 
-**Docs**: /mapkit, /mapkit/map, /mapkit/mklocalsearch, /mapkit/mkdirections
+**Docs**: /mapkit, /mapkit/map, /mapkit/mklocalsearch, /mapkit/mkdirections, /geotoolbox, /geotoolbox/placedescriptor, /mapkit/mkgeocodingrequest, /mapkit/mkreversegeocodingrequest, /mapkit/mkaddress
 
 **Skills**: mapkit, mapkit-diag, core-location-ref

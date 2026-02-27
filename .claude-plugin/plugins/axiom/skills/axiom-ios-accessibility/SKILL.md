@@ -17,6 +17,7 @@ Use this router when:
 - Ensuring touch target sizes
 - Preparing for App Store accessibility review
 - WCAG compliance auditing
+- Assistive Access support (cognitive disabilities, iOS 17+)
 
 ## Routing Logic
 
@@ -29,6 +30,7 @@ Use this router when:
 - Touch target sizes
 - Keyboard navigation
 - Reduce Motion support
+- Assistive Access (cognitive disabilities, iOS 17+)
 - Accessibility Inspector usage
 - App Store Review preparation
 
@@ -53,8 +55,9 @@ Use this router when:
 ## Critical Pattern
 
 **accessibility-diag** covers:
-- 7 critical accessibility issues
+- 8 critical accessibility issues (including Assistive Access)
 - WCAG compliance levels (A, AA, AAA)
+- Assistive Access mode (cognitive disabilities, iOS 17+)
 - Accessibility Inspector workflows
 - VoiceOver testing checklist
 - App Store Review requirements
@@ -75,3 +78,9 @@ User: "Prepare for App Store accessibility review"
 
 User: "Scan my app for accessibility issues automatically"
 → Invoke: `accessibility-auditor` agent
+
+User: "How do I support Assistive Access?"
+→ Invoke: `/skill axiom-accessibility-diag`
+
+User: "My app doesn't show up in Assistive Access"
+→ Invoke: `/skill axiom-accessibility-diag`

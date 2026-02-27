@@ -54,13 +54,7 @@ Run a comprehensive Codable audit and report all issues with:
 
 ## Files to Exclude
 
-Skip these from audit (false positive sources):
-- `*Tests.swift` - Test files may have test fixture JSON strings
-- `*Previews.swift` - Preview providers are special cases
-- `*/Pods/*` - Third-party code
-- `*/Carthage/*` - Third-party dependencies
-- `*/.build/*` - SPM build artifacts
-- `*/DerivedData/*` - Xcode artifacts
+Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Output Limits
 
@@ -275,13 +269,7 @@ catch {
 ### Step 1: Find Swift Files
 
 ```
-Use Glob to find all Swift source files:
-**/*.swift
-
-Exclude:
-- Tests (if not auditing test code)
-- Build artifacts
-- Pods/Packages
+Use Glob: **/*.swift (apply Skip exclusions above)
 ```
 
 ### Step 2: Scan for Anti-Patterns

@@ -1,6 +1,6 @@
 ---
 name: axiom-ownership-conventions
-description: Use when optimizing large value type performance, working with noncopyable types, or reducing ARC traffic. Covers borrowing, consuming, inout modifiers, consume operator, ~Copyable types.
+description: Use when optimizing large value type performance, working with noncopyable types, reducing ARC traffic, or using InlineArray/Span for zero-copy memory access. Covers borrowing, consuming, inout modifiers, consume operator, ~Copyable types, InlineArray, Span, value generics.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -272,12 +272,169 @@ struct Token: ~Copyable {
 - Code where profiling shows no benefit
 - API stability concerns (modifiers affect ABI)
 
+## InlineArray
+
+Fixed-size, stack-allocated array using value generics. No heap allocation, no reference counting, no copy-on-write.
+
+### Declaration
+
+```swift
+@frozen struct InlineArray<let count: Int, Element> where Element: ~Copyable
+```
+
+The `let count: Int` is a **value generic** — the size is part of the type, checked at compile time. `InlineArray<3, Int>` and `InlineArray<4, Int>` are different types.
+
+### When to Use InlineArray
+
+| Use InlineArray | Use Array |
+|----------------|-----------|
+| Size known at compile time | Size changes at runtime |
+| Hot path needing zero heap allocation | Copy-on-write sharing is beneficial |
+| Embedded in other value types | Frequently copied between variables |
+| Performance-critical inner loops | General-purpose collection needs |
+
+### Canonical Example
+
+```swift
+// Fixed-size, inline storage — no heap allocation
+var matrix: InlineArray<9, Float> = [1, 0, 0, 0, 1, 0, 0, 0, 1]
+matrix[4] = 2.0
+
+// Type inference works for count, element, or both
+let rgb: InlineArray = [0.2, 0.4, 0.8]  // InlineArray<3, Double>
+
+// Eager copy on assignment (no COW)
+var copy = matrix
+copy[0] = 99  // matrix[0] still 1
+```
+
+### Memory Layout
+
+Elements are stored contiguously with no overhead:
+
+```swift
+MemoryLayout<InlineArray<3, UInt16>>.size       // 6 (2 bytes × 3)
+MemoryLayout<InlineArray<3, UInt16>>.alignment  // 2 (same as UInt16)
+```
+
+### ~Copyable Integration
+
+InlineArray supports noncopyable elements — enables fixed-size collections of unique resources:
+
+```swift
+struct Sensor: ~Copyable { var id: Int }
+var sensors: InlineArray<4, Sensor> = ...  // Valid: ~Copyable elements allowed
+```
+
+## Span — Safe Contiguous Memory Access
+
+`Span` replaces unsafe pointers with compile-time-enforced safe memory views. Zero runtime overhead.
+
+### The Span Family
+
+| Type | Access | Use Case |
+|------|--------|----------|
+| `Span<Element>` | Read-only elements | Safe iteration, passing to algorithms |
+| `MutableSpan<Element>` | Read-write elements | In-place mutation without copies |
+| `RawSpan` | Read-only bytes | Binary parsing, protocol decoding |
+| `MutableRawSpan` | Read-write bytes | Binary serialization |
+| `OutputSpan` | Write-only | Initializing new collection storage |
+| `UTF8Span` | Read-only UTF-8 | Safe Unicode processing |
+
+### Accessing Spans
+
+Containers with contiguous storage expose `.span` and `.mutableSpan`:
+
+```swift
+let array = [1, 2, 3, 4]
+let span = array.span  // Span<Int>
+
+var mutable = [10, 20, 30]
+var ms = mutable.mutableSpan  // MutableSpan<Int>
+ms[0] = 99
+```
+
+### Lifetime Safety — Compile-Time Enforcement
+
+Spans are **non-escapable** — the compiler guarantees they cannot outlive the container they borrow from:
+
+```swift
+// ❌ Cannot return span that depends on local variable
+func getSpan() -> Span<UInt8> {
+    let array: [UInt8] = Array(repeating: 0, count: 128)
+    return array.span  // Compile error
+}
+
+// ❌ Cannot capture span in closure
+let span = array.span
+let closure = { span.count }  // Compile error
+
+// ❌ Cannot access span after mutating original
+var array = [1, 2, 3]
+let span = array.span
+array.append(4)
+// span[0]  // Compile error: container was modified
+```
+
+These constraints prevent use-after-free, dangling pointers, and overlapping mutation at **compile time** with zero runtime cost.
+
+### Span vs Unsafe Pointers
+
+| | Span | UnsafeBufferPointer |
+|---|------|---------------------|
+| Memory safety | Compile-time enforced | Manual, error-prone |
+| Lifetime tracking | Automatic, non-escapable | None — dangling pointers possible |
+| Runtime overhead | Zero | Zero |
+| Use-after-free | Impossible | Common source of crashes |
+
+### Canonical Example — Binary Parsing
+
+```swift
+func parseHeader(_ data: borrowing Data) -> Header {
+    var raw = data.span.rawSpan  // RawSpan over data's bytes
+    let magic = raw.unsafeLoadUnaligned(as: UInt32.self)
+    raw = raw._extracting(droppingFirst: 4)
+    let version = raw.unsafeLoadUnaligned(as: UInt16.self)
+    return Header(magic: magic, version: version)
+}
+```
+
+### When to Use Span
+
+- **Replace `UnsafeBufferPointer`** — same performance, compile-time safety
+- **Performance-critical algorithms** — direct memory access without copying
+- **Binary parsing/serialization** — `RawSpan` for byte-level access
+- **Passing data between functions** — borrow the container, pass the span
+- **UTF-8 processing** — `UTF8Span` for safe string byte access
+
+## Value Generics
+
+Value generics allow integer values as generic parameters, making sizes part of the type system:
+
+```swift
+// `let count: Int` is a value generic parameter
+struct InlineArray<let count: Int, Element> { ... }
+
+// Different counts = different types
+let a: InlineArray<3, Int> = [1, 2, 3]
+let b: InlineArray<4, Int> = [1, 2, 3, 4]
+// a = b  // Compile error: different types
+```
+
+Currently limited to `Int` parameters. Enables stack-allocated, fixed-size abstractions where the compiler verifies size compatibility at compile time.
+
 ## Decision Tree
 
 ```
 Need explicit ownership?
 ├─ Working with ~Copyable type?
 │  └─ Yes → Required (borrowing/consuming)
+├─ Fixed-size collection, no heap allocation?
+│  └─ Yes → InlineArray<let count, Element>
+├─ Need safe pointer-like access to contiguous memory?
+│  ├─ Read-only? → Span<Element>
+│  ├─ Mutable? → MutableSpan<Element>
+│  └─ Raw bytes? → RawSpan / MutableRawSpan
 ├─ Large value type passed frequently?
 │  ├─ Read-only? → borrowing
 │  └─ Final use? → consuming
@@ -289,8 +446,10 @@ Need explicit ownership?
 
 ## Resources
 
-**Swift Evolution**: SE-0377
+**Swift Evolution**: SE-0377, SE-0453 (Span), SE-0451 (InlineArray), SE-0452 (value generics)
 
-**WWDC**: 2024-10170
+**WWDC**: 2024-10170, 2025-245, 2025-312
+
+**Docs**: /swift/inlinearray, /swift/span
 
 **Skills**: axiom-swift-performance, axiom-swift-concurrency

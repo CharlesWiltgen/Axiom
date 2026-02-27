@@ -20,6 +20,7 @@ Use this router when:
 - Detecting barcodes or QR codes
 - Scanning documents
 - Using VisionKit or DataScannerViewController
+- Integrating with Visual Intelligence (iOS 26+ system camera feature)
 
 ## Routing Logic
 
@@ -49,6 +50,11 @@ Use this router when:
 - RecognizeDocumentsRequest (iOS 26+)
 - Coordinate conversion patterns
 
+**Visual Intelligence integration** → `/skill axiom-vision-ref` (see Visual Intelligence Integration section)
+- Making app content discoverable to Visual Intelligence camera
+- `IntentValueQuery` and `SemanticContentDescriptor`
+- Deep linking from Visual Intelligence results
+
 **Diagnostics** → `/skill axiom-vision-diag`
 - Subject not detected
 - Hand pose missing landmarks
@@ -63,8 +69,9 @@ Use this router when:
 ## Decision Tree
 
 1. Implementing (pose, segmentation, OCR, barcodes, documents, live scanning)? → vision
-2. Need API reference / code examples? → vision-ref
-3. Debugging issues (detection failures, confidence, coordinates)? → vision-diag
+2. Visual Intelligence system integration (camera feature, iOS 26+)? → vision-ref (Visual Intelligence section)
+3. Need API reference / code examples? → vision-ref
+4. Debugging issues (detection failures, confidence, coordinates)? → vision-diag
 
 ## Anti-Rationalization
 
@@ -73,6 +80,7 @@ Use this router when:
 | "Vision framework is just a request/handler pattern" | Vision has coordinate conversion, confidence thresholds, and performance gotchas. vision covers them. |
 | "I'll handle text recognition without the skill" | VNRecognizeTextRequest has fast/accurate modes and language-specific settings. vision has the patterns. |
 | "Subject segmentation is straightforward" | Instance masks have HDR compositing and hand-exclusion patterns. vision covers complex scenarios. |
+| "Visual Intelligence is just the camera API" | Visual Intelligence is a system-level feature requiring IntentValueQuery and SemanticContentDescriptor. vision-ref has the integration section. |
 
 ## Critical Patterns
 
@@ -134,4 +142,10 @@ User: "What symbologies does VNDetectBarcodesRequest support?"
 → Invoke: `/skill axiom-vision-ref`
 
 User: "RecognizeDocumentsRequest API reference"
+→ Invoke: `/skill axiom-vision-ref`
+
+User: "How do I make my app work with Visual Intelligence?"
+→ Invoke: `/skill axiom-vision-ref`
+
+User: "How do users discover my app content through the camera?"
 → Invoke: `/skill axiom-vision-ref`

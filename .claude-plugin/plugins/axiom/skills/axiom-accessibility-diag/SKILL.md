@@ -567,6 +567,128 @@ Button("Toggle") {
 .accessibilityValue(isOn ? "Enabled" : "Disabled")
 ```
 
+## 8. Assistive Access Support (iOS 17+ — Cognitive Disabilities)
+
+**Problem** App is unavailable or broken in Assistive Access mode, excluding users with cognitive disabilities who rely on a simplified system experience.
+
+Assistive Access is a system-wide mode (Settings > Accessibility > Assistive Access) that replaces the standard iOS UI with large controls, simplified navigation, and reduced cognitive load. Apps that don't opt in are hidden from users in this mode.
+
+#### Symptom: App missing from Assistive Access home screen
+
+Your app doesn't appear under "Optimized Apps" in Assistive Access settings.
+
+```xml
+<!-- ✅ FIX - Add to Info.plist -->
+<key>UISupportsAssistiveAccess</key>
+<true/>
+```
+
+This makes the app available and launches it full screen in Assistive Access mode. Without this key, users in Assistive Access mode cannot access your app at all.
+
+#### Symptom: Standard UI too complex for Assistive Access users
+
+Your app launches in Assistive Access but shows the full standard interface, overwhelming users who need simplified controls.
+
+```swift
+// ✅ FIX - Provide a dedicated Assistive Access scene
+@main
+struct MyApp: App {
+  var body: some Scene {
+    WindowGroup {
+      ContentView() // Standard UI
+    }
+
+    AssistiveAccess {
+      AssistiveAccessContentView() // Simplified UI
+    }
+  }
+}
+```
+
+The `AssistiveAccess` scene type provides a separate entry point. When the system is in Assistive Access mode, it uses this scene instead of the standard `WindowGroup`. Native SwiftUI controls inside this scene automatically adopt the Assistive Access visual style (large buttons, prominent navigation, grid/row layout).
+
+#### Symptom: App already designed for cognitive accessibility but displays in reduced frame
+
+If your app is already purpose-built for users with cognitive disabilities (e.g., AAC apps), it may appear in a reduced frame rather than full screen.
+
+```xml
+<!-- ✅ FIX - Add to Info.plist for apps already designed for cognitive accessibility -->
+<key>UISupportsFullScreenInAssistiveAccess</key>
+<true/>
+```
+
+This displays your app identically to its standard appearance, bypassing the Assistive Access frame.
+
+#### Detecting Assistive Access at runtime
+
+```swift
+struct MyView: View {
+  @Environment(\.accessibilityAssistiveAccessEnabled) var assistiveAccessEnabled
+
+  var body: some View {
+    if assistiveAccessEnabled {
+      // Simplified content
+    } else {
+      // Standard content
+    }
+  }
+}
+```
+
+#### UIKit implementation
+
+```swift
+class AssistiveAccessSceneDelegate: UIHostingSceneDelegate {
+  static var rootScene: some Scene {
+    AssistiveAccess {
+      AssistiveAccessContentView()
+    }
+  }
+}
+
+// In AppDelegate — route to the correct scene delegate
+func application(_ application: UIApplication,
+                 configurationForConnecting connectingSceneSession: UISceneSession,
+                 options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+  let role = connectingSceneSession.role
+  let config = UISceneConfiguration(name: nil, sessionRole: role)
+  if role == .windowAssistiveAccessApplication {
+    config.delegateClass = AssistiveAccessSceneDelegate.self
+  }
+  return config
+}
+```
+
+#### Design principles for Assistive Access scenes
+
+- **Distill to core functionality** — One or two essential features, not the full app
+- **Large, prominent controls** — Ample spacing, no hidden gestures or timed interactions
+- **Multiple representations** — Pair text with icons; use visual alternatives
+- **Step-by-step navigation** — Clear back buttons, consistent patterns
+- **Safe interactions** — Remove irreversible actions; confirm destructive ones
+
+#### Adding navigation icons
+
+```swift
+NavigationStack {
+  MyView()
+    .navigationTitle("My Feature")
+    .assistiveAccessNavigationIcon(systemImage: "star.fill")
+}
+```
+
+#### Testing
+
+1. **Xcode Preview** — Use the `.assistiveAccess` trait:
+   ```swift
+   #Preview(traits: .assistiveAccess)
+   AssistiveAccessContentView()
+   ```
+2. **Device** — Enable Assistive Access in Settings > Accessibility > Assistive Access, verify app appears in "Optimized Apps", test the full user flow
+3. **Accessibility Inspector** — Run audit on the Assistive Access scene for label, contrast, and hit region issues
+
+---
+
 ## Accessibility Inspector Workflow
 
 ### 1. Launch Accessibility Inspector
