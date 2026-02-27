@@ -45,6 +45,8 @@ In Claude Code, run:
 
 Then search for "axiom" in the `/plugin` menu and install.
 
+**Using Xcode 26.3+?** See the [Xcode Integration guide](https://charleswiltgen.github.io/Axiom/guide/xcode-setup) to add Axiom to Claude Agent or Codex via MCP.
+
 ### Verify Installation
 
 Use `/plugin` and select "Manage and install" to see installed plugins. Axiom should be listed.
