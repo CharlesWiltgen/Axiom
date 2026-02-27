@@ -30,8 +30,8 @@ node_modules/
 yarn.lock
 pnpm-lock.yaml
 
-# NPM auth tokens
-.npmrc
+# NPM auth tokens (root only — mcp-server/.npmrc uses env var reference, safe to commit)
+/.npmrc
 
 # Environment files
 .env
