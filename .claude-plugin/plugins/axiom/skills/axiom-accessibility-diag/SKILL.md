@@ -637,27 +637,7 @@ struct MyView: View {
 
 #### UIKit implementation
 
-```swift
-class AssistiveAccessSceneDelegate: UIHostingSceneDelegate {
-  static var rootScene: some Scene {
-    AssistiveAccess {
-      AssistiveAccessContentView()
-    }
-  }
-}
-
-// In AppDelegate — route to the correct scene delegate
-func application(_ application: UIApplication,
-                 configurationForConnecting connectingSceneSession: UISceneSession,
-                 options: UIScene.ConnectionOptions) -> UISceneConfiguration {
-  let role = connectingSceneSession.role
-  let config = UISceneConfiguration(name: nil, sessionRole: role)
-  if role == .windowAssistiveAccessApplication {
-    config.delegateClass = AssistiveAccessSceneDelegate.self
-  }
-  return config
-}
-```
+For UIKit apps, use the `.windowAssistiveAccessApplication` scene session role in your `UISceneConfiguration` to route to a dedicated scene delegate for the Assistive Access experience.
 
 #### Design principles for Assistive Access scenes
 
@@ -679,13 +659,8 @@ NavigationStack {
 
 #### Testing
 
-1. **Xcode Preview** — Use the `.assistiveAccess` trait:
-   ```swift
-   #Preview(traits: .assistiveAccess)
-   AssistiveAccessContentView()
-   ```
-2. **Device** — Enable Assistive Access in Settings > Accessibility > Assistive Access, verify app appears in "Optimized Apps", test the full user flow
-3. **Accessibility Inspector** — Run audit on the Assistive Access scene for label, contrast, and hit region issues
+1. **Device** — Enable Assistive Access in Settings > Accessibility > Assistive Access, verify app appears in "Optimized Apps", test the full user flow
+2. **Accessibility Inspector** — Run audit on the Assistive Access scene for label, contrast, and hit region issues
 
 ---
 

@@ -390,10 +390,10 @@ These constraints prevent use-after-free, dangling pointers, and overlapping mut
 ### Canonical Example — Binary Parsing
 
 ```swift
-func parseHeader(_ data: borrowing Data) -> Header {
-    var raw = data.span.rawSpan  // RawSpan over data's bytes
+func parseHeader(_ data: borrowing [UInt8]) -> Header {
+    var raw = data.span.rawSpan  // RawSpan over the array's bytes
     let magic = raw.unsafeLoadUnaligned(as: UInt32.self)
-    raw = raw._extracting(droppingFirst: 4)
+    raw = raw.extracting(droppingFirst: 4)
     let version = raw.unsafeLoadUnaligned(as: UInt16.self)
     return Header(magic: magic, version: version)
 }
