@@ -69,6 +69,10 @@ Run a comprehensive IAP audit and report all issues with:
 - Specific fix recommendations
 - StoreKit 2 best practices violations
 
+## Files to Exclude
+
+Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
+
 ## What You Check
 
 ### 1. Transaction Finishing (CRITICAL - Revenue Impact)

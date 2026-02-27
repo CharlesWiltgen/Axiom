@@ -864,35 +864,112 @@ Combine all modifiers (`.dragContainer`, `.dragConfiguration`, `.dragPreviewsFor
 
 ### Overview
 
-Swift Charts now supports three-dimensional plotting with `Chart3D`.
+Swift Charts supports three-dimensional plotting with `Chart3D`. Key components: `Chart3D` (container), `SurfacePlot` (continuous surfaces), `Chart3DPose` (camera control), `Chart3DSurfaceStyle` (surface appearance).
 
-### Basic Usage
-
-#### From WWDC 256:21:35
+### Chart3D Container
 
 ```swift
 import Charts
 
-struct HikePlotView: View {
-    var body: some View {
-        Chart3D {
-            SurfacePlot(x: "x", y: "y", z: "z") { x, y in
-                sin(x) * cos(y)
-            }
-            .foregroundStyle(Gradient(colors: [.orange, .pink]))
-        }
-        .chartXScale(domain: -3...3)
-        .chartYScale(domain: -3...3)
-        .chartZScale(domain: -3...3)
+Chart3D {
+    SurfacePlot(x: "x", y: "y", z: "z") { x, y in
+        sin(x) * cos(y)
     }
+    .foregroundStyle(Gradient(colors: [.orange, .pink]))
+}
+.chartXScale(domain: -3...3)
+.chartYScale(domain: -3...3)
+.chartZScale(domain: -3...3)
+```
+
+`Chart3D` also accepts data collections:
+
+```swift
+Chart3D(dataPoints) { point in
+    // 3D mark for each data point
 }
 ```
 
-#### Features
-- `Chart3D` container
-- `SurfacePlot` for continuous surface rendering from a function
-- Z-axis specific modifiers (`.chartZScale()`, `.chartZAxis()`, etc.)
-- All existing chart marks with 3D variants (e.g., `LineMark3D`)
+### SurfacePlot
+
+Renders continuous surfaces from a mathematical function mapping (x, y) to z values.
+
+```swift
+SurfacePlot(x: "X Axis", y: "Y Axis", z: "Z Axis") { x, y in
+    sin(sqrt(x * x + y * y))
+}
+```
+
+#### Surface Styling
+
+```swift
+SurfacePlot(x: "X", y: "Y", z: "Z") { x, y in sin(x) * cos(y) }
+    .foregroundStyle(.blue)                        // Solid color
+    .roughness(0.3)                                // 0 = smooth, 1 = rough
+
+// Height-based coloring (color maps to z-value)
+    .foregroundStyle(Chart3DSurfaceStyle.heightBased(yRange: -1.0...1.0))
+
+// Custom gradient mapped to height
+    .foregroundStyle(Chart3DSurfaceStyle.heightBased(
+        Gradient(colors: [.blue, .green, .yellow, .red]),
+        yRange: -1.0...1.0
+    ))
+```
+
+Available surface styles: `.heightBased` (color by z-value), `.normalBased` (color by surface normal direction).
+
+#### Multiple Surfaces
+
+```swift
+Chart3D {
+    SurfacePlot(x: "X", y: "Y", z: "Z") { x, y in sin(x) * cos(y) }
+    SurfacePlot(x: "X", y: "Y", z: "Z") { x, y in cos(x) * sin(y) + 2 }
+}
+```
+
+### Chart3DPose (Camera Control)
+
+Controls the viewing angle. Pass as value for static positioning, or bind for interactive rotation.
+
+```swift
+@State private var chartPose: Chart3DPose = .default
+
+Chart3D { /* ... */ }
+    .chart3DPose(chartPose)      // Static — read-only
+    .chart3DPose($chartPose)     // Binding — enables drag-to-rotate
+```
+
+Predefined poses: `.default`, `.front`, `.back`, `.top`, `.bottom`, `.left`, `.right`
+
+Custom pose with specific angles:
+
+```swift
+Chart3DPose(azimuth: .degrees(45), inclination: .degrees(30))
+```
+
+Animate between poses:
+
+```swift
+Button("Top View") { withAnimation { chartPose = .top } }
+```
+
+### Chart3DCameraProjection
+
+Controls how 3D depth is projected to 2D.
+
+```swift
+Chart3D { /* ... */ }
+    .chart3DCameraProjection(.perspective)    // Objects shrink with distance
+    .chart3DCameraProjection(.orthographic)   // Objects maintain size regardless of depth
+    .chart3DCameraProjection(.automatic)      // System decides
+```
+
+### Z-Axis Modifiers
+
+All existing chart axis modifiers have z-axis equivalents:
+- `.chartZScale(domain:)` — Set z-axis range
+- `.chartZAxis()` — Configure z-axis labels and grid lines
 
 **Reference** "Bring Swift Charts to the third dimension" (WWDC 2025)
 
@@ -1061,7 +1138,7 @@ Apps must support resizable windows on iPad.
 
 **WWDC**: 2025-256, 2025-278 (What's new in widgets), 2025-287 (Meet WebKit for SwiftUI), 2025-310 (Optimize SwiftUI performance with instruments), 2025-323 (Build a SwiftUI app with the new design), 2025-325 (Bring Swift Charts to the third dimension), 2025-341 (Cook up a rich text experience in SwiftUI with AttributedString)
 
-**Docs**: /swiftui, /swiftui/defaulttoolbaritem, /swiftui/toolbarspacer, /swiftui/searchtoolbarbehavior, /swiftui/view/toolbar(id:content:), /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts, /realitykit/presentationcomponent, /swiftui/chart3d
+**Docs**: /swiftui, /swiftui/defaulttoolbaritem, /swiftui/toolbarspacer, /swiftui/searchtoolbarbehavior, /swiftui/view/toolbar(id:content:), /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts, /charts/chart3d, /charts/surfaceplot, /charts/chart3dpose, /charts/chart3dcameraprojection, /charts/chart3dsurfacestyle, /realitykit/presentationcomponent
 
 **Skills**: axiom-swiftui-performance, axiom-liquid-glass, axiom-swift-concurrency, axiom-app-intents-ref, axiom-swiftui-search-ref
 

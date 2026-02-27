@@ -38,7 +38,7 @@ Run a comprehensive memory leak audit across 6 common patterns and report all is
 
 ## Files to Exclude
 
-Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`
+Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## What You Check
 

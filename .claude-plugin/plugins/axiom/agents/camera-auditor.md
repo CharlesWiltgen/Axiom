@@ -79,13 +79,7 @@ Look for capture code in:
 
 ## Files to Exclude
 
-Skip these from audit:
-- `*Tests.swift` - Test files
-- `*Previews.swift` - Preview providers
-- `*/Pods/*` - Third-party code
-- `*/Carthage/*` - Dependencies
-- `*/.build/*` - SPM artifacts
-- `*/DerivedData/*` - Build artifacts
+Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## What You Check
 

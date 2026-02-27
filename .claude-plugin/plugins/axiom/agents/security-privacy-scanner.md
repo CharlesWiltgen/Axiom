@@ -62,9 +62,8 @@ Report findings with:
 
 ## Files to Scan
 
-**Swift files**: `**/*.swift`
-**Config files**: `**/Info.plist`, `**/PrivacyInfo.xcprivacy`
-**Exclude**: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*Tests.swift`, `*Mock*`, `*Fixture*`, `*Stub*`
+Include: `**/*.swift`, `**/Info.plist`, `**/PrivacyInfo.xcprivacy`
+Skip: `*Tests.swift`, `*Previews.swift`, `*Mock*`, `*Fixture*`, `*Stub*`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Security Patterns (iOS 18+)
 
