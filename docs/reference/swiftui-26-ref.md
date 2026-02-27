@@ -80,6 +80,7 @@ Questions you can ask Claude that will draw from this reference:
 - BarMark3D, LineMark3D, PointMark3D
 - Perspective options
 - Data visualization in 3D
+- Expanded 3D Charts (Chart3D, SurfacePlot, Chart3DPose, surface styling)
 
 ### Scene Bridging
 - UIKit ↔ SwiftUI transitions
