@@ -41,6 +41,9 @@ Diagnostic workflows for VoiceOver testing, Dynamic Type support, color contrast
 - Spacing between tappable elements
 - Gesture conflicts
 
+#### Assistive Access
+- Assistive Access support (iOS 17+, cognitive disabilities)
+
 ### App Store Rejection Defense
 
 #### Guideline 2.5.2 - Accessibility

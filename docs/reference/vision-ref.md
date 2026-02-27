@@ -54,6 +54,11 @@ Vision provides computer vision algorithms for still images and video. This refe
   - Real-world coordinates in meters
   - Supports depth data input
 
+### Visual Intelligence
+
+- **Visual Intelligence system integration** (iOS 26+)
+  - System-level visual analysis integration
+
 ### Face Detection
 
 - **VNDetectFaceRectanglesRequest** (iOS 11+)

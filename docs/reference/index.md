@@ -16,6 +16,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**swiftui-animation-ref**](./swiftui-animation-ref) | Complete SwiftUI animation reference — VectorArithmetic, Animatable protocol, @Animatable macro, springs vs timing curves, CustomAnimation, performance optimization (iOS 13-26) |
 | [**app-discoverability**](./app-discoverability) | Complete discoverability strategy — 6-step framework combining App Intents, App Shortcuts, Core Spotlight, NSUserActivity for Spotlight and Siri |
 | [**app-intents-ref**](./app-intents-ref) | App Intents framework for Siri, Apple Intelligence, Shortcuts, Spotlight — AppIntent, AppEntity, parameters, queries, debugging |
+| [**alarmkit-ref**](./alarmkit-ref) | AlarmKit API reference — alarm scheduling, authorization, Live Activity integration (iOS 26+) |
 | [**app-shortcuts-ref**](./app-shortcuts-ref) | App Shortcuts implementation guide — AppShortcutsProvider, suggested phrases, instant Siri/Spotlight availability, debugging |
 | [**avfoundation-ref**](./avfoundation-ref) | AVFoundation audio APIs — AVAudioSession, AVAudioEngine, bit-perfect DAC output, iOS 26+ spatial audio capture, ASAF/APAC, Audio Mix |
 | [**core-spotlight-ref**](./core-spotlight-ref) | Core Spotlight indexing — CSSearchableItem, IndexedEntity, NSUserActivity integration, Spotlight search and prediction |

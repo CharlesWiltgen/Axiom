@@ -57,6 +57,9 @@ Questions you can ask Claude that will draw from this skill:
 - Background context patterns with actors
 - Safe async/await patterns
 
+### Class Inheritance
+- Class inheritance (base/subclass @Model patterns, type-based queries)
+
 ### Migration Strategies
 - Realm → SwiftData pattern equivalents
 - Core Data → SwiftData migration

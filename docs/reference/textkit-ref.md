@@ -53,6 +53,9 @@ Questions you can ask Claude that will draw from this reference:
 - Custom formatting definitions
 - Value constraints
 - Selection handling
+- AttributedString text alignment and line height control
+- Programmatic selection replacement
+- DiscontiguousAttributedSubstring for non-contiguous selections
 
 ## Documentation Scope
 
