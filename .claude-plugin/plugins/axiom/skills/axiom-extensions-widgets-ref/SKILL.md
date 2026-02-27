@@ -756,9 +756,9 @@ Use `AppIntentControlConfiguration` with a `WidgetConfigurationIntent` (same pat
 
 # Part 7: iOS 18+ Updates
 
-## Liquid Glass / Accented Rendering (iOS 26+)
+## Accented Rendering and Liquid Glass
 
-Widgets render in two modes under Liquid Glass: **full color** (default) and **accented** (tinted appearance chosen by user). Detect the mode and adapt layout accordingly.
+Widget rendering modes span multiple iOS versions: `widgetAccentable()` (iOS 16+), `WidgetAccentedRenderingMode` (iOS 18+), and Liquid Glass effects like `glassEffect()` and `GlassEffectContainer` (iOS 26+). Detect the mode and adapt layout accordingly.
 
 ### Detecting Rendering Mode
 

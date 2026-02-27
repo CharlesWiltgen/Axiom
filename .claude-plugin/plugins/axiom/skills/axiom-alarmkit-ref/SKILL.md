@@ -107,7 +107,7 @@ func requestAlarmAuthorization() async -> Bool {
 Use `authorizationState` (not `authorizationStatus`) to read the current value:
 
 ```swift
-let status = await AlarmManager.shared.authorizationState
+let state = await AlarmManager.shared.authorizationState
 // .authorized | .denied | .notDetermined
 ```
 

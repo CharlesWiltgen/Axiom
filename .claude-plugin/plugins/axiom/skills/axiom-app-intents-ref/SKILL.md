@@ -1653,11 +1653,9 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 
 ## Resources
 
-**WWDC**: 244, 275, 260
+**WWDC**: 2025-244, 2025-275, 2025-260
 
 **Docs**: /appintents, /appintents/appintent, /appintents/appentity, /Updates/AppIntents
-
-**Apple Guide**: AppIntents-Updates.md (Xcode bundled, read via axiom-apple-docs)
 
 **Skills**: axiom-app-shortcuts-ref, axiom-core-spotlight-ref, axiom-app-discoverability
 
