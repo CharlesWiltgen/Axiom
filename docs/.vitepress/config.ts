@@ -413,6 +413,7 @@ export default withMermaid(defineConfig({
         {
           text: 'Integration',
           items: [
+            { text: 'AlarmKit', link: '/reference/alarmkit-ref' },
             { text: 'App Discoverability', link: '/reference/app-discoverability' },
             { text: 'App Intents Integration', link: '/reference/app-intents-ref' },
             { text: 'App Shortcuts', link: '/reference/app-shortcuts-ref' },

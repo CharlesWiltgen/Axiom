@@ -33,6 +33,9 @@ Use this reference when:
 - Overlays and renderers
 - Map snapshots (MKMapSnapshotter)
 - iOS version feature matrix
+- GeoToolbox framework and PlaceDescriptor (iOS 26+)
+- MKGeocodingRequest and MKReverseGeocodingRequest
+- MKAddress type
 
 ## Documentation Scope
 

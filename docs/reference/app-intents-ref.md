@@ -62,6 +62,12 @@ Questions you can ask Claude that will draw from this reference:
 - Search result actions
 - Deep linking patterns
 
+### Visual Intelligence
+- Visual Intelligence integration (IntentValueQuery, SemanticContentDescriptor)
+- Computed and deferred properties (@ComputedProperty, @DeferredProperty)
+- Intent modes and background-to-foreground transitions
+- Interactive snippets (SnippetIntent)
+
 ### Debugging
 - Intent testing in Xcode
 - Shortcuts app debugging

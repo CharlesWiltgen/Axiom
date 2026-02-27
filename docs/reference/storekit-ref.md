@@ -76,6 +76,8 @@ Questions you can ask Claude that will draw from this reference:
 - appTransactionID field
 - offerPeriod for subscription offers
 - Enhanced renewal info
+- subscriptionStatusTask modifier (iOS 18+)
+- Advanced Commerce API
 
 ## Key Pattern
 

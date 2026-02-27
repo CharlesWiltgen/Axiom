@@ -65,6 +65,15 @@ struct FileHandle: ~Copyable {
 }
 ```
 
+## What's Covered
+
+- `borrowing` and `consuming` parameter ownership modifiers
+- `~Copyable` (noncopyable) types
+- `inout` mutation patterns
+- InlineArray (fixed-size, stack-allocated arrays)
+- Span / MutableSpan (safe zero-copy memory access)
+- Value generics
+
 ## Related Skills
 
 - [Swift Performance](/skills/concurrency/swift-performance) — Value type optimization

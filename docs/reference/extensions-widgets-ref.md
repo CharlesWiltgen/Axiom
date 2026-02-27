@@ -69,8 +69,9 @@ Questions you can ask Claude that will draw from this reference:
 
 ### Platform Variations
 - watchOS widget considerations
-- visionOS widget support
+- visionOS widget support (mounting styles, textures, proximity awareness)
 - macOS desktop widgets
+- Liquid Glass widget rendering (iOS 26+)
 
 ### Troubleshooting
 - Common failure patterns
