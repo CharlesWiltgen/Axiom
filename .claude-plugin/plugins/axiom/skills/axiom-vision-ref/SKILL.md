@@ -1,8 +1,8 @@
 ---
 name: axiom-vision-ref
-description: Vision framework API, VNDetectHumanHandPoseRequest, VNDetectHumanBodyPoseRequest, person segmentation, face detection, VNImageRequestHandler, recognized points, joint landmarks, VNRecognizeTextRequest, VNDetectBarcodesRequest, DataScannerViewController, VNDocumentCameraViewController, RecognizeDocumentsRequest, Visual Intelligence, SemanticContentDescriptor, IntentValueQuery
+description: Use when needing Vision framework API details for hand/body pose, segmentation, text recognition, barcode detection, document scanning, or Visual Intelligence integration. Covers VNRequest types, coordinate conversion, DataScannerViewController, RecognizeDocumentsRequest, SemanticContentDescriptor, IntentValueQuery.
 license: MIT
-compatibility: iOS 11+, iPadOS 11+, macOS 10.13+, tvOS 11+, axiom-visionOS 1+
+compatibility: iOS 11+, iPadOS 11+, macOS 10.13+, tvOS 11+, visionOS 1+
 metadata:
   version: "1.1.0"
   last-updated: "2026-01-03"
@@ -115,7 +115,7 @@ func processFrame(_ buffer: CVPixelBuffer) throws {
 
 ### VNGenerateForegroundInstanceMaskRequest
 
-**Availability**: iOS 17+, macOS 14+, tvOS 17+, axiom-visionOS 1+
+**Availability**: iOS 17+, macOS 14+, tvOS 17+, visionOS 1+
 
 Generates class-agnostic instance mask of foreground objects (people, pets, buildings, food, shoes, etc.)
 
@@ -639,7 +639,7 @@ let visionMask = try observation.createScaledMask(
 )
 
 // 2. Convert to CIImage
-let maskImage = CIImage(cvPixelBuffer: axiom-visionMask)
+let maskImage = CIImage(cvPixelBuffer: visionMask)
 
 // 3. Apply filter
 let filter = CIFilter(name: "CIBlendWithMask")!
