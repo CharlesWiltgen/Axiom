@@ -699,6 +699,27 @@ struct RecipeEditor: View {
 - Genmoji
 - Line height, text alignment, base writing direction
 
+### TextAlignment and WritingDirection
+
+```swift
+// Text alignment (AttributedString.TextAlignment)
+var text = AttributedString("Centered paragraph")
+text.alignment = .center  // .left, .right, .center
+
+// Writing direction for bidirectional text
+var bidiText = AttributedString("Hello عربي")
+bidiText.writingDirection = .rightToLeft  // .leftToRight, .rightToLeft
+```
+
+### LineHeight Control
+
+```swift
+var multiline = AttributedString("Paragraph\nwith multiple\nlines.")
+multiline.lineHeight = .exact(points: 32)       // Fixed height
+multiline.lineHeight = .multiple(factor: 2.5)   // Multiplier
+multiline.lineHeight = .loose                    // System loose spacing
+```
+
 ### Selection Binding
 
 ```swift
@@ -731,6 +752,47 @@ if let selection {
     }
 }
 ```
+
+### Programmatic Selection Replacement
+
+```swift
+var text = AttributedString("Here is my dog")
+var selection = AttributedTextSelection(range: text.range(of: "dog")!)
+
+// Replace with plain text
+text.replaceSelection(&selection, withCharacters: "cat")
+
+// Replace with attributed content
+let replacement = AttributedString("horse")
+text.replaceSelection(&selection, with: replacement)
+```
+
+### DiscontiguousAttributedSubstring
+
+Work with non-contiguous selections using `RangeSet`:
+
+```swift
+let text = AttributedString("Select multiple parts of this text")
+let range1 = text.range(of: "Select")!
+let range2 = text.range(of: "text")!
+let rangeSet = RangeSet([range1, range2])
+var substring = text[rangeSet]  // DiscontiguousAttributedSubstring
+substring.backgroundColor = .yellow
+
+// Convert back to AttributedString
+let combined = AttributedString(substring)
+```
+
+### Text Selection Affinity
+
+Control selection affinity for the view hierarchy:
+
+```swift
+TextEditor(text: $text, selection: $selection)
+    .textSelectionAffinity(.upstream)  // .upstream or .downstream
+```
+
+Use `.upstream` when selection should resolve toward the beginning of text at line boundaries.
 
 ### Custom Formatting Definition
 
@@ -886,4 +948,4 @@ Unsupported in TextKit 2:
 
 **WWDC**: 2021-10061, 2022-10090, 2023-10058, 2024-10168, 2025-265, 2025-280
 
-**Docs**: /uikit/nstextlayoutmanager, /appkit/textkit/using_textkit_2_to_interact_with_text, /uikit/display-text-with-a-custom-layout, /swiftui/building-rich-swiftui-text-experiences, /foundation/attributedstring, /uikit/writing-tools, /appkit/enhancing-your-custom-text-engine-with-writing-tools
+**Docs**: /uikit/nstextlayoutmanager, /appkit/textkit/using_textkit_2_to_interact_with_text, /uikit/display-text-with-a-custom-layout, /swiftui/building-rich-swiftui-text-experiences, /foundation/attributedstring, /foundation/attributedstring/textalignment, /foundation/attributedstring/lineheight, /foundation/discontiguousattributedsubstring, /uikit/writing-tools, /appkit/enhancing-your-custom-text-engine-with-writing-tools

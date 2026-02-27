@@ -63,7 +63,7 @@ Report findings with:
 ## Files to Scan
 
 **Swift files**: `**/*.swift`
-**Exclude**: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`
+Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Modernization Patterns (iOS 17+ / iOS 18+)
 

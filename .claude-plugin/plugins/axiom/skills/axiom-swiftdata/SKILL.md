@@ -114,10 +114,11 @@ final class Track {
 ```
 
 #### Key patterns
-- Use `final class`, not `struct`
+- Use `final class`, not `struct` (omit `final` if you need subclasses — see Class Inheritance below)
 - Use `@Attribute(.unique)` for primary key-like behavior
 - Provide explicit `init` (SwiftData doesn't synthesize)
 - Optional properties (`String?`) are nullable
+- Use `@Attribute(.preserveValueOnDeletion)` on properties whose values should survive even after the object is deleted (useful for analytics, audit trails)
 
 ### Relationships
 
@@ -240,6 +241,108 @@ try modelContext.save()
 - `.nullify` - Set relationship to nil
 - `.deny` - Prevent deletion if relationship exists
 - `.noAction` - Leave relationship as-is (careful!)
+
+## Class Inheritance
+
+SwiftData supports class inheritance for hierarchical models. Use when you have a clear IS-A relationship (e.g., `BusinessTrip` IS-A `Trip`) and need both broad queries (all trips) and type-specific queries.
+
+### Base and Subclass Pattern
+
+Apply `@Model` to both base class and subclasses. Omit `final` on the base class.
+
+```swift
+@Model class Trip {
+    @Attribute(.preserveValueOnDeletion)
+    var name: String
+    var destination: String
+    var startDate: Date
+    var endDate: Date
+
+    @Relationship(deleteRule: .cascade, inverse: \Accommodation.trip)
+    var accommodation: Accommodation?
+
+    init(name: String, destination: String, startDate: Date, endDate: Date) {
+        self.name = name
+        self.destination = destination
+        self.startDate = startDate
+        self.endDate = endDate
+    }
+}
+
+@Model class BusinessTrip: Trip {
+    var purpose: String
+    var expenseCode: String
+
+    @Relationship(deleteRule: .cascade, inverse: \BusinessMeal.trip)
+    var businessMeals: [BusinessMeal] = []
+
+    init(name: String, destination: String, startDate: Date, endDate: Date,
+         purpose: String, expenseCode: String) {
+        self.purpose = purpose
+        self.expenseCode = expenseCode
+        super.init(name: name, destination: destination, startDate: startDate, endDate: endDate)
+    }
+}
+```
+
+### Type-Based Queries with #Predicate
+
+Query all base class instances (includes subclasses), or filter by type:
+
+```swift
+// All trips (includes BusinessTrip, PersonalTrip, etc.)
+@Query(sort: \Trip.startDate) var allTrips: [Trip]
+
+// Only business trips — use `is` in #Predicate
+@Query(filter: #Predicate<Trip> { $0 is BusinessTrip }) var businessTrips: [Trip]
+
+// Filter on subclass-specific properties — use `as?` cast
+let vacationPredicate = #Predicate<Trip> {
+    if let personal = $0 as? PersonalTrip {
+        return personal.reason == .vacation
+    }
+    return false
+}
+@Query(filter: vacationPredicate) var vacationTrips: [Trip]
+```
+
+### Polymorphic Relationships
+
+Relationships typed to the base class can hold mixed subclass instances:
+
+```swift
+@Model class TravelPlanner {
+    var name: String
+
+    @Relationship(deleteRule: .cascade)
+    var upcomingTrips: [Trip] = []  // Can contain BusinessTrip and PersonalTrip
+
+    init(name: String) { self.name = name }
+}
+```
+
+Cast to access subclass-specific properties:
+
+```swift
+for trip in planner.upcomingTrips {
+    if let business = trip as? BusinessTrip {
+        print(business.expenseCode)
+    }
+}
+```
+
+### When to Use Inheritance vs Alternatives
+
+| Signal | Use Inheritance | Use Enum/Flag Instead |
+|--------|----------------|----------------------|
+| Subclasses share many base properties | Yes | — |
+| Need type-based queries across all models | Yes | — |
+| Subclasses have their own relationships | Yes | — |
+| Only 1-2 distinguishing properties | — | Yes |
+| Query only on specialized properties | — | Yes |
+| Protocol conformance suffices | — | Yes |
+
+**Keep hierarchies shallow** (1-2 levels). Deep chains complicate schema migrations and queries.
 
 ## ModelContainer Setup
 
@@ -956,7 +1059,7 @@ final class TrackTests: XCTestCase {
 
 ## Resources
 
-**Docs**: /swiftdata
+**Docs**: /swiftdata, /swiftdata/adopting-inheritance-in-swiftdata
 
 **Skills**: axiom-swiftdata-migration, axiom-swiftdata-migration-diag, axiom-database-migration, axiom-sqlitedata, axiom-grdb, axiom-swift-concurrency
 

@@ -2,7 +2,7 @@
 name: axiom-extensions-widgets-ref
 description: Use when implementing widgets, Live Activities, Control Center controls, or app extensions - comprehensive API reference for WidgetKit, ActivityKit, App Groups, and extension lifecycle for iOS 14+
 license: MIT
-compatibility: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, axiom-visionOS 2+
+compatibility: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, visionOS 2+
 metadata:
   version: "1.0.0"
 ---
@@ -17,6 +17,8 @@ This skill provides comprehensive API reference for Apple's widget and extension
 - **Interactive Widgets** (iOS 17+) — Buttons and toggles with App Intents
 - **Live Activities** (iOS 16.1+) — Real-time updates on Lock Screen and Dynamic Island
 - **Control Center Widgets** (iOS 18+) — System-wide quick controls
+- **Liquid Glass Widgets** (iOS 26+) — Accented rendering, glass effects, container backgrounds
+- **visionOS Widgets** (visionOS 2+) — Mounting styles, textures, proximity awareness
 - **App Extensions** — Shared data, lifecycle, entitlements
 
 Widgets are SwiftUI **archived snapshots** rendered on a timeline by the system. Extensions are sandboxed executables bundled with your app.
@@ -30,7 +32,9 @@ Widgets are SwiftUI **archived snapshots** rendered on a timeline by the system.
 - Sharing data between app and extensions
 - Understanding widget timelines and refresh policies
 - Integrating widgets with App Intents
+- Adopting Liquid Glass rendering in widgets
 - Supporting watchOS or visionOS widgets
+- Implementing visionOS mounting styles, textures, or proximity awareness
 
 ❌ **Do NOT use this skill for**:
 - Pure App Intents questions (use **app-intents-ref** skill)
@@ -752,14 +756,168 @@ Use `AppIntentControlConfiguration` with a `WidgetConfigurationIntent` (same pat
 
 # Part 7: iOS 18+ Updates
 
-## Liquid Glass / Accented Rendering (iOS 18+)
+## Liquid Glass / Accented Rendering (iOS 26+)
 
-Apply `.widgetAccentedRenderingMode(.accented)` to your widget view for system glass effects. Default is `.fullColor`. When accented, colors blend with system glass — test in multiple contexts (Home Screen, StandBy, Lock Screen).
+Widgets render in two modes under Liquid Glass: **full color** (default) and **accented** (tinted appearance chosen by user). Detect the mode and adapt layout accordingly.
+
+### Detecting Rendering Mode
+
+```swift
+struct MyWidgetView: View {
+    @Environment(\.widgetRenderingMode) var renderingMode
+
+    var body: some View {
+        if renderingMode == .accented {
+            // Simplified layout — opaque images tinted white, background replaced with glass
+        } else {
+            // Standard full-color layout
+        }
+    }
+}
+```
+
+### widgetAccentable(_:)
+
+Marks views as part of the **accent group**. In accented mode, accent-group views are tinted separately from primary-group views, creating visual hierarchy.
+
+```swift
+HStack {
+    VStack(alignment: .leading) {
+        Text("Title")
+            .font(.headline)
+            .widgetAccentable()  // Accent group — tinted in accented mode
+        Text("Subtitle")
+            // Primary group by default
+    }
+    Image(systemName: "star.fill")
+        .widgetAccentable()  // Also accent group
+}
+```
+
+### WidgetAccentedRenderingMode
+
+Controls how images render in accented mode. Apply to `Image` views:
+
+```swift
+Image("myPhoto")
+    .widgetAccentedRenderingMode(.accented)      // Tinted with accent color
+Image("myIcon")
+    .widgetAccentedRenderingMode(.monochrome)     // Rendered as monochrome
+Image("myBadge")
+    .widgetAccentedRenderingMode(.fullColor)       // Keeps original colors (opt-out)
+```
+
+**Best practices**: Display full-color images only in `.fullColor` rendering mode. Use `.widgetAccentable()` strategically for visual hierarchy. Test with multiple accent colors and background images.
+
+### Container Backgrounds
+
+```swift
+VStack { /* content */ }
+    .containerBackground(for: .widget) {
+        Color.blue.opacity(0.2)
+    }
+```
+
+In accented mode, the system removes the background and replaces it with themed glass. To prevent removal (excludes widget from iPad Lock Screen, StandBy):
+
+```swift
+.containerBackgroundRemovable(false)
+```
+
+### Liquid Glass in Custom Widget Elements
+
+```swift
+Text("Label")
+    .padding()
+    .glassEffect()  // Default capsule shape
+
+Image(systemName: "star.fill")
+    .frame(width: 60, height: 60)
+    .glassEffect(.regular, in: .rect(cornerRadius: 12))
+
+Button("Action") { }
+    .buttonStyle(.glass)
+```
+
+Combine multiple glass elements with `GlassEffectContainer`:
+
+```swift
+GlassEffectContainer(spacing: 20.0) {
+    HStack(spacing: 20.0) {
+        Image(systemName: "cloud")
+            .frame(width: 60, height: 60)
+            .glassEffect()
+        Image(systemName: "sun")
+            .frame(width: 60, height: 60)
+            .glassEffect()
+    }
+}
+```
 
 ## Cross-Platform Support
 
-### visionOS (2+)
-Use `#if os(visionOS)` guard, `.supportedFamilies([.systemSmall, .systemMedium])`, and `.ornamentLevel(.default)` for spatial ornament positioning.
+### visionOS Widgets (visionOS 2+)
+
+visionOS widgets are 3D objects placed in physical space — mounted on surfaces or floating. They support unique spatial features.
+
+#### Mounting Styles
+
+Widgets can be elevated (on top of surfaces) or recessed (embedded into vertical surfaces like walls):
+
+```swift
+.supportedMountingStyles([.elevated, .recessed])  // Default is both
+// .supportedMountingStyles([.recessed])           // Wall-only widget
+```
+
+If limited to `.recessed`, users cannot place the widget on horizontal surfaces.
+
+#### Widget Textures
+
+Two visual textures for spatial appearance:
+
+```swift
+.widgetTexture(.glass)   // Default — transparent glass-like appearance
+.widgetTexture(.paper)   // Poster-like look, effective with extra-large sizes
+```
+
+#### Proximity Awareness (levelOfDetail)
+
+Widgets adapt to user distance automatically. The system animates transitions between detail levels:
+
+```swift
+@Environment(\.levelOfDetail) var levelOfDetail
+
+var body: some View {
+    VStack {
+        Text(entry.value)
+            .font(levelOfDetail == .simplified ? .largeTitle : .title)
+    }
+}
+```
+
+Values: `.default` (close viewing) and `.simplified` (distance viewing — use larger text, fewer details).
+
+#### visionOS Widget Families
+
+visionOS supports all system families plus extra-large sizes:
+
+```swift
+.supportedFamilies([
+    .systemSmall, .systemMedium, .systemLarge,
+    .systemExtraLarge,
+    .systemExtraLargePortrait  // visionOS-specific portrait orientation
+])
+```
+
+Extra-large families are particularly effective with `.widgetTexture(.paper)` for poster-like displays.
+
+#### Background Detection
+
+Detect whether the widget background is visible (removed in accented mode):
+
+```swift
+@Environment(\.showsWidgetContainerBackground) var showsBackground
+```
 
 ### CarPlay (iOS 18+)
 Add `.supplementalActivityFamilies([.medium])` to `ActivityConfiguration`. Uses StandBy-style full-width dashboard presentation.
@@ -905,6 +1063,19 @@ For a complete step-by-step tutorial with working code examples, see Apple's [Bu
 - [ ] Proper dismissal policy set
 - [ ] watchOS support configured if relevant (supplementalActivityFamilies)
 - [ ] Dynamic Island layouts tested (compact, minimal, expanded)
+
+**Liquid Glass** (if applicable):
+- [ ] `widgetAccentable()` applied for visual hierarchy in accented mode
+- [ ] `WidgetAccentedRenderingMode` set on images (`.accented`, `.monochrome`, or `.fullColor`)
+- [ ] Tested with multiple accent colors and background images
+- [ ] Container background configured with `.containerBackground(for: .widget)`
+
+**visionOS** (if applicable):
+- [ ] Mounting styles configured (`.elevated`, `.recessed`, or both)
+- [ ] Widget texture chosen (`.glass` or `.paper`)
+- [ ] `levelOfDetail` handled for proximity-aware layouts
+- [ ] Extra-large families supported if appropriate (`.systemExtraLarge`, `.systemExtraLargePortrait`)
+- [ ] Tested at different distances for proximity transitions
 
 **Control Center Widgets** (if applicable):
 - [ ] ControlValueProvider async and fast (< 1 second)
@@ -1112,4 +1283,4 @@ let entries = (0..<100).map { offset in
 
 ---
 
-**Version**: 0.9 | **Platforms**: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, axiom-visionOS 2+
+**Version**: 0.9 | **Platforms**: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, visionOS 2+

@@ -949,12 +949,23 @@ struct ContentView: View {
 
 #### From WWDC 2025-241:14:27
 
+**With Loaded Product**:
+```swift
+let product: Product // Already loaded via Product.products(for:)
+
+SubscriptionOfferView(product: product)
+```
+
 **With Promotional Icon**:
 ```swift
 SubscriptionOfferView(
     id: productID,
     prefersPromotionalIcon: true
 )
+
+// Also available as modifier
+SubscriptionOfferView(id: productID)
+    .prefersPromotionalIcon(true)
 ```
 
 **With Custom Icon**:
@@ -1056,6 +1067,40 @@ SubscriptionStoreView(groupID: groupID)
 ```
 
 #### From WWDC 2025-241:12:17
+
+### subscriptionStatusTask Modifier (iOS 18.4+)
+
+Track subscription status at the app level with a SwiftUI modifier. Eliminates manual polling by reacting to status changes automatically.
+
+**Basic Usage**:
+```swift
+@main
+struct MyApp: App {
+    @State private var customerStatus: CustomerStatus = .unknown
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environment(\.customerSubscriptionStatus, customerStatus)
+                .subscriptionStatusTask(for: "your.group.id") { statuses in
+                    if statuses.contains(where: { $0.state == .subscribed }) {
+                        customerStatus = .subscribed
+                    } else if statuses.contains(where: { $0.state == .expired }) {
+                        customerStatus = .expired
+                    } else {
+                        customerStatus = .notSubscribed
+                    }
+                }
+        }
+    }
+}
+```
+
+**Key behavior**:
+- Fires on app launch with current statuses
+- Fires again when subscription status changes (renewal, expiration, upgrade)
+- Translate StoreKit statuses to your app's model — keep your domain model simple
+- Attach at the top of your view hierarchy (App or root WindowGroup)
 
 ---
 
@@ -1336,6 +1381,11 @@ func handleTransaction(_ transaction: Transaction) async {
 
 ### Advanced Commerce API
 
+The Advanced Commerce API enables support for:
+- In-app purchases for large content catalogs
+- Creator experiences (tipping, patronage)
+- Subscriptions with optional add-ons
+
 **Check if Transaction Uses Advanced Commerce**:
 ```swift
 if transaction.advancedCommerceInfo != nil {
@@ -1344,7 +1394,7 @@ if transaction.advancedCommerceInfo != nil {
 }
 ```
 
-**More Info**: Visit Advanced Commerce API documentation
+Accessible through the `advancedCommerceInfo` field on both `Transaction` and `RenewalInfo`. Returns `nil` for standard IAP transactions.
 
 #### From WWDC 2025-241:4:51
 
@@ -1389,6 +1439,17 @@ if renewalInfo.expirationReason == .didNotConsentToPriceIncrease {
 - Upgrades/downgrades
 - Offer code redemptions
 - Family Sharing (enable in config file)
+
+### Transaction Manager
+
+Use the Transaction Manager window in Xcode to inspect and manipulate transactions during testing:
+
+- Create transactions manually (test specific purchase flows)
+- Modify transaction properties (expiration, renewal state)
+- Test subscription offer scenarios
+- Inspect transaction details and verification status
+
+**Open**: Debug → StoreKit → Manage Transactions (while running with StoreKit configuration)
 
 ### Sandbox Testing
 

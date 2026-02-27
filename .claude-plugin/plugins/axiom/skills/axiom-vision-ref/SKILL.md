@@ -1,6 +1,6 @@
 ---
 name: axiom-vision-ref
-description: Vision framework API, VNDetectHumanHandPoseRequest, VNDetectHumanBodyPoseRequest, person segmentation, face detection, VNImageRequestHandler, recognized points, joint landmarks, VNRecognizeTextRequest, VNDetectBarcodesRequest, DataScannerViewController, VNDocumentCameraViewController, RecognizeDocumentsRequest
+description: Vision framework API, VNDetectHumanHandPoseRequest, VNDetectHumanBodyPoseRequest, person segmentation, face detection, VNImageRequestHandler, recognized points, joint landmarks, VNRecognizeTextRequest, VNDetectBarcodesRequest, DataScannerViewController, VNDocumentCameraViewController, RecognizeDocumentsRequest, Visual Intelligence, SemanticContentDescriptor, IntentValueQuery
 license: MIT
 compatibility: iOS 11+, iPadOS 11+, macOS 10.13+, tvOS 11+, axiom-visionOS 1+
 metadata:
@@ -1079,6 +1079,136 @@ TextObservation
 └── detectedData: [DetectedDataObservation]
 ```
 
+## Visual Intelligence Integration
+
+Visual Intelligence is a **system-level feature** (iOS 26+) that lets users point their camera at real-world objects and find matching content across apps. This is distinct from the Vision framework (VNRequest-based image analysis) covered above. Vision analyzes images within your app; Visual Intelligence lets the system invoke your app when users search with the camera or screenshots.
+
+### How It Works
+
+1. User activates Visual Intelligence camera or takes a screenshot
+2. System analyzes what the user is looking at
+3. System queries participating apps via `IntentValueQuery`
+4. Your app receives a `SemanticContentDescriptor` with labels and/or pixel data
+5. Your app searches its content and returns matching `AppEntity` results
+6. Results appear in the Visual Intelligence UI with your app's branding
+
+### Required Frameworks
+
+```swift
+import VisualIntelligence
+import AppIntents
+```
+
+### SemanticContentDescriptor
+
+The core object the system provides to describe what the user is looking at.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `labels` | `[String]` | Classification labels for the detected item |
+| `pixelBuffer` | `CVReadOnlyPixelBuffer?` | Visual data of the detected item |
+
+Use labels for fast keyword matching against your content catalog. Use the pixel buffer for image-similarity search when labels are insufficient.
+
+### IntentValueQuery
+
+The entry point for Visual Intelligence to communicate with your app. Implement `values(for:)` to receive search requests and return matching entities.
+
+```swift
+struct LandmarkIntentValueQuery: IntentValueQuery {
+    @Dependency var modelData: ModelData
+
+    func values(for input: SemanticContentDescriptor) async throws -> [LandmarkEntity] {
+        if !input.labels.isEmpty {
+            return try await modelData.search(matching: input.labels)
+        }
+        guard let pixelBuffer = input.pixelBuffer else { return [] }
+        return try await modelData.search(matching: pixelBuffer)
+    }
+}
+```
+
+### Returning Multiple Result Types
+
+Use `@UnionValue` when your app can return different entity types from a single search.
+
+```swift
+@UnionValue
+enum VisualSearchResult {
+    case landmark(LandmarkEntity)
+    case collection(CollectionEntity)
+}
+```
+
+### Display Representation
+
+Visual Intelligence uses your entity's `DisplayRepresentation` to show results. Provide a title, subtitle, and image for each result.
+
+```swift
+struct LandmarkEntity: AppEntity {
+    var id: String
+    var name: String
+    var location: String
+
+    static var typeDisplayRepresentation: TypeDisplayRepresentation {
+        TypeDisplayRepresentation(
+            name: LocalizedStringResource("Landmark", table: "AppIntents"),
+            numericFormat: "\(placeholder: .int) landmarks"
+        )
+    }
+
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(
+            title: "\(name)",
+            subtitle: "\(location)",
+            image: .init(named: thumbnailImageName)
+        )
+    }
+}
+```
+
+### Deep Linking from Results
+
+When a user taps a result, your app should open to the relevant content. Provide an `appLinkURL` on your entity.
+
+```swift
+var appLinkURL: URL? {
+    URL(string: "yourapp://landmark/\(id)")
+}
+```
+
+### "More Results" Intent
+
+For large result sets, provide a `VisualIntelligenceSearchIntent` that opens your app's full search UI.
+
+```swift
+struct ViewMoreLandmarksIntent: AppIntent, VisualIntelligenceSearchIntent {
+    static var title: LocalizedStringResource = "View More Landmarks"
+
+    @Parameter(title: "Semantic Content")
+    var semanticContent: SemanticContentDescriptor
+
+    func perform() async throws -> some IntentResult {
+        // Open your app's search view with the semantic content
+        return .result()
+    }
+}
+```
+
+### Best Practices
+
+- **Return results quickly** — Visual Intelligence expects low-latency responses. Limit to 10-20 most relevant results
+- **Prefer labels first** — Label matching is faster than pixel buffer analysis. Fall back to pixel buffer when labels are empty or insufficient
+- **Localize everything** — Display representations appear in the system UI. Use `LocalizedStringResource` for all user-facing text
+- **Include images** — Results with thumbnails are more recognizable in the Visual Intelligence overlay
+
+### Testing
+
+1. Build and run on a physical device
+2. Activate Visual Intelligence camera or take a screenshot of relevant content
+3. Perform a visual search and verify your app's results appear
+4. Tap results to verify deep linking opens the correct content
+
 ## API Quick Reference
 
 ### Subject Segmentation
@@ -1117,6 +1247,14 @@ TextObservation
 | `VNDetectDocumentSegmentationRequest` | iOS 15+ | Programmatic document edge detection |
 | `RecognizeDocumentsRequest` | iOS 26+ | Structured document extraction |
 
+### Visual Intelligence
+
+| API | Platform | Purpose |
+|-----|----------|---------|
+| `SemanticContentDescriptor` | iOS 26+ | Describes what the user is looking at (labels + pixel buffer) |
+| `IntentValueQuery` | iOS 26+ | Entry point for receiving visual search requests |
+| `VisualIntelligenceSearchIntent` | iOS 26+ | "More results" deep link to your app |
+
 ### Observation Types
 
 | Observation | Returned By |
@@ -1137,6 +1275,6 @@ TextObservation
 
 **WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2023-111241, 2023-10048, 2020-10653, 2020-10043, 2020-10099
 
-**Docs**: /vision, /visionkit, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest
+**Docs**: /vision, /visionkit, /visualintelligence, /visualintelligence/semanticcontentdescriptor, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest
 
 **Skills**: axiom-vision, axiom-vision-diag

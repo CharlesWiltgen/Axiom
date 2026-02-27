@@ -45,6 +45,50 @@ App Intents integrate with:
 - **Live Activities** — Dynamic Island updates
 - **Visual Intelligence** — Image-based interactions
 
+## Visual Intelligence Integration
+
+### IntentValueQuery
+
+Allow users to circle objects in the Visual Intelligence camera and see matching results from your app:
+
+```swift
+@UnionValue
+enum VisualSearchResult {
+    case landmark(LandmarkEntity)
+    case collection(CollectionEntity)
+}
+
+struct LandmarkIntentValueQuery: IntentValueQuery {
+    func values(for input: SemanticContentDescriptor) async throws -> [VisualSearchResult] {
+        // Match visual input to app entities
+    }
+}
+
+// Each entity type needs an OpenIntent
+struct OpenLandmarkIntent: OpenIntent { /* ... */ }
+struct OpenCollectionIntent: OpenIntent { /* ... */ }
+```
+
+### Onscreen Entities
+
+Associate app entities with visible content so users can ask Siri or ChatGPT about what's on screen:
+
+```swift
+struct LandmarkDetailView: View {
+    let landmark: LandmarkEntity
+
+    var body: some View {
+        Group { /* View content */ }
+        .userActivity("com.landmarks.ViewingLandmark") { activity in
+            activity.title = "Viewing \(landmark.name)"
+            activity.appEntityIdentifier = EntityIdentifier(for: landmark)
+        }
+    }
+}
+```
+
+---
+
 ## Core Concepts
 
 ### The Three Building Blocks
@@ -282,6 +326,38 @@ struct TaskEntity: AppEntity {
 }
 ```
 
+### Computed and Deferred Properties
+
+#### @ComputedProperty
+
+Computed properties that read directly from a source of truth (no stored value):
+
+```swift
+struct SettingsEntity: UniqueAppEntity {
+    @ComputedProperty
+    var defaultPlace: PlaceDescriptor {
+        UserDefaults.standard.defaultPlace
+    }
+
+    init() { }
+}
+```
+
+#### @DeferredProperty
+
+Properties that are expensive to calculate, only fetched when explicitly requested:
+
+```swift
+struct LandmarkEntity: IndexedEntity {
+    @DeferredProperty
+    var crowdStatus: Int {
+        get async throws {
+            await modelData.getCrowdStatus(self)
+        }
+    }
+}
+```
+
 ### Entity Query
 
 ```swift
@@ -370,7 +446,67 @@ struct UnlockVaultIntent: AppIntent {
 
 ## Background vs Foreground Execution
 
-### Background Execution
+### Intent Modes
+
+Use `supportedModes` for granular control over execution context instead of the boolean `openAppWhenRun`:
+
+```swift
+struct GetCrowdStatusIntent: AppIntent {
+    static let supportedModes: IntentModes = [.background, .foreground(.dynamic)]
+
+    func perform() async throws -> some ReturnsValue<Int> & ProvidesDialog {
+        guard await modelData.isOpen(landmark) else {
+            return .result(value: 0, dialog: "The landmark is currently closed.")
+        }
+
+        if systemContext.currentMode.canContinueInForeground {
+            do {
+                try await continueInForeground(alwaysConfirm: false)
+                await navigator.navigateToCrowdStatus(landmark)
+            } catch {
+                // Opening app was denied
+            }
+        }
+
+        let status = await modelData.getCrowdStatus(landmark)
+        return .result(value: status, dialog: "Current crowd level: \(status)")
+    }
+}
+```
+
+#### Available Modes
+
+| Mode | Behavior |
+|------|----------|
+| `.background` | Performs entirely in background |
+| `.foreground(.immediate)` | App foregrounded before `perform()` runs |
+| `.foreground(.dynamic)` | Can request foreground during execution |
+| `.foreground(.deferred)` | Background initially, foreground before completion |
+
+#### Common Combinations
+
+| Combination | Use When |
+|-------------|----------|
+| `[.background, .foreground]` | Foreground default, background fallback |
+| `[.background, .foreground(.dynamic)]` | Background default, can request foreground |
+| `[.background, .foreground(.deferred)]` | Background initially, guaranteed foreground when requested |
+
+### Continuing in Foreground
+
+Request foreground transition at runtime when using `.foreground(.dynamic)`:
+
+```swift
+// Normal transition
+try await continueInForeground(alwaysConfirm: false)
+
+// Transition after an error
+throw needsToContinueInForegroundError(
+    IntentDialog("Need to open app to complete this action"),
+    alwaysConfirm: true
+)
+```
+
+### Background Execution (Legacy)
 
 ```swift
 struct QuickToggleIntent: AppIntent {
@@ -384,7 +520,7 @@ struct QuickToggleIntent: AppIntent {
 }
 ```
 
-### Foreground Continuation
+### Foreground Continuation (Legacy)
 
 ```swift
 struct EditDocumentIntent: AppIntent {
@@ -437,6 +573,100 @@ struct DeleteTaskIntent: AppIntent {
     }
 }
 ```
+
+---
+
+## Multiple Choice API
+
+Request user input with structured options:
+
+```swift
+let options = [
+    IntentChoiceOption(title: "Option 1", subtitle: "Description 1"),
+    IntentChoiceOption(title: "Option 2", subtitle: "Description 2"),
+    IntentChoiceOption.cancel(title: "Not now")
+]
+
+let choice = try await requestChoice(
+    between: options,
+    dialog: IntentDialog("Please select an option")
+)
+
+switch choice.id {
+case options[0].id: // Option 1 selected
+case options[1].id: // Option 2 selected
+default: // Cancelled
+}
+```
+
+---
+
+## Interactive Snippets
+
+### Static Snippets
+
+Return a SwiftUI view showing the outcome of an intent:
+
+```swift
+func perform() async throws -> some IntentResult {
+    return .result(view: Text("Order placed!").font(.title))
+}
+```
+
+### SnippetIntent
+
+Return interactive snippets with follow-up action buttons:
+
+```swift
+func perform() async throws -> some IntentResult {
+    let landmark = await findNearestLandmark()
+
+    return .result(
+        value: landmark,
+        opensIntent: OpenLandmarkIntent(landmark: landmark),
+        snippetIntent: LandmarkSnippetIntent(landmark: landmark)
+    )
+}
+
+struct LandmarkSnippetIntent: SnippetIntent {
+    @Parameter var landmark: LandmarkEntity
+
+    var snippet: some View {
+        VStack {
+            Text(landmark.name).font(.headline)
+            Text(landmark.description).font(.body)
+
+            HStack {
+                Button("Add to Favorites") { /* action */ }
+                Button("Search Tickets") { /* action */ }
+            }
+        }
+        .padding()
+    }
+}
+```
+
+---
+
+## Swift Package Support
+
+### AppIntentsPackage
+
+Include App Intents in Swift Packages and static libraries:
+
+```swift
+// In your framework or dynamic library
+public struct LandmarksKitPackage: AppIntentsPackage { }
+
+// In your app target
+struct LandmarksPackage: AppIntentsPackage {
+    static var includedPackages: [any AppIntentsPackage.Type] {
+        [LandmarksKitPackage.self]
+    }
+}
+```
+
+This enables modular intent definitions across package boundaries. The app target aggregates all packages via `includedPackages`.
 
 ---
 
@@ -701,6 +931,40 @@ extension EventEntityQuery: EntityStringQuery {
 ```
 
 Or rely on IndexedEntity + Spotlight for automatic search.
+
+### Explicit Spotlight Indexing
+
+For entities that need custom searchable attributes or manual index management:
+
+```swift
+extension LandmarkEntity {
+    var searchableAttributes: CSSearchableItemAttributeSet {
+        let attributes = CSSearchableItemAttributeSet()
+        attributes.title = name
+        attributes.namedLocation = regionDescription
+        attributes.keywords = activities
+        attributes.latitude = NSNumber(value: coordinate.latitude)
+        attributes.longitude = NSNumber(value: coordinate.longitude)
+        attributes.supportsNavigation = true
+        return attributes
+    }
+}
+
+// Add entities to index
+func indexLandmarks() async {
+    let landmarks = await fetchLandmarks()
+    try await CSSearchableIndex.default().indexAppEntities(landmarks, priority: .normal)
+}
+
+// Remove from index when deleted
+func deleteLandmark(_ landmark: LandmarkEntity) async {
+    await dataStore.delete(landmark)
+    try await CSSearchableIndex.default().deleteAppEntities(
+        identifiedBy: [landmark.id],
+        ofType: LandmarkEntity.self
+    )
+}
+```
 
 ### Example: Travel Tracking App
 
@@ -1391,7 +1655,9 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 
 **WWDC**: 244, 275, 260
 
-**Docs**: /appintents, /appintents/appintent, /appintents/appentity
+**Docs**: /appintents, /appintents/appintent, /appintents/appentity, /Updates/AppIntents
+
+**Apple Guide**: AppIntents-Updates.md (Xcode bundled, read via axiom-apple-docs)
 
 **Skills**: axiom-app-shortcuts-ref, axiom-core-spotlight-ref, axiom-app-discoverability
 
