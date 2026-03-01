@@ -169,7 +169,7 @@ try Attachment.insert {
 
 ```swift
 try Attachment.find(id).update {
-    $0.kind = .link(URL(string: "https://example.com")!)
+    $0.kind = #bind(.link(URL(string: "https://example.com")!))
 }
 .execute(db)
 // Sets link column, NULLs note and image columns
@@ -335,7 +335,7 @@ Key benefits: atomic reads, automatic observation, type-safe results.
 | `instr(search)` | `$0.title.instr("search") > 0` | INSTR |
 | `like(pattern)` | `$0.title.like("%phone%")` | LIKE |
 | `hasPrefix` / `hasSuffix` / `contains` | `$0.title.contains("Max")` | Swift-style |
-| `collate(.nocase)` | `$0.title.collate(.nocase).eq("X")` | COLLATE |
+| `collate(.nocase)` | `$0.title.collate(.nocase).eq(#bind("X"))` | COLLATE |
 
 ### Null Handling
 
@@ -464,9 +464,9 @@ let status = try Order.select {
 // Case in updates (toggle pattern)
 try Reminder.find(id).update {
     $0.status = Case($0.status)
-        .when(.incomplete, then: .completing)
-        .when(.completing, then: .completed)
-        .else(.incomplete)
+        .when(#bind(.incomplete), then: #bind(.completing))
+        .when(#bind(.completing), then: #bind(.completed))
+        .else(#bind(.incomplete))
 }.execute(db)
 ```
 
@@ -511,7 +511,7 @@ nonisolated struct Category: Identifiable {
 
 // Get all descendants of a root category
 let allDescendants = try With {
-    Category.where { $0.id.eq(rootCategoryId) }  // Base case
+    Category.where { $0.id.eq(#bind(rootCategoryId)) }  // Base case
 } recursiveUnion: { cte in
     Category.all.join(cte) { $0.parentID.eq($1.id) }.select { $0 }  // Recursive case
 } query: { cte in
@@ -598,7 +598,7 @@ let stats = try Item.select {
         total: $0.count(),
         activeCount: $0.count(filter: $0.isActive),
         avgActivePrice: $0.price.avg(filter: $0.isActive),
-        totalRevenue: $0.revenue.sum(filter: $0.status.eq(.completed))
+        totalRevenue: $0.revenue.sum(filter: $0.status.eq(#bind(.completed)))
     )
 }.fetchOne(db)
 ```

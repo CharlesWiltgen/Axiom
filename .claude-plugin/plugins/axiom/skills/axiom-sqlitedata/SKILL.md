@@ -1,17 +1,17 @@
 ---
 name: axiom-sqlitedata
-description: SQLiteData queries, @Table models, Point-Free SQLite, RETURNING clause, FTS5 full-text search, CloudKit sync, CTEs, JSON aggregation, @DatabaseFunction
+description: Use when working with SQLiteData @Table models, CRUD operations, query patterns, CloudKit SyncEngine setup, or batch imports. Covers model definitions, @FetchAll/@FetchOne, upsert patterns, database setup with Dependencies.
 license: MIT
 metadata:
   version: "3.0.0"
-  last-updated: "2025-12-19 — Split from single skill, added v1.2-1.4 APIs"
+  last-updated: "2025-12-19"
 ---
 
 # SQLiteData
 
 ## Overview
 
-Type-safe SQLite persistence using [SQLiteData](https://github.com/pointfreeco/sqlite-data) by Point-Free. A fast, lightweight replacement for SwiftData with CloudKit synchronization support, built on [GRDB](https://github.com/groue/GRDB.swift) and [StructuredQueries](https://github.com/pointfreeco/swift-structured-queries).
+Type-safe SQLite persistence using SQLiteData (pointfreeco/sqlite-data) by Point-Free. A fast, lightweight replacement for SwiftData with CloudKit synchronization support, built on GRDB (groue/GRDB.swift) and StructuredQueries (pointfreeco/swift-structured-queries).
 
 **Core principle:** Value types (`struct`) + `@Table` macro + `database.write { }` blocks for all mutations.
 
@@ -74,12 +74,12 @@ try database.write { db in
 
 // UPDATE (single)
 try database.write { db in
-    try Item.find(id).update { $0.title = "Updated" }.execute(db)
+    try Item.find(id).update { $0.title = #bind("Updated") }.execute(db)
 }
 
 // UPDATE (bulk)
 try database.write { db in
-    try Item.where(\.isInStock).update { $0.notes = "" }.execute(db)
+    try Item.where(\.isInStock).update { $0.notes = #bind("") }.execute(db)
 }
 
 // DELETE
@@ -126,21 +126,33 @@ syncEngine.isSynchronizing     // either sending or fetching
 
 ### ❌ Using `==` in predicates
 ```swift
-// WRONG — may not work in all contexts
+// WRONG — removed in StructuredQueries 0.31+ (compiler error)
 .where { $0.status == .completed }
 
 // CORRECT — use comparison methods
 .where { $0.status.eq(#bind(.completed)) }
 ```
 
+### ❌ Missing `#bind` in update assignments (StructuredQueries 0.31+)
+```swift
+// WRONG — compiler error in StructuredQueries 0.31+
+Item.find(id).update { $0.title = "New" }.execute(db)
+
+// CORRECT — wrap literal values with #bind
+Item.find(id).update { $0.title = #bind("New") }.execute(db)
+
+// NOTE: Compound operators (+=, -=) don't need #bind — they auto-bind
+Item.find(id).update { $0.title += "!" }.execute(db)  // OK
+```
+
 ### ❌ Wrong update order
 ```swift
 // WRONG — .update before .where
-Item.update { $0.title = "X" }.where { $0.id == id }
+Item.update { $0.title = #bind("X") }.where { $0.id.eq(#bind(id)) }
 
 // CORRECT — .find() for single, .where() before .update() for bulk
-Item.find(id).update { $0.title = "X" }.execute(db)
-Item.where(\.isOld).update { $0.archived = true }.execute(db)
+Item.find(id).update { $0.title = #bind("X") }.execute(db)
+Item.where(\.isOld).update { $0.archived = #bind(true) }.execute(db)
 ```
 
 ### ❌ Instance methods for insert
@@ -269,7 +281,7 @@ let filtered = allReminders.filter { $0.remindersListID == listID }
 // ✅ Filter at database level
 let filtered = try database.read {
     try Reminder.all
-        .filter { $0.remindersListID.eq(listID) }
+        .filter { $0.remindersListID.eq(#bind(listID)) }
         .fetch($0)
 }
 
@@ -277,7 +289,7 @@ let filtered = try database.read {
 let remindersWithList = try database.read {
     try Reminder.all
         .join(RemindersList.all) { $0.remindersListID.eq($1.id) }
-        .filter { $1.name.eq("Shopping") }
+        .filter { $1.name.eq(#bind("Shopping")) }
         .fetch($0)
 }
 
@@ -545,7 +557,7 @@ let newId = try database.write { db in
 ```swift
 try database.write { db in
     try Item.find(itemId)
-        .update { $0.title = "Updated Title" }
+        .update { $0.title = #bind("Updated Title") }
         .execute(db)
 }
 ```
@@ -555,7 +567,7 @@ try database.write { db in
 ```swift
 try database.write { db in
     try Item.where(\.isArchived)
-        .update { $0.isDeleted = true }
+        .update { $0.isDeleted = #bind(true) }
         .execute(db)
 }
 ```
@@ -594,7 +606,8 @@ try database.write { db in
 }
 ```
 
-**Parameters:**
+#### Parameters
+
 - `onConflict:` — Columns defining "same row" (must match UNIQUE constraint/index)
 - `doUpdate:` — What to update on conflict
   - `row` = existing database row
@@ -617,7 +630,8 @@ try Item.insert {
 .execute(db)
 ```
 
-**Schema requirement:**
+#### Schema Requirement
+
 ```sql
 CREATE UNIQUE INDEX idx_items_sync_identity
 ON items (libraryID, remoteID)
@@ -626,7 +640,8 @@ WHERE remoteID IS NOT NULL
 
 #### Merge Strategies
 
-**Replace all mutable fields** (sync mirror):
+##### Replace All Mutable Fields (Sync Mirror)
+
 ```swift
 doUpdate: { row, excluded in
     row.name = excluded.name
@@ -635,7 +650,8 @@ doUpdate: { row, excluded in
 }
 ```
 
-**Merge without clobbering** (keep existing if new is NULL):
+##### Merge Without Clobbering
+
 ```swift
 doUpdate: { row, excluded in
     row.name = excluded.name.ifnull(row.name)
@@ -643,7 +659,8 @@ doUpdate: { row, excluded in
 }
 ```
 
-**Last-write-wins** (only update if newer) — use raw SQL:
+##### Last-Write-Wins (Raw SQL)
+
 ```swift
 try db.execute(sql: """
     INSERT INTO items (id, name, updatedAt) VALUES (?, ?, ?)
@@ -657,14 +674,16 @@ try db.execute(sql: """
 
 #### ❌ Common Upsert Mistakes
 
-**Missing UNIQUE constraint:**
+##### Missing UNIQUE Constraint
+
 ```swift
 // WRONG — no index to conflict against
 onConflict: { ($0.libraryID, $0.remoteID) }
 // but table has no UNIQUE(libraryID, remoteID)
 ```
 
-**Using INSERT OR REPLACE:**
+##### Using INSERT OR REPLACE
+
 ```swift
 // WRONG — REPLACE deletes then inserts, breaking FK relationships
 try db.execute(sql: "INSERT OR REPLACE INTO items ...")
@@ -709,7 +728,7 @@ If any operation throws, the entire transaction rolls back.
 
 ## Raw SQL with #sql Macro
 
-When you need custom SQL expressions beyond the type-safe query builder, use the `#sql` macro from [StructuredQueries](https://github.com/pointfreeco/swift-structured-queries):
+When you need custom SQL expressions beyond the type-safe query builder, use the `#sql` macro from StructuredQueries:
 
 ### Custom Query Expressions
 
@@ -736,13 +755,14 @@ let tableName = "items"
 try #sql("SELECT * FROM \(raw: tableName)").execute(db)
 ```
 
-**Why `#sql`?**
+#### Why #sql
+
 - Type-safe parameter binding (prevents SQL injection)
 - Compile-time syntax checking
 - Seamless integration with query builder
 - Parameter interpolation automatically escapes values
 
-**For schema creation** (CREATE TABLE, migrations), see the `axiom-sqlitedata-ref` reference skill for complete examples.
+For schema creation (CREATE TABLE, migrations), see the `axiom-sqlitedata-ref` reference skill for complete examples.
 
 ---
 
@@ -877,37 +897,11 @@ try await syncEngine.migratePrimaryKeys(
 
 SQLiteData is built on GRDB. Use raw GRDB when you need:
 
-**Complex joins:**
-```swift
-let sql = try database.read { db in
-    try Row.fetchAll(db, sql:
-        """
-        SELECT items.*, categories.name as categoryName
-        FROM items
-        JOIN categories ON items.categoryID = categories.id
-        JOIN tags ON items.id = tags.itemID
-        WHERE tags.name IN (?, ?)
-        """,
-        arguments: ["electronics", "sale"]
-    )
-}
-```
+- Complex joins across 4+ tables
+- Window functions (ROW_NUMBER, RANK, etc.)
+- Performance-critical paths where you've profiled and confirmed the query builder is the bottleneck
 
-**Window functions:**
-```swift
-let ranked = try database.read { db in
-    try Row.fetchAll(db, sql:
-        """
-        SELECT *,
-               ROW_NUMBER() OVER (PARTITION BY category ORDER BY price DESC) as rank
-        FROM items
-        """
-    )
-}
-```
-
-**Performance-critical paths:**
-When you've profiled and confirmed SQLiteData's query builder is the bottleneck, drop to raw SQL.
+See `axiom-grdb` for raw SQL patterns, ValueObservation, and DatabaseMigrator usage.
 
 ---
 

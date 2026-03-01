@@ -98,7 +98,7 @@ try database.write { db in
 
 // UPDATE
 try database.write { db in
-    try Item.find(id).update { $0.title = "Updated" }.execute(db)
+    try Item.find(id).update { $0.title = #bind("Updated") }.execute(db)
 }
 
 // DELETE

@@ -90,7 +90,7 @@ let descendants = Folder
     .withRecursive(
         initial: Folder.filter(id: rootFolderId),
         recursive: { cte in
-            Folder.joining(required: cte, on: \.parentId == cte[\.id])
+            Folder.joining(required: cte, on: \.parentId.eq(cte[\.id]))
         }
     )
 ```
