@@ -258,7 +258,7 @@ You don't have to migrate everything at once:
 
 // SQLiteData: explicit column + query
 // In child: var projectID: Project.ID
-// To fetch: Task.where { $0.projectID == project.id }
+// To fetch: Task.where { $0.projectID.eq(#bind(project.id)) }
 ```
 
 ### Cascade Deletes
@@ -276,7 +276,7 @@ You don't have to migrate everything at once:
 // SwiftData: @Relationship(inverse: \Task.project)
 
 // SQLiteData: Query both directions manually
-let tasks = Task.where { $0.projectID == project.id }
+let tasks = Task.where { $0.projectID.eq(#bind(project.id)) }
 let project = Project.find(task.projectID)
 ```
 
