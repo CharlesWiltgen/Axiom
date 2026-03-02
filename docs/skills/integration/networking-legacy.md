@@ -1,11 +1,11 @@
 ---
 name: networking-legacy
-description: NWConnection patterns for iOS 12-25 with completion handlers, UDP batching, NWListener, and NWBrowser service discovery
+description: NWConnection patterns for iOS 12-18 with completion handlers, UDP batching, NWListener, and NWBrowser service discovery
 ---
 
 # Networking Legacy
 
-NWConnection patterns for apps supporting iOS 12-25 that can't use async/await yet. Covers TLS connections, UDP batching, server listeners, and Bonjour service discovery using completion-handler-based APIs.
+NWConnection patterns for apps supporting iOS 12-18 that can't use async/await yet. Covers TLS connections, UDP batching, server listeners, and Bonjour service discovery using completion-handler-based APIs.
 
 ## When to Use
 
@@ -41,7 +41,7 @@ Questions you can ask Claude that will draw from this skill:
 
 ## Key Differences from iOS 26+
 
-| NWConnection (iOS 12-25) | NetworkConnection (iOS 26+) |
+| NWConnection (iOS 12-18) | NetworkConnection (iOS 26+) |
 |--------------------------|----------------------------|
 | Completion handlers | async/await |
 | `[weak self]` required | No `[weak self]` needed |
