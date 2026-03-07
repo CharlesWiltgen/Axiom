@@ -35,6 +35,7 @@ Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, w
 - Applying glass button styles (iOS 26.1+)
 - Controlling button sizing behavior
 - Implementing compact search toolbars
+- Adjusting line height or baseline spacing for text
 
 ## System Requirements
 
@@ -269,6 +270,55 @@ extension View {
 ```
 
 **Button roles, GlassButtonStyle, buttonSizing** — See Liquid Glass Design System section above.
+
+### lineHeight (iOS 26)
+
+Sets the baseline-to-baseline distance between text lines. More intuitive than `.lineSpacing()` which measures bottom-of-line to top-of-next-line.
+
+#### Presets
+
+```swift
+Text("Lorem ipsum...")
+    .lineHeight(.loose)     // Increased spacing for open layouts
+    .lineHeight(.tight)     // Reduced spacing for compact layouts
+    .lineHeight(.normal)    // Constant height based on point size multiple
+    .lineHeight(.variable)  // Uses font metrics for height calculation
+```
+
+#### Precise Control
+
+```swift
+// Scale proportionally to font size
+Text("Scales with text size")
+    .lineHeight(.multiple(factor: 2))
+
+// Relative to point size with fixed increase
+Text("Point-size relative")
+    .lineHeight(.leading(increase: 30))
+
+// Absolute fixed value — does NOT scale with Dynamic Type
+Text("Fixed height")
+    .lineHeight(.exact(points: 30))
+```
+
+#### AttributedString Support
+
+```swift
+var s = AttributedString("Paragraph\nwith multiple\nlines.")
+s.lineHeight = .exact(points: 32)
+s.lineHeight = .multiple(factor: 2.5)
+s.lineHeight = .loose
+```
+
+#### Comparison with Existing APIs
+
+| API | Measures | Available |
+|-----|----------|-----------|
+| `.lineHeight()` | Baseline to baseline | iOS 26+ |
+| `.lineSpacing()` | Bottom of line to top of next | iOS 13+ |
+| `.font(.body.leading(.tight))` | Font-level leading preset | iOS 14+ |
+
+**Cross-reference** `axiom-typography-ref` — Full typography system including Dynamic Type, tracking, and internationalization
 
 ---
 
@@ -1105,6 +1155,7 @@ Apps must support resizable windows on iPad.
 🔧 DefaultToolbarItem for system components in toolbars
 🔧 Stable toolbar items (`toolbar(id:)` with matched IDs across screens)
 🔧 User-customizable toolbars (`toolbar(id:)` with `CustomizableToolbarContent`)
+🔧 Line height control (`.lineHeight()` — baseline-to-baseline distance)
 🔧 Tab bar minimization (`.tabBarMinimizeBehavior(.onScrollDown)`)
 🔧 Tab view bottom accessory (`.tabViewBottomAccessory(isEnabled:content:)` — iOS 26.1+)
 
