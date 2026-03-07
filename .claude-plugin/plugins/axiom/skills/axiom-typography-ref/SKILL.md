@@ -226,10 +226,26 @@ From WWDC 2023:
 let paragraphStyle = NSMutableParagraphStyle()
 paragraphStyle.lineSpacing = 8.0 // 8pt additional space
 
-// SwiftUI
+// SwiftUI (iOS 13+)
 Text("Custom spacing")
     .lineSpacing(8.0)
 ```
+
+**Line Height (iOS 26+):**
+
+`.lineHeight()` sets baseline-to-baseline distance directly — more intuitive than `.lineSpacing()` (which measures bottom-to-top).
+
+```swift
+// Presets
+Text("Open layout").lineHeight(.loose)
+Text("Compact layout").lineHeight(.tight)
+
+// Precise control
+Text("Scaled").lineHeight(.multiple(factor: 1.5))
+Text("Fixed").lineHeight(.exact(points: 30)) // Does NOT scale with Dynamic Type
+```
+
+Also available as `AttributedString.lineHeight` for styled strings. See `axiom-swiftui-26-ref` for full API details.
 
 ### Third-Party Font Tracking
 
