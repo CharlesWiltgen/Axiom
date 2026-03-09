@@ -39,6 +39,21 @@ Symptoms that indicate push-specific issues:
 | Notification appears twice | Both local and remote notification scheduled for same event |
 | FCM works on Android, not iOS | Missing APNs auth key upload in Firebase Console |
 
+## Anti-Rationalization
+
+| Rationalization | Why It Fails | Time Cost |
+|----------------|--------------|-----------|
+| "It worked yesterday, so entitlements are fine" | Provisioning profiles get regenerated during signing changes. Always re-verify. | 30-60 min debugging code when the profile lost push capability |
+| "The server says their payload is fine" | 55% of push failures are client-side (entitlements + tokens). Verify independently with curl. | 1-2 hours of finger-pointing before someone checks |
+| "I'll skip token verification, the error is clearly in the payload" | Wrong-environment tokens are the #1 cause of "works in dev, not production." | 30+ min debugging valid payloads sent to invalid tokens |
+| "Focus mode doesn't matter, we use default interruption level" | Default (`active`) is filtered by Focus. Only `time-sensitive` and `critical` break through. | Hours adding code workarounds for a payload-level fix |
+| "Silent push is reliable, we use it for sync" | System throttles to ~2-3/hour and ignores force-quit apps. It's a hint, not a guarantee. | Architecture rework when silent push can't sustain real-time sync |
+| "Service extension is set up, so rich notifications should work" | Extension needs correct bundle ID suffix, mutable-content in payload, AND completing within 30s. | 30+ min when any one of the three prerequisites is missing |
+| "FCM handles everything, I don't need to understand APNs" | FCM wraps APNs. Token type confusion, missing p8 key upload, and swizzling conflicts are all APNs-level problems. | Hours debugging FCM when the issue is APNs configuration |
+| "I'll test on Simulator first" | Simulator cannot register for remote notifications. No APNs token = no real push testing. | Wasted test cycle discovering Simulator limitations |
+| "Let me rewrite the notification handler" | 80% of push failures are configuration (entitlements, tokens, environment), not code. | Hours rewriting working code while the config stays broken |
+| "This worked on iOS 17, the bug must be in our code" | Each iOS version changes Focus defaults, interruption filtering, and provisional behavior. | Debugging code when the fix is a payload or Settings change |
+
 ## Mandatory First Steps
 
 Before investigating code, run these diagnostics:
