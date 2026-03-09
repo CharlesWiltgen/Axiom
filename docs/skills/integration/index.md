@@ -19,6 +19,7 @@ flowchart LR
         photo_library["photo-library"]:::discipline
         now_playing["now-playing"]:::discipline
         background_processing["background-processing"]:::discipline
+        push_notifications["push-notifications"]:::discipline
         core_location["core-location"]:::discipline
         haptics["haptics"]:::discipline
         localization["localization"]:::discipline
@@ -31,6 +32,7 @@ flowchart LR
         storekit_ref["storekit-ref"]:::reference
         avfoundation_ref["avfoundation-ref"]:::reference
         extensions_widgets_ref["extensions-widgets-ref"]:::reference
+        push_notifications_ref["push-notifications-ref"]:::reference
         core_location_ref["core-location-ref"]:::reference
     end
     axiom_ios_integration --> skills_r
@@ -70,6 +72,22 @@ BGTaskScheduler implementation and debugging:
 **When to use** Implementing background tasks, debugging execution issues, understanding scheduling factors
 
 **Requirements** iOS 13+, iOS 26+ for BGContinuedProcessingTask
+
+---
+
+### [Push Notifications](./push-notifications)
+
+Remote and local notification implementation for iOS:
+- **Permission flow** — Standard, provisional, contextual timing
+- **Token management** — APNs device token lifecycle, server sync
+- **Payload design** — Alert, silent, localized, custom data
+- **Rich notifications** — Service extensions, media attachments
+- **Communication notifications** — Avatars, Focus integration (iOS 15+)
+- **Live Activity push** — Push-start, push-update, push-end transport
+
+**When to use** Setting up APNs, designing notification payloads, implementing actionable or rich notifications, debugging delivery issues
+
+**Requirements** iOS 10+ (core), iOS 15+ (communication/time-sensitive), iOS 18+ (broadcast push)
 
 ---
 
