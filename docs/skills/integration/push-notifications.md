@@ -47,19 +47,6 @@ Questions you can ask Claude that will draw from this skill:
 - **Live Activity push** — Push token observation, start/update/end flows
 - **Pressure scenarios** — Shipping under deadline, debugging token mismatch
 
-## Key Pattern
-
-### Minimal Remote Notification Setup
-
-```swift
-// Request permission in context
-let center = UNUserNotificationCenter.current()
-let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
-if granted {
-    await MainActor.run { UIApplication.shared.registerForRemoteNotifications() }
-}
-```
-
 ## Documentation Scope
 
 This page documents the `axiom-push-notifications` skill — push notification patterns Claude uses when helping you implement remote and local notifications.
