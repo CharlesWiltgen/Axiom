@@ -52,9 +52,16 @@ Use this router when:
 | "Dynamic Type just needs .scaledFont" | Dynamic Type has 7 common violations. accessibility-diag catches them all. |
 | "Color contrast looks fine to me" | Visual assessment is unreliable. WCAG ratios require measurement. accessibility-diag validates. |
 
-## Critical Pattern
+## Critical Patterns
 
-**accessibility-diag** covers:
+#### Image Accessibility
+
+- Use `Image(decorative: "photo")` for purely decorative images — automatically hidden from VoiceOver (equivalent to `accessibilityHidden(true)` but semantically clearer)
+- Use `accessibilityInputLabels()` for buttons with complex or changing labels — improves Voice Control accuracy by providing alternative labels
+- Respect `accessibilityDifferentiateWithoutColor` environment value — when active, provide non-color cues (icons, patterns, labels) alongside color indicators
+
+#### accessibility-diag Coverage
+
 - 8 critical accessibility issues (including Assistive Access)
 - WCAG compliance levels (A, AA, AAA)
 - Assistive Access mode (cognitive disabilities, iOS 17+)
