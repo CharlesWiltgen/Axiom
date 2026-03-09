@@ -25,6 +25,7 @@ flowchart LR
         hig["hig"]:::discipline
         uikit_bridging["uikit-bridging"]:::discipline
         ui_testing["ui-testing"]:::discipline
+        ux_flow_audit["ux-flow-audit"]:::discipline
     end
     axiom_ios_ui --> skills_d
 
@@ -45,6 +46,7 @@ flowchart LR
         agent_nav["swiftui-nav-auditor"]:::agent
         agent_lg["liquid-glass-auditor"]:::agent
         agent_tk["textkit-auditor"]:::agent
+        agent_ux["ux-flow-auditor"]:::agent
     end
     axiom_ios_ui --> agents_sg
 ```
@@ -92,3 +94,8 @@ flowchart LR
   - *"How do I switch between login and main screens without flicker?"*
   - *"Where should auth state live in my app?"*
   - *"When should I split my app into modules?"*
+
+- **[UX Flow Audit](/agents/ux-flow-auditor)** – Detect dead ends, dismiss traps, buried CTAs, missing empty/loading/error states, and accessibility dead ends
+  - *"Check my app for UX dead ends and dismiss traps"*
+  - *"Are there any screens users can't escape from?"*
+  - *"Audit my user flows for missing states"*
