@@ -164,6 +164,11 @@ NavigationStack(path: $path) {
 }
 ```
 
+#### Navigation Anti-Patterns
+
+- **Never mix `navigationDestination(for:)` and `NavigationLink(destination:)`** in the same NavigationStack hierarchy — causes undefined behavior
+- **Register `navigationDestination(for:)` once per data type** — duplicates cause the wrong view to appear
+
 #### Placement rules
 - Place `navigationDestination` outside lazy containers (not inside ForEach)
 - Place near related NavigationLinks for code organization
