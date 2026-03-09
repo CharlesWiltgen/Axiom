@@ -1,11 +1,7 @@
 ---
 name: axiom-push-notifications-ref
-description: Push notifications API reference — APNs HTTP/2 transport, JWT auth, payload keys, UNUserNotificationCenter, UNNotificationCategory, UNNotificationServiceExtension, Live Activity push headers, broadcast push, command-line testing
+description: Use when needing APNs HTTP/2 transport details, JWT authentication setup, payload key reference, UNUserNotificationCenter API, notification category/action registration, service extension lifecycle, local notification triggers, Live Activity push headers, or broadcast push format. Covers complete push notification API surface.
 license: MIT
-compatibility: iOS 10+, iPadOS 10+, watchOS 3+, macOS 10.14+, tvOS 10+
-metadata:
-  version: "1.0.0"
-  last-updated: "2026-03-09"
 ---
 
 # Push Notifications API Reference

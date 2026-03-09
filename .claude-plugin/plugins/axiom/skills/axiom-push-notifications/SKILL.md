@@ -1,11 +1,7 @@
 ---
 name: axiom-push-notifications
-description: Push notification implementation patterns — permission flow, token management, payload design, categories, actions, service extensions, communication notifications, Focus interaction, Live Activity push transport, broadcast push, FCM provider gotchas
+description: Use when implementing remote or local push notifications, requesting notification permission, managing APNs device tokens, adding notification actions/categories, building service extensions, or debugging push delivery failures. Covers APNs, FCM, Live Activity push transport, broadcast push, communication notifications, Focus interaction.
 license: MIT
-compatibility: iOS 10+, iPadOS 10+, watchOS 3+, macOS 10.14+, tvOS 10+
-metadata:
-  version: "1.0.0"
-  last-updated: "2026-03-09"
 ---
 
 # Push Notifications
@@ -160,7 +156,7 @@ Redirect to Settings when user has denied:
 
 ```swift
 func promptToOpenSettings() {
-    // iOS 15.4+
+    // iOS 16+
     if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
         UIApplication.shared.open(url)
     } else {
@@ -525,7 +521,10 @@ import Intents
 override func didReceive(_ request: UNNotificationRequest,
                          withContentHandler contentHandler:
                             @escaping (UNNotificationContent) -> Void) {
-    let bestAttemptContent = request.content.mutableCopy() as! UNMutableNotificationContent
+    guard let bestAttemptContent = request.content.mutableCopy() as? UNMutableNotificationContent else {
+        contentHandler(request.content)
+        return
+    }
 
     // 1. Create sender persona
     let senderImage = INImage(url: avatarURL) // or INImage(imageData:)

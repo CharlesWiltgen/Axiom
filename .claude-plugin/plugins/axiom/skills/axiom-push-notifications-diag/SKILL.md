@@ -1,11 +1,7 @@
 ---
 name: axiom-push-notifications-diag
-description: notifications not arriving, token registration failed, push works in dev not production, silent notifications not waking app, rich notification missing image, Live Activity not updating via push, notifications stopped after iOS update, APNs rejected payload
+description: Use when push notifications fail to arrive, token registration errors occur, notifications work in development but not production, silent push does not wake app, rich notification media is missing, or Live Activity stops updating via push. Covers APNs errors, environment mismatches, Focus mode filtering, service extension failures, FCM diagnostics.
 license: MIT
-compatibility: iOS 10+, iPadOS 10+, watchOS 3+, macOS 10.14+
-metadata:
-  version: "1.0.0"
-  last-updated: "2026-03-09"
 ---
 
 # Push Notification Diagnostics
@@ -458,6 +454,44 @@ Messaging.messaging().token { token, error in
 | Focus mode filtering | Interruption level | Use .timeSensitive for important notifications |
 | FCM iOS failure | Firebase Console | Upload .p8 key with correct Key ID and Team ID |
 | Actions not showing | Category ID | Match category identifier in payload to registered categories |
+
+## Pressure Scenarios
+
+### Scenario 1: "Server team says the problem is on the iOS side"
+
+**Context**: Push notifications stopped working. The backend team says their payload is fine and the problem must be in the app.
+
+**Pressure**: Skip client-side diagnostics and assume the server is right. Start rewriting notification handling code.
+
+**Reality**: 55% of push failures are entitlement/token issues (Steps 1-2), not code bugs. The server may be sending to the wrong environment or using an expired token.
+
+**Correct action**: Run all 4 mandatory diagnostic steps before touching code. Share the curl test (Step 3) results with the server team — this objectively proves which side has the issue.
+
+**Push-back template**: "Let me verify the client-side chain first — I can share the curl results in 5 minutes so we both know exactly where the failure is."
+
+### Scenario 2: "Notifications stopped after iOS update, ship a fix today"
+
+**Context**: Users report notifications stopped working after updating to a new iOS version. Management wants a hotfix today.
+
+**Pressure**: Start debugging notification code immediately. Assume Apple broke something.
+
+**Reality**: New iOS versions often enable Focus mode by default or change interruption level filtering. 15% of push failures are Focus/interruption suppression — no code change needed on your side.
+
+**Correct action**: Check Tree 6 ("Notifications stopped after iOS update"). Verify Focus mode settings on test devices before changing any code. If Focus is filtering, the fix is setting the correct `interruption-level` in the payload, not rewriting notification handling.
+
+**Push-back template**: "iOS updates often change Focus mode defaults. Let me check interruption levels first — if that's the cause, the fix is a one-line payload change, not a code rewrite."
+
+### Scenario 3: "Silent push worked last week, nothing changed"
+
+**Context**: Background content sync via silent push stopped working. "We didn't change anything."
+
+**Pressure**: Deep-dive into background execution code. Assume a regression.
+
+**Reality**: Silent push has a system-enforced throttle budget (~2-3/hour). If usage increased, or if users force-quit the app, silent push stops working regardless of code quality. Also, the provisioning profile may have been regenerated without the push entitlement.
+
+**Correct action**: Follow Tree 3 ("Silent notifications not waking app"). Check throttle budget, force-quit state, and entitlements before debugging code.
+
+**Push-back template**: "Silent push has a system throttle budget. Let me verify we haven't exceeded it and that the app hasn't been force-quit on test devices — those are the two most common causes."
 
 ## Checklist
 
