@@ -51,6 +51,15 @@ When integration issues overlap with other domains:
 - Location authorization, monitoring, background location → **also invoke ios-performance** or **ios-integration** (core-location)
 - Map performance with many annotations → **also invoke ios-performance** if profiling needed
 
+**Push notification + Live Activity issues** (push not updating Live Activity):
+- Push transport, APNs headers, token management → **stay in ios-integration** (push-notifications, push-notifications-diag)
+- ActivityKit UI, attributes, Dynamic Island → **also invoke ios-integration** (extensions-widgets)
+- Background execution timing → **also invoke ios-concurrency** if async patterns are involved
+
+**Push notification + background processing** (silent push not triggering background work):
+- Push payload and delivery → **stay in ios-integration** (push-notifications-diag)
+- Background execution, BGTaskScheduler → **also invoke ios-integration** (background-processing)
+
 ## Routing Logic
 
 ### Apple Intelligence & Siri
@@ -107,6 +116,12 @@ When integration issues overlap with other domains:
 **Background task debugging** → `/skill axiom-background-processing-diag`
 **Background task API reference** → `/skill axiom-background-processing-ref`
 
+### Push Notifications
+
+**Push notification implementation** → `/skill axiom-push-notifications`
+**Push notification API reference** → `/skill axiom-push-notifications-ref`
+**Push notification debugging** → `/skill axiom-push-notifications-diag`
+
 ### Location Services
 
 **Implementation patterns** → `/skill axiom-core-location`
@@ -151,9 +166,12 @@ When integration issues overlap with other domains:
 14. Localization? → localization
 15. Privacy / permissions? → privacy-ux
 16. Background processing? → background-processing (patterns), background-processing-diag (debugging), background-processing-ref (API)
-17. Location services? → core-location (patterns), core-location-diag (debugging), core-location-ref (API)
-18. Maps / MapKit / annotations / directions? → mapkit (patterns), mapkit-ref (API), mapkit-diag (debugging)
-19. Alarms / AlarmKit? → alarmkit-ref
+17. Push notification implementation, APNs, or remote notification handling? → push-notifications (patterns), push-notifications-ref (API), push-notifications-diag (debugging)
+18. Need APNs payload format, headers, or JWT auth details? → push-notifications-ref
+19. Push notifications not arriving, token issues, or delivery failures? → push-notifications-diag
+20. Location services? → core-location (patterns), core-location-diag (debugging), core-location-ref (API)
+21. Maps / MapKit / annotations / directions? → mapkit (patterns), mapkit-ref (API), mapkit-diag (debugging)
+22. Alarms / AlarmKit? → alarmkit-ref
 
 ## Anti-Rationalization
 
@@ -167,6 +185,7 @@ When integration issues overlap with other domains:
 | "I'll just use MKMapView, I know it already" | SwiftUI Map is 10x less code for standard map features. mapkit has the decision tree. |
 | "MapKit search doesn't work, I'll use Google Maps SDK" | MapKit search needs region bias and resultTypes configuration. mapkit-diag fixes this in 5 minutes. |
 | "Alarm scheduling is just UNNotificationRequest" | AlarmKit (iOS 26+) has dedicated alarm UI, authorization, and Live Activity integration. alarmkit-ref covers the framework. |
+| "Push notifications are just a payload and a token" | Token lifecycle, Focus interruption levels, service extension gotchas, and sandbox/production mismatch cause 80% of push bugs. push-notifications covers all. |
 
 ## Example Invocations
 
@@ -256,3 +275,18 @@ User: "How do I schedule alarms in iOS 26?"
 
 User: "How do I integrate AlarmKit with Live Activities?"
 → Invoke: `/skill axiom-alarmkit-ref`
+
+User: "How do I implement push notifications?"
+→ Invoke: `/skill axiom-push-notifications`
+
+User: "What APNs headers do I need?"
+→ Invoke: `/skill axiom-push-notifications-ref`
+
+User: "Push notifications work in dev but not production"
+→ Invoke: `/skill axiom-push-notifications-diag`
+
+User: "My Live Activity isn't updating via push"
+→ Invoke: `/skill axiom-push-notifications-diag` + `/skill axiom-extensions-widgets`
+
+User: "Should I use FCM or direct APNs?"
+→ Invoke: `/skill axiom-push-notifications`
