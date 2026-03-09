@@ -84,7 +84,8 @@ export default withMermaid(defineConfig({
             { text: 'swiftui-architecture-auditor', link: '/agents/swiftui-architecture-auditor' },
             { text: 'swiftui-layout-auditor', link: '/agents/swiftui-layout-auditor' },
             { text: 'swiftui-performance-analyzer', link: '/agents/swiftui-performance-analyzer' },
-            { text: 'swiftui-nav-auditor', link: '/agents/swiftui-nav-auditor' }
+            { text: 'swiftui-nav-auditor', link: '/agents/swiftui-nav-auditor' },
+            { text: 'ux-flow-auditor', link: '/agents/ux-flow-auditor' }
           ]
         },
         {

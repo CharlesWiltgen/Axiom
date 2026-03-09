@@ -78,6 +78,7 @@ Use this router when working with:
 **Architecture audit** → Launch `swiftui-architecture-auditor` agent (separation of concerns, logic in views, testability)
 **Performance scan** → Launch `swiftui-performance-analyzer` agent or `/axiom:audit swiftui-performance` (expensive view body ops, unnecessary updates)
 **Navigation audit** → Launch `swiftui-nav-auditor` agent or `/axiom:audit swiftui-nav` (deep link gaps, state restoration, wrong containers)
+**UX flow audit** → Launch `ux-flow-auditor` agent or `/axiom:audit ux-flow` (dead ends, dismiss traps, buried CTAs, missing empty/loading/error states)
 **Liquid Glass scan** → Launch `liquid-glass-auditor` agent or `/axiom:audit liquid-glass` (adoption opportunities, toolbar improvements)
 **TextKit scan** → Launch `textkit-auditor` agent or `/axiom:audit textkit` (TextKit 1 fallbacks, deprecated glyph APIs, Writing Tools)
 
@@ -115,11 +116,13 @@ digraph ios_ui {
     swiftui_type -> "swiftui-search-ref" [label="search"];
     swiftui_type -> "swiftui-26-ref" [label="iOS 26 features"];
     swiftui_type -> "uikit-bridging" [label="UIKit interop"];
+    swiftui_type -> "ux-flow-audit" [label="UX dead ends, dismiss traps"];
 
     uikit_type [label="UIKit issue?" shape=diamond];
     uikit_type -> "auto-layout-debugging" [label="Auto Layout"];
     uikit_type -> "uikit-animation-debugging" [label="animations"];
     uikit_type -> "uikit-bridging" [label="SwiftUI embedding"];
+    uikit_type -> "ux-flow-audit" [label="UX dead ends, dismiss traps"];
 
     design_type [label="Design topic?" shape=diamond];
     design_type -> "liquid-glass" [label="Liquid Glass"];
@@ -134,6 +137,7 @@ digraph ios_ui {
 - Want architecture audit (separation of concerns, testability)? → swiftui-architecture-auditor (Agent)
 - Want SwiftUI performance scan (view body ops, unnecessary updates)? → swiftui-performance-analyzer (Agent)
 - Want navigation audit (deep links, state restoration)? → swiftui-nav-auditor (Agent)
+- Want UX flow audit (dead ends, dismiss traps, missing states)? → ux-flow-auditor (Agent)
 - Want Liquid Glass adoption scan? → liquid-glass-auditor (Agent)
 - Want TextKit scan (Writing Tools, deprecated APIs)? → textkit-auditor (Agent)
 
@@ -146,6 +150,7 @@ digraph ios_ui {
 | "It's just a view not updating, I'll debug it" | View update failures have 4 root causes. swiftui-debugging diagnoses in 5 min. |
 | "I'll just add .animation() and fix later" | Animation issues compound. swiftui-animation-ref has the correct patterns. |
 | "This UI is simple, no architecture needed" | Even small features benefit from separation. swiftui-architecture prevents refactoring debt. |
+| "UX issues are just polish, we'll fix later" | Dead ends and dismiss traps cause 1-star reviews. ux-flow-audit catches them in minutes. |
 | "I know how .searchable works" | Search has 6 gotchas (navigation container, isSearching level, suggestion completion). swiftui-search-ref covers all of them. |
 | "I know SF Symbols, it's just Image(systemName:)" | 4 rendering modes, 12+ effects, 3 Draw playback modes, custom symbol authoring. sf-symbols has decision trees for all of them. |
 | "Drag and drop is just .draggable and .dropDestination" | UTType declarations, representation ordering, file lifecycle, cross-app transfer gotchas. transferable-ref covers all of them. |
@@ -219,6 +224,9 @@ User: "I'm building a tvOS app and focus navigation isn't working"
 
 User: "How do I handle text input on tvOS?"
 → Invoke: `/skill axiom-tvos`
+
+User: "Check my app for UX dead ends and dismiss traps"
+→ Invoke: `ux-flow-auditor` agent
 
 User: "Check my SwiftUI architecture for separation of concerns"
 → Invoke: `swiftui-architecture-auditor` agent
