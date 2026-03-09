@@ -606,6 +606,8 @@ func application(_ application: UIApplication,
 - Budget depletes with each launch and refills throughout day
 - ~30 seconds runtime per launch
 
+> For silent push notification patterns (content-available payload, throttling limits, APNs setup), see axiom-push-notifications.
+
 ---
 
 ## Swift 6 Cancellation Integration
@@ -1000,7 +1002,7 @@ subsystem:com.apple.backgroundtaskscheduler
 
 **Docs**: /backgroundtasks/bgtaskscheduler, /backgroundtasks/starting-and-terminating-tasks-during-development
 
-**Skills**: axiom-background-processing-ref, axiom-background-processing-diag, axiom-energy
+**Skills**: axiom-background-processing-ref, axiom-background-processing-diag, axiom-energy, axiom-push-notifications
 
 ---
 

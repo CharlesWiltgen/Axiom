@@ -918,6 +918,8 @@ Recommendation: Position as "near real-time" (accurate) vs "instant" (misleading
 - Budget limits exist for battery optimization
 - Users prefer longer battery life over millisecond-faster scores
 
+> For comprehensive push notification setup (APNs auth, payload format, token management, service extensions), see axiom-push-notifications and axiom-push-notifications-ref. This skill covers the ActivityKit UI and state management side.
+
 ---
 
 ## Scenario 3: "Control Center control is slow"
@@ -1044,3 +1046,9 @@ Before shipping widgets or Live Activities:
 ---
 
 **Remember**: Widgets are NOT mini apps. They're glanceable snapshots rendered by the system. Extensions run in sandboxed environments with strict resource limits. Follow the patterns in this skill to avoid the most common pitfalls.
+
+---
+
+## Resources
+
+**Skills**: axiom-extensions-widgets-ref, axiom-push-notifications, axiom-push-notifications-ref
