@@ -249,6 +249,21 @@ authorization: bearer eyAia2lkIjog...
 }
 ```
 
+#### Critical Alert
+
+```json
+{
+    "aps": {
+        "alert": {
+            "title": "Server Down",
+            "body": "Production database is unreachable"
+        },
+        "sound": { "critical": 1, "name": "default", "volume": 1.0 },
+        "interruption-level": "critical"
+    }
+}
+```
+
 #### Time-Sensitive with Category
 
 ```json
@@ -583,6 +598,17 @@ let request = UNNotificationRequest(
 
 try await UNUserNotificationCenter.current().add(request)
 ```
+
+### Limitations
+
+| Limitation | Detail |
+|-----------|--------|
+| Minimum repeat interval | 60 seconds for UNTimeIntervalNotificationTrigger |
+| Location authorization | Location trigger requires When In Use or Always authorization |
+| No service extensions | Local notifications do not trigger UNNotificationServiceExtension |
+| No background wake | Local notifications cannot use content-available for background processing |
+| App extensions | Local notifications cannot be scheduled from app extensions (use app group + main app) |
+| Pending limit | 64 pending notification requests per app |
 
 ---
 
