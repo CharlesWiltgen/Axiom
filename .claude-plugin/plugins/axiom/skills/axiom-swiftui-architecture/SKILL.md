@@ -935,6 +935,44 @@ struct FormView: View {
 
 See MVVM Mistake 2 in Part 2 above — split by concern into separate ViewModels.
 
+## ❌ Anti-Pattern 5: @AppStorage Inside @Observable
+
+**Never use `@AppStorage` inside an `@Observable` class** — it silently breaks observation. `@AppStorage` is a property wrapper designed for SwiftUI views, not model classes.
+
+```swift
+// ❌ BROKEN — @AppStorage silently breaks @Observable
+@Observable
+class Settings {
+    @AppStorage("theme") var theme = "light"  // Changes won't trigger view updates
+}
+
+// ✅ Read @AppStorage in view, pass to model
+struct SettingsView: View {
+    @AppStorage("theme") private var theme = "light"
+    // ...
+}
+```
+
+## ❌ Anti-Pattern 6: Binding(get:set:) in View Body
+
+Creating `Binding(get:set:)` in the view body creates a new binding on every evaluation, breaking SwiftUI's identity tracking.
+
+```swift
+// ❌ New Binding created every body evaluation
+var body: some View {
+    TextField("Name", text: Binding(
+        get: { model.name },
+        set: { model.name = $0 }
+    ))
+}
+
+// ✅ Use @Bindable or computed binding
+var body: some View {
+    @Bindable var model = model
+    TextField("Name", text: $model.name)
+}
+```
+
 ---
 
 # Code Review Checklist
