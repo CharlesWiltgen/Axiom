@@ -813,6 +813,11 @@ SwiftUI's new support for rich text editing is great for experiences like commen
 
 **Note** The WWDC transcript uses "TextView" as editorial language. The actual SwiftUI API is `TextEditor` which now supports `AttributedString` binding for rich text editing.
 
+#### Plain Text vs Rich Text
+
+- **For plain text**: Prefer `TextField("Label", text: $text, axis: .vertical)` over `TextEditor` — supports placeholder text, consistent styling, and automatic vertical expansion (iOS 16+)
+- **For rich text**: Use `TextEditor` with `AttributedString` binding (iOS 26+) — `TextField` does not support `AttributedString`
+
 ### Rich Text Editing
 
 ```swift

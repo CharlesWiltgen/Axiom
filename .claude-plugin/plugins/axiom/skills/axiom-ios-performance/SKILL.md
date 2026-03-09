@@ -110,6 +110,11 @@ Use this router when:
 
 **Swift performance scan** → Launch `swift-performance-analyzer` agent or `/axiom:audit swift-performance` (unnecessary copies, ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs, memory layout)
 
+**Modern Swift idioms** → `/skill axiom-swift-modern`
+- Outdated API patterns (Date(), CGFloat, DateFormatter)
+- Foundation modernization (URL.documentsDirectory, FormatStyle)
+- Claude-specific hallucination corrections
+
 ### MetricKit Integration
 
 **MetricKit API reference** → `/skill axiom-metrickit-ref`
@@ -158,6 +163,8 @@ Use this router when:
 20. EXC_BAD_INSTRUCTION crash with DispatchSourceTimer? → timer-patterns (4 crash patterns)
 21. Choosing between Timer, DispatchSourceTimer, Combine timer, async timer? → timer-patterns
 22. Need timer API syntax/lifecycle? → timer-patterns-ref
+23. Code review for outdated Swift patterns? → swift-modern
+24. Claude generating legacy APIs (DateFormatter, CGFloat, DispatchQueue)? → swift-modern
 
 ## Anti-Rationalization
 
@@ -174,6 +181,7 @@ Use this router when:
 | "I'll just add print statements to debug this" | Print-debug cycles cost 3-5 min each (build + run + reproduce). An LLDB breakpoint costs 30 seconds. axiom-lldb has the commands. |
 | "I'll just use Timer.scheduledTimer, it's simpler" | Timer stops during scrolling (`.default` mode), retains its target (leak). timer-patterns has the decision tree. |
 | "DispatchSourceTimer crashed but it's intermittent, let's ship" | DispatchSourceTimer has 4 crash patterns that are ALL deterministic. timer-patterns diagnoses which one. |
+| "Claude already knows modern Swift" | Claude defaults to pre-5.5 patterns (Date(), CGFloat, filter().count). swift-modern has the correction table. |
 
 ## Critical Patterns
 
@@ -279,3 +287,9 @@ User: "Should I use Timer or DispatchSourceTimer?"
 
 User: "How do I create an AsyncTimerSequence?"
 → Invoke: `/skill axiom-timer-patterns-ref`
+
+User: "Review my Swift code for outdated patterns"
+→ Invoke: `/skill axiom-swift-modern`
+
+User: "Is there a more modern way to do this?"
+→ Invoke: `/skill axiom-swift-modern`

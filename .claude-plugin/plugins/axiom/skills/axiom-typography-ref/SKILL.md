@@ -81,6 +81,10 @@ From WWDC 2020:
 | `.caption` | 12pt | Small annotations |
 | `.caption2` | 11pt | Smallest annotations |
 
+#### Font Size Guidance
+
+- **Avoid `.caption2` for readable content** — at 11pt, it's acceptable for timestamps and metadata annotations but too small for body text or labels users need to read. Prefer `.caption` or `.footnote` as the minimum for readable content.
+
 ### Emphasized Text Styles
 
 Apply `.bold` symbolic trait to get emphasized variants:

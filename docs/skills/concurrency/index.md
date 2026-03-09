@@ -14,6 +14,7 @@ flowchart LR
     subgraph skills_d["Skills"]
         swift_concurrency["swift-concurrency"]:::discipline
         swift_performance["swift-performance"]:::discipline
+        swift_modern["swift-modern"]:::discipline
         assume_isolated["assume-isolated"]:::discipline
         synchronization["synchronization"]:::discipline
         ownership_conventions["ownership-conventions"]:::discipline
@@ -47,6 +48,10 @@ flowchart LR
 - **[Swift Performance](/skills/concurrency/swift-performance)** – Optimizing Swift code performance: ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs
   - *"My Swift code is allocating too much memory"*
   - *"How do I reduce ARC overhead in hot loops?"*
+
+- **[Modern Swift Idioms](/skills/concurrency/swift-modern)** – Corrects outdated Swift patterns: legacy APIs, pre-5.5 syntax, Foundation modernization, Claude hallucination fixes
+  - *"Review my Swift code for outdated patterns"*
+  - *"Why am I using DateFormatter when I could use FormatStyle?"*
 
 - **[assumeIsolated](/skills/concurrency/assume-isolated)** – Synchronous actor access for tests, legacy callbacks, and performance-critical code
   - *"How do I access MainActor state from a delegate callback that runs on main thread?"*

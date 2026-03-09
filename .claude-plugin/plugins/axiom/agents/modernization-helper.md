@@ -38,6 +38,7 @@ tools:
   - Read
 skills:
   - axiom-ios-ui
+  - axiom-ios-performance
 ---
 
 # Modernization Helper Agent
@@ -314,6 +315,24 @@ isExpanded.toggle()
 // Or use new binding animation:
 $isExpanded.animation(.spring()).wrappedValue.toggle()
 ```
+
+### Pattern 8: Swift Language Modernization (LOW)
+
+**Why migrate**: Clearer, more efficient, modern Swift idioms
+
+**Detection**:
+```
+Grep: Date\(\)
+Grep: CGFloat
+Grep: replacingOccurrences
+Grep: DateFormatter\(\)
+Grep: \.filter\(.*\)\.count
+Grep: Task\.sleep\(nanoseconds:
+```
+
+**Reference**: See `axiom-swift-modern` skill for the full modern API replacement table.
+
+Report matches as LOW priority unless they appear in hot paths (then MEDIUM).
 
 ## Audit Process
 
