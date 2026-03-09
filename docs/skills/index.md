@@ -27,6 +27,7 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**typography-ref**](/reference/typography-ref) | San Francisco fonts, text styles, Dynamic Type, tracking, leading |
 | [**uikit-bridging**](/skills/ui-design/uikit-bridging) | Wrapping UIKit views/controllers in SwiftUI with UIViewRepresentable |
 | [**uikit-animation-debugging**](/skills/ui-design/uikit-animation-debugging) | CAAnimation issues, completion handlers, spring physics |
+| [**ux-flow-audit**](/agents/ux-flow-auditor) | Dead ends, dismiss traps, buried CTAs, missing empty/loading/error states |
 
 ### Computer Vision
 
