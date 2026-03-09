@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: "area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models, screenshots"
+argument: "area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models, screenshots, ux-flow"
 disable-model-invocation: true
 ---
 
@@ -41,6 +41,7 @@ If no area specified → analyze project and suggest relevant audits
 | swiftui-layout | swiftui-layout-auditor | GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss |
 | database-schema | database-schema-auditor | Unsafe ALTER TABLE, DROP operations, missing idempotency, FK misuse, transaction safety |
 | screenshots | screenshot-validator | Placeholder text, wrong dimensions, debug indicators, broken UI, competitor references |
+| ux-flow | ux-flow-auditor | Dead-end views, dismiss traps, buried CTAs, missing empty/loading/error states, accessibility dead ends |
 
 ## Direct Dispatch
 
@@ -73,8 +74,9 @@ When running multiple audits (either user-requested or from smart suggestions):
    - security → Hardcoded credentials, Privacy Manifests, ATS
    - testing → Flaky tests, slow CI
 
-3. **MEDIUM audits** (architecture, performance):
+3. **MEDIUM audits** (architecture, performance, UX):
    - swiftui-architecture → Logic in views, testability
+   - ux-flow → Dead ends, dismiss traps, missing states, UX defects
    - swiftui-performance → Expensive operations, missing lazy
    - swiftui-layout → GeometryReader misuse, hardcoded breakpoints, identity loss
    - swift-performance → ARC overhead, allocations
@@ -91,6 +93,7 @@ When running multiple audits (either user-requested or from smart suggestions):
 **Batch Recommendations:**
 - For pre-release: Run CRITICAL + HIGH audits
 - For architecture review: Run swiftui-architecture + swiftui-nav + swiftui-layout + swiftui-performance
+- For UX review: Run ux-flow + swiftui-nav + accessibility
 - For performance tuning: Run swift-performance + swiftui-performance + memory + energy
 - For App Store prep: Run accessibility + networking + storage + security + screenshots
 - For CI reliability: Run testing + concurrency + memory
@@ -124,6 +127,38 @@ When running multiple audits (user selected 2+ areas):
 
 **Single audit**: When only one audit is requested, run it normally (foreground, full output to conversation).
 
+## Regression Tracking
+
+When writing results to `scratch/audit-{area}-{date}.md`:
+
+1. Check for most recent previous file for that area (`scratch/audit-{area}-*.md`)
+2. If found, include a "Regression Check" section in output comparing:
+   - **New issues** (not in previous run)
+   - **Fixed issues** (in previous but not current)
+   - **Persistent issues** (in both runs)
+3. Summary line: "3 new, 5 fixed, 12 persistent since last audit on YYYY-MM-DD"
+
+No new files, no YAML — markdown in, markdown out. The `scratch/` directory IS the persistence layer.
+
+## Enhanced Rating Table
+
+For CRITICAL and HIGH findings, agents should include an enhanced rating table:
+
+```markdown
+| Finding | Urgency | Blast Radius | Fix Effort | ROI |
+|---------|---------|-------------|-----------|-----|
+| Dead-end after payment | Ship-blocker | All users | 30 min | Critical |
+| Missing empty state | Next release | Users who search | 15 min | High |
+```
+
+**Columns**:
+- **Urgency**: Ship-blocker / Next release / Backlog
+- **Blast Radius**: All users / Specific flow / Edge case
+- **Fix Effort**: Time estimate for the fix
+- **ROI**: Computed from urgency x blast radius / effort
+
+Individual agents adopt this format incrementally — no requirement to update all agents at once. The `ux-flow-auditor` uses this format natively. When updating other agents, prioritize those with high-stakes findings: `security-privacy-scanner`, `core-data-auditor`, `database-schema-auditor`, `concurrency-auditor`.
+
 ## Project Analysis (No Area Specified)
 
 If no area argument:
@@ -147,6 +182,7 @@ If no area argument:
    - Find GeometryReader / layout patterns → suggest swiftui-layout audit
    - Find registerMigration / ALTER TABLE / DatabaseMigrator → suggest database-schema audit
    - Find screenshots folder (Screenshots/, screenshots/, marketing/) → suggest screenshots audit
+   - Find NavigationStack/sheet/TabView → suggest ux-flow audit
 
 2. Present findings and ask: "Based on your project, I suggest these audits: [list]. Which would you like to run?"
 
