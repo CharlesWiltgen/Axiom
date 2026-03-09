@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: "area (optional) - Which audit to run: memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models, screenshots, ux-flow"
+argument: "area (optional) - Which audit to run: all, memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models, screenshots, ux-flow"
 disable-model-invocation: true
 ---
 
@@ -46,6 +46,9 @@ If no area specified → analyze project and suggest relevant audits
 ## Direct Dispatch
 
 If area argument provided ($ARGUMENTS contains an area):
+
+If $ARGUMENTS is "all" → Launch the `health-check` agent instead. This runs all relevant auditors in parallel with a unified report.
+
 1. Look up the agent name from the table above
 2. Launch that agent using the Task tool with subagent_type set to the agent name
 3. Pass the current directory path to the agent

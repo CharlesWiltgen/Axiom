@@ -24,6 +24,7 @@ This routes your question to the right Axiom skill or agent automatically.
 | [**`/axiom:audit`**](./utility/audit) | Unified audit command - smart selector or direct area targeting | Suggestions or specific audit execution |
 | [**`/axiom:analyze-crash`**](./debugging/analyze-crash) | Parse and analyze crash logs (.ips, .crash) to identify root cause | Crash pattern categorization and actionable diagnostics |
 | [**`/axiom:fix-build`**](./build/fix-build) | Xcode build failures, environment issues, zombie processes, Derived Data, SPM cache, simulator state | Automatic diagnostics and fixes with verification |
+| [**`/axiom:health-check`**](./health-check) | Auto-detect relevant auditors, run in parallel, deduplicate findings | Prioritized report with executive summary + per-domain details |
 | [**`/axiom:optimize-build`**](./build/optimize-build) | Build performance bottlenecks, compilation settings, build phase scripts, type checking issues | Optimization recommendations with time savings estimates |
 | [**`/axiom:profile`**](./debugging/profile) | Automated performance profiling via xctrace CLI (CPU, memory, leaks, SwiftUI) | Trace recording, export, and analysis summary |
 | [**`/axiom:run-tests`**](./testing/run-tests) | Run XCUITests and parse .xcresult bundles for structured results | Test results with failure analysis and attachment export |
@@ -37,6 +38,7 @@ This routes your question to the right Axiom skill or agent automatically.
 # Utility commands
 /axiom:ask "My build is failing"
 /axiom:audit                    # Smart mode - analyze and suggest audits
+/axiom:health-check             # Run all relevant auditors in parallel
 /axiom:status                   # Check health
 
 # Audit commands (unified syntax)
@@ -71,6 +73,7 @@ Commands output results with `file:line` references and link to relevant skills 
 ### Utility
 - `/axiom:ask` — Natural language helper
 - `/axiom:audit` — Unified audit command (smart selector or direct area targeting)
+- `/axiom:health-check` — Run all relevant auditors in parallel with unified report
 - `/axiom:status` — Project health dashboard
 
 ### Build & Environment
