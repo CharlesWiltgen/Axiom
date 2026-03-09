@@ -45,16 +45,6 @@ The diagnostic follows a systematic approach:
 5. **Extension debugging** — Service extension not called, attachment download failures, 30s timeout
 6. **Environment mismatch** — Sandbox vs production tokens, certificate type, APNs endpoint
 
-## When to Use This Diagnostic
-
-Use this diagnostic when:
-- Push notifications stop arriving unexpectedly
-- Token registration succeeds but notifications never arrive
-- Notifications work inconsistently across environments
-- Service extension modifications aren't applied
-- Live Activity push updates are ignored
-- You need to verify APNs delivery with server logs
-
 ## Documentation Scope
 
 This page documents the `push-notifications-diag` skill — diagnostic workflows Claude uses when helping you debug push notification issues.

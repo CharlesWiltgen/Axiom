@@ -290,3 +290,9 @@ User: "My Live Activity isn't updating via push"
 
 User: "Should I use FCM or direct APNs?"
 → Invoke: `/skill axiom-push-notifications`
+
+User: "How do I use pushTokenUpdates for Live Activities?"
+→ Invoke: `/skill axiom-extensions-widgets` (ActivityKit API owns push token observation)
+
+User: "How do I test push notifications without a real server?"
+→ Invoke: `/skill axiom-push-notifications-ref` (command-line testing section)

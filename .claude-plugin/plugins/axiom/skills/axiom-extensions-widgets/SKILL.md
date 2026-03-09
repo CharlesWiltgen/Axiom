@@ -1051,4 +1051,4 @@ Before shipping widgets or Live Activities:
 
 ## Resources
 
-**Skills**: axiom-extensions-widgets-ref, axiom-push-notifications, axiom-push-notifications-ref
+**Skills**: axiom-extensions-widgets-ref, axiom-push-notifications, axiom-push-notifications-ref, axiom-background-processing

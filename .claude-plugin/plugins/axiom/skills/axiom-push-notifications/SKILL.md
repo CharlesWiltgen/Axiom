@@ -915,4 +915,4 @@ Before shipping push notifications:
 
 **Docs**: /usernotifications, /usernotifications/unusernotificationcenter, /activitykit
 
-**Skills**: axiom-push-notifications-ref, axiom-push-notifications-diag, axiom-extensions-widgets
+**Skills**: axiom-push-notifications-ref, axiom-push-notifications-diag, axiom-extensions-widgets, axiom-background-processing
