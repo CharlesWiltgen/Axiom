@@ -25,6 +25,8 @@ Agents are autonomous problem-solvers that:
 - "Implement in-app purchases" → **iap-implementation** triggers
 - "My build is failing" → **build-fixer** triggers
 - "My builds are slow" → **build-optimizer** triggers
+- "Run a health check on my project" → **health-check** triggers
+- "Scan everything for issues" → **health-check** triggers
 - "Check my navigation architecture" → **swiftui-nav-auditor** triggers
 - "Validate my App Store screenshots" → **screenshot-validator** triggers
 - "Take a screenshot to verify this fix" → **simulator-tester** triggers
@@ -47,9 +49,13 @@ Agents are autonomous problem-solvers that:
 /axiom:optimize-build
 /axiom:audit screenshots
 /axiom:test-simulator
+/axiom:health-check
 ```
 
 ## Agent Categories
+
+### Project-Wide
+- **health-check** — Orchestrates multiple specialized auditors in parallel, deduplicates findings, and produces a unified project health report with executive summary
 
 ### Build & Environment
 - **build-fixer** — Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics (zombie processes, Derived Data, simulator state, SPM cache)

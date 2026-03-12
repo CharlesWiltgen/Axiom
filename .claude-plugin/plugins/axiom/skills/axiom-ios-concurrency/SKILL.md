@@ -86,6 +86,12 @@ Use this router when:
 - Thread pool exhaustion
 - Task visualization
 
+**Combine reactive patterns** → `/skill axiom-combine-patterns`
+- Publisher/Subscriber lifecycle, AnyCancellable
+- Combine vs async/await decision
+- @Published + ObservableObject
+- Operator patterns, bridging
+
 ### Automated Scanning
 
 **Concurrency audit** → Launch `concurrency-auditor` agent or `/axiom:audit concurrency` (Swift 6 strict concurrency violations, unsafe Task captures, missing @MainActor, Sendable violations, actor isolation problems)
@@ -102,6 +108,7 @@ Use this router when:
 7. Profile async performance / actor contention? → concurrency-profiling
 8. Value type / ARC / generic optimization? → swift-performance
 9. Want automated concurrency scan? → concurrency-auditor (Agent)
+10. Combine / @Published / AnyCancellable / reactive streams? → combine-patterns
 
 ## Anti-Rationalization
 
@@ -112,6 +119,7 @@ Use this router when:
 | "It's just one async call" | Even single async calls have cancellation and isolation implications. swift-concurrency covers them. |
 | "I know how actors work" | Actor reentrancy and isolation rules changed in Swift 6.2. swift-concurrency is current. |
 | "I'll fix the Sendable warnings later" | Sendable violations cause runtime crashes. swift-concurrency fixes them correctly now. |
+| "Combine is dead, just use async/await" | Combine has no deprecation notice. Rewriting working pipelines wastes time and introduces bugs. combine-patterns covers incremental migration. |
 
 ## Critical Patterns
 
@@ -184,6 +192,18 @@ User: "How do I convert a completion handler to async?"
 
 User: "What are the actor reentrancy rules?"
 → Invoke: `/skill axiom-swift-concurrency-ref`
+
+User: "My Combine pipeline silently stopped producing values"
+→ Invoke: `/skill axiom-combine-patterns`
+
+User: "Should I use Combine or async/await for this data flow?"
+→ Invoke: `/skill axiom-combine-patterns`
+
+User: "How do I bridge a Combine publisher into async/await code?"
+→ Invoke: `/skill axiom-combine-patterns`
+
+User: "AnyCancellable is leaking memory"
+→ Invoke: `/skill axiom-combine-patterns`
 
 User: "Check my code for Swift 6 concurrency issues"
 → Invoke: `concurrency-auditor` agent

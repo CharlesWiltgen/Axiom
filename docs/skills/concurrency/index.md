@@ -19,6 +19,7 @@ flowchart LR
         synchronization["synchronization"]:::discipline
         ownership_conventions["ownership-conventions"]:::discipline
         concurrency_profiling["concurrency-profiling"]:::discipline
+        combine_patterns["combine-patterns"]:::discipline
     end
     axiom_ios_concurrency --> skills_d
 
@@ -64,6 +65,10 @@ flowchart LR
 - **[Ownership Conventions](/skills/concurrency/ownership-conventions)** – borrowing/consuming modifiers for performance and noncopyable types
   - *"What does borrowing do in Swift?"*
   - *"How do I use ~Copyable types?"*
+
+- **[Combine Patterns](/skills/concurrency/combine-patterns)** – Combine reactive programming: publisher lifecycle, operators, @Published traps, async/await bridging
+  - *"Should I use Combine or async/await for this?"*
+  - *"My Combine pipeline silently stops producing values"*
 
 - **[Concurrency Profiling](/skills/concurrency/concurrency-profiling)** – Instruments workflows for async/await performance
   - *"My async code is slow, how do I profile it?"*

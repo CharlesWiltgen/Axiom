@@ -127,6 +127,12 @@ export default withMermaid(defineConfig({
           ]
         },
         {
+          text: 'Project-Wide',
+          items: [
+            { text: 'health-check', link: '/agents/health-check' }
+          ]
+        },
+        {
           text: 'Misc',
           items: [
             { text: 'crash-analyzer', link: '/agents/crash-analyzer' },
@@ -216,6 +222,12 @@ export default withMermaid(defineConfig({
           ]
         },
         {
+          text: 'Project-Wide',
+          items: [
+            { text: '/axiom:health-check', link: '/commands/health-check' }
+          ]
+        },
+        {
           text: 'Utility',
           items: [
             { text: '/axiom:ask', link: '/commands/utility/ask' },
@@ -275,6 +287,8 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/skills/concurrency/' },
             { text: 'Swift Concurrency', link: '/skills/concurrency/swift-concurrency' },
+            { text: 'Combine Patterns', link: '/skills/concurrency/combine-patterns' },
+            { text: 'Modern Swift Idioms', link: '/skills/concurrency/swift-modern' },
             { text: 'assumeIsolated', link: '/skills/concurrency/assume-isolated' },
             { text: 'Concurrency Profiling', link: '/skills/concurrency/concurrency-profiling' },
             { text: 'Ownership Conventions', link: '/skills/concurrency/ownership-conventions' },
@@ -315,6 +329,7 @@ export default withMermaid(defineConfig({
             { text: 'Networking (Legacy iOS 12-25)', link: '/skills/integration/networking-legacy' },
             { text: 'Now Playing', link: '/skills/integration/now-playing' },
             { text: 'Photo Library', link: '/skills/integration/photo-library' },
+            { text: 'Push Notifications', link: '/skills/integration/push-notifications' },
             { text: 'tvOS', link: '/skills/integration/tvos' }
           ]
         },
@@ -435,6 +450,7 @@ export default withMermaid(defineConfig({
             { text: 'Photo Library', link: '/reference/photo-library-ref' },
             { text: 'MapKit API', link: '/reference/mapkit-ref' },
             { text: 'Privacy UX Patterns', link: '/reference/privacy-ux' },
+            { text: 'Push Notifications', link: '/reference/push-notifications-ref' },
             { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' }
           ]
         },
@@ -496,6 +512,7 @@ export default withMermaid(defineConfig({
             { text: 'MapKit Diagnostics', link: '/diagnostic/mapkit-diag' },
             { text: 'Metal Migration Diagnostics', link: '/diagnostic/metal-migration-diag' },
             { text: 'Networking Diagnostics', link: '/diagnostic/networking-diag' },
+            { text: 'Push Notifications Diagnostics', link: '/diagnostic/push-notifications-diag' },
             { text: 'RealityKit Diagnostics', link: '/diagnostic/realitykit-diag' },
             { text: 'SpriteKit Diagnostics', link: '/diagnostic/spritekit-diag' },
             { text: 'Storage Diagnostics', link: '/diagnostic/storage-diag' },
@@ -514,7 +531,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v2.32.0'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v2.32.1'
     }
   }
 }))

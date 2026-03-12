@@ -30,6 +30,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**sqlitedata-ref**](./sqlitedata-ref) | SQLiteData advanced patterns — @Select, @Join, batch operations, CloudKit sync, query optimization |
 | [**vision-ref**](./vision-ref) | Vision framework API reference — subject segmentation, hand/body pose, text recognition, barcode scanning |
 | [**coreml-ref**](./coreml-ref) | CoreML API reference — MLTensor, coremltools conversion, model compression, state management |
+| [**push-notifications-ref**](./push-notifications-ref) | Push notification implementation — APNs HTTP/2 transport, UserNotifications framework, silent push, rich media, notification service/content extensions |
 | [**timer-patterns-ref**](./timer-patterns-ref) | Timer implementation patterns — invalidation, memory-safe usage, dispatch timers, CADisplayLink |
 | [**mapkit-ref**](./mapkit-ref) | MapKit API reference — SwiftUI Map, MKMapView, annotations, search, directions |
 | [**storage**](./storage) | Complete iOS storage decision framework — database vs files, local vs cloud, SwiftData/CloudKit/iCloud Drive selection |
