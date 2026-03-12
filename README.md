@@ -317,6 +317,12 @@ Comprehensive migration guide for Realm users facing Device Sync sunset (Sept 30
 
 ---
 
+## Quality
+
+Every Axiom discipline skill is TDD-tested against developer pressure scenarios — deadline pressure, authority pressure, sunk cost bias, and more. 17 skills validated, 53 pressure scenarios passed.
+
+Other tools give you tips. Axiom gives you guidance that holds up when you're tempted to cut corners. [Learn more](https://charleswiltgen.github.io/Axiom/guide/quality)
+
 ## Documentation
 
 Full documentation available at [https://charleswiltgen.github.io/Axiom](https://charleswiltgen.github.io/Axiom)

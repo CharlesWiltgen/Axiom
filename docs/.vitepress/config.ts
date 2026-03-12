@@ -46,7 +46,8 @@ export default withMermaid(defineConfig({
             { text: 'MCP Server', link: '/guide/mcp-install' },
             { text: 'Xcode Integration', link: '/guide/xcode-setup' },
             { text: 'Example Workflows', link: '/guide/workflows' },
-            { text: 'Skill Map', link: '/guide/skill-map' }
+            { text: 'Skill Map', link: '/guide/skill-map' },
+            { text: 'Quality', link: '/guide/quality' }
           ]
         }
       ],
