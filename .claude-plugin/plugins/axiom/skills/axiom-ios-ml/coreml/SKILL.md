@@ -1,6 +1,7 @@
 ---
 name: coreml
 description: Use when deploying custom ML models on-device, converting PyTorch models, compressing models, implementing LLM inference, or optimizing CoreML performance. Covers model conversion, compression, stateful models, KV-cache, multi-function models, MLTensor.
+license: MIT
 version: 1.0.0
 ---
 

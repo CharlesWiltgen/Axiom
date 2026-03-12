@@ -1,6 +1,7 @@
 ---
 name: speech
 description: Use when implementing speech-to-text, live transcription, or audio transcription. Covers SpeechAnalyzer (iOS 26+), SpeechTranscriber, volatile/finalized results, AssetInventory model management, audio format handling.
+license: MIT
 version: 1.0.0
 ---
 
