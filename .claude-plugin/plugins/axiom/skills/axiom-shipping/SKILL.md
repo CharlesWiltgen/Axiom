@@ -160,6 +160,23 @@ Use this router when you encounter:
 
 ---
 
+### 9. Distribution Signing Issues → **code-signing** / **code-signing-diag**
+
+**Triggers**:
+- ITMS-90035 Invalid Signature on upload
+- ITMS-90161 Invalid Provisioning Profile
+- "No signing certificate found" when archiving
+- Certificate expired before submission
+- Archive succeeds but export/upload fails
+- Profile doesn't match bundle ID
+- Entitlement mismatch on upload
+
+**Why code-signing**: Distribution signing errors are the #1 cause of upload failures. Diagnosing with CLI tools takes 5 minutes. code-signing-diag has 6 decision trees mapping ITMS errors to root causes.
+
+**Invoke**: `/skill axiom-code-signing-diag` (troubleshooting) or `/skill axiom-code-signing` (setup)
+
+---
+
 ## Decision Tree
 
 ```dot
@@ -181,6 +198,8 @@ digraph shipping {
     "iap-auditor" [shape=box, label="iap-auditor\n(Agent)"];
     "screenshot-validator" [shape=box, label="screenshot-validator\n(Agent)"];
     "asc-mcp" [shape=box, label="asc-mcp\n(MCP tool workflows)"];
+    "code-signing" [shape=box, label="code-signing\n(distribution signing)"];
+    "Signing error?" [shape=diamond];
 
     "Shipping question?" -> "Rejected?" [label="yes, about to submit or general"];
     "Rejected?" -> "app-store-diag" [label="yes, app was rejected"];
@@ -195,8 +214,10 @@ digraph shipping {
     "Need specific specs?" -> "IAP issue?" [label="no"];
     "IAP issue?" -> "iap-auditor" [label="yes"];
     "IAP issue?" -> "Want code scan?" [label="no"];
+    "Want code scan?" -> "Signing error?" [label="no"];
     "Want code scan?" -> "security-privacy-scanner" [label="yes, scan for privacy/security"];
-    "Want code scan?" -> "app-store-submission" [label="no, general prep"];
+    "Signing error?" -> "code-signing" [label="yes, ITMS/cert/profile error"];
+    "Signing error?" -> "app-store-submission" [label="no, general prep"];
 }
 ```
 
@@ -209,7 +230,8 @@ Simplified:
 5. Need specific metadata/guideline specs? → app-store-ref
 6. IAP submission issue? → iap-auditor (Agent)
 7. Want pre-submission code scan? → security-privacy-scanner (Agent)
-8. General submission preparation? → app-store-submission
+8. ITMS signing/certificate/profile error on upload? → code-signing / code-signing-diag
+9. General submission preparation? → app-store-submission
 
 ## Anti-Rationalization
 
@@ -223,6 +245,7 @@ Simplified:
 | "It's just a bug fix, I don't need a full checklist" | Bug fix updates still need What's New text, correct screenshots, and valid build. app-store-submission covers it. |
 | "I'll just eyeball the screenshots myself" | Human review misses dimension mismatches (even 1px off = rejection), subtle placeholder text, and debug indicators. A single missed issue costs 24-48 hours in resubmission. screenshot-validator catches it in 2 minutes. |
 | "I'll just do it in the ASC web dashboard" | If asc-mcp is configured, MCP tools are faster for bulk operations — distributing builds, responding to reviews, creating versions. asc-mcp has the workflow. |
+| "Upload failed with ITMS error, let me re-archive" | ITMS signing errors are configuration — wrong cert, expired profile, missing entitlement. Re-archiving with the same config produces the same result. code-signing-diag has the fix. |
 
 ## When NOT to Use (Conflict Resolution)
 
@@ -322,3 +345,9 @@ User: "Distribute build 42 to my beta testers via MCP"
 
 User: "Respond to negative App Store reviews from Claude"
 → Invoke: `/skill axiom-asc-mcp`
+
+User: "ITMS-90035 Invalid Signature when uploading"
+→ Invoke: `/skill axiom-code-signing-diag`
+
+User: "My provisioning profile expired and I can't upload"
+→ Invoke: `/skill axiom-code-signing-diag`

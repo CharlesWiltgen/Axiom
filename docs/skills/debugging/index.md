@@ -64,6 +64,11 @@ flowchart LR
   - *"View controllers don't deallocate after dismiss. How do I find the retain cycle?"*
   - **Command** [`/axiom:audit-memory`](/commands/debugging/audit-memory) for quick triage scanning
 
+- **[Code Signing](/skills/debugging/code-signing)** – Certificate management, provisioning profiles, entitlements, CI/CD signing, fastlane match
+  - *"My build fails with 'No signing certificate found'"*
+  - *"How do I set up code signing for GitHub Actions?"*
+  - *"ITMS-90035 Invalid Signature when uploading to App Store Connect"*
+
 - **[Build Debugging](/skills/debugging/build-debugging)** – Dependency resolution for CocoaPods and Swift Package Manager conflicts
   - *"I added a Swift Package but I'm getting 'No such module' errors."*
   - *"Build works on my Mac but fails on CI. Both have the latest Xcode."*

@@ -268,14 +268,15 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/skills/debugging/' },
             { text: 'Auto Layout Debugging', link: '/skills/debugging/auto-layout-debugging' },
+            { text: 'Build Debugging', link: '/skills/debugging/build-debugging' },
+            { text: 'Build Performance', link: '/skills/debugging/build-performance' },
+            { text: 'Code Signing', link: '/skills/debugging/code-signing' },
             { text: 'Deep Link Debugging', link: '/skills/debugging/deep-link-debugging' },
             { text: 'Display Performance', link: '/skills/debugging/display-performance' },
             { text: 'Energy Optimization', link: '/skills/debugging/energy' },
             { text: 'Hang Diagnostics', link: '/skills/debugging/hang-diagnostics' },
             { text: 'LLDB Debugging', link: '/skills/debugging/lldb' },
             { text: 'Memory Debugging', link: '/skills/debugging/memory-debugging' },
-            { text: 'Build Debugging', link: '/skills/debugging/build-debugging' },
-            { text: 'Build Performance', link: '/skills/debugging/build-performance' },
             { text: 'Objective-C Block Retain Cycles', link: '/skills/debugging/objc-block-retain-cycles' },
             { text: 'Performance Profiling', link: '/skills/debugging/performance-profiling' },
             { text: 'TestFlight Triage', link: '/skills/debugging/testflight-triage' },
@@ -483,6 +484,7 @@ export default withMermaid(defineConfig({
             { text: 'App Store Connect MCP', link: '/reference/asc-mcp-ref' },
             { text: 'App Store Submission', link: '/reference/app-store-ref' },
             { text: 'AXe (Simulator Automation)', link: '/reference/axe-ref' },
+            { text: 'Code Signing', link: '/reference/code-signing-ref' },
             { text: 'MetricKit', link: '/reference/metrickit-ref' },
             { text: 'LLDB Command Reference', link: '/reference/lldb-ref' },
             { text: 'Timer Patterns', link: '/reference/timer-patterns-ref' },
@@ -505,6 +507,7 @@ export default withMermaid(defineConfig({
             { text: 'Background Processing Diagnostics', link: '/diagnostic/background-processing-diag' },
             { text: 'Camera Capture Diagnostics', link: '/diagnostic/camera-capture-diag' },
             { text: 'Cloud Sync Diagnostics', link: '/diagnostic/cloud-sync-diag' },
+            { text: 'Code Signing Diagnostics', link: '/diagnostic/code-signing-diag' },
             { text: 'Core Data Diagnostics', link: '/diagnostic/core-data-diag' },
             { text: 'CoreML Diagnostics', link: '/diagnostic/coreml-diag' },
             { text: 'Core Location Diagnostics', link: '/diagnostic/core-location-diag' },
@@ -532,7 +535,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v2.32.1'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v2.33.0'
     }
   }
 }))

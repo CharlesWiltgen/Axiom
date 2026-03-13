@@ -219,6 +219,23 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
+### 15. Code Signing Issues → **code-signing**
+**Triggers**:
+- "No signing certificate found"
+- "Provisioning profile doesn't include signing certificate"
+- errSecInternalComponent in CI
+- ITMS-90035 Invalid Signature on upload
+- Ambiguous identity / multiple certificates
+- Entitlement mismatch or missing capability
+- Setting up CI/CD code signing (GitHub Actions, fastlane match)
+- Certificate expired or revoked
+
+**Why code-signing**: Code signing errors are NEVER code bugs — they are 100% configuration (certificates, profiles, entitlements, keychains). Diagnosing with CLI tools takes 5 minutes vs hours of guessing.
+
+**Invoke**: `/skill axiom-code-signing` (workflows) or `/skill axiom-code-signing-diag` (troubleshooting)
+
+---
+
 ## Decision Tree
 
 1. Mysterious/intermittent/clean build fails? → xcode-debugging (environment-first)
@@ -235,6 +252,7 @@ This router invokes specialized skills based on the specific issue:
 12. MetricKit setup/parsing? → metrickit-ref
 13. App hang/freeze/watchdog? → hang-diagnostics
 14. Need to reproduce crash interactively / inspect runtime state? → axiom-lldb
+15. Code signing error (certificate, profile, entitlement, Keychain)? → code-signing / code-signing-diag
 
 ## Anti-Rationalization
 
@@ -246,6 +264,7 @@ This router invokes specialized skills based on the specific issue:
 | "The simulator is just slow today" | Simulator issues indicate environment corruption. xcode-debugging checks systematically. |
 | "I'll skip environment checks, it compiles locally" | Environment-first saves 30+ min. Every time. |
 | "I'll read the crash report more carefully instead of reproducing" | Crash reports show WHAT crashed, not WHY. Reproducing in LLDB with breakpoints reveals the actual state. axiom-lldb has the workflow. |
+| "I know my certificate is fine, let me check the code" | Code signing errors are NEVER code bugs. 100% configuration. code-signing diagnoses with CLI in 5 min. |
 
 ## When NOT to Use (Conflict Resolution)
 
@@ -367,3 +386,12 @@ User: "Build sometimes succeeds, sometimes fails"
 
 User: "How can I speed up my Xcode build times?"
 → Invoke: `build-optimizer` agent or `/axiom:optimize-build`
+
+User: "No signing certificate found when I try to build"
+→ Invoke: `/skill axiom-code-signing-diag`
+
+User: "errSecInternalComponent in my GitHub Actions CI"
+→ Invoke: `/skill axiom-code-signing-diag`
+
+User: "How do I set up code signing for GitHub Actions?"
+→ Invoke: `/skill axiom-code-signing`
