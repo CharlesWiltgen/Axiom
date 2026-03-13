@@ -43,6 +43,10 @@
       "description": "Use when app feels slow, memory grows, battery drains, or diagnosing ANY performance issue. Covers memory leaks, profiling, Instruments workflows, retain cycles, performance optimization."
     },
     {
+      "name": "axiom-app-launch-performance-debugging",
+      "description": "Use when app launch is slow, takes >2 seconds to first screen, users complain about startup time, or optimizing cold/warm/push notification launch performance. Covers App Launch Instrument, dyld optimization, pre-main analysis, main thread blocking, notification response optimization for UIKit, SwiftUI, Swift, and Objective-C codebases."
+    },
+    {
       "name": "axiom-ios-networking",
       "description": "Use when implementing or debugging ANY network connection, API call, or socket. Covers URLSession, Network.framework, NetworkConnection, deprecated APIs, connection diagnostics, structured concurrency networking."
     },

@@ -61,6 +61,7 @@ Skills are **automatically suggested by Claude Code** based on your questions an
 - "I need to add a database column safely" → activates `axiom-database-migration`
 - "My app has memory leaks" → activates `axiom-memory-debugging`
 - "My app drains battery quickly" → activates `axiom-energy`
+- "My app launch is slow, takes 3+ seconds" → activates `axiom-app-launch-performance-debugging`
 - "Help me migrate from Realm to SwiftData" → activates `realm-to-swiftdata-migration`
 
 ## Skills Overview
@@ -212,6 +213,23 @@ Systematic memory leak diagnosis with Instruments. 5 leak patterns covering 90% 
 Dependency resolution for CocoaPods and Swift Package Manager conflicts.
 
 **When to use** Dependency conflicts, CocoaPods/SPM resolution failures, "Multiple commands produce" errors, framework version mismatches
+
+---
+
+#### `axiom-app-launch-performance-debugging`
+Systematic app launch performance optimization with App Launch Instrument profiling. Covers cold/warm/hot/push notification launches across all iOS architectures.
+
+#### Key Features
+- **Launch Phase Analysis** — Pre-main (dyld loading), main thread work, first frame to interactive timing
+- **App Launch Instrument** workflows and timeline interpretation
+- **Cross-Architecture Support** — UIKit (Objective-C/Swift), SwiftUI, mixed codebases
+- **Launch Type Optimization** — Cold (<1.5s), warm (<1.0s), hot (<0.5s), push notification (<1.0s) launches
+- **Push Notification Performance** — UNUserNotificationCenter optimization, deep link routing, background app refresh integration
+- **Production Monitoring** — MetricKit integration, XCTest performance testing, OSSignposter custom metrics
+
+**When to use** App takes >2 seconds to launch, users complain about startup time, optimizing launch performance, push notification response is slow
+
+**Requirements** iOS 15+, Xcode 14+, real device testing
 
 ---
 

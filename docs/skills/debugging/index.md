@@ -81,6 +81,11 @@ flowchart LR
   - *"Scrolling is slow and I need to know if it's Core Data or SwiftUI."*
   - *"We have a deadline and my app feels slow. What should I optimize first?"*
 
+- **[App Launch Performance Debugging](/skills/debugging/app-launch-performance-debugging)** – Systematic launch optimization with App Launch Instrument across all iOS architectures
+  - *"My app takes 3+ seconds to launch. How do I identify what's blocking startup?"*
+  - *"Users complain about slow app launch from push notifications. How do I optimize notification response time?"*
+  - *"How do I profile cold vs warm launch and set performance targets?"*
+
 - **[Energy Optimization](/skills/debugging/energy)** – Power Profiler workflows, subsystem diagnosis, anti-pattern fixes for battery drain
   - *"My app drains battery quickly. Where do I even start?"*
   - *"Users report the device gets hot when using my app."*
