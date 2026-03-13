@@ -7,13 +7,22 @@ Systematic diagnostics for production issues with mandatory workflows and pressu
 | Skill | Description |
 |-------|-------------|
 | [**accessibility-diag**](./accessibility-diag) | VoiceOver, Dynamic Type, color contrast, touch targets — WCAG compliance with App Store rejection defense |
+| [**app-store-diag**](./app-store-diag) | App Store rejections, metadata issues, review guidelines — submission failure diagnostics |
+| [**background-processing-diag**](./background-processing-diag) | Background tasks not executing, BGTaskScheduler debugging, scheduling factors — background processing diagnostics |
+| [**camera-capture-diag**](./camera-capture-diag) | Camera freezes, preview rotation, capture failures — AVCaptureSession diagnostics |
 | [**cloud-sync-diag**](./cloud-sync-diag) | CloudKit errors, iCloud Drive sync failures, quota exceeded — systematic cloud sync diagnostics with production crisis defense |
+| [**code-signing-diag**](./code-signing-diag) | Certificate not found, provisioning profile mismatch, errSecInternalComponent, ITMS upload errors — code signing diagnostics |
 | [**core-data-diag**](./core-data-diag) | Schema migrations, thread-confinement, N+1 queries — Core Data diagnostics with production crisis defense |
+| [**core-location-diag**](./core-location-diag) | Location updates not arriving, background location broken, authorization denied, geofence not triggering — Core Location diagnostics |
+| [**coreml-diag**](./coreml-diag) | Model loading failures, prediction errors, conversion issues — CoreML diagnostics |
 | [**energy-diag**](./energy-diag) | Battery drain, device hot, background drain, cellular usage — symptom-based decision trees with time-cost analysis |
 | [**foundation-models-diag**](./foundation-models-diag) | Context exceeded, guardrail violations, slow generation — Foundation Models diagnostics with production crisis defense |
+| [**mapkit-diag**](./mapkit-diag) | Annotations not appearing, search failures, directions errors — MapKit diagnostics |
+| [**metal-migration-diag**](./metal-migration-diag) | Shader compilation failures, rendering artifacts, performance issues — Metal migration diagnostics |
 | [**networking-diag**](./networking-diag) | Connection timeouts, TLS failures, data arrival issues — Network.framework diagnostics with production crisis defense |
 | [**push-notifications-diag**](./push-notifications-diag) | Notifications not arriving, token registration failed, works in dev not production, silent push throttled, rich media missing — push notification diagnostics with delivery log analysis |
-| [**core-location-diag**](./core-location-diag) | Location updates not arriving, background location broken, authorization denied, geofence not triggering — Core Location diagnostics |
+| [**realitykit-diag**](./realitykit-diag) | Entity loading failures, physics issues, rendering problems — RealityKit diagnostics |
+| [**spritekit-diag**](./spritekit-diag) | Physics contacts not firing, frame drops, tunneling, coordinate confusion — SpriteKit diagnostics |
 | [**storage-diag**](./storage-diag) | Files disappeared, backup too large, file access errors — systematic local storage diagnostics with production crisis defense |
 | [**swiftdata-migration-diag**](./swiftdata-migration-diag) | SwiftData migration crashes, relationship preservation failures, device vs simulator issues — schema migration diagnostics with testing workflows |
 | [**swiftui-debugging-diag**](./swiftui-debugging-diag) | Intermittent view updates, complex state dependencies, Self._printChanges() analysis — systematic SwiftUI debugging with Instruments integration |
