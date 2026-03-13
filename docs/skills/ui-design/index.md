@@ -25,7 +25,6 @@ flowchart LR
         hig["hig"]:::discipline
         uikit_bridging["uikit-bridging"]:::discipline
         ui_testing["ui-testing"]:::discipline
-        ux_flow_audit["ux-flow-audit"]:::discipline
     end
     axiom_ios_ui --> skills_d
 
@@ -94,6 +93,26 @@ flowchart LR
   - *"How do I switch between login and main screens without flicker?"*
   - *"Where should auth state live in my app?"*
   - *"When should I split my app into modules?"*
+
+- **[SwiftUI Gestures](/skills/ui-design/swiftui-gestures)** – Gesture recognizers, composition, simultaneous gestures, drag interactions
+  - *"How do I combine tap and long press gestures?"*
+  - *"My drag gesture conflicts with the scroll view"*
+
+- **[SwiftUI Navigation](/skills/ui-design/swiftui-nav)** – NavigationStack, NavigationSplitView, NavigationPath, deep linking, state restoration
+  - *"How do I implement programmatic navigation?"*
+  - *"My navigation state is lost when switching tabs"*
+
+- **[SwiftUI Layout](/skills/ui-design/swiftui-layout)** – Adaptive layouts with ViewThatFits, AnyLayout, size classes, iOS 26 free-form windows
+  - *"My layout breaks on iPad. How do I make it adaptive?"*
+  - *"Should I use GeometryReader or onGeometryChange?"*
+
+- **[UIKit Bridging](/skills/ui-design/uikit-bridging)** – UIViewRepresentable, UIViewControllerRepresentable, coordinator patterns
+  - *"How do I wrap a UIKit view for SwiftUI?"*
+  - *"My UIViewRepresentable doesn't update correctly"*
+
+- **[UIKit Animation Debugging](/skills/ui-design/uikit-animation-debugging)** – CAAnimation completion handlers, UIView animation conflicts, Core Animation debugging
+  - *"My CAAnimation completion handler never fires"*
+  - *"UIView animations are conflicting with each other"*
 
 - **[UX Flow Audit](/agents/ux-flow-auditor)** – Detect dead ends, dismiss traps, buried CTAs, missing empty/loading/error states, and accessibility dead ends
   - *"Check my app for UX dead ends and dismiss traps"*

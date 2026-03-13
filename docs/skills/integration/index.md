@@ -209,6 +209,95 @@ Methodology for researching Apple frameworks using WWDC transcripts and sosumi.a
 
 ---
 
+### [Extensions & Widgets](./extensions-widgets)
+
+WidgetKit, Live Activities, Control Center widgets for iOS 14-18+:
+- **Standard widgets** — Timeline providers, intent configuration
+- **Interactive widgets** — iOS 17+ button/toggle support
+- **Live Activities** — Dynamic Island and Lock Screen
+
+**When to use** Implementing widgets, Live Activities, Control Center widgets
+
+**Requirements** iOS 14+ (iOS 17+ for interactive, iOS 18+ for Control Center)
+
+---
+
+### [Camera Capture](./camera-capture)
+
+AVCaptureSession, photo/video recording, camera preview:
+- **Session configuration** — Inputs, outputs, presets
+- **Photo capture** — Still images, HDR, depth
+- **Video recording** — Movie file output, frame processing
+
+**When to use** Adding camera features, capturing photos/video
+
+---
+
+### [Photo Library](./photo-library)
+
+PHPicker and PhotosPicker for photo selection:
+- **PHPickerViewController** — UIKit photo picker
+- **PhotosPicker** — SwiftUI photo picker (iOS 16+)
+- **PHAsset** — Photo library access and management
+
+**When to use** Selecting photos from library, managing photo assets
+
+---
+
+### [Now Playing](./now-playing)
+
+MPNowPlayingInfoCenter for media apps:
+- **Info display** — Title, artist, artwork on Lock Screen
+- **Remote commands** — Play, pause, skip controls
+- **MPNowPlayingSession** — Automatic management (iOS 16+)
+
+**When to use** Audio/video apps needing Lock Screen controls and Now Playing display
+
+---
+
+### [In-App Purchases](./in-app-purchases)
+
+StoreKit 2 implementation for consumables, subscriptions, and non-consumables:
+- **Product configuration** — Store setup, pricing
+- **Transaction handling** — Purchase flow, verification
+- **Subscription management** — Renewal, upgrade/downgrade
+
+**When to use** Adding purchases, subscriptions, or restoring transactions
+
+---
+
+### [Haptics](/reference/haptics)
+
+UIFeedbackGenerator and Core Haptics for tactile feedback.
+
+**When to use** Adding haptic feedback, designing custom haptic patterns
+
+---
+
+### [Localization](/reference/localization)
+
+String Catalogs, type-safe symbols (Xcode 26+), plurals, RTL layouts.
+
+**When to use** Localizing your app, supporting multiple languages
+
+---
+
+### [Privacy UX](/reference/privacy-ux)
+
+Privacy Manifests, just-in-time permissions, App Tracking Transparency.
+
+**When to use** Implementing privacy-first permission flows, preparing Privacy Manifests
+
+---
+
+### [Networking (Legacy)](./networking-legacy)
+
+URLSession patterns and legacy networking code modernization.
+
+**When to use** Working with URLSession, modernizing older networking code
+
+---
+
 ### [tvOS](./tvos)
 
 tvOS app development patterns — focus engine, top shelf, platform differences from iOS.

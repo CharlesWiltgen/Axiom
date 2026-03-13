@@ -95,22 +95,39 @@ The `/axiom:audit` command supports these areas:
 
 ### UI & Design
 - `accessibility` — VoiceOver, Dynamic Type, WCAG compliance
-- `axiom-liquid-glass` — Liquid Glass adoption opportunities
-- `axiom-swiftui-architecture` — SwiftUI architecture and testability
-- `axiom-swiftui-nav` — Navigation architecture
-- `axiom-swiftui-performance` — Performance anti-patterns
+- `liquid-glass` — Liquid Glass adoption opportunities
+- `swiftui-architecture` — SwiftUI architecture and testability
+- `swiftui-layout` — GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints
+- `swiftui-nav` — Navigation architecture
+- `swiftui-performance` — SwiftUI performance anti-patterns
 - `textkit` — TextKit 1 vs 2 modernization
+- `ux-flow` — Dead ends, dismiss traps, missing states
 
 ### Code Quality
-- `axiom-codable` — JSON serialization anti-patterns
+- `codable` — JSON serialization anti-patterns
 - `concurrency` — Swift 6 strict concurrency
+- `energy` — Battery drain, timer abuse, polling
 - `memory` — Memory leak detection
-- `axiom-swift-performance` — ARC and allocation issues
+- `security` / `privacy` — Hardcoded credentials, Privacy Manifests, ATS
+- `swift-performance` — ARC and allocation issues
+- `testing` — Flaky tests, missing assertions, Swift Testing migration
 
 ### Persistence & Storage
-- `axiom-core-data` — Core Data safety and migrations
+- `core-data` — Core Data safety and migrations
+- `database-schema` — Unsafe ALTER TABLE, DROP operations, migration safety
 - `icloud` — iCloud sync reliability
-- `axiom-storage` — File storage safety
+- `storage` — File storage safety
+- `swiftdata` — SwiftData models, relationships, N+1 patterns
 
 ### Integration
-- `axiom-networking` — Deprecated networking APIs
+- `camera` — Camera capture issues, deprecated APIs
+- `foundation-models` — Foundation Models availability, session lifecycle
+- `networking` — Deprecated networking APIs
+- `spritekit` — Physics bitmask issues, draw call waste
+
+### Shipping
+- `screenshots` — App Store screenshot validation
+- `modernization` — Legacy pattern migration (ObservableObject → @Observable)
+
+### Project-Wide
+- `all` — Run all relevant auditors via `/axiom:health-check`

@@ -69,6 +69,10 @@ flowchart LR
   - *"How do I set up code signing for GitHub Actions?"*
   - *"ITMS-90035 Invalid Signature when uploading to App Store Connect"*
 
+- **[Build Performance](/skills/debugging/build-performance)** – Slow build optimization — compilation settings, build phase scripts, type checking bottlenecks
+  - *"My builds are taking too long. How can I speed them up?"*
+  - *"Which build settings should I change to reduce compile time?"*
+
 - **[Build Debugging](/skills/debugging/build-debugging)** – Dependency resolution for CocoaPods and Swift Package Manager conflicts
   - *"I added a Swift Package but I'm getting 'No such module' errors."*
   - *"Build works on my Mac but fails on CI. Both have the latest Xcode."*
@@ -99,6 +103,14 @@ flowchart LR
 - **[Timer Safety Patterns](/skills/debugging/timer-patterns)** – Timer invalidation, memory-safe usage, dispatch timers, CADisplayLink
   - *"My timer is causing a memory leak"*
   - *"What's the best way to implement a repeating timer?"*
+
+- **[Auto Layout Debugging](/skills/debugging/auto-layout-debugging)** – "Unable to simultaneously satisfy constraints" diagnosis, ambiguous layouts, layout priority conflicts
+  - *"Xcode shows 'Unable to simultaneously satisfy constraints'"*
+  - *"How do I fix ambiguous Auto Layout issues?"*
+
+- **[Objective-C Block Retain Cycles](/skills/debugging/objc-block-retain-cycles)** – Block-based retain cycle diagnosis for Objective-C and mixed codebases
+  - *"Memory leak in my Objective-C delegate callback"*
+  - *"How do I use weak references in blocks?"*
 
 - **[SwiftUI Debugging Diagnostics](/diagnostic/swiftui-debugging-diag)** – Systematic diagnostic workflows for complex SwiftUI issues with Instruments integration
   - *"Self._printChanges() shows unexpected patterns and I need to trace the data flow."*
