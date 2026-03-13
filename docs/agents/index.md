@@ -1,6 +1,6 @@
 # Autonomous Agents
 
-Axiom includes 18 autonomous agents that automatically detect and diagnose common iOS development issues.
+Axiom includes 38 autonomous agents that automatically detect and diagnose common iOS development issues.
 
 ## What Are Agents?
 
@@ -77,6 +77,7 @@ Agents are autonomous problem-solvers that:
 - **swiftui-layout-auditor** — Scans SwiftUI layout code for GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss, missing lazy containers
 - **swiftui-performance-analyzer** — Detects SwiftUI performance anti-patterns (expensive operations in view bodies, missing lazy loading, unnecessary updates, navigation performance issues)
 - **swiftui-nav-auditor** — Scans SwiftUI navigation architecture (missing NavigationPath, deep link gaps, state restoration issues, wrong container usage, type safety problems)
+- **ux-flow-auditor** — Detects UX dead ends, dismiss traps, buried CTAs, missing empty/loading/error states, and accessibility dead ends
 
 ### Persistence & Storage
 - **core-data-auditor** — Scans for schema migration risks, thread-confinement violations, N+1 query patterns, production data loss risks, performance issues
@@ -104,6 +105,9 @@ Agents are autonomous problem-solvers that:
 - **test-runner** — Runs XCUITests, parses .xcresult bundles, provides structured results with failure analysis
 - **testing-auditor** — Scans for flaky test patterns, shared mutable state, missing assertions, Swift Testing migration opportunities
 
+### Games
+- **spritekit-auditor** — Scans SpriteKit code for physics bitmask issues, draw call waste, node accumulation, action memory leaks, coordinate confusion, and touch handling bugs
+
 ### Misc
 - **crash-analyzer** — Parses crash reports (.ips, .crash), checks symbolication, categorizes by crash pattern, generates actionable diagnostics
 - **modernization-helper** — Scans for legacy patterns and provides migration paths to iOS 17/18 (ObservableObject to @Observable, etc.)
@@ -119,7 +123,7 @@ Agents are autonomous problem-solvers that:
 - Natural language: "check accessibility"
 - Automatic triggering based on context
 - One source of truth, zero duplication
-- Scales better (9 agents = 9 files + 9 commands = 18 total, not 18 duplicated implementations)
+- Scales better (agents = files + commands, not duplicated implementations)
 
 ## Agent Architecture
 

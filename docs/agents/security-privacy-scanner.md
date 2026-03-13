@@ -59,5 +59,5 @@ Scans for security vulnerabilities and privacy compliance issues including hardc
 
 ## Related
 
-- [privacy-ux](/skills/integration/privacy-ux) — Privacy-first UX patterns
-- [storage](/skills/debugging/storage) — Secure storage patterns including Keychain
+- [privacy-ux](/reference/privacy-ux) — Privacy-first UX patterns
+- [storage](/reference/storage) — Secure storage patterns including Keychain
