@@ -293,7 +293,71 @@ func main() {
 	}
 }
 
+// waitForSimulatorBoot ensures the simulator is fully booted before proceeding.
+// Uses `simctl bootstatus` which blocks until boot completes and is a no-op if
+// already booted. Prints a message only when actually waiting.
+func waitForSimulatorBoot(ctx context.Context, device string) {
+	// Quick check: get current state via simctl list
+	out, err := exec.CommandContext(ctx, "xcrun", "simctl", "list", "devices", "-j").Output()
+	if err != nil {
+		// Can't check state — fall through and let the actual command fail with a better error
+		return
+	}
+
+	var result struct {
+		Devices map[string][]struct {
+			UDID  string `json:"udid"`
+			State string `json:"state"`
+			Name  string `json:"name"`
+		} `json:"devices"`
+	}
+	if err := json.Unmarshal(out, &result); err != nil {
+		return
+	}
+
+	// Find the target device
+	state := ""
+	for _, devices := range result.Devices {
+		for _, d := range devices {
+			if device == "booted" {
+				if d.State == "Booted" {
+					return // already booted, nothing to wait for
+				}
+				if d.State == "Booting" {
+					state = d.State
+				}
+			} else if d.UDID == device {
+				state = d.State
+				break
+			}
+		}
+	}
+
+	if state == "Booted" {
+		return
+	}
+
+	if state == "" && device == "booted" {
+		fatal("no simulator is booted — boot one with: xcrun simctl boot <device>")
+	}
+
+	if state == "Shutdown" {
+		fatal("simulator is shut down — boot it with: xcrun simctl boot %s", device)
+	}
+
+	// Device is Booting (or unknown state) — wait for boot to complete
+	fmt.Fprintf(os.Stderr, "Waiting for simulator to finish booting...\n")
+	cmd := exec.CommandContext(ctx, "xcrun", "simctl", "bootstatus", device)
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fatal("simulator boot failed: %v", err)
+	}
+	fmt.Fprintf(os.Stderr, "Simulator ready.\n")
+}
+
 func runList(cfg *Config) {
+	waitForSimulatorBoot(context.Background(), cfg.Device)
+
 	// Get plist from simctl
 	simctlOut, err := exec.Command("xcrun", "simctl", "listapps", cfg.Device).Output()
 	if err != nil {
@@ -329,12 +393,50 @@ func runList(cfg *Config) {
 	}
 }
 
+// findPIDViaLaunchctl queries the simulator's launchctl for the PID of a running app.
+// Retries up to 5 times (2.5s total) since the app may need a moment to register.
+func findPIDViaLaunchctl(ctx context.Context, device, bundleID string) int {
+	for attempt := 0; attempt < 5; attempt++ {
+		if attempt > 0 {
+			select {
+			case <-ctx.Done():
+				fatal("timeout waiting for %s to appear in launchctl", bundleID)
+			case <-time.After(500 * time.Millisecond):
+			}
+		}
+		out, err := exec.CommandContext(ctx, "xcrun", "simctl", "spawn", device, "launchctl", "list").Output()
+		if err != nil {
+			continue
+		}
+		// launchctl list format: "PID\tStatus\tLabel"
+		// Running apps: "34395\t0\tUIKitApplication:com.example.App[uuid]"
+		// Not running:  "-\t0\tcom.apple.something"
+		scanner := bufio.NewScanner(bytes.NewReader(out))
+		for scanner.Scan() {
+			line := scanner.Text()
+			if !strings.Contains(line, bundleID) {
+				continue
+			}
+			fields := strings.Fields(line)
+			if len(fields) >= 1 {
+				if pid, err := strconv.Atoi(fields[0]); err == nil && pid > 0 {
+					return pid
+				}
+			}
+		}
+	}
+	fatal("cannot find PID for %s — app may not have launched (check bundle ID and simulator)", bundleID)
+	return 0
+}
+
 func runLaunch(ctx context.Context, cancel context.CancelFunc, bundleID string, cfg *Config, out io.Writer) {
+	waitForSimulatorBoot(ctx, cfg.Device)
+
 	lines := make(chan LogLine, 256)
 	var wg sync.WaitGroup
 	var cmds []*exec.Cmd
 
-	// Single-phase launch: --console gives us stdout/stderr AND prints "bundle.id: PID" first
+	// Launch with --console for stdout/stderr capture
 	simctlArgs := []string{
 		"simctl", "launch", "--console", "--terminate-running-process",
 		cfg.Device, bundleID,
@@ -354,28 +456,49 @@ func runLaunch(ctx context.Context, cancel context.CancelFunc, bundleID string, 
 		fatal("simctl launch --console failed: %v", err)
 	}
 
-	// Parse PID from first line of --console stdout: "com.example.App: 12345"
+	// Get PID: try first stdout line (Xcode ≤26.2 prints "bundle.id: PID"),
+	// fall back to launchctl list (Xcode 26.3+ omits PID from --console stdout).
+	// The goroutine that reads the first line continues as the stdout streamer,
+	// since bufio.Reader isn't safe for concurrent reads.
 	stdoutReader := bufio.NewReader(stdout)
-	appPID := 0
-	firstLine, err := stdoutReader.ReadString('\n')
-	if err == nil {
-		if parts := strings.SplitN(strings.TrimSpace(firstLine), ":", 2); len(parts) == 2 {
-			if pid, err := strconv.Atoi(strings.TrimSpace(parts[1])); err == nil {
-				appPID = pid
-				fmt.Fprintf(os.Stderr, "Launched %s (PID %d) on %s\n", bundleID, appPID, cfg.Device)
-			}
-		}
-	}
-	if appPID == 0 {
-		fatal("could not parse PID from simctl output: %s", strings.TrimSpace(firstLine))
-	}
+	pidCh := make(chan int, 1)
 
-	// Stream stdout (print/debugPrint)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+
+		firstLine, err := stdoutReader.ReadString('\n')
+		if err == nil {
+			trimmed := strings.TrimSpace(firstLine)
+			if parts := strings.SplitN(trimmed, ":", 2); len(parts) == 2 {
+				if pid, err := strconv.Atoi(strings.TrimSpace(parts[1])); err == nil && pid > 0 {
+					pidCh <- pid
+					streamLines(stdoutReader, SourceStdout, lines, cfg)
+					return
+				}
+			}
+			// First line wasn't a PID — replay it as app output
+			pidCh <- 0
+			if trimmed != "" && matchesFilter(trimmed, cfg) {
+				lines <- LogLine{Time: time.Now(), Source: SourceStdout, Text: trimmed}
+			}
+		} else {
+			pidCh <- 0
+		}
 		streamLines(stdoutReader, SourceStdout, lines, cfg)
 	}()
+
+	appPID := 0
+	select {
+	case pid := <-pidCh:
+		appPID = pid
+	case <-time.After(3 * time.Second):
+		// Xcode 26.3+: PID not printed to --console stdout
+	}
+	if appPID == 0 {
+		appPID = findPIDViaLaunchctl(ctx, cfg.Device, bundleID)
+	}
+	fmt.Fprintf(os.Stderr, "Launched %s (PID %d) on %s\n", bundleID, appPID, cfg.Device)
 
 	// Stream stderr (NSLog)
 	wg.Add(1)
