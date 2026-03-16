@@ -57,9 +57,8 @@ You can also use commands directly:
 
 Full documentation, skill catalog, and guides at **[charleswiltgen.github.io/Axiom](https://charleswiltgen.github.io/Axiom)**.
 
-## Contributing
+## Community
 
-Feedback is welcome!
-
+- [r/axiomdev](https://www.reddit.com/r/axiomdev/) — Version announcements with changelogs
 - [Report issues or request features](https://github.com/CharlesWiltgen/Axiom/issues)
 - [Share usage patterns and questions](https://github.com/CharlesWiltgen/Axiom/discussions)
