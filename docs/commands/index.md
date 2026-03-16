@@ -23,6 +23,7 @@ This routes your question to the right Axiom skill or agent automatically.
 | [**`/axiom:ask`**](./utility/ask) | Natural language entry point to all Axiom skills | Triggers the right skill or agent |
 | [**`/axiom:audit`**](./utility/audit) | Unified audit command - smart selector or direct area targeting | Suggestions or specific audit execution |
 | [**`/axiom:analyze-crash`**](./debugging/analyze-crash) | Parse and analyze crash logs (.ips, .crash) to identify root cause | Crash pattern categorization and actionable diagnostics |
+| [**`/axiom:console`**](./debugging/console) | Simulator console output — print(), os_log(), Logger — as structured JSON | Guided capture with bounded defaults |
 | [**`/axiom:fix-build`**](./build/fix-build) | Xcode build failures, environment issues, zombie processes, Derived Data, SPM cache, simulator state | Automatic diagnostics and fixes with verification |
 | [**`/axiom:health-check`**](./health-check) | Auto-detect relevant auditors, run in parallel, deduplicate findings | Prioritized report with executive summary + per-domain details |
 | [**`/axiom:optimize-build`**](./build/optimize-build) | Build performance bottlenecks, compilation settings, build phase scripts, type checking issues | Optimization recommendations with time savings estimates |
@@ -82,6 +83,7 @@ Commands output results with `file:line` references and link to relevant skills 
 
 ### Debugging
 - `/axiom:analyze-crash` — Parse and analyze crash logs
+- `/axiom:console` — Capture simulator console output (print + os_log) as structured JSON
 - `/axiom:profile` — Automated performance profiling via xctrace CLI
 
 ### Testing

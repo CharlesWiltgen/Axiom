@@ -96,6 +96,11 @@ flowchart LR
   - *"I want to take screenshots of different screens automatically."*
   - **Related** [`simulator-tester` agent](/agents/simulator-tester) for automated testing with deep links
 
+- **[Console Capture (xclog)](/skills/debugging/xclog)** – Unified print()/os_log()/Logger capture from iOS simulator as structured JSON for LLM analysis
+  - *"Show me what my app is logging"*
+  - *"Capture the simulator console while I reproduce this crash"*
+  - **Command** [`/axiom:console`](/commands/debugging/console) for guided capture
+
 - **[LLDB Debugging](/skills/debugging/lldb)** – 6 playbooks for crash triage, state inspection, `po` alternatives, breakpoint strategy, expression evaluation, and thread analysis
   - *"How do I use LLDB to debug a crash?"*
   - *"What's faster than po for inspecting variables?"*
