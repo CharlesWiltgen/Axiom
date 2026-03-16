@@ -60,3 +60,4 @@ CHANGELOG.md
 .dolt/
 *.db
 tools/xclog/xclog
+mcp-server/docs/
