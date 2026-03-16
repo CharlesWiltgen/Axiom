@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,35 +20,39 @@ import (
 	"time"
 )
 
-const usage = `xclog — capture iOS simulator console output for LLMs and humans
+const usage = `xclog — capture iOS console output for LLMs and humans
 
 Usage:
-  xclog launch <bundle-id> [options]    Launch app and capture all output
+  xclog launch <bundle-id> [options]    Launch simulator app and capture all output
   xclog attach <name-or-pid> [options]  Attach to running process (os_log only)
+  xclog show <name-or-pid> [options]    Show recent logs (post-mortem analysis)
   xclog list [options]                  List installed apps on simulator
 
 Output is JSON lines by default (optimized for LLM consumption).
 
 Options:
-  --device <udid>       Simulator UDID (default: "booted")
-  --output <file>       Write to file (in addition to stdout)
-  --human               Human-readable colored output instead of JSON
-  --no-color            Disable colors (--human mode only)
-  --filter <regex>      Filter output lines by regex pattern
-  --subsystem <name>    Filter os_log by subsystem
-  --max-lines <n>       Stop after n lines (default: 0 = unlimited)
-  --timeout <duration>  Stop after duration (e.g. "30s", "5m")
+  --device <udid>         Simulator UDID (default: "booted")
+  --device-udid <udid>    Physical device UDID (for show command)
+  --output <file>         Write to file (in addition to stdout)
+  --human                 Human-readable colored output instead of JSON
+  --no-color              Disable colors (--human mode only)
+  --filter <regex>        Filter output lines by regex pattern
+  --subsystem <name>      Filter os_log by subsystem
+  --max-lines <n>         Stop after n lines (default: 0 = unlimited)
+  --timeout <duration>    Stop after duration (e.g. "30s", "5m")
+  --last <duration>       How far back to search (show command, default: "5m")
 
 Examples:
   xclog launch com.example.MyApp --timeout 30s --max-lines 100
   xclog attach MyApp --filter "error|warning"
-  xclog attach 12345 --subsystem com.example.MyApp --human
+  xclog show MyApp --last 10m --filter "(?i)error"
+  xclog show MyApp --device-udid 00001234-... --last 5m
   xclog list
-  xclog list --device 5A3F...
 
 Coverage:
-  launch mode captures print(), debugPrint(), NSLog(), os_log(), Logger
-  attach mode captures NSLog(), os_log(), Logger (NOT print/debugPrint)
+  launch mode captures print(), debugPrint(), NSLog(), os_log(), Logger (simulator)
+  attach mode captures NSLog(), os_log(), Logger (simulator, NOT print/debugPrint)
+  show   mode captures NSLog(), os_log(), Logger (simulator + physical device)
 `
 
 // Source identifies where a log line originated.
@@ -99,14 +104,16 @@ type LogLine struct {
 
 // Config holds all CLI options.
 type Config struct {
-	Device    string
-	Output    string
-	Human     bool
-	NoColor   bool
-	Filter    string
-	Subsystem string
-	MaxLines  int
-	Timeout   time.Duration
+	Device     string
+	DeviceUDID string // physical device UDID
+	Output     string
+	Human      bool
+	NoColor    bool
+	Filter     string
+	Subsystem  string
+	MaxLines   int
+	Timeout    time.Duration
+	Last       string // duration string for show command (e.g. "5m")
 
 	filterRe *regexp.Regexp // compiled eagerly in main(); read-only at runtime
 }
@@ -114,7 +121,7 @@ type Config struct {
 // subsystemRe validates subsystem names (reverse-DNS identifiers).
 var subsystemRe = regexp.MustCompile(`^[\w.-]+$`)
 
-// osLogEntry is a single entry from `log stream --style json`.
+// osLogEntry is a single entry from `log` ndjson output.
 type osLogEntry struct {
 	Timestamp        string `json:"timestamp"`
 	EventMessage     string `json:"eventMessage"`
@@ -181,6 +188,7 @@ func processName(imagePath string) string {
 
 func registerFlags(fs *flag.FlagSet, cfg *Config) {
 	fs.StringVar(&cfg.Device, "device", "booted", "Simulator UDID")
+	fs.StringVar(&cfg.DeviceUDID, "device-udid", "", "Physical device UDID (show command)")
 	fs.StringVar(&cfg.Output, "output", "", "Write to file")
 	fs.BoolVar(&cfg.Human, "human", false, "Human-readable colored output")
 	fs.BoolVar(&cfg.NoColor, "no-color", false, "Disable colors (--human mode)")
@@ -188,6 +196,7 @@ func registerFlags(fs *flag.FlagSet, cfg *Config) {
 	fs.StringVar(&cfg.Subsystem, "subsystem", "", "Filter os_log by subsystem")
 	fs.IntVar(&cfg.MaxLines, "max-lines", 0, "Stop after n lines (0 = unlimited)")
 	fs.DurationVar(&cfg.Timeout, "timeout", 0, "Stop after duration (e.g. 30s, 5m)")
+	fs.StringVar(&cfg.Last, "last", "5m", "How far back to search (show command)")
 }
 
 func main() {
@@ -259,6 +268,8 @@ func main() {
 		runLaunch(ctx, cancel, target, &cfg, out)
 	case "attach":
 		runAttach(ctx, cancel, target, &cfg, out)
+	case "show":
+		runShow(target, &cfg, out)
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n\n", subcmd)
 		fmt.Fprint(os.Stderr, usage)
@@ -357,14 +368,14 @@ func runLaunch(ctx context.Context, cancel context.CancelFunc, bundleID string, 
 		streamLines(stderr, SourceStderr, lines, cfg)
 	}()
 
-	// Start log stream with JSON output for structured os_log data
+	// Start log stream with ndjson for structured os_log data
 	predicate := fmt.Sprintf("processIdentifier == %d", appPID)
 	if cfg.Subsystem != "" {
 		predicate = fmt.Sprintf("processIdentifier == %d AND subsystem == '%s'", appPID, cfg.Subsystem)
 	}
 	logCmd := exec.CommandContext(ctx, "log", "stream",
 		"--level", "debug",
-		"--style", "json",
+		"--style", "ndjson",
 		"--predicate", predicate,
 	)
 	cmds = append(cmds, logCmd)
@@ -379,7 +390,7 @@ func runLaunch(ctx context.Context, cancel context.CancelFunc, bundleID string, 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			streamOSLogJSON(logStdout, lines, cfg)
+			streamOSLogNDJSON(logStdout, lines, cfg)
 		}()
 	}
 
@@ -416,7 +427,7 @@ func runAttach(ctx context.Context, cancel context.CancelFunc, target string, cf
 
 	logCmd := exec.CommandContext(ctx, "log", "stream",
 		"--level", "debug",
-		"--style", "json",
+		"--style", "ndjson",
 		"--predicate", predicate,
 	)
 	logStdout, err := logCmd.StdoutPipe()
@@ -430,7 +441,7 @@ func runAttach(ctx context.Context, cancel context.CancelFunc, target string, cf
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		streamOSLogJSON(logStdout, lines, cfg)
+		streamOSLogNDJSON(logStdout, lines, cfg)
 	}()
 
 	go func() {
@@ -440,6 +451,103 @@ func runAttach(ctx context.Context, cancel context.CancelFunc, target string, cf
 
 	writeLines(ctx, lines, cfg, out)
 	cleanup([]*exec.Cmd{logCmd})
+}
+
+func runShow(target string, cfg *Config, out io.Writer) {
+	predicate := ""
+	if pid, err := strconv.Atoi(target); err == nil {
+		predicate = fmt.Sprintf("processIdentifier == %d", pid)
+	} else {
+		predicate = fmt.Sprintf("process == %q", target)
+	}
+
+	if cfg.Subsystem != "" {
+		predicate += fmt.Sprintf(" AND subsystem == '%s'", cfg.Subsystem)
+	}
+
+	var logShowArgs []string
+
+	if cfg.DeviceUDID != "" {
+		// Physical device: collect logs first, then show from archive
+		fmt.Fprintf(os.Stderr, "Collecting logs from device %s (last %s)...\n", cfg.DeviceUDID, cfg.Last)
+
+		tmpDir, err := os.MkdirTemp("", "xclog-*")
+		if err != nil {
+			fatal("cannot create temp dir: %v", err)
+		}
+		defer os.RemoveAll(tmpDir)
+
+		archivePath := filepath.Join(tmpDir, "device.logarchive")
+		collectArgs := []string{
+			"collect",
+			"--device-udid", cfg.DeviceUDID,
+			"--last", cfg.Last,
+			"--output", archivePath,
+		}
+		if predicate != "" {
+			collectArgs = append(collectArgs, "--predicate", predicate)
+		}
+
+		collectCmd := exec.Command("log", collectArgs...)
+		collectCmd.Stderr = os.Stderr
+		if err := collectCmd.Run(); err != nil {
+			fatal("log collect failed: %v (is the device connected and unlocked?)", err)
+		}
+
+		fmt.Fprintf(os.Stderr, "Collected. Parsing archive...\n")
+		logShowArgs = []string{"show", archivePath,
+			"--style", "ndjson",
+			"--info", "--debug",
+		}
+	} else {
+		// Simulator / local: query system log directly
+		fmt.Fprintf(os.Stderr, "Showing logs (last %s) for %q\n", cfg.Last, target)
+		logShowArgs = []string{"show",
+			"--last", cfg.Last,
+			"--style", "ndjson",
+			"--info", "--debug",
+			"--predicate", predicate,
+		}
+	}
+
+	fmt.Fprintf(os.Stderr, "---\n")
+
+	showCmd := exec.Command("log", logShowArgs...)
+	showStdout, err := showCmd.StdoutPipe()
+	if err != nil {
+		fatal("log show pipe: %v", err)
+	}
+	if err := showCmd.Start(); err != nil {
+		fatal("log show failed: %v", err)
+	}
+
+	lines := make(chan LogLine, 256)
+	go func() {
+		streamOSLogNDJSON(showStdout, lines, cfg)
+		close(lines)
+	}()
+
+	reset := "\033[0m"
+	count := 0
+	for line := range lines {
+		writeLine(line, cfg, out, reset)
+		count++
+		if cfg.MaxLines > 0 && count >= cfg.MaxLines {
+			// Kill the process to avoid waiting for it to finish processing
+			if showCmd.Process != nil {
+				showCmd.Process.Kill()
+			}
+			break
+		}
+	}
+
+	showCmd.Wait()
+
+	if count == 0 {
+		fmt.Fprintf(os.Stderr, "No matching log entries found.\n")
+	} else {
+		fmt.Fprintf(os.Stderr, "--- %d entries\n", count)
+	}
 }
 
 // streamLines reads raw lines from a reader and sends them as LogLines.
@@ -466,34 +574,21 @@ func streamLines(r io.Reader, src Source, out chan<- LogLine, cfg *Config) {
 	}
 }
 
-// streamOSLogJSON reads `log stream --style json` output as a streaming JSON array.
-// Extracts structured fields: timestamp, level, subsystem, category, process, PID.
-func streamOSLogJSON(r io.Reader, out chan<- LogLine, cfg *Config) {
-	br := bufio.NewReader(r)
-
-	// Skip header text until we find the opening '[' of the JSON array
-	for {
-		b, err := br.ReadByte()
-		if err != nil {
-			return
+// streamOSLogNDJSON reads ndjson output (one JSON object per line) from `log stream`
+// or `log show`. Extracts structured fields: timestamp, level, subsystem, category,
+// process, PID. Skips the "Filtering the log data" header line automatically.
+func streamOSLogNDJSON(r io.Reader, out chan<- LogLine, cfg *Config) {
+	scanner := bufio.NewScanner(r)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		if len(line) == 0 || line[0] != '{' {
+			continue // skip header lines and empty lines
 		}
-		if b == '[' {
-			break
-		}
-	}
 
-	// Decode streaming JSON array
-	dec := json.NewDecoder(io.MultiReader(strings.NewReader("["), br))
-
-	// Consume opening '['
-	if tok, err := dec.Token(); err != nil || tok != json.Delim('[') {
-		return
-	}
-
-	for dec.More() {
 		var entry osLogEntry
-		if err := dec.Decode(&entry); err != nil {
-			break // corrupted stream — can't recover
+		if err := json.Unmarshal(line, &entry); err != nil {
+			continue
 		}
 
 		if entry.EventMessage == "" {
@@ -519,6 +614,9 @@ func streamOSLogJSON(r io.Reader, out chan<- LogLine, cfg *Config) {
 			PID:       entry.ProcessID,
 			Text:      entry.EventMessage,
 		}
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintf(os.Stderr, "xclog: os_log scanner error: %v\n", err)
 	}
 }
 

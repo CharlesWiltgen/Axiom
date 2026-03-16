@@ -1,6 +1,6 @@
 # Console Capture (xclog)
 
-Reference for `xclog`, an iOS simulator console capture tool that unifies print()/debugPrint() output with os_log/Logger into structured JSON — designed for LLM consumption.
+Reference for `xclog`, an iOS console capture tool that unifies print()/debugPrint() output with os_log/Logger into structured JSON — designed for LLM consumption. Supports both simulator and physical devices.
 
 ## When to Use This Reference
 
@@ -21,7 +21,7 @@ Use this reference when:
 
 ## What This Skill Provides
 
-- **list / launch / attach** command reference with all flags
+- **list / launch / attach / show** command reference with all flags
 - **JSON output schema** with level, subsystem, category, process, pid fields
 - **Crash diagnosis workflow** — list → launch with bounded capture → reproduce → filter errors
 - **Silent failure workflow** — subsystem-filtered capture
@@ -30,8 +30,9 @@ Use this reference when:
 
 ## Key Concepts
 
-- **launch mode** captures everything (print + os_log) but restarts the app
-- **attach mode** preserves app state but only captures os_log
+- **launch mode** captures everything (print + os_log) but restarts the app (simulator only)
+- **attach mode** preserves app state but only captures os_log (simulator only)
+- **show mode** searches recent logs post-mortem — works with simulator AND physical devices
 - **JSON is the default** output format — no flags needed for structured output
 - **Always run `list` first** to discover the correct bundle ID
 - **Always bound output** with `--timeout` and `--max-lines` to protect context
