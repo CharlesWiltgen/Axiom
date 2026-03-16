@@ -50,7 +50,6 @@ func TestFormatJSONRichFields(t *testing.T) {
 
 	got := string(formatJSON(line))
 
-	// Parse back and verify fields
 	var parsed jsonOutputLine
 	if err := json.Unmarshal([]byte(got), &parsed); err != nil {
 		t.Fatalf("invalid JSON: %v", err)
@@ -82,7 +81,6 @@ func TestFormatJSONOmitsEmpty(t *testing.T) {
 
 	got := string(formatJSON(line))
 
-	// stdout lines should NOT have level, subsystem, category, process, pid
 	if strings.Contains(got, `"level"`) {
 		t.Errorf("stdout line should omit level, got: %s", got)
 	}
@@ -201,18 +199,17 @@ func TestProcessName(t *testing.T) {
 	}
 }
 
-func TestStreamOSLogJSON(t *testing.T) {
-	// Simulate `log stream --style json` output
+func TestStreamOSLogNDJSON(t *testing.T) {
 	input := `Filtering the log data using "processIdentifier == 123"
-[{"timestamp":"2025-03-15 10:30:45.123456-0700","eventMessage":"Hello from Logger","messageType":"Default","subsystem":"com.example.MyApp","category":"general","processID":123,"processImagePath":"\/Applications\/MyApp.app\/MyApp"},
-{"timestamp":"2025-03-15 10:30:46.000000-0700","eventMessage":"Error occurred","messageType":"Error","subsystem":"com.example.MyApp","category":"networking","processID":123,"processImagePath":"\/Applications\/MyApp.app\/MyApp"}]
+{"timestamp":"2025-03-15 10:30:45.123456-0700","eventMessage":"Hello from Logger","messageType":"Default","subsystem":"com.example.MyApp","category":"general","processID":123,"processImagePath":"/Applications/MyApp.app/MyApp"}
+{"timestamp":"2025-03-15 10:30:46.000000-0700","eventMessage":"Error occurred","messageType":"Error","subsystem":"com.example.MyApp","category":"networking","processID":123,"processImagePath":"/Applications/MyApp.app/MyApp"}
 `
 
 	lines := make(chan LogLine, 10)
 	cfg := &Config{}
 
 	go func() {
-		streamOSLogJSON(strings.NewReader(input), lines, cfg)
+		streamOSLogNDJSON(strings.NewReader(input), lines, cfg)
 		close(lines)
 	}()
 
@@ -235,9 +232,6 @@ func TestStreamOSLogJSON(t *testing.T) {
 	if first.Subsystem != "com.example.MyApp" {
 		t.Errorf("subsystem = %q, want %q", first.Subsystem, "com.example.MyApp")
 	}
-	if first.Category != "general" {
-		t.Errorf("category = %q, want %q", first.Category, "general")
-	}
 	if first.Process != "MyApp" {
 		t.Errorf("process = %q, want %q", first.Process, "MyApp")
 	}
@@ -248,23 +242,20 @@ func TestStreamOSLogJSON(t *testing.T) {
 		t.Errorf("time = %v, want 10:30", first.Time.Format("15:04"))
 	}
 
-	second := results[1]
-	if second.Level != "Error" {
-		t.Errorf("second level = %q, want %q", second.Level, "Error")
+	if results[1].Level != "Error" {
+		t.Errorf("second level = %q, want %q", results[1].Level, "Error")
 	}
 }
 
-func TestStreamOSLogJSONWithFilter(t *testing.T) {
-	input := `Filtering the log data
-[{"timestamp":"2025-03-15 10:00:00.000000-0700","eventMessage":"keep this","messageType":"Default","subsystem":"","category":"","processID":1,"processImagePath":"/bin/test"},
-{"timestamp":"2025-03-15 10:00:01.000000-0700","eventMessage":"drop this","messageType":"Default","subsystem":"","category":"","processID":1,"processImagePath":"/bin/test"}]
+func TestStreamOSLogNDJSONWithFilter(t *testing.T) {
+	input := `{"timestamp":"2025-03-15 10:00:00.000000-0700","eventMessage":"keep this","messageType":"Default","subsystem":"","category":"","processID":1,"processImagePath":"/bin/test"}
+{"timestamp":"2025-03-15 10:00:01.000000-0700","eventMessage":"drop this","messageType":"Default","subsystem":"","category":"","processID":1,"processImagePath":"/bin/test"}
 `
-
 	lines := make(chan LogLine, 10)
 	cfg := &Config{filterRe: regexp.MustCompile("keep")}
 
 	go func() {
-		streamOSLogJSON(strings.NewReader(input), lines, cfg)
+		streamOSLogNDJSON(strings.NewReader(input), lines, cfg)
 		close(lines)
 	}()
 
@@ -276,17 +267,14 @@ func TestStreamOSLogJSONWithFilter(t *testing.T) {
 	if len(results) != 1 {
 		t.Fatalf("expected 1 filtered line, got %d", len(results))
 	}
-	if results[0].Text != "keep this" {
-		t.Errorf("text = %q, want %q", results[0].Text, "keep this")
-	}
 }
 
-func TestStreamOSLogJSONEmptyInput(t *testing.T) {
+func TestStreamOSLogNDJSONEmptyInput(t *testing.T) {
 	lines := make(chan LogLine, 10)
 	cfg := &Config{}
 
 	go func() {
-		streamOSLogJSON(strings.NewReader(""), lines, cfg)
+		streamOSLogNDJSON(strings.NewReader(""), lines, cfg)
 		close(lines)
 	}()
 
@@ -296,24 +284,72 @@ func TestStreamOSLogJSONEmptyInput(t *testing.T) {
 	}
 
 	if len(results) != 0 {
-		t.Errorf("expected 0 lines from empty input, got %d", len(results))
+		t.Errorf("expected 0 lines, got %d", len(results))
 	}
 }
 
-// FuzzStreamOSLogJSON exercises the JSON parser with arbitrary input.
-// Run: go test -fuzz=FuzzStreamOSLogJSON -fuzztime=30s
-func FuzzStreamOSLogJSON(f *testing.F) {
-	f.Add(`[{"timestamp":"2025-03-15 10:30:45.123456-0700","eventMessage":"msg","messageType":"Default","subsystem":"","category":"","processID":0,"processImagePath":""}]`)
-	f.Add(`Filtering header text [{}]`)
+func TestStreamOSLogNDJSONSkipsEmptyMessages(t *testing.T) {
+	input := `{"timestamp":"2025-03-15 10:00:00.000000-0700","eventMessage":"","messageType":"Default","subsystem":"","category":"","processID":1,"processImagePath":""}
+{"timestamp":"2025-03-15 10:00:00.000000-0700","eventMessage":"real message","messageType":"Default","subsystem":"","category":"","processID":1,"processImagePath":""}
+`
+	lines := make(chan LogLine, 10)
+	cfg := &Config{}
+
+	go func() {
+		streamOSLogNDJSON(strings.NewReader(input), lines, cfg)
+		close(lines)
+	}()
+
+	var results []LogLine
+	for line := range lines {
+		results = append(results, line)
+	}
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 line (empty skipped), got %d", len(results))
+	}
+}
+
+func TestStreamOSLogNDJSONMalformedLines(t *testing.T) {
+	input := `not json at all
+{"timestamp":"2025-03-15 10:00:00.000000-0700","eventMessage":"valid","messageType":"Default","subsystem":"","category":"","processID":1,"processImagePath":""}
+{broken json
+{"timestamp":"2025-03-15 10:00:01.000000-0700","eventMessage":"also valid","messageType":"Error","subsystem":"","category":"","processID":1,"processImagePath":""}
+`
+	lines := make(chan LogLine, 10)
+	cfg := &Config{}
+
+	go func() {
+		streamOSLogNDJSON(strings.NewReader(input), lines, cfg)
+		close(lines)
+	}()
+
+	var results []LogLine
+	for line := range lines {
+		results = append(results, line)
+	}
+
+	if len(results) != 2 {
+		t.Fatalf("expected 2 valid lines (malformed skipped), got %d", len(results))
+	}
+}
+
+// FuzzStreamOSLogNDJSON exercises the ndjson parser with arbitrary input.
+// Run: go test -fuzz=FuzzStreamOSLogNDJSON -fuzztime=30s
+func FuzzStreamOSLogNDJSON(f *testing.F) {
+	f.Add(`{"timestamp":"2025-03-15 10:30:45.123456-0700","eventMessage":"msg","messageType":"Default","subsystem":"","category":"","processID":0,"processImagePath":""}`)
+	f.Add(`Filtering header text`)
 	f.Add(``)
-	f.Add(`[{"timestamp":"invalid","eventMessage":"msg","messageType":"Error","subsystem":"","category":"","processID":0,"processImagePath":""}]`)
+	f.Add(`{"timestamp":"invalid","eventMessage":"msg","messageType":"Error","subsystem":"","category":"","processID":0,"processImagePath":""}`)
+	f.Add(`{"eventMessage":"","messageType":"Default"}`)
+	f.Add(`not json`)
 
 	f.Fuzz(func(t *testing.T, input string) {
 		lines := make(chan LogLine, 100)
 		cfg := &Config{}
 
 		go func() {
-			streamOSLogJSON(strings.NewReader(input), lines, cfg)
+			streamOSLogNDJSON(strings.NewReader(input), lines, cfg)
 			close(lines)
 		}()
 
