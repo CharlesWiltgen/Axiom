@@ -219,6 +219,21 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
+### 16. Runtime Console Capture → **xclog-ref**
+**Triggers**:
+- Need to see what the app is logging at runtime
+- App crashes but no crash report (need console output)
+- Silent failures (network, data, auth) with no UI feedback
+- Want to capture print()/os_log() output from simulator
+- Need structured log output for analysis
+- "What is the app printing?"
+
+**Why xclog-ref**: Xcode's debug console isn't accessible externally. xclog combines simctl stdout/stderr with `log stream` JSON to capture everything print(), NSLog(), os_log(), and Logger emit — with structured fields (level, subsystem, category) for automated analysis.
+
+**Invoke**: `/skill axiom-xclog-ref` or `/axiom:console`
+
+---
+
 ### 15. Code Signing Issues → **code-signing**
 **Triggers**:
 - "No signing certificate found"
@@ -253,6 +268,7 @@ This router invokes specialized skills based on the specific issue:
 13. App hang/freeze/watchdog? → hang-diagnostics
 14. Need to reproduce crash interactively / inspect runtime state? → axiom-lldb
 15. Code signing error (certificate, profile, entitlement, Keychain)? → code-signing / code-signing-diag
+16. Need to see runtime console output (print/os_log)? → xclog-ref or `/axiom:console`
 
 ## Anti-Rationalization
 
@@ -265,6 +281,7 @@ This router invokes specialized skills based on the specific issue:
 | "I'll skip environment checks, it compiles locally" | Environment-first saves 30+ min. Every time. |
 | "I'll read the crash report more carefully instead of reproducing" | Crash reports show WHAT crashed, not WHY. Reproducing in LLDB with breakpoints reveals the actual state. axiom-lldb has the workflow. |
 | "I know my certificate is fine, let me check the code" | Code signing errors are NEVER code bugs. 100% configuration. code-signing diagnoses with CLI in 5 min. |
+| "I can't see what the app is logging without Xcode" | xclog captures print() + os_log from the simulator. Structured JSON output with level, subsystem, category. `/axiom:console` or `/skill axiom-xclog-ref`. |
 
 ## When NOT to Use (Conflict Resolution)
 
@@ -395,3 +412,12 @@ User: "errSecInternalComponent in my GitHub Actions CI"
 
 User: "How do I set up code signing for GitHub Actions?"
 → Invoke: `/skill axiom-code-signing`
+
+User: "What is my app printing to the console?"
+→ Invoke: `/skill axiom-xclog-ref` or `/axiom:console`
+
+User: "I need to see the simulator console output"
+→ Invoke: `/skill axiom-xclog-ref` or `/axiom:console`
+
+User: "The app fails silently, no error in the UI"
+→ Invoke: `/skill axiom-xclog-ref` or `/axiom:console`

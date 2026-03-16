@@ -1,0 +1,2 @@
+go test fuzz v1
+string("[{\"timestamp\":\"2025-03-15 10:30:45.123456-0700\",\"eventMessage\":\"msg\",\"messageType\":\"Defau\ft\",\"subsystem\":\"\",\"category\":\"\",\"processID\":0,\"processImagePath\":\"\"}]")

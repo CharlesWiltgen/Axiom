@@ -15,7 +15,8 @@
     "./commands/run-tests.md",
     "./commands/screenshot.md",
     "./commands/status.md",
-    "./commands/test-simulator.md"
+    "./commands/test-simulator.md",
+    "./commands/console.md"
   ],
   "skills": [
     {

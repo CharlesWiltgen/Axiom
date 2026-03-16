@@ -61,6 +61,16 @@ if guide_count > 0 or diag_count > 0:
 
 **Apple for-LLM Documentation**: Xcode detected with {guide_count} guides + {diag_count} Swift diagnostics. Use `axiom-apple-docs` router for authoritative Apple API references."""
 
+# Detect xclog binary
+xclog_path = f"{plugin_root}/bin/xclog"
+xclog_context = ""
+if os.path.isfile(xclog_path) and os.access(xclog_path, os.X_OK):
+    xclog_context = f"""
+
+---
+
+**xclog** (simulator console capture): Available at `{xclog_path}`. Captures print()/os_log()/Logger output as structured JSON. Use `xclog list` to find bundle IDs, `xclog launch <bundle-id> --timeout 30s --max-lines 200` for bounded capture. For crash diagnosis workflow, see `/skill axiom-xclog-ref`. Command: `/axiom:console`."""
+
 # Build the context message
 additional_context = f"""<EXTREMELY_IMPORTANT>
 You have Axiom iOS development skills.
@@ -71,7 +81,7 @@ You have Axiom iOS development skills.
 
 **Below is the full content of your 'axiom:using-axiom' skill - your introduction to using Axiom skills. For all other Axiom skills, use the 'Skill' tool:**
 
-{using_axiom_content}{apple_docs_context}
+{using_axiom_content}{apple_docs_context}{xclog_context}
 
 </EXTREMELY_IMPORTANT>"""
 

@@ -123,6 +123,14 @@ Use this router when:
 - Field performance data collection
 - Integration with crash reporting
 
+### Runtime Console Capture
+
+**Capture simulator console output** → `/skill axiom-xclog-ref` or `/axiom:console`
+- Capture print(), os_log(), Logger output from simulator
+- Structured JSON with level, subsystem, category
+- Bounded collection with `--timeout` and `--max-lines`
+- Filter by subsystem or regex
+
 ### Runtime State Inspection
 
 **LLDB interactive debugging** → `/skill axiom-lldb`
@@ -165,6 +173,7 @@ Use this router when:
 22. Need timer API syntax/lifecycle? → timer-patterns-ref
 23. Code review for outdated Swift patterns? → swift-modern
 24. Claude generating legacy APIs (DateFormatter, CGFloat, DispatchQueue)? → swift-modern
+25. Need to see runtime console output before profiling? → xclog-ref or `/axiom:console`
 
 ## Anti-Rationalization
 
@@ -179,6 +188,7 @@ Use this router when:
 | "It only freezes on first launch, must be loading something" | First-launch hangs have 3 patterns: synchronous I/O, lazy initialization, main thread contention. hang-diagnostics diagnoses which. |
 | "UI locks up when network requests finish — that's slow" | Multiple callbacks completing at once = main thread contention = concurrency issue. Cross-route to ios-concurrency. |
 | "I'll just add print statements to debug this" | Print-debug cycles cost 3-5 min each (build + run + reproduce). An LLDB breakpoint costs 30 seconds. axiom-lldb has the commands. |
+| "I can't see what the app is logging" | xclog captures print() + os_log from the simulator with structured JSON. `/axiom:console` or `/skill axiom-xclog-ref`. |
 | "I'll just use Timer.scheduledTimer, it's simpler" | Timer stops during scrolling (`.default` mode), retains its target (leak). timer-patterns has the decision tree. |
 | "DispatchSourceTimer crashed but it's intermittent, let's ship" | DispatchSourceTimer has 4 crash patterns that are ALL deterministic. timer-patterns diagnoses which one. |
 | "Claude already knows modern Swift" | Claude defaults to pre-5.5 patterns (Date(), CGFloat, filter().count). swift-modern has the correction table. |
@@ -293,3 +303,9 @@ User: "Review my Swift code for outdated patterns"
 
 User: "Is there a more modern way to do this?"
 → Invoke: `/skill axiom-swift-modern`
+
+User: "What is the app logging? I need to see console output"
+→ Invoke: `/skill axiom-xclog-ref` or `/axiom:console`
+
+User: "Capture the simulator logs while I reproduce this bug"
+→ Invoke: `/skill axiom-xclog-ref` or `/axiom:console`
