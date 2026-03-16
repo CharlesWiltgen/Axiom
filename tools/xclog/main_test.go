@@ -334,6 +334,42 @@ func TestStreamOSLogNDJSONMalformedLines(t *testing.T) {
 	}
 }
 
+func TestDeviceUDIDValidation(t *testing.T) {
+	valid := []string{
+		"00001234-000A1234AB1234CD",
+		"abcdef1234567890abcdef1234567890abcdef12",
+		"00008101-001A2B3C4D5E6F78",
+	}
+	for _, s := range valid {
+		if !deviceUDIDRe.MatchString(s) {
+			t.Errorf("deviceUDIDRe should accept %q", s)
+		}
+	}
+
+	invalid := []string{"--output /etc/passwd", "not-a-udid!", "abc xyz", ""}
+	for _, s := range invalid {
+		if deviceUDIDRe.MatchString(s) {
+			t.Errorf("deviceUDIDRe should reject %q", s)
+		}
+	}
+}
+
+func TestLastDurationValidation(t *testing.T) {
+	valid := []string{"5m", "30m", "2h", "1d", "120m"}
+	for _, s := range valid {
+		if !lastDurationRe.MatchString(s) {
+			t.Errorf("lastDurationRe should accept %q", s)
+		}
+	}
+
+	invalid := []string{"--output", "5", "5s", "abc", "5m2h", ""}
+	for _, s := range invalid {
+		if lastDurationRe.MatchString(s) {
+			t.Errorf("lastDurationRe should reject %q", s)
+		}
+	}
+}
+
 // FuzzStreamOSLogNDJSON exercises the ndjson parser with arbitrary input.
 // Run: go test -fuzz=FuzzStreamOSLogNDJSON -fuzztime=30s
 func FuzzStreamOSLogNDJSON(f *testing.F) {
