@@ -121,6 +121,12 @@ type Config struct {
 // subsystemRe validates subsystem names (reverse-DNS identifiers).
 var subsystemRe = regexp.MustCompile(`^[\w.-]+$`)
 
+// deviceUDIDRe validates Apple device UDIDs (hyphenated or plain hex).
+var deviceUDIDRe = regexp.MustCompile(`^[0-9A-Fa-f-]{16,50}$`)
+
+// lastDurationRe validates log duration format (e.g. "5m", "2h", "1d").
+var lastDurationRe = regexp.MustCompile(`^\d+[mhd]$`)
+
 // osLogEntry is a single entry from `log` ndjson output.
 type osLogEntry struct {
 	Timestamp        string `json:"timestamp"`
@@ -241,6 +247,16 @@ func main() {
 	// Validate subsystem to prevent NSPredicate injection
 	if cfg.Subsystem != "" && !subsystemRe.MatchString(cfg.Subsystem) {
 		fatal("invalid subsystem %q: must be a reverse-DNS identifier (e.g. com.example.MyApp)", cfg.Subsystem)
+	}
+
+	// Validate device UDID format
+	if cfg.DeviceUDID != "" && !deviceUDIDRe.MatchString(cfg.DeviceUDID) {
+		fatal("invalid --device-udid %q: must be a device UDID (e.g. 00001234-000A1234AB1234CD)", cfg.DeviceUDID)
+	}
+
+	// Validate --last duration format for show command
+	if subcmd == "show" && !lastDurationRe.MatchString(cfg.Last) {
+		fatal("invalid --last %q: must be a duration like 5m, 2h, or 1d", cfg.Last)
 	}
 
 	var out io.Writer = os.Stdout
@@ -529,15 +545,23 @@ func runShow(target string, cfg *Config, out io.Writer) {
 
 	reset := "\033[0m"
 	count := 0
+	hitLimit := false
 	for line := range lines {
 		writeLine(line, cfg, out, reset)
 		count++
 		if cfg.MaxLines > 0 && count >= cfg.MaxLines {
-			// Kill the process to avoid waiting for it to finish processing
-			if showCmd.Process != nil {
-				showCmd.Process.Kill()
-			}
+			hitLimit = true
 			break
+		}
+	}
+
+	if hitLimit {
+		// Kill the process to stop producing output
+		if showCmd.Process != nil {
+			showCmd.Process.Kill()
+		}
+		// Drain the channel to unblock the goroutine
+		for range lines {
 		}
 	}
 
