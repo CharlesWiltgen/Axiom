@@ -5,6 +5,7 @@ Battle-tested Claude Code skills, commands, and references for modern xOS (iOS, 
 ## What's New Recently
 
 #### Latest
+- **xclog Console Capture** — Captures print()/os_log()/Logger output from iOS simulator (and physical devices via `show`) as structured JSON. Purpose-built for LLM consumption with bounded output, level/subsystem/category fields, and crash diagnosis workflows. Universal binary ships with Axiom.
 - **Apple Documentation Access** — Direct access to 20 official Apple guides + 32 Swift compiler diagnostics bundled in Xcode, read at runtime via MCP server
 
 #### WWDC 2025 Updates
