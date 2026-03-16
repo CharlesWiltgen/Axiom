@@ -80,7 +80,7 @@ ${CLAUDE_PLUGIN_ROOT}/bin/xclog launch com.example.MyApp --output /tmp/console.l
 
 ### attach — Monitor Running Process
 
-Attaches to a running process via os_log only. Does NOT capture print()/debugPrint().
+Attaches to a running process via os_log only. Does NOT capture print()/debugPrint(). Simulator only.
 
 ```bash
 # By process name
@@ -92,6 +92,30 @@ ${CLAUDE_PLUGIN_ROOT}/bin/xclog attach 12345 --max-lines 100
 # Filter for errors only
 ${CLAUDE_PLUGIN_ROOT}/bin/xclog attach MyApp --filter "(?i)error|fault"
 ```
+
+### show — Historical Log Search (Simulator + Physical Device)
+
+Searches recent logs without needing proactive capture. Works with both simulator and connected physical devices.
+
+```bash
+# Simulator: show last 5 minutes of MyApp logs
+${CLAUDE_PLUGIN_ROOT}/bin/xclog show MyApp --last 5m --max-lines 200
+
+# Simulator: show last 10 minutes, errors only
+${CLAUDE_PLUGIN_ROOT}/bin/xclog show MyApp --last 10m --max-lines 100 --filter "(?i)error|fault"
+
+# Physical device: collect and show logs (device must be connected + unlocked)
+${CLAUDE_PLUGIN_ROOT}/bin/xclog show MyApp --device-udid 00008101-... --last 5m --max-lines 200
+
+# By PID
+${CLAUDE_PLUGIN_ROOT}/bin/xclog show 12345 --last 2m
+```
+
+**Physical device workflow**: `show --device-udid` runs `log collect` to pull a log archive from the device over USB, then parses it locally. The device must be connected and unlocked.
+
+**When to use `show` vs `attach`**:
+- `show` — "What just happened?" (post-mortem, no setup needed)
+- `attach` — "What's happening now?" (live streaming, must be running before the event)
 
 ## Output Format
 
@@ -137,6 +161,7 @@ ${CLAUDE_PLUGIN_ROOT}/bin/xclog attach MyApp --human --no-color
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--device <udid>` | `booted` | Target simulator UDID |
+| `--device-udid <udid>` | none | Physical device UDID (show command) |
 | `--output <file>` | stdout | Also write to file |
 | `--human` | off | Human-readable colored output |
 | `--no-color` | off | Disable ANSI colors (--human mode) |
@@ -144,15 +169,23 @@ ${CLAUDE_PLUGIN_ROOT}/bin/xclog attach MyApp --human --no-color
 | `--subsystem <name>` | none | Filter os_log by subsystem |
 | `--max-lines <n>` | 0 (unlimited) | Stop after n lines |
 | `--timeout <duration>` | 0 (unlimited) | Stop after duration (e.g. `30s`, `5m`) |
+| `--last <duration>` | `5m` | How far back to search (show command) |
 
 ## Coverage by Source
 
-| Swift API | launch mode | attach mode |
-|-----------|:-----------:|:-----------:|
-| `print()` | yes | no |
-| `debugPrint()` | yes | no |
-| `NSLog()` | yes | yes |
-| `os_log()` | yes | yes |
+| Swift API | launch | attach | show |
+|-----------|:------:|:------:|:----:|
+| `print()` | yes | no | no |
+| `debugPrint()` | yes | no | no |
+| `NSLog()` | yes | yes | yes |
+| `os_log()` | yes | yes | yes |
+| `Logger` | yes | yes | yes |
+
+| | Simulator | Physical Device |
+|---|:-:|:-:|
+| `launch` | yes | no |
+| `attach` | yes | no |
+| `show` | yes | yes |
 | `Logger` | yes | yes |
 
 **Use `launch` for full coverage.** `attach` is for monitoring already-running processes.
