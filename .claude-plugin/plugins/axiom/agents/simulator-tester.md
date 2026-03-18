@@ -47,6 +47,12 @@ You are an expert at using the iOS Simulator for automated testing and closed-lo
 
 **ALWAYS run these checks FIRST** (using JSON for reliable parsing):
 
+**Check for saved preferences first:**
+
+Read `.axiom/preferences.yaml` if it exists. If it contains a `simulator.device` and `simulator.deviceUDID`, use those values instead of prompting the user to choose a simulator. If the saved device isn't booted, boot it by UDID.
+
+If no preferences file exists, proceed with discovery below.
+
 ```bash
 # List available simulators with structured output
 xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.isAvailable == true) | {name, udid, state}'
@@ -259,6 +265,7 @@ axe screenshot --output /tmp/screenshot.png --udid $UDID
 4. **Capture**: Screenshot, video, logs
 5. **Analyze**: Review visual state, check for errors
 6. **Report**: Actual vs expected, pass/fail
+7. **Save**: If this is a new device/app selection, save to `.axiom/preferences.yaml` (see `axiom-xclog-ref` skill)
 
 ## Output Format
 
