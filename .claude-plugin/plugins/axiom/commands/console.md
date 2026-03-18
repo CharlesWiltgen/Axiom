@@ -10,10 +10,12 @@ Captures iOS simulator console output using **xclog**, combining print/debugPrin
 
 ## Steps
 
-1. Run `${CLAUDE_PLUGIN_ROOT}/bin/xclog list` to discover installed apps
-2. Ask the user which app to capture (or use the one they specified)
-3. Run `${CLAUDE_PLUGIN_ROOT}/bin/xclog launch <bundle-id> --timeout 30s --max-lines 200`
-4. Present the captured output, highlighting errors and faults
+1. Read `.axiom/preferences.yaml` — if it exists and has a `simulator` section, use saved `device`, `deviceUDID`, and `bundleId`
+2. If no saved preferences, run `${CLAUDE_PLUGIN_ROOT}/bin/xclog list` to discover installed apps
+3. Ask the user which app to capture (or use the saved/specified one)
+4. Run `${CLAUDE_PLUGIN_ROOT}/bin/xclog launch <bundle-id> --timeout 30s --max-lines 200`
+5. Present the captured output, highlighting errors and faults
+6. Save the used device and bundle ID to `.axiom/preferences.yaml` (see `axiom-xclog-ref` skill for write instructions)
 
 ## Usage Tips
 
