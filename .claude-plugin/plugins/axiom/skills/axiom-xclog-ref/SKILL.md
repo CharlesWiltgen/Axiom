@@ -31,11 +31,12 @@ ${CLAUDE_PLUGIN_ROOT}/bin/xclog
 **App already running?** `launch` will terminate it and relaunch. Use `attach` if you need to preserve current state (os_log only — no print() capture).
 
 ```bash
-# 1. FIRST: Discover installed apps
+# 1. FIRST: Check .axiom/preferences.yaml for saved device and bundle ID
+# 2. If no preferences: Discover installed apps
 ${CLAUDE_PLUGIN_ROOT}/bin/xclog list
 
-# 2. Find the target app's bundle_id from output
-# 3. THEN: Launch with the correct bundle ID (restarts app)
+# 3. Find the target app's bundle_id from output
+# 4. THEN: Launch with the correct bundle ID (restarts app)
 ${CLAUDE_PLUGIN_ROOT}/bin/xclog launch com.example.MyApp --timeout 30s --max-lines 200
 
 # OR: Attach to running app without restarting (os_log only)
@@ -59,6 +60,10 @@ simulator:
 
 If the file exists and contains a `simulator` section, use the saved `deviceUDID` and `bundleId` for xclog commands. Skip `xclog list` unless the user asks for a different app or the saved values fail.
 
+```bash
+${CLAUDE_PLUGIN_ROOT}/bin/xclog launch <bundleId> --device <deviceUDID> --timeout 30s --max-lines 200
+```
+
 If the file doesn't exist or the `simulator` section is missing, fall back to `xclog list` discovery.
 
 If the saved `deviceUDID` is not found among available simulators (xclog or simctl fails), fall back to discovery and save the new selection.
@@ -67,22 +72,14 @@ If the YAML is malformed, warn the developer and fall back to discovery. Do not 
 
 ### Writing Preferences
 
-After a successful `xclog launch` or `xclog list` selection, save the device and bundle ID:
+After a successful `xclog launch` or when the user selects a target app from `xclog list` output, save the device and bundle ID:
 
-1. Read `.axiom/preferences.yaml` if it exists (to preserve other keys)
-2. Update the `simulator:` section with `device`, `deviceUDID`, and `bundleId`
-3. Write the merged YAML back using the Write tool
-4. If `.axiom/` doesn't exist, create it first
-5. After creating `.axiom/`, check `.gitignore` — if the file exists, check if any line matches `.axiom/` exactly; if not, append a new line with `.axiom/`. If `.gitignore` doesn't exist, create it with `.axiom/` as its content
+1. If `.axiom/` doesn't exist, create it. Ensure `.axiom/` is in `.gitignore`. If `.gitignore` doesn't exist, create it.
+2. Read `.axiom/preferences.yaml` if it exists (to preserve other keys)
+3. Update the `simulator:` section with `device`, `deviceUDID`, and `bundleId`
+4. Write the merged YAML back using the Write tool
 
-Example write:
-
-```yaml
-simulator:
-  device: iPhone 16 Pro
-  deviceUDID: 1A2B3C4D-5E6F-7890-ABCD-EF1234567890
-  bundleId: com.example.MyApp
-```
+Write the same `simulator:` structure shown in Reading Preferences above.
 
 ## Commands
 
