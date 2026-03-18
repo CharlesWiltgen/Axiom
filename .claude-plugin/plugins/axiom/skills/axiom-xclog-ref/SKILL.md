@@ -74,7 +74,7 @@ If the YAML is malformed, warn the developer and fall back to discovery. Do not 
 
 After a successful `xclog launch` or when the user selects a target app from `xclog list` output, save the device and bundle ID:
 
-1. If `.axiom/` doesn't exist, create it. Ensure `.axiom/` is in `.gitignore`. If `.gitignore` doesn't exist, create it.
+1. If `.axiom/` doesn't exist, create it. Then check `.gitignore`: if the file exists, check if any line matches `.axiom/` exactly — if not, append `.axiom/` on a new line. If `.gitignore` doesn't exist, create it with `.axiom/` as its content.
 2. Read `.axiom/preferences.yaml` if it exists (to preserve other keys)
 3. Update the `simulator:` section with `device`, `deviceUDID`, and `bundleId`
 4. Write the merged YAML back using the Write tool

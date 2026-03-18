@@ -49,7 +49,7 @@ You are an expert at using the iOS Simulator for automated testing and closed-lo
 
 **Check for saved preferences first:**
 
-Read `.axiom/preferences.yaml` if it exists. If it contains a `simulator.device` and `simulator.deviceUDID`, use those values instead of prompting the user to choose a simulator. If the saved device isn't booted, boot it by UDID.
+Read `.axiom/preferences.yaml` if it exists. If it contains a `simulator.device` and `simulator.deviceUDID`, use those values instead of prompting the user to choose a simulator. If the saved device isn't booted, boot it by UDID. If the file exists but is malformed, skip and fall back to discovery.
 
 If no preferences file exists, proceed with discovery below.
 
