@@ -574,8 +574,10 @@ Is view using @EnvironmentObject?
 - Models that intentionally support iOS 14-16
 - Combine publishers (not the same as @Published)
 - Already migrated code using @Observable
+- Apple protocol families unrelated to Observation — classes conforming to `AppIntent`, `EntityQuery`, `AppEntity`, `WidgetConfiguration`, `TimelineProvider`, or other App Intents / WidgetKit protocols are NOT `ObservableObject` and should not be flagged for `@Observable` migration
 
 **Check before reporting**:
 - Verify file is in your project, not dependencies
 - Check deployment target constraints
 - Confirm model is actually used in SwiftUI views
+- Confirm the class actually conforms to `ObservableObject` — do not flag classes just because they are classes

@@ -251,23 +251,27 @@ func testViewModel() {
 **Fix**: Extract to helper methods, use factory patterns
 
 #### 5.3 Force Unwrapping in Tests
-**Issue**: Excessive '!' in test code
-**Why**: Crashes obscure actual test failures
+**Issue**: Force unwraps on values returned by the system under test
+**Why**: Crashes obscure actual test failures with an unhelpful backtrace instead of a clear assertion message
 **Impact**: Hard to debug, noisy failures
 **Fix**: Use `XCTUnwrap` or `try #require`
 
+**Scope**: Only flag force unwraps where the unwrapped value comes from the system under test (decoded results, method return values, query results). Do NOT flag:
+- Force unwraps in `setUp()` / `setUpWithError()` / class setup on known-valid data
+- Force unwraps on known-valid literals: `URL(string: "https://example.com")!`, `JSONEncoder().encode(hardcodedValue)`, `Data("literal".utf8)`
+- Force unwraps in test fixture factories that construct guaranteed-valid test data
+
 ```swift
-// ❌ Bad
-let result = try! JSONDecoder().decode(User.self, from: data)
+// ✅ OK — known-valid literal in setup
+let url = URL(string: "https://api.example.com/users")!
+
+// ❌ Flag — system-under-test return value
+let result = try! JSONDecoder().decode(User.self, from: responseData)
 XCTAssertEqual(result!.name, "Alice")
 
-// ✅ Good (XCTest)
-let result = try XCTUnwrap(JSONDecoder().decode(User.self, from: data))
+// ✅ Better
+let result = try XCTUnwrap(JSONDecoder().decode(User.self, from: responseData))
 XCTAssertEqual(result.name, "Alice")
-
-// ✅ Good (Swift Testing)
-let result = try #require(JSONDecoder().decode(User.self, from: data))
-#expect(result.name == "Alice")
 ```
 
 ---
@@ -456,6 +460,7 @@ For detailed testing guidance:
 - UI tests that legitimately need XCUIApplication
 - Performance tests using XCTMetric
 - Tests intentionally using XCTest for Objective-C interop
+- Force unwraps in `setUp()` / fixture setup on known-valid literals (URLs from string constants, inline JSON, hardcoded test data)
 
 **Verify before reporting**:
 - Read surrounding context

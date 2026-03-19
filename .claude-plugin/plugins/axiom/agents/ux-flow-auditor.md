@@ -120,7 +120,7 @@ Async operations without user feedback.
 Flows unreachable via assistive technology.
 
 **Search for**:
-- `.onLongPressGesture` / `DragGesture` / `.swipeActions` without `.accessibilityAction` equivalent
+- `.onLongPressGesture` / `DragGesture` without `.accessibilityAction` equivalent (note: `.swipeActions` are automatically exposed via VoiceOver Actions rotor — do NOT flag these)
 - Custom controls without `.accessibilityLabel`
 - Views where the only interactive element is gesture-based
 
@@ -141,6 +141,8 @@ State/binding wiring issues.
 - `@Binding` parameters initialized with `.constant()` in non-preview production code
 - `@Environment` keys used but not provided in view hierarchy
 - `@Observable` objects created with `@State` when they should be passed via environment
+
+**Before flagging**: Read 3-5 lines above and below the match. If there is a comment explaining the intent (e.g., `// Staged refactor`, `// Intentional`, `// TODO: wire up`, `// ViewModel bridge`), downgrade to LOW/ADVISORY or skip. Developers document intentional temporary patterns — respect that context.
 
 ### 11. Platform Parity Gaps (MEDIUM)
 
