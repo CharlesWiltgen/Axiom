@@ -26,6 +26,8 @@ Use this router for:
 - Background processing (BGTaskScheduler)
 - Location services (Core Location)
 - Maps & MapKit (Map, MKMapView, annotations, search, directions)
+- Passkeys & authentication (ASAuthorizationController, WebAuthn)
+- App integrity & fraud prevention (App Attest, DeviceCheck)
 
 ## Cross-Domain Routing
 
@@ -103,6 +105,14 @@ When integration issues overlap with other domains:
 **Localization** → `/skill axiom-localization`
 **Privacy UX** → `/skill axiom-privacy-ux`
 
+### Authentication & Credentials
+
+**Passkeys / WebAuthn sign-in** → `/skill axiom-passkeys`
+
+### App Integrity & Fraud Prevention
+
+**App Attest / DeviceCheck** → `/skill axiom-app-attest`
+
 ### Alarms
 
 **AlarmKit (iOS 26+)** → `/skill axiom-alarmkit-ref`
@@ -172,6 +182,8 @@ When integration issues overlap with other domains:
 20. Location services? → core-location (patterns), core-location-diag (debugging), core-location-ref (API)
 21. Maps / MapKit / annotations / directions? → mapkit (patterns), mapkit-ref (API), mapkit-diag (debugging)
 22. Alarms / AlarmKit? → alarmkit-ref
+23. Passkeys / WebAuthn / replacing passwords / ASAuthorizationController? → passkeys
+24. App Attest / DeviceCheck / fraud prevention / app integrity? → app-attest
 
 ## Anti-Rationalization
 
@@ -186,6 +198,8 @@ When integration issues overlap with other domains:
 | "MapKit search doesn't work, I'll use Google Maps SDK" | MapKit search needs region bias and resultTypes configuration. mapkit-diag fixes this in 5 minutes. |
 | "Alarm scheduling is just UNNotificationRequest" | AlarmKit (iOS 26+) has dedicated alarm UI, authorization, and Live Activity integration. alarmkit-ref covers the framework. |
 | "Push notifications are just a payload and a token" | Token lifecycle, Focus interruption levels, service extension gotchas, and sandbox/production mismatch cause 80% of push bugs. push-notifications covers all. |
+| "Our users aren't ready for passkeys" | Apple, Google, and Microsoft ship passkeys across all platforms. Users don't need to understand crypto — they just tap. passkeys covers the migration path. |
+| "App Attest is overkill for our app" | Any app with server-side value (premium content, virtual currency, user accounts) is a fraud target. app-attest has a gradual rollout strategy. |
 
 ## Example Invocations
 
@@ -296,3 +310,15 @@ User: "How do I use pushTokenUpdates for Live Activities?"
 
 User: "How do I test push notifications without a real server?"
 → Invoke: `/skill axiom-push-notifications-ref` (command-line testing section)
+
+User: "How do I implement passkey sign-in?"
+→ Invoke: `/skill axiom-passkeys`
+
+User: "How do I replace passwords with passkeys?"
+→ Invoke: `/skill axiom-passkeys`
+
+User: "How do I verify my app hasn't been tampered with?"
+→ Invoke: `/skill axiom-app-attest`
+
+User: "How do I prevent promotional fraud?"
+→ Invoke: `/skill axiom-app-attest`
