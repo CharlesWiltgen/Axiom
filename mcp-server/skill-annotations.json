@@ -1590,5 +1590,116 @@
     "related": [
       "coreml"
     ]
+  },
+  "axiom-keychain": {
+    "category": "security",
+    "tags": [
+      "keychain",
+      "secitem",
+      "credentials",
+      "secrets",
+      "token-storage",
+      "accessibility",
+      "access-groups"
+    ],
+    "related": [
+      "axiom-keychain-diag",
+      "axiom-keychain-ref",
+      "axiom-cryptokit"
+    ]
+  },
+  "axiom-keychain-diag": {
+    "category": "security",
+    "tags": [
+      "diagnostic",
+      "keychain",
+      "secitem",
+      "errSecDuplicateItem",
+      "errSecItemNotFound",
+      "errSecInteractionNotAllowed",
+      "errSecMissingEntitlement"
+    ],
+    "related": [
+      "axiom-keychain",
+      "axiom-keychain-ref"
+    ]
+  },
+  "axiom-keychain-ref": {
+    "category": "security",
+    "tags": [
+      "reference",
+      "keychain",
+      "secitem",
+      "secaccesscontrol",
+      "localauthentication",
+      "accessibility",
+      "lacontext"
+    ],
+    "related": [
+      "axiom-keychain",
+      "axiom-keychain-diag"
+    ]
+  },
+  "axiom-cryptokit": {
+    "category": "security",
+    "tags": [
+      "cryptokit",
+      "encryption",
+      "signing",
+      "secure-enclave",
+      "quantum",
+      "hpke",
+      "aes-gcm"
+    ],
+    "related": [
+      "axiom-cryptokit-ref",
+      "axiom-keychain"
+    ]
+  },
+  "axiom-cryptokit-ref": {
+    "category": "security",
+    "tags": [
+      "reference",
+      "cryptokit",
+      "aes-gcm",
+      "ecdsa",
+      "mlkem",
+      "mldsa",
+      "hpke",
+      "swift-crypto",
+      "chacha"
+    ],
+    "related": [
+      "axiom-cryptokit"
+    ]
+  },
+  "axiom-passkeys": {
+    "category": "security",
+    "tags": [
+      "passkeys",
+      "webauthn",
+      "fido",
+      "authentication",
+      "autofill",
+      "credential",
+      "asauthorizationcontroller"
+    ],
+    "related": [
+      "axiom-keychain"
+    ]
+  },
+  "axiom-app-attest": {
+    "category": "security",
+    "tags": [
+      "app-attest",
+      "devicecheck",
+      "fraud",
+      "integrity",
+      "attestation",
+      "assertion"
+    ],
+    "related": [
+      "axiom-cryptokit"
+    ]
   }
 }

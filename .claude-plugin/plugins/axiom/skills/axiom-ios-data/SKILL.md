@@ -17,6 +17,8 @@ Use this router when working with:
 - File storage (iCloud Drive, local storage)
 - Data serialization (Codable, JSON)
 - Storage strategy decisions
+- Keychain / secure credential storage
+- Encryption, signing, key management (CryptoKit)
 
 ## Routing Logic
 
@@ -50,6 +52,14 @@ Use this router when working with:
 **CloudKit** → `/skill axiom-cloudkit-ref`
 **iCloud Drive** → `/skill axiom-icloud-drive-ref`
 **Cloud sync errors** → `/skill axiom-cloud-sync-diag`
+
+### Keychain & Encryption
+
+**Keychain / secure credential storage** → `/skill axiom-keychain`
+**Keychain errors** → `/skill axiom-keychain-diag`
+**Keychain API reference** → `/skill axiom-keychain-ref`
+**Encryption / signing / key management** → `/skill axiom-cryptokit`
+**CryptoKit API reference** → `/skill axiom-cryptokit-ref`
 
 ### File Storage
 
@@ -86,7 +96,11 @@ Use this router when working with:
 12. Codable/JSON serialization? → codable
 13. File storage strategy? → storage, storage-diag, storage-management-ref
 14. File protection? → file-protection-ref
-15. Want Core Data safety scan? → core-data-auditor (Agent)
+15. Keychain / storing tokens, passwords, secrets securely? → keychain, keychain-diag, keychain-ref
+16. SecItem errors (errSecDuplicateItem, errSecItemNotFound, errSecInteractionNotAllowed)? → keychain-diag
+17. Encryption, signing, Secure Enclave, CryptoKit? → cryptokit, cryptokit-ref
+18. Quantum-secure cryptography, HPKE, ML-KEM? → cryptokit
+19. Want Core Data safety scan? → core-data-auditor (Agent)
 16. Want Codable anti-pattern scan? → codable-auditor (Agent)
 17. Want iCloud sync audit? → icloud-auditor (Agent)
 18. Want storage location audit? → storage-auditor (Agent)
@@ -102,6 +116,8 @@ Use this router when working with:
 | "CloudKit sync is straightforward" | CloudKit has 15+ failure modes. cloud-sync-diag diagnoses them systematically. |
 | "I know Codable well enough" | Codable has silent data loss traps (try? swallows errors). codable skill prevents production bugs. |
 | "I'll use local storage on tvOS" | tvOS has NO persistent local storage. System deletes Caches at any time. axiom-tvos explains the iCloud-first pattern. |
+| "UserDefaults is fine for this token" | UserDefaults is unencrypted, backed up to iCloud, and visible to MDM profiles. One audit catches it. keychain stores tokens securely. |
+| "I'll encrypt it myself with CommonCrypto" | CryptoKit replaced CommonCrypto's buffer-management nightmares with one-line APIs. cryptokit prevents misuse. |
 
 ## Critical Pattern: Migrations
 
@@ -143,3 +159,18 @@ User: "How do I persist data on tvOS?"
 
 User: "My tvOS app loses data between launches"
 → Invoke: `/skill axiom-tvos`
+
+User: "How do I store an auth token securely?"
+→ Invoke: `/skill axiom-keychain`
+
+User: "errSecDuplicateItem but I checked and the item doesn't exist"
+→ Invoke: `/skill axiom-keychain-diag`
+
+User: "How do I encrypt data with AES in Swift?"
+→ Invoke: `/skill axiom-cryptokit`
+
+User: "I need to sign data with the Secure Enclave"
+→ Invoke: `/skill axiom-cryptokit`
+
+User: "What's ML-KEM and should I use it?"
+→ Invoke: `/skill axiom-cryptokit`
