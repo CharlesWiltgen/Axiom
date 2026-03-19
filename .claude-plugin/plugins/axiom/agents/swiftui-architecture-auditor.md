@@ -96,7 +96,7 @@ If >100 total issues:
 **Issue**: Coupling business logic to UI framework, hindering unit testing
 **Fix**: Remove `import SwiftUI` from models; use Foundation types
 
-**Exception**: Files that import SwiftUI only for value types (`Color`, `Font`, `Image`, `CGFloat`) are acceptable — this is a common pattern for design systems, theme definitions, and semantic color/typography mappings. Before flagging, read the file and check what SwiftUI types it actually uses. If there are no `View` conformances, no `body` properties, and no view-building code, skip it.
+**Exception**: Files that import SwiftUI only for value types (`Color`, `Font`, `Image`) are acceptable — this is a common pattern for design systems, theme definitions, and semantic color/typography mappings. Before flagging, read the file and check what SwiftUI types it actually uses. If there are no `View` conformances, no `body` properties, and no view-building code, skip it.
 
 ## Audit Process
 
@@ -141,7 +141,8 @@ grep -rn "@Observable class" --include="*.swift"
 ```bash
 # SwiftUI imports in non-View files (heuristic: look for "class" or "struct" files without View)
 grep -rn "import SwiftUI" --include="*.swift"
-# (You'll need to filter these results to check if they are actually Views)
+# For each match: read the file. Skip if it conforms to View (has `body`), or if it only
+# uses SwiftUI value types (Color, Font, Image) for design system / theme definitions.
 ```
 
 ### Step 3: Categorize by Severity
