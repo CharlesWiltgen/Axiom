@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S deno run --allow-read --allow-run
 /**
  * Skill Freshness Audit
  *
@@ -6,14 +6,14 @@
  * git history (last modification date of SKILL.md).
  *
  * Usage:
- *   node scripts/skill-freshness.js           # Default: 6 month threshold
- *   node scripts/skill-freshness.js --months=3  # Custom threshold
- *   node scripts/skill-freshness.js --all       # Show all skills, not just stale
+ *   deno run --allow-read --allow-run scripts/skill-freshness.js
+ *   deno run --allow-read --allow-run scripts/skill-freshness.js --months=3
+ *   deno run --allow-read --allow-run scripts/skill-freshness.js --all
  */
-import { execSync } from 'child_process';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
