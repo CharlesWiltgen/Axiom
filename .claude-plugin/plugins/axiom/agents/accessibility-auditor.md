@@ -162,7 +162,7 @@ grep -rn "UIFont(name:.*size:" --include="*.swift" | grep -v "UIFontMetrics"
 grep -rn "\.withSize(" --include="*.swift" | grep -v "UIFontMetrics"
 ```
 
-**Verify @ScaledMetric before flagging**: When a `.system(size:)` match uses a variable name instead of a literal number, grep the same file for that variable's declaration. If it's declared with `@ScaledMetric`, it already scales with Dynamic Type — do NOT flag it.
+**Verify @ScaledMetric before flagging**: When a `.system(size:)` or `.custom(name, size:)` match uses a variable name instead of a literal number, grep the same file for that variable's declaration. If it's declared with `@ScaledMetric`, it already scales with Dynamic Type — do NOT flag it.
 
 **Custom Fonts Without Scaling**:
 ```bash
@@ -172,6 +172,7 @@ grep -rn "UIFont(descriptor:" --include="*.swift" | grep -v "UIFontMetrics"
 
 # SwiftUI custom fonts without relativeTo: parameter
 grep -rn "\.custom(" --include="*.swift" | grep -v "relativeTo:"
+# Note: same @ScaledMetric variable check applies here — trace the size parameter
 ```
 
 **Layout Constants Without Scaling**:
