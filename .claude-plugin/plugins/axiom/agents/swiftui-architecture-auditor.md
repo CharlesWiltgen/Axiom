@@ -96,6 +96,8 @@ If >100 total issues:
 **Issue**: Coupling business logic to UI framework, hindering unit testing
 **Fix**: Remove `import SwiftUI` from models; use Foundation types
 
+**Exception**: Files that import SwiftUI only for value types (`Color`, `Font`, `Image`, `CGFloat`) are acceptable — this is a common pattern for design systems, theme definitions, and semantic color/typography mappings. Before flagging, read the file and check what SwiftUI types it actually uses. If there are no `View` conformances, no `body` properties, and no view-building code, skip it.
+
 ## Audit Process
 
 ### Step 1: Find SwiftUI Files
