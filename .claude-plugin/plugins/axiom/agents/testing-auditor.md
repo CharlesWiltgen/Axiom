@@ -258,7 +258,7 @@ func testViewModel() {
 
 **Scope**: Only flag force unwraps where the unwrapped value comes from the system under test (decoded results, method return values, query results). Do NOT flag:
 - Force unwraps in `setUp()` / `setUpWithError()` / class setup on known-valid data
-- Force unwraps on known-valid literals: `URL(string: "https://example.com")!`, `JSONEncoder().encode(hardcodedValue)`, `Data("literal".utf8)`
+- Force unwraps on known-valid literals: `URL(string: "https://example.com")!`, `UUID(uuidString: "known-valid")!`, `NSRegularExpression(pattern: "simple")!`
 - Force unwraps in test fixture factories that construct guaranteed-valid test data
 
 ```swift
@@ -269,9 +269,13 @@ let url = URL(string: "https://api.example.com/users")!
 let result = try! JSONDecoder().decode(User.self, from: responseData)
 XCTAssertEqual(result!.name, "Alice")
 
-// ✅ Better
+// ✅ Better (XCTest)
 let result = try XCTUnwrap(JSONDecoder().decode(User.self, from: responseData))
 XCTAssertEqual(result.name, "Alice")
+
+// ✅ Better (Swift Testing)
+let result = try #require(JSONDecoder().decode(User.self, from: responseData))
+#expect(result.name == "Alice")
 ```
 
 ---
