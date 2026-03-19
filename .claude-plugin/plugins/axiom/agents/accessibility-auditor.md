@@ -162,6 +162,8 @@ grep -rn "UIFont(name:.*size:" --include="*.swift" | grep -v "UIFontMetrics"
 grep -rn "\.withSize(" --include="*.swift" | grep -v "UIFontMetrics"
 ```
 
+**Verify @ScaledMetric before flagging**: When a `.system(size:)` match uses a variable name instead of a literal number, grep the same file for that variable's declaration. If it's declared with `@ScaledMetric`, it already scales with Dynamic Type — do NOT flag it.
+
 **Custom Fonts Without Scaling**:
 ```bash
 # UIKit custom fonts without UIFontMetrics scaling
@@ -373,6 +375,8 @@ These are acceptable (not issues):
 - Decorative images with `.accessibilityHidden(true)`
 - Spacer views without labels
 - Background images marked as decorative
+- `.swipeActions` on List rows — iOS automatically exposes these to VoiceOver via the Actions rotor (swipe up/down on focused row). No `.accessibilityAction` needed.
+- `.font(.system(size: variable))` where the variable is declared with `@ScaledMetric` — these already scale with Dynamic Type. Before flagging any `.system(size:)` that uses a variable (not a literal number), grep the file for that variable name and check if it's `@ScaledMetric`.
 
 ## Testing Recommendations
 
