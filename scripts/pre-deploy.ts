@@ -431,6 +431,56 @@ try {
   );
 }
 
+// ── 12. MCP Bundle Staleness ──
+
+heading("12. MCP Bundle Staleness");
+
+const bundlePath = path.join(root, "mcp-server/dist/bundle.json");
+if (fs.existsSync(bundlePath)) {
+  const bundleMtime = fs.statSync(bundlePath).mtimeMs;
+
+  // Find the newest skill, agent, or command file
+  let newestSource = 0;
+  const sourceDirs = [
+    path.join(pluginDir, "skills"),
+    path.join(pluginDir, "agents"),
+    path.join(pluginDir, "commands"),
+  ];
+  for (const dir of sourceDirs) {
+    if (!fs.existsSync(dir)) continue;
+    const walk = (d: string) => {
+      for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+        const full = path.join(d, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (entry.name.endsWith(".md")) {
+          const mtime = fs.statSync(full).mtimeMs;
+          if (mtime > newestSource) newestSource = mtime;
+        }
+      }
+    };
+    walk(dir);
+  }
+
+  // Also check skill-annotations.json
+  const annotationsPath = path.join(root, "mcp-server/skill-annotations.json");
+  if (fs.existsSync(annotationsPath)) {
+    const annotMtime = fs.statSync(annotationsPath).mtimeMs;
+    if (annotMtime > newestSource) newestSource = annotMtime;
+  }
+
+  if (newestSource > bundleMtime) {
+    const staleMinutes = Math.round((newestSource - bundleMtime) / 60000);
+    error(
+      "bundle-staleness",
+      `MCP bundle is ${staleMinutes}min older than newest source file. Run: cd mcp-server && pnpm run build:bundle`,
+    );
+  } else {
+    console.log("  ✓ MCP bundle is up-to-date with source files");
+  }
+} else {
+  warn("bundle-staleness", "MCP bundle not found at mcp-server/dist/bundle.json — build with: cd mcp-server && pnpm run build:bundle");
+}
+
 // ── Phase 1 Summary ──
 
 heading("Phase 1 Summary (Static)");
