@@ -1,18 +1,18 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S deno run --allow-read
 
 /**
  * Generates Mermaid diagram blocks for Axiom's skill map documentation.
  *
  * Usage:
- *   node scripts/generate-skill-diagrams.js           # Print all diagrams
- *   node scripts/generate-skill-diagrams.js --check    # Verify docs are up-to-date
- *   node scripts/generate-skill-diagrams.js --overview  # Print only the overview mindmap
- *   node scripts/generate-skill-diagrams.js --domain <name>  # Print one domain flowchart
+ *   deno run --allow-read scripts/generate-skill-diagrams.js
+ *   deno run --allow-read scripts/generate-skill-diagrams.js --check
+ *   deno run --allow-read scripts/generate-skill-diagrams.js --overview
+ *   deno run --allow-read scripts/generate-skill-diagrams.js --domain <name>
  */
 
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
