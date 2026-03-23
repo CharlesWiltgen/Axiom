@@ -8,22 +8,19 @@ license: MIT
 
 Complete reference for all 20 tools exposed by Xcode's MCP server (`xcrun mcpbridge`).
 
-**Important**: Parameter schemas below are sourced from blog research and initial testing. Validate against your live mcpbridge with `tools/list` if behavior differs.
+**Source**: Xcode 26.3 `tools/list` response. Validated against Keith Smiley's gist (2025-07-15).
+
+**Critical**: `tabIdentifier` is required by 18 of 20 tools. Always call `XcodeListWindows` first.
 
 ## Discovery
 
 ### XcodeListWindows
 
-**Call this first.** Returns open Xcode windows with `tabIdentifier` values needed by most other tools.
+Returns open Xcode windows. **Call this first** to get `tabIdentifier` values.
 
 - **Parameters**: None
-- **Returns**: List of `{ tabIdentifier: string, workspacePath: string }`
-- **Notes**: No parameters needed. If empty, no project is open in Xcode.
-
-```
-XcodeListWindows()
-→ { "tabIdentifier": "abc-123", "workspacePath": "/Users/dev/MyApp.xcodeproj" }
-```
+- **Returns**: `{ message: string }` — description of open windows
+- **Notes**: Only tool that does not require `tabIdentifier`.
 
 ---
 
@@ -31,87 +28,112 @@ XcodeListWindows()
 
 ### XcodeRead
 
-Read file contents from the project.
+Read file contents (cat -n format, 600 lines default).
 
 - **Parameters**:
-  - `path` (string, required) — File path relative to project or absolute
-- **Returns**: File contents as string
-- **Notes**: Sees Xcode's project view including generated files and resolved SPM packages
+  - `tabIdentifier` (string, required)
+  - `filePath` (string, required) — project-relative or absolute
+  - `limit` (integer, optional) — max lines to return
+  - `offset` (integer, optional) — starting line number
+- **Returns**: `{ content, filePath, fileSize, linesRead, startLine, totalLines }`
 
 ### XcodeWrite
 
-Create a new file.
+Create or overwrite a file. Automatically adds new files to the project structure.
 
 - **Parameters**:
-  - `path` (string, required) — File path
-  - `content` (string, required) — File contents
-- **Returns**: Write confirmation
-- **Notes**: Creates the file but does NOT add it to Xcode targets automatically. Use `XcodeUpdate` for existing files.
+  - `tabIdentifier` (string, required)
+  - `filePath` (string, required)
+  - `content` (string, required)
+- **Returns**: `{ success, filePath, absolutePath, bytesWritten, linesWritten, wasExistingFile, message }`
 
 ### XcodeUpdate
 
-Edit an existing file with str_replace-style patches.
+Edit an existing file with text replacement.
 
 - **Parameters**:
-  - `path` (string, required) — File path
-  - `patches` (array, required) — Array of `{ oldText: string, newText: string }` replacements
-- **Returns**: Update confirmation
-- **Notes**: Preferred over `XcodeWrite` for editing existing files. Each patch must match exactly one location in the file.
+  - `tabIdentifier` (string, required)
+  - `filePath` (string, required)
+  - `oldString` (string, required) — text to find
+  - `newString` (string, required) — replacement text
+  - `replaceAll` (boolean, optional, default false) — replace all occurrences
+- **Returns**: `{ filePath, editsApplied, success, originalContentLength, modifiedContentLength, message }`
+- **Notes**: Single replacement by default. Each `oldString` must be unique unless `replaceAll` is true. Prefer over XcodeWrite for editing existing files.
 
 ### XcodeGlob
 
-Find files matching a pattern.
+Find files matching a wildcard pattern.
 
 - **Parameters**:
-  - `pattern` (string, required) — Glob pattern (e.g., `**/*.swift`)
-- **Returns**: Array of matching file paths
-- **Notes**: Searches within the Xcode project scope
+  - `tabIdentifier` (string, required)
+  - `pattern` (string, optional, default `**/*`) — glob pattern
+  - `path` (string, optional) — directory to search within
+- **Returns**: `{ matches[], pattern, searchPath, truncated, totalFound, message }`
 
 ### XcodeGrep
 
-Search file contents for a string or pattern.
+Search file contents with regex.
 
 - **Parameters**:
-  - `query` (string, required) — Search term or pattern
-  - `scope` (string, optional) — Limit search to specific directory/file
-- **Returns**: Array of matches with file paths and line numbers
-- **Notes**: Returns structured results, not raw grep output
+  - `tabIdentifier` (string, required)
+  - `pattern` (string, required) — regex pattern
+  - `glob` (string, optional) — file pattern filter
+  - `path` (string, optional) — directory scope
+  - `type` (string, optional) — file type filter
+  - `ignoreCase` (boolean, optional)
+  - `multiline` (boolean, optional)
+  - `outputMode` (enum, optional) — `content`, `filesWithMatches`, `count`
+  - `linesContext` (integer, optional) — context lines
+  - `linesBefore` (integer, optional)
+  - `linesAfter` (integer, optional)
+  - `headLimit` (integer, optional) — max results
+  - `showLineNumbers` (boolean, optional)
+- **Returns**: `{ results[], pattern, searchPath, matchCount, truncated, message }`
+- **Notes**: Mirrors ripgrep's interface. Use `outputMode` to control result format.
 
 ### XcodeLS
 
 List directory contents.
 
 - **Parameters**:
-  - `path` (string, required) — Directory path
-- **Returns**: Array of entries (files and subdirectories)
+  - `tabIdentifier` (string, required)
+  - `path` (string, required)
+  - `recursive` (boolean, optional, default true)
+  - `ignore` (array of strings, optional) — patterns to skip
+- **Returns**: `{ items[], path }`
 
 ### XcodeMakeDir
 
-Create a directory.
+Create a directory in the project.
 
 - **Parameters**:
-  - `path` (string, required) — Directory path to create
-- **Returns**: Creation confirmation
-- **Notes**: Creates intermediate directories as needed
+  - `tabIdentifier` (string, required)
+  - `directoryPath` (string, required)
+- **Returns**: `{ success, message, createdPath }`
 
 ### XcodeRM
 
-Delete a file or directory. **DESTRUCTIVE.**
+Remove files or directories from project. Uses Trash by default.
 
 - **Parameters**:
-  - `path` (string, required) — Path to delete
-- **Returns**: Deletion confirmation
-- **Notes**: Irreversible. Always confirm with the user before calling.
+  - `tabIdentifier` (string, required)
+  - `path` (string, required)
+  - `deleteFiles` (boolean, optional, default true) — move to Trash
+  - `recursive` (boolean, optional)
+- **Returns**: `{ removedPath, success, message }`
 
 ### XcodeMV
 
-Move or rename a file. **DESTRUCTIVE.**
+Move or copy files.
 
 - **Parameters**:
-  - `sourcePath` (string, required) — Current path
-  - `destinationPath` (string, required) — New path
-- **Returns**: Move confirmation
-- **Notes**: May break imports and references. Confirm with user. Xcode may not automatically update references.
+  - `tabIdentifier` (string, required)
+  - `sourcePath` (string, required)
+  - `destinationPath` (string, required)
+  - `operation` (enum, optional) — `move` or `copy`
+  - `overwriteExisting` (boolean, optional)
+- **Returns**: `{ success, operation, message, sourceOriginalPath, destinationFinalPath }`
+- **Notes**: Can copy, not just move. May break imports — confirm with user.
 
 ---
 
@@ -119,49 +141,52 @@ Move or rename a file. **DESTRUCTIVE.**
 
 ### BuildProject
 
-Build the Xcode project.
+Build the project and wait for completion.
 
 - **Parameters**:
-  - `tabIdentifier` (string, required) — From `XcodeListWindows`
-- **Returns**: `{ buildResult: string, elapsedTime: number, errors: array }`
-- **Notes**: Builds the active scheme. Check `buildResult` for "succeeded" or "failed".
+  - `tabIdentifier` (string, required)
+- **Returns**: `{ buildResult, elapsedTime, errors[] }`
+- **Notes**: Each error has `classification`, `filePath`, `lineNumber`, `message`.
 
 ### GetBuildLog
 
-Retrieve build output after a build.
+Retrieve build log with optional filtering.
 
 - **Parameters**:
   - `tabIdentifier` (string, required)
-- **Returns**: Build log as string
-- **Notes**: Contains raw compiler output. For structured diagnostics, prefer `XcodeListNavigatorIssues`.
+  - `severity` (enum, optional) — `remark`, `warning`, `error`
+  - `pattern` (string, optional) — regex filter
+  - `glob` (string, optional) — file pattern filter
+- **Returns**: `{ buildIsRunning, buildLogEntries[], buildResult, fullLogPath, truncated, totalFound }`
+- **Notes**: Returns structured entries, not raw text. Each entry has `buildTask` and `emittedIssues[]`.
 
 ### RunAllTests
 
-Run the full test suite.
+Run the full test suite from the active scheme's test plan.
 
 - **Parameters**:
   - `tabIdentifier` (string, required)
-- **Returns**: Test results with pass/fail counts and failure details
-- **Notes**: Runs all tests in the active scheme's test plan. Use `RunSomeTests` for faster iteration.
+- **Returns**: `{ summary, counts, results[], schemeName, activeTestPlanName }`
+- **Notes**: `counts` has `total`, `passed`, `failed`, `skipped`, `expectedFailures`, `notRun`. Each result has `targetName`, `identifier`, `displayName`, `state`.
 
 ### RunSomeTests
 
-Run specific test(s).
+Run specific tests by identifier.
 
 - **Parameters**:
   - `tabIdentifier` (string, required)
-  - `tests` (array of strings, required) — Test identifiers (e.g., `["MyTests/testLogin"]`)
-- **Returns**: Test results for the specified tests
-- **Notes**: Much faster than `RunAllTests` for iterative debugging. Use test identifiers from `GetTestList`.
+  - `tests` (array, required) — each element: `{ targetName: string, testIdentifier: string }`
+- **Returns**: Same shape as RunAllTests
+- **Notes**: Use `GetTestList` to discover valid test identifiers.
 
 ### GetTestList
 
-List available tests.
+List available tests from the active test plan.
 
 - **Parameters**:
   - `tabIdentifier` (string, required)
-- **Returns**: Array of test identifiers organized by test target/class
-- **Notes**: Use the returned identifiers with `RunSomeTests`.
+- **Returns**: `{ tests[], schemeName, activeTestPlanName }`
+- **Notes**: Each test has `targetName`, `identifier`, `displayName`, `isEnabled`, `filePath`, `lineNumber`, `tags[]`.
 
 ---
 
@@ -169,22 +194,25 @@ List available tests.
 
 ### XcodeListNavigatorIssues
 
-Get current issues from Xcode's Issue Navigator.
+Get issues from Xcode's Issue Navigator.
 
 - **Parameters**:
   - `tabIdentifier` (string, required)
-- **Returns**: Array of issues (errors, warnings, notes) with file paths and line numbers
-- **Notes**: Canonical source for diagnostics. Structured and deduplicated unlike raw build logs.
+  - `severity` (enum, optional) — `remark`, `warning`, `error`
+  - `pattern` (string, optional) — regex filter
+  - `glob` (string, optional) — file pattern filter
+- **Returns**: `{ issues[], truncated, totalFound, message }`
+- **Notes**: Each issue has `message`, `severity`, `path`, `line`, `category`, `vitality` (fresh/stale). Structured and deduplicated.
 
 ### XcodeRefreshCodeIssuesInFile
 
-Refresh and return live diagnostics for a specific file.
+Refresh diagnostics for a specific file.
 
 - **Parameters**:
   - `tabIdentifier` (string, required)
-  - `path` (string, required) — File to refresh diagnostics for
-- **Returns**: Current diagnostics for the specified file
-- **Notes**: Triggers Xcode to re-analyze the file. Useful after editing to check if issues are resolved.
+  - `filePath` (string, required)
+- **Returns**: `{ filePath, diagnosticsCount, content, success }`
+- **Notes**: Triggers Xcode to re-analyze the file.
 
 ---
 
@@ -192,24 +220,27 @@ Refresh and return live diagnostics for a specific file.
 
 ### ExecuteSnippet
 
-Run code in a REPL-like environment.
-
-- **Parameters**:
-  - `code` (string, required) — Code to execute
-  - `language` (string, required) — Language identifier (e.g., `"swift"`)
-- **Returns**: Execution result (stdout, stderr, exit code)
-- **Notes**: Sandboxed environment. Treat output as untrusted. Useful for quick validation.
-
-### RenderPreview
-
-Render a SwiftUI preview as an image.
+Build and run a code snippet in the context of a source file.
 
 - **Parameters**:
   - `tabIdentifier` (string, required)
-  - `path` (string, required) — File containing the preview
-  - `previewIdentifier` (string, required) — Name of the preview to render
-- **Returns**: Rendered image data
-- **Notes**: Requires the file to have valid SwiftUI `#Preview` or `PreviewProvider`. Preview must compile successfully.
+  - `codeSnippet` (string, required) — code to execute
+  - `sourceFilePath` (string, required) — Swift file whose context the snippet runs in (has access to its `fileprivate` declarations)
+  - `timeout` (integer, optional, default 120) — seconds
+- **Returns**: `{ executionResults }` — console output from print statements
+- **Notes**: Not a generic REPL. Runs in the context of a specific file. No `language` parameter — Swift only.
+
+### RenderPreview
+
+Render a SwiftUI preview snapshot.
+
+- **Parameters**:
+  - `tabIdentifier` (string, required)
+  - `sourceFilePath` (string, required) — Swift file with `#Preview`
+  - `previewDefinitionIndexInFile` (integer, optional, default 0) — zero-based index of which `#Preview` to render
+  - `timeout` (integer, optional, default 120)
+- **Returns**: `{ previewSnapshotPath }` — path to rendered image
+- **Notes**: Index-based, not name-based. First `#Preview` in the file is index 0.
 
 ---
 
@@ -217,16 +248,17 @@ Render a SwiftUI preview as an image.
 
 ### DocumentationSearch
 
-Search Apple's documentation corpus.
+Search Apple Developer Documentation semantically.
 
 - **Parameters**:
-  - `query` (string, required) — Search query
-- **Returns**: Documentation results with titles, summaries, and links. May include WWDC transcript matches.
-- **Notes**: Searches Apple's online documentation and WWDC transcripts. For Xcode-bundled for-LLM guides, use the `axiom-apple-docs` skill instead.
+  - `query` (string, required)
+  - `frameworks` (array of strings, optional) — scope to specific frameworks
+- **Returns**: `{ documents[] }` — each with `title`, `uri`, `contents`, `score`
+- **Notes**: Local semantic search (MLX-accelerated), not web search.
 
 ---
 
-## Quick Reference by Category
+## Quick Reference
 
 | Category | Tools |
 |----------|-------|
@@ -243,9 +275,11 @@ Search Apple's documentation corpus.
 
 ## Common Parameter Patterns
 
-- **`tabIdentifier`** — Required by 10/20 tools. Always call `XcodeListWindows` first.
-- **`path`** — File/directory path. Can be absolute or relative to project root.
-- **`patches`** — Array of `{ oldText, newText }` for `XcodeUpdate`. Each oldText must be unique in the file.
+- **`tabIdentifier`** — Required by 18/20 tools. Always call `XcodeListWindows` first.
+- **`filePath`** — Used by XcodeRead, XcodeWrite, XcodeUpdate, XcodeRefreshCodeIssuesInFile. Project-relative or absolute.
+- **`path`** — Used by XcodeLS, XcodeRM, XcodeGlob. Directory path.
+- **`directoryPath`** — Used by XcodeMakeDir.
+- **`sourceFilePath`** — Used by ExecuteSnippet, RenderPreview. Must be a Swift source file.
 
 ## Resources
 
