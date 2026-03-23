@@ -312,7 +312,7 @@ Use `derRepresentation` when exchanging signatures with non-CryptoKit systems (O
 
 ## Post-Quantum Cryptography: ML-KEM
 
-Key Encapsulation Mechanism based on Module-Lattice (FIPS 203). iOS 18.4+.
+Key Encapsulation Mechanism based on Module-Lattice (FIPS 203). iOS 26+.
 
 ### Parameter Sets
 
@@ -336,10 +336,10 @@ let privateKey = MLKEM1024.PrivateKey()
 // Sender: encapsulate with recipient's public key
 let result = try recipientPublicKey.encapsulate()
 // result.sharedSecret: SymmetricKey (32 bytes)
-// result.encapsulatedKey: Data (ciphertext to send)
+// result.encapsulated: Data (ciphertext to send)
 
 // Recipient: decapsulate with private key
-let sharedSecret = try privateKey.decapsulate(result.encapsulatedKey)
+let sharedSecret = try privateKey.decapsulate(result.encapsulated)
 // sharedSecret: SymmetricKey — matches sender's sharedSecret
 ```
 
@@ -350,14 +350,11 @@ let sharedSecret = try privateKey.decapsulate(result.encapsulatedKey)
 publicKey.rawRepresentation                // Data
 
 // Private key
-privateKey.rawRepresentation               // Data (expanded form)
-privateKey.seedRepresentation              // Data (compact seed, 64 bytes)
+privateKey.seedRepresentation              // Data (compact seed)
+privateKey.integrityCheckedRepresentation  // Data (seed + SHA3-256 hash)
 
 // Reconstruct
-let pk = try MLKEM768.PrivateKey(rawRepresentation: rawData)
-let pk = try MLKEM768.PrivateKey(seedRepresentation: seedData)
-
-// Integrity-checked (validates key consistency)
+let pk = try MLKEM768.PrivateKey(seedRepresentation: seedData, publicKey: publicKey)
 let pk = try MLKEM768.PrivateKey(integrityCheckedRepresentation: data)
 ```
 
@@ -365,7 +362,7 @@ let pk = try MLKEM768.PrivateKey(integrityCheckedRepresentation: data)
 
 ## Post-Quantum Cryptography: ML-DSA
 
-Digital Signature Algorithm based on Module-Lattice (FIPS 204). iOS 18.4+.
+Digital Signature Algorithm based on Module-Lattice (FIPS 204). iOS 26+.
 
 ### Parameter Sets
 
@@ -386,15 +383,15 @@ let privateKey = MLDSA87.PrivateKey()
 ### Sign and Verify
 
 ```swift
-// Sign
-let signature = try privateKey.signature(for: data)
+// Sign — returns Data (not a typed Signature struct)
+let signatureData = try privateKey.signature(for: data)
 
 // Sign with context (domain separation)
-let signature = try privateKey.signature(for: data, context: contextData)
+let signatureData = try privateKey.signature(for: data, context: contextData)
 
-// Verify
-let valid = publicKey.isValidSignature(signature, for: data)
-let valid = publicKey.isValidSignature(signature, for: data, context: contextData)
+// Verify — takes DataProtocol for signature parameter
+let valid = publicKey.isValidSignature(signatureData, for: data)
+let valid = publicKey.isValidSignature(signatureData, for: data, context: contextData)
 ```
 
 ### Key and Signature Representations
@@ -404,23 +401,22 @@ let valid = publicKey.isValidSignature(signature, for: data, context: contextDat
 publicKey.rawRepresentation
 
 // Private key
-privateKey.rawRepresentation
 privateKey.seedRepresentation
+privateKey.integrityCheckedRepresentation
 
 // Reconstruct
-let pk = try MLDSA65.PrivateKey(rawRepresentation: rawData)
-let pk = try MLDSA65.PrivateKey(seedRepresentation: seedData)
+let pk = try MLDSA65.PrivateKey(seedRepresentation: seedData, publicKey: publicKey)
+let pk = try MLDSA65.PrivateKey(integrityCheckedRepresentation: data)
 
-// Signature
-signature.rawRepresentation
-let sig = try MLDSA65.Signature(rawRepresentation: rawData)
+// Signature is raw Data — no typed Signature struct
+// Store/transmit signatureData directly
 ```
 
 ---
 
 ## Hybrid Post-Quantum: X-Wing KEM
 
-Combines ML-KEM768 + Curve25519 ECDH for hybrid post-quantum key exchange. If either algorithm holds, the combined scheme holds. iOS 18.4+.
+Combines ML-KEM768 + Curve25519 ECDH for hybrid post-quantum key exchange. If either algorithm holds, the combined scheme holds. iOS 26+.
 
 ```swift
 let privateKey = XWingMLKEM768X25519.PrivateKey()
@@ -428,15 +424,15 @@ let publicKey = privateKey.publicKey
 
 // Encapsulate
 let result = try publicKey.encapsulate()
-// result.sharedSecret, result.encapsulatedKey
+// result.sharedSecret, result.encapsulated
 
 // Decapsulate
-let sharedSecret = try privateKey.decapsulate(result.encapsulatedKey)
+let sharedSecret = try privateKey.decapsulate(result.encapsulated)
 
 // Representations
 publicKey.rawRepresentation
-privateKey.rawRepresentation
 privateKey.seedRepresentation
+privateKey.integrityCheckedRepresentation
 ```
 
 ---
@@ -451,9 +447,6 @@ Hybrid Public Key Encryption (RFC 9180). Combines KEM + KDF + AEAD into a single
 |-------------|-----|-----|------|
 | `.XWingMLKEM768X25519_SHA256_AES_GCM_256` | X-Wing | HKDF-SHA256 | AES-256-GCM |
 | `.Curve25519_SHA256_ChachaPoly` | Curve25519 | HKDF-SHA256 | ChaCha20Poly1305 |
-| `.Curve25519_SHA256_AES_GCM_128` | Curve25519 | HKDF-SHA256 | AES-128-GCM |
-| `.Curve25519_SHA256_AES_GCM_256` | Curve25519 | HKDF-SHA256 | AES-256-GCM |
-| `.P256_SHA256_AES_GCM_128` | P-256 | HKDF-SHA256 | AES-128-GCM |
 | `.P256_SHA256_AES_GCM_256` | P-256 | HKDF-SHA256 | AES-256-GCM |
 | `.P384_SHA384_AES_GCM_256` | P-384 | HKDF-SHA384 | AES-256-GCM |
 | `.P521_SHA512_AES_GCM_256` | P-521 | HKDF-SHA512 | AES-256-GCM |
@@ -470,7 +463,7 @@ let ciphersuite = HPKE.Ciphersuite(
 
 #### KEM Options
 
-`.Curve25519_HKDF_SHA256`, `.P256_HKDF_SHA256`, `.P384_HKDF_SHA384`, `.P521_HKDF_SHA512`, `.XWingMLKEM768X25519_SHA256`
+`.Curve25519_HKDF_SHA256`, `.P256_HKDF_SHA256`, `.P384_HKDF_SHA384`, `.P521_HKDF_SHA512`, `.XWingMLKEM768X25519` (iOS 26+)
 
 #### KDF Options
 
@@ -538,11 +531,14 @@ var recipient = try HPKE.Recipient(
 ### HPKE Error Types
 
 ```swift
-HPKE.Errors.sealFailure           // Encryption failed
-HPKE.Errors.openFailure           // Decryption/authentication failed
-HPKE.Errors.encapsulationFailure  // KEM encapsulation failed
-HPKE.Errors.decapsulationFailure  // KEM decapsulation failed
-HPKE.Errors.exportFailure         // Secret export failed
+HPKE.Errors.inconsistentParameters          // Ciphersuite/key mismatch
+HPKE.Errors.inconsistentCiphersuiteAndKey   // Key type doesn't match KEM
+HPKE.Errors.exportOnlyMode                  // Seal/open called in export-only mode
+HPKE.Errors.inconsistentPSKInputs           // PSK and PSK ID must both be provided or neither
+HPKE.Errors.expectedPSK                     // PSK mode requires PSK
+HPKE.Errors.unexpectedPSK                   // Non-PSK mode given PSK
+HPKE.Errors.outOfRangeSequenceNumber        // Sequence number overflow
+HPKE.Errors.ciphertextTooShort              // Ciphertext shorter than tag size
 ```
 
 ---
@@ -563,10 +559,10 @@ SecureEnclave.isAvailable  // false on Simulator, true on devices with SE
 |------|-----|
 | `SecureEnclave.P256.Signing.PrivateKey` | ECDSA signatures |
 | `SecureEnclave.P256.KeyAgreement.PrivateKey` | ECDH key agreement |
-| `SecureEnclave.MLKEM768.PrivateKey` | Post-quantum KEM (iOS 18.4+) |
-| `SecureEnclave.MLKEM1024.PrivateKey` | Post-quantum KEM (iOS 18.4+) |
-| `SecureEnclave.MLDSA65.PrivateKey` | Post-quantum signatures (iOS 18.4+) |
-| `SecureEnclave.MLDSA87.PrivateKey` | Post-quantum signatures (iOS 18.4+) |
+| `SecureEnclave.MLKEM768.PrivateKey` | Post-quantum KEM (iOS 26+) |
+| `SecureEnclave.MLKEM1024.PrivateKey` | Post-quantum KEM (iOS 26+) |
+| `SecureEnclave.MLDSA65.PrivateKey` | Post-quantum signatures (iOS 26+) |
+| `SecureEnclave.MLDSA87.PrivateKey` | Post-quantum signatures (iOS 26+) |
 
 ### Key Creation
 
@@ -662,13 +658,14 @@ CryptoKitASN1Error.invalidPEMDocument           // PEM header/footer or Base64 i
 ### HPKE and KEM Errors
 
 ```swift
-HPKE.Errors.sealFailure
-HPKE.Errors.openFailure
-HPKE.Errors.encapsulationFailure
-HPKE.Errors.decapsulationFailure
-HPKE.Errors.exportFailure
+// HPKE.Errors — see HPKE section for full list of 8 cases
+HPKE.Errors.inconsistentParameters
+HPKE.Errors.ciphertextTooShort
+// ... (6 more)
 
-KEM.Errors.decapsulationFailed
+// KEM.Errors (iOS 26+)
+KEM.Errors.publicKeyMismatchDuringInitialization
+KEM.Errors.invalidSeed
 ```
 
 ---

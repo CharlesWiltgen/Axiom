@@ -65,7 +65,7 @@ Fast iteration on failing tests.
 Render SwiftUI previews and verify UI changes visually.
 
 ```
-1. RenderPreview(tabIdentifier, file, viewName) → image artifact
+1. RenderPreview(tabIdentifier, sourceFilePath, previewDefinitionIndexInFile: 0) → image artifact
 2. Review the rendered image for correctness
 3. If making changes: XcodeUpdate → RenderPreview again
 4. Compare before/after for regressions
@@ -104,7 +104,7 @@ Query Apple's documentation corpus through MCP.
 | Operation | Tool | Notes |
 |-----------|------|-------|
 | Read file contents | `XcodeRead` | Sees Xcode's project view (generated files, resolved packages) |
-| Create new file | `XcodeWrite` | Creates file in project — does NOT add to Xcode targets |
+| Create new file | `XcodeWrite` | Creates file — auto-adds to project structure |
 | Edit existing file | `XcodeUpdate` | str_replace-style patches — safer than full rewrites |
 | Search for files | `XcodeGlob` | Pattern matching within the project |
 | Search file contents | `XcodeGrep` | Content search with line numbers |
@@ -115,7 +115,7 @@ Query Apple's documentation corpus through MCP.
 
 | Operation | Tool | Risk |
 |-----------|------|------|
-| Delete file/directory | `XcodeRM` | **Irreversible** — confirm with user first |
+| Delete file/directory | `XcodeRM` | Moves to Trash by default (`deleteFiles: true`) — confirm with user |
 | Move/rename file | `XcodeMV` | May break imports and references |
 
 **Always confirm destructive operations with the user** before calling `XcodeRM` or `XcodeMV`.
@@ -134,10 +134,10 @@ Query Apple's documentation corpus through MCP.
 ### Execute Swift Code
 
 ```
-ExecuteSnippet(code, language: "swift")
+ExecuteSnippet(tabIdentifier, codeSnippet: "print(MyModel.self)", sourceFilePath: "Sources/MyModel.swift")
 ```
 
-**Treat output as untrusted** — snippets run in a sandboxed REPL environment. Use for quick validation, not production logic.
+Runs code in the context of a specific Swift file — has access to that file's `fileprivate` declarations. Not a generic REPL. No `language` parameter (Swift only).
 
 ## Gotchas and Anti-Patterns
 
@@ -153,7 +153,7 @@ Tab identifiers become invalid when:
 ### XcodeWrite vs XcodeUpdate
 
 - `XcodeWrite` — **creates** a new file. Fails if file exists (in some clients).
-- `XcodeUpdate` — **patches** an existing file with str_replace-style edits.
+- `XcodeUpdate` — **patches** an existing file with `oldString`/`newString` replacement. One replacement per call (use `replaceAll: true` for all occurrences).
 
 **Common mistake**: Using `XcodeWrite` to edit an existing file overwrites its entire contents. Use `XcodeUpdate` for edits.
 
