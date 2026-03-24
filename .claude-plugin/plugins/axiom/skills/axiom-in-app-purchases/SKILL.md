@@ -869,6 +869,13 @@ rg "AppStore\.sync|Transaction\.all" --type swift
 - [ ] TestFlight beta testers confirm purchase flows work
 - [ ] Server-side validation works (if using backend)
 
+### App Store Connect Submission (see **app-store-submission** for full checklist)
+
+- [ ] **Review screenshot uploaded** for each IAP product (shows purchase UI — review-only, not on App Store)
+- [ ] **IAP products attached to this version** (first submission: App Version → In-App Purchases section → Select → checkbox each product)
+- [ ] **Terms of Use + Privacy Policy links on purchase screen** (required by DPLA Schedule 2; `SubscriptionStoreView` handles this automatically)
+- [ ] Subscription terms explicit: price, period, auto-renewal, cancellation
+
 ---
 
 ## Resources

@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-03-24T15:42:33.474Z",
+  "generatedAt": "2026-03-24T15:59:06.547Z",
   "skills": {
     "axiom-accessibility-diag": {
       "name": "axiom-accessibility-diag",
@@ -1916,7 +1916,7 @@
     "axiom-app-store-submission": {
       "name": "axiom-app-store-submission",
       "description": "Use when preparing ANY app for App Store submission - enforces pre-flight checklist, rejection prevention, privacy compliance, and metadata completeness to prevent common App Store rejections",
-      "content": "\n# App Store Submission\n\n## Overview\n\nSystematic pre-flight checklist that catches 90% of App Store rejection causes before submission. **Core principle**: Ship once, ship right. Over 40% of App Store rejections cite Guideline 2.1 (App Completeness) — crashes, placeholders, broken links. Another 30% are metadata and privacy issues. A disciplined pre-flight process eliminates these preventable rejections.\n\n**Key insight**: Apple rejected nearly 1.93 million submissions in 2024. Most rejections are not policy disagreements — they are checklist failures. A 30-minute pre-flight saves 3-7 days of rejection-fix-resubmit cycles.\n\n## When to Use This Skill\n\n✅ **Use this skill when**:\n- Preparing to submit an app or update to the App Store\n- Submitting your first app as a new developer\n- Responding to an App Review rejection\n- Running a pre-submission audit before TestFlight or production\n- Updating an existing app after a long gap (new requirements may apply)\n- Wondering \"is my app ready to submit?\"\n\n❌ **Do NOT use this skill for**:\n- Code signing and provisioning profiles (use build-debugging)\n- CI/CD pipeline setup\n- Performance optimization (use ios-performance)\n- UI testing automation (use ui-testing)\n- In-app purchase implementation (use storekit-ref)\n- Privacy manifest details (use privacy-ux for deep implementation)\n\n## Example Prompts\n\nReal questions developers ask that this skill answers:\n\n#### 1. \"Is my app ready to submit to the App Store?\"\n> The skill provides a complete pre-flight checklist covering build, privacy, metadata, accounts, review info, content, and regional requirements\n\n#### 2. \"What do I need before submitting my first iOS app?\"\n> The skill walks through every requirement from scratch — privacy manifest, metadata fields, screenshots, demo credentials, age rating\n\n#### 3. \"I keep getting rejected, what am I missing?\"\n> The skill provides anti-patterns with specific rejection causes and the decision tree to identify gaps\n\n#### 4. \"What's the pre-submission checklist for App Store?\"\n> The skill provides a categorized mandatory checklist with every item that triggers rejection if missing\n\n#### 5. \"Do I need a privacy manifest?\"\n> Yes. Since May 2024, missing privacy manifests cause automatic rejection. The skill explains when and how.\n\n#### 6. \"My app update was rejected for metadata issues\"\n> The skill covers metadata completeness requirements and the common gaps that trigger Guideline 2.3 rejections\n\n---\n\n## Anti-Patterns\n\n### 1. Submitting without device testing\n\n**Time cost**: 3-7 days (rejection + fix + resubmit wait)\n\n**Symptom**: Rejection for Guideline 2.1 — App Completeness. Crashes, broken flows, or missing functionality discovered by App Review.\n\n❌ **BAD**: Test only in Simulator, submit when build succeeds\n```\n\"It works in Simulator, ship it\"\n→ Rejection: App crashes on launch on iPhone 15 Pro (memory limit)\n→ 3-7 day delay\n```\n\n✅ **GOOD**: Test on physical device with latest shipping OS, exercise all user flows\n```bash\n# Build for device\nxcodebuild -scheme YourApp \\\n  -destination 'platform=iOS,name=Your iPhone'\n\n# Test critical paths:\n# - Launch → main screen loads\n# - All tabs/screens accessible\n# - Core user flows complete without crash\n# - Edge cases: no network, low storage, interruptions\n```\n\n**Why it works**: Simulator hides real-device constraints — memory limits, cellular networking behavior, hardware-specific APIs, thermal throttling. App Review tests on physical devices.\n\n---\n\n### 2. Missing or inadequate privacy policy\n\n**Time cost**: 2-5 days (rejection + policy creation + resubmit)\n\n**Symptom**: Rejection for Guideline 5.1.1(i) — Data Collection and Storage. Privacy policy missing, inaccessible, or inconsistent with actual data practices.\n\n❌ **BAD**: No privacy policy URL, or a generic template that doesn't match actual data collection\n```\nPrivacy Policy URL: (empty)\n— or —\nPrivacy Policy: \"We respect your privacy\" (generic, no specifics)\n```\n\n✅ **GOOD**: Privacy policy accessible in two places, specific to your app's data practices\n```\n1. App Store Connect → App Information → Privacy Policy URL\n2. In-app → Settings/About screen → Privacy Policy link\n3. Policy content lists:\n   - All collected data types\n   - How each type is used\n   - Third-party sharing (who and why)\n   - Data retention period\n   - How to request deletion\n```\n\n**Three-way consistency**: Apple compares (a) your app's actual behavior, (b) your privacy policy content, and (c) your Privacy Nutrition Labels in ASC. All three must agree. If any of these three disagree, you get a 5.1.1 rejection. Check each SDK's documentation for its privacy manifest and data collection disclosure — your app's total data collection is your code PLUS all SDK data collection.\n\n**Why it works**: Guideline 5.1.1(i) requires privacy policy accessible BOTH in ASC metadata AND within the app. The policy must specifically describe your app's data practices, not a generic template.\n\n---\n\n### 3. Placeholder content left in build\n\n**Time cost**: 3-5 days (rejection + content replacement + resubmit)\n\n**Symptom**: Rejection for Guideline 2.1 — App Completeness. Reviewers find placeholder text, empty screens, or TODO artifacts.\n\n❌ **BAD**: Ship with development artifacts visible to users\n```\n- \"Lorem ipsum\" text in onboarding\n- Empty tab that shows \"Coming Soon\"\n- Button that opens alert \"Not implemented yet\"\n- Default app icon (white grid)\n```\n\n✅ **GOOD**: Every screen has final content and production assets\n```\nPre-submission content audit:\n- [ ] Every screen has real content (no lorem ipsum)\n- [ ] All images are final production assets\n- [ ] No \"Coming Soon\" or \"Under Construction\" screens\n- [ ] All buttons perform their intended action\n- [ ] Default/empty states have proper messaging\n- [ ] App icon is final and meets spec (1024x1024, no alpha)\n```\n\n**Why it works**: App Review tests every screen and tab, including states you might consider edge cases. They open every menu, tap every button, and switch every tab.\n\n---\n\n### 4. Ignoring privacy manifest\n\n**Time cost**: 1-3 days (automatic rejection + manifest creation + resubmit)\n\n**Symptom**: Automatic rejection before human review. Missing `PrivacyInfo.xcprivacy` or undeclared Required Reason APIs.\n\n❌ **BAD**: No privacy manifest, or missing Required Reason API declarations\n```\nNo PrivacyInfo.xcprivacy in project\n— or —\nUsing UserDefaults, file timestamps, disk space APIs\nwithout declaring approved reasons\n```\n\n✅ **GOOD**: Privacy manifest present with all Required Reason APIs declared\n```\nProject must contain:\n├── PrivacyInfo.xcprivacy\n│   ├── NSPrivacyTracking (true/false)\n│   ├── NSPrivacyTrackingDomains (if tracking)\n│   ├── NSPrivacyCollectedDataTypes (all types)\n│   └── NSPrivacyAccessedAPITypes (all Required Reason APIs)\n│\n└── Third-party SDK manifests (each SDK includes its own)\n```\n\nCommon Required Reason APIs that need declaration:\n- `UserDefaults` → Reason `CA92.1`\n- File timestamp APIs → Reason `C617.1`\n- Disk space APIs → Reason `E174.1`\n- System boot time → Reason `35F9.1`\n\n**Why it works**: Since May 2024, this is an automated gate. No human reviewer involved — the build processing system rejects submissions missing required privacy declarations.\n\n---\n\n### 5. Missing Sign in with Apple\n\n**Time cost**: 3-7 days (SIWA implementation + resubmit)\n\n**Symptom**: Rejection for Guideline 4.8. App offers third-party login (Google, Facebook, email) but no Sign in with Apple option.\n\n❌ **BAD**: Third-party login without SIWA\n```swift\n// Login screen offers:\n// - Sign in with Google\n// - Sign in with Facebook\n// - Email/password\n// ← Missing: Sign in with Apple\n```\n\n✅ **GOOD**: SIWA offered as equivalent option alongside any third-party login\n```swift\n// Login screen offers:\n// - Sign in with Apple ← Required if others exist\n// - Sign in with Google\n// - Sign in with Facebook\n// - Email/password\n```\n\n**Exceptions** (SIWA not required):\n- Company-internal or employee-only apps\n- Education apps using existing school accounts\n- Government/tax/banking apps requiring government ID\n- Apps that are a client for a specific third-party service\n- Apps using only the company's own authentication system\n\n**Why it works**: Guideline 4.8 requires SIWA as an option whenever ANY third-party or social login is offered. Apple enforces this strictly.\n\n---\n\n### 6. No account deletion flow\n\n**Time cost**: 5-10 days (implementation + testing + resubmit)\n\n**Symptom**: Rejection for Guideline 5.1.1(v). App allows account creation but provides no way to delete the account.\n\n❌ **BAD**: Account creation without deletion capability\n```\n- Sign up button exists\n- No \"Delete Account\" anywhere in app\n- \"Contact support to delete\" (not sufficient)\n- \"Deactivate account\" (not the same as delete)\n```\n\n✅ **GOOD**: Full account deletion flow accessible in-app\n```\nAccount deletion requirements:\n1. Discoverable in Settings/Profile (not hidden)\n2. Clearly labeled \"Delete Account\" (not \"Deactivate\")\n3. Explains what deletion means (data removed, timeline)\n4. Confirms completion to user\n5. If Sign in with Apple used → revoke SIWA token\n6. If active subscriptions → inform user to cancel first\n7. Deletion completes within reasonable timeframe (days, not months)\n```\n\n```swift\n// Revoking Sign in with Apple token (required)\nlet appleIDProvider = ASAuthorizationAppleIDProvider()\nlet request = appleIDProvider.createRequest()\n\n// After user confirms deletion:\n// POST to Apple's revoke endpoint with the user's token\n// Then delete server-side account data\n```\n\n**Why it works**: Required since June 2022. Must be actual deletion (not deactivation), must be in-app (not just email/website), and must revoke SIWA tokens if used. Apple tests this flow specifically.\n\n---\n\n### 7. Wrong age rating\n\n**Time cost**: 2-4 days (re-answer questionnaire + possible content changes + resubmit)\n\n**Symptom**: Rejection for Guideline 2.3.6 — Inaccurate metadata. Age rating doesn't reflect actual app content or capabilities.\n\n❌ **BAD**: Understate content to get lower rating\n```\nApp has user-generated content (chat, posts)\nbut age rating questionnaire answered \"No UGC\"\n\nApp has cartoon violence in gameplay\nbut answered \"No violence\"\n```\n\n✅ **GOOD**: Answer age rating questionnaire accurately\n```\nDeclare honestly:\n- User-generated content (chat, forums, social features)\n- Violence (even cartoon/fantasy)\n- Mature themes\n- Profanity / crude humor\n- Gambling (simulated or real)\n- Horror / fear themes\n- Medical / treatment information\n- Unrestricted web access (WebView with open URLs)\n```\n\n**New age ratings (January 31, 2026)**: Apple expanded from 4+/9+/12+/17+ to 5 tiers (4+/9+/13+/16+/18+) with new capability declarations for messaging, UGC, advertising, and parental controls. All developers must complete the updated questionnaire or app updates will be blocked.\n\n**Why it works**: Mismatched ratings violate Guideline 2.3.6. Apple compares your questionnaire answers against observed app behavior. UGC and web access are the most commonly missed declarations.\n\n---\n\n### 8. Missing demo credentials\n\n**Time cost**: 3-5 days (rejection + credential creation + resubmit wait)\n\n**Symptom**: Rejection for Guideline 2.1. Reviewer unable to test app because login is required and no test account was provided.\n\n❌ **BAD**: App requires login, but no demo account in review notes\n```\nApp Review Information:\n  Notes: (empty)\n  Demo Account: (empty)\n  Demo Password: (empty)\n→ Reviewer sees login screen, can't proceed, rejects\n```\n\n✅ **GOOD**: Working demo credentials with clear instructions\n```\nApp Review Information:\n  Demo Account: demo@yourapp.com\n  Demo Password: AppReview2025!\n  Notes: \"Log in with the demo account above.\n         The account has sample data pre-loaded.\n         To test [feature X], navigate to Tab 2 > Settings.\n         If 2FA is required, use code: 123456\"\n\nRequirements:\n- Account must not expire during review (1-2 weeks minimum)\n- Account must have representative data\n- Include any special setup steps\n- If hardware required, explain workarounds\n- If location-specific, provide test coordinates\n```\n\n**Why it works**: Reviewers cannot test what they cannot access. They will not create their own account. If your app requires any form of authentication, demo credentials are mandatory. This is one of the most common rejection reasons for apps with login flows.\n\n---\n\n## Decision Tree\n\n```\nIs my app ready to submit?\n│\n├─ Does it crash on a real device?\n│  ├─ YES → STOP. Fix crashes first (Guideline 2.1)\n│  └─ NO → Continue\n│\n├─ Privacy manifest (PrivacyInfo.xcprivacy) present?\n│  ├─ NO → Add privacy manifest with Required Reason APIs\n│  └─ YES → Continue\n│\n├─ Privacy policy URL set in App Store Connect?\n│  ├─ NO → Add privacy policy URL in ASC\n│  └─ YES → Is it also accessible in-app?\n│     ├─ NO → Add in-app privacy policy link\n│     └─ YES → Continue\n│\n├─ All screenshots final and matching current app?\n│  ├─ NO → Update screenshots for all required device sizes\n│  └─ YES → Continue\n│\n├─ Does app create user accounts?\n│  ├─ YES → Account deletion implemented and discoverable?\n│  │  ├─ NO → Implement account deletion flow\n│  │  └─ YES → Continue\n│  └─ NO → Continue\n│\n├─ Does app offer third-party login (Google, Facebook, etc.)?\n│  ├─ YES → Sign in with Apple offered?\n│  │  ├─ NO → Add SIWA (unless exemption applies)\n│  │  └─ YES → Continue\n│  └─ NO → Continue\n│\n├─ Does app have in-app purchases or subscriptions?\n│  ├─ YES → IAP items submitted for review in ASC?\n│  │  ├─ NO → Submit IAP for review (can be reviewed separately)\n│  │  └─ YES → Restore Purchases button implemented?\n│  │     ├─ NO → Add Restore Purchases functionality\n│  │     └─ YES → Continue\n│  └─ NO → Continue\n│\n├─ Does app use encryption beyond standard HTTPS?\n│  ├─ YES → Export compliance documentation uploaded?\n│  │  ├─ NO → Add ITSAppUsesNonExemptEncryption to Info.plist\n│  │  │       and upload compliance documentation\n│  │  └─ YES → Continue\n│  └─ NO → Set ITSAppUsesNonExemptEncryption = NO in Info.plist\n│\n├─ Distributing in EU?\n│  ├─ YES → DSA trader status verified in ASC?\n│  │  ├─ NO → Complete trader verification in ASC\n│  │  └─ YES → Continue\n│  └─ NO → Continue\n│\n├─ Does app require login to function?\n│  ├─ YES → Demo credentials in App Review notes?\n│  │  ├─ NO → Add working demo account + password + instructions\n│  │  └─ YES → Continue\n│  └─ NO → Continue\n│\n├─ Age rating questionnaire completed honestly?\n│  ├─ NO → Complete updated questionnaire (new 13+/16+/18+ ratings)\n│  └─ YES → Continue\n│\n├─ Any placeholder content remaining?\n│  ├─ YES → Replace all placeholders with final content\n│  └─ NO → Continue\n│\n└─ All checks passed → READY TO SUBMIT\n```\n\n---\n\n## Mandatory Pre-Flight Checklist\n\nRun this entire checklist before every submission. Check every item, not just the ones you think apply.\n\n### 1. Build Configuration\n\n- [ ] Built with current required SDK (iOS 18 SDK / Xcode 16 as of 2025; iOS 26 SDK / Xcode 26 required starting April 28, 2026)\n- [ ] `ITSAppUsesNonExemptEncryption` set in Info.plist (`NO` if only HTTPS)\n- [ ] App tested on physical device with latest shipping iOS version\n- [ ] App works over IPv6-only network (Apple review network is IPv6)\n- [ ] No private/undocumented API usage\n- [ ] No references to pre-release/beta OS features unless targeting that OS\n- [ ] Minimum deployment target is reasonable (not unnecessarily high)\n- [ ] Release build tested (not just Debug configuration)\n\n### 2. Privacy\n\n- [ ] `PrivacyInfo.xcprivacy` file present in app target\n- [ ] All Required Reason APIs declared with approved reason codes\n- [ ] Third-party SDKs each include their own privacy manifests\n- [ ] Privacy policy URL set in App Store Connect\n- [ ] Privacy policy accessible in-app (Settings/About screen)\n- [ ] Privacy policy content matches actual data collection practices\n- [ ] All `NS*UsageDescription` purpose strings present (Camera, Location, etc.)\n- [ ] Purpose strings explain user benefit (not just \"we need access\")\n- [ ] App Tracking Transparency implemented if tracking users (ATT)\n- [ ] Privacy Nutrition Labels completed in ASC matching manifest\n\n### 3. Metadata\n\n- [ ] App name (30 character limit, no keyword stuffing)\n- [ ] Subtitle (30 character limit)\n- [ ] Description (accurate, no misleading claims)\n- [ ] Keywords (100 character limit, comma-separated)\n- [ ] Category and secondary category set\n- [ ] Screenshots for all required device sizes (6.9\", 6.7\", 6.5\", 5.5\" for iPhone; 13\" for iPad if universal)\n- [ ] Screenshots reflect current app UI (not outdated)\n- [ ] App Preview videos current (if using)\n- [ ] Support URL valid and accessible\n- [ ] Marketing URL valid (if set)\n- [ ] Copyright string current year\n- [ ] Version number and build number incremented\n- [ ] \"What's New\" text written (for updates)\n\n### 4. Account and Authentication\n\n- [ ] Account deletion flow implemented (if account creation exists)\n- [ ] Account deletion is actual deletion (not just deactivation)\n- [ ] SIWA token revocation on account deletion (if SIWA used)\n- [ ] Sign in with Apple offered (if any third-party login exists)\n- [ ] Active subscriptions handled during account deletion\n- [ ] Restore Purchases button works (if IAP exists)\n- [ ] IAP items submitted for review in ASC (if new/changed)\n- [ ] Subscription terms clearly communicated before purchase\n\n### 5. App Review Information\n\n- [ ] Contact information (name, phone, email) provided\n- [ ] Demo account username provided (if login required)\n- [ ] Demo account password provided (if login required)\n- [ ] Demo account won't expire during review period (1-2 weeks)\n- [ ] Demo account has representative sample data\n- [ ] Special instructions for hardware-dependent features\n- [ ] Notes explain any non-obvious features or flows\n- [ ] If app uses location, provide test coordinates\n\n### 6. Content Completeness\n\n- [ ] No placeholder text (lorem ipsum, TODO, \"Coming Soon\")\n- [ ] No broken links or dead-end screens\n- [ ] All images are production assets (no stock watermarks)\n- [ ] App icon meets spec (1024x1024, no alpha channel, no rounded corners)\n- [ ] All tabs/screens have functional content\n- [ ] Error states and empty states have proper messaging\n- [ ] Onboarding/tutorial flows complete and accurate\n- [ ] All deep links and universal links resolve correctly\n\n### 7. Regional and Compliance\n\n- [ ] EU DSA trader status verified (if distributing in EU)\n- [ ] Age rating questionnaire completed with updated categories (13+/16+/18+)\n- [ ] Age rating reflects actual content (UGC, violence, web access declared)\n- [ ] Export compliance documentation uploaded (if non-exempt encryption)\n- [ ] Content complies with local laws for each distribution territory\n- [ ] GDPR compliance (if distributing in EU)\n\n### 8. New for 2025-2026\n\n- [ ] Updated age rating questionnaire completed (deadline: January 31, 2026)\n- [ ] Accessibility Nutrition Labels declared (becoming required for new submissions)\n- [ ] External AI service consent modal (if app sends personal data to external AI)\n- [ ] SDK minimum version met (Xcode 16/iOS 18 SDK now; Xcode 26/iOS 26 SDK starting April 28, 2026)\n\n---\n\n## Pressure Scenarios\n\n### Scenario 1: \"Ship by end of day\"\n\n**Setup**: PM says the app must be submitted today for a marketing launch next week.\n\n**Pressure**: Deadline + executive visibility\n\n**Rationalization traps**:\n- \"We'll fix the privacy policy after approval\"\n- \"The placeholder is only on one screen, they won't notice\"\n- \"We'll add account deletion in the next update\"\n- \"It passed internal testing, no need for device testing\"\n\n**MANDATORY**: Run the full pre-flight checklist. Every item. Missing items cause rejection, which costs 3-7 MORE days — far worse than the 30 minutes the checklist takes.\n\nSkipping the checklist to save 30 minutes costs 3-7 days when it causes rejection.\n\n**Communication template**: \"The pre-flight check found [N] issues that will cause rejection. Fixing them takes [X hours]. Submitting without fixing guarantees rejection, which costs 3-7 days minimum. Let me fix these now — it's the fastest path to being live.\"\n\n---\n\n### Scenario 2: \"Third rejection, just make it work\"\n\n**Setup**: App rejected 3 times for different issues each time. Developer is frustrated and tempted to cut corners or argue with Apple.\n\n**Pressure**: Frustration + sunk cost + temptation to appeal instead of fix\n\n**Rationalization traps**:\n- \"They keep finding new issues — they're being unfair\"\n- \"I'll appeal this one, it's unreasonable\"\n- \"I'll just hide that screen from reviewers\"\n\n**MANDATORY**: Read the FULL text of every rejection message. Run the complete pre-flight checklist from scratch. Reviewers often find new issues on subsequent reviews because they test deeper each pass — they explore screens they didn't reach before, test flows they skipped, and review with stricter attention.\n\nEach rejection is a signal that the pre-submission process has gaps. Do not fight the feedback — absorb it and close the gaps systematically.\n\n**Communication template**: \"Multiple rejections mean we have systematic gaps, not bad luck. I'm running the complete pre-flight checklist — this takes 30 minutes but prevents the 3-7 day cycle of partial fixes followed by new rejections.\"\n\n---\n\n### Scenario 3: \"It's just a bug fix update\"\n\n**Setup**: Simple one-line bug fix. Developer assumes the update will sail through because the app was already approved.\n\n**Pressure**: Complacency + false confidence from prior approval\n\n**Rationalization traps**:\n- \"It was approved last time with the same metadata\"\n- \"I only changed one file, they don't need to re-review everything\"\n- \"They won't re-check the privacy stuff, it hasn't changed\"\n\n**MANDATORY**: Updates are reviewed against CURRENT guidelines. Requirements change between releases. Privacy manifests became mandatory mid-cycle. Age rating questionnaire was overhauled. SDK minimums increase annually. A bug fix update can be rejected for issues that didn't exist when the previous version was approved.\n\nRun the pre-flight checklist every time. Requirements that didn't exist when your app was last reviewed may now be enforced.\n\n**Communication template**: \"Even for a bug fix, App Review applies current guidelines — not the ones from when we were last approved. The privacy manifest requirement and age rating overhaul both came mid-cycle. Running the 30-minute pre-flight now prevents a surprise rejection.\"\n\n---\n\n## Screenshot Requirements\n\nScreenshots must match current app UI. See `app-store-ref` Part 1 for required sizes, dimensions, and rules.\n\n---\n\n## Handling Rejections\n\n### Reading the Rejection Message\n\nEvery rejection includes:\n1. **Guideline number** — Specific section violated\n2. **Description** — What the reviewer found\n3. **Screenshots/recordings** — Visual evidence (if applicable)\n4. **Suggestions** — Sometimes included with fixes\n\n### Response Strategy\n\n```\n1. Read the FULL rejection message (every word)\n2. Identify ALL guidelines cited (may be multiple)\n3. Fix EVERY cited issue (not just the first one)\n4. Run the complete pre-flight checklist\n5. In your resubmission notes, explain what you fixed\n6. Do NOT argue or explain why you think the rejection is wrong\n```\n\n### When to Appeal\n\nAppeals are appropriate when:\n- You believe the reviewer misunderstood your app's functionality\n- Your app clearly complies with the cited guideline\n- You have evidence supporting your position\n\nAppeals are NOT appropriate when:\n- You disagree with the guideline itself\n- The rejection is technically correct but feels unfair\n- You want to delay fixing the issue\n\n### Appeal Process\n\n```\nApp Store Connect → Resolution Center → Reply\n- Explain clearly why you believe the rejection is incorrect\n- Provide specific evidence (screenshots, documentation)\n- Remain professional and factual\n- Apple's App Review Board will re-review\n```\n\n### Metadata Rejected vs Binary Rejected\n\n| Type | What it means | What to do |\n|------|--------------|------------|\n| Metadata Rejected | Screenshots, description, or ASC fields need fixing | Fix in ASC, resubmit (no new build needed) |\n| Binary Rejected | Code/app issue needs fixing | Fix code, create new archive, upload new build |\n\n---\n\n## In-App Purchase Review\n\nIAP items require separate review. Missing or broken IAP is a top rejection cause under Guideline 3.1.1.\n\n### IAP Submission Checklist\n\n- [ ] All IAP products created in ASC with screenshots\n- [ ] IAP products submitted for review (can be submitted independently)\n- [ ] Restore Purchases button visible and functional\n- [ ] Subscription terms displayed before purchase confirmation\n- [ ] Free trial terms clearly communicated\n- [ ] Pricing displayed matches ASC configuration\n- [ ] No external purchase links (Guideline 3.1.1) unless eligible for entitlement\n- [ ] StoreKit testing completed in sandbox environment\n\n### Common IAP Rejection Patterns\n\n```\n❌ \"Buy Premium\" button that does nothing → Guideline 3.1.1\n❌ No Restore Purchases option → Guideline 3.1.1\n❌ Subscription auto-renews without clear disclosure → Guideline 3.1.2\n❌ Free trial duration not shown before purchase → Guideline 3.1.2\n❌ External purchase link without entitlement → Guideline 3.1.1\n```\n\n---\n\n## Common Rejection Reasons Quick Reference\n\n| Guideline | Issue | Prevention |\n|-----------|-------|------------|\n| 2.1 | Crashes, broken features, incomplete | Device testing, content audit |\n| 2.3 | Inaccurate metadata, wrong screenshots | Screenshot audit, metadata review |\n| 2.3.6 | Incorrect age rating | Honest questionnaire, declare UGC |\n| 3.1.1 | IAP issues, missing Restore Purchases | Test all IAP flows, add restore |\n| 4.0 | Design: poor UI, non-standard patterns | Follow HIG, test on all sizes |\n| 4.8 | Missing Sign in with Apple | Add SIWA with any third-party login |\n| 5.1.1(i) | Privacy policy missing/inadequate | Both ASC and in-app, specific content |\n| 5.1.1(v) | No account deletion | In-app deletion, not just deactivation |\n| 5.1.2 | Missing Required Reason APIs | Complete privacy manifest |\n\n---\n\n## App Store Connect Submission Workflow\n\nSee `app-store-ref` Part 9 for the ASC upload workflow and build processing details.\n\n---\n\n## Encryption Export Compliance\n\nMost apps need `ITSAppUsesNonExemptEncryption = false`. See `app-store-ref` Part 5 for the full decision tree.\n\n---\n\n## Accessibility Nutrition Labels (New 2025)\n\nAccessibility Nutrition Labels are becoming required for new submissions. See `app-store-ref` Part 10 for the full label list and declaration rules. Run `axiom-accessibility-diag` before declaring.\n\n---\n\n## First-Time Developer Checklist\n\nFor developers submitting their first app, these are additional items often missed. If you need to create a privacy policy from scratch, use a privacy policy generator (many free options exist) and customize it to match your app's actual data practices — a generic template will be rejected.\n\n### Apple Developer Program\n\n- [ ] Enrolled in Apple Developer Program ($99/year)\n- [ ] Accepted latest Apple Developer Program License Agreement\n- [ ] Tax and banking information completed in ASC (for paid apps/IAP)\n- [ ] Distribution certificate created\n- [ ] App ID registered with correct bundle identifier\n- [ ] Provisioning profile created for App Store distribution\n\n### App Store Connect Setup\n\n- [ ] New app record created in ASC\n- [ ] Bundle ID matches Xcode project exactly\n- [ ] Primary language set\n- [ ] Content rights declared (original content or licensed)\n- [ ] Pricing and availability configured\n- [ ] Territory selection (worldwide or specific countries)\n\n### Common First-Time Mistakes\n\n| Mistake | Result | Fix |\n|---------|--------|-----|\n| Bundle ID mismatch between Xcode and ASC | Upload rejected | Match exactly, including case |\n| Distribution cert expired/missing | Archive fails to upload | Create new cert in Developer Portal |\n| License agreement not accepted | Upload blocked | Accept in developer.apple.com |\n| Tax forms incomplete | Paid app not distributed | Complete in ASC → Agreements, Tax, and Banking |\n| Wrong team selected in Xcode | Signing errors | Select correct team in Signing & Capabilities |\n\n---\n\n## Real-World Impact\n\n**Before**: Developer submits without checklist → rejected for missing privacy manifest (3 days) → fixes, resubmits → rejected for missing SIWA (5 days) → fixes, resubmits → rejected for placeholder content (3 days) → 11 days lost to preventable issues\n\n**After**: Developer runs 30-minute pre-flight → catches all three issues → fixes in 4 hours → approved on first submission\n\n**Key insight**: The checklist takes 30 minutes. Each rejection cycle takes 3-7 days. The math is simple.\n\n---\n\n## Resources\n\n**WWDC**: 2022-10166, 2025-328, 2025-224, 2025-241\n\n**Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details, /support/offering-account-deletion-in-your-app, /documentation/security/complying-with-encryption-export-regulations\n\n**Skills**: axiom-privacy-ux, axiom-storekit-ref, axiom-accessibility-diag, axiom-testflight-triage, axiom-app-store-connect-ref\n",
+      "content": "\n# App Store Submission\n\n## Overview\n\nSystematic pre-flight checklist that catches 90% of App Store rejection causes before submission. **Core principle**: Ship once, ship right. Over 40% of App Store rejections cite Guideline 2.1 (App Completeness) — crashes, placeholders, broken links. Another 30% are metadata and privacy issues. A disciplined pre-flight process eliminates these preventable rejections.\n\n**Key insight**: Apple rejected nearly 1.93 million submissions in 2024. Most rejections are not policy disagreements — they are checklist failures. A 30-minute pre-flight saves 3-7 days of rejection-fix-resubmit cycles.\n\n## When to Use This Skill\n\n✅ **Use this skill when**:\n- Preparing to submit an app or update to the App Store\n- Submitting your first app as a new developer\n- Responding to an App Review rejection\n- Running a pre-submission audit before TestFlight or production\n- Updating an existing app after a long gap (new requirements may apply)\n- Wondering \"is my app ready to submit?\"\n\n❌ **Do NOT use this skill for**:\n- Code signing and provisioning profiles (use build-debugging)\n- CI/CD pipeline setup\n- Performance optimization (use ios-performance)\n- UI testing automation (use ui-testing)\n- In-app purchase implementation (use storekit-ref)\n- Privacy manifest details (use privacy-ux for deep implementation)\n\n## Example Prompts\n\nReal questions developers ask that this skill answers:\n\n#### 1. \"Is my app ready to submit to the App Store?\"\n> The skill provides a complete pre-flight checklist covering build, privacy, metadata, accounts, review info, content, and regional requirements\n\n#### 2. \"What do I need before submitting my first iOS app?\"\n> The skill walks through every requirement from scratch — privacy manifest, metadata fields, screenshots, demo credentials, age rating\n\n#### 3. \"I keep getting rejected, what am I missing?\"\n> The skill provides anti-patterns with specific rejection causes and the decision tree to identify gaps\n\n#### 4. \"What's the pre-submission checklist for App Store?\"\n> The skill provides a categorized mandatory checklist with every item that triggers rejection if missing\n\n#### 5. \"Do I need a privacy manifest?\"\n> Yes. Since May 2024, missing privacy manifests cause automatic rejection. The skill explains when and how.\n\n#### 6. \"My app update was rejected for metadata issues\"\n> The skill covers metadata completeness requirements and the common gaps that trigger Guideline 2.3 rejections\n\n---\n\n## Anti-Patterns\n\n### 1. Submitting without device testing\n\n**Time cost**: 3-7 days (rejection + fix + resubmit wait)\n\n**Symptom**: Rejection for Guideline 2.1 — App Completeness. Crashes, broken flows, or missing functionality discovered by App Review.\n\n❌ **BAD**: Test only in Simulator, submit when build succeeds\n```\n\"It works in Simulator, ship it\"\n→ Rejection: App crashes on launch on iPhone 15 Pro (memory limit)\n→ 3-7 day delay\n```\n\n✅ **GOOD**: Test on physical device with latest shipping OS, exercise all user flows\n```bash\n# Build for device\nxcodebuild -scheme YourApp \\\n  -destination 'platform=iOS,name=Your iPhone'\n\n# Test critical paths:\n# - Launch → main screen loads\n# - All tabs/screens accessible\n# - Core user flows complete without crash\n# - Edge cases: no network, low storage, interruptions\n```\n\n**Why it works**: Simulator hides real-device constraints — memory limits, cellular networking behavior, hardware-specific APIs, thermal throttling. App Review tests on physical devices.\n\n---\n\n### 2. Missing or inadequate privacy policy\n\n**Time cost**: 2-5 days (rejection + policy creation + resubmit)\n\n**Symptom**: Rejection for Guideline 5.1.1(i) — Data Collection and Storage. Privacy policy missing, inaccessible, or inconsistent with actual data practices.\n\n❌ **BAD**: No privacy policy URL, or a generic template that doesn't match actual data collection\n```\nPrivacy Policy URL: (empty)\n— or —\nPrivacy Policy: \"We respect your privacy\" (generic, no specifics)\n```\n\n✅ **GOOD**: Privacy policy accessible in two places, specific to your app's data practices\n```\n1. App Store Connect → App Information → Privacy Policy URL\n2. In-app → Settings/About screen → Privacy Policy link\n3. Policy content lists:\n   - All collected data types\n   - How each type is used\n   - Third-party sharing (who and why)\n   - Data retention period\n   - How to request deletion\n```\n\n**Three-way consistency**: Apple compares (a) your app's actual behavior, (b) your privacy policy content, and (c) your Privacy Nutrition Labels in ASC. All three must agree. If any of these three disagree, you get a 5.1.1 rejection. Check each SDK's documentation for its privacy manifest and data collection disclosure — your app's total data collection is your code PLUS all SDK data collection.\n\n**Why it works**: Guideline 5.1.1(i) requires privacy policy accessible BOTH in ASC metadata AND within the app. The policy must specifically describe your app's data practices, not a generic template.\n\n---\n\n### 3. Placeholder content left in build\n\n**Time cost**: 3-5 days (rejection + content replacement + resubmit)\n\n**Symptom**: Rejection for Guideline 2.1 — App Completeness. Reviewers find placeholder text, empty screens, or TODO artifacts.\n\n❌ **BAD**: Ship with development artifacts visible to users\n```\n- \"Lorem ipsum\" text in onboarding\n- Empty tab that shows \"Coming Soon\"\n- Button that opens alert \"Not implemented yet\"\n- Default app icon (white grid)\n```\n\n✅ **GOOD**: Every screen has final content and production assets\n```\nPre-submission content audit:\n- [ ] Every screen has real content (no lorem ipsum)\n- [ ] All images are final production assets\n- [ ] No \"Coming Soon\" or \"Under Construction\" screens\n- [ ] All buttons perform their intended action\n- [ ] Default/empty states have proper messaging\n- [ ] App icon is final and meets spec (1024x1024, no alpha)\n```\n\n**Why it works**: App Review tests every screen and tab, including states you might consider edge cases. They open every menu, tap every button, and switch every tab.\n\n---\n\n### 4. Ignoring privacy manifest\n\n**Time cost**: 1-3 days (automatic rejection + manifest creation + resubmit)\n\n**Symptom**: Automatic rejection before human review. Missing `PrivacyInfo.xcprivacy` or undeclared Required Reason APIs.\n\n❌ **BAD**: No privacy manifest, or missing Required Reason API declarations\n```\nNo PrivacyInfo.xcprivacy in project\n— or —\nUsing UserDefaults, file timestamps, disk space APIs\nwithout declaring approved reasons\n```\n\n✅ **GOOD**: Privacy manifest present with all Required Reason APIs declared\n```\nProject must contain:\n├── PrivacyInfo.xcprivacy\n│   ├── NSPrivacyTracking (true/false)\n│   ├── NSPrivacyTrackingDomains (if tracking)\n│   ├── NSPrivacyCollectedDataTypes (all types)\n│   └── NSPrivacyAccessedAPITypes (all Required Reason APIs)\n│\n└── Third-party SDK manifests (each SDK includes its own)\n```\n\nCommon Required Reason APIs that need declaration:\n- `UserDefaults` → Reason `CA92.1`\n- File timestamp APIs → Reason `C617.1`\n- Disk space APIs → Reason `E174.1`\n- System boot time → Reason `35F9.1`\n\n**Why it works**: Since May 2024, this is an automated gate. No human reviewer involved — the build processing system rejects submissions missing required privacy declarations.\n\n---\n\n### 5. Missing Sign in with Apple\n\n**Time cost**: 3-7 days (SIWA implementation + resubmit)\n\n**Symptom**: Rejection for Guideline 4.8. App offers third-party login (Google, Facebook, email) but no Sign in with Apple option.\n\n❌ **BAD**: Third-party login without SIWA\n```swift\n// Login screen offers:\n// - Sign in with Google\n// - Sign in with Facebook\n// - Email/password\n// ← Missing: Sign in with Apple\n```\n\n✅ **GOOD**: SIWA offered as equivalent option alongside any third-party login\n```swift\n// Login screen offers:\n// - Sign in with Apple ← Required if others exist\n// - Sign in with Google\n// - Sign in with Facebook\n// - Email/password\n```\n\n**Exceptions** (SIWA not required):\n- Company-internal or employee-only apps\n- Education apps using existing school accounts\n- Government/tax/banking apps requiring government ID\n- Apps that are a client for a specific third-party service\n- Apps using only the company's own authentication system\n\n**Why it works**: Guideline 4.8 requires SIWA as an option whenever ANY third-party or social login is offered. Apple enforces this strictly.\n\n---\n\n### 6. No account deletion flow\n\n**Time cost**: 5-10 days (implementation + testing + resubmit)\n\n**Symptom**: Rejection for Guideline 5.1.1(v). App allows account creation but provides no way to delete the account.\n\n❌ **BAD**: Account creation without deletion capability\n```\n- Sign up button exists\n- No \"Delete Account\" anywhere in app\n- \"Contact support to delete\" (not sufficient)\n- \"Deactivate account\" (not the same as delete)\n```\n\n✅ **GOOD**: Full account deletion flow accessible in-app\n```\nAccount deletion requirements:\n1. Discoverable in Settings/Profile (not hidden)\n2. Clearly labeled \"Delete Account\" (not \"Deactivate\")\n3. Explains what deletion means (data removed, timeline)\n4. Confirms completion to user\n5. If Sign in with Apple used → revoke SIWA token\n6. If active subscriptions → inform user to cancel first\n7. Deletion completes within reasonable timeframe (days, not months)\n```\n\n```swift\n// Revoking Sign in with Apple token (required)\nlet appleIDProvider = ASAuthorizationAppleIDProvider()\nlet request = appleIDProvider.createRequest()\n\n// After user confirms deletion:\n// POST to Apple's revoke endpoint with the user's token\n// Then delete server-side account data\n```\n\n**Why it works**: Required since June 2022. Must be actual deletion (not deactivation), must be in-app (not just email/website), and must revoke SIWA tokens if used. Apple tests this flow specifically.\n\n---\n\n### 7. Wrong age rating\n\n**Time cost**: 2-4 days (re-answer questionnaire + possible content changes + resubmit)\n\n**Symptom**: Rejection for Guideline 2.3.6 — Inaccurate metadata. Age rating doesn't reflect actual app content or capabilities.\n\n❌ **BAD**: Understate content to get lower rating\n```\nApp has user-generated content (chat, posts)\nbut age rating questionnaire answered \"No UGC\"\n\nApp has cartoon violence in gameplay\nbut answered \"No violence\"\n```\n\n✅ **GOOD**: Answer age rating questionnaire accurately\n```\nDeclare honestly:\n- User-generated content (chat, forums, social features)\n- Violence (even cartoon/fantasy)\n- Mature themes\n- Profanity / crude humor\n- Gambling (simulated or real)\n- Horror / fear themes\n- Medical / treatment information\n- Unrestricted web access (WebView with open URLs)\n```\n\n**New age ratings (January 31, 2026)**: Apple expanded from 4+/9+/12+/17+ to 5 tiers (4+/9+/13+/16+/18+) with new capability declarations for messaging, UGC, advertising, and parental controls. All developers must complete the updated questionnaire or app updates will be blocked.\n\n**Why it works**: Mismatched ratings violate Guideline 2.3.6. Apple compares your questionnaire answers against observed app behavior. UGC and web access are the most commonly missed declarations.\n\n---\n\n### 8. Missing demo credentials\n\n**Time cost**: 3-5 days (rejection + credential creation + resubmit wait)\n\n**Symptom**: Rejection for Guideline 2.1. Reviewer unable to test app because login is required and no test account was provided.\n\n❌ **BAD**: App requires login, but no demo account in review notes\n```\nApp Review Information:\n  Notes: (empty)\n  Demo Account: (empty)\n  Demo Password: (empty)\n→ Reviewer sees login screen, can't proceed, rejects\n```\n\n✅ **GOOD**: Working demo credentials with clear instructions\n```\nApp Review Information:\n  Demo Account: demo@yourapp.com\n  Demo Password: AppReview2025!\n  Notes: \"Log in with the demo account above.\n         The account has sample data pre-loaded.\n         To test [feature X], navigate to Tab 2 > Settings.\n         If 2FA is required, use code: 123456\"\n\nRequirements:\n- Account must not expire during review (1-2 weeks minimum)\n- Account must have representative data\n- Include any special setup steps\n- If hardware required, explain workarounds\n- If location-specific, provide test coordinates\n```\n\n**Why it works**: Reviewers cannot test what they cannot access. They will not create their own account. If your app requires any form of authentication, demo credentials are mandatory. This is one of the most common rejection reasons for apps with login flows.\n\n---\n\n## Decision Tree\n\n```\nIs my app ready to submit?\n│\n├─ Does it crash on a real device?\n│  ├─ YES → STOP. Fix crashes first (Guideline 2.1)\n│  └─ NO → Continue\n│\n├─ Privacy manifest (PrivacyInfo.xcprivacy) present?\n│  ├─ NO → Add privacy manifest with Required Reason APIs\n│  └─ YES → Continue\n│\n├─ Privacy policy URL set in App Store Connect?\n│  ├─ NO → Add privacy policy URL in ASC\n│  └─ YES → Is it also accessible in-app?\n│     ├─ NO → Add in-app privacy policy link\n│     └─ YES → Continue\n│\n├─ All screenshots final and matching current app?\n│  ├─ NO → Update screenshots for all required device sizes\n│  └─ YES → Continue\n│\n├─ Does app create user accounts?\n│  ├─ YES → Account deletion implemented and discoverable?\n│  │  ├─ NO → Implement account deletion flow\n│  │  └─ YES → Continue\n│  └─ NO → Continue\n│\n├─ Does app offer third-party login (Google, Facebook, etc.)?\n│  ├─ YES → Sign in with Apple offered?\n│  │  ├─ NO → Add SIWA (unless exemption applies)\n│  │  └─ YES → Continue\n│  └─ NO → Continue\n│\n├─ Does app have in-app purchases or subscriptions?\n│  ├─ YES → IAP items submitted for review in ASC?\n│  │  ├─ NO → Submit IAP for review (can be reviewed separately)\n│  │  └─ YES → Restore Purchases button implemented?\n│  │     ├─ NO → Add Restore Purchases functionality\n│  │     └─ YES → Continue\n│  └─ NO → Continue\n│\n├─ Does app use encryption beyond standard HTTPS?\n│  ├─ YES → Export compliance documentation uploaded?\n│  │  ├─ NO → Add ITSAppUsesNonExemptEncryption to Info.plist\n│  │  │       and upload compliance documentation\n│  │  └─ YES → Continue\n│  └─ NO → Set ITSAppUsesNonExemptEncryption = NO in Info.plist\n│\n├─ Distributing in EU?\n│  ├─ YES → DSA trader status verified in ASC?\n│  │  ├─ NO → Complete trader verification in ASC\n│  │  └─ YES → Continue\n│  └─ NO → Continue\n│\n├─ Does app require login to function?\n│  ├─ YES → Demo credentials in App Review notes?\n│  │  ├─ NO → Add working demo account + password + instructions\n│  │  └─ YES → Continue\n│  └─ NO → Continue\n│\n├─ Age rating questionnaire completed honestly?\n│  ├─ NO → Complete updated questionnaire (new 13+/16+/18+ ratings)\n│  └─ YES → Continue\n│\n├─ Any placeholder content remaining?\n│  ├─ YES → Replace all placeholders with final content\n│  └─ NO → Continue\n│\n└─ All checks passed → READY TO SUBMIT\n```\n\n---\n\n## Mandatory Pre-Flight Checklist\n\nRun this entire checklist before every submission. Check every item, not just the ones you think apply.\n\n### 1. Build Configuration\n\n- [ ] Built with current required SDK (iOS 18 SDK / Xcode 16 as of 2025; iOS 26 SDK / Xcode 26 required starting April 28, 2026)\n- [ ] `ITSAppUsesNonExemptEncryption` set in Info.plist (`NO` if only HTTPS)\n- [ ] App tested on physical device with latest shipping iOS version\n- [ ] App works over IPv6-only network (Apple review network is IPv6)\n- [ ] No private/undocumented API usage\n- [ ] No references to pre-release/beta OS features unless targeting that OS\n- [ ] Minimum deployment target is reasonable (not unnecessarily high)\n- [ ] Release build tested (not just Debug configuration)\n\n### 2. Privacy\n\n- [ ] `PrivacyInfo.xcprivacy` file present in app target\n- [ ] All Required Reason APIs declared with approved reason codes\n- [ ] Third-party SDKs each include their own privacy manifests\n- [ ] Privacy policy URL set in App Store Connect\n- [ ] Privacy policy accessible in-app (Settings/About screen)\n- [ ] Privacy policy content matches actual data collection practices\n- [ ] All `NS*UsageDescription` purpose strings present (Camera, Location, etc.)\n- [ ] Purpose strings explain user benefit (not just \"we need access\")\n- [ ] App Tracking Transparency implemented if tracking users (ATT)\n- [ ] Privacy Nutrition Labels completed in ASC matching manifest\n\n### 3. Metadata\n\n- [ ] App name (30 character limit, no keyword stuffing)\n- [ ] Subtitle (30 character limit)\n- [ ] Description (accurate, no misleading claims)\n- [ ] Keywords (100 character limit, comma-separated)\n- [ ] Category and secondary category set\n- [ ] Screenshots for all required device sizes (6.9\", 6.7\", 6.5\", 5.5\" for iPhone; 13\" for iPad if universal)\n- [ ] Screenshots reflect current app UI (not outdated)\n- [ ] App Preview videos current (if using)\n- [ ] Support URL valid and accessible\n- [ ] Marketing URL valid (if set)\n- [ ] Copyright string current year\n- [ ] Version number and build number incremented\n- [ ] \"What's New\" text written (for updates)\n\n### 4. Account and Authentication\n\n- [ ] Account deletion flow implemented (if account creation exists)\n- [ ] Account deletion is actual deletion (not just deactivation)\n- [ ] SIWA token revocation on account deletion (if SIWA used)\n- [ ] Sign in with Apple offered (if any third-party login exists)\n- [ ] Active subscriptions handled during account deletion\n- [ ] Restore Purchases button works (if IAP exists)\n- [ ] IAP items submitted for review in ASC (if new/changed)\n- [ ] Subscription terms clearly communicated before purchase\n\n### 5. App Review Information\n\n- [ ] Contact information (name, phone, email) provided\n- [ ] Demo account username provided (if login required)\n- [ ] Demo account password provided (if login required)\n- [ ] Demo account won't expire during review period (1-2 weeks)\n- [ ] Demo account has representative sample data\n- [ ] Special instructions for hardware-dependent features\n- [ ] Notes explain any non-obvious features or flows\n- [ ] If app uses location, provide test coordinates\n\n### 6. Content Completeness\n\n- [ ] No placeholder text (lorem ipsum, TODO, \"Coming Soon\")\n- [ ] No broken links or dead-end screens\n- [ ] All images are production assets (no stock watermarks)\n- [ ] App icon meets spec (1024x1024, no alpha channel, no rounded corners)\n- [ ] All tabs/screens have functional content\n- [ ] Error states and empty states have proper messaging\n- [ ] Onboarding/tutorial flows complete and accurate\n- [ ] All deep links and universal links resolve correctly\n\n### 7. Regional and Compliance\n\n- [ ] EU DSA trader status verified (if distributing in EU)\n- [ ] Age rating questionnaire completed with updated categories (13+/16+/18+)\n- [ ] Age rating reflects actual content (UGC, violence, web access declared)\n- [ ] Export compliance documentation uploaded (if non-exempt encryption)\n- [ ] Content complies with local laws for each distribution territory\n- [ ] GDPR compliance (if distributing in EU)\n\n### 8. New for 2025-2026\n\n- [ ] Updated age rating questionnaire completed (deadline: January 31, 2026)\n- [ ] Accessibility Nutrition Labels declared (becoming required for new submissions)\n- [ ] External AI service consent modal (if app sends personal data to external AI)\n- [ ] SDK minimum version met (Xcode 16/iOS 18 SDK now; Xcode 26/iOS 26 SDK starting April 28, 2026)\n\n---\n\n## Pressure Scenarios\n\n### Scenario 1: \"Ship by end of day\"\n\n**Setup**: PM says the app must be submitted today for a marketing launch next week.\n\n**Pressure**: Deadline + executive visibility\n\n**Rationalization traps**:\n- \"We'll fix the privacy policy after approval\"\n- \"The placeholder is only on one screen, they won't notice\"\n- \"We'll add account deletion in the next update\"\n- \"It passed internal testing, no need for device testing\"\n\n**MANDATORY**: Run the full pre-flight checklist. Every item. Missing items cause rejection, which costs 3-7 MORE days — far worse than the 30 minutes the checklist takes.\n\nSkipping the checklist to save 30 minutes costs 3-7 days when it causes rejection.\n\n**Communication template**: \"The pre-flight check found [N] issues that will cause rejection. Fixing them takes [X hours]. Submitting without fixing guarantees rejection, which costs 3-7 days minimum. Let me fix these now — it's the fastest path to being live.\"\n\n---\n\n### Scenario 2: \"Third rejection, just make it work\"\n\n**Setup**: App rejected 3 times for different issues each time. Developer is frustrated and tempted to cut corners or argue with Apple.\n\n**Pressure**: Frustration + sunk cost + temptation to appeal instead of fix\n\n**Rationalization traps**:\n- \"They keep finding new issues — they're being unfair\"\n- \"I'll appeal this one, it's unreasonable\"\n- \"I'll just hide that screen from reviewers\"\n\n**MANDATORY**: Read the FULL text of every rejection message. Run the complete pre-flight checklist from scratch. Reviewers often find new issues on subsequent reviews because they test deeper each pass — they explore screens they didn't reach before, test flows they skipped, and review with stricter attention.\n\nEach rejection is a signal that the pre-submission process has gaps. Do not fight the feedback — absorb it and close the gaps systematically.\n\n**Communication template**: \"Multiple rejections mean we have systematic gaps, not bad luck. I'm running the complete pre-flight checklist — this takes 30 minutes but prevents the 3-7 day cycle of partial fixes followed by new rejections.\"\n\n---\n\n### Scenario 3: \"It's just a bug fix update\"\n\n**Setup**: Simple one-line bug fix. Developer assumes the update will sail through because the app was already approved.\n\n**Pressure**: Complacency + false confidence from prior approval\n\n**Rationalization traps**:\n- \"It was approved last time with the same metadata\"\n- \"I only changed one file, they don't need to re-review everything\"\n- \"They won't re-check the privacy stuff, it hasn't changed\"\n\n**MANDATORY**: Updates are reviewed against CURRENT guidelines. Requirements change between releases. Privacy manifests became mandatory mid-cycle. Age rating questionnaire was overhauled. SDK minimums increase annually. A bug fix update can be rejected for issues that didn't exist when the previous version was approved.\n\nRun the pre-flight checklist every time. Requirements that didn't exist when your app was last reviewed may now be enforced.\n\n**Communication template**: \"Even for a bug fix, App Review applies current guidelines — not the ones from when we were last approved. The privacy manifest requirement and age rating overhaul both came mid-cycle. Running the 30-minute pre-flight now prevents a surprise rejection.\"\n\n---\n\n## Screenshot Requirements\n\nScreenshots must match current app UI. See `app-store-ref` Part 1 for required sizes, dimensions, and rules.\n\n---\n\n## Handling Rejections\n\n### Reading the Rejection Message\n\nEvery rejection includes:\n1. **Guideline number** — Specific section violated\n2. **Description** — What the reviewer found\n3. **Screenshots/recordings** — Visual evidence (if applicable)\n4. **Suggestions** — Sometimes included with fixes\n\n### Response Strategy\n\n```\n1. Read the FULL rejection message (every word)\n2. Identify ALL guidelines cited (may be multiple)\n3. Fix EVERY cited issue (not just the first one)\n4. Run the complete pre-flight checklist\n5. In your resubmission notes, explain what you fixed\n6. Do NOT argue or explain why you think the rejection is wrong\n```\n\n### When to Appeal\n\nAppeals are appropriate when:\n- You believe the reviewer misunderstood your app's functionality\n- Your app clearly complies with the cited guideline\n- You have evidence supporting your position\n\nAppeals are NOT appropriate when:\n- You disagree with the guideline itself\n- The rejection is technically correct but feels unfair\n- You want to delay fixing the issue\n\n### Appeal Process\n\n```\nApp Store Connect → Resolution Center → Reply\n- Explain clearly why you believe the rejection is incorrect\n- Provide specific evidence (screenshots, documentation)\n- Remain professional and factual\n- Apple's App Review Board will re-review\n```\n\n### Metadata Rejected vs Binary Rejected\n\n| Type | What it means | What to do |\n|------|--------------|------------|\n| Metadata Rejected | Screenshots, description, or ASC fields need fixing | Fix in ASC, resubmit (no new build needed) |\n| Binary Rejected | Code/app issue needs fixing | Fix code, create new archive, upload new build |\n\n---\n\n## In-App Purchase Review\n\nIAP items require separate review. Missing or broken IAP is a top rejection cause under Guideline 3.1.1.\n\n### IAP Submission Checklist\n\n- [ ] All IAP products created in ASC with complete metadata\n- [ ] **IAP review screenshot uploaded** for each product (shows what user sees when purchasing — review-only, not displayed on App Store)\n- [ ] **IAP products attached to THIS version** (first submission only: App Version page → In-App Purchases section → Select → checkbox each product). After first approval, subsequent IAPs can be submitted independently.\n- [ ] IAP products submitted for review\n- [ ] Restore Purchases button visible and functional\n- [ ] Subscription terms displayed before purchase confirmation (price, period, auto-renewal)\n- [ ] **Terms of Use and Privacy Policy links visible on the purchase screen** (required by Schedule 2 of the DPLA, referenced by Guideline 3.1.2(c)). `SubscriptionStoreView` handles this automatically from ASC metadata — if using custom paywall UI, add links manually.\n- [ ] Free trial terms clearly communicated\n- [ ] Pricing displayed matches ASC configuration\n- [ ] No external purchase links (Guideline 3.1.1) unless eligible for entitlement\n- [ ] StoreKit testing completed in sandbox environment\n\n### Common IAP Rejection Patterns\n\n```\n❌ \"Buy Premium\" button that does nothing → Guideline 3.1.1\n❌ No Restore Purchases option → Guideline 3.1.1\n❌ Subscription auto-renews without clear disclosure → Guideline 3.1.2\n❌ Free trial duration not shown before purchase → Guideline 3.1.2\n❌ External purchase link without entitlement → Guideline 3.1.1\n❌ IAP products not attached to submission version → Guideline 2.1 (reviewer can't see them)\n❌ No review screenshot on IAP product → Guideline 2.1 (reviewer can't verify purchase UI)\n❌ Terms of Use / Privacy Policy missing from paywall → DPLA Schedule 2 (use SubscriptionStoreView to avoid)\n```\n\n---\n\n## Common Rejection Reasons Quick Reference\n\n| Guideline | Issue | Prevention |\n|-----------|-------|------------|\n| 2.1 | Crashes, broken features, incomplete | Device testing, content audit |\n| 2.1 | IAP not visible to reviewer | Attach IAP to version (checkbox in ASC), upload review screenshots |\n| 2.3 | Inaccurate metadata, wrong screenshots | Screenshot audit, metadata review |\n| 2.3.6 | Incorrect age rating | Honest questionnaire, declare UGC |\n| 3.1.1 | IAP issues, missing Restore Purchases | Test all IAP flows, add restore |\n| 4.0 | Design: poor UI, non-standard patterns | Follow HIG, test on all sizes |\n| 4.8 | Missing Sign in with Apple | Add SIWA with any third-party login |\n| 5.1.1(i) | Privacy policy missing/inadequate | Both ASC and in-app, specific content |\n| 5.1.1(v) | No account deletion | In-app deletion, not just deactivation |\n| 5.1.2 | Missing Required Reason APIs | Complete privacy manifest |\n\n---\n\n## App Store Connect Submission Workflow\n\nSee `app-store-ref` Part 9 for the ASC upload workflow and build processing details.\n\n---\n\n## Encryption Export Compliance\n\nMost apps need `ITSAppUsesNonExemptEncryption = false`. See `app-store-ref` Part 5 for the full decision tree.\n\n---\n\n## Accessibility Nutrition Labels (New 2025)\n\nAccessibility Nutrition Labels are becoming required for new submissions. See `app-store-ref` Part 10 for the full label list and declaration rules. Run `axiom-accessibility-diag` before declaring.\n\n---\n\n## First-Time Developer Checklist\n\nFor developers submitting their first app, these are additional items often missed. If you need to create a privacy policy from scratch, use a privacy policy generator (many free options exist) and customize it to match your app's actual data practices — a generic template will be rejected.\n\n### Apple Developer Program\n\n- [ ] Enrolled in Apple Developer Program ($99/year)\n- [ ] Accepted latest Apple Developer Program License Agreement\n- [ ] Tax and banking information completed in ASC (for paid apps/IAP)\n- [ ] Distribution certificate created\n- [ ] App ID registered with correct bundle identifier\n- [ ] Provisioning profile created for App Store distribution\n\n### App Store Connect Setup\n\n- [ ] New app record created in ASC\n- [ ] Bundle ID matches Xcode project exactly\n- [ ] Primary language set\n- [ ] Content rights declared (original content or licensed)\n- [ ] Pricing and availability configured\n- [ ] Territory selection (worldwide or specific countries)\n\n### Common First-Time Mistakes\n\n| Mistake | Result | Fix |\n|---------|--------|-----|\n| Bundle ID mismatch between Xcode and ASC | Upload rejected | Match exactly, including case |\n| Distribution cert expired/missing | Archive fails to upload | Create new cert in Developer Portal |\n| License agreement not accepted | Upload blocked | Accept in developer.apple.com |\n| Tax forms incomplete | Paid app not distributed | Complete in ASC → Agreements, Tax, and Banking |\n| Wrong team selected in Xcode | Signing errors | Select correct team in Signing & Capabilities |\n\n---\n\n## Real-World Impact\n\n**Before**: Developer submits without checklist → rejected for missing privacy manifest (3 days) → fixes, resubmits → rejected for missing SIWA (5 days) → fixes, resubmits → rejected for placeholder content (3 days) → 11 days lost to preventable issues\n\n**After**: Developer runs 30-minute pre-flight → catches all three issues → fixes in 4 hours → approved on first submission\n\n**Key insight**: The checklist takes 30 minutes. Each rejection cycle takes 3-7 days. The math is simple.\n\n---\n\n## Resources\n\n**WWDC**: 2022-10166, 2025-328, 2025-224, 2025-241\n\n**Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details, /support/offering-account-deletion-in-your-app, /documentation/security/complying-with-encryption-export-regulations\n\n**Skills**: axiom-privacy-ux, axiom-storekit-ref, axiom-accessibility-diag, axiom-testflight-triage, axiom-app-store-connect-ref\n",
       "skillType": "discipline",
       "source": "axiom",
       "category": "integration",
@@ -2059,56 +2059,56 @@
           "heading": "In-App Purchase Review",
           "level": 2,
           "startLine": 613,
-          "endLine": 639,
-          "charCount": 997
+          "endLine": 645,
+          "charCount": 1920
         },
         {
           "heading": "Common Rejection Reasons Quick Reference",
           "level": 2,
-          "startLine": 640,
-          "endLine": 655,
-          "charCount": 827
+          "startLine": 646,
+          "endLine": 662,
+          "charCount": 934
         },
         {
           "heading": "App Store Connect Submission Workflow",
           "level": 2,
-          "startLine": 656,
-          "endLine": 661,
+          "startLine": 663,
+          "endLine": 668,
           "charCount": 132
         },
         {
           "heading": "Encryption Export Compliance",
           "level": 2,
-          "startLine": 662,
-          "endLine": 667,
+          "startLine": 669,
+          "endLine": 674,
           "charCount": 149
         },
         {
           "heading": "Accessibility Nutrition Labels (New 2025)",
           "level": 2,
-          "startLine": 668,
-          "endLine": 673,
+          "startLine": 675,
+          "endLine": 680,
           "charCount": 249
         },
         {
           "heading": "First-Time Developer Checklist",
           "level": 2,
-          "startLine": 674,
-          "endLine": 707,
+          "startLine": 681,
+          "endLine": 714,
           "charCount": 1575
         },
         {
           "heading": "Real-World Impact",
           "level": 2,
-          "startLine": 708,
-          "endLine": 717,
+          "startLine": 715,
+          "endLine": 724,
           "charCount": 512
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 718,
-          "endLine": 725,
+          "startLine": 725,
+          "endLine": 732,
           "charCount": 408
         }
       ],
@@ -4820,7 +4820,7 @@
     "axiom-cloud-sync": {
       "name": "axiom-cloud-sync",
       "description": "Use when choosing between CloudKit vs iCloud Drive, implementing reliable sync, handling offline-first patterns, or designing sync architecture - prevents common sync mistakes that cause data loss",
-      "content": "\n# Cloud Sync\n\n## Overview\n\n**Core principle**: Choose the right sync technology for the data shape, then implement offline-first patterns that handle network failures gracefully.\n\nTwo fundamentally different sync approaches:\n- **CloudKit** — Structured data (records with fields and relationships)\n- **iCloud Drive** — File-based data (documents, images, any file format)\n\n## Quick Decision Tree\n\n```\nWhat needs syncing?\n\n├─ Structured data (records, relationships)?\n│  ├─ Using SwiftData? → SwiftData + CloudKit (easiest, iOS 17+)\n│  ├─ Need shared/public database? → CKSyncEngine or raw CloudKit\n│  └─ Custom persistence (GRDB, SQLite)? → CKSyncEngine (iOS 17+)\n│\n├─ Documents/files users expect in Files app?\n│  └─ iCloud Drive (UIDocument or FileManager)\n│\n├─ Large binary blobs (images, videos)?\n│  ├─ Associated with structured data? → CKAsset in CloudKit\n│  └─ Standalone files? → iCloud Drive\n│\n└─ App settings/preferences?\n   └─ NSUbiquitousKeyValueStore (simple key-value, 1MB limit)\n```\n\n## CloudKit vs iCloud Drive\n\n| Aspect | CloudKit | iCloud Drive |\n|--------|----------|--------------|\n| **Data shape** | Structured records | Files/documents |\n| **Query support** | Full query language | Filename only |\n| **Relationships** | Native support | None (manual) |\n| **Conflict resolution** | Record-level | File-level |\n| **User visibility** | Hidden from user | Visible in Files app |\n| **Sharing** | Record/database sharing | File sharing |\n| **Offline** | Local cache required | Automatic download |\n\n## Red Flags\n\nIf ANY of these appear, STOP and reconsider:\n\n- ❌ \"Store JSON files in CloudKit\" — Wrong tool. Use iCloud Drive for files\n- ❌ \"Build relationships manually in iCloud Drive\" — Wrong tool. Use CloudKit\n- ❌ \"Assume sync is instant\" — Network fails. Design offline-first\n- ❌ \"Skip conflict handling\" — Conflicts WILL happen on multiple devices\n- ❌ \"Use CloudKit for user documents\" — Users can't see them. Use iCloud Drive\n- ❌ \"Sync on app launch only\" — Users expect continuous sync\n\n## Offline-First Pattern\n\n**MANDATORY**: All sync code must work offline first.\n\n```swift\n// ✅ CORRECT: Offline-first architecture\nclass OfflineFirstSync {\n    private let localStore: LocalDatabase  // GRDB, SwiftData, Core Data\n    private let syncEngine: CKSyncEngine\n\n    // Write to LOCAL first, sync to cloud in background\n    func save(_ item: Item) async throws {\n        // 1. Save locally (instant)\n        try await localStore.save(item)\n\n        // 2. Queue for sync (non-blocking)\n        syncEngine.state.add(pendingRecordZoneChanges: [\n            .saveRecord(item.recordID)\n        ])\n    }\n\n    // Read from LOCAL (instant)\n    func fetch() async throws -> [Item] {\n        return try await localStore.fetchAll()\n    }\n}\n\n// ❌ WRONG: Cloud-first (blocks on network)\nfunc save(_ item: Item) async throws {\n    // Fails when offline, slow on bad network\n    try await cloudKit.save(item)\n    try await localStore.save(item)\n}\n```\n\n## Conflict Resolution Strategies\n\nConflicts occur when two devices edit the same data before syncing.\n\n### Strategy 1: Last-Writer-Wins (Simplest)\n\n```swift\n// Server always has latest, client accepts it\nfunc resolveConflict(local: CKRecord, server: CKRecord) -> CKRecord {\n    return server  // Accept server version\n}\n```\n\n**Use when**: Data is non-critical, user won't notice overwrites\n\n### Strategy 2: Merge (Most Common)\n\n```swift\n// Combine changes from both versions\nfunc resolveConflict(local: CKRecord, server: CKRecord) -> CKRecord {\n    let merged = server.copy() as! CKRecord\n\n    // For each field, apply custom merge logic\n    merged[\"notes\"] = mergeText(\n        local[\"notes\"] as? String,\n        server[\"notes\"] as? String\n    )\n    merged[\"tags\"] = mergeSets(\n        local[\"tags\"] as? [String] ?? [],\n        server[\"tags\"] as? [String] ?? []\n    )\n\n    return merged\n}\n```\n\n**Use when**: Both versions contain valuable changes\n\n### Strategy 3: User Choice\n\n```swift\n// Present conflict to user\nfunc resolveConflict(local: CKRecord, server: CKRecord) async -> CKRecord {\n    let choice = await presentConflictUI(local: local, server: server)\n    return choice == .keepLocal ? local : server\n}\n```\n\n**Use when**: Data is critical, user must decide\n\n## Common Patterns\n\n### Pattern 1: SwiftData + CloudKit (Recommended for New Apps)\n\n```swift\nimport SwiftData\n\n// Automatic CloudKit sync with zero configuration\n@Model\nclass Note {\n    var title: String\n    var content: String\n    var createdAt: Date\n\n    init(title: String, content: String) {\n        self.title = title\n        self.content = content\n        self.createdAt = Date()\n    }\n}\n\n// Container automatically syncs if CloudKit entitlement present\nlet container = try ModelContainer(for: Note.self)\n```\n\n**Limitations**:\n- Private database only (no public/shared)\n- Automatic sync (less control over timing)\n- No custom conflict resolution\n\n### Pattern 2: CKSyncEngine (Custom Persistence)\n\n```swift\n// For GRDB, SQLite, or custom databases\nclass MySyncManager: CKSyncEngineDelegate {\n    private let engine: CKSyncEngine\n    private let database: GRDBDatabase\n\n    func handleEvent(_ event: CKSyncEngine.Event) async {\n        switch event {\n        case .stateUpdate(let update):\n            // Persist sync state\n            await saveSyncState(update.stateSerialization)\n\n        case .fetchedDatabaseChanges(let changes):\n            // Apply changes to local DB\n            for zone in changes.modifications {\n                await handleZoneChanges(zone)\n            }\n\n        case .sentRecordZoneChanges(let sent):\n            // Mark records as synced\n            for saved in sent.savedRecords {\n                await markSynced(saved.recordID)\n            }\n        }\n    }\n}\n```\n\nSee `axiom-cloudkit-ref` for complete CKSyncEngine setup.\n\n### Pattern 3: iCloud Drive Documents\n\n```swift\nimport UIKit\n\nclass MyDocument: UIDocument {\n    var content: Data?\n\n    override func contents(forType typeName: String) throws -> Any {\n        return content ?? Data()\n    }\n\n    override func load(fromContents contents: Any, ofType typeName: String?) throws {\n        content = contents as? Data\n    }\n}\n\n// Save to iCloud Drive (visible in Files app)\nlet url = FileManager.default.url(forUbiquityContainerIdentifier: nil)?\n    .appendingPathComponent(\"Documents\")\n    .appendingPathComponent(\"MyFile.txt\")\n\nlet doc = MyDocument(fileURL: url!)\ndoc.content = \"Hello\".data(using: .utf8)\ndoc.save(to: url!, for: .forCreating)\n```\n\nSee `axiom-icloud-drive-ref` for NSFileCoordinator and conflict handling.\n\n## Anti-Patterns\n\n### 1. Ignoring Sync State\n\n```swift\n// ❌ WRONG: No awareness of pending changes\nvar items: [Item] = []  // Are these synced? Pending? Conflicted?\n\n// ✅ CORRECT: Track sync state\nstruct SyncableItem {\n    let item: Item\n    let syncState: SyncState  // .synced, .pending, .conflict\n}\n```\n\n### 2. Blocking UI on Sync\n\n```swift\n// ❌ WRONG: UI blocks until sync completes\nfunc viewDidLoad() async {\n    items = try await cloudKit.fetchAll()  // Spinner forever on airplane\n    tableView.reloadData()\n}\n\n// ✅ CORRECT: Show local data immediately\nfunc viewDidLoad() {\n    items = localStore.fetchAll()  // Instant\n    tableView.reloadData()\n\n    Task {\n        await syncEngine.fetchChanges()  // Background update\n    }\n}\n```\n\n### 3. No Retry Logic\n\n```swift\n// ❌ WRONG: Single attempt\ntry await cloudKit.save(record)\n\n// ✅ CORRECT: Exponential backoff\nfunc saveWithRetry(_ record: CKRecord, attempts: Int = 3) async throws {\n    for attempt in 0..<attempts {\n        do {\n            try await cloudKit.save(record)\n            return\n        } catch let error as CKError where error.isRetryable {\n            let delay = pow(2.0, Double(attempt))\n            try await Task.sleep(for: .seconds(delay))\n        }\n    }\n    throw SyncError.maxRetriesExceeded\n}\n```\n\n## Sync State Indicators\n\nAlways show users the sync state:\n\n```swift\nenum SyncState {\n    case synced       // ✓ (checkmark)\n    case pending      // ↻ (arrows)\n    case conflict     // ⚠ (warning)\n    case offline      // ☁ with X\n}\n\n// In SwiftUI\nHStack {\n    Text(item.title)\n    Spacer()\n    SyncIndicator(state: item.syncState)\n}\n```\n\n## Entitlement Checklist\n\nBefore sync will work:\n\n1. **Xcode → Signing & Capabilities**\n   - ✓ iCloud capability added\n   - ✓ CloudKit checked (for CloudKit)\n   - ✓ iCloud Documents checked (for iCloud Drive)\n   - ✓ Container selected/created\n\n2. **Apple Developer Portal**\n   - ✓ App ID has iCloud capability\n   - ✓ CloudKit container exists (for CloudKit)\n\n3. **Device**\n   - ✓ Signed into iCloud\n   - ✓ iCloud Drive enabled (Settings → [Name] → iCloud)\n\n## Large Dataset Sync\n\nWhen syncing 10,000+ records, naive approaches cause timeouts and launch slowdowns.\n\n### Initial Sync Strategy\n\n```swift\n// ❌ WRONG: Fetch everything at once\nlet allRecords = try await database.fetchAll()\nsyncEngine.state.add(pendingRecordZoneChanges: allRecords.map { .saveRecord($0.recordID) })\n\n// ✅ CORRECT: Batch initial sync\nfunc performInitialSync(batchSize: Int = 200) async throws {\n    var cursor: CKQueryOperation.Cursor? = nil\n\n    repeat {\n        let (results, nextCursor) = try await database.records(\n            matching: query,\n            resultsLimit: batchSize,\n            desiredKeys: nil,\n            continuationCursor: cursor\n        )\n        // Process batch\n        try await localStore.saveBatch(results.compactMap { try? $0.1.get() })\n        cursor = nextCursor\n    } while cursor != nil\n}\n```\n\n### Incremental Sync (After Initial)\n\nCKSyncEngine handles incremental sync automatically — it fetches only changes since the last sync token. Ensure you persist `stateSerialization` so the engine doesn't re-fetch everything on next launch.\n\n### Performance Guidelines\n\n| Dataset Size | Strategy | Notes |\n|-------------|----------|-------|\n| < 1,000 records | Default CKSyncEngine | Works out of the box |\n| 1,000–10,000 | Batch initial sync | 200-record batches, show progress UI |\n| 10,000+ | Pagination + background | Use BGProcessingTask for initial sync |\n| 100,000+ | Server-side filtering | Only sync what user needs, lazy-load rest |\n\n**Key insight**: Initial sync is the bottleneck. After initial sync, CKSyncEngine's incremental approach handles large datasets efficiently because it only fetches deltas.\n\n## Pressure Scenarios\n\n### Scenario 1: \"Just skip conflict handling for v1\"\n\n**Situation**: Deadline pressure to ship without conflict resolution.\n\n**Risk**: Users WILL edit on multiple devices. Data WILL be lost silently.\n\n**Response**: \"Minimum viable conflict handling takes 2 hours. Silent data loss costs users and generates 1-star reviews.\"\n\n### Scenario 2: \"Sync on app launch is enough\"\n\n**Situation**: Avoiding continuous sync complexity.\n\n**Risk**: Users expect changes to appear within seconds, not on next launch.\n\n**Response**: Use CKSyncEngine or SwiftData which handle continuous sync automatically.\n\n## Related Skills\n\n- `axiom-cloudkit-ref` — Complete CloudKit API reference\n- `axiom-icloud-drive-ref` — File-based sync with NSFileCoordinator\n- `axiom-cloud-sync-diag` — Debugging sync failures\n- `axiom-storage` — Choosing where to store data locally\n",
+      "content": "\n# Cloud Sync\n\n## Overview\n\n**Core principle**: Choose the right sync technology for the data shape, then implement offline-first patterns that handle network failures gracefully.\n\nTwo fundamentally different sync approaches:\n- **CloudKit** — Structured data (records with fields and relationships)\n- **iCloud Drive** — File-based data (documents, images, any file format)\n\n## Quick Decision Tree\n\n```\nWhat needs syncing?\n\n├─ Structured data (records, relationships)?\n│  ├─ Using SwiftData? → SwiftData + CloudKit (easiest, iOS 17+)\n│  ├─ Need shared/public database? → CKSyncEngine or raw CloudKit\n│  └─ Custom persistence (GRDB, SQLite)? → CKSyncEngine (iOS 17+)\n│\n├─ Documents/files users expect in Files app?\n│  └─ iCloud Drive (UIDocument or FileManager)\n│\n├─ Large binary blobs (images, videos)?\n│  ├─ Associated with structured data? → CKAsset in CloudKit\n│  └─ Standalone files? → iCloud Drive\n│\n└─ App settings/preferences?\n   └─ NSUbiquitousKeyValueStore (simple key-value, 1MB limit)\n```\n\n## CloudKit vs iCloud Drive\n\n| Aspect | CloudKit | iCloud Drive |\n|--------|----------|--------------|\n| **Data shape** | Structured records | Files/documents |\n| **Query support** | Full query language | Filename only |\n| **Relationships** | Native support | None (manual) |\n| **Conflict resolution** | Record-level | File-level |\n| **User visibility** | Hidden from user | Visible in Files app |\n| **Sharing** | Record/database sharing | File sharing |\n| **Offline** | Local cache required | Automatic download |\n\n## Red Flags\n\nIf ANY of these appear, STOP and reconsider:\n\n- ❌ \"Store JSON files in CloudKit\" — Wrong tool. Use iCloud Drive for files\n- ❌ \"Build relationships manually in iCloud Drive\" — Wrong tool. Use CloudKit\n- ❌ \"Assume sync is instant\" — Network fails. Design offline-first\n- ❌ \"Skip conflict handling\" — Conflicts WILL happen on multiple devices\n- ❌ \"Use CloudKit for user documents\" — Users can't see them. Use iCloud Drive\n- ❌ \"Sync on app launch only\" — Users expect continuous sync\n\n## Offline-First Pattern\n\n**MANDATORY**: All sync code must work offline first.\n\n```swift\n// ✅ CORRECT: Offline-first architecture\nclass OfflineFirstSync {\n    private let localStore: LocalDatabase  // GRDB, SwiftData, Core Data\n    private let syncEngine: CKSyncEngine\n\n    // Write to LOCAL first, sync to cloud in background\n    func save(_ item: Item) async throws {\n        // 1. Save locally (instant)\n        try await localStore.save(item)\n\n        // 2. Queue for sync (non-blocking)\n        syncEngine.state.add(pendingRecordZoneChanges: [\n            .saveRecord(item.recordID)\n        ])\n    }\n\n    // Read from LOCAL (instant)\n    func fetch() async throws -> [Item] {\n        return try await localStore.fetchAll()\n    }\n}\n\n// ❌ WRONG: Cloud-first (blocks on network)\nfunc save(_ item: Item) async throws {\n    // Fails when offline, slow on bad network\n    try await cloudKit.save(item)\n    try await localStore.save(item)\n}\n```\n\n## Conflict Resolution Strategies\n\nConflicts occur when two devices edit the same data before syncing.\n\n### Strategy 1: Last-Writer-Wins (Simplest)\n\n```swift\n// Server always has latest, client accepts it\nfunc resolveConflict(local: CKRecord, server: CKRecord) -> CKRecord {\n    return server  // Accept server version\n}\n```\n\n**Use when**: Data is non-critical, user won't notice overwrites\n\n### Strategy 2: Merge (Most Common)\n\n```swift\n// Combine changes from both versions\nfunc resolveConflict(local: CKRecord, server: CKRecord) -> CKRecord {\n    let merged = server.copy() as! CKRecord\n\n    // For each field, apply custom merge logic\n    merged[\"notes\"] = mergeText(\n        local[\"notes\"] as? String,\n        server[\"notes\"] as? String\n    )\n    merged[\"tags\"] = mergeSets(\n        local[\"tags\"] as? [String] ?? [],\n        server[\"tags\"] as? [String] ?? []\n    )\n\n    return merged\n}\n```\n\n**Use when**: Both versions contain valuable changes\n\n### Strategy 3: User Choice\n\n```swift\n// Present conflict to user\nfunc resolveConflict(local: CKRecord, server: CKRecord) async -> CKRecord {\n    let choice = await presentConflictUI(local: local, server: server)\n    return choice == .keepLocal ? local : server\n}\n```\n\n**Use when**: Data is critical, user must decide\n\n## Common Patterns\n\n### Pattern 1: SwiftData + CloudKit (Recommended for New Apps)\n\n```swift\nimport SwiftData\n\n// Automatic CloudKit sync with zero configuration\n@Model\nclass Note {\n    var title: String\n    var content: String\n    var createdAt: Date\n\n    init(title: String, content: String) {\n        self.title = title\n        self.content = content\n        self.createdAt = Date()\n    }\n}\n\n// Container automatically syncs if CloudKit entitlement present\nlet container = try ModelContainer(for: Note.self)\n```\n\n**Limitations**:\n- Private database only (no public/shared)\n- Automatic sync (less control over timing)\n- No custom conflict resolution\n\n### Pattern 2: CKSyncEngine (Custom Persistence)\n\n```swift\n// For GRDB, SQLite, or custom databases\nclass MySyncManager: CKSyncEngineDelegate {\n    private let engine: CKSyncEngine\n    private let database: GRDBDatabase\n\n    func handleEvent(_ event: CKSyncEngine.Event) async {\n        switch event {\n        case .stateUpdate(let update):\n            // Persist sync state\n            await saveSyncState(update.stateSerialization)\n\n        case .fetchedDatabaseChanges(let changes):\n            // Apply changes to local DB\n            for zone in changes.modifications {\n                await handleZoneChanges(zone)\n            }\n\n        case .sentRecordZoneChanges(let sent):\n            // Mark records as synced\n            for saved in sent.savedRecords {\n                await markSynced(saved.recordID)\n            }\n        }\n    }\n}\n```\n\nSee `axiom-cloudkit-ref` for complete CKSyncEngine setup.\n\n### Pattern 3: iCloud Drive Documents\n\n```swift\nimport UIKit\n\nclass MyDocument: UIDocument {\n    var content: Data?\n\n    override func contents(forType typeName: String) throws -> Any {\n        return content ?? Data()\n    }\n\n    override func load(fromContents contents: Any, ofType typeName: String?) throws {\n        content = contents as? Data\n    }\n}\n\n// Save to iCloud Drive (visible in Files app)\nlet url = FileManager.default.url(forUbiquityContainerIdentifier: nil)?\n    .appendingPathComponent(\"Documents\")\n    .appendingPathComponent(\"MyFile.txt\")\n\nlet doc = MyDocument(fileURL: url!)\ndoc.content = \"Hello\".data(using: .utf8)\ndoc.save(to: url!, for: .forCreating)\n```\n\nSee `axiom-icloud-drive-ref` for NSFileCoordinator and conflict handling.\n\n## Anti-Patterns\n\n### 1. Ignoring Sync State\n\n```swift\n// ❌ WRONG: No awareness of pending changes\nvar items: [Item] = []  // Are these synced? Pending? Conflicted?\n\n// ✅ CORRECT: Track sync state\nstruct SyncableItem {\n    let item: Item\n    let syncState: SyncState  // .synced, .pending, .conflict\n}\n```\n\n### 2. Blocking UI on Sync\n\n```swift\n// ❌ WRONG: UI blocks until sync completes\nfunc viewDidLoad() async {\n    items = try await cloudKit.fetchAll()  // Spinner forever on airplane\n    tableView.reloadData()\n}\n\n// ✅ CORRECT: Show local data immediately\nfunc viewDidLoad() {\n    items = localStore.fetchAll()  // Instant\n    tableView.reloadData()\n\n    Task {\n        await syncEngine.fetchChanges()  // Background update\n    }\n}\n```\n\n### 3. CloudKit Schema Not Deployed to Production\n\nCloudKit has **separate schemas for Development and Production**. Your app in the App Store can only access the Production environment. If you add record types, fields, or indexes in Development but never deploy them, queries in Production return empty results with no error.\n\n```\n❌ Works in Xcode/TestFlight (Development) → empty results in App Store (Production)\n   Queries silently return zero results — no CKError, no crash, no clue.\n\n✅ Before every App Store submission:\n   1. CloudKit Console → Select container\n   2. \"Deploy Schema Changes\" → Review changes → Deploy\n   3. Test with Production environment in Xcode scheme settings\n```\n\n**Time cost of skipping**: 3-7 days (rejection cycle + debugging \"why does it work in TestFlight but not production?\"). This is the #1 CloudKit gotcha for first-time submitters.\n\n### 4. No Retry Logic\n\n```swift\n// ❌ WRONG: Single attempt\ntry await cloudKit.save(record)\n\n// ✅ CORRECT: Exponential backoff\nfunc saveWithRetry(_ record: CKRecord, attempts: Int = 3) async throws {\n    for attempt in 0..<attempts {\n        do {\n            try await cloudKit.save(record)\n            return\n        } catch let error as CKError where error.isRetryable {\n            let delay = pow(2.0, Double(attempt))\n            try await Task.sleep(for: .seconds(delay))\n        }\n    }\n    throw SyncError.maxRetriesExceeded\n}\n```\n\n## Sync State Indicators\n\nAlways show users the sync state:\n\n```swift\nenum SyncState {\n    case synced       // ✓ (checkmark)\n    case pending      // ↻ (arrows)\n    case conflict     // ⚠ (warning)\n    case offline      // ☁ with X\n}\n\n// In SwiftUI\nHStack {\n    Text(item.title)\n    Spacer()\n    SyncIndicator(state: item.syncState)\n}\n```\n\n## Entitlement Checklist\n\nBefore sync will work:\n\n1. **Xcode → Signing & Capabilities**\n   - ✓ iCloud capability added\n   - ✓ CloudKit checked (for CloudKit)\n   - ✓ iCloud Documents checked (for iCloud Drive)\n   - ✓ Container selected/created\n\n2. **Apple Developer Portal**\n   - ✓ App ID has iCloud capability\n   - ✓ CloudKit container exists (for CloudKit)\n\n3. **CloudKit Console (before App Store submission)**\n   - ✓ Schema deployed to Production (record types, fields, indexes)\n   - ✓ Test with Production environment in Xcode scheme to verify queries work\n\n4. **Device**\n   - ✓ Signed into iCloud\n   - ✓ iCloud Drive enabled (Settings → [Name] → iCloud)\n\n## Large Dataset Sync\n\nWhen syncing 10,000+ records, naive approaches cause timeouts and launch slowdowns.\n\n### Initial Sync Strategy\n\n```swift\n// ❌ WRONG: Fetch everything at once\nlet allRecords = try await database.fetchAll()\nsyncEngine.state.add(pendingRecordZoneChanges: allRecords.map { .saveRecord($0.recordID) })\n\n// ✅ CORRECT: Batch initial sync\nfunc performInitialSync(batchSize: Int = 200) async throws {\n    var cursor: CKQueryOperation.Cursor? = nil\n\n    repeat {\n        let (results, nextCursor) = try await database.records(\n            matching: query,\n            resultsLimit: batchSize,\n            desiredKeys: nil,\n            continuationCursor: cursor\n        )\n        // Process batch\n        try await localStore.saveBatch(results.compactMap { try? $0.1.get() })\n        cursor = nextCursor\n    } while cursor != nil\n}\n```\n\n### Incremental Sync (After Initial)\n\nCKSyncEngine handles incremental sync automatically — it fetches only changes since the last sync token. Ensure you persist `stateSerialization` so the engine doesn't re-fetch everything on next launch.\n\n### Performance Guidelines\n\n| Dataset Size | Strategy | Notes |\n|-------------|----------|-------|\n| < 1,000 records | Default CKSyncEngine | Works out of the box |\n| 1,000–10,000 | Batch initial sync | 200-record batches, show progress UI |\n| 10,000+ | Pagination + background | Use BGProcessingTask for initial sync |\n| 100,000+ | Server-side filtering | Only sync what user needs, lazy-load rest |\n\n**Key insight**: Initial sync is the bottleneck. After initial sync, CKSyncEngine's incremental approach handles large datasets efficiently because it only fetches deltas.\n\n## Pressure Scenarios\n\n### Scenario 1: \"Just skip conflict handling for v1\"\n\n**Situation**: Deadline pressure to ship without conflict resolution.\n\n**Risk**: Users WILL edit on multiple devices. Data WILL be lost silently.\n\n**Response**: \"Minimum viable conflict handling takes 2 hours. Silent data loss costs users and generates 1-star reviews.\"\n\n### Scenario 2: \"Sync on app launch is enough\"\n\n**Situation**: Avoiding continuous sync complexity.\n\n**Risk**: Users expect changes to appear within seconds, not on next launch.\n\n**Response**: Use CKSyncEngine or SwiftData which handle continuous sync automatically.\n\n## Related Skills\n\n- `axiom-cloudkit-ref` — Complete CloudKit API reference\n- `axiom-icloud-drive-ref` — File-based sync with NSFileCoordinator\n- `axiom-cloud-sync-diag` — Debugging sync failures\n- `axiom-storage` — Choosing where to store data locally\n",
       "skillType": "discipline",
       "source": "axiom",
       "category": "data",
@@ -4904,42 +4904,42 @@
           "heading": "Anti-Patterns",
           "level": 2,
           "startLine": 231,
-          "endLine": 286,
-          "charCount": 1279
+          "endLine": 302,
+          "charCount": 2152
         },
         {
           "heading": "Sync State Indicators",
           "level": 2,
-          "startLine": 287,
-          "endLine": 306,
+          "startLine": 303,
+          "endLine": 322,
           "charCount": 340
         },
         {
           "heading": "Entitlement Checklist",
           "level": 2,
-          "startLine": 307,
-          "endLine": 324,
-          "charCount": 456
+          "startLine": 323,
+          "endLine": 344,
+          "charCount": 659
         },
         {
           "heading": "Large Dataset Sync",
           "level": 2,
-          "startLine": 325,
-          "endLine": 368,
+          "startLine": 345,
+          "endLine": 388,
           "charCount": 1666
         },
         {
           "heading": "Pressure Scenarios",
           "level": 2,
-          "startLine": 369,
-          "endLine": 386,
+          "startLine": 389,
+          "endLine": 406,
           "charCount": 615
         },
         {
           "heading": "Related Skills",
           "level": 2,
-          "startLine": 387,
-          "endLine": 393,
+          "startLine": 407,
+          "endLine": 413,
           "charCount": 253
         }
       ],
@@ -11913,7 +11913,7 @@
     "axiom-in-app-purchases": {
       "name": "axiom-in-app-purchases",
       "description": "Use when implementing in-app purchases, StoreKit 2, subscriptions, or transaction handling - testing-first workflow with .storekit configuration, StoreManager architecture, transaction verification, subscription management, and restore purchases for consumables, non-consumables, and auto-renewable subscriptions",
-      "content": "\n# StoreKit 2 In-App Purchase Implementation\n\n**Purpose**: Guide robust, testable in-app purchase implementation\n**StoreKit Version**: StoreKit 2\n**iOS Version**: iOS 15+ (iOS 18.4+ for latest features)\n**Xcode**: Xcode 13+ (Xcode 16+ recommended)\n**Context**: WWDC 2025-241, 2025-249, 2023-10013, 2021-10114\n\n## When to Use This Skill\n\n✅ **Use this skill when**:\n- Implementing any in-app purchase functionality (new or existing)\n- Adding consumable products (coins, hints, boosts)\n- Adding non-consumable products (premium features, level packs)\n- Adding auto-renewable subscriptions (monthly/annual plans)\n- Debugging purchase failures, missing transactions, or restore issues\n- Setting up StoreKit testing configuration\n- Implementing subscription status tracking\n- Adding promotional offers or introductory offers\n- Server-side receipt validation\n- Family Sharing support\n\n❌ **Do NOT use this skill for**:\n- StoreKit 1 (legacy API) - this skill focuses on StoreKit 2\n- App Store Connect product configuration (separate documentation)\n- Pricing strategy or business model decisions\n\n---\n\n## ⚠️ Already Wrote Code Before Creating .storekit Config?\n\nIf you wrote purchase code before creating `.storekit` configuration, you have three options:\n\n### Option A: Delete and Start Over (Strongly Recommended)\n\nDelete all IAP code and follow the testing-first workflow below. This reinforces correct habits and ensures you experience the full benefit of .storekit-first development.\n\n**Why this is best**:\n- Validates that you understand the workflow\n- Catches product ID issues you might have missed\n- Builds muscle memory for future IAP implementations\n- Takes only 15-30 minutes for experienced developers\n\n### Option B: Create .storekit Config Now (Acceptable with Caution)\n\nCreate the `.storekit` file now with your existing product IDs. Test everything works locally. Document in your PR that you tested in sandbox first.\n\n**Trade-offs**:\n- ✅ Keeps working code\n- ✅ Adds local testing capability\n- ❌ Misses product ID validation benefit\n- ❌ Reinforces testing-after pattern\n- ❌ Requires extra vigilance in code review\n\n**If choosing this path**: Create .storekit immediately, verify locally, and commit a note explaining the approach.\n\n### Option C: Skip .storekit Entirely (Not Recommended)\n\nCommit without `.storekit` configuration, test only in sandbox.\n\n**Why this is problematic**:\n- Teammates can't test purchases locally\n- No validation of product IDs before runtime\n- Harder iteration (requires App Store Connect)\n- Missing documentation of product structure\n\n**Bottom line**: Choose Option A if possible, Option B if pragmatic, never Option C.\n\n---\n\n## Core Philosophy: Testing-First Workflow\n\n> **Best Practice**: Create and test StoreKit configuration BEFORE writing production purchase code.\n\n### Why .storekit-First Matters\n\nThe recommended workflow is to create `.storekit` configuration before writing any purchase code. This isn't arbitrary - it provides concrete benefits:\n\n**Immediate product ID validation**:\n- Typos caught in Xcode, not at runtime\n- Product configuration visible in project\n- No App Store Connect dependency for testing\n\n**Faster iteration**:\n- Test purchases in simulator instantly\n- No network requests during development\n- Accelerated subscription renewal for testing\n\n**Team benefits**:\n- Anyone can test purchase flows locally\n- Product catalog documented in code\n- Code review includes purchase testing\n\n**Common objections addressed**:\n\n❓ **\"I already tested in sandbox\"** - Sandbox testing is valuable but comes later. Local testing with .storekit is faster and enables true TDD.\n\n❓ **\"My code works\"** - Working code is great! Adding .storekit makes it easier for teammates to verify and maintain.\n\n❓ **\"I've done this before\"** - Experience is valuable. The .storekit-first workflow makes experienced developers even more productive.\n\n❓ **\"Time pressure\"** - Creating .storekit takes 10-15 minutes. The time saved in iteration pays back immediately.\n\n### The Recommended Workflow\n\n```\nStoreKit Config → Local Testing → Production Code → Unit Tests → Sandbox Testing\n      ↓               ↓                ↓               ↓              ↓\n   .storekit      Test purchases   StoreManager    Mock store    Integration test\n```\n\n**Why this order helps**:\n1. **StoreKit Config First**: Defines products without App Store Connect dependency\n2. **Local Testing**: Validates product IDs and purchase flows immediately\n3. **Production Code**: Implements against validated product configuration\n4. **Unit Tests**: Verifies business logic with mocked store responses\n5. **Sandbox Testing**: Final validation in App Store environment\n\n**Benefits of following this workflow**:\n- Product IDs validated before writing code\n- Faster development iteration\n- Easier team collaboration\n- Better test coverage\n\n---\n\n## Mandatory Checklist\n\nBefore marking IAP implementation complete, **ALL** items must be verified:\n\n### Phase 1: Testing Foundation\n- [ ] Created `.storekit` configuration file with all products\n- [ ] Verified each product type renders correctly in StoreKit preview\n- [ ] Tested successful purchase flow for each product in Xcode\n- [ ] Tested purchase failure scenarios (insufficient funds, cancelled)\n- [ ] Tested restore purchases flow\n- [ ] For subscriptions: tested renewal, expiration, and upgrade/downgrade\n\n### Phase 2: Architecture\n- [ ] Centralized StoreManager class exists (single source of truth)\n- [ ] StoreManager is ObservableObject (SwiftUI) or uses NotificationCenter\n- [ ] Transaction observer listens for updates via `Transaction.updates`\n- [ ] All transaction verification uses `VerificationResult`\n- [ ] All transactions call `.finish()` after entitlement granted\n- [ ] Product loading happens at app launch or before displaying store\n\n### Phase 3: Purchase Flow\n- [ ] Purchase uses new `purchase(confirmIn:options:)` with UI context (iOS 18.2+)\n- [ ] Purchase handles all `PurchaseResult` cases (success, userCancelled, pending)\n- [ ] Purchase verifies transaction signature before granting entitlement\n- [ ] Purchase stores transaction receipt/identifier for support\n- [ ] appAccountToken set for all purchases (if using server backend)\n\n### Phase 4: Subscription Management (if applicable)\n- [ ] Subscription status tracked via `Product.SubscriptionInfo.Status`\n- [ ] Current entitlements checked via `Transaction.currentEntitlements(for:)`\n- [ ] Renewal info accessed for expiration, renewal date, offer status\n- [ ] Subscription views use ProductView or SubscriptionStoreView\n- [ ] Win-back offers implemented for expired subscriptions\n- [ ] Grace period and billing retry states handled\n\n### Phase 5: Restore & Sync\n- [ ] Restore purchases implemented (required by App Store Review)\n- [ ] Restore uses `Transaction.currentEntitlements` or `Transaction.all`\n- [ ] Family Sharing transactions identified (if supported)\n- [ ] Server sync implemented (if using backend)\n- [ ] Cross-device entitlement sync tested\n\n### Phase 6: Error Handling\n- [ ] Network errors handled gracefully (retries, user messaging)\n- [ ] Invalid product IDs detected and logged\n- [ ] Purchase failures show user-friendly error messages\n- [ ] Transaction verification failures logged and reported\n- [ ] Refund notifications handled (via App Store Server Notifications)\n\n### Phase 7: Testing & Validation\n- [ ] Unit tests verify purchase logic with mocked Product/Transaction\n- [ ] Unit tests verify subscription status determination\n- [ ] Integration tests with StoreKit configuration pass\n- [ ] Sandbox testing with real Apple ID completed\n- [ ] TestFlight testing completed before production release\n\n---\n\n## Step 1: Create StoreKit Configuration (FIRST!)\n\n**DO THIS BEFORE WRITING ANY PURCHASE CODE.**\n\n### Create Configuration File\n\n1. **Xcode → File → New → File → StoreKit Configuration File**\n2. **Save as**: `Products.storekit` (or your app name)\n3. **Add to target**: ✅ (include in app bundle for testing)\n\n### Add Products\n\nClick \"+\" and add each product type:\n\n#### Consumable\n```\nProduct ID: com.yourapp.coins_100\nReference Name: 100 Coins\nPrice: $0.99\n```\n\n#### Non-Consumable\n```\nProduct ID: com.yourapp.premium\nReference Name: Premium Upgrade\nPrice: $4.99\n```\n\n#### Auto-Renewable Subscription\n```\nProduct ID: com.yourapp.pro_monthly\nReference Name: Pro Monthly\nPrice: $9.99/month\nSubscription Group ID: pro_tier\n```\n\n### Test Immediately\n\n1. **Run app in simulator**\n2. **Scheme → Edit Scheme → Run → Options**\n3. **StoreKit Configuration**: Select `Products.storekit`\n4. **Verify**: Products load, purchases complete, transactions appear\n\n---\n\n## Step 2: Implement StoreManager Architecture\n\n### Required Pattern: Centralized StoreManager\n\n**All purchase logic must go through a single StoreManager.** No scattered `Product.purchase()` calls throughout app.\n\n```swift\nimport StoreKit\n\n@MainActor\nfinal class StoreManager: ObservableObject {\n    // Published state for UI\n    @Published private(set) var products: [Product] = []\n    @Published private(set) var purchasedProductIDs: Set<String> = []\n\n    // Product IDs from StoreKit configuration\n    private let productIDs = [\n        \"com.yourapp.coins_100\",\n        \"com.yourapp.premium\",\n        \"com.yourapp.pro_monthly\"\n    ]\n\n    private var transactionListener: Task<Void, Never>?\n\n    init() {\n        // Start transaction listener immediately\n        transactionListener = listenForTransactions()\n\n        Task {\n            await loadProducts()\n            await updatePurchasedProducts()\n        }\n    }\n\n    deinit {\n        transactionListener?.cancel()\n    }\n}\n```\n\n**Why @MainActor**: Published properties must update on main thread for UI binding.\n\n### Load Products (At Launch)\n\n```swift\nextension StoreManager {\n    func loadProducts() async {\n        do {\n            // Load products from App Store\n            let loadedProducts = try await Product.products(for: productIDs)\n\n            // Update published property on main thread\n            self.products = loadedProducts\n\n        } catch {\n            print(\"Failed to load products: \\(error)\")\n            // Show error to user\n        }\n    }\n}\n```\n\n**Call from**: `App.init()` or first view's `.task` modifier\n\n### Listen for Transactions (REQUIRED)\n\n```swift\nextension StoreManager {\n    func listenForTransactions() -> Task<Void, Never> {\n        Task.detached { [weak self] in\n            // Listen for ALL transaction updates\n            for await verificationResult in Transaction.updates {\n                await self?.handleTransaction(verificationResult)\n            }\n        }\n    }\n\n    @MainActor\n    private func handleTransaction(_ result: VerificationResult<Transaction>) async {\n        // Verify transaction signature\n        guard let transaction = try? result.payloadValue else {\n            print(\"Transaction verification failed\")\n            return\n        }\n\n        // Grant entitlement to user\n        await grantEntitlement(for: transaction)\n\n        // CRITICAL: Always finish transaction\n        await transaction.finish()\n\n        // Update purchased products\n        await updatePurchasedProducts()\n    }\n}\n```\n\n**Why detached**: Transaction listener runs independently of view lifecycle\n\n---\n\n## Step 3: Implement Purchase Flow\n\n### Purchase with UI Context (iOS 18.2+)\n\n```swift\nextension StoreManager {\n    func purchase(_ product: Product, confirmIn scene: UIWindowScene) async throws -> Bool {\n        // Perform purchase with UI context for payment sheet\n        let result = try await product.purchase(confirmIn: scene)\n\n        switch result {\n        case .success(let verificationResult):\n            // Verify the transaction\n            guard let transaction = try? verificationResult.payloadValue else {\n                print(\"Transaction verification failed\")\n                return false\n            }\n\n            // Grant entitlement\n            await grantEntitlement(for: transaction)\n\n            // CRITICAL: Finish transaction\n            await transaction.finish()\n\n            // Update state\n            await updatePurchasedProducts()\n\n            return true\n\n        case .userCancelled:\n            // User tapped \"Cancel\" in payment sheet\n            return false\n\n        case .pending:\n            // Purchase requires action (Ask to Buy, payment issue)\n            // Will be delivered via Transaction.updates when approved\n            return false\n\n        @unknown default:\n            return false\n        }\n    }\n}\n```\n\n### SwiftUI Purchase (Using Environment)\n\n```swift\nstruct ProductRow: View {\n    let product: Product\n    @Environment(\\.purchase) private var purchase\n\n    var body: some View {\n        Button(\"Buy \\(product.displayPrice)\") {\n            Task {\n                do {\n                    let result = try await purchase(product)\n                    // Handle result\n                } catch {\n                    print(\"Purchase failed: \\(error)\")\n                }\n            }\n        }\n    }\n}\n```\n\n### Set appAccountToken (If Using Backend)\n\n```swift\nfunc purchase(\n    _ product: Product,\n    confirmIn scene: UIWindowScene,\n    accountToken: UUID\n) async throws -> Bool {\n    // Purchase with appAccountToken for server-side association\n    let result = try await product.purchase(\n        confirmIn: scene,\n        options: [\n            .appAccountToken(accountToken)\n        ]\n    )\n\n    // ... handle result\n}\n```\n\n**When to use**: When your backend needs to associate purchases with user accounts\n\n---\n\n## Step 4: Verify Transactions (MANDATORY)\n\n### Always Use VerificationResult\n\n```swift\nfunc handleTransaction(_ result: VerificationResult<Transaction>) async {\n    switch result {\n    case .verified(let transaction):\n        // ✅ Transaction signed by App Store\n        await grantEntitlement(for: transaction)\n        await transaction.finish()\n\n    case .unverified(let transaction, let error):\n        // ❌ Transaction signature invalid\n        print(\"Unverified transaction: \\(error)\")\n        // DO NOT grant entitlement\n        // DO finish transaction to clear from queue\n        await transaction.finish()\n    }\n}\n```\n\n**Why verify**: Prevents granting entitlements for:\n- Fraudulent receipts\n- Jailbroken device receipts\n- Man-in-the-middle attacks\n\n### Check Transaction Fields\n\n```swift\nfunc grantEntitlement(for transaction: Transaction) async {\n    // Check transaction hasn't been revoked\n    guard transaction.revocationDate == nil else {\n        print(\"Transaction was refunded\")\n        await revokeEntitlement(for: transaction.productID)\n        return\n    }\n\n    // Grant based on product type\n    switch transaction.productType {\n    case .consumable:\n        await addConsumable(productID: transaction.productID)\n\n    case .nonConsumable:\n        await unlockFeature(productID: transaction.productID)\n\n    case .autoRenewable:\n        await activateSubscription(productID: transaction.productID)\n\n    default:\n        break\n    }\n}\n```\n\n---\n\n## Step 5: Track Current Entitlements\n\n### Check What User Owns\n\n```swift\nextension StoreManager {\n    func updatePurchasedProducts() async {\n        var purchased: Set<String> = []\n\n        // Iterate through all current entitlements\n        for await result in Transaction.currentEntitlements {\n            guard let transaction = try? result.payloadValue else {\n                continue\n            }\n\n            // Only include active entitlements (not revoked)\n            if transaction.revocationDate == nil {\n                purchased.insert(transaction.productID)\n            }\n        }\n\n        self.purchasedProductIDs = purchased\n    }\n}\n```\n\n### Check Specific Product\n\n```swift\nfunc isEntitled(to productID: String) async -> Bool {\n    // Check current entitlements for specific product\n    for await result in Transaction.currentEntitlements(for: productID) {\n        if let transaction = try? result.payloadValue,\n           transaction.revocationDate == nil {\n            return true\n        }\n    }\n\n    return false\n}\n```\n\n---\n\n## Step 6: Implement Subscription Management\n\n### Track Subscription Status\n\n```swift\nextension StoreManager {\n    func checkSubscriptionStatus(for groupID: String) async -> Product.SubscriptionInfo.Status? {\n        // Get subscription statuses for group\n        guard let result = try? await Product.SubscriptionInfo.status(for: groupID),\n              let status = result.first else {\n            return nil\n        }\n\n        return status.state\n    }\n}\n```\n\n### Handle Subscription States\n\n```swift\nfunc updateSubscriptionUI(for status: Product.SubscriptionInfo.Status) {\n    switch status.state {\n    case .subscribed:\n        // User has active subscription\n        showSubscribedContent()\n\n    case .expired:\n        // Subscription expired - show win-back offer\n        showResubscribeOffer()\n\n    case .inGracePeriod:\n        // Billing issue - show payment update prompt\n        showUpdatePaymentPrompt()\n\n    case .inBillingRetryPeriod:\n        // Apple retrying payment - maintain access\n        showBillingRetryMessage()\n\n    case .revoked:\n        // Family Sharing access removed\n        removeAccess()\n\n    @unknown default:\n        break\n    }\n}\n```\n\n### Use StoreKit Views (iOS 17+)\n\n```swift\nstruct SubscriptionView: View {\n    var body: some View {\n        SubscriptionStoreView(groupID: \"pro_tier\") {\n            // Marketing content\n            VStack {\n                Image(\"premium-icon\")\n                Text(\"Unlock all features\")\n            }\n        }\n        .subscriptionStoreControlStyle(.prominentPicker)\n    }\n}\n```\n\n---\n\n## Step 7: Implement Restore Purchases (REQUIRED)\n\n### Restore Flow\n\n```swift\nextension StoreManager {\n    func restorePurchases() async {\n        // Sync all transactions from App Store\n        try? await AppStore.sync()\n\n        // Update current entitlements\n        await updatePurchasedProducts()\n    }\n}\n```\n\n### UI Button\n\n```swift\nstruct SettingsView: View {\n    @StateObject private var store = StoreManager()\n\n    var body: some View {\n        Button(\"Restore Purchases\") {\n            Task {\n                await store.restorePurchases()\n            }\n        }\n    }\n}\n```\n\n**App Store Requirement**: Apps with IAP must provide restore functionality for non-consumables and subscriptions.\n\n---\n\n## Step 8: Handle Refunds\n\n### Listen for Refund Notifications\n\n```swift\nextension StoreManager {\n    func listenForTransactions() -> Task<Void, Never> {\n        Task.detached { [weak self] in\n            for await verificationResult in Transaction.updates {\n                await self?.handleTransaction(verificationResult)\n            }\n        }\n    }\n\n    @MainActor\n    private func handleTransaction(_ result: VerificationResult<Transaction>) async {\n        guard let transaction = try? result.payloadValue else {\n            return\n        }\n\n        // Check if transaction was refunded\n        if let revocationDate = transaction.revocationDate {\n            print(\"Transaction refunded on \\(revocationDate)\")\n            await revokeEntitlement(for: transaction.productID)\n        } else {\n            await grantEntitlement(for: transaction)\n        }\n\n        await transaction.finish()\n    }\n}\n```\n\n---\n\n## Step 9: Unit Testing\n\n### Mock Store Responses\n\n```swift\nprotocol StoreProtocol {\n    func products(for ids: [String]) async throws -> [Product]\n    func purchase(_ product: Product) async throws -> PurchaseResult\n}\n\n// Production\nfinal class StoreManager: StoreProtocol {\n    func products(for ids: [String]) async throws -> [Product] {\n        try await Product.products(for: ids)\n    }\n}\n\n// Testing\nfinal class MockStore: StoreProtocol {\n    var mockProducts: [Product] = []\n    var mockPurchaseResult: PurchaseResult?\n\n    func products(for ids: [String]) async throws -> [Product] {\n        mockProducts\n    }\n\n    func purchase(_ product: Product) async throws -> PurchaseResult {\n        mockPurchaseResult ?? .userCancelled\n    }\n}\n```\n\n### Test Purchase Logic\n\n```swift\n@Test func testSuccessfulPurchase() async {\n    let mockStore = MockStore()\n    let manager = StoreManager(store: mockStore)\n\n    // Given: Mock successful purchase\n    mockStore.mockPurchaseResult = .success(.verified(mockTransaction))\n\n    // When: Purchase product\n    let result = await manager.purchase(mockProduct)\n\n    // Then: Entitlement granted\n    #expect(result == true)\n    #expect(manager.purchasedProductIDs.contains(\"com.app.premium\"))\n}\n\n@Test func testCancelledPurchase() async {\n    let mockStore = MockStore()\n    let manager = StoreManager(store: mockStore)\n\n    // Given: User cancels\n    mockStore.mockPurchaseResult = .userCancelled\n\n    // When: Purchase product\n    let result = await manager.purchase(mockProduct)\n\n    // Then: No entitlement granted\n    #expect(result == false)\n    #expect(manager.purchasedProductIDs.isEmpty)\n}\n```\n\n---\n\n## Common Anti-Patterns (NEVER DO THIS)\n\n### ❌ No StoreKit Configuration\n\n```swift\n// ❌ WRONG: Writing purchase code without .storekit file\nlet products = try await Product.products(for: productIDs)\n// Can't test this without App Store Connect setup!\n```\n\n✅ **Correct**: Create `.storekit` file FIRST, test in Xcode, THEN implement.\n\n### ❌ Code Before .storekit Config\n\n```swift\n// ❌ Less ideal: Write code, test in sandbox, add .storekit later\nlet products = try await Product.products(for: productIDs)\nlet result = try await product.purchase(confirmIn: scene)\n// \"I tested this in sandbox, it works! I'll add .storekit config later.\"\n```\n\n✅ **Recommended**: Create `.storekit` config first, then write code.\n\n**If you're in this situation**: See \"Already Wrote Code Before Creating .storekit Config?\" section above for your options (A, B, or C).\n\n**Why .storekit-first is better**:\n- Product ID typos caught in Xcode, not at runtime\n- Faster iteration without network requests\n- Teammates can test locally\n- Documents product structure in code\n\n**Sandbox testing is valuable** - it validates against real App Store infrastructure. But starting with .storekit makes sandbox testing easier because you've already validated product IDs locally.\n\n### ❌ Scattered Purchase Calls\n\n```swift\n// ❌ WRONG: Purchase calls scattered throughout app\nButton(\"Buy\") {\n    try await product.purchase()  // In view 1\n}\n\nButton(\"Subscribe\") {\n    try await subscriptionProduct.purchase()  // In view 2\n}\n```\n\n✅ **Correct**: All purchases through centralized StoreManager.\n\n### ❌ Forgetting to Finish Transactions\n\n```swift\n// ❌ WRONG: Never calling finish()\nfunc handleTransaction(_ transaction: Transaction) {\n    grantEntitlement(for: transaction)\n    // Missing: await transaction.finish()\n}\n```\n\n✅ **Correct**: ALWAYS call `transaction.finish()` after granting entitlement.\n\n### ❌ Not Verifying Transactions\n\n```swift\n// ❌ WRONG: Using unverified transaction\nfor await transaction in Transaction.all {\n    grantEntitlement(for: transaction)  // Unsafe!\n}\n```\n\n✅ **Correct**: Always check `VerificationResult` before granting.\n\n### ❌ Ignoring Transaction Listener\n\n```swift\n// ❌ WRONG: Only handling purchases in purchase() method\nfunc purchase() {\n    let result = try await product.purchase()\n    // What about pending purchases, family sharing, restore?\n}\n```\n\n✅ **Correct**: Listen to `Transaction.updates` for ALL transaction sources.\n\n### ❌ Not Implementing Restore\n\n```swift\n// ❌ WRONG: No restore button\n// App Store will REJECT your app!\n```\n\n✅ **Correct**: Provide visible \"Restore Purchases\" button in settings.\n\n---\n\n## Validation\n\nBefore marking IAP implementation complete, verify:\n\n### Code Inspection\n\nRun these searches to verify compliance:\n\n```bash\n# Check StoreKit configuration exists\nfind . -name \"*.storekit\"\n\n# Check transaction.finish() is called\nrg \"transaction\\.finish\\(\\)\" --type swift\n\n# Check VerificationResult usage\nrg \"VerificationResult\" --type swift\n\n# Check Transaction.updates listener\nrg \"Transaction\\.updates\" --type swift\n\n# Check restore implementation\nrg \"AppStore\\.sync|Transaction\\.all\" --type swift\n```\n\n### Functional Testing\n\n- [ ] Can purchase each product type in StoreKit configuration\n- [ ] Can cancel purchase and state remains consistent\n- [ ] Can restore purchases and regain access\n- [ ] Subscription renewal/expiration works as expected\n- [ ] Refunded transactions revoke access\n- [ ] Family Sharing transactions identified (if supported)\n\n### Sandbox Testing\n\n- [ ] Real Apple ID sandbox purchases complete\n- [ ] TestFlight beta testers confirm purchase flows work\n- [ ] Server-side validation works (if using backend)\n\n---\n\n## Resources\n\n**WWDC**: 2025-241, 2025-249, 2023-10013, 2021-10114\n\n**Docs**: /storekit, /appstoreserverapi\n\n**Skills**: axiom-storekit-ref\n",
+      "content": "\n# StoreKit 2 In-App Purchase Implementation\n\n**Purpose**: Guide robust, testable in-app purchase implementation\n**StoreKit Version**: StoreKit 2\n**iOS Version**: iOS 15+ (iOS 18.4+ for latest features)\n**Xcode**: Xcode 13+ (Xcode 16+ recommended)\n**Context**: WWDC 2025-241, 2025-249, 2023-10013, 2021-10114\n\n## When to Use This Skill\n\n✅ **Use this skill when**:\n- Implementing any in-app purchase functionality (new or existing)\n- Adding consumable products (coins, hints, boosts)\n- Adding non-consumable products (premium features, level packs)\n- Adding auto-renewable subscriptions (monthly/annual plans)\n- Debugging purchase failures, missing transactions, or restore issues\n- Setting up StoreKit testing configuration\n- Implementing subscription status tracking\n- Adding promotional offers or introductory offers\n- Server-side receipt validation\n- Family Sharing support\n\n❌ **Do NOT use this skill for**:\n- StoreKit 1 (legacy API) - this skill focuses on StoreKit 2\n- App Store Connect product configuration (separate documentation)\n- Pricing strategy or business model decisions\n\n---\n\n## ⚠️ Already Wrote Code Before Creating .storekit Config?\n\nIf you wrote purchase code before creating `.storekit` configuration, you have three options:\n\n### Option A: Delete and Start Over (Strongly Recommended)\n\nDelete all IAP code and follow the testing-first workflow below. This reinforces correct habits and ensures you experience the full benefit of .storekit-first development.\n\n**Why this is best**:\n- Validates that you understand the workflow\n- Catches product ID issues you might have missed\n- Builds muscle memory for future IAP implementations\n- Takes only 15-30 minutes for experienced developers\n\n### Option B: Create .storekit Config Now (Acceptable with Caution)\n\nCreate the `.storekit` file now with your existing product IDs. Test everything works locally. Document in your PR that you tested in sandbox first.\n\n**Trade-offs**:\n- ✅ Keeps working code\n- ✅ Adds local testing capability\n- ❌ Misses product ID validation benefit\n- ❌ Reinforces testing-after pattern\n- ❌ Requires extra vigilance in code review\n\n**If choosing this path**: Create .storekit immediately, verify locally, and commit a note explaining the approach.\n\n### Option C: Skip .storekit Entirely (Not Recommended)\n\nCommit without `.storekit` configuration, test only in sandbox.\n\n**Why this is problematic**:\n- Teammates can't test purchases locally\n- No validation of product IDs before runtime\n- Harder iteration (requires App Store Connect)\n- Missing documentation of product structure\n\n**Bottom line**: Choose Option A if possible, Option B if pragmatic, never Option C.\n\n---\n\n## Core Philosophy: Testing-First Workflow\n\n> **Best Practice**: Create and test StoreKit configuration BEFORE writing production purchase code.\n\n### Why .storekit-First Matters\n\nThe recommended workflow is to create `.storekit` configuration before writing any purchase code. This isn't arbitrary - it provides concrete benefits:\n\n**Immediate product ID validation**:\n- Typos caught in Xcode, not at runtime\n- Product configuration visible in project\n- No App Store Connect dependency for testing\n\n**Faster iteration**:\n- Test purchases in simulator instantly\n- No network requests during development\n- Accelerated subscription renewal for testing\n\n**Team benefits**:\n- Anyone can test purchase flows locally\n- Product catalog documented in code\n- Code review includes purchase testing\n\n**Common objections addressed**:\n\n❓ **\"I already tested in sandbox\"** - Sandbox testing is valuable but comes later. Local testing with .storekit is faster and enables true TDD.\n\n❓ **\"My code works\"** - Working code is great! Adding .storekit makes it easier for teammates to verify and maintain.\n\n❓ **\"I've done this before\"** - Experience is valuable. The .storekit-first workflow makes experienced developers even more productive.\n\n❓ **\"Time pressure\"** - Creating .storekit takes 10-15 minutes. The time saved in iteration pays back immediately.\n\n### The Recommended Workflow\n\n```\nStoreKit Config → Local Testing → Production Code → Unit Tests → Sandbox Testing\n      ↓               ↓                ↓               ↓              ↓\n   .storekit      Test purchases   StoreManager    Mock store    Integration test\n```\n\n**Why this order helps**:\n1. **StoreKit Config First**: Defines products without App Store Connect dependency\n2. **Local Testing**: Validates product IDs and purchase flows immediately\n3. **Production Code**: Implements against validated product configuration\n4. **Unit Tests**: Verifies business logic with mocked store responses\n5. **Sandbox Testing**: Final validation in App Store environment\n\n**Benefits of following this workflow**:\n- Product IDs validated before writing code\n- Faster development iteration\n- Easier team collaboration\n- Better test coverage\n\n---\n\n## Mandatory Checklist\n\nBefore marking IAP implementation complete, **ALL** items must be verified:\n\n### Phase 1: Testing Foundation\n- [ ] Created `.storekit` configuration file with all products\n- [ ] Verified each product type renders correctly in StoreKit preview\n- [ ] Tested successful purchase flow for each product in Xcode\n- [ ] Tested purchase failure scenarios (insufficient funds, cancelled)\n- [ ] Tested restore purchases flow\n- [ ] For subscriptions: tested renewal, expiration, and upgrade/downgrade\n\n### Phase 2: Architecture\n- [ ] Centralized StoreManager class exists (single source of truth)\n- [ ] StoreManager is ObservableObject (SwiftUI) or uses NotificationCenter\n- [ ] Transaction observer listens for updates via `Transaction.updates`\n- [ ] All transaction verification uses `VerificationResult`\n- [ ] All transactions call `.finish()` after entitlement granted\n- [ ] Product loading happens at app launch or before displaying store\n\n### Phase 3: Purchase Flow\n- [ ] Purchase uses new `purchase(confirmIn:options:)` with UI context (iOS 18.2+)\n- [ ] Purchase handles all `PurchaseResult` cases (success, userCancelled, pending)\n- [ ] Purchase verifies transaction signature before granting entitlement\n- [ ] Purchase stores transaction receipt/identifier for support\n- [ ] appAccountToken set for all purchases (if using server backend)\n\n### Phase 4: Subscription Management (if applicable)\n- [ ] Subscription status tracked via `Product.SubscriptionInfo.Status`\n- [ ] Current entitlements checked via `Transaction.currentEntitlements(for:)`\n- [ ] Renewal info accessed for expiration, renewal date, offer status\n- [ ] Subscription views use ProductView or SubscriptionStoreView\n- [ ] Win-back offers implemented for expired subscriptions\n- [ ] Grace period and billing retry states handled\n\n### Phase 5: Restore & Sync\n- [ ] Restore purchases implemented (required by App Store Review)\n- [ ] Restore uses `Transaction.currentEntitlements` or `Transaction.all`\n- [ ] Family Sharing transactions identified (if supported)\n- [ ] Server sync implemented (if using backend)\n- [ ] Cross-device entitlement sync tested\n\n### Phase 6: Error Handling\n- [ ] Network errors handled gracefully (retries, user messaging)\n- [ ] Invalid product IDs detected and logged\n- [ ] Purchase failures show user-friendly error messages\n- [ ] Transaction verification failures logged and reported\n- [ ] Refund notifications handled (via App Store Server Notifications)\n\n### Phase 7: Testing & Validation\n- [ ] Unit tests verify purchase logic with mocked Product/Transaction\n- [ ] Unit tests verify subscription status determination\n- [ ] Integration tests with StoreKit configuration pass\n- [ ] Sandbox testing with real Apple ID completed\n- [ ] TestFlight testing completed before production release\n\n---\n\n## Step 1: Create StoreKit Configuration (FIRST!)\n\n**DO THIS BEFORE WRITING ANY PURCHASE CODE.**\n\n### Create Configuration File\n\n1. **Xcode → File → New → File → StoreKit Configuration File**\n2. **Save as**: `Products.storekit` (or your app name)\n3. **Add to target**: ✅ (include in app bundle for testing)\n\n### Add Products\n\nClick \"+\" and add each product type:\n\n#### Consumable\n```\nProduct ID: com.yourapp.coins_100\nReference Name: 100 Coins\nPrice: $0.99\n```\n\n#### Non-Consumable\n```\nProduct ID: com.yourapp.premium\nReference Name: Premium Upgrade\nPrice: $4.99\n```\n\n#### Auto-Renewable Subscription\n```\nProduct ID: com.yourapp.pro_monthly\nReference Name: Pro Monthly\nPrice: $9.99/month\nSubscription Group ID: pro_tier\n```\n\n### Test Immediately\n\n1. **Run app in simulator**\n2. **Scheme → Edit Scheme → Run → Options**\n3. **StoreKit Configuration**: Select `Products.storekit`\n4. **Verify**: Products load, purchases complete, transactions appear\n\n---\n\n## Step 2: Implement StoreManager Architecture\n\n### Required Pattern: Centralized StoreManager\n\n**All purchase logic must go through a single StoreManager.** No scattered `Product.purchase()` calls throughout app.\n\n```swift\nimport StoreKit\n\n@MainActor\nfinal class StoreManager: ObservableObject {\n    // Published state for UI\n    @Published private(set) var products: [Product] = []\n    @Published private(set) var purchasedProductIDs: Set<String> = []\n\n    // Product IDs from StoreKit configuration\n    private let productIDs = [\n        \"com.yourapp.coins_100\",\n        \"com.yourapp.premium\",\n        \"com.yourapp.pro_monthly\"\n    ]\n\n    private var transactionListener: Task<Void, Never>?\n\n    init() {\n        // Start transaction listener immediately\n        transactionListener = listenForTransactions()\n\n        Task {\n            await loadProducts()\n            await updatePurchasedProducts()\n        }\n    }\n\n    deinit {\n        transactionListener?.cancel()\n    }\n}\n```\n\n**Why @MainActor**: Published properties must update on main thread for UI binding.\n\n### Load Products (At Launch)\n\n```swift\nextension StoreManager {\n    func loadProducts() async {\n        do {\n            // Load products from App Store\n            let loadedProducts = try await Product.products(for: productIDs)\n\n            // Update published property on main thread\n            self.products = loadedProducts\n\n        } catch {\n            print(\"Failed to load products: \\(error)\")\n            // Show error to user\n        }\n    }\n}\n```\n\n**Call from**: `App.init()` or first view's `.task` modifier\n\n### Listen for Transactions (REQUIRED)\n\n```swift\nextension StoreManager {\n    func listenForTransactions() -> Task<Void, Never> {\n        Task.detached { [weak self] in\n            // Listen for ALL transaction updates\n            for await verificationResult in Transaction.updates {\n                await self?.handleTransaction(verificationResult)\n            }\n        }\n    }\n\n    @MainActor\n    private func handleTransaction(_ result: VerificationResult<Transaction>) async {\n        // Verify transaction signature\n        guard let transaction = try? result.payloadValue else {\n            print(\"Transaction verification failed\")\n            return\n        }\n\n        // Grant entitlement to user\n        await grantEntitlement(for: transaction)\n\n        // CRITICAL: Always finish transaction\n        await transaction.finish()\n\n        // Update purchased products\n        await updatePurchasedProducts()\n    }\n}\n```\n\n**Why detached**: Transaction listener runs independently of view lifecycle\n\n---\n\n## Step 3: Implement Purchase Flow\n\n### Purchase with UI Context (iOS 18.2+)\n\n```swift\nextension StoreManager {\n    func purchase(_ product: Product, confirmIn scene: UIWindowScene) async throws -> Bool {\n        // Perform purchase with UI context for payment sheet\n        let result = try await product.purchase(confirmIn: scene)\n\n        switch result {\n        case .success(let verificationResult):\n            // Verify the transaction\n            guard let transaction = try? verificationResult.payloadValue else {\n                print(\"Transaction verification failed\")\n                return false\n            }\n\n            // Grant entitlement\n            await grantEntitlement(for: transaction)\n\n            // CRITICAL: Finish transaction\n            await transaction.finish()\n\n            // Update state\n            await updatePurchasedProducts()\n\n            return true\n\n        case .userCancelled:\n            // User tapped \"Cancel\" in payment sheet\n            return false\n\n        case .pending:\n            // Purchase requires action (Ask to Buy, payment issue)\n            // Will be delivered via Transaction.updates when approved\n            return false\n\n        @unknown default:\n            return false\n        }\n    }\n}\n```\n\n### SwiftUI Purchase (Using Environment)\n\n```swift\nstruct ProductRow: View {\n    let product: Product\n    @Environment(\\.purchase) private var purchase\n\n    var body: some View {\n        Button(\"Buy \\(product.displayPrice)\") {\n            Task {\n                do {\n                    let result = try await purchase(product)\n                    // Handle result\n                } catch {\n                    print(\"Purchase failed: \\(error)\")\n                }\n            }\n        }\n    }\n}\n```\n\n### Set appAccountToken (If Using Backend)\n\n```swift\nfunc purchase(\n    _ product: Product,\n    confirmIn scene: UIWindowScene,\n    accountToken: UUID\n) async throws -> Bool {\n    // Purchase with appAccountToken for server-side association\n    let result = try await product.purchase(\n        confirmIn: scene,\n        options: [\n            .appAccountToken(accountToken)\n        ]\n    )\n\n    // ... handle result\n}\n```\n\n**When to use**: When your backend needs to associate purchases with user accounts\n\n---\n\n## Step 4: Verify Transactions (MANDATORY)\n\n### Always Use VerificationResult\n\n```swift\nfunc handleTransaction(_ result: VerificationResult<Transaction>) async {\n    switch result {\n    case .verified(let transaction):\n        // ✅ Transaction signed by App Store\n        await grantEntitlement(for: transaction)\n        await transaction.finish()\n\n    case .unverified(let transaction, let error):\n        // ❌ Transaction signature invalid\n        print(\"Unverified transaction: \\(error)\")\n        // DO NOT grant entitlement\n        // DO finish transaction to clear from queue\n        await transaction.finish()\n    }\n}\n```\n\n**Why verify**: Prevents granting entitlements for:\n- Fraudulent receipts\n- Jailbroken device receipts\n- Man-in-the-middle attacks\n\n### Check Transaction Fields\n\n```swift\nfunc grantEntitlement(for transaction: Transaction) async {\n    // Check transaction hasn't been revoked\n    guard transaction.revocationDate == nil else {\n        print(\"Transaction was refunded\")\n        await revokeEntitlement(for: transaction.productID)\n        return\n    }\n\n    // Grant based on product type\n    switch transaction.productType {\n    case .consumable:\n        await addConsumable(productID: transaction.productID)\n\n    case .nonConsumable:\n        await unlockFeature(productID: transaction.productID)\n\n    case .autoRenewable:\n        await activateSubscription(productID: transaction.productID)\n\n    default:\n        break\n    }\n}\n```\n\n---\n\n## Step 5: Track Current Entitlements\n\n### Check What User Owns\n\n```swift\nextension StoreManager {\n    func updatePurchasedProducts() async {\n        var purchased: Set<String> = []\n\n        // Iterate through all current entitlements\n        for await result in Transaction.currentEntitlements {\n            guard let transaction = try? result.payloadValue else {\n                continue\n            }\n\n            // Only include active entitlements (not revoked)\n            if transaction.revocationDate == nil {\n                purchased.insert(transaction.productID)\n            }\n        }\n\n        self.purchasedProductIDs = purchased\n    }\n}\n```\n\n### Check Specific Product\n\n```swift\nfunc isEntitled(to productID: String) async -> Bool {\n    // Check current entitlements for specific product\n    for await result in Transaction.currentEntitlements(for: productID) {\n        if let transaction = try? result.payloadValue,\n           transaction.revocationDate == nil {\n            return true\n        }\n    }\n\n    return false\n}\n```\n\n---\n\n## Step 6: Implement Subscription Management\n\n### Track Subscription Status\n\n```swift\nextension StoreManager {\n    func checkSubscriptionStatus(for groupID: String) async -> Product.SubscriptionInfo.Status? {\n        // Get subscription statuses for group\n        guard let result = try? await Product.SubscriptionInfo.status(for: groupID),\n              let status = result.first else {\n            return nil\n        }\n\n        return status.state\n    }\n}\n```\n\n### Handle Subscription States\n\n```swift\nfunc updateSubscriptionUI(for status: Product.SubscriptionInfo.Status) {\n    switch status.state {\n    case .subscribed:\n        // User has active subscription\n        showSubscribedContent()\n\n    case .expired:\n        // Subscription expired - show win-back offer\n        showResubscribeOffer()\n\n    case .inGracePeriod:\n        // Billing issue - show payment update prompt\n        showUpdatePaymentPrompt()\n\n    case .inBillingRetryPeriod:\n        // Apple retrying payment - maintain access\n        showBillingRetryMessage()\n\n    case .revoked:\n        // Family Sharing access removed\n        removeAccess()\n\n    @unknown default:\n        break\n    }\n}\n```\n\n### Use StoreKit Views (iOS 17+)\n\n```swift\nstruct SubscriptionView: View {\n    var body: some View {\n        SubscriptionStoreView(groupID: \"pro_tier\") {\n            // Marketing content\n            VStack {\n                Image(\"premium-icon\")\n                Text(\"Unlock all features\")\n            }\n        }\n        .subscriptionStoreControlStyle(.prominentPicker)\n    }\n}\n```\n\n---\n\n## Step 7: Implement Restore Purchases (REQUIRED)\n\n### Restore Flow\n\n```swift\nextension StoreManager {\n    func restorePurchases() async {\n        // Sync all transactions from App Store\n        try? await AppStore.sync()\n\n        // Update current entitlements\n        await updatePurchasedProducts()\n    }\n}\n```\n\n### UI Button\n\n```swift\nstruct SettingsView: View {\n    @StateObject private var store = StoreManager()\n\n    var body: some View {\n        Button(\"Restore Purchases\") {\n            Task {\n                await store.restorePurchases()\n            }\n        }\n    }\n}\n```\n\n**App Store Requirement**: Apps with IAP must provide restore functionality for non-consumables and subscriptions.\n\n---\n\n## Step 8: Handle Refunds\n\n### Listen for Refund Notifications\n\n```swift\nextension StoreManager {\n    func listenForTransactions() -> Task<Void, Never> {\n        Task.detached { [weak self] in\n            for await verificationResult in Transaction.updates {\n                await self?.handleTransaction(verificationResult)\n            }\n        }\n    }\n\n    @MainActor\n    private func handleTransaction(_ result: VerificationResult<Transaction>) async {\n        guard let transaction = try? result.payloadValue else {\n            return\n        }\n\n        // Check if transaction was refunded\n        if let revocationDate = transaction.revocationDate {\n            print(\"Transaction refunded on \\(revocationDate)\")\n            await revokeEntitlement(for: transaction.productID)\n        } else {\n            await grantEntitlement(for: transaction)\n        }\n\n        await transaction.finish()\n    }\n}\n```\n\n---\n\n## Step 9: Unit Testing\n\n### Mock Store Responses\n\n```swift\nprotocol StoreProtocol {\n    func products(for ids: [String]) async throws -> [Product]\n    func purchase(_ product: Product) async throws -> PurchaseResult\n}\n\n// Production\nfinal class StoreManager: StoreProtocol {\n    func products(for ids: [String]) async throws -> [Product] {\n        try await Product.products(for: ids)\n    }\n}\n\n// Testing\nfinal class MockStore: StoreProtocol {\n    var mockProducts: [Product] = []\n    var mockPurchaseResult: PurchaseResult?\n\n    func products(for ids: [String]) async throws -> [Product] {\n        mockProducts\n    }\n\n    func purchase(_ product: Product) async throws -> PurchaseResult {\n        mockPurchaseResult ?? .userCancelled\n    }\n}\n```\n\n### Test Purchase Logic\n\n```swift\n@Test func testSuccessfulPurchase() async {\n    let mockStore = MockStore()\n    let manager = StoreManager(store: mockStore)\n\n    // Given: Mock successful purchase\n    mockStore.mockPurchaseResult = .success(.verified(mockTransaction))\n\n    // When: Purchase product\n    let result = await manager.purchase(mockProduct)\n\n    // Then: Entitlement granted\n    #expect(result == true)\n    #expect(manager.purchasedProductIDs.contains(\"com.app.premium\"))\n}\n\n@Test func testCancelledPurchase() async {\n    let mockStore = MockStore()\n    let manager = StoreManager(store: mockStore)\n\n    // Given: User cancels\n    mockStore.mockPurchaseResult = .userCancelled\n\n    // When: Purchase product\n    let result = await manager.purchase(mockProduct)\n\n    // Then: No entitlement granted\n    #expect(result == false)\n    #expect(manager.purchasedProductIDs.isEmpty)\n}\n```\n\n---\n\n## Common Anti-Patterns (NEVER DO THIS)\n\n### ❌ No StoreKit Configuration\n\n```swift\n// ❌ WRONG: Writing purchase code without .storekit file\nlet products = try await Product.products(for: productIDs)\n// Can't test this without App Store Connect setup!\n```\n\n✅ **Correct**: Create `.storekit` file FIRST, test in Xcode, THEN implement.\n\n### ❌ Code Before .storekit Config\n\n```swift\n// ❌ Less ideal: Write code, test in sandbox, add .storekit later\nlet products = try await Product.products(for: productIDs)\nlet result = try await product.purchase(confirmIn: scene)\n// \"I tested this in sandbox, it works! I'll add .storekit config later.\"\n```\n\n✅ **Recommended**: Create `.storekit` config first, then write code.\n\n**If you're in this situation**: See \"Already Wrote Code Before Creating .storekit Config?\" section above for your options (A, B, or C).\n\n**Why .storekit-first is better**:\n- Product ID typos caught in Xcode, not at runtime\n- Faster iteration without network requests\n- Teammates can test locally\n- Documents product structure in code\n\n**Sandbox testing is valuable** - it validates against real App Store infrastructure. But starting with .storekit makes sandbox testing easier because you've already validated product IDs locally.\n\n### ❌ Scattered Purchase Calls\n\n```swift\n// ❌ WRONG: Purchase calls scattered throughout app\nButton(\"Buy\") {\n    try await product.purchase()  // In view 1\n}\n\nButton(\"Subscribe\") {\n    try await subscriptionProduct.purchase()  // In view 2\n}\n```\n\n✅ **Correct**: All purchases through centralized StoreManager.\n\n### ❌ Forgetting to Finish Transactions\n\n```swift\n// ❌ WRONG: Never calling finish()\nfunc handleTransaction(_ transaction: Transaction) {\n    grantEntitlement(for: transaction)\n    // Missing: await transaction.finish()\n}\n```\n\n✅ **Correct**: ALWAYS call `transaction.finish()` after granting entitlement.\n\n### ❌ Not Verifying Transactions\n\n```swift\n// ❌ WRONG: Using unverified transaction\nfor await transaction in Transaction.all {\n    grantEntitlement(for: transaction)  // Unsafe!\n}\n```\n\n✅ **Correct**: Always check `VerificationResult` before granting.\n\n### ❌ Ignoring Transaction Listener\n\n```swift\n// ❌ WRONG: Only handling purchases in purchase() method\nfunc purchase() {\n    let result = try await product.purchase()\n    // What about pending purchases, family sharing, restore?\n}\n```\n\n✅ **Correct**: Listen to `Transaction.updates` for ALL transaction sources.\n\n### ❌ Not Implementing Restore\n\n```swift\n// ❌ WRONG: No restore button\n// App Store will REJECT your app!\n```\n\n✅ **Correct**: Provide visible \"Restore Purchases\" button in settings.\n\n---\n\n## Validation\n\nBefore marking IAP implementation complete, verify:\n\n### Code Inspection\n\nRun these searches to verify compliance:\n\n```bash\n# Check StoreKit configuration exists\nfind . -name \"*.storekit\"\n\n# Check transaction.finish() is called\nrg \"transaction\\.finish\\(\\)\" --type swift\n\n# Check VerificationResult usage\nrg \"VerificationResult\" --type swift\n\n# Check Transaction.updates listener\nrg \"Transaction\\.updates\" --type swift\n\n# Check restore implementation\nrg \"AppStore\\.sync|Transaction\\.all\" --type swift\n```\n\n### Functional Testing\n\n- [ ] Can purchase each product type in StoreKit configuration\n- [ ] Can cancel purchase and state remains consistent\n- [ ] Can restore purchases and regain access\n- [ ] Subscription renewal/expiration works as expected\n- [ ] Refunded transactions revoke access\n- [ ] Family Sharing transactions identified (if supported)\n\n### Sandbox Testing\n\n- [ ] Real Apple ID sandbox purchases complete\n- [ ] TestFlight beta testers confirm purchase flows work\n- [ ] Server-side validation works (if using backend)\n\n### App Store Connect Submission (see **app-store-submission** for full checklist)\n\n- [ ] **Review screenshot uploaded** for each IAP product (shows purchase UI — review-only, not on App Store)\n- [ ] **IAP products attached to this version** (first submission: App Version → In-App Purchases section → Select → checkbox each product)\n- [ ] **Terms of Use + Privacy Policy links on purchase screen** (required by DPLA Schedule 2; `SubscriptionStoreView` handles this automatically)\n- [ ] Subscription terms explicit: price, period, auto-renewal, cancellation\n\n---\n\n## Resources\n\n**WWDC**: 2025-241, 2025-249, 2023-10013, 2021-10114\n\n**Docs**: /storekit, /appstoreserverapi\n\n**Skills**: axiom-storekit-ref\n",
       "skillType": "discipline",
       "source": "axiom",
       "category": "integration",
@@ -12079,14 +12079,14 @@
           "heading": "Check restore implementation",
           "level": 1,
           "startLine": 845,
-          "endLine": 865,
-          "charCount": 618
+          "endLine": 872,
+          "charCount": 1177
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 866,
-          "endLine": 873,
+          "startLine": 873,
+          "endLine": 880,
           "charCount": 140
         }
       ],
@@ -29550,7 +29550,7 @@
           20,
           8,
           74,
-          986
+          1006
         ],
         "11": [
           4,
@@ -29655,7 +29655,7 @@
           23,
           5,
           31,
-          446
+          482
         ],
         "26": [
           4,
@@ -29935,7 +29935,7 @@
           25,
           7,
           60,
-          618
+          634
         ],
         "66": [
           1,
@@ -30678,7 +30678,7 @@
         25.01169590643275,
         4.239766081871343,
         43.56725146198833,
-        599.7602339181282
+        600.1812865497071
       ],
       "storedFields": {
         "0": {
@@ -32613,7 +32613,7 @@
               "22": 7,
               "23": 3,
               "24": 3,
-              "25": 1,
+              "25": 2,
               "34": 1,
               "42": 1,
               "50": 2,
@@ -33834,6 +33834,7 @@
               "2": 1,
               "4": 1,
               "5": 2,
+              "25": 3,
               "34": 1,
               "36": 2,
               "37": 11,
@@ -38773,7 +38774,7 @@
               "17": 2,
               "20": 11,
               "21": 33,
-              "25": 1,
+              "25": 4,
               "26": 1,
               "27": 2,
               "29": 21,
@@ -40949,7 +40950,7 @@
               "17": 1,
               "21": 10,
               "22": 3,
-              "25": 22,
+              "25": 27,
               "26": 23,
               "27": 35,
               "28": 1,
@@ -43216,6 +43217,7 @@
           {
             "4": {
               "1": 1,
+              "10": 1,
               "15": 1,
               "17": 1,
               "22": 2,
@@ -43237,7 +43239,7 @@
               "57": 1,
               "60": 1,
               "63": 1,
-              "65": 1,
+              "65": 2,
               "70": 1,
               "71": 3,
               "73": 2,
@@ -51599,7 +51601,7 @@
               "22": 12,
               "23": 1,
               "24": 21,
-              "25": 4,
+              "25": 6,
               "26": 57,
               "27": 16,
               "28": 34,
@@ -52495,6 +52497,7 @@
               "18": 1,
               "19": 1,
               "21": 1,
+              "25": 1,
               "26": 1,
               "28": 2,
               "29": 7,
@@ -53100,7 +53103,7 @@
               "7": 3,
               "8": 12,
               "9": 15,
-              "10": 9,
+              "10": 11,
               "11": 1,
               "12": 1,
               "17": 2,
@@ -53132,7 +53135,7 @@
               "59": 1,
               "60": 1,
               "63": 3,
-              "65": 4,
+              "65": 6,
               "66": 5,
               "67": 1,
               "68": 1,
@@ -53514,6 +53517,7 @@
               "10": 8,
               "21": 2,
               "23": 1,
+              "25": 2,
               "28": 1,
               "34": 1,
               "35": 1,
@@ -55046,6 +55050,7 @@
               "12": 1,
               "14": 1,
               "20": 3,
+              "25": 3,
               "29": 2,
               "30": 2,
               "31": 7,
@@ -58538,6 +58543,7 @@
               "60": 1,
               "62": 1,
               "63": 1,
+              "65": 1,
               "67": 1,
               "71": 4,
               "72": 2,
@@ -61633,6 +61639,7 @@
               "21": 1,
               "22": 3,
               "23": 4,
+              "25": 2,
               "26": 5,
               "28": 4,
               "29": 3,
@@ -65881,7 +65888,7 @@
               "22": 6,
               "23": 7,
               "24": 2,
-              "25": 2,
+              "25": 4,
               "26": 1,
               "29": 3,
               "30": 7,
@@ -69247,7 +69254,7 @@
               "6": 5,
               "8": 23,
               "9": 38,
-              "10": 25,
+              "10": 26,
               "11": 1,
               "12": 1,
               "14": 7,
@@ -69284,7 +69291,7 @@
               "61": 1,
               "62": 1,
               "63": 1,
-              "65": 4,
+              "65": 5,
               "69": 2,
               "70": 1,
               "72": 3,
@@ -69792,8 +69799,9 @@
             "4": {
               "8": 1,
               "9": 2,
+              "10": 1,
               "29": 1,
-              "65": 5,
+              "65": 6,
               "122": 36
             }
           }
@@ -70218,7 +70226,7 @@
             "4": {
               "8": 24,
               "9": 2,
-              "10": 5
+              "10": 8
             }
           }
         ],
@@ -70301,11 +70309,12 @@
               "7": 1,
               "8": 55,
               "9": 43,
-              "10": 27,
+              "10": 31,
               "11": 2,
               "12": 21,
               "20": 1,
               "22": 1,
+              "25": 1,
               "34": 2,
               "37": 2,
               "38": 1,
@@ -70321,7 +70330,7 @@
               "56": 2,
               "58": 4,
               "62": 5,
-              "65": 3,
+              "65": 5,
               "71": 1,
               "73": 10,
               "74": 5,
@@ -71358,7 +71367,7 @@
               "22": 16,
               "23": 6,
               "24": 14,
-              "25": 6,
+              "25": 8,
               "26": 1,
               "27": 5,
               "28": 6,
@@ -71688,6 +71697,7 @@
           {
             "4": {
               "8": 1,
+              "10": 1,
               "36": 1,
               "72": 1,
               "126": 2
@@ -73291,7 +73301,7 @@
               "21": 1,
               "22": 24,
               "24": 14,
-              "25": 25,
+              "25": 27,
               "26": 44,
               "27": 99,
               "35": 4,
@@ -76694,6 +76704,7 @@
               "8": 58,
               "9": 12,
               "10": 40,
+              "25": 1,
               "62": 3,
               "63": 3,
               "71": 1,
@@ -77977,7 +77988,7 @@
               "6": 1,
               "9": 2,
               "21": 1,
-              "25": 3,
+              "25": 6,
               "27": 4,
               "29": 1,
               "34": 5,
@@ -79421,7 +79432,7 @@
               "7": 2,
               "8": 3,
               "9": 3,
-              "10": 4,
+              "10": 5,
               "11": 4,
               "13": 3,
               "14": 2,
@@ -79982,7 +79993,7 @@
               "7": 6,
               "8": 23,
               "9": 33,
-              "10": 12,
+              "10": 13,
               "13": 1,
               "15": 7,
               "17": 37,
@@ -80361,7 +80372,7 @@
               "7": 7,
               "8": 18,
               "9": 21,
-              "10": 11,
+              "10": 14,
               "11": 20,
               "12": 14,
               "13": 8,
@@ -80416,7 +80427,7 @@
               "62": 31,
               "63": 52,
               "64": 14,
-              "65": 7,
+              "65": 8,
               "66": 12,
               "67": 10,
               "68": 2,
@@ -80752,8 +80763,9 @@
             "4": {
               "7": 3,
               "9": 1,
-              "10": 2,
+              "10": 3,
               "12": 1,
+              "65": 1,
               "101": 1,
               "102": 3
             }
@@ -80789,7 +80801,7 @@
               "7": 1,
               "8": 6,
               "9": 14,
-              "10": 6,
+              "10": 7,
               "17": 2,
               "21": 3,
               "26": 13,
@@ -83640,7 +83652,7 @@
               "6": 9,
               "8": 8,
               "9": 6,
-              "10": 5,
+              "10": 7,
               "11": 6,
               "13": 7,
               "14": 36,
@@ -83686,7 +83698,7 @@
               "62": 6,
               "63": 15,
               "64": 2,
-              "65": 11,
+              "65": 12,
               "66": 1,
               "70": 3,
               "71": 1,
@@ -84951,7 +84963,7 @@
               "0": 6,
               "8": 55,
               "9": 9,
-              "10": 24,
+              "10": 27,
               "112": 12,
               "123": 1,
               "138": 1
@@ -85254,6 +85266,7 @@
             "4": {
               "12": 1,
               "14": 1,
+              "25": 1,
               "28": 1,
               "32": 2,
               "34": 1,
@@ -88737,12 +88750,13 @@
             "4": {
               "3": 1,
               "8": 14,
-              "10": 5,
+              "10": 7,
               "11": 2,
               "16": 1,
               "45": 20,
               "51": 1,
               "58": 1,
+              "65": 1,
               "100": 1,
               "135": 2,
               "140": 4,
@@ -94185,6 +94199,7 @@
           {
             "4": {
               "9": 2,
+              "10": 1,
               "84": 2,
               "88": 2,
               "89": 1,
@@ -94562,9 +94577,9 @@
               "7": 1,
               "8": 3,
               "9": 4,
-              "10": 2,
+              "10": 3,
               "60": 1,
-              "65": 3,
+              "65": 4,
               "77": 1,
               "101": 1,
               "122": 38,
@@ -96408,7 +96423,8 @@
           "purchas",
           {
             "4": {
-              "9": 1
+              "9": 1,
+              "10": 1
             }
           }
         ],
@@ -96438,10 +96454,10 @@
             "4": {
               "8": 10,
               "9": 3,
-              "10": 7,
+              "10": 9,
               "26": 1,
               "29": 1,
-              "65": 67,
+              "65": 69,
               "122": 42,
               "142": 1
             }
@@ -96463,8 +96479,8 @@
               "2": 3,
               "8": 4,
               "9": 7,
-              "10": 7,
-              "65": 18,
+              "10": 8,
+              "65": 19,
               "77": 4,
               "112": 2,
               "122": 13
@@ -97990,7 +98006,7 @@
               "5": 8,
               "8": 31,
               "9": 6,
-              "10": 24,
+              "10": 26,
               "26": 1,
               "27": 4,
               "31": 1,
@@ -98001,6 +98017,7 @@
               "55": 2,
               "56": 6,
               "57": 1,
+              "65": 1,
               "72": 5,
               "77": 1,
               "88": 1,
@@ -99577,6 +99594,7 @@
               "5": 1,
               "6": 1,
               "9": 14,
+              "10": 1,
               "11": 3,
               "35": 4,
               "41": 1,
@@ -100005,6 +100023,14 @@
           {
             "4": {
               "31": 1
+            }
+          }
+        ],
+        [
+          "paywall",
+          {
+            "4": {
+              "10": 2
             }
           }
         ],
@@ -102450,6 +102476,7 @@
               "17": 6,
               "18": 5,
               "20": 1,
+              "25": 9,
               "26": 1,
               "28": 3,
               "31": 4,
@@ -102525,9 +102552,9 @@
           {
             "4": {
               "8": 3,
-              "10": 2,
+              "10": 4,
               "45": 1,
-              "65": 34,
+              "65": 35,
               "100": 2,
               "122": 24,
               "127": 1,
@@ -102552,6 +102579,7 @@
               "5": 3,
               "8": 9,
               "9": 18,
+              "10": 3,
               "12": 2,
               "21": 4,
               "22": 1,
@@ -102563,7 +102591,7 @@
               "50": 1,
               "53": 2,
               "56": 3,
-              "65": 87,
+              "65": 89,
               "68": 1,
               "78": 1,
               "81": 2,
@@ -104833,7 +104861,7 @@
               "2": 1,
               "8": 78,
               "9": 66,
-              "10": 55,
+              "10": 57,
               "12": 1,
               "34": 8,
               "35": 2,
@@ -104845,6 +104873,7 @@
               "55": 6,
               "56": 1,
               "57": 1,
+              "65": 1,
               "77": 1,
               "79": 2,
               "85": 1,
@@ -105131,10 +105160,11 @@
               "5": 3,
               "8": 1,
               "9": 10,
+              "10": 1,
               "21": 2,
               "28": 8,
               "55": 2,
-              "65": 4,
+              "65": 5,
               "77": 1,
               "104": 2,
               "116": 6,
@@ -109592,6 +109622,7 @@
               "18": 5,
               "22": 4,
               "23": 2,
+              "25": 1,
               "26": 1,
               "28": 1,
               "29": 3,
@@ -110571,7 +110602,7 @@
               "7": 3,
               "8": 40,
               "9": 27,
-              "10": 53,
+              "10": 54,
               "11": 2,
               "12": 4,
               "13": 3,
@@ -110586,7 +110617,7 @@
               "22": 2,
               "23": 8,
               "24": 1,
-              "25": 4,
+              "25": 8,
               "26": 10,
               "27": 5,
               "28": 9,
@@ -111244,7 +111275,7 @@
               "7": 2,
               "8": 55,
               "9": 34,
-              "10": 30,
+              "10": 33,
               "11": 7,
               "12": 7,
               "13": 4,
@@ -111259,7 +111290,7 @@
               "22": 20,
               "23": 32,
               "24": 8,
-              "25": 1,
+              "25": 3,
               "26": 26,
               "27": 5,
               "28": 11,
@@ -111298,7 +111329,7 @@
               "62": 7,
               "63": 19,
               "64": 10,
-              "65": 8,
+              "65": 9,
               "67": 10,
               "68": 2,
               "69": 4,
@@ -112317,7 +112348,7 @@
               "27": 1
             },
             "4": {
-              "25": 26,
+              "25": 27,
               "26": 17,
               "27": 67,
               "59": 1,
@@ -112613,6 +112644,7 @@
               "8": 4,
               "10": 4,
               "20": 2,
+              "25": 1,
               "32": 4,
               "70": 1,
               "75": 2,
@@ -113732,6 +113764,7 @@
               "7": 2,
               "8": 3,
               "9": 16,
+              "10": 1,
               "13": 2,
               "14": 2,
               "16": 1,
@@ -114453,6 +114486,7 @@
               "18": 1,
               "21": 1,
               "23": 5,
+              "25": 1,
               "28": 1,
               "32": 6,
               "34": 2,
@@ -115777,59 +115811,6 @@
           }
         ],
         [
-          "clue",
-          {
-            "4": {
-              "146": 1
-            }
-          }
-        ],
-        [
-          "clues",
-          {
-            "4": {
-              "146": 1
-            }
-          }
-        ],
-        [
-          "cluster",
-          {
-            "1": {
-              "78": 1,
-              "79": 1,
-              "80": 1
-            },
-            "3": {
-              "78": 1,
-              "79": 1
-            },
-            "4": {
-              "78": 30,
-              "79": 21,
-              "80": 12
-            }
-          }
-        ],
-        [
-          "clusters",
-          {
-            "4": {
-              "66": 1,
-              "67": 2,
-              "148": 1
-            }
-          }
-        ],
-        [
-          "clutter",
-          {
-            "4": {
-              "6": 2
-            }
-          }
-        ],
-        [
           "clservicesession",
           {
             "4": {
@@ -115874,6 +115855,60 @@
           {
             "4": {
               "31": 2
+            }
+          }
+        ],
+        [
+          "cluster",
+          {
+            "1": {
+              "78": 1,
+              "79": 1,
+              "80": 1
+            },
+            "3": {
+              "78": 1,
+              "79": 1
+            },
+            "4": {
+              "78": 30,
+              "79": 21,
+              "80": 12
+            }
+          }
+        ],
+        [
+          "clusters",
+          {
+            "4": {
+              "66": 1,
+              "67": 2,
+              "148": 1
+            }
+          }
+        ],
+        [
+          "clues",
+          {
+            "4": {
+              "146": 1
+            }
+          }
+        ],
+        [
+          "clue",
+          {
+            "4": {
+              "25": 1,
+              "146": 1
+            }
+          }
+        ],
+        [
+          "clutter",
+          {
+            "4": {
+              "6": 2
             }
           }
         ],
@@ -116550,7 +116585,7 @@
               "9": 2,
               "17": 1,
               "19": 1,
-              "25": 42,
+              "25": 47,
               "26": 65,
               "27": 56,
               "28": 1,
@@ -116879,6 +116914,17 @@
           }
         ],
         [
+          "checkpoint",
+          {
+            "4": {
+              "17": 2,
+              "18": 1,
+              "19": 2,
+              "49": 1
+            }
+          }
+        ],
+        [
           "checkboxes",
           {
             "4": {
@@ -116890,19 +116936,10 @@
           "checkbox",
           {
             "4": {
+              "10": 2,
               "21": 1,
+              "65": 1,
               "111": 1
-            }
-          }
-        ],
-        [
-          "checkpoint",
-          {
-            "4": {
-              "17": 2,
-              "18": 1,
-              "19": 2,
-              "49": 1
             }
           }
         ],
@@ -117345,7 +117382,7 @@
               "60": 1,
               "61": 1,
               "62": 3,
-              "65": 1,
+              "65": 2,
               "66": 1,
               "67": 3,
               "69": 1,
@@ -118339,7 +118376,7 @@
               "21": 1,
               "22": 4,
               "23": 2,
-              "25": 14,
+              "25": 16,
               "26": 3,
               "27": 33,
               "29": 2,
@@ -120799,7 +120836,7 @@
               "7": 4,
               "8": 8,
               "9": 16,
-              "10": 4,
+              "10": 6,
               "11": 1,
               "12": 3,
               "13": 1,
@@ -120811,7 +120848,7 @@
               "22": 9,
               "23": 3,
               "24": 11,
-              "25": 1,
+              "25": 2,
               "26": 2,
               "27": 1,
               "28": 8,
@@ -121057,6 +121094,7 @@
               "19": 2,
               "38": 1,
               "40": 1,
+              "65": 1,
               "66": 2,
               "68": 2,
               "81": 1,
@@ -121862,6 +121900,7 @@
               "18": 1,
               "20": 2,
               "22": 7,
+              "25": 1,
               "28": 1,
               "29": 3,
               "30": 1,
@@ -124386,7 +124425,7 @@
               "47": 2,
               "49": 2,
               "52": 1,
-              "65": 5,
+              "65": 6,
               "69": 1,
               "85": 1,
               "86": 10,
@@ -125765,6 +125804,7 @@
               "17": 5,
               "18": 3,
               "19": 2,
+              "25": 2,
               "26": 1,
               "27": 3,
               "37": 1,
@@ -126543,7 +126583,7 @@
               "3": 9,
               "9": 3,
               "14": 6,
-              "25": 6,
+              "25": 7,
               "26": 17,
               "27": 21,
               "28": 45,
@@ -130494,7 +130534,7 @@
               "6": 3,
               "8": 7,
               "9": 10,
-              "10": 16,
+              "10": 17,
               "11": 7,
               "16": 1,
               "17": 7,
@@ -133046,7 +133086,7 @@
               "5": 6,
               "8": 18,
               "9": 14,
-              "10": 21,
+              "10": 22,
               "11": 1,
               "12": 1,
               "14": 3,
@@ -134708,7 +134748,7 @@
               "6": 1,
               "8": 21,
               "9": 19,
-              "10": 13,
+              "10": 15,
               "12": 1,
               "15": 13,
               "22": 1,
@@ -137408,6 +137448,7 @@
             "4": {
               "4": 2,
               "5": 2,
+              "10": 1,
               "11": 3,
               "17": 1,
               "22": 3,
@@ -142434,7 +142475,7 @@
               "7": 1,
               "8": 11,
               "9": 10,
-              "10": 7,
+              "10": 9,
               "12": 5,
               "13": 2,
               "14": 1,
@@ -142447,7 +142488,7 @@
               "21": 9,
               "22": 1,
               "23": 1,
-              "25": 6,
+              "25": 7,
               "26": 4,
               "27": 7,
               "28": 5,
@@ -142485,7 +142526,7 @@
               "62": 2,
               "63": 11,
               "64": 3,
-              "65": 4,
+              "65": 5,
               "66": 2,
               "67": 4,
               "68": 3,
@@ -145733,6 +145774,7 @@
               "2": 1,
               "10": 1,
               "22": 1,
+              "25": 1,
               "37": 1,
               "94": 1,
               "104": 1,
@@ -153431,7 +153473,7 @@
               "6": 2,
               "7": 5,
               "8": 1,
-              "10": 1,
+              "10": 2,
               "14": 6,
               "15": 1,
               "17": 2,
@@ -153462,6 +153504,7 @@
               "59": 1,
               "60": 5,
               "63": 1,
+              "65": 1,
               "68": 1,
               "73": 1,
               "74": 2,
@@ -154064,6 +154107,7 @@
               "15": 1,
               "21": 2,
               "24": 1,
+              "25": 1,
               "37": 2,
               "42": 1,
               "44": 2,
@@ -155306,12 +155350,13 @@
               "7": 3,
               "8": 1,
               "9": 3,
-              "10": 1,
+              "10": 2,
               "14": 6,
               "15": 2,
               "16": 3,
               "20": 1,
               "21": 1,
+              "25": 1,
               "27": 1,
               "29": 7,
               "30": 3,
@@ -155328,7 +155373,7 @@
               "60": 5,
               "61": 1,
               "63": 2,
-              "65": 1,
+              "65": 2,
               "68": 2,
               "70": 1,
               "73": 1,
@@ -155600,7 +155645,7 @@
             "4": {
               "6": 1,
               "8": 1,
-              "10": 1,
+              "10": 2,
               "34": 2,
               "50": 1,
               "54": 1,
@@ -155664,7 +155709,7 @@
               "7": 4,
               "8": 7,
               "9": 7,
-              "10": 4,
+              "10": 5,
               "12": 4,
               "14": 9,
               "15": 1,
@@ -155702,7 +155747,7 @@
               "61": 2,
               "62": 2,
               "63": 7,
-              "65": 1,
+              "65": 2,
               "66": 1,
               "69": 2,
               "70": 1,
@@ -156350,7 +156395,7 @@
               "3": 1,
               "6": 3,
               "9": 1,
-              "10": 1,
+              "10": 2,
               "29": 3,
               "30": 7,
               "31": 8,
@@ -156364,7 +156409,7 @@
               "60": 1,
               "62": 1,
               "63": 3,
-              "65": 1,
+              "65": 2,
               "70": 207,
               "71": 154,
               "72": 288,
@@ -156601,7 +156646,7 @@
               "22": 14,
               "23": 12,
               "24": 39,
-              "25": 2,
+              "25": 3,
               "26": 3,
               "28": 1,
               "29": 3,
@@ -157604,7 +157649,7 @@
           {
             "4": {
               "12": 1,
-              "25": 1,
+              "25": 2,
               "26": 4,
               "28": 1,
               "32": 5,
@@ -160737,7 +160782,7 @@
               "7": 13,
               "8": 27,
               "9": 47,
-              "10": 22,
+              "10": 25,
               "12": 16,
               "13": 2,
               "17": 1,
@@ -160745,7 +160790,7 @@
               "19": 1,
               "20": 5,
               "22": 1,
-              "25": 9,
+              "25": 13,
               "27": 1,
               "28": 8,
               "29": 15,
@@ -160775,7 +160820,7 @@
               "62": 3,
               "63": 3,
               "64": 15,
-              "65": 78,
+              "65": 82,
               "70": 5,
               "71": 4,
               "72": 2,
@@ -163784,14 +163829,16 @@
               "7": 1,
               "8": 10,
               "9": 23,
-              "10": 10,
+              "10": 12,
               "12": 9,
               "19": 1,
               "20": 1,
+              "25": 2,
               "29": 3,
               "31": 3,
               "49": 2,
               "56": 1,
+              "65": 3,
               "82": 1,
               "87": 1,
               "112": 37,
@@ -163808,6 +163855,14 @@
             "4": {
               "10": 1,
               "78": 1
+            }
+          }
+        ],
+        [
+          "submitters",
+          {
+            "4": {
+              "25": 1
             }
           }
         ],
@@ -164410,11 +164465,11 @@
             "4": {
               "8": 9,
               "9": 13,
-              "10": 3,
+              "10": 5,
               "27": 22,
               "32": 7,
               "51": 1,
-              "65": 27,
+              "65": 29,
               "81": 1,
               "93": 23,
               "109": 1,
@@ -164428,7 +164483,7 @@
           {
             "4": {
               "9": 1,
-              "10": 1,
+              "10": 2,
               "12": 2,
               "32": 2,
               "55": 1,
@@ -164752,6 +164807,7 @@
             },
             "4": {
               "9": 3,
+              "25": 3,
               "26": 2,
               "27": 1,
               "36": 4,
@@ -164796,6 +164852,7 @@
             },
             "4": {
               "5": 3,
+              "25": 1,
               "37": 2,
               "44": 1,
               "55": 1,
@@ -164841,6 +164898,7 @@
               "10": 1,
               "20": 8,
               "21": 19,
+              "25": 2,
               "29": 1,
               "31": 4,
               "42": 1,
@@ -164933,6 +164991,7 @@
             "4": {
               "1": 21,
               "2": 2,
+              "10": 2,
               "15": 2,
               "17": 18,
               "18": 5,
@@ -164940,6 +164999,7 @@
               "46": 1,
               "47": 2,
               "49": 7,
+              "65": 1,
               "73": 1,
               "87": 2,
               "103": 1,
@@ -165526,10 +165586,11 @@
               "7": 2,
               "8": 4,
               "9": 5,
-              "10": 2,
+              "10": 4,
               "16": 13,
               "37": 1,
               "45": 17,
+              "65": 1,
               "99": 2,
               "112": 18,
               "130": 1,
@@ -165571,7 +165632,7 @@
               "6": 2,
               "8": 12,
               "9": 1,
-              "10": 11,
+              "10": 12,
               "14": 2,
               "16": 2,
               "23": 2,
@@ -165587,6 +165648,7 @@
               "53": 13,
               "62": 8,
               "63": 26,
+              "65": 1,
               "74": 2,
               "77": 5,
               "78": 1,
@@ -166524,7 +166586,8 @@
           "ia",
           {
             "4": {
-              "9": 2
+              "9": 2,
+              "10": 1
             }
           }
         ],
@@ -166544,9 +166607,9 @@
             "4": {
               "8": 13,
               "9": 20,
-              "10": 13,
+              "10": 19,
               "12": 5,
-              "65": 5,
+              "65": 7,
               "112": 19,
               "122": 9
             }
@@ -168289,7 +168352,7 @@
               "7": 4,
               "8": 43,
               "9": 16,
-              "10": 30,
+              "10": 31,
               "11": 2,
               "12": 2,
               "13": 7,
@@ -168304,7 +168367,7 @@
               "22": 26,
               "23": 15,
               "24": 19,
-              "25": 2,
+              "25": 3,
               "26": 18,
               "27": 10,
               "28": 9,
@@ -170076,6 +170139,7 @@
           "indexes",
           {
             "4": {
+              "25": 2,
               "41": 2,
               "44": 2,
               "59": 6,
@@ -177756,6 +177820,7 @@
               "20": 4,
               "21": 9,
               "22": 8,
+              "25": 1,
               "28": 7,
               "29": 4,
               "30": 2,
@@ -178481,7 +178546,7 @@
               "7": 1,
               "8": 7,
               "9": 18,
-              "10": 11,
+              "10": 12,
               "11": 4,
               "12": 4,
               "13": 9,
@@ -178684,7 +178749,7 @@
               "7": 3,
               "8": 14,
               "9": 12,
-              "10": 10,
+              "10": 11,
               "11": 3,
               "12": 9,
               "17": 4,
@@ -179231,7 +179296,7 @@
               "21": 1,
               "22": 6,
               "23": 6,
-              "25": 2,
+              "25": 4,
               "26": 2,
               "28": 1,
               "29": 2,
@@ -179401,7 +179466,7 @@
               "21": 4,
               "22": 1,
               "23": 1,
-              "25": 1,
+              "25": 2,
               "26": 2,
               "28": 2,
               "29": 4,
@@ -180278,6 +180343,7 @@
               "19": 1,
               "21": 3,
               "24": 3,
+              "25": 2,
               "27": 1,
               "28": 17,
               "29": 1,
@@ -181364,6 +181430,7 @@
               "21": 13,
               "22": 3,
               "23": 15,
+              "25": 2,
               "26": 1,
               "28": 4,
               "29": 8,
@@ -183168,11 +183235,11 @@
               "5": 1,
               "6": 2,
               "8": 4,
-              "10": 1,
+              "10": 2,
               "12": 1,
               "17": 2,
               "20": 1,
-              "25": 1,
+              "25": 2,
               "27": 1,
               "28": 1,
               "29": 1,
@@ -188555,11 +188622,12 @@
             "4": {
               "8": 10,
               "9": 5,
-              "10": 3,
+              "10": 5,
               "41": 1,
               "55": 3,
               "57": 3,
               "63": 1,
+              "65": 2,
               "118": 1,
               "159": 1,
               "162": 1
@@ -189495,6 +189563,7 @@
               "19": 3,
               "20": 5,
               "22": 3,
+              "25": 4,
               "26": 4,
               "29": 12,
               "30": 1,
@@ -190820,6 +190889,7 @@
               "9": 6,
               "10": 14,
               "12": 10,
+              "25": 2,
               "29": 8,
               "31": 3,
               "37": 1,
@@ -191259,7 +191329,7 @@
               "61": 1,
               "62": 1,
               "63": 6,
-              "65": 1,
+              "65": 2,
               "66": 1,
               "70": 3,
               "71": 1,
@@ -195492,7 +195562,7 @@
               "7": 2,
               "8": 13,
               "9": 5,
-              "10": 9,
+              "10": 11,
               "11": 1,
               "12": 4,
               "15": 3,
@@ -195505,7 +195575,7 @@
               "22": 5,
               "23": 2,
               "24": 2,
-              "25": 8,
+              "25": 9,
               "26": 4,
               "27": 2,
               "28": 2,
@@ -195539,7 +195609,7 @@
               "62": 3,
               "63": 8,
               "64": 2,
-              "65": 13,
+              "65": 14,
               "66": 1,
               "67": 8,
               "68": 3,
@@ -196618,7 +196688,7 @@
               "9": 5,
               "10": 2,
               "12": 1,
-              "25": 1,
+              "25": 3,
               "27": 1,
               "28": 2,
               "30": 1,
@@ -198974,6 +199044,7 @@
               "7": 1,
               "8": 17,
               "9": 1,
+              "10": 1,
               "11": 3,
               "12": 3,
               "13": 1,
@@ -198985,6 +199056,7 @@
               "21": 2,
               "22": 1,
               "23": 1,
+              "25": 1,
               "26": 6,
               "29": 1,
               "30": 8,
@@ -199238,7 +199310,7 @@
               "7": 11,
               "8": 15,
               "9": 18,
-              "10": 4,
+              "10": 8,
               "11": 1,
               "12": 26,
               "16": 1,
@@ -199265,7 +199337,7 @@
               "61": 2,
               "62": 2,
               "64": 17,
-              "65": 2,
+              "65": 4,
               "67": 8,
               "71": 1,
               "74": 2,
@@ -199895,7 +199967,7 @@
               "7": 4,
               "8": 12,
               "9": 2,
-              "10": 1,
+              "10": 3,
               "11": 2,
               "13": 11,
               "14": 110,
@@ -199937,7 +200009,7 @@
               "62": 5,
               "63": 15,
               "64": 1,
-              "65": 15,
+              "65": 16,
               "69": 3,
               "73": 12,
               "74": 30,
@@ -200191,7 +200263,7 @@
               "6": 4,
               "8": 7,
               "9": 2,
-              "10": 2,
+              "10": 4,
               "14": 2,
               "15": 1,
               "16": 3,
@@ -200598,6 +200670,15 @@
           {
             "4": {
               "152": 3
+            }
+          }
+        ],
+        [
+          "dpla",
+          {
+            "4": {
+              "10": 2,
+              "65": 1
             }
           }
         ],
@@ -202457,6 +202538,7 @@
               "9": 5,
               "10": 18,
               "20": 3,
+              "25": 1,
               "31": 1,
               "34": 1,
               "37": 1,
@@ -203385,6 +203467,7 @@
               "11": 1,
               "22": 2,
               "23": 1,
+              "25": 1,
               "26": 1,
               "28": 1,
               "30": 3,
@@ -205508,6 +205591,7 @@
           "deployed",
           {
             "4": {
+              "25": 2,
               "136": 1,
               "143": 1
             }
@@ -205526,6 +205610,7 @@
             "4": {
               "8": 3,
               "10": 1,
+              "25": 3,
               "37": 14,
               "44": 2,
               "46": 1,
@@ -205843,7 +205928,7 @@
               "21": 1,
               "22": 1,
               "23": 1,
-              "25": 1,
+              "25": 2,
               "26": 1,
               "27": 1,
               "28": 3,
@@ -207912,6 +207997,7 @@
               "10": 1,
               "17": 2,
               "18": 1,
+              "25": 3,
               "29": 8,
               "30": 6,
               "31": 20,
@@ -211296,7 +211382,7 @@
           {
             "4": {
               "9": 4,
-              "10": 2,
+              "10": 3,
               "35": 2,
               "52": 1,
               "55": 1,
@@ -213847,9 +213933,11 @@
             "4": {
               "1": 1,
               "8": 2,
+              "10": 2,
               "12": 1,
               "17": 2,
               "60": 2,
+              "65": 1,
               "74": 1,
               "75": 1,
               "81": 1,
@@ -213878,6 +213966,7 @@
             "4": {
               "8": 3,
               "9": 1,
+              "10": 1,
               "12": 5,
               "15": 4,
               "32": 2,
@@ -214834,6 +214923,7 @@
               "4": 2,
               "6": 1,
               "8": 1,
+              "10": 1,
               "13": 2,
               "14": 1,
               "15": 1,
@@ -215580,7 +215670,7 @@
               "7": 21,
               "8": 19,
               "9": 1,
-              "10": 18,
+              "10": 20,
               "12": 23,
               "59": 1,
               "112": 26,
@@ -216654,7 +216744,7 @@
             "4": {
               "0": 3,
               "8": 3,
-              "10": 2,
+              "10": 3,
               "12": 2,
               "35": 1,
               "52": 6,
@@ -217923,7 +218013,7 @@
               "7": 30,
               "8": 166,
               "9": 160,
-              "10": 110,
+              "10": 113,
               "11": 5,
               "12": 63,
               "14": 1,
@@ -217936,7 +218026,7 @@
               "22": 13,
               "23": 3,
               "24": 3,
-              "25": 7,
+              "25": 12,
               "26": 4,
               "27": 6,
               "28": 2,
@@ -217975,7 +218065,7 @@
               "62": 15,
               "63": 20,
               "64": 6,
-              "65": 32,
+              "65": 37,
               "66": 2,
               "67": 2,
               "69": 2,
@@ -218236,7 +218326,7 @@
               "7": 2,
               "8": 1,
               "9": 6,
-              "10": 4,
+              "10": 5,
               "12": 2,
               "14": 6,
               "16": 1,
@@ -219980,6 +220070,7 @@
               "6": 2,
               "8": 1,
               "9": 5,
+              "10": 1,
               "12": 1,
               "13": 1,
               "14": 3,
@@ -220016,6 +220107,7 @@
               "59": 1,
               "62": 8,
               "63": 11,
+              "65": 1,
               "66": 1,
               "68": 1,
               "70": 1,
@@ -220242,7 +220334,7 @@
               "7": 1,
               "8": 1,
               "9": 5,
-              "10": 1,
+              "10": 2,
               "11": 4,
               "12": 2,
               "14": 9,
@@ -220266,7 +220358,7 @@
               "58": 3,
               "62": 1,
               "63": 1,
-              "65": 3,
+              "65": 4,
               "70": 1,
               "72": 1,
               "75": 3,
@@ -223889,7 +223981,7 @@
               "7": 1,
               "8": 16,
               "9": 4,
-              "10": 10,
+              "10": 11,
               "11": 3,
               "12": 8,
               "14": 4,
@@ -223903,7 +223995,7 @@
               "22": 25,
               "23": 10,
               "24": 26,
-              "25": 2,
+              "25": 3,
               "26": 2,
               "27": 5,
               "28": 4,
@@ -225478,6 +225570,7 @@
               "22": 2,
               "23": 5,
               "24": 2,
+              "25": 1,
               "26": 1,
               "27": 1,
               "29": 2,
@@ -243595,20 +243688,69 @@
           "products",
           "created",
           "asc",
-          "screenshots",
-          "submitted",
+          "complete",
+          "metadata",
+          "screenshot",
+          "uploaded",
+          "each",
+          "product",
+          "shows",
+          "what",
+          "user",
+          "sees",
+          "when",
+          "purchas",
+          "only",
+          "not",
+          "displayed",
+          "store",
+          "attached",
+          "version",
+          "first",
+          "page",
+          "purchases",
+          "sec",
+          "select",
+          "checkbox",
+          "after",
+          "approval",
+          "subsequent",
+          "ia",
+          "ps",
           "can",
+          "submitted",
           "independently",
           "restore",
-          "purchases",
           "button",
           "visible",
           "functional",
           "subscrip",
           "terms",
-          "displayed",
           "before",
           "confirma",
+          "price",
+          "period",
+          "auto",
+          "renewal",
+          "use",
+          "privacy",
+          "policy",
+          "links",
+          "screen",
+          "required",
+          "schedule",
+          "dpla",
+          "referenced",
+          "view",
+          "handles",
+          "automatically",
+          "if",
+          "using",
+          "custom",
+          "paywall",
+          "ui",
+          "add",
+          "manually",
           "free",
           "trial",
           "clearly",
@@ -243618,11 +243760,9 @@
           "configura",
           "no",
           "external",
-          "links",
           "unless",
           "eligible",
           "entitle",
-          "store",
           "kit",
           "test",
           "completed",
@@ -243635,15 +243775,18 @@
           "does",
           "noth",
           "option",
-          "auto",
           "renews",
           "without",
           "clear",
           "disclosure",
           "dura",
-          "not",
           "shown",
-          "link"
+          "link",
+          "reviewer",
+          "see",
+          "them",
+          "verify",
+          "avoid"
         ],
         "Common Rejection Reasons Quick Reference": [
           "common",
@@ -243662,12 +243805,21 @@
           "test",
           "content",
           "audit",
+          "iap",
+          "not",
+          "visible",
+          "reviewer",
+          "attach",
+          "version",
+          "checkbox",
+          "asc",
+          "upload",
+          "review",
+          "screenshots",
           "inaccurate",
           "metadata",
           "wrong",
-          "screenshots",
           "screenshot",
-          "review",
           "incorrect",
           "age",
           "rat",
@@ -243675,7 +243827,6 @@
           "questionnaire",
           "declare",
           "ugc",
-          "iap",
           "issues",
           "miss",
           "restore",
@@ -243703,13 +243854,11 @@
           "policy",
           "inadequate",
           "both",
-          "asc",
           "app",
           "specific",
           "no",
           "account",
           "dele",
-          "not",
           "just",
           "deactiva",
           "required",
@@ -258720,22 +258869,76 @@
           "engine",
           "background",
           "update",
+          "schema",
+          "not",
+          "deployed",
+          "produc",
+          "separate",
+          "schemas",
+          "develop",
+          "app",
+          "can",
+          "only",
+          "access",
+          "environ",
+          "if",
+          "add",
+          "record",
+          "types",
+          "fields",
+          "indexes",
+          "but",
+          "never",
+          "deploy",
+          "them",
+          "queries",
+          "return",
+          "empty",
+          "results",
+          "error",
+          "works",
+          "xcode",
+          "test",
+          "flight",
+          "silently",
+          "zero",
+          "ck",
+          "crash",
+          "clue",
+          "before",
+          "every",
+          "submission",
+          "console",
+          "select",
+          "container",
+          "review",
+          "scheme",
+          "settings",
+          "time",
+          "cost",
+          "skipp",
+          "days",
+          "rejec",
+          "cycle",
+          "debugg",
+          "why",
+          "does",
+          "work",
+          "gotcha",
+          "first",
+          "submitters",
           "retry",
           "logic",
           "single",
           "attempt",
           "save",
-          "record",
           "exponential",
           "backoff",
-          "ck",
           "attempts",
           "int",
           "throws",
           "do",
-          "return",
           "catch",
-          "error",
           "where",
           "retryable",
           "delay",
@@ -258798,6 +259001,21 @@
           "app",
           "id",
           "exists",
+          "console",
+          "store",
+          "submission",
+          "schema",
+          "deployed",
+          "produc",
+          "record",
+          "types",
+          "fields",
+          "indexes",
+          "test",
+          "environ",
+          "scheme",
+          "verify",
+          "queries",
           "device",
           "signed",
           "into",
@@ -308554,7 +308772,44 @@
           "side",
           "valida",
           "using",
-          "backend"
+          "backend",
+          "connect",
+          "submission",
+          "see",
+          "full",
+          "checklist",
+          "review",
+          "screenshot",
+          "uploaded",
+          "iap",
+          "shows",
+          "ui",
+          "only",
+          "not",
+          "products",
+          "attached",
+          "version",
+          "first",
+          "sec",
+          "select",
+          "checkbox",
+          "terms",
+          "use",
+          "privacy",
+          "policy",
+          "links",
+          "screen",
+          "required",
+          "dpla",
+          "schedule",
+          "view",
+          "handles",
+          "automatically",
+          "explicit",
+          "price",
+          "period",
+          "auto",
+          "cancella"
         ],
         "Resources": [
           "resources",

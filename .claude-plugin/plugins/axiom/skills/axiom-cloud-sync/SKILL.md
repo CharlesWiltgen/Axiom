@@ -273,7 +273,23 @@ func viewDidLoad() {
 }
 ```
 
-### 3. No Retry Logic
+### 3. CloudKit Schema Not Deployed to Production
+
+CloudKit has **separate schemas for Development and Production**. Your app in the App Store can only access the Production environment. If you add record types, fields, or indexes in Development but never deploy them, queries in Production return empty results with no error.
+
+```
+❌ Works in Xcode/TestFlight (Development) → empty results in App Store (Production)
+   Queries silently return zero results — no CKError, no crash, no clue.
+
+✅ Before every App Store submission:
+   1. CloudKit Console → Select container
+   2. "Deploy Schema Changes" → Review changes → Deploy
+   3. Test with Production environment in Xcode scheme settings
+```
+
+**Time cost of skipping**: 3-7 days (rejection cycle + debugging "why does it work in TestFlight but not production?"). This is the #1 CloudKit gotcha for first-time submitters.
+
+### 4. No Retry Logic
 
 ```swift
 // ❌ WRONG: Single attempt
@@ -328,7 +344,11 @@ Before sync will work:
    - ✓ App ID has iCloud capability
    - ✓ CloudKit container exists (for CloudKit)
 
-3. **Device**
+3. **CloudKit Console (before App Store submission)**
+   - ✓ Schema deployed to Production (record types, fields, indexes)
+   - ✓ Test with Production environment in Xcode scheme to verify queries work
+
+4. **Device**
    - ✓ Signed into iCloud
    - ✓ iCloud Drive enabled (Settings → [Name] → iCloud)
 
