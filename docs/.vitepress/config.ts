@@ -323,6 +323,7 @@ export default withMermaid(defineConfig({
             { text: 'Background Processing', link: '/skills/integration/background-processing' },
             { text: 'Camera Capture', link: '/skills/integration/camera-capture' },
             { text: 'Core Location', link: '/skills/integration/core-location' },
+            { text: 'EventKit & Contacts', link: '/skills/integration/eventkit-contacts' },
             { text: 'Extensions & Widgets', link: '/skills/integration/extensions-widgets' },
             { text: 'Foundation Models (Apple Intelligence)', link: '/skills/integration/foundation-models' },
             { text: 'In-App Purchases (StoreKit 2)', link: '/skills/integration/in-app-purchases' },
@@ -535,7 +536,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v2.35.0'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v2.36.0'
     }
   }
 }))

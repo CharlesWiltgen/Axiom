@@ -116,6 +116,7 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**camera-capture**](/skills/integration/camera-capture) | AVCaptureSession, camera preview, photo/video recording |
 | [**core-location**](/skills/integration/core-location) | CLLocationUpdate, CLMonitor, geofencing, background location |
 | [**core-spotlight-ref**](/reference/core-spotlight-ref) | Core Spotlight search, NSUserActivity, CSSearchableItem, IndexedEntity |
+| [**eventkit + contacts**](/skills/integration/eventkit-contacts) | Calendar events, reminders, contact access — 4 skills covering EventKit/EventKitUI, Contacts/ContactsUI, ContactProvider |
 | [**extensions-widgets**](/skills/integration/extensions-widgets) | Implementing widgets, Live Activities, Control Center controls |
 | [**extensions-widgets-ref**](/reference/extensions-widgets-ref) | Complete WidgetKit/ActivityKit API reference |
 | [**foundation-models**](/skills/integration/foundation-models) | On-device AI with Apple's Foundation Models framework (iOS 26+) |

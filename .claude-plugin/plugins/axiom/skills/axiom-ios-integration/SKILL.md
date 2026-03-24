@@ -1,6 +1,6 @@
 ---
 name: axiom-ios-integration
-description: Use when integrating ANY iOS system feature - Siri, Shortcuts, Apple Intelligence, widgets, IAP, camera, photo library, photos picker, audio, axiom-haptics, axiom-localization, privacy, alarms. Covers App Intents, WidgetKit, StoreKit, AVFoundation, PHPicker, PhotosPicker, Core Haptics, App Shortcuts, Spotlight, AlarmKit.
+description: Use when integrating ANY iOS system feature - Siri, Shortcuts, Apple Intelligence, widgets, IAP, camera, photo library, photos picker, audio, axiom-haptics, axiom-localization, privacy, alarms, calendar events, reminders, contacts. Covers App Intents, WidgetKit, StoreKit, AVFoundation, PHPicker, PhotosPicker, Core Haptics, App Shortcuts, Spotlight, AlarmKit, EventKit, Contacts.
 license: MIT
 ---
 
@@ -28,6 +28,8 @@ Use this router for:
 - Maps & MapKit (Map, MKMapView, annotations, search, directions)
 - Passkeys & authentication (ASAuthorizationController, WebAuthn)
 - App integrity & fraud prevention (App Attest, DeviceCheck)
+- Calendar events & reminders (EventKit, EventKitUI)
+- Contacts & contact pickers (Contacts, ContactsUI, ContactProvider)
 
 ## Cross-Domain Routing
 
@@ -61,6 +63,16 @@ When integration issues overlap with other domains:
 **Push notification + background processing** (silent push not triggering background work):
 - Push payload and delivery → **stay in ios-integration** (push-notifications-diag)
 - Background execution, BGTaskScheduler → **also invoke ios-integration** (background-processing)
+
+**Calendar + data sync issues** (events not syncing, stale calendar data):
+- EventKit store changes, EKEventStoreChanged → **stay in ios-integration** (eventkit)
+- Shared data with widget via App Groups → **also invoke ios-data** for shared container patterns
+- Background refresh for calendar sync → **also invoke ios-integration** (background-processing)
+
+**Contacts + privacy issues** (contact access denied, limited access confusion):
+- Contact permission model, Contact Access Button → **stay in ios-integration** (contacts)
+- Privacy manifest or Info.plist for contacts → **stay in ios-integration** (privacy-ux)
+- Contact Provider extension architecture → **also invoke ios-build** if extension target issues
 
 ## Routing Logic
 
@@ -119,6 +131,38 @@ When integration issues overlap with other domains:
 - Alarm scheduling and authorization
 - Live Activity integration
 - SwiftUI alarm management views
+
+### Calendar & Reminders (EventKit)
+
+**EventKit implementation** → `/skill axiom-eventkit`
+- Permission model (no access, write-only, full access)
+- Event creation patterns (EventKitUI vs direct EventKit)
+- Reminder patterns (DateComponents, EKSource selection)
+- Store lifecycle (singleton, change notifications)
+- Migration from pre-iOS 17 APIs
+
+**EventKit API reference** → `/skill axiom-eventkit-ref`
+- EKEventStore, EKEvent, EKReminder, EKAlarm, EKRecurrenceRule
+- EventKitUI view controllers
+- Siri Event Suggestions (INReservation donation)
+- Virtual conference extensions
+- Location-based reminders
+
+### Contacts
+
+**Contacts implementation** → `/skill axiom-contacts`
+- Permission model (limited vs full access)
+- Contact Access Button (iOS 18+)
+- Picker vs store access decisions
+- CNContactStore patterns
+- Contact Provider extensions
+
+**Contacts API reference** → `/skill axiom-contacts-ref`
+- CNContactStore, CNMutableContact, CNSaveRequest
+- CNContactFormatter, CNContactVCardSerialization
+- CNContactPickerViewController, ContactAccessButton
+- ContactProvider framework
+- Change history (CNChangeHistoryFetchRequest)
 
 ### Background Processing
 
@@ -184,6 +228,13 @@ When integration issues overlap with other domains:
 22. Alarms / AlarmKit? → alarmkit-ref
 23. Passkeys / WebAuthn / replacing passwords / ASAuthorizationController? → passkeys
 24. App Attest / DeviceCheck / fraud prevention / app integrity? → app-attest
+25. Calendar events / EventKit / EventKitUI / add to calendar? → eventkit (patterns), eventkit-ref (API)
+26. Reminders / EKReminder / reminder lists? → eventkit (patterns), eventkit-ref (API)
+27. Siri Event Suggestions / INReservation? → eventkit-ref (API, Part 9)
+28. Virtual conference extension / EKVirtualConferenceProvider? → eventkit-ref (API, Part 8)
+29. Contacts / contact picker / CNContactStore? → contacts (patterns), contacts-ref (API)
+30. Contact Access Button / limited access / iOS 18 contacts? → contacts (patterns), contacts-ref (API)
+31. Contact Provider extension / expose contacts to system? → contacts-ref (API, Part 10)
 
 ## Anti-Rationalization
 
@@ -200,6 +251,9 @@ When integration issues overlap with other domains:
 | "Push notifications are just a payload and a token" | Token lifecycle, Focus interruption levels, service extension gotchas, and sandbox/production mismatch cause 80% of push bugs. push-notifications covers all. |
 | "Our users aren't ready for passkeys" | Apple, Google, and Microsoft ship passkeys across all platforms. Users don't need to understand crypto — they just tap. passkeys covers the migration path. |
 | "App Attest is overkill for our app" | Any app with server-side value (premium content, virtual currency, user accounts) is a fraud target. app-attest has a gradual rollout strategy. |
+| "Just request full Calendar access" | Most apps only need to add events — EventKitUI does that with zero permissions. eventkit has the access tier decision tree. |
+| "I'll use CNContactStore directly for contact picking" | CNContactPickerViewController needs no authorization and shows all contacts. contacts has the access level decision tree. |
+| "Contacts access is simple, just request and fetch" | iOS 18 limited access means your app may only see a subset. ContactAccessButton handles this gracefully. contacts covers the full model. |
 
 ## Example Invocations
 
@@ -322,3 +376,33 @@ User: "How do I verify my app hasn't been tampered with?"
 
 User: "How do I prevent promotional fraud?"
 → Invoke: `/skill axiom-app-attest`
+
+User: "How do I add an event to the user's calendar?"
+→ Invoke: `/skill axiom-eventkit`
+
+User: "What's the difference between write-only and full Calendar access?"
+→ Invoke: `/skill axiom-eventkit`
+
+User: "How do I create reminders programmatically?"
+→ Invoke: `/skill axiom-eventkit`
+
+User: "What is EKEventEditViewController?"
+→ Invoke: `/skill axiom-eventkit-ref`
+
+User: "How do I implement Siri Event Suggestions?"
+→ Invoke: `/skill axiom-eventkit-ref`
+
+User: "How do I let users pick a contact?"
+→ Invoke: `/skill axiom-contacts`
+
+User: "What is the Contact Access Button?"
+→ Invoke: `/skill axiom-contacts`
+
+User: "How do I search and fetch contacts?"
+→ Invoke: `/skill axiom-contacts-ref`
+
+User: "How do I build a Contact Provider extension?"
+→ Invoke: `/skill axiom-contacts-ref`
+
+User: "How do I detect contact changes for sync?"
+→ Invoke: `/skill axiom-contacts-ref`

@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "2.35.0",
+  "version": "2.36.0",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -49,7 +49,7 @@
     },
     {
       "name": "axiom-ios-integration",
-      "description": "Use when integrating ANY iOS system feature: Siri, Shortcuts, Apple Intelligence, widgets, IAP, audio, haptics, localization, privacy. Covers App Intents, WidgetKit, StoreKit, AVFoundation, Core Haptics, App Shortcuts, Spotlight."
+      "description": "Use when integrating ANY iOS system feature: Siri, Shortcuts, Apple Intelligence, widgets, IAP, camera, photo library, audio, haptics, localization, privacy, calendar events, reminders, contacts. Covers App Intents, WidgetKit, StoreKit, AVFoundation, Core Haptics, App Shortcuts, Spotlight, EventKit, Contacts."
     },
     {
       "name": "axiom-ios-accessibility",
