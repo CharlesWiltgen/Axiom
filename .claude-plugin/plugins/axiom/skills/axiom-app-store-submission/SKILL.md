@@ -607,7 +607,21 @@ App Store Connect → Resolution Center → Reply
 - Provide specific evidence (screenshots, documentation)
 - Remain professional and factual
 - Apple's App Review Board will re-review
+- One appeal per rejection
+- Must respond to all information requests BEFORE appealing
 ```
+
+### Expedited Review
+
+Two eligible scenarios:
+1. **Critical Bug Fix** — include steps to reproduce the bug on the current live version
+2. **Event-Related App** — include event name, date, and your association with the event
+
+### Communication Options (Often Overlooked)
+
+- **30-minute WebEx with App Review** — schedule at developer.apple.com/events (search "Review")
+- **Bug fix shortcut** — if additional (non-legal/safety) issues are found during a bug fix review, you can accept approval for the current submission and fix the extras in the next update
+- **App Store Connect mobile app** for status tracking on the go
 
 ### Metadata Rejected vs Binary Rejected
 

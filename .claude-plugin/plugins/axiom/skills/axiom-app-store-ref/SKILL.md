@@ -66,6 +66,14 @@ Complete reference for every App Store submission requirement:
 
 ## Part 1: Required Metadata Fields
 
+### Immutable Fields (Cannot Change After Creation)
+
+These fields are locked once set. Choose carefully:
+- **Bundle ID** — must match Xcode project exactly
+- **SKU** — internal identifier, never shown to users
+- **IAP Product ID** — cannot be changed or reused after creation
+- **Subscription Duration** — locked after subscription is created
+
 ### App Information
 
 | Field | Required | Localizable | Max Length | Notes |
@@ -91,30 +99,39 @@ Complete reference for every App Store submission requirement:
 
 #### Screenshot Requirements
 
-Screenshots must be provided for each device size you support:
+Format: `.jpeg`, `.jpg`, `.png`. Min 1, max 10 per device size per locale.
 
-| Device | Required Size (portrait) | Required Size (landscape) |
-|--------|-------------------------|--------------------------|
-| iPhone 6.9" | 1320 x 2868 | 2868 x 1320 |
-| iPhone 6.7" | 1290 x 2796 | 2796 x 1290 |
-| iPhone 6.5" | 1284 x 2778 | 2778 x 1284 |
-| iPhone 5.5" | 1242 x 2208 | 2208 x 1242 |
-| iPad Pro 13" | 2048 x 2732 | 2732 x 2048 |
-| iPad Pro 12.9" | 2048 x 2732 | 2732 x 2048 |
+**Fallback**: Provide highest resolution only — App Store auto-scales to smaller sizes. Required: 6.9" or 6.5" for iPhone, 13" for iPad.
 
-Screenshots must show the app in actual use. Not permitted: title art alone, login screens, splash screens, or screens from other platforms.
+| Device | Portrait | Landscape |
+|--------|----------|-----------|
+| iPhone 6.9" (Air, 17 Pro Max, 16 Pro Max) | 1260x2736 | 2736x1260 |
+| iPhone 6.5" (14 Plus, 13 Pro Max, XS Max) | 1284x2778 or 1242x2688 | 2778x1284 or 2688x1242 |
+| iPhone 6.3" (17 Pro, 16 Pro, 16, 15 Pro) | 1179x2556 or 1206x2622 | 2556x1179 or 2622x1206 |
+| iPhone 6.1" (17e, 16e, 14, 13, 12) | 1170x2532, 1125x2436, or 1080x2340 | 2532x1170, 2436x1125, or 2340x1080 |
+| iPhone 5.5" (8 Plus, 7 Plus) | 1242x2208 | 2208x1242 |
+| iPad 13" (Pro M5/M4, Air M4/M3) | 2064x2752 or 2048x2732 | 2752x2064 or 2732x2048 |
+| iPad 11" (Pro, Air, mini, 10th gen) | 1488x2266 or 1668x2420 | 2266x1488 or 2420x1668 |
+| Mac | 1280x800, 1440x900, 2560x1600, or 2880x1800 | — |
+| Apple TV | 1920x1080 or 3840x2160 | — |
+| Apple Vision Pro | 3840x2160 | — |
+
+Screenshots must show the app in actual use. Not permitted: title art alone, login screens, splash screens, or screens from other platforms. Cannot update screenshots on an approved version — must create a new version.
 
 #### App Preview Video Specifications
 
-| Specification | Requirement |
-|---------------|-------------|
+| Spec | Value |
+|------|-------|
 | Duration | 15-30 seconds |
-| Format | H.264, ProRes 422 |
-| Audio | English or localized; no offensive content |
-| Frame rate | 30 or 60 fps |
-| Resolution | Must match screenshot dimensions for the device |
-| Content | Must show actual app footage; no device frames allowed in video |
-| Per locale | Up to 3 preview videos per device size per locale |
+| Max file size | 500 MB |
+| Max frame rate | 30 fps |
+| Max per device/locale | 3 |
+| H.264 | 10-12 Mbps, `.mov`/`.m4v`/`.mp4`, 256 kbps AAC stereo |
+| ProRes 422 HQ | ~220 Mbps VBR, `.mov` only, PCM or 256 kbps AAC stereo |
+| Audio sample rate | 44.1 or 48 kHz |
+| Orientation | Portrait or landscape (Mac/tvOS/visionOS: landscape only) |
+
+**Gotchas**: Processing can take up to 24 hours — do not submit for review immediately after uploading previews. All audio tracks must be enabled (disabled tracks cause rejection). Previews always appear before screenshots on the product page.
 
 #### App Icon Requirements
 
@@ -280,6 +297,16 @@ Xcode > Product > Archive > Generate Privacy Report
 ```
 
 This produces a PDF summarizing privacy manifests from your app and all embedded frameworks.
+
+**Privacy manifest gotchas**:
+- Custom string values for `NSPrivacyCollectedDataType` or `NSPrivacyCollectedDataTypePurposes` are silently rejected by Xcode — must use Apple's predefined constants
+- iOS 17 automatically blocks connections to declared tracking domains when user denies tracking
+- IP address collection must be declared (as location, device ID, or diagnostics)
+- Web view data collection must be declared
+- You are responsible for ALL data collected by third-party SDKs in your app
+- Some SDKs default to tracking unless explicitly disabled — creates unintentional tracking
+- Fingerprinting is NEVER allowed, regardless of ATT permission
+- Since May 1, 2024: missing required-reason API declarations cause automatic rejection (no human review)
 
 ### Required Reason API Categories
 
@@ -489,51 +516,69 @@ The system automatically calculates your app's age rating across all regions bas
 
 ## Part 5: Export Compliance
 
+### Three-Tier Encryption System
+
+| Tier | Encryption Type | Documentation Required |
+|------|----------------|----------------------|
+| **Exempt** | Apple OS built-in (HTTPS via URLSession, AES data protection, CryptoKit, Keychain, Secure Enclave) | None — set `ITSAppUsesNonExemptEncryption = NO` |
+| **Standard** | Industry-standard algorithms (IEEE, IETF, ISO, ITU, ETSI, 3GPP approved) | French ANSSI declaration only (if distributing in France) |
+| **Proprietary** | Custom/unpublished algorithms not adopted by standards bodies | US CCATS + French declaration (if France) |
+
 ### Encryption Decision Tree
 
 ```
 Does your app use encryption?
-├── No → Set ITSAppUsesNonExemptEncryption = NO in Info.plist → Done
-├── Only HTTPS/TLS/URLSession?
-│   ├── Yes → Exempt, set ITSAppUsesNonExemptEncryption = NO → Done
-│   │         (May need annual self-classification report to BIS)
-│   └── No (custom encryption) →
-│       Set ITSAppUsesNonExemptEncryption = YES →
-│       Upload compliance documentation to App Store Connect →
-│       Receive encryption compliance code →
-│       Set ITSEncryptionExportComplianceCode in Info.plist → Done
+├── No → ITSAppUsesNonExemptEncryption = NO → Done
+├── Only Apple OS encryption (HTTPS, Keychain, CryptoKit)?
+│   ├── Yes → ITSAppUsesNonExemptEncryption = NO → Done
+│   │         (May need annual BIS self-classification report)
+│   └── No → Industry-standard algorithm (AES, RSA, etc.)?
+│       ├── Yes → ITSAppUsesNonExemptEncryption = YES
+│       │         French declaration if distributing in France
+│       │         Upload docs → receive ITSEncryptionExportComplianceCode
+│       └── No (custom/proprietary) →
+│           ITSAppUsesNonExemptEncryption = YES
+│           US CCATS required (~2 business days)
+│           French declaration if France
+│           Upload docs → receive ITSEncryptionExportComplianceCode
 ```
 
 ### Info.plist Keys
 
 ```xml
-<!-- Most apps: HTTPS only -->
+<!-- Most apps: only Apple OS encryption -->
 <key>ITSAppUsesNonExemptEncryption</key>
 <false/>
 
-<!-- Apps with custom encryption -->
+<!-- Apps with non-exempt encryption (bypasses questionnaire on future submissions) -->
 <key>ITSAppUsesNonExemptEncryption</key>
 <true/>
 <key>ITSEncryptionExportComplianceCode</key>
 <string>YOUR_COMPLIANCE_CODE</string>
 ```
 
+Setting `ITSAppUsesNonExemptEncryption` in Info.plist skips the encryption questionnaire on every submission.
+
 ### Exempt Encryption Uses
 
-These are exempt from export documentation (but may still require annual self-classification):
+No documentation needed:
 - HTTPS/TLS (URLSession, Network.framework, WKWebView)
-- Secure Enclave operations (biometric auth, Keychain)
-- Apple's built-in encryption frameworks (CryptoKit, Security.framework) when used per Apple documentation
+- Secure Enclave, Keychain, biometric auth
+- CryptoKit, Security.framework per Apple docs
 - Password hashing (bcrypt, scrypt, PBKDF2)
 
 ### Non-Exempt Encryption Uses
 
-These require compliance documentation:
+Documentation required:
 - Custom encryption algorithms
-- Open-source encryption libraries (OpenSSL, libsodium) used for non-standard purposes
+- OpenSSL, libsodium for non-standard purposes
 - End-to-end encrypted messaging
 - VPN implementations
 - Custom DRM systems
+
+### France-Specific
+
+Import/export controlled by ANSSI. Banking and medical apps are exempt. Applies to: secure storage, secure communications, security/antivirus apps.
 
 ---
 
@@ -844,16 +889,31 @@ Certain features require entitlements configured in Xcode and provisioning profi
 
 ### TestFlight Submission
 
-TestFlight builds also go through a review process, though lighter than App Store:
-
 | Aspect | Internal Testing | External Testing |
 |--------|-----------------|-----------------|
-| Testers | Up to 100 App Store Connect users | Up to 10,000 external testers |
-| Review required | No | Yes (first build per version) |
+| Testers | Up to 100 ASC users | Up to 10,000 via email/public link |
+| Review required | No | Yes (first build per version, full App Review) |
 | Review time | — | Usually under 24 hours |
-| Duration | 90 days from upload | 90 days from upload |
-| Groups | — | Organize testers into groups |
-| Feedback | Crash reports only | Screenshots, feedback, crash reports |
+| Build expiry | 90 days from upload | 90 days from upload |
+| Groups | Automatic (ASC roles) | Custom groups with "What to Test" notes |
+| Feedback | Crash reports | Screenshots, text feedback, crash reports |
+| Submission limit | — | Max 6 builds per 24-hour period |
+
+**TestFlight readiness checklist**:
+- [ ] Internal tester group exists (required before creating external groups)
+- [ ] Beta App Description set (can differ from production)
+- [ ] Feedback email configured
+- [ ] "What to Test" notes written for each external group
+- [ ] Export compliance answered (required for beta builds too)
+- [ ] Demo credentials included (if login required)
+- [ ] First external build: expect full App Review (guideline compliance checked)
+
+**Gotchas**:
+- Builds uploaded as "TestFlight Internal Only" from Xcode/Xcode Cloud can only go to internal groups
+- Managed Apple Accounts (School/Business Manager) cannot be testers
+- Public link tester cap is configurable (1-10,000) per link
+- Builds remain testable even after the app goes live on the App Store
+- Developer can manually expire builds before 90 days
 
 ---
 
