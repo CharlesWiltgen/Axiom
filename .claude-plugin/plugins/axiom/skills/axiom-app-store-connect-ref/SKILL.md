@@ -1,6 +1,6 @@
 ---
 name: axiom-app-store-connect-ref
-description: Reference for App Store Connect crash analysis, TestFlight feedback, metrics dashboards, and data export workflows
+description: Use when navigating App Store Connect to find crash data, read TestFlight feedback, interpret metrics dashboards, or export diagnostic logs. Covers crash-free rates, dSYM symbolication, termination types, MetricKit.
 license: MIT
 metadata:
   version: "1.0.0"

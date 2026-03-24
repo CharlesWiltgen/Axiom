@@ -1,6 +1,6 @@
 ---
 name: axiom-app-store-ref
-description: App Store submission reference — complete metadata field specs, App Review guideline index, privacy manifest schema, age rating system, export compliance, EU DSA requirements, IAP review pipeline, and WWDC25 submission changes
+description: Use when looking up ANY App Store metadata field requirement, privacy manifest schema, age rating tier, export compliance decision, EU DSA trader status, IAP review pipeline, or WWDC25 submission change. Covers character limits, screenshot specs, encryption decision tree, account deletion rules.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -415,20 +415,7 @@ For the complete guideline index (Sections 1-5), see `references/app-review-guid
 
 ### Most Common Rejection Reasons
 
-Based on Apple's published data, the most frequent rejection reasons:
-
-| Rank | Guideline | Issue | Prevention |
-|------|-----------|-------|------------|
-| 1 | 2.1 | App Completeness — bugs, crashes, placeholder content | Thorough QA before submission |
-| 2 | 4.3 | Spam — duplicate apps, cookie-cutter templates | Ensure genuine unique value |
-| 3 | 2.3.3 | Inaccurate screenshots | Screenshots must match actual app |
-| 4 | 5.1.1 | Privacy — missing policy or purpose strings | Complete all privacy requirements |
-| 5 | 4.0 | Design — not meeting minimum quality bar | Follow HIG, test all flows |
-| 6 | 2.5.1 | Private API usage | Only use public APIs |
-| 7 | 3.1.1 | IAP required for digital goods | Use IAP for digital content |
-| 8 | 4.2 | Minimum functionality — app too simple | Provide genuine utility |
-| 9 | 5.1.1(v) | Missing account deletion | Implement full account deletion |
-| 10 | 2.3.7 | Wrong app category | Choose accurate primary category |
+See `references/app-review-guidelines.md` for the full top-10 rejection causes table with percentages.
 
 ### App Review Timeline
 

@@ -403,10 +403,10 @@ func requestTrackingPermission() {
 The rule is simple: If your app uses ANY third-party or social login service, you MUST offer Sign in with Apple as an equivalent option.
 
 **Exceptions** (SIWA not required):
-- App exclusively uses your company's own accounts
-- App is for education (managed Apple IDs)
-- App requires government or institution ID
-- App is a client for a third-party service (e.g., email client)
+- Company-internal or employee-only apps
+- Education or enterprise apps with existing institutional auth
+- Government/tax/banking apps requiring government ID
+- Apps that are a client for a specific third-party service (e.g., email client)
 
 #### Fix
 ```swift
@@ -1190,7 +1190,7 @@ Design & Originality (4.2/4.3):
 - **app-store-connect-ref** — ASC crash analysis, TestFlight feedback, metrics dashboards
 - **privacy-ux** — Privacy manifest implementation details and required reason APIs
 - **storekit-ref** — StoreKit 2 IAP/subscription implementation
-- **accessibility-diag** — Accessibility compliance (Guideline 2.5.1)
+- **accessibility-diag** — Accessibility compliance (VoiceOver, Dynamic Type, WCAG)
 - **ios-build** — Build and signing issues that cause Binary Rejected
 
 ## Resources

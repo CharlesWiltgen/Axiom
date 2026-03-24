@@ -1,6 +1,6 @@
 ---
 name: axiom-app-store-submission
-description: Use when preparing ANY app for App Store submission - enforces pre-flight checklist, rejection prevention, privacy compliance, and metadata completeness to prevent common App Store rejections
+description: Use when preparing ANY app for App Store submission, responding to App Review rejections, or running a pre-submission audit. Covers privacy manifests, metadata requirements, IAP review, account deletion, SIWA, age ratings, export compliance, first-time developer setup.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -287,7 +287,7 @@ Declare honestly:
 - Unrestricted web access (WebView with open URLs)
 ```
 
-**New age ratings (January 31, 2026)**: Apple expanded from 4+/9+/12+/17+ to 5 tiers (4+/9+/13+/16+/18+) with new capability declarations for messaging, UGC, advertising, and parental controls. All developers must complete the updated questionnaire or app updates will be blocked.
+**Updated age ratings (effective January 31, 2026)**: Apple expanded from 4+/9+/12+/17+ to 5 tiers (4+/9+/13+/16+/18+) with new capability declarations for messaging, UGC, advertising, and parental controls. All developers must have completed the updated questionnaire — app updates are blocked without it.
 
 **Why it works**: Mismatched ratings violate Guideline 2.3.6. Apple compares your questionnaire answers against observed app behavior. UGC and web access are the most commonly missed declarations.
 
@@ -493,7 +493,7 @@ Run this entire checklist before every submission. Check every item, not just th
 
 ### 8. New for 2025-2026
 
-- [ ] Updated age rating questionnaire completed (deadline: January 31, 2026)
+- [ ] Updated age rating questionnaire completed (required since January 31, 2026)
 - [ ] Accessibility Nutrition Labels declared (becoming required for new submissions)
 - [ ] External AI service consent modal (if app sends personal data to external AI)
 - [ ] SDK minimum version met (Xcode 16/iOS 18 SDK now; Xcode 26/iOS 26 SDK starting April 28, 2026)
@@ -619,8 +619,8 @@ Two eligible scenarios:
 
 ### Communication Options (Often Overlooked)
 
-- **30-minute WebEx with App Review** — schedule at developer.apple.com/events (search "Review")
-- **Bug fix shortcut** — if additional (non-legal/safety) issues are found during a bug fix review, you can accept approval for the current submission and fix the extras in the next update
+- **"Meet with App Review" sessions** — Apple periodically offers 30-minute appointments; check developer.apple.com/events for availability (not always open)
+- **Bug fix leniency** — Apple may sometimes approve a bug fix submission with informational notes about additional non-legal/safety issues to address in the next update, rather than blocking the release. This is not guaranteed but happens in practice.
 - **App Store Connect mobile app** for status tracking on the go
 
 ### Metadata Rejected vs Binary Rejected
