@@ -975,32 +975,8 @@ For the discipline-focused pre-flight workflow, see `app-store-submission`.
 | 9 | Build string conflict | Duplicate build string for same version | Each build upload must have a unique build string |
 | 10 | "In Review" for extended period | Complex review or holiday backlog | 90% of apps reviewed in <24h; use expedited review for critical/urgent issues |
 
-### Expedited Review
-
-Request via App Store Connect when:
-- Critical bug fix affecting many users
-- Security vulnerability patch
-- Time-sensitive event (holiday sale, product launch)
-- Legal or government compliance deadline
-
-Apple reviews expedited requests case-by-case. Not guaranteed. Provide clear justification.
-
-### Rejection Response Options
-
-| Option | When to Use | How |
-|--------|-------------|-----|
-| Fix and resubmit | Issue is clear and fixable | Fix the issue, upload new build or update metadata, resubmit |
-| Reply in Resolution Center | Need clarification or want to explain | App Store Connect > Resolution Center |
-| Appeal | Believe rejection is incorrect | App Review Board appeal via Resolution Center |
-| Contact App Review | Need guidance on a specific guideline | Phone or online request |
-
-#### Resolution Center Best Practices
-
-- Respond within 14 days (submissions auto-expire after that)
-- Be specific about what you changed to address the rejection
-- Include screenshots if the fix is visual
-- Reference specific guideline numbers when explaining compliance
-- If appealing, provide factual evidence, not emotional arguments
+For rejection handling (expedited review, appeals, Resolution Center), see `app-store-diag` Pattern 7.
+For pre-submission testing checklists, see `app-store-diag` or `app-store-submission`.
 
 ### App Store Connect API for Submissions
 
@@ -1017,23 +993,6 @@ For automated submission workflows:
 | `GET /v1/apps/{id}/builds` | List processed builds |
 
 Authentication requires an API key from App Store Connect (Users and Access > Integrations > App Store Connect API).
-
-### Pre-Submission Testing Checklist
-
-| Test | What to Verify |
-|------|---------------|
-| Fresh install | App works on clean device with no prior data |
-| Upgrade path | App works when upgrading from previous version |
-| Network conditions | App handles offline, slow, and interrupted connections |
-| Low storage | App handles low disk space gracefully |
-| Background/foreground | App resumes correctly from background |
-| Accessibility | VoiceOver navigation works for all key flows |
-| All device sizes | UI adapts to smallest and largest supported devices |
-| Dark mode | UI renders correctly in both light and dark appearance |
-| All supported languages | No truncation or layout issues in localized versions |
-| Permission denial | App handles denied permissions without crashing |
-| IAP restore | Restore Purchases works on fresh device |
-| Account deletion | Full account deletion flow works end to end |
 
 ---
 
