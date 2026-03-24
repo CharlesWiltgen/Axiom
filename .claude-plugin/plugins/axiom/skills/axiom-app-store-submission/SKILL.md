@@ -624,10 +624,13 @@ IAP items require separate review. Missing or broken IAP is a top rejection caus
 
 ### IAP Submission Checklist
 
-- [ ] All IAP products created in ASC with screenshots
-- [ ] IAP products submitted for review (can be submitted independently)
+- [ ] All IAP products created in ASC with complete metadata
+- [ ] **IAP review screenshot uploaded** for each product (shows what user sees when purchasing — review-only, not displayed on App Store)
+- [ ] **IAP products attached to THIS version** (first submission only: App Version page → In-App Purchases section → Select → checkbox each product). After first approval, subsequent IAPs can be submitted independently.
+- [ ] IAP products submitted for review
 - [ ] Restore Purchases button visible and functional
-- [ ] Subscription terms displayed before purchase confirmation
+- [ ] Subscription terms displayed before purchase confirmation (price, period, auto-renewal)
+- [ ] **Terms of Use and Privacy Policy links visible on the purchase screen** (required by Schedule 2 of the DPLA, referenced by Guideline 3.1.2(c)). `SubscriptionStoreView` handles this automatically from ASC metadata — if using custom paywall UI, add links manually.
 - [ ] Free trial terms clearly communicated
 - [ ] Pricing displayed matches ASC configuration
 - [ ] No external purchase links (Guideline 3.1.1) unless eligible for entitlement
@@ -641,6 +644,9 @@ IAP items require separate review. Missing or broken IAP is a top rejection caus
 ❌ Subscription auto-renews without clear disclosure → Guideline 3.1.2
 ❌ Free trial duration not shown before purchase → Guideline 3.1.2
 ❌ External purchase link without entitlement → Guideline 3.1.1
+❌ IAP products not attached to submission version → Guideline 2.1 (reviewer can't see them)
+❌ No review screenshot on IAP product → Guideline 2.1 (reviewer can't verify purchase UI)
+❌ Terms of Use / Privacy Policy missing from paywall → DPLA Schedule 2 (use SubscriptionStoreView to avoid)
 ```
 
 ---
@@ -650,6 +656,7 @@ IAP items require separate review. Missing or broken IAP is a top rejection caus
 | Guideline | Issue | Prevention |
 |-----------|-------|------------|
 | 2.1 | Crashes, broken features, incomplete | Device testing, content audit |
+| 2.1 | IAP not visible to reviewer | Attach IAP to version (checkbox in ASC), upload review screenshots |
 | 2.3 | Inaccurate metadata, wrong screenshots | Screenshot audit, metadata review |
 | 2.3.6 | Incorrect age rating | Honest questionnaire, declare UGC |
 | 3.1.1 | IAP issues, missing Restore Purchases | Test all IAP flows, add restore |
