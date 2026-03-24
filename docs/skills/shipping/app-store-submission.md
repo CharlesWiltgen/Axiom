@@ -1,6 +1,6 @@
 ---
 name: app-store-submission
-description: Use when preparing ANY app for App Store submission - enforces pre-flight checklist, rejection prevention, privacy compliance, and metadata completeness to prevent common App Store rejections
+description: Use when preparing ANY app for App Store submission, responding to App Review rejections, or running a pre-submission audit
 ---
 
 # App Store Submission
@@ -38,17 +38,20 @@ Complete mandatory checklist covering build configuration, privacy requirements,
 ### Anti-Patterns with Time Costs
 8 common submission mistakes — submitting without device testing, missing privacy policy, placeholder content, ignoring privacy manifest, missing Sign in with Apple, no account deletion, wrong age rating, missing demo credentials — each with the days lost and prevention steps.
 
+### IAP Submission Checklist
+- Review screenshot required for each IAP product
+- IAP products must be attached to the version (checkbox in ASC, first submission only)
+- Terms of Use and Privacy Policy links on paywall (`SubscriptionStoreView` handles automatically; custom UI must add manually)
+- Subscription terms visible before purchase (price, period, auto-renewal)
+
 ### Decision Tree
 Step-by-step "Is my app ready?" walkthrough covering crashes, privacy manifest, privacy policy, screenshots, account deletion, SIWA, IAP, encryption, EU compliance, demo credentials, age rating, and placeholder content.
 
 ### Pressure Scenarios
 Three scenarios that prevent rationalization under deadline pressure, repeated rejections, and false confidence from prior approval.
 
-### Screenshot and Metadata Requirements
-Device size specifications, screenshot rules, App Preview video specs, and common metadata rejection triggers.
-
 ### Handling Rejections
-Reading rejection messages, response strategy, when to appeal, appeal process, and metadata vs binary rejection differences.
+Reading rejection messages, response strategy, when to appeal, expedited review eligibility (critical bug fix, event-related), "Meet with App Review" scheduling, bug fix leniency, and metadata vs binary rejection differences.
 
 ## Key Pattern
 

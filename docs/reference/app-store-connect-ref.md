@@ -1,6 +1,6 @@
 ---
 name: app-store-connect-ref
-description: Crash analysis, TestFlight feedback, metrics dashboards, and data export workflows for App Store Connect
+description: Use when navigating App Store Connect to find crash data, read TestFlight feedback, interpret metrics dashboards, or export diagnostic logs
 ---
 
 # App Store Connect Reference

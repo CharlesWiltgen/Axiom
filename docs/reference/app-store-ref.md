@@ -1,6 +1,6 @@
 ---
 name: app-store-ref
-description: App Store submission reference — complete metadata field specs, App Review guideline index, privacy manifest schema, age rating system, export compliance, EU DSA requirements, IAP review pipeline, and WWDC25 submission changes
+description: Use when looking up ANY App Store metadata field, privacy manifest schema, age rating tier, export compliance decision, or WWDC25 submission change
 skill_type: reference
 version: 1.0.0
 apple_platforms: iOS, iPadOS, tvOS, watchOS, visionOS
@@ -41,15 +41,15 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-- **Part 1: Metadata Fields** — All required fields with character limits, screenshot pixel dimensions per device, App Preview specs, icon requirements, localization rules, category selection
-- **Part 2: Privacy Requirements** — Privacy manifest XML schema, Required Reason API categories with reason codes, Privacy Nutrition Label data types and purposes, ATT implementation, common purpose strings (NS*UsageDescription)
-- **Part 3: App Review Guidelines** — Quick reference for all sections 1-5 (Safety, Performance, Business, Design, Legal) with guideline numbers and topics, plus top 10 rejection reasons
-- **Part 4: Age Rating System** — Five-tier ratings (4+/9+/13+/16+/18+), new capability declarations (messaging, UGC, advertising), regional mapping, questionnaire topics
-- **Part 5: Export Compliance** — Encryption decision tree, exempt vs non-exempt uses, Info.plist keys
+- **Part 1: Metadata Fields** — Immutable fields warning (Bundle ID, Product ID, Subscription Duration), all required fields with character limits, complete screenshot pixel dimensions for all device sizes with fallback chains, App Preview codec specs (H.264/ProRes 422 HQ, 15-30s, 500MB), icon requirements, localization rules
+- **Part 2: Privacy Requirements** — Privacy manifest XML schema, Required Reason API categories with reason codes, Privacy Nutrition Labels, ATT, purpose strings, plus gotchas (custom values silently rejected by Xcode, IP address declaration, iOS 17 tracking domain blocking, web view collection)
+- **Part 3: App Review Guidelines** — Verified index (Feb 6 2026 revision) for all sections 1-5, top 10 rejection causes, zero-tolerance guidelines, sensitive app types requiring extra documentation
+- **Part 4: Age Rating System** — Five-tier ratings (4+/9+/13+/16+/18+), OS 26 adds 12+ and 17+, capability declarations, regional mapping, questionnaire topics
+- **Part 5: Export Compliance** — Three-tier encryption system (exempt/industry-standard/proprietary), decision tree, Info.plist keys, France-specific ANSSI requirements
 - **Part 6: Account Requirements** — Account deletion checklist, SIWA rules and exceptions, token revocation
 - **Part 7: Monetization** — IAP submission pipeline, subscription rules, loot box disclosure, external payment eligibility, subscription group architecture
 - **Part 8: EU Compliance** — DSA trader status, trader requirements, alternative distribution
-- **Part 9: Build Upload** — Upload methods, build identifiers, SDK requirements, processing stages, TestFlight review
+- **Part 9: Build Upload** — Upload methods, build identifiers, SDK requirements, processing stages, TestFlight readiness checklist (90-day expiry, 10K external testers, 6 builds/24h limit, first external build needs full review)
 - **Part 10: WWDC25 Changes** — Draft submissions, reusable build numbers, accessibility nutrition labels, AI-generated tags, custom product page keywords, expanded offer codes
 
 ## Key Pattern
