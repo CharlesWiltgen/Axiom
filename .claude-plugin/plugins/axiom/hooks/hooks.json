@@ -44,6 +44,16 @@
         ]
       }
     ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/subagent-start.sh\""
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
