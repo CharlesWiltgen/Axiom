@@ -52,11 +52,12 @@ If Axiom doesn't appear after installation:
 
 ### Skills Not Being Suggested
 
-If Claude Code isn't suggesting Axiom skills:
+Axiom v2.37.0 includes automatic skill routing — every message is checked for iOS-related keywords and the matching skill is injected. If skills still aren't firing:
 
-1. **Be specific**: Use keywords from skill descriptions (e.g., "BUILD FAILED", "actor isolation", "memory leak")
-2. **Manual invocation**: Type `/skill axiom:` to see available skills
-3. **Check context**: Skills are suggested based on your question and code context
+1. **Use iOS-specific terms**: Keywords like "SwiftUI", "build failed", "memory leak", "@State", "SwiftData" trigger routing automatically
+2. **Use `/axiom:ask`**: Explicitly routes your question to the right skill
+3. **Manual invocation**: Type `/skill axiom:` to see available skills
+4. **Check context**: Skills route based on your question content — generic terms like "fix the bug" may not trigger routing
 
 ### Skills Not Found
 

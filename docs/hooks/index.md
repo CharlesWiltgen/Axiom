@@ -1,34 +1,32 @@
 # Automatic Hooks
 
-Axiom includes **4 event-driven hooks** that automatically enhance your workflow by responding to specific events in Claude Code.
+Axiom includes **6 event-driven hooks** that automatically enhance your workflow by responding to specific events in Claude Code.
 
 ## What Are Hooks?
 
 Hooks are automatic triggers that:
-- Run at specific events (session start, before/after tool use)
+- Run at specific events (session start, user prompt, before/after tool use, subagent spawn)
 - Provide proactive warnings and suggestions
-- Automate repetitive tasks
-- Enhance code quality without manual intervention
+- Route you to the right Axiom skill automatically
+- Automate repetitive tasks like code formatting
 
 ## Available Hooks
 
-### 1. Build Failure Auto-Trigger
+### 1. Skill Routing (v2.37.0)
 
-**Event**: PostToolUse on Bash
-**Trigger**: When `xcodebuild` or `swift build` fails with non-zero exit
+**Event**: UserPromptSubmit
+**Trigger**: Every user message
 
-Automatically suggests running `/axiom:fix-build` for environment-first diagnostics.
+Analyzes your prompt for iOS-related keywords and injects a specific skill recommendation before Claude responds. This is the primary mechanism that makes Axiom skills fire automatically.
 
 **Example**:
-```bash
-# You run a build that fails
-xcodebuild build
+```
+You type: "My SwiftUI view is not updating when the data changes"
 
-# Hook automatically suggests:
-# "Build failed. Run /axiom:fix-build for automatic diagnostics?"
+Hook injects: "Axiom: This prompt matches `axiom-ios-ui`. Invoke it before responding."
 ```
 
-**Value**: Zero-friction entry to build diagnostics when you need it most.
+Covers 13 iOS domains: build, UI, data, concurrency, performance, networking, testing, integration, accessibility, AI, ML, vision, games, graphics, and shipping. Includes a negative gate to avoid false positives on non-iOS work (TypeScript, React, Python, etc.).
 
 ---
 
@@ -37,42 +35,54 @@ xcodebuild build
 **Event**: SessionStart
 **Trigger**: Every time a Claude Code session starts
 
-Checks for common environment issues:
+Injects the Axiom discipline skill (`using-axiom`) into the conversation and checks for common environment issues:
 - **Zombie xcodebuild processes** (warns if >5 running)
 - **Large Derived Data** (warns if >10GB)
-
-**Example output** (only shown if issues detected):
-```
-Axiom Environment Check:
-⚠️ 12 xcodebuild processes running (consider: killall xcodebuild)
-⚠️ Derived Data is 15.3GB (consider cleaning)
-```
-
-**Value**: Catch environment issues before they waste your time.
+- **Xcode detection** (loads Apple for-LLM documentation if available)
+- **xclog availability** (console capture tool)
 
 ---
 
-### 3. Core Data Model Protection
+### 3. Subagent Skill Injection (v2.37.0)
 
-**Event**: PreToolUse on Edit/Write
-**Trigger**: When editing `.xcdatamodeld` files
+**Event**: SubagentStart
+**Trigger**: When Claude spawns a subagent
 
-Warns about migration planning risks and suggests running `/axiom:audit-core-data` after changes.
+Injects a compact Axiom skill menu into subagents so they can access Axiom's expertise. Without this, subagents don't inherit the session-start context and wouldn't know about Axiom skills.
 
-**Example**:
-```swift
-// You start editing MyModel.xcdatamodeld
-
-// Hook adds context:
-// "Warning: Core Data model changes require migration planning.
-//  Run /axiom:audit-core-data after changes to verify safety."
-```
-
-**Value**: Prevent accidental schema changes that cause production crashes.
+Skips non-iOS agent types (beads, plugin-dev, etc.) to avoid wasting context.
 
 ---
 
-### 4. Swift Auto-Format
+### 4. Error Pattern Detection
+
+**Event**: PostToolUse on Bash
+**Trigger**: After any Bash command runs
+
+Scans command output for iOS-specific error patterns and suggests the right skill:
+
+| Error Pattern | Suggested Skill |
+|---------------|----------------|
+| Auto Layout constraint conflicts | `auto-layout-debugging` |
+| Actor-isolated / Sendable / data race | `swift-concurrency` |
+| No such column / FOREIGN KEY / migration | `database-migration` |
+| Retain cycle / memory leak | `memory-debugging` |
+| CKError / CKRecord | `cloudkit-ref` or `cloud-sync-diag` |
+| Module not found / linker failed | `/axiom:fix-build` |
+
+---
+
+### 5. Swift Guardrails
+
+**Event**: PostToolUse on Write/Edit
+**Trigger**: After modifying `.swift` files
+
+Catches critical Swift issues as code is written:
+- **`@State var` without access control** — blocks the edit and requires fixing. Without an explicit access level (usually `private`), child views can create independent copies of the state, causing silent bugs.
+
+---
+
+### 6. Swift Auto-Format
 
 **Event**: PostToolUse on Write/Edit
 **Trigger**: After modifying `.swift` files
@@ -84,73 +94,33 @@ Automatically runs `swiftformat` to ensure consistent code style.
 brew install swiftformat
 ```
 
-**Example**:
-```swift
-// You write or edit a Swift file
-// Hook automatically formats it with swiftformat
-
-// If swiftformat not installed:
-// "⚠️ Axiom: swiftformat not found. Install with: brew install swiftformat"
-```
-
-**Value**: Consistent code style without manual formatting.
-
 ---
 
 ## How Hooks Work
 
-Hooks are defined in `plugins/axiom/hooks/hooks.json`:
-
-```json
-{
-  "hooks": [
-    {
-      "event": "PostToolUse",
-      "matcher": "Bash",
-      "hook": {
-        "type": "prompt",
-        "prompt": "If this bash command was xcodebuild/swift build and it failed..."
-      }
-    },
-    {
-      "event": "SessionStart",
-      "hook": {
-        "type": "command",
-        "command": "${CLAUDE_PLUGIN_ROOT}/scripts/environment-check.sh"
-      }
-    }
-  ]
-}
-```
+Hooks are defined in `plugins/axiom/hooks/hooks.json` and execute shell scripts or inline commands. All hooks are synchronous by default (they complete before Claude responds).
 
 ### Hook Types
 
-**Prompt Hooks** (`type: "prompt"`):
-- Use LLM (Haiku) to analyze context
-- Make intelligent decisions
-- Add contextual warnings or suggestions
-
 **Command Hooks** (`type: "command"`):
-- Execute bash scripts
+- Execute bash scripts or inline shell commands
 - Fast, deterministic behavior
-- Direct system interaction
+- Can inject context, block actions, or auto-approve operations
+
+### Hook Outputs
+
+Hooks can return JSON to control Claude's behavior:
+
+| Output Field | Effect |
+|-------------|--------|
+| `additionalContext` | Injects text into Claude's context (used by skill routing, subagent injection) |
+| `decision: "block"` | Blocks the action and forces Claude to fix the issue (used by swift guardrails) |
+| `reason` | Explanation shown when an action is blocked |
 
 ---
 
 ## Disabling Hooks
 
-If you want to disable specific hooks, you can modify `plugins/axiom/hooks/hooks.json` and remove or comment out entries.
+If you want to disable specific hooks, you can modify `plugins/axiom/hooks/hooks.json` and remove entries.
 
 Alternatively, you can disable all Axiom hooks by removing the `"hooks"` field from `plugins/axiom/claude-code.json`.
-
----
-
-## Future Hooks
-
-Potential future hooks based on community feedback:
-- Pre-commit git safety checks
-- Automatic test running on code changes
-- Performance profiling suggestions
-- Accessibility audit reminders
-
-[Let us know](https://github.com/CharlesWiltgen/Axiom/issues) what hooks would be valuable for your workflow!
