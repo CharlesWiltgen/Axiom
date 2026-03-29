@@ -1,0 +1,3 @@
+interface:
+  display_name: "SwiftUI Performance"
+  short_description: "UI is slow, scrolling lags, animations stutter, or when asking 'why is my SwiftUI view slow', 'how do I optimize List..."

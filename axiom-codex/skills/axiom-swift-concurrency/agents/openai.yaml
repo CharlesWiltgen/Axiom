@@ -1,0 +1,3 @@
+interface:
+  display_name: "Swift Concurrency"
+  short_description: "You see 'actor-isolated', 'Sendable', 'data race', '@MainActor' errors, or when asking 'why is this not thread safe',..."

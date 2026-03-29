@@ -1,0 +1,3 @@
+interface:
+  display_name: "Xcode MCP Tools"
+  short_description: "Xcode MCP workflow patterns"

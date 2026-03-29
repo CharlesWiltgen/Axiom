@@ -1,0 +1,3 @@
+interface:
+  display_name: "Metal Migration Diagnostics"
+  short_description: "ANY Metal porting issue occurs"

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Vision"
+  short_description: "Subject segmentation, VNGenerateForegroundInstanceMaskRequest, isolate object from hand, VisionKit subject lifting, i..."

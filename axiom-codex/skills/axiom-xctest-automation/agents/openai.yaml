@@ -1,0 +1,3 @@
+interface:
+  display_name: "XCTest Automation"
+  short_description: "Writing, running, or debugging XCUITests"

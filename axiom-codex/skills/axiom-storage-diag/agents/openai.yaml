@@ -1,0 +1,3 @@
+interface:
+  display_name: "Storage Diagnostics"
+  short_description: "Debugging 'files disappeared', 'data missing after restart', 'backup too large', 'can't save file', 'file not found',..."

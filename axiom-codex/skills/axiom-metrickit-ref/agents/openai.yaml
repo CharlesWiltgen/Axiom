@@ -1,0 +1,3 @@
+interface:
+  display_name: "MetricKit Reference"
+  short_description: "MetricKit API reference for field diagnostics"

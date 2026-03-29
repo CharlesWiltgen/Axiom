@@ -1,0 +1,3 @@
+interface:
+  display_name: "SwiftUI Animation Reference"
+  short_description: "Implementing SwiftUI animations, understanding VectorArithmetic, using @Animatable macro, zoom transitions, UIKit/App..."

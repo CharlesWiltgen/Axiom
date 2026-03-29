@@ -1,0 +1,3 @@
+interface:
+  display_name: "Xcode Debugging"
+  short_description: "Encountering BUILD FAILED, test crashes, simulator hangs, stale builds, zombie xcodebuild processes, \"Unable to boot ..."

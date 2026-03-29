@@ -1,0 +1,3 @@
+interface:
+  display_name: "Timer Patterns"
+  short_description: "Implementing timers, debugging timer crashes (EXC_BAD_INSTRUCTION), Timer stops during scrolling, or choosing between..."

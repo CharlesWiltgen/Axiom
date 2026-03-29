@@ -1,0 +1,3 @@
+interface:
+  display_name: "Combine Patterns"
+  short_description: "Working with Combine publishers, AnyCancellable lifecycle, @Published properties, or bridging Combine with async/await"

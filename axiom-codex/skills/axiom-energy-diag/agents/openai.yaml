@@ -1,0 +1,3 @@
+interface:
+  display_name: "Energy Diagnostics"
+  short_description: "Symptom-based energy troubleshooting"

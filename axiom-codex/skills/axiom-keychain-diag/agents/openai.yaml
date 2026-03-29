@@ -1,0 +1,3 @@
+interface:
+  display_name: "Keychain Diagnostics"
+  short_description: "SecItem calls fail — errSecDuplicateItem from unexpected uniqueness, errSecItemNotFound despite item existing, errSec..."

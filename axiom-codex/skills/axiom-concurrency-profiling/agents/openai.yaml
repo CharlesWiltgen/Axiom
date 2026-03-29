@@ -1,0 +1,3 @@
+interface:
+  display_name: "Concurrency Profiling"
+  short_description: "Profiling async/await performance, diagnosing actor contention, or investigating thread pool exhaustion"

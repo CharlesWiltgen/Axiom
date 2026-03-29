@@ -1,0 +1,3 @@
+interface:
+  display_name: "CloudKit Reference"
+  short_description: "Implementing 'CloudKit sync', 'CKSyncEngine', 'CKRecord', 'CKDatabase', 'SwiftData CloudKit', 'shared database', 'pub..."

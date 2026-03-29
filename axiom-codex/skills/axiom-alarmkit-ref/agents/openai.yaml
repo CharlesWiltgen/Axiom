@@ -1,0 +1,3 @@
+interface:
+  display_name: "AlarmKit Reference"
+  short_description: "Implementing alarm functionality, scheduling wake alarms, or integrating AlarmKit with Live Activities"

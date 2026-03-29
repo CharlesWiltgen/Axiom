@@ -1,0 +1,3 @@
+interface:
+  display_name: "Keychain Reference"
+  short_description: "Needing SecItem function signatures, keychain attribute constants, item class uniqueness constraints, accessibility l..."

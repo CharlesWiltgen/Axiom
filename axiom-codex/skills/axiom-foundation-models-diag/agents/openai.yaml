@@ -1,0 +1,3 @@
+interface:
+  display_name: "Foundation Models Diagnostics"
+  short_description: "Debugging Foundation Models issues"

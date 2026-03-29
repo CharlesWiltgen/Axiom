@@ -1,0 +1,3 @@
+interface:
+  display_name: "Obj-C Block Retain Cycles"
+  short_description: "Debugging memory leaks from blocks, blocks assigned to self or properties, network callbacks, or crashes from dealloc..."

@@ -1,0 +1,38 @@
+{
+  "name": "axiom",
+  "version": "2.37.0",
+  "description": "Battle-tested skills for modern iOS development — SwiftUI, concurrency, data, performance, networking, accessibility, and more.",
+  "author": {
+    "name": "Charles Wiltgen",
+    "url": "https://charleswiltgen.github.io/Axiom/"
+  },
+  "homepage": "https://charleswiltgen.github.io/Axiom/",
+  "repository": "https://github.com/CharlesWiltgen/Axiom",
+  "license": "MIT",
+  "keywords": [
+    "ios",
+    "swift",
+    "swiftui",
+    "xcode",
+    "apple",
+    "mobile",
+    "development"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Axiom",
+    "shortDescription": "Battle-tested iOS development skills",
+    "longDescription": "Axiom gives AI coding assistants deep iOS development expertise — preventing data loss from bad migrations, catching memory leaks, diagnosing build failures, and guiding Swift concurrency, SwiftUI, networking, accessibility, and more.",
+    "developerName": "Charles Wiltgen",
+    "category": "Development",
+    "capabilities": [
+      "Read"
+    ],
+    "websiteURL": "https://charleswiltgen.github.io/Axiom/",
+    "defaultPrompt": [
+      "Check my SwiftUI code for performance issues",
+      "Help me fix this build failure",
+      "How do I safely add a database column?"
+    ]
+  }
+}

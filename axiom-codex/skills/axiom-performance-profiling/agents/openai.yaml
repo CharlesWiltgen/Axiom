@@ -1,0 +1,3 @@
+interface:
+  display_name: "Performance Profiling"
+  short_description: "App feels slow, memory grows over time, battery drains fast, or you want to profile proactively"

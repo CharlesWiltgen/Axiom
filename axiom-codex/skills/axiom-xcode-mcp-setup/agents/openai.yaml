@@ -1,0 +1,3 @@
+interface:
+  display_name: "Xcode MCP Setup"
+  short_description: "Xcode MCP setup — enable mcpbridge, per-client config, permission handling, multi-Xcode targeting, troubleshooting"

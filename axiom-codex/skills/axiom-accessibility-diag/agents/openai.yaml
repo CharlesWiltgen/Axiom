@@ -1,0 +1,3 @@
+interface:
+  display_name: "Accessibility Diagnostics"
+  short_description: "Fixing VoiceOver issues, Dynamic Type violations, color contrast failures, touch target problems, keyboard navigation..."

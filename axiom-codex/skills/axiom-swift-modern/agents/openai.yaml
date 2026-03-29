@@ -1,0 +1,3 @@
+interface:
+  display_name: "Swift Modern"
+  short_description: "Reviewing or generating Swift code for modern idiom correctness"

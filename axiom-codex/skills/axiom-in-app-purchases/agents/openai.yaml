@@ -1,0 +1,3 @@
+interface:
+  display_name: "In App Purchases"
+  short_description: "Implementing in-app purchases, StoreKit 2, subscriptions, or transaction handling"

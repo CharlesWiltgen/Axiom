@@ -1,0 +1,3 @@
+interface:
+  display_name: "LLDB Reference"
+  short_description: "Complete LLDB command reference"

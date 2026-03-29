@@ -1,0 +1,3 @@
+interface:
+  display_name: "SwiftUI Layout"
+  short_description: "Layouts need to adapt to different screen sizes, iPad multitasking, or iOS 26 free-form windows"

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Foundation Models Reference"
+  short_description: "Reference — Complete Foundation Models framework guide covering LanguageModelSession, @Generable, @Guide, Tool protoc..."

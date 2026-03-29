@@ -1,0 +1,3 @@
+interface:
+  display_name: "Networking Migration"
+  short_description: "Network framework migration guides"

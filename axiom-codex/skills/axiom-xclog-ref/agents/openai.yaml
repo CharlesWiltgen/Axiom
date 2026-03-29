@@ -1,0 +1,3 @@
+interface:
+  display_name: "xclog Reference"
+  short_description: "Capturing iOS simulator console output, diagnosing runtime crashes, viewing print/os_log output, or needing structure..."

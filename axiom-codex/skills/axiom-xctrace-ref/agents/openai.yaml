@@ -1,0 +1,3 @@
+interface:
+  display_name: "xctrace Reference"
+  short_description: "Automating Instruments profiling, running headless performance analysis, or integrating profiling into CI/CD"

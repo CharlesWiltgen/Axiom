@@ -1,0 +1,3 @@
+interface:
+  display_name: "Code Signing Reference"
+  short_description: "Needing certificate CLI commands, provisioning profile inspection, entitlement extraction, Keychain management script..."

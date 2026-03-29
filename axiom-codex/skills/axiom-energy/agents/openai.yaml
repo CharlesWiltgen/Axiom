@@ -1,0 +1,3 @@
+interface:
+  display_name: "Energy"
+  short_description: "App drains battery, device gets hot, users report energy issues, or auditing power consumption"

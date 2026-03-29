@@ -1,6 +1,6 @@
-# Quick Start
+# Install
 
-## Install the Claude Code Plugin
+## Install for Claude Code
 
 In Claude Code, run:
 
@@ -16,14 +16,12 @@ Then install the plugin:
 
 Verify with `/plugin` → "Manage and install" — Axiom should be listed.
 
-## Install the Codex Plugin
+## Install for Codex
 
-Clone the repo and build:
+Clone the repo:
 
 ```bash
 git clone https://github.com/CharlesWiltgen/Axiom.git
-cd Axiom
-npm run build:codex
 ```
 
 Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
@@ -44,6 +42,8 @@ Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
 ```
 
 Replace `/path/to/Axiom` with the actual path where you cloned the repo. See the [full Codex setup guide](/start/codex-install) for project-scoped installation and troubleshooting.
+
+To update, just `git pull` — the plugin reads from disk.
 
 ## Use Skills
 
@@ -67,7 +67,7 @@ Axiom skills route automatically based on iOS-specific keywords in your question
 
 1. **Use specific terms**: "SwiftUI", "build failed", "memory leak", "@MainActor", "SwiftData" trigger routing
 2. **Use `/axiom:ask`** (Claude Code): Explicitly routes your question to the right skill
-3. **Restart**: Reload Claude Code or rebuild the Codex plugin
+3. **Restart**: Reload Claude Code or Codex
 
 ### Getting Help
 

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Core Data Diagnostics"
+  short_description: "Debugging schema migration crashes, concurrency thread-confinement errors, N+1 query performance, SwiftData to Core D..."

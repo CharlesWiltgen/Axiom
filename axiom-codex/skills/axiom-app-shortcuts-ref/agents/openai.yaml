@@ -1,0 +1,3 @@
+interface:
+  display_name: "App Shortcuts Reference"
+  short_description: "Implementing App Shortcuts for instant Siri/Spotlight availability, configuring AppShortcutsProvider, adding suggeste..."

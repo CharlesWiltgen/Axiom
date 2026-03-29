@@ -41,7 +41,7 @@ export default withMermaid(defineConfig({
           text: 'Get Started',
           items: [
             { text: 'Overview', link: '/start/' },
-            { text: 'Quick Start', link: '/start/quick-start' },
+            { text: 'Install', link: '/start/install' },
             { text: 'MCP Server', link: '/start/mcp-install' },
             { text: 'Codex Plugin', link: '/start/codex-install' },
             { text: 'Xcode Integration', link: '/start/xcode-setup' },
