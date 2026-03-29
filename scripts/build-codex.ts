@@ -48,10 +48,10 @@ fs.mkdirSync(OUTPUT_MANIFEST, { recursive: true });
 
 // Parse SKILL.md frontmatter (name, description) without external dependencies
 function parseFrontmatter(content: string): Record<string, string> {
-  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!match) return {};
   const fields: Record<string, string> = {};
-  for (const line of match[1].split('\n')) {
+  for (const line of match[1].split(/\r?\n/)) {
     const m = line.match(/^(\w+):\s*(.+)/);
     if (m) fields[m[1]] = m[2];
   }
@@ -91,8 +91,8 @@ function toShortDescription(description: string): string {
   const end = short.search(/\.\s|—|\s-\s/);
   if (end >= 20) short = short.slice(0, end);
   if (short.length > 120) short = short.slice(0, 117) + '...';
-  // Escape quotes for YAML and trim
-  short = short.replace(/"/g, '\\"').trim();
+  // Escape for YAML double-quoted string (backslashes first, then quotes) and trim
+  short = short.replace(/\\/g, '\\\\').replace(/"/g, '\\"').trim();
   return short.charAt(0).toUpperCase() + short.slice(1);
 }
 
@@ -117,11 +117,13 @@ for (const dir of skillDirs) {
     fs.mkdirSync(agentsDir, { recursive: true });
     const yaml = [
       'interface:',
-      `  display_name: "${toDisplayName(fm.name)}"`,
+      `  display_name: "${toDisplayName(dir.name)}"`,
       `  short_description: "${toShortDescription(fm.description)}"`,
       '',
     ].join('\n');
     fs.writeFileSync(path.join(agentsDir, 'openai.yaml'), yaml);
+  } else {
+    console.warn(`  warn: skipped openai.yaml for ${dir.name} (missing name or description in frontmatter)`);
   }
 
   copied++;
@@ -163,5 +165,6 @@ fs.writeFileSync(
 );
 
 // Summary
-const skipped = EXCLUDE_SKILLS.size;
+const allDirs = fs.readdirSync(SOURCE_SKILLS, { withFileTypes: true }).filter(d => d.isDirectory());
+const skipped = allDirs.filter(d => EXCLUDE_SKILLS.has(d.name)).length;
 console.log(`axiom-codex built: ${copied} skills (${skipped} routers excluded), v${version}`);
