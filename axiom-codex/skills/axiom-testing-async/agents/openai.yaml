@@ -1,0 +1,3 @@
+interface:
+  display_name: "Testing Async"
+  short_description: "Testing async code with Swift Testing"

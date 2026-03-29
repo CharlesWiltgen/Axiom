@@ -1,0 +1,3 @@
+interface:
+  display_name: "Axe Reference"
+  short_description: "Automating iOS Simulator UI interactions beyond simctl capabilities"

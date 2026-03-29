@@ -1,0 +1,3 @@
+interface:
+  display_name: "Haptics"
+  short_description: "Implementing haptic feedback, Core Haptics patterns, audio-haptic synchronization, or debugging haptic issues"

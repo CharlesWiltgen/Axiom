@@ -1,0 +1,3 @@
+interface:
+  display_name: "Synchronization"
+  short_description: "Needing thread-safe primitives for performance-critical code"

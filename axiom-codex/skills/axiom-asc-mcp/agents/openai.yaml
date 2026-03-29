@@ -1,0 +1,3 @@
+interface:
+  display_name: "ASC MCP"
+  short_description: "Automating App Store Connect via MCP"

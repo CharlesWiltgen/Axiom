@@ -1,0 +1,3 @@
+interface:
+  display_name: "SF Symbols Reference"
+  short_description: "You need complete SF Symbols API reference including every rendering mode, symbol effect, configuration option, UIKit..."

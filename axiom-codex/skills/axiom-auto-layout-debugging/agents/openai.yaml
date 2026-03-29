@@ -1,0 +1,3 @@
+interface:
+  display_name: "Auto Layout Debugging"
+  short_description: "Encountering \"Unable to simultaneously satisfy constraints\" errors, constraint conflicts, ambiguous layout warnings, ..."

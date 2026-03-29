@@ -1,0 +1,3 @@
+interface:
+  display_name: "Core Data"
+  short_description: "Choosing Core Data vs SwiftData, setting up the Core Data stack, modeling relationships, or implementing concurrency ..."

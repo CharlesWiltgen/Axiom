@@ -1,0 +1,3 @@
+interface:
+  display_name: "Networking Legacy"
+  short_description: "This skill should be used when working with NWConnection patterns for iOS 12-25, supporting apps that can't use async..."

@@ -1,0 +1,3 @@
+interface:
+  display_name: "SwiftUI Debugging Diagnostics"
+  short_description: "SwiftUI view debugging requires systematic investigation"

@@ -1,0 +1,3 @@
+interface:
+  display_name: "iCloud Drive Reference"
+  short_description: "Implementing 'iCloud Drive', 'ubiquitous container', 'file sync', 'NSFileCoordinator', 'NSFilePresenter', 'isUbiquito..."

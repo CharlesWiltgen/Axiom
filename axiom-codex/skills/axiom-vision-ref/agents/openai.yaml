@@ -1,0 +1,3 @@
+interface:
+  display_name: "Vision Reference"
+  short_description: "Needing Vision framework API details for hand/body pose, segmentation, text recognition, barcode detection, document ..."

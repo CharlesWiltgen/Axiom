@@ -1,0 +1,3 @@
+interface:
+  display_name: "Core Spotlight Reference"
+  short_description: "Indexing app content for Spotlight search, using NSUserActivity for prediction/handoff, or choosing between CSSearcha..."

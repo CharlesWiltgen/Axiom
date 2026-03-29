@@ -1,0 +1,3 @@
+interface:
+  display_name: "RealityKit Diagnostics"
+  short_description: "RealityKit entities not visible, anchors not tracking, gestures not responding, performance drops, materials wrong, o..."

@@ -19,7 +19,6 @@ The Codex plugin includes 164 specialized skills covering:
 ## Prerequisites
 
 - **Codex CLI** or Codex web app
-- **Node.js 24+** — required to build the plugin. Check with `node --version`
 
 ## Installation
 
@@ -29,15 +28,11 @@ The Codex plugin marketplace does not yet support third-party submissions. For n
 
 ### Option 1: Personal Marketplace (recommended)
 
-Clone the repo and build the plugin:
+Clone the repo:
 
 ```bash
 git clone https://github.com/CharlesWiltgen/Axiom.git
-cd Axiom
-npm run build:codex
 ```
-
-This creates the `axiom-codex/` directory containing the plugin. Use its full path in the config below.
 
 Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
 
@@ -96,12 +91,11 @@ Skills activate automatically based on your questions. Just ask:
 
 ## Updating
 
-Pull the latest changes and rebuild:
+Pull the latest changes:
 
 ```bash
 cd /path/to/Axiom
 git pull
-npm run build:codex
 ```
 
 The plugin reads skills from disk, so the update takes effect immediately.
@@ -119,21 +113,12 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 
 ## Troubleshooting
 
-### `axiom-codex/` directory not found
-
-Run the build step first:
-
-```bash
-cd /path/to/Axiom
-npm run build:codex
-```
-
 ### Skills not appearing in Codex
 
 Verify the path in your `marketplace.json` points to the `axiom-codex/` directory (not the repo root), and that the directory contains `.codex-plugin/plugin.json`.
 
 ## Also Available
 
-- **[Claude Code](/start/quick-start)** — Full Axiom experience with 38 autonomous agents and 12 commands
-- **[MCP Server](/start/mcp-install)** — Skills in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool; no build step required
+- **[Claude Code](/start/install)** — Full Axiom experience with 38 autonomous agents and 12 commands
+- **[MCP Server](/start/mcp-install)** — Skills in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
 - **[Xcode Integration](/start/xcode-setup)** — Direct Xcode MCP bridge for in-editor assistance

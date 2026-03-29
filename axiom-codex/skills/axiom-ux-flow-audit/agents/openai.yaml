@@ -1,0 +1,3 @@
+interface:
+  display_name: "UX Flow Audit"
+  short_description: "Auditing user journeys, checking for UX dead ends, dismiss traps, buried CTAs, missing empty/loading/error states, or..."

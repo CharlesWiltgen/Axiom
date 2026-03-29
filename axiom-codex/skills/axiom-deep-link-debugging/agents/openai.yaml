@@ -1,0 +1,3 @@
+interface:
+  display_name: "Deep Link Debugging"
+  short_description: "Adding debug-only deep links for testing, enabling simulator navigation to specific screens, or integrating with auto..."

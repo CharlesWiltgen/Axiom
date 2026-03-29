@@ -1,0 +1,3 @@
+interface:
+  display_name: "Realm Migration Reference"
+  short_description: "Migrating from Realm to SwiftData"

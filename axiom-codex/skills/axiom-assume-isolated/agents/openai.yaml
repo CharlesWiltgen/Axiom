@@ -1,0 +1,3 @@
+interface:
+  display_name: "Assume Isolated"
+  short_description: "Needing synchronous actor access in tests, legacy delegate callbacks, or performance-critical code"

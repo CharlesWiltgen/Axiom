@@ -1,0 +1,3 @@
+interface:
+  display_name: "UIKit Bridging"
+  short_description: "Wrapping UIKit views/controllers in SwiftUI, embedding SwiftUI in UIKit, or debugging UIKit-SwiftUI interop issues"

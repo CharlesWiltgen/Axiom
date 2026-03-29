@@ -1,0 +1,3 @@
+interface:
+  display_name: "Vision Diagnostics"
+  short_description: "Subject not detected, hand pose missing landmarks, low confidence observations, Vision performance, coordinate conver..."

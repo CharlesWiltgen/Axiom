@@ -1,0 +1,3 @@
+interface:
+  display_name: "StoreKit Reference"
+  short_description: "Reference — Complete StoreKit 2 API guide covering Product, Transaction, AppTransaction, RenewalInfo, SubscriptionSta..."

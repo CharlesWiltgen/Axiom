@@ -1,0 +1,3 @@
+interface:
+  display_name: "App Composition"
+  short_description: "Structuring app entry points, managing authentication flows, switching root views, handling scene lifecycle, or askin..."

@@ -1,0 +1,3 @@
+interface:
+  display_name: "SpriteKit Diagnostics"
+  short_description: "Physics contacts don't fire, objects tunnel through walls, frame rate drops, touches don't register, memory spikes, c..."

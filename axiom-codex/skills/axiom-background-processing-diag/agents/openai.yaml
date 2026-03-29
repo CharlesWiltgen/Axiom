@@ -1,0 +1,3 @@
+interface:
+  display_name: "Background Processing Diagnostics"
+  short_description: "Symptom-based background task troubleshooting"

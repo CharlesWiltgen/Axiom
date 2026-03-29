@@ -1,0 +1,3 @@
+interface:
+  display_name: "SwiftUI Debugging"
+  short_description: "Debugging SwiftUI view updates, preview crashes, or layout issues"

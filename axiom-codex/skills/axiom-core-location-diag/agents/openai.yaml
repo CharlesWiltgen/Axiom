@@ -1,0 +1,3 @@
+interface:
+  display_name: "Core Location Diagnostics"
+  short_description: "Core Location troubleshooting"
