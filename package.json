@@ -7,12 +7,13 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "test": "deno run --allow-read --allow-run --allow-env scripts/pre-deploy.ts --static",
-    "test:full": "deno run --allow-read --allow-run --allow-env scripts/pre-deploy.ts",
-    "predeploy": "deno run --allow-read --allow-run --allow-env scripts/pre-deploy.ts",
-    "build:codex": "deno run --allow-read --allow-write scripts/build-codex.ts"
+    "test": "node scripts/pre-deploy.ts --static",
+    "test:full": "node scripts/pre-deploy.ts",
+    "predeploy": "node scripts/pre-deploy.ts",
+    "build:codex": "node scripts/build-codex.ts"
   },
   "devDependencies": {
+    "gray-matter": "^4.0.3",
     "mermaid": "^11.12.2",
     "vitepress": "2.0.0-alpha.15",
     "vitepress-plugin-mermaid": "^2.0.17"

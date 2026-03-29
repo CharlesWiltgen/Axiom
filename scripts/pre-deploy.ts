@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-read --allow-run --allow-env
+#!/usr/bin/env node
 
 /**
  * Axiom Pre-Deploy Validation Suite
@@ -504,7 +504,7 @@ if (totalErrors > 0) {
   console.log(
     `\n✗ Phase 1 FAILED with ${totalErrors} error(s). Fix before deploying.`,
   );
-  Deno.exit(1);
+  process.exit(1);
 }
 
 console.log("\n✓ Phase 1 PASSED — static validation clean\n");
@@ -513,9 +513,9 @@ console.log("\n✓ Phase 1 PASSED — static validation clean\n");
 
 heading("Phase 2: Build Validation");
 
-if (Deno.args.includes("--static")) {
+if (process.argv.slice(2).includes("--static")) {
   console.log("  ⊘ Skipped (--static flag)");
-  Deno.exit(0);
+  process.exit(0);
 }
 
 heading("12. MCP Server Tests");
@@ -535,7 +535,7 @@ try {
     `MCP server tests failed${summary ? ":\n    " + summary.join("\n    ") : ""}`,
   );
   console.log("\n✗ Phase 2 FAILED. Fix MCP tests before deploying.");
-  Deno.exit(1);
+  process.exit(1);
 }
 
 heading("13. MCP Bundle Build");
@@ -567,7 +567,7 @@ try {
     `MCP bundle build failed: ${err.stderr?.toString()?.slice(0, 200) || "unknown error"}`,
   );
   console.log("\n✗ Phase 2 FAILED. Fix MCP bundle before deploying.");
-  Deno.exit(1);
+  process.exit(1);
 }
 
 heading("14. VitePress Build");
@@ -587,7 +587,7 @@ try {
     `VitePress build failed${deadLinks ? ":\n    " + deadLinks.slice(0, 5).join("\n    ") : ""}`,
   );
   console.log("\n✗ Phase 2 FAILED. Fix VitePress build before deploying.");
-  Deno.exit(1);
+  process.exit(1);
 }
 
 // ── Final Summary ──

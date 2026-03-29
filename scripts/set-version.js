@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-read --allow-write --allow-run
+#!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
