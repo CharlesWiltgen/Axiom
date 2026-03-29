@@ -4,7 +4,7 @@
  * Axiom Pre-Deploy Validation Suite
  *
  * Comprehensive validation that thousands of developers depend on.
- * Run before every deploy: `deno task predeploy`
+ * Run before every deploy: `npm run predeploy`
  *
  * Phase 1: Static validation (fast, no builds)
  * Phase 2: Build validation (slower, requires tools)
@@ -538,7 +538,7 @@ try {
   process.exit(1);
 }
 
-heading("13. MCP Bundle Build");
+heading("13. MCP Bundle Build + Validation");
 try {
   execSync("pnpm run build:bundle", {
     cwd: path.join(root, "axiom-mcp"),
@@ -546,19 +546,45 @@ try {
     timeout: 120000,
   });
   const bundlePath = path.join(root, "axiom-mcp/dist/bundle.json");
-  if (fs.existsSync(bundlePath)) {
+  if (!fs.existsSync(bundlePath)) {
+    error("mcp-bundle", "bundle.json not generated");
+  } else {
     const bundleSize = fs.statSync(bundlePath).size;
     if (bundleSize < 1000) {
-      error(
-        "mcp-bundle",
-        `bundle.json suspiciously small (${bundleSize} bytes)`,
-      );
+      error("mcp-bundle", `bundle.json suspiciously small (${bundleSize} bytes)`);
     } else {
       const bundleKB = Math.round(bundleSize / 1024);
-      console.log(`  ✓ MCP bundle built successfully (${bundleKB} KB)`);
+      console.log(`  ✓ MCP bundle built (${bundleKB} KB)`);
     }
-  } else {
-    error("mcp-bundle", "bundle.json not generated");
+
+    // Validate bundle contents match source
+    const bundle = JSON.parse(fs.readFileSync(bundlePath, "utf8"));
+    const bundleSkillCount = Object.keys(bundle.skills || {}).length;
+    const bundleAgentCount = Object.keys(bundle.agents || {}).length;
+    const bundleCommandCount = Object.keys(bundle.commands || {}).length;
+
+    if (bundleSkillCount !== skillFilesChecked) {
+      error("mcp-fidelity", `bundle has ${bundleSkillCount} skills, source has ${skillFilesChecked}`);
+    } else {
+      console.log(`  ✓ MCP bundle skills match source (${bundleSkillCount})`);
+    }
+    if (bundleAgentCount !== agentFilesChecked) {
+      error("mcp-fidelity", `bundle has ${bundleAgentCount} agents, source has ${agentFilesChecked}`);
+    } else {
+      console.log(`  ✓ MCP bundle agents match source (${bundleAgentCount})`);
+    }
+    if (bundleCommandCount !== commandFilesChecked) {
+      error("mcp-fidelity", `bundle has ${bundleCommandCount} commands, source has ${commandFilesChecked}`);
+    } else {
+      console.log(`  ✓ MCP bundle commands match source (${bundleCommandCount})`);
+    }
+
+    // Validate search index
+    if (bundle.searchIndex) {
+      console.log(`  ✓ MCP search index present`);
+    } else {
+      error("mcp-fidelity", "search index missing from bundle");
+    }
   }
 } catch (e: unknown) {
   const err = e as { stderr?: Buffer };
@@ -570,7 +596,93 @@ try {
   process.exit(1);
 }
 
-heading("14. VitePress Build");
+heading("14. Codex Plugin Build + Validation");
+try {
+  execSync("npm run build:codex", {
+    cwd: root,
+    stdio: "pipe",
+    timeout: 60000,
+  });
+
+  const codexDir = path.join(root, "axiom-codex");
+  const codexManifest = path.join(codexDir, ".codex-plugin/plugin.json");
+
+  // Validate manifest
+  if (!fs.existsSync(codexManifest)) {
+    error("codex-manifest", ".codex-plugin/plugin.json not generated");
+  } else {
+    const manifest = JSON.parse(fs.readFileSync(codexManifest, "utf8"));
+    if (!manifest.name || !manifest.version || !manifest.skills) {
+      error("codex-manifest", "plugin.json missing required fields (name, version, skills)");
+    } else {
+      console.log(`  ✓ Codex manifest valid (v${manifest.version})`);
+    }
+
+    // Version must match Claude Code manifest
+    const ccManifest = JSON.parse(
+      fs.readFileSync(path.join(pluginDir, "claude-code.json"), "utf8"),
+    );
+    if (manifest.version !== ccManifest.version) {
+      error("codex-version", `Codex version ${manifest.version} != Claude Code version ${ccManifest.version}`);
+    }
+  }
+
+  // Validate skill count (source minus excluded routers)
+  const codexSkillsDir = path.join(codexDir, "skills");
+  if (!fs.existsSync(codexSkillsDir)) {
+    error("codex-skills", "skills/ directory not generated");
+  } else {
+    const codexSkillDirs = fs.readdirSync(codexSkillsDir, { withFileTypes: true })
+      .filter((d: fs.Dirent) => d.isDirectory());
+    const codexSkillCount = codexSkillDirs.length;
+
+    // Count source top-level skill dirs with SKILL.md (matches what build-codex copies)
+    const sourceSkillDirs = fs.readdirSync(path.join(pluginDir, "skills"), { withFileTypes: true })
+      .filter((d: fs.Dirent) => d.isDirectory() && fs.existsSync(path.join(pluginDir, "skills", d.name, "SKILL.md")));
+    const CODEX_EXCLUDE = new Set([
+      'axiom-ios-build', 'axiom-ios-testing', 'axiom-ios-ui', 'axiom-ios-data',
+      'axiom-ios-concurrency', 'axiom-ios-performance', 'axiom-ios-networking',
+      'axiom-ios-integration', 'axiom-ios-accessibility', 'axiom-ios-ai',
+      'axiom-ios-ml', 'axiom-ios-vision', 'axiom-ios-graphics', 'axiom-ios-games',
+      'axiom-apple-docs', 'axiom-xcode-mcp', 'axiom-shipping', 'axiom-using-axiom',
+    ]);
+    const excludedCount = sourceSkillDirs.filter((d: fs.Dirent) => CODEX_EXCLUDE.has(d.name)).length;
+    const sourceTopLevel = sourceSkillDirs.length;
+    const expectedCount = sourceTopLevel - excludedCount;
+
+    if (codexSkillCount !== expectedCount) {
+      error("codex-fidelity", `Codex has ${codexSkillCount} skills, expected ${expectedCount} (${sourceTopLevel} source - ${excludedCount} excluded)`);
+    } else {
+      console.log(`  ✓ Codex skill count matches source (${codexSkillCount} = ${sourceTopLevel} - ${excludedCount} excluded)`);
+    }
+
+    // Validate every skill has SKILL.md and agents/openai.yaml
+    let missingSkillMd = 0;
+    let missingYaml = 0;
+    for (const dir of codexSkillDirs) {
+      if (!fs.existsSync(path.join(codexSkillsDir, dir.name, "SKILL.md"))) missingSkillMd++;
+      if (!fs.existsSync(path.join(codexSkillsDir, dir.name, "agents/openai.yaml"))) missingYaml++;
+    }
+    if (missingSkillMd > 0) {
+      error("codex-fidelity", `${missingSkillMd} Codex skill(s) missing SKILL.md`);
+    } else {
+      console.log(`  ✓ All ${codexSkillCount} Codex skills have SKILL.md`);
+    }
+    if (missingYaml > 0) {
+      error("codex-fidelity", `${missingYaml} Codex skill(s) missing agents/openai.yaml`);
+    } else {
+      console.log(`  ✓ All ${codexSkillCount} Codex skills have agents/openai.yaml`);
+    }
+  }
+} catch (e: unknown) {
+  const err = e as { stderr?: Buffer; stdout?: Buffer };
+  error(
+    "codex-build",
+    `Codex build failed: ${err.stderr?.toString()?.slice(0, 200) || err.stdout?.toString()?.slice(0, 200) || "unknown error"}`,
+  );
+}
+
+heading("15. VitePress Build");
 try {
   execSync("npm run docs:build", {
     cwd: root,
@@ -596,7 +708,7 @@ heading("Final Summary");
 console.log(
   `  Phase 1: ✓ Static validation (${skillFilesChecked} skills, ${agentFilesChecked} agents, ${commandFilesChecked} commands)`,
 );
-console.log("  Phase 2: ✓ Build validation (MCP tests + bundle + VitePress)");
+console.log("  Phase 2: ✓ Build validation (MCP tests + bundle + Codex + VitePress)");
 
 if (totalWarnings > 0) {
   console.log(`\n  ${totalWarnings} warning(s) — review above`);
