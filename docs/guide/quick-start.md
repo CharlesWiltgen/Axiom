@@ -1,6 +1,6 @@
 # Quick Start
 
-## 1. Add the Marketplace
+## Install the Claude Code Plugin
 
 In Claude Code, run:
 
@@ -8,82 +8,73 @@ In Claude Code, run:
 /plugin marketplace add CharlesWiltgen/Axiom
 ```
 
-## 2. Install the Plugin
-
-Once you've added the marketplace in Claude Code:
+Then install the plugin:
 
 1. Use `/plugin` to open the plugin menu
 2. Search for "axiom"
 3. Click "Install"
 
-## 3. Verify Installation
+Verify with `/plugin` → "Manage and install" — Axiom should be listed.
 
-Use `/plugin` and select "Manage and install" to see installed plugins. Axiom should be listed.
+## Install the Codex Plugin
 
-## 4. Use Skills
+Clone the repo and build:
 
-Skills are **automatically suggested by Claude Code** based on your questions and context. Simply ask questions that match the skill's purpose:
+```bash
+git clone https://github.com/CharlesWiltgen/Axiom.git
+cd Axiom
+npm run build:codex
+```
 
-### Examples
-- "I'm getting BUILD FAILED in Xcode with stale builds" → activates `axiom-xcode-debugging`
-- "How do I fix actor isolation errors in Swift 6?" → activates `axiom-swift-concurrency`
-- "I need to add a column to my database safely" → activates `axiom-database-migration`
-- "My app has memory leaks, where should I look?" → activates `axiom-memory-debugging`
+Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
 
-Skills available in Axiom:
-- **Apple Intelligence**: foundation-models, foundation-models-diag, foundation-models-ref, app-intents-ref, swiftui-26-ref, apple-docs
-- **UI & Design**: hig, hig-ref, liquid-glass, liquid-glass-ref, swiftui-performance, ui-testing, swiftui-debugging
-- **Debugging**: xcode-debugging, memory-debugging, build-debugging, performance-profiling
-- **Concurrency**: swift-concurrency
-- **Data & Persistence**: database-migration, sqlitedata, grdb, swiftdata, realm-migration-ref, core-data-diag
-- **Accessibility**: accessibility-diag
-- **Networking**: networking, networking-diag, network-framework-ref
-- **Legacy**: objc-block-retain-cycles, uikit-animation-debugging
+```json
+{
+  "name": "axiom-local",
+  "interface": { "displayName": "Axiom (Local)" },
+  "plugins": [
+    {
+      "name": "axiom",
+      "source": { "source": "local", "path": "/path/to/Axiom/axiom-codex" },
+      "policy": { "installation": "INSTALLED_BY_DEFAULT" },
+      "category": "Development"
+    }
+  ]
+}
+```
+
+Replace `/path/to/Axiom` with the actual path where you cloned the repo. See the [full Codex setup guide](/guide/codex-install) for project-scoped installation and troubleshooting.
+
+## Use Skills
+
+Skills activate automatically based on your questions. Just ask:
+
+```
+"I'm getting BUILD FAILED in Xcode"
+"How do I fix Swift 6 concurrency errors?"
+"My app has memory leaks"
+"I need to add a database column safely"
+"Check my SwiftUI code for performance issues"
+```
+
+Skills cover SwiftUI, concurrency, data persistence, performance, networking, accessibility, Apple Intelligence, build debugging, and more. See the [full skill catalog](/skills/) for everything available.
 
 ## Troubleshooting
 
-### Plugin Not Showing in Claude Code
+### Skills Not Activating
 
-If Axiom doesn't appear after installation:
+Axiom skills route automatically based on iOS-specific keywords in your questions. If skills aren't firing:
 
-1. **Verify installation**: Run `/plugin` and check "Manage and install" list
-2. **Reload Claude Code**: Restart the application
-3. **Check marketplace**: Ensure you added the correct marketplace: `CharlesWiltgen/Axiom`
-
-### Skills Not Being Suggested
-
-Axiom v2.37.0 includes automatic skill routing — every message is checked for iOS-related keywords and the matching skill is injected. If skills still aren't firing:
-
-1. **Use iOS-specific terms**: Keywords like "SwiftUI", "build failed", "memory leak", "@State", "SwiftData" trigger routing automatically
-2. **Use `/axiom:ask`**: Explicitly routes your question to the right skill
-3. **Manual invocation**: Type `/skill axiom:` to see available skills
-4. **Check context**: Skills route based on your question content — generic terms like "fix the bug" may not trigger routing
-
-### Skills Not Found
-
-If you get "skill not found" errors:
-
-1. **Use correct syntax**: `/skill axiom:skill-name` (not `/axiom:skill-name`)
-2. **Check spelling**: Skill names use dashes (e.g., `axiom-swift-concurrency`, not `swift_concurrency`)
-3. **List available skills**: Use `/plugin` to see which skills are installed
-
-### Commands Not Working
-
-If `/audit-*` commands don't execute:
-
-1. **Verify command syntax**: Commands start with `/audit-` or `/axiom:`
-2. **Check file access**: Ensure Claude Code has access to your project files
-3. **Run manually**: Try using the command via `/command` menu
+1. **Use specific terms**: "SwiftUI", "build failed", "memory leak", "@MainActor", "SwiftData" trigger routing
+2. **Use `/axiom:ask`** (Claude Code): Explicitly routes your question to the right skill
+3. **Restart**: Reload Claude Code or rebuild the Codex plugin
 
 ### Getting Help
 
-- **Issues**: [Report bugs on GitHub](https://github.com/CharlesWiltgen/Axiom/issues)
-- **Discussions**: [Ask questions and share patterns](https://github.com/CharlesWiltgen/Axiom/discussions)
-- **Claude Code docs**: [Official documentation](https://docs.claude.ai/code)
+- [Report issues](https://github.com/CharlesWiltgen/Axiom/issues)
+- [Discussions](https://github.com/CharlesWiltgen/Axiom/discussions)
 
-## What's Next
+## Also Available
 
-- [Example Workflows →](/guide/workflows)
-- [MCP Server →](/guide/mcp-install) — Use Axiom in VS Code, Cursor, Claude Desktop, or Gemini CLI
-- [View all skills →](/skills/)
-- [Contributing guide →](https://github.com/CharlesWiltgen/Axiom/blob/main/CONTRIBUTING.md)
+- **[MCP Server](/guide/mcp-install)** — Use Axiom in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
+- **[Xcode Integration](/guide/xcode-setup)** — Direct Xcode MCP bridge setup
