@@ -11,7 +11,7 @@ Axiom gives AI coding assistants deep iOS development expertise — the kind tha
 - **12 commands** for quick audits and diagnostics
 - **xclog** — a built-in console capture tool that gives AI assistants access to simulator and device logs
 
-Every discipline skill is TDD-tested against real developer pressure scenarios. [Learn more about quality](https://charleswiltgen.github.io/Axiom/guide/quality).
+Every discipline skill is TDD-tested against real developer pressure scenarios. [Learn more about quality](https://charleswiltgen.github.io/Axiom/start/quality).
 
 ## Installation
 
@@ -25,11 +25,11 @@ Then search for "axiom" in the `/plugin` menu and install.
 
 ### MCP (VS Code, Cursor, Gemini CLI, and more)
 
-See the [MCP setup guide](https://charleswiltgen.github.io/Axiom/guide/mcp-install).
+See the [MCP setup guide](https://charleswiltgen.github.io/Axiom/start/mcp-install).
 
 ### Xcode (Claude Agent / Codex)
 
-See the [Xcode integration guide](https://charleswiltgen.github.io/Axiom/guide/xcode-setup).
+See the [Xcode integration guide](https://charleswiltgen.github.io/Axiom/start/xcode-setup).
 
 ## Getting Started
 

@@ -1,5 +1,5 @@
 /**
- * Skill validation data — drives badges on doc pages and the /guide/quality page.
+ * Skill validation data — drives badges on doc pages and the /start/quality page.
  *
  * Only skills that have been formally validated are listed here.
  * `grade` is optional — omit for skills that are tested but not graded.

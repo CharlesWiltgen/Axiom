@@ -186,4 +186,4 @@ npx axiom-mcp
 
 - [View all skills →](/skills/) — Browse the complete skill catalog
 - [Agents overview →](/agents/) — See what autonomous agents can do
-- [Example Workflows →](/guide/workflows) — Step-by-step guides for common tasks
+- [Example Workflows →](/start/workflows) — Step-by-step guides for common tasks

@@ -65,6 +65,6 @@ Axiom provides comprehensive iOS development workflows:
 
 ## What's Next?
 
-- [Quick Start →](/guide/quick-start) — Install Axiom and start using skills
-- [Example Workflows →](/guide/workflows) — Step-by-step guides for common tasks
+- [Quick Start →](/start/quick-start) — Install Axiom and start using skills
+- [Example Workflows →](/start/workflows) — Step-by-step guides for common tasks
 - [View all skills →](/skills/) — Browse the complete skill catalog

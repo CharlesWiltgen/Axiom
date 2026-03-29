@@ -134,6 +134,6 @@ Verify the path in your `marketplace.json` points to the `axiom-codex/` director
 
 ## Also Available
 
-- **[Claude Code](/guide/quick-start)** — Full Axiom experience with 38 autonomous agents and 12 commands
-- **[MCP Server](/guide/mcp-install)** — Skills in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool; no build step required
-- **[Xcode Integration](/guide/xcode-setup)** — Direct Xcode MCP bridge for in-editor assistance
+- **[Claude Code](/start/quick-start)** — Full Axiom experience with 38 autonomous agents and 12 commands
+- **[MCP Server](/start/mcp-install)** — Skills in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool; no build step required
+- **[Xcode Integration](/start/xcode-setup)** — Direct Xcode MCP bridge for in-editor assistance
