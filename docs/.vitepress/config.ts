@@ -27,7 +27,7 @@ export default withMermaid(defineConfig({
 
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Guide', link: '/guide/' },
+      { text: 'Get Started', link: '/start/' },
       { text: 'Skills', link: '/skills/' },
       { text: 'Agents', link: '/agents/' },
       { text: 'Commands', link: '/commands/' },
@@ -37,18 +37,18 @@ export default withMermaid(defineConfig({
     ],
 
     sidebar: {
-      '/guide/': [
+      '/start/': [
         {
-          text: 'Guide',
+          text: 'Get Started',
           items: [
-            { text: 'Overview', link: '/guide/' },
-            { text: 'Quick Start', link: '/guide/quick-start' },
-            { text: 'MCP Server', link: '/guide/mcp-install' },
-            { text: 'Codex Plugin', link: '/guide/codex-install' },
-            { text: 'Xcode Integration', link: '/guide/xcode-setup' },
-            { text: 'Example Workflows', link: '/guide/workflows' },
-            { text: 'Skill Map', link: '/guide/skill-map' },
-            { text: 'Quality', link: '/guide/quality' }
+            { text: 'Overview', link: '/start/' },
+            { text: 'Quick Start', link: '/start/quick-start' },
+            { text: 'MCP Server', link: '/start/mcp-install' },
+            { text: 'Codex Plugin', link: '/start/codex-install' },
+            { text: 'Xcode Integration', link: '/start/xcode-setup' },
+            { text: 'Example Workflows', link: '/start/workflows' },
+            { text: 'Skill Map', link: '/start/skill-map' },
+            { text: 'Quality', link: '/start/quality' }
           ]
         }
       ],

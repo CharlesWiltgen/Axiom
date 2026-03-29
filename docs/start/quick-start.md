@@ -43,7 +43,7 @@ Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
 }
 ```
 
-Replace `/path/to/Axiom` with the actual path where you cloned the repo. See the [full Codex setup guide](/guide/codex-install) for project-scoped installation and troubleshooting.
+Replace `/path/to/Axiom` with the actual path where you cloned the repo. See the [full Codex setup guide](/start/codex-install) for project-scoped installation and troubleshooting.
 
 ## Use Skills
 
@@ -76,5 +76,5 @@ Axiom skills route automatically based on iOS-specific keywords in your question
 
 ## Also Available
 
-- **[MCP Server](/guide/mcp-install)** — Use Axiom in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
-- **[Xcode Integration](/guide/xcode-setup)** — Direct Xcode MCP bridge setup
+- **[MCP Server](/start/mcp-install)** — Use Axiom in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
+- **[Xcode Integration](/start/xcode-setup)** — Direct Xcode MCP bridge setup
