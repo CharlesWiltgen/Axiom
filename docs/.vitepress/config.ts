@@ -26,7 +26,6 @@ export default withMermaid(defineConfig({
     },
 
     nav: [
-      { text: 'Home', link: '/' },
       { text: 'Get Started', link: '/start/' },
       { text: 'Skills', link: '/skills/' },
       { text: 'Agents', link: '/agents/' },
