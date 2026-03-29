@@ -21,16 +21,16 @@ docs/.vitepress/cache
 docs/.vitepress/dist
 
 # MCP Server build artifacts
-mcp-server/node_modules/
-mcp-server/dist/
-mcp-server/*.tsbuildinfo
+axiom-mcp/node_modules/
+axiom-mcp/dist/
+axiom-mcp/*.tsbuildinfo
 
 # Node modules and dependencies
 node_modules/
 yarn.lock
 pnpm-lock.yaml
 
-# NPM auth tokens (root only — mcp-server/.npmrc uses env var reference, safe to commit)
+# NPM auth tokens (root only — axiom-mcp/.npmrc uses env var reference, safe to commit)
 /.npmrc
 
 # Environment files
@@ -60,4 +60,4 @@ CHANGELOG.md
 .dolt/
 *.db
 tools/xclog/xclog
-mcp-server/docs/
+axiom-mcp/docs/

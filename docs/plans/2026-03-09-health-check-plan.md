@@ -377,7 +377,7 @@ git commit -m "docs: add health-check command documentation"
 ### Task 6: Rebuild MCP Bundle
 
 **Files:**
-- Rebuild: `mcp-server/dist/bundle.json`
+- Rebuild: `axiom-mcp/dist/bundle.json`
 
 **Context:**
 - After adding a new agent and command, rebuild the MCP bundle
@@ -387,7 +387,7 @@ git commit -m "docs: add health-check command documentation"
 **Step 1: Rebuild**
 
 ```bash
-cd mcp-server && pnpm run build:bundle
+cd axiom-mcp && pnpm run build:bundle
 ```
 
 **Step 2: Verify health-check appears**
@@ -435,5 +435,5 @@ Check that:
 | 3 | Add "all" alias | `commands/audit.md` |
 | 4 | Register in manifest | `claude-code.json` |
 | 5 | Documentation | `docs/commands/health-check.md`, `docs/commands/index.md` |
-| 6 | Rebuild MCP bundle | `mcp-server/dist/bundle.json` |
+| 6 | Rebuild MCP bundle | `axiom-mcp/dist/bundle.json` |
 | 7 | Smoke test | Manual verification |

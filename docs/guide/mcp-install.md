@@ -110,7 +110,7 @@ For Axiom contributors who want live-reloading skills during development:
 ```bash
 AXIOM_MCP_MODE=development \
 AXIOM_DEV_PATH=/path/to/Axiom/.claude-plugin/plugins/axiom \
-node /path/to/Axiom/mcp-server/dist/index.js
+node /path/to/Axiom/axiom-mcp/dist/index.js
 ```
 
 Changes to skill files are reflected immediately — no rebuild needed.

@@ -32,12 +32,12 @@ export class DevLoader implements Loader {
   ) {}
 
   /**
-   * Load MCP annotations from skill-annotations.json (co-located with mcp-server/)
+   * Load MCP annotations from skill-annotations.json (co-located with axiom-mcp/)
    */
   private async loadAnnotations(): Promise<SkillAnnotations> {
     // Try multiple resolution strategies for skill-annotations.json
     const candidates = [
-      join(this.pluginPath, '..', '..', 'mcp-server', 'skill-annotations.json'),
+      join(this.pluginPath, '..', '..', 'axiom-mcp', 'skill-annotations.json'),
       join(process.cwd(), 'skill-annotations.json'),
     ];
 

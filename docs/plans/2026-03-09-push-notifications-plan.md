@@ -1111,7 +1111,7 @@ git commit -m "docs: add push notifications documentation pages"
 **Step 1: Rebuild the bundle**
 
 ```bash
-cd mcp-server && pnpm run build:bundle
+cd axiom-mcp && pnpm run build:bundle
 ```
 
 This regenerates `bundle.json` with the 3 new skills included.
@@ -1119,7 +1119,7 @@ This regenerates `bundle.json` with the 3 new skills included.
 **Step 2: Verify new skills in bundle**
 
 ```bash
-cd mcp-server && node -e "
+cd axiom-mcp && node -e "
 const bundle = require('./dist/bundle.json');
 const pushSkills = bundle.skills?.filter(s => s.name?.includes('push-notification')) || [];
 console.log('Push notification skills found:', pushSkills.length);
@@ -1132,7 +1132,7 @@ Expected: 3 skills found (push-notifications, push-notifications-ref, push-notif
 **Step 3: Commit**
 
 ```bash
-git add mcp-server/dist/bundle.json
+git add axiom-mcp/dist/bundle.json
 git commit -m "chore: rebuild MCP server bundle with push notification skills"
 ```
 

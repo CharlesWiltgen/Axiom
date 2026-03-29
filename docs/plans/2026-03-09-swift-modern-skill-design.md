@@ -444,21 +444,21 @@ git commit -m "feat: add Swift language modernization patterns to modernization-
 **Step 1: Rebuild the bundle**
 
 ```bash
-cd mcp-server && pnpm run build:bundle
+cd axiom-mcp && pnpm run build:bundle
 ```
 Expected: Build succeeds, `bundle.json` is regenerated with the new skill.
 
 **Step 2: Verify new skill appears in bundle**
 
 ```bash
-cd /Users/Charles/Projects/Axiom && node -e "const b = require('./mcp-server/dist/bundle.json'); const s = b.skills.find(s => s.name === 'axiom-swift-modern'); console.log(s ? 'Found: ' + s.name : 'NOT FOUND')"
+cd /Users/Charles/Projects/Axiom && node -e "const b = require('./axiom-mcp/dist/bundle.json'); const s = b.skills.find(s => s.name === 'axiom-swift-modern'); console.log(s ? 'Found: ' + s.name : 'NOT FOUND')"
 ```
 Expected: `Found: axiom-swift-modern`
 
 **Step 3: Commit**
 
 ```bash
-git add mcp-server/dist/bundle.json
+git add axiom-mcp/dist/bundle.json
 git commit -m "chore: rebuild MCP server bundle with axiom-swift-modern"
 ```
 

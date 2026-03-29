@@ -35,7 +35,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/CharlesWiltgen/Axiom.git",
-    "directory": "mcp-server"
+    "directory": "axiom-mcp"
   },
   "homepage": "https://charleswiltgen.github.io/Axiom/guide/mcp-install",
   "bugs": {
