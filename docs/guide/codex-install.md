@@ -19,7 +19,7 @@ The Codex plugin includes 164 specialized skills covering:
 ## Prerequisites
 
 - **Codex CLI** or Codex web app
-- **Deno** — required to build the plugin. Check with `deno --version` or install from [deno.com](https://deno.com)
+- **Node.js 24+** — required to build the plugin. Check with `node --version`
 
 ## Installation
 
@@ -118,14 +118,6 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 | Installation | `/plugin marketplace add` | Local marketplace |
 
 ## Troubleshooting
-
-### `deno: command not found`
-
-Install Deno from [deno.com](https://deno.com):
-
-```bash
-curl -fsSL https://deno.land/install.sh | sh
-```
 
 ### `axiom-codex/` directory not found
 
