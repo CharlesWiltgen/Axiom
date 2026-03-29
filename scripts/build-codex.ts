@@ -1,7 +1,8 @@
-#!/usr/bin/env -S deno run --allow-read --allow-write
+#!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import matter from 'gray-matter';
 
 const __filename = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(__filename));
@@ -46,16 +47,10 @@ if (fs.existsSync(OUTPUT_DIR)) {
 fs.mkdirSync(OUTPUT_SKILLS, { recursive: true });
 fs.mkdirSync(OUTPUT_MANIFEST, { recursive: true });
 
-// Parse SKILL.md frontmatter (name, description) without external dependencies
+// Parse SKILL.md frontmatter via gray-matter (shared with axiom-mcp)
 function parseFrontmatter(content: string): Record<string, string> {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!match) return {};
-  const fields: Record<string, string> = {};
-  for (const line of match[1].split(/\r?\n/)) {
-    const m = line.match(/^(\w+):\s*(.+)/);
-    if (m) fields[m[1]] = m[2];
-  }
-  return fields;
+  const { data } = matter(content);
+  return data as Record<string, string>;
 }
 
 // Known casing for iOS/Apple terms
