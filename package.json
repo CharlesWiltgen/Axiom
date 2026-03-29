@@ -9,7 +9,8 @@
     "docs:preview": "vitepress preview docs",
     "test": "deno run --allow-read --allow-run --allow-env scripts/pre-deploy.ts --static",
     "test:full": "deno run --allow-read --allow-run --allow-env scripts/pre-deploy.ts",
-    "predeploy": "deno run --allow-read --allow-run --allow-env scripts/pre-deploy.ts"
+    "predeploy": "deno run --allow-read --allow-run --allow-env scripts/pre-deploy.ts",
+    "build:codex": "deno run --allow-read --allow-write scripts/build-codex.ts"
   },
   "devDependencies": {
     "mermaid": "^11.12.2",
