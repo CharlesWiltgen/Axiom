@@ -334,20 +334,20 @@ try {
     label: '.claude-plugin/plugins/axiom/hooks/metadata.txt'
   });
 
-  // 5. Prepare mcp-server/package.json update
-  const mcpPackagePath = path.join(root, 'mcp-server/package.json');
+  // 5. Prepare axiom-mcp/package.json update
+  const mcpPackagePath = path.join(root, 'axiom-mcp/package.json');
   if (fs.existsSync(mcpPackagePath)) {
     let mcpPackage;
     try {
       mcpPackage = JSON.parse(fs.readFileSync(mcpPackagePath, 'utf8'));
     } catch (err) {
-      throw new Error(`Failed to parse mcp-server/package.json: ${err.message}`);
+      throw new Error(`Failed to parse axiom-mcp/package.json: ${err.message}`);
     }
     mcpPackage.version = version;
     updates.push({
       path: mcpPackagePath,
       content: JSON.stringify(mcpPackage, null, 2) + '\n',
-      label: 'mcp-server/package.json'
+      label: 'axiom-mcp/package.json'
     });
   }
 

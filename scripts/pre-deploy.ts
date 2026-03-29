@@ -318,10 +318,10 @@ if (fs.existsSync(configPath)) {
   else warn("version", "Version not found in docs/.vitepress/config.ts footer");
 }
 
-const mcpPkgPath = path.join(root, "mcp-server/package.json");
+const mcpPkgPath = path.join(root, "axiom-mcp/package.json");
 if (fs.existsSync(mcpPkgPath)) {
   const mcpPkg = JSON.parse(fs.readFileSync(mcpPkgPath, "utf8"));
-  versions["mcp-server/package.json"] = mcpPkg.version;
+  versions["axiom-mcp/package.json"] = mcpPkg.version;
 }
 
 const versionValues = Object.values(versions);
@@ -435,7 +435,7 @@ try {
 
 heading("12. MCP Bundle Staleness");
 
-const bundlePath = path.join(root, "mcp-server/dist/bundle.json");
+const bundlePath = path.join(root, "axiom-mcp/dist/bundle.json");
 if (fs.existsSync(bundlePath)) {
   const bundleMtime = fs.statSync(bundlePath).mtimeMs;
 
@@ -462,7 +462,7 @@ if (fs.existsSync(bundlePath)) {
   }
 
   // Also check skill-annotations.json
-  const annotationsPath = path.join(root, "mcp-server/skill-annotations.json");
+  const annotationsPath = path.join(root, "axiom-mcp/skill-annotations.json");
   if (fs.existsSync(annotationsPath)) {
     const annotMtime = fs.statSync(annotationsPath).mtimeMs;
     if (annotMtime > newestSource) newestSource = annotMtime;
@@ -472,13 +472,13 @@ if (fs.existsSync(bundlePath)) {
     const staleMinutes = Math.round((newestSource - bundleMtime) / 60000);
     error(
       "bundle-staleness",
-      `MCP bundle is ${staleMinutes}min older than newest source file. Run: cd mcp-server && pnpm run build:bundle`,
+      `MCP bundle is ${staleMinutes}min older than newest source file. Run: cd axiom-mcp && pnpm run build:bundle`,
     );
   } else {
     console.log("  ✓ MCP bundle is up-to-date with source files");
   }
 } else {
-  warn("bundle-staleness", "MCP bundle not found at mcp-server/dist/bundle.json — build with: cd mcp-server && pnpm run build:bundle");
+  warn("bundle-staleness", "MCP bundle not found at axiom-mcp/dist/bundle.json — build with: cd axiom-mcp && pnpm run build:bundle");
 }
 
 // ── Phase 1 Summary ──
@@ -521,7 +521,7 @@ if (Deno.args.includes("--static")) {
 heading("12. MCP Server Tests");
 try {
   execSync("pnpm test", {
-    cwd: path.join(root, "mcp-server"),
+    cwd: path.join(root, "axiom-mcp"),
     stdio: "pipe",
     timeout: 60000,
   });
@@ -541,11 +541,11 @@ try {
 heading("13. MCP Bundle Build");
 try {
   execSync("pnpm run build:bundle", {
-    cwd: path.join(root, "mcp-server"),
+    cwd: path.join(root, "axiom-mcp"),
     stdio: "pipe",
     timeout: 120000,
   });
-  const bundlePath = path.join(root, "mcp-server/dist/bundle.json");
+  const bundlePath = path.join(root, "axiom-mcp/dist/bundle.json");
   if (fs.existsSync(bundlePath)) {
     const bundleSize = fs.statSync(bundlePath).size;
     if (bundleSize < 1000) {

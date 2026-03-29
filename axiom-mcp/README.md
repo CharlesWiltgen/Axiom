@@ -188,7 +188,7 @@ Examples:
 ### Project Structure
 
 ```
-mcp-server/
+axiom-mcp/
 ├── package.json              # npm package config
 ├── tsconfig.json             # TypeScript config
 ├── skill-annotations.json    # MCP search/catalog metadata
