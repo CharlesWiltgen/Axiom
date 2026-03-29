@@ -19,6 +19,7 @@ The Codex plugin includes 164 specialized skills covering:
 ## Prerequisites
 
 - **Codex CLI** or Codex web app
+- **Deno** — required to build the plugin. Check with `deno --version` or install from [deno.com](https://deno.com)
 
 ## Installation
 
@@ -35,6 +36,8 @@ git clone https://github.com/CharlesWiltgen/Axiom.git
 cd Axiom
 npm run build:codex
 ```
+
+This creates the `axiom-codex/` directory containing the plugin. Use its full path in the config below.
 
 Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
 
@@ -91,8 +94,6 @@ Skills activate automatically based on your questions. Just ask:
 "I need to add a database column safely"
 ```
 
-You can also invoke skills explicitly with `$skill-name` in Codex.
-
 ## Updating
 
 Pull the latest changes and rebuild:
@@ -112,14 +113,35 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 | Feature | Claude Code | Codex |
 |---------|-------------|-------|
 | Skills | 164 specialized + 17 routers | 164 specialized (Codex has native routing) |
-| Agents | 38 autonomous auditors | Not yet supported in Codex plugins |
-| Commands | 12 `/axiom:*` commands | Not yet supported in Codex plugins |
+| Agents | 38 autonomous auditors | Not supported in Codex plugins |
+| Commands | 12 `/axiom:*` commands | Not supported in Codex plugins |
 | Installation | `/plugin marketplace add` | Local marketplace |
 
-As the Codex plugin system matures, we'll add support for additional features.
+## Troubleshooting
+
+### `deno: command not found`
+
+Install Deno from [deno.com](https://deno.com):
+
+```bash
+curl -fsSL https://deno.land/install.sh | sh
+```
+
+### `axiom-codex/` directory not found
+
+Run the build step first:
+
+```bash
+cd /path/to/Axiom
+npm run build:codex
+```
+
+### Skills not appearing in Codex
+
+Verify the path in your `marketplace.json` points to the `axiom-codex/` directory (not the repo root), and that the directory contains `.codex-plugin/plugin.json`.
 
 ## Also Available
 
-- **[Claude Code](/guide/quick-start)** — Native plugin with full agent and command support
-- **[MCP Server](/guide/mcp-install)** — Works with VS Code, Cursor, Gemini CLI, and more
-- **[Xcode Integration](/guide/xcode-setup)** — Direct Xcode MCP bridge setup
+- **[Claude Code](/guide/quick-start)** — Full Axiom experience with 38 autonomous agents and 12 commands
+- **[MCP Server](/guide/mcp-install)** — Skills in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool; no build step required
+- **[Xcode Integration](/guide/xcode-setup)** — Direct Xcode MCP bridge for in-editor assistance
