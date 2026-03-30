@@ -20,6 +20,7 @@ flowchart LR
         now_playing["now-playing"]:::discipline
         background_processing["background-processing"]:::discipline
         push_notifications["push-notifications"]:::discipline
+        shazamkit["shazamkit"]:::discipline
         core_location["core-location"]:::discipline
         haptics["haptics"]:::discipline
         localization["localization"]:::discipline
@@ -34,6 +35,7 @@ flowchart LR
         extensions_widgets_ref["extensions-widgets-ref"]:::reference
         push_notifications_ref["push-notifications-ref"]:::reference
         core_location_ref["core-location-ref"]:::reference
+        shazamkit_ref["shazamkit-ref"]:::reference
     end
     axiom_ios_integration --> skills_r
 
@@ -72,6 +74,21 @@ BGTaskScheduler implementation and debugging:
 **When to use** Implementing background tasks, debugging execution issues, understanding scheduling factors
 
 **Requirements** iOS 13+, iOS 26+ for BGContinuedProcessingTask
+
+---
+
+### [ShazamKit](./shazamkit)
+
+Audio recognition and custom audio matching:
+- **Song identification** — Recognize songs via Shazam catalog with SHManagedSession (iOS 17+)
+- **Custom catalogs** — Match against your own audio (podcasts, TV, lessons)
+- **Second-screen sync** — Timed media items for content synchronized to audio
+- **Library management** — SHLibrary for reading, adding, removing recognized songs
+- **Signature generation** — From AVAsset, audio buffers, or Shazam CLI at scale
+
+**When to use** Adding song recognition, building audio-synced experiences, creating custom audio catalogs, managing Shazam library
+
+**Requirements** iOS 15+ (SHSession), iOS 17+ (SHManagedSession, SHLibrary)
 
 ---
 
