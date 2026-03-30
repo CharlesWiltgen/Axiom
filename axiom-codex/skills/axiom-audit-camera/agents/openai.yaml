@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit Camera"
+  short_description: "Use this agent to scan Swift code for camera, video, and audio capture issues including deprecated APIs, missing inte..."

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Analyze Test Failures"
+  short_description: "The user mentions flaky tests, tests that pass locally but fail in CI, race conditions in tests, or needs to diagnose..."

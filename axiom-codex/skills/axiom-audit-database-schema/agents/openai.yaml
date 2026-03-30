@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit Database Schema"
+  short_description: "The user mentions database schema review, migration safety, GRDB migration audit, or SQLite schema checking."

@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "2.37.0",
+  "version": "2.38.0",
   "description": "Battle-tested skills for modern iOS development — SwiftUI, concurrency, data, performance, networking, accessibility, and more.",
   "author": {
     "name": "Charles Wiltgen",
@@ -29,6 +29,9 @@
       "Read"
     ],
     "websiteURL": "https://charleswiltgen.github.io/Axiom/",
+    "privacyPolicyURL": "https://charleswiltgen.github.io/Axiom/privacy",
+    "termsOfServiceURL": "https://charleswiltgen.github.io/Axiom/terms",
+    "brandColor": "#3451b2",
     "defaultPrompt": [
       "Check my SwiftUI code for performance issues",
       "Help me fix this build failure",

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit Memory"
+  short_description: "The user mentions memory leak prevention, code review for memory issues, or proactive leak checking."

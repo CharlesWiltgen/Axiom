@@ -1,0 +1,3 @@
+interface:
+  display_name: "Fix Build"
+  short_description: "The user mentions Xcode build failures, build errors, or environment issues."

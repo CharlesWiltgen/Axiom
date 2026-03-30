@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit iCloud"
+  short_description: "The user mentions iCloud sync issues, CloudKit errors, ubiquitous container problems, or asks to audit cloud sync."

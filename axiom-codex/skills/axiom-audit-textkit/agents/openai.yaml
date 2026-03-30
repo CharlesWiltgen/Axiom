@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit TextKit"
+  short_description: "The user mentions TextKit review, text layout issues, Writing Tools integration, or UITextView/NSTextView code review."

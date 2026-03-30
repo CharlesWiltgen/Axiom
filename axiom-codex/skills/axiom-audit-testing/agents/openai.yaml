@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit Testing"
+  short_description: "The user wants to audit test quality, find flaky test patterns, speed up test execution, or prepare for Swift Testing..."

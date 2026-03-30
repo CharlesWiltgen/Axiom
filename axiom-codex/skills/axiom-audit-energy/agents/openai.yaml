@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit Energy"
+  short_description: "The user mentions battery drain, energy optimization, power consumption audit, or pre-release energy check."

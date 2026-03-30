@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit SwiftData"
+  short_description: "The user mentions SwiftData review, @Model issues, SwiftData migration safety, or SwiftData performance checking."

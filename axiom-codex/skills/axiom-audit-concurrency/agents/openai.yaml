@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit Concurrency"
+  short_description: "The user mentions concurrency checking, Swift 6 compliance, data race prevention, or async code review."

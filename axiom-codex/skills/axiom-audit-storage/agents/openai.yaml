@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit Storage"
+  short_description: "The user mentions file storage issues, data loss, backup bloat, or asks to audit storage usage."

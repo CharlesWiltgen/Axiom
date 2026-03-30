@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit SwiftUI Layout"
+  short_description: "The user mentions SwiftUI layout review, adaptive layout issues, GeometryReader problems, or multi-device layout chec..."
