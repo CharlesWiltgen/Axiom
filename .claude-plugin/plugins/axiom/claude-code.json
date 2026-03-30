@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "2.37.0",
+  "version": "2.38.0",
   "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -49,7 +49,7 @@
     },
     {
       "name": "axiom-ios-integration",
-      "description": "Use when integrating ANY iOS system feature: Siri, Shortcuts, Apple Intelligence, widgets, IAP, camera, photo library, audio, haptics, localization, privacy, calendar events, reminders, contacts. Covers App Intents, WidgetKit, StoreKit, AVFoundation, Core Haptics, App Shortcuts, Spotlight, EventKit, Contacts."
+      "description": "Use when integrating ANY iOS system feature - Siri, Shortcuts, widgets, IAP, camera, photos, audio, ShazamKit, haptics, localization, privacy, alarms, calendar, reminders, contacts. Covers App Intents, WidgetKit, StoreKit, AVFoundation, EventKit."
     },
     {
       "name": "axiom-ios-accessibility",
@@ -85,7 +85,7 @@
     },
     {
       "name": "axiom-shipping",
-      "description": "Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect. Covers submission checklists, rejection troubleshooting, metadata requirements, privacy manifests, age ratings, export compliance."
+      "description": "Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect. Covers submission checklists, rejection troubleshooting, metadata, privacy manifests, age ratings, export compliance."
     }
   ]
 }
