@@ -1,6 +1,6 @@
 ---
 name: axiom-ios-integration
-description: Use when integrating ANY iOS system feature - Siri, Shortcuts, Apple Intelligence, widgets, IAP, camera, photo library, photos picker, audio, axiom-haptics, axiom-localization, privacy, alarms, calendar events, reminders, contacts. Covers App Intents, WidgetKit, StoreKit, AVFoundation, PHPicker, PhotosPicker, Core Haptics, App Shortcuts, Spotlight, AlarmKit, EventKit, Contacts.
+description: Use when integrating ANY iOS system feature - Siri, Shortcuts, widgets, IAP, camera, photo library, audio, ShazamKit, haptics, localization, privacy, alarms, calendar, reminders, contacts. Covers App Intents, WidgetKit, StoreKit, AVFoundation, ShazamKit, Core Haptics, Spotlight, EventKit, Contacts.
 license: MIT
 ---
 
@@ -17,7 +17,7 @@ Use this router for:
 - In-app purchases (StoreKit)
 - Camera capture (AVCaptureSession)
 - Photo library & pickers (PHPicker, PhotosPicker)
-- Audio & haptics
+- Audio, haptics, & audio recognition (ShazamKit)
 - Localization
 - Privacy & permissions
 - Spotlight search
@@ -74,6 +74,18 @@ When integration issues overlap with other domains:
 - Privacy manifest or Info.plist for contacts → **stay in ios-integration** (privacy-ux)
 - Contact Provider extension architecture → **also invoke ios-build** if extension target issues
 
+**ShazamKit + microphone permissions** (no match results, permission denied):
+- Microphone NSMicrophoneUsageDescription / Info.plist → **stay in ios-integration** (privacy-ux)
+- ShazamKit App Service not enabled → **stay in ios-integration** (shazamkit)
+
+**ShazamKit + AVFoundation** (custom SHSession with AVAudioEngine buffers):
+- Audio engine setup, buffer formats, session configuration → **stay in ios-integration** (shazamkit)
+- AVAudioEngine pipeline, audio session category, format conversion → **also invoke avfoundation-ref**
+
+**ShazamKit + MusicKit** (play matched song via Apple Music):
+- Match result with appleMusicID/appleMusicURL → **stay in ios-integration** (shazamkit)
+- MusicKit playback, ApplicationMusicPlayer → **also invoke ios-integration** (now-playing-musickit)
+
 ## Routing Logic
 
 ### Apple Intelligence & Siri
@@ -104,13 +116,24 @@ When integration issues overlap with other domains:
 **Photo pickers & library** → `/skill axiom-photo-library`
 **Photo library API reference** → `/skill axiom-photo-library-ref`
 
-### Audio & Haptics
+### Audio, Haptics & Audio Recognition
 
 **Audio (AVFoundation)** → `/skill axiom-avfoundation-ref`
 **Haptics** → `/skill axiom-haptics`
 **Now Playing** → `/skill axiom-now-playing`
 **CarPlay Now Playing** → `/skill axiom-now-playing-carplay`
 **MusicKit integration** → `/skill axiom-now-playing-musickit`
+
+**ShazamKit implementation** → `/skill axiom-shazamkit`
+- Song recognition (Shazam catalog), custom audio matching
+- SHManagedSession (modern) vs SHSession (legacy) decision
+- Custom catalogs, signature generation, Shazam CLI
+- Library management (SHLibrary)
+
+**ShazamKit API reference** → `/skill axiom-shazamkit-ref`
+- SHManagedSession, SHSession, SHCustomCatalog, SHSignatureGenerator
+- SHMediaItem, SHMatchedMediaItem, SHLibrary, SHError
+- Complete property keys and error codes
 
 ### Localization & Privacy
 
@@ -217,24 +240,26 @@ When integration issues overlap with other domains:
 11. Audio / AVFoundation? → avfoundation-ref
 12. Now Playing? → now-playing, now-playing-carplay, now-playing-musickit
 13. Haptics? → haptics
-14. Localization? → localization
-15. Privacy / permissions? → privacy-ux
-16. Background processing? → background-processing (patterns), background-processing-diag (debugging), background-processing-ref (API)
-17. Push notification implementation, APNs, or remote notification handling? → push-notifications (patterns), push-notifications-ref (API), push-notifications-diag (debugging)
-18. Need APNs payload format, headers, or JWT auth details? → push-notifications-ref
-19. Push notifications not arriving, token issues, or delivery failures? → push-notifications-diag
-20. Location services? → core-location (patterns), core-location-diag (debugging), core-location-ref (API)
-21. Maps / MapKit / annotations / directions? → mapkit (patterns), mapkit-ref (API), mapkit-diag (debugging)
-22. Alarms / AlarmKit? → alarmkit-ref
-23. Passkeys / WebAuthn / replacing passwords / ASAuthorizationController? → passkeys
-24. App Attest / DeviceCheck / fraud prevention / app integrity? → app-attest
-25. Calendar events / EventKit / EventKitUI / add to calendar? → eventkit (patterns), eventkit-ref (API)
-26. Reminders / EKReminder / reminder lists? → eventkit (patterns), eventkit-ref (API)
-27. Siri Event Suggestions / INReservation? → eventkit-ref (API, Part 9)
-28. Virtual conference extension / EKVirtualConferenceProvider? → eventkit-ref (API, Part 8)
-29. Contacts / contact picker / CNContactStore? → contacts (patterns), contacts-ref (API)
-30. Contact Access Button / limited access / iOS 18 contacts? → contacts (patterns), contacts-ref (API)
-31. Contact Provider extension / expose contacts to system? → contacts-ref (API, Part 10)
+14. Audio recognition / ShazamKit / song identification? → shazamkit (patterns), shazamkit-ref (API)
+15. Custom audio catalogs / second-screen sync / audio matching? → shazamkit (patterns), shazamkit-ref (API)
+16. Localization? → localization
+17. Privacy / permissions? → privacy-ux
+18. Background processing? → background-processing (patterns), background-processing-diag (debugging), background-processing-ref (API)
+19. Push notification implementation, APNs, or remote notification handling? → push-notifications (patterns), push-notifications-ref (API), push-notifications-diag (debugging)
+20. Need APNs payload format, headers, or JWT auth details? → push-notifications-ref
+21. Push notifications not arriving, token issues, or delivery failures? → push-notifications-diag
+22. Location services? → core-location (patterns), core-location-diag (debugging), core-location-ref (API)
+23. Maps / MapKit / annotations / directions? → mapkit (patterns), mapkit-ref (API), mapkit-diag (debugging)
+24. Alarms / AlarmKit? → alarmkit-ref
+25. Passkeys / WebAuthn / replacing passwords / ASAuthorizationController? → passkeys
+26. App Attest / DeviceCheck / fraud prevention / app integrity? → app-attest
+27. Calendar events / EventKit / EventKitUI / add to calendar? → eventkit (patterns), eventkit-ref (API)
+28. Reminders / EKReminder / reminder lists? → eventkit (patterns), eventkit-ref (API)
+29. Siri Event Suggestions / INReservation? → eventkit-ref (API, Part 9)
+30. Virtual conference extension / EKVirtualConferenceProvider? → eventkit-ref (API, Part 8)
+31. Contacts / contact picker / CNContactStore? → contacts (patterns), contacts-ref (API)
+32. Contact Access Button / limited access / iOS 18 contacts? → contacts (patterns), contacts-ref (API)
+33. Contact Provider extension / expose contacts to system? → contacts-ref (API, Part 10)
 
 ## Anti-Rationalization
 
@@ -252,6 +277,7 @@ When integration issues overlap with other domains:
 | "Our users aren't ready for passkeys" | Apple, Google, and Microsoft ship passkeys across all platforms. Users don't need to understand crypto — they just tap. passkeys covers the migration path. |
 | "App Attest is overkill for our app" | Any app with server-side value (premium content, virtual currency, user accounts) is a fraud target. app-attest has a gradual rollout strategy. |
 | "Just request full Calendar access" | Most apps only need to add events — EventKitUI does that with zero permissions. eventkit has the access tier decision tree. |
+| "ShazamKit is just SHSession + a delegate" | iOS 17+ has SHManagedSession which eliminates all AVAudioEngine boilerplate. shazamkit has the era decision tree. |
 | "I'll use CNContactStore directly for contact picking" | CNContactPickerViewController needs no authorization and shows all contacts. contacts has the access level decision tree. |
 | "Contacts access is simple, just request and fetch" | iOS 18 limited access means your app may only see a subset. ContactAccessButton handles this gracefully. contacts covers the full model. |
 

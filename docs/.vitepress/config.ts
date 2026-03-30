@@ -333,6 +333,7 @@ export default withMermaid(defineConfig({
             { text: 'Now Playing', link: '/skills/integration/now-playing' },
             { text: 'Photo Library', link: '/skills/integration/photo-library' },
             { text: 'Push Notifications', link: '/skills/integration/push-notifications' },
+            { text: 'ShazamKit', link: '/skills/integration/shazamkit' },
             { text: 'tvOS', link: '/skills/integration/tvos' }
           ]
         },
@@ -536,7 +537,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v2.37.0'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v2.38.0'
     }
   }
 }))
