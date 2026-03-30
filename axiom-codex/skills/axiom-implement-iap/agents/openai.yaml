@@ -1,0 +1,3 @@
+interface:
+  display_name: "Implement IAP"
+  short_description: "The user wants to add in-app purchases, implement StoreKit 2, or set up subscriptions."

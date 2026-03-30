@@ -1,0 +1,3 @@
+interface:
+  display_name: "Analyze SwiftUI Performance"
+  short_description: "The user mentions SwiftUI performance, janky scrolling, slow animations, or view update issues."

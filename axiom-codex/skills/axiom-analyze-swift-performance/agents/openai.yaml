@@ -1,0 +1,3 @@
+interface:
+  display_name: "Analyze Swift Performance"
+  short_description: "The user mentions Swift performance audit, code optimization, or performance review."

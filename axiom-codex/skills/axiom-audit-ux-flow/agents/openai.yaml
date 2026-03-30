@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit UX Flow"
+  short_description: "The user mentions UX flow issues, dead-end views, dismiss traps, missing empty states, broken user journeys, or wants..."

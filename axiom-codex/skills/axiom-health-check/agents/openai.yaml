@@ -1,0 +1,3 @@
+interface:
+  display_name: "Health Check"
+  short_description: "The user wants a comprehensive project-wide audit, full health check, or scan across all domains."

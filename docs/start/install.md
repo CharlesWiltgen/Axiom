@@ -41,9 +41,56 @@ Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
 }
 ```
 
-Replace `/path/to/Axiom` with the actual path where you cloned the repo. See the [full Codex setup guide](/start/codex-install) for project-scoped installation and troubleshooting.
+Replace `/path/to/Axiom` with the actual path where you cloned the repo. To update, just `git pull` — the plugin reads from disk.
 
-To update, just `git pull` — the plugin reads from disk.
+### Team Installation (Repo-Scoped)
+
+To share Axiom across your team, add the plugin to your project repo. Every Codex user in the repo gets it automatically.
+
+1. Copy the `axiom-codex` directory into your repo:
+
+```bash
+cp -r /path/to/Axiom/axiom-codex your-repo/plugins/axiom
+```
+
+2. Create `.agents/plugins/marketplace.json` at your repo root:
+
+```json
+{
+  "name": "axiom-team",
+  "interface": { "displayName": "Axiom iOS Development" },
+  "plugins": [
+    {
+      "name": "axiom",
+      "source": { "source": "local", "path": "./plugins/axiom" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Development"
+    }
+  ]
+}
+```
+
+3. Commit both `plugins/axiom/` and `.agents/plugins/marketplace.json`
+
+Team members see Axiom in their Codex plugin picker on next session. Use `"installation": "INSTALLED_BY_DEFAULT"` to enable it automatically without prompting.
+
+### MCP Server (Optional)
+
+Axiom's MCP server lets Codex search across all skills by keyword. Add it with one command:
+
+```bash
+codex mcp add axiom -- npx -y axiom-mcp
+```
+
+Or add it manually to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.axiom]
+command = "npx"
+args = ["-y", "axiom-mcp"]
+```
+
+For project-scoped config, use `.codex/config.toml` in your repo root instead.
 
 ## Use Skills
 

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Run Tests"
+  short_description: "The user wants to run XCUITests, parse test results, view test failures, or export test attachments."

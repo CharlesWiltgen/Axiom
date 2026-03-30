@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit Core Data"
+  short_description: "The user mentions Core Data review, schema migration, production crashes, or data safety checking."

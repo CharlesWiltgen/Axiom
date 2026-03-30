@@ -1,0 +1,3 @@
+interface:
+  display_name: "Profile Performance"
+  short_description: "The user wants automated performance profiling, headless Instruments analysis, or CLI-based trace collection."
