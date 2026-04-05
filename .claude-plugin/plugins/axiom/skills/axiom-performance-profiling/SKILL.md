@@ -726,6 +726,43 @@ Action: Optimize JSON decoding (not memory)
 
 ---
 
+## CLI Quick Checks (No Instruments)
+
+Xcode ships CLI profiling tools for fast checks without opening Instruments.
+
+### CPU Profiling
+
+```bash
+# Quick 5-second CPU sample of running app
+xcrun sample MyApp 5
+
+# Sample by PID, save to file for analysis
+xcrun sample 12345 5 -file output.txt
+```
+
+**When to use**: Quick CPU check before committing to a full xctrace session. Shows which functions are hot in 5 seconds.
+
+### Memory Profiling
+
+```bash
+# Quick leak check — is there a leak at all?
+xcrun leaks MyApp
+```
+
+For `heap`, `vmmap`, `stringdups`, and a full CLI diagnosis workflow, see `axiom-memory-debugging`.
+
+### Headless Instruments (xctrace)
+
+```bash
+# CPU profile from CLI
+xcrun xctrace record --instrument 'CPU Profiler' --attach 'MyApp' --time-limit 10s --output cpu.trace
+
+# Memory allocations from CLI
+xcrun xctrace record --instrument 'Allocations' --attach 'MyApp' --time-limit 30s --output alloc.trace
+```
+
+See `axiom-xctrace-ref` for comprehensive xctrace reference.
+
 ## Quick Reference
 
 ### Common Operations
