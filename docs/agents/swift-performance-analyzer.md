@@ -1,35 +1,31 @@
 # swift-performance-analyzer
 
-Scans Swift code for performance anti-patterns that cause slowdowns and excessive allocations.
+Scans Swift code for performance issues — from known anti-patterns like unnecessary copies and ARC overhead to context-dependent problems like actor hops in tight loops and existential types in hot paths.
 
-## When to Use
+## What It Does
 
-- Auditing Swift code for performance issues
-- Finding unnecessary copies and ARC overhead
-- Detecting unspecialized generics
-- Identifying collection inefficiencies
-- Finding actor isolation costs
-- Checking memory layout issues
+- Detects 8 known anti-patterns (unnecessary copies, ARC traffic, unspecialized generics, collection inefficiencies, actor overhead, large value types, inlining, memory layout)
+- Identifies context-dependent performance issues (same code is acceptable in setup but devastating in a tight loop)
+- Correlates findings that compound into higher severity
+- Produces a Performance Health Score (OPTIMIZED / OVERHEAD / BOTTLENECKED)
 
-## What It Detects
+**Note**: This agent checks Swift-level performance (ARC, copies, generics, actors). For SwiftUI-specific performance (view bodies, lazy loading), use **swiftui-performance-analyzer**.
 
-- **Unnecessary copies** — Value types copied when reference would suffice
-- **ARC overhead** — Excessive retain/release cycles
-- **Unspecialized generics** — Generic code not optimized for specific types
-- **Collection inefficiencies** — Suboptimal collection usage patterns
-- **Actor isolation costs** — Expensive actor hop patterns
-- **Memory layout issues** — Poor struct packing, excessive padding
+## How to Use
 
-## Example Triggers
-
+**Natural language:**
 - "Check my Swift code for performance issues"
 - "Audit my code for optimization opportunities"
 - "I'm seeing excessive memory allocations"
-- "Review my Swift performance anti-patterns"
-- "Check if I'm using COW correctly"
+
+**Explicit command:**
+```bash
+/axiom:audit swift-performance
+```
 
 ## Related
 
-- **swift-performance** — Swift performance optimization patterns
-- **swiftui-performance** — SwiftUI-specific performance issues
-- **memory-debugging** — Memory leak diagnosis
+- **swift-performance** skill — use to profile and fix the issues this auditor finds
+- **swiftui-performance-analyzer** agent — for SwiftUI view-specific performance (complementary)
+- **memory-auditor** agent — overlaps on ARC and closure capture lifecycle
+- **concurrency-auditor** agent — overlaps on actor isolation overhead
