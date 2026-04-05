@@ -30,7 +30,7 @@ Use this router when:
 - Instruments workflows
 - deinit not called
 
-**Memory leak scan** → Launch `memory-auditor` agent or `/axiom:audit memory` (6 common patterns: timers, observers, closures, delegates, view callbacks, PhotoKit)
+**Memory leak scan** → Launch `memory-auditor` agent or `/axiom:audit memory` (5-phase semantic audit: maps resource ownership, detects 6 leak patterns, reasons about missing cleanup, correlates compound risks, scores lifecycle health)
 
 **Memory leaks (Objective-C blocks)** → `/skill axiom-objc-block-retain-cycles`
 - Block retain cycles
