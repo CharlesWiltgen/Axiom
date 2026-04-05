@@ -210,7 +210,14 @@ xcrun atos -arch arm64 \
   -o MyApp.app.dSYM/Contents/Resources/DWARF/MyApp \
   -l 0x100000000 \
   0x0000000100abc123
+
+# 5. Symbolicate an entire crash log (parse + symbolicate in one step)
+# Note: crashlog is an LLDB Python script, not a compiled tool.
+# Works via xcrun but may not be available in all Xcode configurations.
+xcrun crashlog MyCrash.ips
 ```
+
+**`atos` vs `crashlog`**: Use `atos` for individual addresses (always available). Use `crashlog` to parse and symbolicate an entire crash report at once — it handles the full Binary Images section and resolves all addresses automatically.
 
 ### Common Symbolication Failures
 

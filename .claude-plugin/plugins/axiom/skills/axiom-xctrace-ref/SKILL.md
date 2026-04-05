@@ -350,6 +350,46 @@ Raw addresses in backtraces (e.g., `0x18f17ed94`) instead of function names.
 xcrun xctrace symbolicate --input trace.trace --dsym /path/to/App.dSYM
 ```
 
+## Post-Processing with filtercalltree
+
+`filtercalltree` transforms call tree output for targeted analysis. It takes text files in the format produced by `sample`.
+
+```bash
+# 1. Capture a call tree with sample (writes to /tmp/*.sample.txt)
+xcrun sample MyApp 5
+
+# 2. Invert the call tree (show hottest leaf frames first)
+xcrun filtercalltree -i /tmp/MyApp_*.sample.txt
+
+# 3. Charge library costs to callers (attribute UIKitCore time to your code)
+xcrun filtercalltree -chargeLibrary=UIKitCore /tmp/MyApp_*.sample.txt
+
+# 4. Combine: invert + charge system libraries + prune noise
+xcrun filtercalltree -i -chargeSystemLibraries -pruneCount 5 /tmp/MyApp_*.sample.txt
+```
+
+| Flag | Effect |
+|------|--------|
+| `-i` | Invert call tree — hottest leaf frames first (like Instruments "Invert Call Tree") |
+| `-chargeLibrary=X` | Attribute framework X time to your calling code (repeatable) |
+| `-chargeSystemLibraries` | Charge all /System and /usr libraries to callers |
+| `-pruneCount N` | Remove branches with fewer than N samples |
+| `-pruneMallocSize S` | Remove branches with malloc size below S (e.g., `500K`, `1.2M`) |
+
+## Companion CLI Tools
+
+These tools complement xctrace for specific profiling needs:
+
+```bash
+# Quick CPU sample without full trace (5-second sample)
+xcrun sample MyApp 5
+
+# Sample by PID, save to file
+xcrun sample 12345 5 -file output.txt
+```
+
+`sample` is lighter than xctrace — use for quick CPU checks when you don't need the full Instruments pipeline.
+
 ## Limitations
 
 1. **Privacy restrictions**: Some instruments require privacy permissions granted in System Preferences
