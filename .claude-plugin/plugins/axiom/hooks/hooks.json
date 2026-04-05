@@ -54,16 +54,6 @@
         ]
       }
     ],
-    "PermissionDenied": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/permission-denied.sh\""
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [
