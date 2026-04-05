@@ -1,29 +1,28 @@
 # memory-auditor
 
-Automatically scans for the 6 most common memory leak patterns to prevent crashes and progressive memory growth.
+Scans for memory leaks — from known patterns like timer and observer mismatches to architectural issues like missing cleanup paths and unbounded collection growth.
 
-## How to Use This Agent
+## What It Does
 
-**Natural language (automatic triggering):**
+- Detects 6 known leak patterns (timers, observers, closures, delegates, view callbacks, PhotoKit)
+- Identifies architectural issues (missing deinit, partial cleanup, unbounded collection growth, inconsistent lifecycle management)
+- Correlates findings that compound into higher severity
+- Produces a Resource Lifecycle Health Score (CLEAN / NEEDS ATTENTION / LEAKING)
+
+## How to Use
+
+**Natural language:**
 - "Can you check my code for memory leaks?"
 - "Scan for potential memory leak patterns"
 - "Review my code for retain cycles"
-- "Before I ship, can you check for memory issues?"
 
 **Explicit command:**
 ```bash
 /axiom:audit memory
 ```
 
-## What It Does
-
-1. **Timer Leaks** (CRITICAL) — Timer.scheduledTimer(repeats: true) without .invalidate()
-2. **Observer/Notification Leaks** (HIGH) — addObserver without removeObserver
-3. **Closure Capture Leaks** (HIGH) — Closures in arrays capturing self strongly
-4. **Strong Delegate Cycles** (MEDIUM) — Delegate properties without weak
-5. **View Callback Leaks** (MEDIUM) — SwiftUI callbacks capturing self
-6. **PhotoKit Accumulation** (LOW) — PHImageManager requests without cancellation
-
 ## Related
 
-- **memory-debugging** skill — Systematic memory leak diagnosis with Instruments
+- **memory-debugging** skill — use to diagnose and fix the issues this auditor finds, including Instruments workflows
+- **concurrency-auditor** agent — overlaps on Task lifecycle and async sequence retention
+- **health-check** agent — includes memory-auditor in project-wide scans

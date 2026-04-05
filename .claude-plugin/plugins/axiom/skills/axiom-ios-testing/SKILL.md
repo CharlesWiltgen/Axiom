@@ -169,7 +169,7 @@ This router invokes specialized skills based on the specific testing need:
 - Migrate from XCTest to Swift Testing
 - Check tests for Swift 6 concurrency issues
 
-**Why testing-auditor**: Scans for sleep() calls, shared mutable state, missing assertions, XCTest to Swift Testing migration opportunities, and Swift 6 concurrency issues in tests.
+**Why testing-auditor**: Maps test coverage shape against production code, detects flaky patterns and speed issues, identifies untested critical paths (auth, payments, persistence), and scores overall test health.
 
 **Invoke**: Launch `testing-auditor` agent or `/axiom:audit testing`
 

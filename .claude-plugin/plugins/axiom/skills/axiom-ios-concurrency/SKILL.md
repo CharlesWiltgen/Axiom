@@ -94,7 +94,7 @@ Use this router when:
 
 ### Automated Scanning
 
-**Concurrency audit** → Launch `concurrency-auditor` agent or `/axiom:audit concurrency` (Swift 6 strict concurrency violations, unsafe Task captures, missing @MainActor, Sendable violations, actor isolation problems)
+**Concurrency audit** → Launch `concurrency-auditor` agent or `/axiom:audit concurrency` (5-phase semantic audit: maps isolation architecture, detects 8 anti-patterns, reasons about missing concurrency patterns, correlates compound risks, scores Swift 6.3 readiness)
 
 ## Decision Tree
 
