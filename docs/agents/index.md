@@ -68,15 +68,15 @@ Agents are autonomous problem-solvers that:
 - **concurrency-auditor** — Detects Swift 6 concurrency violations and architectural issues (missing isolation, incoherent strategies, incomplete cancellation, permanent escape hatches)
 - **energy-auditor** — Scans for energy anti-patterns and unnecessary background work (timers for inactive features, location when not on map, unused background modes, lifecycle asymmetries)
 - **memory-auditor** — Finds memory leak patterns and architectural issues (missing cleanup paths, unbounded collection growth, inconsistent resource lifecycle management)
-- **swift-performance-analyzer** — Detects Swift performance anti-patterns (ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs)
+- **swift-performance-analyzer** — Detects Swift performance issues and context-dependent overhead (ARC in hot paths, copies in tight loops, actor hops in iteration, existential types in hot paths)
 - **textkit-auditor** — Scans for TextKit 1 fallback triggers, deprecated glyph APIs, missing Writing Tools support
 
 ### UI & Design
 - **liquid-glass-auditor** — Identifies iOS 26+ Liquid Glass adoption opportunities (glass effects, toolbar improvements, search patterns, migration from old blur effects)
-- **swiftui-architecture-auditor** — Scans SwiftUI architecture (logic in view bodies, async boundary violations, property wrapper misuse, testability gaps)
+- **swiftui-architecture-auditor** — Scans SwiftUI architecture and completeness (untestable logic in views, async boundary violations, inconsistent patterns, missing separation of concerns)
 - **swiftui-layout-auditor** — Scans SwiftUI layout code for GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss, missing lazy containers
 - **swiftui-performance-analyzer** — Detects SwiftUI performance issues and context-dependent problems (expensive operations amplified in scrolling cells, unnecessary rebuilds, missing lazy loading)
-- **swiftui-nav-auditor** — Scans SwiftUI navigation architecture (missing NavigationPath, deep link gaps, state restoration issues, wrong container usage, type safety problems)
+- **swiftui-nav-auditor** — Scans SwiftUI navigation architecture and completeness (orphan destinations, deep link gaps, state restoration, type collisions, modal/stack conflicts)
 - **ux-flow-auditor** — Detects UX journey defects and incomplete flows (dead ends, dismiss traps, buried CTAs, missing states, unvalidated entry points, inaccessible paths)
 
 ### Persistence & Storage

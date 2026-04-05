@@ -1,38 +1,31 @@
 # swiftui-nav-auditor
 
-Automatically scans SwiftUI navigation code for architecture and correctness issues.
-
-## How to Use This Agent
-
-**Natural language (automatic triggering):**
-- "Check my SwiftUI navigation for correctness issues"
-- "Review my navigation implementation for architectural problems"
-- "My deep links aren't working, can you scan my navigation code?"
-- "Audit my app's navigation state restoration"
-
-**Explicit command:**
-```bash
-/axiom:audit-swiftui-nav
-```
+Scans SwiftUI navigation code for architecture and correctness issues — from known anti-patterns like missing NavigationPath to architectural gaps like orphan destinations, incomplete deep link coverage, and missing state preservation.
 
 ## What It Does
 
-**IMPORTANT**: This agent checks navigation **architecture and correctness**. For navigation **performance** issues (NavigationPath recreation, large models in state), use the **swiftui-performance-analyzer** agent instead.
+- Detects 10 known anti-patterns (missing NavigationPath, deep link gaps, state restoration, type safety, wrong container, deprecated APIs, and more)
+- Identifies navigation completeness gaps (orphan destination types, unvalidated deep link targets, modal/stack conflicts)
+- Correlates findings that compound into higher severity
+- Produces a Navigation Health Score (SOLID / FRAGILE / BROKEN)
 
-### Architecture Issues
+**Note**: This agent checks navigation **architecture and correctness**. For navigation **performance** issues (NavigationPath recreation, large models in state), use **swiftui-performance-analyzer**.
 
-1. **Missing NavigationPath** (HIGH) — Dynamic navigation without `@State` NavigationPath binding
-2. **Deep Link Gaps** (CRITICAL) — Missing `.onOpenURL`, no URL scheme registration, unhandled URL patterns
-3. **State Restoration Issues** (HIGH) — Missing `.navigationDestination(for:)`, no state preservation
-4. **Wrong Container** (MEDIUM) — NavigationStack for master-detail, NavigationSplitView for linear flows
-5. **Type Safety Issues** (HIGH) — Multiple `.navigationDestination` with same type, type mismatches
-6. **Tab/Nav Integration** (MEDIUM) — iOS 18+ missing `.tabViewStyle(.sidebarAdaptable)`, state conflicts
-7. **Missing State Preservation** (HIGH) — No `@SceneStorage` for navigation path, state lost on termination
-8. **Coordinator Pattern Violations** (LOW) — Navigation logic scattered across views
+## How to Use
+
+**Natural language:**
+- "Check my SwiftUI navigation for correctness issues"
+- "My deep links aren't working, can you scan my navigation code?"
+- "Review my navigation state restoration"
+
+**Explicit command:**
+```bash
+/axiom:audit swiftui-nav
+```
 
 ## Related
 
-- **swiftui-nav** skill — NavigationStack vs NavigationSplitView decision trees, deep linking, coordinator patterns
-- **swiftui-nav-diag** skill — Systematic navigation debugging (not responding, unexpected pops, deep link failures)
-- **swiftui-nav-ref** skill — Complete API reference with WWDC code examples
-- **swiftui-performance-analyzer** agent — For navigation **performance** issues (not architecture)
+- **swiftui-nav** skill — the navigation patterns this auditor checks against
+- **swiftui-nav-diag** skill — systematic debugging for navigation failures (unexpected pops, deep link misroutes)
+- **swiftui-performance-analyzer** agent — overlaps on NavigationPath recreation performance
+- **ux-flow-auditor** agent — overlaps on deep link dead ends and user journey completeness
