@@ -72,6 +72,8 @@ Use this router when:
 - Context limits exceeded
 - Model unavailable
 
+**Automated scanning** → Launch `foundation-models-auditor` agent or `/axiom:audit foundation-models` (missing availability checks, main thread blocking, manual JSON parsing, session lifecycle issues)
+
 ## Decision Tree
 
 1. Custom ML model / CoreML / PyTorch conversion? → **Route to ios-ml** (not this router)
@@ -81,6 +83,7 @@ Use this router when:
 5. Need API reference / code examples? → foundation-models-ref
 6. Debugging AI issues (blocked, slow, guardrails)? → foundation-models-diag
 7. Foundation Models + UI freezing? → foundation-models (async patterns) + also invoke ios-concurrency if needed
+8. Want automated Foundation Models code scan? → foundation-models-auditor (Agent)
 
 ## Anti-Rationalization
 
@@ -124,6 +127,9 @@ User: "I want to add AI to my app"
 
 User: "My Foundation Models session is blocking the UI"
 → Invoke: `/skill axiom-foundation-models` (async patterns) + also invoke `ios-concurrency` if needed
+
+User: "Review my Foundation Models code for issues"
+→ Invoke: `foundation-models-auditor` agent
 
 User: "I want to run my PyTorch model on device"
 → Route to: `ios-ml` router (CoreML conversion, not Foundation Models)
