@@ -407,6 +407,37 @@ if (brokenRefs === 0) {
   );
 }
 
+// Reverse check: every agent should be referenced by at least one router
+const agentsExemptFromRouting = new Set(["health-check"]);
+const allRouterContent = routerSkillNames
+  .map((name) => {
+    const p = path.join(pluginDir, "skills", name, "SKILL.md");
+    return fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "";
+  })
+  .join("\n");
+
+let unreachableAgents = 0;
+for (const agentName of allAgentNames) {
+  if (agentsExemptFromRouting.has(agentName)) continue;
+  if (!allRouterContent.includes(agentName)) {
+    warn(
+      "agent-routing",
+      `Agent "${agentName}" is not referenced by any router skill — users can't discover it via natural language`,
+    );
+    unreachableAgents++;
+  }
+}
+
+if (unreachableAgents === 0) {
+  console.log(
+    `  ✓ ${allAgentNames.size - agentsExemptFromRouting.size} agents reachable via routers (${agentsExemptFromRouting.size} exempt)`,
+  );
+} else {
+  console.log(
+    `  ⚠ ${unreachableAgents} agent(s) not reachable via any router`,
+  );
+}
+
 heading("11. Hook Scripts");
 
 try {

@@ -79,6 +79,8 @@ Use this router when working with:
 **Codable audit** → Launch `codable-auditor` agent or `/axiom:audit codable` (try? swallowing errors, JSONSerialization, date handling)
 **iCloud audit** → Launch `icloud-auditor` agent or `/axiom:audit icloud` (entitlement checks, file coordination, CloudKit anti-patterns)
 **Storage audit** → Launch `storage-auditor` agent or `/axiom:audit storage` (wrong file locations, missing backup exclusions, data loss risks)
+**Database schema audit** → Launch `database-schema-auditor` agent or `/axiom:audit database-schema` (unsafe ALTER TABLE, DROP operations, missing idempotency, foreign key misuse)
+**SwiftData audit** → Launch `swiftdata-auditor` agent or `/axiom:audit swiftdata` (struct models, missing VersionedSchema, relationship defaults, background context misuse, N+1 patterns)
 
 ## Decision Tree
 
@@ -104,7 +106,9 @@ Use this router when working with:
 16. Want Codable anti-pattern scan? → codable-auditor (Agent)
 17. Want iCloud sync audit? → icloud-auditor (Agent)
 18. Want storage location audit? → storage-auditor (Agent)
-19. tvOS data persistence? → axiom-tvos (CRITICAL: no persistent local storage) + axiom-sqlitedata (CloudKit SyncEngine)
+19. Want database schema/migration safety scan? → database-schema-auditor (Agent)
+20. Want SwiftData code audit? → swiftdata-auditor (Agent)
+21. tvOS data persistence? → axiom-tvos (CRITICAL: no persistent local storage) + axiom-sqlitedata (CloudKit SyncEngine)
 
 ## Anti-Rationalization
 
@@ -153,6 +157,12 @@ User: "Audit my iCloud sync implementation"
 
 User: "Check if my files are stored in the right locations"
 → Invoke: `storage-auditor` agent
+
+User: "Audit my database migrations for safety"
+→ Invoke: `database-schema-auditor` agent
+
+User: "Check my SwiftData models for issues"
+→ Invoke: `swiftdata-auditor` agent
 
 User: "How do I persist data on tvOS?"
 → Invoke: `/skill axiom-tvos` + `/skill axiom-sqlitedata`
