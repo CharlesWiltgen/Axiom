@@ -1,12 +1,18 @@
 # swiftui-layout-auditor
 
-Scans SwiftUI layout code for the 10 most critical violations — GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss from conditional stacks, and missing lazy containers.
+Scans SwiftUI layout code for issues — from known anti-patterns like GeometryReader misuse and deprecated screen APIs to architectural gaps like missing multitasking support, identity-losing conditional stacks, and layouts that clip on smaller devices.
 
-## How to Use This Agent
+## What It Does
 
-**Natural language (automatic triggering):**
+- Detects 10 known layout violations (GeometryReader in stacks, deprecated UIScreen/UIDevice, UIRequiresFullScreen, size class misuse, conditional stacks, hardcoded breakpoints, and more)
+- Identifies layout completeness gaps (missing multitasking support, near-edge fixed sizing, GeometryReader in scroll contexts, no iOS 26 free-form window support)
+- Correlates findings that compound into higher severity
+- Produces a Layout Health Score (ADAPTIVE / RIGID / BROKEN)
+
+## How to Use
+
+**Natural language:**
 - "Can you check my SwiftUI layouts for issues?"
-- "Review my adaptive layout code"
 - "My layout breaks on iPad, can you scan for problems?"
 - "Check for GeometryReader misuse in my views"
 
@@ -15,20 +21,9 @@ Scans SwiftUI layout code for the 10 most critical violations — GeometryReader
 /axiom:audit swiftui-layout
 ```
 
-## What It Does
-
-1. **GeometryReader in Stacks Without .frame()** (CRITICAL) — Collapses sibling views
-2. **UIScreen.main / UIDevice.current** (CRITICAL) — Deprecated, unreliable in SwiftUI
-3. **UIRequiresFullScreen** (CRITICAL) — Disables all iPad multitasking
-4. **Size Class as Orientation Proxy** (HIGH) — Breaks on iPad and large iPhones
-5. **Conditional HStack/VStack** (HIGH) — Destroys child view state on switch
-6. **Nested GeometryReaders** (HIGH) — Confusing size propagation
-7. **Hardcoded Width/Height Breakpoints** (MEDIUM) — Breaks on new device sizes
-8. **Large Fixed Frames (300+ px)** (MEDIUM) — Clips on smaller devices
-9. **Non-Lazy ForEach in Stacks** (MEDIUM) — Launch lag with 100+ items
-10. **Missing containerRelativeFrame** (LOW) — Modernization opportunity (iOS 17+)
-
 ## Related
 
-- **swiftui-layout** — Adaptive layout decision trees (ViewThatFits, AnyLayout)
-- **swiftui-layout-ref** — Complete SwiftUI layout API reference
+- **swiftui-layout** skill — adaptive layout decision trees (ViewThatFits, AnyLayout, onGeometryChange)
+- **swiftui-layout-ref** skill — complete SwiftUI layout API reference
+- **swiftui-performance-analyzer** agent — overlaps on non-lazy ForEach and GeometryReader in scrolling contexts
+- **accessibility-auditor** agent — overlaps on fixed dimensions that clip with Dynamic Type

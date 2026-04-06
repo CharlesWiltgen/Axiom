@@ -78,6 +78,7 @@ Use this router when working with:
 **Architecture audit** → Launch `swiftui-architecture-auditor` agent (separation of concerns, logic in views, testability)
 **Performance scan** → Launch `swiftui-performance-analyzer` agent or `/axiom:audit swiftui-performance` (expensive view body ops, unnecessary updates)
 **Navigation audit** → Launch `swiftui-nav-auditor` agent or `/axiom:audit swiftui-nav` (deep link gaps, state restoration, wrong containers)
+**Layout audit** → Launch `swiftui-layout-auditor` agent or `/axiom:audit swiftui-layout` (GeometryReader misuse, missing adaptivity, hardcoded breakpoints, identity loss)
 **UX flow audit** → Launch `ux-flow-auditor` agent or `/axiom:audit ux-flow` (dead ends, dismiss traps, buried CTAs, missing empty/loading/error states)
 **Liquid Glass scan** → Launch `liquid-glass-auditor` agent or `/axiom:audit liquid-glass` (adoption opportunities, toolbar improvements)
 **TextKit scan** → Launch `textkit-auditor` agent or `/axiom:audit textkit` (TextKit 1 fallbacks, deprecated glyph APIs, Writing Tools)
@@ -137,6 +138,7 @@ digraph ios_ui {
 - Want architecture audit (separation of concerns, testability)? → swiftui-architecture-auditor (Agent)
 - Want SwiftUI performance scan (view body ops, unnecessary updates)? → swiftui-performance-analyzer (Agent)
 - Want navigation audit (deep links, state restoration)? → swiftui-nav-auditor (Agent)
+- Want layout audit (GeometryReader, adaptivity, hardcoded sizes)? → swiftui-layout-auditor (Agent)
 - Want UX flow audit (dead ends, dismiss traps, missing states)? → ux-flow-auditor (Agent)
 - Want Liquid Glass adoption scan? → liquid-glass-auditor (Agent)
 - Want TextKit scan (Writing Tools, deprecated APIs)? → textkit-auditor (Agent)
@@ -236,6 +238,9 @@ User: "Scan my SwiftUI views for performance issues"
 
 User: "Audit my navigation for deep link gaps"
 → Invoke: `swiftui-nav-auditor` agent
+
+User: "Check my layouts for iPad and multitasking issues"
+→ Invoke: `swiftui-layout-auditor` agent
 
 User: "Check my app for Liquid Glass adoption opportunities"
 → Invoke: `liquid-glass-auditor` agent

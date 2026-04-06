@@ -74,7 +74,7 @@ Agents are autonomous problem-solvers that:
 ### UI & Design
 - **liquid-glass-auditor** — Identifies iOS 26+ Liquid Glass adoption opportunities (glass effects, toolbar improvements, search patterns, migration from old blur effects)
 - **swiftui-architecture-auditor** — Scans SwiftUI architecture and completeness (untestable logic in views, async boundary violations, inconsistent patterns, missing separation of concerns)
-- **swiftui-layout-auditor** — Scans SwiftUI layout code for GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss, missing lazy containers
+- **swiftui-layout-auditor** — Scans SwiftUI layout for anti-patterns and adaptivity gaps (GeometryReader misuse, missing multitasking support, identity loss, near-edge fixed sizing)
 - **swiftui-performance-analyzer** — Detects SwiftUI performance issues and context-dependent problems (expensive operations amplified in scrolling cells, unnecessary rebuilds, missing lazy loading)
 - **swiftui-nav-auditor** — Scans SwiftUI navigation architecture and completeness (orphan destinations, deep link gaps, state restoration, type collisions, modal/stack conflicts)
 - **ux-flow-auditor** — Detects UX journey defects and incomplete flows (dead ends, dismiss traps, buried CTAs, missing states, unvalidated entry points, inaccessible paths)
