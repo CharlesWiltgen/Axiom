@@ -94,6 +94,111 @@ Button("Tap Me") {
 
 **Automatic Adoption**: Simply recompiling with Xcode 26 brings Liquid Glass to standard controls automatically.
 
+#### Interactive Modifier (iOS Only)
+
+The `.interactive()` modifier adds scale, bounce, shimmer, and illumination from the touch point on press. Use it on custom controls that need touch feedback:
+
+```swift
+Button("Tap Me") { }
+    .glassEffect(.regular.interactive())
+```
+
+#### Button Styles
+
+Two built-in button styles provide glass appearance with appropriate visual weight:
+
+| Style | Appearance | Use Case |
+|-------|-----------|----------|
+| `.glass` | Translucent | Secondary actions |
+| `.glassProminent` | More opaque | Primary actions |
+
+```swift
+HStack {
+    Button("Cancel") { }
+        .buttonStyle(.glass)
+
+    Button("Confirm") { }
+        .buttonStyle(.glassProminent)
+        .tint(.green)
+}
+```
+
+#### GlassEffectContainer
+
+When multiple glass elements appear near each other, wrap them in `GlassEffectContainer`. Glass cannot properly sample other glass — the container creates a shared sampling region for consistent rendering, better performance, and morphing support.
+
+```swift
+GlassEffectContainer {
+    HStack(spacing: 16) {
+        Button("Edit") { }.glassEffect()
+        Button("Share") { }.glassEffect()
+        Button("Delete") { }.glassEffect()
+    }
+}
+```
+
+The `spacing` parameter controls the distance at which elements merge into one glass piece:
+
+```swift
+GlassEffectContainer(spacing: 30) {
+    HStack(spacing: 20) {
+        Button("A") { }.glassEffect()
+        Button("B") { }.glassEffect()
+    }
+}
+```
+
+#### Morphing Animations with glassEffectID
+
+Glass elements inside a `GlassEffectContainer` can morph fluidly between states using `glassEffectID` and a shared `@Namespace`. Requirements: (1) elements in the same container, (2) each has a `glassEffectID` with shared namespace, (3) state changes wrapped in `withAnimation`.
+
+```swift
+struct ExpandableMenu: View {
+    @State private var isExpanded = false
+    @Namespace private var namespace
+
+    var body: some View {
+        GlassEffectContainer(spacing: 20) {
+            HStack(spacing: 16) {
+                if isExpanded {
+                    Button("Camera", systemImage: "camera") { }
+                        .glassEffect(.regular.interactive())
+                        .glassEffectID("camera", in: namespace)
+
+                    Button("Photos", systemImage: "photo") { }
+                        .glassEffect(.regular.interactive())
+                        .glassEffectID("photos", in: namespace)
+                }
+
+                Button {
+                    withAnimation(.bouncy) {
+                        isExpanded.toggle()
+                    }
+                } label: {
+                    Image(systemName: isExpanded ? "xmark" : "plus")
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.circle)
+                .glassEffectID("toggle", in: namespace)
+            }
+        }
+    }
+}
+```
+
+#### macOS / AppKit
+
+On macOS Tahoe, AppKit controls adopt glass via `NSButton.bezelStyle`:
+
+```swift
+let button = NSButton()
+button.bezelStyle = .glass
+button.bezelColor = .systemBlue
+```
+
+AppKit automatically groups multiple toolbar buttons onto one glass piece. Use `NSToolbarItemGroup` or spacers to override grouping. Sidebars receive ambient reflection from nearby colorful content automatically on macOS and iPad.
+
 ### Variants: Regular vs Clear
 
 **CRITICAL DECISION**: Never mix Regular and Clear in the same interface.
