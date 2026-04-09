@@ -26,7 +26,7 @@ Add to your VS Code `settings.json`:
 
 ```json
 {
-  "github.copilot.chat.mcp.servers": {
+  "servers": {
     "axiom": {
       "command": "npx",
       "args": ["-y", "axiom-mcp"]
