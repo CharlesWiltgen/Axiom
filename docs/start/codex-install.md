@@ -28,9 +28,10 @@ The Codex plugin marketplace does not yet support third-party submissions. For n
 
 ### Option 1: Personal Marketplace (recommended)
 
-Clone the repo:
+Clone the repo somewhere under your home directory:
 
 ```bash
+cd ~
 git clone https://github.com/CharlesWiltgen/Axiom.git
 ```
 
@@ -43,7 +44,7 @@ Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
   "plugins": [
     {
       "name": "axiom",
-      "source": { "source": "local", "path": "/path/to/Axiom/axiom-codex" },
+      "source": { "source": "local", "path": "./Axiom/axiom-codex" },
       "policy": { "installation": "INSTALLED_BY_DEFAULT" },
       "category": "Development"
     }
@@ -51,7 +52,7 @@ Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
 }
 ```
 
-Replace `/path/to/Axiom` with the actual path where you cloned the repo.
+The path must start with `./` and is relative to your home directory (the grandparent of `~/.agents/plugins/`). Absolute paths are not supported. If you cloned to a different location under `~`, adjust the path accordingly.
 
 ::: tip Verifying Installation
 Use `/plugins` in Codex to open the plugin browser — Axiom should appear as installed. You can also run `/status` or `/debug-config` to check your session configuration.
@@ -74,13 +75,21 @@ Create `.agents/plugins/marketplace.json`:
   "plugins": [
     {
       "name": "axiom",
-      "source": { "source": "local", "path": "/path/to/Axiom/axiom-codex" },
+      "source": { "source": "local", "path": "./plugins/axiom" },
       "policy": { "installation": "INSTALLED_BY_DEFAULT" },
       "category": "Development"
     }
   ]
 }
 ```
+
+Copy the `axiom-codex` directory into your project first:
+
+```bash
+cp -r ~/Axiom/axiom-codex ./plugins/axiom
+```
+
+The path is relative to the project root (grandparent of `.agents/plugins/`).
 
 ## Usage
 
@@ -98,7 +107,7 @@ Skills activate automatically based on your questions. Just ask:
 Pull the latest changes:
 
 ```bash
-cd /path/to/Axiom
+cd ~/Axiom
 git pull
 ```
 

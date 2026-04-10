@@ -18,9 +18,10 @@ Verify with `/plugin` → "Manage and install" — Axiom should be listed.
 
 ## Install for Codex
 
-Clone the repo:
+Clone the repo somewhere under your home directory:
 
 ```bash
+cd ~
 git clone https://github.com/CharlesWiltgen/Axiom.git
 ```
 
@@ -33,7 +34,7 @@ Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
   "plugins": [
     {
       "name": "axiom",
-      "source": { "source": "local", "path": "/path/to/Axiom/axiom-codex" },
+      "source": { "source": "local", "path": "./Axiom/axiom-codex" },
       "policy": { "installation": "INSTALLED_BY_DEFAULT" },
       "category": "Development"
     }
@@ -41,7 +42,7 @@ Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
 }
 ```
 
-Replace `/path/to/Axiom` with the actual path where you cloned the repo. To update, just `git pull` — the plugin reads from disk.
+The path must start with `./` and is relative to your home directory (the grandparent of `~/.agents/plugins/`). If you cloned to a different location under `~`, adjust the path accordingly. To update, just `cd ~/Axiom && git pull` — the plugin reads from disk.
 
 ::: tip Verifying Installation
 Use `/plugins` in Codex to open the plugin browser — Axiom should appear as installed. You can also run `/status` or `/debug-config` to check your session configuration.
