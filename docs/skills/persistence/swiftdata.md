@@ -31,7 +31,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I handle CloudKit sync conflicts in my chat app?"
 - "Which properties should I add indexes to without slowing down writes?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Core Patterns
 - `@Model` definitions with `@Attribute` and `@Relationship`

@@ -35,7 +35,7 @@ Questions you can ask Claude that will draw from this skill:
 - "Is my touch target too small?"
 - "What's the minimum tappable area for buttons?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Background Colors
 - When to use permanent dark appearance (media-focused apps)

@@ -33,7 +33,7 @@ Questions you can ask Claude that will draw from this skill:
 - "When do I need an actor vs just @MainActor?"
 - "My app compiles but crashes with data race. How do I debug?"
 
-## What's Covered
+## What This Skill Provides
 
 ### The Progressive Journey
 ```

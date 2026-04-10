@@ -33,7 +33,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I add custom signposts to measure my own code paths?"
 - "How do I set up automated performance regression tests?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Decision Tree
 

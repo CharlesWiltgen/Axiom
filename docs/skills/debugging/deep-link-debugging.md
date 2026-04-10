@@ -32,7 +32,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I navigate programmatically from the simulator command line?"
 - "I need to verify a fix with screenshots but don't want to tap through navigation."
 
-## What's Covered
+## What This Skill Provides
 
 ### Debug URL Scheme Setup
 - SwiftUI .onOpenURL handler

@@ -32,7 +32,7 @@ Questions you can ask Claude that will draw from this skill:
 - "I have large data structures and complex view hierarchies. How do I optimize them?"
 - "We have a performance deadline and I need to understand what's slow in SwiftUI."
 
-## What's Covered
+## What This Skill Provides
 
 ### SwiftUI Instrument (Instruments 26)
 - Four track lanes: Update Groups, Long View Body Updates, Long Representable Updates, Other Long Updates

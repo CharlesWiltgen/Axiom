@@ -31,7 +31,7 @@ Questions you can ask Claude that will draw from this skill:
 - "My connection keeps failing on network transitions. How do I handle this?"
 - "How do I implement a server listener for incoming connections?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Anti-Patterns Prevented
 - SCNetworkReachability (race conditions, deprecated)

@@ -30,7 +30,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I set up Instruments to track memory leaks?"
 - "How do I verify my fix actually worked?"
 
-## What's Covered
+## What This Skill Provides
 
 ### The 5 Leak Patterns (90% of Real Issues)
 

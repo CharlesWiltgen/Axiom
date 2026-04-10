@@ -32,7 +32,7 @@ Questions you can ask Claude that will draw from this skill:
 - "My query is slow (10+ seconds). How do I profile and optimize it?"
 - "I need GROUP BY with HAVING clause. Raw SQL seems easier than type-safe queries."
 
-## What's Covered
+## What This Skill Provides
 
 ### Database Setup
 - DatabaseQueue (single connection) vs DatabasePool (concurrent access)

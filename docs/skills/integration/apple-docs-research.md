@@ -32,7 +32,7 @@ Questions you can ask Claude that will draw from this skill:
 - "Where can I find Apple documentation in markdown format?"
 - "I want to build a skill based on WWDC sessions. How do I extract the content?"
 
-## What's Covered
+## What This Skill Provides
 
 ### WWDC Session Transcripts
 - Chrome auto-capture technique
