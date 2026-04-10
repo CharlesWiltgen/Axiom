@@ -488,24 +488,25 @@ TCA is a third-party architecture from Point-Free. Consider it when:
 TCA has 4 building blocks — **State** (data), **Action** (events), **Reducer** (state evolution), and **Store** (runtime engine). Here they are in a single feature:
 
 ```swift
-// STATE — Data your feature needs
-@ObservableState
+@Reducer
 struct CounterFeature {
-    var count = 0
-    var fact: String?
-    var isLoading = false
-}
+    // STATE — Data your feature needs
+    @ObservableState
+    struct State {
+        var count = 0
+        var fact: String?
+        var isLoading = false
+    }
 
-// ACTION — All possible events
-enum Action {
-    case incrementButtonTapped
-    case decrementButtonTapped
-    case factButtonTapped
-    case factResponse(String)
-}
+    // ACTION — All possible events
+    enum Action {
+        case incrementButtonTapped
+        case decrementButtonTapped
+        case factButtonTapped
+        case factResponse(String)
+    }
 
-// REDUCER — How state evolves in response to actions
-struct CounterFeature: Reducer {
+    // REDUCER — How state evolves in response to actions
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
