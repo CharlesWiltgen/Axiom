@@ -94,7 +94,7 @@ final class Track {
 ```
 
 **Key differences**:
-- Realm: `@Persisted(primaryKey: true)` → SwiftData: `@Attribute(.unique)`
+- Realm: `@Persisted(primaryKey: true)` → SwiftData: `@Attribute(.unique)` (not supported with CloudKit sync — remove `.unique` if using CloudKit)
 - Realm: Implicit init → SwiftData: Explicit init required
 - Realm: `Object` base class → SwiftData: `@Model` macro on `final class`
 
