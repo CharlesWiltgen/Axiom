@@ -31,7 +31,7 @@ Questions you can ask Claude that will draw from this skill:
 - "Where should formatters and calculations go?"
 - "Which property wrapper do I use?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Apple's Native Patterns
 - @Observable for data models (replaces ObservableObject)
