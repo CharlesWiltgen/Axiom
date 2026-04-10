@@ -53,6 +53,10 @@ Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
 
 Replace `/path/to/Axiom` with the actual path where you cloned the repo.
 
+::: tip Verifying Installation
+Use `/plugins` in Codex to open the plugin browser — Axiom should appear as installed. You can also run `/status` or `/debug-config` to check your session configuration.
+:::
+
 ### Option 2: Project-Scoped
 
 To make Axiom available only within a specific project, add a marketplace file at your repo root:

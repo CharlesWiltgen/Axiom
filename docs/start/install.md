@@ -43,6 +43,10 @@ Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
 
 Replace `/path/to/Axiom` with the actual path where you cloned the repo. To update, just `git pull` — the plugin reads from disk.
 
+::: tip Verifying Installation
+Use `/plugins` in Codex to open the plugin browser — Axiom should appear as installed. You can also run `/status` or `/debug-config` to check your session configuration.
+:::
+
 ### Team Installation (Repo-Scoped)
 
 To share Axiom across your team, add the plugin to your project repo. Every Codex user in the repo gets it automatically.
