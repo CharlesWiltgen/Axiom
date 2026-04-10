@@ -41,7 +41,7 @@ Questions you can ask Claude that will draw from this skill:
 
 ### CloudKit Integration
 - Enabling sync with `ModelConfiguration`
-- CloudKit constraints (optional/default properties)
+- CloudKit constraints (optional/default properties, no `@Attribute(.unique)`)
 - Sync status monitoring and offline handling
 - Conflict resolution strategies
 - Record sharing (iOS 26+)
