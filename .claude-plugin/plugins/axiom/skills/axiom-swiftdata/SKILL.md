@@ -115,7 +115,7 @@ final class Track {
 
 #### Key patterns
 - Use `final class`, not `struct` (omit `final` if you need subclasses — see Class Inheritance below)
-- Use `@Attribute(.unique)` for primary key-like behavior
+- Use `@Attribute(.unique)` for primary key-like behavior (not supported with CloudKit sync — see CloudKit Constraints below)
 - Provide explicit `init` (SwiftData doesn't synthesize)
 - Optional properties (`String?`) are nullable
 - Use `@Attribute(.preserveValueOnDeletion)` on properties whose values should survive even after the object is deleted (useful for analytics, audit trails)
@@ -623,7 +623,7 @@ let container = try ModelContainer(
 ```swift
 @Model
 final class Track {
-    @Attribute(.unique) var id: String = UUID().uuidString  // ✅ Has default
+    var id: String = UUID().uuidString  // ✅ Has default (don't use .unique — CloudKit can't enforce it)
     var title: String = ""  // ✅ Has default
     var duration: TimeInterval = 0  // ✅ Has default
     var genre: String? = nil  // ✅ Optional
