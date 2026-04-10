@@ -973,7 +973,7 @@ var body: some View {
 }
 ```
 
-## ❌ Anti-Pattern 7: Mutating Parent State That Flows Back as Child Init Params
+## ❌ Anti-Pattern 7: Circular State in Closures
 
 Any `@ViewBuilder` closure (`.sheet`, `.fullScreenCover`, `NavigationStack` destination, `.popover`) re-evaluates when parent state changes. If a child callback mutates the same parent `@State` that's passed as a child init parameter, the child gets re-initialized with changed values mid-lifecycle.
 
@@ -985,8 +985,6 @@ Any `@ViewBuilder` closure (`.sheet`, `.fullScreenCover`, `NavigationStack` dest
         onSuccess: { cachedResponse = $0 }  // ❌ Mutates same state
     )
 }
-// onSuccess fires → cachedResponse set → parent re-evaluates → closure re-evaluates
-// → new ChildView struct with savedResponse now non-nil → loading/animations skipped
 
 // ✅ Don't pass state that callbacks will mutate
 .sheet(item: $sheetItem) { _ in
@@ -995,6 +993,11 @@ Any `@ViewBuilder` closure (`.sheet`, `.fullScreenCover`, `NavigationStack` dest
     )
 }
 ```
+
+**Why it's wrong**:
+- Callback mutates parent state that the closure depends on
+- Parent re-evaluates, which re-evaluates the closure with the mutated value
+- Child silently skips loading/animation states — no crash, just wrong behavior
 
 **Fixes**: (1) Don't pass the mutated state back as an init param. (2) Use a separate `@State` for the child's display logic. (3) Have the child query its own data source. See Root Cause 5 in `axiom-swiftui-debugging` for full diagnostic workflow.
 
