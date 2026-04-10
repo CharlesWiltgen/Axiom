@@ -401,7 +401,7 @@ struct ContentView: View {
 - Works with `@State` instead of `@StateObject`
 - Can pass as plain property instead of `@ObservedObject`
 
-**See also**: [Managing model data in your app](https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app)
+**See also** [Managing model data in your app](https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app)
 
 ---
 
@@ -443,15 +443,15 @@ struct ContentView: View {
 
 // ✅ Fix 2: Separate state for display vs cache
 @State private var cachedResponse: Response?    // Parent's cache
-@State private var childInitResponse: Response? // Captured at sheet open time
+@State private var responseSnapshot: Response?   // Frozen at sheet open time
 
 Button("Open") {
-    childInitResponse = cachedResponse  // Snapshot once
+    responseSnapshot = cachedResponse  // Snapshot once
     sheetData = SheetData()
 }
 .sheet(item: $sheetData) { _ in
     ChildView(
-        savedResponse: childInitResponse,       // Frozen at open time — not mutated by callback
+        savedResponse: responseSnapshot,          // Frozen at open time — not mutated by callback
         onSuccess: { cachedResponse = $0 }
     )
 }
@@ -948,7 +948,7 @@ Views in `if/else` change position → different identity.
 | ForEach jumps | Non-unique ID | Use unique, stable IDs |
 | Unexpected recreation | Conditional position | Add explicit `.id()` |
 
-**See also**: [WWDC21: Demystify SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10022/)
+**See also** [WWDC21: Demystify SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10022/)
 
 ---
 

@@ -60,6 +60,9 @@ Questions you can ask Claude that will draw from this skill:
 - @Bindable for two-way binding to @Observable
 - Plain properties for read-only data
 
+### Anti-Patterns
+- 7 anti-patterns with before/after code, including logic in view body, wrong property wrapper, god ViewModel, and circular state in @ViewBuilder closures
+
 ### Refactoring Workflow
 - Identifying logic in views
 - Extracting to model layer

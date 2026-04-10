@@ -29,6 +29,7 @@ Questions you can ask Claude that will draw from this skill:
 - "My counter resets to 0 every time I toggle a boolean, why?"
 - "I'm using @Observable but the view still doesn't update when I change the property."
 - "Text field loses focus when I start typing, very frustrating."
+- "My sheet always skips its loading animation and shows the completed state."
 - "Layout looks wrong on iPad but fine on iPhone."
 
 ## What's Covered
@@ -38,6 +39,7 @@ Questions you can ask Claude that will draw from this skill:
 - **Lost Binding Identity** — Passing `.constant()` or recreating bindings breaks two-way connection
 - **Accidental View Recreation** — Conditionals destroy and recreate views, resetting @State
 - **Missing Observer Pattern** — @Observable vs ObservableObject usage
+- **@ViewBuilder Closure Re-Initialization** — Sheet or modal child views skip loading states when parent state changes cause closure re-evaluation
 
 ### Preview Crashes Decision Tree
 - **Missing Dependencies** — Views need @EnvironmentObject or environment values
