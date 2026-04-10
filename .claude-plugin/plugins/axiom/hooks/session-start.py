@@ -15,6 +15,7 @@ try:
     with open(f"{plugin_root}/skills/axiom-using-axiom/SKILL.md", "r") as f:
         using_axiom_content = f.read()
 except Exception as e:
+    print(f"[WARN SessionStart] Failed to read using-axiom skill: {e}", file=sys.stderr)
     using_axiom_content = f"Error reading using-axiom skill: {e}"
 
 # Platform context - behavioral rules for handling iOS version uncertainty
@@ -34,7 +35,7 @@ BEHAVIORAL RULES (not factual claims):
 This is a BEHAVIORAL INSTRUCTION, not a factual claim."""
 
 # Detect Apple for-LLM documentation in Xcode
-xcode_path = "/Applications/Xcode.app"
+xcode_path = os.environ.get("AXIOM_XCODE_PATH", "/Applications/Xcode.app")
 apple_docs_path = f"{xcode_path}/Contents/PlugIns/IDEIntelligenceChat.framework/Versions/A/Resources/AdditionalDocumentation"
 diagnostics_path = f"{xcode_path}/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/share/doc/swift/diagnostics"
 
@@ -85,4 +86,4 @@ output = {
     }
 }
 
-print(json.dumps(output, indent=2))
+print(json.dumps(output))

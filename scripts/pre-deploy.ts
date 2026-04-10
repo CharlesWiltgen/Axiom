@@ -485,7 +485,7 @@ for (const pyFile of pyHooks) {
 const sessionStartSh = path.join(pluginDir, "hooks/session-start.sh");
 if (fs.existsSync(sessionStartSh)) {
   try {
-    const hookOutput = execSync(`bash "${sessionStartSh}" 2>/dev/null`, {
+    const hookOutput = execSync(`bash "${sessionStartSh}"`, {
       stdio: ["pipe", "pipe", "pipe"],
       timeout: 10000,
       cwd: root,
@@ -500,8 +500,8 @@ if (fs.existsSync(sessionStartSh)) {
       console.log("  ✓ session-start.sh produces valid JSON with expected structure");
     }
   } catch (e: unknown) {
-    const err = e as { message?: string; stdout?: Buffer; stderr?: Buffer };
-    if ((err as { killed?: boolean }).killed) {
+    const err = e as { message?: string; stdout?: Buffer; stderr?: Buffer; killed?: boolean };
+    if (err.killed) {
       error("hooks", "session-start.sh timed out (possible heredoc deadlock)");
     } else {
       error(
