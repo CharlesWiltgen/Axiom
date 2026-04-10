@@ -127,41 +127,35 @@ The most common frustration: you changed @State but the view didn't redraw. The 
 
 ### Step 2: Diagnose the Root Cause
 
-#### Root Cause 1: Struct Mutation
+#### Root Cause 1: Struct Mutation Through Local Copy
 
-**Symptom**: You modify a @State value directly, but the view doesn't update.
+**Symptom**: You modify a value, but the view doesn't update.
 
-**Why it happens**: SwiftUI doesn't see direct mutations on structs. You need to reassign the entire value.
+**Why it happens**: You captured the struct value in a local variable or passed it to a function that mutates a copy. The `@State` property wrapper only sees mutations through its projected interface — changes to copies are invisible to SwiftUI.
 
 ```swift
-// ❌ WRONG: Direct mutation doesn't trigger update
-@State var items: [String] = []
+// ❌ WRONG: Mutating a local copy — SwiftUI doesn't see it
+@State var settings = AppSettings()
 
-func addItem(_ item: String) {
-    items.append(item)  // SwiftUI doesn't see this change
+func resetTheme() {
+    var copy = settings
+    copy.theme = .default  // Mutates the copy, not the @State
+    // View never updates
 }
 
-// ✅ RIGHT: Reassignment triggers update
-@State var items: [String] = []
-
-func addItem(_ item: String) {
-    var newItems = items
-    newItems.append(item)
-    self.items = newItems  // Full reassignment
+// ✅ RIGHT: Mutate through the @State property directly
+func resetTheme() {
+    settings.theme = .default  // @State sees this mutation
 }
 
-// ✅ ALSO RIGHT: Use a binding
-@State var items: [String] = []
-
-var itemsBinding: Binding<[String]> {
-    Binding(
-        get: { items },
-        set: { items = $0 }
-    )
+// ❌ ALSO WRONG: Nested struct mutation through a captured reference
+func updateNestedValue(_ s: inout AppSettings) {
+    s.theme = .dark
 }
+// Calling updateNestedValue(&localCopy) won't update the view
 ```
 
-**Fix it**: Always reassign the entire struct value, not pieces of it.
+**Fix it**: Always mutate through the `@State` property itself, not through local copies or function parameters.
 
 ---
 
@@ -739,25 +733,28 @@ VStack(spacing: 0) {
 
 **Symptom**: Padding, corners, or shadows appearing in wrong place.
 
-**Root cause**: Applying modifiers in wrong order. SwiftUI applies bottom-to-top.
+**Root cause**: Each modifier wraps the view above it, building outward. `.padding().background(.red)` adds padding first, then fills the padded area with red. `.background(.red).padding()` fills the text area with red, then adds transparent padding outside.
 
 ```swift
-// ❌ WRONG: Corners applied after padding
+// Background INSIDE padding (red fills only text area)
 Text("Hello")
-    .padding()
-    .cornerRadius(8)  // Corners are too large
-
-// ✅ RIGHT: Corners first, then padding
-Text("Hello")
-    .cornerRadius(8)
+    .background(.red)
     .padding()
 
-// ❌ WRONG: Shadow after frame
+// Background OUTSIDE padding (red fills padded area too)
 Text("Hello")
-    .frame(width: 100)
-    .shadow(radius: 4)  // Shadow only on frame bounds
+    .padding()
+    .background(.red)
 
-// ✅ RIGHT: Shadow includes all content
+// Shadow on content, then framed
+Text("Hello")
+    .shadow(radius: 4)  // Shadow on text
+    .frame(width: 200)
+
+// Shadow on frame bounds
+Text("Hello")
+    .frame(width: 200)
+    .shadow(radius: 4)  // Shadow on the 200pt frame
 Text("Hello")
     .shadow(radius: 4)
     .frame(width: 100)
