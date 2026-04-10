@@ -65,3 +65,7 @@ CHANGELOG.md
 *.db
 tools/xclog/xclog
 axiom-mcp/docs/
+
+# Beads / Dolt files (added by bd init)
+.beads-credential-key
+__pycache__
