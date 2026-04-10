@@ -4,7 +4,7 @@ Axiom is available as a native plugin for OpenAI Codex, bringing its iOS develop
 
 ## What You Get
 
-The Codex plugin includes 164 specialized skills covering:
+The Codex plugin includes 184 specialized skills covering:
 
 - **SwiftUI** — layout, navigation, animations, performance, architecture, debugging
 - **Data** — SwiftData, Core Data, GRDB, CloudKit, migrations, Codable
@@ -19,14 +19,31 @@ The Codex plugin includes 164 specialized skills covering:
 ## Prerequisites
 
 - **Codex CLI** or Codex web app
+- **Node.js 18+** (for npx)
 
 ## Installation
 
-::: info
-The Codex plugin marketplace does not yet support third-party submissions. For now, install Axiom locally using one of the methods below. We'll update this page when marketplace publishing is available.
+### npx skills (recommended)
+
+```bash
+npx skills add CharlesWiltgen/Axiom -a codex -g
+```
+
+This installs all 184 skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
+
+To install for the current project only (omit `-g`):
+
+```bash
+npx skills add CharlesWiltgen/Axiom -a codex
+```
+
+::: tip Verifying Installation
+Run `npx skills list -g` (or `npx skills list` for project-scoped) to see installed skills. You can also use `/plugins` in Codex to check.
 :::
 
-### Option 1: Personal Marketplace (recommended)
+### Manual Marketplace (alternative)
+
+If you prefer not to use npx skills, you can configure the plugin manually.
 
 Clone the repo somewhere under your home directory:
 
@@ -52,44 +69,17 @@ Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
 }
 ```
 
-The path must start with `./` and is relative to your home directory (the grandparent of `~/.agents/plugins/`). Absolute paths are not supported. If you cloned to a different location under `~`, adjust the path accordingly.
+The path must start with `./` and is relative to your home directory (the grandparent of `~/.agents/plugins/`). Absolute paths are not supported.
 
-::: tip Verifying Installation
-Use `/plugins` in Codex to open the plugin browser — Axiom should appear as installed. You can also run `/status` or `/debug-config` to check your session configuration.
-:::
+### Team Installation (Repo-Scoped)
 
-### Option 2: Project-Scoped
-
-To make Axiom available only within a specific project, add a marketplace file at your repo root:
+To share Axiom across your team, install at the project level:
 
 ```bash
-mkdir -p .agents/plugins
+npx skills add CharlesWiltgen/Axiom -a codex
 ```
 
-Create `.agents/plugins/marketplace.json`:
-
-```json
-{
-  "name": "project-plugins",
-  "interface": { "displayName": "Project Plugins" },
-  "plugins": [
-    {
-      "name": "axiom",
-      "source": { "source": "local", "path": "./plugins/axiom" },
-      "policy": { "installation": "INSTALLED_BY_DEFAULT" },
-      "category": "Development"
-    }
-  ]
-}
-```
-
-Copy the `axiom-codex` directory into your project first:
-
-```bash
-cp -r ~/Axiom/axiom-codex ./plugins/axiom
-```
-
-The path is relative to the project root (grandparent of `.agents/plugins/`).
+This creates skills in `.agents/skills/` which you can commit to your repo. Team members get Axiom automatically.
 
 ## Usage
 
@@ -104,14 +94,17 @@ Skills activate automatically based on your questions. Just ask:
 
 ## Updating
 
-Pull the latest changes:
-
 ```bash
-cd ~/Axiom
-git pull
+npx skills update
 ```
 
-The plugin reads skills from disk, so the update takes effect immediately.
+If using the manual marketplace method, run `cd ~/Axiom && git pull` instead.
+
+## Removing
+
+```bash
+npx skills remove -a codex -g
+```
 
 ## Differences from Claude Code
 
@@ -119,16 +112,17 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 
 | Feature | Claude Code | Codex |
 |---------|-------------|-------|
-| Skills | 164 specialized + 17 routers | 164 specialized (Codex has native routing) |
+| Skills | 184 specialized + 17 routers | 184 specialized (Codex has native routing) |
 | Agents | 38 autonomous auditors | Not supported in Codex plugins |
 | Commands | 12 `/axiom:*` commands | Not supported in Codex plugins |
-| Installation | `/plugin marketplace add` | Local marketplace |
+| Installation | `/plugin marketplace add` | `npx skills add` or manual marketplace |
 
 ## Troubleshooting
 
 ### Skills not appearing in Codex
 
-Verify the path in your `marketplace.json` points to the `axiom-codex/` directory (not the repo root), and that the directory contains `.codex-plugin/plugin.json`.
+- Run `npx skills list -g` to verify skills are installed
+- If using manual marketplace, verify the path points to the `axiom-codex/` directory (not the repo root) and starts with `./`
 
 ## Also Available
 

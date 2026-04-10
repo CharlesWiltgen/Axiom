@@ -18,66 +18,17 @@ Verify with `/plugin` → "Manage and install" — Axiom should be listed.
 
 ## Install for Codex
 
-Clone the repo somewhere under your home directory:
-
 ```bash
-cd ~
-git clone https://github.com/CharlesWiltgen/Axiom.git
+npx skills add CharlesWiltgen/Axiom -a codex -g
 ```
 
-Add to your personal marketplace at `~/.agents/plugins/marketplace.json`:
-
-```json
-{
-  "name": "axiom-local",
-  "interface": { "displayName": "Axiom (Local)" },
-  "plugins": [
-    {
-      "name": "axiom",
-      "source": { "source": "local", "path": "./Axiom/axiom-codex" },
-      "policy": { "installation": "INSTALLED_BY_DEFAULT" },
-      "category": "Development"
-    }
-  ]
-}
-```
-
-The path must start with `./` and is relative to your home directory (the grandparent of `~/.agents/plugins/`). If you cloned to a different location under `~`, adjust the path accordingly. To update, just `cd ~/Axiom && git pull` — the plugin reads from disk.
+This installs all 184 skills globally using [npx skills](https://skills.sh/). To update later, run `npx skills update`.
 
 ::: tip Verifying Installation
-Use `/plugins` in Codex to open the plugin browser — Axiom should appear as installed. You can also run `/status` or `/debug-config` to check your session configuration.
+Use `/plugins` in Codex to open the plugin browser — Axiom should appear as installed. You can also run `npx skills list -g` to see installed skills.
 :::
 
-### Team Installation (Repo-Scoped)
-
-To share Axiom across your team, add the plugin to your project repo. Every Codex user in the repo gets it automatically.
-
-1. Copy the `axiom-codex` directory into your repo:
-
-```bash
-cp -r /path/to/Axiom/axiom-codex your-repo/plugins/axiom
-```
-
-2. Create `.agents/plugins/marketplace.json` at your repo root:
-
-```json
-{
-  "name": "axiom-team",
-  "interface": { "displayName": "Axiom iOS Development" },
-  "plugins": [
-    {
-      "name": "axiom",
-      "source": { "source": "local", "path": "./plugins/axiom" },
-      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
-      "category": "Development"
-    }
-  ]
-}
-```
-
-3. Commit both `plugins/axiom/` and `.agents/plugins/marketplace.json`
-
-Team members see Axiom in their Codex plugin picker on next session. Use `"installation": "INSTALLED_BY_DEFAULT"` to enable it automatically without prompting.
+For more installation options (project-scoped, team sharing, MCP server), see the [Codex install guide](/start/codex-install).
 
 ### MCP Server (Optional)
 
