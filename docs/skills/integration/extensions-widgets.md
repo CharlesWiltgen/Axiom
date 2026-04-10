@@ -36,7 +36,7 @@ Questions you can ask Claude that will draw from this skill:
 - "Interactive widget button does nothing when tapped."
 - "Widget gallery doesn't show my widget."
 
-## What's Covered
+## What This Skill Provides
 
 ### Timeline Management
 - TimelineProvider patterns (getTimeline, getSnapshot, placeholder)

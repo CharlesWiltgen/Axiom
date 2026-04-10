@@ -30,7 +30,7 @@ Questions you can ask Claude that will draw from this skill:
 - "My build works on my Mac but fails on CI."
 - "I'm getting framework version conflicts."
 
-## What's Covered
+## What This Skill Provides
 
 ### Swift Package Manager Issues
 - "No such module" after adding package

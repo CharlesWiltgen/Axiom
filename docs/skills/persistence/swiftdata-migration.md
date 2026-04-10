@@ -35,7 +35,7 @@ Questions you can ask Claude that will draw from this skill:
 - "My migration works in simulator but crashes on real device."
 - "I'm getting 'model used to open store is incompatible' error."
 
-## What's Covered
+## What This Skill Provides
 
 ### The willMigrate/didMigrate Limitation
 - willMigrate sees only OLD models

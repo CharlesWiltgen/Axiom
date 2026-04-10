@@ -31,7 +31,7 @@ Questions you can ask Claude that will draw from this skill:
 - "What does EXC_BAD_ACCESS mean and how do I fix it?"
 - "Our crash rate spiked after the latest build. How do I triage this?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Xcode Organizer Walkthrough
 - Opening Organizer (Window → Organizer)

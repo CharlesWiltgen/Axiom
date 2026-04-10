@@ -33,7 +33,7 @@ Questions you can ask Claude that will draw from this skill:
 - "When should I use Clear variant vs Regular variant?"
 - "My designer wants Clear variant everywhere. How do I push back professionally?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Visual Properties
 - Lensing (primary characteristic) — light bending vs scattering

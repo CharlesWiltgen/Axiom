@@ -65,7 +65,7 @@ struct FileHandle: ~Copyable {
 }
 ```
 
-## What's Covered
+## What This Skill Provides
 
 - `borrowing` and `consuming` parameter ownership modifiers
 - `~Copyable` (noncopyable) types

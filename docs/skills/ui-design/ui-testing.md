@@ -31,7 +31,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I write tests that aren't flaky?"
 - "How do I test my app under slow network conditions?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Condition-Based Waiting
 - `waitForExistence(timeout:)` instead of `sleep()`

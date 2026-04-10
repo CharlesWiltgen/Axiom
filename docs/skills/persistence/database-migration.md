@@ -32,7 +32,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I test migrations before shipping?"
 - "What's the safe pattern for renaming a column?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Critical Rules (Data Loss Prevention)
 

@@ -36,7 +36,7 @@ Questions you can ask Claude that will draw from this skill:
 - "What's the difference between consumable and non-consumable?"
 - "How do I handle subscription renewal and expiration?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Testing-First Workflow
 - Creating `.storekit` configuration file

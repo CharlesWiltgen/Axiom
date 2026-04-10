@@ -38,7 +38,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I set up CloudKit sync with SQLiteData?"
 - "What's the difference between @FetchAll and @FetchOne?"
 
-## What's Covered
+## What This Skill Provides
 
 ### @Table Models
 - let for auto primary key (first let = primary key)

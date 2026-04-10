@@ -30,7 +30,7 @@ Questions you can ask Claude that will draw from this skill:
 - "What accuracy level should I use for a store finder?"
 - "How do I handle location authorization denial gracefully?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Anti-Patterns Prevented
 - Premature Always authorization (30-60% denial rate)

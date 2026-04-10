@@ -33,7 +33,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I pop to root in NavigationStack?"
 - "What's the difference between navigationDestination(for:) and navigationDestination(item:)?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Architecture Decision Tree
 - NavigationStack vs NavigationSplitView vs TabView

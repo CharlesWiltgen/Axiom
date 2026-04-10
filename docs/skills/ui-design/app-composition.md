@@ -33,7 +33,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I handle app going to background?"
 - "When should I split my app into modules?"
 
-## What's Covered
+## What This Skill Provides
 
 ### App-Level State Machines
 - AppState enum pattern (loading, unauthenticated, authenticated, error)

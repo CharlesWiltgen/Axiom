@@ -31,7 +31,7 @@ Questions you can ask Claude that will draw from this skill:
 - "Build sometimes succeeds, sometimes fails. Why?"
 - "I have 20 xcodebuild processes running. Is that normal?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Red Flags (Check Environment First)
 - "It works on my machine but not CI"

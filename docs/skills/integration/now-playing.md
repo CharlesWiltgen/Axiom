@@ -34,7 +34,7 @@ Questions you can ask Claude that will draw from this skill:
 - "Apple Music takes over and my app loses Now Playing control."
 - "How do I add Now Playing support to my CarPlay audio app?"
 
-## What's Covered
+## What This Skill Provides
 
 ### AVAudioSession Configuration (Pattern 1)
 - Non-mixable `.playback` category for eligibility

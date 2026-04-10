@@ -19,7 +19,7 @@ Use this skill when:
 - "How does Apple recommend using Foundation Models on-device?"
 - "What's the official pattern for SwiftData class inheritance?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Guide Topics (20)
 

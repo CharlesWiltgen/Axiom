@@ -33,7 +33,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I use lldb to debug Auto Layout issues?"
 - "My cell is showing constraint errors but I can't identify which constraints conflict."
 
-## What's Covered
+## What This Skill Provides
 
 ### Understanding Error Messages
 - Anatomy of constraint conflict messages

@@ -34,7 +34,7 @@ Questions you can ask Claude that will draw from this skill:
 - "My app uses too much energy in the background."
 - "What's causing high CPU usage?"
 
-## What's Covered
+## What This Skill Provides
 
 ### Power Profiler Workflow
 - Running baseline measurement (5 min)
