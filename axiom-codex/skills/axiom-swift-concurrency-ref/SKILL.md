@@ -209,6 +209,8 @@ actor DataManager {
 | Global actor inheritance | Subclass inherits @MainActor | Be intentional about which methods need isolation |
 | Actor init not isolated | Can't call isolated methods in init | Use factory method or populate after init |
 | Actor protocol conformance | "Non-isolated" conformance error | Use nonisolated for protocol methods, or isolated conformance (Swift 6.2+) |
+| Using actor for ViewModel | @Published won't work, UI updates require await | Use @MainActor class for UI-facing code, actor only for non-UI shared state |
+| GCD queue-hopping inside actor | Breaks isolation guarantees, risks thread explosion | Remove GCD — actor isolation already serializes access |
 
 ---
 
@@ -287,7 +289,7 @@ final class ThreadSafeCache: @unchecked Sendable {
 }
 ```
 
-**Requirements for @unchecked Sendable**:
+#### Requirements for @unchecked Sendable
 - Class must be `final`
 - All mutable state must be protected by a synchronization primitive (lock, queue, Mutex)
 - You are responsible for correctness — the compiler will not check
@@ -474,6 +476,68 @@ print(RequestContext.requestID)  // nil
 
 **Propagation rules**: `@TaskLocal` values propagate to child tasks created with `Task {}`. They do NOT propagate to `Task.detached {}`.
 
+### Task Timeout Pattern
+
+Enforce a deadline on any async operation using a task group race:
+
+```swift
+func withTimeout<T: Sendable>(
+    _ duration: Duration,
+    operation: @Sendable @escaping () async throws -> T
+) async throws -> T {
+    try await withThrowingTaskGroup(of: T.self) { group in
+        group.addTask { try await operation() }
+        group.addTask {
+            try await Task.sleep(for: duration)
+            throw TimeoutError()
+        }
+        guard let result = try await group.next() else {
+            throw TimeoutError()
+        }
+        group.cancelAll()  // Cancel the loser — without this it keeps running
+        return result
+    }
+}
+```
+
+`group.cancelAll()` is critical. Without it, the losing task (either the timeout or the operation) continues running until the group scope exits.
+
+### Task Retain Cycles
+
+Tasks capture variables like closures. Stored tasks that reference `self` create retain cycles.
+
+```swift
+// ❌ Retain cycle: self → task → self
+task = Task {
+    while true { await self.poll() }
+}
+
+// ✅ Weak capture breaks the cycle
+task = Task { [weak self] in
+    while let self, !Task.isCancelled {
+        await self.poll()
+    }
+}
+```
+
+**Rule**: Use `[weak self]` when the Task is stored as a property or iterates an infinite async sequence. Short-lived Tasks that complete quickly can use strong captures.
+
+### Thread.current in Swift 6
+
+`Thread.current` is unavailable from async contexts in Swift 6 language mode:
+
+```swift
+// ❌ Compiler error in Swift 6 mode
+func check() async { print(Thread.current) }
+
+// ✅ Workaround for debugging only
+extension Thread {
+    static var currentThread: Thread { Thread.current }
+}
+```
+
+Don't rely on thread identity for correctness — tasks move between threads at suspension points. Reason about isolation domains instead.
+
 ### Task Gotcha Table
 
 | Gotcha | Symptom | Fix |
@@ -481,9 +545,11 @@ print(RequestContext.requestID)  // nil
 | Task never cancelled | Resource leak, work continues after view disappears | Store task, cancel in deinit/onDisappear |
 | Ignoring cancellation | Task runs to completion even when cancelled | Check Task.isCancelled in loops, use checkCancellation() |
 | Task.detached loses actor context | "Not isolated to MainActor" | Use Task {} when you need actor isolation |
-| Capturing self in Task | Potential retain cycle | Use [weak self] for long-lived tasks |
+| Capturing self in stored Task | Retain cycle, deinit never called | Use [weak self] for long-lived or stored tasks |
+| Assuming async = background | Code stays on calling actor | Use @concurrent to force background execution |
 | TaskLocal not propagated | Value is nil in detached task | TaskLocal only propagates to child tasks, not detached |
 | Task priority inversion | Low-priority task blocks high-priority | System handles most cases; avoid awaiting low-priority from high |
+| Thread.current in async context | Compiler error in Swift 6 mode | Don't rely on thread identity — use isolation domains |
 
 ---
 
@@ -547,7 +613,7 @@ let images = try await withThrowingTaskGroup(of: (URL, UIImage).self) { group in
 
 ### withDiscardingTaskGroup (iOS 17+)
 
-For when you need concurrency but don't need to collect results.
+For when you need concurrency but don't need to collect results. More memory-efficient than regular TaskGroup — no result storage.
 
 ```swift
 try await withThrowingDiscardingTaskGroup { group in
@@ -558,6 +624,30 @@ try await withThrowingDiscardingTaskGroup { group in
         }
     }
     // Group stays alive until all tasks complete or one throws
+}
+```
+
+#### Real-world pattern — merge multiple notification streams
+
+```swift
+extension NotificationCenter {
+    func notifications(named names: [Notification.Name]) -> AsyncStream<Void> {
+        AsyncStream { continuation in
+            let task = Task {
+                await withDiscardingTaskGroup { group in
+                    for name in names {
+                        group.addTask {
+                            for await _ in self.notifications(named: name) {
+                                continuation.yield()
+                            }
+                        }
+                    }
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
 }
 ```
 
@@ -907,7 +997,7 @@ class MyDelegate: @preconcurrency SomeLegacyDelegate {
 }
 ```
 
-### #isolation (Swift 5.9+)
+### #isolation (Swift 6.0+)
 
 Capture the caller's isolation context so a function runs on whatever actor the caller is on.
 
@@ -931,6 +1021,26 @@ actor MyActor {
 }
 ```
 
+### #isolation Capture in Task Closures (SE-0420)
+
+When spawning `Task` closures that need to work with non-Sendable types, capture the isolation parameter to inherit the caller's context.
+
+```swift
+func process(
+    delegate: NonSendableDelegate,
+    isolation: isolated (any Actor)? = #isolation
+) {
+    Task {
+        _ = isolation          // Forces capture — Task inherits caller's isolation
+        delegate.doWork()      // ✅ Safe: running on caller's actor
+    }
+}
+```
+
+**Why `_ = isolation` is required**: Per SE-0420, `Task` closures only inherit isolation when a non-optional binding of an isolated parameter is captured by the closure. The `_ = isolation` statement forces this capture. Without it, the Task runs on the default executor and the non-Sendable capture is a compiler error.
+
+**When to use**: Spawning Tasks that work with non-Sendable delegate objects, fire-and-forget async work that needs access to caller's state, or bridging callback-based APIs while keeping delegates alive.
+
 ### Isolation Gotcha Table
 
 | Gotcha | Symptom | Fix |
@@ -939,7 +1049,9 @@ actor MyActor {
 | nonisolated(unsafe) data race | Crash at runtime, corrupted state | Use proper isolation or Mutex |
 | @preconcurrency hiding real issues | Runtime crashes in production | Migrate to proper concurrency before shipping |
 | #isolation not available pre-5.9 | Compiler error | Use traditional @MainActor annotation |
+| #isolation not captured in Task | Non-Sendable capture error | Add `_ = isolation` inside Task closure (SE-0420) |
 | nonisolated on actor method | Can't access any isolated state | Only use for computed properties from non-isolated state |
+| Thread.current in async context | Compiler error in Swift 6 mode | Don't rely on thread identity — reason about isolation domains |
 
 ---
 
@@ -1250,6 +1362,8 @@ await withTaskGroup(of: Void.self) { group in
 | Callback called multiple times | Continuation crash | Use AsyncStream instead of continuation |
 | Semaphore.wait in async context | Thread starvation, potential deadlock | Use TaskGroup with manual concurrency limiting |
 | DispatchQueue.main.async to MainActor | Subtle timing differences | MainActor.run is the equivalent — test edge cases |
+| Replacing structured tasks with top-level Tasks | Losing cancellation propagation and error handling | Use async let or TaskGroup for related parallel work |
+| Batch @unchecked Sendable to fix warnings | Hiding real data races throughout codebase | Fix one type at a time with proper Sendable, actor, or sending |
 
 ---
 
@@ -1268,7 +1382,7 @@ await withTaskGroup(of: Void.self) { group in
 | Check cancellation | `Task.checkCancellation()` | 5.5+ |
 | Task-scoped values | `@TaskLocal` | 5.5+ |
 | Assert isolation | `MainActor.assumeIsolated` | 5.9+ (iOS 17+) |
-| Capture caller isolation | `#isolation` | 5.9+ |
+| Capture caller isolation | `#isolation` | 6.0+ |
 | Lock-based sync | `Mutex` | 6.0+ (iOS 18+) |
 | Discard results | `withDiscardingTaskGroup` | 5.9+ (iOS 17+) |
 | Transfer ownership | `sending` parameter | 6.0+ |

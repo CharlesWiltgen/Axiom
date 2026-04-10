@@ -52,15 +52,37 @@ Claude frequently generates outdated Swift patterns from its training data. This
 - **`LabeledContent` in Forms** (iOS 16+) provides consistent label alignment without manual HStack layout
 - **`confirmationDialog()` must attach to triggering UI** — Liquid Glass morphing animations depend on the source element
 
+## Swift 6.3 Concurrency Posture
+
+Write Swift 6.3-first code, not Swift 5-era code. These defaults apply to ALL new Swift code, not just when concurrency errors appear.
+
+| Default | Rationale |
+|---------|-----------|
+| Assume strict concurrency and MainActor default isolation for app/UI modules | Swift 6.3 language mode; Xcode 26+ default for new projects |
+| Prefer async/await over GCD, DispatchGroup, and callback pyramids | GCD is a bridge pattern for legacy APIs, not default architecture |
+| Async does not mean background — use `@concurrent` (Swift 6.2+) to force off-main | Async functions resume on the same actor they were called from |
+| Prefer structured concurrency (`async let`, `TaskGroup`) over unstructured `Task {}` | Structured tasks propagate cancellation and errors automatically |
+| Do not use `Task.detached` unless there is a specific, stated reason | Loses actor context, priority, and task-local values |
+| Prefer Sendable structs/enums for data that crosses actor boundaries | Value types are inherently safe to share |
+| Use actors only for truly shared mutable state across concurrency domains | Don't make every class an actor — UI code stays @MainActor |
+| Treat `@unchecked Sendable`, `@preconcurrency`, `nonisolated(unsafe)` as temporary bridge tools | Each should have a removal ticket, not be permanent |
+| Do not add escape hatches just to silence compiler errors | They hide data races that crash in production |
+
+For detailed patterns, decision trees, and error-specific guidance, see `axiom-swift-concurrency`.
+
 ## Common Claude Hallucinations
 
 These patterns appear frequently in Claude-generated code:
 
 1. **Creates `DateFormatter` instances inline** — Use `.formatted()` or `FormatStyle` instead. If a formatter must exist, make it `static let`.
-2. **Uses `DispatchQueue.main.async`** — Use `@MainActor` or `MainActor.run`. Never GCD. (See `axiom-swift-concurrency` for full guidance.)
-3. **Uses `CGFloat` for SwiftUI parameters** — `Double` works everywhere since Swift 5.5 implicit bridging.
-4. **Generates `guard let x = x else`** — Use `guard let x else` shorthand.
-5. **Returns explicitly in single-expression computed properties** — Omit `return`.
+2. **Uses `DispatchQueue.main.async`** — Use `@MainActor` or `MainActor.run`. GCD is a bridge pattern, not a default.
+3. **Uses `DispatchQueue.global().async` for background work** — Use `@concurrent` (Swift 6.2+) or extract to an actor.
+4. **Uses `Task.detached` to "make it background"** — Use `@concurrent`. `Task.detached` loses actor context.
+5. **Uses `CGFloat` for SwiftUI parameters** — `Double` works everywhere since Swift 5.5 implicit bridging.
+6. **Generates `guard let x = x else`** — Use `guard let x else` shorthand.
+7. **Returns explicitly in single-expression computed properties** — Omit `return`.
+8. **Spawns unstructured `Task {}` in loops** — Use `TaskGroup` for dynamic parallel work.
+9. **Adds `@unchecked Sendable` to silence warnings** — Convert to actor or proper Sendable type.
 
 ## Resources
 
