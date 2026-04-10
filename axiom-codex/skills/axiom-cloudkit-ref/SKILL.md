@@ -44,6 +44,7 @@ Three modern approaches:
 **Limitations**:
 - Private database only (no public/shared)
 - Automatic sync (less control)
+- `@Attribute(.unique)` not supported with CloudKit sync — remove if using CloudKit
 - SwiftData constraints apply
 
 ```swift

@@ -77,7 +77,7 @@ class RealmTrack: Object {
 // SWIFTDATA
 @Model
 final class Track {
-    @Attribute(.unique) var id: String
+    @Attribute(.unique) var id: String  // remove if using CloudKit sync
     var title: String
     var artist: String
     var duration: TimeInterval
@@ -94,7 +94,7 @@ final class Track {
 ```
 
 **Key differences**:
-- Realm: `@Persisted(primaryKey: true)` → SwiftData: `@Attribute(.unique)`
+- Realm: `@Persisted(primaryKey: true)` → SwiftData: `@Attribute(.unique)` (not supported with CloudKit sync — remove if using CloudKit)
 - Realm: Implicit init → SwiftData: Explicit init required
 - Realm: `Object` base class → SwiftData: `@Model` macro on `final class`
 

@@ -176,6 +176,7 @@ let container = try ModelContainer(for: Note.self)
 - Private database only (no public/shared)
 - Automatic sync (less control over timing)
 - No custom conflict resolution
+- `@Attribute(.unique)` not supported with CloudKit sync — remove if using CloudKit
 
 ### Pattern 2: CKSyncEngine (Custom Persistence)
 
