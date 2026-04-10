@@ -19,7 +19,7 @@ CloudKit is for **structured data sync** (records with relationships), not simpl
 
 **When to Use**: Modern apps with SwiftData models
 
-**Limitations**: Private database only, automatic sync
+**Limitations**: Private database only, automatic sync, no `@Attribute(.unique)`
 
 ```swift
 let container = try ModelContainer(
