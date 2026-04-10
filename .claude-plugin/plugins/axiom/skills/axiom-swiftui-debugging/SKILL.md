@@ -413,7 +413,7 @@ struct ContentView: View {
 
 ```swift
 // ❌ WRONG: Parent state passed to child, then mutated by child callback
-.sheet(item: $sheetData) { data in
+.sheet(item: $sheetData) { _ in
     ChildView(
         savedResponse: cachedResponse,      // Parent state as init param
         onSuccess: { cachedResponse = $0 }  // Callback mutates same state
@@ -435,7 +435,7 @@ struct ContentView: View {
 
 ```swift
 // ✅ Fix 1: Don't pass the mutated state back as init param
-.sheet(item: $sheetData) { data in
+.sheet(item: $sheetData) { _ in
     ChildView(
         onSuccess: { cachedResponse = $0 }  // Updates parent, doesn't flow back
     )
@@ -449,9 +449,9 @@ Button("Open") {
     childInitResponse = cachedResponse  // Snapshot once
     sheetData = SheetData()
 }
-.sheet(item: $sheetData) { data in
+.sheet(item: $sheetData) { _ in
     ChildView(
-        savedResponse: childInitResponse,       // Stable — not mutated by callback
+        savedResponse: childInitResponse,       // Frozen at open time — not mutated by callback
         onSuccess: { cachedResponse = $0 }
     )
 }
