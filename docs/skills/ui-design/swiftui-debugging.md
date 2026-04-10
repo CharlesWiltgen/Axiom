@@ -32,7 +32,7 @@ Questions you can ask Claude that will draw from this skill:
 - "My sheet always skips its loading animation and shows the completed state."
 - "Layout looks wrong on iPad but fine on iPhone."
 
-## What's Covered
+## What This Skill Provides
 
 ### View Not Updating Decision Tree
 - **Struct Mutation** — Direct mutation doesn't trigger updates; reassign the full value
