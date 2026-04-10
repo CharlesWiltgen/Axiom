@@ -979,7 +979,7 @@ Any `@ViewBuilder` closure (`.sheet`, `.fullScreenCover`, `NavigationStack` dest
 
 ```swift
 // ❌ Callback mutates the same state passed as init param
-.sheet(item: $sheetItem) { item in
+.sheet(item: $sheetItem) { _ in
     ChildView(
         savedResponse: cachedResponse,      // ❌ Parent state as init param
         onSuccess: { cachedResponse = $0 }  // ❌ Mutates same state
@@ -989,7 +989,7 @@ Any `@ViewBuilder` closure (`.sheet`, `.fullScreenCover`, `NavigationStack` dest
 // → new ChildView struct with savedResponse now non-nil → loading/animations skipped
 
 // ✅ Don't pass state that callbacks will mutate
-.sheet(item: $sheetItem) { item in
+.sheet(item: $sheetItem) { _ in
     ChildView(
         onSuccess: { cachedResponse = $0 }  // Update parent, but don't read it back
     )
