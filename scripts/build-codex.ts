@@ -91,34 +91,57 @@ function toShortDescription(description: string): string {
   return short.charAt(0).toUpperCase() + short.slice(1);
 }
 
+// Recursively find all SKILL.md files (supports nested skills like axiom-ios-ml/coreml/)
+interface SkillEntry {
+  name: string;       // from frontmatter or directory name
+  sourcePath: string; // full path to SKILL.md
+  content: string;    // file content
+  frontmatter: Record<string, string>;
+}
+
+function findSkillEntries(dir: string): SkillEntry[] {
+  const results: SkillEntry[] = [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const entryPath = path.join(dir, entry.name);
+    const skillFile = path.join(entryPath, 'SKILL.md');
+    if (fs.existsSync(skillFile)) {
+      const content = fs.readFileSync(skillFile, 'utf8');
+      const fm = parseFrontmatter(content);
+      const name = fm.name || entry.name;
+      if (!EXCLUDE_SKILLS.has(name)) {
+        results.push({ name, sourcePath: skillFile, content, frontmatter: fm });
+      }
+    }
+    // Recurse into subdirectories
+    results.push(...findSkillEntries(entryPath));
+  }
+  return results;
+}
+
 // Copy skills and generate openai.yaml
-const skillDirs = fs.readdirSync(SOURCE_SKILLS, { withFileTypes: true })
-  .filter(d => d.isDirectory() && !EXCLUDE_SKILLS.has(d.name));
+const skillEntries = findSkillEntries(SOURCE_SKILLS);
 
 let copied = 0;
-for (const dir of skillDirs) {
-  const srcSkill = path.join(SOURCE_SKILLS, dir.name, 'SKILL.md');
-  if (!fs.existsSync(srcSkill)) continue;
-
-  const destDir = path.join(OUTPUT_SKILLS, dir.name);
+for (const skill of skillEntries) {
+  const destDir = path.join(OUTPUT_SKILLS, skill.name);
   fs.mkdirSync(destDir, { recursive: true });
-  fs.copyFileSync(srcSkill, path.join(destDir, 'SKILL.md'));
+  fs.copyFileSync(skill.sourcePath, path.join(destDir, 'SKILL.md'));
 
   // Generate agents/openai.yaml from frontmatter
-  const content = fs.readFileSync(srcSkill, 'utf8');
-  const fm = parseFrontmatter(content);
-  if (fm.name && fm.description) {
+  if (skill.frontmatter.name && skill.frontmatter.description) {
     const agentsDir = path.join(destDir, 'agents');
     fs.mkdirSync(agentsDir, { recursive: true });
     const yaml = [
       'interface:',
-      `  display_name: "${toDisplayName(dir.name)}"`,
-      `  short_description: "${toShortDescription(fm.description)}"`,
+      `  display_name: "${toDisplayName(skill.name)}"`,
+      `  short_description: "${toShortDescription(skill.frontmatter.description)}"`,
       '',
     ].join('\n');
     fs.writeFileSync(path.join(agentsDir, 'openai.yaml'), yaml);
   } else {
-    console.warn(`  warn: skipped openai.yaml for ${dir.name} (missing name or description in frontmatter)`);
+    console.warn(`  warn: skipped openai.yaml for ${skill.name} (missing name or description in frontmatter)`);
   }
 
   copied++;
@@ -271,6 +294,5 @@ for (const file of agentFiles) {
 }
 
 // Summary
-const allDirs = fs.readdirSync(SOURCE_SKILLS, { withFileTypes: true }).filter(d => d.isDirectory());
-const skipped = allDirs.filter(d => EXCLUDE_SKILLS.has(d.name)).length;
+const skipped = EXCLUDE_SKILLS.size;
 console.log(`axiom-codex built: ${copied} skills (${skipped} routers excluded) + ${agentsCopied} agent-skills, v${version}`);
