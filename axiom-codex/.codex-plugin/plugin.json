@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "2.38.0",
+  "version": "2.39.5",
   "description": "Battle-tested skills for modern iOS development — SwiftUI, concurrency, data, performance, networking, accessibility, and more.",
   "author": {
     "name": "Charles Wiltgen",
