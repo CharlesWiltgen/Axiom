@@ -50,7 +50,7 @@ Questions you can ask Claude that will draw from this skill:
 - ZStack ordering and zIndex
 - GeometryReader sizing constraints
 - SafeArea handling
-- Modifier order (bottom-to-top)
+- Modifier order (each wraps the view above it)
 - frame() vs fixedSize() behavior
 
 ### View Identity
