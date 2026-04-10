@@ -409,7 +409,7 @@ struct ContentView: View {
 
 **Symptom**: A child view in a `.sheet`, `.fullScreenCover`, `.popover`, or `NavigationStack` destination never shows expected loading states or animations — it always appears in the "completed" state. A callback updates parent state, and the child behaves as if data was already loaded.
 
-**Why it happens**: Any `@ViewBuilder` closure re-evaluates when the parent body re-evaluates. If you pass parent `@State` as a child init parameter, and a callback mutates that same state, the closure re-evaluates with the new value. The child `@State` is preserved (WWDC 2021 "Demystify SwiftUI" — identity-based lifetime), but init parameters are recomputed.
+**Why it happens**: Any `@ViewBuilder` closure re-evaluates when the parent body re-evaluates. If you pass parent `@State` as a child init parameter, and a callback mutates that same state, the closure re-evaluates with the new value. The child `@State` is preserved (identity-based lifetime), but init parameters are recomputed.
 
 ```swift
 // ❌ WRONG: Parent state passed to child, then mutated by child callback
