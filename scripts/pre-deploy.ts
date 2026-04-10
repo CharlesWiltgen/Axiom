@@ -462,6 +462,56 @@ try {
   );
 }
 
+// Validate Python hook scripts (syntax + functional)
+const pyHooks = fs
+  .readdirSync(path.join(pluginDir, "hooks"))
+  .filter((f: string) => f.endsWith(".py"));
+
+for (const pyFile of pyHooks) {
+  const pyPath = path.join(pluginDir, "hooks", pyFile);
+  try {
+    execSync(`python3 -m py_compile "${pyPath}"`, { stdio: "pipe", cwd: root });
+    console.log(`  ✓ ${pyFile} passes syntax check`);
+  } catch (e: unknown) {
+    const err = e as { stdout?: Buffer; stderr?: Buffer };
+    error(
+      "hooks",
+      `${pyFile} syntax error:\n${err.stdout?.toString() || err.stderr?.toString()}`,
+    );
+  }
+}
+
+// Functional validation: run session-start.sh and validate JSON output
+const sessionStartSh = path.join(pluginDir, "hooks/session-start.sh");
+if (fs.existsSync(sessionStartSh)) {
+  try {
+    const hookOutput = execSync(`bash "${sessionStartSh}" 2>/dev/null`, {
+      stdio: ["pipe", "pipe", "pipe"],
+      timeout: 10000,
+      cwd: root,
+    }).toString();
+    const parsed = JSON.parse(hookOutput);
+    const ctx = parsed?.hookSpecificOutput?.additionalContext;
+    if (!ctx || typeof ctx !== "string") {
+      error("hooks", "session-start.sh output missing hookSpecificOutput.additionalContext");
+    } else if (!ctx.includes("EXTREMELY_IMPORTANT")) {
+      error("hooks", "session-start.sh output missing EXTREMELY_IMPORTANT wrapper");
+    } else {
+      console.log("  ✓ session-start.sh produces valid JSON with expected structure");
+    }
+  } catch (e: unknown) {
+    const err = e as { message?: string; stdout?: Buffer; stderr?: Buffer };
+    if ((err as { killed?: boolean }).killed) {
+      error("hooks", "session-start.sh timed out (possible heredoc deadlock)");
+    } else {
+      error(
+        "hooks",
+        `session-start.sh functional test failed:\n${err.message || err.stdout?.toString() || err.stderr?.toString()}`,
+      );
+    }
+  }
+}
+
 // ── 12. MCP Bundle Staleness ──
 
 heading("12. MCP Bundle Staleness");
