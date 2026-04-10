@@ -131,7 +131,7 @@ The most common frustration: you changed @State but the view didn't redraw. The 
 
 **Symptom**: You modify a value, but the view doesn't update.
 
-**Why it happens**: You captured the struct value in a local variable or passed it to a function that mutates a copy. The `@State` property wrapper only sees mutations through its projected interface — changes to copies are invisible to SwiftUI.
+**Why it happens**: You captured the struct value in a local variable or passed it to a function that mutates a copy. The `@State` property wrapper only sees mutations through its own setter — changes to copies are invisible to SwiftUI.
 
 ```swift
 // ❌ WRONG: Mutating a local copy — SwiftUI doesn't see it
@@ -755,9 +755,6 @@ Text("Hello")
 Text("Hello")
     .frame(width: 200)
     .shadow(radius: 4)  // Shadow on the 200pt frame
-Text("Hello")
-    .shadow(radius: 4)
-    .frame(width: 100)
 ```
 
 ## View Identity
