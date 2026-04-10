@@ -286,12 +286,109 @@ When Instruments prevents reproduction (Heisenbug) or leaks only happen with spe
 | Memory by type | VM Tracker | Objects consuming most memory |
 | Cache behavior | Allocations | Objects allocated but not freed |
 
-## Command Line Tools
+## CLI Quick Checks (No Instruments)
+
+Xcode ships CLI tools for fast memory diagnostics without opening Instruments. Use these for quick checks during development.
+
+### leaks — Detect Leaks in Running Process
 
 ```bash
-xcrun xctrace record --template "Memory" --output memory.trace
-xcrun xctrace dump memory.trace
-leaks -atExit -excludeNoise YourApp
+# Check running app by name (positional argument, not --process)
+xcrun leaks MyApp
+
+# Check by PID
+xcrun leaks 12345
+
+# Show full stack traces for each leak
+xcrun leaks --fullStacks MyApp
+
+# Analyze a memgraph file (from Xcode's Debug Memory Graph)
+xcrun leaks MyApp.memgraph
+```
+
+**When to use**: Quick leak check without recording an Instruments trace. Run after exercising a suspect code path.
+
+### heap — Inspect Live Heap Allocations
+
+```bash
+# Show heap summary by class (process name is positional)
+xcrun heap MyApp
+
+# Show all instances of a specific class
+xcrun heap --addresses=MyViewController MyApp
+
+# Sort by size (find biggest consumers)
+xcrun heap -s MyApp
+
+# Analyze a memgraph
+xcrun heap MyApp.memgraph
+```
+
+**When to use**: Finding what's consuming memory right now. Answers "how many MyViewController instances exist?" without Instruments.
+
+### vmmap — Virtual Memory Map
+
+```bash
+# Summary view (dirty, clean, swapped)
+xcrun vmmap --summary MyApp.memgraph
+
+# Full memory regions
+xcrun vmmap MyApp.memgraph
+```
+
+**When to use**: Understanding memory composition. Shows dirty pages (your data), clean pages (mapped files), and compressed memory.
+
+### stringdups — Find Duplicate Strings
+
+```bash
+# Find duplicate strings in running process (positional argument)
+xcrun stringdups MyApp
+
+# Analyze a memgraph
+xcrun stringdups MyApp.memgraph
+```
+
+**When to use**: Reducing memory footprint from repeated string allocations. No GUI equivalent.
+
+### malloc_history — Track Allocation Origins
+
+```bash
+# Enable malloc logging first: set MallocStackLogging=1 in scheme env vars
+# Then query a specific address
+xcrun malloc_history <pid> <address>
+
+# Show all allocations sorted by size
+xcrun malloc_history <pid> -allBySize
+```
+
+**When to use**: Tracing where a leaked object was allocated. Requires `MallocStackLogging=1` environment variable in scheme.
+
+### Quick Diagnosis Workflow
+
+```bash
+# 1. Is there a leak? (30 seconds)
+xcrun leaks MyApp
+
+# 2. What's on the heap? (30 seconds)
+xcrun heap -s MyApp
+
+# 3. Any duplicate strings wasting memory? (30 seconds)
+xcrun stringdups MyApp
+
+# 4. Where is memory allocated? (requires memgraph)
+xcrun vmmap --summary MyApp.memgraph
+```
+
+**Time cost**: 2 minutes for a full CLI memory check vs 10+ minutes launching Instruments.
+
+### xctrace (Headless Instruments)
+
+```bash
+# Record memory trace without GUI
+xcrun xctrace record --instrument 'Allocations' --attach 'MyApp' --time-limit 30s --output memory.trace
+
+# Record leak detection
+xcrun xctrace record --instrument 'Leaks' --attach 'MyApp' --time-limit 30s --output leaks.trace
 ```
 
 ## Real-World Impact

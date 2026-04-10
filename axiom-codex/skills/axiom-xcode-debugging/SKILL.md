@@ -205,7 +205,7 @@ Test/build failing?
 | Tests hang | Check simctl list, reboot simulator |
 | Stale code executing | Delete Derived Data |
 
-## Useful Flags
+## Useful CLI Tools
 
 ```bash
 # Show build settings
@@ -220,7 +220,40 @@ xcodebuild -verbose build -scheme YourScheme
 # Build without testing (faster)
 xcodebuild build-for-testing -scheme YourScheme
 xcodebuild test-without-building -scheme YourScheme
+
+# Version and build number management (agvtool)
+xcrun agvtool what-marketing-version          # Current version (e.g., 2.0)
+xcrun agvtool what-version                    # Current build number
+xcrun agvtool next-version -all               # Bump build number
+xcrun agvtool new-version -all 42             # Set specific build number
+xcrun agvtool new-marketing-version 2.1       # Set marketing version
+
+# Validate asset catalogs
+xcrun amlint Assets.xcassets                   # Lint for issues before build
 ```
+
+## Physical Device Management (devicectl)
+
+`devicectl` is the modern CLI for physical device operations (replaces legacy `idevice*` tools).
+
+```bash
+# List connected devices
+xcrun devicectl list devices
+
+# Install app on device
+xcrun devicectl device install app --device <udid> MyApp.app
+
+# Launch app on device
+xcrun devicectl device process launch --device <udid> com.your.bundleid
+
+# List installed apps
+xcrun devicectl device info apps --device <udid>
+
+# List running processes
+xcrun devicectl device info processes --device <udid>
+```
+
+**When to use**: Physical device debugging when the issue doesn't reproduce in Simulator — install, launch, and inspect from CLI.
 
 ## Crash Log Analysis
 
@@ -228,9 +261,12 @@ xcodebuild test-without-building -scheme YourScheme
 # Recent crashes
 ls -lt ~/Library/Logs/DiagnosticReports/*.crash | head -5
 
-# Symbolicate address (if you have .dSYM)
-atos -o YourApp.app.dSYM/Contents/Resources/DWARF/YourApp \
-  -arch arm64 0x<address>
+# Symbolicate a single address (if you have .dSYM)
+xcrun atos -o YourApp.app.dSYM/Contents/Resources/DWARF/YourApp \
+  -arch arm64 -l 0x100000000 0x<address>
+
+# Symbolicate an entire crash log at once (LLDB Python script, may vary by Xcode version)
+xcrun crashlog MyCrash.ips
 ```
 
 ## Common Mistakes
