@@ -36,7 +36,7 @@ From WWDC25: "A systematic approach means designing with intention at every leve
 - Use `axiom-hig` for quick decisions and checklists
 - Use `axiom-liquid-glass` for iOS 26 material implementation
 - Use `axiom-liquid-glass-ref` for iOS 26 app-wide adoption
-- Use `axiom-accessibility-diag` for accessibility troubleshooting
+- Use `axiom-accessibility` for accessibility troubleshooting
 
 ---
 
@@ -1228,7 +1228,7 @@ HStack {
 
 **Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/materials, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/accessibility, /design/human-interface-guidelines/icons
 
-**Skills**: axiom-hig, axiom-liquid-glass, axiom-liquid-glass-ref, axiom-swiftui, axiom-accessibility-diag, axiom-tvos
+**Skills**: axiom-hig, axiom-liquid-glass, axiom-liquid-glass-ref, axiom-swiftui, axiom-accessibility, axiom-tvos
 
 ---
 

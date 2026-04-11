@@ -47,7 +47,7 @@ These topics are part of the broader iOS UI domain but live in separate suites:
 - tvOS (focus, remote, text input) → `/skill axiom-tvos`
 - App-level composition (root, auth, scenes) → `/skill axiom-app-composition`
 - Drag/drop, sharing, copy/paste → `/skill axiom-transferable-ref`
-- VoiceOver, Dynamic Type → `/skill axiom-accessibility-diag`
+- VoiceOver, Dynamic Type → `/skill axiom-accessibility`
 - UI test flakiness → `/skill axiom-ui-testing`
 - UX dead ends, dismiss traps → Launch `ux-flow-auditor` agent
 
