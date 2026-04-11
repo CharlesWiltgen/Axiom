@@ -463,10 +463,10 @@ struct AdaptableApp: View {
 **Time cost**: 25-30 min
 
 ```swift
-@MainActor
-class NavigationModel: ObservableObject, Codable {
-    @Published var selectedCategory: Category?
-    @Published var recipePath: [Recipe.ID] = []  // Store IDs, not objects
+@MainActor @Observable
+class NavigationModel: Codable {
+    var selectedCategory: Category?
+    var recipePath: [Recipe.ID] = []  // Store IDs, not objects
 
     enum CodingKeys: String, CodingKey {
         case selectedCategory, recipePath
@@ -499,7 +499,7 @@ class NavigationModel: ObservableObject, Codable {
 }
 
 struct ContentView: View {
-    @StateObject private var navModel = NavigationModel()
+    @State private var navModel = NavigationModel()
     @SceneStorage("navigation") private var data: Data?
 
     var body: some View {
@@ -644,7 +644,7 @@ var body: some View {
 ```
 
 **Issue** Path recreated each render, navigation state lost.
-**Fix** Use `@State` or `@StateObject` for navigation state.
+**Fix** Use `@State` for navigation state.
 
 ---
 
@@ -784,7 +784,7 @@ checks and fallback UI for older devices."
 - [ ] Each tab has own NavigationStack (if tab-based)
 
 ### State Management
-- [ ] NavigationPath in @State or @StateObject (not recreated in body)
+- [ ] NavigationPath in @State (not recreated in body)
 - [ ] @MainActor isolation for navigation state (Swift 6)
 - [ ] IDs stored for restoration (not full objects)
 - [ ] Error handling for decode failures
