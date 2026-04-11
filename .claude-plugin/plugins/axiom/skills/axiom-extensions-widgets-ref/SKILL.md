@@ -38,16 +38,16 @@ Widgets are SwiftUI **archived snapshots** rendered on a timeline by the system.
 
 ❌ **Do NOT use this skill for**:
 - Pure App Intents questions (use **app-intents-ref** skill)
-- SwiftUI layout issues (use **swiftui-layout** skill)
-- Performance optimization (use **swiftui-performance** skill)
+- SwiftUI layout issues (use **axiom-swiftui** layout reference)
+- Performance optimization (use **axiom-swiftui** performance reference)
 - Debugging crashes (use **xcode-debugging** skill)
 
 ## Related Skills
 
 - **app-intents-ref** — App Intents for interactive widgets and configuration
 - **swift-concurrency** — Async/await patterns for widget data loading
-- **swiftui-performance** — Optimizing widget rendering
-- **swiftui-layout** — Complex widget layouts
+- **axiom-swiftui** (performance reference) — Optimizing widget rendering
+- **axiom-swiftui** (layout reference) — Complex widget layouts
 - **extensions-widgets** — Discipline skill with anti-patterns and debugging
 
 ## Key Terminology
@@ -1279,7 +1279,7 @@ let entries = (0..<100).map { offset in
 
 **Docs**: /widgetkit, /activitykit, /appintents
 
-**Skills**: axiom-app-intents-ref, axiom-swift-concurrency, axiom-swiftui-performance, axiom-swiftui-layout, axiom-extensions-widgets
+**Skills**: axiom-app-intents-ref, axiom-swift-concurrency, axiom-swiftui, axiom-extensions-widgets
 
 ---
 

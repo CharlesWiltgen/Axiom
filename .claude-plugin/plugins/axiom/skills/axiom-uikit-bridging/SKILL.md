@@ -246,7 +246,7 @@ func updateUIView(_ uiView: UIView, context: Context) {
 - **Incompatible with** `UIViewPropertyAnimator` and `UIView` keyframe animations
 - **Velocity retargeting**: Re-targeted SwiftUI animations carry forward velocity from interrupted animations, creating fluid transitions
 
-For comprehensive animation bridging patterns, see `/skill axiom-swiftui-animation-ref` Part 10.
+For comprehensive animation bridging patterns, see `/skill axiom-swiftui` (animation reference) Part 10.
 
 ---
 
@@ -769,4 +769,4 @@ class DashboardViewController: UIViewController {
 
 **Docs**: /swiftui/uiviewrepresentable, /swiftui/uiviewcontrollerrepresentable, /swiftui/uigesturerecognizerrepresentable, /uikit/uihostingcontroller, /uikit/uihostingconfiguration, /swiftui/uitraitbridgedenvironmentkey, /observation, /uikit/updating-views-automatically-with-observation-tracking
 
-**Skills**: app-composition, swiftui-animation-ref, camera-capture, transferable-ref, swift-concurrency
+**Skills**: app-composition, axiom-swiftui, camera-capture, transferable-ref, swift-concurrency

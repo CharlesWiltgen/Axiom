@@ -249,7 +249,7 @@ Text("Scaled").lineHeight(.multiple(factor: 1.5))
 Text("Fixed").lineHeight(.exact(points: 30)) // Does NOT scale with Dynamic Type
 ```
 
-Also available as `AttributedString.lineHeight` for styled strings. See `axiom-swiftui-26-ref` for full API details.
+Also available as `AttributedString.lineHeight` for styled strings. See `axiom-swiftui` (iOS 26 reference) for full API details.
 
 ### Third-Party Font Tracking
 
