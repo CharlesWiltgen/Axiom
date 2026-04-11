@@ -1,0 +1,3 @@
+interface:
+  display_name: "Coreml"
+  short_description: "Deploying custom ML models on-device, converting PyTorch models, compressing models, implementing LLM inference, or o..."
