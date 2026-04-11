@@ -122,10 +122,10 @@ for (const skill of skillEntries) {
   fs.mkdirSync(destDir, { recursive: true });
   fs.copyFileSync(skill.sourcePath, path.join(destDir, 'SKILL.md'));
 
-  // Copy references/ directory if it exists (skill suites)
-  const refsDir = path.join(path.dirname(skill.sourcePath), 'references');
+  // Copy skills/ directory if it exists (skill suites)
+  const refsDir = path.join(path.dirname(skill.sourcePath), 'skills');
   if (fs.existsSync(refsDir)) {
-    const destRefs = path.join(destDir, 'references');
+    const destRefs = path.join(destDir, 'skills');
     fs.mkdirSync(destRefs, { recursive: true });
     for (const ref of fs.readdirSync(refsDir)) {
       fs.copyFileSync(path.join(refsDir, ref), path.join(destRefs, ref));
