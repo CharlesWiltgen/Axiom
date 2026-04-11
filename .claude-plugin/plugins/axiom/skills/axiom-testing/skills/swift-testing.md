@@ -283,7 +283,7 @@ public struct MyAppRootView: View {
 
 #### Step 4: Thin-Shell App.swift
 
-The app target becomes a thin shell that imports the package and delegates (see `axiom-app-composition` for the full thin-shell principle):
+The app target becomes a thin shell that imports the package and delegates (see `axiom-design (skills/app-composition.md)` for the full thin-shell principle):
 
 ```swift
 import SwiftUI

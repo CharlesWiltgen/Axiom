@@ -12,7 +12,7 @@ SwiftUI debugging falls into three categories, each with a different diagnostic 
 **Core principle**: Start with observable symptoms, test systematically, eliminate causes one by one. Don't guess.
 
 **Requires**: Xcode 26+, iOS 17+ (iOS 14-16 patterns still valid, see notes)
-**Related skills**: `axiom-xcode-debugging` (cache corruption diagnosis), `axiom-concurrency` (observer patterns), `skills/performance.md` (profiling with Instruments), `skills/layout.md` (adaptive layout patterns)
+**Related skills**: `axiom-build (skills/xcode-debugging.md)` (cache corruption diagnosis), `axiom-concurrency` (observer patterns), `skills/performance.md` (profiling with Instruments), `skills/layout.md` (adaptive layout patterns)
 
 ## Example Prompts
 
@@ -44,7 +44,7 @@ These are real questions developers ask that this skill is designed to answer:
 - ✅ Layout looks wrong on specific devices
 - ✅ You're tempted to bandaid with @ObservedObject everywhere
 
-#### Use `axiom-xcode-debugging` instead when
+#### Use `axiom-build (skills/xcode-debugging.md)` instead when
 - App crashes at runtime (not preview)
 - Build fails completely
 - You need environment diagnostics

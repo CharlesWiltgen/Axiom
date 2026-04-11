@@ -7,7 +7,7 @@ Background execution is a **privilege**, not a right. iOS actively limits backgr
 
 **Key insight**: Most "my task never runs" issues stem from registration mistakes or misunderstanding the 7 scheduling factors that govern execution. This skill provides systematic debugging, not guesswork.
 
-**Energy optimization**: For reducing battery impact of background tasks, see `axiom-energy` skill. This skill focuses on task **mechanics** — making tasks run correctly and complete reliably.
+**Energy optimization**: For reducing battery impact of background tasks, see `axiom-performance (skills/energy.md)` skill. This skill focuses on task **mechanics** — making tasks run correctly and complete reliably.
 
 **Requirements**: iOS 13+ (BGTaskScheduler), iOS 26+ (BGContinuedProcessingTask), Xcode 15+
 
@@ -47,7 +47,7 @@ If you see ANY of these, suspect registration or scheduling issues:
 - **"No handler registered"**: Handler not registered before first scheduling
 
 #### Difference from energy issues
-- **Energy issue**: Task runs but drains battery (see `axiom-energy` skill)
+- **Energy issue**: Task runs but drains battery (see `axiom-performance (skills/energy.md)` skill)
 - **This skill**: Task doesn't run, or terminates before completing work
 
 ---

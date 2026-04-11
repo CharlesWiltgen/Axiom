@@ -615,7 +615,7 @@ xcrun simctl io booted screenshot login-error.png
 
 - `axiom-swiftui` (navigation reference) — Production deep linking and NavigationStack patterns
 - `simulator-tester` — Automated simulator testing using debug deep links
-- `axiom-xcode-debugging` — Environment-first debugging workflows
+- `axiom-build (skills/xcode-debugging.md)` — Environment-first debugging workflows
 
 ---
 

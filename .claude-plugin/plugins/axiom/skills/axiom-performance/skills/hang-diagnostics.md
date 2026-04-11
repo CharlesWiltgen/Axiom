@@ -33,7 +33,7 @@ User taps → Main thread busy/blocked → Event queued → 1+ second delay → 
 | **Hitch** | 1-3 frames (16-50ms) | Animation stutters | Animation Hitches instrument |
 | **Lag** | 100-500ms | Feels slow but responsive | Time Profiler |
 
-**This skill covers hangs.** For hitches, see `axiom-swiftui` (performance reference). For general lag, see `axiom-performance-profiling`.
+**This skill covers hangs.** For hitches, see `axiom-swiftui` (performance reference). For general lag, see `axiom-performance (skills/performance-profiling.md)`.
 
 ## The Two Causes of Hangs
 

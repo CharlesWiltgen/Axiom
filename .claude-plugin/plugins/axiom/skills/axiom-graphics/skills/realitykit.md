@@ -18,9 +18,9 @@ Use this skill when:
 - Targeting visionOS
 
 Do NOT use this skill for:
-- SceneKit maintenance (use `axiom-scenekit`)
+- SceneKit maintenance (use `axiom-graphics (skills/scenekit.md)`)
 - 2D games (use `axiom-games`)
-- Metal shader programming (use `axiom-metal-migration-ref`)
+- Metal shader programming (use `axiom-graphics (skills/metal-migration-ref.md)`)
 - Pure GPU compute (use Metal directly)
 
 ---

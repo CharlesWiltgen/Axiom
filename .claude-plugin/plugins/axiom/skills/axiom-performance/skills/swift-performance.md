@@ -10,9 +10,9 @@
 **Platforms**: iOS 18+, macOS 15+
 
 **Related Skills**:
-- `axiom-performance-profiling` — Use Instruments to measure (do this first!)
+- `axiom-performance (skills/performance-profiling.md)` — Use Instruments to measure (do this first!)
 - `axiom-swiftui` (performance reference) — SwiftUI-specific optimizations
-- `axiom-build-performance` — Compilation speed
+- `axiom-build (skills/build-performance.md)` — Compilation speed
 - `axiom-concurrency` — Correctness-focused concurrency patterns
 
 ## When to Use This Skill

@@ -3,7 +3,7 @@
 
 Complete API reference for iOS energy optimization, with code examples from WWDC sessions and Apple documentation.
 
-**Related skills**: `axiom-energy` (decision trees, patterns), `axiom-energy-diag` (troubleshooting)
+**Related skills**: `axiom-performance (skills/energy.md)` (decision trees, patterns), `axiom-performance (skills/energy-diag.md)` (troubleshooting)
 
 ---
 

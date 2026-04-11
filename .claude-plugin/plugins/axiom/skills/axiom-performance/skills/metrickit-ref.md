@@ -16,9 +16,9 @@ Use this reference when:
 - Understanding background exit reasons (jetsam, watchdog)
 - Integrating MetricKit with existing crash reporters
 
-For hang diagnosis workflows, see `axiom-hang-diagnostics`.
-For general profiling with Instruments, see `axiom-performance-profiling`.
-For memory debugging including jetsam, see `axiom-memory-debugging`.
+For hang diagnosis workflows, see `axiom-performance (skills/hang-diagnostics.md)`.
+For general profiling with Instruments, see `axiom-performance (skills/performance-profiling.md)`.
+For memory debugging including jetsam, see `axiom-performance (skills/memory-debugging.md)`.
 
 ## Common Gotchas
 

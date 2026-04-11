@@ -5,8 +5,8 @@ Complete MapKit API reference for iOS development. Covers both SwiftUI Map (iOS 
 
 ## Related Skills
 
-- `axiom-mapkit` — Decision trees, anti-patterns, pressure scenarios
-- `axiom-mapkit-diag` — Symptom-based troubleshooting
+- `axiom-location (skills/mapkit.md)` — Decision trees, anti-patterns, pressure scenarios
+- `axiom-location (skills/mapkit-diag.md)` — Symptom-based troubleshooting
 
 ---
 

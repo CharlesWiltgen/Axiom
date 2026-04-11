@@ -11,7 +11,7 @@ Use when:
 - You need to create custom symbols with proper template structure
 
 #### Related Skills
-- Use `axiom-sf-symbols` for decision trees, anti-patterns, troubleshooting, and when to use which effect
+- Use `axiom-design (skills/sf-symbols.md)` for decision trees, anti-patterns, troubleshooting, and when to use which effect
 - Use `axiom-swiftui` (animation reference) for general SwiftUI animation (non-symbol)
 
 ---

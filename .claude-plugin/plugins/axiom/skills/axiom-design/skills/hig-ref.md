@@ -25,9 +25,9 @@ The UI should not distract from essential content. Use subtle backgrounds, reced
 From WWDC25: "A systematic approach means designing with intention at every level, ensuring that all elements, from the tiniest control to the largest surface, are considered in relation to the whole."
 
 #### Related Skills
-- Use `axiom-hig` for quick decisions and checklists
-- Use `axiom-liquid-glass` for iOS 26 material implementation
-- Use `axiom-liquid-glass-ref` for iOS 26 app-wide adoption
+- Use `axiom-design (skills/hig.md)` for quick decisions and checklists
+- Use `axiom-design (skills/liquid-glass.md)` for iOS 26 material implementation
+- Use `axiom-design (skills/liquid-glass-ref.md)` for iOS 26 app-wide adoption
 - Use `axiom-accessibility` for accessibility troubleshooting
 
 ---
@@ -406,7 +406,7 @@ VStack {
 
 **Modals & Sheets (iOS 26+):** Sheets, alerts, and popovers automatically adopt Liquid Glass with Xcode 26 — remove custom `.presentationBackground()` or `UIBlurEffect` backgrounds. System handles material, concentric corner radius, and morphing transitions. Use elevated semantic colors for modal content backgrounds, not Liquid Glass on the sheet body.
 
-**Cross-reference:** For full Liquid Glass implementation patterns (sheets, alerts, popovers, morphing transitions), see `axiom-liquid-glass-ref`. For decision trees, see `axiom-liquid-glass`.
+**Cross-reference:** For full Liquid Glass implementation patterns (sheets, alerts, popovers, morphing transitions), see `axiom-design (skills/liquid-glass-ref.md)`. For decision trees, see `axiom-design (skills/liquid-glass.md)`.
 
 ---
 
@@ -691,7 +691,7 @@ SwiftUI provides animation capabilities; WatchKit offers `WKInterfaceImage` for 
 
 6,900+ vector symbols that match San Francisco font, scale with Dynamic Type, and adapt to Bold Text and Dark Mode automatically. Nine weights, three scales, four rendering modes, and 12+ animation effects.
 
-> **For comprehensive coverage** of rendering modes (Monochrome, Hierarchical, Palette, Multicolor), symbol effects (Bounce, Pulse, Wiggle, Draw On/Off), and custom symbol authoring, see `axiom-sf-symbols` (decision trees) and `axiom-sf-symbols-ref` (complete API).
+> **For comprehensive coverage** of rendering modes (Monochrome, Hierarchical, Palette, Multicolor), symbol effects (Bounce, Pulse, Wiggle, Draw On/Off), and custom symbol authoring, see `axiom-design (skills/sf-symbols.md)` (decision trees) and `axiom-design (skills/sf-symbols-ref.md)` (complete API).
 
 ### Custom Interface Icons
 
@@ -891,9 +891,9 @@ Very small display — glanceable, minimal interaction. Full-bleed content, mini
 
 **TVUIKit**: tvOS-exclusive components — TVPosterView (parallax focus effects), TVDigitEntryViewController (PIN entry). No SwiftUI equivalents exist; bridge via UIViewRepresentable.
 
-**Text input**: Standard text fields trigger a fullscreen system keyboard. For better UX, use the shadow input pattern (Button UI + hidden CocoaTextField). See `axiom-tvos` for implementation details.
+**Text input**: Standard text fields trigger a fullscreen system keyboard. For better UX, use the shadow input pattern (Button UI + hidden CocoaTextField). See `axiom-swift (skills/tvos.md)` for implementation details.
 
-**Storage**: No persistent local storage. All local files are cache that the system deletes. See `axiom-tvos` for data strategy.
+**Storage**: No persistent local storage. All local files are cache that the system deletes. See `axiom-swift (skills/tvos.md)` for data strategy.
 
 ### visionOS
 

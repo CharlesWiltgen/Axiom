@@ -37,7 +37,7 @@ digraph bridge {
 
 Use when you have a `UIView` subclass (MKMapView, WKWebView, custom drawing views) and need it in SwiftUI.
 
-> For comprehensive MapKit patterns and the SwiftUI Map vs MKMapView decision, see `axiom-mapkit`.
+> For comprehensive MapKit patterns and the SwiftUI Map vs MKMapView decision, see `axiom-location (skills/mapkit.md)`.
 
 ## Lifecycle
 

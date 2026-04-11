@@ -159,7 +159,7 @@ Use when:
 - **Intermittent failures** — Need to reproduce specific conditions
 - **Before shipping** — Final verification that fix actually works
 
-**Pro tip**: If you have debug deep links (see `axiom-deep-link-debugging` skill), you can navigate directly to the screen that was broken:
+**Pro tip**: If you have debug deep links (see `axiom-swift (skills/deep-link-debugging.md)` skill), you can navigate directly to the screen that was broken:
 ```bash
 xcrun simctl openurl booted "debug://problem-screen"
 sleep 1

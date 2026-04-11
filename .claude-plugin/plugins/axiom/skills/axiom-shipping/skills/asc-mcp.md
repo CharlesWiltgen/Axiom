@@ -284,7 +284,7 @@ Or use numbered environment variables: `ASC_COMPANY_1_NAME`, `ASC_COMPANY_1_KEY_
 
 If asc-mcp is not configured, fall back to manual workflows:
 
-- **Crash analysis**: Use Xcode Organizer (see `axiom-testflight-triage`) or App Store Connect web dashboard (see `axiom-app-store-connect-ref`)
+- **Crash analysis**: Use Xcode Organizer (see `axiom-shipping (skills/testflight-triage.md)`) or App Store Connect web dashboard (see `axiom-shipping (skills/app-store-connect-ref.md)`)
 - **TestFlight distribution**: Use Xcode → Product → Archive → Distribute, or `xcodebuild` + `altool`
 - **Review management**: Use App Store Connect web dashboard
 - **Submission**: Use Xcode → Product → Archive → Distribute to App Store

@@ -13,8 +13,8 @@ Use when:
 - Deciding between Foundation Models vs server LLMs (ChatGPT, Claude, etc.)
 
 #### Related Skills
-- Use `axiom-foundation-models-diag` for systematic troubleshooting (context exceeded, guardrail violations, availability problems)
-- Use `axiom-foundation-models-ref` for complete API reference with all WWDC code examples
+- Use `axiom-ai (skills/foundation-models-diag.md)` for systematic troubleshooting (context exceeded, guardrail violations, availability problems)
+- Use `axiom-ai (skills/foundation-models-ref.md)` for complete API reference with all WWDC code examples
 
 ---
 
@@ -394,7 +394,7 @@ let person = response.content // Type-safe Person instance!
 
 ### Supported Types
 
-Supports `String`, `Int`, `Float`, `Double`, `Bool`, arrays, nested `@Generable` types, enums with associated values, and recursive types. See `axiom-foundation-models-ref` for complete list with examples.
+Supports `String`, `Int`, `Float`, `Double`, `Bool`, arrays, nested `@Generable` types, enums with associated values, and recursive types. See `axiom-ai (skills/foundation-models-ref.md)` for complete list with examples.
 
 ### @Guide Constraints
 
@@ -416,7 +416,7 @@ struct NPC {
 
 **Runtime validation**: `@Guide` constraints are enforced during generation via constrained decoding — the model cannot produce out-of-range values. However, always validate business logic on the result since the model may produce semantically wrong but structurally valid output.
 
-See `axiom-foundation-models-ref` for complete `@Guide` reference (ranges, regex, maximum counts).
+See `axiom-ai (skills/foundation-models-ref.md)` for complete `@Guide` reference (ranges, regex, maximum counts).
 
 ### Property Order Matters
 
@@ -472,7 +472,7 @@ for try await partial in stream {
 
 ### PartiallyGenerated Type
 
-`@Generable` macro automatically creates a `PartiallyGenerated` type where all properties are optional (they fill in as the model generates them). See `axiom-foundation-models-ref` for details.
+`@Generable` macro automatically creates a `PartiallyGenerated` type where all properties are optional (they fill in as the model generates them). See `axiom-ai (skills/foundation-models-ref.md)` for details.
 
 ### SwiftUI Integration
 
@@ -633,7 +633,7 @@ print(response.content)
 - **Multiple tools**: Session accepts array of tools; model autonomously decides which to call
 - **Stateful tools**: Use `class` (not `struct`) when tools need to maintain state across calls
 
-See `axiom-foundation-models-ref` for `Tool` protocol reference, `ToolOutput` forms, stateful tool patterns, and additional examples.
+See `axiom-ai (skills/foundation-models-ref.md)` for `Tool` protocol reference, `ToolOutput` forms, stateful tool patterns, and additional examples.
 
 ### Tool Calling Flow
 
@@ -754,7 +754,7 @@ func condensedSession(from previous: LanguageModelSession) -> LanguageModelSessi
 - Recent context retained
 - Total tokens drastically reduced
 
-For advanced strategies (summarizing middle entries with Foundation Models itself), see `axiom-foundation-models-ref`.
+For advanced strategies (summarizing middle entries with Foundation Models itself), see `axiom-ai (skills/foundation-models-ref.md)`.
 
 ### Preventing Context Overflow
 
@@ -806,7 +806,7 @@ for day in 1...7 {
 
 **Caveat**: Greedy determinism only holds for same model version. OS updates may change output.
 
-See `axiom-foundation-models-ref` for complete `GenerationOptions` API reference.
+See `axiom-ai (skills/foundation-models-ref.md)` for complete `GenerationOptions` API reference.
 
 ---
 
@@ -1065,7 +1065,7 @@ prompt takes 2-3 hours debugging why it hits context limit and produces poor res
 
 4. **Foundation Models Instrument**: Use `Instruments > Foundation Models` template to profile latency, see token counts, and identify optimization opportunities.
 
-See `axiom-foundation-models-ref` for code examples of each optimization.
+See `axiom-ai (skills/foundation-models-ref.md)` for code examples of each optimization.
 
 ---
 

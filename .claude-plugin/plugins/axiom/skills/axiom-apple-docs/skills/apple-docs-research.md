@@ -163,7 +163,7 @@ https://sosumi.ai/documentation/widgetkit
 
 **Common mistakes**:
 - ❌ `app-intents` → ✅ `appintents`
-- ❌ `axiom-core-data` → ✅ `coredata`
+- ❌ `axiom-data (skills/core-data.md)` → ✅ `coredata`
 - ❌ `AVFoundation` → ✅ `avfoundation`
 
 **Examples**:

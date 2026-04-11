@@ -8,7 +8,7 @@ iOS app performance problems fall into distinct categories, each with a specific
 **Core principle**: Measure before optimizing. Guessing about performance wastes more time than profiling.
 
 **Requires**: Xcode 15+, iOS 14+
-**Related skills**: `axiom-swiftui` (performance reference — SwiftUI-specific profiling with Instruments 26), `axiom-memory-debugging` (memory leak diagnosis)
+**Related skills**: `axiom-swiftui` (performance reference — SwiftUI-specific profiling with Instruments 26), `axiom-performance (skills/memory-debugging.md)` (memory leak diagnosis)
 
 ## When to Use Performance Profiling
 
@@ -20,7 +20,7 @@ iOS app performance problems fall into distinct categories, each with a specific
 - ✅ You're unsure which Instruments tool to use
 - ✅ Profiling results are confusing or contradictory
 
-#### Use `axiom-memory-debugging` instead when
+#### Use `axiom-performance (skills/memory-debugging.md)` instead when
 - Investigating specific memory leaks with retain cycles
 - Using Instruments Allocations in detail mode
 
@@ -741,7 +741,7 @@ xcrun sample 12345 5 -file output.txt
 xcrun leaks MyApp
 ```
 
-For `heap`, `vmmap`, `stringdups`, and a full CLI diagnosis workflow, see `axiom-memory-debugging`.
+For `heap`, `vmmap`, `stringdups`, and a full CLI diagnosis workflow, see `axiom-performance (skills/memory-debugging.md)`.
 
 ### Headless Instruments (xctrace)
 
@@ -753,7 +753,7 @@ xcrun xctrace record --instrument 'CPU Profiler' --attach 'MyApp' --time-limit 1
 xcrun xctrace record --instrument 'Allocations' --attach 'MyApp' --time-limit 30s --output alloc.trace
 ```
 
-See `axiom-xctrace-ref` for comprehensive xctrace reference.
+See `axiom-performance (skills/xctrace-ref.md)` for comprehensive xctrace reference.
 
 ## Quick Reference
 
@@ -1045,7 +1045,7 @@ func testSyncPerformance() {
 
 ### Stage 3: Monitor in Production (MetricKit)
 
-See `axiom-metrickit-ref` for comprehensive MetricKit integration. Key metrics to monitor:
+See `axiom-performance (skills/metrickit-ref.md)` for comprehensive MetricKit integration. Key metrics to monitor:
 
 - `MXAppLaunchMetric` — Launch time regression
 - `MXAppResponsivenessMetric` — Hang rate increase

@@ -819,11 +819,11 @@ Check **Battery Usage** pane in Xcode Organizer for field data:
 | Lazy loading | Eliminates startup CPU spikes |
 
 ### Related Skills
-- `axiom-energy-ref` — Complete API reference with all code examples
-- `axiom-energy-diag` — Symptom-based troubleshooting decision trees
+- `axiom-performance (skills/energy-ref.md)` — Complete API reference with all code examples
+- `axiom-performance (skills/energy-diag.md)` — Symptom-based troubleshooting decision trees
 - `axiom-integration` — Background tasks (skills/background-processing.md), timers (skills/timer-patterns.md)
-- `axiom-performance-profiling` — General Instruments workflows
-- `axiom-memory-debugging` — Memory leak diagnosis (often related to energy)
+- `axiom-performance (skills/performance-profiling.md)` — General Instruments workflows
+- `axiom-performance (skills/memory-debugging.md)` — Memory leak diagnosis (often related to energy)
 - `axiom-networking` — Network optimization patterns
 
 ---
