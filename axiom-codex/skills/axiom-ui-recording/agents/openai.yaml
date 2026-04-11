@@ -1,3 +1,0 @@
-interface:
-  display_name: "Ui Recording"
-  short_description: "Setting up UI test recording in Xcode 26, enhancing recorded tests for stability, or configuring test plans for multi..."

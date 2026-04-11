@@ -320,7 +320,7 @@ Tests complete
 
 **Docs**: /xcode/xcresulttool
 
-**Skills**: axiom-ios-testing, axiom-xctest-automation
+**Skills**: axiom-testing
 
 ## Related
 

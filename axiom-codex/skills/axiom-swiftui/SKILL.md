@@ -48,7 +48,7 @@ These topics are part of the broader iOS UI domain but live in separate suites:
 - App-level composition (root, auth, scenes) → `/skill axiom-app-composition`
 - Drag/drop, sharing, copy/paste → `/skill axiom-transferable-ref`
 - VoiceOver, Dynamic Type → `/skill axiom-accessibility`
-- UI test flakiness → `/skill axiom-ui-testing`
+- UI test flakiness → `/skill axiom-testing`
 - UX dead ends, dismiss traps → Launch `ux-flow-auditor` agent
 
 ## Conflict Resolution

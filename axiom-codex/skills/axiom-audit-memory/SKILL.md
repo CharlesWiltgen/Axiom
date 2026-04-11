@@ -234,4 +234,4 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 For Instruments workflows: `axiom-memory-debugging` skill
 For Memory Graph Debugger: `axiom-memory-debugging` skill
-For Task lifecycle issues found during audit: `axiom-swift-concurrency` skill
+For Task lifecycle issues found during audit: `axiom-concurrency` skill

@@ -322,7 +322,7 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For unit test patterns: `axiom-swift-testing` skill
-For UI test patterns: `axiom-ui-testing` skill
-For async test patterns: `axiom-testing-async` skill
+For unit test patterns: `axiom-testing` (swift-testing reference)
+For UI test patterns: `axiom-testing` (ui-testing reference)
+For async test patterns: `axiom-testing` (testing-async reference)
 For flaky test diagnosis: `axiom-test-failure-analyzer` agent

@@ -811,4 +811,4 @@ func playCoordinated() {
 
 **Docs**: /corehaptics, /corehaptics/chhapticengine
 
-**Skills**: axiom-swiftui, axiom-ui-testing, axiom-accessibility
+**Skills**: axiom-swiftui, axiom-testing, axiom-accessibility
