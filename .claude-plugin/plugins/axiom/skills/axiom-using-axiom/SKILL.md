@@ -62,7 +62,7 @@ Axiom skills apply when:
 
 Axiom uses **router skills** for progressive disclosure:
 
-1. Check the appropriate router skill first (ios-build, axiom-ios-ui, axiom-ios-data, etc.)
+1. Check the appropriate router skill first (ios-build, axiom-swiftui, axiom-ios-data, etc.)
 2. Router will invoke the specialized skill(s) you actually need
 3. Follow the specialized skill exactly
 

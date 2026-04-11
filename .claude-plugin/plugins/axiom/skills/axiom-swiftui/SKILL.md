@@ -53,9 +53,9 @@ These topics are part of the broader iOS UI domain but live in separate suites:
 
 ## Conflict Resolution
 
-**axiom-swiftui vs axiom-performance**: When UI is slow (e.g., "SwiftUI List slow"):
+**axiom-swiftui vs axiom-ios-performance**: When UI is slow (e.g., "SwiftUI List slow"):
 1. **Try axiom-swiftui FIRST** — Domain-specific fixes (LazyVStack, view identity, @State optimization) often solve UI performance in 5 minutes
-2. **Only use axiom-performance** if domain fixes don't help — Profiling takes longer and may confirm what domain knowledge already knows
+2. **Only use axiom-ios-performance** if domain fixes don't help — Profiling takes longer and may confirm what domain knowledge already knows
 
 ## Decision Tree
 

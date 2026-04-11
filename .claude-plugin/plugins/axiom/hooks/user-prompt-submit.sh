@@ -38,11 +38,11 @@ if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (c
 
 # UI
 if re.search(r'swiftui|uikit|@state\b|@binding\b|@observable\b|@environment\b|navigationstack|navigationsplitview|layout.{0,10}(break|bug|wrong|issue)|liquid glass|preview.{0,5}(crash|fail|not |won.t|broken)|view.{0,10}(not|won.t|doesn.t).{0,10}(updat|render|show|appear)|tabview|scroll.{0,20}(jank|lag|slow|stutter)|human interface guidelines', prompt_lower):
-    matches.append("axiom-ios-ui")
+    matches.append("axiom-swiftui")
 
 # UI — generic terms gated by non_ios check
-if not non_ios and "axiom-ios-ui" not in matches and re.search(r'animation.{0,5}(not|won.t|broken|stutter|jank)|toolbar|\.sheet|\.fullscreencover|list\b.{0,10}(scroll|slow|performance)', prompt_lower):
-    matches.append("axiom-ios-ui")
+if not non_ios and "axiom-swiftui" not in matches and re.search(r'animation.{0,5}(not|won.t|broken|stutter|jank)|toolbar|\.sheet|\.fullscreencover|list\b.{0,10}(scroll|slow|performance)', prompt_lower):
+    matches.append("axiom-swiftui")
 
 # Data
 if re.search(r'swiftdata|core\s*data|@model\b|@query\b|@relationship\b|modelcontainer|modelcontext|cloudkit|ckrecord|cksyncengine|grdb|codable\b|nsmanagedobject|fetchrequest', prompt_lower):

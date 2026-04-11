@@ -49,7 +49,7 @@ if any(agent_type.startswith(p) for p in skip_prefixes):
 context = """You have access to Axiom iOS development skills via the Skill tool. If your task involves iOS, Swift, Xcode, or Apple frameworks, invoke the matching skill BEFORE doing the work:
 
 - `axiom-ios-build` — build failures, Xcode, simulator, SPM
-- `axiom-ios-ui` — SwiftUI, UIKit, layout, navigation, animation
+- `axiom-swiftui` — SwiftUI views, navigation, layout, animation, architecture
 - `axiom-ios-data` — SwiftData, Core Data, CloudKit, migrations, Codable
 - `axiom-ios-concurrency` — async/await, actors, Sendable, data races
 - `axiom-ios-performance` — memory leaks, profiling, battery, Instruments
@@ -60,7 +60,7 @@ context = """You have access to Axiom iOS development skills via the Skill tool.
 - `axiom-ios-games` — SpriteKit, SceneKit, RealityKit
 - `axiom-shipping` — App Store submission, rejections, privacy manifests
 
-Invoke with: Skill tool, skill name (e.g., "axiom-ios-ui")."""
+Invoke with: Skill tool, skill name (e.g., "axiom-swiftui")."""
 
 output = {
     "hookSpecificOutput": {

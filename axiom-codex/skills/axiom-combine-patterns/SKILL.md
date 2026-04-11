@@ -28,7 +28,7 @@ Combine remains embedded in massive production codebases — UIKit delegates, No
 
 - Timer.publish patterns → route via `axiom-ios-concurrency` to timer-patterns skill (dedicated timer lifecycle coverage)
 - @Observable migration from ObservableObject → use `axiom-swift-concurrency` (modern observation)
-- UIKit ↔ SwiftUI bridging → route via `axiom-ios-ui` (view wrapping, not data flow)
+- UIKit ↔ SwiftUI bridging → route via `axiom-swiftui` (view wrapping, not data flow)
 - General async/await patterns → use `axiom-swift-concurrency`
 
 ## Example Prompts

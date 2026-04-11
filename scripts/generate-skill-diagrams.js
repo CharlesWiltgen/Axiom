@@ -24,7 +24,7 @@ const DOCS_DIR = path.join(__dirname, '..', 'docs')
 
 const ROUTER_NAMES = [
   'axiom-ios-build',
-  'axiom-ios-ui',
+  'axiom-swiftui',
   'axiom-ios-data',
   'axiom-ios-concurrency',
   'axiom-ios-performance',
@@ -44,7 +44,7 @@ const ROUTER_NAMES = [
 
 // Map routers to doc category pages
 const ROUTER_TO_CATEGORY = {
-  'axiom-ios-ui': 'docs/skills/ui-design/index.md',
+  'axiom-swiftui': 'docs/skills/ui-design/index.md',
   'axiom-ios-build': 'docs/skills/debugging/index.md',
   'axiom-ios-performance': 'docs/skills/debugging/index.md',
   'axiom-ios-concurrency': 'docs/skills/concurrency/index.md',
@@ -59,7 +59,7 @@ const ROUTER_TO_CATEGORY = {
 // Friendly display names for routers
 const ROUTER_DISPLAY = {
   'axiom-ios-build': 'Build & Environment',
-  'axiom-ios-ui': 'UI & Design',
+  'axiom-swiftui': 'UI & Design',
   'axiom-ios-data': 'Data & Persistence',
   'axiom-ios-concurrency': 'Concurrency',
   'axiom-ios-performance': 'Performance',
