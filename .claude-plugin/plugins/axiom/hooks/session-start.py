@@ -12,11 +12,11 @@ plugin_root = sys.argv[1]
 
 # Read using-axiom content
 try:
-    with open(f"{plugin_root}/skills/axiom-using-axiom/SKILL.md", "r") as f:
+    with open(f"{plugin_root}/skills/axiom-tools/SKILL.md", "r") as f:
         using_axiom_content = f.read()
 except Exception as e:
-    print(f"[WARN SessionStart] Failed to read using-axiom skill: {e}", file=sys.stderr)
-    using_axiom_content = f"Error reading using-axiom skill: {e}"
+    print(f"[WARN SessionStart] Failed to read axiom-tools skill: {e}", file=sys.stderr)
+    using_axiom_content = f"Error reading axiom-tools skill: {e}"
 
 # Platform context - behavioral rules for handling iOS version uncertainty
 current_date = datetime.now().strftime("%A, %Y-%m-%d")
@@ -62,7 +62,7 @@ if os.path.isfile(xclog_path) and os.access(xclog_path, os.X_OK):
 
 ---
 
-**xclog** (simulator console capture): Available at `{xclog_path}`. Captures print()/os_log()/Logger output as structured JSON. Use `xclog list` to find bundle IDs, `xclog launch <bundle-id> --timeout 30s --max-lines 200` for bounded capture. For crash diagnosis workflow, see `/skill axiom-xclog-ref`. Command: `/axiom:console`."""
+**xclog** (simulator console capture): Available at `{xclog_path}`. Captures print()/os_log()/Logger output as structured JSON. Use `xclog list` to find bundle IDs, `xclog launch <bundle-id> --timeout 30s --max-lines 200` for bounded capture. For crash diagnosis workflow, see `axiom-tools` (skills/xclog-ref.md). Command: `/axiom:console`."""
 
 # Build the context message
 additional_context = f"""<EXTREMELY_IMPORTANT>
@@ -72,7 +72,7 @@ You have Axiom iOS development skills.
 
 ---
 
-**Below is the full content of your 'axiom:using-axiom' skill - your introduction to using Axiom skills. For all other Axiom skills, use the 'Skill' tool:**
+**Below is the full content of your 'axiom:axiom-tools' skill - your introduction to using Axiom skills. For all other Axiom skills, use the 'Skill' tool:**
 
 {using_axiom_content}{apple_docs_context}{xclog_context}
 

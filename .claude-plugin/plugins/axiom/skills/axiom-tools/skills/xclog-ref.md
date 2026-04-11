@@ -1,10 +1,3 @@
----
-name: axiom-xclog-ref
-description: Use when capturing iOS simulator console output, diagnosing runtime crashes, viewing print/os_log output, or needing structured app logs for analysis. Reference for xclog CLI covering launch, attach, list modes with JSON output.
-license: MIT
-metadata:
-  version: "1.0.0"
----
 
 # xclog Reference (iOS Simulator Console Capture)
 

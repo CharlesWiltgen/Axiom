@@ -1,11 +1,3 @@
----
-name: axiom-getting-started
-description: Use when first installing Axiom, unsure which skill to use, want an overview of available skills, or need help finding the right skill for your situation — interactive onboarding that recommends skills based on your project and current focus
-license: MIT
-metadata:
-  version: "1.0.0"
----
-
 # Getting Started with Axiom
 
 Welcome! This skill helps new users discover the most relevant Axiom skills for their situation.
@@ -310,7 +302,3 @@ Axiom skills load automatically — you don't need to memorize names or commands
 - **Start with diagnostic skills** — When troubleshooting specific issues
 - **Use reference skills** — When implementing new features
 - **All skills are searchable** — Just describe what you need
-
----
-
-**Total**: 50 skills, 12 audit commands, covering the complete iOS development lifecycle from design to deployment

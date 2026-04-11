@@ -151,6 +151,10 @@ User question about Apple API/framework?
 └── Other → Search with axiom_search_skills using source filter "apple"
 ```
 
+## Research Methodology
+
+For WWDC transcript capture (Chrome auto-capture), sosumi.ai documentation access, and multi-session research workflows, see [skills/apple-docs-research.md](skills/apple-docs-research.md).
+
 ## Resources
 
 **Skills**: axiom-swiftui, axiom-concurrency, axiom-data, axiom-ai, axiom-integration

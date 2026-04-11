@@ -1,8 +1,23 @@
 ---
-name: axiom-using-axiom
-description: Use when starting any iOS/Swift conversation - establishes how to find and use Axiom skills, requiring Skill tool invocation before ANY response including clarifying questions
+name: axiom-tools
+description: Use when asking how to use Axiom, what skills are available, getting started with Axiom, or capturing iOS simulator console output with xclog.
 license: MIT
 ---
+
+# Axiom Tools & Onboarding
+
+This suite covers Axiom itself — how to use it, what's available, and the tools that ship with it.
+
+## Routing
+
+| Question | Read |
+|----------|------|
+| "How do I use Axiom?" / "What skills are available?" | [skills/getting-started.md](skills/getting-started.md) |
+| "How do I capture console output?" / "What is xclog?" | [skills/xclog-ref.md](skills/xclog-ref.md) |
+
+## Using Axiom Skills
+
+The content below is the core discipline for Axiom's routing system — it establishes the rule that Axiom skills must be checked before any iOS/Swift response.
 
 <EXTREMELY-IMPORTANT>
 If you think there is even a 1% chance an Axiom skill might apply to your iOS/Swift task, you ABSOLUTELY MUST check for the skill.
@@ -11,8 +26,6 @@ IF AN AXIOM SKILL APPLIES TO YOUR iOS/SWIFT TASK, YOU DO NOT HAVE A CHOICE. YOU 
 
 This is not negotiable. This is not optional. You cannot rationalize your way out of this.
 </EXTREMELY-IMPORTANT>
-
-# Using Axiom Skills
 
 ## The Rule
 
@@ -94,3 +107,7 @@ Skip Axiom skills for:
 - Questions about Claude Code itself (use claude-code-guide skill)
 
 But when in doubt for iOS/Swift work: **check first, decide later.**
+
+## Resources
+
+**Skills**: axiom-swiftui, axiom-concurrency, axiom-data, axiom-build, axiom-performance
