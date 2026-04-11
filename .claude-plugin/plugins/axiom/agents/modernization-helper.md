@@ -38,7 +38,7 @@ tools:
   - Read
 skills:
   - axiom-swiftui
-  - axiom-ios-performance
+  - axiom-performance
 ---
 
 # Modernization Helper Agent

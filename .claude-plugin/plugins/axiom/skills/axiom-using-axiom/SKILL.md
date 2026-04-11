@@ -41,8 +41,8 @@ These thoughts mean STOP—you're rationalizing:
 When multiple Axiom skills could apply, use this priority:
 
 1. **Environment/Build first** (ios-build) — Fix the environment before debugging code
-2. **Architecture patterns** (axiom-swiftui, axiom-ios-data, axiom-concurrency) — These determine HOW to structure the solution
-3. **Implementation details** (ios-integration, axiom-ios-ai, axiom-vision) — These guide specific feature work
+2. **Architecture patterns** (axiom-swiftui, axiom-data, axiom-concurrency) — These determine HOW to structure the solution
+3. **Implementation details** (ios-integration, axiom-ai, axiom-vision) — These guide specific feature work
 
 Examples:
 - "Xcode build failed" → ios-build first (environment)
@@ -62,7 +62,7 @@ Axiom skills apply when:
 
 Axiom uses **router skills** for progressive disclosure:
 
-1. Check the appropriate router skill first (ios-build, axiom-swiftui, axiom-ios-data, etc.)
+1. Check the appropriate router skill first (ios-build, axiom-swiftui, axiom-data, etc.)
 2. Router will invoke the specialized skill(s) you actually need
 3. Follow the specialized skill exactly
 

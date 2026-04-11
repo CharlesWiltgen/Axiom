@@ -24,7 +24,7 @@ describe('buildCatalog', () => {
 
   it('excludes router and meta skills', () => {
     const skills = new Map<string, Skill>([
-      ['axiom-ios-build', makeSkill({ name: 'axiom-ios-build', skillType: 'router' })],
+      ['axiom-build', makeSkill({ name: 'axiom-build', skillType: 'router' })],
       ['axiom-using-axiom', makeSkill({ name: 'axiom-using-axiom', skillType: 'meta' })],
       ['axiom-regular', makeSkill({ name: 'axiom-regular', skillType: 'discipline' })],
     ]);

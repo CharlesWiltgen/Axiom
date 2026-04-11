@@ -155,14 +155,16 @@ const SKILL_TYPE_OVERRIDES: Record<string, SkillType> = {
 };
 
 /**
- * Infer skill type from name conventions, with explicit overrides for edge cases
+ * Infer skill type from name conventions, with explicit overrides for edge cases.
+ * Content is optionally checked for suite routers (SKILL.md files that reference references/*.md).
  */
-function inferSkillType(name: string): SkillType {
+function inferSkillType(name: string, content?: string): SkillType {
   if (SKILL_TYPE_OVERRIDES[name]) return SKILL_TYPE_OVERRIDES[name];
-  if (name.match(/^axiom-ios-/)) return 'router';
   if (name === 'axiom-using-axiom') return 'meta';
   if (name.endsWith('-ref')) return 'reference';
   if (name.endsWith('-diag')) return 'diagnostic';
+  // Suite routers reference their references/ directory
+  if (content && /references\/\S+\.md/.test(content)) return 'router';
   return 'discipline';
 }
 
@@ -182,7 +184,7 @@ export function parseSkill(content: string, filename: string): Skill {
     name,
     description: data.description || '',
     content: parsed.content,
-    skillType: inferSkillType(name),
+    skillType: inferSkillType(name, parsed.content),
     source: 'axiom',
     category: mcp?.category,
     tags: mcp?.tags || [],
@@ -352,7 +354,7 @@ export function parseReferenceFile(
     name,
     description: description || title,
     content,
-    skillType: inferSkillType(name),
+    skillType: inferSkillType(name, content),
     source: 'axiom',
     tags,
     related: [],

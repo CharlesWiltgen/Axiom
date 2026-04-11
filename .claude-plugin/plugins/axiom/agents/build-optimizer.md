@@ -22,7 +22,7 @@ tools:
   - Grep
   - Glob
 skills:
-  - axiom-ios-build
+  - axiom-build
 hooks:
   PreToolUse:
     - matcher: Edit|Write

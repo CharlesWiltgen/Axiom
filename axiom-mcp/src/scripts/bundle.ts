@@ -86,7 +86,7 @@ export async function generateBundle(pluginPath: string): Promise<BundleV2> {
             // No references/ directory
           }
         }
-        // Recurse into subdirectories (e.g., axiom-ios-ml/coreml/)
+        // Recurse into subdirectories (e.g., axiom-ai/coreml/)
         await loadSkillsFromDir(entryPath);
       }
     }

@@ -22,24 +22,24 @@ license: MIT
 | Scene transition crashes | See `references/spritekit-diag.md` |
 | Objects tunneling through walls | See `references/spritekit-diag.md` |
 | SpriteKit node/action reference | See `references/spritekit-ref.md` |
-| SceneKit maintenance/migration | `/skill axiom-scenekit` |
-| SceneKit API / migration mapping | `/skill axiom-scenekit-ref` |
-| RealityKit (3D, ECS, AR) | `/skill axiom-realitykit` |
-| RealityKit API reference | `/skill axiom-realitykit-ref` |
-| RealityKit diagnostics | `/skill axiom-realitykit-diag` |
+| SceneKit maintenance/migration | See axiom-graphics (references/scenekit.md) |
+| SceneKit API / migration mapping | See axiom-graphics (references/scenekit-ref.md) |
+| RealityKit (3D, ECS, AR) | See axiom-graphics (references/realitykit.md) |
+| RealityKit API reference | See axiom-graphics (references/realitykit-ref.md) |
+| RealityKit diagnostics | See axiom-graphics (references/realitykit-diag.md) |
 
 ## External Routes
 
 These topics are part of the broader games/3D domain but live in separate skill suites:
 
 **SceneKit (3D — soft-deprecated iOS 26):**
-- Maintenance and migration planning → `/skill axiom-scenekit`
-- API reference and migration mapping → `/skill axiom-scenekit-ref`
+- Maintenance and migration planning → See axiom-graphics (references/scenekit.md)
+- API reference and migration mapping → See axiom-graphics (references/scenekit-ref.md)
 
 **RealityKit (3D — modern):**
-- ECS architecture, AR, SwiftUI integration → `/skill axiom-realitykit`
-- API reference → `/skill axiom-realitykit-ref`
-- Troubleshooting → `/skill axiom-realitykit-diag`
+- ECS architecture, AR, SwiftUI integration → See axiom-graphics (references/realitykit.md)
+- API reference → See axiom-graphics (references/realitykit-ref.md)
+- Troubleshooting → See axiom-graphics (references/realitykit-diag.md)
 
 ## Decision Tree
 
@@ -51,8 +51,8 @@ digraph games {
 
     start -> what;
     what -> sprite_what [label="SpriteKit (2D)"];
-    what -> "axiom-scenekit" [label="SceneKit (3D legacy)"];
-    what -> "axiom-realitykit" [label="RealityKit (3D modern)"];
+    what -> "axiom-graphics/scenekit" [label="SceneKit (3D legacy)"];
+    what -> "axiom-graphics/realitykit" [label="RealityKit (3D modern)"];
 
     sprite_what -> "references/spritekit.md" [label="architecture/patterns"];
     sprite_what -> "references/spritekit-ref.md" [label="API lookup"];
@@ -63,13 +63,13 @@ digraph games {
 1. Building/designing a 2D SpriteKit game? → `references/spritekit.md`
 2. How to use a specific SpriteKit API? → `references/spritekit-ref.md`
 3. SpriteKit broken or performing badly? → `references/spritekit-diag.md`
-4. Maintaining existing SceneKit code? → `/skill axiom-scenekit`
-5. SceneKit API reference or migration mapping? → `/skill axiom-scenekit-ref`
-6. Building new 3D game or experience? → `/skill axiom-realitykit`
-7. How to use a specific RealityKit API? → `/skill axiom-realitykit-ref`
-8. RealityKit entity not visible, gestures broken, performance? → `/skill axiom-realitykit-diag`
-9. Migrating SceneKit to RealityKit? → `/skill axiom-scenekit` (migration tree) + `/skill axiom-scenekit-ref` (mapping table)
-10. Building AR game? → `/skill axiom-realitykit`
+4. Maintaining existing SceneKit code? → See axiom-graphics (references/scenekit.md)
+5. SceneKit API reference or migration mapping? → See axiom-graphics (references/scenekit-ref.md)
+6. Building new 3D game or experience? → See axiom-graphics (references/realitykit.md)
+7. How to use a specific RealityKit API? → See axiom-graphics (references/realitykit-ref.md)
+8. RealityKit entity not visible, gestures broken, performance? → See axiom-graphics (references/realitykit-diag.md)
+9. Migrating SceneKit to RealityKit? → See axiom-graphics (references/scenekit.md) (migration tree) + See axiom-graphics (references/scenekit-ref.md) (mapping table)
+10. Building AR game? → See axiom-graphics (references/realitykit.md)
 11. Want automated SpriteKit code scan? → `spritekit-auditor` agent
 
 ## Automated Scanning
@@ -133,10 +133,10 @@ User: "Objects pass through walls"
 → See `references/spritekit-diag.md`
 
 User: "I need to build a 3D game"
-→ Invoke: `/skill axiom-realitykit`
+→ Invoke: See axiom-graphics (references/realitykit.md)
 
 User: "I'm migrating from SceneKit to RealityKit"
-→ Invoke: `/skill axiom-scenekit` + `/skill axiom-scenekit-ref`
+→ Invoke: See axiom-graphics (references/scenekit.md) + See axiom-graphics (references/scenekit-ref.md)
 
 User: "Can you scan my SpriteKit code for common issues?"
 → Launch `spritekit-auditor` agent

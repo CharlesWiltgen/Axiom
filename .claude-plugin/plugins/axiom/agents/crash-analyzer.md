@@ -32,7 +32,7 @@ tools:
   - Grep
   - Glob
 skills:
-  - axiom-ios-build
+  - axiom-build
 ---
 
 # Crash Analyzer Agent

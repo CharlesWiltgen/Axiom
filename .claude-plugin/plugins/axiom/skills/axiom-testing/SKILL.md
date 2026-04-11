@@ -52,7 +52,7 @@ digraph testing {
 4. XCUIElement queries, waiting, test plans, CI? → `references/xctest-automation.md`
 5. Record UI interactions (Xcode 26)? → `references/ui-recording.md`
 6. Flaky tests / race conditions (Swift Testing)? → test-failure-analyzer (Agent)
-7. Tests crash / environment wrong? → `/skill axiom-xcode-debugging`
+7. Tests crash / environment wrong? → See axiom-build (references/xcode-debugging.md)
 8. Run tests from CLI / parse results? → test-runner (Agent)
 9. Fix failing tests automatically? → test-debugger (Agent)
 10. Want test quality audit? → testing-auditor (Agent) or `/axiom:audit testing`
