@@ -13,8 +13,8 @@ Use when:
 - Requesting code review of navigation implementation before shipping
 
 #### Related Skills
-- Use `axiom-swiftui-nav-diag` for systematic troubleshooting of navigation failures
-- Use `axiom-swiftui-nav-ref` for comprehensive API reference (including Tab customization, iOS 26+ features) with all WWDC examples
+- Use `references/nav-diag.md` for systematic troubleshooting of navigation failures
+- Use `references/nav-ref.md` for comprehensive API reference (including Tab customization, iOS 26+ features) with all WWDC examples
 
 ## Example Prompts
 
@@ -819,7 +819,7 @@ checks and fallback UI for older devices."
 
 **WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323
 
-**Skills**: axiom-swiftui-nav-diag, axiom-swiftui-nav-ref
+**Skills**: references/nav-diag.md, references/nav-ref.md
 
 ---
 
