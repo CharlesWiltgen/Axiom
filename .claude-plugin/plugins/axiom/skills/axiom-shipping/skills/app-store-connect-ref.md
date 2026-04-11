@@ -219,7 +219,7 @@ If **asc-mcp** is configured, you can access ASC data programmatically from Clau
 | Check build status | `builds_get_processing_state` |
 | Export sales data | `analytics_sales_report` (requires vendor_number) |
 
-**Setup and workflows**: `/skill axiom-asc-mcp`
+**Setup and workflows**: See axiom-shipping (skills/asc-mcp.md)
 
 ### Xcode Cloud Integration
 

@@ -614,7 +614,7 @@ If **asc-mcp** is configured, you can access crash diagnostics and tester data p
 
 **Limitation**: TestFlight text feedback and screenshots are NOT available via the App Store Connect API. Use Xcode Organizer or the ASC web dashboard for feedback content.
 
-**Setup**: `/skill axiom-asc-mcp`
+**Setup**: See axiom-shipping (skills/asc-mcp.md)
 
 ### Getting More Context
 

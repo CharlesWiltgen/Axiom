@@ -202,7 +202,7 @@ Look for multiple threads with state `waiting` that reference each other's locks
 
 Switch to another thread to inspect its state.
 
-**Cross-reference:** For fix patterns once you've identified the hang cause → `/skill axiom-hang-diagnostics`
+**Cross-reference:** For fix patterns once you've identified the hang cause → See axiom-performance (skills/hang-diagnostics.md)
 
 ---
 
@@ -525,7 +525,7 @@ Each child task runs on its own thread. Use `bt all` to see them.
    (lldb) register read
    (lldb) register read x0 x1 x2
    ```
-   On ARM64: `x0` = self, `x1`-`x7` = first 7 arguments. Check `/skill axiom-lldb-ref` Part 1 for details.
+   On ARM64: `x0` = self, `x1`-`x7` = first 7 arguments. Check See axiom-build (skills/lldb-ref.md) Part 1 for details.
 
 ### Scenario 2: "Just Add Print Statements"
 
