@@ -51,8 +51,8 @@ digraph concurrency {
 4. Mutex / lock / synchronization? → `references/synchronization.md`
 5. Profile async performance / actor contention? → `references/concurrency-profiling.md`
 6. Value type / ARC / generic optimization? → See axiom-performance (references/swift-performance.md)
-7. borrowing / consuming / ~Copyable? → `/skill axiom-ownership-conventions`
-8. Combine / @Published / AnyCancellable / reactive streams? → `/skill axiom-combine-patterns`
+7. borrowing / consuming / ~Copyable? → See axiom-swift (references/ownership-conventions.md)
+8. Combine / @Published / AnyCancellable / reactive streams? → See axiom-uikit (references/combine-patterns.md)
 9. Want automated concurrency scan? → concurrency-auditor (Agent)
 
 ## Conflict Resolution
@@ -109,7 +109,7 @@ digraph concurrency {
 | "It's just one async call" | Even single async calls have cancellation and isolation implications. |
 | "I know how actors work" | Actor reentrancy and isolation rules changed in Swift 6.2. |
 | "I'll fix the Sendable warnings later" | Sendable violations cause runtime crashes. Fix them now. |
-| "Combine is dead, just use async/await" | Combine has no deprecation notice. Rewriting working pipelines wastes time. See `/skill axiom-combine-patterns`. |
+| "Combine is dead, just use async/await" | Combine has no deprecation notice. Rewriting working pipelines wastes time. See See axiom-uikit (references/combine-patterns.md). |
 | "I'll use @unchecked Sendable to silence this" | You're hiding a data race from the compiler. It will crash in production. |
 | "This async function runs on a background thread" | `async` suspends without blocking but resumes on the *same actor*. Use `@concurrent` to force background. |
 

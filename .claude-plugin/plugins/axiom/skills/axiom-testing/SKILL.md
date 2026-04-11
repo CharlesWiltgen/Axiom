@@ -56,7 +56,7 @@ digraph testing {
 8. Run tests from CLI / parse results? → test-runner (Agent)
 9. Fix failing tests automatically? → test-debugger (Agent)
 10. Want test quality audit? → testing-auditor (Agent) or `/axiom:audit testing`
-11. Automate without XCUITest / AXe CLI? → simulator-tester (Agent) + `/skill axiom-axe-ref`
+11. Automate without XCUITest / AXe CLI? → simulator-tester (Agent) + See axiom-xcode-mcp (references/axe-ref.md)
 
 ## Swift Testing vs XCTest Quick Guide
 

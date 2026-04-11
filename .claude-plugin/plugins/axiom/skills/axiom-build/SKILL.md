@@ -143,7 +143,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why testflight-triage**: Systematic workflow for investigating TestFlight crashes and reviewing beta feedback. Covers symbolication, crash interpretation, common patterns, and Claude-assisted analysis.
 
-**Invoke**: `/skill axiom-testflight-triage`
+**Invoke**: See axiom-shipping (references/testflight-triage.md)
 
 ---
 
@@ -158,7 +158,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why app-store-connect-ref**: Reference for navigating ASC crash analysis, metrics dashboards, and data export workflows.
 
-**Invoke**: `/skill axiom-app-store-connect-ref`
+**Invoke**: See axiom-shipping (references/app-store-connect-ref.md)
 
 ---
 
@@ -247,7 +247,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why code-signing**: Code signing errors are NEVER code bugs — they are 100% configuration (certificates, profiles, entitlements, keychains). Diagnosing with CLI tools takes 5 minutes vs hours of guessing.
 
-**Invoke**: `/skill axiom-code-signing` (workflows) or `/skill axiom-code-signing-diag` (troubleshooting)
+**Invoke**: See axiom-security (references/code-signing.md) (workflows) or See axiom-security (references/code-signing-diag.md) (troubleshooting)
 
 ---
 
@@ -339,25 +339,25 @@ User: "Should I still use @StateObject?"
 → Invoke: `modernization-helper` agent
 
 User: "A beta tester said my app crashed"
-→ Invoke: `/skill axiom-testflight-triage`
+→ Invoke: See axiom-shipping (references/testflight-triage.md)
 
 User: "I see crashes in App Store Connect but don't know how to investigate"
-→ Invoke: `/skill axiom-testflight-triage`
+→ Invoke: See axiom-shipping (references/testflight-triage.md)
 
 User: "My crash logs aren't symbolicated"
-→ Invoke: `/skill axiom-testflight-triage`
+→ Invoke: See axiom-shipping (references/testflight-triage.md)
 
 User: "I need to review TestFlight feedback"
-→ Invoke: `/skill axiom-testflight-triage`
+→ Invoke: See axiom-shipping (references/testflight-triage.md)
 
 User: "How do I find crashes in App Store Connect?"
-→ Invoke: `/skill axiom-app-store-connect-ref`
+→ Invoke: See axiom-shipping (references/app-store-connect-ref.md)
 
 User: "Where's the crash-free users metric in ASC?"
-→ Invoke: `/skill axiom-app-store-connect-ref`
+→ Invoke: See axiom-shipping (references/app-store-connect-ref.md)
 
 User: "How do I export crash data from App Store Connect?"
-→ Invoke: `/skill axiom-app-store-connect-ref`
+→ Invoke: See axiom-shipping (references/app-store-connect-ref.md)
 
 User: "Analyze this crash log" [pastes .ips content]
 → Invoke: `crash-analyzer` agent or `/axiom:analyze-crash`
@@ -405,13 +405,13 @@ User: "How can I speed up my Xcode build times?"
 → Invoke: `build-optimizer` agent or `/axiom:optimize-build`
 
 User: "No signing certificate found when I try to build"
-→ Invoke: `/skill axiom-code-signing-diag`
+→ Invoke: See axiom-security (references/code-signing-diag.md)
 
 User: "errSecInternalComponent in my GitHub Actions CI"
-→ Invoke: `/skill axiom-code-signing-diag`
+→ Invoke: See axiom-security (references/code-signing-diag.md)
 
 User: "How do I set up code signing for GitHub Actions?"
-→ Invoke: `/skill axiom-code-signing`
+→ Invoke: See axiom-security (references/code-signing.md)
 
 User: "What is my app printing to the console?"
 → Invoke: `/skill axiom-xclog-ref` or `/axiom:console`

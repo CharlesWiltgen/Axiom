@@ -110,7 +110,7 @@ Use this router when:
 
 **Swift performance scan** → Launch `swift-performance-analyzer` agent or `/axiom:audit swift-performance` (unnecessary copies, ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs, memory layout)
 
-**Modern Swift idioms** → `/skill axiom-swift-modern`
+**Modern Swift idioms** → See axiom-swift (references/swift-modern.md)
 - Outdated API patterns (Date(), CGFloat, DateFormatter)
 - Foundation modernization (URL.documentsDirectory, FormatStyle)
 - Claude-specific hallucination corrections
@@ -299,10 +299,10 @@ User: "How do I create an AsyncTimerSequence?"
 → Read: `axiom-integration` (references/timer-patterns-ref.md)
 
 User: "Review my Swift code for outdated patterns"
-→ Invoke: `/skill axiom-swift-modern`
+→ Invoke: See axiom-swift (references/swift-modern.md)
 
 User: "Is there a more modern way to do this?"
-→ Invoke: `/skill axiom-swift-modern`
+→ Invoke: See axiom-swift (references/swift-modern.md)
 
 User: "What is the app logging? I need to see console output"
 → Invoke: `/skill axiom-xclog-ref` or `/axiom:console`

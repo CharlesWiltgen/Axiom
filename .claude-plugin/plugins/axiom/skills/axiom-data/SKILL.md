@@ -43,13 +43,13 @@ Use this skill when working with:
 | Storage strategy, where to store data | See `references/storage.md` |
 | Storage issues, files disappeared | See `references/storage-diag.md` |
 | Storage management, disk pressure | See `references/storage-management-ref.md` |
-| Keychain / secure credential storage | `/skill axiom-keychain` |
-| Keychain errors (errSecDuplicateItem) | `/skill axiom-keychain-diag` |
-| Keychain API reference | `/skill axiom-keychain-ref` |
-| Encryption / signing / key management | `/skill axiom-cryptokit` |
-| CryptoKit API reference | `/skill axiom-cryptokit-ref` |
-| File protection, NSFileProtection | `/skill axiom-file-protection-ref` |
-| tvOS data persistence (no local storage) | `/skill axiom-tvos` |
+| Keychain / secure credential storage | See axiom-security (references/keychain.md) |
+| Keychain errors (errSecDuplicateItem) | See axiom-security (references/keychain-diag.md) |
+| Keychain API reference | See axiom-security (references/keychain-ref.md) |
+| Encryption / signing / key management | See axiom-security (references/cryptokit.md) |
+| CryptoKit API reference | See axiom-security (references/cryptokit-ref.md) |
+| File protection, NSFileProtection | See axiom-security (references/file-protection-ref.md) |
+| tvOS data persistence (no local storage) | See axiom-swift (references/tvos.md) |
 | tvOS + CloudKit SyncEngine | See `references/sqlitedata.md` |
 
 ### Automated Scanning
@@ -76,18 +76,18 @@ Use this skill when working with:
 11. Cloud sync errors? → `references/cloud-sync-diag.md`
 12. Codable/JSON serialization? → `references/codable.md`
 13. File storage strategy? → `references/storage.md`, `references/storage-diag.md`, `references/storage-management-ref.md`
-14. File protection? → `/skill axiom-file-protection-ref`
-15. Keychain / storing tokens, passwords, secrets securely? → `/skill axiom-keychain`, `/skill axiom-keychain-diag`, `/skill axiom-keychain-ref`
-16. SecItem errors (errSecDuplicateItem, errSecItemNotFound, errSecInteractionNotAllowed)? → `/skill axiom-keychain-diag`
-17. Encryption, signing, Secure Enclave, CryptoKit? → `/skill axiom-cryptokit`, `/skill axiom-cryptokit-ref`
-18. Quantum-secure cryptography, HPKE, ML-KEM? → `/skill axiom-cryptokit`
+14. File protection? → See axiom-security (references/file-protection-ref.md)
+15. Keychain / storing tokens, passwords, secrets securely? → See axiom-security (references/keychain.md), See axiom-security (references/keychain-diag.md), See axiom-security (references/keychain-ref.md)
+16. SecItem errors (errSecDuplicateItem, errSecItemNotFound, errSecInteractionNotAllowed)? → See axiom-security (references/keychain-diag.md)
+17. Encryption, signing, Secure Enclave, CryptoKit? → See axiom-security (references/cryptokit.md), See axiom-security (references/cryptokit-ref.md)
+18. Quantum-secure cryptography, HPKE, ML-KEM? → See axiom-security (references/cryptokit.md)
 19. Want Core Data safety scan? → core-data-auditor (Agent)
 20. Want Codable anti-pattern scan? → codable-auditor (Agent)
 21. Want iCloud sync audit? → icloud-auditor (Agent)
 22. Want storage location audit? → storage-auditor (Agent)
 23. Want database schema/migration safety scan? → database-schema-auditor (Agent)
 24. Want SwiftData code audit? → swiftdata-auditor (Agent)
-25. tvOS data persistence? → `/skill axiom-tvos` (CRITICAL: no persistent local storage) + `references/sqlitedata.md` (CloudKit SyncEngine)
+25. tvOS data persistence? → See axiom-swift (references/tvos.md) (CRITICAL: no persistent local storage) + `references/sqlitedata.md` (CloudKit SyncEngine)
 
 ## Anti-Rationalization
 
@@ -144,22 +144,22 @@ User: "Check my SwiftData models for issues"
 → Launch: `swiftdata-auditor` agent
 
 User: "How do I persist data on tvOS?"
-→ Invoke: `/skill axiom-tvos` + Read: `references/sqlitedata.md`
+→ Invoke: See axiom-swift (references/tvos.md) + Read: `references/sqlitedata.md`
 
 User: "My tvOS app loses data between launches"
-→ Invoke: `/skill axiom-tvos`
+→ Invoke: See axiom-swift (references/tvos.md)
 
 User: "How do I store an auth token securely?"
-→ Invoke: `/skill axiom-keychain`
+→ Invoke: See axiom-security (references/keychain.md)
 
 User: "errSecDuplicateItem but I checked and the item doesn't exist"
-→ Invoke: `/skill axiom-keychain-diag`
+→ Invoke: See axiom-security (references/keychain-diag.md)
 
 User: "How do I encrypt data with AES in Swift?"
-→ Invoke: `/skill axiom-cryptokit`
+→ Invoke: See axiom-security (references/cryptokit.md)
 
 User: "I need to sign data with the Secure Enclave"
-→ Invoke: `/skill axiom-cryptokit`
+→ Invoke: See axiom-security (references/cryptokit.md)
 
 User: "What's ML-KEM and should I use it?"
-→ Invoke: `/skill axiom-cryptokit`
+→ Invoke: See axiom-security (references/cryptokit.md)

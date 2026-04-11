@@ -4,15 +4,15 @@ description: Use when connecting to Xcode via MCP, using xcrun mcpbridge, or wor
 license: MIT
 ---
 
-# Xcode MCP Router
+# Xcode MCP
 
 **You MUST use this skill for ANY Xcode MCP interaction — setup, tool usage, workflow patterns, or troubleshooting.**
 
-Xcode 26.3 ships an MCP server (`xcrun mcpbridge`) that exposes 20 IDE tools to external AI clients. This router directs you to the right specialized skill.
+Xcode 26.3 ships an MCP server (`xcrun mcpbridge`) that exposes 20 IDE tools to external AI clients. This skill suite covers setup, tool reference, workflow patterns, and troubleshooting.
 
 ## When to Use
 
-Use this router when:
+Use this skill when:
 - Setting up Xcode MCP for the first time
 - Configuring `xcrun mcpbridge` for any MCP client
 - Using any Xcode MCP tool (file ops, build, test, preview)
@@ -33,7 +33,7 @@ Use this router when:
 - Multi-Xcode targeting (`MCP_XCODE_PID`)
 - Schema compliance issues with strict clients
 
-**Invoke**: `/skill axiom-xcode-mcp-setup`
+**Read**: `references/xcode-mcp-setup.md`
 
 ---
 
@@ -47,7 +47,7 @@ Use this router when:
 - When to use MCP tools vs CLI (`xcodebuild`)
 - Destructive operation safety (`XcodeRM`, `XcodeMV`)
 
-**Invoke**: `/skill axiom-xcode-mcp-tools`
+**Read**: `references/xcode-mcp-tools.md`
 
 ---
 
@@ -60,7 +60,7 @@ Use this router when:
 - "What params does BuildProject take?"
 - Tool category listing
 
-**Invoke**: `/skill axiom-xcode-mcp-ref`
+**Read**: `references/xcode-mcp-ref.md`
 
 ---
 
@@ -112,26 +112,26 @@ digraph xcode_mcp_router {
 ## Example Invocations
 
 User: "How do I set up Xcode MCP with Claude Code?"
--> Invoke: `/skill axiom-xcode-mcp-setup`
+-> Read: `references/xcode-mcp-setup.md`
 
 User: "How do I build my project using MCP tools?"
--> Invoke: `/skill axiom-xcode-mcp-tools`
+-> Read: `references/xcode-mcp-tools.md`
 
 User: "What parameters does BuildProject take?"
--> Invoke: `/skill axiom-xcode-mcp-ref`
+-> Read: `references/xcode-mcp-ref.md`
 
 User: "My mcpbridge connection keeps failing"
--> Invoke: `/skill axiom-xcode-mcp-setup`
+-> Read: `references/xcode-mcp-setup.md`
 
 User: "How do I target a specific Xcode window?"
--> Invoke: `/skill axiom-xcode-mcp-tools`
+-> Read: `references/xcode-mcp-tools.md`
 
 User: "Can I render SwiftUI previews via MCP?"
--> Invoke: `/skill axiom-xcode-mcp-tools` (workflow), then `/skill axiom-xcode-mcp-ref` (params)
+-> Read: `references/xcode-mcp-tools.md` (workflow), then `references/xcode-mcp-ref.md` (params)
 
 User: "Cursor can't parse Xcode's MCP responses"
--> Invoke: `/skill axiom-xcode-mcp-setup` (schema compliance section)
+-> Read: `references/xcode-mcp-setup.md` (schema compliance section)
 
 ## Resources
 
-**Skills**: xcode-mcp-setup, xcode-mcp-tools, xcode-mcp-ref
+**References**: references/xcode-mcp-setup.md, references/xcode-mcp-tools.md, references/xcode-mcp-ref.md, references/axe-ref.md

@@ -86,6 +86,26 @@
     {
       "name": "axiom-shipping",
       "description": "Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect. Covers submission checklists, rejection troubleshooting, metadata, privacy manifests, age ratings, export compliance."
+    },
+    {
+      "name": "axiom-security",
+      "description": "Use when storing credentials securely, encrypting data, implementing passkeys, code signing, or managing certificates and provisioning profiles."
+    },
+    {
+      "name": "axiom-location",
+      "description": "Use when implementing location services, maps, geofencing, or debugging location/MapKit issues. Covers Core Location, CLMonitor, MapKit, annotations, directions."
+    },
+    {
+      "name": "axiom-design",
+      "description": "Use when making design decisions, implementing HIG patterns, Liquid Glass, SF Symbols, typography, or structuring app entry points and authentication flows."
+    },
+    {
+      "name": "axiom-uikit",
+      "description": "Use when bridging UIKit and SwiftUI, debugging Auto Layout constraints, working with Combine, TextKit, or UIKit animations."
+    },
+    {
+      "name": "axiom-swift",
+      "description": "Use when reviewing Swift code for modern idioms, working with noncopyable types, implementing drag and drop, adding debug deep links, or building for tvOS."
     }
   ]
 }
