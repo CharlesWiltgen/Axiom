@@ -1,3 +1,0 @@
-interface:
-  display_name: "Codable"
-  short_description: "Working with Codable protocol, JSON encoding/decoding, CodingKeys customization, enum serialization, date strategies,..."

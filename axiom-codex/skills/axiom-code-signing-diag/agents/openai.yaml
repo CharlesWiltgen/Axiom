@@ -1,3 +1,0 @@
-interface:
-  display_name: "Code Signing Diagnostics"
-  short_description: "Code signing fails during build, archive, or upload"

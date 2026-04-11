@@ -12,21 +12,21 @@ license: MIT
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| async/await patterns, @MainActor, actors | See `references/swift-concurrency.md` |
-| Data race errors, Sendable conformance | See `references/swift-concurrency.md` |
-| Swift 6 migration, @concurrent attribute | See `references/swift-concurrency.md` |
-| Actor definition, reentrancy, global actors | See `references/swift-concurrency-ref.md` |
-| Task/TaskGroup/cancellation API | See `references/swift-concurrency-ref.md` |
-| AsyncStream, continuations | See `references/swift-concurrency-ref.md` |
-| DispatchQueue → actor migration | See `references/swift-concurrency-ref.md` |
-| Mutex (iOS 18+), OSAllocatedUnfairLock | See `references/synchronization.md` |
-| Atomic types, lock vs actor decision | See `references/synchronization.md` |
-| MainActor.assumeIsolated | See `references/assume-isolated.md` |
-| @preconcurrency protocol conformances | See `references/assume-isolated.md` |
-| Legacy delegate callbacks | See `references/assume-isolated.md` |
-| Swift Concurrency Instruments template | See `references/concurrency-profiling.md` |
-| Actor contention diagnosis | See `references/concurrency-profiling.md` |
-| Thread pool exhaustion | See `references/concurrency-profiling.md` |
+| async/await patterns, @MainActor, actors | See `skills/swift-concurrency.md` |
+| Data race errors, Sendable conformance | See `skills/swift-concurrency.md` |
+| Swift 6 migration, @concurrent attribute | See `skills/swift-concurrency.md` |
+| Actor definition, reentrancy, global actors | See `skills/swift-concurrency-ref.md` |
+| Task/TaskGroup/cancellation API | See `skills/swift-concurrency-ref.md` |
+| AsyncStream, continuations | See `skills/swift-concurrency-ref.md` |
+| DispatchQueue → actor migration | See `skills/swift-concurrency-ref.md` |
+| Mutex (iOS 18+), OSAllocatedUnfairLock | See `skills/synchronization.md` |
+| Atomic types, lock vs actor decision | See `skills/synchronization.md` |
+| MainActor.assumeIsolated | See `skills/assume-isolated.md` |
+| @preconcurrency protocol conformances | See `skills/assume-isolated.md` |
+| Legacy delegate callbacks | See `skills/assume-isolated.md` |
+| Swift Concurrency Instruments template | See `skills/concurrency-profiling.md` |
+| Actor contention diagnosis | See `skills/concurrency-profiling.md` |
+| Thread pool exhaustion | See `skills/concurrency-profiling.md` |
 
 ## Decision Tree
 
@@ -36,23 +36,23 @@ digraph concurrency {
     what [label="What do you need?" shape=diamond];
 
     start -> what;
-    what -> "references/swift-concurrency.md" [label="async/await, actors,\nSendable, data races,\nSwift 6 migration"];
-    what -> "references/swift-concurrency-ref.md" [label="API syntax lookup\n(TaskGroup, AsyncStream,\ncontinuations, migration)"];
-    what -> "references/synchronization.md" [label="Mutex, locks,\natomic types"];
-    what -> "references/assume-isolated.md" [label="assumeIsolated,\n@preconcurrency"];
-    what -> "references/concurrency-profiling.md" [label="profile async perf,\nactor contention"];
+    what -> "skills/swift-concurrency.md" [label="async/await, actors,\nSendable, data races,\nSwift 6 migration"];
+    what -> "skills/swift-concurrency-ref.md" [label="API syntax lookup\n(TaskGroup, AsyncStream,\ncontinuations, migration)"];
+    what -> "skills/synchronization.md" [label="Mutex, locks,\natomic types"];
+    what -> "skills/assume-isolated.md" [label="assumeIsolated,\n@preconcurrency"];
+    what -> "skills/concurrency-profiling.md" [label="profile async perf,\nactor contention"];
 }
 ```
 
-1. Data races / actor isolation / @MainActor / Sendable / Swift 6 migration? → `references/swift-concurrency.md`
-1a. Need specific API syntax (actor definition, TaskGroup, AsyncStream, continuations)? → `references/swift-concurrency-ref.md`
-2. Writing async/await code? → `references/swift-concurrency.md`
-3. assumeIsolated / @preconcurrency? → `references/assume-isolated.md`
-4. Mutex / lock / synchronization? → `references/synchronization.md`
-5. Profile async performance / actor contention? → `references/concurrency-profiling.md`
-6. Value type / ARC / generic optimization? → `/skill axiom-swift-performance`
-7. borrowing / consuming / ~Copyable? → `/skill axiom-ownership-conventions`
-8. Combine / @Published / AnyCancellable / reactive streams? → `/skill axiom-combine-patterns`
+1. Data races / actor isolation / @MainActor / Sendable / Swift 6 migration? → `skills/swift-concurrency.md`
+1a. Need specific API syntax (actor definition, TaskGroup, AsyncStream, continuations)? → `skills/swift-concurrency-ref.md`
+2. Writing async/await code? → `skills/swift-concurrency.md`
+3. assumeIsolated / @preconcurrency? → `skills/assume-isolated.md`
+4. Mutex / lock / synchronization? → `skills/synchronization.md`
+5. Profile async performance / actor contention? → `skills/concurrency-profiling.md`
+6. Value type / ARC / generic optimization? → See axiom-performance (skills/swift-performance.md)
+7. borrowing / consuming / ~Copyable? → See axiom-swift (skills/ownership-conventions.md)
+8. Combine / @Published / AnyCancellable / reactive streams? → See axiom-uikit (skills/combine-patterns.md)
 9. Want automated concurrency scan? → concurrency-auditor (Agent)
 
 ## Conflict Resolution
@@ -71,14 +71,14 @@ digraph concurrency {
 
 ## Critical Patterns
 
-**Swift Concurrency** (`references/swift-concurrency.md`):
+**Swift Concurrency** (`skills/swift-concurrency.md`):
 - Progressive journey: single-threaded → async → concurrent → actors
 - @concurrent attribute for forced background execution
 - Isolated conformances, main actor mode
 - 12 copy-paste patterns including delegate value capture, weak self in Tasks
 - Comprehensive decision tree for 7 common error messages
 
-**API Reference** (`references/swift-concurrency-ref.md`):
+**API Reference** (`skills/swift-concurrency-ref.md`):
 - Actor definition, reentrancy, global actors, nonisolated
 - Sendable patterns, @unchecked Sendable, sending parameter
 - Task/TaskGroup/cancellation, async let, withDiscardingTaskGroup
@@ -86,12 +86,12 @@ digraph concurrency {
 - Isolation patterns (#isolation, @preconcurrency, nonisolated(unsafe))
 - DispatchQueue/DispatchGroup/completion handler migration
 
-**Synchronization** (`references/synchronization.md`):
+**Synchronization** (`skills/synchronization.md`):
 - Mutex (iOS 18+), OSAllocatedUnfairLock (iOS 16+), Atomic types
 - Lock vs actor decision tree
 - Danger patterns: locks across await, semaphores in async context
 
-**Profiling** (`references/concurrency-profiling.md`):
+**Profiling** (`skills/concurrency-profiling.md`):
 - Swift Concurrency Instruments template
 - Diagnosing main thread blocking, actor contention, thread pool exhaustion
 - Safe vs unsafe primitives for cooperative pool
@@ -104,40 +104,40 @@ digraph concurrency {
 
 | Thought | Reality |
 |---------|---------|
-| "Just add @MainActor and it'll work" | @MainActor has isolation inheritance rules. `references/swift-concurrency.md` covers all patterns. |
-| "I'll use nonisolated(unsafe) to silence the warning" | Silencing warnings hides data races. `references/swift-concurrency.md` shows the safe pattern. |
+| "Just add @MainActor and it'll work" | @MainActor has isolation inheritance rules. `skills/swift-concurrency.md` covers all patterns. |
+| "I'll use nonisolated(unsafe) to silence the warning" | Silencing warnings hides data races. `skills/swift-concurrency.md` shows the safe pattern. |
 | "It's just one async call" | Even single async calls have cancellation and isolation implications. |
 | "I know how actors work" | Actor reentrancy and isolation rules changed in Swift 6.2. |
 | "I'll fix the Sendable warnings later" | Sendable violations cause runtime crashes. Fix them now. |
-| "Combine is dead, just use async/await" | Combine has no deprecation notice. Rewriting working pipelines wastes time. See `/skill axiom-combine-patterns`. |
+| "Combine is dead, just use async/await" | Combine has no deprecation notice. Rewriting working pipelines wastes time. See See axiom-uikit (skills/combine-patterns.md). |
 | "I'll use @unchecked Sendable to silence this" | You're hiding a data race from the compiler. It will crash in production. |
 | "This async function runs on a background thread" | `async` suspends without blocking but resumes on the *same actor*. Use `@concurrent` to force background. |
 
 ## Example Invocations
 
 User: "I'm getting 'data race' errors in Swift 6"
-→ Read: `references/swift-concurrency.md`
+→ Read: `skills/swift-concurrency.md`
 
 User: "How do I use @MainActor correctly?"
-→ Read: `references/swift-concurrency.md`
+→ Read: `skills/swift-concurrency.md`
 
 User: "How do I create a TaskGroup?"
-→ Read: `references/swift-concurrency-ref.md`
+→ Read: `skills/swift-concurrency-ref.md`
 
 User: "What's the AsyncStream API?"
-→ Read: `references/swift-concurrency-ref.md`
+→ Read: `skills/swift-concurrency-ref.md`
 
 User: "How do I use assumeIsolated?"
-→ Read: `references/assume-isolated.md`
+→ Read: `skills/assume-isolated.md`
 
 User: "Should I use Mutex or actor?"
-→ Read: `references/synchronization.md`
+→ Read: `skills/synchronization.md`
 
 User: "My async code is slow, how do I profile it?"
-→ Read: `references/concurrency-profiling.md`
+→ Read: `skills/concurrency-profiling.md`
 
 User: "My app is slow due to unnecessary copying"
-→ Invoke: `/skill axiom-swift-performance`
+→ See axiom-performance (skills/swift-performance.md)
 
 User: "Check my code for Swift 6 concurrency issues"
 → Invoke: `concurrency-auditor` agent

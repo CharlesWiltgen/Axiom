@@ -1,0 +1,3 @@
+interface:
+  display_name: "Location"
+  short_description: "Implementing location services, maps, geofencing, or debugging location/MapKit issues"

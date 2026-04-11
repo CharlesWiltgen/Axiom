@@ -1,3 +1,0 @@
-interface:
-  display_name: "Build Debugging"
-  short_description: "Encountering dependency conflicts, CocoaPods/SPM resolution failures, \"Multiple commands produce\" errors, or framewor..."

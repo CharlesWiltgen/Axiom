@@ -1,0 +1,3 @@
+interface:
+  display_name: "Build"
+  short_description: "ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code"

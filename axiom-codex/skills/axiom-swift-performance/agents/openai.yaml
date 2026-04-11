@@ -1,3 +1,0 @@
-interface:
-  display_name: "Swift Performance"
-  short_description: "Optimizing Swift code performance, reducing memory usage, improving runtime efficiency, dealing with COW, ARC overhea..."

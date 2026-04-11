@@ -1,3 +1,0 @@
-interface:
-  display_name: "Display Performance"
-  short_description: "App runs at unexpected frame rate, stuck at 60fps on ProMotion, frame pacing issues, or configuring render loops"

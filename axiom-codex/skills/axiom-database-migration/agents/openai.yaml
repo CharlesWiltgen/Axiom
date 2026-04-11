@@ -1,3 +1,0 @@
-interface:
-  display_name: "Database Migration"
-  short_description: "Adding/modifying database columns, encountering \"FOREIGN KEY constraint failed\", \"no such column\", \"cannot add NOT NU..."

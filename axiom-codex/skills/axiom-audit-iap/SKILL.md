@@ -293,13 +293,12 @@ Revenue Risk: HIGH (missing purchases, rejections)
 After reporting issues:
 1. Prioritize CRITICAL fixes (revenue/rejection risk)
 2. Suggest StoreManager refactoring if architecture is scattered
-3. Recommend `axiom-in-app-purchases` skill for implementation guidance
+3. Recommend `axiom-integration` skill (skills/in-app-purchases.md) for implementation guidance
 4. Offer to implement fixes if user requests
 
 ## Skills to Reference
 
-- `axiom-in-app-purchases` - Discipline skill with testing-first workflow
-- `axiom-storekit-ref` - Complete API reference
+- `axiom-integration` — IAP and StoreKit (skills/in-app-purchases.md, storekit-ref.md)
 
 ## Remember
 

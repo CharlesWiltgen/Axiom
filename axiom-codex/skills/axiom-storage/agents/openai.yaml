@@ -1,3 +1,0 @@
-interface:
-  display_name: "Storage"
-  short_description: "Asking 'where should I store this data', 'should I use SwiftData or files', 'CloudKit vs iCloud Drive', 'Documents vs..."

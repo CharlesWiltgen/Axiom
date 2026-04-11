@@ -1,3 +1,0 @@
-interface:
-  display_name: "EventKit"
-  short_description: "Working with ANY calendar event, reminder, EventKit permission, or EventKitUI controller"

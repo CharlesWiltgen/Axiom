@@ -1,3 +1,0 @@
-interface:
-  display_name: "SQLiteData Reference"
-  short_description: "SQLiteData advanced patterns, @Selection column groups, single-table inheritance, recursive CTEs, database views, cus..."

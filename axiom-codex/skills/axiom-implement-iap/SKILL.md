@@ -167,6 +167,6 @@ Button("Restore Purchases") {
 
 ## Related
 
-For detailed patterns: `axiom-in-app-purchases` skill
-For API reference: `axiom-storekit-ref` skill
+For detailed patterns: `axiom-integration` (skills/in-app-purchases.md)
+For API reference: `axiom-integration` (skills/storekit-ref.md)
 For auditing: `iap-auditor` agent

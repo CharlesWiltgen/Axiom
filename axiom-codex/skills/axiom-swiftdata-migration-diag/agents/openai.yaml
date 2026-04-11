@@ -1,3 +1,0 @@
-interface:
-  display_name: "SwiftData Migration Diagnostics"
-  short_description: "SwiftData migrations crash, fail to preserve relationships, lose data, or work in simulator but fail on device"

@@ -1,3 +1,0 @@
-interface:
-  display_name: "CryptoKit"
-  short_description: "Encrypting data, signing payloads, verifying signatures, generating keys, using Secure Enclave, migrating from Common..."

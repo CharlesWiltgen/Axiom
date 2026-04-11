@@ -1,3 +1,0 @@
-interface:
-  display_name: "Contacts"
-  short_description: "Accessing ANY contact data, requesting Contacts permissions, choosing between picker and store access, implementing C..."

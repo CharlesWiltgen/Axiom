@@ -1,0 +1,3 @@
+interface:
+  display_name: "Security"
+  short_description: "Storing credentials securely, encrypting data, implementing passkeys, code signing, or managing certificates and prov..."

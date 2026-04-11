@@ -1,3 +1,0 @@
-interface:
-  display_name: "Hang Diagnostics"
-  short_description: "App freezes, UI unresponsive, main thread blocked, watchdog termination, or diagnosing hang reports from Xcode Organi..."
