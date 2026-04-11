@@ -457,7 +457,7 @@ ZStack {
 
 ### Platform Availability
 
-**iOS 17+, iPadOS 17+, macOS 14+, visionOS 1.0+**
+#### Platform Availability
 
 For earlier iOS versions, use manual safe area handling:
 
@@ -664,14 +664,14 @@ enum UserInterfaceSizeClass {
 
 ### Platform Behavior
 
-**iPhone:**
+#### iPhone
 | Orientation | Horizontal | Vertical |
 |-------------|------------|----------|
 | Portrait | `.compact` | `.regular` |
 | Landscape (small) | `.compact` | `.compact` |
 | Landscape (Plus/Max) | `.regular` | `.compact` |
 
-**iPad:**
+#### iPad
 | Configuration | Horizontal | Vertical |
 |--------------|------------|----------|
 | Any full screen | `.regular` | `.regular` |

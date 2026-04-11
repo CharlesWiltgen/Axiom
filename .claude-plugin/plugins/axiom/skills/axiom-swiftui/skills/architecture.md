@@ -660,7 +660,7 @@ You can combine Coordinators with any architecture:
 
 Run this checklist on your views:
 
-**View body contains:**
+#### View body contains
 - DateFormatter, NumberFormatter creation
 - Calculations or data transformations
 - API calls or async operations
@@ -1048,14 +1048,14 @@ If you hear:
 
 ### Time Cost Comparison
 
-**Option A: Put logic in view**
+#### Option A — Put logic in view
 - Write feature in view: 2 hours
 - Realize it's untestable: 1 hour
 - Try to test it anyway: 2 hours
 - Give up, ship with manual testing: 0 hours
 - **Total: 5 hours, 0 tests**
 
-**Option B: Extract logic properly**
+#### Option B — Extract logic properly
 - Create model/ViewModel: 30 min
 - Write feature with separation: 2 hours
 - Write tests: 1 hour
