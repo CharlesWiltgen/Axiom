@@ -64,7 +64,7 @@ Image(systemName: "checkmark.circle")
 
 ## Documentation Scope
 
-This page documents the `axiom-sf-symbols` skill — decision trees, effect selection guidance, and troubleshooting for SF Symbols implementation.
+This page documents the `axiom-design` skill — decision trees, effect selection guidance, and troubleshooting for SF Symbols implementation.
 
 **For complete API reference:** See [SF Symbols Reference](/reference/sf-symbols-ref) for every modifier signature, UIKit equivalents, and the full platform availability matrix.
 

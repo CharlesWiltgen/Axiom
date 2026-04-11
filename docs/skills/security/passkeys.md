@@ -36,7 +36,7 @@ Use this skill when:
 
 ## Documentation Scope
 
-This page documents the `axiom-passkeys` discipline skill. The discipline skill provides end-to-end workflows and decision guidance for passkey implementation, not API-level details.
+This page documents the `axiom-security` discipline skill. The discipline skill provides end-to-end workflows and decision guidance for passkey implementation, not API-level details.
 
 ## Related
 

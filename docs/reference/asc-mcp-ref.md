@@ -35,7 +35,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `axiom-asc-mcp` skill — the workflow-focused guide Claude uses when interacting with App Store Connect via asc-mcp MCP tools.
+This page documents the `axiom-shipping` skill — the workflow-focused guide Claude uses when interacting with App Store Connect via asc-mcp MCP tools.
 
 - For manual ASC navigation (crash data, metrics dashboards), see [App Store Connect Reference](/reference/app-store-connect-ref)
 - For submission preparation checklists, see [App Store Submission](/skills/shipping/app-store-submission)

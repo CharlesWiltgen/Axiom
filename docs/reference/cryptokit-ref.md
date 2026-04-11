@@ -35,7 +35,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `axiom-cryptokit-ref` reference skill. It provides API-level detail for developers who already understand which algorithm to use and need specific type signatures and parameters.
+This page documents the `axiom-security` reference skill. It provides API-level detail for developers who already understand which algorithm to use and need specific type signatures and parameters.
 
 - For decision guidance on choosing algorithms and workflows, see [CryptoKit](/skills/security/cryptokit)
 

@@ -35,4 +35,4 @@ Start with the symptom you're seeing in the quick reference table, then follow t
 
 ## Resources
 
-**Skills**: axiom-mapkit, axiom-mapkit-ref, axiom-core-location-diag
+**Skills**: axiom-location

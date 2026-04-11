@@ -37,4 +37,4 @@ Use this skill when:
 
 **WWDC**: 2017-706
 
-**Skills**: axiom-timer-patterns-ref, axiom-memory-debugging, axiom-energy
+**Skills**: axiom-integration, axiom-performance

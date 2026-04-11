@@ -42,7 +42,7 @@ Use this reference when:
 
 ## Documentation Scope
 
-This page documents the `axiom-scenekit-ref` skill. For SceneKit development patterns, deprecation context, and migration planning, use the discipline skill.
+This page documents the `axiom-graphics` skill. For SceneKit development patterns, deprecation context, and migration planning, use the discipline skill.
 
 - For SceneKit patterns and migration planning, see [SceneKit](/skills/games/scenekit)
 - For RealityKit development, see [RealityKit](/skills/games/realitykit)

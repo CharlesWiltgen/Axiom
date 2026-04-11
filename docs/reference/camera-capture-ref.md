@@ -45,7 +45,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `axiom-camera-capture-ref` skill. It provides complete API documentation for AVFoundation camera classes. For guided implementation patterns, use the discipline skill. For troubleshooting, use the diagnostic skill.
+This page documents the `axiom-media` skill. It provides complete API documentation for AVFoundation camera classes. For guided implementation patterns, use the discipline skill. For troubleshooting, use the diagnostic skill.
 
 - For implementation guidance, use [camera-capture](/skills/integration/camera-capture)
 - For troubleshooting camera issues, see [camera-capture-diag](/diagnostic/camera-capture-diag)

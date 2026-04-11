@@ -93,7 +93,7 @@ struct CameraPreview: UIViewRepresentable {
 
 ## Documentation Scope
 
-This page documents the `axiom-camera-capture` skill -- AVFoundation camera patterns Claude uses when helping you build custom camera features. The skill contains 7 core patterns with code examples, anti-patterns, a shipping checklist, and pressure scenarios.
+This page documents the `axiom-media` skill -- AVFoundation camera patterns Claude uses when helping you build custom camera features. The skill contains 7 core patterns with code examples, anti-patterns, a shipping checklist, and pressure scenarios.
 
 **For diagnostics:** See [camera-capture-diag](/diagnostic/camera-capture-diag) for troubleshooting black previews, frozen cameras, and rotation issues.
 

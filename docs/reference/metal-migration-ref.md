@@ -41,7 +41,7 @@ Use this reference when:
 
 ## Documentation Scope
 
-This page documents the `axiom-metal-migration-ref` skill. For migration strategy and planning, use the discipline skill. For troubleshooting porting issues, use the diagnostic skill.
+This page documents the `axiom-graphics` skill. For migration strategy and planning, use the discipline skill. For troubleshooting porting issues, use the diagnostic skill.
 
 - For migration planning, see [Metal Migration](/skills/games/metal-migration)
 - For troubleshooting, see [Metal Migration Diagnostics](/diagnostic/metal-migration-diag)

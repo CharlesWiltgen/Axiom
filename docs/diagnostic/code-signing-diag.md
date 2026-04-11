@@ -37,7 +37,7 @@ Six decision trees then map specific errors to root causes: certificate not foun
 
 ## Documentation Scope
 
-This page documents the `axiom-code-signing-diag` diagnostic skill. The full decision trees and diagnostic steps are in the skill file — Claude accesses them automatically when you describe a signing error.
+This page documents the `axiom-security` diagnostic skill. The full decision trees and diagnostic steps are in the skill file — Claude accesses them automatically when you describe a signing error.
 
 - For setup guidance and anti-patterns, see [Code Signing](/skills/debugging/code-signing)
 - For CLI command reference, see [Code Signing Reference](/reference/code-signing-ref)

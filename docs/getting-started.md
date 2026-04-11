@@ -74,9 +74,9 @@ Run audit commands:
 
 ## Skill Naming
 
-- **No suffix** — Discipline skills with workflows (e.g., `axiom-liquid-glass`)
+- **No suffix** — Discipline skills with workflows (e.g., `axiom-design`)
 - **-diag suffix** — Diagnostic skills for troubleshooting (e.g., `axiom-swiftui-nav-diag`)
-- **-ref suffix** — Reference skills with comprehensive APIs (e.g., `axiom-storekit-ref`)
+- **-ref suffix** — Reference skills with comprehensive APIs (e.g., `axiom-integration`)
 
 ## Tips
 

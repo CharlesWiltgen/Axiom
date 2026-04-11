@@ -40,7 +40,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `axiom-sf-symbols-ref` skill — the comprehensive API reference Claude uses for SF Symbols implementation details.
+This page documents the `axiom-design` skill — the comprehensive API reference Claude uses for SF Symbols implementation details.
 
 **For decision guidance:** See [SF Symbols](/skills/ui-design/sf-symbols) for rendering mode decision trees, effect selection guidance, anti-patterns, and troubleshooting.
 

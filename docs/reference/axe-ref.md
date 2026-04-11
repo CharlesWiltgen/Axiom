@@ -59,7 +59,7 @@ axe tap --label "Login" --udid $UDID
 
 ## Documentation Scope
 
-This page documents the `axiom-axe-ref` reference skill -- the complete AXe CLI guide Claude uses when you need to automate simulator UI interactions.
+This page documents the `axiom-xcode-mcp` reference skill -- the complete AXe CLI guide Claude uses when you need to automate simulator UI interactions.
 
 **For UI testing with XCTest:** See [UI Testing](/skills/ui-design/ui-testing) for Xcode's built-in UI testing framework.
 

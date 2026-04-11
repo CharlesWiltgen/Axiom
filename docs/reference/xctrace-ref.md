@@ -62,7 +62,7 @@ xcrun xctrace export --input profile.trace \
 
 ## Documentation Scope
 
-This page documents the `axiom-xctrace-ref` reference skill -- the complete xctrace CLI guide Claude uses when you need headless profiling or automated performance analysis.
+This page documents the `axiom-performance` reference skill -- the complete xctrace CLI guide Claude uses when you need headless profiling or automated performance analysis.
 
 **For GUI profiling workflows:** See [performance-profiling](/skills/debugging/performance-profiling) for Instruments decision trees.
 

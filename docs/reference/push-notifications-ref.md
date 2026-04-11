@@ -71,4 +71,4 @@ This page documents the `push-notifications-ref` skill — the API reference Cla
 
 **Docs**: /usernotifications, /usernotifications/setting_up_a_remote_notification_server
 
-**Skills**: push-notifications, push-notifications-diag
+**Skills**: 

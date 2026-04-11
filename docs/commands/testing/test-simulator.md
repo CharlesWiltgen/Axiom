@@ -142,14 +142,14 @@ For just a quick screenshot without full testing capabilities:
 
 - Xcode with iOS Simulator installed
 - App built for simulator
-- Optionally: Deep links for navigation (see `axiom-deep-link-debugging` skill)
+- Optionally: Deep links for navigation (see `axiom-swift` skill)
 
 ## Related
 
 - **`/axiom:screenshot`** — Quick screenshot only
 - **`simulator-tester` agent** — Full documentation
-- **`axiom-deep-link-debugging` skill** — Add debug-only deep links
-- **`axiom-xcode-debugging` skill** — Environment-first debugging
+- **`axiom-swift` skill** — Add debug-only deep links
+- **`axiom-build` skill** — Environment-first debugging
 - **`axiom-swiftui-debugging` skill** — SwiftUI debugging with simulator verification
 
 ## Real-World Impact

@@ -65,7 +65,7 @@ po (print object)   → Calls debugDescription. Use for NSObject subclasses, NSE
 
 ## Documentation Scope
 
-This page documents the `axiom-lldb-ref` reference skill — the complete LLDB command guide Claude uses when you need specific command syntax or flags.
+This page documents the `axiom-build` reference skill — the complete LLDB command guide Claude uses when you need specific command syntax or flags.
 
 **For debugging workflows and decision trees:** See [LLDB Debugging](/skills/debugging/lldb) for playbooks that tell you *which* commands to use and *when*.
 
@@ -80,4 +80,4 @@ This page documents the `axiom-lldb-ref` reference skill — the complete LLDB c
 
 **Docs**: /xcode/debugging, /xcode/stepping-through-code-and-inspecting-variables-to-isolate-bugs
 
-**Skills**: axiom-lldb, axiom-memory-debugging, axiom-performance-profiling
+**Skills**: axiom-build, axiom-performance

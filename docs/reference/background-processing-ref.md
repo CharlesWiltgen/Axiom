@@ -47,7 +47,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `axiom-background-processing-ref` reference skill -- comprehensive API coverage Claude uses when you need specific background task APIs, configuration details, or implementation patterns.
+This page documents the `axiom-integration` reference skill -- comprehensive API coverage Claude uses when you need specific background task APIs, configuration details, or implementation patterns.
 
 - For implementation guidance and decision trees, see [background-processing](/skills/integration/background-processing)
 - For troubleshooting "task never runs" and other issues, see [background-processing-diag](/diagnostic/background-processing-diag)

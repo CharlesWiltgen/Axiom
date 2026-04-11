@@ -42,7 +42,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `axiom-app-store-connect-ref` reference skill -- the complete guide Claude uses when you need to navigate App Store Connect for crash and performance data.
+This page documents the `axiom-shipping` reference skill -- the complete guide Claude uses when you need to navigate App Store Connect for crash and performance data.
 
 **For crash log parsing:** Use the `/axiom:analyze-crash` command to parse downloaded crash logs.
 

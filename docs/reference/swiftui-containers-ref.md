@@ -99,4 +99,4 @@ List(selection: $selection) {
 
 **Docs**: /swiftui/lazyvstack, /swiftui/lazyvgrid, /swiftui/lazyhgrid, /swiftui/grid, /swiftui/outlinegroup, /swiftui/disclosuregroup
 
-**Skills**: swiftui-layout, swiftui-layout-ref, swiftui-nav, swiftui-26-ref
+**Skills**: 

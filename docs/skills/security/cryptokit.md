@@ -35,7 +35,7 @@ Use this skill when:
 
 ## Documentation Scope
 
-This page documents the `axiom-cryptokit` discipline skill. The discipline skill provides decision frameworks, workflows, and anti-rationalization guidance for cryptographic operations.
+This page documents the `axiom-security` discipline skill. The discipline skill provides decision frameworks, workflows, and anti-rationalization guidance for cryptographic operations.
 
 - For API-level details on all CryptoKit types and algorithms, see [CryptoKit Reference](/reference/cryptokit-ref)
 

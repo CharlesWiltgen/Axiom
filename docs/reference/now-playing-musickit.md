@@ -40,7 +40,7 @@ MusicKit's `ApplicationMusicPlayer` automatically publishes to `MPNowPlayingInfo
 
 ## Documentation Scope
 
-This page documents the `axiom-now-playing-musickit` reference skill -- MusicKit-specific Now Playing patterns.
+This page documents the `axiom-media` reference skill -- MusicKit-specific Now Playing patterns.
 
 - For core Now Playing setup (MPNowPlayingInfoCenter, remote commands, artwork), see [now-playing](/skills/integration/now-playing)
 - For CarPlay integration, see [now-playing-carplay](/reference/now-playing-carplay)

@@ -44,7 +44,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `axiom-photo-library-ref` skill. It provides complete API documentation for PhotoKit classes and photo picker views. For guided implementation patterns, use the discipline skill.
+This page documents the `axiom-media` skill. It provides complete API documentation for PhotoKit classes and photo picker views. For guided implementation patterns, use the discipline skill.
 
 - For implementation guidance, use [photo-library](/skills/integration/photo-library)
 - For camera capture, see [camera-capture](/skills/integration/camera-capture)

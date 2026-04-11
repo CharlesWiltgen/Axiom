@@ -41,13 +41,13 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `axiom-metrickit-ref` reference skill -- the complete MetricKit API guide Claude uses when you need to collect and analyze field performance data.
+This page documents the `axiom-performance` reference skill -- the complete MetricKit API guide Claude uses when you need to collect and analyze field performance data.
 
 **For profiling during development:** See [xctrace-ref](/reference/xctrace-ref) for CLI-based Instruments profiling.
 
 **For App Store Connect metrics:** See [app-store-connect-ref](/reference/app-store-connect-ref) for the web dashboard view of performance data.
 
-**For hang diagnosis:** See the `axiom-hang-diagnostics` skill for hang-specific workflows.
+**For hang diagnosis:** See the `axiom-performance` skill for hang-specific workflows.
 
 ## Related
 

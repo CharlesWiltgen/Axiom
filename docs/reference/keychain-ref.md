@@ -35,7 +35,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `axiom-keychain-ref` reference skill. It provides API-level detail for developers who already understand keychain concepts and need specific function signatures or constant values.
+This page documents the `axiom-security` reference skill. It provides API-level detail for developers who already understand keychain concepts and need specific function signatures or constant values.
 
 - For workflow guidance and decision trees, see [Keychain](/skills/security/keychain)
 - For troubleshooting specific errors, see [Keychain Diagnostics](/diagnostic/keychain-diag)

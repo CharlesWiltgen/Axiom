@@ -39,7 +39,7 @@ Use this reference when:
 
 ## Documentation Scope
 
-This page documents the `axiom-code-signing-ref` reference skill. The full CLI command reference, error codes, and CI scripts are in the skill file — Claude accesses them automatically.
+This page documents the `axiom-security` reference skill. The full CLI command reference, error codes, and CI scripts are in the skill file — Claude accesses them automatically.
 
 - For setup guidance and anti-patterns, see [Code Signing](/skills/debugging/code-signing)
 - For error troubleshooting with decision trees, see [Code Signing Diagnostics](/diagnostic/code-signing-diag)

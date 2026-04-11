@@ -33,7 +33,7 @@ Use this skill when:
 
 ## Documentation Scope
 
-This page documents the `axiom-keychain` discipline skill. The discipline skill provides workflows, decision trees, and anti-rationalization guidance for keychain storage decisions.
+This page documents the `axiom-security` discipline skill. The discipline skill provides workflows, decision trees, and anti-rationalization guidance for keychain storage decisions.
 
 - For troubleshooting specific keychain errors, see [Keychain Diagnostics](/diagnostic/keychain-diag)
 - For SecItem API details and attribute constants, see [Keychain Reference](/reference/keychain-ref)

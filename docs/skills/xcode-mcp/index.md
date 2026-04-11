@@ -59,9 +59,9 @@ This is a router skill with three specialized sub-skills:
 | Skill | Type | Purpose |
 |-------|------|---------|
 | `axiom-xcode-mcp` | Router | Routes to the right specialized skill |
-| `axiom-xcode-mcp-setup` | Specialized | Enable, connect, and troubleshoot per client |
-| `axiom-xcode-mcp-tools` | Discipline | Workflow patterns, gotchas, window targeting |
-| `axiom-xcode-mcp-ref` | Reference | All 20 tools with params, schemas, examples |
+| `axiom-xcode-mcp` | Specialized | Enable, connect, and troubleshoot per client |
+| `axiom-xcode-mcp` | Discipline | Workflow patterns, gotchas, window targeting |
+| `axiom-xcode-mcp` | Reference | All 20 tools with params, schemas, examples |
 
 ## The 20 Xcode MCP Tools
 

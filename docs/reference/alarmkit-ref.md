@@ -28,7 +28,7 @@ Use this reference when:
 
 ## Documentation Scope
 
-This page documents the `axiom-alarmkit-ref` skill — the API reference Claude uses for AlarmKit integration.
+This page documents the `axiom-integration` skill — the API reference Claude uses for AlarmKit integration.
 
 ## Related
 
@@ -39,4 +39,4 @@ This page documents the `axiom-alarmkit-ref` skill — the API reference Claude 
 
 **WWDC**: 2025-230
 
-**Skills**: axiom-alarmkit-ref, axiom-extensions-widgets-ref
+**Skills**: axiom-integration

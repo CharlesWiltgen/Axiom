@@ -75,7 +75,7 @@ Before EVERY submission, run the complete checklist:
 
 ## Documentation Scope
 
-This page documents the `axiom-app-store-submission` skill — a discipline skill that Claude uses when helping you prepare for App Store submission. The skill contains the complete checklist, all 8 anti-patterns with code examples, pressure scenarios, and first-time developer guidance.
+This page documents the `axiom-shipping` skill — a discipline skill that Claude uses when helping you prepare for App Store submission. The skill contains the complete checklist, all 8 anti-patterns with code examples, pressure scenarios, and first-time developer guidance.
 
 **For specific field specs:** See [App Store Reference](/reference/app-store-ref) for metadata character limits, screenshot dimensions, privacy manifest schema, and guideline numbers.
 
@@ -95,4 +95,4 @@ This page documents the `axiom-app-store-submission` skill — a discipline skil
 
 **Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details
 
-**Skills**: axiom-app-store-ref, axiom-app-store-diag, axiom-storekit-ref, axiom-privacy-ux
+**Skills**: axiom-integration, axiom-shipping
