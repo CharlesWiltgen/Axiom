@@ -23,7 +23,7 @@ tools:
   - Read
 skills:
   - axiom-testing
-  - axiom-axe-ref
+  - axiom-xcode-mcp
 hooks:
   PreToolUse:
     - matcher: Bash
@@ -384,5 +384,5 @@ xcrun simctl diagnose -X --all-logs
 
 For deep link debugging: `axiom-deep-link-debugging` skill
 For build issues: `build-fixer` agent
-For AXe reference: `axiom-axe-ref` skill
+For AXe reference: `axiom-xcode-mcp` skill
 For running tests: `test-runner` agent

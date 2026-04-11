@@ -3,7 +3,7 @@
 
 Complete command reference for LLDB in Xcode. Organized by task so you can find the exact command you need.
 
-For debugging workflows and decision trees, see `/skill axiom-lldb`.
+For debugging workflows and decision trees, see See axiom-build (skills/lldb.md).
 
 ---
 

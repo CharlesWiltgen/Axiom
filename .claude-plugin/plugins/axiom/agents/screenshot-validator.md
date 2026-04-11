@@ -43,7 +43,7 @@ skills:
 mcp:
   category: auditing
   tags: [screenshots, app-store, dimensions, validation, submission]
-  related: [axiom-app-store-submission, axiom-app-store-ref]
+  related: [axiom-shipping]
   inputSchema:
     type: object
     properties:

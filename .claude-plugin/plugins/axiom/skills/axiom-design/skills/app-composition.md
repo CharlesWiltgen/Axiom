@@ -1183,7 +1183,7 @@ class OrderCoordinator { }     // Order flow, history, details
 
 # Part 5b: UIKit Integration (Incremental Adoption)
 
-> For comprehensive bridging patterns (UIViewRepresentable, UIViewControllerRepresentable, UIHostingConfiguration, coordinators, lifecycle, gotchas), see `/skill axiom-uikit-bridging`. This section covers app-level integration strategy only.
+> For comprehensive bridging patterns (UIViewRepresentable, UIViewControllerRepresentable, UIHostingConfiguration, coordinators, lifecycle, gotchas), see See axiom-uikit (skills/uikit-bridging.md). This section covers app-level integration strategy only.
 
 ## When This Applies
 
