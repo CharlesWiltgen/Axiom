@@ -14,7 +14,7 @@
 import { readdir, readFile, writeFile, mkdir, stat } from 'fs/promises';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
-import { parseSkill, parseCommand, parseAgent, applyAnnotations, Skill, Command, Agent, SkillAnnotations } from '../loader/parser.js';
+import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, Skill, Command, Agent, SkillAnnotations } from '../loader/parser.js';
 import type { BundleV2 } from '../loader/types.js';
 import { buildIndex, serializeIndex } from '../search/index.js';
 import { buildCatalog } from '../catalog/index.js';
@@ -30,7 +30,7 @@ async function loadAnnotations(): Promise<SkillAnnotations> {
   }
 }
 
-async function generateBundle(pluginPath: string): Promise<BundleV2> {
+export async function generateBundle(pluginPath: string): Promise<BundleV2> {
   console.log(`Reading plugin from: ${pluginPath}`);
 
   const bundle: BundleV2 = {
@@ -61,6 +61,28 @@ async function generateBundle(pluginPath: string): Promise<BundleV2> {
           bundle.skills[skill.name] = skill;
         } catch {
           // No SKILL.md in this directory
+        }
+        // Load reference files from references/ subdirectory (suite pattern)
+        if (bundle.skills[entry]) {
+          const refsDir = join(entryPath, 'references');
+          try {
+            const refEntries = await readdir(refsDir);
+            for (const refFile of refEntries) {
+              if (!refFile.endsWith('.md')) continue;
+              try {
+                const refContent = await readFile(join(refsDir, refFile), 'utf-8');
+                const refSkill = applyAnnotations(
+                  parseReferenceFile(refContent, refFile, entry),
+                  annotations,
+                );
+                bundle.skills[refSkill.name] = refSkill;
+              } catch {
+                console.warn(`Warning: Failed to parse reference ${entry}/references/${refFile}`);
+              }
+            }
+          } catch {
+            // No references/ directory
+          }
         }
         // Recurse into subdirectories (e.g., axiom-ios-ml/coreml/)
         await loadSkillsFromDir(entryPath);
