@@ -1,3 +1,0 @@
-interface:
-  display_name: "GRDB"
-  short_description: "Writing raw SQL queries with GRDB, complex joins, ValueObservation for reactive queries, DatabaseMigrator patterns, q..."

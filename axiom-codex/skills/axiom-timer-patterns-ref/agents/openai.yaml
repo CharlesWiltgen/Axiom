@@ -1,3 +1,0 @@
-interface:
-  display_name: "Timer Patterns Reference"
-  short_description: "Timer, DispatchSourceTimer, Combine Timer.publish, AsyncTimerSequence, Task.sleep API reference with lifecycle diagra..."

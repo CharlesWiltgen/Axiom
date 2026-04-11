@@ -1,3 +1,0 @@
-interface:
-  display_name: "Push Notifications Diagnostics"
-  short_description: "Push notifications fail to arrive, token registration errors occur, notifications work in development but not product..."

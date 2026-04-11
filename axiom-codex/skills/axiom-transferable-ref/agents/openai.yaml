@@ -1,3 +1,0 @@
-interface:
-  display_name: "Transferable Reference"
-  short_description: "Implementing drag and drop, copy/paste, ShareLink, or ANY content sharing between apps or views"

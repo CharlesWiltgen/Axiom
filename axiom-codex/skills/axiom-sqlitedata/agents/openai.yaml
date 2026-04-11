@@ -1,3 +1,0 @@
-interface:
-  display_name: "SQLiteData"
-  short_description: "Working with SQLiteData @Table models, CRUD operations, query patterns, CloudKit SyncEngine setup, or batch imports"

@@ -1,3 +1,0 @@
-interface:
-  display_name: "Code Signing"
-  short_description: "Setting up code signing, managing certificates, configuring provisioning profiles, debugging signing errors, setting ..."

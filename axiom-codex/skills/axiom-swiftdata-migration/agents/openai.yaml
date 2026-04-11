@@ -1,3 +1,0 @@
-interface:
-  display_name: "SwiftData Migration"
-  short_description: "Creating SwiftData custom schema migrations with VersionedSchema and SchemaMigrationPlan"

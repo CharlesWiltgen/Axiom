@@ -1,3 +1,0 @@
-interface:
-  display_name: "Keychain"
-  short_description: "Storing credentials, tokens, or secrets securely, debugging SecItem errors (errSecDuplicateItem, errSecItemNotFound, ..."

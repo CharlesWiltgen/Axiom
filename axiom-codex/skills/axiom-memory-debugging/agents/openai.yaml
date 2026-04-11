@@ -1,3 +1,0 @@
-interface:
-  display_name: "Memory Debugging"
-  short_description: "You see memory warnings, 'retain cycle', app crashes from memory pressure, or when asking 'why is my app using so muc..."

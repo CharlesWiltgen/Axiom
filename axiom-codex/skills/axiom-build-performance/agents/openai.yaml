@@ -1,3 +1,0 @@
-interface:
-  display_name: "Build Performance"
-  short_description: "Build times are slow, investigating build performance, analyzing Build Timeline, identifying type checking bottleneck..."

@@ -12,20 +12,20 @@ license: MIT
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| VoiceOver labels, hints, navigation | See `references/accessibility-diag.md` |
-| Dynamic Type scaling violations | See `references/accessibility-diag.md` |
-| Color contrast (WCAG AA/AAA) | See `references/accessibility-diag.md` |
-| Touch target sizes (< 44x44pt) | See `references/accessibility-diag.md` |
-| Keyboard navigation (iPadOS/macOS) | See `references/accessibility-diag.md` |
-| Reduce Motion support | See `references/accessibility-diag.md` |
-| Assistive Access (cognitive, iOS 17+) | See `references/accessibility-diag.md` |
-| Accessibility Inspector workflows | See `references/accessibility-diag.md` |
-| App Store Review preparation | See `references/accessibility-diag.md` |
-| UX dead ends, dismiss traps | See `references/ux-flow-audit.md` |
-| Buried CTAs, missing empty states | See `references/ux-flow-audit.md` |
-| Missing loading/error states | See `references/ux-flow-audit.md` |
-| Deep link dead ends | See `references/ux-flow-audit.md` |
-| Accessibility dead ends (gesture-only) | See `references/ux-flow-audit.md` |
+| VoiceOver labels, hints, navigation | See `skills/accessibility-diag.md` |
+| Dynamic Type scaling violations | See `skills/accessibility-diag.md` |
+| Color contrast (WCAG AA/AAA) | See `skills/accessibility-diag.md` |
+| Touch target sizes (< 44x44pt) | See `skills/accessibility-diag.md` |
+| Keyboard navigation (iPadOS/macOS) | See `skills/accessibility-diag.md` |
+| Reduce Motion support | See `skills/accessibility-diag.md` |
+| Assistive Access (cognitive, iOS 17+) | See `skills/accessibility-diag.md` |
+| Accessibility Inspector workflows | See `skills/accessibility-diag.md` |
+| App Store Review preparation | See `skills/accessibility-diag.md` |
+| UX dead ends, dismiss traps | See `skills/ux-flow-audit.md` |
+| Buried CTAs, missing empty states | See `skills/ux-flow-audit.md` |
+| Missing loading/error states | See `skills/ux-flow-audit.md` |
+| Deep link dead ends | See `skills/ux-flow-audit.md` |
+| Accessibility dead ends (gesture-only) | See `skills/ux-flow-audit.md` |
 
 ## Decision Tree
 
@@ -35,24 +35,24 @@ digraph accessibility {
     what [label="What type?" shape=diamond];
 
     start -> what;
-    what -> "references/accessibility-diag.md" [label="VoiceOver/labels/hints"];
-    what -> "references/accessibility-diag.md" [label="Dynamic Type"];
-    what -> "references/accessibility-diag.md" [label="color contrast"];
-    what -> "references/accessibility-diag.md" [label="touch targets"];
-    what -> "references/accessibility-diag.md" [label="keyboard nav"];
-    what -> "references/accessibility-diag.md" [label="Reduce Motion"];
-    what -> "references/accessibility-diag.md" [label="Assistive Access"];
-    what -> "references/accessibility-diag.md" [label="App Store prep"];
-    what -> "references/ux-flow-audit.md" [label="UX dead end/dismiss trap"];
-    what -> "references/ux-flow-audit.md" [label="missing states"];
+    what -> "skills/accessibility-diag.md" [label="VoiceOver/labels/hints"];
+    what -> "skills/accessibility-diag.md" [label="Dynamic Type"];
+    what -> "skills/accessibility-diag.md" [label="color contrast"];
+    what -> "skills/accessibility-diag.md" [label="touch targets"];
+    what -> "skills/accessibility-diag.md" [label="keyboard nav"];
+    what -> "skills/accessibility-diag.md" [label="Reduce Motion"];
+    what -> "skills/accessibility-diag.md" [label="Assistive Access"];
+    what -> "skills/accessibility-diag.md" [label="App Store prep"];
+    what -> "skills/ux-flow-audit.md" [label="UX dead end/dismiss trap"];
+    what -> "skills/ux-flow-audit.md" [label="missing states"];
     what -> "accessibility-auditor" [label="automated scan" shape=box];
 }
 ```
 
-1. ANY VoiceOver, Dynamic Type, contrast, touch target, or WCAG issue → `references/accessibility-diag.md`
-2. Assistive Access (cognitive disabilities, iOS 17+) → `references/accessibility-diag.md`
-3. App Store accessibility rejection → `references/accessibility-diag.md`
-4. UX dead ends, dismiss traps, buried CTAs, missing states → `references/ux-flow-audit.md`
+1. ANY VoiceOver, Dynamic Type, contrast, touch target, or WCAG issue → `skills/accessibility-diag.md`
+2. Assistive Access (cognitive disabilities, iOS 17+) → `skills/accessibility-diag.md`
+3. App Store accessibility rejection → `skills/accessibility-diag.md`
+4. UX dead ends, dismiss traps, buried CTAs, missing states → `skills/ux-flow-audit.md`
 5. Want automated accessibility scan? → `accessibility-auditor` agent or `/axiom:audit accessibility`
 
 ## Automated Scanning
@@ -90,28 +90,28 @@ digraph accessibility {
 ## Example Invocations
 
 User: "My button isn't being read by VoiceOver"
-→ See `references/accessibility-diag.md`
+→ See `skills/accessibility-diag.md`
 
 User: "How do I support Dynamic Type?"
-→ See `references/accessibility-diag.md`
+→ See `skills/accessibility-diag.md`
 
 User: "Check my app for accessibility issues"
-→ See `references/accessibility-diag.md`
+→ See `skills/accessibility-diag.md`
 
 User: "Prepare for App Store accessibility review"
-→ See `references/accessibility-diag.md`
+→ See `skills/accessibility-diag.md`
 
 User: "Scan my app for accessibility issues automatically"
 → Launch `accessibility-auditor` agent
 
 User: "How do I support Assistive Access?"
-→ See `references/accessibility-diag.md`
+→ See `skills/accessibility-diag.md`
 
 User: "Check for UX dead ends and dismiss traps"
-→ See `references/ux-flow-audit.md`
+→ See `skills/ux-flow-audit.md`
 
 User: "My fullScreenCover has no way to dismiss"
-→ See `references/ux-flow-audit.md`
+→ See `skills/ux-flow-audit.md`
 
 User: "Are there missing empty states in my app?"
-→ See `references/ux-flow-audit.md`
+→ See `skills/ux-flow-audit.md`

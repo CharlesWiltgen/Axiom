@@ -1,3 +1,0 @@
-interface:
-  display_name: "Camera Capture"
-  short_description: "AVCaptureSession, camera preview, photo capture, video recording, RotationCoordinator, session interruptions, deferre..."

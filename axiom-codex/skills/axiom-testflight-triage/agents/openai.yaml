@@ -1,3 +1,0 @@
-interface:
-  display_name: "Testflight Triage"
-  short_description: "ANY beta tester reports a crash, ANY crash appears in Organizer or App Store Connect, crash logs need symbolication, ..."

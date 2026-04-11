@@ -1,3 +1,0 @@
-interface:
-  display_name: "Camera Capture Reference"
-  short_description: "Reference — AVCaptureSession, AVCapturePhotoSettings, AVCapturePhotoOutput, RotationCoordinator, photoQualityPrioriti..."

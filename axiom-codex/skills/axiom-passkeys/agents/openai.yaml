@@ -1,3 +1,0 @@
-interface:
-  display_name: "Passkeys"
-  short_description: "Implementing passkey sign-in, replacing passwords with WebAuthn, configuring ASAuthorizationController, setting up Au..."

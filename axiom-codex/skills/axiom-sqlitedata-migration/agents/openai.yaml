@@ -1,3 +1,0 @@
-interface:
-  display_name: "SQLiteData Migration"
-  short_description: "Migrating from SwiftData to SQLiteData"

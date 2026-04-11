@@ -1,3 +1,0 @@
-interface:
-  display_name: "UIKit Animation Debugging"
-  short_description: "CAAnimation completion handler doesn't fire, spring physics look wrong on device, animation duration mismatches actua..."

@@ -1,3 +1,0 @@
-interface:
-  display_name: "App Attest"
-  short_description: "Implementing app integrity verification, preventing fraud with DCAppAttestService, validating requests from legitimat..."

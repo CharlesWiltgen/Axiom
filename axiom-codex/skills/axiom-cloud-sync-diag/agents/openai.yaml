@@ -1,3 +1,0 @@
-interface:
-  display_name: "Cloud Sync Diagnostics"
-  short_description: "Debugging 'file not syncing', 'CloudKit error', 'sync conflict', 'iCloud upload failed', 'ubiquitous item error', 'da..."

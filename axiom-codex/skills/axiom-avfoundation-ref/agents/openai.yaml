@@ -1,3 +1,0 @@
-interface:
-  display_name: "AVFoundation Reference"
-  short_description: "Reference — AVFoundation audio APIs, AVAudioSession categories/modes, AVAudioEngine pipelines, bit-perfect DAC output..."

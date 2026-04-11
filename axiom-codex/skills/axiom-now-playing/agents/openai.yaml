@@ -1,3 +1,0 @@
-interface:
-  display_name: "Now Playing"
-  short_description: "Now Playing metadata doesn't appear on Lock Screen/Control Center, remote commands (play/pause/skip) don't respond, a..."
