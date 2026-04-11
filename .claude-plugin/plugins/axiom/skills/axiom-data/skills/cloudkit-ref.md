@@ -15,7 +15,7 @@ Use this skill when:
 - Debugging CloudKit sync issues
 - Monitoring CloudKit performance
 
-**NOT for**: Simple file sync (use `axiom-icloud-drive-ref` instead)
+**NOT for**: Simple file sync (use `skills/icloud-drive-ref.md` instead)
 
 ## Overview
 
@@ -70,7 +70,7 @@ let container = try ModelContainer(
 - iCloud capability
 - CloudKit container
 
-**Use `axiom-swiftdata` skill for SwiftData details**
+**Use `skills/swiftdata.md` skill for SwiftData details**
 
 ---
 
@@ -608,10 +608,10 @@ func userDidAcceptCloudKitShareWith(_ cloudKitShareMetadata: CKShare.Metadata) {
 
 ## Related Skills
 
-- `axiom-swiftdata` — SwiftData implementation details
-- `axiom-storage` — Choose CloudKit vs iCloud Drive
-- `axiom-icloud-drive-ref` — File-based iCloud sync
-- `axiom-cloud-sync-diag` — Debug CloudKit sync issues
+- `skills/swiftdata.md` — SwiftData implementation details
+- `skills/storage.md` — Choose CloudKit vs iCloud Drive
+- `skills/icloud-drive-ref.md` — File-based iCloud sync
+- `skills/cloud-sync-diag.md` — Debug CloudKit sync issues
 
 ---
 

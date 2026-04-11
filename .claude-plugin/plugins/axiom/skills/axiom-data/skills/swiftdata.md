@@ -29,7 +29,7 @@ Apple's native persistence framework using `@Model` classes and declarative quer
 - Complex raw SQL required
 - Fine-grained migration control needed
 
-**For migrations** See the `axiom-swiftdata-migration` skill for custom schema migrations with VersionedSchema and SchemaMigrationPlan. For migration debugging, see `axiom-swiftdata-migration-diag`.
+**For migrations** See the `skills/swiftdata-migration.md` skill for custom schema migrations with VersionedSchema and SchemaMigrationPlan. For migration debugging, see `skills/swiftdata-migration-diag.md`.
 
 ## Example Prompts
 
@@ -77,7 +77,7 @@ These are real questions developers ask that this skill is designed to answer:
 #### Migration from Legacy Frameworks
 
 #### 12. "We're migrating from Realm/Core Data to SwiftData"
-→ See the comparison table in Migration section below, then follow `realm-to-swiftdata-migration` or `axiom-swiftdata-migration` for detailed guides
+→ See the comparison table in Migration section below, then follow `skills/realm-migration-ref.md` or `skills/swiftdata-migration.md` for detailed guides
 
 ---
 
@@ -639,7 +639,7 @@ final class Track {
 
 ### Sync Status, Conflicts, Offline Handling
 
-SwiftData CloudKit sync uses **last-write-wins** by default. For sync status monitoring, custom conflict resolution, and offline-aware UI patterns, see `axiom-cloud-sync`. For CKShare-based record sharing, see `axiom-cloudkit-ref`.
+SwiftData CloudKit sync uses **last-write-wins** by default. For sync status monitoring, custom conflict resolution, and offline-aware UI patterns, see `skills/cloud-sync.md`. For CKShare-based record sharing, see `skills/cloudkit-ref.md`.
 
 ### Resolving "Property must be optional or have default value" Error
 
@@ -993,9 +993,9 @@ struct ContentView: View {
 
 ### Detailed Migration Guides
 
-- **`realm-to-swiftdata-migration`** — Complete Realm migration: pattern equivalents, thread safety conversion, relationship migration, CloudKit sync transition, timeline planning
-- **`axiom-swiftdata-migration`** — SwiftData schema evolution: VersionedSchema, SchemaMigrationPlan, lightweight vs custom migrations
-- **`axiom-database-migration`** — Safe additive migration patterns applicable to any persistence framework
+- **`skills/realm-migration-ref.md`** — Complete Realm migration: pattern equivalents, thread safety conversion, relationship migration, CloudKit sync transition, timeline planning
+- **`skills/swiftdata-migration.md`** — SwiftData schema evolution: VersionedSchema, SchemaMigrationPlan, lightweight vs custom migrations
+- **`skills/database-migration.md`** — Safe additive migration patterns applicable to any persistence framework
 
 ## Testing
 
@@ -1046,15 +1046,9 @@ final class TrackTests: XCTestCase {
 
 **SwiftData on tvOS has no persistent local storage.** tvOS has no Document directory, and Application Support maps to Caches — the system deletes files under storage pressure. A local-only SwiftData store will lose all data.
 
-**You must use CloudKit sync** (`cloudKitDatabase: .private(...)`) for tvOS SwiftData apps. Without iCloud, user data does not survive between app launches. See `axiom-tvos` for full tvOS storage constraints.
+**You must use CloudKit sync** (`cloudKitDatabase: .private(...)`) for tvOS SwiftData apps. Without iCloud, user data does not survive between app launches. See axiom-swift (skills/tvos.md) for full tvOS storage constraints.
 
 ---
-
-## Resources
-
-**Docs**: /swiftdata, /swiftdata/adopting-inheritance-in-swiftdata
-
-**Skills**: axiom-swiftdata-migration, axiom-swiftdata-migration-diag, axiom-database-migration, axiom-sqlitedata, axiom-grdb, axiom-concurrency
 
 ## Common Mistakes
 
@@ -1094,9 +1088,8 @@ modelContext.insert(track)
 ```
 **Fix** Call `try modelContext.save()` for immediate persistence
 
----
+## Resources
 
-**Created** 2025-11-28
-**Targets** iOS 17+ (focus on iOS 26+ features)
-**Framework** SwiftData (Apple)
-**Swift** 5.9+ (Swift 6 concurrency patterns)
+**Docs**: /swiftdata, /swiftdata/adopting-inheritance-in-swiftdata
+
+**Skills**: skills/swiftdata-migration.md, skills/swiftdata-migration-diag.md, skills/database-migration.md, skills/sqlitedata.md, skills/grdb.md

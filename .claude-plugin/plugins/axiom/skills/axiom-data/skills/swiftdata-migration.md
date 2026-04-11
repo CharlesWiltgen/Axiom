@@ -725,7 +725,7 @@ If you have access to production data:
 - Verify no data corruption
 - Check performance with production-sized dataset
 
-See `axiom-swiftdata-migration-diag` for debugging tools if migration fails.
+See `skills/swiftdata-migration-diag.md` for debugging tools if migration fails.
 
 ### Migration Test Pattern
 
