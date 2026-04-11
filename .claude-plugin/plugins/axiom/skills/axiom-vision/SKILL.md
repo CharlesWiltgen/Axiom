@@ -78,9 +78,9 @@ digraph vision {
 
 | Thought | Reality |
 |---------|---------|
-| "Vision framework is just a request/handler pattern" | Vision has coordinate conversion, confidence thresholds, and performance gotchas. vision.md covers them. |
-| "I'll handle text recognition without the skill" | VNRecognizeTextRequest has fast/accurate modes and language-specific settings. vision.md has the patterns. |
-| "Subject segmentation is straightforward" | Instance masks have HDR compositing and hand-exclusion patterns. vision.md covers complex scenarios. |
+| "Vision framework is just a request/handler pattern" | Vision has coordinate conversion, confidence thresholds, and performance gotchas. vision-framework.md covers them. |
+| "I'll handle text recognition without the skill" | VNRecognizeTextRequest has fast/accurate modes and language-specific settings. vision-framework.md has the patterns. |
+| "Subject segmentation is straightforward" | Instance masks have HDR compositing and hand-exclusion patterns. vision-framework.md covers complex scenarios. |
 | "Visual Intelligence is just the camera API" | Visual Intelligence is a system-level feature requiring IntentValueQuery and SemanticContentDescriptor. vision-ref.md has the integration section. |
 | "I'll just process on the main thread" | Vision blocks UI on older devices. Users on iPhone 12 will experience frozen app. 15 min to add background queue. |
 
