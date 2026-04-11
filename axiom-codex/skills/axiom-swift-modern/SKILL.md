@@ -86,4 +86,4 @@ These patterns appear frequently in Claude-generated code:
 
 ## Resources
 
-**Skills**: axiom-swift-performance, axiom-swift-concurrency, axiom-swiftui-architecture
+**Skills**: axiom-swift-performance, axiom-swift-concurrency, axiom-swiftui

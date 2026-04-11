@@ -1,3 +1,0 @@
-interface:
-  display_name: "SwiftUI Architecture"
-  short_description: "Separating logic from SwiftUI views, choosing architecture patterns, refactoring view files, or asking 'where should ..."

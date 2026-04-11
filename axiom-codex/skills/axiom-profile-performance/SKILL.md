@@ -273,4 +273,4 @@ echo "To clean up: rm -rf '$TRACE_DIR'"
 - `axiom-xctrace-ref` — Full xctrace CLI reference
 - `axiom-performance-profiling` — Manual Instruments workflows
 - `axiom-memory-debugging` — Memory leak diagnosis
-- `axiom-swiftui-performance` — SwiftUI-specific profiling
+- `axiom-swiftui` — SwiftUI-specific profiling

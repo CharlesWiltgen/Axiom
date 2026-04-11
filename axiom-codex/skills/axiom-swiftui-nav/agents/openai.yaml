@@ -1,3 +1,0 @@
-interface:
-  display_name: "SwiftUI Nav"
-  short_description: "Implementing navigation patterns, choosing between NavigationStack and NavigationSplitView, handling deep links, adop..."

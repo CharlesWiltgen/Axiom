@@ -132,4 +132,4 @@ If >100 total opportunities: Summarize by category, show only HIGH/MEDIUM detail
 
 For design guidance: `axiom-liquid-glass` skill
 For comprehensive API reference: `axiom-liquid-glass-ref` skill
-For SwiftUI 26 features: `axiom-swiftui-26-ref` skill
+For SwiftUI 26 features: `axiom-swiftui` skill (iOS 26 reference)

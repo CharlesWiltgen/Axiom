@@ -112,7 +112,7 @@ URL opens but lands on empty or broken state.
 - Universal link handling that doesn't validate the entity ID
 - No fallback when deep-linked content is unavailable
 
-**Cross-reference**: `axiom-swiftui-nav` covers deep link architecture. This category checks the UX outcome.
+**Cross-reference**: `axiom-swiftui` (navigation reference) covers deep link architecture. This category checks the UX outcome.
 
 ### 6. Missing Empty States (HIGH)
 
@@ -170,7 +170,7 @@ State/binding wiring issues that manifest as UX problems (view shows stale data,
 - `@Observable` models created locally when they should be injected
 - `@State` used where `@Binding` should propagate changes upward
 
-**Scope note**: This overlaps with general SwiftUI correctness (`axiom-swiftui-debugging`). Include findings here only when the broken data path causes a visible UX problem — blank screen, stale content, edits that don't persist. Skip compiler-level or crash-level issues that belong in code review.
+**Scope note**: This overlaps with general SwiftUI correctness (`axiom-swiftui`, debugging reference). Include findings here only when the broken data path causes a visible UX problem — blank screen, stale content, edits that don't persist. Skip compiler-level or crash-level issues that belong in code review.
 
 ### 11. Platform Parity Gaps (MEDIUM)
 
@@ -295,6 +295,6 @@ Most UX flow defects are fast fixes. When someone says "that's a big change," ch
 
 ## Resources
 
-**Skills**: axiom-swiftui-nav, axiom-accessibility-diag, axiom-hig, axiom-swiftui-debugging
+**Skills**: axiom-swiftui, axiom-accessibility-diag, axiom-hig
 
 **Agents**: ux-flow-auditor (automated scanning), swiftui-nav-auditor (navigation architecture), accessibility-auditor (WCAG compliance)

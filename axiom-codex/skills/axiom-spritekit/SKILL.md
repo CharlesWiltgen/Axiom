@@ -29,7 +29,7 @@ Do NOT use this skill for:
 - SceneKit 3D rendering (`axiom-scenekit`)
 - GameplayKit entity-component systems
 - Metal shader programming (`axiom-metal-migration-ref`)
-- General SwiftUI layout (`axiom-swiftui-layout`)
+- General SwiftUI layout (`axiom-swiftui`, layout reference)
 
 ---
 
