@@ -181,16 +181,33 @@ try {
   if (!fs.existsSync(skillsDir)) {
     throw new Error(`Skills directory not found: ${skillsDir}`);
   }
-  // Recursively find all directories containing SKILL.md
+  // Recursively find all skill content units.
+  // A "skill" is either:
+  //   - A standalone SKILL.md (directory has no references/ subdir)
+  //   - Each references/*.md file in a suite (directory has references/ subdir)
+  // Suite SKILL.md files are routers, not counted as skills.
   const skillNames = [];
+  let suiteCount = 0;
   function findSkills(dir) {
     for (const name of fs.readdirSync(dir)) {
       const fullPath = path.join(dir, name);
       const stat = fs.statSync(fullPath, { throwIfNoEntry: false });
       if (!stat?.isDirectory()) continue;
       const skillFile = path.join(fullPath, 'SKILL.md');
+      const refsDir = path.join(fullPath, 'references');
       if (fs.existsSync(skillFile)) {
-        skillNames.push(name);
+        if (fs.existsSync(refsDir) && fs.statSync(refsDir).isDirectory()) {
+          // Suite: count each references/*.md as a skill, not the SKILL.md
+          suiteCount++;
+          for (const ref of fs.readdirSync(refsDir)) {
+            if (ref.endsWith('.md')) {
+              skillNames.push(ref.replace(/\.md$/, ''));
+            }
+          }
+        } else {
+          // Standalone skill
+          skillNames.push(name);
+        }
       }
       // Recurse into subdirectories (e.g., axiom-ios-ml/coreml/)
       findSkills(fullPath);
@@ -391,7 +408,7 @@ try {
 
   // Success - print summary
   console.log(`✓ Version set to ${version}`);
-  console.log(`  Skills: ${skillsCount} (${disciplineCount} discipline, ${referenceCount} reference, ${diagnosticCount} diagnostic)`);
+  console.log(`  Skills: ${skillsCount} (${disciplineCount} discipline, ${referenceCount} reference, ${diagnosticCount} diagnostic)${suiteCount > 0 ? ` across ${suiteCount} suite(s)` : ''}`);
   console.log(`  Agents: ${agentsCount}`);
   console.log(`  Commands: ${commandsCount}`);
   console.log();

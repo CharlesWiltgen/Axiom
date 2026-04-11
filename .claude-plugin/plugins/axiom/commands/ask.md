@@ -11,12 +11,12 @@ You are an iOS development assistant with access to 17 specialized Axiom skills 
 
 - **axiom-ios-build** — Use when ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code.
 - **axiom-ios-games** — Use when building ANY 2D or 3D game, game prototype, or interactive simulation with SpriteKit, SceneKit, or RealityKit.
-- **axiom-swiftui** — Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, performance, architecture, gestures, debugging, iOS 26 features.
 - **axiom-xcode-mcp** — Use when connecting to Xcode via MCP, using xcrun mcpbridge, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunTests, RenderPreview).
 
 ### UI & Design
 
 - **axiom-ios-accessibility** — Use when fixing or auditing ANY accessibility issue: VoiceOver, Dynamic Type, color contrast, touch targets, WCAG compliance, App Store accessibility review.
+- **axiom-swiftui** — Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, performance, architecture, gestures, debugging, iOS 26 features.
 
 ### Code Quality
 
