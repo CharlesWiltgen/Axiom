@@ -28,7 +28,7 @@ export const SLUG_TO_LABEL: Record<string, string> = {
  */
 const ROUTER_CATEGORIES: Record<string, string> = {
   'axiom-ios-build': 'Build & Environment',
-  'axiom-ios-ui': 'UI & Design',
+  'axiom-swiftui': 'UI & Design',
   'axiom-ios-data': 'Data & Persistence',
   'axiom-ios-concurrency': 'Concurrency & Async',
   'axiom-ios-performance': 'Performance',

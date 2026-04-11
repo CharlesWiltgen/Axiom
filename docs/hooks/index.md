@@ -23,7 +23,7 @@ Analyzes your prompt for iOS-related keywords and injects a specific skill recom
 ```
 You type: "My SwiftUI view is not updating when the data changes"
 
-Hook injects: "Axiom: This prompt matches `axiom-ios-ui`. Invoke it before responding."
+Hook injects: "Axiom: This prompt matches `axiom-swiftui`. Invoke it before responding."
 ```
 
 Covers 13 iOS domains: build, UI, data, concurrency, performance, networking, testing, integration, accessibility, AI, ML, vision, games, graphics, and shipping. Includes a negative gate to avoid false positives on non-iOS work (TypeScript, React, Python, etc.).

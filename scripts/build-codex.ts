@@ -16,7 +16,7 @@ const OUTPUT_MANIFEST = path.join(OUTPUT_DIR, '.codex-plugin');
 const EXCLUDE_SKILLS = new Set([
   'axiom-ios-build',
   'axiom-ios-testing',
-  'axiom-ios-ui',
+  'axiom-swiftui',
   'axiom-ios-data',
   'axiom-ios-concurrency',
   'axiom-ios-performance',
