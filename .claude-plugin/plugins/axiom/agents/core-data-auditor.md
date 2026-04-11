@@ -37,7 +37,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-data
+  - axiom-data
 ---
 
 # Core Data Auditor Agent
@@ -349,7 +349,7 @@ After fixes:
 
 ## For Detailed Diagnosis
 
-Use `/skill axiom-core-data-diag` for:
+See axiom-data (references/core-data-diag.md) for:
 - Comprehensive Core Data diagnostics
 - Production crisis defense scenarios
 - Safe migration patterns

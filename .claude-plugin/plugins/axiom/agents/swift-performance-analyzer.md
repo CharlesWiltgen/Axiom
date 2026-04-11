@@ -37,7 +37,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-performance
+  - axiom-performance
 ---
 
 # Swift Performance Analyzer Agent

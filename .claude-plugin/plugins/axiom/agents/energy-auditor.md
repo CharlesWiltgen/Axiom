@@ -22,7 +22,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-performance
+  - axiom-performance
 ---
 
 # Energy Auditor Agent

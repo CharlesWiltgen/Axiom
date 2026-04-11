@@ -20,7 +20,7 @@
   ],
   "skills": [
     {
-      "name": "axiom-ios-build",
+      "name": "axiom-build",
       "description": "Use when ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code. Covers build failures, compilation errors, dependency conflicts, simulator problems, environment-first diagnostics."
     },
     {
@@ -32,7 +32,7 @@
       "description": "Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, performance, architecture, gestures, debugging, iOS 26 features."
     },
     {
-      "name": "axiom-ios-data",
+      "name": "axiom-data",
       "description": "Use when working with ANY data persistence, database, storage, CloudKit, migration, or serialization. Covers SwiftData, Core Data, GRDB, SQLite, Realm, CloudKit sync, file storage, Codable, migrations."
     },
     {
@@ -40,7 +40,7 @@
       "description": "Use when writing ANY code with async, actors, threads, or seeing ANY concurrency error. Covers Swift 6 concurrency, @MainActor, Sendable, data races, async/await patterns, performance optimization."
     },
     {
-      "name": "axiom-ios-performance",
+      "name": "axiom-performance",
       "description": "Use when app feels slow, memory grows, battery drains, or diagnosing ANY performance issue. Covers memory leaks, profiling, Instruments workflows, retain cycles, performance optimization."
     },
     {
@@ -60,19 +60,15 @@
       "description": "Use when fixing or auditing ANY accessibility issue — VoiceOver, Dynamic Type, color contrast, touch targets, WCAG compliance, App Store accessibility review."
     },
     {
-      "name": "axiom-ios-ai",
-      "description": "Use when implementing ANY Apple Intelligence or on-device AI feature. Covers Foundation Models, @Generable, LanguageModelSession, structured output, Tool protocol, iOS 26 AI integration."
-    },
-    {
-      "name": "axiom-ios-ml",
-      "description": "Use when deploying ANY custom ML model on-device, converting PyTorch models, compressing models, or implementing speech-to-text. Covers CoreML conversion, MLTensor, quantization, palettization, stateful models, KV-cache, SpeechAnalyzer."
+      "name": "axiom-ai",
+      "description": "Use when implementing ANY Apple Intelligence, on-device AI, or custom ML feature. Covers Foundation Models, @Generable, LanguageModelSession, CoreML conversion, MLTensor, quantization, iOS 26 AI integration."
     },
     {
       "name": "axiom-vision",
       "description": "Use when implementing ANY computer vision feature — image analysis, pose detection, person segmentation, subject lifting, text recognition, barcode scanning."
     },
     {
-      "name": "axiom-ios-graphics",
+      "name": "axiom-graphics",
       "description": "Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, or display performance. Covers Metal migration, shader conversion, RealityKit ECS, RealityView, variable refresh rate, ProMotion."
     },
     {

@@ -153,4 +153,4 @@ User question about Apple API/framework?
 
 ## Resources
 
-**Skills**: axiom-swiftui, axiom-concurrency, axiom-ios-data, axiom-ios-ai, axiom-integration
+**Skills**: axiom-swiftui, axiom-concurrency, axiom-data, axiom-ai, axiom-integration

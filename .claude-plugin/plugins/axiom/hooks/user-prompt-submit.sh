@@ -34,7 +34,7 @@ non_ios = re.search(r'typescript|react(?!\s*native)|angular|vue\.js|django|flask
 
 # Build/environment (highest priority)
 if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (crash|hang|won.t|not )|pod (install|update)|spm |swift package|linker (error|command)|module.{0,5}not found|derived data|code sign|provisioning|xcworkspace|xcodeproj|xcode (error|crash|hang|won.t)|build time|compile (error|slow|time)', prompt_lower):
-    matches.append("axiom-ios-build")
+    matches.append("axiom-build")
 
 # UI
 if re.search(r'swiftui|uikit|@state\b|@binding\b|@observable\b|@environment\b|navigationstack|navigationsplitview|layout.{0,10}(break|bug|wrong|issue)|liquid glass|preview.{0,5}(crash|fail|not |won.t|broken)|view.{0,10}(not|won.t|doesn.t).{0,10}(updat|render|show|appear)|tabview|scroll.{0,20}(jank|lag|slow|stutter)|human interface guidelines', prompt_lower):
@@ -46,11 +46,11 @@ if not non_ios and "axiom-swiftui" not in matches and re.search(r'animation.{0,5
 
 # Data
 if re.search(r'swiftdata|core\s*data|@model\b|@query\b|@relationship\b|modelcontainer|modelcontext|cloudkit|ckrecord|cksyncengine|grdb|codable\b|nsmanagedobject|fetchrequest', prompt_lower):
-    matches.append("axiom-ios-data")
+    matches.append("axiom-data")
 
 # Data — generic terms gated
-if not non_ios and "axiom-ios-data" not in matches and re.search(r'migration.{0,10}(crash|fail|data|schema|version)|sqlite\b|realm|schema.{0,5}(change|evolv|version)', prompt_lower):
-    matches.append("axiom-ios-data")
+if not non_ios and "axiom-data" not in matches and re.search(r'migration.{0,10}(crash|fail|data|schema|version)|sqlite\b|realm|schema.{0,5}(change|evolv|version)', prompt_lower):
+    matches.append("axiom-data")
 
 # Concurrency
 if re.search(r'actor[\s-]isolated|sendable|@mainactor|data race|strict concurrency|swift 6.{0,5}concurren|task\s*\{|taskgroup|async\s+(let|sequence|stream)|nonisolated|global\s*actor|concurren.{0,5}(error|warning|violat|issue)', prompt_lower):
@@ -62,11 +62,11 @@ if not non_ios and "axiom-concurrency" not in matches and re.search(r'main threa
 
 # Performance
 if re.search(r'memory leak|retain cycle|instruments\b.{0,10}(profil|trace|template)|time profiler|allocations\b.{0,5}(instrument|tool|track)', prompt_lower):
-    matches.append("axiom-ios-performance")
+    matches.append("axiom-performance")
 
 # Performance — generic terms gated
-if not non_ios and "axiom-ios-performance" not in matches and re.search(r'performance.{0,10}(slow|issue|bad|poor)|profil.{0,5}(app|cpu|memory)|battery drain|energy.{0,5}(issue|audit)|memory.{0,5}(grow|pressure|warning)', prompt_lower):
-    matches.append("axiom-ios-performance")
+if not non_ios and "axiom-performance" not in matches and re.search(r'performance.{0,10}(slow|issue|bad|poor)|profil.{0,5}(app|cpu|memory)|battery drain|energy.{0,5}(issue|audit)|memory.{0,5}(grow|pressure|warning)', prompt_lower):
+    matches.append("axiom-performance")
 
 # Networking
 if re.search(r'urlsession|network\.framework|networkconnection\b|nwconnection\b|nwlistener', prompt_lower):
@@ -94,11 +94,11 @@ if re.search(r'voiceover|accessibility.{0,10}(label|hint|trait|value|issue|audit
 
 # AI
 if re.search(r'foundation models|apple intelligence|@generable\b|languagemodelsession|on-device.{0,5}(ai|model|ml)|@guide\b.{0,10}(generat|struct)', prompt_lower):
-    matches.append("axiom-ios-ai")
+    matches.append("axiom-ai")
 
 # ML
 if re.search(r'coreml|core\s*ml|mltensor|create\s*ml|mlmodel|convert.{0,10}(pytorch|tensorflow|onnx).{0,10}(coreml|ios)|model.{0,10}(quantiz|compress|palettiz)|speech.{0,5}(recogni|analyz|to.text)', prompt_lower):
-    matches.append("axiom-ios-ml")
+    matches.append("axiom-ai")
 
 # Vision
 if re.search(r'vision\s*framework|vnrequest|vngenerateforeground|subject.{0,5}(segment|lift)|hand\s*pose|body\s*pose|text\s*recogni|barcode.{0,5}(scan|detect)|document\s*scan|datascanner', prompt_lower):
@@ -110,7 +110,7 @@ if re.search(r'spritekit|scenekit|realitykit|skscene|skspritenode|skphysics|real
 
 # Graphics (Metal/GPU — separate from games)
 if re.search(r'metal\b.{0,10}(shader|render|migrat|buffer|texture|pipeline)|opengl.{0,10}(migrat|metal|convert)|gpu.{0,10}(render|compute)|promoti|variable.{0,5}refresh.{0,5}rate', prompt_lower):
-    matches.append("axiom-ios-graphics")
+    matches.append("axiom-graphics")
 
 # App Store / Shipping
 if re.search(r'app store.{0,10}(reject|review|submiss|connect|metadata)|testflight|privacy manifest|app review|export compliance|age rating|app.{0,5}(submit|upload|distribut)', prompt_lower):

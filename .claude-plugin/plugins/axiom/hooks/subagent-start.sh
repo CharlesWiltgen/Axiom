@@ -48,16 +48,16 @@ if any(agent_type.startswith(p) for p in skip_prefixes):
 
 context = """You have access to Axiom iOS development skills via the Skill tool. If your task involves iOS, Swift, Xcode, or Apple frameworks, invoke the matching skill BEFORE doing the work:
 
-- `axiom-ios-build` — build failures, Xcode, simulator, SPM
+- `axiom-build` — build failures, Xcode, simulator, SPM
 - `axiom-swiftui` — SwiftUI views, navigation, layout, animation, architecture
-- `axiom-ios-data` — SwiftData, Core Data, CloudKit, migrations, Codable
+- `axiom-data` — SwiftData, Core Data, CloudKit, migrations, Codable
 - `axiom-concurrency` — async/await, actors, Sendable, data races
-- `axiom-ios-performance` — memory leaks, profiling, battery, Instruments
+- `axiom-performance` — memory leaks, profiling, battery, Instruments
 - `axiom-networking` — URLSession, Network.framework, HTTP
 - `axiom-integration` — widgets, Siri, StoreKit, EventKit, push, background tasks
 - `axiom-media` — camera, photos, audio, haptics, ShazamKit, Now Playing
 - `axiom-accessibility` — VoiceOver, Dynamic Type, WCAG
-- `axiom-ios-ai` — Foundation Models, Apple Intelligence
+- `axiom-ai` — Foundation Models, Apple Intelligence
 - `axiom-games` — SpriteKit, SceneKit, RealityKit
 - `axiom-shipping` — App Store submission, rejections, privacy manifests
 

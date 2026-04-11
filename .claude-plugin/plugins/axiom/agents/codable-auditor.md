@@ -37,7 +37,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-data
+  - axiom-data
 ---
 
 # Codable Auditor Agent

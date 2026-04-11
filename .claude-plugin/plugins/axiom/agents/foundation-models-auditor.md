@@ -37,7 +37,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-ai
+  - axiom-ai
 ---
 
 # Foundation Models Auditor Agent

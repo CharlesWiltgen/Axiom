@@ -122,7 +122,7 @@ export class DevLoader implements Loader {
                 }
               }
             }
-            // Recurse into subdirectories (e.g., axiom-ios-ml/coreml/)
+            // Recurse into subdirectories (e.g., axiom-ai/coreml/)
             await loadFromDir(entryPath);
           }
         }

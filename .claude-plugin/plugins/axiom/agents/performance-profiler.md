@@ -37,7 +37,7 @@ tools:
   - Grep
   - Glob
 skills:
-  - axiom-ios-performance
+  - axiom-performance
 ---
 
 # Performance Profiler Agent

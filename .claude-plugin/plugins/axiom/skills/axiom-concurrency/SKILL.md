@@ -50,7 +50,7 @@ digraph concurrency {
 3. assumeIsolated / @preconcurrency? → `references/assume-isolated.md`
 4. Mutex / lock / synchronization? → `references/synchronization.md`
 5. Profile async performance / actor contention? → `references/concurrency-profiling.md`
-6. Value type / ARC / generic optimization? → `/skill axiom-swift-performance`
+6. Value type / ARC / generic optimization? → See axiom-performance (references/swift-performance.md)
 7. borrowing / consuming / ~Copyable? → `/skill axiom-ownership-conventions`
 8. Combine / @Published / AnyCancellable / reactive streams? → `/skill axiom-combine-patterns`
 9. Want automated concurrency scan? → concurrency-auditor (Agent)
@@ -137,7 +137,7 @@ User: "My async code is slow, how do I profile it?"
 → Read: `references/concurrency-profiling.md`
 
 User: "My app is slow due to unnecessary copying"
-→ Invoke: `/skill axiom-swift-performance`
+→ See axiom-performance (references/swift-performance.md)
 
 User: "Check my code for Swift 6 concurrency issues"
 → Invoke: `concurrency-auditor` agent

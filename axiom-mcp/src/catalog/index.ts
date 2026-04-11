@@ -28,19 +28,18 @@ export const SLUG_TO_LABEL: Record<string, string> = {
  * Each maps a router name to a human-readable category label.
  */
 const ROUTER_CATEGORIES: Record<string, string> = {
-  'axiom-ios-build': 'Build & Environment',
+  'axiom-build': 'Build & Environment',
   'axiom-swiftui': 'UI & Design',
-  'axiom-ios-data': 'Data & Persistence',
+  'axiom-data': 'Data & Persistence',
   'axiom-concurrency': 'Concurrency & Async',
-  'axiom-ios-performance': 'Performance',
+  'axiom-performance': 'Performance',
   'axiom-networking': 'Networking',
   'axiom-integration': 'System Integration',
   'axiom-media': 'Media',
   'axiom-accessibility': 'Accessibility',
-  'axiom-ios-ai': 'Apple Intelligence',
-  'axiom-ios-ml': 'Machine Learning',
+  'axiom-ai': 'Apple Intelligence & ML',
   'axiom-vision': 'Computer Vision',
-  'axiom-ios-graphics': 'Graphics & Metal',
+  'axiom-graphics': 'Graphics & Metal',
   'axiom-games': 'Games',
   'axiom-testing': 'Testing',
 };

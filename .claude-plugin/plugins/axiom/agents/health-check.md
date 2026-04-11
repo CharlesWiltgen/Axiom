@@ -29,7 +29,7 @@ tools:
   - Write
   - Agent
 skills:
-  - axiom-ios-build
+  - axiom-build
 ---
 
 # Health Check Meta-Audit Agent
