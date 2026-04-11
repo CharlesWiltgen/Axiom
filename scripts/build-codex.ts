@@ -17,7 +17,6 @@ const EXCLUDE_SKILLS = new Set([
   'axiom-ios-build',
   'axiom-ios-data',
   'axiom-ios-performance',
-  'axiom-ios-integration',
   'axiom-ios-ai',
   'axiom-ios-ml',
   'axiom-ios-graphics',
@@ -59,7 +58,8 @@ const CASE_MAP: Record<string, string> = {
   ref: 'Reference', diag: 'Diagnostics', objc: 'Obj-C',
   avfoundation: 'AVFoundation', xctest: 'XCTest', xctrace: 'xctrace',
   xclog: 'xclog', sqlitedata: 'SQLiteData', metrickit: 'MetricKit',
-  alarmkit: 'AlarmKit',
+  alarmkit: 'AlarmKit', shazamkit: 'ShazamKit', musickit: 'MusicKit',
+  carplay: 'CarPlay', haptics: 'Haptics',
 };
 
 // Derive display name: "axiom-swiftui-performance" → "SwiftUI Performance"

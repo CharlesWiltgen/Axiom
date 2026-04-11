@@ -1,6 +1,6 @@
 ---
 name: axiom-hig-ref
-description: Reference — Comprehensive Apple Human Interface Guidelines covering colors (semantic, custom, patterns), backgrounds (material hierarchy, dynamic), typography (built-in styles, custom fonts, Dynamic Type), SF Symbols (rendering modes, color, axiom-localization), Dark Mode, accessibility, and platform-specific considerations
+description: Reference — Comprehensive Apple Human Interface Guidelines covering colors (semantic, custom, patterns), backgrounds (material hierarchy, dynamic), typography (built-in styles, custom fonts, Dynamic Type), SF Symbols (rendering modes, color, localization), Dark Mode, accessibility, and platform-specific considerations
 license: MIT
 compatibility: iOS, iPadOS, macOS, watchOS, tvOS, visionOS
 metadata:

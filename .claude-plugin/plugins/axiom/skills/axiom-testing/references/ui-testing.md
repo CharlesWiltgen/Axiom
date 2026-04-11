@@ -305,7 +305,7 @@ element.waitForExistence(timeout: 0.1)  // ❌ Too short
 **Actions include**:
 - Launching your app
 - Interacting with buttons and navigation
-- Setting system state (Dark Mode, axiom-localization, etc.)
+- Setting system state (Dark Mode, localization, etc.)
 - Setting simulated location
 
 ### Accessibility is the Foundation

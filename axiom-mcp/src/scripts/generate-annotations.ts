@@ -50,6 +50,7 @@ export const CATEGORY_SLUGS: Record<string, string> = {
   'Graphics & Metal': 'graphics',
   'Games': 'games',
   'Testing': 'testing',
+  'Media': 'media',
   'General': 'general',
 };
 
@@ -88,7 +89,6 @@ const CATEGORY_OVERRIDES: Record<string, string> = {
   'axiom-core-location': 'System Integration',
   'axiom-core-location-diag': 'System Integration',
   'axiom-core-location-ref': 'System Integration',
-  'axiom-avfoundation-ref': 'System Integration',
   'axiom-metrickit-ref': 'Performance',
   'axiom-lldb': 'Performance',
   'axiom-lldb-ref': 'Performance',
@@ -99,8 +99,6 @@ const CATEGORY_OVERRIDES: Record<string, string> = {
   'axiom-realitykit-ref': 'Games',
   'axiom-transferable-ref': 'UI & Design',
   'axiom-app-composition': 'UI & Design',
-  'axiom-app-discoverability': 'System Integration',
-  'axiom-in-app-purchases': 'System Integration',
   'axiom-file-protection-ref': 'Data & Persistence',
 };
 
@@ -149,13 +147,14 @@ export function inferCategoryFromName(name: string): string {
   if (name.includes('network') || name.includes('url')) return 'Networking';
   if (name.includes('accessibility')) return 'Accessibility';
   if (name.includes('test') || name.includes('xctest') || name.includes('xctrace') || name.includes('axe')) return 'Testing';
-  if (name.includes('vision') || name.includes('photo') || name.includes('camera')) return 'Computer Vision';
+  if (name.includes('camera') || name.includes('photo') || name.includes('haptic') || name.includes('now-playing') || name.includes('shazamkit') || name.includes('avfoundation') || name.includes('musickit') || name.includes('carplay')) return 'Media';
+  if (name.includes('vision')) return 'Computer Vision';
   if (name.includes('foundation-model') || name.includes('intelligence') || name.includes('coreml') || name === 'speech') return 'Apple Intelligence';
   if (name.includes('metal') || name.includes('graphics')) return 'Graphics & Metal';
   if (name.includes('spritekit') || name.includes('scenekit') || name.includes('game')) return 'Games';
   if (name.includes('debug')) return 'Build & Environment';
   if (name.includes('triage') || name.includes('app-store-connect')) return 'Build & Environment';
-  if (name.includes('intent') || name.includes('shortcut') || name.includes('widget') || name.includes('extension') || name.includes('haptic') || name.includes('storekit') || name.includes('iap') || name.includes('now-playing') || name.includes('localization') || name.includes('spotlight') || name.includes('privacy') || name.includes('deep-link') || name.includes('app-store') || name.includes('background-process') || name.includes('shipping')) return 'System Integration';
+  if (name.includes('intent') || name.includes('shortcut') || name.includes('widget') || name.includes('extension') || name.includes('storekit') || name.includes('iap') || name.includes('localization') || name.includes('spotlight') || name.includes('privacy') || name.includes('deep-link') || name.includes('app-store') || name.includes('background-process') || name.includes('shipping') || name.includes('push-notif') || name.includes('timer-pattern') || name.includes('eventkit') || name.includes('contacts') || name.includes('alarmkit')) return 'System Integration';
   if (name.includes('docs-research') || name.includes('getting-started')) return 'General';
   return 'General';
 }
@@ -165,9 +164,6 @@ export function inferCategoryFromName(name: string): string {
 const SKILL_TYPE_OVERRIDES: Record<string, string> = {
   'axiom-apple-docs': 'router',
   'axiom-getting-started': 'discipline',
-  'axiom-haptics': 'reference',
-  'axiom-localization': 'reference',
-  'axiom-privacy-ux': 'reference',
   'axiom-sqlitedata-migration': 'reference',
 };
 

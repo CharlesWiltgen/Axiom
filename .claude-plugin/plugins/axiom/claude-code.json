@@ -48,8 +48,12 @@
       "description": "Use when implementing or debugging ANY network connection, API call, or socket. Covers URLSession, Network.framework, NetworkConnection, deprecated APIs, connection diagnostics, structured concurrency networking."
     },
     {
-      "name": "axiom-ios-integration",
-      "description": "Use when integrating ANY iOS system feature - Siri, Shortcuts, widgets, IAP, camera, photos, audio, ShazamKit, haptics, localization, privacy, alarms, calendar, reminders, contacts. Covers App Intents, WidgetKit, StoreKit, AVFoundation, EventKit."
+      "name": "axiom-integration",
+      "description": "Use when integrating ANY iOS system feature - Siri, Shortcuts, widgets, IAP, localization, privacy, alarms, calendar, reminders, contacts, background tasks, push notifications, timers. Covers App Intents, WidgetKit, StoreKit, EventKit, Contacts."
+    },
+    {
+      "name": "axiom-media",
+      "description": "Use when working with camera, photos, audio, haptics, ShazamKit, or Now Playing. Covers AVCaptureSession, PHPicker, PhotosPicker, AVFoundation, Core Haptics, audio recognition, MediaPlayer, CarPlay, MusicKit."
     },
     {
       "name": "axiom-accessibility",
