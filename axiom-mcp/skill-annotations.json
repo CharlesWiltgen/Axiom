@@ -1352,24 +1352,6 @@
       "axiom-networking"
     ]
   },
-  "axiom-networking--networking": {
-    "category": "networking",
-    "tags": [
-      "cpu",
-      "dns",
-      "json",
-      "networkconnection",
-      "tls",
-      "tlv",
-      "udp",
-      "websockets"
-    ],
-    "related": [
-      "axiom-networking",
-      "axiom-networking--networking-diag",
-      "axiom-networking--networking-migration"
-    ]
-  },
   "axiom-networking--networking-diag": {
     "category": "networking",
     "tags": [
@@ -1388,8 +1370,23 @@
     ],
     "related": [
       "axiom-networking",
-      "axiom-networking--networking",
       "axiom-networking--networking-migration"
+    ]
+  },
+  "axiom-networking--networking-discipline": {
+    "category": "networking",
+    "tags": [
+      "cpu",
+      "dns",
+      "json",
+      "networkconnection",
+      "tls",
+      "tlv",
+      "udp",
+      "websockets"
+    ],
+    "related": [
+      "axiom-networking"
     ]
   },
   "axiom-networking--networking-legacy": {
@@ -1414,7 +1411,6 @@
     ],
     "related": [
       "axiom-networking",
-      "axiom-networking--networking",
       "axiom-networking--networking-diag"
     ]
   },
@@ -2108,19 +2104,19 @@
       "axiom-swiftui--nav-diag"
     ]
   },
-  "axiom-swiftui--performance": {
+  "axiom-swiftui--search-ref": {
     "category": "ui",
     "tags": [
-      "scrollviews"
+      "navigationsplitview"
     ],
     "related": [
       "axiom-swiftui"
     ]
   },
-  "axiom-swiftui--search-ref": {
+  "axiom-swiftui--swiftui-performance": {
     "category": "ui",
     "tags": [
-      "navigationsplitview"
+      "scrollviews"
     ],
     "related": [
       "axiom-swiftui"
@@ -2274,19 +2270,6 @@
   "axiom-vision": {
     "category": "vision"
   },
-  "axiom-vision--vision": {
-    "category": "vision",
-    "tags": [
-      "datascannerviewcontroller",
-      "ocr",
-      "visionkit"
-    ],
-    "related": [
-      "axiom-vision",
-      "axiom-vision--vision-diag",
-      "axiom-vision--vision-ref"
-    ]
-  },
   "axiom-vision--vision-diag": {
     "category": "vision",
     "tags": [
@@ -2295,8 +2278,18 @@
     ],
     "related": [
       "axiom-vision",
-      "axiom-vision--vision",
       "axiom-vision--vision-ref"
+    ]
+  },
+  "axiom-vision--vision-framework": {
+    "category": "vision",
+    "tags": [
+      "datascannerviewcontroller",
+      "ocr",
+      "visionkit"
+    ],
+    "related": [
+      "axiom-vision"
     ]
   },
   "axiom-vision--vision-ref": {
@@ -2321,7 +2314,6 @@
     ],
     "related": [
       "axiom-vision",
-      "axiom-vision--vision",
       "axiom-vision--vision-diag"
     ]
   },

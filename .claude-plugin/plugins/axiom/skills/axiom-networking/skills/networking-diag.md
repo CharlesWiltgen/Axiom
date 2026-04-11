@@ -1033,7 +1033,7 @@ if case .failed(let error) = state {
 
 ### For Preventive Patterns
 
-**`skills/networking.md`** — Discipline-enforcing anti-patterns:
+**`skills/networking-discipline.md`** — Discipline-enforcing anti-patterns:
 - Red Flags: SCNetworkReachability, blocking sockets, hardcoded IPs
 - Pattern 1a: NetworkConnection with TLS (correct implementation)
 - Pattern 2a: NWConnection with proper state handling

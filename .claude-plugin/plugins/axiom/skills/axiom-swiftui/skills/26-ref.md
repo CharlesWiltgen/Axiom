@@ -1189,7 +1189,7 @@ Apps must support resizable windows on iPad.
 
 **Docs**: /swiftui, /swiftui/defaulttoolbaritem, /swiftui/toolbarspacer, /swiftui/searchtoolbarbehavior, /swiftui/view/toolbar(id:content:), /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts, /charts/chart3d, /charts/surfaceplot, /charts/chart3dpose, /charts/chart3dcameraprojection, /charts/chart3dsurfacestyle, /realitykit/presentationcomponent
 
-**Skills**: skills/performance.md, axiom-design (skills/liquid-glass.md), axiom-concurrency, axiom-integration, skills/search-ref.md
+**Skills**: skills/swiftui-performance.md, axiom-design (skills/liquid-glass.md), axiom-concurrency, axiom-integration, skills/search-ref.md
 
 ---
 

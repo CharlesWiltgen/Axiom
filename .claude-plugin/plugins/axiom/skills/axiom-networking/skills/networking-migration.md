@@ -270,4 +270,4 @@ func sendAndReceive() async throws {
 
 ## Resources
 
-**Skills**: See `skills/networking.md`, `skills/networking-legacy.md`
+**Skills**: See `skills/networking-discipline.md`, `skills/networking-legacy.md`

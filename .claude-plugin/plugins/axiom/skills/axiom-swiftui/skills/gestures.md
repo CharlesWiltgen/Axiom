@@ -939,7 +939,7 @@ func testDragGesture() throws {
 
 **Docs**: /swiftui/composing-swiftui-gestures, /swiftui/gesturestate, /swiftui/gesture
 
-**Skills**: axiom-accessibility, skills/performance.md, axiom-testing
+**Skills**: axiom-accessibility, skills/swiftui-performance.md, axiom-testing
 
 ---
 

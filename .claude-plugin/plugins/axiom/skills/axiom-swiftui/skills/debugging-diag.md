@@ -255,7 +255,7 @@ xcodebuild build -scheme YourScheme -configuration Release
 - Compare before/after update counts
 - Verify red/orange bars reduced or eliminated
 
-**Cross-reference**: `skills/performance.md` skill for detailed Instruments workflows
+**Cross-reference**: `skills/swiftui-performance.md` skill for detailed Instruments workflows
 
 ---
 
@@ -843,4 +843,4 @@ grep -r "\.id(" --include="*.swift" .
 
 **Docs**: /xcode/understanding-hitches-in-your-app, /xcode/analyzing-hangs-in-your-app, /swiftui/managing-model-data-in-your-app
 
-**Skills**: skills/debugging.md, skills/performance.md, skills/layout.md, axiom-build (skills/xcode-debugging.md)
+**Skills**: skills/debugging.md, skills/swiftui-performance.md, skills/layout.md, axiom-build (skills/xcode-debugging.md)

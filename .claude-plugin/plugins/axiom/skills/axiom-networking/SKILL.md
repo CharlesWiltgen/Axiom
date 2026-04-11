@@ -12,10 +12,10 @@ license: MIT
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| URLSession with structured concurrency | See `skills/networking.md` |
-| Network.framework anti-patterns | See `skills/networking.md` |
-| Deprecated API migration | See `skills/networking.md` |
-| Pressure scenarios (reachability, sockets) | See `skills/networking.md` |
+| URLSession with structured concurrency | See `skills/networking-discipline.md` |
+| Network.framework anti-patterns | See `skills/networking-discipline.md` |
+| Deprecated API migration | See `skills/networking-discipline.md` |
+| Pressure scenarios (reachability, sockets) | See `skills/networking-discipline.md` |
 | NetworkConnection (iOS 26+) API reference | See `skills/network-framework-ref.md` |
 | NWConnection (iOS 12-25) API reference | See `skills/network-framework-ref.md` |
 | TLV framing, Coder protocol | See `skills/network-framework-ref.md` |
@@ -38,7 +38,7 @@ digraph networking {
     what [label="What do you need?" shape=diamond];
 
     start -> what;
-    what -> "skills/networking.md" [label="implement patterns,\nanti-patterns,\npressure scenarios"];
+    what -> "skills/networking-discipline.md" [label="implement patterns,\nanti-patterns,\npressure scenarios"];
     what -> "skills/network-framework-ref.md" [label="API reference\n(iOS 26+ or 12-25)"];
     what -> "skills/networking-diag.md" [label="debug connection\nfailures"];
     what -> "skills/networking-legacy.md" [label="iOS 12-25\nNWConnection patterns"];
@@ -46,7 +46,7 @@ digraph networking {
 }
 ```
 
-1. URLSession with structured concurrency? → `skills/networking.md`
+1. URLSession with structured concurrency? → `skills/networking-discipline.md`
 2. Network.framework / NetworkConnection (iOS 26+)? → `skills/network-framework-ref.md`
 3. NWConnection (iOS 12-25)? → `skills/networking-legacy.md`
 4. Migrating from sockets/URLSession? → `skills/networking-migration.md`
@@ -67,7 +67,7 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 
 ## Critical Patterns
 
-**Networking** (`skills/networking.md`):
+**Networking** (`skills/networking-discipline.md`):
 - URLSession with structured concurrency
 - 8 red-flag anti-patterns (SCNetworkReachability, blocking sockets, hardcoded IPs)
 - Decision tree for choosing TCP/UDP/TLS patterns
@@ -102,7 +102,7 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 
 | Thought | Reality |
 |---------|---------|
-| "URLSession is simple, I don't need a skill" | URLSession with structured concurrency has async/cancellation patterns. `skills/networking.md` covers them. |
+| "URLSession is simple, I don't need a skill" | URLSession with structured concurrency has async/cancellation patterns. `skills/networking-discipline.md` covers them. |
 | "I'll debug the connection timeout myself" | Connection failures have 8 causes (DNS, TLS, proxy, cellular). `skills/networking-diag.md` diagnoses systematically. |
 | "I just need a basic HTTP request" | Even basic requests need error handling, retry, and cancellation patterns. |
 | "My custom networking layer works fine" | Custom layers miss cellular/proxy edge cases. Standard APIs handle them automatically. |
@@ -113,7 +113,7 @@ User: "My API request is failing with a timeout"
 → Read: `skills/networking-diag.md`
 
 User: "How do I use URLSession with async/await?"
-→ Read: `skills/networking.md`
+→ Read: `skills/networking-discipline.md`
 
 User: "I need to implement a TCP connection"
 → Read: `skills/network-framework-ref.md`
