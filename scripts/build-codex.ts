@@ -16,7 +16,6 @@ const OUTPUT_MANIFEST = path.join(OUTPUT_DIR, '.codex-plugin');
 const EXCLUDE_SKILLS = new Set([
   'axiom-ios-build',
   'axiom-ios-testing',
-  'axiom-swiftui',
   'axiom-ios-data',
   'axiom-ios-concurrency',
   'axiom-ios-performance',
@@ -128,6 +127,16 @@ for (const skill of skillEntries) {
   const destDir = path.join(OUTPUT_SKILLS, skill.name);
   fs.mkdirSync(destDir, { recursive: true });
   fs.copyFileSync(skill.sourcePath, path.join(destDir, 'SKILL.md'));
+
+  // Copy references/ directory if it exists (multi-file suites)
+  const refsDir = path.join(path.dirname(skill.sourcePath), 'references');
+  if (fs.existsSync(refsDir)) {
+    const destRefs = path.join(destDir, 'references');
+    fs.mkdirSync(destRefs, { recursive: true });
+    for (const ref of fs.readdirSync(refsDir)) {
+      fs.copyFileSync(path.join(refsDir, ref), path.join(destRefs, ref));
+    }
+  }
 
   // Generate agents/openai.yaml from frontmatter
   if (skill.frontmatter.name && skill.frontmatter.description) {
