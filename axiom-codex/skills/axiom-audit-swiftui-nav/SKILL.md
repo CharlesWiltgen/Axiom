@@ -251,6 +251,4 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For navigation patterns: `axiom-swiftui-nav` skill
-For debugging: `axiom-swiftui-nav-diag` skill
-For API reference: `axiom-swiftui-nav-ref` skill
+For navigation patterns, debugging, and API reference: `axiom-swiftui` skill (navigation)

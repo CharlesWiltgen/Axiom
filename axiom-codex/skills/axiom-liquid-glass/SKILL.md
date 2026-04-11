@@ -511,7 +511,7 @@ Text("Label")
 **Issue**: Scrolling feels janky with Liquid Glass
 
 **Debug**:
-1. Profile with Instruments (see `axiom-swiftui-performance` skill)
+1. Profile with Instruments (see `axiom-swiftui` performance reference)
 2. Check for excessive view body updates
 3. Simplify view hierarchy under glass
 4. Verify not applying glass to content layer (major performance hit)

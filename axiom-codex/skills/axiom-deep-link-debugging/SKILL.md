@@ -20,7 +20,7 @@ Use when:
 - Testing navigation flows without manual tapping
 
 **Do NOT use for**:
-- Production deep linking (use `axiom-swiftui-nav` skill instead)
+- Production deep linking (use `axiom-swiftui` navigation reference instead)
 - Universal links or App Clips
 - Complex routing architectures
 
@@ -622,7 +622,7 @@ xcrun simctl io booted screenshot login-error.png
 
 ## Related Skills
 
-- `axiom-swiftui-nav` — Production deep linking and NavigationStack patterns
+- `axiom-swiftui` (navigation reference) — Production deep linking and NavigationStack patterns
 - `simulator-tester` — Automated simulator testing using debug deep links
 - `axiom-xcode-debugging` — Environment-first debugging workflows
 

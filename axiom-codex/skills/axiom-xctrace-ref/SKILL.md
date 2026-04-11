@@ -400,6 +400,6 @@ xcrun sample 12345 5 -file output.txt
 
 ## Resources
 
-**Skills**: axiom-performance-profiling, axiom-memory-debugging, axiom-swiftui-performance
+**Skills**: axiom-performance-profiling, axiom-memory-debugging, axiom-swiftui
 
 **Docs**: /xcode/instruments, /os/logging/recording-performance-data

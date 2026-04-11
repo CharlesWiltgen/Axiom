@@ -499,4 +499,4 @@ struct AlarmListView: View {
 
 **Docs**: /alarmkit, /alarmkit/alarmmanager, /alarmkit/alarm, /alarmkit/alarmpresentation, /alarmkit/alarmattributes
 
-**Skills**: axiom-extensions-widgets-ref, axiom-swiftui-26-ref
+**Skills**: axiom-extensions-widgets-ref, axiom-swiftui

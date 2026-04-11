@@ -256,6 +256,4 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For SwiftUI layout patterns: `axiom-swiftui-layout` skill
-For SwiftUI layout reference: `axiom-swiftui-layout-ref` skill
-For SwiftUI containers: `axiom-swiftui-containers-ref` skill
+For SwiftUI layout patterns, reference, and containers: `axiom-swiftui` skill (layout)

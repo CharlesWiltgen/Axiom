@@ -26,7 +26,7 @@ Use this skill when:
 Do NOT use this skill for:
 - Calendar events or reminders (use **eventkit**)
 - General privacy patterns (use **privacy-ux**)
-- SwiftUI architecture (use **swiftui-architecture**)
+- SwiftUI architecture (use **axiom-swiftui** architecture reference)
 
 ## Related Skills
 

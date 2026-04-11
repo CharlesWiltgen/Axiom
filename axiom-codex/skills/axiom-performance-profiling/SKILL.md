@@ -16,7 +16,7 @@ iOS app performance problems fall into distinct categories, each with a specific
 **Core principle**: Measure before optimizing. Guessing about performance wastes more time than profiling.
 
 **Requires**: Xcode 15+, iOS 14+
-**Related skills**: `axiom-swiftui-performance` (SwiftUI-specific profiling with Instruments 26), `axiom-memory-debugging` (memory leak diagnosis)
+**Related skills**: `axiom-swiftui` (performance reference — SwiftUI-specific profiling with Instruments 26), `axiom-memory-debugging` (memory leak diagnosis)
 
 ## When to Use Performance Profiling
 
@@ -32,7 +32,7 @@ iOS app performance problems fall into distinct categories, each with a specific
 - Investigating specific memory leaks with retain cycles
 - Using Instruments Allocations in detail mode
 
-#### Use `axiom-swiftui-performance` instead when
+#### Use `axiom-swiftui` (performance reference) instead when
 - Analyzing SwiftUI view body updates
 - Using SwiftUI Instrument specifically
 
@@ -1068,7 +1068,7 @@ See `axiom-metrickit-ref` for comprehensive MetricKit integration. Key metrics t
 
 **Docs**: /library/archive/documentation/cocoa/conceptual/coredataperformance, /library/archive/technotes/tn2224, /os/ossignposter, /xctest/xctestcase/measure
 
-**Skills**: axiom-memory-debugging, axiom-swiftui-performance, axiom-swift-concurrency, axiom-metrickit-ref
+**Skills**: axiom-memory-debugging, axiom-swiftui, axiom-swift-concurrency, axiom-metrickit-ref
 
 ---
 

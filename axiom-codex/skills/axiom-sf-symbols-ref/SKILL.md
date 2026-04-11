@@ -20,7 +20,7 @@ Use when:
 
 #### Related Skills
 - Use `axiom-sf-symbols` for decision trees, anti-patterns, troubleshooting, and when to use which effect
-- Use `axiom-swiftui-animation-ref` for general SwiftUI animation (non-symbol)
+- Use `axiom-swiftui` (animation reference) for general SwiftUI animation (non-symbol)
 
 ---
 
@@ -968,7 +968,7 @@ struct TaskCheckbox: View {
 
 **Docs**: /symbols, /symbols/symboleffect, /symbols/bouncesymboleffect, /symbols/pulsesymboleffect, /symbols/variablecolorsymboleffect, /symbols/scalesymboleffect, /symbols/wigglesymboleffect, /symbols/rotatesymboleffect, /symbols/breathesymboleffect, /symbols/appearsymboleffect, /symbols/disappearsymboleffect, /symbols/replacesymboleffect, /symbols/drawonsymboleffect, /symbols/drawoffsymboleffect, /swiftui/image/symbolrenderingmode(_:), /uikit/uiimage/symbolconfiguration
 
-**Skills**: axiom-sf-symbols, axiom-hig-ref, axiom-swiftui-animation-ref
+**Skills**: axiom-sf-symbols, axiom-hig-ref, axiom-swiftui
 
 ---
 

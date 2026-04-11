@@ -1,3 +1,0 @@
-interface:
-  display_name: "SwiftUI Gestures"
-  short_description: "Implementing SwiftUI gestures (tap, drag, long press, magnification, rotation), composing gestures, managing gesture ..."

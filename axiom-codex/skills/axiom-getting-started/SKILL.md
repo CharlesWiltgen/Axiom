@@ -75,7 +75,7 @@ Based on answers, recommend 3-5 skills using this matrix:
 **Then add based on pain points**:
 - Xcode/build → xcode-debugging, axiom-build-debugging
 - Memory leaks → memory-debugging, axiom-objc-block-retain-cycles
-- UI/animation (SwiftUI) → swiftui-debugging, axiom-swiftui-performance
+- UI/animation (SwiftUI) → axiom-swiftui (debugging, performance references)
 - UI/animation (UIKit) → uikit-animation-debugging, axiom-auto-layout-debugging
 - Database → database-migration, axiom-sqlitedata-migration (decision guide)
 - Networking → networking, axiom-networking-diag
@@ -86,8 +86,8 @@ Based on answers, recommend 3-5 skills using this matrix:
 
 **SwiftUI stack**:
 1. performance-profiling (decision trees for tools)
-2. swiftui-performance (SwiftUI Instrument)
-3. swiftui-debugging (view update issues)
+2. axiom-swiftui (performance reference — SwiftUI Instrument)
+3. axiom-swiftui (debugging reference — view update issues)
 
 **UIKit/Mixed**:
 1. performance-profiling (Instruments guide)
@@ -103,11 +103,10 @@ Based on answers, recommend 3-5 skills using this matrix:
 **iOS 26+ features**:
 - liquid-glass (material design system)
 - foundation-models (on-device AI)
-- swiftui-26-ref (complete iOS 26 guide)
+- axiom-swiftui (iOS 26 reference — complete iOS 26 guide)
 
 **Navigation patterns**:
-- swiftui-nav (iOS 18+ Tab/Sidebar, deep linking)
-- swiftui-nav-ref (comprehensive API reference)
+- axiom-swiftui (navigation reference — iOS 18+ Tab/Sidebar, deep linking)
 
 **Integrations**:
 - app-intents-ref (Siri, Shortcuts, Spotlight)
@@ -180,8 +179,8 @@ Include this reference section in every response for browsing:
 - **objc-block-retain-cycles** — Objective-C block memory leaks, weak-strong pattern
 
 **UI Debugging**
-- **swiftui-debugging** — View update issues, struct mutation, binding identity, view recreation
-- **swiftui-performance** — SwiftUI Instrument (iOS 26), long view bodies, Cause & Effect Graph
+- **axiom-swiftui** (debugging reference) — View update issues, struct mutation, binding identity, view recreation
+- **axiom-swiftui** (performance reference) — SwiftUI Instrument (iOS 26), long view bodies, Cause & Effect Graph
 - **uikit-animation-debugging** — CAAnimation completion, spring physics, gesture+animation jank
 - **auto-layout-debugging** — Auto Layout conflicts, constraint debugging (not yet in manifest)
 
@@ -195,11 +194,9 @@ Include this reference section in every response for browsing:
 - **liquid-glass-ref** — Complete app-wide adoption guide (icons, controls, navigation, windows)
 
 **Layout & Navigation**
-- **swiftui-layout** — ViewThatFits vs AnyLayout vs onGeometryChange, decision trees, iOS 26 free-form windows
-- **swiftui-layout-ref** — Complete layout API reference
-- **swiftui-nav** — NavigationStack vs NavigationSplitView, deep links, coordinator patterns, iOS 18+ Tab/Sidebar
-- **swiftui-nav-ref** — Comprehensive navigation API reference
-- **swiftui-nav-diag** — Navigation not responding, unexpected pops, deep link failures, state loss
+- **axiom-swiftui** (layout reference) — ViewThatFits vs AnyLayout vs onGeometryChange, decision trees, iOS 26 free-form windows
+- **axiom-swiftui** (navigation reference) — NavigationStack vs NavigationSplitView, deep links, coordinator patterns, iOS 18+ Tab/Sidebar
+- **axiom-swiftui** (navigation diagnostics) — Navigation not responding, unexpected pops, deep link failures, state loss
 
 ### Testing
 - **ui-testing** — Recording UI Automation (Xcode 26), condition-based waiting, accessibility-first patterns
@@ -232,7 +229,7 @@ Include this reference section in every response for browsing:
 
 ### Integrations
 - **app-intents-ref** — Siri, Apple Intelligence, Shortcuts, Spotlight (iOS 16+)
-- **swiftui-26-ref** — iOS 26 SwiftUI features, @Animatable, 3D layout, WebView, AttributedString
+- **axiom-swiftui** (iOS 26 reference) — iOS 26 SwiftUI features, @Animatable, 3D layout, WebView, AttributedString
 - **avfoundation-ref** — Audio APIs, bit-perfect DAC, iOS 26 spatial audio, ASAF/APAC
 
 ### Diagnostics (Systematic Troubleshooting)
@@ -261,7 +258,7 @@ Include this reference section in every response for browsing:
 
 **"App is slow"**
 → Start: axiom:performance-profiling (decision trees)
-→ If SwiftUI: axiom:swiftui-performance
+→ If SwiftUI: axiom-swiftui (performance reference)
 → If memory grows: axiom:memory-debugging
 
 **"Memory leak"**
@@ -269,12 +266,12 @@ Include this reference section in every response for browsing:
 → If Objective-C blocks: axiom:objc-block-retain-cycles
 
 **"SwiftUI view issues"**
-→ Start: axiom:swiftui-debugging
-→ If performance: axiom:swiftui-performance
+→ Start: axiom-swiftui (debugging reference)
+→ If performance: axiom-swiftui (performance reference)
 
 **"Navigation problems"**
-→ Start: axiom:swiftui-nav-diag (troubleshooting)
-→ For patterns: axiom:swiftui-nav
+→ Start: axiom-swiftui (navigation diagnostics)
+→ For patterns: axiom-swiftui (navigation reference)
 
 **"Which database?"**
 → Decision guide: axiom:sqlitedata-migration
