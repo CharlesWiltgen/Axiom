@@ -1,14 +1,26 @@
 {
-  "axiom-accessibility-diag": {
+  "axiom-accessibility": {
     "category": "accessibility",
     "tags": [
-      "diagnostic",
       "voiceover",
-      "dynamic-type",
-      "color-contrast",
-      "wcag",
-      "touch-targets",
-      "screen-reader"
+      "wcag"
+    ]
+  },
+  "axiom-alarmkit-ref": {
+    "category": "general"
+  },
+  "axiom-app-attest": {
+    "category": "security",
+    "tags": [
+      "app-attest",
+      "devicecheck",
+      "fraud",
+      "integrity",
+      "attestation",
+      "assertion"
+    ],
+    "related": [
+      "axiom-cryptokit"
     ]
   },
   "axiom-app-composition": {
@@ -22,7 +34,12 @@
   },
   "axiom-app-discoverability": {
     "category": "integration",
-    "tags": ["spotlight", "siri-suggestions", "handoff", "universal-links"]
+    "tags": [
+      "spotlight",
+      "siri-suggestions",
+      "handoff",
+      "universal-links"
+    ]
   },
   "axiom-app-intents-ref": {
     "category": "integration",
@@ -76,7 +93,13 @@
   },
   "axiom-app-store-submission": {
     "category": "integration",
-    "tags": ["rejection", "review-guidelines", "metadata", "privacy-manifest", "export-compliance"],
+    "tags": [
+      "rejection",
+      "review-guidelines",
+      "metadata",
+      "privacy-manifest",
+      "export-compliance"
+    ],
     "related": [
       "axiom-accessibility-diag",
       "axiom-app-store-connect-ref",
@@ -102,16 +125,14 @@
       "axiom-testflight-triage"
     ]
   },
-  "axiom-assume-isolated": {
-    "category": "concurrency",
-    "tags": [
-      "@preconcurrency",
-      "mainactor"
-    ]
-  },
   "axiom-auto-layout-debugging": {
     "category": "ui",
-    "tags": ["constraint-conflict", "unable-to-simultaneously-satisfy", "ambiguous-layout", "nslayoutconstraint"],
+    "tags": [
+      "constraint-conflict",
+      "unable-to-simultaneously-satisfy",
+      "ambiguous-layout",
+      "nslayoutconstraint"
+    ],
     "related": [
       "axiom-swiftui-performance",
       "axiom-ui-testing",
@@ -129,11 +150,22 @@
   },
   "axiom-axe-ref": {
     "category": "testing",
-    "tags": ["reference", "simulator", "screenshot", "xcrun-simctl", "automation"]
+    "tags": [
+      "reference",
+      "simulator",
+      "screenshot",
+      "xcrun-simctl",
+      "automation"
+    ]
   },
   "axiom-background-processing": {
     "category": "integration",
-    "tags": ["bgtaskscheduler", "background-fetch", "background-refresh", "silent-push"],
+    "tags": [
+      "bgtaskscheduler",
+      "background-fetch",
+      "background-refresh",
+      "silent-push"
+    ],
     "related": [
       "axiom-background-processing-diag",
       "axiom-background-processing-ref",
@@ -174,7 +206,12 @@
   },
   "axiom-build-performance": {
     "category": "build",
-    "tags": ["slow-build", "compilation-time", "type-checking", "parallelization"]
+    "tags": [
+      "slow-build",
+      "compilation-time",
+      "type-checking",
+      "parallelization"
+    ]
   },
   "axiom-camera-capture": {
     "category": "vision",
@@ -215,7 +252,12 @@
   },
   "axiom-cloud-sync": {
     "category": "data",
-    "tags": ["cloudkit", "icloud", "sync-conflict", "ckrecord"],
+    "tags": [
+      "cloudkit",
+      "icloud",
+      "sync-conflict",
+      "ckrecord"
+    ],
     "related": [
       "axiom-cloudkit-ref",
       "axiom-icloud-drive-ref",
@@ -276,13 +318,87 @@
       "serialization"
     ]
   },
-  "axiom-concurrency-profiling": {
+  "axiom-code-signing": {
+    "category": "general",
+    "tags": [
+      "cd",
+      "ci"
+    ],
+    "related": [
+      "axiom-code-signing-diag",
+      "axiom-code-signing-ref"
+    ]
+  },
+  "axiom-code-signing-diag": {
+    "category": "general",
+    "tags": [
+      "ci",
+      "itms"
+    ],
+    "related": [
+      "axiom-code-signing",
+      "axiom-code-signing-ref"
+    ]
+  },
+  "axiom-code-signing-ref": {
+    "category": "general",
+    "tags": [
+      "cli"
+    ],
+    "related": [
+      "axiom-code-signing",
+      "axiom-code-signing-diag"
+    ]
+  },
+  "axiom-combine-patterns": {
+    "category": "general",
+    "tags": [
+      "@published",
+      "anycancellable"
+    ],
+    "related": [
+      "axiom-concurrency",
+      "axiom-swiftui"
+    ]
+  },
+  "axiom-concurrency": {
     "category": "concurrency",
-    "tags": ["instruments", "swift-concurrency-instrument", "task-graph", "actor-contention"]
+    "tags": [
+      "@mainactor"
+    ],
+    "related": [
+      "axiom-combine-patterns",
+      "axiom-ownership-conventions",
+      "axiom-swift-performance"
+    ]
+  },
+  "axiom-contacts": {
+    "category": "general",
+    "tags": [
+      "contactprovider"
+    ],
+    "related": [
+      "axiom-contacts-ref"
+    ]
+  },
+  "axiom-contacts-ref": {
+    "category": "general",
+    "tags": [
+      "contactaccessbutton",
+      "contactprovider"
+    ],
+    "related": [
+      "axiom-contacts"
+    ]
   },
   "axiom-core-data": {
     "category": "data",
-    "tags": ["nsmanagedobject", "nspersistentcontainer", "fetch-request", "nsfetchedresultscontroller"],
+    "tags": [
+      "nsmanagedobject",
+      "nspersistentcontainer",
+      "fetch-request",
+      "nsfetchedresultscontroller"
+    ],
     "related": [
       "axiom-core-data-diag",
       "axiom-swiftdata",
@@ -301,7 +417,13 @@
   },
   "axiom-core-location": {
     "category": "integration",
-    "tags": ["gps", "cllocationmanager", "geofencing", "clmonitor", "significant-change"],
+    "tags": [
+      "gps",
+      "cllocationmanager",
+      "geofencing",
+      "clmonitor",
+      "significant-change"
+    ],
     "related": [
       "axiom-core-location-diag",
       "axiom-core-location-ref",
@@ -335,6 +457,39 @@
     "tags": [
       "indexedentity",
       "reference"
+    ]
+  },
+  "axiom-cryptokit": {
+    "category": "security",
+    "tags": [
+      "cryptokit",
+      "encryption",
+      "signing",
+      "secure-enclave",
+      "quantum",
+      "hpke",
+      "aes-gcm"
+    ],
+    "related": [
+      "axiom-cryptokit-ref",
+      "axiom-keychain"
+    ]
+  },
+  "axiom-cryptokit-ref": {
+    "category": "security",
+    "tags": [
+      "reference",
+      "cryptokit",
+      "aes-gcm",
+      "ecdsa",
+      "mlkem",
+      "mldsa",
+      "hpke",
+      "swift-crypto",
+      "chacha"
+    ],
+    "related": [
+      "axiom-cryptokit"
     ]
   },
   "axiom-database-migration": {
@@ -419,9 +574,33 @@
       "axiom-energy-diag"
     ]
   },
+  "axiom-eventkit": {
+    "category": "general",
+    "tags": [
+      "eventkitui"
+    ],
+    "related": [
+      "axiom-eventkit-ref"
+    ]
+  },
+  "axiom-eventkit-ref": {
+    "category": "general",
+    "tags": [
+      "eventkitui"
+    ],
+    "related": [
+      "axiom-eventkit"
+    ]
+  },
   "axiom-extensions-widgets": {
     "category": "integration",
-    "tags": ["widgetkit", "live-activity", "dynamic-island", "timeline-provider", "control-center"],
+    "tags": [
+      "widgetkit",
+      "live-activity",
+      "dynamic-island",
+      "timeline-provider",
+      "control-center"
+    ],
     "related": [
       "axiom-extensions-widgets-ref"
     ]
@@ -494,6 +673,22 @@
       "axiom-foundation-models-diag"
     ]
   },
+  "axiom-games": {
+    "category": "games",
+    "tags": [
+      "ecs",
+      "realitykit",
+      "scenekit",
+      "spritekit"
+    ],
+    "related": [
+      "axiom-realitykit",
+      "axiom-realitykit-diag",
+      "axiom-realitykit-ref",
+      "axiom-scenekit",
+      "axiom-scenekit-ref"
+    ]
+  },
   "axiom-getting-started": {
     "category": "general",
     "related": [
@@ -535,7 +730,13 @@
   },
   "axiom-hig": {
     "category": "ui",
-    "tags": ["human-interface-guidelines", "design-patterns", "apple-design", "spacing", "color-palette"],
+    "tags": [
+      "human-interface-guidelines",
+      "design-patterns",
+      "apple-design",
+      "spacing",
+      "color-palette"
+    ],
     "related": [
       "axiom-accessibility-diag",
       "axiom-hig-ref",
@@ -587,6 +788,55 @@
       "iap",
       "purchase",
       "storemanager"
+    ]
+  },
+  "axiom-keychain": {
+    "category": "security",
+    "tags": [
+      "keychain",
+      "secitem",
+      "credentials",
+      "secrets",
+      "token-storage",
+      "accessibility",
+      "access-groups"
+    ],
+    "related": [
+      "axiom-keychain-diag",
+      "axiom-keychain-ref",
+      "axiom-cryptokit"
+    ]
+  },
+  "axiom-keychain-diag": {
+    "category": "security",
+    "tags": [
+      "diagnostic",
+      "keychain",
+      "secitem",
+      "errSecDuplicateItem",
+      "errSecItemNotFound",
+      "errSecInteractionNotAllowed",
+      "errSecMissingEntitlement"
+    ],
+    "related": [
+      "axiom-keychain",
+      "axiom-keychain-ref"
+    ]
+  },
+  "axiom-keychain-ref": {
+    "category": "security",
+    "tags": [
+      "reference",
+      "keychain",
+      "secitem",
+      "secaccesscontrol",
+      "localauthentication",
+      "accessibility",
+      "lacontext"
+    ],
+    "related": [
+      "axiom-keychain",
+      "axiom-keychain-diag"
     ]
   },
   "axiom-liquid-glass": {
@@ -651,6 +901,34 @@
       "rtl"
     ]
   },
+  "axiom-mapkit": {
+    "category": "general",
+    "related": [
+      "axiom-core-location",
+      "axiom-core-location-diag",
+      "axiom-energy",
+      "axiom-mapkit-diag",
+      "axiom-mapkit-ref"
+    ]
+  },
+  "axiom-mapkit-diag": {
+    "category": "general",
+    "related": [
+      "axiom-mapkit",
+      "axiom-mapkit-ref"
+    ]
+  },
+  "axiom-mapkit-ref": {
+    "category": "general",
+    "tags": [
+      "geotoolbox",
+      "placedescriptor"
+    ],
+    "related": [
+      "axiom-mapkit",
+      "axiom-mapkit-diag"
+    ]
+  },
   "axiom-memory-debugging": {
     "category": "performance",
     "tags": [
@@ -711,20 +989,6 @@
       "axiom-performance-profiling"
     ]
   },
-  "axiom-network-framework-ref": {
-    "category": "networking",
-    "tags": [
-      "networkbrowser",
-      "networkconnection",
-      "networklistener",
-      "reference",
-      "tlv"
-    ],
-    "related": [
-      "axiom-networking",
-      "axiom-networking-diag"
-    ]
-  },
   "axiom-networking": {
     "category": "networking",
     "tags": [
@@ -739,34 +1003,6 @@
       "axiom-networking-diag",
       "axiom-networking-legacy",
       "axiom-networking-migration"
-    ]
-  },
-  "axiom-networking-diag": {
-    "category": "networking",
-    "tags": [
-      "diagnostic",
-      "tls",
-      "vpn"
-    ],
-    "related": [
-      "axiom-networking",
-      "axiom-networking-migration"
-    ]
-  },
-  "axiom-networking-legacy": {
-    "category": "networking",
-    "tags": ["urlsession", "nsurlsession", "alamofire", "cfnetwork"]
-  },
-  "axiom-networking-migration": {
-    "category": "networking",
-    "tags": [
-      "bsd",
-      "networkconnection",
-      "streamtask"
-    ],
-    "related": [
-      "axiom-networking",
-      "axiom-networking-diag"
     ]
   },
   "axiom-now-playing": {
@@ -816,9 +1052,30 @@
       "arc"
     ]
   },
+  "axiom-passkeys": {
+    "category": "security",
+    "tags": [
+      "passkeys",
+      "webauthn",
+      "fido",
+      "authentication",
+      "autofill",
+      "credential",
+      "asauthorizationcontroller"
+    ],
+    "related": [
+      "axiom-keychain"
+    ]
+  },
   "axiom-performance-profiling": {
     "category": "performance",
-    "tags": ["instruments", "time-profiler", "allocations", "leaks", "cpu-usage"],
+    "tags": [
+      "instruments",
+      "time-profiler",
+      "allocations",
+      "leaks",
+      "cpu-usage"
+    ],
     "related": [
       "axiom-memory-debugging",
       "axiom-metrickit-ref",
@@ -851,6 +1108,37 @@
     "tags": [
       "reference",
       "ux"
+    ]
+  },
+  "axiom-push-notifications": {
+    "category": "general",
+    "tags": [
+      "fcm"
+    ],
+    "related": [
+      "axiom-push-notifications-diag",
+      "axiom-push-notifications-ref"
+    ]
+  },
+  "axiom-push-notifications-diag": {
+    "category": "general",
+    "tags": [
+      "fcm"
+    ],
+    "related": [
+      "axiom-push-notifications",
+      "axiom-push-notifications-ref"
+    ]
+  },
+  "axiom-push-notifications-ref": {
+    "category": "general",
+    "tags": [
+      "http",
+      "jwt"
+    ],
+    "related": [
+      "axiom-push-notifications",
+      "axiom-push-notifications-diag"
     ]
   },
   "axiom-realitykit": {
@@ -946,6 +1234,21 @@
       "axiom-swiftui-animation-ref"
     ]
   },
+  "axiom-shazamkit": {
+    "category": "general",
+    "tags": [
+      "cli"
+    ],
+    "related": [
+      "axiom-shazamkit-ref"
+    ]
+  },
+  "axiom-shazamkit-ref": {
+    "category": "general",
+    "related": [
+      "axiom-shazamkit"
+    ]
+  },
   "axiom-shipping": {
     "category": "integration",
     "tags": [
@@ -957,43 +1260,6 @@
       "axiom-app-store-ref",
       "axiom-app-store-submission",
       "axiom-asc-mcp"
-    ]
-  },
-  "axiom-spritekit": {
-    "category": "games",
-    "tags": [
-      "physics",
-      "actions",
-      "scene",
-      "2d-game",
-      "skscene"
-    ],
-    "related": [
-      "axiom-metal-migration-ref",
-      "axiom-scenekit",
-      "axiom-spritekit-diag",
-      "axiom-spritekit-ref",
-      "axiom-swiftui-layout"
-    ]
-  },
-  "axiom-spritekit-diag": {
-    "category": "games",
-    "tags": [
-      "diagnostic"
-    ],
-    "related": [
-      "axiom-spritekit",
-      "axiom-spritekit-ref"
-    ]
-  },
-  "axiom-spritekit-ref": {
-    "category": "games",
-    "tags": [
-      "reference"
-    ],
-    "related": [
-      "axiom-spritekit",
-      "axiom-spritekit-diag"
     ]
   },
   "axiom-sqlitedata": {
@@ -1103,20 +1369,10 @@
       "axiom-in-app-purchases"
     ]
   },
-  "axiom-swift-concurrency": {
-    "category": "concurrency",
-    "tags": [
-      "@mainactor",
-      "sendable",
-      "data-race",
-      "thread-safe",
-      "actor-isolated",
-      "@concurrent",
-      "async-await"
-    ],
+  "axiom-swift-modern": {
+    "category": "general",
     "related": [
-      "axiom-swiftui-debugging",
-      "axiom-swiftui-performance"
+      "axiom-concurrency"
     ]
   },
   "axiom-swift-performance": {
@@ -1130,18 +1386,6 @@
       "axiom-performance-profiling",
       "axiom-swift-concurrency",
       "axiom-swiftui-performance"
-    ]
-  },
-  "axiom-swift-testing": {
-    "category": "testing",
-    "tags": [
-      "@test",
-      "#expect",
-      "swift-testing",
-      "parameterized",
-      "@suite",
-      "confirmation",
-      "trait"
     ]
   },
   "axiom-swiftdata": {
@@ -1186,165 +1430,15 @@
       "axiom-swiftdata-migration"
     ]
   },
-  "axiom-swiftui-26-ref": {
+  "axiom-swiftui": {
     "category": "ui",
-    "tags": [
-      "@animatable",
-      "attributedstring",
-      "reference",
-      "webpage",
-      "webview"
-    ],
     "related": [
+      "axiom-accessibility",
+      "axiom-app-composition",
+      "axiom-auto-layout-debugging",
+      "axiom-hig",
       "axiom-liquid-glass",
-      "axiom-liquid-glass-ref",
-      "axiom-swiftui-layout-ref",
-      "axiom-swiftui-search-ref",
-      "axiom-tvos"
-    ]
-  },
-  "axiom-swiftui-animation-ref": {
-    "category": "ui",
-    "tags": [
-      "@animatable",
-      "appkit",
-      "reference",
-      "vectorarithmetic"
-    ]
-  },
-  "axiom-swiftui-architecture": {
-    "category": "ui",
-    "tags": [
-      "mvvm",
-      "tca"
-    ],
-    "related": [
-      "axiom-swiftui-nav"
-    ]
-  },
-  "axiom-swiftui-containers-ref": {
-    "category": "ui",
-    "tags": [
-      "reference"
-    ]
-  },
-  "axiom-swiftui-debugging": {
-    "category": "ui",
-    "tags": [
-      "not-updating",
-      "preview-crash",
-      "@state",
-      "@binding",
-      "view-body"
-    ],
-    "related": [
-      "axiom-swift-concurrency",
-      "axiom-swiftui-debugging-diag",
-      "axiom-swiftui-layout",
-      "axiom-swiftui-performance",
-      "axiom-xcode-debugging"
-    ]
-  },
-  "axiom-swiftui-debugging-diag": {
-    "category": "ui",
-    "tags": [
-      "diagnostic"
-    ],
-    "related": [
-      "axiom-swiftui-debugging",
-      "axiom-swiftui-performance"
-    ]
-  },
-  "axiom-swiftui-gestures": {
-    "category": "ui",
-    "tags": ["drag-gesture", "tap-gesture", "long-press", "simultaneous-gesture", "gesture-mask"]
-  },
-  "axiom-swiftui-layout": {
-    "category": "ui",
-    "tags": [
-      "anylayout",
-      "viewthatfits"
-    ],
-    "related": [
-      "axiom-swiftui-layout-ref"
-    ]
-  },
-  "axiom-swiftui-layout-ref": {
-    "category": "ui",
-    "tags": [
-      "anylayout",
-      "geometryreader",
-      "reference",
-      "viewthatfits"
-    ],
-    "related": [
-      "axiom-swiftui-layout"
-    ]
-  },
-  "axiom-swiftui-nav": {
-    "category": "ui",
-    "tags": [
-      "navigation",
-      "navigationstack",
-      "navigationsplitview",
-      "deep-links",
-      "state-restoration",
-      "coordinator-pattern"
-    ],
-    "related": [
-      "axiom-swiftui-nav-diag",
-      "axiom-swiftui-nav-ref",
-      "axiom-swiftui-layout"
-    ]
-  },
-  "axiom-swiftui-nav-diag": {
-    "category": "ui",
-    "tags": [
-      "diagnostic"
-    ],
-    "related": [
-      "axiom-swiftui-nav",
-      "axiom-swiftui-nav-ref"
-    ]
-  },
-  "axiom-swiftui-nav-ref": {
-    "category": "ui",
-    "tags": [
-      "navigationpath",
-      "navigationsplitview",
-      "navigationstack",
-      "reference"
-    ],
-    "related": [
-      "axiom-swiftui-26-ref",
-      "axiom-swiftui-nav",
-      "axiom-swiftui-nav-diag",
-      "axiom-swiftui-search-ref"
-    ]
-  },
-  "axiom-swiftui-performance": {
-    "category": "ui",
-    "tags": [
-      "list-is-laggy",
-      "view-body-is-called-too-often"
-    ]
-  },
-  "axiom-swiftui-search-ref": {
-    "category": "ui",
-    "tags": [
-      "reference"
-    ],
-    "related": [
-      "axiom-swiftui-26-ref"
-    ]
-  },
-  "axiom-synchronization": {
-    "category": "concurrency",
-    "tags": [
-      "mutex",
-      "atomic",
-      "lock",
-      "thread-safe"
+      "axiom-sf-symbols"
     ]
   },
   "axiom-testflight-triage": {
@@ -1363,11 +1457,11 @@
       "axiom-swift-concurrency"
     ]
   },
-  "axiom-testing-async": {
-    "category": "concurrency",
-    "tags": [
-      "@mainactor",
-      "async-testing"
+  "axiom-testing": {
+    "category": "testing",
+    "related": [
+      "axiom-axe-ref",
+      "axiom-xcode-debugging"
     ]
   },
   "axiom-textkit-ref": {
@@ -1376,6 +1470,31 @@
       "reference",
       "swiftui",
       "texteditor"
+    ]
+  },
+  "axiom-timer-patterns": {
+    "category": "general",
+    "tags": [
+      "dispatchsourcetimer"
+    ],
+    "related": [
+      "axiom-energy",
+      "axiom-memory-debugging",
+      "axiom-timer-patterns-ref"
+    ]
+  },
+  "axiom-timer-patterns-ref": {
+    "category": "general",
+    "tags": [
+      "asynctimersequence",
+      "dispatchsourcetimer",
+      "runloop"
+    ],
+    "related": [
+      "axiom-energy",
+      "axiom-energy-ref",
+      "axiom-memory-debugging",
+      "axiom-timer-patterns"
     ]
   },
   "axiom-transferable-ref": {
@@ -1413,21 +1532,14 @@
       "reference"
     ]
   },
-  "axiom-ui-recording": {
-    "category": "testing",
-    "tags": ["record-interaction", "replay", "xcode-26", "recording-ui-automation"]
-  },
-  "axiom-ui-testing": {
-    "category": "ui",
-    "tags": ["xcuiapplication", "xcuielement", "accessibility-identifier", "condition-based-waiting"],
-    "related": [
-      "axiom-memory-debugging",
-      "axiom-swift-concurrency"
-    ]
-  },
   "axiom-uikit-animation-debugging": {
     "category": "ui",
-    "tags": ["caanimation", "uiview-animate", "completion-not-called", "layer-animation"]
+    "tags": [
+      "caanimation",
+      "uiview-animate",
+      "completion-not-called",
+      "layer-animation"
+    ]
   },
   "axiom-uikit-bridging": {
     "category": "ui",
@@ -1451,28 +1563,11 @@
       "axiom-vision-ref"
     ]
   },
-  "axiom-vision-diag": {
-    "category": "vision",
+  "axiom-xclog-ref": {
+    "category": "general",
     "tags": [
-      "datascannerviewcontroller",
-      "diagnostic",
-      "visionkit"
-    ],
-    "related": [
-      "axiom-vision",
-      "axiom-vision-ref"
-    ]
-  },
-  "axiom-vision-ref": {
-    "category": "vision",
-    "tags": [
-      "datascannerviewcontroller",
-      "recognizedocumentsrequest",
-      "reference"
-    ],
-    "related": [
-      "axiom-vision",
-      "axiom-vision-diag"
+      "cli",
+      "json"
     ]
   },
   "axiom-xcode-debugging": {
@@ -1534,10 +1629,6 @@
       "axiom-xcode-mcp-setup"
     ]
   },
-  "axiom-xctest-automation": {
-    "category": "testing",
-    "tags": ["xcodebuild-test", "test-plan", "parallel-testing", "ci-cd"]
-  },
   "axiom-xctrace-ref": {
     "category": "testing",
     "tags": [
@@ -1589,117 +1680,6 @@
     ],
     "related": [
       "coreml"
-    ]
-  },
-  "axiom-keychain": {
-    "category": "security",
-    "tags": [
-      "keychain",
-      "secitem",
-      "credentials",
-      "secrets",
-      "token-storage",
-      "accessibility",
-      "access-groups"
-    ],
-    "related": [
-      "axiom-keychain-diag",
-      "axiom-keychain-ref",
-      "axiom-cryptokit"
-    ]
-  },
-  "axiom-keychain-diag": {
-    "category": "security",
-    "tags": [
-      "diagnostic",
-      "keychain",
-      "secitem",
-      "errSecDuplicateItem",
-      "errSecItemNotFound",
-      "errSecInteractionNotAllowed",
-      "errSecMissingEntitlement"
-    ],
-    "related": [
-      "axiom-keychain",
-      "axiom-keychain-ref"
-    ]
-  },
-  "axiom-keychain-ref": {
-    "category": "security",
-    "tags": [
-      "reference",
-      "keychain",
-      "secitem",
-      "secaccesscontrol",
-      "localauthentication",
-      "accessibility",
-      "lacontext"
-    ],
-    "related": [
-      "axiom-keychain",
-      "axiom-keychain-diag"
-    ]
-  },
-  "axiom-cryptokit": {
-    "category": "security",
-    "tags": [
-      "cryptokit",
-      "encryption",
-      "signing",
-      "secure-enclave",
-      "quantum",
-      "hpke",
-      "aes-gcm"
-    ],
-    "related": [
-      "axiom-cryptokit-ref",
-      "axiom-keychain"
-    ]
-  },
-  "axiom-cryptokit-ref": {
-    "category": "security",
-    "tags": [
-      "reference",
-      "cryptokit",
-      "aes-gcm",
-      "ecdsa",
-      "mlkem",
-      "mldsa",
-      "hpke",
-      "swift-crypto",
-      "chacha"
-    ],
-    "related": [
-      "axiom-cryptokit"
-    ]
-  },
-  "axiom-passkeys": {
-    "category": "security",
-    "tags": [
-      "passkeys",
-      "webauthn",
-      "fido",
-      "authentication",
-      "autofill",
-      "credential",
-      "asauthorizationcontroller"
-    ],
-    "related": [
-      "axiom-keychain"
-    ]
-  },
-  "axiom-app-attest": {
-    "category": "security",
-    "tags": [
-      "app-attest",
-      "devicecheck",
-      "fraud",
-      "integrity",
-      "attestation",
-      "assertion"
-    ],
-    "related": [
-      "axiom-cryptokit"
     ]
   }
 }
