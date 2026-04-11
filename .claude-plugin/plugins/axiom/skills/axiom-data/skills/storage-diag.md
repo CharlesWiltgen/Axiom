@@ -332,9 +332,9 @@ func diagnoseStorageIssue(fileURL: URL) {
 
 ## Related Skills
 
-- `axiom-storage` — Correct storage location decisions
-- `axiom-file-protection-ref` — Understanding protection levels
-- `axiom-storage-management-ref` — Purge behavior and capacity APIs
+- `skills/storage.md` — Correct storage location decisions
+- axiom-security (skills/file-protection-ref.md) — Understanding protection levels
+- `skills/storage-management-ref.md` — Purge behavior and capacity APIs
 
 ---
 

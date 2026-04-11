@@ -19,7 +19,7 @@ Direct SQLite access using [GRDB.swift](https://github.com/groue/GRDB.swift) —
 - ✅ Full control over SQL for performance
 - ✅ Advanced migration logic beyond schema changes
 
-**Note:** SQLiteData now supports GROUP BY (`.group(by:)`) and HAVING (`.having()`) via the query builder — see the `axiom-sqlitedata-ref` skill.
+**Note:** SQLiteData now supports GROUP BY (`.group(by:)`) and HAVING (`.having()`) via the query builder — see the `skills/sqlitedata-ref.md` skill.
 
 #### Use SQLiteData instead when
 - Type-safe `@Table` models are sufficient
@@ -30,7 +30,7 @@ Direct SQLite access using [GRDB.swift](https://github.com/groue/GRDB.swift) —
 - Simple CRUD with native Apple integration
 - Don't need raw SQL control
 
-**For migrations** See the `axiom-database-migration` skill for safe schema evolution patterns.
+**For migrations** See the `skills/database-migration.md` skill for safe schema evolution patterns.
 
 ## Example Prompts
 
@@ -365,7 +365,7 @@ migrator.registerMigration("v3_add_indexes") { db in
 try migrator.migrate(dbQueue)
 ```
 
-**For migration safety patterns** See the `axiom-database-migration` skill.
+**For migration safety patterns** See the `skills/database-migration.md` skill.
 
 ### Migration with Data Transform
 
@@ -660,7 +660,7 @@ for track in tracks {
 
 **Local GRDB databases are not persistent on tvOS.** The system deletes Caches (including Application Support) under storage pressure. A local-only GRDB database will lose all data between app launches.
 
-**If targeting tvOS**, pair GRDB with CloudKit sync (via CKSyncEngine or SQLiteData's SyncEngine) so iCloud is the persistent store and the local database is a rebuildable cache. See `axiom-tvos` for full tvOS storage constraints.
+**If targeting tvOS**, pair GRDB with CloudKit sync (via CKSyncEngine or SQLiteData's SyncEngine) so iCloud is the persistent store and the local database is a rebuildable cache. See axiom-swift (skills/tvos.md) for full tvOS storage constraints.
 
 ---
 

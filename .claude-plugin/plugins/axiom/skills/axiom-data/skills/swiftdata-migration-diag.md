@@ -533,7 +533,7 @@ If you've spent >30 minutes and the migration issue persists:
 - [ ] I checked relationship inverse declarations
 
 #### If ALL boxes are checked and still broken
-- You need two-stage migration (covered in `axiom-swiftdata-migration` skill)
+- You need two-stage migration (covered in `skills/swiftdata-migration.md` skill)
 - Time cost: 30-60 minutes for complex type change migration
 - Ask: "What data transformation is actually needed?" and implement two-stage pattern
 

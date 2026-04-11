@@ -1,12 +1,12 @@
 ---
 name: axiom-data
-description: Use when working with ANY data persistence, database, axiom-storage, CloudKit, migration, or serialization. Covers SwiftData, Core Data, GRDB, SQLite, CloudKit sync, file storage, Codable, migrations.
+description: Use when working with ANY data persistence, database, storage, CloudKit, migration, or serialization. Covers SwiftData, Core Data, GRDB, SQLite, CloudKit sync, file storage, Codable, migrations.
 license: MIT
 ---
 
 # Data & Persistence
 
-**You MUST use this skill for ANY data persistence, database, axiom-storage, CloudKit, or serialization work.**
+**You MUST use this skill for ANY data persistence, database, storage, CloudKit, or serialization work.**
 
 ## When to Use
 
@@ -98,7 +98,7 @@ Use this skill when working with:
 | "Simple query, I don't need the skill" | Query patterns prevent N+1 and thread-safety issues. The skill has copy-paste solutions. |
 | "CloudKit sync is straightforward" | CloudKit has 15+ failure modes. cloud-sync-diag diagnoses them systematically. |
 | "I know Codable well enough" | Codable has silent data loss traps (try? swallows errors). codable skill prevents production bugs. |
-| "I'll use local storage on tvOS" | tvOS has NO persistent local storage. System deletes Caches at any time. axiom-tvos explains the iCloud-first pattern. |
+| "I'll use local storage on tvOS" | tvOS has NO persistent local storage. System deletes Caches at any time. See axiom-swift (skills/tvos.md) for the iCloud-first pattern. |
 | "UserDefaults is fine for this token" | UserDefaults is unencrypted, backed up to iCloud, and visible to MDM profiles. One audit catches it. keychain stores tokens securely. |
 | "I'll encrypt it myself with CommonCrypto" | CryptoKit replaced CommonCrypto's buffer-management nightmares with one-line APIs. cryptokit prevents misuse. |
 

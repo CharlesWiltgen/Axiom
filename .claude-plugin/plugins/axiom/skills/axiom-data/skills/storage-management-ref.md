@@ -564,7 +564,7 @@ func findLargeFiles(in directory: URL) {
 
 ## File Protection Quick Reference
 
-Set encryption level per file. See `axiom-file-protection-ref` for full guide.
+Set encryption level per file. See axiom-security (skills/file-protection-ref.md) for full guide.
 
 | Level | When Accessible | Use For |
 |-------|----------------|---------|
@@ -593,9 +593,9 @@ print("Protection: \(values.fileProtection ?? .none)")
 
 ## Related Skills
 
-- `axiom-storage` — Decide where to store files
-- `axiom-file-protection-ref` — File encryption and security
-- `axiom-storage-diag` — Debug storage-related issues
+- `skills/storage.md` — Decide where to store files
+- axiom-security (skills/file-protection-ref.md) — File encryption and security
+- `skills/storage-diag.md` — Debug storage-related issues
 
 ---
 
