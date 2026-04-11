@@ -4,13 +4,13 @@ description: Use when preparing ANY app for submission, handling App Store rejec
 license: MIT
 ---
 
-# Shipping & App Store Router
+# Shipping & App Store
 
 **You MUST use this skill when preparing to submit ANY app, handling App Store rejections, or working on release workflow.**
 
 ## When to Use
 
-Use this router when you encounter:
+Use this skill when you encounter:
 - Preparing an app for App Store submission
 - App Store rejection (any guideline)
 - Metadata requirements (screenshots, descriptions, keywords)
@@ -23,6 +23,39 @@ Use this router when you encounter:
 - App Review appeals
 - WWDC25 App Store Connect changes
 - First-time submission workflow
+
+## Quick Reference
+
+| Symptom / Task | Reference |
+|----------------|-----------|
+| How do I submit my app? | See `references/app-store-submission.md` |
+| Pre-flight checklist | See `references/app-store-submission.md` |
+| First-time submission | See `references/app-store-submission.md` |
+| Encryption compliance | See `references/app-store-submission.md` |
+| Accessibility Nutrition Labels | See `references/app-store-submission.md` |
+| Metadata field requirements | See `references/app-store-ref.md` |
+| Guideline number lookup | See `references/app-store-ref.md` |
+| Privacy manifest schema | See `references/app-store-ref.md` |
+| Age rating tiers | See `references/app-store-ref.md` |
+| EU DSA compliance | See `references/app-store-ref.md` |
+| WWDC25 ASC changes | See `references/app-store-ref.md` |
+| App was rejected | See `references/app-store-diag.md` |
+| Guideline 2.1/4.2/4.3 rejection | See `references/app-store-diag.md` |
+| Writing an appeal | See `references/app-store-diag.md` |
+| Repeated rejections | See `references/app-store-diag.md` |
+| App Review Guidelines reference | See `references/app-review-guidelines.md` |
+| Expert review checklist | See `references/expert-review-checklist.md` |
+| Crash data in App Store Connect | See `references/app-store-connect-ref.md` |
+| TestFlight crash reports | See `references/app-store-connect-ref.md` |
+| ASC metrics dashboards | See `references/app-store-connect-ref.md` |
+| Beta tester crash report | See `references/testflight-triage.md` |
+| Crash log symbolication | See `references/testflight-triage.md` |
+| Automate App Store Connect | See `references/asc-mcp.md` |
+| Submit build programmatically | See `references/asc-mcp.md` |
+| Manage TestFlight via MCP | See `references/asc-mcp.md` |
+| ITMS signing error on upload | See axiom-security (references/code-signing-diag.md) |
+| Certificate/profile mismatch | See axiom-security (references/code-signing-diag.md) |
+| Code signing setup | See axiom-security (references/code-signing.md) |
 
 ## Routing Logic
 
@@ -41,7 +74,7 @@ Use this router when you encounter:
 
 **Why app-store-submission**: Discipline skill with 8 anti-patterns, decision trees, and pressure scenarios. Prevents the mistakes that cause 90% of rejections.
 
-**Invoke**: `/skill axiom-app-store-submission`
+**Reference**: `references/app-store-submission.md`
 
 ---
 
@@ -60,7 +93,7 @@ Use this router when you encounter:
 
 **Why app-store-ref**: 10-part reference covering every metadata field, guideline, and compliance requirement with exact specifications.
 
-**Invoke**: `/skill axiom-app-store-ref`
+**Reference**: `references/app-store-ref.md`
 
 ---
 
@@ -80,7 +113,7 @@ Use this router when you encounter:
 
 **Why app-store-diag**: 9 diagnostic patterns mapping rejection types to root causes and fixes, including subjective rejections (4.2/4.3, 1.x). Includes appeal writing guidance and crisis scenario for repeated rejections.
 
-**Invoke**: `/skill axiom-app-store-diag`
+**Reference**: `references/app-store-diag.md`
 
 ---
 
@@ -141,7 +174,7 @@ Use this router when you encounter:
 
 **Why asc-mcp**: Workflow-focused skill teaching Claude to use asc-mcp MCP tools for release pipelines, TestFlight distribution, review management, and feedback triage — all without leaving Claude Code.
 
-**Invoke**: `/skill axiom-asc-mcp`
+**Reference**: `references/asc-mcp.md`
 
 ---
 
@@ -156,11 +189,25 @@ Use this router when you encounter:
 
 **Why app-store-connect-ref**: ASC navigation for crash dashboards, TestFlight feedback, performance metrics, and data export workflows.
 
-**Invoke**: `/skill axiom-app-store-connect-ref`
+**Reference**: `references/app-store-connect-ref.md`
 
 ---
 
-### 9. Distribution Signing Issues → **code-signing** / **code-signing-diag**
+### 9. Beta Crash Triage → **testflight-triage**
+
+**Triggers**:
+- Beta tester reports a crash
+- Crash appears in Organizer or App Store Connect
+- Crash logs need symbolication
+- Post-release crash investigation
+
+**Why testflight-triage**: Systematic crash triage from symbolication through root cause analysis.
+
+**Reference**: `references/testflight-triage.md`
+
+---
+
+### 10. Distribution Signing Issues → **code-signing** / **code-signing-diag**
 
 **Triggers**:
 - ITMS-90035 Invalid Signature on upload
@@ -173,7 +220,7 @@ Use this router when you encounter:
 
 **Why code-signing**: Distribution signing errors are the #1 cause of upload failures. Diagnosing with CLI tools takes 5 minutes. code-signing-diag has 6 decision trees mapping ITMS errors to root causes.
 
-**Invoke**: `/skill axiom-code-signing-diag` (troubleshooting) or `/skill axiom-code-signing` (setup)
+**Reference**: See axiom-security (references/code-signing-diag.md) (troubleshooting) or See axiom-security (references/code-signing.md) (setup)
 
 ---
 
@@ -184,54 +231,59 @@ digraph shipping {
     "Shipping question?" [shape=diamond];
     "Rejected?" [shape=diamond];
     "Post-submission monitoring?" [shape=diamond];
+    "Beta crash triage?" [shape=diamond];
     "Automate via MCP?" [shape=diamond];
     "Screenshot review?" [shape=diamond];
     "Need specific specs?" [shape=diamond];
     "IAP issue?" [shape=diamond];
     "Want code scan?" [shape=diamond];
+    "Signing error?" [shape=diamond];
 
-    "app-store-submission" [shape=box, label="app-store-submission\n(pre-flight checklist)"];
-    "app-store-ref" [shape=box, label="app-store-ref\n(metadata/guideline specs)"];
-    "app-store-diag" [shape=box, label="app-store-diag\n(rejection troubleshooting)"];
-    "app-store-connect-ref" [shape=box, label="app-store-connect-ref\n(ASC dashboards/metrics)"];
+    "references/app-store-submission.md" [shape=box, label="app-store-submission\n(pre-flight checklist)"];
+    "references/app-store-ref.md" [shape=box, label="app-store-ref\n(metadata/guideline specs)"];
+    "references/app-store-diag.md" [shape=box, label="app-store-diag\n(rejection troubleshooting)"];
+    "references/app-store-connect-ref.md" [shape=box, label="app-store-connect-ref\n(ASC dashboards/metrics)"];
+    "references/testflight-triage.md" [shape=box, label="testflight-triage\n(beta crash triage)"];
     "security-privacy-scanner" [shape=box, label="security-privacy-scanner\n(Agent)"];
     "iap-auditor" [shape=box, label="iap-auditor\n(Agent)"];
     "screenshot-validator" [shape=box, label="screenshot-validator\n(Agent)"];
-    "asc-mcp" [shape=box, label="asc-mcp\n(MCP tool workflows)"];
-    "code-signing" [shape=box, label="code-signing\n(distribution signing)"];
-    "Signing error?" [shape=diamond];
+    "references/asc-mcp.md" [shape=box, label="asc-mcp\n(MCP tool workflows)"];
+    "axiom-security/code-signing" [shape=box, label="axiom-security\n(distribution signing)"];
 
     "Shipping question?" -> "Rejected?" [label="yes, about to submit or general"];
-    "Rejected?" -> "app-store-diag" [label="yes, app was rejected"];
+    "Rejected?" -> "references/app-store-diag.md" [label="yes, app was rejected"];
     "Rejected?" -> "Post-submission monitoring?" [label="no"];
-    "Post-submission monitoring?" -> "app-store-connect-ref" [label="yes, crash data/metrics/TestFlight"];
-    "Post-submission monitoring?" -> "Automate via MCP?" [label="no"];
-    "Automate via MCP?" -> "asc-mcp" [label="yes, programmatic ASC access"];
+    "Post-submission monitoring?" -> "references/app-store-connect-ref.md" [label="yes, crash data/metrics"];
+    "Post-submission monitoring?" -> "Beta crash triage?" [label="no"];
+    "Beta crash triage?" -> "references/testflight-triage.md" [label="yes, beta crash/symbolication"];
+    "Beta crash triage?" -> "Automate via MCP?" [label="no"];
+    "Automate via MCP?" -> "references/asc-mcp.md" [label="yes, programmatic ASC access"];
     "Automate via MCP?" -> "Screenshot review?" [label="no"];
     "Screenshot review?" -> "screenshot-validator" [label="yes, validate screenshots"];
     "Screenshot review?" -> "Need specific specs?" [label="no"];
-    "Need specific specs?" -> "app-store-ref" [label="yes, looking up field/guideline"];
+    "Need specific specs?" -> "references/app-store-ref.md" [label="yes, looking up field/guideline"];
     "Need specific specs?" -> "IAP issue?" [label="no"];
     "IAP issue?" -> "iap-auditor" [label="yes"];
     "IAP issue?" -> "Want code scan?" [label="no"];
     "Want code scan?" -> "Signing error?" [label="no"];
     "Want code scan?" -> "security-privacy-scanner" [label="yes, scan for privacy/security"];
-    "Signing error?" -> "code-signing" [label="yes, ITMS/cert/profile error"];
-    "Signing error?" -> "app-store-submission" [label="no, general prep"];
+    "Signing error?" -> "axiom-security/code-signing" [label="yes, ITMS/cert/profile error"];
+    "Signing error?" -> "references/app-store-submission.md" [label="no, general prep"];
 }
 ```
 
 Simplified:
 
-1. App was rejected? → app-store-diag
-2. Post-submission crash data/metrics/TestFlight? → app-store-connect-ref
-3. Automate ASC via MCP tools? → asc-mcp
-4. Validate screenshots? → screenshot-validator (Agent)
-5. Need specific metadata/guideline specs? → app-store-ref
-6. IAP submission issue? → iap-auditor (Agent)
-7. Want pre-submission code scan? → security-privacy-scanner (Agent)
-8. ITMS signing/certificate/profile error on upload? → code-signing / code-signing-diag
-9. General submission preparation? → app-store-submission
+1. App was rejected? → `references/app-store-diag.md`
+2. Post-submission crash data/metrics? → `references/app-store-connect-ref.md`
+3. Beta crash triage/symbolication? → `references/testflight-triage.md`
+4. Automate ASC via MCP tools? → `references/asc-mcp.md`
+5. Validate screenshots? → `screenshot-validator` (Agent)
+6. Need specific metadata/guideline specs? → `references/app-store-ref.md`
+7. IAP submission issue? → `iap-auditor` (Agent)
+8. Want pre-submission code scan? → `security-privacy-scanner` (Agent)
+9. ITMS signing/certificate/profile error on upload? → See axiom-security (references/code-signing-diag.md)
+10. General submission preparation? → `references/app-store-submission.md`
 
 ## Anti-Rationalization
 
@@ -249,105 +301,105 @@ Simplified:
 
 ## When NOT to Use (Conflict Resolution)
 
-**Do NOT use axiom-shipping for these — use the correct router instead:**
+**Do NOT use axiom-shipping for these — use the correct skill instead:**
 
-| Issue | Correct Router | Why NOT axiom-shipping |
+| Issue | Correct Skill | Why NOT axiom-shipping |
 |-------|---------------|----------------------|
-| Build fails before archiving | **ios-build** | Environment/build issue, not submission |
-| SwiftData migration crash | **ios-data** | Schema issue, not App Store |
-| Privacy manifest coding (writing the file) | **ios-build** | security-privacy-scanner handles code scanning |
-| StoreKit 2 implementation (writing IAP code) | **ios-integration** | in-app-purchases / storekit-ref covers implementation |
-| Performance issues found during testing | **ios-performance** | Profiling issue, not submission |
-| Accessibility implementation | **ios-accessibility** | Code-level accessibility, not App Store labels |
+| Build fails before archiving | **axiom-build** | Environment/build issue, not submission |
+| SwiftData migration crash | **axiom-data** | Schema issue, not App Store |
+| Privacy manifest coding (writing the file) | **axiom-build** | security-privacy-scanner handles code scanning |
+| StoreKit 2 implementation (writing IAP code) | **axiom-integration** | in-app-purchases / storekit-ref covers implementation |
+| Performance issues found during testing | **axiom-performance** | Profiling issue, not submission |
+| Accessibility implementation | **axiom-accessibility** | Code-level accessibility, not App Store labels |
 
 **axiom-shipping is for the submission workflow**, not code implementation:
 - Preparing metadata and compliance → axiom-shipping
-- Writing the actual code → domain-specific router (ios-build, ios-data, etc.)
+- Writing the actual code → domain-specific skill (axiom-build, axiom-data, etc.)
 - App was rejected → axiom-shipping
-- Code changes to fix rejection → domain-specific router, then back to axiom-shipping to verify
+- Code changes to fix rejection → domain-specific skill, then back to axiom-shipping to verify
 
 ## Example Invocations
 
 User: "How do I submit my app to the App Store?"
-→ Invoke: `/skill axiom-app-store-submission`
+→ See `references/app-store-submission.md`
 
 User: "My app was rejected for Guideline 2.1"
-→ Invoke: `/skill axiom-app-store-diag`
+→ See `references/app-store-diag.md`
 
 User: "What screenshots do I need?"
-→ Invoke: `/skill axiom-app-store-ref`
+→ See `references/app-store-ref.md`
 
 User: "What fields are required in App Store Connect?"
-→ Invoke: `/skill axiom-app-store-ref`
+→ See `references/app-store-ref.md`
 
 User: "How do I fill out the age rating questionnaire?"
-→ Invoke: `/skill axiom-app-store-ref`
+→ See `references/app-store-ref.md`
 
 User: "Do I need an encryption compliance declaration?"
-→ Invoke: `/skill axiom-app-store-submission`
+→ See `references/app-store-submission.md`
 
 User: "My app keeps getting rejected, what do I do?"
-→ Invoke: `/skill axiom-app-store-diag`
+→ See `references/app-store-diag.md`
 
 User: "How do I appeal an App Store rejection?"
-→ Invoke: `/skill axiom-app-store-diag`
+→ See `references/app-store-diag.md`
 
 User: "My app was rejected for Guideline 4.2 minimum functionality"
-→ Invoke: `/skill axiom-app-store-diag`
+→ See `references/app-store-diag.md`
 
 User: "Rejected for being a web wrapper / duplicate app"
-→ Invoke: `/skill axiom-app-store-diag`
+→ See `references/app-store-diag.md`
 
 User: "Rejection for user-generated content without moderation"
-→ Invoke: `/skill axiom-app-store-diag`
+→ See `references/app-store-diag.md`
 
 User: "Kids category compliance rejection"
-→ Invoke: `/skill axiom-app-store-diag`
+→ See `references/app-store-diag.md`
 
 User: "Scan my code for App Store compliance issues"
-→ Invoke: `security-privacy-scanner` agent
+→ Launch `security-privacy-scanner` agent
 
 User: "Check my IAP implementation before submission"
-→ Invoke: `iap-auditor` agent
+→ Launch `iap-auditor` agent
 
 User: "Check my App Store screenshots in ~/Screenshots"
-→ Invoke: `screenshot-validator` agent
+→ Launch `screenshot-validator` agent
 
 User: "Are my screenshots the right dimensions?"
-→ Invoke: `screenshot-validator` agent
+→ Launch `screenshot-validator` agent
 
 User: "How do I find crash data in App Store Connect?"
-→ Invoke: `/skill axiom-app-store-connect-ref`
+→ See `references/app-store-connect-ref.md`
 
 User: "Where are my TestFlight crash reports in ASC?"
-→ Invoke: `/skill axiom-app-store-connect-ref`
+→ See `references/app-store-connect-ref.md`
 
 User: "What's new in App Store Connect for 2025?"
-→ Invoke: `/skill axiom-app-store-ref`
+→ See `references/app-store-ref.md`
 
 User: "I need to set up DSA trader status for the EU"
-→ Invoke: `/skill axiom-app-store-ref`
+→ See `references/app-store-ref.md`
 
 User: "What are Accessibility Nutrition Labels?"
-→ Invoke: `/skill axiom-app-store-submission`
+→ See `references/app-store-submission.md`
 
 User: "This is my first app submission ever"
-→ Invoke: `/skill axiom-app-store-submission`
+→ See `references/app-store-submission.md`
 
 User: "Submit this build to App Store programmatically"
-→ Invoke: `/skill axiom-asc-mcp`
+→ See `references/asc-mcp.md`
 
 User: "Set up asc-mcp for App Store Connect"
-→ Invoke: `/skill axiom-asc-mcp`
+→ See `references/asc-mcp.md`
 
 User: "Distribute build 42 to my beta testers via MCP"
-→ Invoke: `/skill axiom-asc-mcp`
+→ See `references/asc-mcp.md`
 
 User: "Respond to negative App Store reviews from Claude"
-→ Invoke: `/skill axiom-asc-mcp`
+→ See `references/asc-mcp.md`
 
 User: "ITMS-90035 Invalid Signature when uploading"
-→ Invoke: `/skill axiom-code-signing-diag`
+→ See axiom-security (references/code-signing-diag.md)
 
 User: "My provisioning profile expired and I can't upload"
-→ Invoke: `/skill axiom-code-signing-diag`
+→ See axiom-security (references/code-signing-diag.md)

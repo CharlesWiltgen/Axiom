@@ -32,21 +32,21 @@ license: MIT
 These topics are part of the broader iOS UI domain but live in separate suites:
 
 **UIKit issues:**
-- Auto Layout conflicts → `/skill axiom-auto-layout-debugging`
-- Animation timing → `/skill axiom-uikit-animation-debugging`
-- SwiftUI ↔ UIKit bridging → `/skill axiom-uikit-bridging`
+- Auto Layout conflicts → See axiom-uikit (references/auto-layout-debugging.md)
+- Animation timing → See axiom-uikit (references/uikit-animation-debugging.md)
+- SwiftUI ↔ UIKit bridging → See axiom-uikit (references/uikit-bridging.md)
 
 **Design & guidelines:**
-- Liquid Glass adoption → `/skill axiom-liquid-glass`
-- SF Symbols → `/skill axiom-sf-symbols`
-- HIG compliance → `/skill axiom-hig`
-- Typography → `/skill axiom-typography-ref`
-- TextKit/rich text → `/skill axiom-textkit-ref`
+- Liquid Glass adoption → See axiom-design (references/liquid-glass.md)
+- SF Symbols → See axiom-design (references/sf-symbols.md)
+- HIG compliance → See axiom-design (references/hig.md)
+- Typography → See axiom-design (references/typography-ref.md)
+- TextKit/rich text → See axiom-uikit (references/textkit-ref.md)
 
 **Other:**
-- tvOS (focus, remote, text input) → `/skill axiom-tvos`
-- App-level composition (root, auth, scenes) → `/skill axiom-app-composition`
-- Drag/drop, sharing, copy/paste → `/skill axiom-transferable-ref`
+- tvOS (focus, remote, text input) → See axiom-swift (references/tvos.md)
+- App-level composition (root, auth, scenes) → See axiom-design (references/app-composition.md)
+- Drag/drop, sharing, copy/paste → See axiom-swift (references/transferable-ref.md)
 - VoiceOver, Dynamic Type → `/skill axiom-accessibility`
 - UI test flakiness → `/skill axiom-testing`
 - UX dead ends, dismiss traps → Launch `ux-flow-auditor` agent

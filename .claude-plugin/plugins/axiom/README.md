@@ -510,16 +510,13 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 
 ```bash
 # WWDC 2025 skills
-/skill axiom-liquid-glass
+/skill axiom-design
 /skill axiom-swiftui
 /skill axiom-testing
 
 # Debugging
-/skill axiom-xcode-debugging
-/skill axiom-memory-debugging
-/skill axiom-build-debugging
-/skill axiom-build-performance
-/skill axiom-deep-link-debugging
+/skill axiom-build
+/skill axiom-performance
 
 # Swift & Concurrency
 /skill axiom-concurrency
