@@ -36,7 +36,7 @@ Iteratively build, diagnose, and fix until the project compiles.
 
 **Why `XcodeListNavigatorIssues` over build log parsing**: The Issue Navigator provides structured, deduplicated diagnostics. Build logs contain raw compiler output with noise.
 
-**When to fall back to `axiom-xcode-debugging`**: When the error is environmental (zombie processes, stale Derived Data, simulator issues) rather than code-level. MCP tools operate on code; environment issues need CLI diagnostics.
+**When to fall back to `axiom-build (skills/xcode-debugging.md)`**: When the error is environmental (zombie processes, stale Derived Data, simulator issues) rather than code-level. MCP tools operate on code; environment issues need CLI diagnostics.
 
 ## Workflow: TestFix Loop
 

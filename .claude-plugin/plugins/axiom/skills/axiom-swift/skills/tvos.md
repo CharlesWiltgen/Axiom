@@ -7,7 +7,7 @@ tvOS shares UIKit and SwiftUI with iOS but diverges in critical ways that catch 
 
 **Core principle** tvOS is not "iOS on TV." It has a dual focus system, no persistent local storage, no WebView, and a remote with two incompatible generations. Treat it as its own platform.
 
-**tvOS 26** Adopts Liquid Glass design language with new app icon system. See `axiom-liquid-glass` for implementation patterns.
+**tvOS 26** Adopts Liquid Glass design language with new app icon system. See `axiom-design (skills/liquid-glass.md)` for implementation patterns.
 
 ### tvOS Porting Triage
 
@@ -365,7 +365,7 @@ func loadData() async throws -> [Item] {
 | NSUbiquitousKeyValueStore | Good for small data | 1 MB limit, key-value only |
 | On-demand resources | Good for read-only assets | OS manages download/purge lifecycle |
 
-**See** `axiom-sqlitedata` for CloudKit SyncEngine patterns, `axiom-storage` for full storage decision tree.
+**See** `axiom-data (skills/sqlitedata.md)` for CloudKit SyncEngine patterns, `axiom-data (skills/storage.md)` for full storage decision tree.
 
 ---
 

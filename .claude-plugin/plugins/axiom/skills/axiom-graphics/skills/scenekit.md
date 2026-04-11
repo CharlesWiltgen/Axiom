@@ -16,11 +16,11 @@ Use this skill when:
 - Loading 3D models via Model I/O or SCNSceneSource
 
 Do NOT use this skill for:
-- New 3D projects (use `axiom-realitykit`)
-- AR experiences (use `axiom-realitykit`)
-- visionOS development (use `axiom-realitykit`)
+- New 3D projects (use `axiom-graphics (skills/realitykit.md)`)
+- AR experiences (use `axiom-graphics (skills/realitykit.md)`)
+- visionOS development (use `axiom-graphics (skills/realitykit.md)`)
 - SpriteKit 2D games (`axiom-games`)
-- Metal shader programming (`axiom-metal-migration-ref`)
+- Metal shader programming (`axiom-graphics (skills/metal-migration-ref.md)`)
 
 ---
 
@@ -34,7 +34,7 @@ SceneKit is **soft-deprecated as of iOS 26** (WWDC 2025). This means:
 
 **Apple's forward path is RealityKit.** All new 3D projects should use RealityKit. SceneKit knowledge remains valuable for maintaining legacy code and understanding concepts during migration.
 
-**In RealityKit**: ECS architecture replaces scene graph. See `axiom-scenekit-ref` for the complete concept mapping table.
+**In RealityKit**: ECS architecture replaces scene graph. See `axiom-graphics (skills/scenekit-ref.md)` for the complete concept mapping table.
 
 ---
 
@@ -174,7 +174,7 @@ let node = SCNNode(geometry: sphere)
 node.geometry?.firstMaterial = material
 ```
 
-**In RealityKit**: Use `PhysicallyBasedMaterial` with similar properties but different API surface. See `axiom-scenekit-ref` Part 1 for the mapping.
+**In RealityKit**: Use `PhysicallyBasedMaterial` with similar properties but different API surface. See `axiom-graphics (skills/scenekit-ref.md)` Part 1 for the mapping.
 
 ### Shader Modifiers
 

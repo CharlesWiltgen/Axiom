@@ -38,7 +38,7 @@ Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, w
 
 ## Liquid Glass Design System
 
-**For comprehensive coverage**, see `axiom-liquid-glass` (design principles, variants, review pressure) and `axiom-liquid-glass-ref` (app-wide adoption guide). This section covers WWDC 256-specific APIs only.
+**For comprehensive coverage**, see `axiom-design (skills/liquid-glass.md)` (design principles, variants, review pressure) and `axiom-design (skills/liquid-glass-ref.md)` (app-wide adoption guide). This section covers WWDC 256-specific APIs only.
 
 ### Automatic Adoption
 
@@ -311,7 +311,7 @@ s.lineHeight = .loose
 | `.lineSpacing()` | Bottom of line to top of next | iOS 13+ |
 | `.font(.body.leading(.tight))` | Font-level leading preset | iOS 14+ |
 
-**Cross-reference** `axiom-typography-ref` — Full typography system including Dynamic Type, tracking, and internationalization
+**Cross-reference** `axiom-design (skills/typography-ref.md)` — Full typography system including Dynamic Type, tracking, and internationalization
 
 ---
 
@@ -785,7 +785,7 @@ struct InAppBrowser: View {
 - Access page properties (`title`, `url`, `canGoBack`, `canGoForward`)
 - Observable — SwiftUI views update automatically
 
-**tvOS**: WebView and WebPage are **not available on tvOS**. tvOS has no WKWebView at all. For web content parsing on tvOS, use JavaScriptCore. See `axiom-tvos` for alternatives.
+**tvOS**: WebView and WebPage are **not available on tvOS**. tvOS has no WKWebView at all. For web content parsing on tvOS, use JavaScriptCore. See `axiom-swift (skills/tvos.md)` for alternatives.
 
 ### Advanced WebKit Features
 

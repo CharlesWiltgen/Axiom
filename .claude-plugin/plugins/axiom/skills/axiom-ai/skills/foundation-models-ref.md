@@ -22,8 +22,8 @@ Use this reference when:
 - Debugging implementation issues
 
 **Related Skills**:
-- `axiom-foundation-models` — Discipline skill with anti-patterns, pressure scenarios, decision trees
-- `axiom-foundation-models-diag` — Diagnostic skill for troubleshooting issues
+- `axiom-ai (skills/foundation-models.md)` — Discipline skill with anti-patterns, pressure scenarios, decision trees
+- `axiom-ai (skills/foundation-models-diag.md)` — Diagnostic skill for troubleshooting issues
 
 ---
 
@@ -1062,7 +1062,7 @@ Playgrounds can also access types defined in your app (like @Generable structs).
 
 ### From Manual JSON Parsing
 
-Use `@Generable` with `respond(to:generating:)` instead of prompting for JSON and parsing manually. See `axiom-foundation-models` Scenario 2 for the complete migration pattern.
+Use `@Generable` with `respond(to:generating:)` instead of prompting for JSON and parsing manually. See `axiom-ai (skills/foundation-models.md)` Scenario 2 for the complete migration pattern.
 
 ---
 

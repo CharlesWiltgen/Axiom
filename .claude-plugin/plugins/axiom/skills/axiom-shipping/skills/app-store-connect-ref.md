@@ -317,7 +317,7 @@ Both show the same data, but:
 
 ## Field Diagnostics with MetricKit
 
-For device-level crash diagnostics, hang call stacks, and custom telemetry beyond ASC's aggregated dashboards, see `axiom-metrickit-ref`.
+For device-level crash diagnostics, hang call stacks, and custom telemetry beyond ASC's aggregated dashboards, see `axiom-performance (skills/metrickit-ref.md)`.
 
 **Key difference**: ASC shows aggregated trends for team visibility. MetricKit provides per-device diagnostics you can correlate with your own telemetry.
 

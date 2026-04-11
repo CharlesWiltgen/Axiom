@@ -15,9 +15,9 @@ MapKit patterns and anti-patterns for iOS apps. Prevents common mistakes: using 
 
 ## Related Skills
 
-- `axiom-mapkit-ref` — Complete API reference
-- `axiom-mapkit-diag` — Symptom-based troubleshooting
-- `axiom-core-location` — Location authorization and monitoring
+- `axiom-location (skills/mapkit-ref.md)` — Complete API reference
+- `axiom-location (skills/mapkit-diag.md)` — Symptom-based troubleshooting
+- `axiom-location (skills/core-location.md)` — Location authorization and monitoring
 
 ---
 
@@ -269,9 +269,9 @@ class MapModel {
 ### Cross-Reference
 
 For full authorization decision trees, monitoring patterns, and background location:
-- `axiom-core-location` — Authorization strategy, monitoring approach
-- `axiom-core-location-diag` — "Location not working" troubleshooting
-- `axiom-energy` — Location as battery subsystem
+- `axiom-location (skills/core-location.md)` — Authorization strategy, monitoring approach
+- `axiom-location (skills/core-location-diag.md)` — "Location not working" troubleshooting
+- `axiom-performance (skills/energy.md)` — Location as battery subsystem
 
 ---
 

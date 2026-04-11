@@ -458,8 +458,8 @@ timer.setEventHandler { [weak self] in
 ## Related Skills
 
 - `skills/timer-patterns-ref.md` — API reference for Timer, DispatchSourceTimer, Combine Timer.publish, AsyncTimerSequence with lifecycle diagrams and platform availability
-- `axiom-memory-debugging` — Timer as Pattern 1 memory leak (Timer retains target, RunLoop retains Timer)
-- `axiom-energy` — Timer as energy drain pattern (tolerance, coalescing, event-driven alternatives)
+- `axiom-performance (skills/memory-debugging.md)` — Timer as Pattern 1 memory leak (Timer retains target, RunLoop retains Timer)
+- `axiom-performance (skills/energy.md)` — Timer as energy drain pattern (tolerance, coalescing, event-driven alternatives)
 
 ## Resources
 

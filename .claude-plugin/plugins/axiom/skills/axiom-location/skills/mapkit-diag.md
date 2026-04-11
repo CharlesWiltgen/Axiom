@@ -5,8 +5,8 @@ Symptom-based MapKit troubleshooting. Start with the symptom you're seeing, foll
 
 ## Related Skills
 
-- `axiom-mapkit` — Patterns, decision trees, anti-patterns
-- `axiom-mapkit-ref` — API reference, code examples
+- `axiom-location (skills/mapkit.md)` — Patterns, decision trees, anti-patterns
+- `axiom-location (skills/mapkit-ref.md)` — API reference, code examples
 
 ---
 
