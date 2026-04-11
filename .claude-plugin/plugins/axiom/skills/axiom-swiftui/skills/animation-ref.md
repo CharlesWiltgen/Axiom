@@ -34,7 +34,7 @@ While this animation runs, SwiftUI computes intermediate values:
 0.0 → 0.02 → 0.05 → 0.1 → 0.25 → 0.4 → 0.6 → 0.8 → 1.0
 ```
 
-**How values are distributed**
+#### How values are distributed
 - Determined by the animation's timing curve or velocity function
 - Spring animations use physics simulation
 - Timing curves use bezier curves
@@ -75,7 +75,7 @@ Animatable attributes conceptually have two values:
 - Updates frame-by-frame during animation
 - What the user actually sees
 
-**Example**
+#### Example
 
 ```swift
 .scaleEffect(selected ? 1.5 : 1.0)
@@ -153,7 +153,7 @@ AnimatableNumberView(number: value)
     .animation(.spring, value: value)
 ```
 
-**How it works**
+#### How it works
 1. `number` changes from 0 to 100
 2. SwiftUI calls `body` for every frame of the animation
 3. Each frame gets a new `number` value: 0 → 5 → 15 → 30 → 55 → 80 → 100
@@ -378,7 +378,7 @@ Spring animations use physics simulation to create natural, organic motion.
 .animation(.spring(duration: 0.6, bounce: 0.3))
 ```
 
-**Parameters**
+#### Parameters
 - `duration` — Perceived animation duration
 - `bounce` — Amount of bounce (0 = no bounce, 1 = very bouncy)
 
@@ -416,14 +416,14 @@ Multiplies the animation speed.
 
 ### Default Animation Changes (iOS 17+)
 
-**Before iOS 17**
+#### Before iOS 17
 ```swift
 withAnimation {
     // Used timing curve by default
 }
 ```
 
-**iOS 17+**
+#### iOS 17+
 ```swift
 withAnimation {
     // Uses .smooth spring by default
@@ -450,7 +450,7 @@ Button("Scale Up") {
 }
 ```
 
-**How it works**
+#### How it works
 1. `withAnimation` opens a transaction
 2. Sets the animation in the transaction dictionary
 3. Executes the closure (state changes)
@@ -536,7 +536,7 @@ struct AvatarView: View {
 }
 ```
 
-**How it works**
+#### How it works
 - Animation only applies to attributes in the closure
 - Other attributes are unaffected
 - Prevents accidental animations
@@ -607,7 +607,7 @@ func shouldMerge(...) -> Bool {
 
 **Behavior**: Both animations run together, results are combined additively.
 
-**Example**
+#### Example
 - First tap: animate 1.0 → 1.5 (running)
 - Second tap (before finish): animate 1.5 → 1.0
 - Result: Both animations run, values combine
@@ -622,7 +622,7 @@ func shouldMerge(...) -> Bool {
 
 **Behavior**: New animation incorporates state of previous animation, preserving velocity.
 
-**Example**
+#### Example
 - First tap: animate 1.0 → 1.5 with velocity V
 - Second tap (before finish): retarget to 1.0, preserving current velocity V
 - Result: Smooth transition, no sudden velocity change

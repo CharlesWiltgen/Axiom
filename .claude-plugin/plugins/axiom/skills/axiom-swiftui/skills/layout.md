@@ -139,7 +139,7 @@ struct AdaptiveStack<Content: View>: View {
 }
 ```
 
-**For Dynamic Type:**
+#### For Dynamic Type
 
 ```swift
 @Environment(\.dynamicTypeSize) var dynamicTypeSize
@@ -176,7 +176,7 @@ struct ResponsiveGrid: View {
 }
 ```
 
-**For aspect ratio detection (iPad "orientation"):**
+#### For aspect ratio detection (iPad "orientation")
 
 ```swift
 struct WindowShapeReader: View {

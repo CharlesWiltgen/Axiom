@@ -780,13 +780,13 @@ See `skills/26-ref.md` skill for complete toolbar morphing API including Default
 
 ### 7.1 When to Use Coordinators
 
-**Use coordinators when:**
+#### Use coordinators when
 - Navigation logic is complex with conditional flows
 - Testing navigation in isolation
 - Sharing navigation logic across multiple screens
 - UIKit interop with heavy navigation requirements
 
-**Use built-in navigation when:**
+#### Use built-in navigation when
 - Simple linear or hierarchical navigation
 - State restoration is primary concern
 - Fewer than 5-10 navigation destinations
