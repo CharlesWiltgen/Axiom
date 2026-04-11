@@ -149,7 +149,7 @@ These lanes are covered in detail in the next section.
 
 **No code changes required** — rebuild with iOS 26 SDK to get these improvements.
 
-**Cross-reference** SwiftUI 26 Features (swiftui-26-ref skill) — Comprehensive guide to all iOS 26 SwiftUI changes
+**Cross-reference** SwiftUI 26 Features (`skills/26-ref.md`) — Comprehensive guide to all iOS 26 SwiftUI changes
 
 ---
 
@@ -266,9 +266,7 @@ Frame 1:
 
 **Key Insight**: View body runtime matters because missing frame deadlines causes hitches, making animations less fluid.
 
-**Reference**:
-- [Understanding hitches in your app](https://developer.apple.com/documentation/xcode/understanding-hitches-in-your-app)
-- Tech Talk on render loop and fixing hitches
+**Docs**: /xcode/understanding-hitches-in-your-app
 
 ---
 
@@ -1076,9 +1074,7 @@ Problem likely elsewhere:
 - Database queries
 - Third-party frameworks
 
-**Next steps**:
-- [Analyze hangs with Instruments](https://developer.apple.com/documentation/xcode/analyzing-hangs-in-your-app)
-- [Optimize CPU performance with Instruments](https://developer.apple.com/documentation/xcode/optimizing-your-app-s-performance)
+**Docs**: /xcode/analyzing-hangs-in-your-app, /xcode/optimizing-your-app-s-performance
 
 ---
 
