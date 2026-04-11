@@ -68,7 +68,7 @@ Write Swift 6.3-first code, not Swift 5-era code. These defaults apply to ALL ne
 | Treat `@unchecked Sendable`, `@preconcurrency`, `nonisolated(unsafe)` as temporary bridge tools | Each should have a removal ticket, not be permanent |
 | Do not add escape hatches just to silence compiler errors | They hide data races that crash in production |
 
-For detailed patterns, decision trees, and error-specific guidance, see `axiom-swift-concurrency`.
+For detailed patterns, decision trees, and error-specific guidance, see `axiom-concurrency` (swift-concurrency reference).
 
 ## Common Claude Hallucinations
 
@@ -86,4 +86,4 @@ These patterns appear frequently in Claude-generated code:
 
 ## Resources
 
-**Skills**: axiom-swift-performance, axiom-swift-concurrency, axiom-swiftui
+**Skills**: axiom-swift-performance, axiom-concurrency, axiom-swiftui

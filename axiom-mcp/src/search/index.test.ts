@@ -101,8 +101,8 @@ describe('buildIndex', () => {
 
 describe('search', () => {
   const skills = new Map<string, Skill>([
-    ['axiom-swift-concurrency', makeSkill({
-      name: 'axiom-swift-concurrency',
+    ['axiom-concurrency', makeSkill({
+      name: 'axiom-concurrency',
       description: 'Swift concurrency patterns and async await',
       content: '# Concurrency\nLearn about actors and Sendable types',
       tags: ['concurrency', 'async', 'swift'],
@@ -123,7 +123,7 @@ describe('search', () => {
     const results = search(index, 'concurrency async', {}, skills);
 
     expect(results.length).toBeGreaterThan(0);
-    expect(results[0].name).toBe('axiom-swift-concurrency');
+    expect(results[0].name).toBe('axiom-concurrency');
   });
 
   it('respects limit option', () => {
@@ -198,7 +198,7 @@ describe('search', () => {
   it('uses AND for multi-word queries', () => {
     // "swift concurrency" should strongly prefer the skill with both terms
     const results = search(index, 'swift concurrency', {}, skills);
-    expect(results[0].name).toBe('axiom-swift-concurrency');
+    expect(results[0].name).toBe('axiom-concurrency');
   });
 });
 

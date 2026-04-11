@@ -1,5 +1,5 @@
 ---
-name: axiom-ios-concurrency
+name: axiom-concurrency
 description: Use when writing ANY code with async, actors, threads, or seeing ANY concurrency error. Covers Swift 6 concurrency, @MainActor, Sendable, data races, async/await patterns, performance optimization.
 license: MIT
 ---
@@ -40,7 +40,7 @@ Use this router when:
 
 ### Swift Concurrency Issues
 
-**Swift 6 concurrency patterns** → `/skill axiom-swift-concurrency`
+**Swift 6 concurrency patterns** → `/skill axiom-concurrency`
 - async/await patterns
 - @MainActor usage
 - Actor isolation
@@ -48,7 +48,7 @@ Use this router when:
 - Data race prevention
 - Swift 6 migration
 
-**Swift concurrency API reference** → `/skill axiom-swift-concurrency-ref`
+**Swift concurrency API reference** → `/skill axiom-concurrency`
 - Actor definition, reentrancy, global actors
 - Sendable patterns, @unchecked Sendable
 - Task/TaskGroup/cancellation API
@@ -62,13 +62,13 @@ Use this router when:
 - Generic specialization
 - Collection performance
 
-**Synchronous actor access** → `/skill axiom-assume-isolated`
+**Synchronous actor access** → `/skill axiom-concurrency`
 - MainActor.assumeIsolated
 - @preconcurrency protocol conformances
 - Legacy delegate callbacks
 - Testing MainActor code synchronously
 
-**Thread-safe primitives** → `/skill axiom-synchronization`
+**Thread-safe primitives** → `/skill axiom-concurrency`
 - Mutex (iOS 18+)
 - OSAllocatedUnfairLock (iOS 16+)
 - Atomic types
@@ -80,7 +80,7 @@ Use this router when:
 - ARC traffic reduction
 - consume operator
 
-**Concurrency profiling** → `/skill axiom-concurrency-profiling`
+**Concurrency profiling** → `/skill axiom-concurrency`
 - Swift Concurrency Instruments template
 - Actor contention diagnosis
 - Thread pool exhaustion
@@ -140,28 +140,28 @@ Use this router when:
 ## Example Invocations
 
 User: "I'm getting 'data race' errors in Swift 6"
-→ Invoke: `/skill axiom-swift-concurrency`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "How do I use @MainActor correctly?"
-→ Invoke: `/skill axiom-swift-concurrency`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "My app is slow due to unnecessary copying"
 → Invoke: `/skill axiom-swift-performance`
 
 User: "Should I use async/await for this network call?"
-→ Invoke: `/skill axiom-swift-concurrency`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "How do I use assumeIsolated?"
-→ Invoke: `/skill axiom-assume-isolated`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "My delegate callback runs on main thread, how do I access MainActor state?"
-→ Invoke: `/skill axiom-assume-isolated`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "Should I use Mutex or actor?"
-→ Invoke: `/skill axiom-synchronization`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "What's the difference between os_unfair_lock and OSAllocatedUnfairLock?"
-→ Invoke: `/skill axiom-synchronization`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "What does borrowing do in Swift?"
 → Invoke: `/skill axiom-ownership-conventions`
@@ -170,28 +170,28 @@ User: "How do I use ~Copyable types?"
 → Invoke: `/skill axiom-ownership-conventions`
 
 User: "My async code is slow, how do I profile it?"
-→ Invoke: `/skill axiom-concurrency-profiling`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "I think I have actor contention, how do I diagnose it?"
-→ Invoke: `/skill axiom-concurrency-profiling`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "My Core Data saves lose data from background tasks"
 → Route to: `ios-data` router (Core Data threading is framework-specific)
 
 User: "How do I create a TaskGroup?"
-→ Invoke: `/skill axiom-swift-concurrency-ref`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "What's the AsyncStream API?"
-→ Invoke: `/skill axiom-swift-concurrency-ref`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "How do I create a custom global actor?"
-→ Invoke: `/skill axiom-swift-concurrency-ref`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "How do I convert a completion handler to async?"
-→ Invoke: `/skill axiom-swift-concurrency-ref`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "What are the actor reentrancy rules?"
-→ Invoke: `/skill axiom-swift-concurrency-ref`
+→ Invoke: `/skill axiom-concurrency`
 
 User: "My Combine pipeline silently stopped producing values"
 → Invoke: `/skill axiom-combine-patterns`

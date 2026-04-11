@@ -41,7 +41,7 @@ These thoughts mean STOP—you're rationalizing:
 When multiple Axiom skills could apply, use this priority:
 
 1. **Environment/Build first** (ios-build) — Fix the environment before debugging code
-2. **Architecture patterns** (axiom-swiftui, axiom-ios-data, axiom-ios-concurrency) — These determine HOW to structure the solution
+2. **Architecture patterns** (axiom-swiftui, axiom-ios-data, axiom-concurrency) — These determine HOW to structure the solution
 3. **Implementation details** (ios-integration, axiom-ios-ai, axiom-vision) — These guide specific feature work
 
 Examples:
@@ -82,7 +82,7 @@ Examples:
 
 ## Backward Compatibility
 
-- Direct skill invocation still works: `/skill axiom-swift-concurrency`
+- Direct skill invocation still works: `/skill axiom-concurrency`
 - Commands work unchanged: `/axiom:fix-build`, `/axiom:audit-accessibility`
 - Agents work via routing or direct command invocation
 

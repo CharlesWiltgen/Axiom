@@ -355,4 +355,4 @@ struct MyTests {
 
 **Docs**: /testing, /testing/confirmation
 
-**Skills**: axiom-swift-testing, axiom-ios-testing
+**Skills**: axiom-testing

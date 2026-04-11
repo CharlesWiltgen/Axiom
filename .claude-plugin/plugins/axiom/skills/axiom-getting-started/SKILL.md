@@ -78,7 +78,7 @@ Based on answers, recommend 3-5 skills using this matrix:
 - UI/animation (SwiftUI) → axiom-swiftui (debugging, performance references)
 - UI/animation (UIKit) → uikit-animation-debugging, axiom-auto-layout-debugging
 - Database → database-migration, axiom-sqlitedata-migration (decision guide)
-- Networking → networking, axiom-networking-diag
+- Networking → axiom-networking
 - Concurrency → swift-concurrency
 - Accessibility → accessibility-diag
 
@@ -294,7 +294,7 @@ Axiom skills load automatically — you don't need to memorize names or commands
 - "I'm getting Sendable errors in Swift 6" → loads `swift-concurrency`
 
 **Explicit invocation**: If you know the skill name, invoke it directly:
-- `/skill axiom-swift-concurrency`
+- `/skill axiom-concurrency`
 - `/skill axiom-liquid-glass`
 
 **Audit commands**: Run automated scans with slash commands:

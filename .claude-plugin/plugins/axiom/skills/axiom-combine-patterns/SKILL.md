@@ -26,10 +26,10 @@ Combine remains embedded in massive production codebases — UIKit delegates, No
 
 ## When NOT to Use This Skill
 
-- Timer.publish patterns → route via `axiom-ios-concurrency` to timer-patterns skill (dedicated timer lifecycle coverage)
-- @Observable migration from ObservableObject → use `axiom-swift-concurrency` (modern observation)
+- Timer.publish patterns → route via `axiom-concurrency` to timer-patterns skill (dedicated timer lifecycle coverage)
+- @Observable migration from ObservableObject → use `axiom-concurrency` (modern observation)
 - UIKit ↔ SwiftUI bridging → route via `axiom-swiftui` (view wrapping, not data flow)
-- General async/await patterns → use `axiom-swift-concurrency`
+- General async/await patterns → use `axiom-concurrency`
 
 ## Example Prompts
 
@@ -367,7 +367,7 @@ class AppState: ObservableObject {
 }
 ```
 
-**Better fix for iOS 17+**: Migrate to `@Observable`, which handles nested observation automatically. See `axiom-swift-concurrency` for migration patterns.
+**Better fix for iOS 17+**: Migrate to `@Observable`, which handles nested observation automatically. See `axiom-concurrency` (swift-concurrency reference) for migration patterns.
 
 ### Thread Safety Warning
 

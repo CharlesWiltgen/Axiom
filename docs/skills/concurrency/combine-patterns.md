@@ -35,5 +35,5 @@ Use this skill when:
 ## Related
 
 - [Swift Concurrency](/skills/concurrency/swift-concurrency) — Modern async/await patterns; use for new code on iOS 17+
-- **Timer Patterns** (routed via `axiom-ios-concurrency`) — Dedicated Timer/DispatchSourceTimer lifecycle; use for Timer.publish patterns
+- **Timer Patterns** (routed via `axiom-concurrency`) — Dedicated Timer/DispatchSourceTimer lifecycle; use for Timer.publish patterns
 - **Memory Debugging** (routed via `axiom-ios-performance`) — Instruments-based leak diagnosis when Combine pipelines cause retain cycles

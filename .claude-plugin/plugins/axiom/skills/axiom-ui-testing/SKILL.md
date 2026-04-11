@@ -1088,7 +1088,7 @@ class PhotoViewController: UIViewController {
 }
 ```
 
-**For deep crash analysis**: See `axiom-swift-concurrency` skill for @MainActor patterns and `axiom-memory-debugging` skill for thread-safety issues.
+**For deep crash analysis**: See `axiom-concurrency` (swift-concurrency reference) for @MainActor patterns and `axiom-memory-debugging` skill for thread-safety issues.
 
 #### Step 5: Add Crash-Prevention Tests
 

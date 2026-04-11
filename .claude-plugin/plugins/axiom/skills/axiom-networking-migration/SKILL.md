@@ -275,4 +275,4 @@ func sendAndReceive() async throws {
 
 ## Resources
 
-**Skills**: axiom-ios-networking, axiom-networking-legacy
+**Skills**: axiom-networking

@@ -36,7 +36,7 @@ Use this reference when:
 
 ## Documentation Scope
 
-This page documents the `axiom-swift-concurrency-ref` skill — the API reference Claude uses for Swift concurrency syntax and patterns.
+This page documents the `axiom-concurrency` (swift-concurrency-ref reference) — the API reference Claude uses for Swift concurrency syntax and patterns.
 
 **For the progressive journey and decision trees:** See [Swift Concurrency](/skills/concurrency/swift-concurrency) for *when* and *why* to introduce concurrency, plus 11 copy-paste patterns.
 
@@ -51,4 +51,4 @@ This page documents the `axiom-swift-concurrency-ref` skill — the API referenc
 
 **WWDC**: 2021-10132, 2021-10134, 2022-110350, 2025-268
 
-**Skills**: axiom-swift-concurrency, axiom-synchronization, axiom-assume-isolated, axiom-concurrency-profiling
+**Skills**: axiom-concurrency

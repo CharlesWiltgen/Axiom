@@ -250,7 +250,7 @@ Test across these configurations:
 - Content scrolling (verify scroll edge effects)
 - Right-to-left languages
 
-See `axiom-ui-testing` for comprehensive UI testing patterns including visual regression and accessibility testing.
+See `axiom-testing` (ui-testing reference) for comprehensive UI testing patterns including visual regression and accessibility testing.
 
 ---
 

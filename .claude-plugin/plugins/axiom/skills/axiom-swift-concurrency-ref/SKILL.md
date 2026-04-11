@@ -11,9 +11,9 @@ metadata:
 
 Complete Swift concurrency API reference for copy-paste patterns and syntax lookup.
 
-Complements `axiom-swift-concurrency` (which covers *when* and *why* to use concurrency — progressive journey, decision trees, @concurrent, isolated conformances).
+Complements `axiom-concurrency` (swift-concurrency reference) (which covers *when* and *why* to use concurrency — progressive journey, decision trees, @concurrent, isolated conformances).
 
-**Related skills**: `axiom-swift-concurrency` (progressive journey, decision trees), `axiom-synchronization` (Mutex, locks), `axiom-assume-isolated` (assumeIsolated patterns)
+**Related skills**: `axiom-concurrency` (progressive journey, decision trees, Mutex/locks, assumeIsolated patterns)
 
 ## Part 1: Actor Patterns
 
@@ -944,7 +944,7 @@ func legacyCallback() {
 }
 ```
 
-See `axiom-assume-isolated` for comprehensive patterns.
+See `axiom-concurrency` (assume-isolated reference) for comprehensive patterns.
 
 ### nonisolated
 

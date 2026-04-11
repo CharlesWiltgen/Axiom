@@ -1,5 +1,5 @@
 ---
-name: axiom-ios-networking
+name: axiom-networking
 description: Use when implementing or debugging ANY network connection, API call, or socket. Covers URLSession, Network.framework, NetworkConnection, deprecated APIs, connection diagnostics, structured concurrency networking.
 license: MIT
 ---
@@ -45,9 +45,9 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 - Modern networking patterns
 - Deprecated API migration
 
-**Network.framework reference** → `/skill axiom-network-framework-ref`
-**Legacy iOS 12-25 patterns** → `/skill axiom-networking-legacy`
-**Migration guides** → `/skill axiom-networking-migration`
+**Network.framework reference** → `/skill axiom-networking`
+**Legacy iOS 12-25 patterns** → `/skill axiom-networking`
+**Migration guides** → `/skill axiom-networking`
 - NWConnection (iOS 12-25)
 - NetworkConnection (iOS 26+)
 - TCP connections
@@ -56,7 +56,7 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 
 ### App Store Compliance
 
-**ATS / HTTP security** → `/skill axiom-networking-diag`
+**ATS / HTTP security** → `/skill axiom-networking`
 - App Transport Security (ATS) configuration
 - HTTP → HTTPS migration
 - App Store rejection for insecure connections
@@ -69,7 +69,7 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 
 ### Network Debugging
 
-**Connection issues** → `/skill axiom-networking-diag`
+**Connection issues** → `/skill axiom-networking`
 - Connection timeouts
 - TLS handshake failures
 - Data not arriving
@@ -120,19 +120,19 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 ## Example Invocations
 
 User: "My API request is failing with a timeout"
-→ Invoke: `/skill axiom-networking-diag`
+→ Invoke: `/skill axiom-networking`
 
 User: "How do I use URLSession with async/await?"
 → Invoke: `/skill axiom-networking`
 
 User: "I need to implement a TCP connection"
-→ Invoke: `/skill axiom-network-framework-ref`
+→ Invoke: `/skill axiom-networking`
 
 User: "Should I use NWConnection or NetworkConnection?"
-→ Invoke: `/skill axiom-network-framework-ref`
+→ Invoke: `/skill axiom-networking`
 
 User: "My app was rejected for using HTTP connections"
-→ Invoke: `/skill axiom-networking-diag` (ATS compliance)
+→ Invoke: `/skill axiom-networking` (ATS compliance)
 
 User: "App Store says I'm using UIWebView"
 → Invoke: `networking-auditor` agent (deprecated API scan)

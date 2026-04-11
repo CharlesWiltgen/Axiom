@@ -54,11 +54,11 @@ if not non_ios and "axiom-ios-data" not in matches and re.search(r'migration.{0,
 
 # Concurrency
 if re.search(r'actor[\s-]isolated|sendable|@mainactor|data race|strict concurrency|swift 6.{0,5}concurren|task\s*\{|taskgroup|async\s+(let|sequence|stream)|nonisolated|global\s*actor|concurren.{0,5}(error|warning|violat|issue)', prompt_lower):
-    matches.append("axiom-ios-concurrency")
+    matches.append("axiom-concurrency")
 
 # Concurrency — generic terms gated
-if not non_ios and "axiom-ios-concurrency" not in matches and re.search(r'main thread.{0,10}(block|freeze|hang|busy)|block.{0,15}main thread', prompt_lower):
-    matches.append("axiom-ios-concurrency")
+if not non_ios and "axiom-concurrency" not in matches and re.search(r'main thread.{0,10}(block|freeze|hang|busy)|block.{0,15}main thread', prompt_lower):
+    matches.append("axiom-concurrency")
 
 # Performance
 if re.search(r'memory leak|retain cycle|instruments\b.{0,10}(profil|trace|template)|time profiler|allocations\b.{0,5}(instrument|tool|track)', prompt_lower):
@@ -70,15 +70,15 @@ if not non_ios and "axiom-ios-performance" not in matches and re.search(r'perfor
 
 # Networking
 if re.search(r'urlsession|network\.framework|networkconnection\b|nwconnection\b|nwlistener', prompt_lower):
-    matches.append("axiom-ios-networking")
+    matches.append("axiom-networking")
 
 # Networking — generic terms gated
-if not non_ios and "axiom-ios-networking" not in matches and re.search(r'api.{0,5}(call|request|endpoint|fail)|http.{0,5}(request|error|status|timeout)|websocket|tls.{0,5}(handshake|error|fail)|certificate.{0,5}(pin|trust|error)', prompt_lower):
-    matches.append("axiom-ios-networking")
+if not non_ios and "axiom-networking" not in matches and re.search(r'api.{0,5}(call|request|endpoint|fail)|http.{0,5}(request|error|status|timeout)|websocket|tls.{0,5}(handshake|error|fail)|certificate.{0,5}(pin|trust|error)', prompt_lower):
+    matches.append("axiom-networking")
 
 # Testing
 if re.search(r'xctest|xcuitest|swift\s*testing|@test\b|@suite\b|#expect\b|ui\s*test.{0,10}(fail|flak|slow|crash|record)|test.{0,10}(without simulator|faster|speed)', prompt_lower):
-    matches.append("axiom-ios-testing")
+    matches.append("axiom-testing")
 
 # Integration
 if re.search(r'widgetkit|add.{0,10}widget|widget.{0,10}(timeline|entry|not updat|show|display)|siri\b|storekit|in-app purchase|iap\b|avcapture|phpicker|photospicker|photo.{0,5}(library|picker)|core\s*haptics|eventkit|ekevents|reminder.{0,5}(access|permiss)|cncontact|app\s*intent|app\s*shortcut|spotlight.{0,5}(index|search)|localization|string\s*catalog|live\s*activit|control\s*center.{0,5}(widget|control)', prompt_lower):

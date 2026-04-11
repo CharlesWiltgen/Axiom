@@ -230,4 +230,4 @@ Per Apple documentation:
 
 **Docs**: /swift/mainactor/assumeisolated, /swift/actor/assumeisolated
 
-**Skills**: axiom-swift-concurrency
+**Skills**: axiom-concurrency

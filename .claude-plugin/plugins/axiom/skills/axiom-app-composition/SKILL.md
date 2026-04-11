@@ -399,7 +399,7 @@ The thin-shell pattern enables up to 60x faster tests. When app logic lives in a
 | Business logic, models, services | Swift Package (`MyAppCore`) | `swift test` (0.4s) |
 | Root view composition | App target (thin shell) | `xcodebuild test` (25s) |
 
-See `axiom-swift-testing` Strategy 1 for the complete package extraction walkthrough.
+See `axiom-testing` (swift-testing reference) Strategy 1 for the complete package extraction walkthrough.
 
 ## Preventing Flicker During Transitions
 
@@ -1459,4 +1459,4 @@ When incrementally adopting SwiftUI in a UIKit app:
 
 **Docs**: /swiftui/scenephase, /swiftui/scene, /swiftui/scenestorage, /swiftui/windowgroup, /observation/observable()
 
-**Skills**: axiom-swiftui, axiom-swift-concurrency
+**Skills**: axiom-swiftui, axiom-concurrency

@@ -1279,7 +1279,7 @@ let entries = (0..<100).map { offset in
 
 **Docs**: /widgetkit, /activitykit, /appintents
 
-**Skills**: axiom-app-intents-ref, axiom-swift-concurrency, axiom-swiftui, axiom-extensions-widgets
+**Skills**: axiom-app-intents-ref, axiom-concurrency, axiom-swiftui, axiom-extensions-widgets
 
 ---
 

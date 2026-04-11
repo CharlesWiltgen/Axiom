@@ -79,7 +79,7 @@ Comprehensive SwiftUI suite covering views, navigation, layout, animations, perf
 
 ---
 
-#### `axiom-ui-testing`
+#### `axiom-testing`
 Recording UI Automation (Xcode 26) with condition-based waiting patterns.
 
 **Use when**: Writing UI tests, recording interactions, flaky tests, race conditions
@@ -218,7 +218,7 @@ Add debug-only deep links for automated testing and closed-loop debugging with v
 
 ### ⚡ Swift & Concurrency
 
-#### `axiom-swift-concurrency`
+#### `axiom-concurrency`
 Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor isolation.
 
 **Use when**: Actor isolation errors, data race warnings, converting delegate callbacks to async-safe patterns
@@ -312,7 +312,7 @@ Network.framework patterns for UDP/TCP with NWConnection (iOS 12-25) and Network
 
 ---
 
-#### `axiom-networking-diag` (Diagnostic)
+#### `axiom-networking` (Diagnostic)
 Systematic Network.framework troubleshooting for connection timeouts, TLS failures, data arrival issues.
 
 **Use when**: Connection times out, TLS handshake fails, data not arriving, WiFi/cellular transitions
@@ -325,7 +325,7 @@ Systematic Network.framework troubleshooting for connection timeouts, TLS failur
 
 ---
 
-#### `axiom-network-framework-ref` (Reference)
+#### `axiom-networking` (Reference)
 Comprehensive Network.framework API reference covering all iOS 12-26+ networking APIs.
 
 **Use when**: Planning network implementation, understanding API differences, migrating between versions
@@ -512,7 +512,7 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 # WWDC 2025 skills
 /skill axiom-liquid-glass
 /skill axiom-swiftui
-/skill axiom-ui-testing
+/skill axiom-testing
 
 # Debugging
 /skill axiom-xcode-debugging
@@ -522,7 +522,7 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 /skill axiom-deep-link-debugging
 
 # Swift & Concurrency
-/skill axiom-swift-concurrency
+/skill axiom-concurrency
 
 # Persistence
 /skill axiom-database-migration
@@ -532,8 +532,8 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 
 # Networking
 /skill axiom-networking
-/skill axiom-networking-diag
-/skill axiom-network-framework-ref
+/skill axiom-networking
+/skill axiom-networking
 
 # Apple Intelligence
 /skill axiom-foundation-models

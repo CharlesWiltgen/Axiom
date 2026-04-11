@@ -38,7 +38,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `axiom-networking-migration` reference skill -- migration guides Claude uses when helping you move between networking API generations. The skill contains complete before/after examples for each migration path.
+This page documents the `axiom-networking` (networking-migration reference) -- migration guides Claude uses when helping you move between networking API generations. The skill contains complete before/after examples for each migration path.
 
 - For current networking patterns, see [networking](/skills/integration/networking)
 - For legacy iOS 12-25 patterns, see [networking-legacy](/skills/integration/networking-legacy)

@@ -404,6 +404,6 @@ AXe uses private APIs - ensure you're running on a Mac with Xcode installed and 
 
 **Related**: xcsentinel (build orchestration)
 
-**Skills**: axiom-xctest-automation, axiom-ui-testing
+**Skills**: axiom-testing
 
 **Agents**: simulator-tester, test-runner
