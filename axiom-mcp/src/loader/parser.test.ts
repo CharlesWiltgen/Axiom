@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseSections, parseSkill, parseCommand, parseAgent, parseAppleDoc, filterSkillSections } from './parser.js';
+import { parseSections, parseSkill, parseCommand, parseAgent, parseAppleDoc, filterSkillSections, parseReferenceFile } from './parser.js';
 import type { Skill } from './parser.js';
 
 describe('parseSections', () => {
@@ -226,5 +226,61 @@ describe('filterSkillSections', () => {
   it('always returns the same skill reference', () => {
     const result = filterSkillSections(skill, ['overview']);
     expect(result.skill).toBe(skill);
+  });
+});
+
+describe('parseReferenceFile', () => {
+  it('parses frontmatter-free markdown into a Skill', () => {
+    const content = `# Timer Patterns
+
+Use timers carefully to avoid retain cycles.
+
+## Background Timers
+
+Details about background timers here.
+`;
+    const skill = parseReferenceFile(content, 'timer-patterns.md', 'axiom-integration');
+
+    expect(skill.name).toBe('axiom-integration--timer-patterns');
+    expect(skill.description).toBe('Use timers carefully to avoid retain cycles.');
+    expect(skill.skillType).toBe('discipline');
+    expect(skill.source).toBe('axiom');
+    expect(skill.tags).toContain('timer');
+    expect(skill.tags).toContain('patterns');
+  });
+
+  it('infers skill type from filename suffix', () => {
+    const content = '# Some Ref\n\nDescription here.\n';
+
+    const refSkill = parseReferenceFile(content, 'timer-patterns-ref.md', 'axiom-integration');
+    expect(refSkill.skillType).toBe('reference');
+
+    const diagSkill = parseReferenceFile(content, 'timer-patterns-diag.md', 'axiom-integration');
+    expect(diagSkill.skillType).toBe('diagnostic');
+  });
+
+  it('extracts description from first paragraph after title', () => {
+    const content = `# Timer Patterns
+
+
+Use timers carefully.
+
+## Section
+`;
+    const skill = parseReferenceFile(content, 'timer-patterns.md', 'axiom-integration');
+
+    expect(skill.description).toBe('Use timers carefully.');
+  });
+
+  it('falls back to title when no paragraph follows', () => {
+    const content = `# Timer Patterns
+
+## Overview
+
+Details here.
+`;
+    const skill = parseReferenceFile(content, 'timer-patterns.md', 'axiom-integration');
+
+    expect(skill.description).toBe('Timer Patterns');
   });
 });

@@ -308,6 +308,59 @@ export function parseAppleDoc(
 }
 
 /**
+ * Parse a frontmatter-free suite reference file into a Skill.
+ * Used for files in a skill suite's references/ subdirectory.
+ * Name is formatted as `${parentSuite}--${baseName}` to prevent cross-suite collisions.
+ */
+export function parseReferenceFile(
+  content: string,
+  filename: string,
+  parentSuite: string,
+): Skill {
+  const baseName = filename.replace(/\.md$/, '');
+  const name = `${parentSuite}--${baseName}`;
+
+  // Extract title from first # heading
+  const titleMatch = content.match(/^#\s+(.+)$/m);
+  const title = titleMatch ? titleMatch[1].trim() : baseName.replace(/-/g, ' ');
+
+  // Extract description from first non-empty paragraph after the # title
+  const lines = content.split('\n');
+  let description = '';
+  let pastTitle = false;
+  for (const line of lines) {
+    if (!pastTitle) {
+      if (line.match(/^#\s+/)) {
+        pastTitle = true;
+      }
+      continue;
+    }
+    const trimmed = line.trim();
+    if (trimmed === '') continue;
+    if (trimmed.startsWith('#')) break;
+    description = trimmed;
+    break;
+  }
+
+  // Infer tags from filename components
+  const tags = baseName
+    .split(/[-_]/)
+    .filter(t => t.length > 2)
+    .map(t => t.toLowerCase());
+
+  return {
+    name,
+    description: description || title,
+    content,
+    skillType: inferSkillType(name),
+    source: 'axiom',
+    tags,
+    related: [],
+    sections: parseSections(content),
+  };
+}
+
+/**
  * Filter a skill's content to only matching sections.
  * Returns full content if no sectionNames provided.
  */
