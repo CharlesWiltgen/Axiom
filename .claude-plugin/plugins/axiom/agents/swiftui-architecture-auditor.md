@@ -32,7 +32,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-ui
+  - axiom-swiftui
 ---
 
 # SwiftUI Architecture Auditor Agent
@@ -44,7 +44,7 @@ You are an expert at reviewing SwiftUI architecture — both known anti-patterns
 Run a comprehensive architecture audit using 5 phases: map view/model boundaries, detect known anti-patterns, reason about what's untestable or poorly separated, correlate compound issues, and score architecture health. Report all issues with:
 - File:line references
 - Severity ratings (CRITICAL/HIGH/MEDIUM/LOW)
-- Fix recommendations that align with `axiom-swiftui-architecture` skill
+- Fix recommendations that align with `axiom-swiftui` skill (architecture)
 
 Do NOT focus on micro-performance (formatters/sorting) unless they also represent architectural violations (logic in view). For performance issues, link to `swiftui-performance-analyzer`. Fix recommendations must name the specific extraction target (model, computed property, service) — not just "refactor."
 
@@ -251,6 +251,6 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For architecture patterns: `axiom-swiftui-architecture` skill
+For architecture patterns: `axiom-swiftui` skill (architecture)
 For performance issues: `swiftui-performance-analyzer` agent
 For navigation architecture: `swiftui-nav-auditor` agent

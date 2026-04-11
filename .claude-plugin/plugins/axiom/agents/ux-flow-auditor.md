@@ -27,7 +27,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-ui
+  - axiom-swiftui
 ---
 
 # UX Flow Auditor Agent
@@ -293,6 +293,6 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For navigation architecture: `axiom-swiftui-nav` skill
+For navigation architecture: `axiom-swiftui` skill (navigation)
 For accessibility compliance: `axiom-accessibility-diag` skill
 For UX principles: `axiom-ux-flow-audit` skill
