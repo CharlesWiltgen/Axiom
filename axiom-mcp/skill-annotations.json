@@ -166,6 +166,7 @@
       "cli",
       "failed",
       "lldb",
+      "mysterious",
       "somepackage",
       "spm"
     ],
@@ -387,7 +388,8 @@
       "grdb",
       "returning",
       "sql",
-      "structuredqueries"
+      "structuredqueries",
+      "swiftdata"
     ],
     "related": [
       "axiom-data",
@@ -414,10 +416,12 @@
       "@selection",
       "create",
       "ddl",
+      "grdb",
       "having",
       "json",
       "returning",
       "sql",
+      "structuredqueries",
       "swiftdata",
       "table",
       "tablealias"
@@ -477,6 +481,7 @@
     "category": "data",
     "tags": [
       "attributedstring",
+      "old",
       "sql",
       "versionedschema"
     ],
@@ -491,7 +496,8 @@
     "tags": [
       "correct",
       "interpretation",
-      "stop"
+      "stop",
+      "versionedschema"
     ],
     "related": [
       "axiom-data",
@@ -714,7 +720,6 @@
     "category": "graphics",
     "tags": [
       "anchorentity",
-      "ar",
       "ecs",
       "inputtargetcomponent",
       "manipulationcomponent",
@@ -846,6 +851,7 @@
       "intentvaluequery",
       "json",
       "show",
+      "sirikit",
       "snippetintent",
       "won"
     ],
@@ -1088,6 +1094,7 @@
     "category": "integration",
     "tags": [
       "dispatchsourcetimer",
+      "gcd",
       "runloop",
       "safedispatchtimer"
     ],
@@ -1256,7 +1263,8 @@
     "category": "media",
     "tags": [
       "carplay",
-      "musickit"
+      "musickit",
+      "three"
     ],
     "related": [
       "axiom-media"
@@ -1270,6 +1278,9 @@
   },
   "axiom-media--now-playing-musickit": {
     "category": "media",
+    "tags": [
+      "applicationmusicplayer"
+    ],
     "related": [
       "axiom-media"
     ]
@@ -1427,6 +1438,7 @@
   "axiom-performance--energy": {
     "category": "performance",
     "tags": [
+      "cpu",
       "emrca",
       "gpu",
       "metrickit"
@@ -2107,7 +2119,9 @@
   "axiom-swiftui--search-ref": {
     "category": "ui",
     "tags": [
-      "navigationsplitview"
+      "navigationsplitview",
+      "navigationstack",
+      "tabview"
     ],
     "related": [
       "axiom-swiftui"
@@ -2218,6 +2232,8 @@
       "anycancellable",
       "asyncsequence",
       "currentvaluesubject",
+      "kvo",
+      "notificationcenter",
       "observableobject",
       "passthroughsubject"
     ],
@@ -2401,10 +2417,10 @@
     "tags": [
       "buildfix",
       "documentationsearch",
-      "ide",
       "issuetriage",
       "previewverify",
       "testfix",
+      "xcodelistwindows",
       "xcodeupdate",
       "xcodewrite"
     ],

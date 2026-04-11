@@ -450,7 +450,8 @@ async function main() {
               const baseName = refFile.replace(/\.md$/, '');
               const refName = `${entry}--${baseName}`;
 
-              // Extract description from first paragraph after title
+              // Extract description from first prose paragraph after title
+              // (mirrors parser.ts parseReferenceFile — keep in sync)
               const lines = refContent.split('\n');
               let description = '';
               let pastTitle = false;
@@ -461,7 +462,9 @@ async function main() {
                 }
                 const trimmed = line.trim();
                 if (trimmed === '') continue;
-                if (trimmed.startsWith('#')) break;
+                if (trimmed.startsWith('#')) continue;
+                if (trimmed.startsWith('**') && trimmed.includes('**:')) continue;
+                if (trimmed.startsWith('**') && !trimmed.endsWith('**')) continue;
                 description = trimmed;
                 break;
               }
