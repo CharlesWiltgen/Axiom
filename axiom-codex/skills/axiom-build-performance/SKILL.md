@@ -2,7 +2,7 @@
 name: axiom-build-performance
 description: Use when build times are slow, investigating build performance, analyzing Build Timeline, identifying type checking bottlenecks, enabling compilation caching, or optimizing incremental builds - comprehensive build optimization workflows including Xcode 26 compilation caching
 license: MIT
-compatibility: iOS 14+, macOS 11+, iPadOS 14+, tvOS 14+, watchOS 7+, axiom-visionOS 1.0+. Xcode 14+ (Xcode 26+ for compilation caching and explicit modules)
+compatibility: iOS 14+, macOS 11+, iPadOS 14+, tvOS 14+, watchOS 7+, visionOS 1.0+. Xcode 14+ (Xcode 26+ for compilation caching and explicit modules)
 metadata:
   version: "2.0"
   last-updated: "2026-01-01"

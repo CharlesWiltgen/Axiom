@@ -457,7 +457,7 @@ ZStack {
 
 ### Platform Availability
 
-**iOS 17+, iPadOS 17+, macOS 14+, axiom-visionOS 1.0+**
+**iOS 17+, iPadOS 17+, macOS 14+, visionOS 1.0+**
 
 For earlier iOS versions, use manual safe area handling:
 

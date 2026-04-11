@@ -861,7 +861,7 @@ let location = thumbTip.location
 let visionPoint = recognizedPoint.location  // (0, 0) = bottom-left
 
 // UIKit uses top-left origin
-let uiPoint = CGPoint(x: axiom-visionPoint.x, y: axiom-visionPoint.y)  // WRONG!
+let uiPoint = CGPoint(x: visionPoint.x, y: visionPoint.y)  // WRONG!
 ```
 
 **Right**:
@@ -870,7 +870,7 @@ let visionPoint = recognizedPoint.location
 
 // Convert to UIKit coordinates
 let uiPoint = CGPoint(
-    x: axiom-visionPoint.x * imageWidth,
+    x: visionPoint.x * imageWidth,
     y: (1 - visionPoint.y) * imageHeight  // Flip Y axis
 )
 ```

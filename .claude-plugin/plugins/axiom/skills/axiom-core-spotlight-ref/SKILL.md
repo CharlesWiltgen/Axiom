@@ -332,7 +332,7 @@ NSUserActivity captures user engagement for:
 - **Siri predictions** — Suggest returning to this screen
 - **Quick Note** — Link notes to app content
 
-**Platform support** iOS 8.0+, iPadOS 8.0+, macOS 10.10+, tvOS 9.0+, watchOS 2.0+, axiom-visionOS 1.0+
+**Platform support** iOS 8.0+, iPadOS 8.0+, macOS 10.10+, tvOS 9.0+, watchOS 2.0+, visionOS 1.0+
 
 ---
 

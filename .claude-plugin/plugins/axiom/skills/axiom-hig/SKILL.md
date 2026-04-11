@@ -2,7 +2,7 @@
 name: axiom-hig
 description: Use when making design decisions, reviewing UI for HIG compliance, choosing colors/backgrounds/typography, or defending design choices - quick decision frameworks and checklists for Apple Human Interface Guidelines
 license: MIT
-compatibility: iOS, iPadOS, macOS, watchOS, tvOS, axiom-visionOS. iOS 13+ (Dark Mode), iOS 17+ (latest semantic colors), iOS 26+ (Liquid Glass)
+compatibility: iOS, iPadOS, macOS, watchOS, tvOS, visionOS. iOS 13+ (Dark Mode), iOS 17+ (latest semantic colors), iOS 26+ (Liquid Glass)
 metadata:
   version: "1.0.0"
 ---

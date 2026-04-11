@@ -2,7 +2,7 @@
 name: axiom-camera-capture
 description: AVCaptureSession, camera preview, photo capture, video recording, RotationCoordinator, session interruptions, deferred processing, capture responsiveness, zero-shutter-lag, photoQualityPrioritization, front camera mirroring
 license: MIT
-compatibility: iOS 17+, iPadOS 17+, macOS 14+, tvOS 17+, axiom-visionOS 1+
+compatibility: iOS 17+, iPadOS 17+, macOS 14+, tvOS 17+, visionOS 1+
 metadata:
   version: "1.0.0"
   last-updated: "2026-01-03"
