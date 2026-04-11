@@ -284,4 +284,4 @@ After listing all issues, provide a summary:
 ## Related Skills
 
 For detailed patterns and solutions, refer developers to:
-- `axiom-media` — Camera capture, photo library (references/camera-capture.md, camera-capture-diag.md, camera-capture-ref.md, photo-library.md)
+- `axiom-media` — Camera capture, photo library (skills/camera-capture.md, camera-capture-diag.md, camera-capture-ref.md, photo-library.md)

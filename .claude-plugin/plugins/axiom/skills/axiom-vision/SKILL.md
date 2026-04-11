@@ -12,25 +12,25 @@ license: MIT
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| Subject segmentation, lifting | See `references/vision.md` |
-| Hand/body pose detection | See `references/vision.md` |
-| Text recognition (OCR) | See `references/vision.md` |
-| Barcode/QR code detection | See `references/vision.md` |
-| Document scanning | See `references/vision.md` |
-| DataScannerViewController | See `references/vision.md` |
-| Structured document extraction (iOS 26+) | See `references/vision.md` |
-| Isolate object excluding hand | See `references/vision.md` |
-| Vision framework API reference | See `references/vision-ref.md` |
-| Visual Intelligence integration (iOS 26+) | See `references/vision-ref.md` |
-| Subject not detected | See `references/vision-diag.md` |
-| Hand/body pose missing landmarks | See `references/vision-diag.md` |
-| Low confidence observations | See `references/vision-diag.md` |
-| UI freezing during processing | See `references/vision-diag.md` |
-| Coordinate conversion bugs | See `references/vision-diag.md` |
-| Text not recognized / wrong chars | See `references/vision-diag.md` |
-| Barcode not detected | See `references/vision-diag.md` |
-| DataScanner blank / no items | See `references/vision-diag.md` |
-| Document edges not detected | See `references/vision-diag.md` |
+| Subject segmentation, lifting | See `skills/vision.md` |
+| Hand/body pose detection | See `skills/vision.md` |
+| Text recognition (OCR) | See `skills/vision.md` |
+| Barcode/QR code detection | See `skills/vision.md` |
+| Document scanning | See `skills/vision.md` |
+| DataScannerViewController | See `skills/vision.md` |
+| Structured document extraction (iOS 26+) | See `skills/vision.md` |
+| Isolate object excluding hand | See `skills/vision.md` |
+| Vision framework API reference | See `skills/vision-ref.md` |
+| Visual Intelligence integration (iOS 26+) | See `skills/vision-ref.md` |
+| Subject not detected | See `skills/vision-diag.md` |
+| Hand/body pose missing landmarks | See `skills/vision-diag.md` |
+| Low confidence observations | See `skills/vision-diag.md` |
+| UI freezing during processing | See `skills/vision-diag.md` |
+| Coordinate conversion bugs | See `skills/vision-diag.md` |
+| Text not recognized / wrong chars | See `skills/vision-diag.md` |
+| Barcode not detected | See `skills/vision-diag.md` |
+| DataScanner blank / no items | See `skills/vision-diag.md` |
+| Document edges not detected | See `skills/vision-diag.md` |
 
 ## Decision Tree
 
@@ -40,21 +40,21 @@ digraph vision {
     what [label="What do you need?" shape=diamond];
 
     start -> what;
-    what -> "references/vision.md" [label="implement feature"];
-    what -> "references/vision-ref.md" [label="API reference"];
-    what -> "references/vision-ref.md" [label="Visual Intelligence"];
-    what -> "references/vision-diag.md" [label="something broken"];
+    what -> "skills/vision.md" [label="implement feature"];
+    what -> "skills/vision-ref.md" [label="API reference"];
+    what -> "skills/vision-ref.md" [label="Visual Intelligence"];
+    what -> "skills/vision-diag.md" [label="something broken"];
 }
 ```
 
-1. Implementing (pose, segmentation, OCR, barcodes, documents, live scanning)? → `references/vision.md`
-2. Visual Intelligence system integration (camera feature, iOS 26+)? → `references/vision-ref.md` (Visual Intelligence section)
-3. Need API reference / code examples? → `references/vision-ref.md`
-4. Debugging issues (detection failures, confidence, coordinates)? → `references/vision-diag.md`
+1. Implementing (pose, segmentation, OCR, barcodes, documents, live scanning)? → `skills/vision.md`
+2. Visual Intelligence system integration (camera feature, iOS 26+)? → `skills/vision-ref.md` (Visual Intelligence section)
+3. Need API reference / code examples? → `skills/vision-ref.md`
+4. Debugging issues (detection failures, confidence, coordinates)? → `skills/vision-diag.md`
 
 ## Critical Patterns
 
-**Implementation** (`references/vision.md`):
+**Implementation** (`skills/vision.md`):
 - Decision tree for choosing the right Vision API
 - Subject segmentation with VisionKit
 - Isolating objects while excluding hands (combining APIs)
@@ -65,7 +65,7 @@ digraph vision {
 - Live scanning with DataScannerViewController
 - CoreImage HDR compositing
 
-**Diagnostics** (`references/vision-diag.md`):
+**Diagnostics** (`skills/vision-diag.md`):
 - Subject detection failures (edge of frame, lighting)
 - Landmark tracking issues (confidence thresholds)
 - Performance optimization (frame skipping, downscaling)
@@ -87,28 +87,28 @@ digraph vision {
 ## Example Invocations
 
 User: "How do I detect hand pose in an image?"
-→ See `references/vision.md`
+→ See `skills/vision.md`
 
 User: "Isolate a subject but exclude the user's hands"
-→ See `references/vision.md`
+→ See `skills/vision.md`
 
 User: "How do I read text from an image?"
-→ See `references/vision.md`
+→ See `skills/vision.md`
 
 User: "Scan QR codes with the camera"
-→ See `references/vision.md`
+→ See `skills/vision.md`
 
 User: "Subject detection isn't working"
-→ See `references/vision-diag.md`
+→ See `skills/vision-diag.md`
 
 User: "Text recognition returns wrong characters"
-→ See `references/vision-diag.md`
+→ See `skills/vision-diag.md`
 
 User: "Show me VNDetectHumanBodyPoseRequest examples"
-→ See `references/vision-ref.md`
+→ See `skills/vision-ref.md`
 
 User: "How do I make my app work with Visual Intelligence?"
-→ See `references/vision-ref.md`
+→ See `skills/vision-ref.md`
 
 User: "RecognizeDocumentsRequest API reference"
-→ See `references/vision-ref.md`
+→ See `skills/vision-ref.md`

@@ -76,7 +76,7 @@ Content here
 
   it('infers skill type from name conventions', () => {
     const base = `---\nname: NAME\ndescription: test\n---\nContent`;
-    const suiteBase = `---\nname: NAME\ndescription: test\n---\nSee references/child.md for details`;
+    const suiteBase = `---\nname: NAME\ndescription: test\n---\nSee skills/child.md for details`;
 
     expect(parseSkill(suiteBase.replace('NAME', 'axiom-build'), 'axiom-build').skillType).toBe('router');
     expect(parseSkill(base.replace('NAME', 'axiom-something-ref'), 'axiom-something-ref').skillType).toBe('reference');

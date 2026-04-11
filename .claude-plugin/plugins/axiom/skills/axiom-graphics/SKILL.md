@@ -30,20 +30,20 @@ Use this router when:
 
 ### Metal Migration
 
-**Strategy decisions** → See references/metal-migration.md
+**Strategy decisions** → See skills/metal-migration.md
 - Translation layer vs native rewrite decision
 - Project assessment and migration planning
 - Anti-patterns and common mistakes
 - Pressure scenarios for deadline resistance
 
-**API reference & conversion** → See references/metal-migration-ref.md
+**API reference & conversion** → See skills/metal-migration-ref.md
 - GLSL → MSL shader conversion tables
 - HLSL → MSL shader conversion tables
 - GL/D3D API → Metal API equivalents
 - MTKView setup, render pipelines, compute shaders
 - Complete WWDC code examples
 
-**Diagnostics** → See references/metal-migration-diag.md
+**Diagnostics** → See skills/metal-migration-diag.md
 - Black screen after porting
 - Shader compilation errors
 - Wrong colors or coordinate systems
@@ -52,7 +52,7 @@ Use this router when:
 
 ### Display Performance
 
-**Frame rate & render loops** → See references/display-performance.md
+**Frame rate & render loops** → See skills/display-performance.md
 - App stuck at 60fps on ProMotion (120Hz) device
 - MTKView or CADisplayLink configuration
 - Variable refresh rate optimization
@@ -64,20 +64,20 @@ Use this router when:
 
 For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, use the RealityKit skills. **For game-specific RealityKit patterns, use the ios-games router instead.**
 
-**Architecture, ECS, and best practices** → See references/realitykit.md
+**Architecture, ECS, and best practices** → See skills/realitykit.md
 - Entity-Component-System architecture
 - SwiftUI integration: RealityView, Model3D, attachments
 - AR on iOS: AnchorEntity types, SpatialTrackingSession
 - Materials, physics, interaction
 - Performance optimization
 
-**API reference** → See references/realitykit-ref.md
+**API reference** → See skills/realitykit-ref.md
 - Complete component catalog
 - RealityView and Model3D API
 - Material system (PBR, Unlit, Occlusion, Custom)
 - RealityRenderer (Metal integration)
 
-**Troubleshooting** → See references/realitykit-diag.md
+**Troubleshooting** → See skills/realitykit-diag.md
 - Entity not visible, anchor not tracking
 - Gesture not responding, performance issues
 - Material problems, physics issues
@@ -151,46 +151,46 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 ## Example Invocations
 
 User: "Should I use MetalANGLE or rewrite in native Metal?"
-→ See `references/metal-migration.md`
+→ See `skills/metal-migration.md`
 
 User: "I'm porting projectM from OpenGL ES to iOS"
-→ See `references/metal-migration.md`
+→ See `skills/metal-migration.md`
 
 User: "How do I convert this GLSL shader to Metal?"
-→ See `references/metal-migration-ref.md`
+→ See `skills/metal-migration-ref.md`
 
 User: "Setting up MTKView for the first time"
-→ See `references/metal-migration-ref.md`
+→ See `skills/metal-migration-ref.md`
 
 User: "My ported app shows a black screen"
-→ See `references/metal-migration-diag.md`
+→ See `skills/metal-migration-diag.md`
 
 User: "Performance is worse after porting to Metal"
-→ See `references/metal-migration-diag.md`
+→ See `skills/metal-migration-diag.md`
 
 User: "My app is stuck at 60fps on iPhone Pro"
-→ See `references/display-performance.md`
+→ See `skills/display-performance.md`
 
 User: "How do I configure CADisplayLink for 120Hz?"
-→ See `references/display-performance.md`
+→ See `skills/display-performance.md`
 
 User: "ProMotion not working in my Metal app"
-→ See `references/display-performance.md`
+→ See `skills/display-performance.md`
 
 User: "How do I show a 3D model in my SwiftUI app?"
-→ See `references/realitykit.md`
+→ See `skills/realitykit.md`
 
 User: "I need to display a USDZ model"
-→ See `references/realitykit.md`
+→ See `skills/realitykit.md`
 
 User: "How do I set up RealityView?"
-→ See `references/realitykit-ref.md`
+→ See `skills/realitykit-ref.md`
 
 User: "My 3D model isn't showing in RealityView"
-→ See `references/realitykit-diag.md`
+→ See `skills/realitykit-diag.md`
 
 User: "How do I use RealityRenderer with Metal?"
-→ See `references/realitykit-ref.md`
+→ See `skills/realitykit-ref.md`
 
 User: "I need AR in my app"
-→ See `references/realitykit.md`
+→ See `skills/realitykit.md`

@@ -64,9 +64,9 @@ export async function generateBundle(pluginPath: string): Promise<BundleV2> {
         } catch {
           // No SKILL.md in this directory
         }
-        // Load reference files from references/ subdirectory (suite pattern)
+        // Load reference files from skills/ subdirectory (suite pattern)
         if (skillLoaded) {
-          const refsDir = join(entryPath, 'references');
+          const refsDir = join(entryPath, 'skills');
           try {
             const refEntries = await readdir(refsDir);
             for (const refFile of refEntries) {
@@ -79,11 +79,11 @@ export async function generateBundle(pluginPath: string): Promise<BundleV2> {
                 );
                 bundle.skills[refSkill.name] = refSkill;
               } catch {
-                console.warn(`Warning: Failed to parse reference ${entry}/references/${refFile}`);
+                console.warn(`Warning: Failed to parse reference ${entry}/skills/${refFile}`);
               }
             }
           } catch {
-            // No references/ directory
+            // No skills/ directory
           }
         }
         // Recurse into subdirectories (e.g., axiom-ai/coreml/)

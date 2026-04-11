@@ -12,29 +12,29 @@ license: MIT
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| Siri, App Intents, entity queries | See `references/app-intents-ref.md` |
-| App Shortcuts, phrases, Spotlight | See `references/app-shortcuts-ref.md` |
-| App discoverability strategy | See `references/app-discoverability.md` |
-| Core Spotlight indexing | See `references/core-spotlight-ref.md` |
-| Widgets, Live Activities, Control Center | See `references/extensions-widgets.md` |
-| Widget/Live Activity API reference | See `references/extensions-widgets-ref.md` |
-| In-app purchases, subscriptions | See `references/in-app-purchases.md` |
-| StoreKit 2 API reference | See `references/storekit-ref.md` |
-| Calendar events, reminders (EventKit) | See `references/eventkit.md` |
-| EventKit API reference | See `references/eventkit-ref.md` |
-| Contacts, contact picker | See `references/contacts.md` |
-| Contacts API reference | See `references/contacts-ref.md` |
-| Localization, String Catalogs | See `references/localization.md` |
-| Privacy manifests, permissions UX | See `references/privacy-ux.md` |
-| AlarmKit (iOS 26+) | See `references/alarmkit-ref.md` |
-| Timer patterns, scheduling | See `references/timer-patterns.md` |
-| Timer API reference | See `references/timer-patterns-ref.md` |
-| Background tasks, BGTaskScheduler | See `references/background-processing.md` |
-| Background task debugging | See `references/background-processing-diag.md` |
-| Background task API reference | See `references/background-processing-ref.md` |
-| Push notifications, APNs | See `references/push-notifications.md` |
-| Push notification debugging | See `references/push-notifications-diag.md` |
-| Push notification API reference | See `references/push-notifications-ref.md` |
+| Siri, App Intents, entity queries | See `skills/app-intents-ref.md` |
+| App Shortcuts, phrases, Spotlight | See `skills/app-shortcuts-ref.md` |
+| App discoverability strategy | See `skills/app-discoverability.md` |
+| Core Spotlight indexing | See `skills/core-spotlight-ref.md` |
+| Widgets, Live Activities, Control Center | See `skills/extensions-widgets.md` |
+| Widget/Live Activity API reference | See `skills/extensions-widgets-ref.md` |
+| In-app purchases, subscriptions | See `skills/in-app-purchases.md` |
+| StoreKit 2 API reference | See `skills/storekit-ref.md` |
+| Calendar events, reminders (EventKit) | See `skills/eventkit.md` |
+| EventKit API reference | See `skills/eventkit-ref.md` |
+| Contacts, contact picker | See `skills/contacts.md` |
+| Contacts API reference | See `skills/contacts-ref.md` |
+| Localization, String Catalogs | See `skills/localization.md` |
+| Privacy manifests, permissions UX | See `skills/privacy-ux.md` |
+| AlarmKit (iOS 26+) | See `skills/alarmkit-ref.md` |
+| Timer patterns, scheduling | See `skills/timer-patterns.md` |
+| Timer API reference | See `skills/timer-patterns-ref.md` |
+| Background tasks, BGTaskScheduler | See `skills/background-processing.md` |
+| Background task debugging | See `skills/background-processing-diag.md` |
+| Background task API reference | See `skills/background-processing-ref.md` |
+| Push notifications, APNs | See `skills/push-notifications.md` |
+| Push notification debugging | See `skills/push-notifications-diag.md` |
+| Push notification API reference | See `skills/push-notifications-ref.md` |
 
 ## Decision Tree
 
@@ -44,35 +44,35 @@ digraph integration {
     what [label="Which system feature?" shape=diamond];
 
     start -> what;
-    what -> "references/app-intents-ref.md" [label="Siri / App Intents"];
-    what -> "references/app-shortcuts-ref.md" [label="Shortcuts / phrases"];
-    what -> "references/app-discoverability.md" [label="discoverability\nstrategy"];
-    what -> "references/extensions-widgets.md" [label="widgets / Live Activities\n/ Control Center"];
-    what -> "references/in-app-purchases.md" [label="IAP / subscriptions"];
-    what -> "references/eventkit.md" [label="calendar / reminders"];
-    what -> "references/contacts.md" [label="contacts"];
-    what -> "references/localization.md" [label="localization"];
-    what -> "references/privacy-ux.md" [label="privacy / permissions"];
-    what -> "references/alarmkit-ref.md" [label="alarms (iOS 26+)"];
-    what -> "references/timer-patterns.md" [label="timers"];
-    what -> "references/background-processing.md" [label="background tasks"];
-    what -> "references/push-notifications.md" [label="push notifications"];
+    what -> "skills/app-intents-ref.md" [label="Siri / App Intents"];
+    what -> "skills/app-shortcuts-ref.md" [label="Shortcuts / phrases"];
+    what -> "skills/app-discoverability.md" [label="discoverability\nstrategy"];
+    what -> "skills/extensions-widgets.md" [label="widgets / Live Activities\n/ Control Center"];
+    what -> "skills/in-app-purchases.md" [label="IAP / subscriptions"];
+    what -> "skills/eventkit.md" [label="calendar / reminders"];
+    what -> "skills/contacts.md" [label="contacts"];
+    what -> "skills/localization.md" [label="localization"];
+    what -> "skills/privacy-ux.md" [label="privacy / permissions"];
+    what -> "skills/alarmkit-ref.md" [label="alarms (iOS 26+)"];
+    what -> "skills/timer-patterns.md" [label="timers"];
+    what -> "skills/background-processing.md" [label="background tasks"];
+    what -> "skills/push-notifications.md" [label="push notifications"];
 }
 ```
 
-1. Siri / App Intents / entity queries? → `references/app-intents-ref.md`
-2. App Shortcuts / phrases? → `references/app-shortcuts-ref.md`
-3. App discoverability / Spotlight strategy? → `references/app-discoverability.md`, `references/core-spotlight-ref.md`
-4. Widgets / Live Activities / Control Center? → `references/extensions-widgets.md`, `references/extensions-widgets-ref.md`
-5. In-app purchases / StoreKit? → `references/in-app-purchases.md`, `references/storekit-ref.md`
-6. Calendar / reminders / EventKit? → `references/eventkit.md`, `references/eventkit-ref.md`
-7. Contacts / contact picker? → `references/contacts.md`, `references/contacts-ref.md`
-8. Localization? → `references/localization.md`
-9. Privacy / permissions? → `references/privacy-ux.md`
-10. Alarms (iOS 26+)? → `references/alarmkit-ref.md`
-11. Timers? → `references/timer-patterns.md`, `references/timer-patterns-ref.md`
-12. Background tasks / BGTaskScheduler? → `references/background-processing.md`, `references/background-processing-diag.md`, `references/background-processing-ref.md`
-13. Push notifications? → `references/push-notifications.md`, `references/push-notifications-diag.md`, `references/push-notifications-ref.md`
+1. Siri / App Intents / entity queries? → `skills/app-intents-ref.md`
+2. App Shortcuts / phrases? → `skills/app-shortcuts-ref.md`
+3. App discoverability / Spotlight strategy? → `skills/app-discoverability.md`, `skills/core-spotlight-ref.md`
+4. Widgets / Live Activities / Control Center? → `skills/extensions-widgets.md`, `skills/extensions-widgets-ref.md`
+5. In-app purchases / StoreKit? → `skills/in-app-purchases.md`, `skills/storekit-ref.md`
+6. Calendar / reminders / EventKit? → `skills/eventkit.md`, `skills/eventkit-ref.md`
+7. Contacts / contact picker? → `skills/contacts.md`, `skills/contacts-ref.md`
+8. Localization? → `skills/localization.md`
+9. Privacy / permissions? → `skills/privacy-ux.md`
+10. Alarms (iOS 26+)? → `skills/alarmkit-ref.md`
+11. Timers? → `skills/timer-patterns.md`, `skills/timer-patterns-ref.md`
+12. Background tasks / BGTaskScheduler? → `skills/background-processing.md`, `skills/background-processing-diag.md`, `skills/background-processing-ref.md`
+13. Push notifications? → `skills/push-notifications.md`, `skills/push-notifications-diag.md`, `skills/push-notifications-ref.md`
 14. Want IAP audit? → Launch `iap-auditor` agent
 15. Want full IAP implementation? → Launch `iap-implementation` agent
 16. Camera / photos / audio / haptics / ShazamKit? → **Use `axiom-media` instead**
@@ -125,28 +125,28 @@ digraph integration {
 ## Example Invocations
 
 User: "How do I add Siri support?"
-→ Read: `references/app-intents-ref.md`
+→ Read: `skills/app-intents-ref.md`
 
 User: "My widget isn't updating"
-→ Read: `references/extensions-widgets.md`
+→ Read: `skills/extensions-widgets.md`
 
 User: "Implement in-app purchases with StoreKit 2"
-→ Read: `references/in-app-purchases.md`
+→ Read: `skills/in-app-purchases.md`
 
 User: "How do I implement push notifications?"
-→ Read: `references/push-notifications.md`
+→ Read: `skills/push-notifications.md`
 
 User: "Push notifications work in dev but not production"
-→ Read: `references/push-notifications-diag.md`
+→ Read: `skills/push-notifications-diag.md`
 
 User: "My background task never runs"
-→ Read: `references/background-processing-diag.md`
+→ Read: `skills/background-processing-diag.md`
 
 User: "How do I add an event to the user's calendar?"
-→ Read: `references/eventkit.md`
+→ Read: `skills/eventkit.md`
 
 User: "How do I let users pick a contact?"
-→ Read: `references/contacts.md`
+→ Read: `skills/contacts.md`
 
 User: "Review my in-app purchase implementation"
 → Launch: `iap-auditor` agent

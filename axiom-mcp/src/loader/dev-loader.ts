@@ -97,9 +97,9 @@ export class DevLoader implements Loader {
                 this.logger.warn(`Failed to parse skill ${entry}: ${(err as Error).message}`);
               }
 
-              // Load reference files from references/ subdirectory (suite pattern)
+              // Load reference files from skills/ subdirectory (suite pattern)
               if (skillLoaded) {
-                const refsDir = join(entryPath, 'references');
+                const refsDir = join(entryPath, 'skills');
                 try {
                   const refEntries = await readdir(refsDir);
                   for (const refFile of refEntries) {
@@ -114,11 +114,11 @@ export class DevLoader implements Loader {
                       this.logger.debug(`Loaded reference: ${refSkill.name}`);
                       loadedCount++;
                     } catch (refErr) {
-                      this.logger.warn(`Failed to parse reference ${entry}/references/${refFile}: ${(refErr as Error).message}`);
+                      this.logger.warn(`Failed to parse reference ${entry}/skills/${refFile}: ${(refErr as Error).message}`);
                     }
                   }
                 } catch {
-                  // No references/ directory — not a suite, that's fine
+                  // No skills/ directory — not a suite, that's fine
                 }
               }
             }

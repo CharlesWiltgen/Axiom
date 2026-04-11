@@ -65,7 +65,7 @@ describe('generateBundle reference file discovery', () => {
     tmpDir = await mkdtemp(join(tmpdir(), 'axiom-bundle-test-'));
 
     // Create minimal plugin structure
-    await mkdir(join(tmpDir, 'skills', 'axiom-test-suite', 'references'), { recursive: true });
+    await mkdir(join(tmpDir, 'skills', 'axiom-test-suite', 'skills'), { recursive: true });
     await mkdir(join(tmpDir, 'commands'), { recursive: true });
     await mkdir(join(tmpDir, 'agents'), { recursive: true });
 
@@ -86,7 +86,7 @@ Content here.
 
     // Reference file — no frontmatter
     await writeFile(
-      join(tmpDir, 'skills', 'axiom-test-suite', 'references', 'patterns.md'),
+      join(tmpDir, 'skills', 'axiom-test-suite', 'skills', 'patterns.md'),
       `# Patterns
 
 Common patterns.

@@ -33,7 +33,7 @@ Use this skill when:
 - Multi-Xcode targeting (`MCP_XCODE_PID`)
 - Schema compliance issues with strict clients
 
-**Read**: `references/xcode-mcp-setup.md`
+**Read**: `skills/xcode-mcp-setup.md`
 
 ---
 
@@ -47,7 +47,7 @@ Use this skill when:
 - When to use MCP tools vs CLI (`xcodebuild`)
 - Destructive operation safety (`XcodeRM`, `XcodeMV`)
 
-**Read**: `references/xcode-mcp-tools.md`
+**Read**: `skills/xcode-mcp-tools.md`
 
 ---
 
@@ -60,7 +60,7 @@ Use this skill when:
 - "What params does BuildProject take?"
 - Tool category listing
 
-**Read**: `references/xcode-mcp-ref.md`
+**Read**: `skills/xcode-mcp-ref.md`
 
 ---
 
@@ -112,26 +112,26 @@ digraph xcode_mcp_router {
 ## Example Invocations
 
 User: "How do I set up Xcode MCP with Claude Code?"
--> Read: `references/xcode-mcp-setup.md`
+-> Read: `skills/xcode-mcp-setup.md`
 
 User: "How do I build my project using MCP tools?"
--> Read: `references/xcode-mcp-tools.md`
+-> Read: `skills/xcode-mcp-tools.md`
 
 User: "What parameters does BuildProject take?"
--> Read: `references/xcode-mcp-ref.md`
+-> Read: `skills/xcode-mcp-ref.md`
 
 User: "My mcpbridge connection keeps failing"
--> Read: `references/xcode-mcp-setup.md`
+-> Read: `skills/xcode-mcp-setup.md`
 
 User: "How do I target a specific Xcode window?"
--> Read: `references/xcode-mcp-tools.md`
+-> Read: `skills/xcode-mcp-tools.md`
 
 User: "Can I render SwiftUI previews via MCP?"
--> Read: `references/xcode-mcp-tools.md` (workflow), then `references/xcode-mcp-ref.md` (params)
+-> Read: `skills/xcode-mcp-tools.md` (workflow), then `skills/xcode-mcp-ref.md` (params)
 
 User: "Cursor can't parse Xcode's MCP responses"
--> Read: `references/xcode-mcp-setup.md` (schema compliance section)
+-> Read: `skills/xcode-mcp-setup.md` (schema compliance section)
 
 ## Resources
 
-**References**: references/xcode-mcp-setup.md, references/xcode-mcp-tools.md, references/xcode-mcp-ref.md, references/axe-ref.md
+**References**: skills/xcode-mcp-setup.md, skills/xcode-mcp-tools.md, skills/xcode-mcp-ref.md, skills/axe-ref.md
