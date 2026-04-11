@@ -978,7 +978,7 @@ func writeHeader(to output: inout OutputRawSpan) {
 }
 ```
 
-Use for building byte arrays, binary serialization, image pixel data. Apple's open-source [Swift Binary Parsing](https://github.com/apple/swift-binary-parsing) library is built entirely on Span types.
+Use for building byte arrays, binary serialization, image pixel data. Apple's Swift Binary Parsing library (apple/swift-binary-parsing) is built entirely on Span types.
 
 ### When NOT to Use Span
 

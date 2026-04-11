@@ -173,7 +173,7 @@ Use this router when:
 22. Need timer API syntax/lifecycle? → timer-patterns-ref
 23. Code review for outdated Swift patterns? → swift-modern
 24. Claude generating legacy APIs (DateFormatter, CGFloat, DispatchQueue)? → swift-modern
-25. Need to see runtime console output before profiling? → xclog-ref or `/axiom:console`
+25. Need to see runtime console output before profiling? → axiom-tools (skills/xclog-ref.md) or `/axiom:console`
 
 ## Anti-Rationalization
 
