@@ -2,7 +2,7 @@
 name: axiom-hig-ref
 description: Reference — Comprehensive Apple Human Interface Guidelines covering colors (semantic, custom, patterns), backgrounds (material hierarchy, dynamic), typography (built-in styles, custom fonts, Dynamic Type), SF Symbols (rendering modes, color, axiom-localization), Dark Mode, accessibility, and platform-specific considerations
 license: MIT
-compatibility: iOS, iPadOS, macOS, watchOS, tvOS, axiom-visionOS
+compatibility: iOS, iPadOS, macOS, watchOS, tvOS, visionOS
 metadata:
   version: "1.0.0"
 ---
@@ -811,7 +811,7 @@ Custom gestures should only be implemented when necessary and must be:
 ### Launch Screens
 
 **Mandatory for:** iOS, iPadOS, tvOS
-**Not required for:** macOS, axiom-visionOS, watchOS
+**Not required for:** macOS, visionOS, watchOS
 
 **Design principle:** "Design a launch screen that's nearly identical to the first screen of your app or game" to avoid jarring visual transitions.
 

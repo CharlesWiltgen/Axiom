@@ -2,7 +2,7 @@
 name: axiom-liquid-glass
 description: Use when implementing Liquid Glass effects, reviewing UI for Liquid Glass adoption, debugging visual artifacts, optimizing performance, or requesting expert review of Liquid Glass implementation - provides comprehensive design principles, API patterns, and troubleshooting guidance from WWDC 2025. Includes design review pressure handling and professional push-back frameworks
 license: MIT
-compatibility: iOS 26+, iPadOS 26+, macOS Tahoe+, axiom-visionOS 3+
+compatibility: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+
 metadata:
   version: "1.2.0"
   last-updated: "Added new iOS 26 APIs and backward compatibility guidance"
@@ -41,7 +41,7 @@ Liquid Glass is Apple's next-generation material design system introduced at WWD
 - **Dynamically bends and shapes light** (lensing) rather than scattering it
 - **Moves organically** like a lightweight liquid, responding to touch and app dynamism
 - **Adapts automatically** to size, environment, content, and light/dark modes
-- **Unifies design language** across all Apple platforms (iOS, iPadOS, macOS, axiom-visionOS)
+- **Unifies design language** across all Apple platforms (iOS, iPadOS, macOS, visionOS)
 
 **Core Philosophy**: Liquid Glass complements the evolution of rounded, immersive screens with rounded, floating forms that feel natural to touch interaction while letting content shine through.
 
@@ -604,6 +604,6 @@ For complete API reference including `glassEffect()`, `glassBackgroundEffect()`,
 
 ---
 
-**Platforms:** iOS 26+, iPadOS 26+, macOS Tahoe, axiom-visionOS 3
+**Platforms:** iOS 26+, iPadOS 26+, macOS Tahoe, visionOS 3
 **Xcode:** 26+
 **History:** See git log for changes

@@ -460,19 +460,19 @@ overlayView.center = CGPoint(x: uiX, y: uiY)
 ```swift
 // ❌ WRONG (no Y flip)
 let uiPoint = CGPoint(
-    x: axiom-visionPoint.x * width,
-    y: axiom-visionPoint.y * height
+    x: visionPoint.x * width,
+    y: visionPoint.y * height
 )
 
 // ❌ WRONG (forgot to scale from normalized)
 let uiPoint = CGPoint(
-    x: axiom-visionPoint.x,
+    x: visionPoint.x,
     y: 1 - visionPoint.y
 )
 
 // ✅ CORRECT
 let uiPoint = CGPoint(
-    x: axiom-visionPoint.x * width,
+    x: visionPoint.x * width,
     y: (1 - visionPoint.y) * height
 )
 ```

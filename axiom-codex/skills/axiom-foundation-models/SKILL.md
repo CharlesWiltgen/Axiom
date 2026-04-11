@@ -1,8 +1,8 @@
 ---
 name: axiom-foundation-models
-description: Use when implementing on-device AI with Apple's Foundation Models framework — prevents context overflow, blocking UI, wrong model use cases, and manual JSON parsing when @Generable should be used. iOS 26+, macOS 26+, iPadOS 26+, axiom-visionOS 26+
+description: Use when implementing on-device AI with Apple's Foundation Models framework — prevents context overflow, blocking UI, wrong model use cases, and manual JSON parsing when @Generable should be used. iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+
 license: MIT
-compatibility: iOS 26+, macOS 26+, iPadOS 26+, axiom-visionOS 26+
+compatibility: iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+
 metadata:
   version: "1.0.0"
   last-updated: "2025-12-03"
@@ -1122,4 +1122,4 @@ Before shipping Foundation Models features:
 
 **Last Updated**: 2025-12-03
 **Version**: 1.0.0
-**Target**: iOS 26+, macOS 26+, iPadOS 26+, axiom-visionOS 26+
+**Target**: iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+

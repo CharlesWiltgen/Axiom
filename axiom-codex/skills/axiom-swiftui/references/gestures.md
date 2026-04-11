@@ -11,7 +11,7 @@ Comprehensive guide to SwiftUI gesture recognition with composition patterns, st
 - Creating custom gesture recognizers
 - Debugging gesture conflicts or unresponsive gestures
 - Making gestures accessible with VoiceOver
-- Cross-platform gesture handling (iOS, macOS, axiom-visionOS)
+- Cross-platform gesture handling (iOS, macOS, visionOS)
 
 ## Example Prompts
 

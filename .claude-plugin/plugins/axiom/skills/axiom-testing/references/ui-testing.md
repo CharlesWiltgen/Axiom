@@ -292,7 +292,7 @@ element.waitForExistence(timeout: 0.1)  // ❌ Too short
 2. **Replay** — Run across multiple devices, languages, regions, orientations
 3. **Review** — Watch video recordings, analyze failures, view UI element overlays
 
-**Supported Platforms**: iOS, iPadOS, macOS, watchOS, tvOS, axiom-visionOS (Designed for iPad)
+**Supported Platforms**: iOS, iPadOS, macOS, watchOS, tvOS, visionOS (Designed for iPad)
 
 ### How UI Automation Works
 
@@ -1080,7 +1080,7 @@ class PhotoViewController: UIViewController {
 }
 ```
 
-**For deep crash analysis**: See `axiom-swift-concurrency` skill for @MainActor patterns and `axiom-memory-debugging` skill for thread-safety issues.
+**For deep crash analysis**: See `axiom-concurrency` (swift-concurrency reference) for @MainActor patterns and `axiom-memory-debugging` skill for thread-safety issues.
 
 #### Step 5: Add Crash-Prevention Tests
 

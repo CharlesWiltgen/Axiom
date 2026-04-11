@@ -2,7 +2,7 @@
 name: axiom-app-composition
 description: Use when structuring app entry points, managing authentication flows, switching root views, handling scene lifecycle, or asking 'how do I structure my @main', 'where does auth state live', 'how do I prevent screen flicker on launch', 'when should I modularize' - app-level composition patterns for iOS 26+
 license: MIT
-compatibility: iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, axiom-visionOS 26+. Xcode 26+
+compatibility: iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+. Xcode 26+
 metadata:
   version: "1.0"
 ---
@@ -18,7 +18,7 @@ Use this skill when:
 - Handling scene lifecycle events (scenePhase)
 - Restoring app state after termination
 - Deciding when to split into feature modules
-- Coordinating between multiple windows (iPad, axiom-visionOS)
+- Coordinating between multiple windows (iPad, visionOS)
 
 ## Example Prompts
 
@@ -726,7 +726,7 @@ struct DetailView: View {
 }
 ```
 
-## Multi-Window Coordination (iPad, axiom-visionOS)
+## Multi-Window Coordination (iPad, visionOS)
 
 From Apple documentation: Every window in a WindowGroup maintains **independent state**. The system allocates new storage for @State and @StateObject for each window.
 
@@ -902,7 +902,7 @@ internal class FeatureImplementation: FeatureAPI {
     }
 
     private func makeViewModel() -> FeatureViewModel {
-        FeatureViewModel(analytics: analytics, axiom-networking: axiom-networking)
+        FeatureViewModel(analytics: analytics, networking: networking)
     }
 }
 ```

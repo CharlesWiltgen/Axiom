@@ -1420,6 +1420,6 @@ final class OrderViewModelTests: XCTestCase {
 
 ---
 
-**Platforms**: iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, axiom-visionOS 26+
+**Platforms**: iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+
 **Xcode**: 26+
 **Status**: Production-ready (v1.0)
