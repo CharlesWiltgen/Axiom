@@ -41,6 +41,9 @@ These are real questions developers ask that this skill is designed to answer:
 #### 5. "Text field loses focus when I start typing, very frustrating"
 → The skill identifies ForEach identity issues and shows how to use stable IDs
 
+#### 6. "My sheet/modal always skips its loading animation and shows the completed state"
+→ The skill identifies @ViewBuilder closure re-initialization from parent state changes causing init params to change
+
 ## When to Use SwiftUI Debugging
 
 #### Use this skill when
@@ -124,41 +127,35 @@ The most common frustration: you changed @State but the view didn't redraw. The 
 
 ### Step 2: Diagnose the Root Cause
 
-#### Root Cause 1: Struct Mutation
+#### Root Cause 1: Struct Mutation Through Local Copy
 
-**Symptom**: You modify a @State value directly, but the view doesn't update.
+**Symptom**: You modify a value, but the view doesn't update.
 
-**Why it happens**: SwiftUI doesn't see direct mutations on structs. You need to reassign the entire value.
+**Why it happens**: You captured the struct value in a local variable or passed it to a function that mutates a copy. The `@State` property wrapper only sees mutations through its own setter — changes to copies are invisible to SwiftUI.
 
 ```swift
-// ❌ WRONG: Direct mutation doesn't trigger update
-@State var items: [String] = []
+// ❌ WRONG: Mutating a local copy — SwiftUI doesn't see it
+@State var settings = AppSettings()
 
-func addItem(_ item: String) {
-    items.append(item)  // SwiftUI doesn't see this change
+func resetTheme() {
+    var copy = settings
+    copy.theme = .default  // Mutates the copy, not the @State
+    // View never updates
 }
 
-// ✅ RIGHT: Reassignment triggers update
-@State var items: [String] = []
-
-func addItem(_ item: String) {
-    var newItems = items
-    newItems.append(item)
-    self.items = newItems  // Full reassignment
+// ✅ RIGHT: Mutate through the @State property directly
+func resetTheme() {
+    settings.theme = .default  // @State sees this mutation
 }
 
-// ✅ ALSO RIGHT: Use a binding
-@State var items: [String] = []
-
-var itemsBinding: Binding<[String]> {
-    Binding(
-        get: { items },
-        set: { items = $0 }
-    )
+// ❌ ALSO WRONG: Nested struct mutation through a captured reference
+func updateNestedValue(_ s: inout AppSettings) {
+    s.theme = .dark
 }
+// Calling updateNestedValue(&localCopy) won't update the view
 ```
 
-**Fix it**: Always reassign the entire struct value, not pieces of it.
+**Fix it**: Always mutate through the `@State` property itself, not through local copies or function parameters.
 
 ---
 
@@ -398,7 +395,63 @@ struct ContentView: View {
 - Works with `@State` instead of `@StateObject`
 - Can pass as plain property instead of `@ObservedObject`
 
-**See also**: [Managing model data in your app](https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app)
+**See also** [Managing model data in your app](https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app)
+
+---
+
+#### Root Cause 5: @ViewBuilder Closure Re-Initialization
+
+**Symptom**: A child view in a `.sheet`, `.fullScreenCover`, `.popover`, or `NavigationStack` destination never shows expected loading states or animations — it always appears in the "completed" state. A callback updates parent state, and the child behaves as if data was already loaded.
+
+**Why it happens**: Any `@ViewBuilder` closure re-evaluates when the parent body re-evaluates. If you pass parent `@State` as a child init parameter, and a callback mutates that same state, the closure re-evaluates with the new value. The child `@State` is preserved (identity-based lifetime), but init parameters are recomputed.
+
+```swift
+// ❌ WRONG: Parent state passed to child, then mutated by child callback
+.sheet(item: $sheetData) { _ in
+    ChildView(
+        savedResponse: cachedResponse,      // Parent state as init param
+        onSuccess: { cachedResponse = $0 }  // Callback mutates same state
+    )
+}
+// 1. Sheet opens → ChildView(savedResponse: nil)
+// 2. Async completes → onSuccess fires → cachedResponse set
+// 3. Parent body re-evaluates → closure re-evaluates
+// 4. New ChildView(savedResponse: cachedResponse) — now non-nil
+// 5. Child takes "pre-loaded" path → animations always skipped
+```
+
+**Diagnosis**: Add `let _ = Self._printChanges()` to both parent and child. If the child's init params change after its own callback fires, this is the cause.
+
+**Fixes** (simplest first):
+1. **Don't pass it back**: Remove the mutated state from init params — let the callback update parent without flowing it back
+2. **Separate state**: Use a different `@State` for the child's display logic vs the parent's cache
+3. **Child-owned lookup**: Child queries its own data source instead of receiving parent state
+
+```swift
+// ✅ Fix 1: Don't pass the mutated state back as init param
+.sheet(item: $sheetData) { _ in
+    ChildView(
+        onSuccess: { cachedResponse = $0 }  // Updates parent, doesn't flow back
+    )
+}
+
+// ✅ Fix 2: Separate state for display vs cache
+@State private var cachedResponse: Response?    // Parent's cache
+@State private var responseSnapshot: Response?   // Frozen at sheet open time
+
+Button("Open") {
+    responseSnapshot = cachedResponse  // Snapshot once
+    sheetData = SheetData()
+}
+.sheet(item: $sheetData) { _ in
+    ChildView(
+        savedResponse: responseSnapshot,          // Frozen at open time — not mutated by callback
+        onSuccess: { cachedResponse = $0 }
+    )
+}
+```
+
+**Key insight**: This is not sheet-specific — it applies to any `@ViewBuilder` closure. The child's `@State` persists across re-evaluations, but init parameters are recomputed with current parent state.
 
 ---
 
@@ -418,6 +471,7 @@ digraph view_not_updating {
     cause -> "Lost Binding Identity" [label="passed binding to child"];
     cause -> "Accidental Recreation" [label="view inside conditional"];
     cause -> "Missing Observer" [label="object changed, view didn't"];
+    cause -> "Sheet/Closure Re-Init" [label="closure re-evaluated with changed parent state"];
 }
 ```
 
@@ -679,28 +733,28 @@ VStack(spacing: 0) {
 
 **Symptom**: Padding, corners, or shadows appearing in wrong place.
 
-**Root cause**: Applying modifiers in wrong order. SwiftUI applies bottom-to-top.
+**Root cause**: Each modifier wraps the view above it, building outward. `.padding().background(.red)` adds padding first, then fills the padded area with red. `.background(.red).padding()` fills the text area with red, then adds transparent padding outside.
 
 ```swift
-// ❌ WRONG: Corners applied after padding
+// Background INSIDE padding (red fills only text area)
 Text("Hello")
-    .padding()
-    .cornerRadius(8)  // Corners are too large
-
-// ✅ RIGHT: Corners first, then padding
-Text("Hello")
-    .cornerRadius(8)
+    .background(.red)
     .padding()
 
-// ❌ WRONG: Shadow after frame
+// Background OUTSIDE padding (red fills padded area too)
 Text("Hello")
-    .frame(width: 100)
-    .shadow(radius: 4)  // Shadow only on frame bounds
+    .padding()
+    .background(.red)
 
-// ✅ RIGHT: Shadow includes all content
+// Shadow on content, then framed
 Text("Hello")
-    .shadow(radius: 4)
-    .frame(width: 100)
+    .shadow(radius: 4)  // Shadow on text
+    .frame(width: 200)
+
+// Shadow on frame bounds
+Text("Hello")
+    .frame(width: 200)
+    .shadow(radius: 4)  // Shadow on the 200pt frame
 ```
 
 ## View Identity
@@ -888,7 +942,7 @@ Views in `if/else` change position → different identity.
 | ForEach jumps | Non-unique ID | Use unique, stable IDs |
 | Unexpected recreation | Conditional position | Add explicit `.id()` |
 
-**See also**: [WWDC21: Demystify SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10022/)
+**See also** [WWDC21: Demystify SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10022/)
 
 ---
 

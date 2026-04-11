@@ -488,24 +488,25 @@ TCA is a third-party architecture from Point-Free. Consider it when:
 TCA has 4 building blocks — **State** (data), **Action** (events), **Reducer** (state evolution), and **Store** (runtime engine). Here they are in a single feature:
 
 ```swift
-// STATE — Data your feature needs
-@ObservableState
+@Reducer
 struct CounterFeature {
-    var count = 0
-    var fact: String?
-    var isLoading = false
-}
+    // STATE — Data your feature needs
+    @ObservableState
+    struct State {
+        var count = 0
+        var fact: String?
+        var isLoading = false
+    }
 
-// ACTION — All possible events
-enum Action {
-    case incrementButtonTapped
-    case decrementButtonTapped
-    case factButtonTapped
-    case factResponse(String)
-}
+    // ACTION — All possible events
+    enum Action {
+        case incrementButtonTapped
+        case decrementButtonTapped
+        case factButtonTapped
+        case factResponse(String)
+    }
 
-// REDUCER — How state evolves in response to actions
-struct CounterFeature: Reducer {
+    // REDUCER — How state evolves in response to actions
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
@@ -972,6 +973,34 @@ var body: some View {
     TextField("Name", text: $model.name)
 }
 ```
+
+## ❌ Anti-Pattern 7: Circular State in Closures
+
+Any `@ViewBuilder` closure (`.sheet`, `.fullScreenCover`, `NavigationStack` destination, `.popover`) re-evaluates when parent state changes. If a child callback mutates the same parent `@State` that's passed as a child init parameter, the child gets re-initialized with changed values mid-lifecycle.
+
+```swift
+// ❌ Callback mutates the same state passed as init param
+.sheet(item: $sheetItem) { _ in
+    ChildView(
+        savedResponse: cachedResponse,      // ❌ Parent state as init param
+        onSuccess: { cachedResponse = $0 }  // ❌ Mutates same state
+    )
+}
+
+// ✅ Don't pass state that callbacks will mutate
+.sheet(item: $sheetItem) { _ in
+    ChildView(
+        onSuccess: { cachedResponse = $0 }  // Update parent, but don't read it back
+    )
+}
+```
+
+**Why it's wrong**:
+- Callback mutates parent state that the closure depends on
+- Parent re-evaluates, which re-evaluates the closure with the mutated value
+- Child silently skips loading/animation states — no crash, just wrong behavior
+
+**Fixes**: (1) Don't pass the mutated state back as an init param. (2) Use a separate `@State` for the child's display logic. (3) Have the child query its own data source. See Root Cause 5 in `axiom-swiftui-debugging` for full diagnostic workflow.
 
 ---
 

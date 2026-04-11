@@ -1,0 +1,3 @@
+interface:
+  display_name: "Speech"
+  short_description: "Implementing speech-to-text, live transcription, or audio transcription"
