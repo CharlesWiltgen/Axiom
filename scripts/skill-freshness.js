@@ -40,7 +40,7 @@ function skillType(name) {
   if (name === 'axiom-using-axiom' || name === 'axiom-getting-started' ||
       name === 'axiom-apple-docs' || name === 'axiom-shipping' ||
       name === 'axiom-xcode-mcp' || name === 'axiom-ios-ml' ||
-      name === 'axiom-ios-games' || name === 'axiom-ios-graphics') return 'router';
+      name === 'axiom-games' || name === 'axiom-ios-graphics') return 'router';
   return 'discipline';
 }
 

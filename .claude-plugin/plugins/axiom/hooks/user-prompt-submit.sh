@@ -86,7 +86,7 @@ if re.search(r'widgetkit|add.{0,10}widget|widget.{0,10}(timeline|entry|not updat
 
 # Accessibility
 if re.search(r'voiceover|accessibility.{0,10}(label|hint|trait|value|issue|audit|fix)|dynamic type|color contrast|wcag|a11y|accessib.{0,10}(element|identif|action)', prompt_lower):
-    matches.append("axiom-ios-accessibility")
+    matches.append("axiom-accessibility")
 
 # AI
 if re.search(r'foundation models|apple intelligence|@generable\b|languagemodelsession|on-device.{0,5}(ai|model|ml)|@guide\b.{0,10}(generat|struct)', prompt_lower):
@@ -98,11 +98,11 @@ if re.search(r'coreml|core\s*ml|mltensor|create\s*ml|mlmodel|convert.{0,10}(pyto
 
 # Vision
 if re.search(r'vision\s*framework|vnrequest|vngenerateforeground|subject.{0,5}(segment|lift)|hand\s*pose|body\s*pose|text\s*recogni|barcode.{0,5}(scan|detect)|document\s*scan|datascanner', prompt_lower):
-    matches.append("axiom-ios-vision")
+    matches.append("axiom-vision")
 
 # Games/Graphics
 if re.search(r'spritekit|scenekit|realitykit|skscene|skspritenode|skphysics|realityview|arview|game.{0,5}(loop|scene|physics)', prompt_lower):
-    matches.append("axiom-ios-games")
+    matches.append("axiom-games")
 
 # Graphics (Metal/GPU — separate from games)
 if re.search(r'metal\b.{0,10}(shader|render|migrat|buffer|texture|pipeline)|opengl.{0,10}(migrat|metal|convert)|gpu.{0,10}(render|compute)|promoti|variable.{0,5}refresh.{0,5}rate', prompt_lower):

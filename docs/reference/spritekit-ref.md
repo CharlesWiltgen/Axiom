@@ -55,7 +55,7 @@ SKRenderer Metal integration pattern. SKShader GLSL-like syntax with uniforms an
 
 ## Documentation Scope
 
-This page documents the `axiom-spritekit-ref` skill. For architecture patterns and best practices, use the discipline skill. For troubleshooting, use the diagnostic skill.
+This page documents the `axiom-games` suite (spritekit-ref reference). For architecture patterns and best practices, use the discipline skill. For troubleshooting, use the diagnostic skill.
 
 - For game development patterns, see [SpriteKit](/skills/games/spritekit)
 - For troubleshooting, see [SpriteKit Diagnostics](/diagnostic/spritekit-diag)

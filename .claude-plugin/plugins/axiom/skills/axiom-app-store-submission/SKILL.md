@@ -696,7 +696,7 @@ Most apps need `ITSAppUsesNonExemptEncryption = false`. See `app-store-ref` Part
 
 ## Accessibility Nutrition Labels (New 2025)
 
-Accessibility Nutrition Labels are becoming required for new submissions. See `app-store-ref` Part 10 for the full label list and declaration rules. Run `axiom-accessibility-diag` before declaring.
+Accessibility Nutrition Labels are becoming required for new submissions. See `app-store-ref` Part 10 for the full label list and declaration rules. Run `axiom-accessibility` before declaring.
 
 ---
 
@@ -750,4 +750,4 @@ For developers submitting their first app, these are additional items often miss
 
 **Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details, /support/offering-account-deletion-in-your-app, /documentation/security/complying-with-encryption-export-regulations
 
-**Skills**: axiom-privacy-ux, axiom-storekit-ref, axiom-accessibility-diag, axiom-testflight-triage, axiom-app-store-connect-ref
+**Skills**: axiom-privacy-ux, axiom-storekit-ref, axiom-accessibility, axiom-testflight-triage, axiom-app-store-connect-ref

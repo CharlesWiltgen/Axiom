@@ -34,12 +34,12 @@ const ROUTER_CATEGORIES: Record<string, string> = {
   'axiom-ios-performance': 'Performance',
   'axiom-ios-networking': 'Networking',
   'axiom-ios-integration': 'System Integration',
-  'axiom-ios-accessibility': 'Accessibility',
+  'axiom-accessibility': 'Accessibility',
   'axiom-ios-ai': 'Apple Intelligence',
   'axiom-ios-ml': 'Machine Learning',
-  'axiom-ios-vision': 'Computer Vision',
+  'axiom-vision': 'Computer Vision',
   'axiom-ios-graphics': 'Graphics & Metal',
-  'axiom-ios-games': 'Games',
+  'axiom-games': 'Games',
   'axiom-ios-testing': 'Testing',
 };
 

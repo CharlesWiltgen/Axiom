@@ -174,7 +174,7 @@ All reference skills are reviewed against 4 quality criteria:
 4. **Practical Value** – Copy-paste ready, expert checklists, real-world impact
 
 #### Current reference skills
-- `axiom-accessibility-diag` – WCAG compliance, VoiceOver testing, Accessibility Inspector workflows
+- `axiom-accessibility` – WCAG compliance, VoiceOver testing, Accessibility Inspector workflows
 - `axiom-app-intents-ref` – Siri, Apple Intelligence, Shortcuts, Spotlight integration
 - `axiom-swiftui-26-ref` – iOS 26 SwiftUI: Liquid Glass, WebView, rich text, 3D charts
 - `axiom-core-data-diag` – Core Data troubleshooting and optimization

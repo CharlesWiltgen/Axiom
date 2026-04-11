@@ -52,8 +52,8 @@
       "description": "Use when integrating ANY iOS system feature - Siri, Shortcuts, widgets, IAP, camera, photos, audio, ShazamKit, haptics, localization, privacy, alarms, calendar, reminders, contacts. Covers App Intents, WidgetKit, StoreKit, AVFoundation, EventKit."
     },
     {
-      "name": "axiom-ios-accessibility",
-      "description": "Use when fixing or auditing ANY accessibility issue: VoiceOver, Dynamic Type, color contrast, touch targets, WCAG compliance, App Store accessibility review."
+      "name": "axiom-accessibility",
+      "description": "Use when fixing or auditing ANY accessibility issue — VoiceOver, Dynamic Type, color contrast, touch targets, WCAG compliance, App Store accessibility review."
     },
     {
       "name": "axiom-ios-ai",
@@ -64,16 +64,16 @@
       "description": "Use when deploying ANY custom ML model on-device, converting PyTorch models, compressing models, or implementing speech-to-text. Covers CoreML conversion, MLTensor, quantization, palettization, stateful models, KV-cache, SpeechAnalyzer."
     },
     {
-      "name": "axiom-ios-vision",
-      "description": "Use when implementing ANY computer vision feature: image analysis, text recognition (OCR), barcode/QR scanning, document scanning, pose detection, person segmentation, subject lifting, DataScannerViewController."
+      "name": "axiom-vision",
+      "description": "Use when implementing ANY computer vision feature — image analysis, pose detection, person segmentation, subject lifting, text recognition, barcode scanning."
     },
     {
       "name": "axiom-ios-graphics",
       "description": "Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, or display performance. Covers Metal migration, shader conversion, RealityKit ECS, RealityView, variable refresh rate, ProMotion."
     },
     {
-      "name": "axiom-ios-games",
-      "description": "Use when building ANY 2D or 3D game, game prototype, or interactive simulation with SpriteKit, SceneKit, or RealityKit. Covers scene graphs, ECS architecture, physics, actions, game loops, rendering, SwiftUI integration, SceneKit migration."
+      "name": "axiom-games",
+      "description": "Use when building ANY 2D or 3D game with SpriteKit, SceneKit, or RealityKit. Covers scene graphs, ECS, physics, actions, game loops, rendering, SwiftUI integration."
     },
     {
       "name": "axiom-apple-docs",
