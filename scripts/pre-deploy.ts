@@ -721,7 +721,7 @@ try {
     const sourceSkillDirs = fs.readdirSync(path.join(pluginDir, "skills"), { withFileTypes: true })
       .filter((d: fs.Dirent) => d.isDirectory() && fs.existsSync(path.join(pluginDir, "skills", d.name, "SKILL.md")));
     const CODEX_EXCLUDE = new Set([
-      'axiom-ios-build', 'axiom-ios-testing', 'axiom-swiftui', 'axiom-ios-data',
+      'axiom-ios-build', 'axiom-ios-testing', 'axiom-ios-data',
       'axiom-ios-concurrency', 'axiom-ios-performance', 'axiom-ios-networking',
       'axiom-ios-integration', 'axiom-ios-accessibility', 'axiom-ios-ai',
       'axiom-ios-ml', 'axiom-ios-vision', 'axiom-ios-graphics', 'axiom-ios-games',
