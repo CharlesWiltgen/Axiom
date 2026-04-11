@@ -31,6 +31,7 @@ interface SkillInfo {
   description: string;
   content: string;
   skillType: string;
+  parentSuite?: string;  // For reference files within suites
 }
 
 // --- Category label → slug mapping ---
@@ -51,6 +52,7 @@ export const CATEGORY_SLUGS: Record<string, string> = {
   'Games': 'games',
   'Testing': 'testing',
   'Media': 'media',
+  'Shipping': 'shipping',
   'General': 'general',
 };
 
@@ -75,31 +77,28 @@ const NOISE_WORDS = new Set([
   'specific', 'adopt', 'adopting', 'modern', 'current', 'latest',
   'legacy', 'existing', 'relevant', 'approach', 'best', 'practice',
   'practices', 'wrong', 'right', 'avoid', 'prevent', 'ensure',
+  // Prose words from section headings (not framework terms)
+  'critical', 'mandatory', 'optional', 'important', 'overview',
+  'example', 'examples', 'quick', 'advanced', 'basic', 'both',
+  'good', 'bad', 'step', 'steps', 'summary', 'resources',
+  'related', 'pattern', 'decision', 'tree', 'gotcha', 'gotchas', 'one',
+  'troubleshooting', 'checklist', 'when', 'what', 'how', 'why',
 ]);
 
 // --- Category overrides for names where heuristic order causes mismatches ---
 // e.g., "metal-migration" matches "migration" → data before "metal" → graphics
 
 const CATEGORY_OVERRIDES: Record<string, string> = {
-  'axiom-metal-migration': 'Graphics & Metal',
-  'axiom-metal-migration-diag': 'Graphics & Metal',
-  'axiom-metal-migration-ref': 'Graphics & Metal',
-  'axiom-networking-migration': 'Networking',
-  'axiom-networking-legacy': 'Networking',
-  'axiom-core-location': 'System Integration',
-  'axiom-core-location-diag': 'System Integration',
-  'axiom-core-location-ref': 'System Integration',
-  'axiom-metrickit-ref': 'Performance',
-  'axiom-lldb': 'Performance',
-  'axiom-lldb-ref': 'Performance',
-  'axiom-objc-block-retain-cycles': 'Performance',
-  'axiom-ownership-conventions': 'Concurrency & Async',
-  'axiom-realitykit': 'Games',
-  'axiom-realitykit-diag': 'Games',
-  'axiom-realitykit-ref': 'Games',
-  'axiom-transferable-ref': 'UI & Design',
-  'axiom-app-composition': 'UI & Design',
-  'axiom-file-protection-ref': 'Data & Persistence',
+  // Suite-level overrides (suite names don't contain framework-specific keywords)
+  'axiom-ai': 'Apple Intelligence',
+  'axiom-design': 'UI & Design',
+  'axiom-integration': 'System Integration',
+  'axiom-location': 'System Integration',
+  'axiom-media': 'Media',
+  'axiom-security': 'General',
+  'axiom-swift': 'General',
+  'axiom-shipping': 'Shipping',
+  'axiom-tools': 'General',
 };
 
 // Apple doc filename patterns → category (mirrors catalog/index.ts APPLE_DOC_CATEGORIES)
@@ -188,8 +187,44 @@ export function extractTags(
   skillName: string,
   _categorySlug: string,
   _skillType: string,
+  content?: string,
 ): string[] {
   const tags = new Set<string>();
+
+  // Also scan section headings from content (## headers contain framework terms)
+  if (content) {
+    const headings = content.match(/^#{1,4}\s+(.+)$/gm);
+    if (headings) {
+      const headingText = headings.join(' ');
+      // PascalCase from headings
+      const pascalInHeadings = headingText.match(/\b[A-Z][a-z]+(?:[A-Z][a-z]*)+\b/g);
+      if (pascalInHeadings) {
+        for (const pt of pascalInHeadings) {
+          const lower = pt.toLowerCase();
+          if (!NOISE_WORDS.has(lower) && !GENERIC_TAGS.has(lower) && lower.length > 3) {
+            tags.add(lower);
+          }
+        }
+      }
+      // @-prefixed from headings
+      const atInHeadings = headingText.match(/@[A-Za-z]\w+/g);
+      if (atInHeadings) {
+        for (const at of atInHeadings) {
+          tags.add(at.toLowerCase());
+        }
+      }
+      // Abbreviations from headings (3+ chars to skip DO, ID, SE etc.)
+      const abbrInHeadings = headingText.match(/\b[A-Z]{3,}\b/g);
+      if (abbrInHeadings) {
+        for (const ab of abbrInHeadings) {
+          const lower = ab.toLowerCase();
+          if (!NOISE_WORDS.has(lower) && !GENERIC_TAGS.has(lower) && lower !== 'ios' && lower !== 'not' && lower !== 'any') {
+            tags.add(lower);
+          }
+        }
+      }
+    }
+  }
 
   // Quoted terms from description (single, double, curly quotes — error messages, keywords)
   const quotedPatterns = [
@@ -389,6 +424,7 @@ async function main() {
       if (!entryStat.isDirectory()) continue;
 
       const skillFile = join(entryPath, 'SKILL.md');
+      let suiteLoaded = false;
       try {
         const raw = await readFile(skillFile, 'utf-8');
         const parsed = matter(raw);
@@ -397,8 +433,48 @@ async function main() {
         const skillType = inferSkillType(name);
 
         skills.set(name, { name, description, content: parsed.content, skillType });
+        suiteLoaded = true;
       } catch {
         // No SKILL.md or parse error, skip
+      }
+
+      // Load reference files from skills/ subdirectory (mirrors dev-loader.ts)
+      if (suiteLoaded) {
+        const refsDir = join(entryPath, 'skills');
+        try {
+          const refEntries = await readdir(refsDir);
+          for (const refFile of refEntries) {
+            if (!refFile.endsWith('.md')) continue;
+            try {
+              const refContent = await readFile(join(refsDir, refFile), 'utf-8');
+              const baseName = refFile.replace(/\.md$/, '');
+              const refName = `${entry}--${baseName}`;
+
+              // Extract description from first paragraph after title
+              const lines = refContent.split('\n');
+              let description = '';
+              let pastTitle = false;
+              for (const line of lines) {
+                if (!pastTitle) {
+                  if (line.match(/^#\s+/)) pastTitle = true;
+                  continue;
+                }
+                const trimmed = line.trim();
+                if (trimmed === '') continue;
+                if (trimmed.startsWith('#')) break;
+                description = trimmed;
+                break;
+              }
+
+              const skillType = inferSkillType(refName);
+              skills.set(refName, { name: refName, description, content: refContent, skillType, parentSuite: entry });
+            } catch {
+              // Parse error on reference file, skip
+            }
+          }
+        } catch {
+          // No skills/ directory — not a suite
+        }
       }
 
       // Recurse into subdirectories
@@ -439,10 +515,21 @@ async function main() {
       continue;
     }
 
-    const categoryLabel = inferCategoryFromName(name);
+    // Inherit category from parent suite if this is a reference file
+    let categoryLabel: string;
+    if (info.parentSuite) {
+      categoryLabel = inferCategoryFromName(info.parentSuite);
+    } else {
+      categoryLabel = inferCategoryFromName(name);
+    }
     const categorySlug = CATEGORY_SLUGS[categoryLabel] || 'general';
-    const tags = extractTags(info.description, name, categorySlug, info.skillType);
+    const tags = extractTags(info.description, name, categorySlug, info.skillType, info.content);
     const related = findRelatedSkills(name, info.content, allNames);
+
+    // Add parent suite to related for reference files
+    if (info.parentSuite && allNames.has(info.parentSuite) && !related.includes(info.parentSuite)) {
+      related.unshift(info.parentSuite);
+    }
 
     const entry: AnnotationEntry = { category: categorySlug };
     if (tags.length > 0) entry.tags = tags;
@@ -461,6 +548,20 @@ async function main() {
     }
   }
 
+  // 4b. Prune stale related references within remaining entries
+  let staleRelated = 0;
+  for (const entry of Object.values(annotations)) {
+    if (entry.related) {
+      const valid = entry.related.filter(r => allNames.has(r));
+      staleRelated += entry.related.length - valid.length;
+      if (valid.length > 0) {
+        entry.related = valid;
+      } else {
+        delete entry.related;
+      }
+    }
+  }
+
   // 5. Sort by key and write
   const sorted: Record<string, AnnotationEntry> = {};
   for (const key of Object.keys(annotations).sort()) {
@@ -474,6 +575,7 @@ async function main() {
   console.log(`  Preserved: ${preserved} existing annotations`);
   console.log(`  Generated: ${generated} new annotations`);
   if (pruned > 0) console.log(`  Pruned:    ${pruned} stale annotations`);
+  if (staleRelated > 0) console.log(`  Cleaned:   ${staleRelated} stale related references`);
   console.log(`  Total:     ${Object.keys(sorted).length} annotations`);
   console.log();
   console.log(`Written to: ${annotationsPath}`);

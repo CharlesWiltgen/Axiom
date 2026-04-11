@@ -20,6 +20,7 @@ export const SLUG_TO_LABEL: Record<string, string> = {
   'graphics': 'Graphics & Metal',
   'games': 'Games',
   'testing': 'Testing',
+  'shipping': 'Shipping & Distribution',
   'general': 'General',
 };
 
