@@ -65,4 +65,4 @@ This page documents the `push-notifications-diag` skill — diagnostic workflows
 
 **Docs**: /usernotifications, /usernotifications/setting_up_a_remote_notification_server
 
-**Skills**: push-notifications, push-notifications-ref
+**Skills**: 

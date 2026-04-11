@@ -99,7 +99,7 @@ Thread 0 Crashed:
 
 ## Documentation Scope
 
-This page documents the `axiom-testflight-triage` skill — systematic crash investigation workflow that Claude uses when you report TestFlight issues. The skill contains complete Organizer walkthroughs, symbolication commands, crash pattern guides, and pressure scenarios.
+This page documents the `axiom-shipping` skill — systematic crash investigation workflow that Claude uses when you report TestFlight issues. The skill contains complete Organizer walkthroughs, symbolication commands, crash pattern guides, and pressure scenarios.
 
 The skill routes through the `ios-build` router, so asking about TestFlight crashes will automatically invoke this guidance.
 

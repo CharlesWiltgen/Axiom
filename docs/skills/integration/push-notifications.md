@@ -49,7 +49,7 @@ Questions you can ask Claude that will draw from this skill:
 
 ## Documentation Scope
 
-This page documents the `axiom-push-notifications` skill — push notification patterns Claude uses when helping you implement remote and local notifications.
+This page documents the `axiom-integration` skill — push notification patterns Claude uses when helping you implement remote and local notifications.
 
 - **For diagnostics:** See [push-notifications-diag](/diagnostic/push-notifications-diag) for troubleshooting delivery failures
 - **For API reference:** See [push-notifications-ref](/reference/push-notifications-ref) for APNs transport and payload format

@@ -31,7 +31,7 @@ Use this reference when:
 
 ## Documentation Scope
 
-This page documents the `axiom-timer-patterns-ref` skill — the API reference Claude uses for timer syntax and lifecycle details.
+This page documents the `axiom-integration` skill — the API reference Claude uses for timer syntax and lifecycle details.
 
 **For decision trees and crash prevention:** See [Timer Safety Patterns](/skills/debugging/timer-patterns) for when to use which timer API and how to prevent DispatchSourceTimer crashes.
 
@@ -43,4 +43,4 @@ This page documents the `axiom-timer-patterns-ref` skill — the API reference C
 
 ## Resources
 
-**Skills**: axiom-timer-patterns, axiom-energy-ref, axiom-memory-debugging
+**Skills**: axiom-integration, axiom-performance

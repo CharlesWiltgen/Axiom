@@ -32,7 +32,7 @@ When run without arguments, analyzes your project and recommends relevant audits
 | Area | What It Checks |
 |------|----------------|
 | `accessibility` | VoiceOver, Dynamic Type, WCAG compliance |
-| `axiom-liquid-glass` | iOS 26 adoption opportunities |
+| `axiom-design` | iOS 26 adoption opportunities |
 | `axiom-swiftui-architecture` | Logic in views, testability |
 | `axiom-swiftui-nav` | NavigationStack issues, deep linking |
 | `axiom-swiftui-performance` | Expensive operations in view bodies |
@@ -42,14 +42,14 @@ When run without arguments, analyzes your project and recommends relevant audits
 |------|----------------|
 | `concurrency` | Swift 6 data races, @MainActor violations |
 | `memory` | Retain cycles, Timer leaks, closure captures |
-| `axiom-codable` | Manual JSON building, error swallowing |
+| `axiom-data` | Manual JSON building, error swallowing |
 
 ### Persistence & Storage
 | Area | What It Checks |
 |------|----------------|
-| `axiom-core-data` | Thread violations, N+1 queries |
+| `axiom-data` | Thread violations, N+1 queries |
 | `icloud` | File coordination, CloudKit errors |
-| `axiom-storage` | File protection, backup exclusions |
+| `axiom-data` | File protection, backup exclusions |
 
 ### Integration
 | Area | What It Checks |

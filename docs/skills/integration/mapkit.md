@@ -41,4 +41,4 @@ Use this skill when:
 
 **WWDC**: 2023-10043, 2024-10094
 
-**Skills**: axiom-mapkit-ref, axiom-mapkit-diag, axiom-core-location
+**Skills**: axiom-location

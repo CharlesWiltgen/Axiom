@@ -56,7 +56,7 @@ Questions you can ask Claude that will draw from this skill:
 
 ## Documentation Scope
 
-This page documents the `axiom-lldb` skill — the debugging workflow and decision tree skill Claude uses when helping you debug at runtime with LLDB. The skill contains complete playbooks, command selection logic, and pressure scenario handling.
+This page documents the `axiom-build` skill — the debugging workflow and decision tree skill Claude uses when helping you debug at runtime with LLDB. The skill contains complete playbooks, command selection logic, and pressure scenario handling.
 
 **For the complete command reference:** See [LLDB Command Reference](/reference/lldb-ref) for every LLDB command organized by task.
 
@@ -72,4 +72,4 @@ This page documents the `axiom-lldb` skill — the debugging workflow and decisi
 
 **Docs**: /xcode/debugging, /xcode/stepping-through-code-and-inspecting-variables-to-isolate-bugs
 
-**Skills**: axiom-lldb-ref, axiom-hang-diagnostics, axiom-memory-debugging, axiom-performance-profiling
+**Skills**: axiom-build, axiom-performance

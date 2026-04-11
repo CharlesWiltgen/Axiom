@@ -75,7 +75,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `axiom-app-store-ref` reference skill — complete API-level coverage Claude uses when you need specific App Store submission details, field specs, and guideline numbers.
+This page documents the `axiom-shipping` reference skill — complete API-level coverage Claude uses when you need specific App Store submission details, field specs, and guideline numbers.
 
 **For submission workflow:** See [App Store Submission](/skills/shipping/app-store-submission) for the pre-flight checklist and anti-patterns.
 
@@ -95,4 +95,4 @@ This page documents the `axiom-app-store-ref` reference skill — complete API-l
 
 **Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details, /help/app-store-connect
 
-**Skills**: axiom-app-store-submission, axiom-app-store-diag, axiom-privacy-ux, axiom-storekit-ref
+**Skills**: axiom-integration, axiom-shipping

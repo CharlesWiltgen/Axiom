@@ -34,7 +34,7 @@ Use this skill when:
 
 ## Documentation Scope
 
-This page documents the `axiom-code-signing` discipline skill.
+This page documents the `axiom-security` discipline skill.
 
 - For error troubleshooting with decision trees, see [Code Signing Diagnostics](/diagnostic/code-signing-diag)
 - For CLI command reference and API details, see [Code Signing Reference](/reference/code-signing-ref)

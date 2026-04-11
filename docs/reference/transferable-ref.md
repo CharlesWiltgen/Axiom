@@ -84,7 +84,7 @@ Color.clear
 
 ## Documentation Scope
 
-This page documents the `axiom-transferable-ref` skill. It covers the CoreTransferable framework and all SwiftUI surfaces that consume Transferable types (iOS 16+).
+This page documents the `axiom-swift` skill. It covers the CoreTransferable framework and all SwiftUI surfaces that consume Transferable types (iOS 16+).
 
 - For photo-specific picking and library access, see [photo-library-ref](./photo-library-ref)
 - For gesture handling (tap, drag gesture state, composition), see [SwiftUI Gestures](/skills/ui-design/swiftui-gestures)

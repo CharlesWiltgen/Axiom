@@ -156,4 +156,4 @@ This is a **diagnostic skill** — systematic rejection diagnosis with guideline
 
 **Docs**: /app-store/review/guidelines, /distribute/app-review, /contact/app-store/?topic=appeal
 
-**Skills**: axiom-app-store-submission, axiom-app-store-ref, axiom-storekit-ref, axiom-privacy-ux
+**Skills**: axiom-integration, axiom-shipping

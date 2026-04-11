@@ -34,7 +34,7 @@ Use this skill when:
 
 ## Documentation Scope
 
-This page documents the `axiom-app-attest` discipline skill. The discipline skill provides lifecycle workflows, rollout planning, and anti-rationalization guidance for app integrity verification.
+This page documents the `axiom-security` discipline skill. The discipline skill provides lifecycle workflows, rollout planning, and anti-rationalization guidance for app integrity verification.
 
 ## Related
 

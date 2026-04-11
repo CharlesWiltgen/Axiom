@@ -42,7 +42,7 @@ Use this reference when:
 
 ## Documentation Scope
 
-This page documents the `axiom-realitykit-ref` skill. For architecture patterns, ECS guidance, and best practices, use the discipline skill. For troubleshooting, use the diagnostic skill.
+This page documents the `axiom-graphics` skill. For architecture patterns, ECS guidance, and best practices, use the discipline skill. For troubleshooting, use the diagnostic skill.
 
 - For ECS architecture and patterns, see [RealityKit](/skills/games/realitykit)
 - For troubleshooting, see [RealityKit Diagnostics](/diagnostic/realitykit-diag)

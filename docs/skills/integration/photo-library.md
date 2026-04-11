@@ -92,7 +92,7 @@ PhotosPicker(
 
 ## Documentation Scope
 
-This page documents the `axiom-photo-library` skill -- privacy-forward photo access patterns Claude uses when helping you implement photo selection and library features. The skill contains 6 core patterns, anti-patterns, a shipping checklist, and pressure scenarios.
+This page documents the `axiom-media` skill -- privacy-forward photo access patterns Claude uses when helping you implement photo selection and library features. The skill contains 6 core patterns, anti-patterns, a shipping checklist, and pressure scenarios.
 
 **For API reference:** See [photo-library-ref](/reference/photo-library-ref) for comprehensive PHPickerViewController, PhotosPicker, PHPhotoLibrary, PHAsset, and PHImageManager API coverage.
 

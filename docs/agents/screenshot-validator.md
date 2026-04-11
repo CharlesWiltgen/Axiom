@@ -65,7 +65,7 @@ Validates screenshots against all required App Store sizes:
 
 ## Related Tools
 
-- **`axiom-app-store-submission` skill** — Pre-flight checklist for the full submission workflow
-- **`axiom-app-store-ref` skill** — Metadata specs, guideline details, screenshot requirements
+- **`axiom-shipping` skill** — Pre-flight checklist for the full submission workflow
+- **`axiom-shipping` skill** — Metadata specs, guideline details, screenshot requirements
 - **`security-privacy-scanner` agent** — Code-level security and privacy compliance scanning
 - **`simulator-tester` agent** — Capture screenshots from the iOS Simulator

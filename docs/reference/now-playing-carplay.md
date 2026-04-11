@@ -41,7 +41,7 @@ CarPlay reads from the same `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter`
 
 ## Documentation Scope
 
-This page documents the `axiom-now-playing-carplay` reference skill -- CarPlay-specific patterns for Now Playing integration.
+This page documents the `axiom-media` reference skill -- CarPlay-specific patterns for Now Playing integration.
 
 - For core Now Playing setup (MPNowPlayingInfoCenter, remote commands, artwork), see [now-playing](/skills/integration/now-playing)
 - For MusicKit automatic Now Playing with Apple Music content, see [now-playing-musickit](/reference/now-playing-musickit)

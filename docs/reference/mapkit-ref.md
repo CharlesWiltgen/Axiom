@@ -39,7 +39,7 @@ Use this reference when:
 
 ## Documentation Scope
 
-This page documents the `axiom-mapkit-ref` skill — the API reference Claude uses for MapKit syntax and configuration.
+This page documents the `axiom-location` skill — the API reference Claude uses for MapKit syntax and configuration.
 
 **For decision trees and anti-patterns:** See [MapKit](/skills/integration/mapkit) for when to use SwiftUI Map vs MKMapView and annotation strategies.
 **For troubleshooting:** See [MapKit Diagnostics](/diagnostic/mapkit-diag) for symptom-based diagnosis.
@@ -54,4 +54,4 @@ This page documents the `axiom-mapkit-ref` skill — the API reference Claude us
 
 **WWDC**: 2023-10043, 2024-10094
 
-**Skills**: axiom-mapkit, axiom-mapkit-diag, axiom-core-location-ref
+**Skills**: axiom-location
