@@ -171,7 +171,7 @@ heading("5. Skill Integrity");
 
 const allSkillNames = new Set<string>();
 let skillFilesChecked = 0;
-let skillContentCount = 0; // Content units: standalone SKILL.md + references/*.md in suites
+let skillContentCount = 0; // Content units: standalone SKILL.md + references/*.md in skill suites
 
 function checkSkillsIn(dir: string): void {
   if (!fs.existsSync(dir)) return;

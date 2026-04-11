@@ -128,7 +128,7 @@ for (const skill of skillEntries) {
   fs.mkdirSync(destDir, { recursive: true });
   fs.copyFileSync(skill.sourcePath, path.join(destDir, 'SKILL.md'));
 
-  // Copy references/ directory if it exists (multi-file suites)
+  // Copy references/ directory if it exists (skill suites)
   const refsDir = path.join(path.dirname(skill.sourcePath), 'references');
   if (fs.existsSync(refsDir)) {
     const destRefs = path.join(destDir, 'references');
