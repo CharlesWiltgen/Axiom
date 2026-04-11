@@ -171,6 +171,7 @@ heading("5. Skill Integrity");
 
 const allSkillNames = new Set<string>();
 let skillFilesChecked = 0;
+let skillContentCount = 0; // Content units: standalone SKILL.md + references/*.md in suites
 
 function checkSkillsIn(dir: string): void {
   if (!fs.existsSync(dir)) return;
@@ -182,6 +183,15 @@ function checkSkillsIn(dir: string): void {
     const skillFile = path.join(fullPath, "SKILL.md");
     if (fs.existsSync(skillFile)) {
       skillFilesChecked++;
+
+      // Count content units: suites count references/, standalone count SKILL.md
+      const refsDir = path.join(fullPath, "references");
+      if (fs.existsSync(refsDir) && fs.statSync(refsDir).isDirectory()) {
+        skillContentCount += fs.readdirSync(refsDir).filter((f: string) => f.endsWith(".md")).length;
+      } else {
+        skillContentCount++;
+      }
+
       const content = fs.readFileSync(skillFile, "utf8");
 
       if (content.trim().length < 50) {
@@ -347,10 +357,10 @@ if (fs.existsSync(metadataPath)) {
   const metaAgents = parseInt(lines[2], 10);
   const metaCommands = parseInt(lines[3], 10);
 
-  if (metaSkills !== skillFilesChecked) {
+  if (metaSkills !== skillContentCount) {
     error(
       "metadata",
-      `metadata.txt says ${metaSkills} skills, filesystem has ${skillFilesChecked}`,
+      `metadata.txt says ${metaSkills} skills, filesystem has ${skillContentCount} content units`,
     );
   } else {
     console.log(`  ✓ Skill count matches: ${metaSkills}`);
