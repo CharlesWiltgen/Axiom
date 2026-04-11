@@ -23,7 +23,7 @@ const EXCLUDE_SKILLS = new Set([
   'axiom-apple-docs',
   'axiom-xcode-mcp',
   'axiom-shipping',
-  'axiom-using-axiom', // Claude Code-specific discipline injection
+  'axiom-tools', // Claude Code-specific discipline injection + onboarding
 ]);
 
 // Read version from Claude Code manifest

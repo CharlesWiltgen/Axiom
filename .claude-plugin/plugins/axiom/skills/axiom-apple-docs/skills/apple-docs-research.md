@@ -1,11 +1,3 @@
----
-name: axiom-apple-docs-research
-description: Use when researching Apple frameworks, APIs, or WWDC sessions - provides techniques for retrieving full transcripts, code samples, and documentation using Chrome browser and sosumi.ai
-license: MIT
-metadata:
-  version: "1.0.0"
----
-
 # Apple Documentation Research
 
 ## When to Use This Skill
@@ -321,7 +313,5 @@ Before using captured content:
 ## Resources
 
 **Skills**: superpowers-chrome:browsing, writing-skills, reviewing-reference-skills
-
----
 
 **Time Saved**: Using this technique saves 30-40 minutes per WWDC session vs. manual video watching and transcription. For comprehensive research spanning multiple sessions, savings compound to 3-4 hours per skill.

@@ -265,7 +265,7 @@ axe screenshot --output /tmp/screenshot.png --udid $UDID
 4. **Capture**: Screenshot, video, logs
 5. **Analyze**: Review visual state, check for errors
 6. **Report**: Actual vs expected, pass/fail
-7. **Save**: If this is a new device/app selection, save to `.axiom/preferences.yaml` (see `axiom-xclog-ref` skill)
+7. **Save**: If this is a new device/app selection, save to `.axiom/preferences.yaml` (see `axiom-tools (skills/xclog-ref.md)` skill)
 
 ## Output Format
 
