@@ -11,22 +11,11 @@ Energy issues manifest as battery drain, hot devices, and poor App Store reviews
 
 ## Example Prompts
 
-Real questions developers ask that this skill answers:
-
-#### 1. "My app is always at the top of Battery Settings. How do I find what's draining power?"
-→ The skill covers Power Profiler workflow to identify dominant subsystem and targeted fixes
-
-#### 2. "Users report my app makes their phone hot. Where do I start debugging?"
-→ The skill provides decision tree: CPU vs GPU vs Network diagnosis with specific patterns
-
-#### 3. "I have timers and location updates. Are they causing battery drain?"
-→ The skill covers timer tolerance, location accuracy trade-offs, and audit checklists
-
-#### 4. "My app drains battery in the background even when users aren't using it."
-→ The skill covers background execution patterns, BGTasks, and EMRCA principles
-
-#### 5. "How do I measure if my optimization actually improved battery life?"
-→ The skill demonstrates before/after Power Profiler comparison workflow
+- "My app is always at the top of Battery Settings. How do I find what's draining power?"
+- "Users report my app makes their phone hot. Where do I start debugging?"
+- "I have timers and location updates. Are they causing battery drain?"
+- "My app drains battery in the background even when users aren't using it."
+- "How do I measure if my optimization actually improved battery life?"
 
 ---
 
@@ -818,26 +807,8 @@ Check **Battery Usage** pane in Xcode Organizer for field data:
 | Timer tolerance | Significant CPU savings |
 | Lazy loading | Eliminates startup CPU spikes |
 
-### Related Skills
-- `axiom-performance (skills/energy-ref.md)` — Complete API reference with all code examples
-- `axiom-performance (skills/energy-diag.md)` — Symptom-based troubleshooting decision trees
-- `axiom-integration` — Background tasks (skills/background-processing.md), timers (skills/timer-patterns.md)
-- `axiom-performance (skills/performance-profiling.md)` — General Instruments workflows
-- `axiom-performance (skills/memory-debugging.md)` — Memory leak diagnosis (often related to energy)
-- `axiom-networking` — Network optimization patterns
+## Resources
 
----
+**WWDC**: 2025-226, 2025-227, 2022-10083, 2020-10095, 2019-417
 
-## WWDC Sessions
-
-- **WWDC25-226** "Profile and optimize power usage in your app" — Power Profiler workflow
-- **WWDC25-227** "Finish tasks in the background" — BGContinuedProcessingTask, EMRCA
-- **WWDC22-10083** "Power down: Improve battery consumption" — Dark Mode, frame rates, deferral
-- **WWDC20-10095** "The Push Notifications primer" — Push vs poll
-- **WWDC19-417** "Improving Battery Life and Performance" — MetricKit
-
----
-
-**Last Updated**: 2025-12-26
-**Platforms**: iOS 26+, iPadOS 26+
-**Status**: Production-ready energy optimization patterns
+**Skills**: skills/energy-ref.md, skills/energy-diag.md, skills/performance-profiling.md, skills/memory-debugging.md
