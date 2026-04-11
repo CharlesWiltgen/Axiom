@@ -25,7 +25,7 @@ Use this router when:
 | Developer Intent | Route To |
 |-----------------|----------|
 | On-device text generation (Apple Intelligence) | **Stay here** → Foundation Models skills |
-| Custom ML model deployment (PyTorch, TensorFlow) | **See references/ios-ml.md** → CoreML conversion, compression |
+| Custom ML model deployment (PyTorch, TensorFlow) | **See skills/ios-ml.md** → CoreML conversion, compression |
 | Computer vision (image analysis, OCR, segmentation) | **/skill axiom-vision** → Vision framework |
 | Cloud API integration (OpenAI, etc.) | **/skill axiom-networking** → URLSession patterns |
 | System AI features (Writing Tools, Genmoji) | No custom code needed — these are system-provided |
@@ -33,7 +33,7 @@ Use this router when:
 **Key boundary: ai vs ios-ml**
 - ai = Apple's Foundation Models framework (LanguageModelSession, @Generable, on-device LLM)
 - ios-ml = Custom model deployment (CoreML conversion, quantization, MLTensor, speech-to-text)
-- If developer says "run my own model" → references/ios-ml.md. If "use Apple Intelligence" → stay here.
+- If developer says "run my own model" → skills/ios-ml.md. If "use Apple Intelligence" → stay here.
 
 ## Cross-Domain Routing
 
@@ -51,7 +51,7 @@ Use this router when:
 
 ### Foundation Models Work
 
-**Implementation patterns** → `references/foundation-models.md`
+**Implementation patterns** → `skills/foundation-models.md`
 - LanguageModelSession basics
 - @Generable structured output
 - Tool protocol integration
@@ -59,13 +59,13 @@ Use this router when:
 - Dynamic schemas
 - 26 WWDC code examples
 
-**API reference** → `references/foundation-models-ref.md`
+**API reference** → `skills/foundation-models-ref.md`
 - Complete API documentation
 - All @Generable examples
 - Tool protocol patterns
 - Streaming generation patterns
 
-**Diagnostics** → `references/foundation-models-diag.md`
+**Diagnostics** → `skills/foundation-models-diag.md`
 - AI response blocked
 - Generation slow
 - Guardrail violations
@@ -76,7 +76,7 @@ Use this router when:
 
 ## Decision Tree
 
-1. Custom ML model / CoreML / PyTorch conversion? → **See references/ios-ml.md**
+1. Custom ML model / CoreML / PyTorch conversion? → **See skills/ios-ml.md**
 2. Computer vision / image analysis / OCR? → **/skill axiom-vision**
 3. Cloud AI API integration? → **/skill axiom-networking**
 4. Implementing Foundation Models / @Generable / Tool protocol? → foundation-models
@@ -111,25 +111,25 @@ Use this router when:
 ## Example Invocations
 
 User: "How do I use Apple Intelligence to generate structured data?"
-→ Read: `references/foundation-models.md`
+→ Read: `skills/foundation-models.md`
 
 User: "My AI generation is being blocked"
-→ Read: `references/foundation-models-diag.md`
+→ Read: `skills/foundation-models-diag.md`
 
 User: "Show me @Generable examples"
-→ Read: `references/foundation-models-ref.md`
+→ Read: `skills/foundation-models-ref.md`
 
 User: "Implement streaming AI generation"
-→ Read: `references/foundation-models.md`
+→ Read: `skills/foundation-models.md`
 
 User: "I want to add AI to my app"
 → First ask: Apple Intelligence (Foundation Models) or custom ML model? Route accordingly.
 
 User: "My Foundation Models session is blocking the UI"
-→ Read: `references/foundation-models.md` (async patterns) + also invoke `ios-concurrency` if needed
+→ Read: `skills/foundation-models.md` (async patterns) + also invoke `ios-concurrency` if needed
 
 User: "Review my Foundation Models code for issues"
 → Invoke: `foundation-models-auditor` agent
 
 User: "I want to run my PyTorch model on device"
-→ Read: `references/ios-ml.md` (CoreML conversion, not Foundation Models)
+→ Read: `skills/ios-ml.md` (CoreML conversion, not Foundation Models)

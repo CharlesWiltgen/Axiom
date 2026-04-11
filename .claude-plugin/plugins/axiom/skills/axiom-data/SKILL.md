@@ -24,33 +24,33 @@ Use this skill when working with:
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| SwiftData @Model, @Query, ModelContext | See `references/swiftdata.md` |
-| SwiftData schema migration, VersionedSchema | See `references/swiftdata-migration.md` |
-| SwiftData migration crashes, data loss | See `references/swiftdata-migration-diag.md` |
-| Migrating from Realm to SwiftData | See `references/realm-migration-ref.md` |
-| SwiftData vs SQLiteData decision | See `references/sqlitedata-migration.md` |
-| GRDB queries, ValueObservation, DatabaseMigrator | See `references/grdb.md` |
-| SQLiteData @Table, CRUD, SyncEngine | See `references/sqlitedata.md` |
-| SQLiteData advanced patterns, CTEs, views | See `references/sqlitedata-ref.md` |
-| Core Data stack, relationships, concurrency | See `references/core-data.md` |
-| Core Data migration crashes, thread errors | See `references/core-data-diag.md` |
-| ANY schema migration safety | See `references/database-migration.md` |
-| Codable, JSON encoding/decoding | See `references/codable.md` |
-| Cloud sync architecture, offline-first | See `references/cloud-sync.md` |
-| CloudKit, CKSyncEngine, CKRecord | See `references/cloudkit-ref.md` |
-| iCloud Drive, ubiquitous containers | See `references/icloud-drive-ref.md` |
-| Cloud sync errors, conflict resolution | See `references/cloud-sync-diag.md` |
-| Storage strategy, where to store data | See `references/storage.md` |
-| Storage issues, files disappeared | See `references/storage-diag.md` |
-| Storage management, disk pressure | See `references/storage-management-ref.md` |
-| Keychain / secure credential storage | See axiom-security (references/keychain.md) |
-| Keychain errors (errSecDuplicateItem) | See axiom-security (references/keychain-diag.md) |
-| Keychain API reference | See axiom-security (references/keychain-ref.md) |
-| Encryption / signing / key management | See axiom-security (references/cryptokit.md) |
-| CryptoKit API reference | See axiom-security (references/cryptokit-ref.md) |
-| File protection, NSFileProtection | See axiom-security (references/file-protection-ref.md) |
-| tvOS data persistence (no local storage) | See axiom-swift (references/tvos.md) |
-| tvOS + CloudKit SyncEngine | See `references/sqlitedata.md` |
+| SwiftData @Model, @Query, ModelContext | See `skills/swiftdata.md` |
+| SwiftData schema migration, VersionedSchema | See `skills/swiftdata-migration.md` |
+| SwiftData migration crashes, data loss | See `skills/swiftdata-migration-diag.md` |
+| Migrating from Realm to SwiftData | See `skills/realm-migration-ref.md` |
+| SwiftData vs SQLiteData decision | See `skills/sqlitedata-migration.md` |
+| GRDB queries, ValueObservation, DatabaseMigrator | See `skills/grdb.md` |
+| SQLiteData @Table, CRUD, SyncEngine | See `skills/sqlitedata.md` |
+| SQLiteData advanced patterns, CTEs, views | See `skills/sqlitedata-ref.md` |
+| Core Data stack, relationships, concurrency | See `skills/core-data.md` |
+| Core Data migration crashes, thread errors | See `skills/core-data-diag.md` |
+| ANY schema migration safety | See `skills/database-migration.md` |
+| Codable, JSON encoding/decoding | See `skills/codable.md` |
+| Cloud sync architecture, offline-first | See `skills/cloud-sync.md` |
+| CloudKit, CKSyncEngine, CKRecord | See `skills/cloudkit-ref.md` |
+| iCloud Drive, ubiquitous containers | See `skills/icloud-drive-ref.md` |
+| Cloud sync errors, conflict resolution | See `skills/cloud-sync-diag.md` |
+| Storage strategy, where to store data | See `skills/storage.md` |
+| Storage issues, files disappeared | See `skills/storage-diag.md` |
+| Storage management, disk pressure | See `skills/storage-management-ref.md` |
+| Keychain / secure credential storage | See axiom-security (skills/keychain.md) |
+| Keychain errors (errSecDuplicateItem) | See axiom-security (skills/keychain-diag.md) |
+| Keychain API reference | See axiom-security (skills/keychain-ref.md) |
+| Encryption / signing / key management | See axiom-security (skills/cryptokit.md) |
+| CryptoKit API reference | See axiom-security (skills/cryptokit-ref.md) |
+| File protection, NSFileProtection | See axiom-security (skills/file-protection-ref.md) |
+| tvOS data persistence (no local storage) | See axiom-swift (skills/tvos.md) |
+| tvOS + CloudKit SyncEngine | See `skills/sqlitedata.md` |
 
 ### Automated Scanning
 
@@ -63,31 +63,31 @@ Use this skill when working with:
 
 ## Decision Tree
 
-1. SwiftData? → `references/swiftdata.md`, `references/swiftdata-migration.md`
-2. Core Data? → `references/core-data.md`, `references/core-data-diag.md`
-3. GRDB? → `references/grdb.md`
-4. SQLiteData? → `references/sqlitedata.md`, `references/sqlitedata-ref.md`
-5. ANY schema migration? → `references/database-migration.md` (ALWAYS — prevents data loss)
-6. Realm migration? → `references/realm-migration-ref.md`
-7. SwiftData vs SQLiteData? → `references/sqlitedata-migration.md`
-8. Cloud sync architecture? → `references/cloud-sync.md`
-9. CloudKit? → `references/cloudkit-ref.md`
-10. iCloud Drive? → `references/icloud-drive-ref.md`
-11. Cloud sync errors? → `references/cloud-sync-diag.md`
-12. Codable/JSON serialization? → `references/codable.md`
-13. File storage strategy? → `references/storage.md`, `references/storage-diag.md`, `references/storage-management-ref.md`
-14. File protection? → See axiom-security (references/file-protection-ref.md)
-15. Keychain / storing tokens, passwords, secrets securely? → See axiom-security (references/keychain.md), See axiom-security (references/keychain-diag.md), See axiom-security (references/keychain-ref.md)
-16. SecItem errors (errSecDuplicateItem, errSecItemNotFound, errSecInteractionNotAllowed)? → See axiom-security (references/keychain-diag.md)
-17. Encryption, signing, Secure Enclave, CryptoKit? → See axiom-security (references/cryptokit.md), See axiom-security (references/cryptokit-ref.md)
-18. Quantum-secure cryptography, HPKE, ML-KEM? → See axiom-security (references/cryptokit.md)
+1. SwiftData? → `skills/swiftdata.md`, `skills/swiftdata-migration.md`
+2. Core Data? → `skills/core-data.md`, `skills/core-data-diag.md`
+3. GRDB? → `skills/grdb.md`
+4. SQLiteData? → `skills/sqlitedata.md`, `skills/sqlitedata-ref.md`
+5. ANY schema migration? → `skills/database-migration.md` (ALWAYS — prevents data loss)
+6. Realm migration? → `skills/realm-migration-ref.md`
+7. SwiftData vs SQLiteData? → `skills/sqlitedata-migration.md`
+8. Cloud sync architecture? → `skills/cloud-sync.md`
+9. CloudKit? → `skills/cloudkit-ref.md`
+10. iCloud Drive? → `skills/icloud-drive-ref.md`
+11. Cloud sync errors? → `skills/cloud-sync-diag.md`
+12. Codable/JSON serialization? → `skills/codable.md`
+13. File storage strategy? → `skills/storage.md`, `skills/storage-diag.md`, `skills/storage-management-ref.md`
+14. File protection? → See axiom-security (skills/file-protection-ref.md)
+15. Keychain / storing tokens, passwords, secrets securely? → See axiom-security (skills/keychain.md), See axiom-security (skills/keychain-diag.md), See axiom-security (skills/keychain-ref.md)
+16. SecItem errors (errSecDuplicateItem, errSecItemNotFound, errSecInteractionNotAllowed)? → See axiom-security (skills/keychain-diag.md)
+17. Encryption, signing, Secure Enclave, CryptoKit? → See axiom-security (skills/cryptokit.md), See axiom-security (skills/cryptokit-ref.md)
+18. Quantum-secure cryptography, HPKE, ML-KEM? → See axiom-security (skills/cryptokit.md)
 19. Want Core Data safety scan? → core-data-auditor (Agent)
 20. Want Codable anti-pattern scan? → codable-auditor (Agent)
 21. Want iCloud sync audit? → icloud-auditor (Agent)
 22. Want storage location audit? → storage-auditor (Agent)
 23. Want database schema/migration safety scan? → database-schema-auditor (Agent)
 24. Want SwiftData code audit? → swiftdata-auditor (Agent)
-25. tvOS data persistence? → See axiom-swift (references/tvos.md) (CRITICAL: no persistent local storage) + `references/sqlitedata.md` (CloudKit SyncEngine)
+25. tvOS data persistence? → See axiom-swift (skills/tvos.md) (CRITICAL: no persistent local storage) + `skills/sqlitedata.md` (CloudKit SyncEngine)
 
 ## Anti-Rationalization
 
@@ -104,7 +104,7 @@ Use this skill when working with:
 
 ## Critical Pattern: Migrations
 
-**ALWAYS read `references/database-migration.md` when adding/modifying database columns.**
+**ALWAYS read `skills/database-migration.md` when adding/modifying database columns.**
 
 This prevents:
 - "FOREIGN KEY constraint failed" errors
@@ -114,16 +114,16 @@ This prevents:
 ## Example Invocations
 
 User: "I need to add a column to my SwiftData model"
-→ Read: `references/database-migration.md` (critical - prevents data loss)
+→ Read: `skills/database-migration.md` (critical - prevents data loss)
 
 User: "How do I query SwiftData with complex filters?"
-→ Read: `references/swiftdata.md`
+→ Read: `skills/swiftdata.md`
 
 User: "CloudKit sync isn't working"
-→ Read: `references/cloud-sync-diag.md`
+→ Read: `skills/cloud-sync-diag.md`
 
 User: "Should I use SwiftData or SQLiteData?"
-→ Read: `references/sqlitedata-migration.md`
+→ Read: `skills/sqlitedata-migration.md`
 
 User: "Check my Core Data code for safety issues"
 → Launch: `core-data-auditor` agent
@@ -144,22 +144,22 @@ User: "Check my SwiftData models for issues"
 → Launch: `swiftdata-auditor` agent
 
 User: "How do I persist data on tvOS?"
-→ Invoke: See axiom-swift (references/tvos.md) + Read: `references/sqlitedata.md`
+→ Invoke: See axiom-swift (skills/tvos.md) + Read: `skills/sqlitedata.md`
 
 User: "My tvOS app loses data between launches"
-→ Invoke: See axiom-swift (references/tvos.md)
+→ Invoke: See axiom-swift (skills/tvos.md)
 
 User: "How do I store an auth token securely?"
-→ Invoke: See axiom-security (references/keychain.md)
+→ Invoke: See axiom-security (skills/keychain.md)
 
 User: "errSecDuplicateItem but I checked and the item doesn't exist"
-→ Invoke: See axiom-security (references/keychain-diag.md)
+→ Invoke: See axiom-security (skills/keychain-diag.md)
 
 User: "How do I encrypt data with AES in Swift?"
-→ Invoke: See axiom-security (references/cryptokit.md)
+→ Invoke: See axiom-security (skills/cryptokit.md)
 
 User: "I need to sign data with the Secure Enclave"
-→ Invoke: See axiom-security (references/cryptokit.md)
+→ Invoke: See axiom-security (skills/cryptokit.md)
 
 User: "What's ML-KEM and should I use it?"
-→ Invoke: See axiom-security (references/cryptokit.md)
+→ Invoke: See axiom-security (skills/cryptokit.md)

@@ -12,18 +12,18 @@ license: MIT
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| Camera capture, AVCaptureSession | See `references/camera-capture.md` |
-| Camera API (RotationCoordinator, etc.) | See `references/camera-capture-ref.md` |
-| Camera freezes, black preview, rotation | See `references/camera-capture-diag.md` |
-| Photo pickers, library access | See `references/photo-library.md` |
-| PHPicker, PhotosPicker API reference | See `references/photo-library-ref.md` |
-| Audio, AVFoundation, spatial audio | See `references/avfoundation-ref.md` |
-| Audio recognition, ShazamKit | See `references/shazamkit.md` |
-| ShazamKit API reference | See `references/shazamkit-ref.md` |
-| Haptic feedback, Core Haptics | See `references/haptics.md` |
-| Now Playing metadata, remote commands | See `references/now-playing.md` |
-| CarPlay Now Playing | See `references/now-playing-carplay.md` |
-| MusicKit Now Playing | See `references/now-playing-musickit.md` |
+| Camera capture, AVCaptureSession | See `skills/camera-capture.md` |
+| Camera API (RotationCoordinator, etc.) | See `skills/camera-capture-ref.md` |
+| Camera freezes, black preview, rotation | See `skills/camera-capture-diag.md` |
+| Photo pickers, library access | See `skills/photo-library.md` |
+| PHPicker, PhotosPicker API reference | See `skills/photo-library-ref.md` |
+| Audio, AVFoundation, spatial audio | See `skills/avfoundation-ref.md` |
+| Audio recognition, ShazamKit | See `skills/shazamkit.md` |
+| ShazamKit API reference | See `skills/shazamkit-ref.md` |
+| Haptic feedback, Core Haptics | See `skills/haptics.md` |
+| Now Playing metadata, remote commands | See `skills/now-playing.md` |
+| CarPlay Now Playing | See `skills/now-playing-carplay.md` |
+| MusicKit Now Playing | See `skills/now-playing-musickit.md` |
 
 ## Decision Tree
 
@@ -33,21 +33,21 @@ digraph media {
     what [label="Which media feature?" shape=diamond];
 
     start -> what;
-    what -> "references/camera-capture.md" [label="camera capture"];
-    what -> "references/photo-library.md" [label="photo pickers\n/ library"];
-    what -> "references/avfoundation-ref.md" [label="audio / AVFoundation"];
-    what -> "references/shazamkit.md" [label="ShazamKit\n/ audio recognition"];
-    what -> "references/haptics.md" [label="haptic feedback"];
-    what -> "references/now-playing.md" [label="Now Playing\n/ remote commands"];
+    what -> "skills/camera-capture.md" [label="camera capture"];
+    what -> "skills/photo-library.md" [label="photo pickers\n/ library"];
+    what -> "skills/avfoundation-ref.md" [label="audio / AVFoundation"];
+    what -> "skills/shazamkit.md" [label="ShazamKit\n/ audio recognition"];
+    what -> "skills/haptics.md" [label="haptic feedback"];
+    what -> "skills/now-playing.md" [label="Now Playing\n/ remote commands"];
 }
 ```
 
-1. Camera capture? → `references/camera-capture.md` (patterns), `references/camera-capture-ref.md` (API), `references/camera-capture-diag.md` (debugging)
-2. Photo pickers / library? → `references/photo-library.md`, `references/photo-library-ref.md`
-3. Audio / AVFoundation? → `references/avfoundation-ref.md`
-4. ShazamKit / audio recognition? → `references/shazamkit.md`, `references/shazamkit-ref.md`
-5. Haptics? → `references/haptics.md`
-6. Now Playing / remote commands? → `references/now-playing.md`, `references/now-playing-carplay.md`, `references/now-playing-musickit.md`
+1. Camera capture? → `skills/camera-capture.md` (patterns), `skills/camera-capture-ref.md` (API), `skills/camera-capture-diag.md` (debugging)
+2. Photo pickers / library? → `skills/photo-library.md`, `skills/photo-library-ref.md`
+3. Audio / AVFoundation? → `skills/avfoundation-ref.md`
+4. ShazamKit / audio recognition? → `skills/shazamkit.md`, `skills/shazamkit-ref.md`
+5. Haptics? → `skills/haptics.md`
+6. Now Playing / remote commands? → `skills/now-playing.md`, `skills/now-playing-carplay.md`, `skills/now-playing-musickit.md`
 7. Want camera code audit? → Launch `camera-auditor` agent
 
 ## Cross-Domain Routing
@@ -83,22 +83,22 @@ digraph media {
 ## Example Invocations
 
 User: "How do I set up a camera preview?"
-→ Read: `references/camera-capture.md`
+→ Read: `skills/camera-capture.md`
 
 User: "Camera freezes when I get a phone call"
-→ Read: `references/camera-capture-diag.md`
+→ Read: `skills/camera-capture-diag.md`
 
 User: "How do I let users pick photos in SwiftUI?"
-→ Read: `references/photo-library.md`
+→ Read: `skills/photo-library.md`
 
 User: "Implement haptic feedback for button taps"
-→ Read: `references/haptics.md`
+→ Read: `skills/haptics.md`
 
 User: "Now Playing info doesn't appear on Lock Screen"
-→ Read: `references/now-playing.md`
+→ Read: `skills/now-playing.md`
 
 User: "How do I identify songs with ShazamKit?"
-→ Read: `references/shazamkit.md`
+→ Read: `skills/shazamkit.md`
 
 User: "Check my camera code for issues"
 → Launch: `camera-auditor` agent

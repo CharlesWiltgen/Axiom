@@ -24,7 +24,7 @@ Use this router when:
 
 ### Memory Issues
 
-**Memory leaks (Swift)** → See references/memory-debugging.md
+**Memory leaks (Swift)** → See skills/memory-debugging.md
 - Systematic leak diagnosis
 - 5 common leak patterns
 - Instruments workflows
@@ -32,20 +32,20 @@ Use this router when:
 
 **Memory leak scan** → Launch `memory-auditor` agent or `/axiom:audit memory` (5-phase semantic audit: maps resource ownership, detects 6 leak patterns, reasons about missing cleanup, correlates compound risks, scores lifecycle health)
 
-**Memory leaks (Objective-C blocks)** → See references/objc-block-retain-cycles.md
+**Memory leaks (Objective-C blocks)** → See skills/objc-block-retain-cycles.md
 - Block retain cycles
 - Weak-strong pattern
 - Network callback leaks
 
 ### Performance Profiling
 
-**Performance profiling (GUI)** → See references/performance-profiling.md
+**Performance profiling (GUI)** → See skills/performance-profiling.md
 - Time Profiler (CPU)
 - Allocations (memory growth)
 - Core Data profiling (N+1 queries)
 - Decision trees for tool selection
 
-**Automated profiling (CLI)** → See references/xctrace-ref.md
+**Automated profiling (CLI)** → See skills/xctrace-ref.md
 - Headless xctrace profiling
 - CI/CD integration patterns
 - Command-line trace recording
@@ -58,7 +58,7 @@ Use this router when:
 
 ### Hang/Freeze Issues
 
-**App hangs or freezes** → See references/hang-diagnostics.md
+**App hangs or freezes** → See skills/hang-diagnostics.md
 - UI unresponsive for >1 second
 - Main thread blocked (busy or waiting)
 - Decision tree: busy vs blocked diagnosis
@@ -68,19 +68,19 @@ Use this router when:
 
 ### Energy Issues
 
-**Battery drain, high energy** → See references/energy.md
+**Battery drain, high energy** → See skills/energy.md
 - Power Profiler workflow
 - Subsystem diagnosis (CPU/GPU/Network/Location/Display)
 - Anti-pattern fixes
 - Background execution optimization
 
-**Symptom-based diagnosis** → See references/energy-diag.md
+**Symptom-based diagnosis** → See skills/energy-diag.md
 - "App at top of Battery Settings"
 - "Device gets hot"
 - "Background battery drain"
 - Time-cost analysis for each path
 
-**API reference with code** → See references/energy-ref.md
+**API reference with code** → See skills/energy-ref.md
 - Complete WWDC code examples
 - Timer, network, location efficiency
 - BGContinuedProcessingTask (iOS 26)
@@ -90,34 +90,34 @@ Use this router when:
 
 ### Timer Safety
 
-**Timer crash patterns (DispatchSourceTimer)** → See `axiom-integration` (references/timer-patterns.md)
+**Timer crash patterns (DispatchSourceTimer)** → See `axiom-integration` (skills/timer-patterns.md)
 - 4 crash scenarios causing EXC_BAD_INSTRUCTION
 - RunLoop mode gotcha (Timer stops during scroll)
 - SafeDispatchTimer wrapper
 - Timer vs DispatchSourceTimer decision
 
-**Timer API reference** → See `axiom-integration` (references/timer-patterns-ref.md)
+**Timer API reference** → See `axiom-integration` (skills/timer-patterns-ref.md)
 - Timer, DispatchSourceTimer, Combine, AsyncTimerSequence APIs
 - Lifecycle diagrams
 - Platform availability
 
 ### Swift Performance
 
-**Swift performance optimization** → See references/swift-performance.md
+**Swift performance optimization** → See skills/swift-performance.md
 - Value vs reference types, copy-on-write
 - ARC overhead, generic specialization
 - Collection performance
 
 **Swift performance scan** → Launch `swift-performance-analyzer` agent or `/axiom:audit swift-performance` (unnecessary copies, ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs, memory layout)
 
-**Modern Swift idioms** → See axiom-swift (references/swift-modern.md)
+**Modern Swift idioms** → See axiom-swift (skills/swift-modern.md)
 - Outdated API patterns (Date(), CGFloat, DateFormatter)
 - Foundation modernization (URL.documentsDirectory, FormatStyle)
 - Claude-specific hallucination corrections
 
 ### MetricKit Integration
 
-**MetricKit API reference** → See references/metrickit-ref.md
+**MetricKit API reference** → See skills/metrickit-ref.md
 - MXMetricPayload parsing
 - MXDiagnosticPayload (crashes, hangs)
 - Field performance data collection
@@ -133,13 +133,13 @@ Use this router when:
 
 ### Runtime State Inspection
 
-**LLDB interactive debugging** → See axiom-build (references/lldb.md)
+**LLDB interactive debugging** → See axiom-build (skills/lldb.md)
 - Set breakpoints, inspect variables at runtime
 - Crash reproduction from crash logs
 - Thread state analysis for hangs
 - Swift value inspection (po vs v)
 
-**LLDB command reference** → See axiom-build (references/lldb-ref.md)
+**LLDB command reference** → See axiom-build (skills/lldb-ref.md)
 - Complete command syntax
 - Breakpoint recipes
 - Expression evaluation patterns
@@ -165,8 +165,8 @@ Use this router when:
 14. Want proactive memory leak scan? → memory-auditor (Agent)
 15. Want energy anti-pattern scan? → energy-auditor (Agent)
 16. Want Swift performance audit (ARC, generics, collections)? → swift-performance-analyzer (Agent)
-17. Need to inspect variable/thread state at runtime? → See axiom-build (references/lldb.md)
-18. Need exact LLDB command syntax? → See axiom-build (references/lldb-ref.md)
+17. Need to inspect variable/thread state at runtime? → See axiom-build (skills/lldb.md)
+18. Need exact LLDB command syntax? → See axiom-build (skills/lldb-ref.md)
 19. Timer stops during scrolling? → timer-patterns (RunLoop mode)
 20. EXC_BAD_INSTRUCTION crash with DispatchSourceTimer? → timer-patterns (4 crash patterns)
 21. Choosing between Timer, DispatchSourceTimer, Combine timer, async timer? → timer-patterns
@@ -187,7 +187,7 @@ Use this router when:
 | "Memory is climbing AND scrolling stutters — two separate bugs" | Memory pressure causes GC pauses that drop frames. Fix the leak first, then re-check scroll performance. |
 | "It only freezes on first launch, must be loading something" | First-launch hangs have 3 patterns: synchronous I/O, lazy initialization, main thread contention. hang-diagnostics diagnoses which. |
 | "UI locks up when network requests finish — that's slow" | Multiple callbacks completing at once = main thread contention = concurrency issue. Cross-route to axiom-concurrency. |
-| "I'll just add print statements to debug this" | Print-debug cycles cost 3-5 min each (build + run + reproduce). An LLDB breakpoint costs 30 seconds. axiom-build (references/lldb.md) has the commands. |
+| "I'll just add print statements to debug this" | Print-debug cycles cost 3-5 min each (build + run + reproduce). An LLDB breakpoint costs 30 seconds. axiom-build (skills/lldb.md) has the commands. |
 | "I can't see what the app is logging" | xclog captures print() + os_log from the simulator with structured JSON. `/axiom:console` or `/skill axiom-xclog-ref`. |
 | "I'll just use Timer.scheduledTimer, it's simpler" | Timer stops during scrolling (`.default` mode), retains its target (leak). timer-patterns has the decision tree. |
 | "DispatchSourceTimer crashed but it's intermittent, let's ship" | DispatchSourceTimer has 4 crash patterns that are ALL deterministic. timer-patterns diagnoses which one. |
@@ -215,49 +215,49 @@ Use this router when:
 ## Example Invocations
 
 User: "My app's memory usage keeps growing"
-→ See references/memory-debugging.md
+→ See skills/memory-debugging.md
 
 User: "I have a memory leak but deinit isn't being called"
-→ See references/memory-debugging.md
+→ See skills/memory-debugging.md
 
 User: "My app feels slow, where do I start?"
-→ See references/performance-profiling.md
+→ See skills/performance-profiling.md
 
 User: "My Objective-C block callback is leaking"
-→ See references/objc-block-retain-cycles.md
+→ See skills/objc-block-retain-cycles.md
 
 User: "My app drains battery quickly"
-→ See references/energy.md
+→ See skills/energy.md
 
 User: "Users say the device gets hot when using my app"
-→ See references/energy-diag.md
+→ See skills/energy-diag.md
 
 User: "What's the best way to implement location tracking efficiently?"
-→ See references/energy-ref.md
+→ See skills/energy-ref.md
 
 User: "Profile my app's CPU usage"
 → Use: `performance-profiler` agent (or `/axiom:profile`)
 
 User: "How do I run xctrace from the command line?"
-→ See references/xctrace-ref.md
+→ See skills/xctrace-ref.md
 
 User: "I need headless profiling for CI/CD"
-→ See references/xctrace-ref.md
+→ See skills/xctrace-ref.md
 
 User: "My app hangs sometimes"
-→ See references/hang-diagnostics.md
+→ See skills/hang-diagnostics.md
 
 User: "The UI freezes and becomes unresponsive"
-→ See references/hang-diagnostics.md
+→ See skills/hang-diagnostics.md
 
 User: "Main thread is blocked, how do I diagnose?"
-→ See references/hang-diagnostics.md
+→ See skills/hang-diagnostics.md
 
 User: "How do I set up MetricKit?"
-→ See references/metrickit-ref.md
+→ See skills/metrickit-ref.md
 
 User: "How do I parse MXMetricPayload?"
-→ See references/metrickit-ref.md
+→ See skills/metrickit-ref.md
 
 User: "Scan my code for memory leaks"
 → Invoke: `memory-auditor` agent
@@ -269,40 +269,40 @@ User: "Audit my Swift code for performance anti-patterns"
 → Invoke: `swift-performance-analyzer` agent
 
 User: "How do I inspect this variable in the debugger?"
-→ Invoke: See axiom-build (references/lldb.md)
+→ Invoke: See axiom-build (skills/lldb.md)
 
 User: "What's the LLDB command for conditional breakpoints?"
-→ Invoke: See axiom-build (references/lldb-ref.md)
+→ Invoke: See axiom-build (skills/lldb-ref.md)
 
 User: "I need to reproduce this crash in the debugger"
-→ Invoke: See axiom-build (references/lldb.md)
+→ Invoke: See axiom-build (skills/lldb.md)
 
 User: "My list scrolls slowly and memory keeps growing"
-→ See references/memory-debugging.md first, then references/performance-profiling.md if stutter remains
+→ See skills/memory-debugging.md first, then skills/performance-profiling.md if stutter remains
 
 User: "App freezes for a few seconds on first launch then works fine"
-→ See references/hang-diagnostics.md
+→ See skills/hang-diagnostics.md
 
 User: "UI locks up when multiple API calls return at the same time"
 → Cross-route: `/skill axiom-concurrency` (callback contention)
 
 User: "My timer stops when the user scrolls"
-→ Read: `axiom-integration` (references/timer-patterns.md)
+→ Read: `axiom-integration` (skills/timer-patterns.md)
 
 User: "EXC_BAD_INSTRUCTION crash in my timer code"
-→ Read: `axiom-integration` (references/timer-patterns.md)
+→ Read: `axiom-integration` (skills/timer-patterns.md)
 
 User: "Should I use Timer or DispatchSourceTimer?"
-→ Read: `axiom-integration` (references/timer-patterns.md)
+→ Read: `axiom-integration` (skills/timer-patterns.md)
 
 User: "How do I create an AsyncTimerSequence?"
-→ Read: `axiom-integration` (references/timer-patterns-ref.md)
+→ Read: `axiom-integration` (skills/timer-patterns-ref.md)
 
 User: "Review my Swift code for outdated patterns"
-→ Invoke: See axiom-swift (references/swift-modern.md)
+→ Invoke: See axiom-swift (skills/swift-modern.md)
 
 User: "Is there a more modern way to do this?"
-→ Invoke: See axiom-swift (references/swift-modern.md)
+→ Invoke: See axiom-swift (skills/swift-modern.md)
 
 User: "What is the app logging? I need to see console output"
 → Invoke: `/skill axiom-xclog-ref` or `/axiom:console`

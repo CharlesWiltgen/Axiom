@@ -35,7 +35,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why xcode-debugging first**: 90% of mysterious issues are environment, not code. Check this BEFORE debugging code.
 
-**Invoke**: `references/xcode-debugging.md`
+**Invoke**: `skills/xcode-debugging.md`
 
 ---
 
@@ -46,7 +46,7 @@ This router invokes specialized skills based on the specific issue:
 - Want to optimize build time
 - Build Timeline shows slow phases
 
-**Invoke**: `references/build-performance.md`
+**Invoke**: `skills/build-performance.md`
 
 ---
 
@@ -129,7 +129,7 @@ This router invokes specialized skills based on the specific issue:
 - Framework version mismatches
 - Non-SPM dependency graph conflicts
 
-**Invoke**: `references/build-debugging.md`
+**Invoke**: `skills/build-debugging.md`
 
 ---
 
@@ -143,7 +143,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why testflight-triage**: Systematic workflow for investigating TestFlight crashes and reviewing beta feedback. Covers symbolication, crash interpretation, common patterns, and Claude-assisted analysis.
 
-**Invoke**: See axiom-shipping (references/testflight-triage.md)
+**Invoke**: See axiom-shipping (skills/testflight-triage.md)
 
 ---
 
@@ -158,7 +158,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why app-store-connect-ref**: Reference for navigating ASC crash analysis, metrics dashboards, and data export workflows.
 
-**Invoke**: See axiom-shipping (references/app-store-connect-ref.md)
+**Invoke**: See axiom-shipping (skills/app-store-connect-ref.md)
 
 ---
 
@@ -187,7 +187,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why metrickit-ref**: Complete MetricKit API reference with setup patterns, payload parsing, and integration with crash reporting systems.
 
-**Invoke**: See axiom-performance (`references/metrickit-ref.md`)
+**Invoke**: See axiom-performance (`skills/metrickit-ref.md`)
 
 ---
 
@@ -202,7 +202,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why hang-diagnostics**: Systematic diagnosis of hangs with decision tree for busy vs blocked main thread, tool selection (Time Profiler, System Trace), and 8 common hang patterns with fixes.
 
-**Invoke**: See axiom-performance (`references/hang-diagnostics.md`)
+**Invoke**: See axiom-performance (`skills/hang-diagnostics.md`)
 
 ---
 
@@ -215,7 +215,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why axiom-lldb**: Crash reports tell you WHAT crashed. LLDB tells you WHY.
 
-**Invoke**: `references/lldb.md`
+**Invoke**: `skills/lldb.md`
 
 ---
 
@@ -247,7 +247,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why code-signing**: Code signing errors are NEVER code bugs — they are 100% configuration (certificates, profiles, entitlements, keychains). Diagnosing with CLI tools takes 5 minutes vs hours of guessing.
 
-**Invoke**: See axiom-security (references/code-signing.md) (workflows) or See axiom-security (references/code-signing-diag.md) (troubleshooting)
+**Invoke**: See axiom-security (skills/code-signing.md) (workflows) or See axiom-security (skills/code-signing-diag.md) (troubleshooting)
 
 ---
 
@@ -306,10 +306,10 @@ This router invokes specialized skills based on the specific issue:
 ## Example Invocations
 
 User: "My build failed with a linker error"
-→ Invoke: `references/xcode-debugging.md` (environment-first diagnostic)
+→ Invoke: `skills/xcode-debugging.md` (environment-first diagnostic)
 
 User: "Builds are taking 10 minutes"
-→ Invoke: `references/build-performance.md`
+→ Invoke: `skills/build-performance.md`
 
 User: "SPM won't resolve dependencies"
 → Invoke: `spm-conflict-resolver` agent
@@ -339,25 +339,25 @@ User: "Should I still use @StateObject?"
 → Invoke: `modernization-helper` agent
 
 User: "A beta tester said my app crashed"
-→ Invoke: See axiom-shipping (references/testflight-triage.md)
+→ Invoke: See axiom-shipping (skills/testflight-triage.md)
 
 User: "I see crashes in App Store Connect but don't know how to investigate"
-→ Invoke: See axiom-shipping (references/testflight-triage.md)
+→ Invoke: See axiom-shipping (skills/testflight-triage.md)
 
 User: "My crash logs aren't symbolicated"
-→ Invoke: See axiom-shipping (references/testflight-triage.md)
+→ Invoke: See axiom-shipping (skills/testflight-triage.md)
 
 User: "I need to review TestFlight feedback"
-→ Invoke: See axiom-shipping (references/testflight-triage.md)
+→ Invoke: See axiom-shipping (skills/testflight-triage.md)
 
 User: "How do I find crashes in App Store Connect?"
-→ Invoke: See axiom-shipping (references/app-store-connect-ref.md)
+→ Invoke: See axiom-shipping (skills/app-store-connect-ref.md)
 
 User: "Where's the crash-free users metric in ASC?"
-→ Invoke: See axiom-shipping (references/app-store-connect-ref.md)
+→ Invoke: See axiom-shipping (skills/app-store-connect-ref.md)
 
 User: "How do I export crash data from App Store Connect?"
-→ Invoke: See axiom-shipping (references/app-store-connect-ref.md)
+→ Invoke: See axiom-shipping (skills/app-store-connect-ref.md)
 
 User: "Analyze this crash log" [pastes .ips content]
 → Invoke: `crash-analyzer` agent or `/axiom:analyze-crash`
@@ -369,31 +369,31 @@ User: "Why did my app crash? Here's the report..."
 → Invoke: `crash-analyzer` agent or `/axiom:analyze-crash`
 
 User: "How do I set up MetricKit to collect crash data?"
-→ Invoke: See axiom-performance (`references/metrickit-ref.md`)
+→ Invoke: See axiom-performance (`skills/metrickit-ref.md`)
 
 User: "How do I parse MXDiagnosticPayload?"
-→ Invoke: See axiom-performance (`references/metrickit-ref.md`)
+→ Invoke: See axiom-performance (`skills/metrickit-ref.md`)
 
 User: "What's in MXCallStackTree and how do I decode it?"
-→ Invoke: See axiom-performance (`references/metrickit-ref.md`)
+→ Invoke: See axiom-performance (`skills/metrickit-ref.md`)
 
 User: "My app hangs sometimes"
-→ Invoke: See axiom-performance (`references/hang-diagnostics.md`)
+→ Invoke: See axiom-performance (`skills/hang-diagnostics.md`)
 
 User: "The main thread is blocked and UI is unresponsive"
-→ Invoke: See axiom-performance (`references/hang-diagnostics.md`)
+→ Invoke: See axiom-performance (`skills/hang-diagnostics.md`)
 
 User: "Xcode Organizer shows hang diagnostics for my app"
-→ Invoke: See axiom-performance (`references/hang-diagnostics.md`)
+→ Invoke: See axiom-performance (`skills/hang-diagnostics.md`)
 
 User: "My app was killed by watchdog during launch"
-→ Invoke: See axiom-performance (`references/hang-diagnostics.md`)
+→ Invoke: See axiom-performance (`skills/hang-diagnostics.md`)
 
 User: "I have a crash report and need to reproduce it in the debugger"
-→ Invoke: `references/lldb.md`
+→ Invoke: `skills/lldb.md`
 
 User: "How do I set breakpoints to catch this crash?"
-→ Invoke: `references/lldb.md`
+→ Invoke: `skills/lldb.md`
 
 User: "My build is failing with BUILD FAILED but no error details"
 → Invoke: `build-fixer` agent or `/axiom:fix-build`
@@ -405,13 +405,13 @@ User: "How can I speed up my Xcode build times?"
 → Invoke: `build-optimizer` agent or `/axiom:optimize-build`
 
 User: "No signing certificate found when I try to build"
-→ Invoke: See axiom-security (references/code-signing-diag.md)
+→ Invoke: See axiom-security (skills/code-signing-diag.md)
 
 User: "errSecInternalComponent in my GitHub Actions CI"
-→ Invoke: See axiom-security (references/code-signing-diag.md)
+→ Invoke: See axiom-security (skills/code-signing-diag.md)
 
 User: "How do I set up code signing for GitHub Actions?"
-→ Invoke: See axiom-security (references/code-signing.md)
+→ Invoke: See axiom-security (skills/code-signing.md)
 
 User: "What is my app printing to the console?"
 → Invoke: `/skill axiom-xclog-ref` or `/axiom:console`

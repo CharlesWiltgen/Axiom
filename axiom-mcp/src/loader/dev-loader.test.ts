@@ -72,7 +72,7 @@ Main entry points.
 
     // Create minimal plugin structure
     const skillDir = join(tmpPlugin, 'skills', 'axiom-test-suite');
-    const refsDir = join(skillDir, 'references');
+    const refsDir = join(skillDir, 'skills');
     await mkdir(refsDir, { recursive: true });
     await mkdir(join(tmpPlugin, 'commands'), { recursive: true });
     await mkdir(join(tmpPlugin, 'agents'), { recursive: true });

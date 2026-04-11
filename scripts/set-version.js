@@ -183,8 +183,8 @@ try {
   }
   // Recursively find all skill content units.
   // A "skill" is either:
-  //   - A standalone SKILL.md (directory has no references/ subdir)
-  //   - Each references/*.md file in a skill suite (directory has references/ subdir)
+  //   - A standalone SKILL.md (directory has no skills/ subdir)
+  //   - Each skills/*.md file in a skill suite (directory has skills/ subdir)
   // Skill suite SKILL.md files are routers, not counted as skills.
   const skillNames = [];
   let suiteCount = 0;
@@ -194,10 +194,10 @@ try {
       const stat = fs.statSync(fullPath, { throwIfNoEntry: false });
       if (!stat?.isDirectory()) continue;
       const skillFile = path.join(fullPath, 'SKILL.md');
-      const refsDir = path.join(fullPath, 'references');
+      const refsDir = path.join(fullPath, 'skills');
       if (fs.existsSync(skillFile)) {
         if (fs.existsSync(refsDir) && fs.statSync(refsDir).isDirectory()) {
-          // Skill suite: count each references/*.md as a skill, not the SKILL.md
+          // Skill suite: count each skills/*.md as a skill, not the SKILL.md
           suiteCount++;
           for (const ref of fs.readdirSync(refsDir)) {
             if (ref.endsWith('.md')) {

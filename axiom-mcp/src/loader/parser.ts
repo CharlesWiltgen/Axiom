@@ -156,15 +156,15 @@ const SKILL_TYPE_OVERRIDES: Record<string, SkillType> = {
 
 /**
  * Infer skill type from name conventions, with explicit overrides for edge cases.
- * Content is optionally checked for suite routers (SKILL.md files that reference references/*.md).
+ * Content is optionally checked for suite routers (SKILL.md files that reference skills/*.md).
  */
 function inferSkillType(name: string, content?: string): SkillType {
   if (SKILL_TYPE_OVERRIDES[name]) return SKILL_TYPE_OVERRIDES[name];
   if (name === 'axiom-using-axiom') return 'meta';
   if (name.endsWith('-ref')) return 'reference';
   if (name.endsWith('-diag')) return 'diagnostic';
-  // Suite routers reference their references/ directory
-  if (content && /references\/\S+\.md/.test(content)) return 'router';
+  // Suite routers reference their skills/ directory
+  if (content && /skills\/\S+\.md/.test(content)) return 'router';
   return 'discipline';
 }
 
@@ -311,7 +311,7 @@ export function parseAppleDoc(
 
 /**
  * Parse a frontmatter-free suite reference file into a Skill.
- * Used for files in a skill suite's references/ subdirectory.
+ * Used for files in a skill suite's skills/ subdirectory.
  * Name is formatted as `${parentSuite}--${baseName}` to prevent cross-suite collisions.
  */
 export function parseReferenceFile(

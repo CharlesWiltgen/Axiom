@@ -295,7 +295,7 @@ Axiom skills load automatically — you don't need to memorize names or commands
 
 **Explicit invocation**: If you know the skill name, invoke it directly:
 - `/skill axiom-concurrency`
-- See axiom-design (references/liquid-glass.md)
+- See axiom-design (skills/liquid-glass.md)
 
 **Audit commands**: Run automated scans with slash commands:
 - `/axiom:audit-memory` — scans for memory leak patterns

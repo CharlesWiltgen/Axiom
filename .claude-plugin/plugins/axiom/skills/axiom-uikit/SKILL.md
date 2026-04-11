@@ -12,21 +12,21 @@ license: MIT
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| UIViewRepresentable, UIViewControllerRepresentable | See `references/uikit-bridging.md` |
-| Embedding SwiftUI in UIKit (UIHostingController) | See `references/uikit-bridging.md` |
-| Coordinator pattern, updateUIView lifecycle | See `references/uikit-bridging.md` |
-| "Unable to simultaneously satisfy constraints" | See `references/auto-layout-debugging.md` |
-| Constraint conflicts, ambiguous layout | See `references/auto-layout-debugging.md` |
-| Views not appearing, positioned incorrectly | See `references/auto-layout-debugging.md` |
-| CAAnimation completion handler not firing | See `references/uikit-animation-debugging.md` |
-| Spring physics wrong on device, duration mismatch | See `references/uikit-animation-debugging.md` |
-| Animation jank, CATransaction timing | See `references/uikit-animation-debugging.md` |
-| Combine publishers, AnyCancellable lifecycle | See `references/combine-patterns.md` |
-| @Published properties, Combine ↔ async/await | See `references/combine-patterns.md` |
-| When to use Combine vs async/await | See `references/combine-patterns.md` |
-| TextKit 2 architecture, NSTextLayoutManager | See `references/textkit-ref.md` |
-| Writing Tools integration (iOS 26) | See `references/textkit-ref.md` |
-| SwiftUI TextEditor, TextKit 1 migration | See `references/textkit-ref.md` |
+| UIViewRepresentable, UIViewControllerRepresentable | See `skills/uikit-bridging.md` |
+| Embedding SwiftUI in UIKit (UIHostingController) | See `skills/uikit-bridging.md` |
+| Coordinator pattern, updateUIView lifecycle | See `skills/uikit-bridging.md` |
+| "Unable to simultaneously satisfy constraints" | See `skills/auto-layout-debugging.md` |
+| Constraint conflicts, ambiguous layout | See `skills/auto-layout-debugging.md` |
+| Views not appearing, positioned incorrectly | See `skills/auto-layout-debugging.md` |
+| CAAnimation completion handler not firing | See `skills/uikit-animation-debugging.md` |
+| Spring physics wrong on device, duration mismatch | See `skills/uikit-animation-debugging.md` |
+| Animation jank, CATransaction timing | See `skills/uikit-animation-debugging.md` |
+| Combine publishers, AnyCancellable lifecycle | See `skills/combine-patterns.md` |
+| @Published properties, Combine ↔ async/await | See `skills/combine-patterns.md` |
+| When to use Combine vs async/await | See `skills/combine-patterns.md` |
+| TextKit 2 architecture, NSTextLayoutManager | See `skills/textkit-ref.md` |
+| Writing Tools integration (iOS 26) | See `skills/textkit-ref.md` |
+| SwiftUI TextEditor, TextKit 1 migration | See `skills/textkit-ref.md` |
 
 ## Decision Tree
 
@@ -36,22 +36,22 @@ digraph uikit {
     what [label="What do you need?" shape=diamond];
 
     start -> what;
-    what -> "references/uikit-bridging.md" [label="wrap UIKit in SwiftUI\nor SwiftUI in UIKit"];
-    what -> "references/auto-layout-debugging.md" [label="constraint errors,\nlayout issues"];
-    what -> "references/uikit-animation-debugging.md" [label="CAAnimation bugs,\nspring physics,\ncompletion handlers"];
-    what -> "references/combine-patterns.md" [label="publishers, sinks,\n@Published,\nasync/await bridge"];
-    what -> "references/textkit-ref.md" [label="text layout,\nWriting Tools,\nTextKit migration"];
+    what -> "skills/uikit-bridging.md" [label="wrap UIKit in SwiftUI\nor SwiftUI in UIKit"];
+    what -> "skills/auto-layout-debugging.md" [label="constraint errors,\nlayout issues"];
+    what -> "skills/uikit-animation-debugging.md" [label="CAAnimation bugs,\nspring physics,\ncompletion handlers"];
+    what -> "skills/combine-patterns.md" [label="publishers, sinks,\n@Published,\nasync/await bridge"];
+    what -> "skills/textkit-ref.md" [label="text layout,\nWriting Tools,\nTextKit migration"];
 }
 ```
 
-1. UIViewRepresentable / UIViewControllerRepresentable / UIHostingController? → `references/uikit-bridging.md`
-2. "Unable to simultaneously satisfy constraints" / layout bugs? → `references/auto-layout-debugging.md`
-3. CAAnimation completion missing / spring physics wrong / animation jank? → `references/uikit-animation-debugging.md`
-4. Combine publishers / AnyCancellable / @Published / Combine ↔ async bridge? → `references/combine-patterns.md`
-5. TextKit 2 / Writing Tools / TextEditor / TextKit 1 migration? → `references/textkit-ref.md`
+1. UIViewRepresentable / UIViewControllerRepresentable / UIHostingController? → `skills/uikit-bridging.md`
+2. "Unable to simultaneously satisfy constraints" / layout bugs? → `skills/auto-layout-debugging.md`
+3. CAAnimation completion missing / spring physics wrong / animation jank? → `skills/uikit-animation-debugging.md`
+4. Combine publishers / AnyCancellable / @Published / Combine ↔ async bridge? → `skills/combine-patterns.md`
+5. TextKit 2 / Writing Tools / TextEditor / TextKit 1 migration? → `skills/textkit-ref.md`
 6. Pure SwiftUI view question (no UIKit bridging)? → `/skill axiom-swiftui`
-7. Block retain cycles in UIKit callbacks? → See axiom-performance (`references/objc-block-retain-cycles.md`)
-8. Memory leaks from Combine subscriptions? → Start with `references/combine-patterns.md`, then axiom-performance if leak persists
+7. Block retain cycles in UIKit callbacks? → See axiom-performance (`skills/objc-block-retain-cycles.md`)
+8. Memory leaks from Combine subscriptions? → Start with `skills/combine-patterns.md`, then axiom-performance if leak persists
 
 ## Conflict Resolution
 
@@ -60,7 +60,7 @@ digraph uikit {
 - **Use swiftui** for pure SwiftUI views, navigation, layout, animations
 
 **uikit vs concurrency**: When Combine interacts with async/await:
-- **Use uikit** (`references/combine-patterns.md`) for bridging Combine pipelines with async/await
+- **Use uikit** (`skills/combine-patterns.md`) for bridging Combine pipelines with async/await
 - **Use concurrency** for pure async/await patterns, actors, Sendable
 
 **uikit vs performance**: When animations or layout cause performance issues:
@@ -75,32 +75,32 @@ digraph uikit {
 
 | Thought | Reality |
 |---------|---------|
-| "I'll just use UIHostingController, it's simple" | Hosting has sizing, lifecycle, and navigation edge cases. `references/uikit-bridging.md` covers the gotchas. |
+| "I'll just use UIHostingController, it's simple" | Hosting has sizing, lifecycle, and navigation edge cases. `skills/uikit-bridging.md` covers the gotchas. |
 | "Auto Layout error is just a warning, I'll ignore it" | Unsatisfied constraints cause unpredictable layout at runtime. Fix them now. |
-| "I know how CAAnimation works" | 90% of CAAnimation bugs are CATransaction timing, not Core Animation. Check `references/uikit-animation-debugging.md`. |
-| "Combine is dead, just rewrite with async/await" | Combine has no deprecation notice. Rewriting working pipelines wastes time. `references/combine-patterns.md` covers when to migrate vs maintain. |
-| "TextKit 1 still works fine" | TextKit 1 misses Writing Tools integration and has known layout bugs Apple won't fix. See `references/textkit-ref.md`. |
+| "I know how CAAnimation works" | 90% of CAAnimation bugs are CATransaction timing, not Core Animation. Check `skills/uikit-animation-debugging.md`. |
+| "Combine is dead, just rewrite with async/await" | Combine has no deprecation notice. Rewriting working pipelines wastes time. `skills/combine-patterns.md` covers when to migrate vs maintain. |
+| "TextKit 1 still works fine" | TextKit 1 misses Writing Tools integration and has known layout bugs Apple won't fix. See `skills/textkit-ref.md`. |
 | "I'll store cancellables in a local variable" | Local AnyCancellable deallocates immediately, killing the subscription. |
 
 ## Example Invocations
 
 User: "How do I wrap a UIKit view in SwiftUI?"
-→ Read: `references/uikit-bridging.md`
+→ Read: `skills/uikit-bridging.md`
 
 User: "I'm getting 'Unable to simultaneously satisfy constraints'"
-→ Read: `references/auto-layout-debugging.md`
+→ Read: `skills/auto-layout-debugging.md`
 
 User: "My CAAnimation completion handler never fires"
-→ Read: `references/uikit-animation-debugging.md`
+→ Read: `skills/uikit-animation-debugging.md`
 
 User: "Should I use Combine or async/await for this?"
-→ Read: `references/combine-patterns.md`
+→ Read: `skills/combine-patterns.md`
 
 User: "How do I integrate Writing Tools with my text editor?"
-→ Read: `references/textkit-ref.md`
+→ Read: `skills/textkit-ref.md`
 
 User: "My SwiftUI view has a memory leak from a Combine subscription"
-→ Read: `references/combine-patterns.md`
+→ Read: `skills/combine-patterns.md`
 
 User: "How do I embed SwiftUI in my UIKit app?"
-→ Read: `references/uikit-bridging.md`
+→ Read: `skills/uikit-bridging.md`
