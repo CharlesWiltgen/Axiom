@@ -456,7 +456,16 @@ async function main() {
     generated++;
   }
 
-  // 4. Sort by key and write
+  // 4. Prune entries for skills that no longer exist
+  let pruned = 0;
+  for (const key of Object.keys(annotations)) {
+    if (!allNames.has(key)) {
+      delete annotations[key];
+      pruned++;
+    }
+  }
+
+  // 5. Sort by key and write
   const sorted: Record<string, AnnotationEntry> = {};
   for (const key of Object.keys(annotations).sort()) {
     sorted[key] = annotations[key];
@@ -468,6 +477,7 @@ async function main() {
   console.log('Results:');
   console.log(`  Preserved: ${preserved} existing annotations`);
   console.log(`  Generated: ${generated} new annotations`);
+  if (pruned > 0) console.log(`  Pruned:    ${pruned} stale annotations`);
   console.log(`  Total:     ${Object.keys(sorted).length} annotations`);
   console.log();
   console.log(`Written to: ${annotationsPath}`);
