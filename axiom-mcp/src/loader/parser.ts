@@ -158,13 +158,14 @@ const SKILL_TYPE_OVERRIDES: Record<string, SkillType> = {
  * Infer skill type from name conventions, with explicit overrides for edge cases.
  * Content is optionally checked for suite routers (SKILL.md files that reference skills/*.md).
  */
-function inferSkillType(name: string, content?: string): SkillType {
+function inferSkillType(name: string, content?: string, isReferenceFile?: boolean): SkillType {
   if (SKILL_TYPE_OVERRIDES[name]) return SKILL_TYPE_OVERRIDES[name];
   if (name === 'axiom-using-axiom') return 'meta';
   if (name.endsWith('-ref')) return 'reference';
   if (name.endsWith('-diag')) return 'diagnostic';
-  // Suite routers reference their skills/ directory
-  if (content && /skills\/\S+\.md/.test(content)) return 'router';
+  // Suite routers reference their skills/ directory — but reference files
+  // also cross-reference siblings, so skip this check for reference files
+  if (!isReferenceFile && content && /skills\/\S+\.md/.test(content)) return 'router';
   return 'discipline';
 }
 
@@ -326,7 +327,8 @@ export function parseReferenceFile(
   const titleMatch = content.match(/^#\s+(.+)$/m);
   const title = titleMatch ? titleMatch[1].trim() : baseName.replace(/-/g, ' ');
 
-  // Extract description from first non-empty paragraph after the # title
+  // Extract description from first non-empty prose paragraph after the # title.
+  // Skips ## sub-headers and lines starting with ** (bold labels like **Core principle**).
   const lines = content.split('\n');
   let description = '';
   let pastTitle = false;
@@ -339,7 +341,9 @@ export function parseReferenceFile(
     }
     const trimmed = line.trim();
     if (trimmed === '') continue;
-    if (trimmed.startsWith('#')) break;
+    if (trimmed.startsWith('#')) continue;  // skip sub-headers, keep looking
+    if (trimmed.startsWith('**') && trimmed.includes('**:')) continue;  // skip bold labels
+    if (trimmed.startsWith('**') && !trimmed.endsWith('**')) continue;  // skip bold-prefixed meta lines
     description = trimmed;
     break;
   }
@@ -354,7 +358,7 @@ export function parseReferenceFile(
     name,
     description: description || title,
     content,
-    skillType: inferSkillType(name, content),
+    skillType: inferSkillType(name, content, true),
     source: 'axiom',
     tags,
     related: [],
