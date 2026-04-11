@@ -475,4 +475,4 @@ Before shipping, verify:
 
 **Docs**: /xcode/analyzing-responsiveness-issues-in-your-shipping-app, /metrickit/mxhangdiagnostic
 
-**Skills**: axiom-metrickit-ref, axiom-performance-profiling, axiom-swift-concurrency, axiom-lldb (interactive thread inspection at freeze point)
+**Skills**: axiom-metrickit-ref, axiom-performance-profiling, axiom-concurrency, axiom-lldb (interactive thread inspection at freeze point)

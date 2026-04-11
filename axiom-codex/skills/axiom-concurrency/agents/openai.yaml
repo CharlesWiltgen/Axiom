@@ -1,0 +1,3 @@
+interface:
+  display_name: "Concurrency"
+  short_description: "Writing ANY async code, actors, threads, or seeing ANY concurrency error"

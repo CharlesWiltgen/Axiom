@@ -1,3 +1,0 @@
-interface:
-  display_name: "Network Framework Reference"
-  short_description: "Reference — Comprehensive Network.framework guide covering NetworkConnection (iOS 26+), NWConnection (iOS 12-25), TLV..."

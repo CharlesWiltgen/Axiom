@@ -1,3 +1,0 @@
-interface:
-  display_name: "Networking Diagnostics"
-  short_description: "Debugging connection timeouts, TLS handshake failures, data not arriving, connection drops, performance issues, or pr..."

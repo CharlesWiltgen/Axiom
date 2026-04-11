@@ -1,3 +1,0 @@
-interface:
-  display_name: "Swift Concurrency"
-  short_description: "You see 'actor-isolated', 'Sendable', 'data race', '@MainActor' errors, or asking 'how do I use async/await', 'my app..."

@@ -235,6 +235,6 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For detailed concurrency patterns: `axiom-swift-concurrency` skill
+For detailed concurrency patterns: `axiom-concurrency` skill
 For migration guidance: Enable `-strict-concurrency=complete` and fix warnings
 For memory lifecycle issues found during audit: `axiom-memory-debugging` skill

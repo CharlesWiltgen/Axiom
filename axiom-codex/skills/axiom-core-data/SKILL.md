@@ -414,4 +414,4 @@ context.automaticallyMergesChangesFromParent = true
 - `axiom-core-data-diag` — Debugging migrations, thread errors, N+1 queries
 - `axiom-swiftdata` — Modern alternative for iOS 17+
 - `axiom-database-migration` — Safe schema evolution patterns
-- `axiom-swift-concurrency` — Async/await patterns for Core Data
+- `axiom-concurrency` — Async/await patterns for Core Data

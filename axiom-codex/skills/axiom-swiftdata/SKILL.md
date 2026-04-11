@@ -1061,7 +1061,7 @@ final class TrackTests: XCTestCase {
 
 **Docs**: /swiftdata, /swiftdata/adopting-inheritance-in-swiftdata
 
-**Skills**: axiom-swiftdata-migration, axiom-swiftdata-migration-diag, axiom-database-migration, axiom-sqlitedata, axiom-grdb, axiom-swift-concurrency
+**Skills**: axiom-swiftdata-migration, axiom-swiftdata-migration-diag, axiom-database-migration, axiom-sqlitedata, axiom-grdb, axiom-concurrency
 
 ## Common Mistakes
 
