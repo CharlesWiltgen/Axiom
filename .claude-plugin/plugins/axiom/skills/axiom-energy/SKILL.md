@@ -828,11 +828,10 @@ Check **Battery Usage** pane in Xcode Organizer for field data:
 ### Related Skills
 - `axiom-energy-ref` — Complete API reference with all code examples
 - `axiom-energy-diag` — Symptom-based troubleshooting decision trees
-- `axiom-background-processing` — Background task mechanics (why tasks don't run)
+- `axiom-integration` — Background tasks (references/background-processing.md), timers (references/timer-patterns.md)
 - `axiom-performance-profiling` — General Instruments workflows
 - `axiom-memory-debugging` — Memory leak diagnosis (often related to energy)
 - `axiom-networking` — Network optimization patterns
-- `axiom-timer-patterns` — Timer crash prevention and lifecycle safety
 
 ---
 

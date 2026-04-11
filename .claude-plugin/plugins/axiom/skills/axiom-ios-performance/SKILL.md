@@ -90,13 +90,13 @@ Use this router when:
 
 ### Timer Safety
 
-**Timer crash patterns (DispatchSourceTimer)** → `/skill axiom-timer-patterns`
+**Timer crash patterns (DispatchSourceTimer)** → See `axiom-integration` (references/timer-patterns.md)
 - 4 crash scenarios causing EXC_BAD_INSTRUCTION
 - RunLoop mode gotcha (Timer stops during scroll)
 - SafeDispatchTimer wrapper
 - Timer vs DispatchSourceTimer decision
 
-**Timer API reference** → `/skill axiom-timer-patterns-ref`
+**Timer API reference** → See `axiom-integration` (references/timer-patterns-ref.md)
 - Timer, DispatchSourceTimer, Combine, AsyncTimerSequence APIs
 - Lifecycle diagrams
 - Platform availability
@@ -287,16 +287,16 @@ User: "UI locks up when multiple API calls return at the same time"
 → Cross-route: `/skill axiom-concurrency` (callback contention)
 
 User: "My timer stops when the user scrolls"
-→ Invoke: `/skill axiom-timer-patterns`
+→ Read: `axiom-integration` (references/timer-patterns.md)
 
 User: "EXC_BAD_INSTRUCTION crash in my timer code"
-→ Invoke: `/skill axiom-timer-patterns`
+→ Read: `axiom-integration` (references/timer-patterns.md)
 
 User: "Should I use Timer or DispatchSourceTimer?"
-→ Invoke: `/skill axiom-timer-patterns`
+→ Read: `axiom-integration` (references/timer-patterns.md)
 
 User: "How do I create an AsyncTimerSequence?"
-→ Invoke: `/skill axiom-timer-patterns-ref`
+→ Read: `axiom-integration` (references/timer-patterns-ref.md)
 
 User: "Review my Swift code for outdated patterns"
 → Invoke: `/skill axiom-swift-modern`

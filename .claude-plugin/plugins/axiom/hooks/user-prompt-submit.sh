@@ -81,8 +81,12 @@ if re.search(r'xctest|xcuitest|swift\s*testing|@test\b|@suite\b|#expect\b|ui\s*t
     matches.append("axiom-testing")
 
 # Integration
-if re.search(r'widgetkit|add.{0,10}widget|widget.{0,10}(timeline|entry|not updat|show|display)|siri\b|storekit|in-app purchase|iap\b|avcapture|phpicker|photospicker|photo.{0,5}(library|picker)|core\s*haptics|eventkit|ekevents|reminder.{0,5}(access|permiss)|cncontact|app\s*intent|app\s*shortcut|spotlight.{0,5}(index|search)|localization|string\s*catalog|live\s*activit|control\s*center.{0,5}(widget|control)', prompt_lower):
-    matches.append("axiom-ios-integration")
+if re.search(r'widgetkit|add.{0,10}widget|widget.{0,10}(timeline|entry|not updat|show|display)|siri\b|storekit|in-app purchase|iap\b|eventkit|ekevents|reminder.{0,5}(access|permiss)|cncontact|app\s*intent|app\s*shortcut|spotlight.{0,5}(index|search)|localization|string\s*catalog|live\s*activit|control\s*center.{0,5}(widget|control)|push\s*notif|background\s*task|bgtask|timer.{0,5}(pattern|crash|dispatch)', prompt_lower):
+    matches.append("axiom-integration")
+
+# Media
+if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker)|core\s*haptics|haptic|now\s*playing|shazamkit|audio\s*recogni|avfoundation|carplay.{0,5}(audio|now)|musickit|camera.{0,5}(capture|preview|session)', prompt_lower):
+    matches.append("axiom-media")
 
 # Accessibility
 if re.search(r'voiceover|accessibility.{0,10}(label|hint|trait|value|issue|audit|fix)|dynamic type|color contrast|wcag|a11y|accessib.{0,10}(element|identif|action)', prompt_lower):

@@ -733,7 +733,7 @@ try {
     const CODEX_EXCLUDE = new Set([
       'axiom-ios-build', 'axiom-ios-data',
       'axiom-ios-performance',
-      'axiom-ios-integration', 'axiom-ios-ai',
+      'axiom-ios-ai',
       'axiom-ios-ml', 'axiom-ios-graphics',
       'axiom-apple-docs', 'axiom-xcode-mcp', 'axiom-shipping', 'axiom-using-axiom',
     ]);

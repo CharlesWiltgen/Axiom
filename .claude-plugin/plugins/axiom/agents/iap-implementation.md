@@ -24,7 +24,7 @@ tools:
   - Edit
   - Bash
 skills:
-  - axiom-ios-integration
+  - axiom-integration
 hooks:
   PreToolUse:
     - matcher: Edit|Write
@@ -196,6 +196,6 @@ Button("Restore Purchases") {
 
 ## Related
 
-For detailed patterns: `axiom-in-app-purchases` skill
-For API reference: `axiom-storekit-ref` skill
+For detailed patterns: `axiom-integration` (references/in-app-purchases.md)
+For API reference: `axiom-integration` (references/storekit-ref.md)
 For auditing: `iap-auditor` agent

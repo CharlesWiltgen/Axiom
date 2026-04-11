@@ -37,7 +37,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-integration
+  - axiom-media
 # MCP annotations (ignored by Claude Code)
 mcp:
   category: auditing
@@ -284,7 +284,4 @@ After listing all issues, provide a summary:
 ## Related Skills
 
 For detailed patterns and solutions, refer developers to:
-- `axiom-camera-capture` - Session setup, rotation, interruption handling
-- `axiom-camera-capture-diag` - Troubleshooting decision trees
-- `axiom-camera-capture-ref` - API reference
-- `axiom-photo-library` - Photo picker and library patterns
+- `axiom-media` — Camera capture, photo library (references/camera-capture.md, camera-capture-diag.md, camera-capture-ref.md, photo-library.md)

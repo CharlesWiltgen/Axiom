@@ -54,7 +54,8 @@ context = """You have access to Axiom iOS development skills via the Skill tool.
 - `axiom-concurrency` — async/await, actors, Sendable, data races
 - `axiom-ios-performance` — memory leaks, profiling, battery, Instruments
 - `axiom-networking` — URLSession, Network.framework, HTTP
-- `axiom-ios-integration` — widgets, Siri, StoreKit, camera, EventKit
+- `axiom-integration` — widgets, Siri, StoreKit, EventKit, push, background tasks
+- `axiom-media` — camera, photos, audio, haptics, ShazamKit, Now Playing
 - `axiom-accessibility` — VoiceOver, Dynamic Type, WCAG
 - `axiom-ios-ai` — Foundation Models, Apple Intelligence
 - `axiom-games` — SpriteKit, SceneKit, RealityKit

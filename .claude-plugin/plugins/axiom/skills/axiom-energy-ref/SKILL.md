@@ -174,7 +174,7 @@ timer.resume()
 timer.cancel()
 ```
 
-> For DispatchSourceTimer lifecycle safety and crash prevention, see `axiom-timer-patterns`.
+> For DispatchSourceTimer lifecycle safety and crash prevention, see `axiom-integration` (references/timer-patterns.md).
 
 ### Event-Driven Alternative to Timers
 

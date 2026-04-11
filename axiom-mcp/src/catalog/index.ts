@@ -12,6 +12,7 @@ export const SLUG_TO_LABEL: Record<string, string> = {
   'performance': 'Performance',
   'networking': 'Networking',
   'integration': 'System Integration',
+  'media': 'Media',
   'accessibility': 'Accessibility',
   'ai': 'Apple Intelligence',
   'ml': 'Machine Learning',
@@ -33,7 +34,8 @@ const ROUTER_CATEGORIES: Record<string, string> = {
   'axiom-concurrency': 'Concurrency & Async',
   'axiom-ios-performance': 'Performance',
   'axiom-networking': 'Networking',
-  'axiom-ios-integration': 'System Integration',
+  'axiom-integration': 'System Integration',
+  'axiom-media': 'Media',
   'axiom-accessibility': 'Accessibility',
   'axiom-ios-ai': 'Apple Intelligence',
   'axiom-ios-ml': 'Machine Learning',
@@ -146,13 +148,14 @@ function inferCategoryFromName(name: string): string {
   if (name.includes('network') || name.includes('url')) return 'Networking';
   if (name.includes('accessibility')) return 'Accessibility';
   if (name.includes('test') || name.includes('xctest') || name.includes('xctrace') || name.includes('axe')) return 'Testing';
-  if (name.includes('vision') || name.includes('photo') || name.includes('camera')) return 'Computer Vision';
+  if (name.includes('camera') || name.includes('photo') || name.includes('haptic') || name.includes('now-playing') || name.includes('shazamkit') || name.includes('avfoundation') || name.includes('musickit') || name.includes('carplay')) return 'Media';
+  if (name.includes('vision')) return 'Computer Vision';
   if (name.includes('foundation-model') || name.includes('intelligence') || name.includes('coreml') || name === 'speech') return 'Apple Intelligence';
   if (name.includes('metal') || name.includes('graphics')) return 'Graphics & Metal';
   if (name.includes('spritekit') || name.includes('scenekit') || name.includes('game')) return 'Games';
   if (name.includes('debug')) return 'Build & Environment';
   if (name.includes('triage') || name.includes('app-store-connect')) return 'Build & Environment';
-  if (name.includes('intent') || name.includes('shortcut') || name.includes('widget') || name.includes('extension') || name.includes('haptic') || name.includes('storekit') || name.includes('iap') || name.includes('now-playing') || name.includes('localization') || name.includes('spotlight') || name.includes('privacy') || name.includes('deep-link') || name.includes('app-store') || name.includes('background-process') || name.includes('shipping')) return 'System Integration';
+  if (name.includes('intent') || name.includes('shortcut') || name.includes('widget') || name.includes('extension') || name.includes('storekit') || name.includes('iap') || name.includes('localization') || name.includes('spotlight') || name.includes('privacy') || name.includes('deep-link') || name.includes('app-store') || name.includes('background-process') || name.includes('shipping') || name.includes('push-notif') || name.includes('timer-pattern') || name.includes('eventkit') || name.includes('contacts') || name.includes('alarmkit')) return 'System Integration';
   if (name.includes('docs-research') || name.includes('getting-started')) return 'General';
   return 'General';
 }

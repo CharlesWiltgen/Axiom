@@ -151,9 +151,6 @@ export function parseSections(content: string): SkillSection[] {
 const SKILL_TYPE_OVERRIDES: Record<string, SkillType> = {
   'axiom-apple-docs': 'router',
   'axiom-getting-started': 'discipline',
-  'axiom-haptics': 'reference',
-  'axiom-localization': 'reference',
-  'axiom-privacy-ux': 'reference',
   'axiom-sqlitedata-migration': 'reference',
 };
 
