@@ -282,4 +282,4 @@ If the crash is intermittent, increase bounds: `--timeout 120s --max-lines 1000`
 
 ## Resources
 
-**Skills**: axiom-xcode-debugging, axiom-performance-profiling, axiom-lldb
+**Skills**: axiom-build (skills/xcode-debugging.md), axiom-performance (skills/performance-profiling.md), axiom-build (skills/lldb.md)

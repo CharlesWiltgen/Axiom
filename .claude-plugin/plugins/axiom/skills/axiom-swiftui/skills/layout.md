@@ -381,4 +381,4 @@ var isLandscape: Bool {
 
 **WWDC**: 2025-208, 2024-10074, 2022-10056
 
-**Skills**: skills/layout-ref.md, skills/debugging.md, axiom-liquid-glass
+**Skills**: skills/layout-ref.md, skills/debugging.md, axiom-design (skills/liquid-glass.md)

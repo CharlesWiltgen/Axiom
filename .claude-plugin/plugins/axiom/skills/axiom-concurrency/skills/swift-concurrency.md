@@ -1081,7 +1081,7 @@ When migrating an existing codebase to strict concurrency:
 
 **Docs**: /swift/adoptingswift6, /swift/sendable
 
-**Skills**: axiom-lldb (debug actor/task state in the debugger)
+**Skills**: axiom-build (skills/lldb.md) (debug actor/task state in the debugger)
 
 ---
 

@@ -944,7 +944,7 @@ let container = try ModelContainer(
 
 **Docs**: /swiftdata
 
-**Skills**: axiom-swiftdata, axiom-swiftdata-migration-diag, axiom-database-migration
+**Skills**: axiom-data (skills/swiftdata.md), axiom-data (skills/swiftdata-migration-diag.md), axiom-data (skills/database-migration.md)
 
 ---
 

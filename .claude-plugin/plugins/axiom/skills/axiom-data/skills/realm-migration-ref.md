@@ -776,7 +776,7 @@ Settings → [Your Name] → iCloud → Check CloudKit status
 
 **Docs**: /swiftdata
 
-**Skills**: axiom-swiftdata, axiom-concurrency, axiom-database-migration
+**Skills**: axiom-data (skills/swiftdata.md), axiom-concurrency, axiom-data (skills/database-migration.md)
 
 ---
 

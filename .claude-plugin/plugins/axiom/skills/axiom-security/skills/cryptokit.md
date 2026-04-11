@@ -51,7 +51,7 @@ digraph need_cryptokit {
 
     "Use URLSession + TLS\n(system handles crypto)" [shape=box];
     "Use Data Protection\n(.completeFileProtection)" [shape=box];
-    "Use Keychain\n(axiom-keychain skill)" [shape=box];
+    "Use Keychain\n(axiom-security (skills/keychain.md) skill)" [shape=box];
     "Use CloudKit encryption\n(encryptedValues)" [shape=box];
     "YES — Use CryptoKit" [shape=box, style=bold];
 
@@ -65,7 +65,7 @@ digraph need_cryptokit {
     "Data in transit\nvia HTTPS?" -> "Custom crypto\nneeded?" [label="need E2E beyond TLS"];
     "Data at rest\non device?" -> "Use Data Protection\n(.completeFileProtection)" [label="file-level"];
     "Data at rest\non device?" -> "Custom crypto\nneeded?" [label="field-level encryption"];
-    "Credentials or\ntokens?" -> "Use Keychain\n(axiom-keychain skill)" [label="yes"];
+    "Credentials or\ntokens?" -> "Use Keychain\n(axiom-security (skills/keychain.md) skill)" [label="yes"];
     "CloudKit or\niCloud?" -> "Use CloudKit encryption\n(encryptedValues)" [label="yes"];
     "Custom crypto\nneeded?" -> "YES — Use CryptoKit" [label="yes"];
 }
@@ -423,4 +423,4 @@ Before shipping any custom cryptography:
 
 **Docs**: /cryptokit, /cryptokit/secureenclave, /security/certificate_key_and_trust_services
 
-**Skills**: axiom-cryptokit-ref, axiom-keychain
+**Skills**: axiom-security (skills/cryptokit-ref.md), axiom-security (skills/keychain.md)

@@ -431,7 +431,7 @@ Every design decision should support these principles:
 
 **Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/typography
 
-**Skills**: axiom-hig-ref, axiom-liquid-glass, axiom-liquid-glass-ref, axiom-accessibility
+**Skills**: axiom-design (skills/hig-ref.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-accessibility
 
 ---
 

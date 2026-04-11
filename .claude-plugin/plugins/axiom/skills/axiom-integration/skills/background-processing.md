@@ -995,7 +995,7 @@ subsystem:com.apple.backgroundtaskscheduler
 
 **Docs**: /backgroundtasks/bgtaskscheduler, /backgroundtasks/starting-and-terminating-tasks-during-development
 
-**Skills**: skills/background-processing-ref.md, skills/background-processing-diag.md, axiom-energy, skills/push-notifications.md
+**Skills**: skills/background-processing-ref.md, skills/background-processing-diag.md, axiom-performance (skills/energy.md), skills/push-notifications.md
 
 ---
 

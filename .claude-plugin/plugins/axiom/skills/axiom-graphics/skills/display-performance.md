@@ -623,4 +623,4 @@ class FrameDropMonitor {
 
 **Docs**: /quartzcore/cadisplaylink, /quartzcore/cametaldisplaylink, /quartzcore/optimizing-iphone-and-ipad-apps-to-support-promotion-displays, /xcode/understanding-hitches-in-your-app, /metal/mtldrawable/present(afterminimumduration:), /metrickit/mxanimationmetric
 
-**Skills**: axiom-energy, axiom-graphics, axiom-metal-migration-ref, axiom-performance-profiling
+**Skills**: axiom-performance (skills/energy.md), axiom-graphics, axiom-graphics (skills/metal-migration-ref.md), axiom-performance (skills/performance-profiling.md)

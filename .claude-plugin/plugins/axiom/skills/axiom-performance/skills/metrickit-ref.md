@@ -668,4 +668,4 @@ class MetricsMonitor: MXMetricManagerSubscriber {
 
 **Docs**: /metrickit, /metrickit/mxmetricmanager, /metrickit/mxdiagnosticpayload
 
-**Skills**: axiom-hang-diagnostics, axiom-performance-profiling, axiom-testflight-triage
+**Skills**: axiom-performance (skills/hang-diagnostics.md), axiom-performance (skills/performance-profiling.md), axiom-shipping (skills/testflight-triage.md)

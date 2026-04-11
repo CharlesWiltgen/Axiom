@@ -185,4 +185,4 @@ These are for configuring Xcode's **internal** assistant, separate from external
 
 **Docs**: /xcode/mcp-server
 
-**Skills**: axiom-xcode-mcp-tools, axiom-xcode-mcp-ref
+**Skills**: axiom-xcode-mcp (skills/xcode-mcp-tools.md), axiom-xcode-mcp (skills/xcode-mcp-ref.md)

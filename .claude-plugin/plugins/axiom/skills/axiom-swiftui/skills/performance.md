@@ -1109,7 +1109,7 @@ Problem likely elsewhere:
 
 **Docs**: /xcode/understanding-hitches-in-your-app, /xcode/analyzing-hangs-in-your-app, /xcode/optimizing-your-app-s-performance
 
-**Skills**: skills/debugging-diag.md, skills/debugging.md, axiom-memory-debugging, axiom-xcode-debugging
+**Skills**: skills/debugging-diag.md, skills/debugging.md, axiom-performance (skills/memory-debugging.md), axiom-build (skills/xcode-debugging.md)
 
 ---
 

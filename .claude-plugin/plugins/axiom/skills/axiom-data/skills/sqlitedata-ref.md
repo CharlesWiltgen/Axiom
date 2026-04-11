@@ -879,7 +879,7 @@ let shared = try Customer.select(\.email).intersect(Supplier.select(\.email)).fe
 
 **GitHub**: pointfreeco/sqlite-data, pointfreeco/swift-structured-queries, groue/GRDB.swift
 
-**Skills**: axiom-sqlitedata, axiom-sqlitedata-migration, axiom-database-migration, axiom-grdb
+**Skills**: axiom-data (skills/sqlitedata.md), axiom-data (skills/sqlitedata-migration.md), axiom-data (skills/database-migration.md), axiom-data (skills/grdb.md)
 
 ---
 

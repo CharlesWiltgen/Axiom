@@ -692,4 +692,4 @@ curl -v \
 
 **Docs**: /security, /bundleresources/entitlements, /xcode/distributing-your-app
 
-**Skills**: axiom-code-signing, axiom-code-signing-diag
+**Skills**: axiom-security (skills/code-signing.md), axiom-security (skills/code-signing-diag.md)

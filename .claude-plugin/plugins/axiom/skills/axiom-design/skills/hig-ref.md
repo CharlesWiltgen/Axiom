@@ -1220,7 +1220,7 @@ HStack {
 
 **Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/materials, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/accessibility, /design/human-interface-guidelines/icons
 
-**Skills**: axiom-hig, axiom-liquid-glass, axiom-liquid-glass-ref, axiom-swiftui, axiom-accessibility, axiom-tvos
+**Skills**: axiom-design (skills/hig.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-swiftui, axiom-accessibility, axiom-swift (skills/tvos.md)
 
 ---
 

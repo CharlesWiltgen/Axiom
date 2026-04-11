@@ -1070,7 +1070,7 @@ Use `@Generable` with `respond(to:generating:)` instead of prompting for JSON an
 
 **WWDC**: 286, 259, 301
 
-**Skills**: axiom-foundation-models, axiom-foundation-models-diag
+**Skills**: axiom-ai (skills/foundation-models.md), axiom-ai (skills/foundation-models-diag.md)
 
 ---
 

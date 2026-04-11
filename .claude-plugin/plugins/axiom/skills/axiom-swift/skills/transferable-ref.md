@@ -664,4 +664,4 @@ provider.loadTransferable(type: Profile.self) { result in
 
 **Docs**: /coretransferable/transferable, /coretransferable/choosing-a-transfer-representation-for-a-model-type, /coretransferable/filerepresentation, /coretransferable/proxyrepresentation, /swiftui/sharelink, /swiftui/drag-and-drop, /swiftui/clipboard, /uniformtypeidentifiers
 
-**Skills**: axiom-integration, axiom-codable, axiom-swiftui
+**Skills**: axiom-integration, axiom-data (skills/codable.md), axiom-swiftui

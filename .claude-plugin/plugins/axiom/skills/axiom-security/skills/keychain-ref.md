@@ -577,4 +577,4 @@ When querying, `kSecAttrSynchronizable` defaults to `kSecAttrSynchronizableAny` 
 
 **Docs**: /security/keychain_services, /localauthentication, /security/secaccesscontrolcreateflags, /security/secitemadd(_:_:)
 
-**Skills**: axiom-code-signing-ref, axiom-app-attest
+**Skills**: axiom-security (skills/code-signing-ref.md), axiom-security (skills/app-attest.md)

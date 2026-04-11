@@ -574,7 +574,7 @@ If you've spent >30 minutes and the migration issue persists:
 
 **Docs**: /swiftdata
 
-**Skills**: axiom-swiftdata-migration, axiom-swiftdata, axiom-database-migration
+**Skills**: axiom-data (skills/swiftdata-migration.md), axiom-data (skills/swiftdata.md), axiom-data (skills/database-migration.md)
 
 ---
 

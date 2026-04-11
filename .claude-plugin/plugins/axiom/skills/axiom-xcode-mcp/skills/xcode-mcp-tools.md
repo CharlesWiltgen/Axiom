@@ -31,7 +31,7 @@ Iteratively build, diagnose, and fix until the project compiles.
 4. XcodeListNavigatorIssues(tabIdentifier) → canonical diagnostics
 5. XcodeUpdate(file, fix) for each diagnostic
 6. Go to step 1 (max 5 iterations)
-7. If same error persists after 3 attempts → fall back to axiom-xcode-debugging
+7. If same error persists after 3 attempts → fall back to axiom-build (skills/xcode-debugging.md)
 ```
 
 **Why `XcodeListNavigatorIssues` over build log parsing**: The Issue Navigator provides structured, deduplicated diagnostics. Build logs contain raw compiler output with noise.
@@ -176,4 +176,4 @@ After `XcodeUpdate`, the project may need a build to surface new diagnostics. Do
 
 ## Resources
 
-**Skills**: axiom-xcode-mcp-setup, axiom-xcode-mcp-ref, axiom-xcode-debugging
+**Skills**: axiom-xcode-mcp (skills/xcode-mcp-setup.md), axiom-xcode-mcp (skills/xcode-mcp-ref.md), axiom-build (skills/xcode-debugging.md)

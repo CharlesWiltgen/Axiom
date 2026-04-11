@@ -342,4 +342,4 @@ Before declaring a signing issue fixed:
 
 **Docs**: /security, /bundleresources/entitlements, /xcode/distributing-your-app
 
-**Skills**: axiom-code-signing, axiom-code-signing-ref
+**Skills**: axiom-security (skills/code-signing.md), axiom-security (skills/code-signing-ref.md)

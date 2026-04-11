@@ -481,7 +481,7 @@ After completing the port:
 
 **Tools**: MetalANGLE, MoltenVK
 
-**Skills**: axiom-metal-migration-ref, axiom-metal-migration-diag
+**Skills**: axiom-graphics (skills/metal-migration-ref.md), axiom-graphics (skills/metal-migration-diag.md)
 
 ---
 

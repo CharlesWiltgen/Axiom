@@ -293,6 +293,6 @@ If asc-mcp is not configured, fall back to manual workflows:
 
 ## Resources
 
-**Skills**: axiom-app-store-submission, axiom-app-store-ref, axiom-app-store-connect-ref, axiom-testflight-triage
+**Skills**: axiom-shipping (skills/app-store-submission.md), axiom-shipping (skills/app-store-ref.md), axiom-shipping (skills/app-store-connect-ref.md), axiom-shipping (skills/testflight-triage.md)
 
 **Agents**: crash-analyzer, security-privacy-scanner, iap-auditor
