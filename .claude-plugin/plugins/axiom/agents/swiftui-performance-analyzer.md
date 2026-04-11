@@ -275,4 +275,4 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 ## Related
 
 For SwiftUI Instruments workflows and view update debugging: `axiom-swiftui` skill (performance, debugging)
-For memory lifecycle issues: `axiom-memory-debugging` skill
+For memory lifecycle issues: `axiom-performance (skills/memory-debugging.md)` skill

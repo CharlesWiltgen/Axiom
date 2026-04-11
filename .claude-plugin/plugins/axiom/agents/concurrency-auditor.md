@@ -258,4 +258,4 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 For detailed concurrency patterns: `axiom-concurrency` skill
 For migration guidance: Enable `-strict-concurrency=complete` and fix warnings
-For memory lifecycle issues found during audit: `axiom-memory-debugging` skill
+For memory lifecycle issues found during audit: `axiom-performance (skills/memory-debugging.md)` skill

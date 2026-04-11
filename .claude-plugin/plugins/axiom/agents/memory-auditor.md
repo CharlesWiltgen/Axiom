@@ -253,6 +253,6 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For Instruments workflows: `axiom-memory-debugging` skill
-For Memory Graph Debugger: `axiom-memory-debugging` skill
+For Instruments workflows: `axiom-performance (skills/memory-debugging.md)` skill
+For Memory Graph Debugger: `axiom-performance (skills/memory-debugging.md)` skill
 For Task lifecycle issues found during audit: `axiom-concurrency` skill

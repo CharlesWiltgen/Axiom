@@ -318,6 +318,6 @@ If NO issues found:
 
 ## Related
 
-For SwiftData patterns: `axiom-swiftdata` skill
-For migration diagnostics: `axiom-swiftdata-migration-diag` skill
-For schema migration: `axiom-swiftdata-migration` skill
+For SwiftData patterns: `axiom-data (skills/swiftdata.md)` skill
+For migration diagnostics: `axiom-data (skills/swiftdata-migration-diag.md)` skill
+For schema migration: `axiom-data (skills/swiftdata-migration.md)` skill

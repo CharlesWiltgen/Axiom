@@ -330,7 +330,7 @@ Grep: \.filter\(.*\)\.count
 Grep: Task\.sleep\(nanoseconds:
 ```
 
-**Reference**: See `axiom-swift-modern` skill for the full modern API replacement table.
+**Reference**: See `axiom-swift (skills/swift-modern.md)` skill for the full modern API replacement table.
 
 Report matches as LOW priority unless they appear in hot paths (then MEDIUM).
 
