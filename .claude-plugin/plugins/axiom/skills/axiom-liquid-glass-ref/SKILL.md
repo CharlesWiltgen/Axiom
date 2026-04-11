@@ -23,7 +23,7 @@ Use when:
 
 #### Related Skills
 - Use `axiom-liquid-glass` for implementing the Liquid Glass material itself and design review pressure scenarios
-- Use `axiom-swiftui-performance` for profiling Liquid Glass rendering performance
+- Use `axiom-swiftui` (performance reference) for profiling Liquid Glass rendering performance
 - Use `axiom-accessibility-diag` for accessibility testing
 
 ---
@@ -236,7 +236,7 @@ When glass extends edge-to-edge via `.ignoresSafeArea()`, use `.safeAreaPadding(
 // ✅ .safeAreaPadding(.horizontal, 20) — 20pt beyond safe areas
 ```
 
-Applies to: full-screen sheets with materials, edge-to-edge toolbars, floating panels, custom glass navigation bars. Requires iOS 17+. See `axiom-swiftui-layout-ref` for full `.safeAreaPadding()` vs `.padding()` guidance.
+Applies to: full-screen sheets with materials, edge-to-edge toolbars, floating panels, custom glass navigation bars. Requires iOS 17+. See `axiom-swiftui` (layout reference) for full `.safeAreaPadding()` vs `.padding()` guidance.
 
 Verify: content visible beneath sidebar/inspector, not cropped, peek-through looks intentional, properly inset from notch/Dynamic Island/home indicator.
 
@@ -347,7 +347,7 @@ List(emails) { email in
 
 ### Toolbar Grouping, Spacers, and Morphing
 
-See `axiom-swiftui-26-ref` for complete toolbar API coverage: `ToolbarSpacer`, `ToolbarItemGroup` visual grouping, `.sharedBackgroundVisibility(.hidden)`, toolbar morphing, `DefaultToolbarItem`, user-customizable toolbars, monochrome icon rendering, backward-compatible toolbar labels, and floating glass buttons.
+See `axiom-swiftui` (iOS 26 reference) for complete toolbar API coverage: `ToolbarSpacer`, `ToolbarItemGroup` visual grouping, `.sharedBackgroundVisibility(.hidden)`, toolbar morphing, `DefaultToolbarItem`, user-customizable toolbars, monochrome icon rendering, backward-compatible toolbar labels, and floating glass buttons.
 
 **Liquid Glass-specific toolbar guidance:**
 - Pick one style (icons OR text) per toolbar background group — mixing creates inconsistent visual weight under glass
@@ -442,7 +442,7 @@ List(items) { item in
 
 ### Semantic Search Tabs
 
-For Tab API patterns including `.tabRole(.search)`, see swiftui-nav-ref skill Section 5 (Tab Navigation Integration).
+For Tab API patterns including `.tabRole(.search)`, see `axiom-swiftui` navigation reference, Section 5 (Tab Navigation Integration).
 
 ---
 
@@ -527,7 +527,7 @@ Wrap multiple `.glassEffect()` views in `GlassEffectContainer { }` to optimize r
 
 ### Performance Testing
 
-Profile scrolling, animations, memory, and CPU with Instruments (Time Profiler, SwiftUI, Allocations, Core Animation). See `axiom-swiftui-performance` for SwiftUI Instrument workflows and `axiom-performance-profiling` for Instruments decision trees.
+Profile scrolling, animations, memory, and CPU with Instruments (Time Profiler, SwiftUI, Allocations, Core Animation). See `axiom-swiftui` (performance reference) for SwiftUI Instrument workflows and `axiom-performance-profiling` for Instruments decision trees.
 
 ### Backward Compatibility
 
@@ -617,7 +617,7 @@ Use this checklist when auditing app for Liquid Glass adoption. 30 highest-impac
 ### Menus and Toolbars
 - [ ] Standard selectors used for automatic menu icons
 - [ ] Swipe actions match contextual menu actions
-- [ ] Toolbar items grouped logically (see `axiom-swiftui-26-ref`)
+- [ ] Toolbar items grouped logically (see `axiom-swiftui` iOS 26 reference)
 
 ### Windows and Modals
 - [ ] Arbitrary window sizes supported (iPadOS); flexible layouts used
@@ -639,7 +639,7 @@ Use this checklist when auditing app for Liquid Glass adoption. 30 highest-impac
 
 **Sample Code**: /SwiftUI/Landmarks-Building-an-app-with-Liquid-Glass
 
-**Skills**: axiom-liquid-glass, axiom-swiftui-performance, axiom-swiftui-debugging, axiom-accessibility-diag
+**Skills**: axiom-liquid-glass, axiom-swiftui, axiom-accessibility-diag
 
 ---
 

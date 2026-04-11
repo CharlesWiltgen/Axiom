@@ -30,7 +30,7 @@ metadata:
 
 ❌ **Do NOT use this skill for**:
 - General Swift syntax (use Swift documentation)
-- SwiftUI-specific patterns (use `axiom-swiftui-debugging` or `axiom-swiftui-performance`)
+- SwiftUI-specific patterns (use `axiom-swiftui` debugging or performance references)
 - API-specific patterns (use API documentation)
 
 ## Core Philosophy: Think in Isolation Domains, Not Threads

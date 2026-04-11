@@ -35,8 +35,8 @@ metadata:
 
 ❌ **Do NOT use this skill for**:
 - Pure App Intents implementation (use **app-intents-ref**)
-- SwiftUI layout questions (use **swiftui-layout**)
-- Performance profiling (use **swiftui-performance**)
+- SwiftUI layout questions (use **axiom-swiftui** layout reference)
+- Performance profiling (use **axiom-swiftui** performance reference)
 - General debugging (use **xcode-debugging**)
 
 ## Related Skills

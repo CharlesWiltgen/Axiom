@@ -18,7 +18,7 @@ metadata:
 
 **Related Skills**:
 - `axiom-performance-profiling` — Use Instruments to measure (do this first!)
-- `axiom-swiftui-performance` — SwiftUI-specific optimizations
+- `axiom-swiftui` (performance reference) — SwiftUI-specific optimizations
 - `axiom-build-performance` — Compilation speed
 - `axiom-swift-concurrency` — Correctness-focused concurrency patterns
 
@@ -1231,6 +1231,6 @@ func render<S: Shape>(shapes: [S]) { }
 
 **Docs**: /swift/inlinearray, /swift/span, /swift/outputspan
 
-**Skills**: axiom-performance-profiling, axiom-swift-concurrency, axiom-swiftui-performance
+**Skills**: axiom-performance-profiling, axiom-swift-concurrency, axiom-swiftui
 
 ---

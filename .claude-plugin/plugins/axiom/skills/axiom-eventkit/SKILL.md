@@ -26,7 +26,7 @@ Use this skill when:
 
 Do NOT use this skill for:
 - Contacts framework questions (use **contacts**)
-- General SwiftUI architecture (use **swiftui-architecture**)
+- General SwiftUI architecture (use **axiom-swiftui** architecture reference)
 - Background task scheduling (use **background-processing**)
 
 ## Related Skills

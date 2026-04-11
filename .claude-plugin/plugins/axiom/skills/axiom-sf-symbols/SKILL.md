@@ -22,7 +22,7 @@ Use when:
 
 #### Related Skills
 - Use `axiom-sf-symbols-ref` for complete API reference with all modifiers, UIKit equivalents, and platform availability matrix
-- Use `axiom-swiftui-animation-ref` for general SwiftUI animation (not symbol-specific)
+- Use `axiom-swiftui` (animation reference) for general SwiftUI animation (not symbol-specific)
 - Use `axiom-hig-ref` for broader icon design guidelines
 
 ## Example Prompts
@@ -585,7 +585,7 @@ Image(systemName: isFavorite ? "star.fill" : "star")
 
 **Docs**: /symbols, /symbols/symboleffect, /symbols/symbolrenderingmode, /swiftui/image/symboleffect(_:options:value:), /swiftui/image/symbolrenderingmode(_:)
 
-**Skills**: axiom-sf-symbols-ref, axiom-hig-ref, axiom-swiftui-animation-ref
+**Skills**: axiom-sf-symbols-ref, axiom-hig-ref, axiom-swiftui
 
 ---
 
