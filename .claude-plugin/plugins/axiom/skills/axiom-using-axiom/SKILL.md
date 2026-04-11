@@ -25,7 +25,7 @@ These thoughts mean STOP—you're rationalizing:
 | Thought | Reality |
 |---------|---------|
 | "This is just a simple build issue" | Build failures have patterns. Check ios-build first. |
-| "I can fix this SwiftUI bug quickly" | SwiftUI issues have hidden gotchas. Check ios-ui first. |
+| "I can fix this SwiftUI bug quickly" | SwiftUI issues have hidden gotchas. Check axiom-swiftui first. |
 | "Let me just add this database column" | Schema changes risk data loss. Check ios-data first. |
 | "This async code looks straightforward" | Swift concurrency has subtle rules. Check ios-concurrency first. |
 | "I'll debug the memory leak manually" | Leak patterns are documented. Check ios-performance first. |
@@ -41,12 +41,12 @@ These thoughts mean STOP—you're rationalizing:
 When multiple Axiom skills could apply, use this priority:
 
 1. **Environment/Build first** (ios-build) — Fix the environment before debugging code
-2. **Architecture patterns** (ios-ui, axiom-ios-data, axiom-ios-concurrency) — These determine HOW to structure the solution
+2. **Architecture patterns** (axiom-swiftui, axiom-ios-data, axiom-ios-concurrency) — These determine HOW to structure the solution
 3. **Implementation details** (ios-integration, axiom-ios-ai, axiom-ios-vision) — These guide specific feature work
 
 Examples:
 - "Xcode build failed" → ios-build first (environment)
-- "Add SwiftUI screen" → ios-ui first (architecture), then maybe ios-integration if using system features
+- "Add SwiftUI screen" → axiom-swiftui first (architecture), then maybe ios-integration if using system features
 - "App is slow" → ios-performance first (diagnose), then fix the specific domain
 - "Network request failing" → ios-build first (environment check), then ios-networking (implementation)
 
@@ -73,7 +73,7 @@ Axiom uses **router skills** for progressive disclosure:
 When a question spans multiple domains, **invoke ALL relevant routers — don't stop after the first one.**
 
 Examples:
-- "My SwiftUI view doesn't update when SwiftData changes" → invoke **both** ios-ui AND ios-data
+- "My SwiftUI view doesn't update when SwiftData changes" → invoke **both** axiom-swiftui AND ios-data
 - "My widget isn't showing updated data from SwiftData" → invoke **both** ios-integration AND ios-data
 - "My Foundation Models session freezes the UI" → invoke **both** ios-ai AND ios-concurrency
 - "My Core Data saves lose data from background tasks" → invoke **both** ios-data AND ios-concurrency
