@@ -26,7 +26,7 @@ Use this skill when:
 
 Do NOT use this skill for:
 - SceneKit maintenance (use `axiom-scenekit`)
-- 2D games (use `axiom-spritekit`)
+- 2D games (use `axiom-games`)
 - Metal shader programming (use `axiom-metal-migration-ref`)
 - Pure GPU compute (use Metal directly)
 

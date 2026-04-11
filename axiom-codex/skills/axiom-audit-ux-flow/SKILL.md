@@ -268,5 +268,5 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 ## Related
 
 For navigation architecture: `axiom-swiftui` skill (navigation)
-For accessibility compliance: `axiom-accessibility-diag` skill
-For UX principles: `axiom-ux-flow-audit` skill
+For accessibility compliance: `axiom-accessibility` (accessibility-diag reference)
+For UX principles: `axiom-accessibility` (ux-flow-audit reference)

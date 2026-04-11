@@ -1,10 +1,3 @@
----
-name: axiom-spritekit-diag
-description: Use when physics contacts don't fire, objects tunnel through walls, frame rate drops, touches don't register, memory spikes, coordinate confusion, or scene transition crashes
-license: MIT
-metadata:
-  version: "1.0.0"
----
 
 # SpriteKit Diagnostics
 
@@ -36,7 +29,7 @@ if let view = self.view as? SKView {
 
 If `showsPhysics` doesn't show expected physics body outlines, your physics bodies aren't configured correctly. **Stop and fix bodies before debugging contacts.**
 
-For SpriteKit architecture patterns and best practices, see `axiom-spritekit`. For API reference, see `axiom-spritekit-ref`.
+For SpriteKit architecture patterns and best practices, see `references/spritekit.md`. For API reference, see `references/spritekit-ref.md`.
 
 ---
 
@@ -380,4 +373,4 @@ These mistakes cause the majority of SpriteKit issues. Check these first before 
 
 **Docs**: /spritekit/skphysicsbody, /spritekit/maximizing-node-drawing-performance
 
-**Skills**: axiom-spritekit, axiom-spritekit-ref
+**Skills**: references/spritekit.md, references/spritekit-ref.md

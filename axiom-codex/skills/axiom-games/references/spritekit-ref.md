@@ -1,11 +1,3 @@
----
-name: axiom-spritekit-ref
-description: SpriteKit API reference — all node types, physics body creation, action catalog, texture atlases, constraints, scene setup, particles, SKRenderer
-license: MIT
-compatibility: [iOS 13+, macOS 10.15+, tvOS 13+, watchOS 6+]
-metadata:
-  version: "1.0.0"
----
 
 # SpriteKit API Reference
 
@@ -708,4 +700,4 @@ struct GameContainerView: View {
 
 **Docs**: /spritekit/skspritenode, /spritekit/skphysicsbody, /spritekit/skaction, /spritekit/skemitternode, /spritekit/skrenderer
 
-**Skills**: axiom-spritekit, axiom-spritekit-diag
+**Skills**: references/spritekit.md, references/spritekit-diag.md

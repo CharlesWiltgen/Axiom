@@ -1,10 +1,3 @@
----
-name: axiom-spritekit
-description: Use when building SpriteKit games, implementing physics, actions, scene management, or debugging game performance. Covers scene graph, physics engine, actions system, game loop, rendering optimization.
-license: MIT
-metadata:
-  version: "1.0.0"
----
 
 # SpriteKit Game Development Guide
 
@@ -510,7 +503,7 @@ func setupControllers() {
 
 ### Performance Priorities
 
-For detailed performance diagnosis, see `axiom-spritekit-diag` Symptom 3. Key priorities:
+For detailed performance diagnosis, see `references/spritekit-diag.md` Symptom 3. Key priorities:
 
 1. **Node count** — Remove offscreen nodes, use object pooling
 2. **Draw calls** — Use texture atlases, replace SKShapeNode with pre-rendered textures
@@ -959,4 +952,4 @@ node.run(SKAction.repeatForever(SKAction.sequence([
 
 **Docs**: /spritekit, /spritekit/skscene, /spritekit/skphysicsbody, /spritekit/maximizing-node-drawing-performance
 
-**Skills**: axiom-spritekit-ref, axiom-spritekit-diag
+**Skills**: references/spritekit-ref.md, references/spritekit-diag.md
