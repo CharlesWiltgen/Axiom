@@ -1,6 +1,6 @@
 import { readdir, readFile, stat, watch } from 'fs/promises';
 import { join } from 'path';
-import { parseSkill, parseCommand, parseAgent, applyAnnotations, filterSkillSections, Skill, Command, Agent, SkillSection, SkillAnnotations } from './parser.js';
+import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, filterSkillSections, Skill, Command, Agent, SkillSection, SkillAnnotations } from './parser.js';
 import { Config, Logger } from '../config.js';
 import { Loader } from './types.js';
 import { buildIndex, search, SearchIndex, SearchResult } from '../search/index.js';
@@ -93,6 +93,29 @@ export class DevLoader implements Loader {
                 loadedCount++;
               } catch (err) {
                 this.logger.warn(`Failed to parse skill ${entry}: ${(err as Error).message}`);
+              }
+
+              // Load reference files from references/ subdirectory (suite pattern)
+              const refsDir = join(entryPath, 'references');
+              try {
+                const refEntries = await readdir(refsDir);
+                for (const refFile of refEntries) {
+                  if (!refFile.endsWith('.md')) continue;
+                  try {
+                    const refContent = await readFile(join(refsDir, refFile), 'utf-8');
+                    const refSkill = applyAnnotations(
+                      parseReferenceFile(refContent, refFile, entry),
+                      annotations,
+                    );
+                    this.skillsCache.set(refSkill.name, refSkill);
+                    this.logger.debug(`Loaded reference: ${refSkill.name}`);
+                    loadedCount++;
+                  } catch (refErr) {
+                    this.logger.warn(`Failed to parse reference ${entry}/references/${refFile}: ${(refErr as Error).message}`);
+                  }
+                }
+              } catch {
+                // No references/ directory — not a suite, that's fine
               }
             }
             // Recurse into subdirectories (e.g., axiom-ios-ml/coreml/)
