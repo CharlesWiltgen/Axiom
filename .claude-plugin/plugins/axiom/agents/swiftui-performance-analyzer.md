@@ -22,7 +22,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-ui
+  - axiom-swiftui
 ---
 
 # SwiftUI Performance Analyzer Agent
@@ -274,6 +274,5 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For SwiftUI Instruments workflows: `axiom-swiftui-performance` skill
-For view update debugging: `axiom-swiftui-debugging` skill
+For SwiftUI Instruments workflows and view update debugging: `axiom-swiftui` skill (performance, debugging)
 For memory lifecycle issues: `axiom-memory-debugging` skill

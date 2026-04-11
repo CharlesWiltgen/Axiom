@@ -37,7 +37,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-ui
+  - axiom-swiftui
   - axiom-ios-performance
 ---
 

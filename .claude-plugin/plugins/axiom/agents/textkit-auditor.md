@@ -37,7 +37,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-ui
+  - axiom-swiftui
 # MCP annotations (ignored by Claude Code)
 mcp:
   category: auditing
