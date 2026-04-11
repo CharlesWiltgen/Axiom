@@ -365,7 +365,7 @@ Report to user and stop if:
 
 ## Related
 
-- `axiom-testflight-triage` — Full TestFlight workflow including Organizer
-- `axiom-memory-debugging` — For memory-related crashes
+- `axiom-shipping (skills/testflight-triage.md)` — Full TestFlight workflow including Organizer
+- `axiom-performance (skills/memory-debugging.md)` — For memory-related crashes
 - `axiom-concurrency` — For concurrency-related crashes
-- `axiom-xcode-debugging` — For build/environment issues
+- `axiom-build (skills/xcode-debugging.md)` — For build/environment issues

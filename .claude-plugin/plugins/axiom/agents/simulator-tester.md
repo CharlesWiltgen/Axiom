@@ -382,7 +382,7 @@ xcrun simctl diagnose -X --all-logs
 **Optional Tools:**
 - **AXe**: `brew install cameroncooke/axe/axe` — UI automation CLI
 
-For deep link debugging: `axiom-deep-link-debugging` skill
+For deep link debugging: `axiom-swift (skills/deep-link-debugging.md)` skill
 For build issues: `build-fixer` agent
 For AXe reference: `axiom-xcode-mcp` skill
 For running tests: `test-runner` agent

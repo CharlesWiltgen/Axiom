@@ -269,6 +269,6 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For detailed optimization patterns: `axiom-energy` skill
-For Power Profiler workflows: `axiom-energy-ref` skill
+For detailed optimization patterns: `axiom-performance (skills/energy.md)` skill
+For Power Profiler workflows: `axiom-performance (skills/energy-ref.md)` skill
 For timer lifecycle issues: `axiom-integration` (skills/timer-patterns.md)
