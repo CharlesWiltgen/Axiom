@@ -733,8 +733,8 @@ try {
     const CODEX_EXCLUDE = new Set([
       'axiom-ios-build', 'axiom-ios-testing', 'axiom-ios-data',
       'axiom-ios-concurrency', 'axiom-ios-performance', 'axiom-ios-networking',
-      'axiom-ios-integration', 'axiom-accessibility', 'axiom-ios-ai',
-      'axiom-ios-ml', 'axiom-vision', 'axiom-ios-graphics', 'axiom-games',
+      'axiom-ios-integration', 'axiom-ios-ai',
+      'axiom-ios-ml', 'axiom-ios-graphics',
       'axiom-apple-docs', 'axiom-xcode-mcp', 'axiom-shipping', 'axiom-using-axiom',
     ]);
     const excludedCount = sourceSkillDirs.filter((d: fs.Dirent) => CODEX_EXCLUDE.has(d.name)).length;

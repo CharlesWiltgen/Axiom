@@ -1,8 +1,3 @@
----
-name: axiom-ux-flow-audit
-description: Use when auditing user journeys, checking for UX dead ends, dismiss traps, buried CTAs, missing empty/loading/error states, or broken data paths in iOS apps (SwiftUI and UIKit).
-license: MIT
----
 
 # UX Flow Audit
 
@@ -148,7 +143,7 @@ Actions only reachable via gestures or visual cues, invisible to assistive techn
 - Navigation that depends on color alone (e.g., "tap the green button")
 - Pull-to-refresh (`refreshable`) without VoiceOver-accessible alternative (note: `refreshable` is automatically accessible — check custom implementations)
 
-**Cross-reference**: `axiom-accessibility-diag` covers full WCAG compliance. This category specifically checks UX flow reachability from assistive technology.
+**Cross-reference**: `references/accessibility-diag.md` covers full WCAG compliance. This category specifically checks UX flow reachability from assistive technology.
 
 ### 9. Onboarding Gaps (MEDIUM)
 
@@ -295,6 +290,6 @@ Most UX flow defects are fast fixes. When someone says "that's a big change," ch
 
 ## Resources
 
-**Skills**: axiom-swiftui, axiom-accessibility-diag, axiom-hig
+**Skills**: axiom-swiftui, references/accessibility-diag.md, axiom-hig
 
 **Agents**: ux-flow-auditor (automated scanning), swiftui-nav-auditor (navigation architecture), accessibility-auditor (WCAG compliance)

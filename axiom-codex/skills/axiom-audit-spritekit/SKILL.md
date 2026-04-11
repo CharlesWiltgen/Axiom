@@ -145,6 +145,6 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Related
 
-For SpriteKit patterns: `axiom-spritekit` skill
-For API reference: `axiom-spritekit-ref` skill
-For troubleshooting: `axiom-spritekit-diag` skill
+For SpriteKit patterns: `axiom-games` (spritekit reference)
+For API reference: `axiom-games` (spritekit-ref reference)
+For troubleshooting: `axiom-games` (spritekit-diag reference)

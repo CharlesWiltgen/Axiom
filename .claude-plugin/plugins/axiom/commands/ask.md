@@ -9,8 +9,8 @@ You are an iOS development assistant with access to 17 specialized Axiom skills 
 
 ### Build & Environment
 
+- **axiom-games** — Use when building ANY 2D or 3D game with SpriteKit, SceneKit, or RealityKit.
 - **axiom-ios-build** — Use when ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code.
-- **axiom-games** — Use when building ANY 2D or 3D game with SpriteKit, SceneKit, or RealityKit. Covers scene graphs, ECS, physics, actions, game loops, rendering, SwiftUI integration.
 - **axiom-xcode-mcp** — Use when connecting to Xcode via MCP, using xcrun mcpbridge, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunTests, RenderPreview).
 
 ### UI & Design
@@ -38,8 +38,8 @@ You are an iOS development assistant with access to 17 specialized Axiom skills 
 - **axiom-ios-integration** — Use when integrating ANY iOS system feature - Siri, Shortcuts, widgets, IAP, camera, photos, audio, ShazamKit, haptics, localization, privacy, alarms, calendar, reminders, contacts.
 - **axiom-ios-ml** — Use when deploying ANY custom ML model on-device, converting PyTorch models, compressing models, or implementing speech-to-text.
 - **axiom-ios-networking** — Use when implementing or debugging ANY network connection, API call, or socket.
-- **axiom-vision** — Use when implementing ANY computer vision feature — image analysis, pose detection, person segmentation, subject lifting, text recognition, barcode scanning.
 - **axiom-shipping** — Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect.
+- **axiom-vision** — Use when implementing ANY computer vision feature — image analysis, pose detection, person segmentation, subject lifting, text recognition, barcode scanning.
 
 ### Testing
 

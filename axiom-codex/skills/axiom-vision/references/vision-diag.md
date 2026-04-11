@@ -1,12 +1,3 @@
----
-name: axiom-vision-diag
-description: subject not detected, hand pose missing landmarks, low confidence observations, Vision performance, coordinate conversion, VisionKit errors, observation nil, text not recognized, barcode not detected, DataScannerViewController not working, document scan issues
-license: MIT
-compatibility: iOS 11+, iPadOS 11+, macOS 10.13+, tvOS 11+, axiom-visionOS 1+
-metadata:
-  version: "1.1.0"
-  last-updated: "2026-01-03"
----
 
 # Vision Framework Diagnostics
 
@@ -190,7 +181,7 @@ if #available(iOS 17.0, *) {
 }
 ```
 
-**Prevention**: Check API availability in `axiom-vision-ref` before implementing
+**Prevention**: Check API availability in `references/vision-ref.md` before implementing
 
 **Time to fix**: 10 min
 
@@ -973,4 +964,4 @@ func scaled(_ point: CGPoint, to size: CGSize) -> CGPoint {
 
 **Docs**: /vision, /vision/vnrecognizetextrequest, /visionkit
 
-**Skills**: axiom-vision, axiom-vision-ref
+**Skills**: references/vision.md, references/vision-ref.md

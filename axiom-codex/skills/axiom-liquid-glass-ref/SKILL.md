@@ -24,7 +24,7 @@ Use when:
 #### Related Skills
 - Use `axiom-liquid-glass` for implementing the Liquid Glass material itself and design review pressure scenarios
 - Use `axiom-swiftui` (performance reference) for profiling Liquid Glass rendering performance
-- Use `axiom-accessibility-diag` for accessibility testing
+- Use `axiom-accessibility` for accessibility testing
 
 ---
 
@@ -639,7 +639,7 @@ Use this checklist when auditing app for Liquid Glass adoption. 30 highest-impac
 
 **Sample Code**: /SwiftUI/Landmarks-Building-an-app-with-Liquid-Glass
 
-**Skills**: axiom-liquid-glass, axiom-swiftui, axiom-accessibility-diag
+**Skills**: axiom-liquid-glass, axiom-swiftui, axiom-accessibility
 
 ---
 

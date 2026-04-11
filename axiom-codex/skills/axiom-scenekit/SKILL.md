@@ -26,7 +26,7 @@ Do NOT use this skill for:
 - New 3D projects (use `axiom-realitykit`)
 - AR experiences (use `axiom-realitykit`)
 - visionOS development (use `axiom-realitykit`)
-- SpriteKit 2D games (`axiom-spritekit`)
+- SpriteKit 2D games (`axiom-games`)
 - Metal shader programming (`axiom-metal-migration-ref`)
 
 ---

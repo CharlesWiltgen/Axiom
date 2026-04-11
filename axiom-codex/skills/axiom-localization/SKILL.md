@@ -1095,4 +1095,4 @@ After adopting Xcode 26 generated symbols, verify:
 
 **Docs**: /xcode/localization, /xcode/localizing-and-varying-text-with-a-string-catalog
 
-**Skills**: axiom-app-intents-ref, axiom-hig, axiom-accessibility-diag
+**Skills**: axiom-app-intents-ref, axiom-hig, axiom-accessibility
