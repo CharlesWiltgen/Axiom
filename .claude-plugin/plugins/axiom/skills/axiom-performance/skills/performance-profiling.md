@@ -1060,7 +1060,7 @@ See `axiom-performance (skills/metrickit-ref.md)` for comprehensive MetricKit in
 
 **Docs**: /library/archive/documentation/cocoa/conceptual/coredataperformance, /library/archive/technotes/tn2224, /os/ossignposter, /xctest/xctestcase/measure
 
-**Skills**: axiom-memory-debugging, axiom-swiftui, axiom-concurrency, axiom-metrickit-ref
+**Skills**: axiom-performance (skills/memory-debugging.md), axiom-swiftui, axiom-concurrency, axiom-performance (skills/metrickit-ref.md)
 
 ---
 

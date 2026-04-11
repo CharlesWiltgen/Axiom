@@ -955,7 +955,7 @@ NavigationPath(codableRepresentation)  // For decoding
 
 **Docs**: /swiftui/tabrole/search, /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:)
 
-**Skills**: skills/nav.md, skills/nav-diag.md, skills/26-ref.md, axiom-liquid-glass, skills/search-ref.md
+**Skills**: skills/nav.md, skills/nav-diag.md, skills/26-ref.md, axiom-design (skills/liquid-glass.md), skills/search-ref.md
 
 ---
 

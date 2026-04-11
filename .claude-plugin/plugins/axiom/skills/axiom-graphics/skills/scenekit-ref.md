@@ -334,4 +334,4 @@ node.constraints = [lookAt]
 
 **Docs**: /scenekit, /scenekit/scnscene, /scenekit/scnnode, /scenekit/scnmaterial, /scenekit/scnphysicsbody, /scenekit/scnaction
 
-**Skills**: axiom-scenekit, axiom-realitykit, axiom-realitykit-ref
+**Skills**: axiom-graphics (skills/scenekit.md), axiom-graphics (skills/realitykit.md), axiom-graphics (skills/realitykit-ref.md)

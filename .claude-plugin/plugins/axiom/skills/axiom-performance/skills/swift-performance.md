@@ -1224,6 +1224,6 @@ func render<S: Shape>(shapes: [S]) { }
 
 **Docs**: /swift/inlinearray, /swift/span, /swift/outputspan
 
-**Skills**: axiom-performance-profiling, axiom-concurrency, axiom-swiftui
+**Skills**: axiom-performance (skills/performance-profiling.md), axiom-concurrency, axiom-swiftui
 
 ---

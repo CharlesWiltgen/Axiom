@@ -325,7 +325,7 @@ For device-level crash diagnostics, hang call stacks, and custom telemetry beyon
 
 ## Related
 
-**Skills**: axiom-testflight-triage (Xcode Organizer workflows), axiom-asc-mcp (programmatic ASC access via MCP)
+**Skills**: axiom-shipping (skills/testflight-triage.md) (Xcode Organizer workflows), axiom-shipping (skills/asc-mcp.md) (programmatic ASC access via MCP)
 
 **Agents**: crash-analyzer (automated crash log parsing)
 

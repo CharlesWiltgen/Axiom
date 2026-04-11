@@ -350,4 +350,4 @@ Before declaring a keychain issue fixed:
 
 **Reference**: Quinn "The Eskimo" — SecItem Pitfalls and Best Practices (Apple Developer Forums), Keychain Items Fundamentals (Apple TN3137)
 
-**Skills**: axiom-keychain, axiom-keychain-ref
+**Skills**: axiom-security (skills/keychain.md), axiom-security (skills/keychain-ref.md)

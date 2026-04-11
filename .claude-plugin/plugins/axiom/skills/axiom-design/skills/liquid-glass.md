@@ -591,7 +591,7 @@ For complete API reference including `glassEffect()`, `glassBackgroundEffect()`,
 
 **Docs**: /technologyoverviews/adopting-liquid-glass, /swiftui/landmarks-building-an-app-with-liquid-glass, /swiftui/applying-liquid-glass-to-custom-views
 
-**Skills**: axiom-liquid-glass-ref
+**Skills**: axiom-design (skills/liquid-glass-ref.md)
 
 ---
 

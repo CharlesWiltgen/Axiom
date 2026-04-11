@@ -459,4 +459,4 @@ breakpoint set -S "scheduledTimerWithTimeInterval:target:selector:userInfo:repea
 
 ## Resources
 
-**Skills**: skills/timer-patterns.md, axiom-energy-ref, axiom-memory-debugging
+**Skills**: skills/timer-patterns.md, axiom-performance (skills/energy-ref.md), axiom-performance (skills/memory-debugging.md)

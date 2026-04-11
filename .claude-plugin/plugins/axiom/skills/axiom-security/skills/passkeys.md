@@ -453,4 +453,4 @@ Before shipping passkey authentication:
 
 **Docs**: /authenticationservices, /authenticationservices/public-private-key-authentication/supporting-passkeys
 
-**Skills**: axiom-keychain
+**Skills**: axiom-security (skills/keychain.md)

@@ -528,4 +528,4 @@ log stream --predicate 'process == "YourAppName" AND subsystem == "com.apple.Cor
 
 **Docs**: /corelocation, /corelocation/clmonitor, /corelocation/cllocationupdate
 
-**Skills**: axiom-core-location, axiom-core-location-ref, axiom-energy-diag
+**Skills**: axiom-location (skills/core-location.md), axiom-location (skills/core-location-ref.md), axiom-performance (skills/energy-diag.md)

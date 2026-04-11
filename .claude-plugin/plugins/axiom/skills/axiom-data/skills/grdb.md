@@ -506,7 +506,7 @@ ValueObservation.tracking { db in
 
 **Docs**: sqlite.org/docs.html
 
-**Skills**: axiom-database-migration, axiom-sqlitedata, axiom-swiftdata
+**Skills**: axiom-data (skills/database-migration.md), axiom-data (skills/sqlitedata.md), axiom-data (skills/swiftdata.md)
 
 ## Production Performance: Query Optimization Under Pressure
 

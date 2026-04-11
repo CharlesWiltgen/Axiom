@@ -907,7 +907,7 @@ SQLiteData with CloudKit SyncEngine is the **recommended tvOS data solution**. t
 
 **GitHub**: pointfreeco/sqlite-data, pointfreeco/swift-structured-queries, groue/GRDB.swift
 
-**Skills**: axiom-sqlitedata-ref, axiom-sqlitedata-migration, axiom-database-migration, axiom-grdb
+**Skills**: axiom-data (skills/sqlitedata-ref.md), axiom-data (skills/sqlitedata-migration.md), axiom-data (skills/database-migration.md), axiom-data (skills/grdb.md)
 
 ---
 

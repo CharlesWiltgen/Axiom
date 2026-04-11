@@ -743,4 +743,4 @@ For developers submitting their first app, these are additional items often miss
 
 **Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details, /support/offering-account-deletion-in-your-app, /documentation/security/complying-with-encryption-export-regulations
 
-**Skills**: axiom-integration, axiom-accessibility, axiom-testflight-triage, axiom-app-store-connect-ref
+**Skills**: axiom-integration, axiom-accessibility, axiom-shipping (skills/testflight-triage.md), axiom-shipping (skills/app-store-connect-ref.md)

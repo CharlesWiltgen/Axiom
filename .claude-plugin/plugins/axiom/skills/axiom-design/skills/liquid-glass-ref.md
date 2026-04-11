@@ -630,7 +630,7 @@ Use this checklist when auditing app for Liquid Glass adoption. 30 highest-impac
 
 **Sample Code**: /SwiftUI/Landmarks-Building-an-app-with-Liquid-Glass
 
-**Skills**: axiom-liquid-glass, axiom-swiftui, axiom-accessibility
+**Skills**: axiom-design (skills/liquid-glass.md), axiom-swiftui, axiom-accessibility
 
 ---
 

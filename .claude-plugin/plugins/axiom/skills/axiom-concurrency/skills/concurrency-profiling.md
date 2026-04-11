@@ -239,4 +239,4 @@ Run these checks first:
 
 **Docs**: /xcode/improving-app-responsiveness
 
-**Skills**: See `skills/swift-concurrency.md`, axiom-performance-profiling, see `skills/synchronization.md`, axiom-lldb (interactive thread state inspection)
+**Skills**: See `skills/swift-concurrency.md`, axiom-performance (skills/performance-profiling.md), see `skills/synchronization.md`, axiom-build (skills/lldb.md) (interactive thread state inspection)

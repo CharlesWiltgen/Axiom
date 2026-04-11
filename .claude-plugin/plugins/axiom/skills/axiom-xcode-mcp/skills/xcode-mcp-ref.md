@@ -278,4 +278,4 @@ Search Apple Developer Documentation semantically.
 
 ## Resources
 
-**Skills**: axiom-xcode-mcp-setup, axiom-xcode-mcp-tools
+**Skills**: axiom-xcode-mcp (skills/xcode-mcp-setup.md), axiom-xcode-mcp (skills/xcode-mcp-tools.md)

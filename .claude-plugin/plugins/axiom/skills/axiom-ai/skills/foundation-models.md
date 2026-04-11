@@ -1107,7 +1107,7 @@ Before shipping Foundation Models features:
 
 **WWDC**: 286, 259, 301
 
-**Skills**: axiom-foundation-models-diag, axiom-foundation-models-ref
+**Skills**: axiom-ai (skills/foundation-models-diag.md), axiom-ai (skills/foundation-models-ref.md)
 
 ---
 

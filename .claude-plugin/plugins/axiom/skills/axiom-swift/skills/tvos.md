@@ -756,4 +756,4 @@ extension View {
 
 **WWDC**: 2016-215, 2017-224, 2021-10023, 2021-10081, 2021-10191, 2023-10162, 2025-219
 
-**Skills**: axiom-storage, axiom-sqlitedata, axiom-integration, axiom-hig-ref, axiom-liquid-glass
+**Skills**: axiom-data (skills/storage.md), axiom-data (skills/sqlitedata.md), axiom-integration, axiom-design (skills/hig-ref.md), axiom-design (skills/liquid-glass.md)

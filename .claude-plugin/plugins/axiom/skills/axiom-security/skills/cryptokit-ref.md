@@ -697,4 +697,4 @@ Everything maps 1:1 except `SecureEnclave.*` (requires Apple hardware). Hashing,
 
 **Docs**: /cryptokit, /cryptokit/performing-common-cryptographic-operations, /security/certificate-key-and-trust-services/keys/storing-keys-in-the-secure-enclave
 
-**Skills**: axiom-cryptokit
+**Skills**: axiom-security (skills/cryptokit.md)

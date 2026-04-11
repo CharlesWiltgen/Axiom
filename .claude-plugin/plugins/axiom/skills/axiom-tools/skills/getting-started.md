@@ -65,11 +65,11 @@ Based on answers, recommend 3-5 skills using this matrix:
 **Always recommend**: axiom:xcode-debugging (universal starting point)
 
 **Then add based on pain points**:
-- Xcode/build → xcode-debugging, axiom-build-debugging
-- Memory leaks → memory-debugging, axiom-objc-block-retain-cycles
+- Xcode/build → xcode-debugging, axiom-build (skills/build-debugging.md)
+- Memory leaks → memory-debugging, axiom-performance (skills/objc-block-retain-cycles.md)
 - UI/animation (SwiftUI) → axiom-swiftui (debugging, performance references)
-- UI/animation (UIKit) → uikit-animation-debugging, axiom-auto-layout-debugging
-- Database → database-migration, axiom-sqlitedata-migration (decision guide)
+- UI/animation (UIKit) → uikit-animation-debugging, axiom-uikit (skills/auto-layout-debugging.md)
+- Database → database-migration, axiom-data (skills/sqlitedata-migration.md) (decision guide)
 - Networking → axiom-networking
 - Concurrency → swift-concurrency
 - Accessibility → accessibility-diag
@@ -105,8 +105,8 @@ Based on answers, recommend 3-5 skills using this matrix:
 - networking (Network.framework modern patterns)
 
 **Data persistence**:
-- Ask: "Which persistence framework?" → swiftdata, axiom-sqlitedata, or grdb
-- Migration: axiom-sqlitedata-migration, axiom-realm-migration-ref
+- Ask: "Which persistence framework?" → swiftdata, axiom-data (skills/sqlitedata.md), or grdb
+- Migration: axiom-data (skills/sqlitedata-migration.md), axiom-data (skills/realm-migration-ref.md)
 
 ### If "Code review / quality check"
 

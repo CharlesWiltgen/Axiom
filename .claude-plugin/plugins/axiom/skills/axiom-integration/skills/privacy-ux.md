@@ -911,4 +911,4 @@ UserDefaults.standard.set(value, forKey: "setting")
 
 **Docs**: /bundleresources/privacy_manifest_files, /bundleresources/describing-use-of-required-reason-api, /app-store/app-privacy-details, /app-store/user-privacy-and-data-use
 
-**Skills**: skills/app-intents-ref.md, axiom-cloudkit-ref, axiom-storage
+**Skills**: skills/app-intents-ref.md, axiom-data (skills/cloudkit-ref.md), axiom-data (skills/storage.md)

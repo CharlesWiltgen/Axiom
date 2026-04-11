@@ -447,4 +447,4 @@ Before archiving for distribution:
 
 **Docs**: /security, /bundleresources/entitlements, /xcode/distributing-your-app
 
-**Skills**: axiom-code-signing-ref, axiom-code-signing-diag
+**Skills**: axiom-security (skills/code-signing-ref.md), axiom-security (skills/code-signing-diag.md)

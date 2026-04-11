@@ -843,4 +843,4 @@ grep -r "\.id(" --include="*.swift" .
 
 **Docs**: /xcode/understanding-hitches-in-your-app, /xcode/analyzing-hangs-in-your-app, /swiftui/managing-model-data-in-your-app
 
-**Skills**: skills/debugging.md, skills/performance.md, skills/layout.md, axiom-xcode-debugging
+**Skills**: skills/debugging.md, skills/performance.md, skills/layout.md, axiom-build (skills/xcode-debugging.md)

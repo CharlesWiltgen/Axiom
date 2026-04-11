@@ -577,7 +577,7 @@ Image(systemName: isFavorite ? "star.fill" : "star")
 
 **Docs**: /symbols, /symbols/symboleffect, /symbols/symbolrenderingmode, /swiftui/image/symboleffect(_:options:value:), /swiftui/image/symbolrenderingmode(_:)
 
-**Skills**: axiom-sf-symbols-ref, axiom-hig-ref, axiom-swiftui
+**Skills**: axiom-design (skills/sf-symbols-ref.md), axiom-design (skills/hig-ref.md), axiom-swiftui
 
 ---
 

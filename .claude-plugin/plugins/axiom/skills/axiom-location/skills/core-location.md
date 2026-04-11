@@ -472,4 +472,4 @@ for id in await monitor.identifiers {
 
 **Docs**: /corelocation, /corelocation/clmonitor, /corelocation/cllocationupdate, /corelocation/clservicesession
 
-**Skills**: axiom-core-location-ref, axiom-core-location-diag, axiom-energy
+**Skills**: axiom-location (skills/core-location-ref.md), axiom-location (skills/core-location-diag.md), axiom-performance (skills/energy.md)
