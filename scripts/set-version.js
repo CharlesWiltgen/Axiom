@@ -184,8 +184,8 @@ try {
   // Recursively find all skill content units.
   // A "skill" is either:
   //   - A standalone SKILL.md (directory has no references/ subdir)
-  //   - Each references/*.md file in a suite (directory has references/ subdir)
-  // Suite SKILL.md files are routers, not counted as skills.
+  //   - Each references/*.md file in a skill suite (directory has references/ subdir)
+  // Skill suite SKILL.md files are routers, not counted as skills.
   const skillNames = [];
   let suiteCount = 0;
   function findSkills(dir) {
@@ -197,7 +197,7 @@ try {
       const refsDir = path.join(fullPath, 'references');
       if (fs.existsSync(skillFile)) {
         if (fs.existsSync(refsDir) && fs.statSync(refsDir).isDirectory()) {
-          // Suite: count each references/*.md as a skill, not the SKILL.md
+          // Skill suite: count each references/*.md as a skill, not the SKILL.md
           suiteCount++;
           for (const ref of fs.readdirSync(refsDir)) {
             if (ref.endsWith('.md')) {
@@ -408,7 +408,7 @@ try {
 
   // Success - print summary
   console.log(`✓ Version set to ${version}`);
-  console.log(`  Skills: ${skillsCount} (${disciplineCount} discipline, ${referenceCount} reference, ${diagnosticCount} diagnostic)${suiteCount > 0 ? ` across ${suiteCount} suite(s)` : ''}`);
+  console.log(`  Skills: ${skillsCount} (${disciplineCount} discipline, ${referenceCount} reference, ${diagnosticCount} diagnostic)${suiteCount > 0 ? ` across ${suiteCount} skill suite(s)` : ''}`);
   console.log(`  Agents: ${agentsCount}`);
   console.log(`  Commands: ${commandsCount}`);
   console.log();
