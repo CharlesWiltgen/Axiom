@@ -302,7 +302,7 @@ When analyzing failures, consider:
 - **axiom-xctest-automation**: Best practices for element queries, waiting
 - **axiom-ui-testing**: Condition-based waiting patterns
 - **axiom-swift-concurrency**: Async test patterns, race conditions
-- **axiom-swiftui-debugging**: View update issues in UI tests
+- **axiom-swiftui**: View update issues in UI tests
 
 ## Guidelines
 
