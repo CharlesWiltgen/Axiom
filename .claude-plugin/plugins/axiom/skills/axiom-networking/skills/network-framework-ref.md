@@ -22,7 +22,7 @@ Network.framework is Apple's modern networking API that replaces Berkeley socket
 - **Network.framework** UDP, custom protocols, low-level control, peer-to-peer, gaming, streaming → Use Network.framework
 
 #### Related Skills
-- See `skills/networking.md` for anti-patterns, common patterns, pressure scenarios
+- See `skills/networking-discipline.md` for anti-patterns, common patterns, pressure scenarios
 - See `skills/networking-diag.md` for systematic troubleshooting of connection failures
 
 ---
@@ -1395,7 +1395,7 @@ monitor.start(queue: .main)
 
 **Docs**: /network, /network/nwconnection, /network/networkconnection
 
-**Skills**: See `skills/networking.md`, `skills/networking-diag.md`
+**Skills**: See `skills/networking-discipline.md`, `skills/networking-diag.md`
 
 ---
 

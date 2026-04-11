@@ -12,7 +12,7 @@ SwiftUI debugging falls into three categories, each with a different diagnostic 
 **Core principle**: Start with observable symptoms, test systematically, eliminate causes one by one. Don't guess.
 
 **Requires**: Xcode 26+, iOS 17+ (iOS 14-16 patterns still valid, see notes)
-**Related skills**: `axiom-build (skills/xcode-debugging.md)` (cache corruption diagnosis), `axiom-concurrency` (observer patterns), `skills/performance.md` (profiling with Instruments), `skills/layout.md` (adaptive layout patterns)
+**Related skills**: `axiom-build (skills/xcode-debugging.md)` (cache corruption diagnosis), `axiom-concurrency` (observer patterns), `skills/swiftui-performance.md` (profiling with Instruments), `skills/layout.md` (adaptive layout patterns)
 
 ## Example Prompts
 
@@ -97,7 +97,7 @@ MyView: (no output)
 - Investigating unexpected updates
 - Verifying dependencies after refactoring
 
-**Cross-reference**: For complex update patterns, use SwiftUI Instrument → see `skills/performance.md` skill
+**Cross-reference**: For complex update patterns, use SwiftUI Instrument → see `skills/swiftui-performance.md` skill
 
 ---
 
@@ -1342,5 +1342,5 @@ xcrun simctl io booted screenshot /tmp/after-fix.png
 
 **Docs**: /swiftui/managing-model-data-in-your-app, /swiftui, /swiftui/state-and-data-flow, /xcode/previews, /observation
 
-**Skills**: skills/performance.md, skills/debugging-diag.md, axiom-build (skills/xcode-debugging.md), axiom-concurrency, axiom-build (skills/lldb.md) (LLDB debugging workflows beyond Self._printChanges)
+**Skills**: skills/swiftui-performance.md, skills/debugging-diag.md, axiom-build (skills/xcode-debugging.md), axiom-concurrency, axiom-build (skills/lldb.md) (LLDB debugging workflows beyond Self._printChanges)
 

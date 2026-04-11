@@ -12,14 +12,14 @@ license: MIT
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| Subject segmentation, lifting | See `skills/vision.md` |
-| Hand/body pose detection | See `skills/vision.md` |
-| Text recognition (OCR) | See `skills/vision.md` |
-| Barcode/QR code detection | See `skills/vision.md` |
-| Document scanning | See `skills/vision.md` |
-| DataScannerViewController | See `skills/vision.md` |
-| Structured document extraction (iOS 26+) | See `skills/vision.md` |
-| Isolate object excluding hand | See `skills/vision.md` |
+| Subject segmentation, lifting | See `skills/vision-framework.md` |
+| Hand/body pose detection | See `skills/vision-framework.md` |
+| Text recognition (OCR) | See `skills/vision-framework.md` |
+| Barcode/QR code detection | See `skills/vision-framework.md` |
+| Document scanning | See `skills/vision-framework.md` |
+| DataScannerViewController | See `skills/vision-framework.md` |
+| Structured document extraction (iOS 26+) | See `skills/vision-framework.md` |
+| Isolate object excluding hand | See `skills/vision-framework.md` |
 | Vision framework API reference | See `skills/vision-ref.md` |
 | Visual Intelligence integration (iOS 26+) | See `skills/vision-ref.md` |
 | Subject not detected | See `skills/vision-diag.md` |
@@ -40,21 +40,21 @@ digraph vision {
     what [label="What do you need?" shape=diamond];
 
     start -> what;
-    what -> "skills/vision.md" [label="implement feature"];
+    what -> "skills/vision-framework.md" [label="implement feature"];
     what -> "skills/vision-ref.md" [label="API reference"];
     what -> "skills/vision-ref.md" [label="Visual Intelligence"];
     what -> "skills/vision-diag.md" [label="something broken"];
 }
 ```
 
-1. Implementing (pose, segmentation, OCR, barcodes, documents, live scanning)? → `skills/vision.md`
+1. Implementing (pose, segmentation, OCR, barcodes, documents, live scanning)? → `skills/vision-framework.md`
 2. Visual Intelligence system integration (camera feature, iOS 26+)? → `skills/vision-ref.md` (Visual Intelligence section)
 3. Need API reference / code examples? → `skills/vision-ref.md`
 4. Debugging issues (detection failures, confidence, coordinates)? → `skills/vision-diag.md`
 
 ## Critical Patterns
 
-**Implementation** (`skills/vision.md`):
+**Implementation** (`skills/vision-framework.md`):
 - Decision tree for choosing the right Vision API
 - Subject segmentation with VisionKit
 - Isolating objects while excluding hands (combining APIs)
@@ -87,16 +87,16 @@ digraph vision {
 ## Example Invocations
 
 User: "How do I detect hand pose in an image?"
-→ See `skills/vision.md`
+→ See `skills/vision-framework.md`
 
 User: "Isolate a subject but exclude the user's hands"
-→ See `skills/vision.md`
+→ See `skills/vision-framework.md`
 
 User: "How do I read text from an image?"
-→ See `skills/vision.md`
+→ See `skills/vision-framework.md`
 
 User: "Scan QR codes with the camera"
-→ See `skills/vision.md`
+→ See `skills/vision-framework.md`
 
 User: "Subject detection isn't working"
 → See `skills/vision-diag.md`

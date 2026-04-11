@@ -1002,5 +1002,5 @@ Spring animations merge by default, preserving velocity. Use timing curve animat
 
 **Docs**: /swiftui/animatable, /swiftui/animation, /swiftui/vectorarithmetic, /swiftui/transaction, /swiftui/view/navigationtransition(_:), /swiftui/view/matchedtransitionsource(id:in:configuration:), /uikit/uiview/animate(_:changes:completion:)
 
-**Skills**: skills/26-ref.md, skills/nav-ref.md, skills/performance.md, skills/debugging.md, axiom-design (skills/sf-symbols-ref.md)
+**Skills**: skills/26-ref.md, skills/nav-ref.md, skills/swiftui-performance.md, skills/debugging.md, axiom-design (skills/sf-symbols-ref.md)
 

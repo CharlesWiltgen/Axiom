@@ -19,7 +19,7 @@ license: MIT
 | Navigation API reference | See `skills/nav-ref.md` |
 | Layout breaks on iPad/rotation | See `skills/layout.md` |
 | Layout API reference | See `skills/layout-ref.md` |
-| Performance/lag/slow scroll | See `skills/performance.md` |
+| Performance/lag/slow scroll | See `skills/swiftui-performance.md` |
 | Architecture/testability | See `skills/architecture.md` |
 | Animation issues | See `skills/animation-ref.md` |
 | Stacks/grids/outlines | See `skills/containers-ref.md` |
@@ -67,7 +67,7 @@ digraph swiftui {
     start -> what;
     what -> "skills/debugging.md" [label="view not updating"];
     what -> "skills/nav.md" [label="navigation"];
-    what -> "skills/performance.md" [label="slow/lag"];
+    what -> "skills/swiftui-performance.md" [label="slow/lag"];
     what -> "skills/layout.md" [label="adaptive layout"];
     what -> "skills/containers-ref.md" [label="stacks/grids/outlines"];
     what -> "skills/architecture.md" [label="feature architecture"];
