@@ -640,7 +640,7 @@ func testDeepLink() {
 }
 ```
 
-For state restoration, advanced URL routing, and tab-based coordination, see `axiom-swiftui-nav` — Pattern 7 (Coordinator) for structure, Pattern 1b for URL-based deep linking.
+For state restoration, advanced URL routing, and tab-based coordination, see `references/nav.md` — Pattern 7 (Coordinator) for structure, Pattern 1b for URL-based deep linking.
 
 ## Coordinator + Architecture Combinations
 
@@ -992,7 +992,7 @@ Any `@ViewBuilder` closure (`.sheet`, `.fullScreenCover`, `NavigationStack` dest
 - Parent re-evaluates, which re-evaluates the closure with the mutated value
 - Child silently skips loading/animation states — no crash, just wrong behavior
 
-**Fixes**: (1) Don't pass the mutated state back as an init param. (2) Use a separate `@State` for the child's display logic. (3) Have the child query its own data source. See Root Cause 5 in `axiom-swiftui-debugging` for full diagnostic workflow.
+**Fixes**: (1) Don't pass the mutated state back as an init param. (2) Use a separate `@State` for the child's display logic. (3) Have the child query its own data source. See Root Cause 5 in `references/debugging.md` for full diagnostic workflow.
 
 ---
 

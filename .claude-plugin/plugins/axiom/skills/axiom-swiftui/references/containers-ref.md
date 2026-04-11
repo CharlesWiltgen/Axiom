@@ -406,4 +406,4 @@ VideoPlayer(player: player)
 
 **Docs**: /swiftui/lazyvstack, /swiftui/lazyvgrid, /swiftui/lazyhgrid, /swiftui/grid, /swiftui/outlinegroup, /swiftui/disclosuregroup
 
-**Skills**: axiom-swiftui-layout, axiom-swiftui-layout-ref, axiom-swiftui-nav, axiom-swiftui-26-ref
+**Skills**: references/layout.md, references/layout-ref.md, references/nav.md, references/26-ref.md

@@ -105,7 +105,7 @@ Use in collapsed `NavigationSplitView` sidebar to specify which column shows sea
 
 ### Bottom-Aligned Search
 
-**Foundational search APIs**: See `axiom-swiftui-search-ref`. This section covers iOS 26 refinements only.
+**Foundational search APIs**: See `references/search-ref.md`. This section covers iOS 26 refinements only.
 
 ```swift
 NavigationSplitView {
@@ -222,7 +222,7 @@ Works like `safeAreaInset` but with blur. Bar remains fixed while content scroll
 
 ### searchToolbarBehavior
 
-See `axiom-swiftui-search-ref` for foundational `.searchable` APIs. iOS 26 adds:
+See `references/search-ref.md` for foundational `.searchable` APIs. iOS 26 adds:
 
 ```swift
 .searchable(text: $searchText)
@@ -1163,7 +1163,7 @@ Apps must support resizable windows on iPad.
 
 - **Performance**: Profile with new SwiftUI Instrument; use lazy stacks in nested ScrollViews; trust automatic list performance improvements
 - **Liquid Glass**: Recompile and test first; use toolbar spacers; attach `.toolbar {}` to individual views (not NavigationStack); remove `presentationBackground` from sheets; use `GlassEffectContainer` for nearby glass elements
-- **Layout**: Use `.safeAreaPadding()` for edge-to-edge (not `.padding()`). See `axiom-swiftui-layout-ref` for full guide
+- **Layout**: Use `.safeAreaPadding()` for edge-to-edge (not `.padding()`). See `references/layout-ref.md` for full guide
 - **Rich Text**: Bind `AttributedString` to `TextEditor`; constrain attributes for your UX
 - **Spatial (visionOS)**: Use `Alignment3D` for depth; `.manipulable()` only where it makes sense
 
@@ -1189,7 +1189,7 @@ Apps must support resizable windows on iPad.
 
 **Docs**: /swiftui, /swiftui/defaulttoolbaritem, /swiftui/toolbarspacer, /swiftui/searchtoolbarbehavior, /swiftui/view/toolbar(id:content:), /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts, /charts/chart3d, /charts/surfaceplot, /charts/chart3dpose, /charts/chart3dcameraprojection, /charts/chart3dsurfacestyle, /realitykit/presentationcomponent
 
-**Skills**: axiom-swiftui-performance, axiom-liquid-glass, axiom-swift-concurrency, axiom-app-intents-ref, axiom-swiftui-search-ref
+**Skills**: references/performance.md, axiom-liquid-glass, axiom-swift-concurrency, axiom-app-intents-ref, references/search-ref.md
 
 ---
 

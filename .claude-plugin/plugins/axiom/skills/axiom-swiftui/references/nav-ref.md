@@ -22,8 +22,8 @@ SwiftUI's navigation APIs provide data-driven, programmatic navigation that scal
 - **UINavigationController** Complex coordinator patterns, legacy code, specific UIKit features → Consider UIKit
 
 #### Related Skills
-- Use `axiom-swiftui-nav` for anti-patterns, decision trees, pressure scenarios
-- Use `axiom-swiftui-nav-diag` for systematic troubleshooting of navigation issues
+- Use `references/nav.md` for anti-patterns, decision trees, pressure scenarios
+- Use `references/nav-diag.md` for systematic troubleshooting of navigation issues
 
 ---
 
@@ -369,7 +369,7 @@ Use `.onOpenURL` to receive URLs, parse with `URLComponents`, then manipulate `N
 
 For multi-step deep links (`myapp://category/desserts/recipe/apple-pie`), iterate URL path components and append each resolved value to build the full navigation stack.
 
-For comprehensive deep linking examples, error diagnosis, and testing workflows, see `axiom-swiftui-nav-diag` (Pattern 3).
+For comprehensive deep linking examples, error diagnosis, and testing workflows, see `references/nav-diag.md` (Pattern 3).
 
 ---
 
@@ -464,7 +464,7 @@ TabView {
 }
 ```
 
-**Search tab requirement**: Contents of a search-role tab must be wrapped in `NavigationStack` with `.searchable()` applied to the stack. Without `NavigationStack`, the search field will not appear. For foundational `.searchable` patterns (suggestions, scopes, tokens, programmatic control), see `axiom-swiftui-search-ref`.
+**Search tab requirement**: Contents of a search-role tab must be wrapped in `NavigationStack` with `.searchable()` applied to the stack. Without `NavigationStack`, the search field will not appear. For foundational `.searchable` patterns (suggestions, scopes, tokens, programmatic control), see `references/search-ref.md`.
 
 ### 5.2 TabView with NavigationStack Per Tab
 
@@ -574,7 +574,7 @@ Return an empty closure to deactivate the context menu conditionally:
 
 #### iPhone Tab Bar Long-Press
 
-`.contextMenu` on `Tab` only applies to the sidebar representation (iPad/Mac). iPhone tab bar context menus require UIKit interop (adding `UILongPressGestureRecognizer` to `UITabBar` via Introspect or a `UITabBarController` subclass). See `axiom-swiftui-nav-diag` for workaround patterns.
+`.contextMenu` on `Tab` only applies to the sidebar representation (iPad/Mac). iPhone tab bar context menus require UIKit interop (adding `UILongPressGestureRecognizer` to `UITabBar` via Introspect or a `UITabBarController` subclass). See `references/nav-diag.md` for workaround patterns.
 
 **Caveat**: Relies on private `UITabBarButton` subviews — fragile across iOS versions, not a public API guarantee.
 
@@ -719,7 +719,7 @@ NavigationSplitView {
 
 ### 6.3 Bottom-Aligned Search (WWDC 2025, 256)
 
-**Foundational search APIs** For `.searchable`, `isSearching`, suggestions, scopes, tokens, and programmatic control, see `axiom-swiftui-search-ref`. This section covers iOS 26 bottom-aligned refinement only.
+**Foundational search APIs** For `.searchable`, `isSearching`, suggestions, scopes, tokens, and programmatic control, see `references/search-ref.md`. This section covers iOS 26 bottom-aligned refinement only.
 
 ```swift
 NavigationSplitView {
@@ -772,7 +772,7 @@ iOS 26 automatically morphs toolbars during NavigationStack push/pop when each d
 
 **Key rule**: Attach `.toolbar {}` to individual views inside NavigationStack, not to NavigationStack itself. Otherwise there is nothing to morph between.
 
-See `axiom-swiftui-26-ref` skill for complete toolbar morphing API including DefaultToolbarItem, `toolbar(id:)` stable items, ToolbarSpacer patterns, and troubleshooting.
+See `references/26-ref.md` skill for complete toolbar morphing API including DefaultToolbarItem, `toolbar(id:)` stable items, ToolbarSpacer patterns, and troubleshooting.
 
 ---
 
@@ -955,7 +955,7 @@ NavigationPath(codableRepresentation)  // For decoding
 
 **Docs**: /swiftui/tabrole/search, /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:)
 
-**Skills**: axiom-swiftui-nav, axiom-swiftui-nav-diag, axiom-swiftui-26-ref, axiom-liquid-glass, axiom-swiftui-search-ref
+**Skills**: references/nav.md, references/nav-diag.md, references/26-ref.md, axiom-liquid-glass, references/search-ref.md
 
 ---
 

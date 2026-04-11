@@ -15,7 +15,7 @@ SwiftUI search is **environment-based and navigation-consumed**. You attach `.se
 | 17 | `isPresented` parameter, `suggestedTokens` parameter |
 | 17.1 | `.searchPresentationToolbarBehavior(.avoidHidingContent)` |
 | 18 | `.searchFocused($isFocused)` for programmatic focus control |
-| 26 | Bottom-aligned search, `.searchToolbarBehavior(.minimize)`, `Tab(role: .search)`, `DefaultToolbarItem(kind: .search)` — see `axiom-swiftui-26-ref` |
+| 26 | Bottom-aligned search, `.searchToolbarBehavior(.minimize)`, `Tab(role: .search)`, `DefaultToolbarItem(kind: .search)` — see `references/26-ref.md` |
 
 ## When to Use This Skill
 
@@ -27,7 +27,7 @@ SwiftUI search is **environment-based and navigation-consumed**. You attach `.se
 - Controlling search focus programmatically
 - Debugging "search field doesn't appear" issues
 
-For iOS 26 search features (bottom-aligned, minimized toolbar, search tab role), see `axiom-swiftui-26-ref`.
+For iOS 26 search features (bottom-aligned, minimized toolbar, search tab role), see `references/26-ref.md`.
 
 ---
 
@@ -679,7 +679,7 @@ List { ... }
 
 ### 6. iOS 26 Refinements
 
-For bottom-aligned search, `.searchToolbarBehavior(.minimize)`, `Tab(role: .search)`, and `DefaultToolbarItem(kind: .search)`, see `axiom-swiftui-26-ref`. These build on the foundational APIs documented here.
+For bottom-aligned search, `.searchToolbarBehavior(.minimize)`, `Tab(role: .search)`, and `DefaultToolbarItem(kind: .search)`, see `references/26-ref.md`. These build on the foundational APIs documented here.
 
 ---
 
@@ -722,7 +722,7 @@ For bottom-aligned search, `.searchToolbarBehavior(.minimize)`, `Tab(role: .sear
 
 **Docs**: /swiftui/view/searchable(text:placement:prompt:), /swiftui/environmentvalues/issearching, /swiftui/view/searchscopes(_:activation:_:), /swiftui/view/searchfocused(_:), /swiftui/searchfieldplacement
 
-**Skills**: axiom-swiftui-26-ref, axiom-swiftui-nav-ref, axiom-swiftui-nav
+**Skills**: references/26-ref.md, references/nav-ref.md, references/nav.md
 
 ---
 

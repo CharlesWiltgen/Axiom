@@ -4,7 +4,7 @@
 ## When to Use This Diagnostic Skill
 
 Use this skill when:
-- **Basic troubleshooting failed** — Applied `axiom-swiftui-debugging` skill patterns but issue persists
+- **Basic troubleshooting failed** — Applied `references/debugging.md` skill patterns but issue persists
 - **Self._printChanges() shows unexpected patterns** — View updating when it shouldn't, or not updating when it should
 - **Intermittent issues** — Works sometimes, fails other times ("heisenbug")
 - **Complex dependency chains** — Need to trace data flow through multiple views/models
@@ -255,7 +255,7 @@ xcodebuild build -scheme YourScheme -configuration Release
 - Compare before/after update counts
 - Verify red/orange bars reduced or eliminated
 
-**Cross-reference**: `axiom-swiftui-performance` skill for detailed Instruments workflows
+**Cross-reference**: `references/performance.md` skill for detailed Instruments workflows
 
 ---
 
@@ -843,4 +843,4 @@ grep -r "\.id(" --include="*.swift" .
 
 **Docs**: /xcode/understanding-hitches-in-your-app, /xcode/analyzing-hangs-in-your-app, /swiftui/managing-model-data-in-your-app
 
-**Skills**: axiom-swiftui-debugging, axiom-swiftui-performance, axiom-swiftui-layout, axiom-xcode-debugging
+**Skills**: references/debugging.md, references/performance.md, references/layout.md, axiom-xcode-debugging

@@ -1,7 +1,7 @@
 
 # SwiftUI Layout API Reference
 
-Comprehensive API reference for SwiftUI adaptive layout tools. For decision guidance and anti-patterns, see the `axiom-swiftui-layout` skill.
+Comprehensive API reference for SwiftUI adaptive layout tools. For decision guidance and anti-patterns, see the `references/layout.md` skill.
 
 ## Overview
 
@@ -929,4 +929,4 @@ LazyVStack {
 
 **Docs**: /swiftui/layout, /swiftui/viewthatfits
 
-**Skills**: axiom-swiftui-layout, axiom-swiftui-debugging
+**Skills**: references/layout.md, references/debugging.md

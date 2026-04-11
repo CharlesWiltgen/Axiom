@@ -1196,14 +1196,14 @@ var path: NavigationPath { NavigationPath() }  // ❌ Reset every time
 
 ### For Preventive Patterns
 
-**swiftui-nav skill** — Discipline-enforcing anti-patterns:
+**references/nav.md** — Discipline-enforcing anti-patterns:
 - Red Flags: NavigationView, view-based links, path in body
 - Pattern 1a-7: Correct implementation patterns
 - Pressure Scenarios: How to handle architecture pressure
 
 ### For API Reference
 
-**swiftui-nav-ref skill** — Complete API documentation:
+**references/nav-ref.md** — Complete API documentation:
 - NavigationStack, NavigationSplitView, NavigationPath full API
 - All WWDC code examples with timestamps
 - Router/Coordinator patterns with testing
