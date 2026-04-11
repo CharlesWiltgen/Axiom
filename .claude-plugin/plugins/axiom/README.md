@@ -63,8 +63,8 @@ Apple's new material design system (iOS 26+) with expert review checklist for va
 
 ---
 
-#### `axiom-swiftui-performance`
-Master the new SwiftUI Instrument in Instruments 26, eliminate long view body updates and unnecessary updates.
+#### `axiom-swiftui`
+Comprehensive SwiftUI suite covering views, navigation, layout, animations, performance, architecture, gestures, debugging, and iOS 26 features.
 
 **Use when**: App feels sluggish, animations stutter, scrolling performance issues, SwiftUI bottlenecks
 
@@ -511,15 +511,8 @@ Skills are automatically suggested by Claude Code based on context, or invoke th
 ```bash
 # WWDC 2025 skills
 /skill axiom-liquid-glass
-/skill axiom-swiftui-performance
+/skill axiom-swiftui
 /skill axiom-ui-testing
-
-# SwiftUI
-/skill axiom-swiftui-gestures
-/skill axiom-swiftui-debugging
-/skill axiom-swiftui-debugging-diag
-/skill axiom-swiftui-layout
-/skill axiom-swiftui-nav
 
 # Debugging
 /skill axiom-xcode-debugging
