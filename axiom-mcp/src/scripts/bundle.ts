@@ -55,15 +55,17 @@ export async function generateBundle(pluginPath: string): Promise<BundleV2> {
 
       if (entryStat.isDirectory()) {
         const skillFile = join(entryPath, 'SKILL.md');
+        let skillLoaded = false;
         try {
           const content = await readFile(skillFile, 'utf-8');
           const skill = applyAnnotations(parseSkill(content, entry), annotations);
           bundle.skills[skill.name] = skill;
+          skillLoaded = true;
         } catch {
           // No SKILL.md in this directory
         }
         // Load reference files from references/ subdirectory (suite pattern)
-        if (bundle.skills[entry]) {
+        if (skillLoaded) {
           const refsDir = join(entryPath, 'references');
           try {
             const refEntries = await readdir(refsDir);

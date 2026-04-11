@@ -86,36 +86,40 @@ export class DevLoader implements Loader {
               this.logger.debug(`No SKILL.md in ${entry}, skipping`);
             }
             if (content) {
+              let skillLoaded = false;
               try {
                 const skill = applyAnnotations(parseSkill(content, entry), annotations);
                 this.skillsCache.set(skill.name, skill);
                 this.logger.debug(`Loaded skill: ${skill.name}`);
                 loadedCount++;
+                skillLoaded = true;
               } catch (err) {
                 this.logger.warn(`Failed to parse skill ${entry}: ${(err as Error).message}`);
               }
 
               // Load reference files from references/ subdirectory (suite pattern)
-              const refsDir = join(entryPath, 'references');
-              try {
-                const refEntries = await readdir(refsDir);
-                for (const refFile of refEntries) {
-                  if (!refFile.endsWith('.md')) continue;
-                  try {
-                    const refContent = await readFile(join(refsDir, refFile), 'utf-8');
-                    const refSkill = applyAnnotations(
-                      parseReferenceFile(refContent, refFile, entry),
-                      annotations,
-                    );
-                    this.skillsCache.set(refSkill.name, refSkill);
-                    this.logger.debug(`Loaded reference: ${refSkill.name}`);
-                    loadedCount++;
-                  } catch (refErr) {
-                    this.logger.warn(`Failed to parse reference ${entry}/references/${refFile}: ${(refErr as Error).message}`);
+              if (skillLoaded) {
+                const refsDir = join(entryPath, 'references');
+                try {
+                  const refEntries = await readdir(refsDir);
+                  for (const refFile of refEntries) {
+                    if (!refFile.endsWith('.md')) continue;
+                    try {
+                      const refContent = await readFile(join(refsDir, refFile), 'utf-8');
+                      const refSkill = applyAnnotations(
+                        parseReferenceFile(refContent, refFile, entry),
+                        annotations,
+                      );
+                      this.skillsCache.set(refSkill.name, refSkill);
+                      this.logger.debug(`Loaded reference: ${refSkill.name}`);
+                      loadedCount++;
+                    } catch (refErr) {
+                      this.logger.warn(`Failed to parse reference ${entry}/references/${refFile}: ${(refErr as Error).message}`);
+                    }
                   }
+                } catch {
+                  // No references/ directory — not a suite, that's fine
                 }
-              } catch {
-                // No references/ directory — not a suite, that's fine
               }
             }
             // Recurse into subdirectories (e.g., axiom-ios-ml/coreml/)
