@@ -3,7 +3,7 @@ import { classifyChange } from './dev-loader.js';
 
 describe('classifyChange', () => {
   it('classifies skill paths', () => {
-    expect(classifyChange('skills/axiom-swift-concurrency/SKILL.md')).toBe('skills');
+    expect(classifyChange('skills/axiom-concurrency/SKILL.md')).toBe('skills');
     expect(classifyChange('skills/new-skill/SKILL.md')).toBe('skills');
   });
 

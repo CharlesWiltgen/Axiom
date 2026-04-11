@@ -20,7 +20,7 @@ metadata:
 - `axiom-performance-profiling` — Use Instruments to measure (do this first!)
 - `axiom-swiftui` (performance reference) — SwiftUI-specific optimizations
 - `axiom-build-performance` — Compilation speed
-- `axiom-swift-concurrency` — Correctness-focused concurrency patterns
+- `axiom-concurrency` — Correctness-focused concurrency patterns
 
 ## When to Use This Skill
 
@@ -736,7 +736,7 @@ func updateUI() async {
 }
 ```
 
-For `nonisolated` performance patterns and detailed actor isolation guidance, see `axiom-swift-concurrency`.
+For `nonisolated` performance patterns and detailed actor isolation guidance, see `axiom-concurrency` (swift-concurrency reference).
 
 ---
 
@@ -1231,6 +1231,6 @@ func render<S: Shape>(shapes: [S]) { }
 
 **Docs**: /swift/inlinearray, /swift/span, /swift/outputspan
 
-**Skills**: axiom-performance-profiling, axiom-swift-concurrency, axiom-swiftui
+**Skills**: axiom-performance-profiling, axiom-concurrency, axiom-swiftui
 
 ---

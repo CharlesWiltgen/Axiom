@@ -32,8 +32,7 @@ tools:
   - Grep
   - Glob
 skills:
-  - axiom-ios-testing
-  - axiom-xctest-automation
+  - axiom-testing
 hooks:
   PreToolUse:
     - matcher: Bash
@@ -355,7 +354,7 @@ Tests complete
 
 **Docs**: /xcode/xcresulttool
 
-**Skills**: axiom-ios-testing, axiom-xctest-automation
+**Skills**: axiom-testing
 
 ## Related
 

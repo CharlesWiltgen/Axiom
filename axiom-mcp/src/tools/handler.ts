@@ -110,7 +110,7 @@ export class DynamicToolsHandler {
                   properties: {
                     name: {
                       type: 'string',
-                      description: 'Skill name (e.g. "axiom-swift-concurrency")',
+                      description: 'Skill name (e.g. "axiom-concurrency")',
                     },
                     sections: {
                       type: 'array',

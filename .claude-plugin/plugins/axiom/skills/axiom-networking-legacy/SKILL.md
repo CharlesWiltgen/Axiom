@@ -6,7 +6,7 @@ license: MIT
 
 # Legacy iOS 12-25 NWConnection Patterns
 
-These patterns use NWConnection with completion handlers for apps supporting iOS 12-25. If your app targets iOS 26+, use NetworkConnection with async/await instead (see axiom-network-framework-ref skill).
+These patterns use NWConnection with completion handlers for apps supporting iOS 12-25. If your app targets iOS 26+, use NetworkConnection with async/await instead (see axiom-networking (network-framework-ref reference)).
 
 ## Pattern 2a: NWConnection with TLS (iOS 12-25)
 
@@ -366,8 +366,8 @@ func connectToService(_ endpoint: NWEndpoint) {
 
 ### iOS 26+ alternative
 - Use NetworkBrowser with Wi-Fi Aware for peer-to-peer without infrastructure
-- See Pattern 1d in axiom-network-framework-ref skill
+- See Pattern 1d in axiom-networking (network-framework-ref reference)
 
 ## Resources
 
-**Skills**: axiom-networking, axiom-network-framework-ref, axiom-networking-migration
+**Skills**: axiom-networking

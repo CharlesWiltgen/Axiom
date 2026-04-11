@@ -428,4 +428,4 @@ XCTAssertTrue(app.staticTexts["Welcome"].waitForExistence(timeout: 10))
 
 **Docs**: /xcode/testing/recording-ui-tests, /xctest/xcuiapplication
 
-**Skills**: axiom-xctest-automation, axiom-ui-testing
+**Skills**: axiom-testing

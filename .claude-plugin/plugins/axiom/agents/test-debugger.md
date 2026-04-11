@@ -28,8 +28,7 @@ tools:
   - Glob
   - Edit
 skills:
-  - axiom-ios-testing
-  - axiom-xctest-automation
+  - axiom-testing
 hooks:
   PreToolUse:
     - matcher: Bash
@@ -299,9 +298,8 @@ Check result:
 
 When analyzing failures, consider:
 
-- **axiom-xctest-automation**: Best practices for element queries, waiting
-- **axiom-ui-testing**: Condition-based waiting patterns
-- **axiom-swift-concurrency**: Async test patterns, race conditions
+- **axiom-testing**: Best practices for element queries, waiting, condition-based waiting patterns
+- **axiom-concurrency**: Async test patterns, race conditions
 - **axiom-swiftui**: View update issues in UI tests
 
 ## Guidelines
@@ -351,7 +349,7 @@ When analyzing failures, consider:
 
 **WWDC**: 2019-413 (Testing in Xcode), 2025-344 (Record, replay, and review)
 
-**Skills**: axiom-ios-testing, axiom-xctest-automation
+**Skills**: axiom-testing
 
 ## Related
 

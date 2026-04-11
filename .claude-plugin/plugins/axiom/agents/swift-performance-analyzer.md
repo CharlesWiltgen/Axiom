@@ -291,4 +291,4 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 For Instruments workflows: `axiom-swift-performance` skill
 For SwiftUI-specific performance: `swiftui-performance-analyzer` agent
 For memory lifecycle issues: `axiom-memory-debugging` skill
-For actor isolation patterns: `axiom-swift-concurrency` skill
+For actor isolation patterns: `axiom-concurrency` skill

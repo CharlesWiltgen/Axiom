@@ -151,11 +151,11 @@ Skills in Axiom are developed using rigorous quality standards:
 Battle-tested against real-world scenarios and pressure conditions:
 
 - `axiom-xcode-debugging` – Handles mysterious build failures, zombie processes, and simulator hangs
-- `axiom-swift-concurrency` – Prevents data races and actor isolation errors in Swift 6
+- `axiom-concurrency` – Prevents data races and actor isolation errors in Swift 6
 - `axiom-database-migration` – Prevents data loss during schema changes with 100k+ users
 - `axiom-swiftdata` – Handles CloudKit corruption, many-to-many relationships, and unfollow patterns
 - `axiom-memory-debugging` – Finds PhotoKit leaks and diagnoses non-reproducible memory issues
-- `axiom-ui-testing` – Handles flaky tests, network conditions, and App Store review blockers
+- `axiom-testing` – Handles flaky tests, network conditions, and App Store review blockers
 - `axiom-build-debugging` – Resolves dependency conflicts under production crisis pressure
 - `axiom-liquid-glass` – Navigates design review pressure and variant decision conflicts
 - `axiom-swiftui-performance` – Diagnoses performance issues under App Store deadline pressure
@@ -179,7 +179,7 @@ All reference skills are reviewed against 4 quality criteria:
 - `axiom-swiftui-26-ref` – iOS 26 SwiftUI: Liquid Glass, WebView, rich text, 3D charts
 - `axiom-core-data-diag` – Core Data troubleshooting and optimization
 - `axiom-realm-migration-ref` – Migration patterns from Realm to SwiftData
-- `axiom-network-framework-ref` – Network.framework API reference (iOS 12-26+)
+- `axiom-networking` – Network.framework API reference (iOS 12-26+)
 - `axiom-avfoundation-ref` – AVFoundation audio APIs, iOS 26+ spatial audio, bit-perfect DAC
 - `axiom-foundation-models-ref` – Apple Intelligence Foundation Models framework (iOS 26+)
 - `axiom-foundation-models-diag` – Foundation Models troubleshooting and diagnostics

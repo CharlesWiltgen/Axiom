@@ -32,7 +32,7 @@ Network.framework is Apple's modern networking API that replaces Berkeley socket
 
 #### Related Skills
 - Use `axiom-networking` for anti-patterns, common patterns, pressure scenarios
-- Use `axiom-networking-diag` for systematic troubleshooting of connection failures
+- Use `axiom-networking` (networking-diag reference) for systematic troubleshooting of connection failures
 
 ---
 
@@ -1404,7 +1404,7 @@ monitor.start(queue: .main)
 
 **Docs**: /network, /network/nwconnection, /network/networkconnection
 
-**Skills**: axiom-networking, axiom-networking-diag
+**Skills**: axiom-networking
 
 ---
 

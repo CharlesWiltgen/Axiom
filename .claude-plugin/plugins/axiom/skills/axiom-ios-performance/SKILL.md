@@ -153,7 +153,7 @@ Use this router when:
    - YES → hang-diagnostics (busy vs blocked diagnosis)
    - NO, just slow → performance-profiling (Time Profiler)
    - First launch only? → Also check for synchronous I/O or lazy initialization in hang-diagnostics
-5. Slowdown when multiple async operations complete at once? → Cross-route to `axiom-ios-concurrency` (callback contention, not profiling)
+5. Slowdown when multiple async operations complete at once? → Cross-route to `axiom-concurrency` (callback contention, not profiling)
 6. Battery drain (know the symptom)? → energy-diag
 7. Battery drain (need API reference)? → energy-ref
 8. Battery drain (general)? → energy
@@ -284,7 +284,7 @@ User: "App freezes for a few seconds on first launch then works fine"
 → Invoke: `/skill axiom-hang-diagnostics`
 
 User: "UI locks up when multiple API calls return at the same time"
-→ Cross-route: `/skill axiom-ios-concurrency` (callback contention)
+→ Cross-route: `/skill axiom-concurrency` (callback contention)
 
 User: "My timer stops when the user scrolls"
 → Invoke: `/skill axiom-timer-patterns`

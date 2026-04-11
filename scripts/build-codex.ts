@@ -15,11 +15,8 @@ const OUTPUT_MANIFEST = path.join(OUTPUT_DIR, '.codex-plugin');
 // Router skills — Codex has native progressive disclosure, so these are unnecessary
 const EXCLUDE_SKILLS = new Set([
   'axiom-ios-build',
-  'axiom-ios-testing',
   'axiom-ios-data',
-  'axiom-ios-concurrency',
   'axiom-ios-performance',
-  'axiom-ios-networking',
   'axiom-ios-integration',
   'axiom-ios-ai',
   'axiom-ios-ml',

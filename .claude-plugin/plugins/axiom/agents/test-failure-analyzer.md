@@ -37,7 +37,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-testing
+  - axiom-testing
 ---
 
 # Test Failure Analyzer Agent

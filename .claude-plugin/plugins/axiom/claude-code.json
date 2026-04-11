@@ -24,7 +24,7 @@
       "description": "Use when ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code. Covers build failures, compilation errors, dependency conflicts, simulator problems, environment-first diagnostics."
     },
     {
-      "name": "axiom-ios-testing",
+      "name": "axiom-testing",
       "description": "Use when writing ANY test, debugging flaky tests, making tests faster, or asking about Swift Testing vs XCTest. Covers unit tests, UI tests, fast tests without simulator, async testing, test architecture."
     },
     {
@@ -36,7 +36,7 @@
       "description": "Use when working with ANY data persistence, database, storage, CloudKit, migration, or serialization. Covers SwiftData, Core Data, GRDB, SQLite, Realm, CloudKit sync, file storage, Codable, migrations."
     },
     {
-      "name": "axiom-ios-concurrency",
+      "name": "axiom-concurrency",
       "description": "Use when writing ANY code with async, actors, threads, or seeing ANY concurrency error. Covers Swift 6 concurrency, @MainActor, Sendable, data races, async/await patterns, performance optimization."
     },
     {
@@ -44,7 +44,7 @@
       "description": "Use when app feels slow, memory grows, battery drains, or diagnosing ANY performance issue. Covers memory leaks, profiling, Instruments workflows, retain cycles, performance optimization."
     },
     {
-      "name": "axiom-ios-networking",
+      "name": "axiom-networking",
       "description": "Use when implementing or debugging ANY network connection, API call, or socket. Covers URLSession, Network.framework, NetworkConnection, deprecated APIs, connection diagnostics, structured concurrency networking."
     },
     {

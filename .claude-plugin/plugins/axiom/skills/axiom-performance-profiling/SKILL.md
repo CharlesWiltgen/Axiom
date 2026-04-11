@@ -1068,7 +1068,7 @@ See `axiom-metrickit-ref` for comprehensive MetricKit integration. Key metrics t
 
 **Docs**: /library/archive/documentation/cocoa/conceptual/coredataperformance, /library/archive/technotes/tn2224, /os/ossignposter, /xctest/xctestcase/measure
 
-**Skills**: axiom-memory-debugging, axiom-swiftui, axiom-swift-concurrency, axiom-metrickit-ref
+**Skills**: axiom-memory-debugging, axiom-swiftui, axiom-concurrency, axiom-metrickit-ref
 
 ---
 

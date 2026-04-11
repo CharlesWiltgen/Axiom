@@ -604,7 +604,7 @@ imageView.widthAnchor.constraint(equalToConstant: 100).isActive = true // Auto L
 
 - For Xcode environment issues: See `axiom-xcode-debugging` skill
 - For SwiftUI layout issues: See `axiom-swiftui` (performance reference)
-- For testing UI: See `axiom-ui-testing` skill
+- For testing UI: See `axiom-testing` (ui-testing reference)
 
 ---
 

@@ -22,7 +22,7 @@ tools:
   - Grep
   - Read
 skills:
-  - axiom-ios-testing
+  - axiom-testing
   - axiom-axe-ref
 hooks:
   PreToolUse:

@@ -51,9 +51,9 @@ context = """You have access to Axiom iOS development skills via the Skill tool.
 - `axiom-ios-build` — build failures, Xcode, simulator, SPM
 - `axiom-swiftui` — SwiftUI views, navigation, layout, animation, architecture
 - `axiom-ios-data` — SwiftData, Core Data, CloudKit, migrations, Codable
-- `axiom-ios-concurrency` — async/await, actors, Sendable, data races
+- `axiom-concurrency` — async/await, actors, Sendable, data races
 - `axiom-ios-performance` — memory leaks, profiling, battery, Instruments
-- `axiom-ios-networking` — URLSession, Network.framework, HTTP
+- `axiom-networking` — URLSession, Network.framework, HTTP
 - `axiom-ios-integration` — widgets, Siri, StoreKit, camera, EventKit
 - `axiom-accessibility` — VoiceOver, Dynamic Type, WCAG
 - `axiom-ios-ai` — Foundation Models, Apple Intelligence

@@ -1,5 +1,5 @@
 ---
-name: axiom-ios-testing
+name: axiom-testing
 description: Use when writing ANY test, debugging flaky tests, making tests faster, or asking about Swift Testing vs XCTest. Covers unit tests, UI tests, fast tests without simulator, async testing, test architecture.
 license: MIT
 ---
@@ -43,7 +43,7 @@ This router invokes specialized skills based on the specific testing need:
 
 **Why swift-testing**: Modern Swift Testing framework with parallel execution, better async support, and the ability to run without launching simulator.
 
-**Invoke**: Read the `axiom-swift-testing` skill
+**Invoke**: Read the `axiom-testing` skill
 
 ---
 
@@ -61,7 +61,7 @@ This router invokes specialized skills based on the specific testing need:
 
 **Why ui-testing**: XCUITest requires simulator and has unique patterns for reliability.
 
-**Invoke**: Read the `axiom-ui-testing` skill
+**Invoke**: Read the `axiom-testing` skill
 
 ---
 
@@ -96,7 +96,7 @@ This router invokes specialized skills based on the specific testing need:
 
 **Why testing-async**: Dedicated patterns for async code in Swift Testing framework.
 
-**Invoke**: Read the `axiom-testing-async` skill
+**Invoke**: Read the `axiom-testing` skill
 
 ---
 
@@ -156,7 +156,7 @@ This router invokes specialized skills based on the specific testing need:
 
 **Why ui-recording**: Focused guide for Xcode 26's Record/Replay/Review workflow.
 
-**Invoke**: Read the `axiom-ui-recording` skill
+**Invoke**: Read the `axiom-testing` skill
 
 ---
 
@@ -229,7 +229,7 @@ This router invokes specialized skills based on the specific testing need:
 ## Example Invocations
 
 User: "How do I write a unit test in Swift?"
-→ Invoke: axiom-swift-testing
+→ Invoke: axiom-testing
 
 User: "My UI tests are flaky in CI"
 → Check codebase: XCUIApplication/XCUIElement patterns? → ui-testing
@@ -254,16 +254,16 @@ User: "How do I use confirmation with expectedCount?"
 → Invoke: testing-async
 
 User: "I want my tests to run faster"
-→ Invoke: axiom-swift-testing (Strategy 1: Package extraction)
+→ Invoke: axiom-testing (Strategy 1: Package extraction)
 
 User: "My unit tests take 25 seconds to run"
-→ Invoke: axiom-swift-testing (Strategy 1: Package extraction)
+→ Invoke: axiom-testing (Strategy 1: Package extraction)
 
 User: "How do I use swift test instead of xcodebuild test?"
-→ Invoke: axiom-swift-testing (Fast Tests section)
+→ Invoke: axiom-testing (Fast Tests section)
 
 User: "Should I use Swift Testing or XCTest?"
-→ Invoke: axiom-swift-testing (Migration section) + this decision tree
+→ Invoke: axiom-testing (Migration section) + this decision tree
 
 User: "Tests crash before any assertions"
 → Invoke: axiom-xcode-debugging
@@ -281,10 +281,10 @@ User: "Export failure screenshots from my tests"
 → Invoke: test-runner (Agent)
 
 User: "How do I record UI automation in Xcode 26?"
-→ Invoke: axiom-ui-recording
+→ Invoke: axiom-testing
 
 User: "How do I use test plans for multi-language testing?"
-→ Invoke: axiom-ui-recording
+→ Invoke: axiom-testing
 
 User: "Can I automate my app without writing XCUITests?"
 → Invoke: simulator-tester (Agent) + axiom-axe-ref

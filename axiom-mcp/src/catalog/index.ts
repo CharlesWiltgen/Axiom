@@ -30,9 +30,9 @@ const ROUTER_CATEGORIES: Record<string, string> = {
   'axiom-ios-build': 'Build & Environment',
   'axiom-swiftui': 'UI & Design',
   'axiom-ios-data': 'Data & Persistence',
-  'axiom-ios-concurrency': 'Concurrency & Async',
+  'axiom-concurrency': 'Concurrency & Async',
   'axiom-ios-performance': 'Performance',
-  'axiom-ios-networking': 'Networking',
+  'axiom-networking': 'Networking',
   'axiom-ios-integration': 'System Integration',
   'axiom-accessibility': 'Accessibility',
   'axiom-ios-ai': 'Apple Intelligence',
@@ -40,7 +40,7 @@ const ROUTER_CATEGORIES: Record<string, string> = {
   'axiom-vision': 'Computer Vision',
   'axiom-ios-graphics': 'Graphics & Metal',
   'axiom-games': 'Games',
-  'axiom-ios-testing': 'Testing',
+  'axiom-testing': 'Testing',
 };
 
 interface CatalogCategory {
