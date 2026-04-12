@@ -321,7 +321,7 @@ From Apple's App Programming Guide for tvOS: "Every app developed for the new Ap
 ### Size Limits
 
 - **App bundle**: 4 GB maximum
-- **NSUserDefaults / UserDefaults**: 500 KB maximum (Apple docs; not the 4 MB iOS gets). Available but subject to system purge — not guaranteed persistent between sessions
+- **NSUserDefaults / UserDefaults**: Limited storage (significantly less than iOS). Available but subject to system purge — not guaranteed persistent between sessions
 - **On-demand resources**: Available for read-only assets the OS manages
 - **Local cache**: No guaranteed size; system can purge while app is not running
 
@@ -748,11 +748,7 @@ extension View {
 
 ## Resources
 
-**Source**: "Surviving tvOS" (Ronnie Wong, 2026) — tvOS engineering log for Syncnext media player
-
-**Apple Docs**: /tvuikit, /uikit/uifocusenvironment, /uikit/uifocusguide, /swiftui/focus, /gamecontroller/gcmicrogamepad, /avfoundation/avplayer, /javascriptcore
-
-**Apple Guides**: App Programming Guide for tvOS (storage, input, gestures), HIG Web Views (tvOS exclusion)
+**Docs**: /tvuikit, /uikit/uifocusenvironment, /uikit/uifocusguide, /swiftui/focus, /gamecontroller/gcmicrogamepad, /avfoundation/avplayer, /javascriptcore
 
 **WWDC**: 2016-215, 2017-224, 2021-10023, 2021-10081, 2021-10191, 2023-10162, 2025-219
 
