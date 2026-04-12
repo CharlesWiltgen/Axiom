@@ -192,10 +192,10 @@ var body: some View {
     .gesture(
       MagnificationGesture()
         .updating($magnificationAmount) { value, state, _ in
-          state = value.magnification
+          state = value
         }
         .onEnded { value in
-          currentZoom *= value.magnification
+          currentZoom *= value
         }
     )
 }
@@ -222,10 +222,10 @@ var body: some View {
     .gesture(
       RotationGesture()
         .updating($rotationAngle) { value, state, _ in
-          state = value.rotation
+          state = value
         }
         .onEnded { value in
-          currentRotation += value.rotation
+          currentRotation += value
         }
     )
 }
@@ -255,7 +255,7 @@ var body: some View {
         .simultaneously(with:
           MagnificationGesture()
             .updating($magnificationAmount) { value, state, _ in
-              state = value.magnification
+              state = value
             }
         )
     )
@@ -449,16 +449,8 @@ var body: some View {
     .gesture(
       DragGesture()
         .onEnded { value in
-          // value.velocity is deprecated in iOS 18+
-          // Use value.predictedEndLocation and time
-
-          let timeDelta = value.time.timeIntervalSince(value.startLocation.time)
-          let distance = value.translation
-
-          velocity = CGSize(
-            width: distance.width / timeDelta,
-            height: distance.height / timeDelta
-          )
+          // value.velocity (iOS 17+) gives velocity as CGSize
+          velocity = value.velocity
 
           // Animate with momentum
           withAnimation(.interpolatingSpring(stiffness: 100, damping: 15)) {

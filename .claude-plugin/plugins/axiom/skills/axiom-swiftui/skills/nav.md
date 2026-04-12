@@ -508,9 +508,9 @@ struct ContentView: View {
         }
         .task {
             if let data { navModel.jsonData = data }
-            for await _ in navModel.objectWillChange.values {
-                data = navModel.jsonData
-            }
+        }
+        .onChange(of: navModel.recipePath) {
+            data = navModel.jsonData
         }
     }
 }

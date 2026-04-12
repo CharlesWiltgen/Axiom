@@ -354,8 +354,6 @@ NavigationSplitView {
 // Adapts to resizing automatically
 ```
 
-**Reference** "Elevate the design of your iPad app" (WWDC 2025)
-
 ---
 
 ## macOS Window Enhancements
@@ -426,9 +424,7 @@ Available lanes:
 - **Platform view updates** — Track UIKit/AppKit bridging performance
 - Other performance problem areas
 
-**Reference** "Optimize SwiftUI performance with instruments" (WWDC 2025)
-
-**Cross-reference** [SwiftUI Performance](/skills/ui-design/swiftui-performance) — Master the SwiftUI Instrument
+**Cross-reference** skills/swiftui-performance.md — Master the SwiftUI Instrument
 
 ---
 
@@ -450,11 +446,7 @@ class TripStore {
 
 **Benefits** Find bugs in concurrent code before they affect your app
 
-#### References
-- "Embracing Swift concurrency" (WWDC 2025)
-- "Explore concurrency in SwiftUI" (WWDC 2025)
-
-**Cross-reference** [Swift Concurrency](/skills/concurrency/swift-concurrency) — Swift 6 strict concurrency patterns
+**Cross-reference** axiom-concurrency — Swift 6 strict concurrency patterns
 
 ---
 
@@ -568,11 +560,6 @@ var body: some View {
 }
 ```
 
-#### References
-- "Meet SwiftUI spatial layout" (WWDC 2025)
-- "Set the scene with SwiftUI in visionOS" (WWDC 2025)
-- "What's new in visionOS" (WWDC 2025)
-
 ---
 
 ## Scene Bridging
@@ -622,8 +609,6 @@ struct MyMacApp: App {
 - Hover effects and input events supported
 - Uses CompositorServices and Metal
 
-**Reference** "What's new in Metal rendering for immersive apps" (WWDC 2025)
-
 ### AssistiveAccess Scene
 
 #### Special mode for users with cognitive disabilities
@@ -642,8 +627,6 @@ struct MyApp: App {
     }
 }
 ```
-
-**Reference** "Customize your app for Assistive Access" (WWDC 2025)
 
 ---
 
@@ -723,8 +706,6 @@ popover.components[PresentationComponent.self] = PresentationComponent(
 - Synchronizing animations, binding to components
 - New sizing behaviors for RealityView
 
-**Reference** "Better Together: SwiftUI & RealityKit" (WWDC 2025)
-
 ---
 
 ## WebView & WebPage
@@ -794,8 +775,6 @@ struct InAppBrowser: View {
 - Custom URL schemes
 - And more
 
-**Reference** "Meet WebKit for SwiftUI" (WWDC 2025)
-
 ---
 
 ## TextEditor with AttributedString
@@ -837,9 +816,7 @@ struct CommentView: View {
 - Attribute transformations
 - Constrain which attributes users can apply
 
-**Reference** "Cook up a rich text experience in SwiftUI with AttributedString" (WWDC 2025)
-
-**Cross-reference** App Intents Integration (app-intents-ref skill) — AttributedString for Apple Intelligence Use Model action
+**Cross-reference** axiom-integration — AttributedString for Apple Intelligence Use Model action
 
 ---
 
@@ -1019,8 +996,6 @@ All existing chart axis modifiers have z-axis equivalents:
 - `.chartZScale(domain:)` — Set z-axis range
 - `.chartZAxis()` — Configure z-axis labels and grid lines
 
-**Reference** "Bring Swift Charts to the third dimension" (WWDC 2025)
-
 ---
 
 ## Widgets & Controls
@@ -1085,8 +1060,6 @@ Live Activities now appear on CarPlay displays for glanceable information while 
 
 - Push-based updating API
 - New relevance APIs for watchOS
-
-**Reference** "What's new in widgets" (WWDC 2025)
 
 ---
 

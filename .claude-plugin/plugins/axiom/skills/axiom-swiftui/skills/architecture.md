@@ -250,7 +250,7 @@ struct DonutMenu: View {
 }
 ```
 
-**How it works** (WWDC 2023/10149):
+**How it works**:
 - SwiftUI tracks which properties are accessed during `body` execution
 - Only those properties trigger view updates when changed
 - Granular dependency tracking = better performance
