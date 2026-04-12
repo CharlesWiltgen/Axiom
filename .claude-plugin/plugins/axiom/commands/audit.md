@@ -49,6 +49,8 @@ If area argument provided ($ARGUMENTS contains an area):
 
 If $ARGUMENTS is "all" → Launch the `health-check` agent instead. This runs all relevant auditors in parallel with a unified report.
 
+If $ARGUMENTS is a filename (contains `.swift`, `.m`, etc.) rather than an audit area name → treat it as a scoped audit request. Acknowledge you're selecting the most relevant audit(s) for that file, then analyze the file to pick appropriate auditor(s). Don't frame this as a user error — it's a valid shorthand.
+
 1. Look up the agent name from the table above
 2. Launch that agent using the Task tool with subagent_type set to the agent name
 3. Pass the current directory path to the agent
@@ -56,6 +58,7 @@ If $ARGUMENTS is "all" → Launch the `health-check` agent instead. This runs al
 **Example:**
 - User runs `/axiom:audit memory` → Launch memory-auditor agent
 - User runs `/axiom:audit concurrency` → Launch concurrency-auditor agent
+- User runs `/axiom:audit MyService.swift` → Pick relevant auditor(s) for that file and run them
 
 ## Batch Execution Guidance
 
