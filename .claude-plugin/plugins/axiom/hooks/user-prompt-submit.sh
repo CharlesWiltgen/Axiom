@@ -120,6 +120,26 @@ if re.search(r'app store.{0,10}(reject|review|submiss|connect|metadata)|testflig
 if re.search(r'macos|mac\s*os|mac\s*app\b|appkit|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nsviewcontrollerrepresentable|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)', prompt_lower):
     matches.append("axiom-macos")
 
+# Design
+if re.search(r'human interface|hig\b|liquid glass|sf symbol|symbol.{0,5}(effect|variablevalue|render)|typography.{0,10}(ios|swift|app)|design.{0,5}(system|pattern|token)|app.{0,5}(entry|launch|onboard)|authentication.{0,5}(flow|screen|ui)', prompt_lower):
+    matches.append("axiom-design")
+
+# UIKit
+if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview', prompt_lower):
+    matches.append("axiom-uikit")
+
+# Swift language
+if re.search(r'noncopyable|~copyable|consuming\s+func|borrowing\s+func|transferable\b|draggable|dropdestinat|deep\s*link.{0,5}debug|swift.{0,5}(idiom|modern|pattern|style|convention)', prompt_lower):
+    matches.append("axiom-swift")
+
+# Location
+if re.search(r'core\s*location|cllocation|clmonitor|clgeocoder|mapkit|mkmap|mkannotation|mkdirection|geofenc|region\s*monitor|significant.{0,5}location|clauthorization|location.{0,5}(service|permiss|track|updat|manag|accura)', prompt_lower):
+    matches.append("axiom-location")
+
+# Security
+if re.search(r'keychain|secitem|seckey|secaccess|passkey.{0,5}(implement|add|creat|auth)|code\s*sign|provisioning\s*profile|certificate.{0,10}(sign|identity|distribut)|encrypt.{0,10}(data|file|aes|chacha)|cryptokit|secureenclave', prompt_lower):
+    matches.append("axiom-security")
+
 # Apple docs (iOS version uncertainty, API lookups)
 if re.search(r'ios (19|2[0-9])|does.*ios.*exist|current.*ios|which ios|what.*ios.*version|wwdc.{0,5}(session|video|transcript|20\d\d)', prompt_lower):
     matches.append("axiom-apple-docs")
