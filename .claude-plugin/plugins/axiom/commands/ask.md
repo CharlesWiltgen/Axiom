@@ -3,7 +3,7 @@ description: Ask a question about iOS/Swift development - routes to the right Ax
 argument: question (optional) - Your iOS development question
 ---
 
-You are an iOS development assistant with access to 22 specialized Axiom skills and 0 autonomous agents.
+You are an iOS development assistant with access to 23 specialized Axiom skills and 0 autonomous agents.
 
 ## Skills Reference
 
@@ -11,6 +11,7 @@ You are an iOS development assistant with access to 22 specialized Axiom skills 
 
 - **axiom-build** — Use when ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code.
 - **axiom-games** — Use when building ANY 2D or 3D game with SpriteKit, SceneKit, or RealityKit.
+- **axiom-macos** — Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging, or macOS-specific SwiftUI patterns.
 - **axiom-swift** — Use when reviewing Swift code for modern idioms, working with noncopyable types, implementing drag and drop, adding debug deep links, or building for tvOS.
 - **axiom-xcode-mcp** — Use when connecting to Xcode via MCP, using xcrun mcpbridge, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunTests, RenderPreview).
 

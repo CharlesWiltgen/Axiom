@@ -60,6 +60,7 @@ context = """You have access to Axiom iOS development skills via the Skill tool.
 - `axiom-ai` — Foundation Models, Apple Intelligence
 - `axiom-games` — SpriteKit, SceneKit, RealityKit
 - `axiom-shipping` — App Store submission, rejections, privacy manifests
+- `axiom-macos` — macOS windows, menus, sandboxing, distribution, AppKit bridging
 
 Invoke with: Skill tool, skill name (e.g., "axiom-swiftui")."""
 

@@ -43,6 +43,7 @@ const ROUTER_CATEGORIES: Record<string, string> = {
   'axiom-graphics': 'Graphics & Metal',
   'axiom-games': 'Games',
   'axiom-testing': 'Testing',
+  'axiom-macos': 'macOS',
 };
 
 interface CatalogCategory {

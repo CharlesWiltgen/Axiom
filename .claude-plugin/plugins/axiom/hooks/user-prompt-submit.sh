@@ -116,6 +116,10 @@ if re.search(r'metal\b.{0,10}(shader|render|migrat|buffer|texture|pipeline)|open
 if re.search(r'app store.{0,10}(reject|review|submiss|connect|metadata)|testflight|privacy manifest|app review|export compliance|age rating|app.{0,5}(submit|upload|distribut)', prompt_lower):
     matches.append("axiom-shipping")
 
+# macOS
+if re.search(r'macos|mac\s*os|mac\s*app\b|appkit|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nsviewcontrollerrepresentable|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)', prompt_lower):
+    matches.append("axiom-macos")
+
 # Apple docs (iOS version uncertainty, API lookups)
 if re.search(r'ios (19|2[0-9])|does.*ios.*exist|current.*ios|which ios|what.*ios.*version|wwdc.{0,5}(session|video|transcript|20\d\d)', prompt_lower):
     matches.append("axiom-apple-docs")
