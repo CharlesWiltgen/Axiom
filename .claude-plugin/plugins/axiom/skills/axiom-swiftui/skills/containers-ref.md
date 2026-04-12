@@ -3,8 +3,6 @@
 
 Stacks, grids, outlines, and scroll enhancements. iOS 14 through iOS 26.
 
-**Sources**: WWDC 2020-10031, 2022-10056, 2023-10148, 2024-10144, 2025-256
-
 ## Quick Decision
 
 | Use Case | Container | iOS |
@@ -300,10 +298,9 @@ struct ContentView: View {
 
 ### iOS 26 Performance
 
-- **6x faster list loading** for 100k+ items
-- **16x faster list updates**
-- **Reduced dropped frames** in scrolling
-- **Nested ScrollViews with lazy stacks** now properly defer loading:
+- Significant list loading and update performance improvements for large datasets
+- Reduced dropped frames in scrolling
+- Nested ScrollViews with lazy stacks now properly defer loading:
 
 ```swift
 ScrollView(.horizontal) {

@@ -457,8 +457,6 @@ ZStack {
 
 ### Platform Availability
 
-#### Platform Availability
-
 For earlier iOS versions, use manual safe area handling:
 
 ```swift

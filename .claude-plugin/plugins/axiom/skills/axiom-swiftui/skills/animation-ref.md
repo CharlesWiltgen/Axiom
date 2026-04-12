@@ -974,8 +974,6 @@ Each `.interactiveSpring` retargets the previous animation, and the final `.spri
 
 ---
 
----
-
 ## Troubleshooting
 
 ### Property Not Animating

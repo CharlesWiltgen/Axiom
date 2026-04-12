@@ -51,8 +51,6 @@ These are real questions developers ask that this skill is designed to answer:
 
 ## iOS 26 Framework Performance Improvements
 
-**"Performance improvements to the framework benefit apps across all of Apple's platforms, from our app to yours."** — WWDC 2025-256
-
 SwiftUI in iOS 26 includes major performance wins that benefit all apps automatically. These improvements work alongside the new profiling tools to make SwiftUI faster out of the box.
 
 ### List Performance (macOS Focus)
