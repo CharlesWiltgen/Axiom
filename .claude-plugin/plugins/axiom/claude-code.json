@@ -1,7 +1,7 @@
 {
   "name": "axiom",
-  "version": "2.39.6",
-  "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, watchOS, tvOS) development",
+  "version": "3.0.0",
+  "description": "Battle-tested Claude Code skills for modern xOS (iOS, iPadOS, macOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
   "commands": [
@@ -106,6 +106,10 @@
     {
       "name": "axiom-swift",
       "description": "Use when reviewing Swift code for modern idioms, working with noncopyable types, implementing drag and drop, adding debug deep links, or building for tvOS."
+    },
+    {
+      "name": "axiom-macos",
+      "description": "Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging, or macOS-specific SwiftUI patterns."
     }
   ]
 }
