@@ -592,7 +592,8 @@ case "screenshot":
     navigate(to: screen)
 
     // Post notification for external capture
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+    Task { @MainActor in
+        try? await Task.sleep(for: .seconds(1))
         NotificationCenter.default.post(
             name: .readyForScreenshot,
             object: screen
