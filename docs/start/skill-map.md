@@ -43,8 +43,8 @@ Axiom uses **progressive disclosure** — you never need to memorize skill names
 
 | Category | Count |
 |----------|-------|
-| Routers | 17 |
-| Skills | 186 |
+| Routers | 23 |
+| Skills | 175 |
 | Agents | 38 |
 | Commands | 12 |
 

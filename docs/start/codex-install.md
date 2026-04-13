@@ -112,7 +112,7 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 
 | Feature | Claude Code | Codex |
 |---------|-------------|-------|
-| Skills | 184 specialized + 17 routers | 184 specialized (Codex has native routing) |
+| Skills | 175 specialized + 23 routers | 175 specialized (Codex has native routing) |
 | Agents | 38 autonomous auditors | Not supported in Codex plugins |
 | Commands | 12 `/axiom:*` commands | Not supported in Codex plugins |
 | Installation | `/plugin marketplace add` | `npx skills add` or manual marketplace |
