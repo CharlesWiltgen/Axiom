@@ -10,7 +10,7 @@ flowchart LR
     classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
     classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
 
-    axiom_ios_data["ios-data router"]:::router
+    axiom_data["axiom-data router"]:::router
 
     subgraph skills_d["Skills"]
         swiftdata["swiftdata"]:::discipline
@@ -22,7 +22,7 @@ flowchart LR
         cloud_sync["cloud-sync"]:::discipline
         storage["storage"]:::discipline
     end
-    axiom_ios_data --> skills_d
+    axiom_data --> skills_d
 
     subgraph skills_r["References"]
         cloudkit_ref["cloudkit-ref"]:::reference
@@ -30,7 +30,7 @@ flowchart LR
         realm_migration_ref["realm-migration-ref"]:::reference
         sqlitedata_ref["sqlitedata-ref"]:::reference
     end
-    axiom_ios_data --> skills_r
+    axiom_data --> skills_r
 
     subgraph agents_sg["Agents"]
         agent_cda["core-data-auditor"]:::agent
@@ -38,7 +38,7 @@ flowchart LR
         agent_ic["icloud-auditor"]:::agent
         agent_sa["storage-auditor"]:::agent
     end
-    axiom_ios_data --> agents_sg
+    axiom_data --> agents_sg
 ```
 
 ## Skills

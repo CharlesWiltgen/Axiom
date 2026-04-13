@@ -9,7 +9,7 @@ flowchart LR
     classDef reference fill:#cce5ff,stroke:#0d6efd,color:#003366
     classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
 
-    axiom_ios_concurrency["ios-concurrency router"]:::router
+    axiom_concurrency["axiom-concurrency router"]:::router
 
     subgraph skills_d["Skills"]
         swift_concurrency["swift-concurrency"]:::discipline
@@ -21,17 +21,17 @@ flowchart LR
         concurrency_profiling["concurrency-profiling"]:::discipline
         combine_patterns["combine-patterns"]:::discipline
     end
-    axiom_ios_concurrency --> skills_d
+    axiom_concurrency --> skills_d
 
     subgraph skills_r["References"]
         swift_concurrency_ref["swift-concurrency-ref"]:::reference
     end
-    axiom_ios_concurrency --> skills_r
+    axiom_concurrency --> skills_r
 
     subgraph agents_sg["Agents"]
         agent_ca["concurrency-auditor"]:::agent
     end
-    axiom_ios_concurrency --> agents_sg
+    axiom_concurrency --> agents_sg
 ```
 
 ## Skills

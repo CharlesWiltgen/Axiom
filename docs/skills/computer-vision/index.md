@@ -9,22 +9,22 @@ flowchart LR
     classDef reference fill:#cce5ff,stroke:#0d6efd,color:#003366
     classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
 
-    axiom_ios_vision["ios-vision router"]:::router
+    axiom_vision["axiom-vision router"]:::router
 
     subgraph skills_d["Skills"]
         vision["vision"]:::discipline
     end
-    axiom_ios_vision --> skills_d
+    axiom_vision --> skills_d
 
     subgraph skills_r["References"]
         vision_ref["vision-ref"]:::reference
     end
-    axiom_ios_vision --> skills_r
+    axiom_vision --> skills_r
 
     subgraph skills_diag["Diagnostics"]
         vision_diag["vision-diag"]:::diagnostic
     end
-    axiom_ios_vision --> skills_diag
+    axiom_vision --> skills_diag
 ```
 
 ## Available Skills

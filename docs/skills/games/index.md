@@ -10,32 +10,32 @@ flowchart LR
     classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
     classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
 
-    axiom_ios_games["ios-games router"]:::router
+    axiom_games["axiom-games router"]:::router
 
     subgraph skills_d["Skills"]
         spritekit["spritekit"]:::discipline
         scenekit["scenekit"]:::discipline
         realitykit["realitykit"]:::discipline
     end
-    axiom_ios_games --> skills_d
+    axiom_games --> skills_d
 
     subgraph skills_r["References"]
         spritekit_ref["spritekit-ref"]:::reference
         scenekit_ref["scenekit-ref"]:::reference
         realitykit_ref["realitykit-ref"]:::reference
     end
-    axiom_ios_games --> skills_r
+    axiom_games --> skills_r
 
     subgraph skills_diag["Diagnostics"]
         spritekit_diag["spritekit-diag"]:::diagnostic
         realitykit_diag["realitykit-diag"]:::diagnostic
     end
-    axiom_ios_games --> skills_diag
+    axiom_games --> skills_diag
 
     subgraph agents_sg["Agents"]
         agent_ska["spritekit-auditor"]:::agent
     end
-    axiom_ios_games --> agents_sg
+    axiom_games --> agents_sg
 ```
 
 ## Available Skills
