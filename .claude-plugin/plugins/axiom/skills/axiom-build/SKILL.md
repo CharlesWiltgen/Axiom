@@ -289,9 +289,9 @@ This router invokes specialized skills based on the specific issue:
 
 | Error Type | Correct Router | Why NOT ios-build |
 |------------|----------------|-------------------|
-| Swift 6 concurrency errors | **ios-concurrency** | Code error, not environment |
-| SwiftData migration errors | **ios-data** | Schema issue, not build environment |
-| "Sending 'self' risks data race" | **ios-concurrency** | Language error, not Xcode issue |
+| Swift 6 concurrency errors | `/skill axiom-concurrency` | Code error, not environment |
+| SwiftData migration errors | `/skill axiom-data` | Schema issue, not build environment |
+| "Sending 'self' risks data race" | `/skill axiom-concurrency` | Language error, not Xcode issue |
 | Type mismatch / compilation errors | Fix the code | These are code bugs |
 
 **ios-build is for environment mysteries**, not code errors:
