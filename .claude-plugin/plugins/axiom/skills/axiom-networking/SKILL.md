@@ -52,8 +52,9 @@ digraph networking {
 4. Migrating from sockets/URLSession? → `skills/networking-migration.md`
 5. Connection issues / debugging? → `skills/networking-diag.md`
 6. ATS / HTTP / App Store rejection for networking? → `skills/networking-diag.md` + networking-auditor
-7. UIWebView or deprecated API rejection? → networking-auditor (Agent)
-8. Want deprecated API / anti-pattern scan? → networking-auditor (Agent)
+7. Certificate pinning, signing API requests, encrypting payloads? → `/skill axiom-security`
+8. UIWebView or deprecated API rejection? → networking-auditor (Agent)
+9. Want deprecated API / anti-pattern scan? → networking-auditor (Agent)
 
 ## Pressure Resistance
 

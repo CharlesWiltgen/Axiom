@@ -88,6 +88,8 @@ Use this skill when working with:
 23. Want database schema/migration safety scan? → database-schema-auditor (Agent)
 24. Want SwiftData code audit? → swiftdata-auditor (Agent)
 25. tvOS data persistence? → See axiom-swift (skills/tvos.md) (CRITICAL: no persistent local storage) + `skills/sqlitedata.md` (CloudKit SyncEngine)
+26. SwiftData @MainActor / background context threading? → `/skill axiom-concurrency`
+27. Structured data generation with Foundation Models? → `/skill axiom-ai`
 
 ## Anti-Rationalization
 

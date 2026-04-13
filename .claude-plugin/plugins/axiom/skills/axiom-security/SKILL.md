@@ -61,7 +61,9 @@ digraph security {
 7. Build/upload failures after signing? → See axiom-build
 8. App Store submission prep? → `/skill axiom-shipping`
 9. Privacy manifests, tracking transparency? → See axiom-integration
-10. Want automated security scan? → security-privacy-scanner (Agent)
+10. Data persistence (SwiftData, Core Data, storage strategy)? → `/skill axiom-data`
+11. TLS configuration, certificate pinning for network requests? → `/skill axiom-networking`
+12. Want automated security scan? → security-privacy-scanner (Agent)
 
 ## Conflict Resolution
 
