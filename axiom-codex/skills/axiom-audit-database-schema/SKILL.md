@@ -281,6 +281,6 @@ If NO issues found:
 
 ## Related
 
-For database migration patterns: `axiom-database-migration` skill
-For GRDB patterns: `axiom-grdb` skill
-For SwiftData migrations: `axiom-swiftdata-migration` skill
+For database migration patterns: `axiom-data (skills/database-migration.md)` skill
+For GRDB patterns: `axiom-data (skills/grdb.md)` skill
+For SwiftData migrations: `axiom-data (skills/swiftdata-migration.md)` skill

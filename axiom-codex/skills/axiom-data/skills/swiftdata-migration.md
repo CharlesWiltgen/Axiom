@@ -725,7 +725,7 @@ If you have access to production data:
 - Verify no data corruption
 - Check performance with production-sized dataset
 
-See `axiom-swiftdata-migration-diag` for debugging tools if migration fails.
+See `skills/swiftdata-migration-diag.md` for debugging tools if migration fails.
 
 ### Migration Test Pattern
 
@@ -944,7 +944,7 @@ let container = try ModelContainer(
 
 **Docs**: /swiftdata
 
-**Skills**: axiom-swiftdata, axiom-swiftdata-migration-diag, axiom-database-migration
+**Skills**: axiom-data (skills/swiftdata.md), axiom-data (skills/swiftdata-migration-diag.md), axiom-data (skills/database-migration.md)
 
 ---
 

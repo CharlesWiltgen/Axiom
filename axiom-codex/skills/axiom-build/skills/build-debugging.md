@@ -499,7 +499,7 @@ xcodebuild -showBuildSettings  # Show all build settings
 
 **GitHub**: Carthage/Carthage
 
-**Skills**: axiom-xcode-debugging
+**Skills**: axiom-build (skills/xcode-debugging.md)
 
 ---
 

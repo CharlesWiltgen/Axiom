@@ -393,6 +393,6 @@ xcrun sample 12345 5 -file output.txt
 
 ## Resources
 
-**Skills**: axiom-performance-profiling, axiom-memory-debugging, axiom-swiftui
+**Skills**: axiom-performance (skills/performance-profiling.md), axiom-performance (skills/memory-debugging.md), axiom-swiftui
 
 **Docs**: /xcode/instruments, /os/logging/recording-performance-data

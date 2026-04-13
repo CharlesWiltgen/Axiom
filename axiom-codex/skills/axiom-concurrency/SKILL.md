@@ -57,17 +57,17 @@ digraph concurrency {
 
 ## Conflict Resolution
 
-**concurrency vs ios-performance**: When app freezes or feels slow:
+**concurrency vs axiom-performance**: When app freezes or feels slow:
 1. **Try concurrency FIRST** — Main thread blocking is the #1 cause of UI freezes. Check for synchronous work on @MainActor before profiling.
-2. **Only use ios-performance** if concurrency fixes don't help — Profile after ruling out obvious blocking.
+2. **Only use axiom-performance** if concurrency fixes don't help — Profile after ruling out obvious blocking.
 
-**concurrency vs ios-build**: When seeing Swift 6 concurrency errors:
-- **Use concurrency, NOT ios-build** — Concurrency errors are CODE issues, not environment issues.
+**concurrency vs axiom-build**: When seeing Swift 6 concurrency errors:
+- **Use concurrency, NOT axiom-build** — Concurrency errors are CODE issues, not environment issues.
 
-**concurrency vs ios-data**: When concurrency errors involve Core Data or SwiftData:
-- Core Data threading (NSManagedObjectContext thread confinement) → **use ios-data first**
+**concurrency vs axiom-data**: When concurrency errors involve Core Data or SwiftData:
+- Core Data threading (NSManagedObjectContext thread confinement) → **use axiom-data first**
 - SwiftData + @MainActor ModelContext → **use concurrency**
-- General "background saves losing data" → **use ios-data first**
+- General "background saves losing data" → **use axiom-data first**
 
 ## Critical Patterns
 

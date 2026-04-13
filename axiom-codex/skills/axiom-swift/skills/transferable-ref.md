@@ -654,7 +654,7 @@ provider.loadTransferable(type: Profile.self) { result in
 
 ### PasteButton Platform Differences
 
-`PasteButton` auto-validates against pasteboard changes on iOS — the button enables/disables as the pasteboard content changes. On macOS, this automatic validation does not occur. If your macOS app needs dynamic paste validation, monitor `UIPasteboard.changedNotification` (UIKit) or `NSPasteboard` change count manually.
+`PasteButton` auto-validates against pasteboard changes on iOS — the button enables/disables as the pasteboard content changes. On macOS, this automatic validation does not occur. If your iOS app needs dynamic paste validation, monitor `UIPasteboard.changedNotification`. On macOS, monitor `NSPasteboard` change count manually (there is no equivalent notification).
 
 ---
 
@@ -664,4 +664,4 @@ provider.loadTransferable(type: Profile.self) { result in
 
 **Docs**: /coretransferable/transferable, /coretransferable/choosing-a-transfer-representation-for-a-model-type, /coretransferable/filerepresentation, /coretransferable/proxyrepresentation, /swiftui/sharelink, /swiftui/drag-and-drop, /swiftui/clipboard, /uniformtypeidentifiers
 
-**Skills**: axiom-integration, axiom-codable, axiom-swiftui
+**Skills**: axiom-integration, axiom-data (skills/codable.md), axiom-swiftui

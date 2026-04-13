@@ -14,10 +14,10 @@ Symptom-based troubleshooting for Core Location issues.
 
 ## Related Skills
 
-- `axiom-core-location` — Implementation patterns, decision trees
-- `axiom-core-location-ref` — API reference, code examples
-- `axiom-energy-diag` — Battery drain from location
-- `axiom-mapkit-diag` — For map-specific location display issues (Symptom 7)
+- `axiom-location (skills/core-location.md)` — Implementation patterns, decision trees
+- `axiom-location (skills/core-location-ref.md)` — API reference, code examples
+- `axiom-performance (skills/energy-diag.md)` — Battery drain from location
+- `axiom-location (skills/mapkit-diag.md)` — For map-specific location display issues (Symptom 7)
 
 ---
 
@@ -528,4 +528,4 @@ log stream --predicate 'process == "YourAppName" AND subsystem == "com.apple.Cor
 
 **Docs**: /corelocation, /corelocation/clmonitor, /corelocation/cllocationupdate
 
-**Skills**: axiom-core-location, axiom-core-location-ref, axiom-energy-diag
+**Skills**: axiom-location (skills/core-location.md), axiom-location (skills/core-location-ref.md), axiom-performance (skills/energy-diag.md)

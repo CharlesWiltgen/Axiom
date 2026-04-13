@@ -3,7 +3,7 @@
 
 Symptom-based troubleshooting for energy issues. Start with your symptom, follow the decision tree, get the fix.
 
-**Related skills**: `axiom-energy` (patterns, checklists), `axiom-energy-ref` (API reference)
+**Related skills**: `axiom-performance (skills/energy.md)` (patterns, checklists), `axiom-performance (skills/energy-ref.md)` (API reference)
 
 ---
 
@@ -348,12 +348,12 @@ Use this when you need fast answers:
 
 ## When to Escalate
 
-### Use `axiom-energy` skill when
+### Use `axiom-performance (skills/energy.md)` skill when
 - Need full audit checklist
 - Want comprehensive patterns with code
 - Planning proactive optimization
 
-### Use `axiom-energy-ref` skill when
+### Use `axiom-performance (skills/energy-ref.md)` skill when
 - Need specific API details
 - Want complete code examples
 - Implementing from scratch

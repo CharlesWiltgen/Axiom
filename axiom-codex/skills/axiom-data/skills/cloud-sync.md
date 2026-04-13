@@ -199,7 +199,7 @@ class MySyncManager: CKSyncEngineDelegate {
 }
 ```
 
-See `axiom-cloudkit-ref` for complete CKSyncEngine setup.
+See `skills/cloudkit-ref.md` for complete CKSyncEngine setup.
 
 ### Pattern 3: iCloud Drive Documents
 
@@ -228,7 +228,7 @@ doc.content = "Hello".data(using: .utf8)
 doc.save(to: url!, for: .forCreating)
 ```
 
-See `axiom-icloud-drive-ref` for NSFileCoordinator and conflict handling.
+See `skills/icloud-drive-ref.md` for NSFileCoordinator and conflict handling.
 
 ## Anti-Patterns
 
@@ -408,7 +408,7 @@ CKSyncEngine handles incremental sync automatically — it fetches only changes 
 
 ## Related Skills
 
-- `axiom-cloudkit-ref` — Complete CloudKit API reference
-- `axiom-icloud-drive-ref` — File-based sync with NSFileCoordinator
-- `axiom-cloud-sync-diag` — Debugging sync failures
-- `axiom-storage` — Choosing where to store data locally
+- `skills/cloudkit-ref.md` — Complete CloudKit API reference
+- `skills/icloud-drive-ref.md` — File-based sync with NSFileCoordinator
+- `skills/cloud-sync-diag.md` — Debugging sync failures
+- `skills/storage.md` — Choosing where to store data locally

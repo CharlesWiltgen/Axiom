@@ -19,7 +19,7 @@ license: MIT
 | Navigation API reference | See `skills/nav-ref.md` |
 | Layout breaks on iPad/rotation | See `skills/layout.md` |
 | Layout API reference | See `skills/layout-ref.md` |
-| Performance/lag/slow scroll | See `skills/performance.md` |
+| Performance/lag/slow scroll | See `skills/swiftui-performance.md` |
 | Architecture/testability | See `skills/architecture.md` |
 | Animation issues | See `skills/animation-ref.md` |
 | Stacks/grids/outlines | See `skills/containers-ref.md` |
@@ -31,19 +31,19 @@ license: MIT
 
 These topics are part of the broader iOS UI domain but live in separate suites:
 
-**UIKit issues:**
+#### UIKit issues
 - Auto Layout conflicts → See axiom-uikit (skills/auto-layout-debugging.md)
 - Animation timing → See axiom-uikit (skills/uikit-animation-debugging.md)
 - SwiftUI ↔ UIKit bridging → See axiom-uikit (skills/uikit-bridging.md)
 
-**Design & guidelines:**
+#### Design & guidelines
 - Liquid Glass adoption → See axiom-design (skills/liquid-glass.md)
 - SF Symbols → See axiom-design (skills/sf-symbols.md)
 - HIG compliance → See axiom-design (skills/hig.md)
 - Typography → See axiom-design (skills/typography-ref.md)
 - TextKit/rich text → See axiom-uikit (skills/textkit-ref.md)
 
-**Other:**
+#### Other
 - tvOS (focus, remote, text input) → See axiom-swift (skills/tvos.md)
 - App-level composition (root, auth, scenes) → See axiom-design (skills/app-composition.md)
 - Drag/drop, sharing, copy/paste → See axiom-swift (skills/transferable-ref.md)
@@ -67,7 +67,7 @@ digraph swiftui {
     start -> what;
     what -> "skills/debugging.md" [label="view not updating"];
     what -> "skills/nav.md" [label="navigation"];
-    what -> "skills/performance.md" [label="slow/lag"];
+    what -> "skills/swiftui-performance.md" [label="slow/lag"];
     what -> "skills/layout.md" [label="adaptive layout"];
     what -> "skills/containers-ref.md" [label="stacks/grids/outlines"];
     what -> "skills/architecture.md" [label="feature architecture"];

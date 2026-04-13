@@ -7,7 +7,7 @@ Type-safe SQLite persistence using SQLiteData (pointfreeco/sqlite-data) by Point
 
 **Core principle:** Value types (`struct`) + `@Table` macro + `database.write { }` blocks for all mutations.
 
-**For advanced patterns** (CTEs, views, custom aggregates, schema composition), see the `axiom-sqlitedata-ref` reference skill.
+**For advanced patterns** (CTEs, views, custom aggregates, schema composition), see the `skills/sqlitedata-ref.md` reference skill.
 
 **Requires:** iOS 17+, Swift 6 strict concurrency
 **License:** MIT
@@ -293,7 +293,7 @@ let allWithOptionalList = try database.read {
 }
 ```
 
-For complex joins across 4+ tables, drop down to raw GRDB (see `axiom-grdb`).
+For complex joins across 4+ tables, drop down to raw GRDB (see `skills/grdb.md`).
 
 ### @Ephemeral — Non-Persisted Properties
 
@@ -754,7 +754,7 @@ try #sql("SELECT * FROM \(raw: tableName)").execute(db)
 - Seamless integration with query builder
 - Parameter interpolation automatically escapes values
 
-For schema creation (CREATE TABLE, migrations), see the `axiom-sqlitedata-ref` reference skill for complete examples.
+For schema creation (CREATE TABLE, migrations), see the `skills/sqlitedata-ref.md` reference skill for complete examples.
 
 ---
 
@@ -893,13 +893,13 @@ SQLiteData is built on GRDB. Use raw GRDB when you need:
 - Window functions (ROW_NUMBER, RANK, etc.)
 - Performance-critical paths where you've profiled and confirmed the query builder is the bottleneck
 
-See `axiom-grdb` for raw SQL patterns, ValueObservation, and DatabaseMigrator usage.
+See `skills/grdb.md` for raw SQL patterns, ValueObservation, and DatabaseMigrator usage.
 
 ---
 
 ## tvOS
 
-SQLiteData with CloudKit SyncEngine is the **recommended tvOS data solution**. tvOS has no persistent local storage — the system deletes Caches (including Application Support) under storage pressure. With SyncEngine, iCloud is your persistent store and the local database is just a cache that rebuilds automatically after deletion. See `axiom-tvos` for full tvOS storage constraints.
+SQLiteData with CloudKit SyncEngine is the **recommended tvOS data solution**. tvOS has no persistent local storage — the system deletes Caches (including Application Support) under storage pressure. With SyncEngine, iCloud is your persistent store and the local database is just a cache that rebuilds automatically after deletion. See axiom-swift (skills/tvos.md) for full tvOS storage constraints.
 
 ---
 
@@ -907,7 +907,7 @@ SQLiteData with CloudKit SyncEngine is the **recommended tvOS data solution**. t
 
 **GitHub**: pointfreeco/sqlite-data, pointfreeco/swift-structured-queries, groue/GRDB.swift
 
-**Skills**: axiom-sqlitedata-ref, axiom-sqlitedata-migration, axiom-database-migration, axiom-grdb
+**Skills**: axiom-data (skills/sqlitedata-ref.md), axiom-data (skills/sqlitedata-migration.md), axiom-data (skills/database-migration.md), axiom-data (skills/grdb.md)
 
 ---
 

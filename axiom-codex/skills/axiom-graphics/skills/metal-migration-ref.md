@@ -632,7 +632,7 @@ descriptor.usage = [.shaderRead, .shaderWrite]
 
 **Docs**: /metal/migrating-opengl-code-to-metal, /metal/shader-converter, /metalkit/mtkview
 
-**Skills**: axiom-metal-migration, axiom-metal-migration-diag
+**Skills**: axiom-graphics (skills/metal-migration.md), axiom-graphics (skills/metal-migration-diag.md)
 
 ---
 

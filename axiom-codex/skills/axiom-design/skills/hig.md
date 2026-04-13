@@ -12,13 +12,13 @@ Use when:
 - Quick lookups for common design questions
 
 #### Related Skills
-- Use `axiom-hig-ref` for comprehensive details and code examples
-- Use `axiom-liquid-glass` for iOS 26 material design implementation and version-conditional design (supporting both pre-Liquid Glass and Liquid Glass in the same app)
-- Use `axiom-liquid-glass-ref` for iOS 26 app-wide adoption guide with backward compatibility strategy
+- Use `axiom-design (skills/hig-ref.md)` for comprehensive details and code examples
+- Use `axiom-design (skills/liquid-glass.md)` for iOS 26 material design implementation and version-conditional design (supporting both pre-Liquid Glass and Liquid Glass in the same app)
+- Use `axiom-design (skills/liquid-glass-ref.md)` for iOS 26 app-wide adoption guide with backward compatibility strategy
 - Use `axiom-accessibility` for accessibility troubleshooting
 
 #### Version-Conditional Design
-When supporting both iOS 25 (pre-Liquid Glass) and iOS 26+, see `axiom-liquid-glass` for the adoption strategy — it covers when to use `#available(iOS 26, *)`, how to degrade gracefully, and which system components adopt Liquid Glass automatically vs which need explicit opt-in.
+When supporting both iOS 25 (pre-Liquid Glass) and iOS 26+, see `axiom-design (skills/liquid-glass.md)` for the adoption strategy — it covers when to use `#available(iOS 26, *)`, how to degrade gracefully, and which system components adopt Liquid Glass automatically vs which need explicit opt-in.
 
 ---
 
@@ -431,7 +431,7 @@ Every design decision should support these principles:
 
 **Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/typography
 
-**Skills**: axiom-hig-ref, axiom-liquid-glass, axiom-liquid-glass-ref, axiom-accessibility
+**Skills**: axiom-design (skills/hig-ref.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-accessibility
 
 ---
 

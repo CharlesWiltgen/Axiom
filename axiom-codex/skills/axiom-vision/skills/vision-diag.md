@@ -964,4 +964,4 @@ func scaled(_ point: CGPoint, to size: CGSize) -> CGPoint {
 
 **Docs**: /vision, /vision/vnrecognizetextrequest, /visionkit
 
-**Skills**: skills/vision.md, skills/vision-ref.md
+**Skills**: skills/vision-framework.md, skills/vision-ref.md

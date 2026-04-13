@@ -365,4 +365,4 @@ func connectToService(_ endpoint: NWEndpoint) {
 
 ## Resources
 
-**Skills**: See `skills/networking.md`, `skills/network-framework-ref.md`, `skills/networking-migration.md`
+**Skills**: See `skills/networking-discipline.md`, `skills/network-framework-ref.md`, `skills/networking-migration.md`

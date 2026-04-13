@@ -226,7 +226,7 @@ func migration012_AddIndexes() throws {
 }
 ```
 
-**Test 2** Fresh install (run all migrations, verify final schema)
+#### Test 2 — Fresh install (run all migrations, verify final schema)
 ```swift
 @Test func freshInstallCreatesCorrectSchema() async throws {
     let db = try Database(inMemory: true)
@@ -246,7 +246,7 @@ func migration012_AddIndexes() throws {
 }
 ```
 
-**Test 3** Idempotency (run migrations twice, should not throw)
+#### Test 3 — Idempotency (run migrations twice, should not throw)
 ```swift
 @Test func migrationsAreIdempotent() async throws {
     let db = try Database(inMemory: true)
@@ -426,7 +426,7 @@ enum MyAppMigrationPlan: SchemaMigrationPlan {
 - Don't assume previous data exists for backfill operations
 - Test the "fresh install" path as often as the "upgrade" path
 
-See `axiom-tvos` for full tvOS storage constraints.
+See axiom-swift (skills/tvos.md) for full tvOS storage constraints.
 
 ---
 

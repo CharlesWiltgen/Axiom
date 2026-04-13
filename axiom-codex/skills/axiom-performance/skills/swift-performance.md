@@ -10,9 +10,9 @@
 **Platforms**: iOS 18+, macOS 15+
 
 **Related Skills**:
-- `axiom-performance-profiling` — Use Instruments to measure (do this first!)
+- `axiom-performance (skills/performance-profiling.md)` — Use Instruments to measure (do this first!)
 - `axiom-swiftui` (performance reference) — SwiftUI-specific optimizations
-- `axiom-build-performance` — Compilation speed
+- `axiom-build (skills/build-performance.md)` — Compilation speed
 - `axiom-concurrency` — Correctness-focused concurrency patterns
 
 ## When to Use This Skill
@@ -978,7 +978,7 @@ func writeHeader(to output: inout OutputRawSpan) {
 }
 ```
 
-Use for building byte arrays, binary serialization, image pixel data. Apple's open-source [Swift Binary Parsing](https://github.com/apple/swift-binary-parsing) library is built entirely on Span types.
+Use for building byte arrays, binary serialization, image pixel data. Apple's Swift Binary Parsing library (apple/swift-binary-parsing) is built entirely on Span types.
 
 ### When NOT to Use Span
 
@@ -1224,6 +1224,6 @@ func render<S: Shape>(shapes: [S]) { }
 
 **Docs**: /swift/inlinearray, /swift/span, /swift/outputspan
 
-**Skills**: axiom-performance-profiling, axiom-concurrency, axiom-swiftui
+**Skills**: axiom-performance (skills/performance-profiling.md), axiom-concurrency, axiom-swiftui
 
 ---

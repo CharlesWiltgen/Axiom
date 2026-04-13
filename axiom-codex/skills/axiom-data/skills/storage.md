@@ -18,15 +18,15 @@
 - Debugging "files disappeared" or "data not syncing"
 
 ❌ **Do NOT use this skill for**:
-- SwiftData implementation details (use `axiom-swiftdata` skill)
-- SQLite/GRDB specifics (use `axiom-sqlitedata` or `axiom-grdb` skills)
-- CloudKit sync implementation (use `axiom-cloudkit-ref` skill)
-- File protection APIs (use `axiom-file-protection-ref` skill)
+- SwiftData implementation details (use `skills/swiftdata.md` skill)
+- SQLite/GRDB specifics (use `skills/sqlitedata.md` or `skills/grdb.md` skills)
+- CloudKit sync implementation (use `skills/cloudkit-ref.md` skill)
+- File protection APIs (use axiom-security (skills/file-protection-ref.md) skill)
 
 **Related Skills**:
-- Existing database skills: `axiom-swiftdata`, `axiom-sqlitedata`, `axiom-grdb`
-- New file skills: `axiom-file-protection-ref`, `axiom-storage-management-ref`, `axiom-storage-diag`
-- New cloud skills: `axiom-cloudkit-ref`, `axiom-icloud-drive-ref`, `axiom-cloud-sync-diag`
+- Existing database skills: `skills/swiftdata.md`, `skills/sqlitedata.md`, `skills/grdb.md`
+- New file skills: axiom-security (skills/file-protection-ref.md), `skills/storage-management-ref.md`, `skills/storage-diag.md`
+- New cloud skills: `skills/cloudkit-ref.md`, `skills/icloud-drive-ref.md`, `skills/cloud-sync-diag.md`
 
 ## Core Philosophy
 
@@ -88,7 +88,7 @@ class Task {
 - Type-safe queries
 - Built-in CloudKit sync support
 - Observable models integrate with SwiftUI
-- **Use skill**: `axiom-swiftdata` for implementation details
+- **Use skill**: `skills/swiftdata.md` for implementation details
 
 **When NOT to use SwiftData**:
 - Need advanced SQLite features (FTS5, complex joins)
@@ -110,13 +110,13 @@ let results = try db.prepare("SELECT * FROM users WHERE name MATCH ?", "John")
 - Custom SQL queries and indices
 - Maximum performance (direct SQLite)
 - Migration from existing SQLite database
-- **Use skill**: `axiom-sqlitedata` for modern SQLite patterns
+- **Use skill**: `skills/sqlitedata.md` for modern SQLite patterns
 
 **Use GRDB when**:
 - Need reactive queries (ValueObservation)
 - Complex database operations
 - Type-safe query builders
-- **Use skill**: `axiom-grdb` for advanced patterns
+- **Use skill**: `skills/grdb.md` for advanced patterns
 
 ### Legacy Apps (iOS 16 and earlier)
 
@@ -193,7 +193,7 @@ func saveUserDocument(_ data: Data, filename: String) throws {
 - ❌ DON'T store: Downloaded data that can be re-fetched, caches, temp files
 - ⚠️ WARNING: Everything here is backed up to iCloud. Large re-downloadable files will bloat backups and may get your app rejected.
 
-**Use skill**: `axiom-file-protection-ref` for encryption options
+**Use skill**: axiom-security (skills/file-protection-ref.md) for encryption options
 
 ### Application Support Directory
 
@@ -252,7 +252,7 @@ func cacheDownloadedImage(data: Data, for url: URL) throws {
 - ✅ Always have a way to re-download or regenerate
 - ❌ Don't store anything that can't be recreated
 
-**Use skill**: `axiom-storage-management-ref` for purge policies and disk space management
+**Use skill**: `skills/storage-management-ref.md` for purge policies and disk space management
 
 ### Temporary Directory
 
@@ -324,19 +324,19 @@ let container = try ModelContainer(
    - Automatic sync for SwiftData models
    - Private database only
    - Easiest approach
-   - **Use skill**: `axiom-swiftdata` for details
+   - **Use skill**: `skills/swiftdata.md` for details
 
 2. **CKSyncEngine** (Custom persistence, iOS 17+):
    - For SQLite, GRDB, or custom stores
    - Manages sync automatically
    - Modern replacement for manual CloudKit
-   - **Use skill**: `axiom-cloudkit-ref` for CKSyncEngine patterns
+   - **Use skill**: `skills/cloudkit-ref.md` for CKSyncEngine patterns
 
 3. **Raw CloudKit APIs** (Legacy):
    - CKContainer, CKDatabase, CKRecord
    - Manual sync management
    - Only if CKSyncEngine doesn't fit
-   - **Use skill**: `axiom-cloudkit-ref` for raw API reference
+   - **Use skill**: `skills/cloudkit-ref.md` for raw API reference
 
 ### iCloud Drive Path (File Sync)
 
@@ -366,7 +366,7 @@ func saveToICloud(_ data: Data, filename: String) throws {
 - File-based collaboration
 - Simple file sync (like Dropbox)
 
-**Use skill**: `axiom-icloud-drive-ref` for implementation details
+**Use skill**: `skills/icloud-drive-ref.md` for implementation details
 
 ### Key-Value Store (Small Preferences)
 
@@ -474,11 +474,11 @@ try data.write(to: iCloudDocumentsURL.appendingPathComponent("doc.pdf"))
 
 | Data Type | Format | Local Location | Cloud Sync | Use Skill |
 |-----------|--------|----------------|------------|-----------|
-| User tasks, notes | Structured | Application Support | SwiftData + CloudKit | `axiom-swiftdata` → `axiom-cloudkit-ref` |
-| User photos (created) | File | Documents | iCloud Drive | `axiom-file-protection-ref` → `axiom-icloud-drive-ref` |
-| Downloaded images | File | Caches | None (re-download) | `axiom-storage-management-ref` |
-| Thumbnails | File | Caches | None (regenerate) | `axiom-storage-management-ref` |
-| Database file | File | Application Support | CKSyncEngine (if custom) | `axiom-sqlitedata` → `axiom-cloudkit-ref` |
+| User tasks, notes | Structured | Application Support | SwiftData + CloudKit | `skills/swiftdata.md` → `skills/cloudkit-ref.md` |
+| User photos (created) | File | Documents | iCloud Drive | axiom-security (skills/file-protection-ref.md) → `skills/icloud-drive-ref.md` |
+| Downloaded images | File | Caches | None (re-download) | `skills/storage-management-ref.md` |
+| Thumbnails | File | Caches | None (regenerate) | `skills/storage-management-ref.md` |
+| Database file | File | Application Support | CKSyncEngine (if custom) | `skills/sqlitedata.md` → `skills/cloudkit-ref.md` |
 | Temp processing | File | tmp | None | N/A |
 | User settings | Key-Value | UserDefaults | NSUbiquitousKeyValueStore | N/A |
 
@@ -498,7 +498,7 @@ try data.write(to: iCloudDocumentsURL.appendingPathComponent("doc.pdf"))
 
 **Every local file can vanish between app launches.** Your tvOS app must survive starting from zero.
 
-**Recommended**: Use iCloud (CloudKit, NSUbiquitousKeyValueStore, or iCloud Drive) as primary storage. Treat local files as cache only. See `axiom-tvos` for full tvOS storage patterns.
+**Recommended**: Use iCloud (CloudKit, NSUbiquitousKeyValueStore, or iCloud Drive) as primary storage. Treat local files as cache only. See axiom-swift (skills/tvos.md) for full tvOS storage patterns.
 
 ---
 
@@ -507,18 +507,18 @@ try data.write(to: iCloudDocumentsURL.appendingPathComponent("doc.pdf"))
 **Files disappeared**:
 - Check if stored in Caches or tmp (system purged them)
 - Check file protection level (may be inaccessible when locked)
-- **Use skill**: `axiom-storage-diag`
+- **Use skill**: `skills/storage-diag.md`
 
 **Backup too large**:
 - Check if re-downloadable content is in Documents (should be in Caches)
 - Check if `isExcludedFromBackup` is set on large files
-- **Use skill**: `axiom-storage-management-ref`
+- **Use skill**: `skills/storage-management-ref.md`
 
 **Data not syncing**:
 - CloudKit: Check CKSyncEngine status, account availability
-  - **Use skill**: `axiom-cloud-sync-diag`
+  - **Use skill**: `skills/cloud-sync-diag.md`
 - iCloud Drive: Check ubiquitous container entitlements, file coordinator
-  - **Use skill**: `axiom-icloud-drive-ref`, `axiom-cloud-sync-diag`
+  - **Use skill**: `skills/icloud-drive-ref.md`, `skills/cloud-sync-diag.md`
 
 ---
 

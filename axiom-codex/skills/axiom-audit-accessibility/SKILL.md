@@ -248,5 +248,5 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 ## Related
 
 For comprehensive accessibility debugging: `axiom-accessibility` (accessibility-diag reference)
-For Dynamic Type and typography: `axiom-typography-ref` skill
+For Dynamic Type and typography: `axiom-design (skills/typography-ref.md)` skill
 For UX flow accessibility: `axiom-accessibility` (ux-flow-audit reference)

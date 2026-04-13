@@ -398,11 +398,11 @@ context.automaticallyMergesChangesFromParent = true
 
 **CoreData + CloudKit is dangerous on tvOS.** CloudKit metadata causes significant space inflation in the local store, and tvOS has no persistent local storage — the system deletes Caches (including Application Support) at any time. The inflated store plus random deletion is a worst-case combination.
 
-**Recommendation**: Use SQLiteData with CloudKit SyncEngine instead for tvOS data persistence. See `axiom-tvos` for full tvOS storage constraints.
+**Recommendation**: Use SQLiteData with CloudKit SyncEngine instead for tvOS data persistence. See axiom-swift (skills/tvos.md) for full tvOS storage constraints.
 
 ## Related Skills
 
-- `axiom-core-data-diag` — Debugging migrations, thread errors, N+1 queries
-- `axiom-swiftdata` — Modern alternative for iOS 17+
-- `axiom-database-migration` — Safe schema evolution patterns
+- `skills/core-data-diag.md` — Debugging migrations, thread errors, N+1 queries
+- `skills/swiftdata.md` — Modern alternative for iOS 17+
+- `skills/database-migration.md` — Safe schema evolution patterns
 - `axiom-concurrency` — Async/await patterns for Core Data

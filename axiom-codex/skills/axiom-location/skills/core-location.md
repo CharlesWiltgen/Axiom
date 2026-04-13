@@ -13,9 +13,9 @@ Discipline skill for Core Location implementation decisions. Prevents common aut
 
 ## Related Skills
 
-- `axiom-core-location-ref` — API reference, code examples
-- `axiom-core-location-diag` — Symptom-based troubleshooting
-- `axiom-energy` — Location as battery subsystem
+- `axiom-location (skills/core-location-ref.md)` — API reference, code examples
+- `axiom-location (skills/core-location-diag.md)` — Symptom-based troubleshooting
+- `axiom-performance (skills/energy.md)` — Location as battery subsystem
 
 ---
 
@@ -472,4 +472,4 @@ for id in await monitor.identifiers {
 
 **Docs**: /corelocation, /corelocation/clmonitor, /corelocation/cllocationupdate, /corelocation/clservicesession
 
-**Skills**: axiom-core-location-ref, axiom-core-location-diag, axiom-energy
+**Skills**: axiom-location (skills/core-location-ref.md), axiom-location (skills/core-location-diag.md), axiom-performance (skills/energy.md)

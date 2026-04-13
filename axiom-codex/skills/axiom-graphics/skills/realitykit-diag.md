@@ -14,7 +14,7 @@ Use this skill when:
 - Multiplayer entities not syncing across devices
 - Physics bodies not colliding or passing through each other
 
-For RealityKit architecture patterns and best practices, see `axiom-realitykit`. For API reference, see `axiom-realitykit-ref`.
+For RealityKit architecture patterns and best practices, see `axiom-graphics (skills/realitykit.md)`. For API reference, see `axiom-graphics (skills/realitykit-ref.md)`.
 
 ---
 
@@ -445,4 +445,4 @@ Q3: Is it an AR-related crash (camera, tracking)?
 
 **Docs**: /realitykit, /realitykit/entity, /realitykit/collisioncomponent, /realitykit/physicsbodycomponent
 
-**Skills**: axiom-realitykit, axiom-realitykit-ref
+**Skills**: axiom-graphics (skills/realitykit.md), axiom-graphics (skills/realitykit-ref.md)

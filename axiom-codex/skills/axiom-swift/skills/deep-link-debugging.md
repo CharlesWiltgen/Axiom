@@ -592,7 +592,8 @@ case "screenshot":
     navigate(to: screen)
 
     // Post notification for external capture
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+    Task { @MainActor in
+        try? await Task.sleep(for: .seconds(1))
         NotificationCenter.default.post(
             name: .readyForScreenshot,
             object: screen
@@ -615,7 +616,7 @@ xcrun simctl io booted screenshot login-error.png
 
 - `axiom-swiftui` (navigation reference) — Production deep linking and NavigationStack patterns
 - `simulator-tester` — Automated simulator testing using debug deep links
-- `axiom-xcode-debugging` — Environment-first debugging workflows
+- `axiom-build (skills/xcode-debugging.md)` — Environment-first debugging workflows
 
 ---
 

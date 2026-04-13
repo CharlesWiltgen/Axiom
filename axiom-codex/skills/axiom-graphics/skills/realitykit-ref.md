@@ -641,4 +641,4 @@ try renderer.render(
 
 **Docs**: /realitykit, /realitykit/entity, /realitykit/component, /realitykit/system, /realitykit/realityview, /realitykit/model3d, /realitykit/modelentity, /realitykit/anchorentity, /realitykit/physicallybasedmaterial
 
-**Skills**: axiom-realitykit, axiom-realitykit-diag, axiom-scenekit-ref
+**Skills**: axiom-graphics (skills/realitykit.md), axiom-graphics (skills/realitykit-diag.md), axiom-graphics (skills/scenekit-ref.md)

@@ -83,7 +83,7 @@ kSecAttrServer + kSecAttrAccount + kSecAttrPort
   + kSecAttrAccessGroup
 ```
 
-See axiom-keychain-ref for the full attribute breakdown per class.
+See axiom-security (skills/keychain-ref.md) for the full attribute breakdown per class.
 
 ### The errSecDuplicateItem Trap
 
@@ -536,4 +536,4 @@ Before shipping keychain code:
 
 **Apple Forums**: thread/724023 (SecItem Fundamentals), thread/724013 (SecItem Pitfalls)
 
-**Skills**: axiom-keychain-diag, axiom-keychain-ref, axiom-cryptokit, axiom-code-signing, axiom-app-attest
+**Skills**: axiom-security (skills/keychain-diag.md), axiom-security (skills/keychain-ref.md), axiom-security (skills/cryptokit.md), axiom-security (skills/code-signing.md), axiom-security (skills/app-attest.md)

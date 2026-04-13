@@ -544,9 +544,9 @@ func diagnoseCloudSyncIssue() async {
 
 ## Related Skills
 
-- `axiom-cloudkit-ref` — CloudKit implementation details
-- `axiom-icloud-drive-ref` — iCloud Drive implementation details
-- `axiom-storage` — Choose sync approach
+- `skills/cloudkit-ref.md` — CloudKit implementation details
+- `skills/icloud-drive-ref.md` — iCloud Drive implementation details
+- `skills/storage.md` — Choose sync approach
 
 ---
 
