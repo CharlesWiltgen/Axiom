@@ -73,8 +73,8 @@ digraph swift {
 - ShareLink + Transferable -> **use swift** (`skills/transferable-ref.md`)
 - UIActivityViewController customization, share extensions -> **use integration**
 
-**swift vs ios-build**: When tvOS build fails:
-- Environment/Xcode issues -> **use ios-build first**
+**swift vs axiom-build**: When tvOS build fails:
+- Environment/Xcode issues -> **use axiom-build first**
 - tvOS platform-specific code issues (Focus Engine, storage, no WebView) -> **use swift** (`skills/tvos.md`)
 
 ## Critical Patterns

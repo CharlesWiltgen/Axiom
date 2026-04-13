@@ -285,16 +285,16 @@ This router invokes specialized skills based on the specific issue:
 
 ## When NOT to Use (Conflict Resolution)
 
-**Do NOT use ios-build for these — use the correct router instead:**
+**Do NOT use axiom-build for these — use the correct router instead:**
 
-| Error Type | Correct Router | Why NOT ios-build |
+| Error Type | Correct Router | Why NOT axiom-build |
 |------------|----------------|-------------------|
 | Swift 6 concurrency errors | `/skill axiom-concurrency` | Code error, not environment |
 | SwiftData migration errors | `/skill axiom-data` | Schema issue, not build environment |
 | "Sending 'self' risks data race" | `/skill axiom-concurrency` | Language error, not Xcode issue |
 | Type mismatch / compilation errors | Fix the code | These are code bugs |
 
-**ios-build is for environment mysteries**, not code errors:
+**axiom-build is for environment mysteries**, not code errors:
 - ✅ "No such module" when code is correct
 - ✅ Simulator won't boot
 - ✅ Clean build fails, incremental works

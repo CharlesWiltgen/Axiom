@@ -20,7 +20,7 @@ Systematic pre-flight checklist that catches 90% of App Store rejection causes b
 ❌ **Do NOT use this skill for**:
 - Code signing and provisioning profiles (use build-debugging)
 - CI/CD pipeline setup
-- Performance optimization (use ios-performance)
+- Performance optimization (use axiom-performance)
 - UI testing automation (use ui-testing)
 - In-app purchase implementation (use storekit-ref)
 - Privacy manifest details (use privacy-ux for deep implementation)

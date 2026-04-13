@@ -67,22 +67,22 @@ digraph security {
 
 ## Conflict Resolution
 
-**security vs ios-build**: When build fails with signing errors:
+**security vs axiom-build**: When build fails with signing errors:
 - Code signing errors (certificate, profile, entitlement) → **use security**
-- Environment issues (Xcode version, simulator, Derived Data) → **use ios-build**
+- Environment issues (Xcode version, simulator, Derived Data) → **use axiom-build**
 - If unsure, check the error message: `CODESIGN`, `ITMS-90xxx`, `errSec` → **security**
 
 **security vs shipping**: When preparing for App Store:
 - Privacy manifests, submission checklists, rejections → **use shipping**
 - Code signing for distribution, certificate management → **use security**
 
-**security vs ios-data**: When storing sensitive data:
+**security vs axiom-data**: When storing sensitive data:
 - Tokens, passwords, API keys → **use security** (keychain)
-- User preferences, non-sensitive settings → **use ios-data** (UserDefaults/SwiftData)
+- User preferences, non-sensitive settings → **use axiom-data** (UserDefaults/SwiftData)
 - File encryption levels for database files → **use security** (file-protection-ref)
 
-**security vs ios-networking**: When securing network communication:
-- TLS configuration, certificate pinning → **use ios-networking**
+**security vs axiom-networking**: When securing network communication:
+- TLS configuration, certificate pinning → **use axiom-networking**
 - Signing API requests, encrypting payloads → **use security** (CryptoKit)
 
 ## Critical Patterns

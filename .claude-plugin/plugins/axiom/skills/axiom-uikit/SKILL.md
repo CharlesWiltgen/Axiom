@@ -68,9 +68,9 @@ digraph uikit {
 1. **Try uikit FIRST** — Most animation jank is CATransaction timing or layer state, not a profiling issue
 2. **Only use performance** if animation logic is correct but rendering is slow
 
-**uikit vs ios-data**: When @Published properties relate to data persistence:
+**uikit vs axiom-data**: When @Published properties relate to data persistence:
 - **Use uikit** for Combine publisher patterns and @Published lifecycle
-- **Use ios-data** for SwiftData/Core Data model layer concerns
+- **Use axiom-data** for SwiftData/Core Data model layer concerns
 
 ## Anti-Rationalization
 
