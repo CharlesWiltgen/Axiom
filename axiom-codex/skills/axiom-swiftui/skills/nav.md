@@ -221,7 +221,7 @@ struct RecipeList: View {
 }
 ```
 
-**Key points:**
+#### Key points
 - Typed array `[Recipe]` when all values are same type
 - Value-based `NavigationLink(title, value:)`
 - `navigationDestination(for:)` outside lazy containers
@@ -281,7 +281,7 @@ struct ContentView: View {
 }
 ```
 
-**Key points:**
+#### Key points
 - `NavigationPath` for heterogeneous types
 - Pop to root before building deep link path
 - Build path in correct order (parent → child)
@@ -325,7 +325,7 @@ struct MultiColumnView: View {
 }
 ```
 
-**Key points:**
+#### Key points
 - `selection: $binding` on List connects to column selection
 - Value-presenting links update selection automatically
 - Adapts to single stack on iPhone
@@ -365,7 +365,7 @@ struct GridWithDrillDown: View {
 }
 ```
 
-**Key points:**
+#### Key points
 - NavigationStack inside detail column
 - Grid → Detail drill-down while preserving sidebar
 - Separate path for drill-down, selection for sidebar
@@ -407,7 +407,7 @@ struct TabBasedApp: View {
 }
 ```
 
-**Key points:**
+#### Key points
 - Each Tab has its own NavigationStack
 - Navigation state preserved when switching tabs
 - iOS 18+ Tab syntax with systemImage
@@ -449,7 +449,7 @@ struct AdaptableApp: View {
 }
 ```
 
-**Key points:**
+#### Key points
 - `.tabViewStyle(.sidebarAdaptable)` enables sidebar on iPad
 - `TabSection` creates collapsible groups in sidebar
 - `Tab(role: .search)` gets special placement
@@ -463,10 +463,10 @@ struct AdaptableApp: View {
 **Time cost**: 25-30 min
 
 ```swift
-@MainActor
-class NavigationModel: ObservableObject, Codable {
-    @Published var selectedCategory: Category?
-    @Published var recipePath: [Recipe.ID] = []  // Store IDs, not objects
+@MainActor @Observable
+class NavigationModel: Codable {
+    var selectedCategory: Category?
+    var recipePath: [Recipe.ID] = []  // Store IDs, not objects
 
     enum CodingKeys: String, CodingKey {
         case selectedCategory, recipePath
@@ -499,7 +499,7 @@ class NavigationModel: ObservableObject, Codable {
 }
 
 struct ContentView: View {
-    @StateObject private var navModel = NavigationModel()
+    @State private var navModel = NavigationModel()
     @SceneStorage("navigation") private var data: Data?
 
     var body: some View {
@@ -508,15 +508,15 @@ struct ContentView: View {
         }
         .task {
             if let data { navModel.jsonData = data }
-            for await _ in navModel.objectWillChange.values {
-                data = navModel.jsonData
-            }
+        }
+        .onChange(of: navModel.recipePath) {
+            data = navModel.jsonData
         }
     }
 }
 ```
 
-**Key points:**
+#### Key points
 - Store IDs, resolve to current objects
 - `@MainActor` for Swift 6 concurrency safety
 - SceneStorage for automatic scene-scoped persistence
@@ -584,13 +584,13 @@ struct ContentView: View {
 }
 ```
 
-**When coordinators add value:**
+#### When coordinators add value
 - Complex conditional navigation flows
 - Navigation logic needs unit testing
 - Multiple views trigger same navigation
 - UIKit interop with custom transitions
 
-**When coordinators add complexity without value:**
+#### When coordinators add complexity without value
 - Simple linear navigation
 - < 5 navigation destinations
 - No need for navigation testing
@@ -644,7 +644,7 @@ var body: some View {
 ```
 
 **Issue** Path recreated each render, navigation state lost.
-**Fix** Use `@State` or `@StateObject` for navigation state.
+**Fix** Use `@State` for navigation state.
 
 ---
 
@@ -715,18 +715,18 @@ only when we hit a real limitation."
 
 ### Real-World Example: 48-Hour Feature Push
 
-**Scenario:**
+#### Scenario
 - PM: "We need deep linking for the campaign launch in 2 days"
 - Lead: "Let's build a proper coordinator first"
 - Time available: 16 working hours
 
-**Wrong approach:**
+#### Wrong approach
 - 8 hours: Build coordinator infrastructure
 - 4 hours: Debug coordinator edge cases
 - 4 hours: Rush deep linking on broken foundation
 - Result: Buggy, deadline missed
 
-**Correct approach:**
+#### Correct approach
 - 2 hours: Implement Pattern 1b (NavigationStack with deep linking)
 - 1 hour: Test all deep link URLs
 - 1 hour: Add SceneStorage restoration (Pattern 6)
@@ -784,7 +784,7 @@ checks and fallback UI for older devices."
 - [ ] Each tab has own NavigationStack (if tab-based)
 
 ### State Management
-- [ ] NavigationPath in @State or @StateObject (not recreated in body)
+- [ ] NavigationPath in @State (not recreated in body)
 - [ ] @MainActor isolation for navigation state (Swift 6)
 - [ ] IDs stored for restoration (not full objects)
 - [ ] Error handling for decode failures

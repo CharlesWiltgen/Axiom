@@ -62,7 +62,7 @@ Use this router when:
 
 ### RealityKit (Non-Game 3D Content)
 
-For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, use the RealityKit skills. **For game-specific RealityKit patterns, use the ios-games router instead.**
+For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, use the RealityKit skills. **For game-specific RealityKit patterns, use the axiom-games router instead.**
 
 **Architecture, ECS, and best practices** → See skills/realitykit.md
 - Entity-Component-System architecture
@@ -97,7 +97,7 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 11. RealityView or Model3D setup? → axiom-realitykit-ref
 12. 3D content not visible or not tracking? → axiom-realitykit-diag
 13. Custom Metal rendering of RealityKit content? → axiom-realitykit-ref (RealityRenderer)
-14. Building a 3D game? → Use ios-games router instead
+14. Building a 3D game? → Use axiom-games router instead
 
 ## Anti-Rationalization
 

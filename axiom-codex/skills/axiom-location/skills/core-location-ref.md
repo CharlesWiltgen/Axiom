@@ -13,9 +13,9 @@ Comprehensive API reference for modern Core Location (iOS 17+).
 
 ## Related Skills
 
-- `axiom-core-location` — Anti-patterns, decision trees, pressure scenarios
-- `axiom-core-location-diag` — Symptom-based troubleshooting
-- `axiom-energy-ref` — Location as battery subsystem (accuracy vs power)
+- `axiom-location (skills/core-location.md)` — Anti-patterns, decision trees, pressure scenarios
+- `axiom-location (skills/core-location-diag.md)` — Symptom-based troubleshooting
+- `axiom-performance (skills/energy-ref.md)` — Location as battery subsystem (accuracy vs power)
 
 ---
 
@@ -734,4 +734,4 @@ if geocoder.isGeocoding {
 
 **Docs**: /corelocation, /corelocation/clmonitor, /corelocation/cllocationupdate, /corelocation/clservicesession
 
-**Skills**: axiom-core-location, axiom-core-location-diag, axiom-energy-ref
+**Skills**: axiom-location (skills/core-location.md), axiom-location (skills/core-location-diag.md), axiom-performance (skills/energy-ref.md)

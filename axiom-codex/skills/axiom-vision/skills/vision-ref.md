@@ -17,7 +17,7 @@ Comprehensive reference for Vision framework computer vision: subject segmentati
 - **Scanning documents** with VNDocumentCameraViewController
 - **Extracting structured document data** with RecognizeDocumentsRequest (iOS 26+)
 
-**Related skills**: See `skills/vision.md` for decision trees and patterns, `skills/vision-diag.md` for troubleshooting
+**Related skills**: See `skills/vision-framework.md` for decision trees and patterns, `skills/vision-diag.md` for troubleshooting
 
 ## Vision Framework Overview
 
@@ -1268,4 +1268,4 @@ struct ViewMoreLandmarksIntent: AppIntent, VisualIntelligenceSearchIntent {
 
 **Docs**: /vision, /visionkit, /visualintelligence, /visualintelligence/semanticcontentdescriptor, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest
 
-**Skills**: skills/vision.md, skills/vision-diag.md
+**Skills**: skills/vision-framework.md, skills/vision-diag.md

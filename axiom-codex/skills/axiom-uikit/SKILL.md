@@ -50,8 +50,9 @@ digraph uikit {
 4. Combine publishers / AnyCancellable / @Published / Combine ↔ async bridge? → `skills/combine-patterns.md`
 5. TextKit 2 / Writing Tools / TextEditor / TextKit 1 migration? → `skills/textkit-ref.md`
 6. Pure SwiftUI view question (no UIKit bridging)? → `/skill axiom-swiftui`
-7. Block retain cycles in UIKit callbacks? → See axiom-performance (`skills/objc-block-retain-cycles.md`)
-8. Memory leaks from Combine subscriptions? → Start with `skills/combine-patterns.md`, then axiom-performance if leak persists
+7. Design decisions, HIG, Liquid Glass, SF Symbols, typography? → `/skill axiom-design`
+8. Block retain cycles in UIKit callbacks? → See axiom-performance (`skills/objc-block-retain-cycles.md`)
+9. Memory leaks from Combine subscriptions? → Start with `skills/combine-patterns.md`, then axiom-performance if leak persists
 
 ## Conflict Resolution
 
@@ -67,9 +68,9 @@ digraph uikit {
 1. **Try uikit FIRST** — Most animation jank is CATransaction timing or layer state, not a profiling issue
 2. **Only use performance** if animation logic is correct but rendering is slow
 
-**uikit vs ios-data**: When @Published properties relate to data persistence:
+**uikit vs axiom-data**: When @Published properties relate to data persistence:
 - **Use uikit** for Combine publisher patterns and @Published lifecycle
-- **Use ios-data** for SwiftData/Core Data model layer concerns
+- **Use axiom-data** for SwiftData/Core Data model layer concerns
 
 ## Anti-Rationalization
 

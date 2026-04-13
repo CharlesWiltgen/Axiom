@@ -230,7 +230,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why xclog-ref**: Xcode's debug console isn't accessible externally. xclog combines simctl stdout/stderr with `log stream` JSON to capture everything print(), NSLog(), os_log(), and Logger emit — with structured fields (level, subsystem, category) for automated analysis.
 
-**Invoke**: `/skill axiom-xclog-ref` or `/axiom:console`
+**Invoke**: `/axiom:console`
 
 ---
 
@@ -281,20 +281,20 @@ This router invokes specialized skills based on the specific issue:
 | "I'll skip environment checks, it compiles locally" | Environment-first saves 30+ min. Every time. |
 | "I'll read the crash report more carefully instead of reproducing" | Crash reports show WHAT crashed, not WHY. Reproducing in LLDB with breakpoints reveals the actual state. axiom-lldb has the workflow. |
 | "I know my certificate is fine, let me check the code" | Code signing errors are NEVER code bugs. 100% configuration. code-signing diagnoses with CLI in 5 min. |
-| "I can't see what the app is logging without Xcode" | xclog captures print() + os_log from the simulator. Structured JSON output with level, subsystem, category. `/axiom:console` or `/skill axiom-xclog-ref`. |
+| "I can't see what the app is logging without Xcode" | xclog captures print() + os_log from the simulator. Structured JSON output with level, subsystem, category. `/axiom:console`. |
 
 ## When NOT to Use (Conflict Resolution)
 
-**Do NOT use ios-build for these — use the correct router instead:**
+**Do NOT use axiom-build for these — use the correct router instead:**
 
-| Error Type | Correct Router | Why NOT ios-build |
+| Error Type | Correct Router | Why NOT axiom-build |
 |------------|----------------|-------------------|
-| Swift 6 concurrency errors | **ios-concurrency** | Code error, not environment |
-| SwiftData migration errors | **ios-data** | Schema issue, not build environment |
-| "Sending 'self' risks data race" | **ios-concurrency** | Language error, not Xcode issue |
+| Swift 6 concurrency errors | `/skill axiom-concurrency` | Code error, not environment |
+| SwiftData migration errors | `/skill axiom-data` | Schema issue, not build environment |
+| "Sending 'self' risks data race" | `/skill axiom-concurrency` | Language error, not Xcode issue |
 | Type mismatch / compilation errors | Fix the code | These are code bugs |
 
-**ios-build is for environment mysteries**, not code errors:
+**axiom-build is for environment mysteries**, not code errors:
 - ✅ "No such module" when code is correct
 - ✅ Simulator won't boot
 - ✅ Clean build fails, incremental works
@@ -414,10 +414,10 @@ User: "How do I set up code signing for GitHub Actions?"
 → Invoke: See axiom-security (skills/code-signing.md)
 
 User: "What is my app printing to the console?"
-→ Invoke: `/skill axiom-xclog-ref` or `/axiom:console`
+→ Invoke: `/axiom:console`
 
 User: "I need to see the simulator console output"
-→ Invoke: `/skill axiom-xclog-ref` or `/axiom:console`
+→ Invoke: `/axiom:console`
 
 User: "The app fails silently, no error in the UI"
-→ Invoke: `/skill axiom-xclog-ref` or `/axiom:console`
+→ Invoke: `/axiom:console`

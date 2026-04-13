@@ -5,8 +5,8 @@ Symptom-based MapKit troubleshooting. Start with the symptom you're seeing, foll
 
 ## Related Skills
 
-- `axiom-mapkit` — Patterns, decision trees, anti-patterns
-- `axiom-mapkit-ref` — API reference, code examples
+- `axiom-location (skills/mapkit.md)` — Patterns, decision trees, anti-patterns
+- `axiom-location (skills/mapkit-ref.md)` — API reference, code examples
 
 ---
 
@@ -368,7 +368,7 @@ Q6: Location icon appearing but blue dot not on screen?
 │   Fix: Use MapCameraPosition.userLocation(fallback: .automatic)
 │   Or add MapUserLocationButton() in .mapControls
 │
-└─ See axiom-core-location-diag for deeper location troubleshooting
+└─ See axiom-location (skills/core-location-diag.md) for deeper location troubleshooting
 ```
 
 ---
@@ -451,4 +451,4 @@ log stream --predicate 'process == "YourApp" AND (subsystem == "com.apple.MapKit
 
 **Docs**: /mapkit, /mapkit/mklocalsearch
 
-**Skills**: axiom-mapkit, axiom-mapkit-ref, axiom-core-location-diag
+**Skills**: axiom-location (skills/mapkit.md), axiom-location (skills/mapkit-ref.md), axiom-location (skills/core-location-diag.md)

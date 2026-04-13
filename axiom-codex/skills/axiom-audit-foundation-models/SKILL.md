@@ -289,6 +289,6 @@ If NO issues found:
 
 ## Related
 
-For Foundation Models patterns: `axiom-foundation-models` skill
-For Foundation Models diagnostics: `axiom-foundation-models-diag` skill
-For Foundation Models API reference: `axiom-foundation-models-ref` skill
+For Foundation Models patterns: `axiom-ai (skills/foundation-models.md)` skill
+For Foundation Models diagnostics: `axiom-ai (skills/foundation-models-diag.md)` skill
+For Foundation Models API reference: `axiom-ai (skills/foundation-models-ref.md)` skill

@@ -30,9 +30,9 @@ Use this router when:
 | Cloud API integration (OpenAI, etc.) | **/skill axiom-networking** → URLSession patterns |
 | System AI features (Writing Tools, Genmoji) | No custom code needed — these are system-provided |
 
-**Key boundary: ai vs ios-ml**
-- ai = Apple's Foundation Models framework (LanguageModelSession, @Generable, on-device LLM)
-- ios-ml = Custom model deployment (CoreML conversion, quantization, MLTensor, speech-to-text)
+**Key boundary: Foundation Models vs ML (custom models)**
+- Foundation Models = Apple's on-device LLM framework (LanguageModelSession, @Generable)
+- ML = Custom model deployment (CoreML conversion, quantization, MLTensor, speech-to-text)
 - If developer says "run my own model" → skills/ios-ml.md. If "use Apple Intelligence" → stay here.
 
 ## Cross-Domain Routing
@@ -40,12 +40,12 @@ Use this router when:
 **Foundation Models + concurrency** (session blocking main thread, UI freezes):
 - Foundation Models sessions are async — blocking likely means missing `await` or running on @MainActor
 - **Fix here first** using async session patterns in foundation-models skill
-- If concurrency issue is broader than Foundation Models → **also invoke ios-concurrency**
+- If concurrency issue is broader than Foundation Models → **also invoke axiom-concurrency**
 
 **Foundation Models + data** (@Generable decoding errors, structured output issues):
 - @Generable output problems are Foundation Models-specific, NOT generic Codable issues
 - **Stay here** → foundation-models-diag handles structured output debugging
-- If developer also has general Codable/serialization questions → **also invoke ios-data**
+- If developer also has general Codable/serialization questions → **also invoke axiom-data**
 
 ## Routing Logic
 
@@ -82,7 +82,7 @@ Use this router when:
 4. Implementing Foundation Models / @Generable / Tool protocol? → foundation-models
 5. Need API reference / code examples? → foundation-models-ref
 6. Debugging AI issues (blocked, slow, guardrails)? → foundation-models-diag
-7. Foundation Models + UI freezing? → foundation-models (async patterns) + also invoke ios-concurrency if needed
+7. Foundation Models + UI freezing? → foundation-models (async patterns) + also invoke axiom-concurrency if needed
 8. Want automated Foundation Models code scan? → foundation-models-auditor (Agent)
 
 ## Anti-Rationalization
@@ -126,7 +126,7 @@ User: "I want to add AI to my app"
 → First ask: Apple Intelligence (Foundation Models) or custom ML model? Route accordingly.
 
 User: "My Foundation Models session is blocking the UI"
-→ Read: `skills/foundation-models.md` (async patterns) + also invoke `ios-concurrency` if needed
+→ Read: `skills/foundation-models.md` (async patterns) + also invoke `axiom-concurrency` if needed
 
 User: "Review my Foundation Models code for issues"
 → Invoke: `foundation-models-auditor` agent

@@ -520,12 +520,12 @@ File protection generally works without special entitlements, but some features 
 
 ## Related Skills
 
-- `axiom-storage` — Decide when to use file protection vs other security measures
-- `axiom-storage-management-ref` — File lifecycle, purging, and disk management
-- `axiom-storage-diag` — Debug file access issues
-- `axiom-keychain` — Secure credential storage (tokens, passwords, keys)
-- `axiom-keychain-ref` — Complete SecItem API reference
-- `axiom-cryptokit` — Encryption and signing with CryptoKit
+- `axiom-data (skills/storage.md)` — Decide when to use file protection vs other security measures
+- `axiom-data (skills/storage-management-ref.md)` — File lifecycle, purging, and disk management
+- `axiom-data (skills/storage-diag.md)` — Debug file access issues
+- `axiom-security (skills/keychain.md)` — Secure credential storage (tokens, passwords, keys)
+- `axiom-security (skills/keychain-ref.md)` — Complete SecItem API reference
+- `axiom-security (skills/cryptokit.md)` — Encryption and signing with CryptoKit
 
 ---
 

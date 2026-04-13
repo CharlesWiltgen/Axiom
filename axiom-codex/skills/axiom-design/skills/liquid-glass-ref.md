@@ -13,7 +13,7 @@ Use when:
 - Reviewing search, navigation, or organizational component updates
 
 #### Related Skills
-- Use `axiom-liquid-glass` for implementing the Liquid Glass material itself and design review pressure scenarios
+- Use `axiom-design (skills/liquid-glass.md)` for implementing the Liquid Glass material itself and design review pressure scenarios
 - Use `axiom-swiftui` (performance reference) for profiling Liquid Glass rendering performance
 - Use `axiom-accessibility` for accessibility testing
 
@@ -91,7 +91,7 @@ NavigationView { }
 
 ### Test with Accessibility Settings
 
-Liquid Glass adapts to: Reduce Transparency (frostier), Increase Contrast (black/white borders), Reduce Motion (no elastic animations). Verify legibility maintained under each setting and that custom elements provide fallback experiences. For detailed accessibility testing workflows, see `axiom-liquid-glass` discipline skill.
+Liquid Glass adapts to: Reduce Transparency (frostier), Increase Contrast (black/white borders), Reduce Motion (no elastic animations). Verify legibility maintained under each setting and that custom elements provide fallback experiences. For detailed accessibility testing workflows, see `axiom-design (skills/liquid-glass.md)` discipline skill.
 
 ```swift
 app.launchArguments += ["-UIAccessibilityIsReduceTransparencyEnabled", "1",
@@ -518,7 +518,7 @@ Wrap multiple `.glassEffect()` views in `GlassEffectContainer { }` to optimize r
 
 ### Performance Testing
 
-Profile scrolling, animations, memory, and CPU with Instruments (Time Profiler, SwiftUI, Allocations, Core Animation). See `axiom-swiftui` (performance reference) for SwiftUI Instrument workflows and `axiom-performance-profiling` for Instruments decision trees.
+Profile scrolling, animations, memory, and CPU with Instruments (Time Profiler, SwiftUI, Allocations, Core Animation). See `axiom-swiftui` (performance reference) for SwiftUI Instrument workflows and `axiom-performance (skills/performance-profiling.md)` for Instruments decision trees.
 
 ### Backward Compatibility
 
@@ -630,7 +630,7 @@ Use this checklist when auditing app for Liquid Glass adoption. 30 highest-impac
 
 **Sample Code**: /SwiftUI/Landmarks-Building-an-app-with-Liquid-Glass
 
-**Skills**: axiom-liquid-glass, axiom-swiftui, axiom-accessibility
+**Skills**: axiom-design (skills/liquid-glass.md), axiom-swiftui, axiom-accessibility
 
 ---
 

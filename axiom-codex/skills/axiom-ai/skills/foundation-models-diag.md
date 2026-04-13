@@ -1005,8 +1005,8 @@ Post-mortem items:
 ## Cross-References
 
 **Related Axiom Skills**:
-- `axiom-foundation-models` — Discipline skill for anti-patterns, proper usage patterns, pressure scenarios
-- `axiom-foundation-models-ref` — Complete API reference with all WWDC 2025 code examples
+- `axiom-ai (skills/foundation-models.md)` — Discipline skill for anti-patterns, proper usage patterns, pressure scenarios
+- `axiom-ai (skills/foundation-models-ref.md)` — Complete API reference with all WWDC 2025 code examples
 
 **Apple Resources**:
 - Foundation Models Framework Documentation

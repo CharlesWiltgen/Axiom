@@ -276,9 +276,9 @@ let project = Project.find(task.projectID)
 ---
 
 **Related Skills:**
-- `axiom-sqlitedata` — Full SQLiteData API reference
-- `axiom-swiftdata` — SwiftData patterns if staying with Apple's framework
-- `axiom-grdb` — Raw GRDB for complex queries
+- `skills/sqlitedata.md` — Full SQLiteData API reference
+- `skills/swiftdata.md` — SwiftData patterns if staying with Apple's framework
+- `skills/grdb.md` — Raw GRDB for complex queries
 
 ---
 

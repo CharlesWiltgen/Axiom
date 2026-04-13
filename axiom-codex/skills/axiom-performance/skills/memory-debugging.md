@@ -399,4 +399,4 @@ xcrun xctrace record --instrument 'Leaks' --attach 'MyApp' --time-limit 30s --ou
 
 **Docs**: /xcode/gathering-information-about-memory-use, /metrickit/mxbackgroundexitdata
 
-**Skills**: axiom-performance-profiling, axiom-objc-block-retain-cycles, axiom-metrickit-ref, axiom-lldb (inspect retain cycles interactively)
+**Skills**: skills/performance-profiling.md, skills/objc-block-retain-cycles.md, skills/metrickit-ref.md, axiom-build (skills/lldb.md)

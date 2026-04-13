@@ -279,4 +279,4 @@ lock.withLock { /* all work here */ }
 
 **Swift Evolution**: SE-0433
 
-**Skills**: See `skills/swift-concurrency.md`, axiom-swift-performance
+**Skills**: See `skills/swift-concurrency.md`, axiom-performance (skills/swift-performance.md)

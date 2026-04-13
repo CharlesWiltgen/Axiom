@@ -15,7 +15,7 @@ Use this skill when:
 - Handling iCloud file conflicts
 - Using NSUbiquitousKeyValueStore for preferences
 
-**NOT for**: Structured data with relationships (use `axiom-cloudkit-ref` instead)
+**NOT for**: Structured data with relationships (use `skills/cloudkit-ref.md` instead)
 
 ---
 
@@ -476,9 +476,9 @@ class ICloudMonitor {
 
 ## Related Skills
 
-- `axiom-storage` — Choose iCloud Drive vs CloudKit
-- `axiom-cloudkit-ref` — For structured data sync
-- `axiom-cloud-sync-diag` — Debug iCloud sync issues
+- `skills/storage.md` — Choose iCloud Drive vs CloudKit
+- `skills/cloudkit-ref.md` — For structured data sync
+- `skills/cloud-sync-diag.md` — Debug iCloud sync issues
 
 ---
 

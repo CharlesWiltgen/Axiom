@@ -399,10 +399,9 @@ struct UseSceneStorage: View {
             if let data = data {
                 navModel.jsonData = data
             }
-            // Save on changes
-            for await _ in navModel.objectWillChangeSequence {
-                data = navModel.jsonData
-            }
+        }
+        .onChange(of: navModel.recipePath) {
+            data = navModel.jsonData
         }
         .environmentObject(dataModel)
     }
@@ -412,9 +411,10 @@ struct UseSceneStorage: View {
 ### 4.2 Codable NavigationModel
 
 ```swift
-class NavigationModel: ObservableObject, Codable {
-    @Published var selectedCategory: Category?
-    @Published var recipePath: [Recipe] = []
+@MainActor @Observable
+class NavigationModel: Codable {
+    var selectedCategory: Category?
+    var recipePath: [Recipe] = []
 
     enum CodingKeys: String, CodingKey {
         case selectedCategory
@@ -435,10 +435,21 @@ class NavigationModel: ObservableObject, Codable {
         let recipePathIds = try container.decode([Recipe.ID].self, forKey: .recipePathIds)
         self.recipePath = recipePathIds.compactMap { DataModel.shared[$0] } // Discard deleted items
     }
+
+    var jsonData: Data? {
+        get { try? JSONEncoder().encode(self) }
+        set {
+            guard let data = newValue,
+                  let model = try? JSONDecoder().decode(NavigationModel.self, from: data)
+            else { return }
+            selectedCategory = model.selectedCategory
+            recipePath = model.recipePath
+        }
+    }
 }
 ```
 
-Store IDs (not full model objects) and use `compactMap` to handle deleted items gracefully. Add `jsonData` computed property and `objectWillChangeSequence` for SceneStorage integration as shown in 4.1.
+Store IDs (not full model objects) and use `compactMap` to handle deleted items gracefully. The `jsonData` computed property bridges to `SceneStorage` as shown in 4.1.
 
 ---
 
@@ -574,7 +585,7 @@ Return an empty closure to deactivate the context menu conditionally:
 
 #### iPhone Tab Bar Long-Press
 
-`.contextMenu` on `Tab` only applies to the sidebar representation (iPad/Mac). iPhone tab bar context menus require UIKit interop (adding `UILongPressGestureRecognizer` to `UITabBar` via Introspect or a `UITabBarController` subclass). See `skills/nav-diag.md` for workaround patterns.
+`.contextMenu` on `Tab` only applies to the sidebar representation (iPad/Mac). iPhone tab bar context menus require UIKit interop (adding `UILongPressGestureRecognizer` to `UITabBar` via Introspect or a `UITabBarController` subclass). See `axiom-uikit (skills/uikit-bridging.md)` for UIKit interop patterns.
 
 **Caveat**: Relies on private `UITabBarButton` subviews — fragile across iOS versions, not a public API guarantee.
 
@@ -780,13 +791,13 @@ See `skills/26-ref.md` skill for complete toolbar morphing API including Default
 
 ### 7.1 When to Use Coordinators
 
-**Use coordinators when:**
+#### Use coordinators when
 - Navigation logic is complex with conditional flows
 - Testing navigation in isolation
 - Sharing navigation logic across multiple screens
 - UIKit interop with heavy navigation requirements
 
-**Use built-in navigation when:**
+#### Use built-in navigation when
 - Simple linear or hierarchical navigation
 - State restoration is primary concern
 - Fewer than 5-10 navigation destinations
@@ -955,7 +966,7 @@ NavigationPath(codableRepresentation)  // For decoding
 
 **Docs**: /swiftui/tabrole/search, /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:)
 
-**Skills**: skills/nav.md, skills/nav-diag.md, skills/26-ref.md, axiom-liquid-glass, skills/search-ref.md
+**Skills**: skills/nav.md, skills/nav-diag.md, skills/26-ref.md, axiom-design (skills/liquid-glass.md), skills/search-ref.md
 
 ---
 

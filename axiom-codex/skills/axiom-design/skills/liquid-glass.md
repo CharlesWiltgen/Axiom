@@ -13,7 +13,7 @@ Use when:
 - Troubleshooting tinting, legibility, or adaptive behavior issues
 
 #### Related Skills
-- Use `axiom-liquid-glass-ref` for comprehensive app-wide adoption guidance (app icons, controls, navigation, menus, windows, platform considerations)
+- Use `axiom-design (skills/liquid-glass-ref.md)` for comprehensive app-wide adoption guidance (app icons, controls, navigation, menus, windows, platform considerations)
 
 ## Example Prompts
 
@@ -102,7 +102,7 @@ Permanently more transparent, no adaptive behaviors. **Requires dimming layer** 
 2. Content layer won't be negatively affected by **dimming layer**
 3. Content above glass is **bold and bright**
 
-Using Clear without meeting all three conditions results in poor legibility. See `axiom-liquid-glass-ref` for implementation examples.
+Using Clear without meeting all three conditions results in poor legibility. See `axiom-design (skills/liquid-glass-ref.md)` for implementation examples.
 
 ---
 
@@ -119,7 +119,7 @@ Liquid Glass is composed of four layers working together:
 
 ## Scroll Edge Effects
 
-Scroll edge effects dissolve content into background as it scrolls, lifting glass above moving content. Use `.scrollEdgeEffect(.hard)` when pinned accessory views exist (e.g., column headers) for extra visual separation. See `axiom-liquid-glass-ref` for full API details.
+Scroll edge effects dissolve content into background as it scrolls, lifting glass above moving content. Use `.scrollEdgeEffect(.hard)` when pinned accessory views exist (e.g., column headers) for extra visual separation. See `axiom-design (skills/liquid-glass-ref.md)` for full API details.
 
 ---
 
@@ -549,10 +549,10 @@ ZStack {
 
 When migrating incrementally, glass effects apply per-framework:
 - SwiftUI views get `.glassEffect()` / `.glassBackgroundEffect()`
-- UIKit views use the UIKit Liquid Glass APIs (see `axiom-liquid-glass-ref` for migration mapping)
+- UIKit views use the UIKit Liquid Glass APIs (see `axiom-design (skills/liquid-glass-ref.md)` for migration mapping)
 - Hosted SwiftUI views inside `UIHostingController` get glass effects independently
 
-See `axiom-liquid-glass-ref` for complete UIBlurEffect migration mapping table.
+See `axiom-design (skills/liquid-glass-ref.md)` for complete UIBlurEffect migration mapping table.
 
 ---
 
@@ -581,7 +581,7 @@ To ship with latest SDKs while maintaining previous appearance:
 
 ## API Reference
 
-For complete API reference including `glassEffect()`, `glassBackgroundEffect()`, toolbar modifiers, scroll edge effects, navigation/search APIs, controls/layout, `GlassEffectContainer`, `glassEffectID`, types, and backward compatibility, see `axiom-liquid-glass-ref`.
+For complete API reference including `glassEffect()`, `glassBackgroundEffect()`, toolbar modifiers, scroll edge effects, navigation/search APIs, controls/layout, `GlassEffectContainer`, `glassEffectID`, types, and backward compatibility, see `axiom-design (skills/liquid-glass-ref.md)`.
 
 ---
 
@@ -591,7 +591,7 @@ For complete API reference including `glassEffect()`, `glassBackgroundEffect()`,
 
 **Docs**: /technologyoverviews/adopting-liquid-glass, /swiftui/landmarks-building-an-app-with-liquid-glass, /swiftui/applying-liquid-glass-to-custom-views
 
-**Skills**: axiom-liquid-glass-ref
+**Skills**: axiom-design (skills/liquid-glass-ref.md)
 
 ---
 

@@ -7,7 +7,7 @@ tvOS shares UIKit and SwiftUI with iOS but diverges in critical ways that catch 
 
 **Core principle** tvOS is not "iOS on TV." It has a dual focus system, no persistent local storage, no WebView, and a remote with two incompatible generations. Treat it as its own platform.
 
-**tvOS 26** Adopts Liquid Glass design language with new app icon system. See `axiom-liquid-glass` for implementation patterns.
+**tvOS 26** Adopts Liquid Glass design language with new app icon system. See `axiom-design (skills/liquid-glass.md)` for implementation patterns.
 
 ### tvOS Porting Triage
 
@@ -321,7 +321,7 @@ From Apple's App Programming Guide for tvOS: "Every app developed for the new Ap
 ### Size Limits
 
 - **App bundle**: 4 GB maximum
-- **NSUserDefaults / UserDefaults**: 500 KB maximum (Apple docs; not the 4 MB iOS gets). Available but subject to system purge — not guaranteed persistent between sessions
+- **NSUserDefaults / UserDefaults**: Limited storage (significantly less than iOS). Available but subject to system purge — not guaranteed persistent between sessions
 - **On-demand resources**: Available for read-only assets the OS manages
 - **Local cache**: No guaranteed size; system can purge while app is not running
 
@@ -365,7 +365,7 @@ func loadData() async throws -> [Item] {
 | NSUbiquitousKeyValueStore | Good for small data | 1 MB limit, key-value only |
 | On-demand resources | Good for read-only assets | OS manages download/purge lifecycle |
 
-**See** `axiom-sqlitedata` for CloudKit SyncEngine patterns, `axiom-storage` for full storage decision tree.
+**See** `axiom-data (skills/sqlitedata.md)` for CloudKit SyncEngine patterns, `axiom-data (skills/storage.md)` for full storage decision tree.
 
 ---
 
@@ -748,12 +748,8 @@ extension View {
 
 ## Resources
 
-**Source**: "Surviving tvOS" (Ronnie Wong, 2026) — tvOS engineering log for Syncnext media player
-
-**Apple Docs**: /tvuikit, /uikit/uifocusenvironment, /uikit/uifocusguide, /swiftui/focus, /gamecontroller/gcmicrogamepad, /avfoundation/avplayer, /javascriptcore
-
-**Apple Guides**: App Programming Guide for tvOS (storage, input, gestures), HIG Web Views (tvOS exclusion)
+**Docs**: /tvuikit, /uikit/uifocusenvironment, /uikit/uifocusguide, /swiftui/focus, /gamecontroller/gcmicrogamepad, /avfoundation/avplayer, /javascriptcore
 
 **WWDC**: 2016-215, 2017-224, 2021-10023, 2021-10081, 2021-10191, 2023-10162, 2025-219
 
-**Skills**: axiom-storage, axiom-sqlitedata, axiom-integration, axiom-hig-ref, axiom-liquid-glass
+**Skills**: axiom-data (skills/storage.md), axiom-data (skills/sqlitedata.md), axiom-integration, axiom-design (skills/hig-ref.md), axiom-design (skills/liquid-glass.md)

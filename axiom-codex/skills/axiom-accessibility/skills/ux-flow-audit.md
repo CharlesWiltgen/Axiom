@@ -290,6 +290,6 @@ Most UX flow defects are fast fixes. When someone says "that's a big change," ch
 
 ## Resources
 
-**Skills**: axiom-swiftui, skills/accessibility-diag.md, axiom-hig
+**Skills**: axiom-swiftui, skills/accessibility-diag.md, axiom-design (skills/hig.md)
 
 **Agents**: ux-flow-auditor (automated scanning), swiftui-nav-auditor (navigation architecture), accessibility-auditor (WCAG compliance)

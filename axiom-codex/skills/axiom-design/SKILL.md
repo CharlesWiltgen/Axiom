@@ -49,8 +49,9 @@ digraph design {
 4. Font selection / Dynamic Type / text styles / tracking / leading? → `skills/typography-ref.md`
 5. App entry point / auth flow / root view switching / scene lifecycle? → `skills/app-composition.md`
 6. SwiftUI view implementation? → `/skill axiom-swiftui`
-7. Accessibility compliance (VoiceOver, contrast, touch targets)? → `/skill axiom-accessibility`
-8. Audit UI for Liquid Glass adoption? → liquid-glass-auditor (Agent)
+7. TextKit / rich text editing / Writing Tools? → `/skill axiom-uikit`
+8. Accessibility compliance (VoiceOver, contrast, touch targets)? → `/skill axiom-accessibility`
+9. Audit UI for Liquid Glass adoption? → liquid-glass-auditor (Agent)
 
 ## Conflict Resolution
 

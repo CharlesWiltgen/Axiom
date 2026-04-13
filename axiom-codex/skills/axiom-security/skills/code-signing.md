@@ -262,7 +262,7 @@ com.example.app.NotificationService → NotificationService/NotificationService.
 
 ### Without fastlane (raw scripts)
 
-See `axiom-code-signing-ref` for complete CI keychain scripts. The critical steps:
+See `axiom-security (skills/code-signing-ref.md)` for complete CI keychain scripts. The critical steps:
 
 1. **Create** temporary keychain
 2. **Add to search list** (include login.keychain-db) — do NOT use `default-keychain -s` as it breaks access to login keychain credentials
@@ -447,4 +447,4 @@ Before archiving for distribution:
 
 **Docs**: /security, /bundleresources/entitlements, /xcode/distributing-your-app
 
-**Skills**: axiom-code-signing-ref, axiom-code-signing-diag
+**Skills**: axiom-security (skills/code-signing-ref.md), axiom-security (skills/code-signing-diag.md)

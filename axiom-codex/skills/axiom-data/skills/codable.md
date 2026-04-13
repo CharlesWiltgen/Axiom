@@ -806,10 +806,10 @@ struct User: Decodable {
 
 ## Related Skills
 
-- **swift-concurrency** — Codable types crossing actor boundaries must be `Sendable`
-- **swiftdata** — `@Model` types use Codable for CloudKit sync
-- **networking** — `Coder` protocol wraps Codable for Network.framework
-- **app-intents-ref** — `AppEnum` parameters use Codable serialization
+- **axiom-concurrency** — Codable types crossing actor boundaries must be `Sendable`
+- **`skills/swiftdata.md`** — `@Model` types use Codable for CloudKit sync
+- **axiom-networking** — `Coder` protocol wraps Codable for Network.framework
+- **axiom-integration** — `AppEnum` parameters use Codable serialization
 
 ---
 

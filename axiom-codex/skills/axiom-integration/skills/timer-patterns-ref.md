@@ -453,10 +453,10 @@ breakpoint set -S "scheduledTimerWithTimeInterval:target:selector:userInfo:repea
 ## Related Skills
 
 - `skills/timer-patterns.md` — Decision trees, crash patterns, SafeDispatchTimer wrapper
-- `axiom-energy` — Timer tolerance as energy optimization (Pattern 1)
-- `axiom-energy-ref` — Timer efficiency APIs with WWDC code examples
-- `axiom-memory-debugging` — Timer as Pattern 1 memory leak
+- `axiom-performance (skills/energy.md)` — Timer tolerance as energy optimization (Pattern 1)
+- `axiom-performance (skills/energy-ref.md)` — Timer efficiency APIs with WWDC code examples
+- `axiom-performance (skills/memory-debugging.md)` — Timer as Pattern 1 memory leak
 
 ## Resources
 
-**Skills**: skills/timer-patterns.md, axiom-energy-ref, axiom-memory-debugging
+**Skills**: skills/timer-patterns.md, axiom-performance (skills/energy-ref.md), axiom-performance (skills/memory-debugging.md)

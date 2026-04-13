@@ -327,4 +327,4 @@ Before shipping App Attest:
 
 **Docs**: /devicecheck, /devicecheck/establishing-your-app-s-integrity, /devicecheck/validating-apps-that-connect-to-your-server
 
-**Skills**: axiom-cryptokit
+**Skills**: axiom-security (skills/cryptokit.md)

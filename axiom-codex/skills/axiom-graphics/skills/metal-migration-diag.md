@@ -456,7 +456,7 @@ When something doesn't work:
 
 **Docs**: /metal/debugging-metal-applications, /metal/gpu-capture
 
-**Skills**: axiom-metal-migration, axiom-metal-migration-ref
+**Skills**: axiom-graphics (skills/metal-migration.md), axiom-graphics (skills/metal-migration-ref.md)
 
 ---
 
