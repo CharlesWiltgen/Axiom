@@ -33,7 +33,7 @@ matches = []
 non_ios = re.search(r'typescript|react(?!\s*native)|angular|vue\.js|django|flask|rails|node\.js|nodejs|npm |yarn |webpack|docker|kubernetes|python\b|java\b(?!script)|kotlin|android|flutter', prompt_lower)
 
 # Build/environment (highest priority)
-if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (crash|hang|won.t|not )|pod (install|update)|spm |swift package|linker (error|command)|module.{0,5}not found|derived data|code sign|provisioning|xcworkspace|xcodeproj|xcode (error|crash|hang|won.t)|build time|compile (error|slow|time)', prompt_lower):
+if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (crash|hang|won.t|not )|pod (install|update)|spm |swift package|linker (error|command)|module.{0,5}not found|derived data|code sign|provisioning|xcworkspace|xcodeproj|xcode (error|crash|hang|won.t)|build time|compile (error|slow|time)|lldb\b|breakpoint.{0,10}(set|conditional|symbolic)|thread\s*backtrace|\bpo\b.{0,10}(vs|variable|expression)', prompt_lower):
     matches.append("axiom-build")
 
 # UI
@@ -49,11 +49,11 @@ if re.search(r'swiftdata|core\s*data|@model\b|@query\b|@relationship\b|modelcont
     matches.append("axiom-data")
 
 # Data — generic terms gated
-if not non_ios and "axiom-data" not in matches and re.search(r'migration.{0,10}(crash|fail|data|schema|version)|sqlite\b|realm|schema.{0,5}(change|evolv|version)', prompt_lower):
+if not non_ios and "axiom-data" not in matches and re.search(r'migration.{0,10}(crash|fail|data|schema|version)|sqlite\b|sqlitedata|@table\b.{0,10}(macro|column|model)|realm|schema.{0,5}(change|evolv|version)|foreign key constraint|no such column', prompt_lower):
     matches.append("axiom-data")
 
 # Concurrency
-if re.search(r'actor[\s-]isolated|sendable|@mainactor|data race|strict concurrency|swift 6.{0,5}concurren|task\s*\{|taskgroup|async\s+(let|sequence|stream)|nonisolated|global\s*actor|concurren.{0,5}(error|warning|violat|issue)', prompt_lower):
+if re.search(r'actor[\s-]isolated|sendable|@mainactor|data race|strict concurrency|swift 6.{0,5}concurren|task\s*\{|taskgroup|async\s+(let|sequence|stream)|nonisolated|global\s*actor|concurren.{0,5}(error|warning|violat|issue)|assumeisolated|@preconcurrency', prompt_lower):
     matches.append("axiom-concurrency")
 
 # Concurrency — generic terms gated
@@ -137,7 +137,7 @@ if re.search(r'core\s*location|cllocation|clmonitor|clgeocoder|mapkit|mkmap|mkan
     matches.append("axiom-location")
 
 # Security
-if re.search(r'keychain|secitem|seckey|secaccess|passkey.{0,5}(implement|add|creat|auth)|code\s*sign|provisioning\s*profile|certificate.{0,10}(sign|identity|distribut)|encrypt.{0,10}(data|file|aes|chacha)|cryptokit|secureenclave', prompt_lower):
+if re.search(r'keychain|secitem|seckey|secaccess|passkey.{0,5}(implement|add|creat|auth)|code\s*sign|provisioning\s*profile|certificate.{0,10}(sign|identity|distribut)|encrypt.{0,10}(data|file|aes|chacha)|cryptokit|secureenclave|app\s*attest|dcappattest|devicecheck', prompt_lower):
     matches.append("axiom-security")
 
 # Apple docs (iOS version uncertainty, API lookups)
