@@ -1,18 +1,18 @@
 # Getting Started
 
-Welcome to Axiom — battle-tested Claude Code skills, commands, and references for modern xOS (iOS, iPadOS, tvOS, watchOS) development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more.
+Welcome to Axiom — battle-tested Claude Code skills, commands, and references for modern xOS (iOS, iPadOS, macOS, tvOS, watchOS) development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more.
 
 ## What is Axiom?
 
-Axiom provides comprehensive iOS development workflows:
+Axiom provides comprehensive Apple platform development workflows:
 
-- **108 discipline skills** — Mandatory workflows (18 TDD-tested using ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development))
+- **98 discipline skills** — Mandatory workflows (18 TDD-tested using ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development))
 - **55 reference skills** — Comprehensive API guides with code examples
-- **23 diagnostic skills** — Systematic troubleshooting with decision trees
+- **22 diagnostic skills** — Systematic troubleshooting with decision trees
 - **12 commands** — Quick automated scans for common issues
 - **38 agents** — Autonomous code scanning and natural language automation
 
-#### Total: 186 skills + 12 commands + 38 agents
+#### Total: 175 skills + 12 commands + 38 agents
 
 ### 🤖 Apple Intelligence
 - **Foundation Models** -- Implement on-device AI with structured output and tool calling
