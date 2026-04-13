@@ -273,7 +273,17 @@ Use timers carefully.
     expect(skill.description).toBe('Use timers carefully.');
   });
 
-  it('falls back to title when no paragraph follows', () => {
+  it('falls back to title when no prose exists at all', () => {
+    const content = `# Timer Patterns
+
+## Overview
+`;
+    const skill = parseReferenceFile(content, 'timer-patterns.md', 'axiom-integration');
+
+    expect(skill.description).toBe('Timer Patterns');
+  });
+
+  it('finds prose under a sub-header when none follows title directly', () => {
     const content = `# Timer Patterns
 
 ## Overview
@@ -282,6 +292,6 @@ Details here.
 `;
     const skill = parseReferenceFile(content, 'timer-patterns.md', 'axiom-integration');
 
-    expect(skill.description).toBe('Timer Patterns');
+    expect(skill.description).toBe('Details here.');
   });
 });
