@@ -522,9 +522,50 @@ if (fs.existsSync(sessionStartSh)) {
   }
 }
 
-// ── 12. MCP Bundle Staleness ──
+heading("12a. Stale Skill Name References");
 
-heading("12. MCP Bundle Staleness");
+// Scan all skill content for ios-* references (v2.x names that should be axiom-*)
+const staleIosPattern = /\bios-(build|ui|data|concurrency|performance|networking|integration|accessibility|ai|vision|testing|games|graphics|ml)\b/g;
+let staleRefCount = 0;
+
+function scanForStaleRefs(dir: string): void {
+  if (!fs.existsSync(dir)) return;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      scanForStaleRefs(full);
+    } else if (entry.name.endsWith(".md")) {
+      const content = fs.readFileSync(full, "utf8");
+      const relPath = path.relative(pluginDir, full);
+
+      // Skip file path contexts (e.g. skills/ios-ml.md is a valid path)
+      const lines = content.split("\n");
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        // Find ios-* patterns not preceded by / (file path) or . (extension)
+        const lineMatches = line.matchAll(staleIosPattern);
+        for (const m of lineMatches) {
+          // Skip if this is a file path reference (e.g., skills/ios-ml.md)
+          const charBefore = m.index! > 0 ? line[m.index! - 1] : " ";
+          if (charBefore === "/") continue;
+          error("stale-refs", `"${m[0]}" in ${relPath}:${i + 1} — use axiom-* name instead`);
+          staleRefCount++;
+        }
+      }
+    }
+  }
+}
+
+scanForStaleRefs(path.join(pluginDir, "skills"));
+scanForStaleRefs(path.join(pluginDir, "agents"));
+
+if (staleRefCount === 0) {
+  console.log("  ✓ No stale ios-* references found in skill/agent content");
+}
+
+// ── 12b. MCP Bundle Staleness ──
+
+heading("12b. MCP Bundle Staleness");
 
 const bundlePath = path.join(root, "axiom-mcp/dist/bundle.json");
 if (fs.existsSync(bundlePath)) {
