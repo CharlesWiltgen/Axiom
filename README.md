@@ -1,10 +1,10 @@
 # Axiom
 
-Battle-tested skills, agents, and tools for modern iOS development with AI coding assistants. Native for Claude Code, MCP for everything else.
+Battle-tested skills, agents, and tools for modern Apple platform development with AI coding assistants. Native for Claude Code, MCP for everything else.
 
 ## What is Axiom?
 
-Axiom gives AI coding assistants deep iOS development expertise — the kind that prevents data loss from bad migrations, catches memory leaks before users complain, and stops you from spending 30 minutes debugging a zombie xcodebuild process.
+Axiom gives AI coding assistants deep Apple platform development expertise — the kind that prevents data loss from bad migrations, catches memory leaks before users complain, and stops you from spending 30 minutes debugging a zombie xcodebuild process.
 
 - **175 skills** covering UI, data, concurrency, performance, networking, accessibility, and more
 - **38 agents** that autonomously scan for issues (memory leaks, concurrency violations, build problems)
