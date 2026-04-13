@@ -101,7 +101,7 @@ Thread 0 Crashed:
 
 This page documents the `axiom-shipping` skill — systematic crash investigation workflow that Claude uses when you report TestFlight issues. The skill contains complete Organizer walkthroughs, symbolication commands, crash pattern guides, and pressure scenarios.
 
-The skill routes through the `ios-build` router, so asking about TestFlight crashes will automatically invoke this guidance.
+The skill routes through the `axiom-build` router, so asking about TestFlight crashes will automatically invoke this guidance.
 
 ## Related
 

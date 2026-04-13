@@ -9,7 +9,7 @@ flowchart LR
     classDef reference fill:#cce5ff,stroke:#0d6efd,color:#003366
     classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
 
-    axiom_ios_testing["ios-testing router"]:::router
+    axiom_testing["axiom-testing router"]:::router
 
     subgraph skills_d["Skills"]
         swift_testing["swift-testing"]:::discipline
@@ -17,12 +17,12 @@ flowchart LR
         testing_async["testing-async"]:::discipline
         ui_recording["ui-recording"]:::discipline
     end
-    axiom_ios_testing --> skills_d
+    axiom_testing --> skills_d
 
     subgraph skills_r["References"]
         axe_ref["axe-ref"]:::reference
     end
-    axiom_ios_testing --> skills_r
+    axiom_testing --> skills_r
 
     subgraph agents_sg["Agents"]
         agent_tfa["test-failure-analyzer"]:::agent
@@ -31,7 +31,7 @@ flowchart LR
         agent_ta["testing-auditor"]:::agent
         agent_st["simulator-tester"]:::agent
     end
-    axiom_ios_testing --> agents_sg
+    axiom_testing --> agents_sg
 ```
 
 ## Skills

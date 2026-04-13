@@ -10,7 +10,7 @@ flowchart LR
     classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
     classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
 
-    axiom_ios_ui["ios-ui router"]:::router
+    axiom_swiftui["axiom-swiftui router"]:::router
 
     subgraph skills_d["Skills"]
         swiftui_debugging["swiftui-debugging"]:::discipline
@@ -26,7 +26,7 @@ flowchart LR
         uikit_bridging["uikit-bridging"]:::discipline
         ui_testing["ui-testing"]:::discipline
     end
-    axiom_ios_ui --> skills_d
+    axiom_swiftui --> skills_d
 
     subgraph skills_r["References"]
         swiftui_containers_ref["swiftui-containers-ref"]:::reference
@@ -37,7 +37,7 @@ flowchart LR
         typography_ref["typography-ref"]:::reference
         textkit_ref["textkit-ref"]:::reference
     end
-    axiom_ios_ui --> skills_r
+    axiom_swiftui --> skills_r
 
     subgraph agents_sg["Agents"]
         agent_arch["swiftui-architecture-auditor"]:::agent
@@ -47,7 +47,7 @@ flowchart LR
         agent_tk["textkit-auditor"]:::agent
         agent_ux["ux-flow-auditor"]:::agent
     end
-    axiom_ios_ui --> agents_sg
+    axiom_swiftui --> agents_sg
 ```
 
 ## Skills

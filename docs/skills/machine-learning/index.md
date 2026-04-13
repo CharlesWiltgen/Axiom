@@ -9,23 +9,23 @@ flowchart LR
     classDef reference fill:#cce5ff,stroke:#0d6efd,color:#003366
     classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
 
-    axiom_ios_ml["ios-ml router"]:::router
+    axiom_ai["axiom-ai router"]:::router
 
     subgraph skills_d["Skills"]
         coreml["coreml"]:::discipline
         speech["speech"]:::discipline
     end
-    axiom_ios_ml --> skills_d
+    axiom_ai --> skills_d
 
     subgraph skills_r["References"]
         coreml_ref["coreml-ref"]:::reference
     end
-    axiom_ios_ml --> skills_r
+    axiom_ai --> skills_r
 
     subgraph skills_diag["Diagnostics"]
         coreml_diag["coreml-diag"]:::diagnostic
     end
-    axiom_ios_ml --> skills_diag
+    axiom_ai --> skills_diag
 ```
 
 ## Available Skills

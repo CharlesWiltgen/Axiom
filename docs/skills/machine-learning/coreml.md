@@ -19,7 +19,7 @@ Use when you need to:
 - ☑ Compress models to fit on device (quantization, palettization)
 - ☑ Deploy large language models with KV-cache
 - ☑ Optimize inference performance
-- ☑ Choose between CoreML and Foundation Models (ios-ai)
+- ☑ Choose between CoreML and Foundation Models (axiom-ai)
 - ☑ Profile and debug CoreML models
 
 ## Example Prompts

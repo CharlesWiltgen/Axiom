@@ -10,7 +10,7 @@ flowchart LR
     classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
     classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
 
-    axiom_ios_integration["ios-integration router"]:::router
+    axiom_integration["axiom-integration router"]:::router
 
     subgraph skills_d["Skills"]
         extensions_widgets["extensions-widgets"]:::discipline
@@ -26,7 +26,7 @@ flowchart LR
         localization["localization"]:::discipline
         privacy_ux["privacy-ux"]:::discipline
     end
-    axiom_ios_integration --> skills_d
+    axiom_integration --> skills_d
 
     subgraph skills_r["References"]
         app_intents_ref["app-intents-ref"]:::reference
@@ -37,14 +37,14 @@ flowchart LR
         core_location_ref["core-location-ref"]:::reference
         shazamkit_ref["shazamkit-ref"]:::reference
     end
-    axiom_ios_integration --> skills_r
+    axiom_integration --> skills_r
 
     subgraph agents_sg["Agents"]
         agent_iap["iap-auditor"]:::agent
         agent_iapi["iap-implementation"]:::agent
         agent_cam["camera-auditor"]:::agent
     end
-    axiom_ios_integration --> agents_sg
+    axiom_integration --> agents_sg
 ```
 
 ## Available Skills

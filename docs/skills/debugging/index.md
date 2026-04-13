@@ -10,8 +10,8 @@ flowchart LR
     classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
     classDef agent fill:#f8d7da,stroke:#dc3545,color:#58151c
 
-    build_router["ios-build router"]:::router
-    perf_router["ios-performance router"]:::router
+    build_router["axiom-build router"]:::router
+    perf_router["axiom-performance router"]:::router
 
     subgraph build_skills["Build & Environment"]
         xcode_debugging["xcode-debugging"]:::discipline
