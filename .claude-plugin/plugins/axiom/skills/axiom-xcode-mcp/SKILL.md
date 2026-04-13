@@ -103,10 +103,10 @@ digraph xcode_mcp_router {
 | Domain | Owner | Why |
 |--------|-------|-----|
 | MCP-specific interaction (mcpbridge, MCP tools, tab identifiers) | **xcode-mcp** | MCP protocol and tool-specific |
-| Xcode environment (Derived Data, zombie processes, simulators) | **ios-build** | Environment diagnostics, not MCP |
+| Xcode environment (Derived Data, zombie processes, simulators) | **axiom-build** | Environment diagnostics, not MCP |
 | Apple's bundled documentation (for-LLM guides/diagnostics) | **apple-docs** | Bundled docs, not MCP tool |
 | `DocumentationSearch` MCP tool usage specifically | **xcode-mcp** | MCP tool invocation |
-| Build failures diagnosed via CLI | **ios-build** | Traditional build debugging |
+| Build failures diagnosed via CLI | **axiom-build** | Traditional build debugging |
 | Build failures diagnosed via MCP tools | **xcode-mcp** | MCP workflow patterns |
 
 ## Example Invocations

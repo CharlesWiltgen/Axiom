@@ -15,20 +15,20 @@ Use this router when:
 - Building speech-to-text features
 - Transcribing audio (live or recorded)
 
-## Boundary with ios-ai
+## Boundary with axiom-ai (Foundation Models)
 
-**ios-ml vs ios-ai — know the difference:**
+**ML (custom models) vs AI (Apple Intelligence) — know the difference:**
 
 | Developer Intent | Router |
 |-----------------|--------|
-| "Use Apple Intelligence / Foundation Models" | **ios-ai** — Apple's on-device LLM |
-| "Run my own ML model on device" | **ios-ml** — CoreML conversion + deployment |
-| "Add text generation with @Generable" | **ios-ai** — Foundation Models structured output |
-| "Deploy a custom LLM with KV-cache" | **ios-ml** — Custom model optimization |
-| "Use Vision framework for image analysis" | **ios-vision** — Not ML deployment |
-| "Use pre-trained Apple NLP models" | **ios-ai** — Apple's models, not custom |
+| "Use Apple Intelligence / Foundation Models" | **axiom-ai** — Apple's on-device LLM |
+| "Run my own ML model on device" | **axiom-ai (ML)** — CoreML conversion + deployment |
+| "Add text generation with @Generable" | **axiom-ai** — Foundation Models structured output |
+| "Deploy a custom LLM with KV-cache" | **axiom-ai (ML)** — Custom model optimization |
+| "Use Vision framework for image analysis" | **axiom-vision** — Not ML deployment |
+| "Use pre-trained Apple NLP models" | **axiom-ai** — Apple's models, not custom |
 
-**Rule of thumb**: If the developer is converting/compressing/deploying their own model → ios-ml. If they're using Apple's built-in AI → ios-ai. If they're doing computer vision → ios-vision.
+**Rule of thumb**: If the developer is converting/compressing/deploying their own model → axiom-ai (ML skills). If they're using Apple's built-in AI → axiom-ai (Foundation Models skills). If they're doing computer vision → axiom-vision.
 
 ## Routing Logic
 

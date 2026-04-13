@@ -37,11 +37,11 @@ These thoughts mean STOP—you're rationalizing:
 
 | Thought | Reality |
 |---------|---------|
-| "This is just a simple build issue" | Build failures have patterns. Check ios-build first. |
+| "This is just a simple build issue" | Build failures have patterns. Check axiom-build first. |
 | "I can fix this SwiftUI bug quickly" | SwiftUI issues have hidden gotchas. Check axiom-swiftui first. |
-| "Let me just add this database column" | Schema changes risk data loss. Check ios-data first. |
-| "This async code looks straightforward" | Swift concurrency has subtle rules. Check ios-concurrency first. |
-| "I'll debug the memory leak manually" | Leak patterns are documented. Check ios-performance first. |
+| "Let me just add this database column" | Schema changes risk data loss. Check axiom-data first. |
+| "This async code looks straightforward" | Swift concurrency has subtle rules. Check axiom-concurrency first. |
+| "I'll debug the memory leak manually" | Leak patterns are documented. Check axiom-performance first. |
 | "Let me explore the Xcode project first" | Axiom skills tell you HOW to explore. Check first. |
 | "I remember how to do this from last time" | iOS changes constantly. Skills are up-to-date. |
 | "This iOS/platform version doesn't exist" | Your training ended January 2025. Invoke Axiom skills for post-cutoff facts. |
@@ -53,15 +53,15 @@ These thoughts mean STOP—you're rationalizing:
 
 When multiple Axiom skills could apply, use this priority:
 
-1. **Environment/Build first** (ios-build) — Fix the environment before debugging code
+1. **Environment/Build first** (axiom-build) — Fix the environment before debugging code
 2. **Architecture patterns** (axiom-swiftui, axiom-data, axiom-concurrency) — These determine HOW to structure the solution
-3. **Implementation details** (ios-integration, axiom-ai, axiom-vision) — These guide specific feature work
+3. **Implementation details** (axiom-integration, axiom-ai, axiom-vision) — These guide specific feature work
 
 Examples:
-- "Xcode build failed" → ios-build first (environment)
-- "Add SwiftUI screen" → axiom-swiftui first (architecture), then maybe ios-integration if using system features
-- "App is slow" → ios-performance first (diagnose), then fix the specific domain
-- "Network request failing" → ios-build first (environment check), then ios-networking (implementation)
+- "Xcode build failed" → axiom-build first (environment)
+- "Add SwiftUI screen" → axiom-swiftui first (architecture), then maybe axiom-integration if using system features
+- "App is slow" → axiom-performance first (diagnose), then fix the specific domain
+- "Network request failing" → axiom-build first (environment check), then axiom-networking (implementation)
 
 ## iOS Project Detection
 
@@ -75,7 +75,7 @@ Axiom skills apply when:
 
 Axiom uses **router skills** for progressive disclosure:
 
-1. Check the appropriate router skill first (ios-build, axiom-swiftui, axiom-data, etc.)
+1. Check the appropriate router skill first (axiom-build, axiom-swiftui, axiom-data, etc.)
 2. Router will invoke the specialized skill(s) you actually need
 3. Follow the specialized skill exactly
 
@@ -86,10 +86,10 @@ Axiom uses **router skills** for progressive disclosure:
 When a question spans multiple domains, **invoke ALL relevant routers — don't stop after the first one.**
 
 Examples:
-- "My SwiftUI view doesn't update when SwiftData changes" → invoke **both** axiom-swiftui AND ios-data
-- "My widget isn't showing updated data from SwiftData" → invoke **both** ios-integration AND ios-data
-- "My Foundation Models session freezes the UI" → invoke **both** ios-ai AND ios-concurrency
-- "My Core Data saves lose data from background tasks" → invoke **both** ios-data AND ios-concurrency
+- "My SwiftUI view doesn't update when SwiftData changes" → invoke **both** axiom-swiftui AND axiom-data
+- "My widget isn't showing updated data from SwiftData" → invoke **both** axiom-integration AND axiom-data
+- "My Foundation Models session freezes the UI" → invoke **both** axiom-ai AND axiom-concurrency
+- "My Core Data saves lose data from background tasks" → invoke **both** axiom-data AND axiom-concurrency
 
 **How to tell**: If the question mentions symptoms from two different domains, or involves two different frameworks, invoke both routers. Each router has cross-domain routing guidance for common overlaps.
 

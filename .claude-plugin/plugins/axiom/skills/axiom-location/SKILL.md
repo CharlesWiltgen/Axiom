@@ -65,21 +65,21 @@ digraph location {
 
 ## Conflict Resolution
 
-**location vs ios-performance**: When location is draining battery:
+**location vs axiom-performance**: When location is draining battery:
 1. **Try location FIRST** — Excessive accuracy or continuous updates are the #1 cause. `skills/core-location.md` covers accuracy selection and monitoring strategy.
-2. **Only use ios-performance** if location settings are already correct — Profile after ruling out obvious over-tracking.
+2. **Only use axiom-performance** if location settings are already correct — Profile after ruling out obvious over-tracking.
 
-**location vs ios-integration**: When implementing background location:
+**location vs axiom-integration**: When implementing background location:
 - Background location configuration (Info.plist, capabilities, CLServiceSession) → **use location**
-- BGTaskScheduler for periodic location processing → **use ios-integration**
+- BGTaskScheduler for periodic location processing → **use axiom-integration**
 
-**location vs ios-data**: When storing or syncing location data:
+**location vs axiom-data**: When storing or syncing location data:
 - Getting location updates, geofencing → **use location**
-- Persisting location history, CloudKit sync → **use ios-data**
+- Persisting location history, CloudKit sync → **use axiom-data**
 
-**location vs ios-build**: When location permissions fail in simulator:
+**location vs axiom-build**: When location permissions fail in simulator:
 - Authorization dialogs, Info.plist keys → **use location** (`skills/core-location-diag.md`)
-- Simulator GPS simulation, `simctl location` → **use ios-build**
+- Simulator GPS simulation, `simctl location` → **use axiom-build**
 
 ## Critical Patterns
 

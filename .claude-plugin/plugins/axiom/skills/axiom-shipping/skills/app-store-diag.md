@@ -1184,7 +1184,7 @@ Design & Originality (4.2/4.3):
 - **privacy-ux** — Privacy manifest implementation details and required reason APIs
 - **storekit-ref** — StoreKit 2 IAP/subscription implementation
 - **accessibility-diag** — Accessibility compliance (VoiceOver, Dynamic Type, WCAG)
-- **ios-build** — Build and signing issues that cause Binary Rejected
+- **axiom-build** — Build and signing issues that cause Binary Rejected
 
 ## Resources
 
