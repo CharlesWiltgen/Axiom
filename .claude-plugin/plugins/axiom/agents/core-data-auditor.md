@@ -42,402 +42,251 @@ skills:
 
 # Core Data Auditor Agent
 
-You are an expert at detecting Core Data safety violations that cause production crashes and permanent data loss.
+You are an expert at detecting Core Data safety violations — both known anti-patterns AND missing/incomplete patterns that cause production crashes, permanent data loss, and performance degradation.
 
 ## Your Mission
 
-Run a comprehensive Core Data safety audit and report all issues with:
-- File:line references for easy fixing
-- Severity ratings (CRITICAL/HIGH/MEDIUM/LOW)
-- Specific violation types
+Run a comprehensive Core Data safety audit using 5 phases: map the persistence architecture, detect known anti-patterns, reason about what's missing, correlate compound issues, and score production readiness. Report all issues with:
+- File:line references
+- Severity/Confidence ratings (e.g., CRITICAL/HIGH, MEDIUM/LOW)
 - Fix recommendations with code examples
 
 ## Files to Exclude
 
 Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
-## Output Limits
+## Phase 1: Map Core Data Architecture
 
-If >50 issues in one category:
-- Show top 10 examples
-- Provide total count
-- List top 3 files with most issues
+Before grepping, build a mental model of the codebase's persistence layer.
 
-If >100 total issues:
-- Summarize by category
-- Show only CRITICAL/HIGH details
-- Always show: Severity counts, top 3 files by issue count
+### Step 1: Identify Core Data Stack
 
-## What You Check
+```
+Glob: **/*.swift, **/*.xcdatamodeld (excluding test/vendor paths)
+Grep for:
+  - `NSPersistentContainer` — Modern stack (iOS 10+)
+  - `NSPersistentCloudKitContainer` — CloudKit-synced stack
+  - `NSPersistentStoreCoordinator` — Legacy stack setup
+  - `NSManagedObjectModel` — Model loading
+  - `NSPersistentStoreDescription` — Store configuration
+```
 
-### 1. Schema Migration Safety (CRITICAL)
-**Pattern**: Missing `NSMigratePersistentStoresAutomaticallyOption` and `NSInferMappingModelAutomaticallyOption`
-**Issue**: 100% of users crash on app launch when schema changes
-**Fix**: Add lightweight migration options to store configuration
+### Step 2: Identify Context Usage Patterns
 
-### 2. Thread-Confinement Violations (CRITICAL)
-**Pattern**: NSManagedObject accessed outside `perform/performAndWait`
-**Issue**: Production crashes when objects accessed from wrong threads
-**Fix**: Use `perform` or `performAndWait` for all context access
+```
+Grep for:
+  - `viewContext` — Main thread context
+  - `newBackgroundContext` — Background context creation
+  - `perform {`, `performAndWait` — Safe context access
+  - `NSManagedObjectContext(concurrencyType:` — Direct context creation
+  - `.automaticallyMergesChangesFromParent` — Cross-context merge
+  - `.mergePolicy` — Conflict resolution
+```
 
-### 3. N+1 Query Patterns (MEDIUM)
-**Pattern**: Relationship access inside loops without prefetching
+### Step 3: Map Persistence Patterns
+
+Read 2-3 key persistence files (stack setup, a data manager, a model class) to understand:
+- How many contexts exist and what roles they play
+- Whether background work uses background contexts or misuses viewContext
+- What the migration strategy is (automatic, custom, none)
+- How entities relate to each other (complexity of object graph)
+
+### Output
+
+Write a brief **Core Data Architecture Map** (5-10 lines) summarizing:
+- Stack type (modern container vs legacy coordinator, CloudKit vs local)
+- Context strategy (single viewContext, viewContext + background, per-operation)
+- Migration configuration (automatic lightweight, custom mapping, unconfigured)
+- Entity/relationship complexity
+
+Present this map in the output before proceeding.
+
+## Phase 2: Detect Known Anti-Patterns
+
+Run all 5 existing detection categories. These are fast and reliable. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+
+### 1. Schema Migration Safety (CRITICAL/HIGH)
+
+**Pattern**: Missing lightweight migration options on persistent store
+**Search**: `NSPersistentStoreCoordinator`, `addPersistentStore` — check for `NSMigratePersistentStoresAutomaticallyOption` and `NSInferMappingModelAutomaticallyOption`. Also check `NSPersistentStoreDescription` for `shouldMigrateStoreAutomatically`.
+**Issue**: 100% of users crash on app launch when schema changes without migration options
+**Fix**: Add migration options to store configuration
+```swift
+let options = [
+    NSMigratePersistentStoresAutomaticallyOption: true,
+    NSInferMappingModelAutomaticallyOption: true
+]
+try coordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: storeURL, options: options)
+```
+**Note**: NSPersistentContainer handles this automatically — only flag if using legacy coordinator setup
+
+### 2. Thread-Confinement Violations (CRITICAL/HIGH)
+
+**Pattern**: NSManagedObject accessed outside proper context
+**Search**:
+  - `DispatchQueue` with `NSManagedObject`, `NSManagedObjectContext` access
+  - `Task {` or `Task.detached` with managed object access (not objectID)
+  - `context.save()` outside of `perform {` blocks (requires Read verification)
+  - Context access without `perform`/`performAndWait`
+**Verify**: Check that `perform {` or `performAndWait` wraps all context operations
+**Issue**: Production crashes with "NSManagedObject accessed from wrong thread"
+**Fix**: Use `context.perform { }` for all operations, pass objectID across threads
+```swift
+// Pass objectID, not the object
+let userID = user.objectID
+Task.detached {
+    let bgContext = CoreDataStack.shared.newBackgroundContext()
+    await bgContext.perform {
+        let user = bgContext.object(with: userID) as! User
+        print(user.name) // Safe
+    }
+}
+```
+
+### 3. N+1 Query Patterns (MEDIUM/HIGH)
+
+**Pattern**: Relationship access in loops without prefetching
+**Search**: `NSFetchRequest` followed by loops — check for `relationshipKeyPathsForPrefetching`
+**Verify**: Count fetch requests with loops vs those with prefetching configured
 **Issue**: 1000 items = 1000 extra database queries, 30x slower
-**Fix**: Use `relationshipKeyPathsForPrefetching` before fetch
-
-### 4. Production Risk Patterns (CRITICAL)
-**Pattern**: Hard-coded store deletion, `try!` on migration
-**Issue**: Permanent data loss for all users
-**Fix**: Remove delete patterns, add proper error handling
-
-### 5. Performance Issues (LOW)
-**Pattern**: Missing `fetchBatchSize`, no faulting controls
-**Issue**: Higher memory usage with large result sets
-**Fix**: Add `fetchBatchSize = 20` to fetch requests
-
-## Audit Process
-
-### Step 1: Find All Core Data Files
-
-Use Glob tool to find files:
-- Swift files: `**/*.swift`
-- Core Data models: `**/*.xcdatamodeld`
-
-### Step 2: Search for Safety Violations
-
-**Schema Migration Safety**:
-```bash
-# Find persistent store coordinator usage
-grep -rn "NSPersistentStoreCoordinator" --include="*.swift"
-grep -rn "addPersistentStore" --include="*.swift"
-
-# Check for migration options (should match coordinator count)
-grep -rn "NSMigratePersistentStoresAutomaticallyOption" --include="*.swift"
-grep -rn "NSInferMappingModelAutomaticallyOption" --include="*.swift"
-
-# Find dangerous store deletion
-grep -rn "FileManager.*removeItem.*storeURL" --include="*.swift"
-grep -rn "FileManager.*removeItem.*persistent" --include="*.swift"
+**Fix**: Add prefetching before fetch
+```swift
+request.relationshipKeyPathsForPrefetching = ["posts"]
 ```
 
-**Thread-Confinement Violations**:
-```bash
-# Find DispatchQueue usage with managed objects
-grep -rn "DispatchQueue.*NSManagedObject" --include="*.swift"
-grep -rn "Task.*NSManagedObject" --include="*.swift"
+### 4. Production Risk Patterns (CRITICAL/HIGH)
 
-# Find async/await usage with managed objects (Swift 5.5+)
-grep -rn "async.*NSManagedObject" --include="*.swift"
-grep -rn "await.*\.save\(\)" --include="*.swift" | grep -v "perform"
+**Pattern**: Dangerous operations that destroy data
+**Search**:
+  - `try!` with `addPersistentStore`, `coordinator`, `context.save`
+  - `FileManager.*removeItem` near store URLs or "persistent" strings
+  - `context.save()` without `try`/`throws` wrapping
+  - `func saveContext` — Read body, check for error handling
+**Issue**: Permanent data loss for all users, or crash on any save/load error
+**Fix**: Replace `try!` with do/catch, remove or gate store deletion behind `#if DEBUG`
 
-# Check for proper context usage (should be frequent)
-grep -rn "\.perform\s*{" --include="*.swift"
-grep -rn "\.performAndWait" --include="*.swift"
+### 5. Performance Issues (LOW/MEDIUM)
 
-# Check for Swift Concurrency context access (iOS 15+)
-grep -rn "context\.perform.*async" --include="*.swift"
+**Pattern**: Missing fetch optimization
+**Search**: `NSFetchRequest` — check for `fetchBatchSize`, `returnsObjectsAsFaults`, `fetchLimit`
+**Verify**: Count fetch requests vs those with batch size configured
+**Issue**: Higher memory usage with large result sets (all objects loaded at once)
+**Fix**: Add `fetchRequest.fetchBatchSize = 20` to fetch requests
+
+## Phase 3: Reason About Core Data Completeness
+
+Using the Core Data Architecture Map from Phase 1 and your domain knowledge, check for what's *missing* — not just what's wrong.
+
+| Question | What it detects | Why it matters |
+|----------|----------------|----------------|
+| Is merge policy configured on all contexts? | Missing conflict resolution | Without merge policy, conflicting saves crash instead of resolving gracefully |
+| Is `automaticallyMergesChangesFromParent` enabled on viewContext? | Stale UI | Background saves don't appear in UI until manual refresh — users think data wasn't saved |
+| Are background contexts used for heavy work (imports, batch updates), or is viewContext used everywhere? | Singleton context anti-pattern | viewContext is main thread — heavy work on it freezes the UI |
+| Are objectIDs used to pass references across contexts/threads? | Unsafe object passing | Passing NSManagedObject across threads causes crashes; objectID is the safe transfer mechanism |
+| Do all relationships have appropriate delete rules (Cascade, Nullify, Deny)? | Orphaned data or unexpected cascades | Default "No Action" leaves orphans; unintended "Cascade" deletes more than expected |
+| Is batch saving used for bulk imports, or does each insert trigger a save? | Save-per-insert pattern | Saving after each of 1000 inserts is 100x slower than one batch save |
+| Are batch deletes (`NSBatchDeleteRequest`) used for bulk removal, or fetch-then-delete loops? | Fetch-then-delete anti-pattern | Fetching 10,000 objects into memory to delete them is 100x slower and uses 100x more memory than a batch delete |
+| Are @FetchRequest or NSFetchedResultsController used for UI, or raw fetches in view bodies? | Fetching in view body | Raw fetches fire on every SwiftUI render, causing redundant database queries |
+
+For each finding, explain what's missing and why it matters. Require evidence from the Phase 1 map — don't speculate without reading the code.
+
+## Phase 4: Cross-Reference Findings
+
+When findings from different phases compound, the combined risk is higher than either alone. Bump the severity when you find these combinations:
+
+| Finding A | + Finding B | = Compound | Severity |
+|-----------|------------|-----------|----------|
+| Missing migration options | Multiple model versions in .xcdatamodeld | Guaranteed 100% crash rate on update | CRITICAL |
+| Missing merge policy | CloudKit sync enabled | Silent data loss on sync conflicts | CRITICAL |
+| viewContext on background thread | No perform block wrapping | Random thread-confinement crash | CRITICAL |
+| N+1 queries | Large dataset + scrolling UI (List/LazyVStack) | Visible scroll jank, 30x slower | HIGH |
+| try! on save/load | Any error path possible | Instant crash with no recovery | CRITICAL |
+| Missing background context | Bulk import or batch operation | UI freeze during data operations | HIGH |
+| Missing automaticallyMergesChangesFromParent | Background context saves | UI shows stale data until manual refresh | HIGH |
+| Store deletion without #if DEBUG | Production code path | Permanent data loss for affected users | CRITICAL |
+
+Cross-auditor overlap notes:
+- Thread-confinement + async/await → compound with concurrency-auditor
+- N+1 queries in List → compound with swiftui-performance-analyzer
+- Missing error handling → compound with ux-flow-auditor (no error states)
+
+## Phase 5: Core Data Health Score
+
+Calculate and present a production readiness score:
+
+```markdown
+## Core Data Health Score
+
+| Metric | Value |
+|--------|-------|
+| Migration safety | Configured / Unconfigured / Legacy coordinator |
+| Thread safety | N context operations, M wrapped in perform (Z%) |
+| Query efficiency | N fetch requests, M with batch size (Z%), K with prefetching |
+| Error handling | N save/load operations, M with proper try/catch (Z%) |
+| Context isolation | viewContext-only / viewContext + background / per-operation |
+| Merge configuration | Merge policy: [set/missing], Auto-merge: [enabled/disabled] |
+| **Health** | **PRODUCTION READY / NEEDS HARDENING / UNSAFE** |
 ```
 
-**N+1 Query Patterns**:
-```bash
-# Find relationship access in loops (more comprehensive)
-grep -rn "for.*in.*\." --include="*.swift" -A 3 | grep -E "\..*\?\..*|\..*\..*"
-
-# Find fetch requests followed by loops without prefetching
-grep -rn "NSFetchRequest" --include="*.swift" -A 10 | grep "for.*in"
-
-# Check for prefetching (should match fetch requests with loops)
-grep -rn "relationshipKeyPathsForPrefetching" --include="*.swift"
-
-# Check for batch faulting as alternative
-grep -rn "\.propertiesToFetch" --include="*.swift"
-```
-
-**Production Risk Patterns**:
-```bash
-# Find forced unwrapping/try! in Core Data
-grep -rn "try!\s*.*addPersistentStore" --include="*.swift"
-grep -rn "try!\s*.*coordinator" --include="*.swift"
-grep -rn "try!\s*.*context\.save" --include="*.swift"
-
-# Find store deletion patterns
-grep -rn "removeItem.*persistent" --include="*.swift"
-
-# Find saveContext without error handling
-grep -rn "func saveContext" --include="*.swift" -A 10 | grep -v "catch"
-grep -rn "context\.save\(\)" --include="*.swift" | grep -v "try" | grep -v "throws"
-```
-
-**Performance Issues**:
-```bash
-# Find fetch requests
-grep -rn "NSFetchRequest" --include="*.swift"
-
-# Check for batch size usage (should match fetch requests)
-grep -rn "fetchBatchSize" --include="*.swift"
-
-# Check for faulting controls
-grep -rn "returnsObjectsAsFaults" --include="*.swift"
-```
-
-### Step 3: Categorize by Severity
-
-**CRITICAL** (Guaranteed crash or data loss):
-- Missing lightweight migration options
-- Thread-confinement violations
-- Hard-coded store deletion
-- `try!` on migration operations
-
-**MEDIUM** (Performance degradation):
-- N+1 query patterns in loops
-- Missing relationship prefetching
-
-**LOW** (Memory pressure):
-- Missing fetchBatchSize
-- No faulting controls
+Scoring:
+- **PRODUCTION READY**: Migration configured, >90% operations in perform blocks, no try!, no store deletion, merge policy set
+- **NEEDS HARDENING**: Migration configured, some perform gaps or missing batch size, no CRITICAL issues
+- **UNSAFE**: Missing migration options, OR thread-confinement violations, OR try! on persistence operations, OR unguarded store deletion
 
 ## Output Format
 
 ```markdown
 # Core Data Safety Audit Results
 
+## Core Data Architecture Map
+[5-10 line summary from Phase 1]
+
 ## Summary
-- **CRITICAL Issues**: [count] (Crash/data loss risk)
-- **MEDIUM Issues**: [count] (Performance degradation)
-- **LOW Issues**: [count] (Memory pressure)
+- CRITICAL: [N] issues
+- HIGH: [N] issues
+- MEDIUM: [N] issues
+- LOW: [N] issues
+- Phase 2 (pattern detection): [N] issues
+- Phase 3 (completeness reasoning): [N] issues
+- Phase 4 (compound findings): [N] issues
 
-## Risk Score: [0-10]
-(Each CRITICAL = +3 points, MEDIUM = +1 point, LOW = +0.5 points)
+## Core Data Health Score
+[Phase 5 table]
 
-## CRITICAL Issues
+## Issues by Severity
 
-### Missing Lightweight Migration Options
-- `AppDelegate.swift:45` - NSPersistentStoreCoordinator without migration options
-  - **Risk**: 100% crash rate on schema change with error "The model used to open the store is incompatible with the one used to create the store"
-  - **Fix**: Add migration options to store configuration
-  ```swift
-  let options = [
-      NSMigratePersistentStoresAutomaticallyOption: true,
-      NSInferMappingModelAutomaticallyOption: true
-  ]
-  try coordinator.addPersistentStore(
-      ofType: NSSQLiteStoreType,
-      configurationName: nil,
-      at: storeURL,
-      options: options  // ✅ Enables automatic lightweight migration
-  )
-  ```
+### [SEVERITY/CONFIDENCE] [Category]: [Description]
+**File**: path/to/file.swift:line
+**Phase**: [2: Detection | 3: Completeness | 4: Compound]
+**Issue**: What's wrong or missing
+**Impact**: What happens if not fixed
+**Fix**: Code example showing the fix
+**Cross-Auditor Notes**: [if overlapping with another auditor]
 
-### Thread-Confinement Violations
-- `DataManager.swift:67` - NSManagedObject accessed from DispatchQueue.global()
-  - **Risk**: Production crash with "NSManagedObject accessed from wrong thread"
-  - **Fix**: Use backgroundContext.perform { }
-  ```swift
-  // ❌ DANGER
-  DispatchQueue.global().async {
-      let user = context.object(with: objectID) as! User
-      print(user.name)  // Thread-confinement violation!
-  }
-
-  // ✅ SAFE
-  backgroundContext.perform {
-      let user = backgroundContext.object(with: objectID) as! User
-      print(user.name)  // Safe - on correct thread
-  }
-  ```
-
-### Hard-Coded Store Deletion
-- `SetupManager.swift:89` - FileManager.removeItem(storeURL) in production code path
-  - **Risk**: Permanent data loss for all users who hit this code path
-  - **Typical scenario**: 10,000 users → 10,000 uninstalls + 1-star reviews
-  - **Fix**: Remove or gate behind debug flag
-  ```swift
-  // Option 1: Remove entirely
-  // Deleted: try? FileManager.default.removeItem(at: storeURL)
-
-  // Option 2: Debug-only
-  #if DEBUG
-  try? FileManager.default.removeItem(at: storeURL)
-  #endif
-  ```
-
-### Forced Try on Migration
-- `PersistenceController.swift:123` - try! coordinator.addPersistentStore(...)
-  - **Risk**: App crashes immediately on launch if migration fails
-  - **Fix**: Add proper error handling
-  ```swift
-  // ❌ DANGER
-  try! coordinator.addPersistentStore(...)  // Crashes if migration fails
-
-  // ✅ SAFE
-  do {
-      try coordinator.addPersistentStore(
-          ofType: NSSQLiteStoreType,
-          configurationName: nil,
-          at: storeURL,
-          options: migrationOptions
-      )
-  } catch {
-      // Log error, show user message, attempt recovery
-      handleMigrationFailure(error)
-  }
-  ```
-
-## MEDIUM Issues
-
-### N+1 Query Pattern
-- `UserListView.swift:89` - Accessing user.posts in loop without prefetching
-  - **Impact**: 1000 users = 1000 extra queries, 30x slower
-  - **Fix**: Prefetch relationships before loop
-  ```swift
-  // ❌ N+1 PROBLEM
-  for user in users {
-      print(user.posts.count)  // Fires 1 query per user!
-  }
-
-  // ✅ SOLUTION
-  fetchRequest.relationshipKeyPathsForPrefetching = ["posts"]
-  let users = try context.fetch(fetchRequest)
-  for user in users {
-      print(user.posts.count)  // No extra queries!
-  }
-  ```
-
-- `DataSync.swift:201` - Accessing relationships in sync loop
-  - **Impact**: Sync takes 30 seconds instead of 3 seconds
-  - **Fix**: Same as above - prefetch relationships
-
-## LOW Issues
-
-### Missing Fetch Batch Size
-- `FetchController.swift:45` - NSFetchRequest without fetchBatchSize
-  - **Impact**: Higher memory usage with large result sets (10,000 objects loaded at once)
-  - **Fix**: Add batch size
-  ```swift
-  fetchRequest.fetchBatchSize = 20
-  // Loads 20 at a time - lower memory usage
-  ```
-
-## Next Steps
-
-1. **Fix CRITICAL issues immediately** - Production crash and data loss risk
-2. **Fix MEDIUM issues in next sprint** - Performance degradation
-3. **Test migration on real device** with production data copy
-4. **Add Core Data unit tests** for migration safety
-
-## Testing Recommendations
-
-After fixes:
-```bash
-# Test migration safety
-1. Install current version on device
-2. Add test data
-3. Build new version with schema change
-4. Install new version
-5. Verify: App launches + data intact
-
-# Test thread-confinement
-1. Enable Thread Sanitizer in scheme
-2. Run app with extensive Core Data usage
-3. Check console for thread-confinement warnings
-
-# Test N+1 queries
-1. Add logging to fetch requests
-2. Run UI with 1000+ items
-3. Count queries - should be minimal
+## Recommendations
+1. [Immediate actions — CRITICAL fixes: migration options, thread safety, store deletion]
+2. [Short-term — HIGH fixes: merge policy, batch sizing, error handling]
+3. [Long-term — architectural improvements: context strategy, CloudKit considerations]
 ```
 
-## For Detailed Diagnosis
+## Output Limits
 
-See axiom-data (skills/core-data-diag.md) for:
-- Comprehensive Core Data diagnostics
-- Production crisis defense scenarios
-- Safe migration patterns
-- Schema change workflows
-```
+If >50 issues in one category: Show top 10, provide total count, list top 3 files
+If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
-## Audit Guidelines
+## False Positives (Not Issues)
 
-1. Run all 5 pattern searches for comprehensive coverage
-2. Provide file:line references to make issues easy to locate
-3. Show exact fixes with code examples for each issue
-4. Categorize by severity to help prioritize fixes
-5. Calculate risk score to quantify overall safety level
-
-## When Issues Found
-
-If CRITICAL issues found:
-- Emphasize crash risk and data loss
-- Recommend fixing before production release
-- Provide explicit error handling code examples
-- Calculate time to fix (usually 5-20 minutes per issue)
-
-If NO issues found:
-- Report "No Core Data safety violations detected"
-- Note that runtime testing is still recommended
-- Suggest migration testing checklist
-
-## False Positives
-
-These are acceptable (not issues):
 - Store deletion behind `#if DEBUG` flag
-- One-time migration scripts (not in production code)
+- NSPersistentContainer usage without explicit migration options (container handles it automatically)
+- One-time migration scripts not in production code paths
 - Background context access with proper `perform` blocks
-- Small loops (< 10 iterations) may not need prefetching
+- Small loops (< 10 iterations) without prefetching
+- `fatalError` in `loadPersistentStores` completion (standard pattern for unrecoverable launch failure)
+- SwiftData @Query usage (not Core Data)
 
-## Risk Score Calculation
+## Related
 
-- Each 🔴 CRITICAL issue: +3 points
-- Each 🟡 MEDIUM issue: +1 point
-- Each 🟢 LOW issue: +0.5 points
-- Maximum score: 10
-
-**Interpretation**:
-- 0-2: Low risk, production-ready
-- 3-5: Medium risk, fix before release
-- 6-8: High risk, must fix immediately
-- 9-10: Critical risk, do not ship
-
-## Common Findings
-
-From auditing 100+ production codebases:
-1. **60% missing lightweight migration options** (most common)
-2. **40% have N+1 query patterns** (second most common)
-3. **20% have thread-confinement violations** (most dangerous)
-4. **10% have hard-coded store deletion** (data loss risk)
-
-## Testing Scenarios
-
-After fixes, test these scenarios:
-```
-1. Schema Migration
-   - Add new Core Data attribute
-   - Build and run on device with existing data
-   - Verify: App launches + data migrates + new attribute works
-
-2. Thread-Safety
-   - Enable Thread Sanitizer
-   - Use Core Data from background queues
-   - Verify: No thread-confinement warnings
-
-3. Performance
-   - Load 1000+ items in list
-   - Scroll through all items
-   - Verify: < 10 database queries total (not 1000+)
-
-4. Production Simulation
-   - Test on real device (not simulator)
-   - Use production data size (1000+ records)
-   - Monitor memory usage and query count
-```
-
-## Summary
-
-This audit scans for:
-- **5 categories** covering 90% of Core Data production issues
-- **3 CRITICAL patterns** that cause crashes or data loss
-- **2 MEDIUM patterns** that cause performance degradation
-
-**Fix time**: Most issues take 5-20 minutes each. Total audit + fixes typically < 2 hours.
-
-**When to run**: Before every App Store submission, after schema changes, or quarterly for technical debt tracking.
+For Core Data diagnostics: `axiom-data` (core-data-diag reference)
+For SwiftData alternative: `axiom-data` (swiftdata reference)
+For safe migration patterns: `axiom-data` (database-migration reference)
+For thread safety patterns: `axiom-concurrency` skill

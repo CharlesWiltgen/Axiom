@@ -80,7 +80,7 @@ Agents are autonomous problem-solvers that:
 - **ux-flow-auditor** — Detects UX journey defects and incomplete flows (dead ends, dismiss traps, buried CTAs, missing states, unvalidated entry points, inaccessible paths)
 
 ### Persistence & Storage
-- **core-data-auditor** — Scans for schema migration risks, thread-confinement violations, N+1 query patterns, production data loss risks, performance issues
+- **core-data-auditor** — Scans Core Data for safety violations and architectural gaps (missing migration options, thread-confinement errors, N+1 queries, singleton context abuse, missing merge policies)
 - **database-schema-auditor** — Scans database migration and schema code for unsafe ALTER TABLE patterns, DROP operations, missing idempotency, foreign key misuse
 - **icloud-auditor** — Scans for iCloud integration issues (missing NSFileCoordinator, unsafe CloudKit error handling, missing entitlement checks, SwiftData + CloudKit anti-patterns)
 - **storage-auditor** — Detects file storage mistakes (files in wrong locations, missing backup exclusions, missing file protection, storage anti-patterns causing data loss and backup bloat)
@@ -89,7 +89,7 @@ Agents are autonomous problem-solvers that:
 ### Integration
 - **camera-auditor** — Scans for camera, video, and audio capture issues including deprecated APIs, missing interruption handlers, threading violations
 - **foundation-models-auditor** — Scans Foundation Models code for missing availability checks, main thread blocking, manual JSON parsing, session lifecycle issues
-- **networking-auditor** — Scans for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling)
+- **networking-auditor** — Scans for deprecated networking APIs, anti-patterns, and completeness gaps (missing transition handling, TLS coverage, connection cleanup, framework selection)
 - **iap-auditor** — Audits existing IAP code for missing transaction.finish() calls, weak receipt validation, missing restore functionality, subscription status tracking issues, and StoreKit testing configuration gaps
 - **iap-implementation** — Implements complete StoreKit 2 IAP solution with testing-first workflow (.storekit configuration, centralized StoreManager, transaction handling, subscription management, restore purchases)
 
