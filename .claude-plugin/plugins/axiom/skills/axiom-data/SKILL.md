@@ -54,7 +54,7 @@ Use this skill when working with:
 
 ### Automated Scanning
 
-**Core Data audit** → Launch `core-data-auditor` agent or `/axiom:audit core-data` (migration risks, thread-confinement, N+1 queries, production data loss)
+**Core Data audit** → Launch `core-data-auditor` agent or `/axiom:audit core-data` (safety violations, architectural gaps — migration options, thread-confinement, N+1 queries, merge policies, context isolation)
 **Codable audit** → Launch `codable-auditor` agent or `/axiom:audit codable` (try? swallowing errors, JSONSerialization, date handling)
 **iCloud audit** → Launch `icloud-auditor` agent or `/axiom:audit icloud` (entitlement checks, file coordination, CloudKit anti-patterns)
 **Storage audit** → Launch `storage-auditor` agent or `/axiom:audit storage` (wrong file locations, missing backup exclusions, data loss risks)
