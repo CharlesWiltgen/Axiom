@@ -90,12 +90,12 @@ Agents are autonomous problem-solvers that:
 - **camera-auditor** — Scans for camera, video, and audio capture issues including deprecated APIs, missing interruption handlers, threading violations
 - **foundation-models-auditor** — Scans Foundation Models code for missing availability checks, main thread blocking, manual JSON parsing, session lifecycle issues
 - **networking-auditor** — Scans for deprecated networking APIs, anti-patterns, and completeness gaps (missing transition handling, TLS coverage, connection cleanup, framework selection)
-- **iap-auditor** — Audits existing IAP code for missing transaction.finish() calls, weak receipt validation, missing restore functionality, subscription status tracking issues, and StoreKit testing configuration gaps
+- **iap-auditor** — Audits IAP code for missing transaction.finish(), weak verification, missing Transaction.updates listener, missing restore, partial subscription state coverage, missing intro eligibility checks, subscription terms and loot box odds disclosure gaps, and compound rejection-risk combinations; scores IAP health READY/NEEDS WORK/NOT READY
 - **iap-implementation** — Implements complete StoreKit 2 IAP solution with testing-first workflow (.storekit configuration, centralized StoreManager, transaction handling, subscription management, restore purchases)
 
 ### Shipping
 - **screenshot-validator** — AI-powered visual inspection of App Store screenshots for dimension validation, placeholder text detection, debug artifact scanning, competitor references, and content completeness
-- **security-privacy-scanner** — Scans for API keys in code, insecure @AppStorage usage, missing Privacy Manifests, ATS violations, and logging sensitive data
+- **security-privacy-scanner** — Scans for hardcoded credentials, insecure token storage, Privacy Manifest coverage gaps (cross-referenced against Required Reason APIs actually used), ATS violations, missing ATT descriptions, missing usage descriptions, missing export compliance, weak Keychain ACLs, over-broad entitlements, and third-party SDK manifest gaps; scores security posture HARDENED/GAPS/VULNERABLE
 
 ### Testing
 - **performance-profiler** — Automated performance profiling via xctrace CLI (CPU Profiler, Allocations, Leaks, SwiftUI, Swift Tasks)
