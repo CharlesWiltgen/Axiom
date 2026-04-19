@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 )
 
@@ -130,6 +132,67 @@ func TestVerifyImages_UUIDMismatch(t *testing.T) {
 	if status.Mismatched[0].Kind != MismatchUUID {
 		t.Errorf("Mismatched.Kind = %q, want %q", status.Mismatched[0].Kind, MismatchUUID)
 	}
+}
+
+func TestVerifyImages_ExplicitNonBinarySurfacesUUIDMismatch(t *testing.T) {
+	// Previous behavior silently declared a match when dwarfdump couldn't probe
+	// the file. Current behavior: classify as MismatchUUID so a user passing
+	// --dsym /etc/passwd gets honest diagnostics.
+	nonBinary := filepath.Join(t.TempDir(), "not-a-binary.txt")
+	if err := os.WriteFile(nonBinary, []byte("hello"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	raw := &RawCrash{
+		UsedImages: []UsedImage{{UUID: "DEADBEEF-0000-0000-0000-000000000000", Name: "x", Arch: "arm64"}},
+	}
+	d := NewDiscoverer(DiscovererOptions{
+		Explicit:      nonBinary,
+		SkipSpotlight: true,
+		SkipDefaults:  true,
+	})
+	status, err := VerifyImages(context.Background(), d, raw)
+	if err != nil {
+		t.Fatalf("VerifyImages: %v", err)
+	}
+	if len(status.Mismatched) != 1 || status.Mismatched[0].Kind != MismatchUUID {
+		t.Errorf("want 1 MismatchUUID entry, got %+v", status.Mismatched)
+	}
+}
+
+func TestVerifyImages_PropagatesCtxCancellation(t *testing.T) {
+	// Pre-cancelled ctx → ReadUUIDs inside classifyExplicit returns a
+	// cancellation error that VerifyImages must surface rather than swallow.
+	if _, err := exec.LookPath("xcrun"); err != nil {
+		t.Skip("xcrun not available")
+	}
+	uuids, err := ReadUUIDs(context.Background(), "/bin/ls")
+	if err != nil || len(uuids) == 0 {
+		t.Skipf("cannot read /bin/ls uuids: %v", err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	raw := &RawCrash{
+		UsedImages: []UsedImage{{UUID: uuids[0].UUID, Name: "ls", Arch: uuids[0].Arch}},
+	}
+	d := NewDiscoverer(DiscovererOptions{
+		Explicit:      "/bin/ls",
+		SkipSpotlight: true,
+		SkipDefaults:  true,
+	})
+	_, err = VerifyImages(ctx, d, raw)
+	if err == nil {
+		t.Fatal("expected error from cancelled ctx (dwarfdump cancellation must propagate)")
+	}
+}
+
+func TestStatusCategory_PanicsOnUntaggedMismatch(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected panic on Mismatched entry with empty Kind")
+		}
+	}()
+	StatusCategory(ImageStatus{Mismatched: []ImageMatch{{UUID: "X"}}})
 }
 
 func TestStatusCategory(t *testing.T) {

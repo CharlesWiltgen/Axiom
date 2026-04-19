@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -31,6 +32,54 @@ func TestFindDsym_NotFound(t *testing.T) {
 	_, err := d.Find(context.Background(), "00000000-0000-0000-0000-000000000000", "arm64")
 	if err == nil {
 		t.Fatal("expected not-found error")
+	}
+	if !errors.Is(err, ErrNotFound) {
+		t.Errorf("err = %v, want wrapped ErrNotFound (so callers can distinguish from tool failures)", err)
+	}
+}
+
+func TestFindDsym_ExplicitByUUID(t *testing.T) {
+	targetUUID := "AAAAAAAA-0000-0000-0000-000000000000"
+	otherUUID := "BBBBBBBB-0000-0000-0000-000000000000"
+	d := NewDiscoverer(DiscovererOptions{
+		ExplicitByUUID: map[string]string{targetUUID: "/bin/ls"},
+		SkipSpotlight:  true,
+		SkipDefaults:   true,
+	})
+
+	entry, err := d.Find(context.Background(), targetUUID, "")
+	if err != nil {
+		t.Fatalf("Find(target): %v", err)
+	}
+	if entry.Path != "/bin/ls" {
+		t.Errorf("Path = %q, want /bin/ls", entry.Path)
+	}
+	if entry.Source != "explicit" {
+		t.Errorf("Source = %q, want explicit", entry.Source)
+	}
+
+	_, err = d.Find(context.Background(), otherUUID, "")
+	if err == nil {
+		t.Fatal("Find(other): expected error for UUID not in ExplicitByUUID")
+	}
+	if !errors.Is(err, ErrNotFound) {
+		t.Errorf("other UUID error = %v, want ErrNotFound", err)
+	}
+}
+
+func TestFindDsym_ExplicitByUUID_NormalizesKey(t *testing.T) {
+	// Caller passes a lowercase undashed UUID; lookup with dashed uppercase.
+	d := NewDiscoverer(DiscovererOptions{
+		ExplicitByUUID: map[string]string{"aabbccdd000011112222333344445555": "/bin/ls"},
+		SkipSpotlight:  true,
+		SkipDefaults:   true,
+	})
+	entry, err := d.Find(context.Background(), "AABBCCDD-0000-1111-2222-333344445555", "")
+	if err != nil {
+		t.Fatalf("Find: %v", err)
+	}
+	if entry.Source != "explicit" {
+		t.Errorf("Source = %q, want explicit", entry.Source)
 	}
 }
 

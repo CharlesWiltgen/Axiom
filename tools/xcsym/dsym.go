@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -10,6 +11,10 @@ import (
 	"sync"
 )
 
+// ErrNotFound signals exhaustive discovery without a match. Callers that want
+// to distinguish "dSYM absent" from "tool failure / timeout" use errors.Is.
+var ErrNotFound = errors.New("dSYM not found")
+
 // DiscovererOptions configures dSYM discovery sources.
 //
 // SkipDefaults suppresses the defaulting behavior that fills ArchivesPaths,
@@ -17,9 +22,16 @@ import (
 // directory / xcode-select. Tests use this to prevent real directories from
 // bleeding into fixture-driven test runs.
 type DiscovererOptions struct {
-	Explicit         string   // --dsym override (wins over everything)
-	UserPaths        []string // XCSYM_DSYM_PATHS entries
-	ArchivesPaths    []string // defaults to ~/Library/Developer/Xcode/Archives
+	// Explicit overrides every source for every UUID. Convenient for `verify`,
+	// but wrong for `crash` (which wants the override to apply to the main
+	// binary only). Phase 5 uses ExplicitByUUID for that case.
+	Explicit string
+	// ExplicitByUUID maps a specific UUID to a dSYM/binary path. Takes
+	// precedence over Explicit and the rest of the chain, but only when the
+	// requested UUID matches. UUIDs are normalized (uppercase with dashes).
+	ExplicitByUUID map[string]string
+	UserPaths      []string // XCSYM_DSYM_PATHS entries
+	ArchivesPaths  []string // defaults to ~/Library/Developer/Xcode/Archives
 	DerivedDataPaths []string // defaults to ~/Library/Developer/Xcode/DerivedData
 	DownloadsPaths   []string // defaults to ~/Downloads
 	ToolchainPaths   []string // defaults to $(xcode-select -p)/Toolchains
@@ -35,7 +47,7 @@ type DiscovererOptions struct {
 // Discoverer resolves dSYMs by UUID across a fixed fallback chain.
 // Sources (in order):
 //
-//	explicit → cache → Spotlight → archives → DerivedData → frameworks → downloads → toolchain → env
+//	ExplicitByUUID → Explicit → cache → Spotlight → archives → DerivedData → frameworks → downloads → toolchain → env
 type Discoverer struct {
 	opts DiscovererOptions
 	mu   sync.Mutex
@@ -66,6 +78,15 @@ func NewDiscoverer(opts DiscovererOptions) *Discoverer {
 			}
 		}
 	}
+	// Normalize any caller-provided ExplicitByUUID keys so lookups match
+	// what NormalizeUUID produces downstream.
+	if len(opts.ExplicitByUUID) > 0 {
+		normalized := make(map[string]string, len(opts.ExplicitByUUID))
+		for k, v := range opts.ExplicitByUUID {
+			normalized[NormalizeUUID(k)] = v
+		}
+		opts.ExplicitByUUID = normalized
+	}
 	return &Discoverer{opts: opts, mem: make(map[string]DsymEntry)}
 }
 
@@ -87,6 +108,12 @@ func NewDiscovererFromEnv(opts DiscovererOptions) *Discoverer {
 
 // Find returns a dSYM matching uuid (and arch, when non-empty) or an error.
 //
+// Error semantics:
+//   - ErrNotFound (wrapped): exhaustive search found nothing. Caller should
+//     classify the image as Missing.
+//   - Any other error: a source's tool (mdfind, dwarfdump) failed or timed
+//     out. Caller should surface this rather than treat it as a miss.
+//
 // On a mismatch between requested arch and available slice, Find returns the
 // entry with the dSYM's real arch. Callers (VerifyImages) classify that as
 // a mismatch rather than a miss.
@@ -99,7 +126,14 @@ func (d *Discoverer) Find(ctx context.Context, uuid, arch string) (*DsymEntry, e
 	}
 	d.mu.Unlock()
 
-	// 1. Explicit override — bypass every other source.
+	// 0. Per-UUID explicit — highest precedence, narrowest scope.
+	if path, ok := d.opts.ExplicitByUUID[uuid]; ok {
+		if _, err := os.Stat(path); err == nil {
+			return d.memo(uuid, DsymEntry{UUID: uuid, Path: path, Arch: arch, Source: "explicit"}), nil
+		}
+	}
+
+	// 1. Global explicit override.
 	if d.opts.Explicit != "" {
 		if _, err := os.Stat(d.opts.Explicit); err == nil {
 			return d.memo(uuid, DsymEntry{UUID: uuid, Path: d.opts.Explicit, Arch: arch, Source: "explicit"}), nil
@@ -109,7 +143,7 @@ func (d *Discoverer) Find(ctx context.Context, uuid, arch string) (*DsymEntry, e
 	// 2. Persistent cache (fast path across invocations).
 	if !d.opts.SkipCache && d.opts.Cache != nil {
 		if d.opts.Cache.IsNegative(uuid) {
-			return nil, fmt.Errorf("dSYM not found for UUID %s (negative cache)", uuid)
+			return nil, fmt.Errorf("%w for UUID %s (negative cache)", ErrNotFound, uuid)
 		}
 		if ce, ok := d.opts.Cache.Get(uuid); ok {
 			return d.memo(uuid, DsymEntry{
@@ -118,8 +152,10 @@ func (d *Discoverer) Find(ctx context.Context, uuid, arch string) (*DsymEntry, e
 		}
 	}
 
-	// 3-9. Source fallback chain.
-	sources := []func(context.Context, string, string) *DsymEntry{
+	// 3-9. Source fallback chain. A non-nil error from any source (timeout,
+	// ctx cancel) aborts the chain; a nil error with nil entry just means
+	// "not found here, try next source".
+	sources := []func(context.Context, string, string) (*DsymEntry, error){
 		d.findViaSpotlight,
 		d.findInArchives,
 		d.findInDerivedData,
@@ -129,14 +165,18 @@ func (d *Discoverer) Find(ctx context.Context, uuid, arch string) (*DsymEntry, e
 		d.findInEnvPaths,
 	}
 	for _, src := range sources {
-		if entry := src(ctx, uuid, arch); entry != nil {
+		entry, err := src(ctx, uuid, arch)
+		if err != nil {
+			return nil, err
+		}
+		if entry != nil {
 			d.cachePositive(*entry)
 			return d.memo(uuid, *entry), nil
 		}
 	}
 
 	d.cacheNegative(uuid)
-	return nil, fmt.Errorf("dSYM not found for UUID %s", uuid)
+	return nil, fmt.Errorf("%w: UUID %s", ErrNotFound, uuid)
 }
 
 func (d *Discoverer) memo(uuid string, e DsymEntry) *DsymEntry {
@@ -166,48 +206,67 @@ func (d *Discoverer) cacheNegative(uuid string) {
 	_ = d.opts.Cache.PutNegativeSeconds(uuid, d.opts.NegCacheTTL)
 }
 
+// isHardToolError decides whether a source's tool error should abort the whole
+// Find chain (true: timeout or ctx cancellation) or just skip to the next
+// source (false: tool missing, binary unreadable, etc.).
+func isHardToolError(ctx context.Context, err error) bool {
+	if err == nil {
+		return false
+	}
+	if IsTimeoutError(err) {
+		return true
+	}
+	return ctx.Err() != nil
+}
+
 // findViaSpotlight queries mdfind for dSYMs indexed with the given UUID.
 // Spotlight is the fastest source when the index is warm.
-func (d *Discoverer) findViaSpotlight(ctx context.Context, uuid, arch string) *DsymEntry {
+func (d *Discoverer) findViaSpotlight(ctx context.Context, uuid, arch string) (*DsymEntry, error) {
 	if d.opts.SkipSpotlight {
-		return nil
+		return nil, nil
 	}
-	// Query format: com_apple_xcode_dsym_uuids == "<UUID>".
 	res, err := ExecRun(ctx, 0, "mdfind", fmt.Sprintf(`com_apple_xcode_dsym_uuids == %q`, uuid))
 	if err != nil {
-		return nil
+		if isHardToolError(ctx, err) {
+			return nil, err
+		}
+		return nil, nil
 	}
 	for _, path := range strings.Split(strings.TrimSpace(string(res.Stdout)), "\n") {
 		path = strings.TrimSpace(path)
 		if path == "" {
 			continue
 		}
-		if entry := matchDsymBundle(ctx, path, uuid, arch); entry != nil {
+		entry, err := matchDsymBundle(ctx, path, uuid, arch)
+		if err != nil {
+			return nil, err
+		}
+		if entry != nil {
 			entry.Source = "spotlight"
-			return entry
+			return entry, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 // findInArchives walks ~/Library/Developer/Xcode/Archives (and user overrides).
-func (d *Discoverer) findInArchives(ctx context.Context, uuid, arch string) *DsymEntry {
+func (d *Discoverer) findInArchives(ctx context.Context, uuid, arch string) (*DsymEntry, error) {
 	return walkRoots(ctx, d.opts.ArchivesPaths, uuid, arch, "archives")
 }
 
 // findInDerivedData walks ~/Library/Developer/Xcode/DerivedData.
-func (d *Discoverer) findInDerivedData(ctx context.Context, uuid, arch string) *DsymEntry {
+func (d *Discoverer) findInDerivedData(ctx context.Context, uuid, arch string) (*DsymEntry, error) {
 	return walkRoots(ctx, d.opts.DerivedDataPaths, uuid, arch, "deriveddata")
 }
 
 // findInDownloads walks ~/Downloads (shallow). Users often drop App Store
 // Connect "dSYMs.zip" extractions here.
-func (d *Discoverer) findInDownloads(ctx context.Context, uuid, arch string) *DsymEntry {
+func (d *Discoverer) findInDownloads(ctx context.Context, uuid, arch string) (*DsymEntry, error) {
 	return walkRoots(ctx, d.opts.DownloadsPaths, uuid, arch, "downloads")
 }
 
 // findInToolchain walks $(xcode-select -p)/Toolchains for system framework dSYMs.
-func (d *Discoverer) findInToolchain(ctx context.Context, uuid, arch string) *DsymEntry {
+func (d *Discoverer) findInToolchain(ctx context.Context, uuid, arch string) (*DsymEntry, error) {
 	paths := d.opts.ToolchainPaths
 	if len(paths) == 0 && !d.opts.SkipDefaults {
 		if res, err := ExecRun(ctx, 0, "xcode-select", "-p"); err == nil {
@@ -223,7 +282,7 @@ func (d *Discoverer) findInToolchain(ctx context.Context, uuid, arch string) *Ds
 // findInFrameworks scans the current working directory (+ any user-provided
 // framework roots) for *.xcframework, Carthage/Build, and Pods — common
 // locations for third-party dSYMs inside an app project checkout.
-func (d *Discoverer) findInFrameworks(ctx context.Context, uuid, arch string) *DsymEntry {
+func (d *Discoverer) findInFrameworks(ctx context.Context, uuid, arch string) (*DsymEntry, error) {
 	roots := append([]string{}, d.opts.FrameworkRoots...)
 	if !d.opts.SkipDefaults {
 		if cwd, err := os.Getwd(); err == nil {
@@ -234,11 +293,16 @@ func (d *Discoverer) findInFrameworks(ctx context.Context, uuid, arch string) *D
 }
 
 // findInEnvPaths walks XCSYM_DSYM_PATHS entries.
-func (d *Discoverer) findInEnvPaths(ctx context.Context, uuid, arch string) *DsymEntry {
+func (d *Discoverer) findInEnvPaths(ctx context.Context, uuid, arch string) (*DsymEntry, error) {
 	return walkRoots(ctx, d.opts.UserPaths, uuid, arch, "env")
 }
 
-func walkRoots(ctx context.Context, roots []string, uuid, arch, source string) *DsymEntry {
+// walkRoots walks the given roots in order, returning the first entry found.
+// A non-nil error aborts the source (never a per-root error that would make
+// a later root unreachable — walkForDsymUUID returns errors only for ctx
+// cancellation and tool timeouts, both of which correctly terminate the
+// whole Find chain).
+func walkRoots(ctx context.Context, roots []string, uuid, arch, source string) (*DsymEntry, error) {
 	for _, root := range roots {
 		if root == "" {
 			continue
@@ -246,24 +310,41 @@ func walkRoots(ctx context.Context, roots []string, uuid, arch, source string) *
 		if _, err := os.Stat(root); err != nil {
 			continue
 		}
-		if entry := walkForDsymUUID(ctx, root, uuid, arch); entry != nil {
+		entry, err := walkForDsymUUID(ctx, root, uuid, arch)
+		if err != nil {
+			return nil, err
+		}
+		if entry != nil {
 			entry.Source = source
-			return entry
+			return entry, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 // walkForDsymUUID walks root looking for any *.dSYM whose DWARF binary
 // contains the requested UUID. When arch is provided, prefers the exact
-// arch slice; if none of the slices match, still returns the entry with
-// its own arch so VerifyImages can classify as mismatch rather than miss.
-func walkForDsymUUID(ctx context.Context, root, uuid, arch string) *DsymEntry {
+// arch slice; if only a different slice exists, still returns the entry so
+// VerifyImages can classify as mismatch rather than miss.
+//
+// Returns an error only for ctx cancellation or tool timeouts — per-dSYM
+// read failures are swallowed so a malformed bundle can't abort the walk.
+func walkForDsymUUID(ctx context.Context, root, uuid, arch string) (*DsymEntry, error) {
 	var match *DsymEntry
 	var mismatch *DsymEntry
+	var walkErr error
 
-	filepath.WalkDir(root, func(path string, dir fs.DirEntry, err error) error {
-		if err != nil || match != nil || ctx.Err() != nil {
+	_ = filepath.WalkDir(root, func(path string, dir fs.DirEntry, err error) error {
+		if walkErr != nil || match != nil {
+			return filepath.SkipAll
+		}
+		if ctx.Err() != nil {
+			walkErr = ctx.Err()
+			return filepath.SkipAll
+		}
+		if err != nil {
+			// Per-dir error (permission denied on one subdir) shouldn't abort
+			// the whole walk — just skip this subtree.
 			return filepath.SkipDir
 		}
 		if !dir.IsDir() {
@@ -272,37 +353,52 @@ func walkForDsymUUID(ctx context.Context, root, uuid, arch string) *DsymEntry {
 		if !strings.HasSuffix(path, ".dSYM") {
 			return nil
 		}
-		if entry := matchDsymBundle(ctx, path, uuid, arch); entry != nil {
-			if arch == "" || entry.Arch == arch {
-				match = entry
-				return filepath.SkipAll
-			}
-			if mismatch == nil {
-				mismatch = entry // remember, but keep looking for an exact arch match
-			}
+		entry, mErr := matchDsymBundle(ctx, path, uuid, arch)
+		if mErr != nil {
+			walkErr = mErr
+			return filepath.SkipAll
+		}
+		if entry == nil {
+			return filepath.SkipDir
+		}
+		if arch == "" || entry.Arch == arch {
+			match = entry
+			return filepath.SkipAll
+		}
+		if mismatch == nil {
+			mismatch = entry
 		}
 		return filepath.SkipDir
 	})
-	if match != nil {
-		return match
+	if walkErr != nil {
+		return nil, walkErr
 	}
-	return mismatch
+	if match != nil {
+		return match, nil
+	}
+	return mismatch, nil
 }
 
 // matchDsymBundle returns a DsymEntry when the dSYM at bundlePath contains
 // the requested UUID. Arch preference: exact match wins; otherwise any slice
 // with the right UUID is returned (caller classifies as mismatch).
-func matchDsymBundle(ctx context.Context, bundlePath, uuid, arch string) *DsymEntry {
+//
+// A malformed or unreadable bundle returns (nil, nil) — caller should move
+// on. Only ctx cancellation / tool timeouts propagate.
+func matchDsymBundle(ctx context.Context, bundlePath, uuid, arch string) (*DsymEntry, error) {
 	dwarf := filepath.Join(bundlePath, "Contents", "Resources", "DWARF")
 	entries, err := os.ReadDir(dwarf)
 	if err != nil {
-		return nil
+		return nil, nil
 	}
 	var fallback *DsymEntry
 	for _, e := range entries {
 		bin := filepath.Join(dwarf, e.Name())
 		uuids, err := ReadUUIDs(ctx, bin)
 		if err != nil {
+			if isHardToolError(ctx, err) {
+				return nil, err
+			}
 			continue
 		}
 		for _, u := range uuids {
@@ -311,12 +407,12 @@ func matchDsymBundle(ctx context.Context, bundlePath, uuid, arch string) *DsymEn
 			}
 			entry := &DsymEntry{UUID: uuid, Path: bundlePath, Arch: u.Arch, ImageName: e.Name()}
 			if arch == "" || u.Arch == arch {
-				return entry
+				return entry, nil
 			}
 			if fallback == nil {
 				fallback = entry
 			}
 		}
 	}
-	return fallback
+	return fallback, nil
 }
