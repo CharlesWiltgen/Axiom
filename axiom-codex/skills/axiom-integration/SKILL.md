@@ -25,6 +25,7 @@ license: MIT
 | Contacts, contact picker | See `skills/contacts.md` |
 | Contacts API reference | See `skills/contacts-ref.md` |
 | Localization, String Catalogs | See `skills/localization.md` |
+| Apple terminology matching, glossary, pseudolocalization, TMS | See `skills/localization-research-ref.md` |
 | Privacy manifests, permissions UX | See `skills/privacy-ux.md` |
 | AlarmKit (iOS 26+) | See `skills/alarmkit-ref.md` |
 | Timer patterns, scheduling | See `skills/timer-patterns.md` |
@@ -67,7 +68,8 @@ digraph integration {
 5. In-app purchases / StoreKit? → `skills/in-app-purchases.md`, `skills/storekit-ref.md`
 6. Calendar / reminders / EventKit? → `skills/eventkit.md`, `skills/eventkit-ref.md`
 7. Contacts / contact picker? → `skills/contacts.md`, `skills/contacts-ref.md`
-8. Localization? → `skills/localization.md`
+8. Localization mechanics (String Catalogs, plurals, RTL)? → `skills/localization.md`
+8a. Localization research (Apple terminology, glossary, pseudolocalization, TMS)? → `skills/localization-research-ref.md`
 9. Privacy / permissions? → `skills/privacy-ux.md`
 10. Alarms (iOS 26+)? → `skills/alarmkit-ref.md`
 11. Timers? → `skills/timer-patterns.md`, `skills/timer-patterns-ref.md`

@@ -97,7 +97,7 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 
 ## Automated Scanning
 
-**Networking audit** → Launch `networking-auditor` agent or `/axiom:audit networking` (deprecated APIs like SCNetworkReachability, CFSocket, NSStream; anti-patterns like reachability checks, hardcoded IPs, missing error handling)
+**Networking audit** → Launch `networking-auditor` agent or `/axiom:audit networking` (deprecated APIs, anti-patterns, and completeness gaps — transition handling, TLS coverage, connection cleanup, framework selection)
 
 ## Anti-Rationalization
 

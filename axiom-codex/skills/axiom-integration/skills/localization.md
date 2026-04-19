@@ -1087,4 +1087,4 @@ After adopting Xcode 26 generated symbols, verify:
 
 **Docs**: /xcode/localization, /xcode/localizing-and-varying-text-with-a-string-catalog
 
-**Skills**: skills/app-intents-ref.md, axiom-design (skills/hig.md), axiom-accessibility
+**Skills**: skills/localization-research-ref.md (Apple terminology matching, glossary, VoiceOver comments, pseudolocalization, TMS), skills/app-intents-ref.md, axiom-design (skills/hig.md), axiom-accessibility

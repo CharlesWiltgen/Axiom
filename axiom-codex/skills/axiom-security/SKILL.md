@@ -167,7 +167,7 @@ digraph security {
 
 ## Automated Scanning
 
-**Security audit** → Launch `security-privacy-scanner` agent (scans for hardcoded credentials, insecure @AppStorage usage, missing Privacy Manifests, ATS violations, sensitive data in logs)
+**Security audit** → Launch `security-privacy-scanner` agent (scans for hardcoded credentials, insecure token storage, Privacy Manifest coverage gaps, ATS violations, missing ATT descriptions, missing export compliance, weak Keychain ACLs, and compound rejection risks; scores posture HARDENED/GAPS/VULNERABLE)
 
 ## Anti-Rationalization
 
