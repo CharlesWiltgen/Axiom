@@ -1,6 +1,6 @@
 # security-privacy-scanner
 
-Scans for security vulnerabilities and privacy compliance issues including hardcoded credentials, insecure storage, and missing Privacy Manifests.
+Automatically scans for security and privacy issues — both known anti-patterns and missing/incomplete patterns that cause App Store rejections, security vulnerabilities, and privacy violations.
 
 ## How to Use This Agent
 
@@ -20,44 +20,42 @@ Scans for security vulnerabilities and privacy compliance issues including hardc
 
 ## What It Does
 
-### Critical (App Store Rejection Risk)
-- **Hardcoded API keys** — AWS keys, OpenAI keys, GitHub tokens in source
-- **Missing Privacy Manifest** — Required since May 2024 for App Store
+Maps your security and privacy posture (Privacy Manifest presence, credential storage pattern, network transport, logging discipline, ATT usage, export compliance), then detects and reasons about:
 
-### High Priority (Security Vulnerabilities)
-- **Insecure token storage** — Auth tokens in @AppStorage/UserDefaults
-- **HTTP URLs (ATS violation)** — Cleartext transmission without HTTPS
+### Critical (App Store Rejection or Credential Exposure)
+- **Hardcoded API keys** — AWS keys, OpenAI keys, GitHub tokens extractable from binary
+- **Missing Privacy Manifest** — Required Reason APIs used without declaration (App Store Connect blocks since May 2024)
+- **ATT API without usage description** — Runtime crash + automatic rejection
+- **Missing usage descriptions** for privacy-sensitive APIs that are actually called (runtime crash)
 
-### Medium Priority (Best Practices)
-- **Sensitive data in logs** — Passwords, tokens in print/Logger statements
-- **Missing SSL pinning** — No certificate pinning for sensitive APIs
+### High (Security Vulnerabilities)
+- **Insecure token storage** — Auth tokens in `@AppStorage`/UserDefaults, backup-extractable
+- **HTTP URLs / ATS violations** — Cleartext credential transit
+- **Sensitive data in logs** — Credentials in sysdiagnose, crash reports, support tooling
+- **Missing Keychain migration path** — Upgrade users still carry plaintext tokens
+- **Third-party SDK manifests missing** — Bundled SDKs without their own PrivacyInfo.xcprivacy
+- **Missing export compliance declaration** — Submission blocked when using CryptoKit/CommonCrypto
 
-## Example Output
+### Medium (Best Practices)
+- **Missing SSL pinning** for sensitive endpoints (payments, health, enterprise)
+- **Weak Keychain ACL** — Tokens with `.kSecAttrAccessibleAlways` or `.AfterFirstUnlock` instead of `.WhenUnlockedThisDeviceOnly`
+- **Unused entitlements** — Expanded attack surface (Keychain sharing, App Groups, iCloud, HealthKit claimed but not used)
+- **Missing snapshot protection** — Task switcher snapshot exposes sensitive screens
+- **Raw user IDs in analytics** — PII sent to third-party services
 
-```markdown
-# Security & Privacy Scan Results
+### Privacy Manifest Coverage
+Cross-references every Required Reason API detected in code against declarations in `PrivacyInfo.xcprivacy` — flags partial coverage that causes rejection.
 
-## Summary
-- **CRITICAL Issues**: 2 (App Store rejection risk)
-- **HIGH Issues**: 3 (Security vulnerabilities)
-- **MEDIUM Issues**: 1 (Best practice violations)
+### Compound Findings
+Findings that intersect carry elevated severity — e.g., hardcoded API key + HTTP endpoint means the key transmits in cleartext; insecure token storage + no Keychain migration path means every upgrade user remains exposed.
 
-## App Store Readiness: NOT READY
-
-### CRITICAL: Missing Privacy Manifest
-- **Status**: PrivacyInfo.xcprivacy NOT FOUND
-- **Required Reason APIs detected**:
-  - `UserDefaults` in `AppConfig.swift:23`
-- **Impact**: Will be rejected by App Store Connect
-
-### CRITICAL: Hardcoded API Key
-- `NetworkManager.swift:23`
-  ```swift
-  let apiKey = "sk-1234..."  // EXPOSED
-  ```
-```
+### Security Posture
+Overall security rating: **HARDENED / GAPS / VULNERABLE** based on credentials, manifest status, token storage, network transport, logging hygiene, ATT compliance, export compliance, and entitlement scope.
 
 ## Related
 
 - [privacy-ux](/reference/privacy-ux) — Privacy-first UX patterns
 - [storage](/reference/storage) — Secure storage patterns including Keychain
+- **iap-auditor** agent — Adjacent receipt-validation security concerns
+- **storage-auditor** agent — Compound with insecure token storage findings
+- **networking-auditor** agent — Compound with HTTP endpoints carrying auth
