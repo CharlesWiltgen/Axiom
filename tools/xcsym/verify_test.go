@@ -94,15 +94,41 @@ func TestVerifyImages_ArchMismatch(t *testing.T) {
 		SkipSpotlight: true,
 		SkipDefaults:  true,
 	})
-	// With an explicit override, the discoverer returns the requested arch as-is.
-	// VerifyImages must compare against what dwarfdump reports on the binary.
 	status, err := VerifyImages(context.Background(), d, raw)
 	if err != nil {
 		t.Fatalf("VerifyImages: %v", err)
 	}
 	if len(status.Mismatched) != 1 {
-		t.Errorf("Mismatched = %+v, want 1 entry (requested %s, binary is %s)",
+		t.Fatalf("Mismatched = %+v, want 1 entry (requested %s, binary is %s)",
 			status.Mismatched, wrongArch, realArch)
+	}
+	if status.Mismatched[0].Kind != MismatchArch {
+		t.Errorf("Mismatched.Kind = %q, want %q", status.Mismatched[0].Kind, MismatchArch)
+	}
+}
+
+func TestVerifyImages_UUIDMismatch(t *testing.T) {
+	// Explicit --dsym points at /bin/ls, but the crash references a different UUID.
+	if _, err := exec.LookPath("xcrun"); err != nil {
+		t.Skip("xcrun not available")
+	}
+	raw := &RawCrash{
+		UsedImages: []UsedImage{{UUID: "00000000-0000-0000-0000-000000000000", Name: "ls", Path: "/bin/ls", Arch: "arm64"}},
+	}
+	d := NewDiscoverer(DiscovererOptions{
+		Explicit:      "/bin/ls",
+		SkipSpotlight: true,
+		SkipDefaults:  true,
+	})
+	status, err := VerifyImages(context.Background(), d, raw)
+	if err != nil {
+		t.Fatalf("VerifyImages: %v", err)
+	}
+	if len(status.Mismatched) != 1 {
+		t.Fatalf("Mismatched = %+v, want 1 entry", status.Mismatched)
+	}
+	if status.Mismatched[0].Kind != MismatchUUID {
+		t.Errorf("Mismatched.Kind = %q, want %q", status.Mismatched[0].Kind, MismatchUUID)
 	}
 }
 
@@ -114,10 +140,22 @@ func TestStatusCategory(t *testing.T) {
 	}{
 		{"empty", ImageStatus{}, "all_matched"},
 		{"all matched", ImageStatus{Matched: []ImageMatch{{UUID: "A"}}}, "all_matched"},
-		{"mismatch only", ImageStatus{Mismatched: []ImageMatch{{UUID: "A"}}}, "mismatch"},
-		{"miss + match", ImageStatus{
-			Matched: []ImageMatch{{UUID: "A"}},
-			Missing: []ImageMiss{{UUID: "B"}},
+		{"uuid mismatch", ImageStatus{
+			Mismatched: []ImageMatch{{UUID: "A", Kind: MismatchUUID}},
+		}, "mismatch_uuid"},
+		{"arch mismatch", ImageStatus{
+			Mismatched: []ImageMatch{{UUID: "A", Kind: MismatchArch}},
+		}, "mismatch_arch"},
+		{"uuid wins over arch", ImageStatus{
+			Mismatched: []ImageMatch{
+				{UUID: "A", Kind: MismatchArch},
+				{UUID: "B", Kind: MismatchUUID},
+			},
+		}, "mismatch_uuid"},
+		{"miss beats mismatch", ImageStatus{
+			Matched:    []ImageMatch{{UUID: "A"}},
+			Mismatched: []ImageMatch{{UUID: "B", Kind: MismatchUUID}},
+			Missing:    []ImageMiss{{UUID: "C"}},
 		}, "partial"},
 		{"all missing", ImageStatus{Missing: []ImageMiss{{UUID: "B"}}}, "partial"},
 	}

@@ -100,6 +100,10 @@ type ImageMatch struct {
 	Name     string `json:"name"`
 	Arch     string `json:"arch"`
 	DsymPath string `json:"dsym_path"`
+	// Kind differentiates Mismatched reasons: "uuid" (the discovered dSYM's
+	// UUID doesn't line up) or "arch" (right UUID, wrong slice). Empty on
+	// Matched entries.
+	Kind string `json:"kind,omitempty"`
 }
 
 type ImageMiss struct {
