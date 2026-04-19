@@ -444,6 +444,7 @@ export default withMermaid(defineConfig({
             { text: 'Foundation Models', link: '/reference/foundation-models-ref' },
             { text: 'Haptics & Audio Feedback', link: '/reference/haptics' },
             { text: 'Localization & Internationalization', link: '/reference/localization' },
+            { text: 'Localization Research & Consistency', link: '/reference/localization-research-ref' },
             { text: 'Network.framework API', link: '/reference/network-framework-ref' },
             { text: 'Networking Migration', link: '/reference/networking-migration' },
             { text: 'Background Processing API', link: '/reference/background-processing-ref' },
