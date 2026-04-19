@@ -21,12 +21,13 @@ type verifyOutput struct {
 
 // runVerify implements `xcsym verify <file>`. Returns the intended exit code.
 //
-// Exit codes:
+// Exit codes (see docs/xcsym-design.md):
 //
 //	0 all_matched
 //	1 usage error
 //	2 input not found / unreadable / unsupported format
-//	3 any mismatched images
+//	3 any image has a UUID mismatch with its dSYM (explicit override only)
+//	4 any image has an arch-slice mismatch with its dSYM
 //	5 tool/discovery error
 //	6 command timeout
 //	7 any missing images (with or without matches)
@@ -103,8 +104,10 @@ func runVerify(out io.Writer, args []string) int {
 	}
 
 	switch result.Category {
-	case "mismatch":
+	case "mismatch_uuid":
 		return 3
+	case "mismatch_arch":
+		return 4
 	case "partial":
 		return 7
 	}
