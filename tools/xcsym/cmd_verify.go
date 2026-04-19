@@ -15,7 +15,7 @@ type verifyOutput struct {
 	Tool     string      `json:"tool"`
 	Version  string      `json:"version"`
 	Input    InputInfo   `json:"input"`
-	Category string      `json:"category"` // all_matched | mismatch | partial
+	Category string      `json:"category"` // all_matched | mismatch_uuid | mismatch_arch | partial
 	Images   ImageStatus `json:"images"`
 }
 
