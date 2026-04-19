@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 )
@@ -13,21 +12,21 @@ const (
 	FormatUnknown   = "unknown"
 )
 
-// DetectFormat inspects the first few KB of a crash file to determine format.
-// v2: first line is small JSON header, second line is large JSON payload.
+// DetectFormat inspects crash data to determine its format.
+// v2: first line is small JSON header (app_name, timestamp), second line is large JSON payload.
 // v1: single JSON blob containing "bug_type" and "usedImages" at top level.
-// metrickit: top-level keys include "callStackTree" and "exceptionType" (not a string).
+// metrickit: top-level keys include "callStackTree" and "exceptionType".
 func DetectFormat(data []byte) string {
 	if !isLikelyJSON(data) {
 		return FormatUnknown
 	}
 
-	// Try v2: header line + payload line
-	sc := bufio.NewScanner(bytes.NewReader(data))
-	sc.Buffer(make([]byte, 0, 1<<20), 8<<20)
-	if sc.Scan() {
-		first := sc.Bytes()
-		if isIPSv2Header(first) && sc.Scan() {
+	// Try v2 first: split on first newline, check if the header half parses as an IPS v2 header.
+	// bytes.IndexByte has no size cap, so payloads of any size work.
+	if idx := bytes.IndexByte(data, '\n'); idx > 0 {
+		first := bytes.TrimSpace(data[:idx])
+		rest := bytes.TrimSpace(data[idx+1:])
+		if len(rest) > 0 && isIPSv2Header(first) {
 			return FormatIPSv2
 		}
 	}

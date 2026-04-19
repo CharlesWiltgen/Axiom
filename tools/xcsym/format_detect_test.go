@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 func TestDetectFormat(t *testing.T) {
 	cases := []struct {
@@ -21,5 +24,19 @@ func TestDetectFormat(t *testing.T) {
 				t.Errorf("DetectFormat got %q, want %q", got, c.want)
 			}
 		})
+	}
+}
+
+// Real .ips v2 payloads on image-heavy apps can exceed the 8MB bufio.Scanner
+// default. A valid v2 file must classify regardless of payload size.
+func TestDetectFormatLargeV2Payload(t *testing.T) {
+	header := []byte(`{"app_name":"BigApp","timestamp":"2026-04-19"}` + "\n")
+	// 10MB payload — enough to defeat any reasonable scanner buffer cap.
+	payload := []byte(`{"exception":{"type":"EXC_BAD_ACCESS"},"filler":"`)
+	payload = append(payload, bytes.Repeat([]byte("x"), 10*1024*1024)...)
+	payload = append(payload, []byte(`"}`)...)
+	data := append(header, payload...)
+	if got := DetectFormat(data); got != FormatIPSv2 {
+		t.Errorf("large v2 payload misclassified: got %q, want %q", got, FormatIPSv2)
 	}
 }
