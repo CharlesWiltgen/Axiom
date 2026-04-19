@@ -30,7 +30,9 @@ func main() {
 	switch os.Args[1] {
 	case "resolve":
 		os.Exit(runResolve(os.Stdout, os.Args[2:]))
-	case "crash", "find-dsym", "list-dsyms", "verify", "anonymize":
+	case "verify":
+		os.Exit(runVerify(os.Stdout, os.Args[2:]))
+	case "crash", "find-dsym", "list-dsyms", "anonymize":
 		fmt.Fprintf(os.Stderr, "not implemented yet: %s\n", os.Args[1])
 		os.Exit(1)
 	case "--version", "-v":
