@@ -64,7 +64,7 @@ type Exception struct {
 type Termination struct {
 	Namespace string  `json:"namespace"`
 	Code      string  `json:"code"`
-	Reason    *string `json:"reason"`
+	Reason    *string `json:"reason,omitempty"`
 }
 
 type Thread struct {
