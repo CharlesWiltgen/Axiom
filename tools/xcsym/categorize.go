@@ -39,6 +39,24 @@ var rules = []Rule{
 			return false, ""
 		},
 	},
+	{
+		ID: "R-swift-conc-01", Tag: "swift_concurrency_violation", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if c.Exception.Type != "EXC_BREAKPOINT" {
+				return false, ""
+			}
+			for _, needle := range []string{
+				"_dispatch_assert_queue_fail",
+				"_swift_task_isCurrentExecutor",
+				"swift_task_reportUnexpectedExecutor",
+			} {
+				if strings.Contains(c.Exception.Subtype, needle) {
+					return true, "exception.subtype contains concurrency sentinel " + needle
+				}
+			}
+			return false, ""
+		},
+	},
 }
 
 // Categorize walks the rule list and returns the first match. On no match it

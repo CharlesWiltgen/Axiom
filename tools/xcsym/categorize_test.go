@@ -71,6 +71,45 @@ func TestCategorize_R_swift_unwrap_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-swift-conc-01 ----------------------------------------------------
+
+func TestCategorize_R_swift_conc_01_Positive(t *testing.T) {
+	raw := &RawCrash{
+		Exception: Exception{
+			Type:    "EXC_BREAKPOINT",
+			Codes:   "0x1",
+			Subtype: "Swift runtime failure: _swift_task_isCurrentExecutor expected current executor",
+		},
+	}
+	res := Categorize(raw)
+	if res.RuleID != "R-swift-conc-01" {
+		t.Errorf("rule_id = %q, want R-swift-conc-01", res.RuleID)
+	}
+	if res.Tag != "swift_concurrency_violation" {
+		t.Errorf("tag = %q, want swift_concurrency_violation", res.Tag)
+	}
+	if res.Confidence != "high" {
+		t.Errorf("confidence = %q, want high", res.Confidence)
+	}
+}
+
+func TestCategorize_R_swift_conc_01_Negative(t *testing.T) {
+	// Near miss: EXC_BREAKPOINT with a forced-unwrap subtype must not be
+	// mis-classified as a concurrency violation (and the ordering must keep
+	// swift-unwrap-01 as the winning rule).
+	raw := &RawCrash{
+		Exception: Exception{
+			Type:    "EXC_BREAKPOINT",
+			Codes:   "0x1",
+			Subtype: "Swift runtime failure: unexpectedly found nil while unwrapping an Optional value",
+		},
+	}
+	res := Categorize(raw)
+	if res.RuleID == "R-swift-conc-01" {
+		t.Errorf("must not fire swift_concurrency_violation on forced-unwrap subtype; got %q", res.Tag)
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -100,6 +139,7 @@ type ruleCoverage struct{ positive, negative bool }
 // relying on test runner ordering.
 var coverageRegistry = map[string]ruleCoverage{
 	"R-swift-unwrap-01": {positive: true, negative: true},
+	"R-swift-conc-01":   {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
