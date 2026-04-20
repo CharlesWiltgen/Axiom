@@ -410,21 +410,6 @@ func hasAnyFrameSymbolAllThreads(c *RawCrash, subs []string) string {
 	return ""
 }
 
-// hasAnyFrameImageAllThreads is the Image equivalent of
-// hasAnyFrameSymbolAllThreads.
-func hasAnyFrameImageAllThreads(c *RawCrash, subs []string) string {
-	for _, t := range c.Threads {
-		for _, f := range t.Frames {
-			for _, sub := range subs {
-				if strings.Contains(f.Image, sub) {
-					return sub
-				}
-			}
-		}
-	}
-	return ""
-}
-
 // eqFoldAny returns true if s case-insensitively equals any of options.
 func eqFoldAny(s string, options ...string) bool {
 	for _, o := range options {
