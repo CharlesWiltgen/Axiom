@@ -413,6 +413,47 @@ func TestCategorize_R_mtc_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-abort-01 ---------------------------------------------------------
+
+func TestCategorize_R_abort_01_Positive(t *testing.T) {
+	raw := &RawCrash{
+		Exception: Exception{Type: "EXC_CRASH", Signal: "SIGABRT"},
+		Threads: []Thread{{
+			Index: 0, Triggered: true,
+			Frames: []Frame{
+				{Index: 0, Image: "libsystem_kernel", Symbol: "__pthread_kill"},
+				{Index: 1, Image: "libsystem_platform", Symbol: "_sigtramp"},
+				{Index: 2, Image: "libsystem_c", Symbol: "__abort_with_payload"},
+				{Index: 3, Image: "MyApp", Symbol: "assertion_failed"},
+			},
+		}},
+	}
+	res := Categorize(raw)
+	if res.RuleID != "R-abort-01" {
+		t.Errorf("rule_id = %q, want R-abort-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_abort_01_Negative_ObjCExcPresent(t *testing.T) {
+	// Near miss: SIGABRT with objc_exception_throw — must be classified as
+	// objc_exception, not abort.
+	raw := &RawCrash{
+		Exception: Exception{Type: "EXC_CRASH", Signal: "SIGABRT"},
+		Threads: []Thread{{
+			Index: 0, Triggered: true,
+			Frames: []Frame{
+				{Index: 0, Image: "libsystem_kernel", Symbol: "__pthread_kill"},
+				{Index: 1, Image: "libobjc.A.dylib", Symbol: "objc_exception_throw"},
+				{Index: 2, Image: "libsystem_c", Symbol: "abort"},
+			},
+		}},
+	}
+	res := Categorize(raw)
+	if res.RuleID == "R-abort-01" {
+		t.Errorf("must not fire abort when objc_exception_throw is present")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -451,6 +492,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-exc-guard-01":      {positive: true, negative: true},
 	"R-objc-exc-01":       {positive: true, negative: true},
 	"R-mtc-01":            {positive: true, negative: true},
+	"R-abort-01":          {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
