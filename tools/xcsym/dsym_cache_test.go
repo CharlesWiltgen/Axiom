@@ -189,6 +189,64 @@ func TestCache_VersionMismatchDropsCache(t *testing.T) {
 	}
 }
 
+// TestCache_FutureVersionEnvelopeClobberedOnPut documents the existing
+// version-clobber policy (axiom-lub #1): when an older xcsym binary
+// encounters a future-version envelope on disk, the next Put rewrites the
+// file as v1 and the future entries do NOT survive. This is intentional —
+// the older binary can't safely deserialize a schema it doesn't understand,
+// so it drops and rebuilds. The newer xcsym's entries are lost, which costs
+// at most one Find per UUID to repopulate.
+//
+// This test guards the policy. A future refactor that switches to "refuse
+// to write when disk version > ours" (preserving the future binary's data
+// at the cost of an unwritable cache for the older binary) would break this
+// test loudly, forcing a deliberate decision about the trade-off.
+func TestCache_FutureVersionEnvelopeClobberedOnPut(t *testing.T) {
+	dir := t.TempDir()
+	future := cacheFileV1{Version: 99, Entries: []CacheEntry{
+		{UUID: "FUTURE-0000-0000-0000-000000000099", Path: "/x", Arch: "arm64", ImageName: "FromFuture", MTime: 42},
+	}}
+	data, _ := json.Marshal(future)
+	if err := os.WriteFile(filepath.Join(dir, "uuid-index.json"), data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	tmpFile := filepath.Join(dir, "bin")
+	if err := os.WriteFile(tmpFile, []byte("v"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	info, _ := os.Stat(tmpFile)
+
+	c := NewCache(dir)
+	if err := c.Put(CacheEntry{UUID: "NEW-FROM-OLD-BINARY", Path: tmpFile, MTime: info.ModTime().Unix()}); err != nil {
+		t.Fatal(err)
+	}
+
+	raw, err := os.ReadFile(filepath.Join(dir, "uuid-index.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var env cacheFileV1
+	if err := json.Unmarshal(raw, &env); err != nil {
+		t.Fatalf("rewritten cache should parse as cacheFileV1: %v", err)
+	}
+	if env.Version != cacheSchemaVersion {
+		t.Errorf("rewritten envelope Version = %d, want %d (older binary should clobber the future version)", env.Version, cacheSchemaVersion)
+	}
+	if len(env.Entries) != 1 {
+		t.Fatalf("rewritten envelope has %d entries, want 1 (future entries must not survive)", len(env.Entries))
+	}
+	got := env.Entries[0]
+	if got.UUID != NormalizeUUID("NEW-FROM-OLD-BINARY") {
+		t.Errorf("surviving entry UUID = %q, want %q (only the new Put should appear)", got.UUID, NormalizeUUID("NEW-FROM-OLD-BINARY"))
+	}
+	for _, e := range env.Entries {
+		if e.ImageName == "FromFuture" {
+			t.Errorf("future-version entry %q survived the rewrite — clobber policy regressed", e.UUID)
+		}
+	}
+}
+
 // TestCache_ConcurrentPutPreservesAllEntries guards the fix for bead
 // axiom-jtz (C3): two xcsym processes racing on the same cache must not
 // lose one another's entries. The previous code did an in-memory mutate
