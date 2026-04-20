@@ -57,6 +57,57 @@ var rules = []Rule{
 			return false, ""
 		},
 	},
+	{
+		ID: "R-swift-fatal-01", Tag: "swift_fatal_error", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if c.Exception.Type != "EXC_BREAKPOINT" {
+				return false, ""
+			}
+			if !strings.HasPrefix(c.Exception.Subtype, "Swift runtime failure:") {
+				return false, ""
+			}
+			sentinels := []string{"_assertionFailure", "_fatalError", "_preconditionFailure"}
+			if hit := hasAnyCrashedFrameSymbol(c, sentinels, 8); hit != "" {
+				return true, "crashed-thread frame matches Swift runtime sentinel " + hit
+			}
+			return false, ""
+		},
+	},
+}
+
+// hasCrashedFrameSymbol reports whether any of the crashed thread's first n
+// frames has a symbol containing sub. If n <= 0 the whole thread is scanned.
+// Real Swift runtime crashes commonly bury the informative symbol a few
+// frames down from the OS-level trap, so rules scan a small window rather
+// than only frame 0.
+func hasCrashedFrameSymbol(c *RawCrash, sub string, n int) bool {
+	if c.CrashedIdx < 0 || c.CrashedIdx >= len(c.Threads) {
+		return false
+	}
+	frames := c.Threads[c.CrashedIdx].Frames
+	limit := len(frames)
+	if n > 0 && n < limit {
+		limit = n
+	}
+	for i := 0; i < limit; i++ {
+		if strings.Contains(frames[i].Symbol, sub) {
+			return true
+		}
+	}
+	return false
+}
+
+// hasAnyCrashedFrameSymbol returns the first substring that any of the top n
+// crashed-thread frames contains, or "" if none match. Useful for rules that
+// accept several sentinel symbols and want to quote the one that fired in
+// Reason.
+func hasAnyCrashedFrameSymbol(c *RawCrash, subs []string, n int) string {
+	for _, sub := range subs {
+		if hasCrashedFrameSymbol(c, sub, n) {
+			return sub
+		}
+	}
+	return ""
 }
 
 // Categorize walks the rule list and returns the first match. On no match it
