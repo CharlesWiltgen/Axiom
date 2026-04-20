@@ -104,8 +104,13 @@ func runCrash(out io.Writer, args []string) int {
 	}
 	raw.Format = detected // make sure Format field agrees with detect outcome
 
-	// Reject non-fatal EXC_RESOURCE early — this tool can't triage warnings.
-	if reason := nonFatalResourceReason(raw); reason != "" {
+	// Categorize once, up front. The non-fatal-resource gate needs to know
+	// whether R-swiftui-loop-01 fires, and the formatter needs the result
+	// downstream — double-categorization is wasted work on deep full-tier
+	// payloads.
+	cat := Categorize(raw)
+
+	if reason := nonFatalResourceReason(raw, cat); reason != "" {
 		return writeReject(out, *outputPath, crashRejectPayload{
 			Tool: "xcsym", Version: version,
 			Error:   "non_fatal_resource",
@@ -146,9 +151,6 @@ func runCrash(out io.Writer, args []string) int {
 		SymbolicateForTier(ctx, raw, status, d, tier)
 	}
 
-	// Categorize.
-	cat := Categorize(raw)
-
 	// Environment snapshot. Best-effort — a failure here isn't worth blocking
 	// the whole report (the user might be on a system without Xcode).
 	env, _ := CaptureEnvironment(ctx)
@@ -184,16 +186,16 @@ func parseByFormat(data []byte, format string) (*RawCrash, error) {
 // nonFatalResourceReason returns a human-readable reason when the crash is a
 // non-fatal EXC_RESOURCE warning (CPU usage warnings, wakeups warnings).
 // Returns "" when the crash is a real crash that should flow through the
-// pipeline. We intentionally don't reject SwiftUI update-loop reports here —
-// those hit R-swiftui-loop-01 via categorize and produce useful output.
-func nonFatalResourceReason(raw *RawCrash) string {
+// pipeline. Takes a pre-computed CategorizeResult so the caller's existing
+// categorize pass is reused rather than re-run.
+func nonFatalResourceReason(raw *RawCrash, cat CategorizeResult) string {
 	if raw.Exception.Type != "EXC_RESOURCE" {
 		return ""
 	}
 	sub := raw.Exception.Subtype
 	// The SwiftUI loop rule fires on (CPU WARNING) reports too. Let those
 	// through so the user sees the loop diagnosis.
-	if Categorize(raw).RuleID == "R-swiftui-loop-01" {
+	if cat.RuleID == "R-swiftui-loop-01" {
 		return ""
 	}
 	// FATAL and NON-FATAL spellings — reject NON-FATAL, let FATAL flow through
@@ -208,26 +210,25 @@ func nonFatalResourceReason(raw *RawCrash) string {
 }
 
 // crashExitCode computes the process exit code from image-match outcomes.
-// Main binary = the first used image (or the one whose name matches the
-// app name). See plan Phase 8 Task 32 for the exact table.
+// Main binary = the first used image (UUID is the correlation key — name
+// can differ between app_name header field and actual bundle binary name,
+// so name-matching would silently drop mains whose display name and
+// binary name diverge). See plan Phase 8 Task 32 for the exit-code table.
 func crashExitCode(raw *RawCrash, status ImageStatus) int {
 	if len(raw.UsedImages) == 0 {
 		return 0
 	}
-	mainName := raw.App.Name
-	if mainName == "" {
-		mainName = raw.UsedImages[0].Name
-	}
+	mainUUID := raw.UsedImages[0].UUID
 
 	var mainMatched, mainMissing bool
 	for _, m := range status.Matched {
-		if m.Name == mainName {
+		if m.UUID == mainUUID {
 			mainMatched = true
 			break
 		}
 	}
 	for _, m := range status.Missing {
-		if m.Name == mainName {
+		if m.UUID == mainUUID {
 			mainMissing = true
 			break
 		}
@@ -238,7 +239,7 @@ func crashExitCode(raw *RawCrash, status ImageStatus) int {
 
 	// Main mismatches take priority over other-image mismatches.
 	for _, m := range status.Mismatched {
-		if m.Name == mainName {
+		if m.UUID == mainUUID {
 			if m.Kind == MismatchArch {
 				return 4
 			}

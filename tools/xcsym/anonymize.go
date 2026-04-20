@@ -132,10 +132,14 @@ func anonymizeIPSv2(data []byte) ([]byte, error) {
 	if err := json.Unmarshal(payload, &payloadDoc); err != nil {
 		return nil, fmt.Errorf("anonymize ips v2 payload: %w", err)
 	}
-	// Preserved UUIDs live in the payload's usedImages. Collect once then
-	// apply the same set to both halves so a header field referencing a
-	// dSYM UUID (rare but possible) isn't incorrectly redacted.
+	// Preserved UUIDs live in the payload's usedImages AND in the v2
+	// header's slice_uuid field (same UUID as one of usedImages, but the
+	// header walk needs its own visit to discover it). Collect from both
+	// then apply the merged set to both halves.
 	preserve := collectPreservedUUIDs(payloadDoc)
+	for k := range collectPreservedUUIDs(headerDoc) {
+		preserve[k] = true
+	}
 	anonymizeTree(headerDoc, preserve)
 	anonymizeTree(payloadDoc, preserve)
 
@@ -178,11 +182,14 @@ func collectPreservedUUIDs(doc any) map[string]bool {
 func walkForUUIDs(v any, out map[string]bool) {
 	switch vv := v.(type) {
 	case map[string]any:
-		if u, ok := vv["uuid"].(string); ok && uuidRE.MatchString(u) {
-			out[strings.ToUpper(u)] = true
-		}
-		if u, ok := vv["binaryUUID"].(string); ok && uuidRE.MatchString(u) {
-			out[strings.ToUpper(u)] = true
+		// Only a small set of key names are legitimate dSYM UUID carriers.
+		// Using a whitelist (vs. matching any key literally named "uuid")
+		// keeps an accidentally-named nested field from smuggling an
+		// unrelated UUID through the scrubber.
+		for _, key := range []string{"uuid", "binaryUUID", "slice_uuid"} {
+			if u, ok := vv[key].(string); ok && uuidRE.MatchString(u) {
+				out[strings.ToUpper(u)] = true
+			}
 		}
 		for _, sub := range vv {
 			walkForUUIDs(sub, out)

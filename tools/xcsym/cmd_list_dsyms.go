@@ -133,8 +133,14 @@ func scanDsymBundles(ctx context.Context, roots []string, source string) ([]dsym
 				return ctx.Err()
 			}
 			if err != nil {
-				// Permission denied on one subdir — skip it, keep walking.
-				return filepath.SkipDir
+				// Returning SkipDir on a non-dir file skips REMAINING SIBLINGS
+				// in the parent (per filepath.WalkDir contract) — not what we
+				// want on a stray unreadable entry. Only skip subtree when
+				// we're actually at a directory.
+				if dir != nil && dir.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
 			}
 			if !dir.IsDir() || !strings.HasSuffix(path, ".dSYM") {
 				return nil

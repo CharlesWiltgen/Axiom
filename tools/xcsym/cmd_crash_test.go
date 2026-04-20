@@ -148,16 +148,21 @@ func TestRunCrash_EndToEnd_WithLsBinary(t *testing.T) {
 
 func TestRunCrash_OutputFileFlag(t *testing.T) {
 	// Verify --output writes to disk instead of stdout and doesn't duplicate
-	// to stdout. Uses the existing swift_forced_unwrap fixture for simplicity;
-	// the app binary won't resolve, so exit code will be non-zero, but that
-	// isn't what we're testing — we're testing I/O routing.
+	// to stdout. Uses the existing swift_forced_unwrap fixture; its main
+	// dSYM UUID (AABBCCDD-…) isn't on any CI system so verify should return
+	// "Missing" and crashExitCode should choose 2 (main binary missing).
+	// Asserting the exit code catches regressions that might silently flip
+	// to 8 (write error) while the payload still lands on disk.
 	outPath := filepath.Join(t.TempDir(), "report.json")
 	var buf bytes.Buffer
-	_ = runCrash(&buf, []string{
+	code := runCrash(&buf, []string{
 		"--no-cache", "--no-spotlight", "--no-symbolicate",
 		"--output", outPath,
 		"testdata/crashes/ips_v2/swift_forced_unwrap.ips",
 	})
+	if code != 2 {
+		t.Errorf("expected exit 2 (main binary missing), got %d", code)
+	}
 	// stdout should be empty (payload went to file).
 	if buf.Len() != 0 {
 		t.Errorf("stdout should be empty when --output set, got %q", buf.String())
@@ -168,6 +173,14 @@ func TestRunCrash_OutputFileFlag(t *testing.T) {
 	}
 	if !bytes.Contains(data, []byte("R-swift-unwrap-01")) {
 		t.Errorf("output file missing pattern_rule_id:\n%s", string(data))
+	}
+	// Re-parse the emitted JSON to guard against malformed output.
+	var rep CrashReport
+	if err := json.Unmarshal(data, &rep); err != nil {
+		t.Fatalf("output file not valid CrashReport JSON: %v", err)
+	}
+	if rep.Crash.PatternRuleID != "R-swift-unwrap-01" {
+		t.Errorf("pattern_rule_id = %q", rep.Crash.PatternRuleID)
 	}
 }
 

@@ -85,9 +85,18 @@ func TestRoundTripEquivalence(t *testing.T) {
 			}
 			// Tag must match too. Reason text is format-dependent (the
 			// rule quotes which substring matched, and the subtype wording
-			// may differ), so we don't compare it.
+			// may differ), so we don't compare it verbatim — but both
+			// paths MUST produce a non-empty Reason. A silent regression
+			// where one format emits "" while the other doesn't would
+			// give users a diagnosis with no evidence attached.
 			if ipsRes.Tag != mkRes.Tag {
 				t.Errorf("tag divergence: .ips=%q, metrickit=%q", ipsRes.Tag, mkRes.Tag)
+			}
+			if ipsRes.Reason == "" {
+				t.Errorf(".ips rule %q fired with empty Reason (user loses diagnosis context)", ipsRes.RuleID)
+			}
+			if mkRes.Reason == "" {
+				t.Errorf("metrickit rule %q fired with empty Reason", mkRes.RuleID)
 			}
 		})
 	}
