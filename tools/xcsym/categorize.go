@@ -144,6 +144,19 @@ var rules = []Rule{
 			return false, ""
 		},
 	},
+	{
+		ID: "R-bad-access-01", Tag: "bad_memory_access", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if c.Exception.Type != "EXC_BAD_ACCESS" {
+				return false, ""
+			}
+			blob := c.Exception.Codes + " " + c.Exception.Subtype
+			if !strings.Contains(blob, "KERN_INVALID_ADDRESS") {
+				return false, ""
+			}
+			return true, "EXC_BAD_ACCESS with KERN_INVALID_ADDRESS"
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n
