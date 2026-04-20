@@ -215,6 +215,18 @@ var rules = []Rule{
 			return false, ""
 		},
 	},
+	{
+		ID: "R-watchdog-01", Tag: "watchdog_termination", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if !eqFoldAny(c.Termination.Namespace, "FRONTBOARD", "SPRINGBOARD", "ASSERTIOND") {
+				return false, ""
+			}
+			if !strings.EqualFold(c.Termination.Code, "0x8BADF00D") {
+				return false, ""
+			}
+			return true, "termination.namespace=" + c.Termination.Namespace + " with code 0x8BADF00D (watchdog)"
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n
@@ -305,6 +317,16 @@ func hasAnyFrameImageAllThreads(c *RawCrash, subs []string) string {
 		}
 	}
 	return ""
+}
+
+// eqFoldAny returns true if s case-insensitively equals any of options.
+func eqFoldAny(s string, options ...string) bool {
+	for _, o := range options {
+		if strings.EqualFold(s, o) {
+			return true
+		}
+	}
+	return false
 }
 
 // Categorize walks the rule list and returns the first match. On no match it
