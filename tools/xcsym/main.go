@@ -34,7 +34,11 @@ func main() {
 		os.Exit(runVerify(os.Stdout, os.Args[2:]))
 	case "crash":
 		os.Exit(runCrash(os.Stdout, os.Args[2:]))
-	case "find-dsym", "list-dsyms", "anonymize":
+	case "find-dsym":
+		os.Exit(runFindDsym(os.Stdout, os.Args[2:]))
+	case "list-dsyms":
+		os.Exit(runListDsyms(os.Stdout, os.Args[2:]))
+	case "anonymize":
 		fmt.Fprintf(os.Stderr, "not implemented yet: %s\n", os.Args[1])
 		os.Exit(1)
 	case "--version", "-v":
