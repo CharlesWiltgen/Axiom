@@ -181,6 +181,103 @@ func TestFormat_Standard_OtherThreadsBudget(t *testing.T) {
 	}
 }
 
+func TestFormat_Summary_BasicShape(t *testing.T) {
+	raw, cat, images, env, input := buildStdFixture(t)
+	rep, err := Format(raw, images, env, input, cat, TierSummary)
+	if err != nil {
+		t.Fatalf("Format: %v", err)
+	}
+	if rep.Format != TierSummary {
+		t.Errorf("format = %q, want summary", rep.Format)
+	}
+	// ImagesSummary present, Images absent.
+	if rep.Images != nil {
+		t.Error("summary tier: Images must be nil")
+	}
+	if rep.ImagesSummary == nil {
+		t.Fatal("summary tier: ImagesSummary must be populated")
+	}
+	if rep.ImagesSummary.MatchedCount != 1 {
+		t.Errorf("matched_count = %d, want 1", rep.ImagesSummary.MatchedCount)
+	}
+	// Environment stripped to CLTVersionShort only.
+	if rep.Environment.CLTVersionShort != "Xcode 16.0" {
+		t.Errorf("clt_version_short = %q, want Xcode 16.0", rep.Environment.CLTVersionShort)
+	}
+	if rep.Environment.XcodePath != "" || rep.Environment.AtosVersion != "" {
+		t.Errorf("summary tier environment should be stripped, got %+v", rep.Environment)
+	}
+	// Crashed thread: frames capped at summaryCrashedFrames (5).
+	// Our fixture only has 2 frames so cap isn't triggered — verified
+	// separately below.
+	if len(rep.Crash.CrashedThread.Frames) != 2 {
+		t.Errorf("crashed frames (fixture) = %d, want 2", len(rep.Crash.CrashedThread.Frames))
+	}
+	// No other-threads, no all_threads on summary.
+	if len(rep.Crash.OtherThreadsTopFrames) != 0 {
+		t.Errorf("summary tier: other_threads_top_frames must be empty, got %d", len(rep.Crash.OtherThreadsTopFrames))
+	}
+	if rep.Crash.AllThreads != nil {
+		t.Error("summary tier: all_threads must be nil")
+	}
+	if rep.Crash.PatternRuleID != "R-swift-unwrap-01" {
+		t.Errorf("pattern_rule_id = %q, want R-swift-unwrap-01", rep.Crash.PatternRuleID)
+	}
+}
+
+func TestFormat_Summary_CrashedThreadFrameCap(t *testing.T) {
+	// Build a crashed thread with 20 frames. Summary must cap at 5.
+	frames := make([]Frame, 20)
+	for i := range frames {
+		frames[i] = Frame{Index: i, Image: "MyApp", Symbol: "frame"}
+	}
+	raw := &RawCrash{
+		Threads:    []Thread{{Index: 0, Triggered: true, Frames: frames}},
+		UsedImages: []UsedImage{{UUID: "AAAA", Name: "MyApp"}},
+		CrashedIdx: 0,
+	}
+	rep, err := Format(raw, ImageStatus{}, Environment{}, InputInfo{}, CategorizeResult{}, TierSummary)
+	if err != nil {
+		t.Fatalf("Format: %v", err)
+	}
+	if len(rep.Crash.CrashedThread.Frames) != summaryCrashedFrames {
+		t.Errorf("summary crashed frames = %d, want %d",
+			len(rep.Crash.CrashedThread.Frames), summaryCrashedFrames)
+	}
+}
+
+func TestFormat_Summary_SizeBudget(t *testing.T) {
+	raw, cat, images, env, input := buildStdFixture(t)
+	rep, err := Format(raw, images, env, input, cat, TierSummary)
+	if err != nil {
+		t.Fatalf("Format: %v", err)
+	}
+	buf, err := json.Marshal(rep)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	const budget = 2 * 1024
+	if len(buf) > budget {
+		t.Errorf("summary size = %d bytes, exceeds %d-byte budget:\n%s",
+			len(buf), budget, string(buf))
+	}
+}
+
+func TestFormat_Summary_FallbackCLTShort(t *testing.T) {
+	// When CLTVersionShort is empty, summary falls back to the full
+	// CLTVersion string. Lets callers skip computing a shorthand if
+	// they don't have one handy.
+	env := Environment{CLTVersion: "Xcode 16.0 Build version 16A5171r"}
+	rep, err := Format(&RawCrash{}, ImageStatus{}, env, InputInfo{}, CategorizeResult{}, TierSummary)
+	if err != nil {
+		t.Fatalf("Format: %v", err)
+	}
+	if rep.Environment.CLTVersionShort != env.CLTVersion {
+		t.Errorf("fallback CLTVersionShort = %q, want %q",
+			rep.Environment.CLTVersionShort, env.CLTVersion)
+	}
+}
+
 func TestFormat_RejectsUnknownTier(t *testing.T) {
 	_, err := Format(&RawCrash{}, ImageStatus{}, Environment{}, InputInfo{}, CategorizeResult{}, "gigantic")
 	if err == nil {
