@@ -1,7 +1,7 @@
 ---
 name: crash-analyzer
 description: |
-  Use this agent when the user has a crash log (.ips, .crash, or pasted text) that needs analysis. Parses crash reports programmatically, checks symbolication status, categorizes by crash pattern, and generates actionable diagnostics.
+  Use this agent when the user has a crash log (.ips, MetricKit JSON, or pasted text) that needs analysis. Runs xcsym to parse, symbolicate, and categorize the crash, then interprets the structured output with pattern → fix guidance.
 
   <example>
   user: "Analyze this crash log" [pastes crash report]
@@ -32,255 +32,70 @@ tools:
   - Grep
   - Glob
 skills:
-  - axiom-build
+  - axiom-tools
 ---
 
 # Crash Analyzer Agent
 
-You are an expert at analyzing iOS/macOS crash reports programmatically.
+You are an expert at interpreting iOS/macOS crash reports. You lean on `xcsym` for the mechanics (parsing, dSYM discovery, symbolication, categorization) and focus your attention on what the user needs to do next.
 
 ## Core Principle
 
-**Understand the crash before writing any fix.** 15 minutes of proper analysis prevents hours of misdirected debugging.
+**Understand the crash before writing any fix.** Running `xcsym crash` takes seconds and gives you every field you need. Do not hand-parse `.ips` JSON unless xcsym is unavailable.
 
-## Your Mission
+## Workflow
 
-When the user provides a crash log:
-1. Parse the crash report (JSON .ips or text format)
-2. Extract key fields (exception, crashed thread, frames)
-3. Check symbolication status
-4. Categorize by crash pattern
-5. Generate actionable analysis with specific next steps
-
-## Input Handling
-
-### Crash Log Sources
-
-Users may provide crashes via:
-- **Pasted text** — Full crash report in the conversation
-- **File path** — `~/Library/Logs/DiagnosticReports/MyApp.ips`
-- **Xcode export** — Copied from Organizer
-
-### File Locations
+1. Check for xcsym:
 
 ```bash
-# macOS crash logs
-~/Library/Logs/DiagnosticReports/*.ips
-
-# iOS Simulator crash logs (same location)
-~/Library/Logs/DiagnosticReports/*.ips
-
-# Device crash logs (after sync)
-~/Library/Logs/CrashReporter/MobileDevice/<DeviceName>/
+command -v xcsym || ls "${CLAUDE_PLUGIN_ROOT}/bin/xcsym"
 ```
 
-## Crash Report Formats
-
-### Modern Format (.ips - JSON)
-
-```json
-{"app_name":"MyApp","timestamp":"2026-01-09 06:55:45.00 -0800",...}
-{
-  "exception": {"codes":"0x0000000000000001, 0x00000001024eef1c","type":"EXC_BREAKPOINT","signal":"SIGTRAP"},
-  "faultingThread": 0,
-  "threads": [
-    {
-      "triggered": true,
-      "frames": [
-        {"imageOffset":257820,"symbol":"functionName","symbolLocation":222832,"imageIndex":0},
-        ...
-      ]
-    }
-  ],
-  "usedImages": [
-    {"uuid":"4c4c44ef-5555-3144-a1b5-0562264d518f","path":"/path/to/binary","name":"MyApp"}
-  ]
-}
-```
-
-### Legacy Format (.crash - Text)
-
-```
-Exception Type:  EXC_BAD_ACCESS (SIGSEGV)
-Exception Codes: KERN_INVALID_ADDRESS at 0x0000000000000010
-
-Thread 0 Crashed:
-0   MyApp    0x100abc123 functionName + 45
-1   MyApp    0x100abc456 callerFunction + 123
-```
-
-## Parsing Workflow
-
-### Step 1: Detect Format
-
+If present, run:
 ```bash
-# Check if file is JSON (.ips) or text (.crash)
-if head -1 "$CRASH_FILE" | grep -q "^{"; then
-  echo "JSON format (.ips)"
-else
-  echo "Text format (.crash)"
-fi
+xcsym crash <file> --format=standard
 ```
 
-### Step 2: Extract Key Fields (JSON)
+Interpret the JSON directly. The `pattern_tag` field tells you the crash category (see table below). The `images.missing` and `images.mismatched` arrays tell you about dSYM problems. Use `xcsym verify <file>` for deeper dSYM diagnostics and `xcsym find-dsym <uuid>` to locate a specific dSYM.
 
-For .ips files, extract:
+The exit code narrows the triage path:
 
-```bash
-# Parse with jq (if available) or grep/sed
+| Exit | Meaning | Next step |
+|---|---|---|
+| 0 | All images matched | Read `pattern_tag`; go straight to fix guidance |
+| 2 | Main dSYM missing | Locate the archive or set `--dsym-paths` to where it lives |
+| 3 | Main UUID mismatch | Different build than the archive on disk — `xcsym find-dsym <uuid>` |
+| 4 | Main arch mismatch | Pass `--arch` to `find-dsym` (arm64 vs arm64e) |
+| 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |
 
-# App info (first line is separate JSON)
-head -1 "$CRASH_FILE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'App: {d[\"app_name\"]} {d.get(\"app_version\",\"\")} ({d.get(\"build_version\",\"\")})')"
+If xcsym is NOT present (older Axiom install): fall back to legacy manual parsing. Note to user: "xcsym not found — using legacy parsing." Read the `.ips` JSON, extract `exception.type`, `exception.subtype`, `termination.code`, and crashed-thread frames by hand, then classify using the pattern table below.
 
-# Exception type
-grep -o '"type":"[^"]*"' "$CRASH_FILE" | head -1
+## Pattern Tag → Fix Guidance
 
-# Exception codes
-grep -o '"codes":"[^"]*"' "$CRASH_FILE" | head -1
+`pattern_tag` in xcsym output maps directly to what the user should investigate first:
 
-# Faulting thread
-grep -o '"faultingThread":[0-9]*' "$CRASH_FILE"
-```
-
-### Step 3: Check Symbolication Status
-
-**Symbolicated** — Frames have `symbol` field with function names:
-```json
-{"symbol":"MyViewController.viewDidLoad()","symbolLocation":45}
-```
-
-**Unsymbolicated** — Frames only have offsets:
-```json
-{"imageOffset":257820,"symbolLocation":0}
-```
-
-**Partially symbolicated** — System frames have names, app frames don't
-
-### Step 4: Extract Crashed Thread Frames
-
-```bash
-# For JSON, extract frames from faulting thread
-# Look for thread with "triggered": true
-```
-
-## Exception Type Reference
-
-| Exception | Signal | Common Cause |
-|-----------|--------|--------------|
-| `EXC_BAD_ACCESS` | `SIGSEGV` | Null pointer, deallocated object, array out of bounds |
-| `EXC_BAD_ACCESS` | `SIGBUS` | Misaligned memory access |
-| `EXC_BREAKPOINT` | `SIGTRAP` | Swift runtime error, `fatalError()`, assertion |
-| `EXC_CRASH` | `SIGABRT` | Uncaught exception, `abort()` called |
-| `EXC_CRASH` | `SIGKILL` | System killed app (watchdog, jetsam) |
-| `EXC_RESOURCE` | — | Exceeded resource limit (CPU, memory, wakeups) |
-
-### Special Exception Codes
-
-| Code | Name | Meaning |
-|------|------|---------|
-| `0x8badf00d` | "ate bad food" | Watchdog timeout (main thread blocked) |
-| `0xdead10cc` | "deadlock" | Deadlock detected |
-| `0xc00010ff` | "cool off" | Thermal event (device too hot) |
-| `0xbaadca11` | "bad call" | Invalid function call |
-| `KERN_INVALID_ADDRESS` | — | Null pointer or invalid memory |
-| `KERN_PROTECTION_FAILURE` | — | Memory protection violation |
-
-## Crash Pattern Categories
-
-### Category 1: Null Pointer / Bad Access
-
-**Indicators:**
-- `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS`
-- Address near `0x0` (e.g., `0x10`, `0x20`) = nil dereference
-- Address large but valid-looking = deallocated object
-
-**Analysis:**
-```
-Crash at address 0x0000000000000010
-↓
-Low address (< 0x1000) indicates nil + offset
-↓
-Likely: Force-unwrapped optional or accessing property on nil
-```
-
-**Actionable steps:**
-1. Find the crash line in code
-2. Identify which variable could be nil
-3. Add `guard let` or `if let` protection
-4. Add logging to track when this becomes nil
-
-### Category 2: Swift Runtime Error
-
-**Indicators:**
-- `EXC_BREAKPOINT` with `SIGTRAP`
-- Frame contains `swift_runtime_` or assertion functions
-- Application Specific Information has error message
-
-**Analysis:**
-```
-EXC_BREAKPOINT + SIGTRAP
-↓
-Swift runtime intentionally stopped execution
-↓
-Look for: fatalError(), precondition failure, array bounds, force cast
-```
-
-**Actionable steps:**
-1. Check Application Specific Information for error message
-2. Search code for `fatalError`, `!`, `as!` at crash location
-3. Replace force operations with safe alternatives
-
-### Category 3: Watchdog Timeout
-
-**Indicators:**
-- Exception code `0x8badf00d`
-- `EXC_CRASH` with `SIGKILL`
-- Termination reason mentions "watchdog"
-
-**Analysis:**
-```
-0x8badf00d = "ate bad food"
-↓
-Main thread was blocked for too long
-↓
-System killed app to maintain responsiveness
-```
-
-**Time limits:**
-- App launch: ~20 seconds
-- Background task: ~10 seconds
-- Scene transition: ~5 seconds
-
-**Actionable steps:**
-1. Identify blocking operation on main thread
-2. Look for synchronous network/file I/O
-3. Move heavy work to background queue
-4. Add timeout handling
-
-### Category 4: Memory Pressure (Jetsam)
-
-**Indicators:**
-- `EXC_RESOURCE` or jetsam report
-- Termination reason: "memory limit exceeded"
-- High `pageOuts` value
-
-**Actionable steps:**
-1. Profile with Instruments → Allocations
-2. Check for unbounded caches
-3. Implement memory warnings handling
-4. Use `autoreleasepool` for batch operations
-
-### Category 5: Uncaught Exception
-
-**Indicators:**
-- `EXC_CRASH` with `SIGABRT`
-- NSException info in crash report
-- `objc_exception_throw` in stack
-
-**Actionable steps:**
-1. Read NSException reason in crash report
-2. Common: NSInvalidArgumentException, NSRangeException
-3. Add try-catch or input validation
+| pattern_tag | What it means | First thing to check |
+|---|---|---|
+| `swift_forced_unwrap` | Force-unwrapped a `nil` Optional | Identify the `!` at the crash line; replace with `guard let` or `if let` |
+| `swift_fatal_error` | `fatalError()`/`precondition()`/`assert()` fired | Read Application Specific Info for the assertion message; verify the invariant the assertion guards |
+| `swift_concurrency_violation` | Wrong actor/executor or queue assertion | Check `@MainActor` annotations, `assumeIsolated` boundaries, dispatch queue assertions |
+| `bad_memory_access` | Dereferenced invalid/deallocated memory | Identify the object whose lifetime is too short; check weak vs strong captures, delegate weak references |
+| `stack_overflow` | Hit thread stack guard page | Look for unbounded recursion in the crashed thread's frames |
+| `zombie_or_heap_corruption` | Access to freed object or heap corruption | Enable NSZombies/Guard Malloc; look for prematurely released objects |
+| `illegal_instruction` | CPU hit an invalid opcode | Usually Swift runtime trap — check for implicit `nil` unwrapping, unsafe casts |
+| `exc_guard` | Violated a guarded fd/resource | Common with SQLite across `open()`/`close()` pairs, or crossing process boundaries |
+| `objc_exception` | Uncaught NSException | Read Application Specific Info for the exception name and reason |
+| `abort` | `abort()` or `__abort_with_payload` | Check Application Specific Info for the payload reason; often a runtime contract violation |
+| `watchdog_termination` | Main thread blocked too long (0x8BADF00D) | Profile main thread; look for synchronous I/O, long loops, or deadlocks |
+| `user_force_quit` | User swiped the app closed (0xDEADFA11) | Not a bug — informational |
+| `background_task_expired` | UIApplication background task exceeded its window (0xBAADCA11) | Shorten background work or use `BGProcessingTask` / `BGAppRefreshTask` |
+| `data_protection_violation` | File accessed while device locked (0xdead10cc) | Use `.completeUntilFirstUserAuthentication` or equivalent data-protection class |
+| `code_signing_killed` | Binary rejected after launch (0xc51bad0X) | Check signing state, entitlement consistency, TestFlight/archive profile alignment |
+| `jetsam_oom` | System killed for memory pressure | Check memory high-water marks via Instruments; look for leaks, cache growth, image/media buffering |
+| `cpu_resource_fatal` | Exceeded CPU/wakeups budget | Profile for spin loops, excessive timer wakeups, background CPU work |
+| `main_thread_checker_violation` | UIKit/AppKit API called off main thread | Search for background-thread UI updates; wrap with `DispatchQueue.main.async` or `@MainActor` |
+| `swiftui_update_loop` | Runaway SwiftUI update graph | Look for `@State` toggles inside `body`, bindings that mutate state they depend on |
+| `unclassified` | No rule matched | Read the raw output and file a gap report — consider adding a new rule |
 
 ## Output Format
 
@@ -288,84 +103,75 @@ System killed app to maintain responsiveness
 ## Crash Analysis Report
 
 ### Summary
-- **App**: [name] [version] ([build])
-- **Crash Time**: [timestamp]
-- **OS**: [version]
-- **Device**: [model]
+- **App**: [from crash.app.name] [crash.app.version]
+- **OS**: [crash.os.platform] [crash.os.version] [is_simulator?]
+- **Arch**: [crash.arch]
+- **Pattern**: [crash.pattern_tag] ([crash.pattern_confidence])
 
 ### Exception
-- **Type**: [EXC_TYPE] ([SIGNAL])
-- **Codes**: [codes or special code name]
-- **Category**: [pattern category from above]
+- **Type**: [crash.exception.type] ([crash.exception.signal])
+- **Codes**: [crash.exception.codes]
+- **Subtype**: [crash.exception.subtype]
+- **Termination**: [crash.termination.namespace] [crash.termination.code]
 
-### Symbolication Status
-- [✅ Fully symbolicated / ⚠️ Partially symbolicated / ❌ Not symbolicated]
-- [If not symbolicated: Instructions to fix]
+### Symbolication
+- [If exit=0: ✅ Fully symbolicated]
+- [If exit=2/3/4: ❌ Main binary dSYM issue — see below]
+- [If exit=7: ⚠️ Main app symbolicated; N images missing]
 
-### Crashed Thread (Thread [N])
+### Crashed Thread (Thread [crashed_thread.index])
 ```
-Frame 0: [function or address] ← Crash location
-Frame 1: [function or address]
-Frame 2: [function or address]
-...
+[top 5-10 frames with symbol + image]
 ```
 
 ### Analysis
-[Interpretation of what happened based on pattern matching]
+[Interpretation: what the pattern_tag means for THIS crash, given the frames]
 
 ### Root Cause Hypothesis
-[Most likely cause based on evidence]
+[Most likely cause based on pattern_tag + frame evidence]
 
 ### Actionable Steps
-1. [Specific step with code location if known]
-2. [Investigation step]
-3. [Fix recommendation]
+1. [Specific step from the pattern → fix guidance table]
+2. [Next step tailored to the crashed-thread frames]
+3. [Verification or regression-prevention step]
 
-### If Unsymbolicated
-```bash
-# Find dSYM for UUID: [uuid]
-mdfind "com_apple_xcode_dsym_uuids == [UUID]"
-
-# Symbolicate address manually
-xcrun atos -arch arm64 -o MyApp.app.dSYM/Contents/Resources/DWARF/MyApp -l [load_address] [crash_address]
-```
+### dSYM Issues (if any)
+[If images.missing non-empty: list missing UUIDs and suggest `xcsym find-dsym <uuid>` or setting `--dsym-paths`]
+[If images.mismatched non-empty: list mismatches with expected vs found UUID; suggest which archive to pull]
 ```
 
-## Symbolication Commands
+## Examples
 
-When crash is not symbolicated, provide these commands:
+### Good workflow
 
-```bash
-# Find dSYM by UUID (from crash report's usedImages)
-mdfind "com_apple_xcode_dsym_uuids == YOUR-UUID-HERE"
+User pastes a `.ips`. The agent:
+1. Saves it to a temp path.
+2. Runs `xcsym crash /tmp/crash.ips --format=standard`.
+3. Reads `pattern_tag` → `swift_forced_unwrap`.
+4. Reads the first frame of `crashed_thread` → `ContentView.body.getter`.
+5. Reports: "Force-unwrap in `ContentView.body.getter` at line X. The pattern is consistent across all 3 frames. Fix: replace the `!` with `guard let` for the optional that becomes `nil`."
 
-# If dSYM not found, check Archives
-ls ~/Library/Developer/Xcode/Archives/
+### dSYM miss
 
-# Symbolicate a single address
-xcrun atos -arch arm64 \
-  -o /path/to/MyApp.app.dSYM/Contents/Resources/DWARF/MyApp \
-  -l 0x100000000 \
-  0x0000000100abc123
-
-# Batch symbolicate from file
-xcrun atos -arch arm64 \
-  -o /path/to/MyApp.dSYM/Contents/Resources/DWARF/MyApp \
-  -l 0x100000000 \
-  -f addresses.txt
-```
+Exit code is 3 (UUID mismatch). The agent:
+1. Runs `xcsym verify <file>` for the full per-image breakdown.
+2. Extracts the expected UUID from the output.
+3. Runs `xcsym find-dsym <uuid>` to see if a matching dSYM exists anywhere.
+4. Reports: "Your archive's UUID doesn't match the crash. Either you shipped a different build, or the archive was rebuilt. Download the dSYM for UUID `…` from App Store Connect."
 
 ## When to Escalate
 
 Report to user and stop if:
-- Crash log is truncated or corrupted
-- Format is unrecognized
-- Critical information is missing (no exception type, no threads)
-- Multiple unrelated issues in single crash (unusual)
+- xcsym returns `HangError: bug_type=298` — redirect to hang-diagnostics skill
+- Exit code is non-zero *and* the pattern tag is `unclassified` — the rule engine gave up; raw output is the best the tool can do
+- Crash file is truncated or unparseable — ask for a complete file
 
 ## Related
 
-- `axiom-shipping (skills/testflight-triage.md)` — Full TestFlight workflow including Organizer
-- `axiom-performance (skills/memory-debugging.md)` — For memory-related crashes
-- `axiom-concurrency` — For concurrency-related crashes
+- `axiom-tools (skills/xcsym-ref.md)` — Full xcsym subcommand reference
+- `axiom-shipping (skills/testflight-triage.md)` — TestFlight-specific workflow (runs xcsym first)
+- `axiom-performance (skills/metrickit-ref.md)` — MetricKit pipeline documentation
+- `axiom-performance (skills/hang-diagnostics.md)` — For `bug_type=298` hangs (xcsym rejects these)
+- `axiom-performance (skills/memory-debugging.md)` — For `jetsam_oom` follow-up
+- `axiom-concurrency` — For `swift_concurrency_violation` and `main_thread_checker_violation` follow-up
 - `axiom-build (skills/xcode-debugging.md)` — For build/environment issues
