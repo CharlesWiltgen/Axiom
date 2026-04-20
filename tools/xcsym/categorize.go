@@ -175,6 +175,18 @@ var rules = []Rule{
 			return false, ""
 		},
 	},
+	{
+		ID: "R-objc-exc-01", Tag: "objc_exception", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if c.Exception.Type != "EXC_CRASH" {
+				return false, ""
+			}
+			if hit := hasAnyFrameSymbolAllThreads(c, []string{"objc_exception_throw"}); hit != "" {
+				return true, "EXC_CRASH with " + hit + " in backtrace"
+			}
+			return false, ""
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n
