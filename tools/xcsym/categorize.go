@@ -187,6 +187,15 @@ var rules = []Rule{
 			return false, ""
 		},
 	},
+	{
+		ID: "R-mtc-01", Tag: "main_thread_checker_violation", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if hit := hasAnyCrashedFrameImage(c, []string{"main_thread_checker.dylib"}, 0); hit != "" {
+				return true, "crashed-thread frame references image " + hit
+			}
+			return false, ""
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n
