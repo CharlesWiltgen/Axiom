@@ -316,12 +316,27 @@ func (d *Discoverer) findInEnvPaths(ctx context.Context, uuid, arch string) (*Ds
 	return walkRoots(ctx, d.opts.UserPaths, uuid, arch, "env")
 }
 
-// walkRoots walks the given roots in order, returning the first entry found.
+// walkForDsymUUIDFn is walkForDsymUUID behind a function-typed var so tests
+// can substitute a stub that simulates cross-root match/mismatch outcomes
+// without having to synthesize real dSYM bundles (the UUID/arch ordering bug
+// that walkRoots guards against can't be reproduced with real fixtures —
+// slice UUIDs are content-hashes, so "same UUID, different arch across two
+// dSYMs" is physically impossible in real dwarfdump output).
+var walkForDsymUUIDFn = walkForDsymUUID
+
+// walkRoots walks the given roots in order, returning the best entry found.
+// An exact-arch match in any root wins immediately and short-circuits the
+// loop. If every root only yields mismatches (UUID matches, arch differs),
+// the first mismatch is returned — ordered by root list, not by whichever
+// root we happened to hit first. This protects against a root with a
+// wrong-arch dSYM masking a later root with the correct arch slice.
+//
 // A non-nil error aborts the source (never a per-root error that would make
 // a later root unreachable — walkForDsymUUID returns errors only for ctx
 // cancellation and tool timeouts, both of which correctly terminate the
 // whole Find chain).
 func walkRoots(ctx context.Context, roots []string, uuid, arch, source string) (*DsymEntry, error) {
+	var firstMismatch *DsymEntry
 	for _, root := range roots {
 		if root == "" {
 			continue
@@ -329,16 +344,23 @@ func walkRoots(ctx context.Context, roots []string, uuid, arch, source string) (
 		if _, err := os.Stat(root); err != nil {
 			continue
 		}
-		entry, err := walkForDsymUUID(ctx, root, uuid, arch)
+		entry, err := walkForDsymUUIDFn(ctx, root, uuid, arch)
 		if err != nil {
 			return nil, err
 		}
-		if entry != nil {
+		if entry == nil {
+			continue
+		}
+		if arch == "" || entry.Arch == arch {
 			entry.Source = source
 			return entry, nil
 		}
+		if firstMismatch == nil {
+			firstMismatch = entry
+			firstMismatch.Source = source
+		}
 	}
-	return nil, nil
+	return firstMismatch, nil
 }
 
 // walkForDsymUUID walks root looking for any *.dSYM whose DWARF binary
