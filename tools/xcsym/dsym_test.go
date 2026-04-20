@@ -279,6 +279,86 @@ func TestDiscoverer_EnvPathsParsedFromXCSYM_DSYM_PATHS(t *testing.T) {
 	}
 }
 
+func TestFindDsym_FrameworksScan(t *testing.T) {
+	if _, err := exec.LookPath("xcrun"); err != nil {
+		t.Skip("xcrun not available")
+	}
+	bundle := setupFakeDsymInLayout(t, filepath.Join("Carthage", "Build", "iOS", "MyLib.framework.dSYM"), "MyLib")
+	root := filepath.Dir(filepath.Dir(filepath.Dir(bundle))) // tempdir containing Carthage/
+
+	dwarf := filepath.Join(bundle, "Contents", "Resources", "DWARF")
+	entries, _ := os.ReadDir(dwarf)
+	uuids, err := ReadUUIDs(context.Background(), filepath.Join(dwarf, entries[0].Name()))
+	if err != nil || len(uuids) == 0 {
+		t.Skipf("cannot read UUIDs: %v", err)
+	}
+
+	d := NewDiscoverer(DiscovererOptions{
+		FrameworkRoots: []string{root},
+		SkipSpotlight:  true,
+		SkipDefaults:   true,
+	})
+	entry, err := d.Find(context.Background(), uuids[0].UUID, uuids[0].Arch)
+	if err != nil {
+		t.Fatalf("Find: %v", err)
+	}
+	if entry.Source != "frameworks" {
+		t.Errorf("Source = %q, want frameworks", entry.Source)
+	}
+}
+
+// TestFindDsym_FrameworksScanTimeoutNonFatal guards the fix for bead
+// axiom-jtz (N4): an exhausted XCSYM_FRAMEWORK_SCAN_TIMEOUT budget must not
+// abort the Find chain. The scan bails, the next source runs, and a genuinely
+// missing UUID surfaces as ErrNotFound — not a wrapped DeadlineExceeded.
+func TestFindDsym_FrameworksScanTimeoutNonFatal(t *testing.T) {
+	// Any non-empty root would do; the 1ns budget fires before WalkDir even
+	// enters the first directory. Use a tempdir to avoid touching cwd.
+	root := t.TempDir()
+	t.Setenv("XCSYM_FRAMEWORK_SCAN_TIMEOUT", "1ns")
+
+	d := NewDiscoverer(DiscovererOptions{
+		FrameworkRoots: []string{root},
+		SkipSpotlight:  true,
+		SkipDefaults:   true,
+	})
+	_, err := d.Find(context.Background(), "DEADBEEF-0000-0000-0000-000000000000", "arm64")
+	if err == nil {
+		t.Fatal("expected ErrNotFound after all sources exhausted")
+	}
+	if !errors.Is(err, ErrNotFound) {
+		t.Errorf("err = %v, want wrapped ErrNotFound — a timed-out framework scan must not leak DeadlineExceeded up the Find chain", err)
+	}
+}
+
+// TestDefaultFrameworkScanTimeout checks that XCSYM_FRAMEWORK_SCAN_TIMEOUT
+// accepts both Go duration strings and bare integer seconds, and falls back
+// to 500ms when unset/invalid. The design budget is 500ms.
+func TestDefaultFrameworkScanTimeout(t *testing.T) {
+	cases := []struct {
+		name string
+		env  string
+		want string
+	}{
+		{"default", "", "500ms"},
+		{"duration string", "250ms", "250ms"},
+		{"bare seconds", "2", "2s"},
+		{"invalid falls back", "not-a-duration", "500ms"},
+		{"zero falls back", "0", "500ms"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			// t.Setenv with "" leaves the variable set-but-empty, which
+			// DefaultFrameworkScanTimeout treats as unset (os.Getenv returns "").
+			t.Setenv("XCSYM_FRAMEWORK_SCAN_TIMEOUT", c.env)
+			got := DefaultFrameworkScanTimeout().String()
+			if got != c.want {
+				t.Errorf("DefaultFrameworkScanTimeout() = %q, want %q", got, c.want)
+			}
+		})
+	}
+}
+
 func TestFindDsym_ArchMismatch(t *testing.T) {
 	// Request an arch the dSYM doesn't have; discovery should still return
 	// the dSYM (for mismatch classification by VerifyImages) rather than
