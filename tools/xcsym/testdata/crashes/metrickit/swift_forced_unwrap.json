@@ -1,0 +1,45 @@
+{
+  "timeStampBegin": "2026-04-19 10:28:00.0000 +0000",
+  "timeStampEnd": "2026-04-19 10:30:00.0000 +0000",
+  "diagnosticMetaData": {
+    "exceptionType": 6,
+    "exceptionCode": 0,
+    "signal": 5,
+    "terminationReason": "Swift runtime failure: unexpectedly found nil while unwrapping an Optional value",
+    "virtualMemoryRegionInfo": "",
+    "osVersion": "iPhone OS 17.5 (21F79)",
+    "appBuildVersion": "100",
+    "appVersion": "1.0",
+    "platformArchitecture": "arm64",
+    "bundleIdentifier": "com.example.MyApp",
+    "isTestFlightApp": false,
+    "deviceType": "iPhone14,2"
+  },
+  "callStackTree": {
+    "callStackPerThread": true,
+    "callStacks": [
+      {
+        "threadAttributed": true,
+        "callStackRootFrames": [
+          {
+            "binaryUUID": "AABBCCDD-EEFF-0011-2233-445566778899",
+            "offsetIntoBinaryTextSegment": 500,
+            "sampleCount": 1,
+            "binaryName": "MyApp",
+            "address": 4294967796,
+            "subFrames": [
+              {
+                "binaryUUID": "AABBCCDD-EEFF-0011-2233-445566778899",
+                "offsetIntoBinaryTextSegment": 100,
+                "sampleCount": 1,
+                "binaryName": "MyApp",
+                "address": 4294967396,
+                "subFrames": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
