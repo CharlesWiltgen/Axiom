@@ -63,7 +63,13 @@ func runListDsyms(out io.Writer, args []string) int {
 		return 1
 	}
 
-	bundles, err := scanDsymBundles(context.Background(), roots, *source)
+	// axiom-h2s: when --source=all, label each bundle by the source-type
+	// bucket its root belongs to (archives/deriveddata/downloads/toolchain/
+	// frameworks/env) instead of emitting "all" for every bundle. For
+	// explicit --source=X, every root is already in bucket X.
+	rootLabels := labelRootsBySource(d, *source)
+
+	bundles, err := scanDsymBundles(context.Background(), roots, rootLabels)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "list-dsyms: %v\n", err)
 		return 5
@@ -117,8 +123,10 @@ func rootsForSource(d *Discoverer, source string) ([]string, error) {
 // scanDsymBundles walks the given roots and returns every .dSYM bundle
 // found, along with its UUIDs. Per-bundle probe failures are swallowed
 // (e.g. stripped or malformed bundles) so one broken dSYM can't
-// short-circuit the whole inventory.
-func scanDsymBundles(ctx context.Context, roots []string, source string) ([]dsymBundle, error) {
+// short-circuit the whole inventory. rootLabels maps each root to the
+// source-type label its bundles should carry (archives/deriveddata/...);
+// an absent root falls back to "unknown".
+func scanDsymBundles(ctx context.Context, roots []string, rootLabels map[string]string) ([]dsymBundle, error) {
 	out := []dsymBundle{}
 	seen := make(map[string]bool) // dedup by path
 	for _, root := range roots {
@@ -127,6 +135,10 @@ func scanDsymBundles(ctx context.Context, roots []string, source string) ([]dsym
 		}
 		if _, err := os.Stat(root); err != nil {
 			continue
+		}
+		label := rootLabels[root]
+		if label == "" {
+			label = "unknown"
 		}
 		walkErr := filepath.WalkDir(root, func(path string, dir fs.DirEntry, err error) error {
 			if ctx.Err() != nil {
@@ -149,7 +161,7 @@ func scanDsymBundles(ctx context.Context, roots []string, source string) ([]dsym
 				return filepath.SkipDir
 			}
 			seen[path] = true
-			bundle, err := probeDsymBundle(ctx, path, sourceLabel(root, source))
+			bundle, err := probeDsymBundle(ctx, path, label)
 			if err != nil {
 				if IsTimeoutError(err) {
 					return err
@@ -168,12 +180,36 @@ func scanDsymBundles(ctx context.Context, roots []string, source string) ([]dsym
 	return out, nil
 }
 
-// sourceLabel returns a short string identifying which source the walk came
-// from. When the user asked for --source=all, we don't try to reverse-map
-// which defaults-path the root came from — we just report "all" to keep the
-// labeling logic simple.
-func sourceLabel(root, source string) string {
-	return source
+// labelRootsBySource builds a map from root directory to source-type label
+// so bundles get labeled by the bucket their root came from, not by the
+// user's --source flag. For --source=all this is the whole point: a bundle
+// found under ArchivesPaths gets "archives" and one under DownloadsPaths
+// gets "downloads". For an explicit --source (e.g. "archives"), every root
+// maps to that label — same as the old behavior, just expressed uniformly.
+// axiom-h2s.
+func labelRootsBySource(d *Discoverer, source string) map[string]string {
+	labels := make(map[string]string)
+	add := func(roots []string, label string) {
+		for _, r := range roots {
+			if r == "" || labels[r] != "" {
+				continue
+			}
+			labels[r] = label
+		}
+	}
+	add(d.opts.ArchivesPaths, "archives")
+	add(d.opts.DerivedDataPaths, "deriveddata")
+	add(d.opts.DownloadsPaths, "downloads")
+	add(d.opts.ToolchainPaths, "toolchain")
+	add(d.opts.FrameworkRoots, "frameworks")
+	add(d.opts.UserPaths, "env")
+	// For explicit --source=X, any root the user supplied under --dsym-paths
+	// falls into UserPaths and is already labeled "env". But when the user
+	// asks for a specific source like "archives" and we only return
+	// ArchivesPaths, everything is already labeled "archives". No override
+	// needed — the per-bucket labels above subsume the --source value.
+	_ = source
+	return labels
 }
 
 // probeDsymBundle inspects one .dSYM bundle and returns its contents, or nil
