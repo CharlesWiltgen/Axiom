@@ -5,7 +5,14 @@ export default withMermaid(defineConfig({
   title: 'Axiom',
   description: 'Battle-tested Claude Code skills, autonomous agents, and references for Apple platform development',
   base: '/Axiom/',
-  srcExclude: ['**/public/plugins/**'],
+  srcExclude: [
+    '**/public/plugins/**',
+    // Internal planning — defence-in-depth alongside .gitignore and the
+    // "Internal Planning Docs" check in scripts/pre-deploy.ts.
+    'superpowers/**',
+    'plans/**',
+    'specs/**',
+  ],
   cleanUrls: true,
 
   head: [

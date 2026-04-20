@@ -613,6 +613,44 @@ if (fs.existsSync(bundlePath)) {
   warn("bundle-staleness", "MCP bundle not found at axiom-mcp/dist/bundle.json — build with: cd axiom-mcp && pnpm run build:bundle");
 }
 
+// ── 12c. Internal Planning Docs ──
+
+heading("12c. Internal Planning Docs");
+
+// Hard fail if internal planning content leaks into the published docs tree.
+// These paths are gitignored AND VitePress-excluded (srcExclude in
+// docs/.vitepress/config.ts), but that guardrail only triggers on the next
+// commit — this check fails fast on any already-tracked file.
+const internalPlanningDirs = [
+  "docs/superpowers",
+  "docs/plans",
+  "docs/specs",
+];
+
+let planningLeaks = 0;
+for (const rel of internalPlanningDirs) {
+  const full = path.join(root, rel);
+  if (!fs.existsSync(full)) continue;
+  const walk = (d: string) => {
+    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+      const sub = path.join(d, entry.name);
+      if (entry.isDirectory()) walk(sub);
+      else if (entry.name.endsWith(".md")) {
+        error(
+          "internal-planning",
+          `Internal planning doc leaked into published tree: ${path.relative(root, sub)} — move out of docs/ (see .gitignore for allowed paths)`,
+        );
+        planningLeaks++;
+      }
+    }
+  };
+  walk(full);
+}
+
+if (planningLeaks === 0) {
+  console.log("  ✓ No internal planning docs under docs/superpowers, docs/plans, or docs/specs");
+}
+
 // ── Phase 1 Summary ──
 
 heading("Phase 1 Summary (Static)");
