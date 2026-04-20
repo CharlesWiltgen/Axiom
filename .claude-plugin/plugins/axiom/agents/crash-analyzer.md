@@ -1,7 +1,7 @@
 ---
 name: crash-analyzer
 description: |
-  Use this agent when the user has a crash log (.ips, MetricKit JSON, or pasted text) that needs analysis. Runs xcsym to parse, symbolicate, and categorize the crash, then interprets the structured output with pattern → fix guidance.
+  Use this agent when the user has a crash log (.ips, MetricKit JSON, legacy .crash text, .xccrashpoint bundle, or pasted text) that needs analysis. Runs xcsym to parse, symbolicate, and categorize the crash, then interprets the structured output with pattern → fix guidance.
 
   <example>
   user: "Analyze this crash log" [pastes crash report]

@@ -174,7 +174,7 @@ Use this router when:
 23. Code review for outdated Swift patterns? → swift-modern
 24. Claude generating legacy APIs (DateFormatter, CGFloat, DispatchQueue)? → swift-modern
 25. Need to see runtime console output before profiling? → axiom-tools (skills/xclog-ref.md) or `/axiom:console`
-26. Have an `.ips` or MetricKit crash file to symbolicate/triage? → axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`
+26. Have an `.ips`, MetricKit, or legacy `.crash` text file to symbolicate/triage? → axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`
 
 ## Anti-Rationalization
 

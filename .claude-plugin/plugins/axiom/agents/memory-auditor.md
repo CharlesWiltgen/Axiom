@@ -253,7 +253,7 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 ## Field Crash Correlation
 
-If the user has `.ips` or MetricKit crash artifacts from the field (TestFlight, Xcode Organizer, MetricKit payloads), symbolicate them before inferring the leak pattern. xcsym's `pattern_tag` flags the memory failure mode directly:
+If the user has `.ips`, MetricKit, or legacy `.crash` text artifacts from the field (TestFlight, Xcode Organizer `.xccrashpoint` bundles, MetricKit payloads), symbolicate them before inferring the leak pattern. xcsym's `pattern_tag` flags the memory failure mode directly:
 
 | pattern_tag | What the audit should look for |
 |---|---|

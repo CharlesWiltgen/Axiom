@@ -49,7 +49,7 @@ Use this skill when you encounter:
 | TestFlight crash reports | See `skills/app-store-connect-ref.md` |
 | ASC metrics dashboards | See `skills/app-store-connect-ref.md` |
 | Beta tester crash report | See `skills/testflight-triage.md` |
-| Crash log symbolication (.ips / MetricKit) | See axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`; `skills/testflight-triage.md` for the full TF workflow |
+| Crash log symbolication (.ips / MetricKit / .crash) | See axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`; `skills/testflight-triage.md` for the full TF workflow |
 | Automate App Store Connect | See `skills/asc-mcp.md` |
 | Submit build programmatically | See `skills/asc-mcp.md` |
 | Manage TestFlight via MCP | See `skills/asc-mcp.md` |

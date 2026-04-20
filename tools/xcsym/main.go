@@ -17,7 +17,7 @@ Usage:
   xcsym verify <file>        Verify UUID and arch match per image
   xcsym anonymize <file>     Strip PII from a crash file for fixture use
 
-Accepts .ips (v1/v2) and MetricKit MXCrashDiagnostic JSON. Auto-detects format.
+Accepts .ips (v1/v2), MetricKit MXCrashDiagnostic JSON, and Apple's legacy .crash text format. Auto-detects format.
 
 Run 'xcsym <command> --help' for per-command flags.
 `

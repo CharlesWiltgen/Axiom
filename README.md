@@ -10,7 +10,7 @@ Axiom gives AI coding assistants deep Apple platform development expertise — t
 - **38 agents** that autonomously scan for issues (memory leaks, concurrency violations, build problems)
 - **12 commands** for quick audits and diagnostics
 - **xclog** — a built-in console capture tool that gives AI assistants access to simulator and device logs
-- **xcsym** — a built-in crash symbolication tool for `.ips` and MetricKit crashes, with automatic dSYM discovery and pattern categorization
+- **xcsym** — a built-in crash symbolication tool for `.ips`, MetricKit, and Apple's legacy `.crash` text crashes, with automatic dSYM discovery and pattern categorization
 
 Every discipline skill is TDD-tested against real developer pressure scenarios. [Learn more about quality](https://charleswiltgen.github.io/Axiom/start/quality).
 
@@ -49,7 +49,7 @@ You can also use commands directly:
 
 ```
 /axiom:console          # Capture simulator console output
-/axiom:analyze-crash    # Parse and triage .ips or MetricKit crash reports
+/axiom:analyze-crash    # Parse and triage .ips, MetricKit, or .crash reports
 /axiom:fix-build        # Diagnose build failures
 /axiom:audit memory     # Scan for memory leaks
 /axiom:audit concurrency # Check for data races

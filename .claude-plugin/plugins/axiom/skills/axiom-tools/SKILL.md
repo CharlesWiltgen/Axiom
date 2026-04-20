@@ -1,6 +1,6 @@
 ---
 name: axiom-tools
-description: Use when asking how to use Axiom, what skills are available, getting started with Axiom, capturing iOS simulator console output with xclog, or symbolicating .ips/MetricKit crashes with xcsym.
+description: Use when asking how to use Axiom, what skills are available, getting started with Axiom, capturing iOS simulator console output with xclog, or symbolicating .ips/MetricKit/.crash files with xcsym.
 license: MIT
 ---
 
@@ -113,4 +113,4 @@ But when in doubt for iOS/Swift work: **check first, decide later.**
 
 **Skills**: axiom-swiftui, axiom-concurrency, axiom-data, axiom-build, axiom-performance
 
-**Axiom tools**: `xclog` (simulator console capture, `skills/xclog-ref.md`), `xcsym` (crash symbolication for `.ips` and MetricKit files, `skills/xcsym-ref.md`)
+**Axiom tools**: `xclog` (simulator console capture, `skills/xclog-ref.md`), `xcsym` (crash symbolication for `.ips`, MetricKit, and legacy `.crash` text files, `skills/xcsym-ref.md`)

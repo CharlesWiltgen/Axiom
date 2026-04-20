@@ -35,7 +35,7 @@ ${CLAUDE_PLUGIN_ROOT}/bin/xcsym
 
 **Trust exit codes.** Non-zero codes say *why* symbolication was incomplete — don't assume a crashed call means the tool failed.
 
-**Anonymize before committing a fixture.** The `anonymize` subcommand is format-aware (handles `.ips` v1/v2 and MetricKit) and intentionally preserves dSYM UUIDs so anonymized fixtures still symbolicate against your dSYMs.
+**Anonymize before committing a fixture.** The `anonymize` subcommand is format-aware (handles `.ips` v1/v2, MetricKit, and legacy `.crash` text) and intentionally preserves dSYM UUIDs so anonymized fixtures still symbolicate against your dSYMs.
 
 ## Subcommands
 
