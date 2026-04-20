@@ -100,7 +100,9 @@ func summarizeImages(s ImageStatus) ImagesSummary {
 //
 //	summary:  crashed thread top-5 frames; no other-threads; no all_threads
 //	standard: full crashed thread; top-20 app frames from other threads
-//	full:     everything + AllThreads populated
+//	full:     full crashed thread + all_threads (the superset — no
+//	          other_threads_top_frames, which would duplicate what all_threads
+//	          already carries). axiom-uya.
 func buildCrashInfoForTier(raw *RawCrash, images ImageStatus, cat CategorizeResult, tier string) CrashInfo {
 	var info CrashInfo
 	if raw == nil {
@@ -124,8 +126,10 @@ func buildCrashInfoForTier(raw *RawCrash, images ImageStatus, cat CategorizeResu
 		info.CrashedThread = crashed
 	}
 
-	// other_threads_top_frames: standard and full only.
-	if tier == TierStandard || tier == TierFull {
+	// other_threads_top_frames: standard only. The full tier's all_threads
+	// already contains every frame, so adding OtherThreadsTopFrames would
+	// duplicate data and inflate payload size.
+	if tier == TierStandard {
 		info.OtherThreadsTopFrames = collectOtherThreadsTopFrames(
 			raw, images, standardOtherThreadsBudget)
 	}
