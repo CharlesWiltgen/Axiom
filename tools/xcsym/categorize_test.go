@@ -265,6 +265,40 @@ func TestCategorize_R_zombie_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-bad-access-01 ----------------------------------------------------
+
+func TestCategorize_R_bad_access_01_Positive(t *testing.T) {
+	raw := &RawCrash{
+		Exception: Exception{
+			Type:    "EXC_BAD_ACCESS",
+			Codes:   "0x1, 0x0",
+			Subtype: "KERN_INVALID_ADDRESS",
+		},
+		Threads: []Thread{{Index: 0, Triggered: true, Frames: []Frame{{Index: 0, Image: "MyApp"}}}},
+	}
+	res := Categorize(raw)
+	if res.RuleID != "R-bad-access-01" {
+		t.Errorf("rule_id = %q, want R-bad-access-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_bad_access_01_Negative(t *testing.T) {
+	// Near miss: EXC_BAD_ACCESS without KERN_INVALID_ADDRESS (e.g.
+	// KERN_PROTECTION_FAILURE only) must not fire this rule — it belongs to
+	// stack-overflow or a future rule.
+	raw := &RawCrash{
+		Exception: Exception{
+			Type:    "EXC_BAD_ACCESS",
+			Codes:   "0x2, 0x1000",
+			Subtype: "KERN_PROTECTION_FAILURE at 0x1000",
+		},
+	}
+	res := Categorize(raw)
+	if res.RuleID == "R-bad-access-01" {
+		t.Errorf("must not fire bad_memory_access without KERN_INVALID_ADDRESS")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -298,6 +332,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-swift-fatal-01":  {positive: true, negative: true},
 	"R-stack-overflow-01": {positive: true, negative: true},
 	"R-zombie-01":         {positive: true, negative: true},
+	"R-bad-access-01":     {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
