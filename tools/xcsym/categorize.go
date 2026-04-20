@@ -196,6 +196,25 @@ var rules = []Rule{
 			return false, ""
 		},
 	},
+	{
+		ID: "R-abort-01", Tag: "abort", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if c.Exception.Signal != "SIGABRT" {
+				return false, ""
+			}
+			// Defensive: never fire when an ObjC exception was the proximate
+			// cause — R-objc-exc-01 owns that case and ordering usually
+			// handles it, but the exclusion is cheap to check here.
+			if hasAnyFrameSymbolAllThreads(c, []string{"objc_exception_throw"}) != "" {
+				return false, ""
+			}
+			hit := hasAnyCrashedFrameSymbol(c, []string{"__abort_with_payload", "abort"}, 10)
+			if hit != "" {
+				return true, "SIGABRT with crashed-thread frame " + hit
+			}
+			return false, ""
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n
