@@ -64,6 +64,16 @@ if os.path.isfile(xclog_path) and os.access(xclog_path, os.X_OK):
 
 **xclog** (simulator console capture): Available at `{xclog_path}`. Captures print()/os_log()/Logger output as structured JSON. Use `xclog list` to find bundle IDs, `xclog launch <bundle-id> --timeout 30s --max-lines 200` for bounded capture. For crash diagnosis workflow, see `axiom-tools` (skills/xclog-ref.md). Command: `/axiom:console`."""
 
+# Detect xcsym binary
+xcsym_path = f"{plugin_root}/bin/xcsym"
+xcsym_context = ""
+if os.path.isfile(xcsym_path) and os.access(xcsym_path, os.X_OK):
+    xcsym_context = f"""
+
+---
+
+**xcsym** (crash symbolication): Available at `{xcsym_path}`. Symbolicates .ips and MetricKit crashes with LLM-friendly JSON. Use `xcsym crash <file>` for full triage, `xcsym verify <file>` for dSYM diagnostics. For crash analysis workflow, see `axiom-tools` (skills/xcsym-ref.md). Command: `/axiom:analyze-crash`."""
+
 # Build the context message
 additional_context = f"""<EXTREMELY_IMPORTANT>
 You have Axiom iOS development skills.
@@ -74,7 +84,7 @@ You have Axiom iOS development skills.
 
 **Below is the full content of your 'axiom:axiom-tools' skill - your introduction to using Axiom skills. For all other Axiom skills, use the 'Skill' tool:**
 
-{using_axiom_content}{apple_docs_context}{xclog_context}
+{using_axiom_content}{apple_docs_context}{xclog_context}{xcsym_context}
 
 </EXTREMELY_IMPORTANT>"""
 
