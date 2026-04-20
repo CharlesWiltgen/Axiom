@@ -157,6 +157,15 @@ var rules = []Rule{
 			return true, "EXC_BAD_ACCESS with KERN_INVALID_ADDRESS"
 		},
 	},
+	{
+		ID: "R-illegal-inst-01", Tag: "illegal_instruction", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if c.Exception.Type == "EXC_BAD_INSTRUCTION" {
+				return true, "exception.type == EXC_BAD_INSTRUCTION"
+			}
+			return false, ""
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n

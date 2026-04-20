@@ -299,6 +299,24 @@ func TestCategorize_R_bad_access_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-illegal-inst-01 --------------------------------------------------
+
+func TestCategorize_R_illegal_inst_01_Positive(t *testing.T) {
+	raw := &RawCrash{Exception: Exception{Type: "EXC_BAD_INSTRUCTION", Codes: "0x1, 0x0"}}
+	res := Categorize(raw)
+	if res.RuleID != "R-illegal-inst-01" {
+		t.Errorf("rule_id = %q, want R-illegal-inst-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_illegal_inst_01_Negative(t *testing.T) {
+	raw := &RawCrash{Exception: Exception{Type: "EXC_BAD_ACCESS", Subtype: "KERN_INVALID_ADDRESS"}}
+	res := Categorize(raw)
+	if res.RuleID == "R-illegal-inst-01" {
+		t.Errorf("must not fire illegal_instruction on EXC_BAD_ACCESS")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -333,6 +351,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-stack-overflow-01": {positive: true, negative: true},
 	"R-zombie-01":         {positive: true, negative: true},
 	"R-bad-access-01":     {positive: true, negative: true},
+	"R-illegal-inst-01":   {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
