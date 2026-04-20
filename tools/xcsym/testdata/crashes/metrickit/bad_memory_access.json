@@ -1,0 +1,31 @@
+{
+  "timeStampEnd": "2026-04-19 10:30:00.0000 +0000",
+  "diagnosticMetaData": {
+    "exceptionType": 1,
+    "exceptionCode": 0,
+    "signal": 11,
+    "terminationReason": "KERN_INVALID_ADDRESS at 0x0000000000000000",
+    "osVersion": "iPhone OS 17.5 (21F79)",
+    "appBuildVersion": "100",
+    "appVersion": "1.0",
+    "platformArchitecture": "arm64",
+    "bundleIdentifier": "com.example.MyApp",
+    "deviceType": "iPhone14,2"
+  },
+  "callStackTree": {
+    "callStackPerThread": true,
+    "callStacks": [
+      {
+        "threadAttributed": true,
+        "callStackRootFrames": [
+          {
+            "binaryUUID": "AABBCCDD-EEFF-0011-2233-445566778899",
+            "offsetIntoBinaryTextSegment": 100,
+            "binaryName": "MyApp",
+            "subFrames": []
+          }
+        ]
+      }
+    ]
+  }
+}
