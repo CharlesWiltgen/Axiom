@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-04-20T02:20:52.843Z",
+  "generatedAt": "2026-04-20T02:21:41.908Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -23881,8 +23881,8 @@
     },
     "axiom-shipping--testflight-triage": {
       "name": "axiom-shipping--testflight-triage",
-      "description": "Systematic workflow for investigating TestFlight crashes and reviewing beta feedback using Xcode Organizer. **Core principle:** Understand the crash before writing any fix — 15 minutes of triage prevents hours of debugging.",
-      "content": "\n# TestFlight Crash & Feedback Triage\n\n## Overview\n\nSystematic workflow for investigating TestFlight crashes and reviewing beta feedback using Xcode Organizer. **Core principle:** Understand the crash before writing any fix — 15 minutes of triage prevents hours of debugging.\n\n## Red Flags — Use This Skill When\n\n- \"A beta tester said my app crashed\"\n- \"I see crashes in App Store Connect metrics but don't know how to investigate\"\n- \"Crash logs in Organizer aren't symbolicated\"\n- \"User sent a screenshot of a crash but I can't reproduce it\"\n- \"App was killed but there's no crash — just disappeared\"\n- \"TestFlight feedback has screenshots I need to review\"\n\n---\n\n## Decision Tree — Start Here\n\n### \"A user reported a crash\"\n\n1. **Open Xcode Organizer** (Window → Organizer → Crashes tab)\n2. **Select your app** from the left sidebar\n3. **Find the build version** the user was running\n4. **Is the crash symbolicated?**\n   - YES (you see function names) → Go to [Reading the Crash Report](#reading-the-crash-report)\n   - NO (you see hex addresses like `0x100abc123`) → Go to [Symbolication Workflow](#symbolication-workflow)\n5. **Can you identify the crash location?**\n   - YES → Go to [Common Crash Patterns](#common-crash-patterns)\n   - NO → Go to [Claude-Assisted Interpretation](#claude-assisted-interpretation)\n\n### \"App was killed but no crash report\"\n\nNot all terminations produce crash reports. Check for:\n\n1. **Jetsam reports** — System killed app due to memory pressure\n   - Organizer shows these separately from crashes\n   - Look for high `pageOuts` value\n2. **Watchdog termination** — Main thread blocked too long\n   - Exception code `0x8badf00d` (\"ate bad food\")\n   - Happens during launch (>20s) or background tasks (>10s)\n3. **MetricKit diagnostics** — On-device termination reasons\n   - Requires MetricKit integration in your app\n\n→ See [Terminations Without Crash Reports](#terminations-without-crash-reports)\n\n### \"I want to review TestFlight feedback\"\n\n1. **Xcode Organizer** → Feedback tab (next to Crashes)\n2. **Or** App Store Connect → My Apps → [App] → TestFlight → Feedback\n\n→ See [Feedback Triage Workflow](#feedback-triage-workflow)\n\n---\n\n## Xcode Organizer Walkthrough\n\n### Opening the Organizer\n\n**Window → Organizer** (or ⌘⇧O from Xcode)\n\n### UI Layout\n\n```\n┌─────────────────────────────────────────────────────────────────┐\n│ [Toolbar: Time Period ▼] [Version ▼] [Product ▼] [Release ▼]   │\n├──────────┬──────────────────────────┬───────────────────────────┤\n│ Sidebar  │     Crashes List         │       Inspector           │\n│          │                          │                           │\n│ • Crashes│  ┌─────────────────────┐ │  Distribution Graph       │\n│ • Energy │  │ syncFavorites crash │ │  ┌─────────────────────┐  │\n│ • Hang   │  │ 21 devices • 7 today│ │  │ ▄ ▄▄▄ v2.0          │  │\n│ • Disk   │  └─────────────────────┘ │  │ ▄▄▄▄▄ v2.0.1        │  │\n│ Feedback │  ┌─────────────────────┐ │  └─────────────────────┘  │\n│          │  │ Another crash...    │ │                           │\n│          │  └─────────────────────┘ │  Device Distribution      │\n│          │                          │  OS Distribution          │\n│          ├──────────────────────────┤                           │\n│          │     Log View             │  [Feedback Inspector]     │\n│          │  (simplified crash view) │  Shows tester feedback    │\n│          │                          │  for selected crash       │\n└──────────┴──────────────────────────┴───────────────────────────┘\n```\n\n### Key Features\n\n| Feature | What It Does |\n|---------|--------------|\n| **Speedy Delivery** | TestFlight crashes delivered moments after occurrence (not daily) |\n| **Year of History** | Filter crashes by time period, see monthly trends |\n| **Product Filter** | Filter by App Clip, watch app, extensions, or main app |\n| **Version Filter** | Drill down to specific builds |\n| **Release Filter** | Separate TestFlight vs App Store crashes |\n| **Share Button** | Share crash link with team members |\n| **Feedback Inspector** | See tester comments for selected crash |\n\n### Crash Entry Badges\n\nCrashes in the list show badges indicating origin:\n\n| Badge | Meaning |\n|-------|---------|\n| App Clip | Crash from your App Clip |\n| Watch | Crash from watchOS companion |\n| Extension | Crash from share extension, widget, etc. |\n| (none) | Main iOS app |\n\n### The Triage Questions Workflow\n\nBefore diving into code, ask yourself these questions (from WWDC):\n\n#### Question 1 — How Long Has This Been an Issue\n\n→ Check the **inspector's graph area** on the right\n→ Graph legend shows which versions are affected\n→ Look for when the crash first appeared\n\n#### Question 2 — Is This Affecting Production or Just TestFlight\n\n→ Use the **Release filter** in toolbar\n→ Select \"Release\" to see App Store crashes only\n→ Select \"TestFlight\" for beta crashes only\n\n#### Question 3 — What Was the User Doing\n\n→ Open the **Feedback Inspector** (right panel)\n→ Check for tester comments describing their actions\n→ Context clues: network state, battery level, disk space\n\n### Using the Feedback Inspector\n\nWhen a crash has associated TestFlight feedback, you'll see a feedback icon in the crashes list. Click it to open the Feedback Inspector.\n\n**Each feedback entry shows:**\n\n| Field | Why It Matters |\n|-------|----------------|\n| Version/Build | Confirms exact build tester was running |\n| Device model | Device-specific crashes (older devices, specific screen sizes) |\n| Battery level | Low battery can affect app behavior |\n| Available disk | Low disk can cause write failures |\n| Network type | Cellular vs WiFi, connectivity issues |\n| Tester comment | Their description of what happened |\n\n**Example insight from WWDC:** A tester commented \"I was going through a tunnel and hit the favorite button. A few seconds later, it crashed.\" This revealed a network timeout issue — the crash occurred because a 10-second timeout was too short for poor network conditions.\n\n### Opening Crash in Project\n\n1. Select a crash in the list\n2. Click **Open in Project** button\n3. Xcode opens with:\n   - Debug Navigator showing backtrace\n   - Editor highlighting the exact crash line\n\n### Sharing Crashes\n\n1. Select a crash\n2. Click **Share** button in toolbar\n3. Options:\n   - Copy link to share with team\n   - Add to your to-do list\n4. When teammate clicks link, Organizer opens focused on that specific crash\n\n---\n\n## Symbolication Workflow\n\n### Why Crashes Aren't Symbolicated\n\nCrash reports show raw memory addresses until matched with **dSYM files** (debug symbol files). Xcode handles this automatically when:\n\n- You archived the build in Xcode (not command-line only)\n- \"Upload symbols to Apple\" was enabled during distribution\n- The dSYM is indexed by Spotlight\n\n### Quick Check: Is It Symbolicated?\n\nIn Organizer, look at the stack trace:\n\n| What You See | Status |\n|--------------|--------|\n| `0x0000000100abc123` | Unsymbolicated — needs dSYM |\n| `MyApp.ViewController.viewDidLoad() + 45` | Symbolicated — ready to analyze |\n| System frames symbolicated, app frames not | Partially symbolicated — missing your dSYM |\n\n### Manual Symbolication\n\nIf automatic symbolication failed:\n\n```bash\n# 1. Find the crash's build UUID (shown in crash report header)\n#    Look for \"Binary Images\" section, find your app's UUID\n\n# 2. Find matching dSYM\nmdfind \"com_apple_xcode_dsym_uuids == YOUR-UUID-HERE\"\n\n# 3. If not found, check Archives\nls ~/Library/Developer/Xcode/Archives/\n\n# 4. Symbolicate a specific address\nxcrun atos -arch arm64 \\\n  -o MyApp.app.dSYM/Contents/Resources/DWARF/MyApp \\\n  -l 0x100000000 \\\n  0x0000000100abc123\n\n# 5. Symbolicate an entire crash log (parse + symbolicate in one step)\n# Note: crashlog is an LLDB Python script, not a compiled tool.\n# Works via xcrun but may not be available in all Xcode configurations.\nxcrun crashlog MyCrash.ips\n```\n\n**`atos` vs `crashlog`**: Use `atos` for individual addresses (always available). Use `crashlog` to parse and symbolicate an entire crash report at once — it handles the full Binary Images section and resolves all addresses automatically.\n\n### Common Symbolication Failures\n\n| Symptom | Cause | Fix |\n|---------|-------|-----|\n| System frames OK, app frames hex | Missing dSYM for your app | Find dSYM in Archives folder, or re-archive with symbols |\n| Nothing symbolicated | UUID mismatch between crash and dSYM | Verify UUIDs match; rebuild exact same commit |\n| \"No such file\" from atos | dSYM not in Spotlight index | Run `mdimport /path/to/MyApp.dSYM` |\n| Can't find dSYM anywhere | Archived without symbols | Enable \"Debug Information Format = DWARF with dSYM\" in build settings |\n\n### Preventing Symbolication Issues\n\n```bash\n# Verify dSYM exists after archive\nls ~/Library/Developer/Xcode/Archives/YYYY-MM-DD/MyApp*.xcarchive/dSYMs/\n\n# Verify UUID matches\ndwarfdump --uuid MyApp.app.dSYM\n```\n\n---\n\n## Reading the Crash Report\n\n### Key Fields (What Actually Matters)\n\n| Field | What It Tells You |\n|-------|-------------------|\n| **Exception Type** | Category of crash (EXC_BAD_ACCESS, EXC_CRASH, etc.) |\n| **Exception Codes** | Specific error (KERN_INVALID_ADDRESS = null pointer) |\n| **Termination Reason** | Why the system killed the process |\n| **Crashed Thread** | Which thread died (Thread 0 = main thread) |\n| **Application Specific Information** | Often contains the actual error message |\n| **Binary Images** | Loaded frameworks (helps identify third-party culprits) |\n\n### Reading the Stack Trace\n\nThe crashed thread's stack trace reads **top to bottom**:\n\n- **Frame 0** = Where the crash occurred (most specific)\n- **Lower frames** = What called it (call chain)\n- **Look for your code** = Frames with your app/framework name\n\n```\nThread 0 Crashed:\n0   libsystem_kernel.dylib    __pthread_kill + 8        ← System code\n1   libsystem_pthread.dylib   pthread_kill + 288        ← System code\n2   libsystem_c.dylib         abort + 128               ← System code\n3   MyApp                     ViewController.loadData() ← YOUR CODE (start here)\n4   MyApp                     ViewController.viewDidLoad()\n5   UIKitCore                 -[UIViewController _loadView]\n```\n\n**Start at frame 3** — the first frame in your code. Work down to understand the call chain.\n\n### Example: Interpreting a Real Crash\n\n```\nException Type:  EXC_BAD_ACCESS (SIGSEGV)\nException Codes: KERN_INVALID_ADDRESS at 0x0000000000000010\n\nThread 0 Crashed:\n0   MyApp    0x100abc123 UserManager.currentUser.getter + 45\n1   MyApp    0x100abc456 ProfileViewController.viewDidLoad() + 123\n2   UIKitCore 0x1a2b3c4d5 -[UIViewController loadView] + 89\n```\n\n**Translation:**\n\n- `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS` = Tried to access invalid memory\n- Address `0x10` = Very low address, almost certainly nil dereference\n- Crashed in `currentUser.getter` = Accessing a property that was nil\n- Called from `ProfileViewController.viewDidLoad()` = During view setup\n\n**Likely cause:** Force-unwrapping an optional that was nil, or accessing a deallocated object.\n\n---\n\n## Common Crash Patterns\n\n### EXC_BAD_ACCESS (SIGSEGV / SIGBUS)\n\n**What it means:** Accessed memory that doesn't belong to you.\n\n**Common causes in Swift:**\n\n| Pattern | Example | Fix |\n|---------|---------|-----|\n| Force-unwrap nil | `user!.name` | Use `guard let` or `if let` |\n| Deallocated object | Accessing `self` in escaped closure after dealloc | Use `[weak self]` |\n| Array out of bounds | `array[index]` where index >= count | Check bounds first |\n| Uninitialized pointer | C interop with bad pointer | Validate pointer before use |\n\n```swift\n// Before (crashes if user is nil)\nlet name = user!.name\n\n// After (safe)\nguard let user = user else {\n    logger.warning(\"User was nil in ProfileViewController\")\n    return\n}\nlet name = user.name\n```\n\n### EXC_CRASH (SIGABRT)\n\n**What it means:** App deliberately terminated itself.\n\n**Common causes:**\n\n| Pattern | Clue in Crash Report |\n|---------|---------------------|\n| `fatalError()` / `preconditionFailure()` | Your assertion message in Application Specific Info |\n| Uncaught Objective-C exception | `NSException` type and reason in report |\n| Swift runtime error | \"Fatal error: ...\" message |\n| Deadlock detected | `dispatch_sync` onto current queue |\n\n**Debug tip:** Look at \"Application Specific Information\" section — it usually contains the actual error message.\n\n### Watchdog Termination (0x8badf00d)\n\n**What it means:** Main thread was blocked too long and the system killed your app.\n\n**Time limits:**\n\n| Context | Limit |\n|---------|-------|\n| App launch | ~20 seconds |\n| Background task | ~10 seconds |\n| App going to background | ~5 seconds |\n\n**Common causes:**\n\n- Synchronous network request on main thread\n- Synchronous file I/O on main thread\n- Deadlock between queues\n- Expensive computation blocking UI\n\n```swift\n// Before (blocks main thread — will trigger watchdog)\nlet data = try Data(contentsOf: largeFileURL)\nprocessData(data)\n\n// After (offload to background)\nTask.detached {\n    let data = try Data(contentsOf: largeFileURL)\n    await MainActor.run {\n        self.processData(data)\n    }\n}\n```\n\n### Jetsam (Memory Pressure Kill)\n\n**What it means:** System terminated your app to free memory. No crash report — just gone.\n\n**Symptoms:**\n\n- App \"disappears\" without any crash\n- Jetsam report in Organizer (separate from crashes)\n- High `pageOuts` value in report\n- Often happens during photo/video processing or large data operations\n\n**Investigation:**\n\n1. Profile with Instruments → Allocations\n2. Look for memory spikes during the reported operation\n3. Check for image caching without size limits\n4. Look for large data structures kept in memory\n\n**Common fixes:**\n\n- Use `autoreleasepool` for batch processing\n- Implement image cache with memory limits\n- Stream large files instead of loading entirely\n- Release references to large objects when backgrounded\n\n---\n\n## Terminations Without Crash Reports\n\nWhen users report \"the app just closed\" but you find no crash:\n\n### The Terminations Organizer\n\nThe **Terminations Organizer** (separate from Crashes) shows trends of app terminations that aren't programming crashes:\n\n**Window → Organizer → Terminations** (in sidebar)\n\n| Termination Category | What It Means |\n|---------------------|---------------|\n| Launch timeout | App took too long to launch |\n| Memory limit | Hit system memory ceiling |\n| CPU limit (background) | Too much CPU while backgrounded |\n| Background task timeout | Background task exceeded time limit |\n\n**Key insight:** Compare termination rates against previous versions to find regressions. A spike in memory terminations after a release indicates a memory leak or increased footprint.\n\n### Check for Jetsam\n\n1. Organizer → Select app → Look for \"Disk Write Diagnostics\" or \"Hang Diagnostics\"\n2. These aren't crashes but system-initiated terminations\n\n### Check for Background Termination\n\nApps can be terminated in background for:\n\n- **Memory pressure** (jetsam)\n- **CPU usage** while backgrounded\n- **Background task timeout**\n\n### Ask the User\n\nIf no reports exist:\n\n1. \"Was the app in the foreground when it closed?\"\n2. \"Did you see any error message?\"\n3. \"What were you doing right before it happened?\"\n4. \"How long had the app been open?\"\n\n### Enable Better Diagnostics with MetricKit\n\nMetricKit crash diagnostics are now delivered **on the next app launch** (not aggregated daily). This gives you faster access to crash data.\n\n```swift\nimport MetricKit\n\nclass MetricsManager: NSObject, MXMetricManagerSubscriber {\n\n    static let shared = MetricsManager()\n\n    func startListening() {\n        MXMetricManager.shared.add(self)\n    }\n\n    func didReceive(_ payloads: [MXMetricPayload]) {\n        // Process performance metrics\n    }\n\n    func didReceive(_ payloads: [MXDiagnosticPayload]) {\n        for payload in payloads {\n            // Crash diagnostics — delivered on next launch\n            if let crashDiagnostics = payload.crashDiagnostics {\n                for crash in crashDiagnostics {\n                    // Process crash diagnostic\n                    print(\"Crash: \\(crash.callStackTree)\")\n                }\n            }\n\n            // Hang diagnostics\n            if let hangDiagnostics = payload.hangDiagnostics {\n                for hang in hangDiagnostics {\n                    print(\"Hang duration: \\(hang.hangDuration)\")\n                }\n            }\n        }\n    }\n}\n```\n\n**When to use MetricKit vs Organizer:**\n\n| Use Case | Tool |\n|----------|------|\n| Quick triage of TestFlight crashes | Organizer (faster, visual) |\n| Programmatic crash analysis | MetricKit |\n| Custom crash reporting integration | MetricKit |\n| Termination trends across versions | Terminations Organizer |\n\n---\n\n## Claude-Assisted Interpretation\n\n### Using the Crash Analyzer Agent\n\nFor **automated crash analysis**, use the **crash-analyzer** agent:\n\n```\n/axiom:analyze-crash\n```\n\nOr trigger naturally:\n- \"Analyze this crash log\"\n- \"Parse this .ips file: ~/Library/Logs/DiagnosticReports/MyApp.ips\"\n- \"Why did my app crash? Here's the report...\"\n\nThe agent will:\n1. Parse the crash report (JSON .ips or text .crash format)\n2. Check symbolication status\n3. Categorize by crash pattern (null pointer, Swift runtime, watchdog, jetsam, etc.)\n4. Generate actionable analysis with specific next steps\n\n### Effective Prompts\n\n**Basic interpretation:**\n\n```\nHere's a crash report from my iOS app. Help me understand:\n1. What type of crash is this?\n2. Where in my code did it crash?\n3. What's the likely cause?\n\n[paste full crash report]\n```\n\n**With context (better results):**\n\n```\nMy TestFlight app crashed. Here's what I know:\n\n- User was [describe action, e.g., \"tapping the save button\"]\n- iOS version: [from crash report]\n- Device: [from crash report]\n\nCrash report:\n[paste full crash report]\n\nThe relevant code is in [file/class name]. Help me understand the cause.\n```\n\n### What to Include\n\n| Include | Why |\n|---------|-----|\n| Full crash report | Partial reports lose context |\n| What user was doing | Helps narrow down code paths |\n| Relevant code snippets | If you know the crash area |\n| iOS version and device | Some crashes are device/OS specific |\n\n### What Claude Can Help With\n\n- Interpreting exception types and codes\n- Identifying likely cause from stack trace\n- Explaining unfamiliar system frames\n- Suggesting where to add logging\n- Proposing fix patterns\n\n### What Requires Your Judgment\n\n- Whether the suggested fix is correct for your architecture\n- How to reproduce the crash locally\n- Priority relative to other bugs\n- Whether it's a regression or long-standing issue\n\n---\n\n## Feedback Triage Workflow\n\n### Where to Find Feedback\n\n**Xcode Organizer (recommended):**\nWindow → Organizer → Select app → Feedback tab\n\n**App Store Connect:**\nMy Apps → [App] → TestFlight → Feedback\n\n### What's in Each Feedback Entry\n\n| Component | Description |\n|-----------|-------------|\n| Screenshot | What the user saw (often the most valuable part) |\n| Text comment | User's description of the issue |\n| Device/OS | iPhone model and iOS version |\n| App version | Which TestFlight build |\n| Timestamp | When submitted |\n\n### Triage Workflow\n\n1. **Sort by recency** — Newest first, unless investigating specific issue\n2. **Scan screenshots** — Visual issues are immediately apparent\n3. **Read comments** — User's description and context\n4. **Check version** — Is this fixed in a newer build?\n5. **Categorize:**\n\n| Category | Action |\n|----------|--------|\n| 🐛 **Bug** | Investigate, file issue, prioritize fix |\n| 💡 **Feature request** | Add to backlog if valuable |\n| ❓ **Unclear** | Can't act without more context |\n| ✅ **Working as intended** | May indicate UX confusion |\n\n### Limitations\n\n- **No direct reply** — TestFlight doesn't support responding to feedback\n- **Screenshots only** — No video recordings\n- **Limited context** — Users often don't explain what they were trying to do\n\n### MCP-Powered Feedback Access\n\nIf **asc-mcp** is configured, you can access crash diagnostics and tester data programmatically:\n\n| Task | asc-mcp Tool | Worker |\n|------|-------------|--------|\n| List recent builds | `builds_list` | builds |\n| See who tested a build | `builds_get_beta_testers` | build_beta |\n| Get crash signatures for a build | `metrics_build_diagnostics` | metrics |\n| Download crash logs | `metrics_get_diagnostic_logs` | metrics |\n| Distribute fix to testers | `beta_groups_add_builds` | beta_groups |\n| Notify testers of new build | `builds_send_beta_notification` | build_beta |\n\n**Limitation**: TestFlight text feedback and screenshots are NOT available via the App Store Connect API. Use Xcode Organizer or the ASC web dashboard for feedback content.\n\n**Setup**: See axiom-shipping (skills/asc-mcp.md)\n\n### Getting More Context\n\nIf feedback is unclear and the tester is reachable:\n\n- Contact through TestFlight group email\n- Add in-app feedback mechanism with more detail capture\n- Include reproduction steps prompt in your TestFlight notes\n\n---\n\n## Pressure Scenarios\n\n### Scenario 1: \"VIP user says app crashes constantly, but I can't find any crash reports\"\n\n**Pressure:** Important stakeholder, no evidence, tempted to dismiss with \"works for me\"\n\n**Correct approach:**\n\n1. Verify they're on TestFlight (not App Store, not dev build)\n2. Confirm they've consented to share diagnostics (Settings → Privacy → Analytics)\n3. Check for jetsam reports (kills without crash reports)\n4. Check crash reports for their specific device/OS combination\n5. Ask for specific reproduction steps\n6. If still nothing: request screen recording of the issue\n\n**Response template:**\n> \"I've checked our crash reports and don't see crashes matching your description yet. To help investigate: (1) Could you confirm you're running the TestFlight version? (2) What exactly happens — does the app close suddenly, freeze, or show an error? (3) What were you doing right before? This will help me find the issue.\"\n\n**Why this matters:** \"Works for me\" destroys trust. Investigate thoroughly before dismissing.\n\n### Scenario 2: \"Crash rate spiked after latest TestFlight build, need to fix ASAP\"\n\n**Pressure:** Time pressure, tempted to guess at fix based on code changes\n\n**Correct approach:**\n\n1. Open Organizer → Crashes → Filter to the new build\n2. Group crashes by exception type (look for the dominant signature)\n3. Identify the #1 crash by frequency\n4. Symbolicate and read the crash report fully\n5. Understand the cause before writing any fix\n6. If possible, reproduce locally\n7. Fix the verified cause, not a guess\n\n**Why this matters:** Rushed guesses often introduce new bugs or miss the real issue. 15 minutes of proper triage prevents hours of misdirected debugging.\n\n### Scenario 3: \"Crash report is symbolicated but I still don't understand it\"\n\n**Pressure:** Tempted to ignore it or make random changes hoping it helps\n\n**Correct approach:**\n\n1. Paste full crash report into Claude with context\n2. Ask for interpretation, not just \"fix this\"\n3. Research exception type if unfamiliar\n4. If still unclear after research, add logging around the crash site:\n\n```swift\nfunc suspectFunction() {\n    logger.debug(\"Entering suspectFunction, state: \\(debugDescription)\")\n    defer { logger.debug(\"Exiting suspectFunction\") }\n\n    // ... existing code ...\n}\n```\n\n5. Ship instrumented build to TestFlight\n6. Wait for reproduction with better context\n\n**Why this matters:** Understanding beats guessing. Logging beats speculation. It's okay to say \"I need more information\" rather than shipping a random change.\n\n---\n\n## Quick Reference\n\n### Organizer Keyboard Shortcuts\n\n| Action | Shortcut |\n|--------|----------|\n| Open Organizer | ⌘⇧O (from Xcode) |\n| Refresh | ⌘R |\n\n### Common Exception Codes\n\n| Code | Meaning |\n|------|---------|\n| `KERN_INVALID_ADDRESS` | Null pointer / bad memory access |\n| `KERN_PROTECTION_FAILURE` | Memory protection violation |\n| `0x8badf00d` | Watchdog timeout (main thread blocked) |\n| `0xdead10cc` | Deadlock detected |\n| `0xc00010ff` | Thermal event (device too hot) |\n\n### Crash Report Sections\n\n| Section | Contains |\n|---------|----------|\n| Header | App info, device, OS, date |\n| Exception Information | Crash type and codes |\n| Termination Reason | Why system killed the process |\n| Triggered by Thread | Which thread crashed |\n| Application Specific | Error messages, assertions |\n| Thread Backtraces | Stack traces for all threads |\n| Binary Images | Loaded frameworks and addresses |\n\n---\n\n## Resources\n\n**WWDC:** 2018-414, 2020-10076, 2020-10078, 2020-10081, 2021-10203, 2021-10258\n\n**Docs:** /xcode/diagnosing-issues-using-crash-reports-and-device-logs, /xcode/examining-the-fields-in-a-crash-report, /xcode/adding-identifiable-symbol-names-to-a-crash-report, /xcode/identifying-the-cause-of-common-crashes, /xcode/identifying-high-memory-use-with-jetsam-event-reports\n\n**Skills**: axiom-performance (skills/memory-debugging.md), axiom-build (skills/xcode-debugging.md), axiom-concurrency, axiom-build (skills/lldb.md) (reproduce and investigate interactively), axiom-shipping (skills/asc-mcp.md) (programmatic ASC access)\n\n**Agents:** crash-analyzer (automated crash log parsing and analysis)\n",
+      "description": "When a TestFlight crash comes in (downloaded from App Store Connect), run:",
+      "content": "\n# TestFlight Crash & Feedback Triage\n\n## First Step: Run xcsym\n\nWhen a TestFlight crash comes in (downloaded from App Store Connect), run:\n\n```bash\nxcsym crash path/to/crash.ips --format=standard\n```\n\nxcsym discovers dSYMs from Archives, DerivedData, and `~/Downloads` automatically — no configuration needed. If symbolication is incomplete, use `xcsym verify` to pinpoint which images need dSYMs (the classic bitcode-rebuild UUID mismatch issue lives there). See `axiom-tools (skills/xcsym-ref.md)` for the full subcommand reference and exit-code table.\n\nThe rest of this skill covers the Organizer-centric workflow, common crash patterns, and pre-xcsym fallbacks.\n\n## Overview\n\nSystematic workflow for investigating TestFlight crashes and reviewing beta feedback using Xcode Organizer. **Core principle:** Understand the crash before writing any fix — 15 minutes of triage prevents hours of debugging.\n\n## Red Flags — Use This Skill When\n\n- \"A beta tester said my app crashed\"\n- \"I see crashes in App Store Connect metrics but don't know how to investigate\"\n- \"Crash logs in Organizer aren't symbolicated\"\n- \"User sent a screenshot of a crash but I can't reproduce it\"\n- \"App was killed but there's no crash — just disappeared\"\n- \"TestFlight feedback has screenshots I need to review\"\n\n---\n\n## Decision Tree — Start Here\n\n### \"A user reported a crash\"\n\n1. **Open Xcode Organizer** (Window → Organizer → Crashes tab)\n2. **Select your app** from the left sidebar\n3. **Find the build version** the user was running\n4. **Is the crash symbolicated?**\n   - YES (you see function names) → Go to [Reading the Crash Report](#reading-the-crash-report)\n   - NO (you see hex addresses like `0x100abc123`) → Go to [Symbolication Workflow](#symbolication-workflow)\n5. **Can you identify the crash location?**\n   - YES → Go to [Common Crash Patterns](#common-crash-patterns)\n   - NO → Go to [Claude-Assisted Interpretation](#claude-assisted-interpretation)\n\n### \"App was killed but no crash report\"\n\nNot all terminations produce crash reports. Check for:\n\n1. **Jetsam reports** — System killed app due to memory pressure\n   - Organizer shows these separately from crashes\n   - Look for high `pageOuts` value\n2. **Watchdog termination** — Main thread blocked too long\n   - Exception code `0x8badf00d` (\"ate bad food\")\n   - Happens during launch (>20s) or background tasks (>10s)\n3. **MetricKit diagnostics** — On-device termination reasons\n   - Requires MetricKit integration in your app\n\n→ See [Terminations Without Crash Reports](#terminations-without-crash-reports)\n\n### \"I want to review TestFlight feedback\"\n\n1. **Xcode Organizer** → Feedback tab (next to Crashes)\n2. **Or** App Store Connect → My Apps → [App] → TestFlight → Feedback\n\n→ See [Feedback Triage Workflow](#feedback-triage-workflow)\n\n---\n\n## Xcode Organizer Walkthrough\n\n### Opening the Organizer\n\n**Window → Organizer** (or ⌘⇧O from Xcode)\n\n### UI Layout\n\n```\n┌─────────────────────────────────────────────────────────────────┐\n│ [Toolbar: Time Period ▼] [Version ▼] [Product ▼] [Release ▼]   │\n├──────────┬──────────────────────────┬───────────────────────────┤\n│ Sidebar  │     Crashes List         │       Inspector           │\n│          │                          │                           │\n│ • Crashes│  ┌─────────────────────┐ │  Distribution Graph       │\n│ • Energy │  │ syncFavorites crash │ │  ┌─────────────────────┐  │\n│ • Hang   │  │ 21 devices • 7 today│ │  │ ▄ ▄▄▄ v2.0          │  │\n│ • Disk   │  └─────────────────────┘ │  │ ▄▄▄▄▄ v2.0.1        │  │\n│ Feedback │  ┌─────────────────────┐ │  └─────────────────────┘  │\n│          │  │ Another crash...    │ │                           │\n│          │  └─────────────────────┘ │  Device Distribution      │\n│          │                          │  OS Distribution          │\n│          ├──────────────────────────┤                           │\n│          │     Log View             │  [Feedback Inspector]     │\n│          │  (simplified crash view) │  Shows tester feedback    │\n│          │                          │  for selected crash       │\n└──────────┴──────────────────────────┴───────────────────────────┘\n```\n\n### Key Features\n\n| Feature | What It Does |\n|---------|--------------|\n| **Speedy Delivery** | TestFlight crashes delivered moments after occurrence (not daily) |\n| **Year of History** | Filter crashes by time period, see monthly trends |\n| **Product Filter** | Filter by App Clip, watch app, extensions, or main app |\n| **Version Filter** | Drill down to specific builds |\n| **Release Filter** | Separate TestFlight vs App Store crashes |\n| **Share Button** | Share crash link with team members |\n| **Feedback Inspector** | See tester comments for selected crash |\n\n### Crash Entry Badges\n\nCrashes in the list show badges indicating origin:\n\n| Badge | Meaning |\n|-------|---------|\n| App Clip | Crash from your App Clip |\n| Watch | Crash from watchOS companion |\n| Extension | Crash from share extension, widget, etc. |\n| (none) | Main iOS app |\n\n### The Triage Questions Workflow\n\nBefore diving into code, ask yourself these questions (from WWDC):\n\n#### Question 1 — How Long Has This Been an Issue\n\n→ Check the **inspector's graph area** on the right\n→ Graph legend shows which versions are affected\n→ Look for when the crash first appeared\n\n#### Question 2 — Is This Affecting Production or Just TestFlight\n\n→ Use the **Release filter** in toolbar\n→ Select \"Release\" to see App Store crashes only\n→ Select \"TestFlight\" for beta crashes only\n\n#### Question 3 — What Was the User Doing\n\n→ Open the **Feedback Inspector** (right panel)\n→ Check for tester comments describing their actions\n→ Context clues: network state, battery level, disk space\n\n### Using the Feedback Inspector\n\nWhen a crash has associated TestFlight feedback, you'll see a feedback icon in the crashes list. Click it to open the Feedback Inspector.\n\n**Each feedback entry shows:**\n\n| Field | Why It Matters |\n|-------|----------------|\n| Version/Build | Confirms exact build tester was running |\n| Device model | Device-specific crashes (older devices, specific screen sizes) |\n| Battery level | Low battery can affect app behavior |\n| Available disk | Low disk can cause write failures |\n| Network type | Cellular vs WiFi, connectivity issues |\n| Tester comment | Their description of what happened |\n\n**Example insight from WWDC:** A tester commented \"I was going through a tunnel and hit the favorite button. A few seconds later, it crashed.\" This revealed a network timeout issue — the crash occurred because a 10-second timeout was too short for poor network conditions.\n\n### Opening Crash in Project\n\n1. Select a crash in the list\n2. Click **Open in Project** button\n3. Xcode opens with:\n   - Debug Navigator showing backtrace\n   - Editor highlighting the exact crash line\n\n### Sharing Crashes\n\n1. Select a crash\n2. Click **Share** button in toolbar\n3. Options:\n   - Copy link to share with team\n   - Add to your to-do list\n4. When teammate clicks link, Organizer opens focused on that specific crash\n\n---\n\n## Symbolication Workflow\n\n### Why Crashes Aren't Symbolicated\n\nCrash reports show raw memory addresses until matched with **dSYM files** (debug symbol files). Xcode handles this automatically when:\n\n- You archived the build in Xcode (not command-line only)\n- \"Upload symbols to Apple\" was enabled during distribution\n- The dSYM is indexed by Spotlight\n\n### Quick Check: Is It Symbolicated?\n\nIn Organizer, look at the stack trace:\n\n| What You See | Status |\n|--------------|--------|\n| `0x0000000100abc123` | Unsymbolicated — needs dSYM |\n| `MyApp.ViewController.viewDidLoad() + 45` | Symbolicated — ready to analyze |\n| System frames symbolicated, app frames not | Partially symbolicated — missing your dSYM |\n\n### Manual Symbolication\n\nIf automatic symbolication failed:\n\n```bash\n# 1. Find the crash's build UUID (shown in crash report header)\n#    Look for \"Binary Images\" section, find your app's UUID\n\n# 2. Find matching dSYM\nmdfind \"com_apple_xcode_dsym_uuids == YOUR-UUID-HERE\"\n\n# 3. If not found, check Archives\nls ~/Library/Developer/Xcode/Archives/\n\n# 4. Symbolicate a specific address\nxcrun atos -arch arm64 \\\n  -o MyApp.app.dSYM/Contents/Resources/DWARF/MyApp \\\n  -l 0x100000000 \\\n  0x0000000100abc123\n\n# 5. Symbolicate an entire crash log (parse + symbolicate in one step)\n# Note: crashlog is an LLDB Python script, not a compiled tool.\n# Works via xcrun but may not be available in all Xcode configurations.\nxcrun crashlog MyCrash.ips\n```\n\n**`atos` vs `crashlog`**: Use `atos` for individual addresses (always available). Use `crashlog` to parse and symbolicate an entire crash report at once — it handles the full Binary Images section and resolves all addresses automatically.\n\n### Common Symbolication Failures\n\n| Symptom | Cause | Fix |\n|---------|-------|-----|\n| System frames OK, app frames hex | Missing dSYM for your app | Find dSYM in Archives folder, or re-archive with symbols |\n| Nothing symbolicated | UUID mismatch between crash and dSYM | Verify UUIDs match; rebuild exact same commit |\n| \"No such file\" from atos | dSYM not in Spotlight index | Run `mdimport /path/to/MyApp.dSYM` |\n| Can't find dSYM anywhere | Archived without symbols | Enable \"Debug Information Format = DWARF with dSYM\" in build settings |\n\n### Preventing Symbolication Issues\n\n```bash\n# Verify dSYM exists after archive\nls ~/Library/Developer/Xcode/Archives/YYYY-MM-DD/MyApp*.xcarchive/dSYMs/\n\n# Verify UUID matches\ndwarfdump --uuid MyApp.app.dSYM\n```\n\n---\n\n## Reading the Crash Report\n\n### Key Fields (What Actually Matters)\n\n| Field | What It Tells You |\n|-------|-------------------|\n| **Exception Type** | Category of crash (EXC_BAD_ACCESS, EXC_CRASH, etc.) |\n| **Exception Codes** | Specific error (KERN_INVALID_ADDRESS = null pointer) |\n| **Termination Reason** | Why the system killed the process |\n| **Crashed Thread** | Which thread died (Thread 0 = main thread) |\n| **Application Specific Information** | Often contains the actual error message |\n| **Binary Images** | Loaded frameworks (helps identify third-party culprits) |\n\n### Reading the Stack Trace\n\nThe crashed thread's stack trace reads **top to bottom**:\n\n- **Frame 0** = Where the crash occurred (most specific)\n- **Lower frames** = What called it (call chain)\n- **Look for your code** = Frames with your app/framework name\n\n```\nThread 0 Crashed:\n0   libsystem_kernel.dylib    __pthread_kill + 8        ← System code\n1   libsystem_pthread.dylib   pthread_kill + 288        ← System code\n2   libsystem_c.dylib         abort + 128               ← System code\n3   MyApp                     ViewController.loadData() ← YOUR CODE (start here)\n4   MyApp                     ViewController.viewDidLoad()\n5   UIKitCore                 -[UIViewController _loadView]\n```\n\n**Start at frame 3** — the first frame in your code. Work down to understand the call chain.\n\n### Example: Interpreting a Real Crash\n\n```\nException Type:  EXC_BAD_ACCESS (SIGSEGV)\nException Codes: KERN_INVALID_ADDRESS at 0x0000000000000010\n\nThread 0 Crashed:\n0   MyApp    0x100abc123 UserManager.currentUser.getter + 45\n1   MyApp    0x100abc456 ProfileViewController.viewDidLoad() + 123\n2   UIKitCore 0x1a2b3c4d5 -[UIViewController loadView] + 89\n```\n\n**Translation:**\n\n- `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS` = Tried to access invalid memory\n- Address `0x10` = Very low address, almost certainly nil dereference\n- Crashed in `currentUser.getter` = Accessing a property that was nil\n- Called from `ProfileViewController.viewDidLoad()` = During view setup\n\n**Likely cause:** Force-unwrapping an optional that was nil, or accessing a deallocated object.\n\n---\n\n## Common Crash Patterns\n\n### EXC_BAD_ACCESS (SIGSEGV / SIGBUS)\n\n**What it means:** Accessed memory that doesn't belong to you.\n\n**Common causes in Swift:**\n\n| Pattern | Example | Fix |\n|---------|---------|-----|\n| Force-unwrap nil | `user!.name` | Use `guard let` or `if let` |\n| Deallocated object | Accessing `self` in escaped closure after dealloc | Use `[weak self]` |\n| Array out of bounds | `array[index]` where index >= count | Check bounds first |\n| Uninitialized pointer | C interop with bad pointer | Validate pointer before use |\n\n```swift\n// Before (crashes if user is nil)\nlet name = user!.name\n\n// After (safe)\nguard let user = user else {\n    logger.warning(\"User was nil in ProfileViewController\")\n    return\n}\nlet name = user.name\n```\n\n### EXC_CRASH (SIGABRT)\n\n**What it means:** App deliberately terminated itself.\n\n**Common causes:**\n\n| Pattern | Clue in Crash Report |\n|---------|---------------------|\n| `fatalError()` / `preconditionFailure()` | Your assertion message in Application Specific Info |\n| Uncaught Objective-C exception | `NSException` type and reason in report |\n| Swift runtime error | \"Fatal error: ...\" message |\n| Deadlock detected | `dispatch_sync` onto current queue |\n\n**Debug tip:** Look at \"Application Specific Information\" section — it usually contains the actual error message.\n\n### Watchdog Termination (0x8badf00d)\n\n**What it means:** Main thread was blocked too long and the system killed your app.\n\n**Time limits:**\n\n| Context | Limit |\n|---------|-------|\n| App launch | ~20 seconds |\n| Background task | ~10 seconds |\n| App going to background | ~5 seconds |\n\n**Common causes:**\n\n- Synchronous network request on main thread\n- Synchronous file I/O on main thread\n- Deadlock between queues\n- Expensive computation blocking UI\n\n```swift\n// Before (blocks main thread — will trigger watchdog)\nlet data = try Data(contentsOf: largeFileURL)\nprocessData(data)\n\n// After (offload to background)\nTask.detached {\n    let data = try Data(contentsOf: largeFileURL)\n    await MainActor.run {\n        self.processData(data)\n    }\n}\n```\n\n### Jetsam (Memory Pressure Kill)\n\n**What it means:** System terminated your app to free memory. No crash report — just gone.\n\n**Symptoms:**\n\n- App \"disappears\" without any crash\n- Jetsam report in Organizer (separate from crashes)\n- High `pageOuts` value in report\n- Often happens during photo/video processing or large data operations\n\n**Investigation:**\n\n1. Profile with Instruments → Allocations\n2. Look for memory spikes during the reported operation\n3. Check for image caching without size limits\n4. Look for large data structures kept in memory\n\n**Common fixes:**\n\n- Use `autoreleasepool` for batch processing\n- Implement image cache with memory limits\n- Stream large files instead of loading entirely\n- Release references to large objects when backgrounded\n\n---\n\n## Terminations Without Crash Reports\n\nWhen users report \"the app just closed\" but you find no crash:\n\n### The Terminations Organizer\n\nThe **Terminations Organizer** (separate from Crashes) shows trends of app terminations that aren't programming crashes:\n\n**Window → Organizer → Terminations** (in sidebar)\n\n| Termination Category | What It Means |\n|---------------------|---------------|\n| Launch timeout | App took too long to launch |\n| Memory limit | Hit system memory ceiling |\n| CPU limit (background) | Too much CPU while backgrounded |\n| Background task timeout | Background task exceeded time limit |\n\n**Key insight:** Compare termination rates against previous versions to find regressions. A spike in memory terminations after a release indicates a memory leak or increased footprint.\n\n### Check for Jetsam\n\n1. Organizer → Select app → Look for \"Disk Write Diagnostics\" or \"Hang Diagnostics\"\n2. These aren't crashes but system-initiated terminations\n\n### Check for Background Termination\n\nApps can be terminated in background for:\n\n- **Memory pressure** (jetsam)\n- **CPU usage** while backgrounded\n- **Background task timeout**\n\n### Ask the User\n\nIf no reports exist:\n\n1. \"Was the app in the foreground when it closed?\"\n2. \"Did you see any error message?\"\n3. \"What were you doing right before it happened?\"\n4. \"How long had the app been open?\"\n\n### Enable Better Diagnostics with MetricKit\n\nMetricKit crash diagnostics are now delivered **on the next app launch** (not aggregated daily). This gives you faster access to crash data.\n\n```swift\nimport MetricKit\n\nclass MetricsManager: NSObject, MXMetricManagerSubscriber {\n\n    static let shared = MetricsManager()\n\n    func startListening() {\n        MXMetricManager.shared.add(self)\n    }\n\n    func didReceive(_ payloads: [MXMetricPayload]) {\n        // Process performance metrics\n    }\n\n    func didReceive(_ payloads: [MXDiagnosticPayload]) {\n        for payload in payloads {\n            // Crash diagnostics — delivered on next launch\n            if let crashDiagnostics = payload.crashDiagnostics {\n                for crash in crashDiagnostics {\n                    // Process crash diagnostic\n                    print(\"Crash: \\(crash.callStackTree)\")\n                }\n            }\n\n            // Hang diagnostics\n            if let hangDiagnostics = payload.hangDiagnostics {\n                for hang in hangDiagnostics {\n                    print(\"Hang duration: \\(hang.hangDuration)\")\n                }\n            }\n        }\n    }\n}\n```\n\n**When to use MetricKit vs Organizer:**\n\n| Use Case | Tool |\n|----------|------|\n| Quick triage of TestFlight crashes | Organizer (faster, visual) |\n| Programmatic crash analysis | MetricKit |\n| Custom crash reporting integration | MetricKit |\n| Termination trends across versions | Terminations Organizer |\n\n---\n\n## Claude-Assisted Interpretation\n\n### Using the Crash Analyzer Agent\n\nFor **automated crash analysis**, use the **crash-analyzer** agent:\n\n```\n/axiom:analyze-crash\n```\n\nOr trigger naturally:\n- \"Analyze this crash log\"\n- \"Parse this .ips file: ~/Library/Logs/DiagnosticReports/MyApp.ips\"\n- \"Why did my app crash? Here's the report...\"\n\nThe agent will:\n1. Parse the crash report (JSON .ips or text .crash format)\n2. Check symbolication status\n3. Categorize by crash pattern (null pointer, Swift runtime, watchdog, jetsam, etc.)\n4. Generate actionable analysis with specific next steps\n\n### Effective Prompts\n\n**Basic interpretation:**\n\n```\nHere's a crash report from my iOS app. Help me understand:\n1. What type of crash is this?\n2. Where in my code did it crash?\n3. What's the likely cause?\n\n[paste full crash report]\n```\n\n**With context (better results):**\n\n```\nMy TestFlight app crashed. Here's what I know:\n\n- User was [describe action, e.g., \"tapping the save button\"]\n- iOS version: [from crash report]\n- Device: [from crash report]\n\nCrash report:\n[paste full crash report]\n\nThe relevant code is in [file/class name]. Help me understand the cause.\n```\n\n### What to Include\n\n| Include | Why |\n|---------|-----|\n| Full crash report | Partial reports lose context |\n| What user was doing | Helps narrow down code paths |\n| Relevant code snippets | If you know the crash area |\n| iOS version and device | Some crashes are device/OS specific |\n\n### What Claude Can Help With\n\n- Interpreting exception types and codes\n- Identifying likely cause from stack trace\n- Explaining unfamiliar system frames\n- Suggesting where to add logging\n- Proposing fix patterns\n\n### What Requires Your Judgment\n\n- Whether the suggested fix is correct for your architecture\n- How to reproduce the crash locally\n- Priority relative to other bugs\n- Whether it's a regression or long-standing issue\n\n---\n\n## Feedback Triage Workflow\n\n### Where to Find Feedback\n\n**Xcode Organizer (recommended):**\nWindow → Organizer → Select app → Feedback tab\n\n**App Store Connect:**\nMy Apps → [App] → TestFlight → Feedback\n\n### What's in Each Feedback Entry\n\n| Component | Description |\n|-----------|-------------|\n| Screenshot | What the user saw (often the most valuable part) |\n| Text comment | User's description of the issue |\n| Device/OS | iPhone model and iOS version |\n| App version | Which TestFlight build |\n| Timestamp | When submitted |\n\n### Triage Workflow\n\n1. **Sort by recency** — Newest first, unless investigating specific issue\n2. **Scan screenshots** — Visual issues are immediately apparent\n3. **Read comments** — User's description and context\n4. **Check version** — Is this fixed in a newer build?\n5. **Categorize:**\n\n| Category | Action |\n|----------|--------|\n| 🐛 **Bug** | Investigate, file issue, prioritize fix |\n| 💡 **Feature request** | Add to backlog if valuable |\n| ❓ **Unclear** | Can't act without more context |\n| ✅ **Working as intended** | May indicate UX confusion |\n\n### Limitations\n\n- **No direct reply** — TestFlight doesn't support responding to feedback\n- **Screenshots only** — No video recordings\n- **Limited context** — Users often don't explain what they were trying to do\n\n### MCP-Powered Feedback Access\n\nIf **asc-mcp** is configured, you can access crash diagnostics and tester data programmatically:\n\n| Task | asc-mcp Tool | Worker |\n|------|-------------|--------|\n| List recent builds | `builds_list` | builds |\n| See who tested a build | `builds_get_beta_testers` | build_beta |\n| Get crash signatures for a build | `metrics_build_diagnostics` | metrics |\n| Download crash logs | `metrics_get_diagnostic_logs` | metrics |\n| Distribute fix to testers | `beta_groups_add_builds` | beta_groups |\n| Notify testers of new build | `builds_send_beta_notification` | build_beta |\n\n**Limitation**: TestFlight text feedback and screenshots are NOT available via the App Store Connect API. Use Xcode Organizer or the ASC web dashboard for feedback content.\n\n**Setup**: See axiom-shipping (skills/asc-mcp.md)\n\n### Getting More Context\n\nIf feedback is unclear and the tester is reachable:\n\n- Contact through TestFlight group email\n- Add in-app feedback mechanism with more detail capture\n- Include reproduction steps prompt in your TestFlight notes\n\n---\n\n## Pressure Scenarios\n\n### Scenario 1: \"VIP user says app crashes constantly, but I can't find any crash reports\"\n\n**Pressure:** Important stakeholder, no evidence, tempted to dismiss with \"works for me\"\n\n**Correct approach:**\n\n1. Verify they're on TestFlight (not App Store, not dev build)\n2. Confirm they've consented to share diagnostics (Settings → Privacy → Analytics)\n3. Check for jetsam reports (kills without crash reports)\n4. Check crash reports for their specific device/OS combination\n5. Ask for specific reproduction steps\n6. If still nothing: request screen recording of the issue\n\n**Response template:**\n> \"I've checked our crash reports and don't see crashes matching your description yet. To help investigate: (1) Could you confirm you're running the TestFlight version? (2) What exactly happens — does the app close suddenly, freeze, or show an error? (3) What were you doing right before? This will help me find the issue.\"\n\n**Why this matters:** \"Works for me\" destroys trust. Investigate thoroughly before dismissing.\n\n### Scenario 2: \"Crash rate spiked after latest TestFlight build, need to fix ASAP\"\n\n**Pressure:** Time pressure, tempted to guess at fix based on code changes\n\n**Correct approach:**\n\n1. Open Organizer → Crashes → Filter to the new build\n2. Group crashes by exception type (look for the dominant signature)\n3. Identify the #1 crash by frequency\n4. Symbolicate and read the crash report fully\n5. Understand the cause before writing any fix\n6. If possible, reproduce locally\n7. Fix the verified cause, not a guess\n\n**Why this matters:** Rushed guesses often introduce new bugs or miss the real issue. 15 minutes of proper triage prevents hours of misdirected debugging.\n\n### Scenario 3: \"Crash report is symbolicated but I still don't understand it\"\n\n**Pressure:** Tempted to ignore it or make random changes hoping it helps\n\n**Correct approach:**\n\n1. Paste full crash report into Claude with context\n2. Ask for interpretation, not just \"fix this\"\n3. Research exception type if unfamiliar\n4. If still unclear after research, add logging around the crash site:\n\n```swift\nfunc suspectFunction() {\n    logger.debug(\"Entering suspectFunction, state: \\(debugDescription)\")\n    defer { logger.debug(\"Exiting suspectFunction\") }\n\n    // ... existing code ...\n}\n```\n\n5. Ship instrumented build to TestFlight\n6. Wait for reproduction with better context\n\n**Why this matters:** Understanding beats guessing. Logging beats speculation. It's okay to say \"I need more information\" rather than shipping a random change.\n\n---\n\n## Quick Reference\n\n### Organizer Keyboard Shortcuts\n\n| Action | Shortcut |\n|--------|----------|\n| Open Organizer | ⌘⇧O (from Xcode) |\n| Refresh | ⌘R |\n\n### Common Exception Codes\n\n| Code | Meaning |\n|------|---------|\n| `KERN_INVALID_ADDRESS` | Null pointer / bad memory access |\n| `KERN_PROTECTION_FAILURE` | Memory protection violation |\n| `0x8badf00d` | Watchdog timeout (main thread blocked) |\n| `0xdead10cc` | Deadlock detected |\n| `0xc00010ff` | Thermal event (device too hot) |\n\n### Crash Report Sections\n\n| Section | Contains |\n|---------|----------|\n| Header | App info, device, OS, date |\n| Exception Information | Crash type and codes |\n| Termination Reason | Why system killed the process |\n| Triggered by Thread | Which thread crashed |\n| Application Specific | Error messages, assertions |\n| Thread Backtraces | Stack traces for all threads |\n| Binary Images | Loaded frameworks and addresses |\n\n---\n\n## Resources\n\n**WWDC:** 2018-414, 2020-10076, 2020-10078, 2020-10081, 2021-10203, 2021-10258\n\n**Docs:** /xcode/diagnosing-issues-using-crash-reports-and-device-logs, /xcode/examining-the-fields-in-a-crash-report, /xcode/adding-identifiable-symbol-names-to-a-crash-report, /xcode/identifying-the-cause-of-common-crashes, /xcode/identifying-high-memory-use-with-jetsam-event-reports\n\n**Skills**: axiom-performance (skills/memory-debugging.md), axiom-build (skills/xcode-debugging.md), axiom-concurrency, axiom-build (skills/lldb.md) (reproduce and investigate interactively), axiom-shipping (skills/asc-mcp.md) (programmatic ASC access)\n\n**Agents:** crash-analyzer (automated crash log parsing and analysis)\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -23915,164 +23915,171 @@
           "charCount": 37
         },
         {
-          "heading": "Overview",
+          "heading": "First Step: Run xcsym",
           "level": 2,
           "startLine": 3,
-          "endLine": 6,
+          "endLine": 14,
+          "charCount": 628
+        },
+        {
+          "heading": "Overview",
+          "level": 2,
+          "startLine": 15,
+          "endLine": 18,
           "charCount": 237
         },
         {
           "heading": "Red Flags — Use This Skill When",
           "level": 2,
-          "startLine": 7,
-          "endLine": 17,
+          "startLine": 19,
+          "endLine": 29,
           "charCount": 387
         },
         {
           "heading": "Decision Tree — Start Here",
           "level": 2,
-          "startLine": 18,
-          "endLine": 55,
+          "startLine": 30,
+          "endLine": 67,
           "charCount": 1499
         },
         {
           "heading": "Xcode Organizer Walkthrough",
           "level": 2,
-          "startLine": 56,
-          "endLine": 165,
+          "startLine": 68,
+          "endLine": 177,
           "charCount": 4235
         },
         {
           "heading": "Symbolication Workflow",
           "level": 2,
-          "startLine": 166,
-          "endLine": 190,
+          "startLine": 178,
+          "endLine": 202,
           "charCount": 781
         },
         {
           "heading": "1. Find the crash's build UUID (shown in crash report header)",
           "level": 1,
-          "startLine": 191,
-          "endLine": 191,
+          "startLine": 203,
+          "endLine": 203,
           "charCount": 63
         },
         {
           "heading": "Look for \"Binary Images\" section, find your app's UUID",
           "level": 1,
-          "startLine": 192,
-          "endLine": 193,
+          "startLine": 204,
+          "endLine": 205,
           "charCount": 60
         },
         {
           "heading": "2. Find matching dSYM",
           "level": 1,
-          "startLine": 194,
-          "endLine": 196,
+          "startLine": 206,
+          "endLine": 208,
           "charCount": 78
         },
         {
           "heading": "3. If not found, check Archives",
           "level": 1,
-          "startLine": 197,
-          "endLine": 199,
+          "startLine": 209,
+          "endLine": 211,
           "charCount": 73
         },
         {
           "heading": "4. Symbolicate a specific address",
           "level": 1,
-          "startLine": 200,
-          "endLine": 205,
+          "startLine": 212,
+          "endLine": 217,
           "charCount": 154
         },
         {
           "heading": "5. Symbolicate an entire crash log (parse + symbolicate in one step)",
           "level": 1,
-          "startLine": 206,
-          "endLine": 206,
+          "startLine": 218,
+          "endLine": 218,
           "charCount": 70
         },
         {
           "heading": "Note: crashlog is an LLDB Python script, not a compiled tool.",
           "level": 1,
-          "startLine": 207,
-          "endLine": 207,
+          "startLine": 219,
+          "endLine": 219,
           "charCount": 63
         },
         {
           "heading": "Works via xcrun but may not be available in all Xcode configurations.",
           "level": 1,
-          "startLine": 208,
-          "endLine": 225,
+          "startLine": 220,
+          "endLine": 237,
           "charCount": 936
         },
         {
           "heading": "Verify dSYM exists after archive",
           "level": 1,
-          "startLine": 226,
-          "endLine": 228,
+          "startLine": 238,
+          "endLine": 240,
           "charCount": 108
         },
         {
           "heading": "Verify UUID matches",
           "level": 1,
-          "startLine": 229,
-          "endLine": 234,
+          "startLine": 241,
+          "endLine": 246,
           "charCount": 63
         },
         {
           "heading": "Reading the Crash Report",
           "level": 2,
-          "startLine": 235,
-          "endLine": 290,
+          "startLine": 247,
+          "endLine": 302,
           "charCount": 2139
         },
         {
           "heading": "Common Crash Patterns",
           "level": 2,
-          "startLine": 291,
-          "endLine": 392,
+          "startLine": 303,
+          "endLine": 404,
           "charCount": 2850
         },
         {
           "heading": "Terminations Without Crash Reports",
           "level": 2,
-          "startLine": 393,
-          "endLine": 484,
+          "startLine": 405,
+          "endLine": 496,
           "charCount": 2828
         },
         {
           "heading": "Claude-Assisted Interpretation",
           "level": 2,
-          "startLine": 485,
-          "endLine": 559,
+          "startLine": 497,
+          "endLine": 571,
           "charCount": 1880
         },
         {
           "heading": "Feedback Triage Workflow",
           "level": 2,
-          "startLine": 560,
-          "endLine": 627,
+          "startLine": 572,
+          "endLine": 639,
           "charCount": 2376
         },
         {
           "heading": "Pressure Scenarios",
           "level": 2,
-          "startLine": 628,
-          "endLine": 690,
+          "startLine": 640,
+          "endLine": 702,
           "charCount": 2548
         },
         {
           "heading": "Quick Reference",
           "level": 2,
-          "startLine": 691,
-          "endLine": 723,
+          "startLine": 703,
+          "endLine": 735,
           "charCount": 916
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 724,
-          "endLine": 733,
+          "startLine": 736,
+          "endLine": 745,
           "charCount": 706
         }
       ],
@@ -33291,10 +33298,10 @@
         ],
         "137": [
           4,
-          26,
+          10,
           9,
-          81,
-          904
+          84,
+          928
         ],
         "138": [
           5,
@@ -33572,10 +33579,10 @@
       },
       "averageFieldLength": [
         3.9661016949152543,
-        15.11864406779661,
+        15.028248587570621,
         4.734463276836161,
-        43.926553672316395,
-        605.7344632768356
+        43.943502824858754,
+        605.8700564971747
       ],
       "storedFields": {
         "0": {
@@ -34404,7 +34411,7 @@
           "skillType": "discipline",
           "source": "axiom",
           "category": "shipping",
-          "description": "Systematic workflow for investigating TestFlight crashes and reviewing beta feedback using Xcode Organizer. **Core principle:** Understand the crash before writing any fix — 15 minutes of triage prevents hours of debugging."
+          "description": "When a TestFlight crash comes in (downloaded from App Store Connect), run:"
         },
         "138": {
           "skillType": "discipline",
@@ -41519,43 +41526,6 @@
           }
         ],
         [
-          "xcsentinel",
-          {
-            "4": {
-              "173": 1
-            }
-          }
-        ],
-        [
-          "xcsym",
-          {
-            "0": {
-              "164": 1
-            },
-            "1": {
-              "164": 1
-            },
-            "2": {
-              "164": 1
-            },
-            "3": {
-              "164": 1
-            },
-            "4": {
-              "164": 51
-            }
-          }
-        ],
-        [
-          "xcstrings",
-          {
-            "4": {
-              "71": 12,
-              "72": 15
-            }
-          }
-        ],
-        [
           "xclog",
           {
             "0": {
@@ -41669,6 +41639,45 @@
               "159": 4,
               "160": 23,
               "161": 12
+            }
+          }
+        ],
+        [
+          "xcsentinel",
+          {
+            "4": {
+              "173": 1
+            }
+          }
+        ],
+        [
+          "xcsym",
+          {
+            "0": {
+              "164": 1
+            },
+            "1": {
+              "164": 1
+            },
+            "2": {
+              "164": 1
+            },
+            "3": {
+              "137": 1,
+              "164": 1
+            },
+            "4": {
+              "137": 6,
+              "164": 51
+            }
+          }
+        ],
+        [
+          "xcstrings",
+          {
+            "4": {
+              "71": 12,
+              "72": 15
             }
           }
         ],
@@ -42000,7 +42009,6 @@
               "9": 1,
               "11": 1,
               "121": 1,
-              "137": 1,
               "159": 1,
               "164": 1,
               "174": 1,
@@ -50942,9 +50950,6 @@
         [
           "hours",
           {
-            "1": {
-              "137": 1
-            },
             "4": {
               "0": 4,
               "1": 1,
@@ -53841,9 +53846,6 @@
         [
           "15",
           {
-            "1": {
-              "137": 1
-            },
             "3": {
               "53": 1,
               "76": 1,
@@ -64796,7 +64798,7 @@
               "110": 1,
               "113": 5,
               "114": 41,
-              "137": 1,
+              "137": 2,
               "164": 7
             }
           }
@@ -67944,7 +67946,8 @@
           {
             "4": {
               "131": 1,
-              "133": 2
+              "133": 2,
+              "137": 1
             }
           }
         ],
@@ -72188,7 +72191,7 @@
               "132": 4,
               "134": 1,
               "135": 3,
-              "137": 2,
+              "137": 3,
               "138": 8,
               "147": 10,
               "148": 5,
@@ -73961,8 +73964,7 @@
               "8": 1,
               "11": 1,
               "111": 1,
-              "134": 1,
-              "137": 1
+              "134": 1
             },
             "3": {
               "13": 1,
@@ -74130,9 +74132,6 @@
         [
           "beta",
           {
-            "1": {
-              "137": 1
-            },
             "3": {
               "121": 1
             },
@@ -76183,7 +76182,8 @@
             "1": {
               "62": 1,
               "69": 1,
-              "79": 1
+              "79": 1,
+              "137": 1
             },
             "3": {
               "8": 1,
@@ -76195,6 +76195,7 @@
               "89": 1,
               "116": 1,
               "121": 2,
+              "137": 1,
               "159": 1
             },
             "4": {
@@ -76285,7 +76286,7 @@
               "131": 1,
               "132": 6,
               "134": 6,
-              "137": 2,
+              "137": 4,
               "138": 3,
               "140": 1,
               "144": 5,
@@ -78308,7 +78309,7 @@
               "121": 1,
               "129": 1,
               "131": 1,
-              "137": 1,
+              "137": 2,
               "138": 3,
               "143": 1,
               "148": 4,
@@ -78953,9 +78954,6 @@
             "0": {
               "130": 1,
               "136": 1
-            },
-            "1": {
-              "137": 1
             },
             "2": {
               "130": 1,
@@ -79744,7 +79742,7 @@
               "133": 7,
               "134": 1,
               "135": 1,
-              "137": 1,
+              "137": 2,
               "138": 2,
               "139": 3,
               "140": 1,
@@ -79975,6 +79973,7 @@
               "133": 3,
               "134": 6,
               "135": 3,
+              "137": 1,
               "142": 1,
               "143": 8,
               "144": 3,
@@ -86092,7 +86091,8 @@
               "98": 1,
               "108": 1,
               "124": 6,
-              "125": 3
+              "125": 3,
+              "137": 1
             }
           }
         ],
@@ -87019,7 +87019,7 @@
               "121": 4,
               "129": 1,
               "131": 4,
-              "137": 6,
+              "137": 7,
               "141": 2,
               "145": 7,
               "146": 1,
@@ -87787,7 +87787,6 @@
               "101": 1,
               "105": 1,
               "114": 1,
-              "137": 1,
               "173": 1
             },
             "3": {
@@ -88463,7 +88462,7 @@
               "134": 14,
               "135": 14,
               "136": 1,
-              "137": 13,
+              "137": 14,
               "138": 10,
               "139": 24,
               "140": 11,
@@ -90313,8 +90312,7 @@
           "understand",
           {
             "1": {
-              "10": 1,
-              "137": 1
+              "10": 1
             },
             "3": {
               "36": 1,
@@ -94332,7 +94330,7 @@
               "133": 1,
               "134": 1,
               "135": 3,
-              "137": 4,
+              "137": 5,
               "138": 2,
               "141": 2,
               "142": 1,
@@ -97160,6 +97158,7 @@
               "86": 1,
               "117": 1,
               "122": 1,
+              "137": 1,
               "141": 1,
               "145": 3
             }
@@ -102688,8 +102687,7 @@
           {
             "1": {
               "96": 2,
-              "131": 1,
-              "137": 1
+              "131": 1
             },
             "3": {
               "3": 1,
@@ -103909,7 +103907,7 @@
               "134": 14,
               "135": 10,
               "136": 1,
-              "137": 22,
+              "137": 23,
               "164": 1
             }
           }
@@ -104153,7 +104151,7 @@
               "133": 10,
               "134": 6,
               "135": 3,
-              "137": 5,
+              "137": 6,
               "138": 1,
               "141": 3,
               "142": 6,
@@ -106506,6 +106504,7 @@
           "fallbacks",
           {
             "4": {
+              "137": 1,
               "141": 1
             }
           }
@@ -107816,7 +107815,7 @@
               "131": 3,
               "133": 3,
               "135": 2,
-              "137": 2,
+              "137": 3,
               "140": 4,
               "141": 5,
               "144": 3,
@@ -108370,6 +108369,7 @@
               "126": 1,
               "132": 1,
               "134": 1,
+              "137": 1,
               "138": 1,
               "147": 1,
               "152": 1,
@@ -108493,7 +108493,7 @@
               "133": 6,
               "134": 11,
               "135": 4,
-              "137": 4,
+              "137": 5,
               "138": 2,
               "139": 1,
               "140": 2,
@@ -109875,8 +109875,7 @@
           "fix",
           {
             "1": {
-              "109": 1,
-              "137": 1
+              "109": 1
             },
             "3": {
               "1": 1,
@@ -113256,6 +113255,7 @@
           "pinpoint",
           {
             "4": {
+              "137": 1,
               "164": 1
             }
           }
@@ -116888,7 +116888,7 @@
               "132": 1,
               "134": 1,
               "135": 5,
-              "137": 1,
+              "137": 2,
               "138": 23,
               "139": 4,
               "140": 2,
@@ -117159,7 +117159,7 @@
               "132": 5,
               "133": 1,
               "134": 4,
-              "137": 4,
+              "137": 5,
               "138": 3,
               "139": 1,
               "140": 4,
@@ -121808,7 +121808,6 @@
               "113": 1,
               "115": 1,
               "134": 1,
-              "137": 1,
               "160": 1,
               "168": 1
             },
@@ -123020,6 +123019,7 @@
               "133": 4,
               "134": 19,
               "136": 1,
+              "137": 1,
               "143": 1,
               "147": 2,
               "148": 6,
@@ -123776,8 +123776,7 @@
           {
             "1": {
               "82": 1,
-              "85": 1,
-              "137": 1
+              "85": 1
             },
             "4": {
               "0": 1,
@@ -127131,7 +127130,7 @@
               "127": 1,
               "128": 2,
               "129": 1,
-              "137": 1,
+              "137": 2,
               "138": 1,
               "140": 1,
               "141": 1,
@@ -130064,9 +130063,6 @@
             "0": {
               "137": 1
             },
-            "1": {
-              "137": 1
-            },
             "3": {
               "10": 1,
               "135": 1,
@@ -131058,6 +131054,7 @@
               "128": 1,
               "133": 1,
               "135": 6,
+              "137": 1,
               "140": 1,
               "148": 1,
               "150": 1,
@@ -131953,6 +131950,7 @@
               "128": 2,
               "132": 1,
               "133": 1,
+              "137": 1,
               "142": 1,
               "143": 1,
               "147": 1,
@@ -134061,7 +134059,7 @@
               "134": 22,
               "135": 11,
               "136": 1,
-              "137": 22,
+              "137": 23,
               "138": 25,
               "141": 3,
               "142": 6,
@@ -136311,7 +136309,7 @@
               "133": 2,
               "134": 9,
               "135": 3,
-              "137": 3,
+              "137": 4,
               "138": 4,
               "139": 6,
               "140": 1,
@@ -136446,6 +136444,7 @@
               "132": 7,
               "133": 5,
               "134": 1,
+              "137": 1,
               "138": 1,
               "139": 1,
               "140": 1,
@@ -137555,7 +137554,7 @@
               "134": 54,
               "135": 4,
               "136": 6,
-              "137": 11,
+              "137": 12,
               "138": 4,
               "139": 11,
               "140": 4,
@@ -141583,7 +141582,7 @@
               "133": 46,
               "134": 19,
               "136": 2,
-              "137": 13,
+              "137": 14,
               "139": 20,
               "140": 3,
               "141": 30,
@@ -142876,6 +142875,9 @@
         [
           "downloaded",
           {
+            "1": {
+              "137": 1
+            },
             "4": {
               "25": 9,
               "30": 5,
@@ -142887,6 +142889,7 @@
               "77": 5,
               "110": 1,
               "125": 2,
+              "137": 1,
               "142": 1
             }
           }
@@ -142923,6 +142926,7 @@
               "125": 4,
               "130": 1,
               "133": 1,
+              "137": 1,
               "164": 4
             }
           }
@@ -143803,7 +143807,6 @@
             "1": {
               "10": 1,
               "11": 1,
-              "137": 1,
               "148": 1
             },
             "2": {
@@ -144161,6 +144164,7 @@
               "124": 2,
               "125": 1,
               "132": 1,
+              "137": 1,
               "147": 4,
               "148": 10,
               "164": 5,
@@ -150971,21 +150975,22 @@
           }
         ],
         [
+          "discoveries",
+          {
+            "4": {
+              "147": 1
+            }
+          }
+        ],
+        [
           "discovers",
           {
             "1": {
               "164": 1
             },
             "4": {
+              "137": 1,
               "164": 1
-            }
-          }
-        ],
-        [
-          "discoveries",
-          {
-            "4": {
-              "147": 1
             }
           }
         ],
@@ -151752,7 +151757,7 @@
             "4": {
               "11": 1,
               "131": 3,
-              "137": 4,
+              "137": 5,
               "164": 9
             }
           }
@@ -153327,7 +153332,7 @@
               "132": 13,
               "133": 1,
               "134": 4,
-              "137": 9,
+              "137": 10,
               "138": 1,
               "141": 1,
               "142": 1,
@@ -153871,7 +153876,7 @@
               "134": 31,
               "135": 2,
               "136": 9,
-              "137": 15,
+              "137": 16,
               "138": 31,
               "139": 5,
               "140": 4,
@@ -155365,9 +155370,6 @@
         [
           "investigat",
           {
-            "1": {
-              "137": 1
-            },
             "3": {
               "147": 1
             },
@@ -156221,6 +156223,7 @@
               "132": 2,
               "133": 2,
               "134": 2,
+              "137": 1,
               "142": 1,
               "164": 1
             }
@@ -159406,7 +159409,7 @@
               "132": 1,
               "133": 1,
               "134": 2,
-              "137": 4,
+              "137": 5,
               "156": 2,
               "160": 6,
               "164": 8,
@@ -160968,7 +160971,6 @@
           "writ",
           {
             "1": {
-              "137": 1,
               "161": 1,
               "167": 1
             },
@@ -163703,7 +163705,7 @@
               "133": 1,
               "134": 2,
               "135": 1,
-              "137": 4,
+              "137": 5,
               "141": 2,
               "143": 4,
               "144": 1,
@@ -164047,6 +164049,7 @@
               "112": 1,
               "115": 1,
               "125": 1,
+              "137": 1,
               "138": 1,
               "140": 1,
               "145": 1,
@@ -164305,7 +164308,7 @@
               "133": 18,
               "134": 12,
               "135": 4,
-              "137": 10,
+              "137": 11,
               "138": 3,
               "139": 10,
               "140": 2,
@@ -165243,8 +165246,7 @@
           "workflow",
           {
             "1": {
-              "136": 1,
-              "137": 1
+              "136": 1
             },
             "3": {
               "0": 1,
@@ -165300,7 +165302,7 @@
               "134": 2,
               "135": 6,
               "136": 1,
-              "137": 9,
+              "137": 10,
               "145": 3,
               "148": 1,
               "156": 1,
@@ -170174,9 +170176,6 @@
         [
           "organizer",
           {
-            "1": {
-              "137": 1
-            },
             "3": {
               "112": 1,
               "114": 1,
@@ -170195,7 +170194,7 @@
               "131": 9,
               "132": 4,
               "135": 3,
-              "137": 25
+              "137": 26
             }
           }
         ],
@@ -171248,7 +171247,7 @@
               "133": 5,
               "134": 3,
               "135": 7,
-              "137": 6,
+              "137": 7,
               "138": 2,
               "139": 2,
               "140": 2,
@@ -171490,7 +171489,7 @@
               "132": 2,
               "133": 2,
               "134": 10,
-              "137": 1,
+              "137": 2,
               "138": 1,
               "140": 1,
               "141": 1,
@@ -175404,7 +175403,6 @@
               "126": 1,
               "132": 1,
               "134": 1,
-              "137": 1,
               "169": 1,
               "170": 1
             },
@@ -175467,7 +175465,7 @@
               "114": 1,
               "118": 1,
               "131": 5,
-              "137": 1,
+              "137": 3,
               "164": 8
             }
           }
@@ -176072,7 +176070,7 @@
               "114": 7,
               "118": 1,
               "131": 3,
-              "137": 8,
+              "137": 9,
               "164": 2
             }
           }
@@ -182921,7 +182919,7 @@
               "134": 5,
               "135": 4,
               "136": 1,
-              "137": 14,
+              "137": 15,
               "140": 1,
               "141": 2,
               "142": 3,
@@ -186605,7 +186603,7 @@
               "57": 1,
               "70": 9,
               "113": 2,
-              "137": 1,
+              "137": 2,
               "144": 1,
               "145": 4,
               "162": 3,
@@ -186673,7 +186671,7 @@
               "132": 4,
               "133": 1,
               "135": 3,
-              "137": 1,
+              "137": 2,
               "138": 8,
               "141": 2,
               "143": 3,
@@ -188027,7 +188025,8 @@
               "132": 1,
               "133": 1,
               "134": 2,
-              "136": 1
+              "136": 1,
+              "137": 1
             },
             "3": {
               "0": 1,
@@ -188131,7 +188130,7 @@
               "134": 26,
               "135": 16,
               "136": 2,
-              "137": 7,
+              "137": 8,
               "139": 3,
               "142": 3,
               "143": 1,
@@ -188745,6 +188744,7 @@
               "133": 4,
               "134": 2,
               "135": 1,
+              "137": 1,
               "138": 2,
               "140": 2,
               "141": 2,
@@ -191496,10 +191496,19 @@
           }
         ],
         [
-          "subcommand",
+          "subcategory",
           {
             "4": {
-              "164": 1
+              "152": 1
+            }
+          }
+        ],
+        [
+          "subcategories",
+          {
+            "4": {
+              "112": 2,
+              "133": 2
             }
           }
         ],
@@ -191515,19 +191524,11 @@
           }
         ],
         [
-          "subcategory",
+          "subcommand",
           {
             "4": {
-              "152": 1
-            }
-          }
-        ],
-        [
-          "subcategories",
-          {
-            "4": {
-              "112": 2,
-              "133": 2
+              "137": 1,
+              "164": 1
             }
           }
         ],
@@ -192958,7 +192959,8 @@
           "centric",
           {
             "4": {
-              "37": 1
+              "37": 1,
+              "137": 1
             }
           }
         ],
@@ -195236,8 +195238,7 @@
               "33": 1,
               "79": 2,
               "113": 1,
-              "134": 1,
-              "137": 1
+              "134": 1
             },
             "3": {
               "11": 1,
@@ -195384,7 +195385,7 @@
               "133": 3,
               "134": 2,
               "135": 6,
-              "137": 105,
+              "137": 109,
               "140": 1,
               "145": 2,
               "147": 7,
@@ -196173,7 +196174,8 @@
               "10": 1,
               "54": 1,
               "83": 1,
-              "113": 1
+              "113": 1,
+              "137": 1
             }
           }
         ],
@@ -202859,7 +202861,7 @@
               "133": 7,
               "134": 5,
               "135": 3,
-              "137": 15,
+              "137": 16,
               "138": 6,
               "139": 2,
               "140": 5,
@@ -203868,6 +203870,7 @@
               "132": 1,
               "133": 1,
               "134": 1,
+              "137": 1,
               "141": 1,
               "142": 1,
               "143": 2,
@@ -204355,7 +204358,8 @@
               "131": 1
             },
             "1": {
-              "131": 1
+              "131": 1,
+              "137": 1
             },
             "3": {
               "87": 1,
@@ -204400,7 +204404,7 @@
               "134": 8,
               "135": 9,
               "136": 1,
-              "137": 4,
+              "137": 5,
               "142": 1,
               "160": 2,
               "164": 1,
@@ -205591,6 +205595,7 @@
               "126": 3,
               "132": 3,
               "134": 3,
+              "137": 1,
               "138": 6,
               "139": 1,
               "141": 1,
@@ -208360,7 +208365,6 @@
               "113": 1,
               "115": 1,
               "134": 1,
-              "137": 1,
               "141": 1,
               "160": 1,
               "168": 2
@@ -208835,6 +208839,9 @@
         [
           "comes",
           {
+            "1": {
+              "137": 1
+            },
             "4": {
               "28": 1,
               "70": 1,
@@ -208845,6 +208852,7 @@
               "116": 2,
               "119": 1,
               "128": 1,
+              "137": 1,
               "149": 1
             }
           }
@@ -211173,7 +211181,7 @@
               "132": 14,
               "133": 10,
               "134": 6,
-              "137": 10,
+              "137": 11,
               "138": 1,
               "139": 3,
               "140": 2,
@@ -211822,7 +211830,7 @@
               "114": 1,
               "118": 1,
               "131": 5,
-              "137": 1,
+              "137": 3,
               "139": 2,
               "140": 1,
               "164": 8,
@@ -212077,7 +212085,7 @@
               "133": 3,
               "134": 2,
               "135": 6,
-              "137": 5,
+              "137": 6,
               "138": 1,
               "139": 1,
               "140": 1,
@@ -213429,7 +213437,7 @@
               "132": 1,
               "133": 3,
               "134": 1,
-              "137": 1,
+              "137": 2,
               "152": 5,
               "164": 6,
               "168": 4
@@ -213619,9 +213627,6 @@
         [
           "minutes",
           {
-            "1": {
-              "137": 1
-            },
             "3": {
               "21": 1,
               "33": 1,
@@ -221863,7 +221868,7 @@
               "132": 1,
               "134": 6,
               "135": 6,
-              "137": 7,
+              "137": 8,
               "138": 8,
               "139": 2,
               "140": 4,
@@ -224669,7 +224674,8 @@
               "132": 1,
               "133": 1,
               "134": 3,
-              "136": 1
+              "136": 1,
+              "137": 1
             },
             "2": {
               "130": 1
@@ -224846,7 +224852,7 @@
               "134": 117,
               "135": 63,
               "136": 11,
-              "137": 62,
+              "137": 63,
               "138": 13,
               "140": 2,
               "141": 18,
@@ -227834,7 +227840,7 @@
               "87": 2,
               "122": 1,
               "131": 1,
-              "137": 4,
+              "137": 5,
               "141": 1,
               "164": 6
             }
@@ -228942,7 +228948,7 @@
               "133": 6,
               "134": 1,
               "135": 1,
-              "137": 2,
+              "137": 3,
               "138": 1,
               "140": 2,
               "142": 7,
@@ -231961,8 +231967,7 @@
           {
             "1": {
               "5": 1,
-              "99": 1,
-              "137": 1
+              "99": 1
             },
             "3": {
               "78": 1,
@@ -399812,6 +399817,76 @@
           "feedback",
           "triage"
         ],
+        "First Step: Run xcsym": [
+          "first",
+          "step",
+          "run",
+          "xcsym",
+          "when",
+          "test",
+          "flight",
+          "crash",
+          "comes",
+          "downloaded",
+          "app",
+          "store",
+          "connect",
+          "bash",
+          "path",
+          "ips",
+          "format",
+          "standard",
+          "discovers",
+          "sy",
+          "ms",
+          "archives",
+          "derived",
+          "data",
+          "downloads",
+          "automatically",
+          "no",
+          "configura",
+          "needed",
+          "if",
+          "symbolica",
+          "incomplete",
+          "use",
+          "verify",
+          "pinpoint",
+          "which",
+          "images",
+          "need",
+          "classic",
+          "bitcode",
+          "rebuild",
+          "uuid",
+          "mismatch",
+          "issue",
+          "lives",
+          "there",
+          "see",
+          "axiom",
+          "tools",
+          "skills",
+          "ref",
+          "md",
+          "full",
+          "subcommand",
+          "reference",
+          "exit",
+          "code",
+          "table",
+          "rest",
+          "skill",
+          "covers",
+          "organizer",
+          "centric",
+          "workflow",
+          "common",
+          "patterns",
+          "pre",
+          "fallbacks"
+        ],
         "Overview": [
           "overview",
           "systematic",
@@ -449656,7 +449731,7 @@
           },
           {
             "name": "axiom-shipping--testflight-triage",
-            "description": "Systematic workflow for investigating TestFlight crashes and reviewing beta feedback using Xcode Organizer. **Core principle:** Understand the crash before writing any fix — 15 minutes of triage prevents hours of debugging.",
+            "description": "When a TestFlight crash comes in (downloaded from App Store Connect), run:",
             "skillType": "discipline",
             "source": "axiom"
           }

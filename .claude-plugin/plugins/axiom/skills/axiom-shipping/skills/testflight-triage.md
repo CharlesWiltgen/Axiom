@@ -1,6 +1,18 @@
 
 # TestFlight Crash & Feedback Triage
 
+## First Step: Run xcsym
+
+When a TestFlight crash comes in (downloaded from App Store Connect), run:
+
+```bash
+xcsym crash path/to/crash.ips --format=standard
+```
+
+xcsym discovers dSYMs from Archives, DerivedData, and `~/Downloads` automatically — no configuration needed. If symbolication is incomplete, use `xcsym verify` to pinpoint which images need dSYMs (the classic bitcode-rebuild UUID mismatch issue lives there). See `axiom-tools (skills/xcsym-ref.md)` for the full subcommand reference and exit-code table.
+
+The rest of this skill covers the Organizer-centric workflow, common crash patterns, and pre-xcsym fallbacks.
+
 ## Overview
 
 Systematic workflow for investigating TestFlight crashes and reviewing beta feedback using Xcode Organizer. **Core principle:** Understand the crash before writing any fix — 15 minutes of triage prevents hours of debugging.
