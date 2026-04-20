@@ -472,4 +472,4 @@ Put project-specific aliases and breakpoints in a `.lldbinit` file in your proje
 
 **Docs**: /xcode/stepping-through-code-and-inspecting-variables-to-isolate-bugs, /xcode/setting-breakpoints-to-pause-your-running-app
 
-**Skills**: axiom-build (skills/lldb.md), axiom-build (skills/xcode-debugging.md)
+**Skills**: axiom-build (skills/lldb.md), axiom-build (skills/xcode-debugging.md), axiom-tools (skills/xcsym-ref.md)

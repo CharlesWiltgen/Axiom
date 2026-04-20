@@ -242,6 +242,22 @@ axe screenshot --output /tmp/screenshot.png --udid $UDID
 6. **Report**: Actual vs expected, pass/fail
 7. **Save**: If this is a new device/app selection, save to `.axiom/preferences.yaml` (see `axiom-tools (skills/xclog-ref.md)` skill)
 
+## Crash Detection
+
+Before reporting a test failure, check for new `.ips` files:
+
+```bash
+ls -t ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -5
+```
+
+If any file's mtime is within the test-run window, run:
+
+```bash
+xcsym crash --format=summary <path>
+```
+
+Include the structured crash summary in the test-failure report (pattern_tag, exception type, top frames, and dSYM status). If xcsym returns `{"error":"hang_report"}` on stdout (exit 1), the `.ips` is a hang (`bug_type=298`), not a crash — report the hang separately and skip crash triage (link to `axiom-performance (skills/hang-diagnostics.md)`). See `axiom-tools (skills/xcsym-ref.md)` for full xcsym usage and the exit-code table.
+
 ## Output Format
 
 ```markdown

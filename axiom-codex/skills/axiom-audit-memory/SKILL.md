@@ -230,8 +230,25 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 - Task captures where self is a struct (value type)
 - Combine subscriptions stored in `Set<AnyCancellable>` or `AnyCancellable` property
 
+## Field Crash Correlation
+
+If the user has `.ips` or MetricKit crash artifacts from the field (TestFlight, Xcode Organizer, MetricKit payloads), symbolicate them before inferring the leak pattern. xcsym's `pattern_tag` flags the memory failure mode directly:
+
+| pattern_tag | What the audit should look for |
+|---|---|
+| `jetsam_oom` | Unbounded collection growth, undisposed caches, large images retained in view hierarchy |
+| `zombie_or_heap_corruption` | Use-after-free — missing `[weak self]` in a Task or closure, over-retained delegate |
+| `bad_memory_access` | Dangling reference after deallocation — cross-reference Phase 2 Pattern 4 (delegate cycles) |
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <path-to-ips>
+```
+
+Use the `crashed_thread.frames` to localize which owner class needs deeper Phase 1 ownership mapping.
+
 ## Related
 
 For Instruments workflows: `axiom-performance (skills/memory-debugging.md)` skill
 For Memory Graph Debugger: `axiom-performance (skills/memory-debugging.md)` skill
 For Task lifecycle issues found during audit: `axiom-concurrency` skill
+For symbolicating field crashes (jetsam, heap corruption): `axiom-tools (skills/xcsym-ref.md)`

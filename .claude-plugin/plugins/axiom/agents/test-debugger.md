@@ -104,6 +104,30 @@ xcrun xcresulttool get test-results tests --path "$RESULT_PATH" > "$ATTACHMENTS_
 
 ## Phase 3: Analyze Failures
 
+### Did the Test Crash?
+
+Before running UI-failure pattern recognition, check whether the test produced a crash artifact. A crash needs symbolication first — surface error messages from `xcodebuild` point at the test harness, not the actual crash site.
+
+```bash
+# Any .ips produced during or just after the test run?
+ls -lt ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -5
+
+# Full triage — pattern_tag + symbolicated crashed thread in one call
+${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <path-to-ips>
+```
+
+Feed the returned `pattern_tag` to the fix plan:
+
+| pattern_tag | Action |
+|---|---|
+| `swift_forced_unwrap` | Inspect the force-unwrap site — usually a test helper or mock returning nil |
+| `swift_concurrency_violation` | `@MainActor` state touched off the main actor (route to axiom-concurrency) |
+| `swift_fatal_error` | Production code hit a `precondition`/`fatalError` under the test's input |
+| `jetsam_oom` | Test suite accumulated memory — add `.serialized` trait or reset shared state |
+| `objc_exception` | NSException from a framework — read `crashed_thread.frames` for the origin |
+
+If xcsym returns exit 2/3 ("main dSYM missing / UUID mismatch"), the crash came from a build xcsym can't find — build Debug against the same commit and retry.
+
 ### Failure Pattern Recognition
 
 | Pattern | Error Message | Root Cause | Fix |
@@ -276,6 +300,8 @@ Check result:
 ├─ Build failed → Delegate to build-fixer agent
 ├─ Tests passed → Report success
 └─ Tests failed:
+    ├─ Check for .ips crash artifacts → run xcsym crash --format=summary FIRST
+    │   └─ pattern_tag guides the fix (see Phase 3: "Did the Test Crash?")
     ├─ Export failure attachments
     ├─ Read failure screenshot FIRST (multimodal analysis)
     ├─ Analyze error pattern:
@@ -347,9 +373,9 @@ When analyzing failures, consider:
 
 ## Resources
 
-**WWDC**: 2019-413 (Testing in Xcode), 2025-344 (Record, replay, and review)
+**WWDC**: 2019-413, 2025-344
 
-**Skills**: axiom-testing
+**Skills**: axiom-testing, axiom-tools (skills/xcsym-ref.md)
 
 ## Related
 

@@ -400,6 +400,16 @@ func processCPUException(_ diagnostic: MXCPUExceptionDiagnostic) {
 
 `MXCallStackTree` contains stack frames from diagnostics. Frames are NOT symbolicated—you must symbolicate using your dSYM.
 
+### Symbolicating MetricKit crashes
+
+Write the `MXCrashDiagnostic.jsonRepresentation()` bytes to a file, then:
+
+```bash
+xcsym crash crash.json --format=standard
+```
+
+xcsym auto-detects MetricKit format. Note that MetricKit crashes from users don't ship dSYMs — pair with `xcsym verify crash.json` to confirm your archive's dSYM matches the binary the user was running. See `axiom-tools (skills/xcsym-ref.md)` for the full subcommand reference.
+
 ### Structure
 
 ```swift

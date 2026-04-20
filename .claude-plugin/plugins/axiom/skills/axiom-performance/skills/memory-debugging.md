@@ -255,7 +255,7 @@ When Instruments prevents reproduction (Heisenbug) or leaks only happen with spe
 **Lightweight diagnostics** (when Instruments can't be attached):
 1. **deinit logging as primary diagnostic** — Add `deinit { print("✅ ClassName deallocated") }` to all suspect classes. Run 20+ sessions. When the leak occurs (e.g., 1 in 5 runs), missing deinit messages reveal which objects are retained.
 2. **Isolate the trigger** — Test each navigation path independently. Rapidly toggle background/foreground if timing-dependent. Narrow to the specific path that leaks.
-3. **MetricKit for field diagnostics** — Monitor peak memory in production via `MXMetricPayload.memoryMetrics.peakMemoryUsage`. Alert when exceeding threshold (e.g., 400MB). This catches leaks that only manifest with real user data volumes.
+3. **MetricKit for field diagnostics** — Monitor peak memory in production via `MXMetricPayload.memoryMetrics.peakMemoryUsage`. Alert when exceeding threshold (e.g., 400MB). This catches leaks that only manifest with real user data volumes. When `MXCrashDiagnostic` payloads arrive, symbolicate with xcsym (`xcsym crash --from-metrickit <file>`) — a `pattern_tag=jetsam_oom` confirms the threshold-exceedance hypothesis and the crashed-thread frames localize the retaining owner.
 
 **Common cause of intermittent leaks**: Notification observers added on lifecycle events (`viewWillAppear`, `applicationDidBecomeActive`) without removing duplicates first. Each re-registration accumulates a listener — timing determines whether the duplicate fires.
 
@@ -399,4 +399,4 @@ xcrun xctrace record --instrument 'Leaks' --attach 'MyApp' --time-limit 30s --ou
 
 **Docs**: /xcode/gathering-information-about-memory-use, /metrickit/mxbackgroundexitdata
 
-**Skills**: skills/performance-profiling.md, skills/objc-block-retain-cycles.md, skills/metrickit-ref.md, axiom-build (skills/lldb.md)
+**Skills**: skills/performance-profiling.md, skills/objc-block-retain-cycles.md, skills/metrickit-ref.md, axiom-build (skills/lldb.md), axiom-tools (skills/xcsym-ref.md)

@@ -267,8 +267,26 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 - Background modes with matching feature code
 - CADisplayLink in active game/animation screens (expected GPU usage)
 
+## Field Termination Correlation
+
+Energy anti-patterns surface in the field as system terminations, not slow-draining batteries. When the user has `.ips` artifacts, xcsym's `pattern_tag` flags the termination mode directly:
+
+| pattern_tag | Energy anti-pattern it exposes |
+|---|---|
+| `cpu_resource_fatal` | CPU budget exceeded — tight timer loops, animation leaks, or busy-wait polling (Patterns 1, 4) |
+| `background_task_expired` | `BGTask` didn't call `setTaskCompleted` (Pattern 5) or exceeded its 30s budget |
+| `watchdog_termination` | Main-thread hang from a sync I/O/network call blocking rendering (Pattern 6/8) |
+| `jetsam_oom` | Background memory growth — often a timer/animation retaining state across backgrounding |
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <path-to-ips>
+```
+
+Use the crashed-thread frames to pinpoint which Phase 1 background-activity owner is the culprit.
+
 ## Related
 
 For detailed optimization patterns: `axiom-performance (skills/energy.md)` skill
 For Power Profiler workflows: `axiom-performance (skills/energy-ref.md)` skill
 For timer lifecycle issues: `axiom-integration` (skills/timer-patterns.md)
+For symbolicating CPU/background/watchdog terminations: `axiom-tools (skills/xcsym-ref.md)`

@@ -14,13 +14,14 @@ Interactive debugging with LLDB. The debugger freezes time so you can interrogat
 | Wrong value at runtime but code looks correct | Yes — step through and inspect |
 | Need to understand thread state during hang | Yes — pause + thread backtrace |
 | `po` doesn't work / shows garbage | Yes — Playbook 3 has alternatives |
-| Crash log analyzed, need to reproduce | Yes — set breakpoints from crash context |
+| Crash log analyzed, need to reproduce | Yes — set breakpoints from crash context (symbolicate with xcsym first — see axiom-tools (skills/xcsym-ref.md)) |
 | Need to test a fix without rebuilding | Yes — expression evaluation |
 | Want to break on all exceptions | Yes — exception breakpoints |
 | App feels slow but responsive | No — use axiom-performance (skills/performance-profiling.md) |
 | Memory grows over time | No — use axiom-performance (skills/memory-debugging.md) first |
 | App completely frozen | Maybe — use axiom-performance (skills/hang-diagnostics.md) first, then LLDB for thread inspection |
-| Crash in production, no local repro | No — use axiom-shipping (skills/testflight-triage.md) first |
+| Crash in production, no local repro | No — symbolicate with axiom-tools (skills/xcsym-ref.md) to get `pattern_tag`, then axiom-shipping (skills/testflight-triage.md) |
+| Have a `.ips` or MetricKit crash file | No — run `xcsym crash` first for full pipeline (parse → symbolicate → categorize) |
 
 ## LLDB vs Other Tools
 
@@ -28,13 +29,15 @@ Interactive debugging with LLDB. The debugger freezes time so you can interrogat
 digraph tool_selection {
     "What do you need?" [shape=diamond];
 
+    "axiom-tools (skills/xcsym-ref.md)" [shape=box];
     "axiom-shipping (skills/testflight-triage.md)" [shape=box];
     "axiom-performance (skills/hang-diagnostics.md)" [shape=box];
     "axiom-performance (skills/memory-debugging.md)" [shape=box];
     "axiom-performance (skills/performance-profiling.md)" [shape=box];
     "LLDB (this skill)" [shape=box, style=bold];
 
-    "What do you need?" -> "axiom-shipping (skills/testflight-triage.md)" [label="Crash log from field,\ncan't reproduce locally"];
+    "What do you need?" -> "axiom-tools (skills/xcsym-ref.md)" [label="Have a .ips or\nMetricKit crash file"];
+    "What do you need?" -> "axiom-shipping (skills/testflight-triage.md)" [label="Field crash,\nalready symbolicated"];
     "What do you need?" -> "axiom-performance (skills/hang-diagnostics.md)" [label="App frozen,\nneed diagnosis approach"];
     "What do you need?" -> "axiom-performance (skills/memory-debugging.md)" [label="Memory growing,\nneed leak pattern"];
     "What do you need?" -> "axiom-performance (skills/performance-profiling.md)" [label="Need to measure\nCPU/memory over time"];
@@ -623,4 +626,4 @@ After finding the issue:
 
 **Docs**: /xcode/stepping-through-code-and-inspecting-variables-to-isolate-bugs, /xcode/setting-breakpoints-to-pause-your-running-app, /xcode/diagnosing-memory-thread-and-crash-issues-early
 
-**Skills**: axiom-build (skills/lldb-ref.md), axiom-shipping (skills/testflight-triage.md), axiom-performance (skills/hang-diagnostics.md), axiom-performance (skills/memory-debugging.md), axiom-concurrency
+**Skills**: axiom-build (skills/lldb-ref.md), axiom-tools (skills/xcsym-ref.md), axiom-shipping (skills/testflight-triage.md), axiom-performance (skills/hang-diagnostics.md), axiom-performance (skills/memory-debugging.md), axiom-concurrency
