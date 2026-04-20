@@ -248,6 +248,15 @@ var rules = []Rule{
 			return false, ""
 		},
 	},
+	{
+		ID: "R-data-prot-01", Tag: "data_protection_violation", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if strings.EqualFold(c.Termination.Code, "0xdead10cc") {
+				return true, "termination.code 0xdead10cc (data protection violation)"
+			}
+			return false, ""
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n

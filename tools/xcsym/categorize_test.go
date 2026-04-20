@@ -512,6 +512,34 @@ func TestCategorize_R_bg_expired_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-data-prot-01 -----------------------------------------------------
+
+func TestCategorize_R_data_prot_01_Positive_LowerCase(t *testing.T) {
+	raw := &RawCrash{Termination: Termination{Namespace: "RUNNINGBOARD", Code: "0xdead10cc"}}
+	res := Categorize(raw)
+	if res.RuleID != "R-data-prot-01" {
+		t.Errorf("rule_id = %q, want R-data-prot-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_data_prot_01_Positive_UpperCase(t *testing.T) {
+	// Apple renders this code inconsistently; match is case-insensitive.
+	raw := &RawCrash{Termination: Termination{Namespace: "RUNNINGBOARD", Code: "0xDEAD10CC"}}
+	res := Categorize(raw)
+	if res.RuleID != "R-data-prot-01" {
+		t.Errorf("rule_id = %q, want R-data-prot-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_data_prot_01_Negative(t *testing.T) {
+	// Near miss: transposed hex chars must not fire.
+	raw := &RawCrash{Termination: Termination{Namespace: "RUNNINGBOARD", Code: "0xdead10c0"}}
+	res := Categorize(raw)
+	if res.RuleID == "R-data-prot-01" {
+		t.Errorf("must not fire data_protection on 0xdead10c0")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -554,6 +582,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-watchdog-01":       {positive: true, negative: true},
 	"R-user-quit-01":      {positive: true, negative: true},
 	"R-bg-expired-01":     {positive: true, negative: true},
+	"R-data-prot-01":      {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
