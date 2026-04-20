@@ -373,6 +373,46 @@ func TestCategorize_R_objc_exc_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-mtc-01 -----------------------------------------------------------
+
+func TestCategorize_R_mtc_01_Positive(t *testing.T) {
+	raw := &RawCrash{
+		Exception: Exception{Type: "EXC_CRASH", Signal: "SIGABRT"},
+		Threads: []Thread{{
+			Index: 0, Triggered: true,
+			Frames: []Frame{
+				{Index: 0, Image: "main_thread_checker.dylib", Symbol: "main_thread_checker_violation_reporter"},
+				{Index: 1, Image: "UIKit", Symbol: "-[UILabel setText:]"},
+			},
+		}},
+	}
+	res := Categorize(raw)
+	if res.RuleID != "R-mtc-01" {
+		t.Errorf("rule_id = %q, want R-mtc-01", res.RuleID)
+	}
+	if res.Tag != "main_thread_checker_violation" {
+		t.Errorf("tag = %q, want main_thread_checker_violation", res.Tag)
+	}
+}
+
+func TestCategorize_R_mtc_01_Negative(t *testing.T) {
+	// Near miss: abort without MTC dylib must not fire MTC.
+	raw := &RawCrash{
+		Exception: Exception{Type: "EXC_CRASH", Signal: "SIGABRT"},
+		Threads: []Thread{{
+			Index: 0, Triggered: true,
+			Frames: []Frame{
+				{Index: 0, Image: "libsystem_kernel", Symbol: "__pthread_kill"},
+				{Index: 1, Image: "libsystem_c", Symbol: "abort"},
+			},
+		}},
+	}
+	res := Categorize(raw)
+	if res.RuleID == "R-mtc-01" {
+		t.Errorf("must not fire MTC without main_thread_checker.dylib")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -410,6 +450,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-illegal-inst-01":   {positive: true, negative: true},
 	"R-exc-guard-01":      {positive: true, negative: true},
 	"R-objc-exc-01":       {positive: true, negative: true},
+	"R-mtc-01":            {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
