@@ -36,8 +36,15 @@ func DetectFormat(data []byte) string {
 	if err := json.Unmarshal(data, &top); err != nil {
 		return FormatUnknown
 	}
+	// MetricKit ships in two shapes: the real MXCrashDiagnostic JSON nests
+	// exception metadata under diagnosticMetaData; flattened/legacy variants
+	// surface exceptionType at the top level. Accept both rather than force
+	// callers to preprocess.
 	if _, ok := top["callStackTree"]; ok {
 		if _, hasType := top["exceptionType"]; hasType {
+			return FormatMetricKit
+		}
+		if _, hasMeta := top["diagnosticMetaData"]; hasMeta {
 			return FormatMetricKit
 		}
 	}
