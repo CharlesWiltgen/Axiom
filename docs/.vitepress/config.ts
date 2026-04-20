@@ -14,6 +14,7 @@ export default withMermaid(defineConfig({
     'specs/**',
   ],
   cleanUrls: true,
+  appearance: 'dark',
 
   head: [
     ['meta', { property: 'og:type', content: 'website' }],
