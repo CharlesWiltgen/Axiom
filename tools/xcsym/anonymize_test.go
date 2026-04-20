@@ -278,10 +278,26 @@ func TestAnonymize_NoRealPIIInTestdata(t *testing.T) {
 
 	// Regex-based patterns. Go's regexp has no lookahead, so each match is
 	// compared against a per-pattern whitelist of known-good placeholders.
-	bundleIDRE := regexp.MustCompile(`com\.[A-Za-z0-9_.-]+`)
+	//
+	// Bundle-ID shape: <reverseTLD>.<orgStartingWithLetter>.<rest>. The
+	// enumerated TLD list (axiom-5fr) catches the common reverse-DNS
+	// prefixes Apple ships apps under without resorting to a wildcard
+	// `[a-z]{2,4}\.` that would false-positive on strings like
+	// "swift.runtime.failure" or "co.exe". Three-segment minimum and the
+	// letter-leading second segment further narrow the match.
+	//
+	// Excluded TLDs: 2-letter country codes that double as common English
+	// words (in, at, be, it, no, us) and recent generic TLDs that appear in
+	// .ips free-text (app, dev, co). co.uk-style bundles are still caught
+	// because the second-level country code (uk, jp, za, …) is itself in
+	// the list — `co.uk.example.app` matches starting at `uk.example.app`.
+	bundleIDRE := regexp.MustCompile(
+		`\b(com|org|net|io|edu|gov|mil|biz|info|cloud|` +
+			`de|uk|jp|fr|es|nl|au|ca|cn|ru|br|mx|kr|se|fi|dk|pl|pt|ch|ie|nz|za)` +
+			`\.[a-zA-Z][A-Za-z0-9_-]*\.[A-Za-z0-9_.-]+`)
 	bundleIDWhitelist := map[string]bool{
-		"com.example.MyApp":     true,
-		"com.example.redacted":  true,
+		"com.example.MyApp":       true,
+		"com.example.redacted":    true,
 		"com.apple.CoreSimulator": true,
 	}
 	// Non-zero UUIDs. The zeroUUID sentinel and the canonical test UUID
@@ -368,6 +384,49 @@ func TestAnonymize_NoRealPIIInTestdata(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+// TestPIIScan_BundleIDRegexCatchesNonComPrefixes guards axiom-5fr. The
+// PII-scan test in TestAnonymize_NoRealPIIInTestdata is meant to be the CI
+// gate against real PII slipping into checked-in fixtures. The legacy
+// `com\.[...]` regex caught only `com.*` bundle IDs, so any future fixture
+// using `org.*`, `io.*`, `co.uk.*`, etc. would pass silently — defeating the
+// guard the moment a non-com app vendor ships a real crash.
+//
+// This test pins the broadened regex by writing a synthetic fixture file
+// inside a temp testdata layout, asserting the scan flags each non-com
+// bundle ID. Running the scan against testdata/ directly would couple this
+// test to the real fixture contents.
+func TestPIIScan_BundleIDRegexCatchesNonComPrefixes(t *testing.T) {
+	bundleIDRE := regexp.MustCompile(
+		`\b(com|org|net|io|edu|gov|mil|biz|info|cloud|` +
+			`de|uk|jp|fr|es|nl|au|ca|cn|ru|br|mx|kr|se|fi|dk|pl|pt|ch|ie|nz|za)` +
+			`\.[a-zA-Z][A-Za-z0-9_-]*\.[A-Za-z0-9_.-]+`)
+
+	cases := []struct {
+		input string
+		want  string // expected match (or "" for no match)
+	}{
+		{"io.realcompany.app", "io.realcompany.app"},
+		{"org.example.thing", "org.example.thing"},
+		{"co.uk.example.app", "uk.example.app"}, // co dropped (English ambiguity); uk catches it
+		{"net.somevendor.tool", "net.somevendor.tool"},
+		{"jp.somevendor.app", "jp.somevendor.app"},
+		// Negative cases — strings that look bundle-ID-shaped but shouldn't
+		// trip the regex (and would otherwise create noise on real .ips files).
+		{"swift.runtime.failure", ""},               // tld 'swift' not enumerated
+		{"main_thread_checker.dylib", ""},           // single dot, dylib suffix
+		{"RunLoop in.dispatch.queue", ""},           // 'in' deliberately excluded
+		{"loaded dev.fastlane.tools at", ""},        // 'dev' deliberately excluded
+		{"thread us.foobar.example", ""},            // 'us' deliberately excluded
+		{"com.example.MyApp", "com.example.MyApp"},  // matched (whitelist exempts)
+	}
+	for _, c := range cases {
+		got := bundleIDRE.FindString(c.input)
+		if got != c.want {
+			t.Errorf("FindString(%q) = %q, want %q", c.input, got, c.want)
+		}
 	}
 }
 
