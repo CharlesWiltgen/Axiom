@@ -22,6 +22,23 @@ func DefaultExecTimeout() time.Duration {
 	return 10 * time.Second
 }
 
+// DefaultFrameworkScanTimeout bounds the Carthage/Pods/xcframework walk in
+// findInFrameworks. Override via XCSYM_FRAMEWORK_SCAN_TIMEOUT — accepts a Go
+// duration string ("500ms", "2s") or an integer number of seconds. Default
+// 500ms, matching the design-doc budget so an unrelated monorepo checkout
+// can't stall dSYM discovery for tens of seconds.
+func DefaultFrameworkScanTimeout() time.Duration {
+	if v := os.Getenv("XCSYM_FRAMEWORK_SCAN_TIMEOUT"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil && d > 0 {
+			return d
+		}
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return time.Duration(n) * time.Second
+		}
+	}
+	return 500 * time.Millisecond
+}
+
 // ExecResult captures both stdout and stderr regardless of exit status.
 // atos writes UUID-mismatch warnings to stderr on exit 0; dwarfdump often
 // writes partial output to stdout before erroring. Callers need both.

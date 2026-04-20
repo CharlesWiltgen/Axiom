@@ -282,6 +282,10 @@ func (d *Discoverer) findInToolchain(ctx context.Context, uuid, arch string) (*D
 // findInFrameworks scans the current working directory (+ any user-provided
 // framework roots) for *.xcframework, Carthage/Build, and Pods — common
 // locations for third-party dSYMs inside an app project checkout.
+//
+// The walk is bounded by DefaultFrameworkScanTimeout so an unrelated monorepo
+// cwd can't stall dSYM discovery. A child-ctx deadline is swallowed as a miss
+// (continue the Find chain); parent-ctx cancellation still propagates.
 func (d *Discoverer) findInFrameworks(ctx context.Context, uuid, arch string) (*DsymEntry, error) {
 	roots := append([]string{}, d.opts.FrameworkRoots...)
 	if !d.opts.SkipDefaults {
@@ -289,7 +293,22 @@ func (d *Discoverer) findInFrameworks(ctx context.Context, uuid, arch string) (*
 			roots = append(roots, cwd)
 		}
 	}
-	return walkRoots(ctx, roots, uuid, arch, "frameworks")
+	if len(roots) == 0 {
+		return nil, nil
+	}
+	scanCtx, cancel := context.WithTimeout(ctx, DefaultFrameworkScanTimeout())
+	defer cancel()
+	entry, err := walkRoots(scanCtx, roots, uuid, arch, "frameworks")
+	if err != nil {
+		// Parent-ctx cancellation or other hard errors propagate. A child-ctx
+		// deadline (parent still alive) means "exhausted our budget here" —
+		// let the Find chain try the next source.
+		if ctx.Err() == nil && (errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled)) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return entry, nil
 }
 
 // findInEnvPaths walks XCSYM_DSYM_PATHS entries.

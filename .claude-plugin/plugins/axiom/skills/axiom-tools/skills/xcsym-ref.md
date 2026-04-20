@@ -241,9 +241,9 @@ Source: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact or
 4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)
 5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)
 6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`
-7. **Frameworks** — system framework dSYMs bundled with CLT
+7. **Frameworks (cwd scan)** — walks the current working directory plus caller-supplied roots for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as "no match" and the chain continues.
 8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)
-9. **Toolchain** — current Xcode toolchain (system Swift dylibs)
+9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)
 10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)
 
 `find-dsym` follows the same chain minus step 1 (no per-UUID explicit map). `list-dsyms --source=<name>` restricts scanning to a single root by name.
