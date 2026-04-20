@@ -1,24 +1,39 @@
 package main
 
 // CrashReport is the top-level structured output of `xcsym crash`.
+//
+// Images vs. ImagesSummary is tier-dependent: standard and full emit the
+// full ImageStatus; summary replaces it with a counts-only ImagesSummary to
+// stay within its 2 KB size budget. The two fields are mutually exclusive.
 type CrashReport struct {
-	Tool        string      `json:"tool"`
-	Version     string      `json:"version"`
-	Format      string      `json:"format"` // summary | standard | full
-	Environment Environment `json:"environment"`
-	Input       InputInfo   `json:"input"`
-	Crash       CrashInfo   `json:"crash"`
-	Images      ImageStatus `json:"images"`
-	Warnings    []string    `json:"warnings"`
-	SizeWarning *string     `json:"size_warning,omitempty"`
+	Tool          string         `json:"tool"`
+	Version       string         `json:"version"`
+	Format        string         `json:"format"` // summary | standard | full
+	Environment   Environment    `json:"environment"`
+	Input         InputInfo      `json:"input"`
+	Crash         CrashInfo      `json:"crash"`
+	Images        *ImageStatus   `json:"images,omitempty"`
+	ImagesSummary *ImagesSummary `json:"images_summary,omitempty"`
+	Warnings      []string       `json:"warnings"`
+	SizeWarning   *string        `json:"size_warning,omitempty"`
 }
 
+// ImagesSummary is the counts-only shape emitted in the summary tier.
+type ImagesSummary struct {
+	MatchedCount    int `json:"matched_count"`
+	MismatchedCount int `json:"mismatched_count"`
+	MissingCount    int `json:"missing_count"`
+}
+
+// Environment fields are all omitempty because the summary tier strips
+// everything except CLTVersionShort to keep the report under 2 KB.
 type Environment struct {
-	AtosVersion          string `json:"atos_version"`
-	CLTVersion           string `json:"clt_version"`
-	SwiftDemangleVersion string `json:"swift_demangle_version"`
-	HostArch             string `json:"host_arch"`
-	XcodePath            string `json:"xcode_path"`
+	AtosVersion          string `json:"atos_version,omitempty"`
+	CLTVersion           string `json:"clt_version,omitempty"`
+	CLTVersionShort      string `json:"clt_version_short,omitempty"`
+	SwiftDemangleVersion string `json:"swift_demangle_version,omitempty"`
+	HostArch             string `json:"host_arch,omitempty"`
+	XcodePath            string `json:"xcode_path,omitempty"`
 }
 
 type InputInfo struct {
