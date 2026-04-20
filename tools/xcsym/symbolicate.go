@@ -39,6 +39,13 @@ func ResolveSingle(ctx context.Context, dsymOrBinary, arch, loadAddr, address st
 	return &sym, nil
 }
 
+// resolveBatchFn is ResolveBatch behind a function-typed var so tests can
+// substitute a stub that returns canned SymbolResults without invoking
+// atos. The integration test for the symbolicate write-back loop
+// (axiom-232) uses this seam to verify per-Frame stamping in isolation
+// from the actual atos shell-out.
+var resolveBatchFn = ResolveBatch
+
 // ResolveBatch resolves multiple addresses in one atos invocation for efficiency.
 func ResolveBatch(ctx context.Context, dsymOrBinary, arch, loadAddr string, addresses []string) ([]*SymbolResult, error) {
 	args := []string{"-o", dsymOrBinary}
