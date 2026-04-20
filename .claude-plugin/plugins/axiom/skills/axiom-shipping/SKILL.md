@@ -49,7 +49,7 @@ Use this skill when you encounter:
 | TestFlight crash reports | See `skills/app-store-connect-ref.md` |
 | ASC metrics dashboards | See `skills/app-store-connect-ref.md` |
 | Beta tester crash report | See `skills/testflight-triage.md` |
-| Crash log symbolication | See `skills/testflight-triage.md` |
+| Crash log symbolication (.ips / MetricKit) | See axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`; `skills/testflight-triage.md` for the full TF workflow |
 | Automate App Store Connect | See `skills/asc-mcp.md` |
 | Submit build programmatically | See `skills/asc-mcp.md` |
 | Manage TestFlight via MCP | See `skills/asc-mcp.md` |
@@ -201,9 +201,9 @@ Use this skill when you encounter:
 - Crash logs need symbolication
 - Post-release crash investigation
 
-**Why testflight-triage**: Systematic crash triage from symbolication through root cause analysis.
+**Why testflight-triage**: Systematic crash triage from symbolication through root cause analysis. Uses `xcsym` as the first step (parse → discover dSYMs → symbolicate → categorize with `pattern_tag` → emit structured JSON).
 
-**Reference**: `skills/testflight-triage.md`
+**Reference**: `skills/testflight-triage.md`. For the xcsym subcommand/exit-code reference, see axiom-tools (skills/xcsym-ref.md). For the one-call agent workflow, `/axiom:analyze-crash`.
 
 ---
 

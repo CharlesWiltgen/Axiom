@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-04-20T13:14:39.036Z",
+  "generatedAt": "2026-04-20T14:31:04.425Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -18093,7 +18093,7 @@
     "axiom-performance": {
       "name": "axiom-performance",
       "description": "Use when app feels slow, memory grows, battery drains, or diagnosing ANY performance issue. Covers memory leaks, profiling, Instruments workflows, retain cycles, performance optimization.",
-      "content": "\n# Performance\n\n**You MUST use this skill for ANY performance issue including memory leaks, slow execution, battery drain, or profiling.**\n\n## When to Use\n\nUse this router when:\n- App feels slow or laggy\n- Memory usage grows over time\n- Battery drains quickly\n- Device gets hot during use\n- High energy usage in Battery Settings\n- Diagnosing performance with Instruments\n- Memory leaks or retain cycles\n- App crashes with memory warnings\n\n## Routing Logic\n\n### Memory Issues\n\n**Memory leaks (Swift)** → See skills/memory-debugging.md\n- Systematic leak diagnosis\n- 5 common leak patterns\n- Instruments workflows\n- deinit not called\n\n**Memory leak scan** → Launch `memory-auditor` agent or `/axiom:audit memory` (5-phase semantic audit: maps resource ownership, detects 6 leak patterns, reasons about missing cleanup, correlates compound risks, scores lifecycle health)\n\n**Memory leaks (Objective-C blocks)** → See skills/objc-block-retain-cycles.md\n- Block retain cycles\n- Weak-strong pattern\n- Network callback leaks\n\n### Performance Profiling\n\n**Performance profiling (GUI)** → See skills/performance-profiling.md\n- Time Profiler (CPU)\n- Allocations (memory growth)\n- Core Data profiling (N+1 queries)\n- Decision trees for tool selection\n\n**Automated profiling (CLI)** → See skills/xctrace-ref.md\n- Headless xctrace profiling\n- CI/CD integration patterns\n- Command-line trace recording\n- Programmatic trace analysis\n\n**Run automated profile** → Use `performance-profiler` agent or `/axiom:profile`\n- Records trace via xctrace\n- Exports and analyzes data\n- Reports findings with severity\n\n### Hang/Freeze Issues\n\n**App hangs or freezes** → See skills/hang-diagnostics.md\n- UI unresponsive for >1 second\n- Main thread blocked (busy or waiting)\n- Decision tree: busy vs blocked diagnosis\n- Time Profiler vs System Trace selection\n- 8 common hang patterns with fixes\n- Watchdog terminations\n\n### Energy Issues\n\n**Battery drain, high energy** → See skills/energy.md\n- Power Profiler workflow\n- Subsystem diagnosis (CPU/GPU/Network/Location/Display)\n- Anti-pattern fixes\n- Background execution optimization\n\n**Symptom-based diagnosis** → See skills/energy-diag.md\n- \"App at top of Battery Settings\"\n- \"Device gets hot\"\n- \"Background battery drain\"\n- Time-cost analysis for each path\n\n**API reference with code** → See skills/energy-ref.md\n- Complete WWDC code examples\n- Timer, network, location efficiency\n- BGContinuedProcessingTask (iOS 26)\n- MetricKit setup\n\n**Energy scan** → Launch `energy-auditor` agent or `/axiom:audit energy` (8 anti-patterns: timer abuse, polling, continuous location, animation leaks, background mode misuse, network inefficiency, GPU waste, disk I/O)\n\n### Timer Safety\n\n**Timer crash patterns (DispatchSourceTimer)** → See `axiom-integration` (skills/timer-patterns.md)\n- 4 crash scenarios causing EXC_BAD_INSTRUCTION\n- RunLoop mode gotcha (Timer stops during scroll)\n- SafeDispatchTimer wrapper\n- Timer vs DispatchSourceTimer decision\n\n**Timer API reference** → See `axiom-integration` (skills/timer-patterns-ref.md)\n- Timer, DispatchSourceTimer, Combine, AsyncTimerSequence APIs\n- Lifecycle diagrams\n- Platform availability\n\n### Swift Performance\n\n**Swift performance optimization** → See skills/swift-performance.md\n- Value vs reference types, copy-on-write\n- ARC overhead, generic specialization\n- Collection performance\n\n**Swift performance scan** → Launch `swift-performance-analyzer` agent or `/axiom:audit swift-performance` (unnecessary copies, ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs, memory layout)\n\n**Modern Swift idioms** → See axiom-swift (skills/swift-modern.md)\n- Outdated API patterns (Date(), CGFloat, DateFormatter)\n- Foundation modernization (URL.documentsDirectory, FormatStyle)\n- Claude-specific hallucination corrections\n\n### MetricKit Integration\n\n**MetricKit API reference** → See skills/metrickit-ref.md\n- MXMetricPayload parsing\n- MXDiagnosticPayload (crashes, hangs)\n- Field performance data collection\n- Integration with crash reporting\n\n### Runtime Console Capture\n\n**Capture simulator console output** → `/axiom:console`\n- Capture print(), os_log(), Logger output from simulator\n- Structured JSON with level, subsystem, category\n- Bounded collection with `--timeout` and `--max-lines`\n- Filter by subsystem or regex\n\n### Runtime State Inspection\n\n**LLDB interactive debugging** → See axiom-build (skills/lldb.md)\n- Set breakpoints, inspect variables at runtime\n- Crash reproduction from crash logs\n- Thread state analysis for hangs\n- Swift value inspection (po vs v)\n\n**LLDB command reference** → See axiom-build (skills/lldb-ref.md)\n- Complete command syntax\n- Breakpoint recipes\n- Expression evaluation patterns\n\n## Decision Tree\n\n1. Memory climbing + UI stutter/jank? → memory-debugging FIRST (memory pressure causes GC pauses that drop frames), then performance-profiling if memory is fixed but stutter remains\n2. Memory leak (Swift)? → memory-debugging\n3. Memory leak (Objective-C blocks)? → objc-block-retain-cycles\n4. App hang/freeze — is UI completely unresponsive (can't tap, no feedback)?\n   - YES → hang-diagnostics (busy vs blocked diagnosis)\n   - NO, just slow → performance-profiling (Time Profiler)\n   - First launch only? → Also check for synchronous I/O or lazy initialization in hang-diagnostics\n5. Slowdown when multiple async operations complete at once? → Cross-route to `axiom-concurrency` (callback contention, not profiling)\n6. Battery drain (know the symptom)? → energy-diag\n7. Battery drain (need API reference)? → energy-ref\n8. Battery drain (general)? → energy\n9. MetricKit setup/parsing? → metrickit-ref\n10. Profile with GUI (Instruments)? → performance-profiling\n11. Profile with CLI (xctrace)? → xctrace-ref\n12. Run automated profile now? → performance-profiler agent\n13. General slow/lag? → performance-profiling\n14. Want proactive memory leak scan? → memory-auditor (Agent)\n15. Want energy anti-pattern scan? → energy-auditor (Agent)\n16. Want Swift performance audit (ARC, generics, collections)? → swift-performance-analyzer (Agent)\n17. Need to inspect variable/thread state at runtime? → See axiom-build (skills/lldb.md)\n18. Need exact LLDB command syntax? → See axiom-build (skills/lldb-ref.md)\n19. Timer stops during scrolling? → timer-patterns (RunLoop mode)\n20. EXC_BAD_INSTRUCTION crash with DispatchSourceTimer? → timer-patterns (4 crash patterns)\n21. Choosing between Timer, DispatchSourceTimer, Combine timer, async timer? → timer-patterns\n22. Need timer API syntax/lifecycle? → timer-patterns-ref\n23. Code review for outdated Swift patterns? → swift-modern\n24. Claude generating legacy APIs (DateFormatter, CGFloat, DispatchQueue)? → swift-modern\n25. Need to see runtime console output before profiling? → axiom-tools (skills/xclog-ref.md) or `/axiom:console`\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"I know it's a memory leak, let me find it\" | Memory leaks have 6 patterns. memory-debugging diagnoses the right one in 15 min vs 2 hours. |\n| \"I'll just run Time Profiler\" | Wrong Instruments template wastes time. performance-profiling selects the right tool first. |\n| \"Battery drain is probably the network layer\" | Energy issues span 8 subsystems. energy skill diagnoses the actual cause. |\n| \"App feels slow, I'll optimize later\" | Performance issues compound. Profiling now saves exponentially more time later. |\n| \"It's just a UI freeze, probably a slow API call\" | Freezes have busy vs blocked causes. hang-diagnostics has a decision tree for both. |\n| \"Memory is climbing AND scrolling stutters — two separate bugs\" | Memory pressure causes GC pauses that drop frames. Fix the leak first, then re-check scroll performance. |\n| \"It only freezes on first launch, must be loading something\" | First-launch hangs have 3 patterns: synchronous I/O, lazy initialization, main thread contention. hang-diagnostics diagnoses which. |\n| \"UI locks up when network requests finish — that's slow\" | Multiple callbacks completing at once = main thread contention = concurrency issue. Cross-route to axiom-concurrency. |\n| \"I'll just add print statements to debug this\" | Print-debug cycles cost 3-5 min each (build + run + reproduce). An LLDB breakpoint costs 30 seconds. axiom-build (skills/lldb.md) has the commands. |\n| \"I can't see what the app is logging\" | xclog captures print() + os_log from the simulator with structured JSON. `/axiom:console`. |\n| \"I'll just use Timer.scheduledTimer, it's simpler\" | Timer stops during scrolling (`.default` mode), retains its target (leak). timer-patterns has the decision tree. |\n| \"DispatchSourceTimer crashed but it's intermittent, let's ship\" | DispatchSourceTimer has 4 crash patterns that are ALL deterministic. timer-patterns diagnoses which one. |\n| \"Claude already knows modern Swift\" | Claude defaults to pre-5.5 patterns (Date(), CGFloat, filter().count). swift-modern has the correction table. |\n\n## Critical Patterns\n\n**Memory Debugging** (memory-debugging):\n- 6 leak patterns: timers, observers, closures, delegates, view callbacks, PhotoKit\n- Instruments workflows\n- Leak vs caching distinction\n\n**Performance Profiling** (performance-profiling):\n- Time Profiler for CPU bottlenecks\n- Allocations for memory growth\n- Core Data SQL logging for N+1 queries\n- Self Time vs Total Time\n\n**Energy Optimization** (energy):\n- Power Profiler subsystem diagnosis\n- 8 anti-patterns: timers, polling, location, animations, background, network, GPU, disk\n- Audit checklists by subsystem\n- Pressure scenarios for deadline resistance\n\n## Example Invocations\n\nUser: \"My app's memory usage keeps growing\"\n→ See skills/memory-debugging.md\n\nUser: \"I have a memory leak but deinit isn't being called\"\n→ See skills/memory-debugging.md\n\nUser: \"My app feels slow, where do I start?\"\n→ See skills/performance-profiling.md\n\nUser: \"My Objective-C block callback is leaking\"\n→ See skills/objc-block-retain-cycles.md\n\nUser: \"My app drains battery quickly\"\n→ See skills/energy.md\n\nUser: \"Users say the device gets hot when using my app\"\n→ See skills/energy-diag.md\n\nUser: \"What's the best way to implement location tracking efficiently?\"\n→ See skills/energy-ref.md\n\nUser: \"Profile my app's CPU usage\"\n→ Use: `performance-profiler` agent (or `/axiom:profile`)\n\nUser: \"How do I run xctrace from the command line?\"\n→ See skills/xctrace-ref.md\n\nUser: \"I need headless profiling for CI/CD\"\n→ See skills/xctrace-ref.md\n\nUser: \"My app hangs sometimes\"\n→ See skills/hang-diagnostics.md\n\nUser: \"The UI freezes and becomes unresponsive\"\n→ See skills/hang-diagnostics.md\n\nUser: \"Main thread is blocked, how do I diagnose?\"\n→ See skills/hang-diagnostics.md\n\nUser: \"How do I set up MetricKit?\"\n→ See skills/metrickit-ref.md\n\nUser: \"How do I parse MXMetricPayload?\"\n→ See skills/metrickit-ref.md\n\nUser: \"Scan my code for memory leaks\"\n→ Invoke: `memory-auditor` agent\n\nUser: \"Check my app for battery drain issues\"\n→ Invoke: `energy-auditor` agent\n\nUser: \"Audit my Swift code for performance anti-patterns\"\n→ Invoke: `swift-performance-analyzer` agent\n\nUser: \"How do I inspect this variable in the debugger?\"\n→ Invoke: See axiom-build (skills/lldb.md)\n\nUser: \"What's the LLDB command for conditional breakpoints?\"\n→ Invoke: See axiom-build (skills/lldb-ref.md)\n\nUser: \"I need to reproduce this crash in the debugger\"\n→ Invoke: See axiom-build (skills/lldb.md)\n\nUser: \"My list scrolls slowly and memory keeps growing\"\n→ See skills/memory-debugging.md first, then skills/performance-profiling.md if stutter remains\n\nUser: \"App freezes for a few seconds on first launch then works fine\"\n→ See skills/hang-diagnostics.md\n\nUser: \"UI locks up when multiple API calls return at the same time\"\n→ Cross-route: `/skill axiom-concurrency` (callback contention)\n\nUser: \"My timer stops when the user scrolls\"\n→ Read: `axiom-integration` (skills/timer-patterns.md)\n\nUser: \"EXC_BAD_INSTRUCTION crash in my timer code\"\n→ Read: `axiom-integration` (skills/timer-patterns.md)\n\nUser: \"Should I use Timer or DispatchSourceTimer?\"\n→ Read: `axiom-integration` (skills/timer-patterns.md)\n\nUser: \"How do I create an AsyncTimerSequence?\"\n→ Read: `axiom-integration` (skills/timer-patterns-ref.md)\n\nUser: \"Review my Swift code for outdated patterns\"\n→ Invoke: See axiom-swift (skills/swift-modern.md)\n\nUser: \"Is there a more modern way to do this?\"\n→ Invoke: See axiom-swift (skills/swift-modern.md)\n\nUser: \"What is the app logging? I need to see console output\"\n→ Invoke: `/axiom:console`\n\nUser: \"Capture the simulator logs while I reproduce this bug\"\n→ Invoke: `/axiom:console`\n",
+      "content": "\n# Performance\n\n**You MUST use this skill for ANY performance issue including memory leaks, slow execution, battery drain, or profiling.**\n\n## When to Use\n\nUse this router when:\n- App feels slow or laggy\n- Memory usage grows over time\n- Battery drains quickly\n- Device gets hot during use\n- High energy usage in Battery Settings\n- Diagnosing performance with Instruments\n- Memory leaks or retain cycles\n- App crashes with memory warnings\n\n## Routing Logic\n\n### Memory Issues\n\n**Memory leaks (Swift)** → See skills/memory-debugging.md\n- Systematic leak diagnosis\n- 5 common leak patterns\n- Instruments workflows\n- deinit not called\n\n**Memory leak scan** → Launch `memory-auditor` agent or `/axiom:audit memory` (5-phase semantic audit: maps resource ownership, detects 6 leak patterns, reasons about missing cleanup, correlates compound risks, scores lifecycle health)\n\n**Memory leaks (Objective-C blocks)** → See skills/objc-block-retain-cycles.md\n- Block retain cycles\n- Weak-strong pattern\n- Network callback leaks\n\n### Performance Profiling\n\n**Performance profiling (GUI)** → See skills/performance-profiling.md\n- Time Profiler (CPU)\n- Allocations (memory growth)\n- Core Data profiling (N+1 queries)\n- Decision trees for tool selection\n\n**Automated profiling (CLI)** → See skills/xctrace-ref.md\n- Headless xctrace profiling\n- CI/CD integration patterns\n- Command-line trace recording\n- Programmatic trace analysis\n\n**Run automated profile** → Use `performance-profiler` agent or `/axiom:profile`\n- Records trace via xctrace\n- Exports and analyzes data\n- Reports findings with severity\n\n### Hang/Freeze Issues\n\n**App hangs or freezes** → See skills/hang-diagnostics.md\n- UI unresponsive for >1 second\n- Main thread blocked (busy or waiting)\n- Decision tree: busy vs blocked diagnosis\n- Time Profiler vs System Trace selection\n- 8 common hang patterns with fixes\n- Watchdog terminations\n\n### Energy Issues\n\n**Battery drain, high energy** → See skills/energy.md\n- Power Profiler workflow\n- Subsystem diagnosis (CPU/GPU/Network/Location/Display)\n- Anti-pattern fixes\n- Background execution optimization\n\n**Symptom-based diagnosis** → See skills/energy-diag.md\n- \"App at top of Battery Settings\"\n- \"Device gets hot\"\n- \"Background battery drain\"\n- Time-cost analysis for each path\n\n**API reference with code** → See skills/energy-ref.md\n- Complete WWDC code examples\n- Timer, network, location efficiency\n- BGContinuedProcessingTask (iOS 26)\n- MetricKit setup\n\n**Energy scan** → Launch `energy-auditor` agent or `/axiom:audit energy` (8 anti-patterns: timer abuse, polling, continuous location, animation leaks, background mode misuse, network inefficiency, GPU waste, disk I/O)\n\n### Timer Safety\n\n**Timer crash patterns (DispatchSourceTimer)** → See `axiom-integration` (skills/timer-patterns.md)\n- 4 crash scenarios causing EXC_BAD_INSTRUCTION\n- RunLoop mode gotcha (Timer stops during scroll)\n- SafeDispatchTimer wrapper\n- Timer vs DispatchSourceTimer decision\n\n**Timer API reference** → See `axiom-integration` (skills/timer-patterns-ref.md)\n- Timer, DispatchSourceTimer, Combine, AsyncTimerSequence APIs\n- Lifecycle diagrams\n- Platform availability\n\n### Swift Performance\n\n**Swift performance optimization** → See skills/swift-performance.md\n- Value vs reference types, copy-on-write\n- ARC overhead, generic specialization\n- Collection performance\n\n**Swift performance scan** → Launch `swift-performance-analyzer` agent or `/axiom:audit swift-performance` (unnecessary copies, ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs, memory layout)\n\n**Modern Swift idioms** → See axiom-swift (skills/swift-modern.md)\n- Outdated API patterns (Date(), CGFloat, DateFormatter)\n- Foundation modernization (URL.documentsDirectory, FormatStyle)\n- Claude-specific hallucination corrections\n\n### MetricKit Integration\n\n**MetricKit API reference** → See skills/metrickit-ref.md\n- MXMetricPayload parsing\n- MXDiagnosticPayload (crashes, hangs)\n- Field performance data collection\n- Integration with crash reporting\n\n### Runtime Console Capture\n\n**Capture simulator console output** → `/axiom:console`\n- Capture print(), os_log(), Logger output from simulator\n- Structured JSON with level, subsystem, category\n- Bounded collection with `--timeout` and `--max-lines`\n- Filter by subsystem or regex\n\n### Runtime State Inspection\n\n**LLDB interactive debugging** → See axiom-build (skills/lldb.md)\n- Set breakpoints, inspect variables at runtime\n- Crash reproduction from crash logs\n- Thread state analysis for hangs\n- Swift value inspection (po vs v)\n\n**LLDB command reference** → See axiom-build (skills/lldb-ref.md)\n- Complete command syntax\n- Breakpoint recipes\n- Expression evaluation patterns\n\n## Decision Tree\n\n1. Memory climbing + UI stutter/jank? → memory-debugging FIRST (memory pressure causes GC pauses that drop frames), then performance-profiling if memory is fixed but stutter remains\n2. Memory leak (Swift)? → memory-debugging\n3. Memory leak (Objective-C blocks)? → objc-block-retain-cycles\n4. App hang/freeze — is UI completely unresponsive (can't tap, no feedback)?\n   - YES → hang-diagnostics (busy vs blocked diagnosis)\n   - NO, just slow → performance-profiling (Time Profiler)\n   - First launch only? → Also check for synchronous I/O or lazy initialization in hang-diagnostics\n5. Slowdown when multiple async operations complete at once? → Cross-route to `axiom-concurrency` (callback contention, not profiling)\n6. Battery drain (know the symptom)? → energy-diag\n7. Battery drain (need API reference)? → energy-ref\n8. Battery drain (general)? → energy\n9. MetricKit setup/parsing? → metrickit-ref\n10. Profile with GUI (Instruments)? → performance-profiling\n11. Profile with CLI (xctrace)? → xctrace-ref\n12. Run automated profile now? → performance-profiler agent\n13. General slow/lag? → performance-profiling\n14. Want proactive memory leak scan? → memory-auditor (Agent)\n15. Want energy anti-pattern scan? → energy-auditor (Agent)\n16. Want Swift performance audit (ARC, generics, collections)? → swift-performance-analyzer (Agent)\n17. Need to inspect variable/thread state at runtime? → See axiom-build (skills/lldb.md)\n18. Need exact LLDB command syntax? → See axiom-build (skills/lldb-ref.md)\n19. Timer stops during scrolling? → timer-patterns (RunLoop mode)\n20. EXC_BAD_INSTRUCTION crash with DispatchSourceTimer? → timer-patterns (4 crash patterns)\n21. Choosing between Timer, DispatchSourceTimer, Combine timer, async timer? → timer-patterns\n22. Need timer API syntax/lifecycle? → timer-patterns-ref\n23. Code review for outdated Swift patterns? → swift-modern\n24. Claude generating legacy APIs (DateFormatter, CGFloat, DispatchQueue)? → swift-modern\n25. Need to see runtime console output before profiling? → axiom-tools (skills/xclog-ref.md) or `/axiom:console`\n26. Have an `.ips` or MetricKit crash file to symbolicate/triage? → axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"I know it's a memory leak, let me find it\" | Memory leaks have 6 patterns. memory-debugging diagnoses the right one in 15 min vs 2 hours. |\n| \"I'll just run Time Profiler\" | Wrong Instruments template wastes time. performance-profiling selects the right tool first. |\n| \"Battery drain is probably the network layer\" | Energy issues span 8 subsystems. energy skill diagnoses the actual cause. |\n| \"App feels slow, I'll optimize later\" | Performance issues compound. Profiling now saves exponentially more time later. |\n| \"It's just a UI freeze, probably a slow API call\" | Freezes have busy vs blocked causes. hang-diagnostics has a decision tree for both. |\n| \"Memory is climbing AND scrolling stutters — two separate bugs\" | Memory pressure causes GC pauses that drop frames. Fix the leak first, then re-check scroll performance. |\n| \"It only freezes on first launch, must be loading something\" | First-launch hangs have 3 patterns: synchronous I/O, lazy initialization, main thread contention. hang-diagnostics diagnoses which. |\n| \"UI locks up when network requests finish — that's slow\" | Multiple callbacks completing at once = main thread contention = concurrency issue. Cross-route to axiom-concurrency. |\n| \"I'll just add print statements to debug this\" | Print-debug cycles cost 3-5 min each (build + run + reproduce). An LLDB breakpoint costs 30 seconds. axiom-build (skills/lldb.md) has the commands. |\n| \"I can't see what the app is logging\" | xclog captures print() + os_log from the simulator with structured JSON. `/axiom:console`. |\n| \"I'll hand-parse this .ips JSON to see the top frame\" | xcsym parses, discovers dSYMs, symbolicates, and categorizes in one call — structured JSON with pattern_tag. `/axiom:analyze-crash`. |\n| \"I'll just use Timer.scheduledTimer, it's simpler\" | Timer stops during scrolling (`.default` mode), retains its target (leak). timer-patterns has the decision tree. |\n| \"DispatchSourceTimer crashed but it's intermittent, let's ship\" | DispatchSourceTimer has 4 crash patterns that are ALL deterministic. timer-patterns diagnoses which one. |\n| \"Claude already knows modern Swift\" | Claude defaults to pre-5.5 patterns (Date(), CGFloat, filter().count). swift-modern has the correction table. |\n\n## Critical Patterns\n\n**Memory Debugging** (memory-debugging):\n- 6 leak patterns: timers, observers, closures, delegates, view callbacks, PhotoKit\n- Instruments workflows\n- Leak vs caching distinction\n\n**Performance Profiling** (performance-profiling):\n- Time Profiler for CPU bottlenecks\n- Allocations for memory growth\n- Core Data SQL logging for N+1 queries\n- Self Time vs Total Time\n\n**Energy Optimization** (energy):\n- Power Profiler subsystem diagnosis\n- 8 anti-patterns: timers, polling, location, animations, background, network, GPU, disk\n- Audit checklists by subsystem\n- Pressure scenarios for deadline resistance\n\n## Example Invocations\n\nUser: \"My app's memory usage keeps growing\"\n→ See skills/memory-debugging.md\n\nUser: \"I have a memory leak but deinit isn't being called\"\n→ See skills/memory-debugging.md\n\nUser: \"My app feels slow, where do I start?\"\n→ See skills/performance-profiling.md\n\nUser: \"My Objective-C block callback is leaking\"\n→ See skills/objc-block-retain-cycles.md\n\nUser: \"My app drains battery quickly\"\n→ See skills/energy.md\n\nUser: \"Users say the device gets hot when using my app\"\n→ See skills/energy-diag.md\n\nUser: \"What's the best way to implement location tracking efficiently?\"\n→ See skills/energy-ref.md\n\nUser: \"Profile my app's CPU usage\"\n→ Use: `performance-profiler` agent (or `/axiom:profile`)\n\nUser: \"How do I run xctrace from the command line?\"\n→ See skills/xctrace-ref.md\n\nUser: \"I need headless profiling for CI/CD\"\n→ See skills/xctrace-ref.md\n\nUser: \"My app hangs sometimes\"\n→ See skills/hang-diagnostics.md\n\nUser: \"The UI freezes and becomes unresponsive\"\n→ See skills/hang-diagnostics.md\n\nUser: \"Main thread is blocked, how do I diagnose?\"\n→ See skills/hang-diagnostics.md\n\nUser: \"How do I set up MetricKit?\"\n→ See skills/metrickit-ref.md\n\nUser: \"How do I parse MXMetricPayload?\"\n→ See skills/metrickit-ref.md\n\nUser: \"Scan my code for memory leaks\"\n→ Invoke: `memory-auditor` agent\n\nUser: \"Check my app for battery drain issues\"\n→ Invoke: `energy-auditor` agent\n\nUser: \"Audit my Swift code for performance anti-patterns\"\n→ Invoke: `swift-performance-analyzer` agent\n\nUser: \"How do I inspect this variable in the debugger?\"\n→ Invoke: See axiom-build (skills/lldb.md)\n\nUser: \"What's the LLDB command for conditional breakpoints?\"\n→ Invoke: See axiom-build (skills/lldb-ref.md)\n\nUser: \"I need to reproduce this crash in the debugger\"\n→ Invoke: See axiom-build (skills/lldb.md)\n\nUser: \"My list scrolls slowly and memory keeps growing\"\n→ See skills/memory-debugging.md first, then skills/performance-profiling.md if stutter remains\n\nUser: \"App freezes for a few seconds on first launch then works fine\"\n→ See skills/hang-diagnostics.md\n\nUser: \"UI locks up when multiple API calls return at the same time\"\n→ Cross-route: `/skill axiom-concurrency` (callback contention)\n\nUser: \"My timer stops when the user scrolls\"\n→ Read: `axiom-integration` (skills/timer-patterns.md)\n\nUser: \"EXC_BAD_INSTRUCTION crash in my timer code\"\n→ Read: `axiom-integration` (skills/timer-patterns.md)\n\nUser: \"Should I use Timer or DispatchSourceTimer?\"\n→ Read: `axiom-integration` (skills/timer-patterns.md)\n\nUser: \"How do I create an AsyncTimerSequence?\"\n→ Read: `axiom-integration` (skills/timer-patterns-ref.md)\n\nUser: \"Review my Swift code for outdated patterns\"\n→ Invoke: See axiom-swift (skills/swift-modern.md)\n\nUser: \"Is there a more modern way to do this?\"\n→ Invoke: See axiom-swift (skills/swift-modern.md)\n\nUser: \"What is the app logging? I need to see console output\"\n→ Invoke: `/axiom:console`\n\nUser: \"Capture the simulator logs while I reproduce this bug\"\n→ Invoke: `/axiom:console`\n",
       "skillType": "router",
       "source": "axiom",
       "category": "performance",
@@ -18137,28 +18137,28 @@
           "heading": "Decision Tree",
           "level": 2,
           "startLine": 141,
-          "endLine": 171,
-          "charCount": 2089
+          "endLine": 172,
+          "charCount": 2217
         },
         {
           "heading": "Anti-Rationalization",
           "level": 2,
-          "startLine": 172,
-          "endLine": 189,
-          "charCount": 2118
+          "startLine": 173,
+          "endLine": 191,
+          "charCount": 2311
         },
         {
           "heading": "Critical Patterns",
           "level": 2,
-          "startLine": 190,
-          "endLine": 208,
+          "startLine": 192,
+          "endLine": 210,
           "charCount": 625
         },
         {
           "heading": "Example Invocations",
           "level": 2,
-          "startLine": 209,
-          "endLine": 306,
+          "startLine": 211,
+          "endLine": 308,
           "charCount": 2991
         }
       ],
@@ -22618,7 +22618,7 @@
     "axiom-shipping": {
       "name": "axiom-shipping",
       "description": "Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect. Covers submission checklists, rejection troubleshooting, metadata requirements, privacy manifests, age ratings, export compliance.",
-      "content": "\n# Shipping & App Store\n\n**You MUST use this skill when preparing to submit ANY app, handling App Store rejections, or working on release workflow.**\n\n## When to Use\n\nUse this skill when you encounter:\n- Preparing an app for App Store submission\n- App Store rejection (any guideline)\n- Metadata requirements (screenshots, descriptions, keywords)\n- Privacy manifest and nutrition label questions\n- Age rating and content classification\n- Export compliance and encryption declarations\n- EU DSA trader status\n- Account deletion or Sign in with Apple requirements\n- Build upload and processing issues\n- App Review appeals\n- WWDC25 App Store Connect changes\n- First-time submission workflow\n\n## Quick Reference\n\n| Symptom / Task | Reference |\n|----------------|-----------|\n| How do I submit my app? | See `skills/app-store-submission.md` |\n| Pre-flight checklist | See `skills/app-store-submission.md` |\n| First-time submission | See `skills/app-store-submission.md` |\n| Encryption compliance | See `skills/app-store-submission.md` |\n| Accessibility Nutrition Labels | See `skills/app-store-submission.md` |\n| Metadata field requirements | See `skills/app-store-ref.md` |\n| Guideline number lookup | See `skills/app-store-ref.md` |\n| Privacy manifest schema | See `skills/app-store-ref.md` |\n| Age rating tiers | See `skills/app-store-ref.md` |\n| EU DSA compliance | See `skills/app-store-ref.md` |\n| WWDC25 ASC changes | See `skills/app-store-ref.md` |\n| App was rejected | See `skills/app-store-diag.md` |\n| Guideline 2.1/4.2/4.3 rejection | See `skills/app-store-diag.md` |\n| Writing an appeal | See `skills/app-store-diag.md` |\n| Repeated rejections | See `skills/app-store-diag.md` |\n| App Review Guidelines reference | See `skills/app-review-guidelines.md` |\n| Expert review checklist | See `skills/expert-review-checklist.md` |\n| Crash data in App Store Connect | See `skills/app-store-connect-ref.md` |\n| TestFlight crash reports | See `skills/app-store-connect-ref.md` |\n| ASC metrics dashboards | See `skills/app-store-connect-ref.md` |\n| Beta tester crash report | See `skills/testflight-triage.md` |\n| Crash log symbolication | See `skills/testflight-triage.md` |\n| Automate App Store Connect | See `skills/asc-mcp.md` |\n| Submit build programmatically | See `skills/asc-mcp.md` |\n| Manage TestFlight via MCP | See `skills/asc-mcp.md` |\n| ITMS signing error on upload | See axiom-security (skills/code-signing-diag.md) |\n| Certificate/profile mismatch | See axiom-security (skills/code-signing-diag.md) |\n| Code signing setup | See axiom-security (skills/code-signing.md) |\n\n## Routing Logic\n\n### 1. Pre-Submission Preparation → **app-store-submission**\n\n**Triggers**:\n- \"How do I submit my app?\"\n- \"What do I need before submitting?\"\n- Preparing for first submission\n- Pre-flight checklist needed\n- Screenshot requirements\n- Metadata completeness check\n- Encryption compliance questions\n- Accessibility Nutrition Labels\n- Privacy manifest requirements for submission\n\n**Why app-store-submission**: Discipline skill with 8 anti-patterns, decision trees, and pressure scenarios. Prevents the mistakes that cause 90% of rejections.\n\n**Reference**: `skills/app-store-submission.md`\n\n---\n\n### 2. Metadata, Guidelines, and API Reference → **app-store-ref**\n\n**Triggers**:\n- \"What fields are required in App Store Connect?\"\n- \"What's the max length for app description?\"\n- Specific guideline number lookup\n- Privacy manifest schema details\n- Age rating tiers and questionnaire\n- IAP submission metadata\n- EU DSA compliance details\n- Build upload methods\n- WWDC25 changes to App Store Connect\n\n**Why app-store-ref**: 10-part reference covering every metadata field, guideline, and compliance requirement with exact specifications.\n\n**Reference**: `skills/app-store-ref.md`\n\n---\n\n### 3. Rejection Troubleshooting → **app-store-diag**\n\n**Triggers**:\n- \"My app was rejected\"\n- \"Guideline 2.1 rejection\"\n- \"Binary was rejected\"\n- Guideline 4.2 or 4.3 rejection (app too simple, web wrapper, spam, duplicate)\n- Guideline 1.x rejection (objectionable content, UGC moderation, Kids category)\n- How to respond to a rejection\n- Writing an appeal\n- Understanding rejection messages\n- Third or repeated rejection\n- Resolution Center communication\n\n**Why app-store-diag**: 9 diagnostic patterns mapping rejection types to root causes and fixes, including subjective rejections (4.2/4.3, 1.x). Includes appeal writing guidance and crisis scenario for repeated rejections.\n\n**Reference**: `skills/app-store-diag.md`\n\n---\n\n### 4. Privacy & Security Compliance → **security-privacy-scanner** (Agent)\n\n**Triggers**:\n- \"Scan my code for privacy issues before submission\"\n- Hardcoded API keys or secrets\n- Missing privacy manifest\n- Required Reason API declarations\n- ATS violations\n\n**Why security-privacy-scanner**: Autonomous agent that scans for security vulnerabilities and privacy compliance issues that cause rejections.\n\n**Invoke**: Launch `security-privacy-scanner` agent or `/axiom:audit security`\n\n---\n\n### 5. IAP Review Issues → **iap-auditor** (Agent)\n\n**Triggers**:\n- IAP rejected or not working\n- Missing transaction.finish()\n- Missing restore purchases\n- Subscription tracking issues\n\n**Why iap-auditor**: Scans IAP code for the patterns that cause StoreKit rejections.\n\n**Invoke**: Launch `iap-auditor` agent\n\n---\n\n### 6. Screenshot Validation → **screenshot-validator** (Agent)\n\n**Triggers**:\n- \"Check my App Store screenshots\"\n- \"Are my screenshots the right dimensions?\"\n- \"Validate screenshots before submission\"\n- \"Review my marketing screenshots\"\n- Screenshot content or dimension questions\n\n**Why screenshot-validator**: Multimodal agent that visually inspects each screenshot for placeholder text, wrong dimensions, debug artifacts, broken UI, and competitor references. Catches issues that manual review misses.\n\n**Invoke**: Launch `screenshot-validator` agent or `/axiom:audit screenshots`\n\n---\n\n### 7. Programmatic ASC Access → **asc-mcp**\n\n**Triggers**:\n- \"Automate App Store Connect\"\n- \"Submit build programmatically\"\n- \"Manage TestFlight from Claude\"\n- \"Respond to reviews via API\"\n- \"Set up asc-mcp\"\n- \"Distribute to TestFlight groups via MCP\"\n- \"Create a new version without opening ASC\"\n\n**Why asc-mcp**: Workflow-focused skill teaching Claude to use asc-mcp MCP tools for release pipelines, TestFlight distribution, review management, and feedback triage — all without leaving Claude Code.\n\n**Reference**: `skills/asc-mcp.md`\n\n---\n\n### 8. Post-Submission Monitoring → **app-store-connect-ref**\n\n**Triggers**:\n- \"How do I view crash data in App Store Connect?\"\n- \"Where are my TestFlight crash reports?\"\n- \"How do I read ASC metrics dashboards?\"\n- Post-release crash investigation\n- Downloading crash logs from ASC\n\n**Why app-store-connect-ref**: ASC navigation for crash dashboards, TestFlight feedback, performance metrics, and data export workflows.\n\n**Reference**: `skills/app-store-connect-ref.md`\n\n---\n\n### 9. Beta Crash Triage → **testflight-triage**\n\n**Triggers**:\n- Beta tester reports a crash\n- Crash appears in Organizer or App Store Connect\n- Crash logs need symbolication\n- Post-release crash investigation\n\n**Why testflight-triage**: Systematic crash triage from symbolication through root cause analysis.\n\n**Reference**: `skills/testflight-triage.md`\n\n---\n\n### 10. Distribution Signing Issues → **code-signing** / **code-signing-diag**\n\n**Triggers**:\n- ITMS-90035 Invalid Signature on upload\n- ITMS-90161 Invalid Provisioning Profile\n- \"No signing certificate found\" when archiving\n- Certificate expired before submission\n- Archive succeeds but export/upload fails\n- Profile doesn't match bundle ID\n- Entitlement mismatch on upload\n\n**Why code-signing**: Distribution signing errors are the #1 cause of upload failures. Diagnosing with CLI tools takes 5 minutes. code-signing-diag has 6 decision trees mapping ITMS errors to root causes.\n\n**Reference**: See axiom-security (skills/code-signing-diag.md) (troubleshooting) or See axiom-security (skills/code-signing.md) (setup)\n\n---\n\n## Decision Tree\n\n```dot\ndigraph shipping {\n    \"Shipping question?\" [shape=diamond];\n    \"Rejected?\" [shape=diamond];\n    \"Post-submission monitoring?\" [shape=diamond];\n    \"Beta crash triage?\" [shape=diamond];\n    \"Automate via MCP?\" [shape=diamond];\n    \"Screenshot review?\" [shape=diamond];\n    \"Need specific specs?\" [shape=diamond];\n    \"IAP issue?\" [shape=diamond];\n    \"Want code scan?\" [shape=diamond];\n    \"Signing error?\" [shape=diamond];\n\n    \"skills/app-store-submission.md\" [shape=box, label=\"app-store-submission\\n(pre-flight checklist)\"];\n    \"skills/app-store-ref.md\" [shape=box, label=\"app-store-ref\\n(metadata/guideline specs)\"];\n    \"skills/app-store-diag.md\" [shape=box, label=\"app-store-diag\\n(rejection troubleshooting)\"];\n    \"skills/app-store-connect-ref.md\" [shape=box, label=\"app-store-connect-ref\\n(ASC dashboards/metrics)\"];\n    \"skills/testflight-triage.md\" [shape=box, label=\"testflight-triage\\n(beta crash triage)\"];\n    \"security-privacy-scanner\" [shape=box, label=\"security-privacy-scanner\\n(Agent)\"];\n    \"iap-auditor\" [shape=box, label=\"iap-auditor\\n(Agent)\"];\n    \"screenshot-validator\" [shape=box, label=\"screenshot-validator\\n(Agent)\"];\n    \"skills/asc-mcp.md\" [shape=box, label=\"asc-mcp\\n(MCP tool workflows)\"];\n    \"axiom-security/code-signing\" [shape=box, label=\"axiom-security\\n(distribution signing)\"];\n\n    \"Shipping question?\" -> \"Rejected?\" [label=\"yes, about to submit or general\"];\n    \"Rejected?\" -> \"skills/app-store-diag.md\" [label=\"yes, app was rejected\"];\n    \"Rejected?\" -> \"Post-submission monitoring?\" [label=\"no\"];\n    \"Post-submission monitoring?\" -> \"skills/app-store-connect-ref.md\" [label=\"yes, crash data/metrics\"];\n    \"Post-submission monitoring?\" -> \"Beta crash triage?\" [label=\"no\"];\n    \"Beta crash triage?\" -> \"skills/testflight-triage.md\" [label=\"yes, beta crash/symbolication\"];\n    \"Beta crash triage?\" -> \"Automate via MCP?\" [label=\"no\"];\n    \"Automate via MCP?\" -> \"skills/asc-mcp.md\" [label=\"yes, programmatic ASC access\"];\n    \"Automate via MCP?\" -> \"Screenshot review?\" [label=\"no\"];\n    \"Screenshot review?\" -> \"screenshot-validator\" [label=\"yes, validate screenshots\"];\n    \"Screenshot review?\" -> \"Need specific specs?\" [label=\"no\"];\n    \"Need specific specs?\" -> \"skills/app-store-ref.md\" [label=\"yes, looking up field/guideline\"];\n    \"Need specific specs?\" -> \"IAP issue?\" [label=\"no\"];\n    \"IAP issue?\" -> \"iap-auditor\" [label=\"yes\"];\n    \"IAP issue?\" -> \"Want code scan?\" [label=\"no\"];\n    \"Want code scan?\" -> \"Signing error?\" [label=\"no\"];\n    \"Want code scan?\" -> \"security-privacy-scanner\" [label=\"yes, scan for privacy/security\"];\n    \"Signing error?\" -> \"axiom-security/code-signing\" [label=\"yes, ITMS/cert/profile error\"];\n    \"Signing error?\" -> \"skills/app-store-submission.md\" [label=\"no, general prep\"];\n}\n```\n\nSimplified:\n\n1. App was rejected? → `skills/app-store-diag.md`\n2. Post-submission crash data/metrics? → `skills/app-store-connect-ref.md`\n3. Beta crash triage/symbolication? → `skills/testflight-triage.md`\n4. Automate ASC via MCP tools? → `skills/asc-mcp.md`\n5. Validate screenshots? → `screenshot-validator` (Agent)\n6. Need specific metadata/guideline specs? → `skills/app-store-ref.md`\n7. IAP submission issue? → `iap-auditor` (Agent)\n8. Want pre-submission code scan? → `security-privacy-scanner` (Agent)\n9. ITMS signing/certificate/profile error on upload? → See axiom-security (skills/code-signing-diag.md)\n10. General submission preparation? → `skills/app-store-submission.md`\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"I'll just submit and see what happens\" | 40% of rejections are Guideline 2.1 (completeness). app-store-submission catches them in 10 min. |\n| \"I've submitted apps before, I know the process\" | Requirements change yearly. Privacy manifests, age rating tiers, EU DSA, Accessibility Nutrition Labels are all new since 2024. |\n| \"The rejection is wrong, I'll just resubmit\" | Resubmitting without changes wastes 24-48 hours per cycle. app-store-diag finds the root cause. |\n| \"Privacy manifests are only for big apps\" | Every app using Required Reason APIs needs a manifest since May 2024. Missing = automatic rejection. |\n| \"I'll add the metadata later\" | Missing metadata blocks submission entirely. app-store-ref has the complete field list. |\n| \"It's just a bug fix, I don't need a full checklist\" | Bug fix updates still need What's New text, correct screenshots, and valid build. app-store-submission covers it. |\n| \"I'll just eyeball the screenshots myself\" | Human review misses dimension mismatches (even 1px off = rejection), subtle placeholder text, and debug indicators. A single missed issue costs 24-48 hours in resubmission. screenshot-validator catches it in 2 minutes. |\n| \"I'll just do it in the ASC web dashboard\" | If asc-mcp is configured, MCP tools are faster for bulk operations — distributing builds, responding to reviews, creating versions. asc-mcp has the workflow. |\n| \"Upload failed with ITMS error, let me re-archive\" | ITMS signing errors are configuration — wrong cert, expired profile, missing entitlement. Re-archiving with the same config produces the same result. code-signing-diag has the fix. |\n\n## When NOT to Use (Conflict Resolution)\n\n**Do NOT use axiom-shipping for these — use the correct skill instead:**\n\n| Issue | Correct Skill | Why NOT axiom-shipping |\n|-------|---------------|----------------------|\n| Build fails before archiving | **axiom-build** | Environment/build issue, not submission |\n| SwiftData migration crash | **axiom-data** | Schema issue, not App Store |\n| Privacy manifest coding (writing the file) | **axiom-build** | security-privacy-scanner handles code scanning |\n| StoreKit 2 implementation (writing IAP code) | **axiom-integration** | in-app-purchases / storekit-ref covers implementation |\n| Performance issues found during testing | **axiom-performance** | Profiling issue, not submission |\n| Accessibility implementation | **axiom-accessibility** | Code-level accessibility, not App Store labels |\n\n**axiom-shipping is for the submission workflow**, not code implementation:\n- Preparing metadata and compliance → axiom-shipping\n- Writing the actual code → domain-specific skill (axiom-build, axiom-data, etc.)\n- App was rejected → axiom-shipping\n- Code changes to fix rejection → domain-specific skill, then back to axiom-shipping to verify\n\n## Example Invocations\n\nUser: \"How do I submit my app to the App Store?\"\n→ See `skills/app-store-submission.md`\n\nUser: \"My app was rejected for Guideline 2.1\"\n→ See `skills/app-store-diag.md`\n\nUser: \"What screenshots do I need?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"What fields are required in App Store Connect?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"How do I fill out the age rating questionnaire?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"Do I need an encryption compliance declaration?\"\n→ See `skills/app-store-submission.md`\n\nUser: \"My app keeps getting rejected, what do I do?\"\n→ See `skills/app-store-diag.md`\n\nUser: \"How do I appeal an App Store rejection?\"\n→ See `skills/app-store-diag.md`\n\nUser: \"My app was rejected for Guideline 4.2 minimum functionality\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Rejected for being a web wrapper / duplicate app\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Rejection for user-generated content without moderation\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Kids category compliance rejection\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Scan my code for App Store compliance issues\"\n→ Launch `security-privacy-scanner` agent\n\nUser: \"Check my IAP implementation before submission\"\n→ Launch `iap-auditor` agent\n\nUser: \"Check my App Store screenshots in ~/Screenshots\"\n→ Launch `screenshot-validator` agent\n\nUser: \"Are my screenshots the right dimensions?\"\n→ Launch `screenshot-validator` agent\n\nUser: \"How do I find crash data in App Store Connect?\"\n→ See `skills/app-store-connect-ref.md`\n\nUser: \"Where are my TestFlight crash reports in ASC?\"\n→ See `skills/app-store-connect-ref.md`\n\nUser: \"What's new in App Store Connect for 2025?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"I need to set up DSA trader status for the EU\"\n→ See `skills/app-store-ref.md`\n\nUser: \"What are Accessibility Nutrition Labels?\"\n→ See `skills/app-store-submission.md`\n\nUser: \"This is my first app submission ever\"\n→ See `skills/app-store-submission.md`\n\nUser: \"Submit this build to App Store programmatically\"\n→ See `skills/asc-mcp.md`\n\nUser: \"Set up asc-mcp for App Store Connect\"\n→ See `skills/asc-mcp.md`\n\nUser: \"Distribute build 42 to my beta testers via MCP\"\n→ See `skills/asc-mcp.md`\n\nUser: \"Respond to negative App Store reviews from Claude\"\n→ See `skills/asc-mcp.md`\n\nUser: \"ITMS-90035 Invalid Signature when uploading\"\n→ See axiom-security (skills/code-signing-diag.md)\n\nUser: \"My provisioning profile expired and I can't upload\"\n→ See axiom-security (skills/code-signing-diag.md)\n",
+      "content": "\n# Shipping & App Store\n\n**You MUST use this skill when preparing to submit ANY app, handling App Store rejections, or working on release workflow.**\n\n## When to Use\n\nUse this skill when you encounter:\n- Preparing an app for App Store submission\n- App Store rejection (any guideline)\n- Metadata requirements (screenshots, descriptions, keywords)\n- Privacy manifest and nutrition label questions\n- Age rating and content classification\n- Export compliance and encryption declarations\n- EU DSA trader status\n- Account deletion or Sign in with Apple requirements\n- Build upload and processing issues\n- App Review appeals\n- WWDC25 App Store Connect changes\n- First-time submission workflow\n\n## Quick Reference\n\n| Symptom / Task | Reference |\n|----------------|-----------|\n| How do I submit my app? | See `skills/app-store-submission.md` |\n| Pre-flight checklist | See `skills/app-store-submission.md` |\n| First-time submission | See `skills/app-store-submission.md` |\n| Encryption compliance | See `skills/app-store-submission.md` |\n| Accessibility Nutrition Labels | See `skills/app-store-submission.md` |\n| Metadata field requirements | See `skills/app-store-ref.md` |\n| Guideline number lookup | See `skills/app-store-ref.md` |\n| Privacy manifest schema | See `skills/app-store-ref.md` |\n| Age rating tiers | See `skills/app-store-ref.md` |\n| EU DSA compliance | See `skills/app-store-ref.md` |\n| WWDC25 ASC changes | See `skills/app-store-ref.md` |\n| App was rejected | See `skills/app-store-diag.md` |\n| Guideline 2.1/4.2/4.3 rejection | See `skills/app-store-diag.md` |\n| Writing an appeal | See `skills/app-store-diag.md` |\n| Repeated rejections | See `skills/app-store-diag.md` |\n| App Review Guidelines reference | See `skills/app-review-guidelines.md` |\n| Expert review checklist | See `skills/expert-review-checklist.md` |\n| Crash data in App Store Connect | See `skills/app-store-connect-ref.md` |\n| TestFlight crash reports | See `skills/app-store-connect-ref.md` |\n| ASC metrics dashboards | See `skills/app-store-connect-ref.md` |\n| Beta tester crash report | See `skills/testflight-triage.md` |\n| Crash log symbolication (.ips / MetricKit) | See axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`; `skills/testflight-triage.md` for the full TF workflow |\n| Automate App Store Connect | See `skills/asc-mcp.md` |\n| Submit build programmatically | See `skills/asc-mcp.md` |\n| Manage TestFlight via MCP | See `skills/asc-mcp.md` |\n| ITMS signing error on upload | See axiom-security (skills/code-signing-diag.md) |\n| Certificate/profile mismatch | See axiom-security (skills/code-signing-diag.md) |\n| Code signing setup | See axiom-security (skills/code-signing.md) |\n\n## Routing Logic\n\n### 1. Pre-Submission Preparation → **app-store-submission**\n\n**Triggers**:\n- \"How do I submit my app?\"\n- \"What do I need before submitting?\"\n- Preparing for first submission\n- Pre-flight checklist needed\n- Screenshot requirements\n- Metadata completeness check\n- Encryption compliance questions\n- Accessibility Nutrition Labels\n- Privacy manifest requirements for submission\n\n**Why app-store-submission**: Discipline skill with 8 anti-patterns, decision trees, and pressure scenarios. Prevents the mistakes that cause 90% of rejections.\n\n**Reference**: `skills/app-store-submission.md`\n\n---\n\n### 2. Metadata, Guidelines, and API Reference → **app-store-ref**\n\n**Triggers**:\n- \"What fields are required in App Store Connect?\"\n- \"What's the max length for app description?\"\n- Specific guideline number lookup\n- Privacy manifest schema details\n- Age rating tiers and questionnaire\n- IAP submission metadata\n- EU DSA compliance details\n- Build upload methods\n- WWDC25 changes to App Store Connect\n\n**Why app-store-ref**: 10-part reference covering every metadata field, guideline, and compliance requirement with exact specifications.\n\n**Reference**: `skills/app-store-ref.md`\n\n---\n\n### 3. Rejection Troubleshooting → **app-store-diag**\n\n**Triggers**:\n- \"My app was rejected\"\n- \"Guideline 2.1 rejection\"\n- \"Binary was rejected\"\n- Guideline 4.2 or 4.3 rejection (app too simple, web wrapper, spam, duplicate)\n- Guideline 1.x rejection (objectionable content, UGC moderation, Kids category)\n- How to respond to a rejection\n- Writing an appeal\n- Understanding rejection messages\n- Third or repeated rejection\n- Resolution Center communication\n\n**Why app-store-diag**: 9 diagnostic patterns mapping rejection types to root causes and fixes, including subjective rejections (4.2/4.3, 1.x). Includes appeal writing guidance and crisis scenario for repeated rejections.\n\n**Reference**: `skills/app-store-diag.md`\n\n---\n\n### 4. Privacy & Security Compliance → **security-privacy-scanner** (Agent)\n\n**Triggers**:\n- \"Scan my code for privacy issues before submission\"\n- Hardcoded API keys or secrets\n- Missing privacy manifest\n- Required Reason API declarations\n- ATS violations\n\n**Why security-privacy-scanner**: Autonomous agent that scans for security vulnerabilities and privacy compliance issues that cause rejections.\n\n**Invoke**: Launch `security-privacy-scanner` agent or `/axiom:audit security`\n\n---\n\n### 5. IAP Review Issues → **iap-auditor** (Agent)\n\n**Triggers**:\n- IAP rejected or not working\n- Missing transaction.finish()\n- Missing restore purchases\n- Subscription tracking issues\n\n**Why iap-auditor**: Scans IAP code for the patterns that cause StoreKit rejections.\n\n**Invoke**: Launch `iap-auditor` agent\n\n---\n\n### 6. Screenshot Validation → **screenshot-validator** (Agent)\n\n**Triggers**:\n- \"Check my App Store screenshots\"\n- \"Are my screenshots the right dimensions?\"\n- \"Validate screenshots before submission\"\n- \"Review my marketing screenshots\"\n- Screenshot content or dimension questions\n\n**Why screenshot-validator**: Multimodal agent that visually inspects each screenshot for placeholder text, wrong dimensions, debug artifacts, broken UI, and competitor references. Catches issues that manual review misses.\n\n**Invoke**: Launch `screenshot-validator` agent or `/axiom:audit screenshots`\n\n---\n\n### 7. Programmatic ASC Access → **asc-mcp**\n\n**Triggers**:\n- \"Automate App Store Connect\"\n- \"Submit build programmatically\"\n- \"Manage TestFlight from Claude\"\n- \"Respond to reviews via API\"\n- \"Set up asc-mcp\"\n- \"Distribute to TestFlight groups via MCP\"\n- \"Create a new version without opening ASC\"\n\n**Why asc-mcp**: Workflow-focused skill teaching Claude to use asc-mcp MCP tools for release pipelines, TestFlight distribution, review management, and feedback triage — all without leaving Claude Code.\n\n**Reference**: `skills/asc-mcp.md`\n\n---\n\n### 8. Post-Submission Monitoring → **app-store-connect-ref**\n\n**Triggers**:\n- \"How do I view crash data in App Store Connect?\"\n- \"Where are my TestFlight crash reports?\"\n- \"How do I read ASC metrics dashboards?\"\n- Post-release crash investigation\n- Downloading crash logs from ASC\n\n**Why app-store-connect-ref**: ASC navigation for crash dashboards, TestFlight feedback, performance metrics, and data export workflows.\n\n**Reference**: `skills/app-store-connect-ref.md`\n\n---\n\n### 9. Beta Crash Triage → **testflight-triage**\n\n**Triggers**:\n- Beta tester reports a crash\n- Crash appears in Organizer or App Store Connect\n- Crash logs need symbolication\n- Post-release crash investigation\n\n**Why testflight-triage**: Systematic crash triage from symbolication through root cause analysis. Uses `xcsym` as the first step (parse → discover dSYMs → symbolicate → categorize with `pattern_tag` → emit structured JSON).\n\n**Reference**: `skills/testflight-triage.md`. For the xcsym subcommand/exit-code reference, see axiom-tools (skills/xcsym-ref.md). For the one-call agent workflow, `/axiom:analyze-crash`.\n\n---\n\n### 10. Distribution Signing Issues → **code-signing** / **code-signing-diag**\n\n**Triggers**:\n- ITMS-90035 Invalid Signature on upload\n- ITMS-90161 Invalid Provisioning Profile\n- \"No signing certificate found\" when archiving\n- Certificate expired before submission\n- Archive succeeds but export/upload fails\n- Profile doesn't match bundle ID\n- Entitlement mismatch on upload\n\n**Why code-signing**: Distribution signing errors are the #1 cause of upload failures. Diagnosing with CLI tools takes 5 minutes. code-signing-diag has 6 decision trees mapping ITMS errors to root causes.\n\n**Reference**: See axiom-security (skills/code-signing-diag.md) (troubleshooting) or See axiom-security (skills/code-signing.md) (setup)\n\n---\n\n## Decision Tree\n\n```dot\ndigraph shipping {\n    \"Shipping question?\" [shape=diamond];\n    \"Rejected?\" [shape=diamond];\n    \"Post-submission monitoring?\" [shape=diamond];\n    \"Beta crash triage?\" [shape=diamond];\n    \"Automate via MCP?\" [shape=diamond];\n    \"Screenshot review?\" [shape=diamond];\n    \"Need specific specs?\" [shape=diamond];\n    \"IAP issue?\" [shape=diamond];\n    \"Want code scan?\" [shape=diamond];\n    \"Signing error?\" [shape=diamond];\n\n    \"skills/app-store-submission.md\" [shape=box, label=\"app-store-submission\\n(pre-flight checklist)\"];\n    \"skills/app-store-ref.md\" [shape=box, label=\"app-store-ref\\n(metadata/guideline specs)\"];\n    \"skills/app-store-diag.md\" [shape=box, label=\"app-store-diag\\n(rejection troubleshooting)\"];\n    \"skills/app-store-connect-ref.md\" [shape=box, label=\"app-store-connect-ref\\n(ASC dashboards/metrics)\"];\n    \"skills/testflight-triage.md\" [shape=box, label=\"testflight-triage\\n(beta crash triage)\"];\n    \"security-privacy-scanner\" [shape=box, label=\"security-privacy-scanner\\n(Agent)\"];\n    \"iap-auditor\" [shape=box, label=\"iap-auditor\\n(Agent)\"];\n    \"screenshot-validator\" [shape=box, label=\"screenshot-validator\\n(Agent)\"];\n    \"skills/asc-mcp.md\" [shape=box, label=\"asc-mcp\\n(MCP tool workflows)\"];\n    \"axiom-security/code-signing\" [shape=box, label=\"axiom-security\\n(distribution signing)\"];\n\n    \"Shipping question?\" -> \"Rejected?\" [label=\"yes, about to submit or general\"];\n    \"Rejected?\" -> \"skills/app-store-diag.md\" [label=\"yes, app was rejected\"];\n    \"Rejected?\" -> \"Post-submission monitoring?\" [label=\"no\"];\n    \"Post-submission monitoring?\" -> \"skills/app-store-connect-ref.md\" [label=\"yes, crash data/metrics\"];\n    \"Post-submission monitoring?\" -> \"Beta crash triage?\" [label=\"no\"];\n    \"Beta crash triage?\" -> \"skills/testflight-triage.md\" [label=\"yes, beta crash/symbolication\"];\n    \"Beta crash triage?\" -> \"Automate via MCP?\" [label=\"no\"];\n    \"Automate via MCP?\" -> \"skills/asc-mcp.md\" [label=\"yes, programmatic ASC access\"];\n    \"Automate via MCP?\" -> \"Screenshot review?\" [label=\"no\"];\n    \"Screenshot review?\" -> \"screenshot-validator\" [label=\"yes, validate screenshots\"];\n    \"Screenshot review?\" -> \"Need specific specs?\" [label=\"no\"];\n    \"Need specific specs?\" -> \"skills/app-store-ref.md\" [label=\"yes, looking up field/guideline\"];\n    \"Need specific specs?\" -> \"IAP issue?\" [label=\"no\"];\n    \"IAP issue?\" -> \"iap-auditor\" [label=\"yes\"];\n    \"IAP issue?\" -> \"Want code scan?\" [label=\"no\"];\n    \"Want code scan?\" -> \"Signing error?\" [label=\"no\"];\n    \"Want code scan?\" -> \"security-privacy-scanner\" [label=\"yes, scan for privacy/security\"];\n    \"Signing error?\" -> \"axiom-security/code-signing\" [label=\"yes, ITMS/cert/profile error\"];\n    \"Signing error?\" -> \"skills/app-store-submission.md\" [label=\"no, general prep\"];\n}\n```\n\nSimplified:\n\n1. App was rejected? → `skills/app-store-diag.md`\n2. Post-submission crash data/metrics? → `skills/app-store-connect-ref.md`\n3. Beta crash triage/symbolication? → `skills/testflight-triage.md`\n4. Automate ASC via MCP tools? → `skills/asc-mcp.md`\n5. Validate screenshots? → `screenshot-validator` (Agent)\n6. Need specific metadata/guideline specs? → `skills/app-store-ref.md`\n7. IAP submission issue? → `iap-auditor` (Agent)\n8. Want pre-submission code scan? → `security-privacy-scanner` (Agent)\n9. ITMS signing/certificate/profile error on upload? → See axiom-security (skills/code-signing-diag.md)\n10. General submission preparation? → `skills/app-store-submission.md`\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"I'll just submit and see what happens\" | 40% of rejections are Guideline 2.1 (completeness). app-store-submission catches them in 10 min. |\n| \"I've submitted apps before, I know the process\" | Requirements change yearly. Privacy manifests, age rating tiers, EU DSA, Accessibility Nutrition Labels are all new since 2024. |\n| \"The rejection is wrong, I'll just resubmit\" | Resubmitting without changes wastes 24-48 hours per cycle. app-store-diag finds the root cause. |\n| \"Privacy manifests are only for big apps\" | Every app using Required Reason APIs needs a manifest since May 2024. Missing = automatic rejection. |\n| \"I'll add the metadata later\" | Missing metadata blocks submission entirely. app-store-ref has the complete field list. |\n| \"It's just a bug fix, I don't need a full checklist\" | Bug fix updates still need What's New text, correct screenshots, and valid build. app-store-submission covers it. |\n| \"I'll just eyeball the screenshots myself\" | Human review misses dimension mismatches (even 1px off = rejection), subtle placeholder text, and debug indicators. A single missed issue costs 24-48 hours in resubmission. screenshot-validator catches it in 2 minutes. |\n| \"I'll just do it in the ASC web dashboard\" | If asc-mcp is configured, MCP tools are faster for bulk operations — distributing builds, responding to reviews, creating versions. asc-mcp has the workflow. |\n| \"Upload failed with ITMS error, let me re-archive\" | ITMS signing errors are configuration — wrong cert, expired profile, missing entitlement. Re-archiving with the same config produces the same result. code-signing-diag has the fix. |\n\n## When NOT to Use (Conflict Resolution)\n\n**Do NOT use axiom-shipping for these — use the correct skill instead:**\n\n| Issue | Correct Skill | Why NOT axiom-shipping |\n|-------|---------------|----------------------|\n| Build fails before archiving | **axiom-build** | Environment/build issue, not submission |\n| SwiftData migration crash | **axiom-data** | Schema issue, not App Store |\n| Privacy manifest coding (writing the file) | **axiom-build** | security-privacy-scanner handles code scanning |\n| StoreKit 2 implementation (writing IAP code) | **axiom-integration** | in-app-purchases / storekit-ref covers implementation |\n| Performance issues found during testing | **axiom-performance** | Profiling issue, not submission |\n| Accessibility implementation | **axiom-accessibility** | Code-level accessibility, not App Store labels |\n\n**axiom-shipping is for the submission workflow**, not code implementation:\n- Preparing metadata and compliance → axiom-shipping\n- Writing the actual code → domain-specific skill (axiom-build, axiom-data, etc.)\n- App was rejected → axiom-shipping\n- Code changes to fix rejection → domain-specific skill, then back to axiom-shipping to verify\n\n## Example Invocations\n\nUser: \"How do I submit my app to the App Store?\"\n→ See `skills/app-store-submission.md`\n\nUser: \"My app was rejected for Guideline 2.1\"\n→ See `skills/app-store-diag.md`\n\nUser: \"What screenshots do I need?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"What fields are required in App Store Connect?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"How do I fill out the age rating questionnaire?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"Do I need an encryption compliance declaration?\"\n→ See `skills/app-store-submission.md`\n\nUser: \"My app keeps getting rejected, what do I do?\"\n→ See `skills/app-store-diag.md`\n\nUser: \"How do I appeal an App Store rejection?\"\n→ See `skills/app-store-diag.md`\n\nUser: \"My app was rejected for Guideline 4.2 minimum functionality\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Rejected for being a web wrapper / duplicate app\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Rejection for user-generated content without moderation\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Kids category compliance rejection\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Scan my code for App Store compliance issues\"\n→ Launch `security-privacy-scanner` agent\n\nUser: \"Check my IAP implementation before submission\"\n→ Launch `iap-auditor` agent\n\nUser: \"Check my App Store screenshots in ~/Screenshots\"\n→ Launch `screenshot-validator` agent\n\nUser: \"Are my screenshots the right dimensions?\"\n→ Launch `screenshot-validator` agent\n\nUser: \"How do I find crash data in App Store Connect?\"\n→ See `skills/app-store-connect-ref.md`\n\nUser: \"Where are my TestFlight crash reports in ASC?\"\n→ See `skills/app-store-connect-ref.md`\n\nUser: \"What's new in App Store Connect for 2025?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"I need to set up DSA trader status for the EU\"\n→ See `skills/app-store-ref.md`\n\nUser: \"What are Accessibility Nutrition Labels?\"\n→ See `skills/app-store-submission.md`\n\nUser: \"This is my first app submission ever\"\n→ See `skills/app-store-submission.md`\n\nUser: \"Submit this build to App Store programmatically\"\n→ See `skills/asc-mcp.md`\n\nUser: \"Set up asc-mcp for App Store Connect\"\n→ See `skills/asc-mcp.md`\n\nUser: \"Distribute build 42 to my beta testers via MCP\"\n→ See `skills/asc-mcp.md`\n\nUser: \"Respond to negative App Store reviews from Claude\"\n→ See `skills/asc-mcp.md`\n\nUser: \"ITMS-90035 Invalid Signature when uploading\"\n→ See axiom-security (skills/code-signing-diag.md)\n\nUser: \"My provisioning profile expired and I can't upload\"\n→ See axiom-security (skills/code-signing-diag.md)\n",
       "skillType": "router",
       "source": "axiom",
       "category": "shipping",
@@ -22654,14 +22654,14 @@
           "level": 2,
           "startLine": 21,
           "endLine": 53,
-          "charCount": 1895
+          "charCount": 2000
         },
         {
           "heading": "Routing Logic",
           "level": 2,
           "startLine": 54,
           "endLine": 220,
-          "charCount": 5429
+          "charCount": 5698
         },
         {
           "heading": "Decision Tree",
@@ -28961,7 +28961,7 @@
     "axiom-tools--xcsym-ref": {
       "name": "axiom-tools--xcsym-ref",
       "description": "xcsym symbolicates `.ips` (v1/v2) and MetricKit (`MXCrashDiagnostic`) crash reports end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.",
-      "content": "---\nname: xcsym-ref\ndescription: Use when symbolicating an .ips or MetricKit crash, diagnosing dSYM UUID mismatches, inventorying dSYMs, or anonymizing a crash for fixture use. Reference for the xcsym CLI that ships with Axiom.\nlicense: MIT\n---\n\n# xcsym Reference (iOS/macOS Crash Symbolication)\n\nxcsym symbolicates `.ips` (v1/v2) and MetricKit (`MXCrashDiagnostic`) crash reports end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.\n\n## Binary Location\n\n```bash\n${CLAUDE_PLUGIN_ROOT}/bin/xcsym\n```\n\n## When to Use\n\n- **Triaging a new `.ips`** — full pipeline in one call, structured JSON out\n- **TestFlight crashes** — paired with `xcsym verify` to diagnose UUID mismatches\n- **MetricKit crashes** — write `MXCrashDiagnostic.jsonRepresentation()` to disk and run `crash`\n- **Explaining why a crash is unsymbolicated** — `verify` tells you per-image UUID/arch mismatch\n- **Inventorying local dSYMs** — `list-dsyms` enumerates archives + DerivedData\n- **Scrubbing a user's crash for a fixture** — `anonymize` preserves dSYM UUIDs (correlation keys) while scrubbing PII\n\n**Do not use for hangs.** `xcsym crash` rejects `.ips` files with `bug_type=298` (hangs have a different workflow; see `axiom-performance` skills).\n\n## Critical Best Practices\n\n**Start with `crash`.** It runs the full pipeline (parse → discover dSYMs → symbolicate → categorize → emit JSON). Only reach for `resolve`, `find-dsym`, or `verify` when `crash` surfaces a specific problem.\n\n**Read `pattern_tag` first.** It's the most compact signal about what kind of crash you're looking at. Map it to the agent's fix-guidance table before reading frames.\n\n**Trust exit codes.** Non-zero codes say *why* symbolication was incomplete — don't assume a crashed call means the tool failed.\n\n**Anonymize before committing a fixture.** The `anonymize` subcommand is format-aware (handles `.ips` v1/v2 and MetricKit) and intentionally preserves dSYM UUIDs so anonymized fixtures still symbolicate against your dSYMs.\n\n## Subcommands\n\n### crash — Full Pipeline\n\n```bash\nxcsym crash --format=summary <file>             # small tier (≤2KB), top frames only\nxcsym crash --format=standard <file>            # default (≤12KB)\nxcsym crash --format=full <file>                # all threads (emits size_warning past 100KB)\nxcsym crash --from-metrickit <file>             # force MetricKit (skip auto-detect)\nxcsym crash --dsym <path> <file>                # explicit dSYM for the main app\nxcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots\nxcsym crash --no-symbolicate <file>             # skip atos; keep raw frames\nxcsym crash --no-cache <file>                   # bypass UUID cache\nxcsym crash --no-spotlight <file>               # skip mdfind lookups\nxcsym crash --output <path> <file>              # write JSON to a file\nxcsym crash - < crash.ips                       # read from stdin (for pasted content)\n```\n\n**Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.\n\n### verify — dSYM Match Diagnostics\n\n```bash\nxcsym verify <file>\nxcsym verify <file> --dsym <path>\nxcsym verify <file> --dsym-paths <a>:<b>\nxcsym verify <file> --no-cache\nxcsym verify <file> --no-spotlight\n```\n\nReports which images are matched, mismatched (UUID or arch), and missing. Use when `crash` exits non-zero to pinpoint *which* dSYM is wrong.\n\n### resolve — Single-Address Resolution\n\n```bash\nxcsym resolve --dsym <path> --load-addr <hex> <addr>...\nxcsym resolve --dsym /bin/ls --load-addr 0x100000000 0x10000aabb 0x10000bbcc\nxcsym resolve --dsym <path> --load-addr <hex> --arch arm64 <addr>...\n```\n\nHands raw addresses to `atos` against a specific dSYM. Useful for one-off address resolution outside a crash context.\n\n### find-dsym — Locate dSYM by UUID\n\n```bash\nxcsym find-dsym <uuid>\nxcsym find-dsym <uuid> --arch arm64\nxcsym find-dsym <uuid> --dsym-paths <a>:<b>\nxcsym find-dsym <uuid> --no-cache\nxcsym find-dsym <uuid> --no-spotlight\n```\n\nWalks the discovery chain: cache → explicit paths → Archives → DerivedData → `~/Downloads` → Xcode toolchain → system frameworks → Spotlight.\n\n### list-dsyms — Inventory\n\n```bash\nxcsym list-dsyms\nxcsym list-dsyms --source=archives      # only Archives\nxcsym list-dsyms --source=deriveddata   # only DerivedData\nxcsym list-dsyms --source=downloads\nxcsym list-dsyms --source=toolchain\nxcsym list-dsyms --source=frameworks\nxcsym list-dsyms --source=env\nxcsym list-dsyms --source=all           # default\nxcsym list-dsyms --dsym-paths <a>:<b>\n```\n\n### anonymize — Scrub PII for Fixtures\n\n```bash\nxcsym anonymize <file>                   # anonymized JSON to stdout\nxcsym anonymize --output <path> <file>   # write to file\nxcsym anonymize - < crash.ips            # read from stdin\n```\n\nScrubs bundle IDs, user paths, `.app`/`.framework` names, IPs, device names, session IDs. Preserves dSYM UUIDs (`slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID`) so anonymized output still symbolicates against matching dSYMs.\n\n## Output Schema\n\nTop-level JSON emitted by `crash`:\n\n```json\n{\n  \"tool\": \"xcsym\",\n  \"version\": \"0.1.0-dev\",\n  \"format\": \"standard\",\n  \"environment\": {\n    \"atos_version\": \"...\",\n    \"clt_version\": \"...\",\n    \"xcode_path\": \"/Applications/Xcode.app\"\n  },\n  \"input\": {\n    \"path\": \"testdata/crashes/ips_v2/swift_forced_unwrap.ips\",\n    \"format\": \"ips_json_v2\"\n  },\n  \"crash\": {\n    \"app\": { \"name\": \"...\", \"version\": \"...\", \"bundle_id\": \"...\" },\n    \"os\": { \"platform\": \"iOS\", \"version\": \"17.5\", \"is_simulator\": false },\n    \"arch\": \"arm64\",\n    \"exception\": { \"type\": \"EXC_BREAKPOINT\", \"codes\": \"0x1\", \"subtype\": \"...\", \"signal\": \"SIGTRAP\" },\n    \"termination\": { \"namespace\": \"SIGNAL\", \"code\": \"0x5\" },\n    \"pattern_tag\": \"swift_forced_unwrap\",\n    \"pattern_confidence\": \"high\",\n    \"pattern_rule_id\": \"R-swift-unwrap-01\",\n    \"pattern_reason\": \"exception.subtype matched '...unexpectedly found nil...'\",\n    \"crashed_thread\": { \"index\": 0, \"triggered\": true, \"frames\": [...] },\n    \"other_threads_top_frames\": [...],\n    \"all_threads\": [...]\n  },\n  \"images\": { \"matched\": [...], \"mismatched\": [...], \"missing\": [...] },\n  \"images_summary\": { \"matched_count\": 1, \"mismatched_count\": 0, \"missing_count\": 0 },\n  \"warnings\": [],\n  \"size_warning\": \"report exceeded 100KB (standard tier)...\"\n}\n```\n\n### Tiers\n\n| Tier | Budget | Contains |\n|---|---|---|\n| `summary` | ≤2KB | App, OS, exception, pattern_tag, crashed-thread top 3 frames, `images_summary` |\n| `standard` | ≤12KB | + full crashed thread, other threads' top frames, `images` |\n| `full` | n/a (emits `size_warning` past 100KB) | + `all_threads` (every thread, every frame) |\n\n## Exit Codes\n\nExit codes are subcommand-specific. Usage errors, tool errors, timeouts, and output errors are shared across all subcommands. Symbolication-specific codes (2/3/4/7) vary in meaning between `crash` and `verify`.\n\n**Shared across all subcommands:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Success |\n| 1 | Usage error (bad flags, missing required args) |\n| 5 | Tool/discovery error (dwarfdump/atos failed, Spotlight failed, etc.) |\n| 6 | Command timeout |\n| 8 | Output write error (e.g., `--output` path unwritable) |\n\n**`crash` — main-image-centric:**\n\n| Code | Meaning | First thing to do |\n|---|---|---|\n| 0 | All images matched | — |\n| 2 | Input not found / unreadable / unsupported format OR main app dSYM missing | Check path exists; otherwise download the dSYM for the main UUID |\n| 3 | Main app UUID mismatch | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| 4 | Main app arch mismatch | User is on a different slice (arm64e vs arm64); use `find-dsym --arch` |\n| 7 | Main matched, some other images missing/mismatched | Partial success — frames in the main binary symbolicate, others won't |\n\n**`verify` — per-image-centric (note the 7 vs crash difference):**\n\n| Code | Meaning |\n|---|---|\n| 2 | Input not found / unreadable / unsupported format |\n| 3 | Any image has a UUID mismatch with an explicitly-overridden dSYM |\n| 4 | Any image has an arch-slice mismatch with its dSYM |\n| 7 | Any missing images (with or without matches — NOT \"main matched + others missing\") |\n\n**`find-dsym` — lookup-centric:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Match — dSYM located |\n| 2 | Miss — nothing found across every discovery source |\n\n**`list-dsyms`, `resolve`, `anonymize`:** success/failure only (0/1/5/6/8); no symbolication-specific codes.\n\nOn hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{\"tool\":\"xcsym\",\"error\":\"hang_report\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}`. Route the user to hang-diagnostics when you see `\"error\":\"hang_report\"`.\n\n## Pattern Tag Catalog\n\nEvery `pattern_tag` xcsym can emit, with the rule that fires it:\n\n| pattern_tag | Rule ID | Confidence | Signal |\n|---|---|---|---|\n| `swift_forced_unwrap` | R-swift-unwrap-01 | high | Subtype contains \"unexpectedly found nil...\" |\n| `swift_concurrency_violation` | R-swift-conc-01 | high | `_swift_task_isCurrentExecutor` in subtype |\n| `swift_fatal_error` | R-swift-fatal-01 | high | Swift runtime failure + `swift_preconditionFailure` or `fatalError` sentinel frame |\n| `zombie_or_heap_corruption` | R-zombie-01 | heuristic | `_NSZombie_*` frame or poison-pattern address |\n| `stack_overflow` | R-stack-overflow-01 | heuristic | `KERN_PROTECTION_FAILURE` with fault within 1 page of SP |\n| `bad_memory_access` | R-bad-access-01 | high | `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS` |\n| `illegal_instruction` | R-illegal-inst-01 | high | `EXC_BAD_INSTRUCTION` |\n| `exc_guard` | R-exc-guard-01 | high | `EXC_GUARD` |\n| `objc_exception` | R-objc-exc-01 | high | `EXC_CRASH`/SIGABRT with `objc_exception_throw` frame |\n| `main_thread_checker_violation` | R-mtc-01 | high | `main_thread_checker.dylib` in crashed frames |\n| `abort` | R-abort-01 | high | SIGABRT with `abort`/`__abort_with_payload` frame |\n| `watchdog_termination` | R-watchdog-01 | high | Termination namespace=FRONTBOARD, code=0x8BADF00D |\n| `user_force_quit` | R-user-quit-01 | high | FRONTBOARD + 0xDEADFA11 |\n| `background_task_expired` | R-bg-expired-01 | high | FRONTBOARD + 0xBAADCA11 |\n| `data_protection_violation` | R-data-prot-01 | high | RUNNINGBOARD + 0xdead10cc |\n| `code_signing_killed` | R-code-sign-01 | high | CODESIGNING + 0xc51bad0[0-f] |\n| `jetsam_oom` | R-jetsam-01 | high | `EXC_RESOURCE` with `MEMORY` subtype OR `termination.reason` contains `per-process-limit` / `vm-pageshortage` |\n| `cpu_resource_fatal` | R-cpu-fatal-01 | high | `EXC_RESOURCE` CPU/WAKEUPS FATAL (excludes NON-FATAL) |\n| `swiftui_update_loop` | R-swiftui-loop-01 | low | ≥100 consecutive `AG::Graph::update_*` frames from the top |\n| `unclassified` | — | low | No rule matched — raw fields are in `pattern_reason` |\n\n## dSYM Discovery Order\n\nSource: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact order:\n\n1. **ExplicitByUUID** — per-image overrides the `crash` subcommand builds when the header lists a main-image UUID (before any other source, including cache)\n2. **Explicit paths** — `--dsym` direct override and `--dsym-paths` extra roots\n3. **UUID cache** — `~/Library/Caches/xcsym/uuid-index.json` (skip with `--no-cache`)\n4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)\n5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)\n6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`\n7. **Frameworks (cwd scan)** — walks the current working directory plus caller-supplied roots for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as \"no match\" and the chain continues.\n8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)\n9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)\n10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)\n\n`find-dsym` follows the same chain minus step 1 (no per-UUID explicit map). `list-dsyms --source=<name>` restricts scanning to a single root by name.\n\n## Troubleshooting\n\n| Symptom | Likely cause | Fix |\n|---|---|---|\n| Exit 2, \"main dSYM missing\" | No archive for that UUID on this machine | Download the archive from App Store Connect; or set `XCSYM_DSYM_PATHS` to its location |\n| Exit 3, main UUID mismatch | Crash came from a different build than the archive on disk | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| Exit 4, main arch mismatch | arm64 vs arm64e slice mismatch | Pass `--arch` to `find-dsym`; verify the archive contains the slice |\n| Exit 7, \"main matched, others missing\" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |\n| `pattern_tag=\"unclassified\"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |\n| `size_warning` in output | Full tier exceeded 100KB budget | Switch to `--format=standard` or `--format=summary` |\n| `{\"error\":\"hang_report\"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |\n\n## Resources\n\n**Skills**: axiom-tools (skills/xclog-ref.md), axiom-build (skills/xcode-debugging.md), axiom-performance (skills/metrickit-ref.md, skills/hang-diagnostics.md), axiom-shipping (skills/testflight-triage.md)\n\n**Agents**: crash-analyzer (interprets xcsym JSON with pattern_tag → fix guidance), simulator-tester (auto-runs xcsym on crashes during test runs)\n\n**Commands**: `/axiom:analyze-crash`\n",
+      "content": "---\nname: xcsym-ref\ndescription: Use when symbolicating an .ips or MetricKit crash, diagnosing dSYM UUID mismatches, inventorying dSYMs, or anonymizing a crash for fixture use. Reference for the xcsym CLI that ships with Axiom.\nlicense: MIT\n---\n\n# xcsym Reference (iOS/macOS Crash Symbolication)\n\nxcsym symbolicates `.ips` (v1/v2) and MetricKit (`MXCrashDiagnostic`) crash reports end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.\n\n## Binary Location\n\n```bash\n${CLAUDE_PLUGIN_ROOT}/bin/xcsym\n```\n\n## When to Use\n\n- **Triaging a new `.ips`** — full pipeline in one call, structured JSON out\n- **TestFlight crashes** — paired with `xcsym verify` to diagnose UUID mismatches\n- **MetricKit crashes** — write `MXCrashDiagnostic.jsonRepresentation()` to disk and run `crash`\n- **Explaining why a crash is unsymbolicated** — `verify` tells you per-image UUID/arch mismatch\n- **Inventorying local dSYMs** — `list-dsyms` enumerates archives + DerivedData\n- **Scrubbing a user's crash for a fixture** — `anonymize` preserves dSYM UUIDs (correlation keys) while scrubbing PII\n\n**Do not use for hangs.** `xcsym crash` rejects `.ips` files with `bug_type=298` (hangs have a different workflow; see `axiom-performance` skills).\n\n## Critical Best Practices\n\n**Start with `crash`.** It runs the full pipeline (parse → discover dSYMs → symbolicate → categorize → emit JSON). Only reach for `resolve`, `find-dsym`, or `verify` when `crash` surfaces a specific problem.\n\n**Read `pattern_tag` first.** It's the most compact signal about what kind of crash you're looking at. Map it to the agent's fix-guidance table before reading frames.\n\n**Trust exit codes.** Non-zero codes say *why* symbolication was incomplete — don't assume a crashed call means the tool failed.\n\n**Anonymize before committing a fixture.** The `anonymize` subcommand is format-aware (handles `.ips` v1/v2 and MetricKit) and intentionally preserves dSYM UUIDs so anonymized fixtures still symbolicate against your dSYMs.\n\n## Subcommands\n\n### crash — Full Pipeline\n\n```bash\nxcsym crash --format=summary <file>             # small tier (≤2KB), top frames only\nxcsym crash --format=standard <file>            # default (≤12KB)\nxcsym crash --format=full <file>                # all threads (emits size_warning past 100KB)\nxcsym crash --from-metrickit <file>             # force MetricKit (skip auto-detect)\nxcsym crash --dsym <path> <file>                # explicit dSYM for the main app\nxcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots\nxcsym crash --no-symbolicate <file>             # skip atos; keep raw frames\nxcsym crash --no-cache <file>                   # bypass UUID cache\nxcsym crash --no-spotlight <file>               # skip mdfind lookups\nxcsym crash --output <path> <file>              # write JSON to a file\nxcsym crash - < crash.ips                       # read from stdin (for pasted content)\n```\n\n**Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.\n\n### verify — dSYM Match Diagnostics\n\n```bash\nxcsym verify <file>\nxcsym verify <file> --dsym <path>\nxcsym verify <file> --dsym-paths <a>:<b>\nxcsym verify <file> --no-cache\nxcsym verify <file> --no-spotlight\n```\n\nReports which images are matched, mismatched (UUID or arch), and missing. Use when `crash` exits non-zero to pinpoint *which* dSYM is wrong.\n\n### resolve — Single-Address Resolution\n\n```bash\nxcsym resolve --dsym <path> --load-addr <hex> <addr>...\nxcsym resolve --dsym /bin/ls --load-addr 0x100000000 0x10000aabb 0x10000bbcc\nxcsym resolve --dsym <path> --load-addr <hex> --arch arm64 <addr>...\n```\n\nHands raw addresses to `atos` against a specific dSYM. Useful for one-off address resolution outside a crash context.\n\n### find-dsym — Locate dSYM by UUID\n\n```bash\nxcsym find-dsym <uuid>\nxcsym find-dsym <uuid> --arch arm64\nxcsym find-dsym <uuid> --dsym-paths <a>:<b>\nxcsym find-dsym <uuid> --no-cache\nxcsym find-dsym <uuid> --no-spotlight\n```\n\nWalks the discovery chain: cache → explicit paths → Archives → DerivedData → `~/Downloads` → Xcode toolchain → system frameworks → Spotlight.\n\n### list-dsyms — Inventory\n\n```bash\nxcsym list-dsyms\nxcsym list-dsyms --source=archives      # only Archives\nxcsym list-dsyms --source=deriveddata   # only DerivedData\nxcsym list-dsyms --source=downloads\nxcsym list-dsyms --source=toolchain\nxcsym list-dsyms --source=frameworks\nxcsym list-dsyms --source=env\nxcsym list-dsyms --source=all           # default\nxcsym list-dsyms --dsym-paths <a>:<b>\n```\n\n### anonymize — Scrub PII for Fixtures\n\n```bash\nxcsym anonymize <file>                   # anonymized JSON to stdout\nxcsym anonymize --output <path> <file>   # write to file\nxcsym anonymize - < crash.ips            # read from stdin\n```\n\n**Scrubs:**\n- Bundle IDs across every spelling (`bundle_id`, `bundleID`, `bundleIdentifier`, `CFBundleIdentifier`, `codeSigningID`, `coalitionName`)\n- Process and app names (`procName`, `app_name`)\n- User paths (`/Users/<name>/` → `/Users/REDACTED/`)\n- `.app` names (word-boundary regex, so identifiers like `com.apple.main-thread` aren't mangled) and `.framework` names\n- IPv4 and IPv6 addresses\n- Device names and account IDs (`crashReporterKey`, `sessionID`, `incident_id`, `incident`, `deviceIdentifier`, `deviceUDID`, `userID`)\n- Binary names inside `usedImages[].name` and MetricKit `binaryName`\n- Foreign UUIDs in freeform strings (incident IDs, paths)\n\n**Preserves:**\n- dSYM UUIDs — `slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID` — so anonymized output still symbolicates against matching dSYMs\n- Thread names (`threads[].name`, e.g. `com.apple.main-thread`) — Apple infrastructure labels, not PII; keeping them preserves debug context\n- Library identifiers inside nested library structures (same rationale as thread names)\n- Structural fields categorize and symbolicate rules depend on (exception type, codes, subtype, thread state, frame offsets)\n\n## Output Schema\n\nTop-level JSON emitted by `crash`:\n\n```json\n{\n  \"tool\": \"xcsym\",\n  \"version\": \"0.1.0-dev\",\n  \"format\": \"standard\",\n  \"environment\": {\n    \"atos_version\": \"...\",\n    \"clt_version\": \"...\",\n    \"xcode_path\": \"/Applications/Xcode.app\"\n  },\n  \"input\": {\n    \"path\": \"testdata/crashes/ips_v2/swift_forced_unwrap.ips\",\n    \"format\": \"ips_json_v2\"\n  },\n  \"crash\": {\n    \"app\": { \"name\": \"...\", \"version\": \"...\", \"bundle_id\": \"...\" },\n    \"os\": { \"platform\": \"iOS\", \"version\": \"17.5\", \"is_simulator\": false },\n    \"arch\": \"arm64\",\n    \"exception\": { \"type\": \"EXC_BREAKPOINT\", \"codes\": \"0x1\", \"subtype\": \"...\", \"signal\": \"SIGTRAP\" },\n    \"termination\": { \"namespace\": \"SIGNAL\", \"code\": \"0x5\" },\n    \"pattern_tag\": \"swift_forced_unwrap\",\n    \"pattern_confidence\": \"high\",\n    \"pattern_rule_id\": \"R-swift-unwrap-01\",\n    \"pattern_reason\": \"exception.subtype matched '...unexpectedly found nil...'\",\n    \"crashed_thread\": { \"index\": 0, \"triggered\": true, \"frames\": [...] },\n    \"other_threads_top_frames\": [...],\n    \"all_threads\": [...]\n  },\n  \"images\": { \"matched\": [...], \"mismatched\": [...], \"missing\": [...] },\n  \"images_summary\": { \"matched_count\": 1, \"mismatched_count\": 0, \"missing_count\": 0 },\n  \"warnings\": [],\n  \"size_warning\": \"report exceeded 100KB (standard tier)...\"\n}\n```\n\n### Tiers\n\n| Tier | Budget | Contains |\n|---|---|---|\n| `summary` | ≤2KB | App, OS, exception, pattern_tag, crashed-thread top 3 frames, `images_summary` |\n| `standard` | ≤12KB | + full crashed thread, other threads' top frames, `images` |\n| `full` | n/a (emits `size_warning` past 100KB) | + `all_threads` (every thread, every frame) |\n\n## Exit Codes\n\nExit codes are subcommand-specific. Usage errors, tool errors, timeouts, and output errors are shared across all subcommands. Symbolication-specific codes (2/3/4/7) vary in meaning between `crash` and `verify`.\n\n**Shared across all subcommands:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Success |\n| 1 | Usage error (bad flags, missing required args) |\n| 5 | Tool/discovery error (dwarfdump/atos failed, Spotlight failed, etc.) |\n| 6 | Command timeout |\n| 8 | Output write error (e.g., `--output` path unwritable) |\n\n**`crash` — main-image-centric:**\n\n| Code | Meaning | First thing to do |\n|---|---|---|\n| 0 | All images matched | — |\n| 2 | Input not found / unreadable / unsupported format OR main app dSYM missing | Check path exists; otherwise download the dSYM for the main UUID |\n| 3 | Main app UUID mismatch | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| 4 | Main app arch mismatch | User is on a different slice (arm64e vs arm64); use `find-dsym --arch` |\n| 7 | Main matched, some other images missing/mismatched | Partial success — frames in the main binary symbolicate, others won't |\n\n**`verify` — per-image-centric (note the 7 vs crash difference):**\n\n| Code | Meaning |\n|---|---|\n| 2 | Input not found / unreadable / unsupported format |\n| 3 | Any image has a UUID mismatch with an explicitly-overridden dSYM |\n| 4 | Any image has an arch-slice mismatch with its dSYM |\n| 7 | Any missing images (with or without matches — NOT \"main matched + others missing\") |\n\n**`find-dsym` — lookup-centric:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Match — dSYM located |\n| 2 | Miss — nothing found across every discovery source |\n\n**`list-dsyms`, `resolve`, `anonymize`:** success/failure only (0/1/5/6/8); no symbolication-specific codes.\n\nOn hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{\"tool\":\"xcsym\",\"error\":\"hang_report\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}`. Route the user to hang-diagnostics when you see `\"error\":\"hang_report\"`.\n\n## Pattern Tag Catalog\n\nEvery `pattern_tag` xcsym can emit, with the rule that fires it:\n\n| pattern_tag | Rule ID | Confidence | Signal |\n|---|---|---|---|\n| `swift_forced_unwrap` | R-swift-unwrap-01 | high | Subtype contains \"unexpectedly found nil...\" |\n| `swift_concurrency_violation` | R-swift-conc-01 | high | `_swift_task_isCurrentExecutor` in subtype |\n| `swift_fatal_error` | R-swift-fatal-01 | high | Swift runtime failure + `swift_preconditionFailure` or `fatalError` sentinel frame |\n| `zombie_or_heap_corruption` | R-zombie-01 | heuristic | `_NSZombie_*` frame or poison-pattern address |\n| `stack_overflow` | R-stack-overflow-01 | heuristic | `KERN_PROTECTION_FAILURE` with fault within 1 page of SP |\n| `bad_memory_access` | R-bad-access-01 | high | `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS` |\n| `illegal_instruction` | R-illegal-inst-01 | high | `EXC_BAD_INSTRUCTION` |\n| `exc_guard` | R-exc-guard-01 | high | `EXC_GUARD` |\n| `objc_exception` | R-objc-exc-01 | high | `EXC_CRASH`/SIGABRT with `objc_exception_throw` frame |\n| `main_thread_checker_violation` | R-mtc-01 | high | `main_thread_checker.dylib` in crashed frames |\n| `abort` | R-abort-01 | high | SIGABRT with `abort`/`__abort_with_payload` frame |\n| `watchdog_termination` | R-watchdog-01 | high | Termination namespace=FRONTBOARD, code=0x8BADF00D |\n| `user_force_quit` | R-user-quit-01 | high | FRONTBOARD + 0xDEADFA11 |\n| `background_task_expired` | R-bg-expired-01 | high | FRONTBOARD + 0xBAADCA11 |\n| `data_protection_violation` | R-data-prot-01 | high | RUNNINGBOARD + 0xdead10cc |\n| `code_signing_killed` | R-code-sign-01 | high | CODESIGNING + 0xc51bad0[0-f] |\n| `jetsam_oom` | R-jetsam-01 | high | `EXC_RESOURCE` with `MEMORY` subtype OR `termination.reason` contains `per-process-limit` / `vm-pageshortage` |\n| `cpu_resource_fatal` | R-cpu-fatal-01 | high | `EXC_RESOURCE` CPU/WAKEUPS FATAL (excludes NON-FATAL) |\n| `swiftui_update_loop` | R-swiftui-loop-01 | low | ≥100 consecutive `AG::Graph::update_*` frames from the top |\n| `unclassified` | — | low | No rule matched — raw fields are in `pattern_reason` |\n\n## dSYM Discovery Order\n\nSource: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact order:\n\n1. **ExplicitByUUID** — per-image overrides the `crash` subcommand builds when the header lists a main-image UUID (before any other source, including cache)\n2. **Explicit paths** — `--dsym` direct override and `--dsym-paths` extra roots\n3. **UUID cache** — `~/Library/Caches/xcsym/uuid-index.json` (skip with `--no-cache`)\n4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)\n5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)\n6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`\n7. **Frameworks (cwd scan)** — walks the current working directory plus caller-supplied roots for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as \"no match\" and the chain continues.\n8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)\n9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)\n10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)\n\n`find-dsym` follows the same chain minus step 1 (no per-UUID explicit map). `list-dsyms --source=<name>` restricts scanning to a single root by name.\n\n## Troubleshooting\n\n| Symptom | Likely cause | Fix |\n|---|---|---|\n| Exit 2, \"main dSYM missing\" | No archive for that UUID on this machine | Download the archive from App Store Connect; or set `XCSYM_DSYM_PATHS` to its location |\n| Exit 3, main UUID mismatch | Crash came from a different build than the archive on disk | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| Exit 4, main arch mismatch | arm64 vs arm64e slice mismatch | Pass `--arch` to `find-dsym`; verify the archive contains the slice |\n| Exit 7, \"main matched, others missing\" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |\n| `pattern_tag=\"unclassified\"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |\n| `size_warning` in output | Full tier exceeded 100KB budget | Switch to `--format=standard` or `--format=summary` |\n| `{\"error\":\"hang_report\"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |\n\n## Resources\n\n**Skills**: axiom-tools (skills/xclog-ref.md), axiom-build (skills/xcode-debugging.md), axiom-performance (skills/metrickit-ref.md, skills/hang-diagnostics.md), axiom-shipping (skills/testflight-triage.md)\n\n**Agents**: crash-analyzer (interprets xcsym JSON with pattern_tag → fix guidance), simulator-tester (auto-runs xcsym on crashes during test runs)\n\n**Commands**: `/axiom:analyze-crash`\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -29009,49 +29009,49 @@
           "heading": "Subcommands",
           "level": 2,
           "startLine": 37,
-          "endLine": 114,
-          "charCount": 3076
+          "endLine": 128,
+          "charCount": 4009
         },
         {
           "heading": "Output Schema",
           "level": 2,
-          "startLine": 115,
-          "endLine": 161,
+          "startLine": 129,
+          "endLine": 175,
           "charCount": 1631
         },
         {
           "heading": "Exit Codes",
           "level": 2,
-          "startLine": 162,
-          "endLine": 205,
+          "startLine": 176,
+          "endLine": 219,
           "charCount": 2026
         },
         {
           "heading": "Pattern Tag Catalog",
           "level": 2,
-          "startLine": 206,
-          "endLine": 232,
+          "startLine": 220,
+          "endLine": 246,
           "charCount": 2100
         },
         {
           "heading": "dSYM Discovery Order",
           "level": 2,
-          "startLine": 233,
-          "endLine": 249,
+          "startLine": 247,
+          "endLine": 263,
           "charCount": 1499
         },
         {
           "heading": "Troubleshooting",
           "level": 2,
-          "startLine": 250,
-          "endLine": 261,
+          "startLine": 264,
+          "endLine": 275,
           "charCount": 1069
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 262,
-          "endLine": 269,
+          "startLine": 276,
+          "endLine": 283,
           "charCount": 406
         }
       ]
@@ -33497,7 +33497,7 @@
           45,
           2,
           27,
-          560
+          597
         ],
         "165": [
           5,
@@ -33589,7 +33589,7 @@
         15.028248587570621,
         4.734463276836161,
         43.971751412429384,
-        606.6158192090394
+        606.8248587570623
       ],
       "storedFields": {
         "0": {
@@ -48230,7 +48230,7 @@
               "161": 1,
               "162": 8,
               "163": 1,
-              "164": 6,
+              "164": 7,
               "165": 2,
               "166": 3,
               "167": 37,
@@ -48449,7 +48449,7 @@
               "159": 3,
               "160": 3,
               "161": 4,
-              "164": 1,
+              "164": 2,
               "166": 1,
               "167": 1,
               "168": 2,
@@ -48893,6 +48893,7 @@
               "160": 4,
               "161": 1,
               "162": 1,
+              "164": 1,
               "165": 5,
               "166": 1,
               "167": 4,
@@ -60166,7 +60167,7 @@
               "156": 8,
               "160": 1,
               "162": 1,
-              "164": 4,
+              "164": 5,
               "165": 2,
               "166": 4,
               "169": 2,
@@ -65748,7 +65749,7 @@
               "132": 2,
               "137": 12,
               "160": 5,
-              "164": 5
+              "164": 6
             }
           }
         ],
@@ -67838,7 +67839,7 @@
               "139": 4,
               "141": 4,
               "163": 3,
-              "164": 4,
+              "164": 6,
               "170": 2,
               "173": 1
             }
@@ -69030,7 +69031,7 @@
               "160": 2,
               "161": 4,
               "163": 17,
-              "164": 2
+              "164": 6
             }
           }
         ],
@@ -69983,6 +69984,7 @@
               "117": 1,
               "145": 1,
               "157": 1,
+              "164": 1,
               "166": 2,
               "170": 1
             }
@@ -75214,7 +75216,8 @@
             "4": {
               "37": 1,
               "71": 1,
-              "140": 1
+              "140": 1,
+              "164": 1
             }
           }
         ],
@@ -75883,6 +75886,7 @@
               "152": 1,
               "153": 1,
               "157": 1,
+              "164": 1,
               "166": 3,
               "168": 1,
               "169": 1
@@ -78796,6 +78800,7 @@
               "9": 2,
               "87": 1,
               "163": 5,
+              "164": 1,
               "171": 1,
               "174": 4
             }
@@ -82550,7 +82555,8 @@
           "reporter",
           {
             "4": {
-              "114": 2
+              "114": 2,
+              "164": 1
             }
           }
         ],
@@ -83262,6 +83268,14 @@
               "124": 1,
               "128": 2,
               "129": 7
+            }
+          }
+        ],
+        [
+          "redacted",
+          {
+            "4": {
+              "164": 1
             }
           }
         ],
@@ -86987,6 +87001,7 @@
               "120": 1,
               "160": 2,
               "163": 13,
+              "164": 1,
               "173": 138
             }
           }
@@ -87005,7 +87020,7 @@
             "4": {
               "56": 1,
               "137": 1,
-              "164": 3
+              "164": 4
             }
           }
         ],
@@ -88105,7 +88120,7 @@
               "153": 1,
               "157": 2,
               "160": 1,
-              "164": 1,
+              "164": 2,
               "166": 1,
               "167": 1,
               "171": 1,
@@ -88765,6 +88780,7 @@
               "154": 1,
               "156": 5,
               "162": 1,
+              "164": 2,
               "168": 1,
               "171": 1,
               "172": 2
@@ -88931,7 +88947,7 @@
               "161": 3,
               "162": 2,
               "163": 2,
-              "164": 6,
+              "164": 7,
               "166": 15,
               "169": 9,
               "170": 8,
@@ -97168,7 +97184,7 @@
               "157": 1,
               "158": 1,
               "160": 2,
-              "164": 3,
+              "164": 5,
               "165": 1,
               "175": 2
             }
@@ -97946,6 +97962,7 @@
               "153": 1,
               "154": 2,
               "156": 2,
+              "164": 1,
               "165": 2,
               "167": 1,
               "171": 4,
@@ -100207,6 +100224,7 @@
               "159": 2,
               "160": 6,
               "162": 1,
+              "164": 1,
               "172": 12,
               "173": 1
             }
@@ -104942,6 +104960,14 @@
           }
         ],
         [
+          "freeform",
+          {
+            "4": {
+              "164": 1
+            }
+          }
+        ],
+        [
           "freed",
           {
             "4": {
@@ -105382,7 +105408,7 @@
               "151": 2,
               "155": 1,
               "156": 26,
-              "164": 5,
+              "164": 6,
               "165": 4,
               "167": 8,
               "168": 7,
@@ -107478,7 +107504,8 @@
               "27": 3,
               "28": 5,
               "29": 3,
-              "35": 1
+              "35": 1,
+              "164": 1
             }
           }
         ],
@@ -109745,7 +109772,7 @@
               "160": 6,
               "161": 3,
               "163": 1,
-              "164": 2,
+              "164": 3,
               "166": 2
             }
           }
@@ -110188,7 +110215,8 @@
               "133": 4,
               "134": 2,
               "136": 1,
-              "142": 3
+              "142": 3,
+              "164": 1
             }
           }
         ],
@@ -110203,7 +110231,8 @@
               "105": 14,
               "106": 5,
               "133": 2,
-              "142": 1
+              "142": 1,
+              "164": 1
             }
           }
         ],
@@ -111724,8 +111753,7 @@
               "118": 1,
               "133": 2,
               "134": 1,
-              "136": 1,
-              "164": 1
+              "136": 1
             }
           }
         ],
@@ -113077,7 +113105,7 @@
           "pii",
           {
             "4": {
-              "164": 2
+              "164": 3
             }
           }
         ],
@@ -116888,7 +116916,7 @@
               "145": 1,
               "152": 2,
               "160": 1,
-              "164": 12,
+              "164": 13,
               "167": 2,
               "176": 1
             }
@@ -118549,6 +118577,233 @@
           {
             "4": {
               "5": 2
+            }
+          }
+        ],
+        [
+          "proc",
+          {
+            "4": {
+              "164": 1
+            }
+          }
+        ],
+        [
+          "procedural",
+          {
+            "4": {
+              "82": 1
+            }
+          }
+        ],
+        [
+          "processed",
+          {
+            "4": {
+              "15": 2,
+              "45": 1,
+              "60": 2,
+              "61": 2,
+              "62": 1,
+              "80": 1,
+              "94": 2,
+              "104": 11,
+              "105": 11,
+              "106": 3,
+              "107": 4,
+              "108": 2,
+              "109": 1,
+              "117": 4,
+              "133": 1,
+              "135": 2,
+              "164": 1
+            }
+          }
+        ],
+        [
+          "processes",
+          {
+            "1": {
+              "11": 1
+            },
+            "3": {
+              "11": 2,
+              "118": 3
+            },
+            "4": {
+              "4": 1,
+              "10": 1,
+              "11": 9,
+              "25": 1,
+              "42": 1,
+              "53": 3,
+              "66": 1,
+              "112": 2,
+              "117": 1,
+              "118": 8,
+              "133": 1,
+              "141": 1,
+              "162": 1,
+              "163": 1,
+              "176": 1
+            }
+          }
+        ],
+        [
+          "processor",
+          {
+            "4": {
+              "10": 1,
+              "13": 2,
+              "15": 2,
+              "49": 1,
+              "110": 1,
+              "111": 1,
+              "117": 2,
+              "118": 1,
+              "168": 2
+            }
+          }
+        ],
+        [
+          "process",
+          {
+            "0": {
+              "60": 1,
+              "61": 1,
+              "62": 1
+            },
+            "1": {
+              "134": 1
+            },
+            "3": {
+              "1": 1,
+              "9": 1,
+              "60": 1,
+              "61": 3,
+              "62": 1,
+              "80": 1,
+              "113": 3,
+              "118": 6,
+              "132": 2,
+              "133": 1,
+              "163": 1
+            },
+            "4": {
+              "1": 1,
+              "2": 1,
+              "6": 1,
+              "8": 2,
+              "9": 11,
+              "10": 5,
+              "11": 1,
+              "13": 8,
+              "14": 12,
+              "15": 7,
+              "16": 1,
+              "18": 2,
+              "22": 1,
+              "25": 2,
+              "31": 2,
+              "32": 5,
+              "41": 1,
+              "42": 3,
+              "44": 1,
+              "45": 1,
+              "47": 14,
+              "49": 1,
+              "51": 1,
+              "53": 5,
+              "54": 2,
+              "57": 3,
+              "58": 4,
+              "60": 13,
+              "61": 34,
+              "62": 47,
+              "64": 1,
+              "66": 1,
+              "67": 4,
+              "68": 2,
+              "69": 2,
+              "72": 2,
+              "73": 3,
+              "74": 1,
+              "75": 2,
+              "76": 2,
+              "77": 1,
+              "78": 1,
+              "79": 2,
+              "80": 2,
+              "81": 6,
+              "82": 4,
+              "83": 1,
+              "87": 3,
+              "89": 4,
+              "92": 2,
+              "93": 6,
+              "94": 9,
+              "95": 26,
+              "100": 7,
+              "101": 1,
+              "104": 3,
+              "105": 5,
+              "106": 1,
+              "107": 3,
+              "109": 6,
+              "110": 19,
+              "111": 15,
+              "112": 10,
+              "113": 4,
+              "114": 31,
+              "116": 2,
+              "117": 33,
+              "118": 16,
+              "119": 1,
+              "128": 4,
+              "131": 2,
+              "132": 9,
+              "133": 14,
+              "134": 5,
+              "135": 11,
+              "137": 8,
+              "139": 5,
+              "141": 5,
+              "144": 1,
+              "148": 1,
+              "152": 1,
+              "156": 6,
+              "157": 4,
+              "160": 6,
+              "163": 7,
+              "164": 2,
+              "168": 5,
+              "170": 10,
+              "171": 19,
+              "172": 11,
+              "175": 3
+            }
+          }
+        ],
+        [
+          "proceed",
+          {
+            "4": {
+              "0": 2,
+              "1": 1,
+              "2": 10,
+              "4": 1,
+              "21": 6,
+              "31": 1,
+              "33": 6,
+              "37": 1,
+              "58": 1,
+              "105": 2,
+              "115": 3,
+              "132": 1,
+              "134": 1,
+              "145": 1,
+              "152": 2,
+              "168": 2
             }
           }
         ],
@@ -120711,225 +120966,6 @@
               "168": 5,
               "169": 4,
               "170": 1
-            }
-          }
-        ],
-        [
-          "procedural",
-          {
-            "4": {
-              "82": 1
-            }
-          }
-        ],
-        [
-          "processed",
-          {
-            "4": {
-              "15": 2,
-              "45": 1,
-              "60": 2,
-              "61": 2,
-              "62": 1,
-              "80": 1,
-              "94": 2,
-              "104": 11,
-              "105": 11,
-              "106": 3,
-              "107": 4,
-              "108": 2,
-              "109": 1,
-              "117": 4,
-              "133": 1,
-              "135": 2,
-              "164": 1
-            }
-          }
-        ],
-        [
-          "processes",
-          {
-            "1": {
-              "11": 1
-            },
-            "3": {
-              "11": 2,
-              "118": 3
-            },
-            "4": {
-              "4": 1,
-              "10": 1,
-              "11": 9,
-              "25": 1,
-              "42": 1,
-              "53": 3,
-              "66": 1,
-              "112": 2,
-              "117": 1,
-              "118": 8,
-              "133": 1,
-              "141": 1,
-              "162": 1,
-              "163": 1,
-              "176": 1
-            }
-          }
-        ],
-        [
-          "processor",
-          {
-            "4": {
-              "10": 1,
-              "13": 2,
-              "15": 2,
-              "49": 1,
-              "110": 1,
-              "111": 1,
-              "117": 2,
-              "118": 1,
-              "168": 2
-            }
-          }
-        ],
-        [
-          "process",
-          {
-            "0": {
-              "60": 1,
-              "61": 1,
-              "62": 1
-            },
-            "1": {
-              "134": 1
-            },
-            "3": {
-              "1": 1,
-              "9": 1,
-              "60": 1,
-              "61": 3,
-              "62": 1,
-              "80": 1,
-              "113": 3,
-              "118": 6,
-              "132": 2,
-              "133": 1,
-              "163": 1
-            },
-            "4": {
-              "1": 1,
-              "2": 1,
-              "6": 1,
-              "8": 2,
-              "9": 11,
-              "10": 5,
-              "11": 1,
-              "13": 8,
-              "14": 12,
-              "15": 7,
-              "16": 1,
-              "18": 2,
-              "22": 1,
-              "25": 2,
-              "31": 2,
-              "32": 5,
-              "41": 1,
-              "42": 3,
-              "44": 1,
-              "45": 1,
-              "47": 14,
-              "49": 1,
-              "51": 1,
-              "53": 5,
-              "54": 2,
-              "57": 3,
-              "58": 4,
-              "60": 13,
-              "61": 34,
-              "62": 47,
-              "64": 1,
-              "66": 1,
-              "67": 4,
-              "68": 2,
-              "69": 2,
-              "72": 2,
-              "73": 3,
-              "74": 1,
-              "75": 2,
-              "76": 2,
-              "77": 1,
-              "78": 1,
-              "79": 2,
-              "80": 2,
-              "81": 6,
-              "82": 4,
-              "83": 1,
-              "87": 3,
-              "89": 4,
-              "92": 2,
-              "93": 6,
-              "94": 9,
-              "95": 26,
-              "100": 7,
-              "101": 1,
-              "104": 3,
-              "105": 5,
-              "106": 1,
-              "107": 3,
-              "109": 6,
-              "110": 19,
-              "111": 15,
-              "112": 10,
-              "113": 4,
-              "114": 31,
-              "116": 2,
-              "117": 33,
-              "118": 16,
-              "119": 1,
-              "128": 4,
-              "131": 2,
-              "132": 9,
-              "133": 14,
-              "134": 5,
-              "135": 11,
-              "137": 8,
-              "139": 5,
-              "141": 5,
-              "144": 1,
-              "148": 1,
-              "152": 1,
-              "156": 6,
-              "157": 4,
-              "160": 6,
-              "163": 7,
-              "164": 1,
-              "168": 5,
-              "170": 10,
-              "171": 19,
-              "172": 11,
-              "175": 3
-            }
-          }
-        ],
-        [
-          "proceed",
-          {
-            "4": {
-              "0": 2,
-              "1": 1,
-              "2": 10,
-              "4": 1,
-              "21": 6,
-              "31": 1,
-              "33": 6,
-              "37": 1,
-              "58": 1,
-              "105": 2,
-              "115": 3,
-              "132": 1,
-              "134": 1,
-              "145": 1,
-              "152": 2,
-              "168": 2
             }
           }
         ],
@@ -123403,7 +123439,7 @@
               "143": 1,
               "150": 1,
               "153": 1,
-              "164": 3,
+              "164": 4,
               "172": 1
             }
           }
@@ -125041,7 +125077,7 @@
               "161": 5,
               "162": 2,
               "163": 1,
-              "164": 5,
+              "164": 6,
               "165": 2,
               "166": 3,
               "167": 5,
@@ -126956,7 +126992,7 @@
               "116": 3,
               "137": 1,
               "160": 1,
-              "164": 5
+              "164": 6
             }
           }
         ],
@@ -127035,7 +127071,7 @@
               "157": 1,
               "160": 6,
               "162": 2,
-              "164": 6,
+              "164": 11,
               "166": 9,
               "168": 1,
               "169": 2,
@@ -127632,6 +127668,7 @@
               "156": 3,
               "157": 2,
               "160": 1,
+              "164": 1,
               "168": 1,
               "169": 1,
               "170": 2,
@@ -136202,6 +136239,7 @@
               "159": 1,
               "160": 1,
               "161": 1,
+              "164": 1,
               "166": 10,
               "167": 2
             }
@@ -138426,7 +138464,7 @@
               "160": 17,
               "162": 3,
               "163": 8,
-              "164": 5,
+              "164": 6,
               "165": 9,
               "166": 17,
               "167": 1,
@@ -138673,7 +138711,7 @@
               "137": 2,
               "157": 1,
               "162": 2,
-              "164": 2,
+              "164": 7,
               "167": 1
             }
           }
@@ -138824,7 +138862,7 @@
               "161": 10,
               "162": 4,
               "163": 5,
-              "164": 4,
+              "164": 11,
               "165": 3,
               "166": 8,
               "167": 4,
@@ -139696,7 +139734,7 @@
               "152": 3,
               "153": 3,
               "154": 5,
-              "164": 5,
+              "164": 7,
               "175": 1
             }
           }
@@ -144162,6 +144200,7 @@
               "160": 4,
               "161": 5,
               "163": 5,
+              "164": 1,
               "165": 11,
               "167": 1,
               "170": 2
@@ -144771,7 +144810,8 @@
               "156": 2,
               "157": 2,
               "160": 1,
-              "161": 1
+              "161": 1,
+              "164": 1
             }
           }
         ],
@@ -147134,7 +147174,7 @@
               "160": 30,
               "162": 3,
               "163": 24,
-              "164": 1,
+              "164": 3,
               "165": 1,
               "168": 25,
               "170": 6,
@@ -152948,6 +152988,7 @@
               "148": 1,
               "159": 5,
               "160": 16,
+              "164": 2,
               "165": 5,
               "173": 3,
               "174": 1,
@@ -153037,6 +153078,7 @@
               "159": 9,
               "160": 13,
               "161": 13,
+              "164": 3,
               "165": 3,
               "172": 1,
               "173": 11,
@@ -153272,7 +153314,7 @@
               "158": 2,
               "160": 1,
               "163": 18,
-              "164": 3,
+              "164": 9,
               "166": 3,
               "167": 2,
               "172": 3,
@@ -154636,7 +154678,8 @@
               "107": 1,
               "122": 2,
               "132": 1,
-              "154": 1
+              "154": 1,
+              "164": 1
             }
           }
         ],
@@ -156261,7 +156304,8 @@
           {
             "4": {
               "124": 1,
-              "128": 2
+              "128": 2,
+              "164": 3
             }
           }
         ],
@@ -156999,6 +157043,7 @@
               "155": 3,
               "156": 2,
               "159": 1,
+              "164": 2,
               "166": 1,
               "167": 1,
               "169": 4,
@@ -159532,7 +159577,7 @@
               "137": 5,
               "156": 2,
               "160": 6,
-              "164": 9,
+              "164": 10,
               "169": 6,
               "170": 1,
               "171": 10,
@@ -164784,6 +164829,7 @@
               "88": 2,
               "132": 7,
               "134": 1,
+              "164": 1,
               "167": 1,
               "171": 1,
               "172": 2
@@ -167237,7 +167283,8 @@
               "20": 1,
               "44": 1,
               "48": 1,
-              "68": 1
+              "68": 1,
+              "164": 1
             }
           }
         ],
@@ -174116,7 +174163,7 @@
               "148": 1,
               "154": 1,
               "156": 1,
-              "164": 4,
+              "164": 5,
               "166": 1,
               "168": 2,
               "169": 2
@@ -175229,7 +175276,7 @@
               "160": 3,
               "161": 1,
               "163": 1,
-              "164": 1,
+              "164": 2,
               "165": 1,
               "166": 5,
               "167": 3,
@@ -176182,7 +176229,7 @@
               "118": 2,
               "131": 2,
               "137": 5,
-              "164": 5
+              "164": 6
             }
           }
         ],
@@ -177504,7 +177551,8 @@
           {
             "4": {
               "6": 1,
-              "132": 1
+              "132": 1,
+              "164": 1
             }
           }
         ],
@@ -184928,7 +184976,7 @@
               "133": 9,
               "134": 17,
               "136": 1,
-              "164": 2
+              "164": 3
             }
           }
         ],
@@ -186887,7 +186935,8 @@
               "3": 3,
               "4": 2,
               "20": 6,
-              "148": 2
+              "148": 2,
+              "164": 1
             }
           }
         ],
@@ -186903,6 +186952,7 @@
               "117": 3,
               "137": 1,
               "156": 1,
+              "164": 1,
               "167": 1
             }
           }
@@ -187465,6 +187515,7 @@
               "159": 1,
               "160": 3,
               "161": 1,
+              "164": 1,
               "170": 1,
               "171": 3,
               "174": 2
@@ -189609,6 +189660,7 @@
               "161": 4,
               "162": 1,
               "163": 1,
+              "164": 1,
               "166": 6,
               "167": 4,
               "168": 12,
@@ -191882,7 +191934,7 @@
           {
             "4": {
               "100": 4,
-              "164": 5
+              "164": 6
             }
           }
         ],
@@ -192541,6 +192593,7 @@
               "128": 11,
               "138": 4,
               "162": 1,
+              "164": 1,
               "170": 4
             }
           }
@@ -195555,7 +195608,7 @@
               "154": 3,
               "160": 26,
               "163": 10,
-              "164": 46,
+              "164": 47,
               "166": 6,
               "170": 3
             }
@@ -200664,7 +200717,7 @@
             "4": {
               "4": 1,
               "137": 2,
-              "164": 1
+              "164": 2
             }
           }
         ],
@@ -202077,6 +202130,14 @@
           }
         ],
         [
+          "coali",
+          {
+            "4": {
+              "164": 1
+            }
+          }
+        ],
+        [
           "coalesc",
           {
             "4": {
@@ -202794,7 +202855,7 @@
               "136": 1,
               "137": 5,
               "160": 1,
-              "164": 7,
+              "164": 8,
               "170": 4,
               "171": 10,
               "172": 8
@@ -203050,7 +203111,7 @@
               "161": 3,
               "162": 4,
               "163": 1,
-              "164": 8,
+              "164": 9,
               "165": 2,
               "166": 14,
               "167": 6,
@@ -207572,7 +207633,7 @@
               "152": 3,
               "153": 12,
               "162": 2,
-              "164": 1,
+              "164": 2,
               "167": 22,
               "169": 49,
               "171": 4,
@@ -209002,7 +209063,7 @@
               "160": 9,
               "161": 2,
               "163": 20,
-              "164": 1,
+              "164": 3,
               "167": 3,
               "171": 1,
               "173": 3,
@@ -214807,7 +214868,7 @@
               "158": 4,
               "160": 4,
               "161": 1,
-              "164": 17,
+              "164": 19,
               "166": 5,
               "168": 3,
               "169": 4,
@@ -216147,6 +216208,14 @@
               "171": 8,
               "174": 2,
               "176": 2
+            }
+          }
+        ],
+        [
+          "mangled",
+          {
+            "4": {
+              "164": 1
             }
           }
         ],
@@ -221085,7 +221154,7 @@
               "137": 11,
               "150": 3,
               "157": 1,
-              "164": 6
+              "164": 7
             }
           }
         ],
@@ -224817,7 +224886,7 @@
               "160": 9,
               "162": 2,
               "163": 5,
-              "164": 1,
+              "164": 4,
               "166": 1,
               "167": 1,
               "169": 1,
@@ -225068,7 +225137,7 @@
               "161": 45,
               "162": 5,
               "163": 44,
-              "164": 12,
+              "164": 14,
               "165": 1,
               "166": 4,
               "167": 4,
@@ -228232,6 +228301,7 @@
               "147": 1,
               "151": 1,
               "154": 1,
+              "164": 1,
               "166": 1
             }
           }
@@ -233031,7 +233101,7 @@
               "132": 2,
               "133": 1,
               "137": 5,
-              "164": 1,
+              "164": 2,
               "165": 5
             }
           }
@@ -233572,7 +233642,7 @@
               "159": 2,
               "160": 12,
               "161": 1,
-              "164": 3,
+              "164": 4,
               "169": 2,
               "170": 1,
               "172": 3,
@@ -234427,7 +234497,8 @@
               "136": 4,
               "142": 1,
               "145": 4,
-              "159": 2
+              "159": 2,
+              "164": 1
             }
           }
         ],
@@ -435039,21 +435110,77 @@
           "scrubs",
           "bundle",
           "ds",
-          "user",
-          "framework",
+          "across",
+          "every",
+          "spell",
+          "id",
+          "identifier",
+          "cf",
+          "code",
+          "sign",
+          "coali",
+          "name",
+          "process",
           "names",
-          "ps",
+          "proc",
+          "user",
+          "users",
+          "redacted",
+          "word",
+          "boundary",
+          "regex",
+          "identifiers",
+          "like",
+          "com",
+          "apple",
+          "thread",
+          "aren",
+          "mangled",
+          "framework",
+          "pv4",
+          "pv6",
           "device",
+          "account",
+          "reporter",
+          "key",
           "session",
-          "preserves",
-          "uui",
-          "slice",
-          "used",
+          "incident",
+          "udid",
           "binary",
+          "inside",
+          "used",
+          "foreign",
+          "uui",
+          "freeform",
+          "strings",
+          "preserves",
+          "slice",
           "still",
           "symbolicates",
           "sy",
-          "ms"
+          "ms",
+          "infrastructure",
+          "labels",
+          "not",
+          "them",
+          "debug",
+          "library",
+          "nested",
+          "structures",
+          "same",
+          "rationale",
+          "structural",
+          "fields",
+          "categorize",
+          "rules",
+          "depend",
+          "excep",
+          "type",
+          "codes",
+          "subtype",
+          "state",
+          "frame",
+          "offsets"
         ],
         "Output Schema": [
           "output",
