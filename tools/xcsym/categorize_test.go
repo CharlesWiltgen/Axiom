@@ -162,6 +162,59 @@ func TestCategorize_R_swift_fatal_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-stack-overflow-01 ------------------------------------------------
+
+func TestCategorize_R_stack_overflow_01_Positive(t *testing.T) {
+	// Faulting address 0x16f1fbff0 is 16 bytes below thread SP 0x16f1fc000
+	// — well within the 4096-byte guard page window.
+	raw := &RawCrash{
+		Exception: Exception{
+			Type:    "EXC_BAD_ACCESS",
+			Codes:   "0x0000000000000002, 0x000000016f1fbff0",
+			Subtype: "KERN_PROTECTION_FAILURE at 0x000000016f1fbff0",
+		},
+		Threads: []Thread{{
+			Index: 0, Triggered: true,
+			State: &ThreadState{SP: 0x16f1fc000, PC: 0x1045a8b2c},
+			Frames: []Frame{
+				{Index: 0, Symbol: "someDeepRecursion"},
+			},
+		}},
+		CrashedIdx: 0,
+	}
+	res := Categorize(raw)
+	if res.RuleID != "R-stack-overflow-01" {
+		t.Errorf("rule_id = %q, want R-stack-overflow-01", res.RuleID)
+	}
+	if res.Tag != "stack_overflow" {
+		t.Errorf("tag = %q, want stack_overflow", res.Tag)
+	}
+	if res.Confidence != "heuristic" {
+		t.Errorf("confidence = %q, want heuristic", res.Confidence)
+	}
+}
+
+func TestCategorize_R_stack_overflow_01_Negative_FarFromSP(t *testing.T) {
+	// KERN_PROTECTION_FAILURE but faulting address is far from any SP — do
+	// not classify as stack overflow; let the bad-access rule handle it.
+	raw := &RawCrash{
+		Exception: Exception{
+			Type:    "EXC_BAD_ACCESS",
+			Codes:   "0x2, 0x00007ff812345678",
+			Subtype: "KERN_PROTECTION_FAILURE at 0x00007ff812345678",
+		},
+		Threads: []Thread{{
+			Index: 0, Triggered: true,
+			State: &ThreadState{SP: 0x16f1fc000, PC: 0x1045a8b2c},
+		}},
+		CrashedIdx: 0,
+	}
+	res := Categorize(raw)
+	if res.RuleID == "R-stack-overflow-01" {
+		t.Errorf("must not fire stack_overflow when fault is far from SP")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -193,6 +246,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-swift-unwrap-01": {positive: true, negative: true},
 	"R-swift-conc-01":   {positive: true, negative: true},
 	"R-swift-fatal-01":  {positive: true, negative: true},
+	"R-stack-overflow-01": {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).

@@ -1,6 +1,35 @@
 package main
 
-import "strings"
+import (
+	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+)
+
+// hexAddrRE extracts hexadecimal addresses from free-form .ips strings
+// (exception.codes, exception.subtype). We use this to correlate faulting
+// addresses against thread SP values in R-stack-overflow-01.
+var hexAddrRE = regexp.MustCompile(`0x[0-9a-fA-F]+`)
+
+func extractHexAddresses(s string) []uint64 {
+	var out []uint64
+	for _, m := range hexAddrRE.FindAllString(s, -1) {
+		v, err := strconv.ParseUint(m, 0, 64)
+		if err == nil {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
+// absDiffU returns |a-b| for uint64 without signed overflow pitfalls.
+func absDiffU(a, b uint64) uint64 {
+	if a > b {
+		return a - b
+	}
+	return b - a
+}
 
 // CategorizeResult is the outcome of running the rule engine against a
 // RawCrash. Downstream consumers (crash subcommand, JSON output) populate
@@ -69,6 +98,35 @@ var rules = []Rule{
 			sentinels := []string{"_assertionFailure", "_fatalError", "_preconditionFailure"}
 			if hit := hasAnyCrashedFrameSymbol(c, sentinels, 8); hit != "" {
 				return true, "crashed-thread frame matches Swift runtime sentinel " + hit
+			}
+			return false, ""
+		},
+	},
+	{
+		ID: "R-stack-overflow-01", Tag: "stack_overflow", Confidence: "heuristic",
+		Match: func(c *RawCrash) (bool, string) {
+			if c.Exception.Type != "EXC_BAD_ACCESS" {
+				return false, ""
+			}
+			// .ips renders KERN_PROTECTION_FAILURE in subtype typically ("at 0x...")
+			// but the plan text says codes; check both for robustness.
+			blob := c.Exception.Codes + " " + c.Exception.Subtype
+			if !strings.Contains(blob, "KERN_PROTECTION_FAILURE") {
+				return false, ""
+			}
+			const guardPage uint64 = 4096
+			addrs := extractHexAddresses(blob)
+			for _, addr := range addrs {
+				for _, t := range c.Threads {
+					if t.State == nil || t.State.SP == 0 {
+						continue
+					}
+					if absDiffU(addr, t.State.SP) <= guardPage {
+						return true, fmt.Sprintf(
+							"guard page pattern: faulting addr 0x%x within %d bytes of thread %d SP 0x%x",
+							addr, guardPage, t.Index, t.State.SP)
+					}
+				}
 			}
 			return false, ""
 		},

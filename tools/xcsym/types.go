@@ -68,9 +68,19 @@ type Termination struct {
 }
 
 type Thread struct {
-	Index     int     `json:"index"`
-	Triggered bool    `json:"triggered"`
-	Frames    []Frame `json:"frames"`
+	Index     int          `json:"index"`
+	Triggered bool         `json:"triggered"`
+	Frames    []Frame      `json:"frames"`
+	State     *ThreadState `json:"thread_state,omitempty"`
+}
+
+// ThreadState captures the two register values xcsym needs for pattern
+// detection (currently only R-stack-overflow-01, which checks faulting
+// address proximity to SP). Populated by the Phase 5 crash parser; nil when
+// the source .ips didn't carry threadState.
+type ThreadState struct {
+	SP uint64 `json:"sp"`
+	PC uint64 `json:"pc"`
 }
 
 type ThreadTop struct {
