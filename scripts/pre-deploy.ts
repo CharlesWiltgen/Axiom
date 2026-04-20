@@ -814,7 +814,74 @@ try {
   );
 }
 
-heading("15. VitePress Build");
+// Step 15: bundled Go tools (xcsym, xclog) ship as compiled binaries in
+// bin/. Their source lives in tools/<name>/ as independent Go modules.
+// A regression that breaks tests but still compiles would land in the
+// shipped binary without any other Phase 2 step catching it. axiom-y4z.
+heading("15. Go Tool Tests (xcsym + xclog)");
+const goAvailable = (() => {
+  try {
+    execSync("go version", { stdio: "pipe" });
+    return true;
+  } catch {
+    return false;
+  }
+})();
+if (!goAvailable) {
+  warn(
+    "go-tests",
+    "Go toolchain not found — skipping bundled-tool test step (install Go to enable this check before deploy)",
+  );
+} else {
+  const toolsDir = path.join(root, "tools");
+  // Discover modules dynamically so a future tools/* addition is picked up
+  // without editing this file.
+  const goModules = fs.existsSync(toolsDir)
+    ? fs
+        .readdirSync(toolsDir, { withFileTypes: true })
+        .filter((d: fs.Dirent) => d.isDirectory())
+        .map((d: fs.Dirent) => d.name)
+        .filter((name: string) => fs.existsSync(path.join(toolsDir, name, "go.mod")))
+    : [];
+  if (goModules.length === 0) {
+    warn("go-tests", "no Go modules found under tools/ — nothing to test");
+  }
+  for (const module of goModules) {
+    const moduleDir = path.join(toolsDir, module);
+    try {
+      execSync("go vet ./...", { cwd: moduleDir, stdio: "pipe", timeout: 60000 });
+      console.log(`  ✓ ${module}: go vet clean`);
+    } catch (e: unknown) {
+      const err = e as { stdout?: Buffer; stderr?: Buffer };
+      const out = err.stdout?.toString() || err.stderr?.toString() || "";
+      error("go-vet", `${module} go vet failed: ${out.slice(0, 300)}`);
+      console.log("\n✗ Phase 2 FAILED. Fix Go tool issues before deploying.");
+      process.exit(1);
+    }
+    try {
+      execSync("go test -count=1 ./...", {
+        cwd: moduleDir,
+        stdio: "pipe",
+        timeout: 180000,
+      });
+      console.log(`  ✓ ${module}: go test passes`);
+    } catch (e: unknown) {
+      const err = e as { stdout?: Buffer; stderr?: Buffer };
+      const out = err.stdout?.toString() || err.stderr?.toString() || "";
+      // Surface the test framework's own summary lines so the operator
+      // sees which tests failed without having to re-run manually.
+      const summary = out.match(/--- FAIL.*|FAIL\s+\S+.*|^\s*\S+\.go:\d+:.*$/gm);
+      error(
+        "go-test",
+        `${module} tests failed${summary ? ":\n    " + summary.slice(0, 8).join("\n    ") : ""}`,
+      );
+      console.log("\n✗ Phase 2 FAILED. Fix Go tool tests before deploying.");
+      process.exit(1);
+    }
+  }
+}
+
+heading("16. VitePress Build");
 try {
   execSync("npm run docs:build", {
     cwd: root,
@@ -840,7 +907,7 @@ heading("Final Summary");
 console.log(
   `  Phase 1: ✓ Static validation (${skillFilesChecked} skills, ${agentFilesChecked} agents, ${commandFilesChecked} commands)`,
 );
-console.log("  Phase 2: ✓ Build validation (MCP tests + bundle + Codex + VitePress)");
+console.log("  Phase 2: ✓ Build validation (MCP tests + bundle + Codex + Go tools + VitePress)");
 
 if (totalWarnings > 0) {
   console.log(`\n  ${totalWarnings} warning(s) — review above`);
