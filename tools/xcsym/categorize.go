@@ -103,6 +103,19 @@ var rules = []Rule{
 		},
 	},
 	{
+		ID: "R-zombie-01", Tag: "zombie_or_heap_corruption", Confidence: "heuristic",
+		Match: func(c *RawCrash) (bool, string) {
+			if c.Exception.Type != "EXC_BAD_ACCESS" {
+				return false, ""
+			}
+			subs := []string{"libgmalloc", "_NSZombie", "NSZombie"}
+			if hit := hasAnyCrashedFrameImage(c, subs, 10); hit != "" {
+				return true, "top-10 frames on crashed thread reference image " + hit
+			}
+			return false, ""
+		},
+	},
+	{
 		ID: "R-stack-overflow-01", Tag: "stack_overflow", Confidence: "heuristic",
 		Match: func(c *RawCrash) (bool, string) {
 			if c.Exception.Type != "EXC_BAD_ACCESS" {
@@ -163,6 +176,61 @@ func hasAnyCrashedFrameSymbol(c *RawCrash, subs []string, n int) string {
 	for _, sub := range subs {
 		if hasCrashedFrameSymbol(c, sub, n) {
 			return sub
+		}
+	}
+	return ""
+}
+
+// hasAnyCrashedFrameImage checks whether the crashed thread's first n frames
+// reference any of the given image-name substrings (case-sensitive match
+// against Frame.Image). Returns the first matching substring or "". Mirrors
+// hasAnyCrashedFrameSymbol but on Image instead of Symbol.
+func hasAnyCrashedFrameImage(c *RawCrash, subs []string, n int) string {
+	if c.CrashedIdx < 0 || c.CrashedIdx >= len(c.Threads) {
+		return ""
+	}
+	frames := c.Threads[c.CrashedIdx].Frames
+	limit := len(frames)
+	if n > 0 && n < limit {
+		limit = n
+	}
+	for i := 0; i < limit; i++ {
+		for _, sub := range subs {
+			if strings.Contains(frames[i].Image, sub) {
+				return sub
+			}
+		}
+	}
+	return ""
+}
+
+// hasAnyFrameSymbolAllThreads scans every thread's frames for the first
+// substring match. Some rules (objc exceptions, MTC) care about the presence
+// of the signature anywhere in the backtrace forest, not just on the crashed
+// thread.
+func hasAnyFrameSymbolAllThreads(c *RawCrash, subs []string) string {
+	for _, t := range c.Threads {
+		for _, f := range t.Frames {
+			for _, sub := range subs {
+				if strings.Contains(f.Symbol, sub) {
+					return sub
+				}
+			}
+		}
+	}
+	return ""
+}
+
+// hasAnyFrameImageAllThreads is the Image equivalent of
+// hasAnyFrameSymbolAllThreads.
+func hasAnyFrameImageAllThreads(c *RawCrash, subs []string) string {
+	for _, t := range c.Threads {
+		for _, f := range t.Frames {
+			for _, sub := range subs {
+				if strings.Contains(f.Image, sub) {
+					return sub
+				}
+			}
 		}
 	}
 	return ""
