@@ -258,6 +258,16 @@ func (c *Cache) Get(uuid string) (CacheEntry, bool) {
 	info, err := os.Stat(e.Path)
 	if err != nil || info.ModTime().Unix() != e.MTime {
 		_ = c.rewritePositiveUnderLock(func() {
+			// Re-check under the lock against the now-fresh disk state.
+			// A peer xcsym process may have refreshed this entry in the
+			// window between our initial stat and acquiring the flock —
+			// deleting an entry that's actually fresh on disk would cost
+			// the next Find() a full Spotlight/Archives re-scan.
+			if de, ok := c.pos[key]; ok {
+				if st, sErr := os.Stat(de.Path); sErr == nil && st.ModTime().Unix() == de.MTime {
+					return
+				}
+			}
 			delete(c.pos, key)
 		})
 		return CacheEntry{}, false
