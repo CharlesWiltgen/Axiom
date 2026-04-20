@@ -271,6 +271,23 @@ var rules = []Rule{
 			return false, ""
 		},
 	},
+	{
+		ID: "R-jetsam-01", Tag: "jetsam_oom", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if c.Exception.Type == "EXC_RESOURCE" && strings.Contains(c.Exception.Subtype, "MEMORY") {
+				return true, "EXC_RESOURCE with MEMORY subtype (jetsam / OOM)"
+			}
+			if c.Termination.Reason != nil {
+				reason := *c.Termination.Reason
+				for _, needle := range []string{"per-process-limit", "vm-pageshortage"} {
+					if strings.Contains(reason, needle) {
+						return true, "termination.reason contains jetsam sentinel " + needle
+					}
+				}
+			}
+			return false, ""
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n
