@@ -75,6 +75,12 @@ func TestFormat_Standard_BasicShape(t *testing.T) {
 	}
 }
 
+// TestFormat_Standard_SizeBudget guards that buildStdFixture remains
+// representative of a small/typical crash — i.e. the test fixture itself
+// fits inside the standard tier's documented design target. The 12 KB
+// number is the aspirational target, NOT an enforced production limit;
+// the actual code-side warn threshold is 50 KB (see
+// sizeWarningThresholdsByTier in format.go). axiom-51j.
 func TestFormat_Standard_SizeBudget(t *testing.T) {
 	raw, cat, images, env, input := buildStdFixture(t)
 	report, err := Format(raw, images, env, input, cat, TierStandard)
@@ -85,9 +91,9 @@ func TestFormat_Standard_SizeBudget(t *testing.T) {
 	if err != nil {
 		t.Fatalf("marshal: %v", err)
 	}
-	const budget = 12 * 1024
-	if len(buf) > budget {
-		t.Errorf("standard tier size = %d bytes, exceeds %d-byte budget", len(buf), budget)
+	const designTarget = 12 * 1024
+	if len(buf) > designTarget {
+		t.Errorf("standard tier size = %d bytes, exceeds %d-byte design target — fixture has drifted past the small/typical case", len(buf), designTarget)
 	}
 }
 
@@ -247,6 +253,10 @@ func TestFormat_Summary_CrashedThreadFrameCap(t *testing.T) {
 	}
 }
 
+// TestFormat_Summary_SizeBudget guards the design target, not the warn
+// threshold — fixture-shape regression check, same pattern as
+// TestFormat_Standard_SizeBudget. Production warn threshold for summary
+// is 4 KB (see sizeWarningThresholdsByTier in format.go). axiom-51j.
 func TestFormat_Summary_SizeBudget(t *testing.T) {
 	raw, cat, images, env, input := buildStdFixture(t)
 	rep, err := Format(raw, images, env, input, cat, TierSummary)
@@ -257,10 +267,10 @@ func TestFormat_Summary_SizeBudget(t *testing.T) {
 	if err != nil {
 		t.Fatalf("marshal: %v", err)
 	}
-	const budget = 2 * 1024
-	if len(buf) > budget {
-		t.Errorf("summary size = %d bytes, exceeds %d-byte budget:\n%s",
-			len(buf), budget, string(buf))
+	const designTarget = 2 * 1024
+	if len(buf) > designTarget {
+		t.Errorf("summary size = %d bytes, exceeds %d-byte design target — fixture has drifted past the small/typical case:\n%s",
+			len(buf), designTarget, string(buf))
 	}
 }
 
@@ -365,6 +375,107 @@ func TestFormat_Full_NoWarningUnder100KB(t *testing.T) {
 	}
 	if rep.SizeWarning != nil {
 		t.Errorf("small fixture triggered SizeWarning: %q", *rep.SizeWarning)
+	}
+}
+
+// TestFormat_Standard_SizeWarningFiresPast50KB guards axiom-51j: the
+// standard tier now emits SizeWarning past 50 KB, with a hint pointing
+// at --format=summary as the next step. Before this change only the full
+// tier carried a size warning, so a 40 KB standard report from a
+// framework-heavy app shipped without any signal that it was unusually
+// large. Synthesize an oversized standard report by inflating the
+// usedImages array (the dominant size driver in real standard output).
+func TestFormat_Standard_SizeWarningFiresPast50KB(t *testing.T) {
+	const imageCount = 400
+	images := make([]UsedImage, imageCount)
+	matched := make([]ImageMatch, imageCount)
+	for i := range images {
+		uuid := fmt.Sprintf("AAAAAAAA-0000-0000-0000-%012d", i)
+		images[i] = UsedImage{
+			UUID: uuid, Name: fmt.Sprintf("Framework_%03d", i), Arch: "arm64",
+			Path:        fmt.Sprintf("/private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/MyApp.app/Frameworks/Framework_%03d.framework/Framework_%03d", i, i),
+			LoadAddress: 0x100000000 + uint64(i)*0x10000,
+			Size:        0x10000,
+		}
+		matched[i] = ImageMatch{UUID: uuid, Name: images[i].Name, Arch: "arm64", DsymPath: images[i].Path}
+	}
+	raw := &RawCrash{
+		Threads:    []Thread{{Index: 0, Triggered: true, Frames: []Frame{{Index: 0, Image: "Framework_001", Symbol: "boom"}}}},
+		UsedImages: images,
+		CrashedIdx: 0,
+	}
+	rep, err := Format(raw, ImageStatus{Matched: matched}, Environment{}, InputInfo{}, CategorizeResult{}, TierStandard)
+	if err != nil {
+		t.Fatalf("Format: %v", err)
+	}
+	if rep.SizeWarning == nil {
+		t.Fatal("expected SizeWarning to fire on oversized standard tier report")
+	}
+	w := *rep.SizeWarning
+	if !strings.Contains(w, "exceeds") {
+		t.Errorf("SizeWarning text = %q; want 'exceeds'", w)
+	}
+	// Standard's hint must point at summary, not standard or full.
+	if !strings.Contains(w, "--format=summary") {
+		t.Errorf("SizeWarning hint = %q; want it to suggest --format=summary", w)
+	}
+}
+
+// TestFormat_Summary_SizeWarningFiresPast4KB guards axiom-51j for the
+// summary tier. Summary reports rarely exceed 2 KB, but pathological
+// crashes (very long exception subtype, hundreds of images bloating
+// images_summary indirectly via metadata) can creep past 4 KB. Past
+// that threshold we emit a warning — but unlike the other tiers, there
+// is no smaller tier to recommend, so the warning must NOT carry a
+// "consider --format=X" hint.
+//
+// Brittleness: relies on Exception.Subtype, pattern_reason, and
+// Frame.Symbol round-tripping unchanged into summary output. If summary
+// ever truncates one of those (Symbol is the most plausible target for
+// a future bounded-output change), this test will silently stop being
+// able to push past 4 KB and need a new size-inflation source.
+func TestFormat_Summary_SizeWarningFiresPast4KB(t *testing.T) {
+	// Summary contains: exception (with subtype), pattern_reason,
+	// crashed-thread top frames, images_summary. Inflate exception
+	// subtype + pattern_reason — both ship in summary unchanged.
+	long := strings.Repeat("Swift runtime failure: pathological_subtype_payload_for_size_test ", 100)
+	raw := &RawCrash{
+		Exception:  Exception{Type: "EXC_BREAKPOINT", Subtype: long},
+		Threads:    []Thread{{Index: 0, Triggered: true, Frames: []Frame{{Index: 0, Image: "MyApp", Symbol: long}}}},
+		CrashedIdx: 0,
+	}
+	cat := CategorizeResult{Tag: "swift_forced_unwrap", Confidence: "high", RuleID: "R-swift-unwrap-01", Reason: long}
+	rep, err := Format(raw, ImageStatus{}, Environment{}, InputInfo{}, cat, TierSummary)
+	if err != nil {
+		t.Fatalf("Format: %v", err)
+	}
+	if rep.SizeWarning == nil {
+		t.Fatal("expected SizeWarning to fire on oversized summary tier report")
+	}
+	w := *rep.SizeWarning
+	if !strings.Contains(w, "exceeds") {
+		t.Errorf("SizeWarning text = %q; want 'exceeds'", w)
+	}
+	// Summary has no smaller tier — no hint expected.
+	if strings.Contains(w, "consider --format=") {
+		t.Errorf("SizeWarning text = %q; summary has no smaller tier — must not carry a hint", w)
+	}
+}
+
+// TestNextSmallerTier covers the hint-direction helper. Documents the
+// per-tier suggestion contract: full → standard, standard → summary,
+// summary → none, unknown → none.
+func TestNextSmallerTier(t *testing.T) {
+	cases := []struct{ tier, want string }{
+		{TierFull, TierStandard},
+		{TierStandard, TierSummary},
+		{TierSummary, ""},
+		{"bogus", ""},
+	}
+	for _, c := range cases {
+		if got := nextSmallerTier(c.tier); got != c.want {
+			t.Errorf("nextSmallerTier(%q) = %q, want %q", c.tier, got, c.want)
+		}
 	}
 }
 

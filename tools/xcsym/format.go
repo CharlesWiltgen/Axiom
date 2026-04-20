@@ -23,8 +23,41 @@ const standardOtherThreadsBudget = 20
 // tier — enough to show the fault + one or two callers.
 const summaryCrashedFrames = 5
 
-// sizeWarningThreshold is the full-tier byte budget before SizeWarning fires.
-const sizeWarningThreshold = 100 * 1024
+// sizeWarningThresholdsByTier maps each tier to the marshaled-byte ceiling
+// past which SizeWarning fires. Values are deliberately higher than the
+// "design target" the docs advertise: real iOS .ips files run 25-380 KB
+// and a standard-tier output for a framework-heavy app with 100+ used
+// images regularly lands at 20-40 KB. The warning fires past a realistic
+// threshold so users (a) get an informative signal when a crash is unusually
+// large, (b) don't see noise on every routine production crash. axiom-51j.
+//
+// Design targets (advertised; aspirational):
+//
+//	summary  ~ 2 KB   warns past 4 KB   — strict cap, contains image_summary
+//	standard ~12 KB   warns past 50 KB  — full images array dominates
+//	full      n/a     warns past 100 KB — all_threads + full images
+//
+// Per-image cost (~150-300 bytes from arch/base/name/path/size/source/uuid)
+// drives the standard-tier sizing; field reports show 45-150 used images
+// per process is the typical range.
+var sizeWarningThresholdsByTier = map[string]int{
+	TierSummary:  4 * 1024,
+	TierStandard: 50 * 1024,
+	TierFull:     100 * 1024,
+}
+
+// nextSmallerTier returns the tier name to suggest in a size_warning hint:
+// when full overflows, switch to standard; when standard overflows, switch
+// to summary; summary has no smaller alternative.
+func nextSmallerTier(tier string) string {
+	switch tier {
+	case TierFull:
+		return TierStandard
+	case TierStandard:
+		return TierSummary
+	}
+	return ""
+}
 
 // Format produces a CrashReport from pipeline state. Tier controls the level
 // of detail — see TierSummary/TierStandard/TierFull.
@@ -58,13 +91,17 @@ func Format(raw *RawCrash, images ImageStatus, env Environment, input InputInfo,
 		report.Images = &copy
 	}
 
-	// Full tier: check for oversized output and annotate. We don't truncate —
-	// the plan calls for a warning, not a rejection.
-	if tier == TierFull {
-		if buf, err := json.Marshal(report); err == nil && len(buf) > sizeWarningThreshold {
-			w := fmt.Sprintf(
-				"report size %d bytes exceeds %d bytes; consider --format=standard for triage",
-				len(buf), sizeWarningThreshold)
+	// All tiers: check for oversized output and annotate. We don't
+	// truncate — the contract is informational, not enforcing. Each tier
+	// has its own threshold (see sizeWarningThresholdsByTier); summary
+	// tops out at 4 KB, standard at 50 KB, full at 100 KB.
+	if threshold, ok := sizeWarningThresholdsByTier[tier]; ok {
+		if buf, err := json.Marshal(report); err == nil && len(buf) > threshold {
+			var hint string
+			if smaller := nextSmallerTier(tier); smaller != "" {
+				hint = fmt.Sprintf("; consider --format=%s for triage", smaller)
+			}
+			w := fmt.Sprintf("report size %d bytes exceeds %d bytes%s", len(buf), threshold, hint)
 			report.SizeWarning = &w
 		}
 	}
