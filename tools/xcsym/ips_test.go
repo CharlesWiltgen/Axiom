@@ -87,6 +87,17 @@ func TestParseIPS_v2_SwiftForcedUnwrap(t *testing.T) {
 	if raw.UsedImages[0].LoadAddress != 4294967296 {
 		t.Errorf("usedImages[0].LoadAddress = %d, want 4294967296", raw.UsedImages[0].LoadAddress)
 	}
+	// Frame.UUID is plumbed from the payload's usedImages[imageIndex].uuid so
+	// the symbolicate pipeline can group by UUID instead of name (two images
+	// can share a name; UUIDs are globally unique).
+	if raw.Threads[0].Frames[0].UUID != "AABBCCDD-EEFF-0011-2233-445566778899" {
+		t.Errorf("thread0 frame0.UUID = %q, want MyApp UUID (from imageIndex=0)",
+			raw.Threads[0].Frames[0].UUID)
+	}
+	if raw.Threads[1].Frames[0].UUID != "11223344-5566-7788-99AA-BBCCDDEEFF00" {
+		t.Errorf("thread1 frame0.UUID = %q, want libdispatch UUID (from imageIndex=1)",
+			raw.Threads[1].Frames[0].UUID)
+	}
 }
 
 func TestParseIPS_v1_SwiftForcedUnwrap(t *testing.T) {

@@ -104,10 +104,18 @@ type ThreadTop struct {
 }
 
 type Frame struct {
-	Index        int    `json:"index"`
-	Address      string `json:"address"`
-	Image        string `json:"image"`
-	ImageOffset  int    `json:"image_offset,omitempty"`
+	Index       int    `json:"index"`
+	Address     string `json:"address"`
+	Image       string `json:"image"`
+	ImageOffset int    `json:"image_offset,omitempty"`
+	// UUID is the binary UUID of the image this frame belongs to, plumbed in
+	// at parse time (ips: usedImages[imageIndex].uuid; MetricKit: binaryUUID).
+	// Internal plumbing for the symbolicate pipeline — frames are grouped by
+	// UUID instead of Image name so two images sharing a name (multi-framework
+	// copies, or MetricKit where binaryName can repeat across distinct UUIDs)
+	// don't silently cross-attribute. Not serialized; the authoritative UUID
+	// list lives in CrashReport.Images.
+	UUID         string `json:"-"`
 	Symbol       string `json:"symbol,omitempty"`
 	File         string `json:"file,omitempty"`
 	Line         int    `json:"line,omitempty"`
