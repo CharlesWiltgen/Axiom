@@ -296,7 +296,9 @@ var rules = []Rule{
 			}
 			sub := c.Exception.Subtype
 			hasCPUFlavor := strings.Contains(sub, "CPU") || strings.Contains(sub, "WAKEUPS")
-			if hasCPUFlavor && strings.Contains(sub, "FATAL") {
+			// "FATAL" as a bare substring would also match "NON-FATAL" — explicitly
+			// exclude the non-fatal spelling Apple emits for warnings.
+			if hasCPUFlavor && strings.Contains(sub, "FATAL") && !strings.Contains(sub, "NON-FATAL") {
 				return true, "EXC_RESOURCE fatal subtype " + sub
 			}
 			return false, ""

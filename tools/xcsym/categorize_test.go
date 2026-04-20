@@ -621,6 +621,16 @@ func TestCategorize_R_cpu_fatal_01_Negative_NonFatal(t *testing.T) {
 	}
 }
 
+func TestCategorize_R_cpu_fatal_01_Negative_NonFatalSpelling(t *testing.T) {
+	// Regression: Apple emits "NON-FATAL" in some CPU EXC_RESOURCE subtypes.
+	// A naive strings.Contains(sub, "FATAL") would match — ensure it doesn't.
+	raw := &RawCrash{Exception: Exception{Type: "EXC_RESOURCE", Subtype: "CPU (NON-FATAL)"}}
+	res := Categorize(raw)
+	if res.RuleID == "R-cpu-fatal-01" {
+		t.Errorf("must not fire cpu_resource_fatal on 'NON-FATAL' substring")
+	}
+}
+
 // --- R-swiftui-loop-01 --------------------------------------------------
 
 func TestCategorize_R_swiftui_loop_01_Positive(t *testing.T) {
