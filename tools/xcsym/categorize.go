@@ -288,6 +288,20 @@ var rules = []Rule{
 			return false, ""
 		},
 	},
+	{
+		ID: "R-cpu-fatal-01", Tag: "cpu_resource_fatal", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if c.Exception.Type != "EXC_RESOURCE" {
+				return false, ""
+			}
+			sub := c.Exception.Subtype
+			hasCPUFlavor := strings.Contains(sub, "CPU") || strings.Contains(sub, "WAKEUPS")
+			if hasCPUFlavor && strings.Contains(sub, "FATAL") {
+				return true, "EXC_RESOURCE fatal subtype " + sub
+			}
+			return false, ""
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n
