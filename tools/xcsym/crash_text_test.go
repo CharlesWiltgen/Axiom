@@ -262,6 +262,25 @@ EOF
 	}
 }
 
+// TestParseAppleCrashFrame_SpaceInImageName documents a known
+// limitation — the frame regex's image-name capture is `\S+`, so a
+// dylib filename that contains a literal space (extremely rare on
+// Apple platforms; would require a hand-vendored binary) causes the
+// frame to silently fail the regex and be dropped. If a real-world
+// crash ever surfaces this, widen the capture to be greedy up to the
+// hex address token. Keeping the test green (ok=false) documents the
+// current behavior so it doesn't regress silently in the other
+// direction — accidentally accepting garbled frames.
+func TestParseAppleCrashFrame_SpaceInImageName(t *testing.T) {
+	line := `0   my lib.dylib        	0x23dddf1d0 __pthread_kill + 8 (:-1)`
+	if _, ok := parseAppleCrashFrame(line, nil); ok {
+		t.Error("frames from dylibs with spaces in their names are silently " +
+			"dropped today (see comment above). If this test fails because " +
+			"parsing now succeeds, update the regex documentation and add " +
+			"positive assertions on the recovered fields.")
+	}
+}
+
 // TestParseAppleCrashFrame_Variants exercises the frame-line parser
 // against the shapes the .crash format emits: symbol + offset +
 // (file:line), symbol + offset + (:-1) for stripped frames,
