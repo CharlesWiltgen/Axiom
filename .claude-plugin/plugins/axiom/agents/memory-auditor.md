@@ -262,7 +262,7 @@ If the user has `.ips`, MetricKit, or legacy `.crash` text artifacts from the fi
 | `bad_memory_access` | Dangling reference after deallocation — cross-reference Phase 2 Pattern 4 (delegate cycles) |
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <path-to-ips>
+xcsym crash --format=summary <path-to-ips>
 ```
 
 Use the `crashed_thread.frames` to localize which owner class needs deeper Phase 1 ownership mapping.

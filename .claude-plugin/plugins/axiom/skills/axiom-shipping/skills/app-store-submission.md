@@ -78,7 +78,7 @@ xcodebuild -scheme YourApp \
 
 # After testing, symbolicate any crashes to catch reviewer-blocking bugs early:
 ls ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null
-${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <path>
+xcsym crash --format=summary <path>
 # A non-empty pattern_tag during pre-flight = a guaranteed 2.1 rejection
 ```
 

@@ -113,7 +113,7 @@ Before running UI-failure pattern recognition, check whether the test produced a
 ls -lt ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -5
 
 # Full triage — pattern_tag + symbolicated crashed thread in one call
-${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <path-to-ips>
+xcsym crash --format=summary <path-to-ips>
 ```
 
 Feed the returned `pattern_tag` to the fix plan:
