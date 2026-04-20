@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-04-20T02:23:08.383Z",
+  "generatedAt": "2026-04-20T02:23:46.524Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -2100,7 +2100,7 @@
     "axiom-build--xcode-debugging": {
       "name": "axiom-build--xcode-debugging",
       "description": "Check build environment BEFORE debugging code. **Core principle** 80% of \"mysterious\" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.",
-      "content": "\n# Xcode Debugging\n\n## Overview\n\nCheck build environment BEFORE debugging code. **Core principle** 80% of \"mysterious\" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.\n\n## Example Prompts\n\nThese are real questions developers ask that this skill is designed to answer:\n\n#### 1. \"My build is failing with 'BUILD FAILED' but no error details. I haven't changed anything. What's going on?\"\n→ The skill shows environment-first diagnostics: check Derived Data, simulator states, and zombie processes before investigating code\n\n#### 2. \"Tests passed yesterday with no code changes, but now they're failing. This is frustrating. How do I fix this?\"\n→ The skill explains stale Derived Data and intermittent failures, shows the 2-5 minute fix (clean Derived Data)\n\n#### 3. \"My app builds fine but it's running the old code from before my changes. I restarted Xcode but it still happens.\"\n→ The skill demonstrates that Derived Data caches old builds, shows how deletion forces a clean rebuild\n\n#### 4. \"The simulator says 'Unable to boot simulator' and I can't run tests. How do I recover?\"\n→ The skill covers simulator state diagnosis with simctl and safe recovery patterns (erase/shutdown/reboot)\n\n#### 5. \"I'm getting 'No such module: SomePackage' errors after updating SPM dependencies. How do I fix this?\"\n→ The skill explains SPM caching issues and the clean Derived Data workflow that resolves \"phantom\" module errors\n\n---\n\n## Red Flags — Check Environment First\n\nIf you see ANY of these, suspect environment not code:\n- \"It works on my machine but not CI\"\n- \"Tests passed yesterday, failing today with no code changes\"\n- \"Build succeeds but old code executes\"\n- \"Build sometimes succeeds, sometimes fails\" (intermittent failures)\n- \"Simulator stuck at splash screen\" or \"Unable to install app\"\n- Multiple xcodebuild processes (10+) older than 30 minutes\n\n## Mandatory First Steps\n\n**ALWAYS run these commands FIRST** (before reading code):\n\n```bash\n# 1. Check processes (zombie xcodebuild?)\nps aux | grep -E \"xcodebuild|Simulator\" | grep -v grep\n\n# 2. Check Derived Data size (>10GB = stale)\ndu -sh ~/Library/Developer/Xcode/DerivedData\n\n# 3. Check simulator states (stuck Booting?)\nxcrun simctl list devices | grep -E \"Booted|Booting|Shutting Down\"\n```\n\n#### What these tell you\n- **0 processes + small Derived Data + no booted sims** → Environment clean, investigate code\n- **10+ processes OR >10GB Derived Data OR simulators stuck** → Environment problem, clean first\n- **Stale code executing OR intermittent failures** → Clean Derived Data regardless of size\n\n#### Why environment first\n- Environment cleanup: 2-5 minutes → problem solved\n- Code debugging for environment issues: 30-120 minutes → wasted time\n\n## Quick Fix Workflow\n\n### Finding Your Scheme Name\n\nIf you don't know your scheme name:\n```bash\n# List available schemes\nxcodebuild -list\n```\n\n### For Stale Builds / \"No such module\" Errors\n```bash\n# Clean everything\nxcodebuild clean -scheme YourScheme\nrm -rf ~/Library/Developer/Xcode/DerivedData/*\nrm -rf .build/ build/\n\n# Rebuild\nxcodebuild build -scheme YourScheme \\\n  -destination 'platform=iOS Simulator,name=iPhone 16'\n```\n\n### For Simulator Issues\n```bash\n# Shutdown all simulators\nxcrun simctl shutdown all\n\n# If simctl command fails, shutdown and retry\nxcrun simctl shutdown all\nxcrun simctl list devices\n\n# If still stuck, erase specific simulator\nxcrun simctl erase <device-uuid>\n\n# Nuclear option: force-quit Simulator.app\nkillall -9 Simulator\n```\n\n### For Zombie Processes\n```bash\n# Kill all xcodebuild (use cautiously)\nkillall -9 xcodebuild\n\n# Check they're gone\nps aux | grep xcodebuild | grep -v grep\n```\n\n### For Test Failures\n```bash\n# Isolate failing test\nxcodebuild test -scheme YourScheme \\\n  -destination 'platform=iOS Simulator,name=iPhone 16' \\\n  -only-testing:YourTests/SpecificTestClass\n```\n\n## Simulator Verification (Optional)\n\nAfter applying fixes, verify in simulator with visual confirmation.\n\n### Quick Screenshot Verification\n\n```bash\n# 1. Boot simulator (if not already)\nxcrun simctl boot \"iPhone 16 Pro\"\n\n# 2. Build and install app\nxcodebuild build -scheme YourScheme \\\n  -destination 'platform=iOS Simulator,name=iPhone 16 Pro'\n\n# 3. Launch app\nxcrun simctl launch booted com.your.bundleid\n\n# 4. Wait for UI to stabilize\nsleep 2\n\n# 5. Capture screenshot\nxcrun simctl io booted screenshot /tmp/verify-build-$(date +%s).png\n```\n\n### Using Axiom Tools\n\n**Quick screenshot**:\n```bash\n/axiom:screenshot\n```\n\n**Full simulator testing** (with navigation, state setup):\n```bash\n/axiom:test-simulator\n```\n\n### When to Use Simulator Verification\n\nUse when:\n- **Visual fixes** — Layout changes, UI updates, styling tweaks\n- **State-dependent bugs** — \"Only happens in this specific screen\"\n- **Intermittent failures** — Need to reproduce specific conditions\n- **Before shipping** — Final verification that fix actually works\n\n**Pro tip**: If you have debug deep links (see `axiom-swift (skills/deep-link-debugging.md)` skill), you can navigate directly to the screen that was broken:\n```bash\nxcrun simctl openurl booted \"debug://problem-screen\"\nsleep 1\nxcrun simctl io booted screenshot /tmp/fix-verification.png\n```\n\n## Decision Tree\n\n```\nTest/build failing?\n├─ BUILD FAILED with no details?\n│  └─ Clean Derived Data → rebuild\n├─ Build intermittent (sometimes succeeds/fails)?\n│  └─ Clean Derived Data → rebuild\n├─ Build succeeds but old code executes?\n│  └─ Delete Derived Data → rebuild (2-5 min fix)\n├─ \"Unable to boot simulator\"?\n│  └─ xcrun simctl shutdown all → erase simulator\n├─ \"No such module PackageName\"?\n│  └─ Clean + delete Derived Data → rebuild\n├─ Tests hang indefinitely?\n│  └─ Check simctl list → reboot simulator\n├─ Tests crash?\n│  └─ Check ~/Library/Logs/DiagnosticReports/*.crash\n└─ Code logic bug?\n   └─ Use systematic-debugging skill instead\n```\n\n## Common Error Patterns\n\n| Error | Fix |\n|-------|-----|\n| `BUILD FAILED` (no details) | Delete Derived Data |\n| `Unable to boot simulator` | `xcrun simctl erase <uuid>` |\n| `No such module` | Clean + delete Derived Data |\n| Tests hang | Check simctl list, reboot simulator |\n| Stale code executing | Delete Derived Data |\n\n## Useful CLI Tools\n\n```bash\n# Show build settings\nxcodebuild -showBuildSettings -scheme YourScheme\n\n# List schemes/targets\nxcodebuild -list\n\n# Verbose output\nxcodebuild -verbose build -scheme YourScheme\n\n# Build without testing (faster)\nxcodebuild build-for-testing -scheme YourScheme\nxcodebuild test-without-building -scheme YourScheme\n\n# Version and build number management (agvtool)\nxcrun agvtool what-marketing-version          # Current version (e.g., 2.0)\nxcrun agvtool what-version                    # Current build number\nxcrun agvtool next-version -all               # Bump build number\nxcrun agvtool new-version -all 42             # Set specific build number\nxcrun agvtool new-marketing-version 2.1       # Set marketing version\n\n# Validate asset catalogs\nxcrun amlint Assets.xcassets                   # Lint for issues before build\n```\n\n## Physical Device Management (devicectl)\n\n`devicectl` is the modern CLI for physical device operations (replaces legacy `idevice*` tools).\n\n```bash\n# List connected devices\nxcrun devicectl list devices\n\n# Install app on device\nxcrun devicectl device install app --device <udid> MyApp.app\n\n# Launch app on device\nxcrun devicectl device process launch --device <udid> com.your.bundleid\n\n# List installed apps\nxcrun devicectl device info apps --device <udid>\n\n# List running processes\nxcrun devicectl device info processes --device <udid>\n```\n\n**When to use**: Physical device debugging when the issue doesn't reproduce in Simulator — install, launch, and inspect from CLI.\n\n## Crash Log Analysis\n\n```bash\n# Recent crashes\nls -lt ~/Library/Logs/DiagnosticReports/*.crash | head -5\n\n# Symbolicate a single address (if you have .dSYM)\nxcrun atos -o YourApp.app.dSYM/Contents/Resources/DWARF/YourApp \\\n  -arch arm64 -l 0x100000000 0x<address>\n\n# Symbolicate an entire crash log at once (LLDB Python script, may vary by Xcode version)\nxcrun crashlog MyCrash.ips\n```\n\n## Common Mistakes\n\n❌ **Debugging code before checking environment** — Always run mandatory steps first\n\n❌ **Ignoring simulator states** — \"Booting\" can hang 10+ minutes, shutdown/reboot immediately\n\n❌ **Assuming git changes caused the problem** — Derived Data caches old builds despite code changes\n\n❌ **Running full test suite when one test fails** — Use `-only-testing` to isolate\n\n## Real-World Impact\n\n**Before** 30+ min debugging \"why is old code running\"\n**After** 2 min environment check → clean Derived Data → problem solved\n\n**Key insight** Check environment first, debug code second.\n",
+      "content": "\n# Xcode Debugging\n\n## Overview\n\nCheck build environment BEFORE debugging code. **Core principle** 80% of \"mysterious\" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.\n\n## Example Prompts\n\nThese are real questions developers ask that this skill is designed to answer:\n\n#### 1. \"My build is failing with 'BUILD FAILED' but no error details. I haven't changed anything. What's going on?\"\n→ The skill shows environment-first diagnostics: check Derived Data, simulator states, and zombie processes before investigating code\n\n#### 2. \"Tests passed yesterday with no code changes, but now they're failing. This is frustrating. How do I fix this?\"\n→ The skill explains stale Derived Data and intermittent failures, shows the 2-5 minute fix (clean Derived Data)\n\n#### 3. \"My app builds fine but it's running the old code from before my changes. I restarted Xcode but it still happens.\"\n→ The skill demonstrates that Derived Data caches old builds, shows how deletion forces a clean rebuild\n\n#### 4. \"The simulator says 'Unable to boot simulator' and I can't run tests. How do I recover?\"\n→ The skill covers simulator state diagnosis with simctl and safe recovery patterns (erase/shutdown/reboot)\n\n#### 5. \"I'm getting 'No such module: SomePackage' errors after updating SPM dependencies. How do I fix this?\"\n→ The skill explains SPM caching issues and the clean Derived Data workflow that resolves \"phantom\" module errors\n\n---\n\n## Red Flags — Check Environment First\n\nIf you see ANY of these, suspect environment not code:\n- \"It works on my machine but not CI\"\n- \"Tests passed yesterday, failing today with no code changes\"\n- \"Build succeeds but old code executes\"\n- \"Build sometimes succeeds, sometimes fails\" (intermittent failures)\n- \"Simulator stuck at splash screen\" or \"Unable to install app\"\n- Multiple xcodebuild processes (10+) older than 30 minutes\n\n## Mandatory First Steps\n\n**ALWAYS run these commands FIRST** (before reading code):\n\n```bash\n# 1. Check processes (zombie xcodebuild?)\nps aux | grep -E \"xcodebuild|Simulator\" | grep -v grep\n\n# 2. Check Derived Data size (>10GB = stale)\ndu -sh ~/Library/Developer/Xcode/DerivedData\n\n# 3. Check simulator states (stuck Booting?)\nxcrun simctl list devices | grep -E \"Booted|Booting|Shutting Down\"\n```\n\n#### What these tell you\n- **0 processes + small Derived Data + no booted sims** → Environment clean, investigate code\n- **10+ processes OR >10GB Derived Data OR simulators stuck** → Environment problem, clean first\n- **Stale code executing OR intermittent failures** → Clean Derived Data regardless of size\n\n#### Why environment first\n- Environment cleanup: 2-5 minutes → problem solved\n- Code debugging for environment issues: 30-120 minutes → wasted time\n\n## Quick Fix Workflow\n\n### Finding Your Scheme Name\n\nIf you don't know your scheme name:\n```bash\n# List available schemes\nxcodebuild -list\n```\n\n### For Stale Builds / \"No such module\" Errors\n```bash\n# Clean everything\nxcodebuild clean -scheme YourScheme\nrm -rf ~/Library/Developer/Xcode/DerivedData/*\nrm -rf .build/ build/\n\n# Rebuild\nxcodebuild build -scheme YourScheme \\\n  -destination 'platform=iOS Simulator,name=iPhone 16'\n```\n\n### For Simulator Issues\n```bash\n# Shutdown all simulators\nxcrun simctl shutdown all\n\n# If simctl command fails, shutdown and retry\nxcrun simctl shutdown all\nxcrun simctl list devices\n\n# If still stuck, erase specific simulator\nxcrun simctl erase <device-uuid>\n\n# Nuclear option: force-quit Simulator.app\nkillall -9 Simulator\n```\n\n### For Zombie Processes\n```bash\n# Kill all xcodebuild (use cautiously)\nkillall -9 xcodebuild\n\n# Check they're gone\nps aux | grep xcodebuild | grep -v grep\n```\n\n### For Test Failures\n```bash\n# Isolate failing test\nxcodebuild test -scheme YourScheme \\\n  -destination 'platform=iOS Simulator,name=iPhone 16' \\\n  -only-testing:YourTests/SpecificTestClass\n```\n\n## Simulator Verification (Optional)\n\nAfter applying fixes, verify in simulator with visual confirmation.\n\n### Quick Screenshot Verification\n\n```bash\n# 1. Boot simulator (if not already)\nxcrun simctl boot \"iPhone 16 Pro\"\n\n# 2. Build and install app\nxcodebuild build -scheme YourScheme \\\n  -destination 'platform=iOS Simulator,name=iPhone 16 Pro'\n\n# 3. Launch app\nxcrun simctl launch booted com.your.bundleid\n\n# 4. Wait for UI to stabilize\nsleep 2\n\n# 5. Capture screenshot\nxcrun simctl io booted screenshot /tmp/verify-build-$(date +%s).png\n```\n\n### Using Axiom Tools\n\n**Quick screenshot**:\n```bash\n/axiom:screenshot\n```\n\n**Full simulator testing** (with navigation, state setup):\n```bash\n/axiom:test-simulator\n```\n\n### When to Use Simulator Verification\n\nUse when:\n- **Visual fixes** — Layout changes, UI updates, styling tweaks\n- **State-dependent bugs** — \"Only happens in this specific screen\"\n- **Intermittent failures** — Need to reproduce specific conditions\n- **Before shipping** — Final verification that fix actually works\n\n**Pro tip**: If you have debug deep links (see `axiom-swift (skills/deep-link-debugging.md)` skill), you can navigate directly to the screen that was broken:\n```bash\nxcrun simctl openurl booted \"debug://problem-screen\"\nsleep 1\nxcrun simctl io booted screenshot /tmp/fix-verification.png\n```\n\n## Decision Tree\n\n```\nTest/build failing?\n├─ BUILD FAILED with no details?\n│  └─ Clean Derived Data → rebuild\n├─ Build intermittent (sometimes succeeds/fails)?\n│  └─ Clean Derived Data → rebuild\n├─ Build succeeds but old code executes?\n│  └─ Delete Derived Data → rebuild (2-5 min fix)\n├─ \"Unable to boot simulator\"?\n│  └─ xcrun simctl shutdown all → erase simulator\n├─ \"No such module PackageName\"?\n│  └─ Clean + delete Derived Data → rebuild\n├─ Tests hang indefinitely?\n│  └─ Check simctl list → reboot simulator\n├─ Tests crash?\n│  └─ Check ~/Library/Logs/DiagnosticReports/*.crash\n└─ Code logic bug?\n   └─ Use systematic-debugging skill instead\n```\n\n## Common Error Patterns\n\n| Error | Fix |\n|-------|-----|\n| `BUILD FAILED` (no details) | Delete Derived Data |\n| `Unable to boot simulator` | `xcrun simctl erase <uuid>` |\n| `No such module` | Clean + delete Derived Data |\n| Tests hang | Check simctl list, reboot simulator |\n| Stale code executing | Delete Derived Data |\n\n## Useful CLI Tools\n\n```bash\n# Show build settings\nxcodebuild -showBuildSettings -scheme YourScheme\n\n# List schemes/targets\nxcodebuild -list\n\n# Verbose output\nxcodebuild -verbose build -scheme YourScheme\n\n# Build without testing (faster)\nxcodebuild build-for-testing -scheme YourScheme\nxcodebuild test-without-building -scheme YourScheme\n\n# Version and build number management (agvtool)\nxcrun agvtool what-marketing-version          # Current version (e.g., 2.0)\nxcrun agvtool what-version                    # Current build number\nxcrun agvtool next-version -all               # Bump build number\nxcrun agvtool new-version -all 42             # Set specific build number\nxcrun agvtool new-marketing-version 2.1       # Set marketing version\n\n# Validate asset catalogs\nxcrun amlint Assets.xcassets                   # Lint for issues before build\n```\n\n- `xcsym crash <file>` — Structured crash symbolication with LLM-friendly JSON output. Use for any `.ips` or MetricKit crash file. See `axiom-tools (skills/xcsym-ref.md)`.\n\n## Physical Device Management (devicectl)\n\n`devicectl` is the modern CLI for physical device operations (replaces legacy `idevice*` tools).\n\n```bash\n# List connected devices\nxcrun devicectl list devices\n\n# Install app on device\nxcrun devicectl device install app --device <udid> MyApp.app\n\n# Launch app on device\nxcrun devicectl device process launch --device <udid> com.your.bundleid\n\n# List installed apps\nxcrun devicectl device info apps --device <udid>\n\n# List running processes\nxcrun devicectl device info processes --device <udid>\n```\n\n**When to use**: Physical device debugging when the issue doesn't reproduce in Simulator — install, launch, and inspect from CLI.\n\n## Crash Log Analysis\n\n```bash\n# Recent crashes\nls -lt ~/Library/Logs/DiagnosticReports/*.crash | head -5\n\n# Symbolicate a single address (if you have .dSYM)\nxcrun atos -o YourApp.app.dSYM/Contents/Resources/DWARF/YourApp \\\n  -arch arm64 -l 0x100000000 0x<address>\n\n# Symbolicate an entire crash log at once (LLDB Python script, may vary by Xcode version)\nxcrun crashlog MyCrash.ips\n```\n\n## Common Mistakes\n\n❌ **Debugging code before checking environment** — Always run mandatory steps first\n\n❌ **Ignoring simulator states** — \"Booting\" can hang 10+ minutes, shutdown/reboot immediately\n\n❌ **Assuming git changes caused the problem** — Derived Data caches old builds despite code changes\n\n❌ **Running full test suite when one test fails** — Use `-only-testing` to isolate\n\n## Real-World Impact\n\n**Before** 30+ min debugging \"why is old code running\"\n**After** 2 min environment check → clean Derived Data → problem solved\n\n**Key insight** Check environment first, debug code second.\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -2357,91 +2357,91 @@
           "heading": "Validate asset catalogs",
           "level": 1,
           "startLine": 223,
-          "endLine": 226,
-          "charCount": 108
+          "endLine": 228,
+          "charCount": 281
         },
         {
           "heading": "Physical Device Management (devicectl)",
           "level": 2,
-          "startLine": 227,
-          "endLine": 231,
+          "startLine": 229,
+          "endLine": 233,
           "charCount": 148
         },
         {
           "heading": "List connected devices",
           "level": 1,
-          "startLine": 232,
-          "endLine": 234,
+          "startLine": 234,
+          "endLine": 236,
           "charCount": 54
         },
         {
           "heading": "Install app on device",
           "level": 1,
-          "startLine": 235,
-          "endLine": 237,
+          "startLine": 237,
+          "endLine": 239,
           "charCount": 85
         },
         {
           "heading": "Launch app on device",
           "level": 1,
-          "startLine": 238,
-          "endLine": 240,
+          "startLine": 240,
+          "endLine": 242,
           "charCount": 95
         },
         {
           "heading": "List installed apps",
           "level": 1,
-          "startLine": 241,
-          "endLine": 243,
+          "startLine": 243,
+          "endLine": 245,
           "charCount": 71
         },
         {
           "heading": "List running processes",
           "level": 1,
-          "startLine": 244,
-          "endLine": 249,
+          "startLine": 246,
+          "endLine": 251,
           "charCount": 214
         },
         {
           "heading": "Crash Log Analysis",
           "level": 2,
-          "startLine": 250,
-          "endLine": 252,
+          "startLine": 252,
+          "endLine": 254,
           "charCount": 30
         },
         {
           "heading": "Recent crashes",
           "level": 1,
-          "startLine": 253,
-          "endLine": 255,
+          "startLine": 255,
+          "endLine": 257,
           "charCount": 75
         },
         {
           "heading": "Symbolicate a single address (if you have .dSYM)",
           "level": 1,
-          "startLine": 256,
-          "endLine": 259,
+          "startLine": 258,
+          "endLine": 261,
           "charCount": 158
         },
         {
           "heading": "Symbolicate an entire crash log at once (LLDB Python script, may vary by Xcode version)",
           "level": 1,
-          "startLine": 260,
-          "endLine": 263,
+          "startLine": 262,
+          "endLine": 265,
           "charCount": 121
         },
         {
           "heading": "Common Mistakes",
           "level": 2,
-          "startLine": 264,
-          "endLine": 273,
+          "startLine": 266,
+          "endLine": 275,
           "charCount": 384
         },
         {
           "heading": "Real-World Impact",
           "level": 2,
-          "startLine": 274,
-          "endLine": 280,
+          "startLine": 276,
+          "endLine": 282,
           "charCount": 210
         }
       ],
@@ -32426,7 +32426,7 @@
           22,
           6,
           123,
-          359
+          369
         ],
         "12": [
           4,
@@ -33589,7 +33589,7 @@
         15.028248587570621,
         4.734463276836161,
         43.971751412429384,
-        606.0677966101691
+        606.1242937853106
       ],
       "storedFields": {
         "0": {
@@ -37354,6 +37354,7 @@
               "4": 27,
               "6": 1,
               "7": 3,
+              "11": 1,
               "15": 1,
               "18": 1,
               "19": 1,
@@ -41650,48 +41651,6 @@
           }
         ],
         [
-          "xcsentinel",
-          {
-            "4": {
-              "173": 1
-            }
-          }
-        ],
-        [
-          "xcsym",
-          {
-            "0": {
-              "164": 1
-            },
-            "1": {
-              "164": 1
-            },
-            "2": {
-              "164": 1
-            },
-            "3": {
-              "112": 1,
-              "137": 1,
-              "164": 1
-            },
-            "4": {
-              "112": 4,
-              "114": 4,
-              "137": 6,
-              "164": 51
-            }
-          }
-        ],
-        [
-          "xcstrings",
-          {
-            "4": {
-              "71": 12,
-              "72": 15
-            }
-          }
-        ],
-        [
           "xcarchive",
           {
             "4": {
@@ -41723,6 +41682,49 @@
               "133": 4,
               "134": 5,
               "136": 1
+            }
+          }
+        ],
+        [
+          "xcsentinel",
+          {
+            "4": {
+              "173": 1
+            }
+          }
+        ],
+        [
+          "xcstrings",
+          {
+            "4": {
+              "71": 12,
+              "72": 15
+            }
+          }
+        ],
+        [
+          "xcsym",
+          {
+            "0": {
+              "164": 1
+            },
+            "1": {
+              "164": 1
+            },
+            "2": {
+              "164": 1
+            },
+            "3": {
+              "112": 1,
+              "137": 1,
+              "164": 1
+            },
+            "4": {
+              "11": 2,
+              "112": 4,
+              "114": 4,
+              "137": 6,
+              "164": 51
             }
           }
         ],
@@ -48121,6 +48123,7 @@
               "4": 4,
               "6": 4,
               "8": 10,
+              "11": 1,
               "14": 1,
               "17": 23,
               "18": 29,
@@ -79909,6 +79912,7 @@
               "4": 9,
               "5": 3,
               "10": 2,
+              "11": 1,
               "17": 2,
               "18": 4,
               "19": 2,
@@ -88360,7 +88364,7 @@
               "8": 4,
               "9": 10,
               "10": 29,
-              "11": 6,
+              "11": 7,
               "12": 8,
               "13": 11,
               "14": 47,
@@ -96168,6 +96172,7 @@
               "2": 1,
               "4": 2,
               "5": 2,
+              "11": 1,
               "133": 1,
               "163": 1,
               "164": 1,
@@ -104620,6 +104625,7 @@
               "2": 1,
               "3": 2,
               "4": 1,
+              "11": 1,
               "37": 1,
               "43": 1,
               "58": 2,
@@ -108896,6 +108902,7 @@
               "8": 7,
               "9": 14,
               "10": 12,
+              "11": 2,
               "12": 4,
               "13": 4,
               "14": 3,
@@ -131068,7 +131075,7 @@
               "6": 1,
               "8": 1,
               "10": 1,
-              "11": 3,
+              "11": 4,
               "15": 1,
               "28": 1,
               "34": 1,
@@ -151789,7 +151796,7 @@
               "131": 1
             },
             "4": {
-              "11": 1,
+              "11": 2,
               "112": 2,
               "131": 3,
               "137": 5,
@@ -168197,7 +168204,7 @@
               "8": 3,
               "9": 2,
               "10": 4,
-              "11": 1,
+              "11": 2,
               "20": 1,
               "24": 2,
               "33": 3,
@@ -171163,7 +171170,7 @@
               "7": 2,
               "9": 4,
               "10": 19,
-              "11": 1,
+              "11": 2,
               "12": 2,
               "13": 5,
               "14": 10,
@@ -176102,6 +176109,7 @@
               "164": 1
             },
             "4": {
+              "11": 1,
               "112": 1,
               "114": 7,
               "118": 1,
@@ -182863,7 +182871,7 @@
               "8": 2,
               "9": 2,
               "10": 6,
-              "11": 2,
+              "11": 3,
               "12": 1,
               "13": 2,
               "14": 2,
@@ -186834,6 +186842,7 @@
               "4": 9,
               "5": 1,
               "6": 1,
+              "11": 1,
               "13": 1,
               "14": 4,
               "15": 2,
@@ -195381,7 +195390,7 @@
               "8": 1,
               "9": 3,
               "10": 19,
-              "11": 6,
+              "11": 9,
               "12": 3,
               "14": 5,
               "15": 1,
@@ -212016,7 +212025,7 @@
               "7": 1,
               "9": 3,
               "10": 18,
-              "11": 1,
+              "11": 2,
               "12": 1,
               "13": 4,
               "14": 9,
@@ -220686,105 +220695,6 @@
           }
         ],
         [
-          "metrickit",
-          {
-            "0": {
-              "114": 1
-            },
-            "2": {
-              "47": 1,
-              "110": 1,
-              "111": 1,
-              "112": 1,
-              "113": 1,
-              "116": 1,
-              "131": 1,
-              "137": 1
-            },
-            "4": {
-              "47": 1,
-              "112": 2,
-              "113": 2,
-              "114": 3,
-              "116": 2,
-              "131": 1,
-              "164": 2
-            }
-          }
-        ],
-        [
-          "metric",
-          {
-            "1": {
-              "114": 1,
-              "164": 1
-            },
-            "3": {
-              "110": 1,
-              "112": 1,
-              "114": 3,
-              "119": 1,
-              "131": 1
-            },
-            "4": {
-              "43": 4,
-              "47": 6,
-              "62": 1,
-              "72": 1,
-              "110": 15,
-              "111": 7,
-              "112": 10,
-              "113": 6,
-              "114": 54,
-              "116": 24,
-              "119": 1,
-              "131": 3,
-              "137": 11,
-              "150": 3,
-              "157": 1,
-              "164": 6
-            }
-          }
-        ],
-        [
-          "metrics",
-          {
-            "1": {
-              "114": 1,
-              "131": 1
-            },
-            "3": {
-              "131": 1
-            },
-            "4": {
-              "0": 1,
-              "3": 1,
-              "43": 9,
-              "47": 8,
-              "79": 1,
-              "105": 1,
-              "109": 1,
-              "110": 16,
-              "111": 10,
-              "112": 2,
-              "113": 2,
-              "114": 59,
-              "116": 6,
-              "118": 1,
-              "119": 1,
-              "129": 1,
-              "131": 16,
-              "132": 1,
-              "133": 2,
-              "135": 7,
-              "137": 8,
-              "143": 1,
-              "156": 1,
-              "158": 1
-            }
-          }
-        ],
-        [
           "met",
           {
             "4": {
@@ -220975,6 +220885,106 @@
               "141": 2,
               "142": 1,
               "157": 1
+            }
+          }
+        ],
+        [
+          "metrickit",
+          {
+            "0": {
+              "114": 1
+            },
+            "2": {
+              "47": 1,
+              "110": 1,
+              "111": 1,
+              "112": 1,
+              "113": 1,
+              "116": 1,
+              "131": 1,
+              "137": 1
+            },
+            "4": {
+              "47": 1,
+              "112": 2,
+              "113": 2,
+              "114": 3,
+              "116": 2,
+              "131": 1,
+              "164": 2
+            }
+          }
+        ],
+        [
+          "metric",
+          {
+            "1": {
+              "114": 1,
+              "164": 1
+            },
+            "3": {
+              "110": 1,
+              "112": 1,
+              "114": 3,
+              "119": 1,
+              "131": 1
+            },
+            "4": {
+              "11": 1,
+              "43": 4,
+              "47": 6,
+              "62": 1,
+              "72": 1,
+              "110": 15,
+              "111": 7,
+              "112": 10,
+              "113": 6,
+              "114": 54,
+              "116": 24,
+              "119": 1,
+              "131": 3,
+              "137": 11,
+              "150": 3,
+              "157": 1,
+              "164": 6
+            }
+          }
+        ],
+        [
+          "metrics",
+          {
+            "1": {
+              "114": 1,
+              "131": 1
+            },
+            "3": {
+              "131": 1
+            },
+            "4": {
+              "0": 1,
+              "3": 1,
+              "43": 9,
+              "47": 8,
+              "79": 1,
+              "105": 1,
+              "109": 1,
+              "110": 16,
+              "111": 10,
+              "112": 2,
+              "113": 2,
+              "114": 59,
+              "116": 6,
+              "118": 1,
+              "119": 1,
+              "129": 1,
+              "131": 16,
+              "132": 1,
+              "133": 2,
+              "135": 7,
+              "137": 8,
+              "143": 1,
+              "156": 1,
+              "158": 1
             }
           }
         ],
@@ -221829,7 +221839,7 @@
               "8": 1,
               "9": 3,
               "10": 22,
-              "11": 4,
+              "11": 5,
               "13": 2,
               "15": 2,
               "16": 1,
@@ -232032,7 +232042,7 @@
               "5": 1,
               "7": 3,
               "10": 3,
-              "11": 1,
+              "11": 2,
               "12": 2,
               "14": 15,
               "15": 2,
@@ -249184,7 +249194,27 @@
           "lint",
           "issues",
           "before",
-          "build"
+          "build",
+          "xcsym",
+          "crash",
+          "file",
+          "structured",
+          "symbolica",
+          "llm",
+          "friendly",
+          "json",
+          "output",
+          "use",
+          "any",
+          "ips",
+          "metric",
+          "kit",
+          "see",
+          "axiom",
+          "tools",
+          "skills",
+          "ref",
+          "md"
         ],
         "Physical Device Management (devicectl)": [
           "physical",
