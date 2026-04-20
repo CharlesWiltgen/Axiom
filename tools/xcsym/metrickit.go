@@ -140,6 +140,7 @@ func buildRawCrashFromMetricKit(doc *mxCrashDoc) (*RawCrash, error) {
 				Index:        fi,
 				Address:      metrickitFrameAddress(mf),
 				Image:        mf.BinaryName,
+				UUID:         uuid, // binaryUUID, normalized; "" on empty-UUID frames
 				ImageOffset:  off,
 				Symbolicated: false, // MetricKit has no symbols; symbolicate later
 			}

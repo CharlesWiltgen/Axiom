@@ -250,13 +250,14 @@ func buildRawCrash(format string, h *ipsHeader, p *ipsPayload) (*RawCrash, error
 		th.Frames = make([]Frame, 0, len(t.Frames))
 		for fi, f := range t.Frames {
 			th.Frames = append(th.Frames, Frame{
-				Index:       fi,
-				Address:     frameAddress(p.UsedImages, f),
-				Image:       frameImageName(p.UsedImages, f.ImageIndex),
-				ImageOffset: int(jsonNumberInt(f.ImageOffset)),
-				Symbol:      f.Symbol,
-				File:        f.SourceFile,
-				Line:        f.SourceLine,
+				Index:        fi,
+				Address:      frameAddress(p.UsedImages, f),
+				Image:        frameImageName(p.UsedImages, f.ImageIndex),
+				UUID:         frameImageUUID(p.UsedImages, f.ImageIndex),
+				ImageOffset:  int(jsonNumberInt(f.ImageOffset)),
+				Symbol:       f.Symbol,
+				File:         f.SourceFile,
+				Line:         f.SourceLine,
 				Symbolicated: f.Symbol != "",
 			})
 		}
@@ -476,6 +477,17 @@ func frameImageName(images []rawUsedImage, idx int) string {
 		return ""
 	}
 	return images[idx].Name
+}
+
+// frameImageUUID returns the normalized UUID for the usedImage at imageIndex
+// so Frame.UUID can be populated at parse time. Out-of-range or empty-UUID
+// entries return "" — symbolicate skips such frames rather than misattributing
+// them.
+func frameImageUUID(images []rawUsedImage, idx int) string {
+	if idx < 0 || idx >= len(images) {
+		return ""
+	}
+	return NormalizeUUID(strings.TrimSpace(images[idx].UUID))
 }
 
 // parseUintFlexible handles the variety of encodings Apple uses for numeric

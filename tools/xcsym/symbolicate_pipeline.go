@@ -27,43 +27,11 @@ func SymbolicateForTier(ctx context.Context, raw *RawCrash, images ImageStatus, 
 		return
 	}
 
-	// Map image name → (UUID, arch, loadAddress) so we can look up by Frame.Image.
-	imageByName := make(map[string]UsedImage)
-	for _, img := range raw.UsedImages {
-		imageByName[img.Name] = img
-	}
+	g := buildFrameGroups(raw, threadIdxs)
 
-	// Group unsymbolicated frames by image UUID so we batch one atos call
-	// per image. Keep a back-reference so we can stamp results into the
-	// right frame after atos returns.
-	type frameRef struct{ ti, fi int }
-	groupRefs := make(map[string][]frameRef)
-	groupAddrs := make(map[string][]string)
-	for _, ti := range threadIdxs {
-		for fi, f := range raw.Threads[ti].Frames {
-			if f.Symbolicated {
-				continue
-			}
-			img, ok := imageByName[f.Image]
-			if !ok || img.UUID == "" {
-				continue
-			}
-			if f.Address == "" {
-				continue
-			}
-			groupRefs[img.UUID] = append(groupRefs[img.UUID], frameRef{ti, fi})
-			groupAddrs[img.UUID] = append(groupAddrs[img.UUID], f.Address)
-		}
-	}
-
-	imageByUUID := make(map[string]UsedImage)
-	for _, img := range raw.UsedImages {
-		imageByUUID[img.UUID] = img
-	}
-
-	for uuid, refs := range groupRefs {
-		addrs := groupAddrs[uuid]
-		img, ok := imageByUUID[uuid]
+	for uuid, refs := range g.refs {
+		addrs := g.addrs[uuid]
+		img, ok := g.imagesByUUID[uuid]
 		if !ok {
 			continue
 		}
@@ -91,6 +59,63 @@ func SymbolicateForTier(ctx context.Context, raw *RawCrash, images ImageStatus, 
 			frame.Symbolicated = true
 		}
 	}
+}
+
+// frameRef locates a frame inside raw.Threads by thread and frame index,
+// so atos results can be stamped back into the right Frame once grouped
+// calls return.
+type frameRef struct{ ti, fi int }
+
+// frameGroups holds unsymbolicated frames grouped by image UUID. Keying by
+// UUID (plumbed into Frame.UUID at parse time) prevents cross-attribution
+// when two UsedImages share a Name — a real case with multi-framework copies
+// and MetricKit's binaryName-can-repeat semantics. See axiom-mv5.
+type frameGroups struct {
+	refs         map[string][]frameRef // UUID → frame back-references
+	addrs        map[string][]string   // UUID → atos addresses (parallel to refs)
+	imagesByUUID map[string]UsedImage
+}
+
+// buildFrameGroups returns the per-UUID grouping the symbolicate pass feeds
+// to atos. Frames are skipped (not crashed on) when:
+//   - already symbolicated (on-device atos filled them in)
+//   - Frame.UUID is empty (imageIndex was out of range at parse time)
+//   - UsedImages has no entry for that UUID (defensive)
+//   - Address is empty (no meaningful atos input)
+func buildFrameGroups(raw *RawCrash, threadIdxs []int) frameGroups {
+	g := frameGroups{
+		refs:         make(map[string][]frameRef),
+		addrs:        make(map[string][]string),
+		imagesByUUID: make(map[string]UsedImage),
+	}
+	for _, img := range raw.UsedImages {
+		if img.UUID == "" {
+			continue
+		}
+		g.imagesByUUID[img.UUID] = img
+	}
+	for _, ti := range threadIdxs {
+		if ti < 0 || ti >= len(raw.Threads) {
+			continue
+		}
+		for fi, f := range raw.Threads[ti].Frames {
+			if f.Symbolicated {
+				continue
+			}
+			if f.UUID == "" {
+				continue
+			}
+			if _, ok := g.imagesByUUID[f.UUID]; !ok {
+				continue
+			}
+			if f.Address == "" {
+				continue
+			}
+			g.refs[f.UUID] = append(g.refs[f.UUID], frameRef{ti, fi})
+			g.addrs[f.UUID] = append(g.addrs[f.UUID], f.Address)
+		}
+	}
+	return g
 }
 
 // threadsForTier returns the indices of threads that should be symbolicated

@@ -79,6 +79,13 @@ func TestParseMetricKit_SwiftForcedUnwrap(t *testing.T) {
 	if raw.UsedImages[0].Arch != "arm64" {
 		t.Errorf("usedImages[0].Arch = %q, want arm64", raw.UsedImages[0].Arch)
 	}
+	// Frame.UUID is plumbed from mf.BinaryUUID so the symbolicate pipeline
+	// can group by UUID instead of binaryName (two images can share a name).
+	for fi, f := range raw.Threads[0].Frames {
+		if f.UUID != "AABBCCDD-EEFF-0011-2233-445566778899" {
+			t.Errorf("frame[%d].UUID = %q, want MyApp UUID", fi, f.UUID)
+		}
+	}
 }
 
 func TestParseMetricKit_ExceptionTypeMap(t *testing.T) {
