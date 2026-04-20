@@ -197,7 +197,7 @@ Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`
 ls -lt ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -5
 
 # Full triage in one call (reads pattern_tag, crashed-thread frames, dSYM matches)
-${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <path-to-ips>
+xcsym crash --format=summary <path-to-ips>
 ```
 
 Use the returned `pattern_tag` to route the fix:

@@ -10,11 +10,9 @@ xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), and Apple's 
 
 `.crash` text is the format Xcode Organizer exposes when a user chooses "Show in Finder" on a TestFlight crash — `.xccrashpoint` bundles nest `.crash` files under `Filters/…/Logs/`. xcsym parses either the raw file or the full bundle path.
 
-## Binary Location
+## Invocation
 
-```bash
-${CLAUDE_PLUGIN_ROOT}/bin/xcsym
-```
+`xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xcsym <subcommand>` — no prefix, no path lookup.
 
 ## When to Use
 

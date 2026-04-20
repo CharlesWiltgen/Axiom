@@ -48,7 +48,7 @@ You are an expert at interpreting iOS/macOS crash reports. You lean on `xcsym` f
 1. Check for xcsym:
 
 ```bash
-command -v xcsym || ls "${CLAUDE_PLUGIN_ROOT}/bin/xcsym"
+command -v xcsym
 ```
 
 If present, run:

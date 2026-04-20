@@ -168,7 +168,7 @@ Before proceeding to a pattern:
 # 1. Check crash logs in App Store Connect
 # Xcode Organizer > Crashes > Filter by version
 # Export the .ips and symbolicate with xcsym:
-${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <path-to-ips>
+xcsym crash --format=summary <path-to-ips>
 # The `pattern_tag` field tells you the crash class at a glance:
 #   swift_forced_unwrap → nil-unwrap on reviewer's device (often a missing locale/permission path)
 #   swift_concurrency_violation → @MainActor violation only reproducing on review hardware

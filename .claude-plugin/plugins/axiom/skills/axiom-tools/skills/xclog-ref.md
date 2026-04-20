@@ -3,11 +3,9 @@
 
 xclog captures iOS simulator console output by combining `simctl launch --console` (print/debugPrint/NSLog) with `log stream --style json` (os_log/Logger). Single binary, no dependencies.
 
-## Binary Location
+## Invocation
 
-```bash
-${CLAUDE_PLUGIN_ROOT}/bin/xclog
-```
+`xclog` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xclog <subcommand>` — no prefix, no path lookup.
 
 ## When to Use
 
@@ -26,14 +24,14 @@ ${CLAUDE_PLUGIN_ROOT}/bin/xclog
 ```bash
 # 1. FIRST: Check .axiom/preferences.yaml for saved device and bundle ID
 # 2. If no preferences: Discover installed apps
-${CLAUDE_PLUGIN_ROOT}/bin/xclog list
+xclog list
 
 # 3. Find the target app's bundle_id from output
 # 4. THEN: Launch with the correct bundle ID (restarts app)
-${CLAUDE_PLUGIN_ROOT}/bin/xclog launch com.example.MyApp --timeout 30s --max-lines 200
+xclog launch com.example.MyApp --timeout 30s --max-lines 200
 
 # OR: Attach to running app without restarting (os_log only)
-${CLAUDE_PLUGIN_ROOT}/bin/xclog attach MyApp --timeout 30s --max-lines 200
+xclog attach MyApp --timeout 30s --max-lines 200
 ```
 
 ## Preferences
@@ -54,7 +52,7 @@ simulator:
 If the file exists and contains a `simulator` section, use the saved `deviceUDID` and `bundleId` for xclog commands. Skip `xclog list` unless the user asks for a different app or the saved values fail.
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/bin/xclog launch <bundleId> --device <deviceUDID> --timeout 30s --max-lines 200
+xclog launch <bundleId> --device <deviceUDID> --timeout 30s --max-lines 200
 ```
 
 If the file doesn't exist or the `simulator` section is missing, fall back to `xclog list` discovery.
@@ -79,8 +77,8 @@ Write the same `simulator:` structure shown in Reading Preferences above.
 ### list — Discover Installed Apps
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/bin/xclog list
-${CLAUDE_PLUGIN_ROOT}/bin/xclog list --device <udid>
+xclog list
+xclog list --device <udid>
 ```
 
 Output (JSON lines):
@@ -95,19 +93,19 @@ Launches the app and captures ALL output: print(), debugPrint(), NSLog(), os_log
 
 ```bash
 # Basic launch (JSON output, runs until app exits or Ctrl-C)
-${CLAUDE_PLUGIN_ROOT}/bin/xclog launch com.example.MyApp
+xclog launch com.example.MyApp
 
 # Bounded capture (recommended for LLM use)
-${CLAUDE_PLUGIN_ROOT}/bin/xclog launch com.example.MyApp --timeout 30s --max-lines 200
+xclog launch com.example.MyApp --timeout 30s --max-lines 200
 
 # Filter by subsystem
-${CLAUDE_PLUGIN_ROOT}/bin/xclog launch com.example.MyApp --subsystem com.example.MyApp.networking
+xclog launch com.example.MyApp --subsystem com.example.MyApp.networking
 
 # Filter by regex
-${CLAUDE_PLUGIN_ROOT}/bin/xclog launch com.example.MyApp --filter "error|warning|crash"
+xclog launch com.example.MyApp --filter "error|warning|crash"
 
 # Save to file
-${CLAUDE_PLUGIN_ROOT}/bin/xclog launch com.example.MyApp --output /tmp/console.log --timeout 60s
+xclog launch com.example.MyApp --output /tmp/console.log --timeout 60s
 ```
 
 ### attach — Monitor Running Process
@@ -116,13 +114,13 @@ Attaches to a running process via os_log only. Does NOT capture print()/debugPri
 
 ```bash
 # By process name
-${CLAUDE_PLUGIN_ROOT}/bin/xclog attach MyApp --timeout 30s
+xclog attach MyApp --timeout 30s
 
 # By PID
-${CLAUDE_PLUGIN_ROOT}/bin/xclog attach 12345 --max-lines 100
+xclog attach 12345 --max-lines 100
 
 # Filter for errors only
-${CLAUDE_PLUGIN_ROOT}/bin/xclog attach MyApp --filter "(?i)error|fault"
+xclog attach MyApp --filter "(?i)error|fault"
 ```
 
 ### show — Historical Log Search (Simulator + Physical Device)
@@ -131,16 +129,16 @@ Searches recent logs without needing proactive capture. Works with both simulato
 
 ```bash
 # Simulator: show last 5 minutes of MyApp logs
-${CLAUDE_PLUGIN_ROOT}/bin/xclog show MyApp --last 5m --max-lines 200
+xclog show MyApp --last 5m --max-lines 200
 
 # Simulator: show last 10 minutes, errors only
-${CLAUDE_PLUGIN_ROOT}/bin/xclog show MyApp --last 10m --max-lines 100 --filter "(?i)error|fault"
+xclog show MyApp --last 10m --max-lines 100 --filter "(?i)error|fault"
 
 # Physical device: collect and show logs (device must be connected + unlocked)
-${CLAUDE_PLUGIN_ROOT}/bin/xclog show MyApp --device-udid 00008101-... --last 5m --max-lines 200
+xclog show MyApp --device-udid 00008101-... --last 5m --max-lines 200
 
 # By PID
-${CLAUDE_PLUGIN_ROOT}/bin/xclog show 12345 --last 2m
+xclog show 12345 --last 2m
 ```
 
 **Physical device workflow**: `show --device-udid` runs `log collect` to pull a log archive from the device over USB, then parses it locally. The device must be connected and unlocked.
@@ -184,8 +182,8 @@ Fields not applicable to a source are omitted (not null).
 ### Human-Readable Mode
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/bin/xclog attach MyApp --human
-${CLAUDE_PLUGIN_ROOT}/bin/xclog attach MyApp --human --no-color
+xclog attach MyApp --human
+xclog attach MyApp --human --no-color
 ```
 
 ## Options Reference
@@ -244,13 +242,13 @@ os_log levels indicate severity. For crash diagnosis, focus on `error` and `faul
 **Note**: `--filter` matches against the **message text**, not the JSON output. To filter by level, use jq:
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/bin/xclog launch com.example.MyApp --timeout 30s 2>/dev/null | jq -c 'select(.level == "error" or .level == "fault")'
+xclog launch com.example.MyApp --timeout 30s 2>/dev/null | jq -c 'select(.level == "error" or .level == "fault")'
 ```
 
 For text-based filtering, `--filter` works on message content:
 ```bash
 # Filter messages containing "error" or "failed" (case-insensitive)
-${CLAUDE_PLUGIN_ROOT}/bin/xclog launch com.example.MyApp --filter "(?i)error|failed"
+xclog launch com.example.MyApp --filter "(?i)error|failed"
 ```
 
 ### Common Subsystem Patterns

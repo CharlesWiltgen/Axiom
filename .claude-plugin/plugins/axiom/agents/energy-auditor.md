@@ -279,7 +279,7 @@ Energy anti-patterns surface in the field as system terminations, not slow-drain
 | `jetsam_oom` | Background memory growth — often a timer/animation retaining state across backgrounding |
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <path-to-ips>
+xcsym crash --format=summary <path-to-ips>
 ```
 
 Use the crashed-thread frames to pinpoint which Phase 1 background-activity owner is the culprit.
