@@ -166,6 +166,108 @@ func TestSymbolicateWarning_FormatsErrKinds(t *testing.T) {
 	}
 }
 
+// TestSymbolicateForTier_NameCollisionWriteBackHitsCorrectFrames is the
+// integration counterpart to TestBuildFrameGroups_NameCollisionKeepsFramesSeparate
+// (axiom-232). buildFrameGroups produces per-UUID refs slices; this test
+// drives the full SymbolicateForTier pipeline through the stamping loop and
+// confirms the Symbol/File/Line write-back lands on the right Frame when
+// two UsedImages share a Name "Foo" but have distinct UUIDs.
+//
+// Without per-UUID grouping (the pre-axiom-mv5 name-keyed code), the
+// stamping loop would cross-attribute results: "Foo" frames at addresses
+// 0x1100 and 0x2100 would all symbolicate against whichever UUID won
+// last-write-wins. With UUID grouping, AAAA's frame gets AAAA's symbol,
+// BBBB's frame gets BBBB's symbol, no cross-pollution.
+//
+// Uses the resolveBatchFn seam so the test runs without atos. The stub
+// branches on the address list it receives, returning a canned symbol
+// per address that lets the assertion verify which UUID's batch the
+// stamper applied to which Frame.
+func TestSymbolicateForTier_NameCollisionWriteBackHitsCorrectFrames(t *testing.T) {
+	const (
+		uuidA = "AAAAAAAA-0000-0000-0000-000000000001"
+		uuidB = "BBBBBBBB-0000-0000-0000-000000000002"
+	)
+	raw := &RawCrash{
+		UsedImages: []UsedImage{
+			{UUID: uuidA, Name: "Foo", LoadAddress: 0x1000, Arch: "arm64"},
+			{UUID: uuidB, Name: "Foo", LoadAddress: 0x2000, Arch: "arm64"},
+		},
+		Threads: []Thread{{
+			Index:     0,
+			Triggered: true,
+			Frames: []Frame{
+				{Index: 0, Address: "0x1100", Image: "Foo", UUID: uuidA},
+				{Index: 1, Address: "0x2100", Image: "Foo", UUID: uuidB},
+			},
+		}},
+		CrashedIdx: 0,
+	}
+
+	// /bin/ls exists on every macOS host — Find's os.Stat on the explicit
+	// override succeeds, returning a DsymEntry without ever inspecting the
+	// file's UUIDs (matches TestFindDsym_ExplicitByUUID_TrustsWithoutSliceVerification).
+	// resolveBatchFn never actually shells out, so /bin/ls's content is
+	// irrelevant — it just needs to be a path Find will accept.
+	d := NewDiscoverer(DiscovererOptions{
+		ExplicitByUUID: map[string]string{
+			uuidA: "/bin/ls",
+			uuidB: "/bin/ls",
+		},
+		SkipDefaults:  true,
+		SkipCache:     true,
+		SkipSpotlight: true,
+	})
+
+	// Stub resolveBatchFn. The pipeline calls it once per UUID with that
+	// UUID's address list — so the address determines which canned result
+	// to return. If grouping ever cross-pollinates, the stub will see an
+	// address it doesn't recognize and the test fails on the address-key
+	// lookup rather than on the final assertion.
+	orig := resolveBatchFn
+	t.Cleanup(func() { resolveBatchFn = orig })
+	canned := map[string]*SymbolResult{
+		"0x1100": {Symbol: "fooA", File: "A.swift", Line: 11, Symbolicated: true},
+		"0x2100": {Symbol: "fooB", File: "B.swift", Line: 22, Symbolicated: true},
+	}
+	resolveBatchFn = func(_ context.Context, _, _, _ string, addresses []string) ([]*SymbolResult, error) {
+		out := make([]*SymbolResult, len(addresses))
+		for i, a := range addresses {
+			r, ok := canned[a]
+			if !ok {
+				return nil, errors.New("unexpected address in batch: " + a)
+			}
+			out[i] = r
+		}
+		return out, nil
+	}
+
+	warnings := SymbolicateForTier(context.Background(), raw, ImageStatus{}, d, TierStandard)
+	if len(warnings) != 0 {
+		t.Fatalf("warnings = %v, want none (every batch resolves cleanly)", warnings)
+	}
+
+	// Frame 0 belongs to AAAA → must carry fooA / A.swift / 11.
+	f0 := raw.Threads[0].Frames[0]
+	if !f0.Symbolicated {
+		t.Errorf("frame 0 (UUID %s) not stamped Symbolicated=true", uuidA)
+	}
+	if f0.Symbol != "fooA" || f0.File != "A.swift" || f0.Line != 11 {
+		t.Errorf("frame 0 = {%q, %q, %d}, want {fooA, A.swift, 11} — write-back cross-attributed from BBBB",
+			f0.Symbol, f0.File, f0.Line)
+	}
+
+	// Frame 1 belongs to BBBB → must carry fooB / B.swift / 22.
+	f1 := raw.Threads[0].Frames[1]
+	if !f1.Symbolicated {
+		t.Errorf("frame 1 (UUID %s) not stamped Symbolicated=true", uuidB)
+	}
+	if f1.Symbol != "fooB" || f1.File != "B.swift" || f1.Line != 22 {
+		t.Errorf("frame 1 = {%q, %q, %d}, want {fooB, B.swift, 22} — write-back cross-attributed from AAAA",
+			f1.Symbol, f1.File, f1.Line)
+	}
+}
+
 // TestBuildFrameGroups_SkipsPresymbolicatedAndEmptyAddress: both already-
 // symbolicated frames and frames with missing addresses are no-ops for atos,
 // so they must not appear in the grouping output.

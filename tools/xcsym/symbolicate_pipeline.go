@@ -49,7 +49,7 @@ func SymbolicateForTier(ctx context.Context, raw *RawCrash, images ImageStatus, 
 			continue
 		}
 		loadAddr := fmt.Sprintf("0x%x", img.LoadAddress)
-		results, err := ResolveBatch(ctx, entry.Path, entry.Arch, loadAddr, addrs)
+		results, err := resolveBatchFn(ctx, entry.Path, entry.Arch, loadAddr, addrs)
 		if err != nil {
 			warnings = append(warnings, symbolicateWarning(uuid, img.Name, "atos", err, len(refs)))
 			continue
