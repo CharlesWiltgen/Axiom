@@ -2,13 +2,20 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
 // SymbolicateForTier mutates raw.Threads so each Frame that has a resolvable
-// dSYM gains Symbol/File/Line. Runs per-image batches through atos. Silent
-// on per-image failures — the frame stays unsymbolicated with Raw untouched
-// so the rest of the pipeline still produces output.
+// dSYM gains Symbol/File/Line. Runs per-image batches through atos. Returns
+// a (possibly empty) slice of warnings describing per-image failures —
+// dSYM not found, atos returned nothing, atos errored out. The caller
+// threads these into CrashReport.Warnings so the user sees why frames
+// didn't symbolicate instead of just a silent `"symbolicated": false`.
+// axiom-ogk.
+//
+// Frame-level Raw is left untouched on any per-image failure so the rest
+// of the pipeline still produces output.
 //
 // Scope by tier:
 //   summary:  crashed thread only (Format will truncate to top 5)
@@ -18,16 +25,17 @@ import (
 //
 // Pre-symbolicated frames (Symbolicated=true already, which .ips v2 often
 // provides via on-device atos) are skipped. Only zero-symbol frames ask atos.
-func SymbolicateForTier(ctx context.Context, raw *RawCrash, images ImageStatus, d *Discoverer, tier string) {
+func SymbolicateForTier(ctx context.Context, raw *RawCrash, images ImageStatus, d *Discoverer, tier string) []string {
 	if raw == nil || d == nil {
-		return
+		return nil
 	}
 	threadIdxs := threadsForTier(raw, tier)
 	if len(threadIdxs) == 0 {
-		return
+		return nil
 	}
 
 	g := buildFrameGroups(raw, threadIdxs)
+	var warnings []string
 
 	for uuid, refs := range g.refs {
 		addrs := g.addrs[uuid]
@@ -37,13 +45,16 @@ func SymbolicateForTier(ctx context.Context, raw *RawCrash, images ImageStatus, 
 		}
 		entry, err := d.Find(ctx, uuid, img.Arch)
 		if err != nil {
+			warnings = append(warnings, symbolicateWarning(uuid, img.Name, "discover", err, len(refs)))
 			continue
 		}
 		loadAddr := fmt.Sprintf("0x%x", img.LoadAddress)
 		results, err := ResolveBatch(ctx, entry.Path, entry.Arch, loadAddr, addrs)
 		if err != nil {
+			warnings = append(warnings, symbolicateWarning(uuid, img.Name, "atos", err, len(refs)))
 			continue
 		}
+		stamped := 0
 		for i, ref := range refs {
 			if i >= len(results) || results[i] == nil {
 				continue
@@ -57,7 +68,43 @@ func SymbolicateForTier(ctx context.Context, raw *RawCrash, images ImageStatus, 
 			frame.File = r.File
 			frame.Line = r.Line
 			frame.Symbolicated = true
+			stamped++
 		}
+		// atos returned a batch but none of the addresses resolved to a
+		// symbol — usually indicates a dSYM/address-space mismatch that
+		// Find didn't catch. Worth flagging so the user sees why the
+		// symbolicated flag stayed false on these frames.
+		if stamped == 0 {
+			warnings = append(warnings, fmt.Sprintf(
+				"symbolicate: %s (UUID %s) — dSYM found but atos returned no symbols for %d frames",
+				img.Name, uuid, len(refs)))
+		}
+	}
+	return warnings
+}
+
+// symbolicateWarning builds a one-line human-readable warning for a
+// per-image symbolicate failure. Distinguishes "dSYM not found"
+// (ErrNotFound), timeout, and other errors so the reader can tell
+// recoverable cases from environmental ones. axiom-ogk.
+func symbolicateWarning(uuid, imageName, phase string, err error, frameCount int) string {
+	name := imageName
+	if name == "" {
+		name = "<unnamed>"
+	}
+	switch {
+	case errors.Is(err, ErrNotFound):
+		return fmt.Sprintf(
+			"symbolicate: %s (UUID %s) — dSYM not found; %d frames left unsymbolicated",
+			name, uuid, frameCount)
+	case IsTimeoutError(err):
+		return fmt.Sprintf(
+			"symbolicate: %s (UUID %s) — %s timed out; %d frames left unsymbolicated",
+			name, uuid, phase, frameCount)
+	default:
+		return fmt.Sprintf(
+			"symbolicate: %s (UUID %s) — %s failed (%v); %d frames left unsymbolicated",
+			name, uuid, phase, err, frameCount)
 	}
 }
 
