@@ -473,6 +473,26 @@ func TestCategorize_R_watchdog_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-user-quit-01 -----------------------------------------------------
+
+func TestCategorize_R_user_quit_01_Positive(t *testing.T) {
+	raw := &RawCrash{Termination: Termination{Namespace: "FRONTBOARD", Code: "0xDEADFA11"}}
+	res := Categorize(raw)
+	if res.RuleID != "R-user-quit-01" {
+		t.Errorf("rule_id = %q, want R-user-quit-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_user_quit_01_Negative(t *testing.T) {
+	// Near miss: same code under a different namespace. User-force-quit is
+	// FRONTBOARD-only.
+	raw := &RawCrash{Termination: Termination{Namespace: "SPRINGBOARD", Code: "0xDEADFA11"}}
+	res := Categorize(raw)
+	if res.RuleID == "R-user-quit-01" {
+		t.Errorf("must not fire user_force_quit under non-FRONTBOARD namespace")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -513,6 +533,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-mtc-01":            {positive: true, negative: true},
 	"R-abort-01":          {positive: true, negative: true},
 	"R-watchdog-01":       {positive: true, negative: true},
+	"R-user-quit-01":      {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).

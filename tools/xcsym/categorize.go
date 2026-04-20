@@ -227,6 +227,18 @@ var rules = []Rule{
 			return true, "termination.namespace=" + c.Termination.Namespace + " with code 0x8BADF00D (watchdog)"
 		},
 	},
+	{
+		ID: "R-user-quit-01", Tag: "user_force_quit", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if !strings.EqualFold(c.Termination.Namespace, "FRONTBOARD") {
+				return false, ""
+			}
+			if !strings.EqualFold(c.Termination.Code, "0xDEADFA11") {
+				return false, ""
+			}
+			return true, "FRONTBOARD termination 0xDEADFA11 (user force quit)"
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n
