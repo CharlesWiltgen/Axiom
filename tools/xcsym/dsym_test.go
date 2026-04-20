@@ -155,19 +155,49 @@ func TestFindDsym_Spotlight(t *testing.T) {
 	if len(strings.TrimSpace(string(out))) == 0 {
 		t.Skip("no indexed dSYMs on this host")
 	}
-	firstDsym := strings.SplitN(strings.TrimSpace(string(out)), "\n", 2)[0]
-	dwarfDir := filepath.Join(firstDsym, "Contents", "Resources", "DWARF")
-	dwarfEntries, _ := os.ReadDir(dwarfDir)
-	if len(dwarfEntries) == 0 {
-		t.Skip("first spotlight dSYM has no DWARF entries")
+	// Iterate mdfind results until we find a dSYM whose UUID is ALSO
+	// indexed by Spotlight's `com_apple_xcode_dsym_uuids` attribute.
+	// Just because a bundle is indexed by content-type doesn't mean
+	// its UUIDs were indexed — Swift Macro dSYMs in DerivedData
+	// commonly end up in this half-indexed state (visible to the
+	// content-type query but invisible to the UUID query, depending
+	// on how recently Xcode's mdimporter processed them). Without
+	// this loop the test picks the first content-type hit and may
+	// fail a UUID lookup that the Discoverer correctly reports as a
+	// miss. Cap the search to keep the test fast; if the cap is hit,
+	// skip rather than fail — the Discoverer's behavior is still
+	// correct, the environment just doesn't offer a provable round-trip.
+	const maxCandidates = 10
+	results := strings.Split(strings.TrimSpace(string(out)), "\n")
+	var chosenUUID, chosenArch string
+	for i, candidate := range results {
+		if i >= maxCandidates {
+			break
+		}
+		dwarfDir := filepath.Join(candidate, "Contents", "Resources", "DWARF")
+		dwarfEntries, _ := os.ReadDir(dwarfDir)
+		if len(dwarfEntries) == 0 {
+			continue
+		}
+		uuids, err := ReadUUIDs(context.Background(), filepath.Join(dwarfDir, dwarfEntries[0].Name()))
+		if err != nil || len(uuids) == 0 {
+			continue
+		}
+		// Verify Spotlight indexed this UUID before we try Find().
+		check, err := mdfindPathsForUUID(context.Background(), uuids[0].UUID)
+		if err != nil || len(check) == 0 {
+			continue
+		}
+		chosenUUID = uuids[0].UUID
+		chosenArch = uuids[0].Arch
+		break
 	}
-	uuids, err := ReadUUIDs(context.Background(), filepath.Join(dwarfDir, dwarfEntries[0].Name()))
-	if err != nil || len(uuids) == 0 {
-		t.Skip("cannot read UUIDs from spotlight result")
+	if chosenUUID == "" {
+		t.Skip("no Spotlight-indexed dSYM with queryable UUID on this host")
 	}
 
 	d := NewDiscoverer(DiscovererOptions{SkipDefaults: true})
-	entry, err := d.Find(context.Background(), uuids[0].UUID, uuids[0].Arch)
+	entry, err := d.Find(context.Background(), chosenUUID, chosenArch)
 	if err != nil {
 		t.Fatalf("Find via spotlight: %v", err)
 	}
