@@ -11,9 +11,10 @@ Welcome to Axiom! This guide helps you find the right skills for your iOS develo
 
 Axiom provides skills, agents, and commands that enhance Claude's iOS development capabilities:
 
-- **Skills** — Domain knowledge Claude uses to help you (68 skills)
-- **Agents** — Autonomous tools that scan and analyze code (18 agents)
-- **Commands** — Explicit actions you can invoke (20 commands)
+- **Skills** — Domain knowledge Claude uses to help you
+- **Agents** — Autonomous tools that scan and analyze code
+- **Commands** — Explicit actions you can invoke
+- **Bundled tools** — `xclog` (simulator console capture) and `xcsym` (crash symbolication) ship as native binaries and are used automatically when the task calls for them
 
 **You don't need to memorize anything.** Just describe your problem — Claude will use the right skill automatically.
 
@@ -31,6 +32,8 @@ Tell Claude what's happening:
 - "My build is failing with [error]" → Claude uses xcode-debugging
 - "My app has a memory leak" → Claude uses memory-debugging
 - "SwiftUI view isn't updating" → Claude uses swiftui-debugging
+- "Symbolicate this .ips crash" or "Why is my TestFlight crash unsymbolicated?" → Claude uses xcsym via the crash-analyzer agent
+- "Show me what the app is logging" → Claude uses xclog
 
 ### Building Something New?
 

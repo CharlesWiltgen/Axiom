@@ -22,6 +22,8 @@ features:
     details: Catch VoiceOver issues, validate WCAG compliance, fix Dynamic Type violations, pass App Store Review accessibility requirements
   - title: 🔧 Fix Problems Fast
     details: Solve mysterious build failures, find memory leaks before users complain, prevent data races in Swift 6
+  - title: 🧰 Bundled Developer Tools
+    details: xclog captures simulator console output as structured JSON; xcsym symbolicates .ips and MetricKit crashes with automatic dSYM discovery and pattern categorization
   - title: 💾 Protect User Data
     details: Add database columns without losing data, prevent CloudKit sync failures, safely migrate from Realm
   - title: 📚 Copy-Paste Solutions
