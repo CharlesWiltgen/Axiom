@@ -203,25 +203,9 @@ struct ListView: View {
     }
 }
 
-// ✅ RIGHT (pre-iOS 17): Build the binding in init and cache it, not in body
-@State var name = ""
-@State var nameBinding: Binding<String>
-
-init() {
-    _name = State(initialValue: "")
-    let storage = State(initialValue: "")
-    _nameBinding = State(initialValue: Binding(
-        get: { storage.wrappedValue },
-        set: { storage.wrappedValue = $0 }
-    ))
-}
-
-var body: some View {
-    TextField("Name", text: nameBinding)
-}
 ```
 
-**Fix it**: Pass `$state` directly when possible. For @Observable objects (iOS 17+), use `@Bindable`. If you truly need a custom binding (pre-iOS 17 only), build it in `init` and store it eagerly — never create or mutate the binding from inside `body`.
+**Fix it**: Prefer `$state` directly. For @Observable objects (iOS 17+), use `@Bindable`. Pre-iOS 17 custom `Binding` construction inside `body` is the anti-pattern — the binding's `get`/`set` closures re-bind every render, so children see a new binding identity each cycle. If you must build a custom `Binding`, keep it out of `body`: pass `$state` to children directly instead, or use the projectedValue pattern from an @Observable model (iOS 17+).
 
 ---
 
