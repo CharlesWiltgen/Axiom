@@ -63,9 +63,10 @@ The exit code narrows the triage path:
 | Exit | Meaning | Next step |
 |---|---|---|
 | 0 | All images matched | Read `pattern_tag`; go straight to fix guidance |
-| 2 | Main dSYM missing | Locate the archive or set `--dsym-paths` to where it lives |
+| 2 | Main dSYM missing (or input not found/unreadable) | Locate the archive or set `XCSYM_DSYM_PATHS` to where it lives |
 | 3 | Main UUID mismatch | Different build than the archive on disk — `xcsym find-dsym <uuid>` |
 | 4 | Main arch mismatch | Pass `--arch` to `find-dsym` (arm64 vs arm64e) |
+| 6 | Command timeout | Retry with `--no-spotlight`; if still timing out, atos is the bottleneck |
 | 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |
 
 **Flag placement.** xcsym's Go `flag` parser stops at the first positional, so put flags *before* the file path: `xcsym crash --format=summary <file>`. The reverse order exits 1 with a usage error.
@@ -157,13 +158,37 @@ User pastes a `.ips`. The agent:
 4. Reads the first frame of `crashed_thread` → `ContentView.body.getter`.
 5. Reports: "Force-unwrap in `ContentView.body.getter` at line X. The pattern is consistent across all 3 frames. Fix: replace the `!` with `guard let` for the optional that becomes `nil`."
 
-### dSYM miss
+### dSYM UUID mismatch (exit 3)
 
-Exit code is 3 (UUID mismatch). The agent:
+Exit code is 3. The agent:
 1. Runs `xcsym verify <file>` for the full per-image breakdown.
 2. Extracts the expected UUID from the output.
 3. Runs `xcsym find-dsym <uuid>` to see if a matching dSYM exists anywhere.
 4. Reports: "Your archive's UUID doesn't match the crash. Either you shipped a different build, or the archive was rebuilt. Download the dSYM for UUID `…` from App Store Connect."
+
+### Main dSYM missing (exit 2)
+
+Exit code is 2 and the crash parsed cleanly (no `"error":"hang_report"` on stdout). The agent:
+1. Reads `images.missing[0].uuid` from the JSON — this is the main app's UUID.
+2. Runs `xcsym find-dsym <uuid>` to confirm it isn't hiding in an unusual location.
+3. If `find-dsym` also exits 2: no dSYM exists anywhere discoverable.
+4. Reports: "No dSYM found for main UUID `<uuid>`. Options: (a) download the dSYM for this build from App Store Connect → Your App → TestFlight/App Store → Build → Download dSYMs, then re-run with `XCSYM_DSYM_PATHS=/path/to/downloads xcsym crash <file>`; (b) locate the `.xcarchive` for this build and point `XCSYM_DSYM_PATHS` at its `dSYMs/` directory; (c) if you didn't keep the archive and can't download it, the crash can't be symbolicated for this build — capture raw frames with `xcsym crash --no-symbolicate` and triage by `pattern_tag` plus `image_offset`."
+
+Do NOT confuse exit 2 with exit 3:
+- Exit 2 = no dSYM at all
+- Exit 3 = a dSYM exists but its UUID doesn't match the crash
+
+Checking `images.missing` vs `images.mismatched` in the JSON disambiguates without re-reading the exit code.
+
+### Command timeout (exit 6)
+
+Exit code is 6 after a long wait (typically >30s on default settings). The agent:
+1. First-line retry: `xcsym crash <file> --no-spotlight --format=standard`. Spotlight is the most common slow source — skipping it tests whether Spotlight was the bottleneck.
+2. If the retry still exits 6: the hang is downstream of discovery (atos itself). Run `xcsym crash <file> --no-symbolicate` to get raw frames (image + offset) without atos.
+3. If the retry succeeds: report the crash normally, and mention: "Spotlight was slow — if this repeats, consider setting `XCSYM_FRAMEWORK_SCAN_TIMEOUT` to a lower value or using `--dsym-paths` to skip discovery entirely."
+4. Reports: "xcsym timed out on [Spotlight / atos]. [Retry outcome]. [Actionable next step based on which retry succeeded.]"
+
+Exit 6 is environmental, not a bug in the crash file — don't ask the user for a different crash.
 
 ## When to Escalate
 
