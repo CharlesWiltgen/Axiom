@@ -54,15 +54,32 @@ if guide_count > 0 or diag_count > 0:
 
 **Apple for-LLM Documentation**: Xcode detected with {guide_count} guides + {diag_count} Swift diagnostics. Use `axiom-apple-docs` router for authoritative Apple API references."""
 
-# Detect xclog binary
+# Detect xclog binary. Same size-floor logic as the xcsym block below
+# (axiom-9w0, parallel to axiom-1kn): plugin marketplace downloads can
+# truncate, leaving an executable bit on a partial binary that produces
+# opaque "exec format error" / segfault on first call. xclog ships as a
+# ~4 MB universal binary; 1 MB is well below any plausible legitimate
+# size and well above what truncation produces.
 xclog_path = f"{plugin_root}/bin/xclog"
 xclog_context = ""
-if os.path.isfile(xclog_path) and os.access(xclog_path, os.X_OK):
-    xclog_context = f"""
+MIN_XCLOG_SIZE = 1_000_000
+try:
+    if os.path.isfile(xclog_path):
+        xclog_size = os.path.getsize(xclog_path)
+        if xclog_size < MIN_XCLOG_SIZE:
+            xclog_context = f"""
+
+---
+
+**xclog binary appears truncated** ({xclog_size:,} bytes at `{xclog_path}`; expected ≥{MIN_XCLOG_SIZE:,}). Likely cause: interrupted plugin install or disk-full mid-write. Tell the user to reinstall the Axiom plugin. Do NOT call `xclog` or `/axiom:console` — fall back to `xcrun simctl spawn ... log stream` for any console capture until the user reinstalls."""
+        elif os.access(xclog_path, os.X_OK):
+            xclog_context = f"""
 
 ---
 
 **xclog** (simulator console capture): Available at `{xclog_path}`. Captures print()/os_log()/Logger output as structured JSON. Use `xclog list` to find bundle IDs, `xclog launch <bundle-id> --timeout 30s --max-lines 200` for bounded capture. For crash diagnosis workflow, see `axiom-tools` (skills/xclog-ref.md). Command: `/axiom:console`."""
+except OSError:
+    pass
 
 # Detect xcsym binary. The size floor (axiom-1kn) catches marketplace-
 # download truncation that os.access(X_OK) misses: a partially-written
