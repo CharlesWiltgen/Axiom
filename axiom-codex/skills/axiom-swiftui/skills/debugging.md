@@ -203,22 +203,25 @@ struct ListView: View {
     }
 }
 
-// ✅ RIGHT (pre-iOS 17): Create binding once, not in body
+// ✅ RIGHT (pre-iOS 17): Build the binding in init and cache it, not in body
 @State var name = ""
-@State var nameBinding: Binding<String>?
+@State var nameBinding: Binding<String>
+
+init() {
+    _name = State(initialValue: "")
+    let storage = State(initialValue: "")
+    _nameBinding = State(initialValue: Binding(
+        get: { storage.wrappedValue },
+        set: { storage.wrappedValue = $0 }
+    ))
+}
 
 var body: some View {
-    if nameBinding == nil {
-        nameBinding = Binding(
-            get: { name },
-            set: { name = $0 }
-        )
-    }
-    return TextField("Name", text: nameBinding!)
+    TextField("Name", text: nameBinding)
 }
 ```
 
-**Fix it**: Pass `$state` directly when possible. For @Observable objects (iOS 17+), use `@Bindable`. If creating custom bindings (pre-iOS 17), create them in `init` or cache them, not in `body`.
+**Fix it**: Pass `$state` directly when possible. For @Observable objects (iOS 17+), use `@Bindable`. If you truly need a custom binding (pre-iOS 17 only), build it in `init` and store it eagerly — never create or mutate the binding from inside `body`.
 
 ---
 
@@ -981,6 +984,7 @@ When you're under deadline pressure, you'll be tempted to shortcuts that hide pr
    - Does the view have @State that you're modifying directly? → Struct Mutation
    - Did the view move into a conditional recently? → View Recreation
    - Are you passing bindings to children that have changed? → Lost Binding Identity
+   - Does a sheet/popover callback update the same parent state it receives? → Closure Re-Init
    - Only if none of above: Missing Observer
 3. Fix the actual root cause, not with @ObservedObject band-aid
 
@@ -1290,7 +1294,7 @@ xcodebuild build -scheme YourScheme
 If the bug is deep in your app, use debug deep links to navigate directly:
 
 ```bash
-# 1. Add debug deep links (see deep-link-debugging skill)
+# 1. Add debug deep links (see axiom-swift (skills/deep-link-debugging.md))
 # Example: debug://settings, debug://recipe-detail?id=123
 
 # 2. Navigate and capture
