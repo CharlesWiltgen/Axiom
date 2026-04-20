@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-04-20T02:17:08.270Z",
+  "generatedAt": "2026-04-20T02:18:33.606Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -28483,8 +28483,8 @@
     },
     "axiom-tools": {
       "name": "axiom-tools",
-      "description": "Use when asking how to use Axiom, what skills are available, getting started with Axiom, or capturing iOS simulator console output with xclog.",
-      "content": "\n# Axiom Tools & Onboarding\n\nThis suite covers Axiom itself — how to use it, what's available, and the tools that ship with it.\n\n## Routing\n\n| Question | Read |\n|----------|------|\n| \"How do I use Axiom?\" / \"What skills are available?\" | [skills/getting-started.md](skills/getting-started.md) |\n| \"How do I capture console output?\" / \"What is xclog?\" | [skills/xclog-ref.md](skills/xclog-ref.md) |\n\n## Using Axiom Skills\n\nThe content below is the core discipline for Axiom's routing system — it establishes the rule that Axiom skills must be checked before any iOS/Swift response.\n\n<EXTREMELY-IMPORTANT>\nIf you think there is even a 1% chance an Axiom skill might apply to your iOS/Swift task, you ABSOLUTELY MUST check for the skill.\n\nIF AN AXIOM SKILL APPLIES TO YOUR iOS/SWIFT TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.\n\nThis is not negotiable. This is not optional. You cannot rationalize your way out of this.\n</EXTREMELY-IMPORTANT>\n\n## The Rule\n\n**Check for Axiom skills BEFORE ANY RESPONSE when working with iOS/Swift projects.** This includes clarifying questions. Even 1% chance means check first.\n\n## Red Flags — iOS-Specific Rationalizations\n\nThese thoughts mean STOP—you're rationalizing:\n\n| Thought | Reality |\n|---------|---------|\n| \"This is just a simple build issue\" | Build failures have patterns. Check axiom-build first. |\n| \"I can fix this SwiftUI bug quickly\" | SwiftUI issues have hidden gotchas. Check axiom-swiftui first. |\n| \"Let me just add this database column\" | Schema changes risk data loss. Check axiom-data first. |\n| \"This async code looks straightforward\" | Swift concurrency has subtle rules. Check axiom-concurrency first. |\n| \"I'll debug the memory leak manually\" | Leak patterns are documented. Check axiom-performance first. |\n| \"Let me explore the Xcode project first\" | Axiom skills tell you HOW to explore. Check first. |\n| \"I remember how to do this from last time\" | iOS changes constantly. Skills are up-to-date. |\n| \"This iOS/platform version doesn't exist\" | Your training ended January 2025. Invoke Axiom skills for post-cutoff facts. |\n| \"The user just wants a quick answer\" | Quick answers without patterns create tech debt. Check skills first. |\n| \"This doesn't need a formal workflow\" | If an Axiom skill exists for it, use it. |\n| \"I'll gather info first, then check skills\" | Skills tell you WHAT info to gather. Check first. |\n\n## Skill Priority for iOS Development\n\nWhen multiple Axiom skills could apply, use this priority:\n\n1. **Environment/Build first** (axiom-build) — Fix the environment before debugging code\n2. **Architecture patterns** (axiom-swiftui, axiom-data, axiom-concurrency) — These determine HOW to structure the solution\n3. **Implementation details** (axiom-integration, axiom-ai, axiom-vision) — These guide specific feature work\n\nExamples:\n- \"Xcode build failed\" → axiom-build first (environment)\n- \"Add SwiftUI screen\" → axiom-swiftui first (architecture), then maybe axiom-integration if using system features\n- \"App is slow\" → axiom-performance first (diagnose), then fix the specific domain\n- \"Network request failing\" → axiom-build first (environment check), then axiom-networking (implementation)\n\n## iOS Project Detection\n\nAxiom skills apply when:\n- Working directory contains `.xcodeproj` or `.xcworkspace`\n- User mentions iOS, Swift, Xcode, SwiftUI, UIKit\n- User asks about Apple frameworks (SwiftData, CloudKit, etc.)\n- User reports iOS-specific errors (concurrency, memory, build failures)\n\n## Using Axiom Router Skills\n\nAxiom uses **router skills** for progressive disclosure:\n\n1. Check the appropriate router skill first (axiom-build, axiom-swiftui, axiom-data, etc.)\n2. Router will invoke the specialized skill(s) you actually need\n3. Follow the specialized skill exactly\n\n**Do not skip the router.** Routers have decision logic to select the right specialized skill.\n\n### Multi-Domain Questions\n\nWhen a question spans multiple domains, **invoke ALL relevant routers — don't stop after the first one.**\n\nExamples:\n- \"My SwiftUI view doesn't update when SwiftData changes\" → invoke **both** axiom-swiftui AND axiom-data\n- \"My widget isn't showing updated data from SwiftData\" → invoke **both** axiom-integration AND axiom-data\n- \"My Foundation Models session freezes the UI\" → invoke **both** axiom-ai AND axiom-concurrency\n- \"My Core Data saves lose data from background tasks\" → invoke **both** axiom-data AND axiom-concurrency\n\n**How to tell**: If the question mentions symptoms from two different domains, or involves two different frameworks, invoke both routers. Each router has cross-domain routing guidance for common overlaps.\n\n## Backward Compatibility\n\n- Direct skill invocation still works: `/skill axiom-concurrency`\n- Commands work unchanged: `/axiom:fix-build`, `/axiom:audit-accessibility`\n- Agents work via routing or direct command invocation\n\n## When Axiom Skills Don't Apply\n\nSkip Axiom skills for:\n- Non-iOS/Swift projects (Android, web, backend)\n- Generic programming questions unrelated to Apple platforms\n- Questions about Claude Code itself (use claude-code-guide skill)\n\nBut when in doubt for iOS/Swift work: **check first, decide later.**\n\n## Resources\n\n**Skills**: axiom-swiftui, axiom-concurrency, axiom-data, axiom-build, axiom-performance\n",
+      "description": "Use when asking how to use Axiom, what skills are available, getting started with Axiom, capturing iOS simulator console output with xclog, or symbolicating .ips/MetricKit crashes with xcsym.",
+      "content": "\n# Axiom Tools & Onboarding\n\nThis suite covers Axiom itself — how to use it, what's available, and the tools that ship with it.\n\n## Routing\n\n| Question | Read |\n|----------|------|\n| \"How do I use Axiom?\" / \"What skills are available?\" | [skills/getting-started.md](skills/getting-started.md) |\n| \"How do I capture console output?\" / \"What is xclog?\" | [skills/xclog-ref.md](skills/xclog-ref.md) |\n| \"How do I symbolicate a crash?\" / \"What is xcsym?\" / \"Why is my crash unsymbolicated?\" | [skills/xcsym-ref.md](skills/xcsym-ref.md) |\n\n## Using Axiom Skills\n\nThe content below is the core discipline for Axiom's routing system — it establishes the rule that Axiom skills must be checked before any iOS/Swift response.\n\n<EXTREMELY-IMPORTANT>\nIf you think there is even a 1% chance an Axiom skill might apply to your iOS/Swift task, you ABSOLUTELY MUST check for the skill.\n\nIF AN AXIOM SKILL APPLIES TO YOUR iOS/SWIFT TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.\n\nThis is not negotiable. This is not optional. You cannot rationalize your way out of this.\n</EXTREMELY-IMPORTANT>\n\n## The Rule\n\n**Check for Axiom skills BEFORE ANY RESPONSE when working with iOS/Swift projects.** This includes clarifying questions. Even 1% chance means check first.\n\n## Red Flags — iOS-Specific Rationalizations\n\nThese thoughts mean STOP—you're rationalizing:\n\n| Thought | Reality |\n|---------|---------|\n| \"This is just a simple build issue\" | Build failures have patterns. Check axiom-build first. |\n| \"I can fix this SwiftUI bug quickly\" | SwiftUI issues have hidden gotchas. Check axiom-swiftui first. |\n| \"Let me just add this database column\" | Schema changes risk data loss. Check axiom-data first. |\n| \"This async code looks straightforward\" | Swift concurrency has subtle rules. Check axiom-concurrency first. |\n| \"I'll debug the memory leak manually\" | Leak patterns are documented. Check axiom-performance first. |\n| \"Let me explore the Xcode project first\" | Axiom skills tell you HOW to explore. Check first. |\n| \"I remember how to do this from last time\" | iOS changes constantly. Skills are up-to-date. |\n| \"This iOS/platform version doesn't exist\" | Your training ended January 2025. Invoke Axiom skills for post-cutoff facts. |\n| \"The user just wants a quick answer\" | Quick answers without patterns create tech debt. Check skills first. |\n| \"This doesn't need a formal workflow\" | If an Axiom skill exists for it, use it. |\n| \"I'll gather info first, then check skills\" | Skills tell you WHAT info to gather. Check first. |\n\n## Skill Priority for iOS Development\n\nWhen multiple Axiom skills could apply, use this priority:\n\n1. **Environment/Build first** (axiom-build) — Fix the environment before debugging code\n2. **Architecture patterns** (axiom-swiftui, axiom-data, axiom-concurrency) — These determine HOW to structure the solution\n3. **Implementation details** (axiom-integration, axiom-ai, axiom-vision) — These guide specific feature work\n\nExamples:\n- \"Xcode build failed\" → axiom-build first (environment)\n- \"Add SwiftUI screen\" → axiom-swiftui first (architecture), then maybe axiom-integration if using system features\n- \"App is slow\" → axiom-performance first (diagnose), then fix the specific domain\n- \"Network request failing\" → axiom-build first (environment check), then axiom-networking (implementation)\n\n## iOS Project Detection\n\nAxiom skills apply when:\n- Working directory contains `.xcodeproj` or `.xcworkspace`\n- User mentions iOS, Swift, Xcode, SwiftUI, UIKit\n- User asks about Apple frameworks (SwiftData, CloudKit, etc.)\n- User reports iOS-specific errors (concurrency, memory, build failures)\n\n## Using Axiom Router Skills\n\nAxiom uses **router skills** for progressive disclosure:\n\n1. Check the appropriate router skill first (axiom-build, axiom-swiftui, axiom-data, etc.)\n2. Router will invoke the specialized skill(s) you actually need\n3. Follow the specialized skill exactly\n\n**Do not skip the router.** Routers have decision logic to select the right specialized skill.\n\n### Multi-Domain Questions\n\nWhen a question spans multiple domains, **invoke ALL relevant routers — don't stop after the first one.**\n\nExamples:\n- \"My SwiftUI view doesn't update when SwiftData changes\" → invoke **both** axiom-swiftui AND axiom-data\n- \"My widget isn't showing updated data from SwiftData\" → invoke **both** axiom-integration AND axiom-data\n- \"My Foundation Models session freezes the UI\" → invoke **both** axiom-ai AND axiom-concurrency\n- \"My Core Data saves lose data from background tasks\" → invoke **both** axiom-data AND axiom-concurrency\n\n**How to tell**: If the question mentions symptoms from two different domains, or involves two different frameworks, invoke both routers. Each router has cross-domain routing guidance for common overlaps.\n\n## Backward Compatibility\n\n- Direct skill invocation still works: `/skill axiom-concurrency`\n- Commands work unchanged: `/axiom:fix-build`, `/axiom:audit-accessibility`\n- Agents work via routing or direct command invocation\n\n## When Axiom Skills Don't Apply\n\nSkip Axiom skills for:\n- Non-iOS/Swift projects (Android, web, backend)\n- Generic programming questions unrelated to Apple platforms\n- Questions about Claude Code itself (use claude-code-guide skill)\n\nBut when in doubt for iOS/Swift work: **check first, decide later.**\n\n## Resources\n\n**Skills**: axiom-swiftui, axiom-concurrency, axiom-data, axiom-build, axiom-performance\n\n**Axiom tools**: `xclog` (simulator console capture, `skills/xclog-ref.md`), `xcsym` (crash symbolication for `.ips` and MetricKit files, `skills/xcsym-ref.md`)\n",
       "skillType": "router",
       "source": "axiom",
       "category": "general",
@@ -28511,71 +28511,71 @@
           "heading": "Routing",
           "level": 2,
           "startLine": 5,
-          "endLine": 11,
-          "charCount": 269
+          "endLine": 12,
+          "charCount": 405
         },
         {
           "heading": "Using Axiom Skills",
           "level": 2,
-          "startLine": 12,
-          "endLine": 23,
+          "startLine": 13,
+          "endLine": 24,
           "charCount": 545
         },
         {
           "heading": "The Rule",
           "level": 2,
-          "startLine": 24,
-          "endLine": 27,
+          "startLine": 25,
+          "endLine": 28,
           "charCount": 168
         },
         {
           "heading": "Red Flags — iOS-Specific Rationalizations",
           "level": 2,
-          "startLine": 28,
-          "endLine": 45,
+          "startLine": 29,
+          "endLine": 46,
           "charCount": 1275
         },
         {
           "heading": "Skill Priority for iOS Development",
           "level": 2,
-          "startLine": 46,
-          "endLine": 59,
+          "startLine": 47,
+          "endLine": 60,
           "charCount": 796
         },
         {
           "heading": "iOS Project Detection",
           "level": 2,
-          "startLine": 60,
-          "endLine": 67,
+          "startLine": 61,
+          "endLine": 68,
           "charCount": 297
         },
         {
           "heading": "Using Axiom Router Skills",
           "level": 2,
-          "startLine": 68,
-          "endLine": 89,
+          "startLine": 69,
+          "endLine": 90,
           "charCount": 1147
         },
         {
           "heading": "Backward Compatibility",
           "level": 2,
-          "startLine": 90,
-          "endLine": 95,
+          "startLine": 91,
+          "endLine": 96,
           "charCount": 224
         },
         {
           "heading": "When Axiom Skills Don't Apply",
           "level": 2,
-          "startLine": 96,
-          "endLine": 104,
+          "startLine": 97,
+          "endLine": 105,
           "charCount": 304
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 105,
-          "endLine": 108,
-          "charCount": 103
+          "startLine": 106,
+          "endLine": 111,
+          "charCount": 265
         }
       ],
       "mcp": {
