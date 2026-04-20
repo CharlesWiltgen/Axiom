@@ -248,6 +248,89 @@ func TestCache_ConcurrentPutPreservesAllEntries(t *testing.T) {
 	}
 }
 
+// TestCache_GetDoesNotEvictPeerRefreshedEntry guards the double-check that
+// Get performs under the flock before deleting. Scenario: c1 cached an entry
+// at old mtime T0. The binary changes (mtime T1). c2 (a peer process)
+// re-discovers and Puts the entry at T1. c1.Get sees its stale in-memory
+// T0 vs current-disk T1, enters the eviction path — but by then disk has
+// T1. Without the double-check, c1 would delete c2's correct entry.
+func TestCache_GetDoesNotEvictPeerRefreshedEntry(t *testing.T) {
+	dir := t.TempDir()
+	tmpFile := filepath.Join(dir, "bin")
+	if err := os.WriteFile(tmpFile, []byte("v0"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	info0, _ := os.Stat(tmpFile)
+
+	c1 := NewCache(dir)
+	if err := c1.Put(CacheEntry{UUID: "K", Path: tmpFile, MTime: info0.ModTime().Unix()}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Change the binary — c1's in-memory MTime is now stale.
+	later := info0.ModTime().Add(time.Hour)
+	if err := os.Chtimes(tmpFile, later, later); err != nil {
+		t.Fatal(err)
+	}
+	info1, _ := os.Stat(tmpFile)
+
+	// Peer process refreshes the disk cache with the new mtime.
+	c2 := NewCache(dir)
+	if err := c2.Put(CacheEntry{UUID: "K", Path: tmpFile, MTime: info1.ModTime().Unix()}); err != nil {
+		t.Fatal(err)
+	}
+
+	// c1.Get sees in-memory T0 vs disk T1 and enters eviction. The
+	// double-check must recognize that disk now has T1 and spare the entry.
+	if _, ok := c1.Get("K"); ok {
+		// It's fine either way for c1's return — Get returning miss is OK
+		// (caller re-scans). What matters is the disk state after.
+		t.Log("c1.Get returned hit (freshness check picked up peer's update)")
+	}
+
+	// A subsequent NewCache must still see K on disk with the fresh mtime.
+	c3 := NewCache(dir)
+	got, ok := c3.Get("K")
+	if !ok {
+		t.Fatal("c1's eviction clobbered a peer-refreshed entry — the Get double-check regressed")
+	}
+	if got.MTime != info1.ModTime().Unix() {
+		t.Errorf("surviving entry mtime = %d, want %d", got.MTime, info1.ModTime().Unix())
+	}
+}
+
+// TestCache_GetEvictsGenuinelyStaleEntry is the negative control for
+// TestCache_GetDoesNotEvictPeerRefreshedEntry: when the on-disk state
+// really is stale (no peer refresh), eviction must still happen.
+func TestCache_GetEvictsGenuinelyStaleEntry(t *testing.T) {
+	dir := t.TempDir()
+	tmpFile := filepath.Join(dir, "bin")
+	if err := os.WriteFile(tmpFile, []byte("v0"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	info0, _ := os.Stat(tmpFile)
+
+	c := NewCache(dir)
+	if err := c.Put(CacheEntry{UUID: "K", Path: tmpFile, MTime: info0.ModTime().Unix()}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Change the binary and don't refresh the cache — entry is truly stale.
+	later := info0.ModTime().Add(time.Hour)
+	if err := os.Chtimes(tmpFile, later, later); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, ok := c.Get("K"); ok {
+		t.Error("expected cache miss for stale entry")
+	}
+	// After Get's eviction, a fresh instance must see K gone.
+	c2 := NewCache(dir)
+	if _, ok := c2.Get("K"); ok {
+		t.Error("stale entry survived Get's eviction")
+	}
+}
+
 // TestCache_DiskFormatStability_V1 is the forward-compat fixture test noted
 // in bead axiom-jtz. If someone bumps cacheSchemaVersion without updating
 // this fixture, the test fails loudly — forcing a conscious decision about
