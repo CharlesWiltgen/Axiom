@@ -39,8 +39,7 @@ func main() {
 	case "list-dsyms":
 		os.Exit(runListDsyms(os.Stdout, os.Args[2:]))
 	case "anonymize":
-		fmt.Fprintf(os.Stderr, "not implemented yet: %s\n", os.Args[1])
-		os.Exit(1)
+		os.Exit(runAnonymize(os.Stdout, os.Args[2:]))
 	case "--version", "-v":
 		fmt.Println(version)
 	case "--help", "-h":
