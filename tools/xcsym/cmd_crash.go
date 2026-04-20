@@ -146,9 +146,12 @@ func runCrash(out io.Writer, args []string) int {
 		return 5
 	}
 
-	// Symbolicate.
+	// Symbolicate. Warnings describe per-image failures (dSYM miss, atos
+	// timeout, atos returned no symbols) so the user can tell what happened
+	// instead of just seeing `"symbolicated": false` on frames. axiom-ogk.
+	var symbolicateWarnings []string
 	if !*noSymbolicate {
-		SymbolicateForTier(ctx, raw, status, d, tier)
+		symbolicateWarnings = SymbolicateForTier(ctx, raw, status, d, tier)
 	}
 
 	// Environment snapshot. Best-effort — a failure here isn't worth blocking
@@ -161,6 +164,9 @@ func runCrash(out io.Writer, args []string) int {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "crash: format: %v\n", err)
 		return 5
+	}
+	if len(symbolicateWarnings) > 0 {
+		report.Warnings = append(report.Warnings, symbolicateWarnings...)
 	}
 
 	// Emit JSON.
