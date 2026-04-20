@@ -54,7 +54,9 @@ def classify_path(path: str) -> str:
     # Inside a bundle: distinguish the nested .crash (the one the
     # user actually wants xcsym to read) from other files they might
     # be Read-ing for metadata (DistributionInfo.json, PointInfo.json).
-    if "/.xccrashpoint/" in path or ".xccrashpoint/" in path:
+    # The `.xccrashpoint/` token (no leading slash) covers both the
+    # `/foo.xccrashpoint/inside` and `foo.xccrashpoint/inside` shapes.
+    if ".xccrashpoint/" in path:
         if path.endswith(".crash"):
             return "xccrashpoint_inner_crash"
         return "xccrashpoint_inner_other"
