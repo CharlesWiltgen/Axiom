@@ -9,6 +9,37 @@ import (
 	"testing"
 )
 
+// TestLabelRootsBySource guards axiom-h2s. When --source=all, each bundle's
+// Source field must reflect the source-type bucket its root came from
+// (archives/deriveddata/downloads/toolchain/frameworks/env), not the
+// literal flag value "all".
+func TestLabelRootsBySource(t *testing.T) {
+	opts := DiscovererOptions{
+		ArchivesPaths:    []string{"/archives/A"},
+		DerivedDataPaths: []string{"/dd/X"},
+		DownloadsPaths:   []string{"/dl/Y"},
+		ToolchainPaths:   []string{"/tc/Z"},
+		FrameworkRoots:   []string{"/fr/W"},
+		UserPaths:        []string{"/env/V"},
+		SkipDefaults:     true,
+	}
+	d := NewDiscoverer(opts)
+	labels := labelRootsBySource(d, "all")
+	cases := map[string]string{
+		"/archives/A": "archives",
+		"/dd/X":       "deriveddata",
+		"/dl/Y":       "downloads",
+		"/tc/Z":       "toolchain",
+		"/fr/W":       "frameworks",
+		"/env/V":      "env",
+	}
+	for root, want := range cases {
+		if got := labels[root]; got != want {
+			t.Errorf("labels[%q] = %q, want %q", root, got, want)
+		}
+	}
+}
+
 func TestRunListDsyms_UnknownSource(t *testing.T) {
 	var buf bytes.Buffer
 	if code := runListDsyms(&buf, []string{"--source=nonsense"}); code != 1 {
