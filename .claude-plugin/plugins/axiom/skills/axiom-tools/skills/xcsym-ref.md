@@ -40,9 +40,9 @@ ${CLAUDE_PLUGIN_ROOT}/bin/xcsym
 ### crash — Full Pipeline
 
 ```bash
-xcsym crash --format=summary <file>             # small tier (≤2KB), top frames only
-xcsym crash --format=standard <file>            # default (≤12KB)
-xcsym crash --format=full <file>                # all threads (emits size_warning past 100KB)
+xcsym crash --format=summary <file>             # small tier (~2KB target, warns past 4KB)
+xcsym crash --format=standard <file>            # default (~12KB target, warns past 50KB)
+xcsym crash --format=full <file>                # all threads (warns past 100KB)
 xcsym crash --from-metrickit <file>             # force MetricKit (skip auto-detect)
 xcsym crash --dsym <path> <file>                # explicit dSYM for the main app
 xcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots
@@ -162,17 +162,19 @@ Top-level JSON emitted by `crash`:
   "images": { "matched": [...], "mismatched": [...], "missing": [...] },
   "images_summary": { "matched_count": 1, "mismatched_count": 0, "missing_count": 0 },
   "warnings": [],
-  "size_warning": "report exceeded 100KB (standard tier)..."
+  "size_warning": "report size 54321 bytes exceeds 51200 bytes; consider --format=summary for triage"
 }
 ```
 
 ### Tiers
 
-| Tier | Budget | Contains |
-|---|---|---|
-| `summary` | ≤2KB | App, OS, exception, pattern_tag, crashed-thread top 3 frames, `images_summary` |
-| `standard` | ≤12KB | + full crashed thread, other threads' top frames, `images` |
-| `full` | n/a (emits `size_warning` past 100KB) | + `all_threads` (every thread, every frame) |
+| Tier | Design target | Warns past | Contains |
+|---|---|---|---|
+| `summary` | ~2 KB | 4 KB | App, OS, exception, pattern_tag, crashed-thread top 3 frames, `images_summary` |
+| `standard` | ~12 KB | 50 KB | + full crashed thread, other threads' top frames, `images` |
+| `full` | n/a | 100 KB | + `all_threads` (every thread, every frame) |
+
+Design targets are aspirational — small/typical crashes hit them. Real production crashes from framework-heavy apps regularly exceed them without indicating anything pathological (the `images` array dominates standard size: ~150–300 bytes per image × 45–150 images is typical). The warn threshold is what xcsym actually flags via `size_warning` in output.
 
 ## Exit Codes
 
@@ -271,7 +273,7 @@ Source: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact or
 | Exit 4, main arch mismatch | arm64 vs arm64e slice mismatch | Pass `--arch` to `find-dsym`; verify the archive contains the slice |
 | Exit 7, "main matched, others missing" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |
 | `pattern_tag="unclassified"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |
-| `size_warning` in output | Full tier exceeded 100KB budget | Switch to `--format=standard` or `--format=summary` |
+| `size_warning` in output | Tier exceeded its warn threshold (4 KB summary / 50 KB standard / 100 KB full) | Switch to the next smaller tier — the warning text names it |
 | `{"error":"hang_report"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |
 
 ## Resources
