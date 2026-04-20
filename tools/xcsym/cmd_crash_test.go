@@ -35,6 +35,40 @@ func TestRunCrash_InputNotFound(t *testing.T) {
 	}
 }
 
+func TestRunCrash_UnsupportedFormat(t *testing.T) {
+	// A readable file that is neither .ips nor MetricKit — DetectFormat
+	// returns FormatUnknown and parseByFormat falls through to the
+	// "unsupported or unrecognized crash format" error path. Exit code
+	// must be 2 (shared with other "unreadable/unsupported input" cases)
+	// AND a structured JSON reject must land on stdout so agents can
+	// route on `error` without scraping stderr.
+	path := filepath.Join(t.TempDir(), "garbage.txt")
+	if err := os.WriteFile(path, []byte("not a crash report"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	code := runCrash(&buf, []string{"--no-cache", "--no-spotlight", "--no-symbolicate", path})
+	if code != 2 {
+		t.Fatalf("unsupported format: code = %d, want 2\n%s", code, buf.String())
+	}
+	var reject crashRejectPayload
+	if err := json.Unmarshal(buf.Bytes(), &reject); err != nil {
+		t.Fatalf("json: %v\n%s", err, buf.String())
+	}
+	if reject.Error != "unsupported_format" {
+		t.Errorf("error = %q, want unsupported_format", reject.Error)
+	}
+	if reject.Tool != "xcsym" {
+		t.Errorf("tool = %q, want xcsym", reject.Tool)
+	}
+	if reject.Input != path {
+		t.Errorf("input = %q, want %q", reject.Input, path)
+	}
+	if reject.Message == "" {
+		t.Error("message should not be empty")
+	}
+}
+
 func TestRunCrash_HangRejected(t *testing.T) {
 	var buf bytes.Buffer
 	code := runCrash(&buf, []string{"--no-cache", "--no-spotlight", "--no-symbolicate",
@@ -181,6 +215,49 @@ func TestRunCrash_OutputFileFlag(t *testing.T) {
 	}
 	if rep.Crash.PatternRuleID != "R-swift-unwrap-01" {
 		t.Errorf("pattern_rule_id = %q", rep.Crash.PatternRuleID)
+	}
+}
+
+func TestRunCrash_AppleCrashText_EndToEnd(t *testing.T) {
+	// Drive the committed .crash fixture through the crash subcommand.
+	// The exit code is not asserted here because it varies per host:
+	//   - CI / most dev machines: no dSYMs for the fixture's UUIDs → exit 2
+	//   - A dev machine that happens to have the Poppy archive: main
+	//     matches but most system-framework dSYMs don't → exit 7
+	//   - A machine with every system dSYM pre-downloaded: exit 0
+	// The test's real job is confirming the pipeline ran end-to-end
+	// (parse → verify → categorize → format) on the legacy text format.
+	// We verify that by parsing the JSON output and asserting field
+	// values the pipeline would have had to set correctly to get here.
+	var buf bytes.Buffer
+	code := runCrash(&buf, []string{
+		"--no-cache", "--no-spotlight", "--no-symbolicate",
+		"--format=summary",
+		"testdata/crashes/apple_crash/objc_exception_sigabrt.crash",
+	})
+	// Any symbolication-class exit is fine (0/2/3/4/7). A 1 would mean
+	// usage error, 5 a tool error, 8 an output error — those shouldn't
+	// happen here.
+	switch code {
+	case 0, 2, 3, 4, 7:
+	default:
+		t.Fatalf(".crash pipeline: unexpected code = %d\nstdout:\n%s", code, buf.String())
+	}
+	var report CrashReport
+	if err := json.Unmarshal(buf.Bytes(), &report); err != nil {
+		t.Fatalf("json: %v\n%s", err, buf.String())
+	}
+	if report.Input.Format != FormatAppleCrash {
+		t.Errorf("Input.Format = %q, want %q", report.Input.Format, FormatAppleCrash)
+	}
+	if report.Crash.PatternRuleID != "R-objc-exc-01" {
+		t.Errorf("PatternRuleID = %q, want R-objc-exc-01", report.Crash.PatternRuleID)
+	}
+	if report.Crash.Exception.Type != "EXC_CRASH" {
+		t.Errorf("Exception.Type = %q, want EXC_CRASH", report.Crash.Exception.Type)
+	}
+	if report.Crash.Exception.Signal != "SIGABRT" {
+		t.Errorf("Exception.Signal = %q, want SIGABRT", report.Crash.Exception.Signal)
 	}
 }
 

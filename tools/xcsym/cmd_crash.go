@@ -97,10 +97,21 @@ func runCrash(out io.Writer, args []string) int {
 				Message: "Crash file is a hang report (bug_type=" + he.BugType + "); this tool analyzes crashes, not hangs.",
 				Input:   path,
 				Routing: "Use Apple's 'Hangs' instrument or a hang-report analyzer instead.",
-			})
+			}, 1)
 		}
+		// Unrecognized/unsupported formats: emit a structured JSON reject on
+		// stdout so agents can route on `error` instead of scraping stderr,
+		// and exit 2 per the shared "input not found / unsupported format"
+		// contract (see xcsym-ref.md exit code table). The stderr copy is
+		// kept for humans running the CLI interactively.
 		fmt.Fprintf(os.Stderr, "crash: parse: %v\n", err)
-		return 2
+		return writeReject(out, *outputPath, crashRejectPayload{
+			Tool: "xcsym", Version: version,
+			Error:   "unsupported_format",
+			Message: err.Error(),
+			Input:   path,
+			Routing: "xcsym crash accepts .ips (v1/v2) and MetricKit JSON. Convert other formats first or use a different tool.",
+		}, 2)
 	}
 	raw.Format = detected // make sure Format field agrees with detect outcome
 
@@ -117,7 +128,7 @@ func runCrash(out io.Writer, args []string) int {
 			Message: reason,
 			Input:   path,
 			Routing: "Non-fatal EXC_RESOURCE diagnostics (CPU warnings, wakeups) need a performance analyzer, not a crash reporter.",
-		})
+		}, 1)
 	}
 
 	// Discover dSYMs / verify images.
@@ -185,6 +196,8 @@ func parseByFormat(data []byte, format string) (*RawCrash, error) {
 		return ParseIPS(data)
 	case FormatMetricKit:
 		return ParseMetricKit(data)
+	case FormatAppleCrash:
+		return ParseAppleCrash(data)
 	}
 	return nil, fmt.Errorf("unsupported or unrecognized crash format")
 }
@@ -297,15 +310,18 @@ func writeJSON(out io.Writer, outputPath string, payload any) error {
 	return enc.Encode(payload)
 }
 
-// writeReject emits a rejection payload and returns exit code 1. If output
-// writing fails we downgrade to exit 8 so the caller can distinguish "tool
-// intentionally refused" from "io problem".
-func writeReject(out io.Writer, outputPath string, payload crashRejectPayload) int {
+// writeReject emits a rejection payload and returns the caller-supplied
+// exit code (1 for "tool intentionally refused" cases like hang reports
+// and non-fatal resource diagnostics; 2 for unsupported/unrecognized
+// input formats, mirroring the shared exit-code contract in xcsym-ref.md).
+// If output writing fails we downgrade to exit 8 so the caller can
+// distinguish "tool intentionally refused" from "io problem".
+func writeReject(out io.Writer, outputPath string, payload crashRejectPayload, code int) int {
 	if err := writeJSON(out, outputPath, payload); err != nil {
 		fmt.Fprintf(os.Stderr, "crash: %v\n", err)
 		return 8
 	}
-	return 1
+	return code
 }
 
 // shortenCLT squeezes "Xcode 16.0 Build version 16A5171r" → "Xcode 16.0".
