@@ -12,6 +12,15 @@ import (
 // addresses against thread SP values in R-stack-overflow-01.
 var hexAddrRE = regexp.MustCompile(`0x[0-9a-fA-F]+`)
 
+// minRealFaultAddr is the floor below which extractHexAddresses values are
+// almost certainly Mach kernel error codes (KERN_INVALID_ADDRESS=1,
+// KERN_PROTECTION_FAILURE=2, etc.) rather than real faulting addresses.
+// Real Darwin user-space pointers live well above one page; the kernel
+// codes Apple emits in exception.codes are tiny ordinals. R-stack-overflow-01
+// (axiom-nzb C3) filters here so a small kernel code doesn't accidentally
+// fall within guardPage of a thread SP and fire the rule.
+const minRealFaultAddr uint64 = 0x1000
+
 // codeSignKilledRE matches the family of termination codes the kernel emits
 // when it kills a process for code-signing/provisioning violations. The low
 // nibble distinguishes subcauses but they all route to the same category.
@@ -135,6 +144,17 @@ var rules = []Rule{
 			const guardPage uint64 = 4096
 			addrs := extractHexAddresses(blob)
 			for _, addr := range addrs {
+				// Reject candidates that are too small to plausibly be a
+				// user-space pointer — these are kernel error ordinals
+				// (KERN_INVALID_ADDRESS=1, KERN_PROTECTION_FAILURE=2, ...)
+				// that extractHexAddresses can't distinguish from a real
+				// faulting address. Without this guard, a 32-bit thread
+				// whose SP is near the bottom of the address space could
+				// match a kernel code as if it were the fault site.
+				// axiom-nzb C3.
+				if addr < minRealFaultAddr {
+					continue
+				}
 				for _, t := range c.Threads {
 					if t.State == nil || t.State.SP == 0 {
 						continue
@@ -186,8 +206,13 @@ var rules = []Rule{
 			if c.Exception.Type != "EXC_CRASH" {
 				return false, ""
 			}
-			if hit := hasAnyFrameSymbolAllThreads(c, []string{"objc_exception_throw"}); hit != "" {
-				return true, "EXC_CRASH with " + hit + " in backtrace"
+			// Scan only the crashed thread. The rule's stated semantics
+			// are "exception on the crashed thread", and walking every
+			// thread misclassifies cases where a background thread
+			// caught an ObjC exception legitimately while the crash
+			// occurred elsewhere (axiom-nzb C4).
+			if hit := hasAnyCrashedFrameSymbol(c, []string{"objc_exception_throw"}, 0); hit != "" {
+				return true, "EXC_CRASH with " + hit + " on crashed thread"
 			}
 			return false, ""
 		},
@@ -210,7 +235,11 @@ var rules = []Rule{
 			// Defensive: never fire when an ObjC exception was the proximate
 			// cause — R-objc-exc-01 owns that case and ordering usually
 			// handles it, but the exclusion is cheap to check here.
-			if hasAnyFrameSymbolAllThreads(c, []string{"objc_exception_throw"}) != "" {
+			// Scope the exclusion to the crashed thread: an unrelated
+			// background thread that handled an ObjC exception shouldn't
+			// suppress the abort classification on the main crash
+			// (axiom-nzb C4, mirrors the R-objc-exc-01 fix).
+			if hasAnyCrashedFrameSymbol(c, []string{"objc_exception_throw"}, 0) != "" {
 				return false, ""
 			}
 			hit := hasAnyCrashedFrameSymbol(c, []string{"__abort_with_payload", "abort"}, 10)
@@ -387,23 +416,6 @@ func hasAnyCrashedFrameImage(c *RawCrash, subs []string, n int) string {
 		for _, sub := range subs {
 			if strings.Contains(frames[i].Image, sub) {
 				return sub
-			}
-		}
-	}
-	return ""
-}
-
-// hasAnyFrameSymbolAllThreads scans every thread's frames for the first
-// substring match. Some rules (objc exceptions, MTC) care about the presence
-// of the signature anywhere in the backtrace forest, not just on the crashed
-// thread.
-func hasAnyFrameSymbolAllThreads(c *RawCrash, subs []string) string {
-	for _, t := range c.Threads {
-		for _, f := range t.Frames {
-			for _, sub := range subs {
-				if strings.Contains(f.Symbol, sub) {
-					return sub
-				}
 			}
 		}
 	}
