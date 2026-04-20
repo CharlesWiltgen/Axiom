@@ -20,6 +20,12 @@ CLAUDE*.md
 docs/.vitepress/cache
 docs/.vitepress/dist
 
+# Internal planning — must not appear in published docs (see srcExclude
+# in docs/.vitepress/config.ts and check 12c in scripts/pre-deploy.ts)
+docs/superpowers/
+docs/plans/
+docs/specs/
+
 # MCP Server build artifacts
 axiom-mcp/node_modules/
 axiom-mcp/dist/
