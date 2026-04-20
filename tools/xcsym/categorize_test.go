@@ -110,6 +110,58 @@ func TestCategorize_R_swift_conc_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-swift-fatal-01 ---------------------------------------------------
+
+func TestCategorize_R_swift_fatal_01_Positive(t *testing.T) {
+	raw := &RawCrash{
+		Exception: Exception{
+			Type:    "EXC_BREAKPOINT",
+			Codes:   "0x1",
+			Subtype: "Swift runtime failure: division by zero",
+		},
+		Threads: []Thread{{
+			Index: 0, Triggered: true,
+			Frames: []Frame{
+				{Index: 0, Address: "0x1", Image: "libswiftCore.dylib", Symbol: "swift_runtime_fail"},
+				{Index: 1, Address: "0x2", Image: "libswiftCore.dylib", Symbol: "swift_preconditionFailure"},
+				{Index: 2, Address: "0x3", Image: "MyApp", Symbol: "ContentView.body"},
+			},
+		}},
+		CrashedIdx: 0,
+	}
+	res := Categorize(raw)
+	if res.RuleID != "R-swift-fatal-01" {
+		t.Errorf("rule_id = %q, want R-swift-fatal-01", res.RuleID)
+	}
+	if res.Tag != "swift_fatal_error" {
+		t.Errorf("tag = %q, want swift_fatal_error", res.Tag)
+	}
+}
+
+func TestCategorize_R_swift_fatal_01_Negative(t *testing.T) {
+	// Near miss: same subtype prefix but no fatal sentinel in frames — must
+	// fall through to unclassified (or a later rule) instead of firing.
+	raw := &RawCrash{
+		Exception: Exception{
+			Type:    "EXC_BREAKPOINT",
+			Codes:   "0x1",
+			Subtype: "Swift runtime failure: division by zero",
+		},
+		Threads: []Thread{{
+			Index:     0,
+			Triggered: true,
+			Frames: []Frame{
+				{Index: 0, Image: "MyApp", Symbol: "ContentView.body"},
+			},
+		}},
+		CrashedIdx: 0,
+	}
+	res := Categorize(raw)
+	if res.RuleID == "R-swift-fatal-01" {
+		t.Errorf("must not fire swift_fatal_error without a sentinel frame")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -140,6 +192,7 @@ type ruleCoverage struct{ positive, negative bool }
 var coverageRegistry = map[string]ruleCoverage{
 	"R-swift-unwrap-01": {positive: true, negative: true},
 	"R-swift-conc-01":   {positive: true, negative: true},
+	"R-swift-fatal-01":  {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
