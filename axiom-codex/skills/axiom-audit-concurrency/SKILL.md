@@ -73,6 +73,7 @@ Run all 8 existing detection patterns. These are fast and reliable. For every gr
 **Issue**: Crashes when UI modified from background threads
 **Fix**: Add `@MainActor` to class declaration
 **Note**: SwiftUI Views are implicitly @MainActor — not an issue
+**Field signal**: Crashes with xcsym `pattern_tag=swift_concurrency_violation` (fires on `_swift_task_isCurrentExecutor` in the exception subtype) almost always trace back to this anti-pattern. If the user has `.ips` artifacts, run `${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <file>` and correlate the crashed frames with grep hits.
 
 ### 2. Unsafe Task Self Capture (HIGH/HIGH)
 
@@ -238,3 +239,4 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 For detailed concurrency patterns: `axiom-concurrency` skill
 For migration guidance: Enable `-strict-concurrency=complete` and fix warnings
 For memory lifecycle issues found during audit: `axiom-performance (skills/memory-debugging.md)` skill
+For symbolicating `swift_concurrency_violation` crashes: `axiom-tools (skills/xcsym-ref.md)`

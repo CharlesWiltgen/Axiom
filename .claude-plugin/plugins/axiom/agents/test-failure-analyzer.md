@@ -184,7 +184,36 @@ Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`
 }
 ```
 
-### Pattern 6: `#expect` with Date Comparisons (LOW)
+### Pattern 6: Test-Generated Crashes (CRITICAL)
+
+**Issue**: A test crashes the process (force-unwrap, out-of-bounds, fatalError) instead of failing cleanly
+**Why flaky**: The surface-level failure ("test crashed") hides the actual root cause — and often points at the wrong file
+**Detection**: Test run produced an `.ips` file in `~/Library/Logs/DiagnosticReports/` OR a MetricKit `MXCrashDiagnostic` artifact
+
+**Before analyzing the Swift source, symbolicate the crash:**
+
+```bash
+# List recent crashes
+ls -lt ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -5
+
+# Full triage in one call (reads pattern_tag, crashed-thread frames, dSYM matches)
+${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <path-to-ips>
+```
+
+Use the returned `pattern_tag` to route the fix:
+
+| pattern_tag | Likely cause in tests |
+|---|---|
+| `swift_forced_unwrap` | Test setup returned nil from a helper (mock not primed) |
+| `swift_concurrency_violation` | `@MainActor` type touched from non-isolated Task (see Pattern 2) |
+| `swift_fatal_error` | `preconditionFailure`/`fatalError` hit inside production code under test |
+| `bad_memory_access` | Dangling reference (often weak-var captured in a Task after deallocation) |
+| `objc_exception` | NSException thrown from framework code — check `crashed_thread` for the origin |
+| `jetsam_oom` | Test accumulated memory (suite-level shared state) — run with `.serialized` |
+
+Skip this pattern only when no `.ips` was produced (tests failed via assertion, not crash).
+
+### Pattern 7: `#expect` with Date Comparisons (LOW)
 
 **Issue**: Date assertions drift across timezones/DST
 **Why flaky**: Passes in one timezone, fails in CI (UTC)
@@ -242,7 +271,13 @@ Grep: @Suite\s+struct|@Suite\s*\(
 # Check for Database, FileManager, UserDefaults access
 ```
 
-**Pattern 6 - Date assertions**:
+**Pattern 6 - Test-generated crashes**:
+```
+Glob: ~/Library/Logs/DiagnosticReports/*.ips (modified since test run)
+# Run xcsym crash --format=summary on each to get pattern_tag + crashed frames
+```
+
+**Pattern 7 - Date assertions**:
 ```
 Grep: #expect.*Date\(\)|#expect.*\.date
 ```
@@ -344,6 +379,7 @@ swift test --filter "TestName" --iterations 100
 **CRITICAL**: Will definitely cause intermittent failures
 - Missing `confirmation` for async callbacks
 - Missing `@MainActor` for UI tests
+- Test-generated crashes (`.ips` artifacts) — run xcsym before diagnosing
 
 **HIGH**: Likely to cause parallel execution failures
 - Shared mutable state (`static var`)

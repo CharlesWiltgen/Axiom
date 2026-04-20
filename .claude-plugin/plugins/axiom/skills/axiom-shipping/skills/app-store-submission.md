@@ -75,6 +75,11 @@ xcodebuild -scheme YourApp \
 # - All tabs/screens accessible
 # - Core user flows complete without crash
 # - Edge cases: no network, low storage, interruptions
+
+# After testing, symbolicate any crashes to catch reviewer-blocking bugs early:
+ls ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null
+${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <path>
+# A non-empty pattern_tag during pre-flight = a guaranteed 2.1 rejection
 ```
 
 **Why it works**: Simulator hides real-device constraints — memory limits, cellular networking behavior, hardware-specific APIs, thermal throttling. App Review tests on physical devices.
@@ -743,4 +748,4 @@ For developers submitting their first app, these are additional items often miss
 
 **Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details, /support/offering-account-deletion-in-your-app, /documentation/security/complying-with-encryption-export-regulations
 
-**Skills**: axiom-integration, axiom-accessibility, axiom-shipping (skills/testflight-triage.md), axiom-shipping (skills/app-store-connect-ref.md)
+**Skills**: axiom-integration, axiom-accessibility, axiom-shipping (skills/testflight-triage.md), axiom-shipping (skills/app-store-connect-ref.md), axiom-tools (skills/xcsym-ref.md)

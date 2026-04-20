@@ -167,6 +167,14 @@ Before proceeding to a pattern:
 ```bash
 # 1. Check crash logs in App Store Connect
 # Xcode Organizer > Crashes > Filter by version
+# Export the .ips and symbolicate with xcsym:
+${CLAUDE_PLUGIN_ROOT}/bin/xcsym crash --format=summary <path-to-ips>
+# The `pattern_tag` field tells you the crash class at a glance:
+#   swift_forced_unwrap → nil-unwrap on reviewer's device (often a missing locale/permission path)
+#   swift_concurrency_violation → @MainActor violation only reproducing on review hardware
+#   jetsam_oom → reviewer hit a memory ceiling your internal test devices didn't
+#   watchdog_termination → launch/main-thread hang exceeding 20s on slower review hardware
+#   code_signing_killed → certificate/provisioning issue (not a code bug)
 
 # 2. Search for placeholder strings
 grep -r "Lorem\|TODO\|FIXME\|placeholder\|sample\|test data" \
@@ -1185,6 +1193,7 @@ Design & Originality (4.2/4.3):
 - **storekit-ref** — StoreKit 2 IAP/subscription implementation
 - **accessibility-diag** — Accessibility compliance (VoiceOver, Dynamic Type, WCAG)
 - **axiom-build** — Build and signing issues that cause Binary Rejected
+- **axiom-tools (skills/xcsym-ref.md)** — Symbolicate reviewer crash `.ips` files, get `pattern_tag` + crashed-thread frames
 
 ## Resources
 
@@ -1192,4 +1201,4 @@ Design & Originality (4.2/4.3):
 
 **Docs**: /app-store/review/guidelines, /distribute/app-review, /support/offering-account-deletion-in-your-app, /contact/app-store/?topic=appeal
 
-**Skills**: app-store-connect-ref, privacy-ux, storekit-ref, accessibility-diag
+**Skills**: app-store-connect-ref, privacy-ux, storekit-ref, accessibility-diag, axiom-tools (skills/xcsym-ref.md)
