@@ -134,6 +134,48 @@ func TestAnonymize_MetricKit(t *testing.T) {
 	}
 }
 
+// TestAnonymize_v2_PreservesThreadNames guards axiom-0h7. Thread names like
+// "com.apple.main-thread" are Apple-published infrastructure, not PII —
+// scrubbing them to "App" lost debug context and previously confused the
+// symbolicate pipeline when binaryName coincidentally matched. The fix makes
+// the `name` key path-sensitive: redacted at the document root (device name)
+// and inside usedImages[] (binary name), but preserved inside threads[] and
+// anywhere else.
+func TestAnonymize_v2_PreservesThreadNames(t *testing.T) {
+	// Header has device name; payload has thread names AND a usedImages entry
+	// whose .name must still be scrubbed.
+	v2 := `{"app_name":"SecretApp","bundleID":"com.secretco.secret","bug_type":"309","os_version":"iOS 17","timestamp":"2026","name":"JohnsPhone"}
+{"procName":"SecretApp","cpuType":"ARM-64","exception":{"type":"EXC_BAD_ACCESS","subtype":"KERN_INVALID_ADDRESS"},"faultingThread":0,"threads":[{"triggered":true,"name":"com.apple.main-thread","queue":"com.apple.main-thread","frames":[{"imageOffset":1,"imageIndex":0}]},{"name":"com.example.worker.queue","frames":[{"imageOffset":2,"imageIndex":0}]}],"usedImages":[{"source":"P","arch":"arm64","base":1,"size":1,"uuid":"AABBCCDD-EEFF-0011-2233-445566778899","name":"SecretApp","path":"/x"}]}`
+
+	out, err := Anonymize([]byte(v2))
+	if err != nil {
+		t.Fatalf("Anonymize: %v", err)
+	}
+
+	// Device name at header root MUST be scrubbed.
+	if bytes.Contains(out, []byte("JohnsPhone")) {
+		t.Errorf("device name leaked through:\n%s", string(out))
+	}
+	// Binary name inside usedImages[] MUST be scrubbed.
+	if bytes.Contains(out, []byte(`"name":"SecretApp"`)) {
+		t.Errorf("usedImages name leaked through:\n%s", string(out))
+	}
+	// Thread names MUST be preserved (not PII; useful debug context). The
+	// canonical Apple thread name "com.apple.main-thread" is the one the
+	// ticket explicitly calls out — if it survives both the path-sensitive
+	// `name` handling and the bare-bundle regex, we've fixed axiom-0h7.
+	if !bytes.Contains(out, []byte("com.apple.main-thread")) {
+		t.Errorf("thread name 'com.apple.main-thread' was scrubbed — it's not PII\n%s", string(out))
+	}
+	if !bytes.Contains(out, []byte("com.example.worker.queue")) {
+		t.Errorf("user thread name was scrubbed — should pass through cleanly\n%s", string(out))
+	}
+	// Reparses cleanly after scrubbing so symbolicate/categorize still work.
+	if _, err := ParseIPS(out); err != nil {
+		t.Errorf("reparse after anonymize: %v\n%s", err, string(out))
+	}
+}
+
 func TestAnonymize_v2_PreservesSliceUUIDInHeader(t *testing.T) {
 	// .ips v2 headers carry slice_uuid which equals the main binary's
 	// dSYM UUID. Anonymizer must treat it as preserve-worthy even though

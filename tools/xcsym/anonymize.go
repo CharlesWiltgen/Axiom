@@ -20,9 +20,10 @@ const (
 	zeroUUID         = "00000000-0000-0000-0000-000000000000"
 )
 
-// sensitiveKeys are JSON keys whose values are always PII regardless of
-// content. Value type is tolerated (strings, numbers, nested) but string
-// values get replaced by redacted equivalents.
+// sensitiveKeys are JSON keys whose values are always PII regardless of where
+// in the document they appear. String values get replaced by redacted
+// equivalents; non-string values are left untouched. Context-sensitive keys
+// (currently just "name") live in nameKeyParents, not here — see redactionFor.
 var sensitiveKeys = map[string]string{
 	// Bundle identifiers across v1/v2/MetricKit spellings.
 	"bundle_id":          redactedBundleID,
@@ -34,12 +35,10 @@ var sensitiveKeys = map[string]string{
 	"parentProc":         "launchd",
 	"procName":           "MyApp",
 	"app_name":           "MyApp",
-	// "name" appears in v2 headers as the device name ("JohnsPhone"), and
-	// in usedImages/binaryName as the binary filename. Both are leak paths —
-	// device names are obvious PII, and binary names often reveal app names.
-	// The UUID is the correlation key we care about; the name is cosmetic
-	// after anonymization.
-	"name":       "App",
+	// binaryName is MetricKit's per-frame app-owning-binary label. Always a
+	// candidate for redaction (it's the app's binary identity). Once the
+	// symbolicate pipeline groups by UUID (axiom-mv5), scrubbing this no
+	// longer breaks symbolication.
 	"binaryName": "App",
 	// Device/account identifiers.
 	"crashReporterKey": zeroUUID,
@@ -49,6 +48,34 @@ var sensitiveKeys = map[string]string{
 	"deviceIdentifier": zeroUUID,
 	"deviceUDID":       zeroUUID,
 	"userID":           "501",
+}
+
+// nameKeyParents is the allowlist of parent-key contexts where a `name` key
+// encodes PII (and therefore must be redacted). Other contexts — notably
+// threads[].name ("com.apple.main-thread") and nested library identifiers —
+// are Apple infrastructure labels useful for debugging, not PII. axiom-0h7.
+//
+// A parentKey of "" means the map is the document root. IPS v2 headers and
+// IPS v1 blobs both carry the device name as a root-level `name`.
+// "usedImages" is the array-parent when visiting a usedImages[i] map; the
+// child `name` is the binary name.
+var nameKeyParents = map[string]bool{
+	"":           true, // v2 header / v1 root — device name
+	"usedImages": true, // usedImages[i].name — binary name
+}
+
+// redactionFor returns (replacement, shouldRedact) for a key given its
+// immediate parent-key context. parentKey is "" for the document root and
+// the enclosing map's key (or the enclosing array's key, for items inside
+// arrays) otherwise.
+func redactionFor(key, parentKey string) (string, bool) {
+	if repl, ok := sensitiveKeys[key]; ok {
+		return repl, true
+	}
+	if key == "name" && nameKeyParents[parentKey] {
+		return "App", true
+	}
+	return "", false
 }
 
 // uuidRE matches canonical 8-4-4-4-12 UUID strings (case-insensitive).
@@ -77,8 +104,10 @@ var appBundleRE = regexp.MustCompile(`/([A-Za-z0-9_\-]+)\.app/([A-Za-z0-9_\-]+)`
 
 // bareBundleRE catches `<name>.app` occurrences not covered by the more
 // specific path-plus-binary pattern (e.g. at end of a string with trailing
-// slash stripped, or inside a log line).
-var bareBundleRE = regexp.MustCompile(`([A-Za-z0-9_\-]+)\.app`)
+// slash stripped, or inside a log line). The trailing `\b` prevents
+// false matches inside identifiers like "com.apple.main-thread" where
+// "com.app" would otherwise capture — axiom-0h7.
+var bareBundleRE = regexp.MustCompile(`([A-Za-z0-9_\-]+)\.app\b`)
 
 // frameworkRE matches `<name>.framework` — Apple's convention for shared
 // framework bundles. Framework names can reveal proprietary library names.
@@ -203,11 +232,22 @@ func walkForUUIDs(v any, out map[string]bool) {
 
 // anonymizeTree mutates doc in place: string values are regex-scrubbed;
 // sensitive keys have their values replaced wholesale (when string-typed).
+// Callers use the package entry points (anonymizeIPSv1 / anonymizeIPSv2 /
+// anonymizeMetricKit) which start the walk at the document root.
 func anonymizeTree(doc any, preserve map[string]bool) {
+	anonymizeTreeAt(doc, preserve, "")
+}
+
+// anonymizeTreeAt is the path-aware recursion behind anonymizeTree.
+// parentKey is "" at the document root and the enclosing map's key (for
+// nested maps) or the array's key (for items inside arrays) otherwise.
+// Context-sensitive redactions (currently `name`, see redactionFor) consult
+// this to distinguish PII-bearing positions from Apple-infrastructure ones.
+func anonymizeTreeAt(doc any, preserve map[string]bool, parentKey string) {
 	switch v := doc.(type) {
 	case map[string]any:
 		for k, val := range v {
-			if repl, ok := sensitiveKeys[k]; ok {
+			if repl, ok := redactionFor(k, parentKey); ok {
 				if _, isStr := val.(string); isStr {
 					v[k] = repl
 					continue
@@ -217,16 +257,19 @@ func anonymizeTree(doc any, preserve map[string]bool) {
 			case string:
 				v[k] = scrubString(sv, preserve)
 			case map[string]any, []any:
-				anonymizeTree(sv, preserve)
+				anonymizeTreeAt(sv, preserve, k)
 			}
 		}
 	case []any:
+		// Array items inherit the array's own parentKey — a child map of
+		// usedImages[i] is still "inside usedImages" for the purposes of the
+		// redactionFor check.
 		for i, item := range v {
 			switch sv := item.(type) {
 			case string:
 				v[i] = scrubString(sv, preserve)
 			case map[string]any, []any:
-				anonymizeTree(sv, preserve)
+				anonymizeTreeAt(sv, preserve, parentKey)
 			}
 		}
 	}
