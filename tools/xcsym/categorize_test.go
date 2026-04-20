@@ -454,6 +454,25 @@ func TestCategorize_R_abort_01_Negative_ObjCExcPresent(t *testing.T) {
 	}
 }
 
+// --- R-watchdog-01 ------------------------------------------------------
+
+func TestCategorize_R_watchdog_01_Positive(t *testing.T) {
+	raw := &RawCrash{Termination: Termination{Namespace: "FRONTBOARD", Code: "0x8badf00d"}}
+	res := Categorize(raw)
+	if res.RuleID != "R-watchdog-01" {
+		t.Errorf("rule_id = %q, want R-watchdog-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_watchdog_01_Negative(t *testing.T) {
+	// Near miss: right code, wrong namespace (must stay specific to board daemons).
+	raw := &RawCrash{Termination: Termination{Namespace: "SIGNAL", Code: "0x8BADF00D"}}
+	res := Categorize(raw)
+	if res.RuleID == "R-watchdog-01" {
+		t.Errorf("must not fire watchdog on SIGNAL namespace")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -493,6 +512,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-objc-exc-01":       {positive: true, negative: true},
 	"R-mtc-01":            {positive: true, negative: true},
 	"R-abort-01":          {positive: true, negative: true},
+	"R-watchdog-01":       {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
