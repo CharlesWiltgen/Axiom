@@ -13,7 +13,7 @@
     "docs:preview": "vitepress preview docs",
     "test": "node scripts/pre-deploy.ts --static",
     "test:full": "node scripts/pre-deploy.ts",
-    "predeploy": "node scripts/pre-deploy.ts"
+    "predeploy": "npm run build:mcp && node scripts/pre-deploy.ts"
   },
   "devDependencies": {
     "gray-matter": "^4.0.3",
