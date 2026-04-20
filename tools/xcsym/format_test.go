@@ -278,6 +278,91 @@ func TestFormat_Summary_FallbackCLTShort(t *testing.T) {
 	}
 }
 
+func TestFormat_Full_AllThreadsPopulated(t *testing.T) {
+	raw, cat, images, env, input := buildStdFixture(t)
+	rep, err := Format(raw, images, env, input, cat, TierFull)
+	if err != nil {
+		t.Fatalf("Format: %v", err)
+	}
+	if rep.Format != TierFull {
+		t.Errorf("format = %q, want full", rep.Format)
+	}
+	if rep.Images == nil {
+		t.Fatal("full tier: Images must be populated")
+	}
+	// Fixture has 2 threads; full tier surfaces both in AllThreads.
+	if len(rep.Crash.AllThreads) != 2 {
+		t.Errorf("AllThreads = %d, want 2 (full tier)", len(rep.Crash.AllThreads))
+	}
+	if rep.SizeWarning != nil {
+		t.Errorf("unexpected SizeWarning on small fixture: %q", *rep.SizeWarning)
+	}
+}
+
+func TestFormat_Full_SizeWarningFiresPast100KB(t *testing.T) {
+	// Build a fixture whose marshaled size deliberately exceeds the 100 KB
+	// threshold: thousands of symbolicated frames, each carrying a
+	// moderately long symbol string.
+	const frameCount = 4000
+	frames := make([]Frame, frameCount)
+	long := strings.Repeat("MyModuleNamespace.SomeAggregatedType.someInstanceMethod(_:).", 2)
+	for i := range frames {
+		frames[i] = Frame{
+			Index:        i,
+			Address:      "0x100000000",
+			Image:        "MyApp",
+			Symbol:       long,
+			Symbolicated: true,
+		}
+	}
+	raw := &RawCrash{
+		Threads:    []Thread{{Index: 0, Triggered: true, Frames: frames}},
+		UsedImages: []UsedImage{{UUID: "AAAA", Name: "MyApp"}},
+		CrashedIdx: 0,
+	}
+	rep, err := Format(raw, ImageStatus{}, Environment{}, InputInfo{}, CategorizeResult{}, TierFull)
+	if err != nil {
+		t.Fatalf("Format: %v", err)
+	}
+	if rep.SizeWarning == nil {
+		t.Fatal("expected SizeWarning to fire on oversized full tier report")
+	}
+	if !strings.Contains(*rep.SizeWarning, "exceeds") {
+		t.Errorf("SizeWarning text = %q; expected it to mention 'exceeds'", *rep.SizeWarning)
+	}
+	// Warn text should include the byte figure so users can verify.
+	buf, _ := json.Marshal(rep)
+	if !strings.Contains(*rep.SizeWarning, jsonLenDigit(len(buf))) {
+		// Not a strict requirement — but at least shouldn't falsely claim "0 bytes"
+		t.Logf("SizeWarning text: %q (actual marshal size: %d)", *rep.SizeWarning, len(buf))
+	}
+}
+
+// jsonLenDigit returns one of the digit chars from the length as a loose
+// sanity check — avoids matching stale stub values.
+func jsonLenDigit(n int) string {
+	if n == 0 {
+		return "0"
+	}
+	// Take just the most-significant digit to avoid flakiness if the
+	// marshal size shifts with warning text itself.
+	for n >= 10 {
+		n /= 10
+	}
+	return string(rune('0' + n))
+}
+
+func TestFormat_Full_NoWarningUnder100KB(t *testing.T) {
+	raw, cat, images, env, input := buildStdFixture(t)
+	rep, err := Format(raw, images, env, input, cat, TierFull)
+	if err != nil {
+		t.Fatalf("Format: %v", err)
+	}
+	if rep.SizeWarning != nil {
+		t.Errorf("small fixture triggered SizeWarning: %q", *rep.SizeWarning)
+	}
+}
+
 func TestFormat_RejectsUnknownTier(t *testing.T) {
 	_, err := Format(&RawCrash{}, ImageStatus{}, Environment{}, InputInfo{}, CategorizeResult{}, "gigantic")
 	if err == nil {
