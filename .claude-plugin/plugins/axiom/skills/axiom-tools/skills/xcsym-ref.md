@@ -40,18 +40,20 @@ ${CLAUDE_PLUGIN_ROOT}/bin/xcsym
 ### crash — Full Pipeline
 
 ```bash
-xcsym crash <file>                              # standard tier, JSON to stdout
-xcsym crash <file> --format=summary             # small tier (≤2KB), top frames only
-xcsym crash <file> --format=standard            # default (≤12KB)
-xcsym crash <file> --format=full                # all threads (emits size_warning past 100KB)
-xcsym crash <file> --from-metrickit             # force MetricKit (skip auto-detect)
-xcsym crash <file> --dsym <path>                # explicit dSYM for the main app
-xcsym crash <file> --dsym-paths <a>:<b>         # extra dSYM search roots
-xcsym crash <file> --no-symbolicate             # skip atos; keep raw frames
-xcsym crash <file> --no-cache                   # bypass UUID cache
-xcsym crash <file> --no-spotlight               # skip mdfind lookups
-xcsym crash <file> --output <path>              # write JSON to file
+xcsym crash --format=summary <file>             # small tier (≤2KB), top frames only
+xcsym crash --format=standard <file>            # default (≤12KB)
+xcsym crash --format=full <file>                # all threads (emits size_warning past 100KB)
+xcsym crash --from-metrickit <file>             # force MetricKit (skip auto-detect)
+xcsym crash --dsym <path> <file>                # explicit dSYM for the main app
+xcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots
+xcsym crash --no-symbolicate <file>             # skip atos; keep raw frames
+xcsym crash --no-cache <file>                   # bypass UUID cache
+xcsym crash --no-spotlight <file>               # skip mdfind lookups
+xcsym crash --output <path> <file>              # write JSON to a file
+xcsym crash - < crash.ips                       # read from stdin (for pasted content)
 ```
+
+**Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.
 
 ### verify — dSYM Match Diagnostics
 
@@ -105,7 +107,8 @@ xcsym list-dsyms --dsym-paths <a>:<b>
 
 ```bash
 xcsym anonymize <file>                   # anonymized JSON to stdout
-xcsym anonymize <file> --output <path>   # write to file
+xcsym anonymize --output <path> <file>   # write to file
+xcsym anonymize - < crash.ips            # read from stdin
 ```
 
 Scrubs bundle IDs, user paths, `.app`/`.framework` names, IPs, device names, session IDs. Preserves dSYM UUIDs (`slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID`) so anonymized output still symbolicates against matching dSYMs.
@@ -159,15 +162,47 @@ Top-level JSON emitted by `crash`:
 
 ## Exit Codes
 
+Exit codes are subcommand-specific. Usage errors, tool errors, timeouts, and output errors are shared across all subcommands. Symbolication-specific codes (2/3/4/7) vary in meaning between `crash` and `verify`.
+
+**Shared across all subcommands:**
+
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | Usage error (bad flags, missing required args) |
+| 5 | Tool/discovery error (dwarfdump/atos failed, Spotlight failed, etc.) |
+| 6 | Command timeout |
+| 8 | Output write error (e.g., `--output` path unwritable) |
+
+**`crash` — main-image-centric:**
+
 | Code | Meaning | First thing to do |
 |---|---|---|
-| 0 | Success, all images matched | — |
-| 2 | Main app dSYM missing | Build the archive or download the dSYM; re-run |
-| 3 | Main app UUID mismatch | Find the archive that matches the crashed build's UUID |
+| 0 | All images matched | — |
+| 2 | Input not found / unreadable / unsupported format OR main app dSYM missing | Check path exists; otherwise download the dSYM for the main UUID |
+| 3 | Main app UUID mismatch | `xcsym find-dsym <uuid>` against the exact UUID from the crash |
 | 4 | Main app arch mismatch | User is on a different slice (arm64e vs arm64); use `find-dsym --arch` |
 | 7 | Main matched, some other images missing/mismatched | Partial success — frames in the main binary symbolicate, others won't |
 
-Exit codes apply to `crash` and `verify`. Other subcommands use 0/1 only.
+**`verify` — per-image-centric (note the 7 vs crash difference):**
+
+| Code | Meaning |
+|---|---|
+| 2 | Input not found / unreadable / unsupported format |
+| 3 | Any image has a UUID mismatch with an explicitly-overridden dSYM |
+| 4 | Any image has an arch-slice mismatch with its dSYM |
+| 7 | Any missing images (with or without matches — NOT "main matched + others missing") |
+
+**`find-dsym` — lookup-centric:**
+
+| Code | Meaning |
+|---|---|
+| 0 | Match — dSYM located |
+| 2 | Miss — nothing found across every discovery source |
+
+**`list-dsyms`, `resolve`, `anonymize`:** success/failure only (0/1/5/6/8); no symbolication-specific codes.
+
+On hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{"tool":"xcsym","error":"hang_report","message":"...","input":"...","routing":"..."}`. Route the user to hang-diagnostics when you see `"error":"hang_report"`.
 
 ## Pattern Tag Catalog
 
@@ -191,25 +226,27 @@ Every `pattern_tag` xcsym can emit, with the rule that fires it:
 | `background_task_expired` | R-bg-expired-01 | high | FRONTBOARD + 0xBAADCA11 |
 | `data_protection_violation` | R-data-prot-01 | high | RUNNINGBOARD + 0xdead10cc |
 | `code_signing_killed` | R-code-sign-01 | high | CODESIGNING + 0xc51bad0[0-f] |
-| `jetsam_oom` | R-jetsam-01 | high | `EXC_RESOURCE` MEMORY (fatal) or JETSAM namespace |
+| `jetsam_oom` | R-jetsam-01 | high | `EXC_RESOURCE` with `MEMORY` subtype OR `termination.reason` contains `per-process-limit` / `vm-pageshortage` |
 | `cpu_resource_fatal` | R-cpu-fatal-01 | high | `EXC_RESOURCE` CPU/WAKEUPS FATAL (excludes NON-FATAL) |
 | `swiftui_update_loop` | R-swiftui-loop-01 | low | ≥100 consecutive `AG::Graph::update_*` frames from the top |
 | `unclassified` | — | low | No rule matched — raw fields are in `pattern_reason` |
 
 ## dSYM Discovery Order
 
-When the main app dSYM isn't explicitly passed, xcsym walks sources in this order (first hit wins):
+Source: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact order:
 
-1. UUID cache (`~/Library/Caches/xcsym/uuid-index.json`, unless `--no-cache`)
-2. Explicit `--dsym` / `--dsym-paths` (including `XCSYM_DSYM_PATHS` env var)
-3. `~/Library/Developer/Xcode/Archives/**` (most recent first)
-4. `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`
-5. `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)
-6. Current Xcode toolchain (system Swift dylibs)
-7. System framework dSYMs bundled with CLT
-8. Spotlight (`mdfind kMDItemContentType == com.apple.xcode.dsym`, unless `--no-spotlight`)
+1. **ExplicitByUUID** — per-image overrides the `crash` subcommand builds when the header lists a main-image UUID (before any other source, including cache)
+2. **Explicit paths** — `--dsym` direct override and `--dsym-paths` extra roots
+3. **UUID cache** — `~/Library/Caches/xcsym/uuid-index.json` (skip with `--no-cache`)
+4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)
+5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)
+6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`
+7. **Frameworks** — system framework dSYMs bundled with CLT
+8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)
+9. **Toolchain** — current Xcode toolchain (system Swift dylibs)
+10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)
 
-`find-dsym` follows the same order. `list-dsyms --source=<name>` restricts scanning to one root.
+`find-dsym` follows the same chain minus step 1 (no per-UUID explicit map). `list-dsyms --source=<name>` restricts scanning to a single root by name.
 
 ## Troubleshooting
 
@@ -221,7 +258,7 @@ When the main app dSYM isn't explicitly passed, xcsym walks sources in this orde
 | Exit 7, "main matched, others missing" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |
 | `pattern_tag="unclassified"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |
 | `size_warning` in output | Full tier exceeded 100KB budget | Switch to `--format=standard` or `--format=summary` |
-| `HangError: bug_type=298` | `.ips` is a hang, not a crash | Use hang-diagnostics skill instead; `crash` rejects hangs |
+| `{"error":"hang_report"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |
 
 ## Resources
 

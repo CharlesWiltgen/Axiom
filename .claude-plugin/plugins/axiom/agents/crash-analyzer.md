@@ -68,6 +68,12 @@ The exit code narrows the triage path:
 | 4 | Main arch mismatch | Pass `--arch` to `find-dsym` (arm64 vs arm64e) |
 | 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |
 
+**Flag placement.** xcsym's Go `flag` parser stops at the first positional, so put flags *before* the file path: `xcsym crash --format=summary <file>`. The reverse order exits 1 with a usage error.
+
+**Stdin.** Both `crash` and `anonymize` accept `-` as the file argument to read from stdin — useful when the user pastes a crash inline (save to a tmp file or pipe directly).
+
+**Hang rejection.** `crash` exits 1 and writes `{"tool":"xcsym","error":"hang_report","message":"...","input":"...","routing":"..."}` to stdout when the input is a hang (`bug_type=298`). Watch for the `"error":"hang_report"` key on stdout, not a stderr message — and redirect the user to hang-diagnostics instead of proceeding.
+
 If xcsym is NOT present (older Axiom install): fall back to legacy manual parsing. Note to user: "xcsym not found — using legacy parsing." Read the `.ips` JSON, extract `exception.type`, `exception.subtype`, `termination.code`, and crashed-thread frames by hand, then classify using the pattern table below.
 
 ## Pattern Tag → Fix Guidance
@@ -162,7 +168,7 @@ Exit code is 3 (UUID mismatch). The agent:
 ## When to Escalate
 
 Report to user and stop if:
-- xcsym returns `HangError: bug_type=298` — redirect to hang-diagnostics skill
+- xcsym stdout contains `"error":"hang_report"` (exit 1) — the input is a hang, not a crash; redirect to hang-diagnostics skill
 - Exit code is non-zero *and* the pattern tag is `unclassified` — the rule engine gave up; raw output is the best the tool can do
 - Crash file is truncated or unparseable — ask for a complete file
 
