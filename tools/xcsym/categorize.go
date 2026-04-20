@@ -166,6 +166,15 @@ var rules = []Rule{
 			return false, ""
 		},
 	},
+	{
+		ID: "R-exc-guard-01", Tag: "exc_guard", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if c.Exception.Type == "EXC_GUARD" {
+				return true, "exception.type == EXC_GUARD"
+			}
+			return false, ""
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n

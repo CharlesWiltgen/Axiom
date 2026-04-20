@@ -317,6 +317,24 @@ func TestCategorize_R_illegal_inst_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-exc-guard-01 -----------------------------------------------------
+
+func TestCategorize_R_exc_guard_01_Positive(t *testing.T) {
+	raw := &RawCrash{Exception: Exception{Type: "EXC_GUARD", Codes: "0x...", Subtype: "GUARD_TYPE_FD"}}
+	res := Categorize(raw)
+	if res.RuleID != "R-exc-guard-01" {
+		t.Errorf("rule_id = %q, want R-exc-guard-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_exc_guard_01_Negative(t *testing.T) {
+	raw := &RawCrash{Exception: Exception{Type: "EXC_CRASH"}}
+	res := Categorize(raw)
+	if res.RuleID == "R-exc-guard-01" {
+		t.Errorf("must not fire exc_guard on EXC_CRASH")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -352,6 +370,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-zombie-01":         {positive: true, negative: true},
 	"R-bad-access-01":     {positive: true, negative: true},
 	"R-illegal-inst-01":   {positive: true, negative: true},
+	"R-exc-guard-01":      {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
