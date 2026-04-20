@@ -593,6 +593,34 @@ func TestCategorize_R_jetsam_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-cpu-fatal-01 -----------------------------------------------------
+
+func TestCategorize_R_cpu_fatal_01_Positive_CPU(t *testing.T) {
+	raw := &RawCrash{Exception: Exception{Type: "EXC_RESOURCE", Subtype: "CPU FATAL"}}
+	res := Categorize(raw)
+	if res.RuleID != "R-cpu-fatal-01" {
+		t.Errorf("rule_id = %q, want R-cpu-fatal-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_cpu_fatal_01_Positive_Wakeups(t *testing.T) {
+	raw := &RawCrash{Exception: Exception{Type: "EXC_RESOURCE", Subtype: "WAKEUPS FATAL"}}
+	res := Categorize(raw)
+	if res.RuleID != "R-cpu-fatal-01" {
+		t.Errorf("rule_id = %q, want R-cpu-fatal-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_cpu_fatal_01_Negative_NonFatal(t *testing.T) {
+	// Non-fatal EXC_RESOURCE CPU events are not categorized here — per the
+	// plan they're rejected at the crash subcommand level instead.
+	raw := &RawCrash{Exception: Exception{Type: "EXC_RESOURCE", Subtype: "CPU (WARNING)"}}
+	res := Categorize(raw)
+	if res.RuleID == "R-cpu-fatal-01" {
+		t.Errorf("must not fire cpu_resource_fatal on non-FATAL subtype")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -638,6 +666,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-data-prot-01":      {positive: true, negative: true},
 	"R-code-sign-01":      {positive: true, negative: true},
 	"R-jetsam-01":         {positive: true, negative: true},
+	"R-cpu-fatal-01":      {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
