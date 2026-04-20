@@ -295,6 +295,13 @@ func TestFormat_Full_AllThreadsPopulated(t *testing.T) {
 	if len(rep.Crash.AllThreads) != 2 {
 		t.Errorf("AllThreads = %d, want 2 (full tier)", len(rep.Crash.AllThreads))
 	}
+	// axiom-uya: full tier must NOT populate OtherThreadsTopFrames — AllThreads
+	// already contains everything it would carry, so including it was pure
+	// duplication that inflated payload size.
+	if len(rep.Crash.OtherThreadsTopFrames) != 0 {
+		t.Errorf("full tier OtherThreadsTopFrames = %d, want 0 (AllThreads is the superset)",
+			len(rep.Crash.OtherThreadsTopFrames))
+	}
 	if rep.SizeWarning != nil {
 		t.Errorf("unexpected SizeWarning on small fixture: %q", *rep.SizeWarning)
 	}
