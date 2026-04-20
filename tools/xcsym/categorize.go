@@ -239,6 +239,15 @@ var rules = []Rule{
 			return true, "FRONTBOARD termination 0xDEADFA11 (user force quit)"
 		},
 	},
+	{
+		ID: "R-bg-expired-01", Tag: "background_task_expired", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if strings.EqualFold(c.Termination.Code, "0xBAADCA11") {
+				return true, "termination.code 0xBAADCA11 (background task expired)"
+			}
+			return false, ""
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n
