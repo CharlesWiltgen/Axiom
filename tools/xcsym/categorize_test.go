@@ -493,6 +493,25 @@ func TestCategorize_R_user_quit_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-bg-expired-01 ----------------------------------------------------
+
+func TestCategorize_R_bg_expired_01_Positive(t *testing.T) {
+	raw := &RawCrash{Termination: Termination{Namespace: "FRONTBOARD", Code: "0xBAADCA11"}}
+	res := Categorize(raw)
+	if res.RuleID != "R-bg-expired-01" {
+		t.Errorf("rule_id = %q, want R-bg-expired-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_bg_expired_01_Negative(t *testing.T) {
+	// Near miss: watchdog code 0x8BADF00D must remain classified as watchdog.
+	raw := &RawCrash{Termination: Termination{Namespace: "FRONTBOARD", Code: "0x8BADF00D"}}
+	res := Categorize(raw)
+	if res.RuleID == "R-bg-expired-01" {
+		t.Errorf("must not fire background_task_expired on watchdog code")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -534,6 +553,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-abort-01":          {positive: true, negative: true},
 	"R-watchdog-01":       {positive: true, negative: true},
 	"R-user-quit-01":      {positive: true, negative: true},
+	"R-bg-expired-01":     {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
