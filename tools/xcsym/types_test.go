@@ -28,7 +28,7 @@ func TestCrashReportJSONRoundTrip(t *testing.T) {
 				},
 			},
 		},
-		Images: ImageStatus{
+		Images: &ImageStatus{
 			Matched:    []ImageMatch{{UUID: "AAAA", Name: "MyApp", Arch: "arm64e", DsymPath: "/path"}},
 			Mismatched: []ImageMatch{},
 			Missing:    []ImageMiss{},
