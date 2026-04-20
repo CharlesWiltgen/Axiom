@@ -219,24 +219,51 @@ func isHardToolError(ctx context.Context, err error) bool {
 	return ctx.Err() != nil
 }
 
+// mdfindPathsForUUIDFn is mdfindPathsForUUID behind a function-typed var so
+// tests can substitute a stub that simulates Spotlight returning stale paths
+// (a bundle whose DWARF no longer carries the requested UUID) without having
+// to wait for spindump or rebuild the Spotlight index. The matchDsymBundle
+// loop in findViaSpotlight is the code under test; this seam isolates the
+// shell-out so the loop's stale-result handling can be exercised directly.
+var mdfindPathsForUUIDFn = mdfindPathsForUUID
+
+// mdfindPathsForUUID queries Spotlight for dSYM bundles indexed with the
+// given UUID and returns the non-empty result lines. Tool errors propagate
+// to the caller so isHardToolError can decide whether to abort the Find
+// chain.
+func mdfindPathsForUUID(ctx context.Context, uuid string) ([]string, error) {
+	res, err := ExecRun(ctx, 0, "mdfind", fmt.Sprintf(`com_apple_xcode_dsym_uuids == %q`, uuid))
+	if err != nil {
+		return nil, err
+	}
+	var paths []string
+	for _, p := range strings.Split(strings.TrimSpace(string(res.Stdout)), "\n") {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			paths = append(paths, p)
+		}
+	}
+	return paths, nil
+}
+
 // findViaSpotlight queries mdfind for dSYMs indexed with the given UUID.
-// Spotlight is the fastest source when the index is warm.
+// Spotlight is the fastest source when the index is warm. Stale results
+// (bundle moved or UUID changed since the last index update) are skipped:
+// matchDsymBundle returns nil for a path whose DWARF no longer carries the
+// requested UUID, and the loop tries the next result rather than aborting
+// the source.
 func (d *Discoverer) findViaSpotlight(ctx context.Context, uuid, arch string) (*DsymEntry, error) {
 	if d.opts.SkipSpotlight {
 		return nil, nil
 	}
-	res, err := ExecRun(ctx, 0, "mdfind", fmt.Sprintf(`com_apple_xcode_dsym_uuids == %q`, uuid))
+	paths, err := mdfindPathsForUUIDFn(ctx, uuid)
 	if err != nil {
 		if isHardToolError(ctx, err) {
 			return nil, err
 		}
 		return nil, nil
 	}
-	for _, path := range strings.Split(strings.TrimSpace(string(res.Stdout)), "\n") {
-		path = strings.TrimSpace(path)
-		if path == "" {
-			continue
-		}
+	for _, path := range paths {
 		entry, err := matchDsymBundle(ctx, path, uuid, arch)
 		if err != nil {
 			return nil, err

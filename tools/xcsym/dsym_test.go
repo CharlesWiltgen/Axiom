@@ -425,6 +425,161 @@ func TestDefaultFrameworkScanTimeout(t *testing.T) {
 	}
 }
 
+// setupFakeDsymWithBinary writes the contents of srcBinary into a fake dSYM
+// bundle's DWARF dir. Returns the bundle path. Use this when a test needs
+// a dSYM whose DWARF carries a specific binary's real UUIDs (e.g. a stale
+// Spotlight scenario where one bundle's UUID intentionally won't match
+// another's).
+func setupFakeDsymWithBinary(t *testing.T, relativeBundlePath, binaryName, srcBinary string) string {
+	t.Helper()
+	dir := t.TempDir()
+	bundle := filepath.Join(dir, relativeBundlePath)
+	dwarf := filepath.Join(bundle, "Contents", "Resources", "DWARF")
+	if err := os.MkdirAll(dwarf, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	src, err := os.ReadFile(srcBinary)
+	if err != nil {
+		t.Fatalf("cannot read %s: %v", srcBinary, err)
+	}
+	if err := os.WriteFile(filepath.Join(dwarf, binaryName), src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return bundle
+}
+
+// TestFindViaSpotlight_SkipsStalePaths guards axiom-lub #2. When Spotlight's
+// index is stale (it returns a path whose DWARF no longer carries the
+// requested UUID), findViaSpotlight must continue to the next mdfind result
+// rather than abort the Spotlight source. Without loop continuation, a
+// single stale entry would mask every subsequent Spotlight result for the
+// same UUID — including the one that would actually succeed.
+//
+// Test setup: two real dSYM bundles. The "stale" bundle's DWARF binary is
+// /bin/cat (its UUIDs won't match /bin/ls's). The "fresh" bundle's DWARF
+// binary is /bin/ls; we query for /bin/ls's real UUID. The stub returns
+// the stale path BEFORE the fresh path so the loop has to skip past it.
+func TestFindViaSpotlight_SkipsStalePaths(t *testing.T) {
+	if _, err := exec.LookPath("xcrun"); err != nil {
+		t.Skip("xcrun not available")
+	}
+	if _, err := os.Stat("/bin/cat"); err != nil {
+		t.Skipf("/bin/cat not available: %v", err)
+	}
+
+	stale := setupFakeDsymWithBinary(t, "Stale.dSYM", "stalebin", "/bin/cat")
+	fresh := setupFakeDsymWithBinary(t, "Fresh.dSYM", "freshbin", "/bin/ls")
+
+	// Read /bin/ls's real UUID from the fresh bundle so the lookup target
+	// is whatever the host's /bin/ls actually carries.
+	freshDwarf := filepath.Join(fresh, "Contents", "Resources", "DWARF", "freshbin")
+	uuids, err := ReadUUIDs(context.Background(), freshDwarf)
+	if err != nil || len(uuids) == 0 {
+		t.Skipf("cannot read UUIDs from /bin/ls fixture: %v", err)
+	}
+	targetUUID := uuids[0].UUID
+	targetArch := uuids[0].Arch
+
+	// Sanity: confirm the stale fixture's UUIDs don't accidentally include
+	// the target. If /bin/cat ever shipped with the same UUID as /bin/ls
+	// (vanishingly unlikely but possible on a custom toolchain), the test
+	// would silently degrade to "two fresh paths" and stop guarding the
+	// stale-skip path.
+	staleDwarf := filepath.Join(stale, "Contents", "Resources", "DWARF", "stalebin")
+	staleUUIDs, _ := ReadUUIDs(context.Background(), staleDwarf)
+	for _, u := range staleUUIDs {
+		if u.UUID == targetUUID {
+			t.Skipf("/bin/cat and /bin/ls share UUID %s on this host — fixture invariant violated", targetUUID)
+		}
+	}
+
+	orig := mdfindPathsForUUIDFn
+	t.Cleanup(func() { mdfindPathsForUUIDFn = orig })
+	mdfindPathsForUUIDFn = func(_ context.Context, uuid string) ([]string, error) {
+		return []string{stale, fresh}, nil
+	}
+
+	d := NewDiscoverer(DiscovererOptions{
+		SkipDefaults: true,
+		SkipCache:    true,
+	})
+	entry, err := d.Find(context.Background(), targetUUID, targetArch)
+	if err != nil {
+		t.Fatalf("Find: %v (a stale Spotlight result must not abort the source)", err)
+	}
+	if entry == nil {
+		t.Fatal("expected Find to skip the stale path and return the fresh entry")
+	}
+	if entry.Path != fresh {
+		t.Errorf("Path = %q, want fresh bundle %q — the stale path masked the second mdfind result", entry.Path, fresh)
+	}
+	if entry.Source != "spotlight" {
+		t.Errorf("Source = %q, want spotlight", entry.Source)
+	}
+}
+
+// TestFindDsym_ExplicitByUUID_TrustsWithoutSliceVerification documents the
+// intentional trust-without-verify contract for explicit overrides
+// (axiom-lub #3). When the caller passes --dsym (Explicit) or its per-UUID
+// equivalent (ExplicitByUUID), Find returns the entry after a single
+// os.Stat — it does NOT inspect the bundle's DWARF dir to confirm any
+// slice actually carries the requested UUID. The user said "use THIS
+// file"; Find honors that.
+//
+// This means: in a universal-binary dSYM whose slices claim distinct UUIDs
+// (a synthetic case, but possible when fixtures are hand-assembled or two
+// real dSYMs are concatenated), an explicit override for one slice's UUID
+// returns the bundle path even when the requested UUID isn't in any slice.
+// Slice-UUID validation, if it ever happens, belongs at the layer that
+// invokes atos with the override — not at discovery.
+//
+// A future refactor that adds DWARF inspection inside the Explicit /
+// ExplicitByUUID branches of Find would silently change this contract;
+// this test would fail loudly and force a deliberate decision about
+// whether to keep trust-without-verify.
+func TestFindDsym_ExplicitByUUID_TrustsWithoutSliceVerification(t *testing.T) {
+	// Build a fake universal-style dSYM bundle with two DWARF binaries
+	// claiming different UUIDs. Find must NOT walk this directory under
+	// an explicit override — the path returns as-is.
+	dir := t.TempDir()
+	bundle := filepath.Join(dir, "MultiSlice.dSYM")
+	dwarf := filepath.Join(bundle, "Contents", "Resources", "DWARF")
+	if err := os.MkdirAll(dwarf, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	// Two slice files; their actual DWARF UUIDs are irrelevant because
+	// Find never reads them under an explicit override.
+	for _, name := range []string{"sliceA", "sliceB"} {
+		if err := os.WriteFile(filepath.Join(dwarf, name), []byte("not-a-real-mach-o"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	requestedUUID := "AAAAAAAA-1111-2222-3333-444444444444"
+	d := NewDiscoverer(DiscovererOptions{
+		ExplicitByUUID: map[string]string{requestedUUID: bundle},
+		SkipSpotlight:  true,
+		SkipCache:      true,
+		SkipDefaults:   true,
+	})
+
+	entry, err := d.Find(context.Background(), requestedUUID, "arm64e")
+	if err != nil {
+		t.Fatalf("Find: %v (explicit override must return without slice validation)", err)
+	}
+	if entry.Path != bundle {
+		t.Errorf("Path = %q, want %q (explicit override should be returned verbatim)", entry.Path, bundle)
+	}
+	if entry.Source != "explicit" {
+		t.Errorf("Source = %q, want explicit", entry.Source)
+	}
+	// The entry's UUID is the requested UUID, not anything Find discovered
+	// inside the bundle — that's the trust-without-verify contract.
+	if entry.UUID != requestedUUID {
+		t.Errorf("UUID = %q, want %q (Find should echo the requested UUID, not derive it from the bundle)", entry.UUID, requestedUUID)
+	}
+}
+
 func TestFindDsym_ArchMismatch(t *testing.T) {
 	// Request an arch the dSYM doesn't have; discovery should still return
 	// the dSYM (for mismatch classification by VerifyImages) rather than
