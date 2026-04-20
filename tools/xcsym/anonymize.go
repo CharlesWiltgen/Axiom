@@ -138,6 +138,8 @@ func Anonymize(data []byte) ([]byte, error) {
 		return anonymizeIPSv2(data)
 	case FormatMetricKit:
 		return anonymizeMetricKit(data)
+	case FormatAppleCrash:
+		return anonymizeAppleCrash(data)
 	}
 	return nil, fmt.Errorf("anonymize: unsupported or unrecognized format")
 }

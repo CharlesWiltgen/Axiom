@@ -463,3 +463,190 @@ func TestRunAnonymize_WritesOutputFile(t *testing.T) {
 		t.Errorf("v2 anonymized output missing header/payload separator newline")
 	}
 }
+
+// appleCrashPIIFixture — synthetic .crash text with every PII category
+// the anonymizer must scrub. The inline values are recognizable strings
+// so failed assertions quote the exact bit that leaked through. Mirrors
+// piiFixture at the top of this file but in the legacy text format.
+const appleCrashPIIFixture = `Incident Identifier: 99999999-AAAA-BBBB-CCCC-DDDDEEEEFFFF
+Hardware Model:      iPhone16,2
+Process:             SecretApp [14250]
+Path:                /private/var/containers/Bundle/Application/77777777-8888-9999-AAAA-BBBBBBBBBBBB/SecretApp.app/SecretApp
+Identifier:          com.secretco.secret
+Version:             1.0 (1)
+AppStoreTools:       17E187
+AppVariant:          1:iPhone16,2:26
+Beta:                YES
+Code Type:           ARM-64 (Native)
+Role:                Foreground
+Parent Process:      launchd [1]
+Coalition:           com.secretco.secret [3907]
+
+Date/Time:           2026-04-12 18:04:38.4848 +0300
+
+OS Version:          iPhone OS 26.4.1 (23E254)
+Release Type:        User
+Report Version:      104
+
+Exception Type:  EXC_CRASH (SIGABRT)
+Exception Codes: 0x0000000000000000, 0x0000000000000000
+Termination Reason: SIGNAL 6 Abort trap: 6
+Terminating Process: SecretApp [14250]
+
+Triggered by Thread:  0
+
+Thread 0 Crashed:
+0   libsystem_kernel.dylib        	0x23dddf1d0 __pthread_kill + 8 (:-1)
+1   SecretApp                     	0x104130e78 ContentView.body + 16 (ContentView.swift:42)
+2   libobjc.A.dylib               	0x18bb2138c objc_exception_throw + 448 (objc-exception.mm:385)
+
+Thread 0 crashed with ARM Thread State (64-bit):
+    sp: 0x000000016bd285c0   pc: 0x000000023dddf1d0
+
+
+Binary Images:
+       0x104000000 -        0x104fffffff SecretApp arm64  <a8a78540b3d93b69bba2e8766dbf3194> /private/var/containers/Bundle/Application/77777777-8888-9999-AAAA-BBBBBBBBBBBB/SecretApp.app/SecretApp
+       0x18ba0000 -         0x18bbffff libobjc.A.dylib arm64e  <dbe3f13eefc431c5b7623455cee83e7f> /usr/lib/libobjc.A.dylib
+       0x23ddd4000 -        0x23de0fff libsystem_kernel.dylib arm64e  <5f4e68e1021c3a8fa6f62c4c077d0676> /usr/lib/system/libsystem_kernel.dylib
+
+EOF
+`
+
+func TestAnonymize_AppleCrash_ScrubsKnownPII(t *testing.T) {
+	out, err := Anonymize([]byte(appleCrashPIIFixture))
+	if err != nil {
+		t.Fatalf("Anonymize: %v", err)
+	}
+
+	// Structural: anonymized output must still detect as .crash and
+	// parse cleanly. This guards against a regex accidentally eating a
+	// section header.
+	if got := DetectFormat(out); got != FormatAppleCrash {
+		t.Errorf("DetectFormat after anonymize = %q, want %q", got, FormatAppleCrash)
+	}
+	raw, err := ParseAppleCrash(out)
+	if err != nil {
+		t.Fatalf("reparse after anonymize: %v\n%s", err, string(out))
+	}
+	// The R-objc-exc-01 rule depends on EXC_CRASH + objc_exception_throw on
+	// the crashed thread; both must survive scrubbing.
+	if got := Categorize(raw).RuleID; got != "R-objc-exc-01" {
+		t.Errorf("categorize after anonymize lost signal: RuleID = %q, want R-objc-exc-01", got)
+	}
+
+	// dSYM UUIDs in <…> brackets must survive — they're the correlation
+	// keys dSYM discovery uses. The fixture's a8a7… form is an undashed
+	// 32-hex which uuidRE doesn't match (the existing scrubString is
+	// safe by construction) but we assert explicitly in case a future
+	// regex relaxation breaks the invariant.
+	preservedUUIDs := []string{
+		"a8a78540b3d93b69bba2e8766dbf3194",
+		"dbe3f13eefc431c5b7623455cee83e7f",
+		"5f4e68e1021c3a8fa6f62c4c077d0676",
+	}
+	for _, u := range preservedUUIDs {
+		if !bytes.Contains(out, []byte(u)) {
+			t.Errorf("dSYM UUID was redacted: %q — must be preserved", u)
+		}
+	}
+
+	// Personal data patterns MUST all be gone.
+	leaks := []string{
+		"SecretApp",                            // app name (wherever it appears)
+		"com.secretco.secret",                  // bundle ids
+		"99999999-AAAA",                        // incident UUID prefix
+		"77777777-8888",                        // install UUID prefix (dashed → uuidRE matches → zero'd)
+		"iPhone16,2",                           // device model via Hardware Model + AppVariant
+	}
+	for _, leak := range leaks {
+		if bytes.Contains(out, []byte(leak)) {
+			t.Errorf("PII leaked through: %q still present in output\n%s", leak, string(out))
+		}
+	}
+
+	// Redacted sentinels that should show up as replacements.
+	wants := []string{
+		"Process:             App [1]",
+		"Identifier:          com.example.redacted",
+		"Hardware Model:      RedactedDevice",
+		"AppVariant:          0:RedactedDevice:0",
+		"Coalition:           com.example.redacted [1]",
+		"Terminating Process: App [1]",
+	}
+	for _, w := range wants {
+		if !bytes.Contains(out, []byte(w)) {
+			t.Errorf("expected redaction sentinel not found: %q\n%s", w, string(out))
+		}
+	}
+}
+
+// TestAnonymize_AppleCrash_PreservesColumnAlignment verifies that header
+// rewrites replay the original inter-column whitespace. This matters
+// for humans sanity-checking a fixture — a jumbled .crash looks broken
+// even when the content is correct.
+func TestAnonymize_AppleCrash_PreservesColumnAlignment(t *testing.T) {
+	// Two different padding widths — make sure each is preserved rather
+	// than normalized to a fixed width.
+	in := []byte("Process:             SecretApp [1]\nIdentifier: com.secret\n")
+	out, err := Anonymize(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 13 spaces after "Process:"
+	if !bytes.Contains(out, []byte("Process:             App [1]")) {
+		t.Errorf("Process padding lost:\n%s", string(out))
+	}
+	// 1 space after "Identifier:"
+	if !bytes.Contains(out, []byte("Identifier: com.example.redacted")) {
+		t.Errorf("Identifier padding lost:\n%s", string(out))
+	}
+}
+
+// TestAnonymize_AppleCrash_Fixture rounds-trips the committed fixture
+// through the anonymizer one more time — an anonymized input must be a
+// fixed point (idempotent) so re-running the CLI on an already-clean
+// file doesn't degrade it.
+func TestAnonymize_AppleCrash_Fixture(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("testdata", "crashes", "apple_crash", "objc_exception_sigabrt.crash"))
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	out, err := Anonymize(data)
+	if err != nil {
+		t.Fatalf("Anonymize: %v", err)
+	}
+	if !bytes.Equal(data, out) {
+		// Emit a diff-friendly error — the actual bytes of both buffers
+		// would dominate the failure output, so we pick the first line
+		// that differs and report its index.
+		dataLines := bytes.Split(data, []byte("\n"))
+		outLines := bytes.Split(out, []byte("\n"))
+		for i := 0; i < len(dataLines) && i < len(outLines); i++ {
+			if !bytes.Equal(dataLines[i], outLines[i]) {
+				t.Errorf("anonymize not idempotent at line %d:\n  have: %q\n  want: %q",
+					i+1, outLines[i], dataLines[i])
+				return
+			}
+		}
+		t.Errorf("anonymize not idempotent: length changed (%d → %d)", len(data), len(out))
+	}
+}
+
+// TestAnonymize_AppleCrash_UnknownAppName handles a .crash whose
+// Process: line is empty or has no identifier — the word-boundary
+// substitution step must be skipped so the anonymizer doesn't try to
+// compile a regex from an empty string.
+func TestAnonymize_AppleCrash_UnknownAppName(t *testing.T) {
+	// No Process: line at all.
+	in := []byte("Incident Identifier: 11111111-2222-3333-4444-555555555555\nIdentifier: com.redacted\n")
+	_, err := Anonymize(in)
+	if err != nil {
+		t.Errorf("empty Process: shouldn't fail anonymize: %v", err)
+	}
+	// Invalid identifier characters in Process: (a space in the app name).
+	in2 := []byte("Process: App Name [1]\nIdentifier: com.redacted\n")
+	_, err = Anonymize(in2)
+	if err != nil {
+		t.Errorf("regex-unsafe app name shouldn't fail anonymize: %v", err)
+	}
+}

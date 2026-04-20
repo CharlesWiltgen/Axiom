@@ -16,6 +16,10 @@ func TestDetectFormat(t *testing.T) {
 		{"metrickit", []byte(`{"callStackTree":{"callStacks":[]},"exceptionType":1,"exceptionCode":0}`), "metrickit_json"},
 		{"unknown", []byte(`{"something":"else"}`), "unknown"},
 		{"non-json", []byte(`Exception Type: EXC_BAD_ACCESS`), "unknown"},
+		{"apple_crash canonical", []byte("Incident Identifier: 00000000-0000-0000-0000-000000000000\nProcess: App [1]\n"), "apple_crash_text"},
+		{"apple_crash process-only", []byte("Process:             App [1]\nIdentifier:          com.example.redacted\n"), "apple_crash_text"},
+		{"apple_crash leading blank lines", []byte("\n\n  Incident Identifier: 11111111-2222-3333-4444-555555555555\n"), "apple_crash_text"},
+		{"apple_crash not-really first line similar word", []byte("Incident-of-something else\n"), "unknown"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

@@ -1,12 +1,14 @@
 ---
 name: xcsym-ref
-description: Use when symbolicating an .ips or MetricKit crash, diagnosing dSYM UUID mismatches, inventorying dSYMs, or anonymizing a crash for fixture use. Reference for the xcsym CLI that ships with Axiom.
+description: Use when symbolicating an .ips, MetricKit, or legacy .crash text file, diagnosing dSYM UUID mismatches, inventorying dSYMs, or anonymizing a crash for fixture use. Reference for the xcsym CLI that ships with Axiom.
 license: MIT
 ---
 
 # xcsym Reference (iOS/macOS Crash Symbolication)
 
-xcsym symbolicates `.ips` (v1/v2) and MetricKit (`MXCrashDiagnostic`) crash reports end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.
+xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), and Apple's legacy `.crash` text reports end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.
+
+`.crash` text is the format Xcode Organizer exposes when a user chooses "Show in Finder" on a TestFlight crash — `.xccrashpoint` bundles nest `.crash` files under `Filters/…/Logs/`. xcsym parses either the raw file or the full bundle path.
 
 ## Binary Location
 
@@ -51,7 +53,12 @@ xcsym crash --no-cache <file>                   # bypass UUID cache
 xcsym crash --no-spotlight <file>               # skip mdfind lookups
 xcsym crash --output <path> <file>              # write JSON to a file
 xcsym crash - < crash.ips                       # read from stdin (for pasted content)
+xcsym crash crash.crash                         # legacy Apple text format (Organizer export)
 ```
+
+Accepted inputs: `.ips` (v1 and v2 JSON), MetricKit `MXCrashDiagnostic` JSON, and Apple's legacy `.crash` text format. The file extension doesn't matter — format is auto-detected from content.
+
+**Unsupported input returns exit 2** with a structured JSON reject on stdout (`{"error":"unsupported_format", …}`) so agents can route on the error field instead of scraping stderr. See the Exit Codes section below.
 
 **Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.
 
@@ -106,7 +113,7 @@ xcsym list-dsyms --dsym-paths <a>:<b>
 ### anonymize — Scrub PII for Fixtures
 
 ```bash
-xcsym anonymize <file>                   # anonymized JSON to stdout
+xcsym anonymize <file>                   # anonymized content to stdout (.ips, MetricKit, or .crash)
 xcsym anonymize --output <path> <file>   # write to file
 xcsym anonymize - < crash.ips            # read from stdin
 ```
@@ -120,6 +127,7 @@ xcsym anonymize - < crash.ips            # read from stdin
 - Device names and account IDs (`crashReporterKey`, `sessionID`, `incident_id`, `incident`, `deviceIdentifier`, `deviceUDID`, `userID`)
 - Binary names inside `usedImages[].name` and MetricKit `binaryName`
 - Foreign UUIDs in freeform strings (incident IDs, paths)
+- `.crash` header keys that always carry PII: `Process`, `Identifier`, `Parent Process`, `Coalition`, `Terminating Process`, `Hardware Model`, `AppVariant` — rewritten to deterministic placeholders while preserving column padding so a human can sanity-check the result
 
 **Preserves:**
 - dSYM UUIDs — `slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID` — so anonymized output still symbolicates against matching dSYMs
@@ -143,7 +151,7 @@ Top-level JSON emitted by `crash`:
   },
   "input": {
     "path": "testdata/crashes/ips_v2/swift_forced_unwrap.ips",
-    "format": "ips_json_v2"
+    "format": "ips_json_v2"  // one of: ips_json_v1 | ips_json_v2 | metrickit_json | apple_crash_text
   },
   "crash": {
     "app": { "name": "...", "version": "...", "bundle_id": "..." },
@@ -219,6 +227,8 @@ Exit codes are subcommand-specific. Usage errors, tool errors, timeouts, and out
 **`list-dsyms`, `resolve`, `anonymize`:** success/failure only (0/1/5/6/8); no symbolication-specific codes.
 
 On hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{"tool":"xcsym","error":"hang_report","message":"...","input":"...","routing":"..."}`. Route the user to hang-diagnostics when you see `"error":"hang_report"`.
+
+On unsupported input (anything that isn't `.ips`, MetricKit, or Apple `.crash` text), `crash` exits 2 after writing `{"tool":"xcsym","error":"unsupported_format","message":"...","input":"...","routing":"..."}` to stdout. The routing field names the accepted formats.
 
 ## Pattern Tag Catalog
 

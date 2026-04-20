@@ -39,6 +39,17 @@ func ParseUsedImages(data []byte, format string) ([]UsedImage, error) {
 		return parseUsedImagesJSON(bytes.TrimSpace(data[idx+1:]))
 	case FormatMetricKit:
 		return nil, fmt.Errorf("MetricKit verify not yet supported (Phase 5)")
+	case FormatAppleCrash:
+		// Run the full .crash parser and lift its UsedImages. This is a
+		// little heavier than the JSON-only fast path (we also parse
+		// threads and header fields) but keeps image extraction in one
+		// place — the alternative is maintaining a second Binary Images
+		// scanner that has to stay in sync with the parser.
+		raw, err := ParseAppleCrash(data)
+		if err != nil {
+			return nil, fmt.Errorf("apple_crash verify: %w", err)
+		}
+		return raw.UsedImages, nil
 	default:
 		return nil, fmt.Errorf("unsupported format for verify: %s", format)
 	}
