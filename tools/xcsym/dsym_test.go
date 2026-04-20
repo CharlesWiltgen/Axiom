@@ -279,6 +279,72 @@ func TestDiscoverer_EnvPathsParsedFromXCSYM_DSYM_PATHS(t *testing.T) {
 	}
 }
 
+// TestWalkRoots_MismatchYieldsToLaterExactMatch guards the fix for bead
+// axiom-jtz (C2): when a root returns a UUID-matching entry with the wrong
+// arch slice, walkRoots must keep scanning remaining roots in case one of
+// them has the exact arch. Before this fix, walkRoots returned on the first
+// non-nil entry — a wrong-arch dSYM in ArchivesPaths[0] would hide the
+// correct arm64e dSYM sitting in ArchivesPaths[1].
+//
+// The scenario is physically impossible to reproduce with real dSYMs (slice
+// UUIDs are content-derived, so "same UUID, different arch across bundles"
+// can't occur in real dwarfdump output), so the test mocks the inner walk
+// via walkForDsymUUIDFn to focus on the ordering logic itself.
+func TestWalkRoots_MismatchYieldsToLaterExactMatch(t *testing.T) {
+	r1 := t.TempDir()
+	r2 := t.TempDir()
+	orig := walkForDsymUUIDFn
+	t.Cleanup(func() { walkForDsymUUIDFn = orig })
+	walkForDsymUUIDFn = func(_ context.Context, root, uuid, arch string) (*DsymEntry, error) {
+		switch root {
+		case r1:
+			return &DsymEntry{UUID: uuid, Arch: "x86_64", Path: root + "/Wrong.dSYM"}, nil
+		case r2:
+			return &DsymEntry{UUID: uuid, Arch: "arm64e", Path: root + "/Right.dSYM"}, nil
+		}
+		return nil, nil
+	}
+
+	got, err := walkRoots(context.Background(), []string{r1, r2}, "TARGET-UUID", "arm64e", "archives")
+	if err != nil {
+		t.Fatalf("walkRoots: %v", err)
+	}
+	if got == nil {
+		t.Fatal("expected an entry, got nil")
+	}
+	if got.Arch != "arm64e" {
+		t.Errorf("Arch = %q, want arm64e — walkRoots short-circuited on root[0]'s mismatch and missed root[1]'s exact match", got.Arch)
+	}
+	if got.Path != r2+"/Right.dSYM" {
+		t.Errorf("Path = %q, want the arm64e dSYM from root[1]", got.Path)
+	}
+}
+
+// TestWalkRoots_AllMismatchesReturnsFirst covers the fallback path: if no
+// root has the exact arch, walkRoots must still return something (the first
+// mismatch) so VerifyImages can classify the miss as arch-mismatch rather
+// than wholly-missing.
+func TestWalkRoots_AllMismatchesReturnsFirst(t *testing.T) {
+	r1 := t.TempDir()
+	r2 := t.TempDir()
+	orig := walkForDsymUUIDFn
+	t.Cleanup(func() { walkForDsymUUIDFn = orig })
+	walkForDsymUUIDFn = func(_ context.Context, root, uuid, arch string) (*DsymEntry, error) {
+		return &DsymEntry{UUID: uuid, Arch: "x86_64", Path: root + "/Mismatch.dSYM"}, nil
+	}
+
+	got, err := walkRoots(context.Background(), []string{r1, r2}, "TARGET-UUID", "arm64e", "archives")
+	if err != nil {
+		t.Fatalf("walkRoots: %v", err)
+	}
+	if got == nil {
+		t.Fatal("expected a mismatch entry, got nil")
+	}
+	if got.Path != r1+"/Mismatch.dSYM" {
+		t.Errorf("Path = %q, want first-root mismatch for stable ordering", got.Path)
+	}
+}
+
 func TestFindDsym_FrameworksScan(t *testing.T) {
 	if _, err := exec.LookPath("xcrun"); err != nil {
 		t.Skip("xcrun not available")
