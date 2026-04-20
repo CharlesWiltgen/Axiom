@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -178,12 +179,50 @@ func TestAnonymize_IPv4AndIPv6(t *testing.T) {
 }
 
 // TestAnonymize_NoRealPIIInTestdata scans every checked-in crash fixture
-// and fails if a known PII *marker* appears. This guards against someone
-// committing a real user's crash report as a test fixture. The markers are
-// the words that would give away real data if they leaked; placeholders
-// like "com.example.MyApp" are whitelisted.
+// against two complementary PII defenses:
+//
+//  1. Strict markers — words that would give away real data if they leaked
+//     (e.g. "johndoe", "SecretApp"). Cheap first-pass guard against someone
+//     copy-pasting a colleague's crash report as a test fixture.
+//  2. Regex patterns — the plan's required categories: non-placeholder
+//     bundle IDs, non-zero UUIDs, unredacted /Users/ paths, and non-zero
+//     IPs. Catches shapes of real data even when the specific strings
+//     aren't in the strict-marker list.
+//
+// Whitelists keep known-good placeholders (com.example.*, MyApp, REDACTED,
+// zeroUUID) from triggering false positives. Both checks gate CI.
 func TestAnonymize_NoRealPIIInTestdata(t *testing.T) {
-	// Walk every file under testdata/crashes.
+	strictMarkers := []string{
+		"johndoe",
+		"JohnsPhone",
+		"SecretApp",
+		"com.secretco",
+	}
+
+	// Regex-based patterns. Go's regexp has no lookahead, so each match is
+	// compared against a per-pattern whitelist of known-good placeholders.
+	bundleIDRE := regexp.MustCompile(`com\.[A-Za-z0-9_.-]+`)
+	bundleIDWhitelist := map[string]bool{
+		"com.example.MyApp":     true,
+		"com.example.redacted":  true,
+		"com.apple.CoreSimulator": true,
+	}
+	// Non-zero UUIDs. The zeroUUID sentinel and the canonical test UUID
+	// "AABBCCDD-EEFF-0011-2233-445566778899" are both expected.
+	anyUUIDRE := regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
+	// Whitelist contains structural test placeholders used across fixtures.
+	// Each is visibly synthetic (repeating digits, sequential hex) — not real PII.
+	uuidWhitelist := map[string]bool{
+		"00000000-0000-0000-0000-000000000000": true,
+		"AABBCCDD-EEFF-0011-2233-445566778899": true,
+		"ABCDEF00-1111-2222-3333-444444444444": true,
+		"11223344-5566-7788-99AA-BBCCDDEEFF00": true,
+	}
+	// /Users/ paths — must all be /Users/REDACTED/...
+	userPathRE := regexp.MustCompile(`/Users/([A-Za-z0-9_.-]+)`)
+	// IPv4 dotted-quad. The only acceptable value is 0.0.0.0 (redactedIPv4).
+	ipv4RE := regexp.MustCompile(`\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b`)
+
 	err := filepath.Walk("testdata/crashes", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -195,18 +234,59 @@ func TestAnonymize_NoRealPIIInTestdata(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		for _, banned := range []string{
-			"johndoe",
-			"JohnsPhone",
-			"SecretApp",
-			"com.secretco",
-			// Other plausible leak markers — add as needed if real fixtures
-			// are imported later.
-		} {
+
+		for _, banned := range strictMarkers {
 			if bytes.Contains(data, []byte(banned)) {
 				t.Errorf("fixture %s contains banned PII marker %q", path, banned)
 			}
 		}
+
+		// Bundle IDs
+		for _, m := range bundleIDRE.FindAllString(string(data), -1) {
+			// Strip trailing punctuation that commonly comes from JSON
+			// contexts (e.g., `com.example.MyApp"` → `com.example.MyApp`).
+			trimmed := strings.TrimRight(m, `".,;:)`+"'")
+			if bundleIDWhitelist[trimmed] {
+				continue
+			}
+			// Allow sub-domain forms under com.example.* (e.g., com.example.MyApp.something).
+			if strings.HasPrefix(trimmed, "com.example.") {
+				continue
+			}
+			// Apple system bundle IDs are expected in .ips used_images paths.
+			if strings.HasPrefix(trimmed, "com.apple.") {
+				continue
+			}
+			t.Errorf("fixture %s contains unredacted bundle-ID-shaped string %q", path, trimmed)
+		}
+
+		// Non-zero UUIDs
+		for _, u := range anyUUIDRE.FindAllString(string(data), -1) {
+			upper := strings.ToUpper(u)
+			if uuidWhitelist[upper] || uuidWhitelist[u] {
+				continue
+			}
+			t.Errorf("fixture %s contains non-placeholder UUID %q", path, u)
+		}
+
+		// /Users/ paths must be /Users/REDACTED
+		for _, m := range userPathRE.FindAllStringSubmatch(string(data), -1) {
+			if m[1] != redactedUserName {
+				t.Errorf("fixture %s contains unredacted /Users/ path (owner=%q)", path, m[1])
+			}
+		}
+
+		// IPv4 — anything other than 0.0.0.0.
+		for _, m := range ipv4RE.FindAllString(string(data), -1) {
+			if m == redactedIPv4 {
+				continue
+			}
+			// Allow memory-address-looking numbers that aren't real IPs from
+			// being flagged — the regex is \b-bounded and length-limited, so
+			// 255.255.255.255 would match but addresses like "0x1000" won't.
+			t.Errorf("fixture %s contains non-redacted IPv4 %q", path, m)
+		}
+
 		return nil
 	})
 	if err != nil {
