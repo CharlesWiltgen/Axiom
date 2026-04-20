@@ -302,6 +302,35 @@ var rules = []Rule{
 			return false, ""
 		},
 	},
+	{
+		ID: "R-swiftui-loop-01", Tag: "swiftui_update_loop", Confidence: "low",
+		Match: func(c *RawCrash) (bool, string) {
+			var main *Thread
+			for i := range c.Threads {
+				if c.Threads[i].Index == 0 {
+					main = &c.Threads[i]
+					break
+				}
+			}
+			if main == nil {
+				return false, ""
+			}
+			const prefix = "AG::Graph::update"
+			const threshold = 100
+			count := 0
+			for _, f := range main.Frames {
+				if !strings.HasPrefix(f.Symbol, prefix) {
+					break
+				}
+				count++
+			}
+			if count >= threshold {
+				return true, fmt.Sprintf("main thread has %d consecutive %s frames (≥%d)",
+					count, prefix, threshold)
+			}
+			return false, ""
+		},
+	},
 }
 
 // hasCrashedFrameSymbol reports whether any of the crashed thread's first n

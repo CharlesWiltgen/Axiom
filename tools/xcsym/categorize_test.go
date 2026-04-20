@@ -621,6 +621,64 @@ func TestCategorize_R_cpu_fatal_01_Negative_NonFatal(t *testing.T) {
 	}
 }
 
+// --- R-swiftui-loop-01 --------------------------------------------------
+
+func TestCategorize_R_swiftui_loop_01_Positive(t *testing.T) {
+	frames := make([]Frame, 0, 110)
+	for i := 0; i < 110; i++ {
+		frames = append(frames, Frame{
+			Index: i, Image: "SwiftUI",
+			Symbol: "AG::Graph::update_someVariant",
+		})
+	}
+	raw := &RawCrash{
+		Exception: Exception{Type: "EXC_RESOURCE", Subtype: "CPU (WARNING)"},
+		Threads:   []Thread{{Index: 0, Triggered: true, Frames: frames}},
+	}
+	res := Categorize(raw)
+	if res.RuleID != "R-swiftui-loop-01" {
+		t.Errorf("rule_id = %q, want R-swiftui-loop-01", res.RuleID)
+	}
+	if res.Confidence != "low" {
+		t.Errorf("confidence = %q, want low", res.Confidence)
+	}
+}
+
+func TestCategorize_R_swiftui_loop_01_Negative_JustBelowThreshold(t *testing.T) {
+	// 99 consecutive AG frames must NOT fire (threshold is ≥100).
+	frames := make([]Frame, 0, 99)
+	for i := 0; i < 99; i++ {
+		frames = append(frames, Frame{Index: i, Image: "SwiftUI", Symbol: "AG::Graph::update_foo"})
+	}
+	raw := &RawCrash{
+		Exception: Exception{Type: "EXC_RESOURCE", Subtype: "CPU (WARNING)"},
+		Threads:   []Thread{{Index: 0, Triggered: true, Frames: frames}},
+	}
+	res := Categorize(raw)
+	if res.RuleID == "R-swiftui-loop-01" {
+		t.Errorf("must not fire swiftui_update_loop below threshold (99 frames)")
+	}
+}
+
+func TestCategorize_R_swiftui_loop_01_Negative_BrokenRun(t *testing.T) {
+	// A foreign frame early in the stack breaks the run — the plan requires
+	// consecutive frames from the top.
+	frames := make([]Frame, 0, 110)
+	frames = append(frames, Frame{Index: 0, Image: "SwiftUI", Symbol: "AG::Graph::update_first"})
+	frames = append(frames, Frame{Index: 1, Image: "MyApp", Symbol: "somethingElse"})
+	for i := 2; i < 110; i++ {
+		frames = append(frames, Frame{Index: i, Image: "SwiftUI", Symbol: "AG::Graph::update_rest"})
+	}
+	raw := &RawCrash{
+		Exception: Exception{Type: "EXC_RESOURCE", Subtype: "CPU (WARNING)"},
+		Threads:   []Thread{{Index: 0, Triggered: true, Frames: frames}},
+	}
+	res := Categorize(raw)
+	if res.RuleID == "R-swiftui-loop-01" {
+		t.Errorf("must not fire swiftui_update_loop when the run is broken by a foreign frame")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -667,6 +725,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-code-sign-01":      {positive: true, negative: true},
 	"R-jetsam-01":         {positive: true, negative: true},
 	"R-cpu-fatal-01":      {positive: true, negative: true},
+	"R-swiftui-loop-01":   {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
