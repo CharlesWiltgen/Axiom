@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-04-20T02:22:29.965Z",
+  "generatedAt": "2026-04-20T02:23:08.383Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -18552,7 +18552,7 @@
     "axiom-performance--hang-diagnostics": {
       "name": "axiom-performance--hang-diagnostics",
       "description": "Systematic diagnosis and resolution of app hangs. A hang occurs when the main thread is blocked for more than 1 second, making the app unresponsive to user input.",
-      "content": "\n# Hang Diagnostics\n\nSystematic diagnosis and resolution of app hangs. A hang occurs when the main thread is blocked for more than 1 second, making the app unresponsive to user input.\n\n## Red Flags — Check This Skill When\n\n| Symptom | This Skill Applies |\n|---------|-------------------|\n| App freezes briefly during use | Yes — likely hang |\n| UI doesn't respond to touches | Yes — main thread blocked |\n| \"App not responding\" system dialog | Yes — severe hang |\n| Xcode Organizer shows hang diagnostics | Yes — field hang reports |\n| MetricKit MXHangDiagnostic received | Yes — aggregated hang data |\n| Animations stutter or skip | Maybe — could be hitch, not hang |\n| App feels slow but responsive | No — performance issue, not hang |\n\n## What Is a Hang\n\nA **hang** is when the main runloop cannot process events for more than 1 second. The user taps, but nothing happens.\n\n```\nUser taps → Main thread busy/blocked → Event queued → 1+ second delay → HANG\n```\n\n**Key distinction**: The main thread handles ALL user input. If it's busy or blocked, the entire UI freezes.\n\n### Hang vs Hitch vs Lag\n\n| Issue | Duration | User Experience | Tool |\n|-------|----------|-----------------|------|\n| **Hang** | >1 second | App frozen, unresponsive | Time Profiler, System Trace |\n| **Hitch** | 1-3 frames (16-50ms) | Animation stutters | Animation Hitches instrument |\n| **Lag** | 100-500ms | Feels slow but responsive | Time Profiler |\n\n**This skill covers hangs.** For hitches, see `axiom-swiftui` (performance reference). For general lag, see `axiom-performance (skills/performance-profiling.md)`.\n\n## The Two Causes of Hangs\n\nEvery hang has one of two root causes:\n\n### 1. Main Thread Busy\n\nThe main thread is doing work instead of processing events.\n\n**Subcategories**:\n\n| Type | Example | Fix |\n|------|---------|-----|\n| **Proactive work** | Pre-computing data user hasn't requested | Lazy initialization, compute on demand |\n| **Irrelevant work** | Processing all notifications, not just relevant ones | Filter notifications, targeted observers |\n| **Suboptimal API** | Using blocking API when async exists | Switch to async API |\n\n### 2. Main Thread Blocked\n\nThe main thread is waiting for something else.\n\n**Subcategories**:\n\n| Type | Example | Fix |\n|------|---------|-----|\n| **Synchronous IPC** | Calling system service synchronously | Use async API variant |\n| **File I/O** | `Data(contentsOf:)` on main thread | Move to background queue |\n| **Network** | Synchronous URL request | Use URLSession async |\n| **Lock contention** | Waiting for lock held by background thread | Reduce critical section, use actors |\n| **Semaphore/dispatch_sync** | Blocking on background work | Restructure to async completion |\n\n## Decision Tree — Diagnosing Hangs\n\n```\nSTART: App hangs reported\n  │\n  ├─→ Do you have hang diagnostics from Organizer or MetricKit?\n  │     │\n  │     ├─→ YES: Examine stack trace\n  │     │     │\n  │     │     ├─→ Stack shows your code running\n  │     │     │     → BUSY: Main thread doing work\n  │     │     │     → Profile with Time Profiler\n  │     │     │\n  │     │     └─→ Stack shows waiting (semaphore, lock, dispatch_sync)\n  │     │           → BLOCKED: Main thread waiting\n  │     │           → Profile with System Trace\n  │     │\n  │     └─→ NO: Can you reproduce?\n  │           │\n  │           ├─→ YES: Profile with Time Profiler first\n  │           │     │\n  │           │     ├─→ High CPU on main thread\n  │           │     │     → BUSY: Optimize the work\n  │           │     │\n  │           │     └─→ Low CPU, thread blocked\n  │           │           → Use System Trace to find what's blocking\n  │           │\n  │           └─→ NO: Enable MetricKit in app\n  │                 → Wait for field reports\n  │                 → Check Organizer > Hangs\n```\n\n## Tool Selection\n\n| Scenario | Primary Tool | Why |\n|----------|-------------|-----|\n| **Reproduces locally** | Time Profiler | See exactly what main thread is doing |\n| **Blocked thread suspected** | System Trace | Shows thread state, lock contention |\n| **Field reports only** | Xcode Organizer | Aggregated hang diagnostics |\n| **Want in-app data** | MetricKit | MXHangDiagnostic with call stacks |\n| **Need precise timing** | System Trace | Nanosecond-level thread analysis |\n\n## Time Profiler Workflow for Hangs\n\n1. **Launch Instruments** → Select Time Profiler template\n2. **Record during hang** → Reproduce the freeze\n3. **Stop recording** → Find the hang period in timeline\n4. **Select hang region** → Drag to select frozen timespan\n5. **Examine call tree** → Look for main thread work\n\n**What to look for**:\n- Functions with high \"Self Time\" on main thread\n- Unexpectedly deep call stacks\n- System calls that shouldn't be on main thread\n\n## System Trace Workflow for Blocked Hangs\n\n1. **Launch Instruments** → Select System Trace template\n2. **Record during hang** → Capture thread states\n3. **Find main thread** → Filter to main thread\n4. **Look for red/orange** → Blocked states\n5. **Examine blocking reason** → Lock, semaphore, IPC\n\n**Thread states**:\n- **Running (blue)**: Executing code\n- **Preempted (orange)**: Runnable but not scheduled\n- **Blocked (red)**: Waiting for resource\n\n## Common Hang Patterns and Fixes\n\n### Pattern 1: Synchronous File I/O\n\n**Before (hangs)**:\n```swift\n// Main thread blocks on file read\nfunc loadUserData() {\n    let data = try! Data(contentsOf: largeFileURL)  // BLOCKS\n    processData(data)\n}\n```\n\n**After (async)**:\n```swift\nfunc loadUserData() {\n    Task.detached {\n        let data = try Data(contentsOf: largeFileURL)\n        await MainActor.run {\n            self.processData(data)\n        }\n    }\n}\n```\n\n### Pattern 2: Unfiltered Notification Observer\n\n**Before (processes all)**:\n```swift\nNotificationCenter.default.addObserver(\n    self,\n    selector: #selector(handleChange),\n    name: .NSManagedObjectContextObjectsDidChange,\n    object: nil  // Receives ALL contexts\n)\n```\n\n**After (filtered)**:\n```swift\nNotificationCenter.default.addObserver(\n    self,\n    selector: #selector(handleChange),\n    name: .NSManagedObjectContextObjectsDidChange,\n    object: relevantContext  // Only this context\n)\n```\n\n### Pattern 3: Expensive Formatter Creation\n\n**Before (creates each time)**:\n```swift\nfunc formatDate(_ date: Date) -> String {\n    let formatter = DateFormatter()  // EXPENSIVE\n    formatter.dateStyle = .medium\n    return formatter.string(from: date)\n}\n```\n\n**After (cached)**:\n```swift\nprivate static let dateFormatter: DateFormatter = {\n    let formatter = DateFormatter()\n    formatter.dateStyle = .medium\n    return formatter\n}()\n\nfunc formatDate(_ date: Date) -> String {\n    Self.dateFormatter.string(from: date)\n}\n```\n\n### Pattern 4: dispatch_sync to Main Thread\n\n**Before (deadlock risk)**:\n```swift\n// From background thread\nDispatchQueue.main.sync {  // BLOCKS if main is blocked\n    updateUI()\n}\n```\n\n**After (async)**:\n```swift\nDispatchQueue.main.async {\n    self.updateUI()\n}\n```\n\n### Pattern 5: Semaphore for Async Result\n\n**Before (blocks main thread)**:\n```swift\nfunc fetchDataSync() -> Data {\n    let semaphore = DispatchSemaphore(value: 0)\n    var result: Data?\n\n    URLSession.shared.dataTask(with: url) { data, _, _ in\n        result = data\n        semaphore.signal()\n    }.resume()\n\n    semaphore.wait()  // BLOCKS MAIN THREAD\n    return result!\n}\n```\n\n**After (async/await)**:\n```swift\nfunc fetchData() async throws -> Data {\n    let (data, _) = try await URLSession.shared.data(from: url)\n    return data\n}\n```\n\n### Pattern 6: Lock Contention\n\n**Before (shared lock)**:\n```swift\nclass DataManager {\n    private let lock = NSLock()\n    private var cache: [String: Data] = [:]\n\n    func getData(for key: String) -> Data? {\n        lock.lock()  // Main thread waits for background\n        defer { lock.unlock() }\n        return cache[key]\n    }\n}\n```\n\n**After (actor)**:\n```swift\nactor DataManager {\n    private var cache: [String: Data] = [:]\n\n    func getData(for key: String) -> Data? {\n        cache[key]  // Actor serializes access safely\n    }\n}\n```\n\n### Pattern 7: App Launch Hang (Watchdog)\n\n**Before (too much work)**:\n```swift\nfunc application(_ application: UIApplication,\n                 didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {\n    loadAllUserData()      // Expensive\n    setupAnalytics()       // Network calls\n    precomputeLayouts()    // CPU intensive\n    return true\n}\n```\n\n**After (deferred)**:\n```swift\nfunc application(_ application: UIApplication,\n                 didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {\n    // Only essential setup\n    setupMinimalUI()\n    return true\n}\n\nfunc applicationDidBecomeActive(_ application: UIApplication) {\n    // Defer non-essential work\n    Task {\n        await loadUserDataInBackground()\n    }\n}\n```\n\n### Pattern 8: Image Processing on Main Thread\n\n**Before (blocks UI)**:\n```swift\nfunc processImage(_ image: UIImage) {\n    let filtered = applyExpensiveFilter(image)  // BLOCKS\n    imageView.image = filtered\n}\n```\n\n**After (background processing)**:\n```swift\nfunc processImage(_ image: UIImage) {\n    imageView.image = placeholder\n\n    Task.detached(priority: .userInitiated) {\n        let filtered = applyExpensiveFilter(image)\n        await MainActor.run {\n            self.imageView.image = filtered\n        }\n    }\n}\n```\n\n## Xcode Organizer Hang Diagnostics\n\n**Window > Organizer > Select App > Hangs**\n\nThe Organizer shows aggregated hang data from users who opted into sharing diagnostics.\n\n**Reading the report**:\n1. **Hang Rate**: Hangs per day per device\n2. **Call Stack**: Where the hang occurred\n3. **Device/OS breakdown**: Which configurations affected\n\n**Interpreting call stacks**:\n- **Your code at top**: Main thread busy with your work\n- **System API at top**: You called blocking API on main thread\n- **pthread_mutex/semaphore**: Lock contention or explicit waiting\n\n## MetricKit Hang Diagnostics\n\nAdopt MetricKit to receive hang diagnostics in your app:\n\n```swift\nimport MetricKit\n\nclass MetricsSubscriber: NSObject, MXMetricManagerSubscriber {\n    func didReceive(_ payloads: [MXDiagnosticPayload]) {\n        for payload in payloads {\n            if let hangDiagnostics = payload.hangDiagnostics {\n                for diagnostic in hangDiagnostics {\n                    analyzeHang(diagnostic)\n                }\n            }\n        }\n    }\n\n    private func analyzeHang(_ diagnostic: MXHangDiagnostic) {\n        // Duration of the hang\n        let duration = diagnostic.hangDuration\n\n        // Call stack tree (needs symbolication)\n        let callStack = diagnostic.callStackTree\n\n        // Send to your analytics\n        uploadHangDiagnostic(duration: duration, callStack: callStack)\n    }\n}\n```\n\n**Key MXHangDiagnostic properties**:\n- `hangDuration`: How long the hang lasted\n- `callStackTree`: MXCallStackTree with frames\n- `signatureIdentifier`: For grouping similar hangs\n\n## Watchdog Terminations\n\nThe watchdog kills apps that hang during key transitions:\n\n| Transition | Time Limit | Consequence |\n|------------|-----------|-------------|\n| **App launch** | ~20 seconds | App killed, crash logged |\n| **Background transition** | ~5 seconds | App killed |\n| **Foreground transition** | ~10 seconds | App killed |\n\n**Watchdog disabled in**:\n- Simulator\n- Debugger attached\n- Development builds (sometimes)\n\n**Watchdog kills are logged as crashes** with exception type `EXC_CRASH (SIGKILL)` and termination reason `Namespace RUNNINGBOARD, Code 3735883980` (hex `0xDEAD10CC` — indicates app held a file lock or SQLite database lock while being suspended).\n\n## Pressure Scenarios\n\n### Scenario 1: Manager Says \"Just Add a Loading Spinner\"\n\n**Situation**: App hangs during data load. Manager suggests adding spinner to \"fix\" it.\n\n**Why this fails**: Adding a spinner doesn't prevent the hang—the UI still freezes, the spinner won't animate, and the app remains unresponsive.\n\n**Correct response**: \"A spinner won't animate during a hang because the main thread is blocked. We need to move this work off the main thread so the spinner can actually spin and the app stays responsive.\"\n\n### Scenario 2: \"It Works Fine in Testing\"\n\n**Situation**: QA can't reproduce the hang. Logs show it happens in production.\n\n**Analysis**:\n1. Field devices have different data sizes\n2. Network conditions vary (slow connection = longer sync)\n3. Background apps consume memory/CPU\n4. Watchdog is disabled in debug builds\n\n**Action**:\n- Add MetricKit to capture field diagnostics\n- Test with production-sized datasets\n- Test without debugger attached\n- Check Organizer for hang reports\n\n### Scenario 3: \"We've Always Done It This Way\"\n\n**Situation**: Legacy code calls synchronous API on main thread. Refactoring is \"too risky.\"\n\n**Why it matters**: Even if it worked before:\n- Data may have grown larger\n- OS updates may have changed timing\n- New devices have different characteristics\n- Users notice more as apps get faster\n\n**Approach**:\n1. Add metrics to measure current hang rate\n2. Refactor incrementally with feature flags\n3. A/B test to show improvement\n4. Document risk of not fixing\n\n## Anti-Patterns to Avoid\n\n| Anti-Pattern | Why It's Wrong | Instead |\n|--------------|----------------|---------|\n| `DispatchQueue.main.sync` from background | Can deadlock, always blocks | Use `.async` |\n| Semaphore to convert async to sync | Blocks calling thread | Stay async with completion/await |\n| File I/O on main thread | Unpredictable latency | Background queue |\n| Unfiltered notification observer | Processes irrelevant events | Filter by object/name |\n| Creating formatters in loops | Expensive initialization | Cache and reuse |\n| Synchronous network request | Blocks on network latency | URLSession async |\n\n## Hang Prevention Checklist\n\nBefore shipping, verify:\n\n- [ ] No `Data(contentsOf:)` or file reads on main thread\n- [ ] No `DispatchQueue.main.sync` from background threads\n- [ ] No semaphore.wait() on main thread\n- [ ] Formatters (DateFormatter, NumberFormatter) are cached\n- [ ] Notification observers filter appropriately\n- [ ] Launch work is minimized (defer non-essential)\n- [ ] Image processing happens off main thread\n- [ ] Database queries don't run on main thread\n- [ ] MetricKit adopted for field diagnostics\n\n## Resources\n\n**WWDC**: 2021-10258, 2022-10082\n\n**Docs**: /xcode/analyzing-responsiveness-issues-in-your-shipping-app, /metrickit/mxhangdiagnostic\n\n**Skills**: axiom-performance (skills/metrickit-ref.md), axiom-performance (skills/performance-profiling.md), axiom-concurrency, axiom-build (skills/lldb.md) (interactive thread inspection at freeze point)\n",
+      "content": "\n# Hang Diagnostics\n\nSystematic diagnosis and resolution of app hangs. A hang occurs when the main thread is blocked for more than 1 second, making the app unresponsive to user input.\n\n## Why xcsym rejected my hang .ips\n\nxcsym's `crash` subcommand explicitly rejects `.ips` files of type `hang` because hang analysis has a different workflow from crash analysis. If xcsym returned `HangError: bug_type=298`, you're in the right place — this skill is the authoritative path for hang diagnosis. See `axiom-tools (skills/xcsym-ref.md)` for the crash-focused workflow.\n\n## Red Flags — Check This Skill When\n\n| Symptom | This Skill Applies |\n|---------|-------------------|\n| App freezes briefly during use | Yes — likely hang |\n| UI doesn't respond to touches | Yes — main thread blocked |\n| \"App not responding\" system dialog | Yes — severe hang |\n| Xcode Organizer shows hang diagnostics | Yes — field hang reports |\n| MetricKit MXHangDiagnostic received | Yes — aggregated hang data |\n| Animations stutter or skip | Maybe — could be hitch, not hang |\n| App feels slow but responsive | No — performance issue, not hang |\n\n## What Is a Hang\n\nA **hang** is when the main runloop cannot process events for more than 1 second. The user taps, but nothing happens.\n\n```\nUser taps → Main thread busy/blocked → Event queued → 1+ second delay → HANG\n```\n\n**Key distinction**: The main thread handles ALL user input. If it's busy or blocked, the entire UI freezes.\n\n### Hang vs Hitch vs Lag\n\n| Issue | Duration | User Experience | Tool |\n|-------|----------|-----------------|------|\n| **Hang** | >1 second | App frozen, unresponsive | Time Profiler, System Trace |\n| **Hitch** | 1-3 frames (16-50ms) | Animation stutters | Animation Hitches instrument |\n| **Lag** | 100-500ms | Feels slow but responsive | Time Profiler |\n\n**This skill covers hangs.** For hitches, see `axiom-swiftui` (performance reference). For general lag, see `axiom-performance (skills/performance-profiling.md)`.\n\n## The Two Causes of Hangs\n\nEvery hang has one of two root causes:\n\n### 1. Main Thread Busy\n\nThe main thread is doing work instead of processing events.\n\n**Subcategories**:\n\n| Type | Example | Fix |\n|------|---------|-----|\n| **Proactive work** | Pre-computing data user hasn't requested | Lazy initialization, compute on demand |\n| **Irrelevant work** | Processing all notifications, not just relevant ones | Filter notifications, targeted observers |\n| **Suboptimal API** | Using blocking API when async exists | Switch to async API |\n\n### 2. Main Thread Blocked\n\nThe main thread is waiting for something else.\n\n**Subcategories**:\n\n| Type | Example | Fix |\n|------|---------|-----|\n| **Synchronous IPC** | Calling system service synchronously | Use async API variant |\n| **File I/O** | `Data(contentsOf:)` on main thread | Move to background queue |\n| **Network** | Synchronous URL request | Use URLSession async |\n| **Lock contention** | Waiting for lock held by background thread | Reduce critical section, use actors |\n| **Semaphore/dispatch_sync** | Blocking on background work | Restructure to async completion |\n\n## Decision Tree — Diagnosing Hangs\n\n```\nSTART: App hangs reported\n  │\n  ├─→ Do you have hang diagnostics from Organizer or MetricKit?\n  │     │\n  │     ├─→ YES: Examine stack trace\n  │     │     │\n  │     │     ├─→ Stack shows your code running\n  │     │     │     → BUSY: Main thread doing work\n  │     │     │     → Profile with Time Profiler\n  │     │     │\n  │     │     └─→ Stack shows waiting (semaphore, lock, dispatch_sync)\n  │     │           → BLOCKED: Main thread waiting\n  │     │           → Profile with System Trace\n  │     │\n  │     └─→ NO: Can you reproduce?\n  │           │\n  │           ├─→ YES: Profile with Time Profiler first\n  │           │     │\n  │           │     ├─→ High CPU on main thread\n  │           │     │     → BUSY: Optimize the work\n  │           │     │\n  │           │     └─→ Low CPU, thread blocked\n  │           │           → Use System Trace to find what's blocking\n  │           │\n  │           └─→ NO: Enable MetricKit in app\n  │                 → Wait for field reports\n  │                 → Check Organizer > Hangs\n```\n\n## Tool Selection\n\n| Scenario | Primary Tool | Why |\n|----------|-------------|-----|\n| **Reproduces locally** | Time Profiler | See exactly what main thread is doing |\n| **Blocked thread suspected** | System Trace | Shows thread state, lock contention |\n| **Field reports only** | Xcode Organizer | Aggregated hang diagnostics |\n| **Want in-app data** | MetricKit | MXHangDiagnostic with call stacks |\n| **Need precise timing** | System Trace | Nanosecond-level thread analysis |\n\n## Time Profiler Workflow for Hangs\n\n1. **Launch Instruments** → Select Time Profiler template\n2. **Record during hang** → Reproduce the freeze\n3. **Stop recording** → Find the hang period in timeline\n4. **Select hang region** → Drag to select frozen timespan\n5. **Examine call tree** → Look for main thread work\n\n**What to look for**:\n- Functions with high \"Self Time\" on main thread\n- Unexpectedly deep call stacks\n- System calls that shouldn't be on main thread\n\n## System Trace Workflow for Blocked Hangs\n\n1. **Launch Instruments** → Select System Trace template\n2. **Record during hang** → Capture thread states\n3. **Find main thread** → Filter to main thread\n4. **Look for red/orange** → Blocked states\n5. **Examine blocking reason** → Lock, semaphore, IPC\n\n**Thread states**:\n- **Running (blue)**: Executing code\n- **Preempted (orange)**: Runnable but not scheduled\n- **Blocked (red)**: Waiting for resource\n\n## Common Hang Patterns and Fixes\n\n### Pattern 1: Synchronous File I/O\n\n**Before (hangs)**:\n```swift\n// Main thread blocks on file read\nfunc loadUserData() {\n    let data = try! Data(contentsOf: largeFileURL)  // BLOCKS\n    processData(data)\n}\n```\n\n**After (async)**:\n```swift\nfunc loadUserData() {\n    Task.detached {\n        let data = try Data(contentsOf: largeFileURL)\n        await MainActor.run {\n            self.processData(data)\n        }\n    }\n}\n```\n\n### Pattern 2: Unfiltered Notification Observer\n\n**Before (processes all)**:\n```swift\nNotificationCenter.default.addObserver(\n    self,\n    selector: #selector(handleChange),\n    name: .NSManagedObjectContextObjectsDidChange,\n    object: nil  // Receives ALL contexts\n)\n```\n\n**After (filtered)**:\n```swift\nNotificationCenter.default.addObserver(\n    self,\n    selector: #selector(handleChange),\n    name: .NSManagedObjectContextObjectsDidChange,\n    object: relevantContext  // Only this context\n)\n```\n\n### Pattern 3: Expensive Formatter Creation\n\n**Before (creates each time)**:\n```swift\nfunc formatDate(_ date: Date) -> String {\n    let formatter = DateFormatter()  // EXPENSIVE\n    formatter.dateStyle = .medium\n    return formatter.string(from: date)\n}\n```\n\n**After (cached)**:\n```swift\nprivate static let dateFormatter: DateFormatter = {\n    let formatter = DateFormatter()\n    formatter.dateStyle = .medium\n    return formatter\n}()\n\nfunc formatDate(_ date: Date) -> String {\n    Self.dateFormatter.string(from: date)\n}\n```\n\n### Pattern 4: dispatch_sync to Main Thread\n\n**Before (deadlock risk)**:\n```swift\n// From background thread\nDispatchQueue.main.sync {  // BLOCKS if main is blocked\n    updateUI()\n}\n```\n\n**After (async)**:\n```swift\nDispatchQueue.main.async {\n    self.updateUI()\n}\n```\n\n### Pattern 5: Semaphore for Async Result\n\n**Before (blocks main thread)**:\n```swift\nfunc fetchDataSync() -> Data {\n    let semaphore = DispatchSemaphore(value: 0)\n    var result: Data?\n\n    URLSession.shared.dataTask(with: url) { data, _, _ in\n        result = data\n        semaphore.signal()\n    }.resume()\n\n    semaphore.wait()  // BLOCKS MAIN THREAD\n    return result!\n}\n```\n\n**After (async/await)**:\n```swift\nfunc fetchData() async throws -> Data {\n    let (data, _) = try await URLSession.shared.data(from: url)\n    return data\n}\n```\n\n### Pattern 6: Lock Contention\n\n**Before (shared lock)**:\n```swift\nclass DataManager {\n    private let lock = NSLock()\n    private var cache: [String: Data] = [:]\n\n    func getData(for key: String) -> Data? {\n        lock.lock()  // Main thread waits for background\n        defer { lock.unlock() }\n        return cache[key]\n    }\n}\n```\n\n**After (actor)**:\n```swift\nactor DataManager {\n    private var cache: [String: Data] = [:]\n\n    func getData(for key: String) -> Data? {\n        cache[key]  // Actor serializes access safely\n    }\n}\n```\n\n### Pattern 7: App Launch Hang (Watchdog)\n\n**Before (too much work)**:\n```swift\nfunc application(_ application: UIApplication,\n                 didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {\n    loadAllUserData()      // Expensive\n    setupAnalytics()       // Network calls\n    precomputeLayouts()    // CPU intensive\n    return true\n}\n```\n\n**After (deferred)**:\n```swift\nfunc application(_ application: UIApplication,\n                 didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {\n    // Only essential setup\n    setupMinimalUI()\n    return true\n}\n\nfunc applicationDidBecomeActive(_ application: UIApplication) {\n    // Defer non-essential work\n    Task {\n        await loadUserDataInBackground()\n    }\n}\n```\n\n### Pattern 8: Image Processing on Main Thread\n\n**Before (blocks UI)**:\n```swift\nfunc processImage(_ image: UIImage) {\n    let filtered = applyExpensiveFilter(image)  // BLOCKS\n    imageView.image = filtered\n}\n```\n\n**After (background processing)**:\n```swift\nfunc processImage(_ image: UIImage) {\n    imageView.image = placeholder\n\n    Task.detached(priority: .userInitiated) {\n        let filtered = applyExpensiveFilter(image)\n        await MainActor.run {\n            self.imageView.image = filtered\n        }\n    }\n}\n```\n\n## Xcode Organizer Hang Diagnostics\n\n**Window > Organizer > Select App > Hangs**\n\nThe Organizer shows aggregated hang data from users who opted into sharing diagnostics.\n\n**Reading the report**:\n1. **Hang Rate**: Hangs per day per device\n2. **Call Stack**: Where the hang occurred\n3. **Device/OS breakdown**: Which configurations affected\n\n**Interpreting call stacks**:\n- **Your code at top**: Main thread busy with your work\n- **System API at top**: You called blocking API on main thread\n- **pthread_mutex/semaphore**: Lock contention or explicit waiting\n\n## MetricKit Hang Diagnostics\n\nAdopt MetricKit to receive hang diagnostics in your app:\n\n```swift\nimport MetricKit\n\nclass MetricsSubscriber: NSObject, MXMetricManagerSubscriber {\n    func didReceive(_ payloads: [MXDiagnosticPayload]) {\n        for payload in payloads {\n            if let hangDiagnostics = payload.hangDiagnostics {\n                for diagnostic in hangDiagnostics {\n                    analyzeHang(diagnostic)\n                }\n            }\n        }\n    }\n\n    private func analyzeHang(_ diagnostic: MXHangDiagnostic) {\n        // Duration of the hang\n        let duration = diagnostic.hangDuration\n\n        // Call stack tree (needs symbolication)\n        let callStack = diagnostic.callStackTree\n\n        // Send to your analytics\n        uploadHangDiagnostic(duration: duration, callStack: callStack)\n    }\n}\n```\n\n**Key MXHangDiagnostic properties**:\n- `hangDuration`: How long the hang lasted\n- `callStackTree`: MXCallStackTree with frames\n- `signatureIdentifier`: For grouping similar hangs\n\n## Watchdog Terminations\n\nThe watchdog kills apps that hang during key transitions:\n\n| Transition | Time Limit | Consequence |\n|------------|-----------|-------------|\n| **App launch** | ~20 seconds | App killed, crash logged |\n| **Background transition** | ~5 seconds | App killed |\n| **Foreground transition** | ~10 seconds | App killed |\n\n**Watchdog disabled in**:\n- Simulator\n- Debugger attached\n- Development builds (sometimes)\n\n**Watchdog kills are logged as crashes** with exception type `EXC_CRASH (SIGKILL)` and termination reason `Namespace RUNNINGBOARD, Code 3735883980` (hex `0xDEAD10CC` — indicates app held a file lock or SQLite database lock while being suspended).\n\n## Pressure Scenarios\n\n### Scenario 1: Manager Says \"Just Add a Loading Spinner\"\n\n**Situation**: App hangs during data load. Manager suggests adding spinner to \"fix\" it.\n\n**Why this fails**: Adding a spinner doesn't prevent the hang—the UI still freezes, the spinner won't animate, and the app remains unresponsive.\n\n**Correct response**: \"A spinner won't animate during a hang because the main thread is blocked. We need to move this work off the main thread so the spinner can actually spin and the app stays responsive.\"\n\n### Scenario 2: \"It Works Fine in Testing\"\n\n**Situation**: QA can't reproduce the hang. Logs show it happens in production.\n\n**Analysis**:\n1. Field devices have different data sizes\n2. Network conditions vary (slow connection = longer sync)\n3. Background apps consume memory/CPU\n4. Watchdog is disabled in debug builds\n\n**Action**:\n- Add MetricKit to capture field diagnostics\n- Test with production-sized datasets\n- Test without debugger attached\n- Check Organizer for hang reports\n\n### Scenario 3: \"We've Always Done It This Way\"\n\n**Situation**: Legacy code calls synchronous API on main thread. Refactoring is \"too risky.\"\n\n**Why it matters**: Even if it worked before:\n- Data may have grown larger\n- OS updates may have changed timing\n- New devices have different characteristics\n- Users notice more as apps get faster\n\n**Approach**:\n1. Add metrics to measure current hang rate\n2. Refactor incrementally with feature flags\n3. A/B test to show improvement\n4. Document risk of not fixing\n\n## Anti-Patterns to Avoid\n\n| Anti-Pattern | Why It's Wrong | Instead |\n|--------------|----------------|---------|\n| `DispatchQueue.main.sync` from background | Can deadlock, always blocks | Use `.async` |\n| Semaphore to convert async to sync | Blocks calling thread | Stay async with completion/await |\n| File I/O on main thread | Unpredictable latency | Background queue |\n| Unfiltered notification observer | Processes irrelevant events | Filter by object/name |\n| Creating formatters in loops | Expensive initialization | Cache and reuse |\n| Synchronous network request | Blocks on network latency | URLSession async |\n\n## Hang Prevention Checklist\n\nBefore shipping, verify:\n\n- [ ] No `Data(contentsOf:)` or file reads on main thread\n- [ ] No `DispatchQueue.main.sync` from background threads\n- [ ] No semaphore.wait() on main thread\n- [ ] Formatters (DateFormatter, NumberFormatter) are cached\n- [ ] Notification observers filter appropriately\n- [ ] Launch work is minimized (defer non-essential)\n- [ ] Image processing happens off main thread\n- [ ] Database queries don't run on main thread\n- [ ] MetricKit adopted for field diagnostics\n\n## Resources\n\n**WWDC**: 2021-10258, 2022-10082\n\n**Docs**: /xcode/analyzing-responsiveness-issues-in-your-shipping-app, /metrickit/mxhangdiagnostic\n\n**Skills**: axiom-performance (skills/metrickit-ref.md), axiom-performance (skills/performance-profiling.md), axiom-concurrency, axiom-build (skills/lldb.md) (interactive thread inspection at freeze point)\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -18578,108 +18578,115 @@
           "charCount": 183
         },
         {
-          "heading": "Red Flags — Check This Skill When",
+          "heading": "Why xcsym rejected my hang .ips",
           "level": 2,
           "startLine": 5,
-          "endLine": 16,
+          "endLine": 8,
+          "charCount": 380
+        },
+        {
+          "heading": "Red Flags — Check This Skill When",
+          "level": 2,
+          "startLine": 9,
+          "endLine": 20,
           "charCount": 553
         },
         {
           "heading": "What Is a Hang",
           "level": 2,
-          "startLine": 17,
-          "endLine": 36,
+          "startLine": 21,
+          "endLine": 40,
           "charCount": 855
         },
         {
           "heading": "The Two Causes of Hangs",
           "level": 2,
-          "startLine": 37,
-          "endLine": 66,
+          "startLine": 41,
+          "endLine": 70,
           "charCount": 1120
         },
         {
           "heading": "Decision Tree — Diagnosing Hangs",
           "level": 2,
-          "startLine": 67,
-          "endLine": 98,
+          "startLine": 71,
+          "endLine": 102,
           "charCount": 1067
         },
         {
           "heading": "Tool Selection",
           "level": 2,
-          "startLine": 99,
-          "endLine": 108,
+          "startLine": 103,
+          "endLine": 112,
           "charCount": 481
         },
         {
           "heading": "Time Profiler Workflow for Hangs",
           "level": 2,
-          "startLine": 109,
-          "endLine": 121,
+          "startLine": 113,
+          "endLine": 125,
           "charCount": 465
         },
         {
           "heading": "System Trace Workflow for Blocked Hangs",
           "level": 2,
-          "startLine": 122,
-          "endLine": 134,
+          "startLine": 126,
+          "endLine": 138,
           "charCount": 449
         },
         {
           "heading": "Common Hang Patterns and Fixes",
           "level": 2,
-          "startLine": 135,
-          "endLine": 329,
+          "startLine": 139,
+          "endLine": 333,
           "charCount": 4176
         },
         {
           "heading": "Xcode Organizer Hang Diagnostics",
           "level": 2,
-          "startLine": 330,
-          "endLine": 345,
+          "startLine": 334,
+          "endLine": 349,
           "charCount": 557
         },
         {
           "heading": "MetricKit Hang Diagnostics",
           "level": 2,
-          "startLine": 346,
-          "endLine": 381,
+          "startLine": 350,
+          "endLine": 385,
           "charCount": 1017
         },
         {
           "heading": "Watchdog Terminations",
           "level": 2,
-          "startLine": 382,
-          "endLine": 398,
+          "startLine": 386,
+          "endLine": 402,
           "charCount": 681
         },
         {
           "heading": "Pressure Scenarios",
           "level": 2,
-          "startLine": 399,
-          "endLine": 440,
+          "startLine": 403,
+          "endLine": 444,
           "charCount": 1515
         },
         {
           "heading": "Anti-Patterns to Avoid",
           "level": 2,
-          "startLine": 441,
-          "endLine": 451,
+          "startLine": 445,
+          "endLine": 455,
           "charCount": 623
         },
         {
           "heading": "Hang Prevention Checklist",
           "level": 2,
-          "startLine": 452,
-          "endLine": 465,
+          "startLine": 456,
+          "endLine": 469,
           "charCount": 519
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 466,
-          "endLine": 473,
+          "startLine": 470,
+          "endLine": 477,
           "charCount": 354
         }
       ],
@@ -33125,8 +33132,8 @@
           4,
           18,
           1,
-          39,
-          549
+          44,
+          568
         ],
         "113": [
           4,
@@ -33581,8 +33588,8 @@
         3.9661016949152543,
         15.028248587570621,
         4.734463276836161,
-        43.943502824858754,
-        605.9604519774009
+        43.971751412429384,
+        606.0677966101691
       ],
       "storedFields": {
         "0": {
@@ -41663,10 +41670,12 @@
               "164": 1
             },
             "3": {
+              "112": 1,
               "137": 1,
               "164": 1
             },
             "4": {
+              "112": 4,
               "114": 4,
               "137": 6,
               "164": 51
@@ -50427,7 +50436,7 @@
             },
             "3": {
               "10": 1,
-              "112": 6
+              "112": 7
             },
             "4": {
               "10": 8,
@@ -50437,7 +50446,7 @@
               "48": 1,
               "106": 2,
               "111": 1,
-              "112": 50,
+              "112": 55,
               "114": 16,
               "116": 1,
               "131": 2,
@@ -56708,6 +56717,7 @@
           "298",
           {
             "4": {
+              "112": 1,
               "164": 2
             }
           }
@@ -59619,6 +59629,7 @@
               "107": 40,
               "108": 33,
               "110": 5,
+              "112": 1,
               "113": 2,
               "114": 3,
               "115": 12,
@@ -66459,6 +66470,7 @@
               "89": 2,
               "106": 2,
               "111": 1,
+              "112": 1,
               "113": 1,
               "117": 3,
               "119": 1,
@@ -69366,6 +69378,7 @@
               "93": 1,
               "95": 1,
               "99": 1,
+              "112": 1,
               "113": 1,
               "117": 1,
               "120": 2,
@@ -73632,7 +73645,7 @@
               "99": 2,
               "105": 1,
               "106": 3,
-              "112": 1,
+              "112": 2,
               "115": 1,
               "117": 1,
               "122": 1,
@@ -75597,6 +75610,7 @@
               "106": 1,
               "108": 1,
               "109": 1,
+              "112": 1,
               "113": 1,
               "115": 1,
               "116": 13,
@@ -79958,7 +79972,7 @@
               "107": 3,
               "109": 2,
               "111": 1,
-              "112": 1,
+              "112": 2,
               "113": 1,
               "114": 1,
               "115": 1,
@@ -80373,6 +80387,7 @@
               "102": 1,
               "103": 4,
               "106": 1,
+              "112": 1,
               "115": 1,
               "126": 5,
               "129": 1,
@@ -81834,6 +81849,7 @@
               "106": 5,
               "107": 1,
               "111": 2,
+              "112": 1,
               "113": 2,
               "115": 1,
               "116": 5,
@@ -84935,6 +84951,7 @@
               "76": 2,
               "87": 2,
               "106": 1,
+              "112": 1,
               "133": 1,
               "134": 2,
               "148": 1,
@@ -84967,7 +84984,8 @@
           "rejected",
           {
             "3": {
-              "87": 1
+              "87": 1,
+              "112": 1
             },
             "4": {
               "0": 6,
@@ -84979,6 +84997,7 @@
               "63": 1,
               "66": 1,
               "87": 1,
+              "112": 1,
               "120": 3,
               "130": 1,
               "132": 28,
@@ -107934,6 +107953,7 @@
               "90": 12,
               "91": 2,
               "103": 1,
+              "112": 1,
               "117": 1,
               "133": 1,
               "136": 1,
@@ -109051,6 +109071,7 @@
               "102": 1,
               "103": 6,
               "111": 1,
+              "112": 1,
               "113": 1,
               "114": 2,
               "118": 1,
@@ -115474,6 +115495,7 @@
               "88": 3,
               "90": 4,
               "91": 4,
+              "112": 1,
               "117": 2,
               "129": 1,
               "136": 1,
@@ -116876,6 +116898,7 @@
               "106": 5,
               "108": 5,
               "110": 4,
+              "112": 1,
               "113": 3,
               "115": 1,
               "116": 2,
@@ -124899,7 +124922,7 @@
               "107": 6,
               "108": 4,
               "110": 2,
-              "112": 3,
+              "112": 5,
               "113": 2,
               "114": 6,
               "115": 1,
@@ -131054,6 +131077,7 @@
               "71": 2,
               "87": 4,
               "88": 1,
+              "112": 1,
               "113": 1,
               "114": 1,
               "116": 4,
@@ -149467,7 +149491,7 @@
               "105": 12,
               "109": 5,
               "111": 4,
-              "112": 1,
+              "112": 2,
               "113": 1,
               "114": 1,
               "115": 2,
@@ -149929,7 +149953,7 @@
               "105": 9,
               "106": 1,
               "110": 1,
-              "112": 2,
+              "112": 3,
               "115": 3,
               "116": 5,
               "117": 2,
@@ -151761,10 +151785,12 @@
               "164": 1
             },
             "3": {
+              "112": 1,
               "131": 1
             },
             "4": {
               "11": 1,
+              "112": 2,
               "131": 3,
               "137": 5,
               "164": 9
@@ -153860,7 +153886,7 @@
               "109": 5,
               "110": 18,
               "111": 11,
-              "112": 4,
+              "112": 5,
               "113": 7,
               "114": 19,
               "115": 59,
@@ -163510,6 +163536,7 @@
             },
             "3": {
               "47": 1,
+              "112": 1,
               "129": 1
             },
             "4": {
@@ -163580,7 +163607,7 @@
               "106": 13,
               "108": 1,
               "111": 3,
-              "112": 4,
+              "112": 5,
               "113": 2,
               "114": 1,
               "115": 4,
@@ -165300,7 +165327,7 @@
               "96": 1,
               "110": 2,
               "111": 1,
-              "112": 2,
+              "112": 4,
               "113": 2,
               "116": 8,
               "121": 1,
@@ -171234,7 +171261,7 @@
               "109": 5,
               "110": 4,
               "111": 5,
-              "112": 5,
+              "112": 6,
               "113": 6,
               "114": 8,
               "116": 9,
@@ -171485,7 +171512,7 @@
               "106": 2,
               "109": 2,
               "111": 1,
-              "112": 3,
+              "112": 4,
               "115": 1,
               "116": 7,
               "117": 4,
@@ -182907,7 +182934,7 @@
               "108": 5,
               "110": 1,
               "111": 3,
-              "112": 3,
+              "112": 4,
               "113": 2,
               "114": 4,
               "115": 1,
@@ -191538,6 +191565,7 @@
           "subcommand",
           {
             "4": {
+              "112": 1,
               "114": 1,
               "137": 1,
               "164": 1
@@ -195385,7 +195413,7 @@
               "93": 5,
               "106": 3,
               "110": 1,
-              "112": 2,
+              "112": 5,
               "113": 5,
               "114": 28,
               "115": 13,
@@ -212077,7 +212105,7 @@
               "109": 4,
               "110": 3,
               "111": 4,
-              "112": 4,
+              "112": 5,
               "113": 5,
               "114": 7,
               "116": 7,
@@ -212228,6 +212256,7 @@
           "my",
           {
             "3": {
+              "112": 1,
               "131": 1,
               "132": 1,
               "163": 1
@@ -212300,6 +212329,7 @@
               "107": 1,
               "108": 1,
               "111": 6,
+              "112": 1,
               "113": 22,
               "114": 5,
               "115": 1,
@@ -221861,7 +221891,7 @@
               "106": 1,
               "109": 5,
               "110": 3,
-              "112": 6,
+              "112": 7,
               "113": 2,
               "114": 7,
               "116": 11,
@@ -228532,7 +228562,8 @@
           "authoritative",
           {
             "4": {
-              "71": 4
+              "71": 4,
+              "112": 1
             }
           }
         ],
@@ -230907,7 +230938,7 @@
               "92": 1,
               "103": 1,
               "109": 5,
-              "112": 2,
+              "112": 4,
               "113": 1,
               "116": 2,
               "118": 7,
@@ -365045,6 +365076,43 @@
           "unresponsive",
           "user",
           "input"
+        ],
+        "Why xcsym rejected my hang .ips": [
+          "why",
+          "xcsym",
+          "rejected",
+          "my",
+          "hang",
+          "ips",
+          "crash",
+          "subcommand",
+          "explicitly",
+          "rejects",
+          "files",
+          "type",
+          "because",
+          "analysis",
+          "different",
+          "workflow",
+          "if",
+          "returned",
+          "error",
+          "bug",
+          "298",
+          "re",
+          "right",
+          "place",
+          "skill",
+          "authoritative",
+          "path",
+          "diagnosis",
+          "see",
+          "axiom",
+          "tools",
+          "skills",
+          "ref",
+          "md",
+          "focused"
         ],
         "Red Flags — Check This Skill When": [
           "red",

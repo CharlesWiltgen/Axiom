@@ -3,6 +3,10 @@
 
 Systematic diagnosis and resolution of app hangs. A hang occurs when the main thread is blocked for more than 1 second, making the app unresponsive to user input.
 
+## Why xcsym rejected my hang .ips
+
+xcsym's `crash` subcommand explicitly rejects `.ips` files of type `hang` because hang analysis has a different workflow from crash analysis. If xcsym returned `HangError: bug_type=298`, you're in the right place — this skill is the authoritative path for hang diagnosis. See `axiom-tools (skills/xcsym-ref.md)` for the crash-focused workflow.
+
 ## Red Flags — Check This Skill When
 
 | Symptom | This Skill Applies |
