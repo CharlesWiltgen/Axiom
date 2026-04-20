@@ -19,6 +19,7 @@
     "development"
   ],
   "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Axiom",
     "shortDescription": "Battle-tested iOS development skills",

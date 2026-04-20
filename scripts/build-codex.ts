@@ -164,6 +164,12 @@ const pluginManifest = {
   license: 'MIT',
   keywords: ['ios', 'swift', 'swiftui', 'xcode', 'apple', 'mobile', 'development'],
   skills: './skills/',
+  // Relative path from the plugin root (axiom-codex/) to the MCP
+  // server list. Codex's plugin loader resolves this path against the
+  // plugin root and reads PluginMcpFile from it. The file itself is
+  // written alongside plugin.json below. Schema source:
+  //   https://github.com/openai/codex/blob/main/codex-rs/core-plugins/src/loader.rs
+  mcpServers: './.mcp.json',
   interface: {
     displayName: 'Axiom',
     shortDescription: 'Battle-tested iOS development skills',
@@ -186,6 +192,24 @@ const pluginManifest = {
 fs.writeFileSync(
   path.join(OUTPUT_MANIFEST, 'plugin.json'),
   JSON.stringify(pluginManifest, null, 2) + '\n'
+);
+
+// Generate .mcp.json — the plugin-local MCP server list Codex reads when
+// a user installs the plugin. Keyed by logical server name; each value
+// maps onto Codex's McpServerConfig (same shape as ~/.codex/config.toml's
+// [mcp_servers.NAME] section). Lives at the plugin root so the
+// pluginManifest.mcpServers path ('./.mcp.json') resolves correctly.
+const mcpFile = {
+  mcpServers: {
+    axiom: {
+      command: 'npx',
+      args: ['-y', 'axiom-mcp'],
+    },
+  },
+};
+fs.writeFileSync(
+  path.join(OUTPUT_DIR, '.mcp.json'),
+  JSON.stringify(mcpFile, null, 2) + '\n'
 );
 
 // --- Convert agents to on-demand Codex skills ---
