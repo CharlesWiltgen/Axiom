@@ -355,15 +355,26 @@ func parseTerminationReason(reason string) Termination {
 	return t
 }
 
-// metrickitFrameAddress returns the absolute address field if MetricKit
-// emitted one, otherwise "" (symbolicate will skip it).
+// metrickitFrameAddress formats the frame address that the symbolicate
+// pipeline feeds to atos. MetricKit gives us offsetIntoBinaryTextSegment
+// (relative to the image's __TEXT start); pairing that with loadAddr=0
+// on the UsedImage lets atos compute `address - 0 = offset` and look up
+// the symbol without needing the original virtual base — which MetricKit
+// doesn't reliably provide. This intentionally differs from the .ips
+// path (where Frame.Address is absolute and loadAddr=base).
 func metrickitFrameAddress(f mxFrame) string {
-	s := f.Address.String()
-	if s == "" {
+	off := jsonNumberInt(f.OffsetIntoBinaryTextSegment)
+	if off <= 0 {
+		// Fall back to the address field if offset is missing. Better than
+		// leaving the frame unaddressable; atos with loadAddr=0 and an
+		// absolute address usually fails to symbolicate cleanly but at
+		// least emits the raw address for display.
+		if s := f.Address.String(); s != "" {
+			if v, err := parseHexOrDec(s); err == nil {
+				return fmt.Sprintf("0x%x", v)
+			}
+		}
 		return ""
 	}
-	if v, err := parseHexOrDec(s); err == nil {
-		return fmt.Sprintf("0x%x", v)
-	}
-	return ""
+	return fmt.Sprintf("0x%x", off)
 }

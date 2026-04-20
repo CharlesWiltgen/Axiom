@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -330,26 +331,23 @@ func TestFormat_Full_SizeWarningFiresPast100KB(t *testing.T) {
 	if !strings.Contains(*rep.SizeWarning, "exceeds") {
 		t.Errorf("SizeWarning text = %q; expected it to mention 'exceeds'", *rep.SizeWarning)
 	}
-	// Warn text should include the byte figure so users can verify.
-	buf, _ := json.Marshal(rep)
-	if !strings.Contains(*rep.SizeWarning, jsonLenDigit(len(buf))) {
-		// Not a strict requirement — but at least shouldn't falsely claim "0 bytes"
-		t.Logf("SizeWarning text: %q (actual marshal size: %d)", *rep.SizeWarning, len(buf))
+	// The warning must cite the actual marshaled byte count. Implementation
+	// measures size before setting SizeWarning itself (to avoid a chicken-
+	// and-egg with the warning text's own length), so the test reproduces
+	// that: marshal the report with SizeWarning cleared and assert THAT
+	// size appears in the warning text. Guards against a stale stub that
+	// might say "0 bytes" or hard-code the threshold.
+	copy := rep
+	copy.SizeWarning = nil
+	buf, err := json.Marshal(copy)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
 	}
-}
-
-// jsonLenDigit returns one of the digit chars from the length as a loose
-// sanity check — avoids matching stale stub values.
-func jsonLenDigit(n int) string {
-	if n == 0 {
-		return "0"
+	sizeStr := fmt.Sprintf("%d", len(buf))
+	if !strings.Contains(*rep.SizeWarning, sizeStr) {
+		t.Errorf("SizeWarning should cite pre-annotation size %s bytes; got %q",
+			sizeStr, *rep.SizeWarning)
 	}
-	// Take just the most-significant digit to avoid flakiness if the
-	// marshal size shifts with warning text itself.
-	for n >= 10 {
-		n /= 10
-	}
-	return string(rune('0' + n))
 }
 
 func TestFormat_Full_NoWarningUnder100KB(t *testing.T) {

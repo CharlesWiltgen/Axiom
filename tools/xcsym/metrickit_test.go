@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -114,7 +115,10 @@ func TestParseMetricKit_SignalMap(t *testing.T) {
 		{99, ""},  // unknown → empty
 	}
 	for _, c := range cases {
-		t.Run(c.want+"_"+string(rune(c.sig)), func(t *testing.T) {
+		// string(rune(c.sig)) produced control chars which broke `go test -run`
+		// path matching. fmt.Sprintf keeps subtest names addressable.
+		name := fmt.Sprintf("sig_%d_%s", c.sig, c.want)
+		t.Run(name, func(t *testing.T) {
 			if got := signalName(c.sig); got != c.want {
 				t.Errorf("signalName(%d) = %q, want %q", c.sig, got, c.want)
 			}

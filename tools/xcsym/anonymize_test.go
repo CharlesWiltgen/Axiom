@@ -71,7 +71,7 @@ func TestAnonymize_v1_Works(t *testing.T) {
 	  "bug_type": "309",
 	  "cpuType": "ARM-64",
 	  "incident_id": "99999999-AAAA-BBBB-CCCC-DDDDEEEEFFFF",
-	  "exception": {"type":"EXC_BAD_ACCESS","subtype":"KERN_INVALID_ADDRESS"},
+	  "exception": {"type":"EXC_BREAKPOINT","codes":"0x1","subtype":"Swift runtime failure: unexpectedly found nil while unwrapping an Optional value"},
 	  "faultingThread": 0,
 	  "threads": [{"triggered":true,"frames":[{"imageOffset":100,"imageIndex":0}]}],
 	  "usedImages": [{"uuid":"AABBCCDD-EEFF-0011-2233-445566778899","name":"SecretApp","path":"/Users/johndoe/x","arch":"arm64","base":0,"size":0}]
@@ -88,6 +88,15 @@ func TestAnonymize_v1_Works(t *testing.T) {
 	}
 	if !bytes.Contains(out, []byte("AABBCCDD-EEFF-0011-2233-445566778899")) {
 		t.Errorf("v1 dropped dSYM UUID")
+	}
+	// Structural round-trip: anonymized output must still parse and the
+	// categorize rule that depended on the subtype must still fire.
+	raw, err := ParseIPS(out)
+	if err != nil {
+		t.Fatalf("reparse after anonymize: %v\n%s", err, string(out))
+	}
+	if Categorize(raw).RuleID != "R-swift-unwrap-01" {
+		t.Errorf("v1 anonymize lost categorize signal: rule = %q", Categorize(raw).RuleID)
 	}
 }
 
@@ -121,6 +130,28 @@ func TestAnonymize_MetricKit(t *testing.T) {
 	}
 	if !bytes.Contains(out, []byte("AABBCCDD-EEFF-0011-2233-445566778899")) {
 		t.Errorf("MetricKit dropped binaryUUID (must be preserved)")
+	}
+}
+
+func TestAnonymize_v2_PreservesSliceUUIDInHeader(t *testing.T) {
+	// .ips v2 headers carry slice_uuid which equals the main binary's
+	// dSYM UUID. Anonymizer must treat it as preserve-worthy even though
+	// it lives in the header (not in payload's usedImages).
+	sliceUUID := "AABBCCDD-EEFF-0011-2233-445566778899"
+	v2 := `{"app_name":"SecretApp","bundleID":"com.secretco.secret","bug_type":"309","slice_uuid":"` + sliceUUID + `","timestamp":"2026","os_version":"iOS 17"}
+{"procName":"SecretApp","cpuType":"ARM-64","exception":{"type":"EXC_BAD_ACCESS","subtype":"KERN_INVALID_ADDRESS"},"faultingThread":0,"threads":[{"triggered":true,"frames":[{"imageOffset":1,"imageIndex":0}]}],"usedImages":[{"source":"P","arch":"arm64","base":1,"size":1,"uuid":"` + sliceUUID + `","name":"SecretApp","path":"/x"}]}`
+
+	out, err := Anonymize([]byte(v2))
+	if err != nil {
+		t.Fatalf("Anonymize: %v", err)
+	}
+	if !bytes.Contains(out, []byte(sliceUUID)) {
+		t.Errorf("slice_uuid in header was scrubbed; breaks correlation with usedImages\n%s", string(out))
+	}
+	// And usedImages side should also still carry it.
+	ups := bytes.Count(out, []byte(sliceUUID))
+	if ups < 2 {
+		t.Errorf("expected slice_uuid in both header and usedImages (2 occurrences), found %d", ups)
 	}
 }
 
