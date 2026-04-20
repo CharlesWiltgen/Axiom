@@ -335,6 +335,44 @@ func TestCategorize_R_exc_guard_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-objc-exc-01 ------------------------------------------------------
+
+func TestCategorize_R_objc_exc_01_Positive(t *testing.T) {
+	raw := &RawCrash{
+		Exception: Exception{Type: "EXC_CRASH", Codes: "0x0", Signal: "SIGABRT"},
+		Threads: []Thread{{
+			Index: 0, Triggered: true,
+			Frames: []Frame{
+				{Index: 0, Image: "libsystem_kernel", Symbol: "__pthread_kill"},
+				{Index: 1, Image: "libobjc.A.dylib", Symbol: "objc_exception_throw"},
+				{Index: 2, Image: "Foundation", Symbol: "-[NSException raise]"},
+			},
+		}},
+	}
+	res := Categorize(raw)
+	if res.RuleID != "R-objc-exc-01" {
+		t.Errorf("rule_id = %q, want R-objc-exc-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_objc_exc_01_Negative(t *testing.T) {
+	// Near miss: EXC_CRASH without objc_exception_throw frame must not fire.
+	raw := &RawCrash{
+		Exception: Exception{Type: "EXC_CRASH", Codes: "0x0", Signal: "SIGABRT"},
+		Threads: []Thread{{
+			Index: 0, Triggered: true,
+			Frames: []Frame{
+				{Index: 0, Image: "libsystem_kernel", Symbol: "__pthread_kill"},
+				{Index: 1, Image: "libsystem_c", Symbol: "abort"},
+			},
+		}},
+	}
+	res := Categorize(raw)
+	if res.RuleID == "R-objc-exc-01" {
+		t.Errorf("must not fire objc_exception without objc_exception_throw frame")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -371,6 +409,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-bad-access-01":     {positive: true, negative: true},
 	"R-illegal-inst-01":   {positive: true, negative: true},
 	"R-exc-guard-01":      {positive: true, negative: true},
+	"R-objc-exc-01":       {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
