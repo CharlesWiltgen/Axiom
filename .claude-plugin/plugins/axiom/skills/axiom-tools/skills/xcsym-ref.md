@@ -111,7 +111,21 @@ xcsym anonymize --output <path> <file>   # write to file
 xcsym anonymize - < crash.ips            # read from stdin
 ```
 
-Scrubs bundle IDs, user paths, `.app`/`.framework` names, IPs, device names, session IDs. Preserves dSYM UUIDs (`slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID`) so anonymized output still symbolicates against matching dSYMs.
+**Scrubs:**
+- Bundle IDs across every spelling (`bundle_id`, `bundleID`, `bundleIdentifier`, `CFBundleIdentifier`, `codeSigningID`, `coalitionName`)
+- Process and app names (`procName`, `app_name`)
+- User paths (`/Users/<name>/` → `/Users/REDACTED/`)
+- `.app` names (word-boundary regex, so identifiers like `com.apple.main-thread` aren't mangled) and `.framework` names
+- IPv4 and IPv6 addresses
+- Device names and account IDs (`crashReporterKey`, `sessionID`, `incident_id`, `incident`, `deviceIdentifier`, `deviceUDID`, `userID`)
+- Binary names inside `usedImages[].name` and MetricKit `binaryName`
+- Foreign UUIDs in freeform strings (incident IDs, paths)
+
+**Preserves:**
+- dSYM UUIDs — `slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID` — so anonymized output still symbolicates against matching dSYMs
+- Thread names (`threads[].name`, e.g. `com.apple.main-thread`) — Apple infrastructure labels, not PII; keeping them preserves debug context
+- Library identifiers inside nested library structures (same rationale as thread names)
+- Structural fields categorize and symbolicate rules depend on (exception type, codes, subtype, thread state, frame offsets)
 
 ## Output Schema
 
