@@ -226,6 +226,25 @@ var ruleFixtures = []ruleTable{
 					CrashedIdx: 0,
 				}
 			}},
+			// axiom-nzb C3: a tiny SP (0x1000) and a tiny kernel-code value
+			// (0x2) extracted from codes used to fire spuriously because
+			// |0x1000 - 0x2| = 0xFFE = 4094, which is ≤ guardPage (4096).
+			// With the minRealFaultAddr filter, 0x2 is dropped before the
+			// SP comparison runs and the rule correctly stays silent.
+			{name: "kernel_code_filtered_below_min_fault_addr", make: func() *RawCrash {
+				return &RawCrash{
+					Exception: Exception{
+						Type:    "EXC_BAD_ACCESS",
+						Codes:   "0x2",
+						Subtype: "KERN_PROTECTION_FAILURE at 0x2",
+					},
+					Threads: []Thread{{
+						Index: 0, Triggered: true,
+						State: &ThreadState{SP: 0x1000, PC: 0x1045a8b2c},
+					}},
+					CrashedIdx: 0,
+				}
+			}},
 		},
 	},
 	{
@@ -308,6 +327,32 @@ var ruleFixtures = []ruleTable{
 					}},
 				}
 			}},
+			// axiom-nzb C4: a background thread caught an ObjC exception
+			// legitimately while the crashed thread did something else.
+			// Pre-fix code used hasAnyFrameSymbolAllThreads and would
+			// misclassify this crash as objc_exception. Post-fix the
+			// crashed-thread-only scan correctly skips the rule.
+			{name: "objc_throw_only_on_background_thread", make: func() *RawCrash {
+				return &RawCrash{
+					Exception: Exception{Type: "EXC_CRASH", Codes: "0x0", Signal: "SIGABRT"},
+					Threads: []Thread{
+						{
+							Index: 0, Triggered: true,
+							Frames: []Frame{
+								{Index: 0, Image: "libsystem_kernel", Symbol: "__pthread_kill"},
+								{Index: 1, Image: "libsystem_c", Symbol: "__abort_with_payload"},
+							},
+						},
+						{
+							Index: 1, Triggered: false,
+							Frames: []Frame{
+								{Index: 0, Image: "libobjc.A.dylib", Symbol: "objc_exception_throw"},
+							},
+						},
+					},
+					CrashedIdx: 0,
+				}
+			}},
 		},
 	},
 	{
@@ -359,6 +404,33 @@ var ruleFixtures = []ruleTable{
 							{Index: 3, Image: "MyApp", Symbol: "assertion_failed"},
 						},
 					}},
+				}
+			}},
+			// axiom-nzb C4: an unrelated background thread that handled an
+			// ObjC exception used to suppress the abort classification on
+			// the crashed thread, because the defensive exclusion walked
+			// every thread. With the crashed-thread-only scope, R-abort-01
+			// correctly fires here.
+			{name: "background_objc_throw_does_not_suppress_abort", make: func() *RawCrash {
+				return &RawCrash{
+					Exception: Exception{Type: "EXC_CRASH", Signal: "SIGABRT"},
+					Threads: []Thread{
+						{
+							Index: 0, Triggered: true,
+							Frames: []Frame{
+								{Index: 0, Image: "libsystem_kernel", Symbol: "__pthread_kill"},
+								{Index: 1, Image: "libsystem_c", Symbol: "__abort_with_payload"},
+								{Index: 2, Image: "MyApp", Symbol: "assertion_failed"},
+							},
+						},
+						{
+							Index: 1, Triggered: false,
+							Frames: []Frame{
+								{Index: 0, Image: "libobjc.A.dylib", Symbol: "objc_exception_throw"},
+							},
+						},
+					},
+					CrashedIdx: 0,
 				}
 			}},
 		},
