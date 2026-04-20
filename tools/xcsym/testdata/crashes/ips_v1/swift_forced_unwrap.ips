@@ -1,0 +1,50 @@
+{
+  "app_name": "MyApp",
+  "app_version": "1.0",
+  "bundle_id": "com.example.MyApp",
+  "bug_type": "309",
+  "os_version": "iPhone OS 17.5 (21F79)",
+  "modelCode": "iPhone14,2",
+  "cpuType": "ARM-64",
+  "osVersion": {
+    "train": "iPhone OS 17.5",
+    "build": "21F79"
+  },
+  "exception": {
+    "type": "EXC_BREAKPOINT",
+    "codes": "0x0000000000000001, 0x0000000100c5f3a0",
+    "signal": "SIGTRAP",
+    "subtype": "Swift runtime failure: unexpectedly found nil while unwrapping an Optional value"
+  },
+  "termination": {
+    "namespace": "SIGNAL",
+    "code": 5,
+    "indicator": "Trace/BPT trap: 5"
+  },
+  "faultingThread": 0,
+  "threads": [
+    {
+      "triggered": true,
+      "queue": "com.apple.main-thread",
+      "threadState": {
+        "pc": {"value": 4308898720},
+        "sp": {"value": 6167707648}
+      },
+      "frames": [
+        {"imageOffset": 100, "symbol": "ContentView.body.getter", "imageIndex": 0},
+        {"imageOffset": 500, "symbol": "main", "imageIndex": 0}
+      ]
+    }
+  ],
+  "usedImages": [
+    {
+      "source": "P",
+      "arch": "arm64",
+      "base": 4294967296,
+      "size": 1048576,
+      "uuid": "aabbccdd-eeff-0011-2233-445566778899",
+      "name": "MyApp",
+      "path": "/private/var/containers/Bundle/Application/ABC/MyApp.app/MyApp"
+    }
+  ]
+}
