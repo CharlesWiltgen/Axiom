@@ -215,6 +215,56 @@ func TestCategorize_R_stack_overflow_01_Negative_FarFromSP(t *testing.T) {
 	}
 }
 
+// --- R-zombie-01 --------------------------------------------------------
+
+func TestCategorize_R_zombie_01_Positive(t *testing.T) {
+	raw := &RawCrash{
+		Exception: Exception{
+			Type:    "EXC_BAD_ACCESS",
+			Codes:   "0x1, 0x4141414141414141",
+			Subtype: "KERN_INVALID_ADDRESS",
+		},
+		Threads: []Thread{{
+			Index: 0, Triggered: true,
+			Frames: []Frame{
+				{Index: 0, Image: "CoreFoundation", Symbol: "CFRelease"},
+				{Index: 1, Image: "_NSZombie_MyClass", Symbol: "-[MyClass release]"},
+			},
+		}},
+		CrashedIdx: 0,
+	}
+	res := Categorize(raw)
+	if res.RuleID != "R-zombie-01" {
+		t.Errorf("rule_id = %q, want R-zombie-01", res.RuleID)
+	}
+	if res.Confidence != "heuristic" {
+		t.Errorf("confidence = %q, want heuristic", res.Confidence)
+	}
+}
+
+func TestCategorize_R_zombie_01_Negative(t *testing.T) {
+	// Near miss: EXC_BAD_ACCESS with no zombie/libgmalloc frame must fall
+	// through to the bad-access catch-all.
+	raw := &RawCrash{
+		Exception: Exception{
+			Type:    "EXC_BAD_ACCESS",
+			Codes:   "0x1, 0x0",
+			Subtype: "KERN_INVALID_ADDRESS",
+		},
+		Threads: []Thread{{
+			Index: 0, Triggered: true,
+			Frames: []Frame{
+				{Index: 0, Image: "MyApp", Symbol: "MyView.body"},
+			},
+		}},
+		CrashedIdx: 0,
+	}
+	res := Categorize(raw)
+	if res.RuleID == "R-zombie-01" {
+		t.Errorf("must not fire zombie without NSZombie/libgmalloc frames")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -247,6 +297,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-swift-conc-01":   {positive: true, negative: true},
 	"R-swift-fatal-01":  {positive: true, negative: true},
 	"R-stack-overflow-01": {positive: true, negative: true},
+	"R-zombie-01":         {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
