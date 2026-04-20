@@ -540,6 +540,27 @@ func TestCategorize_R_data_prot_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-code-sign-01 -----------------------------------------------------
+
+func TestCategorize_R_code_sign_01_Positive(t *testing.T) {
+	for _, code := range []string{"0xc51bad00", "0xc51bad01", "0xc51bad0f", "0xC51BAD03"} {
+		raw := &RawCrash{Termination: Termination{Namespace: "CODESIGNING", Code: code}}
+		res := Categorize(raw)
+		if res.RuleID != "R-code-sign-01" {
+			t.Errorf("code %q: rule_id = %q, want R-code-sign-01", code, res.RuleID)
+		}
+	}
+}
+
+func TestCategorize_R_code_sign_01_Negative(t *testing.T) {
+	// Near miss: two-digit low byte (not in /^0xc51bad0[0-9a-f]$/i) must not fire.
+	raw := &RawCrash{Termination: Termination{Namespace: "CODESIGNING", Code: "0xc51bad10"}}
+	res := Categorize(raw)
+	if res.RuleID == "R-code-sign-01" {
+		t.Errorf("must not fire code_signing_killed on 0xc51bad10")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -583,6 +604,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-user-quit-01":      {positive: true, negative: true},
 	"R-bg-expired-01":     {positive: true, negative: true},
 	"R-data-prot-01":      {positive: true, negative: true},
+	"R-code-sign-01":      {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).

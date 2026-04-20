@@ -12,6 +12,11 @@ import (
 // addresses against thread SP values in R-stack-overflow-01.
 var hexAddrRE = regexp.MustCompile(`0x[0-9a-fA-F]+`)
 
+// codeSignKilledRE matches the family of termination codes the kernel emits
+// when it kills a process for code-signing/provisioning violations. The low
+// nibble distinguishes subcauses but they all route to the same category.
+var codeSignKilledRE = regexp.MustCompile(`(?i)^0xc51bad0[0-9a-f]$`)
+
 func extractHexAddresses(s string) []uint64 {
 	var out []uint64
 	for _, m := range hexAddrRE.FindAllString(s, -1) {
@@ -253,6 +258,15 @@ var rules = []Rule{
 		Match: func(c *RawCrash) (bool, string) {
 			if strings.EqualFold(c.Termination.Code, "0xdead10cc") {
 				return true, "termination.code 0xdead10cc (data protection violation)"
+			}
+			return false, ""
+		},
+	},
+	{
+		ID: "R-code-sign-01", Tag: "code_signing_killed", Confidence: "high",
+		Match: func(c *RawCrash) (bool, string) {
+			if codeSignKilledRE.MatchString(c.Termination.Code) {
+				return true, "termination.code " + c.Termination.Code + " matches code-signing family 0xc51bad0X"
 			}
 			return false, ""
 		},
