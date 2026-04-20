@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -230,4 +232,29 @@ func intSliceEqual(a, b []int) bool {
 		}
 	}
 	return true
+}
+
+// FuzzParseMetricKit seeds from every checked-in MetricKit JSON fixture and
+// asserts that ParseMetricKit never panics on arbitrary input. Errors are
+// fine. Budget: `make fuzz-metrickit` runs ≥60s; target ≥1M executions
+// before release.
+func FuzzParseMetricKit(f *testing.F) {
+	const dir = "testdata/crashes/metrickit"
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		f.Logf("seed dir %s: %v", dir, err)
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(dir, e.Name()))
+		if err != nil {
+			continue
+		}
+		f.Add(data)
+	}
+	f.Fuzz(func(t *testing.T, data []byte) {
+		_, _ = ParseMetricKit(data)
+	})
 }
