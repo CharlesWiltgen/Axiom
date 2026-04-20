@@ -561,6 +561,38 @@ func TestCategorize_R_code_sign_01_Negative(t *testing.T) {
 	}
 }
 
+// --- R-jetsam-01 --------------------------------------------------------
+
+func TestCategorize_R_jetsam_01_Positive_ExcResource(t *testing.T) {
+	raw := &RawCrash{Exception: Exception{Type: "EXC_RESOURCE", Subtype: "MEMORY (fatal)"}}
+	res := Categorize(raw)
+	if res.RuleID != "R-jetsam-01" {
+		t.Errorf("rule_id = %q, want R-jetsam-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_jetsam_01_Positive_TerminationReason(t *testing.T) {
+	reason := "per-process-limit"
+	raw := &RawCrash{
+		Exception:   Exception{Type: "EXC_BREAKPOINT"},
+		Termination: Termination{Namespace: "JETSAM", Code: "0x1", Reason: &reason},
+	}
+	res := Categorize(raw)
+	if res.RuleID != "R-jetsam-01" {
+		t.Errorf("rule_id = %q, want R-jetsam-01", res.RuleID)
+	}
+}
+
+func TestCategorize_R_jetsam_01_Negative(t *testing.T) {
+	// Near miss: EXC_RESOURCE with CPU subtype must not fire jetsam
+	// (that's R-cpu-fatal-01's territory).
+	raw := &RawCrash{Exception: Exception{Type: "EXC_RESOURCE", Subtype: "CPU (fatal)"}}
+	res := Categorize(raw)
+	if res.RuleID == "R-jetsam-01" {
+		t.Errorf("must not fire jetsam_oom on CPU subtype")
+	}
+}
+
 // --- Rule coverage ------------------------------------------------------
 
 // TestCategorize_AllRulesHaveFixtures verifies every registered rule has at
@@ -605,6 +637,7 @@ var coverageRegistry = map[string]ruleCoverage{
 	"R-bg-expired-01":     {positive: true, negative: true},
 	"R-data-prot-01":      {positive: true, negative: true},
 	"R-code-sign-01":      {positive: true, negative: true},
+	"R-jetsam-01":         {positive: true, negative: true},
 }
 
 // containsAll reports whether s contains all of subs (order-independent).
