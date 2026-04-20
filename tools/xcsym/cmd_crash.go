@@ -110,7 +110,7 @@ func runCrash(out io.Writer, args []string) int {
 			Error:   "unsupported_format",
 			Message: err.Error(),
 			Input:   path,
-			Routing: "xcsym crash accepts .ips (v1/v2) and MetricKit JSON. Convert other formats first or use a different tool.",
+			Routing: "xcsym crash accepts .ips (v1/v2), MetricKit JSON, and Apple's legacy .crash text format. Convert other formats first or use a different tool.",
 		}, 2)
 	}
 	raw.Format = detected // make sure Format field agrees with detect outcome

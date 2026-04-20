@@ -112,7 +112,7 @@ try:
 
 ---
 
-**xcsym** (crash symbolication): Available at `{xcsym_path}`. Symbolicates .ips and MetricKit crashes with LLM-friendly JSON. Use `xcsym crash <file>` for full triage, `xcsym verify <file>` for dSYM diagnostics. For crash analysis workflow, see `axiom-tools` (skills/xcsym-ref.md). Command: `/axiom:analyze-crash`."""
+**xcsym** (crash symbolication): Available at `{xcsym_path}`. Symbolicates .ips, MetricKit, and Apple legacy .crash text files with LLM-friendly JSON. Use `xcsym crash <file>` for full triage, `xcsym verify <file>` for dSYM diagnostics. For crash analysis workflow, see `axiom-tools` (skills/xcsym-ref.md). Command: `/axiom:analyze-crash`."""
 except OSError:
     pass
 

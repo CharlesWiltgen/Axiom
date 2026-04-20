@@ -1,11 +1,12 @@
 # Crash Symbolication (xcsym)
 
-Reference for `xcsym`, an iOS/macOS crash symbolication tool that parses `.ips` (v1/v2) and MetricKit (`MXCrashDiagnostic`) crash reports end-to-end and emits LLM-friendly JSON. Discovers dSYMs automatically, runs `atos`, categorizes crashes into a `pattern_tag`, and reports UUID/arch mismatches per image.
+Reference for `xcsym`, an iOS/macOS crash symbolication tool that parses `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), and Apple's legacy `.crash` text reports end-to-end and emits LLM-friendly JSON. Discovers dSYMs automatically, runs `atos`, categorizes crashes into a `pattern_tag`, and reports UUID/arch mismatches per image.
 
 ## When to Use This Reference
 
 Use this reference when:
-- You have an `.ips` or MetricKit crash file that needs symbolication
+- You have an `.ips`, MetricKit, or legacy `.crash` text file that needs symbolication
+- Xcode Organizer exposed an `.xccrashpoint` bundle via "Show in Finder" and you need the nested `Logs/*.crash` analyzed
 - Diagnosing *why* a crash came back unsymbolicated (UUID/arch mismatch)
 - Triaging TestFlight crashes downloaded from App Store Connect
 - Inventorying which dSYMs are present on the local machine
@@ -44,7 +45,7 @@ This page documents the `xcsym-ref` reference skill. For the end-to-end agent wo
 - **Exit codes carry diagnosis** — non-zero codes name the reason symbolication was incomplete; don't treat them as "the tool failed"
 - **Format tiers protect context** — `summary` ≤2KB, `standard` ≤12KB, `full` emits `size_warning` past 100KB
 - **UUIDs are correlation keys** — `anonymize` preserves dSYM UUIDs so anonymized fixtures still symbolicate
-- **Auto-detection** — `.ips` (v1 and v2) and MetricKit JSON formats are all detected without flags
+- **Auto-detection** — `.ips` (v1 and v2), MetricKit JSON, and Apple's legacy `.crash` text format are all detected without flags
 
 ## Related
 

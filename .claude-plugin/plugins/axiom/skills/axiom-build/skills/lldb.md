@@ -21,7 +21,7 @@ Interactive debugging with LLDB. The debugger freezes time so you can interrogat
 | Memory grows over time | No — use axiom-performance (skills/memory-debugging.md) first |
 | App completely frozen | Maybe — use axiom-performance (skills/hang-diagnostics.md) first, then LLDB for thread inspection |
 | Crash in production, no local repro | No — symbolicate with axiom-tools (skills/xcsym-ref.md) to get `pattern_tag`, then axiom-shipping (skills/testflight-triage.md) |
-| Have a `.ips` or MetricKit crash file | No — run `xcsym crash` first for full pipeline (parse → symbolicate → categorize) |
+| Have a `.ips`, MetricKit, or `.crash` text file | No — run `xcsym crash` first for full pipeline (parse → symbolicate → categorize) |
 
 ## LLDB vs Other Tools
 
@@ -36,7 +36,7 @@ digraph tool_selection {
     "axiom-performance (skills/performance-profiling.md)" [shape=box];
     "LLDB (this skill)" [shape=box, style=bold];
 
-    "What do you need?" -> "axiom-tools (skills/xcsym-ref.md)" [label="Have a .ips or\nMetricKit crash file"];
+    "What do you need?" -> "axiom-tools (skills/xcsym-ref.md)" [label="Have a .ips, MetricKit,\nor .crash file"];
     "What do you need?" -> "axiom-shipping (skills/testflight-triage.md)" [label="Field crash,\nalready symbolicated"];
     "What do you need?" -> "axiom-performance (skills/hang-diagnostics.md)" [label="App frozen,\nneed diagnosis approach"];
     "What do you need?" -> "axiom-performance (skills/memory-debugging.md)" [label="Memory growing,\nneed leak pattern"];

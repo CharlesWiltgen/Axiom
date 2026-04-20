@@ -152,7 +152,7 @@ Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`
 
 **Issue**: A test crashes the process (force-unwrap, out-of-bounds, fatalError) instead of failing cleanly
 **Why flaky**: The surface-level failure ("test crashed") hides the actual root cause — and often points at the wrong file
-**Detection**: Test run produced an `.ips` file in `~/Library/Logs/DiagnosticReports/` OR a MetricKit `MXCrashDiagnostic` artifact
+**Detection**: Test run produced an `.ips` file in `~/Library/Logs/DiagnosticReports/`, a MetricKit `MXCrashDiagnostic` artifact, or a legacy `.crash` text file
 
 **Before analyzing the Swift source, symbolicate the crash:**
 
