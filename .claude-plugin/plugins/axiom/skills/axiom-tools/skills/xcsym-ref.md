@@ -115,7 +115,7 @@ xcsym anonymize - < crash.ips            # read from stdin
 - Bundle IDs across every spelling (`bundle_id`, `bundleID`, `bundleIdentifier`, `CFBundleIdentifier`, `codeSigningID`, `coalitionName`)
 - Process and app names (`procName`, `app_name`)
 - User paths (`/Users/<name>/` → `/Users/REDACTED/`)
-- `.app` names (word-boundary regex, so identifiers like `com.apple.main-thread` aren't mangled) and `.framework` names
+- `.app` names (word-boundary regex, so `com.apple.*` identifiers aren't mangled) and `.framework` names (anchored to end-of-string or `/`, so `com.framework.*` reverse-DNS segments aren't mangled)
 - IPv4 and IPv6 addresses
 - Device names and account IDs (`crashReporterKey`, `sessionID`, `incident_id`, `incident`, `deviceIdentifier`, `deviceUDID`, `userID`)
 - Binary names inside `usedImages[].name` and MetricKit `binaryName`

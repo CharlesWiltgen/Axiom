@@ -198,6 +198,41 @@ func TestAnonymize_v2_PreservesSliceUUIDInHeader(t *testing.T) {
 	}
 }
 
+// TestScrubString_FrameworkRegexAnchored guards axiom-9fl. frameworkRE was
+// `([A-Za-z0-9_\-]+)\.framework` — greedy-matched `.framework` anywhere,
+// so `com.framework.foo` got captured and mangled to `Framework.framework.foo`.
+//
+// `\b` (which bareBundleRE uses for `.app`) can't fix this — `.framework`
+// is followed by `.` in the false-positive case, and word-char to non-word
+// char IS a word boundary. The real fix anchors frameworkRE to EOS or `/`,
+// the only two legitimate terminators for an Apple framework bundle name.
+//
+// Trade-off documented on frameworkRE: `Foo.framework.dSYM` is no longer
+// scrubbed. Acceptable because that shape is rare in .ips/MetricKit input
+// and the framework name inside is already covered by sibling patterns.
+func TestScrubString_FrameworkRegexAnchored(t *testing.T) {
+	preserve := map[string]bool{}
+
+	cases := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"bare at EOS", "CoreFoo.framework", "Framework.framework"},
+		{"before slash preserves path", "CoreFoo.framework/Helpers", "Framework.framework/Helpers"},
+		{"interior segment must not match", "com.framework.foo", "com.framework.foo"},
+		{"word-continuation must not match", "CoreFoo.frameworkTester", "CoreFoo.frameworkTester"},
+		{"dot-continuation is the trade-off", "CoreFoo.framework.dSYM", "CoreFoo.framework.dSYM"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := scrubString(c.in, preserve); got != c.want {
+				t.Errorf("scrubString(%q) = %q, want %q", c.in, got, c.want)
+			}
+		})
+	}
+}
+
 func TestAnonymize_IPv4AndIPv6(t *testing.T) {
 	blob := `{
 	  "bug_type": "309",
