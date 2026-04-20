@@ -1,0 +1,2 @@
+{"app_name":"MyApp","app_version":"1.0","bundleID":"com.example.MyApp","bug_type":"298","os_version":"iPhone OS 17.5 (21F79)","timestamp":"2026-04-19 10:30:00.0000 -0700","name":"MyApp"}
+{"procName":"MyApp","cpuType":"ARM-64","modelCode":"iPhone14,2","threads":[{"triggered":true,"queue":"com.apple.main-thread","frames":[{"imageOffset":100,"symbol":"main_thread_spinning","imageIndex":0}]}],"usedImages":[{"source":"P","arch":"arm64","base":4294967296,"size":1048576,"uuid":"aabbccdd-eeff-0011-2233-445566778899","name":"MyApp","path":"/path/to/MyApp"}]}
