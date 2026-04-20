@@ -111,7 +111,13 @@ var bareBundleRE = regexp.MustCompile(`([A-Za-z0-9_\-]+)\.app\b`)
 
 // frameworkRE matches `<name>.framework` — Apple's convention for shared
 // framework bundles. Framework names can reveal proprietary library names.
-var frameworkRE = regexp.MustCompile(`([A-Za-z0-9_\-]+)\.framework`)
+// Anchored to EOS or `/` so reverse-DNS identifiers like `com.framework.foo`
+// don't get their middle segment mangled. `\b` (which bareBundleRE uses for
+// `.app`) can't distinguish these cases because `.framework` is followed by
+// `.` — a word boundary — so `\b` would still match. The accepted trade-off:
+// a rare shape like `Foo.framework.dSYM` is NOT scrubbed, but the framework
+// name inside it is already captured by sibling patterns elsewhere. axiom-9fl.
+var frameworkRE = regexp.MustCompile(`([A-Za-z0-9_\-]+)\.framework(/|$)`)
 
 // ipv6RE matches IPv6 addresses with 6+ colon-separated hex groups.
 // We set the lower bound at 6 groups to avoid false-positive matches on
@@ -291,7 +297,7 @@ func scrubString(s string, preserve map[string]bool) string {
 	// common "/SecretApp.app/SecretApp" suffix), then catch-all bare forms.
 	s = appBundleRE.ReplaceAllString(s, "/App.app/App")
 	s = bareBundleRE.ReplaceAllString(s, "App.app")
-	s = frameworkRE.ReplaceAllString(s, "Framework.framework")
+	s = frameworkRE.ReplaceAllString(s, "Framework.framework$2")
 	// IPs — IPv6 first because the IPv4 pattern is looser.
 	s = ipv6RE.ReplaceAllString(s, redactedIPv6)
 	s = ipv4RE.ReplaceAllString(s, redactedIPv4)
