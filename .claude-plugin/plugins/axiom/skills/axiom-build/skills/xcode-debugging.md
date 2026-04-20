@@ -225,6 +225,8 @@ xcrun agvtool new-marketing-version 2.1       # Set marketing version
 xcrun amlint Assets.xcassets                   # Lint for issues before build
 ```
 
+- `xcsym crash <file>` — Structured crash symbolication with LLM-friendly JSON output. Use for any `.ips` or MetricKit crash file. See `axiom-tools (skills/xcsym-ref.md)`.
+
 ## Physical Device Management (devicectl)
 
 `devicectl` is the modern CLI for physical device operations (replaces legacy `idevice*` tools).
