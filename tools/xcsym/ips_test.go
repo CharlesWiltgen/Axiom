@@ -205,3 +205,34 @@ func TestParseIPS_v2_ArchFallbackToFirstImage(t *testing.T) {
 		t.Errorf("arch = %q, want arm64e (from first image)", raw.Arch)
 	}
 }
+
+// FuzzParseIPS seeds from every checked-in .ips fixture (v1 and v2) and
+// asserts that ParseIPS never panics on arbitrary input. Errors are fine —
+// the contract is only that malformed data surfaces as an error, never a
+// crash. Budget: `make fuzz-ips` runs ≥60s; target ≥1M executions before
+// release (the fuzztime on CI is whatever infrastructure allows).
+func FuzzParseIPS(f *testing.F) {
+	for _, dir := range []string{"testdata/crashes/ips_v1", "testdata/crashes/ips_v2"} {
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			f.Logf("seed dir %s: %v", dir, err)
+			continue
+		}
+		for _, e := range entries {
+			if e.IsDir() {
+				continue
+			}
+			data, err := os.ReadFile(filepath.Join(dir, e.Name()))
+			if err != nil {
+				continue
+			}
+			f.Add(data)
+		}
+	}
+	f.Fuzz(func(t *testing.T, data []byte) {
+		// Must not panic. Any error return is acceptable. We also tolerate
+		// *HangError specifically — it's an expected typed error for
+		// bug_type=298 and proves the parser handled the input correctly.
+		_, _ = ParseIPS(data)
+	})
+}
