@@ -52,6 +52,7 @@ digraph design {
 7. TextKit / rich text editing / Writing Tools? → `/skill axiom-uikit`
 8. Accessibility compliance (VoiceOver, contrast, touch targets)? → `/skill axiom-accessibility`
 9. Audit UI for Liquid Glass adoption? → liquid-glass-auditor (Agent)
+10. CarPlay app design, categories, driver-distraction rules? → `/skill axiom-media` (carplay-hig.md)
 
 ## Conflict Resolution
 
@@ -70,6 +71,11 @@ digraph design {
 **design (app-composition) vs swiftui**: When structuring app architecture:
 - @main entry, auth state machine, root view switching, scene lifecycle → **use design** (`skills/app-composition.md`)
 - NavigationStack, NavigationSplitView, tab structure → **use swiftui**
+
+**design vs media (CarPlay)**: When designing for CarPlay:
+- General iOS HIG principles (colors, typography, Liquid Glass) → **use design**
+- CarPlay-specific rules (app categories, entitlement review, template-only UI, driver distraction, per-category design rules) → **invoke axiom-media** (`skills/carplay-hig.md`)
+- CarPlay rules are stricter than iOS HIG and enforced at entitlement review, not just App Store review.
 
 ## Critical Patterns
 
