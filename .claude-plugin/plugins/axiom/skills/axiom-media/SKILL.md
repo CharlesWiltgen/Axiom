@@ -22,7 +22,10 @@ license: MIT
 | ShazamKit API reference | See `skills/shazamkit-ref.md` |
 | Haptic feedback, Core Haptics | See `skills/haptics.md` |
 | Now Playing metadata, remote commands | See `skills/now-playing.md` |
-| CarPlay Now Playing | See `skills/now-playing-carplay.md` |
+| CarPlay HIG, app categories, design rules, entitlements | See `skills/carplay-hig.md` |
+| CarPlay templates reference (all 13 templates, availability matrix, depth limits) | See `skills/carplay-templates-ref.md` |
+| CarPlay navigation reference (base view, route guidance, cluster/HUD, multitouch, voice prompts) | See `skills/carplay-navigation-ref.md` |
+| CarPlay Now Playing template customization + sports mode | See `skills/now-playing-carplay.md` |
 | MusicKit Now Playing | See `skills/now-playing-musickit.md` |
 
 ## Decision Tree
@@ -39,6 +42,7 @@ digraph media {
     what -> "skills/shazamkit.md" [label="ShazamKit\n/ audio recognition"];
     what -> "skills/haptics.md" [label="haptic feedback"];
     what -> "skills/now-playing.md" [label="Now Playing\n/ remote commands"];
+    what -> "skills/carplay-hig.md" [label="CarPlay app design\n/ categories / entitlements"];
 }
 ```
 
@@ -48,7 +52,8 @@ digraph media {
 4. ShazamKit / audio recognition? → `skills/shazamkit.md`, `skills/shazamkit-ref.md`
 5. Haptics? → `skills/haptics.md`
 6. Now Playing / remote commands? → `skills/now-playing.md`, `skills/now-playing-carplay.md`, `skills/now-playing-musickit.md`
-7. Want camera code audit? → Launch `camera-auditor` agent
+7. CarPlay app design, category selection, entitlement request? → `skills/carplay-hig.md` (start here for any CarPlay work)
+8. Want camera code audit? → Launch `camera-auditor` agent
 
 ## Cross-Domain Routing
 
