@@ -35,6 +35,10 @@ Use this router when:
 - ML = Custom model deployment (CoreML conversion, quantization, MLTensor, speech-to-text)
 - If developer says "run my own model" → skills/ios-ml.md. If "use Apple Intelligence" → stay here.
 
+## External Resources
+
+For cloud Claude API integration (Messages API, Anthropic SDK, Claude Agent SDK in your iOS app), see the **`claude-api`** skill — it ships outside Axiom and includes the automated Opus 4.6 → 4.7 migration (model ID swap, sampling-param removal, prefill replacement). Apple's on-device Foundation Models and Anthropic's cloud Claude are unrelated stacks; use both in parallel when an app needs both.
+
 ## Cross-Domain Routing
 
 **Foundation Models + concurrency** (session blocking main thread, UI freezes):
