@@ -346,6 +346,20 @@ export default withMermaid(defineConfig({
           ]
         },
         {
+          text: 'HealthKit & WorkoutKit',
+          items: [
+            { text: 'Overview', link: '/skills/health/' },
+            { text: 'Fundamentals', link: '/skills/health/fundamentals' },
+            { text: 'Authorization & Privacy', link: '/skills/health/authorization-and-privacy' },
+            { text: 'Queries', link: '/skills/health/queries' },
+            { text: 'Sync & Background', link: '/skills/health/sync-and-background' },
+            { text: 'Workouts', link: '/skills/health/workouts' },
+            { text: 'WorkoutKit', link: '/skills/health/workoutkit' },
+            { text: 'Wellbeing & Medications', link: '/skills/health/wellbeing-and-medications' },
+            { text: 'Clinical & Mobility', link: '/skills/health/clinical-and-mobility' }
+          ]
+        },
+        {
           text: 'Testing',
           items: [
             { text: 'Overview', link: '/skills/testing/' },
@@ -379,6 +393,19 @@ export default withMermaid(defineConfig({
             { text: 'Metal Migration', link: '/skills/games/metal-migration' },
             { text: 'RealityKit', link: '/skills/games/realitykit' },
             { text: 'SceneKit', link: '/skills/games/scenekit' }
+          ]
+        },
+        {
+          text: 'watchOS',
+          items: [
+            { text: 'Overview', link: '/skills/watchos/' },
+            { text: 'Platform Basics', link: '/skills/watchos/platform-basics' },
+            { text: 'Design for watchOS', link: '/skills/watchos/design-for-watchos' },
+            { text: 'Watch Connectivity', link: '/skills/watchos/watch-connectivity' },
+            { text: 'Background & Networking', link: '/skills/watchos/background-and-networking' },
+            { text: 'Smart Stack & Complications', link: '/skills/watchos/smart-stack-and-complications' },
+            { text: 'Controls & Live Activities', link: '/skills/watchos/controls-and-live-activities' },
+            { text: 'Modernization', link: '/skills/watchos/modernization' }
           ]
         },
         {
