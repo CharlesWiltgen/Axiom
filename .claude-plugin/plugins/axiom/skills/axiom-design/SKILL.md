@@ -54,6 +54,9 @@ digraph design {
 9. Audit UI for Liquid Glass adoption? → liquid-glass-auditor (Agent)
 10. CarPlay app design, categories, driver-distraction rules? → `/skill axiom-media` (carplay-hig.md)
 
+#### Platform-specific HIG
+- watchOS design (glanceable UI, watchOS 10 navigation) → See axiom-watchos (skills/design-for-watchos.md)
+
 ## Conflict Resolution
 
 **design vs swiftui**: When building UI:
