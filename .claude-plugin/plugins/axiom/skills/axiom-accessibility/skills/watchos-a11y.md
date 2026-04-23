@@ -21,7 +21,7 @@ Use when:
 
 **Three assistive technologies ship on Apple Watch: VoiceOver, AssistiveTouch, and Double Tap.** Each has a distinct input model and SwiftUI support surface. An accessible watchOS app addresses all three, plus Dynamic Type at the large accessibility sizes that watchOS 8 introduced. Most of what works on iOS carries over — what follows is the watchOS-specific additions and pressure points.
 
-> "Accessibility is about people using their devices in the way that's best for them. And that means, to give your app the best user experience, accessibility must be considered." — Daniel Sykes-Turner, Apple Accessibility, WWDC 2021-10223
+> "Accessibility is about people using their devices in the way that's best for them. And that means, to give your app the best user experience, accessibility must be considered." — Daniel Sykes-Turner, Apple Accessibility
 
 ## Watch-Specific Assistive Technologies
 
@@ -310,6 +310,6 @@ Button("Start Workout") {
 
 **WWDC**: 2021-10223, 2021-10308, 2024-10205
 
-**Docs**: /watchos-apps/create-accessible-experiences-for-watchos, /swiftui/environmentvalues/sizecategory, /swiftui/view/accessibilityelement(children:), /swiftui/view/accessibilityrespondstouserinteraction(_:), /swiftui/view/accessibilityadjustableaction(_:), /swiftui/view/accessibilityaction(_:_:), /swiftui/view/contentshape(_:eofill:), /swiftui/view/handgestureshortcut(_:isenabled:)
+**Docs**: /watchos-apps/create-accessible-experiences-for-watchos, /swiftui/environmentvalues/sizecategory, /swiftui/view/accessibilityelement(children:), /swiftui/view/accessibilityrespondstouserinteraction(_:), /swiftui/view/accessibilityadjustableaction(_:), /swiftui/view/accessibilityaction(_:_:), /swiftui/view/contentshape(_:), /swiftui/view/handgestureshortcut(_:isenabled:)
 
 **Skills**: axiom-accessibility (accessibility-diag, ux-flow-audit), axiom-watchos (design-for-watchos, smart-stack-and-complications, controls-and-live-activities)

@@ -62,28 +62,32 @@ struct MyWatch_Watch_App: App {
 }
 ```
 
-### Named identifiers for distinct refresh flows
+### Distinguishing refresh flows by `userInfo`
 
-Schedule with a specific `userInfo` string, then match it in a typed handler:
+Schedule with a specific `userInfo` string, then branch on it inside the handler. `userInfo` must conform to both `NSSecureCoding` and `NSObjectProtocol`; a Swift `String` bridges cleanly via `NSString`:
 
 ```swift
 // Scheduling
 WKApplication.shared().scheduleBackgroundRefresh(
     withPreferredDate: Date(timeIntervalSinceNow: 15 * 60),
-    userInfo: "WEATHER_UPDATE" as NSSecureCoding & NSObjectProtocol
+    userInfo: "WEATHER_UPDATE" as NSString
 ) { error in
     if let error { /* handle */ }
 }
 
-// Handling — one closure per identifier, plus a fallback
-.backgroundTask(.appRefresh("WEATHER_UPDATE")) { _ in
-    await fetchWeather()
-}
-.backgroundTask(.appRefresh("WIDGET_RELOAD")) { _ in
-    await reloadWidgetData()
-}
-.backgroundTask(.appRefresh) { _ in
-    // Any other appRefresh task
+// Handling — one handler, dispatch by userInfo.
+// On watchOS the payload arrives via the task context's userInfo, not via
+// the SwiftUI identifier form that iOS uses for BGTaskScheduler IDs.
+.backgroundTask(.appRefresh) { context in
+    let reason = (context.userInfo as? NSString) as String?
+    switch reason {
+    case "WEATHER_UPDATE":
+        await fetchWeather()
+    case "WIDGET_RELOAD":
+        await reloadWidgetData()
+    default:
+        await performDefaultRefresh()
+    }
 }
 ```
 

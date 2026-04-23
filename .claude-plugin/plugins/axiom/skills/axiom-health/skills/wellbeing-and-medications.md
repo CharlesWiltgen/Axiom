@@ -168,8 +168,7 @@ let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
 ])
 
 let descriptor = HKSampleQueryDescriptor(
-    sampleType: HKMedicationDoseEvent.self,
-    predicate: predicate,
+    predicates: [HKSamplePredicate.medicationDoseEvent(predicate)],
     sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)],
     limit: 1
 )
