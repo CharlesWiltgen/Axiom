@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-04-23T15:17:21.569Z",
+  "generatedAt": "2026-04-23T16:58:26.949Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -30938,6 +30938,66 @@
           "axiom-vision--vision-diag"
         ]
       }
+    },
+    "axiom-watchos": {
+      "name": "axiom-watchos",
+      "description": "Use when building ANY watchOS app — app structure, independent apps, Watch Connectivity, Smart Stack widgets, complications, controls, RelevanceKit, background tasks, ClockKit migration.",
+      "content": "\n# watchOS Development\n\n**You MUST use this skill for ANY watchOS-specific development including app structure, independent apps, Watch Connectivity, complications and Smart Stack widgets, controls, Live Activities on watch, background tasks, and ClockKit migration.**\n\n## Quick Reference\n\n| Symptom / Task | Reference |\n|----------------|-----------|\n| App structure, independent apps, watchOS 26 submission requirements | See `skills/platform-basics.md` |\n| watchOS HIG, glanceable UX, navigation model | See `skills/design-for-watchos.md` |\n| Smart Stack widgets, complications, ClockKit→WidgetKit, RelevanceKit | See `skills/smart-stack-and-complications.md` |\n| Controls on watch surfaces, Live Activities on watch | See `skills/controls-and-live-activities.md` |\n| Watch Connectivity (WCSession), paired-device data transfer, Family Setup | See `skills/watch-connectivity.md` |\n| Background tasks, freshness scheduling, TN3135 networking limits | See `skills/background-and-networking.md` |\n| WatchKit→SwiftUI migration, ClockKit→WidgetKit migration | See `skills/modernization.md` |\n\n## Cross-Suite Routes\n\nThese topics overlap with watchOS development but live in separate suites:\n\n#### SwiftUI (shared iOS/watchOS/macOS)\n- View state, data flow, @Observable → See axiom-swiftui\n- Navigation basics (NavigationStack) → See axiom-swiftui\n- Layout, animations → See axiom-swiftui\n\n#### Design\n- General HIG, Liquid Glass, SF Symbols, typography → See axiom-design\n\n#### Accessibility\n- General VoiceOver, Dynamic Type, WCAG → See axiom-accessibility\n- watchOS-specific (VoiceOver rotor on Digital Crown, AssistiveTouch, Double Tap) → See axiom-accessibility (`skills/watchos-a11y.md`)\n\n#### Health and workouts\n- HealthKit, `HKWorkoutSession`, `HKLiveWorkoutBuilder`, WorkoutKit → See axiom-health\n- Workout recovery, multi-device coordination → See axiom-health (`skills/workouts.md`)\n\n#### iOS-side widgets and App Intents\n- iOS/iPadOS widgets, configuration intents, App Intents → See axiom-integration\n- Live Activities on iPhone (initiation + ActivityKit) → See axiom-integration\n\n#### Concurrency\n- Swift 6 concurrency, actors, Sendable → See axiom-concurrency\n\n## Conflict Resolution\n\n**axiom-watchos vs axiom-swiftui**: When building a watchOS SwiftUI app:\n1. **Use axiom-watchos** for watch-specific patterns: glanceable UI, constrained navigation, Digital Crown focus, Smart Stack placement\n2. **Use axiom-swiftui** for cross-platform SwiftUI: state management, layout primitives, animations\n3. **Both may apply**: A watchOS NavigationStack with complications needs axiom-watchos for complication surfaces and axiom-swiftui for NavigationStack basics\n\n**axiom-watchos vs axiom-integration**: For widgets and Live Activities:\n1. **Use axiom-watchos** for watch complications, Smart Stack placement, watch-side Live Activity presentation, RelevanceKit\n2. **Use axiom-integration** for iOS/iPadOS widgets, core ActivityKit API, App Intents\n\n**axiom-watchos vs axiom-health**: For workouts on Apple Watch:\n1. **Use axiom-watchos** for watch-specific presentation: Always On display, Smart Stack placement, background mode coordination\n2. **Use axiom-health** for `HKWorkoutSession` lifecycle, `HKLiveWorkoutBuilder`, recovery, multi-device mirroring\n\n## Decision Tree\n\n```dot\ndigraph watchos {\n    start [label=\"watchOS development task\" shape=ellipse];\n    what [label=\"What area?\" shape=diamond];\n\n    start -> what;\n    what -> \"skills/platform-basics.md\" [label=\"app structure, independent apps, submission\"];\n    what -> \"skills/design-for-watchos.md\" [label=\"watch HIG, glanceable UX\"];\n    what -> \"skills/smart-stack-and-complications.md\" [label=\"complications, Smart Stack, RelevanceKit\"];\n    what -> \"skills/controls-and-live-activities.md\" [label=\"controls, watch Live Activities\"];\n    what -> \"skills/watch-connectivity.md\" [label=\"WCSession, paired-device transfer\"];\n    what -> \"skills/background-and-networking.md\" [label=\"background tasks, networking limits\"];\n    what -> \"skills/modernization.md\" [label=\"WatchKit/ClockKit migration\"];\n    what -> \"axiom-health\" [label=\"workouts, HealthKit, WorkoutKit\"];\n    what -> \"axiom-swiftui\" [label=\"general SwiftUI patterns\"];\n    what -> \"axiom-accessibility\" [label=\"VoiceOver rotor, AssistiveTouch\"];\n    what -> \"axiom-integration\" [label=\"iOS-side widgets, App Intents\"];\n}\n```\n\n## Resources\n\n**WWDC**: 2021-10003, 2022-10133, 2023-10138, 2023-10029, 2023-10309, 2024-10098, 2024-10157, 2024-10205, 2025-334\n\n**Docs**: /watchos-apps/building-a-watchos-app, /watchos-apps/creating-independent-watchos-apps, /watchconnectivity, /widgetkit/creating-accessory-widgets-and-watch-complications, /widgetkit/converting-a-clockkit-app, /relevancekit, /technotes/tn3135-low-level-networking-on-watchos, /technotes/tn3157-updating-your-watchos-project-for-swiftui-and-widgetkit\n\n**Skills**: axiom-swiftui, axiom-design, axiom-accessibility, axiom-health, axiom-integration, axiom-concurrency\n",
+      "skillType": "router",
+      "source": "axiom",
+      "tags": [],
+      "related": [],
+      "sections": [
+        {
+          "heading": "_preamble",
+          "level": 0,
+          "startLine": 0,
+          "endLine": 0,
+          "charCount": 0
+        },
+        {
+          "heading": "watchOS Development",
+          "level": 1,
+          "startLine": 1,
+          "endLine": 4,
+          "charCount": 268
+        },
+        {
+          "heading": "Quick Reference",
+          "level": 2,
+          "startLine": 5,
+          "endLine": 16,
+          "charCount": 820
+        },
+        {
+          "heading": "Cross-Suite Routes",
+          "level": 2,
+          "startLine": 17,
+          "endLine": 43,
+          "charCount": 1082
+        },
+        {
+          "heading": "Conflict Resolution",
+          "level": 2,
+          "startLine": 44,
+          "endLine": 58,
+          "charCount": 1088
+        },
+        {
+          "heading": "Decision Tree",
+          "level": 2,
+          "startLine": 59,
+          "endLine": 80,
+          "charCount": 1096
+        },
+        {
+          "heading": "Resources",
+          "level": 2,
+          "startLine": 81,
+          "endLine": 88,
+          "charCount": 602
+        }
+      ]
     },
     "axiom-xcode-mcp": {
       "name": "axiom-xcode-mcp",
