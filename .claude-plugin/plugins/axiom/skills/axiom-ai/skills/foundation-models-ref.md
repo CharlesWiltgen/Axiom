@@ -695,6 +695,8 @@ let question = try response.content.value(String.self, forProperty: "question")
 
 ## Sampling & Generation Options
 
+> **Name collision warning.** Apple's `GenerationOptions(temperature:)` controls the *on-device* Foundation Models LLM and is unrelated to the Anthropic Messages API. Anthropic's Opus 4.7 (released 2026-04-16) **removed `temperature`, `top_p`, and `top_k`** from the Messages API — passing them returns a 400. If your app integrates Claude via the Agent SDK in addition to Foundation Models, do not pass these parameters to the Messages API.
+
 **Greedy (deterministic)** — use for tests and demos. Only deterministic within same model version:
 ```swift
 let response = try await session.respond(
