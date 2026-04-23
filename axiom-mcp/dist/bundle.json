@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-04-23T13:14:34.120Z",
+  "generatedAt": "2026-04-23T14:41:59.982Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -329,7 +329,7 @@
     "axiom-ai": {
       "name": "axiom-ai",
       "description": "Use when implementing ANY Apple Intelligence or on-device AI feature. Covers Foundation Models, @Generable, LanguageModelSession, structured output, Tool protocol, iOS 26 AI integration.",
-      "content": "\n# Apple Intelligence & AI\n\n**You MUST use this skill for ANY Apple Intelligence or Foundation Models work.**\n\n## When to Use\n\nUse this router when:\n- Implementing Apple Intelligence features\n- Using Foundation Models\n- Working with LanguageModelSession\n- Generating structured output with @Generable\n- Debugging AI generation issues\n- iOS 26 on-device AI\n\n## AI Approach Triage\n\n**First, determine which kind of AI the developer needs:**\n\n| Developer Intent | Route To |\n|-----------------|----------|\n| On-device text generation (Apple Intelligence) | **Stay here** → Foundation Models skills |\n| Custom ML model deployment (PyTorch, TensorFlow) | **See skills/ios-ml.md** → CoreML conversion, compression |\n| Computer vision (image analysis, OCR, segmentation) | **/skill axiom-vision** → Vision framework |\n| Cloud API integration (OpenAI, etc.) | **/skill axiom-networking** → URLSession patterns |\n| System AI features (Writing Tools, Genmoji) | No custom code needed — these are system-provided |\n\n**Key boundary: Foundation Models vs ML (custom models)**\n- Foundation Models = Apple's on-device LLM framework (LanguageModelSession, @Generable)\n- ML = Custom model deployment (CoreML conversion, quantization, MLTensor, speech-to-text)\n- If developer says \"run my own model\" → skills/ios-ml.md. If \"use Apple Intelligence\" → stay here.\n\n## External Resources\n\nFor cloud Claude API integration (Messages API, Anthropic SDK, Claude Agent SDK in your iOS app), see the **`claude-api`** skill — it ships outside Axiom and includes the automated Opus 4.6 → 4.7 migration (model ID swap, sampling-param removal, prefill replacement). Apple's on-device Foundation Models and Anthropic's cloud Claude are unrelated stacks; use both in parallel when an app needs both.\n\n## Cross-Domain Routing\n\n**Foundation Models + concurrency** (session blocking main thread, UI freezes):\n- Foundation Models sessions are async — blocking likely means missing `await` or running on @MainActor\n- **Fix here first** using async session patterns in foundation-models skill\n- If concurrency issue is broader than Foundation Models → **also invoke axiom-concurrency**\n\n**Foundation Models + data** (@Generable decoding errors, structured output issues):\n- @Generable output problems are Foundation Models-specific, NOT generic Codable issues\n- **Stay here** → foundation-models-diag handles structured output debugging\n- If developer also has general Codable/serialization questions → **also invoke axiom-data**\n\n## Routing Logic\n\n### Foundation Models Work\n\n**Implementation patterns** → `skills/foundation-models.md`\n- LanguageModelSession basics\n- @Generable structured output\n- Tool protocol integration\n- Streaming with PartiallyGenerated\n- Dynamic schemas\n- 26 WWDC code examples\n\n**API reference** → `skills/foundation-models-ref.md`\n- Complete API documentation\n- All @Generable examples\n- Tool protocol patterns\n- Streaming generation patterns\n\n**Diagnostics** → `skills/foundation-models-diag.md`\n- AI response blocked\n- Generation slow\n- Guardrail violations\n- Context limits exceeded\n- Model unavailable\n\n**Automated scanning** → Launch `foundation-models-auditor` agent or `/axiom:audit foundation-models` (missing availability checks, main thread blocking, manual JSON parsing, session lifecycle issues)\n\n## Decision Tree\n\n1. Custom ML model / CoreML / PyTorch conversion? → **See skills/ios-ml.md**\n2. Computer vision / image analysis / OCR? → **/skill axiom-vision**\n3. Cloud AI API integration? → **/skill axiom-networking**\n4. Implementing Foundation Models / @Generable / Tool protocol? → foundation-models\n5. Need API reference / code examples? → foundation-models-ref\n6. Debugging AI issues (blocked, slow, guardrails)? → foundation-models-diag\n7. Foundation Models + UI freezing? → foundation-models (async patterns) + also invoke axiom-concurrency if needed\n8. Want automated Foundation Models code scan? → foundation-models-auditor (Agent)\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"Foundation Models is just LanguageModelSession\" | Foundation Models has @Generable, Tool protocol, streaming, and guardrails. foundation-models covers all. |\n| \"I'll figure out the AI patterns as I go\" | AI APIs have specific error handling and fallback requirements. foundation-models prevents runtime failures. |\n| \"I've used LLMs before, this is similar\" | Apple's on-device models have unique constraints (guardrails, context limits). foundation-models is Apple-specific. |\n\n## Critical Patterns\n\n**foundation-models**:\n- LanguageModelSession setup\n- @Generable for structured output\n- Tool protocol for function calling\n- Streaming generation\n- Dynamic schema evolution\n\n**foundation-models-diag**:\n- Blocked response handling\n- Performance optimization\n- Guardrail violations\n- Context management\n\n## Example Invocations\n\nUser: \"How do I use Apple Intelligence to generate structured data?\"\n→ Read: `skills/foundation-models.md`\n\nUser: \"My AI generation is being blocked\"\n→ Read: `skills/foundation-models-diag.md`\n\nUser: \"Show me @Generable examples\"\n→ Read: `skills/foundation-models-ref.md`\n\nUser: \"Implement streaming AI generation\"\n→ Read: `skills/foundation-models.md`\n\nUser: \"I want to add AI to my app\"\n→ First ask: Apple Intelligence (Foundation Models) or custom ML model? Route accordingly.\n\nUser: \"My Foundation Models session is blocking the UI\"\n→ Read: `skills/foundation-models.md` (async patterns) + also invoke `axiom-concurrency` if needed\n\nUser: \"Review my Foundation Models code for issues\"\n→ Invoke: `foundation-models-auditor` agent\n\nUser: \"I want to run my PyTorch model on device\"\n→ Read: `skills/ios-ml.md` (CoreML conversion, not Foundation Models)\n",
+      "content": "\n# Apple Intelligence & AI\n\n**You MUST use this skill for ANY Apple Intelligence or Foundation Models work.**\n\n## When to Use\n\nUse this router when:\n- Implementing Apple Intelligence features\n- Using Foundation Models\n- Working with LanguageModelSession\n- Generating structured output with @Generable\n- Debugging AI generation issues\n- iOS 26 on-device AI\n\n## AI Approach Triage\n\n**First, determine which kind of AI the developer needs:**\n\n| Developer Intent | Route To |\n|-----------------|----------|\n| On-device text generation (Apple Intelligence) | **Stay here** → Foundation Models skills |\n| Custom ML model deployment (PyTorch, TensorFlow) | **See skills/ios-ml.md** → CoreML conversion, compression |\n| Computer vision (image analysis, OCR, segmentation) | **/skill axiom-vision** → Vision framework |\n| Cloud API integration (OpenAI, generic HTTP) | **/skill axiom-networking** → URLSession patterns |\n| Cloud Claude integration (Anthropic SDK, Messages API, Claude Agent SDK) | **See `claude-api` skill** (external) → includes automated Opus 4.6 → 4.7 migration |\n| System AI features (Writing Tools, Genmoji) | No custom code needed — these are system-provided |\n\n**Key boundary: Foundation Models vs ML (custom models)**\n- Foundation Models = Apple's on-device LLM framework (LanguageModelSession, @Generable)\n- ML = Custom model deployment (CoreML conversion, quantization, MLTensor, speech-to-text)\n- If developer says \"run my own model\" → skills/ios-ml.md. If \"use Apple Intelligence\" → stay here.\n\n## Cross-Domain Routing\n\n**Foundation Models + concurrency** (session blocking main thread, UI freezes):\n- Foundation Models sessions are async — blocking likely means missing `await` or running on @MainActor\n- **Fix here first** using async session patterns in foundation-models skill\n- If concurrency issue is broader than Foundation Models → **also invoke axiom-concurrency**\n\n**Foundation Models + data** (@Generable decoding errors, structured output issues):\n- @Generable output problems are Foundation Models-specific, NOT generic Codable issues\n- **Stay here** → foundation-models-diag handles structured output debugging\n- If developer also has general Codable/serialization questions → **also invoke axiom-data**\n\n## Routing Logic\n\n### Foundation Models Work\n\n**Implementation patterns** → `skills/foundation-models.md`\n- LanguageModelSession basics\n- @Generable structured output\n- Tool protocol integration\n- Streaming with PartiallyGenerated\n- Dynamic schemas\n- 26 WWDC code examples\n\n**API reference** → `skills/foundation-models-ref.md`\n- Complete API documentation\n- All @Generable examples\n- Tool protocol patterns\n- Streaming generation patterns\n\n**Diagnostics** → `skills/foundation-models-diag.md`\n- AI response blocked\n- Generation slow\n- Guardrail violations\n- Context limits exceeded\n- Model unavailable\n\n**Automated scanning** → Launch `foundation-models-auditor` agent or `/axiom:audit foundation-models` (missing availability checks, main thread blocking, manual JSON parsing, session lifecycle issues)\n\n## Decision Tree\n\n1. Custom ML model / CoreML / PyTorch conversion? → **See skills/ios-ml.md**\n2. Computer vision / image analysis / OCR? → **/skill axiom-vision**\n3. Cloud AI API integration? → **/skill axiom-networking**\n4. Implementing Foundation Models / @Generable / Tool protocol? → foundation-models\n5. Need API reference / code examples? → foundation-models-ref\n6. Debugging AI issues (blocked, slow, guardrails)? → foundation-models-diag\n7. Foundation Models + UI freezing? → foundation-models (async patterns) + also invoke axiom-concurrency if needed\n8. Want automated Foundation Models code scan? → foundation-models-auditor (Agent)\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"Foundation Models is just LanguageModelSession\" | Foundation Models has @Generable, Tool protocol, streaming, and guardrails. foundation-models covers all. |\n| \"I'll figure out the AI patterns as I go\" | AI APIs have specific error handling and fallback requirements. foundation-models prevents runtime failures. |\n| \"I've used LLMs before, this is similar\" | Apple's on-device models have unique constraints (guardrails, context limits). foundation-models is Apple-specific. |\n| \"I know the Anthropic SDK already\" | Opus 4.7 removed `temperature`, `top_p`, `top_k`, and prefill from the Messages API. Code that worked on 4.6 returns HTTP 400 at runtime. Read `claude-api` (external) before changing model IDs. |\n\n## External Resources\n\n**Cloud Claude integration (`claude-api` skill, ships outside Axiom).** Opus 4.7 removed `temperature`, `top_p`, `top_k`, and prefill from the Messages API — code that built successfully on 4.6 returns HTTP 400 at runtime, not compile time. The `claude-api` skill automates the migration (model ID swap, sampling-param removal, prefill replacement) and enforces prompt caching from day one. Skipping it costs an afternoon of production debugging when the first 400s arrive.\n\nApple's on-device Foundation Models and Anthropic's cloud Claude are unrelated stacks; use both in parallel when an app needs both, and treat `claude-api` as mandatory reading before any Claude model-ID change ships.\n\n## Critical Patterns\n\n**foundation-models**:\n- LanguageModelSession setup\n- @Generable for structured output\n- Tool protocol for function calling\n- Streaming generation\n- Dynamic schema evolution\n\n**foundation-models-diag**:\n- Blocked response handling\n- Performance optimization\n- Guardrail violations\n- Context management\n\n## Example Invocations\n\nUser: \"How do I use Apple Intelligence to generate structured data?\"\n→ Read: `skills/foundation-models.md`\n\nUser: \"My AI generation is being blocked\"\n→ Read: `skills/foundation-models-diag.md`\n\nUser: \"Show me @Generable examples\"\n→ Read: `skills/foundation-models-ref.md`\n\nUser: \"Implement streaming AI generation\"\n→ Read: `skills/foundation-models.md`\n\nUser: \"I want to add AI to my app\"\n→ First ask: Apple Intelligence (Foundation Models) or custom ML model? Route accordingly.\n\nUser: \"My Foundation Models session is blocking the UI\"\n→ Read: `skills/foundation-models.md` (async patterns) + also invoke `axiom-concurrency` if needed\n\nUser: \"Review my Foundation Models code for issues\"\n→ Invoke: `foundation-models-auditor` agent\n\nUser: \"I want to run my PyTorch model on device\"\n→ Read: `skills/ios-ml.md` (CoreML conversion, not Foundation Models)\n",
       "skillType": "router",
       "source": "axiom",
       "category": "ai",
@@ -367,56 +367,56 @@
           "heading": "AI Approach Triage",
           "level": 2,
           "startLine": 15,
-          "endLine": 31,
-          "charCount": 986
-        },
-        {
-          "heading": "External Resources",
-          "level": 2,
-          "startLine": 32,
-          "endLine": 35,
-          "charCount": 423
+          "endLine": 32,
+          "charCount": 1157
         },
         {
           "heading": "Cross-Domain Routing",
           "level": 2,
-          "startLine": 36,
-          "endLine": 47,
+          "startLine": 33,
+          "endLine": 44,
           "charCount": 723
         },
         {
           "heading": "Routing Logic",
           "level": 2,
-          "startLine": 48,
-          "endLine": 74,
+          "startLine": 45,
+          "endLine": 71,
           "charCount": 805
         },
         {
           "heading": "Decision Tree",
           "level": 2,
-          "startLine": 75,
-          "endLine": 85,
+          "startLine": 72,
+          "endLine": 82,
           "charCount": 645
         },
         {
           "heading": "Anti-Rationalization",
           "level": 2,
-          "startLine": 86,
-          "endLine": 93,
-          "charCount": 550
+          "startLine": 83,
+          "endLine": 91,
+          "charCount": 785
+        },
+        {
+          "heading": "External Resources",
+          "level": 2,
+          "startLine": 92,
+          "endLine": 97,
+          "charCount": 715
         },
         {
           "heading": "Critical Patterns",
           "level": 2,
-          "startLine": 94,
-          "endLine": 108,
+          "startLine": 98,
+          "endLine": 112,
           "charCount": 324
         },
         {
           "heading": "Example Invocations",
           "level": 2,
-          "startLine": 109,
-          "endLine": 134,
+          "startLine": 113,
+          "endLine": 138,
           "charCount": 877
         }
       ],
@@ -536,7 +536,7 @@
     "axiom-ai--foundation-models-ref": {
       "name": "axiom-ai--foundation-models-ref",
       "description": "The Foundation Models framework provides access to Apple's on-device Large Language Model (3 billion parameters, 2-bit quantized) with a Swift API. This reference covers every API, all WWDC 2025 code examples, and comprehensive implementation patterns.",
-      "content": "\n# Foundation Models Framework — Complete API Reference\n\n## Overview\n\nThe Foundation Models framework provides access to Apple's on-device Large Language Model (3 billion parameters, 2-bit quantized) with a Swift API. This reference covers every API, all WWDC 2025 code examples, and comprehensive implementation patterns.\n\n### Model Specifications\n\n3B parameter model, 2-bit quantized, 4096 token context (input + output combined). Optimized for on-device summarization, extraction, classification, and generation. NOT suited for world knowledge, complex reasoning, math, or translation. Runs entirely on-device — no network, no cost, no data leaves device.\n\n---\n\n## When to Use This Reference\n\nUse this reference when:\n- Implementing Foundation Models features\n- Understanding API capabilities\n- Looking up specific code examples\n- Planning architecture with Foundation Models\n- Migrating from prototype to production\n- Debugging implementation issues\n\n**Related Skills**:\n- `axiom-ai (skills/foundation-models.md)` — Discipline skill with anti-patterns, pressure scenarios, decision trees\n- `axiom-ai (skills/foundation-models-diag.md)` — Diagnostic skill for troubleshooting issues\n\n---\n\n## LanguageModelSession\n\n### Overview\n\n`LanguageModelSession` is the core class for interacting with the model. It maintains conversation history (transcript), handles multi-turn interactions, and manages model state.\n\n### Creating a Session\n\n**Basic Creation**:\n```swift\nimport FoundationModels\n\nlet session = LanguageModelSession()\n```\n\n**With Custom Instructions**:\n```swift\nlet session = LanguageModelSession(instructions: \"\"\"\n    You are a friendly barista in a pixel art coffee shop.\n    Respond to the player's question concisely.\n    \"\"\"\n)\n```\n\n#### From WWDC 301:1:05\n\n**With Tools**:\n```swift\nlet session = LanguageModelSession(\n    tools: [GetWeatherTool()],\n    instructions: \"Help user with weather forecasts.\"\n)\n```\n\n#### From WWDC 286:15:03\n\n**With Specific Model/Use Case**:\n```swift\nlet session = LanguageModelSession(\n    model: SystemLanguageModel(useCase: .contentTagging)\n)\n```\n\n#### From WWDC 286:18:39\n\n### Instructions vs Prompts\n\n**Instructions**:\n- Come from **developer**\n- Define model's role, style, constraints\n- Mostly static\n- First entry in transcript\n- Model trained to obey instructions over prompts (security feature)\n\n**Prompts**:\n- Come from **user** (or dynamic app state)\n- Specific requests for generation\n- Dynamic input\n- Each call to `respond(to:)` adds prompt to transcript\n\n**Security Consideration**:\n- **NEVER** interpolate untrusted user input into instructions\n- User input should go in prompts only\n- Prevents prompt injection attacks\n\n### respond(to:) Method\n\n**Basic Text Generation**:\n```swift\nfunc respond(userInput: String) async throws -> String {\n    let session = LanguageModelSession(instructions: \"\"\"\n        You are a friendly barista in a world full of pixels.\n        Respond to the player's question.\n        \"\"\"\n    )\n    let response = try await session.respond(to: userInput)\n    return response.content\n}\n```\n\n#### From WWDC 301:1:05\n\n**Return Type**: `Response<String>` with `.content` property\n\n### respond(to:generating:) Method\n\n**Structured Output with @Generable**:\n```swift\n@Generable\nstruct SearchSuggestions {\n    @Guide(description: \"A list of suggested search terms\", .count(4))\n    var searchTerms: [String]\n}\n\nlet prompt = \"\"\"\n    Generate a list of suggested search terms for an app about visiting famous landmarks.\n    \"\"\"\n\nlet response = try await session.respond(\n    to: prompt,\n    generating: SearchSuggestions.self\n)\n\nprint(response.content) // SearchSuggestions instance\n```\n\n#### From WWDC 286:5:51\n\n**Return Type**: `Response<SearchSuggestions>` with `.content` property\n\n### Generation Options\n\nSee [Sampling & Generation Options](#sampling--generation-options) for `GenerationOptions` including `sampling:`, `temperature:`, and `includeSchemaInPrompt:`.\n\n---\n\n## Multi-Turn Interactions\n\n### Retaining Context\n\n```swift\nlet session = LanguageModelSession()\n\n// First turn\nlet firstHaiku = try await session.respond(to: \"Write a haiku about fishing\")\nprint(firstHaiku.content)\n// Silent waters gleam,\n// Casting lines in morning mist—\n// Hope in every cast.\n\n// Second turn - model remembers context\nlet secondHaiku = try await session.respond(to: \"Do another one about golf\")\nprint(secondHaiku.content)\n// Silent morning dew,\n// Caddies guide with gentle words—\n// Paths of patience tread.\n\nprint(session.transcript) // Shows full history\n```\n\n#### From WWDC 286:17:46\n\n**How it works**:\n- Each `respond()` call adds entry to transcript\n- Model uses entire transcript for context\n- Enables conversational interactions\n\n### Transcript Property\n\n```swift\nlet transcript = session.transcript\n\nfor entry in transcript.entries {\n    print(\"Entry: \\(entry.content)\")\n}\n```\n\n**Use cases**:\n- Debugging generation issues\n- Displaying conversation history in UI\n- Exporting chat logs\n- Condensing for context management\n\n---\n\n## isResponding Property\n\nGate UI on `session.isResponding` to prevent concurrent requests:\n\n```swift\nButton(\"Go!\") {\n    Task { haiku = try await session.respond(to: prompt).content }\n}\n.disabled(session.isResponding)\n```\n\n#### From WWDC 286:18:22\n\n---\n\n## @Generable Macro\n\n### Overview\n\n`@Generable` enables structured output from the model using Swift types. The macro generates a schema at compile-time and uses **constrained decoding** to guarantee structural correctness.\n\n### Basic Usage\n\n**On Structs**:\n```swift\n@Generable\nstruct Person {\n    let name: String\n    let age: Int\n}\n\nlet response = try await session.respond(\n    to: \"Generate a person\",\n    generating: Person.self\n)\n\nlet person = response.content // Type-safe Person instance\n```\n\n#### From WWDC 301:8:14\n\n**On Enums**:\n```swift\n@Generable\nstruct NPC {\n    let name: String\n    let encounter: Encounter\n\n    @Generable\n    enum Encounter {\n        case orderCoffee(String)\n        case wantToTalkToManager(complaint: String)\n    }\n}\n```\n\n#### From WWDC 301:10:49\n\n### Supported Types\n\n**Primitives**:\n- `String`\n- `Int`, `Float`, `Double`, `Decimal`\n- `Bool`\n\n**Collections**:\n- `[ElementType]` (arrays)\n\n**Composed Types**:\n```swift\n@Generable\nstruct Itinerary {\n    var destination: String\n    var days: Int\n    var budget: Float\n    var rating: Double\n    var requiresVisa: Bool\n    var activities: [String]\n    var emergencyContact: Person\n    var relatedItineraries: [Itinerary] // Recursive!\n}\n```\n\n#### From WWDC 286:6:18\n\n### @Guide Constraints\n\n`@Guide` constrains generated properties. Supports `description:` (natural language), `.range()` (numeric bounds), `.count()` / `.maximumCount()` (array length), and `Regex` (pattern matching).\n\n```swift\n@Generable\nstruct NPC {\n    @Guide(description: \"A full name\")\n    let name: String\n\n    @Guide(.range(1...10))\n    let level: Int\n\n    @Guide(.count(3))\n    let attributes: [String]\n}\n```\n\n#### From WWDC 301:11:20\n\n### Constrained Decoding\n\n**How it works**:\n1. `@Generable` macro generates schema at compile-time\n2. Schema defines valid token sequences\n3. During generation, model creates probability distribution for next token\n4. Framework **masks out invalid tokens** based on schema\n5. Model can only pick tokens valid according to schema\n6. Guarantees structural correctness - no hallucinated keys, no invalid JSON\n\n**From WWDC 286**: \"Constrained decoding prevents structural mistakes. Model is prevented from generating invalid field names or wrong types.\"\n\n**Benefits**:\n- Zero parsing code needed\n- No runtime parsing errors\n- Type-safe Swift objects\n- Compile-time safety (changes to struct caught by compiler)\n\n### Property Declaration Order\n\n**Properties generated in order declared**:\n```swift\n@Generable\nstruct Itinerary {\n    var name: String        // Generated FIRST\n    var days: [DayPlan]     // Generated SECOND\n    var summary: String     // Generated LAST\n}\n```\n\n**Why it matters**:\n- Later properties can reference earlier ones\n- Better model quality: Summaries after content\n- Better streaming UX: Important properties first\n\n#### From WWDC 286:11:00\n\n---\n\n## Streaming\n\n### Overview\n\nFoundation Models uses **snapshot streaming** (not delta streaming). Instead of raw deltas, the framework streams `PartiallyGenerated` types with optional properties that fill in progressively.\n\n### PartiallyGenerated Type\n\nThe `@Generable` macro automatically creates a `PartiallyGenerated` nested type:\n\n```swift\n@Generable\nstruct Itinerary {\n    var name: String\n    var days: [DayPlan]\n}\n\n// Compiler generates:\nextension Itinerary {\n    struct PartiallyGenerated {\n        var name: String?        // All properties optional!\n        var days: [DayPlan]?\n    }\n}\n```\n\n#### From WWDC 286:9:20\n\n### streamResponse Method\n\n```swift\n@Generable\nstruct Itinerary {\n    var name: String\n    var days: [Day]\n}\n\nlet stream = session.streamResponse(\n    to: \"Craft a 3-day itinerary to Mt. Fuji.\",\n    generating: Itinerary.self\n)\n\nfor try await partial in stream {\n    print(partial) // Incrementally updated Itinerary.PartiallyGenerated\n}\n```\n\n#### From WWDC 286:9:40\n\n**Return Type**: `AsyncSequence<Itinerary.PartiallyGenerated>`\n\n### SwiftUI Integration\n\n```swift\nstruct ItineraryView: View {\n    let session: LanguageModelSession\n    let dayCount: Int\n    let landmarkName: String\n\n    @State\n    private var itinerary: Itinerary.PartiallyGenerated?\n\n    var body: some View {\n        VStack {\n            if let name = itinerary?.name {\n                Text(name).font(.title)\n            }\n\n            if let days = itinerary?.days {\n                ForEach(days, id: \\.self) { day in\n                    DayView(day: day)\n                }\n            }\n\n            Button(\"Start\") {\n                Task {\n                    do {\n                        let prompt = \"\"\"\n                            Generate a \\(dayCount) itinerary \\\n                            to \\(landmarkName).\n                            \"\"\"\n\n                        let stream = session.streamResponse(\n                            to: prompt,\n                            generating: Itinerary.self\n                        )\n\n                        for try await partial in stream {\n                            self.itinerary = partial\n                        }\n                    } catch {\n                        print(error)\n                    }\n                }\n            }\n        }\n    }\n}\n```\n\n#### From WWDC 286:10:05\n\n### Best Practices\n\n**1. Use SwiftUI animations**:\n```swift\nif let name = itinerary?.name {\n    Text(name)\n        .transition(.opacity)\n}\n```\n\n**2. View identity for arrays**:\n```swift\n// ✅ GOOD - Stable identity\nForEach(days, id: \\.id) { day in\n    DayView(day: day)\n}\n\n// ❌ BAD - Identity changes\nForEach(days.indices, id: \\.self) { index in\n    DayView(day: days[index])\n}\n```\n\n**3. Property order optimization**:\n```swift\n// ✅ GOOD - Title first for streaming\n@Generable\nstruct Article {\n    var title: String      // Shows immediately\n    var summary: String    // Shows second\n    var fullText: String   // Shows last\n}\n```\n\n#### From WWDC 286:11:00\n\n---\n\n## Tool Protocol\n\n### Overview\n\nTools let the model autonomously execute your custom code to fetch external data or perform actions. Tools integrate with MapKit, WeatherKit, Contacts, EventKit, or any custom API.\n\n### Protocol Definition\n\n```swift\nprotocol Tool {\n    var name: String { get }\n    var description: String { get }\n\n    associatedtype Arguments: Generable\n\n    func call(arguments: Arguments) async throws -> ToolOutput\n}\n```\n\n### Example: GetWeatherTool\n\n```swift\nimport FoundationModels\nimport WeatherKit\nimport CoreLocation\n\nstruct GetWeatherTool: Tool {\n    let name = \"getWeather\"\n    let description = \"Retrieve the latest weather information for a city\"\n\n    @Generable\n    struct Arguments {\n        @Guide(description: \"The city to fetch the weather for\")\n        var city: String\n    }\n\n    func call(arguments: Arguments) async throws -> ToolOutput {\n        let places = try await CLGeocoder().geocodeAddressString(arguments.city)\n        let weather = try await WeatherService.shared.weather(for: places.first!.location!)\n        let temperature = weather.currentWeather.temperature.value\n\n        let content = GeneratedContent(properties: [\"temperature\": temperature])\n        let output = ToolOutput(content)\n\n        // Or if your tool's output is natural language:\n        // let output = ToolOutput(\"\\(arguments.city)'s temperature is \\(temperature) degrees.\")\n\n        return output\n    }\n}\n```\n\n#### From WWDC 286:13:42\n\n### Attaching Tools to Session\n\n```swift\nlet session = LanguageModelSession(\n    tools: [GetWeatherTool()],\n    instructions: \"Help the user with weather forecasts.\"\n)\n\nlet response = try await session.respond(\n    to: \"What is the temperature in Cupertino?\"\n)\n\nprint(response.content)\n// It's 71˚F in Cupertino!\n```\n\n#### From WWDC 286:15:03\n\n**How it works**:\n1. Session initialized with tools\n2. User prompt: \"What's Tokyo's weather?\"\n3. Model analyzes prompt, decides weather data needed\n4. Model generates tool call: `getWeather(city: \"Tokyo\")`\n5. Framework calls `call()` method\n6. Your code fetches real data from API\n7. Tool output inserted into transcript\n8. Model generates final response using tool output\n\n**From WWDC 301**: \"Model autonomously decides when and how often to call tools. Can call multiple tools per request, even in parallel.\"\n\n### Stateful Tools\n\nUse `class` instead of `struct` to maintain state across tool calls. The tool instance persists for the session lifetime, enabling patterns like tracking previously returned results:\n\n```swift\nclass FindContactTool: Tool {\n    let name = \"findContact\"\n    let description = \"Finds a contact from a specified age generation.\"\n    var pickedContacts = Set<String>()\n\n    @Generable\n    struct Arguments {\n        let generation: Generation\n        @Generable\n        enum Generation { case babyBoomers, genX, millennial, genZ }\n    }\n\n    func call(arguments: Arguments) async throws -> ToolOutput {\n        // Fetch, filter out already-picked, return new contact\n        pickedContacts.insert(pickedContact.givenName)\n        return ToolOutput(pickedContact.givenName)\n    }\n}\n```\n\n#### From WWDC 301:18:47, 301:21:55\n\n### ToolOutput\n\n**Two forms**:\n\n1. **Natural language** (String):\n```swift\nreturn ToolOutput(\"Temperature is 71°F\")\n```\n\n2. **Structured** (GeneratedContent):\n```swift\nlet content = GeneratedContent(properties: [\"temperature\": 71])\nreturn ToolOutput(content)\n```\n\n### Tool Naming Best Practices\n\n**DO**:\n- Short, readable names: `getWeather`, `findContact`\n- Use verbs: `get`, `find`, `fetch`, `create`\n- One sentence descriptions\n- Keep descriptions concise (they're in prompt)\n\n**DON'T**:\n- Abbreviations: `gtWthr`\n- Implementation details in description\n- Long descriptions (increases token count)\n\n**From WWDC 301**: \"Tool name and description put verbatim in prompt. Longer strings mean more tokens, which increases latency.\"\n\n### Multiple Tools\n\n```swift\nlet session = LanguageModelSession(\n    tools: [\n        GetWeatherTool(),\n        FindRestaurantTool(),\n        FindHotelTool()\n    ],\n    instructions: \"Plan travel itineraries.\"\n)\n\n// Model autonomously decides which tools to call and when\n```\n\n### Tool Calling Behavior\n\n**Key facts**:\n- Tool can be called **multiple times** per request\n- Multiple tools can be called **in parallel**\n- Model decides **when** to call (not guaranteed to call)\n- Arguments guaranteed valid via @Generable\n\n**From WWDC 301**: \"When tools called in parallel, your call method may execute concurrently. Keep this in mind when accessing data.\"\n\n---\n\n## Dynamic Schemas\n\n### Overview\n\n`DynamicGenerationSchema` enables creating schemas at runtime instead of compile-time. Useful for user-defined structures, level creators, or dynamic forms.\n\n### Creating and Using Dynamic Schemas\n\nBuild properties with `DynamicGenerationSchema.Property`, compose into schemas, then validate with `GenerationSchema`:\n\n```swift\n// Build schema at runtime\nlet questionProp = DynamicGenerationSchema.Property(\n    name: \"question\", schema: DynamicGenerationSchema(type: String.self)\n)\nlet answersProp = DynamicGenerationSchema.Property(\n    name: \"answers\", schema: DynamicGenerationSchema(\n        arrayOf: DynamicGenerationSchema(referenceTo: \"Answer\")\n    )\n)\n\nlet riddleSchema = DynamicGenerationSchema(name: \"Riddle\", properties: [questionProp, answersProp])\nlet answerSchema = DynamicGenerationSchema(name: \"Answer\", properties: [/* text, isCorrect */])\n\n// Validate and use\nlet schema = try GenerationSchema(root: riddleSchema, dependencies: [answerSchema])\nlet response = try await session.respond(to: \"Generate a riddle\", schema: schema)\n\nlet question = try response.content.value(String.self, forProperty: \"question\")\n```\n\n#### From WWDC 301:14:50, 301:15:10\n\n### Dynamic vs Static @Generable\n\n**Use @Generable when**:\n- Structure known at compile-time\n- Want type safety\n- Want automatic parsing\n\n**Use Dynamic Schemas when**:\n- Structure only known at runtime\n- User-defined schemas\n- Maximum flexibility\n\n**From WWDC 301**: \"Compile-time @Generable gives type safety. Dynamic schemas give runtime flexibility. Both use same constrained decoding guarantees.\"\n\n---\n\n## Sampling & Generation Options\n\n> **Name collision warning.** Apple's `GenerationOptions(temperature:)` controls the *on-device* Foundation Models LLM and is unrelated to the Anthropic Messages API. Anthropic's Opus 4.7 (released 2026-04-16) **removed `temperature`, `top_p`, and `top_k`** from the Messages API — passing them returns a 400. If your app integrates Claude via the Agent SDK in addition to Foundation Models, do not pass these parameters to the Messages API.\n\n**Greedy (deterministic)** — use for tests and demos. Only deterministic within same model version:\n```swift\nlet response = try await session.respond(\n    to: prompt,\n    options: GenerationOptions(sampling: .greedy)\n)\n```\n\n**Temperature** — controls variance. `0.1-0.5` focused, `1.0` default, `1.5-2.0` creative:\n```swift\nlet response = try await session.respond(\n    to: prompt,\n    options: GenerationOptions(temperature: 0.5)\n)\n```\n\n#### From WWDC 301:6:14\n\n---\n\n## Built-in Use Cases\n\n### Content Tagging Adapter\n\n**Specialized adapter for**:\n- Tag generation\n- Entity extraction\n- Topic detection\n\n```swift\n@Generable\nstruct Result {\n    let topics: [String]\n}\n\nlet session = LanguageModelSession(\n    model: SystemLanguageModel(useCase: .contentTagging)\n)\n\nlet response = try await session.respond(\n    to: articleText,\n    generating: Result.self\n)\n```\n\n#### From WWDC 286:19:19\n\n### Custom Use Cases\n\n**With custom instructions**:\n```swift\n@Generable\nstruct Top3ActionEmotionResult {\n    @Guide(.maximumCount(3))\n    let actions: [String]\n    @Guide(.maximumCount(3))\n    let emotions: [String]\n}\n\nlet session = LanguageModelSession(\n    model: SystemLanguageModel(useCase: .contentTagging),\n    instructions: \"Tag the 3 most important actions and emotions in the given input text.\"\n)\n\nlet response = try await session.respond(\n    to: text,\n    generating: Top3ActionEmotionResult.self\n)\n```\n\n#### From WWDC 286:19:35\n\n---\n\n## Error Handling\n\n### GenerationError Types\n\nCatch `LanguageModelSession.GenerationError` cases:\n- **`.exceededContextWindowSize`** — Context limit (4096 tokens) exceeded. Condense transcript or create new session.\n- **`.guardrailViolation`** — Content policy triggered. Show graceful message.\n- **`.unsupportedLanguageOrLocale`** — Language not supported. Check `supportedLanguages`.\n\n#### From WWDC 301:3:37, 301:7:06\n\n### Context Window Management\n\n#### Strategy 1: Fresh Session\n```swift\nvar session = LanguageModelSession()\n\ndo {\n    let response = try await session.respond(to: prompt)\n    print(response.content)\n} catch LanguageModelSession.GenerationError.exceededContextWindowSize {\n    // New session, no history\n    session = LanguageModelSession()\n}\n```\n\n#### From WWDC 301:3:37\n\n#### Strategy 2: Condensed Session\n```swift\ndo {\n    let response = try await session.respond(to: prompt)\n} catch LanguageModelSession.GenerationError.exceededContextWindowSize {\n    // New session with some history\n    session = newSession(previousSession: session)\n}\n\nprivate func newSession(previousSession: LanguageModelSession) -> LanguageModelSession {\n    let allEntries = previousSession.transcript.entries\n    var condensedEntries = [Transcript.Entry]()\n\n    if let firstEntry = allEntries.first {\n        condensedEntries.append(firstEntry) // Instructions\n\n        if allEntries.count > 1, let lastEntry = allEntries.last {\n            condensedEntries.append(lastEntry) // Recent context\n        }\n    }\n\n    let condensedTranscript = Transcript(entries: condensedEntries)\n    // Note: transcript includes instructions\n    return LanguageModelSession(transcript: condensedTranscript)\n}\n```\n\n#### From WWDC 301:3:55\n\n### Fallback Architecture\n\nWhen Foundation Models is unavailable (older device, user opted out, unsupported region), provide graceful degradation:\n\n```swift\nfunc summarize(_ text: String) async throws -> String {\n    let model = SystemLanguageModel.default\n    switch model.availability {\n    case .available:\n        let session = LanguageModelSession()\n        let response = try await session.respond(to: \"Summarize: \\(text)\")\n        return response.content\n    case .unavailable:\n        // Fallback: truncate with ellipsis, or call server API\n        return String(text.prefix(200)) + \"...\"\n    }\n}\n```\n\n**Architecture pattern**: Wrap Foundation Models behind a protocol so you can swap implementations:\n\n```swift\nprotocol TextSummarizer {\n    func summarize(_ text: String) async throws -> String\n}\n\nstruct OnDeviceSummarizer: TextSummarizer { /* Foundation Models */ }\nstruct ServerSummarizer: TextSummarizer { /* Server API fallback */ }\nstruct TruncationSummarizer: TextSummarizer { /* Simple truncation */ }\n```\n\n### Nested @Generable Troubleshooting\n\nNested `@Generable` types must each independently conform to `@Generable`:\n\n```swift\n// ✅ Both types marked @Generable\n@Generable struct Itinerary {\n    var days: [DayPlan]\n}\n\n@Generable struct DayPlan {\n    var activities: [String]\n}\n\n// ❌ Will fail — nested type not @Generable\n@Generable struct Itinerary {\n    var days: [DayPlan]  // DayPlan must also be @Generable\n}\nstruct DayPlan { var activities: [String] }\n```\n\n**Common issue**: Arrays of non-Generable types compile but fail at runtime. Check all types in the graph.\n\n---\n\n## Availability\n\n### Checking Availability\n\n```swift\nstruct AvailabilityExample: View {\n    private let model = SystemLanguageModel.default\n\n    var body: some View {\n        switch model.availability {\n        case .available:\n            Text(\"Model is available\").foregroundStyle(.green)\n        case .unavailable(let reason):\n            Text(\"Model is unavailable\").foregroundStyle(.red)\n            Text(\"Reason: \\(reason)\")\n        }\n    }\n}\n```\n\n#### From WWDC 286:19:56\n\n### Supported Languages\n\n```swift\nlet supportedLanguages = SystemLanguageModel.default.supportedLanguages\nguard supportedLanguages.contains(Locale.current.language) else {\n    // Show message\n    return\n}\n```\n\n#### From WWDC 301:7:06\n\n### Requirements\n\n**Device Requirements**:\n- Apple Intelligence-enabled device\n- iPhone 15 Pro or later\n- iPad with M1+ chip\n- Mac with Apple silicon\n\n**Region Requirements**:\n- Supported region (check Apple Intelligence availability)\n\n**User Requirements**:\n- User opted in to Apple Intelligence in Settings\n\n---\n\n## Performance & Profiling\n\n### Foundation Models Instrument\n\n**Access**: Instruments app → Foundation Models template\n\n**Metrics**:\n- Initial model load time\n- Token counts (input/output)\n- Generation time per request\n- Latency breakdown\n- Optimization opportunities\n\n**From WWDC 286**: \"New Instruments profiling template lets you observe areas of optimization and quantify improvements.\"\n\n### Optimization: Prewarming\n\n**Problem**: First request takes 1-2s to load model\n\n**Solution**: Create session before user interaction\n\n```swift\nclass ViewModel: ObservableObject {\n    private var session: LanguageModelSession?\n\n    init() {\n        // Prewarm on init\n        Task {\n            self.session = LanguageModelSession(instructions: \"...\")\n        }\n    }\n\n    func generate(prompt: String) async throws -> String {\n        let response = try await session!.respond(to: prompt)\n        return response.content\n    }\n}\n```\n\n**From WWDC 259**: \"Prewarming session before user interaction reduces initial latency.\"\n\n**Time saved**: 1-2 seconds off first generation\n\n### Optimization: includeSchemaInPrompt\n\n**Problem**: Large @Generable schemas increase token count\n\n**Solution**: Skip schema insertion for subsequent requests\n\n```swift\n// First request - schema inserted\nlet first = try await session.respond(\n    to: \"Generate first person\",\n    generating: Person.self\n)\n\n// Subsequent requests - skip schema\nlet second = try await session.respond(\n    to: \"Generate another person\",\n    generating: Person.self,\n    options: GenerationOptions(includeSchemaInPrompt: false)\n)\n```\n\n**From WWDC 259**: \"Setting includeSchemaInPrompt to false decreases token count and latency for subsequent requests.\"\n\n**Time saved**: 10-20% per request\n\n### Optimization: Property Order\n\nDeclare important properties first in `@Generable` structs. With streaming, perceived latency drops from 2.5s to 0.2s when title appears before full text. See [Streaming Best Practices](#best-practices) for examples.\n\n---\n\n## Feedback & Analytics\n\n`LanguageModelFeedbackAttachment` lets you report model quality issues to Apple via Feedback Assistant. Create with `input`, `output`, `sentiment` (`.positive`/`.negative`), `issues` (category + explanation), and `desiredOutputExamples`. Encode as JSON and attach to a Feedback Assistant report.\n\n#### From WWDC 286:22:13\n\n---\n\n## Xcode Playgrounds\n\n### Overview\n\nXcode Playgrounds enable rapid iteration on prompts without rebuilding entire app.\n\n### Basic Usage\n\n```swift\nimport FoundationModels\nimport Playgrounds\n\n#Playground {\n    let session = LanguageModelSession()\n    let response = try await session.respond(\n        to: \"What's a good name for a trip to Japan? Respond only with a title\"\n    )\n}\n```\n\n#### From WWDC 286:2:28\n\nPlaygrounds can also access types defined in your app (like @Generable structs).\n\n---\n\n## API Quick Reference\n\n- **`LanguageModelSession`** — Main interface: `respond(to:)` → `Response<String>`, `respond(to:generating:)` → `Response<T>`, `streamResponse(to:generating:)` → `AsyncSequence<T.PartiallyGenerated>`. Properties: `transcript`, `isResponding`.\n- **`SystemLanguageModel`** — `default.availability` (`.available`/`.unavailable(reason)`), `default.supportedLanguages`, `init(useCase:)`\n- **`GenerationOptions`** — `sampling` (`.greedy`/`.random`), `temperature`, `includeSchemaInPrompt`\n- **`@Generable`** — Macro enabling structured output with constrained decoding\n- **`@Guide`** — Property constraints: `description:`, `.range()`, `.count()`, `.maximumCount()`, `Regex`\n- **`Tool` protocol** — `name`, `description`, `Arguments: Generable`, `call(arguments:) → ToolOutput`\n- **`DynamicGenerationSchema`** — Runtime schema definition with `GeneratedContent` output\n- **`GenerationError`** — `.exceededContextWindowSize`, `.guardrailViolation`, `.unsupportedLanguageOrLocale`\n\n---\n\n## Migration Strategies\n\n### From Server LLMs\n\n- **Migrate when**: Privacy required, offline needed, per-request costs are a concern, and use case fits (summarization/extraction/classification)\n- **Stay on server when**: Need world knowledge, complex reasoning, or >4096 token context\n\n### From Manual JSON Parsing\n\nUse `@Generable` with `respond(to:generating:)` instead of prompting for JSON and parsing manually. See `axiom-ai (skills/foundation-models.md)` Scenario 2 for the complete migration pattern.\n\n---\n\n## Resources\n\n**WWDC**: 286, 259, 301\n\n**Skills**: axiom-ai (skills/foundation-models.md), axiom-ai (skills/foundation-models-diag.md)\n\n---\n\n**Last Updated**: 2025-12-03\n**Version**: 1.0.0\n**Skill Type**: Reference\n**Content**: All WWDC 2025 code examples included\n",
+      "content": "\n# Foundation Models Framework — Complete API Reference\n\n## Overview\n\nThe Foundation Models framework provides access to Apple's on-device Large Language Model (3 billion parameters, 2-bit quantized) with a Swift API. This reference covers every API, all WWDC 2025 code examples, and comprehensive implementation patterns.\n\n### Model Specifications\n\n3B parameter model, 2-bit quantized, 4096 token context (input + output combined). Optimized for on-device summarization, extraction, classification, and generation. NOT suited for world knowledge, complex reasoning, math, or translation. Runs entirely on-device — no network, no cost, no data leaves device.\n\n---\n\n## When to Use This Reference\n\nUse this reference when:\n- Implementing Foundation Models features\n- Understanding API capabilities\n- Looking up specific code examples\n- Planning architecture with Foundation Models\n- Migrating from prototype to production\n- Debugging implementation issues\n\n**Related Skills**:\n- `axiom-ai (skills/foundation-models.md)` — Discipline skill with anti-patterns, pressure scenarios, decision trees\n- `axiom-ai (skills/foundation-models-diag.md)` — Diagnostic skill for troubleshooting issues\n\n---\n\n## LanguageModelSession\n\n### Overview\n\n`LanguageModelSession` is the core class for interacting with the model. It maintains conversation history (transcript), handles multi-turn interactions, and manages model state.\n\n### Creating a Session\n\n**Basic Creation**:\n```swift\nimport FoundationModels\n\nlet session = LanguageModelSession()\n```\n\n**With Custom Instructions**:\n```swift\nlet session = LanguageModelSession(instructions: \"\"\"\n    You are a friendly barista in a pixel art coffee shop.\n    Respond to the player's question concisely.\n    \"\"\"\n)\n```\n\n#### From WWDC 301:1:05\n\n**With Tools**:\n```swift\nlet session = LanguageModelSession(\n    tools: [GetWeatherTool()],\n    instructions: \"Help user with weather forecasts.\"\n)\n```\n\n#### From WWDC 286:15:03\n\n**With Specific Model/Use Case**:\n```swift\nlet session = LanguageModelSession(\n    model: SystemLanguageModel(useCase: .contentTagging)\n)\n```\n\n#### From WWDC 286:18:39\n\n### Instructions vs Prompts\n\n**Instructions**:\n- Come from **developer**\n- Define model's role, style, constraints\n- Mostly static\n- First entry in transcript\n- Model trained to obey instructions over prompts (security feature)\n\n**Prompts**:\n- Come from **user** (or dynamic app state)\n- Specific requests for generation\n- Dynamic input\n- Each call to `respond(to:)` adds prompt to transcript\n\n**Security Consideration**:\n- **NEVER** interpolate untrusted user input into instructions\n- User input should go in prompts only\n- Prevents prompt injection attacks\n\n### respond(to:) Method\n\n**Basic Text Generation**:\n```swift\nfunc respond(userInput: String) async throws -> String {\n    let session = LanguageModelSession(instructions: \"\"\"\n        You are a friendly barista in a world full of pixels.\n        Respond to the player's question.\n        \"\"\"\n    )\n    let response = try await session.respond(to: userInput)\n    return response.content\n}\n```\n\n#### From WWDC 301:1:05\n\n**Return Type**: `Response<String>` with `.content` property\n\n### respond(to:generating:) Method\n\n**Structured Output with @Generable**:\n```swift\n@Generable\nstruct SearchSuggestions {\n    @Guide(description: \"A list of suggested search terms\", .count(4))\n    var searchTerms: [String]\n}\n\nlet prompt = \"\"\"\n    Generate a list of suggested search terms for an app about visiting famous landmarks.\n    \"\"\"\n\nlet response = try await session.respond(\n    to: prompt,\n    generating: SearchSuggestions.self\n)\n\nprint(response.content) // SearchSuggestions instance\n```\n\n#### From WWDC 286:5:51\n\n**Return Type**: `Response<SearchSuggestions>` with `.content` property\n\n### Generation Options\n\nSee [Sampling & Generation Options](#sampling--generation-options) for `GenerationOptions` including `sampling:`, `temperature:`, and `includeSchemaInPrompt:`.\n\n---\n\n## Multi-Turn Interactions\n\n### Retaining Context\n\n```swift\nlet session = LanguageModelSession()\n\n// First turn\nlet firstHaiku = try await session.respond(to: \"Write a haiku about fishing\")\nprint(firstHaiku.content)\n// Silent waters gleam,\n// Casting lines in morning mist—\n// Hope in every cast.\n\n// Second turn - model remembers context\nlet secondHaiku = try await session.respond(to: \"Do another one about golf\")\nprint(secondHaiku.content)\n// Silent morning dew,\n// Caddies guide with gentle words—\n// Paths of patience tread.\n\nprint(session.transcript) // Shows full history\n```\n\n#### From WWDC 286:17:46\n\n**How it works**:\n- Each `respond()` call adds entry to transcript\n- Model uses entire transcript for context\n- Enables conversational interactions\n\n### Transcript Property\n\n```swift\nlet transcript = session.transcript\n\nfor entry in transcript.entries {\n    print(\"Entry: \\(entry.content)\")\n}\n```\n\n**Use cases**:\n- Debugging generation issues\n- Displaying conversation history in UI\n- Exporting chat logs\n- Condensing for context management\n\n---\n\n## isResponding Property\n\nGate UI on `session.isResponding` to prevent concurrent requests:\n\n```swift\nButton(\"Go!\") {\n    Task { haiku = try await session.respond(to: prompt).content }\n}\n.disabled(session.isResponding)\n```\n\n#### From WWDC 286:18:22\n\n---\n\n## @Generable Macro\n\n### Overview\n\n`@Generable` enables structured output from the model using Swift types. The macro generates a schema at compile-time and uses **constrained decoding** to guarantee structural correctness.\n\n### Basic Usage\n\n**On Structs**:\n```swift\n@Generable\nstruct Person {\n    let name: String\n    let age: Int\n}\n\nlet response = try await session.respond(\n    to: \"Generate a person\",\n    generating: Person.self\n)\n\nlet person = response.content // Type-safe Person instance\n```\n\n#### From WWDC 301:8:14\n\n**On Enums**:\n```swift\n@Generable\nstruct NPC {\n    let name: String\n    let encounter: Encounter\n\n    @Generable\n    enum Encounter {\n        case orderCoffee(String)\n        case wantToTalkToManager(complaint: String)\n    }\n}\n```\n\n#### From WWDC 301:10:49\n\n### Supported Types\n\n**Primitives**:\n- `String`\n- `Int`, `Float`, `Double`, `Decimal`\n- `Bool`\n\n**Collections**:\n- `[ElementType]` (arrays)\n\n**Composed Types**:\n```swift\n@Generable\nstruct Itinerary {\n    var destination: String\n    var days: Int\n    var budget: Float\n    var rating: Double\n    var requiresVisa: Bool\n    var activities: [String]\n    var emergencyContact: Person\n    var relatedItineraries: [Itinerary] // Recursive!\n}\n```\n\n#### From WWDC 286:6:18\n\n### @Guide Constraints\n\n`@Guide` constrains generated properties. Supports `description:` (natural language), `.range()` (numeric bounds), `.count()` / `.maximumCount()` (array length), and `Regex` (pattern matching).\n\n```swift\n@Generable\nstruct NPC {\n    @Guide(description: \"A full name\")\n    let name: String\n\n    @Guide(.range(1...10))\n    let level: Int\n\n    @Guide(.count(3))\n    let attributes: [String]\n}\n```\n\n#### From WWDC 301:11:20\n\n### Constrained Decoding\n\n**How it works**:\n1. `@Generable` macro generates schema at compile-time\n2. Schema defines valid token sequences\n3. During generation, model creates probability distribution for next token\n4. Framework **masks out invalid tokens** based on schema\n5. Model can only pick tokens valid according to schema\n6. Guarantees structural correctness - no hallucinated keys, no invalid JSON\n\n**From WWDC 286**: \"Constrained decoding prevents structural mistakes. Model is prevented from generating invalid field names or wrong types.\"\n\n**Benefits**:\n- Zero parsing code needed\n- No runtime parsing errors\n- Type-safe Swift objects\n- Compile-time safety (changes to struct caught by compiler)\n\n### Property Declaration Order\n\n**Properties generated in order declared**:\n```swift\n@Generable\nstruct Itinerary {\n    var name: String        // Generated FIRST\n    var days: [DayPlan]     // Generated SECOND\n    var summary: String     // Generated LAST\n}\n```\n\n**Why it matters**:\n- Later properties can reference earlier ones\n- Better model quality: Summaries after content\n- Better streaming UX: Important properties first\n\n#### From WWDC 286:11:00\n\n---\n\n## Streaming\n\n### Overview\n\nFoundation Models uses **snapshot streaming** (not delta streaming). Instead of raw deltas, the framework streams `PartiallyGenerated` types with optional properties that fill in progressively.\n\n### PartiallyGenerated Type\n\nThe `@Generable` macro automatically creates a `PartiallyGenerated` nested type:\n\n```swift\n@Generable\nstruct Itinerary {\n    var name: String\n    var days: [DayPlan]\n}\n\n// Compiler generates:\nextension Itinerary {\n    struct PartiallyGenerated {\n        var name: String?        // All properties optional!\n        var days: [DayPlan]?\n    }\n}\n```\n\n#### From WWDC 286:9:20\n\n### streamResponse Method\n\n```swift\n@Generable\nstruct Itinerary {\n    var name: String\n    var days: [Day]\n}\n\nlet stream = session.streamResponse(\n    to: \"Craft a 3-day itinerary to Mt. Fuji.\",\n    generating: Itinerary.self\n)\n\nfor try await partial in stream {\n    print(partial) // Incrementally updated Itinerary.PartiallyGenerated\n}\n```\n\n#### From WWDC 286:9:40\n\n**Return Type**: `AsyncSequence<Itinerary.PartiallyGenerated>`\n\n### SwiftUI Integration\n\n```swift\nstruct ItineraryView: View {\n    let session: LanguageModelSession\n    let dayCount: Int\n    let landmarkName: String\n\n    @State\n    private var itinerary: Itinerary.PartiallyGenerated?\n\n    var body: some View {\n        VStack {\n            if let name = itinerary?.name {\n                Text(name).font(.title)\n            }\n\n            if let days = itinerary?.days {\n                ForEach(days, id: \\.self) { day in\n                    DayView(day: day)\n                }\n            }\n\n            Button(\"Start\") {\n                Task {\n                    do {\n                        let prompt = \"\"\"\n                            Generate a \\(dayCount) itinerary \\\n                            to \\(landmarkName).\n                            \"\"\"\n\n                        let stream = session.streamResponse(\n                            to: prompt,\n                            generating: Itinerary.self\n                        )\n\n                        for try await partial in stream {\n                            self.itinerary = partial\n                        }\n                    } catch {\n                        print(error)\n                    }\n                }\n            }\n        }\n    }\n}\n```\n\n#### From WWDC 286:10:05\n\n### Best Practices\n\n**1. Use SwiftUI animations**:\n```swift\nif let name = itinerary?.name {\n    Text(name)\n        .transition(.opacity)\n}\n```\n\n**2. View identity for arrays**:\n```swift\n// ✅ GOOD - Stable identity\nForEach(days, id: \\.id) { day in\n    DayView(day: day)\n}\n\n// ❌ BAD - Identity changes\nForEach(days.indices, id: \\.self) { index in\n    DayView(day: days[index])\n}\n```\n\n**3. Property order optimization**:\n```swift\n// ✅ GOOD - Title first for streaming\n@Generable\nstruct Article {\n    var title: String      // Shows immediately\n    var summary: String    // Shows second\n    var fullText: String   // Shows last\n}\n```\n\n#### From WWDC 286:11:00\n\n---\n\n## Tool Protocol\n\n### Overview\n\nTools let the model autonomously execute your custom code to fetch external data or perform actions. Tools integrate with MapKit, WeatherKit, Contacts, EventKit, or any custom API.\n\n### Protocol Definition\n\n```swift\nprotocol Tool {\n    var name: String { get }\n    var description: String { get }\n\n    associatedtype Arguments: Generable\n\n    func call(arguments: Arguments) async throws -> ToolOutput\n}\n```\n\n### Example: GetWeatherTool\n\n```swift\nimport FoundationModels\nimport WeatherKit\nimport CoreLocation\n\nstruct GetWeatherTool: Tool {\n    let name = \"getWeather\"\n    let description = \"Retrieve the latest weather information for a city\"\n\n    @Generable\n    struct Arguments {\n        @Guide(description: \"The city to fetch the weather for\")\n        var city: String\n    }\n\n    func call(arguments: Arguments) async throws -> ToolOutput {\n        let places = try await CLGeocoder().geocodeAddressString(arguments.city)\n        let weather = try await WeatherService.shared.weather(for: places.first!.location!)\n        let temperature = weather.currentWeather.temperature.value\n\n        let content = GeneratedContent(properties: [\"temperature\": temperature])\n        let output = ToolOutput(content)\n\n        // Or if your tool's output is natural language:\n        // let output = ToolOutput(\"\\(arguments.city)'s temperature is \\(temperature) degrees.\")\n\n        return output\n    }\n}\n```\n\n#### From WWDC 286:13:42\n\n### Attaching Tools to Session\n\n```swift\nlet session = LanguageModelSession(\n    tools: [GetWeatherTool()],\n    instructions: \"Help the user with weather forecasts.\"\n)\n\nlet response = try await session.respond(\n    to: \"What is the temperature in Cupertino?\"\n)\n\nprint(response.content)\n// It's 71˚F in Cupertino!\n```\n\n#### From WWDC 286:15:03\n\n**How it works**:\n1. Session initialized with tools\n2. User prompt: \"What's Tokyo's weather?\"\n3. Model analyzes prompt, decides weather data needed\n4. Model generates tool call: `getWeather(city: \"Tokyo\")`\n5. Framework calls `call()` method\n6. Your code fetches real data from API\n7. Tool output inserted into transcript\n8. Model generates final response using tool output\n\n**From WWDC 301**: \"Model autonomously decides when and how often to call tools. Can call multiple tools per request, even in parallel.\"\n\n### Stateful Tools\n\nUse `class` instead of `struct` to maintain state across tool calls. The tool instance persists for the session lifetime, enabling patterns like tracking previously returned results:\n\n```swift\nclass FindContactTool: Tool {\n    let name = \"findContact\"\n    let description = \"Finds a contact from a specified age generation.\"\n    var pickedContacts = Set<String>()\n\n    @Generable\n    struct Arguments {\n        let generation: Generation\n        @Generable\n        enum Generation { case babyBoomers, genX, millennial, genZ }\n    }\n\n    func call(arguments: Arguments) async throws -> ToolOutput {\n        // Fetch, filter out already-picked, return new contact\n        pickedContacts.insert(pickedContact.givenName)\n        return ToolOutput(pickedContact.givenName)\n    }\n}\n```\n\n#### From WWDC 301:18:47, 301:21:55\n\n### ToolOutput\n\n**Two forms**:\n\n1. **Natural language** (String):\n```swift\nreturn ToolOutput(\"Temperature is 71°F\")\n```\n\n2. **Structured** (GeneratedContent):\n```swift\nlet content = GeneratedContent(properties: [\"temperature\": 71])\nreturn ToolOutput(content)\n```\n\n### Tool Naming Best Practices\n\n**DO**:\n- Short, readable names: `getWeather`, `findContact`\n- Use verbs: `get`, `find`, `fetch`, `create`\n- One sentence descriptions\n- Keep descriptions concise (they're in prompt)\n\n**DON'T**:\n- Abbreviations: `gtWthr`\n- Implementation details in description\n- Long descriptions (increases token count)\n\n**From WWDC 301**: \"Tool name and description put verbatim in prompt. Longer strings mean more tokens, which increases latency.\"\n\n### Multiple Tools\n\n```swift\nlet session = LanguageModelSession(\n    tools: [\n        GetWeatherTool(),\n        FindRestaurantTool(),\n        FindHotelTool()\n    ],\n    instructions: \"Plan travel itineraries.\"\n)\n\n// Model autonomously decides which tools to call and when\n```\n\n### Tool Calling Behavior\n\n**Key facts**:\n- Tool can be called **multiple times** per request\n- Multiple tools can be called **in parallel**\n- Model decides **when** to call (not guaranteed to call)\n- Arguments guaranteed valid via @Generable\n\n**From WWDC 301**: \"When tools called in parallel, your call method may execute concurrently. Keep this in mind when accessing data.\"\n\n---\n\n## Dynamic Schemas\n\n### Overview\n\n`DynamicGenerationSchema` enables creating schemas at runtime instead of compile-time. Useful for user-defined structures, level creators, or dynamic forms.\n\n### Creating and Using Dynamic Schemas\n\nBuild properties with `DynamicGenerationSchema.Property`, compose into schemas, then validate with `GenerationSchema`:\n\n```swift\n// Build schema at runtime\nlet questionProp = DynamicGenerationSchema.Property(\n    name: \"question\", schema: DynamicGenerationSchema(type: String.self)\n)\nlet answersProp = DynamicGenerationSchema.Property(\n    name: \"answers\", schema: DynamicGenerationSchema(\n        arrayOf: DynamicGenerationSchema(referenceTo: \"Answer\")\n    )\n)\n\nlet riddleSchema = DynamicGenerationSchema(name: \"Riddle\", properties: [questionProp, answersProp])\nlet answerSchema = DynamicGenerationSchema(name: \"Answer\", properties: [/* text, isCorrect */])\n\n// Validate and use\nlet schema = try GenerationSchema(root: riddleSchema, dependencies: [answerSchema])\nlet response = try await session.respond(to: \"Generate a riddle\", schema: schema)\n\nlet question = try response.content.value(String.self, forProperty: \"question\")\n```\n\n#### From WWDC 301:14:50, 301:15:10\n\n### Dynamic vs Static @Generable\n\n**Use @Generable when**:\n- Structure known at compile-time\n- Want type safety\n- Want automatic parsing\n\n**Use Dynamic Schemas when**:\n- Structure only known at runtime\n- User-defined schemas\n- Maximum flexibility\n\n**From WWDC 301**: \"Compile-time @Generable gives type safety. Dynamic schemas give runtime flexibility. Both use same constrained decoding guarantees.\"\n\n---\n\n## Sampling & Generation Options\n\n**Greedy (deterministic)** — use for tests and demos. Only deterministic within same model version:\n```swift\nlet response = try await session.respond(\n    to: prompt,\n    options: GenerationOptions(sampling: .greedy)\n)\n```\n\n**Temperature** — controls variance. `0.1-0.5` focused, `1.0` default, `1.5-2.0` creative:\n```swift\nlet response = try await session.respond(\n    to: prompt,\n    options: GenerationOptions(temperature: 0.5)\n)\n```\n\n#### From WWDC 301:6:14\n\n---\n\n## Built-in Use Cases\n\n### Content Tagging Adapter\n\n**Specialized adapter for**:\n- Tag generation\n- Entity extraction\n- Topic detection\n\n```swift\n@Generable\nstruct Result {\n    let topics: [String]\n}\n\nlet session = LanguageModelSession(\n    model: SystemLanguageModel(useCase: .contentTagging)\n)\n\nlet response = try await session.respond(\n    to: articleText,\n    generating: Result.self\n)\n```\n\n#### From WWDC 286:19:19\n\n### Custom Use Cases\n\n**With custom instructions**:\n```swift\n@Generable\nstruct Top3ActionEmotionResult {\n    @Guide(.maximumCount(3))\n    let actions: [String]\n    @Guide(.maximumCount(3))\n    let emotions: [String]\n}\n\nlet session = LanguageModelSession(\n    model: SystemLanguageModel(useCase: .contentTagging),\n    instructions: \"Tag the 3 most important actions and emotions in the given input text.\"\n)\n\nlet response = try await session.respond(\n    to: text,\n    generating: Top3ActionEmotionResult.self\n)\n```\n\n#### From WWDC 286:19:35\n\n---\n\n## Error Handling\n\n### GenerationError Types\n\nCatch `LanguageModelSession.GenerationError` cases:\n- **`.exceededContextWindowSize`** — Context limit (4096 tokens) exceeded. Condense transcript or create new session.\n- **`.guardrailViolation`** — Content policy triggered. Show graceful message.\n- **`.unsupportedLanguageOrLocale`** — Language not supported. Check `supportedLanguages`.\n\n#### From WWDC 301:3:37, 301:7:06\n\n### Context Window Management\n\n#### Strategy 1: Fresh Session\n```swift\nvar session = LanguageModelSession()\n\ndo {\n    let response = try await session.respond(to: prompt)\n    print(response.content)\n} catch LanguageModelSession.GenerationError.exceededContextWindowSize {\n    // New session, no history\n    session = LanguageModelSession()\n}\n```\n\n#### From WWDC 301:3:37\n\n#### Strategy 2: Condensed Session\n```swift\ndo {\n    let response = try await session.respond(to: prompt)\n} catch LanguageModelSession.GenerationError.exceededContextWindowSize {\n    // New session with some history\n    session = newSession(previousSession: session)\n}\n\nprivate func newSession(previousSession: LanguageModelSession) -> LanguageModelSession {\n    let allEntries = previousSession.transcript.entries\n    var condensedEntries = [Transcript.Entry]()\n\n    if let firstEntry = allEntries.first {\n        condensedEntries.append(firstEntry) // Instructions\n\n        if allEntries.count > 1, let lastEntry = allEntries.last {\n            condensedEntries.append(lastEntry) // Recent context\n        }\n    }\n\n    let condensedTranscript = Transcript(entries: condensedEntries)\n    // Note: transcript includes instructions\n    return LanguageModelSession(transcript: condensedTranscript)\n}\n```\n\n#### From WWDC 301:3:55\n\n### Fallback Architecture\n\nWhen Foundation Models is unavailable (older device, user opted out, unsupported region), provide graceful degradation:\n\n```swift\nfunc summarize(_ text: String) async throws -> String {\n    let model = SystemLanguageModel.default\n    switch model.availability {\n    case .available:\n        let session = LanguageModelSession()\n        let response = try await session.respond(to: \"Summarize: \\(text)\")\n        return response.content\n    case .unavailable:\n        // Fallback: truncate with ellipsis, or call server API\n        return String(text.prefix(200)) + \"...\"\n    }\n}\n```\n\n**Architecture pattern**: Wrap Foundation Models behind a protocol so you can swap implementations:\n\n```swift\nprotocol TextSummarizer {\n    func summarize(_ text: String) async throws -> String\n}\n\nstruct OnDeviceSummarizer: TextSummarizer { /* Foundation Models */ }\nstruct ServerSummarizer: TextSummarizer { /* Server API fallback */ }\nstruct TruncationSummarizer: TextSummarizer { /* Simple truncation */ }\n```\n\n### Nested @Generable Troubleshooting\n\nNested `@Generable` types must each independently conform to `@Generable`:\n\n```swift\n// ✅ Both types marked @Generable\n@Generable struct Itinerary {\n    var days: [DayPlan]\n}\n\n@Generable struct DayPlan {\n    var activities: [String]\n}\n\n// ❌ Will fail — nested type not @Generable\n@Generable struct Itinerary {\n    var days: [DayPlan]  // DayPlan must also be @Generable\n}\nstruct DayPlan { var activities: [String] }\n```\n\n**Common issue**: Arrays of non-Generable types compile but fail at runtime. Check all types in the graph.\n\n---\n\n## Availability\n\n### Checking Availability\n\n```swift\nstruct AvailabilityExample: View {\n    private let model = SystemLanguageModel.default\n\n    var body: some View {\n        switch model.availability {\n        case .available:\n            Text(\"Model is available\").foregroundStyle(.green)\n        case .unavailable(let reason):\n            Text(\"Model is unavailable\").foregroundStyle(.red)\n            Text(\"Reason: \\(reason)\")\n        }\n    }\n}\n```\n\n#### From WWDC 286:19:56\n\n### Supported Languages\n\n```swift\nlet supportedLanguages = SystemLanguageModel.default.supportedLanguages\nguard supportedLanguages.contains(Locale.current.language) else {\n    // Show message\n    return\n}\n```\n\n#### From WWDC 301:7:06\n\n### Requirements\n\n**Device Requirements**:\n- Apple Intelligence-enabled device\n- iPhone 15 Pro or later\n- iPad with M1+ chip\n- Mac with Apple silicon\n\n**Region Requirements**:\n- Supported region (check Apple Intelligence availability)\n\n**User Requirements**:\n- User opted in to Apple Intelligence in Settings\n\n---\n\n## Performance & Profiling\n\n### Foundation Models Instrument\n\n**Access**: Instruments app → Foundation Models template\n\n**Metrics**:\n- Initial model load time\n- Token counts (input/output)\n- Generation time per request\n- Latency breakdown\n- Optimization opportunities\n\n**From WWDC 286**: \"New Instruments profiling template lets you observe areas of optimization and quantify improvements.\"\n\n### Optimization: Prewarming\n\n**Problem**: First request takes 1-2s to load model\n\n**Solution**: Create session before user interaction\n\n```swift\nclass ViewModel: ObservableObject {\n    private var session: LanguageModelSession?\n\n    init() {\n        // Prewarm on init\n        Task {\n            self.session = LanguageModelSession(instructions: \"...\")\n        }\n    }\n\n    func generate(prompt: String) async throws -> String {\n        let response = try await session!.respond(to: prompt)\n        return response.content\n    }\n}\n```\n\n**From WWDC 259**: \"Prewarming session before user interaction reduces initial latency.\"\n\n**Time saved**: 1-2 seconds off first generation\n\n### Optimization: includeSchemaInPrompt\n\n**Problem**: Large @Generable schemas increase token count\n\n**Solution**: Skip schema insertion for subsequent requests\n\n```swift\n// First request - schema inserted\nlet first = try await session.respond(\n    to: \"Generate first person\",\n    generating: Person.self\n)\n\n// Subsequent requests - skip schema\nlet second = try await session.respond(\n    to: \"Generate another person\",\n    generating: Person.self,\n    options: GenerationOptions(includeSchemaInPrompt: false)\n)\n```\n\n**From WWDC 259**: \"Setting includeSchemaInPrompt to false decreases token count and latency for subsequent requests.\"\n\n**Time saved**: 10-20% per request\n\n### Optimization: Property Order\n\nDeclare important properties first in `@Generable` structs. With streaming, perceived latency drops from 2.5s to 0.2s when title appears before full text. See [Streaming Best Practices](#best-practices) for examples.\n\n---\n\n## Feedback & Analytics\n\n`LanguageModelFeedbackAttachment` lets you report model quality issues to Apple via Feedback Assistant. Create with `input`, `output`, `sentiment` (`.positive`/`.negative`), `issues` (category + explanation), and `desiredOutputExamples`. Encode as JSON and attach to a Feedback Assistant report.\n\n#### From WWDC 286:22:13\n\n---\n\n## Xcode Playgrounds\n\n### Overview\n\nXcode Playgrounds enable rapid iteration on prompts without rebuilding entire app.\n\n### Basic Usage\n\n```swift\nimport FoundationModels\nimport Playgrounds\n\n#Playground {\n    let session = LanguageModelSession()\n    let response = try await session.respond(\n        to: \"What's a good name for a trip to Japan? Respond only with a title\"\n    )\n}\n```\n\n#### From WWDC 286:2:28\n\nPlaygrounds can also access types defined in your app (like @Generable structs).\n\n---\n\n## API Quick Reference\n\n- **`LanguageModelSession`** — Main interface: `respond(to:)` → `Response<String>`, `respond(to:generating:)` → `Response<T>`, `streamResponse(to:generating:)` → `AsyncSequence<T.PartiallyGenerated>`. Properties: `transcript`, `isResponding`.\n- **`SystemLanguageModel`** — `default.availability` (`.available`/`.unavailable(reason)`), `default.supportedLanguages`, `init(useCase:)`\n- **`GenerationOptions`** — `sampling` (`.greedy`/`.random`), `temperature`, `includeSchemaInPrompt`\n- **`@Generable`** — Macro enabling structured output with constrained decoding\n- **`@Guide`** — Property constraints: `description:`, `.range()`, `.count()`, `.maximumCount()`, `Regex`\n- **`Tool` protocol** — `name`, `description`, `Arguments: Generable`, `call(arguments:) → ToolOutput`\n- **`DynamicGenerationSchema`** — Runtime schema definition with `GeneratedContent` output\n- **`GenerationError`** — `.exceededContextWindowSize`, `.guardrailViolation`, `.unsupportedLanguageOrLocale`\n\n---\n\n## Migration Strategies\n\n### From Server LLMs\n\n- **Migrate when**: Privacy required, offline needed, per-request costs are a concern, and use case fits (summarization/extraction/classification)\n- **Stay on server when**: Need world knowledge, complex reasoning, or >4096 token context\n\n### From Manual JSON Parsing\n\nUse `@Generable` with `respond(to:generating:)` instead of prompting for JSON and parsing manually. See `axiom-ai (skills/foundation-models.md)` Scenario 2 for the complete migration pattern.\n\n---\n\n## Resources\n\n**WWDC**: 286, 259, 301\n\n**Skills**: axiom-ai (skills/foundation-models.md), axiom-ai (skills/foundation-models-diag.md)\n\n---\n\n**Last Updated**: 2025-12-03\n**Version**: 1.0.0\n**Skill Type**: Reference\n**Content**: All WWDC 2025 code examples included\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -636,70 +636,70 @@
           "heading": "Sampling & Generation Options",
           "level": 2,
           "startLine": 695,
-          "endLine": 718,
-          "charCount": 944
+          "endLine": 716,
+          "charCount": 501
         },
         {
           "heading": "Built-in Use Cases",
           "level": 2,
-          "startLine": 719,
-          "endLine": 772,
+          "startLine": 717,
+          "endLine": 770,
           "charCount": 966
         },
         {
           "heading": "Error Handling",
           "level": 2,
-          "startLine": 773,
-          "endLine": 885,
+          "startLine": 771,
+          "endLine": 883,
           "charCount": 3318
         },
         {
           "heading": "Availability",
           "level": 2,
-          "startLine": 886,
-          "endLine": 935,
+          "startLine": 884,
+          "endLine": 933,
           "charCount": 1029
         },
         {
           "heading": "Performance & Profiling",
           "level": 2,
-          "startLine": 936,
-          "endLine": 1009,
+          "startLine": 934,
+          "endLine": 1007,
           "charCount": 1999
         },
         {
           "heading": "Feedback & Analytics",
           "level": 2,
-          "startLine": 1010,
-          "endLine": 1017,
+          "startLine": 1008,
+          "endLine": 1015,
           "charCount": 352
         },
         {
           "heading": "Xcode Playgrounds",
           "level": 2,
-          "startLine": 1018,
-          "endLine": 1043,
+          "startLine": 1016,
+          "endLine": 1041,
           "charCount": 495
         },
         {
           "heading": "API Quick Reference",
           "level": 2,
-          "startLine": 1044,
-          "endLine": 1056,
+          "startLine": 1042,
+          "endLine": 1054,
           "charCount": 1002
         },
         {
           "heading": "Migration Strategies",
           "level": 2,
-          "startLine": 1057,
-          "endLine": 1069,
+          "startLine": 1055,
+          "endLine": 1067,
           "charCount": 513
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 1070,
-          "endLine": 1082,
+          "startLine": 1068,
+          "endLine": 1080,
           "charCount": 265
         }
       ],
@@ -23040,7 +23040,7 @@
     "axiom-shipping": {
       "name": "axiom-shipping",
       "description": "Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect. Covers submission checklists, rejection troubleshooting, metadata requirements, privacy manifests, age ratings, export compliance.",
-      "content": "\n# Shipping & App Store\n\n**You MUST use this skill when preparing to submit ANY app, handling App Store rejections, or working on release workflow.**\n\n## When to Use\n\nUse this skill when you encounter:\n- Preparing an app for App Store submission\n- App Store rejection (any guideline)\n- Metadata requirements (screenshots, descriptions, keywords)\n- Privacy manifest and nutrition label questions\n- Age rating and content classification\n- Export compliance and encryption declarations\n- EU DSA trader status\n- Account deletion or Sign in with Apple requirements\n- Build upload and processing issues\n- App Review appeals\n- WWDC25 App Store Connect changes\n- First-time submission workflow\n\n## Quick Reference\n\n| Symptom / Task | Reference |\n|----------------|-----------|\n| How do I submit my app? | See `skills/app-store-submission.md` |\n| Pre-flight checklist | See `skills/app-store-submission.md` |\n| First-time submission | See `skills/app-store-submission.md` |\n| Encryption compliance | See `skills/app-store-submission.md` |\n| Accessibility Nutrition Labels | See `skills/app-store-submission.md` |\n| Metadata field requirements | See `skills/app-store-ref.md` |\n| Guideline number lookup | See `skills/app-store-ref.md` |\n| Privacy manifest schema | See `skills/app-store-ref.md` |\n| Age rating tiers | See `skills/app-store-ref.md` |\n| EU DSA compliance | See `skills/app-store-ref.md` |\n| WWDC25 ASC changes | See `skills/app-store-ref.md` |\n| App was rejected | See `skills/app-store-diag.md` |\n| Guideline 2.1/4.2/4.3 rejection | See `skills/app-store-diag.md` |\n| Writing an appeal | See `skills/app-store-diag.md` |\n| Repeated rejections | See `skills/app-store-diag.md` |\n| App Review Guidelines reference | See `skills/app-review-guidelines.md` |\n| Expert review checklist | See `skills/expert-review-checklist.md` |\n| Crash data in App Store Connect | See `skills/app-store-connect-ref.md` |\n| TestFlight crash reports | See `skills/app-store-connect-ref.md` |\n| ASC metrics dashboards | See `skills/app-store-connect-ref.md` |\n| Beta tester crash report | See `skills/testflight-triage.md` |\n| Crash log symbolication (.ips / MetricKit / .crash) | See axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`; `skills/testflight-triage.md` for the full TF workflow |\n| Automate App Store Connect | See `skills/asc-mcp.md` |\n| Submit build programmatically | See `skills/asc-mcp.md` |\n| Manage TestFlight via MCP | See `skills/asc-mcp.md` |\n| ITMS signing error on upload | See axiom-security (skills/code-signing-diag.md) |\n| Certificate/profile mismatch | See axiom-security (skills/code-signing-diag.md) |\n| Code signing setup | See axiom-security (skills/code-signing.md) |\n\n## Routing Logic\n\n### 1. Pre-Submission Preparation → **app-store-submission**\n\n**Triggers**:\n- \"How do I submit my app?\"\n- \"What do I need before submitting?\"\n- Preparing for first submission\n- Pre-flight checklist needed\n- Screenshot requirements\n- Metadata completeness check\n- Encryption compliance questions\n- Accessibility Nutrition Labels\n- Privacy manifest requirements for submission\n\n**Why app-store-submission**: Discipline skill with 8 anti-patterns, decision trees, and pressure scenarios. Prevents the mistakes that cause 90% of rejections.\n\n**Reference**: `skills/app-store-submission.md`\n\n---\n\n### 2. Metadata, Guidelines, and API Reference → **app-store-ref**\n\n**Triggers**:\n- \"What fields are required in App Store Connect?\"\n- \"What's the max length for app description?\"\n- Specific guideline number lookup\n- Privacy manifest schema details\n- Age rating tiers and questionnaire\n- IAP submission metadata\n- EU DSA compliance details\n- Build upload methods\n- WWDC25 changes to App Store Connect\n\n**Why app-store-ref**: 10-part reference covering every metadata field, guideline, and compliance requirement with exact specifications.\n\n**Reference**: `skills/app-store-ref.md`\n\n---\n\n### 3. Rejection Troubleshooting → **app-store-diag**\n\n**Triggers**:\n- \"My app was rejected\"\n- \"Guideline 2.1 rejection\"\n- \"Binary was rejected\"\n- Guideline 4.2 or 4.3 rejection (app too simple, web wrapper, spam, duplicate)\n- Guideline 1.x rejection (objectionable content, UGC moderation, Kids category)\n- How to respond to a rejection\n- Writing an appeal\n- Understanding rejection messages\n- Third or repeated rejection\n- Resolution Center communication\n\n**Why app-store-diag**: 9 diagnostic patterns mapping rejection types to root causes and fixes, including subjective rejections (4.2/4.3, 1.x). Includes appeal writing guidance and crisis scenario for repeated rejections.\n\n**Reference**: `skills/app-store-diag.md`\n\n---\n\n### 4. Privacy & Security Compliance → **security-privacy-scanner** (Agent)\n\n**Triggers**:\n- \"Scan my code for privacy issues before submission\"\n- Hardcoded API keys or secrets\n- Missing privacy manifest\n- Required Reason API declarations\n- ATS violations\n\n**Why security-privacy-scanner**: Autonomous agent that scans for security vulnerabilities and privacy compliance issues that cause rejections.\n\n**Invoke**: Launch `security-privacy-scanner` agent or `/axiom:audit security`\n\n---\n\n### 5. IAP Review Issues → **iap-auditor** (Agent)\n\n**Triggers**:\n- IAP rejected or not working\n- Missing transaction.finish()\n- Missing restore purchases\n- Subscription tracking issues\n\n**Why iap-auditor**: Scans IAP code for the patterns that cause StoreKit rejections.\n\n**Invoke**: Launch `iap-auditor` agent\n\n---\n\n### 6. Screenshot Validation → **screenshot-validator** (Agent)\n\n**Triggers**:\n- \"Check my App Store screenshots\"\n- \"Are my screenshots the right dimensions?\"\n- \"Validate screenshots before submission\"\n- \"Review my marketing screenshots\"\n- Screenshot content or dimension questions\n\n**Why screenshot-validator**: Multimodal agent that visually inspects each screenshot for placeholder text, wrong dimensions, debug artifacts, broken UI, and competitor references. Catches issues that manual review misses.\n\n**Invoke**: Launch `screenshot-validator` agent or `/axiom:audit screenshots`\n\n---\n\n### 7. Programmatic ASC Access → **asc-mcp**\n\n**Triggers**:\n- \"Automate App Store Connect\"\n- \"Submit build programmatically\"\n- \"Manage TestFlight from Claude\"\n- \"Respond to reviews via API\"\n- \"Set up asc-mcp\"\n- \"Distribute to TestFlight groups via MCP\"\n- \"Create a new version without opening ASC\"\n\n**Why asc-mcp**: Workflow-focused skill teaching Claude to use asc-mcp MCP tools for release pipelines, TestFlight distribution, review management, and feedback triage — all without leaving Claude Code.\n\n**Reference**: `skills/asc-mcp.md`\n\n---\n\n### 8. Post-Submission Monitoring → **app-store-connect-ref**\n\n**Triggers**:\n- \"How do I view crash data in App Store Connect?\"\n- \"Where are my TestFlight crash reports?\"\n- \"How do I read ASC metrics dashboards?\"\n- Post-release crash investigation\n- Downloading crash logs from ASC\n\n**Why app-store-connect-ref**: ASC navigation for crash dashboards, TestFlight feedback, performance metrics, and data export workflows.\n\n**Reference**: `skills/app-store-connect-ref.md`\n\n---\n\n### 9. Beta Crash Triage → **testflight-triage**\n\n**Triggers**:\n- Beta tester reports a crash\n- Crash appears in Organizer or App Store Connect\n- Crash logs need symbolication\n- Post-release crash investigation\n\n**Why testflight-triage**: Systematic crash triage from symbolication through root cause analysis. Uses `xcsym` as the first step (parse → discover dSYMs → symbolicate → categorize with `pattern_tag` → emit structured JSON).\n\n**Reference**: `skills/testflight-triage.md`. For the xcsym subcommand/exit-code reference, see axiom-tools (skills/xcsym-ref.md). For the one-call agent workflow, `/axiom:analyze-crash`.\n\n---\n\n### 10. Distribution Signing Issues → **code-signing** / **code-signing-diag**\n\n**Triggers**:\n- ITMS-90035 Invalid Signature on upload\n- ITMS-90161 Invalid Provisioning Profile\n- \"No signing certificate found\" when archiving\n- Certificate expired before submission\n- Archive succeeds but export/upload fails\n- Profile doesn't match bundle ID\n- Entitlement mismatch on upload\n\n**Why code-signing**: Distribution signing errors are the #1 cause of upload failures. Diagnosing with CLI tools takes 5 minutes. code-signing-diag has 6 decision trees mapping ITMS errors to root causes.\n\n**Reference**: See axiom-security (skills/code-signing-diag.md) (troubleshooting) or See axiom-security (skills/code-signing.md) (setup)\n\n---\n\n## Decision Tree\n\n```dot\ndigraph shipping {\n    \"Shipping question?\" [shape=diamond];\n    \"Rejected?\" [shape=diamond];\n    \"Post-submission monitoring?\" [shape=diamond];\n    \"Beta crash triage?\" [shape=diamond];\n    \"Automate via MCP?\" [shape=diamond];\n    \"Screenshot review?\" [shape=diamond];\n    \"Need specific specs?\" [shape=diamond];\n    \"IAP issue?\" [shape=diamond];\n    \"Want code scan?\" [shape=diamond];\n    \"Signing error?\" [shape=diamond];\n\n    \"skills/app-store-submission.md\" [shape=box, label=\"app-store-submission\\n(pre-flight checklist)\"];\n    \"skills/app-store-ref.md\" [shape=box, label=\"app-store-ref\\n(metadata/guideline specs)\"];\n    \"skills/app-store-diag.md\" [shape=box, label=\"app-store-diag\\n(rejection troubleshooting)\"];\n    \"skills/app-store-connect-ref.md\" [shape=box, label=\"app-store-connect-ref\\n(ASC dashboards/metrics)\"];\n    \"skills/testflight-triage.md\" [shape=box, label=\"testflight-triage\\n(beta crash triage)\"];\n    \"security-privacy-scanner\" [shape=box, label=\"security-privacy-scanner\\n(Agent)\"];\n    \"iap-auditor\" [shape=box, label=\"iap-auditor\\n(Agent)\"];\n    \"screenshot-validator\" [shape=box, label=\"screenshot-validator\\n(Agent)\"];\n    \"skills/asc-mcp.md\" [shape=box, label=\"asc-mcp\\n(MCP tool workflows)\"];\n    \"axiom-security/code-signing\" [shape=box, label=\"axiom-security\\n(distribution signing)\"];\n\n    \"Shipping question?\" -> \"Rejected?\" [label=\"yes, about to submit or general\"];\n    \"Rejected?\" -> \"skills/app-store-diag.md\" [label=\"yes, app was rejected\"];\n    \"Rejected?\" -> \"Post-submission monitoring?\" [label=\"no\"];\n    \"Post-submission monitoring?\" -> \"skills/app-store-connect-ref.md\" [label=\"yes, crash data/metrics\"];\n    \"Post-submission monitoring?\" -> \"Beta crash triage?\" [label=\"no\"];\n    \"Beta crash triage?\" -> \"skills/testflight-triage.md\" [label=\"yes, beta crash/symbolication\"];\n    \"Beta crash triage?\" -> \"Automate via MCP?\" [label=\"no\"];\n    \"Automate via MCP?\" -> \"skills/asc-mcp.md\" [label=\"yes, programmatic ASC access\"];\n    \"Automate via MCP?\" -> \"Screenshot review?\" [label=\"no\"];\n    \"Screenshot review?\" -> \"screenshot-validator\" [label=\"yes, validate screenshots\"];\n    \"Screenshot review?\" -> \"Need specific specs?\" [label=\"no\"];\n    \"Need specific specs?\" -> \"skills/app-store-ref.md\" [label=\"yes, looking up field/guideline\"];\n    \"Need specific specs?\" -> \"IAP issue?\" [label=\"no\"];\n    \"IAP issue?\" -> \"iap-auditor\" [label=\"yes\"];\n    \"IAP issue?\" -> \"Want code scan?\" [label=\"no\"];\n    \"Want code scan?\" -> \"Signing error?\" [label=\"no\"];\n    \"Want code scan?\" -> \"security-privacy-scanner\" [label=\"yes, scan for privacy/security\"];\n    \"Signing error?\" -> \"axiom-security/code-signing\" [label=\"yes, ITMS/cert/profile error\"];\n    \"Signing error?\" -> \"skills/app-store-submission.md\" [label=\"no, general prep\"];\n}\n```\n\nSimplified:\n\n1. App was rejected? → `skills/app-store-diag.md`\n2. Post-submission crash data/metrics? → `skills/app-store-connect-ref.md`\n3. Beta crash triage/symbolication? → `skills/testflight-triage.md`\n4. Automate ASC via MCP tools? → `skills/asc-mcp.md`\n5. Validate screenshots? → `screenshot-validator` (Agent)\n6. Need specific metadata/guideline specs? → `skills/app-store-ref.md`\n7. IAP submission issue? → `iap-auditor` (Agent)\n8. Want pre-submission code scan? → `security-privacy-scanner` (Agent)\n9. ITMS signing/certificate/profile error on upload? → See axiom-security (skills/code-signing-diag.md)\n10. General submission preparation? → `skills/app-store-submission.md`\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"I'll just submit and see what happens\" | 40% of rejections are Guideline 2.1 (completeness). app-store-submission catches them in 10 min. |\n| \"I've submitted apps before, I know the process\" | Requirements change yearly. Privacy manifests, age rating tiers, EU DSA, Accessibility Nutrition Labels are all new since 2024. |\n| \"The rejection is wrong, I'll just resubmit\" | Resubmitting without changes wastes 24-48 hours per cycle. app-store-diag finds the root cause. |\n| \"Privacy manifests are only for big apps\" | Every app using Required Reason APIs needs a manifest since May 2024. Missing = automatic rejection. |\n| \"I'll add the metadata later\" | Missing metadata blocks submission entirely. app-store-ref has the complete field list. |\n| \"It's just a bug fix, I don't need a full checklist\" | Bug fix updates still need What's New text, correct screenshots, and valid build. app-store-submission covers it. |\n| \"I'll just eyeball the screenshots myself\" | Human review misses dimension mismatches (even 1px off = rejection), subtle placeholder text, and debug indicators. A single missed issue costs 24-48 hours in resubmission. screenshot-validator catches it in 2 minutes. |\n| \"I'll just do it in the ASC web dashboard\" | If asc-mcp is configured, MCP tools are faster for bulk operations — distributing builds, responding to reviews, creating versions. asc-mcp has the workflow. |\n| \"Upload failed with ITMS error, let me re-archive\" | ITMS signing errors are configuration — wrong cert, expired profile, missing entitlement. Re-archiving with the same config produces the same result. code-signing-diag has the fix. |\n\n## External Resources\n\nFor apps that ship AI features powered by the Anthropic Messages API or Claude Agent SDK (rather than Apple's on-device Foundation Models), see the **`claude-api`** skill — it ships outside Axiom and includes the automated Opus 4.6 → 4.7 migration. Useful before submitting an update that changes which Claude model your app calls.\n\n## When NOT to Use (Conflict Resolution)\n\n**Do NOT use axiom-shipping for these — use the correct skill instead:**\n\n| Issue | Correct Skill | Why NOT axiom-shipping |\n|-------|---------------|----------------------|\n| Build fails before archiving | **axiom-build** | Environment/build issue, not submission |\n| SwiftData migration crash | **axiom-data** | Schema issue, not App Store |\n| Privacy manifest coding (writing the file) | **axiom-build** | security-privacy-scanner handles code scanning |\n| StoreKit 2 implementation (writing IAP code) | **axiom-integration** | in-app-purchases / storekit-ref covers implementation |\n| Performance issues found during testing | **axiom-performance** | Profiling issue, not submission |\n| Accessibility implementation | **axiom-accessibility** | Code-level accessibility, not App Store labels |\n\n**axiom-shipping is for the submission workflow**, not code implementation:\n- Preparing metadata and compliance → axiom-shipping\n- Writing the actual code → domain-specific skill (axiom-build, axiom-data, etc.)\n- App was rejected → axiom-shipping\n- Code changes to fix rejection → domain-specific skill, then back to axiom-shipping to verify\n\n## Example Invocations\n\nUser: \"How do I submit my app to the App Store?\"\n→ See `skills/app-store-submission.md`\n\nUser: \"My app was rejected for Guideline 2.1\"\n→ See `skills/app-store-diag.md`\n\nUser: \"What screenshots do I need?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"What fields are required in App Store Connect?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"How do I fill out the age rating questionnaire?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"Do I need an encryption compliance declaration?\"\n→ See `skills/app-store-submission.md`\n\nUser: \"My app keeps getting rejected, what do I do?\"\n→ See `skills/app-store-diag.md`\n\nUser: \"How do I appeal an App Store rejection?\"\n→ See `skills/app-store-diag.md`\n\nUser: \"My app was rejected for Guideline 4.2 minimum functionality\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Rejected for being a web wrapper / duplicate app\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Rejection for user-generated content without moderation\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Kids category compliance rejection\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Scan my code for App Store compliance issues\"\n→ Launch `security-privacy-scanner` agent\n\nUser: \"Check my IAP implementation before submission\"\n→ Launch `iap-auditor` agent\n\nUser: \"Check my App Store screenshots in ~/Screenshots\"\n→ Launch `screenshot-validator` agent\n\nUser: \"Are my screenshots the right dimensions?\"\n→ Launch `screenshot-validator` agent\n\nUser: \"How do I find crash data in App Store Connect?\"\n→ See `skills/app-store-connect-ref.md`\n\nUser: \"Where are my TestFlight crash reports in ASC?\"\n→ See `skills/app-store-connect-ref.md`\n\nUser: \"What's new in App Store Connect for 2025?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"I need to set up DSA trader status for the EU\"\n→ See `skills/app-store-ref.md`\n\nUser: \"What are Accessibility Nutrition Labels?\"\n→ See `skills/app-store-submission.md`\n\nUser: \"This is my first app submission ever\"\n→ See `skills/app-store-submission.md`\n\nUser: \"Submit this build to App Store programmatically\"\n→ See `skills/asc-mcp.md`\n\nUser: \"Set up asc-mcp for App Store Connect\"\n→ See `skills/asc-mcp.md`\n\nUser: \"Distribute build 42 to my beta testers via MCP\"\n→ See `skills/asc-mcp.md`\n\nUser: \"Respond to negative App Store reviews from Claude\"\n→ See `skills/asc-mcp.md`\n\nUser: \"ITMS-90035 Invalid Signature when uploading\"\n→ See axiom-security (skills/code-signing-diag.md)\n\nUser: \"My provisioning profile expired and I can't upload\"\n→ See axiom-security (skills/code-signing-diag.md)\n",
+      "content": "\n# Shipping & App Store\n\n**You MUST use this skill when preparing to submit ANY app, handling App Store rejections, or working on release workflow.**\n\n## When to Use\n\nUse this skill when you encounter:\n- Preparing an app for App Store submission\n- App Store rejection (any guideline)\n- Metadata requirements (screenshots, descriptions, keywords)\n- Privacy manifest and nutrition label questions\n- Age rating and content classification\n- Export compliance and encryption declarations\n- EU DSA trader status\n- Account deletion or Sign in with Apple requirements\n- Build upload and processing issues\n- App Review appeals\n- WWDC25 App Store Connect changes\n- First-time submission workflow\n\n## Quick Reference\n\n| Symptom / Task | Reference |\n|----------------|-----------|\n| How do I submit my app? | See `skills/app-store-submission.md` |\n| Pre-flight checklist | See `skills/app-store-submission.md` |\n| First-time submission | See `skills/app-store-submission.md` |\n| Encryption compliance | See `skills/app-store-submission.md` |\n| Accessibility Nutrition Labels | See `skills/app-store-submission.md` |\n| Metadata field requirements | See `skills/app-store-ref.md` |\n| Guideline number lookup | See `skills/app-store-ref.md` |\n| Privacy manifest schema | See `skills/app-store-ref.md` |\n| Age rating tiers | See `skills/app-store-ref.md` |\n| EU DSA compliance | See `skills/app-store-ref.md` |\n| WWDC25 ASC changes | See `skills/app-store-ref.md` |\n| App was rejected | See `skills/app-store-diag.md` |\n| Guideline 2.1/4.2/4.3 rejection | See `skills/app-store-diag.md` |\n| Writing an appeal | See `skills/app-store-diag.md` |\n| Repeated rejections | See `skills/app-store-diag.md` |\n| App Review Guidelines reference | See `skills/app-review-guidelines.md` |\n| Expert review checklist | See `skills/expert-review-checklist.md` |\n| Crash data in App Store Connect | See `skills/app-store-connect-ref.md` |\n| TestFlight crash reports | See `skills/app-store-connect-ref.md` |\n| ASC metrics dashboards | See `skills/app-store-connect-ref.md` |\n| Beta tester crash report | See `skills/testflight-triage.md` |\n| Crash log symbolication (.ips / MetricKit / .crash) | See axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`; `skills/testflight-triage.md` for the full TF workflow |\n| Automate App Store Connect | See `skills/asc-mcp.md` |\n| Submit build programmatically | See `skills/asc-mcp.md` |\n| Manage TestFlight via MCP | See `skills/asc-mcp.md` |\n| ITMS signing error on upload | See axiom-security (skills/code-signing-diag.md) |\n| Certificate/profile mismatch | See axiom-security (skills/code-signing-diag.md) |\n| Code signing setup | See axiom-security (skills/code-signing.md) |\n| Shipping update with Claude model-ID change (4.6 → 4.7, etc.) | See **`claude-api`** skill (external) + this skill for submission |\n| Switching cloud AI provider in-app (OpenAI → Claude, etc.) | See **`claude-api`** skill (external) + this skill for submission |\n\n## Routing Logic\n\n### 1. Pre-Submission Preparation → **app-store-submission**\n\n**Triggers**:\n- \"How do I submit my app?\"\n- \"What do I need before submitting?\"\n- Preparing for first submission\n- Pre-flight checklist needed\n- Screenshot requirements\n- Metadata completeness check\n- Encryption compliance questions\n- Accessibility Nutrition Labels\n- Privacy manifest requirements for submission\n\n**Why app-store-submission**: Discipline skill with 8 anti-patterns, decision trees, and pressure scenarios. Prevents the mistakes that cause 90% of rejections.\n\n**Reference**: `skills/app-store-submission.md`\n\n---\n\n### 2. Metadata, Guidelines, and API Reference → **app-store-ref**\n\n**Triggers**:\n- \"What fields are required in App Store Connect?\"\n- \"What's the max length for app description?\"\n- Specific guideline number lookup\n- Privacy manifest schema details\n- Age rating tiers and questionnaire\n- IAP submission metadata\n- EU DSA compliance details\n- Build upload methods\n- WWDC25 changes to App Store Connect\n\n**Why app-store-ref**: 10-part reference covering every metadata field, guideline, and compliance requirement with exact specifications.\n\n**Reference**: `skills/app-store-ref.md`\n\n---\n\n### 3. Rejection Troubleshooting → **app-store-diag**\n\n**Triggers**:\n- \"My app was rejected\"\n- \"Guideline 2.1 rejection\"\n- \"Binary was rejected\"\n- Guideline 4.2 or 4.3 rejection (app too simple, web wrapper, spam, duplicate)\n- Guideline 1.x rejection (objectionable content, UGC moderation, Kids category)\n- How to respond to a rejection\n- Writing an appeal\n- Understanding rejection messages\n- Third or repeated rejection\n- Resolution Center communication\n\n**Why app-store-diag**: 9 diagnostic patterns mapping rejection types to root causes and fixes, including subjective rejections (4.2/4.3, 1.x). Includes appeal writing guidance and crisis scenario for repeated rejections.\n\n**Reference**: `skills/app-store-diag.md`\n\n---\n\n### 4. Privacy & Security Compliance → **security-privacy-scanner** (Agent)\n\n**Triggers**:\n- \"Scan my code for privacy issues before submission\"\n- Hardcoded API keys or secrets\n- Missing privacy manifest\n- Required Reason API declarations\n- ATS violations\n\n**Why security-privacy-scanner**: Autonomous agent that scans for security vulnerabilities and privacy compliance issues that cause rejections.\n\n**Invoke**: Launch `security-privacy-scanner` agent or `/axiom:audit security`\n\n---\n\n### 5. IAP Review Issues → **iap-auditor** (Agent)\n\n**Triggers**:\n- IAP rejected or not working\n- Missing transaction.finish()\n- Missing restore purchases\n- Subscription tracking issues\n\n**Why iap-auditor**: Scans IAP code for the patterns that cause StoreKit rejections.\n\n**Invoke**: Launch `iap-auditor` agent\n\n---\n\n### 6. Screenshot Validation → **screenshot-validator** (Agent)\n\n**Triggers**:\n- \"Check my App Store screenshots\"\n- \"Are my screenshots the right dimensions?\"\n- \"Validate screenshots before submission\"\n- \"Review my marketing screenshots\"\n- Screenshot content or dimension questions\n\n**Why screenshot-validator**: Multimodal agent that visually inspects each screenshot for placeholder text, wrong dimensions, debug artifacts, broken UI, and competitor references. Catches issues that manual review misses.\n\n**Invoke**: Launch `screenshot-validator` agent or `/axiom:audit screenshots`\n\n---\n\n### 7. Programmatic ASC Access → **asc-mcp**\n\n**Triggers**:\n- \"Automate App Store Connect\"\n- \"Submit build programmatically\"\n- \"Manage TestFlight from Claude\"\n- \"Respond to reviews via API\"\n- \"Set up asc-mcp\"\n- \"Distribute to TestFlight groups via MCP\"\n- \"Create a new version without opening ASC\"\n\n**Why asc-mcp**: Workflow-focused skill teaching Claude to use asc-mcp MCP tools for release pipelines, TestFlight distribution, review management, and feedback triage — all without leaving Claude Code.\n\n**Reference**: `skills/asc-mcp.md`\n\n---\n\n### 8. Post-Submission Monitoring → **app-store-connect-ref**\n\n**Triggers**:\n- \"How do I view crash data in App Store Connect?\"\n- \"Where are my TestFlight crash reports?\"\n- \"How do I read ASC metrics dashboards?\"\n- Post-release crash investigation\n- Downloading crash logs from ASC\n\n**Why app-store-connect-ref**: ASC navigation for crash dashboards, TestFlight feedback, performance metrics, and data export workflows.\n\n**Reference**: `skills/app-store-connect-ref.md`\n\n---\n\n### 9. Beta Crash Triage → **testflight-triage**\n\n**Triggers**:\n- Beta tester reports a crash\n- Crash appears in Organizer or App Store Connect\n- Crash logs need symbolication\n- Post-release crash investigation\n\n**Why testflight-triage**: Systematic crash triage from symbolication through root cause analysis. Uses `xcsym` as the first step (parse → discover dSYMs → symbolicate → categorize with `pattern_tag` → emit structured JSON).\n\n**Reference**: `skills/testflight-triage.md`. For the xcsym subcommand/exit-code reference, see axiom-tools (skills/xcsym-ref.md). For the one-call agent workflow, `/axiom:analyze-crash`.\n\n---\n\n### 10. Distribution Signing Issues → **code-signing** / **code-signing-diag**\n\n**Triggers**:\n- ITMS-90035 Invalid Signature on upload\n- ITMS-90161 Invalid Provisioning Profile\n- \"No signing certificate found\" when archiving\n- Certificate expired before submission\n- Archive succeeds but export/upload fails\n- Profile doesn't match bundle ID\n- Entitlement mismatch on upload\n\n**Why code-signing**: Distribution signing errors are the #1 cause of upload failures. Diagnosing with CLI tools takes 5 minutes. code-signing-diag has 6 decision trees mapping ITMS errors to root causes.\n\n**Reference**: See axiom-security (skills/code-signing-diag.md) (troubleshooting) or See axiom-security (skills/code-signing.md) (setup)\n\n---\n\n## Decision Tree\n\n```dot\ndigraph shipping {\n    \"Shipping question?\" [shape=diamond];\n    \"Rejected?\" [shape=diamond];\n    \"Post-submission monitoring?\" [shape=diamond];\n    \"Beta crash triage?\" [shape=diamond];\n    \"Automate via MCP?\" [shape=diamond];\n    \"Screenshot review?\" [shape=diamond];\n    \"Need specific specs?\" [shape=diamond];\n    \"IAP issue?\" [shape=diamond];\n    \"Want code scan?\" [shape=diamond];\n    \"Signing error?\" [shape=diamond];\n\n    \"skills/app-store-submission.md\" [shape=box, label=\"app-store-submission\\n(pre-flight checklist)\"];\n    \"skills/app-store-ref.md\" [shape=box, label=\"app-store-ref\\n(metadata/guideline specs)\"];\n    \"skills/app-store-diag.md\" [shape=box, label=\"app-store-diag\\n(rejection troubleshooting)\"];\n    \"skills/app-store-connect-ref.md\" [shape=box, label=\"app-store-connect-ref\\n(ASC dashboards/metrics)\"];\n    \"skills/testflight-triage.md\" [shape=box, label=\"testflight-triage\\n(beta crash triage)\"];\n    \"security-privacy-scanner\" [shape=box, label=\"security-privacy-scanner\\n(Agent)\"];\n    \"iap-auditor\" [shape=box, label=\"iap-auditor\\n(Agent)\"];\n    \"screenshot-validator\" [shape=box, label=\"screenshot-validator\\n(Agent)\"];\n    \"skills/asc-mcp.md\" [shape=box, label=\"asc-mcp\\n(MCP tool workflows)\"];\n    \"axiom-security/code-signing\" [shape=box, label=\"axiom-security\\n(distribution signing)\"];\n\n    \"Shipping question?\" -> \"Rejected?\" [label=\"yes, about to submit or general\"];\n    \"Rejected?\" -> \"skills/app-store-diag.md\" [label=\"yes, app was rejected\"];\n    \"Rejected?\" -> \"Post-submission monitoring?\" [label=\"no\"];\n    \"Post-submission monitoring?\" -> \"skills/app-store-connect-ref.md\" [label=\"yes, crash data/metrics\"];\n    \"Post-submission monitoring?\" -> \"Beta crash triage?\" [label=\"no\"];\n    \"Beta crash triage?\" -> \"skills/testflight-triage.md\" [label=\"yes, beta crash/symbolication\"];\n    \"Beta crash triage?\" -> \"Automate via MCP?\" [label=\"no\"];\n    \"Automate via MCP?\" -> \"skills/asc-mcp.md\" [label=\"yes, programmatic ASC access\"];\n    \"Automate via MCP?\" -> \"Screenshot review?\" [label=\"no\"];\n    \"Screenshot review?\" -> \"screenshot-validator\" [label=\"yes, validate screenshots\"];\n    \"Screenshot review?\" -> \"Need specific specs?\" [label=\"no\"];\n    \"Need specific specs?\" -> \"skills/app-store-ref.md\" [label=\"yes, looking up field/guideline\"];\n    \"Need specific specs?\" -> \"IAP issue?\" [label=\"no\"];\n    \"IAP issue?\" -> \"iap-auditor\" [label=\"yes\"];\n    \"IAP issue?\" -> \"Want code scan?\" [label=\"no\"];\n    \"Want code scan?\" -> \"Signing error?\" [label=\"no\"];\n    \"Want code scan?\" -> \"security-privacy-scanner\" [label=\"yes, scan for privacy/security\"];\n    \"Signing error?\" -> \"axiom-security/code-signing\" [label=\"yes, ITMS/cert/profile error\"];\n    \"Signing error?\" -> \"skills/app-store-submission.md\" [label=\"no, general prep\"];\n}\n```\n\nSimplified:\n\n1. App was rejected? → `skills/app-store-diag.md`\n2. Post-submission crash data/metrics? → `skills/app-store-connect-ref.md`\n3. Beta crash triage/symbolication? → `skills/testflight-triage.md`\n4. Automate ASC via MCP tools? → `skills/asc-mcp.md`\n5. Validate screenshots? → `screenshot-validator` (Agent)\n6. Need specific metadata/guideline specs? → `skills/app-store-ref.md`\n7. IAP submission issue? → `iap-auditor` (Agent)\n8. Want pre-submission code scan? → `security-privacy-scanner` (Agent)\n9. ITMS signing/certificate/profile error on upload? → See axiom-security (skills/code-signing-diag.md)\n10. General submission preparation? → `skills/app-store-submission.md`\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"I'll just submit and see what happens\" | 40% of rejections are Guideline 2.1 (completeness). app-store-submission catches them in 10 min. |\n| \"I've submitted apps before, I know the process\" | Requirements change yearly. Privacy manifests, age rating tiers, EU DSA, Accessibility Nutrition Labels are all new since 2024. |\n| \"The rejection is wrong, I'll just resubmit\" | Resubmitting without changes wastes 24-48 hours per cycle. app-store-diag finds the root cause. |\n| \"Privacy manifests are only for big apps\" | Every app using Required Reason APIs needs a manifest since May 2024. Missing = automatic rejection. |\n| \"I'll add the metadata later\" | Missing metadata blocks submission entirely. app-store-ref has the complete field list. |\n| \"It's just a bug fix, I don't need a full checklist\" | Bug fix updates still need What's New text, correct screenshots, and valid build. app-store-submission covers it. |\n| \"I'll just eyeball the screenshots myself\" | Human review misses dimension mismatches (even 1px off = rejection), subtle placeholder text, and debug indicators. A single missed issue costs 24-48 hours in resubmission. screenshot-validator catches it in 2 minutes. |\n| \"I'll just do it in the ASC web dashboard\" | If asc-mcp is configured, MCP tools are faster for bulk operations — distributing builds, responding to reviews, creating versions. asc-mcp has the workflow. |\n| \"Upload failed with ITMS error, let me re-archive\" | ITMS signing errors are configuration — wrong cert, expired profile, missing entitlement. Re-archiving with the same config produces the same result. code-signing-diag has the fix. |\n| \"It's just a model ID swap (Claude 4.6 → 4.7)\" | 4.6 → 4.7 removed `temperature`, `top_p`, `top_k`, and prefill from the Messages API. Build succeeds; runtime returns HTTP 400 after submission. Read `claude-api` (external) and test the live endpoint before uploading. |\n\n## External Resources\n\n**Cloud Claude migration (`claude-api` skill, ships outside Axiom) — mandatory before shipping any Claude model-ID change.** Opus 4.7 removed `temperature`, `top_p`, `top_k`, and prefill from the Messages API; code that built successfully on 4.6 returns HTTP 400 at runtime. An App Store update that ships this regression is an expedited-review situation. The `claude-api` skill automates the migration (model ID swap, sampling-param removal, prefill replacement) and enforces prompt caching from day one. Treat it as part of your pre-flight checklist, not a side reference.\n\n## When NOT to Use (Conflict Resolution)\n\n**Do NOT use axiom-shipping for these — use the correct skill instead:**\n\n| Issue | Correct Skill | Why NOT axiom-shipping |\n|-------|---------------|----------------------|\n| Build fails before archiving | **axiom-build** | Environment/build issue, not submission |\n| SwiftData migration crash | **axiom-data** | Schema issue, not App Store |\n| Privacy manifest coding (writing the file) | **axiom-build** | security-privacy-scanner handles code scanning |\n| StoreKit 2 implementation (writing IAP code) | **axiom-integration** | in-app-purchases / storekit-ref covers implementation |\n| Performance issues found during testing | **axiom-performance** | Profiling issue, not submission |\n| Accessibility implementation | **axiom-accessibility** | Code-level accessibility, not App Store labels |\n\n**axiom-shipping is for the submission workflow**, not code implementation:\n- Preparing metadata and compliance → axiom-shipping\n- Writing the actual code → domain-specific skill (axiom-build, axiom-data, etc.)\n- App was rejected → axiom-shipping\n- Code changes to fix rejection → domain-specific skill, then back to axiom-shipping to verify\n\n## Example Invocations\n\nUser: \"How do I submit my app to the App Store?\"\n→ See `skills/app-store-submission.md`\n\nUser: \"My app was rejected for Guideline 2.1\"\n→ See `skills/app-store-diag.md`\n\nUser: \"What screenshots do I need?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"What fields are required in App Store Connect?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"How do I fill out the age rating questionnaire?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"Do I need an encryption compliance declaration?\"\n→ See `skills/app-store-submission.md`\n\nUser: \"My app keeps getting rejected, what do I do?\"\n→ See `skills/app-store-diag.md`\n\nUser: \"How do I appeal an App Store rejection?\"\n→ See `skills/app-store-diag.md`\n\nUser: \"My app was rejected for Guideline 4.2 minimum functionality\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Rejected for being a web wrapper / duplicate app\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Rejection for user-generated content without moderation\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Kids category compliance rejection\"\n→ See `skills/app-store-diag.md`\n\nUser: \"Scan my code for App Store compliance issues\"\n→ Launch `security-privacy-scanner` agent\n\nUser: \"Check my IAP implementation before submission\"\n→ Launch `iap-auditor` agent\n\nUser: \"Check my App Store screenshots in ~/Screenshots\"\n→ Launch `screenshot-validator` agent\n\nUser: \"Are my screenshots the right dimensions?\"\n→ Launch `screenshot-validator` agent\n\nUser: \"How do I find crash data in App Store Connect?\"\n→ See `skills/app-store-connect-ref.md`\n\nUser: \"Where are my TestFlight crash reports in ASC?\"\n→ See `skills/app-store-connect-ref.md`\n\nUser: \"What's new in App Store Connect for 2025?\"\n→ See `skills/app-store-ref.md`\n\nUser: \"I need to set up DSA trader status for the EU\"\n→ See `skills/app-store-ref.md`\n\nUser: \"What are Accessibility Nutrition Labels?\"\n→ See `skills/app-store-submission.md`\n\nUser: \"This is my first app submission ever\"\n→ See `skills/app-store-submission.md`\n\nUser: \"Submit this build to App Store programmatically\"\n→ See `skills/asc-mcp.md`\n\nUser: \"Set up asc-mcp for App Store Connect\"\n→ See `skills/asc-mcp.md`\n\nUser: \"Distribute build 42 to my beta testers via MCP\"\n→ See `skills/asc-mcp.md`\n\nUser: \"Respond to negative App Store reviews from Claude\"\n→ See `skills/asc-mcp.md`\n\nUser: \"ITMS-90035 Invalid Signature when uploading\"\n→ See axiom-security (skills/code-signing-diag.md)\n\nUser: \"My provisioning profile expired and I can't upload\"\n→ See axiom-security (skills/code-signing-diag.md)\n",
       "skillType": "router",
       "source": "axiom",
       "category": "shipping",
@@ -23075,49 +23075,49 @@
           "heading": "Quick Reference",
           "level": 2,
           "startLine": 21,
-          "endLine": 53,
-          "charCount": 2009
+          "endLine": 55,
+          "charCount": 2274
         },
         {
           "heading": "Routing Logic",
           "level": 2,
-          "startLine": 54,
-          "endLine": 220,
+          "startLine": 56,
+          "endLine": 222,
           "charCount": 5698
         },
         {
           "heading": "Decision Tree",
           "level": 2,
-          "startLine": 221,
-          "endLine": 281,
+          "startLine": 223,
+          "endLine": 283,
           "charCount": 3490
         },
         {
           "heading": "Anti-Rationalization",
           "level": 2,
-          "startLine": 282,
-          "endLine": 295,
-          "charCount": 1701
+          "startLine": 284,
+          "endLine": 298,
+          "charCount": 1973
         },
         {
           "heading": "External Resources",
           "level": 2,
-          "startLine": 296,
-          "endLine": 299,
-          "charCount": 355
+          "startLine": 299,
+          "endLine": 302,
+          "charCount": 598
         },
         {
           "heading": "When NOT to Use (Conflict Resolution)",
           "level": 2,
-          "startLine": 300,
-          "endLine": 318,
+          "startLine": 303,
+          "endLine": 321,
           "charCount": 1182
         },
         {
           "heading": "Example Invocations",
           "level": 2,
-          "startLine": 319,
-          "endLine": 404,
+          "startLine": 322,
+          "endLine": 407,
           "charCount": 2506
         }
       ],
@@ -32865,7 +32865,7 @@
           27,
           8,
           43,
-          819
+          795
         ],
         "4": [
           4,
@@ -34105,7 +34105,7 @@
         15.161111111111111,
         4.7,
         44.25555555555557,
-        612.3666666666668
+        612.2333333333332
       ],
       "storedFields": {
         "0": {
@@ -39062,6 +39062,48 @@
           }
         ],
         [
+          "4000",
+          {
+            "4": {
+              "136": 3,
+              "139": 1
+            }
+          }
+        ],
+        [
+          "400mb",
+          {
+            "4": {
+              "85": 1,
+              "116": 1,
+              "119": 4
+            }
+          }
+        ],
+        [
+          "400g",
+          {
+            "4": {
+              "58": 1
+            }
+          }
+        ],
+        [
+          "400",
+          {
+            "4": {
+              "45": 1,
+              "74": 3,
+              "75": 1,
+              "90": 1,
+              "91": 2,
+              "119": 1,
+              "147": 1,
+              "176": 8
+            }
+          }
+        ],
+        [
           "40x",
           {
             "4": {
@@ -39100,49 +39142,6 @@
               "6": 1,
               "75": 1,
               "160": 1
-            }
-          }
-        ],
-        [
-          "4000",
-          {
-            "4": {
-              "136": 3,
-              "139": 1
-            }
-          }
-        ],
-        [
-          "400mb",
-          {
-            "4": {
-              "85": 1,
-              "116": 1,
-              "119": 4
-            }
-          }
-        ],
-        [
-          "400g",
-          {
-            "4": {
-              "58": 1
-            }
-          }
-        ],
-        [
-          "400",
-          {
-            "4": {
-              "3": 1,
-              "45": 1,
-              "74": 3,
-              "75": 1,
-              "90": 1,
-              "91": 2,
-              "119": 1,
-              "147": 1,
-              "176": 8
             }
           }
         ],
@@ -41307,6 +41306,74 @@
           }
         ],
         [
+          "0452",
+          {
+            "4": {
+              "142": 1
+            }
+          }
+        ],
+        [
+          "0451",
+          {
+            "4": {
+              "142": 1
+            }
+          }
+        ],
+        [
+          "0453",
+          {
+            "4": {
+              "142": 1
+            }
+          }
+        ],
+        [
+          "0445",
+          {
+            "4": {
+              "84": 1
+            }
+          }
+        ],
+        [
+          "04",
+          {
+            "4": {
+              "71": 1,
+              "102": 1,
+              "106": 1,
+              "107": 1
+            }
+          }
+        ],
+        [
+          "0433",
+          {
+            "4": {
+              "16": 1
+            }
+          }
+        ],
+        [
+          "0430",
+          {
+            "4": {
+              "14": 1
+            }
+          }
+        ],
+        [
+          "0420",
+          {
+            "4": {
+              "14": 3,
+              "15": 2
+            }
+          }
+        ],
+        [
           "0x7f8b9c2",
           {
             "4": {
@@ -41653,75 +41720,6 @@
               "43": 1,
               "66": 1,
               "77": 1,
-              "107": 1
-            }
-          }
-        ],
-        [
-          "0452",
-          {
-            "4": {
-              "142": 1
-            }
-          }
-        ],
-        [
-          "0451",
-          {
-            "4": {
-              "142": 1
-            }
-          }
-        ],
-        [
-          "0453",
-          {
-            "4": {
-              "142": 1
-            }
-          }
-        ],
-        [
-          "0445",
-          {
-            "4": {
-              "84": 1
-            }
-          }
-        ],
-        [
-          "0433",
-          {
-            "4": {
-              "16": 1
-            }
-          }
-        ],
-        [
-          "0430",
-          {
-            "4": {
-              "14": 1
-            }
-          }
-        ],
-        [
-          "0420",
-          {
-            "4": {
-              "14": 3,
-              "15": 2
-            }
-          }
-        ],
-        [
-          "04",
-          {
-            "4": {
-              "3": 1,
-              "71": 1,
-              "102": 1,
-              "106": 1,
               "107": 1
             }
           }
@@ -46959,7 +46957,7 @@
             },
             "4": {
               "2": 29,
-              "3": 39,
+              "3": 38,
               "4": 33,
               "5": 1,
               "8": 1,
@@ -57307,7 +57305,6 @@
             },
             "4": {
               "0": 1,
-              "3": 1,
               "8": 3,
               "11": 4,
               "15": 2,
@@ -58985,6 +58982,29 @@
           }
         ],
         [
+          "2026",
+          {
+            "1": {
+              "133": 1
+            },
+            "3": {
+              "176": 1
+            },
+            "4": {
+              "71": 1,
+              "96": 2,
+              "97": 2,
+              "98": 4,
+              "100": 5,
+              "102": 1,
+              "133": 1,
+              "136": 2,
+              "137": 5,
+              "176": 1
+            }
+          }
+        ],
+        [
           "2020",
           {
             "4": {
@@ -59260,30 +59280,6 @@
               "173": 1,
               "174": 2,
               "175": 3
-            }
-          }
-        ],
-        [
-          "2026",
-          {
-            "1": {
-              "133": 1
-            },
-            "3": {
-              "176": 1
-            },
-            "4": {
-              "3": 1,
-              "71": 1,
-              "96": 2,
-              "97": 2,
-              "98": 4,
-              "100": 5,
-              "102": 1,
-              "133": 1,
-              "136": 2,
-              "137": 5,
-              "176": 1
             }
           }
         ],
@@ -81954,7 +81950,6 @@
               "87": 1
             },
             "4": {
-              "3": 1,
               "6": 1,
               "14": 1,
               "15": 2,
@@ -84843,7 +84838,6 @@
           "released",
           {
             "4": {
-              "3": 1,
               "36": 1,
               "48": 3,
               "69": 1,
@@ -85616,7 +85610,6 @@
           "removed",
           {
             "4": {
-              "3": 1,
               "29": 1,
               "39": 4,
               "41": 3,
@@ -91639,6 +91632,21 @@
           }
         ],
         [
+          "unrelated",
+          {
+            "4": {
+              "13": 1,
+              "41": 1,
+              "96": 5,
+              "120": 1,
+              "150": 1,
+              "151": 1,
+              "161": 1,
+              "167": 1
+            }
+          }
+        ],
+        [
           "unreliable",
           {
             "3": {
@@ -91655,22 +91663,6 @@
               "157": 1,
               "173": 1,
               "174": 3
-            }
-          }
-        ],
-        [
-          "unrelated",
-          {
-            "4": {
-              "3": 1,
-              "13": 1,
-              "41": 1,
-              "96": 5,
-              "120": 1,
-              "150": 1,
-              "151": 1,
-              "161": 1,
-              "167": 1
             }
           }
         ],
@@ -97314,7 +97306,7 @@
             "4": {
               "0": 2,
               "1": 2,
-              "3": 3,
+              "3": 2,
               "4": 2,
               "6": 2,
               "9": 1,
@@ -98138,7 +98130,6 @@
             },
             "4": {
               "2": 1,
-              "3": 1,
               "4": 2,
               "5": 2,
               "11": 1,
@@ -109137,7 +109128,7 @@
             },
             "4": {
               "2": 20,
-              "3": 20,
+              "3": 18,
               "4": 37,
               "5": 4,
               "6": 4,
@@ -119023,7 +119014,6 @@
           {
             "4": {
               "0": 2,
-              "3": 2,
               "15": 2,
               "20": 1,
               "21": 3,
@@ -120432,7 +120422,7 @@
             },
             "4": {
               "2": 1,
-              "3": 2,
+              "3": 1,
               "4": 1,
               "6": 1,
               "15": 1,
@@ -130171,7 +130161,6 @@
             "4": {
               "0": 3,
               "1": 5,
-              "3": 1,
               "4": 1,
               "7": 1,
               "10": 2,
@@ -130267,7 +130256,6 @@
               "0": 5,
               "1": 4,
               "2": 4,
-              "3": 1,
               "4": 2,
               "6": 1,
               "7": 6,
@@ -133493,7 +133481,6 @@
             },
             "4": {
               "0": 1,
-              "3": 2,
               "10": 1,
               "14": 1,
               "37": 3,
@@ -136375,7 +136362,7 @@
           {
             "4": {
               "2": 5,
-              "3": 15,
+              "3": 13,
               "4": 9,
               "41": 1,
               "42": 1,
@@ -141132,7 +141119,7 @@
               "0": 13,
               "1": 6,
               "2": 34,
-              "3": 6,
+              "3": 5,
               "4": 24,
               "5": 2,
               "6": 7,
@@ -141565,7 +141552,7 @@
               "0": 11,
               "1": 1,
               "2": 5,
-              "3": 29,
+              "3": 28,
               "4": 29,
               "6": 5,
               "7": 2,
@@ -145706,7 +145693,7 @@
               "0": 2,
               "1": 3,
               "2": 8,
-              "3": 6,
+              "3": 5,
               "4": 8,
               "5": 2,
               "6": 4,
@@ -150076,7 +150063,7 @@
               "0": 5,
               "1": 1,
               "2": 16,
-              "3": 9,
+              "3": 8,
               "4": 9,
               "5": 5,
               "8": 1,
@@ -157043,7 +157030,7 @@
               "0": 20,
               "1": 7,
               "2": 18,
-              "3": 7,
+              "3": 6,
               "4": 16,
               "5": 3,
               "6": 2,
@@ -161243,7 +161230,6 @@
               "160": 1
             },
             "4": {
-              "3": 1,
               "66": 1,
               "134": 2,
               "144": 1,
@@ -165957,7 +165943,6 @@
             },
             "4": {
               "0": 2,
-              "3": 1,
               "8": 4,
               "14": 2,
               "18": 1,
@@ -172626,14 +172611,6 @@
           }
         ],
         [
-          "opus",
-          {
-            "4": {
-              "3": 1
-            }
-          }
-        ],
-        [
           "operate",
           {
             "4": {
@@ -173350,7 +173327,7 @@
             "4": {
               "0": 1,
               "2": 8,
-              "3": 13,
+              "3": 12,
               "4": 6,
               "9": 2,
               "17": 2,
@@ -175216,29 +175193,12 @@
           }
         ],
         [
-          "sd",
-          {
-            "4": {
-              "26": 30,
-              "36": 1,
-              "39": 1,
-              "40": 1,
-              "67": 1,
-              "73": 9,
-              "135": 11,
-              "136": 8,
-              "137": 1
-            }
-          }
-        ],
-        [
           "sdk",
           {
             "3": {
               "135": 1
             },
             "4": {
-              "3": 1,
               "36": 1,
               "39": 3,
               "40": 1,
@@ -175254,6 +175214,22 @@
               "146": 3,
               "159": 1,
               "169": 1
+            }
+          }
+        ],
+        [
+          "sd",
+          {
+            "4": {
+              "26": 30,
+              "36": 1,
+              "39": 1,
+              "40": 1,
+              "67": 1,
+              "73": 9,
+              "135": 11,
+              "136": 8,
+              "137": 1
             }
           }
         ],
@@ -200351,7 +200327,6 @@
               "178": 1
             },
             "4": {
-              "3": 1,
               "4": 4,
               "134": 1,
               "138": 5,
@@ -207794,75 +207769,6 @@
           }
         ],
         [
-          "columns",
-          {
-            "4": {
-              "23": 16,
-              "24": 6,
-              "28": 12,
-              "29": 8,
-              "37": 1,
-              "39": 2,
-              "43": 1,
-              "49": 1,
-              "53": 1,
-              "89": 1,
-              "90": 12,
-              "98": 1,
-              "100": 2,
-              "121": 1,
-              "131": 1,
-              "146": 3,
-              "147": 1,
-              "149": 15,
-              "153": 1,
-              "154": 3,
-              "155": 1,
-              "156": 5,
-              "157": 2
-            }
-          }
-        ],
-        [
-          "column",
-          {
-            "1": {
-              "156": 1
-            },
-            "3": {
-              "28": 1
-            },
-            "4": {
-              "15": 3,
-              "23": 57,
-              "24": 17,
-              "27": 1,
-              "28": 10,
-              "29": 3,
-              "34": 1,
-              "39": 3,
-              "40": 1,
-              "71": 1,
-              "89": 1,
-              "90": 51,
-              "98": 2,
-              "107": 8,
-              "109": 6,
-              "131": 1,
-              "146": 1,
-              "149": 5,
-              "153": 6,
-              "154": 6,
-              "155": 13,
-              "156": 20,
-              "157": 10,
-              "158": 6,
-              "159": 2,
-              "167": 1
-            }
-          }
-        ],
-        [
           "collidable",
           {
             "4": {
@@ -207936,7 +207842,6 @@
               "53": 1
             },
             "4": {
-              "3": 1,
               "44": 11,
               "45": 2,
               "46": 14,
@@ -208136,6 +208041,75 @@
               "169": 1,
               "172": 7,
               "175": 2
+            }
+          }
+        ],
+        [
+          "columns",
+          {
+            "4": {
+              "23": 16,
+              "24": 6,
+              "28": 12,
+              "29": 8,
+              "37": 1,
+              "39": 2,
+              "43": 1,
+              "49": 1,
+              "53": 1,
+              "89": 1,
+              "90": 12,
+              "98": 1,
+              "100": 2,
+              "121": 1,
+              "131": 1,
+              "146": 3,
+              "147": 1,
+              "149": 15,
+              "153": 1,
+              "154": 3,
+              "155": 1,
+              "156": 5,
+              "157": 2
+            }
+          }
+        ],
+        [
+          "column",
+          {
+            "1": {
+              "156": 1
+            },
+            "3": {
+              "28": 1
+            },
+            "4": {
+              "15": 3,
+              "23": 57,
+              "24": 17,
+              "27": 1,
+              "28": 10,
+              "29": 3,
+              "34": 1,
+              "39": 3,
+              "40": 1,
+              "71": 1,
+              "89": 1,
+              "90": 51,
+              "98": 2,
+              "107": 8,
+              "109": 6,
+              "131": 1,
+              "146": 1,
+              "149": 5,
+              "153": 6,
+              "154": 6,
+              "155": 13,
+              "156": 20,
+              "157": 10,
+              "158": 6,
+              "159": 2,
+              "167": 1
             }
           }
         ],
@@ -212170,7 +212144,7 @@
             "4": {
               "0": 9,
               "1": 1,
-              "3": 2,
+              "3": 1,
               "17": 3,
               "37": 12,
               "38": 3,
@@ -223993,7 +223967,7 @@
             "4": {
               "1": 1,
               "2": 20,
-              "3": 20,
+              "3": 18,
               "4": 37,
               "5": 18,
               "10": 1,
@@ -224474,7 +224448,6 @@
             },
             "4": {
               "0": 1,
-              "3": 3,
               "4": 2,
               "10": 1,
               "24": 1,
@@ -228138,7 +228111,7 @@
             },
             "4": {
               "2": 5,
-              "3": 12,
+              "3": 9,
               "4": 12,
               "5": 4,
               "6": 12,
@@ -229364,7 +229337,7 @@
             "4": {
               "0": 7,
               "2": 16,
-              "3": 7,
+              "3": 6,
               "4": 4,
               "5": 6,
               "6": 19,
@@ -229586,7 +229559,7 @@
               "0": 42,
               "1": 5,
               "2": 6,
-              "3": 6,
+              "3": 5,
               "4": 3,
               "5": 1,
               "6": 5,
@@ -230755,7 +230728,6 @@
               "8": 1
             },
             "4": {
-              "3": 1,
               "8": 2,
               "77": 2,
               "112": 1,
@@ -236623,10 +236595,101 @@
           }
         ],
         [
-          "anthropic",
+          "ancient",
           {
             "4": {
-              "3": 2
+              "87": 1
+            }
+          }
+        ],
+        [
+          "ancestor",
+          {
+            "4": {
+              "52": 2,
+              "145": 2,
+              "172": 3
+            }
+          }
+        ],
+        [
+          "ancestors",
+          {
+            "4": {
+              "1": 1
+            }
+          }
+        ],
+        [
+          "anchorentity",
+          {
+            "2": {
+              "53": 1
+            },
+            "4": {
+              "52": 1,
+              "53": 1
+            }
+          }
+        ],
+        [
+          "anchored",
+          {
+            "4": {
+              "37": 2,
+              "38": 1,
+              "51": 6,
+              "52": 3,
+              "167": 1
+            }
+          }
+        ],
+        [
+          "anchoringcomponent",
+          {
+            "2": {
+              "52": 1
+            }
+          }
+        ],
+        [
+          "anchor",
+          {
+            "3": {
+              "51": 1
+            },
+            "4": {
+              "1": 1,
+              "44": 6,
+              "45": 10,
+              "46": 7,
+              "51": 16,
+              "52": 17,
+              "53": 20,
+              "54": 4,
+              "55": 3,
+              "63": 9,
+              "84": 3,
+              "145": 8,
+              "146": 3,
+              "153": 3,
+              "168": 45,
+              "172": 8
+            }
+          }
+        ],
+        [
+          "anchors",
+          {
+            "3": {
+              "1": 1
+            },
+            "4": {
+              "1": 1,
+              "51": 2,
+              "53": 1,
+              "55": 1,
+              "153": 1
             }
           }
         ],
@@ -236809,105 +236872,6 @@
               "172": 1,
               "174": 6,
               "179": 2
-            }
-          }
-        ],
-        [
-          "ancient",
-          {
-            "4": {
-              "87": 1
-            }
-          }
-        ],
-        [
-          "ancestor",
-          {
-            "4": {
-              "52": 2,
-              "145": 2,
-              "172": 3
-            }
-          }
-        ],
-        [
-          "ancestors",
-          {
-            "4": {
-              "1": 1
-            }
-          }
-        ],
-        [
-          "anchorentity",
-          {
-            "2": {
-              "53": 1
-            },
-            "4": {
-              "52": 1,
-              "53": 1
-            }
-          }
-        ],
-        [
-          "anchored",
-          {
-            "4": {
-              "37": 2,
-              "38": 1,
-              "51": 6,
-              "52": 3,
-              "167": 1
-            }
-          }
-        ],
-        [
-          "anchoringcomponent",
-          {
-            "2": {
-              "52": 1
-            }
-          }
-        ],
-        [
-          "anchor",
-          {
-            "3": {
-              "51": 1
-            },
-            "4": {
-              "1": 1,
-              "44": 6,
-              "45": 10,
-              "46": 7,
-              "51": 16,
-              "52": 17,
-              "53": 20,
-              "54": 4,
-              "55": 3,
-              "63": 9,
-              "84": 3,
-              "145": 8,
-              "146": 3,
-              "153": 3,
-              "168": 45,
-              "172": 8
-            }
-          }
-        ],
-        [
-          "anchors",
-          {
-            "3": {
-              "1": 1
-            },
-            "4": {
-              "1": 1,
-              "51": 2,
-              "53": 1,
-              "55": 1,
-              "153": 1
             }
           }
         ],
@@ -237952,6 +237916,17 @@
           }
         ],
         [
+          "addi",
+          {
+            "4": {
+              "58": 1,
+              "78": 1,
+              "130": 1,
+              "147": 1
+            }
+          }
+        ],
+        [
           "additions",
           {
             "1": {
@@ -238033,18 +238008,6 @@
               "35": 1,
               "45": 1,
               "165": 1
-            }
-          }
-        ],
-        [
-          "addi",
-          {
-            "4": {
-              "3": 1,
-              "58": 1,
-              "78": 1,
-              "130": 1,
-              "147": 1
             }
           }
         ],
@@ -244897,43 +244860,6 @@
           "sampl",
           "genera",
           "options",
-          "name",
-          "collision",
-          "warn",
-          "apple",
-          "temperature",
-          "controls",
-          "device",
-          "founda",
-          "models",
-          "llm",
-          "unrelated",
-          "anthropic",
-          "messages",
-          "api",
-          "opus",
-          "released",
-          "2026",
-          "04",
-          "16",
-          "removed",
-          "top",
-          "pass",
-          "them",
-          "returns",
-          "400",
-          "if",
-          "app",
-          "integrates",
-          "claude",
-          "via",
-          "agent",
-          "sdk",
-          "addi",
-          "do",
-          "not",
-          "these",
-          "parameters",
           "greedy",
           "deterministic",
           "use",
@@ -244952,6 +244878,8 @@
           "session",
           "respond",
           "prompt",
+          "temperature",
+          "controls",
           "variance",
           "focused",
           "default",
