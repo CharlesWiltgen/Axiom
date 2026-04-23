@@ -27,17 +27,14 @@ Use this router when:
 | On-device text generation (Apple Intelligence) | **Stay here** → Foundation Models skills |
 | Custom ML model deployment (PyTorch, TensorFlow) | **See skills/ios-ml.md** → CoreML conversion, compression |
 | Computer vision (image analysis, OCR, segmentation) | **/skill axiom-vision** → Vision framework |
-| Cloud API integration (OpenAI, etc.) | **/skill axiom-networking** → URLSession patterns |
+| Cloud API integration (OpenAI, generic HTTP) | **/skill axiom-networking** → URLSession patterns |
+| Cloud Claude integration (Anthropic SDK, Messages API, Claude Agent SDK) | **See `claude-api` skill** (external) → includes automated Opus 4.6 → 4.7 migration |
 | System AI features (Writing Tools, Genmoji) | No custom code needed — these are system-provided |
 
 **Key boundary: Foundation Models vs ML (custom models)**
 - Foundation Models = Apple's on-device LLM framework (LanguageModelSession, @Generable)
 - ML = Custom model deployment (CoreML conversion, quantization, MLTensor, speech-to-text)
 - If developer says "run my own model" → skills/ios-ml.md. If "use Apple Intelligence" → stay here.
-
-## External Resources
-
-For cloud Claude API integration (Messages API, Anthropic SDK, Claude Agent SDK in your iOS app), see the **`claude-api`** skill — it ships outside Axiom and includes the automated Opus 4.6 → 4.7 migration (model ID swap, sampling-param removal, prefill replacement). Apple's on-device Foundation Models and Anthropic's cloud Claude are unrelated stacks; use both in parallel when an app needs both.
 
 ## Cross-Domain Routing
 
@@ -96,6 +93,13 @@ For cloud Claude API integration (Messages API, Anthropic SDK, Claude Agent SDK 
 | "Foundation Models is just LanguageModelSession" | Foundation Models has @Generable, Tool protocol, streaming, and guardrails. foundation-models covers all. |
 | "I'll figure out the AI patterns as I go" | AI APIs have specific error handling and fallback requirements. foundation-models prevents runtime failures. |
 | "I've used LLMs before, this is similar" | Apple's on-device models have unique constraints (guardrails, context limits). foundation-models is Apple-specific. |
+| "I know the Anthropic SDK already" | Opus 4.7 removed `temperature`, `top_p`, `top_k`, and prefill from the Messages API. Code that worked on 4.6 returns HTTP 400 at runtime. Read `claude-api` (external) before changing model IDs. |
+
+## External Resources
+
+**Cloud Claude integration (`claude-api` skill, ships outside Axiom).** Opus 4.7 removed `temperature`, `top_p`, `top_k`, and prefill from the Messages API — code that built successfully on 4.6 returns HTTP 400 at runtime, not compile time. The `claude-api` skill automates the migration (model ID swap, sampling-param removal, prefill replacement) and enforces prompt caching from day one. Skipping it costs an afternoon of production debugging when the first 400s arrive.
+
+Apple's on-device Foundation Models and Anthropic's cloud Claude are unrelated stacks; use both in parallel when an app needs both, and treat `claude-api` as mandatory reading before any Claude model-ID change ships.
 
 ## Critical Patterns
 
