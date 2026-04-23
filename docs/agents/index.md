@@ -64,7 +64,7 @@ Agents are autonomous problem-solvers that:
 
 ### Code Quality
 - **accessibility-auditor** — Scans for accessibility violations and architectural issues (inaccessible flows, gesture-only paths, inconsistent label coverage, WCAG compliance)
-- **codable-auditor** — Detects Codable anti-patterns (manual JSON building, try? swallowing errors, JSONSerialization usage) and date handling issues
+- **codable-auditor** — Detects Codable safety violations and semantic gaps (silent field drops, wrapper-hidden fallbacks, cross-file strategy drift, enum future-case crashes, CodingKeys mismatches) beyond the obvious anti-patterns
 - **concurrency-auditor** — Detects Swift 6 concurrency violations and architectural issues (missing isolation, incoherent strategies, incomplete cancellation, permanent escape hatches)
 - **energy-auditor** — Scans for energy anti-patterns and unnecessary background work (timers for inactive features, location when not on map, unused background modes, lifecycle asymmetries)
 - **memory-auditor** — Finds memory leak patterns and architectural issues (missing cleanup paths, unbounded collection growth, inconsistent resource lifecycle management)
