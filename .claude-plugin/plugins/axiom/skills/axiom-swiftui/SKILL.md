@@ -51,6 +51,9 @@ These topics are part of the broader iOS UI domain but live in separate suites:
 - UI test flakiness → `/skill axiom-testing`
 - UX dead ends, dismiss traps → Launch `ux-flow-auditor` agent
 
+#### watchOS-specific patterns
+- Glanceable UI, watch navigation, Smart Stack widgets → See axiom-watchos
+
 ## Conflict Resolution
 
 **axiom-swiftui vs axiom-performance**: When UI is slow (e.g., "SwiftUI List slow"):
