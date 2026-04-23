@@ -39,7 +39,8 @@ Both rules are already announced by Apple:
 
 > "Xcode has supported building Apple Watch apps for the arm64 architecture since Xcode 14… If you're already building with standard architectures, you're already building for arm64." — Apple, What's new in watchOS 26
 
-**What to verify before submission:**
+#### What to verify before submission
+
 - Build setting on every Watch target is `Standard Architectures`, not a locked legacy setting
 - Audit `Float`, `Int`, and pointer-based math — behavior differs on arm64 vs armv7k
 - Run on a device (Apple Watch Series 9, Series 10, Ultra 2) in addition to the simulator; the simulator always uses arm64 on Apple Silicon and can hide device-only issues
@@ -88,7 +89,7 @@ struct MyWatch_Watch_App: App {
 
 The `@main` attribute marks the entry point — an app has exactly one. The `WindowGroup` wraps a `NavigationStack` that provides the stack + title area. SwiftUI automatically composes scenes into a compound scene. (`NavigationView` is deprecated since watchOS 9 — use `NavigationStack`.)
 
-**Why SwiftUI over WatchKit:**
+#### Why SwiftUI over WatchKit
 
 > "On watchOS, SwiftUI gives you considerably more freedom, power, and control than user interfaces laid out and designed in a storyboard. For example, List has a number of features that aren't supported by WKInterfaceTable, such as the platter style, swipe actions, and row reordering." — Apple, Building a watchOS app
 

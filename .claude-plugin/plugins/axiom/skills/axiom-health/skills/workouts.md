@@ -34,7 +34,7 @@ This skill covers the first path — live sessions with sensor collection.
 | Class | Platform |
 |---|---|
 | `HKWorkoutSession` | iOS 17+, iPadOS 17+, watchOS 2+ |
-| `HKLiveWorkoutBuilder`, `HKLiveWorkoutDataSource`, `HKLiveWorkoutBuilderDelegate` | **iOS 26+, iPadOS 26+, watchOS 5+** |
+| `HKLiveWorkoutBuilder`, `HKLiveWorkoutDataSource`, `HKLiveWorkoutBuilderDelegate` | **watchOS 5+; iOS 26+, iPadOS 26+** |
 | `HKWorkoutSession.startMirroringToCompanionDevice` | **watchOS 10+ only** |
 | `HKHealthStore.recoverActiveWorkoutSession` | **iOS 26+, iPadOS 26+, watchOS 10+** |
 
