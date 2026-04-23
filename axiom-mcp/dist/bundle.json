@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-04-23T19:00:18.458Z",
+  "generatedAt": "2026-04-23T20:26:08.967Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -336,7 +336,7 @@
     "axiom-accessibility--watchos-a11y": {
       "name": "axiom-accessibility--watchos-a11y",
       "description": "Use when:",
-      "content": "# Accessibility on watchOS\n\n## When to Use This Skill\n\nUse when:\n- Auditing a watchOS app for VoiceOver, AssistiveTouch, or Double Tap support\n- Implementing Dynamic Type on watch faces, watch UI, complications, or notifications\n- Making a custom watch control (counter, scrubber, picker) VoiceOver-adjustable\n- Fixing AssistiveTouch cursor frames that clip or miss tappable elements\n- Supporting the large accessibility text sizes introduced in watchOS 8\n- Debugging why a view element isn't focusable via AssistiveTouch\n\n#### Related Skills\n\n- Use the rest of `axiom-accessibility` for general (cross-platform) VoiceOver, Dynamic Type, and contrast guidance — this skill covers watchOS-specific additions\n- Use `axiom-watchos/skills/design-for-watchos.md` for the watchOS 10 navigation model and Always-On design\n- Use `axiom-watchos/skills/smart-stack-and-complications.md` for complication surfaces that need accessibility labels\n- Use `axiom-watchos/skills/controls-and-live-activities.md` for control surfaces and the Double Tap primary action\n\n## Core Principle\n\n**Three assistive technologies ship on Apple Watch: VoiceOver, AssistiveTouch, and Double Tap.** Each has a distinct input model and SwiftUI support surface. An accessible watchOS app addresses all three, plus Dynamic Type at the large accessibility sizes that watchOS 8 introduced. Most of what works on iOS carries over — what follows is the watchOS-specific additions and pressure points.\n\n> \"Accessibility is about people using their devices in the way that's best for them. And that means, to give your app the best user experience, accessibility must be considered.\" — Daniel Sykes-Turner, Apple Accessibility, WWDC 2021-10223\n\n## Watch-Specific Assistive Technologies\n\n| Technology | What it does | Primary API surface |\n|---|---|---|\n| VoiceOver | Reads UI aloud; gestures navigate | `accessibilityLabel`, `accessibilityValue`, `accessibilityAdjustableAction`, `accessibilityElement(children:)` |\n| AssistiveTouch (watchOS 8+) | Hand-gesture and wrist-motion control; on-screen cursor; action menu | `accessibilityRespondsToUserInteraction`, `contentShape`, `accessibilityAction` |\n| Double Tap (watchOS 11+) | Pinch-fingers gesture triggers primary action | `handGestureShortcut(.primaryAction)` |\n\nDesign for any combination — a user may have VoiceOver on **and** AssistiveTouch enabled. Neither should step on the other.\n\n## Dynamic Type — Three Rules\n\nThe watchOS 8 accessibility large text sizes put more pressure on Dynamic Type than any earlier release. First-run setup now asks every user to pick a text size; if they don't, watchOS picks the closest size to their iPhone's.\n\n### Rule 1 — Always use a text style, never a fixed font size\n\n```swift\n// Wrong — stays the same at any user-chosen size\nText(plant.name).font(.system(size: 18))\n\n// Right — grows with the system text size\nText(plant.name).font(.title3)\n```\n\nSwiftUI ships 11 text styles. Each one scales automatically across the full range, including the large accessibility sizes.\n\n### Rule 2 — Allow text to wrap; don't cap `lineLimit` at 1\n\n```swift\n// Wrong — truncates on larger sizes\nText(task.description).lineLimit(1)\n\n// Right — wraps onto as many lines as needed\nText(task.description)\n// Or: Text(...).lineLimit(3)\n```\n\nA one-line limit on watch UI truncates by design. Accept wrapping by default; cap `lineLimit` only when the layout cannot tolerate reflow.\n\n### Rule 3 — Switch layout for very large sizes\n\nOnce text is wrapping three times and icons are crowding, give up on the horizontal layout and stack vertically:\n\n```swift\nstruct PlantCardView: View {\n    @Environment(\\.sizeCategory) private var sizeCategory\n    let plant: Plant\n\n    var body: some View {\n        if sizeCategory >= .extraExtraLarge {\n            VerticalPlantView(plant: plant)\n        } else {\n            HorizontalPlantView(plant: plant)\n        }\n    }\n}\n```\n\nRead `@Environment(\\.sizeCategory)` and branch at the threshold where the horizontal layout breaks. Don't try to make a single layout work across the full range — the vertical fallback is the right tool for accessibility sizes.\n\n### Complications and notifications count\n\nTwo surfaces people forget:\n\n- **Complication text with abbreviations** needs `accessibilityLabel` with the spoken form. \"Wed Mar 9\" → `accessibilityLabel(\"Wednesday, March 9th\")`.\n- **Complication images** need a label too, or VoiceOver falls back to the image asset name. \"Moon\" becomes `accessibilityLabel(\"A real-time view of the moon. Third quarter.\")`.\n- **SF Symbols** come with default labels (`\"Drop, fill\"`) that may not match your context — override with `accessibilityLabel` when the context warrants.\n- **Dynamic notifications** need the same accessibility treatment as main-app views — labels, hierarchy, action labels.\n\n## VoiceOver on watchOS\n\n### Let `NavigationLink` combine children\n\nA list row with four labels, four images, and two buttons forces VoiceOver to stop at every element. Grouping is usually what you want:\n\n```swift\n// If you're using accessibilityElement(children: .contain) to inspect the row, remove it:\nNavigationLink(destination: PlantDetail(plant: plant)) {\n    PlantRowContents(plant: plant)\n}\n// NavigationLink will combine children into a single accessible element automatically.\n```\n\n### Context in the label, not just the value\n\nVoiceOver without context is unusable. A task row reading \"5 days. 7 days. Medium.\" tells the user nothing:\n\n```swift\n// Wrong — VoiceOver reads \"5 days\"\nText(\"5 days\")\n\n// Right — reads \"Watering in 5 days\"\nstruct PlantTaskLabel: View {\n    let task: PlantTask\n\n    var body: some View {\n        Label(task.displayText, systemImage: task.iconName)\n            .accessibilityLabel(task.voiceOverDescription)\n    }\n}\n\nextension PlantTask {\n    var voiceOverDescription: String {\n        switch self {\n        case .water(let days): \"Watering in \\(days) days\"\n        case .fertilize(let days): \"Fertilizing in \\(days) days\"\n        case .sunlight(let level): \"Keep in \\(level) sunlight\"\n        }\n    }\n}\n```\n\n### Buttons need explicit labels when using system symbols\n\nA button that's just `Image(systemName: \"drop.fill\")` reads as \"Drop fill, button\". Override:\n\n```swift\nButton { log(.water) } label: {\n    Image(systemName: \"drop.fill\")\n}\n.accessibilityLabel(\"Log watering\")\n```\n\n## Custom Adjustable Controls\n\nA stepper built from two buttons and a label reads terribly: \"Watering frequency. Remove, button. 8. Add, button.\" The user can't tell the three elements belong together.\n\nCollapse them into one adjustable element:\n\n```swift\nstruct FrequencyCounter: View {\n    let task: PlantTask\n    @Binding var days: Int\n\n    var body: some View {\n        HStack {\n            Button { days -= 1 } label: { Image(systemName: \"minus.circle\") }\n            Text(\"\\(days)\").font(.title)\n            Button { days += 1 } label: { Image(systemName: \"plus.circle\") }\n        }\n        .accessibilityElement()                            // Ignore children\n        .accessibilityLabel(task.frequencyLabel)           // Read once on focus\n        .accessibilityValue(\"\\(days) days\")                // Read on every change\n        .accessibilityAdjustableAction { direction in\n            switch direction {\n            case .increment: days += 1\n            case .decrement: days -= 1\n            @unknown default: break\n            }\n        }\n    }\n}\n```\n\nThe result: VoiceOver says \"Watering frequency. 8 days. Adjustable.\" — and a swipe up/down adjusts it. One element, one label, one value, one action. That is the shape VoiceOver users expect for every custom control.\n\n## AssistiveTouch Support (watchOS 8+)\n\nAssistiveTouch gives users with motor impairments full control via hand gestures (clench, double-clench, pinch, double-pinch) or wrist-motion cursor steering. Two concepts shape what the framework expects from your UI: focusable elements and cursor frames.\n\n### Focusable elements\n\nAssistiveTouch cursor steps only through elements the system considers **interactive**. Default interactive elements:\n\n| Interactive | Non-interactive |\n|---|---|\n| `Button`, `Toggle` | `Text` (static) |\n| `NavigationLink` | `Label` (static) |\n| Elements with `.onTapGesture` | Elements with `.accessibilityHidden(true)` |\n| Elements with `.accessibilityAction` | Any element with `.disabled(true)` |\n| Elements with an actionable a11y trait | |\n\nThe trap is a `VStack` with an `.onTapGesture` on the whole stack — the stack is interactive, but the `Text` children inside aren't. AssistiveTouch focus skips the text:\n\n```swift\n// Problem — tap works, but AssistiveTouch never highlights the text\nVStack {\n    Text(\"Double Americano\").font(.headline)\n    Text(\"with oat milk\").font(.caption)\n}\n.onTapGesture { showDrinkDetail() }\n\n// Fix — opt the text into interactive treatment\nVStack {\n    Text(\"Double Americano\")\n        .font(.headline)\n        .accessibilityRespondsToUserInteraction(true)\n    Text(\"with oat milk\").font(.caption)\n}\n.onTapGesture { showDrinkDetail() }\n```\n\n`accessibilityRespondsToUserInteraction(true)` tells AssistiveTouch the element is part of the tap target.\n\n### Cursor frame\n\nThe AssistiveTouch cursor draws around the element's **tappable area**, not its visual bounds. A small glyph button has a small cursor that clips or hides the content. Expand the tap target with `contentShape`:\n\n```swift\n// Small visual element; tiny cursor frame; clips the icon\nNavigationLink(destination: SettingsView()) {\n    Image(systemName: \"ellipsis\")\n}\n\n// Generous tappable area; readable cursor\nNavigationLink(destination: SettingsView()) {\n    Image(systemName: \"ellipsis\")\n        .frame(width: 44, height: 44)\n        .contentShape(Circle())\n}\n```\n\nMinimum tappable region is 44×44pt regardless of visual size. `contentShape(Circle())` makes the AssistiveTouch cursor trace a circle that matches the visual icon shape.\n\n### Action menu\n\nAssistiveTouch's action menu (double-clench opens it) surfaces custom actions ahead of system actions for the focused element. Any `accessibilityAction` you already added for VoiceOver appears here automatically:\n\n```swift\nTaskRow(task: task)\n    .accessibilityAction(named: \"Complete\") { task.complete() }\n    .accessibilityAction(named: \"Reschedule\") { showReschedule() }\n```\n\nAdjustable elements surface increment/decrement. Custom actions without an explicit image use the first letter of the action name as the menu icon — provide a `Label` to override:\n\n```swift\n.accessibilityAction {\n    Label(\"Complete\", systemImage: \"checkmark.circle.fill\")\n} action: {\n    task.complete()\n}\n```\n\n## Double Tap (watchOS 11+)\n\nDouble Tap is a pinch-fingers gesture bound globally to the primary action of the frontmost view. For most UI, the primary action is the obvious \"default\" button: \"Start\" in a workout app, \"Reply\" on an incoming message.\n\n### Opt a button into Double Tap\n\n```swift\nButton(\"Start Workout\") {\n    session.start()\n}\n.handGestureShortcut(.primaryAction)\n```\n\n### Rules\n\n- Only one primary action per screen — Double Tap becomes ambiguous otherwise\n- Double Tap is an accelerator, not a replacement — every primary-action button must remain tappable\n- The user can disable Double Tap globally; don't make it the only path to any action\n- Controls (see `axiom-watchos/skills/controls-and-live-activities.md`) bind to Double Tap automatically when the control widget is frontmost\n\n## Testing Checklist\n\n| Test | How |\n|---|---|\n| VoiceOver reads every row with context | Settings → Accessibility → VoiceOver; swipe through a list and listen |\n| Dynamic Type reflows at `accessibility5` | Settings → Accessibility → Display & Text Size → Larger Text → All the way up |\n| Custom adjustable controls speak label + value separately | Focus and listen; swipe up/down to increment |\n| AssistiveTouch highlights every tappable element | Settings → Accessibility → AssistiveTouch → on; pinch-step through the screen |\n| AssistiveTouch cursor doesn't clip icons | Visual check with cursor visible |\n| Double Tap fires the intended action | Pinch with the same hand as the watch |\n| Complication text has spoken-form label | VoiceOver focus on the watch face with your complication |\n| Notification long-look is navigable | VoiceOver on a delivered notification |\n\n## Common Mistakes\n\n| Mistake | Symptom | Fix |\n|---|---|---|\n| Fixed font size on labels | Text stays small at accessibility sizes | Use a text style (`.title3`, `.body`, `.caption`); never `Font.system(size:)` for user-facing text |\n| `lineLimit(1)` on text that can vary in length | Truncation at large Dynamic Type; no way for users to read the content | Remove or raise `lineLimit`; switch layout vertically at accessibility sizes |\n| `accessibilityElement(children: .contain)` on a `NavigationLink` row | VoiceOver navigates past every inner element instead of grouping the row | Remove the modifier; `NavigationLink` combines children automatically |\n| System symbol button without `accessibilityLabel` | VoiceOver reads \"Drop fill, button\" | Add `.accessibilityLabel(\"Log watering\")` |\n| Custom stepper built from buttons without `accessibilityAdjustableAction` | VoiceOver reads two separate button labels and the value; no swipe-to-adjust | `accessibilityElement()` + `accessibilityLabel` + `accessibilityValue` + `accessibilityAdjustableAction` |\n| Static `Text` inside a tappable `VStack` isn't AssistiveTouch-focusable | Cursor skips rows; users can't reach the tap target | Add `.accessibilityRespondsToUserInteraction(true)` on the text elements |\n| Small glyph button without `contentShape` | AssistiveTouch cursor clips the icon; tap area smaller than 44×44 | `.frame(width: 44, height: 44).contentShape(...)` |\n| Custom accessibility actions with no image | Menu shows one-letter placeholders | Attach a `Label(_:systemImage:)` to each `accessibilityAction` |\n| Binding Double Tap to multiple primary actions | Double Tap becomes unpredictable on the screen | Use exactly one `.handGestureShortcut(.primaryAction)` per surface |\n| Using `handGestureShortcut(.primaryAction)` as the only path | Users who disable Double Tap can't reach the action | Keep the button tappable; Double Tap is an accelerator only |\n| Abbreviated complication text without an unabridged `accessibilityLabel` | VoiceOver reads \"Wed Mar 9\" instead of \"Wednesday, March 9th\" | Provide `accessibilityLabel` for every abbreviated string in complications and notifications |\n\n## Resources\n\n**WWDC**: 2021-10223, 2021-10308, 2024-10205\n\n**Docs**: /watchos-apps/create-accessible-experiences-for-watchos, /swiftui/environmentvalues/sizecategory, /swiftui/view/accessibilityelement(children:), /swiftui/view/accessibilityrespondstouserinteraction(_:), /swiftui/view/accessibilityadjustableaction(_:), /swiftui/view/accessibilityaction(_:_:), /swiftui/view/contentshape(_:eofill:), /swiftui/view/handgestureshortcut(_:isenabled:)\n\n**Skills**: axiom-accessibility (accessibility-diag, ux-flow-audit), axiom-watchos (design-for-watchos, smart-stack-and-complications, controls-and-live-activities)\n",
+      "content": "# Accessibility on watchOS\n\n## When to Use This Skill\n\nUse when:\n- Auditing a watchOS app for VoiceOver, AssistiveTouch, or Double Tap support\n- Implementing Dynamic Type on watch faces, watch UI, complications, or notifications\n- Making a custom watch control (counter, scrubber, picker) VoiceOver-adjustable\n- Fixing AssistiveTouch cursor frames that clip or miss tappable elements\n- Supporting the large accessibility text sizes introduced in watchOS 8\n- Debugging why a view element isn't focusable via AssistiveTouch\n\n#### Related Skills\n\n- Use the rest of `axiom-accessibility` for general (cross-platform) VoiceOver, Dynamic Type, and contrast guidance — this skill covers watchOS-specific additions\n- Use `axiom-watchos/skills/design-for-watchos.md` for the watchOS 10 navigation model and Always-On design\n- Use `axiom-watchos/skills/smart-stack-and-complications.md` for complication surfaces that need accessibility labels\n- Use `axiom-watchos/skills/controls-and-live-activities.md` for control surfaces and the Double Tap primary action\n\n## Core Principle\n\n**Three assistive technologies ship on Apple Watch: VoiceOver, AssistiveTouch, and Double Tap.** Each has a distinct input model and SwiftUI support surface. An accessible watchOS app addresses all three, plus Dynamic Type at the large accessibility sizes that watchOS 8 introduced. Most of what works on iOS carries over — what follows is the watchOS-specific additions and pressure points.\n\n> \"Accessibility is about people using their devices in the way that's best for them. And that means, to give your app the best user experience, accessibility must be considered.\" — Daniel Sykes-Turner, Apple Accessibility\n\n## Watch-Specific Assistive Technologies\n\n| Technology | What it does | Primary API surface |\n|---|---|---|\n| VoiceOver | Reads UI aloud; gestures navigate | `accessibilityLabel`, `accessibilityValue`, `accessibilityAdjustableAction`, `accessibilityElement(children:)` |\n| AssistiveTouch (watchOS 8+) | Hand-gesture and wrist-motion control; on-screen cursor; action menu | `accessibilityRespondsToUserInteraction`, `contentShape`, `accessibilityAction` |\n| Double Tap (watchOS 11+) | Pinch-fingers gesture triggers primary action | `handGestureShortcut(.primaryAction)` |\n\nDesign for any combination — a user may have VoiceOver on **and** AssistiveTouch enabled. Neither should step on the other.\n\n## Dynamic Type — Three Rules\n\nThe watchOS 8 accessibility large text sizes put more pressure on Dynamic Type than any earlier release. First-run setup now asks every user to pick a text size; if they don't, watchOS picks the closest size to their iPhone's.\n\n### Rule 1 — Always use a text style, never a fixed font size\n\n```swift\n// Wrong — stays the same at any user-chosen size\nText(plant.name).font(.system(size: 18))\n\n// Right — grows with the system text size\nText(plant.name).font(.title3)\n```\n\nSwiftUI ships 11 text styles. Each one scales automatically across the full range, including the large accessibility sizes.\n\n### Rule 2 — Allow text to wrap; don't cap `lineLimit` at 1\n\n```swift\n// Wrong — truncates on larger sizes\nText(task.description).lineLimit(1)\n\n// Right — wraps onto as many lines as needed\nText(task.description)\n// Or: Text(...).lineLimit(3)\n```\n\nA one-line limit on watch UI truncates by design. Accept wrapping by default; cap `lineLimit` only when the layout cannot tolerate reflow.\n\n### Rule 3 — Switch layout for very large sizes\n\nOnce text is wrapping three times and icons are crowding, give up on the horizontal layout and stack vertically:\n\n```swift\nstruct PlantCardView: View {\n    @Environment(\\.sizeCategory) private var sizeCategory\n    let plant: Plant\n\n    var body: some View {\n        if sizeCategory >= .extraExtraLarge {\n            VerticalPlantView(plant: plant)\n        } else {\n            HorizontalPlantView(plant: plant)\n        }\n    }\n}\n```\n\nRead `@Environment(\\.sizeCategory)` and branch at the threshold where the horizontal layout breaks. Don't try to make a single layout work across the full range — the vertical fallback is the right tool for accessibility sizes.\n\n### Complications and notifications count\n\nTwo surfaces people forget:\n\n- **Complication text with abbreviations** needs `accessibilityLabel` with the spoken form. \"Wed Mar 9\" → `accessibilityLabel(\"Wednesday, March 9th\")`.\n- **Complication images** need a label too, or VoiceOver falls back to the image asset name. \"Moon\" becomes `accessibilityLabel(\"A real-time view of the moon. Third quarter.\")`.\n- **SF Symbols** come with default labels (`\"Drop, fill\"`) that may not match your context — override with `accessibilityLabel` when the context warrants.\n- **Dynamic notifications** need the same accessibility treatment as main-app views — labels, hierarchy, action labels.\n\n## VoiceOver on watchOS\n\n### Let `NavigationLink` combine children\n\nA list row with four labels, four images, and two buttons forces VoiceOver to stop at every element. Grouping is usually what you want:\n\n```swift\n// If you're using accessibilityElement(children: .contain) to inspect the row, remove it:\nNavigationLink(destination: PlantDetail(plant: plant)) {\n    PlantRowContents(plant: plant)\n}\n// NavigationLink will combine children into a single accessible element automatically.\n```\n\n### Context in the label, not just the value\n\nVoiceOver without context is unusable. A task row reading \"5 days. 7 days. Medium.\" tells the user nothing:\n\n```swift\n// Wrong — VoiceOver reads \"5 days\"\nText(\"5 days\")\n\n// Right — reads \"Watering in 5 days\"\nstruct PlantTaskLabel: View {\n    let task: PlantTask\n\n    var body: some View {\n        Label(task.displayText, systemImage: task.iconName)\n            .accessibilityLabel(task.voiceOverDescription)\n    }\n}\n\nextension PlantTask {\n    var voiceOverDescription: String {\n        switch self {\n        case .water(let days): \"Watering in \\(days) days\"\n        case .fertilize(let days): \"Fertilizing in \\(days) days\"\n        case .sunlight(let level): \"Keep in \\(level) sunlight\"\n        }\n    }\n}\n```\n\n### Buttons need explicit labels when using system symbols\n\nA button that's just `Image(systemName: \"drop.fill\")` reads as \"Drop fill, button\". Override:\n\n```swift\nButton { log(.water) } label: {\n    Image(systemName: \"drop.fill\")\n}\n.accessibilityLabel(\"Log watering\")\n```\n\n## Custom Adjustable Controls\n\nA stepper built from two buttons and a label reads terribly: \"Watering frequency. Remove, button. 8. Add, button.\" The user can't tell the three elements belong together.\n\nCollapse them into one adjustable element:\n\n```swift\nstruct FrequencyCounter: View {\n    let task: PlantTask\n    @Binding var days: Int\n\n    var body: some View {\n        HStack {\n            Button { days -= 1 } label: { Image(systemName: \"minus.circle\") }\n            Text(\"\\(days)\").font(.title)\n            Button { days += 1 } label: { Image(systemName: \"plus.circle\") }\n        }\n        .accessibilityElement()                            // Ignore children\n        .accessibilityLabel(task.frequencyLabel)           // Read once on focus\n        .accessibilityValue(\"\\(days) days\")                // Read on every change\n        .accessibilityAdjustableAction { direction in\n            switch direction {\n            case .increment: days += 1\n            case .decrement: days -= 1\n            @unknown default: break\n            }\n        }\n    }\n}\n```\n\nThe result: VoiceOver says \"Watering frequency. 8 days. Adjustable.\" — and a swipe up/down adjusts it. One element, one label, one value, one action. That is the shape VoiceOver users expect for every custom control.\n\n## AssistiveTouch Support (watchOS 8+)\n\nAssistiveTouch gives users with motor impairments full control via hand gestures (clench, double-clench, pinch, double-pinch) or wrist-motion cursor steering. Two concepts shape what the framework expects from your UI: focusable elements and cursor frames.\n\n### Focusable elements\n\nAssistiveTouch cursor steps only through elements the system considers **interactive**. Default interactive elements:\n\n| Interactive | Non-interactive |\n|---|---|\n| `Button`, `Toggle` | `Text` (static) |\n| `NavigationLink` | `Label` (static) |\n| Elements with `.onTapGesture` | Elements with `.accessibilityHidden(true)` |\n| Elements with `.accessibilityAction` | Any element with `.disabled(true)` |\n| Elements with an actionable a11y trait | |\n\nThe trap is a `VStack` with an `.onTapGesture` on the whole stack — the stack is interactive, but the `Text` children inside aren't. AssistiveTouch focus skips the text:\n\n```swift\n// Problem — tap works, but AssistiveTouch never highlights the text\nVStack {\n    Text(\"Double Americano\").font(.headline)\n    Text(\"with oat milk\").font(.caption)\n}\n.onTapGesture { showDrinkDetail() }\n\n// Fix — opt the text into interactive treatment\nVStack {\n    Text(\"Double Americano\")\n        .font(.headline)\n        .accessibilityRespondsToUserInteraction(true)\n    Text(\"with oat milk\").font(.caption)\n}\n.onTapGesture { showDrinkDetail() }\n```\n\n`accessibilityRespondsToUserInteraction(true)` tells AssistiveTouch the element is part of the tap target.\n\n### Cursor frame\n\nThe AssistiveTouch cursor draws around the element's **tappable area**, not its visual bounds. A small glyph button has a small cursor that clips or hides the content. Expand the tap target with `contentShape`:\n\n```swift\n// Small visual element; tiny cursor frame; clips the icon\nNavigationLink(destination: SettingsView()) {\n    Image(systemName: \"ellipsis\")\n}\n\n// Generous tappable area; readable cursor\nNavigationLink(destination: SettingsView()) {\n    Image(systemName: \"ellipsis\")\n        .frame(width: 44, height: 44)\n        .contentShape(Circle())\n}\n```\n\nMinimum tappable region is 44×44pt regardless of visual size. `contentShape(Circle())` makes the AssistiveTouch cursor trace a circle that matches the visual icon shape.\n\n### Action menu\n\nAssistiveTouch's action menu (double-clench opens it) surfaces custom actions ahead of system actions for the focused element. Any `accessibilityAction` you already added for VoiceOver appears here automatically:\n\n```swift\nTaskRow(task: task)\n    .accessibilityAction(named: \"Complete\") { task.complete() }\n    .accessibilityAction(named: \"Reschedule\") { showReschedule() }\n```\n\nAdjustable elements surface increment/decrement. Custom actions without an explicit image use the first letter of the action name as the menu icon — provide a `Label` to override:\n\n```swift\n.accessibilityAction {\n    Label(\"Complete\", systemImage: \"checkmark.circle.fill\")\n} action: {\n    task.complete()\n}\n```\n\n## Double Tap (watchOS 11+)\n\nDouble Tap is a pinch-fingers gesture bound globally to the primary action of the frontmost view. For most UI, the primary action is the obvious \"default\" button: \"Start\" in a workout app, \"Reply\" on an incoming message.\n\n### Opt a button into Double Tap\n\n```swift\nButton(\"Start Workout\") {\n    session.start()\n}\n.handGestureShortcut(.primaryAction)\n```\n\n### Rules\n\n- Only one primary action per screen — Double Tap becomes ambiguous otherwise\n- Double Tap is an accelerator, not a replacement — every primary-action button must remain tappable\n- The user can disable Double Tap globally; don't make it the only path to any action\n- Controls (see `axiom-watchos/skills/controls-and-live-activities.md`) bind to Double Tap automatically when the control widget is frontmost\n\n## Testing Checklist\n\n| Test | How |\n|---|---|\n| VoiceOver reads every row with context | Settings → Accessibility → VoiceOver; swipe through a list and listen |\n| Dynamic Type reflows at `accessibility5` | Settings → Accessibility → Display & Text Size → Larger Text → All the way up |\n| Custom adjustable controls speak label + value separately | Focus and listen; swipe up/down to increment |\n| AssistiveTouch highlights every tappable element | Settings → Accessibility → AssistiveTouch → on; pinch-step through the screen |\n| AssistiveTouch cursor doesn't clip icons | Visual check with cursor visible |\n| Double Tap fires the intended action | Pinch with the same hand as the watch |\n| Complication text has spoken-form label | VoiceOver focus on the watch face with your complication |\n| Notification long-look is navigable | VoiceOver on a delivered notification |\n\n## Common Mistakes\n\n| Mistake | Symptom | Fix |\n|---|---|---|\n| Fixed font size on labels | Text stays small at accessibility sizes | Use a text style (`.title3`, `.body`, `.caption`); never `Font.system(size:)` for user-facing text |\n| `lineLimit(1)` on text that can vary in length | Truncation at large Dynamic Type; no way for users to read the content | Remove or raise `lineLimit`; switch layout vertically at accessibility sizes |\n| `accessibilityElement(children: .contain)` on a `NavigationLink` row | VoiceOver navigates past every inner element instead of grouping the row | Remove the modifier; `NavigationLink` combines children automatically |\n| System symbol button without `accessibilityLabel` | VoiceOver reads \"Drop fill, button\" | Add `.accessibilityLabel(\"Log watering\")` |\n| Custom stepper built from buttons without `accessibilityAdjustableAction` | VoiceOver reads two separate button labels and the value; no swipe-to-adjust | `accessibilityElement()` + `accessibilityLabel` + `accessibilityValue` + `accessibilityAdjustableAction` |\n| Static `Text` inside a tappable `VStack` isn't AssistiveTouch-focusable | Cursor skips rows; users can't reach the tap target | Add `.accessibilityRespondsToUserInteraction(true)` on the text elements |\n| Small glyph button without `contentShape` | AssistiveTouch cursor clips the icon; tap area smaller than 44×44 | `.frame(width: 44, height: 44).contentShape(...)` |\n| Custom accessibility actions with no image | Menu shows one-letter placeholders | Attach a `Label(_:systemImage:)` to each `accessibilityAction` |\n| Binding Double Tap to multiple primary actions | Double Tap becomes unpredictable on the screen | Use exactly one `.handGestureShortcut(.primaryAction)` per surface |\n| Using `handGestureShortcut(.primaryAction)` as the only path | Users who disable Double Tap can't reach the action | Keep the button tappable; Double Tap is an accelerator only |\n| Abbreviated complication text without an unabridged `accessibilityLabel` | VoiceOver reads \"Wed Mar 9\" instead of \"Wednesday, March 9th\" | Provide `accessibilityLabel` for every abbreviated string in complications and notifications |\n\n## Resources\n\n**WWDC**: 2021-10223, 2021-10308, 2024-10205\n\n**Docs**: /watchos-apps/create-accessible-experiences-for-watchos, /swiftui/environmentvalues/sizecategory, /swiftui/view/accessibilityelement(children:), /swiftui/view/accessibilityrespondstouserinteraction(_:), /swiftui/view/accessibilityadjustableaction(_:), /swiftui/view/accessibilityaction(_:_:), /swiftui/view/contentshape(_:), /swiftui/view/handgestureshortcut(_:isenabled:)\n\n**Skills**: axiom-accessibility (accessibility-diag, ux-flow-audit), axiom-watchos (design-for-watchos, smart-stack-and-complications, controls-and-live-activities)\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -364,7 +364,7 @@
           "level": 2,
           "startLine": 19,
           "endLine": 24,
-          "charCount": 652
+          "charCount": 635
         },
         {
           "heading": "Watch-Specific Assistive Technologies",
@@ -427,7 +427,7 @@
           "level": 2,
           "startLine": 308,
           "endLine": 315,
-          "charCount": 616
+          "charCount": 609
         }
       ]
     },
@@ -9870,7 +9870,7 @@
     "axiom-health--wellbeing-and-medications": {
       "name": "axiom-health--wellbeing-and-medications",
       "description": "Use when:",
-      "content": "# Wellbeing and Medications\n\n## When to Use This Skill\n\nUse when:\n- Reading or writing State of Mind samples (mood and emotion logging, iOS 18+)\n- Integrating the HealthKit Medications API (iOS 26+) — concepts, tracked medications, dose events\n- Logging symptoms associated with medications\n- Understanding the per-object authorization model for medications (different from every other HealthKit type)\n\n#### Related Skills\n\n- Use `fundamentals.md` for the HealthKit data model\n- Use `authorization-and-privacy.md` for authorization discipline — and read the per-object section in this skill, which differs from the norm\n- Use `queries.md` for one-shot sample reads\n- Use `sync-and-background.md` for anchored queries, the recommended pattern for State of Mind and medication dose events\n\n## Why Both Live Here\n\nState of Mind (mental wellbeing) and the Medications API are high-salience categories. Both can reveal mental-health, reproductive-health, HIV, or oncology diagnoses. Apple groups them together under \"sensitive health data,\" and both demand extra care in authorization, UI, and privacy disclosures.\n\n## State of Mind\n\n**Platform:** iOS 18+, iPadOS 18+, macOS 15+, visionOS 2+, watchOS 11+\n\n`HKStateOfMind` is a sample class capturing a user's emotional state at a point in time. Four orthogonal inputs:\n\n| Field | Type | Values |\n|---|---|---|\n| `kind` | `HKStateOfMind.Kind` | `.momentaryEmotion` (seconds to minutes) or `.dailyMood` (hours to days) |\n| `valence` | `Double` | Continuous `-1.0` (very unpleasant) to `+1.0` (very pleasant) |\n| `labels` | `[HKStateOfMind.Label]` | 38 emotion labels (happy, anxious, grateful, etc.) — multiple allowed |\n| `associations` | `[HKStateOfMind.Association]` | 18 life-area tags (work, family, fitness, etc.) — multiple allowed |\n\nA derived `valenceClassification: HKStateOfMind.ValenceClassification` bucket (7 cases from `veryUnpleasant` to `veryPleasant`) is available via `init(valence:)`.\n\n### Recording a sample\n\n```swift\nimport HealthKit\n\nlet sample = HKStateOfMind(\n    date: .now,\n    kind: .momentaryEmotion,\n    valence: 0.6,\n    labels: [.happy, .grateful],\n    associations: [.family, .selfCare]\n)\n\ntry await store.save(sample)\n```\n\n### Reading State of Mind\n\nUse `HKSamplePredicate.stateOfMind(_:)` with compound predicates over the wellbeing-specific helpers:\n\n```swift\nlet dateRange = HKQuery.predicateForSamples(\n    withStart: start, end: .now\n)\nlet associationPredicate = HKQuery.predicateForStatesOfMind(with: .work)\nlet labelPredicate = HKQuery.predicateForStatesOfMind(with: .stressed)\n\nlet compound = NSCompoundPredicate(andPredicateWithSubpredicates: [\n    dateRange, associationPredicate, labelPredicate\n])\n\nlet descriptor = HKSampleQueryDescriptor(\n    predicates: [HKSamplePredicate.stateOfMind(compound)],\n    sortDescriptors: []\n)\nlet results: [HKStateOfMind] = try await descriptor.result(for: store)\n```\n\n### Aggregating Valence Correctly\n\n**Common bug:** naively averaging valence across a mix of negative and positive values gives a misleading \"average mood.\" Apple's canonical pattern (WWDC 2024-10109) shifts the range to `[0, 2]` first:\n\n```swift\nlet adjusted = results.map { $0.valence + 1.0 }                 // [0, 2]\nlet totalAdjusted = adjusted.reduce(0.0, +)\nlet averageAdjusted = totalAdjusted / Double(adjusted.count)\nlet percent = Int(100.0 * averageAdjusted / 2.0)                // 0..100\n```\n\nWithout the shift, one +0.8 day and one –0.8 day average to 0 (neutral), misrepresenting two emotionally-intense days as flat.\n\n### SwiftUI Authorization Modifier\n\nHealthKitUI provides a declarative request modifier tied to a trigger:\n\n```swift\nimport HealthKitUI\n\nstruct MoodView: View {\n    @State private var triggerAuth = false\n    let store = HKHealthStore()\n\n    var body: some View {\n        Button(\"Start mood logging\") { triggerAuth = true }\n            .healthDataAccessRequest(\n                store: store,\n                shareTypes: [HKSampleType.stateOfMindType()],\n                readTypes: [HKSampleType.stateOfMindType()],\n                trigger: triggerAuth\n            ) { result in\n                // Handle Result<Bool, Error>\n            }\n    }\n}\n```\n\n## Medications API\n\n**Platform:** iOS 26+, iPadOS 26+, macOS 26+, visionOS 26+, watchOS 26+\n\n> The Health app has had medication tracking since iOS 15, but the **public Medications API is iOS 26 and later only**. Prior-OS apps cannot read or write medication data.\n\nThree types form the model:\n\n| Type | Role | Sample? |\n|---|---|---|\n| `HKMedicationConcept` | Conceptual medication identity (name, form, clinical codes like RxNorm) | Not a sample |\n| `HKUserAnnotatedMedication` | The user's tracked medication — wraps a concept with nickname, schedule, archive state | Not a sample |\n| `HKMedicationDoseEvent` | A single logged dose — taken, skipped, snoozed | Yes (HKSample subclass) |\n\n### `HKMedicationConcept`\n\nIdentity of a medication, with clinical codings (e.g., RxNorm code `105929` is piroxicam):\n\n- `identifier: String` — unique identifier\n- `displayText: String` — user-facing name\n- `generalForm` — tablet, capsule, cream, injection, inhaler, etc.\n- `relatedCodings: [HKClinicalCoding]` — FHIR-style codings for interop\n\n`HKClinicalCoding` has `system`, `version`, `code` properties. The supported coding systems aren't exhaustively documented; RxNorm is confirmed.\n\n### `HKUserAnnotatedMedication`\n\nA medication the user is tracking. Queried via `HKUserAnnotatedMedicationQueryDescriptor`:\n\n```swift\nlet descriptor = HKUserAnnotatedMedicationQueryDescriptor(predicate: nil, limit: 0)\nlet meds: [HKUserAnnotatedMedication] = try await descriptor.result(for: store)\n\nfor med in meds where !med.isArchived {\n    // Active medication; nickname, concept, etc.\n}\n```\n\nKey properties:\n- `medication: HKMedicationConcept` — the tracked concept\n- `nickname: String?` — user-set label\n- `hasSchedule: Bool` — user configured times in the Health app\n- `isArchived: Bool` — user marked as \"no longer taking\"\n\nUsers configure schedules in the Health app. The system handles notifications and dose logging. Third-party apps observe, they don't drive.\n\n### `HKMedicationDoseEvent`\n\nA sample recording a single dose:\n\n```swift\nlet predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [\n    HKQuery.predicateForSamples(withStart: startOfDay, end: .now),\n    HKMedicationDoseEvent.predicateForMedication(concept),\n    HKMedicationDoseEvent.predicateForLogStatus(.taken)\n])\n\nlet descriptor = HKSampleQueryDescriptor(\n    sampleType: HKMedicationDoseEvent.self,\n    predicate: predicate,\n    sortDescriptors: [SortDescriptor(\\.startDate, order: .reverse)],\n    limit: 1\n)\nlet doses = try await descriptor.result(for: store)\n```\n\nKey properties:\n- `medicationConceptIdentifier: String`\n- `logStatus` — whether the user marked the dose taken, skipped, or snoozed\n- `scheduleType` — scheduled vs. \"as needed\"\n- `scheduledDate: Date?` and `scheduledDoseQuantity: HKQuantity?`\n- `doseQuantity: HKQuantity?` — actual amount taken\n- `unit: HKUnit`\n\n## Per-Object Authorization (Medications-Specific)\n\n**This is the biggest departure from normal HealthKit.** Medications do not use the familiar per-type authorization sheet. Instead, the user authorizes your app medication-by-medication, inside the Health app.\n\nConsequences:\n\n- You cannot request medication access via the normal `requestAuthorization` sheet — it will not appear.\n- When a user adds a new medication in Health, Apple presents a per-app toggle inline. Your app is not notified; on next query, the new medication just appears.\n- You cannot know which medications the user has but denied access to. From your app's point of view, denied medications simply do not exist.\n- Use `HKUserAnnotatedMedicationType().requiresPerObjectAuthorization()` to branch if needed.\n\nThis is the same privacy-protective design as HealthKit reads broadly — denials are invisible — but scoped per medication instead of per type.\n\n## Linking Medications to Symptoms (No Built-in API)\n\nThere is no framework-level API for \"this symptom was caused by that medication.\" Apple's sample app maintains a client-side dictionary keyed by RxNorm code to map medications to relevant symptoms:\n\n```swift\nlet symptomMap: [String: [SymptomModel]] = [\n    \"105929\": [                                    // Piroxicam\n        SymptomModel(name: \"Headache\", categoryID: .headache),\n        SymptomModel(name: \"Nausea\", categoryID: .nausea),\n        SymptomModel(name: \"Diarrhea\", categoryID: .diarrhea),\n    ],\n    // ...\n]\n```\n\nSymptoms themselves are ordinary `HKCategorySample`:\n\n```swift\nenum SymptomIntensity: Int {\n    case none = 0, mild, moderate, severe, extreme\n}\n\nlet sample = HKCategorySample(\n    type: HKCategoryType(.headache),\n    value: SymptomIntensity.moderate.rawValue,\n    start: .now,\n    end: .now\n)\ntry await store.save(sample)\n```\n\n## Info.plist\n\nBoth State of Mind and Medications require the same keys as any HealthKit feature:\n\n- `NSHealthShareUsageDescription`\n- `NSHealthUpdateUsageDescription`\n\nWrite purpose strings that honestly describe why the app needs mental-health or medication data. These categories are the most likely to trigger user denial or App Review scrutiny.\n\n## Common Mistakes\n\n| Mistake | Fix |\n|---|---|\n| Averaging raw valence across a mix of negative and positive days | Shift to `[0, 2]` by `valence + 1.0` before averaging, then rescale to `[0, 100]`. |\n| Trying to request medication access via `requestAuthorization` | Medications use per-object authorization managed inside the Health app. The normal sheet does nothing for medication types. |\n| Expecting a framework API linking symptoms to medications | There isn't one. Apple's sample uses an RxNorm → symptom-list dictionary client-side. |\n| Using the Medications API on iOS 25 or earlier | API is iOS 26+. Check with `@available(iOS 26.0, *)`. |\n| Assuming the Health app \"one mood per day\" rule reflects the framework | Daily mood samples can be saved multiple times per day via the API. The Health app UI shows one, but your data model can differ. |\n| Requesting every `HKStateOfMind.Label` and `.Association` up front | Request the minimum set for your feature. Broad requests feel invasive for mental-health data. |\n| Displaying raw valence numbers to users | Users understand emotional language, not `-0.2 to 0.8`. Map to the 7-bucket `ValenceClassification` or emoji. |\n| Failing to treat denied medication reads as \"no data\" | Per privacy design, denials are invisible; empty queries must render as empty states, not errors. |\n\n## Resources\n\n**WWDC**: 2024-10109, 2025-321\n\n**Docs**: /healthkit/hkstateofmind, /healthkit/hkmedicationconcept, /healthkit/hkuserannotatedmedication, /healthkit/hkmedicationdoseevent, /healthkit/hkclinicalcoding, /healthkit/hkuserannotatedmedicationquerydescriptor, /healthkit/logging-symptoms-associated-with-a-medication, /healthkit/visualizing-healthkit-state-of-mind-in-visionos, /healthkitui/healthdataaccessrequest(store:sharetypes:readtypes:trigger:completion:)\n\n**Skills**: axiom-health (fundamentals, authorization-and-privacy, queries, sync-and-background)\n",
+      "content": "# Wellbeing and Medications\n\n## When to Use This Skill\n\nUse when:\n- Reading or writing State of Mind samples (mood and emotion logging, iOS 18+)\n- Integrating the HealthKit Medications API (iOS 26+) — concepts, tracked medications, dose events\n- Logging symptoms associated with medications\n- Understanding the per-object authorization model for medications (different from every other HealthKit type)\n\n#### Related Skills\n\n- Use `fundamentals.md` for the HealthKit data model\n- Use `authorization-and-privacy.md` for authorization discipline — and read the per-object section in this skill, which differs from the norm\n- Use `queries.md` for one-shot sample reads\n- Use `sync-and-background.md` for anchored queries, the recommended pattern for State of Mind and medication dose events\n\n## Why Both Live Here\n\nState of Mind (mental wellbeing) and the Medications API are high-salience categories. Both can reveal mental-health, reproductive-health, HIV, or oncology diagnoses. Apple groups them together under \"sensitive health data,\" and both demand extra care in authorization, UI, and privacy disclosures.\n\n## State of Mind\n\n**Platform:** iOS 18+, iPadOS 18+, macOS 15+, visionOS 2+, watchOS 11+\n\n`HKStateOfMind` is a sample class capturing a user's emotional state at a point in time. Four orthogonal inputs:\n\n| Field | Type | Values |\n|---|---|---|\n| `kind` | `HKStateOfMind.Kind` | `.momentaryEmotion` (seconds to minutes) or `.dailyMood` (hours to days) |\n| `valence` | `Double` | Continuous `-1.0` (very unpleasant) to `+1.0` (very pleasant) |\n| `labels` | `[HKStateOfMind.Label]` | 38 emotion labels (happy, anxious, grateful, etc.) — multiple allowed |\n| `associations` | `[HKStateOfMind.Association]` | 18 life-area tags (work, family, fitness, etc.) — multiple allowed |\n\nA derived `valenceClassification: HKStateOfMind.ValenceClassification` bucket (7 cases from `veryUnpleasant` to `veryPleasant`) is available via `init(valence:)`.\n\n### Recording a sample\n\n```swift\nimport HealthKit\n\nlet sample = HKStateOfMind(\n    date: .now,\n    kind: .momentaryEmotion,\n    valence: 0.6,\n    labels: [.happy, .grateful],\n    associations: [.family, .selfCare]\n)\n\ntry await store.save(sample)\n```\n\n### Reading State of Mind\n\nUse `HKSamplePredicate.stateOfMind(_:)` with compound predicates over the wellbeing-specific helpers:\n\n```swift\nlet dateRange = HKQuery.predicateForSamples(\n    withStart: start, end: .now\n)\nlet associationPredicate = HKQuery.predicateForStatesOfMind(with: .work)\nlet labelPredicate = HKQuery.predicateForStatesOfMind(with: .stressed)\n\nlet compound = NSCompoundPredicate(andPredicateWithSubpredicates: [\n    dateRange, associationPredicate, labelPredicate\n])\n\nlet descriptor = HKSampleQueryDescriptor(\n    predicates: [HKSamplePredicate.stateOfMind(compound)],\n    sortDescriptors: []\n)\nlet results: [HKStateOfMind] = try await descriptor.result(for: store)\n```\n\n### Aggregating Valence Correctly\n\n**Common bug:** naively averaging valence across a mix of negative and positive values gives a misleading \"average mood.\" Apple's canonical pattern (WWDC 2024-10109) shifts the range to `[0, 2]` first:\n\n```swift\nlet adjusted = results.map { $0.valence + 1.0 }                 // [0, 2]\nlet totalAdjusted = adjusted.reduce(0.0, +)\nlet averageAdjusted = totalAdjusted / Double(adjusted.count)\nlet percent = Int(100.0 * averageAdjusted / 2.0)                // 0..100\n```\n\nWithout the shift, one +0.8 day and one –0.8 day average to 0 (neutral), misrepresenting two emotionally-intense days as flat.\n\n### SwiftUI Authorization Modifier\n\nHealthKitUI provides a declarative request modifier tied to a trigger:\n\n```swift\nimport HealthKitUI\n\nstruct MoodView: View {\n    @State private var triggerAuth = false\n    let store = HKHealthStore()\n\n    var body: some View {\n        Button(\"Start mood logging\") { triggerAuth = true }\n            .healthDataAccessRequest(\n                store: store,\n                shareTypes: [HKSampleType.stateOfMindType()],\n                readTypes: [HKSampleType.stateOfMindType()],\n                trigger: triggerAuth\n            ) { result in\n                // Handle Result<Bool, Error>\n            }\n    }\n}\n```\n\n## Medications API\n\n**Platform:** iOS 26+, iPadOS 26+, macOS 26+, visionOS 26+, watchOS 26+\n\n> The Health app has had medication tracking since iOS 15, but the **public Medications API is iOS 26 and later only**. Prior-OS apps cannot read or write medication data.\n\nThree types form the model:\n\n| Type | Role | Sample? |\n|---|---|---|\n| `HKMedicationConcept` | Conceptual medication identity (name, form, clinical codes like RxNorm) | Not a sample |\n| `HKUserAnnotatedMedication` | The user's tracked medication — wraps a concept with nickname, schedule, archive state | Not a sample |\n| `HKMedicationDoseEvent` | A single logged dose — taken, skipped, snoozed | Yes (HKSample subclass) |\n\n### `HKMedicationConcept`\n\nIdentity of a medication, with clinical codings (e.g., RxNorm code `105929` is piroxicam):\n\n- `identifier: String` — unique identifier\n- `displayText: String` — user-facing name\n- `generalForm` — tablet, capsule, cream, injection, inhaler, etc.\n- `relatedCodings: [HKClinicalCoding]` — FHIR-style codings for interop\n\n`HKClinicalCoding` has `system`, `version`, `code` properties. The supported coding systems aren't exhaustively documented; RxNorm is confirmed.\n\n### `HKUserAnnotatedMedication`\n\nA medication the user is tracking. Queried via `HKUserAnnotatedMedicationQueryDescriptor`:\n\n```swift\nlet descriptor = HKUserAnnotatedMedicationQueryDescriptor(predicate: nil, limit: 0)\nlet meds: [HKUserAnnotatedMedication] = try await descriptor.result(for: store)\n\nfor med in meds where !med.isArchived {\n    // Active medication; nickname, concept, etc.\n}\n```\n\nKey properties:\n- `medication: HKMedicationConcept` — the tracked concept\n- `nickname: String?` — user-set label\n- `hasSchedule: Bool` — user configured times in the Health app\n- `isArchived: Bool` — user marked as \"no longer taking\"\n\nUsers configure schedules in the Health app. The system handles notifications and dose logging. Third-party apps observe, they don't drive.\n\n### `HKMedicationDoseEvent`\n\nA sample recording a single dose:\n\n```swift\nlet predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [\n    HKQuery.predicateForSamples(withStart: startOfDay, end: .now),\n    HKMedicationDoseEvent.predicateForMedication(concept),\n    HKMedicationDoseEvent.predicateForLogStatus(.taken)\n])\n\nlet descriptor = HKSampleQueryDescriptor(\n    predicates: [HKSamplePredicate.medicationDoseEvent(predicate)],\n    sortDescriptors: [SortDescriptor(\\.startDate, order: .reverse)],\n    limit: 1\n)\nlet doses = try await descriptor.result(for: store)\n```\n\nKey properties:\n- `medicationConceptIdentifier: String`\n- `logStatus` — whether the user marked the dose taken, skipped, or snoozed\n- `scheduleType` — scheduled vs. \"as needed\"\n- `scheduledDate: Date?` and `scheduledDoseQuantity: HKQuantity?`\n- `doseQuantity: HKQuantity?` — actual amount taken\n- `unit: HKUnit`\n\n## Per-Object Authorization (Medications-Specific)\n\n**This is the biggest departure from normal HealthKit.** Medications do not use the familiar per-type authorization sheet. Instead, the user authorizes your app medication-by-medication, inside the Health app.\n\nConsequences:\n\n- You cannot request medication access via the normal `requestAuthorization` sheet — it will not appear.\n- When a user adds a new medication in Health, Apple presents a per-app toggle inline. Your app is not notified; on next query, the new medication just appears.\n- You cannot know which medications the user has but denied access to. From your app's point of view, denied medications simply do not exist.\n- Use `HKUserAnnotatedMedicationType().requiresPerObjectAuthorization()` to branch if needed.\n\nThis is the same privacy-protective design as HealthKit reads broadly — denials are invisible — but scoped per medication instead of per type.\n\n## Linking Medications to Symptoms (No Built-in API)\n\nThere is no framework-level API for \"this symptom was caused by that medication.\" Apple's sample app maintains a client-side dictionary keyed by RxNorm code to map medications to relevant symptoms:\n\n```swift\nlet symptomMap: [String: [SymptomModel]] = [\n    \"105929\": [                                    // Piroxicam\n        SymptomModel(name: \"Headache\", categoryID: .headache),\n        SymptomModel(name: \"Nausea\", categoryID: .nausea),\n        SymptomModel(name: \"Diarrhea\", categoryID: .diarrhea),\n    ],\n    // ...\n]\n```\n\nSymptoms themselves are ordinary `HKCategorySample`:\n\n```swift\nenum SymptomIntensity: Int {\n    case none = 0, mild, moderate, severe, extreme\n}\n\nlet sample = HKCategorySample(\n    type: HKCategoryType(.headache),\n    value: SymptomIntensity.moderate.rawValue,\n    start: .now,\n    end: .now\n)\ntry await store.save(sample)\n```\n\n## Info.plist\n\nBoth State of Mind and Medications require the same keys as any HealthKit feature:\n\n- `NSHealthShareUsageDescription`\n- `NSHealthUpdateUsageDescription`\n\nWrite purpose strings that honestly describe why the app needs mental-health or medication data. These categories are the most likely to trigger user denial or App Review scrutiny.\n\n## Common Mistakes\n\n| Mistake | Fix |\n|---|---|\n| Averaging raw valence across a mix of negative and positive days | Shift to `[0, 2]` by `valence + 1.0` before averaging, then rescale to `[0, 100]`. |\n| Trying to request medication access via `requestAuthorization` | Medications use per-object authorization managed inside the Health app. The normal sheet does nothing for medication types. |\n| Expecting a framework API linking symptoms to medications | There isn't one. Apple's sample uses an RxNorm → symptom-list dictionary client-side. |\n| Using the Medications API on iOS 25 or earlier | API is iOS 26+. Check with `@available(iOS 26.0, *)`. |\n| Assuming the Health app \"one mood per day\" rule reflects the framework | Daily mood samples can be saved multiple times per day via the API. The Health app UI shows one, but your data model can differ. |\n| Requesting every `HKStateOfMind.Label` and `.Association` up front | Request the minimum set for your feature. Broad requests feel invasive for mental-health data. |\n| Displaying raw valence numbers to users | Users understand emotional language, not `-0.2 to 0.8`. Map to the 7-bucket `ValenceClassification` or emoji. |\n| Failing to treat denied medication reads as \"no data\" | Per privacy design, denials are invisible; empty queries must render as empty states, not errors. |\n\n## Resources\n\n**WWDC**: 2024-10109, 2025-321\n\n**Docs**: /healthkit/hkstateofmind, /healthkit/hkmedicationconcept, /healthkit/hkuserannotatedmedication, /healthkit/hkmedicationdoseevent, /healthkit/hkclinicalcoding, /healthkit/hkuserannotatedmedicationquerydescriptor, /healthkit/logging-symptoms-associated-with-a-medication, /healthkit/visualizing-healthkit-state-of-mind-in-visionos, /healthkitui/healthdataaccessrequest(store:sharetypes:readtypes:trigger:completion:)\n\n**Skills**: axiom-health (fundamentals, authorization-and-privacy, queries, sync-and-background)\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -9912,42 +9912,42 @@
           "heading": "Medications API",
           "level": 2,
           "startLine": 112,
-          "endLine": 185,
-          "charCount": 2846
+          "endLine": 184,
+          "charCount": 2844
         },
         {
           "heading": "Per-Object Authorization (Medications-Specific)",
           "level": 2,
-          "startLine": 186,
-          "endLine": 198,
+          "startLine": 185,
+          "endLine": 197,
           "charCount": 924
         },
         {
           "heading": "Linking Medications to Symptoms (No Built-in API)",
           "level": 2,
-          "startLine": 199,
-          "endLine": 229,
+          "startLine": 198,
+          "endLine": 228,
           "charCount": 908
         },
         {
           "heading": "Info.plist",
           "level": 2,
-          "startLine": 230,
-          "endLine": 238,
+          "startLine": 229,
+          "endLine": 237,
           "charCount": 350
         },
         {
           "heading": "Common Mistakes",
           "level": 2,
-          "startLine": 239,
-          "endLine": 251,
+          "startLine": 238,
+          "endLine": 250,
           "charCount": 1340
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 252,
-          "endLine": 259,
+          "startLine": 251,
+          "endLine": 258,
           "charCount": 569
         }
       ]
@@ -10059,7 +10059,7 @@
     "axiom-health--workouts": {
       "name": "axiom-health--workouts",
       "description": "Use when:",
-      "content": "# HealthKit Workouts\n\n## When to Use This Skill\n\nUse when:\n- Building a workout tracking app on watchOS, iOS, or iPadOS\n- Deciding between a live workout session (`HKWorkoutSession`) and just logging a finished `HKWorkout`\n- Implementing workout pause/resume, multi-activity (triathlon-style), or mirroring between watch and iPhone\n- Handling workout recovery after an app or process termination\n- Adopting iOS 26's new ability to originate workout sessions from iPhone (previously watch-only)\n- Implementing Always On support for workout views\n- Querying or reading historical `HKWorkout` and `HKWorkoutActivity` data\n\n#### Related Skills\n\n- Use `fundamentals.md` for the HKObjectType hierarchy and `HKHealthStore` setup\n- Use `authorization-and-privacy.md` before adding workout write access (workouts require write authorization)\n- Use `workoutkit.md` for planned/scheduled custom workouts — distinct from live sessions\n- Use `axiom-watchos` (`skills/platform-basics.md`) for watch-specific presentation concerns (Always On, Smart Stack, background mode)\n- Use `axiom-concurrency` for actor isolation around session delegates\n\n## Two Distinct Workouts APIs\n\n| API | Purpose | Notes |\n|---|---|---|\n| `HKWorkoutSession` + `HKLiveWorkoutBuilder` | Live in-progress workout — collects data from sensors, persists an `HKWorkout` at the end | Covered here |\n| `HKWorkout.init(...)` + `HKHealthStore.save` | Logging a historical workout (e.g., from a server or manual entry) | Simple write path — see `queries.md` |\n| WorkoutKit | Planned or scheduled custom workouts that the Workout app executes | Covered in `workoutkit.md` |\n\nThis skill covers the first path — live sessions with sensor collection.\n\n## Platform Availability — Read Carefully\n\n| Class | Platform |\n|---|---|\n| `HKWorkoutSession` | iOS 17+, iPadOS 17+, watchOS 2+ |\n| `HKLiveWorkoutBuilder`, `HKLiveWorkoutDataSource`, `HKLiveWorkoutBuilderDelegate` | **iOS 26+, iPadOS 26+, watchOS 5+** |\n| `HKWorkoutSession.startMirroringToCompanionDevice` | **watchOS 10+ only** |\n| `HKHealthStore.recoverActiveWorkoutSession` | **iOS 26+, iPadOS 26+, watchOS 10+** |\n\nThe critical new-in-2025 change: iPhone could *receive* a mirrored workout session since iOS 17, but iOS 26 is the first release where iPhone can **originate** a session and drive a local `HKLiveWorkoutBuilder`. Before iOS 26, iPhone workout tracking meant calling `HKWorkout(init:)` retrospectively — no live sensor collection.\n\n## The Session State Machine\n\n```dot\ndigraph workout_state {\n    notStarted [shape=ellipse];\n    prepared [shape=ellipse];\n    running [shape=ellipse];\n    paused [shape=ellipse];\n    stopped [shape=ellipse];\n    ended [shape=doublecircle];\n\n    notStarted -> prepared [label=\"prepare()\"];\n    prepared -> running [label=\"startActivity(with:)\"];\n    running -> paused [label=\"pause()\"];\n    paused -> running [label=\"resume()\"];\n    running -> stopped [label=\"stopActivity(with:)\"];\n    paused -> stopped [label=\"stopActivity(with:)\"];\n    stopped -> ended [label=\"end()\"];\n}\n```\n\n**The six states** (`HKWorkoutSessionState`):\n\n| State | Meaning |\n|---|---|\n| `.notStarted` | Session created, not yet prepared |\n| `.prepared` | Readied for fast start (sensors warm) |\n| `.running` | Activity tracking live |\n| `.paused` | Paused, ready to resume |\n| `.stopped` | Activity halted but session not yet ended — **builder still needs to finish** |\n| `.ended` | Terminal; session is fully closed |\n\n**`.stopped` is not `.ended`.** This is the single most common bug. `stopActivity(with:)` transitions to `.stopped` — the workout sample has NOT been saved yet. You must run the end sequence below before calling `session.end()`.\n\n## The End Sequence (Do This Exactly)\n\n```swift\n// 1. In the UI event that finishes the workout:\nsession.stopActivity(with: .now)\n\n// 2. In the session delegate:\nfunc workoutSession(\n    _ session: HKWorkoutSession,\n    didChangeTo toState: HKWorkoutSessionState,\n    from fromState: HKWorkoutSessionState,\n    date: Date\n) {\n    guard toState == .stopped, let builder = self.builder else { return }\n\n    Task {\n        try await builder.endCollection(at: date)\n        let finishedWorkout = try await builder.finishWorkout()\n        session.end()\n        // finishedWorkout is now saved as an HKWorkout in the store.\n    }\n}\n```\n\nIf you call `session.end()` before `builder.endCollection(at:) + builder.finishWorkout()`, the workout is not persisted. There is no \"save-on-end\" convenience.\n\n## Canonical Session Setup\n\n```swift\nimport HealthKit\n\n@MainActor\nfinal class WorkoutController: NSObject {\n    let store = HKHealthStore()\n    var session: HKWorkoutSession?\n    var builder: HKLiveWorkoutBuilder?\n\n    func startRun() throws {\n        let config = HKWorkoutConfiguration()\n        config.activityType = .running\n        config.locationType = .outdoor\n\n        let session = try HKWorkoutSession(healthStore: store, configuration: config)\n        let builder = session.associatedWorkoutBuilder()\n\n        builder.dataSource = HKLiveWorkoutDataSource(\n            healthStore: store,\n            workoutConfiguration: config\n        )\n\n        session.delegate = self\n        builder.delegate = self\n\n        session.startActivity(with: .now)\n        Task { try await builder.beginCollection(at: .now) }\n\n        self.session = session\n        self.builder = builder\n    }\n}\n\nextension WorkoutController: HKWorkoutSessionDelegate {\n    nonisolated func workoutSession(\n        _ session: HKWorkoutSession,\n        didFailWithError error: Error\n    ) {\n        // Log and degrade — HKWorkoutSessionError.anotherWorkoutSessionStarted is a common one.\n    }\n\n    nonisolated func workoutSession(\n        _ session: HKWorkoutSession,\n        didChangeTo toState: HKWorkoutSessionState,\n        from fromState: HKWorkoutSessionState,\n        date: Date\n    ) {\n        // Handle .stopped transition here for end sequence.\n    }\n}\n\nextension WorkoutController: HKLiveWorkoutBuilderDelegate {\n    nonisolated func workoutBuilder(\n        _ builder: HKLiveWorkoutBuilder,\n        didCollectDataOf types: Set<HKSampleType>\n    ) {\n        // For each type in `types`, call builder.statistics(for: type) to update UI.\n    }\n\n    nonisolated func workoutBuilderDidCollectEvent(_ builder: HKLiveWorkoutBuilder) {\n        // Fires when a pause/resume/lap event is appended.\n    }\n}\n```\n\n**Delegate method isolation.** HealthKit calls these on its own queue — mark them `nonisolated` and hop to `@MainActor` inside when updating UI. See `axiom-concurrency` for the full pattern.\n\n## `HKLiveWorkoutDataSource` — What Data Is Collected\n\nData sources tell the builder which quantity types to auto-collect from sensors. Default collection depends on the activity type in the configuration (running gets heart rate + distance + energy; swimming adds stroke count and SWOLF).\n\n```swift\nlet source = HKLiveWorkoutDataSource(\n    healthStore: store,\n    workoutConfiguration: config\n)\n\n// Add a type the default set doesn't include:\nsource.enableCollection(for: HKQuantityType(.runningPower), predicate: nil)\n\n// Remove a default if you don't need it:\nsource.disableCollection(for: HKQuantityType(.basalEnergyBurned))\n```\n\nFor multi-activity workouts, update the data source's `typesToCollect` when switching activities — swimming and cycling collect different types, and leaving stale types wastes sensor time.\n\n## Recovery — Different Entry Points Per Platform\n\nWorkout sessions survive app termination. If iOS force-quits your app or the app crashes mid-session, the workout continues recording on the watch's sensors, and you can reconnect to it on next launch.\n\n### watchOS recovery\n\n```swift\nclass ExtensionDelegate: NSObject, WKExtensionDelegate {\n    func handleActiveWorkoutRecovery() {\n        Task {\n            do {\n                let session = try await store.recoverActiveWorkoutSession()\n                // Reattach delegate, update UI.\n            } catch {\n                // No active session to recover.\n            }\n        }\n    }\n}\n```\n\n### iOS 26+ recovery\n\n```swift\n@UIApplicationMain\nclass AppDelegate: UIResponder, UIApplicationDelegate {\n    func application(\n        _ application: UIApplication,\n        configurationForConnecting connectingSceneSession: UISceneSession,\n        options: UIScene.ConnectionOptions\n    ) -> UISceneConfiguration {\n        if options.shouldHandleActiveWorkoutRecovery {\n            // Configure a scene that calls recoverActiveWorkoutSession on launch.\n        }\n        return UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)\n    }\n}\n```\n\nOn both platforms, `recoverActiveWorkoutSession` throws if no session is active. Always wrap in `do/try/catch` and degrade.\n\n## Multi-Device Mirroring\n\nAs of watchOS 10 + iOS 17, a watch-originated session can mirror to the paired iPhone so that a companion app on iPhone shows live metrics.\n\n```swift\n// On watchOS (the primary):\ntry await session.startMirroringToCompanionDevice()\n\n// On iOS (receives):\n// Register HKWorkoutSessionMirroringStartHandler on the HKHealthStore.\nstore.workoutSessionMirroringStartHandler = { session in\n    // A watch workout just started mirroring. Attach UI.\n}\n```\n\n**Constraints:**\n\n- Handler fires on a background queue; hop to `@MainActor` for UI.\n- The handler may fire multiple times during a single workout — every time the iPhone reconnects (user picks up phone, network hiccup). Handle re-entry idempotently.\n- **10-second launch budget:** if the iPhone app is backgrounded, iOS wakes it for up to 10 seconds to receive the mirror-start event. If your app doesn't register state fast enough, the mirror is missed. Register `workoutSessionMirroringStartHandler` in `application(_:didFinishLaunchingWithOptions:)`, not later.\n- Use `session.sendToRemoteWorkoutSession(data:)` for custom cross-device messaging during the workout (e.g., chat, coach signals).\n\n## Multi-Activity Workouts (Triathlons)\n\nFor workouts where activity type changes (swim → bike → run), use multi-activity mode.\n\n```swift\n// Initial configuration sets the container:\nlet container = HKWorkoutConfiguration()\ncontainer.activityType = .swimBikeRun\n\nlet session = try HKWorkoutSession(healthStore: store, configuration: container)\nsession.startActivity(with: .now)\n\n// Begin each sub-activity:\nlet swim = HKWorkoutConfiguration()\nswim.activityType = .swimming\nswim.swimmingLocationType = .openWater\nsession.beginNewActivity(configuration: swim, date: .now, metadata: nil)\n\n// Later, transition:\nsession.beginNewActivity(configuration: cycleConfig, date: .now, metadata: nil)\n// HealthKit ends the previous activity automatically.\n```\n\nActivities cannot overlap in time and need not be contiguous — insert an activity of type `.transition` between the sports to capture transition metrics.\n\nPer-activity statistics are available via `HKWorkoutActivity.statistics(for:)` on the saved workout.\n\n## Always On Considerations (watchOS)\n\nWhen the watch locks mid-workout, the workout view must continue to display. Apple mandates a **1 Hz maximum refresh rate** in the low-power state — one update per second, nothing finer.\n\n```swift\nstruct WorkoutView: View {\n    var body: some View {\n        TimelineView(.periodic(from: .now, by: 1)) { context in\n            Text(duration.formatted())\n        }\n    }\n}\n```\n\nBranch on `TimelineView`'s `mode == .lowFrequency` to show a simpler view during locked state. Avoid animation during low-frequency updates — the system won't render it anyway.\n\n## Info.plist and Entitlements\n\n**Session-capable apps require:**\n\n- Xcode capability: **HealthKit** (adds `com.apple.developer.healthkit`)\n- `NSHealthShareUsageDescription` and `NSHealthUpdateUsageDescription` in Info.plist\n- For watchOS: add `WKBackgroundModes` with `workout-processing` to `Info.plist`\n- For iOS 26 session origination: background mode key is documented in Apple's \"Building a workout app for iPhone and iPad\" sample (verify against the latest sample before shipping — this key is new enough that multiple names have circulated)\n\n**Mirroring iPhone app:** must include a corresponding watchOS app target in the same bundle.\n\n## Querying Workouts After the Fact\n\nWorkouts are just `HKSample` subtypes — read them with a sample query:\n\n```swift\nlet predicate = HKSamplePredicate<HKWorkout>.workout(\n    NSCompoundPredicate(andPredicateWithSubpredicates: [\n        HKQuery.predicateForWorkouts(with: .running),\n        HKQuery.predicateForSamples(withStart: thirtyDaysAgo, end: nil)\n    ])\n)\n\nlet descriptor = HKSampleQueryDescriptor(\n    predicates: [predicate],\n    sortDescriptors: [SortDescriptor(\\.startDate, order: .reverse)],\n    limit: 50\n)\n\nlet runs: [HKWorkout] = try await descriptor.result(for: store)\n```\n\nFor per-activity statistics, iterate `workout.workoutActivities` — each `HKWorkoutActivity` carries its own type + duration + stats.\n\n## Common Mistakes\n\n| Mistake | Fix |\n|---|---|\n| Calling `session.end()` without first running `endCollection` + `finishWorkout` | The workout is not saved. Always: `stopActivity` → wait for `.stopped` → `endCollection` → `finishWorkout` → `end`. |\n| Treating `.stopped` as the terminal state | It's not. `.ended` is terminal. `.stopped` means \"activity halted but builder still needs to finish.\" |\n| Not implementing recovery | After app termination, the session keeps running on the watch. Without `recoverActiveWorkoutSession`, users see \"you don't have an active workout\" even though their heart rate is still being logged. |\n| Assuming iOS can originate sessions before iOS 26 | Pre-26, iPhone can only mirror a watch-initiated session. It cannot drive a local `HKLiveWorkoutBuilder`. |\n| Registering `workoutSessionMirroringStartHandler` in a view's `onAppear` | The iPhone gets 10 seconds after wake to receive the mirror event. Register in app-launch code. |\n| Using `@MainActor` delegate callbacks directly | HealthKit calls these on its own queue. Mark methods `nonisolated` and hop to `@MainActor` internally. |\n| Collecting all quantity types \"just in case\" with `HKLiveWorkoutDataSource` | Only enable types you actually display or save. Extra types waste battery. |\n| Full-screen animation during Always On | The 1 Hz refresh cap means your animation won't render smoothly anyway. Use a simplified view in the `.lowFrequency` timeline branch. |\n| Creating multiple concurrent sessions | `HKWorkoutSessionError.anotherWorkoutSessionStarted` fires and ends your session. Enforce one-at-a-time at your UI layer. |\n| Missing `workout-processing` background mode on watch | Session runs only while app is foreground. Add `WKBackgroundModes` → `workout-processing`. |\n| Writing retrospective workouts and also running live sessions for the same activity | You get duplicates. Choose one path per activity. |\n\n## Resources\n\n**WWDC**: 2021-10009, 2022-10005, 2023-10023, 2025-322\n\n**Docs**: /healthkit/workouts-and-activity-rings, /healthkit/running-workout-sessions, /healthkit/hkworkoutsession, /healthkit/hkliveworkoutbuilder, /healthkit/hkliveworkoutbuilderdelegate, /healthkit/hkliveworkoutdatasource, /healthkit/hkworkoutconfiguration, /healthkit/hkworkout, /healthkit/hkworkoutactivity, /healthkit/hkhealthstore/recoveractiveworkoutsession(completion:), /healthkit/build-a-workout-app-for-apple-watch, /healthkit/building-a-workout-app-for-iphone-and-ipad\n\n**Skills**: axiom-health (fundamentals, authorization-and-privacy, queries, workoutkit), axiom-watchos, axiom-concurrency\n",
+      "content": "# HealthKit Workouts\n\n## When to Use This Skill\n\nUse when:\n- Building a workout tracking app on watchOS, iOS, or iPadOS\n- Deciding between a live workout session (`HKWorkoutSession`) and just logging a finished `HKWorkout`\n- Implementing workout pause/resume, multi-activity (triathlon-style), or mirroring between watch and iPhone\n- Handling workout recovery after an app or process termination\n- Adopting iOS 26's new ability to originate workout sessions from iPhone (previously watch-only)\n- Implementing Always On support for workout views\n- Querying or reading historical `HKWorkout` and `HKWorkoutActivity` data\n\n#### Related Skills\n\n- Use `fundamentals.md` for the HKObjectType hierarchy and `HKHealthStore` setup\n- Use `authorization-and-privacy.md` before adding workout write access (workouts require write authorization)\n- Use `workoutkit.md` for planned/scheduled custom workouts — distinct from live sessions\n- Use `axiom-watchos` (`skills/platform-basics.md`) for watch-specific presentation concerns (Always On, Smart Stack, background mode)\n- Use `axiom-concurrency` for actor isolation around session delegates\n\n## Two Distinct Workouts APIs\n\n| API | Purpose | Notes |\n|---|---|---|\n| `HKWorkoutSession` + `HKLiveWorkoutBuilder` | Live in-progress workout — collects data from sensors, persists an `HKWorkout` at the end | Covered here |\n| `HKWorkout.init(...)` + `HKHealthStore.save` | Logging a historical workout (e.g., from a server or manual entry) | Simple write path — see `queries.md` |\n| WorkoutKit | Planned or scheduled custom workouts that the Workout app executes | Covered in `workoutkit.md` |\n\nThis skill covers the first path — live sessions with sensor collection.\n\n## Platform Availability — Read Carefully\n\n| Class | Platform |\n|---|---|\n| `HKWorkoutSession` | iOS 17+, iPadOS 17+, watchOS 2+ |\n| `HKLiveWorkoutBuilder`, `HKLiveWorkoutDataSource`, `HKLiveWorkoutBuilderDelegate` | **watchOS 5+; iOS 26+, iPadOS 26+** |\n| `HKWorkoutSession.startMirroringToCompanionDevice` | **watchOS 10+ only** |\n| `HKHealthStore.recoverActiveWorkoutSession` | **iOS 26+, iPadOS 26+, watchOS 10+** |\n\nThe critical new-in-2025 change: iPhone could *receive* a mirrored workout session since iOS 17, but iOS 26 is the first release where iPhone can **originate** a session and drive a local `HKLiveWorkoutBuilder`. Before iOS 26, iPhone workout tracking meant calling `HKWorkout(init:)` retrospectively — no live sensor collection.\n\n## The Session State Machine\n\n```dot\ndigraph workout_state {\n    notStarted [shape=ellipse];\n    prepared [shape=ellipse];\n    running [shape=ellipse];\n    paused [shape=ellipse];\n    stopped [shape=ellipse];\n    ended [shape=doublecircle];\n\n    notStarted -> prepared [label=\"prepare()\"];\n    prepared -> running [label=\"startActivity(with:)\"];\n    running -> paused [label=\"pause()\"];\n    paused -> running [label=\"resume()\"];\n    running -> stopped [label=\"stopActivity(with:)\"];\n    paused -> stopped [label=\"stopActivity(with:)\"];\n    stopped -> ended [label=\"end()\"];\n}\n```\n\n**The six states** (`HKWorkoutSessionState`):\n\n| State | Meaning |\n|---|---|\n| `.notStarted` | Session created, not yet prepared |\n| `.prepared` | Readied for fast start (sensors warm) |\n| `.running` | Activity tracking live |\n| `.paused` | Paused, ready to resume |\n| `.stopped` | Activity halted but session not yet ended — **builder still needs to finish** |\n| `.ended` | Terminal; session is fully closed |\n\n**`.stopped` is not `.ended`.** This is the single most common bug. `stopActivity(with:)` transitions to `.stopped` — the workout sample has NOT been saved yet. You must run the end sequence below before calling `session.end()`.\n\n## The End Sequence (Do This Exactly)\n\n```swift\n// 1. In the UI event that finishes the workout:\nsession.stopActivity(with: .now)\n\n// 2. In the session delegate:\nfunc workoutSession(\n    _ session: HKWorkoutSession,\n    didChangeTo toState: HKWorkoutSessionState,\n    from fromState: HKWorkoutSessionState,\n    date: Date\n) {\n    guard toState == .stopped, let builder = self.builder else { return }\n\n    Task {\n        try await builder.endCollection(at: date)\n        let finishedWorkout = try await builder.finishWorkout()\n        session.end()\n        // finishedWorkout is now saved as an HKWorkout in the store.\n    }\n}\n```\n\nIf you call `session.end()` before `builder.endCollection(at:) + builder.finishWorkout()`, the workout is not persisted. There is no \"save-on-end\" convenience.\n\n## Canonical Session Setup\n\n```swift\nimport HealthKit\n\n@MainActor\nfinal class WorkoutController: NSObject {\n    let store = HKHealthStore()\n    var session: HKWorkoutSession?\n    var builder: HKLiveWorkoutBuilder?\n\n    func startRun() throws {\n        let config = HKWorkoutConfiguration()\n        config.activityType = .running\n        config.locationType = .outdoor\n\n        let session = try HKWorkoutSession(healthStore: store, configuration: config)\n        let builder = session.associatedWorkoutBuilder()\n\n        builder.dataSource = HKLiveWorkoutDataSource(\n            healthStore: store,\n            workoutConfiguration: config\n        )\n\n        session.delegate = self\n        builder.delegate = self\n\n        session.startActivity(with: .now)\n        Task { try await builder.beginCollection(at: .now) }\n\n        self.session = session\n        self.builder = builder\n    }\n}\n\nextension WorkoutController: HKWorkoutSessionDelegate {\n    nonisolated func workoutSession(\n        _ session: HKWorkoutSession,\n        didFailWithError error: Error\n    ) {\n        // Log and degrade — HKWorkoutSessionError.anotherWorkoutSessionStarted is a common one.\n    }\n\n    nonisolated func workoutSession(\n        _ session: HKWorkoutSession,\n        didChangeTo toState: HKWorkoutSessionState,\n        from fromState: HKWorkoutSessionState,\n        date: Date\n    ) {\n        // Handle .stopped transition here for end sequence.\n    }\n}\n\nextension WorkoutController: HKLiveWorkoutBuilderDelegate {\n    nonisolated func workoutBuilder(\n        _ builder: HKLiveWorkoutBuilder,\n        didCollectDataOf types: Set<HKSampleType>\n    ) {\n        // For each type in `types`, call builder.statistics(for: type) to update UI.\n    }\n\n    nonisolated func workoutBuilderDidCollectEvent(_ builder: HKLiveWorkoutBuilder) {\n        // Fires when a pause/resume/lap event is appended.\n    }\n}\n```\n\n**Delegate method isolation.** HealthKit calls these on its own queue — mark them `nonisolated` and hop to `@MainActor` inside when updating UI. See `axiom-concurrency` for the full pattern.\n\n## `HKLiveWorkoutDataSource` — What Data Is Collected\n\nData sources tell the builder which quantity types to auto-collect from sensors. Default collection depends on the activity type in the configuration (running gets heart rate + distance + energy; swimming adds stroke count and SWOLF).\n\n```swift\nlet source = HKLiveWorkoutDataSource(\n    healthStore: store,\n    workoutConfiguration: config\n)\n\n// Add a type the default set doesn't include:\nsource.enableCollection(for: HKQuantityType(.runningPower), predicate: nil)\n\n// Remove a default if you don't need it:\nsource.disableCollection(for: HKQuantityType(.basalEnergyBurned))\n```\n\nFor multi-activity workouts, update the data source's `typesToCollect` when switching activities — swimming and cycling collect different types, and leaving stale types wastes sensor time.\n\n## Recovery — Different Entry Points Per Platform\n\nWorkout sessions survive app termination. If iOS force-quits your app or the app crashes mid-session, the workout continues recording on the watch's sensors, and you can reconnect to it on next launch.\n\n### watchOS recovery\n\n```swift\nclass ExtensionDelegate: NSObject, WKExtensionDelegate {\n    func handleActiveWorkoutRecovery() {\n        Task {\n            do {\n                let session = try await store.recoverActiveWorkoutSession()\n                // Reattach delegate, update UI.\n            } catch {\n                // No active session to recover.\n            }\n        }\n    }\n}\n```\n\n### iOS 26+ recovery\n\n```swift\n@UIApplicationMain\nclass AppDelegate: UIResponder, UIApplicationDelegate {\n    func application(\n        _ application: UIApplication,\n        configurationForConnecting connectingSceneSession: UISceneSession,\n        options: UIScene.ConnectionOptions\n    ) -> UISceneConfiguration {\n        if options.shouldHandleActiveWorkoutRecovery {\n            // Configure a scene that calls recoverActiveWorkoutSession on launch.\n        }\n        return UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)\n    }\n}\n```\n\nOn both platforms, `recoverActiveWorkoutSession` throws if no session is active. Always wrap in `do/try/catch` and degrade.\n\n## Multi-Device Mirroring\n\nAs of watchOS 10 + iOS 17, a watch-originated session can mirror to the paired iPhone so that a companion app on iPhone shows live metrics.\n\n```swift\n// On watchOS (the primary):\ntry await session.startMirroringToCompanionDevice()\n\n// On iOS (receives):\n// Register HKWorkoutSessionMirroringStartHandler on the HKHealthStore.\nstore.workoutSessionMirroringStartHandler = { session in\n    // A watch workout just started mirroring. Attach UI.\n}\n```\n\n**Constraints:**\n\n- Handler fires on a background queue; hop to `@MainActor` for UI.\n- The handler may fire multiple times during a single workout — every time the iPhone reconnects (user picks up phone, network hiccup). Handle re-entry idempotently.\n- **10-second launch budget:** if the iPhone app is backgrounded, iOS wakes it for up to 10 seconds to receive the mirror-start event. If your app doesn't register state fast enough, the mirror is missed. Register `workoutSessionMirroringStartHandler` in `application(_:didFinishLaunchingWithOptions:)`, not later.\n- Use `session.sendToRemoteWorkoutSession(data:)` for custom cross-device messaging during the workout (e.g., chat, coach signals).\n\n## Multi-Activity Workouts (Triathlons)\n\nFor workouts where activity type changes (swim → bike → run), use multi-activity mode.\n\n```swift\n// Initial configuration sets the container:\nlet container = HKWorkoutConfiguration()\ncontainer.activityType = .swimBikeRun\n\nlet session = try HKWorkoutSession(healthStore: store, configuration: container)\nsession.startActivity(with: .now)\n\n// Begin each sub-activity:\nlet swim = HKWorkoutConfiguration()\nswim.activityType = .swimming\nswim.swimmingLocationType = .openWater\nsession.beginNewActivity(configuration: swim, date: .now, metadata: nil)\n\n// Later, transition:\nsession.beginNewActivity(configuration: cycleConfig, date: .now, metadata: nil)\n// HealthKit ends the previous activity automatically.\n```\n\nActivities cannot overlap in time and need not be contiguous — insert an activity of type `.transition` between the sports to capture transition metrics.\n\nPer-activity statistics are available via `HKWorkoutActivity.statistics(for:)` on the saved workout.\n\n## Always On Considerations (watchOS)\n\nWhen the watch locks mid-workout, the workout view must continue to display. Apple mandates a **1 Hz maximum refresh rate** in the low-power state — one update per second, nothing finer.\n\n```swift\nstruct WorkoutView: View {\n    var body: some View {\n        TimelineView(.periodic(from: .now, by: 1)) { context in\n            Text(duration.formatted())\n        }\n    }\n}\n```\n\nBranch on `TimelineView`'s `mode == .lowFrequency` to show a simpler view during locked state. Avoid animation during low-frequency updates — the system won't render it anyway.\n\n## Info.plist and Entitlements\n\n**Session-capable apps require:**\n\n- Xcode capability: **HealthKit** (adds `com.apple.developer.healthkit`)\n- `NSHealthShareUsageDescription` and `NSHealthUpdateUsageDescription` in Info.plist\n- For watchOS: add `WKBackgroundModes` with `workout-processing` to `Info.plist`\n- For iOS 26 session origination: background mode key is documented in Apple's \"Building a workout app for iPhone and iPad\" sample (verify against the latest sample before shipping — this key is new enough that multiple names have circulated)\n\n**Mirroring iPhone app:** must include a corresponding watchOS app target in the same bundle.\n\n## Querying Workouts After the Fact\n\nWorkouts are just `HKSample` subtypes — read them with a sample query:\n\n```swift\nlet predicate = HKSamplePredicate<HKWorkout>.workout(\n    NSCompoundPredicate(andPredicateWithSubpredicates: [\n        HKQuery.predicateForWorkouts(with: .running),\n        HKQuery.predicateForSamples(withStart: thirtyDaysAgo, end: nil)\n    ])\n)\n\nlet descriptor = HKSampleQueryDescriptor(\n    predicates: [predicate],\n    sortDescriptors: [SortDescriptor(\\.startDate, order: .reverse)],\n    limit: 50\n)\n\nlet runs: [HKWorkout] = try await descriptor.result(for: store)\n```\n\nFor per-activity statistics, iterate `workout.workoutActivities` — each `HKWorkoutActivity` carries its own type + duration + stats.\n\n## Common Mistakes\n\n| Mistake | Fix |\n|---|---|\n| Calling `session.end()` without first running `endCollection` + `finishWorkout` | The workout is not saved. Always: `stopActivity` → wait for `.stopped` → `endCollection` → `finishWorkout` → `end`. |\n| Treating `.stopped` as the terminal state | It's not. `.ended` is terminal. `.stopped` means \"activity halted but builder still needs to finish.\" |\n| Not implementing recovery | After app termination, the session keeps running on the watch. Without `recoverActiveWorkoutSession`, users see \"you don't have an active workout\" even though their heart rate is still being logged. |\n| Assuming iOS can originate sessions before iOS 26 | Pre-26, iPhone can only mirror a watch-initiated session. It cannot drive a local `HKLiveWorkoutBuilder`. |\n| Registering `workoutSessionMirroringStartHandler` in a view's `onAppear` | The iPhone gets 10 seconds after wake to receive the mirror event. Register in app-launch code. |\n| Using `@MainActor` delegate callbacks directly | HealthKit calls these on its own queue. Mark methods `nonisolated` and hop to `@MainActor` internally. |\n| Collecting all quantity types \"just in case\" with `HKLiveWorkoutDataSource` | Only enable types you actually display or save. Extra types waste battery. |\n| Full-screen animation during Always On | The 1 Hz refresh cap means your animation won't render smoothly anyway. Use a simplified view in the `.lowFrequency` timeline branch. |\n| Creating multiple concurrent sessions | `HKWorkoutSessionError.anotherWorkoutSessionStarted` fires and ends your session. Enforce one-at-a-time at your UI layer. |\n| Missing `workout-processing` background mode on watch | Session runs only while app is foreground. Add `WKBackgroundModes` → `workout-processing`. |\n| Writing retrospective workouts and also running live sessions for the same activity | You get duplicates. Choose one path per activity. |\n\n## Resources\n\n**WWDC**: 2021-10009, 2022-10005, 2023-10023, 2025-322\n\n**Docs**: /healthkit/workouts-and-activity-rings, /healthkit/running-workout-sessions, /healthkit/hkworkoutsession, /healthkit/hkliveworkoutbuilder, /healthkit/hkliveworkoutbuilderdelegate, /healthkit/hkliveworkoutdatasource, /healthkit/hkworkoutconfiguration, /healthkit/hkworkout, /healthkit/hkworkoutactivity, /healthkit/hkhealthstore/recoveractiveworkoutsession(completion:), /healthkit/build-a-workout-app-for-apple-watch, /healthkit/building-a-workout-app-for-iphone-and-ipad\n\n**Skills**: axiom-health (fundamentals, authorization-and-privacy, queries, workoutkit), axiom-watchos, axiom-concurrency\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -31993,7 +31993,7 @@
     "axiom-watchos--background-and-networking": {
       "name": "axiom-watchos--background-and-networking",
       "description": "Use when:",
-      "content": "# Background Tasks and Networking\n\n## When to Use This Skill\n\nUse when:\n- Picking between SwiftUI `.backgroundTask(_:action:)` and a WatchKit app-delegate `handle(_:)` implementation\n- Scheduling app refresh with `scheduleBackgroundRefresh(withPreferredDate:userInfo:scheduledCompletion:)`\n- Deciding between URLSession configurations (default, ephemeral, background) on a Watch target\n- Hitting `ENETDOWN` when starting `NWConnection` on watchOS (TN3135)\n- Handling `WKURLSessionRefreshBackgroundTask` or `WKWatchConnectivityRefreshBackgroundTask` wake-ups\n- Debugging mystery `EXC_CRASH (SIGKILL)` crashes after a background wake\n\n#### Related Skills\n\n- Use `platform-basics.md` for the SwiftUI `.backgroundTask` hook in the `App` body and delegate adoption\n- Use `watch-connectivity.md` for `WCSession` queued transfers and the background-task completion contract\n- Use `smart-stack-and-complications.md` for widget push updates that replace some background-refresh flows on watchOS 26\n- Use `axiom-networking` for general URLSession patterns; this skill covers watchOS-specific constraints\n- Use `axiom-concurrency` for `withTaskCancellationHandler` patterns and Swift concurrency semantics\n\n## Core Principle\n\n**URLSession over everything. Low-level networking is blocked unless you're an audio streamer, a CallKit VoIP app, or a tvOS companion.** TN3135 is explicit — `NWConnection`, Network framework TCP/UDP, `URLSessionStreamTask`, `URLSessionWebSocketTask`, `NWBrowser`, `NetService`, BSD sockets: all blocked for \"normal\" apps, enforced from watchOS 9.\n\n> \"If a normal app attempts to start an NWConnection, that connection will stay in the `.waiting(_:)` state with an error of ENETDOWN. Similarly, an NWPathMonitor will remain in the `.unsatisfied` state.\" — Apple, TN3135\n\nThe three exceptions:\n\n| App type | Low-level window | Minimum version |\n|---|---|---|\n| Audio streaming (background audio session) | While actively streaming | watchOS 6 |\n| VoIP + CallKit | While running a CallKit call | watchOS 9 |\n| tvOS pairing (DeviceDiscoveryUI application service listener) | Persistent | watchOS 9, tvOS 16 |\n\nIf your app isn't in one of those lanes, route every byte through URLSession. The simulator happily runs low-level networking even when the device would refuse — test on real hardware before drawing conclusions.\n\n## URLSession Choice Matrix\n\n| Session | Use when |\n|---|---|\n| Default (`URLSessionConfiguration.default`) | Foreground and active; quick-latency requests; normal cookie/cache behavior |\n| Ephemeral (`URLSessionConfiguration.ephemeral`) | Foreground; no persistence (sensitive requests, private-browsing-style fetches) |\n| Background (`URLSessionConfiguration.background(withIdentifier:)`) | App may become inactive or terminate before the request finishes; guarantees eventual completion |\n\nBackground sessions come with a cost: the system may delay or defer them based on resource conditions. For foreground work, default or ephemeral is faster and more predictable.\n\n## Background Refresh — The New Way (SwiftUI)\n\n`.backgroundTask(_:action:)` on the `App`'s scene is the preferred path. The system marks the task complete when the closure returns, and you only handle the task types you care about.\n\n```swift\nimport SwiftUI\n\n@main\nstruct MyWatch_Watch_App: App {\n    var body: some Scene {\n        WindowGroup { ContentView() }\n            .backgroundTask(.appRefresh) { context in\n                await refreshData()\n            }\n    }\n}\n```\n\n### Named identifiers for distinct refresh flows\n\nSchedule with a specific `userInfo` string, then match it in a typed handler:\n\n```swift\n// Scheduling\nWKApplication.shared().scheduleBackgroundRefresh(\n    withPreferredDate: Date(timeIntervalSinceNow: 15 * 60),\n    userInfo: \"WEATHER_UPDATE\" as NSSecureCoding & NSObjectProtocol\n) { error in\n    if let error { /* handle */ }\n}\n\n// Handling — one closure per identifier, plus a fallback\n.backgroundTask(.appRefresh(\"WEATHER_UPDATE\")) { _ in\n    await fetchWeather()\n}\n.backgroundTask(.appRefresh(\"WIDGET_RELOAD\")) { _ in\n    await reloadWidgetData()\n}\n.backgroundTask(.appRefresh) { _ in\n    // Any other appRefresh task\n}\n```\n\n### Cancellation handling on long tasks\n\nThe system cancels tasks before killing the app on budget exhaustion. Wrap in `withTaskCancellationHandler`:\n\n```swift\n.backgroundTask(.appRefresh) { context in\n    await withTaskCancellationHandler {\n        // The main work\n    } onCancel: {\n        // Clean up, persist partial progress, release resources\n    }\n}\n```\n\n## Background Refresh — WatchKit App Delegate\n\nFor apps that still use `WKApplicationDelegate`, implement `handle(_:)`. This path is fully supported but more work: you receive **every** background task — yours, Watch Connectivity, URLSession background transfers — and must call `setTaskCompletedWithSnapshot(_:)` on each.\n\n```swift\nfunc handle(_ backgroundTasks: Set<WKRefreshBackgroundTask>) {\n    for task in backgroundTasks {\n        switch task {\n        case let t as WKApplicationRefreshBackgroundTask:\n            handleAppRefresh(t)\n        case let t as WKSnapshotRefreshBackgroundTask:\n            t.setTaskCompleted(\n                restoredDefaultState: false,\n                estimatedSnapshotExpiration: .distantFuture,\n                userInfo: nil\n            )\n        case let t as WKURLSessionRefreshBackgroundTask:\n            handleURLSessionRefresh(t)  // save task; complete after delegate callbacks\n        case let t as WKWatchConnectivityRefreshBackgroundTask:\n            handleWatchConnectivity(t)  // save task; complete via KVO (see watch-connectivity.md)\n        default:\n            task.setTaskCompletedWithSnapshot(false)\n        }\n    }\n}\n```\n\n**Every task must reach `setTaskCompletedWithSnapshot(_:)`.** Missing this drains the budget and eventually crashes with `EXC_CRASH (SIGKILL)`. For URLSession and Watch Connectivity tasks, complete **after** the session delegate callbacks fire, not inside `handle(_:)`.\n\n### `expirationHandler` on WKRefreshBackgroundTask\n\n```swift\ntask.expirationHandler = {\n    // Clean up; convert in-flight work to a background URLSession if possible.\n}\n```\n\nApple recommends converting a synchronous download into a background URLSession from the expiration handler — the URL fetch keeps running after the app suspends.\n\n## Background URLSession — The Wake-Up Flow\n\nWhen you start a background `URLSession` from the watch, the system delivers completion events through a `WKURLSessionRefreshBackgroundTask`. The shape is:\n\n```dot\ndigraph bgurl {\n    schedule [label=\"App starts\\nbackground URLSession\" shape=box];\n    suspend [label=\"App suspends\" shape=box];\n    wake [label=\"System wakes app\\nfor download event\" shape=box];\n    handle [label=\"handle(_:) receives\\nWKURLSessionRefreshBackgroundTask\\n— save the task\" shape=box];\n    delegate [label=\"URLSessionDelegate callbacks fire\\n(didFinishDownloadingTo, didCompleteWithError)\" shape=box];\n    complete [label=\"setTaskCompletedWithSnapshot(false)\\non saved task\" shape=box];\n\n    schedule -> suspend -> wake -> handle -> delegate -> complete;\n}\n```\n\n1. In `handle(_:)`, save the `WKURLSessionRefreshBackgroundTask` — don't complete it yet.\n2. The system calls your `URLSessionDelegate` methods (`urlSession(_:downloadTask:didFinishDownloadingTo:)`, then `urlSession(_:task:didCompleteWithError:)`).\n3. Inside `didCompleteWithError:`, call `setTaskCompletedWithSnapshot(false)` on the saved task.\n\nMove the downloaded file out of the temp location inside `didFinishDownloadingTo:` — the system deletes the temp file when the delegate returns.\n\n## Budget Reality\n\nApple is explicit about what gates background time:\n\n- **The system chooses.** Every app has an allocation; the system chooses when to trigger tasks based on current conditions.\n- **Complication helps.** Apps with a complication on the active watch face get higher background priority.\n- **Dock helps.** Apps in the user's Dock get higher priority than apps that aren't.\n- **User activity throttles.** Workouts, navigation, and other high-priority activities deprioritize your background work.\n- **Low battery throttles.** Background tasks suspend when the battery is low even if your budget has room.\n- **Don't expect every task.** Design a fallback: the app must still update when the user foregrounds it.\n\nCall `scheduleBackgroundRefresh(withPreferredDate:...)` with a preferred date; expect the actual wake time to slip. Never promise the user a precise background-update schedule.\n\n## Fresh-Data Strategy\n\nThe briefing from `watch-connectivity.md` applies in reverse here — Watch Connectivity is an optimization, not the primary path:\n\n| Scenario | Best primary path |\n|---|---|\n| Paired iPhone online | URLSession on the watch; system auto-routes through the iPhone via Bluetooth |\n| LTE watch, iPhone asleep or out of range | URLSession over known Wi-Fi or cellular |\n| CloudKit-backed data | `CKSubscription` + notifications (watchOS 6+) |\n| Live refresh needed on-device | `TimelineView` for date/time redraws, `.backgroundTask(.appRefresh)` for data |\n| Instant update from iPhone | Opportunistic `WCSession.transferUserInfo` + `transferCurrentComplicationUserInfo` |\n| Widget refresh from server | APNs widget push updates (watchOS 26+, see `smart-stack-and-complications.md`) |\n\nTest over all three network routes the watch uses — iPhone proxy via Bluetooth, known Wi-Fi, and cellular (Series 3+). Turn off both Wi-Fi and Bluetooth **in the iPhone Settings app** (not Control Center, which only disconnects) to force the watch to use Wi-Fi or LTE.\n\n## Watch-Specific Constraints\n\nUse `URLSession` instead of `Foundation` convenience loaders. Apple explicitly calls out that synchronous byte-loading from URLs is unsupported on watchOS:\n\n> \"Foundation has various APIs for synchronously creating a value using bytes loaded from a URL… Using these APIs with network URLs is not best practice on any Apple platform and is not supported by watchOS.\" — TN3135\n\nAvoid `Data(contentsOf: url)`, `String(contentsOf: url)`, and similar. Use `URLSession.shared.data(from:)` or configure a session properly.\n\n## Debugging Checklist\n\n| Symptom | Probable cause | Check |\n|---|---|---|\n| `NWConnection` stays `.waiting(_:)` with `ENETDOWN` on device, works in simulator | Low-level networking blocked — TN3135 | Switch to URLSession; the simulator does not enforce the rule |\n| `EXC_CRASH (SIGKILL)` shortly after background wake | One or more `WKRefreshBackgroundTask`s never got `setTaskCompletedWithSnapshot(_:)` | Audit every branch in `handle(_:)`; for async work, complete after all delegate callbacks fire |\n| Background refresh never fires | No complication on active watch face; app not in Dock; low battery; high-priority user activity | Add a complication; confirm Settings → Passcode → Allow Background App Refresh; test with the device on charger |\n| Download completes but data loss | `urlSession(_:downloadTask:didFinishDownloadingTo:)` didn't move the file before returning | Copy to a permanent location synchronously inside the delegate |\n| `NWPathMonitor` always `.unsatisfied` | Blocked path monitor on watchOS outside the three exceptions | Use `URLSession` error state instead of attempting to pre-check the path |\n\n## Common Mistakes\n\n| Mistake | Symptom | Fix |\n|---|---|---|\n| Starting `NWConnection` from a non-audio, non-CallKit app | Connection stuck in `.waiting`; `ENETDOWN` errors | Switch to URLSession; low-level networking is blocked on watchOS by policy, not bug |\n| Testing only in the simulator | Code works in simulator, fails on device | Always test networking on a real device; the simulator permits what the device doesn't |\n| Not saving `WKURLSessionRefreshBackgroundTask` / `WKWatchConnectivityRefreshBackgroundTask` before returning from `handle(_:)` | Tasks complete before URLSession delegate finishes; data loss; mystery crashes | Save the task; complete only after the session delegate finishes |\n| Using `Data(contentsOf: url)` on a network URL | Blocked / unsupported path | Use `URLSession.shared.data(from:)` |\n| Mixing SwiftUI `.backgroundTask` with a delegate's `handle(_:)` | Duplicate or dropped tasks; unpredictable completion | Pick one path — SwiftUI for new work, delegate only if the rest of the app already uses it |\n| Expecting every scheduled refresh to fire | UI shows stale data even when the app \"scheduled\" a refresh | Design for missed refreshes; always refresh on foregrounding |\n| Not adding `expirationHandler` on long tasks | SIGKILL when the budget expires mid-task | Set `expirationHandler` (delegate path) or wrap in `withTaskCancellationHandler` (SwiftUI path) |\n| Using `URLSession.shared` for a background transfer | Download cancels when the app suspends | Use a dedicated `URLSession` with `URLSessionConfiguration.background(withIdentifier:)` |\n| Toggling Bluetooth/Wi-Fi from iPhone Control Center thinking it isolates the watch | Control Center disconnects but doesn't fully disable; tests unreliable | Toggle from iPhone Settings app for a real test |\n\n## Resources\n\n**WWDC**: 2019-716 (audio streaming on watchOS 6)\n\n**Docs**: /technotes/tn3135-low-level-networking-on-watchos, /watchkit/using-background-tasks, /watchos-apps/making-background-requests, /watchos-apps/keeping-your-watchos-app-s-content-up-to-date, /swiftui/scene/backgroundtask(_:action:), /watchkit/wkapplication/schedulebackgroundrefresh(withpreferreddate:userinfo:scheduledcompletion:), /watchkit/wkrefreshbackgroundtask, /watchkit/wkurlsessionrefreshbackgroundtask, /foundation/urlsession, /foundation/urlsessionconfiguration/background(withidentifier:)\n\n**Skills**: axiom-watchos (platform-basics, watch-connectivity, smart-stack-and-complications), axiom-networking, axiom-concurrency\n",
+      "content": "# Background Tasks and Networking\n\n## When to Use This Skill\n\nUse when:\n- Picking between SwiftUI `.backgroundTask(_:action:)` and a WatchKit app-delegate `handle(_:)` implementation\n- Scheduling app refresh with `scheduleBackgroundRefresh(withPreferredDate:userInfo:scheduledCompletion:)`\n- Deciding between URLSession configurations (default, ephemeral, background) on a Watch target\n- Hitting `ENETDOWN` when starting `NWConnection` on watchOS (TN3135)\n- Handling `WKURLSessionRefreshBackgroundTask` or `WKWatchConnectivityRefreshBackgroundTask` wake-ups\n- Debugging mystery `EXC_CRASH (SIGKILL)` crashes after a background wake\n\n#### Related Skills\n\n- Use `platform-basics.md` for the SwiftUI `.backgroundTask` hook in the `App` body and delegate adoption\n- Use `watch-connectivity.md` for `WCSession` queued transfers and the background-task completion contract\n- Use `smart-stack-and-complications.md` for widget push updates that replace some background-refresh flows on watchOS 26\n- Use `axiom-networking` for general URLSession patterns; this skill covers watchOS-specific constraints\n- Use `axiom-concurrency` for `withTaskCancellationHandler` patterns and Swift concurrency semantics\n\n## Core Principle\n\n**URLSession over everything. Low-level networking is blocked unless you're an audio streamer, a CallKit VoIP app, or a tvOS companion.** TN3135 is explicit — `NWConnection`, Network framework TCP/UDP, `URLSessionStreamTask`, `URLSessionWebSocketTask`, `NWBrowser`, `NetService`, BSD sockets: all blocked for \"normal\" apps, enforced from watchOS 9.\n\n> \"If a normal app attempts to start an NWConnection, that connection will stay in the `.waiting(_:)` state with an error of ENETDOWN. Similarly, an NWPathMonitor will remain in the `.unsatisfied` state.\" — Apple, TN3135\n\nThe three exceptions:\n\n| App type | Low-level window | Minimum version |\n|---|---|---|\n| Audio streaming (background audio session) | While actively streaming | watchOS 6 |\n| VoIP + CallKit | While running a CallKit call | watchOS 9 |\n| tvOS pairing (DeviceDiscoveryUI application service listener) | Persistent | watchOS 9, tvOS 16 |\n\nIf your app isn't in one of those lanes, route every byte through URLSession. The simulator happily runs low-level networking even when the device would refuse — test on real hardware before drawing conclusions.\n\n## URLSession Choice Matrix\n\n| Session | Use when |\n|---|---|\n| Default (`URLSessionConfiguration.default`) | Foreground and active; quick-latency requests; normal cookie/cache behavior |\n| Ephemeral (`URLSessionConfiguration.ephemeral`) | Foreground; no persistence (sensitive requests, private-browsing-style fetches) |\n| Background (`URLSessionConfiguration.background(withIdentifier:)`) | App may become inactive or terminate before the request finishes; guarantees eventual completion |\n\nBackground sessions come with a cost: the system may delay or defer them based on resource conditions. For foreground work, default or ephemeral is faster and more predictable.\n\n## Background Refresh — The New Way (SwiftUI)\n\n`.backgroundTask(_:action:)` on the `App`'s scene is the preferred path. The system marks the task complete when the closure returns, and you only handle the task types you care about.\n\n```swift\nimport SwiftUI\n\n@main\nstruct MyWatch_Watch_App: App {\n    var body: some Scene {\n        WindowGroup { ContentView() }\n            .backgroundTask(.appRefresh) { context in\n                await refreshData()\n            }\n    }\n}\n```\n\n### Distinguishing refresh flows by `userInfo`\n\nSchedule with a specific `userInfo` string, then branch on it inside the handler. `userInfo` must conform to both `NSSecureCoding` and `NSObjectProtocol`; a Swift `String` bridges cleanly via `NSString`:\n\n```swift\n// Scheduling\nWKApplication.shared().scheduleBackgroundRefresh(\n    withPreferredDate: Date(timeIntervalSinceNow: 15 * 60),\n    userInfo: \"WEATHER_UPDATE\" as NSString\n) { error in\n    if let error { /* handle */ }\n}\n\n// Handling — one handler, dispatch by userInfo.\n// On watchOS the payload arrives via the task context's userInfo, not via\n// the SwiftUI identifier form that iOS uses for BGTaskScheduler IDs.\n.backgroundTask(.appRefresh) { context in\n    let reason = (context.userInfo as? NSString) as String?\n    switch reason {\n    case \"WEATHER_UPDATE\":\n        await fetchWeather()\n    case \"WIDGET_RELOAD\":\n        await reloadWidgetData()\n    default:\n        await performDefaultRefresh()\n    }\n}\n```\n\n### Cancellation handling on long tasks\n\nThe system cancels tasks before killing the app on budget exhaustion. Wrap in `withTaskCancellationHandler`:\n\n```swift\n.backgroundTask(.appRefresh) { context in\n    await withTaskCancellationHandler {\n        // The main work\n    } onCancel: {\n        // Clean up, persist partial progress, release resources\n    }\n}\n```\n\n## Background Refresh — WatchKit App Delegate\n\nFor apps that still use `WKApplicationDelegate`, implement `handle(_:)`. This path is fully supported but more work: you receive **every** background task — yours, Watch Connectivity, URLSession background transfers — and must call `setTaskCompletedWithSnapshot(_:)` on each.\n\n```swift\nfunc handle(_ backgroundTasks: Set<WKRefreshBackgroundTask>) {\n    for task in backgroundTasks {\n        switch task {\n        case let t as WKApplicationRefreshBackgroundTask:\n            handleAppRefresh(t)\n        case let t as WKSnapshotRefreshBackgroundTask:\n            t.setTaskCompleted(\n                restoredDefaultState: false,\n                estimatedSnapshotExpiration: .distantFuture,\n                userInfo: nil\n            )\n        case let t as WKURLSessionRefreshBackgroundTask:\n            handleURLSessionRefresh(t)  // save task; complete after delegate callbacks\n        case let t as WKWatchConnectivityRefreshBackgroundTask:\n            handleWatchConnectivity(t)  // save task; complete via KVO (see watch-connectivity.md)\n        default:\n            task.setTaskCompletedWithSnapshot(false)\n        }\n    }\n}\n```\n\n**Every task must reach `setTaskCompletedWithSnapshot(_:)`.** Missing this drains the budget and eventually crashes with `EXC_CRASH (SIGKILL)`. For URLSession and Watch Connectivity tasks, complete **after** the session delegate callbacks fire, not inside `handle(_:)`.\n\n### `expirationHandler` on WKRefreshBackgroundTask\n\n```swift\ntask.expirationHandler = {\n    // Clean up; convert in-flight work to a background URLSession if possible.\n}\n```\n\nApple recommends converting a synchronous download into a background URLSession from the expiration handler — the URL fetch keeps running after the app suspends.\n\n## Background URLSession — The Wake-Up Flow\n\nWhen you start a background `URLSession` from the watch, the system delivers completion events through a `WKURLSessionRefreshBackgroundTask`. The shape is:\n\n```dot\ndigraph bgurl {\n    schedule [label=\"App starts\\nbackground URLSession\" shape=box];\n    suspend [label=\"App suspends\" shape=box];\n    wake [label=\"System wakes app\\nfor download event\" shape=box];\n    handle [label=\"handle(_:) receives\\nWKURLSessionRefreshBackgroundTask\\n— save the task\" shape=box];\n    delegate [label=\"URLSessionDelegate callbacks fire\\n(didFinishDownloadingTo, didCompleteWithError)\" shape=box];\n    complete [label=\"setTaskCompletedWithSnapshot(false)\\non saved task\" shape=box];\n\n    schedule -> suspend -> wake -> handle -> delegate -> complete;\n}\n```\n\n1. In `handle(_:)`, save the `WKURLSessionRefreshBackgroundTask` — don't complete it yet.\n2. The system calls your `URLSessionDelegate` methods (`urlSession(_:downloadTask:didFinishDownloadingTo:)`, then `urlSession(_:task:didCompleteWithError:)`).\n3. Inside `didCompleteWithError:`, call `setTaskCompletedWithSnapshot(false)` on the saved task.\n\nMove the downloaded file out of the temp location inside `didFinishDownloadingTo:` — the system deletes the temp file when the delegate returns.\n\n## Budget Reality\n\nApple is explicit about what gates background time:\n\n- **The system chooses.** Every app has an allocation; the system chooses when to trigger tasks based on current conditions.\n- **Complication helps.** Apps with a complication on the active watch face get higher background priority.\n- **Dock helps.** Apps in the user's Dock get higher priority than apps that aren't.\n- **User activity throttles.** Workouts, navigation, and other high-priority activities deprioritize your background work.\n- **Low battery throttles.** Background tasks suspend when the battery is low even if your budget has room.\n- **Don't expect every task.** Design a fallback: the app must still update when the user foregrounds it.\n\nCall `scheduleBackgroundRefresh(withPreferredDate:...)` with a preferred date; expect the actual wake time to slip. Never promise the user a precise background-update schedule.\n\n## Fresh-Data Strategy\n\nThe briefing from `watch-connectivity.md` applies in reverse here — Watch Connectivity is an optimization, not the primary path:\n\n| Scenario | Best primary path |\n|---|---|\n| Paired iPhone online | URLSession on the watch; system auto-routes through the iPhone via Bluetooth |\n| LTE watch, iPhone asleep or out of range | URLSession over known Wi-Fi or cellular |\n| CloudKit-backed data | `CKSubscription` + notifications (watchOS 6+) |\n| Live refresh needed on-device | `TimelineView` for date/time redraws, `.backgroundTask(.appRefresh)` for data |\n| Instant update from iPhone | Opportunistic `WCSession.transferUserInfo` + `transferCurrentComplicationUserInfo` |\n| Widget refresh from server | APNs widget push updates (watchOS 26+, see `smart-stack-and-complications.md`) |\n\nTest over all three network routes the watch uses — iPhone proxy via Bluetooth, known Wi-Fi, and cellular (Series 3+). Turn off both Wi-Fi and Bluetooth **in the iPhone Settings app** (not Control Center, which only disconnects) to force the watch to use Wi-Fi or LTE.\n\n## Watch-Specific Constraints\n\nUse `URLSession` instead of `Foundation` convenience loaders. Apple explicitly calls out that synchronous byte-loading from URLs is unsupported on watchOS:\n\n> \"Foundation has various APIs for synchronously creating a value using bytes loaded from a URL… Using these APIs with network URLs is not best practice on any Apple platform and is not supported by watchOS.\" — TN3135\n\nAvoid `Data(contentsOf: url)`, `String(contentsOf: url)`, and similar. Use `URLSession.shared.data(from:)` or configure a session properly.\n\n## Debugging Checklist\n\n| Symptom | Probable cause | Check |\n|---|---|---|\n| `NWConnection` stays `.waiting(_:)` with `ENETDOWN` on device, works in simulator | Low-level networking blocked — TN3135 | Switch to URLSession; the simulator does not enforce the rule |\n| `EXC_CRASH (SIGKILL)` shortly after background wake | One or more `WKRefreshBackgroundTask`s never got `setTaskCompletedWithSnapshot(_:)` | Audit every branch in `handle(_:)`; for async work, complete after all delegate callbacks fire |\n| Background refresh never fires | No complication on active watch face; app not in Dock; low battery; high-priority user activity | Add a complication; confirm Settings → Passcode → Allow Background App Refresh; test with the device on charger |\n| Download completes but data loss | `urlSession(_:downloadTask:didFinishDownloadingTo:)` didn't move the file before returning | Copy to a permanent location synchronously inside the delegate |\n| `NWPathMonitor` always `.unsatisfied` | Blocked path monitor on watchOS outside the three exceptions | Use `URLSession` error state instead of attempting to pre-check the path |\n\n## Common Mistakes\n\n| Mistake | Symptom | Fix |\n|---|---|---|\n| Starting `NWConnection` from a non-audio, non-CallKit app | Connection stuck in `.waiting`; `ENETDOWN` errors | Switch to URLSession; low-level networking is blocked on watchOS by policy, not bug |\n| Testing only in the simulator | Code works in simulator, fails on device | Always test networking on a real device; the simulator permits what the device doesn't |\n| Not saving `WKURLSessionRefreshBackgroundTask` / `WKWatchConnectivityRefreshBackgroundTask` before returning from `handle(_:)` | Tasks complete before URLSession delegate finishes; data loss; mystery crashes | Save the task; complete only after the session delegate finishes |\n| Using `Data(contentsOf: url)` on a network URL | Blocked / unsupported path | Use `URLSession.shared.data(from:)` |\n| Mixing SwiftUI `.backgroundTask` with a delegate's `handle(_:)` | Duplicate or dropped tasks; unpredictable completion | Pick one path — SwiftUI for new work, delegate only if the rest of the app already uses it |\n| Expecting every scheduled refresh to fire | UI shows stale data even when the app \"scheduled\" a refresh | Design for missed refreshes; always refresh on foregrounding |\n| Not adding `expirationHandler` on long tasks | SIGKILL when the budget expires mid-task | Set `expirationHandler` (delegate path) or wrap in `withTaskCancellationHandler` (SwiftUI path) |\n| Using `URLSession.shared` for a background transfer | Download cancels when the app suspends | Use a dedicated `URLSession` with `URLSessionConfiguration.background(withIdentifier:)` |\n| Toggling Bluetooth/Wi-Fi from iPhone Control Center thinking it isolates the watch | Control Center disconnects but doesn't fully disable; tests unreliable | Toggle from iPhone Settings app for a real test |\n\n## Resources\n\n**WWDC**: 2019-716 (audio streaming on watchOS 6)\n\n**Docs**: /technotes/tn3135-low-level-networking-on-watchos, /watchkit/using-background-tasks, /watchos-apps/making-background-requests, /watchos-apps/keeping-your-watchos-app-s-content-up-to-date, /swiftui/scene/backgroundtask(_:action:), /watchkit/wkapplication/schedulebackgroundrefresh(withpreferreddate:userinfo:scheduledcompletion:), /watchkit/wkrefreshbackgroundtask, /watchkit/wkurlsessionrefreshbackgroundtask, /foundation/urlsession, /foundation/urlsessionconfiguration/background(withidentifier:)\n\n**Skills**: axiom-watchos (platform-basics, watch-connectivity, smart-stack-and-complications), axiom-networking, axiom-concurrency\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -32035,63 +32035,63 @@
           "heading": "Background Refresh — The New Way (SwiftUI)",
           "level": 2,
           "startLine": 46,
-          "endLine": 102,
-          "charCount": 1519
+          "endLine": 106,
+          "charCount": 1814
         },
         {
           "heading": "Background Refresh — WatchKit App Delegate",
           "level": 2,
-          "startLine": 103,
-          "endLine": 141,
+          "startLine": 107,
+          "endLine": 145,
           "charCount": 1788
         },
         {
           "heading": "Background URLSession — The Wake-Up Flow",
           "level": 2,
-          "startLine": 142,
-          "endLine": 164,
+          "startLine": 146,
+          "endLine": 168,
           "charCount": 1278
         },
         {
           "heading": "Budget Reality",
           "level": 2,
-          "startLine": 165,
-          "endLine": 177,
+          "startLine": 169,
+          "endLine": 181,
           "charCount": 905
         },
         {
           "heading": "Fresh-Data Strategy",
           "level": 2,
-          "startLine": 178,
-          "endLine": 192,
+          "startLine": 182,
+          "endLine": 196,
           "charCount": 1073
         },
         {
           "heading": "Watch-Specific Constraints",
           "level": 2,
-          "startLine": 193,
-          "endLine": 200,
+          "startLine": 197,
+          "endLine": 204,
           "charCount": 547
         },
         {
           "heading": "Debugging Checklist",
           "level": 2,
-          "startLine": 201,
-          "endLine": 210,
+          "startLine": 205,
+          "endLine": 214,
           "charCount": 1126
         },
         {
           "heading": "Common Mistakes",
           "level": 2,
-          "startLine": 211,
-          "endLine": 224,
+          "startLine": 215,
+          "endLine": 228,
           "charCount": 1799
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 225,
-          "endLine": 232,
+          "startLine": 229,
+          "endLine": 236,
           "charCount": 706
         }
       ]
@@ -32388,7 +32388,7 @@
     "axiom-watchos--platform-basics": {
       "name": "axiom-watchos--platform-basics",
       "description": "Use when:",
-      "content": "# watchOS Platform Basics\n\n## When to Use This Skill\n\nUse when:\n- Starting a new watchOS app and need the project template, target structure, and `Info.plist` keys\n- Deciding between a watch-only app, a companion iOS app, or an independent app that ships in both forms\n- Setting up the app entry point — `@main`, `App`, `WindowGroup`, `NavigationStack`, delegate adoption\n- Preparing for the April 2026 watchOS 26 SDK and ARM64 submission deadlines\n- Adding a `WKApplicationDelegate` to handle workouts, Now Playing, extended runtime, or remote notifications\n- Wiring a custom notification long-look with `WKUserNotificationHostingController`\n- Debugging types that behave differently on arm64 (`Float`, `Int`, pointer math)\n\n#### Related Skills\n\n- Use `design-for-watchos.md` for watchOS HIG, navigation model, and glanceable UX\n- Use `watch-connectivity.md` when coordinating state with a paired iPhone app\n- Use `background-and-networking.md` for `backgroundTask(_:action:)`, URLSession background, and TN3135 networking limits\n- Use `smart-stack-and-complications.md` for WidgetKit complications, Smart Stack widgets, and RelevanceKit\n- Use `controls-and-live-activities.md` for controls that land in Control Center and the Smart Stack\n- Use `modernization.md` for WatchKit → SwiftUI and ClockKit → WidgetKit migration\n- Use `axiom-shipping` for App Store Connect submission specifics beyond the watchOS SDK gate\n- Use `axiom-health` when the app records workouts with HealthKit; Smart Stack suggests workout apps from routine\n\n## Core Principle\n\n**Ship a SwiftUI-first, independent, 64-bit app built with the watchOS 26 SDK.** That is the supported path as of watchOS 26 (April 2026 submission rule). Every other path — WatchKit storyboards, 32-bit builds, companion-only apps — is either deprecated or blocked at submission.\n\n## Submission Requirements (watchOS 26, April 2026)\n\nBoth rules are already announced by Apple:\n\n| Rule | Effective | Details |\n|---|---|---|\n| 64-bit / ARM64 support required | April 2026 | Apple news, July 22, 2025. Use Xcode's default `Standard Architectures` build setting. |\n| Built with watchOS 26 SDK or later | April 28, 2026 | Apple news, February 3, 2026. Same rule applies across iOS/iPadOS/tvOS/visionOS 26 SDKs. |\n\n> \"Apple Watch Series 9 and later, and Apple Watch Ultra 2 now use the arm64 architecture on watchOS 26.\" — Apple, What's new in watchOS 26\n\n> \"Xcode has supported building Apple Watch apps for the arm64 architecture since Xcode 14… If you're already building with standard architectures, you're already building for arm64.\" — Apple, What's new in watchOS 26\n\n**What to verify before submission:**\n- Build setting on every Watch target is `Standard Architectures`, not a locked legacy setting\n- Audit `Float`, `Int`, and pointer-based math — behavior differs on arm64 vs armv7k\n- Run on a device (Apple Watch Series 9, Series 10, Ultra 2) in addition to the simulator; the simulator always uses arm64 on Apple Silicon and can hide device-only issues\n\n## Project Structure — Three Models\n\nApple ships one Xcode template with three valid configurations. Pick the right one once; switching later means editing deployment info and resigning.\n\n| Model | Template | `WKRunsIndependentlyOfCompanionApp` | When to use |\n|---|---|---|---|\n| Watch-only | \"Watch-only App\" | Auto (no companion exists) | Wrist-first apps with no iPhone surface |\n| Paired companion | \"App\" + watchOS target added to iOS project | `false` | Existing iPhone app where the watch is a remote UI |\n| Independent + companion | Same as above, with box checked | `true` | Paired-or-alone — the safe default for new work |\n\n**\"Independent + companion\" is the recommended default.** It gives users the choice, works in Family Setup, and matches the Smart Stack workflow where people add controls from an iPhone app onto a Watch without having a Watch app installed.\n\n> \"Independent watchOS apps can't rely on the Watch Connectivity framework to transfer data or files from a companion iOS app.\" — Apple, Creating independent watchOS apps\n\nWhat an independent app must handle itself:\n\n- Account creation and sign-in on the watch\n- System permission prompts on the watch\n- Data downloads over the network — no Watch Connectivity fallback\n- Push notification registration, including complication pushes\n\nEnable independence on an existing target: project editor → Watch App target → General → Deployment Info → check \"Supports Running Without iOS App Installation\".\n\n## Canonical App Entry Point\n\n**SwiftUI App protocol, no storyboard, no WatchKit Extension.** Every new watchOS app should start from this shape:\n\n```swift\nimport SwiftUI\n\n@main\nstruct MyWatch_Watch_App: App {\n    var body: some Scene {\n        WindowGroup {\n            NavigationStack {\n                ContentView()\n            }\n        }\n    }\n}\n```\n\nThe `@main` attribute marks the entry point — an app has exactly one. The `WindowGroup` wraps a `NavigationStack` that provides the stack + title area. SwiftUI automatically composes scenes into a compound scene. (`NavigationView` is deprecated since watchOS 9 — use `NavigationStack`.)\n\n**Why SwiftUI over WatchKit:**\n\n> \"On watchOS, SwiftUI gives you considerably more freedom, power, and control than user interfaces laid out and designed in a storyboard. For example, List has a number of features that aren't supported by WKInterfaceTable, such as the platter style, swipe actions, and row reordering.\" — Apple, Building a watchOS app\n\nStart new projects on SwiftUI. Use `modernization.md` if an existing WatchKit app needs a migration plan.\n\n## Adding Notification Scenes\n\nEvery notification category that needs a custom long-look gets a `WKNotificationScene` in the `App`'s body:\n\n```swift\nvar body: some Scene {\n    WindowGroup {\n        NavigationStack {\n            ContentView()\n        }\n    }\n    WKNotificationScene(controller: NotificationController.self, category: \"myCategory\")\n}\n```\n\nThe controller subclasses `WKUserNotificationHostingController` and drives a SwiftUI view with the notification's content:\n\n```swift\nimport SwiftUI\nimport UserNotifications\n\nclass NotificationController: WKUserNotificationHostingController<NotificationLongLook> {\n    var content: UNNotificationContent!\n    var date: Date!\n\n    override var body: NotificationLongLook {\n        NotificationLongLook(content: content, date: date)\n    }\n\n    override class var isInteractive: Bool { true }\n\n    override func didReceive(_ notification: UNNotification) {\n        content = notification.request.content\n        date = notification.date\n    }\n}\n```\n\n`isInteractive` decides whether the system shows action buttons. `didReceive(_:)` is the only hand-off point from `UNNotification` to your SwiftUI state.\n\n## SwiftUI Event Handling — What It Covers\n\nFor most lifecycle work, SwiftUI's environment values and view modifiers replace the old app-delegate callbacks:\n\n| Need | SwiftUI hook |\n|---|---|\n| Foreground / background / inactive transitions | `@Environment(\\.scenePhase)` + `.onChange(of: scenePhase)` |\n| Handoff / `NSUserActivity` | `.onContinueUserActivity(_:perform:)` |\n| Background refresh, snapshot, URLSession background delivery | `.backgroundTask(_:action:)` |\n\nReach for an `App` delegate only when SwiftUI can't cover the need — the list is specific.\n\n## When You Still Need an App Delegate\n\nAdopt `WKApplicationDelegate` and wire it with `@WKApplicationDelegateAdaptor`:\n\n```swift\nimport SwiftUI\nimport WatchKit\n\n@main\nstruct MyWatch_Watch_App: App {\n    @WKApplicationDelegateAdaptor var appDelegate: MyAppDelegate\n\n    var body: some Scene {\n        WindowGroup {\n            NavigationStack {\n                ContentView()\n            }\n        }\n        WKNotificationScene(controller: NotificationController.self, category: \"myCategory\")\n    }\n}\n```\n\nThe delegate is the only path for these events — SwiftUI doesn't expose them:\n\n- `applicationDidFinishLaunching()` (when truly needed — most apps don't need it)\n- `userInfo` dictionaries from handoff or complications\n- Remote Now Playing activity\n- Workout configurations and recovery (crash-resilient workout continuation)\n- Extended runtime sessions\n- Registration of remote notifications (APNs device token)\n\nIf none of those apply, skip the delegate entirely. Do not add an empty delegate \"just in case\" — it's one more thing to break on arm64.\n\n## Info.plist Keys That Matter\n\nThe Xcode template sets these; know what they mean when reviewing an existing project:\n\n| Key | Purpose |\n|---|---|\n| `WKWatchKitApp` (Bool) | Marks this bundle as a watchOS app |\n| `WKAppBundleIdentifier` | Bundle ID of the watchOS app |\n| `WKCompanionAppBundleIdentifier` | Paired iOS app bundle ID (companion configs only) |\n| `WKExtensionDelegateClassName` | Legacy WatchKit Extension delegate class name — SwiftUI apps usually don't need it |\n| `WKRunsIndependentlyOfCompanionApp` (Bool) | Set `true` for independent or independent+companion apps |\n| `WKWatchOnly` (Bool) | Set `true` for watch-only apps with no iOS target |\n\n`WKRunsIndependentlyOfCompanionApp = YES` + `WKWatchOnly = NO` is the \"independent + companion\" shape. `WKWatchOnly = YES` is the watch-only shape.\n\n## Common Mistakes\n\n| Mistake | Symptom | Fix |\n|---|---|---|\n| Leaving the target on `armv7k` after enabling `Standard Architectures` via project-level settings | App Store submission rejected starting April 2026; crashes on device because the build links the wrong binary | Confirm `Standard Architectures` is set on every Watch target individually, not just at project level; rebuild |\n| Treating the simulator as sufficient arm64 testing | Device crashes that never reproduce in the simulator — the simulator always uses arm64 on Apple Silicon and masks armv7k-only defects in legacy code | Test on a physical Apple Watch Series 9 / 10 / Ultra 2 running watchOS 26 before submission |\n| Forcing pointer arithmetic through `Int` casts | Misaligned reads, intermittent crashes on device | Audit `Float`, `Int`, and pointer-based math per Apple's arm64 guidance; use typed pointer APIs |\n| Starting a new app as \"Watch App with Companion iOS App\" without checking \"Supports Running Without iOS App Installation\" | App fails Family Setup; won't install on a watch whose paired iPhone lacks the iPhone app | Check the box at project creation — independent+companion is the safe default |\n| Building an independent app that still relies on `WCSession.transferFile` as the primary data path | No data on Family Setup watches or unpaired watches; silent sync failures | Use URLSession + auth token directly from the watch; reserve Watch Connectivity for optimization when a paired iPhone is online |\n| Empty `WKApplicationDelegate` adopted \"just in case\" | Nothing breaks immediately, but obscures whether the app needs delegate callbacks and costs one more build-target dependency | Remove the delegate until a specific event (workout recovery, remote notifications, Now Playing) actually requires it |\n| Custom toolbar/control styles that haven't been audited against Liquid Glass | Inconsistent appearance against watchOS 26 system style; hard-to-read elements on new materials | Run the app on watchOS 26 and verify every custom style, or drop the custom styling and adopt the new defaults |\n| Assuming WWDC 2025-334's \"Controls on Apple Watch\" story means you must build a Watch app | Time spent building a Watch target for an action that works fine as an iPhone-side control surfaced on the watch | Controls from iPhone apps appear on Apple Watch even without a Watch app — see `controls-and-live-activities.md` |\n\n## Resources\n\n**WWDC**: 2025-334, 2025-219, 2024-10205, 2023-10138, 2022-10133\n\n**Docs**: /watchos-apps/building_a_watchos_app, /watchos-apps/setting-up-a-watchos-project, /watchos-apps/creating-independent-watchos-apps, /swiftui/app, /swiftui/scene, /swiftui/windowgroup, /watchkit/wkapplicationdelegate, /swiftui/wkapplicationdelegateadaptor, /swiftui/wknotificationscene, /watchkit/wkusernotificationhostingcontroller\n\n**Skills**: axiom-watchos (design-for-watchos, watch-connectivity, background-and-networking, smart-stack-and-complications, controls-and-live-activities, modernization), axiom-shipping, axiom-health\n",
+      "content": "# watchOS Platform Basics\n\n## When to Use This Skill\n\nUse when:\n- Starting a new watchOS app and need the project template, target structure, and `Info.plist` keys\n- Deciding between a watch-only app, a companion iOS app, or an independent app that ships in both forms\n- Setting up the app entry point — `@main`, `App`, `WindowGroup`, `NavigationStack`, delegate adoption\n- Preparing for the April 2026 watchOS 26 SDK and ARM64 submission deadlines\n- Adding a `WKApplicationDelegate` to handle workouts, Now Playing, extended runtime, or remote notifications\n- Wiring a custom notification long-look with `WKUserNotificationHostingController`\n- Debugging types that behave differently on arm64 (`Float`, `Int`, pointer math)\n\n#### Related Skills\n\n- Use `design-for-watchos.md` for watchOS HIG, navigation model, and glanceable UX\n- Use `watch-connectivity.md` when coordinating state with a paired iPhone app\n- Use `background-and-networking.md` for `backgroundTask(_:action:)`, URLSession background, and TN3135 networking limits\n- Use `smart-stack-and-complications.md` for WidgetKit complications, Smart Stack widgets, and RelevanceKit\n- Use `controls-and-live-activities.md` for controls that land in Control Center and the Smart Stack\n- Use `modernization.md` for WatchKit → SwiftUI and ClockKit → WidgetKit migration\n- Use `axiom-shipping` for App Store Connect submission specifics beyond the watchOS SDK gate\n- Use `axiom-health` when the app records workouts with HealthKit; Smart Stack suggests workout apps from routine\n\n## Core Principle\n\n**Ship a SwiftUI-first, independent, 64-bit app built with the watchOS 26 SDK.** That is the supported path as of watchOS 26 (April 2026 submission rule). Every other path — WatchKit storyboards, 32-bit builds, companion-only apps — is either deprecated or blocked at submission.\n\n## Submission Requirements (watchOS 26, April 2026)\n\nBoth rules are already announced by Apple:\n\n| Rule | Effective | Details |\n|---|---|---|\n| 64-bit / ARM64 support required | April 2026 | Apple news, July 22, 2025. Use Xcode's default `Standard Architectures` build setting. |\n| Built with watchOS 26 SDK or later | April 28, 2026 | Apple news, February 3, 2026. Same rule applies across iOS/iPadOS/tvOS/visionOS 26 SDKs. |\n\n> \"Apple Watch Series 9 and later, and Apple Watch Ultra 2 now use the arm64 architecture on watchOS 26.\" — Apple, What's new in watchOS 26\n\n> \"Xcode has supported building Apple Watch apps for the arm64 architecture since Xcode 14… If you're already building with standard architectures, you're already building for arm64.\" — Apple, What's new in watchOS 26\n\n#### What to verify before submission\n\n- Build setting on every Watch target is `Standard Architectures`, not a locked legacy setting\n- Audit `Float`, `Int`, and pointer-based math — behavior differs on arm64 vs armv7k\n- Run on a device (Apple Watch Series 9, Series 10, Ultra 2) in addition to the simulator; the simulator always uses arm64 on Apple Silicon and can hide device-only issues\n\n## Project Structure — Three Models\n\nApple ships one Xcode template with three valid configurations. Pick the right one once; switching later means editing deployment info and resigning.\n\n| Model | Template | `WKRunsIndependentlyOfCompanionApp` | When to use |\n|---|---|---|---|\n| Watch-only | \"Watch-only App\" | Auto (no companion exists) | Wrist-first apps with no iPhone surface |\n| Paired companion | \"App\" + watchOS target added to iOS project | `false` | Existing iPhone app where the watch is a remote UI |\n| Independent + companion | Same as above, with box checked | `true` | Paired-or-alone — the safe default for new work |\n\n**\"Independent + companion\" is the recommended default.** It gives users the choice, works in Family Setup, and matches the Smart Stack workflow where people add controls from an iPhone app onto a Watch without having a Watch app installed.\n\n> \"Independent watchOS apps can't rely on the Watch Connectivity framework to transfer data or files from a companion iOS app.\" — Apple, Creating independent watchOS apps\n\nWhat an independent app must handle itself:\n\n- Account creation and sign-in on the watch\n- System permission prompts on the watch\n- Data downloads over the network — no Watch Connectivity fallback\n- Push notification registration, including complication pushes\n\nEnable independence on an existing target: project editor → Watch App target → General → Deployment Info → check \"Supports Running Without iOS App Installation\".\n\n## Canonical App Entry Point\n\n**SwiftUI App protocol, no storyboard, no WatchKit Extension.** Every new watchOS app should start from this shape:\n\n```swift\nimport SwiftUI\n\n@main\nstruct MyWatch_Watch_App: App {\n    var body: some Scene {\n        WindowGroup {\n            NavigationStack {\n                ContentView()\n            }\n        }\n    }\n}\n```\n\nThe `@main` attribute marks the entry point — an app has exactly one. The `WindowGroup` wraps a `NavigationStack` that provides the stack + title area. SwiftUI automatically composes scenes into a compound scene. (`NavigationView` is deprecated since watchOS 9 — use `NavigationStack`.)\n\n#### Why SwiftUI over WatchKit\n\n> \"On watchOS, SwiftUI gives you considerably more freedom, power, and control than user interfaces laid out and designed in a storyboard. For example, List has a number of features that aren't supported by WKInterfaceTable, such as the platter style, swipe actions, and row reordering.\" — Apple, Building a watchOS app\n\nStart new projects on SwiftUI. Use `modernization.md` if an existing WatchKit app needs a migration plan.\n\n## Adding Notification Scenes\n\nEvery notification category that needs a custom long-look gets a `WKNotificationScene` in the `App`'s body:\n\n```swift\nvar body: some Scene {\n    WindowGroup {\n        NavigationStack {\n            ContentView()\n        }\n    }\n    WKNotificationScene(controller: NotificationController.self, category: \"myCategory\")\n}\n```\n\nThe controller subclasses `WKUserNotificationHostingController` and drives a SwiftUI view with the notification's content:\n\n```swift\nimport SwiftUI\nimport UserNotifications\n\nclass NotificationController: WKUserNotificationHostingController<NotificationLongLook> {\n    var content: UNNotificationContent!\n    var date: Date!\n\n    override var body: NotificationLongLook {\n        NotificationLongLook(content: content, date: date)\n    }\n\n    override class var isInteractive: Bool { true }\n\n    override func didReceive(_ notification: UNNotification) {\n        content = notification.request.content\n        date = notification.date\n    }\n}\n```\n\n`isInteractive` decides whether the system shows action buttons. `didReceive(_:)` is the only hand-off point from `UNNotification` to your SwiftUI state.\n\n## SwiftUI Event Handling — What It Covers\n\nFor most lifecycle work, SwiftUI's environment values and view modifiers replace the old app-delegate callbacks:\n\n| Need | SwiftUI hook |\n|---|---|\n| Foreground / background / inactive transitions | `@Environment(\\.scenePhase)` + `.onChange(of: scenePhase)` |\n| Handoff / `NSUserActivity` | `.onContinueUserActivity(_:perform:)` |\n| Background refresh, snapshot, URLSession background delivery | `.backgroundTask(_:action:)` |\n\nReach for an `App` delegate only when SwiftUI can't cover the need — the list is specific.\n\n## When You Still Need an App Delegate\n\nAdopt `WKApplicationDelegate` and wire it with `@WKApplicationDelegateAdaptor`:\n\n```swift\nimport SwiftUI\nimport WatchKit\n\n@main\nstruct MyWatch_Watch_App: App {\n    @WKApplicationDelegateAdaptor var appDelegate: MyAppDelegate\n\n    var body: some Scene {\n        WindowGroup {\n            NavigationStack {\n                ContentView()\n            }\n        }\n        WKNotificationScene(controller: NotificationController.self, category: \"myCategory\")\n    }\n}\n```\n\nThe delegate is the only path for these events — SwiftUI doesn't expose them:\n\n- `applicationDidFinishLaunching()` (when truly needed — most apps don't need it)\n- `userInfo` dictionaries from handoff or complications\n- Remote Now Playing activity\n- Workout configurations and recovery (crash-resilient workout continuation)\n- Extended runtime sessions\n- Registration of remote notifications (APNs device token)\n\nIf none of those apply, skip the delegate entirely. Do not add an empty delegate \"just in case\" — it's one more thing to break on arm64.\n\n## Info.plist Keys That Matter\n\nThe Xcode template sets these; know what they mean when reviewing an existing project:\n\n| Key | Purpose |\n|---|---|\n| `WKWatchKitApp` (Bool) | Marks this bundle as a watchOS app |\n| `WKAppBundleIdentifier` | Bundle ID of the watchOS app |\n| `WKCompanionAppBundleIdentifier` | Paired iOS app bundle ID (companion configs only) |\n| `WKExtensionDelegateClassName` | Legacy WatchKit Extension delegate class name — SwiftUI apps usually don't need it |\n| `WKRunsIndependentlyOfCompanionApp` (Bool) | Set `true` for independent or independent+companion apps |\n| `WKWatchOnly` (Bool) | Set `true` for watch-only apps with no iOS target |\n\n`WKRunsIndependentlyOfCompanionApp = YES` + `WKWatchOnly = NO` is the \"independent + companion\" shape. `WKWatchOnly = YES` is the watch-only shape.\n\n## Common Mistakes\n\n| Mistake | Symptom | Fix |\n|---|---|---|\n| Leaving the target on `armv7k` after enabling `Standard Architectures` via project-level settings | App Store submission rejected starting April 2026; crashes on device because the build links the wrong binary | Confirm `Standard Architectures` is set on every Watch target individually, not just at project level; rebuild |\n| Treating the simulator as sufficient arm64 testing | Device crashes that never reproduce in the simulator — the simulator always uses arm64 on Apple Silicon and masks armv7k-only defects in legacy code | Test on a physical Apple Watch Series 9 / 10 / Ultra 2 running watchOS 26 before submission |\n| Forcing pointer arithmetic through `Int` casts | Misaligned reads, intermittent crashes on device | Audit `Float`, `Int`, and pointer-based math per Apple's arm64 guidance; use typed pointer APIs |\n| Starting a new app as \"Watch App with Companion iOS App\" without checking \"Supports Running Without iOS App Installation\" | App fails Family Setup; won't install on a watch whose paired iPhone lacks the iPhone app | Check the box at project creation — independent+companion is the safe default |\n| Building an independent app that still relies on `WCSession.transferFile` as the primary data path | No data on Family Setup watches or unpaired watches; silent sync failures | Use URLSession + auth token directly from the watch; reserve Watch Connectivity for optimization when a paired iPhone is online |\n| Empty `WKApplicationDelegate` adopted \"just in case\" | Nothing breaks immediately, but obscures whether the app needs delegate callbacks and costs one more build-target dependency | Remove the delegate until a specific event (workout recovery, remote notifications, Now Playing) actually requires it |\n| Custom toolbar/control styles that haven't been audited against Liquid Glass | Inconsistent appearance against watchOS 26 system style; hard-to-read elements on new materials | Run the app on watchOS 26 and verify every custom style, or drop the custom styling and adopt the new defaults |\n| Assuming WWDC 2025-334's \"Controls on Apple Watch\" story means you must build a Watch app | Time spent building a Watch target for an action that works fine as an iPhone-side control surfaced on the watch | Controls from iPhone apps appear on Apple Watch even without a Watch app — see `controls-and-live-activities.md` |\n\n## Resources\n\n**WWDC**: 2025-334, 2025-219, 2024-10205, 2023-10138, 2022-10133\n\n**Docs**: /watchos-apps/building_a_watchos_app, /watchos-apps/setting-up-a-watchos-project, /watchos-apps/creating-independent-watchos-apps, /swiftui/app, /swiftui/scene, /swiftui/windowgroup, /watchkit/wkapplicationdelegate, /swiftui/wkapplicationdelegateadaptor, /swiftui/wknotificationscene, /watchkit/wkusernotificationhostingcontroller\n\n**Skills**: axiom-watchos (design-for-watchos, watch-connectivity, background-and-networking, smart-stack-and-complications, controls-and-live-activities, modernization), axiom-shipping, axiom-health\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -32422,63 +32422,63 @@
           "heading": "Submission Requirements (watchOS 26, April 2026)",
           "level": 2,
           "startLine": 28,
-          "endLine": 45,
-          "charCount": 1178
+          "endLine": 46,
+          "charCount": 1179
         },
         {
           "heading": "Project Structure — Three Models",
           "level": 2,
-          "startLine": 46,
-          "endLine": 68,
+          "startLine": 47,
+          "endLine": 69,
           "charCount": 1474
         },
         {
           "heading": "Canonical App Entry Point",
           "level": 2,
-          "startLine": 69,
-          "endLine": 95,
+          "startLine": 70,
+          "endLine": 96,
           "charCount": 1103
         },
         {
           "heading": "Adding Notification Scenes",
           "level": 2,
-          "startLine": 96,
-          "endLine": 135,
+          "startLine": 97,
+          "endLine": 136,
           "charCount": 1154
         },
         {
           "heading": "SwiftUI Event Handling — What It Covers",
           "level": 2,
-          "startLine": 136,
-          "endLine": 147,
+          "startLine": 137,
+          "endLine": 148,
           "charCount": 563
         },
         {
           "heading": "When You Still Need an App Delegate",
           "level": 2,
-          "startLine": 148,
-          "endLine": 181,
+          "startLine": 149,
+          "endLine": 182,
           "charCount": 1054
         },
         {
           "heading": "Info.plist Keys That Matter",
           "level": 2,
-          "startLine": 182,
-          "endLine": 196,
+          "startLine": 183,
+          "endLine": 197,
           "charCount": 812
         },
         {
           "heading": "Common Mistakes",
           "level": 2,
-          "startLine": 197,
-          "endLine": 209,
+          "startLine": 198,
+          "endLine": 210,
           "charCount": 2416
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 210,
-          "endLine": 217,
+          "startLine": 211,
+          "endLine": 218,
           "charCount": 622
         }
       ]
@@ -34630,7 +34630,7 @@
           2,
           2,
           30,
-          539
+          538
         ],
         "3": [
           5,
@@ -35911,7 +35911,7 @@
           2,
           2,
           36,
-          547
+          553
         ],
         "186": [
           5,
@@ -35989,7 +35989,7 @@
         14.086734693877553,
         4.464285714285712,
         43.49489795918365,
-        604.8979591836735
+        604.9234693877548
       ],
       "storedFields": {
         "0": {
@@ -54132,7 +54132,7 @@
               "182": 18,
               "183": 37,
               "184": 53,
-              "185": 10,
+              "185": 11,
               "188": 2,
               "191": 6
             }
@@ -59196,7 +59196,7 @@
           "10223",
           {
             "4": {
-              "2": 2
+              "2": 1
             }
           }
         ],
@@ -62874,7 +62874,7 @@
               "108": 1
             },
             "4": {
-              "2": 3,
+              "2": 2,
               "14": 1,
               "15": 2,
               "16": 1,
@@ -63558,14 +63558,6 @@
             "4": {
               "83": 2,
               "120": 1
-            }
-          }
-        ],
-        [
-          "eofill",
-          {
-            "4": {
-              "2": 1
             }
           }
         ],
@@ -72702,7 +72694,8 @@
               "123": 10,
               "125": 3,
               "126": 8,
-              "176": 1
+              "176": 1,
+              "185": 1
             }
           }
         ],
@@ -76234,7 +76227,7 @@
               "178": 3,
               "180": 2,
               "181": 3,
-              "185": 1,
+              "185": 2,
               "186": 2,
               "187": 2,
               "188": 1,
@@ -76594,7 +76587,8 @@
               "156": 1,
               "157": 1,
               "165": 1,
-              "181": 2
+              "181": 2,
+              "185": 1
             }
           }
         ],
@@ -77000,7 +76994,7 @@
               "62": 1,
               "64": 2,
               "123": 1,
-              "185": 1,
+              "185": 2,
               "190": 1
             }
           }
@@ -78630,7 +78624,7 @@
               "182": 11,
               "183": 10,
               "184": 10,
-              "185": 59,
+              "185": 57,
               "187": 13,
               "189": 8,
               "190": 2,
@@ -85680,7 +85674,7 @@
               "172": 3,
               "178": 3,
               "180": 1,
-              "185": 39,
+              "185": 37,
               "189": 1,
               "190": 2,
               "191": 9,
@@ -90917,6 +90911,7 @@
               "169": 1,
               "176": 4,
               "179": 1,
+              "185": 2,
               "187": 1
             }
           }
@@ -95302,7 +95297,7 @@
               "182": 6,
               "183": 4,
               "184": 3,
-              "185": 2,
+              "185": 3,
               "186": 2,
               "187": 1,
               "188": 3,
@@ -96118,7 +96113,7 @@
               "182": 8,
               "183": 6,
               "184": 8,
-              "185": 11,
+              "185": 16,
               "186": 5,
               "187": 3,
               "188": 7,
@@ -99656,7 +99651,7 @@
               "182": 27,
               "183": 25,
               "184": 9,
-              "185": 9,
+              "185": 10,
               "186": 1,
               "187": 2,
               "188": 21,
@@ -103158,7 +103153,7 @@
               "179": 2,
               "181": 4,
               "184": 2,
-              "185": 3,
+              "185": 6,
               "186": 3,
               "188": 2,
               "189": 1,
@@ -110550,7 +110545,7 @@
               "182": 63,
               "183": 131,
               "184": 117,
-              "185": 5,
+              "185": 6,
               "186": 9,
               "187": 1,
               "188": 4,
@@ -115139,7 +115134,7 @@
               "181": 2,
               "182": 2,
               "183": 4,
-              "185": 2,
+              "185": 1,
               "189": 1,
               "194": 1
             }
@@ -116545,7 +116540,8 @@
               "171": 4,
               "174": 1,
               "178": 1,
-              "179": 1
+              "179": 1,
+              "185": 1
             }
           }
         ],
@@ -120571,6 +120567,7 @@
               "182": 14,
               "183": 16,
               "184": 23,
+              "185": 1,
               "186": 13,
               "188": 1,
               "189": 1,
@@ -121277,7 +121274,6 @@
               "182": 1,
               "183": 5,
               "184": 7,
-              "185": 1,
               "186": 1,
               "187": 2,
               "188": 3,
@@ -124139,7 +124135,6 @@
               "146": 1,
               "162": 1,
               "176": 1,
-              "185": 1,
               "190": 2
             }
           }
@@ -126054,6 +126049,7 @@
               "182": 13,
               "183": 4,
               "184": 4,
+              "185": 1,
               "186": 3,
               "191": 5
             }
@@ -132081,7 +132077,7 @@
               "58": 1,
               "60": 2,
               "61": 1,
-              "62": 2,
+              "62": 3,
               "64": 1,
               "72": 3,
               "73": 1,
@@ -134590,7 +134586,6 @@
               "162": 1,
               "165": 2,
               "166": 2,
-              "185": 1,
               "189": 1
             }
           }
@@ -134807,7 +134802,7 @@
               "59": 47,
               "60": 11,
               "61": 30,
-              "62": 14,
+              "62": 13,
               "64": 16,
               "66": 14,
               "67": 38,
@@ -142262,7 +142257,7 @@
               "172": 2,
               "176": 2,
               "178": 9,
-              "185": 58,
+              "185": 57,
               "189": 2,
               "191": 17,
               "193": 1
@@ -146172,7 +146167,7 @@
               "181": 5,
               "183": 7,
               "184": 2,
-              "185": 3,
+              "185": 6,
               "186": 7,
               "188": 2,
               "189": 2,
@@ -149376,7 +149371,7 @@
               "181": 11,
               "182": 29,
               "183": 6,
-              "185": 10,
+              "185": 11,
               "186": 3,
               "187": 3,
               "188": 3,
@@ -149589,7 +149584,6 @@
               "169": 2,
               "177": 1,
               "184": 1,
-              "185": 1,
               "192": 1
             }
           }
@@ -150737,6 +150731,7 @@
               "165": 3,
               "166": 5,
               "176": 7,
+              "185": 1,
               "194": 1
             }
           }
@@ -159019,7 +159014,7 @@
               "182": 3,
               "183": 3,
               "184": 2,
-              "185": 6,
+              "185": 8,
               "186": 1,
               "187": 7,
               "188": 2,
@@ -162249,6 +162244,7 @@
               "181": 4,
               "182": 5,
               "183": 4,
+              "185": 1,
               "191": 2
             }
           }
@@ -162702,7 +162698,8 @@
               "38": 1,
               "114": 1,
               "128": 1,
-              "160": 1
+              "160": 1,
+              "185": 1
             }
           }
         ],
@@ -162755,8 +162752,7 @@
               "139": 1,
               "144": 4,
               "160": 2,
-              "184": 1,
-              "185": 1
+              "184": 1
             }
           }
         ],
@@ -164996,7 +164992,6 @@
               "172": 16,
               "176": 2,
               "177": 5,
-              "185": 1,
               "192": 3,
               "193": 1,
               "195": 2
@@ -167188,7 +167183,7 @@
               "179": 4,
               "180": 5,
               "181": 3,
-              "185": 6,
+              "185": 11,
               "186": 4,
               "187": 2,
               "188": 4,
@@ -169349,7 +169344,7 @@
               "178": 1,
               "179": 1,
               "181": 4,
-              "185": 4,
+              "185": 5,
               "186": 1,
               "187": 4,
               "188": 1,
@@ -173381,7 +173376,7 @@
               "122": 1
             },
             "4": {
-              "2": 2,
+              "2": 1,
               "3": 3,
               "4": 41,
               "5": 2,
@@ -175506,7 +175501,7 @@
               "171": 2,
               "172": 4,
               "173": 1,
-              "185": 39,
+              "185": 40,
               "186": 49,
               "187": 18,
               "188": 73,
@@ -179373,7 +179368,7 @@
               "176": 4,
               "178": 1,
               "181": 1,
-              "185": 2,
+              "185": 1,
               "188": 1,
               "189": 1,
               "190": 2
@@ -184808,7 +184803,7 @@
               "182": 7,
               "183": 41,
               "184": 61,
-              "185": 17,
+              "185": 19,
               "186": 16,
               "187": 16,
               "188": 53,
@@ -186556,7 +186551,7 @@
               "182": 2,
               "183": 2,
               "184": 1,
-              "185": 3,
+              "185": 4,
               "187": 2,
               "188": 1,
               "189": 1,
@@ -186998,7 +186993,7 @@
               "182": 37,
               "183": 31,
               "184": 51,
-              "185": 13,
+              "185": 15,
               "186": 7,
               "187": 13,
               "188": 24,
@@ -194344,7 +194339,8 @@
               "121": 1,
               "122": 7,
               "123": 3,
-              "178": 2
+              "178": 2,
+              "185": 1
             }
           }
         ],
@@ -197714,7 +197710,7 @@
               "55": 1,
               "56": 4,
               "61": 1,
-              "62": 2,
+              "62": 1,
               "64": 5,
               "65": 2,
               "66": 2,
@@ -203254,7 +203250,7 @@
               "182": 10,
               "183": 18,
               "184": 22,
-              "185": 2,
+              "185": 7,
               "186": 9,
               "190": 1,
               "193": 50,
@@ -212218,7 +212214,7 @@
               "174": 1,
               "178": 2,
               "181": 1,
-              "185": 2,
+              "185": 1,
               "190": 1
             }
           }
@@ -212805,6 +212801,7 @@
           {
             "4": {
               "80": 1,
+              "185": 1,
               "188": 1,
               "191": 1
             }
@@ -216874,7 +216871,7 @@
               "182": 2,
               "183": 23,
               "184": 11,
-              "185": 4,
+              "185": 6,
               "186": 3,
               "187": 3,
               "189": 2,
@@ -222254,7 +222251,8 @@
               "161": 1,
               "167": 1,
               "169": 1,
-              "181": 1
+              "181": 1,
+              "185": 1
             }
           }
         ],
@@ -224590,7 +224588,7 @@
               "181": 49,
               "183": 4,
               "184": 2,
-              "185": 2,
+              "185": 5,
               "186": 6,
               "187": 2,
               "188": 2,
@@ -232929,7 +232927,6 @@
               "180": 4,
               "183": 1,
               "184": 8,
-              "185": 1,
               "186": 3,
               "187": 1,
               "190": 2,
@@ -235507,7 +235504,7 @@
               "179": 2,
               "180": 4,
               "181": 2,
-              "185": 3,
+              "185": 4,
               "186": 2,
               "188": 1,
               "189": 2,
@@ -239628,7 +239625,7 @@
               "182": 1,
               "183": 5,
               "184": 8,
-              "185": 4
+              "185": 5
             }
           }
         ],
@@ -243651,7 +243648,7 @@
               "182": 5,
               "183": 5,
               "184": 19,
-              "185": 36,
+              "185": 33,
               "186": 48,
               "187": 11,
               "188": 58,
@@ -246624,6 +246621,7 @@
               "126": 1,
               "141": 1,
               "178": 2,
+              "185": 1,
               "191": 4
             }
           }
@@ -251391,7 +251389,7 @@
               "181": 5,
               "183": 3,
               "184": 2,
-              "185": 2,
+              "185": 1,
               "186": 1,
               "187": 2,
               "188": 2,
@@ -257254,10 +257252,7 @@
           "considered",
           "daniel",
           "sykes",
-          "turner",
-          "wwdc",
-          "2021",
-          "10223"
+          "turner"
         ],
         "Watch-Specific Assistive Technologies": [
           "watch",
@@ -258140,7 +258135,6 @@
           "accessibilityadjustableac",
           "accessibilityac",
           "contentshape",
-          "eofill",
           "handgestureshortcut",
           "isenabled",
           "skills",
@@ -324147,7 +324141,7 @@
           "now",
           "log",
           "status",
-          "self",
+          "predicates",
           "sort",
           "descriptors",
           "date",
@@ -480230,19 +480224,28 @@
           "context",
           "await",
           "data",
-          "named",
-          "identifiers",
-          "distinct",
+          "distinguish",
           "flows",
-          "schedule",
-          "specific",
           "user",
           "info",
+          "schedule",
+          "specific",
           "str",
           "then",
-          "match",
-          "typed",
+          "branch",
+          "inside",
           "handler",
+          "must",
+          "conform",
+          "both",
+          "ns",
+          "secure",
+          "cod",
+          "object",
+          "protocol",
+          "bridges",
+          "cleanly",
+          "via",
           "schedul",
           "wk",
           "applica",
@@ -480256,25 +480259,30 @@
           "60",
           "weather",
           "update",
-          "ns",
-          "secure",
-          "cod",
-          "object",
-          "protocol",
           "error",
           "if",
           "let",
           "handl",
           "one",
-          "per",
+          "dispatch",
+          "os",
+          "payload",
+          "arrives",
+          "not",
           "identifier",
-          "plus",
-          "fallback",
+          "form",
+          "uses",
+          "bg",
+          "scheduler",
+          "ds",
+          "reason",
+          "switch",
+          "case",
           "fetch",
           "widget",
           "reload",
-          "any",
-          "other",
+          "default",
+          "perform",
           "cancella",
           "long",
           "tasks",
