@@ -299,6 +299,10 @@ Simplified:
 | "I'll just do it in the ASC web dashboard" | If asc-mcp is configured, MCP tools are faster for bulk operations — distributing builds, responding to reviews, creating versions. asc-mcp has the workflow. |
 | "Upload failed with ITMS error, let me re-archive" | ITMS signing errors are configuration — wrong cert, expired profile, missing entitlement. Re-archiving with the same config produces the same result. code-signing-diag has the fix. |
 
+## External Resources
+
+For apps that ship AI features powered by the Anthropic Messages API or Claude Agent SDK (rather than Apple's on-device Foundation Models), see the **`claude-api`** skill — it ships outside Axiom and includes the automated Opus 4.6 → 4.7 migration. Useful before submitting an update that changes which Claude model your app calls.
+
 ## When NOT to Use (Conflict Resolution)
 
 **Do NOT use axiom-shipping for these — use the correct skill instead:**
