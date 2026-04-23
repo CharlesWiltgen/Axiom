@@ -26,6 +26,11 @@ license: MIT
 | Missing loading/error states | See `skills/ux-flow-audit.md` |
 | Deep link dead ends | See `skills/ux-flow-audit.md` |
 | Accessibility dead ends (gesture-only) | See `skills/ux-flow-audit.md` |
+| watchOS-specific (VoiceOver rotor on Digital Crown, AssistiveTouch, Double Tap) | See `skills/watchos-a11y.md` |
+
+## Cross-Suite Routes
+
+- Full watchOS development context → See axiom-watchos
 
 ## Decision Tree
 
@@ -45,6 +50,7 @@ digraph accessibility {
     what -> "skills/accessibility-diag.md" [label="App Store prep"];
     what -> "skills/ux-flow-audit.md" [label="UX dead end/dismiss trap"];
     what -> "skills/ux-flow-audit.md" [label="missing states"];
+    what -> "skills/watchos-a11y.md" [label="watchOS VoiceOver / AssistiveTouch / Double Tap"];
     what -> "accessibility-auditor" [label="automated scan" shape=box];
 }
 ```
@@ -53,7 +59,8 @@ digraph accessibility {
 2. Assistive Access (cognitive disabilities, iOS 17+) → `skills/accessibility-diag.md`
 3. App Store accessibility rejection → `skills/accessibility-diag.md`
 4. UX dead ends, dismiss traps, buried CTAs, missing states → `skills/ux-flow-audit.md`
-5. Want automated accessibility scan? → `accessibility-auditor` agent or `/axiom:audit accessibility`
+5. watchOS-specific accessibility (rotor on Digital Crown, AssistiveTouch, Double Tap) → `skills/watchos-a11y.md`
+6. Want automated accessibility scan? → `accessibility-auditor` agent or `/axiom:audit accessibility`
 
 ## Automated Scanning
 
