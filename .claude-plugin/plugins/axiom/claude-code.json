@@ -110,6 +110,14 @@
     {
       "name": "axiom-macos",
       "description": "Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging, or macOS-specific SwiftUI patterns."
+    },
+    {
+      "name": "axiom-watchos",
+      "description": "Use when building ANY watchOS app — app structure, independent apps, Watch Connectivity, Smart Stack widgets, complications, controls, RelevanceKit, background tasks, ClockKit migration."
+    },
+    {
+      "name": "axiom-health",
+      "description": "Use when working with HealthKit, WorkoutKit, health data, workouts, or fitness features on iOS or watchOS. Covers permissions, queries, background delivery, custom workouts, multidevice coordination."
     }
   ]
 }
