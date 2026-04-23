@@ -91,6 +91,9 @@ Use this skill when working with:
 26. SwiftData @MainActor / background context threading? → `/skill axiom-concurrency`
 27. Structured data generation with Foundation Models? → `/skill axiom-ai`
 
+#### Sync patterns
+- HealthKit anchored/observer queries as a generalizable change-tracking pattern → See axiom-health (skills/sync-and-background.md)
+
 ## Anti-Rationalization
 
 | Thought | Reality |

@@ -56,6 +56,9 @@ digraph networking {
 8. UIWebView or deprecated API rejection? → networking-auditor (Agent)
 9. Want deprecated API / anti-pattern scan? → networking-auditor (Agent)
 
+#### Platform-specific networking
+- watchOS low-level-networking limits (TN3135) → See axiom-watchos (skills/background-and-networking.md)
+
 ## Pressure Resistance
 
 **When user has invested significant time in custom implementation:**
