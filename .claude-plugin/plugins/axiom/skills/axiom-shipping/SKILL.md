@@ -287,6 +287,9 @@ Simplified:
 9. ITMS signing/certificate/profile error on upload? → See axiom-security (skills/code-signing-diag.md)
 10. General submission preparation? → `skills/app-store-submission.md`
 
+#### Platform-specific submission
+- watchOS 26 SDK requirement, 64-bit, independent-app submission → See axiom-watchos (skills/platform-basics.md)
+
 ## Anti-Rationalization
 
 | Thought | Reality |
