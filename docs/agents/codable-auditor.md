@@ -1,10 +1,10 @@
 # codable-auditor
 
-Automatically scans for Codable anti-patterns and JSON serialization issues that cause silent data loss and production bugs.
+Scans Swift code for Codable safety violations, architectural gaps, and semantic risks that cause silent data loss, revenue leaks, and production crashes.
 
-## How to Use This Agent
+## How to Use
 
-**Natural language:**
+**Natural language (automatic triggering):**
 - "Check my Codable code for issues"
 - "Review my JSON encoding/decoding for best practices"
 - "Audit my code for proper Codable usage"
@@ -13,59 +13,52 @@ Automatically scans for Codable anti-patterns and JSON serialization issues that
 
 **Explicit command:**
 ```bash
-/axiom:audit-codable
+/axiom:audit codable
 ```
 
 ## What It Does
 
-### High-Severity Anti-Patterns
+### Detection — Known Anti-Patterns (Phase 2)
 1. **Manual JSON String Building** (HIGH) — String interpolation in JSON, injection vulnerabilities, escaping bugs
-2. **try? Swallowing DecodingError** (HIGH) — Silent failures with `try? JSONDecoder().decode()`, data loss
-3. **String Interpolation in JSON** (HIGH) — Injection risks, breaks on special characters
+2. **try? Swallowing DecodingError** (HIGH) — Silent decode failures, data loss without logs
+3. **Dict-as-Payload + JSONSerialization** (MEDIUM) — Untyped `[String: Any]` request bodies
+4. **JSONSerialization + Cast Chain on Reads** (MEDIUM) — Legacy pattern, no type safety
+5. **Date Without Decoder Strategy** (MEDIUM) — Timezone bugs, intermittent failures across regions
+6. **DateFormatter Without Locale/TimeZone** (MEDIUM) — Locale-dependent parsing failures
+7. **Optional-to-Avoid-Decode-Errors** (MEDIUM) — Masks structural problems, crashes later
+8. **Empty or Context-less Catch Blocks** (LOW) — Missing debugging information
 
-### Medium-Severity Issues
-4. **JSONSerialization Instead of Codable** (MEDIUM) — Legacy pattern, 3x more boilerplate, no type safety
-5. **Date Without Explicit Strategy** (MEDIUM) — Timezone bugs, intermittent failures across regions
-6. **DateFormatter Without Locale/Timezone** (MEDIUM) — Locale-dependent parsing failures
-7. **Optional Properties to Avoid Decode Errors** (MEDIUM) — Masks structural problems, runtime crashes
+### Completeness Reasoning (Phase 3)
+9. **Missing CodingKeys for snake_case** — The most common Codable bug; camelCase struct + snake_case API with no mapping
+10. **@propertyWrapper silent fallback** — Custom wrappers whose `init(from:)` uses `try?` hide silent decoding failures on fields like payment or auth
+11. **Closed enum decoded from server** — String enums without unknown-case handling crash when the server adds values
+12. **Cross-file encoder/decoder drift** — Same data format encoded in one file with one strategy, decoded in another with a different one
+13. **Silent field drop** — Server-supplied fields that the struct simply doesn't declare (e.g. paywall signals)
+14. **Missing Sendable on Codable crossing actors** — Swift 6 isolation violations
+15. **Repeated decoder instantiation** — Per-call creation scatters strategy configuration
 
-### Low-Severity Issues
-8. **No Error Context in Catch Blocks** (LOW) — Missing debugging information
+### Compound Findings (Phase 4)
+Severity bumps when multiple findings interact — e.g. `try?` on decode of a payment field, wrapper-hidden fallback on subscription state, encoder/decoder drift on persistence round-trips.
 
-## Example Output
-
-```markdown
-## Codable Audit Results
-
-### 🔴 High Priority (2 issues)
-- **src/API/Response.swift:45** - Manual JSON building with string interpolation
-  Fix: Use JSONEncoder with Codable type
-
-- **src/Network/Parser.swift:112** - `try?` swallowing DecodingError
-  Fix: Handle DecodingError cases explicitly
-
-### 🟡 Medium Priority (3 issues)
-- **src/Models/User.swift:23** - Date property without explicit strategy
-  Fix: Set decoder.dateDecodingStrategy = .iso8601
-
-- **src/Legacy/OldAPI.swift:67** - JSONSerialization usage
-  Fix: Migrate to Codable
-```
+### Health Score (Phase 5)
+Reports overall serialization hygiene as **SAFE**, **HARDENING NEEDED**, or **UNSAFE** with specific metrics (Codable coverage, strategy consistency, silent-failure risk, CodingKeys coverage, enum future-proofing, cross-file alignment).
 
 ## Related
 
-- **codable** — Comprehensive Codable patterns and anti-patterns
-- **swift-concurrency** — Codable + Sendable for crossing actor boundaries
-- **networking** — Network.framework Coder protocol
-- **swiftdata** — @Model types use Codable for CloudKit sync
+- **codable** skill — Comprehensive Codable patterns and anti-patterns; use to fix issues this auditor finds
+- **axiom-concurrency** skill — Codable + Sendable for crossing actor boundaries
+- **concurrency-auditor** agent — Investigates Sendable gaps this auditor identifies
+- **swiftdata-auditor** agent — Investigates @Model Codable relationships this auditor flags
+- **ux-flow-auditor** agent — Investigates missing error UI for decode failures this auditor finds
 
 ## Why This Matters
 
-This agent prevents production disasters:
+Silent decoding bugs are the hardest production issues to catch. This agent hunts for:
 
-- **Injection vulnerabilities** — Manual JSON building exposes attack vectors
-- **Silent failures** — Swallowed errors lose customer data without logs
-- **Timezone bugs** — Issues appear only in certain locales
-- **Legacy debt** — JSONSerialization should use modern Codable
+- **Injection vulnerabilities** — Manual JSON building with user input breaks on any quote character
+- **Silent failures** — `try?` and property wrapper fallbacks lose customer data without a single log line
+- **Revenue leaks** — Structs that silently drop paywall or subscription fields
+- **Future-case crashes** — Closed String enums decoded from server-controlled values
+- **Round-trip corruption** — Encoder and decoder using different strategies on the same data format
 
-Catch these during development. Production fixes upset customers and cost more.
+A pattern-matching scan catches the obvious cases. The semantic reasoning phases catch the expensive ones you won't notice until a customer emails support.
