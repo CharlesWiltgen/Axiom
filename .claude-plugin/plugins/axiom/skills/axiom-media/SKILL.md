@@ -22,6 +22,7 @@ license: MIT
 | ShazamKit API reference | See `skills/shazamkit-ref.md` |
 | Haptic feedback, Core Haptics | See `skills/haptics.md` |
 | Now Playing metadata, remote commands | See `skills/now-playing.md` |
+| Animated lock-screen artwork (iOS 26+) | See `skills/now-playing.md` Pattern 8 |
 | CarPlay HIG, app categories, design rules, entitlements | See `skills/carplay-hig.md` |
 | CarPlay templates reference (all 13 templates, availability matrix, depth limits) | See `skills/carplay-templates-ref.md` |
 | CarPlay navigation reference (base view, route guidance, cluster/HUD, multitouch, voice prompts) | See `skills/carplay-navigation-ref.md` |
