@@ -30,7 +30,7 @@ description: |
 
   Explicit command: Users can also invoke this agent directly with `/axiom:audit screenshots`
 model: sonnet
-# sonnet required: multimodal vision for screenshot content analysis
+# sonnet chosen for cost/quality tradeoff; opus available for high-fidelity screenshot analysis if needed
 background: true
 color: orange
 tools:
