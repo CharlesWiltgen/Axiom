@@ -23,6 +23,7 @@ license: MIT
 | Architecture/testability | See `skills/architecture.md` |
 | Animation issues | See `skills/animation-ref.md` |
 | Stacks/grids/outlines | See `skills/containers-ref.md` |
+| Custom containers / List replacement (iOS 18+) | See `skills/containers-ref.md` Part 7 |
 | Search implementation | See `skills/search-ref.md` |
 | Gesture conflicts | See `skills/gestures.md` |
 | iOS 26 features | See `skills/26-ref.md` |

@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-04-23T20:33:34.038Z",
+  "generatedAt": "2026-04-25T19:40:42.715Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -26430,7 +26430,7 @@
     "axiom-swiftui": {
       "name": "axiom-swiftui",
       "description": "Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, performance, architecture, gestures, debugging, iOS 26 features.",
-      "content": "\n# SwiftUI\n\n**You MUST use this skill for ANY SwiftUI work including views, state, navigation, layout, animations, architecture, gestures, and debugging.**\n\n## Quick Reference\n\n| Symptom / Task | Reference |\n|----------------|-----------|\n| View not updating | See `skills/debugging.md` |\n| View update still broken after debugging | See `skills/debugging-diag.md` |\n| Navigation issues | See `skills/nav.md` |\n| Navigation still broken after debugging | See `skills/nav-diag.md` |\n| Navigation API reference | See `skills/nav-ref.md` |\n| Layout breaks on iPad/rotation | See `skills/layout.md` |\n| Layout API reference | See `skills/layout-ref.md` |\n| Performance/lag/slow scroll | See `skills/swiftui-performance.md` |\n| Architecture/testability | See `skills/architecture.md` |\n| Animation issues | See `skills/animation-ref.md` |\n| Stacks/grids/outlines | See `skills/containers-ref.md` |\n| Search implementation | See `skills/search-ref.md` |\n| Gesture conflicts | See `skills/gestures.md` |\n| iOS 26 features | See `skills/26-ref.md` |\n\n## Non-SwiftUI UI Routes\n\nThese topics are part of the broader iOS UI domain but live in separate suites:\n\n#### UIKit issues\n- Auto Layout conflicts → See axiom-uikit (skills/auto-layout-debugging.md)\n- Animation timing → See axiom-uikit (skills/uikit-animation-debugging.md)\n- SwiftUI ↔ UIKit bridging → See axiom-uikit (skills/uikit-bridging.md)\n\n#### Design & guidelines\n- Liquid Glass adoption → See axiom-design (skills/liquid-glass.md)\n- SF Symbols → See axiom-design (skills/sf-symbols.md)\n- HIG compliance → See axiom-design (skills/hig.md)\n- Typography → See axiom-design (skills/typography-ref.md)\n- TextKit/rich text → See axiom-uikit (skills/textkit-ref.md)\n\n#### Other\n- tvOS (focus, remote, text input) → See axiom-swift (skills/tvos.md)\n- App-level composition (root, auth, scenes) → See axiom-design (skills/app-composition.md)\n- Drag/drop, sharing, copy/paste → See axiom-swift (skills/transferable-ref.md)\n- VoiceOver, Dynamic Type → `/skill axiom-accessibility`\n- UI test flakiness → `/skill axiom-testing`\n- UX dead ends, dismiss traps → Launch `ux-flow-auditor` agent\n\n#### watchOS-specific patterns\n- Glanceable UI, watch navigation, Smart Stack widgets → See axiom-watchos\n\n## Conflict Resolution\n\n**axiom-swiftui vs axiom-performance**: When UI is slow (e.g., \"SwiftUI List slow\"):\n1. **Try axiom-swiftui FIRST** — Domain-specific fixes (LazyVStack, view identity, @State optimization) often solve UI performance in 5 minutes\n2. **Only use axiom-performance** if domain fixes don't help — Profiling takes longer and may confirm what domain knowledge already knows\n\n## Decision Tree\n\n```dot\ndigraph swiftui {\n    start [label=\"SwiftUI issue\" shape=ellipse];\n    what [label=\"What's wrong?\" shape=diamond];\n\n    start -> what;\n    what -> \"skills/debugging.md\" [label=\"view not updating\"];\n    what -> \"skills/nav.md\" [label=\"navigation\"];\n    what -> \"skills/swiftui-performance.md\" [label=\"slow/lag\"];\n    what -> \"skills/layout.md\" [label=\"adaptive layout\"];\n    what -> \"skills/containers-ref.md\" [label=\"stacks/grids/outlines\"];\n    what -> \"skills/architecture.md\" [label=\"feature architecture\"];\n    what -> \"skills/animation-ref.md\" [label=\"animations\"];\n    what -> \"skills/gestures.md\" [label=\"gestures\"];\n    what -> \"skills/search-ref.md\" [label=\"search\"];\n    what -> \"skills/26-ref.md\" [label=\"iOS 26 features\"];\n    what -> \"axiom-uikit-bridging\" [label=\"UIKit interop\"];\n    what -> \"axiom-app-composition\" [label=\"app-level (root, auth)\"];\n    what -> \"axiom-transferable-ref\" [label=\"drag/drop, sharing\"];\n}\n```\n\n## Automated Scanning\n\n- Architecture audit → Launch `swiftui-architecture-auditor` agent\n- Performance scan → Launch `swiftui-performance-analyzer` agent or `/axiom:audit swiftui-performance`\n- Navigation audit → Launch `swiftui-nav-auditor` agent or `/axiom:audit swiftui-nav`\n- Layout audit → Launch `swiftui-layout-auditor` agent or `/axiom:audit swiftui-layout`\n- UX flow audit → Launch `ux-flow-auditor` agent or `/axiom:audit ux-flow`\n- Liquid Glass scan → Launch `liquid-glass-auditor` agent or `/axiom:audit liquid-glass`\n- TextKit scan → Launch `textkit-auditor` agent or `/axiom:audit textkit`\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"Simple SwiftUI layout, no need\" | SwiftUI layout has 12 gotchas. `skills/layout.md` covers all of them. |\n| \"I know how NavigationStack works\" | Navigation has state restoration, deep linking, and identity traps. `skills/nav.md` prevents 2-hour debugging. |\n| \"It's just a view not updating\" | View update failures have 4 root causes. `skills/debugging.md` diagnoses in 5 min. |\n| \"I'll just add .animation()\" | Animation issues compound. `skills/animation-ref.md` has the correct patterns. |\n| \"No architecture needed\" | Even small features benefit from separation. `skills/architecture.md` prevents refactoring debt. |\n| \"I know .searchable\" | Search has 6 gotchas. `skills/search-ref.md` covers all of them. |\n",
+      "content": "\n# SwiftUI\n\n**You MUST use this skill for ANY SwiftUI work including views, state, navigation, layout, animations, architecture, gestures, and debugging.**\n\n## Quick Reference\n\n| Symptom / Task | Reference |\n|----------------|-----------|\n| View not updating | See `skills/debugging.md` |\n| View update still broken after debugging | See `skills/debugging-diag.md` |\n| Navigation issues | See `skills/nav.md` |\n| Navigation still broken after debugging | See `skills/nav-diag.md` |\n| Navigation API reference | See `skills/nav-ref.md` |\n| Layout breaks on iPad/rotation | See `skills/layout.md` |\n| Layout API reference | See `skills/layout-ref.md` |\n| Performance/lag/slow scroll | See `skills/swiftui-performance.md` |\n| Architecture/testability | See `skills/architecture.md` |\n| Animation issues | See `skills/animation-ref.md` |\n| Stacks/grids/outlines | See `skills/containers-ref.md` |\n| Custom containers / List replacement (iOS 18+) | See `skills/containers-ref.md` Part 7 |\n| Search implementation | See `skills/search-ref.md` |\n| Gesture conflicts | See `skills/gestures.md` |\n| iOS 26 features | See `skills/26-ref.md` |\n\n## Non-SwiftUI UI Routes\n\nThese topics are part of the broader iOS UI domain but live in separate suites:\n\n#### UIKit issues\n- Auto Layout conflicts → See axiom-uikit (skills/auto-layout-debugging.md)\n- Animation timing → See axiom-uikit (skills/uikit-animation-debugging.md)\n- SwiftUI ↔ UIKit bridging → See axiom-uikit (skills/uikit-bridging.md)\n\n#### Design & guidelines\n- Liquid Glass adoption → See axiom-design (skills/liquid-glass.md)\n- SF Symbols → See axiom-design (skills/sf-symbols.md)\n- HIG compliance → See axiom-design (skills/hig.md)\n- Typography → See axiom-design (skills/typography-ref.md)\n- TextKit/rich text → See axiom-uikit (skills/textkit-ref.md)\n\n#### Other\n- tvOS (focus, remote, text input) → See axiom-swift (skills/tvos.md)\n- App-level composition (root, auth, scenes) → See axiom-design (skills/app-composition.md)\n- Drag/drop, sharing, copy/paste → See axiom-swift (skills/transferable-ref.md)\n- VoiceOver, Dynamic Type → `/skill axiom-accessibility`\n- UI test flakiness → `/skill axiom-testing`\n- UX dead ends, dismiss traps → Launch `ux-flow-auditor` agent\n\n#### watchOS-specific patterns\n- Glanceable UI, watch navigation, Smart Stack widgets → See axiom-watchos\n\n## Conflict Resolution\n\n**axiom-swiftui vs axiom-performance**: When UI is slow (e.g., \"SwiftUI List slow\"):\n1. **Try axiom-swiftui FIRST** — Domain-specific fixes (LazyVStack, view identity, @State optimization) often solve UI performance in 5 minutes\n2. **Only use axiom-performance** if domain fixes don't help — Profiling takes longer and may confirm what domain knowledge already knows\n\n## Decision Tree\n\n```dot\ndigraph swiftui {\n    start [label=\"SwiftUI issue\" shape=ellipse];\n    what [label=\"What's wrong?\" shape=diamond];\n\n    start -> what;\n    what -> \"skills/debugging.md\" [label=\"view not updating\"];\n    what -> \"skills/nav.md\" [label=\"navigation\"];\n    what -> \"skills/swiftui-performance.md\" [label=\"slow/lag\"];\n    what -> \"skills/layout.md\" [label=\"adaptive layout\"];\n    what -> \"skills/containers-ref.md\" [label=\"stacks/grids/outlines\"];\n    what -> \"skills/architecture.md\" [label=\"feature architecture\"];\n    what -> \"skills/animation-ref.md\" [label=\"animations\"];\n    what -> \"skills/gestures.md\" [label=\"gestures\"];\n    what -> \"skills/search-ref.md\" [label=\"search\"];\n    what -> \"skills/26-ref.md\" [label=\"iOS 26 features\"];\n    what -> \"axiom-uikit-bridging\" [label=\"UIKit interop\"];\n    what -> \"axiom-app-composition\" [label=\"app-level (root, auth)\"];\n    what -> \"axiom-transferable-ref\" [label=\"drag/drop, sharing\"];\n}\n```\n\n## Automated Scanning\n\n- Architecture audit → Launch `swiftui-architecture-auditor` agent\n- Performance scan → Launch `swiftui-performance-analyzer` agent or `/axiom:audit swiftui-performance`\n- Navigation audit → Launch `swiftui-nav-auditor` agent or `/axiom:audit swiftui-nav`\n- Layout audit → Launch `swiftui-layout-auditor` agent or `/axiom:audit swiftui-layout`\n- UX flow audit → Launch `ux-flow-auditor` agent or `/axiom:audit ux-flow`\n- Liquid Glass scan → Launch `liquid-glass-auditor` agent or `/axiom:audit liquid-glass`\n- TextKit scan → Launch `textkit-auditor` agent or `/axiom:audit textkit`\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"Simple SwiftUI layout, no need\" | SwiftUI layout has 12 gotchas. `skills/layout.md` covers all of them. |\n| \"I know how NavigationStack works\" | Navigation has state restoration, deep linking, and identity traps. `skills/nav.md` prevents 2-hour debugging. |\n| \"It's just a view not updating\" | View update failures have 4 root causes. `skills/debugging.md` diagnoses in 5 min. |\n| \"I'll just add .animation()\" | Animation issues compound. `skills/animation-ref.md` has the correct patterns. |\n| \"No architecture needed\" | Even small features benefit from separation. `skills/architecture.md` prevents refactoring debt. |\n| \"I know .searchable\" | Search has 6 gotchas. `skills/search-ref.md` covers all of them. |\n",
       "skillType": "router",
       "source": "axiom",
       "category": "ui",
@@ -26458,42 +26458,42 @@
           "heading": "Quick Reference",
           "level": 2,
           "startLine": 5,
-          "endLine": 23,
-          "charCount": 885
+          "endLine": 24,
+          "charCount": 976
         },
         {
           "heading": "Non-SwiftUI UI Routes",
           "level": 2,
-          "startLine": 24,
-          "endLine": 50,
+          "startLine": 25,
+          "endLine": 51,
           "charCount": 1196
         },
         {
           "heading": "Conflict Resolution",
           "level": 2,
-          "startLine": 51,
-          "endLine": 56,
+          "startLine": 52,
+          "endLine": 57,
           "charCount": 391
         },
         {
           "heading": "Decision Tree",
           "level": 2,
-          "startLine": 57,
-          "endLine": 80,
+          "startLine": 58,
+          "endLine": 81,
           "charCount": 963
         },
         {
           "heading": "Automated Scanning",
           "level": 2,
-          "startLine": 81,
-          "endLine": 90,
+          "startLine": 82,
+          "endLine": 91,
           "charCount": 605
         },
         {
           "heading": "Anti-Rationalization",
           "level": 2,
-          "startLine": 91,
-          "endLine": 101,
+          "startLine": 92,
+          "endLine": 102,
           "charCount": 785
         }
       ],
@@ -27262,7 +27262,7 @@
     "axiom-swiftui--containers-ref": {
       "name": "axiom-swiftui--containers-ref",
       "description": "Stacks, grids, outlines, and scroll enhancements. iOS 14 through iOS 26.",
-      "content": "\n# SwiftUI Containers Reference\n\nStacks, grids, outlines, and scroll enhancements. iOS 14 through iOS 26.\n\n## Quick Decision\n\n| Use Case | Container | iOS |\n|----------|-----------|-----|\n| Fixed views vertical/horizontal | VStack / HStack | 13+ |\n| Overlapping views | ZStack | 13+ |\n| Large scrollable list | LazyVStack / LazyHStack | 14+ |\n| Multi-column grid | LazyVGrid | 14+ |\n| Multi-row grid (horizontal) | LazyHGrid | 14+ |\n| Static grid, precise alignment | Grid | 16+ |\n| Hierarchical data (tree) | List with `children:` | 14+ |\n| Custom hierarchies | OutlineGroup | 14+ |\n| Show/hide content | DisclosureGroup | 14+ |\n\n---\n\n## Part 1: Stacks\n\n### VStack, HStack, ZStack\n\n```swift\nVStack(alignment: .leading, spacing: 12) {\n    Text(\"Title\")\n    Text(\"Subtitle\")\n}\n\nHStack(alignment: .top, spacing: 8) {\n    Image(systemName: \"star\")\n    Text(\"Rating\")\n}\n\nZStack(alignment: .bottomTrailing) {\n    Image(\"photo\")\n    Badge()\n}\n```\n\n**ZStack alignments**: `.center` (default), `.top`, `.bottom`, `.leading`, `.trailing`, `.topLeading`, `.topTrailing`, `.bottomLeading`, `.bottomTrailing`\n\n### Spacer\n\n```swift\nHStack {\n    Text(\"Left\")\n    Spacer()\n    Text(\"Right\")\n}\n\nSpacer(minLength: 20)  // Minimum size\n```\n\n---\n\n### LazyVStack, LazyHStack (iOS 14+)\n\nRender children only when visible. Use inside ScrollView.\n\n```swift\nScrollView {\n    LazyVStack(spacing: 0) {\n        ForEach(items) { item in\n            ItemRow(item: item)\n        }\n    }\n}\n```\n\n### Pinned Section Headers\n\n```swift\nScrollView {\n    LazyVStack(pinnedViews: [.sectionHeaders]) {\n        ForEach(sections) { section in\n            Section(header: SectionHeader(section)) {\n                ForEach(section.items) { item in\n                    ItemRow(item: item)\n                }\n            }\n        }\n    }\n}\n```\n\n---\n\n## Part 2: Grids\n\n### Grid (iOS 16+)\n\nNon-lazy grid with precise alignment. Loads all views at once.\n\n```swift\nGrid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 10) {\n    GridRow {\n        Text(\"Name\")\n        TextField(\"Enter name\", text: $name)\n    }\n    GridRow {\n        Text(\"Email\")\n        TextField(\"Enter email\", text: $email)\n    }\n}\n```\n\n**Modifiers**:\n- `gridCellColumns(_:)` — Span multiple columns\n- `gridColumnAlignment(_:)` — Override column alignment\n\n```swift\nGrid {\n    GridRow {\n        Text(\"Header\").gridCellColumns(2)\n    }\n    GridRow {\n        Text(\"Left\")\n        Text(\"Right\").gridColumnAlignment(.trailing)\n    }\n}\n```\n\n---\n\n### LazyVGrid (iOS 14+)\n\nVertical-scrolling grid. Define **columns**; rows grow unbounded.\n\n```swift\nlet columns = [\n    GridItem(.flexible()),\n    GridItem(.flexible()),\n    GridItem(.flexible())\n]\n\nScrollView {\n    LazyVGrid(columns: columns, spacing: 16) {\n        ForEach(items) { item in\n            ItemCard(item: item)\n        }\n    }\n}\n```\n\n### LazyHGrid (iOS 14+)\n\nHorizontal-scrolling grid. Define **rows**; columns grow unbounded.\n\n```swift\nlet rows = [GridItem(.fixed(100)), GridItem(.fixed(100))]\n\nScrollView(.horizontal) {\n    LazyHGrid(rows: rows, spacing: 16) {\n        ForEach(items) { item in\n            ItemCard(item: item)\n        }\n    }\n}\n```\n\n### GridItem.Size\n\n| Size | Behavior |\n|------|----------|\n| `.fixed(CGFloat)` | Exact width/height |\n| `.flexible(minimum:maximum:)` | Fills space equally |\n| `.adaptive(minimum:maximum:)` | Creates as many as fit |\n\n```swift\n// Adaptive: responsive column count\nlet columns = [GridItem(.adaptive(minimum: 150))]\n```\n\n---\n\n## Part 3: Outlines\n\n### List with Hierarchical Data (iOS 14+)\n\n```swift\nstruct FileItem: Identifiable {\n    let id = UUID()\n    var name: String\n    var children: [FileItem]?  // nil = leaf\n}\n\nList(files, children: \\.children) { file in\n    Label(file.name, systemImage: file.children != nil ? \"folder\" : \"doc\")\n}\n.listStyle(.sidebar)\n```\n\n### OutlineGroup (iOS 14+)\n\nFor custom hierarchical layouts outside List.\n\n```swift\nList {\n    ForEach(canvases) { canvas in\n        Section(header: Text(canvas.name)) {\n            OutlineGroup(canvas.graphics, children: \\.children) { graphic in\n                GraphicRow(graphic: graphic)\n            }\n        }\n    }\n}\n```\n\n### DisclosureGroup (iOS 14+)\n\n```swift\n@State private var isExpanded = false\n\nDisclosureGroup(\"Advanced Options\", isExpanded: $isExpanded) {\n    Toggle(\"Enable Feature\", isOn: $feature)\n    Slider(value: $intensity)\n}\n```\n\n---\n\n## Part 4: Common Patterns\n\n### Photo Grid\n\n```swift\nlet columns = [GridItem(.adaptive(minimum: 100), spacing: 2)]\n\nScrollView {\n    LazyVGrid(columns: columns, spacing: 2) {\n        ForEach(photos) { photo in\n            AsyncImage(url: photo.thumbnailURL) { image in\n                image.resizable().aspectRatio(1, contentMode: .fill)\n            } placeholder: { Color.gray }\n            .aspectRatio(1, contentMode: .fill)\n            .clipped()\n        }\n    }\n}\n```\n\n### Horizontal Carousel\n\n```swift\nScrollView(.horizontal, showsIndicators: false) {\n    LazyHStack(spacing: 16) {\n        ForEach(items) { item in\n            CarouselCard(item: item).frame(width: 280)\n        }\n    }\n    .padding(.horizontal)\n}\n```\n\n### File Browser\n\n```swift\nList(selection: $selection) {\n    OutlineGroup(rootItems, children: \\.children) { item in\n        Label {\n            Text(item.name)\n        } icon: {\n            Image(systemName: item.children != nil ? \"folder.fill\" : \"doc.fill\")\n        }\n    }\n}\n.listStyle(.sidebar)\n```\n\n---\n\n## Part 5: Performance\n\n### When to Use Lazy\n\n| Size | Scrollable? | Use |\n|------|-------------|-----|\n| 1-20 | No | VStack/HStack |\n| 1-20 | Yes | VStack/HStack in ScrollView |\n| 20-100 | Yes | LazyVStack/LazyHStack |\n| 100+ | Yes | LazyVStack/LazyHStack or List |\n| Grid <50 | No | Grid |\n| Grid 50+ | Yes | LazyVGrid/LazyHGrid |\n\n**Cache GridItem arrays** — define outside body:\n\n```swift\nstruct ContentView: View {\n    let columns = [GridItem(.adaptive(minimum: 150))]  // ✅\n    var body: some View {\n        LazyVGrid(columns: columns) { ... }\n    }\n}\n```\n\n### iOS 26 Performance\n\n- Significant list loading and update performance improvements for large datasets\n- Reduced dropped frames in scrolling\n- Nested ScrollViews with lazy stacks now properly defer loading:\n\n```swift\nScrollView(.horizontal) {\n    LazyHStack {\n        ForEach(photoSets) { set in\n            ScrollView(.vertical) {\n                LazyVStack {\n                    ForEach(set.photos) { PhotoView(photo: $0) }\n                }\n            }\n        }\n    }\n}\n```\n\n---\n\n## Part 6: Scroll Enhancements\n\n### containerRelativeFrame (iOS 17+)\n\nSize views relative to scroll container.\n\n```swift\nScrollView(.horizontal) {\n    LazyHStack {\n        ForEach(cards) { card in\n            CardView(card: card)\n                .containerRelativeFrame(.horizontal, count: 3, span: 1, spacing: 16)\n        }\n    }\n}\n```\n\n### scrollTargetLayout (iOS 17+)\n\nEnable snapping.\n\n```swift\nScrollView(.horizontal) {\n    LazyHStack {\n        ForEach(items) { ItemCard(item: $0) }\n    }\n    .scrollTargetLayout()\n}\n.scrollTargetBehavior(.viewAligned)\n```\n\n### scrollPosition (iOS 17+)\n\nTrack topmost visible item. **Requires `.id()` on each item.**\n\n```swift\n@State private var position: Item.ID?\n\nScrollView {\n    LazyVStack {\n        ForEach(items) { item in\n            ItemRow(item: item).id(item.id)\n        }\n    }\n}\n.scrollPosition(id: $position)\n```\n\n### scrollTransition (iOS 17+)\n\n```swift\n.scrollTransition { content, phase in\n    content\n        .opacity(1 - abs(phase.value) * 0.5)\n        .scaleEffect(phase.isIdentity ? 1.0 : 0.75)\n}\n```\n\n### onScrollGeometryChange (iOS 18+)\n\n```swift\n.onScrollGeometryChange(for: Bool.self) { geo in\n    geo.contentOffset.y < geo.contentInsets.top\n} action: { _, isTop in\n    showBackButton = !isTop\n}\n```\n\n### onScrollVisibilityChange (iOS 18+)\n\n```swift\nVideoPlayer(player: player)\n    .onScrollVisibilityChange(threshold: 0.2) { visible in\n        visible ? player.play() : player.pause()\n    }\n```\n\n---\n\n## Resources\n\n**WWDC**: 2020-10031, 2022-10056, 2023-10148, 2024-10144, 2025-256\n\n**Docs**: /swiftui/lazyvstack, /swiftui/lazyvgrid, /swiftui/lazyhgrid, /swiftui/grid, /swiftui/outlinegroup, /swiftui/disclosuregroup\n\n**Skills**: skills/layout.md, skills/layout-ref.md, skills/nav.md, skills/26-ref.md\n",
+      "content": "\n# SwiftUI Containers Reference\n\nStacks, grids, outlines, and scroll enhancements. iOS 14 through iOS 26.\n\n## Quick Decision\n\n| Use Case | Container | iOS |\n|----------|-----------|-----|\n| Fixed views vertical/horizontal | VStack / HStack | 13+ |\n| Overlapping views | ZStack | 13+ |\n| Large scrollable list | LazyVStack / LazyHStack | 14+ |\n| Multi-column grid | LazyVGrid | 14+ |\n| Multi-row grid (horizontal) | LazyHGrid | 14+ |\n| Static grid, precise alignment | Grid | 16+ |\n| Hierarchical data (tree) | List with `children:` | 14+ |\n| Custom hierarchies | OutlineGroup | 14+ |\n| Show/hide content | DisclosureGroup | 14+ |\n| Custom container that styles its children | Group(subviews:) / ForEach(subviews:) | 18+ |\n| Custom container with sections | Group(sections:) / ForEach(sections:) | 18+ |\n| Container-specific modifier on children | ContainerValues + @Entry | 18+ |\n\n---\n\n## Part 1: Stacks\n\n### VStack, HStack, ZStack\n\n```swift\nVStack(alignment: .leading, spacing: 12) {\n    Text(\"Title\")\n    Text(\"Subtitle\")\n}\n\nHStack(alignment: .top, spacing: 8) {\n    Image(systemName: \"star\")\n    Text(\"Rating\")\n}\n\nZStack(alignment: .bottomTrailing) {\n    Image(\"photo\")\n    Badge()\n}\n```\n\n**ZStack alignments**: `.center` (default), `.top`, `.bottom`, `.leading`, `.trailing`, `.topLeading`, `.topTrailing`, `.bottomLeading`, `.bottomTrailing`\n\n### Spacer\n\n```swift\nHStack {\n    Text(\"Left\")\n    Spacer()\n    Text(\"Right\")\n}\n\nSpacer(minLength: 20)  // Minimum size\n```\n\n---\n\n### LazyVStack, LazyHStack (iOS 14+)\n\nRender children only when visible. Use inside ScrollView.\n\n```swift\nScrollView {\n    LazyVStack(spacing: 0) {\n        ForEach(items) { item in\n            ItemRow(item: item)\n        }\n    }\n}\n```\n\n### Pinned Section Headers\n\n```swift\nScrollView {\n    LazyVStack(pinnedViews: [.sectionHeaders]) {\n        ForEach(sections) { section in\n            Section(header: SectionHeader(section)) {\n                ForEach(section.items) { item in\n                    ItemRow(item: item)\n                }\n            }\n        }\n    }\n}\n```\n\n---\n\n## Part 2: Grids\n\n### Grid (iOS 16+)\n\nNon-lazy grid with precise alignment. Loads all views at once.\n\n```swift\nGrid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 10) {\n    GridRow {\n        Text(\"Name\")\n        TextField(\"Enter name\", text: $name)\n    }\n    GridRow {\n        Text(\"Email\")\n        TextField(\"Enter email\", text: $email)\n    }\n}\n```\n\n**Modifiers**:\n- `gridCellColumns(_:)` — Span multiple columns\n- `gridColumnAlignment(_:)` — Override column alignment\n\n```swift\nGrid {\n    GridRow {\n        Text(\"Header\").gridCellColumns(2)\n    }\n    GridRow {\n        Text(\"Left\")\n        Text(\"Right\").gridColumnAlignment(.trailing)\n    }\n}\n```\n\n---\n\n### LazyVGrid (iOS 14+)\n\nVertical-scrolling grid. Define **columns**; rows grow unbounded.\n\n```swift\nlet columns = [\n    GridItem(.flexible()),\n    GridItem(.flexible()),\n    GridItem(.flexible())\n]\n\nScrollView {\n    LazyVGrid(columns: columns, spacing: 16) {\n        ForEach(items) { item in\n            ItemCard(item: item)\n        }\n    }\n}\n```\n\n### LazyHGrid (iOS 14+)\n\nHorizontal-scrolling grid. Define **rows**; columns grow unbounded.\n\n```swift\nlet rows = [GridItem(.fixed(100)), GridItem(.fixed(100))]\n\nScrollView(.horizontal) {\n    LazyHGrid(rows: rows, spacing: 16) {\n        ForEach(items) { item in\n            ItemCard(item: item)\n        }\n    }\n}\n```\n\n### GridItem.Size\n\n| Size | Behavior |\n|------|----------|\n| `.fixed(CGFloat)` | Exact width/height |\n| `.flexible(minimum:maximum:)` | Fills space equally |\n| `.adaptive(minimum:maximum:)` | Creates as many as fit |\n\n```swift\n// Adaptive: responsive column count\nlet columns = [GridItem(.adaptive(minimum: 150))]\n```\n\n---\n\n## Part 3: Outlines\n\n### List with Hierarchical Data (iOS 14+)\n\n```swift\nstruct FileItem: Identifiable {\n    let id = UUID()\n    var name: String\n    var children: [FileItem]?  // nil = leaf\n}\n\nList(files, children: \\.children) { file in\n    Label(file.name, systemImage: file.children != nil ? \"folder\" : \"doc\")\n}\n.listStyle(.sidebar)\n```\n\n### OutlineGroup (iOS 14+)\n\nFor custom hierarchical layouts outside List.\n\n```swift\nList {\n    ForEach(canvases) { canvas in\n        Section(header: Text(canvas.name)) {\n            OutlineGroup(canvas.graphics, children: \\.children) { graphic in\n                GraphicRow(graphic: graphic)\n            }\n        }\n    }\n}\n```\n\n### DisclosureGroup (iOS 14+)\n\n```swift\n@State private var isExpanded = false\n\nDisclosureGroup(\"Advanced Options\", isExpanded: $isExpanded) {\n    Toggle(\"Enable Feature\", isOn: $feature)\n    Slider(value: $intensity)\n}\n```\n\n---\n\n## Part 4: Common Patterns\n\n### Photo Grid\n\n```swift\nlet columns = [GridItem(.adaptive(minimum: 100), spacing: 2)]\n\nScrollView {\n    LazyVGrid(columns: columns, spacing: 2) {\n        ForEach(photos) { photo in\n            AsyncImage(url: photo.thumbnailURL) { image in\n                image.resizable().aspectRatio(1, contentMode: .fill)\n            } placeholder: { Color.gray }\n            .aspectRatio(1, contentMode: .fill)\n            .clipped()\n        }\n    }\n}\n```\n\n### Horizontal Carousel\n\n```swift\nScrollView(.horizontal, showsIndicators: false) {\n    LazyHStack(spacing: 16) {\n        ForEach(items) { item in\n            CarouselCard(item: item).frame(width: 280)\n        }\n    }\n    .padding(.horizontal)\n}\n```\n\n### File Browser\n\n```swift\nList(selection: $selection) {\n    OutlineGroup(rootItems, children: \\.children) { item in\n        Label {\n            Text(item.name)\n        } icon: {\n            Image(systemName: item.children != nil ? \"folder.fill\" : \"doc.fill\")\n        }\n    }\n}\n.listStyle(.sidebar)\n```\n\n---\n\n## Part 5: Performance\n\n### When to Use Lazy\n\n| Size | Scrollable? | Use |\n|------|-------------|-----|\n| 1-20 | No | VStack/HStack |\n| 1-20 | Yes | VStack/HStack in ScrollView |\n| 20-100 | Yes | LazyVStack/LazyHStack |\n| 100+ | Yes | LazyVStack/LazyHStack or List |\n| Grid <50 | No | Grid |\n| Grid 50+ | Yes | LazyVGrid/LazyHGrid |\n\n**Cache GridItem arrays** — define outside body:\n\n```swift\nstruct ContentView: View {\n    let columns = [GridItem(.adaptive(minimum: 150))]  // ✅\n    var body: some View {\n        LazyVGrid(columns: columns) { ... }\n    }\n}\n```\n\n### iOS 26 Performance\n\n- Significant list loading and update performance improvements for large datasets\n- Reduced dropped frames in scrolling\n- Nested ScrollViews with lazy stacks now properly defer loading:\n\n```swift\nScrollView(.horizontal) {\n    LazyHStack {\n        ForEach(photoSets) { set in\n            ScrollView(.vertical) {\n                LazyVStack {\n                    ForEach(set.photos) { PhotoView(photo: $0) }\n                }\n            }\n        }\n    }\n}\n```\n\n---\n\n## Part 6: Scroll Enhancements\n\n### containerRelativeFrame (iOS 17+)\n\nSize views relative to scroll container.\n\n```swift\nScrollView(.horizontal) {\n    LazyHStack {\n        ForEach(cards) { card in\n            CardView(card: card)\n                .containerRelativeFrame(.horizontal, count: 3, span: 1, spacing: 16)\n        }\n    }\n}\n```\n\n### scrollTargetLayout (iOS 17+)\n\nEnable snapping.\n\n```swift\nScrollView(.horizontal) {\n    LazyHStack {\n        ForEach(items) { ItemCard(item: $0) }\n    }\n    .scrollTargetLayout()\n}\n.scrollTargetBehavior(.viewAligned)\n```\n\n### scrollPosition (iOS 17+)\n\nTrack topmost visible item. **Requires `.id()` on each item.**\n\n```swift\n@State private var position: Item.ID?\n\nScrollView {\n    LazyVStack {\n        ForEach(items) { item in\n            ItemRow(item: item).id(item.id)\n        }\n    }\n}\n.scrollPosition(id: $position)\n```\n\n### scrollTransition (iOS 17+)\n\n```swift\n.scrollTransition { content, phase in\n    content\n        .opacity(1 - abs(phase.value) * 0.5)\n        .scaleEffect(phase.isIdentity ? 1.0 : 0.75)\n}\n```\n\n### onScrollGeometryChange (iOS 18+)\n\n```swift\n.onScrollGeometryChange(for: Bool.self) { geo in\n    geo.contentOffset.y < geo.contentInsets.top\n} action: { _, isTop in\n    showBackButton = !isTop\n}\n```\n\n### onScrollVisibilityChange (iOS 18+)\n\n```swift\nVideoPlayer(player: player)\n    .onScrollVisibilityChange(threshold: 0.2) { visible in\n        visible ? player.play() : player.pause()\n    }\n```\n\n---\n\n## Part 7: Custom Containers (iOS 18+)\n\nContainer View APIs let you build reusable containers that decompose their children — applying decoration between them, grouping them into sections, or reading per-child configuration. This is how you write a `List` replacement instead of a one-off layout.\n\n### When to Reach for These APIs\n\n| Situation | Use |\n|-----------|-----|\n| Container needs to insert decoration between children (dividers, separators) | `Group(subviews:)` to count + index |\n| Container iterates children and wraps each one | `ForEach(subviews:)` |\n| Container must respect `Section` boundaries with header/footer | `Group(sections:)` or `ForEach(sections:)` |\n| Need a `.listRowSeparator(.hidden)`-style modifier on children | `ContainerValues` + `@Entry` |\n| Children come from arbitrary view-builder content (not a `[Data]`) | All of the above |\n\nIf you only need a one-off layout and don't care about composition, `VStack`/`LazyVStack` + a `[Data]` parameter is simpler. Reach for these APIs when you're building a **reusable primitive**.\n\n### Declared vs. Resolved Subviews\n\nThe mental model that makes the rest of this make sense:\n\n- **Declared subviews** — what's written in the view-builder closure (a `Text`, a `ForEach`, an `if`, an `EmptyView`)\n- **Resolved subviews** — what actually appears on screen after SwiftUI evaluates `ForEach`, conditionals, and groups\n\n`Group(subviews:)` and `ForEach(subviews:)` iterate **resolved** subviews, so a single `ForEach(songs)` over 9 items resolves to 9 cards — your container doesn't need a separate `[Data]` parameter.\n\n### Group(subviews:) — Decompose with Count Awareness\n\nUse when the container needs to know *how many* children it has (e.g., to scale them or change layout):\n\n```swift\nstruct Board<Content: View>: View {\n    @ViewBuilder var content: Content\n\n    var body: some View {\n        BoardLayout {\n            Group(subviews: content) { subviews in\n                ForEach(subviews) { subview in\n                    CardView(scale: subviews.count > 15 ? .small : .normal) {\n                        subview\n                    }\n                }\n            }\n        }\n    }\n}\n\n// Caller — composes any mix of static + dynamic content\nBoard {\n    Text(\"Pinned\")\n    ForEach(items) { item in Text(item.title) }\n}\n```\n\n`subviews` is a `SubviewsCollection` exposing `count`, `first`, `last`, and `Identifiable` iteration. Each `Subview` has `id` and `containerValues`.\n\n### ForEach(subviews:) — Decompose Without Count\n\nShorter form when count isn't needed — just iterate and wrap each child:\n\n```swift\nstruct StackedCards<Content: View>: View {\n    @ViewBuilder var content: Content\n\n    var body: some View {\n        VStack(alignment: .leading, spacing: 12) {\n            ForEach(subviews: content) { subview in\n                CardView { subview }\n            }\n        }\n    }\n}\n```\n\nIf you need \"insert a divider between children but not after the last one,\" `ForEach(subviews:)` alone can't tell you which subview is last. Use `Group(subviews:)` instead so you can compare ids:\n\n```swift\nstruct DividedCard<Content: View>: View {\n    @ViewBuilder var content: Content\n\n    var body: some View {\n        VStack(alignment: .leading) {\n            Group(subviews: content) { subviews in\n                ForEach(subviews) { subview in\n                    subview\n                    if subview.id != subviews.last?.id {\n                        Divider().padding(.vertical, 8)\n                    }\n                }\n            }\n        }\n    }\n}\n```\n\n### Group(sections:) / ForEach(sections:) — Respect Section Boundaries\n\nSections are `Section { ... } header: { ... } footer: { ... }` blocks in the caller's content. To honor them, iterate sections instead of subviews:\n\n```swift\nstruct SectionedBoard<Content: View>: View {\n    @ViewBuilder var content: Content\n\n    var body: some View {\n        HStack(spacing: 80) {\n            ForEach(sections: content) { section in\n                VStack(spacing: 20) {\n                    if !section.header.isEmpty {\n                        SectionHeaderCard { section.header }\n                    }\n                    BoardLayout {\n                        ForEach(section.content) { subview in\n                            CardView { subview }\n                        }\n                    }\n                    if !section.footer.isEmpty {\n                        SectionFooterCard { section.footer }\n                    }\n                }\n            }\n        }\n    }\n}\n```\n\n`SectionConfiguration` exposes:\n- `header` / `content` / `footer` — each a `SubviewsCollection`\n- `id` — section identity\n- `containerValues` — per-section configuration (see below)\n- `isEmpty` on `header`/`footer` — check before rendering chrome\n\nContent not wrapped in `Section` automatically forms an implicit section, so `ForEach(sections:)` works even when the caller writes flat content.\n\n### ContainerValues + @Entry — Container-Specific Modifiers\n\nThis is how `List` implements `.listRowSeparator(.hidden)`: a modifier that's only meaningful inside a specific container. Define one in two steps.\n\n#### Step 1 — Declare the Value\n\n```swift\nextension ContainerValues {\n    @Entry var isBoardCardRejected: Bool = false\n}\n\nextension View {\n    func boardCardRejected(_ rejected: Bool = true) -> some View {\n        containerValue(\\.isBoardCardRejected, rejected)\n    }\n}\n```\n\n#### Step 2 — Read It Inside the Container\n\n```swift\nForEach(subviews: content) { subview in\n    CardView(isRejected: subview.containerValues.isBoardCardRejected) {\n        subview\n    }\n}\n```\n\n#### Caller\n\n```swift\nBoard {\n    Text(\"Keeper\")\n    Text(\"Skip this one\")\n        .boardCardRejected()\n    Section(\"Maybes\") {\n        ForEach(items) { Text($0.title) }\n    }\n    .boardCardRejected()  // applies to every card in the section\n}\n```\n\nContainer values differ from environment values and preferences in scope:\n- **Environment** — flows down the entire view hierarchy\n- **Preferences** — flows up the entire hierarchy with merging\n- **Container values** — visible only to the **immediate** container; do not escape\n\nThat bounded scope is the whole point — it's why `.listRowSeparator(.hidden)` doesn't accidentally affect a `LazyVStack` higher in the tree.\n\n### Anti-Patterns\n\n| Mistake | Fix |\n|---------|-----|\n| Custom container takes `[Data]` and `ViewBuilder` row closure (List-style) | Take a single `@ViewBuilder var content: Content` and use `ForEach(subviews:)` — supports static, dynamic, and mixed content |\n| Using `AnyView` to inspect children | Use `Subview` proxies via `Group(subviews:)` — preserves identity and modifiers |\n| Reading per-child config via `PreferenceKey` | Use `ContainerValues` + `@Entry` — bounded scope, no merging surprises |\n| Iterating `content as? Group` to count children | Use `Group(subviews:) { $0.count }` — works for any composition, not just literal `Group` |\n| Section-aware container that drops headers/footers | Always check `section.header.isEmpty` and render header chrome conditionally |\n\n### Performance\n\n`Subview` proxies are lazy — `Group(subviews:)` and `ForEach(subviews:)` resolve children on demand. For large datasets, embed your custom container inside a `ScrollView` + `LazyVStack` (or use `LazyVStack` itself as the layout) so resolution stays incremental.\n\n---\n\n## Resources\n\n**WWDC**: 2020-10031, 2022-10056, 2023-10148, 2024-10144, 2024-10146, 2025-256\n\n**Docs**: /swiftui/lazyvstack, /swiftui/lazyvgrid, /swiftui/lazyhgrid, /swiftui/grid, /swiftui/outlinegroup, /swiftui/disclosuregroup, /swiftui/group/init(subviews:transform:), /swiftui/group/init(sections:transform:), /swiftui/foreach/init(subviews:content:), /swiftui/foreach/init(sections:content:), /swiftui/subview, /swiftui/sectionconfiguration, /swiftui/containervalues, /swiftui/creating-custom-container-views\n\n**Skills**: skills/layout.md, skills/layout-ref.md, skills/nav.md, skills/26-ref.md\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -27296,57 +27296,64 @@
           "heading": "Quick Decision",
           "level": 2,
           "startLine": 5,
-          "endLine": 20,
-          "charCount": 528
+          "endLine": 23,
+          "charCount": 778
         },
         {
           "heading": "Part 1: Stacks",
           "level": 2,
-          "startLine": 21,
-          "endLine": 89,
+          "startLine": 24,
+          "endLine": 92,
           "charCount": 1168
         },
         {
           "heading": "Part 2: Grids",
           "level": 2,
-          "startLine": 90,
-          "endLine": 177,
+          "startLine": 93,
+          "endLine": 180,
           "charCount": 1659
         },
         {
           "heading": "Part 3: Outlines",
           "level": 2,
-          "startLine": 178,
-          "endLine": 223,
+          "startLine": 181,
+          "endLine": 226,
           "charCount": 898
         },
         {
           "heading": "Part 4: Common Patterns",
           "level": 2,
-          "startLine": 224,
-          "endLine": 273,
+          "startLine": 227,
+          "endLine": 276,
           "charCount": 1033
         },
         {
           "heading": "Part 5: Performance",
           "level": 2,
-          "startLine": 274,
-          "endLine": 319,
+          "startLine": 277,
+          "endLine": 322,
           "charCount": 1051
         },
         {
           "heading": "Part 6: Scroll Enhancements",
           "level": 2,
-          "startLine": 320,
-          "endLine": 398,
+          "startLine": 323,
+          "endLine": 401,
           "charCount": 1464
+        },
+        {
+          "heading": "Part 7: Custom Containers (iOS 18+)",
+          "level": 2,
+          "startLine": 402,
+          "endLine": 598,
+          "charCount": 7321
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 399,
-          "endLine": 406,
-          "charCount": 301
+          "startLine": 599,
+          "endLine": 606,
+          "charCount": 598
         }
       ],
       "category": "ui",
@@ -35721,8 +35728,8 @@
           4,
           9,
           7,
-          17,
-          270
+          20,
+          484
         ],
         "159": [
           4,
@@ -35988,8 +35995,8 @@
         3.9591836734693895,
         14.086734693877553,
         4.464285714285712,
-        43.49489795918365,
-        604.9234693877548
+        43.51020408163267,
+        606.0153061224485
       ],
       "storedFields": {
         "0": {
@@ -39990,6 +39997,7 @@
               "155": 1,
               "156": 1,
               "157": 1,
+              "158": 1,
               "159": 2,
               "164": 1,
               "168": 1,
@@ -40840,6 +40848,7 @@
               "154": 4,
               "156": 1,
               "157": 16,
+              "158": 2,
               "159": 1,
               "160": 8,
               "161": 1,
@@ -41715,6 +41724,7 @@
               "150": 1,
               "155": 1,
               "157": 1,
+              "158": 5,
               "160": 4,
               "167": 1
             }
@@ -42226,7 +42236,8 @@
           {
             "4": {
               "97": 6,
-              "99": 1
+              "99": 1,
+              "158": 5
             }
           }
         ],
@@ -50777,6 +50788,7 @@
               "147": 9,
               "149": 2,
               "155": 1,
+              "158": 1,
               "159": 1,
               "165": 1,
               "166": 1,
@@ -50863,7 +50875,7 @@
               "154": 2,
               "155": 8,
               "157": 1,
-              "158": 7,
+              "158": 25,
               "160": 1,
               "162": 2,
               "165": 2,
@@ -51082,6 +51094,7 @@
               "149": 3,
               "151": 1,
               "152": 1,
+              "158": 1,
               "159": 4,
               "160": 1,
               "162": 1,
@@ -51734,6 +51747,14 @@
           }
         ],
         [
+          "keeper",
+          {
+            "4": {
+              "158": 1
+            }
+          }
+        ],
+        [
           "keeps",
           {
             "4": {
@@ -52304,6 +52325,7 @@
               "154": 5,
               "155": 8,
               "156": 5,
+              "158": 1,
               "160": 1,
               "161": 6,
               "162": 3,
@@ -55292,7 +55314,8 @@
               "1": 1,
               "39": 1,
               "122": 1,
-              "123": 1
+              "123": 1,
+              "158": 1
             }
           }
         ],
@@ -55482,6 +55505,7 @@
               "155": 1,
               "156": 9,
               "157": 8,
+              "158": 3,
               "159": 2,
               "160": 2,
               "161": 8,
@@ -56175,7 +56199,7 @@
               "149": 2,
               "151": 3,
               "154": 4,
-              "158": 4,
+              "158": 13,
               "162": 4,
               "174": 3,
               "176": 2,
@@ -56203,7 +56227,7 @@
               "115": 1,
               "122": 1,
               "155": 1,
-              "158": 2
+              "158": 3
             }
           }
         ],
@@ -56583,6 +56607,7 @@
               "113": 1,
               "114": 1,
               "156": 3,
+              "158": 2,
               "159": 2,
               "160": 5,
               "164": 6,
@@ -56828,6 +56853,7 @@
               "145": 2,
               "154": 1,
               "156": 1,
+              "158": 1,
               "177": 1,
               "179": 1,
               "185": 2,
@@ -57056,6 +57082,7 @@
               "146": 1,
               "154": 2,
               "155": 4,
+              "158": 3,
               "159": 1,
               "160": 3,
               "165": 13,
@@ -57651,6 +57678,7 @@
               "114": 1,
               "141": 1,
               "156": 4,
+              "158": 1,
               "162": 1,
               "166": 1,
               "167": 1,
@@ -57708,7 +57736,7 @@
               "148": 1,
               "155": 1,
               "156": 7,
-              "158": 2,
+              "158": 6,
               "162": 1,
               "164": 17,
               "165": 16,
@@ -58245,6 +58273,7 @@
               "153": 1,
               "155": 1,
               "156": 5,
+              "158": 1,
               "159": 8,
               "160": 2,
               "161": 1,
@@ -58803,6 +58832,14 @@
           {
             "4": {
               "20": 1
+            }
+          }
+        ],
+        [
+          "10146",
+          {
+            "4": {
+              "158": 1
             }
           }
         ],
@@ -60629,7 +60666,7 @@
               "155": 2,
               "156": 1,
               "157": 1,
-              "158": 1,
+              "158": 2,
               "161": 1,
               "162": 3,
               "163": 1,
@@ -62849,7 +62886,7 @@
               "154": 1,
               "156": 1,
               "157": 1,
-              "158": 1,
+              "158": 2,
               "162": 1,
               "163": 1,
               "165": 8,
@@ -62997,7 +63034,7 @@
               "155": 2,
               "156": 3,
               "157": 3,
-              "158": 4,
+              "158": 5,
               "159": 5,
               "160": 1,
               "161": 1,
@@ -64570,6 +64607,7 @@
               "129": 1,
               "145": 1,
               "157": 3,
+              "158": 1,
               "160": 5,
               "162": 1
             }
@@ -64908,6 +64946,7 @@
               "154": 3,
               "156": 3,
               "157": 12,
+              "158": 1,
               "159": 4,
               "160": 3,
               "161": 2,
@@ -65236,6 +65275,7 @@
               "145": 3,
               "146": 2,
               "155": 2,
+              "158": 1,
               "160": 1,
               "163": 1,
               "168": 6,
@@ -65579,7 +65619,8 @@
               "93": 1,
               "95": 1,
               "112": 1,
-              "113": 2
+              "113": 2,
+              "158": 1
             }
           }
         ],
@@ -65700,6 +65741,7 @@
               "153": 1,
               "154": 3,
               "157": 4,
+              "158": 5,
               "159": 2,
               "160": 1,
               "164": 2,
@@ -66199,7 +66241,7 @@
               "155": 13,
               "156": 6,
               "157": 3,
-              "158": 14,
+              "158": 40,
               "159": 9,
               "160": 22,
               "161": 4,
@@ -66330,6 +66372,7 @@
               "116": 1,
               "129": 1,
               "152": 1,
+              "158": 1,
               "192": 1
             }
           }
@@ -67671,6 +67714,7 @@
               "154": 4,
               "155": 1,
               "157": 1,
+              "158": 2,
               "159": 39,
               "160": 12,
               "162": 3,
@@ -69114,6 +69158,7 @@
               "147": 1,
               "149": 2,
               "155": 2,
+              "158": 2,
               "159": 2,
               "160": 2,
               "164": 1,
@@ -70537,6 +70582,7 @@
               "153": 9,
               "154": 2,
               "155": 1,
+              "158": 2,
               "162": 2,
               "165": 6,
               "169": 1,
@@ -71212,6 +71258,7 @@
               "97": 1,
               "129": 1,
               "141": 1,
+              "158": 1,
               "176": 1
             }
           }
@@ -71269,7 +71316,8 @@
             "4": {
               "58": 1,
               "66": 1,
-              "67": 4
+              "67": 4,
+              "158": 1
             }
           }
         ],
@@ -73729,6 +73777,7 @@
               "145": 2,
               "149": 1,
               "157": 2,
+              "158": 1,
               "161": 1,
               "169": 1,
               "174": 1,
@@ -74400,6 +74449,7 @@
               "151": 7,
               "155": 4,
               "157": 1,
+              "158": 8,
               "160": 4,
               "167": 1,
               "177": 2,
@@ -74583,6 +74633,7 @@
               "154": 1,
               "155": 5,
               "157": 3,
+              "158": 2,
               "159": 13,
               "160": 8,
               "162": 1,
@@ -75130,6 +75181,7 @@
               "154": 6,
               "155": 1,
               "157": 5,
+              "158": 1,
               "159": 4,
               "160": 19,
               "161": 1,
@@ -75204,7 +75256,8 @@
           "board",
           {
             "4": {
-              "146": 1
+              "146": 1,
+              "158": 12
             }
           }
         ],
@@ -75355,6 +75408,7 @@
               "60": 1,
               "67": 2,
               "80": 4,
+              "158": 2,
               "175": 2,
               "176": 1,
               "186": 1
@@ -75388,6 +75442,7 @@
               "118": 6,
               "152": 1,
               "157": 5,
+              "158": 2,
               "178": 5,
               "179": 4,
               "181": 1,
@@ -75719,7 +75774,7 @@
               "155": 15,
               "156": 12,
               "157": 34,
-              "158": 2,
+              "158": 6,
               "159": 22,
               "160": 32,
               "161": 17,
@@ -76009,7 +76064,7 @@
               "155": 2,
               "156": 10,
               "157": 7,
-              "158": 1,
+              "158": 3,
               "162": 1,
               "163": 2,
               "165": 1,
@@ -79104,6 +79159,7 @@
               "145": 1,
               "154": 1,
               "155": 1,
+              "158": 1,
               "159": 1,
               "162": 1,
               "165": 1,
@@ -79878,6 +79934,7 @@
               "155": 2,
               "156": 8,
               "157": 6,
+              "158": 1,
               "159": 12,
               "160": 7,
               "161": 6,
@@ -80097,6 +80154,7 @@
               "155": 7,
               "156": 4,
               "157": 6,
+              "158": 3,
               "160": 2,
               "162": 3,
               "163": 3,
@@ -83056,7 +83114,7 @@
               "130": 1,
               "155": 1,
               "157": 6,
-              "158": 9,
+              "158": 13,
               "159": 1,
               "161": 1,
               "162": 3,
@@ -83292,7 +83350,8 @@
               "92": 1,
               "93": 3,
               "94": 4,
-              "145": 1
+              "145": 1,
+              "158": 2
             }
           }
         ],
@@ -83639,7 +83698,7 @@
               "154": 5,
               "155": 3,
               "157": 10,
-              "158": 1,
+              "158": 3,
               "159": 1,
               "160": 4,
               "164": 3,
@@ -88389,6 +88448,7 @@
               "153": 1,
               "154": 1,
               "157": 11,
+              "158": 1,
               "159": 5,
               "160": 24,
               "164": 2,
@@ -89133,6 +89193,7 @@
               "150": 1,
               "151": 1,
               "156": 1,
+              "158": 1,
               "161": 1,
               "164": 1,
               "172": 2,
@@ -91118,6 +91179,7 @@
               "117": 3,
               "146": 1,
               "150": 2,
+              "158": 2,
               "164": 1,
               "176": 1,
               "178": 1,
@@ -91725,6 +91787,7 @@
               "155": 1,
               "156": 1,
               "157": 6,
+              "158": 3,
               "159": 5,
               "160": 3,
               "162": 6,
@@ -91867,6 +91930,7 @@
               "145": 6,
               "146": 14,
               "147": 1,
+              "158": 9,
               "182": 1,
               "186": 1,
               "189": 1
@@ -92327,6 +92391,7 @@
               "81": 1,
               "117": 2,
               "149": 1,
+              "158": 1,
               "175": 1,
               "176": 1
             }
@@ -92355,6 +92420,7 @@
               "144": 6,
               "146": 1,
               "153": 1,
+              "158": 1,
               "161": 1,
               "164": 1,
               "166": 2,
@@ -92377,6 +92443,7 @@
               "98": 5,
               "103": 2,
               "123": 1,
+              "158": 3,
               "164": 1,
               "165": 1,
               "195": 3
@@ -92431,6 +92498,7 @@
               "144": 2,
               "145": 2,
               "146": 1,
+              "158": 1,
               "159": 1,
               "164": 1,
               "169": 2,
@@ -93165,6 +93233,7 @@
               "136": 6,
               "137": 3,
               "149": 1,
+              "158": 1,
               "185": 1
             }
           }
@@ -93832,6 +93901,7 @@
               "122": 1,
               "145": 1,
               "146": 1,
+              "158": 2,
               "161": 2,
               "162": 1
             }
@@ -95028,6 +95098,7 @@
               "155": 3,
               "156": 2,
               "157": 1,
+              "158": 1,
               "159": 2,
               "160": 7,
               "161": 2,
@@ -95653,7 +95724,7 @@
               "155": 20,
               "156": 23,
               "157": 35,
-              "158": 4,
+              "158": 12,
               "159": 23,
               "160": 41,
               "161": 23,
@@ -96938,6 +97009,7 @@
               "155": 5,
               "156": 1,
               "157": 1,
+              "158": 1,
               "160": 1,
               "161": 4,
               "164": 1,
@@ -99625,7 +99697,7 @@
               "155": 47,
               "156": 51,
               "157": 41,
-              "158": 1,
+              "158": 2,
               "159": 16,
               "160": 19,
               "161": 4,
@@ -100494,6 +100566,7 @@
               "155": 5,
               "156": 18,
               "157": 1,
+              "158": 11,
               "159": 6,
               "160": 6,
               "162": 4,
@@ -100636,7 +100709,7 @@
               "155": 27,
               "156": 50,
               "157": 14,
-              "158": 2,
+              "158": 4,
               "159": 13,
               "160": 14,
               "161": 83,
@@ -101261,7 +101334,7 @@
               "155": 35,
               "156": 39,
               "157": 83,
-              "158": 5,
+              "158": 15,
               "159": 9,
               "160": 66,
               "161": 36,
@@ -101449,6 +101522,7 @@
               "154": 2,
               "155": 1,
               "156": 3,
+              "158": 1,
               "160": 8,
               "161": 3,
               "162": 1,
@@ -101986,7 +102060,7 @@
               "99": 3,
               "113": 1,
               "155": 5,
-              "158": 4,
+              "158": 5,
               "161": 3,
               "162": 11,
               "163": 2,
@@ -102775,7 +102849,7 @@
               "155": 9,
               "156": 7,
               "157": 19,
-              "158": 6,
+              "158": 7,
               "159": 18,
               "160": 7,
               "161": 3,
@@ -102967,7 +103041,7 @@
               "155": 75,
               "156": 63,
               "157": 236,
-              "158": 19,
+              "158": 45,
               "159": 73,
               "160": 155,
               "161": 39,
@@ -103140,6 +103214,7 @@
               "155": 2,
               "156": 2,
               "157": 1,
+              "158": 2,
               "159": 2,
               "163": 1,
               "164": 1,
@@ -103323,7 +103398,7 @@
               "151": 1,
               "154": 2,
               "155": 3,
-              "158": 4,
+              "158": 5,
               "159": 1,
               "160": 3,
               "161": 1,
@@ -104403,7 +104478,8 @@
               "117": 1,
               "118": 3,
               "119": 2,
-              "120": 1
+              "120": 1,
+              "158": 1
             }
           }
         ],
@@ -105275,7 +105351,7 @@
               "155": 12,
               "156": 4,
               "157": 39,
-              "158": 11,
+              "158": 17,
               "159": 1,
               "160": 14,
               "162": 6,
@@ -108006,7 +108082,7 @@
               "153": 1,
               "155": 6,
               "156": 1,
-              "158": 29,
+              "158": 34,
               "162": 11,
               "163": 1,
               "164": 11,
@@ -108702,7 +108778,7 @@
               "154": 6,
               "155": 7,
               "156": 3,
-              "158": 4,
+              "158": 10,
               "159": 1,
               "160": 10,
               "161": 1,
@@ -109079,6 +109155,7 @@
               "152": 1,
               "153": 3,
               "157": 1,
+              "158": 4,
               "161": 1,
               "162": 1,
               "164": 5,
@@ -109439,7 +109516,7 @@
               "155": 6,
               "156": 2,
               "157": 3,
-              "158": 2,
+              "158": 3,
               "159": 1,
               "160": 1,
               "162": 5,
@@ -110084,7 +110161,7 @@
               "154": 2,
               "155": 6,
               "157": 3,
-              "158": 5,
+              "158": 7,
               "160": 1,
               "162": 8,
               "166": 2,
@@ -110521,7 +110598,7 @@
               "155": 5,
               "156": 4,
               "157": 57,
-              "158": 6,
+              "158": 7,
               "159": 8,
               "160": 19,
               "161": 11,
@@ -111688,6 +111765,7 @@
               "117": 1,
               "125": 5,
               "128": 1,
+              "158": 1,
               "178": 9,
               "187": 1
             }
@@ -112106,6 +112184,7 @@
               "146": 8,
               "150": 1,
               "157": 1,
+              "158": 2,
               "164": 1,
               "165": 2,
               "166": 4,
@@ -112871,6 +112950,7 @@
               "155": 5,
               "156": 13,
               "157": 26,
+              "158": 1,
               "160": 6,
               "161": 1,
               "162": 6,
@@ -115256,7 +115336,7 @@
               "155": 2,
               "156": 3,
               "157": 11,
-              "158": 2,
+              "158": 3,
               "160": 2,
               "161": 5,
               "164": 1,
@@ -115368,12 +115448,21 @@
           }
         ],
         [
+          "footers",
+          {
+            "4": {
+              "158": 1
+            }
+          }
+        ],
+        [
           "footer",
           {
             "4": {
               "107": 1,
               "135": 1,
               "154": 6,
+              "158": 7,
               "162": 1
             }
           }
@@ -116014,6 +116103,9 @@
               "159": 1,
               "160": 1,
               "164": 1
+            },
+            "4": {
+              "158": 2
             }
           }
         ],
@@ -116500,6 +116592,7 @@
               "146": 1,
               "152": 1,
               "154": 1,
+              "158": 1,
               "189": 1
             }
           }
@@ -116533,6 +116626,7 @@
               "138": 1,
               "146": 1,
               "157": 8,
+              "158": 1,
               "161": 2,
               "162": 3,
               "163": 3,
@@ -117305,6 +117399,7 @@
               "154": 5,
               "155": 4,
               "156": 9,
+              "158": 1,
               "159": 2,
               "160": 5,
               "161": 1,
@@ -118786,6 +118881,7 @@
               "154": 1,
               "155": 1,
               "157": 1,
+              "158": 1,
               "159": 35,
               "160": 50,
               "161": 4,
@@ -120483,7 +120579,7 @@
               "155": 16,
               "156": 2,
               "157": 4,
-              "158": 3,
+              "158": 4,
               "159": 9,
               "160": 4,
               "161": 2,
@@ -121253,6 +121349,7 @@
               "155": 2,
               "156": 2,
               "157": 1,
+              "158": 3,
               "159": 4,
               "160": 1,
               "161": 2,
@@ -122330,7 +122427,7 @@
               "107": 6,
               "116": 5,
               "117": 4,
-              "158": 2,
+              "158": 3,
               "165": 1,
               "187": 1
             }
@@ -122810,6 +122907,7 @@
               "155": 20,
               "156": 23,
               "157": 2,
+              "158": 1,
               "162": 6,
               "164": 1,
               "169": 3,
@@ -126598,7 +126696,7 @@
               "154": 3,
               "155": 1,
               "157": 15,
-              "158": 1,
+              "158": 2,
               "159": 10,
               "160": 5,
               "161": 3,
@@ -127154,6 +127252,7 @@
               "151": 5,
               "156": 1,
               "157": 1,
+              "158": 2,
               "159": 3,
               "160": 1,
               "161": 2,
@@ -127494,7 +127593,7 @@
               "153": 6,
               "156": 11,
               "157": 5,
-              "158": 6,
+              "158": 7,
               "167": 10,
               "178": 7,
               "181": 7
@@ -127547,7 +127646,7 @@
               "155": 1,
               "156": 11,
               "157": 12,
-              "158": 6,
+              "158": 7,
               "159": 1,
               "167": 10,
               "178": 18,
@@ -127693,7 +127792,7 @@
               "153": 1,
               "154": 1,
               "155": 4,
-              "158": 1,
+              "158": 2,
               "160": 11,
               "161": 1,
               "162": 53,
@@ -128438,7 +128537,8 @@
               "104": 2,
               "116": 2,
               "117": 1,
-              "118": 3
+              "118": 3,
+              "158": 2
             }
           }
         ],
@@ -131419,6 +131519,7 @@
             "4": {
               "15": 1,
               "50": 3,
+              "158": 1,
               "159": 1,
               "187": 2
             }
@@ -132651,6 +132752,7 @@
               "132": 3,
               "137": 1,
               "144": 1,
+              "158": 2,
               "172": 2,
               "175": 13,
               "177": 1
@@ -132667,6 +132769,7 @@
               "41": 1,
               "86": 3,
               "112": 1,
+              "158": 1,
               "167": 1,
               "168": 1,
               "177": 2
@@ -133114,6 +133217,7 @@
               "112": 1,
               "140": 1,
               "155": 1,
+              "158": 1,
               "162": 1,
               "165": 1,
               "176": 4,
@@ -134404,6 +134508,7 @@
               "146": 2,
               "154": 4,
               "156": 4,
+              "158": 1,
               "159": 1,
               "160": 3,
               "161": 5,
@@ -136028,7 +136133,7 @@
               "154": 6,
               "155": 5,
               "156": 5,
-              "158": 1,
+              "158": 3,
               "160": 12,
               "162": 5,
               "164": 1,
@@ -137483,6 +137588,7 @@
               "149": 3,
               "153": 1,
               "156": 1,
+              "158": 1,
               "165": 2,
               "168": 1,
               "169": 1,
@@ -137732,6 +137838,7 @@
               "154": 1,
               "156": 2,
               "157": 1,
+              "158": 4,
               "159": 1,
               "160": 1,
               "162": 2,
@@ -137852,6 +137959,7 @@
               "155": 1,
               "156": 1,
               "157": 2,
+              "158": 2,
               "159": 4,
               "160": 1,
               "161": 1,
@@ -138319,7 +138427,7 @@
               "153": 1,
               "154": 1,
               "157": 5,
-              "158": 1,
+              "158": 2,
               "159": 1,
               "160": 10,
               "161": 1,
@@ -138793,6 +138901,7 @@
               "155": 4,
               "156": 5,
               "157": 10,
+              "158": 1,
               "159": 1,
               "160": 2,
               "161": 4,
@@ -139795,6 +139904,7 @@
               "129": 7,
               "154": 3,
               "156": 1,
+              "158": 2,
               "169": 1,
               "177": 2,
               "178": 4,
@@ -141911,6 +142021,7 @@
               "150": 2,
               "151": 1,
               "157": 1,
+              "158": 1,
               "160": 2,
               "172": 2,
               "184": 1
@@ -141961,6 +142072,7 @@
               "146": 5,
               "150": 1,
               "157": 2,
+              "158": 1,
               "159": 2,
               "160": 3,
               "162": 1,
@@ -143518,7 +143630,7 @@
               "155": 62,
               "156": 10,
               "157": 45,
-              "158": 16,
+              "158": 22,
               "159": 8,
               "160": 69,
               "161": 6,
@@ -143754,6 +143866,7 @@
               "134": 1,
               "145": 1,
               "150": 1,
+              "158": 1,
               "181": 3
             }
           }
@@ -147059,6 +147172,7 @@
               "153": 2,
               "154": 3,
               "157": 4,
+              "158": 2,
               "160": 1,
               "164": 1,
               "166": 3,
@@ -147220,6 +147334,7 @@
               "155": 1,
               "156": 3,
               "157": 13,
+              "158": 4,
               "159": 6,
               "160": 5,
               "161": 5,
@@ -147360,6 +147475,7 @@
               "154": 2,
               "156": 1,
               "157": 5,
+              "158": 1,
               "159": 2,
               "160": 2,
               "161": 1,
@@ -147955,6 +148071,7 @@
               "144": 1,
               "154": 1,
               "155": 3,
+              "158": 1,
               "168": 3,
               "179": 1,
               "185": 3,
@@ -148558,7 +148675,7 @@
               "155": 4,
               "156": 12,
               "157": 14,
-              "158": 2,
+              "158": 3,
               "159": 9,
               "160": 12,
               "161": 7,
@@ -149348,6 +149465,7 @@
               "155": 13,
               "156": 10,
               "157": 10,
+              "158": 5,
               "159": 12,
               "160": 27,
               "161": 8,
@@ -150888,6 +151006,7 @@
               "152": 1,
               "153": 2,
               "155": 3,
+              "158": 2,
               "162": 10,
               "163": 6,
               "165": 3,
@@ -151943,6 +152062,7 @@
               "131": 1,
               "136": 2,
               "153": 2,
+              "158": 1,
               "180": 1,
               "181": 1,
               "182": 1
@@ -152537,7 +152657,7 @@
               "94": 2,
               "124": 1,
               "128": 1,
-              "158": 1,
+              "158": 2,
               "168": 1
             }
           }
@@ -152912,7 +153032,7 @@
               "155": 18,
               "156": 15,
               "157": 20,
-              "158": 2,
+              "158": 6,
               "159": 17,
               "160": 38,
               "161": 3,
@@ -153330,6 +153450,7 @@
               "154": 3,
               "156": 3,
               "157": 1,
+              "158": 2,
               "159": 3,
               "160": 17,
               "161": 5,
@@ -154166,6 +154287,7 @@
               "154": 3,
               "155": 1,
               "157": 13,
+              "158": 1,
               "159": 2,
               "160": 5,
               "161": 5,
@@ -154304,6 +154426,7 @@
               "155": 4,
               "156": 2,
               "157": 1,
+              "158": 1,
               "161": 4,
               "165": 3,
               "166": 6,
@@ -154711,6 +154834,7 @@
               "155": 1,
               "156": 6,
               "157": 10,
+              "158": 1,
               "159": 7,
               "160": 13,
               "161": 1,
@@ -156391,6 +156515,7 @@
               "144": 1,
               "145": 2,
               "154": 2,
+              "158": 1,
               "162": 1,
               "190": 1
             }
@@ -157630,6 +157755,7 @@
               "146": 2,
               "153": 4,
               "156": 1,
+              "158": 1,
               "186": 1,
               "190": 1,
               "194": 1,
@@ -157653,6 +157779,7 @@
               "146": 5,
               "148": 2,
               "153": 1,
+              "158": 2,
               "180": 8,
               "186": 1
             }
@@ -157755,7 +157882,8 @@
           "decompose",
           {
             "4": {
-              "50": 1
+              "50": 1,
+              "158": 3
             }
           }
         ],
@@ -157795,6 +157923,7 @@
               "40": 1,
               "43": 1,
               "155": 1,
+              "158": 2,
               "181": 1
             }
           }
@@ -159188,7 +159317,7 @@
               "145": 1,
               "150": 1,
               "156": 1,
-              "158": 3,
+              "158": 4,
               "161": 2,
               "162": 1,
               "166": 1,
@@ -161518,7 +161647,8 @@
             "4": {
               "58": 1,
               "63": 1,
-              "107": 1
+              "107": 1,
+              "158": 1
             }
           }
         ],
@@ -161526,7 +161656,8 @@
           "dividers",
           {
             "4": {
-              "99": 2
+              "99": 2,
+              "158": 1
             }
           }
         ],
@@ -161536,6 +161667,7 @@
             "4": {
               "40": 1,
               "97": 2,
+              "158": 2,
               "162": 2
             }
           }
@@ -161675,7 +161807,8 @@
               "96": 1,
               "138": 2,
               "140": 1,
-              "145": 4
+              "145": 4,
+              "158": 1
             }
           }
         ],
@@ -164246,6 +164379,7 @@
               "149": 1,
               "155": 1,
               "157": 1,
+              "158": 1,
               "160": 4,
               "164": 1,
               "165": 1,
@@ -164269,7 +164403,8 @@
             "4": {
               "89": 2,
               "90": 1,
-              "91": 1
+              "91": 1,
+              "158": 1
             }
           }
         ],
@@ -164322,6 +164457,7 @@
               "83": 1,
               "108": 1,
               "155": 1,
+              "158": 3,
               "165": 1,
               "179": 1,
               "195": 1
@@ -164334,7 +164470,8 @@
             "4": {
               "15": 1,
               "43": 1,
-              "129": 1
+              "129": 1,
+              "158": 1
             }
           }
         ],
@@ -164359,6 +164496,7 @@
               "150": 5,
               "151": 1,
               "157": 2,
+              "158": 1,
               "160": 1,
               "172": 3,
               "195": 4
@@ -164451,7 +164589,7 @@
               "155": 17,
               "156": 1,
               "157": 1,
-              "158": 8,
+              "158": 11,
               "159": 6,
               "160": 20,
               "161": 3,
@@ -164561,7 +164699,7 @@
               "155": 24,
               "156": 2,
               "157": 9,
-              "158": 44,
+              "158": 46,
               "159": 12,
               "160": 32,
               "161": 17,
@@ -164690,6 +164828,7 @@
               "90": 1,
               "147": 2,
               "155": 4,
+              "158": 1,
               "164": 2,
               "165": 5
             }
@@ -164843,7 +164982,7 @@
               "145": 2,
               "154": 1,
               "157": 1,
-              "158": 1,
+              "158": 3,
               "159": 13,
               "160": 44,
               "162": 7,
@@ -164916,7 +165055,7 @@
               "126": 1,
               "149": 1,
               "157": 1,
-              "158": 1,
+              "158": 2,
               "160": 2,
               "162": 1,
               "166": 1,
@@ -165313,7 +165452,7 @@
               "155": 21,
               "156": 17,
               "157": 12,
-              "158": 6,
+              "158": 10,
               "159": 24,
               "160": 46,
               "162": 3,
@@ -165902,6 +166041,7 @@
               "132": 1,
               "140": 3,
               "153": 2,
+              "158": 1,
               "159": 1,
               "160": 1,
               "161": 2,
@@ -166103,6 +166243,7 @@
               "155": 4,
               "156": 11,
               "157": 23,
+              "158": 6,
               "159": 24,
               "160": 33,
               "161": 14,
@@ -166538,6 +166679,7 @@
               "136": 2,
               "151": 1,
               "157": 9,
+              "158": 4,
               "159": 2,
               "160": 11,
               "161": 1,
@@ -168283,6 +168425,7 @@
               "142": 2,
               "145": 1,
               "149": 3,
+              "158": 1,
               "159": 5,
               "160": 18,
               "162": 1,
@@ -168769,6 +168912,7 @@
               "141": 1,
               "155": 1,
               "157": 1,
+              "158": 1,
               "166": 2,
               "188": 3
             }
@@ -169006,6 +169150,7 @@
               "132": 2,
               "138": 2,
               "151": 2,
+              "158": 1,
               "177": 1,
               "182": 1
             }
@@ -169179,6 +169324,7 @@
               "110": 2,
               "112": 1,
               "140": 1,
+              "158": 2,
               "165": 1,
               "187": 1
             }
@@ -169331,7 +169477,7 @@
               "153": 1,
               "155": 3,
               "157": 4,
-              "158": 1,
+              "158": 4,
               "159": 1,
               "160": 3,
               "164": 10,
@@ -170006,6 +170152,7 @@
               "152": 1,
               "153": 3,
               "156": 1,
+              "158": 3,
               "159": 4,
               "160": 19,
               "161": 2,
@@ -171909,6 +172056,7 @@
               "153": 1,
               "156": 3,
               "157": 3,
+              "158": 1,
               "159": 1,
               "160": 3,
               "164": 1,
@@ -172287,6 +172435,7 @@
               "144": 2,
               "145": 2,
               "154": 1,
+              "158": 1,
               "164": 3,
               "169": 1,
               "172": 1,
@@ -172614,6 +172763,7 @@
               "139": 1,
               "151": 1,
               "152": 2,
+              "158": 1,
               "160": 2,
               "161": 1,
               "170": 1,
@@ -172626,6 +172776,7 @@
           {
             "4": {
               "79": 1,
+              "158": 1,
               "191": 1
             }
           }
@@ -173869,6 +174020,7 @@
               "135": 6,
               "136": 2,
               "150": 1,
+              "158": 1,
               "161": 1,
               "165": 1,
               "180": 1,
@@ -173969,6 +174121,7 @@
               "62": 1,
               "80": 1,
               "83": 2,
+              "158": 1,
               "160": 1,
               "189": 1,
               "190": 1
@@ -173999,6 +174152,7 @@
               "150": 2,
               "155": 1,
               "156": 2,
+              "158": 1,
               "160": 1,
               "163": 1,
               "164": 2,
@@ -174051,6 +174205,7 @@
               "137": 1,
               "145": 1,
               "146": 1,
+              "158": 1,
               "193": 2
             }
           }
@@ -174107,6 +174262,7 @@
               "128": 1,
               "130": 1,
               "143": 1,
+              "158": 1,
               "159": 1,
               "160": 1
             }
@@ -174189,6 +174345,7 @@
               "152": 1,
               "156": 2,
               "157": 5,
+              "158": 1,
               "159": 1,
               "170": 4,
               "172": 2,
@@ -176073,6 +176230,7 @@
               "154": 2,
               "156": 1,
               "157": 9,
+              "158": 1,
               "159": 2,
               "160": 3,
               "161": 2,
@@ -176923,6 +177081,7 @@
               "152": 1,
               "156": 3,
               "157": 4,
+              "158": 1,
               "159": 7,
               "160": 12,
               "161": 5,
@@ -177051,6 +177210,7 @@
               "155": 4,
               "156": 1,
               "157": 5,
+              "158": 1,
               "159": 5,
               "160": 1,
               "162": 1,
@@ -177759,7 +177919,7 @@
               "155": 8,
               "156": 20,
               "157": 22,
-              "158": 2,
+              "158": 7,
               "159": 21,
               "160": 32,
               "161": 16,
@@ -177952,6 +178112,7 @@
               "155": 2,
               "156": 4,
               "157": 2,
+              "158": 2,
               "159": 9,
               "160": 10,
               "161": 1,
@@ -178024,6 +178185,7 @@
               "44": 1,
               "61": 2,
               "72": 1,
+              "158": 1,
               "168": 3,
               "181": 1
             }
@@ -178795,6 +178957,7 @@
               "155": 2,
               "156": 8,
               "157": 3,
+              "158": 2,
               "159": 9,
               "160": 11,
               "161": 5,
@@ -180028,6 +180191,7 @@
               "155": 2,
               "156": 4,
               "157": 3,
+              "158": 1,
               "159": 2,
               "160": 1,
               "161": 9,
@@ -181026,6 +181190,7 @@
               "152": 1,
               "156": 2,
               "157": 1,
+              "158": 2,
               "162": 2,
               "164": 1,
               "166": 1,
@@ -182526,7 +182691,7 @@
               "155": 7,
               "156": 7,
               "157": 9,
-              "158": 1,
+              "158": 4,
               "159": 3,
               "160": 15,
               "161": 6,
@@ -182779,6 +182944,7 @@
               "155": 1,
               "156": 2,
               "157": 3,
+              "158": 6,
               "159": 4,
               "160": 4,
               "161": 4,
@@ -184616,6 +184782,7 @@
               "155": 2,
               "156": 6,
               "157": 1,
+              "158": 1,
               "162": 2,
               "163": 1,
               "165": 1,
@@ -184778,7 +184945,7 @@
               "155": 80,
               "156": 23,
               "157": 6,
-              "158": 17,
+              "158": 18,
               "159": 6,
               "160": 15,
               "161": 23,
@@ -185181,6 +185348,7 @@
               "147": 1,
               "151": 1,
               "157": 2,
+              "158": 1,
               "159": 1,
               "160": 2,
               "169": 1,
@@ -186185,6 +186353,7 @@
               "155": 1,
               "156": 1,
               "157": 4,
+              "158": 1,
               "160": 1,
               "162": 3,
               "166": 1,
@@ -186681,7 +186850,7 @@
               "155": 14,
               "156": 7,
               "157": 1,
-              "158": 6,
+              "158": 14,
               "159": 4,
               "160": 7,
               "161": 5,
@@ -186966,7 +187135,7 @@
               "155": 92,
               "156": 73,
               "157": 54,
-              "158": 24,
+              "158": 32,
               "159": 34,
               "160": 51,
               "161": 39,
@@ -187885,7 +188054,8 @@
               "81": 1,
               "110": 4,
               "111": 1,
-              "115": 9
+              "115": 9,
+              "158": 1
             }
           }
         ],
@@ -188410,6 +188580,7 @@
               "140": 1,
               "141": 2,
               "144": 2,
+              "158": 4,
               "160": 2,
               "166": 1,
               "168": 1,
@@ -188621,7 +188792,7 @@
               "155": 14,
               "156": 7,
               "157": 21,
-              "158": 1,
+              "158": 6,
               "159": 3,
               "160": 28,
               "161": 16,
@@ -191444,7 +191615,7 @@
               "77": 2,
               "144": 1,
               "155": 5,
-              "158": 11,
+              "158": 14,
               "160": 2,
               "162": 25,
               "163": 2,
@@ -191835,6 +192006,7 @@
               "155": 2,
               "156": 2,
               "157": 3,
+              "158": 3,
               "159": 5,
               "160": 4,
               "161": 1,
@@ -193526,6 +193698,7 @@
               "81": 2,
               "106": 1,
               "135": 1,
+              "158": 1,
               "171": 1
             }
           }
@@ -194776,6 +194949,7 @@
               "140": 2,
               "154": 1,
               "156": 1,
+              "158": 3,
               "159": 1,
               "160": 5,
               "164": 1,
@@ -195391,6 +195565,7 @@
               "154": 2,
               "156": 3,
               "157": 3,
+              "158": 1,
               "159": 3,
               "160": 5,
               "161": 3,
@@ -195621,7 +195796,7 @@
               "150": 1,
               "155": 17,
               "156": 1,
-              "158": 31,
+              "158": 32,
               "159": 11,
               "161": 11,
               "162": 28,
@@ -195802,7 +195977,7 @@
               "155": 6,
               "156": 23,
               "157": 2,
-              "158": 1,
+              "158": 3,
               "161": 2,
               "177": 1,
               "180": 1,
@@ -196403,7 +196578,8 @@
           "separators",
           {
             "4": {
-              "38": 1
+              "38": 1,
+              "158": 1
             }
           }
         ],
@@ -196416,6 +196592,7 @@
               "38": 7,
               "72": 1,
               "157": 1,
+              "158": 3,
               "166": 1
             }
           }
@@ -196521,6 +196698,7 @@
               "150": 2,
               "153": 1,
               "157": 4,
+              "158": 1,
               "160": 2,
               "166": 2,
               "172": 1,
@@ -197069,6 +197247,7 @@
               "106": 1,
               "153": 1,
               "155": 1,
+              "158": 1,
               "187": 2
             }
           }
@@ -198055,6 +198234,7 @@
               "155": 9,
               "156": 1,
               "157": 4,
+              "158": 1,
               "159": 11,
               "160": 11,
               "161": 2,
@@ -198260,6 +198440,41 @@
           {
             "4": {
               "0": 1
+            }
+          }
+        ],
+        [
+          "sectionconfigura",
+          {
+            "4": {
+              "158": 1
+            }
+          }
+        ],
+        [
+          "sectioned",
+          {
+            "4": {
+              "158": 1
+            }
+          }
+        ],
+        [
+          "sections",
+          {
+            "4": {
+              "1": 1,
+              "5": 1,
+              "14": 1,
+              "40": 2,
+              "41": 3,
+              "105": 2,
+              "107": 2,
+              "143": 1,
+              "145": 2,
+              "149": 1,
+              "154": 1,
+              "158": 15
             }
           }
         ],
@@ -198488,25 +198703,6 @@
               "146": 1,
               "147": 1,
               "150": 1
-            }
-          }
-        ],
-        [
-          "sections",
-          {
-            "4": {
-              "1": 1,
-              "5": 1,
-              "14": 1,
-              "40": 2,
-              "41": 3,
-              "105": 2,
-              "107": 2,
-              "143": 1,
-              "145": 2,
-              "149": 1,
-              "154": 1,
-              "158": 1
             }
           }
         ],
@@ -198781,7 +198977,7 @@
               "155": 7,
               "156": 1,
               "157": 3,
-              "158": 8,
+              "158": 28,
               "160": 1,
               "165": 7,
               "166": 2,
@@ -200309,6 +200505,7 @@
               "124": 3,
               "128": 1,
               "144": 1,
+              "158": 1,
               "159": 1,
               "164": 1,
               "174": 1,
@@ -200476,6 +200673,7 @@
               "155": 1,
               "156": 2,
               "157": 1,
+              "158": 2,
               "159": 1,
               "161": 5,
               "164": 3,
@@ -201368,6 +201566,7 @@
               "140": 1,
               "153": 1,
               "157": 2,
+              "158": 1,
               "159": 1,
               "162": 1,
               "165": 1,
@@ -202055,6 +202254,7 @@
               "149": 3,
               "150": 2,
               "156": 1,
+              "158": 1,
               "159": 6,
               "160": 2,
               "164": 1,
@@ -202160,6 +202360,7 @@
               "155": 3,
               "156": 4,
               "157": 8,
+              "158": 2,
               "160": 8,
               "164": 5,
               "165": 1,
@@ -202461,7 +202662,7 @@
               "155": 14,
               "156": 13,
               "157": 35,
-              "158": 2,
+              "158": 6,
               "159": 1,
               "160": 31,
               "161": 2,
@@ -204042,7 +204243,7 @@
               "155": 16,
               "156": 2,
               "157": 8,
-              "158": 2,
+              "158": 4,
               "161": 4,
               "162": 1,
               "164": 1,
@@ -204098,6 +204299,7 @@
               "108": 1,
               "113": 1,
               "155": 4,
+              "158": 1,
               "179": 1,
               "187": 4,
               "189": 1
@@ -204644,6 +204846,7 @@
               "154": 1,
               "155": 1,
               "157": 1,
+              "158": 1,
               "161": 3,
               "164": 1,
               "168": 2,
@@ -204950,7 +205153,7 @@
               "152": 2,
               "153": 12,
               "155": 5,
-              "158": 1,
+              "158": 3,
               "161": 1,
               "162": 2,
               "168": 1,
@@ -205591,6 +205794,7 @@
             "4": {
               "38": 1,
               "86": 1,
+              "158": 1,
               "160": 1
             }
           }
@@ -205678,7 +205882,7 @@
               "155": 15,
               "156": 3,
               "157": 7,
-              "158": 31,
+              "158": 40,
               "159": 4,
               "160": 27,
               "162": 38,
@@ -206400,7 +206604,8 @@
           {
             "4": {
               "8": 1,
-              "152": 1
+              "152": 1,
+              "158": 1
             }
           }
         ],
@@ -206833,6 +207038,7 @@
               "151": 1,
               "153": 3,
               "155": 4,
+              "158": 1,
               "169": 1,
               "179": 1,
               "182": 1,
@@ -207685,6 +207891,7 @@
               "95": 3,
               "113": 1,
               "154": 1,
+              "158": 17,
               "162": 3,
               "177": 2,
               "181": 1,
@@ -207702,6 +207909,7 @@
               "11": 1,
               "50": 2,
               "156": 1,
+              "158": 35,
               "162": 14,
               "165": 1,
               "177": 1,
@@ -209857,6 +210065,7 @@
               "115": 1,
               "128": 1,
               "130": 1,
+              "158": 1,
               "161": 1
             },
             "4": {
@@ -209970,7 +210179,7 @@
               "154": 9,
               "155": 14,
               "156": 20,
-              "158": 2,
+              "158": 8,
               "159": 1,
               "160": 10,
               "161": 8,
@@ -210829,6 +211038,7 @@
               "145": 1,
               "155": 2,
               "157": 2,
+              "158": 1,
               "160": 1,
               "161": 1,
               "162": 3,
@@ -212207,6 +212417,7 @@
               "153": 9,
               "156": 5,
               "157": 3,
+              "158": 2,
               "160": 9,
               "164": 2,
               "165": 2,
@@ -213395,6 +213606,7 @@
               "40": 2,
               "52": 1,
               "66": 1,
+              "158": 2,
               "165": 1,
               "187": 1
             }
@@ -213795,6 +214007,7 @@
               "154": 2,
               "155": 1,
               "156": 2,
+              "158": 2,
               "159": 23,
               "160": 6,
               "161": 2,
@@ -214165,6 +214378,7 @@
               "144": 1,
               "155": 1,
               "157": 8,
+              "158": 3,
               "159": 1,
               "160": 27,
               "162": 4,
@@ -214199,7 +214413,7 @@
               "142": 1,
               "144": 2,
               "145": 1,
-              "158": 11,
+              "158": 23,
               "160": 4,
               "164": 1,
               "181": 1
@@ -214763,7 +214977,7 @@
               "154": 1,
               "156": 10,
               "157": 2,
-              "158": 4,
+              "158": 5,
               "159": 12,
               "160": 7,
               "161": 3,
@@ -216021,6 +216235,7 @@
               "107": 1,
               "129": 2,
               "151": 4,
+              "158": 4,
               "176": 1
             }
           }
@@ -217443,6 +217658,7 @@
               "82": 1,
               "96": 1,
               "136": 1,
+              "158": 1,
               "185": 1,
               "187": 1
             }
@@ -217454,7 +217670,7 @@
             "4": {
               "40": 2,
               "145": 1,
-              "158": 1,
+              "158": 3,
               "190": 5
             }
           }
@@ -217480,7 +217696,7 @@
               "123": 5,
               "154": 1,
               "156": 2,
-              "158": 8,
+              "158": 22,
               "161": 2,
               "162": 1,
               "165": 1,
@@ -217838,6 +218054,7 @@
               "155": 11,
               "156": 5,
               "157": 10,
+              "158": 2,
               "159": 6,
               "160": 13,
               "161": 8,
@@ -219977,7 +220194,7 @@
               "153": 1,
               "156": 4,
               "157": 14,
-              "158": 2,
+              "158": 10,
               "159": 8,
               "160": 28,
               "161": 4,
@@ -220634,6 +220851,7 @@
               "151": 4,
               "154": 3,
               "155": 1,
+              "158": 2,
               "165": 2,
               "167": 1,
               "168": 6,
@@ -221521,6 +221739,7 @@
           {
             "4": {
               "127": 1,
+              "158": 1,
               "159": 1,
               "160": 4
             }
@@ -221533,6 +221752,7 @@
               "15": 1,
               "40": 1,
               "153": 1,
+              "158": 1,
               "160": 1,
               "165": 1,
               "183": 1
@@ -222356,6 +222576,7 @@
               "145": 1,
               "147": 2,
               "151": 4,
+              "158": 1,
               "159": 2,
               "160": 2,
               "171": 1,
@@ -222652,6 +222873,7 @@
               "154": 4,
               "155": 11,
               "156": 1,
+              "158": 3,
               "159": 5,
               "160": 1,
               "162": 1,
@@ -223961,6 +224183,14 @@
           }
         ],
         [
+          "containervalues",
+          {
+            "4": {
+              "158": 1
+            }
+          }
+        ],
+        [
           "container2",
           {
             "4": {
@@ -223986,7 +224216,7 @@
               "26": 1,
               "72": 1,
               "77": 1,
-              "158": 1
+              "158": 2
             },
             "4": {
               "1": 1,
@@ -224004,7 +224234,7 @@
               "129": 1,
               "151": 1,
               "155": 2,
-              "158": 1,
+              "158": 3,
               "162": 4,
               "165": 1,
               "166": 4,
@@ -224069,7 +224299,7 @@
               "153": 1,
               "154": 4,
               "155": 15,
-              "158": 4,
+              "158": 32,
               "159": 5,
               "160": 8,
               "161": 3,
@@ -224407,7 +224637,7 @@
               "155": 25,
               "156": 4,
               "157": 1,
-              "158": 8,
+              "158": 38,
               "159": 3,
               "160": 16,
               "161": 5,
@@ -226208,6 +226438,7 @@
               "131": 1,
               "140": 1,
               "145": 1,
+              "158": 1,
               "172": 1,
               "176": 1,
               "178": 1,
@@ -226713,6 +226944,7 @@
               "144": 3,
               "145": 1,
               "149": 1,
+              "158": 1,
               "159": 3,
               "160": 1,
               "168": 1,
@@ -226999,6 +227231,7 @@
               "125": 1,
               "135": 1,
               "157": 2,
+              "158": 2,
               "161": 3,
               "169": 1,
               "181": 1
@@ -227009,6 +227242,7 @@
           "composes",
           {
             "4": {
+              "158": 1,
               "189": 1
             }
           }
@@ -230136,6 +230370,7 @@
               "129": 2,
               "154": 1,
               "156": 1,
+              "158": 1,
               "164": 1,
               "165": 1,
               "174": 2,
@@ -230176,6 +230411,7 @@
               "127": 3,
               "134": 1,
               "140": 1,
+              "158": 1,
               "160": 1,
               "165": 1,
               "169": 2,
@@ -230882,6 +231118,7 @@
               "151": 3,
               "153": 1,
               "157": 4,
+              "158": 1,
               "159": 3,
               "164": 6,
               "170": 4,
@@ -233506,6 +233743,7 @@
               "155": 2,
               "156": 2,
               "157": 2,
+              "158": 1,
               "160": 3,
               "161": 1,
               "162": 1,
@@ -233558,11 +233796,20 @@
               "153": 3,
               "155": 1,
               "157": 2,
+              "158": 1,
               "164": 1,
               "168": 1,
               "177": 1,
               "178": 2,
               "181": 1
+            }
+          }
+        ],
+        [
+          "maybes",
+          {
+            "4": {
+              "158": 1
             }
           }
         ],
@@ -234611,7 +234858,7 @@
               "144": 1,
               "146": 1,
               "156": 1,
-              "158": 1,
+              "158": 2,
               "159": 7,
               "166": 1,
               "168": 5,
@@ -235486,6 +235733,7 @@
               "153": 1,
               "154": 7,
               "155": 2,
+              "158": 1,
               "159": 2,
               "160": 3,
               "161": 1,
@@ -236850,7 +237098,7 @@
               "154": 2,
               "155": 8,
               "156": 3,
-              "158": 1,
+              "158": 3,
               "159": 6,
               "160": 1,
               "162": 1,
@@ -236890,6 +237138,7 @@
               "154": 2,
               "155": 1,
               "156": 4,
+              "158": 3,
               "160": 4,
               "165": 2,
               "167": 4,
@@ -237336,6 +237585,7 @@
               "155": 3,
               "156": 4,
               "157": 136,
+              "158": 1,
               "159": 24,
               "160": 55,
               "162": 1,
@@ -237719,7 +237969,8 @@
               "23": 2,
               "35": 1,
               "156": 5,
-              "157": 1
+              "157": 1,
+              "158": 2
             }
           }
         ],
@@ -238566,7 +238817,8 @@
               "97": 1,
               "99": 2,
               "105": 3,
-              "144": 2
+              "144": 2,
+              "158": 1
             }
           }
         ],
@@ -238773,7 +239025,8 @@
               "99": 1,
               "115": 1,
               "140": 2,
-              "157": 1
+              "157": 1,
+              "158": 1
             }
           }
         ],
@@ -239454,6 +239707,7 @@
               "116": 17,
               "118": 1,
               "119": 1,
+              "158": 2,
               "162": 2,
               "174": 1,
               "176": 1,
@@ -241546,6 +241800,7 @@
               "155": 1,
               "156": 1,
               "157": 4,
+              "158": 1,
               "159": 1,
               "160": 5,
               "162": 1,
@@ -241619,6 +241874,7 @@
               "146": 3,
               "151": 1,
               "157": 3,
+              "158": 1,
               "160": 4,
               "163": 2,
               "164": 2,
@@ -241819,6 +242075,7 @@
               "152": 5,
               "155": 10,
               "156": 1,
+              "158": 3,
               "162": 4,
               "165": 3,
               "167": 1,
@@ -242668,6 +242925,7 @@
               "141": 2,
               "145": 2,
               "156": 1,
+              "158": 1,
               "160": 2,
               "164": 3,
               "171": 1,
@@ -242854,6 +243112,7 @@
               "146": 2,
               "154": 1,
               "156": 3,
+              "158": 1,
               "160": 1,
               "162": 1,
               "165": 3,
@@ -243110,6 +243369,7 @@
               "153": 1,
               "155": 3,
               "156": 3,
+              "158": 1,
               "159": 4,
               "160": 3,
               "161": 1,
@@ -245966,6 +246226,7 @@
               "151": 1,
               "155": 1,
               "156": 2,
+              "158": 1,
               "163": 1,
               "164": 2,
               "177": 5
@@ -246147,6 +246408,7 @@
               "155": 3,
               "156": 3,
               "157": 4,
+              "158": 2,
               "159": 13,
               "160": 12,
               "161": 3,
@@ -246666,6 +246928,7 @@
               "98": 1,
               "99": 1,
               "117": 1,
+              "158": 1,
               "163": 1,
               "170": 1,
               "172": 4,
@@ -248030,6 +248293,7 @@
               "155": 9,
               "156": 5,
               "157": 2,
+              "158": 1,
               "160": 1,
               "161": 1,
               "163": 1,
@@ -248977,7 +249241,7 @@
               "155": 7,
               "156": 1,
               "157": 2,
-              "158": 9,
+              "158": 11,
               "160": 2,
               "162": 4,
               "179": 5,
@@ -249046,6 +249310,7 @@
               "145": 1,
               "153": 1,
               "154": 2,
+              "158": 1,
               "163": 1,
               "178": 1,
               "181": 2,
@@ -249351,6 +249616,7 @@
               "154": 3,
               "155": 1,
               "156": 2,
+              "158": 1,
               "159": 3,
               "160": 8,
               "161": 1,
@@ -249847,7 +250113,7 @@
               "155": 11,
               "156": 6,
               "157": 12,
-              "158": 1,
+              "158": 2,
               "159": 8,
               "160": 4,
               "161": 2,
@@ -251104,6 +251370,7 @@
               "147": 1,
               "154": 1,
               "157": 9,
+              "158": 1,
               "160": 1,
               "162": 1,
               "163": 2,
@@ -251368,6 +251635,7 @@
               "155": 1,
               "156": 4,
               "157": 5,
+              "158": 3,
               "159": 3,
               "160": 2,
               "161": 2,
@@ -252912,6 +253180,7 @@
               "149": 1,
               "156": 1,
               "157": 1,
+              "158": 1,
               "159": 1,
               "168": 2,
               "172": 2,
@@ -253614,7 +253883,8 @@
           {
             "4": {
               "80": 1,
-              "129": 1
+              "129": 1,
+              "158": 1
             }
           }
         ],
@@ -446381,7 +446651,16 @@
           "show",
           "hide",
           "content",
-          "disclosure"
+          "disclosure",
+          "styles",
+          "subviews",
+          "each",
+          "18",
+          "sections",
+          "specific",
+          "modifier",
+          "values",
+          "@entry"
         ],
         "Part 1: Stacks": [
           "part",
@@ -446764,6 +447043,279 @@
           "play",
           "pause"
         ],
+        "Part 7: Custom Containers (iOS 18+)": [
+          "part",
+          "custom",
+          "containers",
+          "os",
+          "18",
+          "container",
+          "view",
+          "ap",
+          "let",
+          "build",
+          "reusable",
+          "decompose",
+          "their",
+          "children",
+          "apply",
+          "decora",
+          "between",
+          "them",
+          "group",
+          "into",
+          "sections",
+          "read",
+          "per",
+          "child",
+          "configura",
+          "how",
+          "write",
+          "list",
+          "replace",
+          "instead",
+          "one",
+          "off",
+          "layout",
+          "when",
+          "reach",
+          "these",
+          "situa",
+          "use",
+          "needs",
+          "insert",
+          "dividers",
+          "separators",
+          "subviews",
+          "count",
+          "index",
+          "iterates",
+          "wraps",
+          "each",
+          "must",
+          "respect",
+          "sec",
+          "boundaries",
+          "header",
+          "footer",
+          "need",
+          "row",
+          "separator",
+          "hidden",
+          "style",
+          "modifier",
+          "values",
+          "@entry",
+          "come",
+          "arbitrary",
+          "builder",
+          "content",
+          "not",
+          "data",
+          "all",
+          "above",
+          "if",
+          "only",
+          "don",
+          "care",
+          "about",
+          "composi",
+          "stack",
+          "lazy",
+          "parameter",
+          "simpler",
+          "re",
+          "primitive",
+          "declared",
+          "vs",
+          "resolved",
+          "mental",
+          "model",
+          "makes",
+          "rest",
+          "make",
+          "sense",
+          "what",
+          "written",
+          "closure",
+          "text",
+          "empty",
+          "actually",
+          "appears",
+          "screen",
+          "after",
+          "swift",
+          "ui",
+          "evaluates",
+          "conditionals",
+          "groups",
+          "iterate",
+          "so",
+          "single",
+          "songs",
+          "over",
+          "items",
+          "resolves",
+          "cards",
+          "doesn",
+          "separate",
+          "aware",
+          "know",
+          "many",
+          "scale",
+          "change",
+          "struct",
+          "board",
+          "@view",
+          "var",
+          "body",
+          "some",
+          "subview",
+          "card",
+          "15",
+          "small",
+          "normal",
+          "caller",
+          "composes",
+          "any",
+          "mix",
+          "static",
+          "dynamic",
+          "pinned",
+          "item",
+          "title",
+          "collec",
+          "expos",
+          "first",
+          "last",
+          "identifiable",
+          "itera",
+          "id",
+          "without",
+          "shorter",
+          "form",
+          "isn",
+          "needed",
+          "just",
+          "wrap",
+          "stacked",
+          "align",
+          "lead",
+          "spac",
+          "12",
+          "divider",
+          "but",
+          "alone",
+          "can",
+          "tell",
+          "which",
+          "compare",
+          "ids",
+          "divided",
+          "padd",
+          "vertical",
+          "blocks",
+          "honor",
+          "sectioned",
+          "80",
+          "20",
+          "exposes",
+          "identity",
+          "see",
+          "below",
+          "check",
+          "before",
+          "render",
+          "chrome",
+          "wrapped",
+          "automatically",
+          "forms",
+          "implicit",
+          "works",
+          "even",
+          "writes",
+          "flat",
+          "specific",
+          "modifiers",
+          "implements",
+          "meaningful",
+          "inside",
+          "define",
+          "two",
+          "steps",
+          "step",
+          "declare",
+          "value",
+          "extension",
+          "rejected",
+          "bool",
+          "false",
+          "func",
+          "true",
+          "keeper",
+          "skip",
+          "maybes",
+          "applies",
+          "every",
+          "differ",
+          "environ",
+          "preferences",
+          "scope",
+          "flows",
+          "down",
+          "entire",
+          "hierarchy",
+          "up",
+          "merg",
+          "visible",
+          "immediate",
+          "do",
+          "escape",
+          "bounded",
+          "whole",
+          "point",
+          "why",
+          "accidentally",
+          "affect",
+          "higher",
+          "tree",
+          "anti",
+          "patterns",
+          "mistake",
+          "fix",
+          "takes",
+          "take",
+          "supports",
+          "mixed",
+          "using",
+          "inspect",
+          "proxies",
+          "via",
+          "preserves",
+          "config",
+          "preference",
+          "key",
+          "no",
+          "surprises",
+          "iterat",
+          "literal",
+          "drops",
+          "headers",
+          "footers",
+          "always",
+          "conditionally",
+          "performance",
+          "resolve",
+          "demand",
+          "large",
+          "datasets",
+          "embed",
+          "scroll",
+          "itself",
+          "resolu",
+          "stays",
+          "incremental"
+        ],
         "Resources": [
           "resources",
           "wwdc",
@@ -446775,6 +447327,7 @@
           "10148",
           "2024",
           "10144",
+          "10146",
           "2025",
           "256",
           "docs",
@@ -446785,6 +447338,20 @@
           "grid",
           "outlinegroup",
           "disclosuregroup",
+          "group",
+          "init",
+          "subviews",
+          "transform",
+          "sections",
+          "foreach",
+          "content",
+          "subview",
+          "sectionconfigura",
+          "containervalues",
+          "creat",
+          "custom",
+          "container",
+          "views",
           "skills",
           "layout",
           "md",
