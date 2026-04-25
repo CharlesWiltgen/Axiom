@@ -2,15 +2,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Get version from command line
-const version = process.argv[2];
+// Parse args: positional version, optional --tag flag
+const args = process.argv.slice(2);
+const tagFlag = args.includes('--tag');
+const version = args.find(a => !a.startsWith('-'));
+
 if (!version?.match(/^\d+\.\d+\.\d+$/)) {
-  console.error('❌ Usage: node set-version.js X.Y.Z');
+  console.error('❌ Usage: node set-version.js X.Y.Z [--tag]');
   console.error('   Example: node set-version.js 0.9.37');
+  console.error('   Example: node set-version.js 0.9.37 --tag   (also creates annotated git tag v0.9.37)');
   process.exit(1);
 }
 
@@ -385,6 +390,36 @@ try {
     });
   }
 
+  // --tag preflight: refuse on dirty tree (other than expected files) or existing tag
+  if (tagFlag) {
+    const expectedRelative = new Set(updates.map(u => path.relative(root, u.path)));
+    let status;
+    try {
+      status = execSync('git status --porcelain', { cwd: root, encoding: 'utf8' });
+    } catch (err) {
+      throw new Error(`--tag requires a git repository: ${err.message}`);
+    }
+    const dirtyFiles = status.split('\n').filter(Boolean).map(l => l.slice(3));
+    const unexpected = dirtyFiles.filter(f => !expectedRelative.has(f));
+    if (unexpected.length) {
+      throw new Error(
+        `--tag refused: working tree has unrelated changes. Commit or stash them first:\n  ` +
+        unexpected.join('\n  ')
+      );
+    }
+
+    let tagExists = false;
+    try {
+      execSync(`git rev-parse --verify --quiet refs/tags/v${version}`, { cwd: root, stdio: 'pipe' });
+      tagExists = true;
+    } catch {
+      // Tag doesn't exist — proceed
+    }
+    if (tagExists) {
+      throw new Error(`--tag refused: tag v${version} already exists locally. Delete with: git tag -d v${version}`);
+    }
+  }
+
   // Write all files atomically (write to temp, then rename)
   const tempFiles = [];
   try {
@@ -406,6 +441,15 @@ try {
     throw err;
   }
 
+  // Create annotated tag (after successful writes) if --tag passed
+  if (tagFlag) {
+    try {
+      execSync(`git tag -a v${version} -m "Axiom v${version}"`, { cwd: root, stdio: 'pipe' });
+    } catch (err) {
+      throw new Error(`Failed to create tag v${version}: ${err.message}`);
+    }
+  }
+
   // Success - print summary
   console.log(`✓ Version set to ${version}`);
   console.log(`  Skills: ${skillsCount} (${disciplineCount} discipline, ${referenceCount} reference, ${diagnosticCount} diagnostic)${suiteCount > 0 ? ` across ${suiteCount} skill suite(s)` : ''}`);
@@ -415,6 +459,9 @@ try {
   console.log('Updated:');
   for (const update of updates) {
     console.log(`  ✓ ${update.label}`);
+  }
+  if (tagFlag) {
+    console.log(`  ✓ Annotated git tag v${version} (local only, not pushed)`);
   }
 
 } catch (err) {
