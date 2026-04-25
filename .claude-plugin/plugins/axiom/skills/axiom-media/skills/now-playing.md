@@ -1082,12 +1082,17 @@ class AnimatedArtworkService {
         return MPMediaItemAnimatedArtwork(
             artworkID: artworkID,
             previewImageRequestHandler: { [weak self] requestedSize in
-                // First-frame still — return synchronously when possible
-                await self?.loadPreviewImage(albumID: albumID, aspect: aspectRatio, size: requestedSize)
+                // First-frame still — return synchronously when possible.
+                // ✅ guard let, NOT `await self?.method()` — optional chaining on an
+                // async call returning Optional<T> produces Optional<Optional<T>>,
+                // which won't satisfy the handler's `UIImage?` return type.
+                guard let self else { return nil }
+                return await self.loadPreviewImage(albumID: albumID, aspect: aspectRatio, size: requestedSize)
             },
             videoAssetFileURLRequestHandler: { [weak self] requestedSize in
                 // ✅ Local file URL only — download to disk first, then return file URL
-                await self?.localVideoURL(albumID: albumID, aspect: aspectRatio, size: requestedSize)
+                guard let self else { return nil }
+                return await self.localVideoURL(albumID: albumID, aspect: aspectRatio, size: requestedSize)
             }
         )
     }
