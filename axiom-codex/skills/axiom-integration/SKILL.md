@@ -98,6 +98,10 @@ digraph integration {
 - EventKit/Contacts data issues → **stay here**
 - Shared data with widget via App Groups → **also invoke axiom-data**
 
+#### watchOS surfaces
+- Complications + Smart Stack widgets → See axiom-watchos (skills/smart-stack-and-complications.md)
+- Live Activities on Apple Watch → See axiom-watchos (skills/controls-and-live-activities.md)
+
 ## Conflict Resolution
 
 **integration vs axiom-build**: When system features fail with entitlement/certificate errors:

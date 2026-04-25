@@ -55,7 +55,7 @@ Use this skill when working with:
 ### Automated Scanning
 
 **Core Data audit** → Launch `core-data-auditor` agent or `/axiom:audit core-data` (safety violations, architectural gaps — migration options, thread-confinement, N+1 queries, merge policies, context isolation)
-**Codable audit** → Launch `codable-auditor` agent or `/axiom:audit codable` (try? swallowing errors, JSONSerialization, date handling)
+**Codable audit** → Launch `codable-auditor` agent or `/axiom:audit codable` (safety violations, semantic gaps — try? swallowing errors, JSONSerialization, date handling, silent field drops, wrapper-hidden fallbacks, cross-file strategy drift, enum future-case crashes)
 **iCloud audit** → Launch `icloud-auditor` agent or `/axiom:audit icloud` (entitlement checks, file coordination, CloudKit anti-patterns)
 **Storage audit** → Launch `storage-auditor` agent or `/axiom:audit storage` (wrong file locations, missing backup exclusions, data loss risks)
 **Database schema audit** → Launch `database-schema-auditor` agent or `/axiom:audit database-schema` (unsafe ALTER TABLE, DROP operations, missing idempotency, foreign key misuse)
@@ -90,6 +90,9 @@ Use this skill when working with:
 25. tvOS data persistence? → See axiom-swift (skills/tvos.md) (CRITICAL: no persistent local storage) + `skills/sqlitedata.md` (CloudKit SyncEngine)
 26. SwiftData @MainActor / background context threading? → `/skill axiom-concurrency`
 27. Structured data generation with Foundation Models? → `/skill axiom-ai`
+
+#### Sync patterns
+- HealthKit anchored/observer queries as a generalizable change-tracking pattern → See axiom-health (skills/sync-and-background.md)
 
 ## Anti-Rationalization
 

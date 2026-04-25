@@ -21,6 +21,7 @@
 - Now Playing info doesn't appear on Lock Screen or Control Center
 - Play/pause/skip buttons are grayed out or don't respond
 - Album artwork is missing, wrong, or flickers between images
+- Animated lock-screen artwork (iOS 26+) not appearing — see Pattern 8
 - Control Center shows "Playing" when app is paused, or vice versa
 - Apple Music or other apps "steal" Now Playing status
 - Implementing Now Playing for the first time
@@ -104,6 +105,7 @@ if let info = MPNowPlayingInfoCenter.default().nowPlayingInfo {
 | No commands have targets | System ignores app | Pattern 2 |
 | Commands have targets but isEnabled = false | UI grayed out | Pattern 2 |
 | Artwork is nil | MPMediaItemArtwork block returning nil | Pattern 3 |
+| Animated artwork key set but iOS 26 lock screen still shows static | Key not in `supportedAnimatedArtworkKeys` (silently disregarded) | Pattern 8 |
 | playbackRate is 0.0 when playing | Control Center shows paused | Pattern 4 |
 | Background mode "audio" not in Info.plist | Info disappears on lock | Pattern 1 |
 
@@ -149,8 +151,10 @@ Now Playing not working?
 │  │     └─ Pattern 3b (Image Format)
 │  ├─ Wrong artwork showing?
 │  │  └─ Race condition between sources → Pattern 3c
-│  └─ Artwork flickering?
-│     └─ Multiple updates in rapid succession → Pattern 3d
+│  ├─ Artwork flickering?
+│  │  └─ Multiple updates in rapid succession → Pattern 3d
+│  └─ Animated artwork not appearing on iOS 26 lock screen?
+│     └─ Missing capability gate or wrong aspect ratio → Pattern 8
 │
 ├─ State sync issues?
 │  ├─ Shows "Playing" when paused?
@@ -474,6 +478,8 @@ class NowPlayingService {
 - Correct artwork for current track
 - No flickering when track changes
 - Artwork persists after backgrounding
+
+**For iOS 26+ animated artwork** (full-screen Lock Screen video), see Pattern 8. Always set `MPMediaItemPropertyArtwork` (this pattern) alongside the animated keys so iOS 18-25 users still see static artwork.
 
 ---
 
@@ -978,11 +984,202 @@ Testing: Verified with 10 track changes, zero flicker.
 
 ---
 
+## Pattern 8: Animated Artwork (iOS 26+)
+
+**Time cost**: 20-40 minutes
+
+iOS 26 introduces full-screen animated Lock Screen artwork via `MPMediaItemAnimatedArtwork`. Apple opened this API to all third-party audio apps — music, audiobooks, podcasts, anything with motion-friendly cover art.
+
+### Symptom
+- Animated artwork doesn't appear on iOS 26 Lock Screen — falls back to static
+- Animated keys set but seemingly ignored
+- New artwork doesn't update when track changes
+- Animated artwork loads then disappears
+- Crashes on iOS 18-25 (referencing iOS 26-only symbols)
+
+### BAD Code
+
+```swift
+// ❌ WRONG — Setting animated keys without capability check (silently ignored)
+nowPlayingInfo[MPNowPlayingInfoProperty1x1AnimatedArtwork] = animatedArtwork
+nowPlayingInfo[MPNowPlayingInfoProperty3x4AnimatedArtwork] = animatedArtwork  // ❌ Same instance, wrong aspect ratio
+
+// ❌ WRONG — Using a fresh artworkID for the same artwork (forces re-download)
+let artwork = MPMediaItemAnimatedArtwork(
+    artworkID: UUID().uuidString,  // ❌ Different every time → system can't dedupe
+    previewImageRequestHandler: { _ in await loadPreview() },
+    videoAssetFileURLRequestHandler: { _ in await downloadVideo() }
+)
+
+// ❌ WRONG — Pre-downloading video unconditionally (wasted bandwidth)
+Task {
+    let videoURL = await downloadFromCDN(track.animatedArtworkURL)  // ❌ Downloads even if artwork never viewed
+    cachedVideoURL = videoURL
+}
+
+// ❌ WRONG — Returning a remote URL (must be local file URL)
+let artwork = MPMediaItemAnimatedArtwork(
+    artworkID: track.animatedID,
+    previewImageRequestHandler: { size in await loadImage(size) },
+    videoAssetFileURLRequestHandler: { _ in
+        URL(string: "https://cdn.example.com/animated.mp4")  // ❌ System rejects remote URLs
+    }
+)
+
+// ❌ WRONG — Dropping static artwork when adding animated (breaks iOS 18-25)
+nowPlayingInfo.removeValue(forKey: MPMediaItemPropertyArtwork)
+nowPlayingInfo[MPNowPlayingInfoProperty1x1AnimatedArtwork] = animatedArtwork  // ❌ iOS 18-25 now show no artwork
+```
+
+### GOOD Code
+
+```swift
+// ✅ CORRECT — Capability-gated, ID-stable, lazy-loaded, with static fallback
+@MainActor
+class AnimatedArtworkService {
+
+    func updateNowPlaying(for track: Track, staticImage: UIImage) {
+        var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
+
+        // Always set static artwork — backward compat for iOS 18-25
+        // and the system fallback when animation is suppressed (low power, Reduce Motion, etc.)
+        let staticArtwork = MPMediaItemArtwork(boundsSize: staticImage.size) { [staticImage] _ in
+            staticImage
+        }
+        nowPlayingInfo[MPMediaItemPropertyArtwork] = staticArtwork
+
+        // iOS 26+ animated artwork — gated on platform support
+        if #available(iOS 26.0, macOS 26.0, tvOS 26.0, visionOS 26.0, watchOS 26.0, *) {
+            let supported = MPNowPlayingInfoCenter.supportedAnimatedArtworkKeys
+
+            // ✅ Use album-stable ID, NOT track-unique — same animation across album songs
+            let artworkID = "album:\(track.albumID)"
+
+            if supported.contains(MPNowPlayingInfoProperty1x1AnimatedArtwork) {
+                nowPlayingInfo[MPNowPlayingInfoProperty1x1AnimatedArtwork] =
+                    makeAnimatedArtwork(artworkID: artworkID, aspect: .square, track: track)
+            }
+            if supported.contains(MPNowPlayingInfoProperty3x4AnimatedArtwork) {
+                nowPlayingInfo[MPNowPlayingInfoProperty3x4AnimatedArtwork] =
+                    makeAnimatedArtwork(artworkID: artworkID, aspect: .tall, track: track)
+            }
+        }
+
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    }
+
+    @available(iOS 26.0, *)
+    private func makeAnimatedArtwork(
+        artworkID: String,
+        aspect: ArtworkAspect,
+        track: Track
+    ) -> MPMediaItemAnimatedArtwork {
+        // ✅ Async closures with VALUE CAPTURE — Swift 6 strict concurrency safe
+        // ✅ System only invokes these when artwork is actually being viewed
+        let albumID = track.albumID
+        let aspectRatio = aspect
+
+        return MPMediaItemAnimatedArtwork(
+            artworkID: artworkID,
+            previewImageRequestHandler: { [weak self] requestedSize in
+                // First-frame still — return synchronously when possible.
+                // ✅ guard let, NOT `await self?.method()` — optional chaining on an
+                // async call returning Optional<T> produces Optional<Optional<T>>,
+                // which won't satisfy the handler's `UIImage?` return type.
+                guard let self else { return nil }
+                return await self.loadPreviewImage(albumID: albumID, aspect: aspectRatio, size: requestedSize)
+            },
+            videoAssetFileURLRequestHandler: { [weak self] requestedSize in
+                // ✅ Local file URL only — download to disk first, then return file URL
+                guard let self else { return nil }
+                return await self.localVideoURL(albumID: albumID, aspect: aspectRatio, size: requestedSize)
+            }
+        )
+    }
+}
+
+enum ArtworkAspect { case square, tall }
+```
+
+### Why This Pattern
+
+**`artworkID` is the cache key.** The system uses it to detect changes — keep it stable for the same artwork (e.g., `"album:\(albumID)"` for all songs on an album). A new ID forces the system to re-request both preview and video. A `UUID()` per call defeats caching entirely.
+
+**`supportedAnimatedArtworkKeys` is mandatory.** Apple's docs are explicit: "Any animated artwork keys not included in this collection will be disregarded." Don't assume both 1:1 and 3:4 are accepted on every platform — watchOS or tvOS may only accept one (or none).
+
+**Lazy loading is the contract.** The system invokes the request handlers only when the artwork is being viewed. Don't pre-download video assets unconditionally — Apple specifically warns: "Avoid performing expensive network requests for video assets in advance, as the system may ultimately not request the asset."
+
+**Local file URLs only.** The video handler must return a `file://` URL on disk. Download to a cache directory first, then return that path. URLs must remain valid for the lifetime of the `MPMediaItemAnimatedArtwork` in your `nowPlayingInfo` — invalidate them only when you replace or remove the artwork.
+
+**Always set static `MPMediaItemPropertyArtwork` too.** The system falls back to the preview image (and to your static `MPMediaItemArtwork`) under several conditions: low-power mode, low-data mode, high thermal level, Reduce Motion enabled, or Auto-Play Animated Images turned off. Plus iOS 18-25 users see only the static artwork.
+
+### Asset Recommendations
+
+| Constraint | Why |
+|------------|-----|
+| Aspect ratio matches the key (1:1 or 3:4) | System won't crop/letterbox to fit |
+| Frame rate ≤60 fps | Higher frame rates may not display |
+| Loop length <30 seconds | Apple recommends short, seamless loops |
+| Loops without visible jump or fade | Avoid noticeable seams when video repeats |
+| Any local asset playable by `AVPlayerLayer` | No file size limit, but format must be playable |
+| Animated content is an extension of static artwork | Apple's design guidance — match brand identity |
+| Video is complementary to the playing media | Don't ship unrelated content (ads, branding splashes) |
+
+### When Animation Is Suppressed (System Falls Back to Preview)
+
+The system shows the **preview image** (not the video) under these conditions — your preview image must be presentable on its own:
+
+- Low-power mode
+- Low-data mode
+- High thermal state
+- Reduce Motion accessibility setting enabled
+- Auto-Play Animated Images setting disabled
+
+### Three Initializer Forms
+
+```swift
+// Async/UIKit (iOS, iPadOS, tvOS, visionOS, watchOS, Mac Catalyst)
+convenience init(
+    artworkID: String,
+    previewImageRequestHandler: (CGSize) async -> UIImage?,
+    videoAssetFileURLRequestHandler: (CGSize) async -> URL?
+)
+
+// Async/AppKit (macOS native)
+convenience init(
+    artworkID: String,
+    previewImageRequestHandler: (CGSize) async -> NSImage?,
+    videoAssetFileURLRequestHandler: (CGSize) async -> URL?
+)
+
+// Designated initializer with completion handlers (legacy interop)
+init(
+    artworkID: String,
+    previewImageRequestHandler: (CGSize, (UIImage?) -> Void) -> Void,
+    videoAssetFileURLRequestHandler: (CGSize, (URL?) -> Void) -> Void
+)
+```
+
+Prefer the async forms unless you're bridging callback-based code.
+
+### Verification
+
+- Run on iOS 26+ device or simulator (animated APIs are no-ops on older OS)
+- Confirm `MPNowPlayingInfoCenter.supportedAnimatedArtworkKeys` includes the keys you set
+- Lock the device — animated artwork plays full-screen behind Liquid Glass platter
+- Toggle Settings → Accessibility → Motion → Auto-Play Animated Images off — preview image should appear
+- Enable Low Power Mode — preview image should appear
+- Verify static `MPMediaItemPropertyArtwork` still appears on an iOS 18 device (backward compat)
+- Switch tracks within the same album → no re-download (same `artworkID`)
+- Switch albums → re-request fires (different `artworkID`)
+
+---
+
 ## Resources
 
 **WWDC**: 2022-110338, 2017-251, 2019-501
 
-**Docs**: /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpremotecommandcenter, /mediaplayer/mpnowplayingsession
+**Docs**: /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpremotecommandcenter, /mediaplayer/mpnowplayingsession, /mediaplayer/mpmediaitemanimatedartwork, /mediaplayer/providing-animated-artwork-for-media-items
 
 **Skills**: skills/avfoundation-ref.md, skills/now-playing-carplay.md, skills/now-playing-musickit.md
 
