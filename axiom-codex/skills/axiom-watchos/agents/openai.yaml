@@ -1,0 +1,3 @@
+interface:
+  display_name: "Watchos"
+  short_description: "Building ANY watchOS app"

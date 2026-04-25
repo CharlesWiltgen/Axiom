@@ -16,6 +16,9 @@ Stacks, grids, outlines, and scroll enhancements. iOS 14 through iOS 26.
 | Hierarchical data (tree) | List with `children:` | 14+ |
 | Custom hierarchies | OutlineGroup | 14+ |
 | Show/hide content | DisclosureGroup | 14+ |
+| Custom container that styles its children | Group(subviews:) / ForEach(subviews:) | 18+ |
+| Custom container with sections | Group(sections:) / ForEach(sections:) | 18+ |
+| Container-specific modifier on children | ContainerValues + @Entry | 18+ |
 
 ---
 
@@ -397,10 +400,207 @@ VideoPlayer(player: player)
 
 ---
 
+## Part 7: Custom Containers (iOS 18+)
+
+Container View APIs let you build reusable containers that decompose their children — applying decoration between them, grouping them into sections, or reading per-child configuration. This is how you write a `List` replacement instead of a one-off layout.
+
+### When to Reach for These APIs
+
+| Situation | Use |
+|-----------|-----|
+| Container needs to insert decoration between children (dividers, separators) | `Group(subviews:)` to count + index |
+| Container iterates children and wraps each one | `ForEach(subviews:)` |
+| Container must respect `Section` boundaries with header/footer | `Group(sections:)` or `ForEach(sections:)` |
+| Need a `.listRowSeparator(.hidden)`-style modifier on children | `ContainerValues` + `@Entry` |
+| Children come from arbitrary view-builder content (not a `[Data]`) | All of the above |
+
+If you only need a one-off layout and don't care about composition, `VStack`/`LazyVStack` + a `[Data]` parameter is simpler. Reach for these APIs when you're building a **reusable primitive**.
+
+### Declared vs. Resolved Subviews
+
+The mental model that makes the rest of this make sense:
+
+- **Declared subviews** — what's written in the view-builder closure (a `Text`, a `ForEach`, an `if`, an `EmptyView`)
+- **Resolved subviews** — what actually appears on screen after SwiftUI evaluates `ForEach`, conditionals, and groups
+
+`Group(subviews:)` and `ForEach(subviews:)` iterate **resolved** subviews, so a single `ForEach(songs)` over 9 items resolves to 9 cards — your container doesn't need a separate `[Data]` parameter.
+
+### Group(subviews:) — Decompose with Count Awareness
+
+Use when the container needs to know *how many* children it has (e.g., to scale them or change layout):
+
+```swift
+struct Board<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        BoardLayout {
+            Group(subviews: content) { subviews in
+                ForEach(subviews) { subview in
+                    CardView(scale: subviews.count > 15 ? .small : .normal) {
+                        subview
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Caller — composes any mix of static + dynamic content
+Board {
+    Text("Pinned")
+    ForEach(items) { item in Text(item.title) }
+}
+```
+
+`subviews` is a `SubviewsCollection` exposing `count`, `first`, `last`, and `Identifiable` iteration. Each `Subview` has `id` and `containerValues`.
+
+### ForEach(subviews:) — Decompose Without Count
+
+Shorter form when count isn't needed — just iterate and wrap each child:
+
+```swift
+struct StackedCards<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(subviews: content) { subview in
+                CardView { subview }
+            }
+        }
+    }
+}
+```
+
+If you need "insert a divider between children but not after the last one," `ForEach(subviews:)` alone can't tell you which subview is last. Use `Group(subviews:)` instead so you can compare ids:
+
+```swift
+struct DividedCard<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Group(subviews: content) { subviews in
+                ForEach(subviews) { subview in
+                    subview
+                    if subview.id != subviews.last?.id {
+                        Divider().padding(.vertical, 8)
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+### Group(sections:) / ForEach(sections:) — Respect Section Boundaries
+
+Sections are `Section { ... } header: { ... } footer: { ... }` blocks in the caller's content. To honor them, iterate sections instead of subviews:
+
+```swift
+struct SectionedBoard<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        HStack(spacing: 80) {
+            ForEach(sections: content) { section in
+                VStack(spacing: 20) {
+                    if !section.header.isEmpty {
+                        SectionHeaderCard { section.header }
+                    }
+                    BoardLayout {
+                        ForEach(section.content) { subview in
+                            CardView { subview }
+                        }
+                    }
+                    if !section.footer.isEmpty {
+                        SectionFooterCard { section.footer }
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+`SectionConfiguration` exposes:
+- `header` / `content` / `footer` — each a `SubviewsCollection`
+- `id` — section identity
+- `containerValues` — per-section configuration (see below)
+- `isEmpty` on `header`/`footer` — check before rendering chrome
+
+Content not wrapped in `Section` automatically forms an implicit section, so `ForEach(sections:)` works even when the caller writes flat content.
+
+### ContainerValues + @Entry — Container-Specific Modifiers
+
+This is how `List` implements `.listRowSeparator(.hidden)`: a modifier that's only meaningful inside a specific container. Define one in two steps.
+
+#### Step 1 — Declare the Value
+
+```swift
+extension ContainerValues {
+    @Entry var isBoardCardRejected: Bool = false
+}
+
+extension View {
+    func boardCardRejected(_ rejected: Bool = true) -> some View {
+        containerValue(\.isBoardCardRejected, rejected)
+    }
+}
+```
+
+#### Step 2 — Read It Inside the Container
+
+```swift
+ForEach(subviews: content) { subview in
+    CardView(isRejected: subview.containerValues.isBoardCardRejected) {
+        subview
+    }
+}
+```
+
+#### Caller
+
+```swift
+Board {
+    Text("Keeper")
+    Text("Skip this one")
+        .boardCardRejected()
+    Section("Maybes") {
+        ForEach(items) { Text($0.title) }
+    }
+    .boardCardRejected()  // applies to every card in the section
+}
+```
+
+Container values differ from environment values and preferences in scope:
+- **Environment** — flows down the entire view hierarchy
+- **Preferences** — flows up the entire hierarchy with merging
+- **Container values** — visible only to the **immediate** container; do not escape
+
+That bounded scope is the whole point — it's why `.listRowSeparator(.hidden)` doesn't accidentally affect a `LazyVStack` higher in the tree.
+
+### Anti-Patterns
+
+| Mistake | Fix |
+|---------|-----|
+| Custom container takes `[Data]` and `ViewBuilder` row closure (List-style) | Take a single `@ViewBuilder var content: Content` and use `ForEach(subviews:)` — supports static, dynamic, and mixed content |
+| Using `AnyView` to inspect children | Use `Subview` proxies via `Group(subviews:)` — preserves identity and modifiers |
+| Reading per-child config via `PreferenceKey` | Use `ContainerValues` + `@Entry` — bounded scope, no merging surprises |
+| Iterating `content as? Group` to count children | Use `Group(subviews:) { $0.count }` — works for any composition, not just literal `Group` |
+| Section-aware container that drops headers/footers | Always check `section.header.isEmpty` and render header chrome conditionally |
+
+### Performance
+
+`Subview` proxies are lazy — `Group(subviews:)` and `ForEach(subviews:)` resolve children on demand. For large datasets, embed your custom container inside a `ScrollView` + `LazyVStack` (or use `LazyVStack` itself as the layout) so resolution stays incremental.
+
+---
+
 ## Resources
 
-**WWDC**: 2020-10031, 2022-10056, 2023-10148, 2024-10144, 2025-256
+**WWDC**: 2020-10031, 2022-10056, 2023-10148, 2024-10144, 2024-10146, 2025-256
 
-**Docs**: /swiftui/lazyvstack, /swiftui/lazyvgrid, /swiftui/lazyhgrid, /swiftui/grid, /swiftui/outlinegroup, /swiftui/disclosuregroup
+**Docs**: /swiftui/lazyvstack, /swiftui/lazyvgrid, /swiftui/lazyhgrid, /swiftui/grid, /swiftui/outlinegroup, /swiftui/disclosuregroup, /swiftui/group/init(subviews:transform:), /swiftui/group/init(sections:transform:), /swiftui/foreach/init(subviews:content:), /swiftui/foreach/init(sections:content:), /swiftui/subview, /swiftui/sectionconfiguration, /swiftui/containervalues, /swiftui/creating-custom-container-views
 
 **Skills**: skills/layout.md, skills/layout-ref.md, skills/nav.md, skills/26-ref.md

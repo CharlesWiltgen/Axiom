@@ -55,6 +55,9 @@ digraph concurrency {
 8. Combine / @Published / AnyCancellable / reactive streams? → See axiom-uikit (skills/combine-patterns.md)
 9. Want automated concurrency scan? → concurrency-auditor (Agent)
 
+#### Concurrency in practice
+- HealthKit queries with Swift Concurrency (canonical bridging example) → See axiom-health (skills/queries.md)
+
 ## Conflict Resolution
 
 **concurrency vs axiom-performance**: When app freezes or feels slow:

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Health"
+  short_description: "Working with HealthKit, WorkoutKit, health data, workouts, or fitness features on iOS or watchOS"

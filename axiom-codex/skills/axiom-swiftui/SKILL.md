@@ -23,6 +23,7 @@ license: MIT
 | Architecture/testability | See `skills/architecture.md` |
 | Animation issues | See `skills/animation-ref.md` |
 | Stacks/grids/outlines | See `skills/containers-ref.md` |
+| Custom containers / List replacement (iOS 18+) | See `skills/containers-ref.md` Part 7 |
 | Search implementation | See `skills/search-ref.md` |
 | Gesture conflicts | See `skills/gestures.md` |
 | iOS 26 features | See `skills/26-ref.md` |
@@ -50,6 +51,9 @@ These topics are part of the broader iOS UI domain but live in separate suites:
 - VoiceOver, Dynamic Type → `/skill axiom-accessibility`
 - UI test flakiness → `/skill axiom-testing`
 - UX dead ends, dismiss traps → Launch `ux-flow-auditor` agent
+
+#### watchOS-specific patterns
+- Glanceable UI, watch navigation, Smart Stack widgets → See axiom-watchos
 
 ## Conflict Resolution
 
