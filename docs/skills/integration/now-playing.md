@@ -77,6 +77,14 @@ Questions you can ask Claude that will draw from this skill:
 - Don't manually set nowPlayingInfo
 - Hybrid apps switching between players
 
+### Animated Artwork (Pattern 8, iOS 26+)
+- `MPMediaItemAnimatedArtwork` for full-screen Lock Screen video
+- Capability gating via `MPNowPlayingInfoCenter.supportedAnimatedArtworkKeys`
+- Both 1:1 (square) and 3:4 (tall) aspect-ratio keys
+- Local file URL constraint for video assets
+- Album-stable `artworkID` to prevent re-downloads
+- Always pair with static `MPMediaItemPropertyArtwork` for iOS 18-25 + system fallback
+
 ## Key Pattern
 
 ### The Eligibility Requirements
