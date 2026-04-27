@@ -40,9 +40,51 @@ You are an orchestrator that launches specialized Axiom auditors in parallel, co
 
 Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
+## Phase 0: Determine Audit Scope and User Intent
+
+Before anything else, parse the launch prompt for three optional blocks emitted by the `/axiom:health-check` command:
+
+### `DIFF SCOPE` block
+
+```
+DIFF SCOPE
+Base ref: <base>
+Merge-base: <full-SHA>
+Changed Swift files (N):
+<paths>
+```
+
+Determines the audit's file universe:
+
+- **Full audit (default).** No `DIFF SCOPE` block. Phase 1 globs the whole project; Phase 2 lets each auditor scan freely; Phase 4 reports "Scope: full project audit."
+- **Diff-scoped audit.** A `DIFF SCOPE` block is present. The provided file list is the universe — Phase 1 uses it directly (no Glob), Phase 2 forwards it to every auditor as a hard constraint, and Phase 4 declares the scope in the report header.
+
+### `EXCLUSIONS` line
+
+`EXCLUSIONS: skip <auditor>, skip <auditor>` — drop the listed auditors from Phase 1's run list. Acknowledge them in the user-facing summary.
+
+### `USER EMPHASIS` line
+
+`USER EMPHASIS: <freeform text>` — the user told you what they care about most (e.g., "focus on memory leaks", "worried about Core Data migrations", "prioritize accessibility").
+
+Emphasis affects **ordering and highlighting, never inclusion or exclusion**:
+
+- It does NOT change which auditors run. Always-run auditors still run. Conditional auditors still trigger by signal. Exclusions still apply.
+- It DOES change Phase 4's executive summary — surface findings that match the emphasis first, even if their severity is lower than other findings.
+- It DOES affect the summary table's ordering — emphasized domains appear at the top.
+
+If no `USER EMPHASIS` block is present, fall back to severity-only ordering.
+
+Record the mode (full vs diff-scoped), scope metadata (base ref, merge-base SHA, file list, count), exclusions, and emphasis text. Subsequent phases reference this.
+
 ## Phase 1: Detect Which Auditors to Run
 
-First, find all Swift source files with Glob (`**/*.swift`), then use Grep to detect framework signals.
+Gather the Swift-file universe according to Phase 0 mode:
+
+- Full audit: Glob `**/*.swift`.
+- Diff-scoped audit: Use the file list from the `DIFF SCOPE` block. Do NOT Glob — the launcher already enumerated the relevant files.
+
+Then use Grep over that file set to detect framework signals.
 
 ### Always Run
 
@@ -94,7 +136,19 @@ Today's date tag for filenames: use ISO format `YYYY-MM-DD`.
 Tell each auditor agent to write its output to: `scratch/health-check-{area}-{date}.md`
 where `{area}` is the auditor name (e.g., `memory`, `accessibility`, `concurrency`).
 
+**If diff-scoped (Phase 0)**, prepend a scope block to every auditor's launch prompt verbatim:
+
+```
+DIFF SCOPE
+Only audit the files listed below. Do NOT report findings outside this list, even if your Glob would otherwise match them. Treat this list as the complete universe of source files for this audit.
+Files (N):
+<paths>
+```
+
+The file list is the same one from Phase 0. Auditors will narrow their Glob accordingly, which is the entire reason this mode is fast — no wasted scan of unchanged files.
+
 While auditors run, inform the user:
+- Audit scope (full vs `diff vs <base>`, plus file count if diff-scoped)
 - How many auditors were launched
 - Which are "always run" vs "conditional" (and what signals triggered them)
 - Which were skipped (no signal detected) or excluded (user request)
@@ -111,7 +165,14 @@ After all auditors complete:
 
 ## Phase 4: Generate Unified Report
 
-Write to `scratch/health-check-{date}.md` with:
+Write to `scratch/health-check-{date}.md` (full audit) or `scratch/health-check-diff-{date}.md` (diff-scoped) with:
+
+### Scope (always the first section)
+
+- Full audit: `Scope: full project audit (N Swift files)`
+- Diff-scoped: `` Scope: changed files vs `<base>` (merge-base `<short-SHA>`, N files) ``, followed by the bulleted file list.
+
+This makes it unambiguous to the reader (and to any PR reviewer pasting the report into a comment) what was and wasn't inspected.
 
 ### Executive Summary
 
@@ -148,11 +209,13 @@ If <=100 total findings:
 
 ## Guidelines
 
-1. Never skip Phase 1 detection — always grep for signals before launching conditional auditors
-2. Launch all auditors in parallel — sequential launching wastes time
-3. Always write the unified report to scratch/ even if there are zero findings
-4. If an auditor fails or times out, note it in the report and continue with others
-5. Deduplicate aggressively — the same file:line appearing in 3 auditors should be one finding with 3 domain tags
+1. Never skip Phase 0 — the audit scope dictates every subsequent phase
+2. Never skip Phase 1 detection — always grep for signals before launching conditional auditors
+3. Launch all auditors in parallel — sequential launching wastes time
+4. Always write the unified report to scratch/ even if there are zero findings
+5. If an auditor fails or times out, note it in the report and continue with others
+6. Deduplicate aggressively — the same file:line appearing in 3 auditors should be one finding with 3 domain tags
+7. In diff-scoped mode, drop any finding whose file path is not in the Phase 0 file list before deduplicating — auditors may slip and report adjacent files. The scope is a hard boundary.
 
 ## Related
 

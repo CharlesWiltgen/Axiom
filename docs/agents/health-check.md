@@ -12,18 +12,22 @@ Orchestrates multiple specialized Axiom auditors in parallel, deduplicates findi
 
 **Explicit command:**
 ```bash
-/axiom:health-check
+/axiom:health-check                              # Full project audit
+/axiom:health-check diff                         # Scoped to files changed vs origin/main merge-base
+/axiom:health-check focus on memory leaks        # Full audit, but prioritize emphasized findings
+/axiom:health-check diff skip camera             # Diff-scoped, skipping the camera auditor
 /axiom:audit all
 ```
 
 ## What It Does
 
-Runs a 4-phase meta-audit:
+Runs a 5-phase meta-audit:
 
-1. **Detect** — Greps the codebase for framework signals to determine which auditors apply
-2. **Launch** — Runs all applicable auditors in parallel (always-run + conditional)
-3. **Deduplicate** — Merges findings that reference the same file:line across multiple auditors
-4. **Report** — Produces a unified report with executive summary, findings by domain, and summary table
+1. **Scope and intent** — Determines audit scope (full vs diff-scoped vs `origin/main` merge-base), parses any auditor exclusions, and captures any freeform user emphasis. The launching command computes the diff file list and passes it to the agent.
+2. **Detect** — Greps the in-scope file set for framework signals to determine which auditors apply
+3. **Launch** — Runs all applicable auditors in parallel (always-run + conditional). In diff-scoped mode, every auditor is constrained to the same file list.
+4. **Deduplicate** — Merges findings that reference the same file:line across multiple auditors. In diff-scoped mode, any finding outside the file list is dropped.
+5. **Report** — Produces a unified report with scope header, executive summary, findings by domain, and summary table. User emphasis (if any) affects ordering and highlighting, never which auditors ran.
 
 ### Always-Run Auditors
 
@@ -41,7 +45,8 @@ Triggered by framework signals in the codebase (e.g., `import SwiftUI` triggers 
 
 ### Output
 
-Reports are written to `scratch/health-check-{date}.md` with:
+Reports are written to `scratch/health-check-{date}.md` (full audit) or `scratch/health-check-diff-{date}.md` (diff-scoped) with:
+- Scope header (full audit vs `diff vs <base>` with merge-base SHA and file count)
 - Executive summary (top 5 critical findings)
 - Findings grouped by domain, sorted by severity
 - Passed audits (zero-issue domains)
