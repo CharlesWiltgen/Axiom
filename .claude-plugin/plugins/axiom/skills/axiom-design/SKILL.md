@@ -51,7 +51,7 @@ digraph design {
 6. SwiftUI view implementation? → `/skill axiom-swiftui`
 7. TextKit / rich text editing / Writing Tools? → `/skill axiom-uikit`
 8. Accessibility compliance (VoiceOver, contrast, touch targets)? → `/skill axiom-accessibility`
-9. Audit UI for Liquid Glass adoption? → liquid-glass-auditor (Agent)
+9. Audit UI for Liquid Glass adoption? → liquid-glass-auditor (Agent — surfaces migration opportunities AND adoption-completeness gaps: variant discipline, nesting hygiene, availability gating, primary-action tinting, accessibility re-check; scores ADOPTED / PARTIAL / NOT ADOPTED)
 10. CarPlay app design, categories, driver-distraction rules? → `/skill axiom-media` (carplay-hig.md)
 
 #### Platform-specific HIG
