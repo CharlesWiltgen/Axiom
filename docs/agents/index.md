@@ -87,7 +87,7 @@ Agents are autonomous problem-solvers that:
 - **swiftdata-auditor** — Scans SwiftData code for safety violations and architectural gaps (struct models, missing schema registration, array relationships without defaults, background context misuse, N+1 patterns, stale predicates, CloudKit conformance gaps)
 
 ### Integration
-- **camera-auditor** — Scans for camera, video, and audio capture issues including deprecated APIs, missing interruption handlers, threading violations
+- **camera-auditor** — Scans for camera/audio capture issues and architectural gaps (deprecated APIs, missing interruption handlers, main-thread session work, missing runtime-error recovery, concurrent session queues, stuck permission-denied UI, missing audio session deactivation, missing `RotationCoordinator` on iOS 17+, multi-cam without support guards)
 - **foundation-models-auditor** — Scans Foundation Models code for missing availability checks, main thread blocking, manual JSON parsing, session lifecycle issues
 - **networking-auditor** — Scans for deprecated networking APIs, anti-patterns, and completeness gaps (missing transition handling, TLS coverage, connection cleanup, framework selection)
 - **iap-auditor** — Audits IAP code for missing transaction.finish(), weak verification, missing Transaction.updates listener, missing restore, partial subscription state coverage, missing intro eligibility checks, subscription terms and loot box odds disclosure gaps, and compound rejection-risk combinations; scores IAP health READY/NEEDS WORK/NOT READY
