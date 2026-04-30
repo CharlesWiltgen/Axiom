@@ -55,12 +55,6 @@ Scan the codebase for legacy patterns and provide migration paths:
 - Legacy SwiftUI modifiers → Modern equivalents
 - Completion handlers → async/await
 
-Report findings with:
-- File:line references
-- Priority (HIGH/MEDIUM/LOW based on benefit)
-- Migration code examples
-- Breaking change warnings
-
 ## Tool Use Is Mandatory
 
 Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.

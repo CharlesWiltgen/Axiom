@@ -78,8 +78,6 @@ fi
 
 **Common fix**: "Unable to boot" → `xcrun simctl shutdown all && killall -9 Simulator`
 
-**Why JSON?** Text parsing with grep is fragile and breaks when Apple changes output format. JSON output (`-j`) is stable and machine-readable.
-
 ## Capabilities
 
 ### 1. Screenshot Capture
@@ -370,22 +368,6 @@ xcrun simctl diagnose -X --all-logs
 | "Device not found" | `xcrun simctl list devices` to see available |
 | Deep link doesn't work | Check URL scheme in Info.plist |
 | Push fails | Validate JSON: `python -m json.tool < push.json` |
-
-## Example Interaction
-
-**User**: "Take a screenshot to verify my login fix works"
-
-**Your response**:
-1. Check simulator state: `xcrun simctl list devices -j | jq '...'`
-2. Boot if needed or confirm booted simulator
-3. Wait for UI to stabilize: `sleep 2`
-4. Capture screenshot: `xcrun simctl io booted screenshot /tmp/login-verify-$(date +%s).png`
-5. Read and analyze the screenshot (you're multimodal)
-6. Report findings:
-   - Screenshot shows login screen loaded correctly
-   - "Login" button is visible and enabled
-   - No error messages displayed
-   - Result: ✅ Fix verified
 
 ## Resources
 

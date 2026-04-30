@@ -44,13 +44,6 @@ Scan the Xcode project and identify optimization opportunities in these categori
 3. **Type Checking Performance** (MEDIUM IMPACT)
 4. **Compiler Flags** (LOW-MEDIUM IMPACT)
 
-For each finding, provide:
-- Category and severity (HIGH/MEDIUM/LOW)
-- Current configuration
-- Recommended fix
-- Expected time savings
-- Implementation steps
-
 ## What You Check
 
 ### 1. Build Settings (HIGH IMPACT)
@@ -148,8 +141,6 @@ grep -r "prebuiltPlugins" Package.swift
 # Check available cores
 sysctl -n hw.ncpu
 ```
-
-Recommend setting "Build Active Architecture Only" to YES for debug to maximize parallelization.
 
 ### 6. Build Timeline Analysis (Xcode 14+)
 
