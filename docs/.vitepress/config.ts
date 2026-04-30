@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 
 export default withMermaid(defineConfig({
-  title: 'Axiom',
+  title: 'Axiom 3',
   description: 'Battle-tested Claude Code skills, autonomous agents, and references for Apple platform development',
   base: '/Axiom/',
   srcExclude: [

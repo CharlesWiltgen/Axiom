@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: Axiom
+  name: Axiom 3
   text: Skills and Agents for iOS Development
   tagline: The best suite of battle-tested agents and skills for modern xOS development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more. Native for Claude Code, MCP for everything else.
   actions:
