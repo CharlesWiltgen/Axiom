@@ -1,10 +1,17 @@
 # database-schema-auditor
 
-Scans database migration and schema code for the 10 most critical violations — unsafe ALTER TABLE patterns, DROP operations, missing idempotency, foreign key misuse, and transaction safety.
+Scans database migration and schema code for safety violations and architectural gaps — from known anti-patterns like unsafe `ALTER TABLE`, `DROP` operations, and missing idempotency to architectural issues like missing FK enforcement, unguarded destructive operations, and incomplete upgrade paths.
 
-## How to Use This Agent
+## What It Does
 
-**Natural language (automatic triggering):**
+- Detects 10 known anti-patterns (NOT NULL without DEFAULT, DROP TABLE/COLUMN, ALTER without idempotency, INSERT OR REPLACE on FK-referenced tables, missing `PRAGMA foreign_keys`, RENAME COLUMN drift, batch inserts outside transactions, CREATE without IF NOT EXISTS, FK addition without validation)
+- Identifies architectural gaps (missing upgrade path from oldest supported version, FKs declared but not enforced, batch operations outside transactions, RENAME without raw-SQL grep, missing WAL mode for multi-process access, no post-migration sanity check)
+- Correlates findings that compound into higher severity (FK constraints + PRAGMA off, INSERT OR REPLACE + ON DELETE CASCADE, ADD COLUMN NOT NULL + production user base)
+- Produces a Schema Health Score (SAFE / FRAGILE / DANGEROUS)
+
+## How to Use
+
+**Natural language:**
 - "Can you check my database migrations for safety?"
 - "Review my GRDB schema code for issues"
 - "Audit my SQLite migrations before release"
@@ -15,20 +22,12 @@ Scans database migration and schema code for the 10 most critical violations —
 /axiom:audit database-schema
 ```
 
-## What It Does
-
-1. **ADD COLUMN NOT NULL Without DEFAULT** (CRITICAL) — Crashes for all users with existing data
-2. **DROP TABLE on User Data** (CRITICAL) — Permanent data deletion
-3. **DROP COLUMN** (CRITICAL) — Unsupported before SQLite 3.35.0 (iOS 16+)
-4. **ALTER TABLE Without Idempotency** (CRITICAL) — Crashes on re-run
-5. **INSERT OR REPLACE Breaks Foreign Keys** (HIGH) — Silently deletes child records
-6. **Foreign Key Addition Without Validation** (HIGH) — Fails with orphaned rows
-7. **PRAGMA foreign_keys Not Enabled** (HIGH) — Constraints silently ignored
-8. **RENAME COLUMN Without Migration Strategy** (MEDIUM) — Breaks raw SQL references
-9. **Batch Insert Outside Transaction** (MEDIUM) — 30x slower without wrapping
-10. **CREATE Without IF NOT EXISTS** (MEDIUM) — Breaks migration idempotency
-
 ## Related
 
-- **database-migration** — Safe schema evolution patterns for SQLite/GRDB/SwiftData
-- **grdb** — GRDB patterns and DatabaseMigrator reference
+- **database-migration** skill — use to fix migration issues this auditor finds, including the 12-step DROP COLUMN pattern and idempotent ALTER strategies
+- **grdb** skill — GRDB DatabaseMigrator patterns, configuration, and FK enforcement setup
+- **core-data-auditor** agent — overlaps when projects mix Core Data and direct SQLite/GRDB
+- **swiftdata-auditor** agent — overlaps on SwiftData-backed schemas
+- **storage-auditor** agent — overlaps on `.sqlite` file location and backup exclusions
+- **icloud-auditor** agent — overlaps when CloudKit-synced tables undergo schema changes
+- **health-check** agent — includes database-schema-auditor in project-wide scans
