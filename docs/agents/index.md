@@ -72,7 +72,7 @@ Agents are autonomous problem-solvers that:
 - **textkit-auditor** — Scans for TextKit issues and architectural gaps (TextKit 1 fallback triggers, deprecated glyph APIs that break on complex scripts, missing Writing Tools configuration, missing `isWritingToolsActive` guards on programmatic mutations, SwiftUI wrappers dropping TextKit 2 properties, RTL-untested custom layout fragments)
 
 ### UI & Design
-- **liquid-glass-auditor** — Identifies iOS 26+ Liquid Glass adoption opportunities (glass effects, toolbar improvements, search patterns, migration from old blur effects)
+- **liquid-glass-auditor** — Identifies iOS 26+ Liquid Glass adoption opportunities and completeness gaps (glass effects, toolbar prominence, migration from old blur effects, Regular vs Clear variant discipline for media surfaces, glass-on-glass nesting, missing `if #available` gates, accessibility re-check after adoption, `.tabRole(.search)`); scores ADOPTED / PARTIAL / NOT ADOPTED
 - **swiftui-architecture-auditor** — Scans SwiftUI architecture and completeness (untestable logic in views, async boundary violations, inconsistent patterns, missing separation of concerns)
 - **swiftui-layout-auditor** — Scans SwiftUI layout for anti-patterns and adaptivity gaps (GeometryReader misuse, missing multitasking support, identity loss, near-edge fixed sizing)
 - **swiftui-performance-analyzer** — Detects SwiftUI performance issues and context-dependent problems (expensive operations amplified in scrolling cells, unnecessary rebuilds, missing lazy loading)
