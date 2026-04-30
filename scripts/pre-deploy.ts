@@ -897,10 +897,12 @@ if (!goAvailable) {
       process.exit(1);
     }
     try {
-      execSync("go test -count=1 ./...", {
+      execSync("go test -count=1 -timeout 15m ./...", {
         cwd: moduleDir,
         stdio: "pipe",
-        timeout: 180000,
+        // xcsym's full test suite runs ~550s. Go's default test timeout is 10m,
+        // so -timeout 15m is required; the JS timeout must exceed it.
+        timeout: 1000000,
       });
       console.log(`  ✓ ${module}: go test passes`);
     } catch (e: unknown) {
