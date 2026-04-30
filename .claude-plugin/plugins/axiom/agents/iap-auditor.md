@@ -94,9 +94,10 @@ Grep for:
   - `SKProductsRequest`, `SKPaymentQueue` — StoreKit 1 (legacy)
   - `Transaction.updates`, `Transaction.all`, `Transaction.currentEntitlements` — StoreKit 2 lifecycle
   - `SKPaymentTransactionObserver` — StoreKit 1 transaction observer
+  - `paymentQueue\(_:shouldAddStorePayment:` — promoted-purchase handler (SK1)
 ```
 
-StoreKit 1 is not deprecated but is legacy — note if the codebase mixes both.
+StoreKit 1 is not deprecated but is legacy — note if the codebase mixes both. Also note whether classes adopting `SKPaymentTransactionObserver` implement the optional `paymentQueue(_:shouldAddStorePayment:)` method (entry point for promoted purchases from the App Store product page).
 
 ### Step 2: Identify Product Types in Use
 
@@ -106,7 +107,11 @@ Grep for:
   - `.autoRenewable`, `.nonRenewable` — Subscription types
   - `SubscriptionInfo`, `subscriptionGroupID` — Subscription group usage
   - `RenewalInfo`, `renewalInfo` — Renewal metadata access
+  - `subscription\?\.status`, `\.subscriptionStatus`, `Product\.SubscriptionInfo\.Status` — subscription-state read sites
+  - `scenePhase`, `\.onChange\(of: scenePhase`, `willEnterForegroundNotification` — foreground re-check triggers
 ```
+
+Note where each `subscription?.status` read site lives — single read at launch vs. re-checked on app foreground / after `Transaction.updates` fires / on a timer.
 
 ### Step 3: Map Purchase Flow and Architecture
 
@@ -218,6 +223,29 @@ Run all 12 existing detection patterns. These are fast and reliable. For every g
 **Issue**: IAP regressions reach production; refactoring risky
 **Fix**: Unit tests against `.storekit` test file using `Testing` or `XCTest` with `StoreKitTest`
 
+### 13. Missing Promoted-Purchase Handler (HIGH/HIGH — Marketing Revenue Loss)
+
+**Pattern**: A class adopts `SKPaymentTransactionObserver` (StoreKit 1) but does not implement the optional `paymentQueue(_:shouldAddStorePayment:)` delegate method.
+**Search**:
+- `:\s*SKPaymentTransactionObserver` — collect every conforming class
+- `paymentQueue\(_:shouldAddStorePayment:` — collect every implementation
+- Read each conforming class file; flag classes with the conformance but no `shouldAddStorePayment` method
+**Issue**: Promoted IAPs initiated from the App Store product page reach the device's payment queue but are silently dropped without this handler. Marketing dollars spent on App Store promotion buy nothing — the user taps "Buy" on the product page, the app launches, and nothing happens. There is no error surfaced anywhere.
+**Fix**:
+```swift
+extension StoreObserver: SKPaymentTransactionObserver {
+    func paymentQueue(_ queue: SKPaymentQueue,
+                      shouldAddStorePayment payment: SKPayment,
+                      for product: SKProduct) -> Bool {
+        // Return true to continue the promoted purchase immediately,
+        // or false + cache the payment to defer until the user signs in
+        // / completes onboarding / acknowledges a paywall.
+        return true
+    }
+}
+```
+**Note**: SK2-only apps (no `SKPaymentTransactionObserver` conformance anywhere) do not need this handler. Returning `false` to defer the purchase is acceptable when the cached payment is later resubmitted via `SKPaymentQueue.default().add(payment)`.
+
 ## Phase 3: Reason About IAP Completeness
 
 Using the IAP Architecture Map from Phase 1 and your domain knowledge, check for what's *missing* — not just what's wrong.
@@ -225,6 +253,7 @@ Using the IAP Architecture Map from Phase 1 and your domain knowledge, check for
 | Question | What it detects | Why it matters |
 |----------|----------------|----------------|
 | Are all subscription lifecycle states (active, expired, inGracePeriod, inBillingRetryPeriod, revoked) handled with user-facing responses? | Partial state coverage | Billing retry users silently lose access; refunded users keep entitlements |
+| Is `SubscriptionInfo.status` read once at launch, or is it re-observed on triggers that signal state may have changed (app foreground, `Transaction.updates` fires, after `AppStore.sync()`)? | Subscription observer lifecycle gap | One-shot reads miss mid-session expiry, mid-session renewal, mid-session refund. Users whose subscription lapses during a long session keep accessing Pro until relaunch; users who renew mid-session see the old "expired" state until relaunch. The user-visible bug: "I paid and the app still says I haven't." |
 | Is server-side receipt validation in place for high-value entitlements, or is validation purely client-side? | Weak entitlement enforcement | Jailbreak/emulator bypass grants paid features for free |
 | Is introductory offer eligibility checked (`Product.SubscriptionInfo.isEligibleForIntroOffer`) before showing intro pricing? | Ineligible users shown intro price | Users charged full price after seeing "$0.99 first month" — refund requests and 1-star reviews |
 | Are offer codes and promotional offers handled (Transaction.updates with offerType=.promotional)? | Missing redemption paths | Marketing campaigns fail silently; codes appear to "not work" |
@@ -251,6 +280,8 @@ When findings from different phases compound, the combined risk is higher than e
 | Missing intro offer eligibility check | Intro pricing shown in paywall | Users charged full price — refund requests and reviews | HIGH |
 | Missing Family Sharing check | Non-consumables sold | Family members either over-entitled or under-entitled | MEDIUM |
 | Missing refund handling | Subscription entitlement gated on local state | Revoked subscriptions retain access indefinitely | HIGH |
+| Missing promoted-purchase handler (Pattern 13) | StoreKit 1 active in app + App Store promoted IAP listings | Marketing-driven purchases silently fail at the app's threshold; no error surfaces and the user blames the app, not the missing handler | HIGH |
+| One-shot `subscription?.status` read | Long-session app lifetime (multi-day, foreground-resume usage) | Subscription expires or renews mid-session and the app keeps showing the stale state; user sees "you don't have Pro" right after paying, or keeps Pro access after expiring | HIGH |
 
 Cross-auditor overlap notes:
 - Missing server-side validation → compound with `security-privacy-scanner`
@@ -329,6 +360,9 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 - Missing subscription terms when products are non-consumable only
 - appAccountToken omitted when there is no server backend
 - Missing loot box odds when random patterns are unrelated to purchases (e.g., random animation variant)
+- Missing `paymentQueue(_:shouldAddStorePayment:)` in a StoreKit 2-only app (no `SKPaymentTransactionObserver` conformance anywhere — the SK1 delegate method is only meaningful when the SK1 observer path exists)
+- `paymentQueue(_:shouldAddStorePayment:)` returning `false` and caching the payment for deferred execution (legitimate pattern — the purchase isn't dropped, just queued)
+- One-shot `subscription?.status` read in a single-screen single-purpose app where the session lifetime is measured in seconds (no opportunity for mid-session state change) — verify by reading the surrounding view's lifecycle
 
 ## Related
 

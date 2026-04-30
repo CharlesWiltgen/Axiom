@@ -30,6 +30,8 @@ Maps your IAP architecture (StoreKit version, product types, centralization patt
 
 ### High (Subscriber UX and Store Policy)
 - **Partial subscription state coverage** — Billing retry and grace period users lose access
+- **Subscription status read but not observed mid-session** — One-shot read at launch misses mid-session expiry / renewal; users see stale Pro state until relaunch
+- **Missing promoted-purchase handler (StoreKit 1)** — Class adopts `SKPaymentTransactionObserver` without `paymentQueue(_:shouldAddStorePayment:)`; promoted IAPs from the App Store product page silently fail
 - **Missing intro offer eligibility check** — Ineligible users charged full price after seeing intro pricing
 - **Missing appAccountToken** — Server cannot tie transactions to user accounts
 - **Missing StoreKit configuration file** — No local testing; every change requires App Store Connect round-trip
