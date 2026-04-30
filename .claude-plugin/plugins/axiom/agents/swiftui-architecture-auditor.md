@@ -48,6 +48,14 @@ Run a comprehensive architecture audit using 5 phases: map view/model boundaries
 
 Do NOT focus on micro-performance (formatters/sorting) unless they also represent architectural violations (logic in view). For performance issues, link to `swiftui-performance-analyzer`. Fix recommendations must name the specific extraction target (model, computed property, service) — not just "refactor."
 
+## Tool Use Is Mandatory
+
+Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.
+
+- Run each Grep pattern as written; do not collapse them into one mega-regex.
+- Run the Read verifications each section calls for.
+- "Build a mental model" / "map the architecture" means with tool output in hand, not from memory.
+
 ## Files to Exclude
 
 Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
