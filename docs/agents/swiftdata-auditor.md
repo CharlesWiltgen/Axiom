@@ -1,10 +1,17 @@
 # swiftdata-auditor
 
-Scans SwiftData code for the 10 most critical violations — struct models, missing VersionedSchema, relationship defaults, migration timing, background context misuse, and N+1 patterns.
+Scans SwiftData code for safety violations and architectural gaps — from known anti-patterns like struct models, missing VersionedSchema registration, and array-relationships without defaults to architectural issues like CloudKit conformance gaps, stale predicates, and missing recovery paths for failed migrations.
 
-## How to Use This Agent
+## What It Does
 
-**Natural language (automatic triggering):**
+- Detects 10 known anti-patterns (@Model struct, missing schema registration, array relationships without defaults, fetch in didMigrate, @Environment context in background tasks, missing save() after mutations, both-sides bidirectional updates, N+1 in relationship loops, over-indexing, batch inserts without chunking)
+- Identifies architectural gaps (orphan @Model classes not registered, migration plan gaps to oldest supported version, CloudKit conformance failures, stale #Predicate strings after renames, external-storage cleanup leaks, accidental `eraseDatabaseOnSchemaChange` in production, App Group disk-location mismatches)
+- Correlates findings that compound into higher severity (struct model + array relationship, schema misregistration + production users, race + data loss, over-indexing + insert-heavy loops)
+- Produces a SwiftData Health Score (SAFE / FRAGILE / DANGEROUS)
+
+## How to Use
+
+**Natural language:**
 - "Can you check my SwiftData code for issues?"
 - "Review my @Model definitions for correctness"
 - "I'm about to ship with SwiftData, can you audit it?"
@@ -15,21 +22,13 @@ Scans SwiftData code for the 10 most critical violations — struct models, miss
 /axiom:audit swiftdata
 ```
 
-## What It Does
-
-1. **Struct models** (CRITICAL) — @Model requires class, not struct
-2. **Missing VersionedSchema** (CRITICAL) — Required for safe schema migration
-3. **Relationship defaults** (HIGH) — Default values on relationships cause issues
-4. **Migration timing** (HIGH) — Migrations must run before first ModelContext access
-5. **Background context misuse** (HIGH) — Thread-confinement violations
-6. **N+1 patterns** (MEDIUM) — Relationship traversal without prefetching
-7. **Missing indexes** (MEDIUM) — Slow queries on large datasets
-8. **CloudKit compatibility** (MEDIUM) — Optional requirements for sync
-9. **Missing cascade rules** (MEDIUM) — Orphaned related objects
-10. **Fetch descriptor issues** (LOW) — Suboptimal predicate patterns
-
 ## Related
 
-- **swiftdata** — SwiftData @Model, @Query, and CloudKit integration patterns
-- **swiftdata-migration** — Custom schema migration strategies
-- **swiftdata-migration-diag** — Migration crash troubleshooting
+- **swiftdata** skill — use to fix issues this auditor finds, including @Model patterns, @Query usage, and CloudKit integration
+- **swiftdata-migration** skill — schema migration strategies, VersionedSchema design, and stage planning
+- **swiftdata-migration-diag** skill — migration crash troubleshooting
+- **database-schema-auditor** agent — overlaps on the SQLite layer underneath SwiftData
+- **core-data-auditor** agent — overlaps when projects mix Core Data and SwiftData
+- **icloud-auditor** agent — overlaps on CloudKit-synced @Model classes
+- **swiftui-performance-analyzer** agent — overlaps on @Query in heavy views
+- **health-check** agent — includes swiftdata-auditor in project-wide scans
