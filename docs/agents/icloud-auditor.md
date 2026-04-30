@@ -1,10 +1,17 @@
 # icloud-auditor
 
-Automatically scans for iCloud integration issues: missing NSFileCoordinator, unsafe CloudKit error handling, missing entitlement checks, and SwiftData + CloudKit anti-patterns.
+Scans for iCloud integration issues — both known anti-patterns like missing NSFileCoordinator and incomplete CKError handling, and architectural gaps like missing account-change observation, polling instead of CKSubscriptions, and missing fallback UX when iCloud is unavailable.
 
-## How to Use This Agent
+## What It Does
 
-**Natural language (automatic triggering):**
+- Detects 6 known anti-patterns (missing NSFileCoordinator on ubiquitous I/O, missing CKError handling, missing entitlement / availability checks, SwiftData @Attribute(.unique) silently disabling CloudKit sync, missing conflict resolution, legacy CKDatabase APIs on iOS 17+ targets)
+- Identifies architectural gaps (per-access vs once-at-launch availability checks, incomplete CKError matrix coverage across `.quotaExceeded`/`.networkUnavailable`/`.serverRecordChanged`/`.notAuthenticated`/`.zoneNotFound`/`.partialFailure`, missing `NSUbiquityIdentityDidChange` observation, polling instead of CKSubscriptions, missing fallback UX when iCloud is unavailable, sync telemetry blind spots)
+- Correlates findings that compound into higher severity (uncoordinated I/O + multi-process access via extension/widget, CKError gaps + automated retry loops, `@Attribute(.unique)` + CloudKit-bound model)
+- Produces an iCloud Health Score (SAFE / FRAGILE / DANGEROUS)
+
+## How to Use
+
+**Natural language:**
 - "Check my iCloud integration"
 - "Audit my CloudKit code"
 - "My iCloud sync isn't working"
@@ -13,20 +20,15 @@ Automatically scans for iCloud integration issues: missing NSFileCoordinator, un
 
 **Explicit command:**
 ```bash
-/axiom:audit-icloud
+/axiom:audit icloud
 ```
-
-## What It Does
-
-1. **Missing NSFileCoordinator** (CRITICAL) — Reading/writing iCloud Drive files without coordination → data corruption
-2. **Missing CloudKit Error Handling** (HIGH) — CloudKit operations without proper CKError handling → silent failures
-3. **Missing Entitlement Checks** (HIGH) — Accessing ubiquitous container without checking availability → runtime crashes
-4. **SwiftData + CloudKit Anti-Patterns** (HIGH) — Using unsupported features (@Attribute(.unique)) with CloudKit → sync breaks silently
-5. **Missing Conflict Resolution** (MEDIUM) — Not handling ubiquitousItemHasUnresolvedConflicts → data loss from concurrent edits
-6. **CKSyncEngine Migration** (MEDIUM) — Using legacy CKDatabase APIs instead of CKSyncEngine (iOS 17+)
 
 ## Related
 
-- **cloud-sync-diag** — Systematic iCloud sync troubleshooting
-- **cloudkit-ref** — Modern CloudKit patterns and CKSyncEngine reference
-- **icloud-drive-ref** — NSFileCoordinator and file coordination details
+- **cloud-sync-diag** skill — systematic iCloud sync troubleshooting once issues surface
+- **cloudkit-ref** skill — modern CloudKit patterns and CKSyncEngine reference
+- **icloud-drive-ref** skill — NSFileCoordinator and ubiquitous file coordination
+- **swiftdata-auditor** agent — overlaps on `cloudKitDatabase:`-bound @Model classes
+- **storage-auditor** agent — overlaps on iCloud Drive vs Documents location
+- **networking-auditor** agent — overlaps on network connectivity prerequisites for sync
+- **health-check** agent — includes icloud-auditor in project-wide scans
