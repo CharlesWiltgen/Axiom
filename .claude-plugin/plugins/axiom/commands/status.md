@@ -11,7 +11,7 @@ Run these checks and format as a dashboard:
 ### Environment Health
 ```bash
 # Zombie processes
-pgrep -f xcodebuild | wc -l
+pgrep -x xcodebuild | wc -l
 
 # Derived Data size
 du -sh ~/Library/Developer/Xcode/DerivedData 2>/dev/null
