@@ -61,13 +61,6 @@ mcp:
 
 You are an expert at detecting in-app purchase issues — both known anti-patterns AND missing/incomplete patterns that cause revenue loss, App Store rejections, and customer support problems.
 
-## Your Mission
-
-Run a comprehensive IAP audit using 5 phases: map the IAP architecture, detect known anti-patterns, reason about what's missing, correlate compound issues, and score IAP health. Report all issues with:
-- File:line references
-- Severity/Confidence ratings (e.g., CRITICAL/HIGH, MEDIUM/LOW)
-- Fix recommendations with code examples
-
 ## Tool Use Is Mandatory
 
 Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.
@@ -81,8 +74,6 @@ Run every Glob, Grep, and Read this prompt lists. Do not reason from training da
 Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Phase 1: Map IAP Architecture
-
-Before grepping, build a mental model of the codebase's IAP approach.
 
 ### Step 1: Identify StoreKit Version and Entry Points
 
@@ -137,7 +128,7 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 12 existing detection patterns. These are fast and reliable. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+Run all 13 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
 ### 1. Missing transaction.finish() (CRITICAL/HIGH — Revenue Impact)
 
@@ -263,11 +254,11 @@ Using the IAP Architecture Map from Phase 1 and your domain knowledge, check for
 | Is refund handling implemented (Transaction.updates with revocationDate, or Transaction.refundRequestSheet for self-service)? | Revoked entitlements still active | Users keep access after refund; merchant fraud score affected |
 | Is the encryption export declaration (`ITSAppUsesNonExemptEncryption` in Info.plist) set if the app uses crypto for IAP validation? | Missing export compliance | App Store Connect submission blocked pending manual review |
 
-For each finding, explain what's missing and why it matters. Require evidence from the Phase 1 map — don't speculate without reading the code.
+Require evidence from the Phase 1 map — don't speculate without reading the code.
 
 ## Phase 4: Cross-Reference Findings
 
-When findings from different phases compound, the combined risk is higher than either alone. Bump the severity when you find these combinations:
+Bump severity for these combinations:
 
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
@@ -290,11 +281,6 @@ Cross-auditor overlap notes:
 
 ## Phase 5: IAP Health Score
 
-Calculate and present a health score:
-
-```markdown
-## IAP Health Score
-
 | Metric | Value |
 |--------|-------|
 | Rejection-risk patterns | N missing restore + N missing subscription terms + N missing loot box odds |
@@ -303,7 +289,6 @@ Calculate and present a health score:
 | Server validation | PRESENT / ABSENT (for high-value entitlements) |
 | Test coverage | PRESENT / ABSENT (IAP unit tests against .storekit file) |
 | **Health** | **READY / NEEDS WORK / NOT READY** |
-```
 
 Scoring:
 - **READY**: 0 CRITICAL, restore + terms + odds all present, all subscription states handled, verification on every granting path, .storekit file committed
