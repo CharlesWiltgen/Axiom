@@ -73,7 +73,13 @@ Use this router when:
 - Context limits exceeded
 - Model unavailable
 
-**Automated scanning** → Launch `foundation-models-auditor` agent or `/axiom:audit foundation-models` (missing availability checks, main thread blocking, manual JSON parsing, session lifecycle issues)
+**Automated scanning** → Launch `foundation-models-auditor` agent or `/axiom:audit foundation-models`
+
+Detects anti-patterns AND architectural gaps:
+- Missing availability checks, main-thread `respond()`, manual JSON parsing, missing specific error catches (guardrail / contextWindow), session created per-tap, no streaming for long output, missing `@Guide` constraints, nested non-`@Generable` types, no fallback UI
+- Prompt-injection risk from direct user-text interpolation, `@Generable` enums without `@frozen` (future-case crash), missing Cancel UX, missing transcript trimming, stale availability cache after Settings toggle, partial-output validation gaps, Tool errors indistinguishable from session errors, no retry on transient errors
+
+Scores: PRODUCTION-READY / NEEDS HARDENING / FRAGILE
 
 ## Decision Tree
 
@@ -84,7 +90,7 @@ Use this router when:
 5. Need API reference / code examples? → foundation-models-ref
 6. Debugging AI issues (blocked, slow, guardrails)? → foundation-models-diag
 7. Foundation Models + UI freezing? → foundation-models (async patterns) + also invoke axiom-concurrency if needed
-8. Want automated Foundation Models code scan? → foundation-models-auditor (Agent)
+8. Want automated Foundation Models code scan? → foundation-models-auditor (Agent — detects 10 anti-patterns AND completeness gaps including prompt injection, frozen-enum discipline, transcript trimming, Cancel UX; scores PRODUCTION-READY / NEEDS HARDENING / FRAGILE)
 
 ## Anti-Rationalization
 
