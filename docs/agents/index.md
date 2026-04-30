@@ -106,7 +106,7 @@ Agents are autonomous problem-solvers that:
 - **testing-auditor** — Finds flaky patterns, identifies untested critical paths, checks speed improvements, and evaluates Swift Testing migration readiness
 
 ### Games
-- **spritekit-auditor** — Scans SpriteKit code for physics bitmask issues, draw call waste, node accumulation, action memory leaks, coordinate confusion, and touch handling bugs
+- **spritekit-auditor** — Scans SpriteKit code for anti-patterns and architectural gaps (physics bitmask issues, draw call waste, action memory leaks, leaked scenes from missing transition cleanup, runaway node accumulation, missing time-step clamping, HUD on scene root instead of camera, missing async texture preload)
 
 ### Misc
 - **crash-analyzer** — Parses crash reports (.ips, .crash), checks symbolication, categorizes by crash pattern, generates actionable diagnostics

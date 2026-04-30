@@ -75,14 +75,22 @@ digraph games {
 ## Automated Scanning
 
 **SpriteKit audit** → Launch `spritekit-auditor` agent or `/axiom:audit spritekit`
-- Physics bitmask issues
-- Draw call waste (SKShapeNode in gameplay)
-- Node accumulation (missing cleanup)
-- Action memory leaks (strong self)
-- Coordinate confusion
-- Touch handling issues
-- Missing object pooling
-- Missing debug overlays
+
+Detects anti-patterns AND architectural gaps:
+- Physics bitmask issues (default `0xFFFFFFFF`, missing `contactTestBitMask`, magic numbers)
+- Draw call waste (`SKShapeNode` in gameplay, missing texture atlases)
+- Node accumulation and runaway spawn-in-`update()` without cleanup
+- Action memory leaks (strong `self`, `.repeatForever` without `withKey:`)
+- Coordinate confusion (`touch.location(in: self.view)` instead of `in: self`)
+- Silent input dead zones (custom `touchesBegan` without `isUserInteractionEnabled`)
+- Missing object pooling for hot spawns
+- Missing/ungated debug overlays
+- Leaked scenes (transition without `removeAllActions()` and child cleanup)
+- Missing time-step clamping → spiral-of-death teleports bodies through walls
+- HUD attached to scene root instead of camera (drifts with scrolling)
+- Fast bodies without `usesPreciseCollisionDetection` (tunneling)
+
+Scores: PERFORMANT / DEGRADED / UNPLAYABLE
 
 ## Critical Patterns
 
