@@ -81,7 +81,7 @@ Agents are autonomous problem-solvers that:
 
 ### Persistence & Storage
 - **core-data-auditor** — Scans Core Data for safety violations and architectural gaps (missing migration options, thread-confinement errors, N+1 queries, singleton context abuse, missing merge policies)
-- **database-schema-auditor** — Scans database migration and schema code for unsafe ALTER TABLE patterns, DROP operations, missing idempotency, foreign key misuse
+- **database-schema-auditor** — Scans database migration and schema code for safety violations and architectural gaps (unsafe ALTER TABLE, DROP operations, missing idempotency, FK constraints declared but not enforced, incomplete upgrade paths)
 - **icloud-auditor** — Scans for iCloud integration issues (missing NSFileCoordinator, unsafe CloudKit error handling, missing entitlement checks, SwiftData + CloudKit anti-patterns)
 - **storage-auditor** — Detects file storage mistakes (files in wrong locations, missing backup exclusions, missing file protection, storage anti-patterns causing data loss and backup bloat)
 - **swiftdata-auditor** — Scans SwiftData code for struct models, missing VersionedSchema, relationship defaults, background context misuse, N+1 patterns
