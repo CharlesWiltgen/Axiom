@@ -93,7 +93,7 @@ digraph swiftui {
 - Layout audit → Launch `swiftui-layout-auditor` agent or `/axiom:audit swiftui-layout`
 - UX flow audit → Launch `ux-flow-auditor` agent or `/axiom:audit ux-flow`
 - Liquid Glass scan → Launch `liquid-glass-auditor` agent or `/axiom:audit liquid-glass`
-- TextKit scan → Launch `textkit-auditor` agent or `/axiom:audit textkit`
+- TextKit scan → Launch `textkit-auditor` agent or `/axiom:audit textkit` (detects fallback triggers, glyph APIs that corrupt complex scripts, missing Writing Tools wiring, AND architectural gaps like missing fallback observation, SwiftUI wrappers dropping TextKit 2 properties, missing `isWritingToolsActive` guards; scores MODERN / MIXED / LEGACY)
 
 ## Anti-Rationalization
 

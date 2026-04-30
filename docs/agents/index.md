@@ -69,7 +69,7 @@ Agents are autonomous problem-solvers that:
 - **energy-auditor** — Scans for energy anti-patterns and unnecessary background work (timers for inactive features, location when not on map, unused background modes, lifecycle asymmetries)
 - **memory-auditor** — Finds memory leak patterns and architectural issues (missing cleanup paths, unbounded collection growth, inconsistent resource lifecycle management)
 - **swift-performance-analyzer** — Detects Swift performance issues and context-dependent overhead (ARC in hot paths, copies in tight loops, actor hops in iteration, existential types in hot paths)
-- **textkit-auditor** — Scans for TextKit 1 fallback triggers, deprecated glyph APIs, missing Writing Tools support
+- **textkit-auditor** — Scans for TextKit issues and architectural gaps (TextKit 1 fallback triggers, deprecated glyph APIs that break on complex scripts, missing Writing Tools configuration, missing `isWritingToolsActive` guards on programmatic mutations, SwiftUI wrappers dropping TextKit 2 properties, RTL-untested custom layout fragments)
 
 ### UI & Design
 - **liquid-glass-auditor** — Identifies iOS 26+ Liquid Glass adoption opportunities (glass effects, toolbar improvements, search patterns, migration from old blur effects)
