@@ -1,10 +1,17 @@
 # storage-auditor
 
-Automatically scans for file storage mistakes: files in wrong locations, missing backup exclusions, missing file protection, and storage anti-patterns that cause data loss and backup bloat.
+Scans for file storage mistakes and architectural gaps — both known anti-patterns like persistent data in `tmp/`, missing backup exclusions, and large UserDefaults payloads, and architectural issues like sensitive data on disk instead of Keychain, missing App Group containers for extensions, unbounded cache growth, and orphan files left behind when entities are deleted.
 
-## How to Use This Agent
+## What It Does
 
-**Natural language (automatic triggering):**
+- Detects 5 known anti-patterns (persistent data in `tmp/`, large files in backed-up directories without `isExcludedFromBackup`, missing `FileProtectionType` on writes, wrong location for content type, large data in UserDefaults)
+- Identifies architectural gaps (auth tokens stored in files instead of Keychain, missing App Group containers when extensions need shared access, no eviction policy for unbounded `Caches/` growth, missing cleanup of associated files when entities are deleted, no fallback for low-storage events, file-protection levels misaligned with data sensitivity, missing migration path when storage layout changes between versions)
+- Correlates findings that compound into higher severity (user data in `tmp/`, sensitive data + missing protection, wrong location + extension dependency, large UserDefaults + frequent updates)
+- Produces a Storage Health Score (SAFE / FRAGILE / DANGEROUS)
+
+## How to Use
+
+**Natural language:**
 - "Check my file storage usage"
 - "Audit my app for storage issues"
 - "My app backup is too large"
@@ -13,20 +20,17 @@ Automatically scans for file storage mistakes: files in wrong locations, missing
 
 **Explicit command:**
 ```bash
-/axiom:audit-storage
+/axiom:audit storage
 ```
-
-## What It Does
-
-1. **Files in tmp/ Directory** (CRITICAL) — Anything in NSTemporaryDirectory() that isn't truly temporary → iOS purges tmp/, users lose data
-2. **Large Files Missing isExcludedFromBackup** (HIGH) — Files >1MB in Documents/ without backup exclusion → wastes user's iCloud quota
-3. **Missing File Protection** (MEDIUM) — File writes without FileProtectionType → sensitive data not encrypted at rest
-4. **Wrong Storage Location** (HIGH) — User content in Application Support/, re-downloadable content in Documents/, app data in tmp/
-5. **UserDefaults Abuse** (MEDIUM) — Storing >1MB data in UserDefaults → performance degradation
 
 ## Related
 
-- **storage** — Storage decision framework (where to store what)
-- **storage-diag** — Debugging missing files and data loss
-- **file-protection-ref** — FileProtectionType and encryption details
-- **storage-management-ref** — Purging policies and URL resource values
+- **storage** skill — storage decision framework for choosing where to store what
+- **storage-diag** skill — debugging missing files and data loss
+- **file-protection-ref** skill — FileProtectionType and encryption details
+- **storage-management-ref** skill — purging policies and URL resource values
+- **icloud-auditor** agent — overlaps on iCloud Drive containers and file coordination
+- **swiftdata-auditor** agent — overlaps on `@Attribute(.externalStorage)` blob cleanup
+- **security-privacy-scanner** agent — overlaps on sensitive data placement (tokens, credentials)
+- **database-schema-auditor** agent — overlaps on `.sqlite` file location and protection
+- **health-check** agent — includes storage-auditor in project-wide scans
