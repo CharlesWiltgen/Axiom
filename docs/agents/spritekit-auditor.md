@@ -1,10 +1,17 @@
 # spritekit-auditor
 
-Scans SpriteKit game code for the 8 most common anti-patterns that cause physics bugs, performance issues, and memory leaks.
+Scans SpriteKit game code for anti-patterns and architectural gaps — both known anti-patterns like default physics bitmasks, draw call waste, action memory leaks, and coordinate confusion, and architectural issues like leaked scenes from missing transition cleanup, runaway node accumulation, missing time-step clamping, and HUD layered on the scene root instead of the camera.
 
-## How to Use This Agent
+## What It Does
 
-**Natural language (automatic triggering):**
+- Detects 8 known anti-patterns (default `0xFFFFFFFF` bitmasks, `SKShapeNode` for gameplay sprites, unbalanced `addChild`/`removeFromParent`, strong `self` in `SKAction` closures, view-coordinates in touch handlers, missing `isUserInteractionEnabled` on custom touch nodes, missing object pooling for hot spawns, missing debug overlays)
+- Identifies architectural gaps (`physicsWorld.contactDelegate` set but bitmasks ungated, scene transitions without `removeAllActions()` and child cleanup, no offscreen/TTL cleanup for spawn-in-`update()` patterns, missing time-step clamping that lets the spiral-of-death teleport bodies through walls after backgrounding, gameplay textures not atlased, fast bodies without `usesPreciseCollisionDetection`, debug overlays not gated `#if DEBUG`, custom SKNode subclasses not releasing state on removal, no async texture preload, HUD attached to scene root instead of camera)
+- Correlates findings that compound into higher severity (default bitmask + active `didBegin`, leaked scene + running infinite actions, node accumulation + spawn from `update()`, silent input dead zones + custom anchor points)
+- Produces a SpriteKit Health Score (PERFORMANT / DEGRADED / UNPLAYABLE)
+
+## How to Use
+
+**Natural language:**
 - "Can you check my SpriteKit code for issues?"
 - "Audit my game for performance problems"
 - "Scan my SpriteKit project for anti-patterns"
@@ -15,43 +22,14 @@ Scans SpriteKit game code for the 8 most common anti-patterns that cause physics
 /axiom:audit spritekit
 ```
 
-## What It Does
-
-### Critical
-- **Physics bitmask issues** — Default `0xFFFFFFFF` masks, missing `contactTestBitMask`, magic number bitmasks without named constants
-
-### High Priority
-- **Draw call waste** — `SKShapeNode` used for gameplay sprites (1 draw call each, unbatchable), missing texture atlases
-- **Node accumulation** — Nodes created but never removed, `addChild` without matching `removeFromParent`
-- **Action memory leaks** — Strong `self` capture in `SKAction.run` closures, `repeatForever` without `withKey:`
-
-### Medium Priority
-- **Coordinate confusion** — `touch.location(in: self.view)` instead of `touch.location(in: self)`
-- **Touch handling bugs** — `touchesBegan` implemented without `isUserInteractionEnabled = true`
-- **Missing object pooling** — `SKSpriteNode` creation inside `update()` or spawn functions
-
-### Low Priority
-- **Missing debug overlays** — No `showsFPS`, `showsNodeCount`, or `showsDrawCount` configured
-
-## Example Output
-
-```markdown
-## SpriteKit Audit Results
-
-### Summary
-- **CRITICAL Issues**: 2 (Physics bitmask problems)
-- **HIGH Issues**: 3 (Draw call waste, action leaks)
-- **MEDIUM Issues**: 1 (Touch handling)
-
-### CRITICAL: Default Bitmask
-**File**: `GameScene.swift:45`
-**Issue**: collisionBitMask not set (defaults to 0xFFFFFFFF)
-**Impact**: Body collides with everything, causing phantom collisions
-**Fix**: Set explicit collisionBitMask using PhysicsCategory struct
-```
-
 ## Related
 
-- [SpriteKit](/skills/games/spritekit) — Architecture patterns and anti-patterns
-- [SpriteKit API Reference](/reference/spritekit-ref) — Complete API tables
-- [SpriteKit Diagnostics](/diagnostic/spritekit-diag) — Decision trees for common symptoms
+- **spritekit** skill — architecture patterns, PhysicsCategory discipline, camera/world/HUD layering, and the spiral-of-death clamp
+- **spritekit-ref** skill — full SKNode/SKAction/physics API reference
+- **spritekit-diag** skill — decision trees for contacts not firing, tunneling, frame drops, scene-transition crashes
+- **memory-auditor** agent — overlaps on `[weak self]` capture in `SKAction.run` closures
+- **concurrency-auditor** agent — overlaps on main-thread asset loading and `update(_:)` workload
+- **swift-performance-analyzer** agent — overlaps on per-frame allocation hot paths
+- **swiftui-performance-analyzer** agent — overlaps on `SpriteView` re-creation churn from parent re-renders
+- **energy-auditor** agent — overlaps on always-on debug overlays in shipping builds
+- **health-check** agent — includes spritekit-auditor in project-wide scans
