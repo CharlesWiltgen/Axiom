@@ -1,10 +1,17 @@
 # camera-auditor
 
-Scans Swift code for camera, video, and audio capture issues including deprecated APIs, missing interruption handlers, threading violations, and permission anti-patterns.
+Scans Swift code for camera, video, and audio capture issues — both known anti-patterns like main-thread session work, deprecated `videoOrientation`, missing interruption observers, and `UIImagePickerController` for photos, and architectural gaps like missing `sessionRuntimeError` recovery, concurrent session queues, missing audio session deactivation, and stuck permission-denied UI when the user returns from Settings.
 
-## How to Use This Agent
+## What It Does
 
-**Natural language (automatic triggering):**
+- Detects 10 known anti-patterns (main-thread `startRunning`, deprecated `videoOrientation`, missing `sessionWasInterrupted`/`sessionInterruptionEnded` observers, `UIImagePickerController` with `.photoLibrary`, over-requesting `PHPhotoLibrary.requestAuthorization`, missing `photoQualityPrioritization`, wrong `AVAudioSession` category for recording, missing purpose strings, configuration outside `beginConfiguration` block, synchronous photo loading)
+- Identifies architectural gaps (missing `sessionRuntimeError` observer + restart logic, concurrent session queue letting reconfiguration race, no Open-Settings guidance after permission denial and no `didBecomeActiveNotification` re-check on return, hot session left running in background, missing `AVAudioSession.setActive(false)` on end, missing audio interruption handling, stale rotation tracking on iOS 17+ without `RotationCoordinator`, deprecated `AVCaptureDevice.devices()` enumeration vs `DiscoverySession`, non-atomic reconfiguration, `AVCaptureMultiCamSession` without `isMultiCamSupported` check, `try!` on `loadTransferable`)
+- Correlates findings that compound into higher severity (main-thread + heavy initial config, missing interruption + audio capture, missing purpose strings + capture session, deprecated `videoOrientation` + iOS 17+ deployment, AVAudioSession `.playback` + video recording produces silent files)
+- Produces a Capture Reliability Health Score (RELIABLE / FRAGILE / BROKEN)
+
+## How to Use
+
+**Natural language:**
 - "Can you check my camera code for issues?"
 - "Audit my capture implementation"
 - "Is my camera code following best practices?"
@@ -16,42 +23,16 @@ Scans Swift code for camera, video, and audio capture issues including deprecate
 /axiom:audit camera
 ```
 
-## What It Does
-
-### Critical Issues
-- **Main thread session work** — `startRunning()` on main thread causes UI freezes
-- **Missing purpose strings** — Camera/microphone usage without Info.plist keys causes App Store rejection
-
-### High Priority
-- **Deprecated videoOrientation** — Use `RotationCoordinator` instead (iOS 17+)
-- **Missing interruption handling** — No observers for phone calls, multitasking
-- **UIImagePickerController for photos** — Replace with PHPicker or PhotosPicker
-
-### Medium Priority
-- **Over-requesting photo library access** — PHPicker doesn't need permission
-- **Missing photo quality settings** — Default `.quality` is slow for social apps
-- **AVAudioSession category mismatch** — Wrong category prevents recording
-
-### Low Priority
-- **Configuration without block** — Missing `beginConfiguration`/`commitConfiguration`
-- **Synchronous photo loading** — Blocking main thread during image load
-
-## Example Output
-
-```markdown
-## Audit Summary
-
-- **CRITICAL**: 2 issues
-- **HIGH**: 3 issues
-- **MEDIUM**: 1 issue
-
-**Top priority fixes**:
-1. Move startRunning() to session queue (UI freeze risk)
-2. Add AVCaptureSession interruption observers
-3. Replace deprecated videoOrientation with RotationCoordinator
-```
-
 ## Related
 
-- **axiom-camera-capture** skill — Session setup, rotation, interruption handling patterns
-- **axiom-photo-library** skill — Photo picker and library patterns
+- **camera-capture** skill — session setup, rotation handling, interruption recovery patterns
+- **camera-capture-ref** skill — full AVCaptureSession/AVCaptureDevice/RotationCoordinator API reference
+- **camera-capture-diag** skill — decision trees for camera freezes, black preview, rotation bugs
+- **photo-library** skill — PHPicker/PhotosPicker patterns
+- **avfoundation-ref** skill — AVAudioSession category and activation rules
+- **concurrency-auditor** agent — overlaps on main-thread session work and sample-buffer processing
+- **security-privacy-scanner** agent — overlaps on `NSCameraUsageDescription`, `NSMicrophoneUsageDescription`, photo library purpose strings
+- **energy-auditor** agent — overlaps on hot session left running in background and HEVC encoding pressure
+- **swift-performance-analyzer** agent — overlaps on ARC overhead in `AVCaptureVideoDataOutput` sample-buffer paths
+- **storage-auditor** agent — overlaps on saved photo/video file location and `isExcludedFromBackup`
+- **health-check** agent — includes camera-auditor in project-wide scans
