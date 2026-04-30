@@ -129,6 +129,8 @@ If the user says "skip X" or "exclude X", remove that auditor from the run list.
 
 ## Phase 2: Launch Auditors in Parallel
 
+Dispatch one Agent call per auditor selected in Phase 1. Do not merge auditors, skip them, or run their scans inline. N selected → N Agent calls in parallel.
+
 Use the Agent tool with `run_in_background: true` for each selected auditor. Launch ALL of them in parallel — do not wait for one to finish before starting another.
 
 Today's date tag for filenames: use ISO format `YYYY-MM-DD`.

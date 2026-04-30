@@ -52,6 +52,14 @@ Run a comprehensive test quality audit using 5 phases: map test coverage shape, 
 - Issue category and phase
 - Fix recommendations
 
+## Tool Use Is Mandatory
+
+Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.
+
+- Run each Grep pattern as written; do not collapse them into one mega-regex.
+- Run the Read verifications each section calls for.
+- "Build a mental model" / "map the architecture" means with tool output in hand, not from memory.
+
 ## Files to Scan
 
 **Test files**: `*Tests.swift`, `*Test.swift`, `*Spec.swift`
