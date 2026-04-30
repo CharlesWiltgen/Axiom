@@ -56,7 +56,7 @@ Use this skill when working with:
 
 **Core Data audit** → Launch `core-data-auditor` agent or `/axiom:audit core-data` (safety violations, architectural gaps — migration options, thread-confinement, N+1 queries, merge policies, context isolation)
 **Codable audit** → Launch `codable-auditor` agent or `/axiom:audit codable` (safety violations, semantic gaps — try? swallowing errors, JSONSerialization, date handling, silent field drops, wrapper-hidden fallbacks, cross-file strategy drift, enum future-case crashes)
-**iCloud audit** → Launch `icloud-auditor` agent or `/axiom:audit icloud` (entitlement checks, file coordination, CloudKit anti-patterns)
+**iCloud audit** → Launch `icloud-auditor` agent or `/axiom:audit icloud` (entitlement checks, file coordination, incomplete CKError matrix coverage, missing account-change observation, polling vs CKSubscriptions, SwiftData + CloudKit unsupported features, compound risks like uncoordinated I/O across extensions)
 **Storage audit** → Launch `storage-auditor` agent or `/axiom:audit storage` (wrong file locations, missing backup exclusions, data loss risks)
 **Database schema audit** → Launch `database-schema-auditor` agent or `/axiom:audit database-schema` (unsafe ALTER TABLE, DROP operations, missing idempotency, FK constraints declared but not enforced, incomplete upgrade paths, compound risks like INSERT OR REPLACE on FK-referenced tables)
 **SwiftData audit** → Launch `swiftdata-auditor` agent or `/axiom:audit swiftdata` (struct models, missing schema registration, array relationships without defaults, background context misuse, N+1 patterns, stale predicates, CloudKit conformance gaps, compound risks like struct model + array relationship)
