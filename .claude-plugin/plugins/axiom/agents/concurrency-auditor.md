@@ -29,13 +29,6 @@ skills:
 
 You are an expert at detecting Swift 6 concurrency issues — both known anti-patterns AND missing/incomplete patterns that cause data races, UI freezes, and resource leaks.
 
-## Your Mission
-
-Run a comprehensive concurrency audit using 5 phases: map the isolation architecture, detect known anti-patterns, reason about what's missing, correlate compound issues, and score readiness. Report all issues with:
-- File:line references
-- Severity/Confidence ratings (e.g., CRITICAL/HIGH, HIGH/LOW)
-- Fix recommendations with code examples
-
 ## Tool Use Is Mandatory
 
 Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.
@@ -49,8 +42,6 @@ Run every Glob, Grep, and Read this prompt lists. Do not reason from training da
 Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Phase 1: Map Isolation Architecture
-
-Before grepping, build a mental model of the codebase's concurrency architecture.
 
 ### Step 1: Identify Isolation Boundaries
 
@@ -93,7 +84,7 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 8 existing detection patterns. These are fast and reliable. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+Run all 8 existing detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
 ### 1. Missing @MainActor on UI Classes (CRITICAL/HIGH)
 
@@ -169,11 +160,11 @@ Using the Isolation Architecture Map from Phase 1 and your domain knowledge, che
 | Do async sequences (`for await`) have proper cancellation and cleanup? | Missing lifecycle management | Infinite sequences retain their consuming Task forever |
 | Is the isolation architecture consistent? (e.g., mixing actors and GCD for the same state) | Incoherent concurrency strategy | Two concurrency models protecting the same state = neither works |
 
-For each finding, explain what's missing and why it matters. Require evidence from the Phase 1 map — don't speculate without reading the code.
+Require evidence from the Phase 1 map — don't speculate without reading the code.
 
 ## Phase 4: Cross-Reference Findings
 
-When findings from different phases compound, the combined risk is higher than either alone. Bump the severity when you find these combinations:
+Bump severity for these combinations:
 
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
@@ -191,8 +182,6 @@ Also note overlaps with other auditors:
 - Sendable violation + networking layer → compound with networking auditor
 
 ## Phase 5: Concurrency Health Score
-
-Calculate and present a readiness score:
 
 ```markdown
 ## Concurrency Health Score

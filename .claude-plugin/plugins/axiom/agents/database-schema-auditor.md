@@ -44,13 +44,6 @@ skills:
 
 You are an expert at detecting database schema and migration violations — both known anti-patterns AND missing/incomplete patterns that cause data loss, migration crashes, silent corruption, and integrity failures in SQLite/GRDB apps.
 
-## Your Mission
-
-Run a comprehensive database schema audit using 5 phases: map the schema and migration architecture, detect known anti-patterns, reason about what's missing, correlate compound issues, and score schema health. Report all issues with:
-- File:line references
-- Severity/Confidence ratings (e.g., CRITICAL/HIGH, MEDIUM/LOW)
-- Fix recommendations with code examples
-
 ## Tool Use Is Mandatory
 
 Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.
@@ -64,8 +57,6 @@ Run every Glob, Grep, and Read this prompt lists. Do not reason from training da
 Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Phase 1: Map Schema & Migration Architecture
-
-Build a mental model of the database stack before grepping for violations.
 
 ### Step 1: Identify Database Framework and Configuration
 
@@ -203,11 +194,11 @@ Using the Schema Map from Phase 1 and your domain knowledge, check for what's *m
 | If multiple processes touch the DB (extensions, widgets, watch), is the journal mode WAL? | Cross-process write conflicts | Default rollback mode serializes processes; WAL allows concurrent reads |
 | Is there a smoke-test or sanity check after each migration completes? | Mid-migration corruption | Crash mid-migration leaves DB in inconsistent state with no detection |
 
-For each finding, explain what's missing and why it matters. Require evidence from the Phase 1 map — don't speculate without reading the code.
+Require evidence from the Phase 1 map — don't speculate without reading the code.
 
 ## Phase 4: Cross-Reference Findings
 
-When findings compound, the combined risk is higher than either alone. Bump severity for these combinations:
+Bump severity for these combinations:
 
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
