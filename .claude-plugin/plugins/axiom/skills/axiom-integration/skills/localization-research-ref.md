@@ -30,7 +30,7 @@ Do NOT use this skill for:
 
 - **skills/localization.md** — String Catalog mechanics, SwiftUI/UIKit APIs, plurals, RTL, formatters
 - **axiom-accessibility** — VoiceOver labels, hints, traits (the strings this skill helps translate)
-- **axiom-design → skills/hig.md** — HIG terminology conventions
+- **axiom-design** (skills/hig.md) — HIG terminology conventions
 
 ---
 
@@ -294,4 +294,4 @@ This sequence catches layout issues before paying for translation, catches termi
 
 **TMS**: Crowdin, Lokalise, Phrase, SimpleLocalize (all support `.xcstrings` natively)
 
-**Skills**: skills/localization.md (String Catalog mechanics), axiom-accessibility (VoiceOver strings this skill helps translate), axiom-design → skills/hig.md (HIG terminology conventions)
+**Skills**: skills/localization.md (String Catalog mechanics), axiom-accessibility (VoiceOver strings this skill helps translate), axiom-design (skills/hig.md, HIG terminology conventions)
