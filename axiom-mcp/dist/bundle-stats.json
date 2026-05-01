@@ -1,8 +1,8 @@
 {
-  "totalBytes": 8813999,
+  "totalBytes": 8813994,
   "skills": {
     "count": 222,
-    "bytes": 4833556
+    "bytes": 4833551
   },
   "commands": {
     "count": 12,
@@ -15,5 +15,5 @@
   "searchIndex": {
     "bytes": 3388762
   },
-  "generatedAt": "2026-04-30T21:59:46.091Z"
+  "generatedAt": "2026-05-01T17:32:07.446Z"
 }
