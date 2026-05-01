@@ -11,7 +11,7 @@ Use when:
 - Debugging menu items that appear disabled or don't affect the right window
 
 #### Related Skills
-- Use `skills/windows-and-scenes.md` for WindowGroup, Window, UtilityWindow, and multi-window management
+- Use `skills/windows.md` for WindowGroup, Window, UtilityWindow, and multi-window management
 - Use `skills/toolbars.md` for toolbar customization and toolbar items
 
 ---
@@ -375,4 +375,4 @@ struct GardenCommands: Commands {
 
 **HIG**: The Menu Bar, Menus, Context Menus
 
-**Skills**: skills/windows-and-scenes.md
+**Skills**: skills/windows.md
