@@ -13,6 +13,7 @@
     "docs:preview": "vitepress preview docs",
     "test": "node scripts/pre-deploy.ts --static",
     "test:full": "node scripts/pre-deploy.ts",
+    "check:refs": "node scripts/check-cross-refs.js",
     "predeploy": "npm run build:mcp && node scripts/pre-deploy.ts"
   },
   "devDependencies": {
