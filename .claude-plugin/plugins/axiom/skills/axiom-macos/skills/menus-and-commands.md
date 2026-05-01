@@ -12,7 +12,7 @@ Use when:
 
 #### Related Skills
 - Use `skills/windows.md` for WindowGroup, Window, UtilityWindow, and multi-window management
-- Use `skills/toolbars.md` for toolbar customization and toolbar items
+- Use axiom-swiftui (skills/toolbars.md) for toolbar customization and toolbar items (cross-platform `.toolbar`, ToolbarItem, ToolbarSpacer)
 
 ---
 
