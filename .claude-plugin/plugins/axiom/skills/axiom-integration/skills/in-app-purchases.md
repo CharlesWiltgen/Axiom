@@ -1,6 +1,8 @@
 
 # StoreKit 2 In-App Purchase Implementation
 
+> **Selling physical goods, services, or accepting donations?** Use Apple Pay, not IAP. See `axiom-payments/skills/apple-pay-vs-iap.md` for the boundary rule. App Review will reject IAP for physical / service / donation products under §3.1.3(e) and §3.2.
+
 **Purpose**: Guide robust, testable in-app purchase implementation
 **StoreKit Version**: StoreKit 2
 **iOS Version**: iOS 15+ (iOS 18.4+ for latest features)

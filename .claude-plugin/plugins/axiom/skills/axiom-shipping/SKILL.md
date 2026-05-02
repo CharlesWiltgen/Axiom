@@ -56,6 +56,7 @@ Use this skill when you encounter:
 | ITMS signing error on upload | See axiom-security (skills/code-signing-diag.md) |
 | Certificate/profile mismatch | See axiom-security (skills/code-signing-diag.md) |
 | Code signing setup | See axiom-security (skills/code-signing.md) |
+| Apple Pay / Wallet / Tap to Pay payments | See `axiom-payments` suite |
 | Shipping update with Claude model-ID change (4.6 → 4.7, etc.) | See **`claude-api`** skill (external) + this skill for submission |
 | Switching cloud AI provider in-app (OpenAI → Claude, etc.) | See **`claude-api`** skill (external) + this skill for submission |
 

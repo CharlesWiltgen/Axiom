@@ -20,6 +20,7 @@ license: MIT
 | SF Symbols API signatures, UIKit equivalents, availability | See `skills/sf-symbols-ref.md` |
 | San Francisco fonts, text styles, Dynamic Type, tracking | See `skills/typography-ref.md` |
 | App entry points, auth flows, root view switching, scene lifecycle | See `skills/app-composition.md` |
+| Apple Pay button / Wallet pass design / Tap to Pay button | See `axiom-payments` suite, plus `skills/hig.md` for cross-cutting HIG context |
 
 ## Decision Tree
 
