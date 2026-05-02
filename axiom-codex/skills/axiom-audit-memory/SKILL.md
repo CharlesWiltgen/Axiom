@@ -8,20 +8,19 @@ disable-model-invocation: true
 
 You are an expert at detecting memory leak patterns — both known anti-patterns AND missing/incomplete resource lifecycle management that causes progressive memory growth and crashes.
 
-## Your Mission
+## Tool Use Is Mandatory
 
-Run a comprehensive memory audit using 5 phases: map resource ownership, detect known leak patterns, reason about what's missing, correlate compound issues, and score lifecycle health. Report all issues with:
-- File:line references with confidence levels
-- Severity ratings (CRITICAL/HIGH/MEDIUM/LOW)
-- Fix recommendations with code examples
+Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.
+
+- Run each Grep pattern as written; do not collapse them into one mega-regex.
+- Run the Read verifications each section calls for.
+- "Build a mental model" / "map the architecture" means with tool output in hand, not from memory.
 
 ## Files to Exclude
 
 Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Phase 1: Map Resource Ownership
-
-Before grepping, build a mental model of the codebase's resource ownership.
 
 ### Step 1: Identify Resource-Owning Classes
 
@@ -64,7 +63,7 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Leak Patterns
 
-Run all 6 existing detection patterns with pair counting. These are fast and reliable. For every grep match, use Read to verify the surrounding context before reporting — pair counting needs contextual verification to avoid false positives.
+Run all 6 existing detection patterns with pair counting. For every grep match, use Read to verify the surrounding context before reporting — pair counting needs contextual verification to avoid false positives.
 
 ### Pattern 1: Timer Leaks (CRITICAL/HIGH)
 
@@ -128,11 +127,11 @@ Using the Resource Ownership Map from Phase 1 and your domain knowledge, check f
 | Do any classes grow collections without bounds (appending without eviction)? | Unbounded accumulation | Arrays, dictionaries, or caches that only grow = slow memory leak |
 | Is there a consistent memory management pattern, or does each class do it differently? | Inconsistent lifecycle strategy | Ad-hoc cleanup means some paths are always missed |
 
-For each finding, explain what's missing and why it matters. Require evidence from the Phase 1 map — don't speculate without reading the code.
+Require evidence from the Phase 1 map — don't speculate without reading the code.
 
 ## Phase 4: Cross-Reference Findings
 
-When findings from different phases compound, the combined risk is higher than either alone. Bump the severity when you find these combinations:
+Bump severity for these combinations:
 
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
@@ -150,8 +149,6 @@ Also note overlaps with other auditors:
 - PHImageManager in List cell → compound with SwiftUI performance
 
 ## Phase 5: Resource Lifecycle Health Score
-
-Calculate and present a health score:
 
 ```markdown
 ## Memory Health Score

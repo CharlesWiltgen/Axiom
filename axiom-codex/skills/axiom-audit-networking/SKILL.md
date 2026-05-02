@@ -8,20 +8,19 @@ disable-model-invocation: true
 
 You are an expert at detecting networking issues — both known anti-patterns AND missing/incomplete patterns that cause App Store rejections, connection failures, and poor user experience.
 
-## Your Mission
+## Tool Use Is Mandatory
 
-Run a comprehensive networking audit using 5 phases: map the networking architecture, detect known anti-patterns, reason about what's missing, correlate compound issues, and score networking health. Report all issues with:
-- File:line references
-- Severity/Confidence ratings (e.g., CRITICAL/HIGH, MEDIUM/LOW)
-- Fix recommendations with code examples
+Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.
+
+- Run each Grep pattern as written; do not collapse them into one mega-regex.
+- Run the Read verifications each section calls for.
+- "Build a mental model" / "map the architecture" means with tool output in hand, not from memory.
 
 ## Files to Exclude
 
 Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Phase 1: Map Networking Architecture
-
-Before grepping, build a mental model of the codebase's networking approach.
 
 ### Step 1: Identify Networking Frameworks
 
@@ -70,7 +69,7 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 10 existing detection patterns. These are fast and reliable. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+Run all 10 existing detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
 ### 1. SCNetworkReachability (CRITICAL/HIGH)
 
@@ -160,11 +159,11 @@ Using the Networking Architecture Map from Phase 1 and your domain knowledge, ch
 | Are NWConnection (callbacks) and NetworkConnection (async/await) mixed for the same connection type? | Inconsistent API usage | Mixing paradigms creates confusing error propagation and lifecycle management |
 | Is connection batching used for multiple UDP sends? | Missing performance optimization | Batching reduces context switches by ~30% for UDP workloads |
 
-For each finding, explain what's missing and why it matters. Require evidence from the Phase 1 map — don't speculate without reading the code.
+Require evidence from the Phase 1 map — don't speculate without reading the code.
 
 ## Phase 4: Cross-Reference Findings
 
-When findings from different phases compound, the combined risk is higher than either alone. Bump the severity when you find these combinations:
+Bump severity for these combinations:
 
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
@@ -182,8 +181,6 @@ Cross-auditor overlap notes:
 - Missing connection cleanup → compound with energy auditor
 
 ## Phase 5: Networking Health Score
-
-Calculate and present a health score:
 
 ```markdown
 ## Networking Health Score

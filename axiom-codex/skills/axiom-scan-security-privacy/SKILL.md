@@ -8,12 +8,13 @@ disable-model-invocation: true
 
 You are an expert at detecting security and privacy issues — both known anti-patterns AND missing/incomplete patterns that cause App Store rejections, security vulnerabilities, and privacy violations.
 
-## Your Mission
+## Tool Use Is Mandatory
 
-Run a comprehensive security and privacy audit using 5 phases: map the security posture, detect known anti-patterns, reason about what's missing, correlate compound issues, and score security health. Report all issues with:
-- File:line references
-- Severity/Confidence ratings (e.g., CRITICAL/HIGH, MEDIUM/LOW)
-- Fix recommendations with code examples
+Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.
+
+- Run each Grep pattern as written; do not collapse them into one mega-regex.
+- Run the Read verifications each section calls for.
+- "Build a mental model" / "map the architecture" means with tool output in hand, not from memory.
 
 ## Files to Scan
 
@@ -21,8 +22,6 @@ Include: `**/*.swift`, `**/Info.plist`, `**/PrivacyInfo.xcprivacy`, `**/*.entitl
 Skip: `*Tests.swift`, `*Previews.swift`, `*Mock*`, `*Fixture*`, `*Stub*`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Phase 1: Map Security & Privacy Posture
-
-Before grepping, build a mental model of the codebase's security and privacy surface.
 
 ### Step 1: Identify Privacy Manifest and Entitlements
 
@@ -70,7 +69,7 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 7 existing detection patterns. These are fast and reliable. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+Run all 7 existing detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
 ### 1. Hardcoded API Keys (CRITICAL/HIGH)
 
@@ -172,11 +171,11 @@ Using the Security & Privacy Map from Phase 1 and your domain knowledge, check f
 | Does the app use `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` for tokens (not `.kSecAttrAccessibleAlways` or `.kSecAttrAccessibleAfterFirstUnlock`)? | Weak Keychain ACL | Tokens accessible before device unlock or restorable via backup |
 | If the app sends analytics or crash reports, are user identifiers hashed/anonymized before leaving the device? | PII exfiltration | Third-party analytics receive raw user IDs; violates privacy nutrition label claims |
 
-For each finding, explain what's missing and why it matters. Require evidence from the Phase 1 map — don't speculate without reading the code.
+Require evidence from the Phase 1 map — don't speculate without reading the code.
 
 ## Phase 4: Cross-Reference Findings
 
-When findings from different phases compound, the combined risk is higher than either alone. Bump the severity when you find these combinations:
+Bump severity for these combinations:
 
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
@@ -198,8 +197,6 @@ Cross-auditor overlap notes:
 - Unused entitlements → compound with `axiom-build` (code signing / provisioning)
 
 ## Phase 5: Security Posture Score
-
-Calculate and present a health score:
 
 ```markdown
 ## Security Posture

@@ -1218,9 +1218,9 @@ HStack {
 
 **WWDC**: 356, 2019-808
 
-**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/materials, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/accessibility, /design/human-interface-guidelines/icons
+**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/materials, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/accessibility, /design/human-interface-guidelines/icons, /design/human-interface-guidelines/apple-pay, /design/human-interface-guidelines/wallet, /design/human-interface-guidelines/tap-to-pay-on-iphone
 
-**Skills**: axiom-design (skills/hig.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-swiftui, axiom-accessibility, axiom-swift (skills/tvos.md)
+**Skills**: axiom-design (skills/hig.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-swiftui, axiom-accessibility, axiom-swift (skills/tvos.md), axiom-payments
 
 ---
 

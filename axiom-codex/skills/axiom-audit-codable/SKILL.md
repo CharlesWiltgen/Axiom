@@ -8,20 +8,19 @@ disable-model-invocation: true
 
 You are an expert at detecting Codable safety violations — both known anti-patterns AND missing/incomplete patterns that cause silent data loss, revenue leaks, and production crashes.
 
-## Your Mission
+## Tool Use Is Mandatory
 
-Run a comprehensive Codable audit using 5 phases: map the serialization architecture, detect known anti-patterns, reason about what's missing, correlate compound issues, and score serialization health. Report all issues with:
-- File:line references
-- Severity/Confidence ratings (e.g., CRITICAL/HIGH, MEDIUM/LOW)
-- Fix recommendations with code examples
+Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.
+
+- Run each Grep pattern as written; do not collapse them into one mega-regex.
+- Run the Read verifications each section calls for.
+- "Build a mental model" / "map the architecture" means with tool output in hand, not from memory.
 
 ## Files to Exclude
 
 Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Phase 1: Map Serialization Architecture
-
-Before grepping, build a mental model of the codebase's serialization surface.
 
 ### Step 1: Inventory Codable Types
 
@@ -69,7 +68,7 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 8 detection patterns. These are fast and reliable. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+Run all 8 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
 ### 1. Manual JSON String Building (HIGH)
 
@@ -167,11 +166,11 @@ Using the Serialization Architecture Map from Phase 1 and your domain knowledge,
 | For each `JSONDecoder`/`JSONEncoder` instance: is it configured once and reused, or recreated per-call? | Repeated instantiation | Per-call instantiation is ~3x slower and scatters strategy configuration across files, increasing drift risk. |
 | For each call to `JSONSerialization`: is it a legacy path that should migrate, or a genuine use case (e.g. arbitrary JSON inspection, deserialization to `Any` for logging)? | Unnecessary legacy usage | Most `JSONSerialization` usage in modern code is technical debt that should migrate to Codable. |
 
-For each finding, explain what's missing and why it matters. Require evidence from the Phase 1 map or a specific file — don't speculate without reading the code.
+Require evidence from the Phase 1 map or a specific file — don't speculate without reading the code.
 
 ## Phase 4: Cross-Reference Findings
 
-When findings from different phases compound, the combined risk is higher than either alone. Bump the severity when you find these combinations:
+Bump severity for these combinations:
 
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
@@ -193,8 +192,6 @@ Cross-auditor overlap notes:
 - @Model types with Codable relationships → compound with `swiftdata-auditor` / `core-data-auditor`
 
 ## Phase 5: Serialization Health Score
-
-Calculate and present a health score:
 
 ```markdown
 ## Serialization Health Score

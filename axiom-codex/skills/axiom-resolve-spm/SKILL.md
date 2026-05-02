@@ -17,12 +17,6 @@ Analyze Package.swift and Package.resolved to:
 - Resolve transitive dependency problems
 - Fix platform compatibility issues
 
-Report findings with:
-- Specific conflict details
-- Resolution options (ranked by preference)
-- Exact commands to run
-- Package.swift edits if needed
-
 ## Files to Analyze
 
 **Required**:

@@ -18,11 +18,13 @@ Scan the codebase for legacy patterns and provide migration paths:
 - Legacy SwiftUI modifiers → Modern equivalents
 - Completion handlers → async/await
 
-Report findings with:
-- File:line references
-- Priority (HIGH/MEDIUM/LOW based on benefit)
-- Migration code examples
-- Breaking change warnings
+## Tool Use Is Mandatory
+
+Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.
+
+- Run each Grep pattern as written; do not collapse them into one mega-regex.
+- Run the Read verifications each section calls for.
+- "Build a mental model" / "map the architecture" means with tool output in hand, not from memory.
 
 ## Files to Scan
 

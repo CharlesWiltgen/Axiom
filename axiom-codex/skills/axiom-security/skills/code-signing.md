@@ -242,6 +242,7 @@ If using automatic signing, Xcode handles steps 1 and 3 automatically.
 | In-App Purchase | Automatic | No profile change needed |
 | Background Modes | `UIBackgroundModes` (Info.plist) | No profile change needed |
 | Keychain Sharing | `keychain-access-groups` | Must be in profile |
+| Tap to Pay on iPhone | `com.apple.developer.proximity-reader.payment.acceptance` | Apple-managed (not a regular capability); see `axiom-payments/skills/tap-to-pay.md` for the request workflow |
 
 ### Multi-Target Entitlements
 

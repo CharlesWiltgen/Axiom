@@ -8,13 +8,13 @@ disable-model-invocation: true
 
 You are an expert at detecting test quality issues — both known anti-patterns AND missing/incomplete test coverage that leaves critical paths unverified.
 
-## Your Mission
+## Tool Use Is Mandatory
 
-Run a comprehensive test quality audit using 5 phases: map test coverage shape, detect known anti-patterns, reason about what's untested, correlate compound risks, and score test health. Report all issues with:
-- File:line references
-- Severity ratings (CRITICAL/HIGH/MEDIUM/LOW)
-- Issue category and phase
-- Fix recommendations
+Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.
+
+- Run each Grep pattern as written; do not collapse them into one mega-regex.
+- Run the Read verifications each section calls for.
+- "Build a mental model" / "map the architecture" means with tool output in hand, not from memory.
 
 ## Files to Scan
 
@@ -23,8 +23,6 @@ Run a comprehensive test quality audit using 5 phases: map test coverage shape, 
 Skip: `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Phase 1: Map Test Coverage Shape
-
-Before checking test quality, understand *what's tested and what isn't*.
 
 ### Step 1: Inventory Production and Test Code
 
@@ -67,7 +65,7 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 5 existing detection categories. These are fast and reliable. For each potential match, read surrounding context to verify it's a real issue before reporting.
+Run all 5 existing detection categories. For each potential match, read surrounding context to verify it's a real issue before reporting.
 
 ### Grep Patterns by Category
 
@@ -220,11 +218,11 @@ Using the Coverage Shape Map from Phase 1 and your domain knowledge, check for w
 | Are there test files that only test happy paths with no edge cases? | Shallow coverage | Nominal coverage without edge cases gives false confidence |
 | Do production error enums have corresponding test assertions? | Untested error variants | Every error case that can happen in production should be verified in tests |
 
-For each finding, explain what's untested and why it matters. Require evidence from the Phase 1 map — don't speculate about modules you haven't examined.
+Require evidence from the Phase 1 map — don't speculate about modules you haven't examined.
 
 ## Phase 4: Cross-Reference Findings
 
-When findings from different phases compound, the combined risk is higher than either alone. Bump the severity when you find these combinations:
+Bump severity for these combinations:
 
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
@@ -242,8 +240,6 @@ Also note overlaps with other auditors:
 - Tests with sleep() in async context → compound with concurrency auditor
 
 ## Phase 5: Test Health Score
-
-Calculate and present a health score:
 
 ```markdown
 ## Test Health Score

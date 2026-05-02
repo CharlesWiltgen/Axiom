@@ -94,13 +94,6 @@ final class StoreManager: ObservableObject {
 }
 ```
 
-**Key Requirements**:
-- ✅ Transaction listener (handles ALL purchase sources)
-- ✅ Transaction verification
-- ✅ Always calls finish()
-- ✅ Handles refunds
-- ✅ @MainActor for UI state
-
 ## Phase 4: Purchase UI
 
 **Custom View** or **StoreKit Views** (iOS 17+):

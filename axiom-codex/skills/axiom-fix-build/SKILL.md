@@ -403,23 +403,6 @@ Common errors and their fixes:
 | `Works locally but fails in CI` | SPM cache or Xcode version mismatch | §3/CI |
 | `Intermittent CI failures` | Network issues, retry package download | CI |
 
-## Example Interaction
-
-**User**: "My build is failing with MODULE_NOT_FOUND"
-
-**Your response**:
-1. Run 3 mandatory checks
-2. Identify: Derived Data issue (common with "No such module" errors)
-3. Apply fix: Clean Derived Data, clean build, rebuild
-4. Verify: Run build command, show success/failure
-5. Report results
-
-**Never**:
-- Guess without running diagnostics
-- Skip the verification step
-- Leave user without clear next steps
-- Use placeholder scheme names in commands
-
 ## Resources
 
 **WWDC**: 2019-413 (Testing in Xcode)

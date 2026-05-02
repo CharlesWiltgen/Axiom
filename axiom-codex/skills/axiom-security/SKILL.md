@@ -24,6 +24,7 @@ license: MIT
 | Certificate management, provisioning profiles, CI/CD signing | See `skills/code-signing.md` |
 | Certificate not found, profile mismatch, entitlement errors | See `skills/code-signing-diag.md` |
 | Certificate CLI, profile inspection, entitlement extraction | See `skills/code-signing-ref.md` |
+| Apple Pay payment certs / pass type certs / Tap to Pay entitlement | See `axiom-payments` suite |
 
 ## Decision Tree
 

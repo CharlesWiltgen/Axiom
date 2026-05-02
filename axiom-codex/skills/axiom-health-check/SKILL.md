@@ -101,6 +101,8 @@ If the user says "skip X" or "exclude X", remove that auditor from the run list.
 
 ## Phase 2: Launch Auditors in Parallel
 
+Dispatch one Agent call per auditor selected in Phase 1. Do not merge auditors, skip them, or run their scans inline. N selected → N Agent calls in parallel.
+
 Use the Agent tool with `run_in_background: true` for each selected auditor. Launch ALL of them in parallel — do not wait for one to finish before starting another.
 
 Today's date tag for filenames: use ISO format `YYYY-MM-DD`.
@@ -181,13 +183,9 @@ If <=100 total findings:
 
 ## Guidelines
 
-1. Never skip Phase 0 — the audit scope dictates every subsequent phase
-2. Never skip Phase 1 detection — always grep for signals before launching conditional auditors
-3. Launch all auditors in parallel — sequential launching wastes time
-4. Always write the unified report to scratch/ even if there are zero findings
-5. If an auditor fails or times out, note it in the report and continue with others
-6. Deduplicate aggressively — the same file:line appearing in 3 auditors should be one finding with 3 domain tags
-7. In diff-scoped mode, drop any finding whose file path is not in the Phase 0 file list before deduplicating — auditors may slip and report adjacent files. The scope is a hard boundary.
+1. If an auditor fails or times out, note it in the report and continue with others
+2. Deduplicate aggressively — the same file:line appearing in 3 auditors should be one finding with 3 domain tags
+3. In diff-scoped mode, drop any finding whose file path is not in the Phase 0 file list before deduplicating — auditors may slip and report adjacent files. The scope is a hard boundary.
 
 ## Related
 

@@ -12,7 +12,7 @@ Use when:
 - Migrating from deprecated `altool` to `notarytool`
 
 #### Related Skills
-- Use `skills/sandbox.md` for App Sandbox entitlements, file access, container architecture
+- Use `skills/sandbox-and-file-access.md` for App Sandbox entitlements, file access, container architecture
 - Use `axiom-security` for Keychain, encryption, passkeys, certificate management
 - Use `axiom-shipping` for App Store submission, rejections, privacy manifests
 
