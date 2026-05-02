@@ -27,18 +27,14 @@ import (
 // bundle structure and pick a .crash file, while letting downstream callers
 // see both the resolved file and the original bundle path in the JSON.
 
-// XccrashpointBundleSuffix is the directory suffix that identifies an Xcode
-// Organizer crash bundle. Matched case-sensitively because Xcode itself
-// emits the lowercase form.
 const XccrashpointBundleSuffix = ".xccrashpoint"
 
-// xccrashpointResolveOptions controls how a bundle is resolved to a single
-// .crash file inside it. Defaults match the common case: pick the most
-// recently modified Filter directory and prefer the raw (un-symbolicated)
-// .crash so dSYM verification can use the original UUIDs.
 type xccrashpointResolveOptions struct {
 	// FilterMatch is a substring matched against the Filter_* directory name.
-	// Empty selects all filter dirs and falls back to most-recent-mtime.
+	// Substring (not segment-anchored) so a user can pass a partial version
+	// like "1.2" and match "Filter_x-1.2.0-Any"; the trade-off is "1.0" also
+	// matches "11.0.0", so prefer dash-bounded fragments like "0.8.60-Any".
+	// Empty selects all and falls back to most-recent-mtime.
 	FilterMatch string
 
 	// PreferLocallySymbolicated picks Logs/LocallySymbolicated/*.crash when
@@ -48,29 +44,28 @@ type xccrashpointResolveOptions struct {
 	PreferLocallySymbolicated bool
 }
 
-// xccrashpointResolution describes which file inside a bundle we resolved to.
-// BundlePath is the original .xccrashpoint argument; CrashPath is the .crash
-// file the rest of the pipeline should read. Both are absolute when the
-// caller passed an absolute bundle path.
 type xccrashpointResolution struct {
-	BundlePath           string
-	FilterDir            string // absolute path of the chosen Filter_* directory
-	CrashPath            string // absolute path of the .crash file inside Logs/
-	UsedLocallySymbolicated bool   // whether we picked from Logs/LocallySymbolicated/
+	BundlePath string // original .xccrashpoint path (absolute)
+	FilterDir  string // chosen Filter_* directory (absolute)
+	CrashPath  string // chosen .crash file (absolute)
 }
 
 // errNotXccrashpoint signals that the path is a directory but not a bundle
 // xcsym knows how to walk. Callers convert this to the structured
-// "unsupported_format" reject so agents can route on JSON.
+// "empty_bundle" reject so agents can route on JSON.
 var errNotXccrashpoint = errors.New("directory is not a recognized .xccrashpoint bundle")
 
 // IsXccrashpointPath returns true when path looks like an Xcode crash bundle.
-// We deliberately accept any directory whose name ends in .xccrashpoint —
-// even one that's missing its inner Filters/ tree — so the caller can emit
-// a useful "bundle is empty/corrupt" reject instead of a generic
-// "is a directory" error. Walk failures surface at ResolveXccrashpoint time.
+// Suffix matched case-insensitively because APFS/HFS+ are case-insensitive
+// by default — a bundle round-tripped through Finder/zip/iCloud can come
+// back as Foo.XCCrashpoint and would otherwise be silently rejected.
+//
+// Accepts any directory whose name ends in .xccrashpoint — even one missing
+// its inner Filters/ tree — so the caller can emit a useful "bundle is
+// empty/corrupt" reject instead of a generic "is a directory" error. Walk
+// failures surface at ResolveXccrashpoint time.
 func IsXccrashpointPath(path string) bool {
-	if !strings.HasSuffix(path, XccrashpointBundleSuffix) {
+	if !strings.EqualFold(filepath.Ext(path), XccrashpointBundleSuffix) {
 		return false
 	}
 	info, err := os.Stat(path)
@@ -81,8 +76,15 @@ func IsXccrashpointPath(path string) bool {
 }
 
 // ResolveXccrashpoint walks bundlePath/Filters/*/Logs/ and returns the chosen
-// .crash file. Returns errNotXccrashpoint when the bundle is missing the
-// expected structure (no Filters/, no Logs/, no .crash files inside Logs/).
+// .crash file.
+//
+// Error contract:
+//   - errNotXccrashpoint: bundle layout is missing (no Filters/, no Filter_*
+//     dirs, or no .crash files anywhere). Caller should emit a structured
+//     "empty_bundle" reject.
+//   - Other errors: real I/O problems (permission denied, stale NFS handle,
+//     etc.). Caller should surface as a tool error rather than misdirect
+//     the user into "your bundle is corrupt" territory.
 //
 // Selection algorithm:
 //
@@ -90,13 +92,12 @@ func IsXccrashpointPath(path string) bool {
 //     whose directory name contains the substring.
 //  2. Sort surviving Filter dirs by modification time, newest first.
 //  3. Walk each candidate's Logs/ in order. The first one with a usable
-//     .crash file wins. (A bundle with multiple Filter dirs but only the
-//     oldest has a .crash is unusual but not impossible — we don't want to
-//     reject in that case.)
+//     .crash file wins — a bundle whose newest Filter has no .crash but an
+//     older one does is unusual but real (e.g. partial Xcode export).
 //  4. PreferLocallySymbolicated picks Logs/LocallySymbolicated/*.crash;
-//     otherwise we look at Logs/*.crash directly. If the preferred copy
-//     is missing, fall through to the other one rather than fail — the
-//     user gave us a valid bundle and we should return *something*.
+//     otherwise Logs/*.crash directly. If the preferred copy is missing,
+//     fall through to the other one rather than fail — the user gave us a
+//     valid bundle and we should return *something*.
 func ResolveXccrashpoint(bundlePath string, opts xccrashpointResolveOptions) (xccrashpointResolution, error) {
 	abs, err := filepath.Abs(bundlePath)
 	if err != nil {
@@ -106,8 +107,10 @@ func ResolveXccrashpoint(bundlePath string, opts xccrashpointResolveOptions) (xc
 	filtersDir := filepath.Join(abs, "Filters")
 	entries, err := os.ReadDir(filtersDir)
 	if err != nil {
-		// Missing/unreadable Filters/ dir — caller wants a structured reject.
-		return xccrashpointResolution{}, errNotXccrashpoint
+		if os.IsNotExist(err) {
+			return xccrashpointResolution{}, errNotXccrashpoint
+		}
+		return xccrashpointResolution{}, fmt.Errorf("read %s: %w", filtersDir, err)
 	}
 
 	type filterCandidate struct {
@@ -128,7 +131,7 @@ func ResolveXccrashpoint(bundlePath string, opts xccrashpointResolveOptions) (xc
 		}
 		info, statErr := e.Info()
 		if statErr != nil {
-			continue
+			return xccrashpointResolution{}, fmt.Errorf("stat %s: %w", filepath.Join(filtersDir, name), statErr)
 		}
 		candidates = append(candidates, filterCandidate{
 			path:    filepath.Join(filtersDir, name),
@@ -143,7 +146,10 @@ func ResolveXccrashpoint(bundlePath string, opts xccrashpointResolveOptions) (xc
 	})
 
 	for _, c := range candidates {
-		resolution, found := pickCrashInFilter(c.path, opts.PreferLocallySymbolicated)
+		resolution, found, pickErr := pickCrashInFilter(c.path, opts.PreferLocallySymbolicated)
+		if pickErr != nil {
+			return xccrashpointResolution{}, pickErr
+		}
 		if found {
 			resolution.BundlePath = abs
 			return resolution, nil
@@ -152,53 +158,57 @@ func ResolveXccrashpoint(bundlePath string, opts xccrashpointResolveOptions) (xc
 	return xccrashpointResolution{}, errNotXccrashpoint
 }
 
-// pickCrashInFilter inspects a single Filter_*/Logs directory and chooses
-// one .crash file. Returns (_, false) when neither the preferred nor the
-// fallback copy exists. Selection within a directory is deterministic
-// (alphabetical) so repeat runs return the same file — Xcode bundles
-// sometimes contain multiple .crash files for the same incident, and the
-// user shouldn't see different output run-to-run.
-func pickCrashInFilter(filterDir string, preferLocallySymbolicated bool) (xccrashpointResolution, bool) {
+// pickCrashInFilter chooses one .crash within a Filter dir. Selection within
+// a directory is deterministic (alphabetical) so repeat runs return the
+// same file — Xcode bundles sometimes contain multiple .crash files for the
+// same incident, and the user shouldn't see different output run-to-run.
+//
+// (xccrashpointResolution, true, nil) — picked successfully.
+// (zero, false, nil)                  — no usable .crash in this Filter; try next.
+// (zero, false, err)                  — real I/O error; abort the resolve.
+func pickCrashInFilter(filterDir string, preferLocallySymbolicated bool) (xccrashpointResolution, bool, error) {
 	logsDir := filepath.Join(filterDir, "Logs")
 	if _, err := os.Stat(logsDir); err != nil {
-		return xccrashpointResolution{}, false
+		if os.IsNotExist(err) {
+			return xccrashpointResolution{}, false, nil
+		}
+		return xccrashpointResolution{}, false, fmt.Errorf("stat %s: %w", logsDir, err)
 	}
 
-	rawCrashes, _ := listCrashFiles(logsDir)
-	locallySymbolicated, _ := listCrashFiles(filepath.Join(logsDir, "LocallySymbolicated"))
+	rawCrashes, err := listCrashFiles(logsDir)
+	if err != nil {
+		return xccrashpointResolution{}, false, err
+	}
+	locallySymbolicated, err := listCrashFiles(filepath.Join(logsDir, "LocallySymbolicated"))
+	if err != nil {
+		return xccrashpointResolution{}, false, err
+	}
 
 	primary, fallback := rawCrashes, locallySymbolicated
-	usedLocally := false
 	if preferLocallySymbolicated {
 		primary, fallback = locallySymbolicated, rawCrashes
-		usedLocally = true
 	}
 
 	if len(primary) > 0 {
-		return xccrashpointResolution{
-			FilterDir:               filterDir,
-			CrashPath:               primary[0],
-			UsedLocallySymbolicated: usedLocally,
-		}, true
+		return xccrashpointResolution{FilterDir: filterDir, CrashPath: primary[0]}, true, nil
 	}
 	if len(fallback) > 0 {
-		return xccrashpointResolution{
-			FilterDir:               filterDir,
-			CrashPath:               fallback[0],
-			UsedLocallySymbolicated: !usedLocally,
-		}, true
+		return xccrashpointResolution{FilterDir: filterDir, CrashPath: fallback[0]}, true, nil
 	}
-	return xccrashpointResolution{}, false
+	return xccrashpointResolution{}, false, nil
 }
 
 // listCrashFiles returns absolute paths of *.crash files directly inside dir,
-// sorted alphabetically. Subdirectories are not recursed (we look at
-// LocallySymbolicated/ explicitly elsewhere). Returns (nil, nil) when dir
-// doesn't exist — a missing directory isn't an error, just an empty result.
+// sorted alphabetically. Returns (nil, nil) when dir doesn't exist — a
+// missing LocallySymbolicated/ subdirectory isn't an error, just an empty
+// result. Real I/O errors (permission denied, etc.) propagate.
 func listCrashFiles(dir string) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return nil, nil
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("read %s: %w", dir, err)
 	}
 	var paths []string
 	for _, e := range entries {

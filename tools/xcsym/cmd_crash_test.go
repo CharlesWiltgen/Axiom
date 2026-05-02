@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -373,8 +374,8 @@ func TestRunCrash_Xccrashpoint_EmptyBundleRejected(t *testing.T) {
 	if err := json.Unmarshal(buf.Bytes(), &reject); err != nil {
 		t.Fatalf("json: %v\n%s", err, buf.String())
 	}
-	if reject.Error != "unsupported_format" {
-		t.Errorf("error = %q, want unsupported_format", reject.Error)
+	if reject.Error != "empty_bundle" {
+		t.Errorf("error = %q, want empty_bundle", reject.Error)
 	}
 	if reject.Input != bundle {
 		t.Errorf("input = %q, want %q (the bundle path the user passed)", reject.Input, bundle)
@@ -389,34 +390,31 @@ func TestRunCrash_FlagsAfterPositional_HelpfulError(t *testing.T) {
 	// flag.Parse stops at the first positional, so the trailing flags
 	// become extra positionals. The error message should tell the user
 	// how to rephrase, not just "exactly one crash file required".
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("os.Pipe: %v", err)
+	}
 	old := os.Stderr
-	r, w, _ := os.Pipe()
 	os.Stderr = w
+	// Restore even if runCrash panics; otherwise every later test in the
+	// package writes to a closed pipe.
+	t.Cleanup(func() { os.Stderr = old })
+
 	var buf bytes.Buffer
 	code := runCrash(&buf, []string{"file.crash", "--no-symbolicate", "--no-cache"})
-	w.Close()
-	os.Stderr = old
-	stderrBytes, _ := readAll(r)
+	if err := w.Close(); err != nil {
+		t.Fatalf("close pipe: %v", err)
+	}
+	stderrBytes, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatalf("read pipe: %v", err)
+	}
 
 	if code != 1 {
 		t.Errorf("code = %d, want 1", code)
 	}
 	if !strings.Contains(string(stderrBytes), "place all --flags before the file path") {
 		t.Errorf("stderr should suggest flag reordering, got: %q", string(stderrBytes))
-	}
-}
-
-func readAll(r interface{ Read(p []byte) (int, error) }) ([]byte, error) {
-	var out []byte
-	buf := make([]byte, 4096)
-	for {
-		n, err := r.Read(buf)
-		if n > 0 {
-			out = append(out, buf[:n]...)
-		}
-		if err != nil {
-			return out, nil
-		}
 	}
 }
 

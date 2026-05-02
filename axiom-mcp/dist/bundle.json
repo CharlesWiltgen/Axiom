@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-02T16:35:40.247Z",
+  "generatedAt": "2026-05-02T16:46:18.679Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -30736,7 +30736,7 @@
     "axiom-tools--xcsym-ref": {
       "name": "axiom-tools--xcsym-ref",
       "description": "xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's legacy `.crash` text reports, and Xcode Organizer `.xccrashpoint` bundles end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.",
-      "content": "---\nname: xcsym-ref\ndescription: Use when symbolicating an .ips, MetricKit, legacy .crash text file, or .xccrashpoint bundle, diagnosing dSYM UUID mismatches, inventorying dSYMs, or anonymizing a crash for fixture use. Reference for the xcsym CLI that ships with Axiom.\nlicense: MIT\n---\n\n# xcsym Reference (iOS/macOS Crash Symbolication)\n\nxcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's legacy `.crash` text reports, and Xcode Organizer `.xccrashpoint` bundles end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.\n\n`.crash` text is the format Xcode Organizer exposes when a user chooses \"Show in Finder\" on a TestFlight crash. `.xccrashpoint` bundles nest `.crash` files under `Filters/Filter_<id>/Logs/` (with optional `LocallySymbolicated/` siblings). Point xcsym at either the bundle path or the inner `.crash` directly — bundle inputs are walked automatically (most-recent Filter dir, raw not LocallySymbolicated by default).\n\n## Invocation\n\n`xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xcsym <subcommand>` — no prefix, no path lookup.\n\n## When to Use\n\n- **Triaging a new `.ips`** — full pipeline in one call, structured JSON out\n- **TestFlight crashes** — paired with `xcsym verify` to diagnose UUID mismatches\n- **MetricKit crashes** — write `MXCrashDiagnostic.jsonRepresentation()` to disk and run `crash`\n- **Explaining why a crash is unsymbolicated** — `verify` tells you per-image UUID/arch mismatch\n- **Inventorying local dSYMs** — `list-dsyms` enumerates archives + DerivedData\n- **Scrubbing a user's crash for a fixture** — `anonymize` preserves dSYM UUIDs (correlation keys) while scrubbing PII\n\n**Do not use for hangs.** `xcsym crash` rejects `.ips` files with `bug_type=298` (hangs have a different workflow; see `axiom-performance` skills).\n\n## Critical Best Practices\n\n**Start with `crash`.** It runs the full pipeline (parse → discover dSYMs → symbolicate → categorize → emit JSON). Only reach for `resolve`, `find-dsym`, or `verify` when `crash` surfaces a specific problem.\n\n**Read `pattern_tag` first.** It's the most compact signal about what kind of crash you're looking at. Map it to the agent's fix-guidance table before reading frames.\n\n**Trust exit codes.** Non-zero codes say *why* symbolication was incomplete — don't assume a crashed call means the tool failed.\n\n**Anonymize before committing a fixture.** The `anonymize` subcommand is format-aware (handles `.ips` v1/v2, MetricKit, and legacy `.crash` text) and intentionally preserves dSYM UUIDs so anonymized fixtures still symbolicate against your dSYMs.\n\n## Subcommands\n\n### crash — Full Pipeline\n\n```bash\nxcsym crash --format=summary <file>             # small tier (~2KB target, warns past 4KB)\nxcsym crash --format=standard <file>            # default (~12KB target, warns past 50KB)\nxcsym crash --format=full <file>                # all threads (warns past 100KB)\nxcsym crash --from-metrickit <file>             # force MetricKit (skip auto-detect)\nxcsym crash --dsym <path> <file>                # explicit dSYM for the main app\nxcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots\nxcsym crash --no-symbolicate <file>             # skip atos; keep raw frames\nxcsym crash --no-cache <file>                   # bypass UUID cache\nxcsym crash --no-spotlight <file>               # skip mdfind lookups\nxcsym crash --output <path> <file>              # write JSON to a file\nxcsym crash - < crash.ips                       # read from stdin (for pasted content)\nxcsym crash crash.crash                         # legacy Apple text format (Organizer export)\nxcsym crash Foo.xccrashpoint                    # Xcode Organizer bundle (auto-walks to inner .crash)\nxcsym crash --filter 1.2.3 Foo.xccrashpoint     # bundle with multiple Filter_* dirs: pick the one whose name contains \"1.2.3\"\nxcsym crash --prefer-locally-symbolicated Foo.xccrashpoint  # use Logs/LocallySymbolicated/*.crash instead of raw\n```\n\nAccepted inputs: `.ips` (v1 and v2 JSON), MetricKit `MXCrashDiagnostic` JSON, Apple's legacy `.crash` text format, and `.xccrashpoint` directory bundles. The file extension doesn't matter for non-bundle inputs — format is auto-detected from content. For `.xccrashpoint` bundles, xcsym walks `Filters/Filter_*/Logs/` and picks one `.crash` file: most-recent Filter dir (override with `--filter <substring>`), raw copy preferred over `LocallySymbolicated/` (override with `--prefer-locally-symbolicated` to keep Xcode's atos output instead of re-symbolicating). The original bundle path is surfaced in `input.bundle` so consumers can tell where the resolved `.crash` came from.\n\n**Unsupported input returns exit 2** with a structured JSON reject on stdout (`{\"error\":\"unsupported_format\", …}`) so agents can route on the error field instead of scraping stderr. See the Exit Codes section below.\n\n**Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.\n\n### verify — dSYM Match Diagnostics\n\n```bash\nxcsym verify <file>\nxcsym verify <file> --dsym <path>\nxcsym verify <file> --dsym-paths <a>:<b>\nxcsym verify <file> --no-cache\nxcsym verify <file> --no-spotlight\n```\n\nReports which images are matched, mismatched (UUID or arch), and missing. Use when `crash` exits non-zero to pinpoint *which* dSYM is wrong.\n\n### resolve — Single-Address Resolution\n\n```bash\nxcsym resolve --dsym <path> --load-addr <hex> <addr>...\nxcsym resolve --dsym /bin/ls --load-addr 0x100000000 0x10000aabb 0x10000bbcc\nxcsym resolve --dsym <path> --load-addr <hex> --arch arm64 <addr>...\n```\n\nHands raw addresses to `atos` against a specific dSYM. Useful for one-off address resolution outside a crash context.\n\n### find-dsym — Locate dSYM by UUID\n\n```bash\nxcsym find-dsym <uuid>\nxcsym find-dsym <uuid> --arch arm64\nxcsym find-dsym <uuid> --dsym-paths <a>:<b>\nxcsym find-dsym <uuid> --no-cache\nxcsym find-dsym <uuid> --no-spotlight\n```\n\nWalks the discovery chain: cache → explicit paths → Archives → DerivedData → `~/Downloads` → Xcode toolchain → system frameworks → Spotlight.\n\n### list-dsyms — Inventory\n\n```bash\nxcsym list-dsyms\nxcsym list-dsyms --source=archives      # only Archives\nxcsym list-dsyms --source=deriveddata   # only DerivedData\nxcsym list-dsyms --source=downloads\nxcsym list-dsyms --source=toolchain\nxcsym list-dsyms --source=frameworks\nxcsym list-dsyms --source=env\nxcsym list-dsyms --source=all           # default\nxcsym list-dsyms --dsym-paths <a>:<b>\n```\n\n### anonymize — Scrub PII for Fixtures\n\n```bash\nxcsym anonymize <file>                   # anonymized content to stdout (.ips, MetricKit, or .crash)\nxcsym anonymize --output <path> <file>   # write to file\nxcsym anonymize - < crash.ips            # read from stdin\n```\n\n**Scrubs:**\n- Bundle IDs across every spelling (`bundle_id`, `bundleID`, `bundleIdentifier`, `CFBundleIdentifier`, `codeSigningID`, `coalitionName`)\n- Process and app names (`procName`, `app_name`)\n- User paths (`/Users/<name>/` → `/Users/REDACTED/`)\n- `.app` names (word-boundary regex, so `com.apple.*` identifiers aren't mangled) and `.framework` names (anchored to end-of-string or `/`, so `com.framework.*` reverse-DNS segments aren't mangled)\n- IPv4 and IPv6 addresses\n- Device names and account IDs (`crashReporterKey`, `sessionID`, `incident_id`, `incident`, `deviceIdentifier`, `deviceUDID`, `userID`)\n- Binary names inside `usedImages[].name` and MetricKit `binaryName`\n- Foreign UUIDs in freeform strings (incident IDs, paths)\n- `.crash` header keys that always carry PII: `Process`, `Identifier`, `Parent Process`, `Coalition`, `Terminating Process`, `Hardware Model`, `AppVariant` — rewritten to deterministic placeholders while preserving column padding so a human can sanity-check the result\n\n**Preserves:**\n- dSYM UUIDs — `slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID` — so anonymized output still symbolicates against matching dSYMs\n- Thread names (`threads[].name`, e.g. `com.apple.main-thread`) — Apple infrastructure labels, not PII; keeping them preserves debug context\n- Library identifiers inside nested library structures (same rationale as thread names)\n- Structural fields categorize and symbolicate rules depend on (exception type, codes, subtype, thread state, frame offsets)\n\n## Output Schema\n\nTop-level JSON emitted by `crash`:\n\n```json\n{\n  \"tool\": \"xcsym\",\n  \"version\": \"0.1.0-dev\",\n  \"format\": \"standard\",\n  \"environment\": {\n    \"atos_version\": \"...\",\n    \"clt_version\": \"...\",\n    \"xcode_path\": \"/Applications/Xcode.app\"\n  },\n  \"input\": {\n    \"path\": \"testdata/crashes/ips_v2/swift_forced_unwrap.ips\",\n    \"format\": \"ips_json_v2\",  // one of: ips_json_v1 | ips_json_v2 | metrickit_json | apple_crash_text\n    \"bundle\": \"/path/to/Foo.xccrashpoint\"  // omitted unless input was a .xccrashpoint bundle\n  },\n  \"crash\": {\n    \"app\": { \"name\": \"...\", \"version\": \"...\", \"bundle_id\": \"...\" },\n    \"os\": { \"platform\": \"iOS\", \"version\": \"17.5\", \"is_simulator\": false },\n    \"arch\": \"arm64\",\n    \"exception\": { \"type\": \"EXC_BREAKPOINT\", \"codes\": \"0x1\", \"subtype\": \"...\", \"signal\": \"SIGTRAP\" },\n    \"termination\": { \"namespace\": \"SIGNAL\", \"code\": \"0x5\" },\n    \"pattern_tag\": \"swift_forced_unwrap\",\n    \"pattern_confidence\": \"high\",\n    \"pattern_rule_id\": \"R-swift-unwrap-01\",\n    \"pattern_reason\": \"exception.subtype matched '...unexpectedly found nil...'\",\n    \"crashed_thread\": { \"index\": 0, \"triggered\": true, \"frames\": [...] },\n    \"other_threads_top_frames\": [...],\n    \"all_threads\": [...]\n  },\n  \"images\": { \"matched\": [...], \"mismatched\": [...], \"missing\": [...] },\n  \"images_summary\": { \"matched_count\": 1, \"mismatched_count\": 0, \"missing_count\": 0 },\n  \"warnings\": [],\n  \"size_warning\": \"report size 54321 bytes exceeds 51200 bytes; consider --format=summary for triage\"\n}\n```\n\n### Tiers\n\n| Tier | Design target | Warns past | Contains |\n|---|---|---|---|\n| `summary` | ~2 KB | 4 KB | App, OS, exception, pattern_tag, crashed-thread top 3 frames, `images_summary` |\n| `standard` | ~12 KB | 50 KB | + full crashed thread, other threads' top frames, `images` |\n| `full` | n/a | 100 KB | + `all_threads` (every thread, every frame) |\n\nDesign targets are aspirational — small/typical crashes hit them. Real production crashes from framework-heavy apps regularly exceed them without indicating anything pathological (the `images` array dominates standard size: ~150–300 bytes per image × 45–150 images is typical). The warn threshold is what xcsym actually flags via `size_warning` in output.\n\n## Exit Codes\n\nExit codes are subcommand-specific. Usage errors, tool errors, timeouts, and output errors are shared across all subcommands. Symbolication-specific codes (2/3/4/7) vary in meaning between `crash` and `verify`.\n\n**Shared across all subcommands:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Success |\n| 1 | Usage error (bad flags, missing required args) |\n| 5 | Tool/discovery error (dwarfdump/atos failed, Spotlight failed, etc.) |\n| 6 | Command timeout |\n| 8 | Output write error (e.g., `--output` path unwritable) |\n\n**`crash` — main-image-centric:**\n\n| Code | Meaning | First thing to do |\n|---|---|---|\n| 0 | All images matched | — |\n| 2 | Input not found / unreadable / unsupported format OR main app dSYM missing | Check path exists; otherwise download the dSYM for the main UUID |\n| 3 | Main app UUID mismatch | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| 4 | Main app arch mismatch | User is on a different slice (arm64e vs arm64); use `find-dsym --arch` |\n| 7 | Main matched, some other images missing/mismatched | Partial success — frames in the main binary symbolicate, others won't |\n\n**`verify` — per-image-centric (note the 7 vs crash difference):**\n\n| Code | Meaning |\n|---|---|\n| 2 | Input not found / unreadable / unsupported format |\n| 3 | Any image has a UUID mismatch with an explicitly-overridden dSYM |\n| 4 | Any image has an arch-slice mismatch with its dSYM |\n| 7 | Any missing images (with or without matches — NOT \"main matched + others missing\") |\n\n**`find-dsym` — lookup-centric:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Match — dSYM located |\n| 2 | Miss — nothing found across every discovery source |\n\n**`list-dsyms`, `resolve`, `anonymize`:** success/failure only (0/1/5/6/8); no symbolication-specific codes.\n\nOn hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{\"tool\":\"xcsym\",\"error\":\"hang_report\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}`. Route the user to hang-diagnostics when you see `\"error\":\"hang_report\"`.\n\nOn unsupported input (anything that isn't `.ips`, MetricKit, Apple `.crash` text, or a `.xccrashpoint` bundle xcsym can walk), `crash` exits 2 after writing `{\"tool\":\"xcsym\",\"error\":\"unsupported_format\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}` to stdout. The routing field names the accepted formats. A `.xccrashpoint` directory that exists but doesn't contain `Filters/Filter_*/Logs/*.crash` is treated as unsupported with a routing hint suggesting the user point xcsym at a specific `.crash` inside the bundle.\n\n## Pattern Tag Catalog\n\nEvery `pattern_tag` xcsym can emit, with the rule that fires it:\n\n| pattern_tag | Rule ID | Confidence | Signal |\n|---|---|---|---|\n| `swift_forced_unwrap` | R-swift-unwrap-01 | high | Subtype contains \"unexpectedly found nil...\" |\n| `swift_concurrency_violation` | R-swift-conc-01 | high | `_swift_task_isCurrentExecutor` in subtype |\n| `swift_fatal_error` | R-swift-fatal-01 | high | Swift runtime failure + `swift_preconditionFailure` or `fatalError` sentinel frame |\n| `zombie_or_heap_corruption` | R-zombie-01 | heuristic | `_NSZombie_*` frame or poison-pattern address |\n| `stack_overflow` | R-stack-overflow-01 | heuristic | `KERN_PROTECTION_FAILURE` with fault within 1 page of SP |\n| `bad_memory_access` | R-bad-access-01 | high | `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS` |\n| `illegal_instruction` | R-illegal-inst-01 | high | `EXC_BAD_INSTRUCTION` |\n| `exc_guard` | R-exc-guard-01 | high | `EXC_GUARD` |\n| `objc_exception` | R-objc-exc-01 | high | `EXC_CRASH`/SIGABRT with `objc_exception_throw` frame |\n| `main_thread_checker_violation` | R-mtc-01 | high | `main_thread_checker.dylib` in crashed frames |\n| `abort` | R-abort-01 | high | SIGABRT with `abort`/`__abort_with_payload` frame |\n| `watchdog_termination` | R-watchdog-01 | high | Termination namespace=FRONTBOARD, code=0x8BADF00D |\n| `user_force_quit` | R-user-quit-01 | high | FRONTBOARD + 0xDEADFA11 |\n| `background_task_expired` | R-bg-expired-01 | high | FRONTBOARD + 0xBAADCA11 |\n| `data_protection_violation` | R-data-prot-01 | high | RUNNINGBOARD + 0xdead10cc |\n| `code_signing_killed` | R-code-sign-01 | high | CODESIGNING + 0xc51bad0[0-f] |\n| `jetsam_oom` | R-jetsam-01 | high | `EXC_RESOURCE` with `MEMORY` subtype OR `termination.reason` contains `per-process-limit` / `vm-pageshortage` |\n| `cpu_resource_fatal` | R-cpu-fatal-01 | high | `EXC_RESOURCE` CPU/WAKEUPS FATAL (excludes NON-FATAL) |\n| `swiftui_update_loop` | R-swiftui-loop-01 | low | ≥100 consecutive `AG::Graph::update_*` frames from the top |\n| `unclassified` | — | low | No rule matched — raw fields are in `pattern_reason` |\n\n## dSYM Discovery Order\n\nSource: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact order:\n\n1. **ExplicitByUUID** — per-image overrides the `crash` subcommand builds when the header lists a main-image UUID (before any other source, including cache)\n2. **Explicit paths** — `--dsym` direct override and `--dsym-paths` extra roots\n3. **UUID cache** — `~/Library/Caches/xcsym/uuid-index.json` (skip with `--no-cache`)\n4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)\n5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)\n6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`\n7. **Frameworks (cwd scan)** — walks the current working directory plus caller-supplied roots for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as \"no match\" and the chain continues.\n8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)\n9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)\n10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)\n\n`find-dsym` follows the same chain minus step 1 (no per-UUID explicit map). `list-dsyms --source=<name>` restricts scanning to a single root by name.\n\n## Troubleshooting\n\n| Symptom | Likely cause | Fix |\n|---|---|---|\n| Exit 2, \"main dSYM missing\" | No archive for that UUID on this machine | Download the archive from App Store Connect; or set `XCSYM_DSYM_PATHS` to its location |\n| Exit 3, main UUID mismatch | Crash came from a different build than the archive on disk | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| Exit 4, main arch mismatch | arm64 vs arm64e slice mismatch | Pass `--arch` to `find-dsym`; verify the archive contains the slice |\n| Exit 7, \"main matched, others missing\" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |\n| Exit 2 with `unsupported_format` on `.xccrashpoint` | Bundle has no `Filters/Filter_*/Logs/*.crash` (corrupt or stripped) | Pull a fresh export from Xcode Organizer; or point xcsym at a specific `.crash` inside the bundle |\n| `.xccrashpoint` with multiple builds returns the wrong one | Default picks most-recent-mtime Filter dir | Use `--filter <substring>` to select a specific build by version/platform |\n| `pattern_tag=\"unclassified\"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |\n| `size_warning` in output | Tier exceeded its warn threshold (4 KB summary / 50 KB standard / 100 KB full) | Switch to the next smaller tier — the warning text names it |\n| `{\"error\":\"hang_report\"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |\n\n## Resources\n\n**Skills**: axiom-tools (skills/xclog-ref.md), axiom-build (skills/lldb.md, skills/lldb-ref.md, skills/xcode-debugging.md), axiom-performance (skills/memory-debugging.md, skills/metrickit-ref.md, skills/hang-diagnostics.md), axiom-shipping (skills/testflight-triage.md, skills/app-store-diag.md, skills/app-store-submission.md)\n\n**Agents**: crash-analyzer (interprets xcsym JSON with pattern_tag → fix guidance), simulator-tester (auto-runs xcsym on crashes during test runs), test-failure-analyzer + test-debugger (symbolicate test-generated `.ips` artifacts), memory-auditor (correlates jetsam/heap-corruption tags with leak patterns), concurrency-auditor (correlates `swift_concurrency_violation` with @MainActor gaps), energy-auditor (correlates CPU/watchdog/background terminations with energy anti-patterns)\n\n**Commands**: `/axiom:analyze-crash`\n",
+      "content": "---\nname: xcsym-ref\ndescription: Use when symbolicating an .ips, MetricKit, legacy .crash text file, or .xccrashpoint bundle, diagnosing dSYM UUID mismatches, inventorying dSYMs, or anonymizing a crash for fixture use. Reference for the xcsym CLI that ships with Axiom.\nlicense: MIT\n---\n\n# xcsym Reference (iOS/macOS Crash Symbolication)\n\nxcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's legacy `.crash` text reports, and Xcode Organizer `.xccrashpoint` bundles end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.\n\n`.crash` text is the format Xcode Organizer exposes when a user chooses \"Show in Finder\" on a TestFlight crash. `.xccrashpoint` bundles nest `.crash` files under `Filters/Filter_<id>/Logs/` (with optional `LocallySymbolicated/` siblings). Point xcsym at either the bundle path or the inner `.crash` directly — bundle inputs are walked automatically: the Filter dir with the most recent modification time wins, and the raw `.crash` is preferred over `LocallySymbolicated/`.\n\n## Invocation\n\n`xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xcsym <subcommand>` — no prefix, no path lookup.\n\n## When to Use\n\n- **Triaging a new `.ips`** — full pipeline in one call, structured JSON out\n- **TestFlight crashes** — paired with `xcsym verify` to diagnose UUID mismatches\n- **MetricKit crashes** — write `MXCrashDiagnostic.jsonRepresentation()` to disk and run `crash`\n- **Explaining why a crash is unsymbolicated** — `verify` tells you per-image UUID/arch mismatch\n- **Inventorying local dSYMs** — `list-dsyms` enumerates archives + DerivedData\n- **Scrubbing a user's crash for a fixture** — `anonymize` preserves dSYM UUIDs (correlation keys) while scrubbing PII\n\n**Do not use for hangs.** `xcsym crash` rejects `.ips` files with `bug_type=298` (hangs have a different workflow; see `axiom-performance` skills).\n\n## Critical Best Practices\n\n**Start with `crash`.** It runs the full pipeline (parse → discover dSYMs → symbolicate → categorize → emit JSON). Only reach for `resolve`, `find-dsym`, or `verify` when `crash` surfaces a specific problem.\n\n**Read `pattern_tag` first.** It's the most compact signal about what kind of crash you're looking at. Map it to the agent's fix-guidance table before reading frames.\n\n**Trust exit codes.** Non-zero codes say *why* symbolication was incomplete — don't assume a crashed call means the tool failed.\n\n**Anonymize before committing a fixture.** The `anonymize` subcommand is format-aware (handles `.ips` v1/v2, MetricKit, and legacy `.crash` text) and intentionally preserves dSYM UUIDs so anonymized fixtures still symbolicate against your dSYMs.\n\n## Subcommands\n\n### crash — Full Pipeline\n\n```bash\nxcsym crash --format=summary <file>             # small tier (~2KB target, warns past 4KB)\nxcsym crash --format=standard <file>            # default (~12KB target, warns past 50KB)\nxcsym crash --format=full <file>                # all threads (warns past 100KB)\nxcsym crash --from-metrickit <file>             # force MetricKit (skip auto-detect)\nxcsym crash --dsym <path> <file>                # explicit dSYM for the main app\nxcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots\nxcsym crash --no-symbolicate <file>             # skip atos; keep raw frames\nxcsym crash --no-cache <file>                   # bypass UUID cache\nxcsym crash --no-spotlight <file>               # skip mdfind lookups\nxcsym crash --output <path> <file>              # write JSON to a file\nxcsym crash - < crash.ips                       # read from stdin (for pasted content)\nxcsym crash crash.crash                         # legacy Apple text format (Organizer export)\nxcsym crash Foo.xccrashpoint                    # Xcode Organizer bundle (auto-walks to inner .crash)\nxcsym crash --filter 0.8.60-Any Foo.xccrashpoint  # bundle with multiple Filter_* dirs: pick the one whose name contains this substring (use a dash-bounded fragment to avoid matching \"1.0\" against \"11.0.0\")\nxcsym crash --prefer-locally-symbolicated Foo.xccrashpoint  # use Logs/LocallySymbolicated/*.crash instead of raw\n```\n\nAccepted inputs: `.ips` (v1 and v2 JSON), MetricKit `MXCrashDiagnostic` JSON, Apple's legacy `.crash` text format, and `.xccrashpoint` directory bundles. The file extension doesn't matter for non-bundle inputs — format is auto-detected from content. The `.xccrashpoint` suffix is matched case-insensitively (APFS/HFS+ are case-insensitive by default). For `.xccrashpoint` bundles, xcsym walks `Filters/Filter_*/Logs/` and picks one `.crash` file: the Filter dir with the most recent modification time (override with `--filter <substring>` — substring, not segment-anchored, so prefer dash-bounded fragments like `0.8.60-Any`), raw copy preferred over `LocallySymbolicated/` (override with `--prefer-locally-symbolicated` to keep Xcode's atos output instead of re-symbolicating). The original bundle path is surfaced in `input.bundle` so consumers can tell where the resolved `.crash` came from.\n\n**Unsupported input returns exit 2** with a structured JSON reject on stdout (`{\"error\":\"unsupported_format\", …}`) so agents can route on the error field instead of scraping stderr. See the Exit Codes section below.\n\n**Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.\n\n### verify — dSYM Match Diagnostics\n\n```bash\nxcsym verify <file>\nxcsym verify <file> --dsym <path>\nxcsym verify <file> --dsym-paths <a>:<b>\nxcsym verify <file> --no-cache\nxcsym verify <file> --no-spotlight\n```\n\nReports which images are matched, mismatched (UUID or arch), and missing. Use when `crash` exits non-zero to pinpoint *which* dSYM is wrong.\n\n### resolve — Single-Address Resolution\n\n```bash\nxcsym resolve --dsym <path> --load-addr <hex> <addr>...\nxcsym resolve --dsym /bin/ls --load-addr 0x100000000 0x10000aabb 0x10000bbcc\nxcsym resolve --dsym <path> --load-addr <hex> --arch arm64 <addr>...\n```\n\nHands raw addresses to `atos` against a specific dSYM. Useful for one-off address resolution outside a crash context.\n\n### find-dsym — Locate dSYM by UUID\n\n```bash\nxcsym find-dsym <uuid>\nxcsym find-dsym <uuid> --arch arm64\nxcsym find-dsym <uuid> --dsym-paths <a>:<b>\nxcsym find-dsym <uuid> --no-cache\nxcsym find-dsym <uuid> --no-spotlight\n```\n\nWalks the discovery chain: cache → explicit paths → Archives → DerivedData → `~/Downloads` → Xcode toolchain → system frameworks → Spotlight.\n\n### list-dsyms — Inventory\n\n```bash\nxcsym list-dsyms\nxcsym list-dsyms --source=archives      # only Archives\nxcsym list-dsyms --source=deriveddata   # only DerivedData\nxcsym list-dsyms --source=downloads\nxcsym list-dsyms --source=toolchain\nxcsym list-dsyms --source=frameworks\nxcsym list-dsyms --source=env\nxcsym list-dsyms --source=all           # default\nxcsym list-dsyms --dsym-paths <a>:<b>\n```\n\n### anonymize — Scrub PII for Fixtures\n\n```bash\nxcsym anonymize <file>                   # anonymized content to stdout (.ips, MetricKit, or .crash)\nxcsym anonymize --output <path> <file>   # write to file\nxcsym anonymize - < crash.ips            # read from stdin\n```\n\n**Scrubs:**\n- Bundle IDs across every spelling (`bundle_id`, `bundleID`, `bundleIdentifier`, `CFBundleIdentifier`, `codeSigningID`, `coalitionName`)\n- Process and app names (`procName`, `app_name`)\n- User paths (`/Users/<name>/` → `/Users/REDACTED/`)\n- `.app` names (word-boundary regex, so `com.apple.*` identifiers aren't mangled) and `.framework` names (anchored to end-of-string or `/`, so `com.framework.*` reverse-DNS segments aren't mangled)\n- IPv4 and IPv6 addresses\n- Device names and account IDs (`crashReporterKey`, `sessionID`, `incident_id`, `incident`, `deviceIdentifier`, `deviceUDID`, `userID`)\n- Binary names inside `usedImages[].name` and MetricKit `binaryName`\n- Foreign UUIDs in freeform strings (incident IDs, paths)\n- `.crash` header keys that always carry PII: `Process`, `Identifier`, `Parent Process`, `Coalition`, `Terminating Process`, `Hardware Model`, `AppVariant` — rewritten to deterministic placeholders while preserving column padding so a human can sanity-check the result\n\n**Preserves:**\n- dSYM UUIDs — `slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID` — so anonymized output still symbolicates against matching dSYMs\n- Thread names (`threads[].name`, e.g. `com.apple.main-thread`) — Apple infrastructure labels, not PII; keeping them preserves debug context\n- Library identifiers inside nested library structures (same rationale as thread names)\n- Structural fields categorize and symbolicate rules depend on (exception type, codes, subtype, thread state, frame offsets)\n\n## Output Schema\n\nTop-level JSON emitted by `crash`:\n\n```json\n{\n  \"tool\": \"xcsym\",\n  \"version\": \"0.1.0-dev\",\n  \"format\": \"standard\",\n  \"environment\": {\n    \"atos_version\": \"...\",\n    \"clt_version\": \"...\",\n    \"xcode_path\": \"/Applications/Xcode.app\"\n  },\n  \"input\": {\n    \"path\": \"testdata/crashes/ips_v2/swift_forced_unwrap.ips\",\n    \"format\": \"ips_json_v2\",  // one of: ips_json_v1 | ips_json_v2 | metrickit_json | apple_crash_text\n    \"bundle\": \"/path/to/Foo.xccrashpoint\"  // omitted unless input was a .xccrashpoint bundle\n  },\n  \"crash\": {\n    \"app\": { \"name\": \"...\", \"version\": \"...\", \"bundle_id\": \"...\" },\n    \"os\": { \"platform\": \"iOS\", \"version\": \"17.5\", \"is_simulator\": false },\n    \"arch\": \"arm64\",\n    \"exception\": { \"type\": \"EXC_BREAKPOINT\", \"codes\": \"0x1\", \"subtype\": \"...\", \"signal\": \"SIGTRAP\" },\n    \"termination\": { \"namespace\": \"SIGNAL\", \"code\": \"0x5\" },\n    \"pattern_tag\": \"swift_forced_unwrap\",\n    \"pattern_confidence\": \"high\",\n    \"pattern_rule_id\": \"R-swift-unwrap-01\",\n    \"pattern_reason\": \"exception.subtype matched '...unexpectedly found nil...'\",\n    \"crashed_thread\": { \"index\": 0, \"triggered\": true, \"frames\": [...] },\n    \"other_threads_top_frames\": [...],\n    \"all_threads\": [...]\n  },\n  \"images\": { \"matched\": [...], \"mismatched\": [...], \"missing\": [...] },\n  \"images_summary\": { \"matched_count\": 1, \"mismatched_count\": 0, \"missing_count\": 0 },\n  \"warnings\": [],\n  \"size_warning\": \"report size 54321 bytes exceeds 51200 bytes; consider --format=summary for triage\"\n}\n```\n\n### Tiers\n\n| Tier | Design target | Warns past | Contains |\n|---|---|---|---|\n| `summary` | ~2 KB | 4 KB | App, OS, exception, pattern_tag, crashed-thread top 3 frames, `images_summary` |\n| `standard` | ~12 KB | 50 KB | + full crashed thread, other threads' top frames, `images` |\n| `full` | n/a | 100 KB | + `all_threads` (every thread, every frame) |\n\nDesign targets are aspirational — small/typical crashes hit them. Real production crashes from framework-heavy apps regularly exceed them without indicating anything pathological (the `images` array dominates standard size: ~150–300 bytes per image × 45–150 images is typical). The warn threshold is what xcsym actually flags via `size_warning` in output.\n\n## Exit Codes\n\nExit codes are subcommand-specific. Usage errors, tool errors, timeouts, and output errors are shared across all subcommands. Symbolication-specific codes (2/3/4/7) vary in meaning between `crash` and `verify`.\n\n**Shared across all subcommands:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Success |\n| 1 | Usage error (bad flags, missing required args) |\n| 5 | Tool/discovery error (dwarfdump/atos failed, Spotlight failed, etc.) |\n| 6 | Command timeout |\n| 8 | Output write error (e.g., `--output` path unwritable) |\n\n**`crash` — main-image-centric:**\n\n| Code | Meaning | First thing to do |\n|---|---|---|\n| 0 | All images matched | — |\n| 2 | Input not found / unreadable / unsupported format OR main app dSYM missing | Check path exists; otherwise download the dSYM for the main UUID |\n| 3 | Main app UUID mismatch | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| 4 | Main app arch mismatch | User is on a different slice (arm64e vs arm64); use `find-dsym --arch` |\n| 7 | Main matched, some other images missing/mismatched | Partial success — frames in the main binary symbolicate, others won't |\n\n**`verify` — per-image-centric (note the 7 vs crash difference):**\n\n| Code | Meaning |\n|---|---|\n| 2 | Input not found / unreadable / unsupported format |\n| 3 | Any image has a UUID mismatch with an explicitly-overridden dSYM |\n| 4 | Any image has an arch-slice mismatch with its dSYM |\n| 7 | Any missing images (with or without matches — NOT \"main matched + others missing\") |\n\n**`find-dsym` — lookup-centric:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Match — dSYM located |\n| 2 | Miss — nothing found across every discovery source |\n\n**`list-dsyms`, `resolve`, `anonymize`:** success/failure only (0/1/5/6/8); no symbolication-specific codes.\n\nOn hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{\"tool\":\"xcsym\",\"error\":\"hang_report\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}`. Route the user to hang-diagnostics when you see `\"error\":\"hang_report\"`.\n\nOn unsupported input (anything that isn't `.ips`, MetricKit, Apple `.crash` text, or a `.xccrashpoint` bundle), `crash` exits 2 after writing `{\"tool\":\"xcsym\",\"error\":\"unsupported_format\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}` to stdout. The routing field names the accepted formats.\n\nA `.xccrashpoint` directory that exists but doesn't contain `Filters/Filter_*/Logs/*.crash` is a **distinct** error — `crash` exits 2 with `{\"error\":\"empty_bundle\",\"routing\":\"...\"}`. Agents should route the two cases separately: `unsupported_format` means the user gave xcsym the wrong file type; `empty_bundle` means the bundle is right but corrupt or stripped (re-export from Xcode Organizer).\n\nIf the resolver hits a real I/O error walking the bundle (permission denied, stale NFS handle, etc.), `crash` exits 5 (tool error) rather than mislabeling the bundle as empty.\n\n## Pattern Tag Catalog\n\nEvery `pattern_tag` xcsym can emit, with the rule that fires it:\n\n| pattern_tag | Rule ID | Confidence | Signal |\n|---|---|---|---|\n| `swift_forced_unwrap` | R-swift-unwrap-01 | high | Subtype contains \"unexpectedly found nil...\" |\n| `swift_concurrency_violation` | R-swift-conc-01 | high | `_swift_task_isCurrentExecutor` in subtype |\n| `swift_fatal_error` | R-swift-fatal-01 | high | Swift runtime failure + `swift_preconditionFailure` or `fatalError` sentinel frame |\n| `zombie_or_heap_corruption` | R-zombie-01 | heuristic | `_NSZombie_*` frame or poison-pattern address |\n| `stack_overflow` | R-stack-overflow-01 | heuristic | `KERN_PROTECTION_FAILURE` with fault within 1 page of SP |\n| `bad_memory_access` | R-bad-access-01 | high | `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS` |\n| `illegal_instruction` | R-illegal-inst-01 | high | `EXC_BAD_INSTRUCTION` |\n| `exc_guard` | R-exc-guard-01 | high | `EXC_GUARD` |\n| `objc_exception` | R-objc-exc-01 | high | `EXC_CRASH`/SIGABRT with `objc_exception_throw` frame |\n| `main_thread_checker_violation` | R-mtc-01 | high | `main_thread_checker.dylib` in crashed frames |\n| `abort` | R-abort-01 | high | SIGABRT with `abort`/`__abort_with_payload` frame |\n| `watchdog_termination` | R-watchdog-01 | high | Termination namespace=FRONTBOARD, code=0x8BADF00D |\n| `user_force_quit` | R-user-quit-01 | high | FRONTBOARD + 0xDEADFA11 |\n| `background_task_expired` | R-bg-expired-01 | high | FRONTBOARD + 0xBAADCA11 |\n| `data_protection_violation` | R-data-prot-01 | high | RUNNINGBOARD + 0xdead10cc |\n| `code_signing_killed` | R-code-sign-01 | high | CODESIGNING + 0xc51bad0[0-f] |\n| `jetsam_oom` | R-jetsam-01 | high | `EXC_RESOURCE` with `MEMORY` subtype OR `termination.reason` contains `per-process-limit` / `vm-pageshortage` |\n| `cpu_resource_fatal` | R-cpu-fatal-01 | high | `EXC_RESOURCE` CPU/WAKEUPS FATAL (excludes NON-FATAL) |\n| `swiftui_update_loop` | R-swiftui-loop-01 | low | ≥100 consecutive `AG::Graph::update_*` frames from the top |\n| `unclassified` | — | low | No rule matched — raw fields are in `pattern_reason` |\n\n## dSYM Discovery Order\n\nSource: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact order:\n\n1. **ExplicitByUUID** — per-image overrides the `crash` subcommand builds when the header lists a main-image UUID (before any other source, including cache)\n2. **Explicit paths** — `--dsym` direct override and `--dsym-paths` extra roots\n3. **UUID cache** — `~/Library/Caches/xcsym/uuid-index.json` (skip with `--no-cache`)\n4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)\n5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)\n6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`\n7. **Frameworks (cwd scan)** — walks the current working directory plus caller-supplied roots for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as \"no match\" and the chain continues.\n8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)\n9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)\n10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)\n\n`find-dsym` follows the same chain minus step 1 (no per-UUID explicit map). `list-dsyms --source=<name>` restricts scanning to a single root by name.\n\n## Troubleshooting\n\n| Symptom | Likely cause | Fix |\n|---|---|---|\n| Exit 2, \"main dSYM missing\" | No archive for that UUID on this machine | Download the archive from App Store Connect; or set `XCSYM_DSYM_PATHS` to its location |\n| Exit 3, main UUID mismatch | Crash came from a different build than the archive on disk | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| Exit 4, main arch mismatch | arm64 vs arm64e slice mismatch | Pass `--arch` to `find-dsym`; verify the archive contains the slice |\n| Exit 7, \"main matched, others missing\" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |\n| Exit 2 with `empty_bundle` on `.xccrashpoint` | Bundle has no `Filters/Filter_*/Logs/*.crash` (corrupt or stripped) | Pull a fresh export from Xcode Organizer; or point xcsym at a specific `.crash` inside the bundle |\n| Exit 5 on `.xccrashpoint` (tool error) | Permission denied / stale mount walking `Filters/` | Check mount health and `ls -la Foo.xccrashpoint/Filters` |\n| `.xccrashpoint` with multiple builds returns the wrong one | Default picks the Filter dir with the most recent modification time | Use `--filter <substring>` to select a specific build by version/platform — prefer dash-bounded fragments like `0.8.60-Any` |\n| `pattern_tag=\"unclassified\"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |\n| `size_warning` in output | Tier exceeded its warn threshold (4 KB summary / 50 KB standard / 100 KB full) | Switch to the next smaller tier — the warning text names it |\n| `{\"error\":\"hang_report\"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |\n\n## Resources\n\n**Skills**: axiom-tools (skills/xclog-ref.md), axiom-build (skills/lldb.md, skills/lldb-ref.md, skills/xcode-debugging.md), axiom-performance (skills/memory-debugging.md, skills/metrickit-ref.md, skills/hang-diagnostics.md), axiom-shipping (skills/testflight-triage.md, skills/app-store-diag.md, skills/app-store-submission.md)\n\n**Agents**: crash-analyzer (interprets xcsym JSON with pattern_tag → fix guidance), simulator-tester (auto-runs xcsym on crashes during test runs), test-failure-analyzer + test-debugger (symbolicate test-generated `.ips` artifacts), memory-auditor (correlates jetsam/heap-corruption tags with leak patterns), concurrency-auditor (correlates `swift_concurrency_violation` with @MainActor gaps), energy-auditor (correlates CPU/watchdog/background terminations with energy anti-patterns)\n\n**Commands**: `/axiom:analyze-crash`\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -30757,7 +30757,7 @@
           "level": 1,
           "startLine": 6,
           "endLine": 11,
-          "charCount": 903
+          "charCount": 961
         },
         {
           "heading": "Invocation",
@@ -30785,7 +30785,7 @@
           "level": 2,
           "startLine": 37,
           "endLine": 137,
-          "charCount": 5736
+          "charCount": 6035
         },
         {
           "heading": "Output Schema",
@@ -30798,35 +30798,35 @@
           "heading": "Exit Codes",
           "level": 2,
           "startLine": 188,
-          "endLine": 233,
-          "charCount": 2547
+          "endLine": 237,
+          "charCount": 2894
         },
         {
           "heading": "Pattern Tag Catalog",
           "level": 2,
-          "startLine": 234,
-          "endLine": 260,
+          "startLine": 238,
+          "endLine": 264,
           "charCount": 2100
         },
         {
           "heading": "dSYM Discovery Order",
           "level": 2,
-          "startLine": 261,
-          "endLine": 277,
+          "startLine": 265,
+          "endLine": 281,
           "charCount": 1499
         },
         {
           "heading": "Troubleshooting",
           "level": 2,
-          "startLine": 278,
-          "endLine": 291,
-          "charCount": 1534
+          "startLine": 282,
+          "endLine": 296,
+          "charCount": 1758
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 292,
-          "endLine": 299,
+          "startLine": 297,
+          "endLine": 304,
           "charCount": 866
         }
       ]
@@ -36156,7 +36156,7 @@
           51,
           2,
           26,
-          746
+          779
         ],
         "179": [
           5,
@@ -36297,7 +36297,7 @@
         13.97979797979798,
         4.429292929292932,
         43.60606060606061,
-        606.1515151515147
+        606.3181818181813
       ],
       "storedFields": {
         "0": {
@@ -39288,6 +39288,7 @@
               "162": 2,
               "169": 2,
               "171": 1,
+              "178": 3,
               "179": 2,
               "182": 2,
               "184": 1,
@@ -44767,7 +44768,7 @@
               "178": 1
             },
             "4": {
-              "178": 14
+              "178": 17
             }
           }
         ],
@@ -44956,7 +44957,7 @@
               "145": 4,
               "147": 2,
               "150": 6,
-              "178": 68
+              "178": 67
             }
           }
         ],
@@ -45404,7 +45405,7 @@
               "175": 2,
               "176": 7,
               "177": 1,
-              "178": 15,
+              "178": 16,
               "179": 5,
               "189": 2,
               "190": 6,
@@ -48508,7 +48509,8 @@
           "gave",
           {
             "4": {
-              "76": 1
+              "76": 1,
+              "178": 1
             }
           }
         ],
@@ -52776,6 +52778,22 @@
           }
         ],
         [
+          "hfs",
+          {
+            "4": {
+              "178": 1
+            }
+          }
+        ],
+        [
+          "hfp",
+          {
+            "4": {
+              "102": 3
+            }
+          }
+        ],
+        [
           "hh",
           {
             "4": {
@@ -52834,14 +52852,6 @@
             "4": {
               "102": 1,
               "146": 1
-            }
-          }
-        ],
-        [
-          "hfp",
-          {
-            "4": {
-              "102": 3
             }
           }
         ],
@@ -54684,6 +54694,7 @@
               "169": 5,
               "171": 1,
               "175": 2,
+              "178": 1,
               "180": 10,
               "181": 1,
               "182": 1,
@@ -56493,6 +56504,7 @@
               "145": 2,
               "146": 7,
               "158": 1,
+              "178": 1,
               "189": 2,
               "190": 6,
               "191": 3,
@@ -56903,8 +56915,7 @@
               "90": 1,
               "146": 1,
               "154": 1,
-              "155": 1,
-              "178": 1
+              "155": 1
             }
           }
         ],
@@ -57087,6 +57098,7 @@
               "139": 1,
               "141": 2,
               "163": 1,
+              "178": 1,
               "179": 3
             }
           }
@@ -58393,6 +58405,7 @@
               "147": 1,
               "157": 1,
               "167": 1,
+              "178": 1,
               "179": 1,
               "182": 1,
               "185": 2,
@@ -64878,7 +64891,7 @@
               "174": 7,
               "175": 3,
               "177": 13,
-              "178": 12,
+              "178": 17,
               "179": 10,
               "180": 33,
               "183": 2,
@@ -65883,7 +65896,7 @@
               "170": 1,
               "171": 2,
               "174": 6,
-              "178": 1,
+              "178": 2,
               "183": 1,
               "185": 2,
               "186": 1,
@@ -66209,6 +66222,7 @@
               "170": 5,
               "171": 3,
               "173": 1,
+              "178": 4,
               "184": 3,
               "185": 1,
               "186": 4,
@@ -70434,7 +70448,7 @@
               "126": 5,
               "127": 41,
               "150": 2,
-              "178": 11
+              "178": 12
             }
           }
         ],
@@ -70453,7 +70467,7 @@
               "127": 7,
               "128": 1,
               "177": 2,
-              "178": 3,
+              "178": 5,
               "196": 1
             }
           }
@@ -71935,7 +71949,7 @@
               "149": 1,
               "154": 16,
               "175": 2,
-              "178": 2
+              "178": 3
             }
           }
         ],
@@ -74891,7 +74905,7 @@
               "174": 2,
               "175": 4,
               "177": 17,
-              "178": 20,
+              "178": 25,
               "188": 7,
               "190": 13,
               "191": 5
@@ -75704,7 +75718,7 @@
               "170": 4,
               "171": 1,
               "174": 6,
-              "178": 1,
+              "178": 2,
               "179": 6,
               "180": 5,
               "182": 9,
@@ -75933,7 +75947,7 @@
               "80": 4,
               "159": 2,
               "177": 2,
-              "178": 1,
+              "178": 4,
               "188": 1
             }
           }
@@ -81932,6 +81946,7 @@
               "154": 1,
               "164": 1,
               "171": 1,
+              "178": 1,
               "190": 1,
               "193": 1,
               "197": 1
@@ -82167,6 +82182,7 @@
               "170": 5,
               "174": 4,
               "176": 4,
+              "178": 1,
               "179": 3,
               "180": 1,
               "181": 4,
@@ -83521,7 +83537,7 @@
               "165": 5,
               "166": 9,
               "167": 8,
-              "178": 2,
+              "178": 3,
               "180": 2,
               "187": 1,
               "190": 1,
@@ -89075,7 +89091,7 @@
               "173": 1,
               "174": 1,
               "176": 1,
-              "178": 2,
+              "178": 3,
               "180": 4,
               "182": 3,
               "183": 4,
@@ -92125,7 +92141,7 @@
               "167": 3,
               "169": 7,
               "174": 8,
-              "178": 1,
+              "178": 2,
               "179": 1,
               "180": 1,
               "182": 9,
@@ -93015,6 +93031,14 @@
               "165": 1,
               "166": 1,
               "167": 2
+            }
+          }
+        ],
+        [
+          "resolver",
+          {
+            "4": {
+              "178": 1
             }
           }
         ],
@@ -96417,7 +96441,7 @@
               "175": 5,
               "176": 3,
               "177": 10,
-              "178": 9,
+              "178": 10,
               "179": 18,
               "180": 26,
               "181": 10,
@@ -98857,7 +98881,7 @@
               "90": 1,
               "108": 1,
               "132": 2,
-              "178": 8,
+              "178": 7,
               "181": 1,
               "186": 1,
               "187": 2,
@@ -104646,7 +104670,7 @@
               "166": 1,
               "167": 2,
               "174": 1,
-              "178": 1,
+              "178": 2,
               "185": 1,
               "187": 2,
               "195": 3,
@@ -106636,6 +106660,7 @@
               "166": 1,
               "167": 2,
               "169": 2,
+              "178": 2,
               "179": 2,
               "181": 1,
               "185": 4,
@@ -109088,7 +109113,8 @@
               "136": 1,
               "137": 1,
               "140": 8,
-              "141": 4
+              "141": 4,
+              "178": 1
             }
           }
         ],
@@ -114740,6 +114766,7 @@
           "fragments",
           {
             "4": {
+              "178": 2,
               "181": 7
             }
           }
@@ -114764,6 +114791,7 @@
               "56": 3,
               "93": 1,
               "94": 2,
+              "178": 1,
               "181": 25
             }
           }
@@ -116295,7 +116323,7 @@
             "4": {
               "45": 1,
               "171": 4,
-              "178": 4
+              "178": 5
             }
           }
         ],
@@ -118354,7 +118382,7 @@
               "144": 1,
               "168": 2,
               "170": 2,
-              "178": 4
+              "178": 6
             }
           }
         ],
@@ -118681,7 +118709,7 @@
               "173": 3,
               "174": 2,
               "177": 8,
-              "178": 25,
+              "178": 26,
               "180": 1,
               "186": 1,
               "187": 3,
@@ -121654,6 +121682,7 @@
               "145": 6,
               "146": 6,
               "175": 1,
+              "178": 2,
               "184": 2,
               "191": 1,
               "194": 1,
@@ -123816,7 +123845,7 @@
               "174": 1,
               "176": 2,
               "177": 1,
-              "178": 3,
+              "178": 2,
               "181": 7,
               "183": 2,
               "184": 43,
@@ -133645,7 +133674,7 @@
               "164": 2,
               "170": 1,
               "171": 1,
-              "178": 1,
+              "178": 2,
               "179": 4,
               "183": 4,
               "184": 2,
@@ -133716,7 +133745,7 @@
               "170": 1,
               "171": 1,
               "173": 1,
-              "178": 2,
+              "178": 4,
               "185": 1,
               "186": 1,
               "189": 1,
@@ -135545,6 +135574,7 @@
               "169": 1,
               "170": 3,
               "171": 4,
+              "178": 1,
               "179": 1,
               "180": 4,
               "183": 1,
@@ -136033,7 +136063,7 @@
               "175": 5,
               "176": 2,
               "177": 1,
-              "178": 6,
+              "178": 7,
               "179": 2,
               "180": 3,
               "181": 5,
@@ -137012,6 +137042,7 @@
               "175": 4,
               "176": 1,
               "177": 2,
+              "178": 3,
               "179": 2,
               "180": 7,
               "182": 14,
@@ -137403,7 +137434,7 @@
               "166": 1,
               "169": 5,
               "171": 4,
-              "178": 1,
+              "178": 2,
               "179": 8,
               "182": 1,
               "184": 1,
@@ -139207,8 +139238,7 @@
             "4": {
               "81": 1,
               "142": 1,
-              "170": 1,
-              "178": 1
+              "170": 1
             }
           }
         ],
@@ -142797,7 +142827,7 @@
               "174": 1,
               "176": 2,
               "177": 1,
-              "178": 6,
+              "178": 8,
               "180": 1,
               "190": 2,
               "192": 2,
@@ -146256,6 +146286,14 @@
           {
             "4": {
               "106": 1
+            }
+          }
+        ],
+        [
+          "nfs",
+          {
+            "4": {
+              "178": 1
             }
           }
         ],
@@ -153361,6 +153399,14 @@
           }
         ],
         [
+          "dash",
+          {
+            "4": {
+              "178": 3
+            }
+          }
+        ],
+        [
           "dashlane",
           {
             "4": {
@@ -156487,6 +156533,7 @@
               "140": 1,
               "145": 2,
               "146": 2,
+              "178": 2,
               "184": 2,
               "185": 1,
               "194": 1
@@ -164167,6 +164214,7 @@
               "140": 1,
               "145": 4,
               "161": 2,
+              "178": 1,
               "186": 1
             }
           }
@@ -167565,6 +167613,7 @@
               "175": 5,
               "176": 12,
               "177": 17,
+              "178": 1,
               "179": 6,
               "180": 11,
               "181": 16,
@@ -170595,6 +170644,14 @@
           }
         ],
         [
+          "insensitively",
+          {
+            "4": {
+              "178": 1
+            }
+          }
+        ],
+        [
           "insensitive",
           {
             "3": {
@@ -170606,7 +170663,8 @@
               "140": 2,
               "153": 1,
               "168": 5,
-              "177": 1
+              "177": 1,
+              "178": 1
             }
           }
         ],
@@ -170813,7 +170871,7 @@
               "169": 2,
               "170": 11,
               "173": 1,
-              "178": 4,
+              "178": 3,
               "180": 1,
               "181": 1,
               "183": 4,
@@ -175340,7 +175398,7 @@
               "170": 4,
               "171": 1,
               "174": 2,
-              "178": 2,
+              "178": 3,
               "179": 9,
               "180": 1,
               "182": 11,
@@ -176798,7 +176856,7 @@
               "117": 5,
               "119": 1,
               "169": 1,
-              "178": 1,
+              "178": 2,
               "192": 1
             }
           }
@@ -177979,7 +178037,7 @@
               "162": 2,
               "169": 2,
               "176": 3,
-              "178": 1,
+              "178": 2,
               "179": 2,
               "193": 2
             }
@@ -181619,7 +181677,7 @@
               "174": 3,
               "176": 2,
               "177": 1,
-              "178": 1,
+              "178": 2,
               "179": 3,
               "180": 2,
               "183": 2,
@@ -186023,7 +186081,7 @@
               "145": 4,
               "148": 3,
               "150": 26,
-              "178": 5
+              "178": 6
             }
           }
         ],
@@ -190081,7 +190139,7 @@
               "167": 1,
               "169": 1,
               "170": 1,
-              "178": 9,
+              "178": 10,
               "180": 1,
               "182": 2,
               "183": 2,
@@ -193560,7 +193618,7 @@
               "174": 9,
               "175": 3,
               "176": 1,
-              "178": 8,
+              "178": 7,
               "179": 3,
               "180": 1,
               "182": 4,
@@ -195986,6 +196044,7 @@
               "172": 2,
               "173": 1,
               "174": 7,
+              "178": 1,
               "179": 3,
               "180": 3,
               "181": 3,
@@ -198220,6 +198279,7 @@
               "150": 1,
               "158": 1,
               "171": 1,
+              "178": 1,
               "182": 2,
               "185": 2,
               "186": 1
@@ -198747,6 +198807,7 @@
               "116": 2,
               "118": 1,
               "127": 4,
+              "178": 1,
               "181": 3,
               "185": 3
             }
@@ -204607,7 +204668,7 @@
           {
             "4": {
               "151": 3,
-              "178": 2
+              "178": 3
             }
           }
         ],
@@ -206102,6 +206163,7 @@
               "155": 1,
               "161": 1,
               "167": 2,
+              "178": 2,
               "183": 2,
               "187": 1,
               "188": 1,
@@ -207788,7 +207850,6 @@
               "150": 1,
               "161": 1,
               "176": 3,
-              "178": 1,
               "192": 1
             }
           }
@@ -208944,7 +209005,8 @@
               "72": 2,
               "83": 1,
               "84": 1,
-              "176": 3
+              "176": 3,
+              "178": 1
             }
           }
         ],
@@ -209923,7 +209985,7 @@
             "4": {
               "29": 3,
               "134": 1,
-              "178": 2,
+              "178": 4,
               "181": 8,
               "185": 1,
               "186": 2
@@ -213380,7 +213442,7 @@
               "167": 3,
               "174": 26,
               "177": 10,
-              "178": 73,
+              "178": 75,
               "180": 6,
               "184": 3,
               "187": 3,
@@ -215766,7 +215828,7 @@
               "174": 7,
               "176": 3,
               "177": 9,
-              "178": 2,
+              "178": 3,
               "179": 8,
               "180": 3,
               "181": 4,
@@ -218703,6 +218765,7 @@
               "169": 1,
               "171": 4,
               "174": 1,
+              "178": 1,
               "182": 2,
               "183": 1,
               "185": 1,
@@ -218845,6 +218908,7 @@
               "174": 5,
               "175": 1,
               "177": 1,
+              "178": 2,
               "179": 1,
               "180": 4,
               "181": 6,
@@ -219840,7 +219904,7 @@
               "171": 10,
               "174": 6,
               "176": 2,
-              "178": 6,
+              "178": 5,
               "179": 6,
               "180": 2,
               "181": 7,
@@ -227277,7 +227341,7 @@
             "4": {
               "13": 1,
               "115": 1,
-              "178": 1
+              "178": 2
             }
           }
         ],
@@ -231453,14 +231517,6 @@
           }
         ],
         [
-          "mtime",
-          {
-            "4": {
-              "178": 1
-            }
-          }
-        ],
-        [
           "mtc",
           {
             "4": {
@@ -232762,6 +232818,30 @@
           }
         ],
         [
+          "mislabel",
+          {
+            "4": {
+              "178": 1
+            }
+          }
+        ],
+        [
+          "mislead",
+          {
+            "4": {
+              "62": 1,
+              "77": 1,
+              "78": 1,
+              "101": 1,
+              "143": 2,
+              "145": 1,
+              "146": 1,
+              "147": 1,
+              "160": 1
+            }
+          }
+        ],
+        [
           "misplaced",
           {
             "4": {
@@ -232826,22 +232906,6 @@
             "4": {
               "38": 1,
               "184": 4
-            }
-          }
-        ],
-        [
-          "mislead",
-          {
-            "4": {
-              "62": 1,
-              "77": 1,
-              "78": 1,
-              "101": 1,
-              "143": 2,
-              "145": 1,
-              "146": 1,
-              "147": 1,
-              "160": 1
             }
           }
         ],
@@ -234843,7 +234907,7 @@
               "156": 2,
               "157": 7,
               "166": 1,
-              "178": 10,
+              "178": 11,
               "189": 4
             }
           }
@@ -235045,7 +235109,7 @@
               "169": 1,
               "174": 4,
               "175": 4,
-              "178": 4,
+              "178": 5,
               "181": 1,
               "182": 4,
               "185": 1,
@@ -238280,7 +238344,8 @@
           {
             "4": {
               "7": 1,
-              "77": 6
+              "77": 6,
+              "178": 2
             }
           }
         ],
@@ -239095,7 +239160,8 @@
               "140": 2,
               "143": 1,
               "146": 2,
-              "165": 4
+              "165": 4,
+              "178": 3
             }
           }
         ],
@@ -240861,7 +240927,7 @@
               "161": 3,
               "163": 1,
               "165": 1,
-              "178": 1,
+              "178": 3,
               "180": 1,
               "182": 2,
               "191": 2,
@@ -243828,6 +243894,14 @@
           }
         ],
         [
+          "apfs",
+          {
+            "4": {
+              "178": 1
+            }
+          }
+        ],
+        [
           "april",
           {
             "3": {
@@ -246668,6 +246742,7 @@
               "173": 1,
               "174": 1,
               "175": 1,
+              "178": 1,
               "179": 1,
               "180": 1,
               "183": 1,
@@ -246847,7 +246922,7 @@
               "148": 1,
               "150": 1,
               "156": 1,
-              "178": 2,
+              "178": 3,
               "190": 1,
               "194": 1
             }
@@ -246978,7 +247053,7 @@
               "167": 1,
               "170": 1,
               "177": 1,
-              "178": 5,
+              "178": 6,
               "183": 1,
               "185": 1,
               "186": 2,
@@ -253147,7 +253222,7 @@
               "60": 2,
               "61": 24,
               "62": 1,
-              "178": 1
+              "178": 2
             }
           }
         ],
@@ -253655,7 +253730,7 @@
               "174": 4,
               "176": 1,
               "177": 2,
-              "178": 4,
+              "178": 7,
               "179": 1,
               "180": 18,
               "181": 2,
@@ -473370,12 +473445,15 @@
           "inputs",
           "walked",
           "automatically",
+          "dir",
           "most",
           "recent",
-          "dir",
+          "modifica",
+          "time",
+          "wins",
           "raw",
-          "not",
-          "default"
+          "preferred",
+          "over"
         ],
         "Invocation": [
           "invoca",
@@ -473634,6 +473712,8 @@
           "walks",
           "inner",
           "filter",
+          "60",
+          "any",
           "multiple",
           "dirs",
           "pick",
@@ -473641,10 +473721,18 @@
           "whose",
           "name",
           "contains",
+          "substr",
+          "use",
+          "dash",
+          "bounded",
+          "frag",
+          "avoid",
+          "match",
+          "against",
+          "11",
           "prefer",
           "locally",
           "symbolicated",
-          "use",
           "logs",
           "instead",
           "accepted",
@@ -473660,13 +473748,27 @@
           "matter",
           "non",
           "detected",
+          "suffix",
+          "matched",
+          "case",
+          "insensitively",
+          "apfs",
+          "hfs",
+          "insensitive",
           "filters",
           "picks",
+          "dir",
           "most",
           "recent",
-          "dir",
+          "modifica",
+          "time",
           "override",
-          "substr",
+          "not",
+          "seg",
+          "anchored",
+          "so",
+          "fragments",
+          "like",
           "copy",
           "preferred",
           "over",
@@ -473675,7 +473777,6 @@
           "original",
           "surfaced",
           "input",
-          "so",
           "consumers",
           "can",
           "tell",
@@ -473714,12 +473815,10 @@
           "fails",
           "usage",
           "verify",
-          "match",
           "diagnostics",
           "reports",
           "which",
           "images",
-          "matched",
           "mismatched",
           "arch",
           "miss",
@@ -473743,7 +473842,6 @@
           "arm64",
           "hands",
           "addresses",
-          "against",
           "specific",
           "useful",
           "off",
@@ -473797,7 +473895,6 @@
           "aren",
           "mangled",
           "framework",
-          "anchored",
           "end",
           "str",
           "reverse",
@@ -473848,7 +473945,6 @@
           "thread",
           "infrastructure",
           "labels",
-          "not",
           "them",
           "debug",
           "library",
@@ -474139,8 +474235,6 @@
           "text",
           "xccrashpoint",
           "bundle",
-          "can",
-          "walk",
           "field",
           "names",
           "accepted",
@@ -474152,11 +474246,37 @@
           "filters",
           "filter",
           "logs",
-          "treated",
-          "hint",
-          "suggest",
-          "point",
-          "inside"
+          "distinct",
+          "empty",
+          "agents",
+          "should",
+          "two",
+          "cases",
+          "separately",
+          "means",
+          "gave",
+          "wrong",
+          "file",
+          "right",
+          "corrupt",
+          "stripped",
+          "re",
+          "export",
+          "xcode",
+          "organizer",
+          "if",
+          "resolver",
+          "hits",
+          "real",
+          "walk",
+          "permission",
+          "denied",
+          "stale",
+          "nfs",
+          "handle",
+          "rather",
+          "than",
+          "mislabel"
         ],
         "Pattern Tag Catalog": [
           "pattern",
@@ -474465,10 +474585,9 @@
           "dependencies",
           "frames",
           "symbolicate",
-          "unsupported",
-          "format",
-          "xccrashpoint",
+          "empty",
           "bundle",
+          "xccrashpoint",
           "filters",
           "filter",
           "logs",
@@ -474481,6 +474600,18 @@
           "point",
           "specific",
           "inside",
+          "tool",
+          "error",
+          "permission",
+          "denied",
+          "stale",
+          "mount",
+          "walk",
+          "check",
+          "health",
+          "ls",
+          "la",
+          "foo",
           "multiple",
           "builds",
           "returns",
@@ -474488,15 +474619,23 @@
           "one",
           "default",
           "picks",
+          "dir",
           "most",
           "recent",
-          "mtime",
-          "dir",
+          "modifica",
+          "time",
           "use",
           "substr",
           "select",
           "version",
           "platform",
+          "prefer",
+          "dash",
+          "bounded",
+          "fragments",
+          "like",
+          "60",
+          "any",
           "pattern",
           "tag",
           "unclassified",
@@ -474525,7 +474664,6 @@
           "smaller",
           "text",
           "names",
-          "error",
           "hang",
           "stdout",
           "ips",
