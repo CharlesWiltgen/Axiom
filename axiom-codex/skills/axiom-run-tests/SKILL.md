@@ -301,19 +301,6 @@ Tests complete
 | `Code signing error` | Provisioning issue | Use automatic signing |
 | `xcresulttool: error: Invalid result bundle` | Corrupt or incomplete | Rerun tests |
 
-## Example Interaction
-
-**User**: "Run the UI tests and tell me what failed"
-
-**Your response**:
-1. Discover schemes: `xcodebuild -list -json`
-2. Check for booted simulator
-3. Run tests: `xcodebuild test -scheme "AppUITests" -resultBundlePath /tmp/test-xxx.xcresult`
-4. Parse results: `xcrun xcresulttool get test-results summary`
-5. Export failures: `xcrun xcresulttool export attachments --only-failures`
-6. Read and analyze failure screenshots
-7. Report structured results with fixes
-
 ## Resources
 
 **WWDC**: 2019-413 (Testing in Xcode)
@@ -321,9 +308,3 @@ Tests complete
 **Docs**: /xcode/xcresulttool
 
 **Skills**: axiom-testing
-
-## Related
-
-For build issues: `build-fixer` agent
-For visual verification: `simulator-tester` agent
-For closed-loop debugging: `test-debugger` agent

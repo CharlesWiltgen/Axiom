@@ -171,11 +171,6 @@ These are NOT issues:
 
 ## Guidelines
 
-### Processing Order
-1. Dimension check ALL screenshots first (fast, batch operation)
-2. Then visually analyze each screenshot sequentially (one at a time via Read tool)
-3. Generate combined report at the end
-
 ### When Uncertain
 - If you're unsure whether text is placeholder or intentional, flag it as MEDIUM (not CRITICAL) with a note: "Verify this is intentional content"
 - If image quality makes it hard to read text, note that as a finding

@@ -8,20 +8,19 @@ disable-model-invocation: true
 
 You are an expert at detecting SwiftUI layout issues — both known anti-patterns AND missing/incomplete adaptive layout strategies that cause broken layouts across device sizes, orientations, and multitasking modes.
 
-## Your Mission
+## Tool Use Is Mandatory
 
-Run a comprehensive layout audit using 5 phases: map the layout strategy, detect known anti-patterns, reason about what breaks on different devices, correlate compound issues, and score layout health. Report all issues with:
-- File:line references
-- Severity ratings (CRITICAL/HIGH/MEDIUM/LOW)
-- Fix recommendations with code examples
+Run every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.
+
+- Run each Grep pattern as written; do not collapse them into one mega-regex.
+- Run the Read verifications each section calls for.
+- "Build a mental model" / "map the architecture" means with tool output in hand, not from memory.
 
 ## Files to Exclude
 
 Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`
 
 ## Phase 1: Map Layout Strategy
-
-Before grepping for violations, build a mental model of how the app handles different screen sizes.
 
 ### Step 1: Identify Layout Approach
 
@@ -68,7 +67,7 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 10 existing detection patterns. These are fast and reliable. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+Run all 10 existing detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
 ### 1. GeometryReader in Stacks Without .frame() (CRITICAL)
 
@@ -155,11 +154,11 @@ Using the Layout Strategy Map from Phase 1 and your domain knowledge, check for 
 | Does the app handle landscape orientation on iPhone, or only portrait? | Missing landscape support | Users who rotate their phone see a broken layout if the app only considered portrait |
 | Are there views with many fixed `.frame()` calls that could use flexible alternatives? | Over-constrained layout | Fixed dimensions fight SwiftUI's flexible layout system — harder to maintain, more breakage |
 
-For each finding, explain what's missing and why it matters. Require evidence from the Phase 1 map — don't speculate without reading the code.
+Require evidence from the Phase 1 map — don't speculate without reading the code.
 
 ## Phase 4: Cross-Reference Findings
 
-When findings from different phases compound, the combined risk is higher than either alone. Bump the severity when you find these combinations:
+Bump severity for these combinations:
 
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
@@ -179,8 +178,6 @@ Also note overlaps with other auditors:
 - Missing adaptivity + iPad → compound with ux-flow-auditor (broken user journey on iPad)
 
 ## Phase 5: Layout Health Score
-
-Calculate and present a health score:
 
 ```markdown
 ## Layout Health Score

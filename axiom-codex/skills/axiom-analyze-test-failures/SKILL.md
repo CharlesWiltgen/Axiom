@@ -16,12 +16,6 @@ Analyze the codebase to find patterns that cause flaky tests, focusing on:
 - Parallel execution races (shared state, missing `.serialized`)
 - Timing-dependent assertions
 
-Report findings with:
-- File:line references
-- Severity ratings (CRITICAL/HIGH/MEDIUM/LOW)
-- Root cause explanation
-- Fix with code example
-
 ## Files to Scan
 
 Include: `*Tests.swift`, `*Test.swift`, `**/*Tests/*.swift`

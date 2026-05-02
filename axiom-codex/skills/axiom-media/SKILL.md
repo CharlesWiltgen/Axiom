@@ -54,7 +54,7 @@ digraph media {
 5. Haptics? → `skills/haptics.md`
 6. Now Playing / remote commands? → `skills/now-playing.md`, `skills/now-playing-carplay.md`, `skills/now-playing-musickit.md`
 7. CarPlay app design, category selection, entitlement request? → `skills/carplay-hig.md` (start here for any CarPlay work)
-8. Want camera code audit? → Launch `camera-auditor` agent
+8. Want camera code audit? → Launch `camera-auditor` agent (detects deprecated APIs and architectural gaps: missing interruption handlers, runtime-error recovery, audio session deactivation, permission-denied UX, RotationCoordinator on iOS 17+; scores RELIABLE / FRAGILE / BROKEN)
 
 ## Cross-Domain Routing
 

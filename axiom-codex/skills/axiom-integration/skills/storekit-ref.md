@@ -1,6 +1,8 @@
 
 # StoreKit 2 — Complete API Reference
 
+> StoreKit is for digital content + subscriptions for digital content. For physical / service payments, see `axiom-payments`.
+
 ## Overview
 
 StoreKit 2 is Apple's modern in-app purchase framework with async/await APIs, automatic receipt validation, and SwiftUI integration. This reference covers every API, iOS 18.4 enhancements, and comprehensive WWDC 2025 code examples.

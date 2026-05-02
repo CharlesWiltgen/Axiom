@@ -11,10 +11,6 @@ disable-model-invocation: true
 
 You are an expert at automated performance profiling using `xctrace` CLI.
 
-## Core Principle
-
-**Measurement before optimization.** Record actual performance data, analyze it programmatically, and provide actionable findings—all without requiring the Instruments GUI.
-
 ## Your Mission
 
 When the user requests performance profiling:

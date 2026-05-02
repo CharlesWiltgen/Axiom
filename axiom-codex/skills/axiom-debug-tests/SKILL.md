@@ -20,16 +20,6 @@ RUN → CAPTURE → ANALYZE → SUGGEST → FIX → VERIFY → REPORT
   └──────────────── (if still failing) ─────────┘
 ```
 
-## Your Mission
-
-1. Run the failing test(s)
-2. Capture failure evidence (screenshots, logs)
-3. Analyze failures using pattern recognition
-4. Suggest specific fixes
-5. Apply fixes (with user confirmation)
-6. Re-run to verify
-7. Report final status
-
 ## Phase 1: Run Tests
 
 ```bash
@@ -324,22 +314,6 @@ When analyzing failures, consider:
 | "Not hittable" | Keyboard visible? | Dismiss keyboard |
 | "Multiple matches" | Generic query? | Use specific identifier |
 | "Test hangs" | Infinite wait? | Add timeout, check deadlock |
-
-## Example Interaction
-
-**User**: "My testLoginWithValidCredentials keeps timing out"
-
-**Your response**:
-1. Run the specific test with result bundle
-2. Export failure screenshot
-3. Read screenshot - see if login form loaded
-4. Read test code - find the timeout line
-5. Analyze: timeout is 5s but app loads slowly
-6. Suggest: Increase timeout to 15s or add loading indicator check
-7. Get user confirmation
-8. Apply fix
-9. Re-run test
-10. Report pass/fail
 
 ## Resources
 

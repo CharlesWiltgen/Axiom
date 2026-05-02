@@ -20,6 +20,7 @@ license: MIT
 | SF Symbols API signatures, UIKit equivalents, availability | See `skills/sf-symbols-ref.md` |
 | San Francisco fonts, text styles, Dynamic Type, tracking | See `skills/typography-ref.md` |
 | App entry points, auth flows, root view switching, scene lifecycle | See `skills/app-composition.md` |
+| Apple Pay button / Wallet pass design / Tap to Pay button | See `axiom-payments` suite, plus `skills/hig.md` for cross-cutting HIG context |
 
 ## Decision Tree
 
@@ -51,7 +52,7 @@ digraph design {
 6. SwiftUI view implementation? → `/skill axiom-swiftui`
 7. TextKit / rich text editing / Writing Tools? → `/skill axiom-uikit`
 8. Accessibility compliance (VoiceOver, contrast, touch targets)? → `/skill axiom-accessibility`
-9. Audit UI for Liquid Glass adoption? → liquid-glass-auditor (Agent)
+9. Audit UI for Liquid Glass adoption? → liquid-glass-auditor (Agent — surfaces migration opportunities AND adoption-completeness gaps: variant discipline, nesting hygiene, availability gating, primary-action tinting, accessibility re-check; scores ADOPTED / PARTIAL / NOT ADOPTED)
 10. CarPlay app design, categories, driver-distraction rules? → `/skill axiom-media` (carplay-hig.md)
 
 #### Platform-specific HIG
