@@ -188,6 +188,40 @@ Don't fabricate the pickup location to a generic address — Siri Suggestions mi
 
 This skill uses `FinanceKitUI` only for the **order-add helpers** (`AddOrderToWalletButton`). The broader **FinanceKit** (consumer banking surface — account aggregation, transaction queries) is **out of scope for axiom-payments** and would belong in a future banking-app suite. Don't conflate the two; the order-add buttons are a small, isolated FinanceKitUI affordance.
 
+## Misuse Cost — Why "It Will Probably Work" Doesn't
+
+When teams propose using Orders for things that aren't orders (subscription renewals, free-trial-to-paid transitions, "engagement" tracking, in-app event reminders), the argument is usually "the cert pipeline is already built; this is free infrastructure." The infrastructure may be cheap to wire up, but the misuse pollutes **shared system surfaces** that other apps' Orders depend on:
+
+| System surface | What misuse breaks |
+|----------------|--------------------|
+| **Order Tracking widget** (iOS 16.4+) | Renders your "subscription" alongside real e-commerce Orders on the user's home screen with the same status pills (`processing`, `delivered`). User can't distinguish "my Netflix renewed" from "my package shipped." |
+| **Messages share sheet** (iOS 16.4+) | Long-press → Share renders the rich preview using `merchantData.contactInfo`. Subscription "Orders" produce share previews that say "I just shared my Netflix delivery with you." |
+| **Maps Siri Suggestions** (iOS 17+) | If you set `pickupLocation` on a fake "pickup" subscription order, Siri proactively suggests "Time to leave for pickup" — routing the user to a store for a streaming service. If you skip `pickupLocation`, the system widget renders an empty pickup affordance. Either way, broken UX. |
+| **Wallet's order grouping** | Wallet groups Orders by recency and status. A subscription that flips `processing` → `delivered` every billing cycle thrashes the grouping algorithm — stale "active" orders pile up; "Recently delivered" shows your subscription rebill alongside real arrivals. |
+| **App Review** | Reviewers screenshot the system widget and the Messages share preview. "Renewal day delivered today" reads as misleading. The rejection language varies but the underlying rule is: don't pretend platform schemas mean what they don't mean. |
+
+The cost isn't "Apple might reject you." The cost is **the user's shared Wallet experience degrades**, your reviews start mentioning "weird Wallet behavior," and removing the misuse later requires invalidating every order package in flight (because rolling status forward to `cancelled` triggers another notification cycle, and there's no schema for "ignore me, I shouldn't have been here").
+
+## Canonical Subscription-Tracking Surface (When the Real Need Is "Show Renewal Date / Trial Countdown")
+
+If the underlying request is "show the user when their subscription renews" or "remind them when their trial ends," the platform-blessed surfaces — none of which require Order Type ID Certs, signing servers, APNs topics, or web service URLs — are:
+
+| Need | Surface | API |
+|------|---------|-----|
+| Read current subscription state, renewal date, expiration, trial-end | StoreKit 2 | `Product.SubscriptionInfo.Status` (latest verification, renewal info, expiration intent) |
+| Show renewal countdown / trial countdown on lock screen + Dynamic Island | ActivityKit | `ActivityAttributes` + `Activity<Attributes>.request(...)` |
+| Show renewal date on home screen / Smart Stack | WidgetKit | TimelineProvider keyed off `Product.SubscriptionInfo.Status.renewalDate` |
+| Send the user to Apple's cancel/manage UI | StoreKit | `AppStore.showManageSubscriptions(in:)` (iOS 15+) or `Environment(\.openURL)` to `itms-apps://...` |
+| Notify on renewal / lapse server-side | App Store Server Notifications V2 | `RENEWAL`, `DID_FAIL_TO_RENEW`, `EXPIRED` events |
+
+This stack:
+- Doesn't require Apple-managed certs
+- Doesn't pollute system Wallet surfaces
+- Surfaces the cancel affordance (which Manage Subscriptions does and Wallet Orders does not — relevant under §3.1.2 customer-trust rules)
+- Is what App Review expects when the goal is "render subscription state on system surfaces"
+
+Cite this stack when pushing back on Wallet-Orders-for-subscriptions proposals; it's not "we can't" but "the platform already gave you the right surface, and it's cheaper."
+
 ## Anti-Patterns
 
 | Anti-Pattern | Why it fails | Fix |
