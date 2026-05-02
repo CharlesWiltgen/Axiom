@@ -394,6 +394,30 @@ If domain verification fails (the most common single web-integration blocker):
 
 If verification passes but `onvalidatemerchant` still fails: check the curl command in MIG p.11 against your server's cert + domain pair. That isolates the problem to either the cert or the domain.
 
+## Time-Pressure Triage Order (Production Down)
+
+When merchant validation breaks in production with a deadline (launch day, active outage, CEO on the bridge), the sequence below isolates the failure surface in 30 seconds and prevents panic-driven mistakes that extend the outage. Run **in this order**, not in parallel:
+
+| # | Action | Time | Why this order |
+|---|--------|------|---------------|
+| 1 | **MIG p.11 curl** against `apple-pay-gateway.apple.com` (production) or `apple-pay-gateway-cert.apple.com` (sandbox) using prod merchant identity cert + key + the EXACT `initiativeContext` your frontend sends | 30s | Tests cert + key + domain registration + outbound network + Apple-side health in one shot. Almost every other check is a subset of what this proves. |
+| 2 | If curl returns session JSON but live flow still fails: cert is fine, `initiativeContext` mismatch is the next suspect — diff the curl `initiativeContext` against the actual `validationURL` event payload. www-vs-apex, port numbers, and trailing-dot variants all silently fail. | 1 min | Curl proving the cert pair works narrows the search to context. |
+| 3 | If curl fails with TLS error: `openssl x509 -noout -dates` on the cert file, plus modulus-match against the key | 1 min | Distinguishes expiry from cert/key mismatch. |
+| 4 | If curl fails connection-reset / hang: domain-association file at `/.well-known/`, then Apple IP allowlist on egress firewall | 5 min | Connection failure = DNS / network / `.well-known` issue, not cert issue. |
+
+### Don't panic-do (named anti-actions during incidents)
+
+| Anti-action | Why it's wrong |
+|-------------|----------------|
+| Re-issue the merchant identity cert before MIG p.11 curl confirms expiry | Re-issuance creates a new failure window; if cert wasn't the issue, you've made it worse |
+| Bounce app servers as the first move | Server bounces don't fix upstream Apple-side or cert issues; they trade the outage for a cold-cache spike |
+| Pre-emptively hide the button before running the 30s curl test | Curl test is faster than the deploy that would hide the button — diagnose first |
+| Ship "Apple Pay temporarily unavailable" copy on the cart page | AUG governs prominence *when present*; absence is allowed during incidents. A status-message banner about a payment method down is itself an AUG signal Apple may flag — just remove the button conditionally |
+
+### AUG mitigation rule (incident-only)
+
+The Web AUG parity rule applies to button **presence**, not absence. If Apple Pay is broken in production, hide the button via feature flag — that satisfies AUG. Do **not** add disclosure text about Apple Pay being temporarily down; do **not** show a greyed-out button. Either Apple Pay is functional and prominent, or it's absent. Re-enable behind a canary once the curl test passes again.
+
 ## TLS / Cert Debug Checklist
 
 - [ ] `ApplePay.crt.pem` includes only the certificate (no key bytes)
