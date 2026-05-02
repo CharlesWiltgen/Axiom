@@ -261,6 +261,165 @@ func TestRunCrash_AppleCrashText_EndToEnd(t *testing.T) {
 	}
 }
 
+// makeXccrashpointWithIPS builds a synthetic .xccrashpoint at root containing
+// the given IPS bytes at both Logs/raw.crash and Logs/LocallySymbolicated/sym.crash.
+// (The IPS extension wouldn't normally appear inside a real Xcode bundle,
+// which uses .crash text — but DetectFormat sniffs content, not filename, so
+// using IPS keeps the verify pass fast: one synthetic UUID to look up
+// instead of the dozens in a real apple_crash fixture.)
+func makeXccrashpointWithIPS(t *testing.T, root string, ips []byte) {
+	t.Helper()
+	logs := filepath.Join(root, "Filters", "Filter_synth-1.0-Any", "Logs")
+	if err := os.MkdirAll(filepath.Join(logs, "LocallySymbolicated"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(logs, "raw.crash"), ips, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(logs, "LocallySymbolicated", "sym.crash"), ips, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// minimalGhostIPS returns an IPS payload with a single image whose UUID is
+// guaranteed not to be on the host. verify will return Missing for it
+// quickly (no DerivedData walk hits anything to symbolicate against),
+// which keeps these tests fast across machines regardless of host state.
+const minimalGhostIPS = `{"app_name":"Ghost","bundle_id":"com.example.ghost","bug_type":"309","cpuType":"ARM-64","exception":{"type":"EXC_BAD_ACCESS","codes":"0x1, 0x0","subtype":"KERN_INVALID_ADDRESS"},"faultingThread":0,"threads":[{"triggered":true,"frames":[{"imageOffset":1,"imageIndex":0}]}],"usedImages":[{"uuid":"00000000-0000-0000-0000-000000000000","name":"Ghost","arch":"arm64","base":0,"size":0}]}`
+
+func TestRunCrash_Xccrashpoint_EndToEnd(t *testing.T) {
+	// Pointing xcsym at a .xccrashpoint should walk into Filters/*/Logs/,
+	// pick the raw .crash by default, and surface the bundle path in
+	// InputInfo.Bundle. We use a synthetic IPS-as-.crash so verify stays
+	// fast — the .xccrashpoint resolver doesn't care about file content.
+	// Redirecting HOME prevents NewDiscovererFromEnv from defaulting search
+	// roots to the developer's real ~/Library/Developer/Xcode tree, which
+	// can take 30+ seconds to walk on a long-lived machine.
+	t.Setenv("HOME", t.TempDir())
+	bundle := filepath.Join(t.TempDir(), "Sample.xccrashpoint")
+	makeXccrashpointWithIPS(t, bundle, []byte(minimalGhostIPS))
+
+	var buf bytes.Buffer
+	code := runCrash(&buf, []string{
+		"--no-cache", "--no-spotlight", "--no-symbolicate",
+		bundle,
+	})
+	if code != 2 {
+		// Ghost UUID → main-binary missing → exit 2 per the contract.
+		// Any other code means the pipeline is misbehaving.
+		t.Fatalf(".xccrashpoint pipeline: code = %d, want 2\nstdout:\n%s", code, buf.String())
+	}
+	var report CrashReport
+	if err := json.Unmarshal(buf.Bytes(), &report); err != nil {
+		t.Fatalf("json: %v\n%s", err, buf.String())
+	}
+	if report.Input.Bundle == "" {
+		t.Error("Input.Bundle is empty, want absolute path to .xccrashpoint")
+	}
+	if !strings.HasSuffix(report.Input.Bundle, "Sample.xccrashpoint") {
+		t.Errorf("Input.Bundle = %q, want suffix Sample.xccrashpoint", report.Input.Bundle)
+	}
+	if !strings.HasSuffix(report.Input.Path, "raw.crash") {
+		t.Errorf("Input.Path = %q, want suffix raw.crash (default picks raw)", report.Input.Path)
+	}
+	if strings.Contains(report.Input.Path, "LocallySymbolicated") {
+		t.Errorf("Input.Path = %q, default should pick raw not LocallySymbolicated", report.Input.Path)
+	}
+	if report.Crash.App.Name != "Ghost" {
+		t.Errorf("App.Name = %q, want Ghost (resolver passed the right file through)", report.Crash.App.Name)
+	}
+}
+
+func TestRunCrash_Xccrashpoint_PreferLocallySymbolicated(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	bundle := filepath.Join(t.TempDir(), "Sample.xccrashpoint")
+	makeXccrashpointWithIPS(t, bundle, []byte(minimalGhostIPS))
+
+	var buf bytes.Buffer
+	code := runCrash(&buf, []string{
+		"--no-cache", "--no-spotlight", "--no-symbolicate",
+		"--prefer-locally-symbolicated",
+		bundle,
+	})
+	if code != 2 {
+		t.Fatalf(".xccrashpoint pipeline: code = %d, want 2\n%s", code, buf.String())
+	}
+	var report CrashReport
+	if err := json.Unmarshal(buf.Bytes(), &report); err != nil {
+		t.Fatalf("json: %v\n%s", err, buf.String())
+	}
+	if !strings.Contains(report.Input.Path, "LocallySymbolicated") {
+		t.Errorf("Input.Path = %q, want LocallySymbolicated copy", report.Input.Path)
+	}
+}
+
+func TestRunCrash_Xccrashpoint_EmptyBundleRejected(t *testing.T) {
+	// Bundle dir exists but has no Filters/. xcsym should emit a structured
+	// unsupported_format reject (not a generic "is a directory" error) so
+	// agents can route on JSON.
+	bundle := filepath.Join(t.TempDir(), "Empty.xccrashpoint")
+	if err := os.MkdirAll(bundle, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	code := runCrash(&buf, []string{
+		"--no-cache", "--no-spotlight", "--no-symbolicate",
+		bundle,
+	})
+	if code != 2 {
+		t.Fatalf("empty bundle: code = %d, want 2\n%s", code, buf.String())
+	}
+	var reject crashRejectPayload
+	if err := json.Unmarshal(buf.Bytes(), &reject); err != nil {
+		t.Fatalf("json: %v\n%s", err, buf.String())
+	}
+	if reject.Error != "unsupported_format" {
+		t.Errorf("error = %q, want unsupported_format", reject.Error)
+	}
+	if reject.Input != bundle {
+		t.Errorf("input = %q, want %q (the bundle path the user passed)", reject.Input, bundle)
+	}
+	if reject.Routing == "" {
+		t.Error("routing should not be empty — agents need a hint to recover")
+	}
+}
+
+func TestRunCrash_FlagsAfterPositional_HelpfulError(t *testing.T) {
+	// Common footgun: developers (and agents) put flags after the file.
+	// flag.Parse stops at the first positional, so the trailing flags
+	// become extra positionals. The error message should tell the user
+	// how to rephrase, not just "exactly one crash file required".
+	old := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+	var buf bytes.Buffer
+	code := runCrash(&buf, []string{"file.crash", "--no-symbolicate", "--no-cache"})
+	w.Close()
+	os.Stderr = old
+	stderrBytes, _ := readAll(r)
+
+	if code != 1 {
+		t.Errorf("code = %d, want 1", code)
+	}
+	if !strings.Contains(string(stderrBytes), "place all --flags before the file path") {
+		t.Errorf("stderr should suggest flag reordering, got: %q", string(stderrBytes))
+	}
+}
+
+func readAll(r interface{ Read(p []byte) (int, error) }) ([]byte, error) {
+	var out []byte
+	buf := make([]byte, 4096)
+	for {
+		n, err := r.Read(buf)
+		if n > 0 {
+			out = append(out, buf[:n]...)
+		}
+		if err != nil {
+			return out, nil
+		}
+	}
+}
+
 func TestRunCrash_ExitCode2_MainMissing(t *testing.T) {
 	// Fabricate a crash whose "main binary" UUID we know is nowhere on the
 	// system. Without --dsym override, verify should classify it as Missing

@@ -1,0 +1,198 @@
+Incident Identifier: 00000000-0000-0000-0000-000000000000
+Distributor ID:      com.apple.TestFlight
+Hardware Model:      RedactedDevice
+Process:             App [1]
+Path:                /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App
+Identifier:          com.example.redacted
+Version:             0.8.57 (202604081349)
+AppStoreTools:       17E187
+AppVariant:          0:RedactedDevice:0
+Beta:                YES
+Code Type:           ARM-64 (Native)
+Role:                Foreground
+Parent Process:      launchd [1]
+Coalition:           com.example.redacted [1]
+
+Date/Time:           2026-04-12 18:04:38.4848 +0300
+Launch Time:         2026-04-12 18:04:16.5436 +0300
+OS Version:          iPhone OS 26.4.1 (23E254)
+Release Type:        User
+Baseband Version:    3.50.07
+Report Version:      104
+
+Exception Type:  EXC_CRASH (SIGABRT)
+Exception Codes: 0x0000000000000000, 0x0000000000000000
+Termination Reason: SIGNAL 6 Abort trap: 6
+Terminating Process: App [1]
+
+Triggered by Thread:  0
+
+Last Exception Backtrace:
+0   CoreFoundation                	0x18f04bc70 __exceptionPreprocess + 164 (NSException.m:249)
+1   libobjc.A.dylib               	0x18bb21224 objc_exception_throw + 88 (objc-exception.mm:356)
+2   CoreFoundation                	0x18f0b18f8 +[NSException raise:format:] + 128 (NSException.m:0)
+3   CarPlay                       	0x24865a1a0 -[CPInterfaceController pushTemplate:animated:completion:] + 344 (CPInterfaceController.m:263)
+4   App                         	0x104130e78 CPInterfaceController.safePush(_:animated:) + 16 (CarPlaySceneDelegate.swift:622)
+5   App                         	0x104130e78 CarPlaySceneDelegate.pushSearch() + 16 (CarPlaySceneDelegate.swift:269)
+6   App                         	0x104130e78 closure #1 in closure #2 in CarPlaySceneDelegate.attachLibraryCategoryHandlers(to:) + 208 (CarPlaySceneDelegate.swift:199)
+7   App                         	0x10412d251 <deduplicated_symbol> + 1
+8   App                         	0x10428dc71 <deduplicated_symbol> + 1
+9   App                         	0x10412d251 <deduplicated_symbol> + 1
+10  libswift_Concurrency.dylib    	0x18d05c385 completeTaskWithClosure(swift::AsyncContext*, swift::SwiftError*) + 1 (Task.cpp:546)
+
+Thread 0 name:
+Thread 0 Crashed:
+0   libsystem_kernel.dylib        	0x000000023dddf1d0 __pthread_kill + 8 (:-1)
+1   libsystem_pthread.dylib       	0x00000001edd867dc pthread_kill + 268 (pthread.c:1721)
+2   libsystem_c.dylib             	0x000000019aab0de4 abort + 148 (abort.c:122)
+3   libc++abi.dylib               	0x000000018bc21fd4 __abort_message + 132 (abort_message.cpp:66)
+4   libc++abi.dylib               	0x000000018bc23b90 demangling_terminate_handler() + 296 (cxa_default_handlers.cpp:77)
+5   libobjc.A.dylib               	0x000000018bb23868 _objc_terminate() + 156 (objc-exception.mm:496)
+6   App                         	0x0000000105496e80 CPPExceptionTerminate() + 344
+7   libc++abi.dylib               	0x000000018bc2e1f8 std::__terminate(void (*)()) + 16 (cxa_handlers.cpp:59)
+8   libc++abi.dylib               	0x000000018bc2fe18 __cxxabiv1::failed_throw(__cxxabiv1::__cxa_exception*) + 88 (cxa_exception.cpp:152)
+9   libc++abi.dylib               	0x000000018bc1c360 __cxa_throw + 92 (cxa_exception.cpp:299)
+10  libobjc.A.dylib               	0x000000018bb2138c objc_exception_throw + 448 (objc-exception.mm:385)
+11  CoreFoundation                	0x000000018f0b18f8 +[NSException raise:format:] + 128 (NSException.m:0)
+12  CarPlay                       	0x000000024865a1a0 -[CPInterfaceController pushTemplate:animated:completion:] + 344 (CPInterfaceController.m:263)
+13  App                         	0x0000000104130e78 CPInterfaceController.safePush(_:animated:) + 16 (CarPlaySceneDelegate.swift:622)
+14  App                         	0x0000000104130e78 CarPlaySceneDelegate.pushSearch() + 16 (CarPlaySceneDelegate.swift:269)
+15  App                         	0x0000000104130e78 closure #1 in closure #2 in CarPlaySceneDelegate.attachLibraryCategoryHandlers(to:) + 208 (CarPlaySceneDelegate.swift:199)
+16  App                         	0x000000010412d251 <deduplicated_symbol> + 1
+17  App                         	0x000000010428dc71 <deduplicated_symbol> + 1
+18  App                         	0x000000010412d251 <deduplicated_symbol> + 1
+19  libswift_Concurrency.dylib    	0x000000018d05c385 completeTaskWithClosure(swift::AsyncContext*, swift::SwiftError*) + 1 (Task.cpp:546)
+
+Thread 1 name:
+Thread 1:
+0   libsystem_kernel.dylib        	0x000000023ddd4c68 semaphore_timedwait_trap + 8 (:-1)
+1   libdispatch.dylib             	0x00000001c91b57d8 _dispatch_sema4_timedwait + 64 (lock.c:154)
+2   libdispatch.dylib             	0x00000001c9182a68 _dispatch_semaphore_wait_slow + 76 (semaphore.c:116)
+3   libswiftDispatch.dylib        	0x000000019f939350 OS_dispatch_semaphore.wait(wallTimeout:) + 24 (Dispatch.swift:189)
+4   App                         	0x00000001054df05c specialized DefaultHangTracker.waitForHang(semaphore:started:) + 400
+5   App                         	0x00000001054deeb0 specialized closure #1 in closure #1 in DefaultHangTracker.startIfNecessary() + 80
+6   App                         	0x000000010420fbc8 <deduplicated_symbol> + 28
+7   libdispatch.dylib             	0x00000001c91809a8 _dispatch_call_block_and_release + 32 (init.c:1597)
+8   libdispatch.dylib             	0x00000001c919a1e4 _dispatch_client_callout + 16 (client_callout.mm:85)
+9   libdispatch.dylib             	0x00000001c9188fb0 _dispatch_lane_serial_drain + 740 (queue.c:4033)
+10  libdispatch.dylib             	0x00000001c9189aac _dispatch_lane_invoke + 392 (queue.c:4124)
+11  libdispatch.dylib             	0x00000001c9193dac _dispatch_root_queue_drain_deferred_wlh + 284 (queue.c:7329)
+12  libdispatch.dylib             	0x00000001c91936ac _dispatch_workloop_worker_thread + 720 (queue.c:6923)
+13  libsystem_pthread.dylib       	0x00000001edd803b0 _pthread_wqthread + 292 (pthread.c:2696)
+14  libsystem_pthread.dylib       	0x00000001edd7f8c0 start_wqthread + 8 (:-1)
+
+Thread 2:
+0   libsystem_kernel.dylib        	0x000000023ddda808 __semwait_signal + 8 (:-1)
+1   libsystem_c.dylib             	0x000000019aa4682c nanosleep + 220 (nanosleep.c:104)
+2   libsystem_c.dylib             	0x000000019aa46954 sleep + 52 (sleep.c:62)
+3   App                         	0x00000001054ad670 monitorThreadCache + 220
+4   libsystem_pthread.dylib       	0x00000001edd83438 _pthread_start + 136 (pthread.c:931)
+5   libsystem_pthread.dylib       	0x00000001edd7f8cc thread_start + 8 (:-1)
+
+Thread 3 name:
+Thread 3:
+0   libsystem_kernel.dylib        	0x000000023ddd4cd4 mach_msg2_trap + 8 (:-1)
+1   libsystem_kernel.dylib        	0x000000023ddd830c mach_msg2_internal + 76 (mach_msg.c:201)
+2   libsystem_kernel.dylib        	0x000000023ddd62c0 thread_suspend + 108 (thread_actUser.c:1036)
+3   App                         	0x0000000105498234 handleExceptions + 116
+4   libsystem_pthread.dylib       	0x00000001edd83438 _pthread_start + 136 (pthread.c:931)
+5   libsystem_pthread.dylib       	0x00000001edd7f8cc thread_start + 8 (:-1)
+
+Thread 4 name:
+Thread 4:
+0   libsystem_kernel.dylib        	0x000000023ddd4cd4 mach_msg2_trap + 8 (:-1)
+1   libsystem_kernel.dylib        	0x000000023ddd830c mach_msg2_internal + 76 (mach_msg.c:201)
+2   libsystem_kernel.dylib        	0x000000023ddd822c mach_msg_overwrite + 424 (mach_msg.c:0)
+3   libsystem_kernel.dylib        	0x000000023ddd8078 mach_msg + 24 (mach_msg.c:323)
+4   App                         	0x0000000105498260 handleExceptions + 160
+5   libsystem_pthread.dylib       	0x00000001edd83438 _pthread_start + 136 (pthread.c:931)
+6   libsystem_pthread.dylib       	0x00000001edd7f8cc thread_start + 8 (:-1)
+
+Thread 5 name:
+Thread 5:
+0   libsystem_kernel.dylib        	0x000000023ddda808 __semwait_signal + 8 (:-1)
+1   libsystem_c.dylib             	0x000000019aa4682c nanosleep + 220 (nanosleep.c:104)
+2   Foundation                    	0x000000018c4e2df4 +[NSThread sleepForTimeInterval:] + 152 (NSThread.m:534)
+3   App                         	0x00000001054f11b4 @objc SentryThreadWrapper.sleep(forTimeInterval:) + 36
+4   App                         	0x000000010547ea04 -[SentryANRTrackerV2 detectANRs] + 536
+5   Foundation                    	0x000000018c25c804 __NSThread__start__ + 732 (NSThread.m:1004)
+6   libsystem_pthread.dylib       	0x00000001edd83438 _pthread_start + 136 (pthread.c:931)
+7   libsystem_pthread.dylib       	0x00000001edd7f8cc thread_start + 8 (:-1)
+
+Thread 6:
+
+Thread 7 name:
+Thread 7:
+0   libsystem_kernel.dylib        	0x000000023ddd4cd4 mach_msg2_trap + 8 (:-1)
+1   libsystem_kernel.dylib        	0x000000023ddd830c mach_msg2_internal + 76 (mach_msg.c:201)
+2   libsystem_kernel.dylib        	0x000000023ddd822c mach_msg_overwrite + 424 (mach_msg.c:0)
+3   libsystem_kernel.dylib        	0x000000023ddd8078 mach_msg + 24 (mach_msg.c:323)
+4   CoreFoundation                	0x000000018ef9bea4 __CFRunLoopServiceMachPort + 160 (CFRunLoop.c:2650)
+5   CoreFoundation                	0x000000018ef65f94 __CFRunLoopRun + 1188 (CFRunLoop.c:3035)
+6   CoreFoundation                	0x000000018ef651d0 _CFRunLoopRunSpecificWithOptions + 532 (CFRunLoop.c:3462)
+7   Foundation                    	0x000000018c1d8cf0 -[NSRunLoop(NSRunLoop) runMode:beforeDate:] + 212 (NSRunLoop.m:375)
+8   Foundation                    	0x000000018c1d8bd8 -[NSRunLoop(NSRunLoop) runUntilDate:] + 64 (NSRunLoop.m:422)
+9   UIKitCore                     	0x0000000194beeafc 0x194b08000 + 944892
+10  Foundation                    	0x000000018c25c804 __NSThread__start__ + 732 (NSThread.m:1004)
+11  libsystem_pthread.dylib       	0x00000001edd83438 _pthread_start + 136 (pthread.c:931)
+12  libsystem_pthread.dylib       	0x00000001edd7f8cc thread_start + 8 (:-1)
+
+Thread 8:
+
+Thread 9 name:
+Thread 9:
+0   libsystem_kernel.dylib        	0x000000023ddd4cd4 mach_msg2_trap + 8 (:-1)
+1   libsystem_kernel.dylib        	0x000000023ddd830c mach_msg2_internal + 76 (mach_msg.c:201)
+2   libsystem_kernel.dylib        	0x000000023ddd822c mach_msg_overwrite + 424 (mach_msg.c:0)
+3   libsystem_kernel.dylib        	0x000000023ddd8078 mach_msg + 24 (mach_msg.c:323)
+4   CoreFoundation                	0x000000018ef9bea4 __CFRunLoopServiceMachPort + 160 (CFRunLoop.c:2650)
+5   CoreFoundation                	0x000000018ef65f94 __CFRunLoopRun + 1188 (CFRunLoop.c:3035)
+6   CoreFoundation                	0x000000018ef651d0 _CFRunLoopRunSpecificWithOptions + 532 (CFRunLoop.c:3462)
+7   CFNetwork                     	0x00000001a43b19e8 +[__CFN_CoreSchedulingSetRunnable _run:] + 416 (CoreSchedulingSet.mm:1473)
+8   Foundation                    	0x000000018c25c804 __NSThread__start__ + 732 (NSThread.m:1004)
+9   libsystem_pthread.dylib       	0x00000001edd83438 _pthread_start + 136 (pthread.c:931)
+10  libsystem_pthread.dylib       	0x00000001edd7f8cc thread_start + 8 (:-1)
+
+
+Thread 0 crashed with ARM Thread State (64-bit):
+    x0: 0x0000000000000000   x1: 0x0000000000000000   x2: 0x0000000000000000   x3: 0x0000000000000000
+    x4: 0x000000018bc30cd3   x5: 0x000000016bd28670   x6: 0x000000000000006e   x7: 0xfffff0003ffff800
+    x8: 0x91ff0c7641394531   x9: 0x91ff0c77b834e4f1  x10: 0x0000000000000002  x11: 0x00000000fffffffd
+   x12: 0x0000000000000000  x13: 0x0000000000000000  x14: 0x0000000000000000  x15: 0x0000000000000000
+   x16: 0x0000000000000148  x17: 0x00000001f90da1c0  x18: 0x0000000000000000  x19: 0x0000000000000006
+   x20: 0x0000000000000103  x21: 0x00000001f90da2a0  x22: 0x00000001f6058000  x23: 0xbcb06a5adf3fba1a
+   x24: 0x0000000125061f80  x25: 0x00000001f90dd8b8  x26: 0x00000001fad9be50  x27: 0x0000000000000001
+   x28: 0x00000002843c2000   fp: 0x000000016bd285e0   lr: 0x00000001edd867dc
+    sp: 0x000000016bd285c0   pc: 0x000000023dddf1d0 cpsr: 0x40001000
+   esr: 0x56000080 (Syscall)
+
+
+Binary Images:
+        0x1040d4000 -         0x105a1ffff App arm64  <a8a78540b3d93b69bba2e8766dbf3194> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App
+        0x1060cc000 -         0x1060ebfff wavpack arm64  <652efd360fb83b58900fb4eebfc9ffe4> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/wavpack
+        0x10616c000 -         0x106177fff ogg arm64  <e56cdb5d9147301b93634930244be44e> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/ogg
+        0x106184000 -         0x1061affff FLAC arm64  <8b5f617122bc3772b218544d800cff44> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/FLAC
+        0x1061cc000 -         0x10622bfff opus arm64  <6686015dfc4f3e358c0a1a62abb3a9b5> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/opus
+        0x106244000 -         0x1062dffff vorbis arm64  <fe34b7a1ac3037439837e613a8a89853> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/vorbis
+        0x106324000 -         0x10635bfff lame arm64  <e74575127b883a1993a9c416878e0f36> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/lame
+        0x1063a4000 -         0x1063c3fff mpc arm64  <1d9dce7f66173e9699ffd586b506b897> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/mpc
+        0x106400000 -         0x106437fff mpg123 arm64  <8df2b29b97f9323db193d14f11fe52e9> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/mpg123
+        0x106450000 -         0x1064abfff sndfile arm64  <c38c6c5afd29398a9d35759b5a919ebb> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/sndfile
+        0x1064cc000 -         0x1064d7fff tta-cpp arm64  <e89c4a4ee13c3c9094e57d7cbf314540> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/tta-cpp
+        0x1064e8000 -         0x10668bfff Lottie arm64  <98ca029a2f4631ec91a939073701c19c> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/Lottie
+        0x10d204000 -         0x10d20ffff libobjc-trampolines.dylib arm64e  <e51a481b92f532ba9e8bfcecda3b8431> /private/preboot/Cryptexes/OS/usr/lib/libobjc-trampolines.dylib
+        0x18baf0000 -         0x18bb4147f libobjc.A.dylib arm64e  <dbe3f13eefc431c5b7623455cee83e7f> /usr/lib/libobjc.A.dylib
+        0x18bc1a000 -         0x18bc3459f libc++abi.dylib arm64e  <e7bd32f9ab56392d8e79857cde598da1> /usr/lib/libc++abi.dylib
+        0x18c1ce000 -         0x18d05645f Foundation arm64e  <66bf417c1d003457a302196bbaec23d0> /System/Library/Frameworks/Framework.framework/Foundation
+        0x18d057000 -         0x18d0e1925 libswift_Concurrency.dylib arm64e  <619001c3706d3bcdbff2e7a9324c9a53> /usr/lib/swift/libswift_Concurrency.dylib
+        0x18ef37000 -         0x18f4d30ff CoreFoundation arm64e  <11f13078e01b343ba0208d60bae7bbb6> /System/Library/Frameworks/Framework.framework/CoreFoundation
+        0x194b08000 -         0x1970473bf UIKitCore arm64e  <32c1b300a6013e148b533419a2d2f234> /System/Library/PrivateFrameworks/Framework.framework/UIKitCore
+        0x19aa3a000 -         0x19aab930f libsystem_c.dylib arm64e  <08196a2fb3fa3d0bb151ad50a6d0a0b4> /usr/lib/system/libsystem_c.dylib
+        0x19f938000 -         0x19f94e6a0 libswiftDispatch.dylib arm64e  <67b43890c919336a803d718fd340f781> /usr/lib/swift/libswiftDispatch.dylib
+        0x1a4320000 -         0x1a46d063f CFNetwork arm64e  <81defe1108d1377b92d1434c9f74fb3d> /System/Library/Frameworks/Framework.framework/CFNetwork
+        0x1c917f000 -         0x1c91c55ff libdispatch.dylib arm64e  <5fcac52f01e93bf08aac42c442c53560> /usr/lib/system/libdispatch.dylib
+        0x1edd7f000 -         0x1edd8b4ef libsystem_pthread.dylib arm64e  <6c9bcde9819d345d9d71b60ad47e5159> /usr/lib/system/libsystem_pthread.dylib
+        0x23ddd4000 -         0x23de0fac7 libsystem_kernel.dylib arm64e  <5f4e68e1021c3a8fa6f62c4c077d0676> /usr/lib/system/libsystem_kernel.dylib
+        0x248650000 -         0x2486f059f CarPlay arm64e  <3f6a9224a71b3b2695405955f30470c3> /System/Library/Frameworks/Framework.framework/CarPlay
+
+EOF

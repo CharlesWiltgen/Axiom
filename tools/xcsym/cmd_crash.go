@@ -47,10 +47,20 @@ func runCrash(out io.Writer, args []string) int {
 	noCache := fs.Bool("no-cache", false, "skip the persistent UUID cache")
 	noSymbolicate := fs.Bool("no-symbolicate", false, "skip atos calls; keep frames as parsed")
 	outputPath := fs.String("output", "", "write JSON to this path instead of stdout")
+	filterMatch := fs.String("filter", "", "for .xccrashpoint inputs: pick the Filter_* dir whose name contains this substring (default: most-recent-mtime)")
+	preferLocallySymbolicated := fs.Bool("prefer-locally-symbolicated", false, "for .xccrashpoint inputs: pick Logs/LocallySymbolicated/*.crash instead of the raw Logs/*.crash (raw preserves original UUIDs for dSYM verify)")
 	if err := fs.Parse(args); err != nil {
 		return 1
 	}
 	if fs.NArg() != 1 {
+		// Common footgun: "xcsym crash file.crash --no-symbolicate" stops
+		// flag parsing at the first positional, so the trailing flags
+		// become extra positionals and we land here. Tell the user how to
+		// rephrase rather than just complain about arg count.
+		if fs.NArg() > 1 {
+			fmt.Fprintln(os.Stderr, "crash: extra arguments after the crash file — place all --flags before the file path (e.g. `xcsym crash --no-symbolicate file.crash`)")
+			return 1
+		}
 		fmt.Fprintln(os.Stderr, "crash: exactly one crash file required (use '-' for stdin)")
 		return 1
 	}
@@ -62,10 +72,14 @@ func runCrash(out io.Writer, args []string) int {
 		return 1
 	}
 
-	// Read input.
+	// Read input. .xccrashpoint bundles (Xcode Organizer's directory format)
+	// are resolved to a single .crash file inside Filters/*/Logs/ before
+	// reading; the bundle path is preserved in InputInfo.Bundle so JSON
+	// consumers can tell where the .crash came from.
 	path := fs.Arg(0)
 	var data []byte
 	var err error
+	bundlePath := ""
 	if path == "-" {
 		data, err = io.ReadAll(os.Stdin)
 		if err != nil {
@@ -73,6 +87,27 @@ func runCrash(out io.Writer, args []string) int {
 			return 2
 		}
 	} else {
+		if IsXccrashpointPath(path) {
+			res, resolveErr := ResolveXccrashpoint(path, xccrashpointResolveOptions{
+				FilterMatch:               *filterMatch,
+				PreferLocallySymbolicated: *preferLocallySymbolicated,
+			})
+			if resolveErr != nil {
+				// Treat "bundle exists but unwalkable" the same as any other
+				// unsupported input: structured JSON reject so agents can
+				// route on `error`, exit 2 per the shared contract.
+				fmt.Fprintf(os.Stderr, "crash: %v: %s\n", resolveErr, path)
+				return writeReject(out, *outputPath, crashRejectPayload{
+					Tool: "xcsym", Version: version,
+					Error:   "unsupported_format",
+					Message: resolveErr.Error(),
+					Input:   path,
+					Routing: "Bundle is empty or doesn't follow the Xcode Organizer layout (Filters/Filter_*/Logs/*.crash). Point xcsym at a specific .crash file inside the bundle, or pull a fresh crash from the Organizer.",
+				}, 2)
+			}
+			bundlePath = res.BundlePath
+			path = res.CrashPath
+		}
 		data, err = os.ReadFile(path)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "crash: cannot read %s: %v\n", path, err)
@@ -171,7 +206,7 @@ func runCrash(out io.Writer, args []string) int {
 	env.CLTVersionShort = shortenCLT(env.CLTVersion)
 
 	// Compose report.
-	report, err := Format(raw, status, env, InputInfo{Path: path, Format: detected}, cat, tier)
+	report, err := Format(raw, status, env, InputInfo{Path: path, Format: detected, Bundle: bundlePath}, cat, tier)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "crash: format: %v\n", err)
 		return 5
