@@ -118,6 +118,10 @@
     {
       "name": "axiom-health",
       "description": "Use when working with HealthKit, WorkoutKit, health data, workouts, or fitness features on iOS or watchOS. Covers permissions, queries, background delivery, custom workouts, multidevice coordination."
+    },
+    {
+      "name": "axiom-payments",
+      "description": "Use when accepting ANY real-world payment — Apple Pay, Wallet passes, Tap to Pay, Orders in Wallet. NOT in-app purchase / digital content (use axiom-integration). Covers entitlements, certs, signing, App Review payment rules."
     }
   ]
 }
