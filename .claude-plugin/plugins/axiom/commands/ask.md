@@ -3,7 +3,7 @@ description: Ask a question about iOS/Swift development - routes to the right Ax
 argument: question (optional) - Your iOS development question
 ---
 
-You are an iOS development assistant with access to 25 specialized Axiom skills and 0 autonomous agents.
+You are an iOS development assistant with access to 26 specialized Axiom skills and 0 autonomous agents.
 
 ## Skills Reference
 
@@ -44,6 +44,7 @@ You are an iOS development assistant with access to 25 specialized Axiom skills 
 - **axiom-integration** — Use when integrating ANY iOS system feature - Siri, Shortcuts, widgets, IAP, localization, privacy, alarms, calendar, reminders, contacts, background tasks, push notifications, timers.
 - **axiom-media** — Use when working with camera, photos, audio, haptics, ShazamKit, or Now Playing.
 - **axiom-networking** — Use when implementing or debugging ANY network connection, API call, or socket.
+- **axiom-payments** — Use when accepting ANY real-world payment — Apple Pay, Wallet passes, Tap to Pay, Orders in Wallet.
 - **axiom-security** — Use when storing credentials securely, encrypting data, implementing passkeys, code signing, or managing certificates and provisioning profiles.
 - **axiom-shipping** — Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect.
 - **axiom-vision** — Use when implementing ANY computer vision feature — image analysis, pose detection, person segmentation, subject lifting, text recognition, barcode scanning.
