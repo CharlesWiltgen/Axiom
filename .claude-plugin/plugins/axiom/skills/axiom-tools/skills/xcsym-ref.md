@@ -1,14 +1,14 @@
 ---
 name: xcsym-ref
-description: Use when symbolicating an .ips, MetricKit, or legacy .crash text file, diagnosing dSYM UUID mismatches, inventorying dSYMs, or anonymizing a crash for fixture use. Reference for the xcsym CLI that ships with Axiom.
+description: Use when symbolicating an .ips, MetricKit, legacy .crash text file, or .xccrashpoint bundle, diagnosing dSYM UUID mismatches, inventorying dSYMs, or anonymizing a crash for fixture use. Reference for the xcsym CLI that ships with Axiom.
 license: MIT
 ---
 
 # xcsym Reference (iOS/macOS Crash Symbolication)
 
-xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), and Apple's legacy `.crash` text reports end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.
+xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's legacy `.crash` text reports, and Xcode Organizer `.xccrashpoint` bundles end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.
 
-`.crash` text is the format Xcode Organizer exposes when a user chooses "Show in Finder" on a TestFlight crash — `.xccrashpoint` bundles nest `.crash` files under `Filters/…/Logs/`. xcsym parses either the raw file or the full bundle path.
+`.crash` text is the format Xcode Organizer exposes when a user chooses "Show in Finder" on a TestFlight crash. `.xccrashpoint` bundles nest `.crash` files under `Filters/Filter_<id>/Logs/` (with optional `LocallySymbolicated/` siblings). Point xcsym at either the bundle path or the inner `.crash` directly — bundle inputs are walked automatically (most-recent Filter dir, raw not LocallySymbolicated by default).
 
 ## Invocation
 
@@ -52,9 +52,12 @@ xcsym crash --no-spotlight <file>               # skip mdfind lookups
 xcsym crash --output <path> <file>              # write JSON to a file
 xcsym crash - < crash.ips                       # read from stdin (for pasted content)
 xcsym crash crash.crash                         # legacy Apple text format (Organizer export)
+xcsym crash Foo.xccrashpoint                    # Xcode Organizer bundle (auto-walks to inner .crash)
+xcsym crash --filter 1.2.3 Foo.xccrashpoint     # bundle with multiple Filter_* dirs: pick the one whose name contains "1.2.3"
+xcsym crash --prefer-locally-symbolicated Foo.xccrashpoint  # use Logs/LocallySymbolicated/*.crash instead of raw
 ```
 
-Accepted inputs: `.ips` (v1 and v2 JSON), MetricKit `MXCrashDiagnostic` JSON, and Apple's legacy `.crash` text format. The file extension doesn't matter — format is auto-detected from content.
+Accepted inputs: `.ips` (v1 and v2 JSON), MetricKit `MXCrashDiagnostic` JSON, Apple's legacy `.crash` text format, and `.xccrashpoint` directory bundles. The file extension doesn't matter for non-bundle inputs — format is auto-detected from content. For `.xccrashpoint` bundles, xcsym walks `Filters/Filter_*/Logs/` and picks one `.crash` file: most-recent Filter dir (override with `--filter <substring>`), raw copy preferred over `LocallySymbolicated/` (override with `--prefer-locally-symbolicated` to keep Xcode's atos output instead of re-symbolicating). The original bundle path is surfaced in `input.bundle` so consumers can tell where the resolved `.crash` came from.
 
 **Unsupported input returns exit 2** with a structured JSON reject on stdout (`{"error":"unsupported_format", …}`) so agents can route on the error field instead of scraping stderr. See the Exit Codes section below.
 
@@ -149,7 +152,8 @@ Top-level JSON emitted by `crash`:
   },
   "input": {
     "path": "testdata/crashes/ips_v2/swift_forced_unwrap.ips",
-    "format": "ips_json_v2"  // one of: ips_json_v1 | ips_json_v2 | metrickit_json | apple_crash_text
+    "format": "ips_json_v2",  // one of: ips_json_v1 | ips_json_v2 | metrickit_json | apple_crash_text
+    "bundle": "/path/to/Foo.xccrashpoint"  // omitted unless input was a .xccrashpoint bundle
   },
   "crash": {
     "app": { "name": "...", "version": "...", "bundle_id": "..." },
@@ -226,7 +230,7 @@ Exit codes are subcommand-specific. Usage errors, tool errors, timeouts, and out
 
 On hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{"tool":"xcsym","error":"hang_report","message":"...","input":"...","routing":"..."}`. Route the user to hang-diagnostics when you see `"error":"hang_report"`.
 
-On unsupported input (anything that isn't `.ips`, MetricKit, or Apple `.crash` text), `crash` exits 2 after writing `{"tool":"xcsym","error":"unsupported_format","message":"...","input":"...","routing":"..."}` to stdout. The routing field names the accepted formats.
+On unsupported input (anything that isn't `.ips`, MetricKit, Apple `.crash` text, or a `.xccrashpoint` bundle xcsym can walk), `crash` exits 2 after writing `{"tool":"xcsym","error":"unsupported_format","message":"...","input":"...","routing":"..."}` to stdout. The routing field names the accepted formats. A `.xccrashpoint` directory that exists but doesn't contain `Filters/Filter_*/Logs/*.crash` is treated as unsupported with a routing hint suggesting the user point xcsym at a specific `.crash` inside the bundle.
 
 ## Pattern Tag Catalog
 
@@ -280,6 +284,8 @@ Source: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact or
 | Exit 3, main UUID mismatch | Crash came from a different build than the archive on disk | `xcsym find-dsym <uuid>` against the exact UUID from the crash |
 | Exit 4, main arch mismatch | arm64 vs arm64e slice mismatch | Pass `--arch` to `find-dsym`; verify the archive contains the slice |
 | Exit 7, "main matched, others missing" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |
+| Exit 2 with `unsupported_format` on `.xccrashpoint` | Bundle has no `Filters/Filter_*/Logs/*.crash` (corrupt or stripped) | Pull a fresh export from Xcode Organizer; or point xcsym at a specific `.crash` inside the bundle |
+| `.xccrashpoint` with multiple builds returns the wrong one | Default picks most-recent-mtime Filter dir | Use `--filter <substring>` to select a specific build by version/platform |
 | `pattern_tag="unclassified"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |
 | `size_warning` in output | Tier exceeded its warn threshold (4 KB summary / 50 KB standard / 100 KB full) | Switch to the next smaller tier — the warning text names it |
 | `{"error":"hang_report"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |

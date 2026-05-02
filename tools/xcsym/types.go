@@ -39,6 +39,13 @@ type Environment struct {
 type InputInfo struct {
 	Path   string `json:"path"`
 	Format string `json:"format"` // ips_json_v1 | ips_json_v2 | metrickit_json
+	// Bundle is the original .xccrashpoint argument when the user pointed
+	// xcsym at an Xcode Organizer bundle and the resolver walked into it
+	// to find a .crash file. Path then carries the resolved file inside
+	// the bundle, and a separate XccrashpointBundleInfo (full tier only)
+	// records which Filter dir / copy was chosen. omitempty so non-bundle
+	// runs don't see a new field.
+	Bundle string `json:"bundle,omitempty"`
 }
 
 type CrashInfo struct {
