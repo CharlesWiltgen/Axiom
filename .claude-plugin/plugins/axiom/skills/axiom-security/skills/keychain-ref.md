@@ -571,10 +571,21 @@ When querying, `kSecAttrSynchronizable` defaults to `kSecAttrSynchronizableAny` 
 
 ---
 
+## Payment-Related Certs in Keychain
+
+Apple Pay and Wallet integrations export specific certs from Keychain for server-side use. The signing-discipline lives in `axiom-payments`; this section names the certs and points there:
+
+- **Merchant Identity Certificate** (Apple Pay on the web; RSA 2048): export from Keychain as `.p12`, openssl-split into `.crt` + `.key` for two-way TLS to `apple-pay-gateway.apple.com` — see `axiom-payments/skills/apple-pay-web.md` § "Pre-Flight Web Checklist"
+- **Payment Processing Certificate** (Apple Pay native + web; ECC 256-bit, RSA 2048 for mainland China): generated from a CSR (often PSP-supplied); 25-month expiry; renewal uses a create-but-don't-activate workflow — see `axiom-payments/skills/apple-pay.md` § "Cert renewal"
+- **Pass Type ID Certificate** (Wallet passes; RSA): exports as `.p12`, used for PKCS #7 detached signature with WWDR Intermediate; doubles as the APNs cert for pass updates — see `axiom-payments/skills/wallet-passes.md`
+- **Order Type ID Certificate** (Wallet orders): same pattern as Pass Type ID Cert; doubles as APNs cert for order updates — see `axiom-payments/skills/wallet-orders.md`
+
+The Apple WWDR Intermediate Certificate (G6 currently) is not stored in Keychain — download from `apple.com/certificateauthority/` for inclusion in PKCS #7 `extracerts`.
+
 ## Resources
 
 **WWDC**: 2013-709, 2014-711, 2020-10147
 
 **Docs**: /security/keychain_services, /localauthentication, /security/secaccesscontrolcreateflags, /security/secitemadd(_:_:)
 
-**Skills**: axiom-security (skills/code-signing-ref.md), axiom-security (skills/app-attest.md)
+**Skills**: axiom-security (skills/code-signing-ref.md), axiom-security (skills/app-attest.md), axiom-payments

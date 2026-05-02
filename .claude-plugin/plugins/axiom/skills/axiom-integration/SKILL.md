@@ -18,6 +18,7 @@ license: MIT
 | Core Spotlight indexing | See `skills/core-spotlight-ref.md` |
 | Widgets, Live Activities, Control Center | See `skills/extensions-widgets.md` |
 | Widget/Live Activity API reference | See `skills/extensions-widgets-ref.md` |
+| Apple Pay (physical goods, services, donations) | **Use `axiom-payments` instead** |
 | In-app purchases, subscriptions | See `skills/in-app-purchases.md` |
 | StoreKit 2 API reference | See `skills/storekit-ref.md` |
 | Calendar events, reminders (EventKit) | See `skills/eventkit.md` |

@@ -18,6 +18,7 @@ license: MIT
 | App Sandbox, file access, security-scoped bookmarks | See `skills/sandbox-and-file-access.md` |
 | Developer ID, notarization, Sparkle auto-updates | See `skills/direct-distribution.md` |
 | NSViewRepresentable, NSHostingController, AppKit bridging | See `skills/appkit-interop.md` |
+| Apple Pay on Mac / Catalyst | See `axiom-payments/skills/apple-pay.md` (Catalyst section) |
 
 ## Cross-Suite Routes
 

@@ -26,6 +26,17 @@ If you see ANY of these, suspect a submission issue and use this skill:
   - Resubmitting without changes wastes 3-7 days per cycle.
   - If you genuinely disagree, use the appeal process (Pattern 7).
 
+## Apple Pay / Wallet / Tap to Pay Rejections
+
+Payment-related rejections route to the `axiom-payments` suite for the root cause, then back here for the appeal workflow:
+
+- **Section 3.1.1 / 3.1.3(e) misuse** (IAP-vs-Apple-Pay rail) → `axiom-payments/skills/apple-pay-vs-iap.md` for the boundary rule, then `axiom-payments/skills/payments-diag.md` § "App Store Rejection Patterns" for the specific rejection-text mapping
+- **Tap to Pay entitlement-related submission failures** ("Submitted" stuck, distribution entitlement not re-requested) → `axiom-payments/skills/payments-diag.md` § "Tap to Pay Entitlement Stuck"
+- **Apple Pay on the Web AUG violations** (parity rule, primary-option rule, prohibited categories) → `axiom-payments/skills/apple-pay-vs-iap.md` § "Web — Acceptable Use Guidelines"
+- **HIG button violations** (Mark used as button, custom Apple Pay branding, Tap to Pay button used for non-payment) → `axiom-payments/skills/apple-pay.md` and `tap-to-pay.md`
+
+Once root cause is identified, return here for appeal workflow (Pattern 7 below) and Resolution Center communication.
+
 ## Mandatory First Steps
 
 **ALWAYS do these BEFORE changing any code:**

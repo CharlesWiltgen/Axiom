@@ -54,6 +54,8 @@ Verified against Apple's published guidelines (February 6, 2026 revision).
 
 ## Section 3: Business
 
+For Apple Pay / Wallet / Tap to Pay specifically, see `axiom-payments/skills/apple-pay-vs-iap.md` for the IAP boundary and `axiom-payments/skills/payments-diag.md` for entitlement and integration rejection patterns.
+
 | Guideline | Topic |
 |-----------|-------|
 | 3.1.1 | In-App Purchase required for digital goods/services. Loot box odds must be disclosed before purchase. NFTs: may sell via IAP, ownership must not unlock features. |

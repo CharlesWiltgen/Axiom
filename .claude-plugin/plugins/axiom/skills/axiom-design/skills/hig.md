@@ -425,13 +425,21 @@ Every design decision should support these principles:
 
 ---
 
+## Payments
+
+Apple Pay, Wallet, and Tap to Pay each have their own HIG with rules App Review enforces. The discipline lives in `axiom-payments`:
+
+- **Apple Pay button + Apple Pay Mark + payment-sheet UX** → `axiom-payments/skills/apple-pay.md` § "Apple Pay Mark vs Apple Pay Button" + `apple-pay-web.md` § "Acceptable Use Guidelines" (parity rule)
+- **Wallet pass design** (image specs, Apple Watch layout, semantic tags, poster event ticket iOS 18+) → `axiom-payments/skills/wallet-passes.md` § "iOS 18 Poster Event Ticket Migration" + `wallet-passes-ref.md` image table
+- **Tap to Pay on iPhone** (button label, T&C flow, progress indicator, generic labels for non-payment uses) → `axiom-payments/skills/tap-to-pay.md` § "Checkout UX"
+
 ## Resources
 
 **WWDC**: 356, 2019-808
 
-**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/typography
+**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/apple-pay, /design/human-interface-guidelines/wallet, /design/human-interface-guidelines/tap-to-pay-on-iphone
 
-**Skills**: axiom-design (skills/hig-ref.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-accessibility
+**Skills**: axiom-design (skills/hig-ref.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-accessibility, axiom-payments
 
 ---
 
