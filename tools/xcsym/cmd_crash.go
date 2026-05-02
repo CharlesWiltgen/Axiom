@@ -72,10 +72,6 @@ func runCrash(out io.Writer, args []string) int {
 		return 1
 	}
 
-	// Read input. .xccrashpoint bundles (Xcode Organizer's directory format)
-	// are resolved to a single .crash file inside Filters/*/Logs/ before
-	// reading; the bundle path is preserved in InputInfo.Bundle so JSON
-	// consumers can tell where the .crash came from.
 	path := fs.Arg(0)
 	var data []byte
 	var err error
@@ -92,18 +88,25 @@ func runCrash(out io.Writer, args []string) int {
 				FilterMatch:               *filterMatch,
 				PreferLocallySymbolicated: *preferLocallySymbolicated,
 			})
-			if resolveErr != nil {
-				// Treat "bundle exists but unwalkable" the same as any other
-				// unsupported input: structured JSON reject so agents can
-				// route on `error`, exit 2 per the shared contract.
+			if errors.Is(resolveErr, errNotXccrashpoint) {
+				// Distinct from "unsupported_format" (which means "wrong file
+				// type") so agents can route differently — this user has the
+				// right *kind* of input, the bundle is just missing/empty.
 				fmt.Fprintf(os.Stderr, "crash: %v: %s\n", resolveErr, path)
 				return writeReject(out, *outputPath, crashRejectPayload{
 					Tool: "xcsym", Version: version,
-					Error:   "unsupported_format",
+					Error:   "empty_bundle",
 					Message: resolveErr.Error(),
 					Input:   path,
 					Routing: "Bundle is empty or doesn't follow the Xcode Organizer layout (Filters/Filter_*/Logs/*.crash). Point xcsym at a specific .crash file inside the bundle, or pull a fresh crash from the Organizer.",
 				}, 2)
+			}
+			if resolveErr != nil {
+				// Real I/O error (permission denied, stale NFS, etc.) — surface
+				// as a tool error per the shared exit-code contract; don't
+				// pretend the bundle is empty.
+				fmt.Fprintf(os.Stderr, "crash: resolve %s: %v\n", path, resolveErr)
+				return 5
 			}
 			bundlePath = res.BundlePath
 			path = res.CrashPath

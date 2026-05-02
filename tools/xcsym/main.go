@@ -17,7 +17,7 @@ Usage:
   xcsym verify <file>        Verify UUID and arch match per image
   xcsym anonymize <file>     Strip PII from a crash file for fixture use
 
-Accepts .ips (v1/v2), MetricKit MXCrashDiagnostic JSON, Apple's legacy .crash text format, and Xcode Organizer .xccrashpoint bundles. Auto-detects format; .xccrashpoint bundles are walked to pick the .crash inside (default: most-recent Filter, raw not LocallySymbolicated; override with --filter and --prefer-locally-symbolicated).
+Accepts .ips (v1/v2), MetricKit MXCrashDiagnostic JSON, Apple's legacy .crash text format, and Xcode Organizer .xccrashpoint bundles. Auto-detects format; .xccrashpoint bundles are walked to pick the .crash inside (default: Filter_* dir with the most recent modification time, raw .crash not LocallySymbolicated; override with --filter and --prefer-locally-symbolicated).
 
 Run 'xcsym <command> --help' for per-command flags.
 `

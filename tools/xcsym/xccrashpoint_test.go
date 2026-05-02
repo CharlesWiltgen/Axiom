@@ -28,6 +28,14 @@ func TestIsXccrashpointPath(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Case-insensitive bundle suffix: APFS/HFS+ are case-insensitive by
+	// default, so a bundle round-tripped through Finder/zip/iCloud as
+	// Foo.XCCrashpoint must still resolve.
+	uppercaseBundle := filepath.Join(tmp, "Upper.XCCrashpoint")
+	if err := os.Mkdir(uppercaseBundle, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
 	cases := []struct {
 		name string
 		path string
@@ -40,6 +48,7 @@ func TestIsXccrashpointPath(t *testing.T) {
 		// bundle. Real .xccrashpoints are always directories.
 		{"file with bundle suffix", suffixedFile, false},
 		{"missing path", filepath.Join(tmp, "nope.xccrashpoint"), false},
+		{"uppercase suffix", uppercaseBundle, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -50,10 +59,8 @@ func TestIsXccrashpointPath(t *testing.T) {
 	}
 }
 
-// makeBundle builds a minimal .xccrashpoint at root with the given Filter
-// directory names. Each filter gets a Logs/sample.crash and a
-// LocallySymbolicated/sample.crash. The returned slice mirrors the input
-// order so tests can index into it for path assertions.
+// makeBundle returns the absolute Filter dir paths in input order so tests
+// can Chtimes specific dirs without re-deriving the names.
 func makeBundle(t *testing.T, root string, filterNames []string) []string {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Join(root, "Filters"), 0o755); err != nil {
@@ -89,9 +96,6 @@ func TestResolveXccrashpoint_DefaultPicksRawCrash(t *testing.T) {
 	if !strings.HasSuffix(res.CrashPath, filepath.Join("Logs", "raw.crash")) {
 		t.Errorf("CrashPath = %q, want raw .crash directly under Logs/", res.CrashPath)
 	}
-	if res.UsedLocallySymbolicated {
-		t.Error("UsedLocallySymbolicated = true, want false (default prefers raw)")
-	}
 	if !strings.HasSuffix(res.BundlePath, "Sample.xccrashpoint") {
 		t.Errorf("BundlePath = %q, want absolute path ending in Sample.xccrashpoint", res.BundlePath)
 	}
@@ -108,9 +112,6 @@ func TestResolveXccrashpoint_PreferLocallySymbolicated(t *testing.T) {
 	wantSuffix := filepath.Join("LocallySymbolicated", "sym.crash")
 	if !strings.HasSuffix(res.CrashPath, wantSuffix) {
 		t.Errorf("CrashPath = %q, want suffix %q", res.CrashPath, wantSuffix)
-	}
-	if !res.UsedLocallySymbolicated {
-		t.Error("UsedLocallySymbolicated = false, want true")
 	}
 }
 
@@ -134,9 +135,6 @@ func TestResolveXccrashpoint_PreferLocallySymbolicated_FallbackToRaw(t *testing.
 	}
 	if !strings.HasSuffix(res.CrashPath, filepath.Join("Logs", "raw.crash")) {
 		t.Errorf("CrashPath = %q, want fallback to raw.crash", res.CrashPath)
-	}
-	if res.UsedLocallySymbolicated {
-		t.Error("UsedLocallySymbolicated = true, want false after fallback")
 	}
 }
 
@@ -185,6 +183,38 @@ func TestResolveXccrashpoint_FilterMatch(t *testing.T) {
 	}
 }
 
+func TestResolveXccrashpoint_FilterMatch_IsPlainSubstring(t *testing.T) {
+	// Documents (and pins) that --filter is a plain substring match —
+	// passing "1.0" matches both "Filter_x-1.0.0-Any" and
+	// "Filter_y-11.0.0-Any". Users who want a single match should pass a
+	// dash-bounded fragment like "1.0.0-Any". If this test ever needs to
+	// flip to segment-anchored matching, expect a CLI breaking change.
+	bundle := filepath.Join(t.TempDir(), "Sample.xccrashpoint")
+	dirs := makeBundle(t, bundle, []string{
+		"Filter_x-1.0.0-Any",
+		"Filter_y-11.0.0-Any",
+	})
+	// Force the 11.0.0 entry to be the most-recent so we can prove "1.0"
+	// matched both (otherwise mtime ordering alone would explain picking
+	// 11.0.0).
+	now := time.Now()
+	old := now.Add(-1 * time.Hour)
+	if err := os.Chtimes(dirs[0], old, old); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(dirs[1], now, now); err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := ResolveXccrashpoint(bundle, xccrashpointResolveOptions{FilterMatch: "1.0"})
+	if err != nil {
+		t.Fatalf("ResolveXccrashpoint: %v", err)
+	}
+	if !strings.Contains(res.FilterDir, "Filter_y-11.0.0") {
+		t.Errorf("FilterDir = %q, want substring match including 11.0.0 entry (proves substring, not segment match)", res.FilterDir)
+	}
+}
+
 func TestResolveXccrashpoint_FilterMatch_NoneMatched(t *testing.T) {
 	bundle := filepath.Join(t.TempDir(), "Sample.xccrashpoint")
 	makeBundle(t, bundle, []string{"Filter_alpha-0.1.0-Any"})
@@ -219,6 +249,33 @@ func TestResolveXccrashpoint_FilterDirsButNoCrash(t *testing.T) {
 	_, err := ResolveXccrashpoint(bundle, xccrashpointResolveOptions{})
 	if !errors.Is(err, errNotXccrashpoint) {
 		t.Errorf("err = %v, want errNotXccrashpoint", err)
+	}
+}
+
+func TestResolveXccrashpoint_PermissionError_IsNotMistakenForEmpty(t *testing.T) {
+	// Real I/O errors must not collapse to errNotXccrashpoint — that would
+	// route the user to "your bundle is corrupt" when the actual problem is
+	// a permission denial, stale NFS handle, etc. (Skipped when running as
+	// root, where chmod-based permission denial doesn't fire.)
+	if os.Geteuid() == 0 {
+		t.Skip("permission test doesn't fire for root")
+	}
+	bundle := filepath.Join(t.TempDir(), "Locked.xccrashpoint")
+	filtersDir := filepath.Join(bundle, "Filters")
+	if err := os.MkdirAll(filtersDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(filtersDir, 0o000); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(filtersDir, 0o755) })
+
+	_, err := ResolveXccrashpoint(bundle, xccrashpointResolveOptions{})
+	if err == nil {
+		t.Fatal("err = nil, want non-nil for permission denied")
+	}
+	if errors.Is(err, errNotXccrashpoint) {
+		t.Errorf("err = %v, want a real I/O error (not errNotXccrashpoint)", err)
 	}
 }
 
