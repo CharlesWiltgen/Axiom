@@ -3,15 +3,16 @@
 # Detects iOS-related prompts and injects specific skill routing instructions
 # Note: Avoiding 'set -euo pipefail' for robustness - hooks should not block on errors
 
-input_json=$(cat)
-
-python3 - "$input_json" <<'PYTHON_SCRIPT'
+python3 -c "$(cat <<'PYTHON_SCRIPT'
 import json
 import re
 import sys
 
+# Read full payload from stdin — argv path hits the ~256KB-1MB platform limit
+# on large pasted prompts. Python source is delivered via -c so sys.stdin
+# remains the parent shell's stdin (the JSON payload from Claude Code).
 try:
-    input_data = json.loads(sys.argv[1])
+    input_data = json.load(sys.stdin)
     prompt = input_data.get("prompt", "")
 except Exception:
     print("{}")
@@ -172,5 +173,6 @@ output = {
 
 print(json.dumps(output))
 PYTHON_SCRIPT
+)"
 
 exit 0

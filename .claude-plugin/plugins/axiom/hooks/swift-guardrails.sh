@@ -27,7 +27,9 @@ fi
 
 # Output results
 if [[ -n "$ISSUES" ]]; then
-  ESCAPED_ISSUES=$(echo -e "$ISSUES" | sed 's/"/\\"/g' | tr '\n' ' ')
+  # Use Python json.dumps for correct escaping of backslashes, control chars,
+  # and quotes — sed-only escaping breaks for Swift files containing `\`.
+  ESCAPED_ISSUES=$(printf '%b' "$ISSUES" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
 
   if [[ "$CRITICAL" == "true" ]]; then
     cat <<ENDJSON
@@ -36,7 +38,7 @@ if [[ -n "$ISSUES" ]]; then
   "reason": "Swift guardrail: @State properties must have an explicit access level (usually private). Without it, child views can create independent copies of the state, causing silent bugs. Fix: change @State var to @State private var.",
   "hookSpecificOutput": {
     "hookEventName": "PostToolUse",
-    "additionalContext": "${ESCAPED_ISSUES}"
+    "additionalContext": ${ESCAPED_ISSUES}
   }
 }
 ENDJSON
