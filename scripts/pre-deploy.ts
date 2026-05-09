@@ -13,6 +13,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
+import {
+  parseFrontmatterAreas,
+  parseBodyTable,
+  parseDocAreas,
+  parseSidebarAreas,
+  validateParity,
+} from "./audit-parity.ts";
 
 const root = path.resolve(import.meta.dirname!, "..");
 const pluginDir = path.join(root, ".claude-plugin/plugins/axiom");
@@ -653,127 +660,73 @@ if (planningLeaks === 0) {
 
 // ── 12d. /axiom:audit Source-of-Truth Parity ──
 //
-// /axiom:audit's list of audit areas lives in three places that must stay
-// in sync:
+// /axiom:audit's list of audit areas lives in four places that must agree:
 //   A — frontmatter `argument:` line in commands/audit.md (CLI dispatch)
 //   B — body `## Available Audits` table column 1 (agent dispatch)
 //   C — docs/commands/utility/audit.md "Available Audit Areas" code spans
-//       (user reference)
-// Plus D — body table column 2 (agent name) must resolve to a real agent.
+//   D — docs/.vitepress/config.ts commands sidebar audit-* links
 //
-// axiom-77g shipped a broken docs page because A↔C drifted silently;
-// axiom-uk3 generalises the check so internal source drift (A↔B) and
-// dispatch-to-deleted-agent (D) are caught too.
+// Plus E — every agent name in B's column 2 must resolve to a real file
+// under .claude-plugin/plugins/axiom/agents/<agent>.md.
+//
+// axiom-77g shipped a broken docs page because A↔C drifted silently.
+// axiom-uk3 generalised to A↔B and dispatch-to-deleted-agent. Then we
+// caught a sidebar count mismatch (5 in sidebar vs 8 in main page UI &
+// Design) that the original 3-way check missed; D covers it.
+//
+// Parsing/validation logic lives in scripts/audit-parity.ts (pure
+// functions, imported at the top of this file). Tests in
+// scripts/audit-parity.test.ts run on every predeploy via `node --test`.
 
 heading("12d. /axiom:audit Source-of-Truth Parity");
 
 const auditCmdPath = path.join(pluginDir, "commands/audit.md");
 const auditDocPath = path.join(root, "docs/commands/utility/audit.md");
+const sidebarConfigPath = path.join(root, "docs/.vitepress/config.ts");
 
 if (!fs.existsSync(auditCmdPath)) {
   error("audit-parity", `${auditCmdPath} not found`);
 } else if (!fs.existsSync(auditDocPath)) {
   error("audit-parity", `${auditDocPath} not found`);
+} else if (!fs.existsSync(sidebarConfigPath)) {
+  error("audit-parity", `${sidebarConfigPath} not found`);
 } else {
   const cmdContent = fs.readFileSync(auditCmdPath, "utf8");
   const docContent = fs.readFileSync(auditDocPath, "utf8");
+  const cfgContent = fs.readFileSync(sidebarConfigPath, "utf8");
 
-  // A: frontmatter argument list. Drop "all" — meta-target dispatching to
-  // health-check, not a real audit area.
-  const argMatch = cmdContent.match(/^argument:\s*"[^"]*Which audit to run:\s*([^"]+)"/m);
-  const sourceFrontmatter: string[] = argMatch
-    ? argMatch[1]
-        .split(",")
-        .map((s: string) => s.trim())
-        .filter((s: string) => s.length > 0 && s !== "all")
-    : [];
+  const frontmatter = parseFrontmatterAreas(cmdContent);
+  const bodyRows = parseBodyTable(cmdContent);
+  const body = bodyRows.map((r) => r.area);
+  const docAreas = parseDocAreas(docContent);
+  const sidebar = parseSidebarAreas(cfgContent);
 
-  // B: body table rows under `## Available Audits` (column 1, column 2).
-  const bodySection = cmdContent.match(/## Available Audits\s*\n([\s\S]*?)\n## /);
-  const sourceBody: string[] = [];
-  const sourceBodyAgents: Array<{ area: string; agent: string }> = [];
-  if (bodySection) {
-    const lines = bodySection[1].split("\n");
-    for (const line of lines) {
-      const cells = line.split("|").map((c: string) => c.trim());
-      if (cells.length < 4) continue;
-      const area = cells[1];
-      const agent = cells[2];
-      if (!area || area === "Area" || area.startsWith("---")) continue;
-      sourceBody.push(area);
-      sourceBodyAgents.push({ area, agent });
-    }
-  }
+  const parityErrors = validateParity({
+    frontmatter,
+    body,
+    docs: docAreas,
+    sidebar,
+  });
+  for (const msg of parityErrors) error("audit-parity", msg);
 
-  // C: docs page code spans inside Available Audit Areas section.
-  const docSection = docContent.match(/## Available Audit Areas\s*\n([\s\S]*?)\n## /);
-  const docAreas: string[] = [];
-  if (docSection) {
-    const codeSpans = docSection[1].matchAll(/`([a-z][a-z0-9-]+)`/g);
-    for (const m of codeSpans) docAreas.push(m[1]);
-  }
-
-  if (sourceFrontmatter.length === 0)
-    error("audit-parity", "Could not parse audit areas from commands/audit.md frontmatter `argument:` line");
-  if (sourceBody.length === 0)
-    error("audit-parity", "Could not parse audit areas from commands/audit.md `## Available Audits` body table");
-  if (docAreas.length === 0)
-    error("audit-parity", "Could not parse audit areas from docs/commands/utility/audit.md `## Available Audit Areas` section");
-
-  // Helper: report missing/extra between two named sets.
-  const diff = (a: string[], b: string[], aName: string, bName: string) => {
-    const aSet = new Set(a);
-    const bSet = new Set(b);
-    const missing = [...aSet].filter((x) => !bSet.has(x));
-    const extra = [...bSet].filter((x) => !aSet.has(x));
-    if (missing.length > 0)
-      error("audit-parity", `${aName} → ${bName}: missing in ${bName}: ${missing.join(", ")}`);
-    if (extra.length > 0)
-      error("audit-parity", `${aName} → ${bName}: extra in ${bName} (not in ${aName}): ${extra.join(", ")}`);
-    return missing.length === 0 && extra.length === 0;
-  };
-
-  // Duplicate detection within each set.
-  const findDupes = (items: string[], where: string) => {
-    const counts: Record<string, number> = {};
-    for (const x of items) counts[x] = (counts[x] || 0) + 1;
-    let dupes = 0;
-    for (const [name, n] of Object.entries(counts)) {
-      if (n > 1) {
-        error("audit-parity", `Duplicate audit area '${name}' appears ${n}× in ${where}`);
-        dupes++;
-      }
-    }
-    return dupes;
-  };
-
-  let parityErrors = 0;
-  if (sourceFrontmatter.length > 0 && sourceBody.length > 0) {
-    if (!diff(sourceFrontmatter, sourceBody, "frontmatter argument:", "body table")) parityErrors++;
-  }
-  if (sourceFrontmatter.length > 0 && docAreas.length > 0) {
-    if (!diff(sourceFrontmatter, docAreas, "frontmatter argument:", "docs page")) parityErrors++;
-  }
-  parityErrors += findDupes(sourceFrontmatter, "frontmatter argument:");
-  parityErrors += findDupes(sourceBody, "body table");
-  parityErrors += findDupes(docAreas, "docs page");
-
-  // D: every agent name in body table column 2 must resolve to a real
-  // agent file. Catches dispatch-to-deleted-agent.
+  // E: agent file existence — needs filesystem access so it stays here.
   const agentsDirParity = path.join(pluginDir, "agents");
   let missingAgents = 0;
-  for (const { area, agent } of sourceBodyAgents) {
+  for (const { area, agent } of bodyRows) {
     if (!agent) continue;
     const agentFile = path.join(agentsDirParity, `${agent}.md`);
     if (!fs.existsSync(agentFile)) {
-      error("audit-parity", `'${area}' dispatches to '${agent}' but agents/${agent}.md does not exist`);
+      error(
+        "audit-parity",
+        `'${area}' dispatches to '${agent}' but agents/${agent}.md does not exist`,
+      );
       missingAgents++;
     }
   }
 
-  if (parityErrors === 0 && missingAgents === 0) {
+  if (parityErrors.length === 0 && missingAgents === 0) {
     console.log(
-      `  ✓ ${sourceFrontmatter.length} audit areas in sync across frontmatter, body table, docs page (${sourceBodyAgents.length} agent refs resolve)`,
+      `  ✓ ${frontmatter.length} audit areas in sync across frontmatter, body table, docs page, sidebar (${bodyRows.length} agent refs resolve)`,
     );
   }
 }
