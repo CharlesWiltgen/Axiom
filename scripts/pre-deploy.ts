@@ -22,6 +22,9 @@ import {
   parseDocGroups,
   validateParity,
   validateGroupedParity,
+  parseInlineAuditReferences,
+  validateInlineReferences,
+  validateAgentDescriptionParity,
 } from "./audit-parity.ts";
 
 const root = path.resolve(import.meta.dirname!, "..");
@@ -721,7 +724,10 @@ if (!fs.existsSync(auditCmdPath)) {
   for (const msg of groupedErrors) error("audit-parity", `(grouped) ${msg}`);
 
   // E: agent file existence — needs filesystem access so it stays here.
+  // Read agent file contents into a map so the description-parity check
+  // (axiom-pop Gap 2) can reuse them without re-reading the disk.
   const agentsDirParity = path.join(pluginDir, "agents");
+  const agentFileContents: Record<string, string> = {};
   let missingAgents = 0;
   for (const { area, agent } of bodyRows) {
     if (!agent) continue;
@@ -732,16 +738,58 @@ if (!fs.existsSync(auditCmdPath)) {
         `'${area}' dispatches to '${agent}' but agents/${agent}.md does not exist`,
       );
       missingAgents++;
+    } else {
+      agentFileContents[agent] = fs.readFileSync(agentFile, "utf8");
     }
+  }
+
+  // axiom-pop Gap 1: inline audit-area references in audit.md sections
+  // beyond the canonical body table. Step 12d's main parity check covers
+  // the body table and frontmatter; this catches drift in the prose
+  // sections (Direct Dispatch examples, Priority Order bullets, Batch
+  // Recommendations, Project Analysis triggers). A rename like
+  // `core-data` → `core-data-v2` that updates the canonical list but
+  // forgets the prose mentions would slip through the main check.
+  const inlineSections = [
+    "Direct Dispatch",
+    "Batch Execution Guidance",
+    "Project Analysis (No Area Specified)",
+  ];
+  let inlineDrifts = 0;
+  for (const heading of inlineSections) {
+    const refs = parseInlineAuditReferences(cmdContent, heading);
+    if (refs.length === 0) continue;
+    const inlineErrors = validateInlineReferences(frontmatter, refs, heading);
+    for (const msg of inlineErrors) {
+      error("audit-parity", `(inline) ${msg}`);
+      inlineDrifts++;
+    }
+  }
+
+  // axiom-pop Gap 2: body-table description ↔ agent file frontmatter
+  // description drift. Both describe what the agent does; if they share
+  // zero substantive vocabulary, one was likely renamed/repurposed
+  // without the other being updated, leaving docs and MCP prompts
+  // showing different things.
+  const agentDescErrors = validateAgentDescriptionParity({
+    rows: bodyRows,
+    agentFiles: agentFileContents,
+  });
+  for (const msg of agentDescErrors) {
+    error("audit-parity", `(agent-desc) ${msg}`);
   }
 
   if (
     parityErrors.length === 0 &&
     groupedErrors.length === 0 &&
-    missingAgents === 0
+    missingAgents === 0 &&
+    inlineDrifts === 0 &&
+    agentDescErrors.length === 0
   ) {
     console.log(
-      `  ✓ ${frontmatter.length} audit areas in sync across frontmatter, body table, docs page, sidebar (${sidebarGroups.length} groups, same order; ${bodyRows.length} agent refs resolve)`,
+      `  ✓ ${frontmatter.length} audit areas in sync across frontmatter, body table, docs page, sidebar ` +
+        `(${sidebarGroups.length} groups, same order; ${bodyRows.length} agent refs resolve; ` +
+        `${inlineSections.length} prose sections + ${bodyRows.length} agent descriptions verified)`,
     );
   }
 }
