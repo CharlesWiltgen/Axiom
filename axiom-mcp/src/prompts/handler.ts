@@ -119,9 +119,18 @@ export class PromptsHandler {
       }
     }
 
-    // Substitute placeholders
+    // Substitute placeholders. Defense-in-depth against hostile MCP clients:
+    //   1. If the command declares arguments, treat that as an allowlist.
+    //   2. Always regex-escape the key so a key like "(a+)+" or ".*" can't
+    //      become a ReDoS pattern or over-replace template content.
+    const declaredArgs = command.mcp?.arguments
+      ? new Set(command.mcp.arguments.map(a => a.name))
+      : null;
+
     for (const [key, value] of Object.entries(args)) {
-      const placeholder = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+      if (declaredArgs && !declaredArgs.has(key)) continue;
+      const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const placeholder = new RegExp(`{{\\s*${escapedKey}\\s*}}`, 'g');
       content = content.replace(placeholder, value);
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "axiom-mcp",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "MCP server for Axiom development skills, agents, and commands",
   "type": "module",
   "main": "dist/index.js",
@@ -43,7 +43,7 @@
     "url": "https://github.com/CharlesWiltgen/Axiom/issues"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "gray-matter": "^4.0.3",
     "minisearch": "^7.2.0"
   },
