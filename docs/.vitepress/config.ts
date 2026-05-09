@@ -173,6 +173,7 @@ export default withMermaid(defineConfig({
         {
           text: 'Build',
           items: [
+            { text: '/axiom:audit build', link: '/commands/build/audit-build' },
             { text: '/axiom:fix-build', link: '/commands/build/fix-build' },
             { text: '/axiom:optimize-build', link: '/commands/build/optimize-build' }
           ]
@@ -183,13 +184,17 @@ export default withMermaid(defineConfig({
             { text: '/axiom:analyze-crash', link: '/commands/debugging/analyze-crash' },
             { text: '/axiom:audit codable', link: '/commands/debugging/audit-codable' },
             { text: '/axiom:audit core-data', link: '/commands/debugging/audit-core-data' },
+            { text: '/axiom:audit energy', link: '/commands/debugging/audit-energy' },
             { text: '/axiom:audit memory', link: '/commands/debugging/audit-memory' },
+            { text: '/axiom:audit modernization', link: '/commands/debugging/audit-modernization' },
+            { text: '/axiom:audit swift-performance', link: '/commands/debugging/audit-swift-performance' },
             { text: '/axiom:profile', link: '/commands/debugging/profile' }
           ]
         },
         {
           text: 'Testing',
           items: [
+            { text: '/axiom:audit testing', link: '/commands/testing/audit-testing' },
             { text: '/axiom:run-tests', link: '/commands/testing/run-tests' },
             { text: '/axiom:screenshot', link: '/commands/testing/screenshot' },
             { text: '/axiom:test-simulator', link: '/commands/testing/test-simulator' }
@@ -206,28 +211,47 @@ export default withMermaid(defineConfig({
           items: [
             { text: '/axiom:audit liquid-glass', link: '/commands/ui-design/audit-liquid-glass' },
             { text: '/axiom:audit swiftui-architecture', link: '/commands/ui-design/audit-swiftui-architecture' },
+            { text: '/axiom:audit swiftui-layout', link: '/commands/ui-design/audit-swiftui-layout' },
             { text: '/axiom:audit swiftui-nav', link: '/commands/ui-design/audit-swiftui-nav' },
             { text: '/axiom:audit swiftui-performance', link: '/commands/ui-design/audit-swiftui-performance' },
-            { text: '/axiom:audit textkit', link: '/commands/ui-design/audit-textkit' }
+            { text: '/axiom:audit textkit', link: '/commands/ui-design/audit-textkit' },
+            { text: '/axiom:audit ux-flow', link: '/commands/ui-design/audit-ux-flow' }
           ]
         },
         {
           text: 'Integration',
           items: [
+            { text: '/axiom:audit camera', link: '/commands/integration/audit-camera' },
+            { text: '/axiom:audit foundation-models', link: '/commands/integration/audit-foundation-models' },
             { text: '/axiom:audit networking', link: '/commands/integration/audit-networking' }
           ]
         },
         {
           text: 'Storage',
           items: [
+            { text: '/axiom:audit database-schema', link: '/commands/storage/audit-database-schema' },
             { text: '/axiom:audit icloud', link: '/commands/storage/audit-icloud' },
-            { text: '/axiom:audit storage', link: '/commands/storage/audit-storage' }
+            { text: '/axiom:audit storage', link: '/commands/storage/audit-storage' },
+            { text: '/axiom:audit swiftdata', link: '/commands/storage/audit-swiftdata' }
           ]
         },
         {
           text: 'Accessibility',
           items: [
             { text: '/axiom:audit accessibility', link: '/commands/accessibility/audit-accessibility' }
+          ]
+        },
+        {
+          text: 'Games',
+          items: [
+            { text: '/axiom:audit spritekit', link: '/commands/games/audit-spritekit' }
+          ]
+        },
+        {
+          text: 'Shipping',
+          items: [
+            { text: '/axiom:audit screenshots', link: '/commands/shipping/audit-screenshots' },
+            { text: '/axiom:audit security', link: '/commands/shipping/audit-security' }
           ]
         },
         {
