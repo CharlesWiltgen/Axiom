@@ -32,48 +32,93 @@ When run without arguments, analyzes your project and recommends relevant audits
 | Area | What It Checks |
 |------|----------------|
 | `accessibility` | VoiceOver, Dynamic Type, WCAG compliance |
-| `axiom-design` | iOS 26 adoption opportunities |
-| `axiom-swiftui-architecture` | Logic in views, testability |
-| `axiom-swiftui-nav` | NavigationStack issues, deep linking |
-| `axiom-swiftui-performance` | Expensive operations in view bodies |
+| `liquid-glass` | iOS 26 adoption opportunities, toolbar improvements |
+| `swiftui-architecture` | Logic in views, MVVM/TCA boundary violations |
+| `swiftui-layout` | GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints |
+| `swiftui-nav` | NavigationStack issues, path management, deep linking |
+| `swiftui-performance` | Expensive body, formatters, missing lazy containers |
+| `textkit` | TextKit issues, text rendering problems |
+| `ux-flow` | Dead-end views, dismiss traps, missing empty/loading/error states |
 
 ### Code Quality
 | Area | What It Checks |
 |------|----------------|
-| `concurrency` | Swift 6 data races, @MainActor violations |
-| `memory` | Retain cycles, Timer leaks, closure captures |
-| `axiom-data` | Manual JSON building, error swallowing |
+| `codable` | Manual JSON building, error swallowing, Sendable violations |
+| `concurrency` | Swift 6 data races, unsafe Task captures, actor isolation |
+| `memory` | Retain cycles, Timer/observer leaks, closure captures |
+| `modernization` | ObservableObject→@Observable, @StateObject→@State, deprecated APIs |
+| `swift-performance` | ARC issues, allocation patterns, generic specialization |
 
 ### Persistence & Storage
 | Area | What It Checks |
 |------|----------------|
-| `axiom-data` | Thread violations, N+1 queries |
-| `icloud` | File coordination, CloudKit errors |
-| `axiom-data` | File protection, backup exclusions |
+| `core-data` | Thread safety, schema migrations, N+1 queries |
+| `database-schema` | Unsafe ALTER TABLE, DROP operations, FK integrity |
+| `icloud` | iCloud entitlements, file coordination, CloudKit errors |
+| `storage` | File protection, backup exclusions, storage strategies |
+| `swiftdata` | @Model correctness, VersionedSchema, relationship defaults |
 
 ### Integration
 | Area | What It Checks |
 |------|----------------|
-| `axiom-networking` | Deprecated APIs, anti-patterns |
+| `camera` | Deprecated camera APIs, missing interruption handlers |
+| `foundation-models` | Availability checks, main-thread blocking, guardrail handling |
+| `networking` | Deprecated APIs (SCNetworkReachability), anti-patterns |
+
+### Build & Test
+| Area | What It Checks |
+|------|----------------|
+| `build` | Build time optimization opportunities |
+| `testing` | Flaky tests, slow tests, Swift Testing migration |
+
+### Energy & Power
+| Area | What It Checks |
+|------|----------------|
+| `energy` | Timer abuse, polling patterns, continuous location, animation leaks |
+
+### Games
+| Area | What It Checks |
+|------|----------------|
+| `spritekit` | Physics bitmask issues, draw call waste, action leaks |
+
+### Shipping
+| Area | What It Checks |
+|------|----------------|
+| `screenshots` | Placeholder text, wrong dimensions, debug indicators |
+| `security` | API keys in code, insecure storage, Privacy Manifests, ATS violations |
 
 ## Priority Levels
 
-1. **CRITICAL** — core-data, storage, icloud (data corruption/loss risk)
-2. **HIGH** — concurrency, memory, networking (crashes, App Store rejection)
-3. **MEDIUM** — architecture, performance (quality issues)
-4. **LOW** — accessibility, liquid-glass (enhancements)
+1. **CRITICAL** — `core-data`, `swiftdata`, `database-schema`, `storage`, `icloud` (data corruption/loss risk)
+2. **HIGH** — `concurrency`, `memory`, `energy`, `networking`, `security`, `testing` (crashes, App Store rejection)
+3. **MEDIUM** — `swiftui-architecture`, `ux-flow`, `swiftui-performance`, `swiftui-layout`, `swift-performance`, `foundation-models` (architecture, performance, UX)
+4. **LOW** — `accessibility`, `liquid-glass`, `codable`, `modernization`, `camera`, `screenshots` (enhancement opportunities)
 
 ## Batch Patterns
 
 ```bash
-# Pre-release audit
+# Pre-release audit (CRITICAL + HIGH)
 /axiom:audit core-data
 /axiom:audit concurrency
 /axiom:audit memory
+/axiom:audit security
 
 # Architecture review
 /axiom:audit swiftui-architecture
+/axiom:audit swiftui-nav
+/axiom:audit swiftui-layout
 /axiom:audit swiftui-performance
+
+# Data layer review
+/axiom:audit swiftdata
+/axiom:audit database-schema
+/axiom:audit core-data
+/axiom:audit storage
+
+# Battery optimization
+/axiom:audit energy
+/axiom:audit memory
+/axiom:audit networking
 ```
 
 ## Related
