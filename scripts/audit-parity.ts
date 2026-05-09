@@ -350,6 +350,15 @@ export function validateInlineReferences(
  *
  * Returns the trimmed description text, or null if no frontmatter or no
  * description field is present.
+ *
+ * Convention dependency: the block-scalar terminator is "next line that
+ * starts a top-level YAML key" (`/^[a-zA-Z][\w-]*:/`). Every Axiom agent
+ * indents `<example>` body content (including `user:` / `assistant:`
+ * lines) with at least 2 spaces, so those don't match the terminator.
+ * If a future agent ships flush-left example content, the parser will
+ * truncate the description silently — `hasSubstantiveOverlap` may still
+ * pass on the truncated prefix, hiding rename drift. Keep example
+ * content indented when authoring agent frontmatter.
  */
 export function parseAgentDescription(content: string): string | null {
   const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);

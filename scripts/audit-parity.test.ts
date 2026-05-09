@@ -565,6 +565,27 @@ describe("parseInlineAuditReferences", () => {
     assert.ok(!refs.includes("memory-auditor"));
     assert.ok(!refs.includes("swiftui-nav-auditor"));
   });
+
+  it("does NOT capture trailing words after `→ suggest X audit(s)` (Pattern 4 boundary)", () => {
+    // Pattern 4's `(?:\s*,\s*...)*` iteration requires a literal comma to
+    // continue, so trailing words like `audit` / `audits` (separated by
+    // whitespace, not comma) terminate the capture before reaching them.
+    // Locked in as a regression test — the reviewer flagged this as a
+    // potential fragility; the regex actually handles it cleanly.
+    const md = `## Project Analysis (No Area Specified)
+
+   - Find Timer → suggest memory audit
+   - Find SwiftUI → suggest swiftui-performance, swiftui-architecture audit
+   - Find Realm → suggest memory, performance audits
+
+## next`;
+    const refs = parseInlineAuditReferences(md, "Project Analysis (No Area Specified)");
+    assert.ok(!refs.some((r) => /^audits?$/.test(r)), `audit/audits leaked into refs: ${JSON.stringify(refs)}`);
+    assert.ok(refs.includes("memory"));
+    assert.ok(refs.includes("swiftui-performance"));
+    assert.ok(refs.includes("swiftui-architecture"));
+    assert.ok(refs.includes("performance"));
+  });
 });
 
 describe("validateInlineReferences", () => {
