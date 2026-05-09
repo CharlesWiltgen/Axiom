@@ -22,6 +22,12 @@ import {
   findDuplicates,
   diffAreas,
   validateParity,
+  extractSection,
+  parseInlineAuditReferences,
+  validateInlineReferences,
+  parseAgentDescription,
+  hasSubstantiveOverlap,
+  validateAgentDescriptionParity,
 } from "./audit-parity.ts";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────
@@ -103,11 +109,11 @@ describe("parseFrontmatterAreas", () => {
 });
 
 describe("parseBodyTable", () => {
-  it("returns area + agent for each row", () => {
+  it("returns area + agent + detects for each row", () => {
     assert.deepEqual(parseBodyTable(goodCommandMd), [
-      { area: "memory", agent: "memory-auditor" },
-      { area: "concurrency", agent: "concurrency-auditor" },
-      { area: "accessibility", agent: "accessibility-auditor" },
+      { area: "memory", agent: "memory-auditor", detects: "Retain cycles" },
+      { area: "concurrency", agent: "concurrency-auditor", detects: "Data races" },
+      { area: "accessibility", agent: "accessibility-auditor", detects: "VoiceOver" },
     ]);
   });
 
@@ -441,5 +447,375 @@ describe("validateGroupedParity", () => {
     ]);
     const ui = errs.find((e) => /UI & Design.*item order.*sidebar='textkit'.*docs='ghost-area'/.test(e));
     assert.ok(ui, `expected UI & Design item-name error, got ${JSON.stringify(errs)}`);
+  });
+});
+
+// ── Inline audit-area reference tests (axiom-pop Gap 1) ───────────────────
+
+const inlineFixtureMd = `# /axiom:audit
+
+## Available Audits
+
+| Area | Agent | Detects |
+|------|-------|---------|
+| memory | memory-auditor | Retain cycles |
+| swiftui-nav | swiftui-nav-auditor | NavigationStack |
+
+## Direct Dispatch
+
+If $ARGUMENTS is "all" → Launch the \`health-check\` agent instead.
+
+**Example:**
+- User runs \`/axiom:audit memory\` → Launch memory-auditor agent
+- User runs \`/axiom:audit swiftui-nav\` → Launch swiftui-nav-auditor agent
+- User runs \`/axiom:audit MyService.swift\` → Pick relevant auditor(s) for that file
+
+## Batch Execution Guidance
+
+**Priority Order:**
+1. **CRITICAL audits** (data corruption/loss risk):
+   - memory → Retain cycles, leaks
+   - swiftui-nav → NavigationStack issues
+
+2. **HIGH audits** (production crashes):
+   - swiftui-nav → Path management
+
+**Batch Recommendations:**
+- For pre-release: Run CRITICAL + HIGH audits
+- For UX review: Run swiftui-nav + memory
+- For architecture review: Run memory + swiftui-nav
+
+## Project Analysis (No Area Specified)
+
+If no area argument:
+1. Analyze project structure:
+   - Find Timer/NotificationCenter → suggest memory audit
+   - Find NavigationStack/sheet/TabView → suggest swiftui-nav audit
+   - Find SwiftUI files → suggest memory, swiftui-nav
+
+2. Present findings.
+`;
+
+describe("extractSection", () => {
+  it("extracts content of a ## heading until the next ## heading", () => {
+    const got = extractSection(inlineFixtureMd, "Direct Dispatch");
+    assert.ok(got !== null);
+    assert.match(got!, /User runs `\/axiom:audit memory`/);
+    assert.doesNotMatch(got!, /Priority Order/);
+  });
+
+  it("handles headings with regex meta-chars (parentheses)", () => {
+    const got = extractSection(inlineFixtureMd, "Project Analysis (No Area Specified)");
+    assert.ok(got !== null);
+    assert.match(got!, /suggest memory audit/);
+  });
+
+  it("returns null when the heading is not found", () => {
+    assert.equal(extractSection(inlineFixtureMd, "Nonexistent Section"), null);
+  });
+});
+
+describe("parseInlineAuditReferences", () => {
+  it("extracts areas from `/axiom:audit AREA` code spans (Direct Dispatch)", () => {
+    const refs = parseInlineAuditReferences(inlineFixtureMd, "Direct Dispatch");
+    assert.deepEqual(refs.sort(), ["memory", "swiftui-nav"]);
+  });
+
+  it("ignores filename-style backtick spans like `MyService.swift`", () => {
+    const refs = parseInlineAuditReferences(inlineFixtureMd, "Direct Dispatch");
+    assert.ok(!refs.includes("MyService.swift"));
+    assert.ok(!refs.some((r) => /\.swift$/.test(r)));
+  });
+
+  it("extracts areas from bullet `- AREA →` lines (Priority Order)", () => {
+    const refs = parseInlineAuditReferences(inlineFixtureMd, "Batch Execution Guidance");
+    assert.ok(refs.includes("memory"));
+    assert.ok(refs.includes("swiftui-nav"));
+  });
+
+  it("extracts areas from `Run X + Y + Z` lines (Batch Recommendations)", () => {
+    const refs = parseInlineAuditReferences(inlineFixtureMd, "Batch Execution Guidance");
+    // "Run swiftui-nav + memory" — both should be captured.
+    assert.ok(refs.includes("swiftui-nav"));
+    assert.ok(refs.includes("memory"));
+  });
+
+  it("ignores `Run CRITICAL + HIGH` (uppercase placeholders, not areas)", () => {
+    const refs = parseInlineAuditReferences(inlineFixtureMd, "Batch Execution Guidance");
+    assert.ok(!refs.some((r) => /critical|high/i.test(r)));
+  });
+
+  it("extracts areas from `→ suggest AREA` lines (Project Analysis)", () => {
+    const refs = parseInlineAuditReferences(
+      inlineFixtureMd,
+      "Project Analysis (No Area Specified)",
+    );
+    assert.ok(refs.includes("memory"));
+    assert.ok(refs.includes("swiftui-nav"));
+  });
+
+  it("returns [] when the section is missing", () => {
+    assert.deepEqual(parseInlineAuditReferences("# heading\n", "Anything"), []);
+  });
+
+  it("does NOT capture agent names like `memory-auditor` from prose", () => {
+    // The Direct Dispatch section says "Launch memory-auditor agent" — that
+    // must not be flagged as an area reference.
+    const refs = parseInlineAuditReferences(inlineFixtureMd, "Direct Dispatch");
+    assert.ok(!refs.includes("memory-auditor"));
+    assert.ok(!refs.includes("swiftui-nav-auditor"));
+  });
+});
+
+describe("validateInlineReferences", () => {
+  it("returns no errors when every reference is in the canonical set", () => {
+    const errs = validateInlineReferences(
+      ["memory", "swiftui-nav", "concurrency"],
+      ["memory", "swiftui-nav", "memory"],
+      "Priority Order",
+    );
+    assert.deepEqual(errs, []);
+  });
+
+  it("flags references not in the canonical set with the section label", () => {
+    const errs = validateInlineReferences(
+      ["memory", "concurrency"],
+      ["memory", "core-data-v2"],
+      "Priority Order",
+    );
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /Priority Order/);
+    assert.match(errs[0], /core-data-v2/);
+  });
+
+  it("dedupes — one error per unknown reference even if it appears 5×", () => {
+    const errs = validateInlineReferences(
+      ["memory"],
+      ["ghost", "ghost", "ghost", "ghost"],
+      "Direct Dispatch",
+    );
+    assert.equal(errs.length, 1);
+  });
+
+  it("simulates the rename-drift scenario (axiom-pop Gap 1)", () => {
+    // Canonical was renamed core-data → core-data-v2 but Priority Order
+    // still says core-data.
+    const canonical = ["core-data-v2", "memory"];
+    const refs = parseInlineAuditReferences(
+      `## Batch Execution Guidance\n\n- core-data → Schema safety\n\n## next`,
+      "Batch Execution Guidance",
+    );
+    const errs = validateInlineReferences(canonical, refs, "Batch Execution Guidance");
+    assert.ok(errs.some((e) => /core-data/.test(e) && /Batch Execution Guidance/.test(e)));
+  });
+});
+
+// ── Agent description parity tests (axiom-pop Gap 2) ──────────────────────
+
+describe("parseAgentDescription", () => {
+  it("parses the YAML block-scalar `description: |` format used by every Axiom agent", () => {
+    const content = `---
+name: memory-auditor
+description: |
+  Use this agent when the user mentions memory leaks. Scans for retain cycles, timer leaks, and observer leaks.
+
+  <example>
+  user: "Check my code"
+  </example>
+model: sonnet
+---
+
+# Body content
+`;
+    const desc = parseAgentDescription(content);
+    assert.ok(desc !== null);
+    assert.match(desc!, /Use this agent when the user mentions memory leaks/);
+    assert.match(desc!, /retain cycles/);
+    assert.match(desc!, /<example>/);
+    // Block-scalar end marker should not include 'model:' or any other key
+    assert.doesNotMatch(desc!, /model:/);
+  });
+
+  it("parses single-line `description: \"...\"` format", () => {
+    const content = `---
+name: foo
+description: "Use this agent for foo audits."
+---
+`;
+    assert.equal(parseAgentDescription(content), "Use this agent for foo audits.");
+  });
+
+  it("parses single-line unquoted `description: ...` format", () => {
+    const content = `---
+name: foo
+description: bare description
+---
+`;
+    assert.equal(parseAgentDescription(content), "bare description");
+  });
+
+  it("returns null when there is no frontmatter", () => {
+    assert.equal(parseAgentDescription("# heading only\n"), null);
+  });
+
+  it("returns null when frontmatter has no description field", () => {
+    const content = `---
+name: foo
+model: sonnet
+---
+`;
+    assert.equal(parseAgentDescription(content), null);
+  });
+
+  it("strips 2-space indentation from block-scalar lines", () => {
+    const content = `---
+name: foo
+description: |
+  Line one.
+  Line two.
+---
+`;
+    const desc = parseAgentDescription(content);
+    assert.equal(desc, "Line one.\nLine two.");
+  });
+});
+
+describe("hasSubstantiveOverlap", () => {
+  it("returns true when descriptions share a domain word", () => {
+    assert.equal(
+      hasSubstantiveOverlap(
+        "Retain cycles, leaks, Timer/observer patterns",
+        "Use this agent when the user mentions memory leaks. Scans for retain cycles and timer leaks.",
+      ),
+      true,
+    );
+  });
+
+  it("returns false on egregious drift (no shared domain vocabulary)", () => {
+    assert.equal(
+      hasSubstantiveOverlap(
+        "Retain cycles, leaks, Timer/observer patterns",
+        "Use this agent for SwiftData migration safety and VersionedSchema validation.",
+      ),
+      false,
+    );
+  });
+
+  it("ignores the agent-template boilerplate when computing overlap", () => {
+    // Both descriptions contain "agent" / "scans" / "user" — but no real
+    // domain overlap. Should NOT count as overlap.
+    assert.equal(
+      hasSubstantiveOverlap(
+        "VoiceOver labels, Dynamic Type, color contrast",
+        "Use this agent when the user mentions battery drain. Scans for timer abuse and polling.",
+      ),
+      false,
+    );
+  });
+
+  it("returns false when one side is empty", () => {
+    assert.equal(hasSubstantiveOverlap("", "anything"), false);
+    assert.equal(hasSubstantiveOverlap("anything", ""), false);
+  });
+
+  it("matches plural/inflected forms via 5-char prefix overlap", () => {
+    // Real-world: swift-performance body says "allocation patterns,
+    // generic specialization" while the agent description says
+    // "unspecialized generics" / "excessive allocations". The exact
+    // word match misses these but the 5-char prefix fallback catches
+    // "alloc" (allocation/allocations) and "gener" (generic/generics).
+    assert.equal(
+      hasSubstantiveOverlap(
+        "ARC issues, allocation patterns, generic specialization",
+        "Use this agent for performance review. Detects unspecialized generics and excessive allocations.",
+      ),
+      true,
+    );
+  });
+});
+
+describe("validateAgentDescriptionParity", () => {
+  const memoryAgent = `---
+name: memory-auditor
+description: |
+  Use this agent when the user mentions memory leak prevention. Scans for retain cycles, leaks, timer leaks, observer leaks.
+---
+body`;
+
+  const concurrencyAgent = `---
+name: concurrency-auditor
+description: |
+  Use this agent for Swift 6 strict concurrency. Detects unsafe Task captures, missing MainActor, Sendable violations, actor isolation problems.
+---
+body`;
+
+  it("returns no errors when every body row's description overlaps with the agent", () => {
+    const errs = validateAgentDescriptionParity({
+      rows: [
+        { area: "memory", agent: "memory-auditor", detects: "Retain cycles, leaks, Timer/observer patterns" },
+        { area: "concurrency", agent: "concurrency-auditor", detects: "Swift 6 data races, unsafe Task captures, actor isolation" },
+      ],
+      agentFiles: {
+        "memory-auditor": memoryAgent,
+        "concurrency-auditor": concurrencyAgent,
+      },
+    });
+    assert.deepEqual(errs, []);
+  });
+
+  it("flags drift when body description shares no substantive words with agent", () => {
+    // Body says one thing, agent has been repurposed to a different domain.
+    const driftedAgent = `---
+name: memory-auditor
+description: |
+  Use this agent for SwiftData migrations and VersionedSchema validation only.
+---
+body`;
+    const errs = validateAgentDescriptionParity({
+      rows: [
+        { area: "memory", agent: "memory-auditor", detects: "Retain cycles, leaks, Timer/observer patterns" },
+      ],
+      agentFiles: { "memory-auditor": driftedAgent },
+    });
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /memory.*memory-auditor/);
+    assert.match(errs[0], /no substantive vocabulary|rename drift/);
+  });
+
+  it("flags missing or empty agent description", () => {
+    const noDesc = `---
+name: empty-agent
+model: sonnet
+---
+body`;
+    const errs = validateAgentDescriptionParity({
+      rows: [
+        { area: "empty", agent: "empty-agent", detects: "Some thing" },
+      ],
+      agentFiles: { "empty-agent": noDesc },
+    });
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /empty-agent.*missing or empty/);
+  });
+
+  it("flags empty body-table 'Detects' column", () => {
+    const errs = validateAgentDescriptionParity({
+      rows: [
+        { area: "memory", agent: "memory-auditor", detects: "" },
+      ],
+      agentFiles: { "memory-auditor": memoryAgent },
+    });
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /memory.*empty body-table/);
+  });
+
+  it("skips rows whose agent file is not in the map (existence is caller's job)", () => {
+    const errs = validateAgentDescriptionParity({
+      rows: [
+        { area: "ghost", agent: "ghost-agent", detects: "stuff" },
+      ],
+      agentFiles: {},
+    });
+    assert.deepEqual(errs, []);
   });
 });

@@ -172,7 +172,7 @@ If no area argument:
    - Check for .xcodeproj/.xcworkspace → suggest build audit
    - Find SwiftUI files (*.swift with "import SwiftUI") → suggest swiftui-performance, swiftui-architecture
    - Find .xcdatamodeld → suggest core-data audit
-   - Check deployment target in .xcodeproj → suggest compatibility audits
+   - Check deployment target in .xcodeproj → suggest modernization audit
    - Find CloudKit entitlements → suggest icloud audit
    - Find async/await usage → suggest concurrency audit
    - Find Timer/NotificationCenter → suggest memory audit
