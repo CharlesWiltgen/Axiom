@@ -23,6 +23,12 @@ export interface BodyRow {
   agent: string;
 }
 
+/** A group of audit areas — preserves insertion order from the source. */
+export interface AreaGroup {
+  group: string;
+  areas: string[];
+}
+
 export interface ParityError {
   /** Short check identifier — passed to pre-deploy.ts's error() helper. */
   check: "audit-parity";
@@ -90,6 +96,119 @@ export function parseSidebarAreas(configTs: string): string[] {
     out.push(link[1]);
   }
   return out;
+}
+
+/**
+ * Parse the commands sidebar in config.ts grouped — returns one entry
+ * per group that contains at least one audit link. Group order and
+ * within-group item order are preserved. Used to enforce per-group
+ * count + order parity with the docs page (axiom-imz finding: set
+ * parity passes while groupings can still drift independently).
+ */
+export function parseSidebarGroups(configTs: string): AreaGroup[] {
+  const m = configTs.match(/'\/commands\/'\s*:\s*\[([\s\S]*?)\n\s*\],/);
+  if (!m) return [];
+  const block = m[1];
+  const groups: AreaGroup[] = [];
+  // Each group: { text: 'Name', items: [ ... ] }
+  for (const gm of block.matchAll(
+    /text:\s*'([^']+)',\s*items:\s*\[([\s\S]*?)\]\s*\}/g,
+  )) {
+    const name = gm[1];
+    const items = gm[2];
+    const areas: string[] = [];
+    for (const link of items.matchAll(
+      /link:\s*'\/commands\/[^/']+\/audit-([a-z0-9-]+)'/g,
+    )) {
+      areas.push(link[1]);
+    }
+    if (areas.length > 0) groups.push({ group: name, areas });
+  }
+  return groups;
+}
+
+/**
+ * Parse the docs page Available Audit Areas section grouped — one
+ * entry per `### GroupName` heading + immediately-following table.
+ * Group order and within-group item order are preserved.
+ */
+export function parseDocGroups(content: string): AreaGroup[] {
+  const section = content.match(/## Available Audit Areas\s*\n([\s\S]*?)\n## /);
+  if (!section) return [];
+  const groups: AreaGroup[] = [];
+  // Split on ### headings, anchoring at start-of-string OR after \n so a
+  // section that starts directly with `### Foo` (no preamble) splits the
+  // same way as one with preamble.
+  const chunks = section[1].split(/(?:^|\n)###\s+/);
+  for (let i = 1; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    // First line is the group name (until the newline).
+    const nameEnd = chunk.indexOf("\n");
+    if (nameEnd === -1) continue;
+    const name = chunk.slice(0, nameEnd).trim();
+    const body = chunk.slice(nameEnd);
+    const areas: string[] = [];
+    for (const m of body.matchAll(/`([a-z][a-z0-9-]+)`/g)) areas.push(m[1]);
+    if (areas.length > 0) groups.push({ group: name, areas });
+  }
+  return groups;
+}
+
+/**
+ * Validate that two grouped views agree on group names, group order,
+ * within-group items, and within-group order. Returns error messages
+ * naming the first divergence in each category — concise reports beat
+ * walls of diffs.
+ */
+export function validateGroupedParity(
+  sidebar: AreaGroup[],
+  docs: AreaGroup[],
+): string[] {
+  const errors: string[] = [];
+
+  // Group-name + group-order check.
+  const sNames = sidebar.map((g) => g.group);
+  const dNames = docs.map((g) => g.group);
+  if (sNames.length !== dNames.length) {
+    errors.push(
+      `sidebar has ${sNames.length} groups, docs has ${dNames.length}: ` +
+        `sidebar=[${sNames.join(", ")}] docs=[${dNames.join(", ")}]`,
+    );
+  } else {
+    for (let i = 0; i < sNames.length; i++) {
+      if (sNames[i] !== dNames[i]) {
+        errors.push(
+          `group order/name mismatch at position ${i}: sidebar='${sNames[i]}' docs='${dNames[i]}'`,
+        );
+        break; // Subsequent positions are noise once we're misaligned.
+      }
+    }
+  }
+
+  // For matching group-name pairs, check items + order.
+  const dByName = new Map(docs.map((g) => [g.group, g.areas]));
+  for (const sg of sidebar) {
+    const da = dByName.get(sg.group);
+    if (!da) continue; // Already reported by name check above.
+    if (sg.areas.length !== da.length) {
+      errors.push(
+        `group '${sg.group}' count mismatch: sidebar=${sg.areas.length} docs=${da.length} ` +
+          `(sidebar=[${sg.areas.join(", ")}] docs=[${da.join(", ")}])`,
+      );
+      continue;
+    }
+    for (let i = 0; i < sg.areas.length; i++) {
+      if (sg.areas[i] !== da[i]) {
+        errors.push(
+          `group '${sg.group}' item order/name mismatch at position ${i}: ` +
+            `sidebar='${sg.areas[i]}' docs='${da[i]}'`,
+        );
+        break;
+      }
+    }
+  }
+
+  return errors;
 }
 
 /**

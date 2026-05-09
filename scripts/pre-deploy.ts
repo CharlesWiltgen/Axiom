@@ -18,7 +18,10 @@ import {
   parseBodyTable,
   parseDocAreas,
   parseSidebarAreas,
+  parseSidebarGroups,
+  parseDocGroups,
   validateParity,
+  validateGroupedParity,
 } from "./audit-parity.ts";
 
 const root = path.resolve(import.meta.dirname!, "..");
@@ -709,6 +712,14 @@ if (!fs.existsSync(auditCmdPath)) {
   });
   for (const msg of parityErrors) error("audit-parity", msg);
 
+  // Grouped parity: enforce same group names, same group order, same
+  // items per group, same item order. Catches drifts that set parity
+  // doesn't (e.g. axiom-imz: 27=27 set parity but 5-vs-8 group counts).
+  const sidebarGroups = parseSidebarGroups(cfgContent);
+  const docGroups = parseDocGroups(docContent);
+  const groupedErrors = validateGroupedParity(sidebarGroups, docGroups);
+  for (const msg of groupedErrors) error("audit-parity", `(grouped) ${msg}`);
+
   // E: agent file existence — needs filesystem access so it stays here.
   const agentsDirParity = path.join(pluginDir, "agents");
   let missingAgents = 0;
@@ -724,9 +735,13 @@ if (!fs.existsSync(auditCmdPath)) {
     }
   }
 
-  if (parityErrors.length === 0 && missingAgents === 0) {
+  if (
+    parityErrors.length === 0 &&
+    groupedErrors.length === 0 &&
+    missingAgents === 0
+  ) {
     console.log(
-      `  ✓ ${frontmatter.length} audit areas in sync across frontmatter, body table, docs page, sidebar (${bodyRows.length} agent refs resolve)`,
+      `  ✓ ${frontmatter.length} audit areas in sync across frontmatter, body table, docs page, sidebar (${sidebarGroups.length} groups, same order; ${bodyRows.length} agent refs resolve)`,
     );
   }
 }

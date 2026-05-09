@@ -16,6 +16,9 @@ import {
   parseBodyTable,
   parseDocAreas,
   parseSidebarAreas,
+  parseSidebarGroups,
+  parseDocGroups,
+  validateGroupedParity,
   findDuplicates,
   diffAreas,
   validateParity,
@@ -290,5 +293,153 @@ describe("validateParity end-to-end", () => {
     const sidebarMiss = errs.find((e) => /sidebar config.*missing.*concurrency.*ux-flow/.test(e));
     assert.ok(bodyMiss, "expected body-table missing error");
     assert.ok(sidebarMiss, "expected sidebar missing error");
+  });
+});
+
+// ── Grouped parity tests ──────────────────────────────────────────────────
+
+const groupedConfigTs = `      '/commands/': [
+        {
+          text: 'Build',
+          items: [
+            { text: '/axiom:audit build', link: '/commands/build/audit-build' },
+            { text: '/axiom:fix-build', link: '/commands/build/fix-build' }
+          ]
+        },
+        {
+          text: 'UI & Design',
+          items: [
+            { text: '/axiom:audit liquid-glass', link: '/commands/ui-design/audit-liquid-glass' },
+            { text: '/axiom:audit textkit', link: '/commands/ui-design/audit-textkit' }
+          ]
+        },
+        {
+          text: 'Utility',
+          items: [
+            { text: '/axiom:ask', link: '/commands/utility/ask' }
+          ]
+        }
+      ],
+`;
+
+const groupedDocMd = `## Available Audit Areas
+
+### Build
+| Area | What |
+|------|------|
+| \`build\` | Build optimization |
+
+### UI & Design
+| Area | What |
+|------|------|
+| \`liquid-glass\` | iOS 26 |
+| \`textkit\` | Text rendering |
+
+## Priority Levels
+`;
+
+describe("parseSidebarGroups", () => {
+  it("returns one entry per group with at least one audit link, in order", () => {
+    const groups = parseSidebarGroups(groupedConfigTs);
+    assert.deepEqual(groups, [
+      { group: "Build", areas: ["build"] },
+      { group: "UI & Design", areas: ["liquid-glass", "textkit"] },
+    ]);
+  });
+
+  it("ignores groups with zero audit links (e.g., Utility)", () => {
+    const groups = parseSidebarGroups(groupedConfigTs);
+    assert.equal(groups.find((g) => g.group === "Utility"), undefined);
+  });
+
+  it("returns [] when commands sidebar block is absent", () => {
+    assert.deepEqual(parseSidebarGroups("export default {}"), []);
+  });
+});
+
+describe("parseDocGroups", () => {
+  it("returns one entry per ### heading + table with code-span items, in order", () => {
+    const groups = parseDocGroups(groupedDocMd);
+    assert.deepEqual(groups, [
+      { group: "Build", areas: ["build"] },
+      { group: "UI & Design", areas: ["liquid-glass", "textkit"] },
+    ]);
+  });
+
+  it("returns [] when section is missing", () => {
+    assert.deepEqual(parseDocGroups("# heading\n## elsewhere\n"), []);
+  });
+
+  it("preserves item order within each group", () => {
+    const md = `## Available Audit Areas\n\n### Storage\n| \`zebra\` | x |\n| \`alpha\` | y |\n| \`mid\` | z |\n\n## next`;
+    const groups = parseDocGroups(md);
+    assert.deepEqual(groups[0].areas, ["zebra", "alpha", "mid"]);
+  });
+});
+
+describe("validateGroupedParity", () => {
+  const sidebarBaseline = [
+    { group: "Build", areas: ["build"] },
+    { group: "UI & Design", areas: ["liquid-glass", "textkit"] },
+  ];
+
+  it("returns no errors when sidebar and docs match exactly", () => {
+    const errs = validateGroupedParity(sidebarBaseline, [
+      { group: "Build", areas: ["build"] },
+      { group: "UI & Design", areas: ["liquid-glass", "textkit"] },
+    ]);
+    assert.deepEqual(errs, []);
+  });
+
+  it("flags group-count mismatch", () => {
+    const errs = validateGroupedParity(sidebarBaseline, [
+      { group: "Build", areas: ["build"] },
+    ]);
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /sidebar has 2 groups, docs has 1/);
+  });
+
+  it("flags group-name mismatch at first divergence", () => {
+    const errs = validateGroupedParity(sidebarBaseline, [
+      { group: "Build", areas: ["build"] },
+      { group: "Code Quality", areas: ["liquid-glass", "textkit"] },
+    ]);
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /position 1.*sidebar='UI & Design'.*docs='Code Quality'/);
+  });
+
+  it("flags group-order swap (Build ↔ UI & Design)", () => {
+    const errs = validateGroupedParity(sidebarBaseline, [
+      { group: "UI & Design", areas: ["liquid-glass", "textkit"] },
+      { group: "Build", areas: ["build"] },
+    ]);
+    assert.match(errs[0], /position 0.*sidebar='Build'.*docs='UI & Design'/);
+  });
+
+  it("flags within-group count mismatch", () => {
+    const errs = validateGroupedParity(sidebarBaseline, [
+      { group: "Build", areas: ["build"] },
+      { group: "UI & Design", areas: ["liquid-glass"] },
+    ]);
+    const ui = errs.find((e) => /UI & Design.*count mismatch/.test(e));
+    assert.ok(ui, `expected UI & Design count error, got ${JSON.stringify(errs)}`);
+  });
+
+  it("flags within-group item-order swap", () => {
+    const errs = validateGroupedParity(sidebarBaseline, [
+      { group: "Build", areas: ["build"] },
+      { group: "UI & Design", areas: ["textkit", "liquid-glass"] },
+    ]);
+    const ui = errs.find((e) => /UI & Design.*item order.*position 0.*sidebar='liquid-glass'.*docs='textkit'/.test(e));
+    assert.ok(ui, `expected UI & Design order error, got ${JSON.stringify(errs)}`);
+  });
+
+  it("flags within-group item-name mismatch (ghost area in docs)", () => {
+    const errs = validateGroupedParity(sidebarBaseline, [
+      { group: "Build", areas: ["build"] },
+      { group: "UI & Design", areas: ["liquid-glass", "ghost-area"] },
+    ]);
+    const ui = errs.find((e) => /UI & Design.*item order.*sidebar='textkit'.*docs='ghost-area'/.test(e));
+    assert.ok(ui, `expected UI & Design item-name error, got ${JSON.stringify(errs)}`);
   });
 });

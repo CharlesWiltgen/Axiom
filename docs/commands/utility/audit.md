@@ -28,10 +28,36 @@ When run without arguments, analyzes your project and recommends relevant audits
 
 ## Available Audit Areas
 
+Grouped to mirror the sidebar exactly — same group names, same group order, same items in the same order within each group.
+
+### Build
+| Area | What It Checks |
+|------|----------------|
+| `build` | Build time optimization opportunities |
+
+### Debugging
+| Area | What It Checks |
+|------|----------------|
+| `codable` | Manual JSON building, error swallowing, Sendable violations |
+| `core-data` | Thread safety, schema migrations, N+1 queries |
+| `energy` | Timer abuse, polling patterns, continuous location, animation leaks |
+| `memory` | Retain cycles, Timer/observer leaks, closure captures |
+| `modernization` | ObservableObject→@Observable, @StateObject→@State, deprecated APIs |
+| `swift-performance` | ARC issues, allocation patterns, generic specialization |
+
+### Testing
+| Area | What It Checks |
+|------|----------------|
+| `testing` | Flaky tests, slow tests, Swift Testing migration |
+
+### Concurrency
+| Area | What It Checks |
+|------|----------------|
+| `concurrency` | Swift 6 data races, unsafe Task captures, actor isolation |
+
 ### UI & Design
 | Area | What It Checks |
 |------|----------------|
-| `accessibility` | VoiceOver, Dynamic Type, WCAG compliance |
 | `liquid-glass` | iOS 26 adoption opportunities, toolbar improvements |
 | `swiftui-architecture` | Logic in views, MVVM/TCA boundary violations |
 | `swiftui-layout` | GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints |
@@ -40,24 +66,6 @@ When run without arguments, analyzes your project and recommends relevant audits
 | `textkit` | TextKit issues, text rendering problems |
 | `ux-flow` | Dead-end views, dismiss traps, missing empty/loading/error states |
 
-### Code Quality
-| Area | What It Checks |
-|------|----------------|
-| `codable` | Manual JSON building, error swallowing, Sendable violations |
-| `concurrency` | Swift 6 data races, unsafe Task captures, actor isolation |
-| `memory` | Retain cycles, Timer/observer leaks, closure captures |
-| `modernization` | ObservableObject→@Observable, @StateObject→@State, deprecated APIs |
-| `swift-performance` | ARC issues, allocation patterns, generic specialization |
-
-### Persistence & Storage
-| Area | What It Checks |
-|------|----------------|
-| `core-data` | Thread safety, schema migrations, N+1 queries |
-| `database-schema` | Unsafe ALTER TABLE, DROP operations, FK integrity |
-| `icloud` | iCloud entitlements, file coordination, CloudKit errors |
-| `storage` | File protection, backup exclusions, storage strategies |
-| `swiftdata` | @Model correctness, VersionedSchema, relationship defaults |
-
 ### Integration
 | Area | What It Checks |
 |------|----------------|
@@ -65,16 +73,18 @@ When run without arguments, analyzes your project and recommends relevant audits
 | `foundation-models` | Availability checks, main-thread blocking, guardrail handling |
 | `networking` | Deprecated APIs (SCNetworkReachability), anti-patterns |
 
-### Build & Test
+### Storage
 | Area | What It Checks |
 |------|----------------|
-| `build` | Build time optimization opportunities |
-| `testing` | Flaky tests, slow tests, Swift Testing migration |
+| `database-schema` | Unsafe ALTER TABLE, DROP operations, FK integrity |
+| `icloud` | iCloud entitlements, file coordination, CloudKit errors |
+| `storage` | File protection, backup exclusions, storage strategies |
+| `swiftdata` | @Model correctness, VersionedSchema, relationship defaults |
 
-### Energy & Power
+### Accessibility
 | Area | What It Checks |
 |------|----------------|
-| `energy` | Timer abuse, polling patterns, continuous location, animation leaks |
+| `accessibility` | VoiceOver, Dynamic Type, WCAG compliance |
 
 ### Games
 | Area | What It Checks |
