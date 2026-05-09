@@ -78,7 +78,7 @@ func TestRunVerify_UnsupportedFormat(t *testing.T) {
 func TestRunVerify_AllMatched(t *testing.T) {
 	path, _, _ := writeCrashFixture(t)
 	var buf bytes.Buffer
-	code := runVerify(&buf, []string{"--dsym", "/bin/ls", "--no-cache", "--no-spotlight", path})
+	code := runVerify(&buf, []string{"--dsym", "/bin/ls", "--no-cache", "--no-spotlight", "--no-defaults", path})
 	if code != 0 {
 		t.Fatalf("got exit %d, want 0\nstdout:\n%s", code, buf.String())
 	}
@@ -104,7 +104,7 @@ func TestRunVerify_PartialMissing(t *testing.T) {
 	os.WriteFile(path, []byte(doc), 0o644)
 
 	var buf bytes.Buffer
-	code := runVerify(&buf, []string{"--no-cache", "--no-spotlight", path})
+	code := runVerify(&buf, []string{"--no-cache", "--no-spotlight", "--no-defaults", path})
 	if code != 7 {
 		t.Fatalf("got exit %d, want 7 (partial/missing)\n%s", code, buf.String())
 	}

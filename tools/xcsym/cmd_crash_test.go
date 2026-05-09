@@ -29,7 +29,7 @@ func TestRunCrash_UsageErrors(t *testing.T) {
 
 func TestRunCrash_InputNotFound(t *testing.T) {
 	var buf bytes.Buffer
-	code := runCrash(&buf, []string{"--no-cache", "--no-spotlight", "--no-symbolicate",
+	code := runCrash(&buf, []string{"--no-cache", "--no-spotlight", "--no-defaults", "--no-symbolicate",
 		"/nonexistent/crash.ips"})
 	if code != 2 {
 		t.Errorf("missing input: code = %d, want 2", code)
@@ -48,7 +48,7 @@ func TestRunCrash_UnsupportedFormat(t *testing.T) {
 		t.Fatal(err)
 	}
 	var buf bytes.Buffer
-	code := runCrash(&buf, []string{"--no-cache", "--no-spotlight", "--no-symbolicate", path})
+	code := runCrash(&buf, []string{"--no-cache", "--no-spotlight", "--no-defaults", "--no-symbolicate", path})
 	if code != 2 {
 		t.Fatalf("unsupported format: code = %d, want 2\n%s", code, buf.String())
 	}
@@ -72,7 +72,7 @@ func TestRunCrash_UnsupportedFormat(t *testing.T) {
 
 func TestRunCrash_HangRejected(t *testing.T) {
 	var buf bytes.Buffer
-	code := runCrash(&buf, []string{"--no-cache", "--no-spotlight", "--no-symbolicate",
+	code := runCrash(&buf, []string{"--no-cache", "--no-spotlight", "--no-defaults", "--no-symbolicate",
 		"testdata/crashes/ips_v2/hang.ips"})
 	if code != 1 {
 		t.Fatalf("hang: code = %d, want 1\n%s", code, buf.String())
@@ -99,7 +99,7 @@ func TestRunCrash_NonFatalCPURejected(t *testing.T) {
 		t.Fatal(err)
 	}
 	var buf bytes.Buffer
-	code := runCrash(&buf, []string{"--no-cache", "--no-spotlight", "--no-symbolicate", path})
+	code := runCrash(&buf, []string{"--no-cache", "--no-spotlight", "--no-defaults", "--no-symbolicate", path})
 	if code != 1 {
 		t.Fatalf("non-fatal CPU: code = %d, want 1\n%s", code, buf.String())
 	}
@@ -159,7 +159,7 @@ func TestRunCrash_EndToEnd_WithLsBinary(t *testing.T) {
 	var buf bytes.Buffer
 	code := runCrash(&buf, []string{
 		"--dsym", "/bin/ls",
-		"--no-cache", "--no-spotlight",
+		"--no-cache", "--no-spotlight", "--no-defaults",
 		"--format=summary",
 		path,
 	})
@@ -191,7 +191,7 @@ func TestRunCrash_OutputFileFlag(t *testing.T) {
 	outPath := filepath.Join(t.TempDir(), "report.json")
 	var buf bytes.Buffer
 	code := runCrash(&buf, []string{
-		"--no-cache", "--no-spotlight", "--no-symbolicate",
+		"--no-cache", "--no-spotlight", "--no-defaults", "--no-symbolicate",
 		"--output", outPath,
 		"testdata/crashes/ips_v2/swift_forced_unwrap.ips",
 	})
@@ -232,7 +232,7 @@ func TestRunCrash_AppleCrashText_EndToEnd(t *testing.T) {
 	// values the pipeline would have had to set correctly to get here.
 	var buf bytes.Buffer
 	code := runCrash(&buf, []string{
-		"--no-cache", "--no-spotlight", "--no-symbolicate",
+		"--no-cache", "--no-spotlight", "--no-defaults", "--no-symbolicate",
 		"--format=summary",
 		"testdata/crashes/apple_crash/objc_exception_sigabrt.crash",
 	})
@@ -302,7 +302,7 @@ func TestRunCrash_Xccrashpoint_EndToEnd(t *testing.T) {
 
 	var buf bytes.Buffer
 	code := runCrash(&buf, []string{
-		"--no-cache", "--no-spotlight", "--no-symbolicate",
+		"--no-cache", "--no-spotlight", "--no-defaults", "--no-symbolicate",
 		bundle,
 	})
 	if code != 2 {
@@ -338,7 +338,7 @@ func TestRunCrash_Xccrashpoint_PreferLocallySymbolicated(t *testing.T) {
 
 	var buf bytes.Buffer
 	code := runCrash(&buf, []string{
-		"--no-cache", "--no-spotlight", "--no-symbolicate",
+		"--no-cache", "--no-spotlight", "--no-defaults", "--no-symbolicate",
 		"--prefer-locally-symbolicated",
 		bundle,
 	})
@@ -364,7 +364,7 @@ func TestRunCrash_Xccrashpoint_EmptyBundleRejected(t *testing.T) {
 	}
 	var buf bytes.Buffer
 	code := runCrash(&buf, []string{
-		"--no-cache", "--no-spotlight", "--no-symbolicate",
+		"--no-cache", "--no-spotlight", "--no-defaults", "--no-symbolicate",
 		bundle,
 	})
 	if code != 2 {
@@ -429,7 +429,7 @@ func TestRunCrash_ExitCode2_MainMissing(t *testing.T) {
 	}
 	var buf bytes.Buffer
 	code := runCrash(&buf, []string{
-		"--no-cache", "--no-spotlight", "--no-symbolicate",
+		"--no-cache", "--no-spotlight", "--no-defaults", "--no-symbolicate",
 		path,
 	})
 	if code != 2 {

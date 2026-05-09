@@ -22,7 +22,7 @@ func TestRunFindDsym_UsageErrors(t *testing.T) {
 func TestRunFindDsym_NotFound(t *testing.T) {
 	var buf bytes.Buffer
 	code := runFindDsym(&buf, []string{
-		"--no-cache", "--no-spotlight",
+		"--no-cache", "--no-spotlight", "--no-defaults",
 		"--dsym-paths", t.TempDir(), // empty dir; nothing to find
 		"00000000-0000-0000-0000-000000000000",
 	})
@@ -46,7 +46,7 @@ func TestRunFindDsym_ExplicitMatchOnLs(t *testing.T) {
 	// exercise the miss path here — the positive explicit-match path is
 	// covered by TestRunCrash_EndToEnd_WithLsBinary which uses --dsym.
 	var buf bytes.Buffer
-	code := runFindDsym(&buf, []string{"--no-cache", "--no-spotlight", entries[0].UUID})
+	code := runFindDsym(&buf, []string{"--no-cache", "--no-spotlight", "--no-defaults", entries[0].UUID})
 	// Accept exit 2 (not found) as the working outcome. Spotlight-warm
 	// systems might return 0 if a dSYM is cached — in that case we
 	// still want the JSON to be well-formed.
@@ -74,7 +74,7 @@ func TestRunFindDsym_UUIDNormalized(t *testing.T) {
 	errBuf := bytes.Buffer{}
 	_ = errBuf // stderr capture not available; just run it
 	code := runFindDsym(&buf, []string{
-		"--no-cache", "--no-spotlight",
+		"--no-cache", "--no-spotlight", "--no-defaults",
 		"--dsym-paths", t.TempDir(),
 		"aabbccdd-eeff-0011-2233-445566778899",
 	})

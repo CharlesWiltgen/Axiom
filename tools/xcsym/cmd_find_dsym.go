@@ -38,6 +38,7 @@ func runFindDsym(out io.Writer, args []string) int {
 	dsymPaths := fs.String("dsym-paths", "", "extra dSYM search roots (colon-separated)")
 	noSpotlight := fs.Bool("no-spotlight", false, "skip Spotlight (mdfind) lookups")
 	noCache := fs.Bool("no-cache", false, "skip the persistent UUID cache")
+	noDefaults := fs.Bool("no-defaults", false, "skip default dSYM search roots (Archives, DerivedData, Downloads); only --dsym-paths and $XCSYM_DSYM_PATHS apply")
 	if err := fs.Parse(args); err != nil {
 		return 1
 	}
@@ -50,6 +51,7 @@ func runFindDsym(out io.Writer, args []string) int {
 	opts := DiscovererOptions{
 		SkipSpotlight: *noSpotlight,
 		SkipCache:     *noCache,
+		SkipDefaults:  *noDefaults,
 		NegCacheTTL:   DefaultNegCacheTTLSeconds(),
 	}
 	if *dsymPaths != "" {
