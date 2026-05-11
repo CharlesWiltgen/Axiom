@@ -52,7 +52,7 @@ if guide_count > 0 or diag_count > 0:
 
 ---
 
-**Apple for-LLM Documentation**: Xcode detected with {guide_count} guides + {diag_count} Swift diagnostics. Use `axiom-apple-docs` router for authoritative Apple API references."""
+**Apple for-LLM Documentation**: Xcode detected at `{xcode_path}` with {guide_count} guides + {diag_count} Swift diagnostics. Read guides from `{apple_docs_path}/` and diagnostics from `{diagnostics_path}/` using the `Read` tool. Use `axiom-apple-docs` router for the topic→filename map."""
 
 # Detect xclog binary. Same size-floor logic as the xcsym block below
 # (axiom-9w0, parallel to axiom-1kn): plugin marketplace downloads can
