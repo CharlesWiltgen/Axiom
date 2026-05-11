@@ -897,7 +897,7 @@ Recommendation: Launch Phase 1 to market, communicate Phase 2 as "coming soon" o
 
 Technical: Live Activities update via push notifications with 1-3 second latency from server to device
 
-Constraints: Apple's push system has rate limits (~10/hour standard, axiom-higher with special entitlement)
+Constraints: Apple's push system has rate limits (~10/hour standard, higher with special entitlement)
 
 Competitive analysis: Competitors likely use same system with similar limitations
 

@@ -28,7 +28,7 @@ Use this skill when you encounter:
 
 | Issue | Correct Skill | Why NOT axiom-payments |
 |-------|---------------|------------------------|
-| In-app purchase, subscriptions for digital content | **axiom-integration** | StoreKit 2 / digital goods boundary; see `skills/in-app-purchases.md` |
+| In-app purchase, subscriptions for digital content | **axiom-integration** | StoreKit 2 / digital goods boundary; see `axiom-integration (skills/in-app-purchases.md)` |
 | Generic NFC tag reads (Core NFC, non-Wallet) | **axiom-integration** | Different framework; PassKit NFC is Wallet-specific |
 | Code signing / provisioning fundamentals | **axiom-security** | Code signing is generic; payment certs are *added* to that flow |
 | App Store rejection workflow & appeals | **axiom-shipping** | Rejection workflow lives there; payment-specific rejection patterns route from there into here |

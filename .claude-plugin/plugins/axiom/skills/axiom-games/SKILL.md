@@ -116,9 +116,9 @@ Scores: PERFORMANT / DEGRADED / UNPLAYABLE
 | "I can figure out the coordinate system" | SpriteKit uses bottom-left origin (opposite of UIKit). Anchor points add another layer. spritekit-diag.md Symptom 6 resolves in 5 min. |
 | "Physics is straightforward" | Three different bitmask properties, modification rules inside callbacks, and tunneling edge cases. spritekit.md Section 3 covers all gotchas. |
 | "The performance is fine on my device" | Performance varies dramatically across devices. spritekit.md Section 6 has the debug overlay checklist. |
-| "SceneKit is fine for our new project" | SceneKit is soft-deprecated iOS 26. No new features, only security patches. axiom-scenekit has the migration decision tree. |
-| "ECS is overkill for a simple 3D app" | You're already using ECS — Entity + ModelComponent. axiom-realitykit shows how to scale from simple to complex. |
-| "I don't need collision shapes for taps" | RealityKit gestures require CollisionComponent. axiom-realitykit-diag diagnoses this in 2 min vs 30 min guessing. |
+| "SceneKit is fine for our new project" | SceneKit is soft-deprecated iOS 26. No new features, only security patches. axiom-graphics (skills/scenekit.md) has the migration decision tree. |
+| "ECS is overkill for a simple 3D app" | You're already using ECS — Entity + ModelComponent. axiom-graphics (skills/realitykit.md) shows how to scale from simple to complex. |
+| "I don't need collision shapes for taps" | RealityKit gestures require CollisionComponent. axiom-graphics (skills/realitykit-diag.md) diagnoses this in 2 min vs 30 min guessing. |
 
 ## Example Invocations
 

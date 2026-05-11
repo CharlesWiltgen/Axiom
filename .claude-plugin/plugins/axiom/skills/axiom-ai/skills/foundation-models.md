@@ -1010,7 +1010,7 @@ struct InvoiceBasics {
 let basics = try await session.respond(
     to: "Extract vendor, date, and amount",
     generating: InvoiceBasics.self
-) // 0.5 seconds, axiom-high quality
+) // 0.5 seconds, high quality
 
 @Generable
 struct LineItem {
@@ -1022,7 +1022,7 @@ struct LineItem {
 let items = try await session.respond(
     to: "Extract line items",
     generating: [LineItem].self
-) // 1 second, axiom-high quality
+) // 1 second, high quality
 
 // Total: 1.5 seconds, better quality, graceful partial failures
 ```

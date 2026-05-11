@@ -92,11 +92,11 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 6. Stuck at 60fps on ProMotion device? → display-performance
 7. CADisplayLink / variable refresh rate? → display-performance
 8. Frame rate not as expected? → display-performance
-9. Display a 3D model in SwiftUI? → axiom-realitykit
-10. Build an AR experience? → axiom-realitykit
-11. RealityView or Model3D setup? → axiom-realitykit-ref
-12. 3D content not visible or not tracking? → axiom-realitykit-diag
-13. Custom Metal rendering of RealityKit content? → axiom-realitykit-ref (RealityRenderer)
+9. Display a 3D model in SwiftUI? → realitykit
+10. Build an AR experience? → realitykit
+11. RealityView or Model3D setup? → realitykit-ref
+12. 3D content not visible or not tracking? → realitykit-diag
+13. Custom Metal rendering of RealityKit content? → realitykit-ref (RealityRenderer)
 14. Building a 3D game? → Use axiom-games router instead
 
 ## Anti-Rationalization
@@ -107,8 +107,8 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 | "MetalANGLE will handle everything" | Translation layers have significant limitations for production. metal-migration evaluates the trade-offs. |
 | "It's just a black screen, probably a simple bug" | Black screen has 6 distinct causes. metal-migration-diag diagnoses in 5 min vs 30+ min. |
 | "My app runs at 60fps, that's fine" | ProMotion devices support 120Hz. display-performance configures the correct frame rate. |
-| "I'll just use SceneKit for the 3D model" | SceneKit is soft-deprecated. RealityView and Model3D are the modern path. axiom-realitykit covers SwiftUI integration. |
-| "I don't need ECS for one 3D model" | Model3D shows one model with zero ECS. RealityView scales to complex scenes. axiom-realitykit shows both paths. |
+| "I'll just use SceneKit for the 3D model" | SceneKit is soft-deprecated. RealityView and Model3D are the modern path. `skills/realitykit.md` covers SwiftUI integration. |
+| "I don't need ECS for one 3D model" | Model3D shows one model with zero ECS. RealityView scales to complex scenes. `skills/realitykit.md` shows both paths. |
 
 ## Critical Patterns
 
@@ -137,13 +137,13 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 - 8.33ms frame budget for 120Hz
 - UIScreen.maximumFramesPerSecond lies; CADisplayLink tells truth
 
-**axiom-realitykit** (non-game 3D):
+**realitykit** (non-game 3D):
 - RealityView make/update closure pattern
 - Model3D for simple model display
 - AR anchoring with AnchorEntity
 - Material selection (SimpleMaterial, PBR, Occlusion)
 
-**axiom-realitykit-ref** (API):
+**realitykit-ref** (API):
 - RealityRenderer for custom Metal rendering of RealityKit content
 - Complete material property reference
 - RealityView gesture integration

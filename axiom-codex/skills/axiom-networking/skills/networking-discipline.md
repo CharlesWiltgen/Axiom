@@ -318,7 +318,7 @@ let connection = NetworkConnection(
 // WRONG — Don't do this
 let sock = socket(AF_INET, SOCK_DGRAM, 0)
 let sent = sendto(sock, buffer, length, 0, &addr, addrlen)
-// Blocks, no batching, axiom-high CPU overhead
+// Blocks, no batching, high CPU overhead
 ```
 
 #### ✅ GOOD: NetworkConnection with UDP

@@ -281,7 +281,7 @@ Q3: What LiveConfiguration are you using?
 │
 ├─ .fitness → Good for pedestrian activities
 │
-└─ .automotiveNavigation → Highest accuracy, axiom-highest battery
+└─ .automotiveNavigation → Highest accuracy, highest battery
     Only use for actual navigation
 
 Q4: Is the location stale?

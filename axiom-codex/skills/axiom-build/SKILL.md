@@ -206,14 +206,14 @@ This router invokes specialized skills based on the specific issue:
 
 ---
 
-### 14. Live Debugging → **axiom-lldb**
+### 14. Live Debugging → **lldb**
 **Triggers**:
 - Need to reproduce a crash interactively
 - Want to set breakpoints and inspect state
 - Crash report analyzed, now need live investigation
 - Need to attach debugger to running app
 
-**Why axiom-lldb**: Crash reports tell you WHAT crashed. LLDB tells you WHY.
+**Why lldb**: Crash reports tell you WHAT crashed. LLDB tells you WHY.
 
 **Invoke**: `skills/lldb.md`
 
@@ -266,7 +266,7 @@ This router invokes specialized skills based on the specific issue:
 11. Have a crash log (.ips/.crash)? → crash-analyzer (Agent)
 12. MetricKit setup/parsing? → metrickit-ref
 13. App hang/freeze/watchdog? → hang-diagnostics
-14. Need to reproduce crash interactively / inspect runtime state? → axiom-lldb
+14. Need to reproduce crash interactively / inspect runtime state? → lldb
 15. Code signing error (certificate, profile, entitlement, Keychain)? → code-signing / code-signing-diag
 16. Need to see runtime console output (print/os_log)? → xclog-ref or `/axiom:console`
 
@@ -279,7 +279,7 @@ This router invokes specialized skills based on the specific issue:
 | "It's just an SPM issue, I'll fix Package.swift" | SPM conflicts cascade. spm-conflict-resolver analyzes the full dependency graph. |
 | "The simulator is just slow today" | Simulator issues indicate environment corruption. xcode-debugging checks systematically. |
 | "I'll skip environment checks, it compiles locally" | Environment-first saves 30+ min. Every time. |
-| "I'll read the crash report more carefully instead of reproducing" | Crash reports show WHAT crashed, not WHY. Reproducing in LLDB with breakpoints reveals the actual state. axiom-lldb has the workflow. |
+| "I'll read the crash report more carefully instead of reproducing" | Crash reports show WHAT crashed, not WHY. Reproducing in LLDB with breakpoints reveals the actual state. `skills/lldb.md` has the workflow. |
 | "I know my certificate is fine, let me check the code" | Code signing errors are NEVER code bugs. 100% configuration. code-signing diagnoses with CLI in 5 min. |
 | "I can't see what the app is logging without Xcode" | xclog captures print() + os_log from the simulator. Structured JSON output with level, subsystem, category. `/axiom:console`. |
 

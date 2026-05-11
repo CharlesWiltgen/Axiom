@@ -79,9 +79,9 @@ digraph swiftui {
     what -> "skills/gestures.md" [label="gestures"];
     what -> "skills/search-ref.md" [label="search"];
     what -> "skills/26-ref.md" [label="iOS 26 features"];
-    what -> "axiom-uikit-bridging" [label="UIKit interop"];
-    what -> "axiom-app-composition" [label="app-level (root, auth)"];
-    what -> "axiom-transferable-ref" [label="drag/drop, sharing"];
+    what -> "axiom-uikit (skills/uikit-bridging.md)" [label="UIKit interop"];
+    what -> "axiom-design (skills/app-composition.md)" [label="app-level (root, auth)"];
+    what -> "axiom-swift (skills/transferable-ref.md)" [label="drag/drop, sharing"];
 }
 ```
 

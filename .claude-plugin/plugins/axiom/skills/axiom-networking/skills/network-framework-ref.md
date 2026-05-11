@@ -493,7 +493,7 @@ public func findNearbyDevice() async throws {
 #### Wi-Fi Aware features
 - Peer-to-peer without infrastructure (no WiFi router needed)
 - Automatic discovery of paired devices
-- Low latency, axiom-high throughput
+- Low latency, high throughput
 - iOS 26+ only
 
 #### Browse descriptors
