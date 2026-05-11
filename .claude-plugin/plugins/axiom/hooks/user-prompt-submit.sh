@@ -34,7 +34,7 @@ matches = []
 non_ios = re.search(r'typescript|react(?!\s*native)|angular|vue\.js|django|flask|rails|node\.js|nodejs|npm |yarn |webpack|docker|kubernetes|python\b|java\b(?!script)|kotlin|android|flutter', prompt_lower)
 
 # Build/environment (highest priority)
-if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (crash|hang|won.t|not )|pod (install|update)|spm |swift package|linker (error|command)|module.{0,5}not found|derived data|code sign|provisioning|xcworkspace|xcodeproj|xcode (error|crash|hang|won.t)|build time|compile (error|slow|time)|lldb\b|breakpoint.{0,10}(set|conditional|symbolic)|thread\s*backtrace|\bpo\b.{0,10}(vs|variable|expression)', prompt_lower):
+if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (crash|hang|won.t|not )|pod (install|update)|spm |swift package|linker (error|command)|module.{0,5}not found|derived data|code sign|provisioning|xcworkspace|xcodeproj|xcode (error|crash|hang|won.t)|build time|compile (error|slow|time)|lldb\b|breakpoint.{0,10}(set|conditional|symbolic)|thread\s*backtrace|\bpo\b.{0,10}(vs|variable|expression)|transport error|could not be established|\bcoredevice\b|dvtenablecoredevice|deploy(ing|ed)?.{0,30}(to\s+)?(device|watch|phone|ipad|simulator|hardware|real\s+device|physical\s+device)|connect.{0,10}(to.{0,10})?(watch|device|phone|ipad|simulator)|device.{0,10}(not.{0,10}(connect|found|recogn|appear)|won.t.{0,10}(connect|appear|show))', prompt_lower):
     matches.append("axiom-build")
 
 # UI
@@ -42,7 +42,8 @@ if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigati
     matches.append("axiom-swiftui")
 
 # UI — generic terms gated by non_ios check
-if not non_ios and "axiom-swiftui" not in matches and re.search(r'animation.{0,5}(not|won.t|broken|stutter|jank)|toolbar|\.sheet|\.fullscreencover|list\b.{0,10}(scroll|slow|performance)', prompt_lower):
+# Note: bare "toolbar" matches NSToolbar in macOS prompts — require \. prefix or modifier-context
+if not non_ios and "axiom-swiftui" not in matches and re.search(r'animation.{0,5}(not|won.t|broken|stutter|jank)|\.toolbar\b|toolbaritem|toolbarplacement|\.sheet|\.fullscreencover|list\b.{0,10}(scroll|slow|performance)', prompt_lower):
     matches.append("axiom-swiftui")
 
 # Data
@@ -118,8 +119,23 @@ if re.search(r'app store.{0,10}(reject|review|submiss|connect|metadata)|testflig
     matches.append("axiom-shipping")
 
 # macOS
-if re.search(r'macos|mac\s*os|mac\s*app\b|appkit|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nsviewcontrollerrepresentable|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)', prompt_lower):
+# Note: bare "macos"/"mac os" is intentionally NOT matched — it fires on host-OS
+# version mentions ("on macOS 26.3"). Require intent-qualifying terms instead.
+if re.search(r'mac\s*app(?:lication)?s?\b|macos.{0,15}(app|build|sandbox|develop|distribut|notariz|menubar|window|toolbar|sign)|appkit|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nsviewcontrollerrepresentable|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)', prompt_lower):
     matches.append("axiom-macos")
+
+# watchOS
+if re.search(r'\bwatchos\b|apple\s*watch|wcsession|watchconnectivity|watch\s*connectiv|smart\s*stack.{0,10}widget|\bcomplications?\b|relevancekit|clockkit|wkapplication|wkinterface|digital\s*crown', prompt_lower):
+    matches.append("axiom-watchos")
+
+# Health & fitness (HealthKit / WorkoutKit)
+if re.search(r'healthkit|hkworkout|hkliveworkout|workoutkit|hkquery|hkhealthstore|hksample|hkquantity|hkcategor|hkstatistic|hkactivit|health\s*(permission|data|store)|workout\s*(session|builder|recovery|mirror|build)', prompt_lower):
+    matches.append("axiom-health")
+
+# Real-world payments (Apple Pay / Wallet / Tap to Pay)
+# NOT in-app purchase / IAP — that's axiom-integration
+if re.search(r'apple\s*pay|pkpayment|pkpaymentauthorization|passkit|\bpkpass\b|wallet\s*pass|tap\s*to\s*pay|orders?\s*in\s*wallet|merchant\s*(id|capabilit|identifier)|payment\s*(request|network|method)', prompt_lower):
+    matches.append("axiom-payments")
 
 # Design
 if re.search(r'human interface|hig\b|liquid glass|sf symbol|symbol.{0,5}(effect|variablevalue|render)|typography.{0,10}(ios|swift|app)|design.{0,5}(system|pattern|token)|app.{0,5}(entry|launch|onboard)|authentication.{0,5}(flow|screen|ui)', prompt_lower):
