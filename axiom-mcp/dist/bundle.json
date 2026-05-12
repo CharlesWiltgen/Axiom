@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-12T04:12:08.654Z",
+  "generatedAt": "2026-05-12T04:30:24.158Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -2233,7 +2233,7 @@
     "axiom-build--xcode-debugging": {
       "name": "axiom-build--xcode-debugging",
       "description": "Check build environment BEFORE debugging code. **Core principle** 80% of \"mysterious\" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.",
-      "content": "\n# Xcode Debugging\n\n## Overview\n\nCheck build environment BEFORE debugging code. **Core principle** 80% of \"mysterious\" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.\n\n## Example Prompts\n\nThese are real questions developers ask that this skill is designed to answer:\n\n#### 1. \"My build is failing with 'BUILD FAILED' but no error details. I haven't changed anything. What's going on?\"\n→ The skill shows environment-first diagnostics: check Derived Data, simulator states, and zombie processes before investigating code\n\n#### 2. \"Tests passed yesterday with no code changes, but now they're failing. This is frustrating. How do I fix this?\"\n→ The skill explains stale Derived Data and intermittent failures, shows the 2-5 minute fix (clean Derived Data)\n\n#### 3. \"My app builds fine but it's running the old code from before my changes. I restarted Xcode but it still happens.\"\n→ The skill demonstrates that Derived Data caches old builds, shows how deletion forces a clean rebuild\n\n#### 4. \"The simulator says 'Unable to boot simulator' and I can't run tests. How do I recover?\"\n→ The skill covers simulator state diagnosis with simctl and safe recovery patterns (erase/shutdown/reboot)\n\n#### 5. \"I'm getting 'No such module: SomePackage' errors after updating SPM dependencies. How do I fix this?\"\n→ The skill explains SPM caching issues and the clean Derived Data workflow that resolves \"phantom\" module errors\n\n---\n\n## Red Flags — Check Environment First\n\nIf you see ANY of these, suspect environment not code:\n- \"It works on my machine but not CI\"\n- \"Tests passed yesterday, failing today with no code changes\"\n- \"Build succeeds but old code executes\"\n- \"Build sometimes succeeds, sometimes fails\" (intermittent failures)\n- \"Simulator stuck at splash screen\" or \"Unable to install app\"\n- Multiple xcodebuild processes (10+) older than 30 minutes\n\n## Mandatory First Steps\n\n**ALWAYS run these commands FIRST** (before reading code):\n\n```bash\n# 1. Check processes (zombie xcodebuild?)\nps aux | grep -E \"xcodebuild|Simulator\" | grep -v grep\n\n# 2. Check Derived Data size (>10GB = stale)\ndu -sh ~/Library/Developer/Xcode/DerivedData\n\n# 3. Check simulator states (stuck Booting?)\nxcrun simctl list devices | grep -E \"Booted|Booting|Shutting Down\"\n```\n\n#### What these tell you\n- **0 processes + small Derived Data + no booted sims** → Environment clean, investigate code\n- **10+ processes OR >10GB Derived Data OR simulators stuck** → Environment problem, clean first\n- **Stale code executing OR intermittent failures** → Clean Derived Data regardless of size\n\n#### Why environment first\n- Environment cleanup: 2-5 minutes → problem solved\n- Code debugging for environment issues: 30-120 minutes → wasted time\n\n## Quick Fix Workflow\n\n### Finding Your Scheme Name\n\nIf you don't know your scheme name:\n```bash\n# List available schemes\nxcodebuild -list\n```\n\n### For Stale Builds / \"No such module\" Errors\n```bash\n# Clean everything\nxcodebuild clean -scheme YourScheme\nrm -rf ~/Library/Developer/Xcode/DerivedData/*\nrm -rf .build/ build/\n\n# Rebuild\nxcodebuild build -scheme YourScheme \\\n  -destination 'platform=iOS Simulator,name=iPhone 16'\n```\n\n### For Simulator Issues\n```bash\n# Shutdown all simulators\nxcrun simctl shutdown all\n\n# If simctl command fails, shutdown and retry\nxcrun simctl shutdown all\nxcrun simctl list devices\n\n# If still stuck, erase specific simulator\nxcrun simctl erase <device-uuid>\n\n# Nuclear option: force-quit Simulator.app\nkillall -9 Simulator\n```\n\n### For Zombie Processes\n```bash\n# Kill all xcodebuild (use cautiously)\nkillall -9 xcodebuild\n\n# Check they're gone\nps aux | grep xcodebuild | grep -v grep\n```\n\n### For Test Failures\n```bash\n# Isolate failing test\nxcodebuild test -scheme YourScheme \\\n  -destination 'platform=iOS Simulator,name=iPhone 16' \\\n  -only-testing:YourTests/SpecificTestClass\n```\n\n## Simulator Verification (Optional)\n\nAfter applying fixes, verify in simulator with visual confirmation.\n\n### Quick Screenshot Verification\n\n```bash\n# 1. Boot simulator (if not already)\nxcrun simctl boot \"iPhone 16 Pro\"\n\n# 2. Build and install app\nxcodebuild build -scheme YourScheme \\\n  -destination 'platform=iOS Simulator,name=iPhone 16 Pro'\n\n# 3. Launch app\nxcrun simctl launch booted com.your.bundleid\n\n# 4. Wait for UI to stabilize\nsleep 2\n\n# 5. Capture screenshot\nxcrun simctl io booted screenshot /tmp/verify-build-$(date +%s).png\n```\n\n### Using Axiom Tools\n\n**Quick screenshot**:\n```bash\n/axiom:screenshot\n```\n\n**Full simulator testing** (with navigation, state setup):\n```bash\n/axiom:test-simulator\n```\n\n### When to Use Simulator Verification\n\nUse when:\n- **Visual fixes** — Layout changes, UI updates, styling tweaks\n- **State-dependent bugs** — \"Only happens in this specific screen\"\n- **Intermittent failures** — Need to reproduce specific conditions\n- **Before shipping** — Final verification that fix actually works\n\n**Pro tip**: If you have debug deep links (see `axiom-swift (skills/deep-link-debugging.md)` skill), you can navigate directly to the screen that was broken:\n```bash\nxcrun simctl openurl booted \"debug://problem-screen\"\nsleep 1\nxcrun simctl io booted screenshot /tmp/fix-verification.png\n```\n\n## Decision Tree\n\n```\nTest/build failing?\n├─ BUILD FAILED with no details?\n│  └─ Clean Derived Data → rebuild\n├─ Build intermittent (sometimes succeeds/fails)?\n│  └─ Clean Derived Data → rebuild\n├─ Build succeeds but old code executes?\n│  └─ Delete Derived Data → rebuild (2-5 min fix)\n├─ \"Unable to boot simulator\"?\n│  └─ xcrun simctl shutdown all → erase simulator\n├─ \"No such module PackageName\"?\n│  └─ Clean + delete Derived Data → rebuild\n├─ Tests hang indefinitely?\n│  └─ Check simctl list → reboot simulator\n├─ Tests crash?\n│  └─ Check ~/Library/Logs/DiagnosticReports/*.crash\n└─ Code logic bug?\n   └─ Use systematic-debugging skill instead\n```\n\n## Common Error Patterns\n\n| Error | Fix |\n|-------|-----|\n| `BUILD FAILED` (no details) | Delete Derived Data |\n| `Unable to boot simulator` | `xcrun simctl erase <uuid>` |\n| `No such module` | Clean + delete Derived Data |\n| Tests hang | Check simctl list, reboot simulator |\n| Stale code executing | Delete Derived Data |\n\n## Useful CLI Tools\n\n```bash\n# Show build settings\nxcodebuild -showBuildSettings -scheme YourScheme\n\n# List schemes/targets\nxcodebuild -list\n\n# Verbose output\nxcodebuild -verbose build -scheme YourScheme\n\n# Build without testing (faster)\nxcodebuild build-for-testing -scheme YourScheme\nxcodebuild test-without-building -scheme YourScheme\n\n# Version and build number management (agvtool)\nxcrun agvtool what-marketing-version          # Current version (e.g., 2.0)\nxcrun agvtool what-version                    # Current build number\nxcrun agvtool next-version -all               # Bump build number\nxcrun agvtool new-version -all 42             # Set specific build number\nxcrun agvtool new-marketing-version 2.1       # Set marketing version\n\n# Validate asset catalogs\nxcrun amlint Assets.xcassets                   # Lint for issues before build\n```\n\n- `xcsym crash <file>` — Structured crash symbolication with LLM-friendly JSON output. Use for any `.ips`, MetricKit, or legacy `.crash` text file. See `axiom-tools (skills/xcsym-ref.md)`.\n\n## Physical Device Management (devicectl)\n\n`devicectl` is the modern CLI for physical device operations (replaces legacy `idevice*` tools).\n\n```bash\n# List connected devices\nxcrun devicectl list devices\n\n# Install app on device\nxcrun devicectl device install app --device <udid> MyApp.app\n\n# Launch app on device\nxcrun devicectl device process launch --device <udid> com.your.bundleid\n\n# List installed apps\nxcrun devicectl device info apps --device <udid>\n\n# List running processes\nxcrun devicectl device info processes --device <udid>\n```\n\n**When to use**: Physical device debugging when the issue doesn't reproduce in Simulator — install, launch, and inspect from CLI.\n\n## Crash Log Analysis\n\n```bash\n# Recent crashes\nls -lt ~/Library/Logs/DiagnosticReports/*.crash | head -5\n\n# Symbolicate a single address (if you have .dSYM)\nxcrun atos -o YourApp.app.dSYM/Contents/Resources/DWARF/YourApp \\\n  -arch arm64 -l 0x100000000 0x<address>\n\n# Symbolicate an entire crash log at once (LLDB Python script, may vary by Xcode version)\nxcrun crashlog MyCrash.ips\n```\n\n## Common Mistakes\n\n❌ **Debugging code before checking environment** — Always run mandatory steps first\n\n❌ **Ignoring simulator states** — \"Booting\" can hang 10+ minutes, shutdown/reboot immediately\n\n❌ **Assuming git changes caused the problem** — Derived Data caches old builds despite code changes\n\n❌ **Running full test suite when one test fails** — Use `-only-testing` to isolate\n\n## Real-World Impact\n\n**Before** 30+ min debugging \"why is old code running\"\n**After** 2 min environment check → clean Derived Data → problem solved\n\n**Key insight** Check environment first, debug code second.\n",
+      "content": "\n# Xcode Debugging\n\n## Overview\n\nCheck build environment BEFORE debugging code. **Core principle** 80% of \"mysterious\" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.\n\n## Example Prompts\n\nThese are real questions developers ask that this skill is designed to answer:\n\n#### 1. \"My build is failing with 'BUILD FAILED' but no error details. I haven't changed anything. What's going on?\"\n→ The skill shows environment-first diagnostics: check Derived Data, simulator states, and zombie processes before investigating code\n\n#### 2. \"Tests passed yesterday with no code changes, but now they're failing. This is frustrating. How do I fix this?\"\n→ The skill explains stale Derived Data and intermittent failures, shows the 2-5 minute fix (clean Derived Data)\n\n#### 3. \"My app builds fine but it's running the old code from before my changes. I restarted Xcode but it still happens.\"\n→ The skill demonstrates that Derived Data caches old builds, shows how deletion forces a clean rebuild\n\n#### 4. \"The simulator says 'Unable to boot simulator' and I can't run tests. How do I recover?\"\n→ The skill covers simulator state diagnosis with simctl and safe recovery patterns (erase/shutdown/reboot)\n\n#### 5. \"I'm getting 'No such module: SomePackage' errors after updating SPM dependencies. How do I fix this?\"\n→ The skill explains SPM caching issues and the clean Derived Data workflow that resolves \"phantom\" module errors\n\n---\n\n## Red Flags — Check Environment First\n\nIf you see ANY of these, suspect environment not code:\n- \"It works on my machine but not CI\"\n- \"Tests passed yesterday, failing today with no code changes\"\n- \"Build succeeds but old code executes\"\n- \"Build sometimes succeeds, sometimes fails\" (intermittent failures)\n- \"Simulator stuck at splash screen\" or \"Unable to install app\"\n- Multiple xcodebuild processes (10+) older than 30 minutes\n\n## Mandatory First Steps\n\n**ALWAYS run these commands FIRST** (before reading code):\n\n```bash\n# 1. Check processes (zombie xcodebuild?)\n# \\bxcodebuild\\b is word-bounded so it skips the `xcodebuildmcp` MCP server\nps aux | grep -E '\\bxcodebuild\\b|Simulator' | grep -v grep\n\n# 2. Check Derived Data size (>10GB = stale)\ndu -sh ~/Library/Developer/Xcode/DerivedData\n\n# 3. Check simulator states (stuck Booting?)\nxcrun simctl list devices | grep -E \"Booted|Booting|Shutting Down\"\n```\n\n#### What these tell you\n- **0 processes + small Derived Data + no booted sims** → Environment clean, investigate code\n- **10+ processes OR >10GB Derived Data OR simulators stuck** → Environment problem, clean first\n- **Stale code executing OR intermittent failures** → Clean Derived Data regardless of size\n\n#### Why environment first\n- Environment cleanup: 2-5 minutes → problem solved\n- Code debugging for environment issues: 30-120 minutes → wasted time\n\n## Quick Fix Workflow\n\n### Finding Your Scheme Name\n\nIf you don't know your scheme name:\n```bash\n# List available schemes\nxcodebuild -list\n```\n\n### For Stale Builds / \"No such module\" Errors\n```bash\n# Clean everything\nxcodebuild clean -scheme YourScheme\nrm -rf ~/Library/Developer/Xcode/DerivedData/*\nrm -rf .build/ build/\n\n# Rebuild\nxcodebuild build -scheme YourScheme \\\n  -destination 'platform=iOS Simulator,name=iPhone 16'\n```\n\n### For Simulator Issues\n```bash\n# Shutdown all simulators\nxcrun simctl shutdown all\n\n# If simctl command fails, shutdown and retry\nxcrun simctl shutdown all\nxcrun simctl list devices\n\n# If still stuck, erase specific simulator\nxcrun simctl erase <device-uuid>\n\n# Nuclear option: force-quit Simulator.app\nkillall -9 Simulator\n```\n\n### For Zombie Processes\n```bash\n# Kill all xcodebuild (use cautiously)\nkillall -9 xcodebuild\n\n# Check they're gone (-w skips the `xcodebuildmcp` MCP server)\nps aux | grep -w xcodebuild | grep -v grep\n```\n\n### For Test Failures\n```bash\n# Isolate failing test\nxcodebuild test -scheme YourScheme \\\n  -destination 'platform=iOS Simulator,name=iPhone 16' \\\n  -only-testing:YourTests/SpecificTestClass\n```\n\n## Simulator Verification (Optional)\n\nAfter applying fixes, verify in simulator with visual confirmation.\n\n### Quick Screenshot Verification\n\n```bash\n# 1. Boot simulator (if not already)\nxcrun simctl boot \"iPhone 16 Pro\"\n\n# 2. Build and install app\nxcodebuild build -scheme YourScheme \\\n  -destination 'platform=iOS Simulator,name=iPhone 16 Pro'\n\n# 3. Launch app\nxcrun simctl launch booted com.your.bundleid\n\n# 4. Wait for UI to stabilize\nsleep 2\n\n# 5. Capture screenshot\nxcrun simctl io booted screenshot /tmp/verify-build-$(date +%s).png\n```\n\n### Using Axiom Tools\n\n**Quick screenshot**:\n```bash\n/axiom:screenshot\n```\n\n**Full simulator testing** (with navigation, state setup):\n```bash\n/axiom:test-simulator\n```\n\n### When to Use Simulator Verification\n\nUse when:\n- **Visual fixes** — Layout changes, UI updates, styling tweaks\n- **State-dependent bugs** — \"Only happens in this specific screen\"\n- **Intermittent failures** — Need to reproduce specific conditions\n- **Before shipping** — Final verification that fix actually works\n\n**Pro tip**: If you have debug deep links (see `axiom-swift (skills/deep-link-debugging.md)` skill), you can navigate directly to the screen that was broken:\n```bash\nxcrun simctl openurl booted \"debug://problem-screen\"\nsleep 1\nxcrun simctl io booted screenshot /tmp/fix-verification.png\n```\n\n## Decision Tree\n\n```\nTest/build failing?\n├─ BUILD FAILED with no details?\n│  └─ Clean Derived Data → rebuild\n├─ Build intermittent (sometimes succeeds/fails)?\n│  └─ Clean Derived Data → rebuild\n├─ Build succeeds but old code executes?\n│  └─ Delete Derived Data → rebuild (2-5 min fix)\n├─ \"Unable to boot simulator\"?\n│  └─ xcrun simctl shutdown all → erase simulator\n├─ \"No such module PackageName\"?\n│  └─ Clean + delete Derived Data → rebuild\n├─ Tests hang indefinitely?\n│  └─ Check simctl list → reboot simulator\n├─ Tests crash?\n│  └─ Check ~/Library/Logs/DiagnosticReports/*.crash\n└─ Code logic bug?\n   └─ Use systematic-debugging skill instead\n```\n\n## Common Error Patterns\n\n| Error | Fix |\n|-------|-----|\n| `BUILD FAILED` (no details) | Delete Derived Data |\n| `Unable to boot simulator` | `xcrun simctl erase <uuid>` |\n| `No such module` | Clean + delete Derived Data |\n| Tests hang | Check simctl list, reboot simulator |\n| Stale code executing | Delete Derived Data |\n\n## Useful CLI Tools\n\n```bash\n# Show build settings\nxcodebuild -showBuildSettings -scheme YourScheme\n\n# List schemes/targets\nxcodebuild -list\n\n# Verbose output\nxcodebuild -verbose build -scheme YourScheme\n\n# Build without testing (faster)\nxcodebuild build-for-testing -scheme YourScheme\nxcodebuild test-without-building -scheme YourScheme\n\n# Version and build number management (agvtool)\nxcrun agvtool what-marketing-version          # Current version (e.g., 2.0)\nxcrun agvtool what-version                    # Current build number\nxcrun agvtool next-version -all               # Bump build number\nxcrun agvtool new-version -all 42             # Set specific build number\nxcrun agvtool new-marketing-version 2.1       # Set marketing version\n\n# Validate asset catalogs\nxcrun amlint Assets.xcassets                   # Lint for issues before build\n```\n\n- `xcsym crash <file>` — Structured crash symbolication with LLM-friendly JSON output. Use for any `.ips`, MetricKit, or legacy `.crash` text file. See `axiom-tools (skills/xcsym-ref.md)`.\n\n## Physical Device Management (devicectl)\n\n`devicectl` is the modern CLI for physical device operations (replaces legacy `idevice*` tools).\n\n```bash\n# List connected devices\nxcrun devicectl list devices\n\n# Install app on device\nxcrun devicectl device install app --device <udid> MyApp.app\n\n# Launch app on device\nxcrun devicectl device process launch --device <udid> com.your.bundleid\n\n# List installed apps\nxcrun devicectl device info apps --device <udid>\n\n# List running processes\nxcrun devicectl device info processes --device <udid>\n```\n\n**When to use**: Physical device debugging when the issue doesn't reproduce in Simulator — install, launch, and inspect from CLI.\n\n## Crash Log Analysis\n\n```bash\n# Recent crashes\nls -lt ~/Library/Logs/DiagnosticReports/*.crash | head -5\n\n# Symbolicate a single address (if you have .dSYM)\nxcrun atos -o YourApp.app.dSYM/Contents/Resources/DWARF/YourApp \\\n  -arch arm64 -l 0x100000000 0x<address>\n\n# Symbolicate an entire crash log at once (LLDB Python script, may vary by Xcode version)\nxcrun crashlog MyCrash.ips\n```\n\n## Common Mistakes\n\n❌ **Debugging code before checking environment** — Always run mandatory steps first\n\n❌ **Ignoring simulator states** — \"Booting\" can hang 10+ minutes, shutdown/reboot immediately\n\n❌ **Assuming git changes caused the problem** — Derived Data caches old builds despite code changes\n\n❌ **Running full test suite when one test fails** — Use `-only-testing` to isolate\n\n## Real-World Impact\n\n**Before** 30+ min debugging \"why is old code running\"\n**After** 2 min environment check → clean Derived Data → problem solved\n\n**Key insight** Check environment first, debug code second.\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -2294,287 +2294,294 @@
           "heading": "1. Check processes (zombie xcodebuild?)",
           "level": 1,
           "startLine": 43,
-          "endLine": 45,
-          "charCount": 97
+          "endLine": 43,
+          "charCount": 41
+        },
+        {
+          "heading": "\\bxcodebuild\\b is word-bounded so it skips the `xcodebuildmcp` MCP server",
+          "level": 1,
+          "startLine": 44,
+          "endLine": 46,
+          "charCount": 135
         },
         {
           "heading": "2. Check Derived Data size (>10GB = stale)",
           "level": 1,
-          "startLine": 46,
-          "endLine": 48,
+          "startLine": 47,
+          "endLine": 49,
           "charCount": 90
         },
         {
           "heading": "3. Check simulator states (stuck Booting?)",
           "level": 1,
-          "startLine": 49,
-          "endLine": 61,
+          "startLine": 50,
+          "endLine": 62,
           "charCount": 575
         },
         {
           "heading": "Quick Fix Workflow",
           "level": 2,
-          "startLine": 62,
-          "endLine": 67,
+          "startLine": 63,
+          "endLine": 68,
           "charCount": 96
         },
         {
           "heading": "List available schemes",
           "level": 1,
-          "startLine": 68,
-          "endLine": 73,
+          "startLine": 69,
+          "endLine": 74,
           "charCount": 101
         },
         {
           "heading": "Clean everything",
           "level": 1,
-          "startLine": 74,
-          "endLine": 78,
+          "startLine": 75,
+          "endLine": 79,
           "charCount": 124
         },
         {
           "heading": "Rebuild",
           "level": 1,
-          "startLine": 79,
-          "endLine": 85,
+          "startLine": 80,
+          "endLine": 86,
           "charCount": 140
         },
         {
           "heading": "Shutdown all simulators",
           "level": 1,
-          "startLine": 86,
-          "endLine": 88,
+          "startLine": 87,
+          "endLine": 89,
           "charCount": 52
         },
         {
           "heading": "If simctl command fails, shutdown and retry",
           "level": 1,
-          "startLine": 89,
-          "endLine": 92,
+          "startLine": 90,
+          "endLine": 93,
           "charCount": 98
         },
         {
           "heading": "If still stuck, erase specific simulator",
           "level": 1,
-          "startLine": 93,
-          "endLine": 95,
+          "startLine": 94,
+          "endLine": 96,
           "charCount": 76
         },
         {
           "heading": "Nuclear option: force-quit Simulator.app",
           "level": 1,
-          "startLine": 96,
-          "endLine": 101,
+          "startLine": 97,
+          "endLine": 102,
           "charCount": 101
         },
         {
           "heading": "Kill all xcodebuild (use cautiously)",
           "level": 1,
-          "startLine": 102,
-          "endLine": 104,
+          "startLine": 103,
+          "endLine": 105,
           "charCount": 61
         },
         {
-          "heading": "Check they're gone",
+          "heading": "Check they're gone (-w skips the `xcodebuildmcp` MCP server)",
           "level": 1,
-          "startLine": 105,
-          "endLine": 110,
-          "charCount": 95
+          "startLine": 106,
+          "endLine": 111,
+          "charCount": 140
         },
         {
           "heading": "Isolate failing test",
           "level": 1,
-          "startLine": 111,
-          "endLine": 116,
+          "startLine": 112,
+          "endLine": 117,
           "charCount": 165
         },
         {
           "heading": "Simulator Verification (Optional)",
           "level": 2,
-          "startLine": 117,
-          "endLine": 123,
+          "startLine": 118,
+          "endLine": 124,
           "charCount": 149
         },
         {
           "heading": "1. Boot simulator (if not already)",
           "level": 1,
-          "startLine": 124,
-          "endLine": 126,
+          "startLine": 125,
+          "endLine": 127,
           "charCount": 71
         },
         {
           "heading": "2. Build and install app",
           "level": 1,
-          "startLine": 127,
-          "endLine": 130,
+          "startLine": 128,
+          "endLine": 131,
           "charCount": 124
         },
         {
           "heading": "3. Launch app",
           "level": 1,
-          "startLine": 131,
-          "endLine": 133,
+          "startLine": 132,
+          "endLine": 134,
           "charCount": 61
         },
         {
           "heading": "4. Wait for UI to stabilize",
           "level": 1,
-          "startLine": 134,
-          "endLine": 136,
+          "startLine": 135,
+          "endLine": 137,
           "charCount": 38
         },
         {
           "heading": "5. Capture screenshot",
           "level": 1,
-          "startLine": 137,
-          "endLine": 167,
+          "startLine": 138,
+          "endLine": 168,
           "charCount": 876
         },
         {
           "heading": "Decision Tree",
           "level": 2,
-          "startLine": 168,
-          "endLine": 189,
+          "startLine": 169,
+          "endLine": 190,
           "charCount": 652
         },
         {
           "heading": "Common Error Patterns",
           "level": 2,
-          "startLine": 190,
-          "endLine": 199,
+          "startLine": 191,
+          "endLine": 200,
           "charCount": 324
         },
         {
           "heading": "Useful CLI Tools",
           "level": 2,
-          "startLine": 200,
-          "endLine": 202,
+          "startLine": 201,
+          "endLine": 203,
           "charCount": 28
         },
         {
           "heading": "Show build settings",
           "level": 1,
-          "startLine": 203,
-          "endLine": 205,
+          "startLine": 204,
+          "endLine": 206,
           "charCount": 71
         },
         {
           "heading": "List schemes/targets",
           "level": 1,
-          "startLine": 206,
-          "endLine": 208,
+          "startLine": 207,
+          "endLine": 209,
           "charCount": 40
         },
         {
           "heading": "Verbose output",
           "level": 1,
-          "startLine": 209,
-          "endLine": 211,
+          "startLine": 210,
+          "endLine": 212,
           "charCount": 62
         },
         {
           "heading": "Build without testing (faster)",
           "level": 1,
-          "startLine": 212,
-          "endLine": 215,
+          "startLine": 213,
+          "endLine": 216,
           "charCount": 133
         },
         {
           "heading": "Version and build number management (agvtool)",
           "level": 1,
-          "startLine": 216,
-          "endLine": 222,
+          "startLine": 217,
+          "endLine": 223,
           "charCount": 403
         },
         {
           "heading": "Validate asset catalogs",
           "level": 1,
-          "startLine": 223,
-          "endLine": 228,
+          "startLine": 224,
+          "endLine": 229,
           "charCount": 298
         },
         {
           "heading": "Physical Device Management (devicectl)",
           "level": 2,
-          "startLine": 229,
-          "endLine": 233,
+          "startLine": 230,
+          "endLine": 234,
           "charCount": 148
         },
         {
           "heading": "List connected devices",
           "level": 1,
-          "startLine": 234,
-          "endLine": 236,
+          "startLine": 235,
+          "endLine": 237,
           "charCount": 54
         },
         {
           "heading": "Install app on device",
           "level": 1,
-          "startLine": 237,
-          "endLine": 239,
+          "startLine": 238,
+          "endLine": 240,
           "charCount": 85
         },
         {
           "heading": "Launch app on device",
           "level": 1,
-          "startLine": 240,
-          "endLine": 242,
+          "startLine": 241,
+          "endLine": 243,
           "charCount": 95
         },
         {
           "heading": "List installed apps",
           "level": 1,
-          "startLine": 243,
-          "endLine": 245,
+          "startLine": 244,
+          "endLine": 246,
           "charCount": 71
         },
         {
           "heading": "List running processes",
           "level": 1,
-          "startLine": 246,
-          "endLine": 251,
+          "startLine": 247,
+          "endLine": 252,
           "charCount": 214
         },
         {
           "heading": "Crash Log Analysis",
           "level": 2,
-          "startLine": 252,
-          "endLine": 254,
+          "startLine": 253,
+          "endLine": 255,
           "charCount": 30
         },
         {
           "heading": "Recent crashes",
           "level": 1,
-          "startLine": 255,
-          "endLine": 257,
+          "startLine": 256,
+          "endLine": 258,
           "charCount": 75
         },
         {
           "heading": "Symbolicate a single address (if you have .dSYM)",
           "level": 1,
-          "startLine": 258,
-          "endLine": 261,
+          "startLine": 259,
+          "endLine": 262,
           "charCount": 158
         },
         {
           "heading": "Symbolicate an entire crash log at once (LLDB Python script, may vary by Xcode version)",
           "level": 1,
-          "startLine": 262,
-          "endLine": 265,
+          "startLine": 263,
+          "endLine": 266,
           "charCount": 121
         },
         {
           "heading": "Common Mistakes",
           "level": 2,
-          "startLine": 266,
-          "endLine": 275,
+          "startLine": 267,
+          "endLine": 276,
           "charCount": 384
         },
         {
           "heading": "Real-World Impact",
           "level": 2,
-          "startLine": 276,
-          "endLine": 282,
+          "startLine": 277,
+          "endLine": 283,
           "charCount": 210
         }
       ],
@@ -35891,7 +35898,7 @@
     "status": {
       "name": "status",
       "description": "Project health dashboard - shows environment status and suggests improvements",
-      "content": "\nYou are a project health analyzer. Provide a quick dashboard of the iOS project state.\n\n## Gather Information\n\nRun these checks and format as a dashboard:\n\n### Environment Health\n```bash\n# Zombie processes\npgrep -f xcodebuild | wc -l\n\n# Derived Data size\ndu -sh ~/Library/Developer/Xcode/DerivedData 2>/dev/null\n\n# Simulator status (JSON for reliable parsing)\nxcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.state == \"Booted\") | {name, udid}'\n\n# Tool availability\necho \"jq: $(command -v jq &>/dev/null && echo 'installed' || echo 'NOT INSTALLED')\"\necho \"axe: $(command -v axe &>/dev/null && echo 'installed (UI automation available)' || echo 'not installed (optional)')\"\n```\n\n### Project Analysis\n```bash\n# Count SwiftUI views\nfind . -name \"*.swift\" -exec grep -l \"struct.*View.*body\" {} \\; | wc -l\n\n# Check for potential issues\ngrep -r \"Timer\\|NotificationCenter\\.default\\.addObserver\" --include=\"*.swift\" | wc -l\n\n# iOS deployment target\ngrep -r \"IPHONEOS_DEPLOYMENT_TARGET\" *.xcodeproj/project.pbxproj 2>/dev/null | head -1\n```\n\n### Format as Dashboard\n\n```\nAxiom Project Status\n=====================\n\nEnvironment\n   Xcodebuild processes: [count] [warning if > 3]\n   Derived Data: [size] [warning if > 10GB]\n   Simulators running: [count]\n   jq: [installed/NOT INSTALLED]\n   axe: [installed/not installed (optional)]\n\nProject Analysis\n   SwiftUI views: [count]\n   Potential memory patterns: [count] [warning if > 0]\n   Deployment target: iOS [version]\n\nSuggested Actions\n   [Based on findings, suggest 2-3 most relevant audits or skills]\n   [If jq not installed: \"Install jq for reliable simulator control: brew install jq\"]\n   [If axe installed: \"AXe UI automation available for simulator-tester agent\"]\n```\n"
+      "content": "\nYou are a project health analyzer. Provide a quick dashboard of the iOS project state.\n\n## Gather Information\n\nRun these checks and format as a dashboard:\n\n### Environment Health\n```bash\n# Zombie xcodebuild processes (-x = exact process name; -f would also count\n# the long-running `xcodebuildmcp` MCP server, which is not a zombie build)\npgrep -x xcodebuild | wc -l\n\n# Derived Data size\ndu -sh ~/Library/Developer/Xcode/DerivedData 2>/dev/null\n\n# Simulator status (JSON for reliable parsing)\nxcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.state == \"Booted\") | {name, udid}'\n\n# Tool availability\necho \"jq: $(command -v jq &>/dev/null && echo 'installed' || echo 'NOT INSTALLED')\"\necho \"axe: $(command -v axe &>/dev/null && echo 'installed (UI automation available)' || echo 'not installed (optional)')\"\n```\n\n### Project Analysis\n```bash\n# Count SwiftUI views\nfind . -name \"*.swift\" -exec grep -l \"struct.*View.*body\" {} \\; | wc -l\n\n# Check for potential issues\ngrep -r \"Timer\\|NotificationCenter\\.default\\.addObserver\" --include=\"*.swift\" | wc -l\n\n# iOS deployment target\ngrep -r \"IPHONEOS_DEPLOYMENT_TARGET\" *.xcodeproj/project.pbxproj 2>/dev/null | head -1\n```\n\n### Format as Dashboard\n\n```\nAxiom Project Status\n=====================\n\nEnvironment\n   Xcodebuild processes: [count] [warning if > 3]\n   Derived Data: [size] [warning if > 10GB]\n   Simulators running: [count]\n   jq: [installed/NOT INSTALLED]\n   axe: [installed/not installed (optional)]\n\nProject Analysis\n   SwiftUI views: [count]\n   Potential memory patterns: [count] [warning if > 0]\n   Deployment target: iOS [version]\n\nSuggested Actions\n   [Based on findings, suggest 2-3 most relevant audits or skills]\n   [If jq not installed: \"Install jq for reliable simulator control: brew install jq\"]\n   [If axe installed: \"AXe UI automation available for simulator-tester agent\"]\n```\n"
     },
     "test-simulator": {
       "name": "test-simulator",
@@ -35951,7 +35958,7 @@
       "name": "build-fixer",
       "description": "Use this agent when the user mentions Xcode build failures, build errors, or environment issues. Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics - saves 30+ minutes by checking zombie processes, Derived Data, SPM cache, and simulator state before code investigation.\n\n<example>\nuser: \"My build is failing with BUILD FAILED but no error details\"\nassistant: [Automatically launches build-fixer agent]\n</example>\n\n<example>\nuser: \"Xcode says 'No such module' after I updated packages\"\nassistant: [Launches build-fixer agent]\n</example>\n\n<example>\nuser: \"Tests passed yesterday but now they're failing and I haven't changed anything\"\nassistant: [Launches build-fixer agent]\n</example>\n\n<example>\nuser: \"My app builds but it's running old code\"\nassistant: [Launches build-fixer agent]\n</example>\n\n<example>\nuser: \"Getting 'Unable to boot simulator' error\"\nassistant: [Launches build-fixer agent]\n</example>\n\n<example>\nuser: \"Build sometimes succeeds, sometimes fails\"\nassistant: [Launches build-fixer agent]\n</example>\n\nExplicit command: Users can also invoke this agent directly with `/axiom:fix-build`\n",
       "model": "sonnet",
-      "content": "\n# Build Fixer Agent\n\nYou are an expert at diagnosing and fixing Xcode build failures using **environment-first diagnostics**.\n\n## Core Principle\n\n**80% of \"mysterious\" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.**\n\nEnvironment cleanup takes 2-5 minutes. Code debugging for environment issues wastes 30-120 minutes.\n\n## Your Mission\n\nWhen the user reports a build failure:\n1. Run mandatory environment checks FIRST (never skip)\n2. Identify the specific issue type\n3. Apply the appropriate fix automatically\n4. Verify the fix worked\n5. Report results clearly\n\n## Mandatory First Steps\n\n**ALWAYS run these diagnostic commands FIRST** before any investigation:\n\n```bash\n# Optional: Detect CI/CD environment (adjusts diagnostics)\necho \"CI env: ${CI:-not set}, GitHub Actions: ${GITHUB_ACTIONS:-not set}\"\n\n# 0. Verify you're in the project directory\nls -la | grep -E \"\\.xcodeproj|\\.xcworkspace\"\n# If nothing shows, you're in wrong directory\n\n# 1. Check for zombie xcodebuild processes (with elapsed time)\nps -eo pid,etime,command | grep -E \"xcodebuild|Simulator\" | grep -v grep\n# Format: PID ELAPSED COMMAND\n# ELAPSED shows how long process has been running (e.g., 1:23:45 = 1 hour 23 min 45 sec)\n# Processes running > 30 minutes are likely zombies\n\n# 2. Check Derived Data size (>10GB = stale)\ndu -sh ~/Library/Developer/Xcode/DerivedData\n\n# 3. Check simulator states (stuck Booting?) - JSON for reliable parsing\nxcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.state == \"Booted\" or .state == \"Booting\" or .state == \"Shutting Down\") | {name, udid, state}'\n```\n\n### Interpreting Results\n\n**Clean environment** (probably a code issue):\n- Project/workspace file found in current directory\n- 0-2 xcodebuild processes (all < 10 minutes old)\n- Derived Data < 10GB\n- No simulators stuck in Booting/Shutting Down\n\n**Environment problem** (apply fixes below):\n- No project/workspace file found (wrong directory!)\n- 10+ xcodebuild processes OR any process > 30 minutes old (zombies)\n- Derived Data > 10GB (stale cache)\n- Simulators stuck in Booting state\n- Any intermittent failures\n\n## Red Flags: Environment Not Code\n\nIf user mentions ANY of these, it's definitely an environment issue:\n- \"It works on my machine but not CI\"\n- \"Tests passed yesterday, failing today with no code changes\"\n- \"Build succeeds but old code executes\"\n- \"Build sometimes succeeds, sometimes fails\"\n- \"Simulator stuck at splash screen\"\n- \"Unable to install app\"\n\n## CI/CD Environment Detection\n\nWhen running in CI/CD environments, some diagnostics don't apply and fixes need adjustment.\n\n### Detecting CI/CD Context\n\nCheck for environment variables that indicate CI/CD:\n\n```bash\n# Check if running in CI/CD\nif [ -n \"$CI\" ] || [ -n \"$GITHUB_ACTIONS\" ] || [ -n \"$JENKINS_URL\" ] || [ -n \"$GITLAB_CI\" ]; then\n    echo \"Running in CI/CD environment\"\nelse\n    echo \"Running on local machine\"\nfi\n```\n\n### CI/CD-Specific Adjustments\n\n**When in CI/CD:**\n\n1. **Skip simulator checks** - CI runners often use headless simulators or none at all\n2. **Derived Data is fresh** - Most CI systems start with clean environment each run\n3. **Focus on:**\n   - SPM cache issues (common in CI)\n   - Package resolution failures\n   - Xcode version mismatches\n   - Missing provisioning profiles\n   - Code signing issues\n\n**CI/CD-Specific Fixes:**\n\n```bash\n# For CI/CD package resolution issues\nrm -rf .build/\nrm -rf ~/Library/Caches/org.swift.swiftpm/\nxcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>\n\n# For CI/CD build failures\nxcodebuild clean build -scheme <ACTUAL_SCHEME_NAME> \\\n  -destination 'platform=iOS Simulator,name=iPhone 16' \\\n  -allowProvisioningUpdates\n```\n\n**Downloading Simulator Runtimes (CI/CD Setup):**\n\nFor CI/CD environments that need specific simulator runtimes:\n\n```bash\n# Download iOS simulator runtime for current Xcode\nxcodebuild -downloadPlatform iOS\n\n# Download specific iOS version\nxcodebuild -downloadPlatform iOS -buildVersion 18.0\n\n# Download to specific location (for caching/sharing)\nxcodebuild -downloadPlatform iOS -exportPath ~/Downloads\n\n# Download universal variant (works on Intel + Apple Silicon)\nxcodebuild -downloadPlatform iOS -architectureVariant universal\n\n# Download all platforms at once\nxcodebuild -downloadAllPlatforms\n\n# After downloading, install with three steps:\n# 1. Select Xcode version\nxcode-select -s /Applications/Xcode.app\n\n# 2. Run first launch setup\nxcodebuild -runFirstLaunch\n\n# 3. Import platform (if downloaded to custom location)\nxcodebuild -importPlatform \"~/Downloads/iOS 18 Simulator Runtime.dmg\"\n\n# Check for newer components between releases\nxcodebuild -runFirstLaunch -checkForNewerComponents\n```\n\n**Use for**: CI/CD initial setup, missing simulator errors, version-specific testing\n\n**Red Flags for CI/CD:**\n- \"Works locally but fails in CI\" → Usually SPM cache or Xcode version mismatch\n- \"Intermittent CI failures\" → Network issues downloading packages\n- \"CI hangs indefinitely\" → Timeout on package resolution, check network\n\n### When to Report CI/CD Context\n\nIf running in CI/CD, mention this in your diagnosis:\n\n```markdown\n### Environment Context\n- Running in: [GitHub Actions/Jenkins/GitLab CI/Local]\n- Diagnostics adjusted for CI/CD environment\n```\n\n## Fix Workflows\n\n### 1. For Zombie Processes\n\nIf you see 10+ xcodebuild processes OR any processes with elapsed time > 30 minutes:\n\n```bash\n# First, review process ages from the check above\n# Look for ELAPSED times like 35:12 (35 min) or 1:23:45 (1 hr 23 min) - these are zombies\n\n# Kill all xcodebuild processes\nkillall -9 xcodebuild\n\n# Verify they're gone (with elapsed time)\nps -eo pid,etime,command | grep xcodebuild | grep -v grep\n\n# Also kill stuck Simulator processes if needed\nkillall -9 Simulator\n```\n\n### 2. For Stale Derived Data / \"No such module\" Errors\n\nIf Derived Data is large OR user reports \"No such module\" OR intermittent failures:\n\n```bash\n# First, find the scheme name\nxcodebuild -list\n\n# If xcodebuild -list fails, check:\n# 1. Are you in the project directory? (should have .xcodeproj or .xcworkspace)\n# 2. Run: ls -la | grep -E \"\\.xcodeproj|\\.xcworkspace\"\n# 3. If missing, cd to correct directory\n# 4. If .xcworkspace exists, use: xcodebuild -list -workspace YourApp.xcworkspace\n# 5. If .xcodeproj exists, use: xcodebuild -list -project YourApp.xcodeproj\n\n# Clean everything (use the actual scheme name from above)\nxcodebuild clean -scheme <ACTUAL_SCHEME_NAME>\nrm -rf ~/Library/Developer/Xcode/DerivedData/*\nrm -rf .build/ build/\n\n# Rebuild with appropriate destination\nxcodebuild build -scheme <ACTUAL_SCHEME_NAME> \\\n  -destination 'platform=iOS Simulator,name=iPhone 16'\n```\n\n**CRITICAL**:\n- Use the actual scheme name from `xcodebuild -list`, not a placeholder\n- If `xcodebuild -list` fails, verify you're in the correct directory with a workspace/project file\n\n### 3. For SPM Cache Issues / \"No such module\" with Swift Packages\n\nIf user reports \"No such module\" with Swift Package Manager dependencies OR packages won't resolve:\n\n```bash\n# Clean SPM cache (this fixes 90% of SPM issues)\nrm -rf ~/Library/Caches/org.swift.swiftpm/\nrm -rf ~/Library/Developer/Xcode/DerivedData/*\nrm -rf .build/\n\n# Reset package resolution\nxcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>\n\n# Verify packages resolved\nxcodebuild -list\n\n# Rebuild\nxcodebuild build -scheme <ACTUAL_SCHEME_NAME> \\\n  -destination 'platform=iOS Simulator,name=iPhone 16'\n```\n\n**When to use this**:\n- \"No such module\" errors for Swift Package dependencies\n- Package resolution failures\n- \"Package.resolved\" conflicts\n- After switching git branches with different package versions\n\n### 4. For Simulator Issues\n\nIf user reports \"Unable to boot simulator\" or simulators stuck:\n\n```bash\n# Shutdown all simulators\nxcrun simctl shutdown all\n\n# List devices with JSON for reliable parsing\nxcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.isAvailable == true) | {name, udid, state}'\n\n# Get UUID for a specific device (e.g., iPhone 16) using JSON\nUDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.name | contains(\"iPhone 16\")) | select(.isAvailable == true) | .udid' | head -1)\n\nif [ -z \"$UDID\" ]; then\n  echo \"No iPhone 16 simulator found. Available simulators:\"\n  xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.isAvailable == true) | {name, udid}'\nelse\n  echo \"iPhone 16 UUID: $UDID\"\n  # Erase the stuck simulator using the extracted UUID\n  xcrun simctl erase \"$UDID\"\nfi\n\n# Find and erase all simulators stuck in Booting state\nxcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == \"Booting\") | .udid' | while read UDID; do\n  echo \"Erasing stuck simulator: $UDID\"\n  xcrun simctl erase \"$UDID\"\ndone\n\n# Nuclear option if nothing works\nkillall -9 Simulator\n```\n\n### 5. For Test Failures (No Code Changes)\n\nIf tests are failing but user hasn't changed code:\n\n```bash\n# Clean Derived Data first\nrm -rf ~/Library/Developer/Xcode/DerivedData/*\n\n# Run tests again\nxcodebuild test -scheme <ACTUAL_SCHEME_NAME> \\\n  -destination 'platform=iOS Simulator,name=iPhone 16'\n```\n\n### 6. For Old Code Executing\n\nIf build succeeds but old code runs:\n\n```bash\n# This is ALWAYS a Derived Data issue\nrm -rf ~/Library/Developer/Xcode/DerivedData/*\n\n# Force clean rebuild\nxcodebuild clean build -scheme <ACTUAL_SCHEME_NAME>\n```\n\n## Decision Tree\n\nUse this to determine which fix to apply:\n\n```\nUser reports build failure\n↓\nRun mandatory checks (directory, processes, Derived Data, simulators)\n↓\nIdentify issue:\n├─ No project/workspace file → Report \"wrong directory\" to user\n├─ (following checks apply if directory verified)\n↓\n├─ 10+ xcodebuild processes OR any process > 30min → Kill zombie processes (§1)\n├─ Derived Data > 10GB → Clean Derived Data + rebuild (§2)\n├─ \"No such module\" (SPM) → Clean SPM cache + resolve packages (§3)\n├─ \"No such module\" (local) → Clean Derived Data + rebuild (§2)\n├─ Package resolution failures → Clean SPM cache (§3)\n├─ Intermittent failures → Clean Derived Data + rebuild (§2)\n├─ Old code executing → Clean Derived Data + rebuild (§6)\n├─ \"Unable to boot simulator\" → Shutdown/erase simulator (§4)\n├─ Tests failing (no code changes) → Clean + retest (§5)\n└─ All checks clean → Report \"environment is clean, likely code issue\"\n```\n\n## Output Format\n\nProvide a clear, structured report:\n\n```markdown\n## Build Failure Diagnosis Complete\n\n### Environment Context\n- Running in: [Local/GitHub Actions/Jenkins/GitLab CI/etc.]\n- CI/CD detected: [yes/no]\n\n### Environment Check Results\n- Project directory: [verified/not found]\n- Xcodebuild processes: [count] (oldest: [elapsed time]) (clean/zombie)\n- Derived Data size: [size] (clean/stale)\n- Simulator state: [status] (clean/stuck) (skip if CI/CD)\n\n### Issue Identified\n[Specific issue type]\n\n### Fix Applied\n1. [Command 1 with actual output]\n2. [Command 2 with actual output]\n3. [Command 3 with actual output]\n\n### Verification\n[Result of rebuild/retest - success or needs more work]\n\n### Next Steps\n[What user should do next]\n```\n\n## Audit Guidelines\n\n1. **ALWAYS run the 4 mandatory checks first** - never skip (directory, processes, Derived Data, simulators)\n2. **Detect CI/CD context** - check for CI environment variables and adjust diagnostics\n3. **Check process elapsed time** - processes > 30 minutes are zombies, kill them\n4. **Use actual scheme names** from `xcodebuild -list` - never use placeholders\n5. **Handle xcodebuild -list failures** - verify directory and provide recovery steps\n6. **Show command output** - don't just say \"I ran X\", show the result\n7. **Verify fixes worked** - run the build/test again to confirm\n8. **If fix doesn't work** - escalate to user with specific next steps\n\n## When to Stop and Report\n\nIf you encounter:\n- Permission denied errors → Report to user\n- Xcode not installed → Report to user\n- `xcodebuild -list` fails (no workspace/project found) → Report to user, verify correct directory\n- Network issues preventing package resolution → Report to user\n- Workspace file corruption → Report to user (needs manual intervention)\n- All environment checks clean + fix attempts fail → Report \"environment is clean, recommend systematic code debugging\"\n\n## Error Pattern Recognition\n\nCommon errors and their fixes:\n\n| Error Message | Fix | Section |\n|---------------|-----|---------|\n| `xcodebuild: error: Could not resolve package dependencies` | Wrong directory or Clean SPM cache | §0/§3 |\n| `The workspace named \"X\" does not contain a scheme` | Wrong directory, verify location | §0 |\n| `BUILD FAILED` (no details) | Clean Derived Data | §2 |\n| `No such module: <name>` (SPM package) | Clean SPM cache + resolve | §3 |\n| `No such module: <name>` (local) | Clean Derived Data | §2 |\n| `Package resolution failed` | Clean SPM cache | §3 |\n| `Unable to boot simulator` | Erase simulator (skip in CI/CD) | §4 |\n| `Command PhaseScriptExecution failed` | Clean Derived Data | §2 |\n| `Multiple commands produce` | Check for duplicate files (manual) | - |\n| Old code executing | Delete Derived Data | §6 |\n| Tests hang indefinitely | Reboot simulator (or timeout in CI/CD) | §4 |\n| `Works locally but fails in CI` | SPM cache or Xcode version mismatch | §3/CI |\n| `Intermittent CI failures` | Network issues, retry package download | CI |\n\n## Resources\n\n**WWDC**: 2019-413 (Testing in Xcode)\n\n**Docs**: /xcode/downloading-and-installing-additional-xcode-components, /xcode/troubleshooting-simulator\n\n**Tech Notes**: TN2339 (Building from Command Line with Xcode)\n\n## Related\n\nFor test execution: `test-runner` agent\nFor test debugging: `test-debugger` agent\nFor simulator testing: `simulator-tester` agent\nFor SPM conflicts: `spm-conflict-resolver` agent\n"
+      "content": "\n# Build Fixer Agent\n\nYou are an expert at diagnosing and fixing Xcode build failures using **environment-first diagnostics**.\n\n## Core Principle\n\n**80% of \"mysterious\" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.**\n\nEnvironment cleanup takes 2-5 minutes. Code debugging for environment issues wastes 30-120 minutes.\n\n## Your Mission\n\nWhen the user reports a build failure:\n1. Run mandatory environment checks FIRST (never skip)\n2. Identify the specific issue type\n3. Apply the appropriate fix automatically\n4. Verify the fix worked\n5. Report results clearly\n\n## Mandatory First Steps\n\n**ALWAYS run these diagnostic commands FIRST** before any investigation:\n\n```bash\n# Optional: Detect CI/CD environment (adjusts diagnostics)\necho \"CI env: ${CI:-not set}, GitHub Actions: ${GITHUB_ACTIONS:-not set}\"\n\n# 0. Verify you're in the project directory\nls -la | grep -E \"\\.xcodeproj|\\.xcworkspace\"\n# If nothing shows, you're in wrong directory\n\n# 1. Check for zombie xcodebuild processes (with elapsed time)\n# \\bxcodebuild\\b — word-bounded so it does not also list the long-running\n# `xcodebuildmcp` MCP server (a node process), which is not a zombie build\nps -eo pid,etime,command | grep -E '\\bxcodebuild\\b|Simulator' | grep -v grep\n# Format: PID ELAPSED COMMAND\n# ELAPSED shows how long process has been running (e.g., 1:23:45 = 1 hour 23 min 45 sec)\n# Processes running > 30 minutes are likely zombies\n\n# 2. Check Derived Data size (>10GB = stale)\ndu -sh ~/Library/Developer/Xcode/DerivedData\n\n# 3. Check simulator states (stuck Booting?) - JSON for reliable parsing\nxcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.state == \"Booted\" or .state == \"Booting\" or .state == \"Shutting Down\") | {name, udid, state}'\n```\n\n### Interpreting Results\n\n**Clean environment** (probably a code issue):\n- Project/workspace file found in current directory\n- 0-2 xcodebuild processes (all < 10 minutes old)\n- Derived Data < 10GB\n- No simulators stuck in Booting/Shutting Down\n\n**Environment problem** (apply fixes below):\n- No project/workspace file found (wrong directory!)\n- 10+ xcodebuild processes OR any process > 30 minutes old (zombies)\n- Derived Data > 10GB (stale cache)\n- Simulators stuck in Booting state\n- Any intermittent failures\n\n## Red Flags: Environment Not Code\n\nIf user mentions ANY of these, it's definitely an environment issue:\n- \"It works on my machine but not CI\"\n- \"Tests passed yesterday, failing today with no code changes\"\n- \"Build succeeds but old code executes\"\n- \"Build sometimes succeeds, sometimes fails\"\n- \"Simulator stuck at splash screen\"\n- \"Unable to install app\"\n\n## CI/CD Environment Detection\n\nWhen running in CI/CD environments, some diagnostics don't apply and fixes need adjustment.\n\n### Detecting CI/CD Context\n\nCheck for environment variables that indicate CI/CD:\n\n```bash\n# Check if running in CI/CD\nif [ -n \"$CI\" ] || [ -n \"$GITHUB_ACTIONS\" ] || [ -n \"$JENKINS_URL\" ] || [ -n \"$GITLAB_CI\" ]; then\n    echo \"Running in CI/CD environment\"\nelse\n    echo \"Running on local machine\"\nfi\n```\n\n### CI/CD-Specific Adjustments\n\n**When in CI/CD:**\n\n1. **Skip simulator checks** - CI runners often use headless simulators or none at all\n2. **Derived Data is fresh** - Most CI systems start with clean environment each run\n3. **Focus on:**\n   - SPM cache issues (common in CI)\n   - Package resolution failures\n   - Xcode version mismatches\n   - Missing provisioning profiles\n   - Code signing issues\n\n**CI/CD-Specific Fixes:**\n\n```bash\n# For CI/CD package resolution issues\nrm -rf .build/\nrm -rf ~/Library/Caches/org.swift.swiftpm/\nxcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>\n\n# For CI/CD build failures\nxcodebuild clean build -scheme <ACTUAL_SCHEME_NAME> \\\n  -destination 'platform=iOS Simulator,name=iPhone 16' \\\n  -allowProvisioningUpdates\n```\n\n**Downloading Simulator Runtimes (CI/CD Setup):**\n\nFor CI/CD environments that need specific simulator runtimes:\n\n```bash\n# Download iOS simulator runtime for current Xcode\nxcodebuild -downloadPlatform iOS\n\n# Download specific iOS version\nxcodebuild -downloadPlatform iOS -buildVersion 18.0\n\n# Download to specific location (for caching/sharing)\nxcodebuild -downloadPlatform iOS -exportPath ~/Downloads\n\n# Download universal variant (works on Intel + Apple Silicon)\nxcodebuild -downloadPlatform iOS -architectureVariant universal\n\n# Download all platforms at once\nxcodebuild -downloadAllPlatforms\n\n# After downloading, install with three steps:\n# 1. Select Xcode version\nxcode-select -s /Applications/Xcode.app\n\n# 2. Run first launch setup\nxcodebuild -runFirstLaunch\n\n# 3. Import platform (if downloaded to custom location)\nxcodebuild -importPlatform \"~/Downloads/iOS 18 Simulator Runtime.dmg\"\n\n# Check for newer components between releases\nxcodebuild -runFirstLaunch -checkForNewerComponents\n```\n\n**Use for**: CI/CD initial setup, missing simulator errors, version-specific testing\n\n**Red Flags for CI/CD:**\n- \"Works locally but fails in CI\" → Usually SPM cache or Xcode version mismatch\n- \"Intermittent CI failures\" → Network issues downloading packages\n- \"CI hangs indefinitely\" → Timeout on package resolution, check network\n\n### When to Report CI/CD Context\n\nIf running in CI/CD, mention this in your diagnosis:\n\n```markdown\n### Environment Context\n- Running in: [GitHub Actions/Jenkins/GitLab CI/Local]\n- Diagnostics adjusted for CI/CD environment\n```\n\n## Fix Workflows\n\n### 1. For Zombie Processes\n\nIf you see 10+ xcodebuild processes OR any processes with elapsed time > 30 minutes:\n\n```bash\n# First, review process ages from the check above\n# Look for ELAPSED times like 35:12 (35 min) or 1:23:45 (1 hr 23 min) - these are zombies\n\n# Kill all xcodebuild processes\nkillall -9 xcodebuild\n\n# Verify they're gone (with elapsed time). -w xcodebuild ignores `xcodebuildmcp`.\nps -eo pid,etime,command | grep -w xcodebuild | grep -v grep\n\n# Also kill stuck Simulator processes if needed\nkillall -9 Simulator\n```\n\n### 2. For Stale Derived Data / \"No such module\" Errors\n\nIf Derived Data is large OR user reports \"No such module\" OR intermittent failures:\n\n```bash\n# First, find the scheme name\nxcodebuild -list\n\n# If xcodebuild -list fails, check:\n# 1. Are you in the project directory? (should have .xcodeproj or .xcworkspace)\n# 2. Run: ls -la | grep -E \"\\.xcodeproj|\\.xcworkspace\"\n# 3. If missing, cd to correct directory\n# 4. If .xcworkspace exists, use: xcodebuild -list -workspace YourApp.xcworkspace\n# 5. If .xcodeproj exists, use: xcodebuild -list -project YourApp.xcodeproj\n\n# Clean everything (use the actual scheme name from above)\nxcodebuild clean -scheme <ACTUAL_SCHEME_NAME>\nrm -rf ~/Library/Developer/Xcode/DerivedData/*\nrm -rf .build/ build/\n\n# Rebuild with appropriate destination\nxcodebuild build -scheme <ACTUAL_SCHEME_NAME> \\\n  -destination 'platform=iOS Simulator,name=iPhone 16'\n```\n\n**CRITICAL**:\n- Use the actual scheme name from `xcodebuild -list`, not a placeholder\n- If `xcodebuild -list` fails, verify you're in the correct directory with a workspace/project file\n\n### 3. For SPM Cache Issues / \"No such module\" with Swift Packages\n\nIf user reports \"No such module\" with Swift Package Manager dependencies OR packages won't resolve:\n\n```bash\n# Clean SPM cache (this fixes 90% of SPM issues)\nrm -rf ~/Library/Caches/org.swift.swiftpm/\nrm -rf ~/Library/Developer/Xcode/DerivedData/*\nrm -rf .build/\n\n# Reset package resolution\nxcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>\n\n# Verify packages resolved\nxcodebuild -list\n\n# Rebuild\nxcodebuild build -scheme <ACTUAL_SCHEME_NAME> \\\n  -destination 'platform=iOS Simulator,name=iPhone 16'\n```\n\n**When to use this**:\n- \"No such module\" errors for Swift Package dependencies\n- Package resolution failures\n- \"Package.resolved\" conflicts\n- After switching git branches with different package versions\n\n### 4. For Simulator Issues\n\nIf user reports \"Unable to boot simulator\" or simulators stuck:\n\n```bash\n# Shutdown all simulators\nxcrun simctl shutdown all\n\n# List devices with JSON for reliable parsing\nxcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.isAvailable == true) | {name, udid, state}'\n\n# Get UUID for a specific device (e.g., iPhone 16) using JSON\nUDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.name | contains(\"iPhone 16\")) | select(.isAvailable == true) | .udid' | head -1)\n\nif [ -z \"$UDID\" ]; then\n  echo \"No iPhone 16 simulator found. Available simulators:\"\n  xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.isAvailable == true) | {name, udid}'\nelse\n  echo \"iPhone 16 UUID: $UDID\"\n  # Erase the stuck simulator using the extracted UUID\n  xcrun simctl erase \"$UDID\"\nfi\n\n# Find and erase all simulators stuck in Booting state\nxcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == \"Booting\") | .udid' | while read UDID; do\n  echo \"Erasing stuck simulator: $UDID\"\n  xcrun simctl erase \"$UDID\"\ndone\n\n# Nuclear option if nothing works\nkillall -9 Simulator\n```\n\n### 5. For Test Failures (No Code Changes)\n\nIf tests are failing but user hasn't changed code:\n\n```bash\n# Clean Derived Data first\nrm -rf ~/Library/Developer/Xcode/DerivedData/*\n\n# Run tests again\nxcodebuild test -scheme <ACTUAL_SCHEME_NAME> \\\n  -destination 'platform=iOS Simulator,name=iPhone 16'\n```\n\n### 6. For Old Code Executing\n\nIf build succeeds but old code runs:\n\n```bash\n# This is ALWAYS a Derived Data issue\nrm -rf ~/Library/Developer/Xcode/DerivedData/*\n\n# Force clean rebuild\nxcodebuild clean build -scheme <ACTUAL_SCHEME_NAME>\n```\n\n## Decision Tree\n\nUse this to determine which fix to apply:\n\n```\nUser reports build failure\n↓\nRun mandatory checks (directory, processes, Derived Data, simulators)\n↓\nIdentify issue:\n├─ No project/workspace file → Report \"wrong directory\" to user\n├─ (following checks apply if directory verified)\n↓\n├─ 10+ xcodebuild processes OR any process > 30min → Kill zombie processes (§1)\n├─ Derived Data > 10GB → Clean Derived Data + rebuild (§2)\n├─ \"No such module\" (SPM) → Clean SPM cache + resolve packages (§3)\n├─ \"No such module\" (local) → Clean Derived Data + rebuild (§2)\n├─ Package resolution failures → Clean SPM cache (§3)\n├─ Intermittent failures → Clean Derived Data + rebuild (§2)\n├─ Old code executing → Clean Derived Data + rebuild (§6)\n├─ \"Unable to boot simulator\" → Shutdown/erase simulator (§4)\n├─ Tests failing (no code changes) → Clean + retest (§5)\n└─ All checks clean → Report \"environment is clean, likely code issue\"\n```\n\n## Output Format\n\nProvide a clear, structured report:\n\n```markdown\n## Build Failure Diagnosis Complete\n\n### Environment Context\n- Running in: [Local/GitHub Actions/Jenkins/GitLab CI/etc.]\n- CI/CD detected: [yes/no]\n\n### Environment Check Results\n- Project directory: [verified/not found]\n- Xcodebuild processes: [count] (oldest: [elapsed time]) (clean/zombie)\n- Derived Data size: [size] (clean/stale)\n- Simulator state: [status] (clean/stuck) (skip if CI/CD)\n\n### Issue Identified\n[Specific issue type]\n\n### Fix Applied\n1. [Command 1 with actual output]\n2. [Command 2 with actual output]\n3. [Command 3 with actual output]\n\n### Verification\n[Result of rebuild/retest - success or needs more work]\n\n### Next Steps\n[What user should do next]\n```\n\n## Audit Guidelines\n\n1. **ALWAYS run the 4 mandatory checks first** - never skip (directory, processes, Derived Data, simulators)\n2. **Detect CI/CD context** - check for CI environment variables and adjust diagnostics\n3. **Check process elapsed time** - processes > 30 minutes are zombies, kill them\n4. **Use actual scheme names** from `xcodebuild -list` - never use placeholders\n5. **Handle xcodebuild -list failures** - verify directory and provide recovery steps\n6. **Show command output** - don't just say \"I ran X\", show the result\n7. **Verify fixes worked** - run the build/test again to confirm\n8. **If fix doesn't work** - escalate to user with specific next steps\n\n## When to Stop and Report\n\nIf you encounter:\n- Permission denied errors → Report to user\n- Xcode not installed → Report to user\n- `xcodebuild -list` fails (no workspace/project found) → Report to user, verify correct directory\n- Network issues preventing package resolution → Report to user\n- Workspace file corruption → Report to user (needs manual intervention)\n- All environment checks clean + fix attempts fail → Report \"environment is clean, recommend systematic code debugging\"\n\n## Error Pattern Recognition\n\nCommon errors and their fixes:\n\n| Error Message | Fix | Section |\n|---------------|-----|---------|\n| `xcodebuild: error: Could not resolve package dependencies` | Wrong directory or Clean SPM cache | §0/§3 |\n| `The workspace named \"X\" does not contain a scheme` | Wrong directory, verify location | §0 |\n| `BUILD FAILED` (no details) | Clean Derived Data | §2 |\n| `No such module: <name>` (SPM package) | Clean SPM cache + resolve | §3 |\n| `No such module: <name>` (local) | Clean Derived Data | §2 |\n| `Package resolution failed` | Clean SPM cache | §3 |\n| `Unable to boot simulator` | Erase simulator (skip in CI/CD) | §4 |\n| `Command PhaseScriptExecution failed` | Clean Derived Data | §2 |\n| `Multiple commands produce` | Check for duplicate files (manual) | - |\n| Old code executing | Delete Derived Data | §6 |\n| Tests hang indefinitely | Reboot simulator (or timeout in CI/CD) | §4 |\n| `Works locally but fails in CI` | SPM cache or Xcode version mismatch | §3/CI |\n| `Intermittent CI failures` | Network issues, retry package download | CI |\n\n## Resources\n\n**WWDC**: 2019-413 (Testing in Xcode)\n\n**Docs**: /xcode/downloading-and-installing-additional-xcode-components, /xcode/troubleshooting-simulator\n\n**Tech Notes**: TN2339 (Building from Command Line with Xcode)\n\n## Related\n\nFor test execution: `test-runner` agent\nFor test debugging: `test-debugger` agent\nFor simulator testing: `simulator-tester` agent\nFor SPM conflicts: `spm-conflict-resolver` agent\n"
     },
     "build-optimizer": {
       "name": "build-optimizer",
@@ -36690,8 +36697,8 @@
           4,
           22,
           6,
-          123,
-          370
+          131,
+          378
         ],
         "13": [
           4,
@@ -38077,8 +38084,8 @@
         3.990476190476189,
         13.971428571428572,
         4.328571428571427,
-        43.94761904761905,
-        612.3999999999999
+        43.98571428571429,
+        612.4380952380951
       ],
       "storedFields": {
         "0": {
@@ -47343,6 +47350,17 @@
           }
         ],
         [
+          "xcodebuildmcp",
+          {
+            "3": {
+              "12": 2
+            },
+            "4": {
+              "12": 2
+            }
+          }
+        ],
+        [
           "xcodebuild",
           {
             "3": {
@@ -47351,7 +47369,7 @@
             "4": {
               "8": 14,
               "9": 8,
-              "12": 16,
+              "12": 15,
               "37": 2,
               "98": 2,
               "146": 5,
@@ -76797,6 +76815,17 @@
           }
         ],
         [
+          "bxcodebuild",
+          {
+            "3": {
+              "12": 1
+            },
+            "4": {
+              "12": 2
+            }
+          }
+        ],
+        [
           "bytecode",
           {
             "4": {
@@ -79657,26 +79686,6 @@
           }
         ],
         [
-          "bounded",
-          {
-            "3": {
-              "189": 1
-            },
-            "4": {
-              "15": 1,
-              "60": 1,
-              "67": 2,
-              "80": 4,
-              "127": 1,
-              "131": 1,
-              "171": 2,
-              "189": 2,
-              "190": 4,
-              "200": 1
-            }
-          }
-        ],
-        [
           "boundaries",
           {
             "3": {
@@ -79748,6 +79757,28 @@
               "190": 1,
               "192": 2,
               "196": 1
+            }
+          }
+        ],
+        [
+          "bounded",
+          {
+            "3": {
+              "12": 1,
+              "189": 1
+            },
+            "4": {
+              "12": 1,
+              "15": 1,
+              "60": 1,
+              "67": 2,
+              "80": 4,
+              "127": 1,
+              "131": 1,
+              "171": 2,
+              "189": 2,
+              "190": 4,
+              "200": 1
             }
           }
         ],
@@ -189978,10 +190009,12 @@
               "123": 1
             },
             "3": {
+              "12": 1,
               "123": 1
             },
             "4": {
               "7": 1,
+              "12": 1,
               "44": 1,
               "46": 1,
               "57": 1,
@@ -197455,9 +197488,13 @@
         [
           "skips",
           {
+            "3": {
+              "12": 2
+            },
             "4": {
               "2": 2,
               "10": 1,
+              "12": 2,
               "116": 1,
               "122": 1,
               "125": 1,
@@ -200827,12 +200864,16 @@
               "10": 1,
               "11": 1
             },
+            "3": {
+              "12": 1
+            },
             "4": {
               "0": 1,
               "4": 1,
               "8": 2,
               "10": 1,
               "11": 3,
+              "12": 1,
               "15": 1,
               "19": 1,
               "21": 2,
@@ -209859,6 +209900,7 @@
               "207": 1
             },
             "3": {
+              "12": 2,
               "86": 2,
               "118": 3,
               "144": 1
@@ -209868,6 +209910,7 @@
               "4": 5,
               "5": 4,
               "8": 1,
+              "12": 2,
               "18": 11,
               "19": 13,
               "20": 12,
@@ -244271,6 +244314,7 @@
               "162": 1
             },
             "3": {
+              "12": 2,
               "160": 2,
               "207": 1,
               "208": 3,
@@ -244278,6 +244322,7 @@
             },
             "4": {
               "7": 3,
+              "12": 2,
               "156": 6,
               "160": 16,
               "162": 5,
@@ -286267,7 +286312,17 @@
           "check",
           "processes",
           "zombie",
-          "xcodebuild",
+          "xcodebuild"
+        ],
+        "\\bxcodebuild\\b is word-bounded so it skips the `xcodebuildmcp` MCP server": [
+          "bxcodebuild",
+          "word",
+          "bounded",
+          "so",
+          "skips",
+          "xcodebuildmcp",
+          "mcp",
+          "server",
           "ps",
           "aux",
           "grep",
@@ -286440,11 +286495,15 @@
           "cautiously",
           "killall"
         ],
-        "Check they're gone": [
+        "Check they're gone (-w skips the `xcodebuildmcp` MCP server)": [
           "check",
           "they",
           "re",
           "gone",
+          "skips",
+          "xcodebuildmcp",
+          "mcp",
+          "server",
           "ps",
           "aux",
           "grep",

@@ -83,7 +83,9 @@ ls -la | grep -E "\.xcodeproj|\.xcworkspace"
 # If nothing shows, you're in wrong directory
 
 # 1. Check for zombie xcodebuild processes (with elapsed time)
-ps -eo pid,etime,command | grep -E "xcodebuild|Simulator" | grep -v grep
+# \bxcodebuild\b — word-bounded so it does not also list the long-running
+# `xcodebuildmcp` MCP server (a node process), which is not a zombie build
+ps -eo pid,etime,command | grep -E '\bxcodebuild\b|Simulator' | grep -v grep
 # Format: PID ELAPSED COMMAND
 # ELAPSED shows how long process has been running (e.g., 1:23:45 = 1 hour 23 min 45 sec)
 # Processes running > 30 minutes are likely zombies
@@ -228,8 +230,8 @@ If you see 10+ xcodebuild processes OR any processes with elapsed time > 30 minu
 # Kill all xcodebuild processes
 killall -9 xcodebuild
 
-# Verify they're gone (with elapsed time)
-ps -eo pid,etime,command | grep xcodebuild | grep -v grep
+# Verify they're gone (with elapsed time). -w xcodebuild ignores `xcodebuildmcp`.
+ps -eo pid,etime,command | grep -w xcodebuild | grep -v grep
 
 # Also kill stuck Simulator processes if needed
 killall -9 Simulator

@@ -42,7 +42,8 @@ If you see ANY of these, suspect environment not code:
 
 ```bash
 # 1. Check processes (zombie xcodebuild?)
-ps aux | grep -E "xcodebuild|Simulator" | grep -v grep
+# \bxcodebuild\b is word-bounded so it skips the `xcodebuildmcp` MCP server
+ps aux | grep -E '\bxcodebuild\b|Simulator' | grep -v grep
 
 # 2. Check Derived Data size (>10GB = stale)
 du -sh ~/Library/Developer/Xcode/DerivedData
@@ -103,8 +104,8 @@ killall -9 Simulator
 # Kill all xcodebuild (use cautiously)
 killall -9 xcodebuild
 
-# Check they're gone
-ps aux | grep xcodebuild | grep -v grep
+# Check they're gone (-w skips the `xcodebuildmcp` MCP server)
+ps aux | grep -w xcodebuild | grep -v grep
 ```
 
 ### For Test Failures

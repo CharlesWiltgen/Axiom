@@ -221,7 +221,7 @@ def duration_hints(command: str, output: str, duration_ms: int | None) -> list[s
     ):
         hints.append(
             f"💡 Long xcodebuild ({seconds}s) ended in failure. Check for "
-            "zombie processes: `ps aux | grep xcodebuild | wc -l`. "
+            "zombie processes: `pgrep -x xcodebuild | wc -l`. "
             "Try: /axiom:fix-build"
         )
     return hints

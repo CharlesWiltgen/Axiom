@@ -10,8 +10,9 @@ Run these checks and format as a dashboard:
 
 ### Environment Health
 ```bash
-# Zombie processes
-pgrep -f xcodebuild | wc -l
+# Zombie xcodebuild processes (-x = exact process name; -f would also count
+# the long-running `xcodebuildmcp` MCP server, which is not a zombie build)
+pgrep -x xcodebuild | wc -l
 
 # Derived Data size
 du -sh ~/Library/Developer/Xcode/DerivedData 2>/dev/null
