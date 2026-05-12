@@ -21,8 +21,11 @@ except Exception as e:
 # Platform context - behavioral rules for handling iOS version uncertainty.
 # Deliberately does NOT assert the model's training cutoff or list the skipped
 # majors (19-25) as "might exist" — both age badly, and the latter actively
-# misinforms a model that already knows iOS 26. Stays consistent with
-# stop-validation.sh's ground truth (iOS 18 -> 26 at WWDC 2025). See GH #39.
+# misinforms a model that already knows iOS 26. This is now the *only* place
+# Axiom states the iOS-version ground truth; the old reactive Stop hook
+# (stop-validation.sh) was retired — it false-blocked on prose that merely
+# discussed version-denial phrasings and added nothing a current model needs.
+# See GH #39 and axiom-nnue.
 current_date = datetime.now().strftime("%A, %Y-%m-%d")
 platform_context = f"""## iOS / Xcode VERSION GROUND TRUTH (Current date: {current_date})
 
