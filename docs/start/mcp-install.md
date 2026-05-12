@@ -1,6 +1,6 @@
 # MCP Server
 
-Axiom includes an MCP (Model Context Protocol) server that brings its iOS development skills to any MCP-compatible AI coding tool — VS Code with GitHub Copilot, Claude Desktop, Cursor, Gemini CLI, OpenCode, and more.
+Axiom includes an MCP (Model Context Protocol) server that brings its iOS development skills to any MCP-compatible AI coding tool — VS Code, Claude Desktop, Cursor, Gemini CLI, OpenCode, and more.
 
 ## What You Get
 
@@ -20,13 +20,13 @@ That's it. No cloning, no building.
 
 Each tool needs a configuration snippet that tells it how to launch the Axiom MCP server.
 
-### VS Code + GitHub Copilot
+### VS Code
 
-Add to your VS Code `settings.json`:
+Run the **MCP: Open User Configuration** command (Command Palette) to open your user-profile `mcp.json`, then add:
 
 ```json
 {
-  "github.copilot.chat.mcp.servers": {
+  "servers": {
     "axiom": {
       "command": "npx",
       "args": ["-y", "axiom-mcp"]
@@ -34,6 +34,8 @@ Add to your VS Code `settings.json`:
   }
 }
 ```
+
+For a single workspace instead, put the same `{ "servers": { … } }` block in `.vscode/mcp.json`. (You can also use **MCP: Add Server** for a guided flow.)
 
 ### Claude Desktop
 
