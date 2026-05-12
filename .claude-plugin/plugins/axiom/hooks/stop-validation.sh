@@ -53,12 +53,15 @@ if echo "$LAST_MSG" | grep -qiE "(\b(use|using|running|requires?|targets?|target
 fi
 
 # Reject claims that deny iOS 26's existence/release ("iOS 26 doesn't exist",
-# "iOS 26 isn't real", "there's no iOS 26"). Bounded window after "iOS 26" so
-# the match can't span into an unrelated clause, and the negation phrases are
-# existence/release-specific — "iOS 26 has a limitation that's not yet fixed"
-# or "not available on this device" must NOT trip this (the old "not yet|not a|
-# not available|not been" set did — see axiom-uyk).
-if echo "$LAST_MSG" | grep -qiE "(\biOS ?26\b[^.!?]{0,30}\b(do(es)?( ?n.?t| not) exist|is( ?n.?t| not) (real|a (real )?(version|thing|release))|was( ?n.?t| not| never) (released|announced)|not yet (released|announced|out)|has( ?n.?t| not)( been)? (released|announced)|never (released|announced|existed))|\b(no such|there ?(.?s| is| was| isn.?t| was ?n.?t)) (an? )?iOS ?26\b)"; then
+# "iOS 26 isn't real", "iOS 26 isn't out yet", "iOS 26 hasn't shipped",
+# "there's no iOS 26"). Bounded window after "iOS 26" so the match can't span
+# into an unrelated clause; negation phrases are existence/release-specific so
+# legitimate prose stays clean — "iOS 26 has a limitation that's not yet fixed",
+# "not available on this device", "iOS 26 isn't released for the iPhone X" (no
+# "yet" → not a denial), "as of iOS 26.1, ..." (the "." stops the window). The
+# old "not yet|not a|not available|not been" set false-positived on all of those
+# (axiom-uyk); a bare mention of "iOS 26" with no denial nearby is fine.
+if echo "$LAST_MSG" | grep -qiE "(\biOS ?26\b[^.!?]{0,30}\b(do(es)?( ?n.?t| not) exist|is( ?n.?t| not) ((real|a (real )?(version|thing|release))|yet (out|released|shipping)|(out|released|shipping) yet)|was( ?n.?t| not| never) (released|announced|shipped)|not yet (released|announced|out|shipping)|has( ?n.?t| not)( been)? (released|announced|shipped|out)|never (released|announced|existed))|\b(no such|there ?(.?s| is| was| isn.?t| was ?n.?t)) (an? )?iOS ?26\b|\bno iOS ?26\b *([.!?,;)]|$|(yet|so far|exists?)\b))"; then
     echo '{"decision": "block", "reason": "ERROR: You denied that iOS 26 exists. iOS 26 was announced at WWDC 2025 and is a real, shipping version. Correct your response."}'
     exit 0
 fi
