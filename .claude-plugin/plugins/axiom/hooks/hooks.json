@@ -60,7 +60,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/subagent-start.sh\""
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/subagent-start.py\""
           }
         ]
       }

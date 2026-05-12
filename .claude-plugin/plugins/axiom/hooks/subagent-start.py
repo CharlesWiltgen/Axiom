@@ -1,15 +1,19 @@
-#!/usr/bin/env bash
-# SubagentStart hook for Axiom plugin
-# Injects compact Axiom skill awareness into subagents so they use skills
-# Note: Avoiding 'set -euo pipefail' for robustness
+#!/usr/bin/env python3
+"""SubagentStart hook for Axiom plugin.
 
-python3 -c "$(cat <<'PYTHON_SCRIPT'
+Injects compact Axiom skill awareness into subagents so they use skills.
+
+Standalone Python (matching pretool-crash-route.py / posttool-bash-hints.py /
+user-prompt-submit.py) — NOT embedded in a bash heredoc. The heredoc-in-bash
+pattern breaks under macOS bash 3.2 whenever a prose apostrophe lands in the
+body; plain .py avoids that and is directly lintable/testable.
+
+Reads a JSON payload on stdin, writes a JSON response on stdout. Never exits
+non-zero — a hook failure must not block subagent startup.
+"""
 import json
 import sys
 
-# Read full payload from stdin — argv path hits the ~256KB-1MB platform limit
-# on large transcripts. Python source is delivered via -c so sys.stdin
-# remains the parent shell's stdin (the JSON payload from Claude Code).
 try:
     input_data = json.load(sys.stdin)
     agent_type = input_data.get("agent_type", "")
@@ -72,12 +76,8 @@ Invoke with: Skill tool, skill name (e.g., "axiom-swiftui")."""
 output = {
     "hookSpecificOutput": {
         "hookEventName": "SubagentStart",
-        "additionalContext": context
+        "additionalContext": context,
     }
 }
 
 print(json.dumps(output))
-PYTHON_SCRIPT
-)"
-
-exit 0

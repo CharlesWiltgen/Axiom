@@ -336,6 +336,25 @@ class TestHookIsStandalonePython(unittest.TestCase):
             f"hooks.json still references the removed .sh wrapper: {cmds}"
         )
 
+    def test_no_shell_hook_embeds_python_via_heredoc(self):
+        # General guard: the `python3 -c "$(cat <<'EOF' ... EOF)"` pattern in any
+        # .sh hook is fragile under macOS bash 3.2 (quote-tracking through the
+        # heredoc body). Hooks that need Python must be standalone .py files.
+        hooks_dir = os.path.dirname(HOOK)
+        offenders = []
+        for fn in sorted(os.listdir(hooks_dir)):
+            if not fn.endswith(".sh"):
+                continue
+            with open(os.path.join(hooks_dir, fn)) as f:
+                content = f.read()
+            if 'python3 -c "$(cat <<' in content or 'python -c "$(cat <<' in content:
+                offenders.append(fn)
+        self.assertEqual(
+            offenders, [],
+            "These .sh hooks embed Python via a bash heredoc — fragile under "
+            f"bash 3.2. Convert each to a standalone .py file: {offenders}"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
