@@ -290,5 +290,60 @@ class TestManifestCoverage(unittest.TestCase):
                          f"Routers in manifest but not tested: {sorted(missing)}")
 
 
+class TestBash32Compat(unittest.TestCase):
+    """The hook's Python source is delivered via `python3 -c "$(cat <<'EOF' ... EOF)"`.
+
+    Bash 3.2 (macOS /usr/bin/bash) has a parser bug: it tracks single-quote state
+    through the heredoc body while scanning for the closing `)`. A lone apostrophe
+    in prose (e.g. "shell's", "that's") opens a quote that never closes, causing
+    'unexpected EOF while looking for matching `''. Regex strings are balanced
+    'literal' pairs and are fine — the trap is apostrophes in comments/strings.
+
+    These run under whatever bash invoked the suite (likely 5.x), so a 3.2-only
+    parse error wouldn't surface from `bash HOOK` alone — hence this static check.
+    """
+
+    def test_heredoc_body_has_no_unbalanced_single_quotes(self):
+        with open(HOOK) as f:
+            lines = f.readlines()
+
+        # Extract the heredoc body: between the line containing <<'PYTHON_SCRIPT'
+        # and the closing PYTHON_SCRIPT delimiter line.
+        start = next(i for i, l in enumerate(lines) if "<<'PYTHON_SCRIPT'" in l)
+        end = next(i for i, l in enumerate(lines[start + 1:], start + 1)
+                   if l.strip() == "PYTHON_SCRIPT")
+        body = lines[start + 1:end]
+
+        offenders = []
+        for n, line in enumerate(body, start=start + 2):  # 1-based file line nums
+            if line.count("'") % 2 != 0:
+                offenders.append((n, line.rstrip()))
+
+        self.assertEqual(
+            offenders, [],
+            "Lines in the heredoc body have an odd number of single quotes — "
+            "bash 3.2 will fail to parse the script. Rephrase to avoid the "
+            f"apostrophe(s):\n" + "\n".join(f"  line {n}: {l}" for n, l in offenders)
+        )
+
+    def test_hook_parses_under_bash_3_2_if_available(self):
+        # If a bash 3.2 is reachable, do a real `bash -n` parse check on it.
+        # Skip cleanly if no 3.2 is installed.
+        import shutil
+        bash32 = None
+        for cand in ("/bin/bash", shutil.which("bash")):
+            if not cand:
+                continue
+            ver = subprocess.run([cand, "--version"], capture_output=True, text=True)
+            if "version 3.2" in ver.stdout:
+                bash32 = cand
+                break
+        if not bash32:
+            self.skipTest("no bash 3.2 available")
+        result = subprocess.run([bash32, "-n", HOOK], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0,
+                         f"bash 3.2 syntax check failed:\n{result.stderr}")
+
+
 if __name__ == "__main__":
     unittest.main()

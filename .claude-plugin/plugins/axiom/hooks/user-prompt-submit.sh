@@ -10,7 +10,11 @@ import sys
 
 # Read full payload from stdin — argv path hits the ~256KB-1MB platform limit
 # on large pasted prompts. Python source is delivered via -c so sys.stdin
-# remains the parent shell stdin (the JSON payload from Claude Code).
+# stays bound to the parent shell stdin (the JSON payload from Claude Code).
+# NOTE: keep every line below with an EVEN number of single-quote characters.
+# bash 3.2 (macOS /usr/bin/bash) tracks quote state through this heredoc body
+# while scanning for the closing paren, so a stray apostrophe breaks parsing.
+# Regex literals are balanced pairs and fine; the trap is prose contractions.
 try:
     input_data = json.load(sys.stdin)
     prompt = input_data.get("prompt", "")
@@ -133,7 +137,7 @@ if re.search(r'healthkit|hkworkout|hkliveworkout|workoutkit|hkquery|hkhealthstor
     matches.append("axiom-health")
 
 # Real-world payments (Apple Pay / Wallet / Tap to Pay)
-# NOT in-app purchase / IAP — that's axiom-integration
+# NOT in-app purchase / IAP — that belongs to axiom-integration
 if re.search(r'apple\s*pay|pkpayment|pkpaymentauthorization|passkit|\bpkpass\b|wallet\s*pass|tap\s*to\s*pay|orders?\s*in\s*wallet|merchant\s*(id|capabilit|identifier)|payment\s*(request|network|method)', prompt_lower):
     matches.append("axiom-payments")
 
