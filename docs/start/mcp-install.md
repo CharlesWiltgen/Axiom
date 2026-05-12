@@ -1,3 +1,8 @@
+<script setup>
+import stats from '../.vitepress/theme/stats.json'
+const skills = stats.disciplineSkills + stats.referenceSkills + stats.diagnosticSkills
+</script>
+
 # MCP Server
 
 Axiom includes an MCP (Model Context Protocol) server that brings its iOS development skills to any MCP-compatible AI coding tool — VS Code, Claude Desktop, Cursor, Gemini CLI, OpenCode, and more.
@@ -6,9 +11,9 @@ Axiom includes an MCP (Model Context Protocol) server that brings its iOS develo
 
 The MCP server exposes Axiom's full catalog through the MCP protocol:
 
-- **133 skills** as MCP Resources (on-demand loading)
-- **31 agents** as MCP Tools (autonomous scanning and fixing)
-- **10 commands** as MCP Prompts (structured workflows)
+- **{{ skills }} skills** as MCP Resources (on-demand loading)
+- **{{ stats.agents }} agents** as MCP Tools (autonomous scanning and fixing)
+- **{{ stats.commands }} commands** as MCP Prompts (structured workflows)
 
 ## Prerequisites
 
