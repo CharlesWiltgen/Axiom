@@ -504,6 +504,44 @@ for (const pyFile of pyHooks) {
   }
 }
 
+// Execute hook test suites (hooks/*_test.py). py_compile above only checks
+// syntax — this actually runs the unittest suites so routing/heredoc/manifest
+// regressions gate CI. Offline-only; safe under --static.
+const hookTestFiles = fs
+  .readdirSync(path.join(pluginDir, "hooks"))
+  .filter((f: string) => f.endsWith("_test.py"))
+  .sort();
+
+if (hookTestFiles.length === 0) {
+  warn("hooks", "no hooks/*_test.py suites found — expected routing/heredoc coverage");
+} else {
+  const hooksDir = path.join(pluginDir, "hooks");
+  for (const testFile of hookTestFiles) {
+    const moduleName = testFile.replace(/\.py$/, "");
+    try {
+      // unittest writes its dots + summary to stderr; merge it so we can
+      // report the test count on success.
+      const out = execSync(`python3 -m unittest "${moduleName}" 2>&1`, {
+        stdio: ["pipe", "pipe", "pipe"],
+        timeout: 60000,
+        cwd: hooksDir,
+      }).toString();
+      const ran = out.match(/Ran \d+ tests?/)?.[0] ?? "ran";
+      console.log(`  ✓ ${testFile} (${ran})`);
+    } catch (e: unknown) {
+      const err = e as { killed?: boolean; stdout?: Buffer; stderr?: Buffer };
+      if (err.killed) {
+        error("hooks", `${testFile} timed out`);
+      } else {
+        error(
+          "hooks",
+          `${testFile} FAILED:\n${err.stdout?.toString() || err.stderr?.toString()}`,
+        );
+      }
+    }
+  }
+}
+
 // Functional validation: run session-start.sh and validate JSON output
 const sessionStartSh = path.join(pluginDir, "hooks/session-start.sh");
 if (fs.existsSync(sessionStartSh)) {
