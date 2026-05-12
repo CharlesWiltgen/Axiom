@@ -110,6 +110,30 @@ class TestApprovesLegitMentions(unittest.TestCase):
     def test_targets_ios_26(self):
         self.assertEqual("approve", decide("This package targets iOS 26 and later."))
 
+    def test_ios_26_not_released_for_a_device(self):
+        # "isn't released for <device>" has no "yet" → it's a (borderline)
+        # device-availability statement, not a denial of iOS 26 itself.
+        self.assertEqual("approve", decide(
+            "iOS 26 isn't released for the iPhone X (it dropped support)."))
+
+    def test_no_ios_26_specific(self):
+        # "no iOS 26-specific ..." is not "no iOS 26." — the dash isn't a clause end.
+        self.assertEqual("approve", decide("There's no iOS 26-specific issue here."))
+
+    def test_no_ios_26_problems(self):
+        self.assertEqual("approve", decide(
+            "There are no iOS 26 problems with this code."))
+
+    def test_unsure_about_ios_26(self):
+        # A denial keyword *before* "iOS 26" with no denial after it is fine.
+        self.assertEqual("approve", decide(
+            "I'm not sure which iOS 26 features apply here."))
+
+    def test_ios_26_subfeature_not_available_yet(self):
+        # The denial must target iOS 26, not a sub-feature of it.
+        self.assertEqual("approve", decide(
+            "iOS 26's dark mode isn't available yet on iPad."))
+
 
 @unittest.skipUnless(_HAVE_JQ, "jq not installed — stop-validation degrades to approve-all")
 class TestBlocksWrongClaims(unittest.TestCase):
@@ -135,8 +159,27 @@ class TestBlocksWrongClaims(unittest.TestCase):
         self.assertEqual("block", decide(
             "There is no iOS 26; Apple hasn't announced it."))
 
+    def test_theres_no_ios_26_standalone(self):
+        # Bare "There's no iOS 26." used to slip through the narrowed regex.
+        self.assertEqual("block", decide("There's no iOS 26."))
+
+    def test_no_ios_26_yet(self):
+        self.assertEqual("block", decide("There is no iOS 26 yet."))
+
+    def test_no_ios_26_exists(self):
+        self.assertEqual("block", decide("No iOS 26 exists."))
+
     def test_ios_26_isnt_real(self):
         self.assertEqual("block", decide("iOS 26 isn't a real version."))
+
+    def test_ios_26_isnt_out_yet(self):
+        self.assertEqual("block", decide("iOS 26 isn't out yet."))
+
+    def test_ios_26_isnt_released_yet(self):
+        self.assertEqual("block", decide("iOS 26 isn't released yet — it's still in beta."))
+
+    def test_ios_26_hasnt_shipped(self):
+        self.assertEqual("block", decide("iOS 26 hasn't shipped."))
 
     def test_ios_26_was_never_released(self):
         self.assertEqual("block", decide("iOS 26 was never released."))
