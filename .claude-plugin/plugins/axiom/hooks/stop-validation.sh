@@ -39,22 +39,27 @@ if [ -z "$LAST_MSG" ]; then
     exit 0
 fi
 
-# Check for fake iOS versions (19-25 don't exist - Apple jumped from 18 to 26)
-# Only block if claiming they exist - allow mentions in negative context (skip, don't exist)
-# First check if the message explains they don't exist
-if echo "$LAST_MSG" | grep -qiE "(skip|skipped|skipping|jumped from|don.t exist|doesn.t exist).*(iOS|version).*(19|20|21|22|23|24|25)"; then
-    # Message correctly explains these versions don't exist - allow it
-    :
-elif echo "$LAST_MSG" | grep -qiE "iOS (19|20|21|22|23|24|25)([^0-9]|$)"; then
-    # Message mentions iOS 19-25 without explaining they don't exist - block it
-    echo '{"decision": "block", "reason": "ERROR: You mentioned iOS 19-25. These versions DO NOT EXIST. Apple jumped from iOS 18 directly to iOS 26 at WWDC 2025. Correct your response using accurate version numbers."}'
+# iOS 19-25 were never released — Apple went from iOS 18 directly to iOS 26 at
+# WWDC 2025. A bare mention of those numbers is fine (explaining the skip,
+# paraphrasing the SessionStart context, "from iOS 18 to iOS 26, skipping
+# 19-25", etc. all legitimately name them). Only correct sentences that treat
+# one of them as a real or current version — a version-asserting lead-in
+# immediately before "iOS <19-25>". (Replaces the old "any mention, unless it
+# contains these exact words in this exact order" allow-dance — GH #39.)
+_fake="(19|20|21|22|23|24|25)"
+if echo "$LAST_MSG" | grep -qiE "(\b(use|using|running|requires?|targets?|targeting|introduced in|added in|available in|shipped in|since|as of) iOS ?${_fake}\b|\b(upgrade|update|migrate) to iOS ?${_fake}\b|\biOS ?${_fake} (is|was) (the )?(latest|current|newest|out|released|shipping|available)|\b(latest|current|newest|most recent)\b[^.!?]{0,20}\biOS ?${_fake}\b|\b(in|on) iOS ?${_fake} (you|we|they|one|developers?|apps?|the user)\b)"; then
+    echo '{"decision": "block", "reason": "ERROR: iOS 19-25 were never released — Apple went from iOS 18 directly to iOS 26 at WWDC 2025. Your response treats one of those as a real version. Correct it; do not deny that iOS 26 exists."}'
     exit 0
 fi
 
-# Check for claims that "iOS 26 doesn't exist" or "iOS 26 is not real"
-# Pattern: iOS 26 followed by negation within same clause (no sentence breaks)
-if echo "$LAST_MSG" | grep -qiE "iOS 26[^.!?,;]*\b(does.?n.?t|is.?n.?t|has.?n.?t|was.?n.?t|not yet|not been|not a|not real|not available|not released|not out|not announced)"; then
-    echo '{"decision": "block", "reason": "ERROR: You claimed iOS 26 does not exist. iOS 26 WAS announced at WWDC 2025 and is a real version. Correct your response."}'
+# Reject claims that deny iOS 26's existence/release ("iOS 26 doesn't exist",
+# "iOS 26 isn't real", "there's no iOS 26"). Bounded window after "iOS 26" so
+# the match can't span into an unrelated clause, and the negation phrases are
+# existence/release-specific — "iOS 26 has a limitation that's not yet fixed"
+# or "not available on this device" must NOT trip this (the old "not yet|not a|
+# not available|not been" set did — see axiom-uyk).
+if echo "$LAST_MSG" | grep -qiE "(\biOS ?26\b[^.!?]{0,30}\b(do(es)?( ?n.?t| not) exist|is( ?n.?t| not) (real|a (real )?(version|thing|release))|was( ?n.?t| not| never) (released|announced)|not yet (released|announced|out)|has( ?n.?t| not)( been)? (released|announced)|never (released|announced|existed))|\b(no such|there ?(.?s| is| was| isn.?t| was ?n.?t)) (an? )?iOS ?26\b)"; then
+    echo '{"decision": "block", "reason": "ERROR: You denied that iOS 26 exists. iOS 26 was announced at WWDC 2025 and is a real, shipping version. Correct your response."}'
     exit 0
 fi
 

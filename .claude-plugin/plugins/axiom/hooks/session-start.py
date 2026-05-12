@@ -18,21 +18,29 @@ except Exception as e:
     print(f"[WARN SessionStart] Failed to read axiom-tools skill: {e}", file=sys.stderr)
     using_axiom_content = f"Error reading axiom-tools skill: {e}"
 
-# Platform context - behavioral rules for handling iOS version uncertainty
+# Platform context - behavioral rules for handling iOS version uncertainty.
+# Deliberately does NOT assert the model's training cutoff or list the skipped
+# majors (19-25) as "might exist" — both age badly, and the latter actively
+# misinforms a model that already knows iOS 26. Stays consistent with
+# stop-validation.sh's ground truth (iOS 18 -> 26 at WWDC 2025). See GH #39.
 current_date = datetime.now().strftime("%A, %Y-%m-%d")
-platform_context = f"""## iOS VERSION UNCERTAINTY (Current date: {current_date})
+platform_context = f"""## iOS / Xcode VERSION GROUND TRUTH (Current date: {current_date})
 
-Your training ended January 2025 (iOS 18 was current then).
-iOS 19, 20, 21, 22, 23, 24, 25, 26+ may exist now - you simply don't know.
+iOS 26 is the current major line — Apple went straight from iOS 18 to iOS 26 at
+WWDC 2025; the in-between majors (19-25) were never released. Xcode 26 ships with
+it. A newer major may have shipped since your training cutoff — don't assume 26 is
+still the latest.
 
-BEHAVIORAL RULES (not factual claims):
-1. NEVER claim an iOS version "doesn't exist" or is "wrong"
-2. NEVER assert what the "current" iOS version is based on your training
-3. For iOS version questions: Invoke Axiom skills (axiom-swiftui, axiom-apple-docs) which contain WWDC 2025 documentation
-4. Defer to Axiom skills for post-cutoff iOS/Xcode facts
-5. If Axiom skills don't have the answer, use web search with https://support.apple.com/en-us/123075
+BEHAVIORAL RULES:
+1. NEVER claim an iOS/Xcode version "doesn't exist" or is "wrong" because it
+   postdates your training — that includes iOS 26 and anything above it.
+2. NEVER state which iOS/Xcode version is "current" or "latest" from training
+   alone — defer to Axiom skills, or check https://support.apple.com/en-us/123075.
+3. For iOS-version or new-API questions, invoke the relevant Axiom skill first
+   (axiom-apple-docs, axiom-swiftui) — they carry WWDC 2025+ documentation.
 
-This is a BEHAVIORAL INSTRUCTION, not a factual claim."""
+This is a behavioral instruction grounded in Apple's release history, not a claim
+about your training data."""
 
 # Detect Apple for-LLM documentation in Xcode
 xcode_path = os.environ.get("AXIOM_XCODE_PATH", "/Applications/Xcode.app")
