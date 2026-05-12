@@ -273,23 +273,18 @@ class TestManifestCoverage(unittest.TestCase):
             manifest = json.load(f)
         manifest_routers = {s["name"] for s in manifest["skills"]}
 
-        # Every router in the manifest must have a `test_<name>` method.
-        # axiom-name → test_name (underscores)
-        tested = {
-            m[len("test_"):].replace("_", "-")
-            for m in dir(TestPositiveRouting)
-            if m.startswith("test_")
-        }
-        # Map test method names back to router names. Some tests share a router
-        # (e.g. test_build, test_build_device_deployment both for axiom-build),
-        # so we also derive coverage from prefix matching.
+        # Each router `axiom-<suffix>` is covered by a test method named exactly
+        # `test_<suffix>` or `test_<suffix>_<...>` (some routers have several
+        # tests, e.g. test_build, test_build_device_deployment). The trailing
+        # underscore matters: it stops `axiom-swift`'s suffix from being matched
+        # by `test_swiftui` (a `swift`-prefixed but unrelated method).
+        test_methods = [m for m in dir(TestPositiveRouting) if m.startswith("test_")]
         covered = set()
         for router in manifest_routers:
             suffix = router[len("axiom-"):].replace("-", "_")
-            for t in dir(TestPositiveRouting):
-                if t.startswith(f"test_{suffix}"):
-                    covered.add(router)
-                    break
+            exact = f"test_{suffix}"
+            if any(t == exact or t.startswith(exact + "_") for t in test_methods):
+                covered.add(router)
 
         missing = manifest_routers - covered
         self.assertEqual(missing, set(),
