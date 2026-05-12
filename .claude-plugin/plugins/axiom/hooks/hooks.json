@@ -50,7 +50,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.sh\""
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.py\""
           }
         ]
       }

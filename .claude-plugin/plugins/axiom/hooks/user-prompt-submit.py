@@ -1,20 +1,21 @@
-#!/usr/bin/env bash
-# UserPromptSubmit hook for Axiom plugin
-# Detects iOS-related prompts and injects specific skill routing instructions
-# Note: Avoiding 'set -euo pipefail' for robustness - hooks should not block on errors
+#!/usr/bin/env python3
+"""UserPromptSubmit hook for Axiom plugin.
 
-python3 -c "$(cat <<'PYTHON_SCRIPT'
+Detects iOS-related prompts and injects specific skill routing instructions.
+
+Standalone Python (matching pretool-crash-route.py / posttool-bash-hints.py) —
+NOT embedded in a bash heredoc. The old user-prompt-submit.sh wrapped this in
+`python3 -c "$(cat <<'EOF' ... EOF)"`, which broke under macOS bash 3.2 whenever
+a prose apostrophe appeared in the body. Plain .py eliminates that bug class and
+makes the logic directly lintable and testable.
+
+Reads a JSON payload on stdin (`{"prompt": "..."}`), writes a JSON response on
+stdout. Never exits non-zero — a hook failure must not block the prompt.
+"""
 import json
 import re
 import sys
 
-# Read full payload from stdin — argv path hits the ~256KB-1MB platform limit
-# on large pasted prompts. Python source is delivered via -c so sys.stdin
-# stays bound to the parent shell stdin (the JSON payload from Claude Code).
-# NOTE: keep every line below with an EVEN number of single-quote characters.
-# bash 3.2 (macOS /usr/bin/bash) tracks quote state through this heredoc body
-# while scanning for the closing paren, so a stray apostrophe breaks parsing.
-# Regex literals are balanced pairs and fine; the trap is prose contractions.
 try:
     input_data = json.load(sys.stdin)
     prompt = input_data.get("prompt", "")
@@ -187,12 +188,8 @@ else:
 output = {
     "hookSpecificOutput": {
         "hookEventName": "UserPromptSubmit",
-        "additionalContext": context
+        "additionalContext": context,
     }
 }
 
 print(json.dumps(output))
-PYTHON_SCRIPT
-)"
-
-exit 0

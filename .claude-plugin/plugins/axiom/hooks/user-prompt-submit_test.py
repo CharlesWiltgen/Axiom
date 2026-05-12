@@ -1,11 +1,11 @@
-"""Offline tests for user-prompt-submit hook.
+"""Offline tests for the user-prompt-submit hook.
 
 Run with:
     python3 -m unittest hooks/user-prompt-submit_test.py
 
-The hook is a bash wrapper around inline Python that reads a JSON payload
-from stdin and writes a JSON response to stdout. Each test feeds a payload
-and inspects the returned router matches.
+The hook is a standalone Python script that reads a JSON payload from stdin
+and writes a JSON response to stdout. Each test feeds a payload and inspects
+the returned router matches.
 
 Coverage strategy:
 - One positive case per router (26 routers — must cover all)
@@ -15,9 +15,10 @@ Coverage strategy:
 import json
 import os
 import subprocess
+import sys
 import unittest
 
-HOOK = os.path.join(os.path.dirname(__file__), "user-prompt-submit.sh")
+HOOK = os.path.join(os.path.dirname(__file__), "user-prompt-submit.py")
 
 
 def run_hook(prompt: str) -> dict:
@@ -26,7 +27,7 @@ def run_hook(prompt: str) -> dict:
     Returns {} if the hook emitted no match.
     """
     result = subprocess.run(
-        ["bash", HOOK],
+        [sys.executable, HOOK],
         input=json.dumps({"prompt": prompt}),
         capture_output=True,
         text=True,
@@ -290,59 +291,50 @@ class TestManifestCoverage(unittest.TestCase):
                          f"Routers in manifest but not tested: {sorted(missing)}")
 
 
-class TestBash32Compat(unittest.TestCase):
-    """The hook's Python source is delivered via `python3 -c "$(cat <<'EOF' ... EOF)"`.
+class TestHookIsStandalonePython(unittest.TestCase):
+    """Guard the structural decision: the hook is plain Python, not bash-embedded.
 
-    Bash 3.2 (macOS /usr/bin/bash) has a parser bug: it tracks single-quote state
-    through the heredoc body while scanning for the closing `)`. A lone apostrophe
-    in prose (e.g. "shell's", "that's") opens a quote that never closes, causing
-    'unexpected EOF while looking for matching `''. Regex strings are balanced
-    'literal' pairs and are fine — the trap is apostrophes in comments/strings.
-
-    These run under whatever bash invoked the suite (likely 5.x), so a 3.2-only
-    parse error wouldn't surface from `bash HOOK` alone — hence this static check.
+    The old user-prompt-submit.sh wrapped the logic in
+    `python3 -c "$(cat <<'EOF' ... EOF)"`. That broke under macOS bash 3.2 whenever
+    a prose apostrophe appeared in the body (bash 3.2 tracks quote state through the
+    heredoc while scanning for the closing paren). Keeping the hook as a standalone
+    .py eliminates that bug class entirely. If someone reintroduces a bash wrapper,
+    this test fails.
     """
 
-    def test_heredoc_body_has_no_unbalanced_single_quotes(self):
+    def test_hook_is_a_python_file(self):
+        self.assertTrue(HOOK.endswith(".py"), f"hook should be a .py file: {HOOK}")
+        self.assertTrue(os.path.exists(HOOK), f"hook file missing: {HOOK}")
         with open(HOOK) as f:
-            lines = f.readlines()
+            first_line = f.readline().strip()
+        self.assertEqual(first_line, "#!/usr/bin/env python3",
+                         "hook should have a python3 shebang")
 
-        # Extract the heredoc body: between the line containing <<'PYTHON_SCRIPT'
-        # and the closing PYTHON_SCRIPT delimiter line.
-        start = next(i for i, l in enumerate(lines) if "<<'PYTHON_SCRIPT'" in l)
-        end = next(i for i, l in enumerate(lines[start + 1:], start + 1)
-                   if l.strip() == "PYTHON_SCRIPT")
-        body = lines[start + 1:end]
-
-        offenders = []
-        for n, line in enumerate(body, start=start + 2):  # 1-based file line nums
-            if line.count("'") % 2 != 0:
-                offenders.append((n, line.rstrip()))
-
-        self.assertEqual(
-            offenders, [],
-            "Lines in the heredoc body have an odd number of single quotes — "
-            "bash 3.2 will fail to parse the script. Rephrase to avoid the "
-            f"apostrophe(s):\n" + "\n".join(f"  line {n}: {l}" for n, l in offenders)
+    def test_no_bash_wrapper_exists(self):
+        bash_wrapper = HOOK[:-len(".py")] + ".sh"
+        self.assertFalse(
+            os.path.exists(bash_wrapper),
+            f"a bash wrapper reappeared at {bash_wrapper} — the hook must stay "
+            "standalone Python (bash 3.2 heredoc-quote bug, see this class docstring)"
         )
 
-    def test_hook_parses_under_bash_3_2_if_available(self):
-        # If a bash 3.2 is reachable, do a real `bash -n` parse check on it.
-        # Skip cleanly if no 3.2 is installed.
-        import shutil
-        bash32 = None
-        for cand in ("/bin/bash", shutil.which("bash")):
-            if not cand:
-                continue
-            ver = subprocess.run([cand, "--version"], capture_output=True, text=True)
-            if "version 3.2" in ver.stdout:
-                bash32 = cand
-                break
-        if not bash32:
-            self.skipTest("no bash 3.2 available")
-        result = subprocess.run([bash32, "-n", HOOK], capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0,
-                         f"bash 3.2 syntax check failed:\n{result.stderr}")
+    def test_hooks_json_invokes_the_python_file(self):
+        hooks_json = os.path.join(os.path.dirname(HOOK), "hooks.json")
+        with open(hooks_json) as f:
+            cfg = json.load(f)
+        cmds = [
+            h["command"]
+            for entry in cfg["hooks"].get("UserPromptSubmit", [])
+            for h in entry["hooks"]
+        ]
+        self.assertTrue(
+            any("user-prompt-submit.py" in c for c in cmds),
+            f"hooks.json UserPromptSubmit should invoke user-prompt-submit.py; got: {cmds}"
+        )
+        self.assertFalse(
+            any("user-prompt-submit.sh" in c for c in cmds),
+            f"hooks.json still references the removed .sh wrapper: {cmds}"
+        )
 
 
 if __name__ == "__main__":
