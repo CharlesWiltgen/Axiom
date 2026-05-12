@@ -64,7 +64,8 @@ Questions you can ask Claude that will draw from this skill:
 
 ```bash
 # 1. Check for zombie processes (10+ or older than 30 min = problem)
-ps aux | grep -E "xcodebuild|Simulator" | grep -v grep
+# \bxcodebuild\b is word-bounded so it skips the long-running `xcodebuildmcp` MCP server
+ps aux | grep -E '\bxcodebuild\b|Simulator' | grep -v grep
 
 # 2. Kill zombies if found
 killall xcodebuild 2>/dev/null
