@@ -14,6 +14,7 @@ Coverage strategy:
 """
 import json
 import os
+import re
 import subprocess
 import sys
 import unittest
@@ -26,6 +27,11 @@ def run_hook(prompt: str) -> dict:
 
     Returns {} if the hook emitted no match.
     """
+    # Production (hooks.json) invokes the hook as `python3 "<path>"`; tests use
+    # sys.executable instead so the suite runs under whatever interpreter is
+    # running it (venvs, CI images where `python3` is absent or shadowed). Both
+    # resolve to a Python 3 — the hook only uses stdlib, so the choice is moot
+    # for behavior; sys.executable is just the more robust spawn target here.
     result = subprocess.run(
         [sys.executable, HOOK],
         input=json.dumps({"prompt": prompt}),
@@ -46,7 +52,6 @@ def routed_skills(prompt: str) -> set[str]:
     payload = run_hook(prompt)
     ctx = payload.get("hookSpecificOutput", {}).get("additionalContext", "")
     # Skills appear as `axiom-name` (backtick-wrapped) in the context string
-    import re
     return set(re.findall(r"`(axiom-[a-z-]+)`", ctx))
 
 
@@ -302,13 +307,19 @@ class TestHookIsStandalonePython(unittest.TestCase):
     this test fails.
     """
 
+    # Accept either common python3 shebang form. The repo convention is the
+    # `/usr/bin/env python3` form (picks up a pyenv/venv python3 on PATH), but
+    # `/usr/bin/python3` is also valid — the point of this assertion is "the
+    # hook is a directly-executable Python 3 script", not which absolute path.
+    _PY3_SHEBANGS = ("#!/usr/bin/env python3", "#!/usr/bin/python3")
+
     def test_hook_is_a_python_file(self):
         self.assertTrue(HOOK.endswith(".py"), f"hook should be a .py file: {HOOK}")
         self.assertTrue(os.path.exists(HOOK), f"hook file missing: {HOOK}")
         with open(HOOK) as f:
             first_line = f.readline().strip()
-        self.assertEqual(first_line, "#!/usr/bin/env python3",
-                         "hook should have a python3 shebang")
+        self.assertIn(first_line, self._PY3_SHEBANGS,
+                      f"hook should start with a python3 shebang, got {first_line!r}")
 
     def test_no_bash_wrapper_exists(self):
         bash_wrapper = HOOK[:-len(".py")] + ".sh"
@@ -353,10 +364,23 @@ class TestHookIsStandalonePython(unittest.TestCase):
             self.assertNotIn(f"{stem}.sh", joined,
                              f"hooks.json still references the removed {stem}.sh")
 
+    # Heuristic (not a bash parser): on a single logical line, a `python`/`python3`
+    # invocation token followed by either a heredoc operator (`<<`) or the start of
+    # a `$(cat ...)` command substitution (the heredoc body usually wraps onto the
+    # next line). Catches all the fragile shapes:
+    #   python3 -c "$(cat <<'EOF' ... EOF)"      — the original bash-3.2 trap
+    #   python3 - <<'EOF' ... EOF                 — stdin heredoc
+    #   python3 <<'EOF' ... EOF                   — stdin heredoc, implicit
+    #   python3 -c "$(cat \<newline><<'EOF' ...   — `$(cat` matches even when << wraps
+    # Known blind spots (documented, not fixed — a real check needs a shell parser):
+    # the `python` token and the `<<`/`$(cat` split across a line continuation, and
+    # the rare false positive of a literal "python ... <<" inside an echo/comment.
+    _PY_HEREDOC = re.compile(r"\bpython3?\b[^\n]*?(?:<<|\$\(\s*cat\b)")
+
     def test_no_shell_hook_embeds_python_via_heredoc(self):
-        # General guard: the `python3 -c "$(cat <<'EOF' ... EOF)"` pattern in any
-        # .sh hook is fragile under macOS bash 3.2 (quote-tracking through the
-        # heredoc body). Hooks that need Python must be standalone .py files.
+        # General guard: embedding Python source in a .sh hook via a heredoc is
+        # fragile under macOS bash 3.2 (quote-tracking through the heredoc body).
+        # Hooks that need Python must be standalone .py files.
         hooks_dir = os.path.dirname(HOOK)
         offenders = []
         for fn in sorted(os.listdir(hooks_dir)):
@@ -364,8 +388,10 @@ class TestHookIsStandalonePython(unittest.TestCase):
                 continue
             with open(os.path.join(hooks_dir, fn)) as f:
                 content = f.read()
-            if 'python3 -c "$(cat <<' in content or 'python -c "$(cat <<' in content:
-                offenders.append(fn)
+            for lineno, line in enumerate(content.splitlines(), 1):
+                if self._PY_HEREDOC.search(line):
+                    offenders.append(f"{fn}:{lineno}")
+                    break
         self.assertEqual(
             offenders, [],
             "These .sh hooks embed Python via a bash heredoc — fragile under "

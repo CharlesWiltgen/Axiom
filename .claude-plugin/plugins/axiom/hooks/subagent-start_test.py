@@ -18,6 +18,11 @@ HOOK = os.path.join(os.path.dirname(__file__), "subagent-start.py")
 
 def run_hook(payload: dict) -> dict:
     """Invoke the hook with the given payload, return the parsed output ({} if no inject)."""
+    # Production (hooks.json) invokes the hook as `python3 "<path>"`; tests use
+    # sys.executable so the suite runs under whatever interpreter is running it
+    # (venvs, CI images without a bare `python3`). Both are a Python 3; the hook
+    # is stdlib-only, so the choice is behavior-neutral — sys.executable is just
+    # the more robust spawn target for the test process.
     result = subprocess.run(
         [sys.executable, HOOK],
         input=json.dumps(payload),
