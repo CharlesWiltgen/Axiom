@@ -10,7 +10,7 @@ import sys
 
 # Read full payload from stdin — argv path hits the ~256KB-1MB platform limit
 # on large pasted prompts. Python source is delivered via -c so sys.stdin
-# remains the parent shell's stdin (the JSON payload from Claude Code).
+# remains the parent shell stdin (the JSON payload from Claude Code).
 try:
     input_data = json.load(sys.stdin)
     prompt = input_data.get("prompt", "")
