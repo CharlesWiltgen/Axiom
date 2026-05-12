@@ -315,6 +315,11 @@ class TestHookIsStandalonePython(unittest.TestCase):
             first_line = f.readline().strip()
         self.assertIn(first_line, self._PY3_SHEBANGS,
                       f"hook should start with a python3 shebang, got {first_line!r}")
+        # hooks.json invokes it as `python3 "<path>"`, so the exec bit isn't
+        # load-bearing today — but a shebang on a non-executable file is a
+        # contradiction, and keeping +x means a direct `./hook.py` still works.
+        self.assertTrue(os.access(HOOK, os.X_OK),
+                        f"hook has a shebang but isn't executable: {HOOK}")
 
     def test_no_bash_wrapper_exists(self):
         bash_wrapper = HOOK[:-len(".py")] + ".sh"
