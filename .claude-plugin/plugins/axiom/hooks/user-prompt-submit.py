@@ -68,11 +68,11 @@ if not non_ios and "axiom-concurrency" not in matches and re.search(r'main threa
     matches.append("axiom-concurrency")
 
 # Performance
-if re.search(r'memory leak|retain cycle|instruments\b.{0,10}(profil|trace|template)|time profiler|allocations\b.{0,5}(instrument|tool|track)', prompt_lower):
+if re.search(r'memory leak|retain cycle|instruments\b.{0,10}(profil|trace|template)|time profiler|allocations\b.{0,5}(instrument|tool|track)|app launch.{0,5}(time|perf|slow|template|instrument)|launch time|pre-?main\b|dyld\b|static initializer|first frame|extended launch|xctapplicationlaunchmetric|mxapplaunchmetric|\bcold launch\b|\bwarm launch\b', prompt_lower):
     matches.append("axiom-performance")
 
 # Performance — generic terms gated
-if not non_ios and "axiom-performance" not in matches and re.search(r'performance.{0,10}(slow|issue|bad|poor)|profil.{0,5}(app|cpu|memory)|battery drain|energy.{0,5}(issue|audit)|memory.{0,5}(grow|pressure|warning)', prompt_lower):
+if not non_ios and "axiom-performance" not in matches and re.search(r'performance.{0,10}(slow|issue|bad|poor)|profil.{0,5}(app|cpu|memory)|battery drain|energy.{0,5}(issue|audit)|memory.{0,5}(grow|pressure|warning)|(slow|slug|sluggish).{0,15}(launch|startup)|launch.{0,15}(slow|sluggish|regress|too long)|startup.{0,5}(time|slow|perf)|slow.{0,20}(after|when).{0,5}(tapping|tap).{0,15}(push|notification)', prompt_lower):
     matches.append("axiom-performance")
 
 # Networking

@@ -87,6 +87,16 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-performance", routed_skills(
             "I have a memory leak and retain cycle in my app"))
 
+    def test_performance_app_launch(self):
+        self.assertIn("axiom-performance", routed_skills(
+            "My app launch time is slow, how do I reduce pre-main / dyld time?"))
+        self.assertIn("axiom-performance", routed_skills(
+            "Xcode Organizer says my launch regressed and the first frame is slow"))
+        self.assertIn("axiom-performance", routed_skills(
+            "App is sluggish on startup after tapping a push notification"))
+        self.assertIn("axiom-performance", routed_skills(
+            "How do I write an XCTApplicationLaunchMetric test?"))
+
     def test_networking(self):
         self.assertIn("axiom-networking", routed_skills(
             "How do I use URLSession with async/await?"))

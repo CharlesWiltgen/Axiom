@@ -299,6 +299,7 @@ export default withMermaid(defineConfig({
           text: 'Debugging',
           items: [
             { text: 'Overview', link: '/skills/debugging/' },
+            { text: 'App Launch Performance', link: '/skills/debugging/app-launch' },
             { text: 'Auto Layout Debugging', link: '/skills/debugging/auto-layout-debugging' },
             { text: 'Build Debugging', link: '/skills/debugging/build-debugging' },
             { text: 'Build Performance', link: '/skills/debugging/build-performance' },
@@ -597,7 +598,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v3.3.4'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v3.4.0'
     }
   }
 }))
