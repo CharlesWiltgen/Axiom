@@ -56,7 +56,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**haptics**](./haptics) | Haptic feedback and Core Haptics — UIFeedbackGenerator, CHHapticEngine, AHAP patterns (WWDC 2021) |
 | [**localization**](./localization) | App localization — String Catalogs (.xcstrings), type-safe symbols (Xcode 26+), #bundle macro, plurals, RTL layouts |
 | [**mapkit-ref**](./mapkit-ref) | MapKit API — SwiftUI Map, MKMapView, annotations, search, directions |
-| [**network-framework-ref**](./network-framework-ref) | Network.framework API — NWConnection (iOS 12-25), NetworkConnection (iOS 26+), TLV framing, Coder protocol |
+| [**network-framework-ref**](./network-framework-ref) | Network.framework API — NWConnection (iOS 12-18), NetworkConnection (iOS 26+), TLV framing, Coder protocol |
 | [**networking-migration**](./networking-migration) | Network framework migration guide — NWConnection to NetworkConnection transition patterns |
 | [**now-playing-carplay**](./now-playing-carplay) | CarPlay Now Playing integration — MPNowPlayingInfoCenter, transport controls, CarPlay framework |
 | [**now-playing-musickit**](./now-playing-musickit) | MusicKit Now Playing — MusicPlayer, queue management, system integration |

@@ -1,11 +1,11 @@
 ---
 name: networking
-description: Network.framework patterns for UDP/TCP with NWConnection (iOS 12-25) and NetworkConnection (iOS 26+) with structured concurrency
+description: Network.framework patterns for UDP/TCP with NWConnection (iOS 12-18) and NetworkConnection (iOS 26+) with structured concurrency
 ---
 
 # Networking
 
-Network.framework patterns for UDP/TCP connections. Covers NWConnection (iOS 12-25) and NetworkConnection (iOS 26+) with structured concurrency.
+Network.framework patterns for UDP/TCP connections. Covers NWConnection (iOS 12-18) and NetworkConnection (iOS 26+) with structured concurrency.
 
 ## When to Use This Skill
 
@@ -41,7 +41,7 @@ Questions you can ask Claude that will draw from this skill:
 - Hardcoded IP addresses
 - Blocking socket operations on main thread
 
-### NWConnection (iOS 12-25)
+### NWConnection (iOS 12-18)
 - TCP and UDP connections
 - TLS with stateUpdateHandler
 - UDP batch sending (30% CPU reduction)
@@ -82,10 +82,10 @@ for try await event in connection.events {
 }
 ```
 
-### Legacy TCP Connection (iOS 12-25)
+### Legacy TCP Connection (iOS 12-18)
 
 ```swift
-// iOS 12-25: Completion-based with NWConnection
+// iOS 12-18: Completion-based with NWConnection
 let connection = NWConnection(
     host: "example.com",
     port: 443,

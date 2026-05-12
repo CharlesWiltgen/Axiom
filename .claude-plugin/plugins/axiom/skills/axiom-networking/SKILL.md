@@ -17,14 +17,14 @@ license: MIT
 | Deprecated API migration | See `skills/networking-discipline.md` |
 | Pressure scenarios (reachability, sockets) | See `skills/networking-discipline.md` |
 | NetworkConnection (iOS 26+) API reference | See `skills/network-framework-ref.md` |
-| NWConnection (iOS 12-25) API reference | See `skills/network-framework-ref.md` |
+| NWConnection (iOS 12-18) API reference | See `skills/network-framework-ref.md` |
 | TLV framing, Coder protocol | See `skills/network-framework-ref.md` |
 | NetworkListener, NetworkBrowser, Wi-Fi Aware | See `skills/network-framework-ref.md` |
 | Connection timeouts, TLS failures | See `skills/networking-diag.md` |
 | Data not arriving, connection drops | See `skills/networking-diag.md` |
 | ATS / HTTP / App Store rejection | See `skills/networking-diag.md` |
 | Production crisis diagnosis | See `skills/networking-diag.md` |
-| NWConnection patterns (iOS 12-25) | See `skills/networking-legacy.md` |
+| NWConnection patterns (iOS 12-18) | See `skills/networking-legacy.md` |
 | UDP batch, NWListener, NWBrowser | See `skills/networking-legacy.md` |
 | BSD sockets → NWConnection migration | See `skills/networking-migration.md` |
 | NWConnection → NetworkConnection migration | See `skills/networking-migration.md` |
@@ -39,16 +39,16 @@ digraph networking {
 
     start -> what;
     what -> "skills/networking-discipline.md" [label="implement patterns,\nanti-patterns,\npressure scenarios"];
-    what -> "skills/network-framework-ref.md" [label="API reference\n(iOS 26+ or 12-25)"];
+    what -> "skills/network-framework-ref.md" [label="API reference\n(iOS 26+ or 12-18)"];
     what -> "skills/networking-diag.md" [label="debug connection\nfailures"];
-    what -> "skills/networking-legacy.md" [label="iOS 12-25\nNWConnection patterns"];
+    what -> "skills/networking-legacy.md" [label="iOS 12-18\nNWConnection patterns"];
     what -> "skills/networking-migration.md" [label="migrate from\nsockets/URLSession"];
 }
 ```
 
 1. URLSession with structured concurrency? → `skills/networking-discipline.md`
 2. Network.framework / NetworkConnection (iOS 26+)? → `skills/network-framework-ref.md`
-3. NWConnection (iOS 12-25)? → `skills/networking-legacy.md`
+3. NWConnection (iOS 12-18)? → `skills/networking-legacy.md`
 4. Migrating from sockets/URLSession? → `skills/networking-migration.md`
 5. Connection issues / debugging? → `skills/networking-diag.md`
 6. ATS / HTTP / App Store rejection for networking? → `skills/networking-diag.md` + networking-auditor
@@ -81,7 +81,7 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 
 **Network Framework Reference** (`skills/network-framework-ref.md`):
 - NetworkConnection (iOS 26+): all 12 WWDC 2025 examples
-- NWConnection (iOS 12-25): complete API with examples
+- NWConnection (iOS 12-18): complete API with examples
 - TLV framing, Coder protocol, NetworkListener, NetworkBrowser
 - Mobility: viability, better path, Multipath TCP, NWPathMonitor
 - Security: TLS, certificate pinning, cipher suites

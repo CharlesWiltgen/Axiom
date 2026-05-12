@@ -31,7 +31,7 @@ Network.framework is Apple's modern networking API that replaces Berkeley socket
 
 Use this skill when:
 - **Planning migration** from BSD sockets, CFSocket, NSStream, or SCNetworkReachability
-- **Understanding API differences** between NWConnection (iOS 12-25) and NetworkConnection (iOS 26+)
+- **Understanding API differences** between NWConnection (iOS 12-18) and NetworkConnection (iOS 26+)
 - **Implementing all 12 WWDC 2025 examples** (TLS connection, TLV framing, Coder protocol, NetworkListener, Wi-Fi Aware)
 - **Choosing protocols** (TCP, UDP, TLS, QUIC) for your use case
 - **Peer-to-peer discovery** setup with NetworkBrowser and Wi-Fi Aware
@@ -51,9 +51,9 @@ Use this skill when:
 | 2021 | iOS 15 | WebSocket support in URLSession |
 | 2025 | iOS 26 | NetworkConnection (async/await), TLV framing, Coder protocol, Wi-Fi Aware |
 
-### NWConnection (iOS 12-25) vs NetworkConnection (iOS 26+)
+### NWConnection (iOS 12-18) vs NetworkConnection (iOS 26+)
 
-| Feature | NWConnection (iOS 12-25) | NetworkConnection (iOS 26+) |
+| Feature | NWConnection (iOS 12-18) | NetworkConnection (iOS 26+) |
 |---------|-------------------------|----------------------------|
 | **Async model** | Completion handlers | async/await structured concurrency |
 | **State updates** | `stateUpdateHandler` callback | `states` AsyncSequence |
@@ -68,7 +68,7 @@ Use this skill when:
 
 #### Recommendation
 - New apps targeting iOS 26+: Use NetworkConnection (cleaner, safer)
-- Apps supporting iOS 12-25: Use NWConnection (backward compatible)
+- Apps supporting iOS 12-18: Use NWConnection (backward compatible)
 - Migration: Both APIs coexist, migrate incrementally
 
 ---
@@ -511,7 +511,7 @@ public func findNearbyDevice() async throws {
 
 ---
 
-## NWConnection (iOS 12-25) Complete Reference
+## NWConnection (iOS 12-18) Complete Reference
 
 ### 5.1 Creating Connections
 
@@ -1335,7 +1335,7 @@ NetworkListener { TLS() }.run { connection in }
 NetworkBrowser(for: .wifiAware(...)).run { endpoints in }
 ```
 
-### NWConnection (iOS 12-25)
+### NWConnection (iOS 12-18)
 
 ```swift
 // Create connection
@@ -1363,7 +1363,7 @@ connection.betterPathUpdateHandler = { betterPathAvailable in }
 connection.cancel()
 ```
 
-### NWListener (iOS 12-25)
+### NWListener (iOS 12-18)
 
 ```swift
 let listener = try NWListener(using: .tcp, on: 1029)
@@ -1371,7 +1371,7 @@ listener.newConnectionHandler = { newConnection in }
 listener.start(queue: .main)
 ```
 
-### NWBrowser (iOS 12-25)
+### NWBrowser (iOS 12-18)
 
 ```swift
 let browser = NWBrowser(for: .bonjour(type: "_http._tcp", domain: nil), using: .tcp)
@@ -1401,4 +1401,4 @@ monitor.start(queue: .main)
 
 **Last Updated** 2025-12-02
 **Status** Production-ready reference from WWDC 2018 and WWDC 2025
-**Coverage** NWConnection (iOS 12-25), NetworkConnection (iOS 26+), all 12 WWDC 2025 code examples
+**Coverage** NWConnection (iOS 12-18), NetworkConnection (iOS 26+), all 12 WWDC 2025 code examples

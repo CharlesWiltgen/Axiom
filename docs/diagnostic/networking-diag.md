@@ -9,7 +9,7 @@ Systematic Network.framework troubleshooting for connection failures, TLS issues
 
 ## Overview
 
-Diagnostic workflows for debugging Network.framework connections using NWConnection (iOS 12-25) and NetworkConnection (iOS 26+). Includes systematic troubleshooting, production crisis scenarios, and network logging interpretation.
+Diagnostic workflows for debugging Network.framework connections using NWConnection (iOS 12-18) and NetworkConnection (iOS 26+). Includes systematic troubleshooting, production crisis scenarios, and network logging interpretation.
 
 ## What This Diagnostic Covers
 

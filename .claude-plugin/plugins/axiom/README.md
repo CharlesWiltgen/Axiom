@@ -300,12 +300,12 @@ Systematic diagnostics for failed SwiftData migrations with relationship errors 
 ### 🌐 Networking
 
 #### `axiom-networking`
-Network.framework patterns for UDP/TCP with NWConnection (iOS 12-25) and NetworkConnection (iOS 26+) with structured concurrency.
+Network.framework patterns for UDP/TCP with NWConnection (iOS 12-18) and NetworkConnection (iOS 26+) with structured concurrency.
 
 **Use when**: Implementing network connections, migrating from sockets/URLSession streams, debugging connection failures
 
 **Key features**:
-- 8 patterns covering both iOS 12-25 and iOS 26+ APIs
+- 8 patterns covering both iOS 12-18 and iOS 26+ APIs
 - TLV framing and Coder protocol for iOS 26+
 - Prevents deprecated API usage (SCNetworkReachability, CFSocket)
 - Migration guides from BSD sockets

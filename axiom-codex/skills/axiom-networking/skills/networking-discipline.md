@@ -146,7 +146,7 @@ if #available(iOS 26, *) {
 #### What this tells you
 - If HTTP/HTTPS: Use URLSession, not Network.framework
 - If iOS 26+ deployment: Use NetworkConnection with async/await
-- If iOS 12-25 support needed: Use NWConnection with completion handlers
+- If iOS 12-18 support needed: Use NWConnection with completion handlers
 - If any deprecated API found: Must migrate before shipping (App Store review concern)
 
 ---
@@ -183,7 +183,7 @@ Need networking?
 │           No manual JSON encoding needed
 │           Time: 10-15 minutes
 │
-└─ iOS 12-25 or need completion handlers?
+└─ iOS 12-18 or need completion handlers?
    └─ YES → NWConnection path (callbacks)
       ├─ TCP with TLS security?
       │  └─ Pattern 2a: NWConnection + TLS
@@ -538,9 +538,9 @@ public func receiveWithCoder() async throws {
 
 ---
 
-## Legacy iOS 12-25 Patterns
+## Legacy iOS 12-18 Patterns
 
-For apps supporting iOS 12-25 that can't use async/await yet, see `skills/networking-legacy.md`:
+For apps supporting iOS 12-18 that can't use async/await yet, see `skills/networking-legacy.md`:
 - Pattern 2a: NWConnection with TLS (completion handlers)
 - Pattern 2b: NWConnection UDP Batch (30% CPU reduction)
 - Pattern 2c: NWListener (accepting connections, Bonjour)

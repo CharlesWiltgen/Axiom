@@ -1,11 +1,11 @@
 
-# Legacy iOS 12-25 NWConnection Patterns
+# Legacy iOS 12-18 NWConnection Patterns
 
-These patterns use NWConnection with completion handlers for apps supporting iOS 12-25. If your app targets iOS 26+, use NetworkConnection with async/await instead (see `skills/network-framework-ref.md`).
+These patterns use NWConnection with completion handlers for apps supporting iOS 12-18. If your app targets iOS 26+, use NetworkConnection with async/await instead (see `skills/network-framework-ref.md`).
 
-## Pattern 2a: NWConnection with TLS (iOS 12-25)
+## Pattern 2a: NWConnection with TLS (iOS 12-18)
 
-**Use when** Supporting iOS 12-25, need TLS encryption, can't use async/await yet
+**Use when** Supporting iOS 12-18, need TLS encryption, can't use async/await yet
 
 **Time cost** 10-15 minutes
 
@@ -88,9 +88,9 @@ func receiveData() {
 - Completion handlers -> try await calls
 - [weak self] -> No longer needed (async/await handles cancellation)
 
-## Pattern 2b: NWConnection UDP Batch (iOS 12-25)
+## Pattern 2b: NWConnection UDP Batch (iOS 12-18)
 
-**Use when** Supporting iOS 12-25, sending multiple UDP datagrams efficiently, need ~30% CPU reduction
+**Use when** Supporting iOS 12-18, sending multiple UDP datagrams efficiently, need ~30% CPU reduction
 
 **Time cost** 10-15 minutes
 
@@ -169,9 +169,9 @@ func receiveFrames() {
 
 **WWDC 2018 demo** Live video streaming showed 30% lower CPU on receiver with user-space networking + batching
 
-## Pattern 2c: NWListener (iOS 12-25)
+## Pattern 2c: NWListener (iOS 12-18)
 
-**Use when** Need to accept incoming connections, building servers or peer-to-peer apps, supporting iOS 12-25
+**Use when** Need to accept incoming connections, building servers or peer-to-peer apps, supporting iOS 12-18
 
 **Time cost** 20-25 minutes
 
@@ -285,9 +285,9 @@ func handleClient(_ connection: NWConnection) {
 - Validate client connections before processing data
 - Set connection limits to prevent DoS
 
-## Pattern 2d: Network Discovery (iOS 12-25)
+## Pattern 2d: Network Discovery (iOS 12-18)
 
-**Use when** Discovering services on local network (Bonjour), building peer-to-peer apps, supporting iOS 12-25
+**Use when** Discovering services on local network (Bonjour), building peer-to-peer apps, supporting iOS 12-18
 
 **Time cost** 25-30 minutes
 

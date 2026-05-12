@@ -114,7 +114,7 @@ connection.start(queue: .main)
 
 ### Migration mapping
 
-| NWConnection (iOS 12-25) | NetworkConnection (iOS 26+) | Notes |
+| NWConnection (iOS 12-18) | NetworkConnection (iOS 26+) | Notes |
 |-------------------------|----------------------------|-------|
 | `connection.stateUpdateHandler = { state in }` | `for await state in connection.states { }` | Async sequence |
 | `connection.send(content:completion:)` | `try await connection.send(content)` | Suspending function |

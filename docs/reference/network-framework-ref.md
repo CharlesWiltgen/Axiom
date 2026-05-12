@@ -1,11 +1,11 @@
 ---
 name: network-framework-ref
-description: NWConnection (iOS 12-25), NetworkConnection (iOS 26+), TLV framing, Coder protocol
+description: NWConnection (iOS 12-18), NetworkConnection (iOS 26+), TLV framing, Coder protocol
 ---
 
 # Network.framework Reference
 
-Complete API reference for Network.framework. Covers NWConnection (iOS 12-25), NetworkConnection (iOS 26+) with structured concurrency, TLV framing, Coder protocol, and migration patterns.
+Complete API reference for Network.framework. Covers NWConnection (iOS 12-18), NetworkConnection (iOS 26+) with structured concurrency, TLV framing, Coder protocol, and migration patterns.
 
 ## When to Use This Reference
 
@@ -32,7 +32,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-### NWConnection (iOS 12-25)
+### NWConnection (iOS 12-18)
 - Connection creation with endpoints
 - State machine and stateUpdateHandler
 - Completion-based send/receive
@@ -47,7 +47,7 @@ Questions you can ask Claude that will draw from this reference:
 - State property observation
 
 ### Server Patterns
-- NWListener (iOS 12-25)
+- NWListener (iOS 12-18)
 - NetworkListener (iOS 26+)
 - Service discovery with Browser
 - Wi-Fi Aware peer-to-peer
@@ -81,7 +81,7 @@ for try await (message, _) in connection.messages {
 }
 ```
 
-### iOS 12-25 NWConnection
+### iOS 12-18 NWConnection
 
 ```swift
 let connection = NWConnection(

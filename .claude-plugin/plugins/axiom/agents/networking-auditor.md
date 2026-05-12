@@ -119,7 +119,7 @@ Run all 10 existing detection patterns. For every grep match, use Read to verify
 **Pattern**: Legacy service discovery
 **Search**: `NSNetService`, `NSNetServiceBrowser`
 **Issue**: Legacy API, no structured concurrency
-**Fix**: Use NWBrowser (iOS 12-25) or NetworkBrowser (iOS 26+)
+**Fix**: Use NWBrowser (iOS 12-18) or NetworkBrowser (iOS 26+)
 
 ### 5. Manual DNS (MEDIUM/HIGH)
 

@@ -111,7 +111,7 @@ Remote and local notification implementation for iOS:
 ### [Networking](./networking)
 
 Network.framework patterns for custom protocols:
-- **NWConnection** — iOS 12-25 completion-based API
+- **NWConnection** — iOS 12-18 completion-based API
 - **NetworkConnection** — iOS 26+ async/await API
 - **TLV Framing** — Message boundaries
 - **Service Discovery** — Bonjour and Wi-Fi Aware

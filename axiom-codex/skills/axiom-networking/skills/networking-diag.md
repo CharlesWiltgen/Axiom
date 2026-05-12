@@ -475,7 +475,7 @@ if metadata.type == MessageType.chat.rawValue {
 }
 ```
 
-#### Solution 2: Manual Length Prefix (iOS 12-25)
+#### Solution 2: Manual Length Prefix (iOS 12-18)
 ```swift
 // Sender: Prefix message with UInt32 length
 func sendMessage(_ message: Data) {
@@ -1043,7 +1043,7 @@ if case .failed(let error) = state {
 
 **`skills/network-framework-ref.md`** — Complete API documentation:
 - NetworkConnection (iOS 26+): All 12 WWDC 2025 examples
-- NWConnection (iOS 12-25): Complete API with examples
+- NWConnection (iOS 12-18): Complete API with examples
 - TLV framing, Coder protocol, NetworkListener, NetworkBrowser
 - Migration strategies from sockets, URLSession, NWConnection
 

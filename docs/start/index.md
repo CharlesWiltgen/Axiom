@@ -49,7 +49,7 @@ Axiom provides comprehensive Apple platform development workflows:
 - **Accessibility Diagnostics** – Fix VoiceOver, Dynamic Type, color contrast, and touch target issues
 
 ### 🌐 Networking
-- **Networking** – Network.framework patterns for UDP/TCP with NWConnection (iOS 12-25) and NetworkConnection (iOS 26+)
+- **Networking** – Network.framework patterns for UDP/TCP with NWConnection (iOS 12-18) and NetworkConnection (iOS 26+)
 - **Networking Diagnostics** – Fix connection timeouts, TLS failures, data arrival issues
 - **Network.framework Reference** – Complete API guide covering iOS 12-26+ with all WWDC examples
 

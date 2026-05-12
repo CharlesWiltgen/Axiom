@@ -11,7 +11,7 @@ Step-by-step migration guides for moving between networking APIs. Covers three m
 
 Use this reference when you need to:
 - Migrate from BSD sockets to NWConnection
-- Upgrade from NWConnection (iOS 12-25) to NetworkConnection (iOS 26+)
+- Upgrade from NWConnection (iOS 12-18) to NetworkConnection (iOS 26+)
 - Replace URLSession StreamTask with NetworkConnection
 - Understand the mapping between old and new APIs
 - Decide whether to migrate or stay with your current API
@@ -41,13 +41,13 @@ Questions you can ask Claude that will draw from this reference:
 This page documents the `axiom-networking` (networking-migration reference) -- migration guides Claude uses when helping you move between networking API generations. The skill contains complete before/after examples for each migration path.
 
 - For current networking patterns, see [networking](/skills/integration/networking)
-- For legacy iOS 12-25 patterns, see [networking-legacy](/skills/integration/networking-legacy)
+- For legacy iOS 12-18 patterns, see [networking-legacy](/skills/integration/networking-legacy)
 - For troubleshooting connections, see [networking-diag](/diagnostic/networking-diag)
 
 ## Related
 
 - [networking](/skills/integration/networking) — Modern networking patterns and architecture decisions
-- [networking-legacy](/skills/integration/networking-legacy) — NWConnection patterns for iOS 12-25
+- [networking-legacy](/skills/integration/networking-legacy) — NWConnection patterns for iOS 12-18
 - [network-framework-ref](/reference/network-framework-ref) — Complete Network.framework API reference
 - [networking-diag](/diagnostic/networking-diag) — Connection failure troubleshooting
 
