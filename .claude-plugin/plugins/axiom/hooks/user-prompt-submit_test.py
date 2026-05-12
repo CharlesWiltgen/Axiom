@@ -318,23 +318,40 @@ class TestHookIsStandalonePython(unittest.TestCase):
             "standalone Python (bash 3.2 heredoc-quote bug, see this class docstring)"
         )
 
-    def test_hooks_json_invokes_the_python_file(self):
-        hooks_json = os.path.join(os.path.dirname(HOOK), "hooks.json")
-        with open(hooks_json) as f:
+    @staticmethod
+    def _all_hook_commands():
+        hooks_dir = os.path.dirname(HOOK)
+        with open(os.path.join(hooks_dir, "hooks.json")) as f:
             cfg = json.load(f)
-        cmds = [
+        return [
             h["command"]
-            for entry in cfg["hooks"].get("UserPromptSubmit", [])
+            for entries in cfg["hooks"].values()
+            for entry in entries
             for h in entry["hooks"]
         ]
-        self.assertTrue(
-            any("user-prompt-submit.py" in c for c in cmds),
-            f"hooks.json UserPromptSubmit should invoke user-prompt-submit.py; got: {cmds}"
-        )
-        self.assertFalse(
-            any("user-prompt-submit.sh" in c for c in cmds),
-            f"hooks.json still references the removed .sh wrapper: {cmds}"
-        )
+
+    def test_hooks_json_references_resolve(self):
+        # Every hooks/<file>.{sh,py} referenced by a command must exist on disk —
+        # catches a stale reference left behind after a .sh → .py rename.
+        import re as _re
+        hooks_dir = os.path.dirname(HOOK)
+        missing = []
+        for cmd in self._all_hook_commands():
+            for m in _re.finditer(r"hooks/([\w.-]+\.(?:sh|py))", cmd):
+                fname = m.group(1)
+                if not os.path.exists(os.path.join(hooks_dir, fname)):
+                    missing.append((fname, cmd))
+        self.assertEqual(missing, [], f"hooks.json references missing files: {missing}")
+
+    def test_converted_python_hooks_wired_as_python(self):
+        # The hooks that were converted from bash heredoc to standalone Python
+        # must be invoked from hooks.json as the .py file, never via a .sh wrapper.
+        joined = " ".join(self._all_hook_commands())
+        for stem in ("user-prompt-submit", "subagent-start"):
+            self.assertIn(f"{stem}.py", joined,
+                          f"hooks.json should invoke {stem}.py")
+            self.assertNotIn(f"{stem}.sh", joined,
+                             f"hooks.json still references the removed {stem}.sh")
 
     def test_no_shell_hook_embeds_python_via_heredoc(self):
         # General guard: the `python3 -c "$(cat <<'EOF' ... EOF)"` pattern in any
