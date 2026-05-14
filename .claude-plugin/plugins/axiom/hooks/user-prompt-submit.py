@@ -63,6 +63,10 @@ if not non_ios and "axiom-data" not in matches and re.search(r'migration.{0,10}(
 if re.search(r'actor[\s-]isolated|sendable|@mainactor|data race|strict concurrency|swift 6.{0,5}concurren|task\s*\{|taskgroup|async\s+(let|sequence|stream)|nonisolated|global\s*actor|concurren.{0,5}(error|warning|violat|issue)|assumeisolated|@preconcurrency', prompt_lower):
     matches.append("axiom-concurrency")
 
+# Concurrency — runtime isolation crash signatures
+if "axiom-concurrency" not in matches and re.search(r'_dispatch_assert_queue_fail|_swift_task_checkisolated|swift_task_checkisolated|dispatch_assert_queue|isolation inheritance', prompt_lower):
+    matches.append("axiom-concurrency")
+
 # Concurrency — generic terms gated
 if not non_ios and "axiom-concurrency" not in matches and re.search(r'main thread.{0,10}(block|freeze|hang|busy)|block.{0,15}main thread', prompt_lower):
     matches.append("axiom-concurrency")
