@@ -573,6 +573,32 @@ if (fs.existsSync(sessionStartSh)) {
   }
 }
 
+heading("11b. Routing Accuracy");
+
+// The user-prompt-submit hook is unit-tested above, but unit tests cover one
+// keyword at a time. test-routing.ts replays real-world prompts (the messy,
+// multi-keyword kind users actually send) against the hook and asserts the
+// correct *combination* of routers fires. Catches regressions where adding a
+// pattern shifts the matches[:3] cap and silently drops a needed router.
+try {
+  execSync("node scripts/test-routing.ts", {
+    cwd: root,
+    stdio: "pipe",
+    timeout: 60000,
+  });
+  console.log("  ✓ Routing-accuracy harness passes");
+} catch (e: unknown) {
+  const err = e as { stdout?: Buffer; stderr?: Buffer };
+  const out = err.stdout?.toString() || err.stderr?.toString() || "";
+  // Surface the per-scenario failure detail so the operator can fix without re-running.
+  const lines = out.split("\n");
+  const detailStart = lines.findIndex((l: string) => l.includes("Failures detail:"));
+  const summary = detailStart >= 0
+    ? lines.slice(detailStart).join("\n")
+    : out.slice(-1500);
+  error("routing", `Routing harness FAILED:\n${summary}`);
+}
+
 heading("12a. Stale Skill Name References");
 
 // Scan all skill content for ios-* references (v2.x names that should be axiom-*)
