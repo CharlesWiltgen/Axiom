@@ -39,7 +39,7 @@ matches = []
 non_ios = re.search(r'typescript|react(?!\s*native)|angular|vue\.js|django|flask|rails|node\.js|nodejs|npm |yarn |webpack|docker|kubernetes|python\b|java\b(?!script)|kotlin|android|flutter', prompt_lower)
 
 # Build/environment (highest priority)
-if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (crash|hang|won.t|not )|pod (install|update)|spm |swift package|linker (error|command)|module.{0,5}not found|derived data|code sign|provisioning|xcworkspace|xcodeproj|xcode (error|crash|hang|won.t)|build time|compile (error|slow|time)|lldb\b|breakpoint.{0,10}(set|conditional|symbolic)|thread\s*backtrace|\bpo\b.{0,10}(vs|variable|expression)|transport error|could not be established|\bcoredevice\b|dvtenablecoredevice|deploy(ing|ed)?.{0,30}(to\s+)?(device|watch|phone|ipad|simulator|hardware|real\s+device|physical\s+device)|connect.{0,10}(to.{0,10})?(watch|device|phone|ipad|simulator)|device.{0,10}(not.{0,10}(connect|found|recogn|appear)|won.t.{0,10}(connect|appear|show))', prompt_lower):
+if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (crash|hang|won.t|not )|pod (install|update)|spm |swift package|linker (error|command)|module.{0,5}not found|derived data|code sign|provisioning|xcworkspace|xcodeproj|xcode (error|crash|hang|won.t)|build time|compile (error|slow|time)|lldb\b|breakpoint.{0,10}(set|conditional|symbolic)|thread\s*backtrace|\bpo\b.{0,10}(vs|variable|expression)|transport error|could not be established|\bcoredevice\b|dvtenablecoredevice|deploy(ing|ed)?.{0,30}(to\s+)?(device|watch|phone|ipad|simulator|hardware|real\s+device|physical\s+device)|connect.{0,10}(to.{0,10})?(watch|device|phone|ipad|simulator)|device.{0,10}(not.{0,10}(connect|found|recogn|appear)|won.t.{0,10}(connect|appear|show))|cannot find symbol|cannot find.{0,15}in scope|use of unresolved identifier|undefined (symbol|reference)|works? (fine )?(in|on) (the )?simulator.{0,40}(fail|crash|broken|wrong|black|empty|hang).{0,15}(on|in).{0,10}(real |physical )?device|(crash|fail|broken|wrong|black|empty|hang)\w*\s+only\s+on\s+.{0,15}device|only\s+(crash|fail|broken|hang)\w*\s+(on|in)\s+.{0,15}device|(real|physical)\s*device[- ]only|device[- ]only.{0,15}(crash|fail|broken)|after .{0,30}(updating|upgrading|installing) xcode', prompt_lower):
     matches.append("axiom-build")
 
 # UI
@@ -52,7 +52,7 @@ if not non_ios and "axiom-swiftui" not in matches and re.search(r'animation.{0,5
     matches.append("axiom-swiftui")
 
 # Data
-if re.search(r'swiftdata|core\s*data|@model\b|@query\b|@relationship\b|modelcontainer|modelcontext|cloudkit|ckrecord|cksyncengine|grdb|codable\b|nsmanagedobject|fetchrequest', prompt_lower):
+if re.search(r'swiftdata|core\s*data|@model\b|@query\b|@relationship\b|modelcontainer|modelcontext|cloudkit|ckrecord|cksyncengine|ckerror|ckshare|ckdatabase|ckcontainer|ckoperation|grdb|codable\b|nsmanagedobject|fetchrequest', prompt_lower):
     matches.append("axiom-data")
 
 # Data — generic terms gated
@@ -60,7 +60,7 @@ if not non_ios and "axiom-data" not in matches and re.search(r'migration.{0,10}(
     matches.append("axiom-data")
 
 # Concurrency
-if re.search(r'actor[\s-]isolated|sendable|@mainactor|data race|strict concurrency|swift 6.{0,5}concurren|task\s*\{|taskgroup|async\s+(let|sequence|stream)|nonisolated|global\s*actor|concurren.{0,5}(error|warning|violat|issue)|assumeisolated|@preconcurrency', prompt_lower):
+if re.search(r'actor[\s-]isolated|sendable|@mainactor|data race|strict concurrency|swift 6.{0,5}concurren|task\s*\{|taskgroup|async\s+(let|sequence|stream)|nonisolated|global\s*actor|concurren.{0,5}(error|warning|violat|issue)|assumeisolated|@preconcurrency|@concurrent\b|@isolated\(', prompt_lower):
     matches.append("axiom-concurrency")
 
 # Concurrency — runtime isolation crash signatures
@@ -74,11 +74,12 @@ if "axiom-concurrency" not in matches and re.search(r'different contexts|illegal
     matches.append("axiom-concurrency")
 
 # Concurrency — generic terms gated
-if not non_ios and "axiom-concurrency" not in matches and re.search(r'main thread.{0,10}(block|freeze|hang|busy)|block.{0,15}main thread', prompt_lower):
+# UI-freeze symptoms (long async work blocking caller) — high signal for "ran on main" misuse.
+if not non_ios and "axiom-concurrency" not in matches and re.search(r'main thread.{0,10}(block|freeze|hang|busy)|block.{0,15}main thread|(freeze|hang|stuck|frozen).{0,15}(ui|the ui|interface|screen)|(ui|the ui|interface|screen|app)\s+(freeze|hang|stuck|frozen)|freezes the (ui|app|screen|view)', prompt_lower):
     matches.append("axiom-concurrency")
 
 # Performance
-if re.search(r'memory leak|retain cycle|instruments\b.{0,10}(profil|trace|template)|time profiler|allocations\b.{0,5}(instrument|tool|track)|app launch.{0,5}(time|perf|slow|template|instrument)|launch time|pre-?main\b|dyld\b|static initializer|first frame|extended launch|xctapplicationlaunchmetric|mxapplaunchmetric|\bcold launch\b|\bwarm launch\b', prompt_lower):
+if re.search(r'memory leak|retain cycle|instruments\b.{0,10}(profil|trace|template)|time profiler|allocations\b.{0,5}(instrument|tool|track)|app launch.{0,5}(time|perf|slow|template|instrument)|launch time|pre-?main\b|dyld\b|static initializer|first frame|extended launch|xctapplicationlaunchmetric|mxapplaunchmetric|\bcold launch\b|\bwarm launch\b|\b\d{1,3}\s*fps\b|drops?.{0,10}to.{0,5}\d+\s*fps|frame\s*rate.{0,15}(drop|low|stutter|janky|tank)|fps.{0,10}(drop|low|stutter|tank)', prompt_lower):
     matches.append("axiom-performance")
 
 # Performance — generic terms gated
@@ -98,7 +99,7 @@ if re.search(r'xctest|xcuitest|swift\s*testing|@test\b|@suite\b|#expect\b|ui\s*t
     matches.append("axiom-testing")
 
 # Integration
-if re.search(r'widgetkit|add.{0,10}widget|widget.{0,10}(timeline|entry|not updat|show|display)|siri\b|storekit|in-app purchase|iap\b|eventkit|ekevents|reminder.{0,5}(access|permiss)|cncontact|app\s*intent|app\s*shortcut|spotlight.{0,5}(index|search)|localization|string\s*catalog|live\s*activit|control\s*center.{0,5}(widget|control)|push\s*notif|background\s*task|bgtask|timer.{0,5}(pattern|crash|dispatch)', prompt_lower):
+if re.search(r'widgetkit|widgetcenter|reloadalltimelines|reloadtimelines|add.{0,10}widget|widget.{0,10}(timeline|entry|not updat|show|display)|widget.{0,30}(not updat|never updat|stale)|siri\b|storekit|in-app purchase|iap\b|eventkit|ekevents|reminder.{0,5}(access|permiss)|cncontact|app\s*intent|app\s*shortcut|spotlight.{0,5}(index|search)|localization|string\s*catalog|live\s*activit|control\s*center.{0,5}(widget|control)|push\s*notif|background\s*task|bgtask|timer.{0,5}(pattern|crash|dispatch)', prompt_lower):
     matches.append("axiom-integration")
 
 # Media
@@ -118,7 +119,7 @@ if re.search(r'coreml|core\s*ml|mltensor|create\s*ml|mlmodel|convert.{0,10}(pyto
     matches.append("axiom-ai")
 
 # Vision
-if re.search(r'vision\s*framework|vnrequest|vngenerateforeground|subject.{0,5}(segment|lift)|hand\s*pose|body\s*pose|text\s*recogni|barcode.{0,5}(scan|detect)|document\s*scan|datascanner', prompt_lower):
+if re.search(r'vision\s*framework|visionkit|vnrequest|vndetect|vnclassif|vnrecogni|vncoreml|vnimage|vngenerateforeground|vngenerateattention|subject.{0,5}(segment|lift)|hand\s*pose|body\s*pose|text\s*recogni|barcode.{0,5}(scan|detect)|document\s*scan|datascanner', prompt_lower):
     matches.append("axiom-vision")
 
 # Games/Graphics
@@ -144,7 +145,7 @@ if re.search(r'\bwatchos\b|apple\s*watch|wcsession|watchconnectivity|watch\s*con
     matches.append("axiom-watchos")
 
 # Health & fitness (HealthKit / WorkoutKit)
-if re.search(r'healthkit|hkworkout|hkliveworkout|workoutkit|hkquery|hkhealthstore|hksample|hkquantity|hkcategor|hkstatistic|hkactivit|health\s*(permission|data|store)|workout\s*(session|builder|recovery|mirror|build)', prompt_lower):
+if re.search(r'healthkit|hkworkout|hkliveworkout|workoutkit|hkquery|hkobserver|hkanchored|hksamplequery|hkhealthstore|hksample|hkquantity|hkcategor|hkstatistic|hkactivit|health\s*(permission|data|store)|workout\s*(session|builder|recovery|mirror|build)', prompt_lower):
     matches.append("axiom-health")
 
 # Real-world payments (Apple Pay / Wallet / Tap to Pay)
@@ -153,7 +154,7 @@ if re.search(r'apple\s*pay|pkpayment|pkpaymentauthorization|passkit|\bpkpass\b|w
     matches.append("axiom-payments")
 
 # Design
-if re.search(r'human interface|hig\b|liquid glass|sf symbol|symbol.{0,5}(effect|variablevalue|render)|typography.{0,10}(ios|swift|app)|design.{0,5}(system|pattern|token)|app.{0,5}(entry|launch|onboard)|authentication.{0,5}(flow|screen|ui)', prompt_lower):
+if re.search(r'human interface|hig\b|liquid glass|glass\s*[-]?\s*effect\b|glasseffectcontainer|glasseffectlayer|sf symbol|symbol.{0,5}(effect|variablevalue|render)|typography.{0,10}(ios|swift|app)|design.{0,5}(system|pattern|token)|app.{0,5}(entry|launch|onboard)|authentication.{0,5}(flow|screen|ui)', prompt_lower):
     matches.append("axiom-design")
 
 # UIKit
