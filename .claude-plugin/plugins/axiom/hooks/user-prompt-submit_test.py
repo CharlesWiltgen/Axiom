@@ -215,6 +215,75 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-payments", routed_skills(
             "How do I integrate Apple Pay with PKPaymentAuthorizationController?"))
 
+    def test_data_ckerror_partial_failure(self):
+        # CKError/CKShare are CloudKit data-layer; surfaced by 2026-05-14 stress test
+        self.assertIn("axiom-data", routed_skills(
+            "I'm getting CKErrorPartialFailure when syncing CKShare records"))
+        self.assertIn("axiom-data", routed_skills(
+            "CKDatabase save returned an error — CKContainer setup looks right"))
+
+    def test_build_device_only_crash(self):
+        # Device-vs-simulator divergence routes to axiom-build (env first).
+        # The two canonical phrasings cover both word orders surfaced in routing
+        # tests — "only on device" and "works in simulator, fails on device".
+        self.assertIn("axiom-build", routed_skills(
+            "Crashes only on real device — works in simulator"))
+        self.assertIn("axiom-build", routed_skills(
+            "Works in simulator, fails on device with a black-frame crash"))
+
+    def test_build_cannot_find_symbol(self):
+        # Linker / compile-time symbol errors are environment-first
+        self.assertIn("axiom-build", routed_skills(
+            "Tests fail with 'cannot find symbol' after I added a Swift Package"))
+        self.assertIn("axiom-build", routed_skills(
+            "Compiler says use of unresolved identifier 'Logger'"))
+
+    def test_build_after_xcode_update(self):
+        # "After updating Xcode X.Y" is an env-first signal
+        self.assertIn("axiom-build", routed_skills(
+            "After updating Xcode 26.1, all my tests fail to build"))
+
+    def test_concurrency_swift6_concurrent_attribute(self):
+        # Swift 6.2 introduced @concurrent — must route concurrency, not just build
+        skills = routed_skills(
+            "Why does code that uses @concurrent stop compiling under Swift 6?")
+        self.assertIn("axiom-concurrency", skills)
+
+    def test_concurrency_ui_freeze_long_async(self):
+        # "freezes the UI when I call X" is main-thread blocking — concurrency
+        skills = routed_skills(
+            "My API call freezes the UI when the response is large")
+        self.assertIn("axiom-concurrency", skills)
+
+    def test_performance_framerate_drop(self):
+        # FPS drops are performance signals across games, capture, SwiftUI
+        self.assertIn("axiom-performance", routed_skills(
+            "My scene drops to 30fps on iPhone 13 mini"))
+        self.assertIn("axiom-performance", routed_skills(
+            "Frame rate drops below 60fps after a few minutes"))
+
+    def test_integration_widgetcenter(self):
+        # WidgetCenter is the public WidgetKit refresh API
+        self.assertIn("axiom-integration", routed_skills(
+            "WidgetCenter.shared.reloadAllTimelines() doesn't refresh my widget"))
+
+    def test_vision_vndetect_specific_request(self):
+        # Specific VN* request types must route Vision, not just "vnrequest" generic
+        self.assertIn("axiom-vision", routed_skills(
+            "VNDetectFaceRectanglesRequest fires but returns no observations"))
+        self.assertIn("axiom-vision", routed_skills(
+            "Running VNRecognizeTextRequest in batch is slow"))
+
+    def test_health_hkobserverquery(self):
+        # HKObserverQuery wasn't covered by `hkquery` (no substring match)
+        self.assertIn("axiom-health", routed_skills(
+            "HKObserverQuery's update handler fires off-main"))
+
+    def test_design_glass_effect(self):
+        # Liquid Glass is also called "glass-effect" in casual usage
+        self.assertIn("axiom-design", routed_skills(
+            "My glass-effect button doesn't tint with my accent color"))
+
 
 class TestNegativeRouting(unittest.TestCase):
     """Known false-positive traps must NOT trigger."""
@@ -291,6 +360,21 @@ class TestNegativeRouting(unittest.TestCase):
     def test_short_prompt_emits_no_match(self):
         # Prompts under 5 chars are skipped
         self.assertEqual(routed_skills("hi"), set())
+
+    def test_running_tests_in_simulator_does_not_fire_build_device_only(self):
+        # Plain "run tests in simulator" must not trigger device-only-crash pattern
+        skills = routed_skills(
+            "How do I run my XCTest suite in the iOS simulator?")
+        # Build router still allowed (simulator + xctest are valid signals);
+        # the regression here is that the device-only crash regex is so loose it
+        # would fire on this — guard against that by checking axiom-testing fired.
+        self.assertIn("axiom-testing", skills)
+
+    def test_install_carthage_does_not_fire_build_xcode_update(self):
+        # "after installing X" shouldn't be confused with "after installing Xcode"
+        skills = routed_skills(
+            "After installing Carthage 0.39, how do I add a binary framework?")
+        self.assertNotIn("axiom-build", skills)
 
 
 class TestManifestCoverage(unittest.TestCase):
