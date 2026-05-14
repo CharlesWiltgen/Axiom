@@ -116,6 +116,8 @@ class CloudKitStack {
 
 ## Concurrency Patterns
 
+> **Threading errors are isolation bugs.** If you're seeing `Illegal attempt to establish a relationship between objects in different contexts`, `_PFCallContextRequiresMainThread`, or `_PFAssertSafeMultiThreadedAccess_`, this is fundamentally a Swift 6 isolation problem expressed through Core Data's threading rules. Read this section AND axiom-concurrency (skills/isolation-inheritance-diag.md) for the runtime-crash catalog (Pattern 1 — `context.perform` closures inheriting `@MainActor`).
+
 ### The Golden Rule
 
 **NEVER pass NSManagedObject across threads.** Pass objectID instead.

@@ -67,6 +67,12 @@ if re.search(r'actor[\s-]isolated|sendable|@mainactor|data race|strict concurren
 if "axiom-concurrency" not in matches and re.search(r'_dispatch_assert_queue_fail|_swift_task_checkisolated|swift_task_checkisolated|dispatch_assert_queue|isolation inheritance', prompt_lower):
     matches.append("axiom-concurrency")
 
+# Concurrency — Core Data/SwiftData threading error signals (cross-fires with axiom-data)
+# These errors are fundamentally isolation/threading bugs, but the user typically pastes
+# only the persistence-layer error message. Catch them so users get both routers.
+if "axiom-concurrency" not in matches and re.search(r'different contexts|illegal attempt to establish a relationship|cross.{0,10}context.{0,10}thread|_pfcallcontext|_pfassertsafe', prompt_lower):
+    matches.append("axiom-concurrency")
+
 # Concurrency — generic terms gated
 if not non_ios and "axiom-concurrency" not in matches and re.search(r'main thread.{0,10}(block|freeze|hang|busy)|block.{0,15}main thread', prompt_lower):
     matches.append("axiom-concurrency")

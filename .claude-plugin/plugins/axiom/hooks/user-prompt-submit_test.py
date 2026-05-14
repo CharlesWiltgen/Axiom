@@ -83,6 +83,27 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-concurrency", routed_skills(
             "Getting actor-isolated errors with @MainActor in Swift 6"))
 
+    def test_concurrency_runtime_isolation_crash(self):
+        # Warning-free build that crashes in production with the runtime guard
+        for sig in [
+            "production crash _dispatch_assert_queue_fail at context.perform",
+            "TestFlight crash _swift_task_checkIsolatedSwift on @MainActor delegate",
+            "isolation inheritance question — why does my closure capture @MainActor?",
+        ]:
+            self.assertIn("axiom-concurrency", routed_skills(sig),
+                          f"expected axiom-concurrency for: {sig!r}")
+
+    def test_concurrency_cross_context_threading_error(self):
+        # Core Data / SwiftData cross-context errors are fundamentally isolation bugs;
+        # they must cross-fire axiom-data AND axiom-concurrency so users get both
+        # the persistence-layer fix and the threading rationale.
+        result = routed_skills(
+            "When a background notification arrives, my app tries to update SwiftData "
+            "and crashes with 'Illegal attempt to establish a relationship between "
+            "objects in different contexts.'")
+        self.assertIn("axiom-data", result)
+        self.assertIn("axiom-concurrency", result)
+
     def test_performance(self):
         self.assertIn("axiom-performance", routed_skills(
             "I have a memory leak and retain cycle in my app"))
