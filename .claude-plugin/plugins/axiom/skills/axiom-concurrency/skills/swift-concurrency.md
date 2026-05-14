@@ -249,6 +249,38 @@ func decodeImage(_ data: Data) -> Image {
 - Operations that **should always** run on background (image processing, parsing)
 - Performance-critical work that shouldn't block UI
 
+### `@concurrent` vs `nonisolated` — Decision Matrix
+
+The two attributes are the most-confused pair in Swift 6 concurrency. They sound similar but have opposite intent.
+
+| Question | `@concurrent` | `nonisolated` |
+|----------|---------------|---------------|
+| Where does the work run? | **Always** on the cooperative pool (background) | **Wherever the caller is** (inherits caller's actor) |
+| Who decides isolation? | The callee (this function) | The caller |
+| Can it access `@MainActor` state? | Only via `await` — compiler highlights every access | Yes if caller is on `@MainActor`, no if caller is elsewhere |
+| Swift version | 6.2+ (iOS 26+) | All Swift versions |
+| Typical use | CPU-bound work that must not block UI (image decode, parsing, hashing) | Library API where the caller picks the context |
+| Failure mode | Forces a context switch even when caller is already off-main (small overhead) | Silently runs UI-blocking work on main if caller is `@MainActor` |
+
+```dot
+digraph decide {
+    "Need to run off main?" [shape=diamond];
+    "Caller-decided is OK?" [shape=diamond];
+    "Use @concurrent" [shape=box];
+    "Use nonisolated" [shape=box];
+    "Use plain func (inherits actor)" [shape=box];
+
+    "Need to run off main?" -> "Use @concurrent" [label="yes — always"];
+    "Need to run off main?" -> "Caller-decided is OK?" [label="depends on caller"];
+    "Caller-decided is OK?" -> "Use nonisolated" [label="yes"];
+    "Caller-decided is OK?" -> "Use plain func (inherits actor)" [label="no, must inherit @MainActor"];
+}
+```
+
+**Rule of thumb** App code that ships a binary → `@concurrent`. Library code published as a package → `nonisolated`.
+
+**Common mistake** Using `nonisolated` on a CPU-bound function expecting it to run off-main. If called from `@MainActor`, it runs on main. The compiler won't warn. Mark it `@concurrent` to enforce background execution.
+
 ### Breaking Ties to Main Actor
 
 When you mark a function `@concurrent`, compiler shows main actor access:

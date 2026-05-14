@@ -153,6 +153,9 @@ func loadUserData() {
 **After (async)**:
 ```swift
 func loadUserData() {
+    // `Task.detached` is intentional — `Task {}` would inherit the caller's
+    // @MainActor isolation and run the file I/O on main. In Swift 6.2+,
+    // prefer marking a helper `@concurrent` instead of detached.
     Task.detached {
         let data = try Data(contentsOf: largeFileURL)
         await MainActor.run {
@@ -323,6 +326,9 @@ func processImage(_ image: UIImage) {
 func processImage(_ image: UIImage) {
     imageView.image = placeholder
 
+    // `Task.detached` here because the enclosing function is @MainActor-isolated;
+    // `Task {}` would inherit isolation and run the filter on main. In Swift 6.2+,
+    // prefer making the filter `@concurrent` and using a regular `Task {}`.
     Task.detached(priority: .userInitiated) {
         let filtered = applyExpensiveFilter(image)
         await MainActor.run {

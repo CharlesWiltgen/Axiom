@@ -129,6 +129,9 @@ Task.detached {
 
 // ✅ CORRECT: Pass objectID, fetch on target context
 let userID = user.objectID
+// `Task.detached` here illustrates a real off-main hop; in production code
+// `newBackgroundContext().perform { ... }` is the canonical Core Data form
+// (it implicitly runs the closure on the context's private queue).
 Task.detached {
     let bgContext = CoreDataStack.shared.newBackgroundContext()
     let user = bgContext.object(with: userID) as! User
