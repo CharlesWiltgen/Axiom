@@ -117,9 +117,16 @@ CloudKit data not syncing?
 │   └─ .temporarilyUnavailable → Network issue or iCloud outage
 │
 ├─ CKError.quotaExceeded?
-│   └─ User exceeded iCloud storage quota
-│       → Prompt user to purchase more storage
-│       → Or delete old data
+│   └─ This is an UMBRELLA error — three distinct meanings:
+│       1. User iCloud storage full (rare; payload usually small)
+│           → Prompt user to purchase more storage / delete old data
+│       2. Schema not deployed to Production environment
+│           → Dev builds work, TestFlight/App Store fail with quotaExceeded
+│           → Fix: CloudKit Console → Deploy Schema to Production
+│       3. Per-app subscription quota exceeded (100 CKSubscription/db cap)
+│           → App creates subscriptions on every launch without dedup
+│           → Fix: deterministic subscription IDs + fetch-before-save
+│       → DIAGNOSE FIRST: which one? See "CKError.quotaExceeded" below.
 │
 ├─ CKError.networkUnavailable?
 │   └─ No internet connection
@@ -182,18 +189,41 @@ if error.code == .accountTemporarilyUnavailable {
 
 ### CKError.quotaExceeded
 
-**Cause**: User's iCloud storage full
+**Cause**: UMBRELLA error — CloudKit returns `quotaExceeded` for three distinct conditions. Always disambiguate before alerting the user.
 
-**Fix**:
+**Diagnosis — pick the right meaning** (a small per-user payload + dev/TestFlight divergence is almost never the literal storage cause):
+
 ```swift
+// Smoking gun: error.userInfo["CKErrorUserDidResetEncryptedDataKey"] or
+// "ServerErrorDescription" often contains the real reason.
+if let info = error.userInfo["NSUnderlyingError"] as? NSError {
+    print("Underlying reason:", info.localizedDescription)
+}
+
+// Symptom matrix:
+// • Works on dev, fails on TestFlight/App Store?
+//      → MEANING 2: Production schema not deployed.
+//      → Fix: CloudKit Console → switch to Development → click
+//        "Deploy Schema to Production". One-way, permanent.
+//
+// • Fails on every launch after a subscription burst, payload small?
+//      → MEANING 3: Per-app subscription quota (100 / database / app / user).
+//      → Fix: use deterministic CKSubscription IDs and fetch existing
+//        before saving; treat "already exists" as success.
+//
+// • User has actually exhausted iCloud storage (verify in Settings)?
+//      → MEANING 1: Literal storage quota. Prompt to manage iCloud.
+
 if error.code == .quotaExceeded {
-    // Show alert to user
+    // For meaning 1 only — after ruling out 2 and 3:
     showAlert(
         title: "iCloud Storage Full",
         message: "Please free up space in Settings → [Name] → iCloud → Manage Storage"
     )
 }
 ```
+
+**Why CloudKit reuses this error code**: server-side rejection paths for schema-missing and subscription-cap surface as `quotaExceeded` to clients, even though neither involves user storage. The Production Crisis Scenario below covers the dev-vs-prod path; the subscription cap is documented at https://developer.apple.com/documentation/cloudkit/cksubscription.
 
 ### CKError.serverRecordChanged
 

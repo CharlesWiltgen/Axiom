@@ -186,6 +186,41 @@ await withCheckedContinuation { continuation in
 }
 ```
 
+### Sync Lifecycle Callbacks with Async Cleanup
+
+OS lifecycle callbacks like `applicationWillTerminate`, `sceneWillResignActive`, and `applicationDidEnterBackground` are **synchronous** — they expect cleanup to complete before they return. If your cleanup logic is async, you cannot bridge with a `DispatchSemaphore` without risking deadlock: the cooperative thread pool may already be saturated, and blocking the main thread on a semaphore can leave the signal nowhere to come from.
+
+```swift
+// ❌ DEADLOCK RISK — sync callback waiting on async work via semaphore
+func applicationWillTerminate(_ application: UIApplication) {
+    let semaphore = DispatchSemaphore(value: 0)
+    Task {
+        await persistAllChanges()
+        semaphore.signal()
+    }
+    semaphore.wait()  // ❌ Main thread blocked; the Task may need main to make progress
+}
+```
+
+**What to do instead:**
+
+1. **Refactor cleanup to be synchronous where possible.** Most teardown work (writing to disk, in-memory cleanup, Core Data `save()`) has synchronous APIs. Extract a sync code path for the lifecycle callback.
+
+2. **Use background tasks for work that must finish later.** For network flushes or other genuinely async work, request a `BGTaskScheduler` task to complete on the next launch (or backgrounded continuation). The OS will resume your app briefly to finish.
+
+3. **Design for graceful partial completion.** Mark state as "unclean" at the start of a session and run recovery logic on next launch. This is more reliable than racing the OS's termination window — and the window is so short (a few seconds) that even successful async cleanup is risky.
+
+```swift
+// ✅ Sync path for what can be sync, defer the rest
+func applicationWillTerminate(_ application: UIApplication) {
+    saveUnsavedDocumentsSynchronously()       // Sync
+    markSessionAsUnclean()                    // Sync flag for recovery
+    scheduleBackgroundFlush()                 // BGTaskScheduler for async work
+}
+```
+
+The hard truth: **the OS does not guarantee you enough time to complete async work in lifecycle callbacks.** Design for cleanup failure being possible rather than trying to force completion.
+
 ### os_unfair_lock Danger
 
 **Never use `os_unfair_lock` directly in Swift** — it can be moved in memory:

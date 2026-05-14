@@ -116,6 +116,8 @@ class CloudKitStack {
 
 ## Concurrency Patterns
 
+> **Threading errors are isolation bugs.** If you're seeing `Illegal attempt to establish a relationship between objects in different contexts`, `_PFCallContextRequiresMainThread`, or `_PFAssertSafeMultiThreadedAccess_`, this is fundamentally a Swift 6 isolation problem expressed through Core Data's threading rules. Read this section AND axiom-concurrency (skills/isolation-inheritance-diag.md) for the runtime-crash catalog (Pattern 1 — `context.perform` closures inheriting `@MainActor`).
+
 ### The Golden Rule
 
 **NEVER pass NSManagedObject across threads.** Pass objectID instead.
@@ -129,6 +131,9 @@ Task.detached {
 
 // ✅ CORRECT: Pass objectID, fetch on target context
 let userID = user.objectID
+// `Task.detached` here illustrates a real off-main hop; in production code
+// `newBackgroundContext().perform { ... }` is the canonical Core Data form
+// (it implicitly runs the closure on the context's private queue).
 Task.detached {
     let bgContext = CoreDataStack.shared.newBackgroundContext()
     let user = bgContext.object(with: userID) as! User

@@ -97,6 +97,11 @@ Use this to reach the correct diagnostic pattern in 2 minutes:
 
 ```
 Network problem?
+├─ Using URLSession (not NWConnection)?
+│  ├─ URLError(-1005) "network connection lost" after backgrounding? → Pattern 7a (URLSession Stale Pool)
+│  ├─ Works after cold restart but fails on resume? → Pattern 7a (URLSession Stale Pool)
+│  └─ Otherwise: most NWConnection patterns apply — URLSession runs on Network.framework internally
+│
 ├─ Connection never reaches .ready?
 │  ├─ Stuck in .preparing for >5 seconds?
 │  │  ├─ DNS lookup timing out? → Pattern 1a (DNS Failure)
@@ -944,6 +949,92 @@ openssl s_client -connect yourserver.com:443 -tls1_2
 ### ATS vs Network.framework Distinction
 
 ATS applies to **URLSession** and **WKWebView** connections. **Network.framework** (NWConnection/NetworkConnection) is NOT subject to ATS — it handles TLS configuration directly via `tlsOptions`. If URLSession fails but NWConnection succeeds for the same server, ATS is almost certainly the cause.
+
+---
+
+### Pattern 7a: URLSession Stale Connection Pool
+
+**Time cost** 15-30 minutes
+
+#### Symptom
+- `URLError(-1005)` "The network connection was lost" — intermittent, after backgrounding
+- First request post-`applicationDidBecomeActive` fails, subsequent retries succeed
+- "Fixes itself" on cold restart (which drops the pool)
+- Both Wi-Fi and cellular affected (rules out cellular-radio-only causes)
+- Pre-iOS-13 didn't see this — Apple tightened idle-pool reaping in newer OS versions
+
+#### Diagnosis
+
+URLSession maintains a connection pool for HTTP/2 and HTTP/1.1 keep-alive. When the app suspends, the kernel/networkd tear down idle TCP/TLS connections after ~30s, but `URLSession.shared` still holds the dead sockets. The first post-resume request grabs a stale entry, the kernel returns ECONNRESET/EPIPE, CFNetwork surfaces it as -1005. This is NOT a Network.framework issue — it's URLSession's pool not invalidating on lifecycle transitions.
+
+Confirm via `URLSessionTaskMetrics`:
+```swift
+let session = URLSession(configuration: .default, delegate: metricsDelegate, delegateQueue: nil)
+// In delegate's didFinishCollecting:
+print(metrics.transactionMetrics.map { ($0.isReusedConnection, $0.fetchStartDate) })
+// isReusedConnection == true on the failing request? → stale-pool reuse confirmed.
+```
+
+#### Common causes
+
+1. App uses `URLSession.shared` (no lifecycle control over pool)
+2. No invalidation on `UIApplication.didBecomeActiveNotification` / `ScenePhase.active`
+3. Background duration crossed the ~30s pool-evict threshold
+
+#### Fix
+
+Own the session AND retry with idempotency awareness:
+
+```swift
+actor APIClient {
+    private var session = APIClient.makeSession()
+
+    private static func makeSession() -> URLSession {
+        let cfg = URLSessionConfiguration.default
+        cfg.waitsForConnectivity = true
+        cfg.timeoutIntervalForRequest = 30
+        return URLSession(configuration: cfg)
+    }
+
+    /// Drop the connection pool on resume. Call from
+    /// `.onChange(of: scenePhase)` when transitioning to `.active`.
+    func recycleOnResume() {
+        session.finishTasksAndInvalidate()
+        session = Self.makeSession()
+    }
+
+    func send(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        do {
+            return try await session.data(for: request)
+        } catch let e as URLError where e.code == .networkConnectionLost {
+            // ⚠ IDEMPOTENCY GATE: retry ONLY on idempotent methods.
+            // Blind-retrying a POST that already reached the server can
+            // duplicate the side effect (double-charge, duplicate order, etc.).
+            guard let method = request.httpMethod?.uppercased(),
+                  ["GET", "HEAD", "PUT", "DELETE", "OPTIONS"].contains(method) else {
+                throw e
+            }
+            recycleOnResume()
+            return try await session.data(for: request)
+        }
+    }
+}
+```
+
+For non-idempotent POSTs, the only safe retry is one with an app-level dedup key (`Idempotency-Key` header that the server enforces). Without that contract, surface the error and let the caller decide.
+
+#### Verification
+
+1. **Network Link Conditioner** + Airplane Mode toggle for 60s → return to foreground → first request must succeed. Pre-fix: ~30% -1005. Post-fix: 0%.
+2. **Charles Proxy** + observe new TCP/TLS handshake on the first post-resume request (no reused-connection log line).
+3. **URLSessionTaskMetrics**: `transactionMetrics[0].isReusedConnection == false` on first request post-resume.
+4. Run 20 background/foreground cycles per Mistake 4 — failure count drops to 0.
+
+#### Prevention
+
+- **NEVER use `URLSession.shared` for production traffic in apps that backgrounding affects** (which is almost all of them).
+- Hook session recycling to scene-phase transitions, not to timers.
+- For background-eligible work, use `URLSessionConfiguration.background(withIdentifier:)` — its pool is managed by the system and isn't subject to this bug.
 
 ---
 

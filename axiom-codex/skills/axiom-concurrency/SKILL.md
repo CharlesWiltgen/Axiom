@@ -24,6 +24,12 @@ license: MIT
 | MainActor.assumeIsolated | See `skills/assume-isolated.md` |
 | @preconcurrency protocol conformances | See `skills/assume-isolated.md` |
 | Legacy delegate callbacks | See `skills/assume-isolated.md` |
+| Warning-free build crashes with `_dispatch_assert_queue_fail` | See `skills/isolation-inheritance-diag.md` |
+| Crash signature `_swift_task_checkIsolatedSwift` | See `skills/isolation-inheritance-diag.md` |
+| Core Data `context.perform` runtime crash inside @MainActor class | See `skills/isolation-inheritance-diag.md` |
+| Combine `.map`/`.sink` crash from receive(on:) placement | See `skills/isolation-inheritance-diag.md` |
+| Delegate method crash from isolation inheritance (CLLocationManager, NSDocument, AVAudioPlayerDelegate, WKNavigationDelegate) | See `skills/isolation-inheritance-diag.md` |
+| Actor reentrancy / stale state across await | See `skills/isolation-inheritance-diag.md` |
 | Swift Concurrency Instruments template | See `skills/concurrency-profiling.md` |
 | Actor contention diagnosis | See `skills/concurrency-profiling.md` |
 | Thread pool exhaustion | See `skills/concurrency-profiling.md` |
@@ -40,6 +46,7 @@ digraph concurrency {
     what -> "skills/swift-concurrency-ref.md" [label="API syntax lookup\n(TaskGroup, AsyncStream,\ncontinuations, migration)"];
     what -> "skills/synchronization.md" [label="Mutex, locks,\natomic types"];
     what -> "skills/assume-isolated.md" [label="assumeIsolated,\n@preconcurrency"];
+    what -> "skills/isolation-inheritance-diag.md" [label="warning-free build crashes\n_dispatch_assert_queue_fail\n_swift_task_checkIsolatedSwift"];
     what -> "skills/concurrency-profiling.md" [label="profile async perf,\nactor contention"];
 }
 ```
@@ -48,6 +55,7 @@ digraph concurrency {
 1a. Need specific API syntax (actor definition, TaskGroup, AsyncStream, continuations)? → `skills/swift-concurrency-ref.md`
 2. Writing async/await code? → `skills/swift-concurrency.md`
 3. assumeIsolated / @preconcurrency? → `skills/assume-isolated.md`
+3a. Warning-free Swift 6 build that crashes in production with `_dispatch_assert_queue_fail` or `_swift_task_checkIsolatedSwift`? → `skills/isolation-inheritance-diag.md`
 4. Mutex / lock / synchronization? → `skills/synchronization.md`
 5. Profile async performance / actor contention? → `skills/concurrency-profiling.md`
 6. Value type / ARC / generic optimization? → See axiom-performance (skills/swift-performance.md)
@@ -99,6 +107,13 @@ digraph concurrency {
 - Diagnosing main thread blocking, actor contention, thread pool exhaustion
 - Safe vs unsafe primitives for cooperative pool
 
+**Runtime Isolation Crashes** (`skills/isolation-inheritance-diag.md`):
+- `_dispatch_assert_queue_fail` and `_swift_task_checkIsolatedSwift` signatures
+- Closure isolation inheritance (Core Data `perform`, Combine `.map`, NotificationCenter `.sink`)
+- Delegate method isolation inheritance (CLLocationManager, NSDocument, AVAudioPlayerDelegate, WKNavigationDelegate)
+- `MainActor.assumeIsolated` misuse
+- Actor reentrancy state staleness
+
 ## Automated Scanning
 
 **Concurrency audit** → Launch `concurrency-auditor` agent or `/axiom:audit concurrency` (5-phase semantic audit: maps isolation architecture, detects 8 anti-patterns, reasons about missing concurrency patterns, correlates compound risks, scores Swift 6.3 readiness)
@@ -112,6 +127,8 @@ digraph concurrency {
 | "It's just one async call" | Even single async calls have cancellation and isolation implications. |
 | "I know how actors work" | Actor reentrancy and isolation rules changed in Swift 6.2. |
 | "I'll fix the Sendable warnings later" | Sendable violations cause runtime crashes. Fix them now. |
+| "My Swift 6 build has zero warnings, so isolation is correct" | Static checking can't see SDK callbacks. Runtime checks crash anyway. `skills/isolation-inheritance-diag.md`. |
+| "I'll wrap the crash in `MainActor.assumeIsolated`" | `assumeIsolated` is a runtime trap, not a silencer. Wrong assumption = crash. |
 | "Combine is dead, just use async/await" | Combine has no deprecation notice. Rewriting working pipelines wastes time. See See axiom-uikit (skills/combine-patterns.md). |
 | "I'll use @unchecked Sendable to silence this" | You're hiding a data race from the compiler. It will crash in production. |
 | "This async function runs on a background thread" | `async` suspends without blocking but resumes on the *same actor*. Use `@concurrent` to force background. |
@@ -138,6 +155,15 @@ User: "Should I use Mutex or actor?"
 
 User: "My async code is slow, how do I profile it?"
 → Read: `skills/concurrency-profiling.md`
+
+User: "My warning-free Swift 6 build crashes in production with _dispatch_assert_queue_fail"
+→ Read: `skills/isolation-inheritance-diag.md`
+
+User: "Core Data `context.perform` crashes inside an @MainActor view model"
+→ Read: `skills/isolation-inheritance-diag.md`
+
+User: "CLLocationManager delegate method is crashing with _swift_task_checkIsolatedSwift"
+→ Read: `skills/isolation-inheritance-diag.md`
 
 User: "My app is slow due to unnecessary copying"
 → See axiom-performance (skills/swift-performance.md)

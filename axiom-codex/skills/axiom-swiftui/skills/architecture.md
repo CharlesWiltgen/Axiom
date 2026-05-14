@@ -300,6 +300,248 @@ struct PetListView: View {
 
 ---
 
+## Bridging Actor State to SwiftUI
+
+SwiftUI's `@Observable` and `ObservableObject` types must be `@MainActor` — view bodies render on MainActor and need synchronous access to observed state. Custom actors live in their own isolation domain. The two don't connect directly.
+
+**A proxy layer is unavoidable** when you want SwiftUI to observe state owned by a custom actor. Some boilerplate is the cost of safe non-UI concurrency.
+
+The standard pattern: actor owns the source of truth; a `@MainActor @Observable` model holds a snapshot; the model subscribes to actor updates and publishes changes to views.
+
+```swift
+// Source of truth — lives off-main
+actor InventoryStore {
+    private var items: [Item] = []
+    private var listeners: [AsyncStream<[Item]>.Continuation] = []
+
+    func current() -> [Item] { items }
+
+    func updates() -> AsyncStream<[Item]> {
+        AsyncStream { continuation in
+            listeners.append(continuation)
+            continuation.yield(items)
+        }
+    }
+
+    func setItems(_ newItems: [Item]) {
+        items = newItems
+        listeners.forEach { $0.yield(newItems) }
+    }
+}
+
+// Proxy for SwiftUI
+@MainActor
+@Observable
+final class InventoryModel {
+    private(set) var items: [Item] = []
+    private let store: InventoryStore
+    private var observationTask: Task<Void, Never>?
+
+    init(store: InventoryStore) {
+        self.store = store
+    }
+
+    func start() {
+        observationTask = Task { [weak self] in
+            guard let stream = await self?.store.updates() else { return }
+            for await snapshot in stream {
+                self?.items = snapshot
+            }
+        }
+    }
+
+    deinit { observationTask?.cancel() }
+}
+
+struct InventoryView: View {
+    @State private var model: InventoryModel
+
+    var body: some View {
+        List(model.items) { item in Text(item.name) }
+            .onAppear { model.start() }
+    }
+}
+```
+
+The proxy buys you:
+- Safe off-main state ownership in the actor
+- SwiftUI-compatible observable surface on MainActor
+- Decoupling — the actor doesn't know SwiftUI exists; the model doesn't know about non-UI consumers
+
+The cost is the proxy code itself, which scales linearly with the number of actor-owned subsystems you need to surface. There's no way to eliminate this without giving up either actor isolation or SwiftUI's observability model.
+
+---
+
+## `.task` Modifier Lifecycle
+
+The `.task` modifier is the canonical way to attach async work to a SwiftUI view. Its cancellation timing is the most common source of confusion because it does NOT match what developers usually assume.
+
+### When `.task` cancels
+
+`.task` cancels when the **view is destroyed**, which has the same timeline as `onDisappear`. Specifically:
+
+| Event | Does `.task` cancel? |
+|-------|----------------------|
+| State change re-evaluates view body | **No** — body re-evaluation does NOT destroy the view |
+| Conditional branch flips (`if condition { ... } else { ... }`) | **Yes** — the un-rendered branch's views are destroyed |
+| View is popped from `NavigationStack` | **Yes** — destruction |
+| Parent removes the view from its hierarchy | **Yes** — destruction |
+| Sheet/popover is dismissed | **Yes** — destruction (when the sheet view goes away) |
+| App backgrounds | **No** — destruction is a view-tree event, not app lifecycle |
+
+```swift
+struct ContentView: View {
+    @State private var counter = 0
+
+    var body: some View {
+        VStack {
+            Button("Increment") { counter += 1 }
+            DataView()
+                .task {
+                    // ✅ Runs once when DataView first appears
+                    // ❌ Does NOT restart when `counter` changes — DataView is reused
+                    await loadData()
+                }
+        }
+    }
+}
+```
+
+State changes that re-evaluate the body keep the same view identity. `.task` is tied to view identity, not body evaluation. If you want the task to restart on a value change, use `.task(id:)`:
+
+```swift
+DataView(id: selectedID)
+    .task(id: selectedID) {
+        // ✅ Cancels and restarts whenever selectedID changes
+        await loadData(id: selectedID)
+    }
+```
+
+### When you need fine-grained cancellation
+
+SwiftUI does not expose the `Task` handle that `.task` creates. If you need to cancel based on a signal that isn't view destruction (e.g., user taps a "stop" button, network condition changes, a model state requires aborting), own the Task yourself:
+
+```swift
+struct DownloadView: View {
+    @State private var downloadTask: Task<Void, Never>?
+
+    var body: some View {
+        VStack {
+            Button("Cancel") { downloadTask?.cancel() }
+        }
+        .onAppear {
+            downloadTask = Task {
+                await performDownload()
+            }
+        }
+        .onDisappear {
+            downloadTask?.cancel()  // Required — view destruction won't cancel manual tasks
+        }
+    }
+}
+```
+
+This pattern recreates `.task`'s "cancel on view destruction" behavior via `onAppear` + `onDisappear`, while also exposing the handle for explicit cancellation.
+
+### `.task(id:)` Pitfalls
+
+The `.task(id:)` variant restarts when the `id` value changes by `Equatable` comparison. Three specific failure modes:
+
+**Equality-stuck repeated assignment.** Assigning the *same* value to your `id` doesn't trigger a restart, because `oldValue == newValue` returns true. This bites refresh buttons that use a sentinel:
+
+```swift
+@State private var refreshFlag = false
+
+// ❌ Second tap is a no-op — refreshFlag is already true
+Button("Refresh") { refreshFlag = true }
+    .task(id: refreshFlag) { await load() }
+
+// ✅ Use a monotonically increasing token so every action produces a new value
+@State private var refreshToken = UUID()
+Button("Refresh") { refreshToken = UUID() }
+    .task(id: refreshToken) { await load() }
+```
+
+A common workaround is `.toggle()` to force a value change, but that couples the Bool's semantics to a flag-flipping protocol and breaks if any other code path also writes to the flag. `UUID()` or an incrementing `Int` is unambiguous.
+
+**Identity collision in Hashable structs.** If your `id` is a struct with custom `Equatable` (or one that derives equality from a subset of fields), changing a non-included field won't restart the task:
+
+```swift
+struct Filter: Equatable {
+    var category: String
+    var sortOrder: SortOrder
+    var debugLabel: String          // Used only for diagnostics
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.category == rhs.category && lhs.sortOrder == rhs.sortOrder
+        // debugLabel intentionally excluded
+    }
+}
+
+// ❌ Changing debugLabel won't restart the task — Equatable says "no change"
+.task(id: filter) { await load(filter) }
+```
+
+If you need *every* user-perceived change to restart, either ensure the `Equatable` conformance covers every meaningful field, or use a separate `UUID` bump alongside the value change.
+
+**Spurious restart from continuously-changing state.** Don't use a value as `id` if it changes for reasons unrelated to the work the task does. A timestamp, a frequently-updated model field, or a derived value that ticks on every render will restart the task far more often than intended — usually every body re-evaluation. Pick an `id` whose changes correspond exactly to "the task's input changed."
+
+### When to skip `.task(id:)` entirely
+
+For pure refresh-button patterns where the task body doesn't depend on the `id` value, `.task(id:)` is often the wrong tool. The cleaner alternative is to run the async work directly from the button action and use plain `.task { }` for the initial load:
+
+```swift
+struct ProductListView: View {
+    @State private var products: [Product] = []
+
+    var body: some View {
+        VStack {
+            Button("Refresh") {
+                Task { products = await ProductService.fetchAll() }
+            }
+            List(products) { Text($0.name) }
+        }
+        .task {                                  // Initial load on appear
+            products = await ProductService.fetchAll()
+        }
+    }
+}
+```
+
+This separates two concerns that `.task(id:)` conflates: "load once when the view appears" and "reload on user demand." The button-spawned `Task` has the same view-destruction-cancels-it lifetime if you store its handle, or it's fire-and-forget if you don't. You avoid the entire family of `id` pitfalls (equality-stuck, identity collision, spurious restart) by not using `id` at all.
+
+Reach for `.task(id:)` only when the task body *genuinely depends* on the `id` value — for example, fetching details for whichever item the user selected, where the selection drives both the cancellation and the query parameter.
+
+### NavigationStack and `.task` Lifetime
+
+A child view pushed onto a `NavigationStack` has its `.task` cancelled when the user pops back. But the child view **doesn't carry state across re-entry** — pushing the same destination again creates a fresh view (new `@State`, new `.task` invocation). If you need the task's *result* to persist across navigations, store it on a model that lives outside the view (an `@Observable` on the parent or in an `@Environment` value), not on the view's local `@State`.
+
+```swift
+// ❌ Results lost when user pops and pushes again
+struct DetailView: View {
+    @State private var data: [Item] = []
+    var body: some View {
+        List(data) { Text($0.name) }
+            .task { data = await fetch() }  // Re-runs on every push
+    }
+}
+
+// ✅ Results survive navigation
+@Observable @MainActor
+final class DetailModel { var data: [Item] = [] }
+
+struct DetailView: View {
+    @Bindable var model: DetailModel
+    var body: some View {
+        List(model.data) { Text($0.name) }
+            .task {
+                if model.data.isEmpty { model.data = await fetch() }
+            }
+    }
+}
+```
+
+---
+
 # Part 2: MVVM Pattern
 
 ## When to Use MVVM
