@@ -38,6 +38,8 @@ Questions you can ask Claude that will draw from this skill:
 - State-as-Bridge for async boundaries (WWDC 2025)
 - Three property wrappers: @State, @Environment, @Bindable
 - Synchronous UI updates for animations
+- `.task` modifier lifecycle (cancels on view destruction, not body re-evaluation; `.task(id:)` pitfalls)
+- Bridging actor state to SwiftUI via `@Observable` proxy layer
 
 ### MVVM Pattern
 - When MVVM adds value (complex presentation logic)
