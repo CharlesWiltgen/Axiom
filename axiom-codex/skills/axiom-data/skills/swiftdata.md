@@ -513,6 +513,8 @@ try modelContext.save()
 
 ## Swift 6 Concurrency
 
+> **Threading errors are isolation bugs.** If you're seeing `Illegal attempt to establish a relationship between objects in different contexts` from a background notification, push handler, or `BGTaskScheduler` callback, the root cause is usually closure isolation inheritance — the work that fetches in a background `ModelContext` and the work that writes the relationship are running on different actors. Read this section AND axiom-concurrency (skills/isolation-inheritance-diag.md) Pattern 1 for the full runtime-crash catalog.
+
 ### @MainActor Isolation
 
 ```swift

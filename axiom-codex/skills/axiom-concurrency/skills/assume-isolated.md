@@ -223,4 +223,4 @@ Per Apple documentation:
 
 **Docs**: /swift/mainactor/assumeisolated, /swift/actor/assumeisolated
 
-**Skills**: See `skills/swift-concurrency.md`
+**Skills**: See `skills/swift-concurrency.md`, `skills/isolation-inheritance-diag.md` (full crash-signature diagnostic — `_dispatch_assert_queue_fail`, `_swift_task_checkIsolatedSwift`)

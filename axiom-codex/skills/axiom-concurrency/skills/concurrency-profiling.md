@@ -64,6 +64,9 @@ class ViewModel: ObservableObject {
 @MainActor
 class ViewModel: ObservableObject {
     func process() async {
+        // `Task.detached` is correct here — `Task {}` would inherit @MainActor
+        // and run `heavyComputation()` ON the main thread. In Swift 6.2+,
+        // prefer marking `heavyComputation()` `@concurrent` and calling it directly.
         let result = await Task.detached {
             heavyComputation()
         }.value

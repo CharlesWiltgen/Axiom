@@ -299,6 +299,10 @@ extension StoreManager {
 ```swift
 extension StoreManager {
     func listenForTransactions() -> Task<Void, Never> {
+        // `Task.detached` because `StoreManager` is @MainActor; the loop must
+        // NOT run on main (it would block UI). The `await self?.handleTransaction`
+        // call hops back to main where needed. In Swift 6.2+, you can keep the
+        // loop on a regular `Task {}` if `handleTransaction` is marked `@concurrent`.
         Task.detached { [weak self] in
             // Listen for ALL transaction updates
             for await verificationResult in Transaction.updates {
@@ -634,6 +638,8 @@ struct SettingsView: View {
 ```swift
 extension StoreManager {
     func listenForTransactions() -> Task<Void, Never> {
+        // `Task.detached` keeps `Transaction.updates` off the main actor.
+        // See the equivalent listener earlier in this skill for the rationale.
         Task.detached { [weak self] in
             for await verificationResult in Transaction.updates {
                 await self?.handleTransaction(verificationResult)

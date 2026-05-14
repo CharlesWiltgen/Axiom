@@ -66,6 +66,17 @@ Use this router when:
 - 8 common hang patterns with fixes
 - Watchdog terminations
 
+### App Launch
+
+**Slow app launch** → See skills/app-launch.md
+- Slow first frame, frozen first screen, launch regression in Organizer
+- Launch-phase model (pre-main / main→first frame / extended launch)
+- Cold vs warm vs hot/resume vs notification launch — how to reproduce each
+- App Launch instrument workflow, `dyld Activity`, measurement hygiene
+- Pre-main fixes (frameworks, `+load`, mergeable libraries), main-thread deferral, priority inversion
+- `XCTApplicationLaunchMetric` regression test, `MXAppLaunchMetric` field histograms, custom "app is interactive" signpost
+- Push-notification launch path (tap→first pixel / tap→interactive targets)
+
 ### Energy Issues
 
 **Battery drain, high energy** → See skills/energy.md
@@ -154,27 +165,28 @@ Use this router when:
    - NO, just slow → performance-profiling (Time Profiler)
    - First launch only? → Also check for synchronous I/O or lazy initialization in hang-diagnostics
 5. Slowdown when multiple async operations complete at once? → Cross-route to `axiom-concurrency` (callback contention, not profiling)
-6. Battery drain (know the symptom)? → energy-diag
-7. Battery drain (need API reference)? → energy-ref
-8. Battery drain (general)? → energy
-9. MetricKit setup/parsing? → metrickit-ref
-10. Profile with GUI (Instruments)? → performance-profiling
-11. Profile with CLI (xctrace)? → xctrace-ref
-12. Run automated profile now? → performance-profiler agent
-13. General slow/lag? → performance-profiling
-14. Want proactive memory leak scan? → memory-auditor (Agent)
-15. Want energy anti-pattern scan? → energy-auditor (Agent)
-16. Want Swift performance audit (ARC, generics, collections)? → swift-performance-analyzer (Agent)
-17. Need to inspect variable/thread state at runtime? → See axiom-build (skills/lldb.md)
-18. Need exact LLDB command syntax? → See axiom-build (skills/lldb-ref.md)
-19. Timer stops during scrolling? → timer-patterns (RunLoop mode)
-20. EXC_BAD_INSTRUCTION crash with DispatchSourceTimer? → timer-patterns (4 crash patterns)
-21. Choosing between Timer, DispatchSourceTimer, Combine timer, async timer? → timer-patterns
-22. Need timer API syntax/lifecycle? → timer-patterns-ref
-23. Code review for outdated Swift patterns? → swift-modern
-24. Claude generating legacy APIs (DateFormatter, CGFloat, DispatchQueue)? → swift-modern
-25. Need to see runtime console output before profiling? → axiom-tools (skills/xclog-ref.md) or `/axiom:console`
-26. Have an `.ips`, MetricKit, or legacy `.crash` text file to symbolicate/triage? → axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`
+6. Slow app launch / slow first frame / launch regression / slow after push tap? → app-launch
+7. Battery drain (know the symptom)? → energy-diag
+8. Battery drain (need API reference)? → energy-ref
+9. Battery drain (general)? → energy
+10. MetricKit setup/parsing? → metrickit-ref
+11. Profile with GUI (Instruments)? → performance-profiling
+12. Profile with CLI (xctrace)? → xctrace-ref
+13. Run automated profile now? → performance-profiler agent
+14. General slow/lag? → performance-profiling
+15. Want proactive memory leak scan? → memory-auditor (Agent)
+16. Want energy anti-pattern scan? → energy-auditor (Agent)
+17. Want Swift performance audit (ARC, generics, collections)? → swift-performance-analyzer (Agent)
+18. Need to inspect variable/thread state at runtime? → See axiom-build (skills/lldb.md)
+19. Need exact LLDB command syntax? → See axiom-build (skills/lldb-ref.md)
+20. Timer stops during scrolling? → timer-patterns (RunLoop mode)
+21. EXC_BAD_INSTRUCTION crash with DispatchSourceTimer? → timer-patterns (4 crash patterns)
+22. Choosing between Timer, DispatchSourceTimer, Combine timer, async timer? → timer-patterns
+23. Need timer API syntax/lifecycle? → timer-patterns-ref
+24. Code review for outdated Swift patterns? → swift-modern
+25. Claude generating legacy APIs (DateFormatter, CGFloat, DispatchQueue)? → swift-modern
+26. Need to see runtime console output before profiling? → axiom-tools (skills/xclog-ref.md) or `/axiom:console`
+27. Have an `.ips`, MetricKit, or legacy `.crash` text file to symbolicate/triage? → axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`
 
 ## Anti-Rationalization
 
@@ -187,6 +199,9 @@ Use this router when:
 | "It's just a UI freeze, probably a slow API call" | Freezes have busy vs blocked causes. hang-diagnostics has a decision tree for both. |
 | "Memory is climbing AND scrolling stutters — two separate bugs" | Memory pressure causes GC pauses that drop frames. Fix the leak first, then re-check scroll performance. |
 | "It only freezes on first launch, must be loading something" | First-launch hangs have 3 patterns: synchronous I/O, lazy initialization, main thread contention. hang-diagnostics diagnoses which. |
+| "Launch feels slow — I'll trim some startup code" | Launch has 3 phases (pre-main / main→first frame / extended) and a watchdog. app-launch tells you which phase to profile, with measurement hygiene so the number means something. |
+| "Launch is fine, it's fast on my phone" | Measure on your oldest supported device with a Release build. app-launch has the full hygiene checklist — newest-device numbers hide the regression. |
+| "Resume from the app switcher is slow too" | Resume isn't a launch — never measure it as one. app-launch distinguishes cold/warm/hot/notification and how to reproduce each. |
 | "UI locks up when network requests finish — that's slow" | Multiple callbacks completing at once = main thread contention = concurrency issue. Cross-route to axiom-concurrency. |
 | "I'll just add print statements to debug this" | Print-debug cycles cost 3-5 min each (build + run + reproduce). An LLDB breakpoint costs 30 seconds. axiom-build (skills/lldb.md) has the commands. |
 | "I can't see what the app is logging" | xclog captures print() + os_log from the simulator with structured JSON. `/axiom:console`. |
@@ -254,6 +269,21 @@ User: "The UI freezes and becomes unresponsive"
 
 User: "Main thread is blocked, how do I diagnose?"
 → See skills/hang-diagnostics.md
+
+User: "My app takes 3 seconds to launch"
+→ See skills/app-launch.md
+
+User: "Xcode Organizer says my launch time regressed"
+→ See skills/app-launch.md
+
+User: "How do I reduce pre-main / dyld time?"
+→ See skills/app-launch.md
+
+User: "App is slow to come up after tapping a push notification"
+→ See skills/app-launch.md
+
+User: "How do I write a launch performance test?"
+→ See skills/app-launch.md
 
 User: "How do I set up MetricKit?"
 → See skills/metrickit-ref.md

@@ -204,6 +204,51 @@ actor DataManager {
 | Using actor for ViewModel | @Published won't work, UI updates require await | Use @MainActor class for UI-facing code, actor only for non-UI shared state |
 | GCD queue-hopping inside actor | Breaks isolation guarantees, risks thread explosion | Remove GCD — actor isolation already serializes access |
 
+### Custom Executors
+
+Every actor runs on an **executor**. The default executor schedules the synchronous pieces of a task ("jobs") on the cooperative thread pool. `MainActor` has its own serial executor that runs jobs on the main thread. You rarely need to think about executors directly.
+
+When you might implement a custom executor:
+- You own a thread pool with specific tuning (a custom scheduler for a high-throughput service)
+- You need to bridge an actor's work to a specific dispatch queue your team controls
+- You're implementing an actor that must run on a particular thread (e.g., a graphics actor pinned to a specific GPU queue)
+
+Conform to `SerialExecutor` and expose it from your actor via `unownedExecutor`:
+
+```swift
+final class CustomExecutor: SerialExecutor {
+    private let queue: DispatchQueue
+
+    init(queue: DispatchQueue) { self.queue = queue }
+
+    func enqueue(_ job: UnownedJob) {
+        queue.async {
+            job.runSynchronously(on: self.asUnownedSerialExecutor())
+        }
+    }
+
+    func asUnownedSerialExecutor() -> UnownedSerialExecutor {
+        UnownedSerialExecutor(ordinary: self)
+    }
+}
+
+actor PinnedWorker {
+    private let executor: CustomExecutor
+
+    init(queue: DispatchQueue) {
+        self.executor = CustomExecutor(queue: queue)
+    }
+
+    nonisolated var unownedExecutor: UnownedSerialExecutor {
+        executor.asUnownedSerialExecutor()
+    }
+
+    func doWork() { /* runs on `queue` */ }
+}
+```
+
+**For most app code, never reach for custom executors.** They're a footgun — get one wrong and you'll see deadlocks, priority inversions, or unbounded thread growth. The default executor is well-tuned for general-purpose work.
+
 ---
 
 ## Part 2: Sendable Patterns
@@ -327,6 +372,42 @@ Control the strictness of Sendable checking in Xcode:
 | `SWIFT_STRICT_CONCURRENCY` | `minimal` | Only explicit Sendable annotations checked |
 | `SWIFT_STRICT_CONCURRENCY` | `targeted` | Inferred Sendable + closure checking |
 | `SWIFT_STRICT_CONCURRENCY` | `complete` | Full strict concurrency (Swift 6 default) |
+
+### Pulling Sendable Pieces Out of a Non-Sendable Type
+
+When you need data from a non-Sendable type (typically an `NSObject` subclass or legacy class) across isolation boundaries, you usually only need a few properties — not the whole object. Instead of trying to make the wrapper Sendable, **extract the Sendable pieces** at the source isolation and send only those.
+
+```swift
+// ❌ Trying to make the whole legacy type Sendable cascades through the codebase
+final class LegacyImageRecord: NSObject {       // Inherits from NSObject; non-Sendable
+    @objc dynamic var title: String
+    @objc dynamic var url: URL
+    @objc dynamic var thumbnailCache: NSCache<NSString, UIImage>   // Mutable shared state
+}
+
+actor ImageCatalog {
+    func info(for id: String) -> LegacyImageRecord {  // ❌ Can't return non-Sendable across actor
+        ...
+    }
+}
+
+// ✅ Send only the Sendable pieces
+struct ImageInfo: Sendable {
+    let title: String
+    let url: URL
+}
+
+actor ImageCatalog {
+    private var records: [String: LegacyImageRecord] = [:]
+
+    func info(for id: String) -> ImageInfo? {
+        guard let record = records[id] else { return nil }
+        return ImageInfo(title: record.title, url: record.url)   // Sendable snapshot
+    }
+}
+```
+
+This pattern lets you keep legacy non-Sendable types encapsulated within their isolation domain while still surfacing useful information to the rest of the program. Foundation uses this extensively during its own concurrency adoption — most consumers of Foundation types only need string/numeric/date pieces, not the whole reference object.
 
 ### Sendable Gotcha Table
 
@@ -678,6 +759,41 @@ async let images = fetchImages()
 async let metadata = fetchMetadata()
 let result = try await (images, metadata)
 ```
+
+### Batching — When Task-Per-Item Is Wrong
+
+For large input sets (thousands of files, large API result lists, big migration batches), the naive "spawn one Task per item" pattern is rarely optimal:
+
+- The cooperative thread pool has a fixed size (typically core count). 10,000 tasks don't get 10,000 threads — they queue up and add scheduling overhead.
+- Each task allocates context (stack, task-locals, isolation tracking). For trivial work, the overhead dwarfs the actual computation.
+- Memory pressure: keeping 10,000 in-flight task contexts alive while results accumulate can spike memory.
+
+**Profile first.** The naive approach may be fine for your scale. If it's not, batch:
+
+```swift
+// ✅ Bounded concurrency — N workers process items from a shared queue
+func processAll(_ items: [Item], concurrency: Int = 8) async throws {
+    try await withThrowingTaskGroup(of: Void.self) { group in
+        var iterator = items.makeIterator()
+        var inFlight = 0
+
+        // Prime the pump
+        while inFlight < concurrency, let item = iterator.next() {
+            group.addTask { try await process(item) }
+            inFlight += 1
+        }
+
+        // Replace each finished task with the next item
+        for try await _ in group {
+            if let next = iterator.next() {
+                group.addTask { try await process(next) }
+            }
+        }
+    }
+}
+```
+
+Match `concurrency` to the work's profile: 2–4 for CPU-bound work, 8–16 for I/O-bound, much higher (32+) only if you've measured.
 
 ### Structured Concurrency Gotcha Table
 
@@ -1356,6 +1472,28 @@ await withTaskGroup(of: Void.self) { group in
 | DispatchQueue.main.async to MainActor | Subtle timing differences | MainActor.run is the equivalent — test edge cases |
 | Replacing structured tasks with top-level Tasks | Losing cancellation propagation and error handling | Use async let or TaskGroup for related parallel work |
 | Batch @unchecked Sendable to fix warnings | Hiding real data races throughout codebase | Fix one type at a time with proper Sendable, actor, or sending |
+
+---
+
+## Coming in Swift 6.4
+
+Three concurrency features accepted for Swift 6.4 that are not yet shipping. Track the [Swift Evolution dashboard](https://www.swift.org/swift-evolution/) for status; update this section when 6.4 lands.
+
+### Async defer
+
+Swift 6.4 lifts the restriction that prevents `await` inside `defer` blocks. No new syntax — `defer { await cleanup() }` will just work, matching the cooperative-cancellation timing of structured concurrency.
+
+### `Task.withDeadline` (proposal name TBD)
+
+A standard library task API that mirrors the homemade `withTimeout` pattern earlier in this file: kick off async work, cancel automatically if a duration is exceeded. The proposal is under review; naming is still being debated. When it ships, prefer it over the manual `withThrowingTaskGroup` race pattern.
+
+### Task error-swallowing diagnostic
+
+Currently, `Task { try ... }` lets thrown errors disappear silently — no warning, no crash, just a dropped failure. Swift 6.4 adds a diagnostic for unstructured Tasks whose body can throw but where the caller never reads `task.value` or `task.result`. The two valid responses:
+- Handle errors inside the Task body (`do { try ... } catch { ... }`).
+- Store the Task handle and `await task.value` (which throws if the body threw).
+
+Once 6.4 ships, expect a wave of warnings on code that follows the "fire and forget" Task pattern with throwing functions.
 
 ---
 
