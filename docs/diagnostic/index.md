@@ -17,6 +17,7 @@ Systematic diagnostics for production issues with mandatory workflows and pressu
 | [**coreml-diag**](./coreml-diag) | Model loading failures, prediction errors, conversion issues — CoreML diagnostics |
 | [**energy-diag**](./energy-diag) | Battery drain, device hot, background drain, cellular usage — symptom-based decision trees with time-cost analysis |
 | [**foundation-models-diag**](./foundation-models-diag) | Context exceeded, guardrail violations, slow generation — Foundation Models diagnostics with production crisis defense |
+| [**isolation-inheritance-diag**](./isolation-inheritance-diag) | `_dispatch_assert_queue_fail`, `_swift_task_checkIsolatedSwift` — warning-free Swift 6 builds that crash from closure/delegate isolation inheritance (Core Data `context.perform`, Combine, NotificationCenter, CLLocationManager, NSDocument, AVAudioPlayerDelegate, WKNavigationDelegate) |
 | [**mapkit-diag**](./mapkit-diag) | Annotations not appearing, search failures, directions errors — MapKit diagnostics |
 | [**metal-migration-diag**](./metal-migration-diag) | Shader compilation failures, rendering artifacts, performance issues — Metal migration diagnostics |
 | [**networking-diag**](./networking-diag) | Connection timeouts, TLS failures, data arrival issues — Network.framework diagnostics with production crisis defense |
