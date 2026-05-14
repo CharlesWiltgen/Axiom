@@ -46,7 +46,8 @@ Single-Threaded → Asynchronous → Concurrent → Actors
 ### Core Concepts
 - **@MainActor** — Isolate to main thread (UI code)
 - **nonisolated** — Opt out of actor isolation
-- **@concurrent** (Swift 6.2+) — Force background execution
+- **nonisolated(nonsending)** (Swift 6.2+) — New default for async functions; stays on caller's actor instead of switching to global executor
+- **@concurrent** (Swift 6.2+) — Force background execution (explicit spelling for the pre-6.2 default behavior)
 - **Sendable** — Safe to pass between threads
 - **Actor** — Isolated mutable state
 

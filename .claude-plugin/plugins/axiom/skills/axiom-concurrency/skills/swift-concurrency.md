@@ -39,6 +39,10 @@
 
 **Async does not mean background.** An `async` function suspends without blocking, but resumes on the *same actor* it was called from. A `@MainActor` async function runs entirely on the main actor — `await` just yields control, it does not switch threads. Use `@concurrent` (Swift 6.2+) when you need to force work off the calling actor.
 
+**MainActor is the main thread on Apple platforms.** On iOS, iPadOS, macOS, watchOS, tvOS, and visionOS, `@MainActor` and the main thread are the same. Treat them as synonymous in app code. Two edge cases to be aware of:
+- Non-app Swift environments (server-side, library tests) may technically map MainActor elsewhere — not a concern for Apple platform apps.
+- **C/Objective-C/C++ interop bypasses static concurrency checking.** A `@MainActor`-isolated Swift method can be called from C/ObjC/C++ on the wrong thread without a compile-time error — a data race at runtime. When bridging Swift concurrency to these languages, use `MainActor.assumeIsolated` (which crashes on violation) or other dynamic checks at the boundary.
+
 **Prefer structured concurrency.** Use `async let` and `TaskGroup` for parallel work — they propagate cancellation and errors automatically through the task tree. Unstructured `Task {}` is for bridging sync→async boundaries (event handlers, SwiftUI `.task`). `Task.detached` is a last resort.
 
 **GCD is a bridge pattern, not a default.** In new code, do not use `DispatchQueue`, `DispatchGroup`, `DispatchSemaphore`, or completion handlers as primary architecture. Use them only to bridge legacy APIs that don't have async alternatives yet. Isolate bridge code and keep the rest of the codebase idiomatic Swift 6.
@@ -156,6 +160,38 @@ class ImageModel {
     }
 }
 ```
+
+**Where should the Task live — View or Model?** For async work triggered by a button tap or other user event, prefer pushing the Task into your model and exposing a **synchronous** entry point to the View. The View calls `model.startDownload()` (sync); the model spawns the Task internally and updates its observable state when the work completes.
+
+```swift
+// ✅ Model owns the Task
+@Observable
+@MainActor
+final class DownloadModel {
+    var state: DownloadState = .idle
+
+    func startDownload() {                      // Sync API for the View
+        Task {
+            state = .downloading
+            do {
+                let data = try await fetcher.fetch()
+                state = .completed(data)
+            } catch {
+                state = .failed(error)
+            }
+        }
+    }
+}
+
+struct DownloadButton: View {
+    @State private var model = DownloadModel()
+    var body: some View {
+        Button("Download") { model.startDownload() }  // No Task in the View
+    }
+}
+```
+
+Benefits: the async logic is testable independent of any View, the View doesn't own the Task lifecycle, and you can swap models in previews and tests without dragging SwiftUI's environment in. The View becomes a thin trigger over the model's sync surface.
 
 ### Task Interleaving (Important Concept)
 
@@ -280,6 +316,26 @@ digraph decide {
 **Rule of thumb** App code that ships a binary → `@concurrent`. Library code published as a package → `nonisolated`.
 
 **Common mistake** Using `nonisolated` on a CPU-bound function expecting it to run off-main. If called from `@MainActor`, it runs on main. The compiler won't warn. Mark it `@concurrent` to enforce background execution.
+
+### `nonisolated(nonsending)` and the default-behavior flip
+
+In Swift 6.2 (with `NonisolatedNonsendingByDefault` upcoming feature, on by default in new Xcode 26 projects), `nonisolated async` functions no longer auto-hop to the concurrent thread pool. They now stay on the **caller's actor**.
+
+- `nonisolated(nonsending)` — explicit spelling for the new default (stay on caller's actor). Rarely needed since it's the default; useful when you've disabled the upcoming feature but want the new behavior on one function.
+- `@concurrent` — explicit spelling for the old default (always switch to the global concurrent executor).
+- Plain `nonisolated` on a non-async function — unchanged; inherits caller's actor for synchronous execution.
+
+```swift
+struct S: Sendable {
+    func performSync() {}              // Synchronous: caller's actor
+    func performAsync() async {}       // Async: nonisolated(nonsending) by default — caller's actor
+    @concurrent func alwaysSwitch() async {}  // Always concurrent executor
+}
+```
+
+**Why the default flipped:** Apple's pre-6.2 default (move async to concurrent pool) was the wrong trade-off in practice. It caused unnecessary executor switches and made `nonisolated` confusing — the same keyword behaved differently for sync vs. async. The new default makes `nonisolated` mean one thing: "stay on caller's actor; the caller picks the context."
+
+**Migrating from old behavior:** Existing code that relied on the old "async functions always go to the concurrent pool" semantic should annotate those functions `@concurrent` during migration. See the Swift 5 → Swift 6 migration recipe later in this skill.
 
 ### Breaking Ties to Main Actor
 
@@ -451,6 +507,8 @@ class ImageModel {
 
 **Guideline**: Profile first. If main actor has too much state causing bottlenecks, extract one subsystem at a time into actors.
 
+**Keep isolation-domain count low.** Concurrent programming is hard, and every actor is a new isolation domain that must coordinate with the rest of the program via `await`. Most apps need just a few: `MainActor` plus one or two service actors (network manager, database, cache). Reach for an actor when an **entire subsystem** needs its own isolation — not every time you see shared state. Synchronous code on `MainActor` is fine; only escalate when profiling shows contention.
+
 ---
 
 ## Sendable Types (Data Crossing Actor Boundaries)
@@ -605,6 +663,49 @@ struct Track: Sendable {
 enum FetchResult: Sendable {
     case success(data: Data)
     case failure(error: Error)  // Error is Sendable
+}
+```
+
+---
+
+### Pattern 2a: Choosing between `Task { @MainActor in }` and `await MainActor.run { }`
+
+Both forms run code on MainActor. Which to use depends on **how much of the closure body needs MainActor isolation**.
+
+| Situation | Use | Why |
+|-----------|-----|-----|
+| Entire Task body should run on MainActor (typical for delegate-to-UI hops) | `Task { @MainActor in ... }` | Annotation applies to the whole closure; synchronous code inside is MainActor by default |
+| Only a few lines inside an otherwise non-isolated Task need MainActor | `Task { ...; await MainActor.run { ... }; ... }` | Outer body keeps the original isolation; only the `.run` block hops |
+| The MainActor work is reusable across call sites | Factor into `@MainActor func`, call from any Task | Decouples the hop from the call site; testable in isolation |
+
+```swift
+// ✅ Whole body on MainActor
+Task { @MainActor in
+    let model = makeModel()        // MainActor
+    viewModel.apply(model)         // MainActor
+    analytics.log("applied")       // hops if analytics is on another actor
+}
+
+// ✅ Only a couple of lines need MainActor
+Task {
+    let data = try await fetch()   // Wherever Task started
+    let parsed = parse(data)       // Same context
+    await MainActor.run {
+        viewModel.items = parsed   // Brief hop to MainActor
+    }
+    persistMetrics(parsed)         // Back to original context
+}
+
+// ✅ Reusable @MainActor entry point
+@MainActor
+private func applyResult(_ result: ParsedResult) {
+    viewModel.items = result.items
+    viewModel.summary = result.summary
+}
+
+Task {
+    let parsed = try await fetchAndParse()
+    await applyResult(parsed)
 }
 ```
 
@@ -980,13 +1081,98 @@ Build Settings → Swift Compiler — Concurrency
 - Compile-time data race prevention
 - Progressive concurrency adoption
 
+### App vs library — default isolation policy
+
+The right default isolation depends on what you're building. App targets and libraries should choose opposite defaults.
+
+| Context | Default isolation | Selectively use the *opposite* for |
+|---------|-------------------|-------------------------------------|
+| **App target** | `@MainActor` by default | CPU/I/O work that must run off main — annotate `@concurrent` or extract to actor |
+| **Library / Swift package** | `nonisolated` by default | UI-related APIs (e.g., `UndoManager`) — annotate `@MainActor` |
+
+**Why apps default to MainActor:** Most app code interacts with views, which are already MainActor. Defaulting to MainActor eliminates a class of spurious data-race warnings and lets developers write straightforward synchronous code until profiling shows a hotspot.
+
+**Why libraries default to nonisolated:** Library code runs in many isolation contexts — you don't know whether a client will call your API from MainActor, an actor, or a `@concurrent` function. Letting the caller decide is more flexible than imposing an isolation that callers must hop into. Foundation is the reference example: most of Foundation is nonisolated; `UndoManager` (heavily UI-focused) is `@MainActor`.
+
+**Async functions in libraries:** With `NonisolatedNonsendingByDefault` (Swift 6.2+, default in Xcode 26), `async` library functions stay on the caller's actor by default. That's the right behavior for library APIs — the caller controls execution context.
+
 ---
+
+## Task Initializer Forms
+
+### `Task { }`, `Task { @concurrent in }`, and `Task.detached` — what each inherits
+
+The three Task-creation forms are commonly confused. The key axis is **what the new task inherits from the surrounding context**.
+
+| Form | Isolation | Priority | Task-local values | Use when |
+|------|-----------|----------|-------------------|----------|
+| `Task { }` | Inherits caller's actor | Inherits | Inherits | Default. Spawning a task from `@MainActor`, calling actor methods, etc. |
+| `Task { @concurrent in }` | Concurrent executor (overridden) | **Inherits** | **Inherits** | You need background isolation but still want priority/task-locals to flow. |
+| `Task.detached { }` | Concurrent executor | **Does NOT inherit** | **Does NOT inherit** | Genuinely independent work — runs at default priority, fresh task-local scope, unrelated to caller. |
+
+**Decision rule:** If you just need background isolation, use `Task { @concurrent in }` — it preserves priority and task-locals. Reach for `Task.detached` only when you specifically want to discard the surrounding context (e.g., a long-running maintenance task that shouldn't inherit a UI priority).
+
+```swift
+// ✅ Background isolation, but inherits caller's .userInitiated priority and TaskLocal scope
+Task { @concurrent in
+    await indexDocuments()
+}
+
+// ✅ Truly independent — runs at default priority, no caller task-locals visible
+Task.detached {
+    await uploadCrashReports()
+}
+```
+
+### Common Pitfalls When Choosing a Task Form
+
+These are the specific rationalizations that lead to wrong choices. Each one has bitten real codebases.
+
+**"I'll just pass `priority:` to `Task.detached` to keep my user-initiated QoS."** — Wrong. `Task.detached(priority: .userInitiated)` overrides priority *only*; it still drops task-local values (logging context, tracing spans, SwiftUI environment bridges). If your codebase uses `@TaskLocal` anywhere, you'll see "missing trace ID" or "wrong user context" bugs from detached tasks. `Task { @concurrent in }` is the form that preserves both.
+
+**"`@concurrent` doesn't actually move work off the main thread for I/O-bound async code — only for CPU-bound."** — Wrong. `@concurrent` switches the Task's executor to the global concurrent executor regardless of work type. Whether the awaited operation is I/O-bound or CPU-bound is independent. The performance characteristic *of the suspension* (when `await` yields) is separate from *where the Task body runs between awaits*. `@concurrent` controls the latter.
+
+**"Senior engineer says always use `Task.detached` for background work — it's the only way to truly escape MainActor."** — Wrong on Swift 6.2+. This was reasonable advice in Swift 5.5-6.1 when `@concurrent` didn't exist. Today, `Task { @concurrent in }` provides the same escape from MainActor *with* better defaults (inherited priority, inherited task-locals). `Task.detached` should be a deliberate choice to drop those, not the default for "I want this off main."
+
+**"I need `Task.detached` because the surrounding context might cancel me."** — Wrong reasoning. Cancellation propagation is from parent to child for *structured* concurrency (async let, TaskGroup). Unstructured `Task { }` and `Task { @concurrent in }` are NOT children of the surrounding task — they don't get cancelled when their creator's task is cancelled. Only `Task.detached`'s lack of context-inheritance is independent of cancellation behavior. Both unstructured forms have the same cancellation isolation.
+
+**"`@concurrent` requires the function to be async."** — Correct, but often misunderstood. `Task { @concurrent in }` puts `@concurrent` on the closure itself, which makes the closure body run on the concurrent executor — the body doesn't need to be an async function declaration. Inside the closure, you `await` any async work normally.
+
+### Task Lifecycle Facts
+
+Three facts that surprise developers new to Swift concurrency:
+
+1. **Cancellation is cooperative.** Calling `task.cancel()` is a *request*. The task's synchronous code is NOT interrupted at any point — it continues running until it reaches a suspension point or explicitly checks `Task.isCancelled` / calls `try Task.checkCancellation()`. This is by design: a cancelled task may still need to perform atomic cleanup before unwinding.
+
+2. **Tasks are NOT auto-cancelled when their owning scope deinits.** If you store a `Task` as a property on a class and the class deallocates, the task keeps running. You must explicitly call `task.cancel()` in `deinit` (or some other lifecycle hook) for the cancellation to fire. The lifetime of an unstructured task is independent of the lifetime of the value that created it.
+
+3. **Memory is not released the moment `cancel()` is called.** The task and everything it captures (including `self` if captured strongly) live until the task body actually returns. If the body is busy in synchronous code or won't see the cancellation until its next suspension, the captured state persists during that window.
+
+```swift
+class Player {
+    private var monitorTask: Task<Void, Never>?
+
+    func start() {
+        monitorTask = Task { [weak self] in
+            while let self, !Task.isCancelled {
+                await self.tick()             // Cancellation check at the await
+            }
+        }
+    }
+
+    deinit {
+        monitorTask?.cancel()                 // Required — not automatic
+    }
+}
+```
+
+Without the `cancel()` call in `deinit`, the task continues running indefinitely (with `self == nil` after the weak ref is dropped, but the task body itself doesn't know to stop). The `[weak self]` capture is necessary to avoid the retain cycle but isn't sufficient to end the task on its own.
 
 ## Anti-Patterns and Anti-Rationalizations
 
 | Rationalization | Why it's wrong | Do this instead |
 |---|---|---|
-| "I'll use `Task.detached` to make it background" | `Task.detached` loses actor context, priority, and task-local values. It's rarely what you want. | Use `@concurrent` (Swift 6.2+) for forced background. Use `Task {}` when you need actor inheritance. |
+| "I'll use `Task.detached` to make it background" | `Task.detached` is overkill if you only need background isolation — it also discards priority and task-local values. | Use `Task { @concurrent in }` to override only isolation. Reserve `Task.detached` for work that should run independently of the caller's priority/task-locals. |
 | "I'll add `@unchecked Sendable` to silence this" | You're hiding a data race from the compiler. It will crash in production. | Make the type genuinely Sendable (struct/enum), use an actor, or use `sending` parameter. |
 | "I'll use `nonisolated(unsafe)` to fix this" | Zero runtime protection. The compiler stops checking — data races go undetected. | Use proper isolation (`@MainActor`, actor, Mutex). Reserve for global constants only. |
 | "This async function runs on a background thread" | `async` suspends without blocking but resumes on the **same actor**. A `@MainActor` async function runs on the main thread. | Use `@concurrent` to force background. Don't assume async = background. |
@@ -1095,15 +1281,73 @@ print(Thread.currentThread)  // Works, but don't rely on thread identity
 
 ---
 
-## Migration Habits
+## Migrating from Swift 5 to Swift 6 Concurrency
 
-When migrating an existing codebase to strict concurrency:
+Recipe for the common starting point: existing Swift 5 codebase with **Strict Concurrency Checking = Minimal**, **Approachable Concurrency = No**, and **Default Actor Isolation = nonisolated**.
 
-1. **Iterate in small batches** — Fix one module or one diagnostic category at a time. Rebuild, test, commit. Don't batch.
-2. **Design new types as Sendable from the start** — Retrofitting Sendable onto existing types cascades through the codebase.
-3. **Set default isolation early** — For app modules, set `@MainActor` as the default isolation. This eliminates most false warnings.
-4. **Avoid scope creep** — Concurrency migration PRs should contain only concurrency changes, not architecture refactors.
-5. **Don't suppress warnings to ship faster** — `@unchecked Sendable`, `nonisolated(unsafe)`, and `@preconcurrency` are migration tools, not permanent solutions. Track each one with a removal ticket.
+### Step 1 — Enable approachable concurrency
+
+In Xcode build settings (or `Package.swift` `swiftSettings`):
+- `Approachable Concurrency` → **Yes**
+- For app targets: `Default Actor Isolation` → **MainActor**
+- For libraries: leave `Default Actor Isolation` at **nonisolated**
+
+This flips the default for `async` functions (now nonisolated(nonsending) — stays on caller's actor) and unlocks the easier-to-use diagnostics.
+
+### Step 2 — Run the Swift migration tool
+
+```
+swift package migrate --to-feature NonisolatedNonsendingByDefault
+```
+
+The migrator handles mechanical changes. Read the [Swift Migration Guide](https://www.swift.org/migration/documentation/migrationguide/) for the full list of supported migrations.
+
+### Step 3 — Preserve old async semantics where needed
+
+If your code relied on the pre-6.2 behavior where async functions always moved to the concurrent pool, mark those functions `@concurrent`. This is the mechanical preservation path — the function keeps its old semantics with explicit syntax.
+
+```swift
+// Before (relied on async = background)
+nonisolated func process() async { /* expensive work */ }
+
+// After (preserves "always background" intent)
+@concurrent
+nonisolated func process() async { /* expensive work */ }
+```
+
+### Step 4 — Choose your strictness ramp-up
+
+Two viable strategies. Pick one based on team capacity.
+
+**All-at-once.** Set `Strict Concurrency Checking = Complete`. Triage all warnings in waves. Best for small codebases or focused refactoring sprints.
+
+**Feature-by-feature.** Use `Build Settings → Swift Compiler → Upcoming Features` to enable one diagnostic category at a time. Order by impact:
+1. `GlobalConcurrency` — catches unsafe global mutable state
+2. `InferSendableFromCaptures` — finds non-Sendable closure captures
+3. `IsolatedDefaultValues` — flags isolation issues in default arguments
+
+Resolve each category's warnings before enabling the next. Best for large codebases where waves of warnings would be unmanageable.
+
+### Step 5 — Find patterns, not just instances
+
+When you see ten or more warnings of the same shape, a **single annotation** often fixes the lot:
+- Ten warnings about reading a view-model property from nonisolated contexts → put `@MainActor` on the type
+- Ten warnings about a payload type → conform once to `Sendable`
+- Ten warnings about a delegate protocol → use `@preconcurrency` on the conformance with a removal ticket
+
+Scan for the pattern before fixing each warning individually.
+
+### Common Misconception
+
+You do **not** have to refactor everything into a "perfect" concurrency model before code compiles. Strict concurrency is designed for iterative adoption — fix one diagnostic category, ship, fix the next. Foundation itself has migrated target-by-target over multiple releases using exactly this approach.
+
+### Migration Discipline
+
+- **Iterate in small batches.** Fix one module or category at a time. Rebuild, test, commit. Don't batch unrelated changes.
+- **Design new types as Sendable from the start.** Retrofitting Sendable cascades through the codebase.
+- **Avoid scope creep.** Concurrency PRs should contain only concurrency changes, not architecture refactors.
+- **Don't suppress to ship faster.** `@unchecked Sendable`, `nonisolated(unsafe)`, and `@preconcurrency` are migration tools, not permanent solutions. Each one gets a removal ticket.
+- **Prioritize areas of new code.** Maintenance-mode modules can stay on the old defaults longer. Spend migration effort where you're writing new code.
 
 ---
 
