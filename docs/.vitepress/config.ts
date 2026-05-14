@@ -576,6 +576,7 @@ export default withMermaid(defineConfig({
             { text: 'Core Location Diagnostics', link: '/diagnostic/core-location-diag' },
             { text: 'Energy Diagnostics', link: '/diagnostic/energy-diag' },
             { text: 'Foundation Models Diagnostics', link: '/diagnostic/foundation-models-diag' },
+            { text: 'Isolation Inheritance Diagnostics', link: '/diagnostic/isolation-inheritance-diag' },
             { text: 'MapKit Diagnostics', link: '/diagnostic/mapkit-diag' },
             { text: 'Metal Migration Diagnostics', link: '/diagnostic/metal-migration-diag' },
             { text: 'Networking Diagnostics', link: '/diagnostic/networking-diag' },
