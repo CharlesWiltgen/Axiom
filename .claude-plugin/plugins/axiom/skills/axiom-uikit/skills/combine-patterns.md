@@ -365,6 +365,8 @@ class AppState: ObservableObject {
 
 `@Published` is NOT thread-safe. Setting a `@Published` property from a background thread triggers `objectWillChange` off the main thread, which can crash SwiftUI views.
 
+**Related runtime crash class** Inside an `@MainActor` class, `.map`/`.filter`/`.sink` closures silently inherit `@MainActor` isolation. When the publisher emits off-main, the Swift 6 runtime traps with `_dispatch_assert_queue_fail` or `_swift_task_checkIsolatedSwift` — even on warning-free builds. Place `.receive(on:)` *before* any isolated operator, or mark the closure `@Sendable in`. See axiom-concurrency (skills/isolation-inheritance-diag.md) for the full pattern catalog.
+
 ```swift
 // ❌ CRASH: @Published set from background thread
 class ViewModel: ObservableObject {
@@ -631,4 +633,4 @@ Multiple subscribers to the same expensive publisher?
 
 **Docs**: /combine, /combine/anycancellable, /combine/published
 
-**Skills**: swift-concurrency, memory-debugging
+**Skills**: swift-concurrency, memory-debugging, axiom-concurrency (skills/isolation-inheritance-diag.md)
