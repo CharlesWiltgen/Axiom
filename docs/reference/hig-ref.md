@@ -50,11 +50,26 @@ Questions you can ask Claude that will draw from this reference:
 - Font scaling behavior
 - Minimum readable sizes
 
-### Spacing & Layout
+### Shapes & Geometry
+- The three shape types (fixed, capsule, concentric) in iOS 26
+- Concentricity principle for nested containers
+- Optical centering
+- Platform-specific corner radius guidance
+
+### Materials & Depth
+- Standard materials (ultraThin, thin, regular, thick, ultraThick)
+- Vibrancy with materials
+- Liquid Glass (iOS 26+): regular vs clear variants
+- Modals & Sheets: automatic Liquid Glass adoption, semantic backgrounds
+- Sheet button placement (HIG 2026-03-24): Cancel/Done pairing rules, platform-specific placements
+
+### Layout Principles
 - Standard spacing values (4, 8, 12, 16, 20, 24pt)
-- Content margins
-- Safe areas
-- Grid systems
+- Content margins and grid systems
+- Visual hierarchy and grouping
+- Content extension to display edges
+- Safe areas and layout guides
+- Adaptability across size classes
 
 ### Icons & SF Symbols
 - Symbol weights and scales
@@ -75,6 +90,13 @@ Questions you can ask Claude that will draw from this reference:
 - Color contrast ratios
 - Reduce Motion support
 - Button shapes
+- Vision, hearing, mobility, and cognitive accessibility guidance
+
+### Motion & Animation
+- Core principles for purposeful motion
+- Reduce Motion accommodations
+- Best practices for feedback animations
+- Platform-specific motion guidance
 
 ### Platform Specifics
 - iOS vs iPadOS patterns
