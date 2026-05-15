@@ -406,6 +406,12 @@ VStack {
 
 **Modals & Sheets (iOS 26+):** Sheets, alerts, and popovers automatically adopt Liquid Glass with Xcode 26 — remove custom `.presentationBackground()` or `UIBlurEffect` backgrounds. System handles material, concentric corner radius, and morphing transitions. Use elevated semantic colors for modal content backgrounds, not Liquid Glass on the sheet body.
 
+**Sheet button placement (HIG, updated 2026-03-24):**
+- Always pair a confirmation button (Done) with Cancel — or with Back when the sheet is mid-flow. Never ship a solo Done; it implies completion is the only exit.
+- Don't show Cancel, Done, and Back together. Choose the pair the step needs.
+- iOS / iPadOS: Cancel on the leading edge of the top toolbar, Done on the trailing edge. In SwiftUI, `.cancellationAction` and `.confirmationAction` produce these placements with the correct emphasis — see `axiom-swiftui (skills/toolbars.md)` Pattern 2.
+- watchOS: prefer SF Symbols for sheet action labels.
+
 **Cross-reference:** For full Liquid Glass implementation patterns (sheets, alerts, popovers, morphing transitions), see `axiom-design (skills/liquid-glass-ref.md)`. For decision trees, see `axiom-design (skills/liquid-glass.md)`.
 
 ---

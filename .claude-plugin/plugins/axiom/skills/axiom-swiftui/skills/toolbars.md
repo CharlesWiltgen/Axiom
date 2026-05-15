@@ -143,6 +143,19 @@ Standard pair for modal sheets. iOS uses these placements specifically — they 
 
 **Gotcha** Don't use `.topBarLeading` / `.topBarTrailing` here — you lose the platform-correct emphasis (bolded "Done" on iOS, default-button styling on macOS).
 
+### HIG rules for sheet buttons
+
+Apple's HIG codified the following rules for sheet button placement (updated 2026-03-24):
+
+| Rule | Why |
+|------|-----|
+| Always pair a confirmation button with Cancel or Back | A solo Done implies completing the task is the only way out — feels restrictive or misleading. |
+| Don't show Cancel, Done, and Back together | Too many dismiss/commit affordances confuse the exit path. Pick the pair the step needs. |
+| iOS / iPadOS: Cancel leading, Done trailing | `.cancellationAction` and `.confirmationAction` produce this automatically — don't override with `.topBarLeading` / `.topBarTrailing`. |
+| watchOS: prefer SF Symbols for action labels | Brief glance-and-tap interactions; text labels read poorly at watch sizes. |
+
+**Practical implication** The pattern above is already correct for iOS/iPadOS/macOS. The rule to internalize is *don't ship a sheet with only a Done button* — either add Cancel, or use a Back button if the sheet is mid-flow.
+
 ---
 
 ## Pattern 3: Multiple Independent Items (separate ToolbarItems)

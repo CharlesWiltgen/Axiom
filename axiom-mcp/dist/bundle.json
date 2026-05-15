@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-14T20:20:57.085Z",
+  "generatedAt": "2026-05-15T22:27:38.438Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -6720,7 +6720,7 @@
     "axiom-design--hig-ref": {
       "name": "axiom-design--hig-ref",
       "description": "The Human Interface Guidelines (HIG) define Apple's design philosophy and provide concrete guidance for creating intuitive, accessible, platform-appropriate experiences across all Apple devices.",
-      "content": "\n# Apple Human Interface Guidelines — Comprehensive Reference\n\n## Overview\n\nThe Human Interface Guidelines (HIG) define Apple's design philosophy and provide concrete guidance for creating intuitive, accessible, platform-appropriate experiences across all Apple devices.\n\n### Three Core Principles\n\nEvery design decision should support these principles:\n\n**1. Clarity**\nContent is paramount. Interface elements should defer to content, not compete with it. Every element has a purpose, unnecessary complexity is eliminated, and users should immediately know what they can do without extensive instructions.\n\n**2. Consistency**\nApps use standard UI elements and familiar patterns. Navigation follows platform conventions, gestures work as expected, and components appear in expected locations. This familiarity reduces cognitive load.\n\n**3. Deference**\nThe UI should not distract from essential content. Use subtle backgrounds, receding navigation when not needed, restrained branding, and let content be the hero.\n\n**From Apple HIG:** \"Deference makes an app beautiful by ensuring the content stands out while the surrounding visual elements do not compete with it.\"\n\n### Design System Philosophy\n\nFrom WWDC25: \"A systematic approach means designing with intention at every level, ensuring that all elements, from the tiniest control to the largest surface, are considered in relation to the whole.\"\n\n#### Related Skills\n- Use `axiom-design (skills/hig.md)` for quick decisions and checklists\n- Use `axiom-design (skills/liquid-glass.md)` for iOS 26 material implementation\n- Use `axiom-design (skills/liquid-glass-ref.md)` for iOS 26 app-wide adoption\n- Use `axiom-accessibility` for accessibility troubleshooting\n\n---\n\n## Color System\n\n### Semantic Colors Explained\n\nInstead of hardcoded color values, use **semantic colors** that describe the *purpose* of a color rather than its appearance. Semantic colors automatically adapt to light/dark mode and accessibility settings.\n\n**Key insight from WWDC19:** \"Think of Dark Mode as having the lights dimmed rather than everything being flipped inside out.\" Colors are NOT simply inverted—table row backgrounds are lighter in both modes.\n\n### Label Colors (Foreground Content)\n\nFour semantic label levels for text and symbols, each progressively less prominent:\n\n| Style | Semantic Color | Usage |\n|---|---|---|\n| `.primary` | `label` | Titles, most prominent text |\n| `.secondary` | `secondaryLabel` | Subtitles, less prominent |\n| `.tertiary` | `tertiaryLabel` | Placeholder text |\n| `.quaternary` | `quaternaryLabel` | Disabled text |\n\n```swift\nText(\"Title\").foregroundStyle(.primary)    // Black in Light, white in Dark\nText(\"Subtitle\").foregroundStyle(.secondary)\n```\n\n### Background Colors (Primary → Tertiary)\n\nBackground colors come in two sets — **ungrouped** (standard lists) and **grouped** (iOS Settings style):\n\n| Level | Ungrouped | Grouped |\n|---|---|---|\n| Primary | `.systemBackground` | `.systemGroupedBackground` |\n| Secondary | `.secondarySystemBackground` | `.secondarySystemGroupedBackground` |\n| Tertiary | `.tertiarySystemBackground` | `.tertiarySystemGroupedBackground` |\n\nUngrouped: pure white/black in Light/Dark. Grouped: light gray/dark in Light/Dark.\n\n```swift\n// Standard list → ungrouped backgrounds\nList { Text(\"Item\") }\n    .background(Color(.systemBackground))\n\n// Settings-style list → grouped backgrounds\nList { Section(\"Section\") { Text(\"Item\") } }\n    .listStyle(.grouped)\n```\n\n### Base vs Elevated Backgrounds\n\nThere are actually **two sets** of background colors for layering interfaces:\n\n- **Base set:** Used for background apps/interfaces\n- **Elevated set:** Used for foreground apps/interfaces\n\n**Why this matters:**\n\nIn Light Mode, simple drop shadows create visual separation. In Dark Mode, drop shadows are less effective, so the system uses **lighter colors for elevated content**.\n\n**Example:** iPad multitasking:\n- Mail app alone → base color set\n- Contacts in slide-over → elevated colors (lighter, stands out)\n- Both side-by-side → both use elevated colors for contrast around splitter\n- Email compose sheet → elevated colors with overlay dimming\n\n**Critical:** Some darker colors may not contrast well when elevated. Always test designs in elevated state. Semi-opaque fill and separator colors adapt gracefully.\n\n### Tint Colors (Dynamic Adaptation)\n\nTint colors are **dynamic** - they have variants for Light and Dark modes:\n\n```swift\n// Tint color automatically adapts\nButton(\"Primary Action\") {\n    // action\n}\n.tint(.blue)\n// Gets lighter in Dark Mode, darker in Light Mode\n```\n\n**Custom tint colors:**\nWhen creating custom tint colors, select colors that work well in both modes. Use a contrast calculator to aim for **4.5:1 or higher** contrast ratio. Colors that work in Light Mode may have insufficient contrast in Dark Mode.\n\n### Fill Colors (Semi-Transparent)\n\nFill colors are **semi-transparent** to contrast well against variable backgrounds:\n\n```swift\n// System fill colors\nColor(.systemFill)\nColor(.secondarySystemFill)\nColor(.tertiarySystemFill)\nColor(.quaternarySystemFill)\n```\n\n**When to use:** Controls, buttons, and interactive elements that need to appear above dynamic backgrounds.\n\n### Separator Colors\n\n```swift\n// Standard separator (semi-transparent)\nColor(.separator)\n\n// Opaque separator\nColor(.opaqueSeparator)\n```\n\n**Opaque separators** are used when transparency would create undesirable results (e.g., intersecting grid lines where overlapping semi-transparent colors create optical illusions).\n\n### When to Use Permanent Dark Backgrounds\n\n**Apple's explicit guidance:**\n> \"In rare cases, consider using only a dark appearance in the interface. For example, it can make sense for an app that enables **immersive media viewing** to use a permanently dark appearance that lets the UI recede and helps people focus on the media.\"\n\n**Examples from Apple's apps:**\n\n| App | Background | Rationale |\n|-----|------------|-----------|\n| Music | Dark | Album art should be visual focus |\n| Photos | Dark | Images are hero content |\n| Clock | Dark | Nighttime use, instrument feel |\n| Stocks | Dark | Data visualization, charts |\n| Camera | Dark | Reduces distraction during capture |\n\n**For all other apps:** Support both Light and Dark modes via system backgrounds.\n\n### Creating Custom Colors\n\nWhen you need custom colors:\n\n1. **Open Assets.xcassets**\n2. **Add Color Set**\n3. **Configure variants:**\n   - Light mode color\n   - Dark mode color\n   - High Contrast Light (optional but recommended)\n   - High Contrast Dark (optional but recommended)\n\n```swift\n// Use custom color from asset catalog\nColor(\"BrandAccent\")\n// Automatically uses correct variant\n```\n\n---\n\n## Typography\n\n### System Fonts\n\n**San Francisco (SF):** The system sans-serif font family.\n- SF Pro: General use\n- SF Compact: watchOS and space-constrained layouts\n- SF Mono: Code and monospaced text\n- SF Rounded: Softer, friendlier feel\n- Weights: Ultralight, Thin, Light, Regular, Medium, Semibold, Bold, Heavy, Black\n\n**New York (NY):** System serif font family for editorial content.\n\n**Both available as variable fonts** with seamless weight transitions.\n\n### Font Weight Recommendations\n\n**From Apple HIG:** \"Avoid light font weights. Prefer Regular, Medium, Semibold, or Bold weights instead of Ultralight, Thin, or Light.\"\n\n**Why:** Light weights have legibility issues, especially at small sizes, in bright lighting, or for users with visual impairments.\n\n**Hierarchy:**\n```swift\n// Headers - Bold weight for prominence\nText(\"Header\")\n    .font(.title.weight(.bold))\n\n// Subheaders - Semibold\nText(\"Subheader\")\n    .font(.title2.weight(.semibold))\n\n// Body - Regular or Medium\nText(\"Body text\")\n    .font(.body)\n\n// Captions - Regular (never Light)\nText(\"Caption\")\n    .font(.caption)\n```\n\n### Text Styles for Hierarchy\n\nUse built-in text styles for automatic hierarchy and Dynamic Type support:\n\n```swift\n.font(.largeTitle)  .font(.title)       .font(.title2)\n.font(.title3)      .font(.headline)    .font(.body)\n.font(.callout)     .font(.subheadline) .font(.footnote)\n.font(.caption)     .font(.caption2)\n```\n\nAll text styles scale automatically with Dynamic Type.\n\n### Dynamic Type Support\n\n**Requirement:** Apps must support text scaling of at least **200%** (iOS, iPadOS) or **140%** (watchOS).\n\n**Implementation:**\n```swift\n// ✅ CORRECT - Scales automatically\nText(\"Hello\")\n    .font(.body)\n\n// ❌ WRONG - Fixed size, doesn't scale\nText(\"Hello\")\n    .font(.system(size: 17))\n```\n\n**Layout considerations:**\n- Reduce multicolumn layouts at larger sizes\n- Minimize text truncation\n- Use stacked layouts instead of inline at large sizes\n- Maintain consistent information hierarchy regardless of size\n\n**Not all content scales equally:** Prioritize what users actually care about. Secondary elements like tab titles shouldn't grow as much as primary content.\n\n### Custom Fonts\n\nWhen using custom fonts:\n- Ensure legibility at various distances and conditions\n- Implement Dynamic Type support\n- Respond to Bold Text accessibility setting\n- Test at all text sizes\n- Match system font behaviors for accessibility\n\n**If your custom font is thin:** Increase size by ~2 points when pairing with uppercase Latin text.\n\n### Leading (Line Spacing)\n\n**Loose leading:** Wide columns (easier to track to next line)\n**Tight leading:** Constrained height (avoid for 3+ lines)\n\n```swift\n// Adjust leading for specific layouts\nText(\"Long content...\")\n    .lineSpacing(8) // Add space between lines\n```\n\n---\n\n## Shapes & Geometry\n\n### Three Shape Types (iOS 26)\n\nFrom WWDC25: \"There's a quiet geometry to how our shapes fit together, driven by **concentricity**. By aligning radii and margins around a shared center, shapes can comfortably nest within each other.\"\n\n#### 1. Fixed Shapes\n\nConstant corner radius regardless of size:\n\n```swift\nRoundedRectangle(cornerRadius: 12)\n```\n\n**Use when:** You need a specific, unchanging corner radius.\n\n#### 2. Capsules\n\nRadius is half the container's height:\n\n```swift\nCapsule()\n```\n\n**Use when:** You want shapes that adapt to content while maintaining rounded ends. Perfect for buttons, pills, and controls.\n\n**Found throughout iOS 26:** Sliders, switches, grouped table views, tab bars, navigation bars.\n\n#### 3. Concentric Shapes\n\nCalculate radius by subtracting padding from parent's radius:\n\n```swift\n.containerRelativeShape(.roundedRectangle)\n```\n\n**Use when:** Nesting shapes within containers to maintain visual harmony.\n\n### Concentricity Principle\n\n**Hardware ↔ Software harmony:** Apple's hardware features consistent bezel curvature. The same precision now guides UI, with curvature, size, and proportion aligning to create unified rhythm between what you hold and what you see.\n\n**Example of concentricity:**\n```\nWindow (rounded corners)\n  ├─ Sheet (concentric to window)\n  │   ├─ Card (concentric to sheet)\n  │   │   └─ Button (concentric to card)\n```\n\n### Platform-Specific Guidance\n\n**iOS:**\n- **Capsules** for buttons, switches, grouped lists\n- Creates hierarchy and focus in touch-friendly layouts\n\n**macOS:**\n- **Mini, Small, Medium controls** → Rounded rectangles (dense layouts, inspector panels)\n- **Large, X-Large controls** → Capsules (spacious areas, emphasis via Liquid Glass)\n\n### Optical Centering\n\nTo preserve optical balance, views are:\n- Mathematically centered when it makes sense\n- Subtly offset when optical weight requires it\n\n**Example:** Asymmetric icons may need padding adjustments for optical centering rather than geometric centering.\n\n---\n\n## Materials & Depth\n\n### Standard Materials\n\nMaterials allow background content to show through, creating visual depth and hierarchy.\n\n#### Four Thickness Options\n\n1. **Ultra-thin** — Minimal separation, content clearly visible\n2. **Thin** — Lighter-weight interactions\n3. **Regular** — Default, works well in most circumstances\n4. **Thick** — Most separation from background\n\n**Choosing thickness:**\n- Content needs more contrast → thicker material\n- Simpler content → thin/ultra-thin material\n\n```swift\n// Apply material\n.background(.ultraThinMaterial)\n.background(.thinMaterial)\n.background(.regularMaterial)\n.background(.thickMaterial)\n```\n\n### Vibrancy with Materials\n\n**Key principle:** Use vibrant colors on top of materials for legibility. Solid colors can get muddy depending on background context. Vibrancy maintains contrast regardless of background.\n\n```swift\n// Vibrant text on material\nVStack {\n    Text(\"Primary\")\n        .foregroundStyle(.primary) // Vibrant\n    Text(\"Secondary\")\n        .foregroundStyle(.secondary) // Vibrant\n}\n.background(.regularMaterial)\n```\n\n### Liquid Glass (iOS 26+)\n\n**Purpose:** Creates a distinct functional layer for controls and navigation, floating above content.\n\n**Two variants:**\n\n1. **Regular Liquid Glass**\n   - Default, use in 95% of cases\n   - Full visual and adaptive effects\n   - Provides legibility regardless of context\n   - Works over any background\n\n2. **Clear Liquid Glass**\n   - Highly translucent\n   - No adaptive behaviors\n   - **Only use for components over visually rich backgrounds** (photos, videos)\n   - Requires dimming layer for legibility\n\n**Modals & Sheets (iOS 26+):** Sheets, alerts, and popovers automatically adopt Liquid Glass with Xcode 26 — remove custom `.presentationBackground()` or `UIBlurEffect` backgrounds. System handles material, concentric corner radius, and morphing transitions. Use elevated semantic colors for modal content backgrounds, not Liquid Glass on the sheet body.\n\n**Cross-reference:** For full Liquid Glass implementation patterns (sheets, alerts, popovers, morphing transitions), see `axiom-design (skills/liquid-glass-ref.md)`. For decision trees, see `axiom-design (skills/liquid-glass.md)`.\n\n---\n\n## Layout Principles\n\n### Visual Hierarchy\n\n**Place items to convey their relative importance:**\n- Important content → top and leading side\n- Secondary content → below or trailing\n- Tertiary content → separate views or progressive disclosure\n\n**From Apple HIG:** \"Make essential information easy to find by giving it sufficient space and avoid obscuring it with nonessential details.\"\n\n### Grouping & Organization\n\nGroup related items using:\n- Negative space (whitespace)\n- Colors and materials\n- Separator lines\n\n**Ensure content and controls remain clearly distinct** through Liquid Glass material and scroll edge effects.\n\n### Content Extension to Edges\n\n\"Extend content to fill the screen or window\" with backgrounds and artwork reaching display edges.\n\n**Background extension views:** Use when content doesn't naturally span the full window.\n\n```swift\n// Content extends to edges\nVStack {\n    FullWidthImage()\n        .ignoresSafeArea() // Extends to screen edges\n}\n```\n\n### Safe Areas & Layout Guides\n\n**Safe Areas:** Rectangular regions unobstructed by:\n- Status bar\n- Navigation bar\n- Tab bar\n- Toolbar\n- Device features (Dynamic Island, notch, home indicator)\n\n**Layout Guides:** Define rectangular regions for positioning and spacing content with:\n- Predefined margins\n- Text width optimization\n- Reading width constraints\n\n**Key principle:** \"Respect key display and system features in each platform.\"\n\n```swift\n// Respect safe areas\nVStack {\n    Text(\"Content\")\n}\n.safeAreaInset(edge: .bottom) {\n    BottomBar()\n}\n```\n\n### Align Components\n\n\"Align components with one another to make them easier to scan.\"\n\n**Grid alignment:**\n- Text baselines align\n- Controls align on common grid\n- Spacing is consistent and rhythmic\n\n### Adaptability Requirements\n\nDesign layouts that:\n- \"Adapt gracefully to context changes while remaining recognizably consistent\"\n- Support Dynamic Type text-size changes\n- Work across multiple devices, orientations, and localizations\n- Account for different screen sizes, resolutions, and system features\n\n---\n\n## Accessibility\n\n### Vision Accessibility\n\n#### Text & Legibility\n\n**Requirements:**\n- Support text enlargement of at least **200%** (140% for watchOS)\n- Implement Dynamic Type for systemwide text adjustment\n- Use font weights that enhance readability (avoid Light weights with custom fonts)\n\n#### Color Contrast\n\n**WCAG Level AA standards:**\n- Normal text (14pt+): **4.5:1 minimum**\n- Small text (<14pt): **7:1 recommended**\n- Large text (18pt+ regular, 14pt+ bold): 3:1 acceptable\n\n**Implementation:**\n```swift\n// ✅ Use semantic colors (automatic contrast)\nText(\"Label\").foregroundStyle(.primary)\n\n// ❌ Custom colors may fail contrast\nText(\"Label\").foregroundStyle(.gray) // Check with calculator\n```\n\n**High contrast mode:**\nProvide higher contrast color schemes when \"Increase Contrast\" accessibility setting is enabled.\n\n**Test in both Light and Dark modes.**\n\n#### Color Considerations\n\n**Critical:** \"Convey information with more than color alone\" to support colorblind users.\n\n**Solutions:**\n- Use distinct shapes or icons alongside color\n- Add text labels\n- Employ system-defined colors with accessible variants\n- Test with Color Blindness simulators\n\n**Example:**\n```swift\n// ❌ Only color indicates status\nCircle().fill(isActive ? .green : .red)\n\n// ✅ Shape + color\nHStack {\n    Image(systemName: isActive ? \"checkmark.circle.fill\" : \"xmark.circle.fill\")\n    Text(isActive ? \"Active\" : \"Inactive\")\n}\n.foregroundStyle(isActive ? .green : .red)\n```\n\n#### Screen Readers\n\nDescribe interface and content for VoiceOver accessibility:\n\n```swift\nButton {\n    share()\n} label: {\n    Image(systemName: \"square.and.arrow.up\")\n}\n.accessibilityLabel(\"Share\")\n```\n\n### Hearing Accessibility\n\n#### Media Alternatives\n\nFor video/audio content, provide:\n- Captions for dialogue\n- Subtitles\n- Audio descriptions for visual-only information\n- Transcripts for longer-form media\n\n#### Audio Cues\n\nPair audio signals with:\n- Haptic feedback\n- Visual indicators\n\n### Mobility Accessibility\n\n**Touch targets:**\n- Minimum: **44x44 points**\n- Spacing: 12-24 points padding around controls\n\n**Gestures:**\n- Use simple gestures\n- Offer alternatives (buttons alongside gestures)\n- Support Voice Control\n- Enable keyboard navigation\n\n**Assistive technologies:**\n- VoiceOver\n- Switch Control\n- Full Keyboard Access\n\n### Cognitive Accessibility\n\n#### Interaction Design\n\n- \"Keep actions simple and intuitive\"\n- Avoid time-based auto-dismissing views\n- Prevent autoplay of audio/video without controls\n\n#### Motion & Visual Effects\n\n**Respect \"Reduce Motion\":**\n- Minimize animations\n- Avoid excessive flashing lights\n- Support \"Dim Flashing Lights\"\n- Reduce bounce effects\n- Minimize z-axis depth changes\n\n```swift\n// Check Reduce Motion setting\n@Environment(\\.accessibilityReduceMotion) var reduceMotion\n\nvar body: some View {\n    content\n        .animation(reduceMotion ? nil : .spring(), value: isExpanded)\n}\n```\n\n#### Game Accommodations\n\nOffer adjustable difficulty levels.\n\n### visionOS Specific\n\nPrioritize comfort:\n- Maintain horizontal layouts\n- Reduce animation speed\n- Avoid head-anchored content (prevents assistive technology use)\n\n---\n\n## Motion & Animation\n\n### Core Principles\n\n**Purposeful Animation:** \"Add motion purposefully, supporting the experience without overshadowing it.\"\n\n**Avoid gratuitous animations** that distract or cause discomfort. Motion should enhance rather than dominate the interface.\n\n### Accessibility First\n\n**Make motion optional.** Supplement visual feedback with **haptics** and **audio** to communicate important information, ensuring all users can understand your interface regardless of motion preferences.\n\n### Best Practices for Feedback\n\n#### Realistic Motion\n\nDesign animations aligned with user expectations and gestures. Feedback should be:\n- \"Brief and precise\"\n- Lightweight\n- Effectively conveying information without distraction\n\n#### Frequency Considerations\n\n**Avoid animating frequent UI interactions.** Standard system elements already include subtle animations, so custom elements shouldn't add unnecessary motion to common actions.\n\n#### User Control\n\n\"Let people cancel motion\" by not forcing them to wait for animations to complete before proceeding, especially for repeated interactions.\n\n```swift\n// ✅ Allow immediate tap, don't block on animation\nButton(\"Next\") {\n    withAnimation(.easeOut(duration: 0.2)) {\n        showNext = true\n    }\n}\n// User can tap again immediately, not forced to wait\n```\n\n### Platform-Specific Guidance\n\n#### visionOS\n\n- **Avoid motion at peripheral vision edges** — causes discomfort\n- Use fades when relocating objects rather than visible movement\n- Maintain stationary frames of reference\n- Avoid sustained oscillations (especially at 0.2 Hz frequency)\n- Prevent virtual world rotation (disrupts stability)\n\n#### watchOS\n\nSwiftUI provides animation capabilities; WatchKit offers `WKInterfaceImage` for layout animations and sequences.\n\n---\n\n## Icons & Symbols\n\n### SF Symbols\n\n6,900+ vector symbols that match San Francisco font, scale with Dynamic Type, and adapt to Bold Text and Dark Mode automatically. Nine weights, three scales, four rendering modes, and 12+ animation effects.\n\n> **For comprehensive coverage** of rendering modes (Monochrome, Hierarchical, Palette, Multicolor), symbol effects (Bounce, Pulse, Wiggle, Draw On/Off), and custom symbol authoring, see `axiom-design (skills/sf-symbols.md)` (decision trees) and `axiom-design (skills/sf-symbols-ref.md)` (complete API).\n\n### Custom Interface Icons\n\n**Design principles:** Recognizable, simplified designs with familiar visual metaphors. Maintain uniform size, detail level, stroke thickness, and perspective. Match icon weight with adjacent text. Adjust padding for optical centering when visual weight is asymmetric.\n\n**Format:** Use **PDF or SVG** for automatic scaling. System components handle selected states automatically.\n\n### When to Use Icons vs Text\n\nFrom WWDC25: \"A pencil might suggest annotate, and a checkmark can look like confirm—making actions like Select or Edit easy to misread. **When there's no clear shorthand, a text label is always the better choice.**\"\n\n**Use icons when:**\n- Symbol has clear, universal meaning (share, trash, settings)\n- Space is constrained\n- Icon aids quick scanning\n\n**Use text when:**\n- Action has no clear symbol\n- Multiple similar actions exist\n- Clarity is more important than space\n\n### Accessibility\n\n**Always provide alternative text labels** enabling VoiceOver descriptions:\n\n```swift\nImage(systemName: \"star.fill\")\n    .accessibilityLabel(\"Favorite\")\n```\n\n---\n\n## Gestures & Input\n\n### Core Gesture Design Principles\n\n**Consistency and Familiarity:** \"People expect most gestures to work the same regardless of their current context.\" Standard gestures like tap, swipe, and drag should perform their expected functions across platforms.\n\n**Responsive Feedback:** \"Handle gestures as responsively as possible\" and provide immediate feedback during gesture performance so users can predict outcomes.\n\n### Standard Gestures\n\nBasic gestures supported across all platforms (though precise movements vary by device):\n- Tap\n- Swipe\n- Drag\n- Pinch\n- Rotate (iOS/iPadOS)\n- Long press\n\n### Touch Target Requirements\n\n**Minimum touch target sizes:**\n\n| Platform | Minimum Size | Spacing |\n|----------|-------------|---------|\n| iOS/iPadOS | 44x44 points | 12-24pt padding |\n| macOS | Varies by control | System spacing |\n| watchOS | System controls | Optimized for small screen |\n| tvOS | Large (focus model) | 60pt+ spacing |\n\n```swift\n// ✅ Adequate touch target\nButton(\"Tap\") { }\n    .frame(minWidth: 44, minHeight: 44)\n\n// ❌ Too small\nButton(\"Tap\") { }\n    .frame(width: 20, height: 20) // Fails accessibility\n```\n\n### Custom Gesture Guidelines\n\nCustom gestures should only be implemented when necessary and must be:\n- **Discoverable** — Users can find them\n- **Straightforward to perform** — Easy to execute\n- **Distinct from other gestures** — No conflicts\n- **Never the only method** — Provide alternatives for important actions\n\n**Warning:** Don't replace standard gestures with custom ones. Shortcuts should supplement, not replace, familiar interactions.\n\n### Accessibility\n\n**Critical:** \"Give people more than one way to interact with your app.\" Never assume users can perform specific gestures.\n\n**Provide alternatives:**\n- Voice control\n- Keyboard navigation\n- Button alternatives to gestures\n\n```swift\n// ✅ Swipe action + button alternative\n.swipeActions {\n    Button(\"Delete\", role: .destructive) {\n        delete()\n    }\n}\n.contextMenu {\n    Button(\"Delete\", role: .destructive) {\n        delete()\n    }\n}\n```\n\n---\n\n## Launch & Onboarding\n\n### Launch Screens\n\n**Mandatory for:** iOS, iPadOS, tvOS\n**Not required for:** macOS, visionOS, watchOS\n\n**Design principle:** \"Design a launch screen that's nearly identical to the first screen of your app or game\" to avoid jarring visual transitions.\n\n#### Best Practices\n\n**Minimize branding:**\n- Avoid logos\n- No splash screens\n- No artistic flourishes\n- Purpose: Enhance perception of quick startup, not showcase brand\n\n**No text:**\n- Launch screen content cannot be localized\n- Avoid text entirely\n\n**Match appearance:**\n- Respect device orientation\n- Adapt to light/dark mode\n\n```swift\n// Launch screen matches first screen\n// Transitions smoothly without flash\n```\n\n### Onboarding\n\nOnboarding is a **separate experience** that follows the launch phase. Provides \"a high-level view of your app or game\" and can include a splash screen if needed.\n\n**When to use:** Only when you have meaningful context to communicate to new users.\n\n**What onboarding can include:**\n- Branding and splash screens\n- Educational content\n- Permission requests\n- Account setup\n\n**Timeline:**\n1. Launch — System displays launch screen, transitions to first screen\n2. Onboarding (optional) — Can include branding and education\n3. Continued use — \"Restore the previous state when your app restarts so people can continue where they left off\"\n\n---\n\n## Platform-Specific Guidance\n\n### iOS\n\n**Tab Bar Guidelines:**\n- Maximum 5 tabs on iPhone (6th+ go in \"More\" automatically)\n- Every tab must have icon AND text label — icon-only violates HIG\n- Always visible — don't hide during navigation within a tab\n- Tab order reflects usage frequency (most-used on left)\n- Maintain tab state: preserve scroll position and navigation state when switching\n- iOS 26: Liquid Glass automatic — don't add custom blur/material backgrounds\n- iPad: tab bar → sidebar in landscape; use `TabView` with `Tab` for adaptation\n\n**Navigation Bar Guidelines:**\n- Always use system back button (chevron) — don't replace with custom \"X\"\n- Title describes current view content, not app name\n- Large titles (`prefersLargeTitles`) for top-level views only; inline for pushed views\n- 1-3 toolbar actions max; use `...` menu for additional\n- iOS 26: Liquid Glass with toolbar morphing between views\n\n**System integration:** Widgets, Home Screen quick actions, Spotlight, Shortcuts, Activity views\n\n### iPadOS\n\nExtends iOS with larger display, sidebar navigation, split view, pointer/trackpad, arbitrary windows (iOS 26+). Don't just scale iOS layouts — leverage sidebars and split views.\n\n### macOS\n\nPointer-first, keyboard-centric. Dense layouts, smaller controls than iOS. Multiple windows, menu bar, contextual menus, keyboard shortcuts essential. Controls: Mini/Small/Medium → rounded rectangles, Large/X-Large → capsules.\n\n### watchOS\n\nVery small display — glanceable, minimal interaction. Full-bleed content, minimal padding, Digital Crown interactions, complications for watch faces. Always-on display consideration.\n\n**Adapting from iPad/iOS:** Replace sidebars with page-based flow. Convert swipe/pinch to Digital Crown rotation. Use opacity/spacing for hierarchy (no materials/Liquid Glass). Complications replace dashboards. `@State`/`@Environment` reuse well; view hierarchy must be rewritten.\n\n### tvOS\n\n10-foot viewing distance, focus-based navigation, gestural remote. Large touch targets, prominent focus states, limited text input, directional navigation.\n\n**Focus Engine**: tvOS uses a UIKit Focus Engine for hardware navigation that coexists with SwiftUI's @FocusState. The Focus Engine is the ultimate authority — @FocusState assignments are ignored if the Focus Engine considers a view unfocusable. Use UIFocusGuide to bridge navigation gaps between isolated views.\n\n**TVUIKit**: tvOS-exclusive components — TVPosterView (parallax focus effects), TVDigitEntryViewController (PIN entry). No SwiftUI equivalents exist; bridge via UIViewRepresentable.\n\n**Text input**: Standard text fields trigger a fullscreen system keyboard. For better UX, use the shadow input pattern (Button UI + hidden CocoaTextField). See `axiom-swift (skills/tvos.md)` for implementation details.\n\n**Storage**: No persistent local storage. All local files are cache that the system deletes. See `axiom-swift (skills/tvos.md)` for data strategy.\n\n### visionOS\n\nSpatial computing with glass materials, 3D layouts, depth. Comfortable viewing depth, avoid head-anchored content, center content in field of view.\n\n---\n\n## Inclusive Design\n\n### Language & Communication\n\n**Welcoming language requirements:**\n- Use plain, direct, and respectful tone\n- Don't suggest exclusivity based on education level\n- Address people directly with \"you/your\" rather than \"the user\"\n- Define specialized or technical terms when necessary\n- Replace culture-specific expressions with plain alternatives\n\n**Avoid phrases with oppressive origins** (e.g., \"peanut gallery\").\n\n**Exercise caution with humor** — it's subjective and difficult to translate across cultures.\n\n### Visual Representation\n\n**Portraying human diversity:**\n- Feature people demonstrating range of racial backgrounds, body types, ages, physical capabilities\n- Avoid stereotypical representations in occupations and behaviors\n\n**Avoiding assumptions:**\n- Don't assume narrow definitions of family structures\n- Don't assume universal experiences\n- Replace culture-specific security questions with more universal experiences\n\n### Gender Identity & Pronouns\n\n**Best practices:**\n- Avoid unnecessary gender references in copy\n- Provide inclusive options: \"nonbinary,\" \"self-identify,\" \"decline to state\"\n- Use nongendered imagery\n- Allow customization of avatars and characters\n\n### Accessibility & Disability\n\n**Recognize:**\n- Disabilities exist on spectrums\n- Temporary/situational disabilities affect everyone\n\n**Include:**\n- People with disabilities in diversity representations\n- Adopt people-first approach in writing (\"person with disability\" vs \"disabled person\")\n\n### Localization & Global Considerations\n\n**Prepare software for:**\n- Internationalization\n- Translation into multiple languages\n\n**Cultural color awareness:**\n- Colors carry culture-specific meanings\n- White represents death in some cultures, purity in others\n- Red signifies danger in some cultures, positive meanings elsewhere\n\n**Use plain language** and avoid stereotypes to facilitate smoother localization.\n\n---\n\n## Branding\n\n### Core Principles\n\n**Voice & Tone:** Maintain consistent brand personality through written communication.\n\n**Visual Elements:**\n- Consider accent color for UI components\n- Custom font if strongly associated with brand (but system fonts work better for body copy due to legibility)\n\n### Key Restraint Guidelines\n\n**Most critical guidance — restraint:**\n\n**Defer to content:** \"Using screen space for an element that does nothing but display a brand asset can mean there's less room for the content people care about.\"\n\n**Logo minimalism:** \"Resist the temptation to display your logo throughout your app or game unless it's essential for providing context.\"\n\n**Familiar patterns:** Maintain standard UI behaviors and component placement even with stylized designs to keep interfaces approachable.\n\n**Launch screen caution:** Avoid using launch screens for branding since they disappear too quickly; consider onboarding screens instead for brand integration.\n\n### Appropriate Branding\n\n**Do:**\n- Use your brand's accent color as app tint color\n- Include branding in onboarding (not launch screen)\n- Use brand voice in copy\n- Feature brand in content, not chrome\n\n**Don't:**\n- Display logo in navigation bar\n- Override system backgrounds with brand colors\n- Add splash screens\n- Make branding compete with content\n\n### Legal Consideration\n\nApple trademarks cannot appear in your app name or images—consult Apple's official trademark guidelines.\n\n---\n\n## Troubleshooting Common HIG Issues\n\n### Color Contrast Failures\n\n**Symptom:** App Store rejection for accessibility violations, or colors don't meet WCAG standards.\n\n**Diagnosis:** Test with Accessibility Inspector, contrast calculators, both Light/Dark modes, and Increase Contrast enabled. See Accessibility > Vision section above for contrast ratio requirements.\n\n**Solution:**\n```swift\n// ❌ Custom gray may fail contrast\nText(\"Label\").foregroundStyle(.gray)\n\n// ✅ Semantic colors (automatic compliance)\nText(\"Label\").foregroundStyle(.secondary)\n\n// ✅ Verified custom color (~8:1 on white, WCAG AAA)\nText(\"Label\").foregroundStyle(Color(red: 0.25, green: 0.25, blue: 0.25))\n```\n\n### Touch Targets Too Small\n\n**Symptom:** Users report difficult tapping, App Store accessibility rejection.\n\n**Diagnosis:**\n```swift\n// Check button size\nButton(\"Tap\") { }\n    .frame(width: 30, height: 30) // ❌ Too small\n```\n\n**Solution:**\n```swift\n// ✅ Expand touch target to minimum 44x44\nButton(\"Tap\") { }\n    .frame(minWidth: 44, minHeight: 44)\n\n// ✅ Alternative: Add padding\nButton(\"Tap\") { }\n    .padding() // System adds appropriate padding\n```\n\n### Dark Mode Issues\n\n**Symptom:** Colors look wrong in Dark Mode, insufficient contrast.\n\n**Diagnosis:**\n- Hardcoded colors that don't adapt\n- Custom colors without dark variants\n- Not testing in both appearance modes\n\n**Solution:**\n```swift\n// ❌ PROBLEM: Hardcoded white text\nText(\"Label\").foregroundStyle(.white)\n// Invisible in Light Mode\n\n// ✅ SOLUTION: Semantic color\nText(\"Label\").foregroundStyle(.primary)\n// Black in Light, white in Dark\n\n// ✅ ALTERNATIVE: Asset catalog color with variants\nText(\"Label\").foregroundStyle(Color(\"BrandText\"))\n// Define in Assets.xcassets with Light/Dark variants\n```\n\n### Light Font Weight Legibility\n\n**Symptom:** Text hard to read, especially at small sizes or in bright lighting.\n\n**Diagnosis:**\n```swift\nText(\"Headline\")\n    .font(.system(size: 17, weight: .ultralight)) // ❌ Too light\n```\n\n**Solution:**\n```swift\n// ✅ Use Regular minimum\nText(\"Headline\")\n    .font(.system(size: 17, weight: .regular))\n\n// ✅ Better: Use system text styles\nText(\"Headline\")\n    .font(.headline) // Automatically uses appropriate weight\n```\n\n### Dynamic Type Not Working\n\n**Symptom:** Text doesn't scale when user changes text size in Settings.\n\n```swift\n// ❌ Fixed size doesn't scale\nText(\"Label\").font(.system(size: 17))\n\n// ✅ Text styles scale automatically\nText(\"Label\").font(.body)\n\n// ✅ Custom font with scaling\nText(\"Label\").font(.custom(\"CustomFont\", size: 17, relativeTo: .body))\n```\n\n### Reduce Motion Not Respected\n\n**Symptom:** Users with motion sensitivity experience discomfort.\n\n**Diagnosis:**\n- Animations always play regardless of setting\n- No alternative for motion-sensitive users\n\n**Solution:**\n```swift\n// ✅ Check Reduce Motion setting\n@Environment(\\.accessibilityReduceMotion) var reduceMotion\n\nvar body: some View {\n    content\n        .animation(reduceMotion ? nil : .spring(), value: isExpanded)\n}\n\n// ✅ Alternative: Simpler animation\n.animation(reduceMotion ? .linear(duration: 0.1) : .spring(), value: isExpanded)\n```\n\n### VoiceOver Labels Missing\n\n**Symptom:** VoiceOver announces unhelpful information like \"Button\" instead of action.\n\n**Diagnosis:**\n```swift\n// ❌ Image button without label\nButton {\n    share()\n} label: {\n    Image(systemName: \"square.and.arrow.up\")\n}\n// VoiceOver says: \"Button\"\n```\n\n**Solution:**\n```swift\n// ✅ Add accessibility label\nButton {\n    share()\n} label: {\n    Image(systemName: \"square.and.arrow.up\")\n}\n.accessibilityLabel(\"Share\")\n// VoiceOver says: \"Share, Button\"\n```\n\n### Information Only Conveyed by Color\n\n**Symptom:** Colorblind users can't distinguish status.\n\n**Diagnosis:**\n```swift\n// ❌ Only color indicates state\nCircle()\n    .fill(isComplete ? .green : .red)\n```\n\n**Solution:**\n```swift\n// ✅ Use shape + color + text\nHStack {\n    Image(systemName: isComplete ? \"checkmark.circle.fill\" : \"xmark.circle.fill\")\n    Text(isComplete ? \"Complete\" : \"Incomplete\")\n}\n.foregroundStyle(isComplete ? .green : .red)\n```\n\n### Launch Screen Branding Rejection\n\n**Symptom:** App Store rejects launch screen with logo or text.\n\n**Diagnosis:**\n- Launch screen contains branding elements\n- Launch screen has text that can't be localized\n\n**Solution:**\n```swift\n// ❌ Launch screen with logo (rejected)\n// Launch.storyboard contains app logo\n\n// ✅ Launch screen matches first screen (approved)\n// Launch.storyboard shows same background/layout as first screen\n// No text, no logos, minimal branding\n\n// Move branding to onboarding screen instead\n```\n\n### Custom Appearance Toggle Issues\n\n**Symptom:** Users confused by app-specific dark mode setting, double settings.\n\n**Diagnosis:**\n- App has its own Light/Dark toggle\n- Conflicts with system Settings → Display & Brightness\n\n**Solution:**\n```swift\n// ❌ App-specific appearance toggle\n.preferredColorScheme(userPreference == .dark ? .dark : .light)\n\n// ✅ Respect system preference\n// Remove custom toggle, use system preference\n// Let iOS Settings control appearance\n```\n\n---\n\n## Resources\n\n**WWDC**: 356, 2019-808\n\n**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/materials, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/accessibility, /design/human-interface-guidelines/icons, /design/human-interface-guidelines/apple-pay, /design/human-interface-guidelines/wallet, /design/human-interface-guidelines/tap-to-pay-on-iphone\n\n**Skills**: axiom-design (skills/hig.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-swiftui, axiom-accessibility, axiom-swift (skills/tvos.md), axiom-payments\n\n---\n\n**Last Updated**: Based on Apple HIG (2024-2025), WWDC25-356, WWDC19-808\n**Skill Type**: Reference (Comprehensive guide with code examples)\n",
+      "content": "\n# Apple Human Interface Guidelines — Comprehensive Reference\n\n## Overview\n\nThe Human Interface Guidelines (HIG) define Apple's design philosophy and provide concrete guidance for creating intuitive, accessible, platform-appropriate experiences across all Apple devices.\n\n### Three Core Principles\n\nEvery design decision should support these principles:\n\n**1. Clarity**\nContent is paramount. Interface elements should defer to content, not compete with it. Every element has a purpose, unnecessary complexity is eliminated, and users should immediately know what they can do without extensive instructions.\n\n**2. Consistency**\nApps use standard UI elements and familiar patterns. Navigation follows platform conventions, gestures work as expected, and components appear in expected locations. This familiarity reduces cognitive load.\n\n**3. Deference**\nThe UI should not distract from essential content. Use subtle backgrounds, receding navigation when not needed, restrained branding, and let content be the hero.\n\n**From Apple HIG:** \"Deference makes an app beautiful by ensuring the content stands out while the surrounding visual elements do not compete with it.\"\n\n### Design System Philosophy\n\nFrom WWDC25: \"A systematic approach means designing with intention at every level, ensuring that all elements, from the tiniest control to the largest surface, are considered in relation to the whole.\"\n\n#### Related Skills\n- Use `axiom-design (skills/hig.md)` for quick decisions and checklists\n- Use `axiom-design (skills/liquid-glass.md)` for iOS 26 material implementation\n- Use `axiom-design (skills/liquid-glass-ref.md)` for iOS 26 app-wide adoption\n- Use `axiom-accessibility` for accessibility troubleshooting\n\n---\n\n## Color System\n\n### Semantic Colors Explained\n\nInstead of hardcoded color values, use **semantic colors** that describe the *purpose* of a color rather than its appearance. Semantic colors automatically adapt to light/dark mode and accessibility settings.\n\n**Key insight from WWDC19:** \"Think of Dark Mode as having the lights dimmed rather than everything being flipped inside out.\" Colors are NOT simply inverted—table row backgrounds are lighter in both modes.\n\n### Label Colors (Foreground Content)\n\nFour semantic label levels for text and symbols, each progressively less prominent:\n\n| Style | Semantic Color | Usage |\n|---|---|---|\n| `.primary` | `label` | Titles, most prominent text |\n| `.secondary` | `secondaryLabel` | Subtitles, less prominent |\n| `.tertiary` | `tertiaryLabel` | Placeholder text |\n| `.quaternary` | `quaternaryLabel` | Disabled text |\n\n```swift\nText(\"Title\").foregroundStyle(.primary)    // Black in Light, white in Dark\nText(\"Subtitle\").foregroundStyle(.secondary)\n```\n\n### Background Colors (Primary → Tertiary)\n\nBackground colors come in two sets — **ungrouped** (standard lists) and **grouped** (iOS Settings style):\n\n| Level | Ungrouped | Grouped |\n|---|---|---|\n| Primary | `.systemBackground` | `.systemGroupedBackground` |\n| Secondary | `.secondarySystemBackground` | `.secondarySystemGroupedBackground` |\n| Tertiary | `.tertiarySystemBackground` | `.tertiarySystemGroupedBackground` |\n\nUngrouped: pure white/black in Light/Dark. Grouped: light gray/dark in Light/Dark.\n\n```swift\n// Standard list → ungrouped backgrounds\nList { Text(\"Item\") }\n    .background(Color(.systemBackground))\n\n// Settings-style list → grouped backgrounds\nList { Section(\"Section\") { Text(\"Item\") } }\n    .listStyle(.grouped)\n```\n\n### Base vs Elevated Backgrounds\n\nThere are actually **two sets** of background colors for layering interfaces:\n\n- **Base set:** Used for background apps/interfaces\n- **Elevated set:** Used for foreground apps/interfaces\n\n**Why this matters:**\n\nIn Light Mode, simple drop shadows create visual separation. In Dark Mode, drop shadows are less effective, so the system uses **lighter colors for elevated content**.\n\n**Example:** iPad multitasking:\n- Mail app alone → base color set\n- Contacts in slide-over → elevated colors (lighter, stands out)\n- Both side-by-side → both use elevated colors for contrast around splitter\n- Email compose sheet → elevated colors with overlay dimming\n\n**Critical:** Some darker colors may not contrast well when elevated. Always test designs in elevated state. Semi-opaque fill and separator colors adapt gracefully.\n\n### Tint Colors (Dynamic Adaptation)\n\nTint colors are **dynamic** - they have variants for Light and Dark modes:\n\n```swift\n// Tint color automatically adapts\nButton(\"Primary Action\") {\n    // action\n}\n.tint(.blue)\n// Gets lighter in Dark Mode, darker in Light Mode\n```\n\n**Custom tint colors:**\nWhen creating custom tint colors, select colors that work well in both modes. Use a contrast calculator to aim for **4.5:1 or higher** contrast ratio. Colors that work in Light Mode may have insufficient contrast in Dark Mode.\n\n### Fill Colors (Semi-Transparent)\n\nFill colors are **semi-transparent** to contrast well against variable backgrounds:\n\n```swift\n// System fill colors\nColor(.systemFill)\nColor(.secondarySystemFill)\nColor(.tertiarySystemFill)\nColor(.quaternarySystemFill)\n```\n\n**When to use:** Controls, buttons, and interactive elements that need to appear above dynamic backgrounds.\n\n### Separator Colors\n\n```swift\n// Standard separator (semi-transparent)\nColor(.separator)\n\n// Opaque separator\nColor(.opaqueSeparator)\n```\n\n**Opaque separators** are used when transparency would create undesirable results (e.g., intersecting grid lines where overlapping semi-transparent colors create optical illusions).\n\n### When to Use Permanent Dark Backgrounds\n\n**Apple's explicit guidance:**\n> \"In rare cases, consider using only a dark appearance in the interface. For example, it can make sense for an app that enables **immersive media viewing** to use a permanently dark appearance that lets the UI recede and helps people focus on the media.\"\n\n**Examples from Apple's apps:**\n\n| App | Background | Rationale |\n|-----|------------|-----------|\n| Music | Dark | Album art should be visual focus |\n| Photos | Dark | Images are hero content |\n| Clock | Dark | Nighttime use, instrument feel |\n| Stocks | Dark | Data visualization, charts |\n| Camera | Dark | Reduces distraction during capture |\n\n**For all other apps:** Support both Light and Dark modes via system backgrounds.\n\n### Creating Custom Colors\n\nWhen you need custom colors:\n\n1. **Open Assets.xcassets**\n2. **Add Color Set**\n3. **Configure variants:**\n   - Light mode color\n   - Dark mode color\n   - High Contrast Light (optional but recommended)\n   - High Contrast Dark (optional but recommended)\n\n```swift\n// Use custom color from asset catalog\nColor(\"BrandAccent\")\n// Automatically uses correct variant\n```\n\n---\n\n## Typography\n\n### System Fonts\n\n**San Francisco (SF):** The system sans-serif font family.\n- SF Pro: General use\n- SF Compact: watchOS and space-constrained layouts\n- SF Mono: Code and monospaced text\n- SF Rounded: Softer, friendlier feel\n- Weights: Ultralight, Thin, Light, Regular, Medium, Semibold, Bold, Heavy, Black\n\n**New York (NY):** System serif font family for editorial content.\n\n**Both available as variable fonts** with seamless weight transitions.\n\n### Font Weight Recommendations\n\n**From Apple HIG:** \"Avoid light font weights. Prefer Regular, Medium, Semibold, or Bold weights instead of Ultralight, Thin, or Light.\"\n\n**Why:** Light weights have legibility issues, especially at small sizes, in bright lighting, or for users with visual impairments.\n\n**Hierarchy:**\n```swift\n// Headers - Bold weight for prominence\nText(\"Header\")\n    .font(.title.weight(.bold))\n\n// Subheaders - Semibold\nText(\"Subheader\")\n    .font(.title2.weight(.semibold))\n\n// Body - Regular or Medium\nText(\"Body text\")\n    .font(.body)\n\n// Captions - Regular (never Light)\nText(\"Caption\")\n    .font(.caption)\n```\n\n### Text Styles for Hierarchy\n\nUse built-in text styles for automatic hierarchy and Dynamic Type support:\n\n```swift\n.font(.largeTitle)  .font(.title)       .font(.title2)\n.font(.title3)      .font(.headline)    .font(.body)\n.font(.callout)     .font(.subheadline) .font(.footnote)\n.font(.caption)     .font(.caption2)\n```\n\nAll text styles scale automatically with Dynamic Type.\n\n### Dynamic Type Support\n\n**Requirement:** Apps must support text scaling of at least **200%** (iOS, iPadOS) or **140%** (watchOS).\n\n**Implementation:**\n```swift\n// ✅ CORRECT - Scales automatically\nText(\"Hello\")\n    .font(.body)\n\n// ❌ WRONG - Fixed size, doesn't scale\nText(\"Hello\")\n    .font(.system(size: 17))\n```\n\n**Layout considerations:**\n- Reduce multicolumn layouts at larger sizes\n- Minimize text truncation\n- Use stacked layouts instead of inline at large sizes\n- Maintain consistent information hierarchy regardless of size\n\n**Not all content scales equally:** Prioritize what users actually care about. Secondary elements like tab titles shouldn't grow as much as primary content.\n\n### Custom Fonts\n\nWhen using custom fonts:\n- Ensure legibility at various distances and conditions\n- Implement Dynamic Type support\n- Respond to Bold Text accessibility setting\n- Test at all text sizes\n- Match system font behaviors for accessibility\n\n**If your custom font is thin:** Increase size by ~2 points when pairing with uppercase Latin text.\n\n### Leading (Line Spacing)\n\n**Loose leading:** Wide columns (easier to track to next line)\n**Tight leading:** Constrained height (avoid for 3+ lines)\n\n```swift\n// Adjust leading for specific layouts\nText(\"Long content...\")\n    .lineSpacing(8) // Add space between lines\n```\n\n---\n\n## Shapes & Geometry\n\n### Three Shape Types (iOS 26)\n\nFrom WWDC25: \"There's a quiet geometry to how our shapes fit together, driven by **concentricity**. By aligning radii and margins around a shared center, shapes can comfortably nest within each other.\"\n\n#### 1. Fixed Shapes\n\nConstant corner radius regardless of size:\n\n```swift\nRoundedRectangle(cornerRadius: 12)\n```\n\n**Use when:** You need a specific, unchanging corner radius.\n\n#### 2. Capsules\n\nRadius is half the container's height:\n\n```swift\nCapsule()\n```\n\n**Use when:** You want shapes that adapt to content while maintaining rounded ends. Perfect for buttons, pills, and controls.\n\n**Found throughout iOS 26:** Sliders, switches, grouped table views, tab bars, navigation bars.\n\n#### 3. Concentric Shapes\n\nCalculate radius by subtracting padding from parent's radius:\n\n```swift\n.containerRelativeShape(.roundedRectangle)\n```\n\n**Use when:** Nesting shapes within containers to maintain visual harmony.\n\n### Concentricity Principle\n\n**Hardware ↔ Software harmony:** Apple's hardware features consistent bezel curvature. The same precision now guides UI, with curvature, size, and proportion aligning to create unified rhythm between what you hold and what you see.\n\n**Example of concentricity:**\n```\nWindow (rounded corners)\n  ├─ Sheet (concentric to window)\n  │   ├─ Card (concentric to sheet)\n  │   │   └─ Button (concentric to card)\n```\n\n### Platform-Specific Guidance\n\n**iOS:**\n- **Capsules** for buttons, switches, grouped lists\n- Creates hierarchy and focus in touch-friendly layouts\n\n**macOS:**\n- **Mini, Small, Medium controls** → Rounded rectangles (dense layouts, inspector panels)\n- **Large, X-Large controls** → Capsules (spacious areas, emphasis via Liquid Glass)\n\n### Optical Centering\n\nTo preserve optical balance, views are:\n- Mathematically centered when it makes sense\n- Subtly offset when optical weight requires it\n\n**Example:** Asymmetric icons may need padding adjustments for optical centering rather than geometric centering.\n\n---\n\n## Materials & Depth\n\n### Standard Materials\n\nMaterials allow background content to show through, creating visual depth and hierarchy.\n\n#### Four Thickness Options\n\n1. **Ultra-thin** — Minimal separation, content clearly visible\n2. **Thin** — Lighter-weight interactions\n3. **Regular** — Default, works well in most circumstances\n4. **Thick** — Most separation from background\n\n**Choosing thickness:**\n- Content needs more contrast → thicker material\n- Simpler content → thin/ultra-thin material\n\n```swift\n// Apply material\n.background(.ultraThinMaterial)\n.background(.thinMaterial)\n.background(.regularMaterial)\n.background(.thickMaterial)\n```\n\n### Vibrancy with Materials\n\n**Key principle:** Use vibrant colors on top of materials for legibility. Solid colors can get muddy depending on background context. Vibrancy maintains contrast regardless of background.\n\n```swift\n// Vibrant text on material\nVStack {\n    Text(\"Primary\")\n        .foregroundStyle(.primary) // Vibrant\n    Text(\"Secondary\")\n        .foregroundStyle(.secondary) // Vibrant\n}\n.background(.regularMaterial)\n```\n\n### Liquid Glass (iOS 26+)\n\n**Purpose:** Creates a distinct functional layer for controls and navigation, floating above content.\n\n**Two variants:**\n\n1. **Regular Liquid Glass**\n   - Default, use in 95% of cases\n   - Full visual and adaptive effects\n   - Provides legibility regardless of context\n   - Works over any background\n\n2. **Clear Liquid Glass**\n   - Highly translucent\n   - No adaptive behaviors\n   - **Only use for components over visually rich backgrounds** (photos, videos)\n   - Requires dimming layer for legibility\n\n**Modals & Sheets (iOS 26+):** Sheets, alerts, and popovers automatically adopt Liquid Glass with Xcode 26 — remove custom `.presentationBackground()` or `UIBlurEffect` backgrounds. System handles material, concentric corner radius, and morphing transitions. Use elevated semantic colors for modal content backgrounds, not Liquid Glass on the sheet body.\n\n**Sheet button placement (HIG, updated 2026-03-24):**\n- Always pair a confirmation button (Done) with Cancel — or with Back when the sheet is mid-flow. Never ship a solo Done; it implies completion is the only exit.\n- Don't show Cancel, Done, and Back together. Choose the pair the step needs.\n- iOS / iPadOS: Cancel on the leading edge of the top toolbar, Done on the trailing edge. In SwiftUI, `.cancellationAction` and `.confirmationAction` produce these placements with the correct emphasis — see `axiom-swiftui (skills/toolbars.md)` Pattern 2.\n- watchOS: prefer SF Symbols for sheet action labels.\n\n**Cross-reference:** For full Liquid Glass implementation patterns (sheets, alerts, popovers, morphing transitions), see `axiom-design (skills/liquid-glass-ref.md)`. For decision trees, see `axiom-design (skills/liquid-glass.md)`.\n\n---\n\n## Layout Principles\n\n### Visual Hierarchy\n\n**Place items to convey their relative importance:**\n- Important content → top and leading side\n- Secondary content → below or trailing\n- Tertiary content → separate views or progressive disclosure\n\n**From Apple HIG:** \"Make essential information easy to find by giving it sufficient space and avoid obscuring it with nonessential details.\"\n\n### Grouping & Organization\n\nGroup related items using:\n- Negative space (whitespace)\n- Colors and materials\n- Separator lines\n\n**Ensure content and controls remain clearly distinct** through Liquid Glass material and scroll edge effects.\n\n### Content Extension to Edges\n\n\"Extend content to fill the screen or window\" with backgrounds and artwork reaching display edges.\n\n**Background extension views:** Use when content doesn't naturally span the full window.\n\n```swift\n// Content extends to edges\nVStack {\n    FullWidthImage()\n        .ignoresSafeArea() // Extends to screen edges\n}\n```\n\n### Safe Areas & Layout Guides\n\n**Safe Areas:** Rectangular regions unobstructed by:\n- Status bar\n- Navigation bar\n- Tab bar\n- Toolbar\n- Device features (Dynamic Island, notch, home indicator)\n\n**Layout Guides:** Define rectangular regions for positioning and spacing content with:\n- Predefined margins\n- Text width optimization\n- Reading width constraints\n\n**Key principle:** \"Respect key display and system features in each platform.\"\n\n```swift\n// Respect safe areas\nVStack {\n    Text(\"Content\")\n}\n.safeAreaInset(edge: .bottom) {\n    BottomBar()\n}\n```\n\n### Align Components\n\n\"Align components with one another to make them easier to scan.\"\n\n**Grid alignment:**\n- Text baselines align\n- Controls align on common grid\n- Spacing is consistent and rhythmic\n\n### Adaptability Requirements\n\nDesign layouts that:\n- \"Adapt gracefully to context changes while remaining recognizably consistent\"\n- Support Dynamic Type text-size changes\n- Work across multiple devices, orientations, and localizations\n- Account for different screen sizes, resolutions, and system features\n\n---\n\n## Accessibility\n\n### Vision Accessibility\n\n#### Text & Legibility\n\n**Requirements:**\n- Support text enlargement of at least **200%** (140% for watchOS)\n- Implement Dynamic Type for systemwide text adjustment\n- Use font weights that enhance readability (avoid Light weights with custom fonts)\n\n#### Color Contrast\n\n**WCAG Level AA standards:**\n- Normal text (14pt+): **4.5:1 minimum**\n- Small text (<14pt): **7:1 recommended**\n- Large text (18pt+ regular, 14pt+ bold): 3:1 acceptable\n\n**Implementation:**\n```swift\n// ✅ Use semantic colors (automatic contrast)\nText(\"Label\").foregroundStyle(.primary)\n\n// ❌ Custom colors may fail contrast\nText(\"Label\").foregroundStyle(.gray) // Check with calculator\n```\n\n**High contrast mode:**\nProvide higher contrast color schemes when \"Increase Contrast\" accessibility setting is enabled.\n\n**Test in both Light and Dark modes.**\n\n#### Color Considerations\n\n**Critical:** \"Convey information with more than color alone\" to support colorblind users.\n\n**Solutions:**\n- Use distinct shapes or icons alongside color\n- Add text labels\n- Employ system-defined colors with accessible variants\n- Test with Color Blindness simulators\n\n**Example:**\n```swift\n// ❌ Only color indicates status\nCircle().fill(isActive ? .green : .red)\n\n// ✅ Shape + color\nHStack {\n    Image(systemName: isActive ? \"checkmark.circle.fill\" : \"xmark.circle.fill\")\n    Text(isActive ? \"Active\" : \"Inactive\")\n}\n.foregroundStyle(isActive ? .green : .red)\n```\n\n#### Screen Readers\n\nDescribe interface and content for VoiceOver accessibility:\n\n```swift\nButton {\n    share()\n} label: {\n    Image(systemName: \"square.and.arrow.up\")\n}\n.accessibilityLabel(\"Share\")\n```\n\n### Hearing Accessibility\n\n#### Media Alternatives\n\nFor video/audio content, provide:\n- Captions for dialogue\n- Subtitles\n- Audio descriptions for visual-only information\n- Transcripts for longer-form media\n\n#### Audio Cues\n\nPair audio signals with:\n- Haptic feedback\n- Visual indicators\n\n### Mobility Accessibility\n\n**Touch targets:**\n- Minimum: **44x44 points**\n- Spacing: 12-24 points padding around controls\n\n**Gestures:**\n- Use simple gestures\n- Offer alternatives (buttons alongside gestures)\n- Support Voice Control\n- Enable keyboard navigation\n\n**Assistive technologies:**\n- VoiceOver\n- Switch Control\n- Full Keyboard Access\n\n### Cognitive Accessibility\n\n#### Interaction Design\n\n- \"Keep actions simple and intuitive\"\n- Avoid time-based auto-dismissing views\n- Prevent autoplay of audio/video without controls\n\n#### Motion & Visual Effects\n\n**Respect \"Reduce Motion\":**\n- Minimize animations\n- Avoid excessive flashing lights\n- Support \"Dim Flashing Lights\"\n- Reduce bounce effects\n- Minimize z-axis depth changes\n\n```swift\n// Check Reduce Motion setting\n@Environment(\\.accessibilityReduceMotion) var reduceMotion\n\nvar body: some View {\n    content\n        .animation(reduceMotion ? nil : .spring(), value: isExpanded)\n}\n```\n\n#### Game Accommodations\n\nOffer adjustable difficulty levels.\n\n### visionOS Specific\n\nPrioritize comfort:\n- Maintain horizontal layouts\n- Reduce animation speed\n- Avoid head-anchored content (prevents assistive technology use)\n\n---\n\n## Motion & Animation\n\n### Core Principles\n\n**Purposeful Animation:** \"Add motion purposefully, supporting the experience without overshadowing it.\"\n\n**Avoid gratuitous animations** that distract or cause discomfort. Motion should enhance rather than dominate the interface.\n\n### Accessibility First\n\n**Make motion optional.** Supplement visual feedback with **haptics** and **audio** to communicate important information, ensuring all users can understand your interface regardless of motion preferences.\n\n### Best Practices for Feedback\n\n#### Realistic Motion\n\nDesign animations aligned with user expectations and gestures. Feedback should be:\n- \"Brief and precise\"\n- Lightweight\n- Effectively conveying information without distraction\n\n#### Frequency Considerations\n\n**Avoid animating frequent UI interactions.** Standard system elements already include subtle animations, so custom elements shouldn't add unnecessary motion to common actions.\n\n#### User Control\n\n\"Let people cancel motion\" by not forcing them to wait for animations to complete before proceeding, especially for repeated interactions.\n\n```swift\n// ✅ Allow immediate tap, don't block on animation\nButton(\"Next\") {\n    withAnimation(.easeOut(duration: 0.2)) {\n        showNext = true\n    }\n}\n// User can tap again immediately, not forced to wait\n```\n\n### Platform-Specific Guidance\n\n#### visionOS\n\n- **Avoid motion at peripheral vision edges** — causes discomfort\n- Use fades when relocating objects rather than visible movement\n- Maintain stationary frames of reference\n- Avoid sustained oscillations (especially at 0.2 Hz frequency)\n- Prevent virtual world rotation (disrupts stability)\n\n#### watchOS\n\nSwiftUI provides animation capabilities; WatchKit offers `WKInterfaceImage` for layout animations and sequences.\n\n---\n\n## Icons & Symbols\n\n### SF Symbols\n\n6,900+ vector symbols that match San Francisco font, scale with Dynamic Type, and adapt to Bold Text and Dark Mode automatically. Nine weights, three scales, four rendering modes, and 12+ animation effects.\n\n> **For comprehensive coverage** of rendering modes (Monochrome, Hierarchical, Palette, Multicolor), symbol effects (Bounce, Pulse, Wiggle, Draw On/Off), and custom symbol authoring, see `axiom-design (skills/sf-symbols.md)` (decision trees) and `axiom-design (skills/sf-symbols-ref.md)` (complete API).\n\n### Custom Interface Icons\n\n**Design principles:** Recognizable, simplified designs with familiar visual metaphors. Maintain uniform size, detail level, stroke thickness, and perspective. Match icon weight with adjacent text. Adjust padding for optical centering when visual weight is asymmetric.\n\n**Format:** Use **PDF or SVG** for automatic scaling. System components handle selected states automatically.\n\n### When to Use Icons vs Text\n\nFrom WWDC25: \"A pencil might suggest annotate, and a checkmark can look like confirm—making actions like Select or Edit easy to misread. **When there's no clear shorthand, a text label is always the better choice.**\"\n\n**Use icons when:**\n- Symbol has clear, universal meaning (share, trash, settings)\n- Space is constrained\n- Icon aids quick scanning\n\n**Use text when:**\n- Action has no clear symbol\n- Multiple similar actions exist\n- Clarity is more important than space\n\n### Accessibility\n\n**Always provide alternative text labels** enabling VoiceOver descriptions:\n\n```swift\nImage(systemName: \"star.fill\")\n    .accessibilityLabel(\"Favorite\")\n```\n\n---\n\n## Gestures & Input\n\n### Core Gesture Design Principles\n\n**Consistency and Familiarity:** \"People expect most gestures to work the same regardless of their current context.\" Standard gestures like tap, swipe, and drag should perform their expected functions across platforms.\n\n**Responsive Feedback:** \"Handle gestures as responsively as possible\" and provide immediate feedback during gesture performance so users can predict outcomes.\n\n### Standard Gestures\n\nBasic gestures supported across all platforms (though precise movements vary by device):\n- Tap\n- Swipe\n- Drag\n- Pinch\n- Rotate (iOS/iPadOS)\n- Long press\n\n### Touch Target Requirements\n\n**Minimum touch target sizes:**\n\n| Platform | Minimum Size | Spacing |\n|----------|-------------|---------|\n| iOS/iPadOS | 44x44 points | 12-24pt padding |\n| macOS | Varies by control | System spacing |\n| watchOS | System controls | Optimized for small screen |\n| tvOS | Large (focus model) | 60pt+ spacing |\n\n```swift\n// ✅ Adequate touch target\nButton(\"Tap\") { }\n    .frame(minWidth: 44, minHeight: 44)\n\n// ❌ Too small\nButton(\"Tap\") { }\n    .frame(width: 20, height: 20) // Fails accessibility\n```\n\n### Custom Gesture Guidelines\n\nCustom gestures should only be implemented when necessary and must be:\n- **Discoverable** — Users can find them\n- **Straightforward to perform** — Easy to execute\n- **Distinct from other gestures** — No conflicts\n- **Never the only method** — Provide alternatives for important actions\n\n**Warning:** Don't replace standard gestures with custom ones. Shortcuts should supplement, not replace, familiar interactions.\n\n### Accessibility\n\n**Critical:** \"Give people more than one way to interact with your app.\" Never assume users can perform specific gestures.\n\n**Provide alternatives:**\n- Voice control\n- Keyboard navigation\n- Button alternatives to gestures\n\n```swift\n// ✅ Swipe action + button alternative\n.swipeActions {\n    Button(\"Delete\", role: .destructive) {\n        delete()\n    }\n}\n.contextMenu {\n    Button(\"Delete\", role: .destructive) {\n        delete()\n    }\n}\n```\n\n---\n\n## Launch & Onboarding\n\n### Launch Screens\n\n**Mandatory for:** iOS, iPadOS, tvOS\n**Not required for:** macOS, visionOS, watchOS\n\n**Design principle:** \"Design a launch screen that's nearly identical to the first screen of your app or game\" to avoid jarring visual transitions.\n\n#### Best Practices\n\n**Minimize branding:**\n- Avoid logos\n- No splash screens\n- No artistic flourishes\n- Purpose: Enhance perception of quick startup, not showcase brand\n\n**No text:**\n- Launch screen content cannot be localized\n- Avoid text entirely\n\n**Match appearance:**\n- Respect device orientation\n- Adapt to light/dark mode\n\n```swift\n// Launch screen matches first screen\n// Transitions smoothly without flash\n```\n\n### Onboarding\n\nOnboarding is a **separate experience** that follows the launch phase. Provides \"a high-level view of your app or game\" and can include a splash screen if needed.\n\n**When to use:** Only when you have meaningful context to communicate to new users.\n\n**What onboarding can include:**\n- Branding and splash screens\n- Educational content\n- Permission requests\n- Account setup\n\n**Timeline:**\n1. Launch — System displays launch screen, transitions to first screen\n2. Onboarding (optional) — Can include branding and education\n3. Continued use — \"Restore the previous state when your app restarts so people can continue where they left off\"\n\n---\n\n## Platform-Specific Guidance\n\n### iOS\n\n**Tab Bar Guidelines:**\n- Maximum 5 tabs on iPhone (6th+ go in \"More\" automatically)\n- Every tab must have icon AND text label — icon-only violates HIG\n- Always visible — don't hide during navigation within a tab\n- Tab order reflects usage frequency (most-used on left)\n- Maintain tab state: preserve scroll position and navigation state when switching\n- iOS 26: Liquid Glass automatic — don't add custom blur/material backgrounds\n- iPad: tab bar → sidebar in landscape; use `TabView` with `Tab` for adaptation\n\n**Navigation Bar Guidelines:**\n- Always use system back button (chevron) — don't replace with custom \"X\"\n- Title describes current view content, not app name\n- Large titles (`prefersLargeTitles`) for top-level views only; inline for pushed views\n- 1-3 toolbar actions max; use `...` menu for additional\n- iOS 26: Liquid Glass with toolbar morphing between views\n\n**System integration:** Widgets, Home Screen quick actions, Spotlight, Shortcuts, Activity views\n\n### iPadOS\n\nExtends iOS with larger display, sidebar navigation, split view, pointer/trackpad, arbitrary windows (iOS 26+). Don't just scale iOS layouts — leverage sidebars and split views.\n\n### macOS\n\nPointer-first, keyboard-centric. Dense layouts, smaller controls than iOS. Multiple windows, menu bar, contextual menus, keyboard shortcuts essential. Controls: Mini/Small/Medium → rounded rectangles, Large/X-Large → capsules.\n\n### watchOS\n\nVery small display — glanceable, minimal interaction. Full-bleed content, minimal padding, Digital Crown interactions, complications for watch faces. Always-on display consideration.\n\n**Adapting from iPad/iOS:** Replace sidebars with page-based flow. Convert swipe/pinch to Digital Crown rotation. Use opacity/spacing for hierarchy (no materials/Liquid Glass). Complications replace dashboards. `@State`/`@Environment` reuse well; view hierarchy must be rewritten.\n\n### tvOS\n\n10-foot viewing distance, focus-based navigation, gestural remote. Large touch targets, prominent focus states, limited text input, directional navigation.\n\n**Focus Engine**: tvOS uses a UIKit Focus Engine for hardware navigation that coexists with SwiftUI's @FocusState. The Focus Engine is the ultimate authority — @FocusState assignments are ignored if the Focus Engine considers a view unfocusable. Use UIFocusGuide to bridge navigation gaps between isolated views.\n\n**TVUIKit**: tvOS-exclusive components — TVPosterView (parallax focus effects), TVDigitEntryViewController (PIN entry). No SwiftUI equivalents exist; bridge via UIViewRepresentable.\n\n**Text input**: Standard text fields trigger a fullscreen system keyboard. For better UX, use the shadow input pattern (Button UI + hidden CocoaTextField). See `axiom-swift (skills/tvos.md)` for implementation details.\n\n**Storage**: No persistent local storage. All local files are cache that the system deletes. See `axiom-swift (skills/tvos.md)` for data strategy.\n\n### visionOS\n\nSpatial computing with glass materials, 3D layouts, depth. Comfortable viewing depth, avoid head-anchored content, center content in field of view.\n\n---\n\n## Inclusive Design\n\n### Language & Communication\n\n**Welcoming language requirements:**\n- Use plain, direct, and respectful tone\n- Don't suggest exclusivity based on education level\n- Address people directly with \"you/your\" rather than \"the user\"\n- Define specialized or technical terms when necessary\n- Replace culture-specific expressions with plain alternatives\n\n**Avoid phrases with oppressive origins** (e.g., \"peanut gallery\").\n\n**Exercise caution with humor** — it's subjective and difficult to translate across cultures.\n\n### Visual Representation\n\n**Portraying human diversity:**\n- Feature people demonstrating range of racial backgrounds, body types, ages, physical capabilities\n- Avoid stereotypical representations in occupations and behaviors\n\n**Avoiding assumptions:**\n- Don't assume narrow definitions of family structures\n- Don't assume universal experiences\n- Replace culture-specific security questions with more universal experiences\n\n### Gender Identity & Pronouns\n\n**Best practices:**\n- Avoid unnecessary gender references in copy\n- Provide inclusive options: \"nonbinary,\" \"self-identify,\" \"decline to state\"\n- Use nongendered imagery\n- Allow customization of avatars and characters\n\n### Accessibility & Disability\n\n**Recognize:**\n- Disabilities exist on spectrums\n- Temporary/situational disabilities affect everyone\n\n**Include:**\n- People with disabilities in diversity representations\n- Adopt people-first approach in writing (\"person with disability\" vs \"disabled person\")\n\n### Localization & Global Considerations\n\n**Prepare software for:**\n- Internationalization\n- Translation into multiple languages\n\n**Cultural color awareness:**\n- Colors carry culture-specific meanings\n- White represents death in some cultures, purity in others\n- Red signifies danger in some cultures, positive meanings elsewhere\n\n**Use plain language** and avoid stereotypes to facilitate smoother localization.\n\n---\n\n## Branding\n\n### Core Principles\n\n**Voice & Tone:** Maintain consistent brand personality through written communication.\n\n**Visual Elements:**\n- Consider accent color for UI components\n- Custom font if strongly associated with brand (but system fonts work better for body copy due to legibility)\n\n### Key Restraint Guidelines\n\n**Most critical guidance — restraint:**\n\n**Defer to content:** \"Using screen space for an element that does nothing but display a brand asset can mean there's less room for the content people care about.\"\n\n**Logo minimalism:** \"Resist the temptation to display your logo throughout your app or game unless it's essential for providing context.\"\n\n**Familiar patterns:** Maintain standard UI behaviors and component placement even with stylized designs to keep interfaces approachable.\n\n**Launch screen caution:** Avoid using launch screens for branding since they disappear too quickly; consider onboarding screens instead for brand integration.\n\n### Appropriate Branding\n\n**Do:**\n- Use your brand's accent color as app tint color\n- Include branding in onboarding (not launch screen)\n- Use brand voice in copy\n- Feature brand in content, not chrome\n\n**Don't:**\n- Display logo in navigation bar\n- Override system backgrounds with brand colors\n- Add splash screens\n- Make branding compete with content\n\n### Legal Consideration\n\nApple trademarks cannot appear in your app name or images—consult Apple's official trademark guidelines.\n\n---\n\n## Troubleshooting Common HIG Issues\n\n### Color Contrast Failures\n\n**Symptom:** App Store rejection for accessibility violations, or colors don't meet WCAG standards.\n\n**Diagnosis:** Test with Accessibility Inspector, contrast calculators, both Light/Dark modes, and Increase Contrast enabled. See Accessibility > Vision section above for contrast ratio requirements.\n\n**Solution:**\n```swift\n// ❌ Custom gray may fail contrast\nText(\"Label\").foregroundStyle(.gray)\n\n// ✅ Semantic colors (automatic compliance)\nText(\"Label\").foregroundStyle(.secondary)\n\n// ✅ Verified custom color (~8:1 on white, WCAG AAA)\nText(\"Label\").foregroundStyle(Color(red: 0.25, green: 0.25, blue: 0.25))\n```\n\n### Touch Targets Too Small\n\n**Symptom:** Users report difficult tapping, App Store accessibility rejection.\n\n**Diagnosis:**\n```swift\n// Check button size\nButton(\"Tap\") { }\n    .frame(width: 30, height: 30) // ❌ Too small\n```\n\n**Solution:**\n```swift\n// ✅ Expand touch target to minimum 44x44\nButton(\"Tap\") { }\n    .frame(minWidth: 44, minHeight: 44)\n\n// ✅ Alternative: Add padding\nButton(\"Tap\") { }\n    .padding() // System adds appropriate padding\n```\n\n### Dark Mode Issues\n\n**Symptom:** Colors look wrong in Dark Mode, insufficient contrast.\n\n**Diagnosis:**\n- Hardcoded colors that don't adapt\n- Custom colors without dark variants\n- Not testing in both appearance modes\n\n**Solution:**\n```swift\n// ❌ PROBLEM: Hardcoded white text\nText(\"Label\").foregroundStyle(.white)\n// Invisible in Light Mode\n\n// ✅ SOLUTION: Semantic color\nText(\"Label\").foregroundStyle(.primary)\n// Black in Light, white in Dark\n\n// ✅ ALTERNATIVE: Asset catalog color with variants\nText(\"Label\").foregroundStyle(Color(\"BrandText\"))\n// Define in Assets.xcassets with Light/Dark variants\n```\n\n### Light Font Weight Legibility\n\n**Symptom:** Text hard to read, especially at small sizes or in bright lighting.\n\n**Diagnosis:**\n```swift\nText(\"Headline\")\n    .font(.system(size: 17, weight: .ultralight)) // ❌ Too light\n```\n\n**Solution:**\n```swift\n// ✅ Use Regular minimum\nText(\"Headline\")\n    .font(.system(size: 17, weight: .regular))\n\n// ✅ Better: Use system text styles\nText(\"Headline\")\n    .font(.headline) // Automatically uses appropriate weight\n```\n\n### Dynamic Type Not Working\n\n**Symptom:** Text doesn't scale when user changes text size in Settings.\n\n```swift\n// ❌ Fixed size doesn't scale\nText(\"Label\").font(.system(size: 17))\n\n// ✅ Text styles scale automatically\nText(\"Label\").font(.body)\n\n// ✅ Custom font with scaling\nText(\"Label\").font(.custom(\"CustomFont\", size: 17, relativeTo: .body))\n```\n\n### Reduce Motion Not Respected\n\n**Symptom:** Users with motion sensitivity experience discomfort.\n\n**Diagnosis:**\n- Animations always play regardless of setting\n- No alternative for motion-sensitive users\n\n**Solution:**\n```swift\n// ✅ Check Reduce Motion setting\n@Environment(\\.accessibilityReduceMotion) var reduceMotion\n\nvar body: some View {\n    content\n        .animation(reduceMotion ? nil : .spring(), value: isExpanded)\n}\n\n// ✅ Alternative: Simpler animation\n.animation(reduceMotion ? .linear(duration: 0.1) : .spring(), value: isExpanded)\n```\n\n### VoiceOver Labels Missing\n\n**Symptom:** VoiceOver announces unhelpful information like \"Button\" instead of action.\n\n**Diagnosis:**\n```swift\n// ❌ Image button without label\nButton {\n    share()\n} label: {\n    Image(systemName: \"square.and.arrow.up\")\n}\n// VoiceOver says: \"Button\"\n```\n\n**Solution:**\n```swift\n// ✅ Add accessibility label\nButton {\n    share()\n} label: {\n    Image(systemName: \"square.and.arrow.up\")\n}\n.accessibilityLabel(\"Share\")\n// VoiceOver says: \"Share, Button\"\n```\n\n### Information Only Conveyed by Color\n\n**Symptom:** Colorblind users can't distinguish status.\n\n**Diagnosis:**\n```swift\n// ❌ Only color indicates state\nCircle()\n    .fill(isComplete ? .green : .red)\n```\n\n**Solution:**\n```swift\n// ✅ Use shape + color + text\nHStack {\n    Image(systemName: isComplete ? \"checkmark.circle.fill\" : \"xmark.circle.fill\")\n    Text(isComplete ? \"Complete\" : \"Incomplete\")\n}\n.foregroundStyle(isComplete ? .green : .red)\n```\n\n### Launch Screen Branding Rejection\n\n**Symptom:** App Store rejects launch screen with logo or text.\n\n**Diagnosis:**\n- Launch screen contains branding elements\n- Launch screen has text that can't be localized\n\n**Solution:**\n```swift\n// ❌ Launch screen with logo (rejected)\n// Launch.storyboard contains app logo\n\n// ✅ Launch screen matches first screen (approved)\n// Launch.storyboard shows same background/layout as first screen\n// No text, no logos, minimal branding\n\n// Move branding to onboarding screen instead\n```\n\n### Custom Appearance Toggle Issues\n\n**Symptom:** Users confused by app-specific dark mode setting, double settings.\n\n**Diagnosis:**\n- App has its own Light/Dark toggle\n- Conflicts with system Settings → Display & Brightness\n\n**Solution:**\n```swift\n// ❌ App-specific appearance toggle\n.preferredColorScheme(userPreference == .dark ? .dark : .light)\n\n// ✅ Respect system preference\n// Remove custom toggle, use system preference\n// Let iOS Settings control appearance\n```\n\n---\n\n## Resources\n\n**WWDC**: 356, 2019-808\n\n**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/materials, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/accessibility, /design/human-interface-guidelines/icons, /design/human-interface-guidelines/apple-pay, /design/human-interface-guidelines/wallet, /design/human-interface-guidelines/tap-to-pay-on-iphone\n\n**Skills**: axiom-design (skills/hig.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-swiftui, axiom-accessibility, axiom-swift (skills/tvos.md), axiom-payments\n\n---\n\n**Last Updated**: Based on Apple HIG (2024-2025), WWDC25-356, WWDC19-808\n**Skill Type**: Reference (Comprehensive guide with code examples)\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -6778,84 +6778,84 @@
           "heading": "Materials & Depth",
           "level": 2,
           "startLine": 348,
-          "endLine": 411,
-          "charCount": 2206
+          "endLine": 417,
+          "charCount": 2810
         },
         {
           "heading": "Layout Principles",
           "level": 2,
-          "startLine": 412,
-          "endLine": 490,
+          "startLine": 418,
+          "endLine": 496,
           "charCount": 2045
         },
         {
           "heading": "Accessibility",
           "level": 2,
-          "startLine": 491,
-          "endLine": 631,
+          "startLine": 497,
+          "endLine": 637,
           "charCount": 3129
         },
         {
           "heading": "Motion & Animation",
           "level": 2,
-          "startLine": 632,
-          "endLine": 686,
+          "startLine": 638,
+          "endLine": 692,
           "charCount": 1791
         },
         {
           "heading": "Icons & Symbols",
           "level": 2,
-          "startLine": 687,
-          "endLine": 725,
+          "startLine": 693,
+          "endLine": 731,
           "charCount": 1643
         },
         {
           "heading": "Gestures & Input",
           "level": 2,
-          "startLine": 726,
-          "endLine": 799,
+          "startLine": 732,
+          "endLine": 805,
           "charCount": 2059
         },
         {
           "heading": "Launch & Onboarding",
           "level": 2,
-          "startLine": 800,
-          "endLine": 848,
+          "startLine": 806,
+          "endLine": 854,
           "charCount": 1353
         },
         {
           "heading": "Platform-Specific Guidance",
           "level": 2,
-          "startLine": 849,
-          "endLine": 902,
+          "startLine": 855,
+          "endLine": 908,
           "charCount": 3121
         },
         {
           "heading": "Inclusive Design",
           "level": 2,
-          "startLine": 903,
-          "endLine": 961,
+          "startLine": 909,
+          "endLine": 967,
           "charCount": 1917
         },
         {
           "heading": "Branding",
           "level": 2,
-          "startLine": 962,
-          "endLine": 1003,
+          "startLine": 968,
+          "endLine": 1009,
           "charCount": 1462
         },
         {
           "heading": "Troubleshooting Common HIG Issues",
           "level": 2,
-          "startLine": 1004,
-          "endLine": 1215,
+          "startLine": 1010,
+          "endLine": 1221,
           "charCount": 5045
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 1216,
-          "endLine": 1228,
+          "startLine": 1222,
+          "endLine": 1234,
           "charCount": 898
         }
       ],
@@ -28514,7 +28514,7 @@
     "axiom-swiftui": {
       "name": "axiom-swiftui",
       "description": "Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, performance, architecture, gestures, debugging, iOS 26 features.",
-      "content": "\n# SwiftUI\n\n**You MUST use this skill for ANY SwiftUI work including views, state, navigation, layout, animations, architecture, gestures, and debugging.**\n\n## Quick Reference\n\n| Symptom / Task | Reference |\n|----------------|-----------|\n| View not updating | See `skills/debugging.md` |\n| View update still broken after debugging | See `skills/debugging-diag.md` |\n| Navigation issues | See `skills/nav.md` |\n| Navigation still broken after debugging | See `skills/nav-diag.md` |\n| Navigation API reference | See `skills/nav-ref.md` |\n| Layout breaks on iPad/rotation | See `skills/layout.md` |\n| Layout API reference | See `skills/layout-ref.md` |\n| Performance/lag/slow scroll | See `skills/swiftui-performance.md` |\n| Architecture/testability | See `skills/architecture.md` |\n| Animation issues | See `skills/animation-ref.md` |\n| Stacks/grids/outlines | See `skills/containers-ref.md` |\n| Custom containers / List replacement (iOS 18+) | See `skills/containers-ref.md` Part 7 |\n| Search implementation | See `skills/search-ref.md` |\n| Gesture conflicts | See `skills/gestures.md` |\n| iOS 26 features | See `skills/26-ref.md` |\n\n## Non-SwiftUI UI Routes\n\nThese topics are part of the broader iOS UI domain but live in separate suites:\n\n#### UIKit issues\n- Auto Layout conflicts → See axiom-uikit (skills/auto-layout-debugging.md)\n- Animation timing → See axiom-uikit (skills/uikit-animation-debugging.md)\n- SwiftUI ↔ UIKit bridging → See axiom-uikit (skills/uikit-bridging.md)\n\n#### Design & guidelines\n- Liquid Glass adoption → See axiom-design (skills/liquid-glass.md)\n- SF Symbols → See axiom-design (skills/sf-symbols.md)\n- HIG compliance → See axiom-design (skills/hig.md)\n- Typography → See axiom-design (skills/typography-ref.md)\n- TextKit/rich text → See axiom-uikit (skills/textkit-ref.md)\n\n#### Other\n- tvOS (focus, remote, text input) → See axiom-swift (skills/tvos.md)\n- App-level composition (root, auth, scenes) → See axiom-design (skills/app-composition.md)\n- Drag/drop, sharing, copy/paste → See axiom-swift (skills/transferable-ref.md)\n- VoiceOver, Dynamic Type → `/skill axiom-accessibility`\n- UI test flakiness → `/skill axiom-testing`\n- UX dead ends, dismiss traps → Launch `ux-flow-auditor` agent\n\n#### watchOS-specific patterns\n- Glanceable UI, watch navigation, Smart Stack widgets → See axiom-watchos\n\n## Conflict Resolution\n\n**axiom-swiftui vs axiom-performance**: When UI is slow (e.g., \"SwiftUI List slow\"):\n1. **Try axiom-swiftui FIRST** — Domain-specific fixes (LazyVStack, view identity, @State optimization) often solve UI performance in 5 minutes\n2. **Only use axiom-performance** if domain fixes don't help — Profiling takes longer and may confirm what domain knowledge already knows\n\n## Decision Tree\n\n```dot\ndigraph swiftui {\n    start [label=\"SwiftUI issue\" shape=ellipse];\n    what [label=\"What's wrong?\" shape=diamond];\n\n    start -> what;\n    what -> \"skills/debugging.md\" [label=\"view not updating\"];\n    what -> \"skills/nav.md\" [label=\"navigation\"];\n    what -> \"skills/swiftui-performance.md\" [label=\"slow/lag\"];\n    what -> \"skills/layout.md\" [label=\"adaptive layout\"];\n    what -> \"skills/containers-ref.md\" [label=\"stacks/grids/outlines\"];\n    what -> \"skills/architecture.md\" [label=\"feature architecture\"];\n    what -> \"skills/animation-ref.md\" [label=\"animations\"];\n    what -> \"skills/gestures.md\" [label=\"gestures\"];\n    what -> \"skills/search-ref.md\" [label=\"search\"];\n    what -> \"skills/26-ref.md\" [label=\"iOS 26 features\"];\n    what -> \"axiom-uikit (skills/uikit-bridging.md)\" [label=\"UIKit interop\"];\n    what -> \"axiom-design (skills/app-composition.md)\" [label=\"app-level (root, auth)\"];\n    what -> \"axiom-swift (skills/transferable-ref.md)\" [label=\"drag/drop, sharing\"];\n}\n```\n\n## Automated Scanning\n\n- Architecture audit → Launch `swiftui-architecture-auditor` agent\n- Performance scan → Launch `swiftui-performance-analyzer` agent or `/axiom:audit swiftui-performance`\n- Navigation audit → Launch `swiftui-nav-auditor` agent or `/axiom:audit swiftui-nav`\n- Layout audit → Launch `swiftui-layout-auditor` agent or `/axiom:audit swiftui-layout`\n- UX flow audit → Launch `ux-flow-auditor` agent or `/axiom:audit ux-flow`\n- Liquid Glass scan → Launch `liquid-glass-auditor` agent or `/axiom:audit liquid-glass` (detects migration opportunities AND adoption-completeness gaps: variant discipline for media surfaces, glass-on-glass nesting, missing `if #available` gates, primary-action tinting, `.tabRole(.search)`; scores ADOPTED / PARTIAL / NOT ADOPTED)\n- TextKit scan → Launch `textkit-auditor` agent or `/axiom:audit textkit` (detects fallback triggers, glyph APIs that corrupt complex scripts, missing Writing Tools wiring, AND architectural gaps like missing fallback observation, SwiftUI wrappers dropping TextKit 2 properties, missing `isWritingToolsActive` guards; scores MODERN / MIXED / LEGACY)\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"Simple SwiftUI layout, no need\" | SwiftUI layout has 12 gotchas. `skills/layout.md` covers all of them. |\n| \"I know how NavigationStack works\" | Navigation has state restoration, deep linking, and identity traps. `skills/nav.md` prevents 2-hour debugging. |\n| \"It's just a view not updating\" | View update failures have 4 root causes. `skills/debugging.md` diagnoses in 5 min. |\n| \"I'll just add .animation()\" | Animation issues compound. `skills/animation-ref.md` has the correct patterns. |\n| \"No architecture needed\" | Even small features benefit from separation. `skills/architecture.md` prevents refactoring debt. |\n| \"I know .searchable\" | Search has 6 gotchas. `skills/search-ref.md` covers all of them. |\n",
+      "content": "\n# SwiftUI\n\n**You MUST use this skill for ANY SwiftUI work including views, state, navigation, layout, animations, architecture, gestures, and debugging.**\n\n## Quick Reference\n\n| Symptom / Task | Reference |\n|----------------|-----------|\n| View not updating | See `skills/debugging.md` |\n| View update still broken after debugging | See `skills/debugging-diag.md` |\n| Navigation issues | See `skills/nav.md` |\n| Navigation still broken after debugging | See `skills/nav-diag.md` |\n| Navigation API reference | See `skills/nav-ref.md` |\n| Layout breaks on iPad/rotation | See `skills/layout.md` |\n| Layout API reference | See `skills/layout-ref.md` |\n| Performance/lag/slow scroll | See `skills/swiftui-performance.md` |\n| Architecture/testability | See `skills/architecture.md` |\n| Animation issues | See `skills/animation-ref.md` |\n| Stacks/grids/outlines | See `skills/containers-ref.md` |\n| Custom containers / List replacement (iOS 18+) | See `skills/containers-ref.md` Part 7 |\n| Search implementation | See `skills/search-ref.md` |\n| Toolbars, ToolbarItem, sheet button placement, customization | See `skills/toolbars.md` |\n| Gesture conflicts | See `skills/gestures.md` |\n| iOS 26 features | See `skills/26-ref.md` |\n\n## Non-SwiftUI UI Routes\n\nThese topics are part of the broader iOS UI domain but live in separate suites:\n\n#### UIKit issues\n- Auto Layout conflicts → See axiom-uikit (skills/auto-layout-debugging.md)\n- Animation timing → See axiom-uikit (skills/uikit-animation-debugging.md)\n- SwiftUI ↔ UIKit bridging → See axiom-uikit (skills/uikit-bridging.md)\n\n#### Design & guidelines\n- Liquid Glass adoption → See axiom-design (skills/liquid-glass.md)\n- SF Symbols → See axiom-design (skills/sf-symbols.md)\n- HIG compliance → See axiom-design (skills/hig.md)\n- Typography → See axiom-design (skills/typography-ref.md)\n- TextKit/rich text → See axiom-uikit (skills/textkit-ref.md)\n\n#### Other\n- tvOS (focus, remote, text input) → See axiom-swift (skills/tvos.md)\n- App-level composition (root, auth, scenes) → See axiom-design (skills/app-composition.md)\n- Drag/drop, sharing, copy/paste → See axiom-swift (skills/transferable-ref.md)\n- VoiceOver, Dynamic Type → `/skill axiom-accessibility`\n- UI test flakiness → `/skill axiom-testing`\n- UX dead ends, dismiss traps → Launch `ux-flow-auditor` agent\n\n#### watchOS-specific patterns\n- Glanceable UI, watch navigation, Smart Stack widgets → See axiom-watchos\n\n## Conflict Resolution\n\n**axiom-swiftui vs axiom-performance**: When UI is slow (e.g., \"SwiftUI List slow\"):\n1. **Try axiom-swiftui FIRST** — Domain-specific fixes (LazyVStack, view identity, @State optimization) often solve UI performance in 5 minutes\n2. **Only use axiom-performance** if domain fixes don't help — Profiling takes longer and may confirm what domain knowledge already knows\n\n## Decision Tree\n\n```dot\ndigraph swiftui {\n    start [label=\"SwiftUI issue\" shape=ellipse];\n    what [label=\"What's wrong?\" shape=diamond];\n\n    start -> what;\n    what -> \"skills/debugging.md\" [label=\"view not updating\"];\n    what -> \"skills/nav.md\" [label=\"navigation\"];\n    what -> \"skills/swiftui-performance.md\" [label=\"slow/lag\"];\n    what -> \"skills/layout.md\" [label=\"adaptive layout\"];\n    what -> \"skills/containers-ref.md\" [label=\"stacks/grids/outlines\"];\n    what -> \"skills/architecture.md\" [label=\"feature architecture\"];\n    what -> \"skills/animation-ref.md\" [label=\"animations\"];\n    what -> \"skills/gestures.md\" [label=\"gestures\"];\n    what -> \"skills/search-ref.md\" [label=\"search\"];\n    what -> \"skills/toolbars.md\" [label=\"toolbars / sheet buttons\"];\n    what -> \"skills/26-ref.md\" [label=\"iOS 26 features\"];\n    what -> \"axiom-uikit (skills/uikit-bridging.md)\" [label=\"UIKit interop\"];\n    what -> \"axiom-design (skills/app-composition.md)\" [label=\"app-level (root, auth)\"];\n    what -> \"axiom-swift (skills/transferable-ref.md)\" [label=\"drag/drop, sharing\"];\n}\n```\n\n## Automated Scanning\n\n- Architecture audit → Launch `swiftui-architecture-auditor` agent\n- Performance scan → Launch `swiftui-performance-analyzer` agent or `/axiom:audit swiftui-performance`\n- Navigation audit → Launch `swiftui-nav-auditor` agent or `/axiom:audit swiftui-nav`\n- Layout audit → Launch `swiftui-layout-auditor` agent or `/axiom:audit swiftui-layout`\n- UX flow audit → Launch `ux-flow-auditor` agent or `/axiom:audit ux-flow`\n- Liquid Glass scan → Launch `liquid-glass-auditor` agent or `/axiom:audit liquid-glass` (detects migration opportunities AND adoption-completeness gaps: variant discipline for media surfaces, glass-on-glass nesting, missing `if #available` gates, primary-action tinting, `.tabRole(.search)`; scores ADOPTED / PARTIAL / NOT ADOPTED)\n- TextKit scan → Launch `textkit-auditor` agent or `/axiom:audit textkit` (detects fallback triggers, glyph APIs that corrupt complex scripts, missing Writing Tools wiring, AND architectural gaps like missing fallback observation, SwiftUI wrappers dropping TextKit 2 properties, missing `isWritingToolsActive` guards; scores MODERN / MIXED / LEGACY)\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"Simple SwiftUI layout, no need\" | SwiftUI layout has 12 gotchas. `skills/layout.md` covers all of them. |\n| \"I know how NavigationStack works\" | Navigation has state restoration, deep linking, and identity traps. `skills/nav.md` prevents 2-hour debugging. |\n| \"It's just a view not updating\" | View update failures have 4 root causes. `skills/debugging.md` diagnoses in 5 min. |\n| \"I'll just add .animation()\" | Animation issues compound. `skills/animation-ref.md` has the correct patterns. |\n| \"No architecture needed\" | Even small features benefit from separation. `skills/architecture.md` prevents refactoring debt. |\n| \"I know .searchable\" | Search has 6 gotchas. `skills/search-ref.md` covers all of them. |\n| \"I'll just add a Done button\" | Sheets without Cancel break the HIG (updated 2026-03-24). `.cancellationAction` / `.confirmationAction` produce HIG-correct placement automatically — `skills/toolbars.md` Pattern 2 has the rules. |\n",
       "skillType": "router",
       "source": "axiom",
       "category": "ui",
@@ -28542,43 +28542,43 @@
           "heading": "Quick Reference",
           "level": 2,
           "startLine": 5,
-          "endLine": 24,
-          "charCount": 976
+          "endLine": 25,
+          "charCount": 1068
         },
         {
           "heading": "Non-SwiftUI UI Routes",
           "level": 2,
-          "startLine": 25,
-          "endLine": 51,
+          "startLine": 26,
+          "endLine": 52,
           "charCount": 1196
         },
         {
           "heading": "Conflict Resolution",
           "level": 2,
-          "startLine": 52,
-          "endLine": 57,
+          "startLine": 53,
+          "endLine": 58,
           "charCount": 391
         },
         {
           "heading": "Decision Tree",
           "level": 2,
-          "startLine": 58,
-          "endLine": 81,
-          "charCount": 1018
+          "startLine": 59,
+          "endLine": 83,
+          "charCount": 1087
         },
         {
           "heading": "Automated Scanning",
           "level": 2,
-          "startLine": 82,
-          "endLine": 91,
+          "startLine": 84,
+          "endLine": 93,
           "charCount": 1125
         },
         {
           "heading": "Anti-Rationalization",
           "level": 2,
-          "startLine": 92,
-          "endLine": 102,
-          "charCount": 785
+          "startLine": 94,
+          "endLine": 105,
+          "charCount": 1017
         }
       ],
       "mcp": {
@@ -31362,7 +31362,7 @@
     "axiom-swiftui--toolbars": {
       "name": "axiom-swiftui--toolbars",
       "description": "Use when:",
-      "content": "---\nname: swiftui-toolbars\ndescription: Use when adding, customizing, or debugging SwiftUI toolbars on iOS or macOS — .toolbar modifier, ToolbarItem, ToolbarItemGroup, ToolbarSpacer, placements, customization, ToolbarRole.\nlicense: MIT\n---\n\n# SwiftUI Toolbars\n\n## When to Use This Skill\n\nUse when:\n- Adding action buttons to a navigation bar, bottom bar, or window toolbar\n- Choosing between `ToolbarItem`, `ToolbarItemGroup`, and `ToolbarSpacer`\n- Selecting the right `ToolbarItemPlacement` for an action\n- Building a customizable toolbar (user can rearrange items)\n- Setting toolbar visibility, background, or color scheme\n- Adopting iOS 26+ `ToolbarSpacer` for visual breaks\n- Migrating from deprecated `.navigationBarLeading` / `.navigationBarTrailing`\n- Debugging missing or misplaced toolbar items\n- Requesting code review of toolbar implementation before shipping\n\n#### Related Skills\n- Use `skills/nav.md` for the surrounding NavigationStack/NavigationSplitView the toolbar attaches to\n- Use axiom-macos (skills/windows.md) for `windowToolbarStyle` and window-toolbar interactions\n- Use axiom-macos (skills/menus-and-commands.md) for menu bar commands and keyboard shortcuts\n- Use axiom-design (skills/liquid-glass.md) for iOS 26 toolbar Liquid Glass styling\n\n## Example Prompts\n\n#### 1. \"How do I add a Save button to my navigation bar?\"\n→ The skill shows `.toolbar { ToolbarItem(placement: .primaryAction) { ... } }` and explains why `.primaryAction` is preferred over `.topBarTrailing` for cross-platform behavior.\n\n#### 2. \"My toolbar items aren't showing up.\"\n→ The skill covers the most common cause: `.toolbar` must be inside a navigation container (NavigationStack, NavigationSplitView, or sheet's nav). Standalone Views ignore `.toolbar`.\n\n#### 3. \"Should I use ToolbarItem or ToolbarItemGroup?\"\n→ Decision tree: ToolbarItemGroup for tightly-related actions sharing one placement; separate ToolbarItems when you want independent placements or per-item visibility logic.\n\n#### 4. \"How do I make my toolbar customizable so users can rearrange items?\"\n→ Pattern using `.toolbar(id: \"...\")` + `customizationBehavior` + `ToolbarSpacer(.flexible)` for iOS 26 / iPadOS 26 / macOS 26.\n\n#### 5. \"I'm getting a deprecation warning on .navigationBarLeading.\"\n→ Replace with `.topBarLeading` (iOS 14+, but renamed in later versions for cross-platform clarity). Same for `.navigationBarTrailing` → `.topBarTrailing`.\n\n---\n\n## Red Flags — Anti-Patterns to Prevent\n\n| Symptom | Cause | Fix |\n|---|---|---|\n| Toolbar items don't appear | `.toolbar` on a View not inside NavigationStack/SplitView | Move `.toolbar` to the navigation container's content, or wrap in `NavigationStack` |\n| Items appear in wrong order on iPad | Used `.navigationBarTrailing` (deprecated alias) | Use `.topBarTrailing` |\n| Customization sheet has nothing to customize | Used `.toolbar { }` instead of `.toolbar(id:)` | Switch to `.toolbar(id:)` and give each `ToolbarItem` an `id:` |\n| Spacer between items disappears when toolbar overflows | Used `Spacer()` instead of `ToolbarSpacer` | Use `ToolbarSpacer(.fixed)` or `ToolbarSpacer(.flexible)` (iOS 26+) |\n| Two `.primaryAction` items but only one shows | iOS HIG: one primary action per surface | Demote one to `.secondaryAction` or `.topBarTrailing` |\n| Toolbar items flicker when state changes | Conditional `if` inside `.toolbar` rebuilds the whole toolbar | Use `.disabled()` / `.opacity()` modifiers on stable items instead |\n| Bottom bar doesn't appear on iOS | `.bottomBar` requires `.toolbar(.visible, for: .bottomBar)` or items present | Verify visibility AND content; bottom bar hides when empty |\n| Toolbar background ignores custom material | Set `.background` on a child View | Use `.toolbarBackground(.regularMaterial, for: .navigationBar)` instead |\n\n---\n\n## Quick Decision Tree\n\n```dot\ndigraph toolbars {\n    start [shape=ellipse label=\"Need to add toolbar items\"];\n    inNav [shape=diamond label=\"Inside NavigationStack/SplitView?\"];\n    addNav [shape=box label=\"Wrap in NavigationStack first\"];\n    purpose [shape=diamond label=\"What kind of action?\"];\n    primary [shape=box label=\"ToolbarItem(.primaryAction)\"];\n    confirm [shape=box label=\"ToolbarItem(.confirmationAction)\"];\n    cancel [shape=box label=\"ToolbarItem(.cancellationAction)\"];\n    destructive [shape=box label=\"ToolbarItem(.destructiveAction)\"];\n    leading [shape=box label=\"ToolbarItem(.topBarLeading)\"];\n    trailing [shape=box label=\"ToolbarItem(.topBarTrailing)\"];\n    bottom [shape=box label=\"ToolbarItemGroup(.bottomBar)\"];\n    custom [shape=diamond label=\"User-customizable?\"];\n    customYes [shape=box label=\"toolbar(id:) + ToolbarItem(id:)\\n+ ToolbarSpacer for breaks\"];\n    \n    start -> inNav;\n    inNav -> addNav [label=\"no\"];\n    inNav -> purpose [label=\"yes\"];\n    purpose -> primary [label=\"main create/save action\"];\n    purpose -> confirm [label=\"confirm a sheet\"];\n    purpose -> cancel [label=\"cancel a sheet\"];\n    purpose -> destructive [label=\"delete/destroy\"];\n    purpose -> leading [label=\"back/menu (iOS top-left)\"];\n    purpose -> trailing [label=\"secondary action (iOS top-right)\"];\n    purpose -> bottom [label=\"3+ peer actions on iOS\"];\n    purpose -> custom;\n    custom -> customYes [label=\"yes (iOS 26+/macOS 26+)\"];\n}\n```\n\n---\n\n## Pattern 1: Basic Toolbar with Primary Action\n\nThe most common case — a single Save / Done / Add button.\n\n```swift\nNavigationStack {\n    Form {\n        TextField(\"Title\", text: $title)\n    }\n    .navigationTitle(\"New Task\")\n    .toolbar {\n        ToolbarItem(placement: .primaryAction) {\n            Button(\"Save\") { save() }\n                .disabled(title.isEmpty)\n        }\n    }\n}\n```\n\n**Why `.primaryAction`** Cross-platform — appears top-trailing on iOS, primary toolbar slot on macOS, principal area on watchOS. Avoids platform branching.\n\n---\n\n## Pattern 2: Confirmation / Cancellation in a Sheet\n\nStandard pair for modal sheets. iOS uses these placements specifically — they get bolded styling and the right keyboard hookups.\n\n```swift\n.sheet(isPresented: $showingEditor) {\n    NavigationStack {\n        EditorView(item: $editing)\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button(\"Cancel\") { showingEditor = false }\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    Button(\"Done\") {\n                        commit(editing)\n                        showingEditor = false\n                    }\n                    .disabled(!editing.isValid)\n                }\n            }\n    }\n}\n```\n\n**Gotcha** Don't use `.topBarLeading` / `.topBarTrailing` here — you lose the platform-correct emphasis (bolded \"Done\" on iOS, default-button styling on macOS).\n\n---\n\n## Pattern 3: Multiple Independent Items (separate ToolbarItems)\n\nUse separate `ToolbarItem`s when each needs different placement or independent visibility logic.\n\n```swift\n.toolbar {\n    ToolbarItem(placement: .topBarLeading) {\n        Button { showFilters.toggle() } label: {\n            Label(\"Filter\", systemImage: \"line.3.horizontal.decrease.circle\")\n        }\n    }\n    ToolbarItem(placement: .principal) {\n        Picker(\"View\", selection: $sortMode) {\n            Text(\"Date\").tag(SortMode.date)\n            Text(\"Name\").tag(SortMode.name)\n        }\n        .pickerStyle(.segmented)\n    }\n    ToolbarItem(placement: .primaryAction) {\n        Button { create() } label: {\n            Image(systemName: \"plus\")\n        }\n    }\n}\n```\n\n---\n\n## Pattern 4: Grouped Items (ToolbarItemGroup)\n\nUse `ToolbarItemGroup` when 2+ items share placement AND should be treated as a unit (e.g., they appear/disappear together, share customization behavior).\n\n```swift\n.toolbar {\n    ToolbarItemGroup(placement: .bottomBar) {\n        Button { share() } label: { Image(systemName: \"square.and.arrow.up\") }\n        Spacer()\n        Button { archive() } label: { Image(systemName: \"archivebox\") }\n        Spacer()\n        Button { delete() } label: { Image(systemName: \"trash\") }\n            .tint(.red)\n    }\n}\n```\n\n**Note** Inside a `ToolbarItemGroup`, regular `Spacer()` works for layout. Outside the group (between separate ToolbarItems), use `ToolbarSpacer` instead — see Pattern 5.\n\n---\n\n## Pattern 5: Visual Breaks with ToolbarSpacer (iOS 26+ / macOS 26+)\n\n`ToolbarSpacer` creates visual gaps between separate `ToolbarItem`s and integrates with the customization system. Two variants: `.fixed` (consistent gap) and `.flexible` (expands).\n\n```swift\n.toolbar(id: \"main\") {\n    ToolbarItem(id: \"tag\", placement: .primaryAction) {\n        TagButton()\n    }\n    ToolbarSpacer(.fixed)\n    ToolbarItem(id: \"share\", placement: .primaryAction) {\n        ShareButton()\n    }\n    ToolbarSpacer(.flexible)\n    ToolbarItem(id: \"more\", placement: .primaryAction) {\n        MoreButton()\n    }\n}\n```\n\n**Why not regular Spacer** A `Spacer()` between separate `ToolbarItem`s is ignored — toolbar layout doesn't honor SwiftUI flex spacing the way an HStack does. `ToolbarSpacer` is the toolbar-aware equivalent and is also customizable (users can add/remove instances).\n\n**Pre-iOS 26 fallback** Group items into `ToolbarItemGroup` and use regular `Spacer()` inside the group.\n\n---\n\n## Pattern 6: Customizable Toolbars (`.toolbar(id:)`)\n\nLets users rearrange, add, and remove toolbar items via a customization sheet. Requires unique `id:` on the toolbar AND every item.\n\n```swift\n.toolbar(id: \"browser\") {\n    ToolbarItem(id: \"back\", placement: .navigation) {\n        Button { goBack() } label: { Image(systemName: \"chevron.left\") }\n    }\n    .customizationBehavior(.disabled)  // Always present, not removable\n    \n    ToolbarItem(id: \"share\", placement: .secondaryAction) {\n        ShareLink(item: currentURL)\n    }\n    \n    ToolbarItem(id: \"bookmarks\", placement: .secondaryAction) {\n        Button { showBookmarks() } label: { Image(systemName: \"book\") }\n    }\n    .defaultCustomization(.hidden)  // Available but hidden by default\n}\n```\n\n**Customization behaviors:**\n- `.default` — user can move, hide, show\n- `.disabled` — locked in place\n- `.reorderable` — can be moved but not hidden\n\n**Where customization appears**\n- iPadOS 16+ / macOS 13+: Edit Toolbar menu\n- iOS 26+: customization sheet via `.toolbarCustomizationBehavior` action\n\n---\n\n## Pattern 7: ToolbarRole for Three-Column Layouts\n\n`.toolbarRole(.editor)` reorganizes toolbar items for editor-style apps (Mail, Notes) — moves items into the document area's toolbar instead of the sidebar's.\n\n```swift\nNavigationSplitView {\n    SidebarView()\n} content: {\n    ListView()\n} detail: {\n    EditorView()\n        .toolbar { editorActions }\n        .toolbarRole(.editor)  // Items attach to detail column on iPad/Mac\n}\n```\n\nWithout `.toolbarRole(.editor)`, the items appear in the leftmost visible column — usually wrong for editor apps.\n\n---\n\n## Pattern 8: Visibility, Background, Color Scheme\n\nControl toolbar appearance per-bar. The `for:` parameter targets a specific bar (`.navigationBar`, `.bottomBar`, `.tabBar`).\n\n```swift\nContentView()\n    // Show or hide a bar\n    .toolbar(.visible, for: .bottomBar)\n    .toolbar(.hidden, for: .navigationBar)\n    \n    // Background material/color\n    .toolbarBackground(.regularMaterial, for: .navigationBar)\n    .toolbarBackground(.visible, for: .navigationBar)\n    \n    // Color scheme (e.g., dark toolbar on light app)\n    .toolbarColorScheme(.dark, for: .navigationBar)\n```\n\n**iOS 26 note** Liquid Glass changes how toolbar backgrounds render. See axiom-design (skills/liquid-glass.md) before customizing background materials in iOS 26+ apps.\n\n---\n\n## Pattern 9: macOS-Specific — windowToolbarStyle\n\nOn macOS, the toolbar attaches to a window. The window's toolbar style (`unified`, `expanded`, `unifiedCompact`) is set on the Scene, not the View.\n\n```swift\nWindowGroup {\n    ContentView()\n}\n.windowToolbarStyle(.unified)  // Title and toolbar inline (default for many apps)\n```\n\n**Style choices**\n- `.expanded` — title bar above toolbar (classic macOS look)\n- `.unified` — title and toolbar inline (most modern apps)\n- `.unifiedCompact` — compact inline toolbar\n\n**For full macOS toolbar/window integration** see axiom-macos (skills/windows.md), which covers Window vs WindowGroup, MenuBarExtra, and toolbar style choice rationale.\n\n---\n\n## ToolbarItemPlacement Reference\n\nUse this table to pick the right placement. When in doubt, prefer semantic placements (`.primaryAction`, `.confirmationAction`) over positional ones (`.topBarTrailing`) — semantic placements adapt across platforms.\n\n| Placement | iOS | iPadOS | macOS | When to Use |\n|---|---|---|---|---|\n| `.automatic` | ✓ | ✓ | ✓ | Let SwiftUI decide based on context |\n| `.primaryAction` | top-trailing | top-trailing | toolbar | The single most important action (Save, Done, Add) |\n| `.secondaryAction` | overflow menu | overflow menu | toolbar | Less prominent actions; collapses on small screens |\n| `.confirmationAction` | top-trailing (bold) | top-trailing (bold) | default button | Sheet's confirm button — gets bold styling + Return key |\n| `.cancellationAction` | top-leading | top-leading | cancel button | Sheet's cancel button — gets Esc key |\n| `.destructiveAction` | varies | varies | red-tinted | Delete/destroy actions |\n| `.navigation` | back area | back area | navigation slot | Custom back/forward items |\n| `.topBarLeading` | top-leading | top-leading | leading | Filters, menus, drawers |\n| `.topBarTrailing` | top-trailing | top-trailing | trailing | Secondary actions when not using `.primaryAction` |\n| `.bottomBar` | bottom bar | bottom bar | n/a | iOS-style action bars (3+ peer actions) |\n| `.principal` | center of nav bar | center | center | Segmented controls, custom titles |\n| `.status` | n/a | n/a | status area | macOS status info (sync indicators, etc.) |\n| `.keyboard` | above keyboard | n/a | n/a | Input accessory items |\n| `.bottomOrnament` | n/a | n/a | n/a (visionOS) | visionOS bottom ornament |\n\n**Deprecated** `.navigationBarLeading` → use `.topBarLeading`. `.navigationBarTrailing` → use `.topBarTrailing`. The renames give cross-platform clarity (no \"navigation bar\" on macOS).\n\n---\n\n## Anti-Patterns (DO NOT DO THIS)\n\n### ❌ Standalone view with `.toolbar`\n\n```swift\n// Toolbar items will silently disappear\nstruct DetailView: View {\n    var body: some View {\n        VStack { Text(\"Hello\") }\n            .toolbar {\n                ToolbarItem { Button(\"Save\") {} }\n            }\n    }\n}\n```\n\n**Why** Toolbar requires a navigation container (NavigationStack, NavigationSplitView, sheet's nav, or NavigationLink destination). Standalone views render the toolbar to nowhere.\n\n**Fix** Either wrap the view in a `NavigationStack` at the call site, or move the `.toolbar` to where the navigation container lives.\n\n### ❌ Conditional `.toolbar` content\n\n```swift\n.toolbar {\n    if isEditing {\n        ToolbarItem { Button(\"Done\") { isEditing = false } }\n    } else {\n        ToolbarItem { Button(\"Edit\") { isEditing = true } }\n    }\n}\n```\n\n**Why** Conditional toolbar items rebuild the entire toolbar on state change → flicker, animation glitches, dropped first responders.\n\n**Fix** Single stable item with conditional label/action:\n```swift\n.toolbar {\n    ToolbarItem(placement: .primaryAction) {\n        Button(isEditing ? \"Done\" : \"Edit\") { isEditing.toggle() }\n    }\n}\n```\n\n### ❌ Two primary actions\n\n```swift\n.toolbar {\n    ToolbarItem(placement: .primaryAction) { Button(\"Save\") {} }\n    ToolbarItem(placement: .primaryAction) { Button(\"Share\") {} }  // Wrong\n}\n```\n\n**Why** Apple HIG mandates one primary action per surface. SwiftUI may collapse the second into overflow on iOS, or lay them out unpredictably.\n\n**Fix** Demote secondary actions to `.secondaryAction`, `.topBarTrailing`, or move to a menu under the primary action.\n\n### ❌ Regular Spacer between separate ToolbarItems\n\n```swift\n.toolbar {\n    ToolbarItem { LeftButton() }\n    Spacer()  // Ignored — toolbar layout doesn't honor this\n    ToolbarItem { RightButton() }\n}\n```\n\n**Why** Toolbar layout is not an HStack. `Spacer()` outside a `ToolbarItemGroup` is invisible to the layout engine.\n\n**Fix iOS 26+** Use `ToolbarSpacer(.flexible)`. **Pre-iOS 26** Group both items in a `ToolbarItemGroup` (where Spacer works) or use placements to force separation.\n\n### ❌ Forgetting `.toolbar(id:)` for customization\n\n```swift\n// User opens \"Customize Toolbar...\" → empty sheet\n.toolbar {\n    ToolbarItem(id: \"share\") { ShareButton() }  // id: ignored without toolbar(id:)\n}\n```\n\n**Why** `id:` on individual `ToolbarItem`s only takes effect when the parent uses `.toolbar(id:)`. Otherwise customization is disabled entirely.\n\n**Fix** `.toolbar(id: \"main\") { ToolbarItem(id: \"share\") { ... } }`.\n\n---\n\n## Code Review Checklist\n\nBefore merging toolbar code:\n\n- [ ] All `.toolbar` modifiers are inside (or attached to) a navigation container\n- [ ] No deprecated `.navigationBarLeading` / `.navigationBarTrailing` (use `.topBarLeading` / `.topBarTrailing`)\n- [ ] Sheet confirm/cancel use `.confirmationAction` / `.cancellationAction` (not topBar placements)\n- [ ] At most one `.primaryAction` per surface\n- [ ] No conditional `if` inside `.toolbar` — use stable items with conditional label/action\n- [ ] If using `Spacer()` between toolbar items, it's inside a `ToolbarItemGroup` (or replaced with `ToolbarSpacer` on iOS 26+)\n- [ ] Customizable toolbars use `.toolbar(id:)` AND every `ToolbarItem` has an `id:`\n- [ ] Bottom bar items use `.bottomBar` placement (iOS only)\n- [ ] Editor-style three-column layouts use `.toolbarRole(.editor)`\n- [ ] iOS 26+ apps reviewed against axiom-design (skills/liquid-glass.md) for background-material changes\n- [ ] macOS apps set `windowToolbarStyle` on the Scene (see axiom-macos (skills/windows.md))\n\n---\n\n## Troubleshooting Quick Reference\n\n| Symptom | Most Likely Cause |\n|---|---|\n| Toolbar items invisible | Not inside navigation container |\n| Wrong order on iPad vs iPhone | Using deprecated `.navigationBar*` placements |\n| Customization sheet empty | Missing `.toolbar(id:)` on parent |\n| Items flicker on state change | Conditional `if` inside `.toolbar` |\n| Bottom bar empty | No items OR `.toolbar(.hidden, for: .bottomBar)` somewhere upstream |\n| Toolbar background ignores material | Set on a child View; use `.toolbarBackground(_:for:)` |\n| Items reorder unexpectedly on macOS | User customized — use `.customizationBehavior(.disabled)` to lock |\n| `ToolbarSpacer` not recognized | Targeting < iOS 26 / macOS 26 — use `ToolbarItemGroup` + Spacer fallback |\n\n---\n\n## Resources\n\n**WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219\n\n**Docs**: /swiftui/toolbar(content:), /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent\n\n**Skills**: axiom-swiftui (skills/nav.md), axiom-macos (skills/windows.md), axiom-macos (skills/menus-and-commands.md), axiom-design (skills/liquid-glass.md)\n",
+      "content": "---\nname: swiftui-toolbars\ndescription: Use when adding, customizing, or debugging SwiftUI toolbars on iOS or macOS — .toolbar modifier, ToolbarItem, ToolbarItemGroup, ToolbarSpacer, placements, customization, ToolbarRole.\nlicense: MIT\n---\n\n# SwiftUI Toolbars\n\n## When to Use This Skill\n\nUse when:\n- Adding action buttons to a navigation bar, bottom bar, or window toolbar\n- Choosing between `ToolbarItem`, `ToolbarItemGroup`, and `ToolbarSpacer`\n- Selecting the right `ToolbarItemPlacement` for an action\n- Building a customizable toolbar (user can rearrange items)\n- Setting toolbar visibility, background, or color scheme\n- Adopting iOS 26+ `ToolbarSpacer` for visual breaks\n- Migrating from deprecated `.navigationBarLeading` / `.navigationBarTrailing`\n- Debugging missing or misplaced toolbar items\n- Requesting code review of toolbar implementation before shipping\n\n#### Related Skills\n- Use `skills/nav.md` for the surrounding NavigationStack/NavigationSplitView the toolbar attaches to\n- Use axiom-macos (skills/windows.md) for `windowToolbarStyle` and window-toolbar interactions\n- Use axiom-macos (skills/menus-and-commands.md) for menu bar commands and keyboard shortcuts\n- Use axiom-design (skills/liquid-glass.md) for iOS 26 toolbar Liquid Glass styling\n\n## Example Prompts\n\n#### 1. \"How do I add a Save button to my navigation bar?\"\n→ The skill shows `.toolbar { ToolbarItem(placement: .primaryAction) { ... } }` and explains why `.primaryAction` is preferred over `.topBarTrailing` for cross-platform behavior.\n\n#### 2. \"My toolbar items aren't showing up.\"\n→ The skill covers the most common cause: `.toolbar` must be inside a navigation container (NavigationStack, NavigationSplitView, or sheet's nav). Standalone Views ignore `.toolbar`.\n\n#### 3. \"Should I use ToolbarItem or ToolbarItemGroup?\"\n→ Decision tree: ToolbarItemGroup for tightly-related actions sharing one placement; separate ToolbarItems when you want independent placements or per-item visibility logic.\n\n#### 4. \"How do I make my toolbar customizable so users can rearrange items?\"\n→ Pattern using `.toolbar(id: \"...\")` + `customizationBehavior` + `ToolbarSpacer(.flexible)` for iOS 26 / iPadOS 26 / macOS 26.\n\n#### 5. \"I'm getting a deprecation warning on .navigationBarLeading.\"\n→ Replace with `.topBarLeading` (iOS 14+, but renamed in later versions for cross-platform clarity). Same for `.navigationBarTrailing` → `.topBarTrailing`.\n\n---\n\n## Red Flags — Anti-Patterns to Prevent\n\n| Symptom | Cause | Fix |\n|---|---|---|\n| Toolbar items don't appear | `.toolbar` on a View not inside NavigationStack/SplitView | Move `.toolbar` to the navigation container's content, or wrap in `NavigationStack` |\n| Items appear in wrong order on iPad | Used `.navigationBarTrailing` (deprecated alias) | Use `.topBarTrailing` |\n| Customization sheet has nothing to customize | Used `.toolbar { }` instead of `.toolbar(id:)` | Switch to `.toolbar(id:)` and give each `ToolbarItem` an `id:` |\n| Spacer between items disappears when toolbar overflows | Used `Spacer()` instead of `ToolbarSpacer` | Use `ToolbarSpacer(.fixed)` or `ToolbarSpacer(.flexible)` (iOS 26+) |\n| Two `.primaryAction` items but only one shows | iOS HIG: one primary action per surface | Demote one to `.secondaryAction` or `.topBarTrailing` |\n| Toolbar items flicker when state changes | Conditional `if` inside `.toolbar` rebuilds the whole toolbar | Use `.disabled()` / `.opacity()` modifiers on stable items instead |\n| Bottom bar doesn't appear on iOS | `.bottomBar` requires `.toolbar(.visible, for: .bottomBar)` or items present | Verify visibility AND content; bottom bar hides when empty |\n| Toolbar background ignores custom material | Set `.background` on a child View | Use `.toolbarBackground(.regularMaterial, for: .navigationBar)` instead |\n\n---\n\n## Quick Decision Tree\n\n```dot\ndigraph toolbars {\n    start [shape=ellipse label=\"Need to add toolbar items\"];\n    inNav [shape=diamond label=\"Inside NavigationStack/SplitView?\"];\n    addNav [shape=box label=\"Wrap in NavigationStack first\"];\n    purpose [shape=diamond label=\"What kind of action?\"];\n    primary [shape=box label=\"ToolbarItem(.primaryAction)\"];\n    confirm [shape=box label=\"ToolbarItem(.confirmationAction)\"];\n    cancel [shape=box label=\"ToolbarItem(.cancellationAction)\"];\n    destructive [shape=box label=\"ToolbarItem(.destructiveAction)\"];\n    leading [shape=box label=\"ToolbarItem(.topBarLeading)\"];\n    trailing [shape=box label=\"ToolbarItem(.topBarTrailing)\"];\n    bottom [shape=box label=\"ToolbarItemGroup(.bottomBar)\"];\n    custom [shape=diamond label=\"User-customizable?\"];\n    customYes [shape=box label=\"toolbar(id:) + ToolbarItem(id:)\\n+ ToolbarSpacer for breaks\"];\n    \n    start -> inNav;\n    inNav -> addNav [label=\"no\"];\n    inNav -> purpose [label=\"yes\"];\n    purpose -> primary [label=\"main create/save action\"];\n    purpose -> confirm [label=\"confirm a sheet\"];\n    purpose -> cancel [label=\"cancel a sheet\"];\n    purpose -> destructive [label=\"delete/destroy\"];\n    purpose -> leading [label=\"back/menu (iOS top-left)\"];\n    purpose -> trailing [label=\"secondary action (iOS top-right)\"];\n    purpose -> bottom [label=\"3+ peer actions on iOS\"];\n    purpose -> custom;\n    custom -> customYes [label=\"yes (iOS 26+/macOS 26+)\"];\n}\n```\n\n---\n\n## Pattern 1: Basic Toolbar with Primary Action\n\nThe most common case — a single Save / Done / Add button.\n\n```swift\nNavigationStack {\n    Form {\n        TextField(\"Title\", text: $title)\n    }\n    .navigationTitle(\"New Task\")\n    .toolbar {\n        ToolbarItem(placement: .primaryAction) {\n            Button(\"Save\") { save() }\n                .disabled(title.isEmpty)\n        }\n    }\n}\n```\n\n**Why `.primaryAction`** Cross-platform — appears top-trailing on iOS, primary toolbar slot on macOS, principal area on watchOS. Avoids platform branching.\n\n---\n\n## Pattern 2: Confirmation / Cancellation in a Sheet\n\nStandard pair for modal sheets. iOS uses these placements specifically — they get bolded styling and the right keyboard hookups.\n\n```swift\n.sheet(isPresented: $showingEditor) {\n    NavigationStack {\n        EditorView(item: $editing)\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button(\"Cancel\") { showingEditor = false }\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    Button(\"Done\") {\n                        commit(editing)\n                        showingEditor = false\n                    }\n                    .disabled(!editing.isValid)\n                }\n            }\n    }\n}\n```\n\n**Gotcha** Don't use `.topBarLeading` / `.topBarTrailing` here — you lose the platform-correct emphasis (bolded \"Done\" on iOS, default-button styling on macOS).\n\n### HIG rules for sheet buttons\n\nApple's HIG codified the following rules for sheet button placement (updated 2026-03-24):\n\n| Rule | Why |\n|------|-----|\n| Always pair a confirmation button with Cancel or Back | A solo Done implies completing the task is the only way out — feels restrictive or misleading. |\n| Don't show Cancel, Done, and Back together | Too many dismiss/commit affordances confuse the exit path. Pick the pair the step needs. |\n| iOS / iPadOS: Cancel leading, Done trailing | `.cancellationAction` and `.confirmationAction` produce this automatically — don't override with `.topBarLeading` / `.topBarTrailing`. |\n| watchOS: prefer SF Symbols for action labels | Brief glance-and-tap interactions; text labels read poorly at watch sizes. |\n\n**Practical implication** The pattern above is already correct for iOS/iPadOS/macOS. The rule to internalize is *don't ship a sheet with only a Done button* — either add Cancel, or use a Back button if the sheet is mid-flow.\n\n---\n\n## Pattern 3: Multiple Independent Items (separate ToolbarItems)\n\nUse separate `ToolbarItem`s when each needs different placement or independent visibility logic.\n\n```swift\n.toolbar {\n    ToolbarItem(placement: .topBarLeading) {\n        Button { showFilters.toggle() } label: {\n            Label(\"Filter\", systemImage: \"line.3.horizontal.decrease.circle\")\n        }\n    }\n    ToolbarItem(placement: .principal) {\n        Picker(\"View\", selection: $sortMode) {\n            Text(\"Date\").tag(SortMode.date)\n            Text(\"Name\").tag(SortMode.name)\n        }\n        .pickerStyle(.segmented)\n    }\n    ToolbarItem(placement: .primaryAction) {\n        Button { create() } label: {\n            Image(systemName: \"plus\")\n        }\n    }\n}\n```\n\n---\n\n## Pattern 4: Grouped Items (ToolbarItemGroup)\n\nUse `ToolbarItemGroup` when 2+ items share placement AND should be treated as a unit (e.g., they appear/disappear together, share customization behavior).\n\n```swift\n.toolbar {\n    ToolbarItemGroup(placement: .bottomBar) {\n        Button { share() } label: { Image(systemName: \"square.and.arrow.up\") }\n        Spacer()\n        Button { archive() } label: { Image(systemName: \"archivebox\") }\n        Spacer()\n        Button { delete() } label: { Image(systemName: \"trash\") }\n            .tint(.red)\n    }\n}\n```\n\n**Note** Inside a `ToolbarItemGroup`, regular `Spacer()` works for layout. Outside the group (between separate ToolbarItems), use `ToolbarSpacer` instead — see Pattern 5.\n\n---\n\n## Pattern 5: Visual Breaks with ToolbarSpacer (iOS 26+ / macOS 26+)\n\n`ToolbarSpacer` creates visual gaps between separate `ToolbarItem`s and integrates with the customization system. Two variants: `.fixed` (consistent gap) and `.flexible` (expands).\n\n```swift\n.toolbar(id: \"main\") {\n    ToolbarItem(id: \"tag\", placement: .primaryAction) {\n        TagButton()\n    }\n    ToolbarSpacer(.fixed)\n    ToolbarItem(id: \"share\", placement: .primaryAction) {\n        ShareButton()\n    }\n    ToolbarSpacer(.flexible)\n    ToolbarItem(id: \"more\", placement: .primaryAction) {\n        MoreButton()\n    }\n}\n```\n\n**Why not regular Spacer** A `Spacer()` between separate `ToolbarItem`s is ignored — toolbar layout doesn't honor SwiftUI flex spacing the way an HStack does. `ToolbarSpacer` is the toolbar-aware equivalent and is also customizable (users can add/remove instances).\n\n**Pre-iOS 26 fallback** Group items into `ToolbarItemGroup` and use regular `Spacer()` inside the group.\n\n---\n\n## Pattern 6: Customizable Toolbars (`.toolbar(id:)`)\n\nLets users rearrange, add, and remove toolbar items via a customization sheet. Requires unique `id:` on the toolbar AND every item.\n\n```swift\n.toolbar(id: \"browser\") {\n    ToolbarItem(id: \"back\", placement: .navigation) {\n        Button { goBack() } label: { Image(systemName: \"chevron.left\") }\n    }\n    .customizationBehavior(.disabled)  // Always present, not removable\n    \n    ToolbarItem(id: \"share\", placement: .secondaryAction) {\n        ShareLink(item: currentURL)\n    }\n    \n    ToolbarItem(id: \"bookmarks\", placement: .secondaryAction) {\n        Button { showBookmarks() } label: { Image(systemName: \"book\") }\n    }\n    .defaultCustomization(.hidden)  // Available but hidden by default\n}\n```\n\n**Customization behaviors:**\n- `.default` — user can move, hide, show\n- `.disabled` — locked in place\n- `.reorderable` — can be moved but not hidden\n\n**Where customization appears**\n- iPadOS 16+ / macOS 13+: Edit Toolbar menu\n- iOS 26+: customization sheet via `.toolbarCustomizationBehavior` action\n\n---\n\n## Pattern 7: ToolbarRole for Three-Column Layouts\n\n`.toolbarRole(.editor)` reorganizes toolbar items for editor-style apps (Mail, Notes) — moves items into the document area's toolbar instead of the sidebar's.\n\n```swift\nNavigationSplitView {\n    SidebarView()\n} content: {\n    ListView()\n} detail: {\n    EditorView()\n        .toolbar { editorActions }\n        .toolbarRole(.editor)  // Items attach to detail column on iPad/Mac\n}\n```\n\nWithout `.toolbarRole(.editor)`, the items appear in the leftmost visible column — usually wrong for editor apps.\n\n---\n\n## Pattern 8: Visibility, Background, Color Scheme\n\nControl toolbar appearance per-bar. The `for:` parameter targets a specific bar (`.navigationBar`, `.bottomBar`, `.tabBar`).\n\n```swift\nContentView()\n    // Show or hide a bar\n    .toolbar(.visible, for: .bottomBar)\n    .toolbar(.hidden, for: .navigationBar)\n    \n    // Background material/color\n    .toolbarBackground(.regularMaterial, for: .navigationBar)\n    .toolbarBackground(.visible, for: .navigationBar)\n    \n    // Color scheme (e.g., dark toolbar on light app)\n    .toolbarColorScheme(.dark, for: .navigationBar)\n```\n\n**iOS 26 note** Liquid Glass changes how toolbar backgrounds render. See axiom-design (skills/liquid-glass.md) before customizing background materials in iOS 26+ apps.\n\n---\n\n## Pattern 9: macOS-Specific — windowToolbarStyle\n\nOn macOS, the toolbar attaches to a window. The window's toolbar style (`unified`, `expanded`, `unifiedCompact`) is set on the Scene, not the View.\n\n```swift\nWindowGroup {\n    ContentView()\n}\n.windowToolbarStyle(.unified)  // Title and toolbar inline (default for many apps)\n```\n\n**Style choices**\n- `.expanded` — title bar above toolbar (classic macOS look)\n- `.unified` — title and toolbar inline (most modern apps)\n- `.unifiedCompact` — compact inline toolbar\n\n**For full macOS toolbar/window integration** see axiom-macos (skills/windows.md), which covers Window vs WindowGroup, MenuBarExtra, and toolbar style choice rationale.\n\n---\n\n## ToolbarItemPlacement Reference\n\nUse this table to pick the right placement. When in doubt, prefer semantic placements (`.primaryAction`, `.confirmationAction`) over positional ones (`.topBarTrailing`) — semantic placements adapt across platforms.\n\n| Placement | iOS | iPadOS | macOS | When to Use |\n|---|---|---|---|---|\n| `.automatic` | ✓ | ✓ | ✓ | Let SwiftUI decide based on context |\n| `.primaryAction` | top-trailing | top-trailing | toolbar | The single most important action (Save, Done, Add) |\n| `.secondaryAction` | overflow menu | overflow menu | toolbar | Less prominent actions; collapses on small screens |\n| `.confirmationAction` | top-trailing (bold) | top-trailing (bold) | default button | Sheet's confirm button — gets bold styling + Return key |\n| `.cancellationAction` | top-leading | top-leading | cancel button | Sheet's cancel button — gets Esc key |\n| `.destructiveAction` | varies | varies | red-tinted | Delete/destroy actions |\n| `.navigation` | back area | back area | navigation slot | Custom back/forward items |\n| `.topBarLeading` | top-leading | top-leading | leading | Filters, menus, drawers |\n| `.topBarTrailing` | top-trailing | top-trailing | trailing | Secondary actions when not using `.primaryAction` |\n| `.bottomBar` | bottom bar | bottom bar | n/a | iOS-style action bars (3+ peer actions) |\n| `.principal` | center of nav bar | center | center | Segmented controls, custom titles |\n| `.status` | n/a | n/a | status area | macOS status info (sync indicators, etc.) |\n| `.keyboard` | above keyboard | n/a | n/a | Input accessory items |\n| `.bottomOrnament` | n/a | n/a | n/a (visionOS) | visionOS bottom ornament |\n\n**Deprecated** `.navigationBarLeading` → use `.topBarLeading`. `.navigationBarTrailing` → use `.topBarTrailing`. The renames give cross-platform clarity (no \"navigation bar\" on macOS).\n\n---\n\n## Anti-Patterns (DO NOT DO THIS)\n\n### ❌ Standalone view with `.toolbar`\n\n```swift\n// Toolbar items will silently disappear\nstruct DetailView: View {\n    var body: some View {\n        VStack { Text(\"Hello\") }\n            .toolbar {\n                ToolbarItem { Button(\"Save\") {} }\n            }\n    }\n}\n```\n\n**Why** Toolbar requires a navigation container (NavigationStack, NavigationSplitView, sheet's nav, or NavigationLink destination). Standalone views render the toolbar to nowhere.\n\n**Fix** Either wrap the view in a `NavigationStack` at the call site, or move the `.toolbar` to where the navigation container lives.\n\n### ❌ Conditional `.toolbar` content\n\n```swift\n.toolbar {\n    if isEditing {\n        ToolbarItem { Button(\"Done\") { isEditing = false } }\n    } else {\n        ToolbarItem { Button(\"Edit\") { isEditing = true } }\n    }\n}\n```\n\n**Why** Conditional toolbar items rebuild the entire toolbar on state change → flicker, animation glitches, dropped first responders.\n\n**Fix** Single stable item with conditional label/action:\n```swift\n.toolbar {\n    ToolbarItem(placement: .primaryAction) {\n        Button(isEditing ? \"Done\" : \"Edit\") { isEditing.toggle() }\n    }\n}\n```\n\n### ❌ Two primary actions\n\n```swift\n.toolbar {\n    ToolbarItem(placement: .primaryAction) { Button(\"Save\") {} }\n    ToolbarItem(placement: .primaryAction) { Button(\"Share\") {} }  // Wrong\n}\n```\n\n**Why** Apple HIG mandates one primary action per surface. SwiftUI may collapse the second into overflow on iOS, or lay them out unpredictably.\n\n**Fix** Demote secondary actions to `.secondaryAction`, `.topBarTrailing`, or move to a menu under the primary action.\n\n### ❌ Regular Spacer between separate ToolbarItems\n\n```swift\n.toolbar {\n    ToolbarItem { LeftButton() }\n    Spacer()  // Ignored — toolbar layout doesn't honor this\n    ToolbarItem { RightButton() }\n}\n```\n\n**Why** Toolbar layout is not an HStack. `Spacer()` outside a `ToolbarItemGroup` is invisible to the layout engine.\n\n**Fix iOS 26+** Use `ToolbarSpacer(.flexible)`. **Pre-iOS 26** Group both items in a `ToolbarItemGroup` (where Spacer works) or use placements to force separation.\n\n### ❌ Forgetting `.toolbar(id:)` for customization\n\n```swift\n// User opens \"Customize Toolbar...\" → empty sheet\n.toolbar {\n    ToolbarItem(id: \"share\") { ShareButton() }  // id: ignored without toolbar(id:)\n}\n```\n\n**Why** `id:` on individual `ToolbarItem`s only takes effect when the parent uses `.toolbar(id:)`. Otherwise customization is disabled entirely.\n\n**Fix** `.toolbar(id: \"main\") { ToolbarItem(id: \"share\") { ... } }`.\n\n---\n\n## Code Review Checklist\n\nBefore merging toolbar code:\n\n- [ ] All `.toolbar` modifiers are inside (or attached to) a navigation container\n- [ ] No deprecated `.navigationBarLeading` / `.navigationBarTrailing` (use `.topBarLeading` / `.topBarTrailing`)\n- [ ] Sheet confirm/cancel use `.confirmationAction` / `.cancellationAction` (not topBar placements)\n- [ ] At most one `.primaryAction` per surface\n- [ ] No conditional `if` inside `.toolbar` — use stable items with conditional label/action\n- [ ] If using `Spacer()` between toolbar items, it's inside a `ToolbarItemGroup` (or replaced with `ToolbarSpacer` on iOS 26+)\n- [ ] Customizable toolbars use `.toolbar(id:)` AND every `ToolbarItem` has an `id:`\n- [ ] Bottom bar items use `.bottomBar` placement (iOS only)\n- [ ] Editor-style three-column layouts use `.toolbarRole(.editor)`\n- [ ] iOS 26+ apps reviewed against axiom-design (skills/liquid-glass.md) for background-material changes\n- [ ] macOS apps set `windowToolbarStyle` on the Scene (see axiom-macos (skills/windows.md))\n\n---\n\n## Troubleshooting Quick Reference\n\n| Symptom | Most Likely Cause |\n|---|---|\n| Toolbar items invisible | Not inside navigation container |\n| Wrong order on iPad vs iPhone | Using deprecated `.navigationBar*` placements |\n| Customization sheet empty | Missing `.toolbar(id:)` on parent |\n| Items flicker on state change | Conditional `if` inside `.toolbar` |\n| Bottom bar empty | No items OR `.toolbar(.hidden, for: .bottomBar)` somewhere upstream |\n| Toolbar background ignores material | Set on a child View; use `.toolbarBackground(_:for:)` |\n| Items reorder unexpectedly on macOS | User customized — use `.customizationBehavior(.disabled)` to lock |\n| `ToolbarSpacer` not recognized | Targeting < iOS 26 / macOS 26 — use `ToolbarItemGroup` + Spacer fallback |\n\n---\n\n## Resources\n\n**WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219\n\n**Docs**: /swiftui/toolbar(content:), /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent\n\n**Skills**: axiom-swiftui (skills/nav.md), axiom-macos (skills/windows.md), axiom-macos (skills/menus-and-commands.md), axiom-design (skills/liquid-glass.md)\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -31423,91 +31423,91 @@
           "heading": "Pattern 2: Confirmation / Cancellation in a Sheet",
           "level": 2,
           "startLine": 119,
-          "endLine": 146,
-          "charCount": 920
+          "endLine": 159,
+          "charCount": 1905
         },
         {
           "heading": "Pattern 3: Multiple Independent Items (separate ToolbarItems)",
           "level": 2,
-          "startLine": 147,
-          "endLine": 174,
+          "startLine": 160,
+          "endLine": 187,
           "charCount": 744
         },
         {
           "heading": "Pattern 4: Grouped Items (ToolbarItemGroup)",
           "level": 2,
-          "startLine": 175,
-          "endLine": 195,
+          "startLine": 188,
+          "endLine": 208,
           "charCount": 734
         },
         {
           "heading": "Pattern 5: Visual Breaks with ToolbarSpacer (iOS 26+ / macOS 26+)",
           "level": 2,
-          "startLine": 196,
-          "endLine": 221,
+          "startLine": 209,
+          "endLine": 234,
           "charCount": 975
         },
         {
           "heading": "Pattern 6: Customizable Toolbars (`.toolbar(id:)`)",
           "level": 2,
-          "startLine": 222,
-          "endLine": 254,
+          "startLine": 235,
+          "endLine": 267,
           "charCount": 1065
         },
         {
           "heading": "Pattern 7: ToolbarRole for Three-Column Layouts",
           "level": 2,
-          "startLine": 255,
-          "endLine": 274,
+          "startLine": 268,
+          "endLine": 287,
           "charCount": 555
         },
         {
           "heading": "Pattern 8: Visibility, Background, Color Scheme",
           "level": 2,
-          "startLine": 275,
-          "endLine": 296,
+          "startLine": 288,
+          "endLine": 309,
           "charCount": 753
         },
         {
           "heading": "Pattern 9: macOS-Specific — windowToolbarStyle",
           "level": 2,
-          "startLine": 297,
-          "endLine": 316,
+          "startLine": 310,
+          "endLine": 329,
           "charCount": 689
         },
         {
           "heading": "ToolbarItemPlacement Reference",
           "level": 2,
-          "startLine": 317,
-          "endLine": 341,
+          "startLine": 330,
+          "endLine": 354,
           "charCount": 1850
         },
         {
           "heading": "Anti-Patterns (DO NOT DO THIS)",
           "level": 2,
-          "startLine": 342,
-          "endLine": 426,
+          "startLine": 355,
+          "endLine": 439,
           "charCount": 2570
         },
         {
           "heading": "Code Review Checklist",
           "level": 2,
-          "startLine": 427,
-          "endLine": 444,
+          "startLine": 440,
+          "endLine": 457,
           "charCount": 1039
         },
         {
           "heading": "Troubleshooting Quick Reference",
           "level": 2,
-          "startLine": 445,
-          "endLine": 459,
+          "startLine": 458,
+          "endLine": 472,
           "charCount": 769
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 460,
-          "endLine": 467,
+          "startLine": 473,
+          "endLine": 480,
           "charCount": 441
         }
       ]
@@ -37163,7 +37163,7 @@
           20,
           1,
           37,
-          1324
+          1340
         ],
         "40": [
           3,
@@ -38178,7 +38178,7 @@
           2,
           1,
           60,
-          530
+          570
         ],
         "185": [
           3,
@@ -38375,7 +38375,7 @@
         14.04245283018868,
         4.311320754716981,
         44.08018867924528,
-        617.8962264150946
+        618.1603773584909
       ],
       "storedFields": {
         "0": {
@@ -46995,8 +46995,10 @@
               "3": 1,
               "4": 3,
               "5": 1,
+              "39": 1,
               "76": 2,
-              "117": 1
+              "117": 1,
+              "184": 1
             }
           }
         ],
@@ -51098,6 +51100,7 @@
               "37": 1,
               "107": 1,
               "159": 1,
+              "184": 1,
               "202": 1,
               "203": 3
             }
@@ -60327,7 +60330,7 @@
             "4": {
               "0": 2,
               "1": 1,
-              "39": 9,
+              "39": 10,
               "40": 19,
               "43": 1,
               "44": 2,
@@ -60356,7 +60359,7 @@
               "159": 1,
               "161": 1,
               "169": 4,
-              "184": 2,
+              "184": 4,
               "190": 6,
               "205": 1
             }
@@ -66495,36 +66498,6 @@
           }
         ],
         [
-          "2026",
-          {
-            "1": {
-              "157": 1
-            },
-            "3": {
-              "205": 1,
-              "208": 1
-            },
-            "4": {
-              "62": 1,
-              "81": 1,
-              "107": 2,
-              "108": 2,
-              "109": 4,
-              "111": 5,
-              "113": 1,
-              "123": 2,
-              "133": 1,
-              "134": 4,
-              "157": 1,
-              "160": 2,
-              "161": 5,
-              "204": 4,
-              "205": 7,
-              "208": 1
-            }
-          }
-        ],
-        [
           "2020",
           {
             "4": {
@@ -66562,6 +66535,38 @@
               "199": 1,
               "200": 3,
               "204": 3
+            }
+          }
+        ],
+        [
+          "2026",
+          {
+            "1": {
+              "157": 1
+            },
+            "3": {
+              "205": 1,
+              "208": 1
+            },
+            "4": {
+              "39": 1,
+              "62": 1,
+              "81": 1,
+              "107": 2,
+              "108": 2,
+              "109": 4,
+              "111": 5,
+              "113": 1,
+              "123": 2,
+              "133": 1,
+              "134": 4,
+              "157": 1,
+              "160": 2,
+              "161": 5,
+              "184": 1,
+              "204": 4,
+              "205": 7,
+              "208": 1
             }
           }
         ],
@@ -67346,7 +67351,7 @@
               "0": 7,
               "3": 1,
               "8": 5,
-              "39": 1,
+              "39": 2,
               "43": 7,
               "47": 1,
               "49": 2,
@@ -67374,7 +67379,8 @@
               "175": 2,
               "177": 1,
               "179": 1,
-              "183": 6
+              "183": 6,
+              "184": 1
             }
           }
         ],
@@ -67707,7 +67713,7 @@
               "156": 2,
               "158": 1,
               "172": 2,
-              "184": 1,
+              "184": 2,
               "192": 1,
               "194": 2,
               "196": 2,
@@ -70073,7 +70079,7 @@
           "emphasis",
           {
             "4": {
-              "39": 1,
+              "39": 2,
               "42": 1,
               "44": 1,
               "94": 1,
@@ -71807,7 +71813,7 @@
               "35": 1,
               "36": 1,
               "38": 1,
-              "39": 2,
+              "39": 4,
               "41": 23,
               "42": 7,
               "46": 2,
@@ -74294,6 +74300,7 @@
             },
             "4": {
               "18": 1,
+              "39": 1,
               "50": 1,
               "71": 1,
               "85": 2,
@@ -74309,6 +74316,7 @@
               "140": 5,
               "141": 41,
               "164": 2,
+              "184": 1,
               "192": 12
             }
           }
@@ -79988,7 +79996,7 @@
               "175": 1,
               "177": 1,
               "180": 3,
-              "184": 1,
+              "184": 2,
               "187": 20,
               "188": 38,
               "189": 13,
@@ -80028,7 +80036,7 @@
               "31": 1,
               "37": 1,
               "38": 3,
-              "39": 22,
+              "39": 24,
               "40": 3,
               "41": 21,
               "42": 10,
@@ -80113,7 +80121,7 @@
               "181": 7,
               "182": 3,
               "183": 7,
-              "184": 29,
+              "184": 33,
               "187": 26,
               "188": 37,
               "189": 19,
@@ -81925,6 +81933,7 @@
               "143": 2,
               "156": 1,
               "175": 1,
+              "184": 1,
               "194": 1,
               "201": 1
             }
@@ -82880,7 +82889,7 @@
               "180": 21,
               "181": 3,
               "182": 7,
-              "184": 62,
+              "184": 64,
               "187": 1,
               "193": 3,
               "197": 25,
@@ -83722,7 +83731,7 @@
               "31": 1,
               "33": 1,
               "38": 3,
-              "39": 1,
+              "39": 3,
               "40": 3,
               "42": 1,
               "43": 2,
@@ -83795,7 +83804,7 @@
               "179": 8,
               "181": 3,
               "183": 1,
-              "184": 6,
+              "184": 9,
               "185": 1,
               "188": 3,
               "191": 5,
@@ -87452,6 +87461,7 @@
               "160": 1,
               "180": 1,
               "182": 1,
+              "184": 2,
               "192": 5,
               "193": 1,
               "200": 2,
@@ -87536,6 +87546,7 @@
               "172": 5,
               "179": 1,
               "180": 1,
+              "184": 2,
               "185": 1,
               "192": 1,
               "194": 3,
@@ -98200,6 +98211,7 @@
               "180": 3,
               "182": 4,
               "183": 3,
+              "184": 1,
               "186": 4,
               "188": 1,
               "191": 5,
@@ -99575,7 +99587,8 @@
           {
             "4": {
               "93": 1,
-              "176": 1
+              "176": 1,
+              "184": 1
             }
           }
         ],
@@ -102449,7 +102462,7 @@
               "181": 18,
               "182": 5,
               "183": 13,
-              "184": 32,
+              "184": 33,
               "185": 17,
               "186": 8,
               "187": 8,
@@ -103364,7 +103377,7 @@
               "33": 1,
               "34": 1,
               "37": 4,
-              "39": 1,
+              "39": 2,
               "40": 1,
               "41": 5,
               "43": 1,
@@ -103419,6 +103432,7 @@
               "181": 1,
               "182": 1,
               "183": 4,
+              "184": 1,
               "193": 1,
               "195": 2,
               "196": 1,
@@ -106577,7 +106591,7 @@
               "34": 2,
               "37": 15,
               "38": 62,
-              "39": 15,
+              "39": 16,
               "40": 6,
               "41": 23,
               "42": 26,
@@ -116130,7 +116144,7 @@
               "1": 1,
               "2": 8,
               "30": 1,
-              "39": 3,
+              "39": 4,
               "40": 3,
               "41": 3,
               "43": 1,
@@ -116154,6 +116168,7 @@
               "161": 5,
               "163": 2,
               "170": 5,
+              "184": 2,
               "187": 2,
               "188": 6,
               "190": 1,
@@ -117934,7 +117949,7 @@
             "4": {
               "17": 1,
               "26": 1,
-              "39": 5,
+              "39": 6,
               "41": 2,
               "45": 12,
               "66": 2,
@@ -117959,7 +117974,7 @@
               "175": 1,
               "177": 8,
               "181": 2,
-              "184": 18,
+              "184": 20,
               "193": 19,
               "194": 1,
               "197": 4,
@@ -119030,6 +119045,7 @@
               "172": 1,
               "175": 1,
               "183": 1,
+              "184": 1,
               "203": 1
             }
           }
@@ -120142,7 +120158,7 @@
               "14": 1,
               "17": 1,
               "38": 10,
-              "39": 1,
+              "39": 2,
               "40": 1,
               "44": 1,
               "58": 2,
@@ -120185,6 +120201,7 @@
               "177": 2,
               "180": 1,
               "183": 4,
+              "184": 1,
               "187": 4,
               "194": 3,
               "197": 2,
@@ -123954,6 +123971,7 @@
               "158": 1,
               "161": 1,
               "172": 1,
+              "184": 1,
               "193": 3,
               "202": 1
             }
@@ -131655,7 +131673,7 @@
               "170": 1,
               "172": 2,
               "178": 3,
-              "184": 1,
+              "184": 2,
               "192": 1,
               "197": 1,
               "201": 2,
@@ -132630,7 +132648,8 @@
           "poorly",
           {
             "4": {
-              "120": 1
+              "120": 1,
+              "184": 1
             }
           }
         ],
@@ -133414,11 +133433,10 @@
           }
         ],
         [
-          "placements",
+          "placerepresenta",
           {
-            "4": {
-              "184": 8,
-              "203": 1
+            "2": {
+              "94": 1
             }
           }
         ],
@@ -133443,10 +133461,12 @@
           }
         ],
         [
-          "placerepresenta",
+          "placements",
           {
-            "2": {
-              "94": 1
+            "4": {
+              "39": 1,
+              "184": 8,
+              "203": 1
             }
           }
         ],
@@ -133485,7 +133505,7 @@
               "15": 5,
               "18": 1,
               "38": 1,
-              "39": 2,
+              "39": 3,
               "42": 1,
               "43": 2,
               "44": 2,
@@ -133525,7 +133545,7 @@
               "180": 6,
               "181": 1,
               "182": 14,
-              "184": 26,
+              "184": 27,
               "187": 1,
               "192": 1,
               "194": 1,
@@ -134859,7 +134879,7 @@
               "0": 1,
               "17": 1,
               "26": 1,
-              "39": 2,
+              "39": 4,
               "59": 1,
               "62": 1,
               "66": 1,
@@ -134875,7 +134895,7 @@
               "155": 1,
               "170": 4,
               "171": 14,
-              "184": 1,
+              "184": 3,
               "201": 1,
               "207": 1
             }
@@ -136021,6 +136041,7 @@
               "179": 157,
               "180": 87,
               "181": 82,
+              "184": 1,
               "186": 1,
               "187": 4,
               "188": 1,
@@ -136427,7 +136448,7 @@
               "36": 9,
               "37": 5,
               "38": 15,
-              "39": 1,
+              "39": 2,
               "43": 1,
               "44": 2,
               "45": 1,
@@ -136523,7 +136544,7 @@
               "181": 29,
               "182": 4,
               "183": 5,
-              "184": 11,
+              "184": 12,
               "186": 10,
               "188": 8,
               "189": 2,
@@ -137542,7 +137563,7 @@
               "5": 1,
               "17": 1,
               "38": 4,
-              "39": 8,
+              "39": 9,
               "40": 4,
               "41": 11,
               "42": 3,
@@ -137597,7 +137618,7 @@
               "181": 6,
               "182": 3,
               "183": 3,
-              "184": 6,
+              "184": 8,
               "187": 1,
               "188": 18,
               "199": 1,
@@ -137645,6 +137666,7 @@
               "38": 1,
               "78": 1,
               "144": 1,
+              "184": 1,
               "188": 1,
               "195": 1
             }
@@ -138524,6 +138546,7 @@
             "4": {
               "5": 2,
               "8": 5,
+              "39": 1,
               "42": 1,
               "50": 2,
               "125": 1,
@@ -138532,6 +138555,7 @@
               "147": 1,
               "158": 1,
               "164": 1,
+              "184": 1,
               "190": 1,
               "194": 2
             }
@@ -142824,7 +142848,7 @@
               "26": 1,
               "31": 1,
               "38": 1,
-              "39": 1,
+              "39": 2,
               "40": 3,
               "45": 2,
               "48": 1,
@@ -142855,7 +142879,7 @@
               "175": 1,
               "176": 1,
               "180": 1,
-              "184": 1,
+              "184": 2,
               "185": 1,
               "187": 1,
               "192": 4,
@@ -148524,7 +148548,7 @@
               "36": 1,
               "37": 4,
               "38": 3,
-              "39": 1,
+              "39": 2,
               "40": 4,
               "42": 5,
               "43": 1,
@@ -150119,7 +150143,7 @@
           "trail",
           {
             "4": {
-              "39": 1,
+              "39": 2,
               "41": 1,
               "47": 1,
               "48": 4,
@@ -150140,7 +150164,7 @@
               "177": 1,
               "180": 1,
               "182": 1,
-              "184": 26,
+              "184": 28,
               "193": 19,
               "197": 3,
               "202": 2,
@@ -152122,7 +152146,7 @@
               "23": 2,
               "31": 1,
               "38": 1,
-              "39": 1,
+              "39": 2,
               "41": 1,
               "42": 2,
               "43": 1,
@@ -152140,7 +152164,7 @@
               "174": 1,
               "176": 2,
               "183": 1,
-              "184": 1,
+              "184": 2,
               "194": 1,
               "196": 2,
               "202": 1,
@@ -152286,7 +152310,7 @@
               "0": 1,
               "11": 1,
               "16": 1,
-              "39": 3,
+              "39": 4,
               "41": 5,
               "42": 3,
               "45": 1,
@@ -152336,7 +152360,7 @@
               "177": 9,
               "180": 1,
               "182": 1,
-              "184": 32,
+              "184": 34,
               "192": 5,
               "193": 6,
               "194": 4,
@@ -152449,6 +152473,7 @@
               "176": 1,
               "178": 1,
               "183": 8,
+              "184": 1,
               "187": 1,
               "188": 2,
               "189": 1,
@@ -152541,6 +152566,7 @@
               "184": 2
             },
             "4": {
+              "39": 1,
               "41": 10,
               "42": 1,
               "98": 1,
@@ -152563,7 +152589,7 @@
             },
             "4": {
               "1": 2,
-              "39": 3,
+              "39": 4,
               "41": 24,
               "42": 4,
               "44": 1,
@@ -153383,7 +153409,7 @@
               "181": 2,
               "182": 1,
               "183": 2,
-              "184": 1,
+              "184": 2,
               "185": 13,
               "186": 2,
               "188": 2,
@@ -153940,6 +153966,7 @@
               "181": 1,
               "182": 2,
               "183": 1,
+              "184": 1,
               "187": 28,
               "188": 35,
               "189": 17,
@@ -154527,7 +154554,7 @@
               "181": 4,
               "182": 92,
               "183": 14,
-              "184": 5,
+              "184": 6,
               "187": 16,
               "188": 19,
               "189": 28,
@@ -157887,7 +157914,7 @@
               "35": 3,
               "36": 3,
               "38": 1,
-              "39": 3,
+              "39": 4,
               "40": 1,
               "41": 1,
               "42": 2,
@@ -158632,7 +158659,7 @@
               "33": 2,
               "37": 1,
               "38": 1,
-              "39": 1,
+              "39": 2,
               "40": 1,
               "41": 1,
               "42": 1,
@@ -158702,7 +158729,7 @@
               "175": 1,
               "179": 1,
               "181": 3,
-              "184": 1,
+              "184": 2,
               "185": 1,
               "188": 1,
               "193": 1,
@@ -166762,6 +166789,7 @@
               "25": 7,
               "31": 1,
               "38": 1,
+              "39": 4,
               "44": 1,
               "48": 3,
               "50": 2,
@@ -166796,7 +166824,7 @@
               "169": 1,
               "171": 1,
               "175": 2,
-              "184": 6,
+              "184": 10,
               "187": 1,
               "188": 1,
               "189": 1,
@@ -166860,7 +166888,7 @@
               "36": 1,
               "37": 4,
               "38": 6,
-              "39": 12,
+              "39": 13,
               "40": 1,
               "41": 1,
               "42": 7,
@@ -166979,7 +167007,7 @@
               "181": 2,
               "182": 2,
               "183": 6,
-              "184": 2,
+              "184": 5,
               "185": 2,
               "186": 1,
               "187": 3,
@@ -175020,6 +175048,7 @@
               "164": 2,
               "169": 9,
               "182": 20,
+              "184": 1,
               "187": 1,
               "189": 1,
               "197": 9,
@@ -179485,7 +179514,7 @@
               "181": 19,
               "182": 7,
               "183": 14,
-              "184": 5,
+              "184": 6,
               "185": 8,
               "186": 2,
               "187": 1,
@@ -184970,7 +184999,8 @@
             },
             "4": {
               "58": 1,
-              "62": 1
+              "62": 1,
+              "184": 1
             }
           }
         ],
@@ -185399,7 +185429,7 @@
               "169": 1,
               "176": 1,
               "183": 1,
-              "184": 1,
+              "184": 2,
               "187": 3,
               "188": 6,
               "189": 2,
@@ -186388,8 +186418,10 @@
           "implies",
           {
             "4": {
+              "39": 1,
               "60": 1,
-              "159": 1
+              "159": 1,
+              "184": 1
             }
           }
         ],
@@ -186419,7 +186451,8 @@
             },
             "4": {
               "15": 1,
-              "107": 1
+              "107": 1,
+              "184": 1
             }
           }
         ],
@@ -189651,7 +189684,7 @@
               "10": 3,
               "17": 2,
               "26": 1,
-              "39": 9,
+              "39": 10,
               "40": 3,
               "41": 8,
               "42": 1,
@@ -189705,7 +189738,7 @@
               "181": 3,
               "182": 3,
               "183": 1,
-              "184": 1,
+              "184": 3,
               "187": 2,
               "188": 4,
               "189": 1,
@@ -190069,7 +190102,7 @@
               "180": 1,
               "181": 2,
               "183": 1,
-              "184": 1,
+              "184": 2,
               "195": 3,
               "201": 1,
               "204": 2,
@@ -191278,7 +191311,7 @@
               "179": 6,
               "181": 8,
               "183": 7,
-              "184": 8,
+              "184": 9,
               "185": 3,
               "188": 3,
               "192": 2,
@@ -192038,7 +192071,7 @@
               "36": 9,
               "37": 21,
               "38": 22,
-              "39": 29,
+              "39": 30,
               "40": 8,
               "41": 14,
               "42": 19,
@@ -194510,6 +194543,7 @@
               "170": 1,
               "171": 1,
               "173": 1,
+              "184": 1,
               "185": 2,
               "186": 1,
               "188": 8,
@@ -196904,7 +196938,7 @@
               "180": 5,
               "182": 2,
               "183": 2,
-              "184": 1,
+              "184": 2,
               "192": 1,
               "194": 1,
               "195": 4,
@@ -197269,7 +197303,7 @@
               "36": 7,
               "37": 13,
               "38": 4,
-              "39": 11,
+              "39": 12,
               "40": 2,
               "41": 4,
               "42": 7,
@@ -197408,7 +197442,7 @@
               "181": 3,
               "182": 3,
               "183": 15,
-              "184": 3,
+              "184": 5,
               "185": 5,
               "186": 1,
               "187": 1,
@@ -199729,7 +199763,7 @@
               "36": 11,
               "37": 12,
               "38": 5,
-              "39": 46,
+              "39": 49,
               "40": 25,
               "41": 51,
               "42": 15,
@@ -199867,7 +199901,7 @@
               "181": 26,
               "182": 45,
               "183": 30,
-              "184": 52,
+              "184": 58,
               "185": 7,
               "187": 1,
               "188": 11,
@@ -200387,7 +200421,7 @@
               "36": 5,
               "37": 17,
               "38": 2,
-              "39": 15,
+              "39": 16,
               "40": 12,
               "41": 6,
               "42": 9,
@@ -201852,7 +201886,7 @@
               "11": 1,
               "17": 1,
               "38": 5,
-              "39": 1,
+              "39": 2,
               "41": 7,
               "42": 3,
               "43": 3,
@@ -202061,7 +202095,7 @@
               "36": 36,
               "37": 92,
               "38": 73,
-              "39": 46,
+              "39": 47,
               "40": 3,
               "41": 22,
               "42": 17,
@@ -202412,7 +202446,7 @@
             "4": {
               "2": 1,
               "6": 1,
-              "39": 8,
+              "39": 9,
               "40": 5,
               "43": 9,
               "44": 25,
@@ -202427,6 +202461,7 @@
               "169": 1,
               "170": 1,
               "171": 1,
+              "184": 1,
               "197": 1
             }
           }
@@ -203224,9 +203259,11 @@
           "solo",
           {
             "4": {
+              "39": 1,
               "81": 1,
               "103": 1,
-              "149": 2
+              "149": 2,
+              "184": 1
             }
           }
         ],
@@ -206120,7 +206157,7 @@
               "2": 2,
               "9": 2,
               "11": 1,
-              "39": 6,
+              "39": 7,
               "40": 6,
               "42": 1,
               "43": 35,
@@ -206137,7 +206174,8 @@
               "148": 1,
               "158": 2,
               "164": 3,
-              "171": 1
+              "171": 1,
+              "184": 1
             }
           }
         ],
@@ -208238,6 +208276,7 @@
               "17": 3,
               "20": 1,
               "23": 4,
+              "39": 1,
               "41": 2,
               "42": 2,
               "48": 3,
@@ -208282,6 +208321,7 @@
               "174": 2,
               "175": 8,
               "183": 2,
+              "184": 1,
               "196": 1,
               "199": 3,
               "204": 2,
@@ -208334,7 +208374,7 @@
               "1": 5,
               "29": 1,
               "38": 1,
-              "39": 4,
+              "39": 7,
               "40": 1,
               "41": 4,
               "47": 1,
@@ -208373,7 +208413,7 @@
               "179": 1,
               "180": 6,
               "181": 3,
-              "184": 14,
+              "184": 18,
               "197": 2,
               "206": 2
             }
@@ -209685,7 +209725,7 @@
               "33": 1,
               "37": 1,
               "38": 19,
-              "39": 2,
+              "39": 3,
               "40": 6,
               "41": 2,
               "42": 5,
@@ -209792,7 +209832,7 @@
               "181": 5,
               "182": 1,
               "183": 5,
-              "184": 8,
+              "184": 9,
               "185": 1,
               "187": 4,
               "188": 4,
@@ -213988,7 +214028,7 @@
               "36": 1,
               "37": 9,
               "38": 4,
-              "39": 7,
+              "39": 8,
               "40": 2,
               "41": 7,
               "42": 9,
@@ -215889,6 +215929,7 @@
               "175": 4,
               "177": 5,
               "178": 2,
+              "184": 1,
               "188": 1,
               "193": 3,
               "195": 1,
@@ -218489,6 +218530,7 @@
               "25": 7,
               "28": 2,
               "38": 13,
+              "39": 1,
               "40": 4,
               "41": 1,
               "42": 4,
@@ -218561,6 +218603,7 @@
               "180": 1,
               "181": 8,
               "183": 2,
+              "184": 1,
               "185": 4,
               "188": 10,
               "190": 5,
@@ -232704,6 +232747,7 @@
               "33": 2,
               "34": 3,
               "37": 1,
+              "39": 1,
               "62": 1,
               "65": 1,
               "69": 1,
@@ -235778,6 +235822,7 @@
               "17": 11,
               "28": 2,
               "31": 1,
+              "39": 1,
               "48": 1,
               "66": 1,
               "70": 1,
@@ -235806,7 +235851,7 @@
               "172": 4,
               "176": 1,
               "179": 2,
-              "184": 5,
+              "184": 6,
               "201": 5
             }
           }
@@ -235825,7 +235870,7 @@
               "17": 9,
               "31": 1,
               "38": 1,
-              "39": 1,
+              "39": 4,
               "48": 1,
               "61": 2,
               "62": 2,
@@ -235871,7 +235916,7 @@
               "169": 1,
               "172": 8,
               "182": 3,
-              "184": 7,
+              "184": 11,
               "185": 1,
               "194": 2,
               "200": 1,
@@ -237139,6 +237184,14 @@
               "181": 8,
               "195": 1,
               "202": 1
+            }
+          }
+        ],
+        [
+          "codified",
+          {
+            "4": {
+              "184": 1
             }
           }
         ],
@@ -240206,6 +240259,14 @@
           }
         ],
         [
+          "confuse",
+          {
+            "4": {
+              "184": 1
+            }
+          }
+        ],
+        [
           "confuses",
           {
             "4": {
@@ -240859,6 +240920,7 @@
               "7": 1,
               "10": 1,
               "12": 1,
+              "39": 2,
               "41": 1,
               "68": 6,
               "69": 2,
@@ -240873,7 +240935,7 @@
               "167": 1,
               "170": 1,
               "175": 1,
-              "184": 6,
+              "184": 8,
               "185": 3,
               "186": 13,
               "187": 1,
@@ -243725,7 +243787,7 @@
               "36": 5,
               "37": 3,
               "38": 1,
-              "39": 2,
+              "39": 3,
               "40": 1,
               "42": 2,
               "45": 2,
@@ -243808,7 +243870,7 @@
               "181": 4,
               "182": 4,
               "183": 1,
-              "184": 1,
+              "184": 2,
               "185": 3,
               "188": 3,
               "191": 2,
@@ -245977,6 +246039,7 @@
               "127": 1,
               "136": 2,
               "160": 1,
+              "184": 1,
               "207": 1
             }
           }
@@ -246293,6 +246356,7 @@
               "18": 2,
               "19": 1,
               "26": 2,
+              "39": 1,
               "43": 2,
               "44": 1,
               "47": 1,
@@ -246886,7 +246950,7 @@
               "164": 1,
               "166": 2,
               "176": 5,
-              "184": 1,
+              "184": 2,
               "195": 1,
               "196": 1
             }
@@ -248056,7 +248120,7 @@
               "36": 4,
               "37": 16,
               "38": 1,
-              "39": 13,
+              "39": 14,
               "40": 12,
               "41": 4,
               "42": 7,
@@ -248636,6 +248700,7 @@
             "4": {
               "24": 1,
               "30": 1,
+              "39": 1,
               "65": 2,
               "102": 1,
               "106": 1,
@@ -248645,6 +248710,7 @@
               "161": 2,
               "170": 2,
               "172": 1,
+              "184": 1,
               "201": 1
             }
           }
@@ -249306,7 +249372,8 @@
               "159": 1,
               "160": 1,
               "161": 1,
-              "174": 1
+              "174": 1,
+              "184": 1
             }
           }
         ],
@@ -253568,7 +253635,7 @@
               "174": 7,
               "181": 1,
               "183": 5,
-              "184": 1,
+              "184": 2,
               "187": 1,
               "194": 1,
               "198": 1,
@@ -253834,7 +253901,7 @@
               "181": 3,
               "182": 8,
               "183": 10,
-              "184": 18,
+              "184": 19,
               "185": 1,
               "188": 3,
               "192": 1,
@@ -259582,7 +259649,7 @@
               "36": 3,
               "37": 2,
               "38": 8,
-              "39": 17,
+              "39": 18,
               "40": 14,
               "41": 13,
               "42": 9,
@@ -261096,7 +261163,7 @@
               "175": 5,
               "177": 1,
               "180": 2,
-              "184": 2,
+              "184": 3,
               "188": 1,
               "190": 1,
               "191": 1,
@@ -263127,7 +263194,7 @@
               "179": 5,
               "180": 5,
               "181": 1,
-              "184": 1,
+              "184": 2,
               "185": 1,
               "188": 9,
               "190": 2,
@@ -265828,6 +265895,14 @@
           }
         ],
         [
+          "affordances",
+          {
+            "4": {
+              "184": 1
+            }
+          }
+        ],
+        [
           "affordance",
           {
             "4": {
@@ -268152,6 +268227,7 @@
               "181": 1,
               "182": 1,
               "183": 1,
+              "184": 1,
               "185": 1,
               "186": 1,
               "188": 1,
@@ -269341,6 +269417,7 @@
               "179": 1,
               "181": 2,
               "183": 1,
+              "184": 1,
               "191": 3,
               "194": 1,
               "196": 1,
@@ -269479,7 +269556,7 @@
               "35": 2,
               "36": 2,
               "37": 2,
-              "39": 7,
+              "39": 8,
               "40": 1,
               "46": 2,
               "48": 5,
@@ -269579,7 +269656,7 @@
               "180": 1,
               "181": 1,
               "182": 8,
-              "184": 1,
+              "184": 2,
               "185": 1,
               "187": 4,
               "189": 5,
@@ -272992,7 +273069,7 @@
               "181": 8,
               "182": 6,
               "183": 5,
-              "184": 10,
+              "184": 11,
               "185": 6,
               "186": 1,
               "187": 10,
@@ -274031,7 +274108,7 @@
               "17": 1,
               "24": 1,
               "37": 1,
-              "39": 5,
+              "39": 8,
               "41": 12,
               "42": 7,
               "44": 1,
@@ -274114,7 +274191,7 @@
               "181": 2,
               "182": 2,
               "183": 2,
-              "184": 47,
+              "184": 50,
               "187": 2,
               "188": 3,
               "193": 2,
@@ -319807,16 +319884,62 @@
           "not",
           "sheet",
           "body",
+          "button",
+          "place",
+          "hig",
+          "updated",
+          "2026",
+          "03",
+          "24",
+          "always",
+          "pair",
+          "confirma",
+          "done",
+          "cancel",
+          "back",
+          "when",
+          "mid",
+          "flow",
+          "never",
+          "ship",
+          "solo",
+          "implies",
+          "comple",
+          "exit",
+          "don",
+          "together",
+          "choose",
+          "step",
+          "pad",
+          "lead",
+          "edge",
+          "toolbar",
+          "trail",
+          "cancella",
+          "action",
+          "produce",
+          "these",
+          "placements",
+          "correct",
+          "emphasis",
+          "see",
+          "axiom",
+          "swiftui",
+          "skills",
+          "toolbars",
+          "md",
+          "pattern",
+          "watch",
+          "prefer",
+          "sf",
+          "symbols",
+          "labels",
           "cross",
           "reference",
           "implementa",
           "patterns",
-          "see",
-          "axiom",
           "design",
-          "skills",
           "ref",
-          "md",
           "decision",
           "trees"
         ],
@@ -504892,7 +505015,70 @@
           "correct",
           "emphasis",
           "default",
-          "mac"
+          "mac",
+          "hig",
+          "rules",
+          "buttons",
+          "apple",
+          "codified",
+          "follow",
+          "updated",
+          "2026",
+          "03",
+          "24",
+          "rule",
+          "why",
+          "always",
+          "back",
+          "solo",
+          "implies",
+          "complet",
+          "task",
+          "only",
+          "way",
+          "out",
+          "feels",
+          "restrictive",
+          "mislead",
+          "together",
+          "too",
+          "many",
+          "dismiss",
+          "affordances",
+          "confuse",
+          "exit",
+          "path",
+          "pick",
+          "step",
+          "needs",
+          "pad",
+          "produce",
+          "automatically",
+          "override",
+          "watch",
+          "prefer",
+          "sf",
+          "symbols",
+          "labels",
+          "brief",
+          "glance",
+          "tap",
+          "interactions",
+          "text",
+          "read",
+          "poorly",
+          "sizes",
+          "practical",
+          "implica",
+          "above",
+          "already",
+          "internalize",
+          "ship",
+          "either",
+          "add",
+          "if",
+          "mid",
+          "flow"
         ],
         "Pattern 3: Multiple Independent Items (separate ToolbarItems)": [
           "pattern",
