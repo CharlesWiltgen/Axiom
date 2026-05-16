@@ -110,10 +110,18 @@ switch SystemLanguageModel.default.availability {
 case .available:
     let session = LanguageModelSession()
     // proceed
-case .unavailable(let reason):
-    // Show graceful UI: "AI features require Apple Intelligence"
+case .unavailable(.deviceNotEligible):
+    // Hide AI entry point; degrade to offline functionality
+case .unavailable(.appleIntelligenceNotEnabled):
+    // Coach the user toward Settings opt-in
+case .unavailable(.modelNotReady):
+    // Tell the user to try again later; model still downloading
+case .unavailable(let other):
+    // Unknown reason; show generic fallback
 }
 ```
+
+Each `.unavailable` branch needs a tested fallback UI. Use the Xcode scheme's **Foundation Models Availability** override to force each reason on an AI-capable device during development — see "Testing Availability Paths" below.
 
 ---
 
@@ -227,6 +235,41 @@ for try await partial in stream {
 ```
 
 **Why**: Users see progress immediately, perceived latency drops dramatically.
+
+---
+
+## Testing Availability Paths
+
+Every `.unavailable(reason:)` branch in the availability switch needs a tested fallback UI. The canonical production crisis (see `axiom-ai (skills/foundation-models-diag.md)` "Production Crisis Scenario") is shipping a feature without testing the non-AI path — 20% of users on older devices get an error wall instead of a graceful degradation.
+
+Xcode 26 provides a **Foundation Models Availability override** in the scheme editor that simulates each unavailable reason on an AI-capable device. Use it instead of bench-testing on a non-AI device or disabling Apple Intelligence in Settings.
+
+**Where**: Product menu → Scheme → Edit Scheme → Run → Options → "Foundation Models Availability" override.
+
+**Override states**:
+
+| Override | Triggers | Test the UI that |
+|----------|----------|-------------------|
+| Off (default) | Device's actual availability | Real-device behavior |
+| Available | Force `.available` | Same as default on AI-capable device; verifies the happy path |
+| Device Not Eligible | Force `.unavailable(.deviceNotEligible)` | Hides the AI entry point entirely; falls back to offline data |
+| Apple Intelligence Not Enabled | Force `.unavailable(.appleIntelligenceNotEnabled)` | Tells the user the feature requires opting in; deep-links to Settings |
+| Model Not Ready | Force `.unavailable(.modelNotReady)` | Tells the user to try again later; model still downloading |
+
+**Required test loop**: run the app against each override at least once before submission. Confirm each branch renders the right UI and that the unavailable branches do not attempt to construct a `LanguageModelSession`.
+
+**Simulator support**: iPhone and visionOS simulators on Apple silicon Macs with Apple Intelligence enabled inherit the host's availability and respect the scheme override. macOS simulators / VMs do **not** reliably support Foundation Models; use the override on a physical Mac target or via the iOS simulator for cross-platform testing.
+
+**When this is the right tool**:
+- ✅ Verifying every `.unavailable` branch in your `switch`
+- ✅ CI runs that need to exercise non-AI code paths on AI-capable runners
+- ✅ Designer / PM review of the fallback UI without a fleet of older devices
+- ❌ Testing actual model behavior changes (use real devices for that)
+- ❌ Testing offline / poor-network scenarios (the override doesn't simulate network state)
+
+**Cross-references**:
+- `axiom-ai (skills/foundation-models-diag.md)` Patterns 1a/1b/1c (per-reason diagnostic when the override isn't engaged but production reports the same case)
+- `axiom-ai (skills/foundation-models-diag.md)` "Production Crisis Scenario" (the 20%-on-non-AI failure pattern this override prevents)
 
 ---
 

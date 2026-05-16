@@ -1091,7 +1091,9 @@ Impact mitigation:
 ```
 Post-mortem items:
 1. Add availability check to launch checklist
-2. Test on non-Apple-Intelligence devices
+2. Test each .unavailable branch using Xcode's Foundation Models
+   Availability override (Scheme > Edit Scheme > Run > Options) —
+   prevents the no-non-AI-devices-on-the-bench excuse
 3. Document device requirements clearly
 4. Add analytics for availability status
 ```
@@ -1100,11 +1102,12 @@ Post-mortem items:
 
 - **Panic path (disable/rollback)**: 2 hours of meetings + lost work
 - **Proper diagnosis**: 45 minutes root cause → fix → deploy
+- **Prevention via Xcode scheme override**: zero — the test loop is part of normal development if the team knows the override exists. See `axiom-ai (skills/foundation-models.md)` "Testing Availability Paths".
 
 ### What We Learned
 
 1. **Always check availability** before creating session
-2. **Test on real devices** across device generations
+2. **Test every `.unavailable` branch using the Xcode scheme override** (`axiom-ai (skills/foundation-models.md)` "Testing Availability Paths") — the override forces each unavailable reason on an AI-capable device without disabling Apple Intelligence
 3. **Graceful degradation** better than feature removal
 4. **Clear messaging** to users about requirements
 
