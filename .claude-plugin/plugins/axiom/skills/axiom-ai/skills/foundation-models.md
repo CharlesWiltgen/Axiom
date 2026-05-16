@@ -230,6 +230,58 @@ for try await partial in stream {
 
 ---
 
+## Approach Triage — Try Each Before the Next
+
+Foundation Models gives you the on-device LLM directly. **Most quality complaints stem from skipping intermediate steps and reaching for custom adapter training.** Apple's explicit guidance: *"Before considering adapters, try to get the most out of the system model using prompt engineering or tool calling."* Run this ladder before considering any custom training:
+
+```
+You want the model to do task X better.
+│
+├─ 1. Have you written clear, explicit instructions?
+│  └─ Imperative phrasing ("DO X", "DO NOT Y"), defined role, few-shot
+│     examples in the prompt. Pattern 1 covers this.
+│  → Stop here if quality is good enough.
+│
+├─ 2. Are you generating structured output via @Generable?
+│  └─ @Generable + @Guide give constrained-decoding guarantees the
+│     prompt can't. Pattern 2 covers this.
+│  → Stop here if structural failures were the issue.
+│
+├─ 3. Are you giving the model the right context via Tool calling or RAG?
+│  └─ Tool protocol for weather / contacts / calendar lookups; in-prompt
+│     retrieval for app-side documents. Pattern 4 covers tool calling.
+│     Hallucination on factual tasks is almost always a context problem,
+│     not a model problem.
+│  → Stop here if factual gaps were the issue.
+│
+├─ 4. Does the use case match a built-in adapter?
+│  └─ `SystemLanguageModel(useCase: .contentTagging)` ships an Apple-
+│     trained adapter that beats prompt engineering for tag / entity
+│     extraction. See `foundation-models-ref.md`.
+│  → Stop here if your task is tag / entity extraction.
+│
+└─ 5. Only then — consider training a custom adapter.
+   └─ Apple's Adapter Training Toolkit (Python, Developer Program-gated)
+      trains a rank-32 LoRA adapter against a specific base-model
+      version. The cost is real:
+      - ~160 MB per adapter, delivered via Background Assets (NOT
+        bundle-able); see `axiom-integration (skills/background-assets.md)`
+      - Per-OS-version pinning: one adapter per system-model release
+        in your install base, retrained every OS minor
+      - Custom evaluation methodology required (quantitative metrics +
+        human or larger-model grading + safety eval, locale-specific)
+      - Apple Developer Program toolkit download + entitlement request
+        for deployment
+      → Do not start here. Verify steps 1-4 first. Adapter training
+        is the highest-cost, lowest-iteration-velocity option in this
+        ladder. When you've genuinely reached this rung, see (when
+        authored) `skills/foundation-models-adapters.md` per axiom-r0ad.
+```
+
+**Decision rule**: every rung you skip is a rung's worth of free quality you're leaving on the table. Adapter training without rungs 1-4 done first is almost always a sign that prompt engineering, `@Generable`, or tool calling wasn't given a fair attempt.
+
+---
+
 ## Decision Tree
 
 ```
@@ -1050,6 +1102,54 @@ prompt takes 2-3 hours debugging why it hits context limit and produces poor res
 ```
 
 **Time saved**: 2-3 hours debugging vs 30 minutes proper design
+
+---
+
+## User Trust & Disclosure (HIG Generative AI)
+
+Apple's HIG on Generative AI sets baseline requirements that apply to every Foundation Models feature regardless of whether you use the base model, the built-in content-tagging adapter, or a custom-trained adapter.
+
+### Mandatory disclosure
+
+**"Never trick someone into thinking they're interacting with or viewing content authored by a human if they're actually interacting with AI."** This is the load-bearing rule.
+
+Practical implications:
+- Visible labeling on AI-generated content (Image Playground is the canonical pattern — visible "Made by AI" affordance plus region-appropriate disclosure)
+- Set expectations *before* the user invokes the feature, not after
+- Disclosure must align with applicable regulations in each region
+
+### Error and refusal UX
+
+Apple's HIG: *"Help people improve requests when blocked or undesirable results occur. Minimize scoped or blocked output by coaching people how to be more successful next time."*
+
+When `guardrailViolation` fires:
+- Don't show a moralizing error wall. Name the failure neutrally ("Unable to use that description") and offer a constructive next step (suggested alternative prompts).
+- Don't display the user's blocked input back to them — log for review without surfacing harmful content.
+
+When `exceededContextWindowSize` fires:
+- Don't surface "Error 4096 tokens exceeded" — that's developer text, not user text.
+- Offer "Start a new conversation" or summarize-and-continue as a one-tap action.
+
+### Retry as a first-class affordance
+
+HIG: *"Give them the ability to dismiss new content they don't want, and revert or retry content transformations."*
+
+Generative features need:
+- Retry button on every result, not only on errors
+- Alternate results so people can choose
+- Dismiss / revert path for content transformations
+
+### Feedback collection
+
+Recommended pattern: thumbs-up / thumbs-down on each generated result. Voluntary, not mandatory. The `LanguageModelFeedbackAttachment` API (see `foundation-models-ref.md`) bundles input / output / sentiment / issues into a JSON payload for Feedback Assistant.
+
+### Trust language
+
+HIG: *"Ensure they remain in charge of decision making and the overall experience."*
+
+- Provide a clear opt-out path for any data use
+- Disclose whether personal data is used for training (Apple's foundation models do NOT train on user data; if your app sends anything to a server LLM, you must disclose that)
+- Test across a diverse set of people to identify and correct stereotypes
 
 ---
 

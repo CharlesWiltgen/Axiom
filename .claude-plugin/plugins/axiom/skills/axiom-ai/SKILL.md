@@ -36,6 +36,22 @@ Use this router when:
 - ML = Custom model deployment (CoreML conversion, quantization, MLTensor, speech-to-text)
 - If developer says "run my own model" → skills/ios-ml.md. If "use Apple Intelligence" → stay here.
 
+## Training Path Boundaries
+
+When developers say "I need to train / fine-tune / personalize a model," four distinct paths exist. They are often conflated; each has different output, lifecycle, and runtime compatibility.
+
+| Path | Trains | Output | Lifecycle | Routes to |
+|------|--------|--------|-----------|-----------|
+| **FM custom adapter** | Apple's frozen on-device 3B LLM (rank-32 LoRA) | `.fmadapter` package, ~160 MB | Build-time per OS version, delivered via Background Assets | (when authored) `skills/foundation-models-adapters.md` per `axiom-r0ad`; delivery via `axiom-integration (skills/background-assets.md)` |
+| **Core ML `MLUpdateTask`** | Your NN-spec model's fully-connected and convolutional layers | Updated `.mlmodelc` saved to disk | Runtime, per-user (on-device personalization) | `skills/ios-ml.md` |
+| **MLX LM** (`mlx_lm.lora`) | Open-source LLMs on Apple silicon | `adapters/adapters.safetensors` — NOT loadable by Foundation Models | Build-time; not an iOS distribution path | External — outside Axiom scope; treat as adjacent research tool |
+| **Server LLM fine-tune** | Cloud-hosted model (e.g., vendor fine-tunes) | Cloud artifact, accessed via API | Build-time; runs in cloud | `/skill axiom-networking` for the API integration; the fine-tune workflow is the vendor's domain |
+
+**Critical distinctions**:
+- MLX LM output (`.safetensors`) cannot be loaded into a `LanguageModelSession`. Different toolchain, different deployment target.
+- `MLUpdateTask` is **NN-spec only** — does not support ML Program (`.mlpackage`) models from modern PyTorch / TensorFlow conversion. This is the main reason it's rarely used in new projects.
+- FM custom adapters are pinned per-base-model version (per-OS). One adapter does NOT serve every device in your install base — see the Approach Triage section in `skills/foundation-models.md` for the deflection ladder.
+
 ## Cross-Domain Routing
 
 **Foundation Models + concurrency** (session blocking main thread, UI freezes):

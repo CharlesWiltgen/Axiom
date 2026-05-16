@@ -789,6 +789,135 @@ Button("Generate") {
 
 ---
 
+### Pattern 6a: @Generable Macro Not Resolved in Playgrounds
+
+**Symptom**:
+```
+external macro implementation type 'FoundationModelsMacros.GenerableMacro' could not be found
+```
+
+The same `@Generable` struct that compiles in Xcode fails in a Swift Playground.
+
+**Diagnosis**:
+Swift Playgrounds (the iPad app) resolves macros differently than Xcode. The `FoundationModelsMacros` plugin used by `@Generable` is not exposed to the Playgrounds runtime.
+
+**Fix**:
+- For prototyping, use an Xcode Playground inside an Xcode project rather than a standalone Swift Playground
+- For Playgrounds-only workflows, avoid `@Generable` and use `DynamicGenerationSchema` instead
+
+```swift
+// ❌ Won't resolve in Swift Playgrounds
+@Generable
+struct Person { let name: String; let age: Int }
+
+// ✅ Works in Swift Playgrounds (runtime schema, not macro)
+let nameProp = DynamicGenerationSchema.Property(
+    name: "name",
+    schema: DynamicGenerationSchema(type: String.self)
+)
+let ageProp = DynamicGenerationSchema.Property(
+    name: "age",
+    schema: DynamicGenerationSchema(type: Int.self)
+)
+let personSchema = DynamicGenerationSchema(
+    name: "Person",
+    properties: [nameProp, ageProp]
+)
+let schema = try GenerationSchema(root: personSchema, dependencies: [])
+```
+
+**Time cost**: 10-15 minutes to switch to dynamic schema in Playgrounds; not applicable in Xcode (use Xcode instead).
+
+---
+
+### Pattern 6b: Recursive @Generable Types Crash
+
+**Symptom**:
+```
+Fatal error in SchemaAugmentor.swift:209
+```
+
+A `@Generable` type that references itself (directly or via a nested type) crashes when used with `respond(to:generating:)`.
+
+**Diagnosis**:
+The schema augmentor cannot resolve cycles via the `@Generable` macro path. Recursive-type support only works via `DynamicGenerationSchema(referenceTo:)`.
+
+**Fix**:
+Use dynamic schemas for any recursive or cyclic graph:
+
+```swift
+// ❌ Crashes — SchemaAugmentor doesn't resolve the cycle
+@Generable
+struct Tree {
+    let value: String
+    let children: [Tree]
+}
+
+// ✅ Use DynamicGenerationSchema with referenceTo
+let valueProp = DynamicGenerationSchema.Property(
+    name: "value",
+    schema: DynamicGenerationSchema(type: String.self)
+)
+let childrenProp = DynamicGenerationSchema.Property(
+    name: "children",
+    schema: DynamicGenerationSchema(
+        arrayOf: DynamicGenerationSchema(referenceTo: "Tree")
+    )
+)
+let treeSchema = DynamicGenerationSchema(
+    name: "Tree",
+    properties: [valueProp, childrenProp]
+)
+let schema = try GenerationSchema(root: treeSchema, dependencies: [])
+```
+
+**Time cost**: 20-30 minutes to convert recursive types to dynamic schemas.
+
+---
+
+### Pattern 6c: GenerationSchema.SchemaError.undefinedReferences
+
+**Symptom**:
+```
+GenerationSchema.SchemaError.undefinedReferences
+```
+
+`GenerationSchema(root:dependencies:)` throws when a `DynamicGenerationSchema(referenceTo: "X")` doesn't have a matching schema in `dependencies`.
+
+**Diagnosis**:
+Every name used in `referenceTo:` must appear either as the root schema's name or in the dependencies array. The error names the missing reference.
+
+**Fix**:
+```swift
+// ❌ Missing the Answer schema in dependencies
+let answers = DynamicGenerationSchema.Property(
+    name: "answers",
+    schema: DynamicGenerationSchema(
+        arrayOf: DynamicGenerationSchema(referenceTo: "Answer")
+    )
+)
+let riddleSchema = DynamicGenerationSchema(
+    name: "Riddle",
+    properties: [answers]
+)
+let schema = try GenerationSchema(root: riddleSchema, dependencies: [])
+// throws SchemaError.undefinedReferences("Answer")
+
+// ✅ Include every referenced schema
+let answerSchema = DynamicGenerationSchema(
+    name: "Answer",
+    properties: [/* text, isCorrect */]
+)
+let schema = try GenerationSchema(
+    root: riddleSchema,
+    dependencies: [answerSchema]
+)
+```
+
+**Time cost**: 5-10 minutes once the missing reference is identified.
+
+---
+
 ## Production Crisis Scenario
 
 ### Context
@@ -999,6 +1128,9 @@ Post-mortem items:
 | Schema overhead | Re-inserting schema | Subsequent requests? | 4c | 2 min |
 | Complex prompt | Too much at once | >5s generation? | 4d | 30 min |
 | UI frozen | Main thread | Thread check | 5a | 5 min |
+| `@Generable` macro not found | Swift Playgrounds runtime | Xcode vs Playgrounds? | 6a | 15 min |
+| `SchemaAugmentor.swift:209` crash | Recursive `@Generable` types | Self-referencing struct? | 6b | 30 min |
+| `SchemaError.undefinedReferences` | Missing schema in `dependencies:` | All `referenceTo:` names declared? | 6c | 10 min |
 
 ---
 
