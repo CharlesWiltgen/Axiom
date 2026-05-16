@@ -34,6 +34,8 @@ license: MIT
 | Background tasks, BGTaskScheduler | See `skills/background-processing.md` |
 | Background task debugging | See `skills/background-processing-diag.md` |
 | Background task API reference | See `skills/background-processing-ref.md` |
+| Background Assets (large content delivery, FM adapter shipping, Apple-hosted vs server-hosted) | See `skills/background-assets.md` |
+| Background Assets API reference | See `skills/background-assets-ref.md` |
 | Push notifications, APNs | See `skills/push-notifications.md` |
 | Push notification debugging | See `skills/push-notifications-diag.md` |
 | Push notification API reference | See `skills/push-notifications-ref.md` |
@@ -58,6 +60,7 @@ digraph integration {
     what -> "skills/alarmkit-ref.md" [label="alarms (iOS 26+)"];
     what -> "skills/timer-patterns.md" [label="timers"];
     what -> "skills/background-processing.md" [label="background tasks"];
+    what -> "skills/background-assets.md" [label="large asset delivery /\nFM adapter shipping"];
     what -> "skills/push-notifications.md" [label="push notifications"];
 }
 ```
@@ -75,6 +78,7 @@ digraph integration {
 10. Alarms (iOS 26+)? → `skills/alarmkit-ref.md`
 11. Timers? → `skills/timer-patterns.md`, `skills/timer-patterns-ref.md`
 12. Background tasks / BGTaskScheduler? → `skills/background-processing.md`, `skills/background-processing-diag.md`, `skills/background-processing-ref.md`
+12a. Large asset delivery (game packs, ML models, Foundation Models adapters)? → `skills/background-assets.md`, `skills/background-assets-ref.md`
 13. Push notifications? → `skills/push-notifications.md`, `skills/push-notifications-diag.md`, `skills/push-notifications-ref.md`
 14. Want IAP audit? → Launch `iap-auditor` agent
 15. Want full IAP implementation? → Launch `iap-implementation` agent
@@ -126,6 +130,8 @@ digraph integration {
 | "Widgets are simple, I've done them before" | Widgets have timeline, interactivity, and Live Activity patterns that evolve yearly. |
 | "Localization is just String Catalogs" | Xcode 26 has type-safe localization, generated symbols, and #bundle macro. |
 | "Push notifications are just a payload and a token" | Token lifecycle, Focus levels, service extension gotchas cause 80% of push bugs. |
+| "I'll just bundle the assets, it's simpler" | Bundling ≥10 MB inflates first-install size and pays the cost every update. Background Assets ships with App Store install-progress integration; FM adapters can't be bundled at all. See `skills/background-assets.md`. |
+| "I'll use URLSession for the asset download" | URLSession doesn't integrate with App Store install progress, charging-aware scheduling, or per-app quota — and can't reach Apple-hosted asset packs at all. Background Assets is the supported channel. |
 | "Just request full Calendar access" | Most apps only need to add events — EventKitUI does that with zero permissions. |
 | "I'll use CNContactStore directly for picking" | CNContactPickerViewController needs no authorization and shows all contacts. |
 
