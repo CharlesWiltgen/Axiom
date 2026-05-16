@@ -290,9 +290,10 @@ Error: LanguageModelSession.GenerationError.exceededContextWindowSize
 ```
 
 **Diagnosis**:
-- 4096 token limit (input + output)
+- Token limit is `SystemLanguageModel.default.contextSize` (currently 4096 on the on-device base; input + output combined)
 - Long conversations accumulate tokens
 - Verbose prompts eat into limit
+- On iOS 26.4+, use `try await SystemLanguageModel.default.tokenCount(for: instructions)` to verify the instructions budget *before* composing a session; for prompt and transcript sizing, fall back to the ~3 chars/token heuristic (see `axiom-ai (skills/foundation-models-ref.md)` "Token Sizing and Context Size")
 
 **Fix**:
 ```swift
