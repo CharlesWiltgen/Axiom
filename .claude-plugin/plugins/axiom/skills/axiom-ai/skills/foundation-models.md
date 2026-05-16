@@ -747,8 +747,11 @@ for i in 1...100 {
 }
 ```
 
-**Context window**: 4096 tokens (input + output combined)
-**Average**: ~3 characters per token in English
+**Context window**: read `SystemLanguageModel.default.contextSize` for the exact value. Current on-device base is 4096 tokens (input + output combined).
+
+**Exact sizing for Instructions** (iOS 26.4+): `try await SystemLanguageModel.default.tokenCount(for: instructions)`. Use this before composing a session so verbose instructions don't silently consume the budget.
+
+**Estimation fallback** for prompts, transcripts, and pre-26.4 targets: ~3 characters per token in English; more for PFIGSCJK languages. See `axiom-ai (skills/foundation-models-ref.md)` "Token Sizing and Context Size".
 
 **Rough calculation**:
 - 4096 tokens ≈ 12,000 characters

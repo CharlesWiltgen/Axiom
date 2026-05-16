@@ -173,7 +173,7 @@ Apple ships no default eval suite for custom adapters. A complete eval covers fo
 |-------|-----------|
 | English-US | American English |
 | English-outside-US | British, Australian, Indian, Canadian English |
-| PFIGSCJK | Portuguese, French, Italian, Spanish, Chinese-Simplified, Japanese, Korean |
+| PFIGSCJK | Portuguese, French, Italian, German, Spanish, Chinese-Simplified, Japanese, Korean |
 
 If the app ships in a non-English locale, run eval against the matching group. English-only eval against a multi-locale app silently ships non-English regressions.
 

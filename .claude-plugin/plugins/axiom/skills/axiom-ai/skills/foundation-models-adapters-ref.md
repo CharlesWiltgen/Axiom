@@ -274,7 +274,7 @@ Per Apple's 2025 tech report, locale eval is grouped as:
 |-------|-----------|
 | English-US | American English |
 | English-outside-US | British, Australian, Indian, Canadian English |
-| PFIGSCJK | Portuguese, French, Italian, Spanish, Chinese-Simplified, Japanese, Korean |
+| PFIGSCJK | Portuguese, French, Italian, German, Spanish, Chinese-Simplified, Japanese, Korean |
 
 If the app ships in any non-US locale, run eval against the corresponding group. The base model supports 16 languages; the adapter's interaction with each is untested unless explicitly evaluated.
 
