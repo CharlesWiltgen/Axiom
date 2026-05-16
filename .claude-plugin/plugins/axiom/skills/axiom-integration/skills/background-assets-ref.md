@@ -32,7 +32,7 @@ Use this reference when:
 
 **Related Skills**:
 - `skills/background-assets.md` — Discipline skill with decision trees, when-not-to-use, pressure scenarios
-- `axiom-ai (skills/foundation-models-adapters-ref.md)` (when authored) — Foundation Models adapter runtime API that consumes Background Assets
+- `axiom-ai (skills/foundation-models-adapters-ref.md)` — Foundation Models adapter runtime API that consumes Background Assets
 
 ---
 

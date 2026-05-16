@@ -742,7 +742,7 @@ let response = try await session.respond(
 
 #### From WWDC 286:19:19
 
-**Beyond the built-in adapter**: the content-tagging adapter is Apple-trained and covers the common tagging / entity-extraction case. For app-specific behavior that the built-in adapter doesn't cover, the next rung is a custom adapter trained with Apple's Foundation Models Adapter Training Toolkit (Python, Developer Program-gated, produces a `.fmadapter` package delivered via Background Assets). When that path is justified — and only after exhausting prompt engineering, `@Generable`, tool calling, and the built-in adapter — see (when authored) `axiom-ai (skills/foundation-models-adapters.md)` per `axiom-r0ad`. The Approach Triage section in `axiom-ai (skills/foundation-models.md)` has the full deflection ladder.
+**Beyond the built-in adapter**: the content-tagging adapter is Apple-trained and covers the common tagging / entity-extraction case. For app-specific behavior that the built-in adapter doesn't cover, the next rung is a custom adapter trained with Apple's Foundation Models Adapter Training Toolkit (Python, Developer Program-gated, produces a `.fmadapter` package delivered via Background Assets). When that path is justified — and only after exhausting prompt engineering, `@Generable`, tool calling, and the built-in adapter — see `axiom-ai (skills/foundation-models-adapters.md)` for decision discipline, `axiom-ai (skills/foundation-models-adapters-ref.md)` for the toolkit and runtime API, and `axiom-ai (skills/foundation-models-adapters-diag.md)` for adapter-specific failure modes. The Approach Triage section in `axiom-ai (skills/foundation-models.md)` has the full deflection ladder.
 
 ### Custom Use Cases
 

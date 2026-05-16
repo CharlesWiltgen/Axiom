@@ -274,8 +274,11 @@ You want the model to do task X better.
         for deployment
       → Do not start here. Verify steps 1-4 first. Adapter training
         is the highest-cost, lowest-iteration-velocity option in this
-        ladder. When you've genuinely reached this rung, see (when
-        authored) `skills/foundation-models-adapters.md` per axiom-r0ad.
+        ladder. When you've genuinely reached this rung, see
+        `skills/foundation-models-adapters.md` for decision discipline,
+        `skills/foundation-models-adapters-ref.md` for the toolkit and
+        runtime API, and `skills/foundation-models-adapters-diag.md`
+        for adapter-specific failure modes.
 ```
 
 **Decision rule**: every rung you skip is a rung's worth of free quality you're leaving on the table. Adapter training without rungs 1-4 done first is almost always a sign that prompt engineering, `@Generable`, or tool calling wasn't given a fair attempt.

@@ -7,7 +7,7 @@ Background Assets delivers content too large for the app bundle — ML model var
 
 **Key insight**: Asset delivery is a *system integration* concern, not a download problem. Building a custom URLSession stack to fetch assets reinvents what `BackgroundAssets` already does correctly — and ships with App Store install-progress integration, charging-aware scheduling, and per-user quota you can't replicate.
 
-**Foundation Models adapters**: `.fmadapter` packs (~160 MB each, per-OS-version pinning) **must** be delivered via Background Assets — Apple's own documentation rules out bundling. See `axiom-ai (skills/foundation-models-adapters-ref.md)` once authored for the adapter-specific delivery pattern.
+**Foundation Models adapters**: `.fmadapter` packs (~160 MB each, per-OS-version pinning) **must** be delivered via Background Assets — Apple's own documentation rules out bundling. See `axiom-ai (skills/foundation-models-adapters-ref.md)` for the adapter-specific delivery pattern.
 
 **Requirements**: iOS 26+ / iPadOS 26+ / macOS 26+ / tvOS 26+ / visionOS 26+ for managed asset packs and Apple-hosted delivery. Older OS uses the legacy unmanaged `BADownloadManager` path.
 
@@ -259,7 +259,7 @@ Configure your manifest URL via the extension and host the `.aar` files yourself
 
 ### Pattern 3: Foundation Models Adapter Delivery
 
-**Use when**: Shipping a custom `.fmadapter` package per axiom-r0ad's adapter training work.
+**Use when**: Shipping a custom `.fmadapter` package trained with Apple's Foundation Models Adapter Training Toolkit. For the training and runtime API, see `axiom-ai (skills/foundation-models-adapters.md)` and `axiom-ai (skills/foundation-models-adapters-ref.md)`.
 
 ```swift
 import BackgroundAssets
@@ -310,7 +310,7 @@ try? await AssetPackManager.shared.checkForUpdates()
 
 **Why the `compatibleAdapterIdentifiers(name:)` indirection**: each adapter is pinned to one specific base-model version. The function returns the asset pack IDs whose adapter variants match the current device's system model, in descending preference order. Never hardcode the asset pack ID.
 
-For the full adapter runtime contract (compile, error cases, draft model), see `axiom-ai (skills/foundation-models-adapters-ref.md)` once authored per axiom-r0ad. For the Background Assets surface used here, see `skills/background-assets-ref.md`.
+For the full adapter runtime contract (compile, error cases, draft model), see `axiom-ai (skills/foundation-models-adapters-ref.md)`. For the Background Assets surface used here, see `skills/background-assets-ref.md`.
 
 ---
 
