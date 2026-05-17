@@ -291,8 +291,10 @@ export default withMermaid(defineConfig({
             { text: 'SwiftUI Performance', link: '/skills/ui-design/swiftui-performance' },
             { text: 'SwiftUI Debugging', link: '/skills/ui-design/swiftui-debugging' },
             { text: 'SwiftUI Gestures', link: '/skills/ui-design/swiftui-gestures' },
+            { text: 'Toolbars', link: '/skills/ui-design/toolbars' },
             { text: 'UIKit-SwiftUI Bridging', link: '/skills/ui-design/uikit-bridging' },
-            { text: 'UIKit Animation Debugging', link: '/skills/ui-design/uikit-animation-debugging' }
+            { text: 'UIKit Animation Debugging', link: '/skills/ui-design/uikit-animation-debugging' },
+            { text: 'UX Flow Audit', link: '/skills/ui-design/ux-flow-audit' }
           ]
         },
         {
@@ -342,6 +344,7 @@ export default withMermaid(defineConfig({
             { text: 'GRDB', link: '/skills/persistence/grdb' },
             { text: 'SQLiteData', link: '/skills/persistence/sqlitedata' },
             { text: 'SQLiteData Migration', link: '/skills/persistence/sqlitedata-migration' },
+            { text: 'Storage Decisions', link: '/skills/persistence/storage' },
             { text: 'SwiftData', link: '/skills/persistence/swiftdata' },
             { text: 'SwiftData Migration', link: '/skills/persistence/swiftdata-migration' }
           ]
@@ -350,26 +353,36 @@ export default withMermaid(defineConfig({
           text: 'Integration',
           items: [
             { text: 'Overview', link: '/skills/integration/' },
+            { text: 'App Discoverability', link: '/skills/integration/app-discoverability' },
             { text: 'Apple Documentation Access', link: '/skills/integration/apple-docs' },
             { text: 'Apple Docs Research', link: '/skills/integration/apple-docs-research' },
+            { text: 'Apple Pay', link: '/skills/integration/apple-pay' },
+            { text: 'Apple Pay vs IAP (boundary)', link: '/skills/integration/apple-pay-vs-iap' },
+            { text: 'Apple Pay for the Web', link: '/skills/integration/apple-pay-web' },
             { text: 'App Intents', link: '/reference/app-intents-ref' },
             { text: 'Background Assets', link: '/skills/integration/background-assets' },
             { text: 'Background Processing', link: '/skills/integration/background-processing' },
             { text: 'Camera Capture', link: '/skills/integration/camera-capture' },
+            { text: 'CarPlay HIG', link: '/skills/integration/carplay-hig' },
             { text: 'Core Location', link: '/skills/integration/core-location' },
             { text: 'EventKit & Contacts', link: '/skills/integration/eventkit-contacts' },
             { text: 'Extensions & Widgets', link: '/skills/integration/extensions-widgets' },
             { text: 'Foundation Models (Apple Intelligence)', link: '/skills/integration/foundation-models' },
             { text: 'Foundation Models Custom Adapters', link: '/skills/integration/foundation-models-adapters' },
             { text: 'In-App Purchases (StoreKit 2)', link: '/skills/integration/in-app-purchases' },
+            { text: 'Localization', link: '/skills/integration/localization' },
             { text: 'MapKit', link: '/skills/integration/mapkit' },
             { text: 'Networking', link: '/skills/integration/networking' },
             { text: 'Networking (Legacy iOS 12-25)', link: '/skills/integration/networking-legacy' },
             { text: 'Now Playing', link: '/skills/integration/now-playing' },
             { text: 'Photo Library', link: '/skills/integration/photo-library' },
+            { text: 'Privacy UX', link: '/skills/integration/privacy-ux' },
             { text: 'Push Notifications', link: '/skills/integration/push-notifications' },
             { text: 'ShazamKit', link: '/skills/integration/shazamkit' },
-            { text: 'tvOS', link: '/skills/integration/tvos' }
+            { text: 'Tap to Pay on iPhone', link: '/skills/integration/tap-to-pay' },
+            { text: 'tvOS', link: '/skills/integration/tvos' },
+            { text: 'Wallet Orders', link: '/skills/integration/wallet-orders' },
+            { text: 'Wallet Passes', link: '/skills/integration/wallet-passes' }
           ]
         },
         {
@@ -409,6 +422,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/skills/machine-learning/' },
             { text: 'CoreML', link: '/skills/machine-learning/coreml' },
+            { text: 'iOS ML (deployment overview)', link: '/skills/machine-learning/ios-ml' },
             { text: 'Speech', link: '/skills/machine-learning/speech' }
           ]
         },
@@ -432,21 +446,39 @@ export default withMermaid(defineConfig({
             { text: 'Background & Networking', link: '/skills/watchos/background-and-networking' },
             { text: 'Smart Stack & Complications', link: '/skills/watchos/smart-stack-and-complications' },
             { text: 'Controls & Live Activities', link: '/skills/watchos/controls-and-live-activities' },
-            { text: 'Modernization', link: '/skills/watchos/modernization' }
+            { text: 'Modernization', link: '/skills/watchos/modernization' },
+            { text: 'watchOS Accessibility', link: '/skills/watchos/watchos-a11y' }
+          ]
+        },
+        {
+          text: 'macOS',
+          items: [
+            { text: 'Overview', link: '/skills/macos/' },
+            { text: 'AppKit Interop', link: '/skills/macos/appkit-interop' },
+            { text: 'Direct Distribution', link: '/skills/macos/direct-distribution' },
+            { text: 'Menus & Commands', link: '/skills/macos/menus-and-commands' },
+            { text: 'Sandbox & File Access', link: '/skills/macos/sandbox-and-file-access' },
+            { text: 'Settings', link: '/skills/macos/settings' },
+            { text: 'SwiftUI Differences (vs iOS)', link: '/skills/macos/swiftui-differences' },
+            { text: 'Windows', link: '/skills/macos/windows' }
           ]
         },
         {
           text: 'Shipping',
           items: [
             { text: 'Overview', link: '/skills/shipping/' },
+            { text: 'App Review Guidelines', link: '/skills/shipping/app-review-guidelines' },
             { text: 'App Store Submission', link: '/skills/shipping/app-store-submission' },
-            { text: 'App Store Connect MCP', link: '/skills/shipping/asc-mcp' }
+            { text: 'App Store Connect MCP', link: '/skills/shipping/asc-mcp' },
+            { text: 'Expert Review Checklist', link: '/skills/shipping/expert-review-checklist' }
           ]
         },
         {
           text: 'Xcode MCP',
           items: [
-            { text: 'Xcode MCP Integration', link: '/skills/xcode-mcp/' }
+            { text: 'Xcode MCP Integration', link: '/skills/xcode-mcp/' },
+            { text: 'Setup', link: '/skills/xcode-mcp/xcode-mcp-setup' },
+            { text: 'Tools', link: '/skills/xcode-mcp/xcode-mcp-tools' }
           ]
         }
       ],
@@ -500,27 +532,37 @@ export default withMermaid(defineConfig({
             { text: 'App Discoverability', link: '/reference/app-discoverability' },
             { text: 'App Intents Integration', link: '/reference/app-intents-ref' },
             { text: 'App Shortcuts', link: '/reference/app-shortcuts-ref' },
+            { text: 'Apple Pay', link: '/reference/apple-pay-ref' },
+            { text: 'Apple Pay for the Web', link: '/reference/apple-pay-web-ref' },
             { text: 'AVFoundation', link: '/reference/avfoundation-ref' },
             { text: 'Background Assets', link: '/reference/background-assets-ref' },
+            { text: 'Background Processing API', link: '/reference/background-processing-ref' },
+            { text: 'Camera Capture', link: '/reference/camera-capture-ref' },
+            { text: 'CarPlay Navigation', link: '/reference/carplay-navigation-ref' },
+            { text: 'CarPlay Templates', link: '/reference/carplay-templates-ref' },
+            { text: 'Contacts', link: '/reference/contacts-ref' },
+            { text: 'Core Location API', link: '/reference/core-location-ref' },
             { text: 'Core Spotlight & NSUserActivity', link: '/reference/core-spotlight-ref' },
+            { text: 'EventKit', link: '/reference/eventkit-ref' },
             { text: 'Extensions & Widgets', link: '/reference/extensions-widgets-ref' },
             { text: 'Foundation Models', link: '/reference/foundation-models-ref' },
             { text: 'Foundation Models Custom Adapters', link: '/reference/foundation-models-adapters-ref' },
             { text: 'Haptics & Audio Feedback', link: '/reference/haptics' },
             { text: 'Localization & Internationalization', link: '/reference/localization' },
             { text: 'Localization Research & Consistency', link: '/reference/localization-research-ref' },
+            { text: 'MapKit API', link: '/reference/mapkit-ref' },
             { text: 'Network.framework API', link: '/reference/network-framework-ref' },
             { text: 'Networking Migration', link: '/reference/networking-migration' },
-            { text: 'Background Processing API', link: '/reference/background-processing-ref' },
-            { text: 'Camera Capture', link: '/reference/camera-capture-ref' },
-            { text: 'Core Location API', link: '/reference/core-location-ref' },
             { text: 'Now Playing: CarPlay', link: '/reference/now-playing-carplay' },
             { text: 'Now Playing: MusicKit', link: '/reference/now-playing-musickit' },
             { text: 'Photo Library', link: '/reference/photo-library-ref' },
-            { text: 'MapKit API', link: '/reference/mapkit-ref' },
             { text: 'Privacy UX Patterns', link: '/reference/privacy-ux' },
             { text: 'Push Notifications', link: '/reference/push-notifications-ref' },
-            { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' }
+            { text: 'ShazamKit', link: '/reference/shazamkit-ref' },
+            { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' },
+            { text: 'Tap to Pay on iPhone', link: '/reference/tap-to-pay-ref' },
+            { text: 'Wallet Extensions', link: '/reference/wallet-extensions-ref' },
+            { text: 'Wallet Passes', link: '/reference/wallet-passes-ref' }
           ]
         },
         {
@@ -552,9 +594,12 @@ export default withMermaid(defineConfig({
             { text: 'App Store Submission', link: '/reference/app-store-ref' },
             { text: 'AXe (Simulator Automation)', link: '/reference/axe-ref' },
             { text: 'Code Signing', link: '/reference/code-signing-ref' },
-            { text: 'MetricKit', link: '/reference/metrickit-ref' },
             { text: 'LLDB Command Reference', link: '/reference/lldb-ref' },
+            { text: 'MetricKit', link: '/reference/metrickit-ref' },
             { text: 'Timer Patterns', link: '/reference/timer-patterns-ref' },
+            { text: 'xclog (Console Capture)', link: '/reference/xclog-ref' },
+            { text: 'Xcode MCP Tools', link: '/reference/xcode-mcp-ref' },
+            { text: 'xcsym (Crash Symbolication)', link: '/reference/xcsym-ref' },
             { text: 'xctrace', link: '/reference/xctrace-ref' }
           ]
         }
@@ -585,6 +630,7 @@ export default withMermaid(defineConfig({
             { text: 'MapKit Diagnostics', link: '/diagnostic/mapkit-diag' },
             { text: 'Metal Migration Diagnostics', link: '/diagnostic/metal-migration-diag' },
             { text: 'Networking Diagnostics', link: '/diagnostic/networking-diag' },
+            { text: 'Payments Diagnostics', link: '/diagnostic/payments-diag' },
             { text: 'Push Notifications Diagnostics', link: '/diagnostic/push-notifications-diag' },
             { text: 'RealityKit Diagnostics', link: '/diagnostic/realitykit-diag' },
             { text: 'SpriteKit Diagnostics', link: '/diagnostic/spritekit-diag' },
