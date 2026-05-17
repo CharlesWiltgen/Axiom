@@ -110,10 +110,18 @@ switch SystemLanguageModel.default.availability {
 case .available:
     let session = LanguageModelSession()
     // proceed
-case .unavailable(let reason):
-    // Show graceful UI: "AI features require Apple Intelligence"
+case .unavailable(.deviceNotEligible):
+    // Hide AI entry point; degrade to offline functionality
+case .unavailable(.appleIntelligenceNotEnabled):
+    // Coach the user toward Settings opt-in
+case .unavailable(.modelNotReady):
+    // Tell the user to try again later; model still downloading
+case .unavailable(let other):
+    // Unknown reason; show generic fallback
 }
 ```
+
+Each `.unavailable` branch needs a tested fallback UI. Use the Xcode scheme's **Simulated Foundation Models Availability** override to force each reason on an AI-capable device during development — see "Testing Availability Paths" below.
 
 ---
 
@@ -227,6 +235,126 @@ for try await partial in stream {
 ```
 
 **Why**: Users see progress immediately, perceived latency drops dramatically.
+
+---
+
+## Testing Availability Paths
+
+Every `.unavailable(reason:)` branch in the availability switch needs a tested fallback UI. The canonical production crisis (see `axiom-ai (skills/foundation-models-diag.md)` "Production Crisis Scenario") is shipping a feature without testing the non-AI path — 20% of users on older devices get an error wall instead of a graceful degradation.
+
+Xcode 26 provides a **Simulated Foundation Models Availability** override in the scheme editor that forces each `.unavailable` reason — plus the adapter-incompatible runtime error — on an AI-capable device. Use it instead of bench-testing on a non-AI device or disabling Apple Intelligence in Settings.
+
+**Where**: Product menu → Scheme → Edit Scheme → Run → Options → "Simulated Foundation Models Availability" override.
+
+**Override states**:
+
+| Override | Triggers | Test the UI that |
+|----------|----------|-------------------|
+| Off (default) | Device's actual availability | Real-device behavior; `.available` on AI-capable hardware |
+| Device Not Eligible | Force `.unavailable(.deviceNotEligible)` | Hides the AI entry point entirely; falls back to offline data |
+| Apple Intelligence Not Enabled | Force `.unavailable(.appleIntelligenceNotEnabled)` | Tells the user the feature requires opting in; deep-links to Settings |
+| Model Not Ready | Force `.unavailable(.modelNotReady)` | Tells the user to try again later; model still downloading |
+| Custom Adapter Incompatible With Base Model | Force `SystemLanguageModel.Adapter.AssetError.compatibleAdapterNotFound` on adapter load | Adapter-using code paths fall back to base model or surface a "needs update" prompt — see `foundation-models-adapters-diag.md` Pattern 1 |
+
+The first four force a specific `SystemLanguageModel.Availability` state. The fifth simulates a **runtime adapter-load error**, not an `Availability` case — `UnavailableReason` itself has only three cases (`deviceNotEligible`, `appleIntelligenceNotEnabled`, `modelNotReady`). Apps without custom adapters can ignore the fifth row.
+
+**Required test loop**: run the app against each override at least once before submission. Confirm each branch renders the right UI, the unavailable branches do not attempt to construct a `LanguageModelSession`, and adapter-using paths handle `compatibleAdapterNotFound` cleanly.
+
+### Testing Environment Matrix
+
+Foundation Models support depends on the simulator/host/VM combination. Apple DTS confirmed in forum thread 787199 that **simulators use the models shipped with the host macOS** — so simulators on a Sequoia (15.x) host have no model to load, and macOS-26-in-a-VM cannot enable Apple Intelligence at all.
+
+| Environment | Works? | Notes |
+|-------------|--------|-------|
+| Physical iPhone 15 Pro+ / iPad M-series / Apple silicon Mac on iOS / iPadOS / macOS 26+ | ✅ | Canonical; required for any meaningful behavior testing |
+| iPhone simulator on Apple silicon Mac running macOS 26+ with Apple Intelligence enabled | ✅ | Confirmed by Apple DTS; inherits host's model and availability; respects the scheme override |
+| visionOS simulator on Apple silicon Mac running macOS 26+ with Apple Intelligence enabled | ✅ | Same as iPhone simulator |
+| Any simulator on Apple silicon Mac running macOS Sequoia (15.x) | ❌ | Host macOS doesn't ship FM models; simulators have nothing to load |
+| Any simulator on Intel Mac | ❌ | Hardware-gated; Apple Intelligence requires Apple silicon |
+| macOS 26 running in a VM (Virtual Buddy, UTM, Parallels) on an Apple silicon host | ❌ | Apple Intelligence cannot be enabled in a macOS-in-a-VM environment (`.deviceNotEligible`); user-reported in forum thread 787199 |
+| iOS simulator running *inside* a macOS-26 VM | ⚠️ | Availability reports `.available` but runtime fails: `Error Domain=com.apple.UnifiedAssetFramework Code=5000` ("no underlying assets for asset set com.apple.MobileAsset.UAF.FM.Overrides") — the embedded sim has no real model to talk to |
+| Dual-boot macOS 26 on separate APFS volume | ✅ | Confirmed by Apple DTS as a supported alternative to upgrading the primary install |
+
+**Implication for CI/CD**:
+
+- Apple silicon runners booted into macOS 26+ with Apple Intelligence enabled → iOS / iPadOS / visionOS simulator tests against FM work
+- VM-based runners (the common cheap-CI configuration) → both host macOS app tests and embedded simulator tests will fail at runtime
+- macOS app tests that exercise FM directly require a **physical Apple silicon Mac** runner, not a VM
+- The Xcode scheme's Simulated Foundation Models Availability override (above) works in any supported environment and is the right tool for exercising non-AI paths on AI-capable CI runners
+
+**Practical recipes**:
+
+- **Single-developer machine, don't want to risk beta on primary install** → dual-boot macOS 26 on a separate APFS volume; develop and test from the macOS 26 boot, switch back for daily driver work
+- **CI runner constraint** → either provision physical Apple silicon runners booted into macOS 26+, or accept that the FM-touching tests must run on-device (TestFlight / device farm)
+- **Designer / PM review without a fleet** → AI-capable Mac + iOS simulator + scheme override; covers every `.unavailable` branch and the happy path without leaving the desk
+
+**Source caveat**: the macOS-VM behavior is documented in forum thread 787199 as of June 2025 (iOS 26 beta) and was still accurate at the time of this writing. Apple may revisit VM support in a future macOS update; re-verify if VM-based CI is on the table.
+
+**When this is the right tool**:
+- ✅ Verifying every `.unavailable` branch in your `switch`
+- ✅ CI runs that need to exercise non-AI code paths on AI-capable runners
+- ✅ Designer / PM review of the fallback UI without a fleet of older devices
+- ❌ Testing actual model behavior changes (use real devices for that)
+- ❌ Testing offline / poor-network scenarios (the override doesn't simulate network state)
+
+**Cross-references**:
+- `axiom-ai (skills/foundation-models-diag.md)` Patterns 1a/1b/1c (per-reason diagnostic when the override isn't engaged but production reports the same case)
+- `axiom-ai (skills/foundation-models-diag.md)` "Production Crisis Scenario" (the 20%-on-non-AI failure pattern this override prevents)
+
+---
+
+## Approach Triage — Try Each Before the Next
+
+Foundation Models gives you the on-device LLM directly. **Most quality complaints stem from skipping intermediate steps and reaching for custom adapter training.** Apple's explicit guidance: *"Before considering adapters, try to get the most out of the system model using prompt engineering or tool calling."* Run this ladder before considering any custom training:
+
+```
+You want the model to do task X better.
+│
+├─ 1. Have you written clear, explicit instructions?
+│  └─ Imperative phrasing ("DO X", "DO NOT Y"), defined role, few-shot
+│     examples in the prompt. Pattern 1 covers this.
+│  → Stop here if quality is good enough.
+│
+├─ 2. Are you generating structured output via @Generable?
+│  └─ @Generable + @Guide give constrained-decoding guarantees the
+│     prompt can't. Pattern 2 covers this.
+│  → Stop here if structural failures were the issue.
+│
+├─ 3. Are you giving the model the right context via Tool calling or RAG?
+│  └─ Tool protocol for weather / contacts / calendar lookups; in-prompt
+│     retrieval for app-side documents. Pattern 4 covers tool calling.
+│     Hallucination on factual tasks is almost always a context problem,
+│     not a model problem.
+│  → Stop here if factual gaps were the issue.
+│
+├─ 4. Does the use case match a built-in adapter?
+│  └─ `SystemLanguageModel(useCase: .contentTagging)` ships an Apple-
+│     trained adapter that beats prompt engineering for tag / entity
+│     extraction. See `foundation-models-ref.md`.
+│  → Stop here if your task is tag / entity extraction.
+│
+└─ 5. Only then — consider training a custom adapter.
+   └─ Apple's Adapter Training Toolkit (Python, Developer Program-gated)
+      trains a rank-32 LoRA adapter against a specific base-model
+      version. The cost is real:
+      - ~160 MB per adapter, delivered via Background Assets (NOT
+        bundle-able); see `axiom-integration (skills/background-assets.md)`
+      - Per-OS-version pinning: one adapter per system-model release
+        in your install base, retrained every OS minor
+      - Custom evaluation methodology required (quantitative metrics +
+        human or larger-model grading + safety eval, locale-specific)
+      - Apple Developer Program toolkit download + entitlement request
+        for deployment
+      → Do not start here. Verify steps 1-4 first. Adapter training
+        is the highest-cost, lowest-iteration-velocity option in this
+        ladder. When you've genuinely reached this rung, see
+        `skills/foundation-models-adapters.md` for decision discipline,
+        `skills/foundation-models-adapters-ref.md` for the toolkit and
+        runtime API, and `skills/foundation-models-adapters-diag.md`
+        for adapter-specific failure modes.
+```
+
+**Decision rule**: every rung you skip is a rung's worth of free quality you're leaving on the table. Adapter training without rungs 1-4 done first is almost always a sign that prompt engineering, `@Generable`, or tool calling wasn't given a fair attempt.
 
 ---
 
@@ -692,8 +820,11 @@ for i in 1...100 {
 }
 ```
 
-**Context window**: 4096 tokens (input + output combined)
-**Average**: ~3 characters per token in English
+**Context window**: read `SystemLanguageModel.default.contextSize` for the exact value. Current on-device base is 4096 tokens (input + output combined).
+
+**Exact sizing for Instructions** (iOS 26.4+): `try await SystemLanguageModel.default.tokenCount(for: instructions)`. Use this before composing a session so verbose instructions don't silently consume the budget.
+
+**Estimation fallback** for prompts, transcripts, and pre-26.4 targets: ~3 characters per token in English; more for PFIGSCJK languages. See `axiom-ai (skills/foundation-models-ref.md)` "Token Sizing and Context Size".
 
 **Rough calculation**:
 - 4096 tokens ≈ 12,000 characters
@@ -1050,6 +1181,54 @@ prompt takes 2-3 hours debugging why it hits context limit and produces poor res
 ```
 
 **Time saved**: 2-3 hours debugging vs 30 minutes proper design
+
+---
+
+## User Trust & Disclosure (HIG Generative AI)
+
+Apple's HIG on Generative AI sets baseline requirements that apply to every Foundation Models feature regardless of whether you use the base model, the built-in content-tagging adapter, or a custom-trained adapter.
+
+### Mandatory disclosure
+
+**"Never trick someone into thinking they're interacting with or viewing content authored by a human if they're actually interacting with AI."** This is the load-bearing rule.
+
+Practical implications:
+- Visible labeling on AI-generated content (Image Playground is the canonical pattern — visible "Made by AI" affordance plus region-appropriate disclosure)
+- Set expectations *before* the user invokes the feature, not after
+- Disclosure must align with applicable regulations in each region
+
+### Error and refusal UX
+
+Apple's HIG: *"Help people improve requests when blocked or undesirable results occur. Minimize scoped or blocked output by coaching people how to be more successful next time."*
+
+When `guardrailViolation` fires:
+- Don't show a moralizing error wall. Name the failure neutrally ("Unable to use that description") and offer a constructive next step (suggested alternative prompts).
+- Don't display the user's blocked input back to them — log for review without surfacing harmful content.
+
+When `exceededContextWindowSize` fires:
+- Don't surface "Error 4096 tokens exceeded" — that's developer text, not user text.
+- Offer "Start a new conversation" or summarize-and-continue as a one-tap action.
+
+### Retry as a first-class affordance
+
+HIG: *"Give them the ability to dismiss new content they don't want, and revert or retry content transformations."*
+
+Generative features need:
+- Retry button on every result, not only on errors
+- Alternate results so people can choose
+- Dismiss / revert path for content transformations
+
+### Feedback collection
+
+Recommended pattern: thumbs-up / thumbs-down on each generated result. Voluntary, not mandatory. The `LanguageModelFeedbackAttachment` API (see `foundation-models-ref.md`) bundles input / output / sentiment / issues into a JSON payload for Feedback Assistant.
+
+### Trust language
+
+HIG: *"Ensure they remain in charge of decision making and the overall experience."*
+
+- Provide a clear opt-out path for any data use
+- Disclose whether personal data is used for training (Apple's foundation models do NOT train on user data; if your app sends anything to a server LLM, you must disclose that)
+- Test across a diverse set of people to identify and correct stereotypes
 
 ---
 

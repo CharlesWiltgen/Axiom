@@ -742,6 +742,8 @@ let response = try await session.respond(
 
 #### From WWDC 286:19:19
 
+**Beyond the built-in adapter**: the content-tagging adapter is Apple-trained and covers the common tagging / entity-extraction case. For app-specific behavior that the built-in adapter doesn't cover, the next rung is a custom adapter trained with Apple's Foundation Models Adapter Training Toolkit (Python, Developer Program-gated, produces a `.fmadapter` package delivered via Background Assets). When that path is justified — and only after exhausting prompt engineering, `@Generable`, tool calling, and the built-in adapter — see `axiom-ai (skills/foundation-models-adapters.md)` for decision discipline, `axiom-ai (skills/foundation-models-adapters-ref.md)` for the toolkit and runtime API, and `axiom-ai (skills/foundation-models-adapters-diag.md)` for adapter-specific failure modes. The Approach Triage section in `axiom-ai (skills/foundation-models.md)` has the full deflection ladder.
+
 ### Custom Use Cases
 
 **With custom instructions**:
@@ -915,6 +917,52 @@ guard supportedLanguages.contains(Locale.current.language) else {
 ```
 
 #### From WWDC 301:7:06
+
+### Token Sizing and Context Size
+
+`SystemLanguageModel` exposes two introspection points for token-budget math:
+
+```swift
+// Maximum tokens the model can hold (input + output combined).
+let maxTokens: Int = SystemLanguageModel.default.contextSize
+
+// Exact token count for a specific Instructions value.
+@available(iOS 26.4, iPadOS 26.4, macOS 26.4, visionOS 26.4, *)
+let instructionTokens = try await SystemLanguageModel.default
+    .tokenCount(for: Instructions("..."))
+```
+
+**Scope and constraints**:
+- `tokenCount(for:)` accepts **`Instructions` only** — not `Prompt`, not `Transcript`, not arbitrary `String`. Use it to size system instructions against `contextSize` *before* creating a session; there is no public API for exact counting of prompts, transcript entries, or generation output.
+- `tokenCount(for:)` is `async throws`, **iOS 26.4+** (with matching iPadOS / macOS / visionOS / Mac Catalyst 26.4). Older OS targets fall back to estimation.
+- `contextSize` is the absolute ceiling for input + output combined. Use it as the denominator in any budget calculation.
+
+**Estimation fallback** (for `Prompt`, `Transcript`, output, or pre-26.4 targets):
+
+```swift
+// Apple does not expose a public API for these — estimate.
+// Empirical rule for English: ~3 characters per token; non-English
+// varies (PFIGSCJK languages typically use more tokens per character).
+let approxTokens = text.count / 3
+```
+
+The 3-chars-per-token heuristic is intentionally conservative; treat it as an upper-bound for English and a lower-bound for languages with multi-byte characters.
+
+**Common pattern**: combine the exact instructions count with estimated prompt + transcript sizes when deciding whether to compose a session or condense first.
+
+```swift
+@available(iOS 26.4, *)
+func canAccept(_ instructions: Instructions, currentTranscript: Transcript, nextPrompt: String) async throws -> Bool {
+    let model = SystemLanguageModel.default
+    let max = model.contextSize
+    let instructionTokens = try await model.tokenCount(for: instructions)
+    let transcriptApprox = currentTranscript.entries
+        .reduce(0) { $0 + $1.content.count / 3 }
+    let promptApprox = nextPrompt.count / 3
+    let outputBudget = 512 // reserve for generation
+    return instructionTokens + transcriptApprox + promptApprox + outputBudget < max
+}
+```
 
 ### Requirements
 

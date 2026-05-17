@@ -25,6 +25,7 @@ license: MIT
 | Stacks/grids/outlines | See `skills/containers-ref.md` |
 | Custom containers / List replacement (iOS 18+) | See `skills/containers-ref.md` Part 7 |
 | Search implementation | See `skills/search-ref.md` |
+| Toolbars, ToolbarItem, sheet button placement, customization | See `skills/toolbars.md` |
 | Gesture conflicts | See `skills/gestures.md` |
 | iOS 26 features | See `skills/26-ref.md` |
 
@@ -78,6 +79,7 @@ digraph swiftui {
     what -> "skills/animation-ref.md" [label="animations"];
     what -> "skills/gestures.md" [label="gestures"];
     what -> "skills/search-ref.md" [label="search"];
+    what -> "skills/toolbars.md" [label="toolbars / sheet buttons"];
     what -> "skills/26-ref.md" [label="iOS 26 features"];
     what -> "axiom-uikit (skills/uikit-bridging.md)" [label="UIKit interop"];
     what -> "axiom-design (skills/app-composition.md)" [label="app-level (root, auth)"];
@@ -105,3 +107,4 @@ digraph swiftui {
 | "I'll just add .animation()" | Animation issues compound. `skills/animation-ref.md` has the correct patterns. |
 | "No architecture needed" | Even small features benefit from separation. `skills/architecture.md` prevents refactoring debt. |
 | "I know .searchable" | Search has 6 gotchas. `skills/search-ref.md` covers all of them. |
+| "I'll just add a Done button" | Sheets without Cancel break the HIG (updated 2026-03-24). `.cancellationAction` / `.confirmationAction` produce HIG-correct placement automatically — `skills/toolbars.md` Pattern 2 has the rules. |

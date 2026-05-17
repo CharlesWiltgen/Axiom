@@ -188,6 +188,15 @@ await withCheckedContinuation { continuation in
 
 ### Sync Lifecycle Callbacks with Async Cleanup
 
+**First: are you in the right callback?** `applicationWillTerminate` is rarely the right place to flush async work, because **it's not called for the common termination paths**:
+- User swiping the app away from the app switcher → not called
+- System jetsam under memory pressure → not called
+- Backgrounded app silently killed → not called
+
+`applicationWillTerminate` only fires when the app is running in the foreground and the system kills it, or when the app calls `exit()` directly. If you're using it as your "wrap up before termination" hook, you've already lost most terminations. **Use `applicationDidEnterBackground` (or `sceneDidEnterBackground`) paired with `UIApplication.beginBackgroundTask(expirationHandler:)`** to get a ~30-second guaranteed window for cleanup; that callback fires for every transition out of foreground including the user-swipe-away case.
+
+If you genuinely need to bridge an async cleanup from a synchronous OS callback — even if you've picked the right one — read on. The pattern below applies to any sync lifecycle callback that hands you a deadline.
+
 OS lifecycle callbacks like `applicationWillTerminate`, `sceneWillResignActive`, and `applicationDidEnterBackground` are **synchronous** — they expect cleanup to complete before they return. If your cleanup logic is async, you cannot bridge with a `DispatchSemaphore` without risking deadlock: the cooperative thread pool may already be saturated, and blocking the main thread on a semaphore can leave the signal nowhere to come from.
 
 ```swift

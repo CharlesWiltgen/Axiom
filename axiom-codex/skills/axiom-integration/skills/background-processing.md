@@ -169,6 +169,8 @@ Need to run code in the background?
 | beginBackgroundTask | ~30 seconds | Immediately when backgrounding | Save state, finish upload |
 | Background URLSession | As needed | System-friendly time, even after termination | Large transfers |
 
+**Not a task type — asset delivery**: For *downloading* large files (game packs, ML model variants, Foundation Models `.fmadapter` packs), use Background Assets, not BGProcessingTask. Background Assets integrates with App Store install progress, charging-aware scheduling, and per-app quota; BGProcessingTask is the wrong tool for fetching. See `skills/background-assets.md`.
+
 ---
 
 ## Common Patterns
