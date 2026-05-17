@@ -121,7 +121,7 @@ case .unavailable(let other):
 }
 ```
 
-Each `.unavailable` branch needs a tested fallback UI. Use the Xcode scheme's **Foundation Models Availability** override to force each reason on an AI-capable device during development — see "Testing Availability Paths" below.
+Each `.unavailable` branch needs a tested fallback UI. Use the Xcode scheme's **Simulated Foundation Models Availability** override to force each reason on an AI-capable device during development — see "Testing Availability Paths" below.
 
 ---
 
@@ -242,21 +242,23 @@ for try await partial in stream {
 
 Every `.unavailable(reason:)` branch in the availability switch needs a tested fallback UI. The canonical production crisis (see `axiom-ai (skills/foundation-models-diag.md)` "Production Crisis Scenario") is shipping a feature without testing the non-AI path — 20% of users on older devices get an error wall instead of a graceful degradation.
 
-Xcode 26 provides a **Foundation Models Availability override** in the scheme editor that simulates each unavailable reason on an AI-capable device. Use it instead of bench-testing on a non-AI device or disabling Apple Intelligence in Settings.
+Xcode 26 provides a **Simulated Foundation Models Availability** override in the scheme editor that forces each `.unavailable` reason — plus the adapter-incompatible runtime error — on an AI-capable device. Use it instead of bench-testing on a non-AI device or disabling Apple Intelligence in Settings.
 
-**Where**: Product menu → Scheme → Edit Scheme → Run → Options → "Foundation Models Availability" override.
+**Where**: Product menu → Scheme → Edit Scheme → Run → Options → "Simulated Foundation Models Availability" override.
 
 **Override states**:
 
 | Override | Triggers | Test the UI that |
 |----------|----------|-------------------|
-| Off (default) | Device's actual availability | Real-device behavior |
-| Available | Force `.available` | Same as default on AI-capable device; verifies the happy path |
+| Off (default) | Device's actual availability | Real-device behavior; `.available` on AI-capable hardware |
 | Device Not Eligible | Force `.unavailable(.deviceNotEligible)` | Hides the AI entry point entirely; falls back to offline data |
 | Apple Intelligence Not Enabled | Force `.unavailable(.appleIntelligenceNotEnabled)` | Tells the user the feature requires opting in; deep-links to Settings |
 | Model Not Ready | Force `.unavailable(.modelNotReady)` | Tells the user to try again later; model still downloading |
+| Custom Adapter Incompatible With Base Model | Force `SystemLanguageModel.Adapter.AssetError.compatibleAdapterNotFound` on adapter load | Adapter-using code paths fall back to base model or surface a "needs update" prompt — see `foundation-models-adapters-diag.md` Pattern 1 |
 
-**Required test loop**: run the app against each override at least once before submission. Confirm each branch renders the right UI and that the unavailable branches do not attempt to construct a `LanguageModelSession`.
+The first four force a specific `SystemLanguageModel.Availability` state. The fifth simulates a **runtime adapter-load error**, not an `Availability` case — `UnavailableReason` itself has only three cases (`deviceNotEligible`, `appleIntelligenceNotEnabled`, `modelNotReady`). Apps without custom adapters can ignore the fifth row.
+
+**Required test loop**: run the app against each override at least once before submission. Confirm each branch renders the right UI, the unavailable branches do not attempt to construct a `LanguageModelSession`, and adapter-using paths handle `compatibleAdapterNotFound` cleanly.
 
 ### Testing Environment Matrix
 
@@ -278,7 +280,7 @@ Foundation Models support depends on the simulator/host/VM combination. Apple DT
 - Apple silicon runners booted into macOS 26+ with Apple Intelligence enabled → iOS / iPadOS / visionOS simulator tests against FM work
 - VM-based runners (the common cheap-CI configuration) → both host macOS app tests and embedded simulator tests will fail at runtime
 - macOS app tests that exercise FM directly require a **physical Apple silicon Mac** runner, not a VM
-- The Xcode scheme's Foundation Models Availability override (above) works in any supported environment and is the right tool for exercising non-AI paths on AI-capable CI runners
+- The Xcode scheme's Simulated Foundation Models Availability override (above) works in any supported environment and is the right tool for exercising non-AI paths on AI-capable CI runners
 
 **Practical recipes**:
 
