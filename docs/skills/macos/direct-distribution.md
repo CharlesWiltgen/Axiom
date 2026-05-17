@@ -110,7 +110,7 @@ This page documents the `direct-distribution` skill in the `axiom-macos` suite. 
 ## Related
 
 - [sandbox-and-file-access](/skills/macos/sandbox-and-file-access) — Distribution entitlements pair with sandbox entitlements; both live in the entitlements file
-- [axiom-security](/skills/security/keychain) — Keychain, encryption, passkeys, and certificate management
+- [axiom-security](/skills/security/) — Keychain, encryption, passkeys, and certificate management
 - [axiom-shipping](/skills/shipping/) — App Store submission specifics for the App Store-bound path
 
 ## Resources

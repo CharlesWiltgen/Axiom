@@ -84,7 +84,7 @@ This page documents the `sandbox-and-file-access` skill in the `axiom-macos` sui
 - [direct-distribution](/skills/macos/direct-distribution) — Code signing, entitlements file format, and notarization that pair with sandbox entitlements
 - [settings](/skills/macos/settings) — App Group `UserDefaults(suiteName:)` for sharing preferences with extensions inside the sandbox
 - [appkit-interop](/skills/macos/appkit-interop) — When `NSOpenPanel` is needed for capabilities `.fileImporter` doesn't expose (directory selection, accessory views)
-- [axiom-security](/skills/security/keychain) — Keychain, encryption, passkeys, and certificate management that complement file-access entitlements
+- [axiom-security](/skills/security/) — Keychain, encryption, passkeys, and certificate management that complement file-access entitlements
 
 ## Resources
 

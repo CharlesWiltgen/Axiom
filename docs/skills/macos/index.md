@@ -79,7 +79,7 @@ Questions you can ask Claude that will draw from these skills:
 ## Related
 
 - **[axiom-swiftui](/skills/ui-design/)** — Cross-platform SwiftUI patterns (state, layout, animations, navigation fundamentals) that the macOS-specific patterns build on
-- **[axiom-security](/skills/security/keychain)** — Keychain, encryption, passkeys, and certificate management; pair with sandbox-and-file-access and direct-distribution
+- **[axiom-security](/skills/security/)** — Keychain, encryption, passkeys, and certificate management; pair with sandbox-and-file-access and direct-distribution
 - **[axiom-shipping](/skills/shipping/)** — App Store submission, rejections, privacy manifests; complements direct-distribution for App Store-bound macOS apps
 - **[axiom-uikit](/skills/ui-design/)** — UIKit-SwiftUI bridging; same `Representable` pattern as AppKit interop but with `UIView`/`UIViewController`
 - **[axiom-payments](/skills/integration/)** — Apple Pay on Mac and Catalyst payment patterns

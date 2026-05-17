@@ -386,6 +386,16 @@ export default withMermaid(defineConfig({
           ]
         },
         {
+          text: 'Security',
+          items: [
+            { text: 'Overview', link: '/skills/security/' },
+            { text: 'Keychain', link: '/skills/security/keychain' },
+            { text: 'CryptoKit', link: '/skills/security/cryptokit' },
+            { text: 'Passkeys', link: '/skills/security/passkeys' },
+            { text: 'App Attest', link: '/skills/security/app-attest' }
+          ]
+        },
+        {
           text: 'HealthKit & WorkoutKit',
           items: [
             { text: 'Overview', link: '/skills/health/' },
