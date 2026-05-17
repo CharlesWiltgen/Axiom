@@ -109,7 +109,7 @@ ContactAccessButton(queryString: searchText) { identifiers in
 ## Related
 
 - [extensions-widgets](/skills/integration/extensions-widgets) — If combining calendar data with widgets
-- [privacy-ux](/reference/privacy-ux) — General iOS privacy and permission UX patterns
+- [privacy-ux](/skills/integration/privacy-ux) — General iOS privacy and permission UX patterns
 - [background-processing](/skills/integration/background-processing) — If scheduling background calendar sync
 
 ## Resources

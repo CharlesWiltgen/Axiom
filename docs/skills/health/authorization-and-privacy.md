@@ -70,14 +70,14 @@ This page documents the `authorization-and-privacy` skill in the `axiom-health` 
 
 **For the data model** — Use [fundamentals](/skills/health/fundamentals) for the `HKHealthStore` setup and data-type hierarchy this skill builds on.
 
-**For App Store submission specifics** — Use [privacy-ux](/reference/privacy-ux) alongside this skill when writing purpose strings and preparing for App Review.
+**For App Store submission specifics** — Use [privacy-ux](/skills/integration/privacy-ux) alongside this skill when writing purpose strings and preparing for App Review.
 
 ## Related
 
 - [fundamentals](/skills/health/fundamentals) — Prerequisite for this skill; covers the data types you're requesting permission for
 - [queries](/skills/health/queries) — Describes how queries behave after authorization (including why empty results are valid)
 - [sync-and-background](/skills/health/sync-and-background) — Background reads have additional restrictions documented here
-- [privacy-ux](/reference/privacy-ux) — Cross-framework guidance on purpose strings and privacy UX that applies to HealthKit purpose strings
+- [privacy-ux](/skills/integration/privacy-ux) — Cross-framework guidance on purpose strings and privacy UX that applies to HealthKit purpose strings
 - [security-privacy-scanner](/agents/security-privacy-scanner) — Automated scan for privacy issues including missing HealthKit usage strings
 
 ## Resources

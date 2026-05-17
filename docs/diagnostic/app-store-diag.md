@@ -148,7 +148,7 @@ This is a **diagnostic skill** — systematic rejection diagnosis with guideline
 - [App Store Submission](/skills/shipping/app-store-submission) — Pre-flight checklist to prevent rejections
 - [App Store Reference](/reference/app-store-ref) — Metadata specs, guideline index, privacy manifest schema
 - [StoreKit 2 Reference](/reference/storekit-ref) — IAP implementation for Guideline 3.x fixes
-- [Privacy UX Patterns](/reference/privacy-ux) — Privacy manifest and ATT for Guideline 5.1 fixes
+- [Privacy UX Patterns](/skills/integration/privacy-ux) — Privacy manifest and ATT for Guideline 5.1 fixes
 
 ## Resources
 

@@ -108,7 +108,7 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 |-------|-------------|
 | [**apple-docs**](/skills/integration/apple-docs) | Apple's official for-LLM guides and Swift compiler diagnostics from Xcode |
 | [**apple-docs-research**](/skills/integration/apple-docs-research) | Researching Apple frameworks, getting WWDC transcripts, using sosumi.ai |
-| [**app-discoverability**](/reference/app-discoverability) | App Intents, App Shortcuts, Core Spotlight, NSUserActivity for Spotlight/Siri suggestions |
+| [**app-discoverability**](/skills/integration/app-discoverability) | App Intents, App Shortcuts, Core Spotlight, NSUserActivity for Spotlight/Siri suggestions |
 | [**app-intents-ref**](/reference/app-intents-ref) | Siri, Apple Intelligence, Shortcuts, Spotlight integration (iOS 16+) |
 | [**app-shortcuts-ref**](/reference/app-shortcuts-ref) | App Shortcuts, instant Siri availability, suggested phrases |
 | [**avfoundation-ref**](/reference/avfoundation-ref) | AVAudioSession, AVAudioEngine, bit-perfect DAC output, iOS 26+ spatial audio capture |

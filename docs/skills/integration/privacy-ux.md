@@ -43,7 +43,6 @@ Use this skill when:
 
 ## Related
 
-- [privacy-ux-ref](/reference/privacy-ux) — manifest schema, ATT API, Required Reason API code reference
 - [hig](/skills/ui-design/hig) — permission request UX patterns and onboarding flow
 - [hig-ref](/reference/hig-ref) — complete HIG reference
 - [eventkit-contacts](/skills/integration/eventkit-contacts) — EventKit and Contacts have their own permission models layered on top of these patterns

@@ -73,7 +73,7 @@ This page documents the `clinical-and-mobility` skill in the `axiom-health` suit
 - [authorization-and-privacy](/skills/health/authorization-and-privacy) — Baseline HealthKit authorization plus the extra clinical-records Info.plist key
 - [queries](/skills/health/queries) — Standard sample query APIs work for clinical records with a cast to `HKClinicalRecord`
 - [sync-and-background](/skills/health/sync-and-background) — `HKObserverQuery` pattern for proactive Apple Walking Steadiness alerts
-- [privacy-ux](/reference/privacy-ux) — Writing purpose strings and the Privacy Policy URL App Review will enforce
+- [privacy-ux](/skills/integration/privacy-ux) — Writing purpose strings and the Privacy Policy URL App Review will enforce
 - [security-privacy-scanner](/agents/security-privacy-scanner) — Agent that audits privacy disclosures and capability usage
 
 ## Resources

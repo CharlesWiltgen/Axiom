@@ -77,5 +77,5 @@ All locations activate immediately after install.
 ## Related Skills
 
 - [app-intents-ref](/reference/app-intents-ref) — Complete App Intents implementation reference
-- [app-discoverability](/reference/app-discoverability) — Strategic guide for making apps discoverable
+- [app-discoverability](/skills/integration/app-discoverability) — Strategic guide for making apps discoverable
 - [core-spotlight-ref](/reference/core-spotlight-ref) — Core Spotlight and NSUserActivity integration

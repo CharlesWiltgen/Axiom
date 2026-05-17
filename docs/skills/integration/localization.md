@@ -45,6 +45,5 @@ Use this skill when:
 
 ## Related
 
-- [localization-ref](/reference/localization) — String Catalog API, `LocalizedStringResource`, formatter APIs, plural rules
 - [hig](/skills/ui-design/hig) — typography and RTL layout guidance
 - [typography-ref](/reference/typography-ref) — font system that must adapt to per-locale Dynamic Type sizing

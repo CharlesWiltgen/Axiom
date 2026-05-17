@@ -86,7 +86,7 @@ This page documents the `axiom-shipping` reference skill — complete API-level 
 - [App Store Submission](/skills/shipping/app-store-submission) — Pre-flight checklist and submission workflow
 - [App Store Diagnostics](/diagnostic/app-store-diag) — Rejection diagnosis and remediation patterns
 - [StoreKit 2 Reference](/reference/storekit-ref) — IAP and subscription API details
-- [Privacy UX Patterns](/reference/privacy-ux) — Privacy manifest implementation and ATT UX
+- [Privacy UX Patterns](/skills/integration/privacy-ux) — Privacy manifest implementation and ATT UX
 - [App Store Connect](/reference/app-store-connect-ref) — ASC navigation, crash data, metrics
 
 ## Resources

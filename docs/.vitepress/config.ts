@@ -529,7 +529,6 @@ export default withMermaid(defineConfig({
           text: 'Integration',
           items: [
             { text: 'AlarmKit', link: '/reference/alarmkit-ref' },
-            { text: 'App Discoverability', link: '/reference/app-discoverability' },
             { text: 'App Intents Integration', link: '/reference/app-intents-ref' },
             { text: 'App Shortcuts', link: '/reference/app-shortcuts-ref' },
             { text: 'Apple Pay', link: '/reference/apple-pay-ref' },
@@ -548,7 +547,6 @@ export default withMermaid(defineConfig({
             { text: 'Foundation Models', link: '/reference/foundation-models-ref' },
             { text: 'Foundation Models Custom Adapters', link: '/reference/foundation-models-adapters-ref' },
             { text: 'Haptics & Audio Feedback', link: '/reference/haptics' },
-            { text: 'Localization & Internationalization', link: '/reference/localization' },
             { text: 'Localization Research & Consistency', link: '/reference/localization-research-ref' },
             { text: 'MapKit API', link: '/reference/mapkit-ref' },
             { text: 'Network.framework API', link: '/reference/network-framework-ref' },
@@ -556,7 +554,6 @@ export default withMermaid(defineConfig({
             { text: 'Now Playing: CarPlay', link: '/reference/now-playing-carplay' },
             { text: 'Now Playing: MusicKit', link: '/reference/now-playing-musickit' },
             { text: 'Photo Library', link: '/reference/photo-library-ref' },
-            { text: 'Privacy UX Patterns', link: '/reference/privacy-ux' },
             { text: 'Push Notifications', link: '/reference/push-notifications-ref' },
             { text: 'ShazamKit', link: '/reference/shazamkit-ref' },
             { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' },

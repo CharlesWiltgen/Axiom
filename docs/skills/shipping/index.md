@@ -102,6 +102,6 @@ Programmatic App Store Connect access via asc-mcp MCP server (~208 tools):
 ## See Also
 
 - [StoreKit 2 Reference](/reference/storekit-ref) — In-app purchase implementation
-- [Privacy UX Patterns](/reference/privacy-ux) — Privacy manifest and ATT implementation
+- [Privacy UX Patterns](/skills/integration/privacy-ux) — Privacy manifest and ATT implementation
 - [App Store Connect](/reference/app-store-connect-ref) — ASC navigation, crash data, metrics
 - [App Store Connect MCP Reference](/reference/asc-mcp-ref) — asc-mcp tool parameters and API constraints

@@ -43,7 +43,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | Skill | Description |
 |-------|-------------|
 | [**alarmkit-ref**](./alarmkit-ref) | AlarmKit API — alarm scheduling, authorization, Live Activity integration (iOS 26+) |
-| [**app-discoverability**](./app-discoverability) | Discoverability strategy — App Intents, App Shortcuts, Core Spotlight, NSUserActivity for Spotlight and Siri |
+| [**app-discoverability**](/skills/integration/app-discoverability) | Discoverability strategy — App Intents, App Shortcuts, Core Spotlight, NSUserActivity for Spotlight and Siri |
 | [**app-intents-ref**](./app-intents-ref) | App Intents framework — AppIntent, AppEntity, parameters, queries, Siri, Apple Intelligence, Shortcuts, Spotlight |
 | [**app-shortcuts-ref**](./app-shortcuts-ref) | App Shortcuts — AppShortcutsProvider, suggested phrases, Siri/Spotlight availability, debugging |
 | [**avfoundation-ref**](./avfoundation-ref) | AVFoundation audio APIs — AVAudioSession, AVAudioEngine, bit-perfect DAC, iOS 26+ spatial audio, ASAF/APAC |
@@ -54,14 +54,14 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**extensions-widgets-ref**](./extensions-widgets-ref) | Extensions & Widgets API — WidgetKit, ActivityKit, Control Center widgets, timeline providers |
 | [**foundation-models-ref**](./foundation-models-ref) | Foundation Models framework — LanguageModelSession, @Generable, streaming, tool calling, context management (iOS 26+) |
 | [**haptics**](./haptics) | Haptic feedback and Core Haptics — UIFeedbackGenerator, CHHapticEngine, AHAP patterns (WWDC 2021) |
-| [**localization**](./localization) | App localization — String Catalogs (.xcstrings), type-safe symbols (Xcode 26+), #bundle macro, plurals, RTL layouts |
+| [**localization**](/skills/integration/localization) | App localization — String Catalogs (.xcstrings), type-safe symbols (Xcode 26+), #bundle macro, plurals, RTL layouts |
 | [**mapkit-ref**](./mapkit-ref) | MapKit API — SwiftUI Map, MKMapView, annotations, search, directions |
 | [**network-framework-ref**](./network-framework-ref) | Network.framework API — NWConnection (iOS 12-18), NetworkConnection (iOS 26+), TLV framing, Coder protocol |
 | [**networking-migration**](./networking-migration) | Network framework migration guide — NWConnection to NetworkConnection transition patterns |
 | [**now-playing-carplay**](./now-playing-carplay) | CarPlay Now Playing integration — MPNowPlayingInfoCenter, transport controls, CarPlay framework |
 | [**now-playing-musickit**](./now-playing-musickit) | MusicKit Now Playing — MusicPlayer, queue management, system integration |
 | [**photo-library-ref**](./photo-library-ref) | Photo Library API — PHPickerViewController, PhotosPicker, PHAsset, photo selection patterns |
-| [**privacy-ux**](./privacy-ux) | Privacy manifests and permission UX — just-in-time permissions, App Tracking Transparency, Required Reason APIs |
+| [**privacy-ux**](/skills/integration/privacy-ux) | Privacy manifests and permission UX — just-in-time permissions, App Tracking Transparency, Required Reason APIs |
 | [**push-notifications-ref**](./push-notifications-ref) | Push notifications — APNs HTTP/2, UserNotifications framework, silent push, rich media, service extensions |
 | [**storekit-ref**](./storekit-ref) | StoreKit 2 API — Product, Transaction, subscription management, receipts, testing |
 

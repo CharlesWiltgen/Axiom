@@ -22,8 +22,8 @@ Use this reference when:
 - Auditing existing translations for consistency or platform-match
 
 **Do NOT use this reference for:**
-- Xcode String Catalog setup → see [Localization & Internationalization](/reference/localization)
-- Plural handling, RTL, locale-aware formatting → see [Localization & Internationalization](/reference/localization)
+- Xcode String Catalog setup → see [Localization & Internationalization](/skills/integration/localization)
+- Plural handling, RTL, locale-aware formatting → see [Localization & Internationalization](/skills/integration/localization)
 
 ## Example Prompts
 
@@ -96,13 +96,13 @@ The `VoiceOver:` prefix signals to translators (and TMS filters) that the string
 
 ## Documentation Scope
 
-This page documents the `localization-research-ref` skill in the `axiom-integration` suite. It complements the mechanics-focused [Localization & Internationalization](/reference/localization) reference by covering the research and consistency discipline that surrounds the Xcode workflow.
+This page documents the `localization-research-ref` skill in the `axiom-integration` suite. It complements the mechanics-focused [Localization & Internationalization](/skills/integration/localization) reference by covering the research and consistency discipline that surrounds the Xcode workflow.
 
-**For the Xcode/xcstrings mechanics:** see [Localization & Internationalization](/reference/localization).
+**For the Xcode/xcstrings mechanics:** see [Localization & Internationalization](/skills/integration/localization).
 
 ## Related
 
-- [localization](/reference/localization) — String Catalog mechanics, SwiftUI/UIKit APIs, plurals, RTL, formatters
+- [localization](/skills/integration/localization) — String Catalog mechanics, SwiftUI/UIKit APIs, plurals, RTL, formatters
 - [Accessibility Diagnostics](/diagnostic/accessibility-diag) — VoiceOver labels and hints (the strings this reference helps translate)
 - [hig](/skills/ui-design/hig) — HIG terminology conventions
 

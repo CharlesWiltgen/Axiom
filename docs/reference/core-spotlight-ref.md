@@ -108,5 +108,5 @@ let item = CSSearchableItem(appEntity: orderEntity)
 ## Related Skills
 
 - [app-intents-ref](/reference/app-intents-ref) — App Intents framework including IndexedEntity
-- [app-discoverability](/reference/app-discoverability) — Strategic guide for making apps discoverable
+- [app-discoverability](/skills/integration/app-discoverability) — Strategic guide for making apps discoverable
 - [app-shortcuts-ref](/reference/app-shortcuts-ref) — App Shortcuts for instant availability

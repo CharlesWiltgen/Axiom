@@ -76,7 +76,7 @@ This page documents the `wellbeing-and-medications` skill in the `axiom-health` 
 - [authorization-and-privacy](/skills/health/authorization-and-privacy) — Baseline authorization patterns; medications diverge and are documented here
 - [queries](/skills/health/queries) — One-shot reads for State of Mind and dose event samples
 - [sync-and-background](/skills/health/sync-and-background) — Anchored queries, the recommended pattern for keeping mood and dose data in sync
-- [privacy-ux](/reference/privacy-ux) — Writing purpose strings and privacy disclosures for sensitive health data
+- [privacy-ux](/skills/integration/privacy-ux) — Writing purpose strings and privacy disclosures for sensitive health data
 - [security-privacy-scanner](/agents/security-privacy-scanner) — Agent that audits purpose strings and privacy-sensitive data flows
 
 ## Resources

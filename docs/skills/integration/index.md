@@ -291,7 +291,7 @@ UIFeedbackGenerator and Core Haptics for tactile feedback.
 
 ---
 
-### [Localization](/reference/localization)
+### [Localization](/skills/integration/localization)
 
 String Catalogs, type-safe symbols (Xcode 26+), plurals, RTL layouts.
 
@@ -299,7 +299,7 @@ String Catalogs, type-safe symbols (Xcode 26+), plurals, RTL layouts.
 
 ---
 
-### [Privacy UX](/reference/privacy-ux)
+### [Privacy UX](/skills/integration/privacy-ux)
 
 Privacy Manifests, just-in-time permissions, App Tracking Transparency.
 

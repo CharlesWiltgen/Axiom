@@ -86,7 +86,7 @@ This page documents the `axiom-shipping` skill — a discipline skill that Claud
 - [App Store Reference](/reference/app-store-ref) — Complete metadata field specs, guideline index, privacy manifest schema
 - [App Store Diagnostics](/diagnostic/app-store-diag) — Rejection diagnosis and remediation patterns
 - [StoreKit 2 Reference](/reference/storekit-ref) — IAP and subscription implementation
-- [Privacy UX Patterns](/reference/privacy-ux) — Privacy manifest, ATT, and permission request patterns
+- [Privacy UX Patterns](/skills/integration/privacy-ux) — Privacy manifest, ATT, and permission request patterns
 - [App Store Connect](/reference/app-store-connect-ref) — ASC navigation, crash data, and analytics
 
 ## Resources
