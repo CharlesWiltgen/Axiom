@@ -160,6 +160,9 @@ Navigation problem?
 │  └─ Lost on rotation/size change?
 │     └─ → Pattern 4d (Layout Recreation)
 │
+├─ Search tab morph not animating on first selection (iOS 26)?
+│  └─ → Pattern 4e (Tab(role: .search) morph broken by layout observer in subtree)
+│
 ├─ NavigationSplitView issue?
 │  ├─ Sidebar not visible on iPad?
 │  │  ├─ columnVisibility not set? → Pattern 6a (Column Visibility)
@@ -712,6 +715,144 @@ class NavigationModel: ObservableObject {
 - Navigate deep, background app
 - Kill app via Xcode
 - Relaunch — state restored
+
+---
+
+### Pattern 4e: Tab(role: .search) Morph Broken on First Activation (iOS 26)
+
+**Time cost** 30-60 minutes (bisection-driven without this pattern)
+
+#### Symptom
+- On the **first** activation of the search-role tab, the search field renders as a *separate top bar* (legacy `.navigationBarDrawer` placement) instead of morphing up from the tab icon
+- The circular search-role icon still appears in the tab bar — so the visible failure is "two search affordances" (broken top bar + intact tab icon), not "no search at all"
+- The bug is subtle: easy to mistake for intended top-placement behavior if you aren't expecting the bottom-aligned morph
+- **Subsequent** activations of the search tab render correctly (bottom-aligned morph from the tab icon)
+- Other tab behavior (selection, content swap) is unaffected
+- No error or warning in the console
+- Reproducible in the simulator
+
+#### Diagnosis
+```swift
+// ❌ WRONG — .onGeometryChange anywhere in the TabView's subtree
+struct ContentView: View {
+    @State private var windowWidth: CGFloat = 0
+
+    var body: some View {
+        TabView {
+            Tab("Home", systemImage: "house") { HomeView() }
+            Tab(role: .search) {
+                NavigationStack { SearchView() }
+            }
+        }
+        .searchable(text: $query)
+        .tabViewSearchActivation(.searchTabSelection)
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.width
+        } action: { width in
+            windowWidth = width  // ← state write breaks the search-tab morph
+        }
+    }
+}
+// Any state write triggered by .onGeometryChange anywhere in the TabView's
+// subtree — on the body containing TabView, on TabView itself, or on any
+// tab's content — causes a re-render during initial layout that the
+// .search role's morph integration cannot recover from on first activation.
+```
+
+#### Fix
+```swift
+// ✅ CORRECT — Read width from a non-TabView source, OR scope the
+// observer outside the TabView's coordinate space entirely.
+
+// Option A: GeometryReader at the scene root, above the TabView
+struct ContentView: View {
+    var body: some View {
+        GeometryReader { proxy in
+            TabView {
+                Tab("Home", systemImage: "house") {
+                    HomeView()
+                        .environment(\.windowWidth, proxy.size.width)
+                }
+                Tab(role: .search) {
+                    NavigationStack { SearchView() }
+                }
+            }
+            .searchable(text: $query)
+            .tabViewSearchActivation(.searchTabSelection)
+        }
+    }
+}
+
+// Option B: WindowGroup-level read (no per-frame observer)
+@main struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .containerRelativeFrame([.horizontal])  // or measure once
+        }
+    }
+}
+
+// Option C: Move the observer onto a sibling outside the TabView
+struct AppShell: View {
+    @State private var windowWidth: CGFloat = 0
+    var body: some View {
+        ZStack {
+            ContentView()  // TabView lives here, untouched
+            Color.clear
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: {
+                    windowWidth = $0  // safe — outside the TabView subtree
+                }
+        }
+    }
+}
+
+// Option D (recommended for one-time reads): Seed @State once at launch.
+// If you only need the width to gate tab inclusion / structural decisions,
+// read it from the scene at init time instead of subscribing to a layout
+// observer. This is a structural decision, not continuous layout adaptation.
+struct ContentView: View {
+    @State private var windowWidth: CGFloat = {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.screen.bounds.width ?? 0
+    }()
+
+    var body: some View {
+        TabView {
+            Tab("Home", systemImage: "house") { HomeView() }
+            if windowWidth >= 768 {
+                Tab("Extras", systemImage: "ellipsis") { ExtrasView() }
+            }
+            Tab(role: .search) {
+                NavigationStack { SearchView() }
+            }
+        }
+        .searchable(text: $query)
+        .tabViewSearchActivation(.searchTabSelection)
+    }
+}
+// No layout observer, no per-frame state write, morph integration unaffected.
+// Trade-off: width is captured once, won't track multitasking resize.
+```
+
+**Rule of thumb** Don't write observable state from `.onGeometryChange` for any value the TabView's structure depends on. If the read can be done once at launch, use Option D. If the value must track resize, push the observer outside the TabView's coordinate space (Option A or C).
+
+#### Why This Happens
+The `.search` role's morph is a system-owned matched-geometry choreography anchored to the TabView's coordinate space. `.onGeometryChange` fires its action during the initial layout pass, and the resulting `@State` write triggers a TabView re-render *while the morph integration is initializing*. The integration caches state from that first pass and cannot recover, so the search field never replaces the tab bar. Subsequent tab activations succeed because the cached state is then valid.
+
+This is in the same family as the documented breakage from `.introspect(.navigationStack)` on the search tab's `NavigationStack` ([siteline/swiftui-introspect #499](https://github.com/siteline/swiftui-introspect/issues/499)) and `withAnimation` + `.onGeometryChange` interactions (Apple Forums thread 764217). No FB number is published for the exact `.onGeometryChange` variant; the bisection was first reported by an Axiom user 2026-05-18.
+
+#### Verification
+- Comment out the `.onGeometryChange` (or move it outside the TabView's subtree)
+- First-tap search tab → search field morphs in
+- Test on iOS 26.0 and iOS 26.1 — adjacent `tabViewBottomAccessory` AttributeGraph cycle bug was fixed in Xcode 26.1, so this may also be fixed there. Retest before treating as permanent.
+
+#### Adjacent Anti-Patterns
+Avoid these inside a `Tab(role: .search)` TabView's subtree until Apple confirms a fix:
+- `.onGeometryChange(...) { action that writes @State }`
+- `.introspect(.navigationStack, on: .iOS(.v26))` on the search tab
+- Wrapping the TabView body in `withAnimation { ... }` for unrelated state changes
 
 ---
 

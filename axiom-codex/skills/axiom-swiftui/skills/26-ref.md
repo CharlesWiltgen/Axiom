@@ -118,6 +118,26 @@ NavigationSplitView {
 - `searchToolbarBehavior(.minimize)` — Compact search that expands on tap
 - `Tab(role: .search)` — Dedicated search tab; search field replaces tab bar. See swiftui-nav-ref Section 5.7
 
+#### Known Issue: `.onGeometryChange` breaks `Tab(role: .search)` morph on first activation
+
+**Symptom** On first activation of the search-role tab, the search field renders as a separate top bar (legacy `.navigationBarDrawer` placement) instead of morphing from the tab icon. The circular search-role icon still appears in the tab bar, so the visible failure is "two search affordances" rather than "no search." Subsequent activations render correctly.
+
+**Cause** `.onGeometryChange(...) action: { state = ... }` *anywhere* in the TabView's subtree — on the body containing the TabView, on the TabView itself, or on any individual tab's content. The geometry-driven state write triggers a TabView re-render during initial layout that the search-tab morph integration doesn't recover from. Cached state on subsequent activations bypasses the issue.
+
+**Fix** Don't write observable state from `.onGeometryChange` for any value the TabView's structure depends on. For one-time window-size reads at launch (e.g., to gate tab inclusion), seed `@State` once via `UIApplication.shared.connectedScenes`:
+
+```swift
+@State private var windowWidth: CGFloat = {
+    UIApplication.shared.connectedScenes
+        .compactMap { $0 as? UIWindowScene }
+        .first?.screen.bounds.width ?? 0
+}()
+```
+
+For continuous size tracking, push the observer outside the TabView's coordinate space (sibling `Color.clear`) or read from a `GeometryReader` *above* the TabView.
+
+**Status** Reproduced on iOS 26.0. Retest on iOS 26.1+ — adjacent `tabViewBottomAccessory` AttributeGraph cycle bug ([Apple Forums 801431](https://developer.apple.com/forums/thread/801431)) was fixed in Xcode 26.1; this may be too. See `skills/nav-diag.md` Pattern 4e for full diagnosis, all 4 fix options, and verification steps.
+
 ### Glass Effect for Custom Views
 
 ```swift
