@@ -470,12 +470,13 @@ TabView {
             SearchView()
                 .navigationTitle("Search")
         }
-        .searchable(text: $searchText)
     }
 }
+.searchable(text: $searchText)
+.tabViewSearchActivation(.searchTabSelection)
 ```
 
-**Search tab requirement**: Contents of a search-role tab must be wrapped in `NavigationStack` with `.searchable()` applied to the stack. Without `NavigationStack`, the search field will not appear. For foundational `.searchable` patterns (suggestions, scopes, tokens, programmatic control), see `skills/search-ref.md`.
+**Search tab placement**: `.searchable()` goes on the `TabView`, not inside the search-role `Tab`. Pair it with `.tabViewSearchActivation(.searchTabSelection)` so the search field activates only when the search tab is selected. Without `.tabViewSearchActivation`, the tab view applies search to all tabs and resets search state on tab change. The search-role tab's contents must still be wrapped in `NavigationStack` for the search field to render. For foundational `.searchable` patterns (suggestions, scopes, tokens, programmatic control), see `skills/search-ref.md`.
 
 ### 5.2 TabView with NavigationStack Per Tab
 
@@ -669,18 +670,26 @@ TabView { ... }
 // isEnabled: false = hides AND removes reserved space
 
 // Search tab with dedicated search field
-Tab(role: .search) {
-    NavigationStack {
-        SearchView()
-            .navigationTitle("Search")
+TabView {
+    // ...other tabs...
+    Tab(role: .search) {
+        NavigationStack {
+            SearchView()
+                .navigationTitle("Search")
+        }
     }
-    .searchable(text: $searchText)
 }
-// Morphs into search field when selected
-// ⚠️ NavigationStack wrapper required for search field to appear
-// Fallback: If no tab has .search role, the tab view applies search
-// to ALL tabs, resetting search state when the selected tab changes
+.searchable(text: $searchText)
+.tabViewSearchActivation(.searchTabSelection)
+// .searchable goes on the TabView, NOT inside the Tab
+// .tabViewSearchActivation(.searchTabSelection) binds search to the .search role tab
+// Morphs into search field when the search tab is selected
+// ⚠️ NavigationStack wrapper still required for the search field to render
+// Without .tabViewSearchActivation: tab view applies search to ALL tabs,
+// resetting search state when the selected tab changes
 ```
+
+**iOS 26 morph gotcha**: `.onGeometryChange { ... }` *anywhere* in the TabView's subtree (on the body containing TabView, on TabView itself, or on any tab's content) breaks the `.search` role's morph on the **first** activation — the state write triggers a re-render during initial layout that the morph integration can't recover from. Subsequent activations work because state is cached. Same family as `.introspect(.navigationStack)` on the search tab (siteline/swiftui-introspect #499). Workaround: read width via `GeometryReader` *above* the TabView, or scope `.onGeometryChange` to a sibling outside the TabView's coordinate space. See `skills/nav-diag.md` Pattern 4e for full diagnosis and fixes.
 
 #### Dynamic Bottom Accessory
 
@@ -702,6 +711,7 @@ Reserve `tabViewBottomAccessory` for cross-tab content (playback, status). For t
 | `.hidden(_:)` | Tab | 18+ | Programmatic visibility with state preservation |
 | `.tabViewStyle(.sidebarAdaptable)` | TabView | 18+ | Sidebar on iPad, tabs on iPhone |
 | `.tabViewCustomization($binding)` | TabView | 18+ | Persist user tab arrangement |
+| `.tabViewSearchActivation(_:)` | TabView | 18+ | Bind `.searchable` to the `.search` role tab (use `.searchTabSelection`) |
 | `.tabBarMinimizeBehavior(_:)` | TabView | 26+ | Auto-hide on scroll |
 | `.tabViewBottomAccessory(isEnabled:content:)` | TabView | 26.1+ | Dynamic content below tab bar |
 
@@ -964,7 +974,7 @@ NavigationPath(codableRepresentation)  // For decoding
 
 **WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323 (Build a SwiftUI app with the new design)
 
-**Docs**: /swiftui/tabrole/search, /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:)
+**Docs**: /swiftui/tabrole/search, /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/view/tabviewsearchactivation(_:)
 
 **Skills**: skills/nav.md, skills/nav-diag.md, skills/26-ref.md, axiom-design (skills/liquid-glass.md), skills/search-ref.md
 

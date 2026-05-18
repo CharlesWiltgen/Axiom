@@ -701,6 +701,7 @@ If pressured to skip diagnostics:
 | Preview crashes | Missing deps / Bad init | Diagnostics button | D5 | 10 min |
 | Intermittent issues | Identity or timing | Reproduce 30+ times | D3 | 30 min |
 | Long updates (performance) | Expensive body operation | Instruments (SwiftUI + Time Profiler) | D2 | 30 min |
+| iOS 26 integration works on second activation but not first | Initialization-time side-effect (`@State` write from `.onGeometryChange`, `.task`, lazy modifier evaluation) disrupts a system reconciliation that runs once at TabView/NavigationStack setup | Strip parent view's modifier chain to bare minimum, re-add one at a time | swiftui-nav-diag Pattern 4e (concrete case) | 30-45 min |
 
 ---
 
