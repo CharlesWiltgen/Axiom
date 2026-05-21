@@ -1,131 +1,79 @@
+# iOS Machine Learning
 
-# iOS Machine Learning Router
+Guidance for **custom** on-device ML — converting, compressing, and deploying your own models with Core ML — plus on-device speech-to-text. For Apple's built-in on-device LLM (Foundation Models, `@Generable`), stay in `axiom-ai`. For computer vision (image analysis, detection, segmentation), use `axiom-vision`.
 
-**You MUST use this skill for ANY on-device machine learning or speech-to-text work.**
+> **Coverage note**: Axiom does not yet ship dedicated Core ML / Speech *discipline* skills. This page is the decision framework plus the authoritative Apple sources to work from — use `axiom-apple-docs` and the paths in Resources for the API surface. (Deeper Core ML coverage is on the backlog: coremltools conversion, Create ML, `MLUpdateTask` personalization, and quantization-aware vs post-training compression.)
 
 ## When to Use
 
-Use this router when:
-- Converting PyTorch/TensorFlow models to CoreML
-- Deploying ML models on-device
+- Converting PyTorch/TensorFlow models to Core ML
 - Compressing models (quantization, palettization, pruning)
-- Working with large language models (LLMs)
-- Implementing KV-cache for transformers
-- Using MLTensor for model stitching
-- Building speech-to-text features
-- Transcribing audio (live or recorded)
+- Deploying / running custom models on device (including LLMs, KV-cache, `MLTensor` stitching)
+- Building speech-to-text / transcription features
 
-## Boundary with axiom-ai (Foundation Models)
+## Boundary: ML (custom models) vs AI (Apple Intelligence) vs Vision
 
-**ML (custom models) vs AI (Apple Intelligence) — know the difference:**
+| Developer intent | Go to |
+|------------------|-------|
+| "Use Apple Intelligence / Foundation Models" | `axiom-ai` — Apple's on-device LLM |
+| "Add text generation with `@Generable`" | `axiom-ai` — structured output |
+| "Run / convert / compress my OWN model" | This page — Core ML |
+| "Deploy a custom LLM with KV-cache" | This page — Core ML stateful models |
+| "Use the Vision framework for image analysis" | `axiom-vision` |
+| "Use pre-trained Apple NLP models" | `axiom-ai` |
 
-| Developer Intent | Router |
-|-----------------|--------|
-| "Use Apple Intelligence / Foundation Models" | **axiom-ai** — Apple's on-device LLM |
-| "Run my own ML model on device" | **axiom-ai (ML)** — CoreML conversion + deployment |
-| "Add text generation with @Generable" | **axiom-ai** — Foundation Models structured output |
-| "Deploy a custom LLM with KV-cache" | **axiom-ai (ML)** — Custom model optimization |
-| "Use Vision framework for image analysis" | **axiom-vision** — Not ML deployment |
-| "Use pre-trained Apple NLP models" | **axiom-ai** — Apple's models, not custom |
+**Rule of thumb**: converting/compressing/deploying your own model → Core ML (this page). Using Apple's built-in AI → `axiom-ai` Foundation Models. Computer vision → `axiom-vision`.
 
-**Rule of thumb**: If the developer is converting/compressing/deploying their own model → axiom-ai (ML skills). If they're using Apple's built-in AI → axiom-ai (Foundation Models skills). If they're doing computer vision → axiom-vision.
+## Core ML — Decision Framework
 
-## Routing Logic
+### Conversion (PyTorch / TensorFlow → Core ML)
 
-### CoreML Work
+Use **`coremltools`** (Python). Trace/export the source model, then `coremltools.convert(...)` targeting an `.mlpackage` (ML Program). Set `minimum_deployment_target` to the OS you ship and pin `compute_precision` deliberately (FP16 is the default). Validate output parity against the source model on representative inputs before you trust the conversion.
 
-**Implementation patterns** → `/skill coreml`
-- Model conversion workflow
-- MLTensor for model stitching
-- Stateful models with KV-cache
-- Multi-function models (adapters/LoRA)
-- Async prediction patterns
-- Compute unit selection
+### Compression (`coremltools.optimize`)
 
-**API reference** → `/skill coreml-ref`
-- CoreML Tools Python API
-- MLModel lifecycle
-- MLTensor operations
-- MLComputeDevice availability
-- State management APIs
-- Performance reports
+Three families, increasing aggressiveness:
 
-**Diagnostics** → `/skill coreml-diag`
-- Model won't load
-- Slow inference
-- Memory issues
-- Compression accuracy loss
-- Compute unit problems
+- **Palettization** — cluster weights into an N-bit lookup table (2/4/6/8-bit). Usually the best size/accuracy trade-off.
+- **Quantization** — linear weight (and optionally activation) quantization to int8.
+- **Pruning** — zero out low-magnitude weights (magnitude or structured).
 
-### Speech Work
+Post-training compression is fast but lossy; **calibration-time / training-time** compression recovers accuracy. Always re-measure accuracy after compressing — don't assume it held.
 
-**Implementation patterns** → `/skill speech`
-- SpeechAnalyzer setup (iOS 26+)
-- SpeechTranscriber configuration
-- Live transcription
-- File transcription
-- Volatile vs finalized results
-- Model asset management
+### Deployment / runtime
 
-## Decision Tree
+- **Compute units** — set `MLModelConfiguration.computeUnits` deliberately (`.all`, `.cpuAndNeuralEngine`, `.cpuAndGPU`, `.cpuOnly`). `.all` lets the system choose; pin a narrower set only when profiling shows a win.
+- **Stateful models / KV-cache** (iOS 18+) — declare model state so a transformer's KV-cache persists across predictions instead of being re-allocated per token.
+- **`MLTensor`** (iOS 18+) — stitch pre/post-processing and multiple models into one typed-tensor pipeline.
+- **Async prediction** — use the async `prediction(from:)`; batch with `predictions(from:)` where supported.
+- Run inference **off the main thread**, and pre-warm: first load compiles/caches the model (`.mlmodelc`), so warm it before the user needs it. See `axiom-concurrency`.
 
-1. Implementing / converting ML models? → coreml
-2. CoreML API reference? → coreml-ref
-3. Debugging ML issues (load, inference, compression)? → coreml-diag
-4. Speech-to-text / transcription? → speech
+### Common failure modes
+
+- Conversion succeeds but outputs diverge → precision or op-mapping mismatch; compare layer outputs.
+- Slow first inference → on-device compile/caching cost; pre-warm the model.
+- `coremltools` import errors (e.g. `libmilstoragepython`) → environment/version mismatch; match `coremltools` to the source-framework versions.
+- Accuracy drop after compression → mode too aggressive; switch to calibration-time compression.
+
+## Speech-to-Text — Decision Framework
+
+- **iOS 26+** — **`SpeechAnalyzer`** + **`SpeechTranscriber`**: the modern, on-device, offline-capable API. Manage model assets with **`AssetInventory`** (download/reserve locales). Handle **volatile** results (fast, may change) vs **finalized** results (stable) in your UI, and convert input audio to the analyzer's expected format.
+- **Pre-iOS 26** — **`SFSpeechRecognizer`** (`Speech` framework): request authorization, check the recognizer's `supportsOnDeviceRecognition`, and set `requiresOnDeviceRecognition` on your `SFSpeechRecognitionRequest` to force on-device processing; server recognition has duration limits and privacy implications.
+- Both require the `NSSpeechRecognitionUsageDescription` Info.plist string, and live audio also needs microphone permission (`NSMicrophoneUsageDescription`).
 
 ## Anti-Rationalization
 
 | Thought | Reality |
 |---------|---------|
-| "CoreML is just load and predict" | CoreML has compression, stateful models, compute unit selection, and async prediction. coreml covers all. |
-| "My model is small, no optimization needed" | Even small models benefit from compute unit selection and async prediction. coreml has the patterns. |
-| "I'll just use SFSpeechRecognizer" | iOS 26 has SpeechAnalyzer with better accuracy and offline support. speech skill covers the modern API. |
+| "Core ML is just load and predict" | Real apps need compute-unit selection, async/off-main-thread inference, model pre-warming, and (for LLMs) stateful KV-cache. |
+| "My model is small, no optimization needed" | Even small models benefit from compute-unit choice and async prediction; large ones need compression to fit memory. |
+| "Compression is free accuracy" | Post-training compression is lossy — always re-measure; move to calibration-/training-time compression if accuracy drops. |
+| "I'll just use `SFSpeechRecognizer`" | On iOS 26+, `SpeechAnalyzer` is the modern on-device API with better accuracy and offline support. Use `SFSpeechRecognizer` only for pre-26 targets. |
 
-## Critical Patterns
+## Resources
 
-**coreml**:
-- Model conversion (PyTorch → CoreML)
-- Compression (palettization, quantization, pruning)
-- Stateful KV-cache for LLMs
-- Multi-function models for adapters
-- MLTensor for pipeline stitching
-- Async concurrent prediction
+**WWDC**: 2024-10161, 2024-10159, 2025-277
 
-**coreml-diag**:
-- Load failures and caching
-- Inference performance issues
-- Memory pressure from models
-- Accuracy degradation from compression
+**Docs**: /coreml, /coreml/mlmodelconfiguration, /coreml/mltensor, /speech, /speech/speechanalyzer, /speech/speechtranscriber, /speech/sfspeechrecognizer — plus the `coremltools` guide (apple.github.io/coremltools) for conversion + `coremltools.optimize`
 
-**speech**:
-- SpeechAnalyzer + SpeechTranscriber setup
-- AssetInventory model management
-- Live transcription with volatile results
-- Audio format conversion
-
-## Example Invocations
-
-User: "How do I convert a PyTorch model to CoreML?"
-→ Invoke: `/skill coreml`
-
-User: "Compress my model to fit on iPhone"
-→ Invoke: `/skill coreml`
-
-User: "Implement KV-cache for my language model"
-→ Invoke: `/skill coreml`
-
-User: "Model loads slowly on first launch"
-→ Invoke: `/skill coreml-diag`
-
-User: "My compressed model has bad accuracy"
-→ Invoke: `/skill coreml-diag`
-
-User: "Add live transcription to my app"
-→ Invoke: `/skill speech`
-
-User: "Transcribe audio files with SpeechAnalyzer"
-→ Invoke: `/skill speech`
-
-User: "What's MLTensor and how do I use it?"
-→ Invoke: `/skill coreml-ref`
+**Skills**: axiom-ai (Foundation Models — Apple's built-in LLM), axiom-vision (computer vision), axiom-apple-docs (Apple API doc lookup), axiom-concurrency (off-main-thread inference)

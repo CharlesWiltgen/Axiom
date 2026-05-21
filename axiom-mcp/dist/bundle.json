@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-21T20:39:23.775Z",
+  "generatedAt": "2026-05-21T20:49:52.708Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -1572,8 +1572,8 @@
     },
     "axiom-ai--ios-ml": {
       "name": "axiom-ai--ios-ml",
-      "description": "**You MUST use this skill for ANY on-device machine learning or speech-to-text work.**",
-      "content": "\n# iOS Machine Learning Router\n\n**You MUST use this skill for ANY on-device machine learning or speech-to-text work.**\n\n## When to Use\n\nUse this router when:\n- Converting PyTorch/TensorFlow models to CoreML\n- Deploying ML models on-device\n- Compressing models (quantization, palettization, pruning)\n- Working with large language models (LLMs)\n- Implementing KV-cache for transformers\n- Using MLTensor for model stitching\n- Building speech-to-text features\n- Transcribing audio (live or recorded)\n\n## Boundary with axiom-ai (Foundation Models)\n\n**ML (custom models) vs AI (Apple Intelligence) — know the difference:**\n\n| Developer Intent | Router |\n|-----------------|--------|\n| \"Use Apple Intelligence / Foundation Models\" | **axiom-ai** — Apple's on-device LLM |\n| \"Run my own ML model on device\" | **axiom-ai (ML)** — CoreML conversion + deployment |\n| \"Add text generation with @Generable\" | **axiom-ai** — Foundation Models structured output |\n| \"Deploy a custom LLM with KV-cache\" | **axiom-ai (ML)** — Custom model optimization |\n| \"Use Vision framework for image analysis\" | **axiom-vision** — Not ML deployment |\n| \"Use pre-trained Apple NLP models\" | **axiom-ai** — Apple's models, not custom |\n\n**Rule of thumb**: If the developer is converting/compressing/deploying their own model → axiom-ai (ML skills). If they're using Apple's built-in AI → axiom-ai (Foundation Models skills). If they're doing computer vision → axiom-vision.\n\n## Routing Logic\n\n### CoreML Work\n\n**Implementation patterns** → `/skill coreml`\n- Model conversion workflow\n- MLTensor for model stitching\n- Stateful models with KV-cache\n- Multi-function models (adapters/LoRA)\n- Async prediction patterns\n- Compute unit selection\n\n**API reference** → `/skill coreml-ref`\n- CoreML Tools Python API\n- MLModel lifecycle\n- MLTensor operations\n- MLComputeDevice availability\n- State management APIs\n- Performance reports\n\n**Diagnostics** → `/skill coreml-diag`\n- Model won't load\n- Slow inference\n- Memory issues\n- Compression accuracy loss\n- Compute unit problems\n\n### Speech Work\n\n**Implementation patterns** → `/skill speech`\n- SpeechAnalyzer setup (iOS 26+)\n- SpeechTranscriber configuration\n- Live transcription\n- File transcription\n- Volatile vs finalized results\n- Model asset management\n\n## Decision Tree\n\n1. Implementing / converting ML models? → coreml\n2. CoreML API reference? → coreml-ref\n3. Debugging ML issues (load, inference, compression)? → coreml-diag\n4. Speech-to-text / transcription? → speech\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"CoreML is just load and predict\" | CoreML has compression, stateful models, compute unit selection, and async prediction. coreml covers all. |\n| \"My model is small, no optimization needed\" | Even small models benefit from compute unit selection and async prediction. coreml has the patterns. |\n| \"I'll just use SFSpeechRecognizer\" | iOS 26 has SpeechAnalyzer with better accuracy and offline support. speech skill covers the modern API. |\n\n## Critical Patterns\n\n**coreml**:\n- Model conversion (PyTorch → CoreML)\n- Compression (palettization, quantization, pruning)\n- Stateful KV-cache for LLMs\n- Multi-function models for adapters\n- MLTensor for pipeline stitching\n- Async concurrent prediction\n\n**coreml-diag**:\n- Load failures and caching\n- Inference performance issues\n- Memory pressure from models\n- Accuracy degradation from compression\n\n**speech**:\n- SpeechAnalyzer + SpeechTranscriber setup\n- AssetInventory model management\n- Live transcription with volatile results\n- Audio format conversion\n\n## Example Invocations\n\nUser: \"How do I convert a PyTorch model to CoreML?\"\n→ Invoke: `/skill coreml`\n\nUser: \"Compress my model to fit on iPhone\"\n→ Invoke: `/skill coreml`\n\nUser: \"Implement KV-cache for my language model\"\n→ Invoke: `/skill coreml`\n\nUser: \"Model loads slowly on first launch\"\n→ Invoke: `/skill coreml-diag`\n\nUser: \"My compressed model has bad accuracy\"\n→ Invoke: `/skill coreml-diag`\n\nUser: \"Add live transcription to my app\"\n→ Invoke: `/skill speech`\n\nUser: \"Transcribe audio files with SpeechAnalyzer\"\n→ Invoke: `/skill speech`\n\nUser: \"What's MLTensor and how do I use it?\"\n→ Invoke: `/skill coreml-ref`\n",
+      "description": "Guidance for **custom** on-device ML — converting, compressing, and deploying your own models with Core ML — plus on-device speech-to-text. For Apple's built-in on-device LLM (Foundation Models, `@Generable`), stay in `axiom-ai`. For computer vision (image analysis, detection, segmentation), use `axiom-vision`.",
+      "content": "# iOS Machine Learning\n\nGuidance for **custom** on-device ML — converting, compressing, and deploying your own models with Core ML — plus on-device speech-to-text. For Apple's built-in on-device LLM (Foundation Models, `@Generable`), stay in `axiom-ai`. For computer vision (image analysis, detection, segmentation), use `axiom-vision`.\n\n> **Coverage note**: Axiom does not yet ship dedicated Core ML / Speech *discipline* skills. This page is the decision framework plus the authoritative Apple sources to work from — use `axiom-apple-docs` and the paths in Resources for the API surface. (Deeper Core ML coverage is on the backlog: coremltools conversion, Create ML, `MLUpdateTask` personalization, and quantization-aware vs post-training compression.)\n\n## When to Use\n\n- Converting PyTorch/TensorFlow models to Core ML\n- Compressing models (quantization, palettization, pruning)\n- Deploying / running custom models on device (including LLMs, KV-cache, `MLTensor` stitching)\n- Building speech-to-text / transcription features\n\n## Boundary: ML (custom models) vs AI (Apple Intelligence) vs Vision\n\n| Developer intent | Go to |\n|------------------|-------|\n| \"Use Apple Intelligence / Foundation Models\" | `axiom-ai` — Apple's on-device LLM |\n| \"Add text generation with `@Generable`\" | `axiom-ai` — structured output |\n| \"Run / convert / compress my OWN model\" | This page — Core ML |\n| \"Deploy a custom LLM with KV-cache\" | This page — Core ML stateful models |\n| \"Use the Vision framework for image analysis\" | `axiom-vision` |\n| \"Use pre-trained Apple NLP models\" | `axiom-ai` |\n\n**Rule of thumb**: converting/compressing/deploying your own model → Core ML (this page). Using Apple's built-in AI → `axiom-ai` Foundation Models. Computer vision → `axiom-vision`.\n\n## Core ML — Decision Framework\n\n### Conversion (PyTorch / TensorFlow → Core ML)\n\nUse **`coremltools`** (Python). Trace/export the source model, then `coremltools.convert(...)` targeting an `.mlpackage` (ML Program). Set `minimum_deployment_target` to the OS you ship and pin `compute_precision` deliberately (FP16 is the default). Validate output parity against the source model on representative inputs before you trust the conversion.\n\n### Compression (`coremltools.optimize`)\n\nThree families, increasing aggressiveness:\n\n- **Palettization** — cluster weights into an N-bit lookup table (2/4/6/8-bit). Usually the best size/accuracy trade-off.\n- **Quantization** — linear weight (and optionally activation) quantization to int8.\n- **Pruning** — zero out low-magnitude weights (magnitude or structured).\n\nPost-training compression is fast but lossy; **calibration-time / training-time** compression recovers accuracy. Always re-measure accuracy after compressing — don't assume it held.\n\n### Deployment / runtime\n\n- **Compute units** — set `MLModelConfiguration.computeUnits` deliberately (`.all`, `.cpuAndNeuralEngine`, `.cpuAndGPU`, `.cpuOnly`). `.all` lets the system choose; pin a narrower set only when profiling shows a win.\n- **Stateful models / KV-cache** (iOS 18+) — declare model state so a transformer's KV-cache persists across predictions instead of being re-allocated per token.\n- **`MLTensor`** (iOS 18+) — stitch pre/post-processing and multiple models into one typed-tensor pipeline.\n- **Async prediction** — use the async `prediction(from:)`; batch with `predictions(from:)` where supported.\n- Run inference **off the main thread**, and pre-warm: first load compiles/caches the model (`.mlmodelc`), so warm it before the user needs it. See `axiom-concurrency`.\n\n### Common failure modes\n\n- Conversion succeeds but outputs diverge → precision or op-mapping mismatch; compare layer outputs.\n- Slow first inference → on-device compile/caching cost; pre-warm the model.\n- `coremltools` import errors (e.g. `libmilstoragepython`) → environment/version mismatch; match `coremltools` to the source-framework versions.\n- Accuracy drop after compression → mode too aggressive; switch to calibration-time compression.\n\n## Speech-to-Text — Decision Framework\n\n- **iOS 26+** — **`SpeechAnalyzer`** + **`SpeechTranscriber`**: the modern, on-device, offline-capable API. Manage model assets with **`AssetInventory`** (download/reserve locales). Handle **volatile** results (fast, may change) vs **finalized** results (stable) in your UI, and convert input audio to the analyzer's expected format.\n- **Pre-iOS 26** — **`SFSpeechRecognizer`** (`Speech` framework): request authorization, check the recognizer's `supportsOnDeviceRecognition`, and set `requiresOnDeviceRecognition` on your `SFSpeechRecognitionRequest` to force on-device processing; server recognition has duration limits and privacy implications.\n- Both require the `NSSpeechRecognitionUsageDescription` Info.plist string, and live audio also needs microphone permission (`NSMicrophoneUsageDescription`).\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"Core ML is just load and predict\" | Real apps need compute-unit selection, async/off-main-thread inference, model pre-warming, and (for LLMs) stateful KV-cache. |\n| \"My model is small, no optimization needed\" | Even small models benefit from compute-unit choice and async prediction; large ones need compression to fit memory. |\n| \"Compression is free accuracy\" | Post-training compression is lossy — always re-measure; move to calibration-/training-time compression if accuracy drops. |\n| \"I'll just use `SFSpeechRecognizer`\" | On iOS 26+, `SpeechAnalyzer` is the modern on-device API with better accuracy and offline support. Use `SFSpeechRecognizer` only for pre-26 targets. |\n\n## Resources\n\n**WWDC**: 2024-10161, 2024-10159, 2025-277\n\n**Docs**: /coreml, /coreml/mlmodelconfiguration, /coreml/mltensor, /speech, /speech/speechanalyzer, /speech/speechtranscriber, /speech/sfspeechrecognizer — plus the `coremltools` guide (apple.github.io/coremltools) for conversion + `coremltools.optimize`\n\n**Skills**: axiom-ai (Foundation Models — Apple's built-in LLM), axiom-vision (computer vision), axiom-apple-docs (Apple API doc lookup), axiom-concurrency (off-main-thread inference)\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -1584,67 +1584,53 @@
       ],
       "sections": [
         {
-          "heading": "_preamble",
-          "level": 0,
-          "startLine": 0,
-          "endLine": 0,
-          "charCount": 0
-        },
-        {
-          "heading": "iOS Machine Learning Router",
+          "heading": "iOS Machine Learning",
           "level": 1,
-          "startLine": 1,
-          "endLine": 4,
-          "charCount": 118
+          "startLine": 0,
+          "endLine": 5,
+          "charCount": 755
         },
         {
           "heading": "When to Use",
           "level": 2,
-          "startLine": 5,
-          "endLine": 16,
-          "charCount": 376
+          "startLine": 6,
+          "endLine": 12,
+          "charCount": 272
         },
         {
-          "heading": "Boundary with axiom-ai (Foundation Models)",
+          "heading": "Boundary: ML (custom models) vs AI (Apple Intelligence) vs Vision",
           "level": 2,
-          "startLine": 17,
-          "endLine": 31,
-          "charCount": 946
+          "startLine": 13,
+          "endLine": 25,
+          "charCount": 737
         },
         {
-          "heading": "Routing Logic",
+          "heading": "Core ML — Decision Framework",
           "level": 2,
-          "startLine": 32,
-          "endLine": 68,
-          "charCount": 825
+          "startLine": 26,
+          "endLine": 56,
+          "charCount": 2228
         },
         {
-          "heading": "Decision Tree",
+          "heading": "Speech-to-Text — Decision Framework",
           "level": 2,
-          "startLine": 69,
-          "endLine": 75,
-          "charCount": 218
+          "startLine": 57,
+          "endLine": 62,
+          "charCount": 846
         },
         {
           "heading": "Anti-Rationalization",
           "level": 2,
-          "startLine": 76,
-          "endLine": 83,
-          "charCount": 511
+          "startLine": 63,
+          "endLine": 71,
+          "charCount": 752
         },
         {
-          "heading": "Critical Patterns",
+          "heading": "Resources",
           "level": 2,
-          "startLine": 84,
-          "endLine": 105,
-          "charCount": 561
-        },
-        {
-          "heading": "Example Invocations",
-          "level": 2,
-          "startLine": 106,
-          "endLine": 131,
-          "charCount": 622
+          "startLine": 72,
+          "endLine": 79,
+          "charCount": 498
         }
       ],
       "category": "ai",
@@ -38046,10 +38032,10 @@
         ],
         "9": [
           4,
-          10,
+          28,
           1,
           22,
-          192
+          345
         ],
         "10": [
           4,
@@ -39503,10 +39489,10 @@
       },
       "averageFieldLength": [
         4.023041474654377,
-        14.774193548387096,
+        14.857142857142858,
         4.285714285714285,
         45.04147465437788,
-        635.6912442396316
+        636.396313364055
       ],
       "storedFields": {
         "0": {
@@ -39567,7 +39553,7 @@
           "skillType": "discipline",
           "source": "axiom",
           "category": "ai",
-          "description": "**You MUST use this skill for ANY on-device machine learning or speech-to-text work.**"
+          "description": "Guidance for **custom** on-device ML — converting, compressing, and deploying your own models with Core ML — plus on-device speech-to-text. For Apple's built-in on-device LLM (Foundation Models, `@Generable`), stay in `axiom-ai`. For computer vision (image analysis, detection, segmentation), use `axiom-vision`."
         },
         "10": {
           "skillType": "discipline",
@@ -41057,7 +41043,7 @@
           "quantiza",
           {
             "4": {
-              "9": 2
+              "9": 4
             }
           }
         ],
@@ -42161,6 +42147,7 @@
               "6": 1,
               "7": 1,
               "8": 2,
+              "9": 1,
               "18": 2,
               "19": 1,
               "20": 1,
@@ -42736,6 +42723,7 @@
             "4": {
               "3": 3,
               "6": 2,
+              "9": 1,
               "12": 1,
               "19": 1,
               "20": 2,
@@ -46783,7 +46771,8 @@
           "@generable",
           {
             "1": {
-              "5": 1
+              "5": 1,
+              "9": 1
             },
             "2": {
               "6": 1,
@@ -46802,7 +46791,7 @@
               "6": 23,
               "7": 39,
               "8": 30,
-              "9": 1,
+              "9": 2,
               "195": 1
             }
           }
@@ -51659,6 +51648,7 @@
               "3": 1,
               "4": 5,
               "5": 4,
+              "9": 1,
               "19": 1,
               "44": 1,
               "50": 1,
@@ -51755,35 +51745,6 @@
           }
         ],
         [
-          "github",
-          {
-            "1": {
-              "29": 1,
-              "33": 3
-            },
-            "2": {
-              "11": 1,
-              "153": 1,
-              "154": 1,
-              "215": 1
-            },
-            "4": {
-              "11": 6,
-              "29": 3,
-              "33": 4,
-              "102": 1,
-              "153": 2,
-              "155": 2,
-              "177": 1,
-              "184": 1,
-              "190": 1,
-              "213": 1,
-              "215": 1,
-              "216": 1
-            }
-          }
-        ],
-        [
           "git",
           {
             "3": {
@@ -51814,6 +51775,36 @@
               "193": 2,
               "213": 1,
               "215": 1
+            }
+          }
+        ],
+        [
+          "github",
+          {
+            "1": {
+              "29": 1,
+              "33": 3
+            },
+            "2": {
+              "11": 1,
+              "153": 1,
+              "154": 1,
+              "215": 1
+            },
+            "4": {
+              "9": 1,
+              "11": 6,
+              "29": 3,
+              "33": 4,
+              "102": 1,
+              "153": 2,
+              "155": 2,
+              "177": 1,
+              "184": 1,
+              "190": 1,
+              "213": 1,
+              "215": 1,
+              "216": 1
             }
           }
         ],
@@ -52132,6 +52123,7 @@
             "4": {
               "7": 1,
               "8": 1,
+              "9": 1,
               "20": 2,
               "25": 1,
               "31": 4,
@@ -52267,6 +52259,7 @@
           "guidance",
           {
             "1": {
+              "9": 1,
               "42": 1,
               "113": 1,
               "182": 1,
@@ -52282,6 +52275,7 @@
               "2": 1,
               "5": 4,
               "8": 2,
+              "9": 1,
               "42": 6,
               "43": 8,
               "44": 2,
@@ -53275,6 +53269,7 @@
             },
             "4": {
               "7": 2,
+              "9": 1,
               "13": 2,
               "20": 2,
               "26": 1,
@@ -56146,7 +56141,6 @@
             "4": {
               "1": 4,
               "5": 1,
-              "9": 1,
               "11": 4,
               "14": 2,
               "15": 1,
@@ -59526,7 +59520,6 @@
               "3": 1,
               "7": 4,
               "8": 3,
-              "9": 2,
               "10": 1,
               "11": 4,
               "12": 4,
@@ -59826,6 +59819,7 @@
           {
             "4": {
               "4": 1,
+              "9": 1,
               "95": 3,
               "97": 3,
               "144": 2,
@@ -61361,6 +61355,7 @@
               "4": 2,
               "6": 5,
               "8": 2,
+              "9": 1,
               "12": 1,
               "18": 2,
               "19": 9,
@@ -63525,6 +63520,7 @@
             "4": {
               "2": 1,
               "7": 4,
+              "9": 2,
               "10": 1,
               "12": 2,
               "17": 1,
@@ -64956,7 +64952,8 @@
             "4": {
               "3": 1,
               "4": 1,
-              "5": 1
+              "5": 1,
+              "9": 1
             }
           }
         ],
@@ -65102,6 +65099,14 @@
               "16": 2,
               "18": 1,
               "72": 1
+            }
+          }
+        ],
+        [
+          "10161",
+          {
+            "4": {
+              "9": 1
             }
           }
         ],
@@ -67400,105 +67405,6 @@
           }
         ],
         [
-          "272",
-          {
-            "4": {
-              "203": 1,
-              "204": 1,
-              "205": 1
-            }
-          }
-        ],
-        [
-          "2720",
-          {
-            "4": {
-              "107": 1
-            }
-          }
-        ],
-        [
-          "2732x2048",
-          {
-            "4": {
-              "165": 1
-            }
-          }
-        ],
-        [
-          "2736x1260",
-          {
-            "4": {
-              "165": 1
-            }
-          }
-        ],
-        [
-          "2778x1284",
-          {
-            "4": {
-              "165": 1
-            }
-          }
-        ],
-        [
-          "277",
-          {
-            "4": {
-              "148": 1
-            }
-          }
-        ],
-        [
-          "27601",
-          {
-            "4": {
-              "132": 2
-            }
-          }
-        ],
-        [
-          "27",
-          {
-            "4": {
-              "92": 1,
-              "112": 3,
-              "130": 2,
-              "131": 1,
-              "165": 2,
-              "185": 1
-            }
-          }
-        ],
-        [
-          "2752x2064",
-          {
-            "4": {
-              "165": 1
-            }
-          }
-        ],
-        [
-          "275",
-          {
-            "4": {
-              "70": 1,
-              "71": 1
-            }
-          }
-        ],
-        [
-          "278",
-          {
-            "4": {
-              "10": 4,
-              "83": 1,
-              "175": 1,
-              "211": 1
-            }
-          }
-        ],
-        [
           "298",
           {
             "4": {
@@ -67684,6 +67590,106 @@
               "203": 1,
               "204": 1,
               "205": 1
+            }
+          }
+        ],
+        [
+          "272",
+          {
+            "4": {
+              "203": 1,
+              "204": 1,
+              "205": 1
+            }
+          }
+        ],
+        [
+          "2720",
+          {
+            "4": {
+              "107": 1
+            }
+          }
+        ],
+        [
+          "2732x2048",
+          {
+            "4": {
+              "165": 1
+            }
+          }
+        ],
+        [
+          "2736x1260",
+          {
+            "4": {
+              "165": 1
+            }
+          }
+        ],
+        [
+          "27601",
+          {
+            "4": {
+              "132": 2
+            }
+          }
+        ],
+        [
+          "27",
+          {
+            "4": {
+              "92": 1,
+              "112": 3,
+              "130": 2,
+              "131": 1,
+              "165": 2,
+              "185": 1
+            }
+          }
+        ],
+        [
+          "2752x2064",
+          {
+            "4": {
+              "165": 1
+            }
+          }
+        ],
+        [
+          "275",
+          {
+            "4": {
+              "70": 1,
+              "71": 1
+            }
+          }
+        ],
+        [
+          "278",
+          {
+            "4": {
+              "10": 4,
+              "83": 1,
+              "175": 1,
+              "211": 1
+            }
+          }
+        ],
+        [
+          "2778x1284",
+          {
+            "4": {
+              "165": 1
+            }
+          }
+        ],
+        [
+          "277",
+          {
+            "4": {
+              "9": 1,
+              "148": 1
             }
           }
         ],
@@ -68363,7 +68369,7 @@
               "6": 1,
               "7": 8,
               "8": 19,
-              "9": 2,
+              "9": 4,
               "10": 2,
               "12": 9,
               "20": 12,
@@ -69044,6 +69050,7 @@
               "6": 4,
               "7": 3,
               "8": 2,
+              "9": 1,
               "10": 3,
               "12": 1,
               "18": 1,
@@ -69189,6 +69196,7 @@
               "3": 1,
               "4": 3,
               "5": 2,
+              "9": 2,
               "12": 3,
               "16": 2,
               "18": 1,
@@ -70942,6 +70950,7 @@
               "6": 5,
               "7": 1,
               "8": 8,
+              "9": 1,
               "11": 3,
               "12": 2,
               "13": 1,
@@ -75577,6 +75586,7 @@
               "174": 1
             },
             "4": {
+              "9": 1,
               "12": 1,
               "23": 18,
               "24": 28,
@@ -75860,6 +75870,7 @@
               "4": 3,
               "5": 2,
               "8": 4,
+              "9": 1,
               "10": 2,
               "11": 3,
               "15": 13,
@@ -79345,6 +79356,7 @@
               "4": 24,
               "5": 6,
               "7": 1,
+              "9": 1,
               "20": 5,
               "26": 3,
               "31": 2,
@@ -79661,6 +79673,7 @@
           {
             "4": {
               "3": 5,
+              "9": 1,
               "12": 9,
               "14": 1,
               "18": 2,
@@ -79912,7 +79925,6 @@
           "example",
           {
             "3": {
-              "9": 1,
               "11": 1,
               "12": 1,
               "15": 1,
@@ -79964,7 +79976,6 @@
               "4": 2,
               "7": 2,
               "8": 12,
-              "9": 1,
               "10": 5,
               "11": 2,
               "12": 7,
@@ -81164,6 +81175,7 @@
             },
             "4": {
               "7": 2,
+              "9": 2,
               "49": 20,
               "50": 7,
               "51": 36,
@@ -82809,6 +82821,7 @@
           {
             "1": {
               "5": 1,
+              "9": 1,
               "33": 1,
               "34": 1,
               "40": 1,
@@ -82827,7 +82840,7 @@
               "5": 2,
               "7": 4,
               "8": 3,
-              "9": 1,
+              "9": 3,
               "11": 1,
               "12": 8,
               "19": 2,
@@ -83140,6 +83153,7 @@
               "6": 4,
               "7": 1,
               "8": 7,
+              "9": 2,
               "10": 3,
               "11": 11,
               "12": 1,
@@ -85285,6 +85299,7 @@
               "3": 1,
               "7": 2,
               "8": 2,
+              "9": 1,
               "10": 1,
               "11": 3,
               "14": 1,
@@ -85667,6 +85682,7 @@
             },
             "4": {
               "4": 4,
+              "9": 1,
               "19": 3,
               "20": 2,
               "22": 4,
@@ -86040,7 +86056,6 @@
               "6": 10,
               "7": 1,
               "8": 14,
-              "9": 1,
               "10": 2,
               "11": 3,
               "12": 8,
@@ -86831,6 +86846,7 @@
           {
             "4": {
               "1": 1,
+              "9": 1,
               "165": 1,
               "169": 1
             }
@@ -87328,6 +87344,7 @@
               "2": 2,
               "7": 4,
               "8": 3,
+              "9": 1,
               "14": 3,
               "20": 2,
               "28": 1,
@@ -87551,6 +87568,7 @@
               "152": 1
             },
             "4": {
+              "9": 1,
               "11": 1,
               "14": 1,
               "19": 1,
@@ -88548,6 +88566,7 @@
               "6": 5,
               "7": 4,
               "8": 9,
+              "9": 2,
               "10": 1,
               "11": 9,
               "12": 10,
@@ -89675,8 +89694,7 @@
           {
             "4": {
               "4": 6,
-              "8": 1,
-              "9": 1
+              "8": 1
             }
           }
         ],
@@ -90671,6 +90689,7 @@
               "0": 1,
               "3": 1,
               "8": 5,
+              "9": 1,
               "12": 1,
               "13": 3,
               "14": 2,
@@ -90773,6 +90792,7 @@
               "6": 3,
               "7": 8,
               "8": 8,
+              "9": 1,
               "12": 2,
               "13": 1,
               "14": 8,
@@ -90861,7 +90881,7 @@
               "5": 7,
               "6": 6,
               "8": 4,
-              "9": 1,
+              "9": 2,
               "11": 2,
               "12": 3,
               "13": 4,
@@ -91837,6 +91857,32 @@
           }
         ],
         [
+          "rout",
+          {
+            "3": {
+              "103": 1,
+              "185": 1
+            },
+            "4": {
+              "100": 1,
+              "103": 2,
+              "108": 2,
+              "112": 3,
+              "123": 1,
+              "125": 1,
+              "132": 1,
+              "133": 1,
+              "137": 1,
+              "140": 1,
+              "170": 2,
+              "177": 1,
+              "185": 2,
+              "186": 1,
+              "197": 4
+            }
+          }
+        ],
+        [
           "routinely",
           {
             "4": {
@@ -91857,38 +91903,26 @@
           }
         ],
         [
-          "rout",
-          {
-            "3": {
-              "9": 1,
-              "103": 1,
-              "185": 1
-            },
-            "4": {
-              "9": 1,
-              "100": 1,
-              "103": 2,
-              "108": 2,
-              "112": 3,
-              "123": 1,
-              "125": 1,
-              "132": 1,
-              "133": 1,
-              "137": 1,
-              "140": 1,
-              "170": 2,
-              "177": 1,
-              "185": 2,
-              "186": 1,
-              "197": 4
-            }
-          }
-        ],
-        [
           "routed",
           {
             "4": {
               "135": 1
+            }
+          }
+        ],
+        [
+          "router",
+          {
+            "3": {
+              "185": 1,
+              "186": 1
+            },
+            "4": {
+              "123": 1,
+              "170": 10,
+              "184": 5,
+              "185": 22,
+              "186": 13
             }
           }
         ],
@@ -91913,24 +91947,6 @@
               "185": 1,
               "195": 1,
               "206": 2
-            }
-          }
-        ],
-        [
-          "router",
-          {
-            "3": {
-              "9": 1,
-              "185": 1,
-              "186": 1
-            },
-            "4": {
-              "9": 3,
-              "123": 1,
-              "170": 10,
-              "184": 5,
-              "185": 22,
-              "186": 13
             }
           }
         ],
@@ -93094,6 +93110,7 @@
               "6": 3,
               "7": 1,
               "8": 8,
+              "9": 1,
               "12": 1,
               "13": 1,
               "14": 1,
@@ -93232,6 +93249,7 @@
               "5": 2,
               "6": 2,
               "8": 1,
+              "9": 1,
               "10": 1,
               "18": 3,
               "19": 3,
@@ -93673,6 +93691,7 @@
               "6": 8,
               "7": 7,
               "8": 3,
+              "9": 2,
               "11": 1,
               "18": 7,
               "19": 16,
@@ -96527,28 +96546,166 @@
           }
         ],
         [
-          "recogni",
+          "reconnec",
+          {
+            "4": {
+              "124": 1,
+              "125": 1,
+              "212": 1
+            }
+          }
+        ],
+        [
+          "reconnections",
+          {
+            "4": {
+              "215": 1
+            }
+          }
+        ],
+        [
+          "reconnects",
+          {
+            "4": {
+              "68": 1,
+              "89": 2
+            }
+          }
+        ],
+        [
+          "reconnect",
+          {
+            "4": {
+              "68": 1
+            }
+          }
+        ],
+        [
+          "reconcilia",
+          {
+            "4": {
+              "65": 1,
+              "179": 1
+            }
+          }
+        ],
+        [
+          "reconcile",
+          {
+            "4": {
+              "53": 3,
+              "132": 1
+            }
+          }
+        ],
+        [
+          "reconstruc",
+          {
+            "4": {
+              "56": 1
+            }
+          }
+        ],
+        [
+          "reconstruct",
+          {
+            "4": {
+              "10": 2,
+              "155": 3
+            }
+          }
+        ],
+        [
+          "reconstituted",
+          {
+            "4": {
+              "33": 1
+            }
+          }
+        ],
+        [
+          "reconsider",
           {
             "1": {
-              "121": 1,
-              "181": 1,
-              "203": 1,
-              "204": 1,
-              "205": 1
-            },
-            "3": {
-              "181": 1,
-              "205": 1
+              "133": 1
             },
             "4": {
-              "121": 4,
-              "122": 7,
-              "165": 2,
-              "181": 2,
-              "202": 1,
-              "203": 15,
-              "204": 16,
-              "205": 17
+              "23": 1,
+              "133": 1
+            }
+          }
+        ],
+        [
+          "recoveractiveworkoutsession",
+          {
+            "4": {
+              "68": 1
+            }
+          }
+        ],
+        [
+          "recovered",
+          {
+            "4": {
+              "26": 1
+            }
+          }
+        ],
+        [
+          "recovery",
+          {
+            "3": {
+              "68": 1
+            },
+            "4": {
+              "15": 1,
+              "21": 2,
+              "26": 2,
+              "40": 2,
+              "41": 4,
+              "62": 1,
+              "67": 1,
+              "68": 7,
+              "95": 2,
+              "97": 2,
+              "134": 1,
+              "154": 1,
+              "156": 2,
+              "158": 1,
+              "160": 1,
+              "161": 1,
+              "198": 2,
+              "209": 2,
+              "210": 2
+            }
+          }
+        ],
+        [
+          "recover",
+          {
+            "4": {
+              "15": 1,
+              "26": 1,
+              "39": 1,
+              "52": 1,
+              "67": 2,
+              "68": 6,
+              "79": 1,
+              "82": 1,
+              "123": 2,
+              "175": 1,
+              "184": 2,
+              "185": 1,
+              "198": 1
+            }
+          }
+        ],
+        [
+          "recovers",
+          {
+            "4": {
+              "9": 1,
+              "55": 1
             }
           }
         ],
@@ -96654,7 +96811,7 @@
               "202": 1
             },
             "4": {
-              "9": 1,
+              "9": 4,
               "174": 9,
               "175": 8,
               "176": 1,
@@ -96680,165 +96837,29 @@
           }
         ],
         [
-          "reconnec",
-          {
-            "4": {
-              "124": 1,
-              "125": 1,
-              "212": 1
-            }
-          }
-        ],
-        [
-          "reconnections",
-          {
-            "4": {
-              "215": 1
-            }
-          }
-        ],
-        [
-          "reconnects",
-          {
-            "4": {
-              "68": 1,
-              "89": 2
-            }
-          }
-        ],
-        [
-          "reconnect",
-          {
-            "4": {
-              "68": 1
-            }
-          }
-        ],
-        [
-          "reconcilia",
-          {
-            "4": {
-              "65": 1,
-              "179": 1
-            }
-          }
-        ],
-        [
-          "reconcile",
-          {
-            "4": {
-              "53": 3,
-              "132": 1
-            }
-          }
-        ],
-        [
-          "reconstruc",
-          {
-            "4": {
-              "56": 1
-            }
-          }
-        ],
-        [
-          "reconstruct",
-          {
-            "4": {
-              "10": 2,
-              "155": 3
-            }
-          }
-        ],
-        [
-          "reconstituted",
-          {
-            "4": {
-              "33": 1
-            }
-          }
-        ],
-        [
-          "reconsider",
+          "recogni",
           {
             "1": {
-              "133": 1
+              "121": 1,
+              "181": 1,
+              "203": 1,
+              "204": 1,
+              "205": 1
             },
-            "4": {
-              "23": 1,
-              "133": 1
-            }
-          }
-        ],
-        [
-          "recoveractiveworkoutsession",
-          {
-            "4": {
-              "68": 1
-            }
-          }
-        ],
-        [
-          "recovers",
-          {
-            "4": {
-              "55": 1
-            }
-          }
-        ],
-        [
-          "recovered",
-          {
-            "4": {
-              "26": 1
-            }
-          }
-        ],
-        [
-          "recovery",
-          {
             "3": {
-              "68": 1
+              "181": 1,
+              "205": 1
             },
             "4": {
-              "15": 1,
-              "21": 2,
-              "26": 2,
-              "40": 2,
-              "41": 4,
-              "62": 1,
-              "67": 1,
-              "68": 7,
-              "95": 2,
-              "97": 2,
-              "134": 1,
-              "154": 1,
-              "156": 2,
-              "158": 1,
-              "160": 1,
-              "161": 1,
-              "198": 2,
-              "209": 2,
-              "210": 2
-            }
-          }
-        ],
-        [
-          "recover",
-          {
-            "4": {
-              "15": 1,
-              "26": 1,
-              "39": 1,
-              "52": 1,
-              "67": 2,
-              "68": 6,
-              "79": 1,
-              "82": 1,
-              "123": 2,
-              "175": 1,
-              "184": 2,
-              "185": 1,
-              "198": 1
+              "9": 5,
+              "121": 4,
+              "122": 7,
+              "165": 2,
+              "181": 2,
+              "202": 1,
+              "203": 15,
+              "204": 16,
+              "205": 17
             }
           }
         ],
@@ -97085,7 +97106,6 @@
               "192": 1
             },
             "4": {
-              "9": 1,
               "62": 1,
               "110": 2,
               "116": 2,
@@ -97547,6 +97567,7 @@
           {
             "4": {
               "3": 1,
+              "9": 1,
               "83": 1,
               "140": 1,
               "166": 2
@@ -97786,7 +97807,6 @@
             },
             "4": {
               "8": 2,
-              "9": 1,
               "12": 1,
               "15": 2,
               "18": 1,
@@ -98181,7 +98201,7 @@
               "6": 2,
               "7": 1,
               "8": 6,
-              "9": 2,
+              "9": 3,
               "11": 9,
               "13": 2,
               "14": 2,
@@ -98906,6 +98926,7 @@
               "6": 4,
               "7": 1,
               "8": 10,
+              "9": 1,
               "11": 3,
               "12": 1,
               "14": 1,
@@ -101760,7 +101781,6 @@
               "6": 11,
               "7": 8,
               "8": 5,
-              "9": 2,
               "10": 6,
               "11": 1,
               "13": 2,
@@ -102168,7 +102188,6 @@
               "6": 2,
               "7": 1,
               "8": 13,
-              "9": 3,
               "13": 1,
               "14": 7,
               "15": 1,
@@ -102763,6 +102782,7 @@
           {
             "4": {
               "7": 1,
+              "9": 1,
               "20": 3,
               "45": 1,
               "79": 1,
@@ -103161,6 +103181,7 @@
               "5": 1,
               "7": 1,
               "8": 1,
+              "9": 1,
               "10": 1,
               "11": 1,
               "12": 1,
@@ -103355,6 +103376,7 @@
               "6": 1,
               "7": 1,
               "8": 1,
+              "9": 2,
               "10": 4,
               "11": 2,
               "12": 1,
@@ -105893,6 +105915,7 @@
               "5": 2,
               "6": 2,
               "8": 4,
+              "9": 1,
               "11": 8,
               "13": 1,
               "14": 1,
@@ -106461,6 +106484,7 @@
             "4": {
               "1": 1,
               "2": 1,
+              "9": 1,
               "11": 3,
               "13": 1,
               "14": 1,
@@ -106590,6 +106614,7 @@
               "5": 1,
               "6": 2,
               "7": 2,
+              "9": 2,
               "10": 2,
               "19": 2,
               "20": 2,
@@ -106767,7 +106792,7 @@
               "6": 7,
               "7": 3,
               "8": 12,
-              "9": 2,
+              "9": 1,
               "10": 4,
               "11": 3,
               "12": 2,
@@ -107452,7 +107477,7 @@
               "6": 21,
               "7": 23,
               "8": 50,
-              "9": 8,
+              "9": 10,
               "10": 20,
               "11": 4,
               "12": 4,
@@ -107948,7 +107973,7 @@
               "6": 20,
               "7": 15,
               "8": 27,
-              "9": 8,
+              "9": 1,
               "12": 2,
               "13": 2,
               "14": 1,
@@ -110335,6 +110360,7 @@
           "units",
           {
             "4": {
+              "9": 2,
               "56": 1,
               "63": 1,
               "200": 2
@@ -110349,7 +110375,7 @@
             },
             "4": {
               "8": 1,
-              "9": 4,
+              "9": 2,
               "18": 1,
               "39": 1,
               "47": 1,
@@ -110990,6 +111016,7 @@
               "6": 18,
               "7": 4,
               "8": 14,
+              "9": 1,
               "10": 6,
               "12": 12,
               "13": 18,
@@ -111493,6 +111520,7 @@
               "199": 1
             },
             "3": {
+              "9": 2,
               "14": 1,
               "16": 1,
               "17": 1,
@@ -111529,7 +111557,7 @@
               "6": 5,
               "7": 2,
               "8": 6,
-              "9": 2,
+              "9": 4,
               "10": 2,
               "11": 5,
               "12": 4,
@@ -111948,7 +111976,7 @@
           "volatile",
           {
             "4": {
-              "9": 2
+              "9": 1
             }
           }
         ],
@@ -112665,6 +112693,7 @@
               "1": 1,
               "7": 2,
               "8": 1,
+              "9": 1,
               "10": 1,
               "15": 1,
               "18": 1,
@@ -113864,6 +113893,7 @@
               "3": 1,
               "4": 5,
               "5": 3,
+              "9": 1,
               "11": 12,
               "12": 1,
               "20": 1,
@@ -113940,6 +113970,7 @@
               "6": 4,
               "7": 2,
               "8": 4,
+              "9": 1,
               "10": 1,
               "11": 21,
               "15": 9,
@@ -115369,6 +115400,7 @@
               "205": 2
             },
             "1": {
+              "9": 2,
               "128": 1,
               "175": 1,
               "203": 1,
@@ -115376,6 +115408,7 @@
               "205": 2
             },
             "3": {
+              "9": 1,
               "41": 1,
               "61": 1,
               "128": 1,
@@ -115391,7 +115424,7 @@
               "5": 1,
               "7": 2,
               "8": 3,
-              "9": 4,
+              "9": 9,
               "20": 1,
               "41": 3,
               "42": 7,
@@ -115912,6 +115945,7 @@
           "llm",
           {
             "1": {
+              "9": 1,
               "197": 1
             },
             "2": {
@@ -115926,7 +115960,7 @@
               "5": 1,
               "6": 1,
               "8": 4,
-              "9": 2,
+              "9": 4,
               "15": 1,
               "165": 1,
               "196": 1,
@@ -116094,7 +116128,6 @@
               "3": 4,
               "4": 2,
               "5": 2,
-              "9": 1,
               "22": 1,
               "26": 1,
               "39": 1,
@@ -116141,7 +116174,7 @@
               "6": 5,
               "7": 2,
               "8": 5,
-              "9": 4,
+              "9": 2,
               "10": 2,
               "14": 4,
               "19": 12,
@@ -116530,7 +116563,6 @@
             "4": {
               "4": 6,
               "8": 1,
-              "9": 1,
               "54": 2,
               "124": 1
             }
@@ -116980,6 +117012,7 @@
           {
             "4": {
               "5": 1,
+              "9": 1,
               "25": 1,
               "86": 7,
               "87": 1
@@ -117401,14 +117434,12 @@
           "logic",
           {
             "3": {
-              "9": 1,
               "41": 2,
               "177": 3
             },
             "4": {
               "4": 1,
               "8": 2,
-              "9": 1,
               "15": 1,
               "20": 2,
               "21": 2,
@@ -117909,6 +117940,7 @@
             },
             "4": {
               "4": 3,
+              "9": 2,
               "13": 5,
               "19": 1,
               "57": 1,
@@ -118225,6 +118257,14 @@
           }
         ],
         [
+          "lossy",
+          {
+            "4": {
+              "9": 2
+            }
+          }
+        ],
+        [
           "loss",
           {
             "1": {
@@ -118236,7 +118276,6 @@
             "4": {
               "0": 1,
               "4": 1,
-              "9": 1,
               "22": 1,
               "23": 1,
               "25": 2,
@@ -118373,6 +118412,7 @@
               "5": 1,
               "6": 1,
               "8": 1,
+              "9": 1,
               "11": 1,
               "13": 1,
               "14": 2,
@@ -118598,6 +118638,7 @@
               "4": 1,
               "6": 1,
               "8": 1,
+              "9": 1,
               "36": 1,
               "49": 1,
               "50": 1,
@@ -119209,7 +119250,7 @@
               "2": 3,
               "3": 1,
               "4": 1,
-              "9": 4,
+              "9": 1,
               "14": 1,
               "20": 2,
               "28": 1,
@@ -119413,7 +119454,6 @@
             "4": {
               "4": 2,
               "5": 1,
-              "9": 1,
               "20": 3,
               "21": 5,
               "22": 1,
@@ -119684,7 +119724,8 @@
           {
             "4": {
               "3": 4,
-              "4": 1
+              "4": 1,
+              "9": 1
             }
           }
         ],
@@ -120234,6 +120275,7 @@
           {
             "4": {
               "0": 1,
+              "9": 1,
               "42": 1,
               "44": 1,
               "50": 5,
@@ -120717,7 +120759,6 @@
               "4": 3,
               "5": 3,
               "6": 1,
-              "9": 1,
               "13": 3,
               "15": 5,
               "21": 2,
@@ -121482,6 +121523,7 @@
               "202": 1
             },
             "4": {
+              "9": 1,
               "26": 3,
               "31": 3,
               "42": 3,
@@ -121912,7 +121954,6 @@
               "6": 61,
               "7": 46,
               "8": 39,
-              "9": 2,
               "10": 1,
               "12": 2,
               "13": 5,
@@ -123028,9 +123069,6 @@
         [
           "learn",
           {
-            "1": {
-              "9": 1
-            },
             "3": {
               "9": 1
             },
@@ -123038,7 +123076,7 @@
               "4": 7,
               "6": 1,
               "8": 1,
-              "9": 2,
+              "9": 1,
               "11": 1,
               "40": 1,
               "58": 1,
@@ -123291,6 +123329,7 @@
           {
             "4": {
               "7": 2,
+              "9": 1,
               "19": 2,
               "20": 1,
               "41": 1,
@@ -123637,42 +123676,6 @@
           }
         ],
         [
-          "fpa",
-          {
-            "4": {
-              "131": 2,
-              "132": 1,
-              "133": 1
-            }
-          }
-        ],
-        [
-          "fps",
-          {
-            "2": {
-              "213": 1
-            },
-            "3": {
-              "213": 2
-            },
-            "4": {
-              "49": 3,
-              "50": 3,
-              "51": 4,
-              "52": 12,
-              "55": 2,
-              "56": 1,
-              "59": 1,
-              "118": 1,
-              "141": 1,
-              "150": 1,
-              "165": 1,
-              "203": 1,
-              "213": 3
-            }
-          }
-        ],
-        [
           "fcm",
           {
             "2": {
@@ -123759,6 +123762,50 @@
           {
             "4": {
               "54": 1
+            }
+          }
+        ],
+        [
+          "fpa",
+          {
+            "4": {
+              "131": 2,
+              "132": 1,
+              "133": 1
+            }
+          }
+        ],
+        [
+          "fps",
+          {
+            "2": {
+              "213": 1
+            },
+            "3": {
+              "213": 2
+            },
+            "4": {
+              "49": 3,
+              "50": 3,
+              "51": 4,
+              "52": 12,
+              "55": 2,
+              "56": 1,
+              "59": 1,
+              "118": 1,
+              "141": 1,
+              "150": 1,
+              "165": 1,
+              "203": 1,
+              "213": 3
+            }
+          }
+        ],
+        [
+          "fp16",
+          {
+            "4": {
+              "9": 1
             }
           }
         ],
@@ -125044,7 +125091,6 @@
               "6": 4,
               "7": 9,
               "8": 3,
-              "9": 2,
               "12": 8,
               "13": 7,
               "14": 3,
@@ -126185,7 +126231,7 @@
               "2": 1,
               "4": 1,
               "8": 1,
-              "9": 1,
+              "9": 2,
               "14": 1,
               "17": 1,
               "20": 1,
@@ -126456,46 +126502,6 @@
           }
         ],
         [
-          "families",
-          {
-            "3": {
-              "83": 2
-            },
-            "4": {
-              "48": 2,
-              "83": 19,
-              "84": 7,
-              "112": 2,
-              "209": 1,
-              "211": 2
-            }
-          }
-        ],
-        [
-          "familiarity",
-          {
-            "4": {
-              "8": 1,
-              "42": 2,
-              "60": 1
-            }
-          }
-        ],
-        [
-          "familiar",
-          {
-            "4": {
-              "8": 2,
-              "42": 4,
-              "43": 4,
-              "66": 1,
-              "79": 1,
-              "100": 1,
-              "177": 3
-            }
-          }
-        ],
-        [
           "family",
           {
             "3": {
@@ -126528,6 +126534,47 @@
               "210": 3,
               "211": 1,
               "212": 3
+            }
+          }
+        ],
+        [
+          "families",
+          {
+            "3": {
+              "83": 2
+            },
+            "4": {
+              "9": 1,
+              "48": 2,
+              "83": 19,
+              "84": 7,
+              "112": 2,
+              "209": 1,
+              "211": 2
+            }
+          }
+        ],
+        [
+          "familiarity",
+          {
+            "4": {
+              "8": 1,
+              "42": 2,
+              "60": 1
+            }
+          }
+        ],
+        [
+          "familiar",
+          {
+            "4": {
+              "8": 2,
+              "42": 4,
+              "43": 4,
+              "66": 1,
+              "79": 1,
+              "100": 1,
+              "177": 3
             }
           }
         ],
@@ -126778,7 +126825,6 @@
               "5": 5,
               "6": 1,
               "8": 2,
-              "9": 1,
               "11": 2,
               "12": 2,
               "15": 5,
@@ -126853,6 +126899,7 @@
               "6": 1,
               "7": 1,
               "8": 4,
+              "9": 1,
               "11": 2,
               "14": 1,
               "16": 1,
@@ -127408,6 +127455,7 @@
             },
             "4": {
               "1": 2,
+              "9": 2,
               "11": 1,
               "12": 2,
               "14": 1,
@@ -128262,6 +128310,7 @@
               "0": 1,
               "4": 1,
               "8": 3,
+              "9": 1,
               "14": 1,
               "18": 7,
               "21": 3,
@@ -128588,6 +128637,7 @@
             },
             "3": {
               "7": 1,
+              "9": 2,
               "62": 1,
               "73": 1,
               "78": 1,
@@ -128612,7 +128662,7 @@
               "6": 5,
               "7": 5,
               "8": 4,
-              "9": 1,
+              "9": 6,
               "10": 9,
               "11": 11,
               "12": 14,
@@ -129074,6 +129124,7 @@
               "5": 1,
               "6": 2,
               "7": 1,
+              "9": 1,
               "74": 1,
               "109": 1
             },
@@ -129089,7 +129140,6 @@
               "6": 2,
               "7": 1,
               "8": 1,
-              "9": 1,
               "73": 1,
               "87": 1,
               "108": 1,
@@ -129494,6 +129544,7 @@
             "4": {
               "1": 1,
               "8": 6,
+              "9": 1,
               "12": 1,
               "13": 3,
               "14": 3,
@@ -131062,7 +131113,7 @@
               "6": 12,
               "7": 18,
               "8": 22,
-              "9": 1,
+              "9": 2,
               "10": 1,
               "11": 4,
               "12": 7,
@@ -131523,7 +131574,6 @@
               "3": 1,
               "4": 13,
               "5": 1,
-              "9": 1,
               "10": 4,
               "11": 12,
               "12": 7,
@@ -131687,7 +131737,6 @@
               "1": 1,
               "3": 2,
               "4": 3,
-              "9": 1,
               "11": 4,
               "12": 7,
               "13": 1,
@@ -134093,7 +134142,6 @@
               "6": 9,
               "7": 1,
               "8": 3,
-              "9": 1,
               "15": 4,
               "31": 1,
               "33": 2,
@@ -134369,7 +134417,7 @@
           {
             "4": {
               "4": 4,
-              "9": 3
+              "9": 2
             }
           }
         ],
@@ -134868,6 +134916,7 @@
               "215": 1
             },
             "4": {
+              "9": 1,
               "24": 3,
               "35": 3,
               "40": 1,
@@ -135059,7 +135108,6 @@
               "6": 1,
               "7": 1,
               "8": 2,
-              "9": 2,
               "12": 9,
               "14": 16,
               "16": 1,
@@ -135422,6 +135470,7 @@
           "personaliza",
           {
             "4": {
+              "9": 1,
               "44": 1,
               "88": 2,
               "165": 1
@@ -135601,6 +135650,7 @@
           {
             "4": {
               "7": 1,
+              "9": 1,
               "20": 1,
               "26": 1,
               "36": 1,
@@ -135694,6 +135744,7 @@
               "6": 2,
               "7": 8,
               "8": 7,
+              "9": 1,
               "10": 4,
               "12": 4,
               "13": 4,
@@ -136465,6 +136516,7 @@
               "3": 1,
               "4": 1,
               "5": 1,
+              "9": 2,
               "11": 1,
               "42": 1,
               "50": 3,
@@ -138064,6 +138116,7 @@
               "0": 8,
               "5": 3,
               "6": 1,
+              "9": 4,
               "13": 1,
               "18": 1,
               "20": 2,
@@ -139085,6 +139138,7 @@
           "plus",
           {
             "1": {
+              "9": 1,
               "112": 1
             },
             "4": {
@@ -139093,6 +139147,7 @@
               "4": 1,
               "5": 1,
               "8": 2,
+              "9": 3,
               "20": 1,
               "27": 1,
               "65": 1,
@@ -139143,6 +139198,7 @@
             },
             "4": {
               "0": 2,
+              "9": 1,
               "37": 1,
               "44": 2,
               "52": 3,
@@ -140662,6 +140718,7 @@
             },
             "4": {
               "1": 2,
+              "9": 4,
               "10": 3,
               "33": 1,
               "39": 2,
@@ -141727,6 +141784,7 @@
               "6": 2,
               "7": 1,
               "8": 7,
+              "9": 1,
               "11": 5,
               "14": 1,
               "17": 2,
@@ -141980,7 +142038,6 @@
               "5": 1,
               "6": 1,
               "8": 1,
-              "9": 1,
               "10": 1,
               "12": 1,
               "14": 1,
@@ -142102,7 +142159,6 @@
               "6": 4,
               "7": 3,
               "8": 5,
-              "9": 5,
               "10": 3,
               "12": 2,
               "14": 3,
@@ -143306,6 +143362,7 @@
             },
             "4": {
               "1": 2,
+              "9": 1,
               "43": 1,
               "55": 3,
               "129": 6,
@@ -143853,6 +143910,7 @@
               "1": 1,
               "4": 1,
               "6": 1,
+              "9": 2,
               "10": 1,
               "12": 2,
               "13": 11,
@@ -145278,7 +145336,6 @@
               "5": 1,
               "6": 1,
               "8": 1,
-              "9": 1,
               "11": 1,
               "12": 1,
               "15": 1,
@@ -146201,6 +146258,7 @@
               "5": 2,
               "7": 1,
               "8": 2,
+              "9": 1,
               "19": 1,
               "20": 1,
               "54": 2,
@@ -146376,6 +146434,7 @@
             },
             "4": {
               "7": 2,
+              "9": 1,
               "14": 4,
               "17": 3,
               "19": 2,
@@ -147190,6 +147249,7 @@
               "6": 1,
               "7": 1,
               "8": 6,
+              "9": 1,
               "61": 11,
               "62": 5,
               "63": 5,
@@ -148107,7 +148167,6 @@
               "6": 1,
               "7": 1,
               "8": 1,
-              "9": 1,
               "11": 1,
               "12": 1,
               "13": 1,
@@ -148499,6 +148558,7 @@
             "4": {
               "3": 2,
               "4": 6,
+              "9": 2,
               "80": 4
             }
           }
@@ -148513,7 +148573,7 @@
               "181": 1
             },
             "4": {
-              "9": 4,
+              "9": 3,
               "70": 5,
               "80": 8,
               "181": 1,
@@ -148583,23 +148643,6 @@
           }
         ],
         [
-          "precision",
-          {
-            "4": {
-              "42": 1,
-              "54": 4,
-              "55": 3,
-              "94": 2,
-              "131": 1,
-              "132": 1,
-              "172": 1,
-              "173": 1,
-              "176": 1,
-              "207": 1
-            }
-          }
-        ],
-        [
           "precisely",
           {
             "4": {
@@ -148642,6 +148685,24 @@
               "202": 2,
               "206": 1,
               "213": 1
+            }
+          }
+        ],
+        [
+          "precision",
+          {
+            "4": {
+              "9": 2,
+              "42": 1,
+              "54": 4,
+              "55": 3,
+              "94": 2,
+              "131": 1,
+              "132": 1,
+              "172": 1,
+              "173": 1,
+              "176": 1,
+              "207": 1
             }
           }
         ],
@@ -149135,7 +149196,7 @@
               "5": 1,
               "7": 1,
               "8": 1,
-              "9": 1,
+              "9": 7,
               "11": 1,
               "12": 1,
               "19": 2,
@@ -149781,7 +149842,6 @@
               "6": 3,
               "7": 1,
               "8": 4,
-              "9": 1,
               "11": 7,
               "14": 1,
               "19": 1,
@@ -151201,6 +151261,7 @@
               "149": 1
             },
             "4": {
+              "9": 1,
               "13": 1,
               "19": 1,
               "25": 1,
@@ -152483,6 +152544,7 @@
               "6": 31,
               "7": 10,
               "8": 17,
+              "9": 4,
               "10": 3,
               "11": 9,
               "12": 13,
@@ -153930,6 +153992,7 @@
             "4": {
               "6": 9,
               "8": 6,
+              "9": 3,
               "13": 16,
               "14": 25,
               "16": 7,
@@ -154091,6 +154154,7 @@
               "3": 1,
               "4": 5,
               "8": 4,
+              "9": 1,
               "12": 2,
               "19": 2,
               "20": 2,
@@ -154336,7 +154400,6 @@
               "1": 2,
               "2": 2,
               "4": 1,
-              "9": 1,
               "11": 1,
               "14": 1,
               "19": 1,
@@ -154427,7 +154490,6 @@
               "3": 1,
               "7": 1,
               "8": 6,
-              "9": 2,
               "11": 3,
               "12": 1,
               "15": 2,
@@ -154735,6 +154797,7 @@
               "6": 2,
               "7": 1,
               "8": 2,
+              "9": 1,
               "12": 3,
               "14": 5,
               "18": 4,
@@ -155332,7 +155395,6 @@
               "5": 1,
               "6": 1,
               "8": 1,
-              "9": 1,
               "11": 1,
               "15": 1,
               "18": 1,
@@ -155400,7 +155462,6 @@
               "5": 1,
               "6": 7,
               "8": 1,
-              "9": 1,
               "11": 2,
               "12": 1,
               "14": 1,
@@ -155731,6 +155792,24 @@
           }
         ],
         [
+          "traditional",
+          {
+            "4": {
+              "19": 1,
+              "21": 1,
+              "47": 1,
+              "123": 1,
+              "125": 2,
+              "126": 1,
+              "129": 1,
+              "146": 1,
+              "149": 2,
+              "160": 1,
+              "176": 1
+            }
+          }
+        ],
+        [
           "trader",
           {
             "4": {
@@ -155792,12 +155871,22 @@
           }
         ],
         [
+          "trades",
+          {
+            "4": {
+              "18": 1,
+              "149": 2
+            }
+          }
+        ],
+        [
           "trade",
           {
             "3": {
               "177": 1
             },
             "4": {
+              "9": 1,
               "20": 1,
               "33": 1,
               "72": 1,
@@ -155811,33 +155900,6 @@
               "188": 1,
               "200": 1,
               "205": 1
-            }
-          }
-        ],
-        [
-          "trades",
-          {
-            "4": {
-              "18": 1,
-              "149": 2
-            }
-          }
-        ],
-        [
-          "traditional",
-          {
-            "4": {
-              "19": 1,
-              "21": 1,
-              "47": 1,
-              "123": 1,
-              "125": 2,
-              "126": 1,
-              "129": 1,
-              "146": 1,
-              "149": 2,
-              "160": 1,
-              "176": 1
             }
           }
         ],
@@ -156078,6 +156140,7 @@
             "4": {
               "1": 1,
               "2": 1,
+              "9": 1,
               "13": 1,
               "14": 2,
               "18": 4,
@@ -156217,6 +156280,7 @@
               "5": 32,
               "7": 1,
               "8": 8,
+              "9": 5,
               "72": 1,
               "74": 8,
               "76": 1,
@@ -156365,10 +156429,26 @@
           }
         ],
         [
+          "transcribe",
+          {
+            "4": {
+              "10": 1
+            }
+          }
+        ],
+        [
+          "transcriber",
+          {
+            "4": {
+              "9": 1
+            }
+          }
+        ],
+        [
           "transcrip",
           {
             "4": {
-              "9": 5,
+              "9": 1,
               "10": 2
             }
           }
@@ -156404,31 +156484,6 @@
               "203": 1,
               "204": 3,
               "205": 3
-            }
-          }
-        ],
-        [
-          "transcribe",
-          {
-            "4": {
-              "9": 1,
-              "10": 1
-            }
-          }
-        ],
-        [
-          "transcriber",
-          {
-            "4": {
-              "9": 2
-            }
-          }
-        ],
-        [
-          "transcrib",
-          {
-            "4": {
-              "9": 1
             }
           }
         ],
@@ -156864,7 +156919,7 @@
           }
         ],
         [
-          "transformers",
+          "transformer",
           {
             "4": {
               "9": 1
@@ -157726,6 +157781,7 @@
               "1": 1,
               "4": 1,
               "8": 3,
+              "9": 1,
               "11": 2,
               "26": 2,
               "29": 3,
@@ -158321,7 +158377,7 @@
           "torch",
           {
             "4": {
-              "9": 3,
+              "9": 2,
               "83": 3,
               "110": 4,
               "142": 1
@@ -158484,6 +158540,7 @@
               "6": 9,
               "7": 17,
               "8": 9,
+              "9": 1,
               "14": 1,
               "22": 2,
               "23": 1,
@@ -159058,7 +159115,6 @@
               "6": 1,
               "7": 15,
               "8": 16,
-              "9": 1,
               "10": 1,
               "12": 1,
               "13": 1,
@@ -159227,6 +159283,7 @@
               "2": 1,
               "6": 5,
               "8": 2,
+              "9": 1,
               "11": 1,
               "12": 1,
               "17": 1,
@@ -159893,6 +159950,7 @@
               "6": 9,
               "7": 3,
               "8": 6,
+              "9": 1,
               "12": 7,
               "13": 1,
               "14": 10,
@@ -160180,6 +160238,7 @@
               "1": 3,
               "6": 1,
               "8": 2,
+              "9": 1,
               "19": 12,
               "23": 2,
               "26": 1,
@@ -160630,6 +160689,7 @@
               "4": 1,
               "7": 2,
               "8": 1,
+              "9": 1,
               "11": 3,
               "12": 10,
               "15": 1,
@@ -160696,6 +160756,7 @@
               "4": 3,
               "5": 3,
               "8": 1,
+              "9": 2,
               "11": 4,
               "12": 9,
               "13": 4,
@@ -161047,6 +161108,7 @@
               "205": 1
             },
             "3": {
+              "9": 1,
               "33": 1,
               "48": 1,
               "174": 1,
@@ -161425,7 +161487,7 @@
           "tensor",
           {
             "4": {
-              "9": 6
+              "9": 5
             }
           }
         ],
@@ -164404,6 +164466,7 @@
             },
             "4": {
               "0": 1,
+              "9": 2,
               "13": 4,
               "14": 1,
               "16": 1,
@@ -164884,35 +164947,6 @@
           }
         ],
         [
-          "neural",
-          {
-            "4": {
-              "150": 1,
-              "205": 2
-            }
-          }
-        ],
-        [
-          "neutral",
-          {
-            "4": {
-              "66": 1,
-              "131": 1,
-              "134": 1,
-              "135": 1,
-              "175": 1
-            }
-          }
-        ],
-        [
-          "neutrally",
-          {
-            "4": {
-              "8": 1
-            }
-          }
-        ],
-        [
           "negligible",
           {
             "4": {
@@ -165089,6 +165123,36 @@
               "197": 1,
               "199": 10,
               "200": 2
+            }
+          }
+        ],
+        [
+          "neutral",
+          {
+            "4": {
+              "66": 1,
+              "131": 1,
+              "134": 1,
+              "135": 1,
+              "175": 1
+            }
+          }
+        ],
+        [
+          "neutrally",
+          {
+            "4": {
+              "8": 1
+            }
+          }
+        ],
+        [
+          "neural",
+          {
+            "4": {
+              "9": 1,
+              "150": 1,
+              "205": 2
             }
           }
         ],
@@ -165435,6 +165499,7 @@
               "6": 7,
               "7": 1,
               "8": 10,
+              "9": 2,
               "10": 2,
               "11": 2,
               "12": 1,
@@ -165607,6 +165672,7 @@
               "2": 1,
               "4": 1,
               "8": 7,
+              "9": 2,
               "12": 3,
               "18": 1,
               "19": 1,
@@ -167697,6 +167763,7 @@
             "4": {
               "1": 3,
               "7": 1,
+              "9": 1,
               "12": 1,
               "13": 1,
               "20": 1,
@@ -167901,7 +167968,7 @@
               "6": 40,
               "7": 9,
               "8": 51,
-              "9": 2,
+              "9": 1,
               "10": 7,
               "11": 20,
               "12": 5,
@@ -168166,22 +168233,6 @@
           }
         ],
         [
-          "narrower",
-          {
-            "4": {
-              "183": 1
-            }
-          }
-        ],
-        [
-          "narrowest",
-          {
-            "4": {
-              "48": 1
-            }
-          }
-        ],
-        [
           "narrowly",
           {
             "4": {
@@ -168196,6 +168247,23 @@
               "131": 1,
               "158": 1,
               "161": 1
+            }
+          }
+        ],
+        [
+          "narrowest",
+          {
+            "4": {
+              "48": 1
+            }
+          }
+        ],
+        [
+          "narrower",
+          {
+            "4": {
+              "9": 1,
+              "183": 1
             }
           }
         ],
@@ -170265,6 +170333,7 @@
             },
             "4": {
               "0": 1,
+              "9": 1,
               "19": 6,
               "20": 4,
               "22": 2,
@@ -170454,6 +170523,7 @@
               "3": 2,
               "7": 1,
               "8": 1,
+              "9": 1,
               "18": 2,
               "19": 2,
               "20": 1,
@@ -170495,6 +170565,7 @@
             },
             "4": {
               "2": 5,
+              "9": 1,
               "19": 2,
               "20": 1,
               "26": 5,
@@ -172492,6 +172563,7 @@
               "5": 4,
               "7": 1,
               "8": 1,
+              "9": 1,
               "10": 1,
               "14": 2,
               "18": 5,
@@ -172774,7 +172846,6 @@
           "doing",
           {
             "4": {
-              "9": 1,
               "25": 1,
               "55": 1,
               "61": 1,
@@ -172831,6 +172902,7 @@
           "doc",
           {
             "4": {
+              "9": 1,
               "23": 3,
               "37": 1,
               "131": 1,
@@ -172852,6 +172924,7 @@
               "4": 3,
               "5": 1,
               "8": 1,
+              "9": 3,
               "10": 2,
               "11": 1,
               "12": 1,
@@ -173277,7 +173350,6 @@
               "6": 8,
               "7": 5,
               "8": 14,
-              "9": 2,
               "10": 4,
               "11": 5,
               "12": 1,
@@ -173619,6 +173691,7 @@
               "4": 6,
               "5": 3,
               "8": 3,
+              "9": 1,
               "10": 2,
               "11": 1,
               "18": 2,
@@ -173945,6 +174018,7 @@
               "6": 2,
               "7": 1,
               "8": 8,
+              "9": 1,
               "10": 3,
               "11": 3,
               "12": 3,
@@ -174406,6 +174480,7 @@
           {
             "4": {
               "0": 2,
+              "9": 1,
               "27": 1,
               "71": 1,
               "94": 3,
@@ -174857,7 +174932,6 @@
               "6": 1,
               "7": 2,
               "8": 6,
-              "9": 1,
               "11": 5,
               "12": 1,
               "13": 5,
@@ -175291,7 +175365,6 @@
               "6": 2,
               "7": 1,
               "8": 2,
-              "9": 1,
               "26": 1,
               "56": 1,
               "88": 1,
@@ -175562,13 +175635,16 @@
         [
           "deploy",
           {
+            "1": {
+              "9": 1
+            },
             "4": {
               "3": 1,
               "4": 3,
               "5": 2,
               "6": 2,
               "8": 1,
-              "9": 5,
+              "9": 6,
               "22": 2,
               "23": 3,
               "26": 14,
@@ -176042,23 +176118,24 @@
           }
         ],
         [
-          "deliberately",
-          {
-            "4": {
-              "18": 1,
-              "65": 1,
-              "169": 1,
-              "209": 1
-            }
-          }
-        ],
-        [
           "deliberate",
           {
             "4": {
               "14": 1,
               "20": 1,
               "61": 1
+            }
+          }
+        ],
+        [
+          "deliberately",
+          {
+            "4": {
+              "9": 2,
+              "18": 1,
+              "65": 1,
+              "169": 1,
+              "209": 1
             }
           }
         ],
@@ -177003,6 +177080,7 @@
           "detec",
           {
             "1": {
+              "9": 1,
               "203": 1,
               "204": 3,
               "205": 3
@@ -177020,6 +177098,7 @@
             "4": {
               "1": 3,
               "7": 1,
+              "9": 1,
               "24": 1,
               "36": 1,
               "49": 5,
@@ -177419,6 +177498,7 @@
             },
             "4": {
               "7": 1,
+              "9": 1,
               "12": 2,
               "74": 1,
               "88": 5,
@@ -177941,7 +178021,7 @@
               "5": 1,
               "6": 1,
               "8": 1,
-              "9": 1,
+              "9": 2,
               "11": 1,
               "15": 1,
               "18": 1,
@@ -178020,7 +178100,7 @@
               "6": 1,
               "7": 2,
               "8": 4,
-              "9": 1,
+              "9": 3,
               "11": 1,
               "12": 1,
               "13": 1,
@@ -178281,7 +178361,7 @@
               "5": 5,
               "7": 2,
               "8": 5,
-              "9": 2,
+              "9": 1,
               "10": 13,
               "11": 1,
               "14": 2,
@@ -178584,7 +178664,7 @@
             "1": {
               "6": 1,
               "7": 1,
-              "9": 1,
+              "9": 3,
               "151": 2,
               "183": 1
             },
@@ -178623,7 +178703,7 @@
               "6": 17,
               "7": 8,
               "8": 23,
-              "9": 5,
+              "9": 11,
               "12": 1,
               "15": 14,
               "18": 3,
@@ -178863,6 +178943,7 @@
               "6": 15,
               "7": 9,
               "8": 6,
+              "9": 1,
               "12": 3,
               "13": 3,
               "14": 2,
@@ -179722,6 +179803,7 @@
               "6": 2,
               "7": 11,
               "8": 8,
+              "9": 2,
               "13": 8,
               "14": 5,
               "19": 1,
@@ -180216,19 +180298,6 @@
           }
         ],
         [
-          "deeper",
-          {
-            "4": {
-              "98": 1,
-              "104": 1,
-              "164": 1,
-              "166": 1,
-              "188": 1,
-              "192": 1
-            }
-          }
-        ],
-        [
           "deeply",
           {
             "4": {
@@ -180237,6 +180306,20 @@
               "192": 1,
               "193": 1,
               "194": 1
+            }
+          }
+        ],
+        [
+          "deeper",
+          {
+            "4": {
+              "9": 1,
+              "98": 1,
+              "104": 1,
+              "164": 1,
+              "166": 1,
+              "188": 1,
+              "192": 1
             }
           }
         ],
@@ -181572,7 +181655,6 @@
               "0": 1,
               "3": 2,
               "6": 2,
-              "9": 1,
               "11": 1,
               "14": 5,
               "15": 1,
@@ -181744,7 +181826,6 @@
               "5": 2,
               "7": 3,
               "8": 7,
-              "9": 5,
               "16": 1,
               "18": 1,
               "23": 1,
@@ -181858,6 +181939,14 @@
           }
         ],
         [
+          "diverg",
+          {
+            "4": {
+              "86": 1
+            }
+          }
+        ],
+        [
           "diverges",
           {
             "1": {
@@ -181865,14 +181954,6 @@
             },
             "4": {
               "174": 2
-            }
-          }
-        ],
-        [
-          "diverge",
-          {
-            "4": {
-              "86": 1
             }
           }
         ],
@@ -181885,9 +181966,10 @@
           }
         ],
         [
-          "diverg",
+          "diverge",
           {
             "4": {
+              "9": 1,
               "86": 1
             }
           }
@@ -182062,7 +182144,6 @@
           {
             "4": {
               "5": 1,
-              "9": 1,
               "45": 1,
               "53": 1,
               "77": 2,
@@ -184069,6 +184150,7 @@
               "6": 1,
               "7": 2,
               "8": 1,
+              "9": 1,
               "20": 1,
               "25": 3,
               "33": 1,
@@ -184564,6 +184646,7 @@
           "io",
           {
             "4": {
+              "9": 1,
               "15": 2,
               "53": 2,
               "120": 2,
@@ -186496,7 +186579,6 @@
               "6": 2,
               "7": 5,
               "8": 5,
-              "9": 3,
               "11": 5,
               "12": 1,
               "14": 2,
@@ -186941,7 +187023,7 @@
               "6": 19,
               "7": 6,
               "8": 23,
-              "9": 3,
+              "9": 1,
               "10": 2,
               "11": 9,
               "12": 6,
@@ -188181,7 +188263,7 @@
               "3": 1,
               "4": 2,
               "5": 2,
-              "9": 3,
+              "9": 4,
               "12": 1,
               "171": 1,
               "204": 1
@@ -188341,6 +188423,7 @@
               "0": 4,
               "6": 1,
               "8": 1,
+              "9": 1,
               "12": 1,
               "13": 3,
               "14": 2,
@@ -188462,6 +188545,7 @@
               "12": 1
             },
             "4": {
+              "9": 1,
               "12": 5,
               "66": 1,
               "108": 1,
@@ -188497,6 +188581,7 @@
               "6": 9,
               "7": 11,
               "8": 10,
+              "9": 1,
               "12": 3,
               "19": 2,
               "22": 1,
@@ -189002,11 +189087,7 @@
         [
           "invocations",
           {
-            "3": {
-              "9": 1
-            },
             "4": {
-              "9": 1,
               "94": 2
             }
           }
@@ -189046,7 +189127,6 @@
             "4": {
               "4": 1,
               "5": 1,
-              "9": 8,
               "70": 3,
               "72": 3,
               "80": 1,
@@ -189667,6 +189747,7 @@
               "5": 1,
               "7": 1,
               "8": 2,
+              "9": 1,
               "18": 1,
               "19": 1,
               "20": 1,
@@ -190158,6 +190239,22 @@
           }
         ],
         [
+          "incredibly",
+          {
+            "4": {
+              "22": 1
+            }
+          }
+        ],
+        [
+          "incredible",
+          {
+            "4": {
+              "4": 1
+            }
+          }
+        ],
+        [
           "increasingly",
           {
             "4": {
@@ -190169,6 +190266,7 @@
           "increas",
           {
             "4": {
+              "9": 1,
               "49": 1,
               "65": 1,
               "124": 3,
@@ -190238,22 +190336,6 @@
               "141": 1,
               "149": 2,
               "165": 1
-            }
-          }
-        ],
-        [
-          "incredibly",
-          {
-            "4": {
-              "22": 1
-            }
-          }
-        ],
-        [
-          "incredible",
-          {
-            "4": {
-              "4": 1
             }
           }
         ],
@@ -191391,6 +191473,7 @@
               "6": 3,
               "7": 4,
               "8": 4,
+              "9": 1,
               "10": 1,
               "11": 2,
               "12": 1,
@@ -191553,19 +191636,6 @@
               "108": 1,
               "149": 3,
               "171": 4
-            }
-          }
-        ],
-        [
-          "int8",
-          {
-            "4": {
-              "84": 1,
-              "149": 14,
-              "155": 2,
-              "171": 5,
-              "204": 1,
-              "205": 2
             }
           }
         ],
@@ -191763,6 +191833,20 @@
               "88": 1,
               "142": 1,
               "149": 2
+            }
+          }
+        ],
+        [
+          "int8",
+          {
+            "4": {
+              "9": 1,
+              "84": 1,
+              "149": 14,
+              "155": 2,
+              "171": 5,
+              "204": 1,
+              "205": 2
             }
           }
         ],
@@ -192105,6 +192189,7 @@
               "71": 1
             },
             "3": {
+              "9": 1,
               "71": 2,
               "205": 1
             },
@@ -193528,6 +193613,7 @@
               "6": 5,
               "7": 3,
               "8": 13,
+              "9": 2,
               "12": 2,
               "13": 1,
               "17": 1,
@@ -193787,6 +193873,7 @@
           "image",
           {
             "1": {
+              "9": 1,
               "197": 1
             },
             "3": {
@@ -193800,7 +193887,7 @@
               "2": 12,
               "6": 2,
               "8": 1,
-              "9": 1,
+              "9": 2,
               "13": 8,
               "14": 1,
               "18": 8,
@@ -194356,6 +194443,7 @@
           {
             "4": {
               "8": 1,
+              "9": 1,
               "28": 1,
               "149": 1
             }
@@ -194431,7 +194519,6 @@
               "4": 1,
               "7": 1,
               "8": 2,
-              "9": 2,
               "19": 1,
               "20": 1,
               "24": 2,
@@ -194534,7 +194621,6 @@
               "6": 1,
               "7": 3,
               "8": 6,
-              "9": 2,
               "10": 1,
               "22": 2,
               "24": 1,
@@ -194607,7 +194693,6 @@
               "5": 1,
               "6": 4,
               "8": 1,
-              "9": 1,
               "14": 1,
               "19": 1,
               "22": 2,
@@ -194906,6 +194991,7 @@
               "6": 1,
               "7": 6,
               "8": 4,
+              "9": 1,
               "12": 1,
               "19": 2,
               "20": 2,
@@ -195309,6 +195395,7 @@
               "6": 3,
               "7": 41,
               "8": 2,
+              "9": 1,
               "10": 15,
               "12": 4,
               "13": 1,
@@ -196274,18 +196361,6 @@
           }
         ],
         [
-          "weights",
-          {
-            "4": {
-              "42": 7,
-              "43": 6,
-              "46": 3,
-              "47": 2,
-              "48": 3
-            }
-          }
-        ],
-        [
           "weighted",
           {
             "4": {
@@ -196296,10 +196371,24 @@
           }
         ],
         [
+          "weights",
+          {
+            "4": {
+              "9": 2,
+              "42": 7,
+              "43": 6,
+              "46": 3,
+              "47": 2,
+              "48": 3
+            }
+          }
+        ],
+        [
           "weight",
           {
             "4": {
               "4": 2,
+              "9": 1,
               "42": 13,
               "43": 2,
               "44": 1,
@@ -197775,6 +197864,7 @@
           {
             "4": {
               "4": 1,
+              "9": 4,
               "62": 3,
               "68": 1,
               "98": 1,
@@ -198621,6 +198711,7 @@
               "4": 5,
               "5": 1,
               "8": 2,
+              "9": 1,
               "12": 2,
               "14": 1,
               "16": 3,
@@ -199245,7 +199336,6 @@
               "6": 10,
               "7": 3,
               "8": 6,
-              "9": 1,
               "10": 3,
               "11": 8,
               "12": 7,
@@ -200216,6 +200306,7 @@
               "12": 1
             },
             "4": {
+              "9": 1,
               "12": 1,
               "64": 1,
               "85": 2,
@@ -201111,7 +201202,6 @@
           "work",
           {
             "1": {
-              "9": 1,
               "72": 1,
               "77": 1,
               "86": 1,
@@ -201136,7 +201226,7 @@
               "5": 6,
               "6": 4,
               "8": 4,
-              "9": 4,
+              "9": 1,
               "10": 2,
               "11": 2,
               "12": 1,
@@ -201527,7 +201617,6 @@
             "4": {
               "0": 1,
               "4": 1,
-              "9": 1,
               "10": 5,
               "12": 1,
               "15": 2,
@@ -201614,7 +201703,6 @@
               "1": 1,
               "3": 1,
               "6": 3,
-              "9": 1,
               "11": 2,
               "14": 2,
               "19": 2,
@@ -203479,7 +203567,7 @@
             "4": {
               "7": 1,
               "8": 7,
-              "9": 1,
+              "9": 2,
               "22": 2,
               "23": 9,
               "31": 1,
@@ -203513,6 +203601,7 @@
               "0": 2,
               "7": 1,
               "8": 2,
+              "9": 4,
               "18": 10,
               "19": 3,
               "20": 13,
@@ -204537,6 +204626,7 @@
           "own",
           {
             "1": {
+              "9": 1,
               "78": 1
             },
             "3": {
@@ -204546,7 +204636,7 @@
             "4": {
               "0": 1,
               "4": 1,
-              "9": 2,
+              "9": 3,
               "14": 1,
               "18": 2,
               "19": 3,
@@ -204982,6 +205072,7 @@
               "3": 1,
               "5": 2,
               "8": 2,
+              "9": 2,
               "12": 4,
               "108": 6,
               "109": 4,
@@ -205022,7 +205113,7 @@
               "6": 22,
               "7": 30,
               "8": 25,
-              "9": 1,
+              "9": 2,
               "11": 2,
               "12": 3,
               "13": 2,
@@ -205100,6 +205191,7 @@
               "5": 1,
               "7": 3,
               "8": 4,
+              "9": 1,
               "10": 1,
               "11": 2,
               "13": 4,
@@ -205367,19 +205459,6 @@
           }
         ],
         [
-          "op",
-          {
-            "4": {
-              "22": 1,
-              "56": 1,
-              "61": 1,
-              "65": 1,
-              "94": 2,
-              "177": 1
-            }
-          }
-        ],
-        [
           "ops",
           {
             "4": {
@@ -205387,6 +205466,20 @@
               "65": 1,
               "97": 1,
               "118": 1
+            }
+          }
+        ],
+        [
+          "op",
+          {
+            "4": {
+              "9": 1,
+              "22": 1,
+              "56": 1,
+              "61": 1,
+              "65": 1,
+              "94": 2,
+              "177": 1
             }
           }
         ],
@@ -205465,7 +205558,6 @@
             },
             "4": {
               "1": 3,
-              "9": 1,
               "12": 1,
               "15": 1,
               "17": 1,
@@ -205884,6 +205976,33 @@
           }
         ],
         [
+          "optimiz",
+          {
+            "1": {
+              "12": 1,
+              "143": 1
+            },
+            "4": {
+              "12": 4,
+              "45": 1,
+              "51": 1,
+              "52": 1,
+              "83": 1,
+              "100": 1,
+              "111": 1,
+              "115": 1,
+              "123": 1,
+              "143": 2,
+              "148": 3,
+              "149": 1,
+              "171": 1,
+              "175": 1,
+              "188": 2,
+              "195": 2
+            }
+          }
+        ],
+        [
           "optimizes",
           {
             "4": {
@@ -205908,6 +206027,7 @@
               "17": 1
             },
             "4": {
+              "9": 2,
               "12": 7,
               "17": 1,
               "25": 1,
@@ -205963,33 +206083,6 @@
           }
         ],
         [
-          "optimiz",
-          {
-            "1": {
-              "12": 1,
-              "143": 1
-            },
-            "4": {
-              "12": 4,
-              "45": 1,
-              "51": 1,
-              "52": 1,
-              "83": 1,
-              "100": 1,
-              "111": 1,
-              "115": 1,
-              "123": 1,
-              "143": 2,
-              "148": 3,
-              "149": 1,
-              "171": 1,
-              "175": 1,
-              "188": 2,
-              "195": 2
-            }
-          }
-        ],
-        [
           "optimizable",
           {
             "4": {
@@ -206037,7 +206130,7 @@
               "6": 2,
               "7": 6,
               "8": 3,
-              "9": 2,
+              "9": 1,
               "11": 2,
               "12": 12,
               "14": 2,
@@ -206294,22 +206387,6 @@
           }
         ],
         [
-          "optionally",
-          {
-            "4": {
-              "52": 1,
-              "61": 1,
-              "71": 1,
-              "113": 1,
-              "114": 2,
-              "137": 1,
-              "140": 1,
-              "142": 1,
-              "184": 1
-            }
-          }
-        ],
-        [
           "optionality",
           {
             "4": {
@@ -206326,6 +206403,23 @@
               "172": 1,
               "180": 1,
               "190": 1
+            }
+          }
+        ],
+        [
+          "optionally",
+          {
+            "4": {
+              "9": 1,
+              "52": 1,
+              "61": 1,
+              "71": 1,
+              "113": 1,
+              "114": 2,
+              "137": 1,
+              "140": 1,
+              "142": 1,
+              "184": 1
             }
           }
         ],
@@ -206776,6 +206870,7 @@
               "6": 2,
               "7": 7,
               "8": 7,
+              "9": 3,
               "11": 2,
               "12": 9,
               "13": 2,
@@ -207079,6 +207174,7 @@
               "0": 1,
               "7": 1,
               "8": 1,
+              "9": 1,
               "14": 1,
               "19": 3,
               "29": 1,
@@ -207131,6 +207227,7 @@
               "6": 2,
               "7": 2,
               "8": 15,
+              "9": 1,
               "11": 2,
               "12": 4,
               "13": 6,
@@ -208088,7 +208185,7 @@
               "6": 1,
               "7": 10,
               "8": 36,
-              "9": 3,
+              "9": 7,
               "10": 3,
               "11": 1,
               "12": 1,
@@ -208979,7 +209076,6 @@
           "skill",
           {
             "1": {
-              "9": 1,
               "10": 1,
               "20": 1,
               "24": 1,
@@ -209115,7 +209211,6 @@
               "6": 2,
               "7": 3,
               "8": 1,
-              "9": 14,
               "10": 8,
               "11": 7,
               "12": 2,
@@ -210088,6 +210183,7 @@
               "6": 10,
               "7": 2,
               "8": 4,
+              "9": 1,
               "13": 4,
               "14": 4,
               "17": 2,
@@ -210852,6 +210948,14 @@
           }
         ],
         [
+          "sfspeechrecognizer",
+          {
+            "4": {
+              "9": 1
+            }
+          }
+        ],
+        [
           "sf",
           {
             "0": {
@@ -210864,7 +210968,7 @@
             },
             "4": {
               "2": 1,
-              "9": 1,
+              "9": 4,
               "42": 9,
               "43": 5,
               "46": 9,
@@ -211028,14 +211132,6 @@
               "148": 1,
               "188": 1,
               "193": 3
-            }
-          }
-        ],
-        [
-          "slowly",
-          {
-            "4": {
-              "9": 1
             }
           }
         ],
@@ -211514,6 +211610,7 @@
               "6": 15,
               "7": 12,
               "8": 9,
+              "9": 1,
               "11": 2,
               "12": 1,
               "14": 2,
@@ -213167,6 +213264,7 @@
               "93": 1
             },
             "4": {
+              "9": 1,
               "10": 1,
               "12": 2,
               "41": 4,
@@ -213214,6 +213312,7 @@
             "4": {
               "6": 2,
               "8": 1,
+              "9": 3,
               "12": 3,
               "14": 1,
               "19": 1,
@@ -213379,6 +213478,7 @@
               "5": 1,
               "7": 1,
               "8": 3,
+              "9": 2,
               "11": 2,
               "13": 1,
               "14": 3,
@@ -216472,9 +216572,28 @@
           }
         ],
         [
+          "speechtranscriber",
+          {
+            "4": {
+              "9": 1
+            }
+          }
+        ],
+        [
+          "speechanalyzer",
+          {
+            "4": {
+              "9": 1
+            }
+          }
+        ],
+        [
           "speech",
           {
             "1": {
+              "9": 1
+            },
+            "3": {
               "9": 1
             },
             "4": {
@@ -217583,6 +217702,7 @@
               "4": 3,
               "5": 4,
               "8": 2,
+              "9": 2,
               "12": 1,
               "18": 1,
               "20": 3,
@@ -218929,6 +219049,7 @@
               "6": 3,
               "7": 4,
               "8": 2,
+              "9": 1,
               "11": 1,
               "12": 4,
               "13": 1,
@@ -221332,6 +221453,7 @@
               "6": 1,
               "7": 5,
               "8": 5,
+              "9": 1,
               "11": 1,
               "15": 2,
               "20": 1,
@@ -222052,23 +222174,6 @@
           }
         ],
         [
-          "segmenta",
-          {
-            "1": {
-              "204": 1,
-              "205": 1
-            },
-            "3": {
-              "205": 2
-            },
-            "4": {
-              "203": 8,
-              "204": 16,
-              "205": 18
-            }
-          }
-        ],
-        [
           "segments",
           {
             "4": {
@@ -222092,6 +222197,25 @@
               "175": 1,
               "187": 1,
               "189": 2
+            }
+          }
+        ],
+        [
+          "segmenta",
+          {
+            "1": {
+              "9": 1,
+              "204": 1,
+              "205": 1
+            },
+            "3": {
+              "205": 2
+            },
+            "4": {
+              "9": 1,
+              "203": 8,
+              "204": 16,
+              "205": 18
             }
           }
         ],
@@ -222171,7 +222295,7 @@
             "4": {
               "4": 2,
               "5": 2,
-              "9": 3,
+              "9": 1,
               "14": 1,
               "19": 1,
               "26": 1,
@@ -222846,6 +222970,7 @@
               "6": 9,
               "7": 4,
               "8": 21,
+              "9": 1,
               "11": 6,
               "12": 2,
               "13": 2,
@@ -223920,7 +224045,6 @@
               "2": 1,
               "3": 2,
               "4": 2,
-              "9": 2,
               "15": 1,
               "19": 1,
               "22": 1,
@@ -224056,6 +224180,7 @@
               "5": 5,
               "7": 1,
               "8": 4,
+              "9": 4,
               "12": 6,
               "13": 26,
               "14": 25,
@@ -225427,6 +225552,7 @@
               "6": 8,
               "7": 10,
               "8": 9,
+              "9": 1,
               "11": 1,
               "15": 2,
               "19": 1,
@@ -227002,7 +227128,7 @@
           "stitch",
           {
             "4": {
-              "9": 3
+              "9": 2
             }
           }
         ],
@@ -228471,7 +228597,7 @@
               "5": 2,
               "7": 4,
               "8": 10,
-              "9": 1,
+              "9": 2,
               "10": 1,
               "15": 1,
               "17": 1,
@@ -229432,6 +229558,7 @@
               "6": 12,
               "7": 45,
               "8": 19,
+              "9": 1,
               "13": 7,
               "14": 5,
               "16": 4,
@@ -230079,6 +230206,7 @@
             "4": {
               "7": 1,
               "8": 1,
+              "9": 1,
               "12": 1,
               "21": 2,
               "22": 6,
@@ -230136,6 +230264,9 @@
         [
           "stay",
           {
+            "1": {
+              "9": 1
+            },
             "2": {
               "123": 1,
               "127": 1
@@ -230143,6 +230274,7 @@
             "4": {
               "7": 1,
               "8": 1,
+              "9": 1,
               "18": 1,
               "20": 11,
               "26": 3,
@@ -232399,6 +232531,7 @@
               "6": 23,
               "7": 9,
               "8": 6,
+              "9": 1,
               "10": 1,
               "11": 1,
               "13": 1,
@@ -232508,6 +232641,7 @@
               "6": 1,
               "7": 1,
               "8": 2,
+              "9": 1,
               "19": 1,
               "29": 1,
               "32": 1,
@@ -232867,6 +233001,7 @@
               "3": 1,
               "5": 7,
               "8": 2,
+              "9": 1,
               "18": 1,
               "20": 1,
               "22": 1,
@@ -233173,6 +233308,7 @@
               "124": 1
             },
             "4": {
+              "9": 1,
               "11": 3,
               "15": 4,
               "38": 1,
@@ -235004,6 +235140,7 @@
             },
             "4": {
               "6": 1,
+              "9": 3,
               "12": 3,
               "14": 2,
               "17": 2,
@@ -236590,6 +236727,7 @@
               "4": 2,
               "7": 4,
               "8": 6,
+              "9": 1,
               "10": 3,
               "16": 3,
               "19": 3,
@@ -237234,7 +237372,6 @@
             },
             "3": {
               "0": 1,
-              "9": 1,
               "30": 1,
               "31": 1,
               "124": 1,
@@ -237251,7 +237388,6 @@
               "4": 1,
               "6": 1,
               "8": 4,
-              "9": 1,
               "10": 1,
               "11": 1,
               "12": 11,
@@ -237873,6 +238009,7 @@
             "1": {
               "4": 1,
               "5": 1,
+              "9": 1,
               "71": 1,
               "74": 1,
               "121": 1
@@ -237882,6 +238019,7 @@
               "3": 1,
               "4": 1,
               "5": 1,
+              "9": 1,
               "33": 2,
               "39": 3,
               "46": 1,
@@ -238708,37 +238846,6 @@
           }
         ],
         [
-          "clusters",
-          {
-            "4": {
-              "113": 1,
-              "200": 1
-            }
-          }
-        ],
-        [
-          "cluster",
-          {
-            "1": {
-              "113": 1
-            },
-            "3": {
-              "98": 1,
-              "100": 1,
-              "113": 2
-            },
-            "4": {
-              "98": 33,
-              "99": 12,
-              "100": 30,
-              "112": 7,
-              "113": 34,
-              "114": 2,
-              "116": 2
-            }
-          }
-        ],
-        [
           "cluttered",
           {
             "4": {
@@ -238770,6 +238877,38 @@
             "4": {
               "23": 1,
               "169": 1
+            }
+          }
+        ],
+        [
+          "clusters",
+          {
+            "4": {
+              "113": 1,
+              "200": 1
+            }
+          }
+        ],
+        [
+          "cluster",
+          {
+            "1": {
+              "113": 1
+            },
+            "3": {
+              "98": 1,
+              "100": 1,
+              "113": 2
+            },
+            "4": {
+              "9": 1,
+              "98": 33,
+              "99": 12,
+              "100": 30,
+              "112": 7,
+              "113": 34,
+              "114": 2,
+              "116": 2
             }
           }
         ],
@@ -240723,6 +240862,7 @@
               "6": 23,
               "7": 4,
               "8": 7,
+              "9": 1,
               "10": 3,
               "11": 12,
               "12": 23,
@@ -241774,6 +241914,7 @@
               "2": 1,
               "3": 1,
               "8": 2,
+              "9": 1,
               "12": 4,
               "14": 1,
               "19": 1,
@@ -242377,6 +242518,7 @@
             "4": {
               "0": 2,
               "8": 1,
+              "9": 1,
               "20": 2,
               "22": 1,
               "23": 1,
@@ -242469,6 +242611,7 @@
             },
             "4": {
               "8": 2,
+              "9": 1,
               "14": 1,
               "20": 1,
               "21": 1,
@@ -242775,6 +242918,7 @@
               "11": 2
             },
             "4": {
+              "9": 1,
               "10": 2,
               "11": 5,
               "12": 1,
@@ -243617,14 +243761,6 @@
           }
         ],
         [
-          "calibrate",
-          {
-            "4": {
-              "204": 1
-            }
-          }
-        ],
-        [
           "cal",
           {
             "4": {
@@ -243647,6 +243783,22 @@
           {
             "4": {
               "63": 2
+            }
+          }
+        ],
+        [
+          "calibrate",
+          {
+            "4": {
+              "204": 1
+            }
+          }
+        ],
+        [
+          "calibra",
+          {
+            "4": {
+              "9": 3
             }
           }
         ],
@@ -245889,6 +246041,7 @@
               "4": 2,
               "6": 6,
               "8": 6,
+              "9": 1,
               "63": 1,
               "68": 1,
               "73": 1,
@@ -246300,6 +246453,7 @@
               "6": 19,
               "7": 1,
               "8": 6,
+              "9": 1,
               "11": 2,
               "23": 1,
               "25": 1,
@@ -248606,6 +248760,7 @@
             "4": {
               "1": 1,
               "5": 10,
+              "9": 2,
               "10": 1,
               "42": 1,
               "44": 1,
@@ -248693,7 +248848,6 @@
               "5": 3,
               "7": 2,
               "8": 4,
-              "9": 2,
               "11": 2,
               "15": 1,
               "19": 1,
@@ -248870,7 +249024,7 @@
               "54": 2
             },
             "4": {
-              "9": 4,
+              "9": 5,
               "25": 2,
               "26": 1,
               "31": 3,
@@ -248997,6 +249151,7 @@
           "convert",
           {
             "1": {
+              "9": 1,
               "54": 1
             },
             "3": {
@@ -249004,7 +249159,7 @@
             },
             "4": {
               "6": 2,
-              "9": 4,
+              "9": 6,
               "20": 2,
               "25": 2,
               "26": 9,
@@ -249757,7 +249912,6 @@
             },
             "4": {
               "7": 1,
-              "9": 1,
               "18": 1,
               "19": 2,
               "20": 21,
@@ -249812,6 +249966,7 @@
             },
             "4": {
               "1": 1,
+              "9": 2,
               "14": 7,
               "16": 1,
               "17": 9,
@@ -254173,7 +254328,7 @@
               "9": 1
             },
             "4": {
-              "9": 16
+              "9": 3
             }
           }
         ],
@@ -254183,7 +254338,8 @@
             "4": {
               "3": 12,
               "4": 2,
-              "5": 1
+              "5": 1,
+              "9": 9
             }
           }
         ],
@@ -254202,6 +254358,7 @@
               "3": 1,
               "5": 1,
               "6": 1,
+              "9": 1,
               "11": 1,
               "12": 1,
               "15": 1,
@@ -254232,6 +254389,7 @@
             },
             "3": {
               "2": 1,
+              "9": 1,
               "10": 1,
               "20": 1,
               "26": 2,
@@ -254288,7 +254446,7 @@
               "6": 1,
               "7": 2,
               "8": 2,
-              "9": 9,
+              "9": 10,
               "10": 4,
               "11": 2,
               "12": 1,
@@ -254979,6 +255137,7 @@
           "computer",
           {
             "1": {
+              "9": 1,
               "204": 1,
               "205": 1
             },
@@ -254986,7 +255145,7 @@
               "204": 1
             },
             "4": {
-              "9": 1,
+              "9": 3,
               "204": 2,
               "205": 3
             }
@@ -255066,7 +255225,6 @@
               "102": 1
             },
             "4": {
-              "9": 1,
               "48": 1,
               "73": 2,
               "102": 1,
@@ -255082,7 +255240,7 @@
           "compression",
           {
             "4": {
-              "9": 5,
+              "9": 10,
               "37": 2,
               "76": 1,
               "102": 1,
@@ -255093,8 +255251,11 @@
         [
           "compress",
           {
+            "1": {
+              "9": 1
+            },
             "4": {
-              "9": 3,
+              "9": 5,
               "56": 1
             }
           }
@@ -255226,6 +255387,7 @@
             "4": {
               "4": 1,
               "6": 1,
+              "9": 1,
               "13": 1,
               "14": 2,
               "20": 1,
@@ -255252,6 +255414,7 @@
               "4": 5,
               "7": 7,
               "8": 3,
+              "9": 1,
               "11": 1,
               "12": 23,
               "14": 3,
@@ -255960,6 +256123,7 @@
             "4": {
               "0": 1,
               "3": 2,
+              "9": 1,
               "10": 1,
               "11": 3,
               "12": 1,
@@ -257367,6 +257531,7 @@
               "5": 1,
               "7": 3,
               "8": 1,
+              "9": 1,
               "10": 2,
               "11": 3,
               "12": 6,
@@ -258262,21 +258427,55 @@
           }
         ],
         [
+          "mltensor",
+          {
+            "4": {
+              "9": 1
+            }
+          }
+        ],
+        [
+          "mlmodelconfigura",
+          {
+            "4": {
+              "9": 1
+            }
+          }
+        ],
+        [
+          "mlmodelc",
+          {
+            "4": {
+              "9": 1
+            }
+          }
+        ],
+        [
+          "mlpackage",
+          {
+            "4": {
+              "9": 1
+            }
+          }
+        ],
+        [
           "ml",
           {
             "0": {
               "9": 1
             },
             "1": {
+              "9": 2,
               "74": 1
             },
             "3": {
+              "9": 2,
               "155": 2
             },
             "4": {
               "4": 2,
               "5": 1,
-              "9": 25,
+              "9": 18,
               "73": 1,
               "74": 1,
               "76": 1,
@@ -258691,7 +258890,7 @@
               "4": 17,
               "5": 2,
               "8": 1,
-              "9": 6,
+              "9": 2,
               "10": 1,
               "11": 3,
               "12": 5,
@@ -258863,6 +259062,18 @@
           }
         ],
         [
+          "mic",
+          {
+            "4": {
+              "46": 1,
+              "47": 1,
+              "108": 4,
+              "121": 1,
+              "122": 1
+            }
+          }
+        ],
+        [
           "microsoft",
           {
             "4": {
@@ -258875,22 +259086,6 @@
           {
             "4": {
               "21": 1
-            }
-          }
-        ],
-        [
-          "microphone",
-          {
-            "4": {
-              "88": 2,
-              "102": 1,
-              "104": 1,
-              "108": 3,
-              "110": 4,
-              "111": 7,
-              "121": 1,
-              "122": 12,
-              "165": 2
             }
           }
         ],
@@ -258916,14 +259111,19 @@
           }
         ],
         [
-          "mic",
+          "microphone",
           {
             "4": {
-              "46": 1,
-              "47": 1,
-              "108": 4,
+              "9": 2,
+              "88": 2,
+              "102": 1,
+              "104": 1,
+              "108": 3,
+              "110": 4,
+              "111": 7,
               "121": 1,
-              "122": 1
+              "122": 12,
+              "165": 2
             }
           }
         ],
@@ -260168,6 +260368,7 @@
               "1": 2,
               "3": 2,
               "6": 2,
+              "9": 2,
               "22": 1,
               "25": 5,
               "26": 15,
@@ -260575,6 +260776,7 @@
               "2": 1,
               "4": 2,
               "5": 1,
+              "9": 1,
               "11": 1,
               "23": 1,
               "24": 1,
@@ -260992,6 +261194,14 @@
           }
         ],
         [
+          "magnetic",
+          {
+            "4": {
+              "50": 1
+            }
+          }
+        ],
+        [
           "magnifica",
           {
             "4": {
@@ -261029,15 +261239,8 @@
           "magnitude",
           {
             "4": {
+              "9": 2,
               "65": 1
-            }
-          }
-        ],
-        [
-          "magnetic",
-          {
-            "4": {
-              "50": 1
             }
           }
         ],
@@ -261317,6 +261520,7 @@
               "6": 9,
               "7": 1,
               "8": 4,
+              "9": 3,
               "14": 7,
               "16": 25,
               "17": 9,
@@ -262129,6 +262333,7 @@
               "6": 1,
               "7": 2,
               "8": 1,
+              "9": 1,
               "10": 2,
               "11": 3,
               "17": 1,
@@ -262625,6 +262830,7 @@
             },
             "4": {
               "4": 1,
+              "9": 1,
               "26": 15,
               "27": 5,
               "38": 1,
@@ -263015,6 +263221,7 @@
               "6": 1,
               "7": 1,
               "8": 7,
+              "9": 1,
               "10": 1,
               "12": 1,
               "14": 1,
@@ -263987,7 +264194,7 @@
               "4": 1,
               "7": 2,
               "8": 1,
-              "9": 3,
+              "9": 1,
               "11": 1,
               "13": 1,
               "15": 2,
@@ -264171,7 +264378,6 @@
           "machine",
           {
             "1": {
-              "9": 1,
               "86": 1,
               "94": 1
             },
@@ -264187,7 +264393,7 @@
               "4": 2,
               "5": 1,
               "8": 1,
-              "9": 2,
+              "9": 1,
               "11": 2,
               "12": 1,
               "15": 1,
@@ -264643,6 +264849,7 @@
               "6": 1,
               "7": 4,
               "8": 6,
+              "9": 1,
               "10": 4,
               "11": 6,
               "12": 2,
@@ -264810,7 +265017,6 @@
               "5": 10,
               "7": 3,
               "8": 6,
-              "9": 2,
               "12": 2,
               "22": 1,
               "27": 1,
@@ -264948,9 +265154,6 @@
         [
           "must",
           {
-            "1": {
-              "9": 1
-            },
             "3": {
               "3": 1,
               "61": 1,
@@ -264974,7 +265177,6 @@
               "6": 2,
               "7": 2,
               "8": 5,
-              "9": 1,
               "14": 1,
               "16": 1,
               "19": 17,
@@ -265583,6 +265785,7 @@
             "4": {
               "0": 4,
               "1": 1,
+              "9": 1,
               "11": 1,
               "12": 1,
               "14": 1,
@@ -266849,7 +267052,7 @@
               "203": 1
             },
             "4": {
-              "9": 1,
+              "9": 2,
               "15": 1,
               "24": 4,
               "26": 2,
@@ -266912,6 +267115,7 @@
               "5": 1,
               "7": 1,
               "8": 1,
+              "9": 1,
               "12": 1,
               "42": 9,
               "43": 2,
@@ -267056,7 +267260,7 @@
               "6": 51,
               "7": 78,
               "8": 93,
-              "9": 17,
+              "9": 11,
               "12": 3,
               "14": 1,
               "16": 2,
@@ -267194,6 +267398,7 @@
               "5": 1,
               "6": 2,
               "7": 1,
+              "9": 2,
               "38": 1,
               "39": 3,
               "74": 1
@@ -267223,7 +267428,7 @@
               "6": 26,
               "7": 23,
               "8": 57,
-              "9": 18,
+              "9": 14,
               "14": 1,
               "20": 2,
               "24": 1,
@@ -267287,6 +267492,7 @@
               "5": 2,
               "6": 2,
               "8": 3,
+              "9": 1,
               "10": 5,
               "12": 7,
               "13": 2,
@@ -268250,7 +268456,7 @@
             "4": {
               "4": 3,
               "5": 1,
-              "9": 2,
+              "9": 1,
               "13": 13,
               "14": 17,
               "17": 2,
@@ -268518,6 +268724,7 @@
               "0": 2,
               "3": 1,
               "5": 2,
+              "9": 2,
               "12": 13,
               "14": 1,
               "52": 2,
@@ -269583,6 +269790,7 @@
             },
             "4": {
               "4": 1,
+              "9": 1,
               "20": 1,
               "23": 1,
               "34": 1,
@@ -271025,6 +271233,7 @@
               "3": 3,
               "4": 2,
               "5": 1,
+              "9": 2,
               "85": 1,
               "92": 1,
               "149": 1,
@@ -271032,7 +271241,6 @@
             },
             "3": {
               "4": 1,
-              "9": 1,
               "180": 1,
               "195": 1,
               "196": 1
@@ -271047,7 +271255,7 @@
               "6": 6,
               "7": 9,
               "8": 16,
-              "9": 10,
+              "9": 15,
               "10": 1,
               "11": 1,
               "12": 1,
@@ -271344,7 +271552,8 @@
             "1": {
               "3": 3,
               "4": 1,
-              "5": 1
+              "5": 1,
+              "9": 1
             },
             "3": {
               "8": 2,
@@ -271358,7 +271567,7 @@
               "6": 25,
               "7": 9,
               "8": 38,
-              "9": 10,
+              "9": 8,
               "10": 27,
               "73": 2,
               "74": 6,
@@ -272219,7 +272428,6 @@
             },
             "4": {
               "8": 1,
-              "9": 1,
               "10": 3,
               "17": 1,
               "19": 3,
@@ -273902,6 +274110,7 @@
             },
             "1": {
               "7": 1,
+              "9": 1,
               "22": 1,
               "40": 1,
               "42": 2,
@@ -273942,6 +274151,7 @@
               "3": 3,
               "4": 1,
               "8": 1,
+              "9": 1,
               "10": 3,
               "41": 1,
               "42": 1,
@@ -273979,7 +274189,7 @@
               "6": 16,
               "7": 9,
               "8": 36,
-              "9": 6,
+              "9": 12,
               "10": 19,
               "12": 1,
               "16": 1,
@@ -274257,7 +274467,6 @@
               "6": 7,
               "7": 6,
               "8": 8,
-              "9": 1,
               "10": 5,
               "11": 11,
               "12": 12,
@@ -274574,6 +274783,7 @@
               "2": 1,
               "4": 2,
               "8": 1,
+              "9": 1,
               "12": 1,
               "15": 2,
               "20": 4,
@@ -275077,7 +275287,6 @@
               "6": 41,
               "7": 7,
               "8": 19,
-              "9": 1,
               "24": 1,
               "30": 1,
               "36": 2,
@@ -275363,28 +275572,6 @@
           }
         ],
         [
-          "aggressive",
-          {
-            "4": {
-              "36": 1,
-              "37": 1,
-              "83": 1,
-              "97": 1
-            }
-          }
-        ],
-        [
-          "aggressively",
-          {
-            "4": {
-              "35": 2,
-              "36": 4,
-              "61": 1,
-              "113": 1
-            }
-          }
-        ],
-        [
           "aggregat",
           {
             "4": {
@@ -275454,6 +275641,29 @@
               "137": 1,
               "146": 1,
               "195": 1
+            }
+          }
+        ],
+        [
+          "aggressively",
+          {
+            "4": {
+              "35": 2,
+              "36": 4,
+              "61": 1,
+              "113": 1
+            }
+          }
+        ],
+        [
+          "aggressive",
+          {
+            "4": {
+              "9": 2,
+              "36": 1,
+              "37": 1,
+              "83": 1,
+              "97": 1
             }
           }
         ],
@@ -275655,6 +275865,7 @@
               "5": 12,
               "7": 1,
               "8": 3,
+              "9": 1,
               "26": 3,
               "28": 1,
               "34": 1,
@@ -275955,6 +276166,7 @@
               "6": 2,
               "7": 2,
               "8": 1,
+              "9": 2,
               "11": 10,
               "12": 8,
               "13": 1,
@@ -277384,7 +277596,7 @@
               "122": 1
             },
             "4": {
-              "9": 3,
+              "9": 2,
               "18": 3,
               "42": 6,
               "50": 3,
@@ -277713,6 +277925,16 @@
           }
         ],
         [
+          "authors",
+          {
+            "4": {
+              "29": 1,
+              "73": 1,
+              "78": 2
+            }
+          }
+        ],
+        [
           "authorize",
           {
             "4": {
@@ -277811,6 +278033,7 @@
               "133": 1
             },
             "4": {
+              "9": 1,
               "61": 48,
               "62": 8,
               "63": 13,
@@ -277902,6 +278125,7 @@
             },
             "4": {
               "4": 1,
+              "9": 1,
               "62": 1,
               "73": 1,
               "86": 4,
@@ -277912,16 +278136,6 @@
               "136": 1,
               "139": 1,
               "144": 1
-            }
-          }
-        ],
-        [
-          "authors",
-          {
-            "4": {
-              "29": 1,
-              "73": 1,
-              "78": 2
             }
           }
         ],
@@ -278705,7 +278919,7 @@
           {
             "4": {
               "0": 2,
-              "9": 4,
+              "9": 3,
               "18": 1,
               "163": 3,
               "167": 1,
@@ -278759,6 +278973,7 @@
           "analysis",
           {
             "1": {
+              "9": 1,
               "12": 1,
               "150": 1,
               "163": 1,
@@ -278773,7 +278988,7 @@
             "4": {
               "4": 1,
               "8": 4,
-              "9": 1,
+              "9": 2,
               "11": 1,
               "12": 2,
               "15": 1,
@@ -280019,7 +280234,6 @@
           "any",
           {
             "1": {
-              "9": 1,
               "118": 1,
               "133": 1
             },
@@ -280041,7 +280255,6 @@
               "6": 4,
               "7": 2,
               "8": 7,
-              "9": 1,
               "11": 3,
               "14": 3,
               "15": 2,
@@ -280873,6 +281086,7 @@
             },
             "4": {
               "1": 1,
+              "9": 1,
               "16": 18,
               "18": 23,
               "19": 8,
@@ -281275,6 +281489,7 @@
               "5": 15,
               "7": 1,
               "8": 3,
+              "9": 1,
               "15": 1,
               "24": 1,
               "37": 3,
@@ -281329,7 +281544,7 @@
               "4": 47,
               "5": 16,
               "8": 4,
-              "9": 2,
+              "9": 1,
               "12": 1,
               "15": 1,
               "22": 3,
@@ -282241,6 +282456,7 @@
               "4": 1,
               "6": 1,
               "7": 2,
+              "9": 1,
               "13": 1,
               "14": 1,
               "20": 2,
@@ -282405,12 +282621,23 @@
           }
         ],
         [
+          "allocates",
+          {
+            "4": {
+              "19": 1,
+              "41": 1,
+              "149": 1
+            }
+          }
+        ],
+        [
           "allocated",
           {
             "3": {
               "145": 1
             },
             "4": {
+              "9": 1,
               "21": 9,
               "36": 11,
               "145": 3,
@@ -282418,16 +282645,6 @@
               "148": 1,
               "149": 6,
               "171": 2
-            }
-          }
-        ],
-        [
-          "allocates",
-          {
-            "4": {
-              "19": 1,
-              "41": 1,
-              "149": 1
             }
           }
         ],
@@ -282674,7 +282891,7 @@
               "6": 7,
               "7": 8,
               "8": 12,
-              "9": 1,
+              "9": 2,
               "10": 3,
               "11": 5,
               "12": 6,
@@ -282900,6 +283117,7 @@
               "5": 1,
               "6": 2,
               "8": 6,
+              "9": 2,
               "11": 3,
               "12": 1,
               "14": 2,
@@ -283692,7 +283910,6 @@
               "5": 19,
               "7": 3,
               "8": 6,
-              "9": 2,
               "73": 7,
               "74": 23,
               "177": 2
@@ -284205,7 +284422,7 @@
               "5": 1,
               "6": 5,
               "8": 1,
-              "9": 2,
+              "9": 1,
               "10": 3,
               "11": 6,
               "12": 2,
@@ -284539,6 +284756,7 @@
               "6": 1,
               "7": 1,
               "8": 2,
+              "9": 1,
               "10": 1,
               "12": 2,
               "17": 2,
@@ -284951,32 +285169,6 @@
           }
         ],
         [
-          "activa",
-          {
-            "1": {
-              "118": 2
-            },
-            "3": {
-              "212": 1
-            },
-            "4": {
-              "72": 2,
-              "78": 1,
-              "116": 1,
-              "118": 2,
-              "120": 1,
-              "132": 2,
-              "133": 2,
-              "175": 2,
-              "179": 1,
-              "184": 6,
-              "185": 8,
-              "187": 9,
-              "212": 13
-            }
-          }
-        ],
-        [
           "activations",
           {
             "4": {
@@ -285050,6 +285242,33 @@
               "205": 1,
               "208": 1,
               "212": 4
+            }
+          }
+        ],
+        [
+          "activa",
+          {
+            "1": {
+              "118": 2
+            },
+            "3": {
+              "212": 1
+            },
+            "4": {
+              "9": 1,
+              "72": 2,
+              "78": 1,
+              "116": 1,
+              "118": 2,
+              "120": 1,
+              "132": 2,
+              "133": 2,
+              "175": 2,
+              "179": 1,
+              "184": 6,
+              "185": 8,
+              "187": 9,
+              "212": 13
             }
           }
         ],
@@ -285850,7 +286069,7 @@
               "4": 1,
               "5": 1,
               "8": 1,
-              "9": 4,
+              "9": 7,
               "87": 1,
               "95": 45,
               "96": 30,
@@ -301249,27 +301468,76 @@
         ]
       },
       "axiom-ai--ios-ml": {
-        "_preamble": [
-          "preamble"
-        ],
-        "iOS Machine Learning Router": [
+        "iOS Machine Learning": [
           "os",
           "machine",
           "learn",
-          "router",
-          "must",
-          "use",
-          "skill",
-          "any",
+          "guidance",
+          "custom",
           "device",
+          "ml",
+          "convert",
+          "compress",
+          "deploy",
+          "own",
+          "models",
+          "core",
+          "plus",
           "speech",
           "text",
-          "work"
+          "apple",
+          "built",
+          "llm",
+          "founda",
+          "@generable",
+          "stay",
+          "axiom",
+          "ai",
+          "computer",
+          "vision",
+          "image",
+          "analysis",
+          "detec",
+          "segmenta",
+          "use",
+          "coverage",
+          "note",
+          "does",
+          "not",
+          "yet",
+          "ship",
+          "dedicated",
+          "discipline",
+          "skills",
+          "page",
+          "decision",
+          "framework",
+          "authoritative",
+          "sources",
+          "work",
+          "docs",
+          "paths",
+          "resources",
+          "api",
+          "surface",
+          "deeper",
+          "backlog",
+          "coremltools",
+          "conversion",
+          "create",
+          "update",
+          "task",
+          "personaliza",
+          "quantiza",
+          "aware",
+          "vs",
+          "post",
+          "train",
+          "compression"
         ],
         "When to Use": [
           "when",
           "use",
-          "router",
           "convert",
           "py",
           "torch",
@@ -301278,182 +301546,318 @@
           "models",
           "core",
           "ml",
-          "deploy",
-          "device",
           "compress",
           "quantiza",
           "palettiza",
           "prun",
-          "work",
-          "large",
-          "language",
+          "deploy",
+          "runn",
+          "custom",
+          "device",
+          "includ",
           "ll",
           "ms",
-          "implement",
           "kv",
           "cache",
-          "transformers",
-          "using",
-          "model",
           "stitch",
           "build",
           "speech",
           "text",
-          "features",
-          "transcrib",
-          "audio",
-          "live",
-          "recorded"
+          "transcrip",
+          "features"
         ],
-        "Boundary with axiom-ai (Foundation Models)": [
+        "Boundary: ML (custom models) vs AI (Apple Intelligence) vs Vision": [
           "boundary",
-          "axiom",
-          "ai",
-          "founda",
-          "models",
           "ml",
           "custom",
+          "models",
           "vs",
+          "ai",
           "apple",
           "intelligence",
-          "know",
-          "difference",
+          "vision",
           "developer",
           "intent",
-          "router",
+          "go",
           "use",
+          "founda",
+          "axiom",
           "device",
           "llm",
-          "run",
-          "my",
-          "own",
-          "model",
-          "core",
-          "conversion",
-          "deploy",
           "add",
           "text",
           "genera",
           "@generable",
           "structured",
           "output",
+          "run",
+          "convert",
+          "compress",
+          "my",
+          "own",
+          "model",
+          "page",
+          "core",
+          "deploy",
           "kv",
           "cache",
-          "optimiza",
-          "vision",
+          "stateful",
           "framework",
           "image",
           "analysis",
-          "not",
           "pre",
           "trained",
           "nlp",
           "rule",
           "thumb",
-          "if",
-          "convert",
-          "compress",
-          "their",
-          "skills",
-          "they",
-          "re",
           "using",
           "built",
-          "doing",
           "computer"
         ],
-        "Routing Logic": [
-          "rout",
-          "logic",
+        "Core ML — Decision Framework": [
           "core",
           "ml",
-          "work",
-          "implementa",
-          "patterns",
-          "skill",
-          "coreml",
-          "model",
+          "decision",
+          "framework",
           "conversion",
-          "workflow",
+          "py",
+          "torch",
           "tensor",
-          "stitch",
+          "flow",
+          "use",
+          "coremltools",
+          "python",
+          "trace",
+          "export",
+          "source",
+          "model",
+          "then",
+          "convert",
+          "target",
+          "mlpackage",
+          "program",
+          "set",
+          "minimum",
+          "deploy",
+          "os",
+          "ship",
+          "pin",
+          "compute",
+          "precision",
+          "deliberately",
+          "fp16",
+          "default",
+          "validate",
+          "output",
+          "parity",
+          "against",
+          "representative",
+          "inputs",
+          "before",
+          "trust",
+          "compression",
+          "optimize",
+          "three",
+          "families",
+          "increas",
+          "aggressive",
+          "palettiza",
+          "cluster",
+          "weights",
+          "into",
+          "bit",
+          "lookup",
+          "table",
+          "usually",
+          "best",
+          "size",
+          "accuracy",
+          "trade",
+          "off",
+          "quantiza",
+          "linear",
+          "weight",
+          "optionally",
+          "activa",
+          "int8",
+          "prun",
+          "zero",
+          "out",
+          "low",
+          "magnitude",
+          "structured",
+          "post",
+          "train",
+          "fast",
+          "but",
+          "lossy",
+          "calibra",
+          "time",
+          "recovers",
+          "always",
+          "re",
+          "measure",
+          "after",
+          "compress",
+          "don",
+          "assume",
+          "held",
+          "runtime",
+          "units",
+          "configura",
+          "all",
+          "cpu",
+          "neural",
+          "engine",
+          "gpu",
+          "only",
+          "lets",
+          "system",
+          "choose",
+          "narrower",
+          "when",
+          "profil",
+          "shows",
+          "win",
           "stateful",
           "models",
           "kv",
           "cache",
-          "multi",
-          "func",
-          "adapters",
-          "lo",
-          "ra",
+          "18",
+          "declare",
+          "state",
+          "so",
+          "transformer",
+          "persists",
+          "across",
+          "predictions",
+          "instead",
+          "being",
+          "allocated",
+          "per",
+          "token",
+          "stitch",
+          "pre",
+          "process",
+          "multiple",
+          "one",
+          "typed",
+          "pipeline",
           "async",
           "predic",
-          "compute",
-          "unit",
-          "selec",
-          "api",
-          "reference",
-          "ref",
-          "tools",
-          "python",
-          "lifecycle",
-          "operations",
-          "device",
-          "availability",
-          "state",
-          "manage",
-          "ap",
-          "performance",
-          "reports",
-          "diagnostics",
-          "diag",
-          "won",
+          "batch",
+          "where",
+          "supported",
+          "run",
+          "inference",
+          "main",
+          "thread",
+          "warm",
+          "first",
           "load",
+          "compiles",
+          "caches",
+          "mlmodelc",
+          "user",
+          "needs",
+          "see",
+          "axiom",
+          "concurrency",
+          "common",
+          "failure",
+          "modes",
+          "succeeds",
+          "outputs",
+          "diverge",
+          "op",
+          "mapp",
+          "mismatch",
+          "compare",
+          "layer",
           "slow",
-          "inference",
-          "memory",
-          "issues",
-          "compression",
-          "accuracy",
-          "loss",
-          "problems",
-          "speech",
-          "analyzer",
-          "setup",
-          "os",
-          "26",
-          "transcriber",
-          "configura",
-          "live",
-          "transcrip",
-          "file",
-          "volatile",
-          "vs",
-          "finalized",
-          "results",
-          "asset"
+          "device",
+          "compile",
+          "cach",
+          "cost",
+          "import",
+          "errors",
+          "libmilstoragepython",
+          "environ",
+          "version",
+          "match",
+          "versions",
+          "drop",
+          "mode",
+          "too",
+          "switch"
         ],
-        "Decision Tree": [
-          "decision",
-          "tree",
-          "implement",
-          "convert",
-          "ml",
-          "models",
-          "coreml",
-          "core",
-          "api",
-          "reference",
-          "ref",
-          "debugg",
-          "issues",
-          "load",
-          "inference",
-          "compression",
-          "diag",
+        "Speech-to-Text — Decision Framework": [
           "speech",
           "text",
-          "transcrip"
+          "decision",
+          "framework",
+          "os",
+          "26",
+          "analyzer",
+          "transcriber",
+          "modern",
+          "device",
+          "offline",
+          "capable",
+          "api",
+          "manage",
+          "model",
+          "assets",
+          "asset",
+          "inventory",
+          "download",
+          "reserve",
+          "locales",
+          "handle",
+          "volatile",
+          "results",
+          "fast",
+          "may",
+          "change",
+          "vs",
+          "finalized",
+          "stable",
+          "ui",
+          "convert",
+          "input",
+          "audio",
+          "expected",
+          "format",
+          "pre",
+          "sf",
+          "recognizer",
+          "request",
+          "authoriza",
+          "check",
+          "supports",
+          "recogni",
+          "set",
+          "requires",
+          "force",
+          "process",
+          "server",
+          "dura",
+          "limits",
+          "privacy",
+          "implications",
+          "both",
+          "require",
+          "ns",
+          "usage",
+          "descrip",
+          "info",
+          "plist",
+          "str",
+          "live",
+          "also",
+          "needs",
+          "microphone",
+          "permission"
         ],
         "Anti-Rationalization": [
           "anti",
@@ -301465,27 +301869,53 @@
           "just",
           "load",
           "predict",
-          "compression",
-          "stateful",
-          "models",
+          "real",
+          "apps",
+          "need",
           "compute",
           "unit",
           "selec",
           "async",
-          "predic",
-          "coreml",
-          "covers",
-          "all",
-          "my",
+          "off",
+          "main",
+          "thread",
+          "inference",
           "model",
+          "pre",
+          "warm",
+          "ll",
+          "ms",
+          "stateful",
+          "kv",
+          "cache",
+          "my",
           "small",
           "no",
           "optimiza",
           "needed",
           "even",
+          "models",
           "benefit",
-          "patterns",
-          "ll",
+          "choice",
+          "predic",
+          "large",
+          "ones",
+          "compression",
+          "fit",
+          "memory",
+          "free",
+          "accuracy",
+          "post",
+          "train",
+          "lossy",
+          "always",
+          "re",
+          "measure",
+          "move",
+          "calibra",
+          "time",
+          "if",
+          "drops",
           "use",
           "sf",
           "speech",
@@ -301493,112 +301923,56 @@
           "os",
           "26",
           "analyzer",
+          "modern",
+          "device",
+          "api",
           "better",
-          "accuracy",
           "offline",
           "support",
-          "skill",
-          "modern",
-          "api"
+          "only",
+          "targets"
         ],
-        "Critical Patterns": [
-          "critical",
-          "patterns",
+        "Resources": [
+          "resources",
+          "wwdc",
+          "2024",
+          "10161",
+          "10159",
+          "2025",
+          "277",
+          "docs",
           "coreml",
-          "model",
+          "mlmodelconfigura",
+          "mltensor",
+          "speech",
+          "speechanalyzer",
+          "speechtranscriber",
+          "sfspeechrecognizer",
+          "plus",
+          "coremltools",
+          "guide",
+          "apple",
+          "github",
+          "io",
           "conversion",
-          "py",
-          "torch",
-          "core",
-          "ml",
-          "compression",
-          "palettiza",
-          "quantiza",
-          "prun",
-          "stateful",
-          "kv",
-          "cache",
-          "ll",
-          "ms",
-          "multi",
-          "func",
+          "optimize",
+          "skills",
+          "axiom",
+          "ai",
+          "founda",
           "models",
-          "adapters",
-          "tensor",
-          "pipeline",
-          "stitch",
-          "async",
-          "concurrent",
-          "predic",
-          "diag",
-          "load",
-          "failures",
-          "cach",
-          "inference",
-          "performance",
-          "issues",
-          "memory",
-          "pressure",
-          "accuracy",
-          "degrada",
-          "speech",
-          "analyzer",
-          "transcriber",
-          "setup",
-          "asset",
-          "inventory",
-          "manage",
-          "live",
-          "transcrip",
-          "volatile",
-          "results",
-          "audio",
-          "format"
-        ],
-        "Example Invocations": [
-          "example",
-          "invocations",
-          "user",
-          "how",
-          "do",
-          "convert",
-          "py",
-          "torch",
-          "model",
-          "core",
-          "ml",
-          "invoke",
-          "skill",
-          "coreml",
-          "compress",
-          "my",
-          "fit",
-          "phone",
-          "imple",
-          "kv",
-          "cache",
-          "language",
-          "loads",
-          "slowly",
-          "first",
-          "launch",
-          "diag",
-          "compressed",
-          "bad",
-          "accuracy",
-          "add",
-          "live",
-          "transcrip",
-          "app",
-          "speech",
-          "transcribe",
-          "audio",
-          "files",
-          "analyzer",
-          "what",
-          "tensor",
-          "use",
-          "ref"
+          "built",
+          "llm",
+          "vision",
+          "computer",
+          "api",
+          "doc",
+          "lookup",
+          "concurrency",
+          "off",
+          "main",
+          "thread",
+          "inference"
         ]
       },
       "axiom-apple-docs--apple-docs-research": {
@@ -560154,7 +560528,7 @@
           },
           {
             "name": "axiom-ai--ios-ml",
-            "description": "**You MUST use this skill for ANY on-device machine learning or speech-to-text work.**",
+            "description": "Guidance for **custom** on-device ML — converting, compressing, and deploying your own models with Core ML — plus on-device speech-to-text. For Apple's built-in on-device LLM (Foundation Models, `@Generable`), stay in `axiom-ai`. For computer vision (image analysis, detection, segmentation), use `axiom-vision`.",
             "skillType": "discipline",
             "source": "axiom"
           }
