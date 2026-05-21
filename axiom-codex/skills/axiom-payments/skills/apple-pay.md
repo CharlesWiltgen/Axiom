@@ -241,6 +241,8 @@ if result.success {
 
 Keep the auth call fast — the system aborts if you stall. If your server is slow, **don't** return `.success` and reconcile asynchronously: that charges the customer for an order you can't yet fulfil. Tighten your auth path instead.
 
+**Verify the amount server-side.** The `PKPaymentRequest` — including `paymentSummaryItems` and the grand total — is assembled on the device and is attacker-controllable. Recompute the order total on your server from trusted data (catalog prices, cart state) before you authorize the charge. Never charge the amount the client sends.
+
 ### Order tracking handoff (WWDC22)
 
 Set `PKPaymentOrderDetails` on the result to hand off post-purchase tracking to Wallet's Orders surface (see `wallet-orders.md`):
@@ -325,6 +327,7 @@ A clip's button surface and authorization flow are identical to a full app. Use 
 | Treating the Apple Pay Mark as a button | HIG violation; conversion-killer; App Review rejection trigger | Use API-provided button; Mark is signage |
 | Validating addresses against US-only rules in international flow | Rejects valid international addresses (UK postcodes, e.g.) | Tolerate variations; use `countryCode` to scope validation |
 | Requesting more contact fields than you need | Privacy issue + cart abandonment | Request only what fulfillment requires |
+| Trusting the client-built request total | The on-device `PKPaymentRequest` is attacker-controllable; a tampered total charges the wrong amount | Recompute and verify the order total server-side before authorizing |
 | Skipping the cert-renewal create-but-don't-activate workflow | Production transactions decrypt with wrong key during cutover | Coordinate activation with PSP; flip toggle at agreed time |
 | Using Enterprise Program account | Apple Pay is **not** available on Enterprise Program | Use Apple Developer Program (paid, $99/year) |
 
