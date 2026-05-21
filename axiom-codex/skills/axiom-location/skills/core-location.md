@@ -234,6 +234,30 @@ for try await diag in session.diagnostics {
 
 ---
 
+### Anti-Pattern 8: Treating Reduced Accuracy as a Toggle You Control
+
+**Wrong** (geofences silently unreliable for Approximate-location users):
+```swift
+// Assumes full accuracy — a 100m geofence "should" be fine
+let condition = CLMonitor.CircularGeographicCondition(center: target, radius: 100)
+```
+
+**Right** (detect reduced accuracy, escalate only for the feature that needs it):
+```swift
+if manager.accuracyAuthorization == .reducedAccuracy {
+    // Approximate fuzzes location to a several-km area — region monitoring and
+    // any sub-kilometer geofence degrade or stop firing. Request temporary full
+    // accuracy scoped to the feature, with a matching purpose key.
+    manager.requestTemporaryFullAccuracyAuthorization(withPurposeKey: "Geofencing")
+}
+```
+
+The **user**, not you, chooses Precise vs Approximate at the auth prompt. With Approximate granted, Core Location fuzzes location to a large area, so geofencing, turn-by-turn, and any sub-kilometer feature break with no error. Check `accuracyAuthorization`, and escalate via `fullAccuracyPurposeKey` on a `CLServiceSession` (iOS 18+) or `requestTemporaryFullAccuracyAuthorization(withPurposeKey:)` only for the feature that needs it. The purpose key **must** have a matching `NSLocationTemporaryUsageDescriptionDictionary` entry in Info.plist or the request silently no-ops.
+
+**Time cost**: 10 min to add the check; without it, geofences fail for every Approximate-location user with no diagnostic.
+
+---
+
 ## Part 2: Decision Trees
 
 ### Authorization Strategy
@@ -401,6 +425,9 @@ for id in await monitor.identifiers {
 - [ ] `NSLocationDefaultAccuracyReduced` if reduced accuracy acceptable
 - [ ] `NSLocationTemporaryUsageDescriptionDictionary` if requesting temporary full accuracy
 - [ ] `UIBackgroundModes` includes `location` if background tracking
+
+**Privacy manifest** (`PrivacyInfo.xcprivacy`):
+- [ ] Declare your location collection under `NSPrivacyCollectedDataTypes` with the correct purpose(s) and linkage/tracking flags. This feeds the App Store privacy label and must match what you disclose in App Store Connect — an inaccurate or missing entry is a disclosure-accuracy problem (and a possible manual App Review issue under 5.1.1), not a runtime crash. Core Location is **not** a required-reason API, so omitting it does **not** trigger the ITMS-91053 upload rejection — that hard gate (enforced since 2024-05-01) covers `NSPrivacyAccessedAPITypes` and listed third-party SDKs, so a bundled maps/analytics SDK shipping without its own manifest *can* still block your upload. Info.plist usage strings and the privacy manifest are separate requirements; you need both.
 
 **Authorization**:
 - [ ] Start with minimal authorization (.whenInUse)

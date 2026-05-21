@@ -183,6 +183,7 @@ Two-way TLS using the merchant identity cert + private key. Apple's gateway acce
 ### Critical rules (any one of these will break validation)
 
 - **Server-side only.** Calling `paymentSession` from the browser leaks the certificate. App Review and Apple Pay servers both reject this design.
+- **Allowlist the `validationURL` host before you POST to it.** Your endpoint receives `validationURL` from the browser and then POSTs your *merchant identity cert* to it over two-way TLS. An unvalidated `validationURL` is an **SSRF primitive** — a malicious client sends its own URL and your server proxies its client cert to an attacker-chosen host. Match the parsed host for **exact equality** against Apple's known validation hosts — `apple-pay-gateway.apple.com`, `apple-pay-gateway-cert.apple.com` (sandbox), `cn-apple-pay-gateway.apple.com` (China) — and require `https`. Do **not** suffix-match on `apple.com`: `apple-pay-gateway.apple.com.evil.com` ends in `apple.com`, and a bare `endsWith("apple.com")` also matches `evilapple.com`. Failing closed on an unknown host (you add it when Apple adds a regional pod) is safer than failing open to SSRF.
 - **Don't inspect or modify the session object.** It's opaque. Apple updates the schema without notice. Pass it through verbatim.
 - **Single-use.** Each session object is good for one `completeMerchantValidation()` call.
 - **5-minute expiry.** Sessions older than 5 minutes are dead.
@@ -238,6 +239,18 @@ const request = new PaymentRequest(methodData, details, options);
 ```
 
 The currency-amount form differs between the two APIs (string vs nested `{currency, value}` object). Decimal-precise strings throughout — never JS `Number` literals; floating-point math will silently corrupt totals.
+
+## The Charged Amount Must Be Server-Authoritative
+
+The `total` and `lineItems` you pass to `ApplePaySession` / `PaymentRequest` are **display only** — they render the sheet and nothing more. They are fully client-controlled: a hostile user opens devtools, calls your checkout with `amount: "0.01"`, authorizes a genuine Apple Pay payment for a penny, and the encrypted token that comes back is valid. Decimal-precise strings (above) stop floating-point corruption; they do **not** stop tampering. These are two different problems.
+
+| Discipline | Why |
+|------------|-----|
+| **Recompute the captured amount server-side** from the cart's persisted line items (product IDs + quantities in your DB), inside the same endpoint that processes the `onpaymentauthorized` token. Never capture the number the client sent. | The sheet proves *who* paid and *that a card authorized* — it does not prove *how much you should charge*. That figure is yours to compute. |
+| **Bind the cart to the authenticated session.** A `cartId` the client passes must belong to that user. | Otherwise one user can pay for / process another user's cart. |
+| **Idempotency key on capture** (e.g. `cartId` + token), enforced at your endpoint *and* toward the PSP. | A retried `onpaymentauthorized` — network blip, double-tap — must not double-charge. |
+
+The merchant-validation discipline above protects your *identity*; this protects your *revenue*. Both are server-side concerns; neither is optional.
 
 ## Event Handlers
 
@@ -377,6 +390,9 @@ If you already use the SDK button at version 1.2.0+, you get scan-to-pay for fre
 | Apple Pay below other payment methods | AUG parity violation | Promote to at-least-equal prominence |
 | Apple Pay not pre-selected when active card detected | AUG primary-option violation | Pre-select when `paymentCredentialsAvailable` |
 | Floating-point amounts | JS `Number` precision corruption | Decimal-precise strings throughout |
+| Capturing the client-supplied `total` as the charge amount | Sheet amount is display-only and client-controlled — price tampering | Recompute the captured amount server-side from persisted cart line items |
+| POSTing to `validationURL` without checking its host | SSRF — proxies your merchant identity cert to an attacker-chosen server | Exact-host allowlist (`apple-pay-gateway.apple.com`, `-cert` sandbox, `cn-` China) + require https; never suffix-match `apple.com` |
+| No idempotency key on capture | Retried `onpaymentauthorized` double-charges | Key capture on `cartId` + token at your endpoint and the PSP |
 | Sandbox URL in production code | Validation succeeds in sandbox, transactions decline in production | Switch endpoints based on env |
 
 ## Domain-Verification Debug Checklist
