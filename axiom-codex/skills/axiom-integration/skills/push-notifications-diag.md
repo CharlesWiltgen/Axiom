@@ -27,6 +27,8 @@ Symptoms that indicate push-specific issues:
 | Notifications appear without sound | Missing .sound in authorization options or payload |
 | Rich notification shows plain text | Missing mutable-content: 1 in payload |
 | Image not showing in notification | Service extension failed silently — check serviceExtensionTimeWillExpire |
+| ENTIRE notification vanishes (worse than plain text) | NSE never called contentHandler before the ~30s budget expired, and serviceExtensionTimeWillExpire has no fallback. The OS drops the whole notification, not just the media |
+| NSE never fires at all | Extension bundle ID prefix wrong. Must be {host-app-bundle-id}.SomeName — a mismatched prefix means the NSE silently never runs, no crash, no log |
 | Silent push not waking app | System throttling (~2-3/hour), or app was force-quit by user |
 | Notifications stopped after iOS update | Focus mode enabled by default in iOS 15+; check interruption level |
 | Badge shows wrong number | Multiple notifications sent without explicit badge count reset |
@@ -48,6 +50,8 @@ Symptoms that indicate push-specific issues:
 | "I'll test on Simulator first" | Simulator cannot register for remote notifications. No APNs token = no real push testing. | Wasted test cycle discovering Simulator limitations |
 | "Let me rewrite the notification handler" | 80% of push failures are configuration (entitlements, tokens, environment), not code. | Hours rewriting working code while the config stays broken |
 | "This worked on iOS 17, the bug must be in our code" | Each iOS version changes Focus defaults, interruption filtering, and provisional behavior. | Debugging code when the fix is a payload or Settings change |
+| "Just send the push 50 times so it gets through" | Resending the same payload stacks 50 banners and gets you flagged for APNs abuse. Reliable delivery is a header problem, not a volume problem — use apns-expiration for store-and-forward and apns-collapse-id to replace, not stack. | Spam complaints and 1-star reviews; the real fix was two headers |
+| "Push is flaky, just poll the server every minute" | Polling drains battery, wastes server load, and is rejected by App Review for background abuse. APNs already does store-and-forward to offline devices via apns-expiration. | Battery drain, App Review rejection, infra cost for a problem APNs solves for free |
 
 ## Mandatory First Steps
 
@@ -127,6 +131,19 @@ print("Badge: \(settings.badgeSetting.rawValue)")
 - ❌ authorizationStatus = 1 → Denied by user
 - ❌ authorizationStatus = 0 → Not determined (never requested)
 
+## Delivery Levers (Use Instead of Spamming)
+
+When delivery feels unreliable, the fix is APNs headers, not volume. Resending the same payload N times stacks N banners and risks abuse flagging. These levers solve "it didn't arrive" without spamming.
+
+| Lever | Header | What it does |
+|-------|--------|--------------|
+| Store-and-forward | apns-expiration: <unix-ts> | APNs holds the push and delivers when an offline device reconnects. Set 0 for "deliver now or discard"; set a future timestamp for "keep trying until then." Default behavior already retries — use this to control the window |
+| Replace, not stack | apns-collapse-id: <string> | A new push with the same collapse ID overwrites the previous one on the device instead of adding a second banner. This is how you "update" a notification (score changes, delivery status) without piling up |
+| Priority by urgency | apns-priority: 10 (immediate) / 5 (power-considerate) | 10 for user-visible alerts; 5 for background/silent and batchable updates. Wrong priority gets silent pushes throttled harder |
+| Drop dead tokens | 410 Unregistered response | When APNs returns 410, the device token is permanently invalid (app uninstalled / token rotated). Delete it from your server immediately. Continuing to send to 410 tokens is a leading abuse signal |
+
+**Key insight** "Send it 50 times" and "just poll" are both volume answers to a header problem. apns-expiration gives offline delivery for free; apns-collapse-id replaces instead of stacks. Reach for these before adding retry loops or polling.
+
 ## Decision Trees
 
 ### Tree 1: Not Receiving Any Notifications
@@ -194,6 +211,8 @@ Works in development, fails in production?
       └─ Verify Team ID matches Apple Developer account
 ```
 
+**Key insight** A `.p8` token-based auth key works for BOTH sandbox and production — only the endpoint (api.sandbox.push.apple.com vs api.push.apple.com) changes. Switching from `.p12` certificates to `.p8` eliminates an entire class of "wrong cert for environment" bugs, because there is no per-environment credential to get wrong.
+
 ### Tree 3: Silent Notifications Not Waking App
 
 ```
@@ -244,15 +263,19 @@ Rich notification not showing image/video?
 │  └─ Exists → continue
 │
 ├─ Extension bundle ID correct?
-│  ├─ Must be: {app-bundle-id}.{extension-name}
+│  ├─ Must be: {host-app-bundle-id}.SomeName
 │  │  Example: com.myapp.NotificationService
-│  └─ Wrong prefix? → Fix bundle ID to match parent app
+│  └─ Wrong prefix? → NSE SILENTLY never fires (no crash, no log).
+│     Fix bundle ID so prefix exactly matches parent app
 │
 ├─ Download completing in time?
 │  ├─ Extension has ~30 seconds to modify notification
 │  │  └─ Large file? → Use thumbnail URL, not full resolution
-│  └─ serviceExtensionTimeWillExpire called?
-│     └─ Must deliver bestAttemptContent with fallback text
+│  └─ serviceExtensionTimeWillExpire calls contentHandler with a fallback?
+│     ├─ No fallback? → ENTIRE notification vanishes when the budget
+│     │  expires (worse than plain text) — OS never got contentHandler
+│     └─ Always call contentHandler(bestAttemptContent) here so the
+│        text notification still shows even if the media download stalls
 │
 ├─ Attachment created correctly?
 │  ├─ File written to disk before creating UNNotificationAttachment?
@@ -265,6 +288,31 @@ Rich notification not showing image/video?
 └─ App groups configured?
    └─ Extension and app share data via App Groups?
       └─ Missing? → Add same App Group to both targets
+```
+
+#### NSE Timeout Fallback (Prevents the Vanishing Notification)
+
+The expiration handler is not optional. Without it, a stalled download lets the ~30s budget run out and the OS delivers nothing — the whole notification vanishes, which is worse than the plain-text version the user would have seen with no NSE at all.
+
+```swift
+class NotificationService: UNNotificationServiceExtension {
+    var contentHandler: ((UNNotificationContent) -> Void)?
+    var bestAttemptContent: UNMutableNotificationContent?
+
+    override func didReceive(_ request: UNNotificationRequest,
+                             withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
+        self.contentHandler = contentHandler
+        bestAttemptContent = request.content.mutableCopy() as? UNMutableNotificationContent
+        // ... download media, attach, then call contentHandler(bestAttemptContent!) ...
+    }
+
+    override func serviceExtensionTimeWillExpire() {
+        // Budget about to expire — deliver the text now so it never vanishes.
+        if let contentHandler, let bestAttemptContent {
+            contentHandler(bestAttemptContent)
+        }
+    }
+}
 ```
 
 ### Tree 5: Live Activity Not Updating via Push
@@ -460,6 +508,8 @@ Messaging.messaging().token { token, error in
 | Works dev not prod | Step 3: curl both | Switch APNs endpoint; tokens differ per environment |
 | Silent push ignored | Payload + headers | content-available: 1, push-type: background, priority: 5 |
 | Rich media missing | Extension | Add mutable-content: 1, check extension bundle ID and timeout |
+| Entire notification vanishes | NSE timeout | Call contentHandler in serviceExtensionTimeWillExpire fallback |
+| Delivery unreliable / tempted to resend | Headers, not volume | apns-expiration (store-and-forward), apns-collapse-id (replace not stack) |
 | Live Activity stale | Topic format | Use {bundleID}.push-type.liveactivity topic |
 | Focus mode filtering | Interruption level | Use .timeSensitive for important notifications |
 | FCM iOS failure | Firebase Console | Upload .p8 key with correct Key ID and Team ID |
@@ -503,6 +553,18 @@ Messaging.messaging().token { token, error in
 
 **Push-back template**: "Silent push has a system throttle budget. Let me verify we haven't exceeded it and that the app hasn't been force-quit on test devices — those are the two most common causes."
 
+### Scenario 4: "Just send the push 50 times so it gets through" / "just poll"
+
+**Context**: A notification didn't arrive (user was offline). The PM wants you to resend the same push 50 times to brute-force delivery, or to switch to polling the server every minute as a workaround.
+
+**Pressure**: Take the volume shortcut. It "feels" more reliable and ships faster than understanding APNs headers.
+
+**Reality**: Both are wrong fixes to a header problem. Resending stacks 50 banners and flags you for APNs abuse. Polling drains battery and gets rejected by App Review. APNs already does store-and-forward — the missing pieces are headers, not retries.
+
+**Correct action**: Reach for the Delivery Levers. Set apns-expiration so APNs holds the push and delivers it when the offline device reconnects. Use apns-collapse-id so updates replace the previous banner instead of stacking. Set apns-priority by urgency. And on 410 Unregistered, delete the dead token server-side so you stop wasting sends.
+
+**Push-back template**: "Sending it 50 times stacks 50 banners and risks abuse flagging — the real fix is two headers. apns-expiration tells APNs to store-and-forward to the offline device, and apns-collapse-id replaces the banner instead of stacking. That's reliable delivery without the spam."
+
 ## Checklist
 
 Before escalating push notification issues:
@@ -517,6 +579,8 @@ Before escalating push notification issues:
 - [ ] Tested on physical device (not Simulator for token registration)
 - [ ] For FCM: APNs auth key uploaded to Firebase Console
 - [ ] For silent push: background mode enabled, priority 5, no alert keys
+- [ ] For rich media: NSE bundle ID prefix matches host app, and serviceExtensionTimeWillExpire calls contentHandler so the notification never vanishes
+- [ ] For unreliable delivery: use apns-expiration and apns-collapse-id, not resends or polling; delete 410 Unregistered tokens server-side
 
 ## Resources
 

@@ -7,6 +7,26 @@ Symptom-based troubleshooting for energy issues. Start with your symptom, follow
 
 ---
 
+## Measurement Red Flags — Read Before Profiling
+
+These two mistakes invalidate an entire profiling session. Catch them first.
+
+| Red flag | Why it ruins the trace | Fix |
+|----------|------------------------|-----|
+| Profiling over a USB cable | System power metrics read ~0 when the device is charging — the trace looks clean while the bug is still there | Profile over wireless debugging (Window → Devices → Connect via network), unplugged |
+| Can't reproduce drain at your desk | Real drain happens during the commute/in-pocket, not at a stationary desk on WiFi | Use on-device Performance Trace (below) — you cannot find this with a cabled Mac trace |
+
+#### On-device Performance Trace for unreproducible drain
+
+When the drain only shows up in real-world use (commute, pocket, cellular), capture it on the device itself, then bring it back to the Mac:
+
+1. Settings → Developer → Performance Trace → Enable, set mode to Power Profiler
+2. Add the Performance Trace control to Control Center (Add a Control → Performance Trace)
+3. Start the trace from Control Center, use the app normally for the real-world scenario (captures up to ~10 hours)
+4. Stop, then Settings → Developer → Performance Trace → share the trace to your Mac and open in Instruments
+
+---
+
 ## Symptom 1: App at Top of Battery Settings
 
 Users or you notice your app consuming significant battery.
@@ -318,7 +338,7 @@ Energy spike during specific action?
 Use this when you need fast answers:
 
 ### 30-Second Check
-- [ ] Device plugged in? (Power metrics show 0)
+- [ ] Profiling over USB cable? Power metrics read ~0 — switch to wireless debugging, unplugged
 - [ ] Debug build? (Less optimized than release)
 - [ ] Low Power Mode on? (May affect measurements)
 
@@ -343,6 +363,23 @@ Use this when you need fast answers:
 | Missing stopUpdatingLocation | Add stop call | 2 min |
 | No Dark Mode | Add asset variants | 30 min |
 | Audio session always active | Add setActive(false) | 5 min |
+| Polling on a timer (e.g. every 5s) | Convert to push — polling uses ~100x more energy than push | 2-4 hours |
+| Background push waking the radio | Send `apns-priority: 5` so the system batches/coalesces delivery | server-side |
+| Off-screen CADisplayLink at high fps | Cap with `preferredFrameRateRange` (~20% GPU savings) or pause when off-screen | 5 min |
+
+---
+
+## Prove the Fix in the Field (MetricKit)
+
+A clean local Power Profiler trace proves nothing about real users. After shipping a fix, confirm it landed with the MetricKit field that measures exactly what you changed. Implement `MXMetricManager` and read these from `MXMetricPayload`:
+
+| Fix shipped | Field that proves it | What "fixed" looks like |
+|-------------|----------------------|-------------------------|
+| Right-sized background location | `locationActivityMetrics.cumulativeBackgroundLocationTime` | Drops sharply vs the leaking build |
+| Polling converted to push | `networkTransferMetrics` (cellular + WiFi up/down bytes) | Fewer bytes, no steady-interval pattern |
+| Best-accuracy GPS reduced | `locationActivityMetrics.cumulativeBestAccuracyTime` | Time shifts out of the best-accuracy bucket |
+
+Compare the post-fix payload against the pre-fix baseline — without the baseline you can't tell improvement from noise.
 
 ---
 

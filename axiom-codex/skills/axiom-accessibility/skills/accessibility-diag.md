@@ -165,24 +165,45 @@ Text("Headline")
 - `.caption2` - 11pt
 
 #### Layout considerations
+
+The font scaling is the easy half. **Clipping is almost always a fixed *frame*, not a fixed font** — text that scales correctly still gets cut off when it grows inside a hardcoded `height`, a single-line cap, or a horizontal stack that runs out of width. Switch the font to a semantic style AND free the container.
+
 ```swift
-// ❌ WRONG - Fixed frame breaks with large text
+// ❌ WRONG - Fixed frame clips, single line truncates
 Text("Long product description...")
   .font(.body)
-  .frame(height: 50) // Clips at large text sizes
+  .frame(height: 50)
+  .lineLimit(1)
 
-// ✅ CORRECT - Flexible frame
+// ✅ CORRECT - Let the text grow vertically
 Text("Long product description...")
   .font(.body)
-  .lineLimit(nil) // Allow multiple lines
+  .lineLimit(nil)
   .fixedSize(horizontal: false, vertical: true)
+```
 
-// ✅ CORRECT - Stack rearranges at large sizes
+At accessibility sizes a horizontal row of label + control overflows. Reflow to vertical instead of capping the type size — capping defeats the user's setting and risks rejection.
+
+```swift
+// ❌ WRONG - capping the size hides text the user asked for
 HStack {
   Text("Label:")
   Text("Value")
 }
-.dynamicTypeSize(...DynamicTypeSize.xxxLarge) // Limit maximum size if needed
+.dynamicTypeSize(...DynamicTypeSize.accessibility1)
+
+// ✅ CORRECT - reflow HStack → VStack at accessibility sizes
+@Environment(\.dynamicTypeSize) private var typeSize
+
+var body: some View {
+  let layout = typeSize.isAccessibilitySize
+    ? AnyLayout(VStackLayout(alignment: .leading))
+    : AnyLayout(HStackLayout())
+  layout {
+    Text("Label:")
+    Text("Value")
+  }
+}
 ```
 
 #### Testing
@@ -252,17 +273,25 @@ if UIAccessibility.shouldDifferentiateWithoutColor {
 }
 ```
 
-#### Testing
-1. Use Color Contrast Analyzer tool (free download)
-2. Screenshot your UI, measure text vs background
-3. Check both light and dark mode
-4. Settings → Accessibility → Display & Text Size → Increase Contrast (test with this ON)
+#### Contrast Reference (Measure, Don't Eyeball)
 
-#### Quick reference
-- Black (#000000) on White (#FFFFFF): 21:1 ✅ AAA
-- Dark Gray (#595959) on White: 7:1 ✅ AAA
-- Medium Gray (#767676) on White: 4.5:1 ✅ AA
-- Light Gray (#959595) on White: 2.8:1 ❌ Fails
+Light gray on white is the classic failure — it looks "subtle" to a designer but is unreadable for low-vision users and in sunlight. Never judge by eye. Run the Accessibility Inspector **Audit** tab (flags every failing pair automatically) or sample exact hex with the Digital Color Meter, then compare against this table.
+
+| Foreground on white | Ratio | Verdict |
+|---------------------|-------|---------|
+| Black `#000000` | 21:1 | AAA (any size) |
+| Dark gray `#595959` | ~7:1 | AAA normal text |
+| Medium gray `#767676` | ~4.5:1 | AA floor — normal text |
+| Gray `#8E8E8E` | ~3:1 | Large text / UI components only |
+| Light gray `#959595` | ~2.8:1 | FAILS all text |
+
+`#767676` is the darkest gray that still passes AA for body text — anything lighter needs to be ≥18pt (or ≥14pt bold) to qualify as "large text" at 3:1.
+
+#### Testing
+1. Accessibility Inspector → Audit tab → Run Audit — surfaces every contrast failure with the measured ratio
+2. Digital Color Meter (or Color Contrast Analyzer) to sample exact hex when iterating on brand colors
+3. Check both light and dark mode — a pair that passes in one can fail in the other
+4. Settings → Accessibility → Display & Text Size → Increase Contrast (verify it still passes with this ON)
 
 ---
 
@@ -560,6 +589,32 @@ Button("Toggle") {
 .accessibilityValue(isOn ? "Enabled" : "Disabled")
 ```
 
+#### Choose the Right Notification (Don't Use `.announcement` for Everything)
+
+VoiceOver has three distinct notifications. Using `.announcement` for new content that arrives on screen leaves focus stranded on the old element — the new content is announced but the user can't navigate to it. Match the notification to what changed.
+
+| Notification | Use when | Argument | Effect |
+|--------------|----------|----------|--------|
+| `.announcement` | Discrete event with no new focusable target (score update, save complete, error toast) | The string to speak | Speaks, focus unchanged |
+| `.layoutChanged` | New content appeared in place (search results, expanded section, validation error) | The element to focus (or `nil`) | Speaks + moves focus to the passed element |
+| `.screenChanged` | Whole screen replaced (push/pop, sheet, tab switch) | The element to focus first (or `nil`) | Plays screen-change tone, refocuses, re-reads layout |
+
+```swift
+// ❌ WRONG - new results announced but focus stuck on the search field
+UIAccessibility.post(notification: .announcement, argument: "12 results found")
+
+// ✅ CORRECT - SwiftUI: announce a discrete event in priority order
+AccessibilityNotification.Announcement("Saved").post()
+
+// ✅ CORRECT - UIKit: new content arrived, move focus to it
+UIAccessibility.post(notification: .layoutChanged, argument: firstResultCell)
+
+// ✅ CORRECT - whole-screen replacement
+UIAccessibility.post(notification: .screenChanged, argument: detailTitleLabel)
+```
+
+For announcements that must not be interrupted, set priority. In SwiftUI use the `accessibilitySpeechAnnouncementPriority` view modifier around the `AccessibilityNotification.Announcement(_:).post()` call; in UIKit post an `NSAttributedString` carrying the `.accessibilitySpeechAnnouncementPriority` attribute (`.high` cannot be interrupted, `.low` is queued) so the message isn't dropped by VoiceOver's queue.
+
 ## 8. Assistive Access Support (iOS 17+ — Cognitive Disabilities)
 
 **Problem** App is unavailable or broken in Assistive Access mode, excluding users with cognitive disabilities who rely on a simplified system experience.
@@ -798,6 +853,14 @@ If you hear ANY of these, **STOP and reference this skill**:
 - ❌ **"Make buttons 36x36pt for clean aesthetic"** – Fails touch target requirement (44x44pt minimum)
 - ❌ **"Disable Dynamic Type in this screen"** – App Store rejection risk
 - ❌ **"Color-code without labels (red=error, green=success)"** – Excludes colorblind users (8% of men)
+
+#### Implementation Traps (Your Own Code, Not the Designer)
+
+These pass a quick glance but fail real VoiceOver / Dynamic Type use:
+
+- ❌ **`.announcement` for content that arrived on screen** – Speaks it but strands focus. Use `.layoutChanged` (or `.screenChanged`) and pass the new element. See the notification taxonomy above.
+- ❌ **Eyeballing contrast ("looks readable")** – Light gray fails at ~2.8:1. Measure with the Accessibility Inspector Audit; `#767676` is the lightest gray that passes AA body text.
+- ❌ **Fixing fonts but leaving fixed `height`/`lineLimit(1)`** – Text scales then clips. The clip is the frame: `lineLimit(nil)` + `.fixedSize(horizontal: false, vertical: true)`, and reflow HStack → VStack via `dynamicTypeSize.isAccessibilitySize`.
 
 ### How to Push Back Professionally
 

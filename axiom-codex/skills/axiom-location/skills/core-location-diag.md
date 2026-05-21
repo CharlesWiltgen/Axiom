@@ -12,6 +12,17 @@ Symptom-based troubleshooting for Core Location issues.
 - Geofence events not triggering
 - Location icon won't go away
 
+## Red Flags
+
+| Red Flag | Why It Bites | Fix |
+|----------|--------------|-----|
+| Requesting `.always` / `.authorizedAlways` on first launch | Up-front Always denial runs ~30-60%; When-In-Use then escalate runs ~5-10% (WWDC 2024-10212) | Request When In Use first, escalate to Always only when a feature needs it |
+| Using a location with `horizontalAccuracy < 0` | Coordinate is INVALID — Apple docs: "latitude and longitude are invalid" | Discard: `guard loc.horizontalAccuracy >= 0 else { continue }` before using or computing distance |
+| `horizontalAccuracy > ~100m` treated as a real position | WiFi/cell-only fix, not GPS — wrong distances | Wait for a tighter fix or surface "locating…" instead of a number |
+| Deprecated `authorizationStatus()` / class method checked once at launch | Static, never reflects later grants/revocations | Read the instance `manager.authorizationStatus` inside `locationManagerDidChangeAuthorization(_:)` |
+| `CLLocationManager` held in a local var | Deallocates at end of scope; no delegate callbacks ever fire | Store the manager in a property |
+| No `launchOptions[.location]` handling | Background relaunch event is dropped — significant-change "doesn't wake the app" | Recreate manager + restart services in `didFinishLaunching` when the key is present |
+
 ## Related Skills
 
 - `axiom-location (skills/core-location.md)` — Implementation patterns, decision trees
@@ -126,13 +137,13 @@ Q3: Was session started from foreground?
 │
 └─ YES → Check next
 
-Q4: Is app being terminated and not recovering?
-├─ YES → Not recreating session on relaunch
-│   Fix: In didFinishLaunchingWithOptions:
-│         if wasTrackingLocation {
-│             backgroundSession = CLBackgroundActivitySession()
-│             startLocationUpdates()
-│         }
+Q4: Was the app relaunched into the background for a queued event?
+├─ launchOptions[.location] present → System woke you to deliver one event
+│   CRITICAL: The event is delivered to the delegate, NOT in launchOptions.
+│   If you don't recreate the manager + restart services synchronously in
+│   didFinishLaunching, the queued event is DROPPED and the app sleeps again.
+│   This is why significant-change "doesn't wake the app" — it does wake it,
+│   but the relaunch handler never restarts monitoring. (See Relaunch Recovery below.)
 │
 └─ NO → Check authorization level
 
@@ -163,9 +174,44 @@ func startTracking() {
 }
 ```
 
+#### Relaunch Recovery (required for significant-change and region monitoring)
+
+When the system relaunches a terminated app to deliver a location event, the event
+goes to the delegate — never the launch dictionary. If you don't recreate the manager
+and restart services in `didFinishLaunching`, the queued event is dropped.
+
+```swift
+func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?
+) -> Bool {
+    if options?[.location] != nil {
+        // Background relaunch for a queued event — recreate + restart NOW
+        locationManager = makeConfiguredManager()        // store in a property
+        locationManager.startMonitoringSignificantLocationChanges()
+        // Restart whatever you were monitoring before termination
+    }
+    return true
+}
+```
+
 ---
 
 ## Symptom 3: Authorization Always Denied
+
+### Authorization Strategy
+
+Requesting `.always` on first launch is the single biggest cause of avoidable denials.
+Apple's data (WWDC 2024-10212): an up-front Always prompt is denied ~30-60% of the time,
+while requesting When In Use first and escalating to Always only when a feature needs it
+lands ~5-10% denial. Asking for "Always everywhere" up front does not buy more access —
+it loses access.
+
+When a tech lead says "just request Always up front so we never have to ask again":
+escalate the request, not the prompt. Take a When-In-Use `CLServiceSession` at launch,
+then take an `.always` session the moment the user enables a background feature (geofence
+reminder, trip logging). iOS shows the Always upgrade prompt in that context, where users
+say yes far more often.
 
 ### Decision Tree
 
@@ -235,13 +281,20 @@ Q5: Are Info.plist strings compelling?
 let accuracy = CLLocationManager().accuracyAuthorization
 print("Accuracy auth: \(accuracy == .fullAccuracy ? "full" : "reduced")")
 
-// 2. Check update's accuracy flag (iOS 17+)
+// 2. Check update's accuracy flag (iOS 17+) and FILTER invalid fixes
 for try await update in CLLocationUpdate.liveUpdates() {
     if update.accuracyLimited {
         print("Accuracy limited - updates every 15-20 min")
     }
-    if let location = update.location {
-        print("Horizontal accuracy: \(location.horizontalAccuracy)m")
+    guard let location = update.location else { continue }
+
+    // Hard filter: a negative accuracy means the coordinate is invalid.
+    // Never compute distance or display a position from these.
+    guard location.horizontalAccuracy >= 0 else { continue }
+
+    // > ~100m is a WiFi/cell-only fix, not GPS — wrong distances
+    if location.horizontalAccuracy > 100 {
+        print("Coarse fix (\(location.horizontalAccuracy)m) — waiting for GPS")
     }
 }
 ```
@@ -291,17 +344,29 @@ Q4: Is the location stale?
 └─ If timestamp recent but accuracy poor: Environmental issue
 ```
 
-### Requesting Temporary Full Accuracy (iOS 18+)
+### Requesting Temporary Full Accuracy
+
+Both paths require an `Info.plist` purpose dictionary. The dictionary key is
+`NSLocationTemporaryUsageDescriptionDictionary`; each entry maps a purpose key
+to a user-facing string:
+
+```xml
+<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+<dict>
+    <key>NavigationPurpose</key>
+    <string>Precise location enables turn-by-turn directions.</string>
+</dict>
+```
 
 ```swift
-// Requires Info.plist entry:
-// NSLocationTemporaryUsageDescriptionDictionary
-//   NavigationPurpose: "Precise location enables turn-by-turn directions"
-
+// Declarative (iOS 18+): hold the session while the feature is active
 let session = CLServiceSession(
     authorization: .whenInUse,
     fullAccuracyPurposeKey: "NavigationPurpose"
 )
+
+// Imperative (iOS 14+): for code still on CLLocationManager
+manager.requestTemporaryFullAccuracyAuthorization(withPurposeKey: "NavigationPurpose")
 ```
 
 ---

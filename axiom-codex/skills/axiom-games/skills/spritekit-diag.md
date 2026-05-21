@@ -29,6 +29,18 @@ if let view = self.view as? SKView {
 
 If `showsPhysics` doesn't show expected physics body outlines, your physics bodies aren't configured correctly. **Stop and fix bodies before debugging contacts.**
 
+### Read the Overlay as Diagnostic Gates
+
+The overlay numbers are gates, not vibes. Read them before guessing:
+
+| Overlay | Healthy | Gate (act now) | Points to |
+|---------|---------|----------------|-----------|
+| `showsDrawCount` | < 10 | > ~50 | Batching problem (Symptom 3) |
+| `showsNodeCount` | stable | climbing, or > ~1000 | Missing culling/pooling (Symptoms 3, 5) |
+| `showsFPS` | 60 / 120 | sustained dips | Confirms a real frame budget issue |
+
+A climbing `showsNodeCount` that never plateaus is the single clearest signal of "never remove nodes" damage — node count is unbounded, so the slowdown is too.
+
 For SpriteKit architecture patterns and best practices, see `skills/spritekit.md`. For API reference, see `skills/spritekit-ref.md`.
 
 ---
@@ -64,8 +76,18 @@ didBegin(_:) never called
 │   └─ Bodies never reach each other → Check collisionBitMask isn't blocking
 │
 └─ Are you modifying the world inside didBegin?
-    ├─ Removing nodes inside didBegin can cause missed callbacks
-    └─ FIX: Flag nodes for removal, process in update(_:)
+    ├─ NEVER mutate the node tree mid-contact-resolution. Removing a
+    │   body's node inside didBegin can drop sibling callbacks for the
+    │   same frame or crash (EXC_BAD_ACCESS) — the physics engine is
+    │   still iterating the contact set you just edited.
+    └─ FIX: Flag nodes in didBegin, reap them in update(_:):
+        func didBegin(_ contact: SKPhysicsContact) {
+            contact.bodyA.node?.userData = ["dead": true]  // flag only
+        }
+        override func update(_ currentTime: TimeInterval) {
+            children.filter { ($0.userData?["dead"] as? Bool) == true }
+                .forEach { $0.removeFromParent() }              // reap here
+        }
 ```
 
 ### Quick Diagnostic Print
@@ -128,10 +150,14 @@ FPS below 60 (or 120 on ProMotion)
 │
 ├─ Check showsDrawCount
 │   ├─ >50 draw calls → Batching problem
+│   │   ├─ ignoresSiblingOrder = false? → Set view.ignoresSiblingOrder = true FIRST
+│   │   │   └─ This is the batching lever: it lets SpriteKit reorder
+│   │   │      same-texture/same-zPosition sprites into ONE draw call.
+│   │   │      An atlas with this still false batches nothing.
 │   │   ├─ Using SKShapeNode for gameplay? → Replace with pre-rendered textures
-│   │   ├─ Sprites from different images? → Use texture atlas
-│   │   ├─ Sprites at different zPositions? → Consolidate layers
-│   │   └─ ignoresSiblingOrder = false? → Set to true
+│   │   ├─ Sprites from different images? → Pack into a texture atlas
+│   │   │   (same atlas + same zPosition + ignoresSiblingOrder = 1 draw call)
+│   │   └─ Sprites at different zPositions? → Consolidate layers
 │   │
 │   ├─ 10-50 draw calls → Acceptable for most games
 │   └─ <10 draw calls → Drawing isn't the problem
@@ -241,7 +267,10 @@ Memory grows during gameplay
 ├─ Strong reference cycles in actions?
 │   ├─ SKAction.run { self.doSomething() } captures self strongly
 │   ├─ In repeatForever, this prevents scene deallocation
-│   └─ FIX: SKAction.run { [weak self] in self?.doSomething() }
+│   ├─ FIX: SKAction.run { [weak self] in self?.doSomething() }
+│   └─ ALSO run repeatForever with a key so it stays removable:
+│       node.run(action, withKey: "spawn")
+│       node.removeAction(forKey: "spawn")   // keyless = unstoppable
 │
 ├─ Scene not deallocating?
 │   ├─ Add deinit { print("Scene deallocated") }
@@ -348,10 +377,12 @@ These mistakes cause the majority of SpriteKit issues. Check these first before 
 2. **Forgetting `contactTestBitMask`** — Defaults to `0x00000000`. Contacts never fire without setting this.
 3. **Forgetting `physicsWorld.contactDelegate = self`** — Fixes ~30% of contact issues on its own.
 4. **Using SKShapeNode for gameplay** — Each instance = 1 draw call. Pre-render to texture with `view.texture(from:)`.
-5. **SKAction.move on physics bodies** — Actions override physics, causing jitter and missed collisions. Use forces/impulses.
-6. **Strong self in action closures** — `SKAction.run { self.foo() }` in `repeatForever` creates retain cycles. Use `[weak self]`.
-7. **Not removing offscreen nodes** — Node count climbs silently, degrading performance.
-8. **Missing `isUserInteractionEnabled = true`** — Default is `false` on all non-scene nodes.
+5. **Leaving `ignoresSiblingOrder = false`** — This is the batching lever. Without `view.ignoresSiblingOrder = true`, SpriteKit can't reorder same-texture sprites, so an atlas batches nothing and `showsDrawCount` stays high.
+6. **Mutating the node tree inside `didBegin(contact:)`** — Removing a body mid-resolution drops sibling callbacks or crashes. Flag in `didBegin`, reap in `update(_:)`.
+7. **SKAction.move on physics bodies** — Actions override physics, causing jitter and missed collisions. Use forces/impulses.
+8. **Strong self in action closures** — `SKAction.run { self.foo() }` in `repeatForever` creates retain cycles. Use `[weak self]`, and run with `withKey:` so the loop stays removable.
+9. **Not removing offscreen nodes** — Node count climbs silently, degrading performance.
+10. **Missing `isUserInteractionEnabled = true`** — Default is `false` on all non-scene nodes.
 
 ---
 
@@ -360,10 +391,11 @@ These mistakes cause the majority of SpriteKit issues. Check these first before 
 | Symptom | First Check | Most Likely Cause |
 |---------|------------|-------------------|
 | Contacts don't fire | `contactDelegate` set? | Missing `contactTestBitMask` |
+| Crash on collision | Mutating nodes in `didBegin`? | Reap in `update(_:)`, not mid-contact |
 | Tunneling | Object speed vs wall thickness | Missing `usesPreciseCollisionDetection` |
-| Low FPS | `showsDrawCount` | SKShapeNode in gameplay or missing atlas |
+| `showsDrawCount` > ~50 | `ignoresSiblingOrder = true`? | Batching lever off, or SKShapeNode/no atlas |
+| `showsNodeCount` climbing | Removing offscreen nodes? | Nodes created but never culled/pooled |
 | Touches broken | `isUserInteractionEnabled`? | Default is `false` on non-scene nodes |
-| Memory growth | `showsNodeCount` increasing? | Nodes created but never removed |
 | Wrong positions | Y-axis direction | Using view coordinates instead of scene |
 | Transition crash | `willMove(from:)` cleanup? | Strong references to old scene |
 

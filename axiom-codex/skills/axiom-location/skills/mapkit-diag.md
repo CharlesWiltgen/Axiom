@@ -3,6 +3,18 @@
 
 Symptom-based MapKit troubleshooting. Start with the symptom you're seeing, follow the diagnostic path.
 
+## Red Flags
+
+Stop and fix these before anything else — they are the most common causes of "map is slow / search broken / pins are a mess" that look like other problems.
+
+| Red flag | Why it's wrong | Fix |
+|---|---|---|
+| `MKLocalSearch().start()` called in the search field's onChange / per keystroke | Apple rate-limits MKLocalSearch (~1/sec); type-ahead exhausts the budget and returns errors | Type-ahead = one long-lived `MKLocalSearchCompleter`; run MKLocalSearch only on the resolved selection via `MKLocalSearch.Request(completion:)` |
+| New `MKLocalSearchCompleter()` created per query/keystroke | Loses internal throttling and warm state | Keep ONE completer for the field's lifetime; just set `queryFragment` |
+| Adding all annotations regardless of count | Memory ≈ N views with no reuse; 5K places = 5K live views | Three layers: reuse → clustering → visible-region filtering (see thresholds below) |
+| Loading every annotation even with clustering at 1000+ | Clustering thins the *display*, not the *working set* | Filter to `mapView.region` and refresh via `.onMapCameraChange(frequency: .onEnd)` |
+| "Clustering is over-engineering for our count" | 5K overlapping pins is unusable at every zoom and spikes memory | Clustering is the baseline scaling tool, not a nice-to-have — keep it |
+
 ## Related Skills
 
 - `axiom-location (skills/mapkit.md)` — Patterns, decision trees, anti-patterns
@@ -137,6 +149,21 @@ Q5: Is onMapCameraChange triggering state updates that move the camera?
 
 ## Symptom 3: Performance Issues
 
+### Three Scaling Layers (apply by count — they stack, not either/or)
+
+| Annotation count | Required layers |
+|---|---|
+| < 500 | View reuse (dequeue with `for:`) |
+| 500–1000 | Reuse + clustering |
+| > 1000 | Reuse + clustering + visible-region filtering (`mapView.region`, refresh on `.onMapCameraChange(frequency: .onEnd)`) |
+| 5000+ | All three + server-side pre-clustering (return cluster summaries, not raw points) |
+
+Clustering thins the *display*; visible-region filtering thins the *working set*. At 5K places you need both — clustering alone still holds 5K live annotation objects.
+
+**Memory cost without reuse**: ~N annotation views in memory ≈ N annotations (5K places → ~5K views, the laggy/memory-spike symptom). With reuse, MapKit recycles ~20–30 views as the user scrolls.
+
+**Let MapKit thin overlapping pins**: set `view.displayPriority` (`.required` only for must-show pins; `.defaultLow` lets MapKit drop them when crowded) and `view.collisionMode` (`.circle` collides on the glyph radius so dense pins drop instead of overlapping into a wall).
+
 ### Decision Tree
 
 ```
@@ -145,9 +172,9 @@ Q1: How many annotations?
 │   SwiftUI: .mapItemClusteringIdentifier("poi")
 │   MKMapView: view.clusteringIdentifier = "poi"
 │
-├─ > 1000 → Consider visible-region filtering
+├─ > 1000 → ADD visible-region filtering on top of clustering
 │   Only load annotations within mapView.region
-│   Use .onMapCameraChange to fetch when user scrolls
+│   Refresh via .onMapCameraChange(frequency: .onEnd) — fires once at gesture end, not per frame
 │
 └─ < 500 → Check next
 
@@ -301,10 +328,14 @@ Q4: Natural language query format?
 │
 └─ Natural language → Check next
 
-Q5: Rate limited?
-├─ Getting errors after many requests → Apple rate-limits MapKit search
-│   Fix: Throttle searches, use MKLocalSearchCompleter for autocomplete
-│   Don't fire MKLocalSearch on every keystroke
+Q5: Rate limited? (search returns nothing after working briefly, or errors after many requests)
+├─ Firing MKLocalSearch per keystroke → Apple rate-limits MKLocalSearch (~1/sec); type-ahead blows the budget
+│   Fix: Split the work by responsibility —
+│     1. Type-ahead: ONE long-lived MKLocalSearchCompleter; set queryFragment each keystroke
+│        (it self-throttles; do NOT recreate it per query)
+│     2. Run MKLocalSearch ONLY on the selection the user taps:
+│        let req = MKLocalSearch.Request(completion: selectedCompletion)
+│        Never call MKLocalSearch.start() inside onChange of the text field
 │
 └─ NO → Check next
 

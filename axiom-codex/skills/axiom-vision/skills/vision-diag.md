@@ -6,13 +6,14 @@ Systematic troubleshooting for Vision framework issues: subjects not detected, m
 ## Overview
 
 **Core Principle**: When Vision doesn't work, the problem is usually:
-1. **Environment** (lighting, occlusion, edge of frame) - 40%
-2. **Confidence threshold** (ignoring low confidence data) - 30%
-3. **Threading** (blocking main thread causes frozen UI) - 15%
-4. **Coordinates** (mixing lower-left and top-left origins) - 10%
-5. **API availability** (using iOS 17+ APIs on older devices) - 5%
+1. **Environment** (lighting, occlusion, edge of frame) - 30%
+2. **Confidence threshold** (ignoring low confidence data) - 25%
+3. **Orientation** (handler defaults to `.up`; rotated photos look sideways) - 15%
+4. **Threading** (blocking main thread causes frozen UI) - 15%
+5. **Coordinates** (mixing lower-left and top-left origins) - 10%
+6. **API availability** (using iOS 17+ APIs on older devices) - 5%
 
-**Always check environment and confidence BEFORE debugging code.**
+**Always check environment, confidence, AND orientation BEFORE debugging code.** "Nothing detected" on a photo that obviously contains the subject is almost always orientation, not lighting.
 
 ## Red Flags
 
@@ -20,11 +21,12 @@ Symptoms that indicate Vision-specific issues:
 
 | Symptom | Likely Cause |
 |---------|--------------|
+| **Nothing detected on a portrait/landscape photo** | **Orientation not passed — handler defaults to `.up`, sees the image sideways** |
 | Subject not detected at all | Edge of frame, poor lighting, very small subject |
 | Hand landmarks intermittently nil | Hand near edge, parallel to camera, glove/occlusion |
 | Body pose skipped frames | Person bent over, upside down, flowing clothing |
-| UI freezes during processing | Running Vision on main thread |
-| Overlays in wrong position | Coordinate conversion (lower-left vs top-left) |
+| **UI freezes ~1s during processing** | **Vision running on main thread — App Review rejects this; never run Vision on the main thread** |
+| Overlays in wrong position | Coordinate conversion (normalized + lower-left vs top-left) |
 | Crash on older devices | Using iOS 17+ APIs without `@available` check |
 | Person segmentation misses people | >4 people in scene (instance mask limit) |
 | Low FPS in camera feed | `maximumHandCount` too high, not dropping frames |
@@ -39,11 +41,47 @@ Symptoms that indicate Vision-specific issues:
 
 Before investigating code, run these diagnostics:
 
+### Step 0: Verify Orientation
+
+The single most common cause of "nothing detected" on a photo that obviously contains the subject. `VNImageRequestHandler` and `ImageRequestHandler` default to `.up` when you omit `orientation`. A photo shot in portrait or landscape carries EXIF rotation, so without it Vision analyzes a sideways image — and orientation-sensitive detectors (faces, text, body pose) find nothing.
+
+```swift
+// ❌ WRONG — handler assumes .up, ignores the photo's EXIF rotation
+let handler = VNImageRequestHandler(cgImage: cgImage)
+
+// ✅ CORRECT — derive CGImagePropertyOrientation from the source, then pass it
+let cgOrientation = CGImagePropertyOrientation(uiImage.imageOrientation)
+let handler = VNImageRequestHandler(cgImage: cgImage, orientation: cgOrientation)
+```
+
+**Caveat — never cast raw values.** `UIImage.Orientation` and `CGImagePropertyOrientation` use different raw-value orderings, so `CGImagePropertyOrientation(rawValue: uiImage.imageOrientation.rawValue)` silently produces the wrong rotation. Map the cases explicitly:
+
+```swift
+extension CGImagePropertyOrientation {
+    init(_ orientation: UIImage.Orientation) {
+        switch orientation {
+        case .up: self = .up
+        case .down: self = .down
+        case .left: self = .left
+        case .right: self = .right
+        case .upMirrored: self = .upMirrored
+        case .downMirrored: self = .downMirrored
+        case .leftMirrored: self = .leftMirrored
+        case .rightMirrored: self = .rightMirrored
+        @unknown default: self = .up
+        }
+    }
+}
+```
+
+**Consequence for coordinates**: once you pass orientation, Vision returns normalized coordinates in the *oriented* space, so convert overlays against the oriented (display) dimensions — not the raw pixel buffer's width/height. See Pattern 6.
+
 ### Step 1: Verify Detection with Diagnostic Code
 
 ```swift
 let request = VNGenerateForegroundInstanceMaskRequest()  // Or hand/body pose
-let handler = VNImageRequestHandler(cgImage: testImage)
+// Pass orientation — see Step 0. Omitting it defaults to .up.
+let handler = VNImageRequestHandler(cgImage: testImage, orientation: cgOrientation)
 
 do {
     try handler.perform([request])
@@ -112,6 +150,7 @@ if Thread.isMainThread {
 Vision not working as expected?
 │
 ├─ No results returned?
+│  ├─ From a portrait/landscape photo? → Check Step 0 (orientation) FIRST
 │  ├─ Check Step 1 output
 │  │  ├─ "Request failed" → See Pattern 1a (API availability)
 │  │  ├─ "No results" → See Pattern 1b (nothing detected)
@@ -153,6 +192,33 @@ Vision not working as expected?
    ├─ Edges not detected → See Pattern 12a (contrast/shape)
    └─ Perspective wrong → See Pattern 12b (corner points)
 ```
+
+## Modern Swift Vision API (iOS 18+)
+
+The patterns below use the legacy `VN*` API (`VNImageRequestHandler`, `VNRequest`, `request.results`) because it covers iOS 13–17. On an iOS 18+ target, prefer the modern Swift Vision API — it eliminates two whole classes of bug from this skill: the Y-flip and the off-main-thread mistake.
+
+| Concern | Legacy (iOS 13+) | Modern (iOS 18+) |
+|---------|------------------|------------------|
+| Handler | `VNImageRequestHandler` (class) | `ImageRequestHandler` (Sendable) |
+| Request | `VNDetectFaceRectanglesRequest`, `VNRecognizeTextRequest` | `DetectFaceRectanglesRequest`, `RecognizeTextRequest` |
+| Results | `request.results` (untyped, optional) | typed return from `perform` |
+| Threading | synchronous `perform`, you queue it off-main | `async perform`, off the main actor by construction |
+| Coordinates | `VNImageRectForNormalizedRect` | `NormalizedRect.toImageCoordinates(_:origin:.upperLeft)` |
+
+```swift
+// Modern: typed async request, typed results, no manual Y-flip
+let handler = ImageRequestHandler(cgImage, orientation: cgOrientation)
+let request = DetectFaceRectanglesRequest()
+let faces = try await handler.perform(request)  // [FaceObservation]
+
+for face in faces {
+    let rect = face.boundingBox.toImageCoordinates(
+        imageSize, origin: .upperLeft  // handles bottom-left → top-left flip
+    )
+}
+```
+
+`ImageRequestHandler` still takes `orientation` in its initializer, so Step 0 applies to both APIs.
 
 ## Diagnostic Patterns
 
@@ -201,7 +267,8 @@ UIImageWriteToSavedPhotosAlbum(debugImage, nil, nil, nil)
 // - Poor contrast with background?
 ```
 
-**Common causes**:
+**Common causes** (check in this order):
+- **Orientation not passed** — handler defaults to `.up`, sees a rotated photo sideways (see Step 0). Check this FIRST: it's the cheapest fix and the most common cause for camera/library photos.
 - Subject too small (resize or crop closer)
 - Subject too blurry (increase lighting, stabilize camera)
 - Low contrast (subject same color as background)
@@ -209,12 +276,12 @@ UIImageWriteToSavedPhotosAlbum(debugImage, nil, nil, nil)
 **Fix**:
 
 ```swift
-// Crop image to focus on region of interest
+// Crop image to focus on region of interest — keep passing orientation
 let croppedImage = cropImage(sourceImage, to: regionOfInterest)
-let handler = VNImageRequestHandler(cgImage: croppedImage)
+let handler = VNImageRequestHandler(cgImage: croppedImage, orientation: cgOrientation)
 ```
 
-**Time to fix**: 30 min
+**Time to fix**: 30 min (2 min if it turns out to be orientation)
 
 ### Pattern 1c: Edge of Frame Issues
 
@@ -367,16 +434,18 @@ if let faces = request.results as? [VNFaceObservation] {
 
 ### Pattern 5a: UI Freezing (Main Thread)
 
-**Symptom**: App freezes when performing Vision request
+**Symptom**: App freezes ~1s when performing Vision request
 
 **Diagnostic** (Step 3 above confirms main thread)
+
+**Red Flag — "run it on the main thread, it's fast"**: Vision requests routinely take 200ms–1s+ on real images, and longer on older devices. `perform` is synchronous and blocks the calling thread for its full duration. A 1-second main-thread stall is a visible freeze and a documented App Review rejection reason — never run Vision on the main thread, regardless of how fast it looks on your dev device. The modern `ImageRequestHandler.perform` is `async`, which keeps this off the main actor by construction (see Modern API note).
 
 **Fix**:
 
 ```swift
 // BEFORE (wrong)
 let request = VNGenerateForegroundInstanceMaskRequest()
-try handler.perform([request])  // Blocks UI
+try handler.perform([request])  // Blocks UI for the request's full duration
 
 // AFTER (correct)
 DispatchQueue.global(qos: .userInitiated).async {
@@ -475,6 +544,28 @@ let uiPoint = CGPoint(
     x: visionPoint.x * width,
     y: (1 - visionPoint.y) * height
 )
+```
+
+**For bounding boxes, let the framework do the flip** instead of hand-rolling Y math:
+
+```swift
+// Legacy: scales normalized rect to pixels AND flips to top-left origin
+let rectInPixels = VNImageRectForNormalizedRect(
+    observation.boundingBox, Int(width), Int(height)
+)
+
+// Modern (iOS 18+): NormalizedRect handles the bottom-left→top-left flip
+let rectInPixels = observation.boundingBox.toImageCoordinates(
+    CGSize(width: width, height: height), origin: .upperLeft
+)
+```
+
+**Two non-obvious traps**:
+- **Orientation space**: if you passed `orientation` to the handler (Step 0), Vision's normalized coordinates are in the *oriented* image's space. Convert against the oriented (display) width/height, not the raw pixel buffer's.
+- **Aspect-fit letterboxing**: when the image is displayed with `.scaledToFit` (`UIView.ContentMode.scaleAspectFit`), it is letterboxed — the image rect is smaller than the view. Compute that rect with `AVMakeRect(aspectRatio:insideRect:)` and convert into *it*, not the full view bounds, or every overlay is offset.
+
+```swift
+let imageRect = AVMakeRect(aspectRatio: image.size, insideRect: imageView.bounds)
 ```
 
 **Time to fix**: 20 min
@@ -939,6 +1030,7 @@ func scaled(_ point: CGPoint, to size: CGSize) -> CGPoint {
 
 | Symptom | Likely Cause | First Check | Pattern | Est. Time |
 |---------|--------------|-------------|---------|-----------|
+| Nothing detected on a photo | Orientation defaults to `.up` | Step 0 (orientation) | 1b | 2 min |
 | No results | Nothing detected | Step 1 output | 1b/1c | 30 min |
 | Intermittent detection | Edge of frame | Subject position | 1c | 20 min |
 | Hand missing landmarks | Low confidence | Step 2 (confidence) | 2 | 45 min |

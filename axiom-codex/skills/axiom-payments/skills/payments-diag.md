@@ -2,6 +2,16 @@
 
 **You MUST use this skill when something in the axiom-payments suite isn't working.** The discipline skills (`apple-pay.md`, `apple-pay-web.md`, `tap-to-pay.md`, `wallet-passes.md`, `wallet-orders.md`) cover *how* to do things right; this skill covers *what's wrong* when symptoms appear. Each diagnostic branch maps a symptom to a root cause and points back at the discipline skill that fixes it.
 
+## Red Flags
+
+Stop and reconsider the moment you catch yourself in any of these. Each is a baseline mistake that *looks* correct.
+
+| Red flag | Why it's wrong | What's actually true |
+|----------|----------------|----------------------|
+| Gating the Apple Pay button's *visibility* on `canMakePayments(usingNetworks:)` | This produces an "Apple Pay shown as unavailable" App Review rejection (HIG). `usingNetworks:` is a *content* signal, not a *visibility* gate. | Per HIG, show the button whenever `canMakePayments()` is true. Let the system drive card set-up when `usingNetworks:` is false — it presents the add-card flow inside the sheet. Only `canMakePayments() == false` (no Secure Element) hides the button. |
+| Reaching for Apple Pay because it's "cheaper than IAP" for a digital subscription | "Cheaper than IAP" is the *exact* rationalization App Review enforces against. Digital content via any non-IAP rail is a 3.1.1 rejection ("sells digital content using a payment method other than In-App Purchase"). | The rail is product-determined, not cost-determined. Digital/in-app → **IAP only**. Real-world goods/services → Apple Pay (IAP for these is itself a 3.1.3(e) rejection). The legitimate cost lever is the **App Store Small Business Program** (15% vs 30%), not switching rails. |
+| Treating "the certs are set up" as a one-time, permanent state | The **Payment Processing Certificate expires every 25 months** and renewal is a two-stage create-*then-activate* flow. Skipping activation, or activating early, fails *all* live transactions at cutover. | Renew before expiry; coordinate the **Activate** click with your PSP so the old cert stays live until the new one is active. Merchant ID never expires; the cert does. |
+
 ## Top-Level Decision Tree
 
 ```dot
@@ -96,6 +106,18 @@ Customer authenticates, the encrypted token arrives at your server, but PSP auth
 | Multi-PSP setup with one merchant ID | When self-decrypting fails | Only valid if you self-decrypt. If your PSP decrypts, one merchant ID per PSP. |
 | Self-decrypted card data sent to wrong PSP API | Routing | Verify which PSP endpoint accepts the decrypted shape; some PSPs require encrypted blob even when you've decrypted. |
 | `applicationData` doesn't match request hash | Token validation | Token's `header.applicationData` is SHA-256 of `request.applicationData`. If they don't match, the token's been tampered with — investigate before processing. |
+
+### Certificate and artifact lifetimes
+
+Most "it worked, then everything broke" payment failures trace to one of these. Know them before you debug live transactions.
+
+| Artifact | Lifetime | Renewal gotcha |
+|----------|----------|----------------|
+| Merchant ID | Never expires | Reusable across apps; one per PSP if the PSP decrypts |
+| Payment Processing Certificate | Expires every 25 months | Two-stage **create-then-Activate**. Apple allows only 2 at a time — revoke the old non-activated one if "Create" is greyed. Coordinate the Activate cutover with your PSP or all live transactions fail. If your PSP decrypts, the **PSP supplies the CSR** — you can't generate it. |
+| Merchant Identity Certificate (web only) | Expires (RSA 2048) | Used for `onmerchantvalidation` only — never for decryption. Renew + redeploy to your server. |
+
+**Eligibility gate:** Apple Pay is unavailable to **Apple Developer Enterprise Program** accounts. If your merchant ID won't provision or the capability never appears, confirm you're on the standard Apple Developer Program, not Enterprise.
 
 ## Tap to Pay Entitlement Stuck
 
@@ -195,7 +217,7 @@ Symmetric to "Pass imports but updates don't arrive" — order is added but subs
 | Rejection text | Root cause | Fix |
 |----------------|-----------|-----|
 | "Your app uses In-App Purchase to sell physical goods" | Wrong rail (3.1.3(e)) | Switch checkout to Apple Pay; see `apple-pay-vs-iap.md` |
-| "Your app sells digital content using a payment method other than IAP" | Wrong rail (3.1.1) | Switch to IAP; see `axiom-integration/skills/in-app-purchases.md` |
+| "Your app sells digital content using a payment method other than IAP" | Wrong rail (3.1.1) — often chosen because Apple Pay "looked cheaper" | Switch to IAP; the rail is product-determined, not cost-determined. For lower fees use the Small Business Program (15%), not a different rail. See `axiom-integration/skills/in-app-purchases.md` |
 | "Apple Pay is not at parity with other payment methods" | Web AUG parity violation | Promote Apple Pay to at-least-equal prominence on every page that shows payment methods |
 | "Apple Pay must be the primary option when active card detected" | Web AUG primary-option rule | When `applePayCapabilities()` returns `paymentCredentialsAvailable`, pre-select Apple Pay |
 | "Custom button mimics Apple Pay branding" | HIG violation | Use Apple-provided Apple Pay Button API; don't put "Apple Pay" or the logo on custom buttons |
