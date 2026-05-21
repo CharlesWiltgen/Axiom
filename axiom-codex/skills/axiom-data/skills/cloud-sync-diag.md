@@ -10,6 +10,8 @@ iCloud (both CloudKit and iCloud Drive) handles billions of sync operations dail
 ## Red Flags — Suspect Cloud Sync Issue
 
 If you see ANY of these:
+- **Nothing EVER syncs, no errors, console silent** → check `cloudKitContainerOptions` FIRST. A `NSPersistentCloudKitContainer` with no `description.cloudKitContainerOptions` set on its store description silently behaves like a plain `NSPersistentContainer` and mirrors nothing. This is the #1 "sync was never wired up" cause — diagnose it before anything else.
+- **Works in dev, fails in TestFlight/App Store** (often surfacing as `quotaExceeded`) → CloudKit schema not deployed to Production. Named signature — recognize it instantly, do not chase it as a storage or network bug.
 - Files/data not appearing on other devices
 - "iCloud account not available" errors
 - Persistent sync conflicts
@@ -28,6 +30,27 @@ If you see ANY of these:
 ## Mandatory First Steps
 
 **ALWAYS check these FIRST** (before changing code):
+
+#### 0. Confirm the container is actually CloudKit-backed (Core Data)
+
+For `NSPersistentCloudKitContainer`, mirroring is OFF unless EVERY store description has `cloudKitContainerOptions` set. Omit it and the container loads fine, saves locally, raises no error, and syncs nothing. This is the first thing to verify when "it never synced once."
+
+```swift
+let container = NSPersistentCloudKitContainer(name: "Model")
+let description = container.persistentStoreDescriptions.first!
+
+// ❌ MISSING THIS LINE = silent no-op. Looks like a plain NSPersistentContainer.
+description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
+    containerIdentifier: "iCloud.com.example.app"
+)
+
+// Required for sync to function at all:
+description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+// Verify at runtime — nil means this store mirrors nothing:
+assert(description.cloudKitContainerOptions != nil, "Store is not CloudKit-backed")
+```
 
 ```swift
 // 1. Check iCloud account status
@@ -399,6 +422,8 @@ class Task {
     @Attribute(.unique) var id: UUID  // ← Remove this
     var title: String
 }
+// Removing .unique means duplicates CAN appear. Replace enforcement with
+// convergent dedup-on-import — see Pattern 3.
 
 // 3. Check all properties have defaults or are optional
 @Model
@@ -408,7 +433,34 @@ class Task {
 }
 ```
 
-### Pattern 3: File Coordinator Deadlock
+### Pattern 3: Deterministic Dedup-on-Import (no unique constraints)
+
+**Symptom**: Same logical record appears 2-5 times across devices. CloudKit cannot enforce uniqueness, so concurrent first-launch imports each create their own copy.
+
+**Why a naive "delete duplicates" pass fails**: each device picks a different winner (e.g. "keep the newest" — clocks differ; "keep the first I saw" — order differs), so devices delete each other's survivors and the duplicates resurrect on the next sync. The fix is a **convergent dedup**: every device must independently compute the SAME winner from the data alone.
+
+```swift
+// Run on remote-change notification, after merging incoming changes.
+// 1. Group by a stable BUSINESS key (not the CloudKit recordID — those differ).
+let groups = Dictionary(grouping: allRecords, by: \.businessKey)
+
+for (_, dupes) in groups where dupes.count > 1 {
+    // 2. Elect a winner deterministically — same input → same winner on EVERY device.
+    //    Use a stable tiebreaker (UUID string), never a clock or local insertion order.
+    let winner = dupes.min { $0.stableID.uuidString < $1.stableID.uuidString }!
+
+    // 3. Merge field values from losers into the winner (don't lose user edits).
+    for loser in dupes where loser.stableID != winner.stableID {
+        winner.merge(from: loser)
+        context.delete(loser)
+    }
+}
+try context.save()  // Deletions propagate; every device converged on the same winner.
+```
+
+**Rules that make it converge**: (1) group by business key, (2) elect with a deterministic tiebreaker derived from record data (not `Date` or local order), (3) merge losers' fields into the winner before deleting. Idempotent — running it twice changes nothing.
+
+### Pattern 4: File Coordinator Deadlock
 
 **Symptom**: File operations hang
 
@@ -427,7 +479,7 @@ coordinator.coordinate(writingItemAt: url, options: [], error: nil) { newURL in
 }
 ```
 
-### Pattern 4: Conflicts Not Resolving
+### Pattern 5: Conflicts Not Resolving
 
 **Symptom**: Conflicts persist even after resolution
 

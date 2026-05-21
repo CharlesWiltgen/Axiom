@@ -18,6 +18,21 @@ For RealityKit architecture patterns and best practices, see `axiom-graphics (sk
 
 ---
 
+## Red Flags
+
+Stop and check these before reaching for any other fix. Each is the root cause of a whole class of "RealityKit doesn't work" reports.
+
+| Red flag | What it means | Fix |
+|----------|---------------|-----|
+| Debugging gestures/physics without `.showPhysics` on first | You're guessing blind. No visible shape = no `CollisionComponent`, full stop | Enable debug visualization, fix collision, *then* debug input/physics |
+| Model renders solid black or invisibly dark in a non-AR scene | PBR materials have no light to reflect. AR applies real-world lighting automatically; non-AR does not | Add an `ImageBasedLightComponent` (IBL) or `DirectionalLightComponent` — non-AR scenes are unlit by default |
+| Two entities won't collide / object won't fall onto floor | Bodies and colliders only interact within the *same anchor*; or you have two `.static` bodies | Same anchor + `.dynamic` (the faller) vs `.static` (the floor). Two `.static` never collide |
+| Custom component or System "does nothing" | It was never registered, so RealityKit silently ignores it | `registerComponent()` / `registerSystem()` in app init, before any scene loads |
+| Component edits don't stick | Components are value types; mutating a fetched copy is a no-op | Read-modify-write: fetch, mutate, assign back to `entity.components[...]` |
+| Intermittent crash / stale entity in a System | You stored an `Entity` reference that got removed | Never cache entities in a System — re-run the `EntityQuery` every frame |
+
+---
+
 ## Mandatory First Step: Enable Debug Visualization
 
 **Time cost**: 10 seconds vs hours of blind debugging
@@ -266,11 +281,13 @@ Frame rate dropping or stuttering
 ```
 Colors, lighting, or textures look incorrect
 │
-├─ Is the scene too dark?
-│   └─ CHECK → Missing environment lighting:
-│        Add DirectionalLightComponent or EnvironmentResource
-│        In AR, RealityKit uses real-world lighting automatically
-│        In non-AR, you must provide lighting explicitly
+├─ Is the scene too dark, or models solid black?
+│   └─ AR vs non-AR is the rule:
+│        AR sessions apply real-world lighting automatically.
+│        Non-AR (RealityView with no AR, macOS, previews) is UNLIT —
+│        PBR has nothing to reflect, so it renders black.
+│        Fix: add an ImageBasedLightComponent (IBL) for realistic
+│        reflections, or a DirectionalLightComponent for a simple key light.
 │
 ├─ Is the baseColor set?
 │   └─ CHECK → PhysicallyBasedMaterial defaults to white
@@ -393,12 +410,12 @@ Entities not appearing on other devices
 
 | Symptom | First Check | Time Saved |
 |---------|-------------|------------|
-| Not visible | Has ModelComponent? Scale > 0? | 30-60 min |
-| No gesture response | Has CollisionComponent? | 15-30 min |
+| Not visible | Has ModelComponent? Scale > 0? Async load resolved before add? | 30-60 min |
+| No gesture response | `.showPhysics` shows a shape? (no shape = no CollisionComponent) | 15-30 min |
 | Not tracking | Anchor type matches environment? | 20-45 min |
 | Frame drops | Entity count? Resource sharing? | 1-3 hours |
-| Wrong colors | Has lighting? Metallic value? | 15-45 min |
-| No collision | Both have CollisionComponent? Same anchor? | 20-40 min |
+| Renders black / too dark | Non-AR scene with no light? (AR lights automatically) | 15-45 min |
+| No collision | Same anchor? Both have CollisionComponent? `.dynamic`+`.static`? | 20-40 min |
 | No sync | SynchronizationComponent? Codable? | 30-60 min |
 | Sim OK, device crash | Metal features? Texture format? | 15-30 min |
 

@@ -25,6 +25,14 @@ Static isolation checking cannot see through framework callbacks, delegate dispa
 
 Swift 5 mode would silently run the offending code on the wrong thread. Swift 6 mode preemptively crashes rather than continuing in an unsafe state.
 
+### Red Flag — `nonisolated(unsafe)` produces a warning-free build that crashes in production
+
+`nonisolated(unsafe)` and blanket `@MainActor` do not fix isolation — they delete the compiler's evidence that something is wrong. The build goes green, then the *runtime* isolation assertion (`_swift_task_checkIsolatedSwift` / `_dispatch_assert_queue_fail`) fires on a real device because the actual thread still violates the isolation the runtime expects.
+
+**Warning-free ≠ runtime-safe.** "Slap `@MainActor` everywhere and `nonisolated(unsafe)` to silence it" trades a compile-time error you can see for a production crash you can't. The compiler was the cheap warning; the runtime trap is the expensive one. Every shortcut in this file moves the failure *later and more expensive*, never away.
+
+`nonisolated(unsafe)` is legitimate only for a value you can prove is never accessed concurrently (e.g. a `let` set once before any task spawns) — never as a way to quiet a real cross-actor access.
+
 ## Diagnosis Decision Tree
 
 ```dot
@@ -200,6 +208,26 @@ nonisolated func locationManager(
 }
 ```
 
+### Getting off the main actor — `Task { @concurrent in }`, not `Task.detached`
+
+When the goal is the opposite direction — leave `@MainActor` to do real background work — the reflex is `Task.detached`. It works, but it drops everything the originating task carried: **no priority inheritance and no task-local values**, which silently severs trace IDs, logging metadata `MDC`, and any other `@TaskLocal` context. Crashes vanish; observability quietly does too.
+
+`Task { @concurrent in }` (Swift 6.2+) is the correct tool: it leaves the actor and runs on the concurrent pool **while preserving the originating priority and task-locals**.
+
+```swift
+// ❌ Off-main, but task-locals (trace ID, log context) are gone
+Task.detached(priority: .utility) {
+    await indexDocuments()   // logs here have no request context
+}
+
+// ✅ Off-main AND keeps priority + @TaskLocal values
+Task { @concurrent in
+    await indexDocuments()   // trace ID still flows through
+}
+```
+
+Reach for `Task.detached` only when you deliberately want a clean slate (no inherited cancellation, priority, or task-locals). Defaulting to it for "just run this in the background" is the trap.
+
 ### Other delegates with the same trap
 
 - `AVAudioPlayerDelegate` — audio completion callbacks
@@ -238,6 +266,31 @@ func handleCallback() async {
 ```
 
 See `skills/assume-isolated.md` for the full assumeIsolated decision matrix.
+
+### Prefer compiler-checked escape hatches over `assumeIsolated`
+
+`assumeIsolated` is a *runtime* assertion — it's the right tool only when you can prove the code is already on the actor (a legacy delegate documented to deliver on main). For everything else, Swift 6.2 has escape hatches the compiler verifies, so the failure surfaces at build time instead of as a device crash. Try these first:
+
+| Situation | Compiler-checked tool | What it does |
+|-----------|----------------------|--------------|
+| Protocol witness can't satisfy a nonisolated requirement from a `@MainActor` type | Isolated conformance: `extension T: @MainActor P` (SE-0470) | Pins the conformance to the main actor; the requirement is satisfied without `nonisolated` or a trap |
+| Conforming to an old, un-annotated protocol whose callbacks are actually main-thread | `@preconcurrency` on the conformance | Suppresses Sendable diagnostics for the legacy declaration without `unsafe` |
+| `@Sendable` closure / API can't capture non-Sendable `self` once | `sending` parameter (SE-0430) | Transfers the value across the boundary one time; compiler proves the caller stops using it |
+| Async helper needs a non-Sendable delegate to stay on the caller's actor | `isolated (any Actor)? = #isolation` (SE-0420) | Inherits the caller's isolation so the value never crosses a boundary |
+
+```swift
+// Witness case: @MainActor type vs a nonisolated protocol requirement.
+// ❌ Reflex: mark the witness nonisolated, then assumeIsolated inside → crashes if off-main
+// ✅ Isolated conformance — compiler-verified, no runtime trap
+@MainActor final class Renderer: @MainActor Drawable {
+    func draw() { /* main-actor work, no nonisolated, no assumeIsolated */ }
+}
+
+// Capture case: hand a non-Sendable value to a @Sendable boundary exactly once.
+func enqueue(_ job: sending Job) {           // SE-0430
+    Task { @concurrent in await job.run() }  // compiler proves no shared access
+}
+```
 
 ## Pattern 4 — Actor Reentrancy State Staleness
 
@@ -297,6 +350,9 @@ See axiom-testing (skills/swift-testing.md) for testing async code that exercise
 | Thought | Reality |
 |---------|---------|
 | "My build is warning-free, so Swift 6 isolation is correct" | Static checking can't see through SDK callbacks. Runtime assertions fire anyway. |
+| "Slap `@MainActor` everywhere + `nonisolated(unsafe)` to silence it and ship" | That deletes the compiler's evidence, not the bug. Warning-free build crashes in production at `_swift_task_checkIsolatedSwift`. Warning-free ≠ runtime-safe. |
+| "Just use `Task.detached` to get off the main actor" | `Task.detached` drops priority and all `@TaskLocal` values — trace/log context silently lost. Use `Task { @concurrent in }` (Swift 6.2+). |
+| "`assumeIsolated` is my escape hatch for isolation errors" | It's a crashing assertion, valid only when provably on-actor. Prefer compiler-checked `extension T: @MainActor P`, `sending`, or `#isolation`. |
 | "I'll wrap it in `MainActor.assumeIsolated` to silence the warning" | `assumeIsolated` is a runtime trap, not a silencer. It crashes when the assumption is wrong. |
 | "Adding `@Sendable` is the same as `@unchecked Sendable`" | `@Sendable` on a closure breaks isolation inheritance. `@unchecked Sendable` on a type hides data races. |
 | "I'll just remove `@MainActor` from the class" | Now you have data races on UI state. The class-level isolation is correct — fix the specific method/closure. |
