@@ -56,6 +56,8 @@ Use when:
 | Toolbar items flicker when state changes | Conditional `if` inside `.toolbar` rebuilds the whole toolbar | Use `.disabled()` / `.opacity()` modifiers on stable items instead |
 | Bottom bar doesn't appear on iOS | `.bottomBar` requires `.toolbar(.visible, for: .bottomBar)` or items present | Verify visibility AND content; bottom bar hides when empty |
 | Toolbar background ignores custom material | Set `.background` on a child View | Use `.toolbarBackground(.regularMaterial, for: .navigationBar)` instead |
+| Search field shoved into a `ToolbarItem` (a `TextField` in the bar) | Search is not toolbar content | Use `.searchable` on the nav container — see Pattern 10 |
+| Customizable item looks broken in the Edit Toolbar sheet | Text-only or icon-only `Button` | Give every customizable item a `Label` (text + SF Symbol) — see Pattern 6 |
 
 ---
 
@@ -264,6 +266,10 @@ Lets users rearrange, add, and remove toolbar items via a customization sheet. R
 - iPadOS 16+ / macOS 13+: Edit Toolbar menu
 - iOS 26+: customization sheet via `.toolbarCustomizationBehavior` action
 
+**Give every customizable item a `Label` (text + SF Symbol), not a text-only or icon-only `Button`** — the customization sheet and overflow menu render the label, and a bare title or lone glyph reads as broken there.
+
+**Customization affordance is strongest on iPadOS / macOS.** On iPhone the system reordering UI is limited; if "long-press to rearrange/hide" is a hard iPhone requirement, drive a `ForEach` of toolbar items from a persisted order array instead of relying on `.toolbar(id:)` alone.
+
 ---
 
 ## Pattern 7: ToolbarRole for Three-Column Layouts
@@ -325,6 +331,27 @@ WindowGroup {
 - `.unifiedCompact` — compact inline toolbar
 
 **For full macOS toolbar/window integration** see axiom-macos (skills/windows.md), which covers Window vs WindowGroup, MenuBarExtra, and toolbar style choice rationale.
+
+---
+
+## Pattern 10: Search in the Toolbar
+
+A search field is **not** a `ToolbarItem` — never put a `TextField` (or a custom search box) into `.toolbar`. Use `.searchable`, which the system positions correctly relative to the nav bar / Liquid Glass and wires up for free.
+
+```swift
+NavigationStack {
+    List { /* … */ }
+        .navigationTitle("Articles")
+        .searchable(text: $query, prompt: "Search articles")
+}
+```
+
+- **Default placement** Let the system decide — `.searchable(text:)` shows the field under the title on iOS and adapts per platform.
+- **Force it into the bar** `.searchable(text: $query, placement: .toolbar)` when you specifically want it in the toolbar region.
+- **iOS 26 collapsing search** `.searchToolbarBehavior(.minimize)` gives the search *button* that expands into a field — the modern bar pattern.
+- Like `.toolbar`, `.searchable` only works inside a navigation container (same prerequisite as Pattern 1's missing-`NavigationStack` trap).
+
+For multi-token search, scopes, suggestions, and programmatic control, see axiom-swiftui (skills/search-ref.md) — that file owns the full `.searchable` story. For tab-bar and `NavigationSplitView` search placement, see skills/nav-ref.md. This pattern only covers the toolbar-placement decision.
 
 ---
 
