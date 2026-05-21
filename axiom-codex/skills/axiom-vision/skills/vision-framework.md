@@ -44,6 +44,8 @@ Signs you're making this harder than it needs to be:
 - ❌ Writing gesture recognition from scratch (use hand pose + simple distance checks)
 - ❌ Processing on main thread (blocks UI - Vision is resource intensive)
 - ❌ Training custom models when Vision APIs already exist
+- ❌ Counting reps on an instantaneous per-frame threshold (e.g. `hipY < kneeY`) → phantom reps when the user is still; use a joint-angle hysteresis state machine (Pattern 8b)
+- ❌ Comparing raw normalized landmark coordinates for "depth" — use a joint *angle* (scale- and position-invariant), not pixel Y
 - ❌ Not checking confidence scores (low confidence = unreliable landmarks)
 - ❌ Forgetting to convert coordinates (lower-left origin vs UIKit top-left)
 - ❌ Building custom text recognizer when VNRecognizeTextRequest exists
@@ -82,7 +84,8 @@ What do you need to do?
 ├─ Detect body pose?
 │  ├─ 2D normalized landmarks → VNDetectHumanBodyPoseRequest
 │  ├─ 3D real-world coordinates → VNDetectHumanBodyPose3DRequest
-│  └─ Action classification → Body pose + CreateML model
+│  ├─ Count reps of ONE known movement → joint angle + state machine, no training (Pattern 8b)
+│  └─ Classify MANY exercises / nuanced form → Body pose + CreateML model (Pattern 8)
 │
 ├─ Face detection?
 │  ├─ Just bounding boxes → VNDetectFaceRectanglesRequest
@@ -495,6 +498,73 @@ if poseObservations.count == 60 {
 ```
 
 **Cost**: 3-4 hours implementation, 1 hour ongoing
+
+**When to use Pattern 8 vs 8b** Use the CreateML classifier (Pattern 8) when you must distinguish *multiple* exercise types or judge nuanced form. To count reps of *one* known movement, you do NOT need a model — Pattern 8b is more reliable, debuggable, and ships today with zero training data.
+
+### Pattern 8b: Rep Counting Without Training (joint angle + hysteresis state machine)
+
+**Use case**: Count squats/curls/pushups from the live camera. The naive approach — `if hipY < kneeY { reps += 1 }` — produces phantom reps the instant a noisy landmark crosses the threshold (it counts while the user stands still), and raw normalized Y is meaningless for depth (Vision's origin is bottom-left, and pixel distance changes with how far the user stands from the camera).
+
+Two ideas fix it: measure a **joint angle** (scale- and position-invariant), and count only a **completed transition** through a hysteresis state machine — never an instantaneous predicate.
+
+```swift
+// 1. Joint angle at vertex B for A-B-C (e.g. hip-knee-ankle). Origin-agnostic.
+func angle(_ a: CGPoint, _ b: CGPoint, _ c: CGPoint) -> Double {
+    let v1 = CGVector(dx: a.x - b.x, dy: a.y - b.y)
+    let v2 = CGVector(dx: c.x - b.x, dy: c.y - b.y)
+    let mag = hypot(v1.dx, v1.dy) * hypot(v2.dx, v2.dy)
+    guard mag > 0 else { return 180 }
+    let cosine = max(-1, min(1, (v1.dx * v2.dx + v1.dy * v2.dy) / mag))
+    return acos(cosine) * 180 / .pi
+}
+
+// 2. Pure, unit-testable counter. A rep = standing → bottom → standing.
+//    Two thresholds (the hysteresis gap) reject jitter near a single edge.
+struct SquatRepCounter {
+    enum Phase { case standing, bottom }
+    private(set) var phase: Phase = .standing
+    private(set) var reps = 0
+    private var framesAtBottom = 0
+    let downAngle = 100.0, upAngle = 160.0, confirmFrames = 3
+
+    mutating func update(kneeAngle: Double) -> Bool {
+        switch phase {
+        case .standing where kneeAngle <= downAngle:
+            framesAtBottom += 1
+            if framesAtBottom >= confirmFrames { phase = .bottom; framesAtBottom = 0 }
+        case .bottom where kneeAngle >= upAngle:
+            phase = .standing; reps += 1; return true   // the ONLY place a rep counts
+        default: framesAtBottom = 0
+        }
+        return false
+    }
+}
+
+// 3. Per frame: gate on confidence, average both legs, feed the counter.
+func kneeAngle(_ obs: VNHumanBodyPoseObservation, minConfidence: VNConfidence = 0.5) -> Double? {
+    func leg(_ h: VNHumanBodyPoseObservation.JointName,
+             _ k: VNHumanBodyPoseObservation.JointName,
+             _ a: VNHumanBodyPoseObservation.JointName) -> Double? {
+        guard let h = try? obs.recognizedPoint(h), h.confidence > minConfidence,
+              let k = try? obs.recognizedPoint(k), k.confidence > minConfidence,
+              let a = try? obs.recognizedPoint(a), a.confidence > minConfidence else { return nil }
+        return angle(h.location, k.location, a.location)
+    }
+    let l = leg(.leftHip, .leftKnee, .leftAnkle), r = leg(.rightHip, .rightKnee, .rightAnkle)
+    switch (l, r) { case let (l?, r?): return (l + r) / 2; case let (l?, nil): return l
+                    case let (nil, r?): return r; default: return nil }   // no confident pose
+}
+```
+
+**Why this is reliable**
+- **Angle, not pixels** — independent of camera distance and where the user stands in frame.
+- **Hysteresis + frame confirmation** — standing still keeps the angle near 175°; noise can't cross both the 100° down gate and the 160° up gate, so reps fire only on a real down-and-up.
+- **Confidence gating** — drop frames where joints are occluded instead of counting garbage.
+- **Pure counter** — `SquatRepCounter` and `angle` have no camera dependency; unit-test them with synthetic angle streams (standing → 0 reps, ten clean reps → 10, a single spike → 0).
+
+**Production add-ons** Smooth the angle (EMA or 3-5 sample median) before the counter; calibrate thresholds per user from a 1-2s "stand still" baseline; require a minimum rep duration (~600 ms) to reject bouncing. For real-time video, drive this from a single `VNSequenceRequestHandler` (see Mandatory First Steps #3) and run detection off the main thread.
+
+**Cost**: ~1 day, no training data, no model.
 
 ### Pattern 9: Text Recognition (OCR)
 

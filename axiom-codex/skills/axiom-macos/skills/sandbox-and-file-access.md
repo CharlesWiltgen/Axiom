@@ -206,6 +206,8 @@ URLs from open panels, save panels, `fileImporter`, and Dock drag-and-drop all c
 
 This is the pattern developers get wrong most often. Follow every step.
 
+**Entitlement prerequisite.** Creating `.withSecurityScope` bookmarks requires the bookmark entitlement: `com.apple.security.files.bookmarks.app-scope` for app-scoped bookmarks, `com.apple.security.files.bookmarks.document-scope` for document-relative ones. If `bookmarkData(options: .withSecurityScope)` throws, or a resolved bookmark's `startAccessingSecurityScopedResource()` always returns `false` despite valid data, a missing bookmark entitlement is the usual cause — check it before debugging the code. (Recent macOS is sometimes lenient and resolves bookmarks without it, but Apple still documents it as required — declare it so you're not depending on undocumented behavior.)
+
 ### Step 1: Create the Bookmark
 
 Create bookmark data immediately when you have access to the file — typically in the `fileImporter` completion or `NSOpenPanel` callback.
@@ -339,6 +341,8 @@ Any process with access to the parent document can resolve these bookmarks.
 | `com.apple.security.files.user-selected.read-only` | Read files the user picks via open panel |
 | `com.apple.security.files.user-selected.read-write` | Read/write files the user picks |
 | `com.apple.security.files.user-selected.executable` | Write executables to user-selected locations |
+| `com.apple.security.files.bookmarks.app-scope` | Create + resolve **app-scoped** security-scoped bookmarks (persist access across launches) |
+| `com.apple.security.files.bookmarks.document-scope` | Create + resolve **document-scoped** bookmarks (a parent document referencing child files) |
 | `com.apple.security.files.downloads.read-only` | Read the Downloads folder |
 | `com.apple.security.files.downloads.read-write` | Read/write the Downloads folder |
 | `com.apple.security.files.pictures.read-only` | Read the Pictures folder |

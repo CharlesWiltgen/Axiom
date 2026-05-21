@@ -33,6 +33,7 @@ Signs you're making this harder than it needs to be:
 - ❌ Ignoring `.limited` authorization status (users can't expand selection)
 - ❌ Not handling Transferable loading failures (crashes on large photos)
 - ❌ Synchronously loading images from picker results (blocks UI)
+- ❌ Decoding a full-resolution image into memory — a 48MP / RAW / panorama photo is a ~190 MB decompressed bitmap; loading it whole gets the app jetsammed (the "crashes on big photos" report). Downsample with ImageIO.
 - ❌ Using PhotoKit APIs when you only need to pick photos (over-engineering)
 - ❌ Assuming `.authorized` after user grants access (could be `.limited`)
 
@@ -688,6 +689,38 @@ present(picker, animated: true)
 ```
 
 **Why it matters**: UIImagePickerController is deprecated for photo selection. PHPicker is more reliable, handles large assets, and provides better privacy.
+
+### Anti-Pattern 5: Decoding Full-Resolution Images Into Memory
+
+Async loading (Anti-Pattern 3) fixes the *speed*/UI-block problem. It does **not** fix the *memory* problem. A decoded `UIImage` is an uncompressed bitmap — width × height × 4 bytes. A 48MP photo is ~190 MB resident; a large panorama or RAW is far more. Loading the full-resolution image when you only show a thumbnail or attachment spikes memory and the OS **jetsams** (kills) the app — which users report as "crashes on big photos."
+
+**Wrong**:
+```swift
+// Loads the entire full-res bitmap into memory just to show a thumbnail
+let data = try await item.loadTransferable(type: Data.self)!
+imageView.image = UIImage(data: data)   // ~190 MB for a 48MP photo
+```
+
+**Right** — downsample with ImageIO, off the main thread, at the size you actually display:
+```swift
+func downsampledImage(from data: Data, maxPixel: CGFloat) -> UIImage? {
+    let src = CGImageSourceCreateWithData(data as CFData,
+        [kCGImageSourceShouldCache: false] as CFDictionary)
+    guard let src else { return nil }
+    let options: [CFString: Any] = [
+        kCGImageSourceCreateThumbnailFromImageAlways: true,
+        kCGImageSourceCreateThumbnailWithTransform: true,   // honor EXIF orientation
+        kCGImageSourceShouldCacheImmediately: true,
+        kCGImageSourceThumbnailMaxPixelSize: maxPixel        // decode AT this size, not full-res
+    ]
+    guard let cg = CGImageSourceCreateThumbnailAtIndex(src, 0, options as CFDictionary) else { return nil }
+    return UIImage(cgImage: cg)
+}
+```
+
+`CGImageSourceCreateThumbnailAtIndex` decodes directly at the target size — it never materializes the full bitmap. Pick a `maxPixel` matching your display (e.g. 2048 for a full-screen attachment), and downsample again to your upload target before sending over the network.
+
+**Why it matters**: "Slow to load" is a UX problem (show a placeholder). "Crashes on big photos" is a *memory* problem (downsample) — different fix. Conflating them leaves the crash in place.
 
 ## Pressure Scenarios
 

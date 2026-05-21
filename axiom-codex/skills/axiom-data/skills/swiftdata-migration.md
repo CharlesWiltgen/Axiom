@@ -188,6 +188,8 @@ enum NotesSchemaV1: VersionedSchema {
 
 We want to change `Note.content` from `String` to `AttributedString`, but we can't access both old and new types simultaneously.
 
+**Before storing `AttributedString` directly**, read the format-stability caveat under Common Mistakes — its `Codable` shape is version-fragile. The two-stage *mechanics* below are identical whether the final column is `AttributedString` or a stable `Data` form.
+
 #### Solution
 
 Use an intermediate schema version (V1.1) that has BOTH properties.
@@ -304,8 +306,11 @@ enum NotesMigrationPlan: SchemaMigrationPlan {
             let notes = try context.fetch(fetchDesc)
 
             for note in notes {
-                // Convert String → AttributedString
-                note.contentNew = try? AttributedString(markdown: note.contentOld)
+                // Faithful plain-text preservation. Do NOT use AttributedString(markdown:)
+                // unless bodies were authored as markdown — it reinterprets *, _, # as
+                // formatting, and the try? would silently write nil over real content on a
+                // parse failure. The plain initializer round-trips existing text verbatim.
+                note.contentNew = AttributedString(note.contentOld)
             }
 
             try context.save()
@@ -873,6 +878,62 @@ Simulator deletes database on rebuild. Real devices keep persistent databases ac
 **Impact** Migration bugs hidden in simulator, crash 100% of production users.
 
 **Fix** ALWAYS test on real device before shipping.
+
+---
+
+### ❌ Fetching ALL records in `willMigrate` on a large store
+
+```swift
+// ❌ WRONG: loads every record into memory at once
+willMigrate: { context in
+    let notes = try context.fetch(FetchDescriptor<SchemaV1_1.Note>())  // 100k rows → OOM
+    for note in notes { note.contentNew = AttributedString(note.contentOld) }
+    try context.save()
+}
+```
+
+A custom stage runs at app launch on the user's device. An unbounded `fetch` of a production-sized store can exhaust memory and crash *mid-migration* — leaving a half-migrated store that crash-loops on every subsequent launch, with no way for the user to recover.
+
+```swift
+// ✅ CORRECT: page through in batches, save per batch
+willMigrate: { context in
+    let total = try context.fetchCount(FetchDescriptor<SchemaV1_1.Note>())
+    let batchSize = 500
+    var offset = 0
+    while offset < total {
+        var desc = FetchDescriptor<SchemaV1_1.Note>()
+        desc.fetchLimit = batchSize
+        desc.fetchOffset = offset
+        desc.relationshipKeyPathsForPrefetching = [\.folder, \.tags]
+        let batch = try context.fetch(desc)
+        for note in batch { note.contentNew = AttributedString(note.contentOld) }
+        try context.save()           // flush this page before fetching the next
+        offset += batchSize
+    }
+}
+```
+
+**Why** A failed migration on a shipping app is not a bug — it is data loss with no rollback for users who already updated.
+
+---
+
+### ❌ Persisting `AttributedString` directly without a format-stability plan
+
+SwiftData *can* store an `AttributedString` (it's `Codable`), but its encoded representation depends on which attribute scopes are present and has changed across OS versions. A future key that fails to decode can lose the **entire** value, not just the unknown attribute — silent data loss that only shows up after an OS update.
+
+**Lower-risk alternative** Persist a format you control as `Data` (archived `NSAttributedString`, or RTF/RTFD) and expose `AttributedString` through a `@Transient` computed property:
+
+```swift
+@Model final class Note {
+    var bodyData: Data = Data()          // stable, self-controlled format
+    @Transient var body: AttributedString {
+        get { Self.decode(bodyData) }
+        set { bodyData = Self.encode(newValue) }
+    }
+}
+```
+
+If you do store `AttributedString` directly, at minimum ship a **round-trip unit test and a fixture-decode test** so a future OS change can't silently break decoding of existing user content.
 
 ---
 
