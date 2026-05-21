@@ -175,6 +175,28 @@ Note the `-x ".DS_Store"` exclusion — `.DS_Store` files include themselves in 
 
 Drag the `.pkpass` onto a running iOS Simulator. Wallet shows the "Add" sheet if valid. If silent, the pass failed validation; check signing chain and manifest hashes.
 
+### Step 9 — Verify the signature before distributing
+
+A silent Simulator failure doesn't tell you *why*. Run two checks before emailing a single real pass — together they catch the #1 failure (missing WWDR intermediate) without waiting for a customer to report a broken pass.
+
+**1. Confirm the WWDR intermediate is actually embedded.** A leaf-only signature imports as "invalid":
+
+```bash
+openssl pkcs7 -inform DER -in signature -print_certs -noout
+# You must see TWO certificates: your Pass Type ID leaf AND the Apple WWDR intermediate.
+# Only one (the leaf) = WWDR is missing → Wallet rejects the pass.
+```
+
+**2. Confirm the detached signature matches the current manifest** (catches a stale `manifest.json`, a tampered bundle, or the wrong signing key):
+
+```bash
+openssl smime -verify -in signature -inform DER -content manifest.json -noverify
+# "Verification successful" = the envelope is well-formed and the signature matches manifest.json.
+# A digest/verify error = stale manifest, tampered bundle, or wrong key.
+```
+
+`-noverify` disables trust-root checking — so you don't need Apple's root on hand to validate structure + content match. It does **not** inspect the cert chain, which is exactly why check 1 lists the embedded certs directly. (To also verify against a trust store, drop `-noverify` and pass `-CAfile` with Apple's root.) A clean result from both checks plus a successful Simulator "Add" is the minimum gate before distribution.
+
 > **Recommendation: don't roll your own signing.** Server-side libraries exist for Node (`passkit-generator`), Ruby (`pkpass`), Python (`wallet-py3k`, `python-passkit`), Go, and others. Use one. Most signing failures in production come from scratch implementations.
 
 ## Distribution Channels
