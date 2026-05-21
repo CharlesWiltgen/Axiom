@@ -11,6 +11,7 @@ Use this skill when:
 - Colors or coordinates are wrong
 - Performance is worse than the original
 - Rendering artifacts appear
+- Camera or video frames need a Metal texture (`CVOpenGLESTextureCache` replacement)
 - App crashes during GPU work
 
 ## Mandatory First Step: Enable Metal Validation
@@ -188,9 +189,10 @@ Rendering looks wrong
 │
 ├─ Image is upside down
 │   ├─ Cause: Metal Y-axis is opposite OpenGL
-│   ├─ FIX (vertex shader): pos.y = -pos.y
+│   ├─ FIX at ONE layer only — don't double-flip (two flips = no flip)
 │   ├─ FIX (texture load): MTKTextureLoader .origin: .bottomLeft
-│   └─ FIX (UV): uv.y = 1.0 - uv.y in fragment shader
+│   ├─ FIX (UV): uv.y = 1.0 - uv.y in fragment shader
+│   └─ FIX (vertex shader): pos.y = -pos.y — then RECONCILE winding (see below)
 │
 ├─ Image is mirrored
 │   ├─ Cause: Winding order or cull mode wrong
@@ -226,23 +228,49 @@ Rendering looks wrong
 
 ### Coordinate System Fix
 
+A naive port renders upside-down and clipped because OpenGL's NDC Z is `[-1, 1]` while Metal's is `[0, 1]`. Reusing an OpenGL projection matrix clips the near half of your scene. Use a Metal-correct matrix:
+
 ```swift
-// Fix projection matrix for Metal's Z range [0, 1]
+// Metal-correct perspective: Z range [0, 1], +Z forward, column-major.
+// simd_float4x4(columns:) — clipPos = matrix * float4(x, y, z, 1).
 func metalPerspectiveProjection(fovY: Float, aspect: Float, near: Float, far: Float) -> simd_float4x4 {
     let yScale = 1.0 / tan(fovY * 0.5)
     let xScale = yScale / aspect
     let zRange = far - near
 
-    return simd_float4x4(rows: [
+    return simd_float4x4(columns: (
         SIMD4<Float>(xScale, 0, 0, 0),
         SIMD4<Float>(0, yScale, 0, 0),
-        SIMD4<Float>(0, 0, far / zRange, 1),  // Metal: [0, 1]
+        SIMD4<Float>(0, 0, far / zRange, 1),       // Metal Z: [0, 1]
         SIMD4<Float>(0, 0, -near * far / zRange, 0)
-    ])
+    ))
 }
 ```
 
-**Time cost**: With GPU Frame Capture texture inspection: 5-10 min. Without: 1-2 hours.
+#### Fix Y at ONE layer — don't double-flip
+
+The image is upside-down because Metal's clip-space Y and texture origin both invert relative to OpenGL. Pick exactly ONE place to correct it:
+
+- Texture sampling: `MTKTextureLoader` `.origin: .bottomLeft`, or `uv.y = 1.0 - uv.y`
+- Geometry: negate Y in the projection (`yScale` → `-yScale`) or `pos.y = -pos.y`
+
+Applying a flip in two layers cancels out (two flips = no flip) and you're back where you started, chasing a bug that isn't there. Flip once, in the layer you control most cleanly.
+
+#### Reconcile winding after a geometry Y-flip
+
+Flipping geometry Y reverses triangle winding, so back-face culling now culls the faces you want to keep — the model looks inside-out or vanishes. Reconcile the cull state with the flip:
+
+```swift
+// After flipping Y in clip space, the apparent winding reverses.
+encoder.setFrontFacing(.counterClockwise)  // match your data's winding
+encoder.setCullMode(.back)
+// Debugging tip: set .cullMode(.none) first to confirm geometry is present,
+// THEN restore culling and adjust frontFacing.
+```
+
+A texture/UV flip does NOT change winding — only a geometry flip does. This is why fixing the upside-down image at the texture layer avoids the winding problem entirely.
+
+**Time cost**: With GPU Frame Capture texture inspection: 5-10 min. Double-flip / winding guessing: 1-2 hours.
 
 ## Symptom 4: Performance Regression
 
@@ -328,7 +356,109 @@ class TripleBufferedRenderer {
 
 **Time cost**: Metal System Trace diagnosis: 15-30 min. Guessing: hours.
 
-## Symptom 5: Crashes During GPU Work
+## Symptom 5: Camera or Video Texture Interop
+
+Porting camera/video drove your original GL-ES code if you used `CVOpenGLESTextureCache` to wrap `CVPixelBuffer` frames. Metal's equivalent is `CVMetalTextureCache`. This is the most common GL-ES → Metal migration driver and has no GLKView/MTKView shortcut — the cache APIs map one-to-one but the YUV and lifetime rules trip everyone.
+
+### API Mapping
+
+| OpenGL ES | Metal |
+|-----------|-------|
+| `CVOpenGLESTextureCacheCreate` | `CVMetalTextureCacheCreate` |
+| `CVOpenGLESTextureCacheCreateTextureFromImage` | `CVMetalTextureCacheCreateTextureFromImage` |
+| `CVOpenGLESTextureGetName` | `CVMetalTextureGetTexture` |
+| `CVOpenGLESTextureCacheFlush` | `CVMetalTextureCacheFlush` |
+
+### Single-Plane BGRA
+
+When the capture output is `kCVPixelFormatType_32BGRA`, you get one `MTLTexture`:
+
+```swift
+var cache: CVMetalTextureCache!
+CVMetalTextureCacheCreate(nil, nil, device, nil, &cache)
+
+func texture(from pixelBuffer: CVPixelBuffer) -> CVMetalTexture? {
+    let width = CVPixelBufferGetWidth(pixelBuffer)
+    let height = CVPixelBufferGetHeight(pixelBuffer)
+    var cvTexture: CVMetalTexture?
+    CVMetalTextureCacheCreateTextureFromImage(
+        nil, cache, pixelBuffer, nil,
+        .bgra8Unorm, width, height, 0, &cvTexture)
+    return cvTexture  // MUST retain — see lifetime rule
+}
+
+let metalTexture = CVMetalTextureGetTexture(cvTexture!)
+encoder.setFragmentTexture(metalTexture, index: 0)
+```
+
+### YUV Bi-Planar (the common case)
+
+`AVCaptureVideoDataOutput` defaults to `kCVPixelFormatType_420YpCbCr8BiPlanarFullRange`, which has two planes. Create one `MTLTexture` per plane and convert in the fragment shader — there is no single combined texture:
+
+| Plane | Index | Pixel format | Contents |
+|-------|-------|--------------|----------|
+| Luma (Y) | 0 | `.r8Unorm` | full-resolution brightness |
+| Chroma (CbCr) | 1 | `.rg8Unorm` | half-resolution color, two channels |
+
+```swift
+// Luma plane 0
+CVMetalTextureCacheCreateTextureFromImage(
+    nil, cache, pixelBuffer, nil, .r8Unorm,
+    CVPixelBufferGetWidthOfPlane(pixelBuffer, 0),
+    CVPixelBufferGetHeightOfPlane(pixelBuffer, 0), 0, &lumaCV)
+
+// Chroma plane 1
+CVMetalTextureCacheCreateTextureFromImage(
+    nil, cache, pixelBuffer, nil, .rg8Unorm,
+    CVPixelBufferGetWidthOfPlane(pixelBuffer, 1),
+    CVPixelBufferGetHeightOfPlane(pixelBuffer, 1), 1, &chromaCV)
+```
+
+```metal
+// Fragment shader — YCbCr (BT.601 full-range) to RGB
+constant float4x4 ycbcrToRGB = float4x4(
+    float4( 1.0000,  1.0000,  1.0000, 0.0),
+    float4( 0.0000, -0.3441,  1.7720, 0.0),
+    float4( 1.4020, -0.7141,  0.0000, 0.0),
+    float4(-0.7010,  0.5291, -0.8860, 1.0));
+
+fragment float4 cameraFrag(VertexOut in [[stage_in]],
+                           texture2d<float> luma [[texture(0)]],
+                           texture2d<float> chroma [[texture(1)]],
+                           sampler s [[sampler(0)]]) {
+    float y = luma.sample(s, in.uv).r;
+    float2 cbcr = chroma.sample(s, in.uv).rg;
+    return ycbcrToRGB * float4(y, cbcr, 1.0);
+}
+```
+
+### CVMetalTexture Lifetime Rule
+
+**Retain the `CVMetalTexture` (not just the `MTLTexture`) until the command buffer that uses it completes.** The `MTLTexture` returned by `CVMetalTextureGetTexture` is a view into the cache-managed `IOSurface`; if the `CVMetalTexture` deallocates while the GPU is reading it, you get corrupt frames or `EXC_BAD_ACCESS`. This is the camera-interop equivalent of Symptom 6's resource-lifetime rule.
+
+```swift
+// BAD: CVMetalTexture released at end of scope — GPU may still read it
+let mtl = CVMetalTextureGetTexture(makeTexture(from: pixelBuffer)!)
+encoder.setFragmentTexture(mtl, index: 0)
+commandBuffer.commit()
+
+// GOOD: hold the CVMetalTexture(s) until completion
+let lumaCV = makeLuma(from: pixelBuffer)
+let chromaCV = makeChroma(from: pixelBuffer)
+encoder.setFragmentTexture(CVMetalTextureGetTexture(lumaCV!), index: 0)
+encoder.setFragmentTexture(CVMetalTextureGetTexture(chromaCV!), index: 1)
+commandBuffer.addCompletedHandler { _ in
+    _ = lumaCV   // retained until GPU done
+    _ = chromaCV
+}
+commandBuffer.commit()
+```
+
+Call `CVMetalTextureCacheFlush(cache, 0)` once per frame after committing to release textures the cache no longer needs. Skipping it leaks `IOSurface`-backed memory until the cache is destroyed.
+
+**Time cost**: Lifetime/format bugs here look like intermittent corruption — 1-3 hours of guessing vs minutes once you know the two-plane + retain rules.
+
+## Symptom 6: Crashes During GPU Work
 
 ### Decision Tree
 
@@ -446,9 +576,10 @@ When something doesn't work:
 - [ ] **GPU Frame Capture available?** (Visual debugging is fastest)
 - [ ] **Console error messages?** (Read them fully)
 - [ ] **Resources bound?** (Metal requires explicit binding)
-- [ ] **Coordinates correct?** (Y-flip, NDC Z range)
+- [ ] **Coordinates correct?** (Y-flip ONCE, NDC Z [0,1], winding after flip)
 - [ ] **Pipeline state created successfully?** (Check for throw)
 - [ ] **Drawable available?** (View must be on screen)
+- [ ] **Camera frames: CVMetalTexture retained?** (Until command buffer completes; flush cache per frame)
 
 ## Resources
 

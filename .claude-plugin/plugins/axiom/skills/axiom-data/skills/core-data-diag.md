@@ -8,7 +8,9 @@ Core Data issues manifest as production crashes from schema mismatches, mysterio
 ## Red Flags — Suspect Core Data Issue
 
 If you see ANY of these, suspect a Core Data misunderstanding, not framework breakage:
+- 🚩 **#1 root cause** Edited the existing `.xcdatamodel` in place instead of adding a new model version. Any field added/renamed/retyped this way silently rewrites v1 of the model — the on-disk store now mismatches it, and existing devices crash with "model is incompatible with the one used to create the store". Check first: is there more than one `.xcdatamodel` inside the `.xcdatamodeld` bundle?
 - Crash on production launch: "Unresolvable fault" after schema change
+- Crash: "The model used to open the store is incompatible with the one used to create the store"
 - Thread-confinement error: "Accessing NSManagedObject on a different thread"
 - App suddenly slow after adding a User→Posts relationship
 - SwiftData app needs complex features; considering mixing Core Data alongside
@@ -19,6 +21,28 @@ If you see ANY of these, suspect a Core Data misunderstanding, not framework bre
   - Do not rationalize away the issue—diagnose it
 
 **Critical distinction** Simulator deletes the database on each rebuild, hiding schema mismatch issues. Real devices keep persistent databases and crash immediately on schema mismatch. **MANDATORY: Test migrations on real device with real data before shipping.**
+
+#### First fix to try — enable automatic lightweight migration
+
+Most "incompatible store" crashes from additive changes are resolved by turning ON inferred migration (it is OFF by default on a raw coordinator). Always confirm this is set before authoring any custom migration:
+
+```swift
+// NSPersistentContainer (preferred)
+let description = container.persistentStoreDescriptions.first!
+description.shouldMigrateStoreAutomatically = true
+description.shouldInferMappingModelAutomatically = true
+
+// Raw NSPersistentStoreCoordinator
+try coordinator.addPersistentStore(
+    ofType: NSSQLiteStoreType, configurationName: nil, at: storeURL,
+    options: [
+        NSMigratePersistentStoresAutomaticallyOption: true,
+        NSInferMappingModelAutomaticallyOption: true
+    ]
+)
+```
+
+This only works when the change is inferable (add optional, add required-with-default, remove, rename-with-renaming-identifier) AND a new model version exists. It can NEVER infer an attribute type change.
 
 ## Mandatory First Steps
 
@@ -109,10 +133,11 @@ Before changing ANY code, identify ONE of these:
 
 ```
 Core Data problem suspected?
-├─ Crash: "Unresolvable fault"?
+├─ Crash: "Unresolvable fault" / "incompatible store"?
 │  └─ YES → Schema mismatch (store ≠ app model)
-│     ├─ Add new required field? → Pattern 1a (lightweight migration)
-│     ├─ Remove field, rename, or change type? → Pattern 1b (heavy migration)
+│     ├─ Edited the .xcdatamodel in place? → Add a NEW model version first
+│     ├─ Add new required field / remove / rename? → Pattern 1a (lightweight migration)
+│     ├─ Change an attribute type? → Pattern 1b (rename → add → backfill recipe)
 │     └─ Don't know how to fix? → Pattern 1c (testing safety)
 │
 ├─ Crash: "different thread"?
@@ -219,56 +244,70 @@ Core Data problem suspected?
 
 ---
 
-### Pattern 1b: Heavy Migration (Complex Schema Changes)
+### Pattern 1b: Custom Migration (Complex Schema Changes)
 
-**PRINCIPLE** When lightweight migration won't work, use NSEntityMigrationPolicy for custom transformation logic.
+**PRINCIPLE** When lightweight migration can't infer the change, use staged migration (iOS 17+) for custom transformation logic. Reach for hand-authored mapping models + `NSEntityMigrationPolicy` only on iOS 16 and earlier.
 
 #### Use when
-- Changing field types (String → Date)
+- Changing field types (String → Date) — NEVER inferable, always custom
 - Making optional required (need to populate existing nulls)
 - Complex relationship restructuring
 - Custom data transformations (e.g., split "firstName lastName" into separate fields)
 
-#### Example: Convert String dates to Date objects
+#### Modern path (iOS 17+) — NSStagedMigrationManager
+
+`NSStagedMigrationManager` replaces hand-authored mapping models. Express each hop between model versions as a stage: `NSLightweightMigrationStage` for inferable changes, `NSCustomMigrationStage` for code-driven transforms. Stages chain across multiple versions automatically and run inside a single transaction.
 
 ```swift
-// 1. Create mapping model
-// File → New → Mapping Model
-// Source: old version, Destination: new version
+let v1 = NSManagedObjectModelReference(model: modelV1, versionChecksum: modelV1.versionChecksum)
+let v2 = NSManagedObjectModelReference(model: modelV2, versionChecksum: modelV2.versionChecksum)
 
-// 2. Create custom migration policy
-class DateMigrationPolicy: NSEntityMigrationPolicy {
-    override func createDestinationInstances(
-        forSource sInstance: NSManagedObject,
-        in mapping: NSEntityMapping,
-        manager: NSMigrationManager
-    ) throws {
-        let destination = NSEntityDescription.insertNewObject(
-            forEntityName: mapping.destinationEntityName ?? "",
-            into: manager.destinationContext
-        )
-
-        for key in sInstance.entity.attributesByName.keys {
-            destination.setValue(sInstance.value(forKey: key), forKey: key)
-        }
-
-        // Custom transformation: String → Date
-        if let dateString = sInstance.value(forKey: "createdAt") as? String,
-           let date = ISO8601DateFormatter().date(from: dateString) {
-            destination.setValue(date, forKey: "createdAt")
-        } else {
-            destination.setValue(Date(), forKey: "createdAt")
-        }
-
-        manager.associate(source: sInstance, withDestinationInstance: destination, for: mapping)
+let stage = NSCustomMigrationStage(migratingFrom: v1, to: v2)
+stage.didMigrateHandler = { context, _ in
+    // Backfill the new typed attribute from the renamed legacy one (see recipe below)
+    let users = try context.fetch(NSFetchRequest<NSManagedObject>(entityName: "User"))
+    let parser = ISO8601DateFormatter()
+    for user in users {
+        let legacy = user.value(forKey: "createdAt_str") as? String
+        user.setValue(legacy.flatMap(parser.date(from:)) ?? Date(), forKey: "createdAt")
     }
+    try context.save()
 }
 
-// 3. In mapping model Inspector:
-// Set Custom Policy Class: DateMigrationPolicy
-
-// 4. Test extensively with real data before shipping
+let manager = NSStagedMigrationManager([stage])
+let description = container.persistentStoreDescriptions.first!
+description.setOption(manager, forKey: NSPersistentStoreStagedMigrationManagerOptionKey)
 ```
+
+#### Recipe: attribute type change (rename → add → backfill)
+
+An attribute type change can NEVER be inferred and NEVER edited in place — Core Data has no way to reinterpret existing bytes (e.g. a `String` column as a `Date`). Always do this three-step recipe in a NEW model version:
+
+1. **Rename** the old attribute (e.g. `createdAt` → `createdAt_str`, keep its original `String` type). Use a renaming identifier so Core Data maps the column, not drops it.
+2. **Add** the new attribute with the target type (`createdAt: Date`), optional or with a default.
+3. **Backfill** in code — in a `NSCustomMigrationStage.didMigrateHandler` (iOS 17+) or a guarded one-shot on first launch:
+
+```swift
+// Guarded one-shot fallback (works on any iOS version)
+func backfillCreatedAtOnce(_ context: NSManagedObjectContext) throws {
+    let key = "didBackfillCreatedAt_v2"
+    guard !UserDefaults.standard.bool(forKey: key) else { return }
+    let parser = ISO8601DateFormatter()
+    let users = try context.fetch(NSFetchRequest<NSManagedObject>(entityName: "User"))
+    for user in users where user.value(forKey: "createdAt") == nil {
+        let legacy = user.value(forKey: "createdAt_str") as? String
+        user.setValue(legacy.flatMap(parser.date(from:)) ?? Date(), forKey: "createdAt")
+    }
+    try context.save()
+    UserDefaults.standard.set(true, forKey: key)
+}
+```
+
+The `UserDefaults` guard makes the backfill idempotent — without it, a relaunch re-runs the loop over already-migrated rows. Drop `createdAt_str` only in a LATER release, once every user has run the backfill.
+
+#### Legacy path (iOS 16 and earlier) — mapping model + policy
+
+Create a mapping model (File → New → Mapping Model), subclass `NSEntityMigrationPolicy`, and set it as the Custom Policy Class in the mapping inspector. Use only when you must support iOS 16 — `NSStagedMigrationManager` is unavailable there.
 
 #### Critical safety rules
 - ALWAYS backup database before testing migration
@@ -600,11 +639,13 @@ let results = try backgroundContext.perform {
 
 | Issue | Check | Fix |
 |-------|-------|-----|
-| "Unresolvable fault" crash | Do store/model versions match? | Create .xcdatamodel version + mapping model |
+| "Incompatible store" crash | Is there >1 `.xcdatamodel` in the bundle? | Add a NEW model version; never edit the existing one in place |
+| "Unresolvable fault" crash | Do store/model versions match? | Enable shouldInfer/MigrateStoreAutomatically; add a model version |
+| Changed an attribute's type | Can it be inferred? (No — never) | Rename old → add new typed attribute → in-code backfill |
 | "Different thread" crash | Is fetch happening on main thread? | Use private queue context for background work |
 | App became slow | Are relationships being prefetched? | Add relationshipKeyPathsForPrefetching |
 | N+1 query performance | Check `-com.apple.CoreData.SQLDebug 1` logs | Add prefetching or convert to lightweight representation |
-| SwiftData needs Core Data features | Do you need custom migrations? | Use Core Data NSEntityMigrationPolicy |
+| Custom migration needed | Targeting iOS 17+? | Use NSStagedMigrationManager (mapping model only for iOS 16) |
 | Not sure about SwiftData vs. Core Data | Do you need iOS 16 support? | Use Core Data for iOS 16, SwiftData for iOS 17+ |
 | Migration test works, production fails | Did you test with real data? | Create migration test with production database copy |
 
@@ -655,7 +696,7 @@ If you've spent >30 minutes and the Core Data issue persists:
 
 ❌ **Assuming default values protect against data loss**
 - Default values only work for new records, not existing data
-- Fix: Use NSEntityMigrationPolicy for existing data
+- Fix: Backfill existing rows via a staged migration (iOS 17+) or one-shot — see Pattern 1b
 
 ❌ **Accessing Core Data objects across threads without conversion**
 - Objects are thread-confined, can't cross thread boundaries

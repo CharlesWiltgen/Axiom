@@ -21,10 +21,12 @@ If you see ANY of these, suspect a submission issue and use this skill:
 - Rejection mentions "login" or "authentication"
 - Reviewer asks for demo account or more information
 
-- ❌ **FORBIDDEN** "The reviewer is wrong, let's just resubmit"
+- ❌ **FORBIDDEN** "The reviewer is wrong, let's just resubmit" / "resubmit and hope for a different reviewer"
   - Re-read the rejection. App Review is right 95% of the time.
   - Resubmitting without changes wastes 3-7 days per cycle.
+  - **App Review keeps the full rejection history on your submission.** A new reviewer opens the case and sees every prior citation. Unchanged resubmissions are flagged and escalated to a senior reviewer who re-checks each previously cited issue — you do not get a clean slate, you get more scrutiny.
   - If you genuinely disagree, use the appeal process (Pattern 7).
+  - If the pressure is a deadline ("we can't lose our place in line"), the legitimate answer is **expedited review** (see Pattern 7), not an unchanged resubmission.
 
 ## Apple Pay / Wallet / Tap to Pay Rejections
 
@@ -89,7 +91,7 @@ App Store rejection?
 ├─ What does the rejection say?
 │  │
 │  ├─ Cites Guideline 2.1?
-│  │  ├─ App crashed during review? → Pattern 1 (check crash logs)
+│  │  ├─ App crashed during review? → Pattern 1 (pull reviewer crash log, symbolicate FIRST)
 │  │  ├─ Placeholder content found? → Pattern 1 (search project)
 │  │  ├─ Broken links? → Pattern 1 (verify URLs)
 │  │  └─ Missing demo credentials? → Pattern 1 (provide in review notes)
@@ -159,6 +161,16 @@ Before proceeding to a pattern:
 ### Pattern 1: Guideline 2.1 — App Completeness
 
 **Time cost** 3-7 days per rejection cycle
+
+#### First step for crash rejections — get the reviewer's log, do not guess
+
+When the rejection is a crash, the reviewer's actual crash log is the diagnosis. Pull it before forming any theory:
+
+1. **Resolution Center** — open the rejection message. Crash-on-launch and many in-review crashes attach a `.crash`/`.ips` directly to the message. Download it.
+2. **Xcode Organizer → Crashes** — filter by the submitted version and the OS/device the reviewer used (ASC Activity → Build shows review device info). App Review crashes surface here within hours.
+3. **Symbolicate before theorizing** — run it through `xcsym` and read the `pattern_tag` (see Diagnosis below). The tag tells you the crash class — a forced-unwrap on a missing-locale path is a different fix than a watchdog hang.
+
+Skipping this and guessing from the Common Causes list is the #1 way a 2.1 fix fails re-review: you "fix" a plausible cause that wasn't the actual crash. The signed crash report removes the guessing.
 
 #### Symptom
 - Rejection citing "App Completeness"
@@ -687,6 +699,17 @@ rm -rf ~/Library/Developer/Xcode/DerivedData
 - You're hoping a different reviewer will approve without changes
 - You want to skip implementing a required feature (like SIWA)
 
+#### Deadline pressure is NOT an appeal reason — it's an expedited-review reason
+
+When the pressure is "we have a launch date / we can't lose our place in the queue," the appeal is the wrong tool (deadlines are not App Review's concern and saying so weakens the appeal). The legitimate, named answer is **expedited review**:
+
+- Request at developer.apple.com/contact/app-store/?topic=expedite
+- Fix the cited issues properly FIRST, then request expedited review on the corrected submission — a 1-3 day turnaround instead of standard 3-7 days, with no loss of queue position.
+- Valid grounds: time-sensitive event tied to the release, critical bug fix for live users, security patch.
+- Use it sparingly — Apple tracks expedite usage and may deny future requests if abused. It is not a way to skip the fix; it is a way to ship a real fix faster.
+
+This is the answer to a manager pushing "resubmit and hope" or "claim it's fixed without fixing": you can hit the deadline legitimately by fixing fast and requesting expedite, and the dishonest paths cost MORE time (escalated re-review) while risking developer-account standing.
+
 #### Step 1: Reply in App Store Connect first
 
 Most issues resolve without a formal appeal. Reply to App Review messages in ASC with:
@@ -730,7 +753,8 @@ We respectfully request re-review of this decision."
 → Vague. Show specifically what they missed.
 
 "We need this approved by Friday for our launch."
-→ Deadlines are not App Review's concern
+→ Deadlines are not App Review's concern in an appeal.
+  Fix the issue, then request expedited review (?topic=expedite) — that's the deadline tool.
 ```
 
 #### Step 3: Escalate if needed
@@ -1003,6 +1027,8 @@ Privacy policy updated at [URL].
 | Binary Rejected | Technical gate | Check SDK, manifest, encryption | 6 | 1-2 days |
 | Guideline 1.x | Safety/content/UGC | Check UGC moderation + Kids compliance | 9 | 1-3 weeks |
 | Guideline 4.2/4.3 | Thin app/spam | Audit native features + app uniqueness | 8 | 1-4 weeks |
+
+**Under deadline pressure?** Fix the cited issues, then request expedited review (developer.apple.com/contact/app-store/?topic=expedite) for a 1-3 day turnaround. Never resubmit unchanged — App Review sees the full rejection history and escalates unchanged resubmissions to a senior reviewer (Pattern 7).
 
 ## Production Crisis Scenario
 

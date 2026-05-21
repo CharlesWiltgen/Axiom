@@ -967,12 +967,16 @@ ATS applies to **URLSession** and **WKWebView** connections. **Network.framework
 
 URLSession maintains a connection pool for HTTP/2 and HTTP/1.1 keep-alive. When the app suspends, the kernel/networkd tear down idle TCP/TLS connections after ~30s, but `URLSession.shared` still holds the dead sockets. The first post-resume request grabs a stale entry, the kernel returns ECONNRESET/EPIPE, CFNetwork surfaces it as -1005. This is NOT a Network.framework issue — it's URLSession's pool not invalidating on lifecycle transitions.
 
-Confirm via `URLSessionTaskMetrics`:
+#### Confirmation metric (do this before any fix)
+
+The thing that separates a real diagnosis from "probably stale pool" is `URLSessionTaskTransactionMetrics.isReusedConnection`. If the failing request reused a connection, the pool handed you a dead socket — proven, not guessed:
+
 ```swift
 let session = URLSession(configuration: .default, delegate: metricsDelegate, delegateQueue: nil)
-// In delegate's didFinishCollecting:
+// In delegate's urlSession(_:task:didFinishCollecting:):
 print(metrics.transactionMetrics.map { ($0.isReusedConnection, $0.fetchStartDate) })
-// isReusedConnection == true on the failing request? → stale-pool reuse confirmed.
+// isReusedConnection == true on the failing request → stale-pool reuse confirmed.
+// isReusedConnection == false → look elsewhere (this pattern does NOT apply).
 ```
 
 #### Common causes
@@ -981,9 +985,9 @@ print(metrics.transactionMetrics.map { ($0.isReusedConnection, $0.fetchStartDate
 2. No invalidation on `UIApplication.didBecomeActiveNotification` / `ScenePhase.active`
 3. Background duration crossed the ~30s pool-evict threshold
 
-#### Fix
+#### Fix — Recycle-on-Resume pattern
 
-Own the session AND retry with idempotency awareness:
+Own the session (never `URLSession.shared`) and tear down the pool on the foreground transition, so the first post-resume request is forced to open a fresh socket instead of reusing a dead one. The retry path is gated by idempotency (see below).
 
 ```swift
 actor APIClient {
@@ -996,24 +1000,18 @@ actor APIClient {
         return URLSession(configuration: cfg)
     }
 
-    /// Drop the connection pool on resume. Call from
+    /// Drop the stale connection pool on resume. Call from
     /// `.onChange(of: scenePhase)` when transitioning to `.active`.
     func recycleOnResume() {
-        session.finishTasksAndInvalidate()
-        session = Self.makeSession()
+        session.finishTasksAndInvalidate()  // lets in-flight tasks finish, then invalidates
+        session = Self.makeSession()        // next request opens a fresh socket
     }
 
     func send(_ request: URLRequest) async throws -> (Data, URLResponse) {
         do {
             return try await session.data(for: request)
         } catch let e as URLError where e.code == .networkConnectionLost {
-            // ⚠ IDEMPOTENCY GATE: retry ONLY on idempotent methods.
-            // Blind-retrying a POST that already reached the server can
-            // duplicate the side effect (double-charge, duplicate order, etc.).
-            guard let method = request.httpMethod?.uppercased(),
-                  ["GET", "HEAD", "PUT", "DELETE", "OPTIONS"].contains(method) else {
-                throw e
-            }
+            guard isRetrySafe(request) else { throw e }  // idempotency gate
             recycleOnResume()
             return try await session.data(for: request)
         }
@@ -1021,7 +1019,39 @@ actor APIClient {
 }
 ```
 
-For non-idempotent POSTs, the only safe retry is one with an app-level dedup key (`Idempotency-Key` header that the server enforces). Without that contract, surface the error and let the caller decide.
+#### The idempotency gate (why retries don't duplicate charges)
+
+A -1005 can fire AFTER the request reached the server but BEFORE the response got back. Blind-retrying then replays the side effect — a double charge, a duplicate order. Gate every retry on the HTTP method, never on the error code alone:
+
+| Method | Retry-safe? | Why |
+|--------|-------------|-----|
+| GET, HEAD, OPTIONS | Yes | No side effect |
+| PUT, DELETE | Yes | Idempotent by HTTP contract — replaying lands the same final state |
+| POST | No, unless idempotency-keyed | Each replay creates a new resource / charge |
+
+```swift
+private func isRetrySafe(_ request: URLRequest) -> Bool {
+    guard let method = request.httpMethod?.uppercased() else { return false }
+    if ["GET", "HEAD", "PUT", "DELETE", "OPTIONS"].contains(method) { return true }
+    // POST is replay-safe ONLY when the server dedups on a client-sent key.
+    return request.value(forHTTPHeaderField: "Idempotency-Key") != nil
+}
+```
+
+For non-idempotent POSTs without an `Idempotency-Key` the server enforces, do NOT retry — surface the error and let the caller decide. This is the single rule that makes a "tight 10x retry loop" safe instead of a charge-duplication machine.
+
+#### Replacing a reachability gate (waitsForConnectivity, not a pre-flight check)
+
+If the code (or a tech lead) gates requests behind a reachability check — "no network? fail fast" — delete it. A reachability check races: connectivity can change between the check and the request, and it loses Happy Eyeballs / Wi-Fi-Assist / cellular fallback. The URLSession-native replacement is `waitsForConnectivity = true` (already set above): the task parks instead of failing -1009, then proceeds the instant a path comes up. Surface the wait to the UI via the delegate, do not block on it:
+
+```swift
+func urlSession(_ session: URLSession, taskIsWaitingForConnectivity task: URLSessionTask) {
+    // Fires when there's no path yet. Show "Waiting for network…", DON'T cancel.
+    // The task resumes automatically once connectivity is established.
+}
+```
+
+`waitsForConnectivity` covers the initial-connectivity case the reachability gate was trying to handle; `timeoutIntervalForResource` bounds how long it's allowed to wait. (For BSD-socket / `SCNetworkReachability` migrations and the deadline-pressure rebuttal, see `skills/networking-discipline.md` Scenario 1.)
 
 #### Verification
 

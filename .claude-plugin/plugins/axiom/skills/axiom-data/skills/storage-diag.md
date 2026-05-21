@@ -23,6 +23,14 @@ If you see ANY of these:
 - System behavior is documented and predictable
 - 99% of issues are location/protection mismatches
 
+### Red Flag — `isExcludedFromBackup` on user-created content = permanent data loss
+
+**NEVER set `isExcludedFromBackup = true` on anything the user created or can't get back.** Exclusion means it is NOT in iCloud/iTunes backups. If there is also no cloud sync, the data is gone forever on device replacement, restore, or "Erase All Content". Exclusion is correct ONLY for re-downloadable/regenerable content (caches, downloaded media). The reflex of "exclude it to shrink the backup" is how apps silently destroy user data.
+
+### Red Flag — Caches are purged at ANY time, even while your app isn't running
+
+The system can evict `Caches/` mid-session or between launches — there is no "safe" window. A `Caches/` read that assumes the file is present is a latent crash/blank-screen bug. Every `Caches/` (and `tmp/`) read MUST have a cache-miss path that regenerates or re-downloads. If you can't tolerate a miss, the data does not belong in `Caches/`.
+
 ## Mandatory First Steps
 
 **ALWAYS check these FIRST** (before changing code):
@@ -188,7 +196,7 @@ try data.write(to: fileURL)
 
 **Cause**: Caches/ is purged under storage pressure (expected behavior)
 
-**Fix**: Either re-download on demand OR move to Application Support if can't be regenerated
+**Hard rule**: Every `Caches/` read MUST assume the file may be gone — the miss path (regenerate or re-download) is not optional error handling, it is the contract for living in `Caches/`. Either re-download on demand OR move to Application Support if it can't be regenerated.
 ```swift
 // ✅ CORRECT: Handle missing cache gracefully
 func loadCachedImage(url: URL) async throws -> UIImage {
@@ -255,6 +263,63 @@ func downloadPodcast(url: URL) async throws {
     var resourceValues = URLResourceValues()
     resourceValues.isExcludedFromBackup = true
     try podcastURL.setResourceValues(resourceValues)
+}
+```
+
+### Pattern 5: Backup Exclusion Silently Lost After Atomic Write
+
+**Symptom**: A file marked `isExcludedFromBackup` reappears in backups after the next save, and the backup grows again.
+
+**Cause**: `isExcludedFromBackup` is a property of the file's inode, not its path. An atomic write (`.atomic` writes to a temp file, then renames over the original) or any `replaceItemAt` produces a NEW inode — the flag does not carry over. You must re-apply it every time you replace the file.
+
+**Fix**:
+```swift
+// Re-apply AFTER every atomic write / replacement
+try data.write(to: cacheURL, options: .atomic)  // new inode → flag dropped
+var values = URLResourceValues()
+values.isExcludedFromBackup = true
+try cacheURL.setResourceValues(values)           // re-apply on the new file
+
+// ❌ WRONG: setting the flag on a stale path-string URL or before the write
+// URL(fileURLWithPath:) on a path string still resolves to a URL, but if you
+// captured it before the rename you are tagging the OLD inode that no longer exists.
+// Always re-resolve and re-apply on the live file URL after the write completes.
+```
+
+### Pattern 6: Zero-Byte File From a Failed Write
+
+**Symptom**: File exists but reads back empty/nil; corrupted data after a crash, low battery, or disk-full during save.
+
+**Cause**: A non-atomic `write(to:)` truncates the file first, then streams bytes. If the process is killed mid-write, you are left with a partial or zero-byte file — the old good data is already gone.
+
+**Fix**: Always write with `.atomic`. It writes to a temp file and renames only after the bytes are fully on disk, so a reader never sees a half-written file and a failure leaves the previous version intact.
+```swift
+// ✅ CORRECT: atomic write is all-or-nothing
+try data.write(to: fileURL, options: .atomic)
+```
+
+### Pattern 7: Disk-Full Crash From an Unhandled Write
+
+**Symptom**: App crashes when saving a large download on a near-full device; users on 16/32 GB devices hit it constantly.
+
+**Cause**: `Data.write` throws `NSFileWriteOutOfSpaceError` when the volume is full. An unhandled throw becomes a crash. Pre-checking with raw `volumeAvailableCapacityKey` is also wrong — it reports too little, because it ignores space the system can reclaim by purging caches and offloaded content.
+
+**Fix**: Check `volumeAvailableCapacityForImportantUsage` (purgeable-aware → the realistic number iOS will actually give you), AND still handle the out-of-space error, because capacity can change between check and write.
+```swift
+func canStore(bytes needed: Int64, at url: URL) throws -> Bool {
+    let values = try url.resourceValues(
+        forKeys: [.volumeAvailableCapacityForImportantUsageKey]
+    )
+    guard let available = values.volumeAvailableCapacityForImportantUsage
+    else { return false }
+    return available > needed
+}
+
+do {
+    try data.write(to: fileURL, options: .atomic)
+} catch let error as NSError
+    where error.code == NSFileWriteOutOfSpaceError {
+    // Free purgeable cache and surface a clear "storage full" message — don't crash
 }
 ```
 
@@ -338,5 +403,5 @@ func diagnoseStorageIssue(fileURL: URL) {
 
 ---
 
-**Last Updated**: 2025-12-12
+**Last Updated**: 2026-05-21
 **Skill Type**: Diagnostic

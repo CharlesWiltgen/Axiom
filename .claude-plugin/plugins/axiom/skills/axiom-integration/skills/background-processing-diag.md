@@ -97,6 +97,33 @@ Task terminates early?
 | Network timeout > task time | Use background URLSession |
 | Async callback after expiration | Check shouldContinue flag |
 
+**No expirationHandler = silent kill.** A `nil` expirationHandler on a multi-minute sync does NOT buy more time — the system suspends and then terminates the process with no warning, mid-write. Always set it, and have it cancel in-flight work so a checkpoint can be saved.
+
+### Swift 6 Expiration Bridge
+
+Map expiration to cooperative cancellation. Do NOT reach for `Operation`/`isCancelled` polling — bridge `expirationHandler` to `Task.cancel()` and checkpoint on `CancellationError`.
+
+```swift
+func handleSync(task: BGProcessingTask) {
+    let work = Task {
+        try await withTaskCancellationHandler {
+            for batch in pendingBatches {
+                try Task.checkCancellation()  // exits at expiration
+                try await sync(batch)
+                saveCheckpoint(after: batch)  // resume here next launch
+            }
+            task.setTaskCompleted(success: true)
+        } onCancel: {
+            // Runs on arbitrary thread at expiration — keep lightweight
+        }
+    }
+
+    task.expirationHandler = { work.cancel() }  // expiration → cancellation
+}
+```
+
+`Task.checkCancellation()` throws `CancellationError` the moment the system expires the task, so the next launch resumes from the last checkpoint instead of redoing the whole sync.
+
 ### Test Expiration Handling
 
 ```lldb
@@ -249,6 +276,8 @@ Inconsistent scheduling?
 │     └─ System may skip task entirely
 │
 ├─ Step 2: Check scheduling pattern (2 min)
+│  ├─ Does the handler reschedule as its FIRST line?
+│  │  └─ NO → Runs once, never again — fix this first
 │  ├─ Scheduling same task multiple times?
 │  │  └─ Call getPendingTaskRequests to check
 │  └─ Scheduling in handler for continuity?
@@ -261,13 +290,30 @@ Inconsistent scheduling?
       └─ User doesn't charge overnight = no runs
 ```
 
+**Reschedule is the FIRST line of the handler.** BGTask requests are one-shot — the system consumes the request when it launches you. If you reschedule at the end, any early `return`, thrown error, or expiration skips it and the task never runs again. Submit the next request before doing any work.
+
+### Prove the "Never Reschedules" Bug
+
+`getPendingTaskRequests` is the direct diagnostic: query it shortly after a launch. If the queue is empty, the handler launched but never re-submitted — the bug is confirmed, not a system-throttling guess.
+
+```swift
+BGTaskScheduler.shared.getPendingTaskRequests { requests in
+    print("Pending after launch: \(requests.map(\.identifier))")
+    // [] → handler ran but never rescheduled
+}
+```
+
 ### Expected Behavior
 
 | Task Type | Scheduling Behavior |
 |-----------|---------------------|
 | BGAppRefreshTask | Runs before predicted app usage times |
 | BGProcessingTask | Runs when charging + idle (typically overnight) |
-| Silent Push | Rate-limited; 14 pushes may = 7 launches |
+| Silent Push | Coalesced and rate-limited (see below) |
+
+### Silent Push Is Not a Polling Hammer
+
+A "send a silent push every minute" / "60s Timer" plan does NOT yield per-minute background runs. Silent pushes (`content-available: 1`, `apns-priority: 5`) are coalesced against a per-app budget: ~14 pushes in a window may produce only ~7 launches, spaced to roughly a 15-minute floor. The budget depletes with each launch and refills over the day, so a high-frequency cadence buys fewer total launches, not more. For genuinely time-sensitive delivery, use a visible notification (`apns-priority: 10`) — not a silent-push flood.
 
 **Key insight**: You request a time window. System decides when (or if) to run.
 
@@ -386,8 +432,9 @@ func scheduleRefreshIfNeeded() {
 
 - [ ] Identifiers exactly match (case-sensitive)?
 - [ ] Background mode enabled (fetch/processing)?
+- [ ] Handler reschedules as its FIRST line?
 - [ ] setTaskCompleted called in all paths?
-- [ ] Expiration handler set first?
+- [ ] Expiration handler set (and cancels work)?
 
 ### 15-Minute Investigation
 
