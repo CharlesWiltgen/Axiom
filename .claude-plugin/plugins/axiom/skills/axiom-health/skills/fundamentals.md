@@ -184,7 +184,7 @@ HealthKit's own documentation uses the language "Full HealthKit stores" (can rea
 | watchOS 2+ | Full (old Apple Watch data is periodically purged) |
 | visionOS 1+ | Full |
 | macOS 13+ | Limited — compiles, cannot read or write |
-| Mac Catalyst 13+ | Limited — behavior matches iPad rules |
+| Mac Catalyst 13+ | Limited — runs on a Mac, which has no Health store; `isHealthDataAvailable()` returns `false` (matches macOS, **not** iPadOS rules) |
 
 Always check `isHealthDataAvailable()` at runtime — it is the definitive signal for the current device.
 
@@ -207,8 +207,9 @@ See `queries.md` for the async descriptor pattern and `sync-and-background.md` f
 | Requesting authorization for "all" data types up front | Request only what the feature needs. Over 100 data types exist; a giant sheet feels like a privacy violation. |
 | Creating a new `HKHealthStore` per view model | Reuse one store. Multiple instances work but waste resources and complicate lifecycle. |
 | Running on macOS and expecting data | Full store only on iOS, iPadOS 17+, watchOS, visionOS. Gate on `isHealthDataAvailable()` first. |
-| Using `HKQuantitySample` where `HKCumulativeQuantitySample` or `HKDiscreteQuantitySample` is returned | Cast to the concrete subclass for access to `sum` or `average`/`min`/`max`. |
-| Forgetting both `Info.plist` keys when writing data | Missing `NSHealthUpdateUsageDescription` crashes the app on save; missing `NSHealthShareUsageDescription` crashes on read. Both keys are required if you do both operations. |
+| Casting a quantity sample to the wrong concrete subclass | Heart rate is *discrete* (`average`/`min`/`max`/`mostRecentQuantity`); steps/distance/calories are *cumulative* (`sum`). Casting heart rate to `HKCumulativeQuantitySample` with `as?` silently yields `nil` → a wrong `0` that looks like "no data"; with `as!` it crashes the first time real data exists. Match the subclass to the type's aggregation style, or read aggregates via a statistics query. |
+| Hand-summing quantity samples for a daily total | iPhone + Apple Watch both record system types like steps/distance/energy, so a raw `HKSampleQuery` returns overlapping samples and `.reduce(+)` double-counts the same activity (the store is shared — Core Concept 2). `HKStatisticsQuery` / `HKStatisticsQueryDescriptor` with `.cumulativeSum` applies the system's source-prioritization for these auto-recorded types so the same activity isn't counted twice; scope to one source with a predicate when you need it. See `queries.md`. |
+| Forgetting an `Info.plist` usage key | The crash happens at `requestAuthorization(toShare:read:)` — **not** later at save or read. Including a write type without `NSHealthUpdateUsageDescription` (or a read type without `NSHealthShareUsageDescription`) throws an `NSException` the moment you request authorization. Both keys are required if you do both operations. |
 | Updating UI from a completion handler without hopping to main | Completion handlers run on private background queues. Use `await MainActor.run` or call from an `@MainActor` context. |
 
 ## Resources
