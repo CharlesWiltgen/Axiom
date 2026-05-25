@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-25T23:09:21.843Z",
+  "generatedAt": "2026-05-25T23:43:12.491Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -1735,7 +1735,7 @@
     "axiom-apple-docs--apple-docs-research": {
       "name": "axiom-apple-docs--apple-docs-research",
       "description": "✅ **Use this skill when**:",
-      "content": "# Apple Documentation Research\n\n## When to Use This Skill\n\n✅ **Use this skill when**:\n- Researching Apple frameworks or APIs (WidgetKit, SwiftUI, etc.)\n- Need full WWDC session transcripts with code samples\n- Looking for Apple Developer documentation\n- Want to extract code examples from WWDC presentations\n- Building comprehensive skills based on Apple technologies\n\n❌ **Do NOT use this skill for**:\n- Third-party framework documentation\n- General web research\n- Questions already answered in existing skills\n- Basic Swift language questions (use Swift documentation)\n\n## Related Skills\n\n- Use **superpowers-chrome:browsing** for interactive browser control\n- Use **writing-skills** when creating new skills from Apple documentation\n- Use **reviewing-reference-skills** to validate Apple documentation skills\n\n## Core Philosophy\n\n> Apple Developer video pages contain full verbatim transcripts with timestamps and complete code samples. Chrome's auto-capture feature makes this content instantly accessible without manual copying.\n\n**Key insight**: Don't manually transcribe or copy code from WWDC videos. The transcripts are already on the page, fully timestamped and formatted.\n\n## WWDC Session Transcripts via Chrome\n\n### The Technique\n\nApple Developer video pages (`developer.apple.com/videos/play/wwdc20XX/XXXXX/`) contain complete transcripts that Chrome auto-captures.\n\n#### Step-by-Step Process\n\n1. **Navigate** using Chrome browser MCP tool:\n   ```json\n   {\n     \"action\": \"navigate\",\n     \"payload\": \"https://developer.apple.com/videos/play/wwdc2025/278/\"\n   }\n   ```\n\n   Tool name: `mcp__plugin_superpowers-chrome_chrome__use_browser`\n\n   **Complete invocation**:\n   ```\n   Use the mcp__plugin_superpowers-chrome_chrome__use_browser tool with:\n   - action: \"navigate\"\n   - payload: \"https://developer.apple.com/videos/play/wwdc2025/278/\"\n   ```\n\n2. **Locate** the auto-captured file:\n   - Chrome saves to: `~/.../superpowers/browser/YYYY-MM-DD/session-TIMESTAMP/`\n   - Session directory uses Unix timestamp in milliseconds (e.g., `session-1765217804099`)\n   - Filename pattern: `NNN-navigate.md` (e.g., `001-navigate.md`)\n\n   **Finding the latest session**:\n   ```bash\n   # List sessions sorted by modification time (newest first)\n   ls -lt ~/Library/Caches/superpowers/browser/*/session-* | head -5\n   ```\n\n3. **Read** the captured transcript:\n   - Full spoken content with timestamps (e.g., `[0:07]`, `[1:23]`)\n   - Descriptions of code and API usage (spoken, not formatted)\n   - Chapter markers and resource links\n\n### What You Get\n\n**✅ WWDC transcripts contain:**\n- Full spoken content with timestamps (e.g., `[0:07]`, `[1:23]`)\n- API names mentioned by speakers (e.g., `widgetRenderingMode`, `supportedMountingStyles`)\n- Descriptions of what code does (\"I'll add the widgetRenderingMode environment variable\")\n- Step-by-step explanations of implementations\n- Chapter markers and resource links\n\n**❌ WWDC transcripts do NOT contain:**\n- Formatted Swift code blocks ready to copy-paste\n- Complete implementations\n- Structured code examples\n\n**Critical Understanding**: Transcripts are **spoken word, not code**. You'll read sentences like \"I'll add the widgetRenderingMode environment variable to my widget view\" and need to **reconstruct the code yourself** from these descriptions.\n\n### When Code Isn't Clear from Transcript\n\nIf the transcript's code descriptions aren't detailed enough, follow this fallback workflow:\n\n1. **Check Resources Tab**\n   - Navigate back to the WWDC session page\n   - Click \"Resources\" tab\n   - Look for \"Download Sample Code\" or \"View on GitHub\"\n   - Download Xcode project with complete working implementation\n\n2. **Use sosumi.ai for API Details**\n   - Look up specific APIs mentioned in transcript\n   - Example: Transcript says \"widgetAccentedRenderingMode\" → look up `sosumi.ai/documentation/swiftui/widgetaccentedrenderingmode`\n   - Get exact signature, parameters, usage\n\n3. **Jump to Timestamp in Video**\n   - Use transcript timestamp to jump directly to code explanation in video\n   - Example: Transcript says code at `[4:23]` → watch that specific 30-second segment\n   - Faster than watching entire 45-minute session\n\n4. **Combine Sources**\n   - Transcript = conceptual understanding + workflow\n   - Resources = complete code\n   - sosumi.ai = API details\n   - Result: Full picture without manually reconstructing everything\n\n**Example transcript structure**:\n```markdown\n# Session Title - WWDC## - Videos - Apple Developer\n\n## Chapters\n- 0:00 - Introduction\n- 1:23 - Key Topic 1\n\n## Transcript\n0:00\nSpeaker: Welcome to this session...\n\n[timestamp]\nNow I'll add the widgetAccentedRenderingMode modifier...\n```\n\n### Example Session\n\n**WWDC 2025-278** \"What's new in widgets\":\n- Navigate: `https://developer.apple.com/videos/play/wwdc2025/278/`\n- Captured: `001-navigate.md`\n- Contains: ~15 minutes of full transcript with API references and code concepts\n\n## Apple Documentation via sosumi.ai\n\n### Why sosumi.ai\n\nDeveloper.apple.com documentation is HTML-heavy and difficult to parse. sosumi.ai provides the same content in clean markdown format.\n\n### URL Pattern\n\n**Instead of**:\n```\nhttps://developer.apple.com/documentation/widgetkit\n```\n\n**Use**:\n```\nhttps://sosumi.ai/documentation/widgetkit\n```\n\n### URL Pattern Rules\n\n**Format**: `https://sosumi.ai/documentation/[framework]`\n\n**Rules for framework name**:\n1. **Lowercase** - Use lowercase even if framework is capitalized (SwiftUI → swiftui)\n2. **No spaces** - Remove all spaces (Core Data → coredata)\n3. **No hyphens** - Remove all hyphens (App Intents → appintents, NOT app-intents)\n4. **Case-insensitive** - Both `SwiftUI` and `swiftui` work, but lowercase is recommended\n\n**Common mistakes**:\n- ❌ `app-intents` → ✅ `appintents`\n- ❌ `axiom-data (skills/core-data.md)` → ✅ `coredata`\n- ❌ `AVFoundation` → ✅ `avfoundation`\n\n**Examples**:\n| Framework Name | sosumi.ai URL |\n|----------------|---------------|\n| SwiftUI | `sosumi.ai/documentation/swiftui` |\n| App Intents | `sosumi.ai/documentation/appintents` |\n| Core Data | `sosumi.ai/documentation/coredata` |\n| AVFoundation | `sosumi.ai/documentation/avfoundation` |\n| UIKit | `sosumi.ai/documentation/uikit` |\n\n### Using with WebFetch or Read Tools\n\n```\nWebFetch:\n  url: https://sosumi.ai/documentation/widgetkit/widget\n  prompt: \"Extract information about Widget protocol\"\n\nResult: Clean markdown with API signatures, descriptions, examples\n```\n\n### Framework Examples\n\n| Framework | sosumi.ai URL |\n|-----------|---------------|\n| WidgetKit | `https://sosumi.ai/documentation/widgetkit` |\n| SwiftUI | `https://sosumi.ai/documentation/swiftui` |\n| ActivityKit | `https://sosumi.ai/documentation/activitykit` |\n| App Intents | `https://sosumi.ai/documentation/appintents` |\n| Foundation | `https://sosumi.ai/documentation/foundation` |\n\n## Common Research Workflows\n\n### Workflow 1: New iOS Feature Research\n\n**Goal**: Create a comprehensive skill for a new iOS 26 feature.\n\n1. **Find WWDC sessions** — Search \"WWDC 2025 [feature name]\"\n2. **Get transcripts** — Navigate with Chrome to each session\n3. **Read transcripts** — Extract key concepts, code patterns, gotchas\n4. **Get API docs** — Use sosumi.ai for framework reference\n5. **Cross-reference** — Verify code samples match documentation\n6. **Create skill** — Combine transcript insights + API reference\n\n**Time saved**: 3-4 hours vs. watching videos and manual transcription\n\n### Workflow 2: API Deep Dive\n\n**Goal**: Understand a specific API or protocol.\n\n1. **sosumi.ai docs** — Get protocol/class definition\n2. **WWDC sessions** — Search for sessions mentioning the API\n3. **Code samples** — Extract from transcript code blocks\n4. **Verify patterns** — Ensure examples match latest API\n\n### Workflow 3: Multiple Sessions Research\n\n**Goal**: Comprehensive coverage across multiple years (e.g., widgets evolution).\n\n1. **Parallel navigation** — Use Chrome to visit 3-6 sessions\n2. **Read all transcripts** — Compare how APIs evolved\n3. **Extract timeline** — iOS 14 → 17 → 18 → 26 changes\n4. **Consolidate** — Create unified skill with version annotations\n\n**Example**: Extensions & Widgets skill used 6 WWDC sessions (2023-2025)\n\n## Anti-Patterns\n\n### ❌ DON'T: Manual Video Watching\n\n```\nBAD:\n1. Play WWDC video\n2. Pause and take notes\n3. Rewind to capture code\n4. Type out examples manually\n\nResult: 45 minutes per session\n```\n\n### ✅ DO: Chrome Auto-Capture\n\n```\nGOOD:\n1. Navigate with Chrome\n2. Read captured .md file\n3. Copy code blocks directly\n4. Reference timestamps for context\n\nResult: 5 minutes per session\n```\n\n### ❌ DON'T: Scrape developer.apple.com HTML\n\n```\nBAD:\nUse WebFetch on developer.apple.com/documentation\nResult: Complex HTML parsing required\n```\n\n### ✅ DO: Use sosumi.ai\n\n```\nGOOD:\nUse WebFetch on sosumi.ai/documentation\nResult: Clean markdown, instant access\n```\n\n## Troubleshooting\n\n### Chrome Session Directory Not Found\n\n**Symptom**: Can't locate `001-navigate.md` file\n\n**Solution**:\n1. Check Chrome actually navigated (look for URL confirmation)\n2. Find latest session: `ls -lt ~/Library/Caches/superpowers/browser/*/`\n3. Session directory format: `YYYY-MM-DD/session-TIMESTAMP/`\n\n### Transcript Incomplete\n\n**Symptom**: File exists but missing transcript\n\n**Solution**:\n1. Page may still be loading - wait 2-3 seconds\n2. Try navigating again\n3. Some sessions require scrolling to load full content\n\n### sosumi.ai Returns Error\n\n**Symptom**: 404 or invalid URL\n\n**Solution**:\n1. Verify framework name spelling\n2. Check sosumi.ai format: `/documentation/[frameworkname]`\n3. Fallback: Use developer.apple.com but expect HTML\n\n## Verification Checklist\n\nBefore using captured content:\n- ☐ Transcript includes timestamps\n- ☐ Code samples are complete (not truncated)\n- ☐ Speaker names and chapter markers present\n- ☐ Multiple speakers properly attributed\n- ☐ Code syntax highlighting preserved\n\n## Resources\n\n**Skills**: superpowers-chrome:browsing, writing-skills, reviewing-reference-skills\n\n**Time Saved**: Using this technique saves 30-40 minutes per WWDC session vs. manual video watching and transcription. For comprehensive research spanning multiple sessions, savings compound to 3-4 hours per skill.\n",
+      "content": "# Apple Documentation Research\n\n## When to Use This Skill\n\n✅ **Use this skill when**:\n- Researching Apple frameworks or APIs (WidgetKit, SwiftUI, etc.)\n- Need full WWDC session transcripts with code samples\n- Looking for Apple Developer documentation\n- Want to extract code examples from WWDC presentations\n- Building comprehensive skills based on Apple technologies\n\n❌ **Do NOT use this skill for**:\n- Third-party framework documentation\n- General web research\n- Questions already answered in existing skills\n- Basic Swift language questions (use Swift documentation)\n\n## Related Skills\n\n- Use **superpowers-chrome:browsing** for interactive browser control\n- Use **writing-skills** when creating new skills from Apple documentation\n- Use **reviewing-reference-skills** to validate Apple documentation skills\n\n## Core Philosophy\n\n> Apple Developer video pages contain full verbatim transcripts with timestamps and complete code samples. Chrome's auto-capture feature makes this content instantly accessible without manual copying.\n\n**Key insight**: Don't manually transcribe or copy code from WWDC videos. The transcripts are already on the page, fully timestamped and formatted.\n\n## WWDC Session Transcripts via Chrome\n\n### The Technique\n\nApple Developer video pages (`developer.apple.com/videos/play/wwdc20XX/XXXXX/`) contain complete transcripts that Chrome auto-captures.\n\n#### Step-by-Step Process\n\n1. **Navigate** using Chrome browser MCP tool:\n   ```json\n   {\n     \"action\": \"navigate\",\n     \"payload\": \"https://developer.apple.com/videos/play/wwdc2025/278/\"\n   }\n   ```\n\n   Tool name: `mcp__plugin_superpowers-chrome_chrome__use_browser`\n\n   **Complete invocation**:\n   ```\n   Use the mcp__plugin_superpowers-chrome_chrome__use_browser tool with:\n   - action: \"navigate\"\n   - payload: \"https://developer.apple.com/videos/play/wwdc2025/278/\"\n   ```\n\n2. **Locate** the auto-captured file:\n   - Chrome saves to: `~/.../superpowers/browser/YYYY-MM-DD/session-TIMESTAMP/`\n   - Session directory uses Unix timestamp in milliseconds (e.g., `session-1765217804099`)\n   - Filename pattern: `NNN-navigate.md` (e.g., `001-navigate.md`)\n\n   **Finding the latest session**:\n   ```bash\n   # List sessions sorted by modification time (newest first)\n   ls -lt ~/Library/Caches/superpowers/browser/*/session-* | head -5\n   ```\n\n3. **Read** the captured transcript:\n   - Full spoken content with timestamps (e.g., `[0:07]`, `[1:23]`)\n   - Descriptions of code and API usage (spoken, not formatted)\n   - Chapter markers and resource links\n\n### What You Get\n\n**✅ WWDC transcripts contain:**\n- Full spoken content with timestamps (e.g., `[0:07]`, `[1:23]`)\n- API names mentioned by speakers (e.g., `widgetRenderingMode`, `supportedMountingStyles`)\n- Descriptions of what code does (\"I'll add the widgetRenderingMode environment variable\")\n- Step-by-step explanations of implementations\n- Chapter markers and resource links\n\n**❌ WWDC transcripts do NOT contain:**\n- Formatted Swift code blocks ready to copy-paste\n- Complete implementations\n- Structured code examples\n\n**Critical Understanding**: Transcripts are **spoken word, not code**. You'll read sentences like \"I'll add the widgetRenderingMode environment variable to my widget view\" and need to **reconstruct the code yourself** from these descriptions.\n\n### When Code Isn't Clear from Transcript\n\nIf the transcript's code descriptions aren't detailed enough, follow this fallback workflow:\n\n1. **Check Resources Tab**\n   - Navigate back to the WWDC session page\n   - Click \"Resources\" tab\n   - Look for \"Download Sample Code\" or \"View on GitHub\"\n   - Download Xcode project with complete working implementation\n\n2. **Use sosumi.ai for API Details**\n   - Look up specific APIs mentioned in transcript\n   - Example: Transcript says \"widgetAccentedRenderingMode\" → look up `sosumi.ai/documentation/swiftui/widgetaccentedrenderingmode`\n   - Get exact signature, parameters, usage\n\n3. **Jump to Timestamp in Video**\n   - Use transcript timestamp to jump directly to code explanation in video\n   - Example: Transcript says code at `[4:23]` → watch that specific 30-second segment\n   - Faster than watching entire 45-minute session\n\n4. **Combine Sources**\n   - Transcript = conceptual understanding + workflow\n   - Resources = complete code\n   - sosumi.ai = API details\n   - Result: Full picture without manually reconstructing everything\n\n**Example transcript structure**:\n```markdown\n# Session Title - WWDC## - Videos - Apple Developer\n\n## Chapters\n- 0:00 - Introduction\n- 1:23 - Key Topic 1\n\n## Transcript\n0:00\nSpeaker: Welcome to this session...\n\n[timestamp]\nNow I'll add the widgetAccentedRenderingMode modifier...\n```\n\n### Example Session\n\n**WWDC 2025-278** \"What's new in widgets\":\n- Navigate: `https://developer.apple.com/videos/play/wwdc2025/278/`\n- Captured: `001-navigate.md`\n- Contains: ~15 minutes of full transcript with API references and code concepts\n\n## Apple Documentation via sosumi.ai\n\n### Why sosumi.ai\n\nDeveloper.apple.com documentation is HTML-heavy and difficult to parse. sosumi.ai provides the same content in clean markdown format.\n\n### URL Pattern\n\n**Instead of**:\n```\nhttps://developer.apple.com/documentation/widgetkit\n```\n\n**Use**:\n```\nhttps://sosumi.ai/documentation/widgetkit\n```\n\n### URL Pattern Rules\n\n**Format**: `https://sosumi.ai/documentation/[framework]`\n\n**Rules for framework name**:\n1. **Lowercase** - Use lowercase even if framework is capitalized (SwiftUI → swiftui)\n2. **No spaces** - Remove all spaces (Core Data → coredata)\n3. **No hyphens** - Remove all hyphens (App Intents → appintents, NOT app-intents)\n4. **Case-insensitive** - Both `SwiftUI` and `swiftui` work, but lowercase is recommended\n\n**Common mistakes**:\n- ❌ `app-intents` → ✅ `appintents`\n- ❌ `axiom-data (skills/core-data.md)` → ✅ `coredata`\n- ❌ `AVFoundation` → ✅ `avfoundation`\n\n**Examples**:\n| Framework Name | sosumi.ai URL |\n|----------------|---------------|\n| SwiftUI | `sosumi.ai/documentation/swiftui` |\n| App Intents | `sosumi.ai/documentation/appintents` |\n| Core Data | `sosumi.ai/documentation/coredata` |\n| AVFoundation | `sosumi.ai/documentation/avfoundation` |\n| UIKit | `sosumi.ai/documentation/uikit` |\n\n### Using with WebFetch or Read Tools\n\n```\nWebFetch:\n  url: https://sosumi.ai/documentation/widgetkit/widget\n  prompt: \"Extract information about Widget protocol\"\n\nResult: Clean markdown with API signatures, descriptions, examples\n```\n\n### Framework Examples\n\n| Framework | sosumi.ai URL |\n|-----------|---------------|\n| WidgetKit | `https://sosumi.ai/documentation/widgetkit` |\n| SwiftUI | `https://sosumi.ai/documentation/swiftui` |\n| ActivityKit | `https://sosumi.ai/documentation/activitykit` |\n| App Intents | `https://sosumi.ai/documentation/appintents` |\n| Foundation | `https://sosumi.ai/documentation/foundation` |\n\n## Common Research Workflows\n\n### Workflow 1: New iOS Feature Research\n\n**Goal**: Create a comprehensive skill for a new iOS 26 feature.\n\n1. **Find WWDC sessions** — Search \"WWDC 2025 [feature name]\"\n2. **Get transcripts** — Navigate with Chrome to each session\n3. **Read transcripts** — Extract key concepts, code patterns, gotchas\n4. **Get API docs** — Use sosumi.ai for framework reference\n5. **Cross-reference** — Verify code samples match documentation\n6. **Create skill** — Combine transcript insights + API reference\n\n**Time saved**: 3-4 hours vs. watching videos and manual transcription\n\n### Workflow 2: API Deep Dive\n\n**Goal**: Understand a specific API or protocol.\n\n1. **sosumi.ai docs** — Get protocol/class definition\n2. **WWDC sessions** — Search for sessions mentioning the API\n3. **Code samples** — Extract from transcript code blocks\n4. **Verify patterns** — Ensure examples match latest API\n\n### Workflow 3: Multiple Sessions Research\n\n**Goal**: Comprehensive coverage across multiple years (e.g., widgets evolution).\n\n1. **Parallel navigation** — Use Chrome to visit 3-6 sessions\n2. **Read all transcripts** — Compare how APIs evolved\n3. **Extract timeline** — iOS 14 → 17 → 18 → 26 changes\n4. **Consolidate** — Create unified skill with version annotations\n\n**Example**: Extensions & Widgets skill used 6 WWDC sessions (2023-2025)\n\n## Anti-Patterns\n\n### ❌ DON'T: Manual Video Watching\n\n```\nBAD:\n1. Play WWDC video\n2. Pause and take notes\n3. Rewind to capture code\n4. Type out examples manually\n\nResult: 45 minutes per session\n```\n\n### ✅ DO: Chrome Auto-Capture\n\n```\nGOOD:\n1. Navigate with Chrome\n2. Read captured .md file\n3. Copy code blocks directly\n4. Reference timestamps for context\n\nResult: 5 minutes per session\n```\n\n### ❌ DON'T: Scrape developer.apple.com HTML\n\n```\nBAD:\nUse WebFetch on developer.apple.com/documentation\nResult: Complex HTML parsing required\n```\n\n### ✅ DO: Use sosumi.ai\n\n```\nGOOD:\nUse WebFetch on sosumi.ai/documentation\nResult: Clean markdown, instant access\n```\n\n## Troubleshooting\n\n### superpowers-chrome MCP not available\n\n**Symptom**: `mcp__plugin_superpowers-chrome_chrome__use_browser` isn't loaded in this session.\n\n**Solution**: Fall back to the `agent-browser` CLI (`/opt/homebrew/bin/agent-browser`) to fetch the page, then read its output. Don't give up on the content or kill the user's Chrome — launch a separate profile instead if a live browser is required.\n\n### Chrome Session Directory Not Found\n\n**Symptom**: Can't locate `001-navigate.md` file\n\n**Solution**:\n1. Check Chrome actually navigated (look for URL confirmation)\n2. Find latest session: `ls -lt ~/Library/Caches/superpowers/browser/*/`\n3. Session directory format: `YYYY-MM-DD/session-TIMESTAMP/`\n\n### Transcript Incomplete\n\n**Symptom**: File exists but missing transcript\n\n**Solution**:\n1. Page may still be loading - wait 2-3 seconds\n2. Try navigating again\n3. Some sessions require scrolling to load full content\n\n### sosumi.ai Returns Error\n\n**Symptom**: 404 or invalid URL\n\n**Solution**:\n1. Verify framework name spelling\n2. Check sosumi.ai format: `/documentation/[frameworkname]`\n3. Fallback: Use developer.apple.com but expect HTML\n\n## Verification Checklist\n\nBefore using captured content:\n- ☐ Transcript includes timestamps\n- ☐ Code samples are complete (not truncated)\n- ☐ Speaker names and chapter markers present\n- ☐ Multiple speakers properly attributed\n- ☐ Code syntax highlighting preserved\n\n## Resources\n\n**Skills**: superpowers-chrome:browsing, writing-skills, reviewing-reference-skills\n\n**Time Saved**: Using this technique saves 30-40 minutes per WWDC session vs. manual video watching and transcription. For comprehensive research spanning multiple sessions, savings compound to 3-4 hours per skill.\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -1829,21 +1829,21 @@
           "heading": "Troubleshooting",
           "level": 2,
           "startLine": 274,
-          "endLine": 302,
-          "charCount": 764
+          "endLine": 308,
+          "charCount": 1154
         },
         {
           "heading": "Verification Checklist",
           "level": 2,
-          "startLine": 303,
-          "endLine": 311,
+          "startLine": 309,
+          "endLine": 317,
           "charCount": 266
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 312,
-          "endLine": 317,
+          "startLine": 318,
+          "endLine": 323,
           "charCount": 314
         }
       ],
@@ -21556,7 +21556,7 @@
     "axiom-networking--networking-discipline": {
       "name": "axiom-networking--networking-discipline",
       "description": "Use when:",
-      "content": "\n# Network.framework Networking\n\n## When to Use This Skill\n\nUse when:\n- Implementing UDP/TCP connections for gaming, streaming, or messaging apps\n- Migrating from BSD sockets, CFSocket, NSStream, or SCNetworkReachability\n- Debugging connection timeouts or TLS handshake failures\n- Supporting network transitions (WiFi ↔ cellular) gracefully\n- Adopting structured concurrency networking patterns (iOS 26+)\n- Implementing custom protocols over TLS/QUIC\n- Requesting code review of networking implementation before shipping\n\n#### Related Skills\n- See `skills/networking-diag.md` for systematic troubleshooting of connection failures, timeouts, and performance issues\n- See `skills/network-framework-ref.md` for comprehensive API reference with all WWDC examples\n\n## Example Prompts\n\n#### 1. \"How do I migrate from SCNetworkReachability? My app checks connectivity before connecting.\"\n#### 2. \"My connection times out after 60 seconds. How do I debug this?\"\n#### 3. \"Should I use NWConnection or NetworkConnection? What's the difference?\"\n\n---\n\n## Red Flags — Anti-Patterns to Prevent\n\nIf you're doing ANY of these, STOP and use the patterns in this skill:\n\n### ❌ CRITICAL — Never Do These\n\n#### 1. Using SCNetworkReachability to check connectivity before connecting\n```swift\n// ❌ WRONG — Race condition\nif SCNetworkReachabilityGetFlags(reachability, &flags) {\n    connection.start() // Network may change between check and start\n}\n```\n**Why this fails** Network state changes between reachability check and connect(). You miss Network.framework's smart connection establishment (Happy Eyeballs, proxy handling, WiFi Assist). Apple deprecated this API in 2018.\n\n#### 2. Blocking socket operations on main thread\n```swift\n// ❌ WRONG — Guaranteed ANR (Application Not Responding)\nlet socket = socket(AF_INET, SOCK_STREAM, 0)\nconnect(socket, &addr, addrlen) // Blocks main thread\n```\n**Why this fails** Main thread hang → frozen UI → App Store rejection for responsiveness. Even \"quick\" connects take 200-500ms.\n\n#### 3. Manual DNS resolution with getaddrinfo\n```swift\n// ❌ WRONG — Misses Happy Eyeballs, proxies, VPN\nvar hints = addrinfo(...)\ngetaddrinfo(\"example.com\", \"443\", &hints, &results)\n// Now manually try each address...\n```\n**Why this fails** You reimplement 10+ years of Apple's connection logic poorly. Misses IPv4/IPv6 racing, proxy evaluation, VPN detection.\n\n#### 4. Hardcoded IP addresses instead of hostnames\n```swift\n// ❌ WRONG — Breaks proxy/VPN compatibility\nlet host = \"192.168.1.1\" // or any IP literal\n```\n**Why this fails** Proxy auto-configuration (PAC) needs hostname to evaluate rules. VPNs can't route properly. DNS-based load balancing broken.\n\n#### 5. Ignoring waiting state — not handling lack of connectivity\n```swift\n// ❌ WRONG — Poor UX\nconnection.stateUpdateHandler = { state in\n    if case .ready = state {\n        // Handle ready\n    }\n    // Missing: .waiting case\n}\n```\n**Why this fails** User sees \"Connection failed\" in Airplane Mode instead of \"Waiting for network.\" No automatic retry when WiFi returns.\n\n#### 6. Not using [weak self] in NWConnection completion handlers\n```swift\n// ❌ WRONG — Memory leak\nconnection.send(content: data, completion: .contentProcessed { error in\n    self.handleSend(error) // Retain cycle: connection → handler → self → connection\n})\n```\n**Why this fails** Connection retains completion handler, handler captures self strongly, self retains connection → memory leak.\n\n#### 7. Mixing async/await and completion handlers in NetworkConnection (iOS 26+)\n```swift\n// ❌ WRONG — Structured concurrency violation\nTask {\n    let connection = NetworkConnection(...)\n    connection.send(data) // async/await\n    connection.stateUpdateHandler = { ... } // completion handler — don't mix\n}\n```\n**Why this fails** NetworkConnection designed for pure async/await. Mixing paradigms creates difficult error propagation and cancellation issues.\n\n#### 8. Not supporting network transitions\n```swift\n// ❌ WRONG — Connection fails on WiFi → cellular transition\n// No viabilityUpdateHandler, no betterPathUpdateHandler\n// User walks out of building → connection dies\n```\n**Why this fails** Modern apps must handle network changes gracefully. 40% of connection failures happen during network transitions.\n\n---\n\n## Mandatory First Steps\n\n**ALWAYS complete these steps** before writing any networking code:\n\n```swift\n// Step 1: Identify your use case\n// Record: \"UDP gaming\" vs \"TLS messaging\" vs \"Custom protocol over QUIC\"\n// Ask: What data am I sending? Real-time? Reliable delivery needed?\n\n// Step 2: Check if URLSession is sufficient\n// URLSession handles: HTTP, HTTPS, WebSocket, TCP/TLS streams (via StreamTask)\n// Network.framework handles: UDP, custom protocols, low-level control, peer-to-peer\n\n// If HTTP/HTTPS/WebSocket → STOP, use URLSession instead\n// Example:\nURLSession.shared.dataTask(with: url) { ... } // ✅ Correct for HTTP\n\n// Step 3: Choose API version based on deployment target\nif #available(iOS 26, *) {\n    // Use NetworkConnection (structured concurrency, async/await)\n    // TLV framing built-in, Coder protocol for Codable types\n} else {\n    // Use NWConnection (completion handlers)\n    // Manual framing or custom framers\n}\n\n// Step 4: Verify you're NOT using deprecated APIs\n// Search your codebase for these:\n// - SCNetworkReachability → Use connection waiting state\n// - CFSocket → Use NWConnection\n// - NSStream, CFStream → Use NWConnection\n// - NSNetService → Use NWBrowser or NetworkBrowser\n// - getaddrinfo → Let Network.framework handle DNS\n\n// To search:\n// grep -rn \"SCNetworkReachability\\|CFSocket\\|NSStream\\|getaddrinfo\" .\n```\n\n#### What this tells you\n- If HTTP/HTTPS: Use URLSession, not Network.framework\n- If iOS 26+ deployment: Use NetworkConnection with async/await\n- If iOS 12-18 support needed: Use NWConnection with completion handlers\n- If any deprecated API found: Must migrate before shipping (App Store review concern)\n\n---\n\n## Decision Tree\n\nUse this to select the correct pattern in 2 minutes:\n\n```\nNeed networking?\n├─ HTTP, HTTPS, or WebSocket?\n│  └─ YES → Use URLSession (NOT Network.framework)\n│     ✅ URLSession.shared.dataTask(with: url)\n│     ✅ URLSession.webSocketTask(with: url)\n│     ✅ URLSession.streamTask(withHostName:port:) for TCP/TLS\n│\n├─ iOS 26+ and can use structured concurrency?\n│  └─ YES → NetworkConnection path (async/await)\n│     ├─ TCP with TLS security?\n│     │  └─ Pattern 1a: NetworkConnection + TLS\n│     │     Time: 10-15 minutes\n│     │\n│     ├─ UDP for gaming/streaming?\n│     │  └─ Pattern 1b: NetworkConnection + UDP\n│     │     Time: 10-15 minutes\n│     │\n│     ├─ Need message boundaries (framing)?\n│     │  └─ Pattern 1c: TLV Framing\n│     │     Type-Length-Value for mixed message types\n│     │     Time: 15-20 minutes\n│     │\n│     └─ Send/receive Codable objects directly?\n│        └─ Pattern 1d: Coder Protocol\n│           No manual JSON encoding needed\n│           Time: 10-15 minutes\n│\n└─ iOS 12-18 or need completion handlers?\n   └─ YES → NWConnection path (callbacks)\n      ├─ TCP with TLS security?\n      │  └─ Pattern 2a: NWConnection + TLS\n      │     stateUpdateHandler, completion-based send/receive\n      │     Time: 15-20 minutes\n      │\n      ├─ UDP streaming with batching?\n      │  └─ Pattern 2b: NWConnection + UDP Batch\n      │     connection.batch for 30% CPU reduction\n      │     Time: 10-15 minutes\n      │\n      ├─ Listening for incoming connections?\n      │  └─ Pattern 2c: NWListener\n      │     Accept inbound connections, newConnectionHandler\n      │     Time: 20-25 minutes\n      │\n      └─ Network discovery (Bonjour)?\n         └─ Pattern 2d: NWBrowser\n            Discover services on local network\n            Time: 25-30 minutes\n```\n\n#### Quick selection guide\n- Gaming (low latency, some loss OK) → UDP patterns (1b or 2b)\n- Messaging (reliable, ordered) → TLS patterns (1a or 2a)\n- Mixed message types → TLV or Coder (1c or 1d)\n- Peer-to-peer → Discovery patterns (2d) + incoming (2c)\n\n---\n\n## Common Patterns\n\n### Pattern 1a: NetworkConnection with TLS (iOS 26+)\n\n**Use when** iOS 26+ deployment, need reliable TCP with TLS security, want async/await\n\n**Time cost** 10-15 minutes\n\n#### ❌ BAD: Manual DNS, Blocking Socket\n```swift\n// WRONG — Don't do this\nvar hints = addrinfo(...)\ngetaddrinfo(\"www.example.com\", \"1029\", &hints, &results)\nlet sock = socket(AF_INET, SOCK_STREAM, 0)\nconnect(sock, results.pointee.ai_addr, results.pointee.ai_addrlen) // Blocks!\n```\n\n#### ✅ GOOD: NetworkConnection with Declarative Stack\n\n```swift\nimport Network\n\n// Basic connection with TLS\nlet connection = NetworkConnection(\n    to: .hostPort(host: \"www.example.com\", port: 1029)\n) {\n    TLS() // TCP and IP inferred automatically\n}\n\n// Send and receive with async/await\npublic func sendAndReceiveWithTLS() async throws {\n    let outgoingData = Data(\"Hello, world!\".utf8)\n    try await connection.send(outgoingData)\n\n    let incomingData = try await connection.receive(exactly: 98).content\n    print(\"Received data: \\(incomingData)\")\n}\n\n// Optional: Monitor connection state for UI updates\nTask {\n    for await state in connection.states {\n        switch state {\n        case .preparing:\n            print(\"Establishing connection...\")\n        case .ready:\n            print(\"Connected!\")\n        case .waiting(let error):\n            print(\"Waiting for network: \\(error)\")\n        case .failed(let error):\n            print(\"Connection failed: \\(error)\")\n        case .cancelled:\n            print(\"Connection cancelled\")\n        @unknown default:\n            break\n        }\n    }\n}\n```\n\n#### Custom parameters for low data mode\n\n```swift\nlet connection = NetworkConnection(\n    to: .hostPort(host: \"www.example.com\", port: 1029),\n    using: .parameters {\n        TLS {\n            TCP {\n                IP()\n                    .fragmentationEnabled(false)\n            }\n        }\n    }\n    .constrainedPathsProhibited(true) // Don't use cellular in low data mode\n)\n```\n\n#### When to use\n- Secure messaging, email protocols (IMAP, SMTP)\n- Custom protocols requiring encryption\n- APIs using non-HTTP protocols\n\n#### Performance characteristics\n- Smart connection establishment: Happy Eyeballs (IPv4/IPv6 racing), proxy evaluation, VPN detection\n- TLS 1.3 by default (faster handshake)\n- User-space networking: ~30% lower CPU usage vs sockets\n\n#### Debugging\n- Enable logging: `-NWLoggingEnabled 1 -NWConnectionLoggingEnabled 1`\n- Check connection.states async sequence for state transitions\n- Test on real device with Airplane Mode toggle\n\n---\n\n### Pattern 1b: NetworkConnection UDP (iOS 26+)\n\n**Use when** iOS 26+ deployment, need UDP datagrams for gaming or real-time streaming, want async/await\n\n**Time cost** 10-15 minutes\n\n#### ❌ BAD: Blocking UDP Socket\n```swift\n// WRONG — Don't do this\nlet sock = socket(AF_INET, SOCK_DGRAM, 0)\nlet sent = sendto(sock, buffer, length, 0, &addr, addrlen)\n// Blocks, no batching, high CPU overhead\n```\n\n#### ✅ GOOD: NetworkConnection with UDP\n\n```swift\nimport Network\n\n// UDP connection for real-time data\nlet connection = NetworkConnection(\n    to: .hostPort(host: \"game-server.example.com\", port: 9000)\n) {\n    UDP()\n}\n\n// Send game state update\npublic func sendGameUpdate() async throws {\n    let gameState = Data(\"player_position:100,50\".utf8)\n    try await connection.send(gameState)\n}\n\n// Receive game updates\npublic func receiveGameUpdates() async throws {\n    while true {\n        let (data, _) = try await connection.receive()\n        processGameState(data)\n    }\n}\n\n// Batch multiple datagrams for efficiency (30% CPU reduction)\npublic func sendMultipleUpdates(_ updates: [Data]) async throws {\n    for update in updates {\n        try await connection.send(update)\n    }\n}\n```\n\n#### When to use\n- Real-time gaming (player position, game state)\n- Live streaming (video/audio frames where some loss is acceptable)\n- IoT telemetry (sensor data)\n\n#### Performance characteristics\n- User-space networking: ~30% lower CPU vs sockets\n- Batching multiple sends reduces context switches\n- ECN (Explicit Congestion Notification) enabled automatically\n\n#### Debugging\n- Use Instruments Network template to profile datagram throughput\n- Check for packet loss with receive timeouts\n- Test on cellular network (higher latency/loss)\n\n---\n\n### Pattern 1c: TLV Framing (iOS 26+)\n\n**Use when** Need message boundaries on stream protocols (TCP/TLS), have mixed message types, want type-safe message handling\n\n**Time cost** 15-20 minutes\n\n**Background** Stream protocols (TCP/TLS) don't preserve message boundaries. If you send 3 chunks, receiver might get them 1 byte at a time, or all at once. TLV (Type-Length-Value) solves this by encoding each message with its type and length.\n\n#### ❌ BAD: Manual Length Prefix Parsing\n```swift\n// WRONG — Error-prone, boilerplate-heavy\nlet lengthData = try await connection.receive(exactly: 4).content\nlet length = lengthData.withUnsafeBytes { $0.load(as: UInt32.self) }\nlet messageData = try await connection.receive(exactly: Int(length)).content\n// Now decode manually...\n```\n\n#### ✅ GOOD: TLV Framing with Type Safety\n\n```swift\nimport Network\n\n// Define your message types\nenum GameMessage: Int {\n    case selectedCharacter = 0\n    case move = 1\n}\n\nstruct GameCharacter: Codable {\n    let character: String\n}\n\nstruct GameMove: Codable {\n    let row: Int\n    let column: Int\n}\n\n// Connection with TLV framing\nlet connection = NetworkConnection(\n    to: .hostPort(host: \"www.example.com\", port: 1029)\n) {\n    TLV {\n        TLS()\n    }\n}\n\n// Send typed messages\npublic func sendWithTLV() async throws {\n    let characterData = try JSONEncoder().encode(GameCharacter(character: \"🐨\"))\n    try await connection.send(characterData, type: GameMessage.selectedCharacter.rawValue)\n}\n\n// Receive typed messages\npublic func receiveWithTLV() async throws {\n    let (incomingData, metadata) = try await connection.receive()\n\n    switch GameMessage(rawValue: metadata.type) {\n    case .selectedCharacter:\n        let character = try JSONDecoder().decode(GameCharacter.self, from: incomingData)\n        print(\"Character selected: \\(character)\")\n    case .move:\n        let move = try JSONDecoder().decode(GameMove.self, from: incomingData)\n        print(\"Move: row=\\(move.row), column=\\(move.column)\")\n    case .none:\n        print(\"Unknown message type: \\(metadata.type)\")\n    }\n}\n```\n\n#### When to use\n- Mixed message types in same connection (chat + presence + typing indicators)\n- Existing protocols using TLV (many custom protocols)\n- Need message boundaries without heavy framing overhead\n\n#### How it works\n- Type: UInt32 message identifier (your enum raw value)\n- Length: UInt32 message size (automatic)\n- Value: Actual message bytes\n\n#### Performance characteristics\n- Minimal overhead: 8 bytes per message (type + length)\n- No manual parsing: Framework handles framing\n- Type-safe: Compiler catches message type errors\n\n---\n\n### Pattern 1d: Coder Protocol (iOS 26+)\n\n**Use when** Sending/receiving Codable types, want to eliminate JSON boilerplate, need type-safe message handling\n\n**Time cost** 10-15 minutes\n\n**Background** Most apps manually encode Codable types to JSON, send bytes, receive bytes, decode JSON. Coder protocol eliminates this boilerplate by handling serialization automatically.\n\n#### ❌ BAD: Manual JSON Encoding/Decoding\n```swift\n// WRONG — Boilerplate-heavy, error-prone\nlet encoder = JSONEncoder()\nlet data = try encoder.encode(message)\ntry await connection.send(data)\n\nlet receivedData = try await connection.receive().content\nlet decoder = JSONDecoder()\nlet message = try decoder.decode(GameMessage.self, from: receivedData)\n```\n\n#### ✅ GOOD: Coder Protocol for Direct Codable Send/Receive\n\n```swift\nimport Network\n\n// Define message types as Codable enum\nenum GameMessage: Codable {\n    case selectedCharacter(String)\n    case move(row: Int, column: Int)\n}\n\n// Connection with Coder protocol\nlet connection = NetworkConnection(\n    to: .hostPort(host: \"www.example.com\", port: 1029)\n) {\n    Coder(GameMessage.self, using: .json) {\n        TLS()\n    }\n}\n\n// Send Codable types directly\npublic func sendWithCoder() async throws {\n    let selectedCharacter: GameMessage = .selectedCharacter(\"🐨\")\n    try await connection.send(selectedCharacter) // No encoding needed!\n}\n\n// Receive Codable types directly\npublic func receiveWithCoder() async throws {\n    let gameMessage = try await connection.receive().content // Returns GameMessage!\n\n    switch gameMessage {\n    case .selectedCharacter(let character):\n        print(\"Character selected: \\(character)\")\n    case .move(let row, let column):\n        print(\"Move: (\\(row), \\(column))\")\n    }\n}\n```\n\n#### Supported formats\n- `.json` — JSON encoding (most common, human-readable)\n- `.propertyList` — Property list encoding (smaller, faster)\n\n#### When to use\n- App-to-app communication (you control both ends)\n- Prototyping (fastest time to working code)\n- Type-safe protocols (compiler catches message structure changes)\n\n#### When NOT to use\n- Interoperating with non-Swift servers\n- Need custom wire format\n- Performance-critical (prefer TLV with manual encoding for control)\n\n#### Benefits\n- No JSON boilerplate: ~50 lines → ~10 lines\n- Type-safe: Compiler catches message structure changes\n- Automatic framing: Handles message boundaries\n\n---\n\n## Legacy iOS 12-18 Patterns\n\nFor apps supporting iOS 12-18 that can't use async/await yet, see `skills/networking-legacy.md`:\n- Pattern 2a: NWConnection with TLS (completion handlers)\n- Pattern 2b: NWConnection UDP Batch (30% CPU reduction)\n- Pattern 2c: NWListener (accepting connections, Bonjour)\n- Pattern 2d: Network Discovery (NWBrowser for service discovery)\n\n\n## Pressure Scenarios\n\n### Scenario 1: Reachability Race Condition Under App Store Deadline\n\n#### Context\n\nYou're 3 days from App Store submission. QA reports connection failures on cellular networks (15% failure rate). Your PM reviews the code and suggests: \"Just add a reachability check before connecting. If there's no network, show an error immediately instead of timing out.\"\n\n#### Pressure signals\n- ⏰ **Deadline pressure** \"App Store deadline is Friday. We need this fixed by EOD Wednesday.\"\n- 👔 **Authority pressure** PM (non-technical) suggesting specific implementation\n- 💸 **Sunk cost** Already spent 2 hours debugging connection logs, found nothing obvious\n- 📊 **Customer impact** \"15% of users affected, mostly on cellular\"\n\n#### Rationalization trap\n\n*\"SCNetworkReachability is Apple's API, it must be correct. I've seen it in Stack Overflow answers with 500+ upvotes. Adding a quick reachability check will fix the issue today, and I can refactor it properly after launch. The deadline is more important than perfect code right now.\"*\n\n#### Why this fails\n\n1. **Race condition** Network state changes between reachability check and connection start. You check \"WiFi available\" at 10:00:00.000, but WiFi disconnects at 10:00:00.050, then you call connection.start() at 10:00:00.100. Connection fails, but reachability said it was available.\n\n2. **Misses smart connection establishment** Network.framework tries multiple strategies (IPv4, IPv6, proxies, WiFi Assist fallback to cellular). SCNetworkReachability gives you \"yes/no\" but doesn't tell you which strategy will work.\n\n3. **Deprecated API** Apple explicitly deprecated SCNetworkReachability in WWDC 2018. App Store Review may flag this as using legacy APIs.\n\n4. **Doesn't solve actual problem** 15% cellular failures likely caused by not handling waiting state, not by absence of reachability check.\n\n#### MANDATORY response\n\n```swift\n// ❌ NEVER check reachability before connecting\n/*\nif SCNetworkReachabilityGetFlags(reachability, &flags) {\n    if flags.contains(.reachable) {\n        connection.start()\n    } else {\n        showError(\"No network\") // RACE CONDITION\n    }\n}\n*/\n\n// ✅ ALWAYS let Network.framework handle waiting state\nlet connection = NWConnection(\n    host: NWEndpoint.Host(\"api.example.com\"),\n    port: NWEndpoint.Port(integerLiteral: 443),\n    using: .tls\n)\n\nconnection.stateUpdateHandler = { [weak self] state in\n    switch state {\n    case .preparing:\n        // Show: \"Connecting...\"\n        self?.showStatus(\"Connecting...\")\n\n    case .ready:\n        // Connection established\n        self?.hideStatus()\n        self?.sendRequest()\n\n    case .waiting(let error):\n        // CRITICAL: Don't fail here, show \"Waiting for network\"\n        // Network.framework will automatically retry when network returns\n        print(\"Waiting for network: \\(error)\")\n        self?.showStatus(\"Waiting for network...\")\n        // User walks out of elevator → WiFi returns → automatic retry\n\n    case .failed(let error):\n        // Only fail after framework exhausts all options\n        // (tried IPv4, IPv6, proxies, WiFi Assist, waited for network)\n        print(\"Connection failed: \\(error)\")\n        self?.showError(\"Connection failed. Please check your network.\")\n\n    case .cancelled:\n        self?.hideStatus()\n\n    @unknown default:\n        break\n    }\n}\n\nconnection.start(queue: .main)\n```\n\n#### Professional push-back template\n\n*\"I understand the deadline pressure. However, adding SCNetworkReachability will create a race condition that will make the 15% failure rate worse, not better. Apple deprecated this API in 2018 specifically because it causes these issues.*\n\n*The correct fix is to handle the waiting state properly, which Network.framework provides. This will actually solve the cellular failures because the framework will automatically retry when network becomes available (e.g., user walks out of elevator, WiFi returns).*\n\n*Implementation time: 15 minutes to add waiting state handler vs 2-4 hours debugging reachability race conditions. The waiting state approach is both faster AND more reliable.\"*\n\n#### Time saved\n- **Reachability approach** 30 min to implement + 2-4 hours debugging race conditions + potential App Store rejection = 3-5 hours total\n- **Waiting state approach** 15 minutes to implement + 0 hours debugging = 15 minutes total\n- **Savings** 2.5-4.5 hours + avoiding App Store review issues\n\n#### Actual root cause of 15% cellular failures\n\nLikely missing waiting state handler. When user is in area with weak cellular, connection moves to waiting state. Without handler, app shows \"Connection failed\" instead of \"Waiting for network,\" so user force-quits and reports \"doesn't work on cellular.\"\n\n---\n\n### Scenario 2: Blocking Socket Call Causing Main Thread Hang\n\n#### Context\n\nYour app has 1-star reviews: \"App freezes for 5-10 seconds randomly.\" After investigation, you find a \"quick\" socket connect() call on the main thread. Your tech lead says: \"This is a legacy code path from 2015. It only connects to localhost (127.0.0.1), so it should be instant. The real fix is a 3-week refactor to move all networking to a background queue, but we don't have time. Just leave it for now.\"\n\n#### Pressure signals\n- ⏰ **Time pressure** \"3-week refactor, we're in feature freeze for 2.0 launch\"\n- 💸 **Sunk cost** \"This code has worked for 8 years, why change it now?\"\n- 🎯 **Scope pressure** \"It's just localhost, not a real network call\"\n- 📊 **Low frequency** \"Only 2% of users see this freeze\"\n\n#### Rationalization trap\n\n*\"Connecting to localhost is basically instant. The freeze must be caused by something else. Besides, refactoring this legacy code is risky—what if I break something? Better to leave working code alone and focus on the new features for 2.0.\"*\n\n#### Why this fails\n\n1. **Even localhost can block** If the app has many threads, the kernel may schedule other work before returning from connect(). Even 50-100ms is visible to users as a stutter.\n\n2. **ANR (Application Not Responding)** iOS watchdog will terminate your app if main thread blocks for >5 seconds. This explains \"random\" crashes.\n\n3. **Localhost isn't always available** If VPN is active, localhost routing can be delayed. If device is under memory pressure, kernel scheduling is slower.\n\n4. **Guaranteed App Store rejection** Apple's App Store Review Guidelines explicitly check for main thread blocking. This will fail App Review's performance tests.\n\n#### MANDATORY response\n\n```swift\n// ❌ NEVER call blocking socket APIs on main thread\n/*\nlet sock = socket(AF_INET, SOCK_STREAM, 0)\nconnect(sock, &addr, addrlen) // BLOCKS MAIN THREAD → ANR\n*/\n\n// ✅ ALWAYS use async connection, even for localhost\nfunc connectToLocalhost() {\n    let connection = NWConnection(\n        host: \"127.0.0.1\",\n        port: 8080,\n        using: .tcp\n    )\n\n    connection.stateUpdateHandler = { [weak self] state in\n        switch state {\n        case .ready:\n            print(\"Connected to localhost\")\n            self?.sendRequest(on: connection)\n        case .failed(let error):\n            print(\"Localhost connection failed: \\(error)\")\n        default:\n            break\n        }\n    }\n\n    // Non-blocking, returns immediately\n    connection.start(queue: .main)\n}\n```\n\n#### Alternative: If you must keep legacy socket code (not recommended)\n\n```swift\n// Move blocking call to background queue (minimum viable fix)\nDispatchQueue.global(qos: .userInitiated).async {\n    let sock = socket(AF_INET, SOCK_STREAM, 0)\n    connect(sock, &addr, addrlen) // Still blocks, but not main thread\n\n    DispatchQueue.main.async {\n        // Update UI after connection\n    }\n}\n```\n\n#### Professional push-back template\n\n*\"I understand this code has been stable for 8 years. However, Apple's App Store Review now runs automated performance tests that will fail apps with main thread blocking. This will block our 2.0 release.*\n\n*The fix doesn't require a 3-week refactor. I can wrap the existing socket code in a background queue dispatch in 30 minutes. Or, I can replace it with NWConnection (non-blocking) in 45 minutes, which also eliminates the socket management code entirely.*\n\n*Neither approach requires touching other parts of the codebase. We can ship 2.0 on schedule AND fix the ANR crashes.\"*\n\n#### Time saved\n- **Leave it alone** 0 hours upfront + 4-8 hours when App Review rejects + user churn from 1-star reviews\n- **Background queue fix** 30 minutes = main thread safe\n- **NWConnection fix** 45 minutes = main thread safe + eliminates socket management\n- **Savings** 3-7 hours + avoiding App Store rejection\n\n---\n\n### Scenario 3: Design Review Pressure — \"Use WebSockets for Everything\"\n\n#### Context\n\nYour team is building a multiplayer game with real-time player positions (20 updates/second). In architecture review, the senior architect says: \"All our other apps use WebSockets for networking. We should use WebSockets here too for consistency. It's production-proven, and the backend team already knows how to deploy WebSocket servers.\"\n\n#### Pressure signals\n- 👔 **Authority pressure** Senior architect with 15 years experience\n- 🏢 **Org consistency** \"All other apps use WebSockets\"\n- 💼 **Backend expertise** \"Backend team doesn't know UDP\"\n- 📊 **Proven technology** \"WebSockets are battle-tested\"\n\n#### Rationalization trap\n\n*\"The architect has way more experience than me. If WebSockets work for the other apps, they'll work here too. UDP sounds complicated and risky. Better to stick with proven technology than introduce something new that might break in production.\"*\n\n#### Why this fails for real-time gaming\n\n1. **Head-of-line blocking** WebSockets use TCP. If one packet is lost, TCP blocks ALL subsequent packets until retransmission succeeds. In a game, this means old player position (frame 100) blocks new position (frame 120), causing stutter.\n\n2. **Latency overhead** TCP requires 3-way handshake (SYN, SYN-ACK, ACK) before sending data. For 20 updates/second, this overhead adds 50-150ms latency.\n\n3. **Unnecessary reliability** Game position updates don't need guaranteed delivery. If frame 100 is lost, frame 101 (5ms later) makes it obsolete. TCP retransmits frame 100, wasting bandwidth.\n\n4. **Connection establishment** WebSockets require HTTP upgrade handshake (4 round trips) before data transfer. UDP starts sending immediately.\n\n#### MANDATORY response\n\n```swift\n// ❌ WRONG for real-time gaming\n/*\nlet webSocket = URLSession.shared.webSocketTask(with: url)\nwebSocket.resume()\nwebSocket.send(.data(positionUpdate)) { error in\n    // TCP guarantees delivery but blocks on loss\n    // Old position blocks new position → stutter\n}\n*/\n\n// ✅ CORRECT for real-time gaming\nlet connection = NWConnection(\n    host: NWEndpoint.Host(\"game-server.example.com\"),\n    port: NWEndpoint.Port(integerLiteral: 9000),\n    using: .udp\n)\n\nconnection.stateUpdateHandler = { state in\n    if case .ready = state {\n        print(\"Ready to send game updates\")\n    }\n}\n\nconnection.start(queue: .main)\n\n// Send player position updates (20/second)\nfunc sendPosition(_ position: PlayerPosition) {\n    let data = encodePosition(position)\n    connection.send(content: data, completion: .contentProcessed { error in\n        // Fire and forget, no blocking\n        // If this frame is lost, next frame (50ms later) makes it obsolete\n    })\n}\n```\n\n#### Technical comparison table\n\n| Aspect | WebSocket (TCP) | UDP |\n|--------|----------------|-----|\n| Latency (typical) | 50-150ms | 10-30ms |\n| Head-of-line blocking | Yes (old data blocks new) | No |\n| Connection setup | 4 round trips (HTTP upgrade) | 0 round trips |\n| Packet loss handling | Blocks until retransmit | Continues with next packet |\n| Bandwidth (20 updates/sec) | ~40 KB/s | ~20 KB/s |\n| Best for | Chat, API calls | Gaming, streaming |\n\n#### Professional push-back template\n\n*\"I appreciate the concern about consistency and proven technology. WebSockets are excellent for our other apps because they're doing chat, notifications, and API calls—use cases where guaranteed delivery matters.*\n\n*However, real-time gaming has different requirements. Let me explain with a concrete example:*\n\n*Player moves from position A to B to C (3 updates in 150ms). With WebSockets:*\n*- Frame A sent*\n*- Frame A packet lost*\n*- Frame B sent, but TCP blocks it (waiting for Frame A retransmit)*\n*- Frame C sent, also blocked*\n*- Frame A retransmits, arrives 200ms later*\n*- Frames B and C finally delivered*\n*- Result: 200ms of frozen player position, then sudden jump to C*\n\n*With UDP:*\n*- Frame A sent and lost*\n*- Frame B sent and delivered (50ms later)*\n*- Frame C sent and delivered (50ms later)*\n*- Result: Smooth position updates, no freeze*\n\n*The backend team doesn't need to learn UDP from scratch—they can use the same Network.framework on server-side Swift (Vapor, Hummingbird). Implementation time is the same.*\n\n*I'm happy to do a proof-of-concept this week showing latency comparison. We can measure both approaches with real data.\"*\n\n#### When WebSockets ARE correct\n- Chat applications (message delivery must be reliable)\n- Turn-based games (moves must arrive in order)\n- API calls over persistent connection\n- Live notifications/updates\n\n#### Time saved\n- **WebSocket approach** 2 days implementation + 1-2 weeks debugging stutter/lag issues + potential rewrite = 3-4 weeks\n- **UDP approach** 2 days implementation + smooth gameplay = 2 days\n- **Savings** 2-3 weeks + better user experience\n\n---\n\n## Migration Guides\n\nFor detailed migration guides from legacy networking APIs, see `skills/networking-migration.md`:\n- Migration 1: BSD Sockets → NWConnection\n- Migration 2: NWConnection → NetworkConnection (iOS 26+)\n- Migration 3: URLSession StreamTask → NetworkConnection\n\n\n## Checklist\n\nBefore shipping networking code, verify:\n\n### Deprecated API Check\n- [ ] Not using SCNetworkReachability anywhere in codebase\n- [ ] Not using CFSocket, NSSocket, or BSD sockets directly\n- [ ] Not using NSStream or CFStream\n- [ ] Not using NSNetService (use NWBrowser instead)\n- [ ] Not calling getaddrinfo for manual DNS resolution\n\n### Connection Configuration\n- [ ] Using hostname, NOT hardcoded IP address\n- [ ] TLS enabled for sensitive data (passwords, tokens, user content)\n- [ ] Handling waiting state with user feedback (\"Waiting for network...\")\n- [ ] Not checking reachability before calling connection.start()\n\n### Memory Management\n- [ ] Using [weak self] in all NWConnection completion handlers\n- [ ] Or using NetworkConnection (iOS 26+) with async/await (no [weak self] needed)\n- [ ] Calling connection.cancel() when done to free resources\n\n### Network Transitions\n- [ ] Supporting network changes (WiFi → cellular, or vice versa)\n- [ ] Using viabilityUpdateHandler or betterPathUpdateHandler (NWConnection)\n- [ ] Or monitoring connection.states async sequence (NetworkConnection)\n- [ ] NOT tearing down connection immediately on viability change\n\n### Testing on Real Devices\n- [ ] Tested on real device (not just simulator)\n- [ ] Tested WiFi → cellular transition (walk out of building)\n- [ ] Tested Airplane Mode toggle (enable → disable)\n- [ ] Tested on IPv6-only network (some cellular carriers)\n- [ ] Tested with corporate VPN active\n- [ ] Tested with low signal (basement, elevator)\n\n### Performance\n- [ ] Using connection.batch for multiple UDP datagrams (30% CPU reduction)\n- [ ] Using contentProcessed completion for send pacing (not sleep())\n- [ ] Profiled with Instruments Network template\n- [ ] Connection establishment < 500ms (check with logging)\n\n### Error Handling\n- [ ] Handling .failed state with specific error\n- [ ] Timeout handling (don't wait forever in .preparing)\n- [ ] TLS handshake errors logged for debugging\n- [ ] User-facing errors are actionable (\"Check network\" not \"POSIX error 61\")\n\n### iOS 26+ Features (if using NetworkConnection)\n- [ ] Using TLV framing if need message boundaries\n- [ ] Using Coder protocol if sending Codable types\n- [ ] Using NetworkListener instead of NWListener\n- [ ] Using NetworkBrowser with Wi-Fi Aware for peer-to-peer\n\n---\n\n## Real-World Impact\n\n### User-Space Networking: 30% CPU Reduction\n\n**WWDC 2018 Demo** Live UDP video streaming comparison:\n- **BSD sockets** ~30% higher CPU usage on receiver\n- **Network.framework** ~30% lower CPU usage\n\n**Why** Traditional sockets copy data kernel → userspace. Network.framework uses memory-mapped regions (no copy) and reduces context switches from 100 syscalls → ~1 syscall (with batching).\n\n#### Impact for your app\n- Lower battery drain (30% less CPU = longer battery life)\n- Smoother gameplay (more CPU for rendering)\n- Cooler device (less thermal throttling)\n\n### Smart Connection Establishment: 50% Faster\n\n#### Traditional approach\n1. Call getaddrinfo (100-300ms DNS lookup)\n2. Try first IPv6 address, wait 5 seconds for timeout\n3. Try IPv4 address, finally connects\n\n#### Network.framework (Happy Eyeballs)\n1. Start DNS lookup in background\n2. As soon as first address arrives, try connecting\n3. Start second connection attempt 50ms later\n4. Use whichever connects first\n\n**Result** 50% faster connection establishment in dual-stack environments (measured by Apple)\n\n### Proper State Handling: 10x Crash Reduction\n\n**Customer report** App crash rate dropped from 5% → 0.5% after implementing waiting state handler.\n\n**Before** App showed \"Connection failed\" when no network, users force-quit app → crash report.\n\n**After** App showed \"Waiting for network\" and automatically retried when WiFi returned → users saw seamless reconnection.\n\n---\n\n## Resources\n\n**WWDC**: 2018-715, 2025-250\n\n**Skills**: See `skills/networking-diag.md`, `skills/network-framework-ref.md`\n\n---\n\n**Last Updated** 2025-12-02\n**Status** Production-ready patterns from WWDC 2018 and WWDC 2025\n**Tested** Patterns validated against Apple documentation and WWDC transcripts\n",
+      "content": "\n# Network.framework Networking\n\n## When to Use This Skill\n\nUse when:\n- Implementing UDP/TCP connections for gaming, streaming, or messaging apps\n- Migrating from BSD sockets, CFSocket, NSStream, or SCNetworkReachability\n- Debugging connection timeouts or TLS handshake failures\n- Supporting network transitions (WiFi ↔ cellular) gracefully\n- Adopting structured concurrency networking patterns (iOS 26+)\n- Implementing custom protocols over TLS/QUIC\n- Requesting code review of networking implementation before shipping\n\n#### Related Skills\n- See `skills/networking-diag.md` for systematic troubleshooting of connection failures, timeouts, and performance issues\n- See `skills/network-framework-ref.md` for comprehensive API reference with all WWDC examples\n\n## Example Prompts\n\n#### 1. \"How do I migrate from SCNetworkReachability? My app checks connectivity before connecting.\"\n#### 2. \"My connection times out after 60 seconds. How do I debug this?\"\n#### 3. \"Should I use NWConnection or NetworkConnection? What's the difference?\"\n\n---\n\n## Red Flags — Anti-Patterns to Prevent\n\nIf you're doing ANY of these, STOP and use the patterns in this skill:\n\n### ❌ CRITICAL — Never Do These\n\n#### 1. Using SCNetworkReachability to check connectivity before connecting\n```swift\n// ❌ WRONG — Race condition\nif SCNetworkReachabilityGetFlags(reachability, &flags) {\n    connection.start() // Network may change between check and start\n}\n```\n**Why this fails** Network state changes between reachability check and connect(). You miss Network.framework's smart connection establishment (Happy Eyeballs, proxy handling, WiFi Assist). Apple deprecated this API in 2018.\n\n#### 2. Blocking socket operations on main thread\n```swift\n// ❌ WRONG — Guaranteed ANR (Application Not Responding)\nlet socket = socket(AF_INET, SOCK_STREAM, 0)\nconnect(socket, &addr, addrlen) // Blocks main thread\n```\n**Why this fails** Main thread hang → frozen UI → App Store rejection for responsiveness. Even \"quick\" connects take 200-500ms.\n\n#### 3. Manual DNS resolution with getaddrinfo\n```swift\n// ❌ WRONG — Misses Happy Eyeballs, proxies, VPN\nvar hints = addrinfo(...)\ngetaddrinfo(\"example.com\", \"443\", &hints, &results)\n// Now manually try each address...\n```\n**Why this fails** You reimplement 10+ years of Apple's connection logic poorly. Misses IPv4/IPv6 racing, proxy evaluation, VPN detection.\n\n#### 4. Hardcoded IP addresses instead of hostnames\n```swift\n// ❌ WRONG — Breaks proxy/VPN compatibility\nlet host = \"192.168.1.1\" // or any IP literal\n```\n**Why this fails** Proxy auto-configuration (PAC) needs hostname to evaluate rules. VPNs can't route properly. DNS-based load balancing broken.\n\n#### 5. Ignoring waiting state — not handling lack of connectivity\n```swift\n// ❌ WRONG — Poor UX\nconnection.stateUpdateHandler = { state in\n    if case .ready = state {\n        // Handle ready\n    }\n    // Missing: .waiting case\n}\n```\n**Why this fails** User sees \"Connection failed\" in Airplane Mode instead of \"Waiting for network.\" No automatic retry when WiFi returns.\n\n#### 6. Not using [weak self] in NWConnection completion handlers\n```swift\n// ❌ WRONG — Memory leak\nconnection.send(content: data, completion: .contentProcessed { error in\n    self.handleSend(error) // Retain cycle: connection → handler → self → connection\n})\n```\n**Why this fails** Connection retains completion handler, handler captures self strongly, self retains connection → memory leak.\n\n#### 7. Mixing async/await and completion handlers in NetworkConnection (iOS 26+)\n```swift\n// ❌ WRONG — Structured concurrency violation\nTask {\n    let connection = NetworkConnection(...)\n    connection.send(data) // async/await\n    connection.stateUpdateHandler = { ... } // completion handler — don't mix\n}\n```\n**Why this fails** NetworkConnection designed for pure async/await. Mixing paradigms creates difficult error propagation and cancellation issues.\n\n#### 8. Not supporting network transitions\n```swift\n// ❌ WRONG — Connection fails on WiFi → cellular transition\n// No viabilityUpdateHandler, no betterPathUpdateHandler\n// User walks out of building → connection dies\n```\n**Why this fails** Modern apps must handle network changes gracefully. 40% of connection failures happen during network transitions.\n\n---\n\n## Mandatory First Steps\n\n**ALWAYS complete these steps** before writing any networking code:\n\n```swift\n// Step 1: Identify your use case\n// Record: \"UDP gaming\" vs \"TLS messaging\" vs \"Custom protocol over QUIC\"\n// Ask: What data am I sending? Real-time? Reliable delivery needed?\n\n// Step 2: Check if URLSession is sufficient\n// URLSession handles: HTTP, HTTPS, WebSocket, TCP/TLS streams (via StreamTask)\n// Network.framework handles: UDP, custom protocols, low-level control, peer-to-peer\n\n// If HTTP/HTTPS/WebSocket → STOP, use URLSession instead\n// Example:\nURLSession.shared.dataTask(with: url) { ... } // ✅ Correct for HTTP\n\n// Step 3: Choose API version based on deployment target\nif #available(iOS 26, *) {\n    // Use NetworkConnection (structured concurrency, async/await)\n    // TLV framing built-in, Coder protocol for Codable types\n} else {\n    // Use NWConnection (completion handlers)\n    // Manual framing or custom framers\n}\n\n// Step 4: Verify you're NOT using deprecated APIs\n// Search your codebase for these:\n// - SCNetworkReachability → Use connection waiting state\n// - CFSocket → Use NWConnection\n// - NSStream, CFStream → Use NWConnection\n// - NSNetService → Use NWBrowser or NetworkBrowser\n// - getaddrinfo → Let Network.framework handle DNS\n\n// To search:\n// grep -rn \"SCNetworkReachability\\|CFSocket\\|NSStream\\|getaddrinfo\" .\n```\n\n#### What this tells you\n- If HTTP/HTTPS: Use URLSession, not Network.framework\n- If iOS 26+ deployment: Use NetworkConnection with async/await\n- If iOS 12-18 support needed: Use NWConnection with completion handlers\n- If any deprecated API found: Must migrate before shipping (App Store review concern)\n\n---\n\n## Decision Tree\n\nUse this to select the correct pattern in 2 minutes:\n\n```\nNeed networking?\n├─ HTTP, HTTPS, or WebSocket?\n│  └─ YES → Use URLSession (NOT Network.framework)\n│     ✅ URLSession.shared.dataTask(with: url)\n│     ✅ URLSession.webSocketTask(with: url)\n│     ✅ URLSession.streamTask(withHostName:port:) for TCP/TLS\n│\n├─ iOS 26+ and can use structured concurrency?\n│  └─ YES → NetworkConnection path (async/await)\n│     ├─ TCP with TLS security?\n│     │  └─ Pattern 1a: NetworkConnection + TLS\n│     │     Time: 10-15 minutes\n│     │\n│     ├─ UDP for gaming/streaming?\n│     │  └─ Pattern 1b: NetworkConnection + UDP\n│     │     Time: 10-15 minutes\n│     │\n│     ├─ Need message boundaries (framing)?\n│     │  └─ Pattern 1c: TLV Framing\n│     │     Type-Length-Value for mixed message types\n│     │     Time: 15-20 minutes\n│     │\n│     └─ Send/receive Codable objects directly?\n│        └─ Pattern 1d: Coder Protocol\n│           No manual JSON encoding needed\n│           Time: 10-15 minutes\n│\n└─ iOS 12-18 or need completion handlers?\n   └─ YES → NWConnection path (callbacks)\n      ├─ TCP with TLS security?\n      │  └─ Pattern 2a: NWConnection + TLS\n      │     stateUpdateHandler, completion-based send/receive\n      │     Time: 15-20 minutes\n      │\n      ├─ UDP streaming with batching?\n      │  └─ Pattern 2b: NWConnection + UDP Batch\n      │     connection.batch for 30% CPU reduction\n      │     Time: 10-15 minutes\n      │\n      ├─ Listening for incoming connections?\n      │  └─ Pattern 2c: NWListener\n      │     Accept inbound connections, newConnectionHandler\n      │     Time: 20-25 minutes\n      │\n      └─ Network discovery (Bonjour)?\n         └─ Pattern 2d: NWBrowser\n            Discover services on local network\n            Time: 25-30 minutes\n```\n\n#### Quick selection guide\n- Gaming (low latency, some loss OK) → UDP patterns (1b or 2b)\n- Messaging (reliable, ordered) → TLS patterns (1a or 2a)\n- Mixed message types → TLV or Coder (1c or 1d)\n- Peer-to-peer → Discovery patterns (2d) + incoming (2c)\n\n---\n\n## Common Patterns\n\n### Pattern 1a: NetworkConnection with TLS (iOS 26+)\n\n**Use when** iOS 26+ deployment, need reliable TCP with TLS security, want async/await\n\n**Time cost** 10-15 minutes\n\n#### ❌ BAD: Manual DNS, Blocking Socket\n```swift\n// WRONG — Don't do this\nvar hints = addrinfo(...)\ngetaddrinfo(\"www.example.com\", \"1029\", &hints, &results)\nlet sock = socket(AF_INET, SOCK_STREAM, 0)\nconnect(sock, results.pointee.ai_addr, results.pointee.ai_addrlen) // Blocks!\n```\n\n#### ✅ GOOD: NetworkConnection with Declarative Stack\n\n```swift\nimport Network\n\n// Basic connection with TLS\nlet connection = NetworkConnection(\n    to: .hostPort(host: \"www.example.com\", port: 1029)\n) {\n    TLS() // TCP and IP inferred automatically\n}\n\n// Send and receive with async/await\npublic func sendAndReceiveWithTLS() async throws {\n    let outgoingData = Data(\"Hello, world!\".utf8)\n    try await connection.send(outgoingData)\n\n    let incomingData = try await connection.receive(exactly: 98).content\n    print(\"Received data: \\(incomingData)\")\n}\n\n// Optional: observe connection state for UI updates.\n// NetworkConnection has NO `states` async sequence — use onStateUpdate\n// (@discardableResult; the handler passes (connection, state)).\nconnection.onStateUpdate { connection, state in\n    switch state {\n    case .preparing:\n        print(\"Establishing connection...\")\n    case .ready:\n        print(\"Connected!\")\n    case .waiting(let error):\n        print(\"Waiting for network: \\(error)\")\n    case .failed(let error):\n        print(\"Connection failed: \\(error)\")\n    case .cancelled:\n        print(\"Connection cancelled\")\n    @unknown default:\n        break\n    }\n}\n```\n\n#### Custom parameters for low data mode\n\n```swift\nlet connection = NetworkConnection(\n    to: .hostPort(host: \"www.example.com\", port: 1029),\n    using: .parameters {\n        TLS {\n            TCP {\n                IP()\n                    .fragmentationEnabled(false)\n            }\n        }\n    }\n    .constrainedPathsProhibited(true) // Don't use cellular in low data mode\n)\n```\n\n#### When to use\n- Secure messaging, email protocols (IMAP, SMTP)\n- Custom protocols requiring encryption\n- APIs using non-HTTP protocols\n\n#### Performance characteristics\n- Smart connection establishment: Happy Eyeballs (IPv4/IPv6 racing), proxy evaluation, VPN detection\n- TLS 1.3 by default (faster handshake)\n- User-space networking: ~30% lower CPU usage vs sockets\n\n#### Debugging\n- Enable logging: `-NWLoggingEnabled 1 -NWConnectionLoggingEnabled 1`\n- Observe state transitions via `connection.onStateUpdate { conn, state in }` (NetworkConnection has no `states` async sequence)\n- Test on real device with Airplane Mode toggle\n\n---\n\n### Pattern 1b: NetworkConnection UDP (iOS 26+)\n\n**Use when** iOS 26+ deployment, need UDP datagrams for gaming or real-time streaming, want async/await\n\n**Time cost** 10-15 minutes\n\n#### ❌ BAD: Blocking UDP Socket\n```swift\n// WRONG — Don't do this\nlet sock = socket(AF_INET, SOCK_DGRAM, 0)\nlet sent = sendto(sock, buffer, length, 0, &addr, addrlen)\n// Blocks, no batching, high CPU overhead\n```\n\n#### ✅ GOOD: NetworkConnection with UDP\n\n```swift\nimport Network\n\n// UDP connection for real-time data\nlet connection = NetworkConnection(\n    to: .hostPort(host: \"game-server.example.com\", port: 9000)\n) {\n    UDP()\n}\n\n// Send game state update\npublic func sendGameUpdate() async throws {\n    let gameState = Data(\"player_position:100,50\".utf8)\n    try await connection.send(gameState)\n}\n\n// Receive game updates\npublic func receiveGameUpdates() async throws {\n    while true {\n        let (data, _) = try await connection.receive()\n        processGameState(data)\n    }\n}\n\n// Batch multiple datagrams for efficiency (30% CPU reduction)\npublic func sendMultipleUpdates(_ updates: [Data]) async throws {\n    for update in updates {\n        try await connection.send(update)\n    }\n}\n```\n\n#### When to use\n- Real-time gaming (player position, game state)\n- Live streaming (video/audio frames where some loss is acceptable)\n- IoT telemetry (sensor data)\n\n#### Performance characteristics\n- User-space networking: ~30% lower CPU vs sockets\n- Batching multiple sends reduces context switches\n- ECN (Explicit Congestion Notification) enabled automatically\n\n#### Debugging\n- Use Instruments Network template to profile datagram throughput\n- Check for packet loss with receive timeouts\n- Test on cellular network (higher latency/loss)\n\n---\n\n### Pattern 1c: TLV Framing (iOS 26+)\n\n**Use when** Need message boundaries on stream protocols (TCP/TLS), have mixed message types, want type-safe message handling\n\n**Time cost** 15-20 minutes\n\n**Background** Stream protocols (TCP/TLS) don't preserve message boundaries. If you send 3 chunks, receiver might get them 1 byte at a time, or all at once. TLV (Type-Length-Value) solves this by encoding each message with its type and length.\n\n#### ❌ BAD: Manual Length Prefix Parsing\n```swift\n// WRONG — Error-prone, boilerplate-heavy\nlet lengthData = try await connection.receive(exactly: 4).content\nlet length = lengthData.withUnsafeBytes { $0.load(as: UInt32.self) }\nlet messageData = try await connection.receive(exactly: Int(length)).content\n// Now decode manually...\n```\n\n#### ✅ GOOD: TLV Framing with Type Safety\n\n```swift\nimport Network\n\n// Define your message types\nenum GameMessage: Int {\n    case selectedCharacter = 0\n    case move = 1\n}\n\nstruct GameCharacter: Codable {\n    let character: String\n}\n\nstruct GameMove: Codable {\n    let row: Int\n    let column: Int\n}\n\n// Connection with TLV framing\nlet connection = NetworkConnection(\n    to: .hostPort(host: \"www.example.com\", port: 1029)\n) {\n    TLV {\n        TLS()\n    }\n}\n\n// Send typed messages\npublic func sendWithTLV() async throws {\n    let characterData = try JSONEncoder().encode(GameCharacter(character: \"🐨\"))\n    try await connection.send(characterData, type: GameMessage.selectedCharacter.rawValue)\n}\n\n// Receive typed messages\npublic func receiveWithTLV() async throws {\n    let (incomingData, metadata) = try await connection.receive()\n\n    switch GameMessage(rawValue: metadata.type) {\n    case .selectedCharacter:\n        let character = try JSONDecoder().decode(GameCharacter.self, from: incomingData)\n        print(\"Character selected: \\(character)\")\n    case .move:\n        let move = try JSONDecoder().decode(GameMove.self, from: incomingData)\n        print(\"Move: row=\\(move.row), column=\\(move.column)\")\n    case .none:\n        print(\"Unknown message type: \\(metadata.type)\")\n    }\n}\n```\n\n#### When to use\n- Mixed message types in same connection (chat + presence + typing indicators)\n- Existing protocols using TLV (many custom protocols)\n- Need message boundaries without heavy framing overhead\n\n#### How it works\n- Type: UInt32 message identifier (your enum raw value)\n- Length: UInt32 message size (automatic)\n- Value: Actual message bytes\n\n#### Performance characteristics\n- Minimal overhead: 8 bytes per message (type + length)\n- No manual parsing: Framework handles framing\n- Type-safe: Compiler catches message type errors\n\n---\n\n### Pattern 1d: Coder Protocol (iOS 26+)\n\n**Use when** Sending/receiving Codable types, want to eliminate JSON boilerplate, need type-safe message handling\n\n**Time cost** 10-15 minutes\n\n**Background** Most apps manually encode Codable types to JSON, send bytes, receive bytes, decode JSON. Coder protocol eliminates this boilerplate by handling serialization automatically.\n\n#### ❌ BAD: Manual JSON Encoding/Decoding\n```swift\n// WRONG — Boilerplate-heavy, error-prone\nlet encoder = JSONEncoder()\nlet data = try encoder.encode(message)\ntry await connection.send(data)\n\nlet receivedData = try await connection.receive().content\nlet decoder = JSONDecoder()\nlet message = try decoder.decode(GameMessage.self, from: receivedData)\n```\n\n#### ✅ GOOD: Coder Protocol for Direct Codable Send/Receive\n\n```swift\nimport Network\n\n// Define message types as Codable enum\nenum GameMessage: Codable {\n    case selectedCharacter(String)\n    case move(row: Int, column: Int)\n}\n\n// Connection with Coder protocol\nlet connection = NetworkConnection(\n    to: .hostPort(host: \"www.example.com\", port: 1029)\n) {\n    Coder(GameMessage.self, using: .json) {\n        TLS()\n    }\n}\n\n// Send Codable types directly\npublic func sendWithCoder() async throws {\n    let selectedCharacter: GameMessage = .selectedCharacter(\"🐨\")\n    try await connection.send(selectedCharacter) // No encoding needed!\n}\n\n// Receive Codable types directly\npublic func receiveWithCoder() async throws {\n    let gameMessage = try await connection.receive().content // Returns GameMessage!\n\n    switch gameMessage {\n    case .selectedCharacter(let character):\n        print(\"Character selected: \\(character)\")\n    case .move(let row, let column):\n        print(\"Move: (\\(row), \\(column))\")\n    }\n}\n```\n\n#### Supported formats\n- `.json` — JSON encoding (most common, human-readable)\n- `.propertyList` — Property list encoding (smaller, faster)\n\n#### When to use\n- App-to-app communication (you control both ends)\n- Prototyping (fastest time to working code)\n- Type-safe protocols (compiler catches message structure changes)\n\n#### When NOT to use\n- Interoperating with non-Swift servers\n- Need custom wire format\n- Performance-critical (prefer TLV with manual encoding for control)\n\n#### Benefits\n- No JSON boilerplate: ~50 lines → ~10 lines\n- Type-safe: Compiler catches message structure changes\n- Automatic framing: Handles message boundaries\n\n---\n\n## Legacy iOS 12-18 Patterns\n\nFor apps supporting iOS 12-18 that can't use async/await yet, see `skills/networking-legacy.md`:\n- Pattern 2a: NWConnection with TLS (completion handlers)\n- Pattern 2b: NWConnection UDP Batch (30% CPU reduction)\n- Pattern 2c: NWListener (accepting connections, Bonjour)\n- Pattern 2d: Network Discovery (NWBrowser for service discovery)\n\n\n## Pressure Scenarios\n\n### Scenario 1: Reachability Race Condition Under App Store Deadline\n\n#### Context\n\nYou're 3 days from App Store submission. QA reports connection failures on cellular networks (15% failure rate). Your PM reviews the code and suggests: \"Just add a reachability check before connecting. If there's no network, show an error immediately instead of timing out.\"\n\n#### Pressure signals\n- ⏰ **Deadline pressure** \"App Store deadline is Friday. We need this fixed by EOD Wednesday.\"\n- 👔 **Authority pressure** PM (non-technical) suggesting specific implementation\n- 💸 **Sunk cost** Already spent 2 hours debugging connection logs, found nothing obvious\n- 📊 **Customer impact** \"15% of users affected, mostly on cellular\"\n\n#### Rationalization trap\n\n*\"SCNetworkReachability is Apple's API, it must be correct. I've seen it in Stack Overflow answers with 500+ upvotes. Adding a quick reachability check will fix the issue today, and I can refactor it properly after launch. The deadline is more important than perfect code right now.\"*\n\n#### Why this fails\n\n1. **Race condition** Network state changes between reachability check and connection start. You check \"WiFi available\" at 10:00:00.000, but WiFi disconnects at 10:00:00.050, then you call connection.start() at 10:00:00.100. Connection fails, but reachability said it was available.\n\n2. **Misses smart connection establishment** Network.framework tries multiple strategies (IPv4, IPv6, proxies, WiFi Assist fallback to cellular). SCNetworkReachability gives you \"yes/no\" but doesn't tell you which strategy will work.\n\n3. **Deprecated API** Apple explicitly deprecated SCNetworkReachability in WWDC 2018. App Store Review may flag this as using legacy APIs.\n\n4. **Doesn't solve actual problem** 15% cellular failures likely caused by not handling waiting state, not by absence of reachability check.\n\n#### MANDATORY response\n\n```swift\n// ❌ NEVER check reachability before connecting\n/*\nif SCNetworkReachabilityGetFlags(reachability, &flags) {\n    if flags.contains(.reachable) {\n        connection.start()\n    } else {\n        showError(\"No network\") // RACE CONDITION\n    }\n}\n*/\n\n// ✅ ALWAYS let Network.framework handle waiting state\nlet connection = NWConnection(\n    host: NWEndpoint.Host(\"api.example.com\"),\n    port: NWEndpoint.Port(integerLiteral: 443),\n    using: .tls\n)\n\nconnection.stateUpdateHandler = { [weak self] state in\n    switch state {\n    case .preparing:\n        // Show: \"Connecting...\"\n        self?.showStatus(\"Connecting...\")\n\n    case .ready:\n        // Connection established\n        self?.hideStatus()\n        self?.sendRequest()\n\n    case .waiting(let error):\n        // CRITICAL: Don't fail here, show \"Waiting for network\"\n        // Network.framework will automatically retry when network returns\n        print(\"Waiting for network: \\(error)\")\n        self?.showStatus(\"Waiting for network...\")\n        // User walks out of elevator → WiFi returns → automatic retry\n\n    case .failed(let error):\n        // Only fail after framework exhausts all options\n        // (tried IPv4, IPv6, proxies, WiFi Assist, waited for network)\n        print(\"Connection failed: \\(error)\")\n        self?.showError(\"Connection failed. Please check your network.\")\n\n    case .cancelled:\n        self?.hideStatus()\n\n    @unknown default:\n        break\n    }\n}\n\nconnection.start(queue: .main)\n```\n\n#### Professional push-back template\n\n*\"I understand the deadline pressure. However, adding SCNetworkReachability will create a race condition that will make the 15% failure rate worse, not better. Apple deprecated this API in 2018 specifically because it causes these issues.*\n\n*The correct fix is to handle the waiting state properly, which Network.framework provides. This will actually solve the cellular failures because the framework will automatically retry when network becomes available (e.g., user walks out of elevator, WiFi returns).*\n\n*Implementation time: 15 minutes to add waiting state handler vs 2-4 hours debugging reachability race conditions. The waiting state approach is both faster AND more reliable.\"*\n\n#### Time saved\n- **Reachability approach** 30 min to implement + 2-4 hours debugging race conditions + potential App Store rejection = 3-5 hours total\n- **Waiting state approach** 15 minutes to implement + 0 hours debugging = 15 minutes total\n- **Savings** 2.5-4.5 hours + avoiding App Store review issues\n\n#### Actual root cause of 15% cellular failures\n\nLikely missing waiting state handler. When user is in area with weak cellular, connection moves to waiting state. Without handler, app shows \"Connection failed\" instead of \"Waiting for network,\" so user force-quits and reports \"doesn't work on cellular.\"\n\n---\n\n### Scenario 2: Blocking Socket Call Causing Main Thread Hang\n\n#### Context\n\nYour app has 1-star reviews: \"App freezes for 5-10 seconds randomly.\" After investigation, you find a \"quick\" socket connect() call on the main thread. Your tech lead says: \"This is a legacy code path from 2015. It only connects to localhost (127.0.0.1), so it should be instant. The real fix is a 3-week refactor to move all networking to a background queue, but we don't have time. Just leave it for now.\"\n\n#### Pressure signals\n- ⏰ **Time pressure** \"3-week refactor, we're in feature freeze for 2.0 launch\"\n- 💸 **Sunk cost** \"This code has worked for 8 years, why change it now?\"\n- 🎯 **Scope pressure** \"It's just localhost, not a real network call\"\n- 📊 **Low frequency** \"Only 2% of users see this freeze\"\n\n#### Rationalization trap\n\n*\"Connecting to localhost is basically instant. The freeze must be caused by something else. Besides, refactoring this legacy code is risky—what if I break something? Better to leave working code alone and focus on the new features for 2.0.\"*\n\n#### Why this fails\n\n1. **Even localhost can block** If the app has many threads, the kernel may schedule other work before returning from connect(). Even 50-100ms is visible to users as a stutter.\n\n2. **ANR (Application Not Responding)** iOS watchdog will terminate your app if main thread blocks for >5 seconds. This explains \"random\" crashes.\n\n3. **Localhost isn't always available** If VPN is active, localhost routing can be delayed. If device is under memory pressure, kernel scheduling is slower.\n\n4. **Guaranteed App Store rejection** Apple's App Store Review Guidelines explicitly check for main thread blocking. This will fail App Review's performance tests.\n\n#### MANDATORY response\n\n```swift\n// ❌ NEVER call blocking socket APIs on main thread\n/*\nlet sock = socket(AF_INET, SOCK_STREAM, 0)\nconnect(sock, &addr, addrlen) // BLOCKS MAIN THREAD → ANR\n*/\n\n// ✅ ALWAYS use async connection, even for localhost\nfunc connectToLocalhost() {\n    let connection = NWConnection(\n        host: \"127.0.0.1\",\n        port: 8080,\n        using: .tcp\n    )\n\n    connection.stateUpdateHandler = { [weak self] state in\n        switch state {\n        case .ready:\n            print(\"Connected to localhost\")\n            self?.sendRequest(on: connection)\n        case .failed(let error):\n            print(\"Localhost connection failed: \\(error)\")\n        default:\n            break\n        }\n    }\n\n    // Non-blocking, returns immediately\n    connection.start(queue: .main)\n}\n```\n\n#### Alternative: If you must keep legacy socket code (not recommended)\n\n```swift\n// Move blocking call to background queue (minimum viable fix)\nDispatchQueue.global(qos: .userInitiated).async {\n    let sock = socket(AF_INET, SOCK_STREAM, 0)\n    connect(sock, &addr, addrlen) // Still blocks, but not main thread\n\n    DispatchQueue.main.async {\n        // Update UI after connection\n    }\n}\n```\n\n#### Professional push-back template\n\n*\"I understand this code has been stable for 8 years. However, Apple's App Store Review now runs automated performance tests that will fail apps with main thread blocking. This will block our 2.0 release.*\n\n*The fix doesn't require a 3-week refactor. I can wrap the existing socket code in a background queue dispatch in 30 minutes. Or, I can replace it with NWConnection (non-blocking) in 45 minutes, which also eliminates the socket management code entirely.*\n\n*Neither approach requires touching other parts of the codebase. We can ship 2.0 on schedule AND fix the ANR crashes.\"*\n\n#### Time saved\n- **Leave it alone** 0 hours upfront + 4-8 hours when App Review rejects + user churn from 1-star reviews\n- **Background queue fix** 30 minutes = main thread safe\n- **NWConnection fix** 45 minutes = main thread safe + eliminates socket management\n- **Savings** 3-7 hours + avoiding App Store rejection\n\n---\n\n### Scenario 3: Design Review Pressure — \"Use WebSockets for Everything\"\n\n#### Context\n\nYour team is building a multiplayer game with real-time player positions (20 updates/second). In architecture review, the senior architect says: \"All our other apps use WebSockets for networking. We should use WebSockets here too for consistency. It's production-proven, and the backend team already knows how to deploy WebSocket servers.\"\n\n#### Pressure signals\n- 👔 **Authority pressure** Senior architect with 15 years experience\n- 🏢 **Org consistency** \"All other apps use WebSockets\"\n- 💼 **Backend expertise** \"Backend team doesn't know UDP\"\n- 📊 **Proven technology** \"WebSockets are battle-tested\"\n\n#### Rationalization trap\n\n*\"The architect has way more experience than me. If WebSockets work for the other apps, they'll work here too. UDP sounds complicated and risky. Better to stick with proven technology than introduce something new that might break in production.\"*\n\n#### Why this fails for real-time gaming\n\n1. **Head-of-line blocking** WebSockets use TCP. If one packet is lost, TCP blocks ALL subsequent packets until retransmission succeeds. In a game, this means old player position (frame 100) blocks new position (frame 120), causing stutter.\n\n2. **Latency overhead** TCP requires 3-way handshake (SYN, SYN-ACK, ACK) before sending data. For 20 updates/second, this overhead adds 50-150ms latency.\n\n3. **Unnecessary reliability** Game position updates don't need guaranteed delivery. If frame 100 is lost, frame 101 (5ms later) makes it obsolete. TCP retransmits frame 100, wasting bandwidth.\n\n4. **Connection establishment** WebSockets require HTTP upgrade handshake (4 round trips) before data transfer. UDP starts sending immediately.\n\n#### MANDATORY response\n\n```swift\n// ❌ WRONG for real-time gaming\n/*\nlet webSocket = URLSession.shared.webSocketTask(with: url)\nwebSocket.resume()\nwebSocket.send(.data(positionUpdate)) { error in\n    // TCP guarantees delivery but blocks on loss\n    // Old position blocks new position → stutter\n}\n*/\n\n// ✅ CORRECT for real-time gaming\nlet connection = NWConnection(\n    host: NWEndpoint.Host(\"game-server.example.com\"),\n    port: NWEndpoint.Port(integerLiteral: 9000),\n    using: .udp\n)\n\nconnection.stateUpdateHandler = { state in\n    if case .ready = state {\n        print(\"Ready to send game updates\")\n    }\n}\n\nconnection.start(queue: .main)\n\n// Send player position updates (20/second)\nfunc sendPosition(_ position: PlayerPosition) {\n    let data = encodePosition(position)\n    connection.send(content: data, completion: .contentProcessed { error in\n        // Fire and forget, no blocking\n        // If this frame is lost, next frame (50ms later) makes it obsolete\n    })\n}\n```\n\n#### Technical comparison table\n\n| Aspect | WebSocket (TCP) | UDP |\n|--------|----------------|-----|\n| Latency (typical) | 50-150ms | 10-30ms |\n| Head-of-line blocking | Yes (old data blocks new) | No |\n| Connection setup | 4 round trips (HTTP upgrade) | 0 round trips |\n| Packet loss handling | Blocks until retransmit | Continues with next packet |\n| Bandwidth (20 updates/sec) | ~40 KB/s | ~20 KB/s |\n| Best for | Chat, API calls | Gaming, streaming |\n\n#### Professional push-back template\n\n*\"I appreciate the concern about consistency and proven technology. WebSockets are excellent for our other apps because they're doing chat, notifications, and API calls—use cases where guaranteed delivery matters.*\n\n*However, real-time gaming has different requirements. Let me explain with a concrete example:*\n\n*Player moves from position A to B to C (3 updates in 150ms). With WebSockets:*\n*- Frame A sent*\n*- Frame A packet lost*\n*- Frame B sent, but TCP blocks it (waiting for Frame A retransmit)*\n*- Frame C sent, also blocked*\n*- Frame A retransmits, arrives 200ms later*\n*- Frames B and C finally delivered*\n*- Result: 200ms of frozen player position, then sudden jump to C*\n\n*With UDP:*\n*- Frame A sent and lost*\n*- Frame B sent and delivered (50ms later)*\n*- Frame C sent and delivered (50ms later)*\n*- Result: Smooth position updates, no freeze*\n\n*The backend team doesn't need to learn UDP from scratch—they can use the same Network.framework on server-side Swift (Vapor, Hummingbird). Implementation time is the same.*\n\n*I'm happy to do a proof-of-concept this week showing latency comparison. We can measure both approaches with real data.\"*\n\n#### When WebSockets ARE correct\n- Chat applications (message delivery must be reliable)\n- Turn-based games (moves must arrive in order)\n- API calls over persistent connection\n- Live notifications/updates\n\n#### Time saved\n- **WebSocket approach** 2 days implementation + 1-2 weeks debugging stutter/lag issues + potential rewrite = 3-4 weeks\n- **UDP approach** 2 days implementation + smooth gameplay = 2 days\n- **Savings** 2-3 weeks + better user experience\n\n---\n\n## Migration Guides\n\nFor detailed migration guides from legacy networking APIs, see `skills/networking-migration.md`:\n- Migration 1: BSD Sockets → NWConnection\n- Migration 2: NWConnection → NetworkConnection (iOS 26+)\n- Migration 3: URLSession StreamTask → NetworkConnection\n\n\n## Checklist\n\nBefore shipping networking code, verify:\n\n### Deprecated API Check\n- [ ] Not using SCNetworkReachability anywhere in codebase\n- [ ] Not using CFSocket, NSSocket, or BSD sockets directly\n- [ ] Not using NSStream or CFStream\n- [ ] Not using NSNetService (use NWBrowser instead)\n- [ ] Not calling getaddrinfo for manual DNS resolution\n\n### Connection Configuration\n- [ ] Using hostname, NOT hardcoded IP address\n- [ ] TLS enabled for sensitive data (passwords, tokens, user content)\n- [ ] Handling waiting state with user feedback (\"Waiting for network...\")\n- [ ] Not checking reachability before calling connection.start()\n\n### Memory Management\n- [ ] Using [weak self] in all NWConnection completion handlers\n- [ ] Or using NetworkConnection (iOS 26+) with async/await (no [weak self] needed)\n- [ ] Calling connection.cancel() when done to free resources\n\n### Network Transitions\n- [ ] Supporting network changes (WiFi → cellular, or vice versa)\n- [ ] Using viabilityUpdateHandler or betterPathUpdateHandler (NWConnection)\n- [ ] Or observing state via `connection.onStateUpdate { }` (NetworkConnection)\n- [ ] NOT tearing down connection immediately on viability change\n\n### Testing on Real Devices\n- [ ] Tested on real device (not just simulator)\n- [ ] Tested WiFi → cellular transition (walk out of building)\n- [ ] Tested Airplane Mode toggle (enable → disable)\n- [ ] Tested on IPv6-only network (some cellular carriers)\n- [ ] Tested with corporate VPN active\n- [ ] Tested with low signal (basement, elevator)\n\n### Performance\n- [ ] Using connection.batch for multiple UDP datagrams (30% CPU reduction)\n- [ ] Using contentProcessed completion for send pacing (not sleep())\n- [ ] Profiled with Instruments Network template\n- [ ] Connection establishment < 500ms (check with logging)\n\n### Error Handling\n- [ ] Handling .failed state with specific error\n- [ ] Timeout handling (don't wait forever in .preparing)\n- [ ] TLS handshake errors logged for debugging\n- [ ] User-facing errors are actionable (\"Check network\" not \"POSIX error 61\")\n\n### iOS 26+ Features (if using NetworkConnection)\n- [ ] Using TLV framing if need message boundaries\n- [ ] Using Coder protocol if sending Codable types\n- [ ] Using NetworkListener instead of NWListener\n- [ ] Using NetworkBrowser with Wi-Fi Aware for peer-to-peer\n\n---\n\n## Real-World Impact\n\n### User-Space Networking: 30% CPU Reduction\n\n**WWDC 2018 Demo** Live UDP video streaming comparison:\n- **BSD sockets** ~30% higher CPU usage on receiver\n- **Network.framework** ~30% lower CPU usage\n\n**Why** Traditional sockets copy data kernel → userspace. Network.framework uses memory-mapped regions (no copy) and reduces context switches from 100 syscalls → ~1 syscall (with batching).\n\n#### Impact for your app\n- Lower battery drain (30% less CPU = longer battery life)\n- Smoother gameplay (more CPU for rendering)\n- Cooler device (less thermal throttling)\n\n### Smart Connection Establishment: 50% Faster\n\n#### Traditional approach\n1. Call getaddrinfo (100-300ms DNS lookup)\n2. Try first IPv6 address, wait 5 seconds for timeout\n3. Try IPv4 address, finally connects\n\n#### Network.framework (Happy Eyeballs)\n1. Start DNS lookup in background\n2. As soon as first address arrives, try connecting\n3. Start second connection attempt 50ms later\n4. Use whichever connects first\n\n**Result** 50% faster connection establishment in dual-stack environments (measured by Apple)\n\n### Proper State Handling: 10x Crash Reduction\n\n**Customer report** App crash rate dropped from 5% → 0.5% after implementing waiting state handler.\n\n**Before** App showed \"Connection failed\" when no network, users force-quit app → crash report.\n\n**After** App showed \"Waiting for network\" and automatically retried when WiFi returned → users saw seamless reconnection.\n\n---\n\n## Resources\n\n**WWDC**: 2018-715, 2025-250\n\n**Skills**: See `skills/networking-diag.md`, `skills/network-framework-ref.md`\n\n---\n\n**Last Updated** 2025-12-02\n**Status** Production-ready patterns from WWDC 2018 and WWDC 2025\n**Tested** Patterns validated against Apple documentation and WWDC transcripts\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -21627,7 +21627,7 @@
           "level": 2,
           "startLine": 216,
           "endLine": 539,
-          "charCount": 9283
+          "charCount": 9423
         },
         {
           "heading": "Legacy iOS 12-18 Patterns",
@@ -21655,7 +21655,7 @@
           "level": 2,
           "startLine": 863,
           "endLine": 918,
-          "charCount": 2313
+          "charCount": 2320
         },
         {
           "heading": "Real-World Impact",
@@ -29705,7 +29705,7 @@
     "axiom-shipping--expert-review-checklist": {
       "name": "axiom-shipping--expert-review-checklist",
       "description": "Comprehensive 9-section submission checklist. For the discipline-focused pre-flight workflow, see `app-store-submission`.",
-      "content": "# Expert Review Checklist\n\nComprehensive 9-section submission checklist. For the discipline-focused pre-flight workflow, see `app-store-submission`.\n\n## Build\n\n- [ ] Built with required SDK version (currently Xcode 16, iOS 18 SDK)\n- [ ] Export compliance answered (`ITSAppUsesNonExemptEncryption`)\n- [ ] Encryption documentation uploaded (if custom encryption)\n- [ ] IPv6-only network compatible\n- [ ] Signed with distribution certificate and provisioning profile\n- [ ] Correct bundle ID for target environment (production, not development)\n- [ ] Build string unique for this version\n- [ ] Binary under 200 MB OTA cellular limit (or warn users)\n- [ ] All required architectures included (arm64)\n- [ ] No private API usage\n\n## Privacy\n\n- [ ] `PrivacyInfo.xcprivacy` present and complete\n- [ ] Privacy policy URL set in App Store Connect\n- [ ] Privacy policy accessible within the app\n- [ ] All purpose strings (`NS*UsageDescription`) present for requested permissions\n- [ ] ATT implemented if app tracks users\n- [ ] Required Reason APIs declared with approved reasons\n- [ ] Privacy Nutrition Labels match actual data collection\n- [ ] Third-party SDK privacy manifests included\n- [ ] Privacy report generated and reviewed (`Product > Archive > Generate Privacy Report`)\n\n## Metadata\n\n- [ ] App name unique, max 30 characters\n- [ ] Description complete, max 4000 characters, plain text\n- [ ] Keywords set, max 100 bytes, no trademarked terms\n- [ ] Screenshots provided for all supported device sizes\n- [ ] Screenshots show app in actual use (not title art or splash screens)\n- [ ] What's New text updated for this version\n- [ ] Copyright field current year\n- [ ] Support URL links to real contact information\n- [ ] Privacy Policy URL is HTTPS and publicly accessible\n- [ ] Promotional Text set (editable without submission)\n- [ ] App category accurate\n- [ ] All metadata localized for target markets\n\n## Account\n\n- [ ] Account deletion implemented and easy to find\n- [ ] SIWA token revocation on account deletion\n- [ ] Sign in with Apple offered if any third-party login exists\n- [ ] SIWA given equal visual prominence to other login options\n- [ ] Demo credentials provided in App Review Information (if login required)\n- [ ] Demo credentials will not expire during review period\n\n## Content\n\n- [ ] No placeholder content (\"Lorem ipsum\", \"Coming Soon\", etc.)\n- [ ] All links functional and leading to real content\n- [ ] Final production assets (not development/staging URLs)\n- [ ] No test data visible in screenshots or app\n- [ ] No references to other mobile platforms in metadata\n\n## Age Rating\n\n- [ ] Age rating questionnaire completed\n- [ ] New capability declarations answered (messaging, UGC, advertising, parental, age assurance)\n- [ ] UGC moderation implemented if applicable\n- [ ] Content filtering in place for web views (or accept 16+ minimum)\n- [ ] Loot box odds disclosed if applicable\n\n## Monetization\n\n- [ ] All IAPs configured and in \"Ready to Submit\" status\n- [ ] IAP screenshots uploaded\n- [ ] Subscription terms clear (price, duration, auto-renewal, cancellation)\n- [ ] Loot box odds displayed before purchase\n- [ ] Restore Purchases functionality working\n- [ ] No removing paid features to force new purchases\n- [ ] Subscription grace period supported\n- [ ] Offer codes configured if planned\n\n## EU Compliance\n\n- [ ] DSA trader status declared for all EU-distributed apps\n- [ ] Trader email verified via 2FA\n- [ ] Trader phone verified via 2FA\n- [ ] Contact information accurate and current\n- [ ] Labels and markings complete (if applicable for product category)\n\n## App Review\n\n- [ ] Contact information complete (name, email, phone)\n- [ ] Demo account credentials provided (if login required)\n- [ ] Notes for Review explain any non-obvious features\n- [ ] Attachment uploaded for features requiring special hardware or setup\n- [ ] Review contact email actively monitored\n",
+      "content": "# Expert Review Checklist\n\nComprehensive 9-section submission checklist. For the discipline-focused pre-flight workflow, see `app-store-submission`.\n\n## Build\n\n- [ ] Built with the current required SDK (Apple mandates the latest major SDK within months of release — currently Xcode 26 / iOS 26 SDK)\n- [ ] Export compliance answered (`ITSAppUsesNonExemptEncryption`)\n- [ ] Encryption documentation uploaded (if custom encryption)\n- [ ] IPv6-only network compatible\n- [ ] Signed with distribution certificate and provisioning profile\n- [ ] Correct bundle ID for target environment (production, not development)\n- [ ] Build string unique for this version\n- [ ] Binary under 200 MB OTA cellular limit (or warn users)\n- [ ] All required architectures included (arm64)\n- [ ] No private API usage\n\n## Privacy\n\n- [ ] `PrivacyInfo.xcprivacy` present and complete\n- [ ] Privacy policy URL set in App Store Connect\n- [ ] Privacy policy accessible within the app\n- [ ] All purpose strings (`NS*UsageDescription`) present for requested permissions\n- [ ] ATT implemented if app tracks users\n- [ ] Required Reason APIs declared with approved reasons\n- [ ] Privacy Nutrition Labels match actual data collection\n- [ ] Third-party SDK privacy manifests included\n- [ ] Privacy report generated and reviewed (`Product > Archive > Generate Privacy Report`)\n\n## Metadata\n\n- [ ] App name unique, max 30 characters\n- [ ] Description complete, max 4000 characters, plain text\n- [ ] Keywords set, max 100 bytes, no trademarked terms\n- [ ] Screenshots provided for all supported device sizes\n- [ ] Screenshots show app in actual use (not title art or splash screens)\n- [ ] What's New text updated for this version\n- [ ] Copyright field current year\n- [ ] Support URL links to real contact information\n- [ ] Privacy Policy URL is HTTPS and publicly accessible\n- [ ] Promotional Text set (editable without submission)\n- [ ] App category accurate\n- [ ] All metadata localized for target markets\n\n## Account\n\n- [ ] Account deletion implemented and easy to find\n- [ ] SIWA token revocation on account deletion\n- [ ] Sign in with Apple offered if any third-party login exists\n- [ ] SIWA given equal visual prominence to other login options\n- [ ] Demo credentials provided in App Review Information (if login required)\n- [ ] Demo credentials will not expire during review period\n\n## Content\n\n- [ ] No placeholder content (\"Lorem ipsum\", \"Coming Soon\", etc.)\n- [ ] All links functional and leading to real content\n- [ ] Final production assets (not development/staging URLs)\n- [ ] No test data visible in screenshots or app\n- [ ] No references to other mobile platforms in metadata\n\n## Age Rating\n\n- [ ] Age rating questionnaire completed\n- [ ] New capability declarations answered (messaging, UGC, advertising, parental, age assurance)\n- [ ] UGC moderation implemented if applicable\n- [ ] Content filtering in place for web views (or accept 16+ minimum)\n- [ ] Loot box odds disclosed if applicable\n\n## Monetization\n\n- [ ] All IAPs configured and in \"Ready to Submit\" status\n- [ ] IAP screenshots uploaded\n- [ ] Subscription terms clear (price, duration, auto-renewal, cancellation)\n- [ ] Loot box odds displayed before purchase\n- [ ] Restore Purchases functionality working\n- [ ] No removing paid features to force new purchases\n- [ ] Subscription grace period supported\n- [ ] Offer codes configured if planned\n\n## EU Compliance\n\n- [ ] DSA trader status declared for all EU-distributed apps\n- [ ] Trader email verified via 2FA\n- [ ] Trader phone verified via 2FA\n- [ ] Contact information accurate and current\n- [ ] Labels and markings complete (if applicable for product category)\n\n## App Review\n\n- [ ] Contact information complete (name, email, phone)\n- [ ] Demo account credentials provided (if login required)\n- [ ] Notes for Review explain any non-obvious features\n- [ ] Attachment uploaded for features requiring special hardware or setup\n- [ ] Review contact email actively monitored\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -29729,7 +29729,7 @@
           "level": 2,
           "startLine": 4,
           "endLine": 16,
-          "charCount": 572
+          "charCount": 640
         },
         {
           "heading": "Privacy",
@@ -34693,7 +34693,7 @@
     "axiom-tools--getting-started": {
       "name": "axiom-tools--getting-started",
       "description": "Welcome! This skill helps new users discover the most relevant Axiom skills for their situation.",
-      "content": "# Getting Started with Axiom\n\nWelcome! This skill helps new users discover the most relevant Axiom skills for their situation.\n\n## How This Skill Works\n\n1. Ask the user 2-3 targeted questions about their project\n2. Provide personalized skill recommendations (3-5 skills max)\n3. Show example prompts they can try immediately\n4. Include a complete skill reference for browsing\n\n## Step 1: Ask Questions\n\nUse the AskUserQuestion tool to gather context:\n\n### Question 1: Current Focus\n\n```\nQuestion: \"What brings you to Axiom today?\"\nHeader: \"Focus\"\nOptions:\n- \"Debugging an issue\" → Prioritize diagnostic skills\n- \"Optimizing performance\" → Prioritize profiling skills\n- \"Adding new features\" → Prioritize reference skills\n- \"Code review / quality check\" → Prioritize audit commands\n- \"Just exploring\" → Show overview\n```\n\n### Question 2: Tech Stack\n\n```\nQuestion: \"What's your primary tech stack?\"\nHeader: \"Stack\"\nOptions:\n- \"SwiftUI (iOS 16+)\" → SwiftUI-focused skills\n- \"UIKit\" → UIKit-focused skills\n- \"Mixed SwiftUI + UIKit\" → Both\n- \"Starting new project\" → Best practices skills\n```\n\n### Question 3: Pain Points (Optional, Multi-Select)\n\nOnly ask if \"Debugging an issue\" was selected:\n\n```\nQuestion: \"Which areas are you struggling with?\"\nHeader: \"Pain Points\"\nMulti-select: true\nOptions:\n- \"Xcode/build issues\"\n- \"Memory leaks\"\n- \"UI/animation problems\"\n- \"Database/persistence\"\n- \"Networking\"\n- \"Concurrency/async\"\n- \"Accessibility\"\n```\n\n## Step 2: Provide Personalized Recommendations\n\nBased on answers, recommend 3-5 skills using this matrix:\n\n### If \"Debugging an issue\"\n\n**Always recommend**: axiom:xcode-debugging (universal starting point)\n\n**Then add based on pain points**:\n- Xcode/build → xcode-debugging, axiom-build (skills/build-debugging.md)\n- Memory leaks → memory-debugging, axiom-performance (skills/objc-block-retain-cycles.md)\n- UI/animation (SwiftUI) → axiom-swiftui (debugging, performance references)\n- UI/animation (UIKit) → uikit-animation-debugging, axiom-uikit (skills/auto-layout-debugging.md)\n- Database → database-migration, axiom-data (skills/sqlitedata-migration.md) (decision guide)\n- Networking → axiom-networking\n- Concurrency → swift-concurrency\n- Accessibility → accessibility-diag\n\n### If \"Optimizing performance\"\n\n**SwiftUI stack**:\n1. performance-profiling (decision trees for tools)\n2. axiom-swiftui (performance reference — SwiftUI Instrument)\n3. axiom-swiftui (debugging reference — view update issues)\n\n**UIKit/Mixed**:\n1. performance-profiling (Instruments guide)\n2. memory-debugging (leak detection)\n3. uikit-animation-debugging (CAAnimation issues)\n\n### If \"Adding new features\"\n\n**Design decisions**:\n- hig (quick design decisions, checklists)\n- hig-ref (comprehensive HIG reference)\n\n**iOS 26+ features**:\n- liquid-glass (material design system)\n- foundation-models (on-device AI)\n- axiom-swiftui (iOS 26 reference — complete iOS 26 guide)\n\n**Navigation patterns**:\n- axiom-swiftui (navigation reference — iOS 18+ Tab/Sidebar, deep linking)\n\n**Integrations**:\n- app-intents-ref (Siri, Shortcuts, Spotlight)\n- networking (Network.framework modern patterns)\n\n**Data persistence**:\n- Ask: \"Which persistence framework?\" → swiftdata, axiom-data (skills/sqlitedata.md), or grdb\n- Migration: axiom-data (skills/sqlitedata-migration.md), axiom-data (skills/realm-migration-ref.md)\n\n### If \"Code review / quality check\"\n\n**Start with audit commands** (quick wins):\n1. `/axiom:audit-accessibility` — WCAG compliance\n2. `/axiom:audit-concurrency` — Swift 6 violations\n3. `/axiom:audit-memory` — Leak patterns\n4. `/axiom:audit-core-data` — Migration safety\n5. `/axiom:audit-networking` — Deprecated APIs\n\n**Then suggest**:\n- Review skills based on what audits find\n\n### If \"Just exploring\"\n\nShow the complete skill index (see below) and explain categories.\n\n## Step 3: Output Format\n\nAfter gathering answers, output:\n\n```markdown\n## Your Recommended Skills\n\nBased on your answers, here are the skills most relevant to you right now:\n\n### [Icon] [Category Name]\n**axiom:[skill-name]** — [One-line description]\n> Try: \"[Example prompt they can use immediately]\"\n\n[Repeat for 3-5 skills]\n\n### Quick Wins\nRun these audit commands to find issues automatically:\n- `/axiom:audit-[name]` — [What it finds]\n\n## What's Next\n\n1. **Try the example prompts above** — Copy/paste to see how skills work\n2. **Run an audit command** — Get immediate actionable insights\n3. **Describe your problem** — I'll suggest the right skill\n4. **Browse the complete index below** — Explore all 34 skills\n\n---\n\n[Include the Complete Skill Reference below]\n```\n\n## Complete Skill Reference\n\nInclude this reference section in every response for browsing:\n\n### Debugging & Troubleshooting\n\n**Environment & Build Issues**\n- **xcode-debugging** — BUILD FAILED, simulator hangs, zombie processes, environment-first diagnostics\n- **build-debugging** — Dependency conflicts, CocoaPods/SPM failures, Multiple commands produce\n\n**Memory & Performance**\n- **memory-debugging** — Memory growth, retain cycles, leak diagnosis with Instruments\n- **performance-profiling** — Decision trees for Instruments (Time Profiler, Allocations, Core Data, Energy)\n- **objc-block-retain-cycles** — Objective-C block memory leaks, weak-strong pattern\n\n**UI Debugging**\n- **axiom-swiftui** (debugging reference) — View update issues, struct mutation, binding identity, view recreation\n- **axiom-swiftui** (performance reference) — SwiftUI Instrument (iOS 26), long view bodies, Cause & Effect Graph\n- **uikit-animation-debugging** — CAAnimation completion, spring physics, gesture+animation jank\n- **auto-layout-debugging** — Auto Layout conflicts, constraint debugging (not yet in manifest)\n\n### Concurrency & Async\n- **swift-concurrency** — Swift 6 strict concurrency, @concurrent, actor isolation, Sendable, data races\n\n### UI & Design (iOS 26+)\n\n**Liquid Glass (Material Design)**\n- **liquid-glass** — Implementation, Regular vs Clear variants, design review defense\n- **liquid-glass-ref** — Complete app-wide adoption guide (icons, controls, navigation, windows)\n\n**Layout & Navigation**\n- **axiom-swiftui** (layout reference) — ViewThatFits vs AnyLayout vs onGeometryChange, decision trees, iOS 26 free-form windows\n- **axiom-swiftui** (navigation reference) — NavigationStack vs NavigationSplitView, deep links, coordinator patterns, iOS 18+ Tab/Sidebar\n- **axiom-swiftui** (navigation diagnostics) — Navigation not responding, unexpected pops, deep link failures, state loss\n\n### Testing\n- **ui-testing** — Recording UI Automation (Xcode 26), condition-based waiting, accessibility-first patterns\n\n### Persistence\n\n**Frameworks**\n- **swiftdata** — @Model, @Query, @Relationship, CloudKit, iOS 26 features, Swift 6 concurrency\n- **sqlitedata** — Point-Free SQLiteData, @Table, FTS5, CTEs, JSON aggregation, CloudKit sync\n- **grdb** — Raw SQL, complex joins, ValueObservation, DatabaseMigrator, performance\n- **database-migration** — Safe schema evolution for SQLite/GRDB, additive migrations, prevents data loss\n\n**Migration Guides**\n- **sqlitedata-migration** — Decision guide, pattern equivalents, performance benchmarks\n- **realm-migration-ref** — Realm → SwiftData migration (Realm Device Sync sunset Sept 2025)\n\n### Networking\n- **networking** — Network.framework (iOS 12-26), NetworkConnection (iOS 26), structured concurrency\n- **networking-diag** — Connection timeouts, TLS failures, data not arriving, performance issues\n- **network-framework-ref** — Complete API reference, TLV framing, Coder protocol, Wi-Fi Aware\n\n### Apple Intelligence (iOS 26+)\n- **foundation-models** — On-device AI, LanguageModelSession, @Generable, streaming, tool calling\n- **foundation-models-diag** — Context exceeded, guardrails, slow generation, availability issues\n- **foundation-models-ref** — Complete API reference, all 26 WWDC examples\n\n### Design & UI Guidelines\n- **hig** — Quick design decisions, color/background/typography choices, HIG compliance checklists\n- **hig-ref** — Comprehensive Human Interface Guidelines reference with code examples\n\n### Integrations\n- **app-intents-ref** — Siri, Apple Intelligence, Shortcuts, Spotlight (iOS 16+)\n- **axiom-swiftui** (iOS 26 reference) — iOS 26 SwiftUI features, @Animatable, 3D layout, WebView, AttributedString\n- **avfoundation-ref** — Audio APIs, bit-perfect DAC, iOS 26 spatial audio, ASAF/APAC\n\n### Diagnostics (Systematic Troubleshooting)\n- **accessibility-diag** — VoiceOver, Dynamic Type, color contrast, WCAG compliance, App Store defense\n- **core-data-diag** — Schema migration crashes, thread-confinement, N+1 queries\n\n### Audit Commands (Quick Scans)\n- `/axiom:audit-accessibility` — VoiceOver labels, Dynamic Type, contrast, touch targets\n- `/axiom:audit-concurrency` — Swift 6 violations, unsafe tasks, missing @MainActor\n- `/axiom:audit-memory` — Timer leaks, observer leaks, closure captures, delegate cycles\n- `/axiom:audit-core-data` — Migration risks, thread violations, N+1 queries\n- `/axiom:audit-networking` — Deprecated APIs (SCNetworkReachability, CFSocket), anti-patterns\n- `/axiom:audit-liquid-glass` — Glass adoption opportunities, toolbar improvements, blur migration\n\n## Skill Categories Explained\n\n- **Discipline skills** (no suffix) — Step-by-step workflows with pressure scenarios, TDD-tested\n- **Diagnostic skills** (-diag suffix) — Systematic troubleshooting with production crisis defense\n- **Reference skills** (-ref suffix) — Comprehensive API guides with WWDC examples\n\n## Quick Decision Trees\n\n**\"My build is failing\"**\n→ Start: axiom:xcode-debugging\n→ If dependency issue: axiom:build-debugging\n\n**\"App is slow\"**\n→ Start: axiom:performance-profiling (decision trees)\n→ If SwiftUI: axiom-swiftui (performance reference)\n→ If memory grows: axiom:memory-debugging\n\n**\"Memory leak\"**\n→ Start: axiom:memory-debugging\n→ If Objective-C blocks: axiom:objc-block-retain-cycles\n\n**\"SwiftUI view issues\"**\n→ Start: axiom-swiftui (debugging reference)\n→ If performance: axiom-swiftui (performance reference)\n\n**\"Navigation problems\"**\n→ Start: axiom-swiftui (navigation diagnostics)\n→ For patterns: axiom-swiftui (navigation reference)\n\n**\"Which database?\"**\n→ Decision guide: axiom:sqlitedata-migration\n→ Then: axiom:swiftdata, axiom:sqlitedata, or axiom:grdb\n\n**\"iOS 26 design\"**\n→ Start: axiom:liquid-glass\n→ Complete guide: axiom:liquid-glass-ref\n\n**\"Code quality check\"**\n→ Run: `/axiom:audit-accessibility`, `/axiom:audit-concurrency`, `/axiom:audit-memory`\n→ Fix issues with relevant skills\n\n## How Skills Work\n\nAxiom skills load automatically — you don't need to memorize names or commands.\n\n**Automatic triggering** (most common): Just describe your problem naturally. Claude detects which skill applies and loads it.\n- \"My SwiftData CloudKit sync isn't working\" → loads `cloud-sync-diag`\n- \"I'm getting Sendable errors in Swift 6\" → loads `swift-concurrency`\n\n**Explicit invocation**: If you know the skill name, invoke it directly:\n- `/skill axiom-concurrency`\n- See axiom-design (skills/liquid-glass.md)\n\n**Audit commands**: Run automated scans with slash commands:\n- `/axiom:audit-memory` — scans for memory leak patterns\n- `/axiom:audit-concurrency` — scans for Swift 6 violations\n\n**Key insight**: You don't need to know skill names. Describe what you're working on and Axiom routes to the right skill automatically.\n\n## Tips\n\n- **Describe your problem** — Claude will suggest the right skill\n- **Run audits first** — Quick wins with automated scans\n- **Start with diagnostic skills** — When troubleshooting specific issues\n- **Use reference skills** — When implementing new features\n- **All skills are searchable** — Just describe what you need\n",
+      "content": "# Getting Started with Axiom\n\nWelcome! This skill helps new users discover the most relevant Axiom skills for their situation.\n\n## How This Skill Works\n\n1. Ask the user 2-3 targeted questions about their project\n2. Provide personalized skill recommendations (3-5 skills max)\n3. Show example prompts they can try immediately\n4. Include a complete skill reference for browsing\n\n## Step 1: Ask Questions\n\nUse the AskUserQuestion tool to gather context:\n\n### Question 1: Current Focus\n\n```\nQuestion: \"What brings you to Axiom today?\"\nHeader: \"Focus\"\nOptions:\n- \"Debugging an issue\" → Prioritize diagnostic skills\n- \"Optimizing performance\" → Prioritize profiling skills\n- \"Adding new features\" → Prioritize reference skills\n- \"Code review / quality check\" → Prioritize audit commands\n- \"Just exploring\" → Show overview\n```\n\n### Question 2: Tech Stack\n\n```\nQuestion: \"What's your primary tech stack?\"\nHeader: \"Stack\"\nOptions:\n- \"SwiftUI (iOS 16+)\" → SwiftUI-focused skills\n- \"UIKit\" → UIKit-focused skills\n- \"Mixed SwiftUI + UIKit\" → Both\n- \"Starting new project\" → Best practices skills\n```\n\n### Question 3: Pain Points (Optional, Multi-Select)\n\nOnly ask if \"Debugging an issue\" was selected:\n\n```\nQuestion: \"Which areas are you struggling with?\"\nHeader: \"Pain Points\"\nMulti-select: true\nOptions:\n- \"Xcode/build issues\"\n- \"Memory leaks\"\n- \"UI/animation problems\"\n- \"Database/persistence\"\n- \"Networking\"\n- \"Concurrency/async\"\n- \"Accessibility\"\n```\n\n## Step 2: Provide Personalized Recommendations\n\nBased on answers, recommend 3-5 skills using this matrix:\n\n### If \"Debugging an issue\"\n\n**Always recommend**: axiom:xcode-debugging (universal starting point)\n\n**Then add based on pain points**:\n- Xcode/build → xcode-debugging, axiom-build (skills/build-debugging.md)\n- Memory leaks → memory-debugging, axiom-performance (skills/objc-block-retain-cycles.md)\n- UI/animation (SwiftUI) → axiom-swiftui (debugging, performance references)\n- UI/animation (UIKit) → uikit-animation-debugging, axiom-uikit (skills/auto-layout-debugging.md)\n- Database → database-migration, axiom-data (skills/sqlitedata-migration.md) (decision guide)\n- Networking → axiom-networking\n- Concurrency → swift-concurrency\n- Accessibility → accessibility-diag\n\n### If \"Optimizing performance\"\n\n**SwiftUI stack**:\n1. performance-profiling (decision trees for tools)\n2. axiom-swiftui (performance reference — SwiftUI Instrument)\n3. axiom-swiftui (debugging reference — view update issues)\n\n**UIKit/Mixed**:\n1. performance-profiling (Instruments guide)\n2. memory-debugging (leak detection)\n3. uikit-animation-debugging (CAAnimation issues)\n\n### If \"Adding new features\"\n\n**Design decisions**:\n- hig (quick design decisions, checklists)\n- hig-ref (comprehensive HIG reference)\n\n**iOS 26+ features**:\n- liquid-glass (material design system)\n- foundation-models (on-device AI)\n- axiom-swiftui (iOS 26 reference — complete iOS 26 guide)\n\n**Navigation patterns**:\n- axiom-swiftui (navigation reference — iOS 18+ Tab/Sidebar, deep linking)\n\n**Integrations**:\n- app-intents-ref (Siri, Shortcuts, Spotlight)\n- networking (Network.framework modern patterns)\n\n**Data persistence**:\n- Ask: \"Which persistence framework?\" → swiftdata, axiom-data (skills/sqlitedata.md), or grdb\n- Migration: axiom-data (skills/sqlitedata-migration.md), axiom-data (skills/realm-migration-ref.md)\n\n### If \"Code review / quality check\"\n\n**Start with audit commands** (quick wins):\n1. `/axiom:audit accessibility` — WCAG compliance\n2. `/axiom:audit concurrency` — Swift 6 violations\n3. `/axiom:audit memory` — Leak patterns\n4. `/axiom:audit core-data` — Migration safety\n5. `/axiom:audit networking` — Deprecated APIs\n\n**Then suggest**:\n- Review skills based on what audits find\n\n### If \"Just exploring\"\n\nShow the complete skill index (see below) and explain categories.\n\n## Step 3: Output Format\n\nAfter gathering answers, output:\n\n```markdown\n## Your Recommended Skills\n\nBased on your answers, here are the skills most relevant to you right now:\n\n### [Icon] [Category Name]\n**axiom:[skill-name]** — [One-line description]\n> Try: \"[Example prompt they can use immediately]\"\n\n[Repeat for 3-5 skills]\n\n### Quick Wins\nRun these audit commands to find issues automatically:\n- `/axiom:audit [name]` — [What it finds]\n\n## What's Next\n\n1. **Try the example prompts above** — Copy/paste to see how skills work\n2. **Run an audit command** — Get immediate actionable insights\n3. **Describe your problem** — I'll suggest the right skill\n4. **Browse the complete index below** — Explore the full skill catalog\n\n---\n\n[Include the Complete Skill Reference below]\n```\n\n## Complete Skill Reference\n\nInclude this reference section in every response for browsing:\n\n### Debugging & Troubleshooting\n\n**Environment & Build Issues**\n- **xcode-debugging** — BUILD FAILED, simulator hangs, zombie processes, environment-first diagnostics\n- **build-debugging** — Dependency conflicts, CocoaPods/SPM failures, Multiple commands produce\n\n**Memory & Performance**\n- **memory-debugging** — Memory growth, retain cycles, leak diagnosis with Instruments\n- **performance-profiling** — Decision trees for Instruments (Time Profiler, Allocations, Core Data, Energy)\n- **objc-block-retain-cycles** — Objective-C block memory leaks, weak-strong pattern\n\n**UI Debugging**\n- **axiom-swiftui** (debugging reference) — View update issues, struct mutation, binding identity, view recreation\n- **axiom-swiftui** (performance reference) — SwiftUI Instrument (iOS 26), long view bodies, Cause & Effect Graph\n- **uikit-animation-debugging** — CAAnimation completion, spring physics, gesture+animation jank\n- **auto-layout-debugging** — Auto Layout conflicts, constraint debugging (not yet in manifest)\n\n### Concurrency & Async\n- **swift-concurrency** — Swift 6 strict concurrency, @concurrent, actor isolation, Sendable, data races\n\n### UI & Design (iOS 26+)\n\n**Liquid Glass (Material Design)**\n- **liquid-glass** — Implementation, Regular vs Clear variants, design review defense\n- **liquid-glass-ref** — Complete app-wide adoption guide (icons, controls, navigation, windows)\n\n**Layout & Navigation**\n- **axiom-swiftui** (layout reference) — ViewThatFits vs AnyLayout vs onGeometryChange, decision trees, iOS 26 free-form windows\n- **axiom-swiftui** (navigation reference) — NavigationStack vs NavigationSplitView, deep links, coordinator patterns, iOS 18+ Tab/Sidebar\n- **axiom-swiftui** (navigation diagnostics) — Navigation not responding, unexpected pops, deep link failures, state loss\n\n### Testing\n- **ui-testing** — Recording UI Automation (Xcode 26), condition-based waiting, accessibility-first patterns\n\n### Persistence\n\n**Frameworks**\n- **swiftdata** — @Model, @Query, @Relationship, CloudKit, iOS 26 features, Swift 6 concurrency\n- **sqlitedata** — Point-Free SQLiteData, @Table, FTS5, CTEs, JSON aggregation, CloudKit sync\n- **grdb** — Raw SQL, complex joins, ValueObservation, DatabaseMigrator, performance\n- **database-migration** — Safe schema evolution for SQLite/GRDB, additive migrations, prevents data loss\n\n**Migration Guides**\n- **sqlitedata-migration** — Decision guide, pattern equivalents, performance benchmarks\n- **realm-migration-ref** — Realm → SwiftData migration (Realm Device Sync sunset Sept 2025)\n\n### Networking\n- **networking** — Network.framework (iOS 12-26), NetworkConnection (iOS 26), structured concurrency\n- **networking-diag** — Connection timeouts, TLS failures, data not arriving, performance issues\n- **network-framework-ref** — Complete API reference, TLV framing, Coder protocol, Wi-Fi Aware\n\n### Apple Intelligence (iOS 26+)\n- **foundation-models** — On-device AI, LanguageModelSession, @Generable, streaming, tool calling\n- **foundation-models-diag** — Context exceeded, guardrails, slow generation, availability issues\n- **foundation-models-ref** — Complete API reference, all 26 WWDC examples\n\n### Design & UI Guidelines\n- **hig** — Quick design decisions, color/background/typography choices, HIG compliance checklists\n- **hig-ref** — Comprehensive Human Interface Guidelines reference with code examples\n\n### Integrations\n- **app-intents-ref** — Siri, Apple Intelligence, Shortcuts, Spotlight (iOS 16+)\n- **axiom-swiftui** (iOS 26 reference) — iOS 26 SwiftUI features, @Animatable, 3D layout, WebView, AttributedString\n- **avfoundation-ref** — Audio APIs, bit-perfect DAC, iOS 26 spatial audio, ASAF/APAC\n\n### Diagnostics (Systematic Troubleshooting)\n- **accessibility-diag** — VoiceOver, Dynamic Type, color contrast, WCAG compliance, App Store defense\n- **core-data-diag** — Schema migration crashes, thread-confinement, N+1 queries\n\n### Audit Commands (Quick Scans)\n- `/axiom:audit accessibility` — VoiceOver labels, Dynamic Type, contrast, touch targets\n- `/axiom:audit concurrency` — Swift 6 violations, unsafe tasks, missing @MainActor\n- `/axiom:audit memory` — Timer leaks, observer leaks, closure captures, delegate cycles\n- `/axiom:audit core-data` — Migration risks, thread violations, N+1 queries\n- `/axiom:audit networking` — Deprecated APIs (SCNetworkReachability, CFSocket), anti-patterns\n- `/axiom:audit liquid-glass` — Glass adoption opportunities, toolbar improvements, blur migration\n\n## Skill Categories Explained\n\n- **Discipline skills** (no suffix) — Step-by-step workflows with pressure scenarios, TDD-tested\n- **Diagnostic skills** (-diag suffix) — Systematic troubleshooting with production crisis defense\n- **Reference skills** (-ref suffix) — Comprehensive API guides with WWDC examples\n\n## Quick Decision Trees\n\n**\"My build is failing\"**\n→ Start: axiom:xcode-debugging\n→ If dependency issue: axiom:build-debugging\n\n**\"App is slow\"**\n→ Start: axiom:performance-profiling (decision trees)\n→ If SwiftUI: axiom-swiftui (performance reference)\n→ If memory grows: axiom:memory-debugging\n\n**\"Memory leak\"**\n→ Start: axiom:memory-debugging\n→ If Objective-C blocks: axiom:objc-block-retain-cycles\n\n**\"SwiftUI view issues\"**\n→ Start: axiom-swiftui (debugging reference)\n→ If performance: axiom-swiftui (performance reference)\n\n**\"Navigation problems\"**\n→ Start: axiom-swiftui (navigation diagnostics)\n→ For patterns: axiom-swiftui (navigation reference)\n\n**\"Which database?\"**\n→ Decision guide: axiom:sqlitedata-migration\n→ Then: axiom:swiftdata, axiom:sqlitedata, or axiom:grdb\n\n**\"iOS 26 design\"**\n→ Start: axiom:liquid-glass\n→ Complete guide: axiom:liquid-glass-ref\n\n**\"Code quality check\"**\n→ Run: `/axiom:audit accessibility`, `/axiom:audit concurrency`, `/axiom:audit memory`\n→ Fix issues with relevant skills\n\n## How Skills Work\n\nAxiom skills load automatically — you don't need to memorize names or commands.\n\n**Automatic triggering** (most common): Just describe your problem naturally. Claude detects which skill applies and loads it.\n- \"My SwiftData CloudKit sync isn't working\" → loads `cloud-sync-diag`\n- \"I'm getting Sendable errors in Swift 6\" → loads `swift-concurrency`\n\n**Explicit invocation**: If you know the skill name, invoke it directly:\n- `/skill axiom-concurrency`\n- See axiom-design (skills/liquid-glass.md)\n\n**Audit commands**: Run automated scans with slash commands:\n- `/axiom:audit memory` — scans for memory leak patterns\n- `/axiom:audit concurrency` — scans for Swift 6 violations\n\n**Key insight**: You don't need to know skill names. Describe what you're working on and Axiom routes to the right skill automatically.\n\n## Tips\n\n- **Describe your problem** — Claude will suggest the right skill\n- **Run audits first** — Quick wins with automated scans\n- **Start with diagnostic skills** — When troubleshooting specific issues\n- **Use reference skills** — When implementing new features\n- **All skills are searchable** — Just describe what you need\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -34752,7 +34752,7 @@
           "level": 2,
           "startLine": 145,
           "endLine": 156,
-          "charCount": 331
+          "charCount": 340
         },
         {
           "heading": "Complete Skill Reference",
@@ -39610,7 +39610,7 @@
           3,
           4,
           30,
-          418
+          435
         ],
         "11": [
           3,
@@ -40485,7 +40485,7 @@
           2,
           8,
           33,
-          1009
+          1012
         ],
         "136": [
           3,
@@ -40800,7 +40800,7 @@
           12,
           3,
           14,
-          273
+          278
         ],
         "181": [
           4,
@@ -40989,7 +40989,7 @@
           12,
           2,
           27,
-          482
+          483
         ],
         "208": [
           4,
@@ -41158,7 +41158,7 @@
         16.138528138528144,
         4.147186147186151,
         44.46753246753245,
-        622.255411255411
+        622.3679653679651
       ],
       "storedFields": {
         "0": {
@@ -47685,6 +47685,7 @@
           "@discardable",
           {
             "4": {
+              "135": 1,
               "137": 1
             }
           }
@@ -52482,8 +52483,7 @@
             "4": {
               "48": 2,
               "123": 1,
-              "179": 1,
-              "207": 1
+              "179": 1
             }
           }
         ],
@@ -53807,6 +53807,7 @@
               "6": 1,
               "7": 1,
               "8": 3,
+              "10": 1,
               "31": 1,
               "35": 1,
               "42": 1,
@@ -58522,6 +58523,7 @@
               "15": 1
             },
             "4": {
+              "10": 1,
               "13": 3,
               "15": 1,
               "77": 1,
@@ -61612,18 +61614,19 @@
           }
         ],
         [
-          "homebrew",
-          {
-            "4": {
-              "163": 1
-            }
-          }
-        ],
-        [
           "homemade",
           {
             "4": {
               "19": 1
+            }
+          }
+        ],
+        [
+          "homebrew",
+          {
+            "4": {
+              "10": 1,
+              "163": 1
             }
           }
         ],
@@ -63513,7 +63516,7 @@
               "131": 2,
               "133": 26,
               "134": 2,
-              "135": 19,
+              "135": 20,
               "136": 11,
               "137": 8,
               "138": 7,
@@ -65906,7 +65909,6 @@
               "176": 1,
               "177": 5,
               "178": 5,
-              "180": 1,
               "187": 1,
               "188": 7,
               "190": 6,
@@ -69523,7 +69525,7 @@
               "176": 1,
               "177": 8,
               "178": 5,
-              "180": 2,
+              "180": 1,
               "182": 2,
               "184": 1,
               "185": 2,
@@ -70992,6 +70994,7 @@
               "167": 2,
               "177": 2,
               "178": 4,
+              "180": 2,
               "184": 1,
               "186": 1,
               "187": 41,
@@ -83728,6 +83731,35 @@
           }
         ],
         [
+          "biased",
+          {
+            "4": {
+              "166": 1
+            }
+          }
+        ],
+        [
+          "biases",
+          {
+            "4": {
+              "105": 1
+            }
+          }
+        ],
+        [
+          "bias",
+          {
+            "4": {
+              "11": 1,
+              "57": 1,
+              "105": 2,
+              "106": 2,
+              "107": 2,
+              "124": 2
+            }
+          }
+        ],
+        [
           "binaural",
           {
             "4": {
@@ -83798,6 +83830,7 @@
           "bin",
           {
             "4": {
+              "10": 1,
               "12": 2,
               "109": 3,
               "160": 1,
@@ -83908,35 +83941,6 @@
               "216": 1,
               "222": 3,
               "223": 1
-            }
-          }
-        ],
-        [
-          "biased",
-          {
-            "4": {
-              "166": 1
-            }
-          }
-        ],
-        [
-          "biases",
-          {
-            "4": {
-              "105": 1
-            }
-          }
-        ],
-        [
-          "bias",
-          {
-            "4": {
-              "11": 1,
-              "57": 1,
-              "105": 2,
-              "106": 2,
-              "107": 2,
-              "124": 2
             }
           }
         ],
@@ -86825,7 +86829,7 @@
               "141": 1
             },
             "4": {
-              "10": 7,
+              "10": 11,
               "73": 1,
               "130": 1,
               "133": 23,
@@ -90093,7 +90097,7 @@
               "6": 3,
               "7": 1,
               "8": 4,
-              "10": 1,
+              "10": 2,
               "11": 1,
               "13": 1,
               "14": 1,
@@ -96816,7 +96820,7 @@
               "6": 1,
               "7": 1,
               "8": 7,
-              "10": 1,
+              "10": 2,
               "12": 2,
               "19": 2,
               "20": 2,
@@ -102928,7 +102932,7 @@
               "1": 1,
               "2": 5,
               "8": 1,
-              "10": 6,
+              "10": 7,
               "13": 15,
               "14": 13,
               "15": 1,
@@ -103874,6 +103878,7 @@
               "177": 2,
               "178": 3,
               "179": 10,
+              "180": 1,
               "181": 6,
               "182": 8,
               "183": 2,
@@ -108064,7 +108069,7 @@
               "131": 8,
               "132": 17,
               "133": 6,
-              "135": 3,
+              "135": 4,
               "136": 4,
               "137": 1,
               "138": 3,
@@ -109881,7 +109886,7 @@
               "132": 4,
               "133": 27,
               "134": 9,
-              "135": 16,
+              "135": 20,
               "136": 11,
               "137": 9,
               "138": 9,
@@ -110191,7 +110196,7 @@
               "6": 2,
               "7": 1,
               "8": 2,
-              "10": 2,
+              "10": 3,
               "11": 2,
               "12": 1,
               "13": 2,
@@ -111410,7 +111415,7 @@
               "7": 23,
               "8": 50,
               "9": 10,
-              "10": 20,
+              "10": 21,
               "11": 4,
               "12": 4,
               "13": 10,
@@ -111533,7 +111538,7 @@
               "132": 18,
               "133": 27,
               "134": 15,
-              "135": 40,
+              "135": 41,
               "136": 15,
               "137": 2,
               "138": 9,
@@ -111923,6 +111928,7 @@
               "7": 15,
               "8": 27,
               "9": 1,
+              "10": 1,
               "12": 2,
               "13": 2,
               "14": 1,
@@ -118218,7 +118224,7 @@
               "177": 20,
               "178": 9,
               "179": 26,
-              "180": 3,
+              "180": 2,
               "181": 10,
               "183": 3,
               "185": 1,
@@ -118885,7 +118891,7 @@
               "131": 1,
               "132": 2,
               "134": 2,
-              "135": 1,
+              "135": 3,
               "138": 8,
               "139": 6,
               "140": 4,
@@ -120305,6 +120311,7 @@
             "4": {
               "1": 1,
               "4": 1,
+              "10": 1,
               "13": 1,
               "19": 2,
               "26": 2,
@@ -123583,6 +123590,7 @@
               "3": 1,
               "4": 1,
               "9": 1,
+              "10": 1,
               "14": 1,
               "20": 2,
               "28": 1,
@@ -125295,6 +125303,7 @@
               "4": 3,
               "5": 3,
               "6": 1,
+              "10": 1,
               "13": 3,
               "15": 5,
               "21": 2,
@@ -125894,6 +125903,7 @@
               "176": 2,
               "178": 3,
               "179": 2,
+              "180": 1,
               "181": 1,
               "200": 2,
               "205": 1,
@@ -128544,7 +128554,7 @@
               "6": 4,
               "7": 4,
               "8": 4,
-              "10": 4,
+              "10": 5,
               "14": 1,
               "18": 4,
               "19": 18,
@@ -129396,6 +129406,7 @@
               "201": 2,
               "202": 3,
               "205": 1,
+              "207": 1,
               "208": 2,
               "209": 7,
               "210": 1,
@@ -132154,6 +132165,7 @@
               "6": 2,
               "7": 1,
               "8": 1,
+              "10": 1,
               "47": 2,
               "56": 1,
               "62": 1,
@@ -144173,7 +144185,7 @@
           {
             "4": {
               "6": 1,
-              "10": 2,
+              "10": 3,
               "109": 1,
               "208": 1,
               "209": 1
@@ -145843,7 +145855,7 @@
             "4": {
               "1": 2,
               "9": 4,
-              "10": 3,
+              "10": 4,
               "33": 1,
               "39": 2,
               "41": 1,
@@ -146487,6 +146499,7 @@
               "73": 1,
               "92": 3,
               "98": 2,
+              "135": 1,
               "137": 1,
               "138": 1,
               "141": 3,
@@ -151885,6 +151898,7 @@
               "3": 3,
               "6": 2,
               "8": 1,
+              "10": 1,
               "17": 2,
               "19": 4,
               "20": 2,
@@ -160366,6 +160380,7 @@
               "7": 1,
               "8": 2,
               "9": 1,
+              "10": 1,
               "12": 3,
               "14": 5,
               "18": 4,
@@ -165726,7 +165741,7 @@
               "132": 1,
               "133": 12,
               "134": 10,
-              "135": 9,
+              "135": 8,
               "137": 11,
               "144": 2,
               "150": 5,
@@ -171183,7 +171198,7 @@
               "130": 1,
               "133": 111,
               "134": 91,
-              "135": 107,
+              "135": 109,
               "136": 22,
               "137": 18,
               "138": 5,
@@ -173142,7 +173157,7 @@
               "132": 17,
               "133": 22,
               "134": 26,
-              "135": 17,
+              "135": 19,
               "136": 3,
               "137": 11,
               "138": 4,
@@ -173922,7 +173937,7 @@
               "7": 9,
               "8": 51,
               "9": 1,
-              "10": 7,
+              "10": 8,
               "11": 20,
               "12": 5,
               "13": 3,
@@ -180221,7 +180236,7 @@
               "7": 1,
               "8": 8,
               "9": 1,
-              "10": 3,
+              "10": 4,
               "11": 3,
               "12": 3,
               "13": 1,
@@ -193539,7 +193554,7 @@
               "2": 2,
               "5": 1,
               "8": 1,
-              "10": 1,
+              "10": 2,
               "11": 1,
               "20": 1,
               "22": 1,
@@ -193654,7 +193669,7 @@
               "7": 6,
               "8": 23,
               "9": 1,
-              "10": 2,
+              "10": 3,
               "11": 9,
               "12": 6,
               "13": 3,
@@ -198257,7 +198272,7 @@
               "7": 4,
               "8": 4,
               "9": 1,
-              "10": 1,
+              "10": 2,
               "11": 2,
               "12": 1,
               "13": 4,
@@ -206946,7 +206961,7 @@
               "177": 5,
               "178": 2,
               "179": 1,
-              "180": 1,
+              "180": 2,
               "185": 2,
               "187": 1,
               "188": 2,
@@ -211541,6 +211556,7 @@
               "127": 2,
               "130": 1,
               "132": 1,
+              "135": 1,
               "187": 1,
               "192": 1,
               "212": 2,
@@ -211792,6 +211808,7 @@
               "127": 5,
               "130": 2,
               "134": 1,
+              "135": 2,
               "137": 1,
               "144": 1,
               "145": 2,
@@ -212458,6 +212475,7 @@
               "7": 30,
               "8": 25,
               "9": 2,
+              "10": 1,
               "11": 2,
               "12": 3,
               "13": 2,
@@ -213911,6 +213929,7 @@
               "2": 2,
               "6": 3,
               "8": 4,
+              "10": 1,
               "19": 2,
               "37": 1,
               "39": 1,
@@ -216544,7 +216563,7 @@
               "204": 3,
               "205": 2,
               "206": 3,
-              "207": 32,
+              "207": 31,
               "208": 4,
               "209": 12,
               "210": 2,
@@ -216849,7 +216868,7 @@
               "200": 7,
               "201": 3,
               "205": 8,
-              "207": 16,
+              "207": 17,
               "209": 1,
               "210": 2,
               "211": 8,
@@ -216931,7 +216950,7 @@
               "176": 17,
               "177": 6,
               "178": 11,
-              "180": 3,
+              "180": 4,
               "187": 3,
               "200": 1,
               "211": 1,
@@ -220264,7 +220283,7 @@
               "2": 1,
               "3": 11,
               "6": 20,
-              "10": 3,
+              "10": 4,
               "11": 6,
               "12": 6,
               "14": 1,
@@ -220774,7 +220793,7 @@
             "4": {
               "7": 2,
               "8": 3,
-              "10": 3,
+              "10": 4,
               "12": 1,
               "17": 2,
               "20": 7,
@@ -228924,6 +228943,7 @@
               "1": 1,
               "2": 1,
               "8": 2,
+              "10": 1,
               "12": 2,
               "19": 1,
               "20": 1,
@@ -231303,7 +231323,7 @@
               "6": 71,
               "7": 88,
               "8": 85,
-              "10": 20,
+              "10": 21,
               "13": 1,
               "14": 3,
               "17": 1,
@@ -239285,7 +239305,7 @@
               "132": 1,
               "133": 10,
               "134": 1,
-              "135": 3,
+              "135": 2,
               "136": 1,
               "137": 1,
               "153": 1,
@@ -239433,7 +239453,7 @@
               "132": 5,
               "133": 55,
               "134": 15,
-              "135": 39,
+              "135": 46,
               "136": 24,
               "137": 21,
               "141": 1,
@@ -240739,7 +240759,7 @@
           "superpowers",
           {
             "4": {
-              "10": 7,
+              "10": 9,
               "205": 1
             }
           }
@@ -247222,7 +247242,7 @@
               "177": 2,
               "178": 9,
               "179": 3,
-              "180": 2,
+              "180": 3,
               "181": 3,
               "182": 1,
               "186": 2,
@@ -248848,6 +248868,7 @@
             "4": {
               "4": 5,
               "5": 1,
+              "10": 1,
               "15": 3,
               "92": 1,
               "131": 1,
@@ -249086,7 +249107,7 @@
               "10": 1
             },
             "4": {
-              "10": 17,
+              "10": 21,
               "42": 1,
               "43": 2,
               "44": 2,
@@ -249616,7 +249637,7 @@
               "132": 2,
               "133": 9,
               "134": 38,
-              "135": 18,
+              "135": 17,
               "138": 2,
               "139": 1,
               "140": 4,
@@ -253257,6 +253278,7 @@
               "132": 69,
               "142": 1,
               "176": 2,
+              "207": 1,
               "209": 1,
               "211": 1,
               "219": 1
@@ -257888,6 +257910,7 @@
           "conn",
           {
             "4": {
+              "135": 1,
               "137": 1
             }
           }
@@ -257929,7 +257952,7 @@
               "126": 1,
               "133": 200,
               "134": 91,
-              "135": 136,
+              "135": 140,
               "136": 52,
               "137": 55,
               "141": 2,
@@ -261965,7 +261988,7 @@
               "6": 23,
               "7": 31,
               "8": 32,
-              "10": 6,
+              "10": 7,
               "12": 1,
               "19": 1,
               "22": 1,
@@ -267334,7 +267357,7 @@
               "230": 2
             },
             "4": {
-              "10": 3,
+              "10": 5,
               "15": 2,
               "175": 6,
               "179": 16,
@@ -271012,6 +271035,7 @@
               "171": 1,
               "176": 3,
               "177": 1,
+              "180": 1,
               "187": 1,
               "200": 1,
               "202": 1
@@ -273110,6 +273134,7 @@
             "4": {
               "68": 1,
               "114": 1,
+              "180": 1,
               "201": 1
             }
           }
@@ -275691,7 +275716,8 @@
               "143": 3,
               "153": 1,
               "166": 1,
-              "178": 1
+              "178": 1,
+              "180": 1
             }
           }
         ],
@@ -275776,7 +275802,6 @@
               "124": 1,
               "133": 15,
               "134": 4,
-              "135": 2,
               "137": 4,
               "150": 1,
               "151": 1,
@@ -279630,7 +279655,7 @@
               "132": 17,
               "133": 35,
               "134": 7,
-              "135": 25,
+              "135": 24,
               "136": 6,
               "137": 11,
               "140": 1,
@@ -284113,7 +284138,7 @@
               "177": 44,
               "178": 29,
               "179": 2,
-              "180": 1,
+              "180": 2,
               "181": 2,
               "185": 1,
               "186": 15,
@@ -285211,6 +285236,7 @@
               "6": 15,
               "7": 4,
               "8": 3,
+              "10": 1,
               "13": 1,
               "14": 1,
               "15": 1,
@@ -285558,6 +285584,7 @@
               "223": 1
             },
             "4": {
+              "10": 2,
               "12": 2,
               "18": 1,
               "98": 2,
@@ -293208,7 +293235,7 @@
               "204": 1,
               "205": 12,
               "206": 1,
-              "207": 3,
+              "207": 2,
               "208": 1,
               "209": 7,
               "210": 8,
@@ -312921,19 +312948,52 @@
         ],
         "Troubleshooting": [
           "troubleshoot",
+          "superpowers",
           "chrome",
-          "session",
-          "directory",
+          "mcp",
           "not",
-          "found",
+          "available",
           "symptom",
+          "plugin",
+          "use",
+          "browser",
+          "isn",
+          "loaded",
+          "session",
+          "solu",
+          "fall",
+          "back",
+          "agent",
+          "cli",
+          "opt",
+          "homebrew",
+          "bin",
+          "fetch",
+          "page",
+          "then",
+          "read",
+          "output",
+          "don",
+          "give",
+          "up",
+          "content",
+          "kill",
+          "user",
+          "launch",
+          "separate",
+          "profile",
+          "instead",
+          "if",
+          "live",
+          "required",
+          "directory",
+          "found",
           "can",
           "locate",
           "001",
           "navigate",
           "md",
           "file",
-          "solu",
           "check",
           "actually",
           "navigated",
@@ -312946,8 +313006,6 @@
           "lt",
           "library",
           "caches",
-          "superpowers",
-          "browser",
           "format",
           "yyyy",
           "mm",
@@ -312958,7 +313016,6 @@
           "exists",
           "but",
           "miss",
-          "page",
           "may",
           "still",
           "load",
@@ -312972,7 +313029,6 @@
           "require",
           "scroll",
           "full",
-          "content",
           "sosumi",
           "ai",
           "returns",
@@ -312986,7 +313042,6 @@
           "documenta",
           "frameworkname",
           "fallback",
-          "use",
           "developer",
           "apple",
           "com",
@@ -458820,12 +458875,18 @@
           "print",
           "received",
           "optional",
-          "monitor",
+          "observe",
           "state",
           "ui",
           "updates",
-          "task",
+          "no",
           "states",
+          "sequence",
+          "update",
+          "@discardable",
+          "result",
+          "handler",
+          "passes",
           "switch",
           "case",
           "prepar",
@@ -458889,9 +458950,9 @@
           "enable",
           "logg",
           "nw",
-          "check",
-          "sequence",
           "transitions",
+          "via",
+          "conn",
           "test",
           "real",
           "device",
@@ -458906,14 +458967,12 @@
           "sendto",
           "buffer",
           "length",
-          "no",
           "batch",
           "high",
           "overhead",
           "game",
           "server",
           "9000",
-          "update",
           "player",
           "posi",
           "100",
@@ -458947,6 +459006,7 @@
           "profile",
           "datagram",
           "throughput",
+          "check",
           "packet",
           "timeouts",
           "higher",
@@ -459778,9 +459838,8 @@
           "handler",
           "better",
           "path",
-          "monitor",
-          "states",
-          "sequence",
+          "observ",
+          "via",
           "tear",
           "down",
           "immediately",
@@ -519401,14 +519460,20 @@
         "Build": [
           "build",
           "built",
+          "current",
           "required",
           "sdk",
-          "version",
+          "apple",
+          "mandates",
+          "latest",
+          "major",
+          "within",
+          "months",
+          "release",
           "currently",
           "xcode",
-          "16",
+          "26",
           "os",
-          "18",
           "export",
           "compliance",
           "answered",
@@ -519440,6 +519505,7 @@
           "develop",
           "str",
           "unique",
+          "version",
           "binary",
           "under",
           "200",
@@ -555454,8 +555520,8 @@
           "index",
           "below",
           "explore",
-          "all",
-          "34",
+          "full",
+          "catalog",
           "include",
           "reference"
         ],
