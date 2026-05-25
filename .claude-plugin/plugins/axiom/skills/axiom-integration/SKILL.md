@@ -30,6 +30,11 @@ license: MIT
 | Localization, String Catalogs | See `skills/localization.md` |
 | Apple terminology matching, glossary, pseudolocalization, TMS | See `skills/localization-research-ref.md` |
 | Privacy manifests, permissions UX | See `skills/privacy-ux.md` |
+| Bluetooth/Wi-Fi accessory pairing (AccessorySetupKit, iOS 18+) | See `skills/accessorysetupkit.md` |
+| AccessorySetupKit API (descriptor fields, events, auth-settings flow) | See `skills/accessorysetupkit-ref.md` |
+| Weather data, forecasts, attribution (WeatherKit) | See `skills/weatherkit.md` |
+| VoIP calls, CallKit, VoIP push, caller ID/blocking | See `skills/callkit-livecommunicationkit.md` |
+| CallKit / LiveCommunicationKit / IdentityLookup API reference | See `skills/callkit-livecommunicationkit-ref.md` |
 | AlarmKit (iOS 26+) | See `skills/alarmkit-ref.md` |
 | Timer patterns, scheduling | See `skills/timer-patterns.md` |
 | Timer API reference | See `skills/timer-patterns-ref.md` |
@@ -60,6 +65,9 @@ digraph integration {
     what -> "skills/contacts.md" [label="contacts"];
     what -> "skills/localization.md" [label="localization"];
     what -> "skills/privacy-ux.md" [label="privacy / permissions"];
+    what -> "skills/accessorysetupkit.md" [label="accessory pairing\n(Bluetooth/Wi-Fi)"];
+    what -> "skills/weatherkit.md" [label="weather / forecasts"];
+    what -> "skills/callkit-livecommunicationkit.md" [label="VoIP calls /\ncaller ID"];
     what -> "skills/alarmkit-ref.md" [label="alarms (iOS 26+)"];
     what -> "skills/timer-patterns.md" [label="timers"];
     what -> "skills/background-processing.md" [label="background tasks"];
@@ -80,6 +88,9 @@ digraph integration {
 8a. Localization research (Apple terminology, glossary, pseudolocalization, TMS)? → `skills/localization-research-ref.md`
 9. Privacy / permissions? → `skills/privacy-ux.md`
 10. Alarms (iOS 26+)? → `skills/alarmkit-ref.md`
+10a. Bluetooth/Wi-Fi accessory pairing (iOS 18+)? → `skills/accessorysetupkit.md`
+10b. Weather data / forecasts / attribution (WeatherKit)? → `skills/weatherkit.md`
+10c. VoIP calls / CallKit / VoIP push / caller ID / blocking? → `skills/callkit-livecommunicationkit.md`
 11. Timers? → `skills/timer-patterns.md`, `skills/timer-patterns-ref.md`
 12. Background tasks / BGTaskScheduler? → `skills/background-processing.md`, `skills/background-processing-diag.md`, `skills/background-processing-ref.md`
 12a. Large asset delivery (game packs, ML models, Foundation Models adapters)? → `skills/background-assets.md`, `skills/background-assets-ref.md`
@@ -98,6 +109,11 @@ digraph integration {
 - ActivityKit push token / broadcast setup → **stay here** (live-activities)
 - Push delivery failures → **also invoke axiom-networking** (networking-diag)
 - Entitlements/certificates → **also invoke axiom-build**
+
+**VoIP push + CallKit** (VoIP app killed / pushes stopped arriving):
+- VoIP push must report a call to CallKit → **stay here** (callkit-livecommunicationkit, Part 1)
+- PushKit token vs APNs delivery → **stay here** (push-notifications for the APNs contrast)
+- Call audio silent/misrouted → **also invoke axiom-media** (AVAudioSession category)
 
 **Push + background processing** (silent push not triggering background work):
 - Push payload and delivery → **stay here** (push-notifications-diag)
@@ -137,6 +153,9 @@ digraph integration {
 | "I'll just bundle the assets, it's simpler" | Bundling ≥10 MB inflates first-install size and pays the cost every update. Background Assets ships with App Store install-progress integration; FM adapters can't be bundled at all. See `skills/background-assets.md`. |
 | "I'll use URLSession for the asset download" | URLSession doesn't integrate with App Store install progress, charging-aware scheduling, or per-app quota — and can't reach Apple-hosted asset packs at all. Background Assets is the supported channel. |
 | "Just request full Calendar access" | Most apps only need to add events — EventKitUI does that with zero permissions. |
+| "I'll request Bluetooth permission and scan for the accessory" | AccessorySetupKit (iOS 18+) pairs in one tap with no broad Bluetooth prompt and grants scoped BT+Wi-Fi access. See `skills/accessorysetupkit.md`. |
+| "I'll process the VoIP push, then report the call when ready" | iOS terminates your app and stops delivering VoIP pushes if a push doesn't report a call *before* completion. Report first, fetch after. See `skills/callkit-livecommunicationkit.md`. |
+| "I'll activate the audio session when the call connects" | CallKit owns the audio session — activate only in `provider(_:didActivate:)` or audio is silent/misrouted. See `skills/callkit-livecommunicationkit.md`. |
 | "I'll use CNContactStore directly for picking" | CNContactPickerViewController needs no authorization and shows all contacts. |
 
 ## Example Invocations
@@ -167,6 +186,15 @@ User: "How do I add an event to the user's calendar?"
 
 User: "How do I let users pick a contact?"
 → Read: `skills/contacts.md`
+
+User: "How do I pair a Bluetooth accessory without the permission prompt?"
+→ Read: `skills/accessorysetupkit.md`
+
+User: "How do I show the weather forecast with WeatherKit?" / "Why was my weather app rejected?"
+→ Read: `skills/weatherkit.md`
+
+User: "My VoIP app gets killed" / "How do I handle CallKit incoming calls?" / "How do I block spam callers?"
+→ Read: `skills/callkit-livecommunicationkit.md`
 
 User: "Review my in-app purchase implementation"
 → Launch: `iap-auditor` agent

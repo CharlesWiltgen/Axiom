@@ -27,6 +27,9 @@ license: MIT
 | TextKit 2 architecture, NSTextLayoutManager | See `skills/textkit-ref.md` |
 | Writing Tools integration (iOS 26) | See `skills/textkit-ref.md` |
 | SwiftUI TextEditor, TextKit 1 migration | See `skills/textkit-ref.md` |
+| PencilKit canvas, PKToolPicker, drawing persistence | See `skills/pencilkit-paperkit.md` |
+| Apple Pencil Pro (squeeze, barrel roll, hover, haptics) | See `skills/pencilkit-paperkit.md` |
+| PaperKit markup canvas (shapes, images, text + drawing) | See `skills/pencilkit-paperkit-ref.md` |
 
 ## Decision Tree
 
@@ -41,6 +44,7 @@ digraph uikit {
     what -> "skills/uikit-animation-debugging.md" [label="CAAnimation bugs,\nspring physics,\ncompletion handlers"];
     what -> "skills/combine-patterns.md" [label="publishers, sinks,\n@Published,\nasync/await bridge"];
     what -> "skills/textkit-ref.md" [label="text layout,\nWriting Tools,\nTextKit migration"];
+    what -> "skills/pencilkit-paperkit.md" [label="drawing canvas,\nApple Pencil,\nPaperKit markup"];
 }
 ```
 
@@ -49,10 +53,11 @@ digraph uikit {
 3. CAAnimation completion missing / spring physics wrong / animation jank? → `skills/uikit-animation-debugging.md`
 4. Combine publishers / AnyCancellable / @Published / Combine ↔ async bridge? → `skills/combine-patterns.md`
 5. TextKit 2 / Writing Tools / TextEditor / TextKit 1 migration? → `skills/textkit-ref.md`
-6. Pure SwiftUI view question (no UIKit bridging)? → `/skill axiom-swiftui`
-7. Design decisions, HIG, Liquid Glass, SF Symbols, typography? → `/skill axiom-design`
-8. Block retain cycles in UIKit callbacks? → See axiom-performance (`skills/objc-block-retain-cycles.md`)
-9. Memory leaks from Combine subscriptions? → Start with `skills/combine-patterns.md`, then axiom-performance if leak persists
+6. PencilKit canvas / Apple Pencil / PaperKit markup? → `skills/pencilkit-paperkit.md`
+7. Pure SwiftUI view question (no UIKit bridging)? → `/skill axiom-swiftui`
+8. Design decisions, HIG, Liquid Glass, SF Symbols, typography? → `/skill axiom-design`
+9. Block retain cycles in UIKit callbacks? → See axiom-performance (`skills/objc-block-retain-cycles.md`)
+10. Memory leaks from Combine subscriptions? → Start with `skills/combine-patterns.md`, then axiom-performance if leak persists
 
 ## Conflict Resolution
 
@@ -82,6 +87,8 @@ digraph uikit {
 | "Combine is dead, just rewrite with async/await" | Combine has no deprecation notice. Rewriting working pipelines wastes time. `skills/combine-patterns.md` covers when to migrate vs maintain. |
 | "TextKit 1 still works fine" | TextKit 1 misses Writing Tools integration and has known layout bugs Apple won't fix. See `skills/textkit-ref.md`. |
 | "I'll store cancellables in a local variable" | Local AnyCancellable deallocates immediately, killing the subscription. |
+| "I'll archive the PKCanvasView to save the drawing" | Archiving the view loses editability. Persist `drawing.dataRepresentation()`. See `skills/pencilkit-paperkit.md`. |
+| "My tool picker won't show, the API must be broken" | The canvas must `becomeFirstResponder()` after `setVisible(_:forFirstResponder:)`. See `skills/pencilkit-paperkit.md`. |
 
 ## Example Invocations
 
@@ -99,6 +106,12 @@ User: "Should I use Combine or async/await for this?"
 
 User: "How do I integrate Writing Tools with my text editor?"
 → Read: `skills/textkit-ref.md`
+
+User: "How do I add an Apple Pencil drawing canvas with the tool picker?"
+→ Read: `skills/pencilkit-paperkit.md`
+
+User: "How do I add a PaperKit markup canvas with shapes and text?"
+→ Read: `skills/pencilkit-paperkit-ref.md`
 
 User: "My SwiftUI view has a memory leak from a Combine subscription"
 → Read: `skills/combine-patterns.md`

@@ -131,6 +131,12 @@ class TestPositiveRouting(unittest.TestCase):
             "How do I add a WidgetKit timeline to my app?"))
         self.assertIn("axiom-integration", routed_skills(
             "How do I update my Live Activity with a broadcast push?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "How do I pair a Bluetooth accessory with AccessorySetupKit?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "How do I show a forecast with WeatherKit and handle attribution?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "My VoIP app gets killed — how do I report a CallKit call from a PushKit push?"))
 
     def test_media(self):
         self.assertIn("axiom-media", routed_skills(
@@ -161,11 +167,15 @@ class TestPositiveRouting(unittest.TestCase):
     def test_shipping(self):
         self.assertIn("axiom-shipping", routed_skills(
             "My app store submission was rejected for privacy manifest"))
+        self.assertIn("axiom-shipping", routed_skills(
+            "How do I add an App Clip and what's the size limit?"))
 
     def test_macos(self):
         # Must require intent-qualifier; bare "macos" alone must NOT fire
         self.assertIn("axiom-macos", routed_skills(
             "How do I build a Mac app with NSToolbar and sandboxing?"))
+        self.assertIn("axiom-macos", routed_skills(
+            "How do I capture a window with ScreenCaptureKit and SCStream?"))
 
     def test_design(self):
         self.assertIn("axiom-design", routed_skills(
@@ -174,6 +184,10 @@ class TestPositiveRouting(unittest.TestCase):
     def test_uikit(self):
         self.assertIn("axiom-uikit", routed_skills(
             "How do I bridge UIViewController to SwiftUI with UIViewRepresentable?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "How do I add a PencilKit canvas with PKToolPicker and persist the PKDrawing?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "How do I handle Apple Pencil Pro barrel roll and squeeze in my drawing app?"))
 
     def test_swift(self):
         self.assertIn("axiom-swift", routed_skills(

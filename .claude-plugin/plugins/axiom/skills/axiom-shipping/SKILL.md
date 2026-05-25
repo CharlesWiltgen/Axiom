@@ -56,6 +56,8 @@ Use this skill when you encounter:
 | ITMS signing error on upload | See axiom-security (skills/code-signing-diag.md) |
 | Certificate/profile mismatch | See axiom-security (skills/code-signing-diag.md) |
 | Code signing setup | See axiom-security (skills/code-signing.md) |
+| App Clips (size tiers, invocation, AASA, launch experience) | See `skills/app-clips.md` |
+| App Clip entitlements / size / data-sharing reference | See `skills/app-clips-ref.md` |
 | Apple Pay / Wallet / Tap to Pay payments | See `axiom-payments` suite |
 | Shipping update with Claude model-ID change (4.6 → 4.7, etc.) | See **`claude-api`** skill (external) + this skill for submission |
 | Switching cloud AI provider in-app (OpenAI → Claude, etc.) | See **`claude-api`** skill (external) + this skill for submission |
@@ -227,6 +229,22 @@ Use this skill when you encounter:
 
 ---
 
+### 11. App Clips → **app-clips**
+
+**Triggers**:
+- Adding an App Clip target, or choosing an invocation method
+- "What's the App Clip size limit?" / build exceeds maximum size
+- Associated domains / AASA for App Clip links
+- App Store Connect default and advanced launch experiences
+- Handing App Clip data off to the full app on upgrade
+- "My App Clip link does nothing"
+
+**Why app-clips**: App Clips ship embedded in the full app and live under tight size (10/15/100 MB), entitlement, and capability limits. The discipline covers the size tiers, entitlements, AASA, and data handoff; the reference has the tables.
+
+**Reference**: `skills/app-clips.md`, `skills/app-clips-ref.md`
+
+---
+
 ## Decision Tree
 
 ```dot
@@ -287,6 +305,7 @@ Simplified:
 8. Want pre-submission code scan? → `security-privacy-scanner` (Agent)
 9. ITMS signing/certificate/profile error on upload? → See axiom-security (skills/code-signing-diag.md)
 10. General submission preparation? → `skills/app-store-submission.md`
+11. App Clip (size tiers, invocation, AASA, data handoff)? → `skills/app-clips.md`, `skills/app-clips-ref.md`
 
 #### Platform-specific submission
 - watchOS 26 SDK requirement, 64-bit, independent-app submission → See axiom-watchos (skills/platform-basics.md)
@@ -305,6 +324,7 @@ Simplified:
 | "I'll just do it in the ASC web dashboard" | If asc-mcp is configured, MCP tools are faster for bulk operations — distributing builds, responding to reviews, creating versions. asc-mcp has the workflow. |
 | "Upload failed with ITMS error, let me re-archive" | ITMS signing errors are configuration — wrong cert, expired profile, missing entitlement. Re-archiving with the same config produces the same result. code-signing-diag has the fix. |
 | "It's just a model ID swap (Claude 4.6 → 4.7)" | 4.6 → 4.7 removed `temperature`, `top_p`, `top_k`, and prefill from the Messages API. Build succeeds; runtime returns HTTP 400 after submission. Read `claude-api` (external) and test the live endpoint before uploading. |
+| "My App Clip can be 100 MB, so I'll add an App Clip Code too" | The 100 MB tier (iOS 17+) is digital-invocation-only; adding any NFC/QR/App Clip Code drops the limit to 15 MB. See `skills/app-clips.md`. |
 
 ## External Resources
 
@@ -414,3 +434,6 @@ User: "ITMS-90035 Invalid Signature when uploading"
 
 User: "My provisioning profile expired and I can't upload"
 → See axiom-security (skills/code-signing-diag.md)
+
+User: "How do I add an App Clip?" / "What's the App Clip size limit?" / "My App Clip link does nothing"
+→ See `skills/app-clips.md`

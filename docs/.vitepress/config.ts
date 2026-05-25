@@ -284,6 +284,7 @@ export default withMermaid(defineConfig({
             { text: 'App Composition', link: '/skills/ui-design/app-composition' },
             { text: 'HIG (Human Interface Guidelines)', link: '/skills/ui-design/hig' },
             { text: 'Liquid Glass', link: '/skills/ui-design/liquid-glass' },
+            { text: 'PencilKit & PaperKit', link: '/skills/ui-design/pencilkit-paperkit' },
             { text: 'SF Symbols', link: '/skills/ui-design/sf-symbols' },
             { text: 'SwiftUI Architecture', link: '/skills/ui-design/swiftui-architecture' },
             { text: 'SwiftUI Layout', link: '/skills/ui-design/swiftui-layout' },
@@ -353,6 +354,7 @@ export default withMermaid(defineConfig({
           text: 'Integration',
           items: [
             { text: 'Overview', link: '/skills/integration/' },
+            { text: 'AccessorySetupKit', link: '/skills/integration/accessorysetupkit' },
             { text: 'App Discoverability', link: '/skills/integration/app-discoverability' },
             { text: 'Apple Documentation Access', link: '/skills/integration/apple-docs' },
             { text: 'Apple Docs Research', link: '/skills/integration/apple-docs-research' },
@@ -362,6 +364,7 @@ export default withMermaid(defineConfig({
             { text: 'App Intents', link: '/reference/app-intents-ref' },
             { text: 'Background Assets', link: '/skills/integration/background-assets' },
             { text: 'Background Processing', link: '/skills/integration/background-processing' },
+            { text: 'CallKit & LiveCommunicationKit', link: '/skills/integration/callkit-livecommunicationkit' },
             { text: 'Camera Capture', link: '/skills/integration/camera-capture' },
             { text: 'CarPlay HIG', link: '/skills/integration/carplay-hig' },
             { text: 'Core Location', link: '/skills/integration/core-location' },
@@ -384,7 +387,8 @@ export default withMermaid(defineConfig({
             { text: 'Tap to Pay on iPhone', link: '/skills/integration/tap-to-pay' },
             { text: 'tvOS', link: '/skills/integration/tvos' },
             { text: 'Wallet Orders', link: '/skills/integration/wallet-orders' },
-            { text: 'Wallet Passes', link: '/skills/integration/wallet-passes' }
+            { text: 'Wallet Passes', link: '/skills/integration/wallet-passes' },
+            { text: 'WeatherKit', link: '/skills/integration/weatherkit' }
           ]
         },
         {
@@ -470,6 +474,7 @@ export default withMermaid(defineConfig({
             { text: 'Direct Distribution', link: '/skills/macos/direct-distribution' },
             { text: 'Menus & Commands', link: '/skills/macos/menus-and-commands' },
             { text: 'Sandbox & File Access', link: '/skills/macos/sandbox-and-file-access' },
+            { text: 'ScreenCaptureKit', link: '/skills/macos/screencapturekit' },
             { text: 'Settings', link: '/skills/macos/settings' },
             { text: 'SwiftUI Differences (vs iOS)', link: '/skills/macos/swiftui-differences' },
             { text: 'Windows', link: '/skills/macos/windows' }
@@ -479,6 +484,7 @@ export default withMermaid(defineConfig({
           text: 'Shipping',
           items: [
             { text: 'Overview', link: '/skills/shipping/' },
+            { text: 'App Clips', link: '/skills/shipping/app-clips' },
             { text: 'App Review Guidelines', link: '/skills/shipping/app-review-guidelines' },
             { text: 'App Store Submission', link: '/skills/shipping/app-store-submission' },
             { text: 'App Store Connect MCP', link: '/skills/shipping/asc-mcp' },
