@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-25T17:57:09.789Z",
+  "generatedAt": "2026-05-25T18:58:43.074Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -12634,7 +12634,7 @@
     "axiom-integration--callkit-livecommunicationkit-ref": {
       "name": "axiom-integration--callkit-livecommunicationkit-ref",
       "description": "Comprehensive API reference for CallKit, PushKit VoIP, LiveCommunicationKit, and IdentityLookup. For the discipline (the PushKit rule, audio session ownership, action fulfillment), see `skills/callkit-livecommunicationkit.md`.",
-      "content": "\n# CallKit + LiveCommunicationKit + IdentityLookup — API Reference\n\nComprehensive API reference for CallKit, PushKit VoIP, LiveCommunicationKit, and IdentityLookup. For the discipline (the PushKit rule, audio session ownership, action fulfillment), see `skills/callkit-livecommunicationkit.md`.\n\n## Key Terminology\n\n- **CXProvider** — Reports calls to the system and surfaces system-initiated actions via its delegate.\n- **CXCallController** — Requests user-initiated actions (start/end/hold/mute) as transactions.\n- **CXTransaction** — One or more `CXAction`s submitted together.\n- **CXCallUpdate** — Mutable description of a call's metadata (handle, video, caller name).\n- **PKPushRegistry** — Delivers VoIP pushes; each must report a call.\n- **ConversationManager** — LiveCommunicationKit's CXProvider analogue (watch/visionOS, default apps).\n- **CXCallDirectoryProvider** — Bulk, offline caller identification/blocking extension.\n- **LiveCallerIDLookupManager** — Real-time, PIR-based caller ID/blocking (iOS 18+).\n\n---\n\n# Part 1: CXProvider and configuration\n\n```swift\nlet config = CXProviderConfiguration()\nconfig.supportsVideo = true\nconfig.maximumCallGroups = 1\nconfig.maximumCallsPerCallGroup = 1\nconfig.supportedHandleTypes = [.phoneNumber, .generic]   // also .emailAddress\nconfig.iconTemplateImageData = UIImage(named: \"callkit-icon\")?.pngData()\nconfig.ringtoneSound = \"ringtone.caf\"\nconfig.includesCallsInRecents = true\n\nlet provider = CXProvider(configuration: config)\nprovider.setDelegate(self, queue: nil)   // nil = main queue\n```\n\n---\n\n# Part 2: CXProviderDelegate\n\n```swift\nfunc providerDidReset(_ provider: CXProvider)                                   // tear down all calls\nfunc provider(_ provider: CXProvider, perform action: CXStartCallAction)\nfunc provider(_ provider: CXProvider, perform action: CXAnswerCallAction)\nfunc provider(_ provider: CXProvider, perform action: CXEndCallAction)\nfunc provider(_ provider: CXProvider, perform action: CXSetHeldCallAction)\nfunc provider(_ provider: CXProvider, perform action: CXSetMutedCallAction)\nfunc provider(_ provider: CXProvider, perform action: CXSetGroupCallAction)\nfunc provider(_ provider: CXProvider, perform action: CXPlayDTMFCallAction)\nfunc provider(_ provider: CXProvider, timedOutPerforming action: CXAction)\nfunc provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession)\nfunc provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession)\n```\n\nEvery `perform` overload must call `action.fulfill()` or `action.fail()`.\n\n---\n\n# Part 3: Reporting calls\n\n```swift\n// Incoming (from a VoIP push — see Part 6)\nprovider.reportNewIncomingCall(with: uuid, update: update) { error in /* ... */ }\n\n// Outgoing progress\nprovider.reportOutgoingCall(with: uuid, startedConnectingAt: Date())\nprovider.reportOutgoingCall(with: uuid, connectedAt: Date())\n\n// Updates and termination\nprovider.reportCall(with: uuid, updated: update)\nprovider.reportCall(with: uuid, endedAt: Date(), reason: .remoteEnded)\n// CXCallEndedReason: .failed, .remoteEnded, .unanswered, .answeredElsewhere, .declinedElsewhere\n```\n\n## CXCallUpdate\n\n```swift\nlet update = CXCallUpdate()\nupdate.remoteHandle = CXHandle(type: .phoneNumber, value: \"+15551234\")  // .generic, .emailAddress\nupdate.localizedCallerName = \"Jane Doe\"\nupdate.hasVideo = false\nupdate.supportsHolding = true\nupdate.supportsGrouping = false\nupdate.supportsUngrouping = false\nupdate.supportsDTMF = true\n```\n\n---\n\n# Part 4: CXCallController and transactions\n\n```swift\nlet callController = CXCallController()\n\n// Start\nlet start = CXStartCallAction(call: uuid, handle: CXHandle(type: .phoneNumber, value: \"+15551234\"))\nstart.isVideo = false\ncallController.request(CXTransaction(action: start)) { error in /* ... */ }\n\n// Answer / End / Hold / Mute / DTMF\nCXAnswerCallAction(call: uuid)\nCXEndCallAction(call: uuid)\nCXSetHeldCallAction(call: uuid, onHold: true)\nCXSetMutedCallAction(call: uuid, muted: true)\nCXPlayDTMFCallAction(call: uuid, digits: \"5\", type: .singleTone)\n```\n\n---\n\n# Part 5: CXCallObserver\n\n```swift\nlet observer = CXCallObserver()\nobserver.setDelegate(self, queue: nil)\n\nfunc callObserver(_ observer: CXCallObserver, callChanged call: CXCall) {\n    // call.uuid, call.isOutgoing, call.isOnHold, call.hasConnected, call.hasEnded\n}\n```\n\n---\n\n# Part 6: PushKit (VoIP)\n\n```swift\nimport PushKit\n\nlet registry = PKPushRegistry(queue: .main)\nregistry.delegate = self\nregistry.desiredPushTypes = [.voIP]\n\n// Delegate\nfunc pushRegistry(_ registry: PKPushRegistry, didUpdate credentials: PKPushCredentials, for type: PKPushType) {\n    // credentials.token — send to your server\n}\nfunc pushRegistry(_ registry: PKPushRegistry,\n                  didReceiveIncomingPushWith payload: PKPushPayload,\n                  for type: PKPushType,\n                  completion: @escaping () -> Void) {\n    // MUST reportNewIncomingCall before completion() — see discipline Part 1\n}\nfunc pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenFor type: PKPushType) { }\n```\n\nAPNs VoIP push: `apns-push-type: voip`, `apns-topic: <bundleID>.voip`.\n\n---\n\n# Part 7: LiveCommunicationKit (iOS 17.4+)\n\n```swift\nimport LiveCommunicationKit\n\nlet config = ConversationManager.Configuration(/* ringtoneName, iconTemplateImageData, supportsVideo, supportedHandleTypes */)\nlet manager = ConversationManager(configuration: config)\nmanager.delegate = delegate                  // ConversationManagerDelegate\n\ntry await manager.reportNewIncomingConversation(uuid: id, update: update)   // update: Conversation.Update\n// Report later events against the Conversation object (from manager.conversations), NOT a UUID.\n// reportConversationEvent is synchronous and takes a Conversation:\nif let conversation = manager.conversations.first(where: { $0.uuid == id }) {\n    manager.reportConversationEvent(event, for: conversation)               // event: Conversation.Event\n}\nmanager.conversations                         // [Conversation]; ConversationManager is Observable\n\n// Cellular / default dialer\nlet telephony = TelephonyConversationManager(/* ... */)\n```\n\n- `Conversation` — a call. `ConversationAction` — system-initiated action (mirror of `CXAction`); fulfill/fail it.\n- `Handle` — participant identifier (mirror of `CXHandle`).\n- Availability: iOS 17.4+, iPadOS 17.4+, Mac Catalyst 17.4+, visionOS 1.1+, watchOS 10.4+.\n\n---\n\n# Part 8: IdentityLookup and call directories\n\n## Call Directory (bulk, offline) — CallKit\n\n```swift\n// In a Call Directory app extension\nclass DirectoryHandler: CXCallDirectoryProvider {\n    override func beginRequest(with context: CXCallDirectoryExtensionContext) {\n        context.addIdentificationEntry(withNextSequentialPhoneNumber: 15551234, label: \"Spam Likely\")\n        context.addBlockingEntry(withNextSequentialPhoneNumber: 15555678)  // ascending order required\n        context.completeRequest()\n    }\n}\n```\n\nEntries must be added in **ascending** numeric order. No per-call runtime lookups.\n\n## Live Caller ID Lookup (real-time, PIR) — IdentityLookup, iOS 18+\n\n```swift\nimport IdentityLookup\n\nlet manager = LiveCallerIDLookupManager.shared\ntry await manager.refreshPIRParameters(forExtensionWithIdentifier: \"com.example.lookup\")  // async throws\nlet status = manager.status(forExtensionWithIdentifier: \"com.example.lookup\")  // sync, returns .enabled / .disabled\n```\n\nBacked by a Live Caller ID Lookup app extension (`LiveCallerIDLookupExtensionContext`, `LiveCallerIDLookupProtocol`). Uses Private Information Retrieval so your server can't see who is being looked up.\n\n## Message filtering — IdentityLookup\n\n```swift\nclass MessageFilter: ILMessageFilterExtension, ILMessageFilterQueryHandling {\n    func handle(_ request: ILMessageFilterQueryRequest,\n                context: ILMessageFilterExtensionContext,\n                completion: @escaping (ILMessageFilterQueryResponse) -> Void) {\n        let response = ILMessageFilterQueryResponse()\n        response.action = .junk    // .none, .allow, .junk, .promotion, .transaction\n        completion(response)\n    }\n}\n```\n\n---\n\n# Part 9: Entitlements and Info.plist\n\n- `UIBackgroundModes` → `voip` (required for VoIP pushes)\n- `com.apple.developer.calling-app` — default calling app (iOS 18.2+)\n- `com.apple.developer.dialing-app` — default dialer app (iOS 26.0+, EU)\n- A Call Directory or Live Caller ID Lookup **app extension** target for caller ID/blocking\n\n---\n\n## Resources\n\n**WWDC**: 2016-230, 2019-707, 2020-10113\n\n**Docs**: /callkit, /callkit/cxprovider, /callkit/cxproviderconfiguration, /callkit/cxcallcontroller, /callkit/cxcallupdate, /callkit/cxproviderdelegate, /callkit/cxcalldirectoryprovider, /pushkit, /pushkit/pkpushregistry, /livecommunicationkit, /livecommunicationkit/conversationmanager, /identitylookup, /identitylookup/livecalleridlookupmanager\n\n**Skills**: skills/callkit-livecommunicationkit.md, skills/push-notifications-ref.md, axiom-media (AVAudioSession)\n",
+      "content": "\n# CallKit + LiveCommunicationKit + IdentityLookup — API Reference\n\nComprehensive API reference for CallKit, PushKit VoIP, LiveCommunicationKit, and IdentityLookup. For the discipline (the PushKit rule, audio session ownership, action fulfillment), see `skills/callkit-livecommunicationkit.md`.\n\n## Key Terminology\n\n- **CXProvider** — Reports calls to the system and surfaces system-initiated actions via its delegate.\n- **CXCallController** — Requests user-initiated actions (start/end/hold/mute) as transactions.\n- **CXTransaction** — One or more `CXAction`s submitted together.\n- **CXCallUpdate** — Mutable description of a call's metadata (handle, video, caller name).\n- **PKPushRegistry** — Delivers VoIP pushes; each must report a call.\n- **ConversationManager** — LiveCommunicationKit's CXProvider analogue (watch/visionOS, default apps).\n- **CXCallDirectoryProvider** — Bulk, offline caller identification/blocking extension.\n- **LiveCallerIDLookupManager** — Real-time, PIR-based caller ID/blocking (iOS 18+).\n\n---\n\n# Part 1: CXProvider and configuration\n\n```swift\nlet config = CXProviderConfiguration()\nconfig.supportsVideo = true\nconfig.maximumCallGroups = 1\nconfig.maximumCallsPerCallGroup = 1\nconfig.supportedHandleTypes = [.phoneNumber, .generic]   // also .emailAddress\nconfig.iconTemplateImageData = UIImage(named: \"callkit-icon\")?.pngData()\nconfig.ringtoneSound = \"ringtone.caf\"\nconfig.includesCallsInRecents = true\n\nlet provider = CXProvider(configuration: config)\nprovider.setDelegate(self, queue: nil)   // nil = main queue\n```\n\n---\n\n# Part 2: CXProviderDelegate\n\n```swift\nfunc providerDidReset(_ provider: CXProvider)                                   // tear down all calls\nfunc provider(_ provider: CXProvider, perform action: CXStartCallAction)\nfunc provider(_ provider: CXProvider, perform action: CXAnswerCallAction)\nfunc provider(_ provider: CXProvider, perform action: CXEndCallAction)\nfunc provider(_ provider: CXProvider, perform action: CXSetHeldCallAction)\nfunc provider(_ provider: CXProvider, perform action: CXSetMutedCallAction)\nfunc provider(_ provider: CXProvider, perform action: CXSetGroupCallAction)\nfunc provider(_ provider: CXProvider, perform action: CXPlayDTMFCallAction)\nfunc provider(_ provider: CXProvider, timedOutPerforming action: CXAction)\nfunc provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession)\nfunc provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession)\n```\n\nEvery `perform` overload must call `action.fulfill()` or `action.fail()`.\n\n---\n\n# Part 3: Reporting calls\n\n```swift\n// Incoming (from a VoIP push — see Part 6)\nprovider.reportNewIncomingCall(with: uuid, update: update) { error in /* ... */ }\n\n// Outgoing progress\nprovider.reportOutgoingCall(with: uuid, startedConnectingAt: Date())\nprovider.reportOutgoingCall(with: uuid, connectedAt: Date())\n\n// Updates and termination\nprovider.reportCall(with: uuid, updated: update)\nprovider.reportCall(with: uuid, endedAt: Date(), reason: .remoteEnded)\n// CXCallEndedReason: .failed, .remoteEnded, .unanswered, .answeredElsewhere, .declinedElsewhere\n```\n\n## CXCallUpdate\n\n```swift\nlet update = CXCallUpdate()\nupdate.remoteHandle = CXHandle(type: .phoneNumber, value: \"+15551234\")  // .generic, .emailAddress\nupdate.localizedCallerName = \"Jane Doe\"\nupdate.hasVideo = false\nupdate.supportsHolding = true\nupdate.supportsGrouping = false\nupdate.supportsUngrouping = false\nupdate.supportsDTMF = true\n```\n\n---\n\n# Part 4: CXCallController and transactions\n\n```swift\nlet callController = CXCallController()\n\n// Start\nlet start = CXStartCallAction(call: uuid, handle: CXHandle(type: .phoneNumber, value: \"+15551234\"))\nstart.isVideo = false\ncallController.request(CXTransaction(action: start)) { error in /* ... */ }\n\n// Answer / End / Hold / Mute / DTMF\nCXAnswerCallAction(call: uuid)\nCXEndCallAction(call: uuid)\nCXSetHeldCallAction(call: uuid, onHold: true)\nCXSetMutedCallAction(call: uuid, muted: true)\nCXPlayDTMFCallAction(call: uuid, digits: \"5\", type: .singleTone)\n```\n\n---\n\n# Part 5: CXCallObserver\n\n```swift\nlet observer = CXCallObserver()\nobserver.setDelegate(self, queue: nil)\n\nfunc callObserver(_ observer: CXCallObserver, callChanged call: CXCall) {\n    // call.uuid, call.isOutgoing, call.isOnHold, call.hasConnected, call.hasEnded\n}\n```\n\n---\n\n# Part 6: PushKit (VoIP)\n\n```swift\nimport PushKit\n\nlet registry = PKPushRegistry(queue: .main)\nregistry.delegate = self\nregistry.desiredPushTypes = [.voIP]\n\n// Delegate\nfunc pushRegistry(_ registry: PKPushRegistry, didUpdate credentials: PKPushCredentials, for type: PKPushType) {\n    // credentials.token — send to your server\n}\nfunc pushRegistry(_ registry: PKPushRegistry,\n                  didReceiveIncomingPushWith payload: PKPushPayload,\n                  for type: PKPushType,\n                  completion: @escaping () -> Void) {\n    // MUST reportNewIncomingCall before completion() — see discipline Part 1\n}\nfunc pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenFor type: PKPushType) { }\n```\n\nAPNs VoIP push: `apns-push-type: voip`, `apns-topic: <bundleID>.voip`.\n\n---\n\n# Part 7: LiveCommunicationKit (iOS 17.4+)\n\n```swift\nimport LiveCommunicationKit\n\nlet config = ConversationManager.Configuration(/* ringtoneName, iconTemplateImageData, supportsVideo, supportedHandleTypes */)\nlet manager = ConversationManager(configuration: config)\nmanager.delegate = delegate                  // ConversationManagerDelegate\n\ntry await manager.reportNewIncomingConversation(uuid: id, update: update)   // update: Conversation.Update\n// Report later events against the Conversation object (from manager.conversations), NOT a UUID.\n// reportConversationEvent is synchronous and takes a Conversation:\nif let conversation = manager.conversations.first(where: { $0.uuid == id }) {\n    manager.reportConversationEvent(event, for: conversation)               // event: Conversation.Event\n}\nmanager.conversations                         // [Conversation]; ConversationManager is Observable\n\n// Cellular / default dialer (iOS 26+, EU) — singleton, no public init\nlet telephony = TelephonyConversationManager.sharedInstance\ntelephony.startCellularConversation(action)   // ConversationAction\ntelephony.cellularServices                     // available cellular accounts\n```\n\n- `Conversation` — a call. `ConversationAction` — system-initiated action (mirror of `CXAction`); fulfill/fail it.\n- `Handle` — participant identifier (mirror of `CXHandle`).\n- Availability: iOS 17.4+, iPadOS 17.4+, Mac Catalyst 17.4+, visionOS 1.1+, watchOS 10.4+.\n\n---\n\n# Part 8: IdentityLookup and call directories\n\n## Call Directory (bulk, offline) — CallKit\n\n```swift\n// In a Call Directory app extension\nclass DirectoryHandler: CXCallDirectoryProvider {\n    override func beginRequest(with context: CXCallDirectoryExtensionContext) {\n        context.addIdentificationEntry(withNextSequentialPhoneNumber: 15551234, label: \"Spam Likely\")\n        context.addBlockingEntry(withNextSequentialPhoneNumber: 15555678)  // ascending order required\n        context.completeRequest()\n    }\n}\n```\n\nEntries must be added in **ascending** numeric order. No per-call runtime lookups.\n\n## Live Caller ID Lookup (real-time, PIR) — IdentityLookup, iOS 18+\n\n```swift\nimport IdentityLookup\n\nlet manager = LiveCallerIDLookupManager.shared\ntry await manager.refreshPIRParameters(forExtensionWithIdentifier: \"com.example.lookup\")  // async throws\nlet status = manager.status(forExtensionWithIdentifier: \"com.example.lookup\")  // sync, returns .enabled / .disabled\n```\n\nBacked by a Live Caller ID Lookup app extension (`LiveCallerIDLookupExtensionContext`, `LiveCallerIDLookupProtocol`). Uses Private Information Retrieval so your server can't see who is being looked up.\n\n## Message filtering — IdentityLookup\n\n```swift\nclass MessageFilter: ILMessageFilterExtension, ILMessageFilterQueryHandling {\n    func handle(_ request: ILMessageFilterQueryRequest,\n                context: ILMessageFilterExtensionContext,\n                completion: @escaping (ILMessageFilterQueryResponse) -> Void) {\n        let response = ILMessageFilterQueryResponse()\n        response.action = .junk    // .none, .allow, .junk, .promotion, .transaction\n        completion(response)\n    }\n}\n```\n\n---\n\n# Part 9: Entitlements and Info.plist\n\n- `UIBackgroundModes` → `voip` (required for VoIP pushes)\n- `com.apple.developer.calling-app` — default calling app (iOS 18.2+)\n- `com.apple.developer.dialing-app` — default dialer app (iOS 26.0+, EU)\n- A Call Directory or Live Caller ID Lookup **app extension** target for caller ID/blocking\n\n---\n\n## Resources\n\n**WWDC**: 2016-230, 2019-707, 2020-10113\n\n**Docs**: /callkit, /callkit/cxprovider, /callkit/cxproviderconfiguration, /callkit/cxcallcontroller, /callkit/cxcallupdate, /callkit/cxproviderdelegate, /callkit/cxcalldirectoryprovider, /pushkit, /pushkit/pkpushregistry, /livecommunicationkit, /livecommunicationkit/conversationmanager, /identitylookup, /identitylookup/livecalleridlookupmanager\n\n**Skills**: skills/callkit-livecommunicationkit.md, skills/push-notifications-ref.md, axiom-media (AVAudioSession)\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -12718,49 +12718,49 @@
           "heading": "Part 7: LiveCommunicationKit (iOS 17.4+)",
           "level": 1,
           "startLine": 146,
-          "endLine": 172,
-          "charCount": 1261
+          "endLine": 174,
+          "charCount": 1453
         },
         {
           "heading": "Part 8: IdentityLookup and call directories",
           "level": 1,
-          "startLine": 173,
-          "endLine": 174,
+          "startLine": 175,
+          "endLine": 176,
           "charCount": 46
         },
         {
           "heading": "Call Directory (bulk, offline) — CallKit",
           "level": 2,
-          "startLine": 175,
-          "endLine": 189,
+          "startLine": 177,
+          "endLine": 191,
           "charCount": 556
         },
         {
           "heading": "Live Caller ID Lookup (real-time, PIR) — IdentityLookup, iOS 18+",
           "level": 2,
-          "startLine": 190,
-          "endLine": 201,
+          "startLine": 192,
+          "endLine": 203,
           "charCount": 578
         },
         {
           "heading": "Message filtering — IdentityLookup",
           "level": 2,
-          "startLine": 202,
-          "endLine": 217,
+          "startLine": 204,
+          "endLine": 219,
           "charCount": 505
         },
         {
           "heading": "Part 9: Entitlements and Info.plist",
           "level": 1,
-          "startLine": 218,
-          "endLine": 226,
+          "startLine": 220,
+          "endLine": 228,
           "charCount": 337
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 227,
-          "endLine": 234,
+          "startLine": 229,
+          "endLine": 236,
           "charCount": 520
         }
       ]
@@ -28318,7 +28318,7 @@
     "axiom-shipping--app-clips-ref": {
       "name": "axiom-shipping--app-clips-ref",
       "description": "Reference tables for App Clip size tiers, entitlements, invocations, AASA format, data sharing, and restrictions. For the discipline (architecture decisions, gotchas, debugging), see `skills/app-clips.md`.",
-      "content": "\n# App Clips — Reference\n\nReference tables for App Clip size tiers, entitlements, invocations, AASA format, data sharing, and restrictions. For the discipline (architecture decisions, gotchas, debugging), see `skills/app-clips.md`.\n\n## Size limits\n\nUncompressed App Clip binary, after app thinning, per variant, measured against the minimum deployment target:\n\n| Minimum deployment target | Limit | Conditions |\n|---------------------------|-------|------------|\n| iOS 15 and earlier | 10 MB | — |\n| iOS 16+ | 15 MB | — |\n| iOS 17+ | 100 MB | Digital invocations only; reliable internet; no iOS < 17 support |\n\nPhysical invocations (App Clip Code, QR, NFC) cap the clip at **15 MB** regardless of deployment target. Authoritative source: App Store Connect ▸ Reference ▸ Maximum build file sizes.\n\n## Bundle and target\n\n- App Clip bundle ID: **`<ParentBundleID>.Clip`** (exact).\n- App Clip is a separate target embedded in the full app; both ship in **one archive**.\n- Shared code via a common framework or shared source membership — counts against the size budget.\n\n## Entitlements\n\n| Target | Entitlement | Value |\n|--------|-------------|-------|\n| App Clip | `com.apple.developer.parent-application-identifiers` | `[ <TeamID>.<ParentBundleID> ]` |\n| App Clip | `com.apple.developer.on-demand-install-capable` | `true` |\n| Full app | `com.apple.developer.associated-appclip-app-identifiers` | added automatically by Xcode at archive time |\n\nBoth targets also need **Associated Domains** for App Clip links (see below).\n\n## Invocation methods\n\n| Method | Type | Size impact |\n|--------|------|-------------|\n| App Clip Code | Physical | 15 MB cap |\n| NFC tag | Physical | 15 MB cap |\n| QR code | Physical | 15 MB cap |\n| Safari Smart App Banner | Digital | 100 MB eligible (iOS 17+) |\n| Maps | Digital | 100 MB eligible (iOS 17+) |\n| Messages | Digital | 100 MB eligible (iOS 17+) |\n| Spotlight | Digital | 100 MB eligible (iOS 17+) |\n| `https://appclip.apple.com/...` default link | Digital | 100 MB eligible (iOS 17+) |\n\n## Associated Domains and AASA\n\nEntitlement entry (both the App Clip and, for full-app Universal Links, the app):\n\n```\nappclips:example.com\n```\n\nAASA file at `https://example.com/.well-known/apple-app-site-association` (HTTPS, valid JSON, no redirects, answers Apple's `AASA-Bot` / CFNetwork fetch):\n\n```json\n{\n  \"appclips\": {\n    \"apps\": [\"ABCDE12345.com.example.MyApp.Clip\"]\n  }\n}\n```\n\nFor Universal Links into the full app, the same file also carries the standard `applinks` section.\n\n## App Store Connect launch experience\n\n- **Default experience** (required): header image, subtitle (≤ 56 characters), call-to-action verb (e.g. Open / View / Play). Plus the URL the experience opens.\n- **Advanced experiences**: per-URL or per-place cards (Maps place cards, multi-location). Configured in App Store Connect.\n\n## Data sharing with the full app\n\n| Mechanism | Notes |\n|-----------|-------|\n| App Group shared container | Files and shared `UserDefaults` both targets can read |\n| Keychain (access group) | App Clip ↔ app keychain sharing, iOS 15.4+ |\n| Sign in with Apple | Re-establish identity in the full app |\n| CloudKit public database | Read-only from the App Clip (iOS 16+); no private/shared containers |\n\nWrite handoff data **before** prompting the upgrade; read it on first launch of the full app.\n\n## Restrictions\n\nCapabilities an App Clip does **not** have:\n\n- **No background execution** — no `BGTaskScheduler`, no Background Modes, no background URLSession, no background Bluetooth.\n- **Ephemeral notifications by default** — ~8 hours per launch; for multi-day functionality you can explicitly request standard notification permission.\n- **No persistent identity** — device name and `identifierForVendor` both return an empty string.\n- **No ATT / SKAdNetwork** — no App Tracking Transparency, no attribution kit.\n- **Restricted frameworks** — App Intents, HealthKit, HomeKit, Contacts, EventKit, Core Motion, MediaPlayer, PhotoKit, Speech, Nearby Interaction, and others are unavailable at runtime; verify a framework's App Clip availability before depending on it.\n- **No standalone submission** — always submitted embedded in the full app.\n\n## App Clip Live Activities\n\nAn App Clip may present a Live Activity via its own widget-extension target that contains **only** the Live Activity (no static/timeline widgets). See `skills/live-activities.md`.\n\n## Resources\n\n**WWDC**: 2020-10174, 2020-10120, 2021-10013, 2022-10097, 2023-10178\n\n**Docs**: /appclip, /appclip/creating-an-app-clip-with-xcode, /appclip/configuring-the-launch-experience-of-your-app-clip, /appclip/associating-your-app-clip-with-your-website, /appclip/sharing-data-between-your-app-clip-and-your-full-app\n\n**Skills**: skills/app-clips.md, skills/app-store-submission.md, skills/live-activities.md\n",
+      "content": "\n# App Clips — Reference\n\nReference tables for App Clip size tiers, entitlements, invocations, AASA format, data sharing, and restrictions. For the discipline (architecture decisions, gotchas, debugging), see `skills/app-clips.md`.\n\n## Size limits\n\nUncompressed App Clip binary, after app thinning, per variant, measured against the minimum deployment target:\n\n| Minimum deployment target | Limit | Conditions |\n|---------------------------|-------|------------|\n| iOS 15 and earlier | 10 MB | — |\n| iOS 16+ | 15 MB | — |\n| iOS 17+ | 100 MB | Digital invocations only; reliable internet; no iOS < 17 support |\n\nPhysical invocations (App Clip Code, QR, NFC) cap the clip at **15 MB** regardless of deployment target. Authoritative source: App Store Connect ▸ Reference ▸ Maximum build file sizes.\n\nException (testing only): the App Store Connect-generated App Clip **demo link** can use the 100 MB limit even with physical invocations. This is a demo/preview affordance — production physical invocations still cap at 15 MB.\n\n## Bundle and target\n\n- App Clip bundle ID: **`<ParentBundleID>.Clip`** (exact).\n- App Clip is a separate target embedded in the full app; both ship in **one archive**.\n- Shared code via a common framework or shared source membership — counts against the size budget.\n\n## Entitlements\n\n| Target | Entitlement | Value |\n|--------|-------------|-------|\n| App Clip | `com.apple.developer.parent-application-identifiers` | `[ <TeamID>.<ParentBundleID> ]` |\n| App Clip | `com.apple.developer.on-demand-install-capable` | `true` |\n| Full app | `com.apple.developer.associated-appclip-app-identifiers` | added automatically by Xcode at archive time |\n\nBoth targets also need **Associated Domains** for App Clip links (see below).\n\n## Invocation methods\n\n| Method | Type | Size impact |\n|--------|------|-------------|\n| App Clip Code | Physical | 15 MB cap |\n| NFC tag | Physical | 15 MB cap |\n| QR code | Physical | 15 MB cap |\n| Safari Smart App Banner | Digital | 100 MB eligible (iOS 17+) |\n| Maps | Digital | 100 MB eligible (iOS 17+) |\n| Messages | Digital | 100 MB eligible (iOS 17+) |\n| Spotlight | Digital | 100 MB eligible (iOS 17+) |\n| `https://appclip.apple.com/...` default link | Digital | 100 MB eligible (iOS 17+) |\n\n## Associated Domains and AASA\n\nEntitlement entry (both the App Clip and, for full-app Universal Links, the app):\n\n```\nappclips:example.com\n```\n\nAASA file at `https://example.com/.well-known/apple-app-site-association` (HTTPS, valid JSON, no redirects, answers Apple's `AASA-Bot` / CFNetwork fetch):\n\n```json\n{\n  \"appclips\": {\n    \"apps\": [\"ABCDE12345.com.example.MyApp.Clip\"]\n  }\n}\n```\n\nFor Universal Links into the full app, the same file also carries the standard `applinks` section.\n\n## App Store Connect launch experience\n\n- **Default experience** (required): header image, subtitle (≤ 56 characters), call-to-action verb (e.g. Open / View / Play). Plus the URL the experience opens.\n- **Advanced experiences**: per-URL or per-place cards (Maps place cards, multi-location). Configured in App Store Connect.\n\n## Data sharing with the full app\n\n| Mechanism | Notes |\n|-----------|-------|\n| App Group shared container | Files and shared `UserDefaults` both targets can read |\n| Keychain (access group) | App Clip ↔ app keychain sharing, iOS 15.4+ |\n| Sign in with Apple | Re-establish identity in the full app |\n| CloudKit public database | Read-only from the App Clip (iOS 16+); no private/shared containers |\n\nWrite handoff data **before** prompting the upgrade; read it on first launch of the full app.\n\n## Restrictions\n\nCapabilities an App Clip does **not** have:\n\n- **No background execution** — no `BGTaskScheduler`, no Background Modes, no background URLSession, no background Bluetooth.\n- **Ephemeral notifications by default** — ~8 hours per launch; for multi-day functionality you can explicitly request standard notification permission.\n- **No persistent identity** — device name and `identifierForVendor` both return an empty string.\n- **No ATT / SKAdNetwork** — no App Tracking Transparency, no attribution kit.\n- **Restricted frameworks** — App Intents, HealthKit, HomeKit, Contacts, EventKit, Core Motion, MediaPlayer, PhotoKit, Speech, Nearby Interaction, and others are unavailable at runtime; verify a framework's App Clip availability before depending on it.\n- **No standalone submission** — always submitted embedded in the full app.\n\n## App Clip Live Activities\n\nAn App Clip may present a Live Activity via its own widget-extension target that contains **only** the Live Activity (no static/timeline widgets). See `skills/live-activities.md`.\n\n## Resources\n\n**WWDC**: 2020-10174, 2020-10120, 2021-10013, 2022-10097, 2023-10178\n\n**Docs**: /appclip, /appclip/creating-an-app-clip-with-xcode, /appclip/configuring-the-launch-experience-of-your-app-clip, /appclip/associating-your-app-clip-with-your-website, /appclip/sharing-data-between-your-app-clip-and-your-full-app\n\n**Skills**: skills/app-clips.md, skills/app-store-submission.md, skills/live-activities.md\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -28346,70 +28346,70 @@
           "heading": "Size limits",
           "level": 2,
           "startLine": 5,
-          "endLine": 16,
-          "charCount": 563
+          "endLine": 18,
+          "charCount": 790
         },
         {
           "heading": "Bundle and target",
           "level": 2,
-          "startLine": 17,
-          "endLine": 22,
+          "startLine": 19,
+          "endLine": 24,
           "charCount": 268
         },
         {
           "heading": "Entitlements",
           "level": 2,
-          "startLine": 23,
-          "endLine": 32,
+          "startLine": 25,
+          "endLine": 34,
           "charCount": 455
         },
         {
           "heading": "Invocation methods",
           "level": 2,
-          "startLine": 33,
-          "endLine": 45,
+          "startLine": 35,
+          "endLine": 47,
           "charCount": 501
         },
         {
           "heading": "Associated Domains and AASA",
           "level": 2,
-          "startLine": 46,
-          "endLine": 65,
+          "startLine": 48,
+          "endLine": 67,
           "charCount": 487
         },
         {
           "heading": "App Store Connect launch experience",
           "level": 2,
-          "startLine": 66,
-          "endLine": 70,
+          "startLine": 68,
+          "endLine": 72,
           "charCount": 325
         },
         {
           "heading": "Data sharing with the full app",
           "level": 2,
-          "startLine": 71,
-          "endLine": 81,
+          "startLine": 73,
+          "endLine": 83,
           "charCount": 496
         },
         {
           "heading": "Restrictions",
           "level": 2,
-          "startLine": 82,
-          "endLine": 92,
+          "startLine": 84,
+          "endLine": 94,
           "charCount": 847
         },
         {
           "heading": "App Clip Live Activities",
           "level": 2,
-          "startLine": 93,
-          "endLine": 96,
+          "startLine": 95,
+          "endLine": 98,
           "charCount": 209
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 97,
-          "endLine": 104,
+          "startLine": 99,
+          "endLine": 106,
           "charCount": 415
         }
       ]
@@ -28417,7 +28417,7 @@
     "axiom-shipping--app-clips": {
       "name": "axiom-shipping--app-clips",
       "description": "An App Clip is a small slice of your app a user can launch instantly — from a website link, App Clip Code, NFC tag, QR code, Maps, Messages, or Spotlight — without installing the full app. It's a **separate Xcode target embedded inside your full app's archive**, not a standalone submission, and it lives under tight size and capability limits. Get the size tier, entitlements, and data-handoff right and an App Clip is a powerful acquisition funnel; get them wrong and it won't build, won't invoke, or gets rejected.",
-      "content": "\n# App Clips — Lightweight, Install-Free App Slices\n\nAn App Clip is a small slice of your app a user can launch instantly — from a website link, App Clip Code, NFC tag, QR code, Maps, Messages, or Spotlight — without installing the full app. It's a **separate Xcode target embedded inside your full app's archive**, not a standalone submission, and it lives under tight size and capability limits. Get the size tier, entitlements, and data-handoff right and an App Clip is a powerful acquisition funnel; get them wrong and it won't build, won't invoke, or gets rejected.\n\n## Core mental model\n\nThe App Clip is a second target whose bundle ID is `<ParentBundleID>.Clip`. You build and submit it **with** the full app (one archive, App Store Connect ties them together). The App Clip shares code with the full app via a framework or shared sources, but it is heavily constrained: a hard binary-size ceiling, a denylist of frameworks, ephemeral notifications, and no persistent identity. When the user wants more, they upgrade to the full app — and any data the App Clip stored must hand off cleanly.\n\n## When to Use This Skill\n\n- Adding an App Clip target to an existing app\n- Choosing an invocation method (and understanding how it caps your size budget)\n- Configuring associated domains and the AASA file for App Clip links\n- Setting up the App Store Connect default and advanced launch experiences\n- Handing off App Clip data to the full app on upgrade\n- Debugging \"App Clip won't invoke\" or \"build exceeds maximum size\"\n\nFor the entitlement/restriction/size tables and the AASA format, see `skills/app-clips-ref.md`. App Clips ship with the parent app — see `skills/app-store-submission.md` for the submission flow and `skills/app-review-guidelines.md` for review rules.\n\n## App Clip size limits — the make-or-break constraint\n\nThe **uncompressed** App Clip binary (after app thinning, per variant) must not exceed the limit for its minimum deployment target:\n\n| Minimum deployment target | Size limit | Conditions |\n|---------------------------|-----------|------------|\n| iOS 15 and earlier | 10 MB | — |\n| iOS 16+ | 15 MB | — |\n| iOS 17+ | **100 MB** | **Digital invocations only** (website / Spotlight), reliable-internet contexts, and **no support for iOS < 17** |\n\nThe 100 MB tier is exclusive to **digital** invocations. The moment you support a **physical** invocation — App Clip Code, QR code, or NFC tag — you're capped at **15 MB** again. (App Store Connect's \"Maximum build file sizes\" reference is the authoritative source.)\n\n## Critical Gotchas\n\n| Gotcha | Why it bites | Fix |\n|--------|--------------|-----|\n| Counting on the 100 MB tier with an NFC/QR/App Clip Code | Physical invocations cap you at 15 MB | Use only digital invocations for the 100 MB tier, or stay ≤ 15 MB |\n| Bundle ID isn't `<ParentBundleID>.Clip` | App Store Connect won't associate the clip | Name it exactly `<ParentBundleID>.Clip` |\n| AASA not served correctly | App Clip links don't invoke | Serve `apple-app-site-association` with an `appclips` key; the server must answer Apple's `AASA-Bot` / CFNetwork fetch |\n| Using a denylisted framework | App Clip won't build / is rejected | App Intents, HealthKit, Contacts, etc. are unavailable in App Clips — guard or drop them |\n| Expecting persistent identity | App Clips get an empty-string device name and an empty-string `identifierForVendor`; no ATT/SKAdNetwork | Don't rely on device identity or attribution in the clip |\n| Notifications that linger | App Clips get **ephemeral** notifications by default (8 hours per launch) | For multi-day flows, explicitly request standard notification permission |\n| Data doesn't survive upgrade | App Clip and full app are separate sandboxes | Hand off via a shared App Group / Keychain before the user upgrades |\n\n## Part 1 — Target and archive structure\n\nAdd an **App Clip target** to your project (File ▸ New ▸ Target ▸ App Clip). Xcode embeds it inside the full app target so they archive together. Share code through a common framework or shared source membership — but every shared file still counts against the App Clip's size budget, so keep the clip's dependency graph lean.\n\n## Part 2 — Entitlements\n\nThree entitlements wire the clip to its parent:\n\n- **App Clip target** — `com.apple.developer.parent-application-identifiers` listing the full app's App ID, and `com.apple.developer.on-demand-install-capable`.\n- **Full app target** — `com.apple.developer.associated-appclip-app-identifiers`, which Xcode adds automatically when you archive.\n\nIf these don't line up, App Store Connect won't recognize the pairing and TestFlight/review will fail. See `skills/app-clips-ref.md` for the exact key/value shapes.\n\n## Part 3 — Invocations (and how they cap your size)\n\nApp Clips launch from: **App Clip Codes**, **NFC tags**, **QR codes**, Safari **Smart App Banners**, **Maps**, **Messages**, **Spotlight**, and default `https://appclip.apple.com/...` links. The split that matters for your binary budget:\n\n- **Physical** (App Clip Code, NFC, QR) → 15 MB ceiling.\n- **Digital** (website link, Spotlight) → eligible for the 100 MB tier on iOS 17+.\n\nDesign the invocation strategy *before* you architect the clip — it sets your size budget.\n\n## Part 4 — Associated domains and AASA\n\nAdd an **Associated Domains** entitlement with an `appclips:` prefix entry (`appclips:example.com`). Serve an `apple-app-site-association` (AASA) file at `https://example.com/.well-known/apple-app-site-association` with an `appclips` section listing your App Clip's app ID and URL patterns. The file must be valid JSON served over HTTPS with no redirects, and your server must respond to Apple's `AASA-Bot` user agent (and CFNetwork). A 404 or a redirect here is the #1 cause of \"the App Clip link does nothing.\"\n\n## Part 5 — App Store Connect launch experiences\n\n- **Default experience** — a header image, a ≤56-character subtitle, and a call-to-action verb (e.g. \"Open\", \"View\", \"Play\"). Required; it's what users see in the App Clip card.\n- **Advanced experiences** — per-URL or per-location cards (e.g. Maps place cards, multi-location businesses). Configure these in App Store Connect to tailor the card to the specific invocation.\n\n## Part 6 — Handing data off to the full app\n\nThe App Clip and full app are **separate sandboxes**. To carry state across an upgrade, write it somewhere both can read:\n\n- **App Group** shared container (files, shared `UserDefaults`)\n- **Keychain** with an access group (iOS 15.4+ allows the App Clip and app to share keychain items)\n- **Sign in with Apple** (re-establish identity in the full app)\n- **CloudKit public database** (read-only from the clip)\n\nWrite the handoff data *before* prompting the upgrade, and read it on first launch of the full app.\n\n## Part 7 — Restrictions\n\nApp Clips can't use: App Intents, HealthKit, HomeKit, Contacts, EventKit, Core Motion, and several other frameworks (full list in `skills/app-clips-ref.md`). They get **ephemeral** notification authorization by default (8 hours from each launch), though you can explicitly request standard permission for functionality that spans more than a day. They have **no access to ATT or SKAdNetwork**, and both the device name and `identifierForVendor` return an **empty string**. Build the clip assuming no persistent identity and no long-lived background presence.\n\n## Part 8 — App Clip + Live Activities\n\nAn App Clip *can* show a Live Activity. It requires its own widget-extension target that contains **only** the Live Activity (no static/timeline widgets). This is a useful pattern for order/arrival status during an install-free flow — see `skills/live-activities.md` for the ActivityKit side.\n\n## Common Mistakes\n\n- Forgetting the 100 MB tier (iOS 17+) is digital-invocation-only — any NFC/QR/App Clip Code drops you to 15 MB.\n- Adding an NFC/QR/App Clip Code invocation while relying on the 100 MB budget.\n- Naming the clip's bundle ID anything other than `<ParentBundleID>.Clip`.\n- A misconfigured or redirecting AASA file — the App Clip link silently does nothing.\n- Reaching for App Intents / HealthKit / Contacts inside the clip.\n- Expecting persistent identity (device name and `identifierForVendor` are empty strings), ATT, or background execution.\n- Writing data only to the clip's own container, then losing it on upgrade.\n\n## Resources\n\n**WWDC**: 2020-10174, 2020-10120, 2021-10013, 2022-10097, 2023-10178\n\n**Docs**: /appclip, /appclip/creating-an-app-clip-with-xcode, /appclip/configuring-the-launch-experience-of-your-app-clip, /appclip/associating-your-app-clip-with-your-website, /appclip/sharing-data-between-your-app-clip-and-your-full-app, /appclip/choosing-the-right-functionality-for-your-app-clip\n\n**Skills**: skills/app-clips-ref.md, skills/app-store-submission.md (submitting with the parent app), skills/app-review-guidelines.md, skills/live-activities.md (App Clip Live Activities)\n",
+      "content": "\n# App Clips — Lightweight, Install-Free App Slices\n\nAn App Clip is a small slice of your app a user can launch instantly — from a website link, App Clip Code, NFC tag, QR code, Maps, Messages, or Spotlight — without installing the full app. It's a **separate Xcode target embedded inside your full app's archive**, not a standalone submission, and it lives under tight size and capability limits. Get the size tier, entitlements, and data-handoff right and an App Clip is a powerful acquisition funnel; get them wrong and it won't build, won't invoke, or gets rejected.\n\n## Core mental model\n\nThe App Clip is a second target whose bundle ID is `<ParentBundleID>.Clip`. You build and submit it **with** the full app (one archive, App Store Connect ties them together). The App Clip shares code with the full app via a framework or shared sources, but it is heavily constrained: a hard binary-size ceiling, a denylist of frameworks, ephemeral notifications, and no persistent identity. When the user wants more, they upgrade to the full app — and any data the App Clip stored must hand off cleanly.\n\n## When to Use This Skill\n\n- Adding an App Clip target to an existing app\n- Choosing an invocation method (and understanding how it caps your size budget)\n- Configuring associated domains and the AASA file for App Clip links\n- Setting up the App Store Connect default and advanced launch experiences\n- Handing off App Clip data to the full app on upgrade\n- Debugging \"App Clip won't invoke\" or \"build exceeds maximum size\"\n\nFor the entitlement/restriction/size tables and the AASA format, see `skills/app-clips-ref.md`. App Clips ship with the parent app — see `skills/app-store-submission.md` for the submission flow and `skills/app-review-guidelines.md` for review rules.\n\n## App Clip size limits — the make-or-break constraint\n\nThe **uncompressed** App Clip binary (after app thinning, per variant) must not exceed the limit for its minimum deployment target:\n\n| Minimum deployment target | Size limit | Conditions |\n|---------------------------|-----------|------------|\n| iOS 15 and earlier | 10 MB | — |\n| iOS 16+ | 15 MB | — |\n| iOS 17+ | **100 MB** | **Digital invocations only** (website / Spotlight), reliable-internet contexts, and **no support for iOS < 17** |\n\nThe 100 MB tier is exclusive to **digital** invocations. The moment you support a **physical** invocation — App Clip Code, QR code, or NFC tag — you're capped at **15 MB** again. (App Store Connect's \"Maximum build file sizes\" reference is the authoritative source.)\n\nOne exception, for **testing only**: the App Clip *demo link* that App Store Connect generates can exercise the 100 MB limit even from physical invocations (App Clip Codes, NFC, QR). That's a demo/preview affordance — your shipping physical invocations still cap at 15 MB, so don't let a 100 MB clip \"working\" via the demo link convince you it's production-ready.\n\n## Critical Gotchas\n\n| Gotcha | Why it bites | Fix |\n|--------|--------------|-----|\n| Counting on the 100 MB tier with an NFC/QR/App Clip Code | Physical invocations cap you at 15 MB | Use only digital invocations for the 100 MB tier, or stay ≤ 15 MB |\n| Bundle ID isn't `<ParentBundleID>.Clip` | App Store Connect won't associate the clip | Name it exactly `<ParentBundleID>.Clip` |\n| AASA not served correctly | App Clip links don't invoke | Serve `apple-app-site-association` with an `appclips` key; the server must answer Apple's `AASA-Bot` / CFNetwork fetch |\n| Using a denylisted framework | App Clip won't build / is rejected | App Intents, HealthKit, Contacts, etc. are unavailable in App Clips — guard or drop them |\n| Expecting persistent identity | App Clips get an empty-string device name and an empty-string `identifierForVendor`; no ATT/SKAdNetwork | Don't rely on device identity or attribution in the clip |\n| Notifications that linger | App Clips get **ephemeral** notifications by default (8 hours per launch) | For multi-day flows, explicitly request standard notification permission |\n| Data doesn't survive upgrade | App Clip and full app are separate sandboxes | Hand off via a shared App Group / Keychain before the user upgrades |\n\n## Part 1 — Target and archive structure\n\nAdd an **App Clip target** to your project (File ▸ New ▸ Target ▸ App Clip). Xcode embeds it inside the full app target so they archive together. Share code through a common framework or shared source membership — but every shared file still counts against the App Clip's size budget, so keep the clip's dependency graph lean.\n\n## Part 2 — Entitlements\n\nThree entitlements wire the clip to its parent:\n\n- **App Clip target** — `com.apple.developer.parent-application-identifiers` listing the full app's App ID, and `com.apple.developer.on-demand-install-capable`.\n- **Full app target** — `com.apple.developer.associated-appclip-app-identifiers`, which Xcode adds automatically when you archive.\n\nIf these don't line up, App Store Connect won't recognize the pairing and TestFlight/review will fail. See `skills/app-clips-ref.md` for the exact key/value shapes.\n\n## Part 3 — Invocations (and how they cap your size)\n\nApp Clips launch from: **App Clip Codes**, **NFC tags**, **QR codes**, Safari **Smart App Banners**, **Maps**, **Messages**, **Spotlight**, and default `https://appclip.apple.com/...` links. The split that matters for your binary budget:\n\n- **Physical** (App Clip Code, NFC, QR) → 15 MB ceiling.\n- **Digital** (website link, Spotlight) → eligible for the 100 MB tier on iOS 17+.\n\nDesign the invocation strategy *before* you architect the clip — it sets your size budget.\n\n## Part 4 — Associated domains and AASA\n\nAdd an **Associated Domains** entitlement with an `appclips:` prefix entry (`appclips:example.com`). Serve an `apple-app-site-association` (AASA) file at `https://example.com/.well-known/apple-app-site-association` with an `appclips` section listing your App Clip's app ID and URL patterns. The file must be valid JSON served over HTTPS with no redirects, and your server must respond to Apple's `AASA-Bot` user agent (and CFNetwork). A 404 or a redirect here is the #1 cause of \"the App Clip link does nothing.\"\n\n## Part 5 — App Store Connect launch experiences\n\n- **Default experience** — a header image, a ≤56-character subtitle, and a call-to-action verb (e.g. \"Open\", \"View\", \"Play\"). Required; it's what users see in the App Clip card.\n- **Advanced experiences** — per-URL or per-location cards (e.g. Maps place cards, multi-location businesses). Configure these in App Store Connect to tailor the card to the specific invocation.\n\n## Part 6 — Handing data off to the full app\n\nThe App Clip and full app are **separate sandboxes**. To carry state across an upgrade, write it somewhere both can read:\n\n- **App Group** shared container (files, shared `UserDefaults`)\n- **Keychain** with an access group (iOS 15.4+ allows the App Clip and app to share keychain items)\n- **Sign in with Apple** (re-establish identity in the full app)\n- **CloudKit public database** (read-only from the clip)\n\nWrite the handoff data *before* prompting the upgrade, and read it on first launch of the full app.\n\n## Part 7 — Restrictions\n\nApp Clips can't use: App Intents, HealthKit, HomeKit, Contacts, EventKit, Core Motion, and several other frameworks (full list in `skills/app-clips-ref.md`). They get **ephemeral** notification authorization by default (8 hours from each launch), though you can explicitly request standard permission for functionality that spans more than a day. They have **no access to ATT or SKAdNetwork**, and both the device name and `identifierForVendor` return an **empty string**. Build the clip assuming no persistent identity and no long-lived background presence.\n\n## Part 8 — App Clip + Live Activities\n\nAn App Clip *can* show a Live Activity. It requires its own widget-extension target that contains **only** the Live Activity (no static/timeline widgets). This is a useful pattern for order/arrival status during an install-free flow — see `skills/live-activities.md` for the ActivityKit side.\n\n## Common Mistakes\n\n- Forgetting the 100 MB tier (iOS 17+) is digital-invocation-only — any NFC/QR/App Clip Code drops you to 15 MB.\n- Adding an NFC/QR/App Clip Code invocation while relying on the 100 MB budget.\n- Naming the clip's bundle ID anything other than `<ParentBundleID>.Clip`.\n- A misconfigured or redirecting AASA file — the App Clip link silently does nothing.\n- Reaching for App Intents / HealthKit / Contacts inside the clip.\n- Expecting persistent identity (device name and `identifierForVendor` are empty strings), ATT, or background execution.\n- Writing data only to the clip's own container, then losing it on upgrade.\n\n## Resources\n\n**WWDC**: 2020-10174, 2020-10120, 2021-10013, 2022-10097, 2023-10178\n\n**Docs**: /appclip, /appclip/creating-an-app-clip-with-xcode, /appclip/configuring-the-launch-experience-of-your-app-clip, /appclip/associating-your-app-clip-with-your-website, /appclip/sharing-data-between-your-app-clip-and-your-full-app, /appclip/choosing-the-right-functionality-for-your-app-clip\n\n**Skills**: skills/app-clips-ref.md, skills/app-store-submission.md (submitting with the parent app), skills/app-review-guidelines.md, skills/live-activities.md (App Clip Live Activities)\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -28458,84 +28458,84 @@
           "heading": "App Clip size limits — the make-or-break constraint",
           "level": 2,
           "startLine": 20,
-          "endLine": 31,
-          "charCount": 766
+          "endLine": 33,
+          "charCount": 1131
         },
         {
           "heading": "Critical Gotchas",
           "level": 2,
-          "startLine": 32,
-          "endLine": 43,
+          "startLine": 34,
+          "endLine": 45,
           "charCount": 1257
         },
         {
           "heading": "Part 1 — Target and archive structure",
           "level": 2,
-          "startLine": 44,
-          "endLine": 47,
+          "startLine": 46,
+          "endLine": 49,
           "charCount": 369
         },
         {
           "heading": "Part 2 — Entitlements",
           "level": 2,
-          "startLine": 48,
-          "endLine": 56,
+          "startLine": 50,
+          "endLine": 58,
           "charCount": 533
         },
         {
           "heading": "Part 3 — Invocations (and how they cap your size)",
           "level": 2,
-          "startLine": 57,
-          "endLine": 65,
+          "startLine": 59,
+          "endLine": 67,
           "charCount": 525
         },
         {
           "heading": "Part 4 — Associated domains and AASA",
           "level": 2,
-          "startLine": 66,
-          "endLine": 69,
+          "startLine": 68,
+          "endLine": 71,
           "charCount": 554
         },
         {
           "heading": "Part 5 — App Store Connect launch experiences",
           "level": 2,
-          "startLine": 70,
-          "endLine": 74,
+          "startLine": 72,
+          "endLine": 76,
           "charCount": 423
         },
         {
           "heading": "Part 6 — Handing data off to the full app",
           "level": 2,
-          "startLine": 75,
-          "endLine": 85,
+          "startLine": 77,
+          "endLine": 87,
           "charCount": 556
         },
         {
           "heading": "Part 7 — Restrictions",
           "level": 2,
-          "startLine": 86,
-          "endLine": 89,
+          "startLine": 88,
+          "endLine": 91,
           "charCount": 585
         },
         {
           "heading": "Part 8 — App Clip + Live Activities",
           "level": 2,
-          "startLine": 90,
-          "endLine": 93,
+          "startLine": 92,
+          "endLine": 95,
           "charCount": 333
         },
         {
           "heading": "Common Mistakes",
           "level": 2,
-          "startLine": 94,
-          "endLine": 103,
+          "startLine": 96,
+          "endLine": 105,
           "charCount": 638
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 104,
-          "endLine": 111,
+          "startLine": 106,
+          "endLine": 113,
           "charCount": 573
         }
       ]
@@ -35561,7 +35561,7 @@
     "axiom-uikit--pencilkit-paperkit-ref": {
       "name": "axiom-uikit--pencilkit-paperkit-ref",
       "description": "Comprehensive API reference for PencilKit (canvas, tool picker, stroke model, Apple Pencil) and PaperKit (markup canvas, data model, feature sets). For the discipline (setup order, persistence, gotchas, decision-making), see `skills/pencilkit-paperkit.md`.",
-      "content": "\n# PencilKit + PaperKit — API Reference\n\nComprehensive API reference for PencilKit (canvas, tool picker, stroke model, Apple Pencil) and PaperKit (markup canvas, data model, feature sets). For the discipline (setup order, persistence, gotchas, decision-making), see `skills/pencilkit-paperkit.md`.\n\n## Key Terminology\n\n- **PKCanvasView** — `UIScrollView` subclass that captures and renders drawing. Owns a `PKDrawing`.\n- **PKDrawing** — Vector stroke data. The persistable source of truth (`dataRepresentation()`).\n- **PKToolPicker** — Floating palette of tools. Attached to a canvas via `addObserver(_:)`.\n- **PKTool** — A tool that draws on the canvas (`PKInkingTool`, `PKEraserTool`, `PKLassoTool`).\n- **PKToolPickerItem** — An entry *in the picker* (inking, eraser, lasso, ruler, scribble, custom). iPadOS 18+.\n- **PaperMarkup** — PaperKit data model holding markup elements + a PencilKit drawing.\n- **PaperMarkupViewController** — PaperKit's interactive canvas. iOS 26+.\n- **FeatureSet** — The set of PaperKit tools/elements exposed to a markup/insertion controller.\n\n---\n\n# Part 1: PKCanvasView\n\n```swift\nimport PencilKit\n\nlet canvas = PKCanvasView()\ncanvas.drawing = PKDrawing()                 // the vector data\ncanvas.tool = PKInkingTool(.pen, color: .black, width: 5)\ncanvas.drawingPolicy = .anyInput             // .default | .anyInput | .pencilOnly\ncanvas.isRulerActive = false\ncanvas.delegate = coordinator\ncanvas.backgroundColor = .systemBackground\ncanvas.isOpaque = false                      // transparent canvas over content\n```\n\n## PKCanvasViewDelegate\n\n```swift\nfunc canvasViewDrawingDidChange(_ canvasView: PKCanvasView)        // strokes added/removed\nfunc canvasViewDidBeginUsingTool(_ canvasView: PKCanvasView)\nfunc canvasViewDidEndUsingTool(_ canvasView: PKCanvasView)\nfunc canvasViewDidFinishRendering(_ canvasView: PKCanvasView)\n```\n\n`drawingPolicy`: `.default` (pencil-only once a pencil is used; finger otherwise), `.anyInput` (finger or pencil — required in the Simulator), `.pencilOnly`.\n\n---\n\n# Part 2: PKDrawing\n\n```swift\nlet drawing = PKDrawing()                            // empty\nlet restored = try PKDrawing(data: savedData)        // throwing init from blob\nlet composed = PKDrawing(strokes: [stroke1, stroke2])\n\nlet data = drawing.dataRepresentation()              // versioned binary blob — persist THIS\nlet image = drawing.image(from: drawing.bounds, scale: 2.0)  // one-way raster export\n\nlet bounds = drawing.bounds                          // CGRect of all strokes\nlet strokes = drawing.strokes                        // [PKStroke]\nvar moved = drawing\nmoved.transform(using: CGAffineTransform(translationX: 10, y: 0))\nmoved.append(otherDrawing)\n```\n\n`requiredContentVersion` (`PKContentVersion`) reflects the newest feature used. Newer ink types (monoline, fountainPen, watercolor, crayon — iOS 17; reed — iOS 26) raise it, so a drawing made on a newer OS may not decode on an older one. Check it for forwards compatibility.\n\n---\n\n# Part 3: Tools\n\n```swift\n// Inking\nlet pen = PKInkingTool(.pen, color: .systemBlue, width: 5)\npen.inkType        // PKInkingTool.InkType\npen.color          // UIColor\npen.width          // CGFloat\n\n// InkType cases: .pen .pencil .marker .monoline .fountainPen .watercolor .crayon .reed\n//   .pen/.pencil/.marker → iOS 13;  .monoline/.fountainPen/.watercolor/.crayon → iOS 17;  .reed → iOS 26\n\n// Eraser\nlet eraser = PKEraserTool(.vector)          // .vector (stroke) | .bitmap (pixel) | .fixedWidthBitmap (iOS 16.4+)\n\n// Lasso (selection — no ink)\nlet lasso = PKLassoTool()\n```\n\n---\n\n# Part 4: PKToolPicker\n\n```swift\nlet picker = PKToolPicker()                  // default tool set (iOS 13+)\nlet custom = PKToolPicker(toolItems: [...])  // explicit set/order (iPadOS 18+)\n\npicker.addObserver(canvas)                   // canvas mirrors picker selection into its `tool`\npicker.setVisible(true, forFirstResponder: canvas)\ncanvas.becomeFirstResponder()                // required for the picker to appear\n\npicker.selectedToolItem                      // current item (use this — selectedTool is deprecated)\npicker.selectedToolItemIdentifier\npicker.colorUserInterfaceStyle = .dark\npicker.overrideUserInterfaceStyle = .dark\npicker.accessoryItem = UIBarButtonItem(...)  // trailing button (iPadOS 18+); hidden when minimized\n```\n\nDeprecated: `shared(for:)` (per-window picker), `selectedTool`. Use an owned instance and `selectedToolItem`.\n\n## Tool picker items (iPadOS 18+, visionOS 2+)\n\n```swift\nPKToolPickerInkingItem(type: .pen)      // has a matching PKTool; set on observing canvas automatically\nPKToolPickerEraserItem(type: .vector)\nPKToolPickerLassoItem()\nPKToolPickerRulerItem()                 // toggles canvas.isRulerActive; no PKTool, not \"selected\"\nPKToolPickerScribbleItem()             // handwriting → text; auto-hides per Apple Pencil settings\nPKToolPickerCustomItem(configuration:)  // your own tool\n```\n\n## Custom tools\n\n```swift\nvar config = PKToolPickerCustomItem.Configuration(identifier: \"com.example.stamp\", name: \"Stamp\")\nconfig.allowsColorSelection = true\nconfig.defaultColor = .systemRed\nconfig.defaultWidth = 20\nconfig.imageProvider = { item in renderThumbnail(width: item.width, color: item.color) }\n\nlet stamp = PKToolPickerCustomItem(configuration: config)\nstamp.color          // current color\nstamp.width          // current width\nstamp.reloadImage()  // call when a custom attribute changes\n```\n\nWhen a custom item is selected, drawing on observing `PKCanvasView`s is disabled — your app renders the tool's effect.\n\n---\n\n# Part 5: Stroke introspection (iOS 14+)\n\n```swift\nfor stroke in drawing.strokes {\n    let ink: PKInk = stroke.ink            // ink.inkType, ink.color\n    let path: PKStrokePath = stroke.path   // interpolated points\n    let transform = stroke.transform       // CGAffineTransform\n    let mask = stroke.mask                 // optional UIBezierPath\n\n    for point in path {                    // PKStrokePoint\n        point.location        // CGPoint\n        point.timeOffset      // TimeInterval since stroke start\n        point.size            // CGSize (width/height of the contact)\n        point.opacity         // CGFloat\n        point.force           // CGFloat\n        point.azimuth         // CGFloat (radians)\n        point.altitude        // CGFloat (radians)\n    }\n}\n```\n\n`PKStrokePath` is sampled over time; index it (it conforms to `RandomAccessCollection`) or call `interpolatedPoints(in:by:)` (a range + a parametric stride) for even spacing.\n\n---\n\n# Part 6: Apple Pencil interactions\n\n## UIKit — UIPencilInteraction\n\n```swift\nlet interaction = UIPencilInteraction()\ninteraction.delegate = self\nview.addInteraction(interaction)\n\n// iPadOS 12.1+ (Apple Pencil 2nd gen)\nfunc pencilInteraction(_ i: UIPencilInteraction, didReceiveTap tap: UIPencilInteraction.Tap) {\n    // tap.hoverPose (UIPencilHoverPose?) on supported hardware\n}\n\n// iPadOS 17.5+ (Apple Pencil Pro)\nfunc pencilInteraction(_ i: UIPencilInteraction, didReceiveSqueeze squeeze: UIPencilInteraction.Squeeze) {\n    guard squeeze.phase == .ended, let pose = squeeze.hoverPose else { return }\n    showPalette(at: pose.location)   // pose: location, zOffset, azimuth, altitude, rollAngle\n}\n```\n\nIf the device-global squeeze preference is set to run a system shortcut, the squeeze event is **not** delivered to your app.\n\n## SwiftUI\n\n```swift\ncanvas\n    .onPencilDoubleTap { value in /* value.hoverPose */ }\n    .onPencilSqueeze { phase in\n        if case .ended(let value) = phase, let pose = value.hoverPose { show(at: pose.location) }\n    }\n```\n\n## Barrel roll (iOS 17.5+)\n\n```swift\ntouch.rollAngle                       // CGFloat; 0 on pencils without the sensor\nhoverGestureRecognizer.rollAngle      // also on UIHoverGestureRecognizer\n// Refine over Bluetooth:\noverride func touchesEstimatedPropertiesUpdated(_ touches: Set<UITouch>) { ... }\n```\n\n## Drawing haptics (iOS 17.5+)\n\n```swift\n// UIKit\nlet fb = UICanvasFeedbackGenerator(view: canvasView)\nfb.alignmentOccurred(at: point)\nfb.pathCompleted(at: point)\n\n// SwiftUI — the .sensoryFeedback enum cases are iOS 17.0+ (UICanvasFeedbackGenerator is 17.5+)\ncanvas\n    .sensoryFeedback(.alignment, trigger: alignCount)\n    .sensoryFeedback(.pathComplete, trigger: snapCount)\n```\n\n`UIFeedbackGenerator` and subclasses now take a `view` on init and a point when generating feedback — update existing uses.\n\n---\n\n# Part 7: PaperKit data model (iOS 26+)\n\n```swift\nimport PaperKit\n\nlet markup = PaperMarkup(bounds: view.bounds)\nlet loaded = try PaperMarkup(dataRepresentation: data)\n\nmarkup.bounds\nmarkup.featureSet\nmarkup.indexableContent                      // text for Spotlight/search\nmarkup.append(contentsOf: otherMarkup)\nmarkup.append(contentsOf: pkDrawing)         // drops a PKDrawing straight in\n\nmarkup.insertNewImage(image, frame: rect, rotation: 0)\nmarkup.insertNewShape(configuration: shapeConfig, frame: rect, rotation: 0)\nmarkup.insertNewTextbox(attributedText: text, frame: rect, rotation: 0)\n\nlet data = try await markup.dataRepresentation()                       // async throws\nawait markup.draw(in: cgContext, frame: rect, options: .init())        // render thumbnail\n```\n\n---\n\n# Part 8: PaperKit controllers (iOS 26+)\n\n```swift\n// Interactive canvas\nlet markupVC = PaperMarkupViewController(markup: markup, supportedFeatureSet: .latest)\nmarkupVC.delegate = self\nmarkupVC.isEditable = true\nmarkupVC.drawingTool = PKInkingTool(.pen, color: .black, width: 5)\nmarkupVC.contentVisibleFrame                  // visible canvas region\ntoolPicker.addObserver(markupVC)              // markup VC observes the PKToolPicker\n\n// PaperMarkupViewController conforms to Observable — observe instead of delegating if preferred\n\n// Insertion menu — iOS / iPadOS / visionOS\nlet insert = MarkupEditViewController(supportedFeatureSet: .latest, additionalActions: [])\ninsert.delegate = markupVC\n// present as a popover anchored to the tool picker's accessoryItem\n\n// Insertion toolbar — macOS\nlet toolbar = MarkupToolbarViewController(supportedFeatureSet: .latest)\ntoolbar.delegate = markupVC\ntoolbar.selectedDrawingTool\n```\n\n`PaperMarkupViewController.Delegate` surfaces markup-change callbacks (use them to auto-save the model). Embed via standard `UIViewController` (iOS) / `NSViewController` (macOS) containment, or wrap in `UIViewControllerRepresentable` for SwiftUI.\n\n---\n\n# Part 9: FeatureSet (iOS 26+)\n\n```swift\nvar features = FeatureSet.latest          // also: .empty, .version1\nfeatures.remove(.someFeature)             // FeatureSet.Feature\nfeatures.insert(.someFeature)\nfeatures.colorMaximumLinearExposure = 4   // > 1 enables HDR inks; 1 = SDR\nfeatures.features                         // Set<FeatureSet.Feature>\n\nmarkupVC.supportedFeatureSet = features\ninsert.supportedFeatureSet = features     // keep markup + insertion controllers in sync\ntoolPicker.colorMaximumLinearExposure = 4 // set on the picker too for HDR inks\n```\n\nUse `FeatureSet.latest` to track new framework features automatically. For HDR, tone-map down with the screen's headroom (`UIScreen` / `NSScreen`).\n\n---\n\n## Resources\n\n**WWDC**: 2019-221, 2020-10107, 2024-10214, 2025-285\n\n**Docs**: /pencilkit, /pencilkit/pkcanvasview, /pencilkit/pkdrawing, /pencilkit/pktoolpicker, /pencilkit/pktoolpickercustomitem, /pencilkit/pkstroke, /pencilkit/pkinkingtool, /uikit/uipencilinteraction, /uikit/uitouch/rollangle, /paperkit, /paperkit/papermarkup, /paperkit/papermarkupviewcontroller, /paperkit/featureset\n\n**Skills**: skills/pencilkit-paperkit.md, skills/uikit-bridging.md, axiom-data (drawing persistence), axiom-swiftui (canvas wrapping)\n",
+      "content": "\n# PencilKit + PaperKit — API Reference\n\nComprehensive API reference for PencilKit (canvas, tool picker, stroke model, Apple Pencil) and PaperKit (markup canvas, data model, feature sets). For the discipline (setup order, persistence, gotchas, decision-making), see `skills/pencilkit-paperkit.md`.\n\n## Key Terminology\n\n- **PKCanvasView** — `UIScrollView` subclass that captures and renders drawing. Owns a `PKDrawing`.\n- **PKDrawing** — Vector stroke data. The persistable source of truth (`dataRepresentation()`).\n- **PKToolPicker** — Floating palette of tools. Attached to a canvas via `addObserver(_:)`.\n- **PKTool** — A tool that draws on the canvas (`PKInkingTool`, `PKEraserTool`, `PKLassoTool`).\n- **PKToolPickerItem** — An entry *in the picker* (inking, eraser, lasso, ruler, scribble, custom). iPadOS 18+.\n- **PaperMarkup** — PaperKit data model holding markup elements + a PencilKit drawing.\n- **PaperMarkupViewController** — PaperKit's interactive canvas. iOS 26+.\n- **FeatureSet** — The set of PaperKit tools/elements exposed to a markup/insertion controller.\n\n---\n\n# Part 1: PKCanvasView\n\n```swift\nimport PencilKit\n\nlet canvas = PKCanvasView()\ncanvas.drawing = PKDrawing()                 // the vector data\ncanvas.tool = PKInkingTool(.pen, color: .black, width: 5)\ncanvas.drawingPolicy = .anyInput             // .default | .anyInput | .pencilOnly\ncanvas.isRulerActive = false\ncanvas.delegate = coordinator\ncanvas.backgroundColor = .systemBackground\ncanvas.isOpaque = false                      // transparent canvas over content\n```\n\n## PKCanvasViewDelegate\n\n```swift\nfunc canvasViewDrawingDidChange(_ canvasView: PKCanvasView)        // strokes added/removed\nfunc canvasViewDidBeginUsingTool(_ canvasView: PKCanvasView)\nfunc canvasViewDidEndUsingTool(_ canvasView: PKCanvasView)\nfunc canvasViewDidFinishRendering(_ canvasView: PKCanvasView)\n```\n\n`drawingPolicy`: `.default` (pencil-only once a pencil is used; finger otherwise), `.anyInput` (finger or pencil — required in the Simulator), `.pencilOnly`.\n\n---\n\n# Part 2: PKDrawing\n\n```swift\nlet drawing = PKDrawing()                            // empty\nlet restored = try PKDrawing(data: savedData)        // throwing init from blob\nlet composed = PKDrawing(strokes: [stroke1, stroke2])\n\nlet data = drawing.dataRepresentation()              // versioned binary blob — persist THIS\nlet image = drawing.image(from: drawing.bounds, scale: 2.0)  // one-way raster export\n\nlet bounds = drawing.bounds                          // CGRect of all strokes\nlet strokes = drawing.strokes                        // [PKStroke]\nvar moved = drawing\nmoved.transform(using: CGAffineTransform(translationX: 10, y: 0))\nmoved.append(otherDrawing)\n```\n\n`requiredContentVersion` (`PKContentVersion`) reflects the newest feature used. Newer ink types (monoline, fountainPen, watercolor, crayon — iOS 17; reed — iOS 26) raise it, so a drawing made on a newer OS may not decode on an older one. Check it for forwards compatibility.\n\n---\n\n# Part 3: Tools\n\n```swift\n// Inking\nlet pen = PKInkingTool(.pen, color: .systemBlue, width: 5)\npen.inkType        // PKInkingTool.InkType\npen.color          // UIColor\npen.width          // CGFloat\n\n// InkType cases: .pen .pencil .marker .monoline .fountainPen .watercolor .crayon .reed\n//   .pen/.pencil/.marker → iOS 13;  .monoline/.fountainPen/.watercolor/.crayon → iOS 17;  .reed → iOS 26\n\n// Eraser\nlet eraser = PKEraserTool(.vector)          // .vector (stroke) | .bitmap (pixel) | .fixedWidthBitmap (iOS 16.4+)\n\n// Lasso (selection — no ink)\nlet lasso = PKLassoTool()\n```\n\n---\n\n# Part 4: PKToolPicker\n\n```swift\nlet picker = PKToolPicker()                  // default tool set (iOS 13+)\nlet custom = PKToolPicker(toolItems: [...])  // explicit set/order (iPadOS 18+)\n\npicker.addObserver(canvas)                   // canvas mirrors picker selection into its `tool`\npicker.setVisible(true, forFirstResponder: canvas)\ncanvas.becomeFirstResponder()                // required for the picker to appear\n\npicker.selectedToolItem                      // current item (use this — selectedTool is deprecated)\npicker.selectedToolItemIdentifier\npicker.colorUserInterfaceStyle = .dark\npicker.overrideUserInterfaceStyle = .dark\npicker.accessoryItem = UIBarButtonItem(...)  // trailing button (iPadOS 18+); hidden when minimized\n```\n\nDeprecated: `shared(for:)` (per-window picker), `selectedTool`. Use an owned instance and `selectedToolItem`.\n\n## Tool picker items (iPadOS 18+, visionOS 2+)\n\n```swift\nPKToolPickerInkingItem(type: .pen)      // has a matching PKTool; set on observing canvas automatically\nPKToolPickerEraserItem(type: .vector)\nPKToolPickerLassoItem()\nPKToolPickerRulerItem()                 // toggles canvas.isRulerActive; no PKTool, not \"selected\"\nPKToolPickerScribbleItem()             // handwriting → text; auto-hides per Apple Pencil settings\nPKToolPickerCustomItem(configuration:)  // your own tool\n```\n\n## Custom tools\n\n```swift\nvar config = PKToolPickerCustomItem.Configuration(identifier: \"com.example.stamp\", name: \"Stamp\")\nconfig.allowsColorSelection = true\nconfig.defaultColor = .systemRed\nconfig.defaultWidth = 20\nconfig.imageProvider = { item in renderThumbnail(width: item.width, color: item.color) }\n\nlet stamp = PKToolPickerCustomItem(configuration: config)\nstamp.color          // current color\nstamp.width          // current width\nstamp.reloadImage()  // call when a custom attribute changes\n```\n\nWhen a custom item is selected, drawing on observing `PKCanvasView`s is disabled — your app renders the tool's effect.\n\n---\n\n# Part 5: Stroke introspection (iOS 14+)\n\n```swift\nfor stroke in drawing.strokes {\n    let ink: PKInk = stroke.ink            // ink.inkType, ink.color\n    let path: PKStrokePath = stroke.path   // interpolated points\n    let transform = stroke.transform       // CGAffineTransform\n    let mask = stroke.mask                 // optional UIBezierPath\n\n    for point in path {                    // PKStrokePoint\n        point.location        // CGPoint\n        point.timeOffset      // TimeInterval since stroke start\n        point.size            // CGSize (width/height of the contact)\n        point.opacity         // CGFloat\n        point.force           // CGFloat\n        point.azimuth         // CGFloat (radians)\n        point.altitude        // CGFloat (radians)\n    }\n}\n```\n\n`PKStrokePath` is sampled over time; index it (it conforms to `RandomAccessCollection`) or call `interpolatedPoints(in:by:)` (a range + a parametric stride) for even spacing.\n\n---\n\n# Part 6: Apple Pencil interactions\n\n## UIKit — UIPencilInteraction\n\n```swift\nlet interaction = UIPencilInteraction()\ninteraction.delegate = self\nview.addInteraction(interaction)\n\n// iPadOS 12.1+ (Apple Pencil 2nd gen)\nfunc pencilInteraction(_ i: UIPencilInteraction, didReceiveTap tap: UIPencilInteraction.Tap) {\n    // tap.hoverPose (UIPencilHoverPose?) on supported hardware\n}\n\n// iPadOS 17.5+ (Apple Pencil Pro)\nfunc pencilInteraction(_ i: UIPencilInteraction, didReceiveSqueeze squeeze: UIPencilInteraction.Squeeze) {\n    guard squeeze.phase == .ended, let pose = squeeze.hoverPose else { return }\n    showPalette(at: pose.location)   // pose: location, zOffset, azimuth, altitude, rollAngle\n}\n```\n\nIf the device-global squeeze preference is set to run a system shortcut, the squeeze event is **not** delivered to your app.\n\n## SwiftUI\n\n```swift\ncanvas\n    .onPencilDoubleTap { value in /* value.hoverPose */ }\n    .onPencilSqueeze { phase in\n        if case .ended(let value) = phase, let pose = value.hoverPose { show(at: pose.location) }\n    }\n```\n\n## Barrel roll (iOS 17.5+)\n\n```swift\ntouch.rollAngle                       // CGFloat; 0 on pencils without the sensor\nhoverGestureRecognizer.rollAngle      // also on UIHoverGestureRecognizer\n// Refine over Bluetooth:\noverride func touchesEstimatedPropertiesUpdated(_ touches: Set<UITouch>) { ... }\n```\n\n## Drawing haptics (iOS 17.5+)\n\n```swift\n// UIKit\nlet fb = UICanvasFeedbackGenerator(view: canvasView)\nfb.alignmentOccurred(at: point)\nfb.pathCompleted(at: point)\n\n// SwiftUI — the .sensoryFeedback enum cases are iOS 17.0+ (UICanvasFeedbackGenerator is 17.5+)\ncanvas\n    .sensoryFeedback(.alignment, trigger: alignCount)\n    .sensoryFeedback(.pathComplete, trigger: snapCount)\n```\n\n`UIFeedbackGenerator` and subclasses now take a `view` on init and a point when generating feedback — update existing uses.\n\n---\n\n# Part 7: PaperKit data model (iOS 26+)\n\n`PaperMarkup` is a **struct** — `append` and the `insertNew…` methods are `mutating`, so hold it in a `var` (a `let` won't compile) and reassign the VC's `markup` after editing.\n\n```swift\nimport PaperKit\n\nvar markup = PaperMarkup(bounds: view.bounds)        // var — mutating methods below\nlet loaded = try PaperMarkup(dataRepresentation: data)\n\nmarkup.bounds\nmarkup.featureSet\nmarkup.indexableContent                      // text for Spotlight/search\nmarkup.append(contentsOf: otherMarkup)       // mutating\nmarkup.append(contentsOf: pkDrawing)         // mutating — drops a PKDrawing straight in\n\nmarkup.insertNewImage(cgImage, frame: rect, rotation: 0)   // takes a CGImage (uiImage.cgImage), not UIImage\nmarkup.insertNewShape(configuration: shapeConfig, frame: rect, rotation: 0)\nmarkup.insertNewTextbox(attributedText: text, frame: rect, rotation: 0)\nmarkup.removeContentUnsupported(by: .version1)  // forwards-compat: strip content newer than a FeatureSet\n\nlet data = try await markup.dataRepresentation()                       // async throws\nawait markup.draw(in: cgContext, frame: rect, options: .init())        // render thumbnail (async)\n```\n\n---\n\n# Part 8: PaperKit controllers (iOS 26+)\n\n```swift\n// Interactive canvas\nlet markupVC = PaperMarkupViewController(markup: markup, supportedFeatureSet: .latest)\nmarkupVC.delegate = self\nmarkupVC.isEditable = true\nmarkupVC.drawingTool = PKInkingTool(.pen, color: .black, width: 5)\nmarkupVC.contentVisibleFrame                  // visible canvas region\ntoolPicker.addObserver(markupVC)              // markup VC observes the PKToolPicker\n\n// PaperMarkupViewController conforms to Observable — observe instead of delegating if preferred\n\n// Insertion menu — iOS / iPadOS / visionOS\nlet insert = MarkupEditViewController(supportedFeatureSet: .latest, additionalActions: [])\ninsert.delegate = markupVC\n// present as a popover anchored to the tool picker's accessoryItem\n\n// Insertion toolbar — macOS\nlet toolbar = MarkupToolbarViewController(supportedFeatureSet: .latest)\ntoolbar.delegate = markupVC\ntoolbar.selectedDrawingTool\n```\n\n`PaperMarkupViewController.Delegate` surfaces markup-change callbacks (use them to auto-save the model). Embed via standard `UIViewController` (iOS) / `NSViewController` (macOS) containment, or wrap in `UIViewControllerRepresentable` for SwiftUI.\n\n---\n\n# Part 9: FeatureSet (iOS 26+)\n\n```swift\nvar features = FeatureSet.latest          // also: .empty, .version1\nfeatures.remove(.someFeature)             // FeatureSet.Feature\nfeatures.insert(.someFeature)\nfeatures.colorMaximumLinearExposure = 4   // > 1 enables HDR inks; 1 = SDR\nfeatures.features                         // Set<FeatureSet.Feature>\n\nmarkupVC.supportedFeatureSet = features\ninsert.supportedFeatureSet = features     // keep markup + insertion controllers in sync\ntoolPicker.colorMaximumLinearExposure = 4 // set on the picker too for HDR inks\n```\n\nUse `FeatureSet.latest` to track new framework features automatically. For HDR, tone-map down with the screen's headroom (`UIScreen` / `NSScreen`).\n\n---\n\n## Resources\n\n**WWDC**: 2019-221, 2020-10107, 2024-10214, 2025-285\n\n**Docs**: /pencilkit, /pencilkit/pkcanvasview, /pencilkit/pkdrawing, /pencilkit/pktoolpicker, /pencilkit/pktoolpickercustomitem, /pencilkit/pkstroke, /pencilkit/pkinkingtool, /uikit/uipencilinteraction, /uikit/uitouch/rollangle, /paperkit, /paperkit/papermarkup, /paperkit/papermarkupviewcontroller, /paperkit/featureset\n\n**Skills**: skills/pencilkit-paperkit.md, skills/uikit-bridging.md, axiom-data (drawing persistence), axiom-swiftui (canvas wrapping)\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -35687,28 +35687,28 @@
           "heading": "Part 7: PaperKit data model (iOS 26+)",
           "level": 1,
           "startLine": 222,
-          "endLine": 245,
-          "charCount": 784
+          "endLine": 248,
+          "charCount": 1199
         },
         {
           "heading": "Part 8: PaperKit controllers (iOS 26+)",
           "level": 1,
-          "startLine": 246,
-          "endLine": 273,
+          "startLine": 249,
+          "endLine": 276,
           "charCount": 1179
         },
         {
           "heading": "Part 9: FeatureSet (iOS 26+)",
           "level": 1,
-          "startLine": 274,
-          "endLine": 291,
+          "startLine": 277,
+          "endLine": 294,
           "charCount": 716
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 292,
-          "endLine": 299,
+          "startLine": 295,
+          "endLine": 302,
           "charCount": 524
         }
       ]
@@ -35716,7 +35716,7 @@
     "axiom-uikit--pencilkit-paperkit": {
       "name": "axiom-uikit--pencilkit-paperkit",
       "description": "PencilKit gives you a system-quality drawing canvas (`PKCanvasView`) and the platform tool picker (`PKToolPicker`) with almost no code. PaperKit — new in the 26 SDKs — layers a full *markup* experience on top: shapes, images, text boxes, and PencilKit drawing in one canvas, powered by the same engine Notes, Markup, QuickLook, and the Journal app use.",
-      "content": "\n# PencilKit + PaperKit — Drawing & Markup\n\nPencilKit gives you a system-quality drawing canvas (`PKCanvasView`) and the platform tool picker (`PKToolPicker`) with almost no code. PaperKit — new in the 26 SDKs — layers a full *markup* experience on top: shapes, images, text boxes, and PencilKit drawing in one canvas, powered by the same engine Notes, Markup, QuickLook, and the Journal app use.\n\n## Core mental model\n\nPencilKit is **UIKit**. `PKCanvasView` is a `UIScrollView` subclass; there is no SwiftUI-native canvas, so every SwiftUI integration wraps it in `UIViewRepresentable`. The canvas owns a `PKDrawing` — the vector stroke data. You persist that drawing's `dataRepresentation()`, never the view. The tool picker is a *separate* object you attach to the canvas as an observer and show against a first responder.\n\nPaperKit sits one level up. A `PaperMarkupViewController` renders an interactive canvas backed by a `PaperMarkup` data model that stores **both** the markup elements and a PencilKit drawing. PaperKit is **26.0+ only** — gate every use.\n\n## When to Use This Skill\n\n- Adding a drawing, handwriting, or annotation canvas with `PKCanvasView` + `PKToolPicker`\n- Persisting, loading, or re-rendering `PKDrawing` data\n- Building custom tools into the tool picker (iPadOS 18+)\n- Wiring Apple Pencil Pro features — double-tap, squeeze, barrel roll, hover pose, haptics\n- Adding a rich markup canvas (shapes / images / text + drawing) with PaperKit (26.0+)\n- Bridging any of the above into SwiftUI\n\nFor the full type/property surface, see `skills/pencilkit-paperkit-ref.md`. For wrapping UIKit in SwiftUI, see `skills/uikit-bridging.md`. For persisting the drawing blob in a store, see axiom-data.\n\n## System Requirements\n\n| API | Availability |\n|-----|--------------|\n| `PKCanvasView`, `PKToolPicker`, `setVisible(_:forFirstResponder:)`, `addObserver(_:)` | iOS 13+, iPadOS 13+, Mac Catalyst 13.1+, visionOS 1+ — **no native macOS** |\n| `PKStroke`, `PKStrokePoint`, `PKInk` (stroke introspection) | iOS 14+ |\n| `PKToolPicker.init(toolItems:)`, `PKToolPickerCustomItem`, accessory bar button | iPadOS 18+, visionOS 2+ |\n| Double-tap (`pencilInteraction(_:didReceiveTap:)`, `.onPencilDoubleTap`) | iPadOS 12.1+ (Apple Pencil 2nd gen) |\n| Squeeze + hover pose (`didReceiveSqueeze:`, `.onPencilSqueeze`), `UITouch.rollAngle` | iOS/iPadOS 17.5+ (Apple Pencil Pro) |\n| `UICanvasFeedbackGenerator` (canvas haptics) | iOS 17.5+ — SwiftUI `.sensoryFeedback(.alignment / .pathComplete)` itself is iOS 17.0+ |\n| PaperKit (`PaperMarkupViewController`, `PaperMarkup`, `MarkupEditViewController`, `MarkupToolbarViewController`, `FeatureSet`) | iOS / iPadOS / Mac Catalyst / macOS / visionOS 26.0+ |\n\nPencilKit runs on Mac Catalyst, but the **tool picker does not display on Catalyst** — provide your own tool UI there. PaperKit *does* run natively on macOS 26 (Tahoe).\n\n## Critical Gotchas\n\n| Gotcha | Why it bites | Fix |\n|--------|--------------|-----|\n| Tool picker never appears | The picker only shows for the *active first responder* | `addObserver(canvas)`, `setVisible(true, forFirstResponder: canvas)`, then `canvas.becomeFirstResponder()` |\n| `PKToolPicker.shared(for:)` returns nothing useful | Deprecated — it is no longer the per-window picker | Create your own `PKToolPicker()` and hold a strong reference |\n| `selectedTool` is deprecated | Replaced by item-based selection | Read `selectedToolItem` / `selectedToolItemIdentifier` |\n| Saved drawing won't reload | You archived the *view* (or a screenshot), not the drawing | Persist `drawing.dataRepresentation()`; restore with `PKDrawing(data:)` |\n| Squeeze handler never fires | A device-global preference can route squeeze to a system shortcut — your app then gets no event | Treat squeeze as an enhancement; never gate a core feature on it |\n| Finger drawing does nothing | Default `drawingPolicy` becomes pencil-only once a pencil is used | Set `canvas.drawingPolicy = .anyInput` to allow finger / Simulator drawing |\n| PaperKit symbols won't compile | PaperKit is 26.0+ only | Wrap in `if #available(iOS 26, *)` with a fallback |\n\n## Part 1 — The canvas + tool picker (the part everyone gets wrong)\n\nThe picker is attached to the canvas as an observer, made visible *for a responder*, and the canvas must then become first responder. Miss the last step and the picker silently never shows.\n\n```swift\nimport PencilKit\n\nfinal class DrawingViewController: UIViewController {\n    private let canvasView = PKCanvasView()\n    private let toolPicker = PKToolPicker()   // hold a strong reference\n\n    override func viewDidLoad() {\n        super.viewDidLoad()\n        canvasView.frame = view.bounds\n        canvasView.drawingPolicy = .anyInput  // allow finger + Simulator drawing\n        view.addSubview(canvasView)\n\n        toolPicker.addObserver(canvasView)              // canvas reacts to tool changes\n        toolPicker.setVisible(true, forFirstResponder: canvasView)\n        canvasView.becomeFirstResponder()               // REQUIRED — or the picker won't appear\n    }\n}\n```\n\n`drawingPolicy` options: `.default` (pencil-only after a pencil is detected), `.anyInput` (finger or pencil — needed in the Simulator), `.pencilOnly`.\n\n## Part 2 — Persisting drawings\n\nPersist the **drawing's data**, not the view. `dataRepresentation()` is a versioned binary blob; round-trip it through `PKDrawing(data:)`.\n\n```swift\n// Save\nlet data = canvasView.drawing.dataRepresentation()\ntry data.write(to: drawingURL)\n\n// Load\nlet restored = try PKDrawing(data: Data(contentsOf: drawingURL))\ncanvasView.drawing = restored\n\n// Export a raster image for thumbnails / sharing (does not round-trip)\nlet image = canvasView.drawing.image(from: canvasView.drawing.bounds, scale: UIScreen.main.scale)\n```\n\nStore the `Data` blob in your model (a SwiftData/Core Data attribute, a file). Re-rendering an image is one-way — keep the `PKDrawing` data as the source of truth so strokes stay editable. See axiom-data for storing the blob safely.\n\n## Part 3 — SwiftUI integration\n\nNo native SwiftUI canvas exists. Wrap `PKCanvasView` in `UIViewRepresentable` and bridge the drawing with a binding.\n\n```swift\nimport SwiftUI\nimport PencilKit\n\nstruct CanvasView: UIViewRepresentable {\n    @Binding var drawing: PKDrawing\n    let toolPicker = PKToolPicker()\n\n    func makeUIView(context: Context) -> PKCanvasView {\n        let canvas = PKCanvasView()\n        canvas.drawingPolicy = .anyInput\n        canvas.delegate = context.coordinator\n        canvas.drawing = drawing\n        toolPicker.addObserver(canvas)\n        toolPicker.setVisible(true, forFirstResponder: canvas)\n        DispatchQueue.main.async { canvas.becomeFirstResponder() }\n        return canvas\n    }\n\n    func updateUIView(_ canvas: PKCanvasView, context: Context) {\n        if canvas.drawing != drawing { canvas.drawing = drawing }\n    }\n\n    func makeCoordinator() -> Coordinator { Coordinator(self) }\n\n    final class Coordinator: NSObject, PKCanvasViewDelegate {\n        let parent: CanvasView\n        init(_ parent: CanvasView) { self.parent = parent }\n        func canvasViewDrawingDidChange(_ canvas: PKCanvasView) {\n            parent.drawing = canvas.drawing   // push edits back to the binding\n        }\n    }\n}\n```\n\nSee `skills/uikit-bridging.md` for the representable lifecycle and coordinator gotchas.\n\n## Part 4 — Apple Pencil tiers and interactions\n\nFeatures are gated by *hardware*, not just OS. Check before assuming a gesture exists.\n\n| Apple Pencil | Double-tap | Squeeze | Barrel roll | Hover |\n|--------------|-----------|---------|-------------|-------|\n| 1st gen / USB-C | No | No | No | No |\n| 2nd gen | Yes | No | No | Yes (M2 iPad) |\n| Pro | Yes | Yes | Yes | Yes (+ roll) |\n\nUIKit interactions go through `UIPencilInteraction`; SwiftUI has matching view modifiers.\n\n```swift\n// SwiftUI — double-tap and squeeze\nmyCanvas\n    .onPencilDoubleTap { value in\n        // value.hoverPose has location / azimuth / altitude / rollAngle (if available)\n        toggleEraser()\n    }\n    .onPencilSqueeze { phase in\n        // Respect the user's Settings preference; squeeze may be routed to a shortcut\n        if case .ended(let value) = phase, let pose = value.hoverPose {\n            showToolPalette(at: pose.location)\n        }\n    }\n```\n\nTreat squeeze as a single discrete action. If the device preference is set to run a system shortcut, **your app never receives the squeeze event** — so it must remain an enhancement, not a requirement.\n\n## Part 5 — Apple Pencil Pro: barrel roll, hover, haptics\n\n`PKCanvasView` applies barrel roll to the marker and fountain pen automatically. For a *custom* canvas, read `rollAngle` (iOS 17.5+, returns `0` on pencils without the sensor) from `UITouch` or `UIHoverGestureRecognizer`.\n\n```swift\noverride func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {\n    guard let touch = touches.first else { return }\n    // Combine roll + azimuth so finger / older-pencil input still varies the stroke\n    let angle = touch.rollAngle + touch.azimuthAngle(in: view)\n    applyStrokeAngle(angle)\n}\n\n// Roll is estimated first, then refined over Bluetooth — capture the final value\noverride func touchesEstimatedPropertiesUpdated(_ touches: Set<UITouch>) {\n    for touch in touches { finalizeStrokeAngle(touch.rollAngle, for: touch.estimationUpdateIndex) }\n}\n```\n\nUse roll for *stroke input*, not for driving UI controls. For drawing haptics, use `UICanvasFeedbackGenerator` (`.alignment` when snapping to a guide, `.pathComplete` when a stroke snaps to a recognized shape), or SwiftUI's `.sensoryFeedback(.alignment, trigger:)` / `.pathComplete`.\n\n## Part 6 — Custom tools in the tool picker (iPadOS 18+)\n\n`init(toolItems:)` lets you choose and order the picker's tools, and `PKToolPickerCustomItem` adds *your* tool (a stamp, a retouch brush) alongside the system tools. When a custom item is selected, drawing on observing canvases is turned off and **your app does the rendering** — PencilKit only does the picking.\n\n```swift\nvar config = PKToolPickerCustomItem.Configuration(identifier: \"com.example.stamp\", name: \"Stamp\")\nconfig.imageProvider = { item in renderStampThumbnail(width: item.width, color: item.color) }\nlet stamp = PKToolPickerCustomItem(configuration: config)\n\nlet picker = PKToolPicker(toolItems: [\n    PKToolPickerInkingItem(type: .pen),\n    PKToolPickerEraserItem(type: .vector),\n    PKToolPickerLassoItem(),\n    PKToolPickerRulerItem(),\n    stamp,\n])\n```\n\nCall the item's `reloadImage()` when a custom attribute changes so the picker thumbnail updates.\n\n## Part 7 — PaperKit (26.0+)\n\nPaperKit is built from three pieces:\n\n- **`PaperMarkup`** — the data model container. Saves/loads markup *and* the PencilKit drawing; renders thumbnails via its `draw` function.\n- **`PaperMarkupViewController`** — the interactive canvas. Observes a `PKToolPicker`; conforms to `Observable` (or use its delegate).\n- **The insertion menu** — `MarkupEditViewController` on iOS/iPadOS/visionOS, or a `MarkupToolbarViewController` on macOS.\n\n```swift\nif #available(iOS 26, *) {\n    let markupModel = PaperMarkup(bounds: view.bounds)\n    let markupVC = PaperMarkupViewController(markup: markupModel, supportedFeatureSet: .latest)\n    addChild(markupVC)\n    view.addSubview(markupVC.view)\n    markupVC.didMove(toParent: self)\n\n    let toolPicker = PKToolPicker()\n    toolPicker.addObserver(markupVC)               // markup VC reacts to tool changes\n}\n```\n\n**Forwards compatibility is mandatory.** A drawing saved by a newer OS may not load on an older one. On load, verify the content version; on mismatch, show a pre-rendered thumbnail (render it at save time with the model's `draw` into a `CGContext`) rather than failing. This is what Notes does.\n\n**FeatureSet** controls which tools/elements are available. Start from `FeatureSet.latest`, then `remove`/`insert` to customize, and assign the same set to **both** the markup controller and the insertion controller. Enable HDR inks by setting `colorMaximumLinearExposure` > 1 on the feature set *and* the tool picker (use `1` for SDR). Set `contentView` to any `UIView` to render markup over a background template.\n\nPaperKit's `PaperMarkup` interoperates with PencilKit — `append(contentsOf:)` accepts a `PKDrawing`, so existing PencilKit content drops straight in.\n\n## Common Mistakes\n\n- Forgetting `becomeFirstResponder()` — the most common \"the tool picker won't show\" bug.\n- Using `PKToolPicker.shared(for:)` or `selectedTool` — both deprecated; use an instance and `selectedToolItem`.\n- Persisting a screenshot or the view instead of `drawing.dataRepresentation()` — strokes become uneditable.\n- Leaving `drawingPolicy` at `.default` and wondering why finger/Simulator drawing is dead.\n- Gating a core feature on squeeze — the user may have routed it to a system shortcut.\n- Assuming barrel roll / squeeze exist — they are Apple Pencil Pro only; `rollAngle` is `0` otherwise.\n- Calling PaperKit without an availability gate — it is 26.0+ and will not compile against older SDK targets.\n- Skipping PaperKit forwards-compatibility — newer files fail to open with no fallback thumbnail.\n\n## Resources\n\n**WWDC**: 2019-221, 2020-10107, 2024-10214, 2025-285\n\n**Docs**: /pencilkit, /pencilkit/pkcanvasview, /pencilkit/pktoolpicker, /pencilkit/pkdrawing, /pencilkit/pkstroke, /uikit/uipencilinteraction, /uikit/uitouch/rollangle, /paperkit, /paperkit/papermarkupviewcontroller, /paperkit/papermarkup\n\n**Skills**: skills/pencilkit-paperkit-ref.md, skills/uikit-bridging.md (UIViewRepresentable), axiom-data (persisting drawing data), axiom-swiftui (SwiftUI canvas wrapping)\n",
+      "content": "\n# PencilKit + PaperKit — Drawing & Markup\n\nPencilKit gives you a system-quality drawing canvas (`PKCanvasView`) and the platform tool picker (`PKToolPicker`) with almost no code. PaperKit — new in the 26 SDKs — layers a full *markup* experience on top: shapes, images, text boxes, and PencilKit drawing in one canvas, powered by the same engine Notes, Markup, QuickLook, and the Journal app use.\n\n## Core mental model\n\nPencilKit is **UIKit**. `PKCanvasView` is a `UIScrollView` subclass; there is no SwiftUI-native canvas, so every SwiftUI integration wraps it in `UIViewRepresentable`. The canvas owns a `PKDrawing` — the vector stroke data. You persist that drawing's `dataRepresentation()`, never the view. The tool picker is a *separate* object you attach to the canvas as an observer and show against a first responder.\n\nPaperKit sits one level up. A `PaperMarkupViewController` renders an interactive canvas backed by a `PaperMarkup` data model that stores **both** the markup elements and a PencilKit drawing. PaperKit is **26.0+ only** — gate every use.\n\n## When to Use This Skill\n\n- Adding a drawing, handwriting, or annotation canvas with `PKCanvasView` + `PKToolPicker`\n- Persisting, loading, or re-rendering `PKDrawing` data\n- Building custom tools into the tool picker (iPadOS 18+)\n- Wiring Apple Pencil Pro features — double-tap, squeeze, barrel roll, hover pose, haptics\n- Adding a rich markup canvas (shapes / images / text + drawing) with PaperKit (26.0+)\n- Bridging any of the above into SwiftUI\n\nFor the full type/property surface, see `skills/pencilkit-paperkit-ref.md`. For wrapping UIKit in SwiftUI, see `skills/uikit-bridging.md`. For persisting the drawing blob in a store, see axiom-data.\n\n## System Requirements\n\n| API | Availability |\n|-----|--------------|\n| `PKCanvasView`, `PKToolPicker`, `setVisible(_:forFirstResponder:)`, `addObserver(_:)` | iOS 13+, iPadOS 13+, Mac Catalyst 13.1+, visionOS 1+ — **no native macOS** |\n| `PKStroke`, `PKStrokePoint`, `PKInk` (stroke introspection) | iOS 14+ |\n| `PKToolPicker.init(toolItems:)`, `PKToolPickerCustomItem`, accessory bar button | iPadOS 18+, visionOS 2+ |\n| Double-tap (`pencilInteraction(_:didReceiveTap:)`, `.onPencilDoubleTap`) | iPadOS 12.1+ (Apple Pencil 2nd gen) |\n| Squeeze + hover pose (`didReceiveSqueeze:`, `.onPencilSqueeze`), `UITouch.rollAngle` | iOS/iPadOS 17.5+ (Apple Pencil Pro) |\n| `UICanvasFeedbackGenerator` (canvas haptics) | iOS 17.5+ — SwiftUI `.sensoryFeedback(.alignment / .pathComplete)` itself is iOS 17.0+ |\n| PaperKit (`PaperMarkupViewController`, `PaperMarkup`, `MarkupEditViewController`, `MarkupToolbarViewController`, `FeatureSet`) | iOS / iPadOS / Mac Catalyst / macOS / visionOS 26.0+ |\n\nPencilKit runs on Mac Catalyst, but the **tool picker does not display on Catalyst** — provide your own tool UI there. PaperKit *does* run natively on macOS 26 (Tahoe).\n\n## Critical Gotchas\n\n| Gotcha | Why it bites | Fix |\n|--------|--------------|-----|\n| Tool picker never appears | The picker only shows for the *active first responder* | `addObserver(canvas)`, `setVisible(true, forFirstResponder: canvas)`, then `canvas.becomeFirstResponder()` |\n| `PKToolPicker.shared(for:)` returns nothing useful | Deprecated — it is no longer the per-window picker | Create your own `PKToolPicker()` and hold a strong reference |\n| `selectedTool` is deprecated | Replaced by item-based selection | Read `selectedToolItem` / `selectedToolItemIdentifier` |\n| Saved drawing won't reload | You archived the *view* (or a screenshot), not the drawing | Persist `drawing.dataRepresentation()`; restore with `PKDrawing(data:)` |\n| Squeeze handler never fires | A device-global preference can route squeeze to a system shortcut — your app then gets no event | Treat squeeze as an enhancement; never gate a core feature on it |\n| Finger drawing does nothing | Default `drawingPolicy` becomes pencil-only once a pencil is used | Set `canvas.drawingPolicy = .anyInput` to allow finger / Simulator drawing |\n| PaperKit symbols won't compile | PaperKit is 26.0+ only | Wrap in `if #available(iOS 26, *)` with a fallback |\n\n## Part 1 — The canvas + tool picker (the part everyone gets wrong)\n\nThe picker is attached to the canvas as an observer, made visible *for a responder*, and the canvas must then become first responder. Miss the last step and the picker silently never shows.\n\n```swift\nimport PencilKit\n\nfinal class DrawingViewController: UIViewController {\n    private let canvasView = PKCanvasView()\n    private let toolPicker = PKToolPicker()   // hold a strong reference\n\n    override func viewDidLoad() {\n        super.viewDidLoad()\n        canvasView.frame = view.bounds\n        canvasView.drawingPolicy = .anyInput  // allow finger + Simulator drawing\n        view.addSubview(canvasView)\n\n        toolPicker.addObserver(canvasView)              // canvas reacts to tool changes\n        toolPicker.setVisible(true, forFirstResponder: canvasView)\n        canvasView.becomeFirstResponder()               // REQUIRED — or the picker won't appear\n    }\n}\n```\n\n`drawingPolicy` options: `.default` (pencil-only after a pencil is detected), `.anyInput` (finger or pencil — needed in the Simulator), `.pencilOnly`.\n\n## Part 2 — Persisting drawings\n\nPersist the **drawing's data**, not the view. `dataRepresentation()` is a versioned binary blob; round-trip it through `PKDrawing(data:)`.\n\n```swift\n// Save\nlet data = canvasView.drawing.dataRepresentation()\ntry data.write(to: drawingURL)\n\n// Load\nlet restored = try PKDrawing(data: Data(contentsOf: drawingURL))\ncanvasView.drawing = restored\n\n// Export a raster image for thumbnails / sharing (does not round-trip)\nlet image = canvasView.drawing.image(from: canvasView.drawing.bounds, scale: UIScreen.main.scale)\n```\n\nStore the `Data` blob in your model (a SwiftData/Core Data attribute, a file). Re-rendering an image is one-way — keep the `PKDrawing` data as the source of truth so strokes stay editable. See axiom-data for storing the blob safely.\n\n## Part 3 — SwiftUI integration\n\nNo native SwiftUI canvas exists. Wrap `PKCanvasView` in `UIViewRepresentable` and bridge the drawing with a binding.\n\n```swift\nimport SwiftUI\nimport PencilKit\n\nstruct CanvasView: UIViewRepresentable {\n    @Binding var drawing: PKDrawing\n    let toolPicker = PKToolPicker()\n\n    func makeUIView(context: Context) -> PKCanvasView {\n        let canvas = PKCanvasView()\n        canvas.drawingPolicy = .anyInput\n        canvas.delegate = context.coordinator\n        canvas.drawing = drawing\n        toolPicker.addObserver(canvas)\n        toolPicker.setVisible(true, forFirstResponder: canvas)\n        DispatchQueue.main.async { canvas.becomeFirstResponder() }\n        return canvas\n    }\n\n    func updateUIView(_ canvas: PKCanvasView, context: Context) {\n        if canvas.drawing != drawing { canvas.drawing = drawing }\n    }\n\n    func makeCoordinator() -> Coordinator { Coordinator(self) }\n\n    final class Coordinator: NSObject, PKCanvasViewDelegate {\n        let parent: CanvasView\n        init(_ parent: CanvasView) { self.parent = parent }\n        func canvasViewDrawingDidChange(_ canvas: PKCanvasView) {\n            parent.drawing = canvas.drawing   // push edits back to the binding\n        }\n    }\n}\n```\n\nSee `skills/uikit-bridging.md` for the representable lifecycle and coordinator gotchas.\n\n## Part 4 — Apple Pencil tiers and interactions\n\nFeatures are gated by *hardware*, not just OS. Check before assuming a gesture exists.\n\n| Apple Pencil | Double-tap | Squeeze | Barrel roll | Hover |\n|--------------|-----------|---------|-------------|-------|\n| 1st gen / USB-C | No | No | No | No |\n| 2nd gen | Yes | No | No | Yes (M2 iPad) |\n| Pro | Yes | Yes | Yes | Yes (+ roll) |\n\nUIKit interactions go through `UIPencilInteraction`; SwiftUI has matching view modifiers.\n\n```swift\n// SwiftUI — double-tap and squeeze\nmyCanvas\n    .onPencilDoubleTap { value in\n        // value.hoverPose has location / azimuth / altitude / rollAngle (if available)\n        toggleEraser()\n    }\n    .onPencilSqueeze { phase in\n        // Respect the user's Settings preference; squeeze may be routed to a shortcut\n        if case .ended(let value) = phase, let pose = value.hoverPose {\n            showToolPalette(at: pose.location)\n        }\n    }\n```\n\nTreat squeeze as a single discrete action. If the device preference is set to run a system shortcut, **your app never receives the squeeze event** — so it must remain an enhancement, not a requirement.\n\n## Part 5 — Apple Pencil Pro: barrel roll, hover, haptics\n\n`PKCanvasView` applies barrel roll to the marker and fountain pen automatically. For a *custom* canvas, read `rollAngle` (iOS 17.5+, returns `0` on pencils without the sensor) from `UITouch` or `UIHoverGestureRecognizer`.\n\n```swift\noverride func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {\n    guard let touch = touches.first else { return }\n    // Combine roll + azimuth so finger / older-pencil input still varies the stroke\n    let angle = touch.rollAngle + touch.azimuthAngle(in: view)\n    applyStrokeAngle(angle)\n}\n\n// Roll is estimated first, then refined over Bluetooth — capture the final value\noverride func touchesEstimatedPropertiesUpdated(_ touches: Set<UITouch>) {\n    for touch in touches { finalizeStrokeAngle(touch.rollAngle, for: touch.estimationUpdateIndex) }\n}\n```\n\nUse roll for *stroke input*, not for driving UI controls. For drawing haptics, use `UICanvasFeedbackGenerator` (`.alignment` when snapping to a guide, `.pathComplete` when a stroke snaps to a recognized shape), or SwiftUI's `.sensoryFeedback(.alignment, trigger:)` / `.pathComplete`.\n\n## Part 6 — Custom tools in the tool picker (iPadOS 18+)\n\n`init(toolItems:)` lets you choose and order the picker's tools, and `PKToolPickerCustomItem` adds *your* tool (a stamp, a retouch brush) alongside the system tools. When a custom item is selected, drawing on observing canvases is turned off and **your app does the rendering** — PencilKit only does the picking.\n\n```swift\nvar config = PKToolPickerCustomItem.Configuration(identifier: \"com.example.stamp\", name: \"Stamp\")\nconfig.imageProvider = { item in renderStampThumbnail(width: item.width, color: item.color) }\nlet stamp = PKToolPickerCustomItem(configuration: config)\n\nlet picker = PKToolPicker(toolItems: [\n    PKToolPickerInkingItem(type: .pen),\n    PKToolPickerEraserItem(type: .vector),\n    PKToolPickerLassoItem(),\n    PKToolPickerRulerItem(),\n    stamp,\n])\n```\n\nCall the item's `reloadImage()` when a custom attribute changes so the picker thumbnail updates.\n\n## Part 7 — PaperKit (26.0+)\n\nPaperKit is built from three pieces:\n\n- **`PaperMarkup`** — the data model container (a **struct** — its `insertNew…`/`append` methods are `mutating`, so hold it in a `var`). Saves/loads markup *and* the PencilKit drawing; renders thumbnails via its `draw` function.\n- **`PaperMarkupViewController`** — the interactive canvas. Observes a `PKToolPicker`; conforms to `Observable` (or use its delegate).\n- **The insertion menu** — `MarkupEditViewController` on iOS/iPadOS/visionOS, or a `MarkupToolbarViewController` on macOS.\n\n```swift\nif #available(iOS 26, *) {\n    let markupModel = PaperMarkup(bounds: view.bounds)\n    let markupVC = PaperMarkupViewController(markup: markupModel, supportedFeatureSet: .latest)\n    addChild(markupVC)\n    view.addSubview(markupVC.view)\n    markupVC.didMove(toParent: self)\n\n    let toolPicker = PKToolPicker()\n    toolPicker.addObserver(markupVC)               // markup VC reacts to tool changes\n}\n```\n\n**Forwards compatibility is mandatory.** A drawing saved by a newer OS may not load on an older one. On load, verify the content version; on mismatch, show a pre-rendered thumbnail (render it at save time with the model's `draw` into a `CGContext`) rather than failing. This is what Notes does. To proactively drop content an older `FeatureSet` can't render, call `markup.removeContentUnsupported(by: .version1)` before saving or displaying.\n\n**FeatureSet** controls which tools/elements are available. Start from `FeatureSet.latest`, then `remove`/`insert` to customize, and assign the same set to **both** the markup controller and the insertion controller. Enable HDR inks by setting `colorMaximumLinearExposure` > 1 on the feature set *and* the tool picker (use `1` for SDR). Set `contentView` to any `UIView` to render markup over a background template.\n\nPaperKit's `PaperMarkup` interoperates with PencilKit — `append(contentsOf:)` accepts a `PKDrawing`, so existing PencilKit content drops straight in.\n\n## Common Mistakes\n\n- Forgetting `becomeFirstResponder()` — the most common \"the tool picker won't show\" bug.\n- Using `PKToolPicker.shared(for:)` or `selectedTool` — both deprecated; use an instance and `selectedToolItem`.\n- Persisting a screenshot or the view instead of `drawing.dataRepresentation()` — strokes become uneditable.\n- Leaving `drawingPolicy` at `.default` and wondering why finger/Simulator drawing is dead.\n- Gating a core feature on squeeze — the user may have routed it to a system shortcut.\n- Assuming barrel roll / squeeze exist — they are Apple Pencil Pro only; `rollAngle` is `0` otherwise.\n- Calling PaperKit without an availability gate — it is 26.0+ and will not compile against older SDK targets.\n- Skipping PaperKit forwards-compatibility — newer files fail to open with no fallback thumbnail.\n\n## Resources\n\n**WWDC**: 2019-221, 2020-10107, 2024-10214, 2025-285\n\n**Docs**: /pencilkit, /pencilkit/pkcanvasview, /pencilkit/pktoolpicker, /pencilkit/pkdrawing, /pencilkit/pkstroke, /uikit/uipencilinteraction, /uikit/uitouch/rollangle, /paperkit, /paperkit/papermarkupviewcontroller, /paperkit/papermarkup\n\n**Skills**: skills/pencilkit-paperkit-ref.md, skills/uikit-bridging.md (UIViewRepresentable), axiom-data (persisting drawing data), axiom-swiftui (SwiftUI canvas wrapping)\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -35814,7 +35814,7 @@
           "level": 2,
           "startLine": 203,
           "endLine": 229,
-          "charCount": 1743
+          "charCount": 1979
         },
         {
           "heading": "Common Mistakes",
@@ -40100,7 +40100,7 @@
           24,
           3,
           43,
-          322
+          329
         ],
         "81": [
           4,
@@ -40744,14 +40744,14 @@
           22,
           3,
           26,
-          286
+          296
         ],
         "173": [
           4,
           51,
           2,
           47,
-          432
+          446
         ],
         "174": [
           5,
@@ -41024,14 +41024,14 @@
           28,
           3,
           42,
-          439
+          454
         ],
         "213": [
           4,
           39,
           2,
           45,
-          525
+          533
         ],
         "214": [
           4,
@@ -41158,7 +41158,7 @@
         16.138528138528144,
         4.147186147186151,
         44.47186147186147,
-        620.9350649350649
+        621.1688311688309
       ],
       "storedFields": {
         "0": {
@@ -42562,7 +42562,7 @@
               "149": 3,
               "171": 2,
               "172": 2,
-              "173": 7,
+              "173": 8,
               "218": 9,
               "219": 8
             }
@@ -57163,6 +57163,7 @@
               "166": 3,
               "169": 2,
               "171": 1,
+              "172": 1,
               "174": 1,
               "176": 7,
               "177": 4,
@@ -57258,6 +57259,7 @@
               "161": 2,
               "164": 1,
               "171": 1,
+              "173": 1,
               "177": 4,
               "184": 2,
               "188": 1,
@@ -60982,8 +60984,8 @@
               "157": 1,
               "191": 1,
               "193": 5,
-              "212": 1,
-              "213": 2,
+              "212": 2,
+              "213": 3,
               "218": 1,
               "227": 1
             }
@@ -66549,8 +66551,8 @@
               "162": 2,
               "168": 2,
               "170": 4,
-              "172": 7,
-              "173": 8,
+              "172": 8,
+              "173": 9,
               "175": 2,
               "177": 6,
               "178": 1,
@@ -68596,8 +68598,8 @@
               "161": 1,
               "162": 1,
               "164": 2,
-              "172": 6,
-              "173": 7,
+              "172": 7,
+              "173": 9,
               "177": 3,
               "178": 1,
               "179": 1,
@@ -70935,7 +70937,7 @@
               "76": 17,
               "78": 4,
               "79": 7,
-              "80": 1,
+              "80": 2,
               "81": 2,
               "85": 1,
               "87": 2,
@@ -73010,7 +73012,7 @@
               "180": 1
             },
             "4": {
-              "80": 1,
+              "80": 2,
               "81": 2,
               "145": 2,
               "177": 14,
@@ -75195,6 +75197,8 @@
               "166": 3,
               "167": 1,
               "170": 1,
+              "172": 1,
+              "173": 1,
               "176": 1,
               "177": 3,
               "178": 2,
@@ -77124,7 +77128,7 @@
               "202": 1,
               "205": 4,
               "206": 2,
-              "212": 1,
+              "212": 2,
               "213": 2,
               "214": 1,
               "216": 6,
@@ -80416,6 +80420,7 @@
               "18": 2,
               "42": 1,
               "74": 1,
+              "173": 1,
               "178": 1,
               "218": 1,
               "222": 1
@@ -81222,6 +81227,8 @@
               "139": 1,
               "154": 1,
               "156": 20,
+              "172": 1,
+              "173": 1,
               "175": 3,
               "176": 2,
               "181": 12,
@@ -91404,6 +91411,7 @@
               "205": 1,
               "207": 3,
               "209": 1,
+              "212": 1,
               "214": 1,
               "217": 1,
               "225": 1
@@ -91901,7 +91909,7 @@
               "209": 4,
               "210": 5,
               "211": 9,
-              "213": 1,
+              "213": 2,
               "214": 2,
               "215": 18,
               "216": 3,
@@ -96257,7 +96265,7 @@
               "201": 3,
               "205": 1,
               "212": 3,
-              "213": 6,
+              "213": 7,
               "214": 8,
               "216": 2,
               "221": 1,
@@ -101907,7 +101915,8 @@
           "reassign",
           {
             "4": {
-              "192": 4
+              "192": 4,
+              "212": 1
             }
           }
         ],
@@ -102770,6 +102779,7 @@
               "147": 2,
               "163": 1,
               "171": 1,
+              "173": 1,
               "177": 6,
               "178": 4,
               "179": 1,
@@ -104812,8 +104822,8 @@
               "205": 1,
               "210": 1,
               "211": 1,
-              "212": 1,
-              "213": 1,
+              "212": 2,
+              "213": 2,
               "214": 3,
               "215": 10,
               "216": 2,
@@ -111479,6 +111489,7 @@
               "169": 21,
               "170": 21,
               "171": 16,
+              "172": 1,
               "173": 3,
               "174": 9,
               "175": 7,
@@ -113628,6 +113639,8 @@
               "145": 2,
               "161": 2,
               "209": 7,
+              "212": 1,
+              "213": 1,
               "214": 1,
               "219": 1,
               "220": 2,
@@ -115161,7 +115174,7 @@
               "208": 3,
               "210": 36,
               "211": 12,
-              "212": 24,
+              "212": 26,
               "213": 36,
               "214": 29,
               "215": 3,
@@ -115801,7 +115814,7 @@
               "150": 1,
               "185": 1,
               "186": 1,
-              "212": 10,
+              "212": 11,
               "213": 6,
               "216": 7
             }
@@ -117256,8 +117269,8 @@
               "205": 3,
               "206": 1,
               "211": 9,
-              "212": 3,
-              "213": 2,
+              "212": 6,
+              "213": 3,
               "214": 17,
               "215": 1,
               "216": 24,
@@ -117924,7 +117937,8 @@
           "version1",
           {
             "4": {
-              "212": 1
+              "212": 2,
+              "213": 1
             }
           }
         ],
@@ -118814,7 +118828,7 @@
               "170": 2,
               "171": 4,
               "172": 2,
-              "173": 2,
+              "173": 3,
               "174": 1,
               "175": 1,
               "176": 3,
@@ -122984,8 +122998,8 @@
               "168": 11,
               "169": 17,
               "170": 13,
-              "172": 1,
-              "173": 2,
+              "172": 2,
+              "173": 3,
               "175": 3,
               "177": 2,
               "178": 4,
@@ -124443,8 +124457,8 @@
               "153": 5,
               "158": 6,
               "171": 1,
-              "172": 1,
-              "173": 4,
+              "172": 2,
+              "173": 6,
               "174": 2,
               "176": 2,
               "177": 6,
@@ -127867,6 +127881,7 @@
               "169": 22,
               "170": 15,
               "171": 33,
+              "173": 1,
               "176": 14,
               "178": 3,
               "181": 10,
@@ -128887,8 +128902,8 @@
               "202": 6,
               "204": 1,
               "211": 1,
-              "212": 18,
-              "213": 7,
+              "212": 19,
+              "213": 8,
               "216": 14,
               "218": 2,
               "219": 1,
@@ -134543,7 +134558,7 @@
               "138": 1,
               "140": 1,
               "142": 2,
-              "212": 1,
+              "212": 2,
               "213": 2,
               "215": 3
             }
@@ -138681,8 +138696,8 @@
               "158": 2,
               "160": 2,
               "170": 1,
-              "172": 4,
-              "173": 3,
+              "172": 6,
+              "173": 5,
               "174": 3,
               "176": 4,
               "177": 3,
@@ -143245,6 +143260,7 @@
               "72": 1,
               "73": 1,
               "75": 11,
+              "80": 1,
               "84": 4,
               "94": 1,
               "96": 1,
@@ -145796,7 +145812,7 @@
               "4": 1,
               "87": 3,
               "92": 1,
-              "212": 15,
+              "212": 16,
               "213": 23,
               "218": 1
             }
@@ -149389,7 +149405,8 @@
               "104": 1,
               "147": 1,
               "158": 2,
-              "176": 1
+              "176": 1,
+              "213": 1
             }
           }
         ],
@@ -149752,6 +149769,8 @@
               "163": 4,
               "166": 1,
               "170": 1,
+              "172": 1,
+              "173": 1,
               "176": 1,
               "177": 1,
               "178": 4,
@@ -155328,6 +155347,8 @@
               "127": 5,
               "128": 15,
               "147": 3,
+              "172": 1,
+              "173": 1,
               "177": 3,
               "178": 1,
               "185": 19,
@@ -158491,6 +158512,7 @@
               "202": 4,
               "209": 2,
               "210": 8,
+              "212": 1,
               "213": 1,
               "215": 1,
               "217": 2,
@@ -165239,6 +165261,7 @@
               "201": 1,
               "205": 1,
               "211": 1,
+              "212": 1,
               "214": 1,
               "215": 1,
               "217": 2,
@@ -167566,7 +167589,7 @@
           "telephony",
           {
             "4": {
-              "80": 2,
+              "80": 4,
               "81": 1
             }
           }
@@ -168398,7 +168421,8 @@
               "168": 2,
               "169": 6,
               "171": 1,
-              "173": 1,
+              "172": 1,
+              "173": 2,
               "174": 1,
               "175": 14,
               "176": 18,
@@ -168822,7 +168846,7 @@
               "149": 15,
               "152": 1,
               "172": 2,
-              "173": 7
+              "173": 8
             }
           }
         ],
@@ -171718,7 +171742,7 @@
               "163": 1,
               "164": 1,
               "181": 1,
-              "212": 2,
+              "212": 3,
               "213": 2,
               "217": 2
             }
@@ -171914,8 +171938,8 @@
               "209": 1,
               "210": 2,
               "211": 19,
-              "212": 4,
-              "213": 1,
+              "212": 5,
+              "213": 2,
               "214": 5,
               "215": 2,
               "216": 3,
@@ -172902,7 +172926,7 @@
               "77": 18,
               "78": 6,
               "79": 13,
-              "80": 1,
+              "80": 2,
               "81": 2,
               "82": 4,
               "83": 7,
@@ -173928,7 +173952,7 @@
               "209": 7,
               "210": 9,
               "211": 17,
-              "212": 3,
+              "212": 4,
               "213": 9,
               "214": 1,
               "215": 20,
@@ -176436,6 +176460,7 @@
               "176": 1,
               "185": 21,
               "187": 5,
+              "213": 1,
               "218": 1,
               "224": 1
             }
@@ -180154,7 +180179,7 @@
               "169": 2,
               "170": 3,
               "171": 6,
-              "173": 3,
+              "173": 4,
               "174": 2,
               "175": 2,
               "176": 10,
@@ -182027,6 +182052,8 @@
               "135": 1,
               "136": 1,
               "141": 1,
+              "172": 2,
+              "173": 3,
               "174": 3,
               "176": 15,
               "177": 1,
@@ -189235,7 +189262,7 @@
               "199": 5,
               "202": 2,
               "211": 4,
-              "213": 1,
+              "213": 2,
               "214": 5,
               "215": 10,
               "216": 1,
@@ -194077,6 +194104,7 @@
               "71": 3,
               "73": 5,
               "75": 1,
+              "80": 1,
               "81": 1,
               "89": 2,
               "93": 1,
@@ -195582,8 +195610,8 @@
             },
             "4": {
               "100": 2,
-              "172": 3,
-              "173": 5
+              "172": 5,
+              "173": 7
             }
           }
         ],
@@ -197196,8 +197224,8 @@
               "170": 1,
               "190": 2,
               "197": 1,
-              "212": 7,
-              "213": 1,
+              "212": 8,
+              "213": 2,
               "222": 1
             }
           }
@@ -197847,6 +197875,7 @@
               "63": 2,
               "71": 1,
               "73": 1,
+              "80": 1,
               "86": 2,
               "94": 1,
               "102": 2,
@@ -200647,7 +200676,7 @@
               "205": 5,
               "209": 9,
               "210": 48,
-              "212": 6,
+              "212": 10,
               "213": 6,
               "214": 4,
               "216": 9,
@@ -208308,6 +208337,7 @@
               "168": 2,
               "170": 1,
               "171": 6,
+              "173": 1,
               "174": 1,
               "176": 3,
               "177": 3,
@@ -208742,6 +208772,7 @@
               "200": 1,
               "209": 1,
               "211": 1,
+              "212": 1,
               "213": 4,
               "216": 5,
               "218": 1,
@@ -208856,7 +208887,7 @@
               "205": 2,
               "210": 1,
               "212": 1,
-              "213": 3,
+              "213": 4,
               "215": 3,
               "217": 5,
               "218": 3,
@@ -214160,8 +214191,8 @@
               "169": 19,
               "170": 15,
               "171": 4,
-              "172": 3,
-              "173": 6,
+              "172": 4,
+              "173": 7,
               "174": 5,
               "175": 1,
               "176": 13,
@@ -214514,7 +214545,7 @@
               "170": 14,
               "171": 6,
               "172": 1,
-              "173": 1,
+              "173": 2,
               "175": 1,
               "176": 15,
               "177": 4,
@@ -215448,7 +215479,7 @@
               "77": 1,
               "78": 6,
               "79": 16,
-              "80": 10,
+              "80": 11,
               "81": 35,
               "82": 19,
               "83": 6,
@@ -220935,7 +220966,7 @@
               "168": 2,
               "170": 1,
               "171": 2,
-              "173": 2,
+              "173": 3,
               "176": 3,
               "187": 1,
               "189": 1,
@@ -220948,8 +220979,8 @@
               "201": 1,
               "209": 10,
               "211": 1,
-              "212": 1,
-              "213": 6,
+              "212": 2,
+              "213": 7,
               "215": 2,
               "216": 2,
               "217": 4,
@@ -225170,6 +225201,7 @@
               "166": 1,
               "170": 1,
               "171": 4,
+              "173": 1,
               "175": 3,
               "176": 2,
               "178": 4,
@@ -226092,7 +226124,7 @@
               "77": 7,
               "78": 14,
               "79": 16,
-              "80": 1,
+              "80": 2,
               "82": 1,
               "83": 1,
               "84": 5,
@@ -227786,6 +227818,7 @@
               "132": 1,
               "170": 1,
               "171": 1,
+              "213": 1,
               "220": 1
             }
           }
@@ -228982,6 +229015,7 @@
               "61": 1,
               "69": 1,
               "70": 1,
+              "80": 1,
               "89": 1,
               "102": 10,
               "103": 4,
@@ -232183,8 +232217,8 @@
               "209": 1,
               "210": 13,
               "211": 19,
-              "212": 21,
-              "213": 15,
+              "212": 22,
+              "213": 16,
               "214": 9,
               "215": 16,
               "216": 11,
@@ -233612,6 +233646,7 @@
               "27": 2,
               "51": 1,
               "71": 1,
+              "80": 1,
               "86": 1,
               "115": 2,
               "116": 3,
@@ -235123,7 +235158,8 @@
               "166": 2,
               "168": 4,
               "171": 1,
-              "173": 1,
+              "172": 1,
+              "173": 2,
               "176": 3,
               "179": 1,
               "181": 3,
@@ -236179,8 +236215,8 @@
               "169": 2,
               "170": 5,
               "171": 1,
-              "172": 4,
-              "173": 9,
+              "172": 5,
+              "173": 10,
               "174": 2,
               "175": 13,
               "176": 30,
@@ -236741,7 +236777,8 @@
               "202": 14,
               "203": 3,
               "207": 1,
-              "213": 1,
+              "212": 1,
+              "213": 2,
               "214": 5,
               "216": 15,
               "218": 1,
@@ -236950,7 +236987,8 @@
               "148": 5,
               "149": 2,
               "182": 3,
-              "191": 1
+              "191": 1,
+              "212": 1
             }
           }
         ],
@@ -239434,7 +239472,7 @@
               "77": 1,
               "78": 5,
               "79": 6,
-              "80": 7,
+              "80": 8,
               "81": 8,
               "82": 2,
               "83": 1,
@@ -243146,7 +243184,7 @@
               "202": 1,
               "204": 1,
               "210": 2,
-              "212": 12,
+              "212": 15,
               "213": 1,
               "214": 6,
               "216": 6,
@@ -243738,7 +243776,7 @@
               "22": 3,
               "76": 1,
               "78": 2,
-              "80": 1,
+              "80": 4,
               "81": 1,
               "133": 17,
               "134": 31,
@@ -248601,8 +248639,8 @@
               "54": 1,
               "96": 2,
               "142": 1,
-              "172": 23,
-              "173": 53,
+              "172": 24,
+              "173": 56,
               "181": 3,
               "185": 8,
               "186": 1,
@@ -252890,7 +252928,7 @@
               "209": 2,
               "211": 3,
               "212": 2,
-              "213": 2,
+              "213": 3,
               "216": 5,
               "217": 2,
               "220": 8,
@@ -254115,8 +254153,8 @@
               "169": 3,
               "170": 4,
               "171": 7,
-              "172": 2,
-              "173": 5,
+              "172": 3,
+              "173": 6,
               "175": 4,
               "176": 11,
               "177": 20,
@@ -254147,7 +254185,7 @@
               "209": 5,
               "210": 6,
               "211": 2,
-              "213": 1,
+              "213": 2,
               "214": 7,
               "216": 5,
               "218": 5,
@@ -254926,8 +254964,8 @@
               "106": 1,
               "112": 1,
               "151": 1,
-              "172": 4,
-              "173": 2,
+              "172": 5,
+              "173": 3,
               "176": 1,
               "177": 1,
               "185": 2,
@@ -255953,7 +255991,7 @@
               "149": 1,
               "163": 1,
               "169": 3,
-              "173": 2,
+              "173": 3,
               "175": 1,
               "177": 5,
               "178": 1,
@@ -257577,6 +257615,14 @@
           }
         ],
         [
+          "convince",
+          {
+            "4": {
+              "173": 1
+            }
+          }
+        ],
+        [
           "conv",
           {
             "4": {
@@ -257738,7 +257784,7 @@
               "6": 1,
               "7": 2,
               "8": 5,
-              "80": 18,
+              "80": 20,
               "81": 9,
               "97": 2,
               "121": 2,
@@ -258193,8 +258239,8 @@
               "156": 1,
               "161": 1,
               "164": 1,
-              "172": 3,
-              "173": 7,
+              "172": 4,
+              "173": 8,
               "174": 1,
               "175": 12,
               "176": 7,
@@ -261759,8 +261805,8 @@
               "208": 3,
               "209": 4,
               "210": 13,
-              "212": 5,
-              "213": 3,
+              "212": 7,
+              "213": 5,
               "214": 27,
               "216": 31,
               "217": 3,
@@ -264260,6 +264306,7 @@
               "186": 1,
               "187": 3,
               "192": 1,
+              "212": 1,
               "213": 2,
               "216": 1
             }
@@ -264662,7 +264709,8 @@
           {
             "4": {
               "85": 2,
-              "128": 2
+              "128": 2,
+              "212": 1
             }
           }
         ],
@@ -267248,8 +267296,8 @@
               "149": 1,
               "156": 6,
               "157": 2,
-              "172": 12,
-              "173": 14,
+              "172": 14,
+              "173": 17,
               "177": 3,
               "180": 1,
               "186": 1
@@ -271507,8 +271555,8 @@
             },
             "4": {
               "85": 2,
-              "212": 38,
-              "213": 30
+              "212": 41,
+              "213": 31
             }
           }
         ],
@@ -274624,6 +274672,8 @@
               "183": 1,
               "189": 1,
               "192": 1,
+              "212": 4,
+              "213": 1,
               "218": 1
             }
           }
@@ -278855,6 +278905,8 @@
               "189": 1,
               "197": 1,
               "202": 1,
+              "212": 2,
+              "213": 1,
               "214": 3,
               "216": 4,
               "218": 1,
@@ -282746,8 +282798,8 @@
               "198": 6,
               "203": 1,
               "208": 1,
-              "212": 3,
-              "213": 1,
+              "212": 4,
+              "213": 2,
               "214": 1,
               "216": 1,
               "218": 1,
@@ -284063,8 +284115,8 @@
               "169": 18,
               "170": 42,
               "171": 23,
-              "172": 46,
-              "173": 95,
+              "172": 48,
+              "173": 98,
               "174": 16,
               "175": 30,
               "176": 169,
@@ -284879,6 +284931,7 @@
               "77": 1,
               "78": 5,
               "79": 4,
+              "80": 1,
               "82": 4,
               "84": 1,
               "85": 2,
@@ -285501,6 +285554,8 @@
               "122": 1,
               "124": 1,
               "147": 3,
+              "172": 1,
+              "173": 1,
               "201": 1
             }
           }
@@ -285822,6 +285877,7 @@
               "209": 2,
               "210": 6,
               "211": 8,
+              "212": 1,
               "213": 1,
               "214": 3,
               "215": 12,
@@ -290416,7 +290472,7 @@
               "206": 1,
               "207": 2,
               "211": 31,
-              "212": 1,
+              "212": 2,
               "213": 1,
               "214": 6,
               "215": 3,
@@ -295599,7 +295655,7 @@
               "76": 1,
               "78": 1,
               "79": 3,
-              "80": 31,
+              "80": 33,
               "81": 19,
               "83": 2,
               "84": 2,
@@ -295775,6 +295831,7 @@
             },
             "4": {
               "62": 1,
+              "80": 1,
               "85": 2,
               "89": 1,
               "141": 1,
@@ -392790,9 +392847,21 @@
           "cellular",
           "default",
           "dialer",
+          "26",
+          "eu",
+          "singleton",
+          "no",
+          "public",
+          "init",
           "telephony",
-          "call",
+          "shared",
+          "instance",
+          "start",
           "action",
+          "services",
+          "available",
+          "accounts",
+          "call",
           "system",
           "initiated",
           "mirror",
@@ -506973,7 +507042,19 @@
           "maximum",
           "build",
           "file",
-          "sizes"
+          "sizes",
+          "excep",
+          "test",
+          "generated",
+          "demo",
+          "link",
+          "can",
+          "use",
+          "even",
+          "preview",
+          "affordance",
+          "produc",
+          "still"
         ],
         "Bundle and target": [
           "bundle",
@@ -507567,7 +507648,30 @@
           "sizes",
           "reference",
           "authoritative",
-          "source"
+          "source",
+          "one",
+          "excep",
+          "test",
+          "demo",
+          "link",
+          "generates",
+          "can",
+          "exercise",
+          "even",
+          "codes",
+          "preview",
+          "affordance",
+          "shipp",
+          "still",
+          "cap",
+          "so",
+          "don",
+          "let",
+          "work",
+          "via",
+          "convince",
+          "produc",
+          "ready"
         ],
         "Critical Gotchas": [
           "critical",
@@ -560695,12 +560799,28 @@
           "model",
           "os",
           "26",
+          "markup",
+          "struct",
+          "append",
+          "insert",
+          "new",
+          "methods",
+          "mutat",
+          "so",
+          "hold",
+          "var",
+          "let",
+          "won",
+          "compile",
+          "reassign",
+          "vc",
+          "after",
+          "edit",
           "swift",
           "import",
-          "let",
-          "markup",
           "bounds",
           "view",
+          "below",
           "loaded",
           "try",
           "representa",
@@ -560711,28 +560831,36 @@
           "text",
           "spotlight",
           "search",
-          "append",
           "contents",
           "other",
           "pk",
           "draw",
           "drops",
           "straight",
-          "insert",
-          "new",
           "image",
+          "cg",
           "frame",
           "rect",
           "rota",
+          "takes",
+          "ui",
+          "not",
           "shape",
           "configura",
           "config",
           "textbox",
           "attributed",
+          "remove",
+          "unsupported",
+          "version1",
+          "forwards",
+          "compat",
+          "strip",
+          "newer",
+          "than",
           "await",
           "async",
           "throws",
-          "cg",
           "context",
           "options",
           "init",
@@ -561697,6 +561825,15 @@
           "data",
           "model",
           "container",
+          "struct",
+          "insert",
+          "new",
+          "append",
+          "methods",
+          "mutat",
+          "so",
+          "hold",
+          "var",
           "saves",
           "loads",
           "pencil",
@@ -561775,14 +561912,22 @@
           "what",
           "notes",
           "does",
+          "proactively",
+          "drop",
+          "can",
+          "call",
+          "remove",
+          "unsupported",
+          "version1",
+          "before",
+          "sav",
+          "display",
           "controls",
           "which",
           "tools",
           "elements",
           "start",
           "then",
-          "remove",
-          "insert",
           "customize",
           "assign",
           "same",
@@ -561802,10 +561947,8 @@
           "background",
           "template",
           "interoperates",
-          "append",
           "contents",
           "accepts",
-          "so",
           "exist",
           "drops",
           "straight"

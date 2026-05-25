@@ -15,6 +15,8 @@ Uncompressed App Clip binary, after app thinning, per variant, measured against 
 
 Physical invocations (App Clip Code, QR, NFC) cap the clip at **15 MB** regardless of deployment target. Authoritative source: App Store Connect ▸ Reference ▸ Maximum build file sizes.
 
+Exception (testing only): the App Store Connect-generated App Clip **demo link** can use the 100 MB limit even with physical invocations. This is a demo/preview affordance — production physical invocations still cap at 15 MB.
+
 ## Bundle and target
 
 - App Clip bundle ID: **`<ParentBundleID>.Clip`** (exact).

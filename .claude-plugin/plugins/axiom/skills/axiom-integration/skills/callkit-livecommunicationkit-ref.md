@@ -161,8 +161,10 @@ if let conversation = manager.conversations.first(where: { $0.uuid == id }) {
 }
 manager.conversations                         // [Conversation]; ConversationManager is Observable
 
-// Cellular / default dialer
-let telephony = TelephonyConversationManager(/* ... */)
+// Cellular / default dialer (iOS 26+, EU) — singleton, no public init
+let telephony = TelephonyConversationManager.sharedInstance
+telephony.startCellularConversation(action)   // ConversationAction
+telephony.cellularServices                     // available cellular accounts
 ```
 
 - `Conversation` — a call. `ConversationAction` — system-initiated action (mirror of `CXAction`); fulfill/fail it.
