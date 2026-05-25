@@ -16,8 +16,10 @@ license: MIT
 | App Shortcuts, phrases, Spotlight | See `skills/app-shortcuts-ref.md` |
 | App discoverability strategy | See `skills/app-discoverability.md` |
 | Core Spotlight indexing | See `skills/core-spotlight-ref.md` |
-| Widgets, Live Activities, Control Center | See `skills/extensions-widgets.md` |
-| Widget/Live Activity API reference | See `skills/extensions-widgets-ref.md` |
+| Widgets, Control Center controls | See `skills/extensions-widgets.md` |
+| Widget API reference | See `skills/extensions-widgets-ref.md` |
+| Live Activities, Dynamic Island, push-to-start, broadcast | See `skills/live-activities.md` |
+| Live Activities / ActivityKit API reference | See `skills/live-activities-ref.md` |
 | Apple Pay (physical goods, services, donations) | **Use `axiom-payments` instead** |
 | In-app purchases, subscriptions | See `skills/in-app-purchases.md` |
 | StoreKit 2 API reference | See `skills/storekit-ref.md` |
@@ -51,7 +53,8 @@ digraph integration {
     what -> "skills/app-intents-ref.md" [label="Siri / App Intents"];
     what -> "skills/app-shortcuts-ref.md" [label="Shortcuts / phrases"];
     what -> "skills/app-discoverability.md" [label="discoverability\nstrategy"];
-    what -> "skills/extensions-widgets.md" [label="widgets / Live Activities\n/ Control Center"];
+    what -> "skills/extensions-widgets.md" [label="widgets /\nControl Center"];
+    what -> "skills/live-activities.md" [label="Live Activities /\nDynamic Island"];
     what -> "skills/in-app-purchases.md" [label="IAP / subscriptions"];
     what -> "skills/eventkit.md" [label="calendar / reminders"];
     what -> "skills/contacts.md" [label="contacts"];
@@ -68,7 +71,8 @@ digraph integration {
 1. Siri / App Intents / entity queries? → `skills/app-intents-ref.md`
 2. App Shortcuts / phrases? → `skills/app-shortcuts-ref.md`
 3. App discoverability / Spotlight strategy? → `skills/app-discoverability.md`, `skills/core-spotlight-ref.md`
-4. Widgets / Live Activities / Control Center? → `skills/extensions-widgets.md`, `skills/extensions-widgets-ref.md`
+4. Widgets / Control Center controls? → `skills/extensions-widgets.md`, `skills/extensions-widgets-ref.md`
+4a. Live Activities / Dynamic Island / push-to-start / broadcast? → `skills/live-activities.md`, `skills/live-activities-ref.md`
 5. In-app purchases / StoreKit? → `skills/in-app-purchases.md`, `skills/storekit-ref.md`
 6. Calendar / reminders / EventKit? → `skills/eventkit.md`, `skills/eventkit-ref.md`
 7. Contacts / contact picker? → `skills/contacts.md`, `skills/contacts-ref.md`
@@ -91,7 +95,7 @@ digraph integration {
 - SwiftData/Core Data not shared with extension → **also invoke axiom-data** (App Groups)
 
 **Live Activity + push notification**:
-- ActivityKit push token setup → **stay here** (extensions-widgets)
+- ActivityKit push token / broadcast setup → **stay here** (live-activities)
 - Push delivery failures → **also invoke axiom-networking** (networking-diag)
 - Entitlements/certificates → **also invoke axiom-build**
 
@@ -142,6 +146,9 @@ User: "How do I add Siri support?"
 
 User: "My widget isn't updating"
 → Read: `skills/extensions-widgets.md`
+
+User: "My Live Activity won't update" / "How do I add a Dynamic Island?" / "Broadcast scores to thousands of Live Activities"
+→ Read: `skills/live-activities.md`
 
 User: "Implement in-app purchases with StoreKit 2"
 → Read: `skills/in-app-purchases.md`

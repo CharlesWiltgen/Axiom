@@ -1,6 +1,6 @@
 ---
 name: extensions-widgets
-description: Widgets, Live Activities, and Control Center controls with correct timeline and data sharing patterns
+description: Widgets and Control Center controls with correct timeline and data sharing patterns
 skill_type: discipline
 version: 0.9
 apple_platforms: iOS 14+, iPadOS 14+, watchOS 9+
@@ -8,17 +8,17 @@ apple_platforms: iOS 14+, iPadOS 14+, watchOS 9+
 
 # Extensions & Widgets
 
-Widget development patterns for Home Screen, Lock Screen, StandBy, Live Activities, and Control Center controls. Covers timeline management, data sharing between app and extensions, and extension lifecycle.
+Widget development patterns for Home Screen, Lock Screen, StandBy, and Control Center controls. Covers timeline management, data sharing between app and extensions, and extension lifecycle.
+
+> **Live Activities** (Dynamic Island, ActivityKit, push/broadcast) have their own page: [live-activities](/skills/integration/live-activities).
 
 ## When to Use This Skill
 
 Use this skill when you're:
 - Implementing any widget (Home Screen, Lock Screen, StandBy, Control Center)
-- Creating Live Activities with Dynamic Island
 - Widget shows stale data or doesn't update
 - Widget not appearing in gallery
 - Interactive buttons not responding
-- Live Activity fails to start
 - Control Center control is unresponsive
 - Sharing data between main app and widget
 
@@ -31,7 +31,6 @@ Questions you can ask Claude that will draw from this skill:
 - "My widget isn't updating even after I change data in the main app."
 - "How do I share data between my app and widget?"
 - "Widget shows old data even after I update the app."
-- "Live Activity fails to start with no error message."
 - "Control Center control takes forever to respond."
 - "Interactive widget button does nothing when tapped."
 - "Widget gallery doesn't show my widget."
@@ -49,12 +48,6 @@ Questions you can ask Claude that will draw from this skill:
 - Shared UserDefaults with suite name
 - Container URLs for file sharing
 - Why widgets can't see main app data directly
-
-### Live Activities
-- ActivityAttributes and 4KB data limit
-- Dynamic Island presentation
-- Push notification updates
-- Authorization and entitlements
 
 ### Control Center Controls (iOS 18+)
 - ValueProvider for async state
@@ -118,7 +111,7 @@ struct WidgetView: View {
 
 ## Documentation Scope
 
-This page documents the `axiom-integration` skill—widget development patterns Claude uses when you're implementing Home Screen widgets, Live Activities, or Control Center controls.
+This page documents the `axiom-integration` skill—widget development patterns Claude uses when you're implementing Home Screen widgets or Control Center controls.
 
 **For comprehensive API reference:** See [extensions-widgets-ref](/reference/extensions-widgets-ref) for complete API coverage, troubleshooting, and expert review checklist.
 
@@ -126,6 +119,7 @@ This page documents the `axiom-integration` skill—widget development patterns 
 
 ## Related
 
+- [live-activities](/skills/integration/live-activities) — Live Activities & Dynamic Island (extracted from this skill)
 - [extensions-widgets-ref](/reference/extensions-widgets-ref) — Complete API reference, troubleshooting, expert checklist
 - [app-intents-ref](/reference/app-intents-ref) — App Intents for interactive widgets
 - [swift-concurrency](/skills/concurrency/swift-concurrency) — Async patterns for data fetching
@@ -133,6 +127,6 @@ This page documents the `axiom-integration` skill—widget development patterns 
 
 ## Resources
 
-**WWDC**: 2025-278, 2024-10157, 2024-10068, 2023-10028, 2023-10194
+**WWDC**: 2025-278, 2024-10157, 2023-10028
 
-**Docs**: /widgetkit, /activitykit, /widgetkit/controlling-interactivity-and-appearance
+**Docs**: /widgetkit, /widgetkit/controlling-interactivity-and-appearance

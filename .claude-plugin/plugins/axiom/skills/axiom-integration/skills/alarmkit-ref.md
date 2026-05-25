@@ -494,4 +494,4 @@ struct AlarmListView: View {
 
 **Docs**: /alarmkit, /alarmkit/alarmmanager, /alarmkit/alarm, /alarmkit/alarmpresentation, /alarmkit/alarmattributes
 
-**Skills**: skills/extensions-widgets-ref.md, axiom-swiftui
+**Skills**: skills/live-activities-ref.md (AlarmKit renders as a Live Activity), skills/extensions-widgets-ref.md, axiom-swiftui
