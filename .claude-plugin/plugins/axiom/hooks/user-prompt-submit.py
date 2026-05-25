@@ -103,7 +103,7 @@ if re.search(r'widgetkit|widgetcenter|reloadalltimelines|reloadtimelines|add.{0,
     matches.append("axiom-integration")
 
 # Media
-if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker)|core\s*haptics|haptic|now\s*playing|shazamkit|audio\s*recogni|avfoundation|carplay.{0,5}(audio|now)|musickit|camera.{0,5}(capture|preview|session)', prompt_lower):
+if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker)|core\s*haptics|haptic|now\s*playing|shazamkit|audio\s*recogni|avfoundation|carplay.{0,5}(audio|now)|musickit|camera.{0,5}(capture|preview|session)|dockkit|dockaccessory|dock\s*accessory|motorized.{0,12}(stand|dock)', prompt_lower):
     matches.append("axiom-media")
 
 # Accessibility

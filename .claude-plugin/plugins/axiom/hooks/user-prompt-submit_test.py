@@ -129,10 +129,14 @@ class TestPositiveRouting(unittest.TestCase):
     def test_integration(self):
         self.assertIn("axiom-integration", routed_skills(
             "How do I add a WidgetKit timeline to my app?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "How do I update my Live Activity with a broadcast push?"))
 
     def test_media(self):
         self.assertIn("axiom-media", routed_skills(
             "How do I use AVCaptureSession for camera preview?"))
+        self.assertIn("axiom-media", routed_skills(
+            "How do I track a subject with a DockKit motorized stand?"))
 
     def test_accessibility(self):
         self.assertIn("axiom-accessibility", routed_skills(

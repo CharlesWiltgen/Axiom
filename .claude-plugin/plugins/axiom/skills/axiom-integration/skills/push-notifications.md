@@ -651,7 +651,7 @@ Task {
 - Priority budget enforced — excessive `apns-priority: 10` gets throttled
 - Add `NSSupportsLiveActivitiesFrequentUpdates` to Info.plist for high-frequency apps (sports, navigation)
 
-For ActivityKit UI, attributes, and Dynamic Island layout, see skills/extensions-widgets.md.
+For ActivityKit UI, attributes, lifecycle, and Dynamic Island layout, see skills/live-activities.md.
 
 ## Broadcast Push (iOS 18+)
 

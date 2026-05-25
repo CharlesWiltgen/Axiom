@@ -17,13 +17,13 @@
 
 ✅ **Use this skill when**:
 - Implementing any widget (Home Screen, Lock Screen, StandBy, Control Center)
-- Creating Live Activities
 - Debugging why widgets show stale data
 - Widget not appearing in gallery
 - Interactive buttons not responding
-- Live Activity fails to start
 - Control Center control is unresponsive
 - Sharing data between app and widget/extension
+
+> **Live Activities moved.** Dynamic Island, ActivityKit lifecycle, push/broadcast updates, and push-to-start now live in `skills/live-activities.md` (+ `skills/live-activities-ref.md`). They share a widget extension with widgets, which is why setup details (App Groups, the extension target) still apply here.
 
 ❌ **Do NOT use this skill for**:
 - Pure App Intents implementation (see `skills/app-intents-ref.md`)
@@ -34,6 +34,7 @@
 ## Related Skills
 
 - `skills/extensions-widgets-ref.md` — Comprehensive API reference
+- `skills/live-activities.md` — Live Activities & Dynamic Island (extracted from this skill)
 - `skills/app-intents-ref.md` — App Intents for interactive widgets
 - `axiom-concurrency` — Async patterns for data fetching
 - `axiom-data` — Using SwiftData with App Groups
@@ -49,8 +50,8 @@
 #### 3. "Widget shows old data even after I update the app"
 → This skill covers container paths, UserDefaults suite names, and WidgetCenter reload
 
-#### 4. "Live Activity fails to start"
-→ This skill covers 4KB data limit, ActivityAttributes constraints, authorization checks
+#### 4. "Live Activity won't start / update / dismiss"
+→ See `skills/live-activities.md` — Live Activities have their own skill now
 
 #### 5. "Control Center control takes forever to respond"
 → This skill covers async ValueProvider patterns and optimistic UI
@@ -312,167 +313,7 @@ struct ThermostatControl: ControlWidget {
 
 ---
 
-## Pattern 5: Missing Dismissal Policy (Zombie Live Activities)
-
-**Time cost**: User annoyance, negative reviews
-
-### Symptom
-- Live Activities stay on Lock Screen for hours after event ends
-- Users must manually dismiss completed activities
-- Activity shows "Delivered" but won't disappear
-
-### ❌ BAD Code
-
-```swift
-// Start activity
-let activity = try Activity.request(attributes: attributes, content: initialContent)
-
-// Later... event completes
-// ❌ WRONG — Never call .end()
-// Activity stays forever until user dismisses
-```
-
-**Why it's bad**: Activities persist indefinitely unless explicitly ended.
-
-### ✅ GOOD Code
-
-```swift
-// When event completes
-let finalState = DeliveryAttributes.ContentState(
-    status: .delivered,
-    deliveredAt: Date()
-)
-
-await activity.end(
-    ActivityContent(state: finalState, staleDate: nil),
-    dismissalPolicy: .default // Removes after ~4 hours
-)
-
-// Or for immediate removal
-await activity.end(nil, dismissalPolicy: .immediate)
-
-// Or remove at specific time
-let dismissTime = Date().addingTimeInterval(30 * 60) // 30 min
-await activity.end(nil, dismissalPolicy: .after(dismissTime))
-```
-
-**Best practices**:
-- `.immediate` — Transient events (timer completed, song finished)
-- `.default` — Most activities (shows "completed" state for ~4 hours)
-- `.after(date)` — Specific end time (meeting ends, flight lands)
-
----
-
-## Pattern 6: Exceeding 4KB Data Limit (Live Activities)
-
-**Time cost**: Activity fails to start silently, hard to debug
-
-### Symptom
-- `Activity.request()` throws error
-- Console: "Activity attributes exceed size limit"
-- Activity never appears on Lock Screen
-
-### ❌ BAD Code
-
-```swift
-struct GameAttributes: ActivityAttributes {
-    struct ContentState: Codable, Hashable {
-        var teamALogo: Data // ❌ Large image data
-        var teamBLogo: Data
-        var playByPlay: [String] // ❌ Unbounded array
-        var statistics: [String: Any] // ❌ Large dictionary
-    }
-
-    var gameID: String
-    var venueName: String
-}
-
-// Fails if total size > 4KB
-let activity = try Activity.request(attributes: attrs, content: content)
-```
-
-**Why it fails**: ActivityAttributes + ContentState combined must be < 4KB.
-
-### ✅ GOOD Code
-
-```swift
-struct GameAttributes: ActivityAttributes {
-    struct ContentState: Codable, Hashable {
-        var teamAScore: Int // ✅ Small primitives
-        var teamBScore: Int
-        var quarter: Int
-        var timeRemaining: String // "2:34"
-        var lastPlay: String? // Single most recent play
-    }
-
-    var gameID: String // ✅ Reference, not full data
-    var teamAName: String
-    var teamBName: String
-}
-
-// Use asset catalog for images in view
-struct GameLiveActivityView: View {
-    var context: ActivityViewContext<GameAttributes>
-
-    var body: some View {
-        HStack {
-            Image(context.attributes.teamAName) // Asset catalog
-            Text("\(context.state.teamAScore)")
-            // ...
-        }
-    }
-}
-```
-
-**Strategies**:
-- Store IDs/references, not full objects
-- Use asset catalogs for images (not embedded Data)
-- Keep ContentState minimal (only changeable data)
-- Use computed properties in views for derived data
-
-### Size Targets (Safety Margins)
-
-**Hard limit**: 4096 bytes (4KB)
-
-**Target guidance**:
-- ✅ **< 2KB**: Safe with room to grow - recommended for v1.0
-- ⚠️ **2-3KB**: Acceptable but monitor closely as you add features
-- 🔴 **3.5KB+**: Risky - future fields may push you over limit
-
-**Why safety margins matter**: You'll add fields later (new features, more data). Starting at 3.8KB leaves zero room for growth.
-
-**Checking size**:
-```swift
-let attributes = GameAttributes(gameID: "123", teamAName: "Hawks", teamBName: "Eagles")
-let state = GameAttributes.ContentState(teamAScore: 14, teamBScore: 10, quarter: 2, timeRemaining: "5:23", lastPlay: nil)
-
-let encoder = JSONEncoder()
-if let attributesData = try? encoder.encode(attributes),
-   let stateData = try? encoder.encode(state) {
-    let totalSize = attributesData.count + stateData.count
-    print("Total size: \(totalSize) bytes")
-
-    if totalSize < 2048 {
-        print("✅ Safe with room to grow")
-    } else if totalSize < 3072 {
-        print("⚠️ Acceptable but monitor")
-    } else if totalSize < 3584 {
-        print("🔴 Risky - optimize now")
-    } else {
-        print("❌ CRITICAL - will likely fail")
-    }
-}
-```
-
-**Optimization priorities** (when over 2KB):
-1. Replace `String` descriptions with enums (if fixed set)
-2. Shorten string values ("Team A" → "A")
-3. Use smaller types (Int → Int8 if range allows)
-4. Remove optional fields that are rarely used
-
----
-
-## Pattern 7: Widget Not Appearing in Gallery
+## Pattern 5: Widget Not Appearing in Gallery
 
 **Time cost**: 30 minutes debugging invisible widget
 
@@ -558,22 +399,13 @@ Widget/Extension Issue?
 │  └─ Calls WidgetCenter.reloadTimelines()?
 │     └─ Reload to reflect changes
 │
-├─ Live Activity fails to start?
-│  ├─ Data size > 4KB?
-│  │  └─ Reduce ActivityAttributes + ContentState
-│  ├─ Authorization enabled?
-│  │  └─ Check ActivityAuthorizationInfo().areActivitiesEnabled
-│  └─ pushType correct?
-│     └─ nil for local updates, .token for push
+├─ Live Activity issue (start/update/dismiss, Dynamic Island, push, watch)?
+│  └─ See skills/live-activities.md
 │
-├─ Control Center control unresponsive?
-│  ├─ Async operation blocking UI?
-│  │  └─ Use ControlValueProvider with async currentValue()
-│  └─ Provide previewValue for instant fallback
-│
-└─ watchOS Live Activity not showing?
-   ├─ supplementalActivityFamilies includes .small?
-   └─ Apple Watch paired and in range?
+└─ Control Center control unresponsive?
+   ├─ Async operation blocking UI?
+   │  └─ Use ControlValueProvider with async currentValue()
+   └─ Provide previewValue for instant fallback
 ```
 
 ---
@@ -617,26 +449,7 @@ Before debugging any widget or extension issue, complete this checklist:
   // Must print valid path, not "NIL"
   ```
 
-## Live Activity Debugging Checklist
-
-- ☐ **ActivityAttributes < 4KB**
-  ```swift
-  let encoded = try JSONEncoder().encode(attributes)
-  print("Size: \(encoded.count) bytes") // Must be < 4096
-  ```
-
-- ☐ **Authorization check**
-  ```swift
-  let authInfo = ActivityAuthorizationInfo()
-  print("Enabled: \(authInfo.areActivitiesEnabled)")
-  ```
-
-- ☐ **pushType matches server integration**
-  - `nil` → local updates only
-  - `.token` → expects push notifications
-
-- ☐ **Dismissal policy implemented**
-  - Every activity.end() must specify policy
+> For Live Activity debugging (4KB check, authorization, pushType, dismissal), see `skills/live-activities.md`.
 
 ## Control Center Widget Checklist
 
@@ -760,161 +573,7 @@ Workaround for users: Force-quit app and relaunch (triggers widget refresh)
 
 ---
 
-## Scenario 2: "Live Activity must update instantly"
-
-### Situation
-- Sports score app
-- Users expect scores to update within seconds of real game events
-- Current timeline-based approach too slow
-
-### Pressure
-- **Competitive**: "Other apps update faster"
-- **Deadline**: Marketing promised "real-time" updates
-
-### Rationalization Traps (DO NOT)
-
-1. *"Just create entries every 5 seconds"*
-   - **Why it fails**: Not real-time, exhausts battery, doesn't scale
-
-2. *"Add WebSocket to widget view"*
-   - **Why it fails**: Extensions can't maintain persistent connections
-
-3. *"Lower refresh interval to 1 second"*
-   - **Why it fails**: Timeline system not designed for sub-minute updates
-
-### MANDATORY Solution: Phased Approach
-
-**Critical reality check**: Push notification entitlement approval takes **3-7 days**. Never promise features before approval.
-
-#### Phase 1: Ship with Local Updates (No Approval Required)
-
-**Ship immediately** with app-driven updates:
-
-```swift
-// Start activity WITHOUT push (no entitlement needed)
-let activity = try Activity.request(
-    attributes: attributes,
-    content: initialContent,
-    pushType: nil  // Local updates only
-)
-
-// In your app when data changes (user opens app, pulls to refresh)
-await activity.update(ActivityContent(
-    state: updatedState,
-    staleDate: nil
-))
-```
-
-**Set expectations**: Updates occur when user interacts with app. This is **acceptable** for v1.0 and requires zero approval.
-
-#### Phase 2: Add Push After Approval (3-7 Days)
-
-**After entitlement approved**, switch to push:
-
-#### Step 1: Enable Push for Live Activities
-
-```swift
-// 1. Entitlement: "com.apple.developer.activity-push-notification"
-
-// 2. Request activity with push token
-let activity = try Activity.request(
-    attributes: attributes,
-    content: initialContent,
-    pushType: .token
-)
-
-// 3. Monitor for token
-Task {
-    for await pushToken in activity.pushTokenUpdates {
-        let tokenString = pushToken.map { String(format: "%02x", $0) }.joined()
-        await sendTokenToServer(activityID: activity.id, token: tokenString)
-    }
-}
-```
-
-#### Step 2: Server-Side Push (Phase 2 Only)
-
-```json
-{
-  "aps": {
-    "timestamp": 1633046400,
-    "event": "update",
-    "content-state": {
-      "teamAScore": 14,
-      "teamBScore": 10,
-      "quarter": 2,
-      "timeRemaining": "5:23"
-    },
-    "alert": {
-      "title": "Touchdown!",
-      "body": "Team A scores"
-    }
-  }
-}
-```
-
-**Standard push limit**: ~10-12 per hour
-
-#### Step 3: Request Frequent Updates Entitlement (Phase 2, iOS 18.2+)
-
-For apps requiring more frequent pushes (sports, stocks):
-
-```xml
-<key>com.apple.developer.activity-push-notification-frequent-updates</key>
-<true/>
-```
-
-**Requires justification** in App Store Connect: "Live sports scores require immediate updates for user engagement"
-
-#### Verification
-
-```swift
-// Log push receipt in Live Activity widget
-#if DEBUG
-let logURL = FileManager.default.containerURL(
-    forSecurityApplicationGroupIdentifier: "group.com.myapp"
-)!.appendingPathComponent("push_log.txt")
-
-let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
-try! "\(timestamp): Received push\n".append(to: logURL)
-#endif
-```
-
-### Communication Template
-
-**To marketing/exec (Phase 1)**:
-```
-Launch Timeline:
-- Phase 1 (immediate): Live Activities with app-driven updates. Updates appear when users open app or pull to refresh.
-- Phase 2 (3-7 days): Push notification integration after Apple approval. Updates arrive within 1-3 seconds of server events.
-
-Recommendation: Launch Phase 1 to market, communicate Phase 2 as "coming soon" once approved.
-```
-
-**To marketing/exec (Phase 2)**:
-```
-"Real-time" positioning requires clarification:
-
-Technical: Live Activities update via push notifications with 1-3 second latency from server to device
-
-Constraints: Apple's push system has rate limits (~10/hour standard, higher with special entitlement)
-
-Competitive analysis: Competitors likely use same system with similar limitations
-
-Recommendation: Position as "near real-time" (accurate) vs "instant" (misleading)
-```
-
-### Reality Check
-- Push notifications are fastest mechanism available
-- 1-3 second latency is normal
-- Budget limits exist for battery optimization
-- Users prefer longer battery life over millisecond-faster scores
-
-> For comprehensive push notification setup (APNs auth, payload format, token management, service extensions), see skills/push-notifications.md and skills/push-notifications-ref.md. This skill covers the ActivityKit UI and state management side.
-
----
-
-## Scenario 3: "Control Center control is slow"
+## Scenario 2: "Control Center control is slow"
 
 ### Situation
 - Smart home control for lights
@@ -1002,15 +661,13 @@ struct LightControl: ControlWidget {
 
 # Final Checklist
 
-Before shipping widgets or Live Activities:
+Before shipping widgets:
 
 ## Pre-Release
 - ☐ App Groups entitlement in BOTH targets (app + extension)
 - ☐ Shared UserDefaults uses `suiteName` (not `.standard`)
 - ☐ Timeline entries ≥ 5 minutes apart (avoid budget exhaustion)
 - ☐ No network calls in widget views (only in TimelineProvider)
-- ☐ ActivityAttributes + ContentState < 4KB
-- ☐ Live Activities call `.end()` with appropriate dismissal policy
 - ☐ Control Center controls use ControlValueProvider for async data
 - ☐ Tested on actual device (not just simulator) — **Required because**:
   - Simulator doesn't enforce timeline budget limits
@@ -1032,7 +689,6 @@ Before shipping widgets or Live Activities:
 - Wrong group ID → App and widget can't communicate
 - Over-refreshing → Widget stops updating after hours
 - Network in view → Widget renders blank
-- No dismissal policy → Zombie Live Activities
 - Blocking main thread → Unresponsive controls
 
 ---
