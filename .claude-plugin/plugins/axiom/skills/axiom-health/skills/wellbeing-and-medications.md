@@ -128,10 +128,10 @@ Three types form the model:
 
 Identity of a medication, with clinical codings (e.g., RxNorm code `105929` is piroxicam):
 
-- `identifier: String` — unique identifier
+- `identifier: HKHealthConceptIdentifier` — unique identifier (a typed identifier, **not** a `String`)
 - `displayText: String` — user-facing name
-- `generalForm` — tablet, capsule, cream, injection, inhaler, etc.
-- `relatedCodings: [HKClinicalCoding]` — FHIR-style codings for interop
+- `generalForm: HKMedicationGeneralForm` — tablet, capsule, cream, injection, inhaler, etc.
+- `relatedCodings: Set<HKClinicalCoding>` — FHIR-style codings for interop (a `Set`, not an array)
 
 `HKClinicalCoding` has `system`, `version`, `code` properties. The supported coding systems aren't exhaustively documented; RxNorm is confirmed.
 
@@ -140,7 +140,7 @@ Identity of a medication, with clinical codings (e.g., RxNorm code `105929` is p
 A medication the user is tracking. Queried via `HKUserAnnotatedMedicationQueryDescriptor`:
 
 ```swift
-let descriptor = HKUserAnnotatedMedicationQueryDescriptor(predicate: nil, limit: 0)
+let descriptor = HKUserAnnotatedMedicationQueryDescriptor(predicate: nil, limit: nil) // limit is Int?; nil = no limit
 let meds: [HKUserAnnotatedMedication] = try await descriptor.result(for: store)
 
 for med in meds where !med.isArchived {
@@ -161,26 +161,32 @@ Users configure schedules in the Health app. The system handles notifications an
 A sample recording a single dose:
 
 ```swift
+// Dose-event filters are `HKQuery` class methods. The medication filter takes the
+// concept's `HKHealthConceptIdentifier` (concept.identifier), and the status filter
+// takes an `HKMedicationDoseEvent.LogStatus`.
 let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
     HKQuery.predicateForSamples(withStart: startOfDay, end: .now),
-    HKMedicationDoseEvent.predicateForMedication(concept),
-    HKMedicationDoseEvent.predicateForLogStatus(.taken)
+    HKQuery.predicateForMedicationDoseEvent(medicationConceptIdentifier: concept.identifier),
+    HKQuery.predicateForMedicationDoseEvent(status: .taken)
 ])
 
+// There is no typed `HKSamplePredicate.medicationDoseEvent` factory — use the generic
+// `.sample(type:predicate:)` with the dose-event sample type, then cast the results.
 let descriptor = HKSampleQueryDescriptor(
-    predicates: [HKSamplePredicate.medicationDoseEvent(predicate)],
+    predicates: [.sample(type: HKObjectType.medicationDoseEventType(), predicate: predicate)],
     sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)],
     limit: 1
 )
 let doses = try await descriptor.result(for: store)
+    .compactMap { $0 as? HKMedicationDoseEvent }
 ```
 
 Key properties:
-- `medicationConceptIdentifier: String`
-- `logStatus` — whether the user marked the dose taken, skipped, or snoozed
-- `scheduleType` — scheduled vs. "as needed"
-- `scheduledDate: Date?` and `scheduledDoseQuantity: HKQuantity?`
-- `doseQuantity: HKQuantity?` — actual amount taken
+- `medicationConceptIdentifier: HKHealthConceptIdentifier` (a typed identifier, **not** a `String`)
+- `logStatus: HKMedicationDoseEvent.LogStatus` — `.taken`, `.skipped`, `.snoozed`, `.notInteracted`, `.notLogged`, `.notificationNotSent`
+- `scheduleType: HKMedicationDoseEvent.ScheduleType` — scheduled vs. "as needed"
+- `scheduledDate: Date?` and `scheduledDoseQuantity: Double?`
+- `doseQuantity: Double?` — actual amount taken (a `Double` paired with `unit` below, **not** an `HKQuantity`)
 - `unit: HKUnit`
 
 ## Per-Object Authorization (Medications-Specific)
@@ -192,7 +198,7 @@ Consequences:
 - You cannot request medication access via the normal `requestAuthorization` sheet — it will not appear.
 - When a user adds a new medication in Health, Apple presents a per-app toggle inline. Your app is not notified; on next query, the new medication just appears.
 - You cannot know which medications the user has but denied access to. From your app's point of view, denied medications simply do not exist.
-- Use `HKUserAnnotatedMedicationType().requiresPerObjectAuthorization()` to branch if needed.
+- Use `HKObjectType.userAnnotatedMedicationType().requiresPerObjectAuthorization()` to branch if needed (`requiresPerObjectAuthorization` is an `HKObjectType` instance method; get the type via the `HKObjectType.userAnnotatedMedicationType()` factory, not a bare `HKUserAnnotatedMedicationType()` init).
 
 This is the same privacy-protective design as HealthKit reads broadly — denials are invisible — but scoped per medication instead of per type.
 
