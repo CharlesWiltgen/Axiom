@@ -16,8 +16,10 @@ license: MIT
 | App Shortcuts, phrases, Spotlight | See `skills/app-shortcuts-ref.md` |
 | App discoverability strategy | See `skills/app-discoverability.md` |
 | Core Spotlight indexing | See `skills/core-spotlight-ref.md` |
-| Widgets, Live Activities, Control Center | See `skills/extensions-widgets.md` |
-| Widget/Live Activity API reference | See `skills/extensions-widgets-ref.md` |
+| Widgets, Control Center controls | See `skills/extensions-widgets.md` |
+| Widget API reference | See `skills/extensions-widgets-ref.md` |
+| Live Activities, Dynamic Island, push-to-start, broadcast | See `skills/live-activities.md` |
+| Live Activities / ActivityKit API reference | See `skills/live-activities-ref.md` |
 | Apple Pay (physical goods, services, donations) | **Use `axiom-payments` instead** |
 | In-app purchases, subscriptions | See `skills/in-app-purchases.md` |
 | StoreKit 2 API reference | See `skills/storekit-ref.md` |
@@ -28,6 +30,11 @@ license: MIT
 | Localization, String Catalogs | See `skills/localization.md` |
 | Apple terminology matching, glossary, pseudolocalization, TMS | See `skills/localization-research-ref.md` |
 | Privacy manifests, permissions UX | See `skills/privacy-ux.md` |
+| Bluetooth/Wi-Fi accessory pairing (AccessorySetupKit, iOS 18+) | See `skills/accessorysetupkit.md` |
+| AccessorySetupKit API (descriptor fields, events, auth-settings flow) | See `skills/accessorysetupkit-ref.md` |
+| Weather data, forecasts, attribution (WeatherKit) | See `skills/weatherkit.md` |
+| VoIP calls, CallKit, VoIP push, caller ID/blocking | See `skills/callkit-livecommunicationkit.md` |
+| CallKit / LiveCommunicationKit / IdentityLookup API reference | See `skills/callkit-livecommunicationkit-ref.md` |
 | AlarmKit (iOS 26+) | See `skills/alarmkit-ref.md` |
 | Timer patterns, scheduling | See `skills/timer-patterns.md` |
 | Timer API reference | See `skills/timer-patterns-ref.md` |
@@ -51,12 +58,16 @@ digraph integration {
     what -> "skills/app-intents-ref.md" [label="Siri / App Intents"];
     what -> "skills/app-shortcuts-ref.md" [label="Shortcuts / phrases"];
     what -> "skills/app-discoverability.md" [label="discoverability\nstrategy"];
-    what -> "skills/extensions-widgets.md" [label="widgets / Live Activities\n/ Control Center"];
+    what -> "skills/extensions-widgets.md" [label="widgets /\nControl Center"];
+    what -> "skills/live-activities.md" [label="Live Activities /\nDynamic Island"];
     what -> "skills/in-app-purchases.md" [label="IAP / subscriptions"];
     what -> "skills/eventkit.md" [label="calendar / reminders"];
     what -> "skills/contacts.md" [label="contacts"];
     what -> "skills/localization.md" [label="localization"];
     what -> "skills/privacy-ux.md" [label="privacy / permissions"];
+    what -> "skills/accessorysetupkit.md" [label="accessory pairing\n(Bluetooth/Wi-Fi)"];
+    what -> "skills/weatherkit.md" [label="weather / forecasts"];
+    what -> "skills/callkit-livecommunicationkit.md" [label="VoIP calls /\ncaller ID"];
     what -> "skills/alarmkit-ref.md" [label="alarms (iOS 26+)"];
     what -> "skills/timer-patterns.md" [label="timers"];
     what -> "skills/background-processing.md" [label="background tasks"];
@@ -68,7 +79,8 @@ digraph integration {
 1. Siri / App Intents / entity queries? → `skills/app-intents-ref.md`
 2. App Shortcuts / phrases? → `skills/app-shortcuts-ref.md`
 3. App discoverability / Spotlight strategy? → `skills/app-discoverability.md`, `skills/core-spotlight-ref.md`
-4. Widgets / Live Activities / Control Center? → `skills/extensions-widgets.md`, `skills/extensions-widgets-ref.md`
+4. Widgets / Control Center controls? → `skills/extensions-widgets.md`, `skills/extensions-widgets-ref.md`
+4a. Live Activities / Dynamic Island / push-to-start / broadcast? → `skills/live-activities.md`, `skills/live-activities-ref.md`
 5. In-app purchases / StoreKit? → `skills/in-app-purchases.md`, `skills/storekit-ref.md`
 6. Calendar / reminders / EventKit? → `skills/eventkit.md`, `skills/eventkit-ref.md`
 7. Contacts / contact picker? → `skills/contacts.md`, `skills/contacts-ref.md`
@@ -76,6 +88,9 @@ digraph integration {
 8a. Localization research (Apple terminology, glossary, pseudolocalization, TMS)? → `skills/localization-research-ref.md`
 9. Privacy / permissions? → `skills/privacy-ux.md`
 10. Alarms (iOS 26+)? → `skills/alarmkit-ref.md`
+10a. Bluetooth/Wi-Fi accessory pairing (iOS 18+)? → `skills/accessorysetupkit.md`
+10b. Weather data / forecasts / attribution (WeatherKit)? → `skills/weatherkit.md`
+10c. VoIP calls / CallKit / VoIP push / caller ID / blocking? → `skills/callkit-livecommunicationkit.md`
 11. Timers? → `skills/timer-patterns.md`, `skills/timer-patterns-ref.md`
 12. Background tasks / BGTaskScheduler? → `skills/background-processing.md`, `skills/background-processing-diag.md`, `skills/background-processing-ref.md`
 12a. Large asset delivery (game packs, ML models, Foundation Models adapters)? → `skills/background-assets.md`, `skills/background-assets-ref.md`
@@ -91,9 +106,14 @@ digraph integration {
 - SwiftData/Core Data not shared with extension → **also invoke axiom-data** (App Groups)
 
 **Live Activity + push notification**:
-- ActivityKit push token setup → **stay here** (extensions-widgets)
+- ActivityKit push token / broadcast setup → **stay here** (live-activities)
 - Push delivery failures → **also invoke axiom-networking** (networking-diag)
 - Entitlements/certificates → **also invoke axiom-build**
+
+**VoIP push + CallKit** (VoIP app killed / pushes stopped arriving):
+- VoIP push must report a call to CallKit → **stay here** (callkit-livecommunicationkit, Part 1)
+- PushKit token vs APNs delivery → **stay here** (push-notifications for the APNs contrast)
+- Call audio silent/misrouted → **also invoke axiom-media** (AVAudioSession category)
 
 **Push + background processing** (silent push not triggering background work):
 - Push payload and delivery → **stay here** (push-notifications-diag)
@@ -133,6 +153,9 @@ digraph integration {
 | "I'll just bundle the assets, it's simpler" | Bundling ≥10 MB inflates first-install size and pays the cost every update. Background Assets ships with App Store install-progress integration; FM adapters can't be bundled at all. See `skills/background-assets.md`. |
 | "I'll use URLSession for the asset download" | URLSession doesn't integrate with App Store install progress, charging-aware scheduling, or per-app quota — and can't reach Apple-hosted asset packs at all. Background Assets is the supported channel. |
 | "Just request full Calendar access" | Most apps only need to add events — EventKitUI does that with zero permissions. |
+| "I'll request Bluetooth permission and scan for the accessory" | AccessorySetupKit (iOS 18+) pairs in one tap with no broad Bluetooth prompt and grants scoped BT+Wi-Fi access. See `skills/accessorysetupkit.md`. |
+| "I'll process the VoIP push, then report the call when ready" | iOS terminates your app and stops delivering VoIP pushes if a push doesn't report a call *before* completion. Report first, fetch after. See `skills/callkit-livecommunicationkit.md`. |
+| "I'll activate the audio session when the call connects" | CallKit owns the audio session — activate only in `provider(_:didActivate:)` or audio is silent/misrouted. See `skills/callkit-livecommunicationkit.md`. |
 | "I'll use CNContactStore directly for picking" | CNContactPickerViewController needs no authorization and shows all contacts. |
 
 ## Example Invocations
@@ -142,6 +165,9 @@ User: "How do I add Siri support?"
 
 User: "My widget isn't updating"
 → Read: `skills/extensions-widgets.md`
+
+User: "My Live Activity won't update" / "How do I add a Dynamic Island?" / "Broadcast scores to thousands of Live Activities"
+→ Read: `skills/live-activities.md`
 
 User: "Implement in-app purchases with StoreKit 2"
 → Read: `skills/in-app-purchases.md`
@@ -160,6 +186,15 @@ User: "How do I add an event to the user's calendar?"
 
 User: "How do I let users pick a contact?"
 → Read: `skills/contacts.md`
+
+User: "How do I pair a Bluetooth accessory without the permission prompt?"
+→ Read: `skills/accessorysetupkit.md`
+
+User: "How do I show the weather forecast with WeatherKit?" / "Why was my weather app rejected?"
+→ Read: `skills/weatherkit.md`
+
+User: "My VoIP app gets killed" / "How do I handle CallKit incoming calls?" / "How do I block spam callers?"
+→ Read: `skills/callkit-livecommunicationkit.md`
 
 User: "Review my in-app purchase implementation"
 → Launch: `iap-auditor` agent

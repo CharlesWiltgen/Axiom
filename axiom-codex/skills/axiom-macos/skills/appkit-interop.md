@@ -169,7 +169,8 @@ struct ScriptEditorRepresentable: NSViewRepresentable {
 
 ### Key Rules
 
-- **Guard updates**: `updateNSView` is called frequently. Compare before setting properties to avoid unnecessary work.
+- **Guard updates**: `updateNSView` is called frequently. Compare before setting properties -- this is not just a perf nicety: blindly reassigning a text/value property (e.g. `textView.string = text`) on every update resets the insertion point and selection, so the caret jumps to the top while the user types.
+- **Wrapping `NSTextView`**: a bare `NSTextView` has no enclosing scroll view, so it won't scroll or resize correctly. Create it with the `NSTextView.scrollableTextView()` factory (returns the configured `NSScrollView`) and return *that* from `makeNSView`; reach the text view via `scrollView.documentView as? NSTextView`.
 - **Coordinator is the bridge**: It conforms to AppKit delegates and writes back to SwiftUI bindings.
 - **Refresh the coordinator**: Always update `context.coordinator.parent = self` (or equivalent) in `updateNSView` so bindings stay current.
 - **Environment propagation**: Read `context.environment` values (like `isEnabled`) in `updateNSView` and apply them to the AppKit view.
@@ -242,7 +243,7 @@ class ShortcutItemView: NSCollectionViewItem {
 
 ### Shared State Between AppKit and SwiftUI
 
-Use an `@Observable` model (or `ObservableObject` for pre-iOS 17) that both sides can access:
+Use an `@Observable` model that both sides can access:
 
 ```swift
 @Observable
@@ -281,9 +282,9 @@ struct EditorView: View {
     var body: some View {
         ScrollView { ... }
             .focusable()
-            .copyable { [selectedItem] }
-            .cuttable { cut(selectedItem) }
-            .pasteDestination(payloadType: String.self) { strings in
+            .copyable([selectedItem])              // @autoclosure -- pass the array, NOT a trailing closure
+            .cuttable { [selectedItem] }           // action returns items to cut; remove them from your model too
+            .pasteDestination(for: String.self) { strings in   // label is `for:`, not `payloadType:`
                 paste(strings)
             }
             .onMoveCommand { direction in moveSelection(direction) }
@@ -406,6 +407,7 @@ When SwiftUI content needs to accept drops from AppKit views using legacy pasteb
 | New NSHostingView per cell reuse | Scroll jank, high memory | Create once, update `rootView` |
 | Setting frame/bounds in updateNSView | Layout corruption | Use SwiftUI `.frame()` modifier |
 | Stale coordinator bindings | Writes to SwiftUI state ignored | Update coordinator reference in `updateNSView` |
+| Wrapping a bare `NSTextView` | No scrolling; caret jumps to top while typing | Build via `NSTextView.scrollableTextView()`; guard the `string` assignment |
 | Redundant property sets in updateNSView | Unnecessary AppKit view reloads | Compare before setting |
 | Using NSOpenPanel for basic file picks | Unnecessary complexity, sandbox issues | Use `.fileImporter` first |
 | Manual event forwarding | Duplicated or broken input | Let the responder chain work |

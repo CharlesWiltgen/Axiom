@@ -75,11 +75,12 @@ WKApplication.shared().scheduleBackgroundRefresh(
     if let error { /* handle */ }
 }
 
-// Handling — one handler, dispatch by userInfo.
-// On watchOS the payload arrives via the task context's userInfo, not via
-// the SwiftUI identifier form that iOS uses for BGTaskScheduler IDs.
-.backgroundTask(.appRefresh) { context in
-    let reason = (context.userInfo as? NSString) as String?
+// Handling — one handler, dispatch by the scheduled userInfo string.
+// On watchOS the bare `.appRefresh` is BackgroundTask<String?, Void>: the
+// closure receives the scheduled userInfo bridged to a String? DIRECTLY —
+// it is NOT a context object (there is no `context.userInfo`), and NOT the
+// SwiftUI identifier form `.appRefresh("id")` that iOS uses.
+.backgroundTask(.appRefresh) { reason in   // reason: String? == the scheduled userInfo
     switch reason {
     case "WEATHER_UPDATE":
         await fetchWeather()
@@ -96,7 +97,7 @@ WKApplication.shared().scheduleBackgroundRefresh(
 The system cancels tasks before killing the app on budget exhaustion. Wrap in `withTaskCancellationHandler`:
 
 ```swift
-.backgroundTask(.appRefresh) { context in
+.backgroundTask(.appRefresh) { _ in
     await withTaskCancellationHandler {
         // The main work
     } onCancel: {

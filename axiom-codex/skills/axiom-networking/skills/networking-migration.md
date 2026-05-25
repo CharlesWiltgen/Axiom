@@ -110,13 +110,13 @@ connection.start(queue: .main)
 - Async/await eliminates callback hell
 - TLV framing and Coder protocol built-in
 - No [weak self] needed (async/await handles cancellation)
-- State monitoring via async sequences
+- `send`/`receive` suspend until ready and throw on failure — most code never observes state at all (use `onStateUpdate` only when you need it)
 
 ### Migration mapping
 
 | NWConnection (iOS 12-18) | NetworkConnection (iOS 26+) | Notes |
 |-------------------------|----------------------------|-------|
-| `connection.stateUpdateHandler = { state in }` | `for await state in connection.states { }` | Async sequence |
+| `connection.stateUpdateHandler = { state in }` | `connection.onStateUpdate { conn, state in }` | Closure handler — NOT an async sequence |
 | `connection.send(content:completion:)` | `try await connection.send(content)` | Suspending function |
 | `connection.receive(minimumIncompleteLength:maximumLength:completion:)` | `try await connection.receive(exactly:)` | Suspending function |
 | Manual JSON encode/decode | `Coder(MyType.self, using: .json)` | Built-in Codable support |
@@ -178,25 +178,29 @@ let connection = NetworkConnection(
     TLS()
 }
 
-// Monitor states in background task
-Task {
-    for await state in connection.states {
-        switch state {
-        case .preparing:
-            print("Connecting...")
-        case .ready:
-            print("Ready")
-        case .waiting(let error):
-            print("Waiting: \(error)")
-        case .failed(let error):
-            print("Failed: \(error)")
-        default:
-            break
-        }
+// Optional: observe state with a closure. NetworkConnection has NO `states`
+// async sequence — use `onStateUpdate` (returns Self, @discardableResult). The
+// handler passes (connection, state); cases are setup/preparing/ready/
+// waiting(NWError)/failed(NWError)/cancelled.
+connection.onStateUpdate { connection, state in
+    switch state {
+    case .preparing:
+        print("Connecting...")
+    case .ready:
+        print("Ready")
+    case .waiting(let error):
+        print("Waiting: \(error)")
+    case .failed(let error):
+        print("Failed: \(error)")
+    default:
+        break
     }
 }
 
-// Send and receive with async/await
+// Send and receive with async/await. For a STREAM protocol (TLS), send/receive
+// auto-establish the connection and suspend until ready, throwing on failure —
+// there is NO `start()` to call (start() exists only for multiplex protocols
+// like QUIC). Most code can skip state observation entirely.
 func sendAndReceive() async throws {
     let data = Data("Hello".utf8)
     try await connection.send(data)
@@ -260,6 +264,7 @@ let connection = NetworkConnection(
 ) {
     TLS()
 }
+// No start() for stream protocols — send/receive auto-establish the connection.
 
 func sendAndReceive() async throws {
     try await connection.send(Data("Hello".utf8))

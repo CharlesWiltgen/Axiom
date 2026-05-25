@@ -106,10 +106,14 @@ Alerts trigger during a step to nudge the user back to target. Nine concrete ale
 | `SpeedRangeAlert`, `SpeedThresholdAlert` | Pace by speed (named "Speed" in the shipping API) |
 
 ```swift
+// HeartRateRangeAlert takes a Measurement<UnitFrequency> range — NOT an Int range
+// plus an HKUnit. Beats-per-minute is `WorkoutAlertMetric.countPerMinute`.
 let alert = HeartRateRangeAlert(
-    target: 140...160,
-    unit: .count().unitDivided(by: .minute())
+    target: Measurement(value: 140, unit: WorkoutAlertMetric.countPerMinute)
+        ... Measurement(value: 160, unit: WorkoutAlertMetric.countPerMinute)
 )
+// Or the factory (unit defaults to .countPerMinute):
+//   let alert = WorkoutAlert.heartRate(140...160)
 
 let step = WorkoutStep(
     goal: .distance(5, .kilometers),
@@ -117,6 +121,8 @@ let step = WorkoutStep(
     displayName: "Tempo"
 )
 ```
+
+Other metric alerts follow the same shape — a `Measurement<UnitFrequency>` range for the range types, or the `WorkoutAlert.cadence(_:unit:)` / `.speed(_:unit:)` / `.power(_:unit:)` factories (unit is Foundation `UnitFrequency` / `UnitSpeed` / `UnitPower`, **not** HKUnit).
 
 Check `WorkoutAlert.supports(activity:location:)` before attaching — not every alert works with every activity (e.g., power alerts are meaningless for swimming).
 
@@ -154,15 +160,19 @@ SwimBikeRunWorkout(
 ### Authorization
 
 ```swift
-let state = WorkoutScheduler.shared.authorizationState
+var state = WorkoutScheduler.shared.authorizationState
+if state == .notDetermined {
+    // requestAuthorization() is async and RETURNS the new state — it does NOT throw.
+    state = await WorkoutScheduler.shared.requestAuthorization()
+}
 switch state {
-case .notDetermined:
-    try await WorkoutScheduler.shared.requestAuthorization()
 case .authorized:
     // Proceed.
     break
 case .denied, .restricted:
     // Degrade — tell the user how to enable in Settings.
+    break
+default:
     break
 }
 ```
@@ -175,17 +185,23 @@ Authorization is separate from HealthKit authorization. A user can grant HealthK
 guard WorkoutScheduler.shared.isSupported else { return }
 
 let plan = WorkoutPlan(.custom(workout))
-let scheduledDate = Date.now.addingTimeInterval(3600) // 1 hour from now
 
-try await WorkoutScheduler.shared.schedule(plan, at: scheduledDate)
+// schedule(_:at:) takes DateComponents (NOT a Date) — the watch resolves it in
+// the user's calendar/time zone. Include hour/minute so it lands at a real time.
+let when = Calendar.current.dateComponents(
+    [.year, .month, .day, .hour, .minute],
+    from: .now.addingTimeInterval(3600) // ~1 hour from now
+)
+
+try await WorkoutScheduler.shared.schedule(plan, at: when)
 ```
 
 ### Schedule rules
 
 - **Max 15 scheduled workouts at a time** (WWDC 2023-10016).
 - Schedules must be within ±7 days of now.
-- Listing: `await WorkoutScheduler.shared.scheduledWorkouts`.
-- Removing: `await WorkoutScheduler.shared.remove(plan, at: date)` or `removeAllWorkouts()`.
+- Listing: `await WorkoutScheduler.shared.scheduledWorkouts` (returns `[ScheduledWorkoutPlan]`).
+- Removing: `await WorkoutScheduler.shared.remove(plan, at: components)` (same `DateComponents` you scheduled with) or `removeAllWorkouts()`.
 - Marking a scheduled workout complete (e.g., user did it in another way): `markComplete(_:at:)`.
 
 ## Previewing / Opening in Workout App
@@ -241,7 +257,8 @@ The user's pool length is configured when they start the workout; the watch conv
 | Using the term "pace alert" in code | The shipping API uses Speed, not Pace. `SpeedRangeAlert`, `SpeedThresholdAlert`. |
 | Assuming WWDC 2023 sample code matches the shipping API | Early WWDC samples used `BlockStep`, `WarmupStep`, `CustomWorkoutComposition` — these are superseded. Use `IntervalStep`, `WorkoutStep`, `CustomWorkout`. |
 | Expecting WorkoutKit to collect sensor data into a builder | It doesn't. Only `HKLiveWorkoutBuilder` does live collection. The Workout app handles WorkoutKit plans. |
-| Forgetting WorkoutKit authorization is separate from HealthKit | Two separate permissions. Requesting HealthKit doesn't imply WorkoutKit. |
+| Forgetting WorkoutKit authorization is separate from HealthKit | Two separate permissions. Requesting HealthKit doesn't imply WorkoutKit. `requestAuthorization()` is `async` and *returns* `WorkoutScheduler.AuthorizationState` — it does not throw. |
+| Passing a `Date` to `schedule(_:at:)` / `remove(_:at:)` | Both take `DateComponents`, not `Date`. Build it with `Calendar.current.dateComponents([.year,.month,.day,.hour,.minute], from:)` so the watch resolves the local day/time. |
 
 ## Resources
 
