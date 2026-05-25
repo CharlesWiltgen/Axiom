@@ -30,6 +30,8 @@ The **uncompressed** App Clip binary (after app thinning, per variant) must not 
 
 The 100 MB tier is exclusive to **digital** invocations. The moment you support a **physical** invocation — App Clip Code, QR code, or NFC tag — you're capped at **15 MB** again. (App Store Connect's "Maximum build file sizes" reference is the authoritative source.)
 
+One exception, for **testing only**: the App Clip *demo link* that App Store Connect generates can exercise the 100 MB limit even from physical invocations (App Clip Codes, NFC, QR). That's a demo/preview affordance — your shipping physical invocations still cap at 15 MB, so don't let a 100 MB clip "working" via the demo link convince you it's production-ready.
+
 ## Critical Gotchas
 
 | Gotcha | Why it bites | Fix |

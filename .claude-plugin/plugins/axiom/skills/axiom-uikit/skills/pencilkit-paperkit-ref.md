@@ -222,24 +222,27 @@ canvas
 
 # Part 7: PaperKit data model (iOS 26+)
 
+`PaperMarkup` is a **struct** — `append` and the `insertNew…` methods are `mutating`, so hold it in a `var` (a `let` won't compile) and reassign the VC's `markup` after editing.
+
 ```swift
 import PaperKit
 
-let markup = PaperMarkup(bounds: view.bounds)
+var markup = PaperMarkup(bounds: view.bounds)        // var — mutating methods below
 let loaded = try PaperMarkup(dataRepresentation: data)
 
 markup.bounds
 markup.featureSet
 markup.indexableContent                      // text for Spotlight/search
-markup.append(contentsOf: otherMarkup)
-markup.append(contentsOf: pkDrawing)         // drops a PKDrawing straight in
+markup.append(contentsOf: otherMarkup)       // mutating
+markup.append(contentsOf: pkDrawing)         // mutating — drops a PKDrawing straight in
 
-markup.insertNewImage(image, frame: rect, rotation: 0)
+markup.insertNewImage(cgImage, frame: rect, rotation: 0)   // takes a CGImage (uiImage.cgImage), not UIImage
 markup.insertNewShape(configuration: shapeConfig, frame: rect, rotation: 0)
 markup.insertNewTextbox(attributedText: text, frame: rect, rotation: 0)
+markup.removeContentUnsupported(by: .version1)  // forwards-compat: strip content newer than a FeatureSet
 
 let data = try await markup.dataRepresentation()                       // async throws
-await markup.draw(in: cgContext, frame: rect, options: .init())        // render thumbnail
+await markup.draw(in: cgContext, frame: rect, options: .init())        // render thumbnail (async)
 ```
 
 ---

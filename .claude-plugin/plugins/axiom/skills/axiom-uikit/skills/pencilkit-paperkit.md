@@ -205,7 +205,7 @@ Call the item's `reloadImage()` when a custom attribute changes so the picker th
 
 PaperKit is built from three pieces:
 
-- **`PaperMarkup`** — the data model container. Saves/loads markup *and* the PencilKit drawing; renders thumbnails via its `draw` function.
+- **`PaperMarkup`** — the data model container (a **struct** — its `insertNew…`/`append` methods are `mutating`, so hold it in a `var`). Saves/loads markup *and* the PencilKit drawing; renders thumbnails via its `draw` function.
 - **`PaperMarkupViewController`** — the interactive canvas. Observes a `PKToolPicker`; conforms to `Observable` (or use its delegate).
 - **The insertion menu** — `MarkupEditViewController` on iOS/iPadOS/visionOS, or a `MarkupToolbarViewController` on macOS.
 
@@ -222,7 +222,7 @@ if #available(iOS 26, *) {
 }
 ```
 
-**Forwards compatibility is mandatory.** A drawing saved by a newer OS may not load on an older one. On load, verify the content version; on mismatch, show a pre-rendered thumbnail (render it at save time with the model's `draw` into a `CGContext`) rather than failing. This is what Notes does.
+**Forwards compatibility is mandatory.** A drawing saved by a newer OS may not load on an older one. On load, verify the content version; on mismatch, show a pre-rendered thumbnail (render it at save time with the model's `draw` into a `CGContext`) rather than failing. This is what Notes does. To proactively drop content an older `FeatureSet` can't render, call `markup.removeContentUnsupported(by: .version1)` before saving or displaying.
 
 **FeatureSet** controls which tools/elements are available. Start from `FeatureSet.latest`, then `remove`/`insert` to customize, and assign the same set to **both** the markup controller and the insertion controller. Enable HDR inks by setting `colorMaximumLinearExposure` > 1 on the feature set *and* the tool picker (use `1` for SDR). Set `contentView` to any `UIView` to render markup over a background template.
 
