@@ -252,23 +252,23 @@ public func sendAndReceiveWithTLS() async throws {
     print("Received data: \(incomingData)")
 }
 
-// Optional: Monitor connection state for UI updates
-Task {
-    for await state in connection.states {
-        switch state {
-        case .preparing:
-            print("Establishing connection...")
-        case .ready:
-            print("Connected!")
-        case .waiting(let error):
-            print("Waiting for network: \(error)")
-        case .failed(let error):
-            print("Connection failed: \(error)")
-        case .cancelled:
-            print("Connection cancelled")
-        @unknown default:
-            break
-        }
+// Optional: observe connection state for UI updates.
+// NetworkConnection has NO `states` async sequence — use onStateUpdate
+// (@discardableResult; the handler passes (connection, state)).
+connection.onStateUpdate { connection, state in
+    switch state {
+    case .preparing:
+        print("Establishing connection...")
+    case .ready:
+        print("Connected!")
+    case .waiting(let error):
+        print("Waiting for network: \(error)")
+    case .failed(let error):
+        print("Connection failed: \(error)")
+    case .cancelled:
+        print("Connection cancelled")
+    @unknown default:
+        break
     }
 }
 ```
@@ -302,7 +302,7 @@ let connection = NetworkConnection(
 
 #### Debugging
 - Enable logging: `-NWLoggingEnabled 1 -NWConnectionLoggingEnabled 1`
-- Check connection.states async sequence for state transitions
+- Observe state transitions via `connection.onStateUpdate { conn, state in }` (NetworkConnection has no `states` async sequence)
 - Test on real device with Airplane Mode toggle
 
 ---
@@ -886,7 +886,7 @@ Before shipping networking code, verify:
 ### Network Transitions
 - [ ] Supporting network changes (WiFi → cellular, or vice versa)
 - [ ] Using viabilityUpdateHandler or betterPathUpdateHandler (NWConnection)
-- [ ] Or monitoring connection.states async sequence (NetworkConnection)
+- [ ] Or observing state via `connection.onStateUpdate { }` (NetworkConnection)
 - [ ] NOT tearing down connection immediately on viability change
 
 ### Testing on Real Devices

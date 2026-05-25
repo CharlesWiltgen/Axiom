@@ -111,11 +111,11 @@ Based on answers, recommend 3-5 skills using this matrix:
 ### If "Code review / quality check"
 
 **Start with audit commands** (quick wins):
-1. `/axiom:audit-accessibility` — WCAG compliance
-2. `/axiom:audit-concurrency` — Swift 6 violations
-3. `/axiom:audit-memory` — Leak patterns
-4. `/axiom:audit-core-data` — Migration safety
-5. `/axiom:audit-networking` — Deprecated APIs
+1. `/axiom:audit accessibility` — WCAG compliance
+2. `/axiom:audit concurrency` — Swift 6 violations
+3. `/axiom:audit memory` — Leak patterns
+4. `/axiom:audit core-data` — Migration safety
+5. `/axiom:audit networking` — Deprecated APIs
 
 **Then suggest**:
 - Review skills based on what audits find
@@ -141,14 +141,14 @@ Based on your answers, here are the skills most relevant to you right now:
 
 ### Quick Wins
 Run these audit commands to find issues automatically:
-- `/axiom:audit-[name]` — [What it finds]
+- `/axiom:audit [name]` — [What it finds]
 
 ## What's Next
 
 1. **Try the example prompts above** — Copy/paste to see how skills work
 2. **Run an audit command** — Get immediate actionable insights
 3. **Describe your problem** — I'll suggest the right skill
-4. **Browse the complete index below** — Explore all 34 skills
+4. **Browse the complete index below** — Explore the full skill catalog
 
 ---
 
@@ -229,12 +229,12 @@ Include this reference section in every response for browsing:
 - **core-data-diag** — Schema migration crashes, thread-confinement, N+1 queries
 
 ### Audit Commands (Quick Scans)
-- `/axiom:audit-accessibility` — VoiceOver labels, Dynamic Type, contrast, touch targets
-- `/axiom:audit-concurrency` — Swift 6 violations, unsafe tasks, missing @MainActor
-- `/axiom:audit-memory` — Timer leaks, observer leaks, closure captures, delegate cycles
-- `/axiom:audit-core-data` — Migration risks, thread violations, N+1 queries
-- `/axiom:audit-networking` — Deprecated APIs (SCNetworkReachability, CFSocket), anti-patterns
-- `/axiom:audit-liquid-glass` — Glass adoption opportunities, toolbar improvements, blur migration
+- `/axiom:audit accessibility` — VoiceOver labels, Dynamic Type, contrast, touch targets
+- `/axiom:audit concurrency` — Swift 6 violations, unsafe tasks, missing @MainActor
+- `/axiom:audit memory` — Timer leaks, observer leaks, closure captures, delegate cycles
+- `/axiom:audit core-data` — Migration risks, thread violations, N+1 queries
+- `/axiom:audit networking` — Deprecated APIs (SCNetworkReachability, CFSocket), anti-patterns
+- `/axiom:audit liquid-glass` — Glass adoption opportunities, toolbar improvements, blur migration
 
 ## Skill Categories Explained
 
@@ -274,7 +274,7 @@ Include this reference section in every response for browsing:
 → Complete guide: axiom:liquid-glass-ref
 
 **"Code quality check"**
-→ Run: `/axiom:audit-accessibility`, `/axiom:audit-concurrency`, `/axiom:audit-memory`
+→ Run: `/axiom:audit accessibility`, `/axiom:audit concurrency`, `/axiom:audit memory`
 → Fix issues with relevant skills
 
 ## How Skills Work
@@ -290,8 +290,8 @@ Axiom skills load automatically — you don't need to memorize names or commands
 - See axiom-design (skills/liquid-glass.md)
 
 **Audit commands**: Run automated scans with slash commands:
-- `/axiom:audit-memory` — scans for memory leak patterns
-- `/axiom:audit-concurrency` — scans for Swift 6 violations
+- `/axiom:audit memory` — scans for memory leak patterns
+- `/axiom:audit concurrency` — scans for Swift 6 violations
 
 **Key insight**: You don't need to know skill names. Describe what you're working on and Axiom routes to the right skill automatically.
 

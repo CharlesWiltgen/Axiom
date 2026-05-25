@@ -274,6 +274,12 @@ Result: Clean markdown, instant access
 
 ## Troubleshooting
 
+### superpowers-chrome MCP not available
+
+**Symptom**: `mcp__plugin_superpowers-chrome_chrome__use_browser` isn't loaded in this session.
+
+**Solution**: Fall back to the `agent-browser` CLI (`/opt/homebrew/bin/agent-browser`) to fetch the page, then read its output. Don't give up on the content or kill the user's Chrome — launch a separate profile instead if a live browser is required.
+
 ### Chrome Session Directory Not Found
 
 **Symptom**: Can't locate `001-navigate.md` file
