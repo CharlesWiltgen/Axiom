@@ -4,7 +4,7 @@ Comprehensive 9-section submission checklist. For the discipline-focused pre-fli
 
 ## Build
 
-- [ ] Built with required SDK version (currently Xcode 16, iOS 18 SDK)
+- [ ] Built with the current required SDK (Apple mandates the latest major SDK within months of release — currently Xcode 26 / iOS 26 SDK)
 - [ ] Export compliance answered (`ITSAppUsesNonExemptEncryption`)
 - [ ] Encryption documentation uploaded (if custom encryption)
 - [ ] IPv6-only network compatible
