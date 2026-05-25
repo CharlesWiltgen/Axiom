@@ -62,6 +62,8 @@ struct OpenLandmarkIntent: OpenIntent { /* ... */ }
 struct OpenCollectionIntent: OpenIntent { /* ... */ }
 ```
 
+`SemanticContentDescriptor` lives in the **VisualIntelligence** framework — add `import VisualIntelligence`. It's the `Input` associated type of `IntentValueQuery` for visual-intelligence search.
+
 ### Onscreen Entities
 
 Associate app entities with visible content so users can ask Siri or ChatGPT about what's on screen:
@@ -575,9 +577,9 @@ Request user input with structured options:
 
 ```swift
 let options = [
-    IntentChoiceOption(title: "Option 1", subtitle: "Description 1"),
-    IntentChoiceOption(title: "Option 2", subtitle: "Description 2"),
-    IntentChoiceOption.cancel(title: "Not now")
+    IntentChoiceOption(title: "Option 1"),                      // style defaults to .default
+    IntentChoiceOption(title: "Option 2", style: .destructive),
+    IntentChoiceOption.cancel                                   // a static var, NOT a function
 ]
 
 let choice = try await requestChoice(
@@ -585,12 +587,14 @@ let choice = try await requestChoice(
     dialog: IntentDialog("Please select an option")
 )
 
-switch choice.id {
-case options[0].id: // Option 1 selected
-case options[1].id: // Option 2 selected
-default: // Cancelled
+// IntentChoiceOption is Equatable (not Identifiable) — compare by value, not `.id`.
+if choice == options[0] {        // Option 1 selected
+} else if choice == options[1] { // Option 2 selected
+} else {                         // Cancelled
 }
 ```
+
+`IntentChoiceOption` is `init(title:style:)` (style defaults to `.default`; other styles `.destructive`, `.cancel`). There is no `subtitle:` parameter, and `cancel` is a `static var`, not `cancel(title:)`.
 
 ---
 
@@ -622,10 +626,15 @@ func perform() async throws -> some IntentResult {
 }
 
 struct LandmarkSnippetIntent: SnippetIntent {
+    static var title: LocalizedStringResource = "Landmark"
+
     @Parameter var landmark: LandmarkEntity
 
-    var snippet: some View {
-        VStack {
+    // SnippetIntent requires `perform()` returning `some ShowsSnippetView` — there is
+    // NO `var snippet: some View` requirement (that form does not compile). Supply the
+    // SwiftUI view through `.result(view:)`.
+    func perform() async throws -> some IntentResult & ShowsSnippetView {
+        .result(view: VStack {
             Text(landmark.name).font(.headline)
             Text(landmark.description).font(.body)
 
@@ -634,7 +643,7 @@ struct LandmarkSnippetIntent: SnippetIntent {
                 Button("Search Tickets") { /* action */ }
             }
         }
-        .padding()
+        .padding())
     }
 }
 ```
