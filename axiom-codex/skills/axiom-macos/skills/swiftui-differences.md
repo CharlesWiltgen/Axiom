@@ -137,7 +137,7 @@ Key points:
 - Table handles header display and sort indicators automatically
 - You must sort the data yourself in `onChange(of: sortOrder)`
 
-### Column customization (macOS 14+, iOS 17+)
+### Column customization
 
 Persist column order and visibility across launches:
 
@@ -276,7 +276,7 @@ Inspector is the macOS-native way to show detail about the current selection. It
 | Brief contextual info | Popover |
 | Separate editing window | Window (openWindow) |
 
-### Basic Inspector (macOS 14+, iOS 17+)
+### Basic Inspector
 
 ```swift
 struct DocumentEditor: View {

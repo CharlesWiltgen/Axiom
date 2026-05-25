@@ -7,7 +7,6 @@ This skill provides comprehensive API reference for Apple's widget and extension
 
 - **Standard Widgets** (iOS 14+) — Home Screen, Lock Screen, StandBy widgets
 - **Interactive Widgets** (iOS 17+) — Buttons and toggles with App Intents
-- **Live Activities** (iOS 16.1+) — Real-time updates on Lock Screen and Dynamic Island
 - **Control Center Widgets** (iOS 18+) — System-wide quick controls
 - **Liquid Glass Widgets** (iOS 26+) — Accented rendering, glass effects, container backgrounds
 - **visionOS Widgets** (visionOS 2+) — Mounting styles, textures, proximity awareness
@@ -15,11 +14,12 @@ This skill provides comprehensive API reference for Apple's widget and extension
 
 Widgets are SwiftUI **archived snapshots** rendered on a timeline by the system. Extensions are sandboxed executables bundled with your app.
 
+> **Live Activities & Dynamic Island** have their own reference: `skills/live-activities-ref.md` (ActivityKit lifecycle, push/broadcast, Dynamic Island layout, watch/CarPlay/Mac surfaces). They render in a widget extension, so the App Groups and extension-setup details below still apply.
+
 ## When to Use This Skill
 
 ✅ **Use this skill when**:
 - Implementing any type of widget (Home Screen, Lock Screen, StandBy)
-- Creating Live Activities for ongoing events
 - Building Control Center controls
 - Sharing data between app and extensions
 - Understanding widget timelines and refresh policies
@@ -51,11 +51,7 @@ Widgets are SwiftUI **archived snapshots** rendered on a timeline by the system.
 - **Budget-Exempt** — Reloads that don't count (user-initiated, app foregrounding, system-initiated)
 - **Widget Family** — Size/shape (systemSmall, systemMedium, accessoryCircular, etc.)
 - **App Groups** — Entitlement for shared data container between app and extensions
-- **ActivityAttributes** — Static data (set once) + dynamic ContentState (updated during lifecycle)
-- **ContentState** — Changing part of ActivityAttributes; must be under 4KB total
-- **Dynamic Island** — iPhone 14 Pro+ Live Activity display; compact, minimal, and expanded sizes
 - **ControlWidget** — iOS 18+ widgets for Control Center, Lock Screen, and Action Button
-- **Supplemental Activity Families** — Enables Live Activities on Apple Watch or CarPlay
 
 ---
 
@@ -109,7 +105,7 @@ struct MyConfigurableWidget: Widget {
 
 ### ActivityConfiguration
 
-For Live Activities (covered in Live Activities section).
+For Live Activities — declared in the widget extension. See `skills/live-activities-ref.md`.
 
 ## Choosing the Right Configuration
 
@@ -407,243 +403,11 @@ struct Provider: AppIntentTimelineProvider {
 
 ---
 
-# Part 4: Live Activities (iOS 16.1+)
-
-## ActivityAttributes
-
-Defines static and dynamic data for a Live Activity.
-
-```swift
-import ActivityKit
-
-struct PizzaDeliveryAttributes: ActivityAttributes {
-    // Static data - set when activity starts, never changes
-    struct ContentState: Codable, Hashable {
-        // Dynamic data - updated throughout activity lifecycle
-        var status: DeliveryStatus
-        var estimatedDeliveryTime: Date
-        var driverName: String?
-    }
-
-    // Static attributes
-    var orderNumber: String
-    var pizzaType: String
-}
-```
-
-**Key constraint**: `ActivityAttributes` total data size must be under **4KB** to start successfully.
-
-## Starting Activities
-
-### Request Authorization
-
-```swift
-import ActivityKit
-
-let authorizationInfo = ActivityAuthorizationInfo()
-let areActivitiesEnabled = authorizationInfo.areActivitiesEnabled
-```
-
-### Start an Activity
-
-```swift
-let attributes = PizzaDeliveryAttributes(
-    orderNumber: "12345",
-    pizzaType: "Pepperoni"
-)
-
-let initialState = PizzaDeliveryAttributes.ContentState(
-    status: .preparing,
-    estimatedDeliveryTime: Date().addingTimeInterval(30 * 60)
-)
-
-let activity = try Activity.request(
-    attributes: attributes,
-    content: ActivityContent(state: initialState, staleDate: nil),
-    pushType: nil // or .token for push notifications
-)
-```
-
-## Error Handling
-
-### Common Activity Errors
-
-Always check `ActivityAuthorizationInfo().areActivitiesEnabled` before requesting. Handle these errors from `Activity.request()`:
-
-- **`ActivityAuthorizationError`** — User denied Live Activities permission
-- **`ActivityError.dataTooLarge`** — ActivityAttributes exceeds 4KB; reduce attribute size
-- **`ActivityError.tooManyActivities`** — System limit reached (typically 2-3 simultaneous)
-
-Store `activity.id` after successful request for later updates.
-
-## Updating Activities
-
-### Update with New Content
-
-```swift
-// Find active activity by stored ID
-guard let activity = Activity<PizzaDeliveryAttributes>.activities
-    .first(where: { $0.id == storedActivityID }) else { return }
-
-let updatedState = PizzaDeliveryAttributes.ContentState(
-    status: .onTheWay,
-    estimatedDeliveryTime: Date().addingTimeInterval(10 * 60),
-    driverName: "John"
-)
-
-await activity.update(
-    ActivityContent(
-        state: updatedState,
-        staleDate: Date().addingTimeInterval(60) // Mark stale after 1 min
-    )
-)
-```
-
-### Alert Configuration
-
-```swift
-await activity.update(updatedContent, alertConfiguration: AlertConfiguration(
-    title: "Pizza is here!",
-    body: "Your \(attributes.pizzaType) pizza has arrived",
-    sound: .default
-))
-```
-
-### Monitoring Activity Lifecycle
-
-Use `activity.activityStateUpdates` async sequence to observe state changes (`.active`, `.ended`, `.dismissed`, `.stale`). Clean up stored activity IDs on `.ended` or `.dismissed`. Cancel the monitoring task in `deinit`.
-
-## Ending Activities
-
-### Dismissal Policies
-
-```swift
-await activity.end(
-    ActivityContent(state: finalState, staleDate: nil),
-    dismissalPolicy: .default
-)
-```
-
-Dismissal policy options:
-- **`.immediate`** — Removes instantly
-- **`.default`** — Stays on Lock Screen for ~4 hours
-- **`.after(date)`** — Removes at specific time (e.g., `.after(Date().addingTimeInterval(3600))`)
-
-## Push Notifications for Live Activities
-
-### Request Push Token
-
-```swift
-let activity = try Activity.request(
-    attributes: attributes,
-    content: initialContent,
-    pushType: .token // Request push token
-)
-
-// Monitor for push token
-for await pushToken in activity.pushTokenUpdates {
-    let tokenString = pushToken.map { String(format: "%02x", $0) }.joined()
-    // Send to your server
-    await sendTokenToServer(tokenString, activityID: activity.id)
-}
-```
-
-### Frequent Push Updates (iOS 18.2+)
-
-Standard limit is ~10-12 pushes/hour. For live events (sports, stocks), add the `com.apple.developer.activity-push-notification-frequent-updates` entitlement for significantly higher limits.
+> **Live Activities & Dynamic Island moved.** The full ActivityKit reference — `ActivityAttributes`/`ContentState`, start/update/end, the `ActivityState` lifecycle, per-activity push, push-to-start, broadcast channels, frequent updates, Dynamic Island layout, and watch/CarPlay/Mac surfaces — now lives in `skills/live-activities-ref.md`.
 
 ---
 
-# Part 5: Dynamic Island (iOS 16.1+)
-
-## Presentation Types
-
-Live Activities appear in the Dynamic Island with three size classes:
-
-### Compact (Leading + Trailing)
-
-Shown when another Live Activity is expanded or when multiple activities are active.
-
-```swift
-DynamicIsland {
-    DynamicIslandExpandedRegion(.leading) {
-        Image(systemName: "timer")
-    }
-    DynamicIslandExpandedRegion(.trailing) {
-        Text("\(entry.timeRemaining)")
-    }
-    // ...
-} compactLeading: {
-    Image(systemName: "timer")
-} compactTrailing: {
-    Text("\(entry.timeRemaining)")
-        .frame(width: 40)
-}
-```
-
-### Minimal
-
-Shown when more than two Live Activities are active (circular avatar).
-
-```swift
-DynamicIsland {
-    // ...
-} minimal: {
-    Image(systemName: "timer")
-        .foregroundStyle(.tint)
-}
-```
-
-### Expanded
-
-Shown when user long-presses the compact view.
-
-```swift
-DynamicIsland {
-    DynamicIslandExpandedRegion(.leading) {
-        Image(systemName: "timer")
-            .font(.title)
-    }
-
-    DynamicIslandExpandedRegion(.trailing) {
-        VStack(alignment: .trailing) {
-            Text("\(entry.timeRemaining)")
-                .font(.title2.monospacedDigit())
-            Text("remaining")
-                .font(.caption)
-        }
-    }
-
-    DynamicIslandExpandedRegion(.center) {
-        // Optional center content
-    }
-
-    DynamicIslandExpandedRegion(.bottom) {
-        HStack {
-            Button(intent: PauseIntent()) {
-                Label("Pause", systemImage: "pause.fill")
-            }
-            Button(intent: StopIntent()) {
-                Label("Stop", systemImage: "stop.fill")
-            }
-        }
-    }
-}
-```
-
-## Design Principles (From WWDC 2023-10194)
-
-### Concentric Alignment
-
-Content should nest concentrically inside the Dynamic Island's rounded shape with even margins. Use `Circle()` or `RoundedRectangle(cornerRadius:)` — never sharp `Rectangle()` which pokes into corners.
-
-### Biological Motion
-
-Dynamic Island animations should feel organic and elastic. Use `.spring(response: 0.6, dampingFraction: 0.7)` or `.interpolatingSpring(stiffness: 300, damping: 25)` instead of linear animations.
-
----
-
-# Part 6: Control Center Widgets (iOS 18+)
+# Part 4: Control Center Widgets (iOS 18+)
 
 ## ControlWidget Protocol
 
@@ -746,7 +510,7 @@ Use `AppIntentControlConfiguration` with a `WidgetConfigurationIntent` (same pat
 
 ---
 
-# Part 7: iOS 18+ Updates
+# Part 5: iOS 18+ Updates
 
 ## Accented Rendering and Liquid Glass
 
@@ -911,14 +675,10 @@ Detect whether the widget background is visible (removed in accented mode):
 @Environment(\.showsWidgetContainerBackground) var showsBackground
 ```
 
-### CarPlay (iOS 18+)
-Add `.supplementalActivityFamilies([.medium])` to `ActivityConfiguration`. Uses StandBy-style full-width dashboard presentation.
-
-### macOS Menu Bar
-Live Activities from paired iPhone appear automatically in macOS Sequoia+ menu bar. No code changes required.
-
 ### watchOS Controls (11+)
 `ControlWidget` works identically on watchOS — available in Control Center, Action Button, and Smart Stack. Same `StaticControlConfiguration` / `ControlWidgetButton` pattern as iOS.
+
+> Live Activity surfaces (CarPlay, macOS menu bar, Apple Watch Smart Stack) are documented in `skills/live-activities-ref.md`.
 
 ## Relevance Widgets (iOS 18+)
 
@@ -930,7 +690,7 @@ Implement `PKPushRegistryDelegate` and handle `.widgetKit` push type to receive 
 
 ---
 
-# Part 8: App Groups & Data Sharing
+# Part 6: App Groups & Data Sharing
 
 ## App Groups Entitlement
 
@@ -986,27 +746,7 @@ container.persistentStoreDescriptions = [description]
 
 ---
 
-# Part 9: watchOS Integration
-
-## supplementalActivityFamilies (watchOS 11+)
-
-Add `.supplementalActivityFamilies([.small])` to `ActivityConfiguration` to show Live Activities on Apple Watch Smart Stack (same modifier used for CarPlay with `.medium`).
-
-## activityFamily Environment
-
-Use `@Environment(\.activityFamily)` to adapt layout — check for `.small` (watchOS) vs iPhone layout.
-
-## Always On Display
-
-Use `@Environment(\.isLuminanceReduced)` to simplify views for Always On Display — reduce detail, use white text, larger fonts. Combine with `@Environment(\.colorScheme)` for proper dark mode handling.
-
-## Update Budgeting (watchOS)
-
-watchOS updates sync automatically with iPhone via push notifications. Updates may be delayed if watch is out of Bluetooth range.
-
----
-
-# Part 10: Practical Workflows
+# Part 7: Practical Workflows
 
 ## Building Your First Widget
 
@@ -1047,14 +787,6 @@ For a complete step-by-step tutorial with working code examples, see Apple's [Bu
 - [ ] All supported families tested and look correct
 - [ ] Text readable on both light and dark backgrounds
 - [ ] Interactive elements (buttons/toggles) work correctly
-
-**Live Activities** (if applicable):
-- [ ] ActivityAttributes under 4KB
-- [ ] Authorization checked before starting
-- [ ] Activity ends when event completes
-- [ ] Proper dismissal policy set
-- [ ] watchOS support configured if relevant (supplementalActivityFamilies)
-- [ ] Dynamic Island layouts tested (compact, minimal, expanded)
 
 **Liquid Glass** (if applicable):
 - [ ] `widgetAccentable()` applied for visual hierarchy in accented mode
@@ -1105,7 +837,7 @@ Test `placeholder()`, `getSnapshot()`, and `getTimeline()` methods. Save test da
 
 ---
 
-# Part 11: Troubleshooting
+# Part 8: Troubleshooting
 
 **Widget not appearing in gallery**: Check `WidgetBundle` includes it, verify `supportedFamilies()`, check extension's "Skip Install" = NO, verify deployment target matches app.
 
@@ -1148,34 +880,6 @@ let shared = UserDefaults(suiteName: "group.com.mycompany.myapp")!
 let shared = UserDefaults.standard  // ❌ Different containers
 ```
 
-## Live Activity Won't Start
-
-**Symptoms**: `Activity.request()` throws error
-
-**Common Errors**:
-
-**"Activity size exceeds 4KB"**:
-```swift
-// ❌ BAD: Large images in attributes
-struct MyAttributes: ActivityAttributes {
-    var productImage: UIImage  // Too large!
-}
-
-// ✅ GOOD: Use asset catalog names
-struct MyAttributes: ActivityAttributes {
-    var productImageName: String  // Reference to asset
-}
-```
-
-**"Activities not enabled"**:
-```swift
-// Check authorization first
-let authInfo = ActivityAuthorizationInfo()
-guard authInfo.areActivitiesEnabled else {
-    throw ActivityError.notEnabled
-}
-```
-
 ## Interactive Widget Button Not Working
 
 **Symptoms**: Tapping button does nothing
@@ -1205,7 +909,6 @@ Button(action: { /* This won't work in widgets */ }) {
 
 **Timeline entries out of order**: Ensure entry dates are chronological. Use incrementing offsets from `Date()`.
 
-**watchOS Live Activity not showing**: Add `.supplementalActivityFamilies([.small])` to `ActivityConfiguration`, verify watchOS 11+, check Bluetooth/pairing.
 
 ## Performance Issues
 
@@ -1267,11 +970,11 @@ let entries = (0..<100).map { offset in
 
 ## Resources
 
-**WWDC**: 2025-278, 2024-10157, 2024-10068, 2024-10098, 2023-10028, 2023-10194, 2022-10184, 2022-10185
+**WWDC**: 2025-278, 2024-10157, 2024-10098, 2023-10028, 2022-10184, 2022-10185
 
-**Docs**: /widgetkit, /activitykit, /appintents
+**Docs**: /widgetkit, /appintents
 
-**Skills**: skills/app-intents-ref.md, axiom-concurrency, axiom-swiftui, skills/extensions-widgets.md
+**Skills**: skills/live-activities-ref.md (Live Activities & Dynamic Island), skills/app-intents-ref.md, axiom-concurrency, axiom-swiftui, skills/extensions-widgets.md
 
 ---
 

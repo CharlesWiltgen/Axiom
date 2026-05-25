@@ -24,7 +24,7 @@ Use when:
 | API | Purpose | Notes |
 |---|---|---|
 | `HKWorkoutSession` + `HKLiveWorkoutBuilder` | Live in-progress workout — collects data from sensors, persists an `HKWorkout` at the end | Covered here |
-| `HKWorkout.init(...)` + `HKHealthStore.save` | Logging a historical workout (e.g., from a server or manual entry) | Simple write path — see `queries.md` |
+| `HKWorkoutBuilder` (non-live) + `finishWorkout` | Logging a historical workout (e.g., from a server or manual entry) | The `HKWorkout.init(...)` convenience initializers are **deprecated (iOS 17 / watchOS 10)** — build retrospective workouts with a non-live `HKWorkoutBuilder` (`add(_:)` samples → `finishWorkout`), not the old initializer + `save`. See `queries.md` |
 | WorkoutKit | Planned or scheduled custom workouts that the Workout app executes | Covered in `workoutkit.md` |
 
 This skill covers the first path — live sessions with sensor collection.
@@ -342,6 +342,7 @@ For per-activity statistics, iterate `workout.workoutActivities` — each `HKWor
 | Full-screen animation during Always On | The 1 Hz refresh cap means your animation won't render smoothly anyway. Use a simplified view in the `.lowFrequency` timeline branch. |
 | Creating multiple concurrent sessions | `HKWorkoutSessionError.anotherWorkoutSessionStarted` fires and ends your session. Enforce one-at-a-time at your UI layer. |
 | Missing `workout-processing` background mode on watch | Session runs only while app is foreground. Add `WKBackgroundModes` → `workout-processing`. |
+| Hand-building an `HKWorkout(activityType:start:end:)` to "save" a live session | Those convenience initializers are deprecated (iOS 17 / watchOS 10) and produce an empty shell — no samples, route, or totals. Only the live builder's `endCollection` + `finishWorkout` persists collected data; for retrospective non-sensor logging use a non-live `HKWorkoutBuilder`. |
 | Writing retrospective workouts and also running live sessions for the same activity | You get duplicates. Choose one path per activity. |
 
 ## Resources

@@ -24,15 +24,20 @@ If you see ANY of these, suspect animation logic not device behavior:
 **ALWAYS run these FIRST** (before changing code):
 
 ```swift
-// 1. Check if completion is firing at all
-animation.completion = { [weak self] finished in
-    print("🔥 COMPLETION FIRED: finished=\(finished)")
-    guard let self = self else {
-        print("🔥 SELF WAS NIL")
-        return
-    }
-    // original code
+// 1. Check if completion is firing at all.
+// CAAnimation has NO `completion` property. Completion comes from either
+// CATransaction.setCompletionBlock { } (no `finished` flag) or the animation's
+// delegate via animationDidStop(_:finished:) (gives `finished`).
+CATransaction.begin()
+CATransaction.setCompletionBlock {
+    print("🔥 COMPLETION FIRED")   // runs when the transaction's animations end
 }
+layer.add(animation, forKey: "test")
+CATransaction.commit()
+
+// If you need the `finished` flag, use the delegate instead:
+// animation.delegate = self   // NOTE: CAAnimation RETAINS its delegate
+// func animationDidStop(_ anim: CAAnimation, finished: Bool) { ... }
 
 // 2. Check actual duration vs declared
 let startTime = Date()
@@ -96,8 +101,8 @@ CAAnimation problem?
 │  │  ├─ Check: CATransaction wrapping
 │  │  └─ Check: app goes to background during animation
 │  └─ On both simulator and device?
-│     ├─ Check: completion handler is set BEFORE adding animation
-│     └─ Check: [weak self] is actually captured (not nil before completion)
+│     ├─ Check: CATransaction.setCompletionBlock is set between begin() and commit()
+│     └─ Check: transaction commits; or for the delegate path, the delegate outlives the animation
 │
 ├─ Duration mismatch (declared != visual)?
 │  ├─ Is layer.speed != 1.0?
@@ -132,7 +137,7 @@ CAAnimation problem?
 
 1. **Always start with Pattern 1** (Completion Handler Basics)
    - If completion NEVER fires → Pattern 1
-   - Verify completion is set BEFORE add() with print statement (line 33)
+   - Verify you're using `CATransaction.setCompletionBlock` (between `begin()`/`commit()`) or `animation.delegate` — there is no `animation.completion`
    - Only proceed to Pattern 2 if completion FIRES but timing is wrong
 
 2. **Then Pattern 2** (CATransaction duration mismatch)
@@ -152,25 +157,35 @@ CAAnimation problem?
 
 ### Pattern 1: Completion Handler Basics
 
-#### ❌ WRONG (Handler set AFTER adding animation)
+#### ❌ WRONG (CAAnimation has no `completion` property)
 ```swift
-layer.add(animation, forKey: "myAnimation")
-animation.completion = { finished in  // ❌ Too late!
+animation.completion = { finished in  // ❌ Does not compile — no such member
     print("Done")
 }
-```
-
-#### ✅ CORRECT (Handler set BEFORE adding)
-```swift
-animation.completion = { [weak self] finished in
-    print("🔥 Animation finished: \(finished)")
-    guard let self = self else { return }
-    self.doNextStep()
-}
 layer.add(animation, forKey: "myAnimation")
 ```
 
-**Why** Completion handler must be set before animation is added to layer. Setting after does nothing.
+#### ✅ CORRECT — option A: CATransaction completion block
+```swift
+CATransaction.begin()
+CATransaction.setCompletionBlock { [weak self] in   // no `finished` flag here
+    self?.doNextStep()
+}
+layer.add(animation, forKey: "myAnimation")
+CATransaction.commit()
+```
+
+#### ✅ CORRECT — option B: animation delegate (gives `finished`)
+```swift
+animation.delegate = self          // CAAnimation RETAINS its delegate
+layer.add(animation, forKey: "myAnimation")
+
+func animationDidStop(_ anim: CAAnimation, finished: Bool) {
+    doNextStep()
+}
+```
+
+**Why** There is no `CAAnimation.completion`. Use `CATransaction.setCompletionBlock` (set after `begin()`, before `commit()` — it fires when every animation in the transaction ends) or set `animation.delegate` and implement `animationDidStop(_:finished:)` (the only path that gives you the `finished` flag).
 
 ---
 
@@ -222,35 +237,36 @@ layer.add(anim, forKey: nil)
 
 ---
 
-### Pattern 4: Weak Self in Completion (MANDATORY)
+### Pattern 4: Memory Safety in Completion Blocks and Delegates
 
-#### ❌ FORBIDDEN (Strong self creates retain cycle)
+#### ❌ Strong self in a CATransaction completion block
 ```swift
-anim.completion = { finished in
-    self.property = "value"  // ❌ GUARANTEED retain cycle
+CATransaction.setCompletionBlock {
+    self.property = "value"  // ❌ retains self until the animation ends
 }
 ```
 
-#### ✅ MANDATORY (Always use weak self)
+#### ✅ Weak self in the completion block
 ```swift
-anim.completion = { [weak self] finished in
-    guard let self = self else { return }
-    self.property = "value"  // Safe to access
+CATransaction.setCompletionBlock { [weak self] in
+    guard let self else { return }
+    self.property = "value"
 }
 ```
 
-#### Why this is MANDATORY, not optional
-- CAAnimation keeps completion handler alive until animation completes
-- Completion handler captures self strongly (unless explicitly weak)
-- Creates retain cycle: self → animation → completion → self
-- Memory leak occurs even if animation is short-lived (0.3s doesn't prevent it)
+#### The delegate path has a DIFFERENT trap — CAAnimation retains its delegate
+```swift
+animation.delegate = self   // ❌ if self → view → layer → animation, that's a cycle
+```
+You can't make a delegate `weak` the way you weaken a closure capture. Options:
+- Accept it: the animation releases its delegate when it finishes/is removed, so a short, self-removing animation breaks the cycle on its own.
+- Use a small dedicated delegate object that holds a `weak` back-reference, not `self`.
 
-#### FORBIDDEN rationalizations
-- ❌ "Animation is short, so no retain cycle risk"
-- ❌ "I'll remove the animation manually, so it's fine"
-- ❌ "This code path only runs once"
+#### Why this matters
+- A `setCompletionBlock` closure is retained by the transaction until its animations end — `[weak self]` keeps a deallocating object from being kept alive (and from running stale work).
+- The delegate is retained by the animation itself; the cycle lasts only as long as the animation is attached to the layer.
 
-#### ALWAYS use [weak self] in completion handlers. No exceptions.
+#### Default: `[weak self]` in completion blocks; for delegates, ensure the animation is removed on completion (the default `isRemovedOnCompletion = true`).
 
 ---
 
@@ -365,7 +381,7 @@ layer.add(springAnim, forKey: nil)
 
 | Issue | Check | Fix |
 |-------|-------|-----|
-| Completion never fires | Set handler BEFORE `add()` | Move `completion =` before `add()` |
+| Completion never fires | Using a real completion mechanism? | `CATransaction.setCompletionBlock` (between begin/commit) or `animation.delegate` — there is no `animation.completion` |
 | Duration mismatch | Is CATransaction wrapping? | Remove CATransaction or remove animation from it |
 | Jank on older devices | Is value hardcoded? | Use `ProcessInfo` for device class |
 | Animation disappears | `isRemovedOnCompletion`? | Set to `false`, use `fillMode = .forwards` |
@@ -406,9 +422,9 @@ If you've spent >30 minutes and the animation is still broken:
 
 ## Common Mistakes
 
-❌ **Setting completion handler AFTER adding animation**
-- Completion is not set in time
-- Fix: Set completion BEFORE `layer.add()`
+❌ **Reaching for a nonexistent `animation.completion` property**
+- `CAAnimation` has no `completion` — `anim.completion = {}` doesn't compile
+- Fix: `CATransaction.setCompletionBlock { }` (between `begin()`/`commit()`) or `animation.delegate` + `animationDidStop(_:finished:)`
 
 ❌ **Assuming simulator timing = device timing**
 - Simulator runs 60Hz, devices run 60Hz-120Hz
@@ -422,9 +438,9 @@ If you've spent >30 minutes and the animation is still broken:
 - Overrides all animation durations in that transaction
 - Fix: Set duration on animation, not transaction
 
-❌ **FORBIDDEN: Using strong self in completion handler**
-- GUARANTEED retain cycle: self → animation → completion → self
-- Fix: ALWAYS use `[weak self]` with guard
+❌ **Strong self in a completion block / self as a retained delegate**
+- `CATransaction.setCompletionBlock` retains its closure until the animation ends; `CAAnimation` retains its `delegate`
+- Fix: `[weak self]` in the completion block; for the delegate path, rely on the animation being removed on completion (or use a small weak-back-ref delegate object)
 
 ❌ **Not removing old animation before adding new**
 - Same keyPath replaces previous animation

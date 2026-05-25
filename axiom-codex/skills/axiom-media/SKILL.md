@@ -28,6 +28,7 @@ license: MIT
 | CarPlay navigation reference (base view, route guidance, cluster/HUD, multitouch, voice prompts) | See `skills/carplay-navigation-ref.md` |
 | CarPlay Now Playing template customization + sports mode | See `skills/now-playing-carplay.md` |
 | MusicKit Now Playing | See `skills/now-playing-musickit.md` |
+| DockKit motorized stands / gimbals, subject tracking, custom motor control | See `skills/dockkit.md` |
 
 ## Decision Tree
 
@@ -44,6 +45,7 @@ digraph media {
     what -> "skills/haptics.md" [label="haptic feedback"];
     what -> "skills/now-playing.md" [label="Now Playing\n/ remote commands"];
     what -> "skills/carplay-hig.md" [label="CarPlay app design\n/ categories / entitlements"];
+    what -> "skills/dockkit.md" [label="DockKit stands\n/ gimbals / tracking"];
 }
 ```
 
@@ -54,7 +56,8 @@ digraph media {
 5. Haptics? → `skills/haptics.md`
 6. Now Playing / remote commands? → `skills/now-playing.md`, `skills/now-playing-carplay.md`, `skills/now-playing-musickit.md`
 7. CarPlay app design, category selection, entitlement request? → `skills/carplay-hig.md` (start here for any CarPlay work)
-8. Want camera code audit? → Launch `camera-auditor` agent (detects deprecated APIs and architectural gaps: missing interruption handlers, runtime-error recovery, audio session deactivation, permission-denied UX, RotationCoordinator on iOS 17+; scores RELIABLE / FRAGILE / BROKEN)
+8. DockKit motorized stands / gimbals, subject tracking, custom motor control? → `skills/dockkit.md`
+9. Want camera code audit? → Launch `camera-auditor` agent (detects deprecated APIs and architectural gaps: missing interruption handlers, runtime-error recovery, audio session deactivation, permission-denied UX, RotationCoordinator on iOS 17+; scores RELIABLE / FRAGILE / BROKEN)
 
 ## Cross-Domain Routing
 
@@ -76,6 +79,12 @@ digraph media {
 - Full PHPhotoLibrary access → **stay here** (photo-library-ref) — limited access model
 - Privacy manifest for photo usage → **invoke axiom-integration** (privacy-ux reference)
 
+**DockKit + camera / custom inference**:
+- DockKit stand control, framing, motor, tracking states → **stay here** (dockkit)
+- Underlying AVCaptureSession setup → **stay here** (camera-capture)
+- Custom Vision / Core ML inference feeding observations → **invoke axiom-vision**
+- Camera permission (NSCameraUsageDescription) → **invoke axiom-integration** (privacy-ux reference)
+
 ## Anti-Rationalization
 
 | Thought | Reality |
@@ -85,6 +94,7 @@ digraph media {
 | "ShazamKit is just SHSession + a delegate" | iOS 17+ has SHManagedSession which eliminates all AVAudioEngine boilerplate. |
 | "Now Playing info is just setting metadata" | Remote commands, artwork handling, and state sync have 15+ gotchas. |
 | "I'll use UIImagePickerController for photos" | PHPicker/PhotosPicker are the modern API — no permissions required. |
+| "DockKit is just pairing a stand" | Custom control needs system tracking disabled, handles inverted dock states, and two different coordinate origins. |
 
 ## Example Invocations
 
@@ -105,6 +115,9 @@ User: "Now Playing info doesn't appear on Lock Screen"
 
 User: "How do I identify songs with ShazamKit?"
 → Read: `skills/shazamkit.md`
+
+User: "Track a subject with a motorized stand" / "Control a DockKit gimbal"
+→ Read: `skills/dockkit.md`
 
 User: "Check my camera code for issues"
 → Launch: `camera-auditor` agent
