@@ -51,12 +51,14 @@ A dock/undock notification is the prerequisite for any customization. Get a `Doc
 ```swift
 import DockKit
 
-func observeDock() async {
-    for await event in DockAccessoryManager.shared.accessoryStateChanges {
+func observeDock() async throws {
+    // accessoryStateChanges is a throwing getter ({ get throws }) — note `try`
+    for await event in try DockAccessoryManager.shared.accessoryStateChanges {
         switch event.state {
         case .undocked:                 // phone IS in the stand and connected
-            let accessory = event.accessory
-            await configure(accessory)
+            if let accessory = event.accessory {   // event.accessory is DockAccessory?
+                await configure(accessory)
+            }
         case .docked:                   // no phone in the stand
             break
         @unknown default:
