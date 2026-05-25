@@ -186,16 +186,19 @@ class PlayerViewModel: ObservableObject {
 ```swift
 let player = ApplicationMusicPlayer.shared
 
-// Single song
+// Single song (Album/Playlist/Song all conform to PlayableMusicItem,
+// so the array-literal form queues the whole item from the start)
 player.queue = [song]
 
-// Album
-player.queue = ApplicationMusicPlayer.Queue(album: album)
+// Whole album / whole playlist
+player.queue = [album]
+player.queue = [playlist]
 
-// Playlist
-player.queue = ApplicationMusicPlayer.Queue(playlist: playlist)
+// Start an album at a specific track (the album init REQUIRES startingAt —
+// there is no bare Queue(album:) / Queue(playlist:))
+player.queue = ApplicationMusicPlayer.Queue(album: album, startingAt: track)
 
-// Multiple items
+// Multiple items (startingAt defaults to nil → start at the beginning)
 player.queue = ApplicationMusicPlayer.Queue(for: [song1, song2, song3])
 
 // Start at specific item
