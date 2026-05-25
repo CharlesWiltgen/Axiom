@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-05-25T19:01:28.730Z",
+  "generatedAt": "2026-05-25T19:16:14.880Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -19484,7 +19484,7 @@
     "axiom-media--dockkit": {
       "name": "axiom-media--dockkit",
       "description": "DockKit lets your camera app drive motorized stands and gimbals that physically pan and tilt to keep subjects in frame across a 360-degree field of view. The iPhone is the brain: subject detection, tracking, and motor control all run on-device, so *any* app that uses the camera benefits automatically — and you can take direct control when you want a custom experience.",
-      "content": "\n# DockKit — Motorized Camera Stands\n\nDockKit lets your camera app drive motorized stands and gimbals that physically pan and tilt to keep subjects in frame across a 360-degree field of view. The iPhone is the brain: subject detection, tracking, and motor control all run on-device, so *any* app that uses the camera benefits automatically — and you can take direct control when you want a custom experience.\n\n## Overview\n\nA DockKit stand extends any iPhone camera to 360 degrees of pan (Yaw) and 90 degrees of tilt (Pitch) using an on-device system tracker. The phone analyzes camera frames, decides who to track, and sends actuation commands to the dock over the DockKit protocol. Because this runs in the camera pipeline at the system level, automatic tracking works with zero code in any app using the camera APIs.\n\nYou integrate with DockKit only when you want *more* than the default: custom framing, direct motor control, your own tracking model, device animations, or access to the on-device ML tracking signals (iOS 18+).\n\n## When to Use This Skill\n\n- Building a camera, video-conferencing, live-streaming, fitness, or education app that should track subjects on a motorized stand\n- Customizing how the subject is framed (alignment or region of interest)\n- Taking direct control of the motors for custom motion or animations\n- Feeding your own Vision / Core ML inference to track non-default subjects (hands, animals, objects)\n- Reacting to accessory buttons (shutter, flip, zoom) or gimbal controls (iOS 18+)\n- Reading intelligent-tracking signals (saliency, speaking, looking-at-camera) to build custom tracking logic (iOS 18+)\n\n## System Requirements\n\n| API | Availability |\n|-----|--------------|\n| `DockAccessory`, `DockAccessoryManager` | iOS 17.0+, iPadOS 17.0+, Mac Catalyst 17.0+, macOS 14.0+ |\n| `DockAccessory.TrackingStates`, `selectSubjects`, battery states, button events | iOS 18.0+ |\n| `NSCameraUsageDescription` | Required — DockKit operates inside the camera pipeline |\n\n`accessoryStateChanges` throws `DockKitError.notSupported` on macOS. Most app integration targets iOS/iPadOS.\n\n## Critical Gotchas\n\n| Gotcha | Why it bites | Fix |\n|--------|--------------|-----|\n| `.docked` means **no device present** | The state names are inverted from intuition: `.docked` = stand has no phone, `.undocked` = phone is in the stand and connected | Treat `.undocked` as \"ready\"; gate all control on it |\n| Custom motor/inference does nothing | System tracking is on by default and overrides your commands | `try await DockAccessoryManager.shared.setSystemTrackingEnabled(false)` before custom control |\n| `.cameraTCCMissing` thrown | Camera permission not granted | Request camera access (`NSCameraUsageDescription`) before any DockKit call |\n| Coordinate origin mismatch | Region of interest uses **upper-left** (display) origin; `Observation` rects use **lower-left** (Vision) origin | Keep the two coordinate spaces straight; set `.corrected` on the `CameraInformation` orientation when your coords are already in the standard unit rect |\n| Feeding `track()` too fast/slow | Observation delivery outside the valid rate window throws `.frameRateTooHigh` / `.frameRateTooLow` | Feed observations at a steady camera-pipeline rate; handle both errors |\n\n## Part 1 — Tracking out of the box\n\nNo code required. When a DockKit stand is paired and the phone is docked, the system tracker keeps subjects framed in any app that opens an `AVCaptureSession` — including the built-in Camera and FaceTime. A statistical filter (EKF) smooths inference gaps and handles multi-person scenes, tracking a primary subject and re-framing when a second person or object becomes relevant.\n\nYou only write DockKit code to customize this behavior.\n\n## Part 2 — Observe dock state before controlling anything\n\nA dock/undock notification is the prerequisite for any customization. Get a `DockAccessory` reference from the state-change stream, then drive it.\n\n```swift\nimport DockKit\n\nfunc observeDock() async {\n    for await event in DockAccessoryManager.shared.accessoryStateChanges {\n        switch event.state {\n        case .undocked:                 // phone IS in the stand and connected\n            let accessory = event.accessory\n            await configure(accessory)\n        case .docked:                   // no phone in the stand\n            break\n        @unknown default:\n            break\n        }\n    }\n}\n```\n\nTreat the stream as long-lived; iterate it for the lifetime of the capture session.\n\n## Part 3 — Framing\n\nTwo ways to control how the subject sits in the cropped frame.\n\n**Alignment** — keep automatic tracking but bias the composition left, center, or right. Useful when a graphic overlay occupies part of the frame.\n\n```swift\n// Bias framing to the right to balance a logo on the left third\ntry await accessory.setFramingMode(.right)\n```\n\n**Region of interest** — define exactly where the tracked subject should be kept, in normalized coordinates with an **upper-left** origin.\n\n```swift\n// Keep the subject in a centered square (e.g. for a square-cropped call UI).\n// `regionOfInterest` is get-only — set it with the async setter.\ntry await accessory.setRegionOfInterest(CGRect(x: 0.25, y: 0.0, width: 0.5, height: 1.0))\n```\n\n## Part 4 — Direct motor control\n\nTo drive the motors yourself, first disable system tracking, then send angular velocities or absolute orientations. The motion model is two axes: Pitch (tilt, around X) and Yaw (pan, around Y).\n\n`setAngularVelocity(_:)` takes a `Spatial.Vector3D` in axis/angle notation — radians per second for pitch (x), yaw (y), and roll (z).\n\n```swift\nimport DockKit\nimport Spatial\n\nfunc sweep(_ accessory: DockAccessory) async throws {\n    try await DockAccessoryManager.shared.setSystemTrackingEnabled(false)\n\n    // Pan right at 0.2 rad/s while tilting down at 0.1 rad/s\n    try await accessory.setAngularVelocity(Vector3D(x: -0.1, y: 0.2, z: 0))\n    try await Task.sleep(for: .seconds(2))\n\n    // Reverse: pan left, tilt up\n    try await accessory.setAngularVelocity(Vector3D(x: 0.1, y: -0.2, z: 0))\n    try await Task.sleep(for: .seconds(2))\n\n    try await accessory.setAngularVelocity(Vector3D(x: 0, y: 0, z: 0)) // stop\n}\n```\n\nFor absolute or relative target positions instead of continuous velocity, use DockKit's orientation API (it takes a `Spatial.Rotation3D` target). Re-enable system tracking (`setSystemTrackingEnabled(true)`) when you want the dock to resume automatic framing.\n\n## Part 5 — Custom inference\n\nReplace the default face/body tracking with your own detector by feeding `DockAccessory.Observation` values to `track(_:cameraInformation:)`. An observation is a normalized bounding box (Vision's **lower-left** origin) with an `ObservationType` of `.humanFace`, `.humanBody`, or `.object`. Using `.humanFace`/`.humanBody` preserves the system's multi-person framing optimizations.\n\n```swift\nimport DockKit\nimport Vision\n\nfunc trackHand(in pixelBuffer: CVPixelBuffer,\n               accessory: DockAccessory,\n               cameraInfo: DockAccessory.CameraInformation) async throws {\n    try await DockAccessoryManager.shared.setSystemTrackingEnabled(false)\n\n    let request = VNDetectHumanHandPoseRequest()\n    let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer)\n    try handler.perform([request])\n\n    guard let hand = request.results?.first,\n          let thumb = try? hand.recognizedPoint(.thumbTip), thumb.confidence > 0.3\n    else { return }\n\n    // Vision points are normalized, lower-left origin — same space DockKit expects\n    let rect = CGRect(x: thumb.location.x - 0.05, y: thumb.location.y - 0.05,\n                      width: 0.1, height: 0.1)\n    // Observation identifiers are Int (your own per-frame IDs), distinct from the\n    // UUID identifiers that tracking states / selectSubjects use.\n    let observation = DockAccessory.Observation(identifier: 0, type: .object, rect: rect)\n\n    // How DockKit interprets these coordinates comes from cameraInfo.orientation\n    // (a DockAccessory.CameraOrientation, e.g. .corrected for the standard unit rect),\n    // set when you build the CameraInformation — not from track().\n    try await accessory.track([observation], cameraInformation: cameraInfo)\n}\n```\n\n`CameraInformation` is built from your capture device\n(`init(captureDevice:cameraPosition:orientation:cameraIntrinsics:referenceDimensions:)`).\nVision requests (body pose, animal body pose, barcode) share DockKit's coordinate system, so their bounding boxes pass through directly — you only set the device orientation.\n\n## Part 6 — Device animations\n\nDrive motion as an affordance. Built-in animations are `.yes` (nod), `.no` (shake), `.wakeup` (rise to center), and `.kapow` (quick tilt-and-snap). Disable system tracking, run the animation, then re-enable.\n\n```swift\nfunc celebrate(_ accessory: DockAccessory) async throws {\n    try await DockAccessoryManager.shared.setSystemTrackingEnabled(false)\n    try await accessory.animate(motion: DockAccessory.Animation.kapow)\n    try await DockAccessoryManager.shared.setSystemTrackingEnabled(true)\n}\n```\n\nThe animation runs asynchronously from the stand's current position. Build custom animations with direct motor control (Part 4).\n\n## Part 7 — iOS 18 additions\n\n#### Intelligent tracking signals\n\nThe on-device ML pipeline selects the most relevant subject using body/face pose, attention, and speaking confidence. Read the per-subject summary from the `trackingStates` async sequence and act on it.\n\n```swift\nfunc trackActiveSpeakers(_ accessory: DockAccessory) async throws {\n    for await state in accessory.trackingStates {\n        // trackedSubjects is [DockAccessory.TrackedSubjectType]: .person / .object\n        let speakerIDs: [UUID] = state.trackedSubjects.compactMap { subject in\n            guard case .person(let person) = subject,\n                  (person.speakingConfidence ?? 0) > 0.8 else { return nil }\n            return person.identifier\n        }\n        try await accessory.selectSubjects(speakerIDs)\n    }\n}\n```\n\nEach `TrackedSubjectType` is `.person(TrackedPerson)` or `.object(TrackedObject)`. A `TrackedPerson` exposes a `UUID` `identifier`, a face rectangle, an optional `saliencyRank` (`Int?`, rank 1 = most important, increasing monotonically), and optional `speakingConfidence` and `lookingAtCameraConfidence` (`Double?`, 0...1). `selectSubjects(_:)` takes `[UUID]`.\n\n#### Button events\n\nCamera and FaceTime get shutter, flip, and zoom out of the box; the same events are delivered to your app, plus custom button events (an ID and a pressed bool). Zoom carries a relative factor (2.0 = double the image / halve the field of view). Subscribe via `accessoryEvents` to implement custom behaviors — e.g. a gimbal button that starts/stops a panorama sweep.\n\n#### Gimbals\n\nA handheld DockKit accessory class for action and sports capture; same APIs, with button controls (flip, record, scroll-wheel zoom).\n\n#### Battery monitoring\n\nSubscribe to `batteryStates` (a dock may report multiple named batteries, each with a percentage and charge state) to surface status in your UI.\n\n#### New camera modes\n\niOS 18 extends DockKit tracking in the system Camera app to photo, panorama, and cinematic modes.\n\n## Common Mistakes\n\n- Sending motor or `track()` commands before seeing `.undocked` — there is no connected accessory yet.\n- Forgetting to disable system tracking, so your custom commands are immediately overridden.\n- Confusing the two coordinate origins (region of interest = upper-left; observations = lower-left).\n- Treating `.docked` as \"ready\" — it is the opposite.\n- Blocking with `Thread.sleep` or GCD between motor commands; these APIs are async — use `Task.sleep`.\n- Not re-enabling system tracking after a one-shot animation or custom sequence.\n- Mixing identifier types: `Observation` identifiers are `Int` (your per-frame IDs); `selectSubjects(_:)` takes the tracked subjects' `UUID` identifiers. They are not interchangeable.\n\n## Error Handling\n\n`DockKitError` is the single error type. Map the common cases:\n\n| Case | Meaning / response |\n|------|--------------------|\n| `.notConnected` | Accessory not docked; wait for `.undocked` |\n| `.cameraTCCMissing` | Request camera permission first |\n| `.notSupported` / `.notSupportedByDevice` | Feature unavailable (e.g. on macOS, or unsupported hardware); guard with platform/feature checks |\n| `.frameRateTooHigh` / `.frameRateTooLow` | Observation feed rate out of range; throttle/steady the `track()` cadence |\n| `.noSubjectFound` | `selectSubject(at:)` point didn't intersect a tracked subject |\n| `.invalidParameter` | Out-of-range value (e.g. malformed region of interest) |\n\nWrap control calls in `do/catch` and degrade gracefully — a missing or disconnected stand should never crash the camera experience.\n\n## Resources\n\n**WWDC**: 2023-10304, 2024-10164, 2023-111336\n\n**Docs**: /dockkit, /dockkit/dockaccessory, /dockkit/dockaccessorymanager, /dockkit/dockaccessory/observation, /dockkit/dockaccessory/camerainformation, /dockkit/dockaccessory/cameraorientation, /dockkit/dockaccessory/trackingstate, /dockkit/dockkiterror\n\n**Skills**: axiom-media (camera-capture for AVCaptureSession), axiom-vision (custom inference), axiom-concurrency (async sequences)\n",
+      "content": "\n# DockKit — Motorized Camera Stands\n\nDockKit lets your camera app drive motorized stands and gimbals that physically pan and tilt to keep subjects in frame across a 360-degree field of view. The iPhone is the brain: subject detection, tracking, and motor control all run on-device, so *any* app that uses the camera benefits automatically — and you can take direct control when you want a custom experience.\n\n## Overview\n\nA DockKit stand extends any iPhone camera to 360 degrees of pan (Yaw) and 90 degrees of tilt (Pitch) using an on-device system tracker. The phone analyzes camera frames, decides who to track, and sends actuation commands to the dock over the DockKit protocol. Because this runs in the camera pipeline at the system level, automatic tracking works with zero code in any app using the camera APIs.\n\nYou integrate with DockKit only when you want *more* than the default: custom framing, direct motor control, your own tracking model, device animations, or access to the on-device ML tracking signals (iOS 18+).\n\n## When to Use This Skill\n\n- Building a camera, video-conferencing, live-streaming, fitness, or education app that should track subjects on a motorized stand\n- Customizing how the subject is framed (alignment or region of interest)\n- Taking direct control of the motors for custom motion or animations\n- Feeding your own Vision / Core ML inference to track non-default subjects (hands, animals, objects)\n- Reacting to accessory buttons (shutter, flip, zoom) or gimbal controls (iOS 18+)\n- Reading intelligent-tracking signals (saliency, speaking, looking-at-camera) to build custom tracking logic (iOS 18+)\n\n## System Requirements\n\n| API | Availability |\n|-----|--------------|\n| `DockAccessory`, `DockAccessoryManager` | iOS 17.0+, iPadOS 17.0+, Mac Catalyst 17.0+, macOS 14.0+ |\n| `DockAccessory.TrackingStates`, `selectSubjects`, battery states, button events | iOS 18.0+ |\n| `NSCameraUsageDescription` | Required — DockKit operates inside the camera pipeline |\n\n`accessoryStateChanges` throws `DockKitError.notSupported` on macOS. Most app integration targets iOS/iPadOS.\n\n## Critical Gotchas\n\n| Gotcha | Why it bites | Fix |\n|--------|--------------|-----|\n| `.docked` means **no device present** | The state names are inverted from intuition: `.docked` = stand has no phone, `.undocked` = phone is in the stand and connected | Treat `.undocked` as \"ready\"; gate all control on it |\n| Custom motor/inference does nothing | System tracking is on by default and overrides your commands | `try await DockAccessoryManager.shared.setSystemTrackingEnabled(false)` before custom control |\n| `.cameraTCCMissing` thrown | Camera permission not granted | Request camera access (`NSCameraUsageDescription`) before any DockKit call |\n| Coordinate origin mismatch | Region of interest uses **upper-left** (display) origin; `Observation` rects use **lower-left** (Vision) origin | Keep the two coordinate spaces straight; set `.corrected` on the `CameraInformation` orientation when your coords are already in the standard unit rect |\n| Feeding `track()` too fast/slow | Observation delivery outside the valid rate window throws `.frameRateTooHigh` / `.frameRateTooLow` | Feed observations at a steady camera-pipeline rate; handle both errors |\n\n## Part 1 — Tracking out of the box\n\nNo code required. When a DockKit stand is paired and the phone is docked, the system tracker keeps subjects framed in any app that opens an `AVCaptureSession` — including the built-in Camera and FaceTime. A statistical filter (EKF) smooths inference gaps and handles multi-person scenes, tracking a primary subject and re-framing when a second person or object becomes relevant.\n\nYou only write DockKit code to customize this behavior.\n\n## Part 2 — Observe dock state before controlling anything\n\nA dock/undock notification is the prerequisite for any customization. Get a `DockAccessory` reference from the state-change stream, then drive it.\n\n```swift\nimport DockKit\n\nfunc observeDock() async throws {\n    // accessoryStateChanges is a throwing getter ({ get throws }) — note `try`\n    for await event in try DockAccessoryManager.shared.accessoryStateChanges {\n        switch event.state {\n        case .undocked:                 // phone IS in the stand and connected\n            if let accessory = event.accessory {   // event.accessory is DockAccessory?\n                await configure(accessory)\n            }\n        case .docked:                   // no phone in the stand\n            break\n        @unknown default:\n            break\n        }\n    }\n}\n```\n\nTreat the stream as long-lived; iterate it for the lifetime of the capture session.\n\n## Part 3 — Framing\n\nTwo ways to control how the subject sits in the cropped frame.\n\n**Alignment** — keep automatic tracking but bias the composition left, center, or right. Useful when a graphic overlay occupies part of the frame.\n\n```swift\n// Bias framing to the right to balance a logo on the left third\ntry await accessory.setFramingMode(.right)\n```\n\n**Region of interest** — define exactly where the tracked subject should be kept, in normalized coordinates with an **upper-left** origin.\n\n```swift\n// Keep the subject in a centered square (e.g. for a square-cropped call UI).\n// `regionOfInterest` is get-only — set it with the async setter.\ntry await accessory.setRegionOfInterest(CGRect(x: 0.25, y: 0.0, width: 0.5, height: 1.0))\n```\n\n## Part 4 — Direct motor control\n\nTo drive the motors yourself, first disable system tracking, then send angular velocities or absolute orientations. The motion model is two axes: Pitch (tilt, around X) and Yaw (pan, around Y).\n\n`setAngularVelocity(_:)` takes a `Spatial.Vector3D` in axis/angle notation — radians per second for pitch (x), yaw (y), and roll (z).\n\n```swift\nimport DockKit\nimport Spatial\n\nfunc sweep(_ accessory: DockAccessory) async throws {\n    try await DockAccessoryManager.shared.setSystemTrackingEnabled(false)\n\n    // Pan right at 0.2 rad/s while tilting down at 0.1 rad/s\n    try await accessory.setAngularVelocity(Vector3D(x: -0.1, y: 0.2, z: 0))\n    try await Task.sleep(for: .seconds(2))\n\n    // Reverse: pan left, tilt up\n    try await accessory.setAngularVelocity(Vector3D(x: 0.1, y: -0.2, z: 0))\n    try await Task.sleep(for: .seconds(2))\n\n    try await accessory.setAngularVelocity(Vector3D(x: 0, y: 0, z: 0)) // stop\n}\n```\n\nFor absolute or relative target positions instead of continuous velocity, use DockKit's orientation API (it takes a `Spatial.Rotation3D` target). Re-enable system tracking (`setSystemTrackingEnabled(true)`) when you want the dock to resume automatic framing.\n\n## Part 5 — Custom inference\n\nReplace the default face/body tracking with your own detector by feeding `DockAccessory.Observation` values to `track(_:cameraInformation:)`. An observation is a normalized bounding box (Vision's **lower-left** origin) with an `ObservationType` of `.humanFace`, `.humanBody`, or `.object`. Using `.humanFace`/`.humanBody` preserves the system's multi-person framing optimizations.\n\n```swift\nimport DockKit\nimport Vision\n\nfunc trackHand(in pixelBuffer: CVPixelBuffer,\n               accessory: DockAccessory,\n               cameraInfo: DockAccessory.CameraInformation) async throws {\n    try await DockAccessoryManager.shared.setSystemTrackingEnabled(false)\n\n    let request = VNDetectHumanHandPoseRequest()\n    let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer)\n    try handler.perform([request])\n\n    guard let hand = request.results?.first,\n          let thumb = try? hand.recognizedPoint(.thumbTip), thumb.confidence > 0.3\n    else { return }\n\n    // Vision points are normalized, lower-left origin — same space DockKit expects\n    let rect = CGRect(x: thumb.location.x - 0.05, y: thumb.location.y - 0.05,\n                      width: 0.1, height: 0.1)\n    // Observation identifiers are Int (your own per-frame IDs), distinct from the\n    // UUID identifiers that tracking states / selectSubjects use.\n    let observation = DockAccessory.Observation(identifier: 0, type: .object, rect: rect)\n\n    // How DockKit interprets these coordinates comes from cameraInfo.orientation\n    // (a DockAccessory.CameraOrientation, e.g. .corrected for the standard unit rect),\n    // set when you build the CameraInformation — not from track().\n    try await accessory.track([observation], cameraInformation: cameraInfo)\n}\n```\n\n`CameraInformation` is built from your capture device\n(`init(captureDevice:cameraPosition:orientation:cameraIntrinsics:referenceDimensions:)`).\nVision requests (body pose, animal body pose, barcode) share DockKit's coordinate system, so their bounding boxes pass through directly — you only set the device orientation.\n\n## Part 6 — Device animations\n\nDrive motion as an affordance. Built-in animations are `.yes` (nod), `.no` (shake), `.wakeup` (rise to center), and `.kapow` (quick tilt-and-snap). Disable system tracking, run the animation, then re-enable.\n\n```swift\nfunc celebrate(_ accessory: DockAccessory) async throws {\n    try await DockAccessoryManager.shared.setSystemTrackingEnabled(false)\n    try await accessory.animate(motion: DockAccessory.Animation.kapow)\n    try await DockAccessoryManager.shared.setSystemTrackingEnabled(true)\n}\n```\n\nThe animation runs asynchronously from the stand's current position. Build custom animations with direct motor control (Part 4).\n\n## Part 7 — iOS 18 additions\n\n#### Intelligent tracking signals\n\nThe on-device ML pipeline selects the most relevant subject using body/face pose, attention, and speaking confidence. Read the per-subject summary from the `trackingStates` async sequence and act on it.\n\n```swift\nfunc trackActiveSpeakers(_ accessory: DockAccessory) async throws {\n    for await state in accessory.trackingStates {\n        // trackedSubjects is [DockAccessory.TrackedSubjectType]: .person / .object\n        let speakerIDs: [UUID] = state.trackedSubjects.compactMap { subject in\n            guard case .person(let person) = subject,\n                  (person.speakingConfidence ?? 0) > 0.8 else { return nil }\n            return person.identifier\n        }\n        try await accessory.selectSubjects(speakerIDs)\n    }\n}\n```\n\nEach `TrackedSubjectType` is `.person(TrackedPerson)` or `.object(TrackedObject)`. A `TrackedPerson` exposes a `UUID` `identifier`, a face rectangle, an optional `saliencyRank` (`Int?`, rank 1 = most important, increasing monotonically), and optional `speakingConfidence` and `lookingAtCameraConfidence` (`Double?`, 0...1). `selectSubjects(_:)` takes `[UUID]`.\n\n#### Button events\n\nCamera and FaceTime get shutter, flip, and zoom out of the box; the same events are delivered to your app, plus custom button events (an ID and a pressed bool). Zoom carries a relative factor (2.0 = double the image / halve the field of view). Subscribe via `accessoryEvents` to implement custom behaviors — e.g. a gimbal button that starts/stops a panorama sweep.\n\n#### Gimbals\n\nA handheld DockKit accessory class for action and sports capture; same APIs, with button controls (flip, record, scroll-wheel zoom).\n\n#### Battery monitoring\n\nSubscribe to `batteryStates` (a dock may report multiple named batteries, each with a percentage and charge state) to surface status in your UI.\n\n#### New camera modes\n\niOS 18 extends DockKit tracking in the system Camera app to photo, panorama, and cinematic modes.\n\n## Common Mistakes\n\n- Sending motor or `track()` commands before seeing `.undocked` — there is no connected accessory yet.\n- Forgetting to disable system tracking, so your custom commands are immediately overridden.\n- Confusing the two coordinate origins (region of interest = upper-left; observations = lower-left).\n- Treating `.docked` as \"ready\" — it is the opposite.\n- Blocking with `Thread.sleep` or GCD between motor commands; these APIs are async — use `Task.sleep`.\n- Not re-enabling system tracking after a one-shot animation or custom sequence.\n- Mixing identifier types: `Observation` identifiers are `Int` (your per-frame IDs); `selectSubjects(_:)` takes the tracked subjects' `UUID` identifiers. They are not interchangeable.\n\n## Error Handling\n\n`DockKitError` is the single error type. Map the common cases:\n\n| Case | Meaning / response |\n|------|--------------------|\n| `.notConnected` | Accessory not docked; wait for `.undocked` |\n| `.cameraTCCMissing` | Request camera permission first |\n| `.notSupported` / `.notSupportedByDevice` | Feature unavailable (e.g. on macOS, or unsupported hardware); guard with platform/feature checks |\n| `.frameRateTooHigh` / `.frameRateTooLow` | Observation feed rate out of range; throttle/steady the `track()` cadence |\n| `.noSubjectFound` | `selectSubject(at:)` point didn't intersect a tracked subject |\n| `.invalidParameter` | Out-of-range value (e.g. malformed region of interest) |\n\nWrap control calls in `do/catch` and degrade gracefully — a missing or disconnected stand should never crash the camera experience.\n\n## Resources\n\n**WWDC**: 2023-10304, 2024-10164, 2023-111336\n\n**Docs**: /dockkit, /dockkit/dockaccessory, /dockkit/dockaccessorymanager, /dockkit/dockaccessory/observation, /dockkit/dockaccessory/camerainformation, /dockkit/dockaccessory/cameraorientation, /dockkit/dockaccessory/trackingstate, /dockkit/dockkiterror\n\n**Skills**: axiom-media (camera-capture for AVCaptureSession), axiom-vision (custom inference), axiom-concurrency (async sequences)\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -19545,63 +19545,63 @@
           "heading": "Part 2 — Observe dock state before controlling anything",
           "level": 2,
           "startLine": 46,
-          "endLine": 69,
-          "charCount": 760
+          "endLine": 71,
+          "charCount": 913
         },
         {
           "heading": "Part 3 — Framing",
           "level": 2,
-          "startLine": 70,
-          "endLine": 88,
+          "startLine": 72,
+          "endLine": 90,
           "charCount": 742
         },
         {
           "heading": "Part 4 — Direct motor control",
           "level": 2,
-          "startLine": 89,
-          "endLine": 115,
+          "startLine": 91,
+          "endLine": 117,
           "charCount": 1214
         },
         {
           "heading": "Part 5 — Custom inference",
           "level": 2,
-          "startLine": 116,
-          "endLine": 154,
+          "startLine": 118,
+          "endLine": 156,
           "charCount": 2080
         },
         {
           "heading": "Part 6 — Device animations",
           "level": 2,
-          "startLine": 155,
-          "endLine": 168,
+          "startLine": 157,
+          "endLine": 170,
           "charCount": 661
         },
         {
           "heading": "Part 7 — iOS 18 additions",
           "level": 2,
-          "startLine": 169,
-          "endLine": 206,
+          "startLine": 171,
+          "endLine": 208,
           "charCount": 1993
         },
         {
           "heading": "Common Mistakes",
           "level": 2,
-          "startLine": 207,
-          "endLine": 216,
+          "startLine": 209,
+          "endLine": 218,
           "charCount": 739
         },
         {
           "heading": "Error Handling",
           "level": 2,
-          "startLine": 217,
-          "endLine": 231,
+          "startLine": 219,
+          "endLine": 233,
           "charCount": 832
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 232,
-          "endLine": 239,
+          "startLine": 234,
+          "endLine": 241,
           "charCount": 449
         }
       ]
@@ -40408,7 +40408,7 @@
           42,
           1,
           39,
-          561
+          565
         ],
         "125": [
           3,
@@ -41158,7 +41158,7 @@
         16.138528138528144,
         4.147186147186151,
         44.47186147186147,
-        621.1688311688309
+        621.1861471861471
       ],
       "storedFields": {
         "0": {
@@ -57546,6 +57546,7 @@
           "getter",
           {
             "4": {
+              "124": 1,
               "181": 2,
               "188": 1
             }
@@ -57708,7 +57709,7 @@
               "121": 1,
               "122": 1,
               "123": 1,
-              "124": 3,
+              "124": 4,
               "127": 1,
               "128": 1,
               "129": 6,
@@ -75428,7 +75429,7 @@
               "104": 3,
               "108": 4,
               "121": 1,
-              "124": 3,
+              "124": 4,
               "125": 47,
               "126": 5,
               "128": 13,
@@ -159053,7 +159054,7 @@
               "107": 3,
               "111": 1,
               "123": 1,
-              "124": 6,
+              "124": 8,
               "125": 1,
               "127": 4,
               "128": 4,
@@ -159131,6 +159132,7 @@
               "103": 1,
               "107": 1,
               "123": 1,
+              "124": 1,
               "129": 2,
               "130": 2,
               "133": 1,
@@ -161105,7 +161107,7 @@
               "119": 5,
               "120": 4,
               "122": 1,
-              "124": 17,
+              "124": 19,
               "125": 21,
               "127": 11,
               "128": 9,
@@ -173576,6 +173578,7 @@
               "115": 1,
               "119": 1,
               "122": 2,
+              "124": 1,
               "128": 1,
               "130": 1,
               "147": 1,
@@ -178891,7 +178894,7 @@
               "111": 2,
               "114": 4,
               "116": 1,
-              "124": 46,
+              "124": 47,
               "220": 3
             }
           }
@@ -193578,6 +193581,7 @@
               "121": 10,
               "122": 13,
               "123": 4,
+              "124": 1,
               "125": 9,
               "126": 6,
               "127": 9,
@@ -239185,7 +239189,7 @@
               "121": 2,
               "122": 11,
               "123": 2,
-              "124": 9,
+              "124": 10,
               "126": 1,
               "127": 8,
               "128": 27,
@@ -250169,7 +250173,7 @@
               "120": 4,
               "122": 5,
               "123": 1,
-              "124": 2,
+              "124": 3,
               "125": 2,
               "127": 3,
               "128": 11,
@@ -296209,7 +296213,7 @@
               "87": 9,
               "106": 3,
               "108": 3,
-              "124": 43,
+              "124": 46,
               "129": 2,
               "130": 4,
               "187": 3,
@@ -443257,17 +443261,23 @@
           "kit",
           "func",
           "async",
+          "throws",
+          "changes",
+          "throw",
+          "getter",
+          "note",
+          "try",
           "await",
           "event",
           "manager",
           "shared",
-          "changes",
           "switch",
           "case",
           "undocked",
           "phone",
           "stand",
           "connected",
+          "if",
           "let",
           "configure",
           "docked",
