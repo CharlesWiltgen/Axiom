@@ -28,8 +28,8 @@ This is **macOS only**. For iOS screen capture, use ReplayKit (`RPScreenRecorder
 
 | API | Availability |
 |-----|--------------|
-| `SCStream`, `SCShareableContent`, `SCContentFilter`, `SCStreamConfiguration`, `SCStreamOutput` | macOS 12.3+ |
-| `SCContentSharingPicker`, `SCScreenshotManager`, Presenter Overlay (`outputEffectDidStart`) | macOS 14.0+ |
+| `SCStream`, `SCShareableContent`, `SCContentFilter`, `SCStreamConfiguration`, `SCStreamOutput` | macOS |
+| `SCContentSharingPicker`, `SCScreenshotManager`, Presenter Overlay (`outputEffectDidStart`) | macOS |
 | `SCRecordingOutput`, microphone capture (`captureMicrophone`), HDR (`captureDynamicRange`) | macOS 15.0+ |
 | Mac Catalyst | 18.2+ |
 | iOS / iPadOS | **Not available — use ReplayKit** |

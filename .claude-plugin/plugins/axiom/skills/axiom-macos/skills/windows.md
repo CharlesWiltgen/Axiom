@@ -106,11 +106,11 @@ What kind of window?
 
 | Scene | macOS | iOS/iPadOS | visionOS |
 |---|---|---|---|
-| WindowGroup | 11.0+ | 14.0+ | 1.0+ |
-| Window | 13.0+ | — | 26.0+ |
-| UtilityWindow | 15.0+ | — | — |
-| MenuBarExtra | 13.0+ | — | — |
-| Settings | 11.0+ | — | — |
+| WindowGroup | ✓ | ✓ | ✓ |
+| Window | ✓ | — | 26.0+ |
+| UtilityWindow | ✓ | — | — |
+| MenuBarExtra | ✓ | — | — |
+| Settings | ✓ | — | — |
 
 ---
 
@@ -203,7 +203,7 @@ Screen-relative positioning, respects current locale for leading/trailing:
 
 ### Programmatic Placement
 
-For calculated positions based on display geometry (macOS 14+):
+For calculated positions based on display geometry:
 
 ```swift
 .defaultWindowPlacement { content, context in

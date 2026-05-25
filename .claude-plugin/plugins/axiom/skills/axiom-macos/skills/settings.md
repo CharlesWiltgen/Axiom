@@ -35,7 +35,7 @@ Use when:
 | Settings window resizable when it shouldn't be | macOS auto-allows resize when content is flexible | Set fixed `.frame(width:height:)` per tab (no min/max) |
 | Tab icons missing | Forgot `systemImage:` on `Tab` | Add SF Symbols to every tab — required by macOS HIG |
 | Tabs jump in size when switched | Each tab has different intrinsic content size | Set the same `.frame()` on every tab body, OR let tabs resize via `.frame(idealWidth:idealHeight:)` |
-| `SettingsLink` in iOS code | Used `SettingsLink` thinking it opens the iOS system Settings app | macOS 14+ only — opens the app's own Settings scene. Use `UIApplication.openSettingsURLString` for iOS system Settings |
+| `SettingsLink` in iOS code | Used `SettingsLink` thinking it opens the iOS system Settings app | macOS-only — opens the app's own Settings scene. Use `UIApplication.openSettingsURLString` for iOS system Settings |
 | Settings UI shows no values | `@AppStorage` keys differ from where the rest of the app reads them | Centralize keys in a `PreferenceKey` enum; never hardcode strings twice |
 
 ---
@@ -195,7 +195,7 @@ TabView {
 
 ---
 
-## Pattern 5: SettingsLink (macOS 14+)
+## Pattern 5: SettingsLink (macOS)
 
 `SettingsLink` opens the app's own Settings scene from anywhere in the UI — useful for "Open Settings" buttons in onboarding, error states, or inline help.
 
@@ -217,9 +217,9 @@ struct WelcomeView: View {
 
 **Default label** `SettingsLink()` with no closure produces a system-styled "Settings…" button.
 
-**What it does NOT do** `SettingsLink` does not exist on iOS and does not open the iOS system Settings app. It is purely a shortcut to the app's own `Settings { }` scene on macOS 14+.
+**What it does NOT do** `SettingsLink` does not exist on iOS and does not open the iOS system Settings app. It is purely a shortcut to the app's own `Settings { }` scene (macOS only).
 
-**Pre-macOS 14** Use `openSettings` environment action (macOS 14+ also) or `NSApplication.shared.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil, for: nil)` for older targets. Most apps can require macOS 14+.
+**Programmatic alternative** `@Environment(\.openSettings)` gives an `openSettings()` action you can call from a button handler — use it when you need a plain button rather than `SettingsLink`'s link semantics.
 
 ---
 
@@ -245,19 +245,39 @@ struct PermissionDeniedView: View {
 
 **Where this opens** The iOS Settings app, scrolled to the section for the current app. Useful for permission denial flows ("camera access denied → user must enable in Settings").
 
-**Cross-platform unification** If you want a single `OpenSettingsAction` that works on both platforms, use conditional compilation:
+**Two different macOS targets — do not conflate them.** "Open settings" means different things, and `SettingsLink` only covers one of them:
+
+| Goal | iOS | macOS |
+|---|---|---|
+| Open the app's own preferences | (no `Settings` scene — show in-app UI) | `SettingsLink` / `openSettings` |
+| Re-enable a denied **system permission** (camera, mic, location) | `UIApplication.openSettingsURLString` → System Settings | `x-apple.systempreferences:` deep link → System Settings |
+
+`SettingsLink` opens the app's *own* Settings window — it is **not** the macOS equivalent of iOS's `openSettingsURLString`. For a permission-denial flow on macOS, open System Settings directly:
+
+```swift
+// macOS: deep-link System Settings to the Camera privacy pane.
+// Swap the anchor for the permission: Privacy_Camera, Privacy_Microphone,
+// Privacy_LocationServices, etc.
+if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Camera") {
+    NSWorkspace.shared.open(url)
+}
+```
+
+**Cross-platform unification** A single `OpenSettingsButton` is only correct when "settings" means *the app's own preferences*:
 
 ```swift
 struct OpenSettingsButton: View {
     var body: some View {
         #if os(macOS)
-        SettingsLink { Label("Settings…", systemImage: "gear") }
+        SettingsLink { Label("Settings…", systemImage: "gear") }   // app's prefs only
         #else
-        OpenSystemSettingsButton()
+        OpenSystemSettingsButton()                                 // system Settings
         #endif
     }
 }
 ```
+
+For a permission-denial CTA, branch to the System Settings deep link on **both** platforms instead.
 
 ---
 
@@ -383,7 +403,7 @@ struct SettingsView: View {
 | Tabs render without icons | Used `Text` instead of `Label` for `.tabItem` |
 | ⌘, doesn't open Settings | App is sandboxed AND another window is keyWindow with conflicting shortcut |
 | `@AppStorage` doesn't sync to other view | Different key strings (typo) — use central enum |
-| `SettingsLink` causes iOS build failure | `SettingsLink` is macOS 14+ only; needs `#if os(macOS)` |
+| `SettingsLink` causes iOS build failure | `SettingsLink` is macOS-only; needs `#if os(macOS)` |
 | Settings opens but is empty | View body has `if`/`switch` returning `EmptyView` for current state |
 
 ---
@@ -397,7 +417,7 @@ Before merging Settings code:
 - [ ] Root view has `.scenePadding()` AND a `.frame()` constraint
 - [ ] All `Tab` labels use `Label("Title", systemImage: "...")` — never text-only
 - [ ] `@AppStorage` keys come from a central enum, not inline string literals
-- [ ] `SettingsLink` is only used on macOS 14+ (with appropriate availability check or `#if`)
+- [ ] `SettingsLink` is wrapped in `#if os(macOS)` (it does not exist on iOS)
 - [ ] iOS code that opens system Settings uses `UIApplication.openSettingsURLString` via `@Environment(\.openURL)` — not `SettingsLink`
 - [ ] No business logic / network calls / heavy state in SettingsView
 - [ ] Keys persisted via `@AppStorage` use App Group `UserDefaults(suiteName:)` if shared with extensions
