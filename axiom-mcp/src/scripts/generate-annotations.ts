@@ -139,7 +139,7 @@ export function inferCategoryFromName(name: string): string {
     return 'General';
   }
   if (name.includes('build') || name.includes('xcode') || name.includes('spm') || name.includes('asc-mcp')) return 'Build & Environment';
-  if (name.includes('swiftui') || name.includes('uikit') || name.includes('layout') || name.includes('liquid-glass') || name.includes('hig') || name.includes('typography') || name.includes('textkit') || name.includes('animation') || name.includes('ui-recording') || name.includes('ui-testing') || name.includes('sf-symbols') || name.includes('tvos')) return 'UI & Design';
+  if (name.includes('swiftui') || name.includes('uikit') || name.includes('layout') || name.includes('liquid-glass') || name.includes('hig') || name.includes('typography') || name.includes('textkit') || name.includes('animation') || name.includes('ui-recording') || name.includes('ui-testing') || name.includes('sf-symbols') || name.includes('tvos') || name.includes('pencilkit') || name.includes('paperkit')) return 'UI & Design';
   if (name.includes('data') || name.includes('sqlite') || name.includes('grdb') || name.includes('realm') || name.includes('codable') || name.includes('cloud') || name.includes('storage') || name.includes('migration') || name.includes('icloud')) return 'Data & Persistence';
   if (name.includes('concurrency') || name.includes('async') || name.includes('synchroniz') || name.includes('isolated')) return 'Concurrency & Async';
   if (name.includes('performance') || name.includes('energy') || name.includes('memory') || name.includes('profil') || name.includes('hang') || name.includes('display')) return 'Performance';
@@ -153,7 +153,7 @@ export function inferCategoryFromName(name: string): string {
   if (name.includes('spritekit') || name.includes('scenekit') || name.includes('game')) return 'Games';
   if (name.includes('debug')) return 'Build & Environment';
   if (name.includes('triage') || name.includes('app-store-connect')) return 'Build & Environment';
-  if (name.includes('intent') || name.includes('shortcut') || name.includes('widget') || name.includes('extension') || name.includes('storekit') || name.includes('iap') || name.includes('localization') || name.includes('spotlight') || name.includes('privacy') || name.includes('deep-link') || name.includes('app-store') || name.includes('background-process') || name.includes('shipping') || name.includes('push-notif') || name.includes('timer-pattern') || name.includes('eventkit') || name.includes('contacts') || name.includes('alarmkit') || name.includes('live-activit')) return 'System Integration';
+  if (name.includes('intent') || name.includes('shortcut') || name.includes('widget') || name.includes('extension') || name.includes('storekit') || name.includes('iap') || name.includes('localization') || name.includes('spotlight') || name.includes('privacy') || name.includes('deep-link') || name.includes('app-store') || name.includes('background-process') || name.includes('shipping') || name.includes('push-notif') || name.includes('timer-pattern') || name.includes('eventkit') || name.includes('contacts') || name.includes('alarmkit') || name.includes('live-activit') || name.includes('accessorysetupkit') || name.includes('weatherkit') || name.includes('callkit') || name.includes('app-clip')) return 'System Integration';
   if (name.includes('docs-research') || name.includes('getting-started')) return 'General';
   return 'General';
 }

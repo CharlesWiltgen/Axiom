@@ -18,6 +18,8 @@ license: MIT
 | App Sandbox, file access, security-scoped bookmarks | See `skills/sandbox-and-file-access.md` |
 | Developer ID, notarization, Sparkle auto-updates | See `skills/direct-distribution.md` |
 | NSViewRepresentable, NSHostingController, AppKit bridging | See `skills/appkit-interop.md` |
+| Screen recording, sharing, or capture (ScreenCaptureKit) | See `skills/screencapturekit.md` |
+| SCStream / SCContentFilter / screenshots / file recording API | See `skills/screencapturekit-ref.md` |
 | Apple Pay on Mac / Catalyst | See `axiom-payments/skills/apple-pay.md` (Catalyst section) |
 
 ## Cross-Suite Routes
@@ -67,10 +69,13 @@ digraph macos {
     what -> "skills/sandbox-and-file-access.md" [label="sandbox/file access"];
     what -> "skills/direct-distribution.md" [label="distribution/notarization/updates"];
     what -> "skills/appkit-interop.md" [label="AppKit bridging"];
+    what -> "skills/screencapturekit.md" [label="screen capture/\nrecording/sharing"];
     what -> "axiom-swiftui" [label="cross-platform SwiftUI"];
     what -> "axiom-security" [label="Keychain/encryption"];
 }
 ```
+
+> **iOS screen capture?** ScreenCaptureKit is macOS-only. For iOS screen recording, use ReplayKit — see axiom-media.
 
 ## Resources
 

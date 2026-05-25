@@ -99,7 +99,7 @@ if re.search(r'xctest|xcuitest|swift\s*testing|@test\b|@suite\b|#expect\b|ui\s*t
     matches.append("axiom-testing")
 
 # Integration
-if re.search(r'widgetkit|widgetcenter|reloadalltimelines|reloadtimelines|add.{0,10}widget|widget.{0,10}(timeline|entry|not updat|show|display)|widget.{0,30}(not updat|never updat|stale)|siri\b|storekit|in-app purchase|iap\b|eventkit|ekevents|reminder.{0,5}(access|permiss)|cncontact|app\s*intent|app\s*shortcut|spotlight.{0,5}(index|search)|localization|string\s*catalog|live\s*activit|control\s*center.{0,5}(widget|control)|push\s*notif|background\s*task|bgtask|timer.{0,5}(pattern|crash|dispatch)', prompt_lower):
+if re.search(r'widgetkit|widgetcenter|reloadalltimelines|reloadtimelines|add.{0,10}widget|widget.{0,10}(timeline|entry|not updat|show|display)|widget.{0,30}(not updat|never updat|stale)|siri\b|storekit|in-app purchase|iap\b|eventkit|ekevents|reminder.{0,5}(access|permiss)|cncontact|app\s*intent|app\s*shortcut|spotlight.{0,5}(index|search)|localization|string\s*catalog|live\s*activit|control\s*center.{0,5}(widget|control)|push\s*notif|background\s*task|bgtask|timer.{0,5}(pattern|crash|dispatch)|accessorysetupkit|asaccessorysession|asdiscoverydescriptor|accessory\s*(setup|pairing|picker)|weatherkit|weatherservice|callkit|cxprovider|pushkit|pkpushregistry|voip\s*(push|call|app)|livecommunicationkit|conversationmanager|cxcalldirectory|caller\s*id|call\s*directory|livecalleridlookup', prompt_lower):
     matches.append("axiom-integration")
 
 # Media
@@ -131,13 +131,13 @@ if re.search(r'metal\b.{0,10}(shader|render|migrat|buffer|texture|pipeline)|open
     matches.append("axiom-graphics")
 
 # App Store / Shipping
-if re.search(r'app store.{0,10}(reject|review|submiss|connect|metadata)|testflight|privacy manifest|app review|export compliance|age rating|app.{0,5}(submit|upload|distribut)', prompt_lower):
+if re.search(r'app store.{0,10}(reject|review|submiss|connect|metadata)|testflight|privacy manifest|app review|export compliance|age rating|app.{0,5}(submit|upload|distribut)|app\s*clip', prompt_lower):
     matches.append("axiom-shipping")
 
 # macOS
 # Note: bare "macos"/"mac os" is intentionally NOT matched — it fires on host-OS
 # version mentions ("on macOS 26.3"). Require intent-qualifying terms instead.
-if re.search(r'mac\s*app(?:lication)?s?\b|macos.{0,15}(app|build|sandbox|develop|distribut|notariz|menubar|window|toolbar|sign)|appkit|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nsviewcontrollerrepresentable|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)', prompt_lower):
+if re.search(r'mac\s*app(?:lication)?s?\b|macos.{0,15}(app|build|sandbox|develop|distribut|notariz|menubar|window|toolbar|sign)|appkit|screencapturekit|scstream\b|scshareablecontent|sccontentfilter|sccontentsharingpicker|scscreenshotmanager|screcordingoutput|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nsviewcontrollerrepresentable|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)', prompt_lower):
     matches.append("axiom-macos")
 
 # watchOS
@@ -158,7 +158,7 @@ if re.search(r'human interface|hig\b|liquid glass|glass\s*[-]?\s*effect\b|glasse
     matches.append("axiom-design")
 
 # UIKit
-if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview', prompt_lower):
+if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview|pencilkit|pkcanvasview|pktoolpicker|pkdrawing|apple\s*pencil|paperkit|papermarkup', prompt_lower):
     matches.append("axiom-uikit")
 
 # Swift language
