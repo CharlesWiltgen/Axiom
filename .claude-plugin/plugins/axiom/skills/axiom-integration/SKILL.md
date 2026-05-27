@@ -135,6 +135,7 @@ digraph integration {
 
 **integration vs axiom-data**: When widgets or extensions can't access shared data:
 - App Groups and shared containers → **axiom-data**
+- Specifically: GRDB/SQLite database shared with widget/extension/Live Activity → See axiom-data (skills/grdb-app-groups.md)
 - Widget timeline, Live Activity updates → **integration**
 
 **integration vs axiom-media**: When media features overlap with system features:

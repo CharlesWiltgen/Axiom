@@ -174,6 +174,7 @@ Use this router when:
 12. Profile with CLI (xctrace)? → xctrace-ref
 13. Run automated profile now? → performance-profiler agent
 14. General slow/lag? → performance-profiling
+14a. Slow GRDB/SQLite queries (EXPLAIN QUERY PLAN, index design, cursors)? → See axiom-data (skills/grdb-performance.md)
 15. Want proactive memory leak scan? → memory-auditor (Agent)
 16. Want energy anti-pattern scan? → energy-auditor (Agent)
 17. Want Swift performance audit (ARC, generics, collections)? → swift-performance-analyzer (Agent)
