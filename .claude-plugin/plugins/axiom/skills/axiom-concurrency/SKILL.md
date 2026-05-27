@@ -79,6 +79,7 @@ digraph concurrency {
 - Core Data threading (NSManagedObjectContext thread confinement) → **use axiom-data first**
 - SwiftData + @MainActor ModelContext → **use concurrency**
 - General "background saves losing data" → **use axiom-data first**
+- GRDB Sendable patterns (struct records, `databaseSelection` as computed property, Swift 6 conformance) → See axiom-data (skills/grdb-performance.md) §8
 
 ## Critical Patterns
 

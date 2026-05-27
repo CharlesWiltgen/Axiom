@@ -81,6 +81,7 @@ digraph security {
 - Tokens, passwords, API keys → **use security** (keychain)
 - User preferences, non-sensitive settings → **use axiom-data** (UserDefaults/SwiftData)
 - File encryption levels for database files → **use security** (file-protection-ref)
+- SQLite-specific Data Protection (`.db`/`-wal`/`-shm` trio, widget-while-locked access) → See axiom-data (skills/grdb-app-groups.md) §4
 
 **security vs axiom-networking**: When securing network communication:
 - TLS configuration, certificate pinning → **use axiom-networking**

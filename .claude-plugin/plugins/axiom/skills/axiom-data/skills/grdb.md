@@ -32,6 +32,12 @@ Direct SQLite access using [GRDB.swift](https://github.com/groue/GRDB.swift) —
 
 **For migrations** See the `skills/database-migration.md` skill for safe schema evolution patterns.
 
+**For performance, FTS, or app-group sharing**
+
+- Query slow, schema design, `PRAGMA optimize`, `EXPLAIN QUERY PLAN`, index design, cursors → `skills/grdb-performance.md`
+- Full-text search (FTS5), tokenizers, Unicode normalization, external-content sync → `skills/sqlite-fts-ref.md`
+- Database shared with widget, extension, or Live Activity → `skills/grdb-app-groups.md`
+
 ## Example Prompts
 
 These are real questions developers ask that this skill is designed to answer:
@@ -167,6 +173,23 @@ let tracks = try dbQueue.read { db in
     try Track.fetchAll(db, sql: "SELECT * FROM tracks ORDER BY title")
 }
 ```
+
+### Cursors for Large Result Sets
+
+`fetchCursor` streams rows lazily — use it instead of `fetchAll` when the result set is large or memory-sensitive.
+
+```swift
+try dbQueue.read { db in
+    let cursor = try Track.fetchCursor(db, sql: "SELECT * FROM tracks")
+    while let track = try cursor.next() {
+        process(track)
+    }
+}
+```
+
+**Critical:** cursors MUST be consumed inside the `read { ... }` closure — pulling a cursor out is undefined behavior. Cursors iterate once. With `Cursor<Row>`, `Row` is reused per iteration (use `row.copy()` to snapshot).
+
+For design guidance on cursors vs `fetchAll`, see `skills/grdb-performance.md` §9.
 
 ### Writing Data
 
@@ -313,6 +336,26 @@ struct Tracks: Queryable {
 ```
 
 **See** [GRDBQuery documentation](https://github.com/groue/GRDBQuery) for SwiftUI reactive bindings.
+
+### DatabaseRegionObservation
+
+Use `DatabaseRegionObservation` when you need *transaction notifications* rather than fresh values — the callback receives a `Database` for inspection, not fetched results.
+
+```swift
+let observation = DatabaseRegionObservation(tracking: Track.all())
+let cancellable = observation.start(in: dbQueue) { error in
+    // handle error
+} onChange: { db in
+    // a transaction touched the tracked region
+}
+```
+
+**Use this instead of `ValueObservation` when:**
+- You need every individual transaction (no coalescing)
+- You're broadcasting cross-process change notifications (see `skills/grdb-app-groups.md` §7)
+- Synchronous-after-commit semantics matter
+
+See `skills/grdb-performance.md` §10 for design tradeoffs.
 
 ### Filtered Observation
 
@@ -526,6 +569,7 @@ If you see ANY of these symptoms:
 1. Profile with `database.trace`
 2. Use `EXPLAIN QUERY PLAN` to understand execution
 3. Trust GRDB's migration versioning system
+4. **Apply `PRAGMA optimize` on connection setup and periodically** — single biggest cheap perf win. See `skills/grdb-performance.md` §4 for the exact pattern.
 
 ### Profiling Complex Queries
 
