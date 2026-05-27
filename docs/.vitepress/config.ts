@@ -102,6 +102,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'core-data-auditor', link: '/agents/core-data-auditor' },
             { text: 'database-schema-auditor', link: '/agents/database-schema-auditor' },
+            { text: 'grdb-performance-auditor', link: '/agents/grdb-performance-auditor' },
             { text: 'icloud-auditor', link: '/agents/icloud-auditor' },
             { text: 'storage-auditor', link: '/agents/storage-auditor' },
             { text: 'swiftdata-auditor', link: '/agents/swiftdata-auditor' }
@@ -343,6 +344,8 @@ export default withMermaid(defineConfig({
             { text: 'Core Data', link: '/skills/persistence/core-data' },
             { text: 'Database Migration', link: '/skills/persistence/database-migration' },
             { text: 'GRDB', link: '/skills/persistence/grdb' },
+            { text: 'GRDB Across App Groups', link: '/skills/persistence/grdb-app-groups' },
+            { text: 'GRDB Performance', link: '/skills/persistence/grdb-performance' },
             { text: 'SQLiteData', link: '/skills/persistence/sqlitedata' },
             { text: 'SQLiteData Migration', link: '/skills/persistence/sqlitedata-migration' },
             { text: 'Storage Decisions', link: '/skills/persistence/storage' },
@@ -531,6 +534,7 @@ export default withMermaid(defineConfig({
             { text: 'CloudKit', link: '/reference/cloudkit-ref' },
             { text: 'iCloud Drive', link: '/reference/icloud-drive-ref' },
             { text: 'File Protection', link: '/reference/file-protection-ref' },
+            { text: 'SQLite FTS5', link: '/reference/sqlite-fts-ref' },
             { text: 'SQLiteData', link: '/reference/sqlitedata-ref' },
             { text: 'Storage Management', link: '/reference/storage-management-ref' },
             { text: 'Realm Migration', link: '/reference/realm-migration-ref' }
@@ -665,7 +669,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v3.6.1'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v3.7.0'
     }
   }
 }))
