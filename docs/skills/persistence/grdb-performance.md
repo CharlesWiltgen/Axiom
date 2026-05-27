@@ -49,9 +49,13 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Connection Model
 - `DatabaseQueue` vs `DatabasePool` decision rule
-- WAL economics, sidecar files, checkpoint behavior
 - Why connections stay open for app lifetime (WWDC 2019)
-- Backup discipline with `vacuum(into:)`
+
+### WAL Economics & Backup Safety
+- WAL journal mode: 16→1 fsync win measured at WWDC 2019
+- `.db` / `-wal` / `-shm` sidecar files travel together — copying `.db` alone corrupts
+- `vacuum(into:)` for consistent snapshot backups
+- Checkpoint behavior, autocheckpoint thresholds, when to switch back to DELETE journal for very large transactions
 
 ### Query Planner Workflow
 - `PRAGMA optimize=0x10002` on connection open + periodic refresh
@@ -89,6 +93,17 @@ Questions you can ask Claude that will draw from this skill:
 - How tuning transfers from GRDB to SQLiteData
 - Direct SQLite-3 decode vs Codable round-trips
 - `@FetchAll` ≈ `ValueObservation.shared(in:)` semantics
+
+### Anti-Patterns Reference
+- 14-row anti-pattern table covering: SQL string interpolation, missing FK indexes, unbounded `fetchAll`, opening/closing DB per query, missing `PRAGMA optimize`, partial-index WHERE mismatch, `ORDER BY` without supporting index, `.immediate` on slow ValueObservation, `Record` subclass, `databaseSelection` as `static let`, copying `.sqlite` alone, stored generated columns for indexable lookups, string concatenation for case-insensitive search
+- Each anti-pattern cross-references the explaining section
+
+### When to Profile vs Read
+- EXPLAIN QUERY PLAN first (free)
+- Instruments File Activity for write amplification
+- Instruments Points of Interest with `db.trace` for contention
+- Read-first principle: most perf bugs are missing-the-cheap-win problems, not measurement problems
+- Realistic-data warning: toy data lies
 
 ## Key Pattern
 
