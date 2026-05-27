@@ -103,8 +103,9 @@ try db.create(virtualTable: "book_ft", using: FTS5()) { t in
 extension String {
     var fts5Normalized: String {
         precomposedStringWithCompatibilityMapping              // NFKC (ligatures)
-            .applyingGermanFolds()                              // language-specific: ü→ue, ß→ss
             .applyingTransform(.stripDiacritics, reverse: false) ?? self
+        // For language-specific transliteration (e.g., ü→ue, ß→ss for German),
+        // maintain your own replacement table and apply it here.
     }
 }
 
