@@ -2061,6 +2061,42 @@
       "axiom-swiftui--layout"
     ]
   },
+  "axiom-swiftui--previews": {
+    "category": "ui",
+    "tags": [
+      "#preview",
+      "@previewable",
+      "previewmodifier",
+      "previewability",
+      "swift-package",
+      "variant-mode",
+      "xcode_running_for_previews"
+    ],
+    "related": [
+      "axiom-swiftui",
+      "axiom-swiftui--previews-ref",
+      "axiom-swiftui--debugging",
+      "axiom-accessibility"
+    ]
+  },
+  "axiom-swiftui--previews-ref": {
+    "category": "ui",
+    "tags": [
+      "#preview",
+      "@previewable",
+      "development-assets",
+      "previewmodifier",
+      "previewtrait",
+      "sizethatfitslayout",
+      "variant-mode",
+      "xcpreviewagent"
+    ],
+    "related": [
+      "axiom-swiftui",
+      "axiom-swiftui--previews",
+      "axiom-swiftui--debugging"
+    ]
+  },
   "axiom-swiftui--nav": {
     "category": "ui",
     "tags": [

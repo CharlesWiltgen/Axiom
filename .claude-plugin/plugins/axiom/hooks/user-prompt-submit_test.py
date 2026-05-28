@@ -75,6 +75,36 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-swiftui", routed_skills(
             "My SwiftUI @State view won't update"))
 
+    def test_swiftui_previews_slow(self):
+        for prompt in [
+            "My SwiftUI previews take 30 seconds to load",
+            "Why are my previews so slow?",
+            "Preview takes forever to compile",
+            "SwiftUI preview hangs and never finishes",
+        ]:
+            self.assertIn("axiom-swiftui", routed_skills(prompt),
+                          f"expected axiom-swiftui for: {prompt!r}")
+
+    def test_swiftui_previews_api(self):
+        for prompt in [
+            "How do I use @Previewable @State in a preview?",
+            "What is PreviewModifier and makeSharedContext?",
+            "How do I write a #Preview macro with traits?",
+            "Variant Mode in the preview canvas",
+            "Using .sizeThatFitsLayout in #Preview traits",
+        ]:
+            self.assertIn("axiom-swiftui", routed_skills(prompt),
+                          f"expected axiom-swiftui for: {prompt!r}")
+
+    def test_swiftui_previews_perf_patterns(self):
+        for prompt in [
+            "Should I guard SDK init with XCODE_RUNNING_FOR_PREVIEWS?",
+            "Set up Development Assets for my previews",
+            "Pin the preview canvas while editing child views",
+        ]:
+            self.assertIn("axiom-swiftui", routed_skills(prompt),
+                          f"expected axiom-swiftui for: {prompt!r}")
+
     def test_data(self):
         self.assertIn("axiom-data", routed_skills(
             "How do I migrate my SwiftData @Model schema?"))

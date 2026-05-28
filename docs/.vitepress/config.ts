@@ -291,6 +291,7 @@ export default withMermaid(defineConfig({
             { text: 'SwiftUI Layout', link: '/skills/ui-design/swiftui-layout' },
             { text: 'SwiftUI Navigation', link: '/skills/ui-design/swiftui-nav' },
             { text: 'SwiftUI Performance', link: '/skills/ui-design/swiftui-performance' },
+            { text: 'SwiftUI Previews', link: '/skills/ui-design/swiftui-previews' },
             { text: 'SwiftUI Debugging', link: '/skills/ui-design/swiftui-debugging' },
             { text: 'SwiftUI Gestures', link: '/skills/ui-design/swiftui-gestures' },
             { text: 'Toolbars', link: '/skills/ui-design/toolbars' },
@@ -521,6 +522,7 @@ export default withMermaid(defineConfig({
             { text: 'SwiftUI Containers', link: '/reference/swiftui-containers-ref' },
             { text: 'SwiftUI Layout', link: '/reference/swiftui-layout-ref' },
             { text: 'SwiftUI Navigation', link: '/reference/swiftui-nav-ref' },
+            { text: 'SwiftUI Previews', link: '/reference/swiftui-previews-ref' },
             { text: 'SwiftUI Search', link: '/reference/swiftui-search-ref' },
             { text: 'TextKit 2', link: '/reference/textkit-ref' },
             { text: 'Transferable & Sharing', link: '/reference/transferable-ref' },
@@ -669,7 +671,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v3.7.0'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v3.8.0'
     }
   }
 }))

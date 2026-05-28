@@ -858,6 +858,89 @@ if (!fs.existsSync(auditCmdPath)) {
   }
 }
 
+// ── 12e. README Stats-Block Parity ──
+//
+// README.md advertises skill/agent/command counts in prose. Before axiom-wz9k
+// this drifted silently every release (175 vs 217, 217 vs 220, 231 vs 236)
+// because scripts/set-version.js wrote 8 other files but not README. The
+// auto-fix in set-version.js rewrites the marked block; this check enforces
+// that no hand-edit slips drift through to a release.
+//
+// Source of truth: docs/.vitepress/theme/stats.json (also written by
+// set-version.js from the live filesystem walk).
+
+heading("12e. README Stats-Block Parity");
+
+const statsPath = path.join(root, "docs/.vitepress/theme/stats.json");
+const readmePath = path.join(root, "README.md");
+
+if (!fs.existsSync(statsPath)) {
+  error("readme-parity", `stats.json not found at ${statsPath} — cannot verify README parity`);
+} else if (!fs.existsSync(readmePath)) {
+  error("readme-parity", `README.md not found — cannot verify stats parity`);
+} else {
+  const stats = JSON.parse(fs.readFileSync(statsPath, "utf8"));
+  const expectedSkills =
+    (stats.disciplineSkills ?? 0) +
+    (stats.referenceSkills ?? 0) +
+    (stats.diagnosticSkills ?? 0);
+  const expectedAgents = stats.agents ?? 0;
+  const expectedCommands = stats.commands ?? 0;
+
+  const readme = fs.readFileSync(readmePath, "utf8");
+  const beginIdx = readme.indexOf("<!-- AXIOM_STATS_BEGIN");
+  const endIdx = readme.indexOf("<!-- AXIOM_STATS_END -->");
+
+  if (beginIdx === -1 || endIdx === -1 || endIdx < beginIdx) {
+    error(
+      "readme-parity",
+      `README.md missing AXIOM_STATS markers — set-version.js cannot maintain counts. ` +
+        `Restore '<!-- AXIOM_STATS_BEGIN ... -->' / '<!-- AXIOM_STATS_END -->' around the counts block.`,
+    );
+  } else {
+    const block = readme.slice(beginIdx, endIdx);
+    const skillsMatch = block.match(/\*\*(\d+) skills\*\*/);
+    const agentsMatch = block.match(/\*\*(\d+) agents\*\*/);
+    const commandsMatch = block.match(/\*\*(\d+) commands\*\*/);
+
+    const readmeSkills = skillsMatch ? Number(skillsMatch[1]) : NaN;
+    const readmeAgents = agentsMatch ? Number(agentsMatch[1]) : NaN;
+    const readmeCommands = commandsMatch ? Number(commandsMatch[1]) : NaN;
+
+    let drifted = false;
+    if (readmeSkills !== expectedSkills) {
+      error(
+        "readme-parity",
+        `README skills count drift: README says ${readmeSkills}, stats.json says ${expectedSkills}. ` +
+          `Run: node scripts/set-version.js <current-version>`,
+      );
+      drifted = true;
+    }
+    if (readmeAgents !== expectedAgents) {
+      error(
+        "readme-parity",
+        `README agents count drift: README says ${readmeAgents}, stats.json says ${expectedAgents}. ` +
+          `Run: node scripts/set-version.js <current-version>`,
+      );
+      drifted = true;
+    }
+    if (readmeCommands !== expectedCommands) {
+      error(
+        "readme-parity",
+        `README commands count drift: README says ${readmeCommands}, stats.json says ${expectedCommands}. ` +
+          `Run: node scripts/set-version.js <current-version>`,
+      );
+      drifted = true;
+    }
+
+    if (!drifted) {
+      console.log(
+        `  ✓ README counts match stats.json (${expectedSkills} skills, ${expectedAgents} agents, ${expectedCommands} commands)`,
+      );
+    }
+  }
+}
+
 // ── Phase 1 Summary ──
 
 heading("Phase 1 Summary (Static)");

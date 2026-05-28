@@ -390,6 +390,46 @@ try {
     });
   }
 
+  // 7. Prepare README.md stats-block update (closes axiom-wz9k).
+  // README counts were drifting silently every release because the script
+  // updated metadata.txt/stats.json but never touched README. Now the
+  // script rewrites the marked block between AXIOM_STATS_BEGIN and
+  // AXIOM_STATS_END. Hand-editing the block prints a warning; missing
+  // markers fail the script. Parity is also enforced by pre-deploy.ts.
+  const readmePath = path.join(root, 'README.md');
+  if (fs.existsSync(readmePath)) {
+    const readmeContent = fs.readFileSync(readmePath, 'utf8');
+    const beginMarker = '<!-- AXIOM_STATS_BEGIN';
+    const endMarker = '<!-- AXIOM_STATS_END -->';
+    const beginIdx = readmeContent.indexOf(beginMarker);
+    const endIdx = readmeContent.indexOf(endMarker);
+    if (beginIdx === -1 || endIdx === -1 || endIdx < beginIdx) {
+      throw new Error(
+        `README.md is missing AXIOM_STATS markers — expected '${beginMarker} ...' and '${endMarker}'. ` +
+        `Restore the marked block around the skills/agents/commands count lines.`
+      );
+    }
+    // Preserve the begin-marker line as-is (it includes the auto-maintenance comment).
+    const beginLineEnd = readmeContent.indexOf('\n', beginIdx);
+    const newStatsBlock =
+      readmeContent.slice(beginIdx, beginLineEnd + 1) +
+      `- **${skillsCount} skills** covering UI, data, concurrency, performance, networking, accessibility, and more\n` +
+      `- **${agentsCount} agents** that autonomously scan for issues (memory leaks, concurrency violations, build problems)\n` +
+      `- **${commandsCount} commands** for quick audits and diagnostics\n` +
+      endMarker;
+    const newReadmeContent =
+      readmeContent.slice(0, beginIdx) +
+      newStatsBlock +
+      readmeContent.slice(endIdx + endMarker.length);
+    if (newReadmeContent !== readmeContent) {
+      updates.push({
+        path: readmePath,
+        content: newReadmeContent,
+        label: 'README.md'
+      });
+    }
+  }
+
   // --tag preflight: refuse on dirty tree (other than expected files) or existing tag
   if (tagFlag) {
     const expectedRelative = new Set(updates.map(u => path.relative(root, u.path)));
