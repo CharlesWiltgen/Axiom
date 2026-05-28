@@ -46,6 +46,11 @@ if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (c
 if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigationstack|navigationsplitview|layout.{0,10}(break|bug|wrong|issue)|preview.{0,5}(crash|fail|not |won.t|broken)|view.{0,10}(not|won.t|doesn.t).{0,10}(updat|render|show|appear)|tabview|scroll.{0,20}(jank|lag|slow|stutter)', prompt_lower):
     matches.append("axiom-swiftui")
 
+# UI — preview construction (separate from preview-crash routing above)
+# Routes to axiom-swiftui for building good previews, perf, @Previewable, PreviewModifier, variant matrix
+if "axiom-swiftui" not in matches and re.search(r'@previewable\b|previewable\s*\(\s*\)|previewmodifier|makesharedcontext|preview.{0,15}(slow|takes? \w+ seconds?|takes? forever|too slow|hang|never finish)|slow.{0,10}preview|#preview\b|preview\s+(variant|matrix|trait|modifier|canvas)|variant\s*mode|preview\s*pin|xcode_running_for_previews|development assets|sizethatfitslayout', prompt_lower):
+    matches.append("axiom-swiftui")
+
 # UI — generic terms gated by non_ios check
 # Note: bare "toolbar" matches NSToolbar in macOS prompts — require \. prefix or modifier-context
 if not non_ios and "axiom-swiftui" not in matches and re.search(r'animation.{0,5}(not|won.t|broken|stutter|jank)|\.toolbar\b|toolbaritem|toolbarplacement|\.sheet|\.fullscreencover|list\b.{0,10}(scroll|slow|performance)', prompt_lower):
