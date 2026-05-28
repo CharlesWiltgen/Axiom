@@ -30,6 +30,9 @@ Use this skill when working with:
 | Migrating from Realm to SwiftData | See `skills/realm-migration-ref.md` |
 | SwiftData vs SQLiteData decision | See `skills/sqlitedata-migration.md` |
 | GRDB queries, ValueObservation, DatabaseMigrator | See `skills/grdb.md` |
+| GRDB performance, indexes, EXPLAIN QUERY PLAN, cursors | See `skills/grdb-performance.md` |
+| Full-text search (FTS5) in GRDB or SQLiteData | See `skills/sqlite-fts-ref.md` |
+| GRDB shared across app + widget/extension (App Group) | See `skills/grdb-app-groups.md` |
 | SQLiteData @Table, CRUD, SyncEngine | See `skills/sqlitedata.md` |
 | SQLiteData advanced patterns, CTEs, views | See `skills/sqlitedata-ref.md` |
 | Core Data stack, relationships, concurrency | See `skills/core-data.md` |
@@ -59,6 +62,7 @@ Use this skill when working with:
 **iCloud audit** → Launch `icloud-auditor` agent or `/axiom:audit icloud` (entitlement checks, file coordination, incomplete CKError matrix coverage, missing account-change observation, polling vs CKSubscriptions, SwiftData + CloudKit unsupported features, compound risks like uncoordinated I/O across extensions)
 **Storage audit** → Launch `storage-auditor` agent or `/axiom:audit storage` (wrong file locations, missing backup exclusions, sensitive data on disk vs Keychain, missing App Group containers, unbounded cache growth, orphan files, compound risks like user data in tmp/ + critical content)
 **Database schema audit** → Launch `database-schema-auditor` agent or `/axiom:audit database-schema` (unsafe ALTER TABLE, DROP operations, missing idempotency, FK constraints declared but not enforced, incomplete upgrade paths, compound risks like INSERT OR REPLACE on FK-referenced tables)
+**GRDB performance audit** → Launch `grdb-performance-auditor` agent or `/axiom:audit grdb-performance` (raw SQL string interpolation, missing FK indexes in raw SQL, missing PRAGMA optimize for raw-GRDB apps, journal mode mismatch for app-group DBs, missing observesSuspensionNotifications for shared DBs, prefix-redundant indexes in raw SQL, legacy Record subclass)
 **SwiftData audit** → Launch `swiftdata-auditor` agent or `/axiom:audit swiftdata` (struct models, missing schema registration, array relationships without defaults, background context misuse, N+1 patterns, stale predicates, CloudKit conformance gaps, compound risks like struct model + array relationship)
 
 ## Decision Tree
@@ -66,6 +70,9 @@ Use this skill when working with:
 1. SwiftData? → `skills/swiftdata.md`, `skills/swiftdata-migration.md`
 2. Core Data? → `skills/core-data.md`, `skills/core-data-diag.md`
 3. GRDB? → `skills/grdb.md`
+3a. GRDB perf, slow query, schema design for perf? → `skills/grdb-performance.md`
+3b. FTS5 (full-text search, any layer)? → `skills/sqlite-fts-ref.md`
+3c. DB shared across app + extension/widget/Live Activity? → `skills/grdb-app-groups.md`
 4. SQLiteData? → `skills/sqlitedata.md`, `skills/sqlitedata-ref.md`
 5. ANY schema migration? → `skills/database-migration.md` (ALWAYS — prevents data loss)
 6. Realm migration? → `skills/realm-migration-ref.md`
@@ -86,6 +93,7 @@ Use this skill when working with:
 21. Want iCloud sync audit? → icloud-auditor (Agent)
 22. Want storage location audit? → storage-auditor (Agent)
 23. Want database schema/migration safety scan? → database-schema-auditor (Agent)
+23a. Want GRDB performance/app-group scan? → grdb-performance-auditor (Agent)
 24. Want SwiftData code audit? → swiftdata-auditor (Agent)
 25. tvOS data persistence? → See axiom-swift (skills/tvos.md) (CRITICAL: no persistent local storage) + `skills/sqlitedata.md` (CloudKit SyncEngine)
 26. SwiftData @MainActor / background context threading? → `/skill axiom-concurrency`
@@ -144,6 +152,21 @@ User: "Check if my files are stored in the right locations"
 
 User: "Audit my database migrations for safety"
 → Launch: `database-schema-auditor` agent
+
+User: "How do I make my GRDB queries faster?"
+→ Read: `skills/grdb-performance.md`
+
+User: "Add search to my GRDB-backed app" / "Add search to SQLiteData app"
+→ Read: `skills/sqlite-fts-ref.md`
+
+User: "My widget needs to read the same database as the app"
+→ Read: `skills/grdb-app-groups.md`
+
+User: "My widget shows stale data from the database"
+→ Read: `skills/grdb-app-groups.md`
+
+User: "Audit my GRDB code for performance issues"
+→ Launch: `grdb-performance-auditor` agent
 
 User: "Check my SwiftData models for issues"
 → Launch: `swiftdata-auditor` agent

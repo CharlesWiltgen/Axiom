@@ -517,7 +517,15 @@ Reverse the join condition (`$0.id.eq($1.parentID)`) to walk up the tree instead
 
 ## Full-Text Search (FTS5)
 
-### Basic FTS5
+**For FTS5 fundamentals — tokenizer choice, Unicode normalization, external-content sync, ranking math, prefix indexes, the `MATCH` operator semantics — see `sqlite-fts-ref.md`. This section covers only the SQLiteData query-builder surface.**
+
+### Unicode normalization (critical)
+
+FTS5 indexes the bytes you give it. Cocoa strings are NFC; strings read from disk paths or network input may be NFD. Match misses are silent. Apply `String.precomposedStringWithCanonicalMapping` (NFC) before indexing AND before querying. For ligature equivalence ("ﬁ" U+FB01 ↔ "fi") use `precomposedStringWithCompatibilityMapping` (NFKC). For language-specific transliteration ("Müller" ↔ "Mueller") use `String.applyingTransform(...)`. See `sqlite-fts-ref.md` §4 for the full discipline.
+
+The SQLiteData query builder applies parameter binding for values (safe against SQL injection in normal queries) but does **not** escape FTS5 syntax operators (`AND`/`OR`/`NOT`, `"`, `*`). Sanitize operators in user input or construct an explicit FTS5 pattern string before calling `.match(_:)`.
+
+### Declaring an FTS5 table
 
 ```swift
 @Table
@@ -540,21 +548,23 @@ try #sql(
 .execute(db)
 ```
 
-### Advanced FTS5 Features
+### Query API
 
 ```swift
 // Highlight search terms
 let results = try ItemText.where { $0.match(query) }
     .select { ($0.rowid, $0.title.highlight("<b>", "</b>")) }.fetchAll(db)
 
-// Snippets with context
+// Snippets with context (max_tokens must be < 64; 32 is a reasonable default)
 let snippets = try ItemText.where { $0.match(query) }
-    .select { $0.description.snippet("<b>", "</b>", "...", 64) }.fetchAll(db)
+    .select { $0.description.snippet("<b>", "</b>", "...", 32) }.fetchAll(db)
 
-// BM25 relevance ranking
+// BM25 relevance ranking — LOWER bm25 = better match, so default ascending order is correct
 let ranked = try ItemText.where { $0.match(query) }
-    .order { $0.bm25().desc() }.fetchAll(db)
+    .order { $0.bm25() }.fetchAll(db)
 ```
+
+**Critical:** lower bm25 is better. Do not append `.desc()` to `.bm25()` — that puts the worst matches first. The default ascending order is what you want.
 
 ---
 

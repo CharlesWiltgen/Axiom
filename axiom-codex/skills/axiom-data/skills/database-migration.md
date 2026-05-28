@@ -197,6 +197,38 @@ func migration012_AddIndexes() throws {
 // Old structure stays around (deprecated in code)
 ```
 
+## Modern schema choices
+
+When designing new tables (or rewriting old ones during a migration), consider these SQLite 3.37+ features. All are available on Axiom's iOS 18+/macOS 15+ floor.
+
+### STRICT tables
+
+`CREATE TABLE x (...) STRICT;` enforces column types at insert and update time. Six allowed types: `INT`, `INTEGER`, `REAL`, `TEXT`, `BLOB`, `ANY`. Insert a value that can't be losslessly converted to the declared type and SQLite raises `SQLITE_CONSTRAINT_DATATYPE` — behaves like Postgres or MySQL rather than classic SQLite's silent coercion.
+
+```sql
+CREATE TABLE track (
+    id       INTEGER PRIMARY KEY,
+    title    TEXT NOT NULL,
+    duration REAL NOT NULL,
+    artwork  BLOB
+) STRICT;
+```
+
+**When to use**
+
+- New tables where type integrity matters
+- Especially valuable when your records are Swift `Codable` types that won't survive silent coercion — STRICT catches the schema/Swift drift at the database boundary instead of letting bad data accumulate
+
+**Combinable** `CREATE TABLE x (...) STRICT, WITHOUT ROWID;`
+
+**Backwards compatibility** Databases with STRICT tables won't open on SQLite < 3.37.0 (iOS < 15.4). On Axiom's target floor this is safe. If you publish a library with broader support, check your minimum-OS window.
+
+**`ANY` is a gotcha** In a STRICT table, `ANY` columns store values without coercion — `'000123'` stays TEXT instead of being coerced to INTEGER `123` (which is what would happen in a non-STRICT table). If you need polymorphic storage, this is what you want; if you assumed legacy coercion, surprise.
+
+### Related perf-affecting schema choices
+
+`WITHOUT ROWID` (storage layout for small-row tables with non-integer PKs) and generated columns (indexable computed values) are *performance* concerns rather than migration safety. See `grdb-performance.md` §7 "Schema choices that affect performance" for those — they belong to the same design conversation but the tradeoffs are different.
+
 ## Testing Checklist
 
 #### BEFORE deploying any migration
