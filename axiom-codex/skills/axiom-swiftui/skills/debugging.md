@@ -458,6 +458,8 @@ digraph view_not_updating {
 
 When your preview won't load or crashes immediately, the three root causes are distinct.
 
+**Scope note**: This section covers preview *crashes* (won't load, fatal error, cache corruption). For *building* previews — slow previews, `@Previewable`, `PreviewModifier`, variant matrix discipline — see `skills/previews.md`. For the `#Preview` macro API surface, see `skills/previews-ref.md`.
+
 ### Step 1: What's the Error?
 
 #### Error Type 1: "Cannot find in scope" or "No such module"

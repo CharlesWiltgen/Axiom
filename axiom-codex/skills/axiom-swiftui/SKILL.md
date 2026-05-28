@@ -14,6 +14,9 @@ license: MIT
 |----------------|-----------|
 | View not updating | See `skills/debugging.md` |
 | View update still broken after debugging | See `skills/debugging-diag.md` |
+| Slow previews / building good previews / `@Previewable` / `PreviewModifier` / variant matrix | See `skills/previews.md` |
+| Preview API reference (`#Preview`, traits, modes, Development Assets) | See `skills/previews-ref.md` |
+| Preview crashes / won't load | See `skills/debugging.md` (Preview Crashes section) |
 | Navigation issues | See `skills/nav.md` |
 | Navigation still broken after debugging | See `skills/nav-diag.md` |
 | Navigation API reference | See `skills/nav-ref.md` |
@@ -81,6 +84,9 @@ digraph swiftui {
     what -> "skills/search-ref.md" [label="search"];
     what -> "skills/toolbars.md" [label="toolbars / sheet buttons"];
     what -> "skills/26-ref.md" [label="iOS 26 features"];
+    what -> "skills/previews.md" [label="slow previews / building good previews"];
+    what -> "skills/previews-ref.md" [label="preview API reference"];
+    what -> "skills/debugging.md" [label="preview crashes / won't load"];
     what -> "axiom-uikit (skills/uikit-bridging.md)" [label="UIKit interop"];
     what -> "axiom-design (skills/app-composition.md)" [label="app-level (root, auth)"];
     what -> "axiom-swift (skills/transferable-ref.md)" [label="drag/drop, sharing"];
@@ -108,3 +114,5 @@ digraph swiftui {
 | "No architecture needed" | Even small features benefit from separation. `skills/architecture.md` prevents refactoring debt. |
 | "I know .searchable" | Search has 6 gotchas. `skills/search-ref.md` covers all of them. |
 | "I'll just add a Done button" | Sheets without Cancel break the HIG (updated 2026-03-24). `.cancellationAction` / `.confirmationAction` produce HIG-correct placement automatically — `skills/toolbars.md` Pattern 2 has the rules. |
+| "Previews are slow forever, I'll just use the simulator" | Five concrete fixes in `skills/previews.md`. Rule 4 (auto-refresh off) is 30 seconds and often halves perceived slowness. |
+| "I'll just write a wrapper view for `@State` in this preview" | `@Previewable @State` (Xcode 16+) eliminates that boilerplate. `skills/previews-ref.md` has the macro signature. |

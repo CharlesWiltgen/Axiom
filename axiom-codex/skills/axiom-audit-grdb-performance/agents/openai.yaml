@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit GRDB Performance"
+  short_description: "The user mentions GRDB performance review, slow GRDB queries, app-group database setup audit, or pre-release GRDB scan."
