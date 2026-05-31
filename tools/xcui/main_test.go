@@ -120,3 +120,41 @@ func TestWaitConditionMet(t *testing.T) {
 		t.Error("gone(present) should not be met")
 	}
 }
+
+func TestEvaluateAssertPass(t *testing.T) {
+	roots, _ := parseDescribeUI([]byte(sampleTree))
+	res := evaluateAssert(roots, assertSpec{
+		id: "artist.hero", label: "Artwork for The Chemical Brothers", hasLabel: true,
+		trait: "image", single: true,
+	})
+	if !res.Pass {
+		t.Errorf("expected pass, failures: %v", res.Failures)
+	}
+}
+
+func TestEvaluateAssertLabelMismatch(t *testing.T) {
+	roots, _ := parseDescribeUI([]byte(sampleTree))
+	res := evaluateAssert(roots, assertSpec{id: "play.all", label: "Wrong", hasLabel: true})
+	if res.Pass || len(res.Failures) == 0 {
+		t.Error("expected failure on label mismatch")
+	}
+}
+
+func TestEvaluateAssertSingleViolated(t *testing.T) {
+	// two elements sharing an id → --single must fail
+	dup := `[{"AXUniqueId":"dup","AXLabel":"a","role":"AXButton","type":"Button","enabled":true,"frame":{"x":0,"y":0,"width":1,"height":1},"children":[
+	         {"AXUniqueId":"dup","AXLabel":"b","role":"AXButton","type":"Button","enabled":true,"frame":{"x":0,"y":0,"width":1,"height":1},"children":[]}]}]`
+	roots, _ := parseDescribeUI([]byte(dup))
+	res := evaluateAssert(roots, assertSpec{id: "dup", single: true})
+	if res.Pass {
+		t.Error("expected --single failure when id matches 2 elements")
+	}
+}
+
+func TestEvaluateAssertNotFound(t *testing.T) {
+	roots, _ := parseDescribeUI([]byte(sampleTree))
+	res := evaluateAssert(roots, assertSpec{id: "ghost", label: "x", hasLabel: true})
+	if res.Pass {
+		t.Error("expected failure when element not found")
+	}
+}

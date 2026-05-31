@@ -25,3 +25,13 @@ type WaitReport struct {
 	WaitedMS  int64  `json:"waited_ms"`
 	Polls     int    `json:"polls"`
 }
+
+// AssertReport is the JSON payload of `xcui assert`.
+type AssertReport struct {
+	Tool     string   `json:"tool"`
+	Version  string   `json:"version"`
+	ID       string   `json:"id"`
+	Matched  int      `json:"matched"`
+	Pass     bool     `json:"pass"`
+	Failures []string `json:"failures,omitempty"`
+}
