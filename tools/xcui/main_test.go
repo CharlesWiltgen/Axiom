@@ -7,3 +7,60 @@ func TestVersionConstSet(t *testing.T) {
 		t.Fatal("version const must be set")
 	}
 }
+
+const sampleTree = `[
+  {
+    "AXUniqueId": null, "AXLabel": "App", "AXValue": null,
+    "role": "AXApplication", "type": "Application", "enabled": true,
+    "frame": {"x":0,"y":0,"width":402,"height":874},
+    "children": [
+      {
+        "AXUniqueId": "artist.hero", "AXLabel": "Artwork for The Chemical Brothers",
+        "AXValue": null, "role": "AXImage", "type": "Image", "enabled": true,
+        "frame": {"x":0,"y":0,"width":402,"height":402}, "children": []
+      },
+      {
+        "AXUniqueId": "play.all", "AXLabel": "Play all", "AXValue": null,
+        "role": "AXButton", "type": "Button", "enabled": true,
+        "frame": {"x":16,"y":420,"width":120,"height":44}, "children": []
+      }
+    ]
+  }
+]`
+
+func TestParseDescribeUI(t *testing.T) {
+	roots, err := parseDescribeUI([]byte(sampleTree))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+	if len(roots) != 1 || len(roots[0].Children) != 2 {
+		t.Fatalf("got %d roots / %d children, want 1 / 2", len(roots), len(roots[0].Children))
+	}
+}
+
+func TestFindByID(t *testing.T) {
+	roots, _ := parseDescribeUI([]byte(sampleTree))
+	matches := findByID(roots, "artist.hero")
+	if len(matches) != 1 {
+		t.Fatalf("got %d matches, want 1", len(matches))
+	}
+	if got := deref(matches[0].AXLabel); got != "Artwork for The Chemical Brothers" {
+		t.Errorf("label = %q", got)
+	}
+}
+
+func TestFindByIDAbsent(t *testing.T) {
+	roots, _ := parseDescribeUI([]byte(sampleTree))
+	if matches := findByID(roots, "nope"); len(matches) != 0 {
+		t.Errorf("got %d matches, want 0", len(matches))
+	}
+}
+
+func FuzzParseDescribeUI(f *testing.F) {
+	f.Add([]byte(sampleTree))
+	f.Add([]byte(`[]`))
+	f.Add([]byte(`[{"AXUniqueId":null,"children":[]}]`))
+	f.Fuzz(func(t *testing.T, data []byte) {
+		_, _ = parseDescribeUI(data) // must not panic
+	})
+}
