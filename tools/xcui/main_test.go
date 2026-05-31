@@ -158,3 +158,50 @@ func TestEvaluateAssertNotFound(t *testing.T) {
 		t.Error("expected failure when element not found")
 	}
 }
+
+func TestToggleLookup(t *testing.T) {
+	tg, ok := lookupToggle("reduce-motion")
+	if !ok {
+		t.Fatal("reduce-motion should be known")
+	}
+	if tg.method != methodDefaults || tg.key == "" {
+		t.Errorf("unexpected toggle spec: %+v", tg)
+	}
+	if _, ok := lookupToggle("bogus"); ok {
+		t.Error("bogus toggle should be unknown")
+	}
+}
+
+func TestToggleLookupNativeUI(t *testing.T) {
+	if tg, ok := lookupToggle("increase-contrast"); !ok || tg.method != methodIncreaseContrast {
+		t.Errorf("increase-contrast should map to methodIncreaseContrast, got %+v ok=%v", tg, ok)
+	}
+	if tg, ok := lookupToggle("dynamic-type"); !ok || tg.method != methodContentSize {
+		t.Errorf("dynamic-type should map to methodContentSize, got %+v ok=%v", tg, ok)
+	}
+}
+
+func TestParseOnOff(t *testing.T) {
+	for _, s := range []string{"on", "true", "1", "yes"} {
+		if v, err := parseOnOff(s); err != nil || !v {
+			t.Errorf("parseOnOff(%q) = %v,%v", s, v, err)
+		}
+	}
+	for _, s := range []string{"off", "false", "0", "no"} {
+		if v, err := parseOnOff(s); err != nil || v {
+			t.Errorf("parseOnOff(%q) = %v,%v", s, v, err)
+		}
+	}
+	if _, err := parseOnOff("maybe"); err == nil {
+		t.Error("expected error for invalid value")
+	}
+}
+
+func TestContrastArg(t *testing.T) {
+	if contrastArg(true) != "enabled" {
+		t.Error("true should map to enabled")
+	}
+	if contrastArg(false) != "disabled" {
+		t.Error("false should map to disabled")
+	}
+}

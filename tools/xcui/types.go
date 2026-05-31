@@ -35,3 +35,14 @@ type AssertReport struct {
 	Pass     bool     `json:"pass"`
 	Failures []string `json:"failures,omitempty"`
 }
+
+// A11yReport is the JSON payload of `xcui a11y set` / `a11y reset`.
+type A11yReport struct {
+	Tool       string `json:"tool"`
+	Version    string `json:"version"`
+	Toggle     string `json:"toggle,omitempty"`
+	Value      string `json:"value,omitempty"`
+	Applied    bool   `json:"applied"`
+	Relaunched bool   `json:"relaunched,omitempty"`
+	Note       string `json:"note,omitempty"`
+}

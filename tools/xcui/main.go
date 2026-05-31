@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"os"
 )
 
@@ -46,6 +45,3 @@ func main() {
 		os.Exit(2)
 	}
 }
-
-// temporary stub — replaced per-task below
-func runA11y(out io.Writer, args []string) int { return 0 }
