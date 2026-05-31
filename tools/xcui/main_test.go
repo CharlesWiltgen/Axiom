@@ -64,3 +64,26 @@ func FuzzParseDescribeUI(f *testing.F) {
 		_, _ = parseDescribeUI(data) // must not panic
 	})
 }
+
+const sampleDevices = `{"devices":{
+  "com.apple.CoreSimulator.SimRuntime.iOS-26-0":[
+    {"udid":"AAAA","state":"Shutdown","name":"iPhone 16"},
+    {"udid":"BBBB","state":"Booted","name":"iPhone 16 Pro"}
+  ]}}`
+
+func TestPickBootedUDID(t *testing.T) {
+	udid, err := pickBootedUDID([]byte(sampleDevices))
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if udid != "BBBB" {
+		t.Errorf("udid = %q, want BBBB", udid)
+	}
+}
+
+func TestPickBootedUDIDNoneBooted(t *testing.T) {
+	none := `{"devices":{"r":[{"udid":"AAAA","state":"Shutdown","name":"x"}]}}`
+	if _, err := pickBootedUDID([]byte(none)); err == nil {
+		t.Error("expected error when no sim booted")
+	}
+}
