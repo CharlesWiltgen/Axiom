@@ -127,6 +127,30 @@ try:
 except OSError:
     pass
 
+# Detect xcui binary. Same size-floor logic as xclog/xcsym (truncated
+# marketplace downloads keep the exec bit but fault on first call). xcui
+# ships as a multi-MB universal binary; 1 MB is well below legitimate size.
+xcui_path = f"{plugin_root}/bin/xcui"
+xcui_context = ""
+MIN_XCUI_SIZE = 1_000_000
+try:
+    if os.path.isfile(xcui_path):
+        xcui_size = os.path.getsize(xcui_path)
+        if xcui_size < MIN_XCUI_SIZE:
+            xcui_context = f"""
+
+---
+
+**xcui binary appears truncated** ({xcui_size:,} bytes at `{xcui_path}`; expected ≥{MIN_XCUI_SIZE:,}). Likely cause: interrupted plugin install. Tell the user to reinstall the Axiom plugin. Do NOT call `xcui` or `/axiom:ui` until reinstalled."""
+        elif os.access(xcui_path, os.X_OK):
+            xcui_context = f"""
+
+---
+
+**xcui** (scriptable sim UI & accessibility testing): Available at `{xcui_path}`. Drives the simulator via AXe + simctl. Run `xcui doctor` first (verifies AXe; `--install` adds it via brew). Key verbs: `xcui wait --for-element <id>`, `xcui assert --id <id> --label … --trait … --single`, `xcui a11y set --toggle <name> --value <on/off> --app <id>`. For taps use `axe tap --id <id>` directly. Workflow: `axiom-tools` (skills/xcui-ref.md). Command: `/axiom:ui`."""
+except OSError:
+    pass
+
 # Build the context message
 additional_context = f"""<EXTREMELY_IMPORTANT>
 You have Axiom iOS development skills.
@@ -137,7 +161,7 @@ You have Axiom iOS development skills.
 
 **Below is the full content of your 'axiom:axiom-tools' skill - your introduction to using Axiom skills. For all other Axiom skills, use the 'Skill' tool:**
 
-{using_axiom_content}{apple_docs_context}{xclog_context}{xcsym_context}
+{using_axiom_content}{apple_docs_context}{xclog_context}{xcsym_context}{xcui_context}
 
 </EXTREMELY_IMPORTANT>"""
 
