@@ -87,3 +87,20 @@ func TestPickBootedUDIDNoneBooted(t *testing.T) {
 		t.Error("expected error when no sim booted")
 	}
 }
+
+func TestDoctorExitCode(t *testing.T) {
+	cases := []struct {
+		axe, sim bool
+		want     int
+	}{
+		{true, true, 0},
+		{false, true, 2},
+		{true, false, 2},
+		{false, false, 2},
+	}
+	for _, c := range cases {
+		if got := doctorExitCode(c.axe, c.sim); got != c.want {
+			t.Errorf("doctorExitCode(%v,%v) = %d, want %d", c.axe, c.sim, got, c.want)
+		}
+	}
+}
