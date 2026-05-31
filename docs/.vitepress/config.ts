@@ -198,7 +198,8 @@ export default withMermaid(defineConfig({
             { text: '/axiom:audit testing', link: '/commands/testing/audit-testing' },
             { text: '/axiom:run-tests', link: '/commands/testing/run-tests' },
             { text: '/axiom:screenshot', link: '/commands/testing/screenshot' },
-            { text: '/axiom:test-simulator', link: '/commands/testing/test-simulator' }
+            { text: '/axiom:test-simulator', link: '/commands/testing/test-simulator' },
+            { text: '/axiom:ui', link: '/commands/testing/ui' }
           ]
         },
         {
@@ -621,7 +622,8 @@ export default withMermaid(defineConfig({
             { text: 'xclog (Console Capture)', link: '/reference/xclog-ref' },
             { text: 'Xcode MCP Tools', link: '/reference/xcode-mcp-ref' },
             { text: 'xcsym (Crash Symbolication)', link: '/reference/xcsym-ref' },
-            { text: 'xctrace', link: '/reference/xctrace-ref' }
+            { text: 'xctrace', link: '/reference/xctrace-ref' },
+            { text: 'xcui (Simulator UI & Accessibility)', link: '/reference/xcui-ref' }
           ]
         }
       ],
