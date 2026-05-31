@@ -48,6 +48,5 @@ func main() {
 }
 
 // temporary stubs — replaced per-task below
-func runWait(out io.Writer, args []string) int   { return 0 }
 func runAssert(out io.Writer, args []string) int { return 0 }
 func runA11y(out io.Writer, args []string) int   { return 0 }

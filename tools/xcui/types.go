@@ -14,3 +14,14 @@ type DoctorReport struct {
 	Problems   []string `json:"problems,omitempty"`
 	NextSteps  []string `json:"next_steps,omitempty"`
 }
+
+// WaitReport is the JSON payload of `xcui wait`.
+type WaitReport struct {
+	Tool      string `json:"tool"`
+	Version   string `json:"version"`
+	Condition string `json:"condition"`
+	Target    string `json:"target,omitempty"`
+	Met       bool   `json:"met"`
+	WaitedMS  int64  `json:"waited_ms"`
+	Polls     int    `json:"polls"`
+}

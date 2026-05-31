@@ -104,3 +104,19 @@ func TestDoctorExitCode(t *testing.T) {
 		}
 	}
 }
+
+func TestWaitConditionMet(t *testing.T) {
+	roots, _ := parseDescribeUI([]byte(sampleTree))
+	if !conditionMet(roots, waitCond{kind: waitForElement, id: "play.all"}) {
+		t.Error("expected for-element play.all to be met")
+	}
+	if conditionMet(roots, waitCond{kind: waitForElement, id: "absent"}) {
+		t.Error("absent element should not be met")
+	}
+	if !conditionMet(roots, waitCond{kind: waitGone, id: "absent"}) {
+		t.Error("gone(absent) should be met")
+	}
+	if conditionMet(roots, waitCond{kind: waitGone, id: "play.all"}) {
+		t.Error("gone(present) should not be met")
+	}
+}
