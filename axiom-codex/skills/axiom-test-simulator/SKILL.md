@@ -1,6 +1,6 @@
 ---
 name: axiom-test-simulator
-description: Use when the user mentions simulator testing, visual verification, push notification testing, location simulation, or screenshot capture.
+description: Use when the user mentions simulator testing, visual verification, push notification testing, location simulation, screenshot capture, OR live accessibility validation (VoiceOver announcements, Dynamic Type, ADA checks) on the simulator.
 license: MIT
 disable-model-invocation: true
 ---
@@ -41,12 +41,12 @@ UDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] 
 # Boot if needed (get UDID first, then boot)
 xcrun simctl boot "iPhone 16 Pro"
 
-# Check for AXe (enables UI automation if available)
+# Preflight AXe + booted sim with xcui doctor (AXe enables real HID tap/swipe/type/describe-ui)
 if command -v axe &> /dev/null; then
   echo "AXe available - UI automation enabled (tap, swipe, type, describe-ui)"
   AXE_AVAILABLE=true
 else
-  echo "AXe not installed - using simctl only (install: brew install cameroncooke/axe/axe)"
+  echo "AXe not installed - run 'xcui doctor --install' to add it (or: brew install cameroncooke/axe/axe)"
   AXE_AVAILABLE=false
 fi
 ```
@@ -163,16 +163,14 @@ xcrun simctl list runtimes -j | jq '.runtimes[] | {name, identifier, isAvailable
 xcrun simctl keychain booted add-root-cert /path/to/ca.pem
 ```
 
-### 12. UI Automation with AXe (Optional)
+### 12. UI Automation with AXe (preflighted via `xcui doctor`)
 
-**Installation:**
+**Installation:** AXe is the input/tree engine `xcui` builds on. Preflight it with `xcui doctor` (and `xcui doctor --install` to add it via brew, consented) rather than treating it as optional.
 
 ```bash
-# Install AXe via Homebrew
-brew install cameroncooke/axe/axe
-
-# Verify installation
-axe --version
+# Verify (or install) AXe in one step
+xcui doctor          # exit 0 = AXe present + sim booted
+xcui doctor --install  # installs cameroncooke/axe/axe via brew if missing
 ```
 
 **Check availability:** `command -v axe`
@@ -215,7 +213,7 @@ axe button siri --udid $UDID
 ```
 **Use for**: Automated UI flows when XCUITest not available, quick manual automation
 
-### 13. Video Streaming with AXe (Optional)
+### 13. Video Streaming with AXe (preflighted via `xcui doctor`)
 
 ```bash
 # Stream video at 10 FPS (for monitoring)
@@ -229,6 +227,24 @@ axe record-video --output /tmp/recording.mp4 --udid $UDID
 axe screenshot --output /tmp/screenshot.png --udid $UDID
 ```
 **Use for**: Live monitoring, recording test flows, capturing evidence
+
+### 14. Scriptable Assertions & Accessibility with xcui
+
+`xcui` (bundled) adds the test-harness semantics AXe lacks. **Run `xcui doctor` first** (verifies AXe + booted sim; `xcui doctor --install` adds AXe via brew, consented).
+
+```bash
+# Synchronize instead of sleeping
+xcui wait --for-element loginButton --timeout 10s
+
+# Assert on the a11y tree (exit 1 on failure)
+xcui assert --id artist.hero --label "Artwork for …" --trait image --single
+
+# Accessibility runs: set state, relaunch app, then assert
+xcui a11y set --toggle reduce-transparency --value on --app com.example.App
+xcui a11y set --toggle dynamic-type --value accessibility-extra-large
+```
+
+Supported `a11y set` toggles: `dynamic-type`, `increase-contrast`, `reduce-motion`, `reduce-transparency`. For taps, use `axe tap --id <id>` directly (real HID touch). Full reference: `axiom-tools (skills/xcui-ref.md)`.
 
 ## Test Workflow
 
@@ -352,10 +368,12 @@ xcrun simctl diagnose -X --all-logs
 
 ## Related
 
-**Optional Tools:**
-- **AXe**: `brew install cameroncooke/axe/axe` — UI automation CLI
+**Preflighted Tools:**
+- **xcui**: bundled — scriptable wait/assert/a11y + AXe preflight. See `axiom-tools (skills/xcui-ref.md)`.
+- **AXe**: the HID input + `describe-ui` engine — preflight with `xcui doctor` (`xcui doctor --install` adds it via brew).
 
 For deep link debugging: `axiom-swift (skills/deep-link-debugging.md)` skill
 For build issues: `build-fixer` agent
 For AXe reference: `axiom-xcode-mcp` skill
 For running tests: `test-runner` agent
+For static accessibility source scanning: `accessibility-auditor` agent

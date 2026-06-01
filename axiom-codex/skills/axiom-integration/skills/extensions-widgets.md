@@ -225,7 +225,7 @@ func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) ->
 }
 ```
 
-**Why it's bad**: System gives 40-70 reloads/day. This approach uses 24 reloads/hour → exhausts budget in 2-3 hours.
+**Why it's bad**: This is *fake* freshness, and the budget reasoning is subtler than it looks. All 60 entries come from one fetch, so they show the **same** stale value — entries are pre-rendered snapshots, not refetch points, and only **reloads** (each `getTimeline()` call) count against the 40-70/day budget. With `.atEnd`, this timeline is actually ~1 reload/hour (within budget). The real trap is the next instinct: making the value *actually* update every minute via `policy: .after(60s)`, which forces ~1,440 reloads/day and exhausts the budget within ~1 hour — after which the widget freezes for the rest of the day.
 
 ### ✅ GOOD Code
 
@@ -376,7 +376,9 @@ Widget/Extension Issue?
 │
 ├─ Widget not refreshing?
 │  ├─ Timeline policy set to .never?
-│  │  └─ Change to .atEnd or .after(date)
+│  │  ├─ Time/data-driven widget? → Change to .atEnd or .after(date)
+│  │  └─ Intent-driven (interactive) widget? → .never is correct;
+│  │     system auto-reloads after perform(), app reloads on data change
 │  ├─ Budget exhausted? (too frequent reloads)
 │  │  └─ Increase interval between entries (15-60 min)
 │  └─ Manual reload
@@ -396,8 +398,9 @@ Widget/Extension Issue?
 │  │  └─ Must return IntentResult
 │  ├─ perform() updates shared data?
 │  │  └─ Update App Group storage
-│  └─ Calls WidgetCenter.reloadTimelines()?
-│     └─ Reload to reflect changes
+│  └─ Manually calling WidgetCenter for the tapped widget?
+│     └─ Not needed — system auto-reloads this widget after perform()
+│        returns. Manual reload is for app-driven changes / OTHER kinds.
 │
 ├─ Live Activity issue (start/update/dismiss, Dynamic Island, push, watch)?
 │  └─ See skills/live-activities.md
@@ -666,6 +669,7 @@ Before shipping widgets:
 ## Pre-Release
 - ☐ App Groups entitlement in BOTH targets (app + extension)
 - ☐ Shared UserDefaults uses `suiteName` (not `.standard`)
+- ☐ `.containerBackground(for: .widget)` on every widget view (required since iOS 17; without it the widget loses StandBy / iPad Lock Screen placement)
 - ☐ Timeline entries ≥ 5 minutes apart (avoid budget exhaustion)
 - ☐ No network calls in widget views (only in TimelineProvider)
 - ☐ Control Center controls use ControlValueProvider for async data
