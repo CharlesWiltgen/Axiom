@@ -464,7 +464,7 @@ Button("Refresh") { refreshToken = UUID() }
 
 A common workaround is `.toggle()` to force a value change, but that couples the Bool's semantics to a flag-flipping protocol and breaks if any other code path also writes to the flag. `UUID()` or an incrementing `Int` is unambiguous.
 
-**Identity collision in Hashable structs.** If your `id` is a struct with custom `Equatable` (or one that derives equality from a subset of fields), changing a non-included field won't restart the task:
+**Identity collision in Equatable structs.** `.task(id:)` requires only `Equatable`. If your `id` is a struct with custom `Equatable` (or one that derives equality from a subset of fields), changing a non-included field won't restart the task:
 
 ```swift
 struct Filter: Equatable {
