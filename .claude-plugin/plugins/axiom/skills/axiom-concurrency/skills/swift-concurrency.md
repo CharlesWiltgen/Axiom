@@ -45,6 +45,8 @@
 
 **Prefer structured concurrency.** Use `async let` and `TaskGroup` for parallel work — they propagate cancellation and errors automatically through the task tree. Unstructured `Task {}` is for bridging sync→async boundaries (event handlers, SwiftUI `.task`). `Task.detached` is a last resort.
 
+**SwiftUI `.task` cancels on view destruction, not state change.** It cancels on the same timeline as `onDisappear` — a body re-evaluation from a `@State` change does NOT cancel it. SwiftUI does not expose the task handle, so to cancel on any other signal (a "stop" button, a network condition) you must own the `Task` yourself. See axiom-swiftui (skills/architecture.md, "`.task` Modifier Lifecycle").
+
 **GCD is a bridge pattern, not a default.** In new code, do not use `DispatchQueue`, `DispatchGroup`, `DispatchSemaphore`, or completion handlers as primary architecture. Use them only to bridge legacy APIs that don't have async alternatives yet. Isolate bridge code and keep the rest of the codebase idiomatic Swift 6.
 
 ### The Progressive Journey
