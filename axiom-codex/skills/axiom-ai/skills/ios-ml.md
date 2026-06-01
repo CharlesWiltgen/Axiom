@@ -45,7 +45,7 @@ Post-training compression is fast but lossy; **calibration-time / training-time*
 - **Compute units** — set `MLModelConfiguration.computeUnits` deliberately (`.all`, `.cpuAndNeuralEngine`, `.cpuAndGPU`, `.cpuOnly`). `.all` lets the system choose; pin a narrower set only when profiling shows a win.
 - **Stateful models / KV-cache** (iOS 18+) — declare model state so a transformer's KV-cache persists across predictions instead of being re-allocated per token.
 - **`MLTensor`** (iOS 18+) — stitch pre/post-processing and multiple models into one typed-tensor pipeline.
-- **Async prediction** — use the async `prediction(from:)`; batch with `predictions(from:)` where supported.
+- **Async prediction** — use the async `prediction(from:)`; for batches use the synchronous `predictions(fromBatch:)`.
 - Run inference **off the main thread**, and pre-warm: first load compiles/caches the model (`.mlmodelc`), so warm it before the user needs it. See `axiom-concurrency`.
 
 ### Common failure modes
