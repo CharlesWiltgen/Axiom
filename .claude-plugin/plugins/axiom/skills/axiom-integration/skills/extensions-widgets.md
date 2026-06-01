@@ -294,7 +294,7 @@ struct ThermostatProvider: ControlValueProvider {
     }
 }
 
-struct ThermostatValue: ControlValueProviderValue {
+struct ThermostatValue {
     var temperature: Int
 }
 
@@ -592,6 +592,7 @@ struct LightControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "Light") {
             ControlWidgetToggle(
+                "Light",
                 isOn: LightManager.shared.isOn, // ❌ Blocking fetch
                 action: ToggleLightIntent()
             ) { isOn in
@@ -620,23 +621,23 @@ struct LightProvider: ControlValueProvider {
     }
 }
 
-struct LightValue: ControlValueProviderValue {
+struct LightValue {
     var isOn: Bool
 }
 
-// 2. Optimistic Intent
-struct ToggleLightIntent: AppIntent {
+// 2. Optimistic Intent — a toggle's action MUST be a SetValueIntent (ValueType == Bool)
+struct ToggleLightIntent: SetValueIntent {
     static var title: LocalizedStringResource = "Toggle Light"
+
+    @Parameter var value: Bool   // The new on/off state the system passes in
 
     func perform() async throws -> some IntentResult {
         // Immediately update cache (optimistic)
         let shared = UserDefaults(suiteName: "group.com.myapp")!
-        let currentState = shared.bool(forKey: "lastKnownLightState")
-        let newState = !currentState
-        shared.set(newState, forKey: "lastKnownLightState")
+        shared.set(value, forKey: "lastKnownLightState")
 
         // Then update actual device (async)
-        try await HomeManager.shared.setLight(isOn: newState)
+        try await HomeManager.shared.setLight(isOn: value)
 
         return .result()
     }
@@ -647,6 +648,7 @@ struct LightControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "Light", provider: LightProvider()) { value in
             ControlWidgetToggle(
+                "Light",
                 isOn: value.isOn,
                 action: ToggleLightIntent()
             ) { isOn in
