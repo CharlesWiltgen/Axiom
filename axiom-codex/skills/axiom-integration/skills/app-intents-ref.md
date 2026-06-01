@@ -161,8 +161,10 @@ struct SendMessageIntent: AppIntent {
     // OPTIONAL: Discovery in Shortcuts/Spotlight
     static var isDiscoverable: Bool = true
 
-    // OPTIONAL: Launch app when run
-    static var openAppWhenRun: Bool = false
+    // OPTIONAL: Execution context (iOS 26+) — replaces the deprecated `openAppWhenRun`
+    static var supportedModes: IntentModes = .background
+    // iOS 18 deployment targets use the boolean instead (deprecated in iOS 26):
+    // static var openAppWhenRun: Bool = false
 
     // OPTIONAL: Authentication requirement
     static var authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
@@ -443,7 +445,7 @@ struct UnlockVaultIntent: AppIntent {
 
 ### Intent Modes
 
-Use `supportedModes` for granular control over execution context instead of the boolean `openAppWhenRun`:
+Use `supportedModes` (iOS 26+) for granular control over execution context. It replaces the boolean `openAppWhenRun`, which is **deprecated in iOS 26** — keep `openAppWhenRun` only for iOS 18 deployment targets:
 
 ```swift
 struct GetCrowdStatusIntent: AppIntent {
@@ -501,7 +503,9 @@ throw needsToContinueInForegroundError(
 )
 ```
 
-### Background Execution (Legacy)
+### Background Execution — iOS 18 (pre-`supportedModes`)
+
+On iOS 18, where `supportedModes` is unavailable, use the boolean `openAppWhenRun` (deprecated in iOS 26 — prefer `supportedModes` above when targeting iOS 26+):
 
 ```swift
 struct QuickToggleIntent: AppIntent {
@@ -515,7 +519,9 @@ struct QuickToggleIntent: AppIntent {
 }
 ```
 
-### Foreground Continuation (Legacy)
+### Foreground Continuation — iOS 18 (pre-`supportedModes`)
+
+For iOS 18 targets, pair a background intent with a foreground one via `opensIntent` (the iOS 26+ path is `.foreground(.dynamic)` + `continueInForeground`, shown above):
 
 ```swift
 struct EditDocumentIntent: AppIntent {
@@ -1149,7 +1155,7 @@ struct EventEntity: AppEntity, IndexedEntity {
 ```swift
 // Background intent - runs without opening app
 struct CreateEventIntent: AppIntent {
-    static var openAppWhenRun: Bool = false
+    static var supportedModes: IntentModes = .background  // iOS 26+ (was `openAppWhenRun = false`)
 
     @Parameter(title: "Title")
     var title: String
@@ -1173,7 +1179,7 @@ struct CreateEventIntent: AppIntent {
 
 // Foreground intent - opens app to specific event
 struct OpenEventIntent: AppIntent {
-    static var openAppWhenRun: Bool = true
+    static var supportedModes: IntentModes = .foreground  // iOS 26+ (was `openAppWhenRun = true`)
 
     @Parameter(title: "Event")
     var event: EventEntity
@@ -1384,7 +1390,7 @@ func perform() async throws -> some IntentResult {
     return .result()
 }
 
-// ✅ Solution: Use MainActor or openAppWhenRun
+// ✅ Solution: hop to MainActor (or declare a `.foreground` mode in `supportedModes`)
 func perform() async throws -> some IntentResult {
     await MainActor.run {
         UIApplication.shared.open(url)
@@ -1504,7 +1510,7 @@ func perform() async throws -> some IntentResult {
 struct StartWorkoutIntent: AppIntent {
     static var title: LocalizedStringResource = "Start Workout"
     static var description: IntentDescription = "Starts a new workout session"
-    static var openAppWhenRun: Bool = true
+    static var supportedModes: IntentModes = .foreground  // iOS 26+ (was `openAppWhenRun = true`)
 
     @Parameter(title: "Workout Type")
     var workoutType: WorkoutType
@@ -1644,7 +1650,7 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 - ☐ Intents marked `isDiscoverable` appear in Shortcuts
 - ☐ Destructive actions request confirmation
 - ☐ Background intents don't access MainActor
-- ☐ Foreground intents set `openAppWhenRun = true`
+- ☐ Foreground intents declare `.foreground` in `supportedModes` (iOS 26+; `openAppWhenRun = true` is the deprecated pre-26 equivalent)
 - ☐ Entity `displayRepresentation` shows meaningful info
 - ☐ Tested with Siri voice commands
 - ☐ Tested in Shortcuts app

@@ -462,7 +462,7 @@ struct OrderCoffeeIntent: AppIntent {
 struct ReorderLastIntent: AppIntent {
     static var title: LocalizedStringResource = "Reorder Last Coffee"
     static var description = IntentDescription("Reorders your most recent coffee")
-    static var openAppWhenRun: Bool = false
+    static var supportedModes: IntentModes = .background  // iOS 26+ (was `openAppWhenRun = false`)
 
     func perform() async throws -> some IntentResult {
         guard let lastOrder = try await CoffeeService.shared.lastOrder() else {
