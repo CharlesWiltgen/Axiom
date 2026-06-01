@@ -113,12 +113,9 @@ Generates class-agnostic instance mask of foreground objects (people, pets, buil
 #### Basic Usage
 
 ```swift
-let request = VNGenerateForegroundInstanceMaskRequest()
-let handler = VNImageRequestHandler(cgImage: image)
+let handler = ImageRequestHandler(image)
 
-try handler.perform([request])
-
-guard let observation = request.results?.first as? VNInstanceMaskObservation else {
+guard let observation = try await handler.perform(GenerateForegroundInstanceMaskRequest()) else {
     return
 }
 ```
@@ -127,79 +124,82 @@ guard let observation = request.results?.first as? VNInstanceMaskObservation els
 
 **allInstances**: `IndexSet` containing all foreground instance indices (excludes background 0)
 
-**instanceMask**: `CVPixelBuffer` with UInt8 labels (0 = background, 1+ = instance indices)
+**allInstancesMask**: `PixelBufferObservation` holding the UInt8 label buffer (0 = background, 1+ = instance indices). Read a single label with `pixel(at:)` (takes a `NormalizedPoint`, returns `Float`) or scan the whole buffer with `withUnsafePointer(_:)`. It does not expose a `CVPixelBuffer` property.
 
-**instanceAtPoint(_:)**: Returns instance index at normalized point
+**instanceAtPoint(_:)**: Takes a `NormalizedPoint` and returns the `IndexSet` of instances at that point. iOS 18+ modern `InstanceMaskObservation` only. (For raw label lookup you can instead use `allInstancesMask.pixel(at:)` — see below.)
 
 ```swift
-let point = CGPoint(x: 0.5, y: 0.5)  // Center of image
-let instance = observation.instanceAtPoint(point)
+// Center of image; returns an IndexSet (empty = background)
+let instances = observation.instanceAtPoint(NormalizedPoint(x: 0.5, y: 0.5))
 
-if instance == 0 {
+if instances.isEmpty {
     print("Background tapped")
 } else {
-    print("Instance \(instance) tapped")
+    print("Instances \(instances) tapped")
 }
 ```
 
 #### Generating Masks
 
-**createScaledMask(for:croppedToInstancesContent:)**
+Three methods generate output from the selected instances. All are throwing and require the request handler that performed the request (`VNImageRequestHandler`/`ImageRequestHandler`).
+
+**generateScaledMask(for:scaledToImageFrom:)** → soft segmentation mask
 
 Parameters:
 - `for`: `IndexSet` of instances to include
-- `croppedToInstancesContent`:
-  - `false` = Output matches input resolution (for compositing)
-  - `true` = Tight crop around selected instances
+- `scaledToImageFrom`: the request handler that performed the request
 
-Returns: Single-channel floating-point `CVPixelBuffer` (soft segmentation mask)
+Returns: single-channel floating-point `CVPixelBuffer` (soft mask) at the input image's resolution. No crop option — use it for compositing.
+
+**generateMaskedImage(for:imageFrom:croppedToInstancesExtent:)** → masked image
+
+Parameters:
+- `for`: `IndexSet` of instances to include
+- `imageFrom`: the request handler that performed the request
+- `croppedToInstancesExtent`: `false` (default) = full image; `true` = tight crop around the selected instances
+
+Returns: the masked **image** as a `CVPixelBuffer`, optionally cropped.
+
+**generateMask(for:)** → handler-free soft mask (modern `InstanceMaskObservation` only)
+
+Returns a soft mask without needing a handler. For input-resolution scaling use `generateScaledMask(for:scaledToImageFrom:)` instead.
 
 ```swift
-// All instances, full resolution
-let mask = try observation.createScaledMask(
+// All instances, soft mask at input resolution (handler in scope)
+let mask = try observation.generateScaledMask(
     for: observation.allInstances,
-    croppedToInstancesContent: false
+    scaledToImageFrom: handler
 )
 
-// Single instance, cropped
+// Single instance, masked image cropped to its extent
 let instances = IndexSet(integer: 1)
-let croppedMask = try observation.createScaledMask(
+let croppedImage = try observation.generateMaskedImage(
     for: instances,
-    croppedToInstancesContent: true
+    imageFrom: handler,
+    croppedToInstancesExtent: true
 )
 ```
 
 #### Instance Mask Hit Testing
 
-Access raw pixel buffer to map tap coordinates to instance labels:
+The simplest path is `instanceAtPoint(_:)`, which maps a `NormalizedPoint` straight to an `IndexSet`. To read the raw label yourself, the `allInstancesMask` (`PixelBufferObservation`) gives you `pixel(at:)` for a single point and `withUnsafePointer(_:)` for the whole buffer — there is no `CVPixelBuffer` accessor on the modern observation.
 
 ```swift
-let instanceMask = observation.instanceMask
+let labelMask = observation.allInstancesMask  // PixelBufferObservation
 
-CVPixelBufferLockBaseAddress(instanceMask, .readOnly)
-defer { CVPixelBufferUnlockBaseAddress(instanceMask, .readOnly) }
+// Single point: read the label directly (returns Float; 0 = background)
+let label = labelMask.pixel(at: NormalizedPoint(x: normalizedX, y: normalizedY))
 
-let baseAddress = CVPixelBufferGetBaseAddress(instanceMask)
-let width = CVPixelBufferGetWidth(instanceMask)
-let bytesPerRow = CVPixelBufferGetBytesPerRow(instanceMask)
+let instances = label == 0
+    ? observation.allInstances
+    : IndexSet(integer: Int(label))
 
-// Convert normalized tap to pixel coordinates
-let pixelPoint = VNImagePointForNormalizedPoint(
-    CGPoint(x: normalizedX, y: normalizedY),
-    width: imageWidth,
-    height: imageHeight
-)
-
-// Calculate byte offset
-let offset = Int(pixelPoint.y) * bytesPerRow + Int(pixelPoint.x)
-
-// Read instance label
-let label = UnsafeRawPointer(baseAddress!).load(
-    fromByteOffset: offset,
-    as: UInt8.self
-)
-
-let instances = label == 0 ? observation.allInstances : IndexSet(integer: Int(label))
+// Whole buffer: scan all labels via the unsafe pointer
+labelMask.withUnsafePointer { raw in
+    let first = raw.load(fromByteOffset: 0, as: UInt8.self)
+    // ... iterate label bytes as needed
+    _ = first
+}
 ```
 
 ## VisionKit Subject Lifting
@@ -241,39 +241,45 @@ let configuration = ImageAnalyzer.Configuration([.text, .visualLookUp])
 let analysis = try await analyzer.analyze(image, configuration: configuration)
 ```
 
-#### ImageAnalysis
+#### ImageAnalysisInteraction (subjects)
 
-**subjects**: `[Subject]` - All subjects in image
+Subject APIs live on `ImageAnalysisInteraction` (a `@MainActor` `UIInteraction`), NOT on the `ImageAnalysis` returned by `analyzer.analyze(...)`. The `ImageAnalysis` result only exposes `transcript` and `hasResults(for:)`.
 
-**highlightedSubjects**: `Set<Subject>` - Currently highlighted (user long-pressed)
+**subjects**: `Set<ImageAnalysisInteraction.Subject>` - All subjects in image (async — read with `await`)
 
-**subject(at:)**: Async lookup of subject at normalized point (returns `nil` if none)
+**highlightedSubjects**: `Set<ImageAnalysisInteraction.Subject>` - Currently highlighted (user long-pressed)
+
+**subject(at:)**: Async lookup of subject at a point (returns `nil` if none)
+
+**image(for:)**: Async composite of the given subjects
 
 ```swift
-// Get all subjects
-let subjects = analysis.subjects
+// Get all subjects (Set — cannot subscript by Int). `subjects` is async.
+let subjects = await interaction.subjects
 
 // Look up subject at tap
-if let subject = try await analysis.subject(at: tapPoint) {
+if let subject = await interaction.subject(at: tapPoint) {
     // Process subject
 }
 
-// Change highlight state
-analysis.highlightedSubjects = Set([subjects[0], subjects[1]])
+// Change highlight state (take first two safely)
+interaction.highlightedSubjects = Set(subjects.prefix(2))
 ```
 
 #### Subject Struct
 
-**image**: `UIImage`/`NSImage` - Extracted subject with transparency
+The type is `ImageAnalysisInteraction.Subject` (nested on the interaction).
 
-**bounds**: `CGRect` - Subject boundaries in image coordinates
+**image**: `UIImage` - Extracted subject with transparency. The accessor is `async throws` — read it with `try await`.
+
+**bounds**: `CGRect` - Subject boundaries in image coordinates (`@MainActor`-isolated)
 
 ```swift
-// Single subject image
-let subjectImage = subject.image
+// Single subject image (`image` is async throws)
+let subjectImage = try await subject.image
 
 // Composite multiple subjects
-let compositeImage = try await analysis.image(for: [subject1, subject2])
+let compositeImage = try await interaction.image(for: [subject1, subject2])
 ```
 
 **Out-of-process**: VisionKit analysis happens out-of-process (performance benefit, image size limited)
@@ -305,10 +311,9 @@ let personMask = observation.pixelBuffer  // CVPixelBuffer
 Returns **separate masks for up to 4 people**:
 
 ```swift
-let request = VNGeneratePersonInstanceMaskRequest()
-try handler.perform([request])
+let handler = ImageRequestHandler(image)
 
-guard let observation = request.results?.first as? VNInstanceMaskObservation else {
+guard let observation = try await handler.perform(GeneratePersonInstanceMaskRequest()) else {
     return
 }
 
@@ -316,9 +321,9 @@ guard let observation = request.results?.first as? VNInstanceMaskObservation els
 let allPeople = observation.allInstances  // Up to 4 people (1-4)
 
 // Get mask for person 1
-let person1Mask = try observation.createScaledMask(
+let person1Mask = try observation.generateScaledMask(
     for: IndexSet(integer: 1),
-    croppedToInstancesContent: false
+    scaledToImageFrom: handler
 )
 ```
 
@@ -622,11 +627,12 @@ for observation in request.results as? [VNHumanObservation] ?? [] {
 Composite subject on new background using Vision mask:
 
 ```swift
-// 1. Get mask from Vision
-let observation = request.results?.first as? VNInstanceMaskObservation
-let visionMask = try observation.createScaledMask(
+// 1. Get mask from Vision (`handler` is the ImageRequestHandler that performed the request)
+let handler = ImageRequestHandler(sourceImage)
+guard let observation = try await handler.perform(GenerateForegroundInstanceMaskRequest()) else { return }
+let visionMask = try observation.generateScaledMask(
     for: observation.allInstances,
-    croppedToInstancesContent: false
+    scaledToImageFrom: handler
 )
 
 // 2. Convert to CIImage
@@ -1018,11 +1024,11 @@ guard let document = observations.first?.document else {
 
 ```
 DocumentObservation
-└── document: DocumentObservation.Document
-    ├── text: TextObservation
+└── document: DocumentObservation.Container
+    ├── text: Container.Text
+    ├── paragraphs: [Container.Text]
     ├── tables: [Container.Table]
-    ├── lists: [Container.List]
-    └── barcodes: [Container.Barcode]
+    └── lists: [Container.List]
 ```
 
 #### Table Extraction
@@ -1047,27 +1053,26 @@ for data in document.text.detectedData {
         let address = email.emailAddress
     case .phoneNumber(let phone):
         let number = phone.phoneNumber
-    case .link(let url):
-        let link = url
-    case .address(let address):
+    case .link(let link):
+        let url = link.url
+    case .postalAddress(let address):
         let components = address
-    case .date(let date):
-        let dateValue = date
+    case .calendarEvent(let event):
+        let dates = (event.startDate, event.endDate)
     default:
         break
     }
 }
 ```
 
-#### TextObservation Hierarchy
+#### Container.Text Hierarchy
 
 ```
-TextObservation
+Container.Text
 ├── transcript: String
-├── lines: [TextObservation.Line]
-├── paragraphs: [TextObservation.Paragraph]
-├── words: [TextObservation.Word]
-└── detectedData: [DetectedDataObservation]
+├── lines: [RecognizedTextObservation]
+├── words: [RecognizedTextObservation]?
+└── detectedData: [DataDetectorMatch]
 ```
 
 ## Visual Intelligence Integration
@@ -1170,10 +1175,10 @@ var appLinkURL: URL? {
 
 ### "More Results" Intent
 
-For large result sets, provide a `VisualIntelligenceSearchIntent` that opens your app's full search UI.
+For large result sets, provide a regular App Intent (surfaced via your `IntentValueQuery`/App Shortcuts) that opens your app's full search UI.
 
 ```swift
-struct ViewMoreLandmarksIntent: AppIntent, VisualIntelligenceSearchIntent {
+struct ViewMoreLandmarksIntent: AppIntent {
     static var title: LocalizedStringResource = "View More Landmarks"
 
     @Parameter(title: "Semantic Content")
@@ -1244,13 +1249,12 @@ struct ViewMoreLandmarksIntent: AppIntent, VisualIntelligenceSearchIntent {
 |-----|----------|---------|
 | `SemanticContentDescriptor` | iOS 26+ | Describes what the user is looking at (labels + pixel buffer) |
 | `IntentValueQuery` | iOS 26+ | Entry point for receiving visual search requests |
-| `VisualIntelligenceSearchIntent` | iOS 26+ | "More results" deep link to your app |
 
 ### Observation Types
 
 | Observation | Returned By |
 |-------------|-------------|
-| `VNInstanceMaskObservation` | Foreground/person instance masks |
+| `InstanceMaskObservation` | Foreground/person instance masks (modern, iOS 18+) |
 | `VNPixelBufferObservation` | Person segmentation (single mask) |
 | `VNHumanHandPoseObservation` | Hand pose |
 | `VNHumanBodyPoseObservation` | Body pose (2D) |

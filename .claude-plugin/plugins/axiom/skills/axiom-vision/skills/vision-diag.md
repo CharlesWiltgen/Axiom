@@ -294,12 +294,8 @@ let handler = VNImageRequestHandler(cgImage: croppedImage, orientation: cgOrient
 ```swift
 // Check if subject is near edges
 if let observation = results.first as? VNInstanceMaskObservation {
-    let mask = try observation.createScaledMask(
-        for: observation.allInstances,
-        croppedToInstancesContent: true
-    )
-
-    let bounds = calculateMaskBounds(mask)
+    // Bounds only need the raw instance-label buffer — no handler or mask generation required
+    let bounds = calculateMaskBounds(observation.instanceMask)
 
     if bounds.minX < 0.1 || bounds.maxX > 0.9 ||
        bounds.minY < 0.1 || bounds.maxY > 0.9 {
