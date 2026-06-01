@@ -941,6 +941,52 @@ if (!fs.existsSync(statsPath)) {
   }
 }
 
+// ── 12f. Codex Variant Staleness ──
+
+heading("12f. Codex Variant Staleness");
+
+const codexManifest = path.join(root, "axiom-codex/.codex-plugin/plugin.json");
+if (fs.existsSync(codexManifest)) {
+  const codexMtime = fs.statSync(codexManifest).mtimeMs;
+
+  // The Codex variant is rebuilt from skills + agents (npm run build:codex).
+  // Mirror 12b: if any source file is newer than the built variant, it is stale.
+  let newestCodexSource = 0;
+  const codexSourceDirs = [
+    path.join(pluginDir, "skills"),
+    path.join(pluginDir, "agents"),
+  ];
+  for (const dir of codexSourceDirs) {
+    if (!fs.existsSync(dir)) continue;
+    const walk = (d: string) => {
+      for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+        const full = path.join(d, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (entry.name.endsWith(".md")) {
+          const mtime = fs.statSync(full).mtimeMs;
+          if (mtime > newestCodexSource) newestCodexSource = mtime;
+        }
+      }
+    };
+    walk(dir);
+  }
+
+  if (newestCodexSource > codexMtime) {
+    const staleMinutes = Math.round((newestCodexSource - codexMtime) / 60000);
+    error(
+      "codex-staleness",
+      `Codex variant is ${staleMinutes}min older than newest source file. Run: npm run build:codex`,
+    );
+  } else {
+    console.log("  ✓ Codex variant is up-to-date with source files");
+  }
+} else {
+  warn(
+    "codex-staleness",
+    "Codex variant manifest not found at axiom-codex/.codex-plugin/plugin.json — build with: npm run build:codex",
+  );
+}
+
 // ── Phase 1 Summary ──
 
 heading("Phase 1 Summary (Static)");
