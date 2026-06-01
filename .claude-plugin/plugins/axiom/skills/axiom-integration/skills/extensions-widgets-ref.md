@@ -130,6 +130,8 @@ No user configuration needed? Use `StaticConfiguration`. Simple static options? 
 - **`accessoryRectangular`** (~160×72pt) — Above clock, text + icon
 - **`accessoryInline`** (single line) — Above date, text only
 
+> **iPad Lock Screen placement requires these accessory families.** A widget that declares only system families (`systemSmall`/`systemMedium`/`systemLarge`) will not appear on the iPad Lock Screen even with a correct `containerBackground` — the missing piece is `supportedFamilies`, not the background. Declare `accessoryRectangular` / `accessoryCircular` / `accessoryInline` to opt into the Lock Screen on both iPhone and iPad.
+
 ### Example: Supporting Multiple Families
 
 ```swift
@@ -219,6 +221,10 @@ WidgetCenter.shared.reloadAllTimelines()
 WidgetCenter.shared.reloadTimelines(ofKind: "MyWidget")
 ```
 
+### Entries vs. reloads
+
+A `Timeline`'s entries are **pre-rendered snapshots, not refetch points.** The system displays each entry's view at its `date` from data already baked into that entry — it does **not** re-run your provider or fetch anything per entry. You fetch only when `getTimeline()` runs, and *that invocation* is a **reload** — the event the daily budget counts. So 60 one-minute entries ≠ 60 updates: they are 60 archived snapshots from a single fetch, all showing the same data. Adding entries never produces fresher data and never increases reloads. To refresh the *data* you need a new **reload**: a policy trigger (`.atEnd` / `.after`), an interactive intent's `perform()` returning, a `.widgetKit` push, or an app-initiated `WidgetCenter` call.
+
 ## Performance & Budget Quick Reference
 
 ### Timeline Refresh Budget
@@ -260,9 +266,23 @@ Precompute everything in `TimelineEntry`, keep views simple. No expensive operat
 
 # Part 2: Interactive Widgets (iOS 17+)
 
+## Interactivity Is Independent of Configuration Type
+
+Interactivity comes from a `Button`/`Toggle` in the **entry view** — not from the widget's configuration. The common mistake is reaching for `AppIntentConfiguration` to make a widget interactive. You don't need it.
+
+| Your widget | Configuration | Provider | Intent role |
+|---|---|---|---|
+| Tappable actions, no user settings | `StaticConfiguration` | `TimelineProvider` | plain `AppIntent` (button action) |
+| User-configurable (picker, options) | `AppIntentConfiguration` | `AppIntentTimelineProvider` | `WidgetConfigurationIntent` (config) |
+| Both | `AppIntentConfiguration` | `AppIntentTimelineProvider` | `WidgetConfigurationIntent` for config + plain `AppIntent` for buttons |
+
+The two App Intent roles are distinct and unrelated. A **button's** intent is a plain `AppIntent` that performs an action; a **configuration** intent is a `WidgetConfigurationIntent` that parameterizes the timeline. `StaticConfiguration` has no intent parameter at all (`StaticConfiguration<Content: View>`), yet its content view can still contain interactive controls. `AppIntentConfiguration<Intent, Content>` is constrained to `Intent: WidgetConfigurationIntent` — it exists *only* for user configuration.
+
+Interactive controls work in all system families and in `accessoryCircular` / `accessoryRectangular` (Lock Screen) on iPhone and iPad — Lock Screen widgets are **not** read-only.
+
 ## Button and Toggle
 
-Interactive widgets use SwiftUI `Button` and `Toggle` with App Intents.
+Interactive widgets use SwiftUI `Button` and `Toggle` with App Intents, placed inside the entry view of any configuration type.
 
 ### Button with App Intent
 
@@ -272,7 +292,7 @@ Button(intent: IncrementIntent()) {
 }
 ```
 
-The intent updates shared data via App Groups in its `perform()` method. See **skills/app-intents-ref.md** for full `AppIntent` definition syntax.
+The intent updates shared data via App Groups in its `perform()` method. **When `perform()` returns, the system automatically reloads this widget's timeline via its provider** — you do not call `WidgetCenter` for the tapped widget itself (see Part 1's manual-reload note for when you do). See **skills/app-intents-ref.md** for full `AppIntent` definition syntax.
 
 ### Toggle with App Intent
 
@@ -566,6 +586,8 @@ Image("myBadge")
 **Best practices**: Display full-color images only in `.fullColor` rendering mode. Use `.widgetAccentable()` strategically for visual hierarchy. Test with multiple accent colors and background images.
 
 ### Container Backgrounds
+
+> **`containerBackground(for:)` is an iOS 17 API, not an iOS 18 one — and it is effectively required.** Every widget must declare a container background (it replaced direct `.background` use on the widget's root). A widget that omits it does not crash, but it renders with a system default and is excluded from StandBy and the iPad Lock Screen, and Xcode emits an "adopt containerBackground" warning. The accented / Liquid Glass *behavior* described below is the iOS 18 / iOS 26 layer on top of this iOS 17 requirement.
 
 ```swift
 VStack { /* content */ }
