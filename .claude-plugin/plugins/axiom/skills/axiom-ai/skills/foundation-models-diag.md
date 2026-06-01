@@ -35,10 +35,10 @@ case .available:
     print("✅ Available")
 case .unavailable(let reason):
     print("❌ Unavailable: \(reason)")
-    // Possible reasons:
-    // - Device not Apple Intelligence-capable
-    // - Region not supported
-    // - User not opted in
+    // The only three reasons the API surfaces (UnavailableReason):
+    // - .deviceNotEligible — device not Apple Intelligence-capable
+    // - .appleIntelligenceNotEnabled — user hasn't turned on Apple Intelligence
+    // - .modelNotReady — model still downloading / not yet ready; retry later
 }
 
 // Record: "Available? Yes/no, reason if not"
@@ -56,13 +56,30 @@ if !supported.contains(Locale.current.language) {
 
 // 3. Check context usage
 let session = LanguageModelSession()
+// Transcript is a RandomAccessCollection of Transcript.Entry — iterate it directly.
 // After some interactions:
-print("Transcript entries: \(session.transcript.entries.count)")
+print("Transcript entries: \(session.transcript.count)")
 
-// Rough estimation (not exact):
-let transcriptText = session.transcript.entries
-    .map { $0.content }
-    .joined()
+// Rough estimation (not exact). Entry is an enum (.instructions / .prompt /
+// .toolCalls / .toolOutput / .response); text lives in each case's Segments,
+// so reconstruct prompt/response text from those rather than a `.content` property:
+func text(in entry: Transcript.Entry) -> String {
+    let segments: [Transcript.Segment]
+    switch entry {
+    case .instructions(let i): segments = i.segments
+    case .prompt(let p):       segments = p.segments
+    case .toolOutput(let o):   segments = o.segments
+    case .response(let r):     segments = r.segments
+    case .toolCalls:           segments = []
+    @unknown default:          segments = []
+    }
+    return segments.compactMap { segment in
+        if case .text(let textSegment) = segment { return textSegment.content }
+        return nil
+    }.joined()
+}
+
+let transcriptText = session.transcript.map(text(in:)).joined()
 print("Approximate chars: \(transcriptText.count)")
 print("Rough token estimate: \(transcriptText.count / 3)")
 // 4096 token limit ≈ 12,000 characters
@@ -81,8 +98,8 @@ print("Rough token estimate: \(transcriptText.count / 3)")
 
 // 5. Inspect transcript for debugging
 print("Full transcript:")
-for entry in session.transcript.entries {
-    print("Entry: \(entry.content.prefix(100))...")
+for entry in session.transcript {
+    print("Entry: \(text(in: entry).prefix(100))...")
 }
 
 // Record: "Any unusual entries? Repeated content?"
@@ -101,7 +118,7 @@ for entry in session.transcript.entries {
 
 Before changing ANY code, identify ONE of these:
 
-1. If `availability = .unavailable` → Device/region/opt-in issue (not code bug)
+1. If `availability = .unavailable` → Read the `UnavailableReason`: `.deviceNotEligible` (device), `.appleIntelligenceNotEnabled` (opt-in), or `.modelNotReady` (still downloading — retry later). Not a code bug.
 2. If error is `exceededContextWindowSize` → Too many tokens (condense transcript)
 3. If error is `guardrailViolation` → Content policy triggered (not model failure)
 4. If error is `unsupportedLanguageOrLocale` → Language not supported (check supported list)
@@ -122,9 +139,9 @@ Foundation Models problem?
 │
 ├─ Won't start?
 │  ├─ .unavailable → Availability issue
-│  │  ├─ Device not capable? → Pattern 1a (device requirement)
-│  │  ├─ Region restriction? → Pattern 1b (regional availability)
-│  │  └─ User not opted in? → Pattern 1c (Settings check)
+│  │  ├─ .deviceNotEligible? → Pattern 1a (device requirement)
+│  │  ├─ .modelNotReady? → Pattern 1b (model not yet ready — retry later)
+│  │  └─ .appleIntelligenceNotEnabled? → Pattern 1c (Settings check)
 │  │
 ├─ Generation fails?
 │  ├─ exceededContextWindowSize → Context limit
@@ -222,27 +239,28 @@ struct AIFeatureView: View {
 
 ---
 
-### Pattern 1b: Regional Availability
+### Pattern 1b: Model Not Ready
 
 **Symptom**:
-- Feature works for some users, not others
-- .unavailable due to region restrictions
+- Device is eligible and Apple Intelligence is enabled, but `.unavailable(.modelNotReady)`
+- Often transient right after enabling Apple Intelligence or after an OS update — the model assets are still downloading
 
 **Diagnosis**:
-Foundation Models requires:
-- Supported region (e.g., US, UK, Australia initially)
-- May expand over time
+`UnavailableReason.modelNotReady` means the device qualifies but the model isn't ready yet (still downloading or preparing). There is NO region/locale reason in the API — `UnavailableReason` has exactly three cases: `.deviceNotEligible`, `.appleIntelligenceNotEnabled`, `.modelNotReady`.
 
 **Fix**:
 ```swift
-// ✅ GOOD - Clear messaging
+// ✅ GOOD - Tell the user it's coming, offer retry
 switch SystemLanguageModel.default.availability {
 case .available:
     // proceed
-case .unavailable(let reason):
-    // Show region-specific message
-    Text("AI features not yet available in your region")
-    Text("Check Settings → Apple Intelligence for availability")
+case .unavailable(.modelNotReady):
+    Text("AI features are getting ready")
+    Text("The on-device model is still downloading. Try again in a little while.")
+    Button("Retry") { /* re-read SystemLanguageModel.default.availability */ }
+case .unavailable:
+    // .deviceNotEligible or .appleIntelligenceNotEnabled — see Patterns 1a / 1c
+    EmptyView()
 }
 ```
 
@@ -253,11 +271,11 @@ case .unavailable(let reason):
 ### Pattern 1c: User Not Opted In
 
 **Symptom**:
-- Device capable, region supported
-- Still .unavailable
+- Device capable, model ready
+- Still `.unavailable(.appleIntelligenceNotEnabled)`
 
 **Diagnosis**:
-User must opt in to Apple Intelligence in Settings
+User must turn on Apple Intelligence in Settings (`.appleIntelligenceNotEnabled`)
 
 **Fix**:
 ```swift
@@ -313,17 +331,18 @@ do {
 }
 
 func condensedSession(from previous: LanguageModelSession) -> LanguageModelSession {
-    let entries = previous.transcript.entries
+    // Transcript is a RandomAccessCollection of Transcript.Entry — iterate/index it directly.
+    let transcript = previous.transcript
 
-    guard entries.count > 2 else {
-        return LanguageModelSession(transcript: previous.transcript)
+    guard transcript.count > 2,
+          let first = transcript.first,
+          let last = transcript.last else {
+        return LanguageModelSession(transcript: transcript)
     }
 
-    // Keep: first (instructions) + last (recent context)
-    var condensed = [entries.first!, entries.last!]
-
-    let transcript = Transcript(entries: condensed)
-    return LanguageModelSession(transcript: transcript)
+    // Keep: first (instructions) + last (recent context). Rebuild from Entry values.
+    let condensed = Transcript(entries: [first, last])
+    return LanguageModelSession(transcript: condensed)
 }
 ```
 
@@ -403,22 +422,52 @@ do {
 Unknown error types
 
 **Fix**:
+
+`GenerationError` has **nine** cases, not three. Each carries a `Context` payload (`refusal` carries `(Refusal, Context)`) you can inspect for diagnostics — `context.debugDescription`, or `await refusal.explanation` for the model's own reason. Handle them all:
+
 ```swift
-// ✅ GOOD - Comprehensive error handling
+// ✅ GOOD - Handle every GenerationError case
 do {
     let response = try await session.respond(to: prompt)
     print(response.content)
 } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
-    // Handle context overflow
+    // Too many tokens — condense the transcript and retry (see Pattern 2a)
     session = condensedSession(from: session)
+} catch LanguageModelSession.GenerationError.assetsUnavailable {
+    // Model assets not on device yet (downloading) — tell user to try later
+    showMessage("AI model isn't ready yet. Please try again shortly.")
 } catch LanguageModelSession.GenerationError.guardrailViolation {
-    // Handle content policy
+    // Content policy triggered (see Pattern 2b)
     showMessage("Cannot generate that content")
+} catch LanguageModelSession.GenerationError.unsupportedGuide {
+    // A @Guide constraint the model can't satisfy — relax/fix the @Guide in your @Generable type
+    showMessage("Couldn't satisfy the requested format. Loosen the @Guide constraints.")
 } catch LanguageModelSession.GenerationError.unsupportedLanguageOrLocale {
-    // Handle language issue
+    // Language not supported (see Pattern 2c)
     showMessage("Language not supported")
+} catch LanguageModelSession.GenerationError.decodingFailure {
+    // Output didn't decode into the requested @Generable type — simplify the type or retry
+    showMessage("Couldn't parse the response. Try again.")
+} catch LanguageModelSession.GenerationError.rateLimited {
+    // Too many requests — back off and retry with delay
+    showMessage("Too many requests. Please wait a moment.")
+} catch LanguageModelSession.GenerationError.concurrentRequests {
+    // A second request was issued while session.isResponding == true.
+    // Serialize calls per session (or use a separate session) — don't fire in parallel.
+    showMessage("A request is already in progress.")
+} catch let LanguageModelSession.GenerationError.refusal(refusal, _) {
+    // Model refused. The Refusal value carries the reason:
+    if let explanation = try? await refusal.explanation {
+        print("Refused: \(explanation.content)")
+    }
+    showMessage("The request was declined.")
+} catch let error as LanguageModelSession.ToolCallError {
+    // A tool threw. ToolCallError exposes { tool, underlyingError } so you can
+    // distinguish a tool failure from a session/generation failure.
+    print("Tool \(error.tool.name) failed: \(error.underlyingError)")
+    showMessage("A tool used by the assistant failed.")
 } catch {
-    // Catch-all for unexpected errors
+    // Catch-all for anything unexpected
     print("Unexpected error: \(error)")
     showMessage("Something went wrong. Please try again.")
 }
@@ -461,10 +510,12 @@ struct GetFactTool: Tool {
         let query: String
     }
 
-    func call(arguments: Arguments) async throws -> ToolOutput {
+    // Tool.call returns Self.Output (any PromptRepresentable). String conforms,
+    // so return a String directly — there is no standalone ToolOutput type.
+    func call(arguments: Arguments) async throws -> String {
         // Fetch from Wikipedia API, news API, etc.
         let fact = await fetchFactFromAPI(arguments.query)
-        return ToolOutput(fact)
+        return fact
     }
 }
 ```
@@ -538,10 +589,11 @@ struct GetWeatherTool: Tool {
         let city: String
     }
 
-    func call(arguments: Arguments) async throws -> ToolOutput {
+    // Return a String directly — Tool.Output just needs to be PromptRepresentable.
+    func call(arguments: Arguments) async throws -> String {
         // Fetch real weather
         let weather = await WeatherService.shared.weather(for: arguments.city)
-        return ToolOutput("Temperature: \(weather.temperature)°F")
+        return "Temperature: \(weather.temperature)°F"
     }
 }
 
@@ -667,14 +719,18 @@ struct Itinerary {
     var days: [DayPlan]
 }
 
+// streamResponse yields ResponseStream<Itinerary>.Snapshot values; the partial
+// result lives in snapshot.content, typed Itinerary.PartiallyGenerated.
+@State private var itinerary: Itinerary.PartiallyGenerated?
+
 let stream = session.streamResponse(
     to: "Generate 5-day itinerary to Tokyo",
     generating: Itinerary.self
 )
 
-for try await partial in stream {
+for try await snapshot in stream {
     // Update UI incrementally
-    self.itinerary = partial
+    self.itinerary = snapshot.content
 }
 // User sees destination in 0.5s, then days progressively
 ```
@@ -700,11 +756,13 @@ let first = try await session.respond(
     generating: Person.self
 )
 
-// ✅ Subsequent requests - skip schema insertion
+// ✅ Subsequent requests - skip schema insertion.
+// includeSchemaInPrompt is a parameter on respond()/streamResponse() (default true),
+// NOT a GenerationOptions member.
 let second = try await session.respond(
     to: "Generate another person",
     generating: Person.self,
-    options: GenerationOptions(includeSchemaInPrompt: false)
+    includeSchemaInPrompt: false
 )
 ```
 
@@ -978,7 +1036,9 @@ case .unavailable(let reason):
 }
 
 // Hypothesis:
-// - If 20% unavailable → Availability issue (device/region/opt-in)
+// - If 20% unavailable → Availability issue. Read the UnavailableReason:
+//   .deviceNotEligible (device), .appleIntelligenceNotEnabled (opt-in),
+//   or .modelNotReady (still downloading). There is no region reason.
 // - If 20% getting errors → Code bug
 // - If 20% seeing wrong results → Use case mismatch
 ```
@@ -1117,9 +1177,9 @@ Post-mortem items:
 
 | Symptom | Cause | Check | Pattern | Time |
 |---------|-------|-------|---------|------|
-| Won't start | .unavailable | SystemLanguageModel.default.availability | 1a | 5 min |
-| Region issue | Not supported region | Check supported regions | 1b | 5 min |
-| Not opted in | Apple Intelligence disabled | Settings check | 1c | 10 min |
+| Won't start | .unavailable(.deviceNotEligible) | SystemLanguageModel.default.availability | 1a | 5 min |
+| Model not ready | .unavailable(.modelNotReady) | Still downloading — retry later | 1b | 5 min |
+| Not opted in | .unavailable(.appleIntelligenceNotEnabled) | Settings check | 1c | 10 min |
 | Context exceeded | >4096 tokens | Transcript length | 2a | 15 min |
 | Guardrail error | Content policy | User input type | 2b | 10 min |
 | Language error | Unsupported language | supportedLanguages | 2c | 10 min |
