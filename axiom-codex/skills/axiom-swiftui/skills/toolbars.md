@@ -373,7 +373,7 @@ Use this table to pick the right placement. When in doubt, prefer semantic place
 | `.bottomBar` | bottom bar | bottom bar | n/a | iOS-style action bars (3+ peer actions) |
 | `.principal` | center of nav bar | center | center | Segmented controls, custom titles |
 | `.status` | n/a | n/a | status area | macOS status info (sync indicators, etc.) |
-| `.keyboard` | above keyboard | n/a | n/a | Input accessory items |
+| `.keyboard` | above keyboard | above keyboard | n/a | Input accessory items (API is macOS 12+, but no software keyboard there) |
 | `.bottomOrnament` | n/a | n/a | n/a (visionOS) | visionOS bottom ornament |
 
 **Deprecated** `.navigationBarLeading` → use `.topBarLeading`. `.navigationBarTrailing` → use `.topBarTrailing`. The renames give cross-platform clarity (no "navigation bar" on macOS).

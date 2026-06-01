@@ -693,7 +693,7 @@ TabView {
 
 #### Dynamic Bottom Accessory
 
-The accessory can switch on `activeTab` for per-tab content, though Apple's usage (Music mini-player) keeps it global. Read `@Environment(\.tabViewBottomAccessoryPlacement)` to adapt layout: `.bar` when above tab bar (full controls), other values when inline with collapsed tab bar (compact).
+The accessory can switch on `activeTab` for per-tab content, though Apple's usage (Music mini-player) keeps it global. Read `@Environment(\.tabViewBottomAccessoryPlacement)` to adapt layout: `.expanded` when above the tab bar (full controls) vs `.inline` when inline with the minimized tab bar (compact). The enum has exactly these two cases — there is no `.bar` case.
 
 Reserve `tabViewBottomAccessory` for cross-tab content (playback, status). For tab-specific actions, prefer floating glass buttons within the tab's content view.
 
@@ -711,7 +711,7 @@ Reserve `tabViewBottomAccessory` for cross-tab content (playback, status). For t
 | `.hidden(_:)` | Tab | 18+ | Programmatic visibility with state preservation |
 | `.tabViewStyle(.sidebarAdaptable)` | TabView | 18+ | Sidebar on iPad, tabs on iPhone |
 | `.tabViewCustomization($binding)` | TabView | 18+ | Persist user tab arrangement |
-| `.tabViewSearchActivation(_:)` | TabView | 18+ | Bind `.searchable` to the `.search` role tab (use `.searchTabSelection`) |
+| `.tabViewSearchActivation(_:)` | TabView | 26+ | Bind `.searchable` to the `.search` role tab (use `.searchTabSelection`) |
 | `.tabBarMinimizeBehavior(_:)` | TabView | 26+ | Auto-hide on scroll |
 | `.tabViewBottomAccessory(isEnabled:content:)` | TabView | 26.1+ | Dynamic content below tab bar |
 
@@ -760,7 +760,7 @@ NavigationSplitView {
 
 // For dense UIs, adjust sharpness
 ScrollView { ... }
-    .scrollEdgeEffectStyle(.soft)  // .sharp, .soft
+    .scrollEdgeEffectStyle(.soft, for: .top)  // styles: .automatic, .hard, .soft (the `for:` edges argument is required)
 ```
 
 ### 6.5 Sheet Presentations with Zoom Transition

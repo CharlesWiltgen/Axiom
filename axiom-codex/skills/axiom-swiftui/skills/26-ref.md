@@ -153,12 +153,12 @@ Button("To Top", systemImage: "chevron.up") { scrollToTop() }
 ### Button & Control Changes
 
 - Capsule shape default for bordered buttons (override with `.buttonBorderShape(.roundedRectangle)`)
-- `.controlSize(.extraLarge)` — New extra-large button size
+- `.controlSize(.extraLarge)` — extra-large control size (available since iOS 17)
 - `.controlSize(.small)` on containers — Preserve pre-iOS 26 density
-- `GlassButtonStyle(.clear/.glass/.tint)` — Glass button variants (iOS 26.1+)
-- `.buttonSizing(.fit/.stretch/.flexible)` — Control button layout behavior
+- `.buttonStyle(.glass)` / `.glassProminent` / `.glass(.regular.tint(.blue))` — Glass button styles (the `GlassButtonStyle(_:)` initializer is iOS 26.1+)
+- `.buttonSizing(.automatic/.flexible/.fitted)` — Control button layout behavior
 - `Button(role: .close)` / `Button(role: .confirm)` — System-styled close/confirm
-- `.clipShape(.rect(cornerRadius: 12, style: .containerConcentric))` — Corner concentricity
+- `ConcentricRectangle()` (or `.rect(cornerRadius:style:)` with `.circular`/`.continuous`) — Corner concentricity (there is no `.containerConcentric` corner style)
 - Menus: icons on leading edge, consistent iOS/macOS
 
 ---
@@ -641,8 +641,8 @@ struct MyApp: App {
             ContentView()
         }
 
-        AssistiveAccessScene {
-            SimplifiedUI() // UI shown when iPhone is in AssistiveAccess mode
+        AssistiveAccess {
+            SimplifiedUI() // UI shown when iPhone is in Assistive Access mode
         }
     }
 }
@@ -762,7 +762,7 @@ struct InAppBrowser: View {
 
     var body: some View {
         VStack {
-            Text(page.title ?? "Loading...")
+            Text(page.title.isEmpty ? "Loading…" : page.title)
 
             WebView(page)
                 .ignoresSafeArea()
@@ -771,10 +771,14 @@ struct InAppBrowser: View {
                 }
 
             HStack {
-                Button("Back") { page.goBack() }
-                    .disabled(!page.canGoBack)
-                Button("Forward") { page.goForward() }
-                    .disabled(!page.canGoForward)
+                Button("Back") {
+                    if let item = page.backForwardList.backList.last { page.load(item) }
+                }
+                .disabled(page.backForwardList.backList.isEmpty)
+                Button("Forward") {
+                    if let item = page.backForwardList.forwardList.first { page.load(item) }
+                }
+                .disabled(page.backForwardList.forwardList.isEmpty)
             }
         }
     }
@@ -782,8 +786,8 @@ struct InAppBrowser: View {
 ```
 
 #### WebPage features
-- Programmatic navigation (`goBack()`, `goForward()`)
-- Access page properties (`title`, `url`, `canGoBack`, `canGoForward`)
+- History navigation via `backForwardList` (`backList` / `forwardList` / `currentItem`) + `load(_ item:)` — there are no `goBack()`/`goForward()`/`canGoBack`/`canGoForward` members
+- Access page properties (`title` is a non-optional `String`, `url` is `URL?`, `estimatedProgress`)
 - Observable — SwiftUI views update automatically
 
 **tvOS**: WebView and WebPage are **not available on tvOS**. tvOS has no WKWebView at all. For web content parsing on tvOS, use JavaScriptCore. See `axiom-swift (skills/tvos.md)` for alternatives.
@@ -859,16 +863,18 @@ struct PhotoGrid: View {
                 }
             }
         }
-        .dragContainer(for: Photo.self, selection: selectedPhotos) { draggedIDs in
+        .dragContainer(for: Photo.self) { draggedIDs in
             photos(ids: draggedIDs)
         }
+        .dragContainerSelection(selectedPhotos)
     }
 }
 ```
 
 **Key APIs**:
 - `.draggable(containerItemID:containerNamespace:)` marks each item as part of a drag container (namespace defaults to `nil`)
-- `.dragContainer(for:selection:)` provides the typed items lazily when a drop occurs
+- `.dragContainer(for:in:)` provides the typed items lazily when a drop occurs; the payload closure receives the dragged item IDs
+- `.dragContainerSelection(_:containerNamespace:)` supplies the current selection — it is a separate modifier, not a `dragContainer` argument
 
 ### DragConfiguration
 
@@ -895,10 +901,8 @@ struct PhotoGrid: View {
 ```swift
 .dragPreviewsFormation(.stack) // Items stack nicely on top of one another
 
-// Other formations:
-// - .default
-// - .grid
-// - .stack
+// Other formations: .default, .pile, .list, .none
+// (there is no .grid formation)
 ```
 
 Combine all modifiers (`.dragContainer`, `.dragConfiguration`, `.dragPreviewsFormation`, `.onDragSessionUpdated`) on the same scroll view for a complete multi-item drag experience.
@@ -1124,11 +1128,11 @@ Apps must support resizable windows on iPad.
 🔧 `glassEffectID` for morphing transitions between glass elements
 🔧 `GlassEffectContainer` for multiple nearby glass elements
 🔧 `sharedBackgroundVisibility(.hidden)` to remove toolbar item from group background
-🔧 Sheet morphing from buttons (`navigationZoomTransition`)
+🔧 Sheet morphing from buttons (`.navigationTransition(.zoom(sourceID:in:))`)
 🔧 Search tab role (`Tab(role: .search)`)
 🔧 Compact search toolbar (`.searchToolbarBehavior(.minimize)`)
-🔧 Extra large buttons (`.controlSize(.extraLarge)`)
-🔧 Concentric rectangle shape (`.containerConcentric`)
+🔧 Extra large control size (`.controlSize(.extraLarge)`, available since iOS 17)
+🔧 Concentric rectangle shape (`ConcentricRectangle`)
 🔧 iPad menu bar (`.commands`)
 🔧 Window resize anchor (`.windowResizeAnchor()`)
 🔧 @Animatable macro for custom shapes/modifiers
@@ -1140,7 +1144,7 @@ Apps must support resizable windows on iPad.
 🔧 Safe area bars with blur (`.safeAreaBar()` + `.scrollEdgeEffectStyle()`)
 🔧 In-app URL opening (`openURL(url, prefersInApp: true)`)
 🔧 Close and confirm button roles (`Button(role: .close)`)
-🔧 Glass button styles (`GlassButtonStyle` — iOS 26.1+)
+🔧 Glass button styles (`.glass`/`.glassProminent`; the `GlassButtonStyle(_:)` init is iOS 26.1+)
 🔧 Button sizing control (`.buttonSizing()`)
 🔧 Toolbar morphing transitions (per-view `.toolbar {}` inside NavigationStack)
 🔧 DefaultToolbarItem for system components in toolbars
