@@ -151,7 +151,7 @@ Controls have refreshed look across platforms and come to life during interactio
 
 ### Updated Appearance
 
-Bordered buttons default to capsule shape (mini/small/medium on macOS retain rounded-rectangle). Knobs transform into glass during interaction; buttons morph into menus/popovers. New `controlSize(.extraLarge)` option; heights slightly taller on macOS. Use `controlSize(.small)` for backward-compatible high-density layouts. Standard controls adopt automatically — remove hard-coded `.frame()` dimensions.
+Bordered buttons default to capsule shape (mini/small/medium on macOS retain rounded-rectangle). Knobs transform into glass during interaction; buttons morph into menus/popovers. `controlSize(.extraLarge)` (available since iOS 17) suits prominent controls; heights slightly taller on macOS. Use `controlSize(.small)` for backward-compatible high-density layouts. Standard controls adopt automatically — remove hard-coded `.frame()` dimensions.
 
 ### Review Updated Controls
 
@@ -175,7 +175,17 @@ Use `containerRelativeShape()` to align control curvature with containers — cr
 
 ### New Button Styles
 
-Use built-in styles instead of custom glass effects: `.borderedProminent` (primary, with `.tint()`), `.bordered` (secondary), `.plain` + `.glassEffect()` (tertiary/custom). Each adapts to Liquid Glass automatically.
+iOS 26 adds dedicated glass button styles — prefer these over a raw `.glassEffect()` on a button:
+- `.glass` (`GlassButtonStyle`) — standard glass button
+- `.glassProminent` (`GlassProminentButtonStyle`) — emphasized/primary glass button
+- `.glass(_ glass: Glass)` — a configured glass button, e.g. `.buttonStyle(.glass(.regular.tint(.blue)))` (the `GlassButtonStyle(_:)` initializer is iOS 26.1+)
+
+```swift
+Button("Add") { }.buttonStyle(.glass)
+Button("Buy") { }.buttonStyle(.glassProminent)
+```
+
+The existing `.borderedProminent` / `.bordered` styles also adapt to Liquid Glass automatically. All glass button styles are unavailable on visionOS.
 
 ---
 
@@ -448,25 +458,11 @@ Liquid Glass can have distinct appearance and behavior across platforms, context
 | watchOS | Automatic on latest release, even without latest SDK | Use standard toolbar APIs and `.buttonStyle(.bordered)` from watchOS 10 |
 | tvOS | Focus-based — glass appears when controls gain focus (Apple TV 4K 2nd gen+) | Use `.focusable()` on standard controls; for custom controls, apply `.glassEffect()` with `@FocusState`-driven opacity |
 
-### glassBackgroundEffect()
+### visionOS: glassBackgroundEffect()
 
-For custom views that need to reflect content behind them (not just apply glass material on top), use `.glassBackgroundEffect()`. This creates a glass-like background that shows through underlying content, distinct from `.glassEffect()` which applies glass as an overlay material.
+`glassBackgroundEffect()` is a **visionOS-only** modifier — it does not exist in the iOS, iPadOS, macOS, tvOS, or watchOS SDKs (calling it there won't compile). On visionOS it gives a view a glass background plate behind windowed/3D content.
 
-```swift
-// Custom floating panel with glass background reflecting content behind it
-struct FloatingPanel: View {
-    var body: some View {
-        VStack {
-            Text("Panel Content")
-            // ...
-        }
-        .padding()
-        .glassBackgroundEffect() // Reflects content beneath, not on top
-    }
-}
-```
-
-**`.glassEffect()` vs `.glassBackgroundEffect()`**: Use `.glassEffect()` for controls and navigation elements (buttons, toolbars). Use `.glassBackgroundEffect()` for content containers that should show through to underlying layers (panels, cards that need depth).
+On iOS, iPadOS, and macOS there is no separate "background" glass modifier: `glassEffect()` already renders translucent glass that underlying content shows through. Use `glassEffect()` (grouped with `GlassEffectContainer`) for controls and navigation; reach for `glassBackgroundEffect()` only in visionOS code.
 
 ### ScrollView + Glass Interaction
 
@@ -507,14 +503,44 @@ ZStack {
 | `UIBlurEffect(style: .systemChromeMaterial)` | System toolbar/navigation glass (automatic) |
 | `UIVisualEffectView` with blur | Remove entirely — use `.glassEffect()` on SwiftUI view |
 | `.background(.thinMaterial)` | `.glassEffect()` or keep material (adapts automatically) |
-| `.background(.ultraThinMaterial)` | `.glassBackgroundEffect()` for content containers |
+| `.background(.ultraThinMaterial)` | `.glassEffect(.clear)` (with conditions) or keep material |
 | Custom `NSVisualEffectView` (macOS) | `.glassEffect()` or system components |
 
 **Migration steps**: (1) Remove `UIVisualEffectView`/`NSVisualEffectView` wrappers, (2) Replace with `.glassEffect()` on the SwiftUI view, (3) Test with Reduce Transparency to verify fallback, (4) Profile performance — glass effects use GPU compositing.
 
-### Combining Custom Liquid Glass Effects
+### Configuring the Glass Material
 
-Wrap multiple `.glassEffect()` views in `GlassEffectContainer { }` to optimize rendering, enable fluid morphing between glass shapes, and reduce compositor overhead. Use for nearby glass elements, morphing animations, and performance-critical interfaces.
+`glassEffect(_ glass: Glass = .regular, in shape: some Shape = DefaultGlassEffectShape())` takes a `Glass` value. `Glass` has three base values — `.regular`, `.clear`, `.identity` — and two chainable instance methods:
+
+```swift
+.glassEffect(.regular.tint(.blue))          // tint the glass material (Color?)
+.glassEffect(.regular.interactive())        // glass reacts to touch (Bool = true)
+.glassEffect(.regular.tint(.blue).interactive())
+```
+
+There are no material-named variants (no `.thin`/`.thick`); `tint`/`interactive` are methods on `Glass`, not standalone view modifiers.
+
+### Combining and Morphing Custom Liquid Glass Effects
+
+Wrap multiple `.glassEffect()` views in `GlassEffectContainer(spacing:) { }` to optimize rendering, enable fluid morphing between glass shapes, and reduce compositor overhead. Use for nearby glass elements, morphing animations, and performance-critical interfaces.
+
+Morphing between glass shapes uses a shared namespace:
+
+```swift
+@Namespace private var glassNamespace
+
+GlassEffectContainer {
+    if expanded {
+        DetailView().glassEffect().glassEffectID("panel", in: glassNamespace)
+    } else {
+        SummaryView().glassEffect().glassEffectID("panel", in: glassNamespace)
+    }
+}
+```
+
+- `glassEffectID(_ id:in namespace:)` — identifies an element so glass morphs across state changes.
+- `glassEffectUnion(id:namespace:)` — merges adjacent glass shapes into one continuous surface.
+- `glassEffectTransition(_:)` — sets the transition: `.matchedGeometry` (default morph), `.materialize`, or `.identity`.
 
 ### Performance Testing
 
@@ -532,7 +558,9 @@ Add `UIDesignRequiresCompatibility = true` to Info.plist to ship with iOS 26 SDK
 - [ ] `glassEffect()` - Apply Liquid Glass material
 - [ ] `glassEffect(.clear)` - Clear variant (requires 3 conditions)
 - [ ] `glassEffect(in: Shape)` - Custom shape
-- [ ] `glassBackgroundEffect()` - For custom views reflecting content
+- [ ] `.regular.tint(_:)` / `.regular.interactive(_:)` - Configure the `Glass` value
+- [ ] `glassEffectID(_:in:)` / `glassEffectUnion(id:namespace:)` - Morph/merge glass shapes
+- [ ] `.buttonStyle(.glass)` / `.glassProminent` - Dedicated glass button styles
 
 ### Scroll Edge Effects
 - [ ] `scrollEdgeEffectStyle(_:for:)` - Maintain legibility where glass meets scrolling content
@@ -541,8 +569,8 @@ Add `UIDesignRequiresCompatibility = true` to Info.plist to ship with iOS 26 SDK
 
 ### Controls and Shapes
 - [ ] `containerRelativeShape()` - Align control shapes with containers
-- [ ] `.borderedProminent` button style
-- [ ] `.bordered` button style
+- [ ] `.buttonStyle(.glass)` / `.glassProminent` - Glass button styles
+- [ ] `.borderedProminent` / `.bordered` button styles (also adapt to glass)
 - [ ] System colors with `.tint()` for adaptation
 
 ### Navigation
@@ -593,7 +621,7 @@ Use this checklist when auditing app for Liquid Glass adoption. 30 highest-impac
 
 ### Controls
 - [ ] New capsule button shapes reviewed; `controlSize(.small)` for high-density layouts
-- [ ] System colors used (not hard-coded RGB); `.borderedProminent`/`.bordered` adopted
+- [ ] System colors used (not hard-coded RGB); glass button styles (`.glass`/`.glassProminent`) or `.borderedProminent`/`.bordered` adopted
 - [ ] Controls have adequate spacing (no crowding glass-on-glass)
 - [ ] Scroll edge effects applied where glass meets scrolling content
 
@@ -635,6 +663,6 @@ Use this checklist when auditing app for Liquid Glass adoption. 30 highest-impac
 ---
 
 **Last Updated**: 2025-12-01
-**Minimum Platform**: iOS/iPadOS 26, macOS Tahoe, tvOS, watchOS, visionOS 3
+**Minimum Platform**: iOS/iPadOS 26, macOS Tahoe 26, tvOS 26, watchOS 26 (`glassEffect` is unavailable on visionOS; visionOS uses `glassBackgroundEffect`)
 **Xcode Version**: Xcode 26+
 **Skill Type**: Reference (comprehensive adoption guide)

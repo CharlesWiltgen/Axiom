@@ -32,7 +32,7 @@ Liquid Glass is Apple's next-generation material design system introduced at WWD
 - **Dynamically bends and shapes light** (lensing) rather than scattering it
 - **Moves organically** like a lightweight liquid, responding to touch and app dynamism
 - **Adapts automatically** to size, environment, content, and light/dark modes
-- **Unifies design language** across all Apple platforms (iOS, iPadOS, macOS, visionOS)
+- **Unifies design language** across Apple platforms (iOS, iPadOS, macOS, tvOS, watchOS). The SwiftUI `glassEffect` API is unavailable on visionOS, which has its own glass material
 
 **Core Philosophy**: Liquid Glass complements the evolution of rounded, immersive screens with rounded, floating forms that feel natural to touch interaction while letting content shine through.
 
@@ -64,10 +64,12 @@ Liquid Glass **continuously adapts** without fixed light/dark appearance:
 
 ### Basic API Usage
 
-#### SwiftUI: `glassEffect` Modifier
+#### The `glassEffect` Modifier
+
+`glassEffect`, `Glass`, and `GlassEffectContainer` live in SwiftUICore (re-exported by `import SwiftUI`). There is a single overload: `glassEffect(_ glass: Glass = .regular, in shape: some Shape = DefaultGlassEffectShape())`.
 
 ```swift
-// Basic usage - applies glass within capsule shape
+// Basic usage — glass in the default shape (capsule-like)
 Text("Hello")
     .glassEffect()
 
@@ -75,12 +77,20 @@ Text("Hello")
 Text("Hello")
     .glassEffect(in: RoundedRectangle(cornerRadius: 12))
 
-// Interactive elements (iOS - for controls/containers)
-Button("Tap Me") {
-    // action
-}
-.glassEffect()
-.interactive() // Add for custom controls on iOS
+// Interactive glass — interactive() and tint() are methods on Glass,
+// NOT standalone view modifiers
+Button("Tap Me") { /* action */ }
+    .glassEffect(.regular.interactive())
+```
+
+`Glass` has exactly three base values — `.regular`, `.clear`, `.identity` — plus the chainable instance methods `.tint(_ color: Color?)` and `.interactive(_ isEnabled: Bool = true)`. There are no material-named variants (no `.thin`/`.thick`).
+
+For buttons, prefer the dedicated glass button styles over a raw `glassEffect`:
+
+```swift
+Button("Add") { }.buttonStyle(.glass)            // GlassButtonStyle
+Button("Buy") { }.buttonStyle(.glassProminent)   // GlassProminentButtonStyle
+Button("Tag") { }.buttonStyle(.glass(.regular.tint(.blue)))  // tinted glass
 ```
 
 **Automatic Adoption**: Simply recompiling with Xcode 26 brings Liquid Glass to standard controls automatically.
@@ -119,7 +129,7 @@ Liquid Glass is composed of four layers working together:
 
 ## Scroll Edge Effects
 
-Scroll edge effects dissolve content into background as it scrolls, lifting glass above moving content. Use `.scrollEdgeEffect(.hard)` when pinned accessory views exist (e.g., column headers) for extra visual separation. See `axiom-design (skills/liquid-glass-ref.md)` for full API details.
+Scroll edge effects dissolve content into background as it scrolls, lifting glass above moving content. Use `.scrollEdgeEffectStyle(.hard, for: .top)` when pinned accessory views exist (e.g., column headers) for extra visual separation. See `axiom-design (skills/liquid-glass-ref.md)` for full API details.
 
 ---
 
@@ -130,20 +140,20 @@ Liquid Glass introduces **adaptive tinting** — selecting a color generates ton
 ### Tinting Rules
 
 ```swift
-// ✅ Tint primary actions only
-Button("View Bag") { }.tint(.red).glassEffect()
+// ✅ Tint primary actions only — tint the glass material via Glass.tint()
+Button("View Bag") { }.glassEffect(.regular.tint(.red))
 
 // ❌ Don't tint everything — when everything is tinted, nothing stands out
 VStack {
-    Button("Action 1").tint(.blue).glassEffect()
-    Button("Action 2").tint(.green).glassEffect()  // No hierarchy
+    Button("Action 1").glassEffect(.regular.tint(.blue))
+    Button("Action 2").glassEffect(.regular.tint(.green))  // No hierarchy
 }
 
 // ❌ Solid fills break Liquid Glass character
 Button("Action") { }.background(.red)  // Opaque, wrong
 
-// ✅ Use .tint() instead of solid fills
-Button("Action") { }.tint(.red).glassEffect()  // Grounded in environment
+// ✅ Tint the glass instead of solid fills
+Button("Action") { }.glassEffect(.regular.tint(.red))  // Grounded in environment
 ```
 
 Reserve tinting for primary UI actions. Use color in the content layer for overall app color scheme.
@@ -548,7 +558,7 @@ ZStack {
 ### UIKit + SwiftUI Interop
 
 When migrating incrementally, glass effects apply per-framework:
-- SwiftUI views get `.glassEffect()` / `.glassBackgroundEffect()`
+- SwiftUI views get `.glassEffect()`, grouped with `GlassEffectContainer` (note: `glassBackgroundEffect()` is a visionOS-only API, not available on iOS/macOS)
 - UIKit views use the UIKit Liquid Glass APIs (see `axiom-design (skills/liquid-glass-ref.md)` for migration mapping)
 - Hosted SwiftUI views inside `UIHostingController` get glass effects independently
 
@@ -581,7 +591,7 @@ To ship with latest SDKs while maintaining previous appearance:
 
 ## API Reference
 
-For complete API reference including `glassEffect()`, `glassBackgroundEffect()`, toolbar modifiers, scroll edge effects, navigation/search APIs, controls/layout, `GlassEffectContainer`, `glassEffectID`, types, and backward compatibility, see `axiom-design (skills/liquid-glass-ref.md)`.
+For complete API reference including `glassEffect()`, `GlassEffectContainer`, `glassEffectID`/`glassEffectUnion`, `GlassEffectTransition`, `buttonStyle(.glass)`/`.glassProminent`, toolbar modifiers, scroll edge effects, navigation/search APIs, controls/layout, the `Glass` configuration API (`.tint`/`.interactive`), and backward compatibility, see `axiom-design (skills/liquid-glass-ref.md)`.
 
 ---
 
@@ -595,6 +605,6 @@ For complete API reference including `glassEffect()`, `glassBackgroundEffect()`,
 
 ---
 
-**Platforms:** iOS 26+, iPadOS 26+, macOS Tahoe, visionOS 3
+**Platforms:** iOS 26+, iPadOS 26+, macOS Tahoe 26+, tvOS 26+, watchOS 26+ (`glassEffect` is unavailable on visionOS; only `backgroundExtensionEffect` is offered there)
 **Xcode:** 26+
 **History:** See git log for changes
