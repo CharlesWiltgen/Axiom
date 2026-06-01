@@ -139,7 +139,7 @@ print(response.content) // SearchSuggestions instance
 
 ### Generation Options
 
-See [Sampling & Generation Options](#sampling--generation-options) for `GenerationOptions` including `sampling:`, `temperature:`, and `includeSchemaInPrompt:`.
+See [Sampling & Generation Options](#sampling--generation-options) for `GenerationOptions` (`sampling:`, `temperature:`, `maximumResponseTokens:`). Note that `includeSchemaInPrompt:` is a parameter on `respond(...)` / `streamResponse(...)` itself, not a `GenerationOptions` member — see [Optimization: includeSchemaInPrompt](#optimization-includeschemainprompt).
 
 ---
 
@@ -176,11 +176,16 @@ print(session.transcript) // Shows full history
 
 ### Transcript Property
 
+`Transcript` is a `RandomAccessCollection` of `Transcript.Entry` — iterate it directly. There is no `.entries` property (`entries:` is only the `Transcript(entries:)` init label).
+
 ```swift
 let transcript = session.transcript
 
-for entry in transcript.entries {
-    print("Entry: \(entry.content)")
+for entry in transcript {
+    // Entry is an enum: .instructions / .prompt / .toolCalls / .toolOutput / .response.
+    // Text lives in per-case Segments (TextSegment.content / StructuredSegment.content),
+    // not on the Entry itself.
+    print("Entry: \(entry)")
 }
 ```
 
@@ -279,7 +284,7 @@ struct Itinerary {
 
 ### @Guide Constraints
 
-`@Guide` constrains generated properties. Supports `description:` (natural language), `.range()` (numeric bounds), `.count()` / `.maximumCount()` (array length), and `Regex` (pattern matching).
+`@Guide` constrains generated properties. Supports `description:` (natural language), `.range()` (numeric bounds), `.count()` / `.maximumCount()` (array length), and `.pattern(Regex)` (string pattern matching).
 
 ```swift
 @Generable
@@ -378,14 +383,14 @@ let stream = session.streamResponse(
     generating: Itinerary.self
 )
 
-for try await partial in stream {
-    print(partial) // Incrementally updated Itinerary.PartiallyGenerated
+for try await snapshot in stream {
+    print(snapshot.content) // Incrementally updated Itinerary.PartiallyGenerated
 }
 ```
 
 #### From WWDC 286:9:40
 
-**Return Type**: `AsyncSequence<Itinerary.PartiallyGenerated>`
+**Return Type**: `ResponseStream<Itinerary>`. Its `Element` is `ResponseStream<Itinerary>.Snapshot`, which exposes `content: Itinerary.PartiallyGenerated` and `rawContent: GeneratedContent`. Iterate the stream and read `snapshot.content` for the partially generated value.
 
 ### SwiftUI Integration
 
@@ -423,8 +428,8 @@ struct ItineraryView: View {
                             generating: Itinerary.self
                         )
 
-                        for try await partial in stream {
-                            self.itinerary = partial
+                        for try await snapshot in stream {
+                            self.itinerary = snapshot.content
                         }
                     } catch {
                         print(error)
@@ -489,11 +494,14 @@ protocol Tool {
     var name: String { get }
     var description: String { get }
 
-    associatedtype Arguments: Generable
+    associatedtype Output: PromptRepresentable
+    associatedtype Arguments: ConvertibleFromGeneratedContent
 
-    func call(arguments: Arguments) async throws -> ToolOutput
+    func call(arguments: Arguments) async throws -> Output
 }
 ```
+
+Tools return their `Output` directly. There is no standalone `ToolOutput` type — return a `String` (which is `PromptRepresentable`) for natural-language results, or a `GeneratedContent` for structured results. `@Generable` structs satisfy the `Arguments` constraint, since `Generable` refines `ConvertibleFromGeneratedContent`.
 
 ### Example: GetWeatherTool
 
@@ -512,18 +520,17 @@ struct GetWeatherTool: Tool {
         var city: String
     }
 
-    func call(arguments: Arguments) async throws -> ToolOutput {
+    func call(arguments: Arguments) async throws -> GeneratedContent {
         let places = try await CLGeocoder().geocodeAddressString(arguments.city)
         let weather = try await WeatherService.shared.weather(for: places.first!.location!)
         let temperature = weather.currentWeather.temperature.value
 
-        let content = GeneratedContent(properties: ["temperature": temperature])
-        let output = ToolOutput(content)
+        // Structured output: return GeneratedContent directly.
+        return GeneratedContent(properties: ["temperature": temperature])
 
-        // Or if your tool's output is natural language:
-        // let output = ToolOutput("\(arguments.city)'s temperature is \(temperature) degrees.")
-
-        return output
+        // Or if your tool's output is natural language, declare the return type
+        // as String and return text directly:
+        // return "\(arguments.city)'s temperature is \(temperature) degrees."
     }
 }
 ```
@@ -577,29 +584,32 @@ class FindContactTool: Tool {
         enum Generation { case babyBoomers, genX, millennial, genZ }
     }
 
-    func call(arguments: Arguments) async throws -> ToolOutput {
+    func call(arguments: Arguments) async throws -> String {
         // Fetch, filter out already-picked, return new contact
         pickedContacts.insert(pickedContact.givenName)
-        return ToolOutput(pickedContact.givenName)
+        return pickedContact.givenName
     }
 }
 ```
 
 #### From WWDC 301:18:47, 301:21:55
 
-### ToolOutput
+### Tool Output
 
-**Two forms**:
+A tool returns its `Output` value directly — there is no `ToolOutput` wrapper type. Choose the return type based on the result:
 
-1. **Natural language** (String):
+1. **Natural language** (`Output = String`):
 ```swift
-return ToolOutput("Temperature is 71°F")
+func call(arguments: Arguments) async throws -> String {
+    return "Temperature is 71°F"
+}
 ```
 
-2. **Structured** (GeneratedContent):
+2. **Structured** (`Output = GeneratedContent`):
 ```swift
-let content = GeneratedContent(properties: ["temperature": 71])
-return ToolOutput(content)
+func call(arguments: Arguments) async throws -> GeneratedContent {
+    return GeneratedContent(properties: ["temperature": 71])
+}
 ```
 
 ### Tool Naming Best Practices
@@ -775,10 +785,18 @@ let response = try await session.respond(
 
 ### GenerationError Types
 
-Catch `LanguageModelSession.GenerationError` cases:
-- **`.exceededContextWindowSize`** — Context limit (4096 tokens) exceeded. Condense transcript or create new session.
-- **`.guardrailViolation`** — Content policy triggered. Show graceful message.
+Catch `LanguageModelSession.GenerationError` cases (9 total; each carries a `Context`, and `refusal` carries `(Refusal, Context)`):
+- **`.exceededContextWindowSize`** — Context limit exceeded. Condense transcript or create a new session.
+- **`.guardrailViolation`** — Content policy triggered. Show a graceful message.
 - **`.unsupportedLanguageOrLocale`** — Language not supported. Check `supportedLanguages`.
+- **`.unsupportedGuide`** — A `@Guide` constraint isn't supported for that type. Simplify the guide.
+- **`.decodingFailure`** — Output couldn't be decoded into the `@Generable` type. Retry or relax the schema.
+- **`.rateLimited`** — Too many requests. Back off and retry.
+- **`.concurrentRequests`** — A request was issued while `isResponding == true`. Serialize requests.
+- **`.assetsUnavailable`** — Model assets unavailable. Treat like an availability failure.
+- **`.refusal(Refusal, Context)`** — The model refused; read the `Refusal` for the reason (`await refusal.explanation`).
+
+Tool failures surface separately as `LanguageModelSession.ToolCallError` (`.tool`, `.underlyingError`), not as a `GenerationError`.
 
 #### From WWDC 301:3:37, 301:7:06
 
@@ -809,13 +827,14 @@ do {
 }
 
 private func newSession(previousSession: LanguageModelSession) -> LanguageModelSession {
-    let allEntries = previousSession.transcript.entries
+    // Transcript is a RandomAccessCollection of Transcript.Entry — index it directly.
+    let transcript = previousSession.transcript
     var condensedEntries = [Transcript.Entry]()
 
-    if let firstEntry = allEntries.first {
+    if let firstEntry = transcript.first {
         condensedEntries.append(firstEntry) // Instructions
 
-        if allEntries.count > 1, let lastEntry = allEntries.last {
+        if transcript.count > 1, let lastEntry = transcript.last {
             condensedEntries.append(lastEntry) // Recent context
         }
     }
@@ -830,7 +849,7 @@ private func newSession(previousSession: LanguageModelSession) -> LanguageModelS
 
 ### Fallback Architecture
 
-When Foundation Models is unavailable (older device, user opted out, unsupported region), provide graceful degradation:
+When Foundation Models is unavailable (`.deviceNotEligible`, `.appleIntelligenceNotEnabled`, or `.modelNotReady`), provide graceful degradation:
 
 ```swift
 func summarize(_ text: String) async throws -> String {
@@ -920,47 +939,52 @@ guard supportedLanguages.contains(Locale.current.language) else {
 
 ### Token Sizing and Context Size
 
-`SystemLanguageModel` exposes two introspection points for token-budget math:
+`SystemLanguageModel.contextSize` reports the ceiling, and `SystemLanguageModel`'s `tokenCount(for:)` overloads give exact counts for every component of the budget:
 
 ```swift
-// Maximum tokens the model can hold (input + output combined).
-let maxTokens: Int = SystemLanguageModel.default.contextSize
+let model = SystemLanguageModel.default
 
-// Exact token count for a specific Instructions value.
+// Maximum tokens the model can hold (input + output combined).
+let maxTokens: Int = model.contextSize
+
+// Exact token counts — five overloads on SystemLanguageModel, iOS 26.4+.
 @available(iOS 26.4, iPadOS 26.4, macOS 26.4, visionOS 26.4, *)
-let instructionTokens = try await SystemLanguageModel.default
-    .tokenCount(for: Instructions("..."))
+func budget(session: LanguageModelSession) async throws {
+    _ = try await model.tokenCount(for: "some prompt")          // any PromptRepresentable
+    _ = try await model.tokenCount(for: Instructions("..."))     // Instructions
+    _ = try await model.tokenCount(for: [GetWeatherTool()])      // [any Tool]
+    _ = try await model.tokenCount(for: someGenerationSchema)    // GenerationSchema
+    _ = try await model.tokenCount(for: session.transcript)      // some Collection<Transcript.Entry>
+}
 ```
 
 **Scope and constraints**:
-- `tokenCount(for:)` accepts **`Instructions` only** — not `Prompt`, not `Transcript`, not arbitrary `String`. Use it to size system instructions against `contextSize` *before* creating a session; there is no public API for exact counting of prompts, transcript entries, or generation output.
-- `tokenCount(for:)` is `async throws`, **iOS 26.4+** (with matching iPadOS / macOS / visionOS / Mac Catalyst 26.4). Older OS targets fall back to estimation.
+- `tokenCount(for:)` is a method on `SystemLanguageModel` (e.g. `SystemLanguageModel.default`), not `LanguageModelSession`, and has **five overloads**: prompt (`PromptRepresentable`), `Instructions`, `[any Tool]`, `GenerationSchema`, and transcript entries (`some Collection<Transcript.Entry>`). Exact counting **is** available for prompts and transcript entries — use these to size against `contextSize` before composing a turn.
+- All overloads are `async throws`, **iOS 26.4+** (with matching iPadOS / macOS / visionOS / Mac Catalyst 26.4). Only pre-26.4 targets need to fall back to estimation.
 - `contextSize` is the absolute ceiling for input + output combined. Use it as the denominator in any budget calculation.
 
-**Estimation fallback** (for `Prompt`, `Transcript`, output, or pre-26.4 targets):
+**Estimation fallback** (pre-26.4 targets only — on 26.4+ prefer the exact overloads above):
 
 ```swift
-// Apple does not expose a public API for these — estimate.
-// Empirical rule for English: ~3 characters per token; non-English
-// varies (PFIGSCJK languages typically use more tokens per character).
+// Pre-26.4 fallback. Empirical rule for English: ~3 characters per token;
+// non-English varies (PFIGSCJK languages typically use more tokens per character).
 let approxTokens = text.count / 3
 ```
 
 The 3-chars-per-token heuristic is intentionally conservative; treat it as an upper-bound for English and a lower-bound for languages with multi-byte characters.
 
-**Common pattern**: combine the exact instructions count with estimated prompt + transcript sizes when deciding whether to compose a session or condense first.
+**Common pattern**: on 26.4+, count instructions, transcript, and the next prompt exactly before deciding whether to compose a turn or condense first.
 
 ```swift
 @available(iOS 26.4, *)
-func canAccept(_ instructions: Instructions, currentTranscript: Transcript, nextPrompt: String) async throws -> Bool {
+func canAccept(_ instructions: Instructions, session: LanguageModelSession, nextPrompt: String) async throws -> Bool {
     let model = SystemLanguageModel.default
     let max = model.contextSize
     let instructionTokens = try await model.tokenCount(for: instructions)
-    let transcriptApprox = currentTranscript.entries
-        .reduce(0) { $0 + $1.content.count / 3 }
-    let promptApprox = nextPrompt.count / 3
+    let transcriptTokens = try await model.tokenCount(for: session.transcript)
+    let promptTokens = try await model.tokenCount(for: nextPrompt)
     let outputBudget = 512 // reserve for generation
-    return instructionTokens + transcriptApprox + promptApprox + outputBudget < max
+    return instructionTokens + transcriptTokens + promptTokens + outputBudget < max
 }
 ```
 
@@ -972,11 +996,9 @@ func canAccept(_ instructions: Instructions, currentTranscript: Transcript, next
 - iPad with M1+ chip
 - Mac with Apple silicon
 
-**Region Requirements**:
-- Supported region (check Apple Intelligence availability)
-
-**User Requirements**:
+**Apple Intelligence enabled** (when not, surfaces as `.appleIntelligenceNotEnabled`):
 - User opted in to Apple Intelligence in Settings
+- Available in the user's region — regional rollout gates whether Apple Intelligence can be enabled; there is no separate region `UnavailableReason` case
 
 ---
 
@@ -1036,11 +1058,13 @@ let first = try await session.respond(
     generating: Person.self
 )
 
-// Subsequent requests - skip schema
+// Subsequent requests - skip schema.
+// includeSchemaInPrompt is a parameter on respond(...)/streamResponse(...),
+// NOT a member of GenerationOptions.
 let second = try await session.respond(
     to: "Generate another person",
     generating: Person.self,
-    options: GenerationOptions(includeSchemaInPrompt: false)
+    includeSchemaInPrompt: false
 )
 ```
 
@@ -1056,7 +1080,22 @@ Declare important properties first in `@Generable` structs. With streaming, perc
 
 ## Feedback & Analytics
 
-`LanguageModelFeedbackAttachment` lets you report model quality issues to Apple via Feedback Assistant. Create with `input`, `output`, `sentiment` (`.positive`/`.negative`), `issues` (category + explanation), and `desiredOutputExamples`. Encode as JSON and attach to a Feedback Assistant report.
+Report model quality issues to Apple via Feedback Assistant. The session method `logFeedbackAttachment(sentiment:issues:desiredOutput:)` returns `Data` you attach to a Feedback Assistant report. There is no `LanguageModelFeedbackAttachment` type — the feedback model is `LanguageModelFeedback`, with nested `Sentiment` (`.positive` / `.negative` / `.neutral`) and `Issue` (built from an `Issue.Category` plus an optional explanation).
+
+```swift
+let feedbackData = session.logFeedbackAttachment(
+    sentiment: .negative,
+    issues: [
+        LanguageModelFeedback.Issue(
+            category: .didNotFollowInstructions,
+            explanation: "Returned prose instead of the requested list"
+        )
+    ],
+    desiredOutput: nil // optional Transcript.Entry
+)
+// Convenience variants take desiredResponseText: or desiredResponseContent:
+// instead of a Transcript.Entry.
+```
 
 #### From WWDC 286:22:13
 
@@ -1090,14 +1129,14 @@ Playgrounds can also access types defined in your app (like @Generable structs).
 
 ## API Quick Reference
 
-- **`LanguageModelSession`** — Main interface: `respond(to:)` → `Response<String>`, `respond(to:generating:)` → `Response<T>`, `streamResponse(to:generating:)` → `AsyncSequence<T.PartiallyGenerated>`. Properties: `transcript`, `isResponding`.
-- **`SystemLanguageModel`** — `default.availability` (`.available`/`.unavailable(reason)`), `default.supportedLanguages`, `init(useCase:)`
-- **`GenerationOptions`** — `sampling` (`.greedy`/`.random`), `temperature`, `includeSchemaInPrompt`
+- **`LanguageModelSession`** — Main interface: `respond(to:)` → `Response<String>`, `respond(to:generating:)` → `Response<T>`, `streamResponse(to:generating:)` → `ResponseStream<T>` (Element is `Snapshot`; read `snapshot.content` → `T.PartiallyGenerated`). `respond`/`streamResponse` also take `includeSchemaInPrompt:` (defaults `true`). Properties: `transcript`, `isResponding`.
+- **`SystemLanguageModel`** — `default.availability` (`.available`/`.unavailable(reason)`), `default.supportedLanguages`, `default.contextSize`, `default.tokenCount(for:)` → `Int` (5 overloads, iOS 26.4+), `init(useCase:)`
+- **`GenerationOptions`** — `init(sampling:temperature:maximumResponseTokens:)`. `sampling` (`.greedy`, `.random(top:seed:)`, `.random(probabilityThreshold:seed:)`), `temperature`, `maximumResponseTokens`. (`includeSchemaInPrompt` is NOT here — it's a parameter on `respond`/`streamResponse`.)
 - **`@Generable`** — Macro enabling structured output with constrained decoding
-- **`@Guide`** — Property constraints: `description:`, `.range()`, `.count()`, `.maximumCount()`, `Regex`
-- **`Tool` protocol** — `name`, `description`, `Arguments: Generable`, `call(arguments:) → ToolOutput`
+- **`@Guide`** — Property constraints: `description:`, `.range()`, `.count()`, `.maximumCount()`, `.pattern(Regex)`
+- **`Tool` protocol** — `name`, `description`, `Arguments: ConvertibleFromGeneratedContent`, `Output: PromptRepresentable`, `call(arguments:) → Output` (return `String` for text or `GeneratedContent` for structured — no `ToolOutput` type)
 - **`DynamicGenerationSchema`** — Runtime schema definition with `GeneratedContent` output
-- **`GenerationError`** — `.exceededContextWindowSize`, `.guardrailViolation`, `.unsupportedLanguageOrLocale`
+- **`GenerationError`** (9 cases) — `.exceededContextWindowSize`, `.guardrailViolation`, `.unsupportedLanguageOrLocale`, `.unsupportedGuide`, `.decodingFailure`, `.rateLimited`, `.concurrentRequests`, `.assetsUnavailable`, `.refusal(Refusal, Context)`. Tool failures: `ToolCallError` (`.tool`, `.underlyingError`).
 
 ---
 

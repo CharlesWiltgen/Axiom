@@ -346,7 +346,9 @@ Without the entitlement, the runtime `SystemLanguageModel.Adapter` initializers 
 ```swift
 import FoundationModels
 
-public struct SystemLanguageModel.Adapter: Sendable {
+public struct SystemLanguageModel.Adapter {
+    public var creatorDefinedMetadata: [String : Any] { get }
+
     public init(name: String) throws
     public init(fileURL: URL) throws
 
@@ -433,6 +435,8 @@ let isCompatible = SystemLanguageModel.Adapter.isCompatible(assetPack)
 
 Returns `true` if an `AssetPack`'s adapter variant matches the device's current base-model version. Used inside `StoreDownloaderExtension.shouldDownload(_:)` to gate adapter downloads to compatible variants only:
 
+**Caution**: this symbol is present in the FoundationModels binary but absent from the public textual swiftinterface as of iOS 26.5, and it requires `import BackgroundAssets` (the `AssetPack` type comes from that module). Because it isn't in the textual interface, it may not be source-stable across releases. Where a compatibility check doesn't need an `AssetPack` in hand, prefer `compatibleAdapterIdentifiers(name:)`.
+
 ```swift
 @main
 struct AdapterDownloader: StoreDownloaderExtension {
@@ -452,14 +456,14 @@ See `axiom-integration (skills/background-assets-ref.md)` "Foundation Models Ada
 ## SystemLanguageModel.Adapter.AssetError
 
 ```swift
-public enum SystemLanguageModel.Adapter.AssetError: Error, LocalizedError, Sendable {
+public enum SystemLanguageModel.Adapter.AssetError: Error, LocalizedError {
     case compatibleAdapterNotFound(Context)
     case invalidAdapterName(Context)
     case invalidAsset(Context)
 }
 ```
 
-Each case carries a `Context` value with diagnostic detail; check `errorDescription` for a human-readable message.
+Each case carries a `Context` value with diagnostic detail; check `errorDescription` for a human-readable message and `recoverySuggestion` for a suggested fix (both are `String?`, exposed via `LocalizedError`).
 
 | Case | Meaning | Diagnosis path |
 |------|---------|----------------|
@@ -655,7 +659,7 @@ For server-hosted delivery (`BADownloaderExtension`), see `axiom-integration (sk
 
 - **Toolkit CLI**: `examples.train_adapter`, `examples.train_draft_model`, `examples.generate`, `export.export_fmadapter`
 - **Toolkit Python entry points**: documented in toolkit `README.md`; do not modify `export/`
-- **Runtime types**: `SystemLanguageModel.Adapter` (struct, `Sendable`), `SystemLanguageModel.Adapter.AssetError` (enum)
+- **Runtime types**: `SystemLanguageModel.Adapter` (struct), `SystemLanguageModel.Adapter.AssetError` (enum)
 - **Runtime initializers**: `init(name:)`, `init(fileURL:)`
 - **Runtime instance methods**: `compile() async throws`
 - **Runtime static methods**: `removeObsoleteAdapters() throws`, `compatibleAdapterIdentifiers(name:) -> [String]`, `isCompatible(_ assetPack: AssetPack) -> Bool`

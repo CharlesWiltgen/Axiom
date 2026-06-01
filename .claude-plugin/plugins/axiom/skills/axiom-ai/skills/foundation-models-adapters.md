@@ -238,7 +238,7 @@ Adapter-specific additions:
 |-----------|-------------|
 | First download of ~160 MB adapter pack | User-visible progress; not instant on cellular |
 | `compatibleAdapterIdentifiers(name:)` returns empty post-OS-upgrade | Graceful fallback to base model; surface "Using the standard model" only if quality difference is material |
-| Result quality | Wire `LanguageModelFeedbackAttachment` (see `axiom-ai (skills/foundation-models-ref.md)`); thumbs-up/down feeds next retrain dataset |
+| Result quality | Wire `session.logFeedbackAttachment(sentiment:issues:desiredOutput:)` — pass `LanguageModelFeedback.Sentiment` (`.positive`/`.negative`) plus optional `LanguageModelFeedback.Issue` values (see `axiom-ai (skills/foundation-models-ref.md)`); thumbs-up/down feeds next retrain dataset |
 
 ---
 
@@ -361,7 +361,7 @@ Without per-locale eval, none of these are measurable until App Store reviews su
 - [ ] Retry as first-class affordance
 - [ ] `guardrailViolation` shows constructive next step
 - [ ] Adapter-not-available state degrades gracefully
-- [ ] `LanguageModelFeedbackAttachment` wired for next-retrain dataset
+- [ ] `session.logFeedbackAttachment(sentiment:issues:desiredOutput:)` wired (thumbs-up/down via `LanguageModelFeedback.Sentiment`) for next-retrain dataset
 
 ---
 
