@@ -5,8 +5,8 @@
 
 SwiftData schema migrations move your data safely when models change. **Core principle** SwiftData's `willMigrate` sees only OLD models, `didMigrate` sees only NEW models—you can never access both simultaneously. This limitation shapes all migration strategies.
 
-**Requires** iOS 17+, Swift 5.9+
-**Target** iOS 26+ (features like `propertiesToFetch`)
+**Requires** iOS 17+ (SwiftData migration APIs — `VersionedSchema`, `SchemaMigrationPlan`, `MigrationStage` — all ship from iOS 17)
+**Target** iOS 26+ (Axiom version floor; note `propertiesToFetch`/`relationshipKeyPathsForPrefetching` are iOS 17, not 26-specific)
 
 ## When Custom Migrations Are Required
 

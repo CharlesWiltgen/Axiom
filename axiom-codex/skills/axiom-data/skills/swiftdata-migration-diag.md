@@ -400,11 +400,19 @@ static let migrate = MigrationStage.custom(
 import Testing
 import SwiftData
 
-@Test func testMigrationOnRealDevice() throws {
-    // This test MUST run on real device, not simulator
+// Swift Testing skips via a trait, not a thrown XCTSkip (XCTSkip is XCTest-only
+// and isn't in scope in a Testing-based test). Gate with `.enabled(if:)`.
+private let runningInSimulator: Bool = {
     #if targetEnvironment(simulator)
-    throw XCTSkip("Migration test requires real device")
+    true
+    #else
+    false
     #endif
+}()
+
+@Test(.enabled(if: !runningInSimulator))
+func testMigrationOnRealDevice() throws {
+    // Runs only on a real device — migration behavior can differ from simulator
 
     let container = try ModelContainer(
         for: Schema(versionedSchema: SchemaV2.self),

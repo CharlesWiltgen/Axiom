@@ -697,9 +697,9 @@ let container = try ModelContainer(for: schema, configurations: testConfig)
 final class Track {
     @Relationship(
         deleteRule: .cascade,
-        inverse: \Album.tracks,
-        minimum: 0,
-        maximum: 1  // Track belongs to at most one album
+        minimumModelCount: 0,
+        maximumModelCount: 1,  // Track belongs to at most one album
+        inverse: \Album.tracks
     ) var album: Album?
 }
 ```
@@ -725,14 +725,25 @@ final class Track {
 
 ### History Tracking
 
+SwiftData records persistent history automatically — there is no `isHistoryEnabled` flag on `ModelConfiguration`. Query the change history with `ModelContext.fetchHistory(_:)` using a `HistoryDescriptor` (iOS 18+):
+
 ```swift
-// Enable history tracking
-let config = ModelConfiguration(
-    schema: schema,
-    cloudKitDatabase: .private("iCloud.com.example.app"),
-    allowsSave: true,
-    isHistoryEnabled: true  // iOS 26+
-)
+var descriptor = HistoryDescriptor<DefaultHistoryTransaction>()
+// Optionally filter by token/date via descriptor.predicate
+
+let transactions = try modelContext.fetchHistory(descriptor)
+for transaction in transactions {
+    for change in transaction.changes {
+        switch change {
+        case .insert(let inserted): handleInsert(inserted)
+        case .update(let updated):  handleUpdate(updated)
+        case .delete(let deleted):  handleDelete(deleted)
+        }
+    }
+}
+
+// Prune processed history once you've caught up:
+try modelContext.deleteHistory(HistoryDescriptor<DefaultHistoryTransaction>())
 ```
 
 ## Performance Patterns
@@ -809,23 +820,20 @@ for track in largeDataset {
 try modelContext.save()  // Once for entire batch
 ```
 
-### Index Optimization (iOS 26+)
+### Index Optimization (iOS 18+)
 
-Create indexes on frequently queried properties:
+Create indexes on frequently queried properties with the freestanding `#Index` macro (there is no `@Attribute(.indexed)` option). Each array argument is one index — pass multiple arrays for multiple single-column indexes, or one array of several key paths for a compound index:
 
 ```swift
 @Model
 final class Track {
     @Attribute(.unique) var id: String = UUID().uuidString
-
-    @Attribute(.indexed)  // ✅ Add index
     var genre: String = ""
-
-    @Attribute(.indexed)
     var releaseDate: Date = Date()
-
     var title: String = ""
     var duration: TimeInterval = 0
+
+    #Index<Track>([\.genre], [\.releaseDate])  // two single-column indexes
 }
 
 // Now these queries are faster:
