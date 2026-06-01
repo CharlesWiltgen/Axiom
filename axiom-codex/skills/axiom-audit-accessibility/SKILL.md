@@ -241,6 +241,10 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 - Static/singleton formatters (not in view body)
 - `.animation(.default, value:)` — already respects Reduce Motion system setting
 
+## Live Validation
+
+This agent scans source statically. To **run** accessibility checks on a booted simulator (set Dynamic Type / Increase Contrast / Reduce Motion / Reduce Transparency, then assert on the a11y tree), use the `simulator-tester` agent with `xcui` — see `axiom-tools (skills/xcui-ref.md)`.
+
 ## Related
 
 For comprehensive accessibility debugging: `axiom-accessibility` (accessibility-diag reference)

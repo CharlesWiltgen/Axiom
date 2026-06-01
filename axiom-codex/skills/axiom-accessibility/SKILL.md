@@ -31,6 +31,7 @@ license: MIT
 ## Cross-Suite Routes
 
 - Full watchOS development context → See axiom-watchos
+- Live accessibility validation on the simulator (set toggles, assert announcements) → `simulator-tester` agent + `xcui` (see axiom-tools, skills/xcui-ref.md)
 
 ## Decision Tree
 

@@ -143,7 +143,7 @@ let prompt = """
 ---
 
 ### ❌ Not Handling Generation Errors
-**Why it fails**: Three errors MUST be handled or your app will crash in production.
+**Why it fails**: `GenerationError` has 9 cases. Handle the ones your app can actually hit, or it will crash in production. The three below are the most common; the remaining six follow.
 
 ```swift
 do {
@@ -159,6 +159,14 @@ do {
     // → Show disclaimer, check SystemLanguageModel.default.supportedLanguages
 }
 ```
+
+The remaining six cases (each also carries a `Context`):
+- `assetsUnavailable` — model assets aren't on the device (still downloading or evicted); fall back to your non-AI path
+- `unsupportedGuide` — a `@Guide` constraint the model can't satisfy; fix the schema, not at runtime
+- `decodingFailure` — output couldn't be decoded into your `@Generable` type; surface a retry
+- `rateLimited` — too many requests; back off and retry
+- `concurrentRequests` — a request was issued while `session.isResponding == true`; serialize requests per session
+- `refusal(let refusal, _)` — model refused; the `Refusal` value carries the reason to surface or log
 
 ---
 
@@ -228,9 +236,9 @@ let stream = session.streamResponse(
     generating: Itinerary.self
 )
 
-for try await partial in stream {
+for try await snapshot in stream {
     // Update UI incrementally
-    self.itinerary = partial
+    self.itinerary = snapshot.content
 }
 ```
 
@@ -593,8 +601,8 @@ let stream = session.streamResponse(
     generating: Itinerary.self
 )
 
-for try await partial in stream {
-    print(partial) // Incrementally updated
+for try await snapshot in stream {
+    print(snapshot.content) // Incrementally updated
 }
 ```
 
@@ -629,8 +637,8 @@ struct ItineraryView: View {
                         generating: Itinerary.self
                     )
 
-                    for try await partial in stream {
-                        self.itinerary = partial
+                    for try await snapshot in stream {
+                        self.itinerary = snapshot.content
                     }
                 }
             }
@@ -673,8 +681,8 @@ Handle errors during streaming gracefully — partial results may already be dis
 
 ```swift
 do {
-    for try await partial in stream {
-        self.itinerary = partial
+    for try await snapshot in stream {
+        self.itinerary = snapshot.content
     }
 } catch LanguageModelSession.GenerationError.guardrailViolation {
     // Partial content may be visible — show non-disruptive error
@@ -722,12 +730,12 @@ struct GetWeatherTool: Tool {
         var city: String
     }
 
-    func call(arguments: Arguments) async throws -> ToolOutput {
+    func call(arguments: Arguments) async throws -> String {
         let places = try await CLGeocoder().geocodeAddressString(arguments.city)
         let weather = try await WeatherService.shared.weather(for: places.first!.location!)
         let temp = weather.currentWeather.temperature.value
 
-        return ToolOutput("\(arguments.city)'s temperature is \(temp) degrees.")
+        return "\(arguments.city)'s temperature is \(temp) degrees."
     }
 }
 ```
@@ -756,12 +764,12 @@ print(response.content)
 
 ### Key Concepts
 
-- **Tool protocol**: Requires `name`, `description`, `@Generable Arguments`, and `call()` method
-- **ToolOutput**: Return `String` (natural language) or `GeneratedContent` (structured)
+- **Tool protocol**: Requires `name`, `description`, an `Arguments` type, and a `call(arguments:)` method. `Arguments` must conform to `ConvertibleFromGeneratedContent` — a `@Generable` struct satisfies this.
+- **Return value**: There is no `ToolOutput` type. `call(arguments:)` returns its associated `Output` directly — a `String` (natural language; `String` is `PromptRepresentable`), or a `@Generable`/`GeneratedContent` value for structured output.
 - **Multiple tools**: Session accepts array of tools; model autonomously decides which to call
 - **Stateful tools**: Use `class` (not `struct`) when tools need to maintain state across calls
 
-See `axiom-ai (skills/foundation-models-ref.md)` for `Tool` protocol reference, `ToolOutput` forms, stateful tool patterns, and additional examples.
+See `axiom-ai (skills/foundation-models-ref.md)` for `Tool` protocol reference, `Output` forms, stateful tool patterns, and additional examples.
 
 ### Tool Calling Flow
 
@@ -862,15 +870,17 @@ do {
 }
 
 func condensedSession(from previous: LanguageModelSession) -> LanguageModelSession {
-    let allEntries = previous.transcript.entries
+    // Transcript is a RandomAccessCollection of Transcript.Entry — there is no
+    // `.entries` property; index/iterate it directly.
+    let transcript = previous.transcript
     var condensedEntries = [Transcript.Entry]()
 
     // Always include first entry (instructions)
-    if let first = allEntries.first {
+    if let first = transcript.first {
         condensedEntries.append(first)
 
         // Include last entry (most recent context)
-        if allEntries.count > 1, let last = allEntries.last {
+        if transcript.count > 1, let last = transcript.last {
             condensedEntries.append(last)
         }
     }
@@ -1220,7 +1230,7 @@ Generative features need:
 
 ### Feedback collection
 
-Recommended pattern: thumbs-up / thumbs-down on each generated result. Voluntary, not mandatory. The `LanguageModelFeedbackAttachment` API (see `foundation-models-ref.md`) bundles input / output / sentiment / issues into a JSON payload for Feedback Assistant.
+Recommended pattern: thumbs-up / thumbs-down on each generated result. Voluntary, not mandatory. The `LanguageModelFeedback` struct + `session.logFeedbackAttachment(sentiment:issues:desiredOutput:)` API (see `foundation-models-ref.md`) bundles input / output / sentiment / issues into a `Data` payload for Feedback Assistant.
 
 ### Trust language
 
@@ -1238,7 +1248,7 @@ HIG: *"Ensure they remain in charge of decision making and the overall experienc
 
 1. **Prewarm session**: Create `LanguageModelSession` at init, not when user taps button. Saves 1-2 seconds off first generation.
 
-2. **`includeSchemaInPrompt: false`**: For subsequent requests with the same `@Generable` type, set this in `GenerationOptions` to reduce token count by 10-20%.
+2. **`includeSchemaInPrompt: false`**: For subsequent requests with the same `@Generable` type, pass this as an argument to `respond(...)` / `streamResponse(...)` (it's a method parameter, default `true` — NOT a `GenerationOptions` field) to reduce token count by 10-20%.
 
 3. **Property order for streaming**: Put most important properties first in `@Generable` structs. User sees title in 0.2s instead of waiting 2.5s for full generation.
 
@@ -1255,9 +1265,7 @@ Before shipping Foundation Models features:
 ### Required Checks
 - [ ] **Availability checked** before creating session
 - [ ] **Using @Generable** for structured output (not manual JSON)
-- [ ] **Handling context overflow** (`exceededContextWindowSize`)
-- [ ] **Handling guardrail violations** (`guardrailViolation`)
-- [ ] **Handling unsupported language** (`unsupportedLanguageOrLocale`)
+- [ ] **Handling the `GenerationError` cases your app can hit** (9 total) — at minimum `exceededContextWindowSize`, `guardrailViolation`, and `unsupportedLanguageOrLocale`; plus `assetsUnavailable`, `unsupportedGuide`, `decodingFailure`, `rateLimited`, `concurrentRequests`, and `refusal` where applicable
 - [ ] **Streaming for long generations** (>1 second)
 - [ ] **Not blocking UI** (using `Task {}` for async)
 - [ ] **Tools for external data** (not prompting for weather/locations)

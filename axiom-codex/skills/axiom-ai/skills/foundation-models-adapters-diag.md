@@ -36,9 +36,12 @@ print("Variants: \(ids)")
 
 // 2. Asset pack state for the expected variant
 if let preferredID = ids.first {
-    let status = AssetPackManager.shared.status(ofAssetPackWithID: preferredID)
+    let pack = try await AssetPackManager.shared.assetPack(withID: preferredID)
+    let status = try await AssetPackManager.shared.status(relativeTo: pack)
     print("Pack status: \(status)")
 }
+// status(ofAssetPackWithID:) is deprecated as of iOS 26.4 in favor of
+// status(relativeTo:), which takes an AssetPack instead of an ID string.
 // Record: downloadAvailable / downloading / downloaded / upToDate / outOfDate / obsolete?
 
 // 3. Base model availability (rule out non-adapter issue)
@@ -116,7 +119,9 @@ if ids.isEmpty {
 } else {
     // Case 2 — variant exists but may not be local
     let preferredID = ids[0]
-    let status = AssetPackManager.shared.status(ofAssetPackWithID: preferredID)
+    let pack = try await AssetPackManager.shared.assetPack(withID: preferredID)
+    let status = try await AssetPackManager.shared.status(relativeTo: pack)
+    // status(ofAssetPackWithID:) is deprecated as of iOS 26.4 in favor of status(relativeTo:).
     print("Variant exists but status: \(status)")
 }
 ```
@@ -134,7 +139,9 @@ guard let preferredID = ids.first else {
 }
 
 let pack = try await AssetPackManager.shared.assetPack(withID: preferredID)
-try await AssetPackManager.shared.ensureLocalAvailability(of: pack)
+// ensureLocalAvailability(of:) (single-arg) is deprecated as of iOS 26.4 in favor of
+// ensureLocalAvailability(of:requireLatestVersion:).
+try await AssetPackManager.shared.ensureLocalAvailability(of: pack, requireLatestVersion: false)
 let adapter = try SystemLanguageModel.Adapter(name: name)
 ```
 
@@ -356,7 +363,7 @@ If median system-message length exceeds ~200 characters, this pattern is likely.
 
 1. Rewrite training JSONL with short, consistent system messages (≤100 characters, ideally a single sentence)
 2. Retrain
-3. Re-evaluate token efficiency: measure `transcript.entries` token count for a representative single-turn baseline; compare against the previous adapter's measurements
+3. Re-evaluate token efficiency: `Transcript` is a `RandomAccessCollection` of `Transcript.Entry` (iterate it directly — there is no `.entries` property). On iOS 26.4+ measure its size with `session.tokenCount(for: Array(transcript))`, which accepts `some Collection<Transcript.Entry>`; capture this for a representative single-turn baseline and compare against the previous adapter's measurements
 
 **Time cost**: days (dataset rewrite + retrain).
 
