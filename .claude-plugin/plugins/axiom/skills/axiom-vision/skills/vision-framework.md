@@ -170,25 +170,24 @@ Processing video frames? Use `VNSequenceRequestHandler` (maintains inter-frame s
 **Solution**: Combine subject mask with hand pose to create exclusion mask.
 
 ```swift
-// 1. Get subject instance mask
-let subjectRequest = VNGenerateForegroundInstanceMaskRequest()
-let handler = VNImageRequestHandler(cgImage: sourceImage)
-try handler.perform([subjectRequest])
+// 1. Get subject instance mask (modern async Vision API)
+let handler = ImageRequestHandler(sourceImage)
 
-guard let subjectObservation = subjectRequest.results?.first as? VNInstanceMaskObservation else {
+guard let subjectObservation = try await handler.perform(GenerateForegroundInstanceMaskRequest()) else {
     fatalError("No subject detected")
 }
 
-// 2. Get hand pose landmarks
+// 2. Get hand pose landmarks (hand pose still uses the legacy request handler)
 let handRequest = VNDetectHumanHandPoseRequest()
 handRequest.maximumHandCount = 2
-try handler.perform([handRequest])
+let poseHandler = VNImageRequestHandler(cgImage: sourceImage)
+try poseHandler.perform([handRequest])
 
 guard let handObservation = handRequest.results?.first as? VNHumanHandPoseObservation else {
     // No hand detected - use full subject mask
-    let mask = try subjectObservation.createScaledMask(
+    let mask = try subjectObservation.generateScaledMask(
         for: subjectObservation.allInstances,
-        croppedToInstancesContent: false
+        scaledToImageFrom: handler
     )
     return mask
 }
@@ -198,9 +197,9 @@ let handPoints = try handObservation.recognizedPoints(.all)
 let handBounds = calculateConvexHull(from: handPoints)  // Your implementation
 
 // 4. Subtract hand region from subject mask using CoreImage
-let subjectMask = try subjectObservation.createScaledMask(
+let subjectMask = try subjectObservation.generateScaledMask(
     for: subjectObservation.allInstances,
-    croppedToInstancesContent: false
+    scaledToImageFrom: handler
 )
 
 let subjectCIMask = CIImage(cvPixelBuffer: subjectMask)
@@ -273,17 +272,21 @@ let configuration = ImageAnalyzer.Configuration([.text, .visualLookUp])
 
 let analysis = try await analyzer.analyze(sourceImage, configuration: configuration)
 
-// Get all subjects
-for subject in analysis.subjects {
-    let subjectImage = subject.image
+// Subjects come from ImageAnalysisInteraction, NOT the ImageAnalyzer.analyze result.
+let interaction = ImageAnalysisInteraction()
+interaction.analysis = analysis
+
+// Get all subjects (`subjects` is async; `subject.image` is async throws)
+for subject in await interaction.subjects {
+    let subjectImage = try await subject.image
     let subjectBounds = subject.bounds
 
     // Process subject...
 }
 
 // Tap-based lookup
-if let subject = try await analysis.subject(at: tapPoint) {
-    let compositeImage = try await analysis.image(for: [subject])
+if let subject = await interaction.subject(at: tapPoint) {
+    let compositeImage = try await interaction.image(for: [subject])
 }
 ```
 
@@ -294,18 +297,16 @@ if let subject = try await analysis.subject(at: tapPoint) {
 **Use case**: HDR preservation, large images, custom compositing.
 
 ```swift
-let request = VNGenerateForegroundInstanceMaskRequest()
-let handler = VNImageRequestHandler(cgImage: sourceImage)
-try handler.perform([request])
+let handler = ImageRequestHandler(sourceImage)
 
-guard let observation = request.results?.first as? VNInstanceMaskObservation else {
+guard let observation = try await handler.perform(GenerateForegroundInstanceMaskRequest()) else {
     return
 }
 
 // Get soft segmentation mask
-let mask = try observation.createScaledMask(
+let mask = try observation.generateScaledMask(
     for: observation.allInstances,
-    croppedToInstancesContent: false  // Full resolution for compositing
+    scaledToImageFrom: handler  // Soft mask at input resolution, for compositing
 )
 
 // Use with CoreImage for HDR preservation
@@ -324,47 +325,36 @@ let compositedImage = filter.outputImage
 **Use case**: User taps to select which subject/person to lift.
 
 ```swift
-// Get instance at tap point
-let instance = observation.instanceAtPoint(tapPoint)
+// Tap-to-select uses instanceAtPoint + generateMask, which exist ONLY on the
+// modern InstanceMaskObservation (iOS 18+). Obtain it via the async handler:
+let observation = try await ImageRequestHandler(sourceImage)
+    .perform(GenerateForegroundInstanceMaskRequest())
+guard let observation else { return }
 
-if instance == 0 {
-    // Background tapped - select all instances
-    let mask = try observation.createScaledMask(
-        for: observation.allInstances,
-        croppedToInstancesContent: false
-    )
+// instanceAtPoint takes a NormalizedPoint and returns an IndexSet
+let tapped = observation.instanceAtPoint(tapPoint)  // tapPoint: NormalizedPoint
+
+let mask: CVPixelBuffer
+if tapped.isEmpty {
+    mask = try observation.generateMask(for: observation.allInstances)  // nothing tapped → all
 } else {
-    // Specific instance tapped
-    let mask = try observation.createScaledMask(
-        for: IndexSet(integer: instance),
-        croppedToInstancesContent: true
-    )
+    mask = try observation.generateMask(for: tapped)                    // selected instance(s)
 }
 ```
 
-**Alternative: Raw pixel buffer access**
+**Alternative: Raw label access**
 
 ```swift
-let instanceMask = observation.instanceMask
+// allInstancesMask is a PixelBufferObservation (UInt8 label buffer).
+// Read the label at the tap directly — no CVPixelBuffer locking required.
+let labelMask = observation.allInstancesMask
+let label = labelMask.pixel(at: tapPoint)  // Float; 0 = background
 
-CVPixelBufferLockBaseAddress(instanceMask, .readOnly)
-defer { CVPixelBufferUnlockBaseAddress(instanceMask, .readOnly) }
-
-let baseAddress = CVPixelBufferGetBaseAddress(instanceMask)
-let bytesPerRow = CVPixelBufferGetBytesPerRow(instanceMask)
-
-// Convert normalized tap to pixel coordinates
-let pixelPoint = VNImagePointForNormalizedPoint(
-    tapPoint,
-    width: imageWidth,
-    height: imageHeight
-)
-
-let offset = Int(pixelPoint.y) * bytesPerRow + Int(pixelPoint.x)
-let label = UnsafeRawPointer(baseAddress!).load(
-    fromByteOffset: offset,
-    as: UInt8.self
-)
+// Or scan every label byte via the unsafe pointer:
+labelMask.withUnsafePointer { raw in
+    let first = raw.load(fromByteOffset: 0, as: UInt8.self)
+    _ = first
+}
 ```
 
 **Cost**: 45 min implementation, 10 min ongoing
@@ -419,19 +409,18 @@ if isPinching {
 **Use case**: Apply different effects to each person or count people.
 
 ```swift
-let request = VNGeneratePersonInstanceMaskRequest()
-try handler.perform([request])
+let handler = ImageRequestHandler(sourceImage)
 
-guard let observation = request.results?.first as? VNInstanceMaskObservation else {
+guard let observation = try await handler.perform(GeneratePersonInstanceMaskRequest()) else {
     return
 }
 
 let peopleCount = observation.allInstances.count  // Up to 4
 
 for personIndex in observation.allInstances {
-    let personMask = try observation.createScaledMask(
+    let personMask = try observation.generateScaledMask(
         for: IndexSet(integer: personIndex),
-        croppedToInstancesContent: false
+        scaledToImageFrom: handler
     )
 
     // Apply effect to this person only
@@ -812,8 +801,8 @@ for data in allDetectedData {
         print("Email: \(email.emailAddress)")
     case .phoneNumber(let phone):
         print("Phone: \(phone.phoneNumber)")
-    case .link(let url):
-        print("URL: \(url)")
+    case .link(let link):
+        print("URL: \(link.url)")
     default: break
     }
 }
@@ -1060,7 +1049,7 @@ Before shipping Vision features:
 **CoreImage Integration** (if applicable):
 - ☑ HDR preservation verified with high dynamic range images
 - ☑ Mask resolution matches source image
-- ☑ `croppedToInstancesContent` set appropriately (false for compositing)
+- ☑ Use `generateScaledMask(for:scaledToImageFrom:)` for compositing; reserve `generateMaskedImage(for:imageFrom:croppedToInstancesExtent:)` (with `croppedToInstancesExtent: true`) for a tight-cropped masked image
 
 **Text/Barcode Recognition** (if applicable):
 - ☑ Recognition level matches use case (fast for real-time, accurate for documents)
