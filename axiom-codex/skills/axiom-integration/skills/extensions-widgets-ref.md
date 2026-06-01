@@ -486,15 +486,16 @@ ControlWidgetButton(action: PlayMusicIntent()) {
 
 ## ControlWidgetToggle
 
-For boolean state.
+For boolean state. The `action` must be a `SetValueIntent` whose `ValueType == Bool`; the trailing closure is the value label and receives the current `isOn` state, so pass a title as the first argument.
 
 ```swift
 struct AirplaneModeControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "AirplaneModeControl") {
             ControlWidgetToggle(
+                "Airplane Mode",
                 isOn: AirplaneModeIntent.isEnabled,
-                action: AirplaneModeIntent()
+                action: AirplaneModeIntent()   // : SetValueIntent, ValueType == Bool
             ) { isOn in
                 Label(isOn ? "On" : "Off", systemImage: "airplane")
             }
@@ -521,7 +522,7 @@ The provider value is passed to your control's closure: `{ value in ControlWidge
 
 ## Configurable Controls
 
-Use `AppIntentControlConfiguration` with a `WidgetConfigurationIntent` (same pattern as configurable widgets). Add `.promptsForUserConfiguration()` to show configuration UI when the user adds the control.
+Use `AppIntentControlConfiguration` with a `ControlConfigurationIntent` (the control-specific analogue of `WidgetConfigurationIntent`). Add `.promptsForUserConfiguration()` to show configuration UI when the user adds the control.
 
 ## Control Refinements
 
