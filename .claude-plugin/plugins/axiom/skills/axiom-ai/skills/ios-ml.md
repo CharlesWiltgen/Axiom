@@ -1,8 +1,15 @@
 # iOS Machine Learning
 
-Guidance for **custom** on-device ML — converting, compressing, and deploying your own models with Core ML — plus on-device speech-to-text. For Apple's built-in on-device LLM (Foundation Models, `@Generable`), stay in `axiom-ai`. For computer vision (image analysis, detection, segmentation), use `axiom-vision`.
+The **hub** for custom on-device ML — converting, compressing, training, and deploying your own models with Core ML — plus on-device speech-to-text. For Apple's built-in on-device LLM (Foundation Models, `@Generable`), stay in `axiom-ai`. For computer vision (image analysis, detection, segmentation), use `axiom-vision`.
 
-> **Coverage note**: Axiom does not yet ship dedicated Core ML / Speech *discipline* skills. This page is the decision framework plus the authoritative Apple sources to work from — use `axiom-apple-docs` and the paths in Resources for the API surface. (Deeper Core ML coverage is on the backlog: coremltools conversion, Create ML, `MLUpdateTask` personalization, and quantization-aware vs post-training compression.)
+This page owns **deployment/runtime** and **speech**. The lifecycle stages have dedicated files:
+
+| Stage | File |
+|-------|------|
+| Convert a trained PyTorch/TF model → Core ML | `coreml-conversion.md` |
+| Compress it (QAT vs PTQ, palettize/quantize/prune) | `coreml-compression.md` |
+| Train from scratch (Create ML) or personalize on-device (`MLUpdateTask`) | `coreml-training.md` |
+| Deploy / run / speech-to-text | **this page** |
 
 ## When to Use
 
@@ -26,19 +33,10 @@ Guidance for **custom** on-device ML — converting, compressing, and deploying 
 
 ## Core ML — Decision Framework
 
-### Conversion (PyTorch / TensorFlow → Core ML)
+### Conversion & compression → dedicated files
 
-Use **`coremltools`** (Python). Trace/export the source model, then `coremltools.convert(...)` targeting an `.mlpackage` (ML Program). Set `minimum_deployment_target` to the OS you ship and pin `compute_precision` deliberately (FP16 is the default). Validate output parity against the source model on representative inputs before you trust the conversion.
-
-### Compression (`coremltools.optimize`)
-
-Three families, increasing aggressiveness:
-
-- **Palettization** — cluster weights into an N-bit lookup table (2/4/6/8-bit). Usually the best size/accuracy trade-off.
-- **Quantization** — linear weight (and optionally activation) quantization to int8.
-- **Pruning** — zero out low-magnitude weights (magnitude or structured).
-
-Post-training compression is fast but lossy; **calibration-time / training-time** compression recovers accuracy. Always re-measure accuracy after compressing — don't assume it held.
+- **Converting** a PyTorch/TF/Keras model → `coreml-conversion.md` (`coremltools.convert`, ML Program vs NN-spec, trace vs export, parity validation).
+- **Compressing** the result → `coreml-compression.md` (the PTQ-vs-QAT decision, palettization/quantization/pruning).
 
 ### Deployment / runtime
 
@@ -48,12 +46,13 @@ Post-training compression is fast but lossy; **calibration-time / training-time*
 - **Async prediction** — use the async `prediction(from:)`; for batches use the synchronous `predictions(fromBatch:)`.
 - Run inference **off the main thread**, and pre-warm: first load compiles/caches the model (`.mlmodelc`), so warm it before the user needs it. See `axiom-concurrency`.
 
-### Common failure modes
+### Common runtime failure modes
 
-- Conversion succeeds but outputs diverge → precision or op-mapping mismatch; compare layer outputs.
-- Slow first inference → on-device compile/caching cost; pre-warm the model.
-- `coremltools` import errors (e.g. `libmilstoragepython`) → environment/version mismatch; match `coremltools` to the source-framework versions.
-- Accuracy drop after compression → mode too aggressive; switch to calibration-time compression.
+- Slow first inference → on-device compile/caching cost; pre-warm the model before the user needs it.
+- Main-thread stall during prediction → run inference off the main thread (see `axiom-concurrency`).
+- Memory spike loading a large model → compress it first (`coreml-compression.md`).
+
+For conversion-time failures (output divergence, `coremltools` import errors, unsupported ops) see `coreml-conversion.md`; for accuracy loss after compression see `coreml-compression.md`.
 
 ## Speech-to-Text — Decision Framework
 
@@ -76,4 +75,4 @@ Post-training compression is fast but lossy; **calibration-time / training-time*
 
 **Docs**: /coreml, /coreml/mlmodelconfiguration, /coreml/mltensor, /speech, /speech/speechanalyzer, /speech/speechtranscriber, /speech/sfspeechrecognizer — plus the `coremltools` guide (apple.github.io/coremltools) for conversion + `coremltools.optimize`
 
-**Skills**: axiom-ai (Foundation Models — Apple's built-in LLM), axiom-vision (computer vision), axiom-apple-docs (Apple API doc lookup), axiom-concurrency (off-main-thread inference)
+**Skills**: coreml-conversion, coreml-compression, coreml-training (the Core ML lifecycle stages), axiom-ai (Foundation Models — Apple's built-in LLM), axiom-vision (computer vision), axiom-apple-docs (Apple API doc lookup), axiom-concurrency (off-main-thread inference)
