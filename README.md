@@ -7,7 +7,7 @@ Battle-tested skills, agents, and tools for modern Apple platform development wi
 Axiom gives AI coding assistants deep Apple platform development expertise — the kind that prevents data loss from bad migrations, catches memory leaks before users complain, and stops you from spending 30 minutes debugging a zombie xcodebuild process.
 
 <!-- AXIOM_STATS_BEGIN — auto-maintained by scripts/set-version.js; do not hand-edit -->
-- **237 skills** covering UI, data, concurrency, performance, networking, accessibility, and more
+- **242 skills** covering UI, data, concurrency, performance, networking, accessibility, and more
 - **39 agents** that autonomously scan for issues (memory leaks, concurrency violations, build problems)
 - **13 commands** for quick audits and diagnostics
 <!-- AXIOM_STATS_END -->

@@ -673,7 +673,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v3.9.3'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v3.9.4'
     }
   }
 }))
