@@ -81,6 +81,9 @@ Adapter problem?
 │  ├─ Context window over-consumed by trivial prompts → Pattern 7
 │  └─ Accuracy regressed after OS update → Pattern 8
 │
+├─ Draft model stops speeding up inference (iOS only, never macOS)
+│  └─ Pattern 10 (draft-model compilation rate-limited: 3/app/day)
+│
 ├─ Toolkit / export fails on developer Mac
 │  └─ Pattern 9 (coremltools / Python version / Linux export)
 │
@@ -459,6 +462,38 @@ Training and evaluation can run on Linux GPU machines; **export must run on Appl
 
 ---
 
+### Pattern 10: Draft Model Compilation Rate-Limited
+
+**Symptom**:
+
+An adapter that uses a draft model loads and works initially, then after several launches (or several adapter switches) on a device, the draft model stops compiling — inference falls back to the slower non-speculative path, or draft-model setup fails outright. Reproduces on iPhone/iPad/Vision Pro but **never on macOS**.
+
+**Cause**:
+
+Apple rate-limits draft-model compilation to **three compilations per app, per day, on all platforms except macOS** (`/foundationmodels/loading-and-using-a-custom-adapter-with-foundation-models`). Something is triggering recompilation instead of reusing a cached compiled draft model. Common triggers:
+
+1. The compiled draft model isn't cached/persisted, so it recompiles every launch (3 launches → quota exhausted for the day)
+2. The app switches the active adapter repeatedly in one session; each switch can force a new draft-model compilation
+3. Defensive "recompile to be safe" logic on a code path that runs more than three times a day
+
+macOS never reproduces because the limit excludes it — which is exactly why this slips through Mac-based testing.
+
+**Diagnosis**:
+
+- Count how many times your code path that loads/compiles the draft model runs per day on device. If it exceeds three, that's the bug.
+- Check whether the compiled draft model is written to and read back from disk across launches, or regenerated each time.
+- Reproduce on a real iOS device (not the Mac), launching the app 4+ times in a 24-hour window.
+
+**Fix**:
+
+- **Cache the compiled draft model and reuse it across launches.** Compile once; persist; load the cached form thereafter.
+- Remove any speculative/defensive recompilation. Recompile only when the adapter (and therefore its draft model) actually changes.
+- If the feature legitimately needs more than three distinct draft models per day (e.g. frequent adapter switching), reconsider whether a draft model is the right latency strategy for that flow — see `foundation-models-adapters.md` Pattern 5.
+
+**Time cost**: hours (add caching, remove redundant compilation). The 24-hour window resets on its own; no retrain or re-export needed.
+
+---
+
 ## Cross-Referenced @Generable Issues
 
 The following appear in adapter contexts but are general Foundation Models macro/schema issues. Solutions live in `axiom-ai (skills/foundation-models-diag.md)`:
@@ -486,6 +521,7 @@ These are not adapter-specific — they affect any `@Generable` usage. Apply the
 | Trivial prompts eat context window | Verbose system prompts in training data | 7 | Days (rewrite + retrain) |
 | Accuracy drops after OS update | Silent base-model change (FB18924722) | 8 | 1-2 weeks per retrain |
 | `coremltools.libmilstoragepython` missing | Python 3.12/3.13 or Linux export | 9 | 15-30 min |
+| Draft model stops speeding up inference (iOS only) | Draft-model compilation rate-limited (3/app/day); not cached | 10 | Hours (add caching) |
 | `@Generable` Playgrounds / recursive / undefined refs | General macro issues | foundation-models-diag.md 6a/6b/6c | See cross-ref |
 
 ---

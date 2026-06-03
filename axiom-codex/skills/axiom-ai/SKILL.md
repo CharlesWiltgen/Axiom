@@ -25,7 +25,7 @@ Use this router when:
 | Developer Intent | Route To |
 |-----------------|----------|
 | On-device text generation (Apple Intelligence) | **Stay here** → Foundation Models skills |
-| Custom ML model deployment (PyTorch, TensorFlow) | **See skills/ios-ml.md** → CoreML conversion, compression |
+| Custom ML model deployment (PyTorch, TensorFlow) | **See skills/ios-ml.md** (hub) → conversion / compression / training files |
 | Computer vision (image analysis, OCR, segmentation) | **/skill axiom-vision** → Vision framework |
 | Cloud API integration (OpenAI, generic HTTP) | **/skill axiom-networking** → URLSession patterns |
 | Cloud Claude integration (Anthropic SDK, Messages API, Claude Agent SDK) | **See `claude-api` skill** (external) → includes automated Opus 4.6 → 4.7 migration |
@@ -43,7 +43,8 @@ When developers say "I need to train / fine-tune / personalize a model," four di
 | Path | Trains | Output | Lifecycle | Routes to |
 |------|--------|--------|-----------|-----------|
 | **FM custom adapter** | Apple's frozen on-device 3B LLM (rank-32 LoRA) | `.fmadapter` package, ~160 MB | Build-time per OS version, delivered via Background Assets | `skills/foundation-models-adapters.md` (discipline) + `skills/foundation-models-adapters-ref.md` (toolkit + runtime) + `skills/foundation-models-adapters-diag.md` (failure modes); delivery via `axiom-integration (skills/background-assets.md)` |
-| **Core ML `MLUpdateTask`** | Your NN-spec model's fully-connected and convolutional layers | Updated `.mlmodelc` saved to disk | Runtime, per-user (on-device personalization) | `skills/ios-ml.md` |
+| **Core ML `MLUpdateTask`** | Your NN-spec model's fully-connected and convolutional layers | Updated `.mlmodelc` saved to disk | Runtime, per-user (on-device personalization) | `skills/coreml-training.md` |
+| **Create ML** | A new Core ML model from scratch / transfer learning | `.mlmodel` | Build-time, on Mac or iOS (per type) | `skills/coreml-training.md` |
 | **MLX LM** (`mlx_lm.lora`) | Open-source LLMs on Apple silicon | `adapters/adapters.safetensors` — NOT loadable by Foundation Models | Build-time; not an iOS distribution path | External — outside Axiom scope; treat as adjacent research tool |
 | **Server LLM fine-tune** | Cloud-hosted model (e.g., vendor fine-tunes) | Cloud artifact, accessed via API | Build-time; runs in cloud | `/skill axiom-networking` for the API integration; the fine-tune workflow is the vendor's domain |
 
@@ -51,6 +52,8 @@ When developers say "I need to train / fine-tune / personalize a model," four di
 - MLX LM output (`.safetensors`) cannot be loaded into a `LanguageModelSession`. Different toolchain, different deployment target.
 - `MLUpdateTask` is **NN-spec only** — does not support ML Program (`.mlpackage`) models from modern PyTorch / TensorFlow conversion. This is the main reason it's rarely used in new projects.
 - FM custom adapters are pinned per-base-model version (per-OS). One adapter does NOT serve every device in your install base — see the Approach Triage section in `skills/foundation-models.md` for the deflection ladder.
+
+For the full "which path applies to me?" disambiguation (decision tree, the three week-costing mistakes, per-path routing) → `skills/training-paths.md`.
 
 ## Cross-Domain Routing
 
@@ -65,6 +68,14 @@ When developers say "I need to train / fine-tune / personalize a model," four di
 - If developer also has general Codable/serialization questions → **also invoke axiom-data**
 
 ## Routing Logic
+
+### Custom Core ML Work (your own models, not Apple's LLM)
+
+`skills/ios-ml.md` is the hub (deployment, runtime, speech-to-text). The lifecycle stages have dedicated files:
+
+- **Convert** a trained PyTorch/TF/Keras model → `skills/coreml-conversion.md` (`coremltools.convert`, ML Program vs NN-spec, parity validation)
+- **Compress** it → `skills/coreml-compression.md` (the PTQ-vs-QAT decision, palettization/quantization/pruning)
+- **Train from scratch / personalize on-device** → `skills/coreml-training.md` (Create ML; `MLUpdateTask` and its NN-spec-only limitation)
 
 ### Foundation Models Work
 
@@ -88,6 +99,12 @@ When developers say "I need to train / fine-tune / personalize a model," four di
 - Guardrail violations
 - Context limits exceeded
 - Model unavailable
+
+**Guardrails & safety decisions** → `skills/foundation-models-guardrails.md`
+- When to use `permissiveContentTransformations` vs `.default`
+- False-positive triage (correct refusal vs over-restrictive)
+- Custom safety eval / red-team methodology
+- Adapter × guardrail interaction (safety erosion)
 
 **Custom adapter training (after Approach Triage rungs 1-4)** → `skills/foundation-models-adapters.md`
 - Decision discipline (when adapter training is justified vs. rungs 1-4)
@@ -121,7 +138,7 @@ Scores: PRODUCTION-READY / NEEDS HARDENING / FRAGILE
 
 ## Decision Tree
 
-1. Custom ML model / CoreML / PyTorch conversion? → **See skills/ios-ml.md**
+1. Custom ML model / CoreML? → **skills/ios-ml.md** hub → convert (`coreml-conversion.md`), compress (`coreml-compression.md`), or train/personalize (`coreml-training.md`)
 2. Computer vision / image analysis / OCR? → **/skill axiom-vision**
 3. Cloud AI API integration? → **/skill axiom-networking**
 4. Implementing Foundation Models / @Generable / Tool protocol? → foundation-models
