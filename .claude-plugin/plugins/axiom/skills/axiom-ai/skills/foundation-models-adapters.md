@@ -242,6 +242,38 @@ Adapter-specific additions:
 
 ---
 
+### Pattern 5: Draft Model Speculative Decoding
+
+A **draft model** is an optional artifact you can train alongside an adapter. It enables *speculative decoding*: a small, fast model proposes several tokens that the full model verifies in one pass, cutting latency when the verification mostly agrees. Apple's framing is deliberately narrow — the draft model "is an optional step when training your adapter that can speed up inference"; without it, inference "might be slower." It is not a quality lever; it is a latency lever.
+
+The draft model is trained through the toolkit (`examples.train_draft_model`) and exported with the adapter, so it **adds to the adapter's storage and memory footprint** — you ship and load a second model.
+
+#### When training a draft model is worth it
+
+Speculative decoding pays off when the *acceptance rate* is high and completions are long enough to amortize the overhead. As engineering judgment (Apple does not publish a rubric):
+
+| Train a draft model when | Skip it when |
+|--------------------------|--------------|
+| The feature is latency-bound and user-visible (streaming a paragraph, not a word) | Completions are short (a label, a tag, a yes/no) — draft overhead can exceed the savings |
+| Completions are long enough that token-by-token cost dominates | FM invocation is sparse (the model is rarely hot; compile/load cost dominates instead) |
+| You have memory + storage headroom for a second model | The device budget is already tight from the adapter itself |
+| Your eval includes a latency axis you're trying to move | You have no measured latency target — optimize nothing you can't measure |
+
+#### The compilation rate limit (this is the trap)
+
+Apple rate-limits draft-model compilation: *"the framework... rate-limits the compilation process on all platforms, excluding macOS, to three draft model compilations per-app, per-day."* This is a **runtime, on-device** compile step, specific to the draft model — not adapter compilation generally, and not enforced on macOS. Three per app per day is a hard ceiling on iOS/iPadOS/visionOS. Design around it:
+
+- **Cache the compiled draft model across launches.** Never recompile speculatively or "to be safe." A recompile-on-every-launch bug silently burns the daily quota and then fails.
+- **The first compilation is the user's first AI invocation cost.** It is not instant — surface progress, don't block the UI on it.
+- **Switching adapters mid-session triggers a second compilation.** If the user can change the active adapter, each switch can eat another slot in the daily three.
+- Once the three are spent in a 24-hour window, further draft-model compilations fail until the window resets — see `foundation-models-adapters-diag.md` Pattern 10.
+
+#### Eval implication
+
+The draft model changes latency, not just the adapter. **Any latency claim you make about the adapter must be measured with the draft model in place** (and separately without it), because production latency is the combined figure. Add latency to the four-axis eval (Pattern 2) when you ship a draft model.
+
+---
+
 ## Pressure Scenarios
 
 ### Scenario 1: "Train a custom adapter for our restaurant-summarization feature, we need it ASAP"

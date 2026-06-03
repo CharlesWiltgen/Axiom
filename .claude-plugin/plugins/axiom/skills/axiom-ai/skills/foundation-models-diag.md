@@ -375,6 +375,8 @@ do {
 }
 ```
 
+**If the refusal is on content you believe is legitimate** (news summarization, faithful transformation, a real place name), don't reflexively flip to `permissiveContentTransformations`. The decision — is this refusal correct or over-restrictive, is permissive appropriate, how do you prove it's safe — lives in `axiom-ai (skills/foundation-models-guardrails.md)`.
+
 **Time cost**: 5-10 minutes
 
 ---
