@@ -147,7 +147,29 @@ try:
 
 ---
 
-**xcui** (scriptable sim UI & accessibility testing): Available at `{xcui_path}`. Drives the simulator via AXe + simctl. Run `xcui doctor` first (verifies AXe; `--install` adds it via brew). Key verbs: `xcui wait --for-element <id>`, `xcui assert --id <id> --label … --trait … --single`, `xcui a11y set --toggle <name> --value <on/off> --app <id>`. For taps use `axe tap --id <id>` directly. Workflow: `axiom-tools` (skills/xcui-ref.md). Command: `/axiom:ui`."""
+**xcui** (scriptable sim UI & accessibility testing): Available at `{xcui_path}`. Drives the simulator via AXe + simctl. Run `xcui doctor` first (verifies AXe; `--install` adds it via brew). Key verbs: `xcui wait --for-element <id>`, `xcui assert --id <id> --label … --trait … --single`, `xcui a11y set --toggle <name> --value <on/off> --app <id>`, `xcui dialog accept|dismiss` (or `pregrant <bundle-id> <service>…`), `xcui voiceover traverse|assert --sequence <file>`. For taps use `axe tap --id <id>` directly. Workflow: `axiom-tools` (skills/xcui-ref.md). Command: `/axiom:ui`."""
+except OSError:
+    pass
+
+# Detect xcprof binary. Same size-floor logic as the other bundled tools.
+xcprof_path = f"{plugin_root}/bin/xcprof"
+xcprof_context = ""
+MIN_XCPROF_SIZE = 1_000_000
+try:
+    if os.path.isfile(xcprof_path):
+        xcprof_size = os.path.getsize(xcprof_path)
+        if xcprof_size < MIN_XCPROF_SIZE:
+            xcprof_context = f"""
+
+---
+
+**xcprof binary appears truncated** ({xcprof_size:,} bytes at `{xcprof_path}`; expected ≥{MIN_XCPROF_SIZE:,}). Likely cause: interrupted plugin install. Tell the user to reinstall the Axiom plugin. Do NOT call `xcprof` — fall back to `xcrun xctrace export` + manual XML parsing until the user reinstalls."""
+        elif os.access(xcprof_path, os.X_OK):
+            xcprof_context = f"""
+
+---
+
+**xcprof** (structured xctrace analysis): Available at `{xcprof_path}`. Turns an Instruments `.trace` into a token-lean structured report (compact JSON or terse markdown) — resolves xctrace's id/ref back-references that defeat grep, gives an honest per-family support matrix, hot/user-code frame attribution, and approximate main-thread stalls. Run `xcprof doctor` to verify xctrace; `xcprof analyze <trace> [--json] [--start-ms N --end-ms N]` to analyze. Phase 1 covers the CPU/Time Profiler family. Workflow: `axiom-tools` (skills/xcprof-ref.md)."""
 except OSError:
     pass
 
@@ -161,7 +183,7 @@ You have Axiom iOS development skills.
 
 **Below is the full content of your 'axiom:axiom-tools' skill - your introduction to using Axiom skills. For all other Axiom skills, use the 'Skill' tool:**
 
-{using_axiom_content}{apple_docs_context}{xclog_context}{xcsym_context}{xcui_context}
+{using_axiom_content}{apple_docs_context}{xclog_context}{xcsym_context}{xcui_context}{xcprof_context}
 
 </EXTREMELY_IMPORTANT>"""
 

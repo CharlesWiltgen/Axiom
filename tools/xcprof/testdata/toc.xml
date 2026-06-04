@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<trace-toc>
+    <run number="1">
+        <info>
+            <target>
+                <device platform="macOS" model="Mac Studio" name="Mac Studio" os-version="26.5 (25F71)" uuid="CF383450-E70D-57EA-9E23-76E6791524B1"/>
+                <process type="attached" return-exit-status="0" name="yes" pid="37476" termination-reason="exit(0)"/>
+            </target>
+            <summary>
+                <start-date>2026-06-04T07:00:40.915-07:00</start-date>
+                <end-date>2026-06-04T07:00:44.365-07:00</end-date>
+                <duration>3.450364</duration>
+                <end-reason>Time limit reached</end-reason>
+                <instruments-version>16.0 (17F42)</instruments-version>
+                <template-name>Blank</template-name>
+                <recording-mode>Deferred</recording-mode>
+                <time-limit>3 seconds</time-limit>
+            </summary>
+        </info>
+        <processes>
+            <process name="yes" pid="37476" path="/usr/bin/yes"/>
+            <process name="kernel" pid="0" path="/System/Library/Kernels/kernel.release.t6000"/>
+        </processes>
+        <data>
+            <table codes="&quot;0x1f,0x7&quot;" target="SINGLE" schema="kdebug" documentation="Tracing the kernel and some system frameworks."/>
+            <table codes="&quot;0x2b,0xd8&quot;" target="SINGLE" schema="kdebug" documentation="Tracing the kernel and some system frameworks."/>
+            <table schema="thread-info" documentation="Associates threads with their owning process."/>
+            <table schema="process-info" documentation="Associates processes with their process names."/>
+            <table schema="tick" frequency="1" documentation="Provides modelers with a regular reference time for modeling fixed time-based statistics. The ticks are evenly spaced with a configurable frequency specifying the number of events to generate per second, so a tick schema with a frequency of 10 will generate a row every 100ms."/>
+            <table schema="tick" frequency="10" documentation="Provides modelers with a regular reference time for modeling fixed time-based statistics. The ticks are evenly spaced with a configurable frequency specifying the number of events to generate per second, so a tick schema with a frequency of 10 will generate a row every 100ms."/>
+            <table codes="&quot;0x1,0x40,0x20&quot;" pmc-events="&quot;CORE_ACTIVE_CYCLE&quot;" schema="kdebug-counters-with-kdebug-sample" target="SINGLE" documentation="Tracing the kernel and some system frameworks."/>
+            <table schema="dyld-library-load" target-pid="SINGLE"/>
+            <table callstack="user" pmc-events="" pmi-event="&quot;CORE_ACTIVE_CYCLE&quot;" schema="kdebug-counters-with-pmi-sample" target="SINGLE" pmi-threshold="1000000" documentation="Holds a raw CPU profiling sample with additional sampled counter values."/>
+            <table codes="&quot;0x1f,0x05&quot;" target="SINGLE" schema="kdebug-strings" documentation="Associates numeric arguments with strings in kdebug trace points."/>
+            <table codes="&quot;0x07,0x00&quot; &quot;0x1f,0x05&quot;" target="SINGLE" schema="kdebug" documentation="Tracing the kernel and some system frameworks."/>
+            <table codes="&quot;0x2b,0xdc&quot;" target="SINGLE" schema="kdebug" documentation="Tracing the kernel and some system frameworks."/>
+            <table schema="life-cycle-period" target-pid="SINGLE" documentation="Identifies where an application is in its lifecycle."/>
+            <table target-pid="SINGLE" high-frequency-sampling="0" schema="cpu-profile" needs-kernel-callstack="0" documentation="When combined with other cpu-profile samples, creates a statistical picture of where your application is spending its time."/>
+            <table codes="&quot;0x07,0x00&quot;" target="SINGLE" schema="kdebug" documentation="Tracing the kernel and some system frameworks."/>
+            <table codes="&quot;0x1,0x25&quot;" target="SINGLE" schema="kdebug" documentation="Tracing the kernel and some system frameworks."/>
+            <table codes="&quot;0x31,0xca&quot;" target="SINGLE" schema="kdebug" documentation="Tracing the kernel and some system frameworks."/>
+            <table codes="&quot;0x2b,0x87&quot;" target="SINGLE" schema="kdebug" documentation="Tracing the kernel and some system frameworks."/>
+            <table codes="&quot;0x2d,*&quot;" schema="kdebug" callstack="user" target="SINGLE" documentation="Tracing the kernel and some system frameworks."/>
+        </data>
+        <tracks/>
+    </run>
+</trace-toc>
