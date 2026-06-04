@@ -15,6 +15,10 @@ Usage:
   xcui assert --id <id> [--label <s>] [--value <s>] [--trait <role>] [--single]   Assert on an element
   xcui a11y set --toggle <name> --value <on|off> [--app <bundle-id>]   Set an accessibility setting
   xcui a11y reset                               Clear xcui-set accessibility overrides
+  xcui dialog accept | dismiss                  Tap the right button on the frontmost system alert
+  xcui dialog pregrant <bundle-id> <service>... Grant permissions so no dialog appears
+  xcui voiceover traverse                       Emit the computed VoiceOver announcement sequence
+  xcui voiceover assert --sequence <file>       Compare the announcement sequence to an expected one
 
 Default output is JSON; pass --human for prose. Most verbs auto-resolve the booted
 simulator; pass --udid to target a specific one.
@@ -36,6 +40,10 @@ func main() {
 		os.Exit(runAssert(os.Stdout, os.Args[2:]))
 	case "a11y":
 		os.Exit(runA11y(os.Stdout, os.Args[2:]))
+	case "dialog":
+		os.Exit(runDialog(os.Stdout, os.Args[2:]))
+	case "voiceover":
+		os.Exit(runVoiceOver(os.Stdout, os.Args[2:]))
 	case "--version", "-v":
 		fmt.Println(version)
 	case "--help", "-h":
