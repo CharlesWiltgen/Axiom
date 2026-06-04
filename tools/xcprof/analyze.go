@@ -1,6 +1,9 @@
 package main
 
-import "sort"
+import (
+	"math"
+	"sort"
+)
 
 type familyDef struct {
 	name    string
@@ -44,14 +47,23 @@ func supportMatrix(toc *TOC, cpuSamples int) []FamilyStatus {
 	return out
 }
 
-// HotFrame aggregates one function across all samples.
+// HotFrame aggregates one function across all samples. Inclusive/Self are raw
+// cycle-weights (the export's "Cycles" column — work, not time). The *Pct fields
+// are the exact share of total cycles; the *MS fields are an APPROXIMATE
+// wall-time estimate from sample share, not derived from cycles (cycles→time
+// needs per-core frequency under DVFS, which the trace doesn't carry).
 type HotFrame struct {
-	Name      string `json:"name"`
-	Binary    string `json:"binary,omitempty"`
-	Inclusive int64  `json:"inclusive"` // weight where this frame appears anywhere in the stack
-	Self      int64  `json:"self"`      // weight where this frame is the leaf
-	Samples   int    `json:"samples"`   // samples where it appears
-	System    bool   `json:"system"`
+	Name         string  `json:"name"`
+	Binary       string  `json:"binary,omitempty"`
+	Inclusive    int64   `json:"inclusive"`     // cycle-weight where this frame appears anywhere in the stack
+	Self         int64   `json:"self"`          // cycle-weight where this frame is the leaf
+	Samples      int     `json:"samples"`       // samples where it appears
+	SelfSamples  int     `json:"self_samples"`  // samples where it is the leaf
+	InclusivePct float64 `json:"inclusive_pct"` // % of total cycles (exact)
+	SelfPct      float64 `json:"self_pct"`      // % of total cycles (exact)
+	InclusiveMS  float64 `json:"inclusive_ms"`  // approx wall-time (sample share × window)
+	SelfMS       float64 `json:"self_ms"`       // approx wall-time (sample share × window)
+	System       bool    `json:"system"`
 }
 
 // MainThreadStats summarizes main-thread activity. The hang signal is
@@ -59,11 +71,68 @@ type HotFrame struct {
 // between consecutive main-thread samples is a *candidate* stall, not a
 // confirmed hang (the Hangs instrument, Phase 2, confirms).
 type MainThreadStats struct {
-	Samples         int   `json:"samples"`
-	Weight          int64 `json:"weight"`
-	MaxGapMS        int64 `json:"max_gap_ms"`
-	GapThresholdMS  int64 `json:"gap_threshold_ms"`
-	CandidateStalls int   `json:"candidate_stalls"`
+	Samples         int     `json:"samples"`
+	Weight          int64   `json:"weight"`     // raw cycle-weight on the main thread
+	WeightPct       float64 `json:"weight_pct"` // main-thread share of total cycles
+	MaxGapMS        int64   `json:"max_gap_ms"`
+	GapThresholdMS  int64   `json:"gap_threshold_ms"`
+	CandidateStalls int     `json:"candidate_stalls"`
+}
+
+// totalCycleWeight sums the cycle-weight across samples — the denominator for
+// the percentage fields.
+func totalCycleWeight(samples []Sample) int64 {
+	var t int64
+	for _, s := range samples {
+		t += s.Weight
+	}
+	return t
+}
+
+// enrichWeights fills the percentage and approximate-millisecond fields on each
+// frame. Pct is the exact share of total CPU cycles. MS is approximate: it
+// scales the frame's *sample* share by the analyzed window, because each sample
+// represents a fixed wall-clock interval regardless of CPU frequency — a more
+// honest time proxy than scaling cycles (which vary with DVFS). Both guards are
+// no-ops when there is nothing to measure (empty trace or scoped-out window).
+func enrichWeights(frames []HotFrame, totalCycles int64, totalSamples int, windowSec float64) {
+	for i := range frames {
+		if totalCycles > 0 {
+			frames[i].InclusivePct = round2(100 * float64(frames[i].Inclusive) / float64(totalCycles))
+			frames[i].SelfPct = round2(100 * float64(frames[i].Self) / float64(totalCycles))
+		}
+		if totalSamples > 0 && windowSec > 0 {
+			frames[i].InclusiveMS = round1(float64(frames[i].Samples) / float64(totalSamples) * windowSec * 1000)
+			frames[i].SelfMS = round1(float64(frames[i].SelfSamples) / float64(totalSamples) * windowSec * 1000)
+		}
+	}
+}
+
+func round1(f float64) float64 { return math.Round(f*10) / 10 }
+func round2(f float64) float64 { return math.Round(f*100) / 100 }
+
+// analyzedWindowSec returns the wall-clock seconds the analyzed samples span:
+// the full run duration, unless a --start-ms/--end-ms window narrows it (an
+// open-ended window extends to the run end).
+func analyzedWindowSec(durationSec float64, startMS, endMS int64, scoped bool) float64 {
+	if !scoped {
+		return durationSec
+	}
+	hi := endMS
+	// Clamp to the trace end: an open-ended (hi<=0) OR over-long bounded window
+	// must not stretch the ms denominator past the actual recording, which would
+	// render nonsense wall-times (e.g. ~999000ms on a 3.45s trace).
+	if hi <= 0 || hi > int64(durationSec*1000) {
+		hi = int64(durationSec * 1000)
+	}
+	lo := startMS
+	if lo < 0 {
+		lo = 0
+	}
+	if hi > lo {
+		return float64(hi-lo) / 1000
+	}
+	return 0
 }
 
 // scopeByTime keeps samples whose timestamp falls within [startMS, endMS].
@@ -107,14 +176,17 @@ func aggregateHotFrames(samples []Sample, limit int) []HotFrame {
 				byKey[k] = a
 				order = append(order, k)
 			}
-			a.Inclusive += s.Weight
 			if depth == 0 {
 				a.Self += s.Weight
+				a.SelfSamples++
 			}
 			// Count each distinct sample once per frame (a frame can appear
 			// twice in one recursive stack); the generation guard avoids the
-			// O(samples*frames) reset pass.
+			// O(samples*frames) reset pass. Inclusive is counted here too so a
+			// recursive frame doesn't multi-count its sample's weight — keeping
+			// inclusive ≤ total (inclusive_pct ≤ 100%).
 			if a.lastSeenGen != gen {
+				a.Inclusive += s.Weight
 				a.Samples++
 				a.lastSeenGen = gen
 			}

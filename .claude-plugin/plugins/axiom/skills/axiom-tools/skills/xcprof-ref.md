@@ -12,7 +12,7 @@ xcprof turns an Instruments `.trace` into a structured, token-lean report for LL
 
 ## Subcommands (Phase 1)
 
-- `xcprof analyze <trace> [flags]` — analyze an existing `.trace`. Exports the TOC + the `cpu-profile` table, resolves back-references into full backtraces, and reports: summary (target, device, duration, recording mode), the support matrix, CPU hot frames (inclusive + self cycle-weight), an approximate main-thread stall signal, and top user-code frames. Flags:
+- `xcprof analyze <trace> [flags]` — analyze an existing `.trace`. Exports the TOC + the `cpu-profile` table, resolves back-references into full backtraces, and reports: summary (target, device, duration, recording mode), the support matrix, CPU hot frames (inclusive + self as % of total CPU cycles plus an approximate ms), an approximate main-thread stall signal, and top user-code frames. Flags:
   - `--json` — compact single-line JSON (LLM-lean). Default is terse markdown.
   - `--both` — markdown then JSON.
   - `--start-ms N` / `--end-ms N` — scope analysis to a time window (the hang-window workflow: see a stall at t=2.0s, re-analyze 2000–2500ms without re-recording).
@@ -34,6 +34,7 @@ xcprof analyze app.trace --json
 
 ## Honesty caveats
 
+- **Frame cost is cycle share, not time.** The `%` is the exact share of total CPU cycles; the `ms` figure is an *approximate* wall-time from the frame's sample share × the analyzed window. Cycle-weight is cycles (the export's "Cycles" column), and cycles→time needs per-core frequency under DVFS that the trace doesn't carry — so ms is never derived from cycles.
 - **Main-thread stalls are approximate.** cpu-profile samples only running threads, so a large inter-sample gap is a *candidate* stall, not a confirmed hang — the Hangs instrument confirms (a later xcprof phase).
 - **Release builds show addresses.** Stripped binaries report raw `0x…` frame names; symbol resolution via `--dsym` arrives in a later phase. Debug builds symbolicate natively.
 - **Phase 1 is CPU-only.** the memory / network / energy / hangs families report `not_present` (absent from the recording) or `partial` (schema present, parsing pending) — never a silent "clean".
