@@ -18,6 +18,7 @@ xcprof turns an Instruments `.trace` into a structured, token-lean report for LL
   - `--start-ms N` / `--end-ms N` — scope analysis to a time window (the hang-window workflow: see a stall at t=2.0s, re-analyze 2000–2500ms without re-recording).
   - `--hang-threshold-ms N` — main-thread gap counted as a candidate stall (default 250).
   - `--user-binary <names>` — comma-separated extra binaries to treat as user code (embedded frameworks).
+  - `--dsym <path>` — symbolicate raw-address frames using a `.dSYM` bundle or Mach-O. Without it, dSYMs are auto-discovered by UUID via Spotlight; frames with no matching dSYM stay raw and are flagged.
   - `--open` — open the trace in Instruments.app after analysis (opt-in; headless by default).
 - `xcprof doctor [--human]` — environment check.
 
@@ -36,7 +37,7 @@ xcprof analyze app.trace --json
 
 - **Frame cost is cycle share, not time.** The `%` is the exact share of total CPU cycles; the `ms` figure is an *approximate* wall-time from the frame's sample share × the analyzed window. Cycle-weight is cycles (the export's "Cycles" column), and cycles→time needs per-core frequency under DVFS that the trace doesn't carry — so ms is never derived from cycles.
 - **Main-thread stalls are approximate.** cpu-profile samples only running threads, so a large inter-sample gap is a *candidate* stall, not a confirmed hang — the Hangs instrument confirms (a later xcprof phase).
-- **Release builds show addresses.** Stripped binaries report raw `0x…` frame names; symbol resolution via `--dsym` arrives in a later phase. Debug builds symbolicate natively.
+- **Release builds show addresses.** Stripped binaries report raw `0x…` frame names. xcprof resolves them via `--dsym <path>` or auto-discovery by UUID through Spotlight; frames with no matching dSYM stay raw and are flagged (never invented). Fuller discovery sources (Archives/DerivedData walks, shared with xcsym) come with the engine-extraction epic (axiom-fo7k). Debug builds symbolicate natively, and Instruments may pre-symbolicate the export when it can find the dSYM at record time.
 - **Phase 1 is CPU-only.** the memory / network / energy / hangs families report `not_present` (absent from the recording) or `partial` (schema present, parsing pending) — never a silent "clean".
 
 ## Output & exit codes
@@ -45,7 +46,7 @@ Compact JSON (`--json`) or terse markdown (default); `--both` for both. Exit `0`
 
 ## Scope
 
-Phase 1 ships `doctor` + `analyze` (CPU / Time Profiler family). `record` (presets + security gates), `--dsym` symbolication, memory/network/energy parsing, `compare` (regression detection), and `cleanup` are later phases.
+Phase 1 shipped `doctor` + `analyze` (CPU / Time Profiler family); analyze now also does `--dsym` symbolication (explicit path + Spotlight auto-discovery). `record` (presets + security gates), the shared dSYM/symbolication engine with fuller discovery (axiom-fo7k), memory/network/energy parsing, `compare` (regression detection), and `cleanup` remain later phases.
 
 ## Resources
 

@@ -35,7 +35,7 @@ var exportTable = func(ctx context.Context, trace, xpath string) ([]byte, error)
 
 // buildReport is the pure orchestration: TOC + cpu-profile bytes -> report.
 // Kept separate from runAnalyze so it is unit-testable against fixtures.
-func buildReport(trace string, tocBytes, cpuBytes []byte, startMS, endMS int64, userHints []string, hangThresholdMS int64) (AnalyzeReport, error) {
+func buildReport(trace string, tocBytes, cpuBytes []byte, startMS, endMS int64, userHints []string, hangThresholdMS int64, symbolize func([]Sample) symbolizeResult) (AnalyzeReport, error) {
 	toc, err := parseTOC(tocBytes)
 	if err != nil {
 		return AnalyzeReport{}, err
@@ -78,6 +78,13 @@ func buildReport(trace string, tocBytes, cpuBytes []byte, startMS, endMS int64, 
 	rep.CPUSamples = len(samples)
 	rep.Support = supportMatrix(toc, fullSampleCount)
 
+	// Resolve raw-address frames before aggregation so hot/user frames carry
+	// names. No-op (no shell-out) when nothing needs symbolicating.
+	var symRes symbolizeResult
+	if symbolize != nil && len(samples) > 0 {
+		symRes = symbolize(samples)
+	}
+
 	if len(samples) > 0 {
 		userBinaries := userBinarySet(toc.Target.Name, userHints)
 		rep.HotFrames = aggregateHotFrames(samples, 15)
@@ -102,8 +109,17 @@ func buildReport(trace string, tocBytes, cpuBytes []byte, startMS, endMS int64, 
 			"frame % is share of CPU cycles; ms is approximate (sample-share × window), since cycle-weight is cycles, not time",
 		)
 	}
-	if symbolNeeded(rep.UserFrames) {
-		rep.Notes = append(rep.Notes, "some frames are raw addresses (stripped binary); pass --dsym for symbol names (xcprof Phase 2)")
+	switch {
+	case symRes.Attempted && symRes.Unresolved > 0 && symRes.Explicit:
+		rep.Notes = append(rep.Notes, fmt.Sprintf(
+			"%d address frame(s) unresolved by the supplied --dsym (resolved %d); it may not cover every image or the UUID may not match",
+			symRes.Unresolved, symRes.Resolved))
+	case symRes.Attempted && symRes.Unresolved > 0:
+		rep.Notes = append(rep.Notes, fmt.Sprintf(
+			"%d address frame(s) unresolved (no matching dSYM found); pass --dsym <path> to symbolicate (resolved %d)",
+			symRes.Unresolved, symRes.Resolved))
+	case !symRes.Attempted && symbolNeeded(rep.HotFrames):
+		rep.Notes = append(rep.Notes, "some frames are raw addresses (stripped binary); pass --dsym for symbol names")
 	}
 	return rep, nil
 }
@@ -124,6 +140,7 @@ type analyzeOpts struct {
 	startMS   int64
 	endMS     int64
 	hang      int64
+	dsym      string
 	userHints []string
 }
 
@@ -141,6 +158,7 @@ func parseAnalyzeArgs(args []string) (string, analyzeOpts, int) {
 	endMS := fs.Int64("end-ms", 0, "scope analysis to samples at or before this offset (ms)")
 	hang := fs.Int64("hang-threshold-ms", 250, "main-thread gap (ms) counted as a candidate stall")
 	userBinary := fs.String("user-binary", "", "comma-separated binary names to attribute as user code (when set, only the target binary + these count; default: all non-system frames)")
+	dsym := fs.String("dsym", "", "path to a .dSYM bundle or Mach-O for symbolicating raw-address frames (default: auto-discover by UUID via Spotlight)")
 	open := fs.Bool("open", false, "after analysis, open the trace in Instruments.app")
 
 	if err := fs.Parse(args); err != nil {
@@ -161,7 +179,7 @@ func parseAnalyzeArgs(args []string) (string, analyzeOpts, int) {
 			return "", analyzeOpts{}, 2
 		}
 	}
-	opts := analyzeOpts{asJSON: *asJSON, both: *both, open: *open, startMS: *startMS, endMS: *endMS, hang: *hang}
+	opts := analyzeOpts{asJSON: *asJSON, both: *both, open: *open, startMS: *startMS, endMS: *endMS, hang: *hang, dsym: *dsym}
 	for _, h := range strings.Split(*userBinary, ",") {
 		if h = strings.TrimSpace(h); h != "" {
 			opts.userHints = append(opts.userHints, h)
@@ -200,7 +218,10 @@ func runAnalyze(out io.Writer, args []string) int {
 		}
 	}
 
-	rep, err := buildReport(trace, tocBytes, cpuBytes, opts.startMS, opts.endMS, opts.userHints, opts.hang)
+	symbolize := func(samples []Sample) symbolizeResult {
+		return symbolizeSamples(ctx, samples, opts.dsym)
+	}
+	rep, err := buildReport(trace, tocBytes, cpuBytes, opts.startMS, opts.endMS, opts.userHints, opts.hang, symbolize)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "analyze:", err)
 		return 2
