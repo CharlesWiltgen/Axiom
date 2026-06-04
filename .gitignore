@@ -75,8 +75,16 @@ CHANGELOG.md
 # Dolt database files (added by bd init)
 .dolt/
 *.db
-tools/xclog/xclog
 axiom-mcp/docs/
+
+# Local tool build artifacts (distributed binaries live in plugins/axiom/bin/)
+tools/xclog/xclog
+tools/xcui/xcui
+tools/xcui/xcui-amd64
+tools/xcui/xcui-arm64
+tools/xcprof/xcprof
+tools/xcprof/xcprof-amd64
+tools/xcprof/xcprof-arm64
 
 # Beads / Dolt files (added by bd init)
 .beads-credential-key

@@ -85,18 +85,24 @@ axe tap -x 200 -y 400 --udid $UDID
 # Tap with timing controls
 axe tap -x 200 -y 400 --pre-delay 0.5 --post-delay 0.3 --udid $UDID
 
-# Long press (hold duration in seconds)
-axe tap -x 200 -y 400 --duration 1.0 --udid $UDID
+# Long press: use touch with --down --up --delay (tap has no hold option)
+axe touch -x 200 -y 400 --down --up --delay 1.0 --udid $UDID
 ```
 
 ### Low-Level Touch Events
 
 ```bash
 # Touch down (finger press)
-axe touch down -x 200 -y 400 --udid $UDID
+axe touch -x 200 -y 400 --down --udid $UDID
 
 # Touch up (finger release)
-axe touch up -x 200 -y 400 --udid $UDID
+axe touch -x 200 -y 400 --up --udid $UDID
+
+# Both in one call (tap)
+axe touch -x 200 -y 400 --down --up --udid $UDID
+
+# Long press (hold duration in seconds)
+axe touch -x 200 -y 400 --down --up --delay 1.0 --udid $UDID
 ```
 
 ## Swipe & Gesture Commands
@@ -135,8 +141,8 @@ axe gesture swipe-from-bottom-edge --udid $UDID # Home indicator/Control Center
 # Type text (element must be focused)
 axe type "user@example.com" --udid $UDID
 
-# Type with delay between characters
-axe type "password123" --char-delay 0.1 --udid $UDID
+# Type a longer string
+axe type "password123" --udid $UDID
 
 # Type from stdin
 echo "Hello World" | axe type --stdin --udid $UDID
@@ -162,8 +168,8 @@ axe key 40 --udid $UDID  # Return/Enter
 # 81 = Down Arrow
 # 82 = Up Arrow
 
-# Key sequence with timing
-axe key-sequence 40 43 40 --delay 0.2 --udid $UDID
+# Key sequence with timing (comma-separated keycodes, required --keycodes label)
+axe key-sequence --keycodes 40,43,40 --delay 0.2 --udid $UDID
 ```
 
 ## Hardware Buttons
@@ -198,8 +204,8 @@ axe screenshot --udid $UDID
 # Screenshot to specific file
 axe screenshot --output /tmp/my-screenshot.png --udid $UDID
 
-# Screenshot to stdout (for piping)
-axe screenshot --stdout --udid $UDID > screenshot.png
+# For piping, write to a file then redirect (no --stdout flag exists)
+axe screenshot --output /tmp/shot.png --udid $UDID && cat /tmp/shot.png > screenshot.png
 ```
 
 ## Video Recording & Streaming
@@ -338,10 +344,10 @@ Most commands support timing options:
 
 | Option | Description |
 |--------|-------------|
-| `--pre-delay` | Wait before action (seconds) |
-| `--post-delay` | Wait after action (seconds) |
-| `--duration` | Action duration (for taps, button presses) |
-| `--char-delay` | Delay between characters (for type) |
+| `--pre-delay` | Wait before action (seconds, `tap`) |
+| `--post-delay` | Wait after action (seconds, `tap`) |
+| `--delay` | Hold duration between down/up (`touch`) or between key presses (`key-sequence`) |
+| `--duration` | Button-press duration (`button`) or swipe duration (`swipe`) |
 
 ```bash
 # Example with full timing control
@@ -385,7 +391,7 @@ axe tap --id "button" --pre-delay 0.5 --post-delay 0.3 --udid $UDID
 
 1. Ensure text field is focused first: `axe tap --id "textField"`
 2. Check keyboard is visible
-3. Try `--char-delay 0.05` for reliability
+3. For unreliable input, split long strings into multiple `axe type` calls, or use `--stdin`/`--file`
 
 ### Permission Denied
 

@@ -46,3 +46,26 @@ type A11yReport struct {
 	Relaunched bool   `json:"relaunched,omitempty"`
 	Note       string `json:"note,omitempty"`
 }
+
+// DialogReport is the JSON payload of `xcui dialog accept|dismiss|pregrant`.
+type DialogReport struct {
+	Tool    string   `json:"tool"`
+	Version string   `json:"version"`
+	Action  string   `json:"action"`
+	Handled bool     `json:"handled"`
+	Button  string   `json:"button,omitempty"`  // tapped button label (accept/dismiss)
+	Bundle  string   `json:"bundle,omitempty"`  // target bundle id (pregrant)
+	Granted []string `json:"granted,omitempty"` // services granted (pregrant)
+	Note    string   `json:"note,omitempty"`
+}
+
+// VoiceOverReport is the JSON payload of `xcui voiceover traverse|assert`.
+type VoiceOverReport struct {
+	Tool     string   `json:"tool"`
+	Version  string   `json:"version"`
+	Action   string   `json:"action"`
+	Count    int      `json:"count"`
+	Sequence []string `json:"sequence,omitempty"`
+	Pass     bool     `json:"pass,omitempty"`
+	Failures []string `json:"failures,omitempty"`
+}
