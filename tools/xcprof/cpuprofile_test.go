@@ -42,9 +42,9 @@ func TestParseCPUProfileFirstStack(t *testing.T) {
 	samples, _ := parseCPUProfile(loadFixture(t, "cpu-profile.xml"))
 	got := samples[0].Frames
 	want := []Frame{
-		{Name: "write", Addr: "0x181c05835", BinaryName: "libsystem_kernel.dylib", BinaryPath: "/usr/lib/system/libsystem_kernel.dylib"},
-		{Name: "0x1024044f0", Addr: "0x1024045d8", BinaryName: "yes", BinaryPath: "/usr/bin/yes"},
-		{Name: "start", Addr: "0x181887e00", BinaryName: "dyld", BinaryPath: "/usr/lib/dyld"},
+		{Name: "write", Addr: "0x181c05835", BinaryName: "libsystem_kernel.dylib", BinaryPath: "/usr/lib/system/libsystem_kernel.dylib", UUID: "CC1CF985-BC65-3725-809F-4C1E36B8F4BA", Arch: "arm64e", LoadAddr: "0x181c01000"},
+		{Name: "0x1024044f0", Addr: "0x1024045d8", BinaryName: "yes", BinaryPath: "/usr/bin/yes", UUID: "A0E2EAD5-4E82-3E1C-AC6C-1EDC646A6C4D", Arch: "arm64e", LoadAddr: "0x102404000"},
+		{Name: "start", Addr: "0x181887e00", BinaryName: "dyld", BinaryPath: "/usr/lib/dyld", UUID: "A237EF81-B68B-37BA-A165-92C965529534", Arch: "arm64e", LoadAddr: "0x181868000"},
 	}
 	if len(got) != len(want) {
 		t.Fatalf("got %d frames, want %d", len(got), len(want))

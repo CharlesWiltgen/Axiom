@@ -52,18 +52,26 @@ type cpFrame struct {
 }
 
 type cpBinary struct {
-	ID   string `xml:"id,attr"`
-	Ref  string `xml:"ref,attr"`
-	Name string `xml:"name,attr"`
-	Path string `xml:"path,attr"`
+	ID       string `xml:"id,attr"`
+	Ref      string `xml:"ref,attr"`
+	Name     string `xml:"name,attr"`
+	Path     string `xml:"path,attr"`
+	UUID     string `xml:"UUID,attr"`
+	Arch     string `xml:"arch,attr"`
+	LoadAddr string `xml:"load-addr,attr"`
 }
 
 // Frame is a resolved backtrace frame (leaf-first within a Sample).
+// UUID/Arch/LoadAddr come from the frame's <binary> and feed --dsym
+// symbolication (matching the dSYM by UUID, then atos with the load address).
 type Frame struct {
 	Name       string `json:"name"`
 	Addr       string `json:"addr,omitempty"`
 	BinaryName string `json:"binary,omitempty"`
 	BinaryPath string `json:"path,omitempty"`
+	UUID       string `json:"uuid,omitempty"`
+	Arch       string `json:"arch,omitempty"`
+	LoadAddr   string `json:"load_addr,omitempty"`
 }
 
 // Sample is one resolved cpu-profile row.
@@ -131,7 +139,11 @@ func (r *resolver) frame(f cpFrame) Frame {
 		return r.frames[f.Ref]
 	}
 	bin := r.binary(f.Binary)
-	resolved := Frame{Name: f.Name, Addr: f.Addr, BinaryName: bin.Name, BinaryPath: bin.Path}
+	resolved := Frame{
+		Name: f.Name, Addr: f.Addr,
+		BinaryName: bin.Name, BinaryPath: bin.Path,
+		UUID: bin.UUID, Arch: bin.Arch, LoadAddr: bin.LoadAddr,
+	}
 	if f.ID != "" {
 		r.frames[f.ID] = resolved
 	}
