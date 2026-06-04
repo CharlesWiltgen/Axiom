@@ -590,7 +590,7 @@ var sprites: [Sprite] = Array(repeating: .default, count: 40)
 var sprites = InlineArray<40, Sprite>(repeating: .default)
 ```
 
-**Conformances**: `RandomAccessCollection`, `MutableCollection`, `BitwiseCopyable`, `Sendable`. Supports `~Copyable` element types.
+**Conformances**: `BitwiseCopyable`, `Sendable` (both conditional). Supports `~Copyable` element types. InlineArray is **not** a `Collection`/`Sequence` — those conformances require `Copyable` and are deliberately absent so `~Copyable` elements stay supported. Use index-based access (`count`, `indices`, subscript) or `.span`/`.mutableSpan` instead; `map`/`filter`/`for-in` are not available directly.
 
 **When to Use InlineArray**:
 - Fixed size known at compile time
@@ -906,7 +906,9 @@ func processSafe(_ data: MutableSpan<UInt8>) {
 let array = [1, 2, 3, 4, 5]
 let span = array.span        // Read-only view
 print(span[0])               // Subscript access
-for element in span { }      // Safe iteration
+for i in span.indices {      // Iterate by index — Span is not a Sequence/Collection
+    let element = span[i]    // (Span.Index == Int, so `for i in 0..<span.count` also works)
+}
 let slice = span[1..<3]      // Span slice, no copy
 ```
 
@@ -972,9 +974,11 @@ OutputSpan/OutputRawSpan replace `UnsafeMutableBufferPointer` for initializing n
 // Binary serialization: write header bytes safely
 @lifetime(&output)
 func writeHeader(to output: inout OutputRawSpan) {
-    output.append(0x01)       // version
-    output.append(0x00)       // flags
-    output.append(UInt16(42)) // length (type-safe)
+    output.append(0x01)       // version (UInt8 overload, safe)
+    output.append(0x00)       // flags (UInt8 overload, safe)
+    // Multi-byte values use the generic `append(_:as:)`, which is @unsafe —
+    // under strict memory safety the call site needs the `unsafe` expression form:
+    unsafe output.append(UInt16(42), as: UInt16.self) // length
 }
 ```
 

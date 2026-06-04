@@ -494,7 +494,7 @@ class MetricsManager: NSObject, MXMetricManagerSubscriber {
                 let scrollHitchRatio = animationMetrics.scrollHitchTimeRatio
 
                 // Ratio of time spent hitching in all animations
-                if #available(iOS 17.0, *) {
+                if #available(iOS 26.0, macOS 26.0, *) {
                     let hitchRatio = animationMetrics.hitchTimeRatio
                 }
 
@@ -510,7 +510,7 @@ MXMetricManager.shared.add(metricsManager)
 
 **What to track:**
 - `scrollHitchTimeRatio`: Time spent hitching while scrolling (UIScrollView only)
-- `hitchTimeRatio` (iOS 17+): Time spent hitching in all tracked animations
+- `hitchTimeRatio` (iOS 26+ / macOS 26+): Time spent hitching in all tracked animations
 
 ---
 

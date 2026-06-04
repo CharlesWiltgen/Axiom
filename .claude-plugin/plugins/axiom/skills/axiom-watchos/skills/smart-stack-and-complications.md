@@ -5,7 +5,7 @@
 Use when:
 - Building watch complications — `accessoryCircular`, `accessoryRectangular`, `accessoryInline`, `accessoryCorner`, or `AccessoryWidgetGroup`
 - Deciding between a timeline widget and the new watchOS 26 **relevant widget** for Smart Stack placement
-- Adopting RelevanceKit — `RelevantContext`, `WidgetRelevance`, `WidgetRelevanceAttribute`
+- Adopting RelevanceKit's `RelevantContext` (the watchOS 26 `.date(interval:kind:)` / `.location(category:)` additions) together with WidgetKit's existing `WidgetRelevance` / `WidgetRelevanceAttribute`
 - Making a widget or control **configurable** from the watch face or Smart Stack
 - Adding APNs push updates to watch widgets (new in watchOS 26)
 - Deduplicating cards when both a timeline and a relevant widget render the same event
@@ -64,6 +64,8 @@ The relevant widget is the better tool when multiple instances of the same widge
 ## RelevanceKit (watchOS 26)
 
 RelevanceKit tells the system when a widget matters. Contexts cover date, sleep schedule, fitness state, location — and on watchOS 26, **points of interest** by MapKit category.
+
+**Two frameworks, don't conflate them.** Only `RelevantContext` lives in RelevanceKit, and only its `.date(interval:kind:)` / `.location(category:)` overloads are new in watchOS 26.0. The wrapper types `WidgetRelevance<Configuration>` and `WidgetRelevanceAttribute<Configuration>` are **WidgetKit** types that have shipped since iOS 18 / macOS 15 / **watchOS 11** (visionOS 26; tvOS unavailable) — they are not new in watchOS 26 and are not part of RelevanceKit. You build the WidgetKit `WidgetRelevance` wrapper around the watchOS-26 `RelevantContext` cases.
 
 ### `RelevantContext` types
 

@@ -464,7 +464,7 @@ if let observation = request.results?.first as? VNHumanBodyPoseObservation {
 // 2. When you have 60 frames of poses, prepare for CreateML model
 if poseObservations.count == 60 {
     var multiArray = try MLMultiArray(
-        shape: [60, 18, 3],  // 60 frames, 18 joints, (x, y, confidence)
+        shape: [60, 19, 3],  // 60 frames, 19 joints, (x, y, confidence)
         dataType: .double
     )
 

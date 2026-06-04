@@ -478,9 +478,9 @@ XCTAssertTrue(collection.waitForExistence(timeout: 5))
 #### Wait for Property Changes
 
 ```swift
-// Wait for button to become enabled
+// Wait for button to become enabled (first arg is a key path, not a literal)
 let submitButton = app.buttons["Submit"]
-XCTAssertTrue(submitButton.wait(for: .enabled, toEqual: true, timeout: 5))
+XCTAssertTrue(submitButton.wait(for: \.isEnabled, toEqual: true, timeout: 5))
 ```
 
 #### Combine with XCTAssert
@@ -539,12 +539,12 @@ if ProcessInfo.processInfo.arguments.contains("-UI-Testing") {
 #### Custom URL Schemes
 
 ```swift
-// Open app to specific URL
+// Launch the target app to a specific URL (instance method, iOS 16.4+)
 let app = XCUIApplication()
 app.open(URL(string: "myapp://landmark/123")!)
 
-// Open URL with system default app (global version)
-XCUIApplication.open(URL(string: "https://example.com")!)
+// Open a URL with the system's default app, via XCUISystem on XCUIDevice
+XCUIDevice.shared.system.open(URL(string: "https://example.com")!)
 ```
 
 #### Accessibility Audits in Tests
@@ -912,8 +912,9 @@ func testLargeLayoutOn3G() {
     )
 
     // Verify grid loaded without crash
-    let loadedCount = app.images.matching(identifier: NSPredicate(format: "identifier BEGINSWITH 'photoGrid'")).count
-    XCTAssertGreater(loadedCount, 5, "Multiple images should load on 3G")
+    // matching(_:) takes an NSPredicate (matching(identifier:) takes a String)
+    let loadedCount = app.images.matching(NSPredicate(format: "identifier BEGINSWITH 'photoGrid'")).count
+    XCTAssertGreaterThan(loadedCount, 5, "Multiple images should load on 3G")
 
     // No alerts (no crashes)
     XCTAssertFalse(app.alerts.element.exists, "App should not crash on large device + slow network")
@@ -972,20 +973,13 @@ Stack trace: [EXC_BAD_ACCESS in PhotoViewController]
 override func setUpWithError() throws {
     let app = XCUIApplication()
 
-    // Enable all logging
+    // Enable all logging (configure via launchEnvironment before launch())
     app.launchEnvironment = [
         "OS_ACTIVITY_MODE": "debug",
         "DYLD_PRINT_STATISTICS": "1"
     ]
 
-    // Enable test diagnostics
-    if #available(iOS 17, *) {
-        let options = XCUIApplicationLaunchOptions()
-        options.captureRawLogs = true
-        app.launch(options)
-    } else {
-        app.launch()
-    }
+    app.launch()
 }
 ```
 

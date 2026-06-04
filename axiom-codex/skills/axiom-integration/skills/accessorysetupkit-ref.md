@@ -125,7 +125,7 @@ Some accessories aren't fully usable the instant the user taps the picker — a 
 
 ```swift
 // In your event handler, an accessory may be .awaitingAuthorization rather than .authorized
-let settings = ASAccessorySettings.default
+let settings = ASAccessorySettings.defaultSettings
 settings.ssid = collectedHotspotSSID                        // Wi-Fi hotspot to join
 settings.bluetoothTransportBridgingIdentifier = sixByteID   // bridge Bluetooth Classic profiles
 
@@ -134,7 +134,7 @@ session.finishAuthorization(for: accessory, settings: settings) { error in /* no
 session.failAuthorization(for: accessory) { error in /* ... */ }
 ```
 
-`ASAccessorySettings` properties: `ssid` (hotspot to connect to), `bluetoothTransportBridgingIdentifier` (6-byte classic-transport bridge ID), and the `default` empty settings. Separately, `updateAuthorization(for:descriptor:)` **upgrades an authorized accessory's permissions** — e.g. grant Wi-Fi to a Bluetooth-only accessory by passing a broader `ASDiscoveryDescriptor` (it does not mutate `ASAccessorySettings`).
+`ASAccessorySettings` properties: `ssid` (hotspot to connect to), `bluetoothTransportBridgingIdentifier` (6-byte classic-transport bridge ID), and the `defaultSettings` empty settings object (the class accessor — `ASAccessorySettings.default` does not exist). Separately, `updateAuthorization(for:descriptor:)` **upgrades an authorized accessory's permissions** — e.g. grant Wi-Fi to a Bluetooth-only accessory by passing a broader `ASDiscoveryDescriptor` (it does not mutate `ASAccessorySettings`).
 
 ---
 

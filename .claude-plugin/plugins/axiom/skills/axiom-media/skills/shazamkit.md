@@ -458,12 +458,12 @@ SHMediaLibrary.default.add([matchedMediaItem]) { error in
 ### From AVAsset (iOS 16+, Preferred)
 
 ```swift
-let asset = AVAsset(url: audioFileURL)
+let asset = AVURLAsset(url: audioFileURL)
 let generator = SHSignatureGenerator()
 let signature = try await generator.signature(from: asset)
 ```
 
-Accepts any `AVAsset` with an audio track. Multiple tracks are mixed automatically.
+Accepts any `AVAsset` with an audio track (`AVURLAsset` is the concrete subclass — `AVAsset(url:)` is deprecated for Swift since iOS 18). Multiple tracks are mixed automatically.
 
 ### From Audio Buffers (iOS 15+)
 

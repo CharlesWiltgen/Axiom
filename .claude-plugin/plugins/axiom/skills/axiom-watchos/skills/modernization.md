@@ -186,7 +186,11 @@ There is no "both at once" state. The moment WidgetKit provides any complication
        ) {
            // When the descriptor uses CLKDefaultComplicationIdentifier,
            // ignore it and return the default widget kind.
-           let config = CLKComplicationWidgetMigrationConfiguration(
+           // CLKComplicationWidgetMigrationConfiguration is an abstract base
+           // (init is NS_UNAVAILABLE) — construct a concrete subclass.
+           // Static widgets use CLKComplicationStaticWidgetMigrationConfiguration;
+           // intent-configured widgets use CLKComplicationIntentWidgetMigrationConfiguration.
+           let config = CLKComplicationStaticWidgetMigrationConfiguration(
                kind: "com.example.app.coffee-caffeine",
                extensionBundleIdentifier: widgetExtensionBundleID
            )
@@ -277,6 +281,6 @@ The Axiom `modernization-helper` agent (see `/agents/modernization-helper.md`) s
 
 **WWDC**: 2023-10029, 2022-10051, 2022-10050, 2020-10177
 
-**Docs**: /technotes/tn3157-updating-your-watchos-project-for-swiftui-and-widgetkit, /widgetkit/converting-a-clockkit-app, /widgetkit/creating-accessory-widgets-and-watch-complications, /watchkit/wkapplication, /watchkit/wkapplicationdelegate, /swiftui/wkapplicationdelegateadaptor, /watchkit/wkhostingcontroller, /clockkit/clkcomplicationwidgetmigrator, /clockkit/clkcomplicationwidgetmigrationconfiguration, /watchos-apps/creating-independent-watchos-apps
+**Docs**: /technotes/tn3157-updating-your-watchos-project-for-swiftui-and-widgetkit, /widgetkit/converting-a-clockkit-app, /widgetkit/creating-accessory-widgets-and-watch-complications, /watchkit/wkapplication, /watchkit/wkapplicationdelegate, /swiftui/wkapplicationdelegateadaptor, /watchkit/wkhostingcontroller, /clockkit/clkcomplicationwidgetmigrator, /clockkit/clkcomplicationwidgetmigrationconfiguration, /clockkit/clkcomplicationstaticwidgetmigrationconfiguration, /clockkit/clkcomplicationintentwidgetmigrationconfiguration, /watchos-apps/creating-independent-watchos-apps
 
 **Skills**: axiom-watchos (platform-basics, design-for-watchos, smart-stack-and-complications, controls-and-live-activities, watch-connectivity), axiom-swiftui, axiom-shipping

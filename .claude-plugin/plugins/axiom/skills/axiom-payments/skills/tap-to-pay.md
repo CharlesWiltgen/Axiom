@@ -264,7 +264,7 @@ These rules apply to App Store listings, in-app onboarding, and external marketi
 |--------------|--------------|-----|
 | Treating ProximityReader entitlement like a regular capability | Won't appear in Xcode's capability picker; managed-only | Submit Tap to Pay request form, wait for approval, then add via Additional Capabilities |
 | Skipping `prepare()` on app foregrounding | First transaction after background hangs | Call `prepare(using:)` in `scenePhase == .active` |
-| Building a custom "tap your card here" UI | System provides this UI; custom violates HIG and App Review | Let `readPayment` present the system sheet |
+| Building a custom "tap your card here" UI | System provides this UI; custom violates HIG and App Review | Let `readPaymentCard(_:)` present the system sheet |
 | Using "Tap to Pay" label for refund / lookup actions | HIG violation, rejection trigger | Use generic labels (Look Up, Verify, Refund, Store Card) |
 | Including the Apple logo in the Tap to Pay button | HIG violation | Plain text label or wave-3-right icon, no logo |
 | Roll-your-own T&C sheet | The system T&C is the only Apple-approved acceptance flow | Use `linkAccount(using:)` |

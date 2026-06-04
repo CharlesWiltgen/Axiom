@@ -456,14 +456,14 @@ class MetricsManager: NSObject, MXMetricManagerSubscriber {
     static let shared = MetricsManager()
 
     func startListening() {
-        MXMetricManager.shared.add(self)
+        MXMetricManager.shared.addSubscriber(self)
     }
 
-    func didReceive(_ payloads: [MXMetricPayload]) {
+    func didReceiveMetricPayloads(_ payloads: [MXMetricPayload]) {
         // Process performance metrics
     }
 
-    func didReceive(_ payloads: [MXDiagnosticPayload]) {
+    func didReceiveDiagnosticPayloads(_ payloads: [MXDiagnosticPayload]) {
         for payload in payloads {
             // Crash diagnostics — delivered on next launch
             if let crashDiagnostics = payload.crashDiagnostics {

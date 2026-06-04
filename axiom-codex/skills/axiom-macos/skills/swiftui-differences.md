@@ -402,14 +402,21 @@ macOS toolbars behave differently from iOS. They integrate with the title bar an
 ### Toolbar styles
 
 ```swift
+// Scene-level (preferred) -- apply to the WindowGroup
+WindowGroup {
+    ContentView()
+}
+.windowToolbarStyle(.unified)        // Title and toolbar share the title bar (default)
+
+// View-level -- apply to a view inside the window
 NavigationSplitView { /* ... */ }
-    .toolbarStyle(.unified)          // Title and toolbar share the title bar (default)
+    .presentedWindowToolbarStyle(.unified)          // Title and toolbar share the title bar (default)
 
 NavigationSplitView { /* ... */ }
-    .toolbarStyle(.unifiedCompact)   // Smaller toolbar height
+    .presentedWindowToolbarStyle(.unifiedCompact)   // Smaller toolbar height
 
 NavigationSplitView { /* ... */ }
-    .toolbarStyle(.expanded)         // Toolbar below the title bar (more space)
+    .presentedWindowToolbarStyle(.expanded)         // Toolbar below the title bar (more space)
 ```
 
 | Style | Appearance | When to use |

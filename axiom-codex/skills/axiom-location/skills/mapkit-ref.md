@@ -22,7 +22,7 @@ Complete MapKit API reference for iOS development. Covers both SwiftUI Map (iOS 
 | Selection | `.mapSelection($selection)` | delegate `didSelect` |
 | Controls | `.mapControls { }` | `showsCompass`, `showsScale` |
 | Interaction modes | `.mapInteractionModes([])` | delegate methods |
-| Clustering | Built-in via `.mapItemClusteringIdentifier` | `MKClusterAnnotation` |
+| Clustering | No built-in modifier — use MKMapView | `MKAnnotationView.clusteringIdentifier` + `MKClusterAnnotation` |
 
 ---
 
@@ -256,13 +256,20 @@ MapPolyline(route.polyline)
 
 ### Clustering
 
+SwiftUI's declarative `Map` has no built-in clustering modifier. Clustering is UIKit-only: set `clusteringIdentifier` on the `MKAnnotationView` vended by your `MKMapViewDelegate` (iOS 11+, macOS 10.13+, tvOS 11+; unavailable on watchOS). Annotation views that share an identifier collapse into an `MKClusterAnnotation` automatically.
+
 ```swift
-ForEach(locations) { location in
-    Marker(location.name, coordinate: location.coordinate)
-        .tag(location.id)
+func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+    let view = mapView.dequeueReusableAnnotationView(
+        withIdentifier: "marker",
+        for: annotation
+    ) as! MKMarkerAnnotationView
+    view.clusteringIdentifier = "locations"  // Views sharing this identifier cluster
+    return view
 }
-.mapItemClusteringIdentifier("locations")
 ```
+
+To use clustering with a SwiftUI app, wrap `MKMapView` in a `UIViewRepresentable` (see Part 4).
 
 ---
 
@@ -511,8 +518,7 @@ for item in response.mapItems {
 // Filter what kind of results to return
 request.resultTypes = .address           // Street addresses only
 request.resultTypes = .pointOfInterest   // Businesses, landmarks
-request.resultTypes = .physicalFeature   // Mountains, lakes, parks
-request.resultTypes = .query             // Suggested search queries (iOS 18+)
+request.resultTypes = .physicalFeature   // Mountains, lakes, parks (iOS 18+)
 request.resultTypes = [.pointOfInterest, .address]  // Multiple types
 ```
 
@@ -772,7 +778,7 @@ let isVisible = CGRect(origin: .zero, size: snapshot.image.size).contains(point)
 | MapCompass | 17.0+ |
 | MapScaleView | 17.0+ |
 | .mapInteractionModes | 17.0+ |
-| MKLocalSearch.ResultType.query | 18.0+ |
+| MKLocalSearchResultType.physicalFeature | 18.0+ |
 | GeoToolbox / PlaceDescriptor | 26.0+ |
 | MKGeocodingRequest | 26.0+ |
 | MKReverseGeocodingRequest | 26.0+ |
@@ -809,10 +815,9 @@ let statue = PlaceDescriptor(
     ],
     commonName: "Statue of Liberty"
 )
-
-// From MKMapItem
-let descriptor = PlaceDescriptor(item: mapItem)  // Returns optional
 ```
+
+The only public `PlaceDescriptor` initializers are `init(representations:commonName:supportingRepresentations:)` (non-failable) and `Codable`'s `init(from:)`. There is no `PlaceDescriptor(item:)` initializer — build a descriptor from representations as shown above.
 
 ### PlaceRepresentation
 

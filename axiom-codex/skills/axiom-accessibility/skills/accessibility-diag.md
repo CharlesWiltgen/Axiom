@@ -123,12 +123,18 @@ Text("Price: $19.99")
 Text("Headline")
   .font(Font.custom("CustomFont", size: 24))
 
-// ✅ GOOD - Custom size that scales with Dynamic Type
+// ✅ GOOD - Custom-named font that scales relative to a text style
 Text("Large Title")
-  .font(.system(size: 60).relativeTo(.largeTitle))
+  .font(.custom("CustomFont", size: 60, relativeTo: .largeTitle))
 
 Text("Custom Headline")
-  .font(.system(size: 24).relativeTo(.title2))
+  .font(.custom("CustomFont", size: 24, relativeTo: .title2))
+
+// ✅ GOOD - System font at a custom size that scales with Dynamic Type
+@ScaledMetric(relativeTo: .title2) private var headlineSize: CGFloat = 24
+
+Text("Custom Headline")
+  .font(.system(size: headlineSize))
 
 // ✅ BEST - Use semantic styles when possible
 Text("Headline")
@@ -136,9 +142,11 @@ Text("Headline")
 ```
 
 **How `relativeTo:` works**
-- Base size: Your exact pixel size (24pt, 60pt, etc.)
+- Base size: Your exact point size (24pt, 60pt, etc.)
 - Scales with: The text style you specify (`.title2`, `.largeTitle`, etc.)
 - Result: When user increases text size in Settings, your custom size grows proportionally
+
+There is no `Font.system(size:).relativeTo(_:)` — the only `relativeTo:` Font factory is the static `Font.custom(_:size:relativeTo:)`. To scale a *system* font at a custom size, drive it with `@ScaledMetric(relativeTo:)` (or `UIFontMetrics(forTextStyle:).scaledValue(for:)` in UIKit).
 
 **Example**
 - `.title2` base: ~22pt → Your custom: 24pt (1.09x larger)
@@ -147,7 +155,7 @@ Text("Headline")
 
 **Fix hierarchy (best to worst)**
 1. **Best**: Use semantic styles (`.title`, `.body`, `.caption`)
-2. **Good**: Use `.system(size:).relativeTo()` for required custom sizes
+2. **Good**: `Font.custom(_:size:relativeTo:)` or `@ScaledMetric(relativeTo:)` for required custom sizes
 3. **Acceptable**: Custom font with `.dynamicTypeSize()` modifier
 4. **Unacceptable**: Fixed sizes that never scale
 
@@ -329,8 +337,13 @@ Image(systemName: "heart")
   .contentShape(Rectangle()) // Expand tap area
   .onTapGesture { }
 
-// ✅ CORRECT - UIKit button with edge insets
+// ❌ WRONG - contentEdgeInsets is deprecated since iOS 15 and ignored under UIButton.Configuration
 button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+
+// ✅ CORRECT - UIKit button with content insets via UIButton.Configuration (iOS 15+)
+var config = UIButton.Configuration.plain()
+config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
+button.configuration = config
 // Total size: icon size + insets ≥ 44x44pt
 ```
 
@@ -615,11 +628,13 @@ UIAccessibility.post(notification: .screenChanged, argument: detailTitleLabel)
 
 For announcements that must not be interrupted, set priority. In SwiftUI use the `accessibilitySpeechAnnouncementPriority` view modifier around the `AccessibilityNotification.Announcement(_:).post()` call; in UIKit post an `NSAttributedString` carrying the `.accessibilitySpeechAnnouncementPriority` attribute (`.high` cannot be interrupted, `.low` is queued) so the message isn't dropped by VoiceOver's queue.
 
-## 8. Assistive Access Support (iOS 17+ — Cognitive Disabilities)
+## 8. Assistive Access Support (Cognitive Disabilities)
 
 **Problem** App is unavailable or broken in Assistive Access mode, excluding users with cognitive disabilities who rely on a simplified system experience.
 
 Assistive Access is a system-wide mode (Settings > Accessibility > Assistive Access) that replaces the standard iOS UI with large controls, simplified navigation, and reduced cognitive load. Apps that don't opt in are hidden from users in this mode.
+
+**Availability splits by API** The Assistive Access *mode* and its Info.plist opt-in keys (`UISupportsAssistiveAccess`, `UISupportsFullScreenInAssistiveAccess`) are iOS 17+. The newer programmatic APIs arrived later: `@Environment(\.accessibilityAssistiveAccessEnabled)` is iOS 18.0+ (macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0), and the SwiftUI `AssistiveAccess` scene, `assistiveAccessNavigationIcon(_:)`, and the UIKit `.windowAssistiveAccessApplication` scene-session-role are all iOS 26.0+.
 
 #### Symptom: App missing from Assistive Access home screen
 
@@ -638,7 +653,7 @@ This makes the app available and launches it full screen in Assistive Access mod
 Your app launches in Assistive Access but shows the full standard interface, overwhelming users who need simplified controls.
 
 ```swift
-// ✅ FIX - Provide a dedicated Assistive Access scene
+// ✅ FIX - Provide a dedicated Assistive Access scene (iOS 26.0+)
 @main
 struct MyApp: App {
   var body: some Scene {
@@ -646,6 +661,7 @@ struct MyApp: App {
       ContentView() // Standard UI
     }
 
+    // AssistiveAccess scene is @available(iOS 26.0, macOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *)
     AssistiveAccess {
       AssistiveAccessContentView() // Simplified UI
     }
@@ -653,7 +669,7 @@ struct MyApp: App {
 }
 ```
 
-The `AssistiveAccess` scene type provides a separate entry point. When the system is in Assistive Access mode, it uses this scene instead of the standard `WindowGroup`. Native SwiftUI controls inside this scene automatically adopt the Assistive Access visual style (large buttons, prominent navigation, grid/row layout).
+The `AssistiveAccess` scene type (iOS 26.0+) provides a separate entry point. When the system is in Assistive Access mode, it uses this scene instead of the standard `WindowGroup`. Native SwiftUI controls inside this scene automatically adopt the Assistive Access visual style (large buttons, prominent navigation, grid/row layout).
 
 #### Symptom: App already designed for cognitive accessibility but displays in reduced frame
 
@@ -667,10 +683,13 @@ If your app is already purpose-built for users with cognitive disabilities (e.g.
 
 This displays your app identically to its standard appearance, bypassing the Assistive Access frame.
 
-#### Detecting Assistive Access at runtime
+#### Detecting Assistive Access at runtime (iOS 18.0+)
+
+Runtime detection via this environment value requires iOS 18.0+ (macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0) — it is unavailable on iOS 17, where the Assistive Access mode itself first shipped.
 
 ```swift
 struct MyView: View {
+  // @Environment(\.accessibilityAssistiveAccessEnabled) is iOS 18.0+
   @Environment(\.accessibilityAssistiveAccessEnabled) var assistiveAccessEnabled
 
   var body: some View {
@@ -683,9 +702,9 @@ struct MyView: View {
 }
 ```
 
-#### UIKit implementation
+#### UIKit implementation (iOS 26.0+)
 
-For UIKit apps, use the `.windowAssistiveAccessApplication` scene session role in your `UISceneConfiguration` to route to a dedicated scene delegate for the Assistive Access experience.
+For UIKit apps, use the `.windowAssistiveAccessApplication` scene session role (`UIWindowSceneSessionRoleAssistiveAccessApplication`, iOS 26.0+ / tvOS 26.0+ / visionOS 26.0+, unavailable on watchOS and macOS) in your `UISceneConfiguration` to route to a dedicated scene delegate for the Assistive Access experience.
 
 #### Design principles for Assistive Access scenes
 
@@ -695,12 +714,13 @@ For UIKit apps, use the `.windowAssistiveAccessApplication` scene session role i
 - **Step-by-step navigation** — Clear back buttons, consistent patterns
 - **Safe interactions** — Remove irreversible actions; confirm destructive ones
 
-#### Adding navigation icons
+#### Adding navigation icons (iOS 26.0+)
 
 ```swift
 NavigationStack {
   MyView()
     .navigationTitle("My Feature")
+    // assistiveAccessNavigationIcon is iOS 26.0+ (macOS/tvOS/watchOS/visionOS 26.0+)
     .assistiveAccessNavigationIcon(systemImage: "star.fill")
 }
 ```

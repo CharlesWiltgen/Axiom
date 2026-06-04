@@ -62,12 +62,20 @@ For non-Apple-Pay purchases, or when you want an explicit add-to-wallet step:
 ```swift
 import FinanceKitUI
 
-AddOrderToWalletButton {
-    // construct order URL or payload that points Wallet at your signed package
+AddOrderToWalletButton(signedArchive: signedOrderPackageData) { result in
+    switch result {
+    case .success(let saveResult): // FinanceStore.SaveOrderResult
+        // order added to Wallet
+        break
+    case .failure(let error):
+        // surface the failure
+        break
+    }
 }
+.addOrderToWalletButtonStyle(.black)   // or .blackOutline
 ```
 
-UIKit equivalent surfaces exist for non-SwiftUI hosts; check `/financekitui` for the current names. Use this path when:
+The initializer takes the **signed order package** as `Data` plus an `onCompletion` handler — there is no `action:` closure. UIKit equivalent surfaces exist for non-SwiftUI hosts; check `/financekitui` for the current names. Use this path when:
 
 - Customer paid with a non-Apple-Pay method but you still want Wallet tracking
 - Purchase happened outside the app (web checkout) and the user opens the app to add the order

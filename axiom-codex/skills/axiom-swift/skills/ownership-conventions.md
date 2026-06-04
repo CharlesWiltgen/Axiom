@@ -384,7 +384,7 @@ These constraints prevent use-after-free, dangling pointers, and overlapping mut
 
 ```swift
 func parseHeader(_ data: borrowing [UInt8]) -> Header {
-    var raw = data.span.rawSpan  // RawSpan over the array's bytes
+    var raw = data.span.bytes  // RawSpan over the array's bytes (Span<Element: BitwiseCopyable>.bytes)
     let magic = raw.unsafeLoadUnaligned(as: UInt32.self)
     raw = raw.extracting(droppingFirst: 4)
     let version = raw.unsafeLoadUnaligned(as: UInt16.self)

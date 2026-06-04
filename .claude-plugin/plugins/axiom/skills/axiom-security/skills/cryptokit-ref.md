@@ -319,10 +319,10 @@ Key Encapsulation Mechanism based on Module-Lattice (FIPS 203). iOS 26+.
 ### Key Generation
 
 ```swift
-let privateKey = MLKEM768.PrivateKey()
+let privateKey = try MLKEM768.PrivateKey()
 let publicKey = privateKey.publicKey
 
-let privateKey = MLKEM1024.PrivateKey()
+let privateKey = try MLKEM1024.PrivateKey()
 ```
 
 ### Encapsulation and Decapsulation
@@ -369,10 +369,10 @@ Digital Signature Algorithm based on Module-Lattice (FIPS 204). iOS 26+.
 ### Key Generation
 
 ```swift
-let privateKey = MLDSA65.PrivateKey()
+let privateKey = try MLDSA65.PrivateKey()
 let publicKey = privateKey.publicKey
 
-let privateKey = MLDSA87.PrivateKey()
+let privateKey = try MLDSA87.PrivateKey()
 ```
 
 ### Sign and Verify
@@ -414,7 +414,7 @@ let pk = try MLDSA65.PrivateKey(integrityCheckedRepresentation: data)
 Combines ML-KEM768 + Curve25519 ECDH for hybrid post-quantum key exchange. If either algorithm holds, the combined scheme holds. iOS 26+.
 
 ```swift
-let privateKey = XWingMLKEM768X25519.PrivateKey()
+let privateKey = try XWingMLKEM768X25519.PrivateKey()
 let publicKey = privateKey.publicKey
 
 // Encapsulate

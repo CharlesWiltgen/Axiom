@@ -546,10 +546,12 @@ Image(systemName: "wifi", variableValue: signalStrength)
     .symbolVariableValueMode(.color)
 ```
 
-#### SymbolVariableValueMode Enum (iOS 26+)
+#### SymbolVariableValueMode Struct (iOS 26+)
 
-| Case | Description |
-|------|-------------|
+`public struct SymbolVariableValueMode: Equatable, Sendable` — `.color` and `.draw` are `public static let` members, not enum cases.
+
+| Member | Description |
+|--------|-------------|
 | `.color` | Sets opacity of each variable layer on/off based on threshold (existing behavior) |
 | `.draw` | Changes drawn length of each variable layer based on range |
 
@@ -572,10 +574,12 @@ Image(systemName: "cloud.rain.fill")
     .foregroundStyle(.blue)
 ```
 
-#### SymbolColorRenderingMode Enum (iOS 26+)
+#### SymbolColorRenderingMode Struct (iOS 26+)
 
-| Case | Description |
-|------|-------------|
+`public struct SymbolColorRenderingMode: Equatable, Sendable` — `.flat` and `.gradient` are `public static let` members, not enum cases.
+
+| Member | Description |
+|--------|-------------|
 | `.flat` | Solid color fill (default) |
 | `.gradient` | Axial gradient generated from source color |
 

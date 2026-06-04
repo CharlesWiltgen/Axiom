@@ -10,7 +10,7 @@ import AVFoundation
 try AVAudioSession.sharedInstance().setCategory(
     .playback,                              // or .playAndRecord, .ambient
     mode: .default,                         // or .voiceChat, .measurement
-    options: [.mixWithOthers, .allowBluetooth]
+    options: [.mixWithOthers, .allowBluetoothHFP]
 )
 try AVAudioSession.sharedInstance().setActive(true)
 
@@ -74,7 +74,7 @@ try AVAudioSession.sharedInstance().setCategory(
 .interruptSpokenAudioAndMixWithOthers  // Pause podcasts, mix music
 
 // Bluetooth
-.allowBluetooth         // HFP (calls)
+.allowBluetoothHFP      // HFP (calls); replaces deprecated .allowBluetooth
 .allowBluetoothA2DP     // High quality stereo
 .bluetoothHighQualityRecording  // iOS 26+ AirPods recording
 
@@ -395,7 +395,7 @@ audioInput.multichannelAudioMode = .firstOrderAmbisonics
 ```swift
 // Configure two AudioDataOutputs
 let foaOutput = AVCaptureAudioDataOutput()
-foaOutput.spatialAudioChannelLayoutTag = kAudioChannelLayoutTag_HOA_ACN_SN3D  // 4 channels
+foaOutput.spatialAudioChannelLayoutTag = kAudioChannelLayoutTag_HOA_ACN_SN3D | 4  // 4 channels (FOA)
 
 let stereoOutput = AVCaptureAudioDataOutput()
 stereoOutput.spatialAudioChannelLayoutTag = kAudioChannelLayoutTag_Stereo    // 2 channels
@@ -550,7 +550,7 @@ try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDea
 // Allow all Bluetooth
 try AVAudioSession.sharedInstance().setCategory(
     .playAndRecord,
-    options: [.allowBluetooth, .allowBluetoothA2DP]
+    options: [.allowBluetoothHFP, .allowBluetoothA2DP]
 )
 
 // Check current Bluetooth route

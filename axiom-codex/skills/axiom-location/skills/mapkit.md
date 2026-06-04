@@ -409,7 +409,10 @@ func calculateDirections(
     transportType: MKDirectionsTransportType = .automobile
 ) async throws -> MKRoute {
     let request = MKDirections.Request()
-    request.source = MKMapItem(placemark: MKPlacemark(coordinate: source))
+    request.source = MKMapItem(
+        location: CLLocation(latitude: source.latitude, longitude: source.longitude),
+        address: nil
+    )
     request.destination = destination
     request.transportType = transportType
 
@@ -473,17 +476,7 @@ for step in steps {
 
 ## Part 8: Clustering Pattern
 
-### SwiftUI (iOS 17+)
-
-```swift
-Map(position: $cameraPosition) {
-    ForEach(locations) { location in
-        Marker(location.name, coordinate: location.coordinate)
-            .tag(location.id)
-    }
-    .mapItemClusteringIdentifier("locations")
-}
-```
+SwiftUI's declarative `Map` has no clustering modifier — clustering is UIKit-only. Set `clusteringIdentifier` on the `MKAnnotationView` you return from the delegate; views sharing an identifier collapse into an `MKClusterAnnotation`. To cluster in a SwiftUI app, wrap `MKMapView` in a `UIViewRepresentable`.
 
 ### MKMapView
 

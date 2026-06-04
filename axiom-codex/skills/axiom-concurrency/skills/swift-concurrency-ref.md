@@ -1039,7 +1039,7 @@ func processData() async {
 }
 ```
 
-### MainActor.assumeIsolated (iOS 17+)
+### MainActor.assumeIsolated (iOS 13+, Swift 5.9 compiler)
 
 Assert that code is already running on the main actor. Crashes at runtime if the assertion is false.
 
@@ -1511,7 +1511,7 @@ Once 6.4 ships, expect a wave of warnings on code that follows the "fire and for
 | Bridge callback | `withCheckedContinuation` | 5.5+ |
 | Check cancellation | `Task.checkCancellation()` | 5.5+ |
 | Task-scoped values | `@TaskLocal` | 5.5+ |
-| Assert isolation | `MainActor.assumeIsolated` | 5.9+ (iOS 17+) |
+| Assert isolation | `MainActor.assumeIsolated` | 5.9+ (iOS 13+) |
 | Capture caller isolation | `#isolation` | 6.0+ |
 | Lock-based sync | `Mutex` | 6.0+ (iOS 18+) |
 | Discard results | `withDiscardingTaskGroup` | 5.9+ (iOS 17+) |

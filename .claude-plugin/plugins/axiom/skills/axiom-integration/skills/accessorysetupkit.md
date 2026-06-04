@@ -131,7 +131,7 @@ Not every accessory is usable the instant the user taps the picker. A Wi-Fi acce
 case .accessoryAdded:
     guard let accessory = event.accessory else { break }
     if accessory.state == .awaitingAuthorization {
-        let settings = ASAccessorySettings.default
+        let settings = ASAccessorySettings.defaultSettings
         settings.ssid = collectedHotspotSSID                          // Wi-Fi hotspot to join
         // settings.bluetoothTransportBridgingIdentifier = sixByteID  // bridge BT Classic profiles
         session.finishAuthorization(for: accessory, settings: settings) { _ in }

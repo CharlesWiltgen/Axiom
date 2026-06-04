@@ -431,7 +431,7 @@ let chirality = observation.chirality  // .left or .right or .unknown
 
 **Availability**: iOS 14+, macOS 11+
 
-Detects **18 body landmarks** (2D normalized coordinates):
+Detects **19 body landmarks** (2D normalized coordinates):
 
 ```swift
 let request = VNDetectHumanBodyPoseRequest()
@@ -442,7 +442,7 @@ for observation in request.results as? [VNHumanBodyPoseObservation] ?? [] {
 }
 ```
 
-### Body Landmarks (18 points)
+### Body Landmarks (19 points)
 
 **Face** (5 landmarks):
 - `.nose`, `.leftEye`, `.rightEye`, `.leftEar`, `.rightEar`
@@ -467,7 +467,7 @@ for observation in request.results as? [VNHumanBodyPoseObservation] ?? [] {
 
 | Group Key | Points |
 |-----------|--------|
-| `.all` | All 18 landmarks |
+| `.all` | All 19 landmarks |
 | `.face` | 5 face landmarks |
 | `.leftArm` | shoulder, elbow, wrist |
 | `.rightArm` | shoulder, elbow, wrist |
@@ -506,7 +506,7 @@ let position = leftWrist.position  // simd_float4x4 matrix
 let localPosition = leftWrist.localPosition  // Relative to parent joint
 ```
 
-**3D Body Landmarks** (17 points): Same as 2D except no ears (15 vs 18 2D landmarks)
+**3D Body Landmarks** (17 joints, `VNHumanBodyPose3DObservation.JointName`): root, spine, centerShoulder, centerHead, topHead, plus left/right shoulder, elbow, wrist, hip, knee, ankle. The 3D skeleton is NOT the 2D set minus ears — it omits the 2D face/head joints (nose, eyes, ears, neck) and adds spine, centerShoulder, centerHead, topHead. (2D set = 19 joints via `VNHumanBodyPoseObservation.JointName`.)
 
 #### 3D Observation Properties
 
@@ -1221,7 +1221,7 @@ struct ViewMoreLandmarksIntent: AppIntent {
 | API | Platform | Landmarks | Coordinates |
 |-----|----------|-----------|-------------|
 | `VNDetectHumanHandPoseRequest` | iOS 14+ | 21 per hand | 2D normalized |
-| `VNDetectHumanBodyPoseRequest` | iOS 14+ | 18 body joints | 2D normalized |
+| `VNDetectHumanBodyPoseRequest` | iOS 14+ | 19 body joints | 2D normalized |
 | `VNDetectHumanBodyPose3DRequest` | iOS 17+ | 17 body joints | 3D meters |
 
 ### Face & Person Detection
