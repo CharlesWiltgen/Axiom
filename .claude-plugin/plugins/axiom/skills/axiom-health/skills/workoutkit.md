@@ -160,7 +160,8 @@ SwimBikeRunWorkout(
 ### Authorization
 
 ```swift
-var state = WorkoutScheduler.shared.authorizationState
+// authorizationState is `get async` — it requires `await`.
+var state = await WorkoutScheduler.shared.authorizationState
 if state == .notDetermined {
     // requestAuthorization() is async and RETURNS the new state — it does NOT throw.
     state = await WorkoutScheduler.shared.requestAuthorization()
@@ -182,7 +183,8 @@ Authorization is separate from HealthKit authorization. A user can grant HealthK
 ### Schedule a workout
 
 ```swift
-guard WorkoutScheduler.shared.isSupported else { return }
+// isSupported is a static member on the type — NOT on `.shared`.
+guard WorkoutScheduler.isSupported else { return }
 
 let plan = WorkoutPlan(.custom(workout))
 
@@ -193,7 +195,8 @@ let when = Calendar.current.dateComponents(
     from: .now.addingTimeInterval(3600) // ~1 hour from now
 )
 
-try await WorkoutScheduler.shared.schedule(plan, at: when)
+// schedule(_:at:) is async-only — it does NOT throw. No `try`.
+await WorkoutScheduler.shared.schedule(plan, at: when)
 ```
 
 ### Schedule rules
@@ -225,7 +228,11 @@ let warmup = WorkoutStep(goal: .time(3, .minutes), displayName: "Easy")
 let interval = IntervalStep(
     .work,
     step: WorkoutStep(
-        goal: .poolSwimDistanceWithTime(100, .meters, 2, .minutes),
+        // Takes two Measurement values — NOT (Double, Unit, Double, Unit).
+        goal: .poolSwimDistanceWithTime(
+            Measurement(value: 100, unit: .meters),
+            Measurement(value: 2, unit: .minutes)
+        ),
         displayName: "100 @ 2:00"
     )
 )
@@ -250,7 +257,7 @@ The user's pool length is configured when they start the workout; the watch conv
 | Mistake | Fix |
 |---|---|
 | Mixing up `WorkoutSession` (HealthKit) and `WorkoutPlan` (WorkoutKit) | Sessions track live in your app; plans are authored and scheduled to run in the Workout app. Different APIs, different use cases. |
-| Scheduling without checking `WorkoutScheduler.shared.isSupported` | Returns false on devices where WorkoutKit scheduling is not available; `schedule(_:at:)` throws. |
+| Scheduling without checking `WorkoutScheduler.isSupported` | `isSupported` is a static member (not on `.shared`); it returns false on devices where WorkoutKit scheduling is not available. Guard on it before scheduling — `schedule(_:at:)` is async-only and does not throw, so it won't surface unsupported state for you. |
 | Scheduling more than 15 workouts | Older plans silently fall off. Track your scheduled count and remove stale plans before scheduling new ones. |
 | Scheduling beyond ±7 days | The scheduler rejects dates outside the window. Schedule closer to the time and re-schedule as needed. |
 | Attaching an alert to an incompatible activity | `WorkoutAlert.supports(activity:location:)` returns false; runtime behavior is undefined. Check before attaching. |

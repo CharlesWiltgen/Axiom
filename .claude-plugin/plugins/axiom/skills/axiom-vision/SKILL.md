@@ -58,7 +58,7 @@ digraph vision {
 - Decision tree for choosing the right Vision API
 - Subject segmentation with VisionKit
 - Isolating objects while excluding hands (combining APIs)
-- Hand/body pose detection (21/18 landmarks)
+- Hand/body pose detection (21/19 landmarks)
 - Text recognition (fast vs accurate modes)
 - Barcode detection with symbology selection
 - Document scanning and structured extraction (iOS 26+)

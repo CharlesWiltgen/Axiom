@@ -619,17 +619,22 @@ entity.stopAllAudio()
 let renderer = try RealityRenderer()
 renderer.entities.append(entity)
 
-// Render to Metal texture
-let descriptor = RealityRenderer.CameraOutput.Descriptor(
-    colorFormat: .bgra8Unorm,
-    depthFormat: .depth32Float
-)
-try renderer.render(
-    viewMatrix: viewMatrix,
-    projectionMatrix: projectionMatrix,
-    size: size,
-    colorTexture: colorTexture,
-    depthTexture: depthTexture
+// Build the CameraOutput descriptor (single-view to a Metal texture).
+// There is no colorFormat:/depthFormat: init — describe the destination
+// with singleProjection(colorTexture:) or set colorTextures/viewports directly.
+let descriptor = RealityRenderer.CameraOutput.Descriptor.singleProjection(colorTexture: colorTexture)
+// Equivalent manual setup:
+// var descriptor = ...
+// descriptor.colorTextures = [colorTexture]
+// descriptor.viewports = [.init(originX: 0, originY: 0, width: 1, height: 1)]
+
+let cameraOutput = try RealityRenderer.CameraOutput(descriptor)
+
+// Render entry point — no view/projection matrix params.
+// The camera comes from renderer.activeCamera / cameraSettings.
+try renderer.updateAndRender(
+    deltaTime: deltaTime,
+    cameraOutput: cameraOutput
 )
 ```
 

@@ -537,9 +537,9 @@ func textView(
 
 **WKWebView:** `<blockquote>` and `<pre>` tags automatically ignored.
 
-## Writing Tools Coordinator (iOS 26+)
+## Writing Tools Coordinator (iOS 18.2+)
 
-Advanced integration for custom text engines.
+Advanced integration for custom text engines. `UIWritingToolsCoordinator` and `NSWritingToolsCoordinator` — along with their `Context`, `ContextScope`, `State`, and delegate types — are available on iOS 18.2+ / iPadOS 18.2+ / visionOS 2.4+ / macOS 15.2+. A few sub-features are gated at iOS 26.0+ and called out explicitly below (the `includesTextListMarkers` property and the `.presentationIntent` result option).
 
 ### Setup
 
@@ -723,27 +723,36 @@ multiline.lineHeight = .loose                    // System loose spacing
 TextEditor(text: $text, selection: $selection)
 ```
 
-**AttributedTextSelection:**
+**AttributedTextSelection:** A `struct` (iOS 26.0+), not an enum. Selection is expressed with `AttributedString.Index` and `RangeSet`, never `NSRange`. Its nested `Indices` enum, obtained via the `indices(in:)` method, distinguishes a caret from one or more ranges:
+
 ```swift
-enum AttributedTextSelection {
-    case none
-    case single(NSRange)
-    case multiple(Set<NSRange>) // For bidirectional text
+public struct AttributedTextSelection: Equatable, Sendable {  // iOS 26.0+
+    @frozen public enum Indices: Equatable, Sendable {
+        case insertionPoint(AttributedString.Index)
+        case ranges(RangeSet<AttributedString.Index>)
+    }
 }
+
+// Inits:
+AttributedTextSelection()                                       // empty
+AttributedTextSelection(insertionPoint: index)                  // caret
+AttributedTextSelection(ranges: rangeSet)                       // discontiguous
+AttributedTextSelection(range: text.range(of: "dog")!)          // single range
 ```
 
 **Get selected text:**
 ```swift
 if let selection {
-    let selectedText: AttributedSubstring
-    switch selection.indices {
-    case .none:
-        selectedText = text[...]
-    case .single(let range):
-        selectedText = text[range]
-    case .multiple(let ranges):
-        // Discontiguous substring from RangeSet
-        selectedText = text[selection]
+    // indices(in:) is a method, not a property
+    switch selection.indices(in: text) {
+    case .insertionPoint:
+        // Caret only — nothing selected
+        break
+    case .ranges:
+        // text[selection] yields a DiscontiguousAttributedSubstring,
+        // covering both single-range and multi-range (bidirectional) selections
+        let selectedText: DiscontiguousAttributedSubstring = text[selection]
+        _ = selectedText
     }
 }
 ```

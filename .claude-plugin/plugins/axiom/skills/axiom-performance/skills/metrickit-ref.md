@@ -271,8 +271,9 @@ func processSignposts(_ metrics: MXSignpostMetric) {
     let name = metrics.signpostName
     let category = metrics.signpostCategory
 
-    // Histogram of durations
-    let histogram = metrics.signpostIntervalData.histogrammedSignpostDurations
+    // Histogram of durations (signpostIntervalData is Optional — unwrap before use)
+    // MXHistogram<NSUnitDuration>
+    let histogram = metrics.signpostIntervalData?.histogrammedSignpostDuration
 
     // Total count
     let count = metrics.totalCount

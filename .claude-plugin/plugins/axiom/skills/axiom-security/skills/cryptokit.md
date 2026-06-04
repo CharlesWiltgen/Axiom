@@ -112,7 +112,7 @@ guard let accessControl = SecAccessControlCreateWithFlags(
 let seKey = try SecureEnclave.P256.Signing.PrivateKey(
     compactRepresentable: false,
     accessControl: accessControl,
-    authenticationContext: .init(context)
+    authenticationContext: context
 )
 
 let signature = try seKey.signature(for: data)
@@ -129,7 +129,7 @@ let publicKeyDER = seKey.publicKey.derRepresentation
 
 ```swift
 let restoredKey = try SecureEnclave.P256.Signing.PrivateKey(
-    dataRepresentation: savedKeyData, authenticationContext: .init(context)
+    dataRepresentation: savedKeyData, authenticationContext: context
 )
 ```
 
@@ -247,7 +247,7 @@ From WWDC 2025-314: harvest-now-decrypt-later is not theoretical. Nation-state a
 Same HPKE API, different ciphersuite. Combines ML-KEM (quantum-safe) with X25519 (classical) for hybrid security — Apple's recommendation:
 
 ```swift
-let recipientPrivate = XWingMLKEM768X25519.PrivateKey()
+let recipientPrivate = try XWingMLKEM768X25519.PrivateKey()
 
 var sender = try HPKE.Sender(
     recipientKey: recipientPrivate.publicKey,
@@ -271,8 +271,9 @@ Hybrid constructions (classical + post-quantum) ensure security even if one algo
 
 ```swift
 let kemPrivate = try MLKEM768.PrivateKey()
-let (sharedSecret, encapsulation) = try kemPrivate.publicKey.encapsulate()
-let derivedSecret = try kemPrivate.decapsulate(encapsulation)
+let result = try kemPrivate.publicKey.encapsulate()  // KEM.EncapsulationResult
+let sharedSecret = result.sharedSecret               // SymmetricKey
+let derivedSecret = try kemPrivate.decapsulate(result.encapsulated)
 
 let dsaPrivate = try MLDSA65.PrivateKey()
 let signature = try dsaPrivate.signature(for: data)

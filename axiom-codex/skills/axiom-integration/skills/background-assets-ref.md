@@ -22,7 +22,7 @@ The Background Assets framework (`BackgroundAssets`) delivers asset packs to app
 
 Use this reference when:
 - Looking up `AssetPackManager` method signatures
-- Looking up `AssetPack.Status` cases
+- Looking up `AssetPack.Status` flags
 - Looking up Info.plist keys
 - Looking up `BAErrorCode` cases for error handling
 - Writing a `StoreDownloaderExtension` or `BADownloaderExtension`
@@ -160,19 +160,28 @@ Call `checkForUpdates()` at app launch and after OS upgrades. Call `remove(asset
 
 ## AssetPack.Status
 
+`AssetPack.Status` is an `OptionSet`, not an enum. Its values are combinable bit flags, so membership-test them with `contains(_:)` — do NOT exhaustively `switch` over them.
+
 ```swift
-public enum Status {
-    case downloadAvailable
-    case downloading
-    case downloaded
-    case upToDate
-    case outOfDate
-    case obsolete
-    case updateAvailable
+public struct Status: OptionSet, Sendable {
+    public static let downloadAvailable: AssetPack.Status
+    public static let updateAvailable: AssetPack.Status
+    public static let upToDate: AssetPack.Status
+    public static let outOfDate: AssetPack.Status
+    public static let obsolete: AssetPack.Status
+    public static let downloading: AssetPack.Status
+    public static let downloaded: AssetPack.Status
+    public let rawValue: Int
+    public init(rawValue: Int)
+}
+
+// Membership-test the flags, do NOT exhaustively switch:
+if status.contains(.downloaded) || status.contains(.upToDate) {
+    // Pack is local and ready to consume
 }
 ```
 
-Stream-only cases produced by `statusUpdates`:
+The five lifecycle values streamed by `statusUpdates` are a separate `DownloadStatusUpdate` enum (not `AssetPack.Status`):
 
 ```swift
 case .began(AssetPack)
@@ -843,7 +852,7 @@ struct CustomDownloaderExtension: BADownloaderExtension {
 ## API Quick Reference
 
 - **`AssetPackManager.shared`** — Actor. Methods: `assetPack(withID:)`, `allAssetPacks`, `ensureLocalAvailability(of:)`, `ensureLocalAvailability(of:requireLatestVersion:)`, `statusUpdates`, `statusUpdates(forAssetPackWithID:)`, `status(ofAssetPackWithID:)`, `localStatus(ofAssetPackWithID:)`, `status(relativeTo:)`, `assetPackIsAvailableLocally(withID:)`, `contents(at:searchingInAssetPackWithID:options:)`, `descriptor(for:searchingInAssetPackWithID:)`, `url(for:)`, `checkForUpdates()`, `remove(assetPackWithID:)`
-- **`AssetPack.Status`** — `downloadAvailable`, `downloading`, `downloaded`, `upToDate`, `outOfDate`, `obsolete`, `updateAvailable`; stream-only: `began`, `paused`, `downloading(_:progress:)`, `finished`, `failed(_:error:)`
+- **`AssetPack.Status`** — `OptionSet` flags (membership-test, don't switch): `downloadAvailable`, `downloading`, `downloaded`, `upToDate`, `outOfDate`, `obsolete`, `updateAvailable`; stream-only `DownloadStatusUpdate` enum cases: `began`, `paused`, `downloading(_:progress:)`, `finished`, `failed(_:error:)`
 - **Extensions** — `StoreDownloaderExtension` (Apple-hosted), `BADownloaderExtension` (server-hosted), `ManagedDownloaderExtension` (parent)
 - **Unmanaged types** — `BADownloadManager`, `BAURLDownload`, `BADownload`, `BADownload.State`, `BADownload.Priority`, `BAContentRequest`
 - **Errors** — `ManagedBackgroundAssetsError.assetPackNotFound`, `.fileNotFound`; `BAErrorCode.downloadAlreadyScheduled`, `.downloadBackgroundActivityProhibited`, `.downloadWouldExceedAllowance`, `.sessionDownloadAllowanceExceeded`

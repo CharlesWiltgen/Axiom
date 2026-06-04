@@ -2,8 +2,8 @@
 # Swift 6 Concurrency Guide
 
 **Purpose**: Progressive journey from single-threaded to concurrent Swift code
-**Swift Version**: Swift 6.3 (strict concurrency by default). `@concurrent` requires Swift 6.2+.
-**iOS Version**: iOS 17+ (iOS 26+ for `@concurrent`)
+**Swift Version**: Swift 6.3 (strict concurrency by default). `@concurrent` requires the Swift 6.2+ toolchain (compile-time only) — it imposes NO deployment-target floor and back-deploys via the concurrency runtime (iOS 13+).
+**iOS Version**: iOS 17+
 **Xcode**: Xcode 16+ (Xcode 26+ for `@concurrent`)
 
 ## When to Use This Skill
@@ -261,7 +261,7 @@ func decodeImage(_ data: Data) async -> Image {
 - Compiler highlights main actor data access (shows what you need to fix)
 - Cannot access `@MainActor` properties without `await`
 
-**Requirements**: Swift 6.2+, Xcode 26+, iOS 26+
+**Requirements**: Swift 6.2+ toolchain, Xcode 26+ (compile-time only). No deployment-target floor beyond the concurrency runtime — `globalConcurrentExecutor` (what `@concurrent` selects) is iOS 18.0+, and the runtime itself back-deploys to iOS 13. Usable on apps targeting iOS 13/17/18.
 
 ### Solution 2: `nonisolated` (Library APIs)
 
@@ -296,7 +296,7 @@ The two attributes are the most-confused pair in Swift 6 concurrency. They sound
 | Where does the work run? | **Always** on the cooperative pool (background) | **Wherever the caller is** (inherits caller's actor) |
 | Who decides isolation? | The callee (this function) | The caller |
 | Can it access `@MainActor` state? | Only via `await` — compiler highlights every access | Yes if caller is on `@MainActor`, no if caller is elsewhere |
-| Swift version | 6.2+ (iOS 26+) | All Swift versions |
+| Swift version | 6.2+ toolchain (no OS floor) | All Swift versions |
 | Typical use | CPU-bound work that must not block UI (image decode, parsing, hashing) | Library API where the caller picks the context |
 | Failure mode | Forces a context switch even when caller is already off-main (small overhead) | Silently runs UI-blocking work on main if caller is `@MainActor` |
 
@@ -780,7 +780,7 @@ func decodeImage(_ data: Data) async -> Image {
 let image = await decodeImage(data)  // Automatically offloads
 ```
 
-**Requirements**: Swift 6.2+, Xcode 26+, iOS 26+
+**Requirements**: Swift 6.2+ toolchain, Xcode 26+ (compile-time only). No deployment-target floor beyond the concurrency runtime — back-deploys to iOS 13.
 
 ---
 

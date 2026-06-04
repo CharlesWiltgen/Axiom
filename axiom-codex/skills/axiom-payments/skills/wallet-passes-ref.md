@@ -300,11 +300,12 @@ Limits: up to 10 passes, max 150 MB total.
 
 | View | Purpose |
 |------|---------|
-| `AddPassToWalletButton(action:)` | iOS 16+ — Add to Apple Wallet |
-| `AddOrderToWalletButton(action:)` | iOS 17+ — Add Order to Wallet (see `wallet-orders.md`) |
-| `VerifyIdentityWithWalletButton(action:)` | iOS 16+ — Verify with Wallet |
+| `AddPassToWalletButton(action:)` | iOS 16+ — Add to Apple Wallet (`_PassKit_SwiftUI`) |
+| `VerifyIdentityWithWalletButton(_:action:)` | iOS 16+ — Verify with Wallet (`_PassKit_SwiftUI`) |
 
 Use these instead of CSS-styled custom buttons; they handle localization and HIG compliance.
+
+`AddOrderToWalletButton` is **not** a PassKit button — it lives in **FinanceKitUI** (iOS 17+, iOS-only) and takes `AddOrderToWalletButton(signedArchive: Data, onCompletion: @escaping (Result<FinanceStore.SaveOrderResult, Error>) -> Void)`, not an `action:` closure. See `wallet-orders.md`.
 
 ## Web Service Endpoint Schemas
 

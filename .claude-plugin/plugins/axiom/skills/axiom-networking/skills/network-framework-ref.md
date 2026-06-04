@@ -31,7 +31,7 @@ Network.framework is Apple's modern networking API that replaces Berkeley socket
 
 Use this skill when:
 - **Planning migration** from BSD sockets, CFSocket, NSStream, or SCNetworkReachability
-- **Understanding API differences** between NWConnection (iOS 12-18) and NetworkConnection (iOS 26+)
+- **Understanding API differences** between NWConnection (iOS 12+, still available, not deprecated) and NetworkConnection (iOS 26+)
 - **Implementing all 12 WWDC 2025 examples** (TLS connection, TLV framing, Coder protocol, NetworkListener, Wi-Fi Aware)
 - **Choosing protocols** (TCP, UDP, TLS, QUIC) for your use case
 - **Peer-to-peer discovery** setup with NetworkBrowser and Wi-Fi Aware
@@ -51,24 +51,26 @@ Use this skill when:
 | 2021 | iOS 15 | WebSocket support in URLSession |
 | 2025 | iOS 26 | NetworkConnection (async/await), TLV framing, Coder protocol, Wi-Fi Aware |
 
-### NWConnection (iOS 12-18) vs NetworkConnection (iOS 26+)
+### NWConnection (iOS 12+) vs NetworkConnection (iOS 26+)
 
-| Feature | NWConnection (iOS 12-18) | NetworkConnection (iOS 26+) |
+NWConnection is `@available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *)` — open-ended and not deprecated. It remains fully supported in the iOS 26.5 SDK; the "iOS 12+" label is the availability floor, not an upper bound.
+
+| Feature | NWConnection (iOS 12+) | NetworkConnection (iOS 26+) |
 |---------|-------------------------|----------------------------|
 | **Async model** | Completion handlers | async/await structured concurrency |
-| **State updates** | `stateUpdateHandler` callback | `states` AsyncSequence |
+| **State updates** | `stateUpdateHandler` callback | `onStateUpdate { conn, state in }` closure (returns Self) |
 | **Send** | `send(content:completion:)` callback | `try await send(content)` suspending |
 | **Receive** | `receive(minimumIncompleteLength:maximumLength:completion:)` | `try await receive(exactly:)` suspending |
 | **Framing** | Manual or custom NWFramer | TLV built-in (`TLV { TLS() }`) |
 | **Codable** | Manual JSON encode/decode | Coder protocol (`Coder(MyType.self, using: .json)`) |
 | **Memory** | Requires `[weak self]` in all closures | No `[weak self]` needed (Task cancellation automatic) |
 | **Error handling** | Check error in completion | `throws` with natural propagation |
-| **State machine** | Callbacks on state changes | `for await state in connection.states` |
+| **State machine** | Callbacks on state changes | `connection.onStateUpdate { conn, state in }` |
 | **Discovery** | NWBrowser (Bonjour only) | NetworkBrowser (Bonjour + Wi-Fi Aware) |
 
 #### Recommendation
 - New apps targeting iOS 26+: Use NetworkConnection (cleaner, safer)
-- Apps supporting iOS 12-18: Use NWConnection (backward compatible)
+- Apps supporting iOS 12+ (below iOS 26): Use NWConnection (still available, not deprecated)
 - Migration: Both APIs coexist, migrate incrementally
 
 ---
@@ -116,15 +118,15 @@ let connection = NetworkConnection(
     TLS {
         TCP {
             IP()
-                .fragmentationEnabled(false) // Disable IP fragmentation
+                .fragmentationDisabled(true) // Disable IP fragmentation (don't-fragment)
         }
     }
 }
 ```
 
 #### When to customize IP
-- `.fragmentationEnabled(false)` — For protocols that handle fragmentation themselves (QUIC)
-- `.ipVersion(.v6)` — Force IPv6 only (testing)
+- `.fragmentationDisabled(true)` — For protocols that handle fragmentation themselves (QUIC)
+- `.version(.v6)` — Force IPv6 only (testing); `Version` cases are `.any`, `.v4`, `.v6`
 
 #### Example 3: Custom Parameters (WWDC 5:07)
 
@@ -136,7 +138,7 @@ let connection = NetworkConnection(
         TLS {
             TCP {
                 IP()
-                    .fragmentationEnabled(false)
+                    .fragmentationDisabled(true)
             }
         }
     }
@@ -209,26 +211,28 @@ preparing (DNS, TCP handshake, TLS handshake)
 #### Monitoring States
 
 ```swift
-// Option 1: Async sequence (monitor in background)
-Task {
-    for await state in connection.states {
-        switch state {
-        case .preparing:
-            print("Connecting...")
-        case .waiting(let error):
-            print("Waiting for network: \(error)")
-        case .ready:
-            print("Connected!")
-        case .failed(let error):
-            print("Failed: \(error)")
-        case .cancelled:
-            print("Cancelled")
-        @unknown default:
-            break
-        }
+// NetworkConnection has NO `states` async sequence. Observe state with the
+// onStateUpdate closure modifier (returns Self, @discardableResult). The
+// handler passes (connection, state).
+connection.onStateUpdate { connection, state in
+    switch state {
+    case .preparing:
+        print("Connecting...")
+    case .waiting(let error):
+        print("Waiting for network: \(error)")
+    case .ready:
+        print("Connected!")
+    case .failed(let error):
+        print("Failed: \(error)")
+    case .cancelled:
+        print("Cancelled")
+    @unknown default:
+        break
     }
 }
 ```
+
+Most code never observes state directly — `send`/`receive` suspend until ready and `throw` on failure. Use `onStateUpdate` only when you need explicit transitions, or read the synchronous `connection.state` property.
 
 #### Key states
 - **.preparing** DNS lookup, TCP SYN, TLS handshake
@@ -259,8 +263,10 @@ print("Received \(incomingData.count) bytes")
 #### Receive: Variable Length (WWDC 8:29)
 
 ```swift
-// Read UInt32 length prefix, then read that many bytes
-let remaining32 = try await connection.receive(as: UInt32.self).content
+// Read UInt32 length prefix (4 bytes, big-endian / network order), then read that many bytes.
+// NetworkConnection has no receive(as:) — read a fixed byte count and decode.
+let lengthData = try await connection.receive(exactly: 4).content
+let remaining32 = lengthData.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self).bigEndian }
 guard var remaining = Int(exactly: remaining32) else { throw MyError.invalidLength }
 
 while remaining > 0 {
@@ -273,7 +279,7 @@ while remaining > 0 {
 #### receive() variants
 - `receive(exactly: n)` — Wait for exactly n bytes
 - `receive(atLeast: min, atMost: max)` — Get between min and max bytes
-- `receive(as: UInt32.self)` — Read fixed-size type (network byte order)
+- `receive()` — Read the next available message (for message-framed protocols)
 
 ---
 
@@ -465,53 +471,92 @@ NetworkListener(service: .init(name: "MyApp", type: "_myapp._tcp")) { TLS() }
 
 ### 4.7 NetworkBrowser & Wi-Fi Aware (iOS 26+)
 
-Discover endpoints on local network or nearby devices.
+`NetworkBrowser(for:)` takes a `BrowserProvider` — `.bonjour(...)` for local-network discovery, or `.wifiAware(...)` (from the WiFiAware framework) for peer-to-peer discovery of nearby paired devices. There is no `NWBrowser.Descriptor` here; the legacy `NWBrowser(for: .bonjour(...))` descriptor API is iOS 12–18 only (see §5.6).
 
-#### Example: Wi-Fi Aware Discovery (WWDC 17:39)
+#### Prerequisites for Wi-Fi Aware
+
+- **Declare services in `Info.plist`** under `WiFiAwareServices`, each with a `Publishable`/`Subscribable` role. Read them by name: the `allServices[name]` subscript returns an optional (`nil` if the service isn't declared) — `WASubscribableService.allServices[name]` / `WAPublishableService.allServices[name]`.
+- **Devices must be paired first** via AccessorySetupKit. Enumerate paired devices with the `WAPairedDevice.allDevices` async sequence.
+- Both `WASubscribableService` and `WAPublishableService` carry the `WiFiAware` entitlement requirement; iOS 26+ only (macOS/tvOS/watchOS/visionOS unavailable).
+
+A convenience extension gives the leading-dot syntax used below:
+
+```swift
+// Force-unwrap is safe only because "_ttt._udp" is declared in Info.plist.
+extension WASubscribableService {
+    static var ticTacToe: WASubscribableService { allServices["_ttt._udp"]! }
+}
+extension WAPublishableService {
+    static var ticTacToe: WAPublishableService { allServices["_ttt._udp"]! }
+}
+```
+
+#### Subscriber — browse for a service, then connect (WWDC 17:39)
 
 ```swift
 import Network
 import WiFiAware
 
-// Browse for nearby paired Wi-Fi Aware devices
-public func findNearbyDevice() async throws {
+@available(iOS 26.0, *)
+func joinGame() async throws {
+    // Browse paired devices offering the service; finish on the first match.
     let endpoint = try await NetworkBrowser(
-        for: .wifiAware(.connecting(to: .allPairedDevices, from: .ticTacToeService))
+        for: .wifiAware(.connecting(to: .allPairedDevices, from: .ticTacToe))
     ).run { endpoints in
-        .finish(endpoints.first!) // Use first discovered device
+        .finish(endpoints.first!) // assumes at least one match was found
     }
 
-    // Make connection to the discovered endpoint
+    // Connect to the discovered WAEndpoint over Network.framework.
     let connection = NetworkConnection(to: endpoint) {
-        Coder(GameMessage.self, using: .json) {
-            TLS()
+        Coder(GameMessage.self, using: .json) { TLS() }
+    }
+    _ = connection // ... then connection.run { ... }
+}
+```
+
+#### Publisher — advertise a service and accept connections
+
+`NetworkListener(for:)` accepts the `.wifiAware(...)` `ListenerProvider`. **Argument roles are reversed from the subscriber** — the publisher passes `connecting(to: myService, from: pairedDevices)`, the subscriber passes `connecting(to: pairedDevices, from: myService)`.
+
+```swift
+@available(iOS 26.0, *)
+func hostGame() async throws {
+    let listener = try NetworkListener(
+        for: .wifiAware(.connecting(to: .ticTacToe, from: .allPairedDevices))
+    ) { Coder(GameMessage.self, using: .json) { TLS() } }
+
+    try await listener.run { connection in
+        // Optional: derive a shared secret. Listening itself is iOS 26.0+;
+        // only connection.wifiAware / deriveSharedSecret requires iOS 26.4+.
+        if #available(iOS 26.4, *) {
+            let secret = await connection.wifiAware?.deriveSharedSecret(
+                for: .tlsPSK, method: .kdfHash256)
+            _ = secret
         }
     }
 }
 ```
 
+#### Device filters
+
+Both `WASubscriberBrowser.Devices` and `WAPublisherListener.Devices` expose the same options. There is **no** `.pairedDevice(identifier:)` — scope to one device with `.selected([device])` or `.matching(_:)`.
+
+| Filter | Meaning |
+|--------|---------|
+| `.allPairedDevices` | Every paired device offering the service |
+| `.userSpecifiedDevices` | Devices the user picks in the system sheet |
+| `.selected([device])` | A specific `Sequence<WAPairedDevice>` you choose |
+| `.matching(#Predicate { … })` | Paired devices matching a `Foundation.Predicate` |
+
 #### Wi-Fi Aware features
-- Peer-to-peer without infrastructure (no WiFi router needed)
-- Automatic discovery of paired devices
+- Peer-to-peer without infrastructure (no Wi-Fi router needed)
+- Discovery limited to already-paired devices
 - Low latency, high throughput
-- iOS 26+ only
-
-#### Browse descriptors
-
-```swift
-// Bonjour
-.bonjour(type: "_http._tcp", domain: "local")
-
-// Wi-Fi Aware (all paired devices)
-.wifiAware(.connecting(to: .allPairedDevices, from: .myService))
-
-// Wi-Fi Aware (specific device)
-.wifiAware(.connecting(to: .pairedDevice(identifier: deviceID), from: .myService))
-```
+- iOS 26+ (connection-level `wifiAware` secret derivation is iOS 26.4+)
 
 ---
 
-## NWConnection (iOS 12-18) Complete Reference
+## NWConnection (iOS 12+) Complete Reference
 
 ### 5.1 Creating Connections
 
@@ -1219,7 +1264,7 @@ try await connection.send(Data("Hello".utf8))
 
 | NWConnection | NetworkConnection |
 |--------------|-------------------|
-| `connection.stateUpdateHandler = { }` | `for await state in connection.states { }` |
+| `connection.stateUpdateHandler = { }` | `connection.onStateUpdate { conn, state in }` |
 | `connection.send(content:completion:)` | `try await connection.send(content)` |
 | `connection.receive(min:max:completion:)` | `try await connection.receive(exactly:)` |
 | Manual JSON | `Coder(MyType.self, using: .json)` |
@@ -1245,13 +1290,13 @@ func sendData() {
 
 #### After (NetworkConnection)
 ```swift
-Task {
-    for await state in connection.states {
-        if case .ready = state {
-            try await connection.send(data)
-            let received = try await connection.receive(exactly: 10).content
-        }
-    }
+// send/receive suspend until ready and throw on failure — no state loop needed
+try await connection.send(data)
+let received = try await connection.receive(exactly: 10).content
+
+// Observe transitions explicitly only when needed (returns Self):
+connection.onStateUpdate { connection, state in
+    if case .ready = state { print("Ready") }
 }
 ```
 
@@ -1319,8 +1364,8 @@ try await connection.send(data)
 // Receive
 try await connection.receive(exactly: n).content
 
-// States
-for await state in connection.states { }
+// States (closure modifier, returns Self — NO `states` async sequence)
+connection.onStateUpdate { conn, state in }
 
 // TLV framing
 NetworkConnection(to: endpoint) { TLV { TLS() } }
@@ -1335,7 +1380,7 @@ NetworkListener { TLS() }.run { connection in }
 NetworkBrowser(for: .wifiAware(...)).run { endpoints in }
 ```
 
-### NWConnection (iOS 12-18)
+### NWConnection (iOS 12+)
 
 ```swift
 // Create connection
@@ -1363,7 +1408,7 @@ connection.betterPathUpdateHandler = { betterPathAvailable in }
 connection.cancel()
 ```
 
-### NWListener (iOS 12-18)
+### NWListener (iOS 12+)
 
 ```swift
 let listener = try NWListener(using: .tcp, on: 1029)
@@ -1371,7 +1416,7 @@ listener.newConnectionHandler = { newConnection in }
 listener.start(queue: .main)
 ```
 
-### NWBrowser (iOS 12-18)
+### NWBrowser (iOS 12+)
 
 ```swift
 let browser = NWBrowser(for: .bonjour(type: "_http._tcp", domain: nil), using: .tcp)
@@ -1401,4 +1446,4 @@ monitor.start(queue: .main)
 
 **Last Updated** 2025-12-02
 **Status** Production-ready reference from WWDC 2018 and WWDC 2025
-**Coverage** NWConnection (iOS 12-18), NetworkConnection (iOS 26+), all 12 WWDC 2025 code examples
+**Coverage** NWConnection (iOS 12+), NetworkConnection (iOS 26+), all 12 WWDC 2025 code examples

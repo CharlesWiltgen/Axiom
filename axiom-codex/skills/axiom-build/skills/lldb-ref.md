@@ -96,10 +96,12 @@ Full expression evaluation with all options.
 **ObjC expressions for Swift debugging:**
 
 ```
-(lldb) expr -l objc -- (void)[[[UIApplication sharedApplication] keyWindow] recursiveDescription]
+(lldb) expr -l objc -- (void)[[[[[UIApplication sharedApplication] connectedScenes] anyObject] keyWindow] recursiveDescription]
 (lldb) expr -l objc -- (void)[CATransaction flush]
 (lldb) expr -l objc -- (int)[[UIApplication sharedApplication] _isForeground]
 ```
+
+`-[UIApplication keyWindow]` is API_DEPRECATED(ios(2.0,13.0)); use the scene-aware `-[UIWindowScene keyWindow]` reached via `connectedScenes`.
 
 ### `register read`
 
@@ -258,7 +260,7 @@ Force an early return from the current function:
 ```
 (lldb) expr let x = 42; print(x)
 (lldb) expr self.view.backgroundColor = UIColor.red
-(lldb) expr UIApplication.shared.windows.first?.rootViewController
+(lldb) expr UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap { $0.windows }.first { $0.isKeyWindow }?.rootViewController
 (lldb) expr UserDefaults.standard.set(true, forKey: "debug")
 ```
 
@@ -268,15 +270,15 @@ Switch to ObjC when Swift expression parser fails:
 
 ```
 (lldb) expr -l objc -- (void)[CATransaction flush]
-(lldb) expr -l objc -- (id)[[UIApplication sharedApplication] keyWindow]
+(lldb) expr -l objc -- (id)[[[[UIApplication sharedApplication] connectedScenes] anyObject] keyWindow]
 (lldb) expr -l objc -- (void)[[NSNotificationCenter defaultCenter] postNotificationName:@"test" object:nil]
 ```
 
 ### UI Debugging Expressions
 
 ```
-(lldb) expr -l objc -- (void)[[[UIApplication sharedApplication] keyWindow] recursiveDescription]
-(lldb) po UIApplication.shared.windows.first?.rootViewController?.view.recursiveDescription()
+(lldb) expr -l objc -- (void)[[[[[UIApplication sharedApplication] connectedScenes] anyObject] keyWindow] recursiveDescription]
+(lldb) po UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap { $0.windows }.first { $0.isKeyWindow }?.rootViewController?.view.recursiveDescription()
 ```
 
 ### SwiftUI Debugging
@@ -373,11 +375,11 @@ Add to `~/.lldbinit`:
 # Quick reload — flush UI changes made via expression
 command alias flush expr -l objc -- (void)[CATransaction flush]
 
-# Print view hierarchy
-command alias views expr -l objc -- (void)[[[UIApplication sharedApplication] keyWindow] recursiveDescription]
+# Print view hierarchy (scene-aware key window — UIApplication.keyWindow is deprecated since iOS 13)
+command alias views expr -l objc -- (void)[[[[[UIApplication sharedApplication] connectedScenes] anyObject] keyWindow] recursiveDescription]
 
-# Print auto layout constraints
-command alias constraints po [[UIWindow keyWindow] _autolayoutTrace]
+# Print auto layout constraints (UIWindowScene.keyWindow, iOS 15+)
+command alias constraints po [[[[[UIApplication sharedApplication] connectedScenes] anyObject] keyWindow] _autolayoutTrace]
 ```
 
 ### Custom Type Summaries

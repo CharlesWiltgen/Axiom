@@ -39,7 +39,7 @@ This skill covers two independent features that share the suite because they're 
 | `procedureRecord` | Procedures |
 | `vitalSignRecord` | Vital signs (note: **singular** "Sign") |
 | `clinicalNoteRecord` | Clinical notes (iOS 16+) |
-| `coverageRecord` | Insurance coverage (iOS 18+) |
+| `coverageRecord` | Insurance coverage (iOS 14+) |
 
 Note the `.vitalSignRecord` spelling — `.vitalSignsRecord` (plural) does not compile.
 

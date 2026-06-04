@@ -91,11 +91,10 @@ Use these instead of rolling your own subscription billing. Without `PKRecurring
 
 WWDC23 introduced two complementary surfaces for Apple Pay Later:
 
-- **Pre-checkout merchandising** via `PKPayLaterView` (UIKit) / `PayLaterView` (SwiftUI). Place on product / cart pages to indicate "Pay Later available" *before* the customer initiates checkout. Use `PKPayLaterUtilities.validate(amount:currencyCode:)` to gate display.
-- **Per-request gating** via `applePayLaterAvailability` (now marked deprecated; check current docs before use). When you do set it, `.unavailable` requires an associated `Reason`:
+- **Pre-checkout merchandising** via `PKPayLaterView` (UIKit) / `PayLaterView` (SwiftUI). Place on product / cart pages to indicate "Pay Later available" *before* the customer initiates checkout. Gate display with the free `PKPayLaterValidateAmount(_:currencyCode:completion:)` function from PassKit's `PKPayLaterValidator.h` (iOS 17+, iOS-only); the completion block receives a `BOOL eligible`.
+- **Per-request gating** via `applePayLaterAvailability` (current and supported — `API_AVAILABLE` macos 14, ios 17, watchos 10; not deprecated in the iOS 26.5 SDK). When you set it, `.unavailable` requires an associated `Reason`:
 
 ```swift
-// If using applePayLaterAvailability (check deprecation status):
 request.applePayLaterAvailability = .unavailable(.itemIneligible)
 // or .unavailable(.recurringTransaction) for subscription-style requests
 ```

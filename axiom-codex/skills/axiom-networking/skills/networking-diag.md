@@ -370,28 +370,58 @@ let connection = NWConnection(host: "dev-server.example.com", port: 443, using: 
 #endif
 ```
 
-#### For certificate pinning
+#### For pinning — pick ONE API, never mix them
+
+`sec_protocol_metadata_copy_peer_public_key(_:)` returns a `dispatch_data_t` of the raw public key, NOT a `SecCertificate`. Passing it to `SecCertificateCopyData(_:)` (which requires a `SecCertificateRef`) is a type error. Choose public-key pinning OR certificate pinning, not a hybrid of the two.
+
+#### Option A — Public-key pinning (compare raw SPKI bytes)
 ```swift
-// Production-grade certificate pinning
 let tlsOptions = NWProtocolTLS.Options()
 
 sec_protocol_options_set_verify_block(
     tlsOptions.securityProtocolOptions,
     { (metadata, trust, complete) in
-        let trust = sec_protocol_metadata_copy_peer_public_key(metadata)
-        // Compare trust with pinned certificate
-        let pinnedCertificateData = Data(/* your cert */)
-        let serverCertificateData = SecCertificateCopyData(trust) as Data
+        // peer public key is a dispatch_data_t of raw key bytes
+        guard let peerKey = sec_protocol_metadata_copy_peer_public_key(metadata) else {
+            complete(false)
+            return
+        }
+        let peerKeyData = peerKey as AnyObject as! Data  // dispatch_data_t bridges to Data
+        let pinnedKeyData = Data(/* your pinned SPKI bytes */)
 
-        if serverCertificateData == pinnedCertificateData {
-            complete(true)
-        } else {
-            complete(false) // Reject non-pinned certificates
+        complete(peerKeyData == pinnedKeyData)  // never call SecCertificateCopyData on a key
+    },
+    .main
+)
+```
+
+#### Option B — Certificate pinning (evaluate SecTrust, then compare leaf cert)
+```swift
+let tlsOptions = NWProtocolTLS.Options()
+
+sec_protocol_options_set_verify_block(
+    tlsOptions.securityProtocolOptions,
+    { (metadata, trust, complete) in
+        // sec_trust_copy_ref(_:) returns the underlying SecTrustRef
+        let secTrust = sec_trust_copy_ref(trust).takeRetainedValue()
+        SecTrustEvaluateAsyncWithError(secTrust, .main) { _, result, _ in
+            guard result,
+                  let chain = SecTrustCopyCertificateChain(secTrust) as? [SecCertificate],
+                  let leaf = chain.first else {
+                complete(false)
+                return
+            }
+            let serverCertData = SecCertificateCopyData(leaf) as Data  // SecCertificateRef, not a key
+            let pinnedCertData = Data(/* your pinned cert DER */)
+            complete(serverCertData == pinnedCertData) // Reject non-pinned certificates
         }
     },
     .main
 )
 ```
+
+#### iOS 26+ declarative path
+For NetworkConnection, validate inside `TLS().certificateValidator { metadata, trust in ... }` (an `async -> Bool` closure), applying the same Option A or Option B logic.
 
 #### Verification
 - `openssl s_client -connect example.com:443` shows `Verify return code: 0 (ok)`

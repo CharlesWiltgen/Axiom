@@ -199,7 +199,7 @@ Maintain two distinct layers: **Navigation** (tab bar, sidebar, toolbar — Liqu
 
 ### Tab Bar Adapting to Sidebar
 
-Use `.tabViewStyle(.sidebarAdaptable)` (iOS 26) to let the tab bar adapt to sidebar on iPad/macOS while remaining a tab bar on iPhone. Transitions fluidly with adaptive window sizes.
+Use `.tabViewStyle(.sidebarAdaptable)` (iOS 18+ / macOS 15+ / tvOS 18+ / visionOS 2+; watchOS unavailable) to let the tab bar adapt to sidebar on iPad/macOS while remaining a tab bar on iPhone. Transitions fluidly with adaptive window sizes.
 
 ```swift
 TabView {

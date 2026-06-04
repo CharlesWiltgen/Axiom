@@ -167,10 +167,11 @@ Errors flow back via the `update.errors` array on each change callback's update 
 
 | View | Purpose |
 |------|---------|
-| `PayWithApplePayButton(_:action:)` | Initiates Apple Pay; uses system styling |
-| `AddPassToWalletButton(action:)` | Adds a `.pkpass` to Wallet (see `wallet-passes.md`) |
-| `AddOrderToWalletButton(action:)` | iOS 17+; adds an order package (see `wallet-orders.md`) |
-| `VerifyIdentityWithWalletButton(action:)` | Identity verification via Wallet (axiom-integration territory) |
+| `PayWithApplePayButton(_:action:)` | Initiates Apple Pay; uses system styling (`_PassKit_SwiftUI`) |
+| `AddPassToWalletButton(action:)` | Adds a `.pkpass` to Wallet (`_PassKit_SwiftUI`; see `wallet-passes.md`) |
+| `VerifyIdentityWithWalletButton(_:action:)` | Identity verification via Wallet (`_PassKit_SwiftUI`; axiom-integration territory) |
+
+`AddOrderToWalletButton` is **not** a PassKit button — it lives in **FinanceKitUI** (iOS 17+, iOS-only) and takes no `action:` closure. Its only initializer is `AddOrderToWalletButton(signedArchive: Data, onCompletion: @escaping (Result<FinanceStore.SaveOrderResult, Error>) -> Void)`. Style via `.addOrderToWalletButtonStyle(_:)` with `AddOrderToWalletButtonStyle` (`.black` / `.blackOutline`). See `wallet-orders.md`.
 
 Modifiers:
 
@@ -275,9 +276,11 @@ Steps 11–13 happen out-of-band over the merchant-controlled network path. Step
 
 | Type | Purpose |
 |------|---------|
-| `PKPayLaterUtilities` | `validate(forAmount:currency:)` — tells you whether a transaction qualifies |
-| `PKPayLaterView` (UIKit) / `PayLaterView` (SwiftUI) | Pre-checkout merchandising surface |
+| `PKPayLaterValidateAmount(_:currencyCode:completion:)` | Free C function in `PKPayLaterValidator.h` (iOS 17+, iOS-only) — `completion` receives a `BOOL eligible` telling you whether the amount qualifies for merchandising |
+| `PKPayLaterView` (UIKit) / `PayLaterView` (SwiftUI, `_PassKit_SwiftUI`) | Pre-checkout merchandising surface |
 | `PKPaymentRequest.applePayLaterAvailability` | `.available` / `.unavailable` |
+
+`PKPayLaterValidateAmount` is declared `NS_REFINED_FOR_SWIFT`, so the importer generates the Swift-projected name; the C signature is `void PKPayLaterValidateAmount(NSDecimalNumber *amount, NSString *currencyCode, void(^completion)(BOOL eligible))`. It is iOS-only (`API_UNAVAILABLE(macos, watchos, tvos)`), so there is no Catalyst/macOS/watchOS form.
 
 Mark `.unavailable` for prohibited categories (subscriptions, recurring items, gift cards). The `PKPayLaterView` / `PayLaterView` is the merchandising widget you place on product / cart pages to indicate "Pay Later available" *before* checkout.
 

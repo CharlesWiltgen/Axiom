@@ -36,7 +36,7 @@ This skill covers the first path — live sessions with sensor collection.
 | `HKWorkoutSession` | iOS 17+, iPadOS 17+, watchOS 2+ |
 | `HKLiveWorkoutBuilder`, `HKLiveWorkoutDataSource`, `HKLiveWorkoutBuilderDelegate` | **watchOS 5+; iOS 26+, iPadOS 26+** |
 | `HKWorkoutSession.startMirroringToCompanionDevice` | **watchOS 10+ only** |
-| `HKHealthStore.recoverActiveWorkoutSession` | **iOS 26+, iPadOS 26+, watchOS 10+** |
+| `HKHealthStore.recoverActiveWorkoutSession` | **iOS 26+, iPadOS 26+, watchOS 5+** (unavailable on Mac Catalyst, macOS, visionOS) |
 
 The critical new-in-2025 change: iPhone could *receive* a mirrored workout session since iOS 17, but iOS 26 is the first release where iPhone can **originate** a session and drive a local `HKLiveWorkoutBuilder`. Before iOS 26, iPhone workout tracking meant calling `HKWorkout(init:)` retrospectively — no live sensor collection.
 

@@ -394,7 +394,8 @@ let result = await session.run(configuration)
 
 if let notSupported = result {
     // Handle unsupported tracking on this device
-    for denied in notSupported.deniedTrackingModes {
+    // UnavailableCapabilities.anchor is a Set<Configuration.AnchorCapability>
+    for denied in notSupported.anchor {
         print("Not supported: \(denied)")
     }
 }
@@ -412,13 +413,26 @@ if let notSupported = result {
 
 ## 7. Interaction
 
-### ManipulationComponent (iOS, visionOS)
+### ManipulationComponent (visionOS 26+ only)
+
+`ManipulationComponent` is visionOS 26.0+ only — it is `@available(iOS, unavailable)` and `@available(macOS, unavailable)`. It has only `init()`; there is no `allowedModes` parameter and no `.translate/.rotate/.scale` mode enum.
 
 ```swift
-// Enable drag, rotate, scale gestures
-entity.components[ManipulationComponent.self] = ManipulationComponent(
-    allowedModes: .all  // .translate, .rotate, .scale
+// Recommended: configure an entity for manipulation in one call (visionOS)
+ManipulationComponent.configureEntity(
+    entity,
+    allowedInputTypes: .all,           // InputTargetComponent.InputType
+    collisionShapes: [.generateBox(size: SIMD3(0.1, 0.1, 0.1))]
 )
+
+// Or attach the component directly and tune its dynamics
+entity.components[ManipulationComponent.self] = ManipulationComponent()
+var manipulation = entity.components[ManipulationComponent.self]!
+manipulation.dynamics.translationBehavior = .unconstrained   // or .none
+manipulation.dynamics.primaryRotationBehavior = .unconstrained
+manipulation.dynamics.scalingBehavior = .none
+manipulation.releaseBehavior = .stay                          // or .reset
+entity.components[ManipulationComponent.self] = manipulation
 
 // Also requires CollisionComponent for hit testing
 entity.generateCollisionShapes(recursive: true)
@@ -830,7 +844,7 @@ struct MovementSystem: System {
 
 **Time cost**: 15-30 min debugging "why taps don't work"
 
-Gestures require `CollisionComponent`. If an entity has `InputTargetComponent` (visionOS) or `ManipulationComponent` but no `CollisionComponent`, gestures will never fire.
+Gestures require `CollisionComponent`. If an entity has `InputTargetComponent` (visionOS) or `ManipulationComponent` (visionOS) but no `CollisionComponent`, gestures will never fire.
 
 ### Anti-Pattern 5: Storing Entity References in Systems
 

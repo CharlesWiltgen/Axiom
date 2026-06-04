@@ -138,10 +138,17 @@ class RealmTrack: Object {
 @Model
 final class Track {
     @Attribute(.unique) var id: String
-    @Attribute(.indexed) var genre: String = ""
-    @Attribute(.indexed) var releaseDate: Date = Date()
+    var genre: String = ""
+    var releaseDate: Date = Date()
+
+    // Indexes are declared with the freestanding #Index macro, NOT @Attribute.
+    // There is no .indexed attribute option. Each array is one index;
+    // pass multiple key paths in a single array for a compound index.
+    #Index<Track>([\.genre], [\.releaseDate])
 }
 ```
+
+**Key difference**: Realm marks indexes per-property with `@Persisted(indexed: true)`. SwiftData has no `@Attribute(.indexed)` option — use the freestanding `#Index` macro (macOS 15 / iOS 18+) inside the `@Model` class instead.
 
 ---
 

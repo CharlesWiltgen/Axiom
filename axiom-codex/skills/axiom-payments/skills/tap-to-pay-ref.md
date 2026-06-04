@@ -59,21 +59,20 @@ Returned from `prepare(using:)`. Carries the active read pipeline.
 
 | Method | Purpose |
 |--------|---------|
-| `func readPayment(_ request: PaymentCardReadRequest) async throws -> PaymentCardTransaction` | Charge a payment card. PSP-specific request shape; PSP SDK constructs. |
-| `func readPaymentCard(_ request: PaymentCardLookupRequest) async throws -> PaymentCardLookupResult` | Read card without charging — for refund-without-receipt, store-card-on-file, etc. |
-| `func refundPayment(_ request: PaymentCardRefundRequest) async throws -> PaymentCardTransaction` | Issue a refund against a previously-tapped card |
-| `func readPass(_ request: PassReadRequest) async throws -> PassReadResult` | Read NFC loyalty pass from Wallet (independent of payment) |
-| `func cancel()` | Abort the in-flight read |
+| `func readPaymentCard(_ request: PaymentCardTransactionRequest) async throws -> PaymentCardReadResult` | Charge **or refund** a payment card. Refund is a `TransactionType` (`.refund` vs `.purchase`) on the request — **not** a separate method. |
+| `func readPaymentCard(_ request: PaymentCardVerificationRequest) async throws -> PaymentCardReadResult` | Non-charging card read — for refund-without-receipt, store-card-on-file, etc. |
+| `func readVAS(_ request: VASRequest) async throws -> VASReadResult` | Read NFC pass / Value Added Services from Wallet (independent of payment) |
+| `func cancelRead() async throws -> Bool` | Abort the in-flight read |
 
-`readPayment` typically supports a `returnReadResultImmediately` flag — start PSP processing **before** the system completes its checkmark animation. Saves 1–2 seconds per transaction; most PSPs support it.
+`PaymentCardReader.Options.returnReadResultImmediately` (iOS 16.4+) lets the read return **before** the system completes its checkmark animation. Saves 1–2 seconds per transaction; most PSPs support it.
 
-### `PaymentCardTransaction`
+### `PaymentCardReadResult`
 
-Result of a successful read. Wraps the encrypted payment data + PSP-specific metadata. Treat as opaque; pass to your PSP for processing.
+Result of a successful read (charge, refund, or verification). Wraps the encrypted payment data + PSP-specific metadata. Treat as opaque; pass to your PSP for processing.
 
-### `PaymentCardLookupResult`
+### `VASReadResult`
 
-Result of a non-payment read. Carries enough to identify the card (last 4, network, type) without exposing PAN. Used for store-card-on-file or refund-without-receipt flows.
+Result of a VAS / NFC-pass read. Carries the pass payload read from Wallet, independent of any payment.
 
 ## NFC Pass Reading from Wallet
 
@@ -81,16 +80,27 @@ Separate method on `PaymentCardReaderSession` for reading loyalty / NFC passes:
 
 | Method | Purpose |
 |--------|---------|
-| `session.readPass(_:)` | Read a pass independently of payment |
-| Combined-mode read (PSP-specific) | Read pass + payment in one tap |
+| `session.readVAS(_ request: VASRequest)` | Read a pass / Value Added Services independently of payment |
+| `session.readPaymentCard(_:vasRequest:stopOnVASResult:)` | Combined-mode read — pass + payment in one tap (returns `(PaymentCardReadResult?, VASReadResult?)`) |
 
 The pass-side schema (what's in the NFC payload) is defined in `pass.json`'s `nfc` block — see `wallet-passes.md` § "NFC Payloads" and `wallet-passes-ref.md` for the schema.
 
 ## Read Errors
 
-Errors thrown from `readPaymentCard(_:)` / `refundPayment(_:)` / `readPass(_:)` are delivered as Swift `Error` types defined by `PaymentCardReader` / `PaymentCardReaderSession`. **Apple does not publish a single canonical enumerated list across versions** — check `/proximityreader/paymentcardreader` for the current type and cases before pattern-matching.
+Errors are **exhaustive published enums you can pattern-match on** — not an unenumerated surface:
 
-Categories you'll handle in practice:
+- `PaymentCardReaderSession.ReadError: Error, Sendable` — read / refund / VAS failures (`readNotAllowed`, `readerSessionExpired`, `readerTokenExpired`, `paymentCardDeclined`, `pinEntryTimeout`, `cardReadFailed`, `paymentReadFailed`, etc.)
+- `PaymentCardReaderError: Error, Sendable` — reader prepare / link / token failures (`notReady`, `prepareFailed`, `prepareExpired`, `tokenExpired`, `accountNotLinked`, etc.)
+
+Both expose `errorDescription` and `errorName`. `switch` over them and gate version-specific cases behind `@available`:
+
+- `ReadError.readerInitializationFailed` / `.readerNotAvailable` / `.cardNotSupported` are iOS 26.0+
+- `ReadError` store-and-forward cases (`storeAndForwardDeclineFailed`, `storeAndForwardResultNotFound`) and `.unknown(code:)` are iOS 18.4+
+- `PaymentCardReaderError.unknown(code:)` is iOS 18.0+
+
+Always handle `.unknown(code:)` plus a `default` clause for forward-compatibility with cases Apple adds in later releases.
+
+Categories you'll handle in practice (map to the enum cases above):
 
 | Category | Recovery |
 |----------|----------|
@@ -161,7 +171,7 @@ digraph pipeline {
     "App not foregrounded" -> "Foreground";
     "Foreground" -> "prepare(using:)";
     "prepare(using:)" -> "readyForTap" [label="updateProgress\nevents during\nconfig"];
-    "readyForTap" -> "Read in flight" [label="readPayment /\nreadPaymentCard /\nreadPass"];
+    "readyForTap" -> "Read in flight" [label="readPaymentCard /\nreadVAS"];
     "Read in flight" -> "completed" [label="success / fail / cancel"];
     "completed" -> "readyForTap" [label="next read"];
     "completed" -> "Background" [label="app backgrounds"];

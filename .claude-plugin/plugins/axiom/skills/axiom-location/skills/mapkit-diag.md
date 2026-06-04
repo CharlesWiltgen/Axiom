@@ -169,7 +169,7 @@ Clustering thins the *display*; visible-region filtering thins the *working set*
 ```
 Q1: How many annotations?
 ├─ > 500 without clustering → Enable clustering
-│   SwiftUI: .mapItemClusteringIdentifier("poi")
+│   Clustering is UIKit-only (no SwiftUI Map modifier)
 │   MKMapView: view.clusteringIdentifier = "poi"
 │
 ├─ > 1000 → ADD visible-region filtering on top of clustering
@@ -217,7 +217,7 @@ Q5: Geocoding in a loop?
 Q1: Is clusteringIdentifier set on annotation views?
 ├─ NO → Clustering requires an identifier on each annotation view
 │   MKMapView: view.clusteringIdentifier = "poi" in viewFor delegate
-│   SwiftUI: .mapItemClusteringIdentifier("poi") on content
+│   Clustering is UIKit-only — SwiftUI Map has no clustering modifier
 │
 └─ YES → Check next
 

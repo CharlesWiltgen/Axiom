@@ -222,8 +222,10 @@ xcrun agvtool next-version -all               # Bump build number
 xcrun agvtool new-version -all 42             # Set specific build number
 xcrun agvtool new-marketing-version 2.1       # Set marketing version
 
-# Validate asset catalogs
-xcrun amlint Assets.xcassets                   # Lint for issues before build
+# Validate asset catalogs (actool surfaces warnings during compile — no bare "lint" subcommand)
+xcrun actool Assets.xcassets --compile /tmp/actool-out \
+  --platform iphoneos --minimum-deployment-target 26.0 \
+  --app-icon AppIcon --output-partial-info-plist /tmp/partial.plist
 ```
 
 - `xcsym crash <file>` — Structured crash symbolication with LLM-friendly JSON output. Use for any `.ips`, MetricKit, or legacy `.crash` text file. See `axiom-tools (skills/xcsym-ref.md)`.

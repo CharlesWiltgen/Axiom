@@ -49,10 +49,10 @@ What interaction do you need?
 │  └─ Use LongPressGesture
 │
 ├─ Pinch to zoom?
-│  └─ Use MagnificationGesture
+│  └─ Use MagnifyGesture
 │
 ├─ Two-finger rotation?
-│  └─ Use RotationGesture
+│  └─ Use RotateGesture
 │
 ├─ Multiple gestures together?
 │  ├─ Both at same time? → .simultaneously
@@ -180,7 +180,9 @@ var body: some View {
 
 ---
 
-### MagnificationGesture
+### MagnifyGesture
+
+`MagnifyGesture` (iOS 17+, macOS 14+, visionOS 1+; unavailable on watchOS/tvOS) replaces the soft-deprecated `MagnificationGesture`. Its `Value` is a struct — read `.magnification` rather than treating the value as a bare `CGFloat`.
 
 ```swift
 @GestureState private var magnificationAmount = 1.0
@@ -190,12 +192,12 @@ var body: some View {
   Image("photo")
     .scaleEffect(currentZoom * magnificationAmount)
     .gesture(
-      MagnificationGesture()
+      MagnifyGesture()
         .updating($magnificationAmount) { value, state, _ in
-          state = value
+          state = value.magnification
         }
         .onEnded { value in
-          currentZoom *= value
+          currentZoom *= value.magnification
         }
     )
 }
@@ -208,7 +210,9 @@ var body: some View {
 
 ---
 
-### RotationGesture
+### RotateGesture
+
+`RotateGesture` (iOS 17+, macOS 14+; unavailable on watchOS/tvOS) replaces the soft-deprecated `RotationGesture`. Its `Value` is a struct — read `.rotation` (an `Angle`) rather than treating the value as a bare `Angle`. The init is `RotateGesture(minimumAngleDelta: Angle = .degrees(1))`.
 
 ```swift
 @GestureState private var rotationAngle = Angle.zero
@@ -220,12 +224,12 @@ var body: some View {
     .frame(width: 200, height: 200)
     .rotationEffect(currentRotation + rotationAngle)
     .gesture(
-      RotationGesture()
+      RotateGesture()
         .updating($rotationAngle) { value, state, _ in
-          state = value
+          state = value.rotation
         }
         .onEnded { value in
-          currentRotation += value
+          currentRotation += value.rotation
         }
     )
 }
@@ -253,9 +257,9 @@ var body: some View {
           state = value.translation
         }
         .simultaneously(with:
-          MagnificationGesture()
+          MagnifyGesture()
             .updating($magnificationAmount) { value, state, _ in
-              state = value
+              state = value.magnification
             }
         )
     )
@@ -404,8 +408,8 @@ struct SwipeGesture: Gesture {
   // Value is the direction
   typealias Value = Direction
 
-  // Body builds on DragGesture
-  var body: AnyGesture<Direction> {
+  // Body builds on DragGesture — return the opaque gesture type
+  var body: some Gesture<Direction> {
     DragGesture(minimumDistance: minimumDistance, coordinateSpace: coordinateSpace)
       .map { value in
         let horizontal = value.translation.width
@@ -417,7 +421,6 @@ struct SwipeGesture: Gesture {
           return vertical < 0 ? .up : .down
         }
       }
-      .eraseToAnyGesture()
   }
 }
 
@@ -564,8 +567,8 @@ Rectangle()
 | TapGesture | Tap with finger | Click with mouse/trackpad | Look + pinch |
 | DragGesture | Drag with finger | Click and drag | Pinch and move |
 | LongPressGesture | Long press | Click and hold | Long pinch |
-| MagnificationGesture | Two-finger pinch | Trackpad pinch | Pinch with both hands |
-| RotationGesture | Two-finger rotate | Trackpad rotate | Rotate with both hands |
+| MagnifyGesture | Two-finger pinch | Trackpad pinch | Pinch with both hands |
+| RotateGesture | Two-finger rotate | Trackpad rotate | Rotate with both hands |
 
 ### Platform-Specific Gestures
 

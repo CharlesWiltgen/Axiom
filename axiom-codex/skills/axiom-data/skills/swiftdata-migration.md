@@ -474,10 +474,10 @@ static let migrateV1toV2 = MigrationStage.custom(
     willMigrate: { context in
         var fetchDesc = FetchDescriptor<SchemaV1.Note>()
 
-        // Prefetch relationships (iOS 26+)
+        // Prefetch relationships (iOS 17+)
         fetchDesc.relationshipKeyPathsForPrefetching = [\.folder, \.tags]
 
-        // Only fetch properties you need (iOS 26+)
+        // Only fetch properties you need (iOS 17+)
         fetchDesc.propertiesToFetch = [\.title, \.content]
 
         let notes = try context.fetch(fetchDesc)

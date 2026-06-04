@@ -208,11 +208,14 @@ func makeUIView(context: Context) -> UITableView {
 }
 
 func updateUIView(_ table: UITableView, context: Context) {
-    // Tell the nearest navigation controller to track this scroll view
-    // for inline/large title transitions
+    // Tell the nearest content view controller to track this scroll view
+    // for inline/large title transitions. setContentScrollView is declared on
+    // UIViewController (iOS 15+) — call it on the visible content controller,
+    // NOT on the navigation bar.
     if let navController = sequence(first: table as UIResponder, next: \.next)
-        .compactMap({ $0 as? UINavigationController }).first {
-        navController.navigationBar.setContentScrollView(table, forEdge: .top)
+        .compactMap({ $0 as? UINavigationController }).first,
+       let contentController = navController.topViewController {
+        contentController.setContentScrollView(table)
     }
 }
 ```
@@ -586,9 +589,11 @@ When a UIHostingController contains a scroll view and is pushed onto a UINavigat
 ```swift
 let hostingController = UIHostingController(rootView: ScrollableListView())
 
-// After pushing, tell the nav bar to track the scroll view
+// After pushing, tell the content view controller to track the scroll view.
+// setContentScrollView (iOS 15+) is declared on UIViewController — call it on
+// the hosting controller, NOT on the navigation bar.
 if let scrollView = hostingController.view.subviews.compactMap({ $0 as? UIScrollView }).first {
-    navigationController?.navigationBar.setContentScrollView(scrollView, forEdge: .top)
+    hostingController.setContentScrollView(scrollView)
 }
 ```
 
@@ -734,7 +739,7 @@ class DashboardViewController: UIViewController {
 | Coordinator retains parent | Memory leak, views never deallocate | Coordinator stores `var parent: X` (not `let`). SwiftUI updates the parent reference on each `updateUIView` call. Don't add extra strong references. |
 | updateUIView called excessively | UIKit view flickers, resets scroll position, drops user input | Guard with equality checks. Compare old vs new values before applying changes. |
 | Environment doesn't cross bridge | Custom environment values are nil/default | Use `UITraitBridgedEnvironmentKey` (iOS 17+) for bidirectional bridging, or inject dependencies through initializer. System traits (color scheme, size category) bridge automatically. |
-| Large title won't collapse | Navigation bar stays expanded when scrolling wrapped UIScrollView | Call `setContentScrollView(_:forEdge:)` on the navigation bar. |
+| Large title won't collapse | Navigation bar stays expanded when scrolling wrapped UIScrollView | Call `setContentScrollView(_:)` on the content view controller (it's a UIViewController method, iOS 15+), not on the navigation bar. |
 | UIHostingController sizing wrong | View is zero-sized or jumps after layout | Use `sizingOptions: .intrinsicContentSize` (iOS 16+). For earlier versions, call `hostingController.view.invalidateIntrinsicContentSize()` after root view changes. |
 | Mixed navigation stacks | Unpredictable back button behavior, lost state | Don't mix UINavigationController and NavigationStack in the same flow. Migrate entire navigation subtrees. |
 | makeUIView called multiple times | View recreated unexpectedly | Ensure the `UIViewRepresentable` struct's identity is stable. Avoid putting it inside a conditional that changes identity. |

@@ -503,7 +503,8 @@ import BackgroundTasks
 
 // Register handler (can be dynamic, not just at launch)
 func setupExportHandler() {
-    BGTaskScheduler.shared.register("com.app.export") { task in
+    // `using:` is the dispatch queue — pass nil for a default background queue
+    BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.app.export", using: nil) { task in
         let continuedTask = task as! BGContinuedProcessingTask
 
         var shouldContinue = true
@@ -814,11 +815,12 @@ class MetricsManager: NSObject, MXMetricManagerSubscriber {
 
 ```swift
 func processPayload(_ payload: MXMetricPayload) {
-    // CPU metrics
+    // CPU metrics — MXCPUMetric has no foreground/background split.
     if let cpu = payload.cpuMetrics {
-        let foregroundTime = cpu.cumulativeCPUTime
-        let backgroundTime = cpu.cumulativeCPUInstructions
-        logMetric("cpu_foreground", value: foregroundTime)
+        let totalCPUTime = cpu.cumulativeCPUTime              // Measurement<UnitDuration> (iOS 13+)
+        let instructionsRetired = cpu.cumulativeCPUInstructions // Measurement<Unit>, dimensionless count (iOS 14+)
+        logMetric("cpu_time", value: totalCPUTime)
+        logMetric("cpu_instructions", value: instructionsRetired)
     }
 
     // Location metrics
@@ -831,8 +833,8 @@ func processPayload(_ payload: MXMetricPayload) {
     if let network = payload.networkTransferMetrics {
         let cellularUpload = network.cumulativeCellularUpload
         let cellularDownload = network.cumulativeCellularDownload
-        let wifiUpload = network.cumulativeWiFiUpload
-        let wifiDownload = network.cumulativeWiFiDownload
+        let wifiUpload = network.cumulativeWifiUpload
+        let wifiDownload = network.cumulativeWifiDownload
 
         logMetric("cellular_upload", value: cellularUpload)
         logMetric("cellular_download", value: cellularDownload)

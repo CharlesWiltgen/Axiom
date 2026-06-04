@@ -316,8 +316,9 @@ Output for capturing still photos.
 ```swift
 let photoOutput = AVCapturePhotoOutput()
 
-// High resolution
-photoOutput.isHighResolutionCaptureEnabled = true
+// High resolution (iOS 16+) — isHighResolutionCaptureEnabled is deprecated.
+// Set the output's max dimensions to one of the active format's supported values.
+photoOutput.maxPhotoDimensions = camera.activeFormat.supportedMaxPhotoDimensions.last!
 
 // Max quality prioritization
 photoOutput.maxPhotoQualityPrioritization = .quality
@@ -339,7 +340,7 @@ photoOutput.isPortraitEffectsMatteDeliveryEnabled = true
 
 ```swift
 // Check support before enabling
-photoOutput.isHighResolutionCaptureEnabled && photoOutput.isHighResolutionCaptureSupported
+camera.activeFormat.supportedMaxPhotoDimensions  // [CMVideoDimensions] — pick one for maxPhotoDimensions
 photoOutput.isLivePhotoCaptureSupported
 photoOutput.isDepthDataDeliverySupported
 photoOutput.isPortraitEffectsMatteDeliverySupported
@@ -475,12 +476,13 @@ settings.photoQualityPrioritization = .quality  // Enables computational photogr
 ### Resolution
 
 ```swift
-// High resolution still image
-settings.isHighResolutionPhotoEnabled = true
-
-// Max dimensions (limit resolution)
+// Per-shot max dimensions (iOS 16+) — isHighResolutionPhotoEnabled is deprecated.
+// Must match one of camera.activeFormat.supportedMaxPhotoDimensions, and be no
+// larger than photoOutput.maxPhotoDimensions.
 settings.maxPhotoDimensions = CMVideoDimensions(width: 4032, height: 3024)
 ```
+
+**Note**: `isHighResolutionPhotoEnabled` is deprecated since iOS 16 — use `maxPhotoDimensions` only.
 
 ### Preview/Thumbnail
 

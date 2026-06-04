@@ -366,7 +366,7 @@ Fine-grained access control for keychain items. Created with `SecAccessControlCr
 | `.devicePasscode` | Device passcode required |
 | `.privateKeyUsage` | Required for Secure Enclave key signing operations |
 | `.applicationPassword` | App-provided password (in addition to other factors) |
-| `.watch` | Paired Apple Watch can satisfy authentication |
+| `.companion` | Paired companion device (Apple Watch) can satisfy authentication (iOS 18+ / macOS 15+) |
 | `.or` | Combine flags with logical OR (any one satisfies) |
 | `.and` | Combine flags with logical AND (all must satisfy) |
 
@@ -403,7 +403,7 @@ let status = SecItemAdd(query as CFDictionary, nil)
 | `[.biometryCurrentSet, .or, .devicePasscode]` | Biometric OR passcode fallback |
 | `[.biometryCurrentSet, .and, .applicationPassword]` | Biometric AND app password |
 | `[.privateKeyUsage]` | Secure Enclave key operations (sign, decrypt) |
-| `[.biometryAny, .or, .watch]` | Biometric OR paired Watch |
+| `[.biometryAny, .or, .companion]` | Biometric OR paired companion device (iOS 18+) |
 
 **`.biometryAny` vs `.biometryCurrentSet`**: Use `.biometryCurrentSet` for high-security items (banking tokens). If the user enrolls a new fingerprint, the item becomes inaccessible — your app must re-authenticate and re-store. Use `.biometryAny` for convenience items where new enrollment should not invalidate access.
 

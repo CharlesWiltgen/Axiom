@@ -2,7 +2,7 @@
 # SpriteKit Game Development Guide
 
 **Purpose**: Build reliable SpriteKit games by mastering the scene graph, physics engine, action system, and rendering pipeline
-**iOS Version**: iOS 13+ (SwiftUI integration), iOS 11+ (SKRenderer)
+**iOS Version**: iOS 14+ (SwiftUI integration), iOS 11+ (SKRenderer)
 **Xcode**: Xcode 15+
 
 ## When to Use This Skill

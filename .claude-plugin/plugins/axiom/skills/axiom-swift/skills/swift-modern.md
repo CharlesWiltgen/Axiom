@@ -12,7 +12,7 @@ Claude frequently generates outdated Swift patterns from its training data. This
 | Old Pattern | Modern Swift | Since | Why |
 |-------------|-------------|-------|-----|
 | `Date()` | `Date.now` | 5.6 | Clearer intent |
-| `filter { }.count` | `count(where:)` | 5.0 | Single pass, no intermediate allocation |
+| `filter { }.count` | `count(where:)` | 6.0 | Single pass, no intermediate allocation (SE-0220; reverted before 5.0 shipped, re-introduced in 6.0) |
 | `replacingOccurrences(of:with:)` | `replacing(_:with:)` | 5.7 | Swift native, no Foundation bridge |
 | `CGFloat` | `Double` | 5.5 | Implicit bridging; exceptions: optionals, inout, ObjC-bridged APIs |
 | `Task.sleep(nanoseconds:)` | `Task.sleep(for: .seconds(1))` | 5.7 | Type-safe Duration API |
@@ -30,7 +30,7 @@ Claude frequently generates outdated Swift patterns from its training data. This
 | `if let value = value {` | `if let value {` | 5.7 |
 | Explicit `return` in single-expression | Omit `return`; `if`/`switch` are expressions | 5.9 |
 | `Circle()` in modifiers | `.circle` (static member lookup) | 5.5 |
-| `import UIKit` alongside `import SwiftUI` | Often not needed — SwiftUI re-exports most UIKit/AppKit types. Retain for UIKit-only APIs (`UIApplication`, etc.) | 5.5 |
+| Dropping `import UIKit`/`import AppKit` when using SwiftUI | Keep them — SwiftUI re-exports only CoreGraphics, CoreTransferable, DeveloperToolsSupport, and SwiftUICore, NOT UIKit or AppKit. `import UIKit`/`import AppKit` is still required for `UIViewController`, `UIView`, `UIApplication`, gesture recognizers, etc. A few cross-platform types are surfaced through SwiftUI's own bridges (`Image(uiImage:)`, `Color`/`Font`) | — |
 
 ## Foundation Modernization
 
