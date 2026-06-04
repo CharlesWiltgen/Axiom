@@ -7,7 +7,8 @@ import (
 
 // renderMarkdown renders an AnalyzeReport as a terse markdown report following
 // the fixed section order. Markdown stays cheap for an LLM while remaining
-// human-glanceable; weights are shown as cycle counts.
+// human-glanceable; frame cost is shown as % of CPU cycles plus an approximate
+// wall-time in ms (see enrichWeights for why ms is sample-derived).
 func renderMarkdown(r AnalyzeReport) string {
 	var b strings.Builder
 	s := r.Summary
@@ -49,7 +50,8 @@ func renderMarkdown(r AnalyzeReport) string {
 			if hf.System {
 				tag = " ⟨sys⟩"
 			}
-			fmt.Fprintf(&b, "| %s%s | %s | %d | %d | %d |\n", hf.Name, tag, hf.Binary, hf.Inclusive, hf.Self, hf.Samples)
+			fmt.Fprintf(&b, "| %s%s | %s | %.1f%% (~%.0fms) | %.1f%% (~%.0fms) | %d |\n",
+				hf.Name, tag, hf.Binary, hf.InclusivePct, hf.InclusiveMS, hf.SelfPct, hf.SelfMS, hf.Samples)
 		}
 	}
 
@@ -57,8 +59,8 @@ func renderMarkdown(r AnalyzeReport) string {
 	if r.MainThread != nil {
 		mt := r.MainThread
 		b.WriteString("\n## Main thread (approximate)\n")
-		fmt.Fprintf(&b, "- samples: %d · weight: %d · max gap: %dms (threshold %dms) · candidate stalls: %d\n",
-			mt.Samples, mt.Weight, mt.MaxGapMS, mt.GapThresholdMS, mt.CandidateStalls)
+		fmt.Fprintf(&b, "- samples: %d · cpu share: %.1f%% · max gap: %dms (threshold %dms) · candidate stalls: %d\n",
+			mt.Samples, mt.WeightPct, mt.MaxGapMS, mt.GapThresholdMS, mt.CandidateStalls)
 	}
 
 	// 5. Top user-code frames
@@ -68,7 +70,8 @@ func renderMarkdown(r AnalyzeReport) string {
 	} else {
 		b.WriteString("| function | binary | self | inclusive |\n|---|---|---|---|\n")
 		for _, hf := range r.UserFrames {
-			fmt.Fprintf(&b, "| %s | %s | %d | %d |\n", hf.Name, hf.Binary, hf.Self, hf.Inclusive)
+			fmt.Fprintf(&b, "| %s | %s | %.1f%% (~%.0fms) | %.1f%% (~%.0fms) |\n",
+				hf.Name, hf.Binary, hf.SelfPct, hf.SelfMS, hf.InclusivePct, hf.InclusiveMS)
 		}
 	}
 

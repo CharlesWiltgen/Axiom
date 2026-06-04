@@ -83,12 +83,25 @@ func buildReport(trace string, tocBytes, cpuBytes []byte, startMS, endMS int64, 
 		rep.HotFrames = aggregateHotFrames(samples, 15)
 		rep.UserFrames = topUserFrames(samples, userBinaries, 15)
 		mt := mainThreadStats(samples, hangThresholdMS)
+
+		totalCycles := totalCycleWeight(samples)
+		windowSec := analyzedWindowSec(rep.Summary.DurationSec, startMS, endMS, rep.Scope != nil)
+		enrichWeights(rep.HotFrames, totalCycles, len(samples), windowSec)
+		enrichWeights(rep.UserFrames, totalCycles, len(samples), windowSec)
+		if totalCycles > 0 {
+			mt.WeightPct = round2(100 * float64(mt.Weight) / float64(totalCycles))
+		}
 		rep.MainThread = &mt
 	}
 
 	rep.Notes = append(rep.Notes,
 		"main-thread stall figures are approximate (cpu-profile samples running threads only; the Hangs instrument confirms)",
 	)
+	if len(rep.HotFrames) > 0 {
+		rep.Notes = append(rep.Notes,
+			"frame % is share of CPU cycles; ms is approximate (sample-share × window), since cycle-weight is cycles, not time",
+		)
+	}
 	if symbolNeeded(rep.UserFrames) {
 		rep.Notes = append(rep.Notes, "some frames are raw addresses (stripped binary); pass --dsym for symbol names (xcprof Phase 2)")
 	}
