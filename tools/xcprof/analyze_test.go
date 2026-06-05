@@ -132,7 +132,7 @@ func TestScopeByTime(t *testing.T) {
 }
 
 func TestBuildReportEndToEnd(t *testing.T) {
-	rep, err := buildReport("cpu.trace", loadFixture(t, "toc.xml"), loadFixture(t, "cpu-profile.xml"), 0, 0, nil, 250, nil)
+	rep, err := buildReport(buildOpts{trace: "cpu.trace", tocBytes: loadFixture(t, "toc.xml"), cpuBytes: loadFixture(t, "cpu-profile.xml"), hangMS: 250})
 	if err != nil {
 		t.Fatalf("buildReport: %v", err)
 	}
@@ -160,7 +160,7 @@ func TestBuildReportEndToEnd(t *testing.T) {
 }
 
 func TestBuildReportScopedWindow(t *testing.T) {
-	rep, _ := buildReport("cpu.trace", loadFixture(t, "toc.xml"), loadFixture(t, "cpu-profile.xml"), 600, 700, nil, 250, nil)
+	rep, _ := buildReport(buildOpts{trace: "cpu.trace", tocBytes: loadFixture(t, "toc.xml"), cpuBytes: loadFixture(t, "cpu-profile.xml"), startMS: 600, endMS: 700, hangMS: 250})
 	if rep.Scope == nil || rep.Scope.SamplesInScope != 2 {
 		t.Errorf("scoped report should report 2 samples in 600-700ms window, got %+v", rep.Scope)
 	}
@@ -173,7 +173,7 @@ func TestBuildReportScopeDoesNotDowngradeSupport(t *testing.T) {
 	// A window past the trace end excludes every sample, but the trace DID
 	// contain cpu data — the support matrix is trace-level, so cpu must stay
 	// "available", not flip to "partial — no samples parsed".
-	rep, _ := buildReport("cpu.trace", loadFixture(t, "toc.xml"), loadFixture(t, "cpu-profile.xml"), 999000, 1000000, nil, 250, nil)
+	rep, _ := buildReport(buildOpts{trace: "cpu.trace", tocBytes: loadFixture(t, "toc.xml"), cpuBytes: loadFixture(t, "cpu-profile.xml"), startMS: 999000, endMS: 1000000, hangMS: 250})
 	if rep.CPUSamples != 0 {
 		t.Fatalf("expected 0 samples in an out-of-range window, got %d", rep.CPUSamples)
 	}
@@ -189,7 +189,7 @@ func TestBuildReportScopeDoesNotDowngradeSupport(t *testing.T) {
 }
 
 func TestRenderMarkdownSectionOrder(t *testing.T) {
-	rep, _ := buildReport("cpu.trace", loadFixture(t, "toc.xml"), loadFixture(t, "cpu-profile.xml"), 0, 0, nil, 250, nil)
+	rep, _ := buildReport(buildOpts{trace: "cpu.trace", tocBytes: loadFixture(t, "toc.xml"), cpuBytes: loadFixture(t, "cpu-profile.xml"), hangMS: 250})
 	md := renderMarkdown(rep)
 	sections := []string{"## Summary", "## Support", "## CPU", "## Main thread", "## Top user-code frames"}
 	last := -1
