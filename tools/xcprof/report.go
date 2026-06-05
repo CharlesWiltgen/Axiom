@@ -75,7 +75,24 @@ func renderMarkdown(r AnalyzeReport) string {
 		}
 	}
 
-	// 6. (parse failures) / 7. (other families) collapse into Support above in Phase 1.
+	// 6. Network (socket connections, when the table was exported with data)
+	if r.Network != nil {
+		n := r.Network
+		fmt.Fprintf(&b, "\n## Network (%d connections)\n", n.Connections)
+		fmt.Fprintf(&b, "- total: %s in · %s out\n", humanBytes(n.TotalRxBytes), humanBytes(n.TotalTxBytes))
+		if n.UnattributedRows > 0 {
+			fmt.Fprintf(&b, "- %d interval row(s) had traffic but no connection serial — not counted above\n", n.UnattributedRows)
+		}
+		if len(n.TopByBytes) > 0 {
+			b.WriteString("| process | proto | remote | in | out |\n|---|---|---|---|---|\n")
+			for _, c := range n.TopByBytes {
+				fmt.Fprintf(&b, "| %s (%d) | %s | %s | %s | %s |\n",
+					c.Process, c.PID, c.Protocol, c.Remote, humanBytes(c.RxBytes), humanBytes(c.TxBytes))
+			}
+		}
+	}
+
+	// 7. (other families) collapse into Support above.
 	// 8. Notes / caveats
 	if len(r.Notes) > 0 {
 		b.WriteString("\n## Notes\n")
@@ -84,4 +101,19 @@ func renderMarkdown(r AnalyzeReport) string {
 		}
 	}
 	return b.String()
+}
+
+// humanBytes renders a byte count in binary units (KiB/MiB/GiB) for the
+// human-glanceable markdown; the JSON keeps the exact integer.
+func humanBytes(n int64) string {
+	const unit = 1024
+	if n < unit {
+		return fmt.Sprintf("%d B", n)
+	}
+	div, exp := int64(unit), 0
+	for v := n / unit; v >= unit; v /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %ciB", float64(n)/float64(div), "KMGTPE"[exp])
 }

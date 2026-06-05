@@ -6,26 +6,50 @@ import (
 )
 
 type familyDef struct {
-	name    string
-	schemas []string
+	name       string
+	schemas    []string // exportable schemas that satisfy this family
+	exportable bool     // false: xctrace export can never surface this family's data
+	note       string   // emitted when the family is reported not_exportable
 }
 
 // families maps a diagnostic family to the export schemas that satisfy it.
+// Schema names are verified against real Xcode 26 exports (axiom-o4sg), NOT
+// guessed: cpu-profile and network-connection-stat are XML-exportable; the
+// memory (Allocations/Leaks) and macOS energy (Power Profiler) instruments store
+// their data in the trace's event store, which `xctrace export` does not surface
+// at all — so those families are categorically not_exportable, never a misleading
+// "partial, parsing arrives later" (which would never come true).
+// Two families are exportable:false for DIFFERENT reasons, and the distinction
+// is load-bearing for the future iOS-energy work (axiom-fmaw):
+//   - memory: PERMANENT — Allocations/Leaks data lives in the .oa event store on
+//     every platform; no xctrace export will ever surface it. Stays false.
+//   - energy: PROVISIONAL — Power Profiler simply doesn't run on macOS, but on an
+//     iOS device it produces data. When iOS energy parsing lands, energy flips to
+//     exportable:true with schemas + drops the note (the host-platform gate moves
+//     into supportMatrix, not this flag).
 var families = []familyDef{
-	{"cpu", []string{"cpu-profile"}},
-	{"memory", []string{"allocations", "leaks"}},
-	{"network", []string{"http-traffic", "network-connections"}},
-	{"energy", []string{"power", "energy-model", "location-energy-model"}},
-	{"hangs", []string{"hangs", "microstackshots"}},
+	{name: "cpu", schemas: []string{"cpu-profile"}, exportable: true},
+	{name: "memory", exportable: false, // permanent — event store, never exportable
+		note: "Allocations/Leaks data isn't available via xctrace export (it lives in the trace event store); open the trace in Instruments.app for memory analysis"},
+	{name: "network", schemas: []string{"network-connection-stat"}, exportable: true},
+	{name: "energy", exportable: false, // provisional — macOS-unsupported; iOS parsing is axiom-fmaw
+		note: "Power Profiler is iOS/iPadOS-only and isn't exported on macOS; on-device energy parsing is a future, device-verified addition"},
+	{name: "hangs", schemas: []string{"hangs", "microstackshots"}, exportable: true},
 }
 
-// supportMatrix reports, per family, whether xcprof measured it. cpu is
-// available when samples parsed; a family whose schema is present but not yet
-// parsed by this version is `partial` with a note; absent schemas are
-// `not_present`. This is the honesty contract — silence never reads as "clean".
-func supportMatrix(toc *TOC, cpuSamples int) []FamilyStatus {
+// supportMatrix reports, per family, whether xcprof measured it. cpu/network are
+// available when their data parsed, `partial` when the table is present but
+// nothing parsed; non-exportable families (memory, macOS energy) are
+// `not_exportable` with a note pointing at Instruments.app; absent exportable
+// families are `not_present`. This is the honesty contract — silence never reads
+// as "clean", and "can't measure" never reads as "measured, nothing found".
+func supportMatrix(toc *TOC, cpuSamples, netConns int) []FamilyStatus {
 	out := make([]FamilyStatus, 0, len(families))
 	for _, fam := range families {
+		if !fam.exportable {
+			out = append(out, FamilyStatus{Family: fam.name, Status: statusNotExportable, Note: fam.note})
+			continue
+		}
 		present := false
 		for _, s := range fam.schemas {
 			if toc.hasSchema(s) {
@@ -38,6 +62,10 @@ func supportMatrix(toc *TOC, cpuSamples int) []FamilyStatus {
 			out = append(out, FamilyStatus{Family: fam.name, Status: statusAvailable})
 		case fam.name == "cpu" && present:
 			out = append(out, FamilyStatus{Family: fam.name, Status: statusPartial, Note: "cpu-profile table present but no samples parsed"})
+		case fam.name == "network" && present && netConns > 0:
+			out = append(out, FamilyStatus{Family: fam.name, Status: statusAvailable})
+		case fam.name == "network" && present:
+			out = append(out, FamilyStatus{Family: fam.name, Status: statusPartial, Note: "network-connection-stat table present but no connections parsed"})
 		case present:
 			out = append(out, FamilyStatus{Family: fam.name, Status: statusPartial, Note: "schema present; parsing arrives in a later xcprof version"})
 		default:

@@ -21,19 +21,25 @@ const defaultMaxDuration = "60s"
 // timeout, so trace finalization/saving isn't killed mid-write.
 const recordExecGrace = 120 * time.Second
 
-// presets map a preset name to a verified-on-Xcode-26 instrument set. The CPU
-// family deliberately uses "CPU Profiler" (schema cpu-profile, which the
-// analyzer parses), NOT "Time Profiler" (schema time-profile/time-sample, which
-// analyze does not yet read) — ADR-002's table predates the Phase 1 finding
-// that the parser keys on cpu-profile. Names verified via `xctrace list
-// instruments`; do not edit from memory.
+// presets map a preset name to a verified-on-Xcode-26 instrument set. Two
+// instrument choices are deliberate and verified empirically (axiom-o4sg), NOT
+// from memory:
+//   - cpu uses "CPU Profiler" (schema cpu-profile, which analyze parses), NOT
+//     "Time Profiler" (time-profile/time-sample, unparsed).
+//   - network uses "Network Connections" (schema network-connection-stat, which
+//     analyze parses — socket-level, any process), NOT "HTTP Traffic" (cfnetwork
+//     tables that only populate for URLSession traffic and analyze doesn't read).
+//
+// Allocations/Leaks stay in the memory/full presets so a user can open the
+// recording in Instruments.app, even though analyze can't export their data.
+// Names verified via `xctrace list instruments`; do not edit from memory.
 var presets = map[string][]string{
 	"cpu":      {"CPU Profiler"},
 	"memory":   {"Allocations", "Leaks"},
-	"network":  {"CPU Profiler", "HTTP Traffic"},
+	"network":  {"CPU Profiler", "Network Connections"},
 	"energy":   {"Power Profiler"},
-	"full":     {"CPU Profiler", "Allocations", "Leaks", "HTTP Traffic"},
-	"full-ios": {"CPU Profiler", "Allocations", "Leaks", "HTTP Traffic", "Power Profiler"},
+	"full":     {"CPU Profiler", "Allocations", "Leaks", "Network Connections"},
+	"full-ios": {"CPU Profiler", "Allocations", "Leaks", "Network Connections", "Power Profiler"},
 }
 
 // presetNames is the stable display order for usage/error text.
@@ -49,7 +55,7 @@ var presetNames = []string{"cpu", "memory", "network", "energy", "full", "full-i
 var presetFamilies = map[string][]string{
 	"cpu":      {"cpu"},
 	"memory":   {"memory"},
-	"network":  {"cpu", "network"}, // records CPU Profiler + HTTP Traffic
+	"network":  {"cpu", "network"}, // records CPU Profiler + Network Connections
 	"energy":   {"energy"},
 	"full":     {"cpu", "memory", "network"},
 	"full-ios": {"cpu", "memory", "network", "energy"},
