@@ -26,6 +26,7 @@ Use this reference when:
 - "Why does my analyze report show memory as `not_exportable`?"
 - "How do I symbolicate a release build's stack frames in a trace?"
 - "How do I re-analyze just the 2.0–2.5s window where I saw a hang?"
+- "Which processes used the network in my trace, and how many bytes?"
 - "What does `xcprof doctor` check?"
 - "Why did `xcprof record` exit non-zero but still save a trace?"
 - "Which preset records leaks and allocations?"
