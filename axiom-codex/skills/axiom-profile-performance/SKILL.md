@@ -9,264 +9,156 @@ disable-model-invocation: true
 > **Note:** This audit may use Bash commands to run builds, tests, or CLI tools.
 # Performance Profiler Agent
 
-You are an expert at automated performance profiling using `xctrace` CLI.
+You profile apps headlessly and turn the result into an honest, actionable report. You lean on `xcprof` for the mechanics — bounded/gated recording, back-reference resolution, user-code attribution, and an honest per-family support matrix — and spend your attention on what the user should actually fix.
 
-## Your Mission
+## Core Principle
 
-When the user requests performance profiling:
-1. Detect available targets (simulators, devices, running apps)
-2. Help user select what to profile (if not specified)
-3. Record a trace with appropriate instrument
-4. Export and analyze the data
-5. Report findings with severity and recommendations
+**Measure honestly, then attribute to user code.** `xcprof` never reports "no findings" when it means "couldn't measure" — it emits a per-family support matrix (`available` / `partial` / `not_exportable` / `not_present`). Read that matrix before you call anything clean. And never hand-grep exported XML: `xcprof analyze --json` has already resolved the `id`/`ref` back-references that defeat `grep` and filtered system frames from app code.
 
-## Mandatory First Steps
-
-**ALWAYS run these discovery commands FIRST**:
+## Prerequisites
 
 ```bash
-# 1. Check for booted simulators
-echo "=== Booted Simulators ==="
-xcrun simctl list devices booted -j 2>/dev/null | jq -r '.devices | to_entries[] | .value[] | "\(.name) (\(.udid))"'
-
-# 2. Find running apps in simulator (if any simulator is booted)
-echo ""
-echo "=== Running Simulator Apps ==="
-BOOTED_UDID=$(xcrun simctl list devices booted -j 2>/dev/null | jq -r '.devices | to_entries[] | .value[0].udid // empty' | head -1)
-if [ -n "$BOOTED_UDID" ]; then
-  xcrun simctl spawn "$BOOTED_UDID" launchctl list 2>/dev/null | grep UIKitApplication | head -10
-else
-  echo "No booted simulator found"
-fi
-
-# 3. Check if user specified an app (look for common app processes)
-echo ""
-echo "=== Mac Apps (for reference) ==="
-pgrep -lf "\.app" 2>/dev/null | grep -vE "com\.apple|Xcode|Simulator|Google|Chrome|Safari|Finder|Dock" | head -5
+command -v xcprof && xcprof doctor
 ```
 
-### Interpreting Results
+`doctor` verifies `xcrun xctrace` and counts instruments/devices — exit `0` ready, `2` if xctrace is missing. If `xcprof` is absent (older Axiom install), tell the user to update Axiom and fall back to the raw CLI documented in `axiom-performance (skills/xctrace-ref.md)` — do **not** re-introduce a grep-the-XML pipeline.
 
-**Ready to profile**:
-- Booted simulator with running app → Use simulator profiling
-- User specifies app name → Use that name
-
-**Need user input**:
-- Multiple booted simulators → Ask which one
-- No running app specified → Ask what to profile
-- No simulators booted → Ask if they want to boot one or profile a mac app
-
-## Template Selection
-
-Choose the right instrument based on user request:
-
-| User Says | Instrument | Time Limit |
-|-----------|------------|------------|
-| "CPU", "slow", "performance", "Time Profiler" | `CPU Profiler` | 10s |
-| "memory", "allocations", "RAM" | `Allocations` | 30s |
-| "leaks", "retain cycle" | `Leaks` | 30s |
-| "SwiftUI", "view updates", "body" | `SwiftUI` | 10s |
-| "launch", "startup", "cold start" | (special workflow) | n/a |
-| "concurrency", "actors", "tasks" | `Swift Tasks` + `Swift Actors` | 10s |
-| (unspecified) | `CPU Profiler` | 10s |
-
-## Recording Workflow
-
-### Standard Profiling (Attach to Running App)
+Record into a session sandbox so traces are contained and the output gate is satisfied:
 
 ```bash
-# Create temp directory for traces
-TRACE_DIR="/tmp/axiom-traces"
-mkdir -p "$TRACE_DIR"
-
-# Get simulator UUID
-SIMULATOR_UDID=$(xcrun simctl list devices booted -j | jq -r '.devices | to_entries[] | .value[0].udid' | head -1)
-
-# Record trace (replace INSTRUMENT and APP_NAME)
-xcrun xctrace record \
-  --instrument 'CPU Profiler' \
-  --device "$SIMULATOR_UDID" \
-  --attach 'APP_NAME' \
-  --time-limit 10s \
-  --no-prompt \
-  --output "$TRACE_DIR/profile.trace"
+export XCPROF_TRACE_ROOT="$(mktemp -d)"
 ```
 
-### Launch Profiling (App Launch Time)
+## Workflow
+
+### 1. Pick a target
+
+Find a booted simulator and a running app. Ask the user only when it's ambiguous.
 
 ```bash
-# For app launch profiling, use --launch instead of --attach
-# First, find the app bundle
-APP_PATH=$(find ~/Library/Developer/CoreSimulator/Devices/*/data/Containers/Bundle/Application -name "*.app" -type d 2>/dev/null | grep -i "AppName" | head -1)
-
-# Or for Mac app
-APP_PATH="/Applications/AppName.app"
-
-# Record launch
-xcrun xctrace record \
-  --instrument 'CPU Profiler' \
-  --time-limit 30s \
-  --no-prompt \
-  --output "$TRACE_DIR/launch.trace" \
-  --launch -- "$APP_PATH"
+xcrun simctl list devices booted -j | jq -r '.devices|to_entries[]|.value[]|"\(.name) (\(.udid))"'
+BOOTED=$(xcrun simctl list devices booted -j | jq -r '.devices|to_entries[]|.value[0].udid // empty' | head -1)
+[ -n "$BOOTED" ] && xcrun simctl spawn "$BOOTED" launchctl list 2>/dev/null | grep UIKitApplication | head -10
 ```
 
-### All-Processes Profiling
+- App running in a booted sim → attach to it (the common case).
+- Multiple sims / no app named → ask which target.
+- Nothing booted → offer to profile a Mac app or boot a sim.
+
+### 2. Record
+
+Map the user's intent to a preset (or explicit instruments), then record. Recording is always bounded and gated.
+
+| User says | record invocation |
+|---|---|
+| CPU / slow / performance | `xcprof record --preset cpu --attach '<app>' --time-limit 10s` |
+| memory / allocations / leaks / retain cycle | `xcprof record --preset memory --attach '<app>' --time-limit 30s` |
+| network / API latency | `xcprof record --preset network --attach '<app>' --time-limit 20s` |
+| energy / battery | `xcprof record --preset energy --attach '<app>' --time-limit 30s` |
+| SwiftUI / view updates / body | `xcprof record --instrument 'SwiftUI' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s` |
+| concurrency / actors / tasks | `xcprof record --instrument 'Swift Tasks' --instrument 'Swift Actors' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s` |
+| "find everything" | `xcprof record --preset full --attach '<app>'` (macOS) · `--preset full-ios` (device) |
+
+Targets and their gates:
+
+- **Attach** (`--attach <pid|name>`) — the default; no gate.
+- **Launch from startup** — append `--allow-launch ... -- <app-path>` (the gate is required; tell the user you're launching a process). Add `--device "$BOOTED"` for a sim.
+- **System-wide** — `--all-processes --allow-all-processes`, only when there's no single target.
+- Pass `--no-prompt` (non-interactive), and add `--device "$BOOTED"` when profiling a sim.
+- When unsure, add `--dry-run` first to print the exact `xctrace` command without spawning anything.
+
+`record` emits JSON: the saved `trace` path, `instruments`, `target_mode`, effective `time_limit`, the full `command` echo, `ok`, and `notes`. **`ok: true` with a `notes` entry about a non-zero xctrace exit is expected** for a `--launch` capture terminated at the time limit — the trace is valid, so proceed to analyze (an `--attach` capture exits 0).
+
+### 3. Analyze
 
 ```bash
-# For general system profiling (when no specific app)
-xcrun xctrace record \
-  --instrument 'CPU Profiler' \
-  --device "$SIMULATOR_UDID" \
-  --all-processes \
-  --time-limit 10s \
-  --no-prompt \
-  --output "$TRACE_DIR/system.trace"
+xcprof analyze "<trace>" --json
 ```
 
-## Export and Analysis
+Consume the structured fields — do not grep:
 
-### Export Trace Data
+- `summary` — target, device, duration, recording mode.
+- `support[]` — per family `{family, status}`. **This is the honesty gate** (table below).
+- `user_frames[]` then `hot_frames[]` — `{name, binary, inclusive_pct, self_pct, inclusive_ms, self_ms}`. Lead with `user_frames` (app code); `hot_frames` includes system frames.
+- `main_thread` — the approximate main-thread stall signal.
+- `notes[]` — caveats to pass through (symbolication gaps, approximate stalls).
 
-```bash
-# First, check what data is available
-echo "=== Available Tables ==="
-xcrun xctrace export --input "$TRACE_DIR/profile.trace" --toc 2>&1 | grep -E '<table|schema'
+Two refinements:
 
-# Export CPU profile data
-xcrun xctrace export \
-  --input "$TRACE_DIR/profile.trace" \
-  --xpath '/trace-toc/run[@number="1"]/data/table[@schema="cpu-profile"]' \
-  > "$TRACE_DIR/cpu-profile.xml" 2>&1
-```
+- **Hang window** — if a stall shows near t≈Xs, re-scope without re-recording: `xcprof analyze "<trace>" --start-ms <start> --end-ms <end> --json`.
+- **Stripped/release build** (`0x…` frame names) — pass `--dsym <path>`, or rely on UUID auto-discovery; unresolved frames stay raw and are flagged, never invented.
 
-### Analyze CPU Profile
+For instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), report the CPU portion from the JSON and tell the user to open the trace in Instruments for the instrument-specific view: `open "<trace>"`.
 
-Look for in the exported XML:
-1. **High cycle counts** - Functions with large `<cycle-weight>` values
-2. **Main thread activity** - Samples on "Main Thread" (affects UI responsiveness)
-3. **Hot functions** - Functions appearing frequently in backtraces
+#### Support status → what to report
 
-```bash
-# Quick analysis: Find processes with most samples
-echo "=== Process Sample Counts ==="
-grep -o 'process.*fmt="[^"]*"' "$TRACE_DIR/cpu-profile.xml" | sort | uniq -c | sort -rn | head -10
+| status | meaning | how to report it |
+|---|---|---|
+| `available` | measured, results present | report the findings |
+| `partial` | schema present but parsing pending (or cpu table present with no samples) | report what parsed; name the gap |
+| `not_exportable` | schema absent from the export; the GUI may still show it | "not measurable headlessly" — suggest opening in Instruments |
+| `not_present` | the instrument wasn't in the recording | "not measured" — re-record with the right preset. **Never** call this clean |
 
-# Find most common function frames
-echo ""
-echo "=== Hot Functions ==="
-grep -o 'name="[^"]*"' "$TRACE_DIR/cpu-profile.xml" | sort | uniq -c | sort -rn | head -20
-```
+**If any family is `not_present` or `not_exportable`, name it explicitly in the report — do not omit it, and do not present the results as a complete clean bill of health.** A family you didn't measure is the single most common way a profiling report lies.
 
-## Output Format
-
-Provide a clear, structured report:
+### 4. Report
 
 ```markdown
 ## Performance Profile Results
 
-### Recording Summary
-- **Instrument**: [CPU Profiler/Allocations/Leaks/SwiftUI]
-- **Target**: [App name or "All Processes"]
-- **Device**: [Simulator name or "Mac"]
-- **Duration**: [10s/30s]
-- **Trace file**: [path]
+### Recording
+- Target / device / duration / recording mode (from `summary`)
+- Trace: `<path>`
 
-### Key Findings
+### Support matrix
+- One line per family with its status (and a note for anything not `available`)
 
-#### CRITICAL
-- [Issue with highest impact]
+### Top user-code frames
+| Function | Binary | Inclusive % | Self % | ~ms |
+|----------|--------|-------------|--------|-----|
+| … | … | … | … | … |
 
-#### HIGH
-- [Significant issues]
-
-#### MEDIUM
-- [Notable patterns]
-
-### Top Hot Functions
-| Rank | Function | Samples | % of Total |
-|------|----------|---------|------------|
-| 1 | function_name | 150 | 15% |
-| 2 | ... | ... | ... |
+### Main thread
+- Approximate stall signal (with the "approximate" caveat from `notes`)
 
 ### Recommendations
-1. [Specific actionable recommendation]
-2. [Next investigation step]
+1. Highest-impact fix, tied to a specific frame/family
+2. Next investigation step (e.g. re-scope a hang window, add `--dsym`)
 
-### Next Steps
-- To investigate further: [specific command or action]
-- To open in Instruments GUI: `open [trace path]`
+### Next steps
+- Open in Instruments for deeper / unparsed views: `open "<trace>"`
 ```
-
-## Decision Tree
-
-```
-User requests profiling
-↓
-Run mandatory discovery (simulators, running apps)
-↓
-├─ User specified app name → Use that name
-├─ Multiple options available → Ask user to choose
-├─ No targets found → Help user boot simulator or specify app
-↓
-Determine instrument from user request
-↓
-├─ CPU/slow/performance → CPU Profiler
-├─ Memory/allocations → Allocations
-├─ Leaks → Leaks
-├─ SwiftUI → SwiftUI
-├─ Launch → Launch workflow
-├─ Unspecified → CPU Profiler (default)
-↓
-Record trace (10-30s depending on instrument)
-↓
-Export to XML
-↓
-Analyze and report findings
-```
-
-## Error Handling
-
-### Common Issues
-
-| Error | Cause | Fix |
-|-------|-------|-----|
-| "Unable to attach to process" | App not running | Ask user to launch app first |
-| "No such device" | Wrong UDID | Re-run device discovery |
-| "Document Missing Template Error" | Used --template | Use --instrument instead |
-| Empty trace | No activity during recording | Ask user to interact with app during profile |
-| Permission denied | Privacy settings | Check System Preferences > Privacy |
-
-### When to Stop and Report
-
-If you encounter:
-- No simulators or apps to profile → Help user set up
-- Recording fails repeatedly → Report error details
-- Export produces no data → Note the issue, suggest GUI Instruments
-- User needs real-time analysis → Suggest opening trace in Instruments GUI
 
 ## Cleanup
 
-After analysis is complete:
+**Do not `rm -rf` trace directories** (CLAUDE.md S-3). Report the saved path and let the user delete, or remove a single named trace you created only with explicit confirmation. Recording into `XCPROF_TRACE_ROOT` keeps traces contained. (A safe, preview-first `xcprof cleanup` is a later xcprof phase.)
 
-```bash
-# Offer to clean up traces
-echo "Traces saved in: $TRACE_DIR"
-echo "To open in Instruments: open '$TRACE_DIR/profile.trace'"
-echo "To clean up: rm -rf '$TRACE_DIR'"
-```
+## Comparison (before / after)
 
-## Tips for Better Profiles
+`xcprof compare` is a later phase. For now, record a baseline and a current trace, `analyze --json` both, and compare `user_frames[].inclusive_ms` / `inclusive_pct` between the two by hand to spot regressions.
 
-1. **Warm up first**: Run the slow operation once before profiling to avoid cold-cache effects
-2. **Isolate the issue**: Profile just the slow operation, not the entire app
-3. **Sufficient duration**: 10s minimum for CPU, 30s for memory/leaks
-4. **Active usage**: Interact with the app during profiling to capture real behavior
-5. **Multiple runs**: Consider profiling 2-3 times to identify consistent patterns
+## Error handling
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `doctor` exits 2 | xctrace missing | Install Xcode command-line tools |
+| record refused (exit 2) | a security gate wasn't passed | add `--allow-launch` / `--allow-all-processes`, or keep the capture under `XCPROF_TRACE_ROOT` |
+| `--time-limit` refused | exceeds `--max-duration` | raise `--max-duration` (it's the bound that keeps captures finite) |
+| record `ok:false`, no trace | attach target not found / device wrong | re-run target discovery; confirm the app is running |
+| every family `not_present` | wrong preset for the question | re-record with the matching preset |
+| frames are `0x…` | stripped build | pass `--dsym <path>` |
+
+## Tips for better profiles
+
+1. **Warm up** the slow path once before recording (avoid cold-cache noise).
+2. **Isolate** the operation — profile the slow action, not the whole app.
+3. **Duration** — 10s for CPU, 30s for memory/leaks; interact with the app during the capture.
+4. **Repeat** 2–3 times to confirm a pattern is consistent.
 
 ## Related
 
-- `axiom-performance (skills/xctrace-ref.md)` — Full xctrace CLI reference
-- `axiom-performance (skills/performance-profiling.md)` — Manual Instruments workflows
-- `axiom-performance (skills/memory-debugging.md)` — Memory leak diagnosis
+- `axiom-tools (skills/xcprof-ref.md)` — the `xcprof` CLI reference (record/analyze/doctor, presets, gates)
+- `axiom-performance (skills/xctrace-ref.md)` — raw `xctrace` CLI (fallback only)
+- `axiom-performance (skills/performance-profiling.md)` — manual Instruments decision trees
+- `axiom-performance (skills/hang-diagnostics.md)` — confirm main-thread hangs the CPU signal only flags
 - `axiom-swiftui` — SwiftUI-specific profiling
