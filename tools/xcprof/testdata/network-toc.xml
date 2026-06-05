@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<trace-toc>
+    <run number="1">
+        <info>
+            <target>
+                <device platform="macOS" model="Mac Studio" name="Mac Studio" os-version="26.5 (25F71)" uuid="CF383450-E70D-57EA-9E23-76E6791524B1"/>
+                <process type="all" return-exit-status="0" name="(all processes)" pid="0"/>
+            </target>
+            <summary>
+                <duration>6.000000</duration>
+                <end-reason>Time limit reached</end-reason>
+                <instruments-version>16.0 (17F42)</instruments-version>
+                <template-name>Network</template-name>
+                <recording-mode>Deferred</recording-mode>
+                <time-limit>6 seconds</time-limit>
+            </summary>
+        </info>
+        <data>
+            <table schema="thread-info" documentation="Associates threads with their owning process."/>
+            <table schema="network-connection-detected" documentation="Reports a newly detected connection."/>
+            <table schema="network-connection-stat" documentation="Provides statistical information about a connection over a given time interval."/>
+            <table schema="network-connection-update" documentation="Incremental per-connection deltas."/>
+        </data>
+    </run>
+</trace-toc>

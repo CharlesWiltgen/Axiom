@@ -6,10 +6,12 @@ package main
 const (
 	statusAvailable = "available" // exported, parsed, results present
 	statusPartial   = "partial"   // present but only partially handled
-	// statusNotExportable: schema present in the TOC but xctrace can't export it
-	// (GUI may still show data). Phase 1 can't distinguish this from absence
-	// without attempting the export; Phase 2 will report it. Defined now so the
-	// status enum is stable for consumers (ADR-002 honesty contract).
+	// statusNotExportable: the instrument's data cannot be surfaced by xctrace
+	// export — either because it lives in the trace event store rather than an
+	// exportable table (Allocations/Leaks), or because the instrument is
+	// unsupported on the host platform (Power Profiler on macOS). Instruments.app
+	// may still show it. Distinct from not_present (genuinely absent but, if
+	// recorded, would be exportable).
 	statusNotExportable = "not_exportable"
 	statusNotPresent    = "not_present" // instrument wasn't in the recording
 )
@@ -56,6 +58,7 @@ type AnalyzeReport struct {
 	HotFrames  []HotFrame       `json:"hot_frames,omitempty"`
 	UserFrames []HotFrame       `json:"user_frames,omitempty"`
 	MainThread *MainThreadStats `json:"main_thread,omitempty"`
+	Network    *NetworkReport   `json:"network,omitempty"`
 	Notes      []string         `json:"notes,omitempty"`
 }
 

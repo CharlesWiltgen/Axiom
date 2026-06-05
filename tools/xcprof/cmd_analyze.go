@@ -11,9 +11,15 @@ import (
 	"strings"
 )
 
-// cpuProfileXPath targets run 1 — the same run parseTOC selects. If multi-run
-// selection is ever added, both must change together.
+// cpuProfileXPath / netStatXPath target run 1 — the same run parseTOC selects.
+// If multi-run selection is ever added, all must change together.
 const cpuProfileXPath = `/trace-toc/run[@number="1"]/data/table[@schema="cpu-profile"]`
+const netStatXPath = `/trace-toc/run[@number="1"]/data/table[@schema="network-connection-stat"]`
+
+// netStatSchema is the exportable socket-statistics table (the "Network
+// Connections" instrument). Verified on Xcode 26 — NOT http-traffic, which the
+// Phase 1 family table guessed.
+const netStatSchema = "network-connection-stat"
 
 // exportTOC and exportTable are indirected so tests can drive analysis from
 // fixtures without a real .trace.
@@ -42,6 +48,7 @@ type buildOpts struct {
 	trace     string
 	tocBytes  []byte
 	cpuBytes  []byte
+	netBytes  []byte
 	startMS   int64
 	endMS     int64
 	hangMS    int64
@@ -82,6 +89,19 @@ func buildReport(opts buildOpts) (AnalyzeReport, error) {
 			return AnalyzeReport{}, err
 		}
 	}
+
+	// Network is independent of the cpu/scope path: it aggregates its own table.
+	var netConns int
+	if toc.hasSchema(netStatSchema) && len(opts.netBytes) > 0 {
+		net, nerr := parseNetworkStat(opts.netBytes, 15)
+		if nerr != nil {
+			return AnalyzeReport{}, nerr
+		}
+		netConns = net.Connections
+		if net.Connections > 0 {
+			rep.Network = &net
+		}
+	}
 	// The support matrix is a trace-level inventory: base it on the full parsed
 	// count, not the scoped window, so `--start-ms`/`--end-ms` that excludes all
 	// samples doesn't misreport cpu as "partial — no samples parsed".
@@ -92,7 +112,7 @@ func buildReport(opts buildOpts) (AnalyzeReport, error) {
 		samples = scoped
 	}
 	rep.CPUSamples = len(samples)
-	rep.Support = supportMatrix(toc, fullSampleCount)
+	rep.Support = supportMatrix(toc, fullSampleCount, netConns)
 
 	// Resolve raw-address frames before aggregation so hot/user frames carry
 	// names. No-op (no shell-out) when nothing needs symbolicating.
@@ -233,6 +253,14 @@ func runAnalyze(out io.Writer, args []string) int {
 			return 2
 		}
 	}
+	var netBytes []byte
+	if toc.hasSchema(netStatSchema) {
+		netBytes, err = exportTable(ctx, trace, netStatXPath)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "analyze: export network-connection-stat:", err)
+			return 2
+		}
+	}
 
 	symbolize := func(samples []Sample) symbolizeResult {
 		return symbolizeSamples(ctx, samples, opts.dsym)
@@ -241,6 +269,7 @@ func runAnalyze(out io.Writer, args []string) int {
 		trace:     trace,
 		tocBytes:  tocBytes,
 		cpuBytes:  cpuBytes,
+		netBytes:  netBytes,
 		startMS:   opts.startMS,
 		endMS:     opts.endMS,
 		hangMS:    opts.hang,

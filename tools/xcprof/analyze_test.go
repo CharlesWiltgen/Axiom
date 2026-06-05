@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestAggregateHotFramesAttribution(t *testing.T) {
 	samples, _ := parseCPUProfile(loadFixture(t, "cpu-profile.xml"))
@@ -185,6 +188,44 @@ func TestBuildReportScopeDoesNotDowngradeSupport(t *testing.T) {
 	}
 	if cpu != statusAvailable {
 		t.Errorf("cpu support = %q for an empty scope window, want available (full trace had samples)", cpu)
+	}
+}
+
+func TestBuildReportNetwork(t *testing.T) {
+	// A network trace (TOC carries network-connection-stat) + the real stat
+	// export: network must parse, the family flip to available, and the report
+	// carry the aggregated connections.
+	rep, err := buildReport(buildOpts{
+		trace:    "net.trace",
+		tocBytes: loadFixture(t, "network-toc.xml"),
+		netBytes: loadFixture(t, "network-connection-stat.xml"),
+	})
+	if err != nil {
+		t.Fatalf("buildReport: %v", err)
+	}
+	if rep.Network == nil {
+		t.Fatal("expected a network report")
+	}
+	if rep.Network.Connections != 13 {
+		t.Errorf("network connections = %d, want 13", rep.Network.Connections)
+	}
+	var netStatus, memStatus string
+	for _, f := range rep.Support {
+		switch f.Family {
+		case "network":
+			netStatus = f.Status
+		case "memory":
+			memStatus = f.Status
+		}
+	}
+	if netStatus != statusAvailable {
+		t.Errorf("network support = %q, want available", netStatus)
+	}
+	if memStatus != statusNotExportable {
+		t.Errorf("memory support = %q, want not_exportable", memStatus)
+	}
+	if !strings.Contains(renderMarkdown(rep), "## Network (13 connections)") {
+		t.Error("markdown missing the Network section")
 	}
 }
 
