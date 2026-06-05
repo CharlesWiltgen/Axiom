@@ -64,12 +64,15 @@ xcrun xctrace export --input profile.trace \
 
 This page documents the `axiom-performance` reference skill -- the complete xctrace CLI guide Claude uses when you need headless profiling or automated performance analysis.
 
+**For structured capture and analysis:** See [xcprof](/reference/xcprof-ref) -- the bundled Axiom CLI that wraps `xctrace record` and export with bounded, gated recording and a token-lean analysis model (honest support matrix, back-reference resolution, user-code attribution). Prefer it over hand-rolling `record` + `--xpath` + grep.
+
 **For GUI profiling workflows:** See [performance-profiling](/skills/debugging/performance-profiling) for Instruments decision trees.
 
 **For field metrics:** See [metrickit-ref](/reference/metrickit-ref) for collecting performance data from production users.
 
 ## Related
 
+- [xcprof](/reference/xcprof-ref) -- Structured Axiom wrapper over this CLI: gated capture + token-lean analysis
 - [performance-profiling](/skills/debugging/performance-profiling) -- Instruments decision trees and profiling workflows
 - [metrickit-ref](/reference/metrickit-ref) -- Field performance metrics via MetricKit
 - [app-store-connect-ref](/reference/app-store-connect-ref) -- Production crash and metrics dashboards

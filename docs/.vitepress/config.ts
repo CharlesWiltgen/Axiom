@@ -620,6 +620,7 @@ export default withMermaid(defineConfig({
             { text: 'MetricKit', link: '/reference/metrickit-ref' },
             { text: 'Timer Patterns', link: '/reference/timer-patterns-ref' },
             { text: 'xclog (Console Capture)', link: '/reference/xclog-ref' },
+            { text: 'xcprof (Trace Capture & Analysis)', link: '/reference/xcprof-ref' },
             { text: 'Xcode MCP Tools', link: '/reference/xcode-mcp-ref' },
             { text: 'xcsym (Crash Symbolication)', link: '/reference/xcsym-ref' },
             { text: 'xctrace', link: '/reference/xctrace-ref' },
