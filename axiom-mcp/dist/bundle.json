@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-06-04T19:20:55.881Z",
+  "generatedAt": "2026-06-05T16:48:37.404Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -36114,7 +36114,7 @@
     "axiom-tools--xcprof-ref": {
       "name": "axiom-tools--xcprof-ref",
       "description": "xcprof turns an Instruments `.trace` into a structured, token-lean report for LLM consumers. It replaces the old grep-the-XML profiling pipeline: it resolves xctrace's `id`/`ref` back-references (which defeat grep), reports an **honest per-family support matrix** (never \"no findings\" when it means \"couldn't measure\"), and attributes CPU work to user code instead of burying it under `dyld`/`libsystem`.",
-      "content": "# xcprof Reference (Structured xctrace Analysis)\n\nxcprof turns an Instruments `.trace` into a structured, token-lean report for LLM consumers. It replaces the old grep-the-XML profiling pipeline: it resolves xctrace's `id`/`ref` back-references (which defeat grep), reports an **honest per-family support matrix** (never \"no findings\" when it means \"couldn't measure\"), and attributes CPU work to user code instead of burying it under `dyld`/`libsystem`.\n\n## Invocation\n\n`xcprof` is on PATH as a bare command (plugin `bin/` is auto-resolved). Run `xcprof <subcommand>`.\n\n## Prerequisite: run `xcprof doctor`\n\n`xcprof doctor` verifies `xcrun xctrace` and counts available instruments/devices. Exit `0` ready; exit `2` if xctrace is missing.\n\n## Subcommands (Phase 1)\n\n- `xcprof analyze <trace> [flags]` — analyze an existing `.trace`. Exports the TOC + the `cpu-profile` table, resolves back-references into full backtraces, and reports: summary (target, device, duration, recording mode), the support matrix, CPU hot frames (inclusive + self as % of total CPU cycles plus an approximate ms), an approximate main-thread stall signal, and top user-code frames. Flags:\n  - `--json` — compact single-line JSON (LLM-lean). Default is terse markdown.\n  - `--both` — markdown then JSON.\n  - `--start-ms N` / `--end-ms N` — scope analysis to a time window (the hang-window workflow: see a stall at t=2.0s, re-analyze 2000–2500ms without re-recording).\n  - `--hang-threshold-ms N` — main-thread gap counted as a candidate stall (default 250).\n  - `--user-binary <names>` — comma-separated extra binaries to treat as user code (embedded frameworks).\n  - `--dsym <path>` — symbolicate raw-address frames using a `.dSYM` bundle or Mach-O. Without it, dSYMs are auto-discovered by UUID via Spotlight; frames with no matching dSYM stay raw and are flagged.\n  - `--open` — open the trace in Instruments.app after analysis (opt-in; headless by default).\n- `xcprof doctor [--human]` — environment check.\n\nFlags may come before or after `<trace>` — xcprof handles the Go-flag positional gotcha for you.\n\n## Capturing a trace (until `xcprof record` lands)\n\nxcprof Phase 1 analyzes existing traces; use raw xctrace to record (Xcode 26+ prefers `--instrument` over `--template`):\n\n```bash\nxcrun xctrace record --instrument 'CPU Profiler' --attach <pid|name> --time-limit 10s --output app.trace\nxcprof analyze app.trace --json\n```\n\n## Honesty caveats\n\n- **Frame cost is cycle share, not time.** The `%` is the exact share of total CPU cycles; the `ms` figure is an *approximate* wall-time from the frame's sample share × the analyzed window. Cycle-weight is cycles (the export's \"Cycles\" column), and cycles→time needs per-core frequency under DVFS that the trace doesn't carry — so ms is never derived from cycles.\n- **Main-thread stalls are approximate.** cpu-profile samples only running threads, so a large inter-sample gap is a *candidate* stall, not a confirmed hang — the Hangs instrument confirms (a later xcprof phase).\n- **Release builds show addresses.** Stripped binaries report raw `0x…` frame names. xcprof resolves them via `--dsym <path>` or auto-discovery by UUID through Spotlight; frames with no matching dSYM stay raw and are flagged (never invented). Fuller discovery sources (Archives/DerivedData walks, shared with xcsym) come with the engine-extraction epic (axiom-fo7k). Debug builds symbolicate natively, and Instruments may pre-symbolicate the export when it can find the dSYM at record time.\n- **Phase 1 is CPU-only.** the memory / network / energy / hangs families report `not_present` (absent from the recording) or `partial` (schema present, parsing pending) — never a silent \"clean\".\n\n## Output & exit codes\n\nCompact JSON (`--json`) or terse markdown (default); `--both` for both. Exit `0` analyzed · `2` environment/usage error (xctrace missing, trace not found, bad args).\n\n## Scope\n\nPhase 1 shipped `doctor` + `analyze` (CPU / Time Profiler family); analyze now also does `--dsym` symbolication (explicit path + Spotlight auto-discovery). `record` (presets + security gates), the shared dSYM/symbolication engine with fuller discovery (axiom-fo7k), memory/network/energy parsing, `compare` (regression detection), and `cleanup` remain later phases.\n\n## Resources\n\n**Tools**: `xcrun xctrace` (Instruments CLI), companion tools `xclog`, `xcsym`, `xcui`\n\n**Skills**: axiom-performance\n",
+      "content": "# xcprof Reference (Structured xctrace Analysis)\n\nxcprof turns an Instruments `.trace` into a structured, token-lean report for LLM consumers. It replaces the old grep-the-XML profiling pipeline: it resolves xctrace's `id`/`ref` back-references (which defeat grep), reports an **honest per-family support matrix** (never \"no findings\" when it means \"couldn't measure\"), and attributes CPU work to user code instead of burying it under `dyld`/`libsystem`.\n\n## Invocation\n\n`xcprof` is on PATH as a bare command (plugin `bin/` is auto-resolved). Run `xcprof <subcommand>`.\n\n## Prerequisite: run `xcprof doctor`\n\n`xcprof doctor` verifies `xcrun xctrace` and counts available instruments/devices. Exit `0` ready; exit `2` if xctrace is missing.\n\n## Subcommands\n\n- `xcprof record <target> [flags]` — capture a new `.trace`, then analyze it with `xcprof analyze`. Picks instruments by preset, bounds the recording, and enforces security gates (see Recording below).\n- `xcprof analyze <trace> [flags]` — analyze an existing `.trace`. Exports the TOC + the `cpu-profile` table, resolves back-references into full backtraces, and reports: summary (target, device, duration, recording mode), the support matrix, CPU hot frames (inclusive + self as % of total CPU cycles plus an approximate ms), an approximate main-thread stall signal, and top user-code frames. Flags:\n  - `--json` — compact single-line JSON (LLM-lean). Default is terse markdown.\n  - `--both` — markdown then JSON.\n  - `--start-ms N` / `--end-ms N` — scope analysis to a time window (the hang-window workflow: see a stall at t=2.0s, re-analyze 2000–2500ms without re-recording).\n  - `--hang-threshold-ms N` — main-thread gap counted as a candidate stall (default 250).\n  - `--user-binary <names>` — comma-separated extra binaries to treat as user code (embedded frameworks).\n  - `--dsym <path>` — symbolicate raw-address frames using a `.dSYM` bundle or Mach-O. Without it, dSYMs are auto-discovered by UUID via Spotlight; frames with no matching dSYM stay raw and are flagged.\n  - `--open` — open the trace in Instruments.app after analysis (opt-in; headless by default).\n- `xcprof doctor [--human]` — environment check.\n\nFlags may come before or after `<trace>` — xcprof handles the Go-flag positional gotcha for you.\n\n## Recording\n\n`xcprof record` captures a trace and reports the saved path so you can hand it straight to `analyze`. A target is required — exactly one of:\n\n- `--attach <pid|name>` — attach to a running process (the everyday case, no gate).\n- `--all-processes` — system-wide capture. Requires `--allow-all-processes`.\n- `-- <cmd> [args…]` — launch and profile a process from startup (the command follows a literal `--`). Requires `--allow-launch`.\n\nInstruments come from a `--preset` (default `cpu`), an explicit `--template <name>`, or repeated `--instrument <name>` (mutually exclusive — pick one source). Verified presets:\n\n| Preset | Instruments | Use |\n|--------|-------------|-----|\n| `cpu` | CPU Profiler | \"slow\" / CPU bottlenecks (the analyze round-trip target) |\n| `memory` | Allocations, Leaks | growth, retain cycles |\n| `network` | CPU Profiler, HTTP Traffic | API performance |\n| `energy` | Power Profiler | battery (iOS/iPadOS) |\n| `full` | CPU Profiler, Allocations, Leaks, HTTP Traffic | macOS \"find everything\" |\n| `full-ios` | full + Power Profiler | iOS \"find everything\" |\n\nThe `cpu` preset uses **CPU Profiler** (schema `cpu-profile`), not Time Profiler (`time-profile`/`time-sample`, which `analyze` does not yet parse) — record→analyze only round-trips on `cpu-profile`.\n\n```bash\nxcprof record --preset cpu --attach MyApp --time-limit 10s          # attach (no gate)\nxcprof record --allow-launch --time-limit 10s -- /path/to/MyApp     # launch\nxcprof record --preset cpu --attach MyApp --dry-run                 # preview the exact xctrace command\n```\n\n`record` emits compact JSON by default (the saved `trace` path, resolved `instruments`, effective `time_limit`, and the full `command` for transparency); `--human` for terminal text.\n\n### Security gates (designed up front, not bolted on)\n\n- **Bounded by default.** `--max-duration` (default `60s`) is a hard ceiling; an unset `--time-limit` adopts it, so a recording is never unbounded. A `--time-limit` above the ceiling is refused — raise `--max-duration` to record longer.\n- **`--allow-launch`** is required before `-- <cmd>` will execute anything.\n- **`--allow-all-processes`** is required before system-wide capture.\n- **Output sandbox.** `--output` must resolve under `XCPROF_TRACE_ROOT` (or cwd when unset); an outside path is refused unless `--allow-external-output` is passed.\n- **`--no-prompt`** is needed for non-interactive use (otherwise xctrace's privacy prompt can stall). Pass it from agents.\n\n### `record` honesty caveat\n\nA `--launch` recording terminated at the time limit makes `xctrace` exit non-zero (it returns the killed target's status) **while still saving a valid trace**. `record` trusts the saved bundle, not the exit code: it reports `ok: true` with a `notes` entry explaining the benign non-zero exit.\n\n## Honesty caveats\n\n- **Frame cost is cycle share, not time.** The `%` is the exact share of total CPU cycles; the `ms` figure is an *approximate* wall-time from the frame's sample share × the analyzed window. Cycle-weight is cycles (the export's \"Cycles\" column), and cycles→time needs per-core frequency under DVFS that the trace doesn't carry — so ms is never derived from cycles.\n- **Main-thread stalls are approximate.** cpu-profile samples only running threads, so a large inter-sample gap is a *candidate* stall, not a confirmed hang — the Hangs instrument confirms (a later xcprof phase).\n- **Release builds show addresses.** Stripped binaries report raw `0x…` frame names. xcprof resolves them via `--dsym <path>` or auto-discovery by UUID through Spotlight; frames with no matching dSYM stay raw and are flagged (never invented). Fuller discovery sources (Archives/DerivedData walks, shared with xcsym) come with the engine-extraction epic (axiom-fo7k). Debug builds symbolicate natively, and Instruments may pre-symbolicate the export when it can find the dSYM at record time.\n- **Phase 1 is CPU-only.** the memory / network / energy / hangs families report `not_present` (absent from the recording) or `partial` (schema present, parsing pending) — never a silent \"clean\".\n\n## Output & exit codes\n\n`analyze`: compact JSON (`--json`) or terse markdown (default); `--both` for both. `record` and `doctor`: compact JSON by default, `--human` for text. Exit `0` ok · `2` environment/usage error (xctrace missing, trace not found, bad args, refused security gate) · `8` output-write error.\n\n## Scope\n\nShipped: `doctor`, `analyze` (CPU / Time Profiler family with `--dsym` symbolication — explicit path + Spotlight auto-discovery), and `record` (presets + bounded duration + launch/all-processes/output security gates). The shared dSYM/symbolication engine with fuller discovery (axiom-fo7k), memory/network/energy parsing, `compare` (regression detection), and `cleanup` remain later phases.\n\n## Resources\n\n**Tools**: `xcrun xctrace` (Instruments CLI), companion tools `xclog`, `xcsym`, `xcui`\n\n**Skills**: axiom-performance\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -36145,45 +36145,45 @@
           "charCount": 169
         },
         {
-          "heading": "Subcommands (Phase 1)",
+          "heading": "Subcommands",
           "level": 2,
           "startLine": 12,
-          "endLine": 25,
-          "charCount": 1344
+          "endLine": 26,
+          "charCount": 1536
         },
         {
-          "heading": "Capturing a trace (until `xcprof record` lands)",
+          "heading": "Recording",
           "level": 2,
-          "startLine": 26,
-          "endLine": 34,
-          "charCount": 323
+          "startLine": 27,
+          "endLine": 67,
+          "charCount": 2808
         },
         {
           "heading": "Honesty caveats",
           "level": 2,
-          "startLine": 35,
-          "endLine": 41,
+          "startLine": 68,
+          "endLine": 74,
           "charCount": 1284
         },
         {
           "heading": "Output & exit codes",
           "level": 2,
-          "startLine": 42,
-          "endLine": 45,
-          "charCount": 190
+          "startLine": 75,
+          "endLine": 78,
+          "charCount": 311
         },
         {
           "heading": "Scope",
           "level": 2,
-          "startLine": 46,
-          "endLine": 49,
-          "charCount": 376
+          "startLine": 79,
+          "endLine": 82,
+          "charCount": 401
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 50,
-          "endLine": 55,
+          "startLine": 83,
+          "endLine": 88,
           "charCount": 132
         }
       ]
@@ -42311,8 +42311,8 @@
           4,
           48,
           2,
-          23,
-          293
+          18,
+          401
         ],
         "220": [
           4,
@@ -42480,8 +42480,8 @@
         4.028806584362144,
         16.781893004115226,
         4.123456790123455,
-        43.876543209876544,
-        625.7283950617282
+        43.8559670781893,
+        626.1728395061726
       ],
       "storedFields": {
         "0": {
@@ -44091,6 +44091,7 @@
               "196": 3,
               "201": 12,
               "202": 1,
+              "219": 2,
               "220": 2,
               "226": 2,
               "228": 1,
@@ -44463,7 +44464,8 @@
               "142": 1,
               "184": 1,
               "212": 1,
-              "218": 2
+              "218": 2,
+              "219": 1
             }
           }
         ],
@@ -45603,6 +45605,7 @@
               "204": 4,
               "212": 1,
               "217": 1,
+              "219": 1,
               "221": 1,
               "227": 1,
               "232": 1
@@ -48124,7 +48127,7 @@
               "214": 2,
               "217": 1,
               "218": 9,
-              "219": 6,
+              "219": 7,
               "220": 17,
               "221": 4,
               "223": 1,
@@ -51196,7 +51199,7 @@
               "200": 5,
               "216": 1,
               "218": 1,
-              "219": 3,
+              "219": 2,
               "221": 1,
               "239": 2,
               "240": 1,
@@ -51217,10 +51220,10 @@
               "219": 1
             },
             "3": {
-              "219": 3
+              "219": 2
             },
             "4": {
-              "219": 14
+              "219": 18
             }
           }
         ],
@@ -51479,7 +51482,7 @@
               "163": 3,
               "166": 6,
               "168": 37,
-              "219": 8
+              "219": 9
             }
           }
         ],
@@ -51881,7 +51884,6 @@
               "216": 2,
               "217": 7,
               "218": 1,
-              "219": 1,
               "220": 16,
               "221": 1,
               "222": 5,
@@ -56611,6 +56613,7 @@
               "186": 1,
               "195": 1,
               "204": 1,
+              "219": 3,
               "225": 3,
               "230": 3,
               "234": 2,
@@ -56635,7 +56638,7 @@
               "157": 2,
               "178": 5,
               "184": 1,
-              "219": 1,
+              "219": 3,
               "232": 1
             }
           }
@@ -58821,7 +58824,8 @@
               "163": 6,
               "166": 6,
               "168": 1,
-              "217": 1
+              "217": 1,
+              "219": 1
             }
           }
         ],
@@ -60594,6 +60598,7 @@
               "184": 1,
               "189": 6,
               "204": 1,
+              "219": 1,
               "220": 1
             }
           }
@@ -62555,6 +62560,7 @@
               "171": 2,
               "185": 1,
               "194": 4,
+              "219": 2,
               "223": 1
             }
           }
@@ -62956,7 +62962,7 @@
               "186": 2,
               "217": 1,
               "218": 6,
-              "219": 1,
+              "219": 3,
               "220": 1,
               "221": 1,
               "222": 1,
@@ -63807,7 +63813,7 @@
               "219": 1
             },
             "4": {
-              "219": 1
+              "219": 2
             }
           }
         ],
@@ -65659,6 +65665,7 @@
               "181": 4,
               "185": 1,
               "210": 3,
+              "219": 1,
               "229": 25,
               "230": 51,
               "231": 18,
@@ -66529,6 +66536,7 @@
               "205": 1,
               "208": 4,
               "211": 1,
+              "219": 1,
               "229": 1,
               "235": 1,
               "236": 1,
@@ -68752,7 +68760,7 @@
               "168": 14,
               "189": 1,
               "215": 1,
-              "219": 1,
+              "219": 2,
               "221": 1
             }
           }
@@ -73590,7 +73598,6 @@
               "215": 3,
               "216": 1,
               "217": 16,
-              "219": 1,
               "224": 6,
               "225": 10,
               "226": 6,
@@ -75161,6 +75168,7 @@
               "185": 4,
               "186": 1,
               "189": 1,
+              "219": 1,
               "226": 1,
               "234": 1,
               "236": 1
@@ -76557,7 +76565,7 @@
               "215": 7,
               "216": 3,
               "218": 13,
-              "219": 1,
+              "219": 2,
               "220": 17,
               "221": 2,
               "222": 10,
@@ -76875,6 +76883,7 @@
               "106": 1,
               "120": 1,
               "151": 1,
+              "219": 1,
               "220": 1,
               "223": 5
             }
@@ -77570,6 +77579,14 @@
           }
         ],
         [
+          "everyday",
+          {
+            "4": {
+              "219": 1
+            }
+          }
+        ],
+        [
           "everywhere",
           {
             "1": {
@@ -77705,6 +77722,7 @@
               "208": 1,
               "212": 2,
               "215": 1,
+              "219": 2,
               "222": 1,
               "223": 2,
               "231": 1,
@@ -80186,7 +80204,8 @@
               "186": 1,
               "187": 1,
               "204": 3,
-              "208": 1
+              "208": 1,
+              "219": 1
             }
           }
         ],
@@ -80319,7 +80338,7 @@
               "183": 1,
               "189": 1,
               "217": 1,
-              "219": 2,
+              "219": 3,
               "220": 2
             }
           }
@@ -82251,6 +82270,7 @@
               "209": 4,
               "212": 1,
               "215": 1,
+              "219": 1,
               "221": 1,
               "224": 1,
               "231": 2,
@@ -82802,7 +82822,7 @@
               "164": 41,
               "189": 2,
               "211": 1,
-              "219": 4,
+              "219": 7,
               "220": 12,
               "221": 6
             }
@@ -83002,7 +83022,7 @@
               "214": 1,
               "215": 1,
               "218": 5,
-              "219": 2,
+              "219": 1,
               "223": 8,
               "224": 1,
               "225": 2,
@@ -83334,6 +83354,7 @@
               "166": 1,
               "194": 1,
               "207": 1,
+              "219": 1,
               "233": 1,
               "240": 4,
               "242": 2
@@ -83949,6 +83970,7 @@
               "208": 1,
               "210": 3,
               "212": 2,
+              "219": 1,
               "241": 1
             }
           }
@@ -84017,6 +84039,7 @@
               "194": 1,
               "195": 1,
               "201": 1,
+              "219": 1,
               "229": 1
             }
           }
@@ -84874,6 +84897,7 @@
               "210": 1,
               "215": 1,
               "217": 1,
+              "219": 1,
               "220": 1,
               "230": 1
             }
@@ -85063,7 +85087,7 @@
               "213": 2,
               "214": 1,
               "217": 1,
-              "219": 1,
+              "219": 2,
               "220": 5,
               "221": 1,
               "222": 1,
@@ -86187,6 +86211,7 @@
               "210": 1,
               "213": 2,
               "218": 1,
+              "219": 1,
               "221": 1,
               "222": 1,
               "236": 1,
@@ -86259,7 +86284,7 @@
               "204": 1,
               "208": 1,
               "215": 2,
-              "219": 1,
+              "219": 2,
               "220": 3,
               "222": 1,
               "223": 1,
@@ -88554,7 +88579,7 @@
               "215": 2,
               "216": 4,
               "218": 17,
-              "219": 1,
+              "219": 2,
               "220": 25,
               "221": 3,
               "233": 7,
@@ -90602,6 +90627,14 @@
           }
         ],
         [
+          "bolted",
+          {
+            "4": {
+              "219": 1
+            }
+          }
+        ],
+        [
           "bolded",
           {
             "4": {
@@ -90826,6 +90859,7 @@
               "155": 1,
               "198": 2,
               "218": 2,
+              "219": 2,
               "220": 4,
               "233": 1
             }
@@ -91004,6 +91038,7 @@
               "204": 1,
               "215": 1,
               "218": 1,
+              "219": 1,
               "224": 6,
               "225": 4,
               "226": 4,
@@ -91693,7 +91728,8 @@
               "25": 1,
               "29": 1,
               "34": 1,
-              "61": 1
+              "61": 1,
+              "219": 1
             }
           }
         ],
@@ -92123,6 +92159,7 @@
               "166": 9,
               "183": 3,
               "189": 3,
+              "219": 1,
               "232": 3,
               "234": 1,
               "237": 1
@@ -94343,6 +94380,14 @@
           }
         ],
         [
+          "benign",
+          {
+            "4": {
+              "219": 1
+            }
+          }
+        ],
+        [
           "bengali",
           {
             "4": {
@@ -94750,6 +94795,7 @@
               "209": 4,
               "215": 1,
               "217": 3,
+              "219": 1,
               "220": 1,
               "224": 1,
               "226": 2,
@@ -95478,7 +95524,7 @@
               "215": 6,
               "216": 1,
               "218": 7,
-              "219": 1,
+              "219": 3,
               "220": 4,
               "222": 5,
               "223": 9,
@@ -96232,6 +96278,7 @@
             "4": {
               "2": 1,
               "121": 1,
+              "219": 1,
               "224": 1,
               "230": 1
             }
@@ -96487,7 +96534,7 @@
               "214": 2,
               "216": 1,
               "217": 1,
-              "219": 5,
+              "219": 4,
               "220": 6,
               "221": 1,
               "229": 9,
@@ -97713,7 +97760,7 @@
               "215": 6,
               "216": 2,
               "218": 9,
-              "219": 1,
+              "219": 2,
               "227": 1,
               "229": 4,
               "232": 2,
@@ -97993,7 +98040,7 @@
               "216": 2,
               "217": 5,
               "218": 3,
-              "219": 2,
+              "219": 3,
               "220": 2,
               "221": 2,
               "223": 2,
@@ -98897,6 +98944,7 @@
               "210": 2,
               "212": 4,
               "218": 1,
+              "219": 1,
               "220": 1,
               "227": 3,
               "228": 7,
@@ -99217,6 +99265,7 @@
               "143": 3,
               "157": 1,
               "174": 1,
+              "219": 2,
               "221": 1,
               "225": 2
             }
@@ -100406,6 +100455,7 @@
               "207": 1,
               "208": 1,
               "211": 3,
+              "219": 2,
               "223": 1,
               "228": 1,
               "230": 3,
@@ -100571,6 +100621,7 @@
               "207": 1,
               "210": 1,
               "212": 2,
+              "219": 3,
               "220": 1,
               "222": 7,
               "223": 1,
@@ -102568,6 +102619,7 @@
               "168": 1,
               "191": 2,
               "217": 4,
+              "219": 1,
               "223": 4,
               "228": 2,
               "238": 2
@@ -103000,6 +103052,7 @@
               "209": 1,
               "212": 1,
               "214": 1,
+              "219": 1,
               "220": 2,
               "223": 1,
               "225": 2,
@@ -104770,7 +104823,7 @@
               "215": 27,
               "216": 5,
               "217": 1,
-              "219": 8,
+              "219": 21,
               "237": 2,
               "239": 12
             }
@@ -104949,6 +105002,7 @@
               "197": 1,
               "208": 1,
               "215": 1,
+              "219": 1,
               "241": 5
             }
           }
@@ -105107,7 +105161,7 @@
               "203": 2,
               "207": 2,
               "215": 1,
-              "219": 2,
+              "219": 4,
               "220": 3,
               "221": 1
             }
@@ -109120,6 +109174,7 @@
               "111": 1,
               "141": 1,
               "142": 5,
+              "219": 3,
               "241": 2
             }
           }
@@ -110734,7 +110789,7 @@
               "198": 3,
               "204": 1,
               "205": 1,
-              "219": 1,
+              "219": 2,
               "220": 1,
               "221": 1,
               "242": 3
@@ -110778,6 +110833,7 @@
               "204": 1,
               "206": 2,
               "207": 1,
+              "219": 1,
               "220": 6,
               "226": 1
             }
@@ -114594,6 +114650,7 @@
               "213": 2,
               "215": 6,
               "216": 2,
+              "219": 1,
               "221": 1,
               "222": 1,
               "223": 1,
@@ -115492,6 +115549,7 @@
               "214": 2,
               "215": 3,
               "216": 2,
+              "219": 1,
               "222": 2,
               "223": 4,
               "224": 1,
@@ -115953,7 +116011,7 @@
               "216": 5,
               "217": 3,
               "218": 10,
-              "219": 1,
+              "219": 2,
               "220": 10,
               "221": 3,
               "222": 18,
@@ -117534,7 +117592,7 @@
               "211": 2,
               "212": 1,
               "215": 1,
-              "219": 2,
+              "219": 3,
               "220": 1,
               "227": 1
             }
@@ -117724,7 +117782,8 @@
               "72": 1,
               "81": 1,
               "99": 1,
-              "198": 2
+              "198": 2,
+              "219": 1
             }
           }
         ],
@@ -117981,6 +118040,14 @@
               "183": 5,
               "189": 1,
               "220": 1
+            }
+          }
+        ],
+        [
+          "unset",
+          {
+            "4": {
+              "219": 2
             }
           }
         ],
@@ -118282,7 +118349,6 @@
             "3": {
               "117": 1,
               "218": 1,
-              "219": 1,
               "239": 1
             },
             "4": {
@@ -118353,7 +118419,6 @@
               "215": 1,
               "216": 1,
               "218": 1,
-              "219": 1,
               "221": 1,
               "223": 3,
               "227": 3,
@@ -118631,6 +118696,7 @@
               "192": 1,
               "201": 1,
               "218": 1,
+              "219": 1,
               "220": 1,
               "228": 1,
               "232": 1,
@@ -121144,6 +121210,7 @@
               "199": 5,
               "200": 1,
               "210": 5,
+              "219": 1,
               "221": 1,
               "227": 1,
               "230": 1
@@ -122382,6 +122449,7 @@
               "213": 1,
               "214": 1,
               "216": 1,
+              "219": 1,
               "226": 2,
               "230": 4,
               "236": 1,
@@ -125514,6 +125582,7 @@
               "207": 3,
               "208": 1,
               "215": 3,
+              "219": 1,
               "225": 1,
               "226": 1,
               "227": 1,
@@ -128039,7 +128108,7 @@
               "200": 1,
               "212": 2,
               "213": 1,
-              "219": 1,
+              "219": 6,
               "220": 1,
               "223": 1,
               "228": 1,
@@ -129048,7 +129117,8 @@
               "150": 1,
               "198": 1,
               "207": 2,
-              "215": 1
+              "215": 1,
+              "219": 1
             }
           }
         ],
@@ -130339,6 +130409,7 @@
               "215": 37,
               "216": 3,
               "218": 24,
+              "219": 7,
               "222": 1,
               "233": 6,
               "236": 1,
@@ -131364,9 +131435,6 @@
         [
           "lands",
           {
-            "3": {
-              "219": 1
-            },
             "4": {
               "1": 1,
               "24": 1,
@@ -131375,7 +131443,6 @@
               "110": 1,
               "142": 1,
               "152": 1,
-              "219": 1,
               "233": 1
             }
           }
@@ -132563,6 +132630,7 @@
               "168": 5,
               "174": 1,
               "217": 5,
+              "219": 2,
               "223": 2
             }
           }
@@ -134726,7 +134794,7 @@
               "215": 1,
               "217": 1,
               "218": 2,
-              "219": 1,
+              "219": 5,
               "220": 7,
               "222": 1,
               "223": 4,
@@ -135666,7 +135734,7 @@
               "211": 1,
               "212": 1,
               "215": 1,
-              "219": 3,
+              "219": 4,
               "220": 3,
               "221": 1,
               "227": 1,
@@ -138124,6 +138192,7 @@
               "134": 1,
               "185": 1,
               "195": 1,
+              "219": 1,
               "237": 1
             }
           }
@@ -139683,6 +139752,7 @@
               "95": 1,
               "114": 1,
               "197": 1,
+              "219": 1,
               "220": 1
             }
           }
@@ -142944,7 +143014,7 @@
               "215": 1,
               "217": 2,
               "218": 2,
-              "219": 1,
+              "219": 3,
               "220": 13,
               "221": 1,
               "222": 2,
@@ -144713,8 +144783,7 @@
               "17": 1,
               "49": 2,
               "158": 2,
-              "214": 4,
-              "219": 1
+              "214": 4
             },
             "4": {
               "9": 5,
@@ -144750,7 +144819,7 @@
               "203": 2,
               "212": 3,
               "214": 4,
-              "219": 5,
+              "219": 2,
               "224": 3,
               "225": 2,
               "230": 6,
@@ -145599,6 +145668,7 @@
               "150": 1,
               "155": 1,
               "170": 2,
+              "219": 1,
               "220": 2,
               "237": 1
             }
@@ -145668,6 +145738,7 @@
               "207": 3,
               "208": 1,
               "211": 2,
+              "219": 1,
               "220": 1,
               "225": 1,
               "228": 1,
@@ -146817,7 +146888,7 @@
               "215": 1,
               "217": 17,
               "218": 2,
-              "219": 1,
+              "219": 2,
               "220": 2,
               "222": 1,
               "226": 3,
@@ -150382,6 +150453,7 @@
               "183": 3,
               "185": 1,
               "196": 1,
+              "219": 2,
               "236": 1,
               "239": 2
             }
@@ -152682,6 +152754,7 @@
               "199": 1,
               "200": 5,
               "215": 1,
+              "219": 1,
               "229": 3,
               "240": 1
             }
@@ -152843,6 +152916,7 @@
               "212": 1,
               "214": 1,
               "215": 9,
+              "219": 1,
               "220": 1,
               "221": 3,
               "228": 1,
@@ -153478,7 +153552,7 @@
               "215": 2,
               "216": 7,
               "218": 2,
-              "219": 4,
+              "219": 8,
               "220": 16,
               "221": 1,
               "223": 1,
@@ -154142,6 +154216,7 @@
               "204": 1,
               "205": 2,
               "218": 1,
+              "219": 1,
               "220": 1,
               "221": 1,
               "242": 3
@@ -155209,6 +155284,7 @@
               "211": 9,
               "214": 1,
               "215": 18,
+              "219": 1,
               "224": 7,
               "225": 9,
               "226": 1,
@@ -155528,6 +155604,7 @@
               "193": 1,
               "217": 1,
               "218": 1,
+              "219": 4,
               "242": 1
             }
           }
@@ -155692,6 +155769,7 @@
               "212": 4,
               "215": 6,
               "218": 7,
+              "219": 2,
               "220": 5,
               "227": 5,
               "229": 10,
@@ -157445,6 +157523,7 @@
               "211": 1,
               "215": 1,
               "217": 1,
+              "219": 2,
               "229": 2
             }
           }
@@ -158310,7 +158389,7 @@
               "199": 3,
               "210": 6,
               "217": 1,
-              "219": 2
+              "219": 8
             }
           }
         ],
@@ -158451,7 +158530,7 @@
               "206": 2,
               "210": 6,
               "215": 6,
-              "219": 2,
+              "219": 6,
               "222": 6,
               "227": 5,
               "228": 4,
@@ -159146,6 +159225,7 @@
               "188": 9,
               "189": 1,
               "215": 1,
+              "219": 1,
               "221": 2,
               "234": 10
             }
@@ -160923,7 +161003,6 @@
               "106": 2,
               "194": 1,
               "195": 3,
-              "219": 1,
               "221": 2,
               "223": 1
             }
@@ -161545,7 +161624,7 @@
               "187": 1,
               "195": 1,
               "196": 2,
-              "219": 1,
+              "219": 2,
               "239": 1
             }
           }
@@ -161561,7 +161640,8 @@
               "128": 6,
               "137": 2,
               "187": 8,
-              "195": 1
+              "195": 1,
+              "219": 6
             }
           }
         ],
@@ -162188,6 +162268,7 @@
               "201": 7,
               "207": 147,
               "208": 128,
+              "219": 1,
               "226": 8,
               "233": 2,
               "234": 4,
@@ -164843,7 +164924,7 @@
               "216": 4,
               "217": 1,
               "218": 2,
-              "219": 7,
+              "219": 15,
               "220": 3,
               "221": 1,
               "222": 2,
@@ -167459,7 +167540,7 @@
               "216": 1,
               "217": 3,
               "218": 3,
-              "219": 1,
+              "219": 2,
               "223": 1,
               "225": 5,
               "227": 2,
@@ -168354,7 +168435,8 @@
               "167": 2,
               "168": 1,
               "174": 2,
-              "191": 5
+              "191": 5,
+              "219": 2
             }
           }
         ],
@@ -168784,8 +168866,7 @@
               "168": 4,
               "189": 1,
               "199": 1,
-              "210": 1,
-              "219": 1
+              "210": 1
             }
           }
         ],
@@ -168808,8 +168889,7 @@
               "162": 1,
               "163": 1,
               "168": 3,
-              "199": 1,
-              "219": 1
+              "199": 1
             },
             "4": {
               "1": 1,
@@ -168846,7 +168926,7 @@
               "204": 4,
               "210": 8,
               "215": 2,
-              "219": 10,
+              "219": 12,
               "222": 5
             }
           }
@@ -169490,6 +169570,7 @@
               "186": 1,
               "196": 1,
               "207": 1,
+              "219": 1,
               "221": 2,
               "227": 1,
               "231": 2,
@@ -170457,6 +170538,7 @@
               "157": 1,
               "195": 5,
               "210": 1,
+              "219": 1,
               "221": 1
             }
           }
@@ -170484,6 +170566,7 @@
               "174": 1,
               "195": 7,
               "210": 4,
+              "219": 1,
               "225": 2
             }
           }
@@ -170621,7 +170704,8 @@
             "4": {
               "16": 1,
               "49": 1,
-              "141": 1
+              "141": 1,
+              "219": 1
             }
           }
         ],
@@ -170895,6 +170979,7 @@
               "215": 24,
               "216": 11,
               "217": 1,
+              "219": 1,
               "220": 1,
               "222": 33,
               "223": 3,
@@ -174007,7 +174092,7 @@
               "215": 3,
               "216": 5,
               "218": 3,
-              "219": 1,
+              "219": 5,
               "220": 3,
               "223": 2,
               "226": 1,
@@ -174411,6 +174496,7 @@
               "215": 19,
               "216": 28,
               "218": 4,
+              "219": 2,
               "220": 9,
               "221": 1,
               "222": 2,
@@ -175403,6 +175489,7 @@
               "156": 2,
               "157": 1,
               "200": 1,
+              "219": 1,
               "241": 1
             }
           }
@@ -175443,7 +175530,8 @@
               "111": 2,
               "112": 1,
               "164": 1,
-              "189": 3
+              "189": 3,
+              "219": 1
             }
           }
         ],
@@ -178247,7 +178335,7 @@
               "212": 2,
               "213": 3,
               "216": 2,
-              "219": 4,
+              "219": 5,
               "221": 2,
               "222": 3,
               "223": 6,
@@ -178899,7 +178987,7 @@
               "216": 2,
               "217": 14,
               "218": 6,
-              "219": 2,
+              "219": 3,
               "223": 4,
               "231": 2,
               "232": 13,
@@ -179473,6 +179561,7 @@
               "210": 5,
               "215": 2,
               "218": 1,
+              "219": 1,
               "222": 3,
               "223": 2,
               "225": 1,
@@ -179806,6 +179895,7 @@
               "215": 10,
               "217": 5,
               "218": 2,
+              "219": 1,
               "220": 1,
               "222": 2,
               "223": 19,
@@ -180386,7 +180476,6 @@
               "215": 2,
               "217": 1,
               "218": 1,
-              "219": 1,
               "221": 1,
               "222": 1,
               "224": 1,
@@ -180754,6 +180843,7 @@
               "207": 2,
               "208": 1,
               "209": 1,
+              "219": 3,
               "220": 4,
               "226": 3,
               "229": 4,
@@ -181009,7 +181099,7 @@
               "216": 1,
               "217": 1,
               "218": 16,
-              "219": 3,
+              "219": 6,
               "220": 19,
               "221": 8,
               "222": 4,
@@ -181677,6 +181767,7 @@
               "201": 1,
               "207": 1,
               "211": 1,
+              "219": 1,
               "225": 2,
               "240": 14,
               "242": 2
@@ -181960,7 +182051,7 @@
               "215": 18,
               "217": 3,
               "218": 8,
-              "219": 4,
+              "219": 8,
               "220": 7,
               "221": 8,
               "222": 9,
@@ -182675,7 +182766,7 @@
               "216": 10,
               "217": 4,
               "218": 5,
-              "219": 1,
+              "219": 3,
               "220": 12,
               "221": 1,
               "222": 3,
@@ -184360,7 +184451,7 @@
               "213": 1,
               "215": 1,
               "218": 3,
-              "219": 1,
+              "219": 4,
               "220": 1,
               "227": 30,
               "228": 2,
@@ -185610,7 +185701,8 @@
           {
             "4": {
               "93": 2,
-              "125": 1
+              "125": 1,
+              "219": 1
             }
           }
         ],
@@ -187060,7 +187152,7 @@
               "221": 1
             },
             "4": {
-              "219": 4,
+              "219": 5,
               "221": 3
             }
           }
@@ -193826,7 +193918,7 @@
               "214": 3,
               "215": 2,
               "218": 4,
-              "219": 4,
+              "219": 9,
               "220": 5,
               "221": 1,
               "222": 11,
@@ -194770,6 +194862,7 @@
               "208": 1,
               "210": 1,
               "215": 2,
+              "219": 1,
               "223": 1,
               "231": 1,
               "236": 1
@@ -200107,7 +200200,8 @@
               "18": 1,
               "100": 3,
               "150": 1,
-              "187": 1
+              "187": 1,
+              "219": 1
             }
           }
         ],
@@ -206647,7 +206741,7 @@
               "208": 1,
               "210": 15,
               "217": 3,
-              "219": 5,
+              "219": 9,
               "227": 7
             }
           }
@@ -206747,7 +206841,7 @@
               "200": 1,
               "210": 20,
               "217": 2,
-              "219": 3,
+              "219": 2,
               "227": 1
             }
           }
@@ -209237,6 +209331,7 @@
               "201": 2,
               "202": 2,
               "215": 3,
+              "219": 1,
               "224": 2,
               "225": 2,
               "231": 1,
@@ -212300,6 +212395,7 @@
               "213": 4,
               "215": 2,
               "218": 4,
+              "219": 1,
               "220": 4,
               "221": 3,
               "223": 1,
@@ -214762,7 +214858,7 @@
               "214": 1,
               "215": 2,
               "217": 4,
-              "219": 1,
+              "219": 2,
               "220": 2,
               "221": 3,
               "222": 6,
@@ -214883,6 +214979,7 @@
               "212": 1,
               "215": 1,
               "216": 1,
+              "219": 1,
               "220": 2,
               "221": 1,
               "227": 1,
@@ -215635,7 +215732,7 @@
               "215": 5,
               "217": 2,
               "218": 3,
-              "219": 2,
+              "219": 3,
               "220": 7,
               "221": 4,
               "222": 8,
@@ -217169,7 +217266,8 @@
               "197": 2,
               "202": 6,
               "203": 4,
-              "217": 1
+              "217": 1,
+              "219": 2
             }
           }
         ],
@@ -218702,6 +218800,7 @@
               "191": 1,
               "205": 1,
               "211": 1,
+              "219": 1,
               "220": 1,
               "224": 1,
               "225": 1,
@@ -219630,7 +219729,6 @@
               "215": 3,
               "217": 2,
               "218": 1,
-              "219": 1,
               "220": 2,
               "221": 5,
               "222": 3,
@@ -219980,6 +220078,7 @@
               "214": 1,
               "215": 1,
               "216": 1,
+              "219": 2,
               "221": 1,
               "241": 1
             }
@@ -221705,6 +221804,7 @@
               "210": 3,
               "211": 2,
               "216": 1,
+              "219": 1,
               "220": 1,
               "223": 1,
               "232": 1,
@@ -222083,7 +222183,7 @@
               "216": 1,
               "217": 2,
               "218": 16,
-              "219": 2,
+              "219": 6,
               "220": 10,
               "221": 3,
               "222": 3,
@@ -224772,7 +224872,7 @@
               "215": 5,
               "217": 1,
               "218": 13,
-              "219": 2,
+              "219": 3,
               "220": 4,
               "222": 1,
               "223": 8,
@@ -225144,6 +225244,7 @@
               "215": 1,
               "217": 1,
               "218": 1,
+              "219": 2,
               "220": 6,
               "221": 5,
               "222": 3,
@@ -225564,6 +225665,7 @@
               "216": 4,
               "217": 18,
               "218": 19,
+              "219": 4,
               "220": 5,
               "221": 2,
               "222": 1,
@@ -228819,6 +228921,7 @@
               "214": 1,
               "215": 5,
               "217": 2,
+              "219": 1,
               "227": 1,
               "229": 9,
               "239": 1,
@@ -229336,6 +229439,7 @@
               "215": 7,
               "216": 2,
               "217": 1,
+              "219": 2,
               "220": 2,
               "221": 1,
               "222": 8,
@@ -231041,6 +231145,7 @@
               "212": 3,
               "215": 3,
               "218": 4,
+              "219": 1,
               "220": 11,
               "222": 2,
               "224": 1,
@@ -231242,7 +231347,7 @@
               "208": 3,
               "210": 1,
               "211": 1,
-              "219": 2,
+              "219": 4,
               "220": 10,
               "221": 3,
               "223": 1,
@@ -232057,7 +232162,7 @@
               "206": 1,
               "217": 2,
               "218": 1,
-              "219": 1,
+              "219": 2,
               "220": 1,
               "241": 1,
               "242": 2
@@ -238399,7 +238504,8 @@
               "169": 1,
               "171": 1,
               "186": 1,
-              "193": 4
+              "193": 4,
+              "219": 1
             }
           }
         ],
@@ -238427,6 +238533,7 @@
               "140": 1,
               "178": 1,
               "179": 1,
+              "219": 1,
               "225": 1,
               "232": 1
             }
@@ -238542,6 +238649,7 @@
               "204": 8,
               "210": 1,
               "218": 6,
+              "219": 3,
               "221": 1,
               "224": 1,
               "225": 2,
@@ -238837,7 +238945,7 @@
               "208": 26,
               "212": 1,
               "215": 1,
-              "219": 2,
+              "219": 3,
               "230": 1
             }
           }
@@ -241723,7 +241831,7 @@
               "216": 1,
               "217": 3,
               "218": 1,
-              "219": 1,
+              "219": 2,
               "220": 3,
               "221": 1,
               "222": 9,
@@ -242240,7 +242348,7 @@
               "186": 1,
               "187": 1,
               "190": 1,
-              "219": 1
+              "219": 4
             }
           }
         ],
@@ -246161,6 +246269,7 @@
               "212": 1,
               "213": 1,
               "215": 1,
+              "219": 1,
               "220": 2,
               "222": 1,
               "223": 4,
@@ -248451,6 +248560,7 @@
               "130": 1,
               "132": 1,
               "158": 1,
+              "219": 1,
               "221": 1,
               "224": 1,
               "225": 1,
@@ -249340,7 +249450,7 @@
               "153": 1,
               "166": 4,
               "194": 3,
-              "219": 4,
+              "219": 5,
               "220": 1,
               "229": 1
             }
@@ -249887,6 +249997,7 @@
               "207": 3,
               "211": 3,
               "212": 1,
+              "219": 1,
               "222": 1,
               "223": 1,
               "227": 1,
@@ -250523,7 +250634,8 @@
               "166": 3,
               "183": 1,
               "208": 1,
-              "212": 3
+              "212": 3,
+              "219": 1
             }
           }
         ],
@@ -254153,6 +254265,7 @@
           "cwd",
           {
             "4": {
+              "219": 1,
               "220": 1
             }
           }
@@ -254390,6 +254503,7 @@
               "195": 1,
               "200": 4,
               "214": 1,
+              "219": 2,
               "241": 1
             }
           }
@@ -254537,7 +254651,7 @@
               "207": 1,
               "208": 1,
               "217": 5,
-              "219": 6,
+              "219": 7,
               "228": 1
             }
           }
@@ -254758,7 +254872,7 @@
               "183": 2,
               "189": 3,
               "210": 3,
-              "219": 9,
+              "219": 20,
               "220": 4,
               "227": 1,
               "230": 1
@@ -255334,7 +255448,8 @@
               "65": 2,
               "181": 2,
               "184": 1,
-              "189": 1
+              "189": 1,
+              "219": 2
             }
           }
         ],
@@ -263389,6 +263504,7 @@
               "215": 5,
               "216": 1,
               "218": 1,
+              "219": 1,
               "220": 2,
               "221": 1,
               "222": 1,
@@ -263437,6 +263553,7 @@
               "47": 1,
               "72": 1,
               "205": 1,
+              "219": 1,
               "229": 1
             }
           }
@@ -266011,7 +266128,7 @@
               "212": 10,
               "215": 6,
               "217": 2,
-              "219": 1,
+              "219": 3,
               "220": 5,
               "222": 6,
               "223": 2,
@@ -266561,9 +266678,6 @@
             "1": {
               "121": 1
             },
-            "3": {
-              "219": 1
-            },
             "4": {
               "24": 3,
               "48": 1,
@@ -266576,8 +266690,7 @@
               "140": 1,
               "149": 1,
               "165": 2,
-              "214": 1,
-              "219": 1
+              "214": 1
             }
           }
         ],
@@ -266631,6 +266744,7 @@
               "214": 1,
               "217": 1,
               "218": 2,
+              "219": 1,
               "223": 3,
               "224": 1
             }
@@ -266749,6 +266863,7 @@
               "215": 6,
               "216": 4,
               "218": 9,
+              "219": 3,
               "222": 1,
               "223": 2,
               "225": 1,
@@ -268239,7 +268354,7 @@
               "216": 3,
               "217": 4,
               "218": 2,
-              "219": 3,
+              "219": 4,
               "220": 10,
               "222": 2,
               "223": 14,
@@ -276256,7 +276371,7 @@
               "198": 1,
               "207": 1,
               "215": 1,
-              "219": 2,
+              "219": 3,
               "220": 1,
               "223": 1,
               "230": 1,
@@ -277578,7 +277693,7 @@
               "209": 2,
               "211": 3,
               "215": 3,
-              "219": 2,
+              "219": 4,
               "220": 1,
               "223": 2,
               "228": 3,
@@ -278721,7 +278836,7 @@
               "214": 1,
               "217": 1,
               "218": 3,
-              "219": 1,
+              "219": 4,
               "220": 2,
               "221": 2,
               "241": 4
@@ -280611,6 +280726,7 @@
               "216": 8,
               "217": 2,
               "218": 26,
+              "219": 3,
               "223": 3,
               "225": 1,
               "226": 1,
@@ -285069,6 +285185,7 @@
               "198": 1,
               "204": 1,
               "210": 1,
+              "219": 1,
               "221": 1,
               "222": 1,
               "223": 2,
@@ -285419,6 +285536,7 @@
               "215": 5,
               "217": 1,
               "218": 12,
+              "219": 2,
               "222": 1,
               "223": 2,
               "226": 1,
@@ -286637,6 +286755,7 @@
               "211": 21,
               "212": 1,
               "215": 3,
+              "219": 1,
               "220": 1,
               "224": 2,
               "225": 7,
@@ -287409,6 +287528,7 @@
               "213": 2,
               "215": 1,
               "218": 3,
+              "219": 1,
               "220": 1,
               "222": 2,
               "223": 3,
@@ -287445,7 +287565,8 @@
             "4": {
               "156": 1,
               "157": 1,
-              "177": 1
+              "177": 1,
+              "219": 1
             }
           }
         ],
@@ -290904,7 +291025,7 @@
               "210": 1,
               "215": 1,
               "217": 17,
-              "219": 2,
+              "219": 3,
               "220": 4,
               "222": 11,
               "223": 5,
@@ -293244,7 +293365,7 @@
               "214": 7,
               "216": 12,
               "218": 15,
-              "219": 1,
+              "219": 5,
               "223": 2,
               "225": 1,
               "226": 7,
@@ -294881,6 +295002,7 @@
               "215": 1,
               "217": 1,
               "218": 1,
+              "219": 1,
               "221": 2,
               "225": 1,
               "228": 1,
@@ -295830,6 +295952,7 @@
               "187": 1,
               "189": 1,
               "195": 1,
+              "219": 1,
               "220": 3,
               "221": 1,
               "235": 1,
@@ -297042,6 +297165,7 @@
               "215": 2,
               "217": 3,
               "218": 1,
+              "219": 1,
               "223": 9,
               "224": 2,
               "225": 1,
@@ -299055,7 +299179,7 @@
               "216": 45,
               "217": 5,
               "218": 44,
-              "219": 3,
+              "219": 4,
               "220": 17,
               "221": 5,
               "222": 1,
@@ -299944,7 +300068,7 @@
               "35": 1,
               "104": 6,
               "105": 1,
-              "219": 1,
+              "219": 2,
               "220": 1,
               "241": 3
             }
@@ -302060,7 +302184,7 @@
           {
             "4": {
               "19": 1,
-              "219": 2
+              "219": 1
             }
           }
         ],
@@ -302088,7 +302212,7 @@
               "210": 1,
               "214": 2,
               "215": 3,
-              "219": 6,
+              "219": 11,
               "220": 1,
               "229": 4,
               "230": 2,
@@ -302105,7 +302229,6 @@
               "12": 1,
               "132": 1,
               "190": 1,
-              "219": 1,
               "229": 1,
               "231": 4
             }
@@ -303442,6 +303565,7 @@
               "184": 1,
               "206": 1,
               "208": 3,
+              "219": 1,
               "220": 2,
               "223": 2,
               "234": 1
@@ -306010,7 +306134,6 @@
               "209": 1,
               "211": 1,
               "218": 1,
-              "219": 1,
               "223": 2,
               "224": 2,
               "231": 1,
@@ -306159,7 +306282,8 @@
               "167": 3,
               "168": 3,
               "189": 1,
-              "217": 1
+              "217": 1,
+              "219": 2
             }
           }
         ],
@@ -306347,6 +306471,7 @@
               "212": 1,
               "214": 1,
               "216": 3,
+              "219": 6,
               "221": 4,
               "225": 2,
               "232": 1,
@@ -306584,6 +306709,7 @@
               "216": 1,
               "217": 2,
               "218": 1,
+              "219": 4,
               "220": 7,
               "221": 2,
               "222": 8,
@@ -306874,7 +307000,8 @@
               "52": 1,
               "98": 1,
               "167": 1,
-              "194": 1
+              "194": 1,
+              "219": 1
             }
           }
         ],
@@ -584891,13 +585018,26 @@
           "if",
           "miss"
         ],
-        "Subcommands (Phase 1)": [
+        "Subcommands": [
           "subcommands",
-          "phase",
           "xcprof",
-          "analyze",
-          "trace",
+          "record",
+          "target",
           "flags",
+          "capture",
+          "new",
+          "trace",
+          "then",
+          "analyze",
+          "picks",
+          "instruments",
+          "preset",
+          "bounds",
+          "enforces",
+          "security",
+          "gates",
+          "see",
+          "below",
           "exist",
           "exports",
           "toc",
@@ -584912,10 +585052,8 @@
           "backtraces",
           "reports",
           "summary",
-          "target",
           "device",
           "dura",
-          "record",
           "mode",
           "support",
           "matrix",
@@ -584945,7 +585083,6 @@
           "terse",
           "markdown",
           "both",
-          "then",
           "start",
           "end",
           "scope",
@@ -584954,7 +585091,6 @@
           "window",
           "hang",
           "workflow",
-          "see",
           "0s",
           "re",
           "2000",
@@ -584994,7 +585130,6 @@
           "stay",
           "flagged",
           "open",
-          "instruments",
           "app",
           "after",
           "opt",
@@ -585012,40 +585147,185 @@
           "positional",
           "gotcha"
         ],
-        "Capturing a trace (until `xcprof record` lands)": [
-          "captur",
-          "trace",
-          "until",
-          "xcprof",
+        "Recording": [
           "record",
-          "lands",
-          "phase",
-          "analyzes",
-          "exist",
-          "traces",
-          "use",
-          "raw",
-          "xctrace",
-          "xcode",
-          "26",
-          "prefers",
-          "instru",
-          "over",
-          "template",
-          "bash",
-          "xcrun",
-          "cpu",
-          "profiler",
+          "xcprof",
+          "captures",
+          "trace",
+          "reports",
+          "saved",
+          "path",
+          "so",
+          "can",
+          "hand",
+          "straight",
+          "analyze",
+          "target",
+          "required",
+          "exactly",
+          "one",
           "attach",
           "pid",
           "name",
+          "runn",
+          "process",
+          "everyday",
+          "case",
+          "no",
+          "gate",
+          "all",
+          "processes",
+          "system",
+          "wide",
+          "capture",
+          "requires",
+          "allow",
+          "cmd",
+          "args",
+          "launch",
+          "profile",
+          "startup",
+          "command",
+          "follows",
+          "literal",
+          "instruments",
+          "come",
+          "preset",
+          "default",
+          "cpu",
+          "explicit",
+          "template",
+          "repeated",
+          "instru",
+          "mutually",
+          "exclusive",
+          "pick",
+          "source",
+          "verified",
+          "presets",
+          "use",
+          "profiler",
+          "slow",
+          "bottlenecks",
+          "round",
+          "trip",
+          "memory",
+          "allocations",
+          "leaks",
+          "growth",
+          "retain",
+          "cycles",
+          "network",
+          "http",
+          "traffic",
+          "api",
+          "performance",
+          "energy",
+          "power",
+          "battery",
+          "os",
+          "pad",
+          "full",
+          "mac",
+          "find",
+          "everyth",
+          "ios",
+          "uses",
+          "schema",
+          "not",
           "time",
+          "sample",
+          "which",
+          "does",
+          "yet",
+          "parse",
+          "only",
+          "trips",
+          "bash",
+          "my",
+          "app",
           "limit",
           "10s",
+          "dry",
+          "run",
+          "preview",
+          "exact",
+          "xctrace",
+          "emits",
+          "compact",
+          "json",
+          "resolved",
+          "effective",
+          "transparency",
+          "human",
+          "terminal",
+          "text",
+          "security",
+          "gates",
+          "designed",
+          "up",
+          "front",
+          "bolted",
+          "bounded",
+          "max",
+          "dura",
+          "60s",
+          "hard",
+          "ceil",
+          "unset",
+          "adopts",
+          "never",
+          "unbounded",
+          "above",
+          "refused",
+          "raise",
+          "longer",
+          "before",
+          "execute",
+          "anyth",
           "output",
-          "app",
-          "analyze",
-          "json"
+          "sandbox",
+          "must",
+          "resolve",
+          "under",
+          "root",
+          "cwd",
+          "when",
+          "outside",
+          "unless",
+          "external",
+          "passed",
+          "prompt",
+          "needed",
+          "non",
+          "interactive",
+          "otherwise",
+          "privacy",
+          "stall",
+          "pass",
+          "agents",
+          "honesty",
+          "caveat",
+          "terminated",
+          "makes",
+          "exit",
+          "zero",
+          "returns",
+          "killed",
+          "status",
+          "while",
+          "still",
+          "sav",
+          "valid",
+          "trusts",
+          "bundle",
+          "code",
+          "ok",
+          "true",
+          "notes",
+          "entry",
+          "explain",
+          "benign"
         ],
         "Honesty caveats": [
           "honesty",
@@ -585170,13 +585450,18 @@
           "output",
           "exit",
           "codes",
+          "analyze",
           "compact",
           "json",
           "terse",
           "markdown",
           "default",
           "both",
-          "analyzed",
+          "record",
+          "doctor",
+          "human",
+          "text",
+          "ok",
           "environ",
           "usage",
           "error",
@@ -585186,11 +585471,14 @@
           "not",
           "found",
           "bad",
-          "args"
+          "args",
+          "refused",
+          "security",
+          "gate",
+          "write"
         ],
         "Scope": [
           "scope",
-          "phase",
           "shipped",
           "doctor",
           "analyze",
@@ -585198,9 +585486,6 @@
           "time",
           "profiler",
           "family",
-          "now",
-          "also",
-          "does",
           "dsym",
           "symbolica",
           "explicit",
@@ -585210,6 +585495,12 @@
           "discovery",
           "record",
           "presets",
+          "bounded",
+          "dura",
+          "launch",
+          "all",
+          "processes",
+          "output",
           "security",
           "gates",
           "shared",
