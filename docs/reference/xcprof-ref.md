@@ -14,7 +14,7 @@ Use this reference when:
 - Choosing a recording preset (`cpu` / `memory` / `network` / `energy` / `full` / `full-ios`) or recording a single `--template` / `--instrument`
 - Understanding the security gates — why `--launch` needs `--allow-launch`, `--all-processes` needs `--allow-all-processes`, and how `--max-duration` and `XCPROF_TRACE_ROOT` bound a capture
 - Interpreting an exit code (0 ok / 2 environment-or-usage error / 8 output-write error)
-- Reading the support matrix (`available` / `partial` / `not_exportable` / `not_present`) and understanding why a family reads `not_present`
+- Reading the support matrix (`available` / `partial` / `not_exportable` / `not_present`) and understanding why memory/energy read `not_exportable`
 - Symbolicating raw-address frames from a stripped/release build with `--dsym` (explicit path or UUID auto-discovery)
 - Re-scoping CPU analysis to a hang window with `--start-ms` / `--end-ms` without re-recording
 - Previewing the exact `xctrace` command a `record` would run (`--dry-run`)
@@ -23,7 +23,7 @@ Use this reference when:
 
 - "How do I record a CPU trace and analyze it in one workflow?"
 - "How do I profile my app without letting the tool launch arbitrary processes?"
-- "Why does my analyze report show memory as `not_present`?"
+- "Why does my analyze report show memory as `not_exportable`?"
 - "How do I symbolicate a release build's stack frames in a trace?"
 - "How do I re-analyze just the 2.0–2.5s window where I saw a hang?"
 - "What does `xcprof doctor` check?"
@@ -35,10 +35,10 @@ Use this reference when:
 - **Invocation** — `xcprof` is on PATH as a bare command (plugin `bin/` is auto-resolved); run `xcprof <subcommand>`
 - **`doctor` subcommand** — verifies `xcrun xctrace` and counts available instruments/devices; `--human` for prose. Exit `0` ready, `2` if xctrace is missing
 - **`record` subcommand** — captures a `.trace` and reports the saved path so you can hand it straight to `analyze`. Picks instruments by `--preset` (default `cpu`), or `--template <name>` / repeated `--instrument <name>` (one source only). A target is required — exactly one of `--attach <pid|name>`, `--all-processes`, or `-- <cmd>` (launch, after a literal `--`). Emits compact JSON (saved `trace`, resolved `instruments`, effective `time_limit`, `target_mode`, and the full `command` echo for transparency); `--human` for text; `--dry-run` previews without spawning
-- **Recording presets** — six verified preset → instrument maps (see table below). The `cpu` preset uses **CPU Profiler** (schema `cpu-profile`, which `analyze` parses), not Time Profiler (`time-profile`/`time-sample`, not yet parsed) — record → analyze only round-trips on `cpu-profile`
+- **Recording presets** — six verified preset → instrument maps (see table below). `cpu` uses **CPU Profiler** (schema `cpu-profile`) and `network` uses **Network Connections** (schema `network-connection-stat`) — the two families `analyze` parses, so both round-trip from record → analyze; the instrument names are verified against real exports, not guessed
 - **Security gates** — bounded by default (`--max-duration`, default 60s; an unset `--time-limit` adopts it, so a capture is never unbounded), `--allow-launch` before `-- <cmd>` will execute anything, `--allow-all-processes` before system-wide capture, and an `XCPROF_TRACE_ROOT` output sandbox (`--output` must resolve under it or cwd unless `--allow-external-output`). `--no-prompt` is needed for non-interactive use
-- **`analyze` subcommand** — exports the TOC + `cpu-profile` table, resolves back-references into full backtraces, and reports the summary, support matrix, CPU hot frames (inclusive + self as % of total cycles plus an approximate ms), an approximate main-thread stall signal, and top user-code frames. Flags: `--json` / `--both`, `--start-ms` / `--end-ms` (hang-window scoping), `--hang-threshold-ms`, `--user-binary <names>`, `--dsym <path>`, `--open`
-- **Honest support matrix** — per family, `available` (parsed, results present), `partial` (schema present, parsing pending), `not_exportable` (schema absent from the export, GUI may still show it), or `not_present` (instrument wasn't in the recording). Silence never reads as "clean"
+- **`analyze` subcommand** — exports the TOC, the `cpu-profile` table, and the `network-connection-stat` table (when present), resolves back-references into full backtraces, and reports the summary, support matrix, CPU hot frames (inclusive + self as % of total cycles plus an approximate ms), an approximate main-thread stall signal, top user-code frames, and a network section (socket connections aggregated by process: protocol, remote, bytes in/out). Flags: `--json` / `--both`, `--start-ms` / `--end-ms` (hang-window scoping), `--hang-threshold-ms`, `--user-binary <names>`, `--dsym <path>`, `--open`
+- **Honest support matrix** — per family, `available` (parsed, results present), `partial` (schema present but nothing parsed), `not_exportable` (the instrument's data isn't surfaced by `xctrace export` — memory's Allocations/Leaks live in the trace event store, and Power Profiler is iOS-only — so open it in Instruments.app instead), or `not_present` (instrument wasn't in the recording). Silence never reads as "clean", and "couldn't measure" never reads as "measured, nothing found"
 - **Symbolication** — `--dsym <path>` resolves raw `0x…` frames; without it, dSYMs are auto-discovered by UUID via Spotlight, and frames with no match stay raw and are flagged (never invented)
 - **Output envelope & exit codes** — `analyze` defaults to terse markdown (`--json` / `--both` for JSON); `record` and `doctor` default to compact JSON (`--human` for text). Exit `0` ok · `2` environment/usage error (xctrace missing, trace not found, bad args, refused gate) · `8` output-write error
 - **The record honesty caveat** — an `xctrace record --launch` capture terminated at the time limit exits non-zero (it returns the killed target's status) while still saving a valid trace, so `record` trusts the saved bundle, not the exit code, and reports `ok: true` with an explanatory `notes` entry
@@ -49,12 +49,14 @@ Use this reference when:
 
 | Preset | Instruments | Use |
 |----------|-------------|-----|
-| `cpu` | CPU Profiler | "slow" / CPU bottlenecks (the analyze round-trip target) |
-| `memory` | Allocations, Leaks | growth, retain cycles |
-| `network` | CPU Profiler, HTTP Traffic | API performance |
-| `energy` | Power Profiler | battery (iOS/iPadOS) |
-| `full` | CPU Profiler, Allocations, Leaks, HTTP Traffic | macOS "find everything" |
+| `cpu` | CPU Profiler | "slow" / CPU bottlenecks (analyze round-trips) |
+| `memory` | Allocations, Leaks | growth, retain cycles (Instruments.app only) |
+| `network` | CPU Profiler, Network Connections | connections + bytes per process (analyze round-trips) |
+| `energy` | Power Profiler | battery (iOS/iPadOS only) |
+| `full` | CPU Profiler, Allocations, Leaks, Network Connections | macOS "find everything" |
 | `full-ios` | full + Power Profiler | iOS "find everything" |
+
+Two instrument choices are deliberate and verified against real Xcode 26 exports: `cpu` uses **CPU Profiler** (schema `cpu-profile`), not Time Profiler; `network` uses **Network Connections** (schema `network-connection-stat`, socket-level, any process), not HTTP Traffic (which only captures URLSession traffic that `analyze` doesn't read). Allocations/Leaks stay in `memory`/`full` so the recording opens in Instruments.app, but `analyze` can't surface their data — see the support matrix note below.
 
 ```bash
 xcprof record --preset cpu --attach MyApp --time-limit 10s       # attach (no gate)
