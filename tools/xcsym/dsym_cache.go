@@ -311,6 +311,9 @@ func writeAtomic(dir, path string, v any) error {
 		return err
 	}
 	enc := json.NewEncoder(tmp)
+	// Indented on purpose: this is the on-disk UUID cache, inspected by humans
+	// when debugging discovery — not an LLM-consumed report, so the token-lean
+	// compact-JSON rule does not apply.
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(v); err != nil {
 		tmp.Close()

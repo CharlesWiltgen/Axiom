@@ -50,6 +50,7 @@ xcsym crash --no-symbolicate <file>             # skip atos; keep raw frames
 xcsym crash --no-cache <file>                   # bypass UUID cache
 xcsym crash --no-spotlight <file>               # skip mdfind lookups
 xcsym crash --output <path> <file>              # write JSON to a file
+xcsym crash --human <file>                       # terse prose summary instead of JSON (for a person)
 xcsym crash - < crash.ips                       # read from stdin (for pasted content)
 xcsym crash crash.crash                         # legacy Apple text format (Organizer export)
 xcsym crash Foo.xccrashpoint                    # Xcode Organizer bundle (auto-walks to inner .crash)
@@ -60,6 +61,8 @@ xcsym crash --prefer-locally-symbolicated Foo.xccrashpoint  # use Logs/LocallySy
 Accepted inputs: `.ips` (v1 and v2 JSON), MetricKit `MXCrashDiagnostic` JSON, Apple's legacy `.crash` text format, and `.xccrashpoint` directory bundles. The file extension doesn't matter for non-bundle inputs — format is auto-detected from content. The `.xccrashpoint` suffix is matched case-insensitively (APFS/HFS+ are case-insensitive by default). For `.xccrashpoint` bundles, xcsym walks `Filters/Filter_*/Logs/` and picks one `.crash` file: the Filter dir with the most recent modification time (override with `--filter <substring>` — substring, not segment-anchored, so prefer dash-bounded fragments like `0.8.60-Any`), raw copy preferred over `LocallySymbolicated/` (override with `--prefer-locally-symbolicated` to keep Xcode's atos output instead of re-symbolicating). The original bundle path is surfaced in `input.bundle` so consumers can tell where the resolved `.crash` came from.
 
 **Unsupported input returns exit 2** with a structured JSON reject on stdout (`{"error":"unsupported_format", …}`) so agents can route on the error field instead of scraping stderr. See the Exit Codes section below.
+
+**Output is compact JSON by default** (single-line, token-lean for LLM consumers); every report subcommand (`crash`, `resolve`, `find-dsym`, `list-dsyms`, `verify`) takes `--human` for a terse prose rendering, and `… | jq .` gives indented JSON. `anonymize` is the exception — its output is a crash document in the `.ips` wire format (compact header line + pretty payload), not a report, so it has no `--human`.
 
 **Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.
 

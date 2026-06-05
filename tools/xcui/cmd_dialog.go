@@ -241,7 +241,6 @@ func writeDialog(out io.Writer, rep DialogReport, human bool) int {
 		return 0
 	}
 	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
 	if err := enc.Encode(rep); err != nil {
 		fmt.Fprintf(os.Stderr, "dialog: %v\n", err)
 		return 8

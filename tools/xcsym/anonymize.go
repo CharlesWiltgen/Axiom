@@ -184,6 +184,10 @@ func anonymizeIPSv2(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Pretty payload is intentional, NOT a token-leanness oversight: an .ips file
+	// on disk is a compact header line + newline + an indented payload. This
+	// output must stay byte-faithful to that wire format so it re-ingests as a
+	// real crash — do not switch to compact json.Marshal.
 	p, err := json.MarshalIndent(payloadDoc, "", "  ")
 	if err != nil {
 		return nil, err
@@ -201,6 +205,9 @@ func anonymizeMetricKit(data []byte) ([]byte, error) {
 	return marshalIndent(doc)
 }
 
+// marshalIndent keeps anonymized MetricKit output indented to match the .ips
+// wire format (see anonymizeIPS) — anonymize emits a crash document, not a tool
+// report, so the token-lean compact-JSON rule does not apply here.
 func marshalIndent(doc any) ([]byte, error) {
 	return json.MarshalIndent(doc, "", "  ")
 }

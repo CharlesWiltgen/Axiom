@@ -153,7 +153,6 @@ func runA11ySet(out io.Writer, args []string) int {
 	}
 
 	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
 	if err := enc.Encode(rep); err != nil {
 		fmt.Fprintf(os.Stderr, "a11y set: %v\n", err)
 		return 8
@@ -183,7 +182,6 @@ func runA11yReset(out io.Writer, args []string) int {
 	_, _ = ExecRun(ctx, 0, "xcrun", "simctl", "ui", udid, "increase_contrast", "disabled")
 	rep := A11yReport{Tool: "xcui", Version: version, Applied: true, Note: "accessibility overrides cleared"}
 	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
 	if err := enc.Encode(rep); err != nil {
 		return 8
 	}

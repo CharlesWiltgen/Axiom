@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -108,7 +107,11 @@ func TestRunVerify_PartialMissing(t *testing.T) {
 	if code != 7 {
 		t.Fatalf("got exit %d, want 7 (partial/missing)\n%s", code, buf.String())
 	}
-	if !strings.Contains(buf.String(), `"category": "partial"`) {
-		t.Errorf("expected category=partial in output, got:\n%s", buf.String())
+	var got verifyOutput
+	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+		t.Fatalf("output is not valid JSON: %v\n%s", err, buf.String())
+	}
+	if got.Category != "partial" {
+		t.Errorf("category = %q, want partial\n%s", got.Category, buf.String())
 	}
 }

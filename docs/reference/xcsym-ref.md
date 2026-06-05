@@ -33,7 +33,8 @@ Use this reference when:
 ## What's Covered
 
 - **Invocation** — `xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically); no prefix or path lookup needed
-- **`crash` subcommand** — full pipeline (parse → discover dSYMs → symbolicate → categorize → emit JSON); `--format`, `--from-metrickit`, `--dsym`, `--dsym-paths`, `--no-symbolicate`, `--no-cache`, `--no-spotlight`, `--output`, stdin support, `.xccrashpoint` flags
+- **Output format** — compact JSON by default (single-line, token-lean for LLM consumers); every report subcommand (`crash`, `verify`, `resolve`, `find-dsym`, `list-dsyms`) takes `--human` for a terse prose rendering, and `… | jq .` gives indented JSON. `anonymize` is the exception — it reproduces the `.ips` wire format, not a report, so it has no `--human`
+- **`crash` subcommand** — full pipeline (parse → discover dSYMs → symbolicate → categorize → emit JSON); `--format`, `--human`, `--from-metrickit`, `--dsym`, `--dsym-paths`, `--no-symbolicate`, `--no-cache`, `--no-spotlight`, `--output`, stdin support, `.xccrashpoint` flags
 - **`verify` subcommand** — per-image UUID/arch match diagnostics, different exit-code semantics than `crash`
 - **`resolve` subcommand** — single-address resolution via `atos` against an explicit dSYM
 - **`find-dsym` subcommand** — UUID-driven dSYM lookup across the full discovery chain

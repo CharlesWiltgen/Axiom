@@ -39,6 +39,7 @@ func runFindDsym(out io.Writer, args []string) int {
 	noSpotlight := fs.Bool("no-spotlight", false, "skip Spotlight (mdfind) lookups")
 	noCache := fs.Bool("no-cache", false, "skip the persistent UUID cache")
 	noDefaults := fs.Bool("no-defaults", false, "skip default dSYM search roots (Archives, DerivedData, Downloads); only --dsym-paths and $XCSYM_DSYM_PATHS apply")
+	human := fs.Bool("human", false, "human-readable output instead of JSON")
 	if err := fs.Parse(args); err != nil {
 		return 1
 	}
@@ -86,8 +87,11 @@ func runFindDsym(out io.Writer, args []string) int {
 		ImageName: entry.ImageName,
 		Source:    entry.Source,
 	}
+	if *human {
+		renderFindDsymHuman(out, result)
+		return 0
+	}
 	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
 	if err := enc.Encode(result); err != nil {
 		fmt.Fprintf(os.Stderr, "find-dsym: %v\n", err)
 		return 8
