@@ -38,12 +38,32 @@ export default withMermaid(defineConfig({
       { text: 'Skills', link: '/skills/' },
       { text: 'Agents', link: '/agents/' },
       { text: 'Commands', link: '/commands/' },
+      { text: 'Tools', link: '/tools/' },
       { text: 'Hooks', link: '/hooks/' },
       { text: 'Reference', link: '/reference/' },
       { text: 'Diagnostic', link: '/diagnostic/' }
     ],
 
     sidebar: {
+      '/tools/': [
+        {
+          text: 'Tools',
+          items: [
+            { text: 'Overview', link: '/tools/' },
+            { text: 'xclog (Console Capture)', link: '/reference/xclog-ref' },
+            { text: 'xcprof (Trace Capture & Analysis)', link: '/reference/xcprof-ref' },
+            { text: 'xcsym (Crash Symbolication)', link: '/reference/xcsym-ref' },
+            { text: 'xcui (Simulator UI & Accessibility)', link: '/reference/xcui-ref' }
+          ]
+        },
+        {
+          text: 'Related',
+          items: [
+            { text: 'AXe (Simulator Automation)', link: '/reference/axe-ref' },
+            { text: 'xctrace', link: '/reference/xctrace-ref' }
+          ]
+        }
+      ],
       '/start/': [
         {
           text: 'Get Started',

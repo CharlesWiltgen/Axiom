@@ -88,8 +88,14 @@ Comprehensive guides and documentation for Apple platform development. Reference
 
 ## Tools & Profiling
 
+The four Axiom-bundled CLIs (`xclog`, `xcprof`, `xcsym`, `xcui`) have their own [Tools](/tools/) section.
+
 | Skill | Description |
 |-------|-------------|
+| [**xclog-ref**](./xclog-ref) | xclog (Console Capture) — capture simulator/device console output as structured JSON/JSONL |
+| [**xcprof-ref**](./xcprof-ref) | xcprof (Trace Capture & Analysis) — record and analyze Instruments traces with an honest support matrix |
+| [**xcsym-ref**](./xcsym-ref) | xcsym (Crash Symbolication) — symbolicate and triage .ips/MetricKit/.crash/.xccrashpoint reports |
+| [**xcui-ref**](./xcui-ref) | xcui (Simulator UI & Accessibility) — drive and assert on the simulator UI and accessibility tree |
 | [**app-store-connect-ref**](./app-store-connect-ref) | App Store Connect API — builds, beta testing, metadata management |
 | [**asc-mcp-ref**](./asc-mcp-ref) | App Store Connect MCP — automated submission workflows |
 | [**app-store-ref**](./app-store-ref) | App Store submission — review guidelines, metadata requirements, rejection troubleshooting |
