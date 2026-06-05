@@ -33,10 +33,26 @@ var exportTable = func(ctx context.Context, trace, xpath string) ([]byte, error)
 	return res.Stdout, nil
 }
 
+// buildOpts bundles the inputs to buildReport. Grouping them behind named
+// fields removes the silent-transposition risk of the old positional signature
+// (startMS, endMS, and hangMS are all int64 — a swapped pair compiled cleanly)
+// and gives Phase 2 family parsing (axiom-o4sg) a place to add
+// memory/network/energy byte payloads without growing the argument list.
+type buildOpts struct {
+	trace     string
+	tocBytes  []byte
+	cpuBytes  []byte
+	startMS   int64
+	endMS     int64
+	hangMS    int64
+	userHints []string
+	symbolize func([]Sample) symbolizeResult
+}
+
 // buildReport is the pure orchestration: TOC + cpu-profile bytes -> report.
 // Kept separate from runAnalyze so it is unit-testable against fixtures.
-func buildReport(trace string, tocBytes, cpuBytes []byte, startMS, endMS int64, userHints []string, hangThresholdMS int64, symbolize func([]Sample) symbolizeResult) (AnalyzeReport, error) {
-	toc, err := parseTOC(tocBytes)
+func buildReport(opts buildOpts) (AnalyzeReport, error) {
+	toc, err := parseTOC(opts.tocBytes)
 	if err != nil {
 		return AnalyzeReport{}, err
 	}
@@ -44,7 +60,7 @@ func buildReport(trace string, tocBytes, cpuBytes []byte, startMS, endMS int64, 
 		Tool:    "xcprof",
 		Version: version,
 		Summary: Summary{
-			Trace:              filepath.Base(trace),
+			Trace:              filepath.Base(opts.trace),
 			Target:             toc.Target.Name,
 			TargetPID:          toc.Target.PID,
 			Device:             toc.Device.Name,
@@ -60,8 +76,8 @@ func buildReport(trace string, tocBytes, cpuBytes []byte, startMS, endMS int64, 
 	}
 
 	var samples []Sample
-	if toc.hasSchema("cpu-profile") && len(cpuBytes) > 0 {
-		samples, err = parseCPUProfile(cpuBytes)
+	if toc.hasSchema("cpu-profile") && len(opts.cpuBytes) > 0 {
+		samples, err = parseCPUProfile(opts.cpuBytes)
 		if err != nil {
 			return AnalyzeReport{}, err
 		}
@@ -70,9 +86,9 @@ func buildReport(trace string, tocBytes, cpuBytes []byte, startMS, endMS int64, 
 	// count, not the scoped window, so `--start-ms`/`--end-ms` that excludes all
 	// samples doesn't misreport cpu as "partial — no samples parsed".
 	fullSampleCount := len(samples)
-	if startMS > 0 || endMS > 0 {
-		scoped := scopeByTime(samples, startMS, endMS)
-		rep.Scope = &ScopeInfo{StartMS: startMS, EndMS: endMS, SamplesInScope: len(scoped)}
+	if opts.startMS > 0 || opts.endMS > 0 {
+		scoped := scopeByTime(samples, opts.startMS, opts.endMS)
+		rep.Scope = &ScopeInfo{StartMS: opts.startMS, EndMS: opts.endMS, SamplesInScope: len(scoped)}
 		samples = scoped
 	}
 	rep.CPUSamples = len(samples)
@@ -81,18 +97,18 @@ func buildReport(trace string, tocBytes, cpuBytes []byte, startMS, endMS int64, 
 	// Resolve raw-address frames before aggregation so hot/user frames carry
 	// names. No-op (no shell-out) when nothing needs symbolicating.
 	var symRes symbolizeResult
-	if symbolize != nil && len(samples) > 0 {
-		symRes = symbolize(samples)
+	if opts.symbolize != nil && len(samples) > 0 {
+		symRes = opts.symbolize(samples)
 	}
 
 	if len(samples) > 0 {
-		userBinaries := userBinarySet(toc.Target.Name, userHints)
+		userBinaries := userBinarySet(toc.Target.Name, opts.userHints)
 		rep.HotFrames = aggregateHotFrames(samples, 15)
 		rep.UserFrames = topUserFrames(samples, userBinaries, 15)
-		mt := mainThreadStats(samples, hangThresholdMS)
+		mt := mainThreadStats(samples, opts.hangMS)
 
 		totalCycles := totalCycleWeight(samples)
-		windowSec := analyzedWindowSec(rep.Summary.DurationSec, startMS, endMS, rep.Scope != nil)
+		windowSec := analyzedWindowSec(rep.Summary.DurationSec, opts.startMS, opts.endMS, rep.Scope != nil)
 		enrichWeights(rep.HotFrames, totalCycles, len(samples), windowSec)
 		enrichWeights(rep.UserFrames, totalCycles, len(samples), windowSec)
 		if totalCycles > 0 {
@@ -221,7 +237,16 @@ func runAnalyze(out io.Writer, args []string) int {
 	symbolize := func(samples []Sample) symbolizeResult {
 		return symbolizeSamples(ctx, samples, opts.dsym)
 	}
-	rep, err := buildReport(trace, tocBytes, cpuBytes, opts.startMS, opts.endMS, opts.userHints, opts.hang, symbolize)
+	rep, err := buildReport(buildOpts{
+		trace:     trace,
+		tocBytes:  tocBytes,
+		cpuBytes:  cpuBytes,
+		startMS:   opts.startMS,
+		endMS:     opts.endMS,
+		hangMS:    opts.hang,
+		userHints: opts.userHints,
+		symbolize: symbolize,
+	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "analyze:", err)
 		return 2
