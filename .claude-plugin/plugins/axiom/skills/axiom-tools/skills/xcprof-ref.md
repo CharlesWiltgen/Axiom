@@ -52,7 +52,7 @@ xcprof record --allow-launch --time-limit 10s -- /path/to/MyApp     # launch
 xcprof record --preset cpu --attach MyApp --dry-run                 # preview the exact xctrace command
 ```
 
-`record` emits compact JSON by default (the saved `trace` path, resolved `instruments`, effective `time_limit`, and the full `command` for transparency); `--human` for terminal text.
+`record` emits compact JSON by default (the saved `trace` path, resolved `instruments`, a structured `target_mode` of `attach`/`launch`/`all_processes`, effective `time_limit`, and the full `command` for transparency); `--human` for terminal text.
 
 ### Security gates (designed up front, not bolted on)
 
@@ -75,7 +75,7 @@ A `--launch` recording terminated at the time limit makes `xctrace` exit non-zer
 
 ## Output & exit codes
 
-`analyze`: compact JSON (`--json`) or terse markdown (default); `--both` for both. `record` and `doctor`: compact JSON by default, `--human` for text. Exit `0` ok · `2` environment/usage error (xctrace missing, trace not found, bad args, refused security gate) · `8` output-write error.
+`analyze`: compact JSON (`--json`) or terse markdown (default); `--both` for both. `record` and `doctor`: compact JSON by default, `--human` for text. (`analyze` defaults to the human-readable report because it's a read-oriented analysis; `record`/`doctor` default to JSON because they're scriptable status steps — the same split the rest of the toolkit follows: machine format is always compact JSON, `--human` is the prose escape.) Exit `0` ok · `2` environment/usage error (xctrace missing, trace not found, bad args, refused security gate) · `8` output-write error.
 
 ## Scope
 
