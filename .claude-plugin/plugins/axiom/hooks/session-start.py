@@ -169,7 +169,7 @@ try:
 
 ---
 
-**xcprof** (structured xctrace analysis): Available at `{xcprof_path}`. Turns an Instruments `.trace` into a token-lean structured report (compact JSON or terse markdown) — resolves xctrace's id/ref back-references that defeat grep, gives an honest per-family support matrix, hot/user-code frame attribution, and approximate main-thread stalls. Run `xcprof doctor` to verify xctrace; `xcprof analyze <trace> [--json] [--start-ms N --end-ms N]` to analyze. Phase 1 covers the CPU/Time Profiler family. Workflow: `axiom-tools` (skills/xcprof-ref.md)."""
+**xcprof** (structured xctrace capture + analysis): Available at `{xcprof_path}`. Turns an Instruments `.trace` into a token-lean structured report (compact JSON or terse markdown) — resolves xctrace's id/ref back-references that defeat grep, gives an honest per-family support matrix, hot/user-code frame attribution, and approximate main-thread stalls. Run `xcprof doctor` to verify xctrace; `xcprof record --preset cpu --attach <pid|name>` to capture (bounded by `--max-duration`; `-- <cmd>` launch needs `--allow-launch`, `--all-processes` needs `--allow-all-processes`; `--dry-run` previews the command); `xcprof analyze <trace> [--json] [--dsym <path>] [--start-ms N --end-ms N]` to analyze. CPU family round-trips record→analyze; memory/network/energy parsing is later. Workflow: `axiom-tools` (skills/xcprof-ref.md)."""
 except OSError:
     pass
 
