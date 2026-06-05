@@ -16,7 +16,7 @@ This suite covers Axiom itself — how to use it, what's available, and the tool
 | "How do I capture console output?" / "What is xclog?" | [skills/xclog-ref.md](skills/xclog-ref.md) |
 | "How do I symbolicate a crash?" / "What is xcsym?" / "Why is my crash unsymbolicated?" | [skills/xcsym-ref.md](skills/xcsym-ref.md) |
 | "How do I drive/validate the sim UI?" / "What is xcui?" / "How do I script accessibility checks?" | [skills/xcui-ref.md](skills/xcui-ref.md) |
-| "How do I analyze a trace / CPU profile?" / "What is xcprof?" / "Why does the profiler report no findings?" | [skills/xcprof-ref.md](skills/xcprof-ref.md) |
+| "How do I analyze a trace / CPU or network profile?" / "What is xcprof?" / "Why does the profiler report no findings?" | [skills/xcprof-ref.md](skills/xcprof-ref.md) |
 
 ## Using Axiom Skills
 
@@ -115,4 +115,4 @@ But when in doubt for iOS/Swift work: **check first, decide later.**
 
 **Skills**: axiom-swiftui, axiom-concurrency, axiom-data, axiom-build, axiom-performance
 
-**Axiom tools**: `xclog` (simulator console capture, `skills/xclog-ref.md`), `xcsym` (crash symbolication for `.ips`, MetricKit, legacy `.crash` text files, and Xcode Organizer `.xccrashpoint` bundles, `skills/xcsym-ref.md`), `xcui` (scriptable sim UI & accessibility testing, `skills/xcui-ref.md`), `xcprof` (structured xctrace/CPU-profile analysis, `skills/xcprof-ref.md`)
+**Axiom tools**: `xclog` (simulator console capture, `skills/xclog-ref.md`), `xcsym` (crash symbolication for `.ips`, MetricKit, legacy `.crash` text files, and Xcode Organizer `.xccrashpoint` bundles, `skills/xcsym-ref.md`), `xcui` (scriptable sim UI & accessibility testing, `skills/xcui-ref.md`), `xcprof` (structured xctrace CPU & network profile analysis, `skills/xcprof-ref.md`)
