@@ -108,7 +108,6 @@ func runAssert(out io.Writer, args []string) int {
 		}
 	} else {
 		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
 		if err := enc.Encode(rep); err != nil {
 			fmt.Fprintf(os.Stderr, "assert: %v\n", err)
 			return 8

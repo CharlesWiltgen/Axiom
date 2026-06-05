@@ -40,6 +40,7 @@ func runVerify(out io.Writer, args []string) int {
 	noSpotlight := fs.Bool("no-spotlight", false, "skip Spotlight (mdfind) lookups")
 	noCache := fs.Bool("no-cache", false, "skip the persistent UUID cache")
 	noDefaults := fs.Bool("no-defaults", false, "skip default dSYM search roots (Archives, DerivedData, Downloads); only --dsym, --dsym-paths, $XCSYM_DSYM_PATHS apply")
+	human := fs.Bool("human", false, "human-readable output instead of JSON")
 	if err := fs.Parse(args); err != nil {
 		return 1
 	}
@@ -98,11 +99,14 @@ func runVerify(out io.Writer, args []string) int {
 		Category: StatusCategory(status),
 		Images:   status,
 	}
-	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(result); err != nil {
-		fmt.Fprintf(os.Stderr, "verify: %v\n", err)
-		return 8
+	if *human {
+		renderVerifyHuman(out, result)
+	} else {
+		enc := json.NewEncoder(out)
+		if err := enc.Encode(result); err != nil {
+			fmt.Fprintf(os.Stderr, "verify: %v\n", err)
+			return 8
+		}
 	}
 
 	switch result.Category {

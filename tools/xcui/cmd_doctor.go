@@ -78,7 +78,6 @@ func runDoctor(out io.Writer, args []string) int {
 		return code
 	}
 	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
 	if err := enc.Encode(rep); err != nil {
 		fmt.Fprintf(os.Stderr, "doctor: %v\n", err)
 		return 8

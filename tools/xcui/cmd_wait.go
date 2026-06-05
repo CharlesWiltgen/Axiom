@@ -120,7 +120,6 @@ func runWait(out io.Writer, args []string) int {
 		fmt.Fprintf(out, "%s %q met=%v after %dms (%d polls)\n", rep.Condition, rep.Target, rep.Met, rep.WaitedMS, rep.Polls)
 	} else {
 		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
 		if err := enc.Encode(rep); err != nil {
 			fmt.Fprintf(os.Stderr, "wait: %v\n", err)
 			return 8

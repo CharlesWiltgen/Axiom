@@ -40,6 +40,7 @@ func runCrash(out io.Writer, args []string) int {
 	fs := flag.NewFlagSet("crash", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	format := fs.String("format", TierStandard, "output tier: summary|standard|full")
+	human := fs.Bool("human", false, "human-readable output instead of JSON")
 	fromMetrickit := fs.Bool("from-metrickit", false, "force MetricKit format (skip auto-detect)")
 	dsym := fs.String("dsym", "", "explicit dSYM path override (for the main app binary)")
 	dsymPaths := fs.String("dsym-paths", "", "extra dSYM search roots (colon-separated)")
@@ -220,8 +221,14 @@ func runCrash(out io.Writer, args []string) int {
 		report.Warnings = append(report.Warnings, symbolicateWarnings...)
 	}
 
-	// Emit JSON.
-	if err := writeJSON(out, *outputPath, report); err != nil {
+	// Emit. Default is compact JSON (token-lean for the crash-analyzer agent);
+	// --human renders a terse prose summary instead.
+	if *human {
+		if err := writeCrashHuman(out, *outputPath, &report); err != nil {
+			fmt.Fprintf(os.Stderr, "crash: %v\n", err)
+			return 8
+		}
+	} else if err := writeJSON(out, *outputPath, report); err != nil {
 		fmt.Fprintf(os.Stderr, "crash: %v\n", err)
 		return 8
 	}
@@ -345,9 +352,23 @@ func writeJSON(out io.Writer, outputPath string, payload any) error {
 		defer f.Close()
 		w = f
 	}
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(payload)
+	return json.NewEncoder(w).Encode(payload)
+}
+
+// writeCrashHuman renders a terse prose crash summary, mirroring writeJSON's
+// stdout-or-file destination selection.
+func writeCrashHuman(out io.Writer, outputPath string, r *CrashReport) error {
+	var w io.Writer = out
+	if outputPath != "" {
+		f, err := os.Create(outputPath)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		w = f
+	}
+	renderCrashHuman(w, r)
+	return nil
 }
 
 // writeReject emits a rejection payload and returns the caller-supplied

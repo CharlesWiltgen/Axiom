@@ -47,6 +47,7 @@ func runListDsyms(out io.Writer, args []string) int {
 	fs.SetOutput(os.Stderr)
 	source := fs.String("source", "all", "which sources to scan: archives|deriveddata|downloads|toolchain|frameworks|env|all")
 	dsymPaths := fs.String("dsym-paths", "", "extra dSYM search roots (colon-separated)")
+	human := fs.Bool("human", false, "human-readable output instead of JSON")
 	if err := fs.Parse(args); err != nil {
 		return 1
 	}
@@ -81,8 +82,11 @@ func runListDsyms(out io.Writer, args []string) int {
 		Roots:   roots,
 		Bundles: bundles,
 	}
+	if *human {
+		renderListDsymsHuman(out, result)
+		return 0
+	}
 	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
 	if err := enc.Encode(result); err != nil {
 		fmt.Fprintf(os.Stderr, "list-dsyms: %v\n", err)
 		return 8

@@ -173,7 +173,6 @@ func runVoiceOverTraverse(out io.Writer, args []string) int {
 	seq := announcementSequence(roots)
 	rep := VoiceOverReport{Tool: "xcui", Version: version, Action: "traverse", Count: len(seq), Sequence: seq}
 	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
 	if err := enc.Encode(rep); err != nil {
 		return 8
 	}
@@ -221,7 +220,6 @@ func runVoiceOverAssert(out io.Writer, args []string) int {
 		Count: len(got), Sequence: got, Pass: len(failures) == 0, Failures: failures,
 	}
 	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
 	if err := enc.Encode(rep); err != nil {
 		return 8
 	}

@@ -39,6 +39,7 @@ func runResolve(out io.Writer, args []string) int {
 	dsym := fs.String("dsym", "", "dSYM or binary path (required)")
 	arch := fs.String("arch", "", "architecture slice (arm64, arm64e, x86_64)")
 	load := fs.String("load-addr", "", "load address (required)")
+	human := fs.Bool("human", false, "human-readable output instead of JSON")
 	if err := fs.Parse(args); err != nil {
 		return 1
 	}
@@ -83,8 +84,11 @@ func runResolve(out io.Writer, args []string) int {
 			Symbolicated: s.Symbolicated,
 		})
 	}
+	if *human {
+		renderResolveHuman(out, result)
+		return 0
+	}
 	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
 	if err := enc.Encode(result); err != nil {
 		fmt.Fprintf(os.Stderr, "resolve: %v\n", err)
 		return 8
