@@ -16,10 +16,25 @@ import (
 const cpuProfileXPath = `/trace-toc/run[@number="1"]/data/table[@schema="cpu-profile"]`
 const netStatXPath = `/trace-toc/run[@number="1"]/data/table[@schema="network-connection-stat"]`
 
-// netStatSchema is the exportable socket-statistics table (the "Network
-// Connections" instrument). Verified on Xcode 26 — NOT http-traffic, which the
-// Phase 1 family table guessed.
+// cpuProfileSchema / netStatSchema are the exportable tables xcprof parses.
+// netStatSchema is the socket-statistics table (the "Network Connections"
+// instrument). Verified on Xcode 26 — NOT http-traffic, which the Phase 1
+// family table guessed.
+const cpuProfileSchema = "cpu-profile"
 const netStatSchema = "network-connection-stat"
+
+// exportSpecs lists each schema xcprof can parse and the run-1 xpath that
+// exports it. analyzeTrace exports every spec the TOC declares into
+// buildOpts.families, keyed by schema — a table-driven replacement for the
+// per-family if-chain, so a new exportable family is one entry here plus one
+// dispatch block in buildReport.
+var exportSpecs = []struct {
+	schema string
+	xpath  string
+}{
+	{cpuProfileSchema, cpuProfileXPath},
+	{netStatSchema, netStatXPath},
+}
 
 // exportTOC and exportTable are indirected so tests can drive analysis from
 // fixtures without a real .trace.
@@ -47,8 +62,7 @@ var exportTable = func(ctx context.Context, trace, xpath string) ([]byte, error)
 type buildOpts struct {
 	trace     string
 	tocBytes  []byte
-	cpuBytes  []byte
-	netBytes  []byte
+	families  map[string][]byte // exported table bytes keyed by schema (cpu-profile, network-connection-stat, …)
 	startMS   int64
 	endMS     int64
 	hangMS    int64
@@ -82,9 +96,13 @@ func buildReport(opts buildOpts) (AnalyzeReport, error) {
 		},
 	}
 
+	// Parse dispatch is keyed on present families: the caller exported a table
+	// only when the TOC declared its schema, so non-empty bytes ARE the presence
+	// signal. (The support matrix still reads toc.hasSchema independently, so a
+	// present-but-empty table reports `partial`, not silence.)
 	var samples []Sample
-	if toc.hasSchema("cpu-profile") && len(opts.cpuBytes) > 0 {
-		samples, err = parseCPUProfile(opts.cpuBytes)
+	if b := opts.families[cpuProfileSchema]; len(b) > 0 {
+		samples, err = parseCPUProfile(b)
 		if err != nil {
 			return AnalyzeReport{}, err
 		}
@@ -92,8 +110,8 @@ func buildReport(opts buildOpts) (AnalyzeReport, error) {
 
 	// Network is independent of the cpu/scope path: it aggregates its own table.
 	var netConns int
-	if toc.hasSchema(netStatSchema) && len(opts.netBytes) > 0 {
-		net, nerr := parseNetworkStat(opts.netBytes, 15)
+	if b := opts.families[netStatSchema]; len(b) > 0 {
+		net, nerr := parseNetworkStat(b, 15)
 		if nerr != nil {
 			return AnalyzeReport{}, nerr
 		}
@@ -224,6 +242,48 @@ func parseAnalyzeArgs(args []string) (string, analyzeOpts, int) {
 	return trace, opts, 0
 }
 
+// analyzeTrace turns a single .trace path into an AnalyzeReport: export the
+// TOC, export every parseable table the TOC declares (into a schema-keyed
+// families map), then buildReport. Extracted from runAnalyze so `compare` can
+// produce a report for each of its two traces without duplicating the
+// export+symbolize sequence — and so the per-trace symbolize closure (which
+// captures this trace's ctx + dsym) is built here, generalizing cleanly to the
+// two-trace case.
+func analyzeTrace(ctx context.Context, trace string, opts analyzeOpts) (AnalyzeReport, error) {
+	tocBytes, err := exportTOC(ctx, trace)
+	if err != nil {
+		return AnalyzeReport{}, fmt.Errorf("export toc: %w", err)
+	}
+	toc, err := parseTOC(tocBytes)
+	if err != nil {
+		return AnalyzeReport{}, err
+	}
+	families := map[string][]byte{}
+	for _, spec := range exportSpecs {
+		if !toc.hasSchema(spec.schema) {
+			continue
+		}
+		b, terr := exportTable(ctx, trace, spec.xpath)
+		if terr != nil {
+			return AnalyzeReport{}, fmt.Errorf("export %s: %w", spec.schema, terr)
+		}
+		families[spec.schema] = b
+	}
+	symbolize := func(samples []Sample) symbolizeResult {
+		return symbolizeSamples(ctx, samples, opts.dsym)
+	}
+	return buildReport(buildOpts{
+		trace:     trace,
+		tocBytes:  tocBytes,
+		families:  families,
+		startMS:   opts.startMS,
+		endMS:     opts.endMS,
+		hangMS:    opts.hang,
+		userHints: opts.userHints,
+		symbolize: symbolize,
+	})
+}
+
 func runAnalyze(out io.Writer, args []string) int {
 	trace, opts, code := parseAnalyzeArgs(args)
 	if code != 0 {
@@ -235,47 +295,7 @@ func runAnalyze(out io.Writer, args []string) int {
 	}
 
 	ctx := context.Background()
-	tocBytes, err := exportTOC(ctx, trace)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "analyze: export toc:", err)
-		return 2
-	}
-	toc, err := parseTOC(tocBytes)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "analyze:", err)
-		return 2
-	}
-	var cpuBytes []byte
-	if toc.hasSchema("cpu-profile") {
-		cpuBytes, err = exportTable(ctx, trace, cpuProfileXPath)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "analyze: export cpu-profile:", err)
-			return 2
-		}
-	}
-	var netBytes []byte
-	if toc.hasSchema(netStatSchema) {
-		netBytes, err = exportTable(ctx, trace, netStatXPath)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "analyze: export network-connection-stat:", err)
-			return 2
-		}
-	}
-
-	symbolize := func(samples []Sample) symbolizeResult {
-		return symbolizeSamples(ctx, samples, opts.dsym)
-	}
-	rep, err := buildReport(buildOpts{
-		trace:     trace,
-		tocBytes:  tocBytes,
-		cpuBytes:  cpuBytes,
-		netBytes:  netBytes,
-		startMS:   opts.startMS,
-		endMS:     opts.endMS,
-		hangMS:    opts.hang,
-		userHints: opts.userHints,
-		symbolize: symbolize,
-	})
+	rep, err := analyzeTrace(ctx, trace, opts)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "analyze:", err)
 		return 2
