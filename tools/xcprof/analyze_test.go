@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+// cpuFamily wraps the cpu-profile fixture in the schema-keyed families map that
+// buildOpts now carries (mirrors what analyzeTrace builds from a real export).
+func cpuFamily(t *testing.T) map[string][]byte {
+	t.Helper()
+	return map[string][]byte{cpuProfileSchema: loadFixture(t, "cpu-profile.xml")}
+}
+
 func TestAggregateHotFramesAttribution(t *testing.T) {
 	samples, _ := parseCPUProfile(loadFixture(t, "cpu-profile.xml"))
 	hot := aggregateHotFrames(samples, 0)
@@ -135,7 +142,7 @@ func TestScopeByTime(t *testing.T) {
 }
 
 func TestBuildReportEndToEnd(t *testing.T) {
-	rep, err := buildReport(buildOpts{trace: "cpu.trace", tocBytes: loadFixture(t, "toc.xml"), cpuBytes: loadFixture(t, "cpu-profile.xml"), hangMS: 250})
+	rep, err := buildReport(buildOpts{trace: "cpu.trace", tocBytes: loadFixture(t, "toc.xml"), families: cpuFamily(t), hangMS: 250})
 	if err != nil {
 		t.Fatalf("buildReport: %v", err)
 	}
@@ -163,7 +170,7 @@ func TestBuildReportEndToEnd(t *testing.T) {
 }
 
 func TestBuildReportScopedWindow(t *testing.T) {
-	rep, _ := buildReport(buildOpts{trace: "cpu.trace", tocBytes: loadFixture(t, "toc.xml"), cpuBytes: loadFixture(t, "cpu-profile.xml"), startMS: 600, endMS: 700, hangMS: 250})
+	rep, _ := buildReport(buildOpts{trace: "cpu.trace", tocBytes: loadFixture(t, "toc.xml"), families: cpuFamily(t), startMS: 600, endMS: 700, hangMS: 250})
 	if rep.Scope == nil || rep.Scope.SamplesInScope != 2 {
 		t.Errorf("scoped report should report 2 samples in 600-700ms window, got %+v", rep.Scope)
 	}
@@ -176,7 +183,7 @@ func TestBuildReportScopeDoesNotDowngradeSupport(t *testing.T) {
 	// A window past the trace end excludes every sample, but the trace DID
 	// contain cpu data — the support matrix is trace-level, so cpu must stay
 	// "available", not flip to "partial — no samples parsed".
-	rep, _ := buildReport(buildOpts{trace: "cpu.trace", tocBytes: loadFixture(t, "toc.xml"), cpuBytes: loadFixture(t, "cpu-profile.xml"), startMS: 999000, endMS: 1000000, hangMS: 250})
+	rep, _ := buildReport(buildOpts{trace: "cpu.trace", tocBytes: loadFixture(t, "toc.xml"), families: cpuFamily(t), startMS: 999000, endMS: 1000000, hangMS: 250})
 	if rep.CPUSamples != 0 {
 		t.Fatalf("expected 0 samples in an out-of-range window, got %d", rep.CPUSamples)
 	}
@@ -198,7 +205,7 @@ func TestBuildReportNetwork(t *testing.T) {
 	rep, err := buildReport(buildOpts{
 		trace:    "net.trace",
 		tocBytes: loadFixture(t, "network-toc.xml"),
-		netBytes: loadFixture(t, "network-connection-stat.xml"),
+		families: map[string][]byte{netStatSchema: loadFixture(t, "network-connection-stat.xml")},
 	})
 	if err != nil {
 		t.Fatalf("buildReport: %v", err)
@@ -230,7 +237,7 @@ func TestBuildReportNetwork(t *testing.T) {
 }
 
 func TestRenderMarkdownSectionOrder(t *testing.T) {
-	rep, _ := buildReport(buildOpts{trace: "cpu.trace", tocBytes: loadFixture(t, "toc.xml"), cpuBytes: loadFixture(t, "cpu-profile.xml"), hangMS: 250})
+	rep, _ := buildReport(buildOpts{trace: "cpu.trace", tocBytes: loadFixture(t, "toc.xml"), families: cpuFamily(t), hangMS: 250})
 	md := renderMarkdown(rep)
 	sections := []string{"## Summary", "## Support", "## CPU", "## Main thread", "## Top user-code frames"}
 	last := -1
