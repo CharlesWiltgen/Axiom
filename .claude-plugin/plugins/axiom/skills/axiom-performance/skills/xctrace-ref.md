@@ -281,19 +281,19 @@ xcrun xctrace export \
 
 ### Before/After Comparison
 
+Don't export both traces and diff the XML by hand — `xcprof compare` does function-level deltas with a CI-gating exit code. Both recordings must exercise the **same workload**:
+
 ```bash
-# Record baseline
-xcrun xctrace record --instrument 'CPU Profiler' --attach 'MyApp' --time-limit 10s --output baseline.trace
+# Record baseline (before-revision build), then after changes
+xcprof record --preset cpu --attach MyApp --time-limit 10s --no-prompt --output baseline.trace
+# ...rebuild...
+xcprof record --preset cpu --attach MyApp --time-limit 10s --no-prompt --output current.trace
 
-# Make changes, rebuild app
-
-# Record after changes
-xcrun xctrace record --instrument 'CPU Profiler' --attach 'MyApp' --time-limit 10s --output after.trace
-
-# Export both for comparison
-xcrun xctrace export --input baseline.trace --xpath '...' > baseline.xml
-xcrun xctrace export --input after.trace --xpath '...' > after.xml
+# Diff them; --fail-on-regression sets exit 3 when a function's CPU share jumps
+xcprof compare baseline.trace current.trace --fail-on-regression --threshold-pct 5 --human
 ```
+
+Full workflow, CI recipe, and exit-code semantics: skills/trace-comparison.md.
 
 ## Troubleshooting
 
