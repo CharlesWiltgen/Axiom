@@ -8,6 +8,7 @@
     "./commands/analyze-crash.md",
     "./commands/ask.md",
     "./commands/audit.md",
+    "./commands/compare-traces.md",
     "./commands/fix-build.md",
     "./commands/health-check.md",
     "./commands/optimize-build.md",

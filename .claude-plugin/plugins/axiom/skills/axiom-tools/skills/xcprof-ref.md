@@ -21,9 +21,10 @@ xcprof turns an Instruments `.trace` into a structured, token-lean report for LL
   - `--user-binary <names>` — comma-separated extra binaries to treat as user code (embedded frameworks).
   - `--dsym <path>` — symbolicate raw-address frames using a `.dSYM` bundle or Mach-O. Without it, dSYMs are auto-discovered by UUID via Spotlight; frames with no matching dSYM stay raw and are flagged.
   - `--open` — open the trace in Instruments.app after analysis (opt-in; headless by default).
+- `xcprof compare <baseline> <current> [flags]` — diff two traces for regressions (see Comparing traces below).
 - `xcprof doctor [--human]` — environment check.
 
-Flags may come before or after `<trace>` — xcprof handles the Go-flag positional gotcha for you.
+Flags may come before or after the positional `<trace>` arguments — xcprof handles the Go-flag positional gotcha for you.
 
 ## Recording
 
@@ -71,6 +72,21 @@ xcprof record --preset cpu --attach MyApp --dry-run                 # preview th
 
 A `--launch` recording terminated at the time limit makes `xctrace` exit non-zero (it returns the killed target's status) **while still saving a valid trace**. `record` trusts the saved bundle, not the exit code: it reports `ok: true` with a `notes` entry explaining the benign non-zero exit.
 
+## Comparing traces (regression detection)
+
+`xcprof compare <baseline> <current>` runs the analyze pipeline on each trace and diffs them into function-level deltas — for "did this change regress CPU?" and for CI gating. It matches frames by `(binary, function name)` and reports the change in **inclusive CPU-cycle share** in percentage points (the comparable quantity across two runs of different total work — raw cycles and ms are not).
+
+- A frame whose inclusive share rose by ≥ `--threshold-pct` (default `5`) is a **regression**; fell by ≥ that, an **improvement**; in between is noise and dropped. Lists sort by `severity` = `|incl_pct_delta| × max(baseline,current inclusive ms)` (the "% delta × absolute time" rank).
+- `--fail-on-regression` exits **3** when any regression meets the threshold — the CI gate (distinct from `2` usage / `8` I/O so an agent can tell "slower" from "broke").
+- Defaults to compact JSON; `--human` for markdown, `--both` (markdown then JSON). `--dsym` applies to both traces. (No `--user-binary`/window flags: compare diffs the hot-frame tables over the full trace.)
+
+```bash
+xcprof compare baseline.trace current.trace --human                              # read the diff
+xcprof compare baseline.trace current.trace --fail-on-regression --threshold-pct 5  # CI gate (exit 3 on regression)
+```
+
+Both recordings must exercise the **same workload** or the deltas measure workload differences, not code changes. Raw-address frames (`0x…`) don't match across builds (ASLR) — they're excluded and counted in a note; pass `--dsym` for symbol-level deltas on release builds. Per-connection network matching is unreliable across runs, so only total rx/tx byte deltas are reported. Full workflow + CI recipe: `axiom-performance` (skills/trace-comparison.md).
+
 ## Honesty caveats
 
 - **Frame cost is cycle share, not time.** The `%` is the exact share of total CPU cycles; the `ms` figure is an *approximate* wall-time from the frame's sample share × the analyzed window. Cycle-weight is cycles (the export's "Cycles" column), and cycles→time needs per-core frequency under DVFS that the trace doesn't carry — so ms is never derived from cycles.
@@ -80,11 +96,11 @@ A `--launch` recording terminated at the time limit makes `xctrace` exit non-zer
 
 ## Output & exit codes
 
-`analyze`: compact JSON (`--json`) or terse markdown (default); `--both` for both. `record` and `doctor`: compact JSON by default, `--human` for text. (`analyze` defaults to the human-readable report because it's a read-oriented analysis; `record`/`doctor` default to JSON because they're scriptable status steps — the same split the rest of the toolkit follows: machine format is always compact JSON, `--human` is the prose escape.) Exit `0` ok · `2` environment/usage error (xctrace missing, trace not found, bad args, refused security gate) · `8` output-write error.
+`analyze`: compact JSON (`--json`) or terse markdown (default); `--both` for both. `record`, `compare`, and `doctor`: compact JSON by default, `--human` for text. (`analyze` defaults to the human-readable report because it's a read-oriented analysis; `record`/`compare`/`doctor` default to JSON because they're scriptable status steps — the same split the rest of the toolkit follows: machine format is always compact JSON, `--human` is the prose escape.) Exit `0` ok · `2` environment/usage error (xctrace missing, trace not found, bad args, refused security gate) · `3` `compare` regression met `--threshold-pct` under `--fail-on-regression` · `8` output-write error.
 
 ## Scope
 
-Shipped: `doctor`, `analyze` (CPU `cpu-profile` family with `--dsym` symbolication — explicit path + Spotlight auto-discovery — plus the `network-connection-stat` socket family), and `record` (presets + bounded duration + launch/all-processes/output security gates). memory and macOS energy are `not_exportable` by design (data not surfaced by xctrace export). The shared dSYM/symbolication engine with fuller discovery (axiom-fo7k), on-device iOS energy parsing, `compare` (regression detection), and `cleanup` remain later phases.
+Shipped: `doctor`, `analyze` (CPU `cpu-profile` family with `--dsym` symbolication — explicit path + Spotlight auto-discovery — plus the `network-connection-stat` socket family), `record` (presets + bounded duration + launch/all-processes/output security gates), and `compare` (function-level CPU-share regression detection with a `--fail-on-regression` CI gate). memory and macOS energy are `not_exportable` by design (data not surfaced by xctrace export). The shared dSYM/symbolication engine with fuller discovery (axiom-fo7k), on-device iOS energy parsing, and `cleanup` remain later phases.
 
 ## Resources
 
