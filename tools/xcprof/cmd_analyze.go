@@ -61,7 +61,7 @@ var exportTable = func(ctx context.Context, trace, xpath string) ([]byte, error)
 // memory/network/energy byte payloads without growing the argument list.
 type buildOpts struct {
 	trace     string
-	tocBytes  []byte
+	toc       *TOC              // already parsed by the caller (analyzeTrace) — buildReport never re-parses
 	families  map[string][]byte // exported table bytes keyed by schema (cpu-profile, network-connection-stat, …)
 	startMS   int64
 	endMS     int64
@@ -70,13 +70,12 @@ type buildOpts struct {
 	symbolize func([]Sample) symbolizeResult
 }
 
-// buildReport is the pure orchestration: TOC + cpu-profile bytes -> report.
-// Kept separate from runAnalyze so it is unit-testable against fixtures.
+// buildReport is the pure orchestration: parsed TOC + table bytes -> report.
+// Kept separate from runAnalyze so it is unit-testable against fixtures. It
+// takes the already-parsed TOC (not raw bytes) so the parse + support-matrix
+// decision stay derived from one source, and the TOC is parsed once per trace.
 func buildReport(opts buildOpts) (AnalyzeReport, error) {
-	toc, err := parseTOC(opts.tocBytes)
-	if err != nil {
-		return AnalyzeReport{}, err
-	}
+	toc := opts.toc
 	rep := AnalyzeReport{
 		Tool:    "xcprof",
 		Version: version,
@@ -102,10 +101,11 @@ func buildReport(opts buildOpts) (AnalyzeReport, error) {
 	// present-but-empty table reports `partial`, not silence.)
 	var samples []Sample
 	if b := opts.families[cpuProfileSchema]; len(b) > 0 {
-		samples, err = parseCPUProfile(b)
+		parsed, err := parseCPUProfile(b)
 		if err != nil {
 			return AnalyzeReport{}, err
 		}
+		samples = parsed
 	}
 
 	// Network is independent of the cpu/scope path: it aggregates its own table.
@@ -274,7 +274,7 @@ func analyzeTrace(ctx context.Context, trace string, opts analyzeOpts) (AnalyzeR
 	}
 	return buildReport(buildOpts{
 		trace:     trace,
-		tocBytes:  tocBytes,
+		toc:       toc,
 		families:  families,
 		startMS:   opts.startMS,
 		endMS:     opts.endMS,
