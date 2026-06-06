@@ -56,6 +56,11 @@ Use this router when:
 - Exports and analyzes data
 - Reports findings with severity
 
+**Compare two traces / detect regressions** → See skills/trace-comparison.md or `/axiom:compare-traces`
+- Did this change slow down a hot path? Function-level CPU-share deltas
+- CI gating with `xcprof compare --fail-on-regression` (non-zero exit)
+- Regressions vs improvements, severity ranking, exit-code semantics
+
 ### Hang/Freeze Issues
 
 **App hangs or freezes** → See skills/hang-diagnostics.md
