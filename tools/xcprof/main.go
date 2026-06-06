@@ -13,6 +13,7 @@ Usage:
   xcprof doctor [--human]                       Verify xctrace; count instruments/devices
   xcprof record <target> [flags]                Capture a new .trace
   xcprof analyze <trace> [flags]                Analyze an existing .trace
+  xcprof compare <baseline> <current> [flags]   Diff two traces; gate CI on regressions
 
 record target (exactly one required):
   --attach <pid|name>    attach to a running process
@@ -40,9 +41,16 @@ analyze flags:
   --dsym <path>          symbolicate raw-address frames (default: auto-discover by UUID)
   --open                 open the trace in Instruments.app after analysis
 
+compare flags:
+  --threshold-pct <n>    inclusive CPU-share rise (percentage points) counted as a regression (default 5)
+  --fail-on-regression   exit 3 when any regression meets the threshold (CI gate)
+  --human                human-readable markdown (default: compact JSON)
+  --both                 emit markdown then compact JSON
+  --dsym <path>          symbolicate both traces (default: auto-discover by UUID)
+
 Output is JSON-compact (LLM-lean) or terse markdown. Phase 2 covers the CPU
-family end to end (record → analyze); memory/network/energy parsing, compare,
-and cleanup arrive in later phases.
+family end to end (record → analyze → compare); memory/network/energy parsing
+deepens and cleanup arrives in later phases.
 `
 
 func main() {
@@ -57,6 +65,8 @@ func main() {
 		os.Exit(runRecord(os.Stdout, os.Args[2:]))
 	case "analyze":
 		os.Exit(runAnalyze(os.Stdout, os.Args[2:]))
+	case "compare":
+		os.Exit(runCompare(os.Stdout, os.Args[2:]))
 	case "--version", "-v":
 		fmt.Println(version)
 	case "--help", "-h":
