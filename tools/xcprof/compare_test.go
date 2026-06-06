@@ -179,8 +179,18 @@ func TestDiffReportsTruncationDisclosed(t *testing.T) {
 	if !rep.Regressed {
 		t.Error("regressed must stay true even when the list is capped")
 	}
-	if want := fmt.Sprintf("%d regressions met the threshold", compareTopN+5); !strings.Contains(strings.Join(rep.Notes, " "), want) {
-		t.Errorf("expected a note disclosing the full count %q, got %v", want, rep.Notes)
+	// The TRUE total is carried structurally, not just buried in a note, so the
+	// verdict and JSON consumers never read the capped length as the real count.
+	if rep.RegressionCount != compareTopN+5 {
+		t.Errorf("regression_count = %d, want %d (the full pre-cap total)", rep.RegressionCount, compareTopN+5)
+	}
+	// The markdown verdict must report the full count, not the capped array length.
+	md := renderCompareMarkdown(rep)
+	if !strings.Contains(md, fmt.Sprintf("%d regression(s)", compareTopN+5)) {
+		t.Errorf("verdict should report the full count %d; markdown:\n%s", compareTopN+5, md)
+	}
+	if !strings.Contains(md, "more (showing top") {
+		t.Error("truncated table should mark the elided rows")
 	}
 }
 
@@ -199,6 +209,23 @@ func TestDiffReportsNetworkDelta(t *testing.T) {
 	}
 	if rep.Network.TxBytesDelta != 0 {
 		t.Errorf("tx delta = %d, want 0", rep.Network.TxBytesDelta)
+	}
+}
+
+func TestDiffReportsOneSidedNetworkOmitted(t *testing.T) {
+	// Only the current trace recorded the network instrument. A byte delta would
+	// conflate "measured nothing" with "didn't measure", so no delta is emitted;
+	// a note flags it instead (the honesty contract).
+	base := report("base.trace")
+	cur := report("cur.trace")
+	cur.Network = &NetworkReport{TotalRxBytes: 5000, TotalTxBytes: 200}
+	rep := diffReports(base, cur, thresh)
+
+	if rep.Network != nil {
+		t.Errorf("expected no network delta when only one trace measured network, got %+v", rep.Network)
+	}
+	if !strings.Contains(strings.Join(rep.Notes, " "), "only the current trace") {
+		t.Errorf("expected a note that network was recorded in only one trace, got %v", rep.Notes)
 	}
 }
 
@@ -271,6 +298,16 @@ func TestParseCompareArgsMissingTrace(t *testing.T) {
 func TestParseCompareArgsTooManyTraces(t *testing.T) {
 	if _, _, _, code := parseCompareArgs([]string{"a.trace", "b.trace", "c.trace"}); code != 2 {
 		t.Errorf("three traces should be a usage error (2), got %d", code)
+	}
+}
+
+func TestParseCompareArgsRejectsNonPositiveThreshold(t *testing.T) {
+	// 0 would flag every unchanged frame (delta 0 >= 0) as a regression; a
+	// negative value flips improvements into regressions. Both must be rejected.
+	for _, v := range []string{"0", "-5"} {
+		if _, _, _, code := parseCompareArgs([]string{"a.trace", "b.trace", "--threshold-pct", v}); code != 2 {
+			t.Errorf("--threshold-pct %s should be a usage error (2), got %d", v, code)
+		}
 	}
 }
 

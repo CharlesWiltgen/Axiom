@@ -50,18 +50,23 @@ type NetworkDelta struct {
 	TxBytesDelta    int64 `json:"tx_bytes_delta"`
 }
 
-// CompareReport is the structured output of `xcprof compare`.
+// CompareReport is the structured output of `xcprof compare`. RegressionCount /
+// ImprovementCount are the TRUE totals that met the threshold; the Regressions /
+// Improvements arrays are capped at compareTopN by severity, so a consumer
+// compares the count against the array length to know how many were elided.
 type CompareReport struct {
-	Tool         string        `json:"tool"`
-	Version      string        `json:"version"`
-	ThresholdPct float64       `json:"threshold_pct"`
-	Baseline     CompareSide   `json:"baseline"`
-	Current      CompareSide   `json:"current"`
-	Regressions  []FrameDelta  `json:"regressions,omitempty"`
-	Improvements []FrameDelta  `json:"improvements,omitempty"`
-	Network      *NetworkDelta `json:"network,omitempty"`
-	Regressed    bool          `json:"regressed"`
-	Notes        []string      `json:"notes,omitempty"`
+	Tool             string        `json:"tool"`
+	Version          string        `json:"version"`
+	ThresholdPct     float64       `json:"threshold_pct"`
+	Baseline         CompareSide   `json:"baseline"`
+	Current          CompareSide   `json:"current"`
+	RegressionCount  int           `json:"regression_count"`
+	ImprovementCount int           `json:"improvement_count"`
+	Regressions      []FrameDelta  `json:"regressions,omitempty"`
+	Improvements     []FrameDelta  `json:"improvements,omitempty"`
+	Network          *NetworkDelta `json:"network,omitempty"`
+	Regressed        bool          `json:"regressed"`
+	Notes            []string      `json:"notes,omitempty"`
 }
 
 // diffReports diffs two analyze reports into a regression/improvement view.
@@ -121,43 +126,42 @@ func diffReports(baseline, current AnalyzeReport, thresholdPct float64) CompareR
 	sortBySeverity(rep.Regressions)
 	sortBySeverity(rep.Improvements)
 	rep.Regressed = len(rep.Regressions) > 0
-	// Capture the full counts before the display cap so a truncated list never
-	// reads as "that's all of them" (the honesty contract — see the note below).
-	regCount, impCount := len(rep.Regressions), len(rep.Improvements)
-	if regCount > compareTopN {
+	// Record the TRUE totals before the display cap so a truncated list never
+	// reads as "that's all of them" (the honesty contract); the markdown verdict
+	// and any consumer read these, not len(Regressions).
+	rep.RegressionCount = len(rep.Regressions)
+	rep.ImprovementCount = len(rep.Improvements)
+	if rep.RegressionCount > compareTopN {
 		rep.Regressions = rep.Regressions[:compareTopN]
 	}
-	if impCount > compareTopN {
+	if rep.ImprovementCount > compareTopN {
 		rep.Improvements = rep.Improvements[:compareTopN]
 	}
 
-	if baseline.Network != nil || current.Network != nil {
-		var b, c NetworkReport
-		if baseline.Network != nil {
-			b = *baseline.Network
-		}
-		if current.Network != nil {
-			c = *current.Network
-		}
+	// Network deltas only when BOTH traces measured the network instrument — a
+	// one-sided delta would conflate "measured nothing" with "didn't measure"
+	// (the same honesty contract the support matrix enforces).
+	switch {
+	case baseline.Network != nil && current.Network != nil:
+		b, c := *baseline.Network, *current.Network
 		rep.Network = &NetworkDelta{
 			BaselineRxBytes: b.TotalRxBytes, CurrentRxBytes: c.TotalRxBytes, RxBytesDelta: c.TotalRxBytes - b.TotalRxBytes,
 			BaselineTxBytes: b.TotalTxBytes, CurrentTxBytes: c.TotalTxBytes, TxBytesDelta: c.TotalTxBytes - b.TotalTxBytes,
 		}
+	case baseline.Network != nil || current.Network != nil:
+		recorded := "current"
+		if current.Network == nil {
+			recorded = "baseline"
+		}
+		rep.Notes = append(rep.Notes, fmt.Sprintf(
+			"network was recorded in only the %s trace; byte deltas omitted (can't compare measured against unmeasured)", recorded))
 	}
 
 	if skipped > 0 {
 		rep.Notes = append(rep.Notes, fmt.Sprintf(
 			"%d unsymbolicated frame(s) excluded from matching (raw addresses don't match across builds); pass --dsym for symbol-level deltas", skipped))
 	}
-	if regCount > compareTopN {
-		rep.Notes = append(rep.Notes, fmt.Sprintf(
-			"%d regressions met the threshold; the top %d by severity are shown", regCount, compareTopN))
-	}
-	if impCount > compareTopN {
-		rep.Notes = append(rep.Notes, fmt.Sprintf(
-			"%d improvements found; the top %d by severity are shown", impCount, compareTopN))
-	}
-	if len(order) > 0 {
+	if len(rep.Regressions) > 0 || len(rep.Improvements) > 0 {
 		rep.Notes = append(rep.Notes,
 			"deltas are percentage-points of CPU-cycle share; ms deltas are approximate (sample-share × window); a frame absent from the other trace's top frames is treated as 0% (it may have been just below the top-frame cutoff)")
 	}

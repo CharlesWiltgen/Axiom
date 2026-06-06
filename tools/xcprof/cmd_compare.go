@@ -54,6 +54,13 @@ func parseCompareArgs(args []string) (string, string, compareOpts, int) {
 		fmt.Fprintln(os.Stderr, "compare: usage: xcprof compare <baseline> <current> [flags]")
 		return "", "", compareOpts{}, 2
 	}
+	// A non-positive threshold is nonsense: 0 makes every unchanged frame (delta
+	// 0 >= 0) a regression, and a negative value flips improvements into the
+	// regression bucket. Reject it rather than silently mis-gate CI.
+	if *threshold <= 0 {
+		fmt.Fprintf(os.Stderr, "compare: --threshold-pct must be > 0 (got %v)\n", *threshold)
+		return "", "", compareOpts{}, 2
+	}
 
 	opts := compareOpts{
 		human:            *human,
@@ -121,15 +128,26 @@ func writeCompare(out io.Writer, rep CompareReport, human, both bool) int {
 		}
 		return true
 	}
+	emitMarkdown := func() bool {
+		if _, err := fmt.Fprint(out, renderCompareMarkdown(rep)); err != nil {
+			fmt.Fprintln(os.Stderr, "compare: write output:", err)
+			return false
+		}
+		return true
+	}
 	switch {
 	case both:
-		fmt.Fprint(out, renderCompareMarkdown(rep))
+		if !emitMarkdown() {
+			return 8
+		}
 		fmt.Fprintln(out)
 		if !emitJSON() {
 			return 8
 		}
 	case human:
-		fmt.Fprint(out, renderCompareMarkdown(rep))
+		if !emitMarkdown() {
+			return 8
+		}
 	default:
 		if !emitJSON() {
 			return 8
@@ -147,7 +165,7 @@ func renderCompareMarkdown(rep CompareReport) string {
 
 	verdict := "no regression"
 	if rep.Regressed {
-		verdict = fmt.Sprintf("%d regression(s)", len(rep.Regressions))
+		verdict = fmt.Sprintf("%d regression(s)", rep.RegressionCount)
 	}
 	fmt.Fprintf(&b, "**Verdict:** %s (threshold %.1fpp inclusive CPU share)\n", verdict, rep.ThresholdPct)
 
@@ -158,7 +176,7 @@ func renderCompareMarkdown(rep CompareReport) string {
 	fmt.Fprintf(&b, "| cpu samples | %d | %d |\n", rep.Baseline.CPUSamples, rep.Current.CPUSamples)
 	fmt.Fprintf(&b, "| main-thread share | %.1f%% | %.1f%% |\n", rep.Baseline.MainThreadPct, rep.Current.MainThreadPct)
 
-	writeDeltaTable := func(title string, rows []FrameDelta) {
+	writeDeltaTable := func(title string, rows []FrameDelta, total int) {
 		fmt.Fprintf(&b, "\n## %s\n", title)
 		if len(rows) == 0 {
 			b.WriteString("- none\n")
@@ -177,9 +195,12 @@ func renderCompareMarkdown(rep CompareReport) string {
 			fmt.Fprintf(&b, "| %s%s%s | %s | %.1f→%.1f (%+.1f) | %+.1f | %+.0f | %.0f |\n",
 				d.Name, tag, kind, d.Binary, d.BaselineInclPct, d.CurrentInclPct, d.InclPctDelta, d.SelfPctDelta, d.InclMSDelta, d.Severity)
 		}
+		if total > len(rows) {
+			fmt.Fprintf(&b, "\n_…and %d more (showing top %d by severity)_\n", total-len(rows), len(rows))
+		}
 	}
-	writeDeltaTable("Regressions", rep.Regressions)
-	writeDeltaTable("Improvements", rep.Improvements)
+	writeDeltaTable("Regressions", rep.Regressions, rep.RegressionCount)
+	writeDeltaTable("Improvements", rep.Improvements, rep.ImprovementCount)
 
 	if n := rep.Network; n != nil {
 		b.WriteString("\n## Network\n")
