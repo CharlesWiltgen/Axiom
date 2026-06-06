@@ -209,6 +209,7 @@ export default withMermaid(defineConfig({
             { text: '/axiom:audit memory', link: '/commands/debugging/audit-memory' },
             { text: '/axiom:audit modernization', link: '/commands/debugging/audit-modernization' },
             { text: '/axiom:audit swift-performance', link: '/commands/debugging/audit-swift-performance' },
+            { text: '/axiom:compare-traces', link: '/commands/debugging/compare-traces' },
             { text: '/axiom:profile', link: '/commands/debugging/profile' }
           ]
         },
@@ -340,6 +341,7 @@ export default withMermaid(defineConfig({
             { text: 'Performance Profiling', link: '/skills/debugging/performance-profiling' },
             { text: 'TestFlight Triage', link: '/skills/debugging/testflight-triage' },
             { text: 'Timer Safety Patterns', link: '/skills/debugging/timer-patterns' },
+            { text: 'Trace Comparison', link: '/skills/debugging/trace-comparison' },
             { text: 'Xcode Debugging', link: '/skills/debugging/xcode-debugging' }
           ]
         },
