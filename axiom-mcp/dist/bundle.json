@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-06-07T15:32:40.028Z",
+  "generatedAt": "2026-06-07T15:33:57.559Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -40205,6 +40205,11 @@
       "name": "test-simulator",
       "description": "Launch simulator testing agent for test scenarios and visual verification",
       "content": "\n# Simulator Testing Agent\n\nLaunches the **simulator-tester** agent for automated simulator testing with visual verification.\n\n## What It Does\n\nThe agent will:\n1. Check simulator state and boot if needed\n2. Set up test scenarios (location, permissions, push notifications)\n3. Capture screenshots and video\n4. Monitor logs for crashes/errors\n5. Analyze results and provide clear reports\n\n## Capabilities\n\n- **Screenshot capture** for visual debugging\n- **Video recording** for complex workflows\n- **Location simulation** for GPS-based features\n- **Push notification testing** without a server\n- **Permission management** without manual tapping\n- **Deep link navigation** to specific screens\n- **Status bar override** for clean screenshots\n- **Log analysis** for crash detection\n\n## Common Scenarios\n\n**Visual Verification**:\n```bash\n/axiom:test-simulator\n```\n\"Take a screenshot to verify the login button fix\"\n\n**Location Testing**:\n```bash\n/axiom:test-simulator\n```\n\"Set location to San Francisco and test the map feature\"\n\n**Push Notifications**:\n```bash\n/axiom:test-simulator\n```\n\"Send a test push notification and screenshot the result\"\n\n**Permission Flows**:\n```bash\n/axiom:test-simulator\n```\n\"Test the camera permission dialog\"\n\n## Prefer Natural Language?\n\nInstead of using this command, you can simply say:\n- \"Can you take a screenshot of the app?\"\n- \"Test my app with location simulation\"\n- \"Check if the push notification handling works\"\n- \"Navigate to Settings and take a screenshot\"\n- \"Record a video of the app running\"\n\nThe simulator-tester agent will automatically trigger.\n\n## Quick Screenshot\n\nFor just a quick screenshot without full testing, use:\n```bash\n/axiom:screenshot\n```\n"
+    },
+    "triage": {
+      "name": "triage",
+      "description": "Triage a corpus of production crashes/hangs from Sentry or App Store Connect — classify, cluster into families, and flag suspension/idle-runloop false-positives",
+      "content": "\n# Triage Production Crashes\n\nLaunches the **triage-analyzer** agent to pull grouped production issues from the named provider, classify and cluster them, and flag suspension/idle-runloop ANR false-positives — without hiding anything.\n\n## Usage\n\n```\n/axiom:triage sentry\n/axiom:triage asc\n```\n\n## What It Does\n\n1. Fetches unresolved issues from the provider (Sentry token via `SENTRY_AUTH_TOKEN`; ASC via asc-mcp). Follows cursor pagination until the corpus is complete.\n2. Normalizes each issue's latest event into NormalizedReport JSONL.\n3. Runs `xcsym triage` to classify crashes + hangs, mechanically cluster by culprit signature, and apply noise rules.\n4. Merges clusters into root-cause families and ranks by users affected.\n5. Produces a report that demotes likely-noise issues with reasons — never drops them.\n\n## Prefer Natural Language?\n\nYou can also trigger this agent with:\n- \"Triage my Sentry crashes\"\n- \"What are the top crash families in production?\"\n- \"Show me which issues to fix first from App Store Connect\"\n"
     },
     "ui": {
       "name": "ui",
