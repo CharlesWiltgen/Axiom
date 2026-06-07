@@ -61,6 +61,19 @@ func TestDetectEnrichment_PlainDataProtNoBridge(t *testing.T) {
 	}
 }
 
+func TestBuildClusters_LowMemberDowngradesHighCluster(t *testing.T) {
+	// Exercises the seam fix: a high-confidence cluster must be downgraded to
+	// low when any member carries low confidence.
+	issues := []TriageIssue{
+		{IssueID: "A", ClusterKey: "k1", ClusterConfidence: "high", PatternTag: "x", Impact: NRImpact{Users: 3}},
+		{IssueID: "B", ClusterKey: "k1", ClusterConfidence: "low", PatternTag: "x", Impact: NRImpact{Users: 2}},
+	}
+	cl := buildClusters(issues)
+	if len(cl) != 1 || cl[0].ClusterConfidence != "low" {
+		t.Fatalf("expected low confidence after a low member, got %+v", cl)
+	}
+}
+
 func TestBuildClusters_Aggregates(t *testing.T) {
 	issues := []TriageIssue{
 		{IssueID: "A", ClusterKey: "k1", PatternTag: "x", Impact: NRImpact{Users: 3, Events: 5}},
