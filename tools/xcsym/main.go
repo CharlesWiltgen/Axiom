@@ -11,6 +11,7 @@ const usage = `xcsym — iOS/macOS crash symbolication and analysis for LLMs
 
 Usage:
   xcsym crash <file>         Full pipeline: parse, discover dSYMs, symbolicate, categorize
+  xcsym triage [file]        Corpus triage: classify+cluster+noise-flag NormalizedReport JSONL (stdin or file)
   xcsym resolve <addr>...    Resolve address(es) against a dSYM
   xcsym find-dsym <uuid>     Locate dSYM by UUID
   xcsym list-dsyms           Inventory known dSYMs
@@ -34,6 +35,8 @@ func main() {
 		os.Exit(runVerify(os.Stdout, os.Args[2:]))
 	case "crash":
 		os.Exit(runCrash(os.Stdout, os.Args[2:]))
+	case "triage":
+		os.Exit(runTriage(os.Stdout, os.Args[2:]))
 	case "find-dsym":
 		os.Exit(runFindDsym(os.Stdout, os.Args[2:]))
 	case "list-dsyms":
