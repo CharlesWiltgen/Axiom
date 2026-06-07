@@ -66,6 +66,9 @@ func buildClusters(issues []TriageIssue) []Cluster {
 			if conf == "" {
 				conf = "low"
 			}
+			// DominantPatternTag is the first member's tag, which equals every
+			// member's tag because clusterKey embeds cat.Tag — "first" == "dominant"
+			// by construction. No separate majority-vote pass is needed.
 			c = &Cluster{ClusterKey: is.ClusterKey, ClusterConfidence: conf, DominantPatternTag: is.PatternTag}
 			idx[is.ClusterKey] = c
 			order = append(order, is.ClusterKey)

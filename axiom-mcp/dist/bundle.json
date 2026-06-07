@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-06-07T16:02:04.228Z",
+  "generatedAt": "2026-06-07T16:23:21.211Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -30642,7 +30642,7 @@
     "axiom-shipping--production-triage": {
       "name": "axiom-shipping--production-triage",
       "description": "Use this skill when you have a **corpus** of grouped production issues from an aggregator (Sentry, App Store Connect) and need to classify, cluster, and prioritize them. This is the corpus-level path — not for a single local crash file.",
-      "content": "# Production Crash & Hang Triage (Sentry / ASC)\n\nUse this skill when you have a **corpus** of grouped production issues from an aggregator (Sentry, App Store Connect) and need to classify, cluster, and prioritize them. This is the corpus-level path — not for a single local crash file.\n\n- **Single crash file** (.ips, MetricKit, .crash) → `axiom-shipping (skills/testflight-triage.md)` or `/axiom:analyze-crash`\n- **TestFlight triage via Xcode Organizer** → `axiom-shipping (skills/testflight-triage.md)`\n- **This skill** → Sentry unresolved issues list, ASC aggregated crash signatures, dozens-to-hundreds of grouped issues\n\n## The pipeline\n\n```\nSentry / ASC aggregator\n  │  (LLM fetch + normalize)\n  ▼\nNormalizedReport JSONL  ──(stdin)──►  xcsym triage  ──►  TriageResult JSON\n                                      • classify crashes + hangs\n                                      • apply noise rules\n                                      • mechanical clustering\n                                      • 0xdead10cc enrichment\n  ▼\ntriage-analyzer agent\n  • semantic family-merge (mechanical clusters → root-cause families)\n  • impact ranking\n  ▼\nranked triage report (flag-never-hide)\n```\n\nThe Go side (`xcsym triage`) is a network-free pure function. It reads NormalizedReport JSONL on stdin and writes a TriageResult JSON to stdout. The LLM owns all provider auth, fetch, normalization, and semantic merging.\n\n**The command:**\n\n```bash\n# File argument form\nxcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 corpus.jsonl\n\n# Stdin form (both work)\nxcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 < corpus.jsonl\n```\n\nAll three flags are optional. Omit any you don't need; threshold-based noise rules are silently disabled when the corresponding flag is absent.\n\nNo dSYMs required. No Xcode CLT symbolication. No network calls. Pass the JSONL, get a TriageResult.\n\n## Fetching from Sentry\n\n**Token:** Read from `SENTRY_AUTH_TOKEN` environment variable — never commit it, never log it, never include it in output.\n\n### List unresolved issues\n\n```\nGET https://sentry.io/api/0/projects/{org_slug}/{proj_slug}/issues/?query=is:unresolved&statsPeriod=90d&limit=25\nAuthorization: Bearer $SENTRY_AUTH_TOKEN\n```\n\nAdjust `statsPeriod` (e.g., `30d`, `7d`) and add `environment=production` when needed.\n\n### Cursor pagination — mandatory\n\nSentry paginates at ~25 issues per page using cursor-based links. An active app with dozens of unresolved issues will span many pages. Fetching only the first page and calling it a corpus is a correctness failure — it silently drops the majority of issues.\n\n**Algorithm:**\n\n1. Fetch the first page.\n2. Read the `Link:` response header. It contains two entries separated by `,`:\n   ```\n   <https://sentry.io/api/0/...?cursor=X>; rel=\"previous\"; results=\"false\",\n   <https://sentry.io/api/0/...?cursor=Y>; rel=\"next\"; results=\"true\"\n   ```\n3. If `rel=\"next\"` has `results=\"true\"`, extract its URL and fetch the next page. If `results=\"false\"`, the cursor is exhausted — stop.\n4. Accumulate results across all pages.\n5. **Always log the page count** when done: `\"Fetched N pages (M total issues)\"`. If you hit a cap you imposed (e.g., 20-page max), state it explicitly: `\"Cap hit at page 20 — corpus is partial; some issues not included.\"` A partial corpus is not an error, but it must be announced, never silent.\n\nCap example (for very large projects): stop at 20 pages and announce the cap. The user can re-run with tighter filters.\n\n### Fetch latest event per issue\n\nFor each issue, fetch its most recent event to get the stack frames:\n\n```\nGET https://sentry.io/api/0/issues/{issue_id}/events/latest/\nAuthorization: Bearer $SENTRY_AUTH_TOKEN\n```\n\nFrom the response, extract:\n\n| Sentry field | NormalizedReport field |\n|---|---|\n| `id` (issue) | `issue_id` |\n| `permalink` | `issue_url` |\n| `title` | `title` |\n| Issue type \"App Hanging\" / \"App Hang\" | `kind: \"hang\"` (else `\"crash\"`) |\n| `userCount` | `impact.users` |\n| `count` (events) | `impact.events` |\n| `firstSeen`, `lastSeen` | `impact.first_seen`, `impact.last_seen` |\n| `tags.release` (list) | `versions.affected`, `versions.min`, `versions.max` |\n| `tags.os.version` (list) | `os.versions`; `tags.os.name` → `os.platform` |\n| `entries[type=exception].values[0].type` | `exception.type` |\n| `entries[type=exception].values[0].mechanism.meta.signal.name` | `exception.signal` |\n| `entries[type=exception].values[0].mechanism.meta.mach_exception.exception_name` | `exception.mach_exception` |\n| `entries[type=threads].values` or `entries[type=exception].values[0].stacktrace` | `threads[]` |\n\n**Frames:** Sentry frames are **bottom-up** (outermost frame first). Reverse them to get top-down (crashed frame first), matching the NormalizedReport convention. For each frame: `module`/`package` → `image`, `function` → `symbol`, `inApp` → `in_app`.\n\n**`crashed_thread`:** Set to the index of the thread marked `crashed: true`. If ambiguous, use 0 (main thread). The adapter uses this to set `RawCrash.CrashedIdx` — every rule that inspects the crashed thread depends on it.\n\n## Fetching from App Store Connect\n\nUse `asc-mcp` tools when available:\n\n| Task | asc-mcp tool |\n|---|---|\n| List crash signatures for a build | `metrics_build_diagnostics` |\n| Download crash log detail | `metrics_get_diagnostic_logs` |\n\nASC crash aggregates sometimes lack individual-event frame data. When frames are unavailable, emit a **minimal NormalizedReport** with `frames_unavailable: true`:\n\n```json\n{ \"provider\": \"asc\", \"issue_id\": \"...\", \"title\": \"...\", \"kind\": \"crash\",\n  \"impact\": { \"users\": 12, \"events\": 30 }, \"frames_unavailable\": true,\n  \"exception\": { \"mach_exception\": \"0x8badf00d\" }, \"threads\": [] }\n```\n\nThe `triage` subcommand classifies minimal reports using exception codes only (reduced confidence) rather than skipping them. Document the reduced confidence in the triage report.\n\n## NormalizedReport shape\n\nOne JSON object per line (JSONL). Each line is one grouped issue.\n\n**Full example — hang (idle runloop):**\n\n```json\n{\n  \"provider\": \"sentry\",\n  \"issue_id\": \"APP-3V\",\n  \"issue_url\": \"https://sentry.io/organizations/acme/issues/APP-3V/\",\n  \"title\": \"CFRunLoopRunSpecific\",\n  \"kind\": \"hang\",\n  \"impact\": { \"users\": 68, \"events\": 412, \"first_seen\": \"2026-05-01\", \"last_seen\": \"2026-06-05\" },\n  \"versions\": { \"affected\": [\"2.1.0\", \"2.1.1\"], \"min\": \"2.1.0\", \"max\": \"2.1.1\" },\n  \"os\": { \"platform\": \"iOS\", \"versions\": [\"18.4\", \"26.0\"] },\n  \"crashed_thread\": 0,\n  \"threads\": [\n    {\n      \"index\": 0,\n      \"crashed\": true,\n      \"frames\": [\n        { \"image\": \"libsystem_kernel.dylib\", \"symbol\": \"mach_msg2_trap\", \"offset\": 8, \"in_app\": false },\n        { \"image\": \"CoreFoundation\", \"symbol\": \"CFRunLoopRun\", \"offset\": 1234, \"in_app\": false }\n      ]\n    }\n  ]\n}\n```\n\nHang events do not carry an `exception` or `termination` block — those fields are optional and omitted here. The `0xdead10cc` code (data-protection violation) belongs on `kind: \"crash\"` reports, not hangs.\n\n**Full example — crash (data-protection violation, 0xdead10cc):**\n\n```json\n{\n  \"provider\": \"sentry\",\n  \"issue_id\": \"APP-7B\",\n  \"issue_url\": \"https://sentry.io/organizations/acme/issues/APP-7B/\",\n  \"title\": \"GRDB.DatabaseError: disk I/O error\",\n  \"kind\": \"crash\",\n  \"impact\": { \"users\": 22, \"events\": 89, \"first_seen\": \"2026-05-10\", \"last_seen\": \"2026-06-04\" },\n  \"versions\": { \"affected\": [\"2.1.1\"], \"min\": \"2.1.1\", \"max\": \"2.1.1\" },\n  \"os\": { \"platform\": \"iOS\", \"versions\": [\"18.4\"] },\n  \"exception\": { \"mach_exception\": \"0xdead10cc\" },\n  \"termination\": { \"namespace\": \"RUNNINGBOARD\", \"code\": \"0xdead10cc\" },\n  \"crashed_thread\": 1,\n  \"threads\": [\n    {\n      \"index\": 0,\n      \"crashed\": false,\n      \"frames\": [\n        { \"image\": \"libsystem_kernel.dylib\", \"symbol\": \"mach_msg2_trap\", \"offset\": 8, \"in_app\": false }\n      ]\n    },\n    {\n      \"index\": 1,\n      \"crashed\": true,\n      \"frames\": [\n        { \"image\": \"GRDB\", \"symbol\": \"DatabaseQueue.write\", \"offset\": 44, \"in_app\": true },\n        { \"image\": \"MyApp\", \"symbol\": \"HistoryStore.flush\", \"offset\": 12, \"in_app\": true }\n      ]\n    }\n  ]\n}\n```\n\n**Minimal example (ASC, frames unavailable):**\n\n```json\n{ \"provider\": \"asc\", \"issue_id\": \"ASC-001\", \"kind\": \"crash\",\n  \"impact\": { \"users\": 12, \"events\": 30 }, \"frames_unavailable\": true,\n  \"exception\": { \"mach_exception\": \"0x8badf00d\" }, \"threads\": [] }\n```\n\n**Key points:**\n\n- `kind` is `\"crash\"` or `\"hang\"`. The `triage` subcommand accepts both; `xcsym crash` continues to reject hangs.\n- `crashed_thread` is the `index` value of the crashed thread — 0 for main thread. This is not an array position; the adapter resolves it.\n- Thread objects carry no `name` field. The main thread is identified by `index: 0`; Sentry thread names are not mapped.\n- `in_app` per frame is the primary app-vs-system signal. It comes from Sentry's `inApp`. Do not derive it from image-name substrings when the provider already supplies it.\n- `mach_exception` carries the hex code (`0xdead10cc`, `0x8badf00d`). The adapter normalizes it to lowercase `0x…` form before matching rules — uppercase input is handled automatically.\n- Frames are **top-down** in NormalizedReport (index 0 = top of stack, closest to the crash).\n\n## Reading the TriageResult\n\n`xcsym triage` emits a single compact JSON object to stdout:\n\n```json\n{\n  \"tool\": \"xcsym\", \"subcommand\": \"triage\", \"version\": \"...\",\n  \"summary\": { \"total\": 70, \"crashes\": 51, \"hangs\": 19, \"skipped\": 0,\n               \"clusters\": 11, \"flagged_noise\": 23, \"candidate_families\": 6 },\n  \"issues\": [...],\n  \"clusters\": [...],\n  \"errors\": [...]\n}\n```\n\n### Per-issue fields\n\n| Field | Meaning |\n|---|---|\n| `pattern_tag` | Crash/hang category from the rule engine (see table below) |\n| `pattern_confidence` | `high`, `medium`, or `low` — how certain the rule engine is |\n| `pattern_rule_id` | The classification rule that fired (e.g., `R-swift-unwrap-01`, `H-idle-runloop-01`) |\n| `cluster_key` | Mechanical signature grouping this issue with similar ones |\n| `cluster_confidence` | `high` = top app frames; `low` = system-frame fallback (treat as a bag, not a cluster) |\n| `noise_flags` | Array of `{class, rule_id, confidence, reason}` — empty means real-bug candidate |\n| `enrichment` | Cross-skill pointers (e.g., axiom-data for 0xdead10cc + DB frames) |\n| `top_frames` | Top 5 frames of the crashed thread, as `\"image symbol\"` strings |\n\n`pattern_rule_id` and `noise_flags[].rule_id` are two separate fields at different nesting levels. `pattern_rule_id` (top-level on each issue) names the classification rule that matched the crash/hang pattern. Each element of `noise_flags[]` carries its own `rule_id` naming the noise rule that fired (e.g., `noise.anr_suspension.v1`). Do not conflate them.\n\n### Noise-class table\n\n| class | Meaning | Confidence | Action |\n|---|---|---|---|\n| `anr_suspension_false_positive` | Idle-runloop hang — likely background suspension, not a real block | high | Demote; the #1 issue by users may be this non-bug |\n| `fixed_in_newer_build` | `versions.max` predates `--latest-version` — may already be fixed | high | Demote pending verification against the latest build |\n| `third_party_or_system_only` | Crashed thread is non-main and has zero `in_app` frames — may not be directly actionable | low | Demote cautiously; a third-party SDK can crash on a value your code passed it |\n| `single_os_eol` | All affected OS versions are below `--os-floor` | medium | Deprioritize for supported users |\n| `long_tail_low_impact` | `impact.users` is below `--min-users` | high | Rank low, not hidden |\n\n**`noise_flags: []`** means no noise rules fired → the issue is a real-bug candidate.\n\n### Hang-specific pattern tags\n\n| pattern_tag | Meaning |\n|---|---|\n| `anr_idle_runloop` | Main thread parked in run loop with no app work — consistent with background suspension |\n| `anr_main_thread_block` | Main thread in app code or a known blocking syscall — a real block |\n\nAn `anr_idle_runloop` issue is highly likely to carry `anr_suspension_false_positive` noise. When it doesn't (e.g., the main thread has a blocking syscall buried in the window), take it seriously.\n\n## Semantic family-merge\n\nThe `cluster_key` is a mechanical, exact-signature grouping. It is conservative by design: it never over-merges. The agent's job is to merge mechanical clusters that share a root cause and to split bags.\n\n**Merge strategy:**\n\n1. Read `cluster_key`, `cluster_confidence`, `pattern_tag`, and `top_frames` together for each cluster.\n2. Merge clusters when: same `pattern_tag` + overlapping `top_frames` + plausible shared root cause (e.g., two nil-unwrap clusters that differ only in call site).\n3. **Split `cluster_confidence: low` (marked `|sys:`) bags.** A system-frame fallback cluster lumps together unrelated issues under the same top syscall. Inspect individual `top_frames` and `pattern_tag` to split into real families. Do not present a `|sys:` cluster as a single coherent crash family.\n4. Seed merges with the full frame list in `top_frames`, not just `cluster_key`.\n\n## Flag-never-hide reporting rule\n\n**This rule is non-negotiable.** The final triage report must include every issue — noise-flagged or not.\n\n**Structure:**\n\n1. **Top real-bug families** — clusters with no noise flags, ranked by `total_users` descending. Include `pattern_tag`, root-cause hypothesis, enrichment pointers, and recommended next step.\n2. **Deprioritized as likely noise (review before closing)** — a dedicated section listing every noise-flagged issue with:\n   - Issue ID and title\n   - `noise_flags[].class` and `noise_flags[].reason`\n   - User/event impact (so the reader can judge independently)\n3. **Skipped (malformed or unclassifiable)** — `errors[]` from the TriageResult, if any.\n\n**Never omit a noise-flagged issue from the report.** Omission is the correctness failure this architecture is designed to prevent — the ExampleApp lesson was that the #1 issue by user count was an idle-runloop suspension false-positive. A tool that silently buried it would commit the same error inverted.\n\n**Standing note for `third_party_or_system_only`:** Always include this caveat when listing third-party-only issues as deprioritized: \"A third-party SDK can crash on a nil or invalid value passed by app code — zero app frames on the crashed thread does not rule out an app-side root cause. Check for app code on other threads or higher in the call chain before dismissing.\"\n\n**Standing note for `anr_suspension_false_positive`:** \"This issue may represent background suspension, not a real main-thread block. Verify by checking whether the app was actively running when the hang was captured.\"\n\n## Resources\n\n**Skills**: testflight-triage, axiom-data (GRDB suspension / file-protection class), axiom-performance (skills/hang-diagnostics.md)\n\n**Tools**: xcsym (triage subcommand — see axiom-tools skills/xcsym-ref.md)\n\n**Agents**: triage-analyzer\n",
+      "content": "# Production Crash & Hang Triage (Sentry / ASC)\n\nUse this skill when you have a **corpus** of grouped production issues from an aggregator (Sentry, App Store Connect) and need to classify, cluster, and prioritize them. This is the corpus-level path — not for a single local crash file.\n\n- **Single crash file** (.ips, MetricKit, .crash) → `axiom-shipping (skills/testflight-triage.md)` or `/axiom:analyze-crash`\n- **TestFlight triage via Xcode Organizer** → `axiom-shipping (skills/testflight-triage.md)`\n- **This skill** → Sentry unresolved issues list, ASC aggregated crash signatures, dozens-to-hundreds of grouped issues\n\n## The pipeline\n\n```\nSentry / ASC aggregator\n  │  (LLM fetch + normalize)\n  ▼\nNormalizedReport JSONL  ──(stdin)──►  xcsym triage  ──►  TriageResult JSON\n                                      • classify crashes + hangs\n                                      • apply noise rules\n                                      • mechanical clustering\n                                      • 0xdead10cc enrichment\n  ▼\ntriage-analyzer agent\n  • semantic family-merge (mechanical clusters → root-cause families)\n  • impact ranking\n  ▼\nranked triage report (flag-never-hide)\n```\n\nThe Go side (`xcsym triage`) is a network-free pure function. It reads NormalizedReport JSONL on stdin and writes a TriageResult JSON to stdout. The LLM owns all provider auth, fetch, normalization, and semantic merging.\n\n**The command:**\n\n```bash\n# File argument form\nxcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 corpus.jsonl\n\n# Stdin form (both work)\nxcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 < corpus.jsonl\n```\n\nAll three flags are optional. Omit any you don't need; threshold-based noise rules are silently disabled when the corresponding flag is absent.\n\nNo dSYMs required. No Xcode CLT symbolication. No network calls. Pass the JSONL, get a TriageResult.\n\n## Fetching from Sentry\n\n**Token:** Read from `SENTRY_AUTH_TOKEN` environment variable — never commit it, never log it, never include it in output.\n\n### List unresolved issues\n\n```\nGET https://sentry.io/api/0/projects/{org_slug}/{proj_slug}/issues/?query=is:unresolved&statsPeriod=90d&limit=25\nAuthorization: Bearer $SENTRY_AUTH_TOKEN\n```\n\nAdjust `statsPeriod` (e.g., `30d`, `7d`) and add `environment=production` when needed.\n\n### Cursor pagination — mandatory\n\nSentry paginates at ~25 issues per page using cursor-based links. An active app with dozens of unresolved issues will span many pages. Fetching only the first page and calling it a corpus is a correctness failure — it silently drops the majority of issues.\n\n**Algorithm:**\n\n1. Fetch the first page.\n2. Read the `Link:` response header. It contains two entries separated by `,`:\n   ```\n   <https://sentry.io/api/0/...?cursor=X>; rel=\"previous\"; results=\"false\",\n   <https://sentry.io/api/0/...?cursor=Y>; rel=\"next\"; results=\"true\"\n   ```\n3. If `rel=\"next\"` has `results=\"true\"`, extract its URL and fetch the next page. If `results=\"false\"`, the cursor is exhausted — stop.\n4. Accumulate results across all pages.\n5. **Always log the page count** when done: `\"Fetched N pages (M total issues)\"`. If you hit a cap you imposed (e.g., 20-page max), state it explicitly: `\"Cap hit at page 20 — corpus is partial; some issues not included.\"` A partial corpus is not an error, but it must be announced, never silent.\n\nCap example (for very large projects): stop at 20 pages and announce the cap. The user can re-run with tighter filters.\n\n### Fetch latest event per issue\n\nFor each issue, fetch its most recent event to get the stack frames:\n\n```\nGET https://sentry.io/api/0/issues/{issue_id}/events/latest/\nAuthorization: Bearer $SENTRY_AUTH_TOKEN\n```\n\nFrom the response, extract:\n\n| Sentry field | NormalizedReport field |\n|---|---|\n| `id` (issue) | `issue_id` |\n| `permalink` | `issue_url` |\n| `title` | `title` |\n| Issue type \"App Hanging\" / \"App Hang\" | `kind: \"hang\"` (else `\"crash\"`) |\n| `userCount` | `impact.users` |\n| `count` (events) | `impact.events` |\n| `firstSeen`, `lastSeen` | `impact.first_seen`, `impact.last_seen` |\n| `tags.release` (list) | `versions.affected`, `versions.min`, `versions.max` |\n| `tags.os.version` (list) | `os.versions`; `tags.os.name` → `os.platform` |\n| `entries[type=exception].values[0].type` | `exception.type` |\n| `entries[type=exception].values[0].mechanism.meta.signal.name` | `exception.signal` |\n| `entries[type=exception].values[0].mechanism.meta.mach_exception.exception_name` | `exception.mach_exception` |\n| `entries[type=threads].values` or `entries[type=exception].values[0].stacktrace` | `threads[]` |\n\n**Frames:** Sentry frames are **bottom-up** (outermost frame first). Reverse them to get top-down (crashed frame first), matching the NormalizedReport convention. For each frame: `module`/`package` → `image`, `function` → `symbol`, `inApp` → `in_app`.\n\n**`crashed_thread`:** Set to the index of the thread marked `crashed: true`. If ambiguous, use 0 (main thread). The adapter uses this to set `RawCrash.CrashedIdx` — every rule that inspects the crashed thread depends on it.\n\n## Fetching from App Store Connect\n\nUse `asc-mcp` tools when available:\n\n| Task | asc-mcp tool |\n|---|---|\n| List crash signatures for a build | `metrics_build_diagnostics` |\n| Download crash log detail | `metrics_get_diagnostic_logs` |\n\nASC crash aggregates sometimes lack individual-event frame data. When frames are unavailable, emit a **minimal NormalizedReport** with `frames_unavailable: true`:\n\n```json\n{ \"provider\": \"asc\", \"issue_id\": \"...\", \"title\": \"...\", \"kind\": \"crash\",\n  \"impact\": { \"users\": 12, \"events\": 30 }, \"frames_unavailable\": true,\n  \"exception\": { \"mach_exception\": \"0x8badf00d\" }, \"threads\": [] }\n```\n\nThe `triage` subcommand classifies minimal reports using exception codes only (reduced confidence) rather than skipping them. Document the reduced confidence in the triage report.\n\n## NormalizedReport shape\n\nOne JSON object per line (JSONL). Each line is one grouped issue.\n\n**Full example — hang (idle runloop):**\n\n```json\n{\n  \"provider\": \"sentry\",\n  \"issue_id\": \"APP-3V\",\n  \"issue_url\": \"https://sentry.io/organizations/acme/issues/APP-3V/\",\n  \"title\": \"CFRunLoopRunSpecific\",\n  \"kind\": \"hang\",\n  \"impact\": { \"users\": 68, \"events\": 412, \"first_seen\": \"2026-05-01\", \"last_seen\": \"2026-06-05\" },\n  \"versions\": { \"affected\": [\"2.1.0\", \"2.1.1\"], \"min\": \"2.1.0\", \"max\": \"2.1.1\" },\n  \"os\": { \"platform\": \"iOS\", \"versions\": [\"18.4\", \"26.0\"] },\n  \"crashed_thread\": 0,\n  \"threads\": [\n    {\n      \"index\": 0,\n      \"crashed\": true,\n      \"frames\": [\n        { \"image\": \"libsystem_kernel.dylib\", \"symbol\": \"mach_msg2_trap\", \"offset\": 8, \"in_app\": false },\n        { \"image\": \"CoreFoundation\", \"symbol\": \"CFRunLoopRun\", \"offset\": 1234, \"in_app\": false }\n      ]\n    }\n  ]\n}\n```\n\nHang events do not carry an `exception` or `termination` block — those fields are optional and omitted here. The `0xdead10cc` code (data-protection violation) belongs on `kind: \"crash\"` reports, not hangs.\n\n**Full example — crash (data-protection violation, 0xdead10cc):**\n\n```json\n{\n  \"provider\": \"sentry\",\n  \"issue_id\": \"APP-7B\",\n  \"issue_url\": \"https://sentry.io/organizations/acme/issues/APP-7B/\",\n  \"title\": \"GRDB.DatabaseError: disk I/O error\",\n  \"kind\": \"crash\",\n  \"impact\": { \"users\": 22, \"events\": 89, \"first_seen\": \"2026-05-10\", \"last_seen\": \"2026-06-04\" },\n  \"versions\": { \"affected\": [\"2.1.1\"], \"min\": \"2.1.1\", \"max\": \"2.1.1\" },\n  \"os\": { \"platform\": \"iOS\", \"versions\": [\"18.4\"] },\n  \"exception\": { \"mach_exception\": \"0xdead10cc\" },\n  \"termination\": { \"namespace\": \"RUNNINGBOARD\", \"code\": \"0xdead10cc\" },\n  \"crashed_thread\": 1,\n  \"threads\": [\n    {\n      \"index\": 0,\n      \"crashed\": false,\n      \"frames\": [\n        { \"image\": \"libsystem_kernel.dylib\", \"symbol\": \"mach_msg2_trap\", \"offset\": 8, \"in_app\": false }\n      ]\n    },\n    {\n      \"index\": 1,\n      \"crashed\": true,\n      \"frames\": [\n        { \"image\": \"GRDB\", \"symbol\": \"DatabaseQueue.write\", \"offset\": 44, \"in_app\": true },\n        { \"image\": \"MyApp\", \"symbol\": \"HistoryStore.flush\", \"offset\": 12, \"in_app\": true }\n      ]\n    }\n  ]\n}\n```\n\n**Minimal example (ASC, frames unavailable):**\n\n```json\n{ \"provider\": \"asc\", \"issue_id\": \"ASC-001\", \"kind\": \"crash\",\n  \"impact\": { \"users\": 12, \"events\": 30 }, \"frames_unavailable\": true,\n  \"exception\": { \"mach_exception\": \"0x8badf00d\" }, \"threads\": [] }\n```\n\n**Key points:**\n\n- `kind` is `\"crash\"` or `\"hang\"`. The `triage` subcommand accepts both; `xcsym crash` continues to reject hangs.\n- `crashed_thread` is the `index` value of the crashed thread — 0 for main thread. This is not an array position; the adapter resolves it.\n- Thread objects carry no `name` field. The main thread is identified by `index: 0`; Sentry thread names are not mapped.\n- `in_app` per frame is the primary app-vs-system signal. It comes from Sentry's `inApp`. Do not derive it from image-name substrings when the provider already supplies it.\n- `mach_exception` carries the hex code (`0xdead10cc`, `0x8badf00d`). The adapter normalizes it to lowercase `0x…` form before matching rules — uppercase input is handled automatically.\n- Frames are **top-down** in NormalizedReport (index 0 = top of stack, closest to the crash).\n\n## Reading the TriageResult\n\n`xcsym triage` emits a single compact JSON object to stdout:\n\n```json\n{\n  \"tool\": \"xcsym\", \"subcommand\": \"triage\", \"version\": \"...\",\n  \"summary\": { \"total\": 70, \"crashes\": 51, \"hangs\": 19, \"skipped\": 0,\n               \"clusters\": 11, \"flagged_noise\": 23, \"candidate_families\": 6 },\n  \"issues\": [...],\n  \"clusters\": [...],\n  \"errors\": [...]\n}\n```\n\n### Per-issue fields\n\n| Field | Meaning |\n|---|---|\n| `pattern_tag` | Crash/hang category from the rule engine (see table below) |\n| `pattern_confidence` | `high`, `heuristic`, or `low` — how certain the crash/hang rule engine is (`heuristic` = pattern matched but evidence is indirect) |\n| `pattern_rule_id` | The classification rule that fired (e.g., `R-swift-unwrap-01`, `H-idle-runloop-01`) |\n| `cluster_key` | Mechanical signature grouping this issue with similar ones |\n| `cluster_confidence` | `high` = top app frames; `low` = system-frame fallback (treat as a bag, not a cluster) |\n| `noise_flags` | Array of `{class, rule_id, confidence, reason}` — empty means real-bug candidate |\n| `enrichment` | Cross-skill pointers (e.g., axiom-data for 0xdead10cc + DB frames) |\n| `top_frames` | Top 5 frames of the crashed thread, as `\"image symbol\"` strings |\n\n`pattern_rule_id` and `noise_flags[].rule_id` are two separate fields at different nesting levels. `pattern_rule_id` (top-level on each issue) names the classification rule that matched the crash/hang pattern. Each element of `noise_flags[]` carries its own `rule_id` naming the noise rule that fired (e.g., `noise.anr_suspension.v1`). Do not conflate them.\n\n`pattern_confidence` and `noise_flags[].confidence` use **different vocabularies**. `pattern_confidence` values are `high`, `heuristic`, or `low` (crash/hang engine). `noise_flags[].confidence` values are `high`, `medium`, or `low` (noise engine — e.g., `single_os_eol` emits `medium`).\n\n### Noise-class table\n\n| class | Meaning | Confidence | Action |\n|---|---|---|---|\n| `anr_suspension_false_positive` | Idle-runloop hang — likely background suspension, not a real block | high | Demote; the #1 issue by users may be this non-bug |\n| `fixed_in_newer_build` | `versions.max` predates `--latest-version` — may already be fixed | high | Demote pending verification against the latest build |\n| `third_party_or_system_only` | Crashed thread is non-main and has zero `in_app` frames — may not be directly actionable | low | Demote cautiously; a third-party SDK can crash on a value your code passed it |\n| `single_os_eol` | All affected OS versions are below `--os-floor` | medium | Deprioritize for supported users |\n| `long_tail_low_impact` | `impact.users` is below `--min-users` | high | Rank low, not hidden |\n\n**`noise_flags: []`** means no noise rules fired → the issue is a real-bug candidate.\n\n### Hang-specific pattern tags\n\n| pattern_tag | Meaning |\n|---|---|\n| `anr_idle_runloop` | Main thread parked in run loop with no app work — consistent with background suspension |\n| `anr_main_thread_block` | Main thread in app code or a known blocking syscall — a real block |\n\nAn `anr_idle_runloop` issue is highly likely to carry `anr_suspension_false_positive` noise. When it doesn't (e.g., the main thread has a blocking syscall buried in the window), take it seriously.\n\n## Semantic family-merge\n\nThe `cluster_key` is a mechanical, exact-signature grouping. It is conservative by design: it never over-merges. The agent's job is to merge mechanical clusters that share a root cause and to split bags.\n\n**Merge strategy:**\n\n1. Read `cluster_key`, `cluster_confidence`, `pattern_tag`, and `top_frames` together for each cluster.\n2. Merge clusters when: same `pattern_tag` + overlapping `top_frames` + plausible shared root cause (e.g., two nil-unwrap clusters that differ only in call site).\n3. **Split `cluster_confidence: low` (marked `|sys:`) bags.** A system-frame fallback cluster lumps together unrelated issues under the same top syscall. Inspect individual `top_frames` and `pattern_tag` to split into real families. Do not present a `|sys:` cluster as a single coherent crash family.\n4. Seed merges with the full frame list in `top_frames`, not just `cluster_key`.\n\n## Flag-never-hide reporting rule\n\n**This rule is non-negotiable.** The final triage report must include every issue — noise-flagged or not.\n\n**Structure:**\n\n1. **Top real-bug families** — clusters with no noise flags, ranked by `total_users` descending. Include `pattern_tag`, root-cause hypothesis, enrichment pointers, and recommended next step.\n2. **Deprioritized as likely noise (review before closing)** — a dedicated section listing every noise-flagged issue with:\n   - Issue ID and title\n   - `noise_flags[].class` and `noise_flags[].reason`\n   - User/event impact (so the reader can judge independently)\n3. **Skipped (malformed or unclassifiable)** — `errors[]` from the TriageResult, if any.\n\n**Never omit a noise-flagged issue from the report.** Omission is the correctness failure this architecture is designed to prevent — the ExampleApp lesson was that the #1 issue by user count was an idle-runloop suspension false-positive. A tool that silently buried it would commit the same error inverted.\n\n**Standing note for `third_party_or_system_only`:** Always include this caveat when listing third-party-only issues as deprioritized: \"A third-party SDK can crash on a nil or invalid value passed by app code — zero app frames on the crashed thread does not rule out an app-side root cause. Check for app code on other threads or higher in the call chain before dismissing.\"\n\n**Standing note for `anr_suspension_false_positive`:** \"This issue may represent background suspension, not a real main-thread block. Verify by checking whether the app was actively running when the hang was captured.\"\n\n## Resources\n\n**Skills**: testflight-triage, axiom-data (GRDB suspension / file-protection class), axiom-performance (skills/hang-diagnostics.md)\n\n**Tools**: xcsym (triage subcommand — see axiom-tools skills/xcsym-ref.md)\n\n**Agents**: triage-analyzer\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -30704,28 +30704,28 @@
           "heading": "Reading the TriageResult",
           "level": 2,
           "startLine": 208,
-          "endLine": 258,
-          "charCount": 2914
+          "endLine": 260,
+          "charCount": 3273
         },
         {
           "heading": "Semantic family-merge",
           "level": 2,
-          "startLine": 259,
-          "endLine": 269,
+          "startLine": 261,
+          "endLine": 271,
           "charCount": 901
         },
         {
           "heading": "Flag-never-hide reporting rule",
           "level": 2,
-          "startLine": 270,
-          "endLine": 288,
+          "startLine": 272,
+          "endLine": 290,
           "charCount": 1600
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 289,
-          "endLine": 296,
+          "startLine": 291,
+          "endLine": 298,
           "charCount": 251
         }
       ]
@@ -42316,7 +42316,7 @@
           24,
           2,
           31,
-          590
+          594
         ],
         "191": [
           4,
@@ -42702,7 +42702,7 @@
         16.97142857142857,
         4.106122448979592,
         43.861224489795916,
-        625.746938775511
+        625.7632653061231
       ],
       "storedFields": {
         "0": {
@@ -64630,6 +64630,7 @@
               "9": 1,
               "11": 1,
               "147": 1,
+              "190": 3,
               "222": 2
             }
           }
@@ -65879,7 +65880,7 @@
               "166": 1,
               "184": 2,
               "185": 2,
-              "190": 14,
+              "190": 16,
               "191": 10,
               "212": 1,
               "221": 3,
@@ -67885,7 +67886,7 @@
               "185": 1,
               "186": 1,
               "187": 1,
-              "190": 5,
+              "190": 7,
               "191": 3,
               "193": 1,
               "197": 1,
@@ -75749,7 +75750,7 @@
           "eol",
           {
             "4": {
-              "190": 1
+              "190": 2
             }
           }
         ],
@@ -77349,7 +77350,7 @@
               "120": 1,
               "151": 1,
               "168": 1,
-              "190": 1,
+              "190": 2,
               "221": 1,
               "222": 1,
               "225": 5
@@ -77961,6 +77962,7 @@
               "112": 1,
               "185": 9,
               "187": 3,
+              "190": 1,
               "191": 1,
               "201": 5,
               "212": 1,
@@ -81760,7 +81762,7 @@
               "161": 4,
               "169": 1,
               "183": 1,
-              "190": 2,
+              "190": 4,
               "196": 15,
               "199": 1,
               "213": 1,
@@ -90103,7 +90105,7 @@
               "184": 1,
               "185": 8,
               "187": 8,
-              "190": 1,
+              "190": 2,
               "191": 9,
               "194": 1,
               "195": 5,
@@ -116710,7 +116712,7 @@
               "187": 14,
               "188": 14,
               "189": 1,
-              "190": 3,
+              "190": 4,
               "191": 15,
               "192": 10,
               "193": 24,
@@ -121297,6 +121299,29 @@
           }
         ],
         [
+          "vocabularies",
+          {
+            "4": {
+              "190": 1
+            }
+          }
+        ],
+        [
+          "vocabulary",
+          {
+            "3": {
+              "158": 1
+            },
+            "4": {
+              "8": 1,
+              "93": 1,
+              "100": 1,
+              "158": 1,
+              "233": 2
+            }
+          }
+        ],
+        [
           "vo",
           {
             "1": {
@@ -121537,21 +121562,6 @@
               "197": 2,
               "203": 11,
               "216": 1
-            }
-          }
-        ],
-        [
-          "vocabulary",
-          {
-            "3": {
-              "158": 1
-            },
-            "4": {
-              "8": 1,
-              "93": 1,
-              "100": 1,
-              "158": 1,
-              "233": 2
             }
           }
         ],
@@ -122903,7 +122913,7 @@
               "178": 4,
               "179": 1,
               "186": 1,
-              "190": 5,
+              "190": 7,
               "192": 1,
               "193": 4,
               "194": 1,
@@ -128522,7 +128532,7 @@
               "184": 3,
               "186": 1,
               "187": 1,
-              "190": 6,
+              "190": 8,
               "191": 3,
               "196": 1,
               "197": 1,
@@ -136576,7 +136586,7 @@
               "179": 5,
               "180": 1,
               "185": 1,
-              "190": 8,
+              "190": 10,
               "191": 1,
               "192": 1,
               "196": 1,
@@ -155039,7 +155049,7 @@
               "185": 61,
               "186": 1,
               "187": 1,
-              "190": 12,
+              "190": 15,
               "191": 3,
               "192": 8,
               "193": 7,
@@ -181477,7 +181487,7 @@
               "159": 1,
               "168": 1,
               "169": 1,
-              "190": 19,
+              "190": 22,
               "197": 1,
               "214": 1,
               "221": 1,
@@ -198638,7 +198648,7 @@
               "185": 14,
               "186": 7,
               "187": 1,
-              "190": 1,
+              "190": 2,
               "192": 1,
               "193": 4,
               "196": 2,
@@ -206425,6 +206435,7 @@
               "63": 2,
               "165": 3,
               "167": 2,
+              "190": 1,
               "201": 1
             }
           }
@@ -227063,7 +227074,7 @@
               "186": 11,
               "187": 10,
               "189": 1,
-              "190": 13,
+              "190": 14,
               "191": 11,
               "192": 1,
               "194": 2,
@@ -247262,7 +247273,7 @@
               "180": 4,
               "183": 1,
               "186": 1,
-              "190": 5,
+              "190": 6,
               "191": 1,
               "192": 1,
               "194": 3,
@@ -258725,7 +258736,7 @@
               "186": 3,
               "187": 3,
               "188": 6,
-              "190": 24,
+              "190": 26,
               "191": 110,
               "194": 1,
               "199": 2,
@@ -273286,7 +273297,7 @@
               "166": 1,
               "185": 1,
               "187": 1,
-              "190": 8,
+              "190": 12,
               "201": 4,
               "202": 1,
               "212": 4,
@@ -285926,7 +285937,7 @@
               "140": 4,
               "168": 1,
               "178": 1,
-              "190": 1,
+              "190": 2,
               "191": 1,
               "197": 2,
               "198": 7,
@@ -292422,7 +292433,7 @@
               "162": 2,
               "167": 1,
               "184": 1,
-              "190": 2,
+              "190": 3,
               "199": 4,
               "204": 1
             }
@@ -548069,10 +548080,14 @@
           "below",
           "confidence",
           "high",
-          "medium",
+          "heuristic",
           "low",
           "how",
           "certain",
+          "matched",
+          "but",
+          "evidence",
+          "indirect",
           "id",
           "classifica",
           "fired",
@@ -548126,7 +548141,6 @@
           "level",
           "each",
           "names",
-          "matched",
           "ele",
           "carries",
           "own",
@@ -548137,6 +548151,12 @@
           "do",
           "conflate",
           "them",
+          "use",
+          "vocabularies",
+          "values",
+          "medium",
+          "os",
+          "eol",
           "action",
           "false",
           "positive",
@@ -548171,8 +548191,6 @@
           "value",
           "code",
           "passed",
-          "os",
-          "eol",
           "all",
           "affected",
           "floor",

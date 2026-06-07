@@ -57,8 +57,9 @@ func buildRawCrashFromNormalizedReport(r *NormalizedReport) *RawCrash {
 	}
 	raw.Termination.Code = normalizeTerminationCode(code)
 
-	// Threads + CrashedIdx.
-	crashedSlicePos := -1
+	// Build threads, tracking two crashed-thread candidates.
+	idxCrashedFlag := -1 // first thread with crashed:true (provider's explicit marker)
+	idxIndexMatch := -1  // first thread whose Index == crashed_thread
 	for i, t := range r.Threads {
 		th := Thread{Index: t.Index, Triggered: t.Crashed}
 		for _, f := range t.Frames {
@@ -71,16 +72,26 @@ func buildRawCrashFromNormalizedReport(r *NormalizedReport) *RawCrash {
 			})
 		}
 		raw.Threads = append(raw.Threads, th)
-		if t.Index == r.CrashedThread {
-			crashedSlicePos = i
+		if idxCrashedFlag == -1 && t.Crashed {
+			idxCrashedFlag = i
 		}
-		if crashedSlicePos == -1 && t.Crashed {
-			crashedSlicePos = i
+		if idxIndexMatch == -1 && t.Index == r.CrashedThread {
+			idxIndexMatch = i
 		}
 	}
-	if crashedSlicePos < 0 {
-		crashedSlicePos = 0
+	// Resolve the crashed thread. Prefer the explicit per-thread crashed:true
+	// flag (Sentry's authoritative marker) over the crashed_thread index: the
+	// index is an int whose zero value can't distinguish "omitted" from "0", so
+	// a provider that omits crashed_thread would otherwise pick whatever thread
+	// happens to have Index 0 — even a non-crashed one. Index match is the
+	// fallback; slice 0 is the last resort.
+	switch {
+	case idxCrashedFlag >= 0:
+		raw.CrashedIdx = idxCrashedFlag
+	case idxIndexMatch >= 0:
+		raw.CrashedIdx = idxIndexMatch
+	default:
+		raw.CrashedIdx = 0
 	}
-	raw.CrashedIdx = crashedSlicePos
 	return raw
 }
