@@ -59,3 +59,30 @@ func init() {
 			raw: deadlock, cat: categorizeHang(deadlock), want: false},
 	)
 }
+
+func TestCompareVersions(t *testing.T) {
+	cases := []struct {
+		a, b string
+		want int
+	}{
+		{"2.1.0", "2.1.1", -1}, {"2.1.1", "2.1.0", 1}, {"2.1", "2.1.0", 0},
+		{"2.1.0", "2.1", 0}, {"10.0", "9.9", 1}, {"2.1.1", "2.1.1", 0},
+	}
+	for _, c := range cases {
+		if got := compareVersions(c.a, c.b); got != c.want {
+			t.Errorf("compareVersions(%q,%q) = %d want %d", c.a, c.b, got, c.want)
+		}
+	}
+}
+
+func init() {
+	fixed := &NormalizedReport{IssueID: "fixed", Kind: "crash", Versions: NRVersions{Max: "2.0.5"}}
+	current := &NormalizedReport{IssueID: "current", Kind: "crash", Versions: NRVersions{Max: "2.1.0"}}
+	empty := &RawCrash{}
+	noiseFixtures = append(noiseFixtures,
+		noiseCase{ruleID: "noise.fixed_in_newer.v1", report: fixed, raw: empty,
+			th: Thresholds{LatestVersion: "2.1.0"}, want: true},
+		noiseCase{ruleID: "noise.fixed_in_newer.v1", report: current, raw: empty,
+			th: Thresholds{LatestVersion: "2.1.0"}, want: false},
+	)
+}
