@@ -166,6 +166,7 @@ export default withMermaid(defineConfig({
           text: 'Misc',
           items: [
             { text: 'crash-analyzer', link: '/agents/crash-analyzer' },
+            { text: 'triage-analyzer', link: '/agents/triage-analyzer' },
             { text: 'modernization-helper', link: '/agents/modernization-helper' }
           ]
         },
@@ -203,6 +204,7 @@ export default withMermaid(defineConfig({
           text: 'Debugging',
           items: [
             { text: '/axiom:analyze-crash', link: '/commands/debugging/analyze-crash' },
+            { text: '/axiom:triage', link: '/commands/debugging/triage' },
             { text: '/axiom:audit codable', link: '/commands/debugging/audit-codable' },
             { text: '/axiom:audit core-data', link: '/commands/debugging/audit-core-data' },
             { text: '/axiom:audit energy', link: '/commands/debugging/audit-energy' },
@@ -339,6 +341,7 @@ export default withMermaid(defineConfig({
             { text: 'Memory Debugging', link: '/skills/debugging/memory-debugging' },
             { text: 'Objective-C Block Retain Cycles', link: '/skills/debugging/objc-block-retain-cycles' },
             { text: 'Performance Profiling', link: '/skills/debugging/performance-profiling' },
+            { text: 'Production Triage', link: '/skills/debugging/production-triage' },
             { text: 'TestFlight Triage', link: '/skills/debugging/testflight-triage' },
             { text: 'Timer Safety Patterns', link: '/skills/debugging/timer-patterns' },
             { text: 'Trace Comparison', link: '/skills/debugging/trace-comparison' },
