@@ -30,6 +30,10 @@ The Go side (`xcsym triage`) is a network-free pure function. It reads Normalize
 **The command:**
 
 ```bash
+# File argument form
+xcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 corpus.jsonl
+
+# Stdin form (both work)
 xcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 < corpus.jsonl
 ```
 
@@ -122,7 +126,7 @@ The `triage` subcommand classifies minimal reports using exception codes only (r
 
 One JSON object per line (JSONL). Each line is one grouped issue.
 
-**Full example:**
+**Full example — hang (idle runloop):**
 
 ```json
 {
@@ -134,8 +138,6 @@ One JSON object per line (JSONL). Each line is one grouped issue.
   "impact": { "users": 68, "events": 412, "first_seen": "2026-05-01", "last_seen": "2026-06-05" },
   "versions": { "affected": ["2.1.0", "2.1.1"], "min": "2.1.0", "max": "2.1.1" },
   "os": { "platform": "iOS", "versions": ["18.4", "26.0"] },
-  "exception": { "type": "EXC_BAD_ACCESS", "signal": "SIGSEGV", "subtype": "KERN_INVALID_ADDRESS", "mach_exception": "0xdead10cc" },
-  "termination": { "namespace": "SIGNAL", "code": "11" },
   "crashed_thread": 0,
   "threads": [
     {
@@ -144,6 +146,43 @@ One JSON object per line (JSONL). Each line is one grouped issue.
       "frames": [
         { "image": "libsystem_kernel.dylib", "symbol": "mach_msg2_trap", "offset": 8, "in_app": false },
         { "image": "CoreFoundation", "symbol": "CFRunLoopRun", "offset": 1234, "in_app": false }
+      ]
+    }
+  ]
+}
+```
+
+Hang events do not carry an `exception` or `termination` block — those fields are optional and omitted here. The `0xdead10cc` code (data-protection violation) belongs on `kind: "crash"` reports, not hangs.
+
+**Full example — crash (data-protection violation, 0xdead10cc):**
+
+```json
+{
+  "provider": "sentry",
+  "issue_id": "POPPY-7B",
+  "issue_url": "https://sentry.io/organizations/acme/issues/POPPY-7B/",
+  "title": "GRDB.DatabaseError: disk I/O error",
+  "kind": "crash",
+  "impact": { "users": 22, "events": 89, "first_seen": "2026-05-10", "last_seen": "2026-06-04" },
+  "versions": { "affected": ["2.1.1"], "min": "2.1.1", "max": "2.1.1" },
+  "os": { "platform": "iOS", "versions": ["18.4"] },
+  "exception": { "mach_exception": "0xdead10cc" },
+  "termination": { "namespace": "RUNNINGBOARD", "code": "0xdead10cc" },
+  "crashed_thread": 1,
+  "threads": [
+    {
+      "index": 0,
+      "crashed": false,
+      "frames": [
+        { "image": "libsystem_kernel.dylib", "symbol": "mach_msg2_trap", "offset": 8, "in_app": false }
+      ]
+    },
+    {
+      "index": 1,
+      "crashed": true,
+      "frames": [
+        { "image": "GRDB", "symbol": "DatabaseQueue.write", "offset": 44, "in_app": true },
+        { "image": "MyApp", "symbol": "HistoryStore.flush", "offset": 12, "in_app": true }
       ]
     }
   ]
@@ -162,6 +201,7 @@ One JSON object per line (JSONL). Each line is one grouped issue.
 
 - `kind` is `"crash"` or `"hang"`. The `triage` subcommand accepts both; `xcsym crash` continues to reject hangs.
 - `crashed_thread` is the `index` value of the crashed thread — 0 for main thread. This is not an array position; the adapter resolves it.
+- Thread objects carry no `name` field. The main thread is identified by `index: 0`; Sentry thread names are not mapped.
 - `in_app` per frame is the primary app-vs-system signal. It comes from Sentry's `inApp`. Do not derive it from image-name substrings when the provider already supplies it.
 - `mach_exception` carries the hex code (`0xdead10cc`, `0x8badf00d`). The adapter normalizes it to lowercase `0x…` form before matching rules — uppercase input is handled automatically.
 - Frames are **top-down** in NormalizedReport (index 0 = top of stack, closest to the crash).
@@ -187,12 +227,14 @@ One JSON object per line (JSONL). Each line is one grouped issue.
 |---|---|
 | `pattern_tag` | Crash/hang category from the rule engine (see table below) |
 | `pattern_confidence` | `high`, `medium`, or `low` — how certain the rule engine is |
-| `rule_id` | The specific rule that matched (e.g., `R-swift-unwrap-01`, `H-idle-runloop-01`) |
+| `pattern_rule_id` | The classification rule that fired (e.g., `R-swift-unwrap-01`, `H-idle-runloop-01`) |
 | `cluster_key` | Mechanical signature grouping this issue with similar ones |
 | `cluster_confidence` | `high` = top app frames; `low` = system-frame fallback (treat as a bag, not a cluster) |
 | `noise_flags` | Array of `{class, rule_id, confidence, reason}` — empty means real-bug candidate |
 | `enrichment` | Cross-skill pointers (e.g., axiom-data for 0xdead10cc + DB frames) |
 | `top_frames` | Top 5 frames of the crashed thread, as `"image symbol"` strings |
+
+`pattern_rule_id` and `noise_flags[].rule_id` are two separate fields at different nesting levels. `pattern_rule_id` (top-level on each issue) names the classification rule that matched the crash/hang pattern. Each element of `noise_flags[]` carries its own `rule_id` naming the noise rule that fired (e.g., `noise.anr_suspension.v1`). Do not conflate them.
 
 ### Noise-class table
 
@@ -200,7 +242,7 @@ One JSON object per line (JSONL). Each line is one grouped issue.
 |---|---|---|---|
 | `anr_suspension_false_positive` | Idle-runloop hang — likely background suspension, not a real block | high | Demote; the #1 issue by users may be this non-bug |
 | `fixed_in_newer_build` | `versions.max` predates `--latest-version` — may already be fixed | high | Demote pending verification against the latest build |
-| `third_party_or_system_only` | Crashed thread (non-main) has zero app frames — may not be directly actionable | low | Demote cautiously; a third-party SDK can crash on a value your code passed it |
+| `third_party_or_system_only` | Crashed thread is non-main and has zero `in_app` frames — may not be directly actionable | low | Demote cautiously; a third-party SDK can crash on a value your code passed it |
 | `single_os_eol` | All affected OS versions are below `--os-floor` | medium | Deprioritize for supported users |
 | `long_tail_low_impact` | `impact.users` is below `--min-users` | high | Rank low, not hidden |
 

@@ -129,7 +129,7 @@ Input: one NormalizedReport JSON object per line (JSONL). Each report describes 
 
 Output: a single TriageResult JSON object to stdout with:
 - `summary` — total/crashes/hangs/skipped/clusters/flagged_noise/candidate_families
-- `issues[]` — per-issue `pattern_tag`, `noise_flags[]`, `cluster_key`, `cluster_confidence`, `top_frames`
+- `issues[]` — per-issue `pattern_tag`, `pattern_confidence`, `pattern_rule_id`, `cluster_key`, `cluster_confidence`, `noise_flags[]`, `top_frames`
 - `clusters[]` — mechanical groupings by signature with `total_users`/`total_events`
 - `errors[]` — malformed or unclassifiable reports (run still exits 0)
 
