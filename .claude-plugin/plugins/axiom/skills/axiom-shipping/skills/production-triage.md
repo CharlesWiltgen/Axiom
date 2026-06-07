@@ -231,8 +231,8 @@ Hang events do not carry an `exception` or `termination` block — those fields 
 | `cluster_key` | Mechanical signature grouping this issue with similar ones |
 | `cluster_confidence` | `high` = top app frames; `low` = system-frame fallback (treat as a bag, not a cluster) |
 | `noise_flags` | Array of `{class, rule_id, confidence, reason}` — empty means real-bug candidate |
-| `enrichment` | Cross-skill pointers (e.g., axiom-data for 0xdead10cc + DB frames) |
-| `top_frames` | Top 5 frames of the crashed thread, as `"image symbol"` strings |
+| `enrichment` | Cross-skill pointers (e.g., axiom-data for 0xdead10cc + DB frames). **Omitted** when no enrichment applies — i.e. on most issues |
+| `top_frames` | Top 5 frames of the crashed thread, as `"image symbol"` strings. **Omitted** when the crashed thread has no frames — e.g. an ASC aggregate emitted with `frames_unavailable: true` and no `threads[]`. Don't expect it on every issue |
 
 `pattern_rule_id` and `noise_flags[].rule_id` are two separate fields at different nesting levels. `pattern_rule_id` (top-level on each issue) names the classification rule that matched the crash/hang pattern. Each element of `noise_flags[]` carries its own `rule_id` naming the noise rule that fired (e.g., `noise.anr_suspension.v1`). Do not conflate them.
 
