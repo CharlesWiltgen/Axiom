@@ -76,6 +76,24 @@ func TestRunTriage_EndToEnd_SuspensionDemotedRealBugSurfaced(t *testing.T) {
 	}
 }
 
+func TestRunTriage_FramesUnavailableDowngradesConfidence(t *testing.T) {
+	jsonl := `{"provider":"asc","issue_id":"U","kind":"crash","impact":{"users":2,"events":3},"frames_unavailable":true,"exception":{"mach_exception":"0xdead10cc"},"threads":[]}`
+	res, code := runTriageString(t, jsonl)
+	if code != 0 {
+		t.Fatalf("exit = %d", code)
+	}
+	if len(res.Issues) != 1 {
+		t.Fatalf("issues = %d, want 1", len(res.Issues))
+	}
+	is := res.Issues[0]
+	if is.PatternTag != "data_protection_violation" {
+		t.Fatalf("pattern_tag = %q, want data_protection_violation", is.PatternTag)
+	}
+	if is.PatternConfidence != "low" {
+		t.Fatalf("pattern_confidence = %q, want low (frames_unavailable caps it)", is.PatternConfidence)
+	}
+}
+
 func TestRunTriage_EmptyArraysNotNull(t *testing.T) {
 	var out bytes.Buffer
 	jsonl := `{"provider":"sentry","issue_id":"A","kind":"crash","impact":{"users":1,"events":1},"exception":{"type":"EXC_BAD_ACCESS","subtype":"KERN_INVALID_ADDRESS"},"crashed_thread":0,"threads":[{"index":0,"crashed":true,"frames":[{"image":"MyApp","symbol":"boom","in_app":true}]}]}`

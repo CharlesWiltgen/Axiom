@@ -127,6 +127,12 @@ func triageOneReport(r *NormalizedReport, th Thresholds) (TriageIssue, bool) {
 	} else {
 		cat = Categorize(raw)
 	}
+	// frames_unavailable: classification rests on exception/termination codes
+	// alone (no stack evidence), so cap confidence — consumers can then tell a
+	// frame-backed classification from a code-only guess.
+	if r.FramesUnavailable && cat.Confidence == "high" {
+		cat.Confidence = "low"
+	}
 	issue := TriageIssue{
 		IssueID:           r.IssueID,
 		Title:             r.Title,
