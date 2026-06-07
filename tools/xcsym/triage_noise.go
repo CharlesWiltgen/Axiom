@@ -101,6 +101,9 @@ func init() {
 				return false, "", ""
 			}
 			crashed := raw.Threads[raw.CrashedIdx]
+			if len(crashed.Frames) == 0 {
+				return false, "", "" // guard first: no frames ⇒ nothing to judge
+			}
 			if crashed.Index == 0 { // main-thread no-app-frame crashes are more suspicious
 				return false, "", ""
 			}
@@ -108,9 +111,6 @@ func init() {
 				if f.InApp {
 					return false, "", ""
 				}
-			}
-			if len(crashed.Frames) == 0 {
-				return false, "", ""
 			}
 			return true, "low",
 				"crashed thread (non-main) has no app frames; not directly actionable in your code — but a third-party SDK can crash on a value app code passed it, so verify before dismissing"
