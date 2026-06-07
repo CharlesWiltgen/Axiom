@@ -1,0 +1,3 @@
+interface:
+  display_name: "Analyze Triage"
+  short_description: "The user wants to triage a CORPUS of production crashes/hangs from an aggregator (Sentry, App Store Connect)"
