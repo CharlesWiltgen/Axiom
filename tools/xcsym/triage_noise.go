@@ -25,3 +25,19 @@ func applyNoiseRules(r *NormalizedReport, raw *RawCrash, cat CategorizeResult, t
 	}
 	return flags
 }
+
+func init() {
+	noiseRules = append(noiseRules, NoiseRule{
+		ID: "noise.anr_suspension.v1", Class: "anr_suspension_false_positive",
+		Match: func(r *NormalizedReport, raw *RawCrash, cat CategorizeResult, th Thresholds) (bool, string, string) {
+			if r.Kind != "hang" {
+				return false, "", ""
+			}
+			if !isIdleRunloop(raw) {
+				return false, "", ""
+			}
+			return true, "high",
+				"main-thread top frames are run-loop park signatures with no app work in the top 20; consistent with background suspension, not a real block"
+		},
+	})
+}
