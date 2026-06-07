@@ -17,6 +17,7 @@
     "./commands/screenshot.md",
     "./commands/status.md",
     "./commands/test-simulator.md",
+    "./commands/triage.md",
     "./commands/console.md",
     "./commands/ui.md"
   ],
