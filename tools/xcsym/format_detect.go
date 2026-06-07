@@ -11,6 +11,7 @@ const (
 	FormatMetricKit   = "metrickit_json"
 	FormatAppleCrash  = "apple_crash_text"
 	FormatUnknown     = "unknown"
+	FormatNormalized  = "normalized_report"
 )
 
 // DetectFormat inspects crash data to determine its format.
