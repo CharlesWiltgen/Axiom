@@ -87,34 +87,3 @@ func buildClusters(issues []TriageIssue) []Cluster {
 	sort.SliceStable(out, func(i, j int) bool { return out[i].TotalUsers > out[j].TotalUsers })
 	return out
 }
-
-var dbLockFrameSubstrings = []string{"sqlite3_", "GRDB", "Database", "NSFileCoordinator", "FileCoordination"}
-
-// detectEnrichment adds cross-skill pointers. The flagship case: a
-// data_protection_violation (0xdead10cc) whose crashed-thread frames show
-// SQLite/GRDB/file-coordination activity almost always means a shared DB/file
-// lock held across suspension — the actionable fix lives in axiom-data.
-func detectEnrichment(r *NormalizedReport, raw *RawCrash, cat CategorizeResult) []Enrichment {
-	if cat.Tag != "data_protection_violation" {
-		return nil
-	}
-	if raw.CrashedIdx < 0 || raw.CrashedIdx >= len(raw.Threads) {
-		return nil
-	}
-	hasDB := false
-	for _, f := range raw.Threads[raw.CrashedIdx].Frames {
-		for _, sub := range dbLockFrameSubstrings {
-			if strings.Contains(f.Symbol, sub) || strings.Contains(f.Image, sub) {
-				hasDB = true
-			}
-		}
-	}
-	if !hasDB {
-		return nil
-	}
-	return []Enrichment{{
-		Kind: "cross_skill",
-		Note: "0xdead10cc with a DB/file-lock stack near suspension — likely held a shared-DB/file lock across app suspension",
-		See:  "axiom-data: GRDB suspension (observesSuspensionNotifications, file-protection class)",
-	}}
-}
