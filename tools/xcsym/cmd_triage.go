@@ -169,9 +169,8 @@ func countCandidateFamilies(issues []TriageIssue) int {
 	return len(seen)
 }
 
-// Temporary stubs for Phase C–E functions. DELETE each stub when the real
+// Temporary stubs for Phase D–E functions. DELETE each stub when the real
 // implementation lands in its phase.
-func categorizeHang(c *RawCrash) CategorizeResult { return Categorize(c) }
 func applyNoiseRules(r *NormalizedReport, raw *RawCrash, cat CategorizeResult, th Thresholds) []NoiseFlag {
 	return []NoiseFlag{}
 }
