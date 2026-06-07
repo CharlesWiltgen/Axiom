@@ -45,6 +45,37 @@ func TestRunTriage_ClassifiesCrashAndSkipsMalformed(t *testing.T) {
 	}
 }
 
+func TestRunTriage_EndToEnd_SuspensionDemotedRealBugSurfaced(t *testing.T) {
+	jsonl := strings.Join([]string{
+		// idle-runloop hang, huge user count → must be flagged noise, NOT top priority
+		`{"provider":"sentry","issue_id":"POPPY-3V","kind":"hang","impact":{"users":68,"events":412},"crashed_thread":0,"threads":[{"index":0,"crashed":true,"frames":[{"image":"libsystem_kernel.dylib","symbol":"mach_msg2_trap"},{"image":"CoreFoundation","symbol":"CFRunLoopRun"}]}]}`,
+		// real nil-unwrap crash, small user count → must remain a candidate family
+		`{"provider":"sentry","issue_id":"REAL-1","kind":"crash","impact":{"users":4,"events":6},"exception":{"type":"EXC_BREAKPOINT","subtype":"Swift runtime failure: unexpectedly found nil while unwrapping an Optional value"},"crashed_thread":0,"threads":[{"index":0,"crashed":true,"frames":[{"image":"MyApp","symbol":"ContentView.body.getter","in_app":true}]}]}`,
+	}, "\n")
+	res, code := runTriageString(t, jsonl)
+	if code != 0 {
+		t.Fatalf("exit = %d", code)
+	}
+	var poppy, real *TriageIssue
+	for i := range res.Issues {
+		switch res.Issues[i].IssueID {
+		case "POPPY-3V":
+			poppy = &res.Issues[i]
+		case "REAL-1":
+			real = &res.Issues[i]
+		}
+	}
+	if poppy == nil || len(poppy.NoiseFlags) == 0 || poppy.NoiseFlags[0].Class != "anr_suspension_false_positive" {
+		t.Fatalf("POPPY-3V should be noise-flagged: %+v", poppy)
+	}
+	if real == nil || len(real.NoiseFlags) != 0 || real.PatternTag != "swift_forced_unwrap" {
+		t.Fatalf("REAL-1 should be a clean candidate family: %+v", real)
+	}
+	if res.Summary.FlaggedNoise != 1 || res.Summary.CandidateFamilies != 1 {
+		t.Fatalf("summary = %+v, want flagged_noise 1 candidate_families 1", res.Summary)
+	}
+}
+
 func TestRunTriage_EmptyArraysNotNull(t *testing.T) {
 	var out bytes.Buffer
 	jsonl := `{"provider":"sentry","issue_id":"A","kind":"crash","impact":{"users":1,"events":1},"exception":{"type":"EXC_BAD_ACCESS","subtype":"KERN_INVALID_ADDRESS"},"crashed_thread":0,"threads":[{"index":0,"crashed":true,"frames":[{"image":"MyApp","symbol":"boom","in_app":true}]}]}`
