@@ -115,3 +115,15 @@ func init() {
 			th: Thresholds{OSFloor: "18.0"}, want: false},
 	)
 }
+
+func init() {
+	small := &NormalizedReport{IssueID: "small", Kind: "crash", Impact: NRImpact{Users: 2}}
+	big := &NormalizedReport{IssueID: "big", Kind: "crash", Impact: NRImpact{Users: 200}}
+	empty := &RawCrash{}
+	noiseFixtures = append(noiseFixtures,
+		noiseCase{ruleID: "noise.long_tail.v1", report: small, raw: empty,
+			th: Thresholds{MinUsers: 5}, want: true},
+		noiseCase{ruleID: "noise.long_tail.v1", report: big, raw: empty,
+			th: Thresholds{MinUsers: 5}, want: false},
+	)
+}
