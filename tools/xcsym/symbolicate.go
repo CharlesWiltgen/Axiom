@@ -76,11 +76,12 @@ func ResolveBatch(ctx context.Context, dsymOrBinary, arch, loadAddr string, addr
 
 // parseAtosLine extracts symbol/file/line from an atos output line.
 // atos output shapes:
-//   "Symbol (in Image)"                     — symbol, no source
-//   "Symbol (in Image) + offset"            — symbol, no source
-//   "Symbol (in Image) (File:Line)"         — fully symbolicated
-//   "0xaddr (in Image)"                     — unsymbolicated (atos echoes the address)
-//   "-[Class method] (in Image) ..."        — ObjC method
+//
+//	"Symbol (in Image)"                     — symbol, no source
+//	"Symbol (in Image) + offset"            — symbol, no source
+//	"Symbol (in Image) (File:Line)"         — fully symbolicated
+//	"0xaddr (in Image)"                     — unsymbolicated (atos echoes the address)
+//	"-[Class method] (in Image) ..."        — ObjC method
 var atosLineRe = regexp.MustCompile(`^(.*?)\s*\(in\s+[^)]+\)(?:\s*\(([^:]+):(\d+)\))?(?:\s*\+\s*\d+)?\s*$`)
 
 func parseAtosLine(line string) SymbolResult {

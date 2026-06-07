@@ -29,9 +29,9 @@ type DiscovererOptions struct {
 	// ExplicitByUUID maps a specific UUID to a dSYM/binary path. Takes
 	// precedence over Explicit and the rest of the chain, but only when the
 	// requested UUID matches. UUIDs are normalized (uppercase with dashes).
-	ExplicitByUUID map[string]string
-	UserPaths      []string // XCSYM_DSYM_PATHS entries
-	ArchivesPaths  []string // defaults to ~/Library/Developer/Xcode/Archives
+	ExplicitByUUID   map[string]string
+	UserPaths        []string // XCSYM_DSYM_PATHS entries
+	ArchivesPaths    []string // defaults to ~/Library/Developer/Xcode/Archives
 	DerivedDataPaths []string // defaults to ~/Library/Developer/Xcode/DerivedData
 	DownloadsPaths   []string // defaults to ~/Downloads
 	ToolchainPaths   []string // defaults to $(xcode-select -p)/Toolchains

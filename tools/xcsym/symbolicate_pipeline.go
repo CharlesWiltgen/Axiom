@@ -18,10 +18,11 @@ import (
 // of the pipeline still produces output.
 //
 // Scope by tier:
-//   summary:  crashed thread only (Format will truncate to top 5)
-//   standard: crashed thread + non-crashed threads' frames that hit an app
-//             image (Format filters to top 20 app frames)
-//   full:     every thread's every frame
+//
+//	summary:  crashed thread only (Format will truncate to top 5)
+//	standard: crashed thread + non-crashed threads' frames that hit an app
+//	          image (Format filters to top 20 app frames)
+//	full:     every thread's every frame
 //
 // Pre-symbolicated frames (Symbolicated=true already, which .ips v2 often
 // provides via on-device atos) are skipped. Only zero-symbol frames ask atos.

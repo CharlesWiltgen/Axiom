@@ -37,13 +37,13 @@ func TestAnonymize_v2_ScrubsKnownPII(t *testing.T) {
 
 	// Personal data patterns MUST all be gone.
 	leaks := []string{
-		"SecretApp",             // app name
-		"com.secretco.secret",   // bundle ids
-		"johndoe",               // username in path
-		"99999999",              // incident UUID prefix
-		"11111111-2222-3333",    // device UUID prefix
-		"77777777-8888-9999",    // installation UUID prefix
-		"JohnsPhone",            // device name
+		"SecretApp",           // app name
+		"com.secretco.secret", // bundle ids
+		"johndoe",             // username in path
+		"99999999",            // incident UUID prefix
+		"11111111-2222-3333",  // device UUID prefix
+		"77777777-8888-9999",  // installation UUID prefix
+		"JohnsPhone",          // device name
 	}
 	for _, leak := range leaks {
 		if bytes.Contains(out, []byte(leak)) {
@@ -415,12 +415,12 @@ func TestPIIScan_BundleIDRegexCatchesNonComPrefixes(t *testing.T) {
 		{"jp.somevendor.app", "jp.somevendor.app"},
 		// Negative cases — strings that look bundle-ID-shaped but shouldn't
 		// trip the regex (and would otherwise create noise on real .ips files).
-		{"swift.runtime.failure", ""},               // tld 'swift' not enumerated
-		{"main_thread_checker.dylib", ""},           // single dot, dylib suffix
-		{"RunLoop in.dispatch.queue", ""},           // 'in' deliberately excluded
-		{"loaded dev.fastlane.tools at", ""},        // 'dev' deliberately excluded
-		{"thread us.foobar.example", ""},            // 'us' deliberately excluded
-		{"com.example.MyApp", "com.example.MyApp"},  // matched (whitelist exempts)
+		{"swift.runtime.failure", ""},              // tld 'swift' not enumerated
+		{"main_thread_checker.dylib", ""},          // single dot, dylib suffix
+		{"RunLoop in.dispatch.queue", ""},          // 'in' deliberately excluded
+		{"loaded dev.fastlane.tools at", ""},       // 'dev' deliberately excluded
+		{"thread us.foobar.example", ""},           // 'us' deliberately excluded
+		{"com.example.MyApp", "com.example.MyApp"}, // matched (whitelist exempts)
 	}
 	for _, c := range cases {
 		got := bundleIDRE.FindString(c.input)
@@ -552,11 +552,11 @@ func TestAnonymize_AppleCrash_ScrubsKnownPII(t *testing.T) {
 
 	// Personal data patterns MUST all be gone.
 	leaks := []string{
-		"SecretApp",                            // app name (wherever it appears)
-		"com.secretco.secret",                  // bundle ids
-		"99999999-AAAA",                        // incident UUID prefix
-		"77777777-8888",                        // install UUID prefix (dashed → uuidRE matches → zero'd)
-		"iPhone16,2",                           // device model via Hardware Model + AppVariant
+		"SecretApp",           // app name (wherever it appears)
+		"com.secretco.secret", // bundle ids
+		"99999999-AAAA",       // incident UUID prefix
+		"77777777-8888",       // install UUID prefix (dashed → uuidRE matches → zero'd)
+		"iPhone16,2",          // device model via Hardware Model + AppVariant
 	}
 	for _, leak := range leaks {
 		if bytes.Contains(out, []byte(leak)) {

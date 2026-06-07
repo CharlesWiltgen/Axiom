@@ -101,8 +101,8 @@ func TestFormat_Standard_AppFrameDetection(t *testing.T) {
 	// A multi-thread crash where non-crashed threads have both app and
 	// system frames. Only the matched image's frames should surface.
 	raw := &RawCrash{
-		App:     AppInfo{Name: "MyApp"},
-		Arch:    "arm64",
+		App:  AppInfo{Name: "MyApp"},
+		Arch: "arm64",
 		Threads: []Thread{
 			{Index: 0, Triggered: true, Frames: []Frame{
 				{Index: 0, Image: "MyApp", Symbol: "boom"},
