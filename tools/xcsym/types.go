@@ -126,6 +126,10 @@ type Frame struct {
 	File         string `json:"file,omitempty"`
 	Line         int    `json:"line,omitempty"`
 	Symbolicated bool   `json:"symbolicated"`
+	// InApp marks a frame as application code (vs. system/third-party). Set by
+	// the triage NormalizedReport adapter from the provider's inApp flag; the
+	// .ips/MetricKit parsers leave it false (unused by the crash subcommand).
+	InApp bool `json:"in_app,omitempty"`
 }
 
 type ImageStatus struct {
@@ -164,6 +168,9 @@ type RawCrash struct {
 	Threads     []Thread // all threads, flat
 	UsedImages  []UsedImage
 	CrashedIdx  int // index into Threads
+	// Kind is "crash" or "hang". Empty is treated as "crash" so existing
+	// parsers need no change; only the triage adapter sets "hang".
+	Kind string
 }
 
 type UsedImage struct {
