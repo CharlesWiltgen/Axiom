@@ -135,3 +135,19 @@ func init() {
 		},
 	})
 }
+
+func init() {
+	noiseRules = append(noiseRules, NoiseRule{
+		ID: "noise.long_tail.v1", Class: "long_tail_low_impact",
+		Match: func(r *NormalizedReport, raw *RawCrash, cat CategorizeResult, th Thresholds) (bool, string, string) {
+			if th.MinUsers <= 0 {
+				return false, "", ""
+			}
+			if r.Impact.Users < th.MinUsers {
+				return true, "high",
+					"affects fewer than " + strconv.Itoa(th.MinUsers) + " users; ranked low (NOT hidden)"
+			}
+			return false, "", ""
+		},
+	})
+}
