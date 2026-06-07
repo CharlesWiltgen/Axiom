@@ -44,3 +44,16 @@ func TestRunTriage_ClassifiesCrashAndSkipsMalformed(t *testing.T) {
 		t.Fatalf("issue A pattern = %+v, want bad_memory_access", a)
 	}
 }
+
+func TestRunTriage_EmptyArraysNotNull(t *testing.T) {
+	var out bytes.Buffer
+	jsonl := `{"provider":"sentry","issue_id":"A","kind":"crash","impact":{"users":1,"events":1},"exception":{"type":"EXC_BAD_ACCESS","subtype":"KERN_INVALID_ADDRESS"},"crashed_thread":0,"threads":[{"index":0,"crashed":true,"frames":[{"image":"MyApp","symbol":"boom","in_app":true}]}]}`
+	runTriageWithStdin(&out, nil, strings.NewReader(jsonl))
+	s := out.String()
+	if strings.Contains(s, `"noise_flags":null`) {
+		t.Errorf("noise_flags marshaled as null:\n%s", s)
+	}
+	if strings.Contains(s, `"clusters":null`) {
+		t.Errorf("clusters marshaled as null:\n%s", s)
+	}
+}
