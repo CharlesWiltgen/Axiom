@@ -2,15 +2,24 @@ package main
 
 import "testing"
 
-// Every rule in noiseRules must have a positive and negative fixture here.
+// Every rule in noiseRules must have BOTH a positive (want:true) and a
+// negative (want:false) fixture — track them separately.
 func TestNoiseRules_HaveFixtures(t *testing.T) {
-	covered := map[string]bool{}
+	pos := map[string]bool{}
+	neg := map[string]bool{}
 	for _, c := range noiseFixtures {
-		covered[c.ruleID] = true
+		if c.want {
+			pos[c.ruleID] = true
+		} else {
+			neg[c.ruleID] = true
+		}
 	}
 	for _, r := range noiseRules {
-		if !covered[r.ID] {
-			t.Errorf("noise rule %q has no fixtures in noiseFixtures", r.ID)
+		if !pos[r.ID] {
+			t.Errorf("noise rule %q has no positive fixture (want:true)", r.ID)
+		}
+		if !neg[r.ID] {
+			t.Errorf("noise rule %q has no negative fixture (want:false)", r.ID)
 		}
 	}
 }
@@ -67,6 +76,7 @@ func TestCompareVersions(t *testing.T) {
 	}{
 		{"2.1.0", "2.1.1", -1}, {"2.1.1", "2.1.0", 1}, {"2.1", "2.1.0", 0},
 		{"2.1.0", "2.1", 0}, {"10.0", "9.9", 1}, {"2.1.1", "2.1.1", 0},
+		{"2.01", "2.1", 0}, {"2.1.0-beta", "2.1.0", 0}, // leading zero; non-numeric component → 0
 	}
 	for _, c := range cases {
 		if got := compareVersions(c.a, c.b); got != c.want {
