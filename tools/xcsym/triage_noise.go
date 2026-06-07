@@ -117,3 +117,21 @@ func init() {
 		},
 	})
 }
+
+func init() {
+	noiseRules = append(noiseRules, NoiseRule{
+		ID: "noise.single_os_eol.v1", Class: "single_os_eol",
+		Match: func(r *NormalizedReport, raw *RawCrash, cat CategorizeResult, th Thresholds) (bool, string, string) {
+			if th.OSFloor == "" || len(r.OS.Versions) == 0 {
+				return false, "", ""
+			}
+			for _, v := range r.OS.Versions {
+				if compareVersions(v, th.OSFloor) >= 0 {
+					return false, "", "" // at least one supported OS → not EOL-only
+				}
+			}
+			return true, "medium",
+				"all affected OS versions are below the support floor " + th.OSFloor + "; deprioritize"
+		},
+	})
+}

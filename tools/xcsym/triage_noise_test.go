@@ -103,3 +103,15 @@ func init() {
 			raw: mainNoApp, cat: CategorizeResult{Tag: "bad_memory_access"}, want: false},
 	)
 }
+
+func init() {
+	eol := &NormalizedReport{IssueID: "eol", Kind: "crash", OS: NROS{Versions: []string{"17.2", "17.5"}}}
+	mixed := &NormalizedReport{IssueID: "mixed", Kind: "crash", OS: NROS{Versions: []string{"17.5", "18.0"}}}
+	empty := &RawCrash{}
+	noiseFixtures = append(noiseFixtures,
+		noiseCase{ruleID: "noise.single_os_eol.v1", report: eol, raw: empty,
+			th: Thresholds{OSFloor: "18.0"}, want: true},
+		noiseCase{ruleID: "noise.single_os_eol.v1", report: mixed, raw: empty,
+			th: Thresholds{OSFloor: "18.0"}, want: false},
+	)
+}
