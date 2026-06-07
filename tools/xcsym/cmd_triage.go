@@ -173,10 +173,10 @@ func countCandidateFamilies(issues []TriageIssue) int {
 // implementation lands in its phase.
 func categorizeHang(c *RawCrash) CategorizeResult { return Categorize(c) }
 func applyNoiseRules(r *NormalizedReport, raw *RawCrash, cat CategorizeResult, th Thresholds) []NoiseFlag {
-	return nil
+	return []NoiseFlag{}
 }
 func detectEnrichment(r *NormalizedReport, raw *RawCrash, cat CategorizeResult) []Enrichment {
 	return nil
 }
 func clusterKey(raw *RawCrash, cat CategorizeResult) (string, string) { return cat.Tag, "low" }
-func buildClusters(issues []TriageIssue) []Cluster                    { return nil }
+func buildClusters(issues []TriageIssue) []Cluster                    { return []Cluster{} }
