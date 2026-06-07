@@ -7,6 +7,8 @@ const hangTopFrameWindow = 20
 // runLoopParkSymbols are the main-thread top-frame signatures of a thread that
 // is merely parked in its run loop (idle). NOTE: __psynch_* is deliberately
 // absent — psynch indicates lock contention, i.e. a real block, not a park.
+// Matching is substring-based, so "mach_msg" already subsumes "mach_msg2_trap"
+// and "mach_msg_trap"; the explicit variants are kept only for readability.
 var runLoopParkSymbols = []string{
 	"mach_msg2_trap", "mach_msg_trap", "mach_msg",
 	"CFRunLoopRun", "CFRunLoopRunSpecific", "__CFRunLoopServiceMachPort",
@@ -18,7 +20,9 @@ var runLoopParkSymbols = []string{
 // "write" are deliberately EXCLUDED — "read" is a substring of "thread"
 // (thread_start, _pthread_wqthread, _dispatch_worker_thread_*), which appears
 // in nearly every stack and would defeat idle detection. Use the
-// libsystem_kernel stub forms instead.
+// libsystem_kernel stub forms instead. Matching is substring-based, so
+// "psynch_" already subsumes "__psynch_mutexwait" and "__psynch_cvwait"; the
+// explicit variants are kept only for readability.
 var blockingSyscallSymbols = []string{
 	"__psynch_mutexwait", "__psynch_cvwait", "psynch_",
 	"__read", "__write", "pread", "pwrite", "fcntl", "flock",
@@ -98,6 +102,11 @@ func isIdleRunloop(c *RawCrash) bool {
 	return true
 }
 
+// hangRules is a static slice literal because all hang rules live in this one
+// file and order is significant (first match wins — idle-runloop before
+// main-block). Noise rules (triage_noise.go) instead self-register via init()
+// because they are spread across D2–D6 and order there is not significant.
+// Don't mix the two styles.
 var hangRules = []Rule{
 	{
 		ID: "H-idle-runloop-01", Tag: "anr_idle_runloop", Confidence: "high",

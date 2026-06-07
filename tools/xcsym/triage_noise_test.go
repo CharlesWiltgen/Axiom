@@ -77,6 +77,9 @@ func TestCompareVersions(t *testing.T) {
 		{"2.1.0", "2.1.1", -1}, {"2.1.1", "2.1.0", 1}, {"2.1", "2.1.0", 0},
 		{"2.1.0", "2.1", 0}, {"10.0", "9.9", 1}, {"2.1.1", "2.1.1", 0},
 		{"2.01", "2.1", 0}, {"2.1.0-beta", "2.1.0", 0}, // leading zero; non-numeric component → 0
+		// Empty-string args: a missing/blank version is gated by the fixed_in_newer
+		// rule's "" check, so compareVersions must treat "" as the 0-version.
+		{"", "2.1.0", -1}, {"2.1.0", "", 1}, {"", "", 0}, {"", "0.0", 0},
 	}
 	for _, c := range cases {
 		if got := compareVersions(c.a, c.b); got != c.want {
