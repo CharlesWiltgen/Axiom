@@ -385,23 +385,24 @@ func TestRunCrash_Xccrashpoint_EmptyBundleRejected(t *testing.T) {
 	}
 }
 
-func TestRunCrash_FlagsAfterPositional_HelpfulError(t *testing.T) {
-	// Common footgun: developers (and agents) put flags after the file.
-	// flag.Parse stops at the first positional, so the trailing flags
-	// become extra positionals. The error message should tell the user
-	// how to rephrase, not just "exactly one crash file required".
+// Argument-order independence (axiom-v9in): flags must be honored whether they
+// come before or after the file path. Both orders must reach the same outcome —
+// here, file-not-found (exit 2) — rather than mis-parsing the trailing flags as
+// extra positionals (the arg-count usage error, exit 1). This is xcsym's
+// per-tool regression guard for the cross-tool standard.
+func TestRunCrash_ArgOrderIndependent(t *testing.T) {
 	r, w, err := os.Pipe()
 	if err != nil {
 		t.Fatalf("os.Pipe: %v", err)
 	}
 	old := os.Stderr
 	os.Stderr = w
-	// Restore even if runCrash panics; otherwise every later test in the
-	// package writes to a closed pipe.
 	t.Cleanup(func() { os.Stderr = old })
 
-	var buf bytes.Buffer
-	code := runCrash(&buf, []string{"file.crash", "--no-symbolicate", "--no-cache"})
+	missing := filepath.Join(t.TempDir(), "nope.ips")
+	var b1, b2 bytes.Buffer
+	after := runCrash(&b1, []string{missing, "--no-symbolicate", "--no-cache"})
+	before := runCrash(&b2, []string{"--no-symbolicate", "--no-cache", missing})
 	if err := w.Close(); err != nil {
 		t.Fatalf("close pipe: %v", err)
 	}
@@ -410,11 +411,14 @@ func TestRunCrash_FlagsAfterPositional_HelpfulError(t *testing.T) {
 		t.Fatalf("read pipe: %v", err)
 	}
 
-	if code != 1 {
-		t.Errorf("code = %d, want 1", code)
+	if after != before {
+		t.Errorf("arg order changed exit code: after=%d before=%d", after, before)
 	}
-	if !strings.Contains(string(stderrBytes), "place all --flags before the file path") {
-		t.Errorf("stderr should suggest flag reordering, got: %q", string(stderrBytes))
+	if after != 2 {
+		t.Errorf("flags-after-positional must be honored and reach file handling (exit 2), got %d", after)
+	}
+	if strings.Contains(string(stderrBytes), "exactly one crash file required") {
+		t.Errorf("trailing flags were mis-parsed as positionals: %q", string(stderrBytes))
 	}
 }
 
@@ -436,4 +440,3 @@ func TestRunCrash_ExitCode2_MainMissing(t *testing.T) {
 		t.Errorf("missing main binary: code = %d, want 2\n%s", code, buf.String())
 	}
 }
-

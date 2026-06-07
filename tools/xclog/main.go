@@ -205,6 +205,26 @@ func registerFlags(fs *flag.FlagSet, cfg *Config) {
 	fs.StringVar(&cfg.Last, "last", "5m", "How far back to search (show command)")
 }
 
+// parseTargetCommand parses the flags and the single target positional for the
+// launch/attach/show subcommands, accepting them in any order (axiom-v9in).
+// Returns the target, the populated Config, and an exit code (0 ok, 1 missing
+// target, 2 flag parse error).
+func parseTargetCommand(subcmd string, args []string) (string, Config, int) {
+	cfg := Config{}
+	fs := flag.NewFlagSet(subcmd, flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	registerFlags(fs, &cfg)
+	positionals, err := parseInterspersed(fs, args)
+	if err != nil {
+		return "", cfg, 2
+	}
+	if len(positionals) != 1 {
+		fmt.Fprint(os.Stderr, usage)
+		return "", cfg, 1
+	}
+	return positionals[0], cfg, 0
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Fprint(os.Stderr, usage)
@@ -223,17 +243,10 @@ func main() {
 		return
 	}
 
-	if len(os.Args) < 3 {
-		fmt.Fprint(os.Stderr, usage)
-		os.Exit(1)
+	target, cfg, code := parseTargetCommand(subcmd, os.Args[2:])
+	if code != 0 {
+		os.Exit(code)
 	}
-
-	target := os.Args[2]
-
-	cfg := Config{}
-	fs := flag.NewFlagSet(subcmd, flag.ExitOnError)
-	registerFlags(fs, &cfg)
-	fs.Parse(os.Args[3:])
 
 	// Compile filter regex eagerly — fail fast, read-only at runtime (no race)
 	if cfg.Filter != "" {

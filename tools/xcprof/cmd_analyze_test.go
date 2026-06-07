@@ -60,6 +60,22 @@ func TestParseAnalyzeArgsFlagBeforeTrace(t *testing.T) {
 	}
 }
 
+// Argument-order independence (axiom-v9in): a flag before the positional and the
+// same flag after it must produce identical results. This is the cross-tool
+// standard; xcprof's regression guard for it lives here.
+func TestParseAnalyzeArgsOrderIndependent(t *testing.T) {
+	before := []string{"--start-ms=600", "cpu.trace"}
+	after := []string{"cpu.trace", "--start-ms=600"}
+	tb, ob, cb := parseAnalyzeArgs(before)
+	ta, oa, ca := parseAnalyzeArgs(after)
+	if cb != 0 || ca != 0 {
+		t.Fatalf("both orders must succeed: before=%d after=%d", cb, ca)
+	}
+	if tb != ta || ob.startMS != oa.startMS {
+		t.Errorf("order changed result: before(trace=%q start=%d) != after(trace=%q start=%d)", tb, ob.startMS, ta, oa.startMS)
+	}
+}
+
 func TestParseAnalyzeArgsValueFlagAfterTrace(t *testing.T) {
 	trace, opts, code := parseAnalyzeArgs([]string{"cpu.trace", "--start-ms", "600", "--end-ms", "700"})
 	if code != 0 || trace != "cpu.trace" || opts.startMS != 600 || opts.endMS != 700 {

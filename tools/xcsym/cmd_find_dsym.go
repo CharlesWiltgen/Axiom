@@ -40,14 +40,15 @@ func runFindDsym(out io.Writer, args []string) int {
 	noCache := fs.Bool("no-cache", false, "skip the persistent UUID cache")
 	noDefaults := fs.Bool("no-defaults", false, "skip default dSYM search roots (Archives, DerivedData, Downloads); only --dsym-paths and $XCSYM_DSYM_PATHS apply")
 	human := fs.Bool("human", false, "human-readable output instead of JSON")
-	if err := fs.Parse(args); err != nil {
+	positionals, err := parseInterspersed(fs, args)
+	if err != nil {
 		return 1
 	}
-	if fs.NArg() != 1 {
+	if len(positionals) != 1 {
 		fmt.Fprintln(os.Stderr, "find-dsym: exactly one UUID required")
 		return 1
 	}
-	uuid := NormalizeUUID(fs.Arg(0))
+	uuid := NormalizeUUID(positionals[0])
 
 	opts := DiscovererOptions{
 		SkipSpotlight: *noSpotlight,
