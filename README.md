@@ -8,7 +8,7 @@ Axiom gives AI coding assistants deep Apple platform development expertise — t
 
 <!-- AXIOM_STATS_BEGIN — auto-maintained by scripts/set-version.js; do not hand-edit -->
 - **245 skills** covering UI, data, concurrency, performance, networking, accessibility, and more
-- **39 agents** that autonomously scan for issues (memory leaks, concurrency violations, build problems)
+- **40 agents** that autonomously scan for issues (memory leaks, concurrency violations, build problems)
 - **14 commands** for quick audits and diagnostics
 <!-- AXIOM_STATS_END -->
 - **xclog** — a built-in console capture tool that gives AI assistants access to simulator and device logs
