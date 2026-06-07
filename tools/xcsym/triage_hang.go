@@ -13,10 +13,15 @@ var runLoopParkSymbols = []string{
 }
 
 // blockingSyscallSymbols, if present anywhere in the top window, mean the main
-// thread is actually blocked (not idle) — a real ANR.
+// thread is actually blocked (not idle) — a real ANR. These are substring-
+// matched, so entries must not collide with benign frames. NB: bare "read"/
+// "write" are deliberately EXCLUDED — "read" is a substring of "thread"
+// (thread_start, _pthread_wqthread, _dispatch_worker_thread_*), which appears
+// in nearly every stack and would defeat idle detection. Use the
+// libsystem_kernel stub forms instead.
 var blockingSyscallSymbols = []string{
 	"__psynch_mutexwait", "__psynch_cvwait", "psynch_",
-	"read", "write", "pread", "pwrite", "fcntl", "flock",
+	"__read", "__write", "pread", "pwrite", "fcntl", "flock",
 	"sqlite3_step", "sqlite3_exec",
 }
 
