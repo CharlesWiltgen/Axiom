@@ -2,11 +2,41 @@ package main
 
 import (
 	"encoding/json"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 )
+
+// Argument-order independence (axiom-v9in): launch/attach/show must accept flags
+// before or after the target, with identical results. xclog historically forced
+// the target first (os.Args[2]); this guards the fix.
+func TestParseTargetCommandOrderIndependent(t *testing.T) {
+	before := []string{"--max-lines", "50", "com.example.app"}
+	after := []string{"com.example.app", "--max-lines", "50"}
+	tb, cb, codeb := parseTargetCommand("launch", before)
+	ta, ca, codea := parseTargetCommand("launch", after)
+	if codeb != 0 || codea != 0 {
+		t.Fatalf("both orders must succeed: before=%d after=%d", codeb, codea)
+	}
+	if tb != ta || cb.MaxLines != ca.MaxLines {
+		t.Errorf("order changed result: before(target=%q max=%d) != after(target=%q max=%d)", tb, cb.MaxLines, ta, ca.MaxLines)
+	}
+	if ta != "com.example.app" || ca.MaxLines != 50 {
+		t.Errorf("unexpected parse: target=%q max-lines=%d", ta, ca.MaxLines)
+	}
+}
+
+func TestParseTargetCommandMissingTarget(t *testing.T) {
+	old := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+	t.Cleanup(func() { os.Stderr = old; w.Close(); r.Close() })
+	if _, _, code := parseTargetCommand("launch", []string{"--max-lines", "50"}); code != 1 {
+		t.Errorf("expected usage error (1) when target missing, got %d", code)
+	}
+}
 
 func TestFormatJSON(t *testing.T) {
 	line := LogLine{

@@ -195,23 +195,33 @@ func runDialogTap(out io.Writer, action string, args []string) int {
 	return writeDialog(out, rep, *human)
 }
 
-func runDialogPregrant(out io.Writer, args []string) int {
+// parsePregrantArgs parses pregrant's flags and positionals in any order.
+// Returns the bundle id, services, --udid, --human, and an exit code (0 ok,
+// 2 usage error).
+func parsePregrantArgs(args []string) (bundle string, services []string, udid string, human bool, code int) {
 	fs := flag.NewFlagSet("dialog pregrant", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	udidFlag := fs.String("udid", "", "target simulator UDID (default: booted)")
-	human := fs.Bool("human", false, "human-readable output")
-	if err := fs.Parse(args); err != nil {
-		return 2
+	humanFlag := fs.Bool("human", false, "human-readable output")
+	positionals, err := parseInterspersed(fs, args)
+	if err != nil {
+		return "", nil, "", false, 2
 	}
-	rest := fs.Args()
-	if len(rest) < 2 {
+	if len(positionals) < 2 {
 		fmt.Fprintln(os.Stderr, "dialog pregrant: usage: pregrant <bundle-id> <service>... [--udid <udid>]")
-		return 2
+		return "", nil, "", false, 2
 	}
-	bundle, services := rest[0], rest[1:]
+	return positionals[0], positionals[1:], *udidFlag, *humanFlag, 0
+}
+
+func runDialogPregrant(out io.Writer, args []string) int {
+	bundle, services, udidFlag, human, code := parsePregrantArgs(args)
+	if code != 0 {
+		return code
+	}
 
 	ctx := context.Background()
-	udid, err := resolveUDID(ctx, *udidFlag)
+	udid, err := resolveUDID(ctx, udidFlag)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "dialog pregrant:", err)
 		return 2
@@ -225,7 +235,7 @@ func runDialogPregrant(out io.Writer, args []string) int {
 		rep.Granted = append(rep.Granted, svc)
 	}
 	rep.Handled = true
-	return writeDialog(out, rep, *human)
+	return writeDialog(out, rep, human)
 }
 
 // writeDialog emits the report and returns the exit code (0 ok, 8 on

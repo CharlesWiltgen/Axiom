@@ -286,6 +286,16 @@ func TestParseCompareArgsFlagsBeforeTraces(t *testing.T) {
 	}
 }
 
+// compare is the only subcommand with two positionals, so it needs its own
+// guard for a flag landing *between* them (axiom-v9in) — the hallmark
+// interspersed case the generic helper test can't pin to this subcommand.
+func TestParseCompareArgsFlagBetweenTraces(t *testing.T) {
+	base, cur, opts, code := parseCompareArgs([]string{"a.trace", "--human", "b.trace"})
+	if code != 0 || base != "a.trace" || cur != "b.trace" || !opts.human {
+		t.Fatalf("got base=%q cur=%q human=%v code=%d", base, cur, opts.human, code)
+	}
+}
+
 func TestParseCompareArgsMissingTrace(t *testing.T) {
 	if _, _, _, code := parseCompareArgs([]string{"a.trace"}); code != 2 {
 		t.Errorf("one trace should be a usage error (2), got %d", code)

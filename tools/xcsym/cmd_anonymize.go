@@ -20,17 +20,17 @@ func runAnonymize(out io.Writer, args []string) int {
 	fs := flag.NewFlagSet("anonymize", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	outputPath := fs.String("output", "", "write anonymized crash to this path instead of stdout")
-	if err := fs.Parse(args); err != nil {
+	positionals, err := parseInterspersed(fs, args)
+	if err != nil {
 		return 1
 	}
-	if fs.NArg() != 1 {
+	if len(positionals) != 1 {
 		fmt.Fprintln(os.Stderr, "anonymize: exactly one crash file required (use '-' for stdin)")
 		return 1
 	}
 
 	var data []byte
-	var err error
-	path := fs.Arg(0)
+	path := positionals[0]
 	if path == "-" {
 		data, err = io.ReadAll(os.Stdin)
 		if err != nil {

@@ -26,19 +26,20 @@ func runTriage(out io.Writer, args []string) int {
 	latest := fs.String("latest-version", "", "marketing version of the latest shipped build")
 	osFloor := fs.String("os-floor", "", "lowest supported OS version")
 	minUsers := fs.Int("min-users", 0, "issues below this user count are flagged long_tail (0 disables)")
-	if err := fs.Parse(args); err != nil {
+	positionals, err := parseInterspersed(fs, args)
+	if err != nil {
 		return 1
 	}
 	var in io.Reader = os.Stdin
-	if fs.NArg() == 1 {
-		f, err := os.Open(fs.Arg(0))
+	if len(positionals) == 1 {
+		f, err := os.Open(positionals[0])
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "triage: cannot read %s: %v\n", fs.Arg(0), err)
+			fmt.Fprintf(os.Stderr, "triage: cannot read %s: %v\n", positionals[0], err)
 			return 1
 		}
 		defer f.Close()
 		in = f
-	} else if fs.NArg() > 1 {
+	} else if len(positionals) > 1 {
 		fmt.Fprintln(os.Stderr, "triage: at most one file argument (or pipe JSONL on stdin)")
 		return 1
 	}
@@ -178,4 +179,3 @@ func countCandidateFamilies(issues []TriageIssue) int {
 	}
 	return len(seen)
 }
-

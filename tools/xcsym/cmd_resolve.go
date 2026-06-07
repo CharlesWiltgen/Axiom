@@ -40,14 +40,15 @@ func runResolve(out io.Writer, args []string) int {
 	arch := fs.String("arch", "", "architecture slice (arm64, arm64e, x86_64)")
 	load := fs.String("load-addr", "", "load address (required)")
 	human := fs.Bool("human", false, "human-readable output instead of JSON")
-	if err := fs.Parse(args); err != nil {
+	positionals, err := parseInterspersed(fs, args)
+	if err != nil {
 		return 1
 	}
 	if *dsym == "" || *load == "" {
 		fmt.Fprintln(os.Stderr, "resolve: --dsym and --load-addr are required")
 		return 1
 	}
-	if fs.NArg() == 0 {
+	if len(positionals) == 0 {
 		fmt.Fprintln(os.Stderr, "resolve: at least one address required")
 		return 1
 	}
@@ -56,7 +57,7 @@ func runResolve(out io.Writer, args []string) int {
 		return 2
 	}
 
-	syms, err := ResolveBatch(context.Background(), *dsym, *arch, *load, fs.Args())
+	syms, err := ResolveBatch(context.Background(), *dsym, *arch, *load, positionals)
 	if err != nil {
 		if IsTimeoutError(err) {
 			fmt.Fprintf(os.Stderr, "resolve: %v\n", err)
@@ -73,7 +74,7 @@ func runResolve(out io.Writer, args []string) int {
 		Arch:    *arch,
 		Load:    *load,
 	}
-	for i, addr := range fs.Args() {
+	for i, addr := range positionals {
 		s := syms[i]
 		result.Results = append(result.Results, resolveResult{
 			Address:      addr,

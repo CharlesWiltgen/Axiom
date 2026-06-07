@@ -51,16 +51,13 @@ func runCrash(out io.Writer, args []string) int {
 	outputPath := fs.String("output", "", "write JSON to this path instead of stdout")
 	filterMatch := fs.String("filter", "", "for .xccrashpoint inputs: pick the Filter_* dir whose name contains this substring (default: most-recent-mtime)")
 	preferLocallySymbolicated := fs.Bool("prefer-locally-symbolicated", false, "for .xccrashpoint inputs: pick Logs/LocallySymbolicated/*.crash instead of the raw Logs/*.crash (raw preserves original UUIDs for dSYM verify)")
-	if err := fs.Parse(args); err != nil {
+	positionals, err := parseInterspersed(fs, args)
+	if err != nil {
 		return 1
 	}
-	if fs.NArg() != 1 {
-		// Common footgun: "xcsym crash file.crash --no-symbolicate" stops
-		// flag parsing at the first positional, so the trailing flags
-		// become extra positionals and we land here. Tell the user how to
-		// rephrase rather than just complain about arg count.
-		if fs.NArg() > 1 {
-			fmt.Fprintln(os.Stderr, "crash: extra arguments after the crash file — place all --flags before the file path (e.g. `xcsym crash --no-symbolicate file.crash`)")
+	if len(positionals) != 1 {
+		if len(positionals) > 1 {
+			fmt.Fprintf(os.Stderr, "crash: exactly one crash file required (got %d)\n", len(positionals))
 			return 1
 		}
 		fmt.Fprintln(os.Stderr, "crash: exactly one crash file required (use '-' for stdin)")
@@ -74,9 +71,8 @@ func runCrash(out io.Writer, args []string) int {
 		return 1
 	}
 
-	path := fs.Arg(0)
+	path := positionals[0]
 	var data []byte
-	var err error
 	bundlePath := ""
 	if path == "-" {
 		data, err = io.ReadAll(os.Stdin)

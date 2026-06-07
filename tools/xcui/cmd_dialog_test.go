@@ -1,6 +1,35 @@
 package main
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
+
+// Argument-order independence (axiom-v9in): pregrant must accept --udid before
+// or after its positionals and yield identical results. This is xcui's per-tool
+// regression guard for the cross-tool standard.
+func TestParsePregrantArgsOrderIndependent(t *testing.T) {
+	before := []string{"--udid", "ABC123", "com.example.app", "camera", "photos"}
+	after := []string{"com.example.app", "camera", "photos", "--udid", "ABC123"}
+
+	bb, sb, ub, _, cb := parsePregrantArgs(before)
+	ba, sa, ua, _, ca := parsePregrantArgs(after)
+	if cb != 0 || ca != 0 {
+		t.Fatalf("both orders must succeed: before=%d after=%d", cb, ca)
+	}
+	if bb != ba || ub != ua || !reflect.DeepEqual(sb, sa) {
+		t.Errorf("order changed result: before(bundle=%q udid=%q svcs=%v) != after(bundle=%q udid=%q svcs=%v)", bb, ub, sb, ba, ua, sa)
+	}
+	if ba != "com.example.app" || ua != "ABC123" || !reflect.DeepEqual(sa, []string{"camera", "photos"}) {
+		t.Errorf("unexpected parse: bundle=%q udid=%q svcs=%v", ba, ua, sa)
+	}
+}
+
+func TestParsePregrantArgsRequiresBundleAndService(t *testing.T) {
+	if _, _, _, _, code := parsePregrantArgs([]string{"com.example.app"}); code != 2 {
+		t.Errorf("expected usage error (2) with no service, got %d", code)
+	}
+}
 
 // permissionAlert is a camera-permission dialog: an alert container with the
 // standard two-button "Don't Allow" / "Allow" layout (straight apostrophe).

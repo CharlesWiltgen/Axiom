@@ -234,24 +234,19 @@ func parseAnalyzeArgs(args []string) (string, analyzeOpts, int) {
 	dsym := fs.String("dsym", "", "path to a .dSYM bundle or Mach-O for symbolicating raw-address frames (default: auto-discover by UUID via Spotlight)")
 	open := fs.Bool("open", false, "after analysis, open the trace in Instruments.app")
 
-	if err := fs.Parse(args); err != nil {
+	positionals, err := parseInterspersed(fs, args)
+	if err != nil {
 		return "", analyzeOpts{}, 2
 	}
-	rest := fs.Args()
-	if len(rest) == 0 {
+	if len(positionals) == 0 {
 		fmt.Fprintln(os.Stderr, "analyze: usage: xcprof analyze <trace> [flags]")
 		return "", analyzeOpts{}, 2
 	}
-	trace := rest[0]
-	if len(rest) > 1 {
-		if err := fs.Parse(rest[1:]); err != nil {
-			return "", analyzeOpts{}, 2
-		}
-		if fs.NArg() > 0 {
-			fmt.Fprintf(os.Stderr, "analyze: unexpected extra argument %q (one trace only)\n", fs.Arg(0))
-			return "", analyzeOpts{}, 2
-		}
+	if len(positionals) > 1 {
+		fmt.Fprintf(os.Stderr, "analyze: unexpected extra argument %q (one trace only)\n", positionals[1])
+		return "", analyzeOpts{}, 2
 	}
+	trace := positionals[0]
 	opts := analyzeOpts{asJSON: *asJSON, both: *both, open: *open, startMS: *startMS, endMS: *endMS, hang: *hang, dsym: *dsym}
 	for _, h := range strings.Split(*userBinary, ",") {
 		if h = strings.TrimSpace(h); h != "" {

@@ -41,14 +41,15 @@ func runVerify(out io.Writer, args []string) int {
 	noCache := fs.Bool("no-cache", false, "skip the persistent UUID cache")
 	noDefaults := fs.Bool("no-defaults", false, "skip default dSYM search roots (Archives, DerivedData, Downloads); only --dsym, --dsym-paths, $XCSYM_DSYM_PATHS apply")
 	human := fs.Bool("human", false, "human-readable output instead of JSON")
-	if err := fs.Parse(args); err != nil {
+	positionals, err := parseInterspersed(fs, args)
+	if err != nil {
 		return 1
 	}
-	if fs.NArg() != 1 {
+	if len(positionals) != 1 {
 		fmt.Fprintln(os.Stderr, "verify: exactly one crash file required")
 		return 1
 	}
-	path := fs.Arg(0)
+	path := positionals[0]
 
 	data, err := os.ReadFile(path)
 	if err != nil {

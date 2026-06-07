@@ -33,18 +33,9 @@ func parseCompareArgs(args []string) (string, string, compareOpts, int) {
 	threshold := fs.Float64("threshold-pct", 5.0, "inclusive CPU-share increase (percentage points) counted as a regression")
 	dsym := fs.String("dsym", "", "path to a .dSYM/Mach-O for symbolicating both traces (default: auto-discover by UUID)")
 
-	var positionals []string
-	rest := args
-	for {
-		if err := fs.Parse(rest); err != nil {
-			return "", "", compareOpts{}, 2
-		}
-		rest = fs.Args()
-		if len(rest) == 0 {
-			break
-		}
-		positionals = append(positionals, rest[0])
-		rest = rest[1:]
+	positionals, err := parseInterspersed(fs, args)
+	if err != nil {
+		return "", "", compareOpts{}, 2
 	}
 	if len(positionals) > 2 {
 		fmt.Fprintf(os.Stderr, "compare: unexpected extra argument %q (two traces only: <baseline> <current>)\n", positionals[2])
