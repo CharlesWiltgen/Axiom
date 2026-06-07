@@ -23,7 +23,7 @@ xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's lega
 - **Inventorying local dSYMs** — `list-dsyms` enumerates archives + DerivedData
 - **Scrubbing a user's crash for a fixture** — `anonymize` preserves dSYM UUIDs (correlation keys) while scrubbing PII
 
-**Do not use for hangs.** `xcsym crash` rejects `.ips` files with `bug_type=298` (hangs have a different workflow; see `axiom-performance` skills).
+**Do not use `xcsym crash` for hangs.** `crash` rejects `.ips` files with `bug_type=298` (exit 1, `"error":"hang_report"` on stdout). Use `xcsym triage` with `kind: "hang"` in the NormalizedReport for hang classification, or see `axiom-performance (skills/hang-diagnostics.md)` for single-hang investigation.
 
 ## Critical Best Practices
 
@@ -113,6 +113,31 @@ xcsym list-dsyms --source=env
 xcsym list-dsyms --source=all           # default
 xcsym list-dsyms --dsym-paths <a>:<b>
 ```
+
+### triage — Corpus Classification
+
+```bash
+xcsym triage < corpus.jsonl                                    # read NormalizedReport JSONL from stdin
+xcsym triage corpus.jsonl                                      # or from a file
+xcsym triage --latest-version 2.1.1 < corpus.jsonl            # flag issues older than this version
+xcsym triage --os-floor 18.0 < corpus.jsonl                   # flag issues below this OS floor
+xcsym triage --min-users 5 < corpus.jsonl                     # flag issues with fewer affected users
+xcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 < corpus.jsonl  # all thresholds
+```
+
+Input: one NormalizedReport JSON object per line (JSONL). Each report describes one grouped issue from Sentry or App Store Connect — `provider`, `issue_id`, `kind` (`crash` or `hang`), `impact`, `threads[]` with `frames[]` where each frame carries `in_app`. See `axiom-shipping (skills/production-triage.md)` for the full schema and provider fetch workflow.
+
+Output: a single TriageResult JSON object to stdout with:
+- `summary` — total/crashes/hangs/skipped/clusters/flagged_noise/candidate_families
+- `issues[]` — per-issue `pattern_tag`, `noise_flags[]`, `cluster_key`, `cluster_confidence`, `top_frames`
+- `clusters[]` — mechanical groupings by signature with `total_users`/`total_events`
+- `errors[]` — malformed or unclassifiable reports (run still exits 0)
+
+**Network-free.** No symbolication, no dSYM discovery, no `atos`, no environment capture. Provider-symbolicated frames arrive via the NormalizedReport.
+
+**Accepts hangs.** Unlike `xcsym crash`, `triage` accepts `kind: "hang"` and classifies them with `anr_idle_runloop` / `anr_main_thread_block` tags. The `noise.anr_suspension.v1` rule automatically flags idle-runloop hangs as likely background suspension false-positives.
+
+**Exit codes:** 0 = success (including "some reports skipped" — see `errors[]`); 1 = usage error / unreadable stream / invalid flags; 8 = output write error. Never non-zero for "found noise."
 
 ### anonymize — Scrub PII for Fixtures
 
@@ -300,8 +325,8 @@ Source: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact or
 
 ## Resources
 
-**Skills**: axiom-tools (skills/xclog-ref.md), axiom-build (skills/lldb.md, skills/lldb-ref.md, skills/xcode-debugging.md), axiom-performance (skills/memory-debugging.md, skills/metrickit-ref.md, skills/hang-diagnostics.md), axiom-shipping (skills/testflight-triage.md, skills/app-store-diag.md, skills/app-store-submission.md)
+**Skills**: axiom-tools (skills/xclog-ref.md), axiom-build (skills/lldb.md, skills/lldb-ref.md, skills/xcode-debugging.md), axiom-performance (skills/memory-debugging.md, skills/metrickit-ref.md, skills/hang-diagnostics.md), axiom-shipping (skills/testflight-triage.md, skills/production-triage.md, skills/app-store-diag.md, skills/app-store-submission.md)
 
-**Agents**: crash-analyzer (interprets xcsym JSON with pattern_tag → fix guidance), simulator-tester (auto-runs xcsym on crashes during test runs), test-failure-analyzer + test-debugger (symbolicate test-generated `.ips` artifacts), memory-auditor (correlates jetsam/heap-corruption tags with leak patterns), concurrency-auditor (correlates `swift_concurrency_violation` with @MainActor gaps), energy-auditor (correlates CPU/watchdog/background terminations with energy anti-patterns)
+**Agents**: crash-analyzer (single crash file: xcsym crash + pattern_tag → fix guidance), triage-analyzer (corpus triage: fetch Sentry/ASC → xcsym triage → ranked report), simulator-tester (auto-runs xcsym on crashes during test runs), test-failure-analyzer + test-debugger (symbolicate test-generated `.ips` artifacts), memory-auditor (correlates jetsam/heap-corruption tags with leak patterns), concurrency-auditor (correlates `swift_concurrency_violation` with @MainActor gaps), energy-auditor (correlates CPU/watchdog/background terminations with energy anti-patterns)
 
-**Commands**: `/axiom:analyze-crash`
+**Commands**: `/axiom:analyze-crash` (single crash), `/axiom:triage` (corpus triage)

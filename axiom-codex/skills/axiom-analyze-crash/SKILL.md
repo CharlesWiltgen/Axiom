@@ -165,16 +165,19 @@ Exit 6 is environmental, not a bug in the crash file — don't ask the user for 
 ## When to Escalate
 
 Report to user and stop if:
-- xcsym stdout contains `"error":"hang_report"` (exit 1) — the input is a hang, not a crash; redirect to hang-diagnostics skill
+- xcsym stdout contains `"error":"hang_report"` (exit 1) — the input is a hang, not a crash; redirect to hang-diagnostics skill for single-hang investigation, or `triage-analyzer` for corpus/aggregate hang analysis
 - Exit code is non-zero *and* the pattern tag is `unclassified` — the rule engine gave up; raw output is the best the tool can do
 - Crash file is truncated or unparseable — ask for a complete file
+- The user has **multiple grouped issues** from Sentry or App Store Connect (dozens of crashes, a corpus) rather than a single crash file — route to `triage-analyzer` agent or `/axiom:triage` instead; this agent handles one crash at a time
 
 ## Related
 
 - `axiom-tools (skills/xcsym-ref.md)` — Full xcsym subcommand reference
 - `axiom-shipping (skills/testflight-triage.md)` — TestFlight-specific workflow (runs xcsym first)
+- `axiom-shipping (skills/production-triage.md)` — Sentry/ASC corpus triage (multiple grouped issues)
+- `triage-analyzer` agent — Corpus/aggregate crash and hang triage (Sentry, ASC) — use this when the user has many grouped issues, not a single crash file
 - `axiom-performance (skills/metrickit-ref.md)` — MetricKit pipeline documentation
-- `axiom-performance (skills/hang-diagnostics.md)` — For `bug_type=298` hangs (xcsym rejects these)
+- `axiom-performance (skills/hang-diagnostics.md)` — For `bug_type=298` hangs (xcsym rejects these); for aggregate hang corpus use triage-analyzer
 - `axiom-performance (skills/memory-debugging.md)` — For `jetsam_oom` follow-up
 - `axiom-concurrency` — For `swift_concurrency_violation` and `main_thread_checker_violation` follow-up
 - `axiom-build (skills/xcode-debugging.md)` — For build/environment issues

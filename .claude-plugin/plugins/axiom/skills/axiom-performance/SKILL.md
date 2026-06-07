@@ -71,6 +71,12 @@ Use this router when:
 - 8 common hang patterns with fixes
 - Watchdog terminations
 
+**Corpus/aggregate hang triage (Sentry, ASC)** → `axiom-shipping (skills/production-triage.md)` + `triage-analyzer` agent
+- Multiple grouped hang reports from an aggregator, not a single .ips file
+- Classify `anr_idle_runloop` vs `anr_main_thread_block` across the corpus
+- Flag suspension/idle-runloop false-positives (the #1 hang by user count is often noise)
+- Cluster into root-cause families and rank by impact
+
 ### App Launch
 
 **Slow app launch** → See skills/app-launch.md
@@ -169,6 +175,7 @@ Use this router when:
    - YES → hang-diagnostics (busy vs blocked diagnosis)
    - NO, just slow → performance-profiling (Time Profiler)
    - First launch only? → Also check for synchronous I/O or lazy initialization in hang-diagnostics
+   - Multiple grouped hang reports from Sentry/ASC (corpus, not single file)? → `axiom-shipping (skills/production-triage.md)` + `triage-analyzer`
 5. Slowdown when multiple async operations complete at once? → Cross-route to `axiom-concurrency` (callback contention, not profiling)
 6. Slow app launch / slow first frame / launch regression / slow after push tap? → app-launch
 7. Battery drain (know the symptom)? → energy-diag
@@ -275,6 +282,9 @@ User: "The UI freezes and becomes unresponsive"
 
 User: "Main thread is blocked, how do I diagnose?"
 → See skills/hang-diagnostics.md
+
+User: "Triage my Sentry hangs" / "Which ANR reports are real blocks?"
+→ See `axiom-shipping (skills/production-triage.md)` + `triage-analyzer` agent (or `/axiom:triage sentry`)
 
 User: "My app takes 3 seconds to launch"
 → See skills/app-launch.md

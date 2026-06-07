@@ -49,6 +49,7 @@ Use this skill when you encounter:
 | TestFlight crash reports | See `skills/app-store-connect-ref.md` |
 | ASC metrics dashboards | See `skills/app-store-connect-ref.md` |
 | Beta tester crash report | See `skills/testflight-triage.md` |
+| Production corpus triage (Sentry, ASC — multiple grouped issues) | See `skills/production-triage.md` + `triage-analyzer` agent or `/axiom:triage` |
 | Crash log symbolication (.ips / MetricKit / .crash) | See axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`; `skills/testflight-triage.md` for the full TF workflow |
 | Automate App Store Connect | See `skills/asc-mcp.md` |
 | Submit build programmatically | See `skills/asc-mcp.md` |
@@ -204,11 +205,27 @@ Use this skill when you encounter:
 - Beta tester reports a crash
 - Crash appears in Organizer or App Store Connect
 - Crash logs need symbolication
-- Post-release crash investigation
+- Post-release crash investigation (single file or Organizer)
 
 **Why testflight-triage**: Systematic crash triage from symbolication through root cause analysis. Uses `xcsym` as the first step (parse → discover dSYMs → symbolicate → categorize with `pattern_tag` → emit structured JSON).
 
 **Reference**: `skills/testflight-triage.md`. For the xcsym subcommand/exit-code reference, see axiom-tools (skills/xcsym-ref.md). For the one-call agent workflow, `/axiom:analyze-crash`.
+
+---
+
+### 10a. Production Corpus Triage → **production-triage** / **triage-analyzer**
+
+**Triggers**:
+- "Triage my Sentry crashes"
+- "What are the top crash families in production?"
+- "Show me which issues to fix first from App Store Connect"
+- Multiple grouped issues from an aggregator (Sentry, ASC) — dozens of issues, not a single file
+- "Which of these crashes are real bugs vs noise?"
+- Corpus-level hang triage ("Are my ANR reports real blocks?")
+
+**Why production-triage**: Corpus-level triage requires fetching from an aggregator, classifying each issue, noise-flagging suspension false-positives, and clustering into root-cause families. `testflight-triage` covers the Organizer/single-file path; `production-triage` covers the aggregate/multi-issue path.
+
+**Reference**: `skills/production-triage.md` (fetch + NormalizedReport schema + flag-never-hide rule). **Agent**: `triage-analyzer` or `/axiom:triage sentry` / `/axiom:triage asc`.
 
 ---
 
@@ -297,15 +314,16 @@ Simplified:
 
 1. App was rejected? → `skills/app-store-diag.md`
 2. Post-submission crash data/metrics? → `skills/app-store-connect-ref.md`
-3. Beta crash triage/symbolication? → `skills/testflight-triage.md`
-4. Automate ASC via MCP tools? → `skills/asc-mcp.md`
-5. Validate screenshots? → `screenshot-validator` (Agent)
-6. Need specific metadata/guideline specs? → `skills/app-store-ref.md`
-7. IAP submission issue? → `iap-auditor` (Agent)
-8. Want pre-submission code scan? → `security-privacy-scanner` (Agent)
-9. ITMS signing/certificate/profile error on upload? → See axiom-security (skills/code-signing-diag.md)
-10. General submission preparation? → `skills/app-store-submission.md`
-11. App Clip (size tiers, invocation, AASA, data handoff)? → `skills/app-clips.md`, `skills/app-clips-ref.md`
+3. Beta crash triage/symbolication (Organizer or single file)? → `skills/testflight-triage.md`
+4. Production corpus triage (Sentry/ASC, multiple grouped issues)? → `skills/production-triage.md` + `triage-analyzer` agent
+5. Automate ASC via MCP tools? → `skills/asc-mcp.md`
+6. Validate screenshots? → `screenshot-validator` (Agent)
+7. Need specific metadata/guideline specs? → `skills/app-store-ref.md`
+8. IAP submission issue? → `iap-auditor` (Agent)
+9. Want pre-submission code scan? → `security-privacy-scanner` (Agent)
+10. ITMS signing/certificate/profile error on upload? → See axiom-security (skills/code-signing-diag.md)
+11. General submission preparation? → `skills/app-store-submission.md`
+12. App Clip (size tiers, invocation, AASA, data handoff)? → `skills/app-clips.md`, `skills/app-clips-ref.md`
 
 #### Platform-specific submission
 - watchOS 26 SDK requirement, 64-bit, independent-app submission → See axiom-watchos (skills/platform-basics.md)
@@ -398,6 +416,15 @@ User: "Check my App Store screenshots in ~/Screenshots"
 
 User: "Are my screenshots the right dimensions?"
 → Launch `screenshot-validator` agent
+
+User: "Triage my Sentry crashes"
+→ Launch `triage-analyzer` agent (or `/axiom:triage sentry`)
+
+User: "What are the top crash families in production right now?"
+→ Launch `triage-analyzer` agent (or `/axiom:triage sentry`)
+
+User: "Show me which ASC issues to fix first"
+→ Launch `triage-analyzer` agent (or `/axiom:triage asc`)
 
 User: "How do I find crash data in App Store Connect?"
 → See `skills/app-store-connect-ref.md`
