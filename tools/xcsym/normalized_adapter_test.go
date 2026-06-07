@@ -48,6 +48,17 @@ func TestBuildRawCrash_CrashedThreadFallback(t *testing.T) {
 	}
 }
 
+func TestBuildRawCrash_PrefersCrashedFlagOverDefaultIndex(t *testing.T) {
+	r := &NormalizedReport{Kind: "crash", Threads: []NRThread{
+		{Index: 3, Crashed: true, Frames: []NRFrame{{Image: "App", Symbol: "boom", InApp: true}}},
+		{Index: 0, Crashed: false, Frames: []NRFrame{{Image: "CoreFoundation", Symbol: "x"}}},
+	}}
+	raw := buildRawCrashFromNormalizedReport(r)
+	if raw.CrashedIdx != 0 {
+		t.Fatalf("CrashedIdx = %d, want 0 (Crashed-flagged thread wins over default Index 0)", raw.CrashedIdx)
+	}
+}
+
 func TestNormalizeTerminationCode(t *testing.T) {
 	cases := map[string]string{
 		"0xDEAD10CC": "0xdead10cc",

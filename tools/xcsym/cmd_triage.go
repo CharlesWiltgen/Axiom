@@ -60,8 +60,10 @@ func runTriageWithStdin(out io.Writer, args []string, in io.Reader) int {
 }
 
 func runTriageCore(out io.Writer, in io.Reader, th Thresholds) int {
-	// Initialize slices so empty output marshals as [] not null (JSON consumers
-	// index these). Errors keeps omitempty but is initialized for symmetry.
+	// Initialize Issues and Clusters so empty output marshals as [] not null
+	// (they have no omitempty — JSON consumers index these). Errors has omitempty
+	// and is absent from output when empty; it is initialized here only for
+	// uniform appends (no nil-check needed at each append site).
 	res := TriageResult{
 		Tool: "xcsym", Subcommand: "triage", Version: version,
 		Issues:   []TriageIssue{},
@@ -158,7 +160,9 @@ func topFrameStrings(raw *RawCrash, n int) []string {
 		if i >= n {
 			break
 		}
-		out = append(out, strings.TrimSpace(f.Image+" "+f.Symbol))
+		if sig := strings.TrimSpace(f.Image + " " + f.Symbol); sig != "" {
+			out = append(out, sig) // skip frames with neither image nor symbol
+		}
 	}
 	return out
 }
