@@ -28,7 +28,7 @@ type TriageIssue struct {
 	Impact            NRImpact     `json:"impact"`
 	PatternTag        string       `json:"pattern_tag"`
 	PatternConfidence string       `json:"pattern_confidence"`
-	RuleID            string       `json:"rule_id,omitempty"`
+	RuleID            string       `json:"pattern_rule_id,omitempty"`
 	ClusterKey        string       `json:"cluster_key"`
 	ClusterConfidence string       `json:"cluster_confidence,omitempty"`
 	NoiseFlags        []NoiseFlag  `json:"noise_flags"`
