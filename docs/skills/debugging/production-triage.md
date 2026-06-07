@@ -42,8 +42,8 @@ Questions you can ask Claude that will draw from this skill:
 - Correlating ASC crash groups with xcsym `pattern_tag` output
 
 ### Suspension and Idle-Runloop Noise Classification
-- Identifying `0x8badf00d` (watchdog) events triggered by OS background suspension — not a code bug
-- Detecting idle-runloop terminations that inflate crash counts without representing true failures
+- Recognizing idle-runloop hangs (`anr_idle_runloop`) — the app was parked in its runloop, not truly blocked — which `noise.anr_suspension.v1` ranks as noise
+- Separating those from real main-thread blocks (`anr_main_thread_block`) and watchdog terminations (`0x8badf00d`), which are genuine responsiveness failures and are never flagged as noise
 - Flag-never-hide policy: noise is surfaced in the report as "noise" so you can decide, not silently dropped
 
 ### Crash Family Clustering

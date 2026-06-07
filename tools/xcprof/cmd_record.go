@@ -556,6 +556,14 @@ func runRecord(out io.Writer, args []string) int {
 		rep.Notes = append(rep.Notes,
 			"xctrace returned a non-zero exit ("+runErr.Error()+") but the trace was saved; this is expected when a launched target is terminated at the time limit")
 	}
+	// A saved bundle can still be unfinalized (interrupted recording) or
+	// memory/energy-only, so `export --toc` — the same probe analyze uses —
+	// finds nothing to export. Surface that honestly rather than let a bare
+	// ok:true imply a trace the rest of the toolchain can read.
+	if _, terr := exportTOC(ctx, outPath); isMissingExportableTables(terr) {
+		rep.Notes = append(rep.Notes,
+			"the saved trace has no xctrace-exportable tables (interrupted/unfinalized recording, or a memory/energy-only capture); `xcprof analyze` can't read it — open it in Instruments.app")
+	}
 	if o.open {
 		_, _ = ExecRun(ctx, 0, "open", outPath)
 	}

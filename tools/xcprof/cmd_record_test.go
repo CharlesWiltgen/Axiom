@@ -372,6 +372,7 @@ func TestRunRecordTraceSavedDespiteNonZeroExit(t *testing.T) {
 		}
 		return ExecResult{}, fmt.Errorf("xcrun: exit status 54: ") // xctrace's killed-child status
 	}
+	stubExportableTOC(t) // the saved bundle is finalized; the post-record probe finds tables
 
 	var buf bytes.Buffer
 	code := runRecord(&buf, []string{"--preset", "cpu", "--allow-launch", "--time-limit", "1s", "--", "/usr/bin/true"})
@@ -404,6 +405,7 @@ func TestRunRecordTimeoutFlagsIncompleteTrace(t *testing.T) {
 		}
 		return ExecResult{}, &TimeoutError{Cmd: "xcrun", Timeout: timeout}
 	}
+	stubExportableTOC(t)
 
 	var buf bytes.Buffer
 	code := runRecord(&buf, []string{"--preset", "cpu", "--attach", "MyApp"})
@@ -470,6 +472,80 @@ func TestRunRecordRefusesExistingTrace(t *testing.T) {
 	}
 	if called {
 		t.Error("xctrace must not be invoked when the output trace already exists")
+	}
+}
+
+// stubExportableTOC makes the post-record export-toc probe succeed, so a test
+// that only exercises the recording path doesn't shell out to real xcrun.
+func stubExportableTOC(t *testing.T) {
+	t.Helper()
+	orig := exportTOC
+	t.Cleanup(func() { exportTOC = orig })
+	exportTOC = func(context.Context, string) ([]byte, error) {
+		return []byte("<trace-toc></trace-toc>"), nil
+	}
+}
+
+// A bundle that saved but can't be exported (interrupted/unfinalized, or
+// memory/energy-only) stays ok:true — it opens in Instruments — but record must
+// flag it so a bare ok:true never implies a trace `xcprof analyze` can read.
+func TestRunRecordFlagsUnfinalizedTrace(t *testing.T) {
+	t.Setenv("XCPROF_TRACE_ROOT", t.TempDir())
+	origCmd := runRecordCmd
+	t.Cleanup(func() { runRecordCmd = origCmd })
+	runRecordCmd = func(_ context.Context, _ time.Duration, argv []string) (ExecResult, error) {
+		if err := os.MkdirAll(outputPathFromArgv(argv), 0o755); err != nil { // bundle exists...
+			t.Fatal(err)
+		}
+		return ExecResult{}, nil // ...and xctrace exited cleanly
+	}
+	origTOC := exportTOC
+	t.Cleanup(func() { exportTOC = origTOC })
+	exportTOC = func(context.Context, string) ([]byte, error) {
+		return nil, fmt.Errorf("xcrun: exit status 10: Export failed: Document Missing Template Error")
+	}
+
+	var buf bytes.Buffer
+	code := runRecord(&buf, []string{"--preset", "cpu", "--attach", "MyApp"})
+	if code != 0 {
+		t.Fatalf("exit = %d, want 0 (the bundle was written); output: %s", code, buf.String())
+	}
+	var rep RecordReport
+	if err := json.Unmarshal(buf.Bytes(), &rep); err != nil {
+		t.Fatalf("invalid JSON: %v\n%s", err, buf.String())
+	}
+	if !rep.OK {
+		t.Errorf("ok should stay true — the trace was saved and opens in Instruments: %+v", rep)
+	}
+	if joined := strings.Join(rep.Notes, " "); !strings.Contains(joined, "no xctrace-exportable tables") {
+		t.Errorf("an unfinalized trace must be flagged in notes, got notes %v", rep.Notes)
+	}
+}
+
+// The probe must not cry wolf: a finalized, exportable trace gets no such note.
+func TestRunRecordExportableTraceHasNoUnfinalizedNote(t *testing.T) {
+	t.Setenv("XCPROF_TRACE_ROOT", t.TempDir())
+	origCmd := runRecordCmd
+	t.Cleanup(func() { runRecordCmd = origCmd })
+	runRecordCmd = func(_ context.Context, _ time.Duration, argv []string) (ExecResult, error) {
+		if err := os.MkdirAll(outputPathFromArgv(argv), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		return ExecResult{}, nil
+	}
+	stubExportableTOC(t)
+
+	var buf bytes.Buffer
+	code := runRecord(&buf, []string{"--preset", "cpu", "--attach", "MyApp"})
+	if code != 0 {
+		t.Fatalf("exit = %d, want 0; output: %s", code, buf.String())
+	}
+	var rep RecordReport
+	if err := json.Unmarshal(buf.Bytes(), &rep); err != nil {
+		t.Fatalf("invalid JSON: %v\n%s", err, buf.String())
+	}
+	if joined := strings.Join(rep.Notes, " "); strings.Contains(joined, "exportable tables") {
+		t.Errorf("a finalized, exportable trace must not be flagged, got notes %v", rep.Notes)
 	}
 }
 

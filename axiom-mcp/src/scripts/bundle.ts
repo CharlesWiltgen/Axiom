@@ -11,7 +11,7 @@
  *   node scripts/bundle.js /path/to/plugin
  */
 
-import { readdir, readFile, writeFile, mkdir, stat } from 'fs/promises';
+import { readdir, readFile, writeFile, mkdir, stat, copyFile, chmod } from 'fs/promises';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, Skill, Command, Agent, SkillAnnotations } from '../loader/parser.js';
@@ -183,6 +183,28 @@ export function computeBundleStats(bundle: BundleV2): BundleStats {
   };
 }
 
+/**
+ * Copy the bundled xcprof binary into dist/bin so the published npm package
+ * (which only ships dist/) can run it for non-Claude-Code MCP clients. The
+ * binary is a macOS universal binary; on other platforms the MCP tool reports
+ * that xcprof is unavailable rather than failing here.
+ */
+async function copyXcprofBinary(pluginPath: string, outputDir: string): Promise<void> {
+  const src = join(pluginPath, 'bin', 'xcprof');
+  const destDir = join(outputDir, 'bin');
+  const dest = join(destDir, 'xcprof');
+  try {
+    const info = await stat(src);
+    await mkdir(destDir, { recursive: true });
+    await copyFile(src, dest);
+    await chmod(dest, 0o755);
+    console.log(`Copied xcprof binary (${(info.size / 1024 / 1024).toFixed(1)} MB) to ${dest}`);
+  } catch (err) {
+    console.warn(`Warning: xcprof binary not copied from ${src}: ${(err as Error).message}. ` +
+      `The published package will not expose the axiom_xcprof_* MCP tools until it is rebuilt with the binary present.`);
+  }
+}
+
 async function main() {
   const pluginPath = process.argv[2] || join(process.cwd(), '../.claude-plugin/plugins/axiom');
   const outputDir = join(process.cwd(), 'dist');
@@ -228,6 +250,8 @@ async function main() {
     console.log(`  Search Index: ${(bundleStats.searchIndex.bytes / 1024).toFixed(1)} KB`);
     console.log(`  Total:        ${(bundleStats.totalBytes / 1024).toFixed(1)} KB`);
     console.log(`Stats written to: ${statsPath}`);
+
+    await copyXcprofBinary(pluginPath, outputDir);
 
   } catch (error) {
     console.error('Error generating bundle:', error);

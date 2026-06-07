@@ -272,8 +272,8 @@ Every `pattern_tag` xcsym can emit, with the rule that fires it:
 |---|---|---|---|
 | `swift_forced_unwrap` | R-swift-unwrap-01 | high | Subtype contains "unexpectedly found nil..." |
 | `swift_concurrency_violation` | R-swift-conc-01 | high | `_swift_task_isCurrentExecutor` in subtype |
-| `swift_fatal_error` | R-swift-fatal-01 | high | Swift runtime failure + `swift_preconditionFailure` or `fatalError` sentinel frame |
-| `zombie_or_heap_corruption` | R-zombie-01 | heuristic | `_NSZombie_*` frame or poison-pattern address |
+| `swift_fatal_error` | R-swift-fatal-01 | high | Swift runtime failure + `_fatalError` / `_preconditionFailure` / `_assertionFailure` sentinel frame |
+| `zombie_or_heap_corruption` | R-zombie-01 | heuristic | `libgmalloc` / `NSZombie` image in the crashed thread |
 | `stack_overflow` | R-stack-overflow-01 | heuristic | `KERN_PROTECTION_FAILURE` with fault within 1 page of SP |
 | `bad_memory_access` | R-bad-access-01 | high | `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS` |
 | `illegal_instruction` | R-illegal-inst-01 | high | `EXC_BAD_INSTRUCTION` |

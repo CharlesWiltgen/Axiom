@@ -169,7 +169,7 @@ For instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), repor
 
 ## Comparison (before / after)
 
-`xcprof compare` is a later phase. For now, record a baseline and a current trace, `analyze --json` both, and compare `user_frames[].inclusive_ms` / `inclusive_pct` between the two by hand to spot regressions.
+Use `xcprof compare <baseline> <current> --json` to diff two traces. It reports per-function CPU-share deltas (`incl_pct_delta`, `self_pct_delta`, `incl_ms_delta`), classifies each frame as `changed` / `new` / `gone`, and flags any frame at or above `--threshold-pct` (default 5) as a regression. Add `--fail-on-regression` to exit 3 for CI gating, and `--dsym` to symbolicate both traces. Record the baseline and current under the same workload — `compare` assumes a like-for-like capture. See `/axiom:compare-traces` and `axiom-performance (skills/trace-comparison.md)`.
 
 ## Error handling
 
@@ -191,7 +191,8 @@ For instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), repor
 
 ## Related
 
-- `axiom-tools (skills/xcprof-ref.md)` — the `xcprof` CLI reference (record/analyze/doctor, presets, gates)
+- `axiom-tools (skills/xcprof-ref.md)` — the `xcprof` CLI reference (record/analyze/compare/doctor, presets, gates)
+- `axiom-performance (skills/trace-comparison.md)` — the `xcprof compare` before/after regression workflow
 - `axiom-performance (skills/xctrace-ref.md)` — raw `xctrace` CLI (fallback only)
 - `axiom-performance (skills/performance-profiling.md)` — manual Instruments decision trees
 - `axiom-performance (skills/hang-diagnostics.md)` — confirm main-thread hangs the CPU signal only flags

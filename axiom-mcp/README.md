@@ -1,12 +1,13 @@
 # Axiom MCP Server
 
-Model Context Protocol (MCP) server for Axiom's iOS development skills, agents, and commands. Enables cross-platform access to Axiom's battle-tested guidance in any MCP-compatible AI coding tool.
+Model Context Protocol (MCP) server for Axiom's Apple-platform development skills, agents, commands, and bundled CLI tools. Enables cross-platform access to Axiom's battle-tested guidance in any MCP-compatible AI coding tool.
 
 ## Features
 
-- **133 Skills** — iOS development expertise as MCP Resources (on-demand loading)
-- **10 Commands** — Structured prompts as MCP Prompts
-- **31 Agents** — Autonomous tools as MCP Tools
+- **Skills** — Apple-platform (iOS, iPadOS, macOS, watchOS, tvOS) development expertise as MCP Resources (on-demand loading)
+- **Commands** — Structured prompts as MCP Prompts
+- **Agents** — Autonomous auditors, retrievable as MCP Tools
+- **Profiling tools** — the bundled `xcprof` CLI exposed as MCP Tools (macOS + Xcode)
 - **Dual Distribution** — Works standalone or bundled with Claude Code plugin
 - **Hybrid Runtime** — Development mode (live files) or production mode (bundled)
 
@@ -106,6 +107,8 @@ args = ["-y", "axiom-mcp"]
 | `AXIOM_MCP_MODE` | `development`, `production` | `production` | Runtime mode |
 | `AXIOM_DEV_PATH` | File path | — | Plugin directory for dev mode |
 | `AXIOM_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `info` | Logging verbosity |
+| `AXIOM_XCPROF_PATH` | File path | bundled binary | Override the `xcprof` binary the profiling tools invoke |
+| `AXIOM_XCPROF_TIMEOUT` | Seconds | `300` | Per-invocation ceiling for `xcprof` calls (raise for long recordings) |
 
 ### Modes
 
@@ -128,7 +131,7 @@ npx axiom-mcp
 ```
 
 - Reads pre-bundled snapshot from `dist/bundle.json`
-- Bundle contains all 133 skills, 10 commands, 31 agents
+- Bundle contains the full Axiom skill, command, and agent set
 - No file system access after initialization
 - Self-contained, distributed via npm
 
@@ -182,6 +185,26 @@ Examples:
   }]
 }
 ```
+
+## MCP Tools
+
+Beyond the read-only skill-lookup tools (`axiom_get_catalog`, `axiom_search_skills`, `axiom_read_skill`, `axiom_get_agent`), the server wraps the bundled **`xcprof`** profiler so non-Claude-Code clients get the same Instruments workflow. These tools shell out to a macOS universal binary shipped inside the package (`dist/bin/xcprof`).
+
+**Requires macOS with Xcode installed.** `xcprof` drives `xctrace`, which is macOS-only — on other platforms the tools return an explanatory message instead of running.
+
+| Tool | What it does | Read-only |
+|------|--------------|-----------|
+| `axiom_xcprof_doctor` | Verify `xctrace`; count Instruments templates + devices | yes |
+| `axiom_xcprof_analyze` | Analyze an existing `.trace` → structured CPU/hang/network JSON | yes |
+| `axiom_xcprof_compare` | Diff two traces (baseline vs current) for regression detection | yes |
+| `axiom_xcprof_record` | Capture a new `.trace` by attaching to, launching, or system-wide profiling | **no** |
+
+**`record` is the only side-effecting tool.** It defaults to attaching to a process and always runs non-interactively (`--no-prompt`). Its higher-risk modes stay gated, mirroring the CLI's ADR-002 security gates:
+
+- Launching a process (`launch`) requires `allowLaunch: true`.
+- System-wide capture (`allProcesses`) requires `allowAllProcesses: true`.
+
+Without those explicit flags the binary refuses the operation. Recordings are always duration-bounded.
 
 ## Development
 
