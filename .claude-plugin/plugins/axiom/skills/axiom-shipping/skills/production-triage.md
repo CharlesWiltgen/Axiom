@@ -226,7 +226,7 @@ Hang events do not carry an `exception` or `termination` block — those fields 
 | Field | Meaning |
 |---|---|
 | `pattern_tag` | Crash/hang category from the rule engine (see table below) |
-| `pattern_confidence` | `high`, `medium`, or `low` — how certain the rule engine is |
+| `pattern_confidence` | `high`, `heuristic`, or `low` — how certain the crash/hang rule engine is (`heuristic` = pattern matched but evidence is indirect) |
 | `pattern_rule_id` | The classification rule that fired (e.g., `R-swift-unwrap-01`, `H-idle-runloop-01`) |
 | `cluster_key` | Mechanical signature grouping this issue with similar ones |
 | `cluster_confidence` | `high` = top app frames; `low` = system-frame fallback (treat as a bag, not a cluster) |
@@ -235,6 +235,8 @@ Hang events do not carry an `exception` or `termination` block — those fields 
 | `top_frames` | Top 5 frames of the crashed thread, as `"image symbol"` strings |
 
 `pattern_rule_id` and `noise_flags[].rule_id` are two separate fields at different nesting levels. `pattern_rule_id` (top-level on each issue) names the classification rule that matched the crash/hang pattern. Each element of `noise_flags[]` carries its own `rule_id` naming the noise rule that fired (e.g., `noise.anr_suspension.v1`). Do not conflate them.
+
+`pattern_confidence` and `noise_flags[].confidence` use **different vocabularies**. `pattern_confidence` values are `high`, `heuristic`, or `low` (crash/hang engine). `noise_flags[].confidence` values are `high`, `medium`, or `low` (noise engine — e.g., `single_os_eol` emits `medium`).
 
 ### Noise-class table
 
