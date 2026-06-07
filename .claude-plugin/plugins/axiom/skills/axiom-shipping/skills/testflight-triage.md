@@ -1,6 +1,8 @@
 
 # TestFlight Crash & Feedback Triage
 
+> **Sentry or App Store Connect corpus triage?** This skill covers the Xcode Organizer workflow — a single crash file or a TestFlight feedback session. For triage of multiple grouped production issues from Sentry or ASC aggregates (dozens of issues, corpus-level), use `axiom-shipping (skills/production-triage.md)` and the `triage-analyzer` agent (`/axiom:triage`).
+
 ## First Step: Run xcsym
 
 When a TestFlight crash comes in (downloaded from App Store Connect), run:
