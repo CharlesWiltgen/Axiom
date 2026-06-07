@@ -6,12 +6,12 @@ import (
 )
 
 const (
-	FormatIPSv1       = "ips_json_v1"
-	FormatIPSv2       = "ips_json_v2"
-	FormatMetricKit   = "metrickit_json"
-	FormatAppleCrash  = "apple_crash_text"
-	FormatUnknown     = "unknown"
-	FormatNormalized  = "normalized_report"
+	FormatIPSv1      = "ips_json_v1"
+	FormatIPSv2      = "ips_json_v2"
+	FormatMetricKit  = "metrickit_json"
+	FormatAppleCrash = "apple_crash_text"
+	FormatUnknown    = "unknown"
+	FormatNormalized = "normalized_report"
 )
 
 // DetectFormat inspects crash data to determine its format.

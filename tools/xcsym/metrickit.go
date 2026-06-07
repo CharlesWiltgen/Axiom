@@ -29,19 +29,19 @@ type mxCrashDoc struct {
 	DiagnosticMetaData *mxMetaData `json:"diagnosticMetaData"`
 	// Flattened-shape top-level mirrors — populated when the test/fixture
 	// didn't bother with the diagnosticMetaData wrapper.
-	ExceptionType        *int    `json:"exceptionType"`
-	ExceptionCode        *int    `json:"exceptionCode"`
-	Signal               *int    `json:"signal"`
-	TerminationReason    string  `json:"terminationReason"`
-	OSVersion            string  `json:"osVersion"`
-	AppVersion           string  `json:"appVersion"`
-	AppBuildVersion      string  `json:"appBuildVersion"`
-	PlatformArchitecture string  `json:"platformArchitecture"`
-	BundleIdentifier     string  `json:"bundleIdentifier"`
-	DeviceType           string  `json:"deviceType"`
-	IsTestFlightApp      *bool   `json:"isTestFlightApp"`
-	CallStackTree        mxTree  `json:"callStackTree"`
-	TimeStampEnd         string  `json:"timeStampEnd"`
+	ExceptionType        *int   `json:"exceptionType"`
+	ExceptionCode        *int   `json:"exceptionCode"`
+	Signal               *int   `json:"signal"`
+	TerminationReason    string `json:"terminationReason"`
+	OSVersion            string `json:"osVersion"`
+	AppVersion           string `json:"appVersion"`
+	AppBuildVersion      string `json:"appBuildVersion"`
+	PlatformArchitecture string `json:"platformArchitecture"`
+	BundleIdentifier     string `json:"bundleIdentifier"`
+	DeviceType           string `json:"deviceType"`
+	IsTestFlightApp      *bool  `json:"isTestFlightApp"`
+	CallStackTree        mxTree `json:"callStackTree"`
+	TimeStampEnd         string `json:"timeStampEnd"`
 }
 
 type mxMetaData struct {

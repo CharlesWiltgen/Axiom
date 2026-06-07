@@ -120,8 +120,8 @@ func TestParseMetricKit_SignalMap(t *testing.T) {
 		{10, "SIGBUS"},
 		{11, "SIGSEGV"},
 		{9, "SIGKILL"},
-		{0, ""},   // no signal → empty (don't fabricate)
-		{99, ""},  // unknown → empty
+		{0, ""},  // no signal → empty (don't fabricate)
+		{99, ""}, // unknown → empty
 	}
 	for _, c := range cases {
 		// string(rune(c.sig)) produced control chars which broke `go test -run`

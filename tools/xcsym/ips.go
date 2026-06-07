@@ -102,17 +102,17 @@ type ipsHeader struct {
 // Only fields Phase 6 needs to populate RawCrash are declared; everything else
 // is ignored during json.Unmarshal.
 type ipsPayload struct {
-	ProcName    string            `json:"procName"`
-	ProcPath    string            `json:"procPath"`
-	CPUType     string            `json:"cpuType"`
-	ModelCode   string            `json:"modelCode"`
-	OSVersion   *ipsOSVersionV2   `json:"osVersion"`
-	BundleInfo  *ipsBundleInfo    `json:"bundleInfo"`
-	Exception   *ipsException     `json:"exception"`
-	Termination *ipsTermination   `json:"termination"`
-	FaultingThr *int              `json:"faultingThread"`
-	Threads     []ipsThread       `json:"threads"`
-	UsedImages  []rawUsedImage    `json:"usedImages"`
+	ProcName    string          `json:"procName"`
+	ProcPath    string          `json:"procPath"`
+	CPUType     string          `json:"cpuType"`
+	ModelCode   string          `json:"modelCode"`
+	OSVersion   *ipsOSVersionV2 `json:"osVersion"`
+	BundleInfo  *ipsBundleInfo  `json:"bundleInfo"`
+	Exception   *ipsException   `json:"exception"`
+	Termination *ipsTermination `json:"termination"`
+	FaultingThr *int            `json:"faultingThread"`
+	Threads     []ipsThread     `json:"threads"`
+	UsedImages  []rawUsedImage  `json:"usedImages"`
 
 	// v1 mirrors — present at top level of v1 blobs only.
 	AppName    string `json:"app_name"`
