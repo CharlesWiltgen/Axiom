@@ -281,11 +281,11 @@ Every `pattern_tag` xcsym can emit, with the rule that fires it:
 | `objc_exception` | R-objc-exc-01 | high | `EXC_CRASH`/SIGABRT with `objc_exception_throw` frame |
 | `main_thread_checker_violation` | R-mtc-01 | high | `main_thread_checker.dylib` in crashed frames |
 | `abort` | R-abort-01 | high | SIGABRT with `abort`/`__abort_with_payload` frame |
-| `watchdog_termination` | R-watchdog-01 | high | Termination namespace=FRONTBOARD, code=0x8BADF00D |
+| `watchdog_termination` | R-watchdog-01 | high | Termination namespace FRONTBOARD/SPRINGBOARD/ASSERTIOND + code 0x8BADF00D |
 | `user_force_quit` | R-user-quit-01 | high | FRONTBOARD + 0xDEADFA11 |
-| `background_task_expired` | R-bg-expired-01 | high | FRONTBOARD + 0xBAADCA11 |
-| `data_protection_violation` | R-data-prot-01 | high | RUNNINGBOARD + 0xdead10cc |
-| `code_signing_killed` | R-code-sign-01 | high | CODESIGNING + 0xc51bad0[0-f] |
+| `background_task_expired` | R-bg-expired-01 | high | code 0xBAADCA11 (any namespace) |
+| `data_protection_violation` | R-data-prot-01 | high | code 0xdead10cc (any namespace) |
+| `code_signing_killed` | R-code-sign-01 | high | code matches `0xc51bad0[0-9a-f]` (case-insensitive, any namespace) |
 | `jetsam_oom` | R-jetsam-01 | high | `EXC_RESOURCE` with `MEMORY` subtype OR `termination.reason` contains `per-process-limit` / `vm-pageshortage` |
 | `cpu_resource_fatal` | R-cpu-fatal-01 | high | `EXC_RESOURCE` CPU/WAKEUPS FATAL (excludes NON-FATAL) |
 | `swiftui_update_loop` | R-swiftui-loop-01 | low | ≥100 consecutive `AG::Graph::update_*` frames from the top |
