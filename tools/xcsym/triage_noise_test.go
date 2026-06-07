@@ -41,3 +41,21 @@ func TestNoiseRules_Fixtures(t *testing.T) {
 		}
 	}
 }
+
+func init() {
+	idle := hangRaw([]Frame{
+		{Image: "libsystem_kernel.dylib", Symbol: "mach_msg2_trap"},
+		{Image: "CoreFoundation", Symbol: "CFRunLoopRun"},
+	})
+	deadlock := hangRaw([]Frame{
+		{Image: "libsystem_kernel.dylib", Symbol: "mach_msg2_trap"},
+		{Image: "libdispatch.dylib", Symbol: "_dispatch_sync_f_slow"},
+		{Image: "MyApp", Symbol: "ViewModel.load()", InApp: true},
+	})
+	noiseFixtures = append(noiseFixtures,
+		noiseCase{ruleID: "noise.anr_suspension.v1", report: &NormalizedReport{IssueID: "idle", Kind: "hang"},
+			raw: idle, cat: categorizeHang(idle), want: true},
+		noiseCase{ruleID: "noise.anr_suspension.v1", report: &NormalizedReport{IssueID: "deadlock", Kind: "hang"},
+			raw: deadlock, cat: categorizeHang(deadlock), want: false},
+	)
+}
