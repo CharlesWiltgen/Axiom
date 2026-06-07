@@ -19,13 +19,16 @@ The agent will:
 
 ## Supported Instruments
 
-- **CPU Profiler** — Find hot functions and CPU bottlenecks
-- **Allocations** — Track memory usage and growth
-- **Leaks** — Detect memory leaks
-- **SwiftUI** — Analyze view body updates
-- **Swift Tasks/Actors** — Concurrency analysis
+`xcprof analyze` produces structured findings for:
 
-> CPU / memory / network / energy round-trip through `xcprof analyze` today. SwiftUI and Swift Tasks/Actors are recorded alongside CPU Profiler, but their instrument-specific views currently require opening the trace in Instruments (`open <trace>`).
+- **CPU Profiler** — hot functions and CPU bottlenecks (`cpu` preset)
+- **Network Connections** — socket-level connection stats (`network` preset)
+
+These are recorded but **not** parsed by `analyze` — open the trace in Instruments (`open <trace>`) for their views:
+
+- **Allocations / Leaks** — memory usage and growth (`analyze` reports them `not_exportable`)
+- **Power Profiler** — energy (on-device iOS; `not_exportable` on macOS)
+- **SwiftUI**, **Swift Tasks/Actors** — recorded alongside CPU Profiler
 
 ## Prefer Natural Language?
 

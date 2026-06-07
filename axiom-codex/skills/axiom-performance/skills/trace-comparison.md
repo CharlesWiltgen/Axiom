@@ -45,6 +45,8 @@ A frame is a **regression** when its inclusive share rose by ≥ `--threshold-pc
 
 Percentage points — not raw cycles or ms — because two traces have different total work; only *share* is comparable across runs. A function rising 51%→85% regressed even if the traces ran for different durations.
 
+**But a share is relative to its trace's total — read the summary's baseline-vs-current totals first.** If the current trace's total CPU is higher, the run regressed regardless of any per-function share drop: a function can do *more absolute work while its share shrinks*, so it lands in the **improvement** list and gets dropped (`incl_pct_delta` is negative). When the totals diverge, the per-function view tells you *where the new work landed*, not *what got faster* — never read a falling share as an optimization until the totals match (re-record like-for-like). Concretely: `22% of 1.2s = 0.26s` → `17.5% of 2.05s = 0.36s` is a **36% slowdown** wearing an "improvement" label.
+
 ## CI Recipe
 
 `--fail-on-regression` turns a regression into a non-zero exit, so a pipeline step gates on it directly:

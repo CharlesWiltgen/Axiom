@@ -1,6 +1,6 @@
 ---
 name: xcprof-ref
-description: Complete reference for the `xcprof` CLI that ships with Axiom — doctor/record/analyze subcommands for capturing and structurally analyzing Instruments traces, the recording presets, the security gates (launch/all-processes/duration/output sandbox), the honest per-family support matrix, --dsym symbolication, output envelope, and exit codes
+description: Complete reference for the `xcprof` CLI that ships with Axiom — doctor/record/analyze/compare subcommands for capturing, structurally analyzing, and diffing Instruments traces, the recording presets, the security gates (launch/all-processes/duration/output sandbox), the honest per-family support matrix, --dsym symbolication, output envelope, and exit codes
 ---
 
 # xcprof Reference (Structured xctrace Capture & Analysis)
@@ -10,10 +10,10 @@ Complete reference for `xcprof`, the Axiom-bundled CLI that captures Instruments
 ## When to Use This Reference
 
 Use this reference when:
-- Looking up `xcprof doctor` / `record` / `analyze` subcommand flags
+- Looking up `xcprof doctor` / `record` / `analyze` / `compare` subcommand flags
 - Choosing a recording preset (`cpu` / `memory` / `network` / `energy` / `full` / `full-ios`) or recording a single `--template` / `--instrument`
 - Understanding the security gates — why `--launch` needs `--allow-launch`, `--all-processes` needs `--allow-all-processes`, and how `--max-duration` and `XCPROF_TRACE_ROOT` bound a capture
-- Interpreting an exit code (0 ok / 2 environment-or-usage error / 8 output-write error)
+- Interpreting an exit code (0 ok / 2 environment-or-usage error / 3 regression found via `compare --fail-on-regression` / 8 output-write error)
 - Reading the support matrix (`available` / `partial` / `not_exportable` / `not_present`) and understanding why memory/energy read `not_exportable`
 - Symbolicating raw-address frames from a stripped/release build with `--dsym` (explicit path or UUID auto-discovery)
 - Re-scoping CPU analysis to a hang window with `--start-ms` / `--end-ms` without re-recording
@@ -39,9 +39,10 @@ Use this reference when:
 - **Recording presets** — six verified preset → instrument maps (see table below). `cpu` uses **CPU Profiler** (schema `cpu-profile`) and `network` uses **Network Connections** (schema `network-connection-stat`) — the two families `analyze` parses, so both round-trip from record → analyze; the instrument names are verified against real exports, not guessed
 - **Security gates** — bounded by default (`--max-duration`, default 60s; an unset `--time-limit` adopts it, so a capture is never unbounded), `--allow-launch` before `-- <cmd>` will execute anything, `--allow-all-processes` before system-wide capture, and an `XCPROF_TRACE_ROOT` output sandbox (`--output` must resolve under it or cwd unless `--allow-external-output`). `--no-prompt` is needed for non-interactive use
 - **`analyze` subcommand** — exports the TOC, the `cpu-profile` table, and the `network-connection-stat` table (when present), resolves back-references into full backtraces, and reports the summary, support matrix, CPU hot frames (inclusive + self as % of total cycles plus an approximate ms), an approximate main-thread stall signal, top user-code frames, and a network section (socket connections aggregated by process: protocol, remote, bytes in/out). Flags: `--json` / `--both`, `--start-ms` / `--end-ms` (hang-window scoping), `--hang-threshold-ms`, `--user-binary <names>`, `--dsym <path>`, `--open`
+- **`compare` subcommand** — diffs two traces (`xcprof compare <baseline> <current>`) into per-function CPU-share deltas (`incl_pct_delta`, `self_pct_delta`, `incl_ms_delta`), classifies each frame `changed` / `new` / `gone`, and flags any frame at or above `--threshold-pct` (default 5) as a regression. `--fail-on-regression` exits `3` for CI gating; `--dsym` symbolicates both traces; `--human` / `--both` for output. Assumes a like-for-like workload. See the [trace-comparison workflow](/skills/debugging/trace-comparison) and the `/axiom:compare-traces` command
 - **Honest support matrix** — per family, `available` (parsed, results present), `partial` (schema present but nothing parsed), `not_exportable` (the instrument's data isn't surfaced by `xctrace export` — memory's Allocations/Leaks live in the trace event store, and Power Profiler is iOS-only — so open it in Instruments.app instead), or `not_present` (instrument wasn't in the recording). Silence never reads as "clean", and "couldn't measure" never reads as "measured, nothing found"
 - **Symbolication** — `--dsym <path>` resolves raw `0x…` frames; without it, dSYMs are auto-discovered by UUID via Spotlight, and frames with no match stay raw and are flagged (never invented)
-- **Output envelope & exit codes** — `analyze` defaults to terse markdown (`--json` / `--both` for JSON); `record` and `doctor` default to compact JSON (`--human` for text). Exit `0` ok · `2` environment/usage error (xctrace missing, trace not found, bad args, refused gate) · `8` output-write error
+- **Output envelope & exit codes** — `analyze` defaults to terse markdown (`--json` / `--both` for JSON); `record`, `doctor`, and `compare` default to compact JSON (`--human` for text). Exit `0` ok · `2` environment/usage error (xctrace missing, trace not found, bad args, refused gate) · `3` regression found (`compare --fail-on-regression`) · `8` output-write error
 - **The record honesty caveat** — an `xctrace record --launch` capture terminated at the time limit exits non-zero (it returns the killed target's status) while still saving a valid trace, so `record` trusts the saved bundle, not the exit code, and reports `ok: true` with an explanatory `notes` entry
 
 ## Recording Presets

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -10,6 +11,24 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+// xctraceMissingTemplate is xctrace's verbatim phrase (Xcode 26) when
+// `export --toc` runs against a .trace that has no exportable tables: an
+// interrupted/unfinalized recording, or a memory- or energy-only capture whose
+// data lives only in the Instruments event store. Matching the substring lets
+// both analyze and record replace the opaque "xcrun: exit status 10: Export
+// failed: Document Missing Template Error" with an actionable message.
+const xctraceMissingTemplate = "Document Missing Template Error"
+
+// noExportableTablesMsg is the actionable replacement analyze returns for that
+// opaque error. It names the cause and the only way to inspect such a trace.
+const noExportableTablesMsg = "this trace has no xctrace-exportable tables — it is likely an interrupted/unfinalized recording, or a memory- or energy-only capture whose data lives only in the Instruments event store; open it in Instruments.app (`xcprof analyze --open`) to inspect it"
+
+// isMissingExportableTables reports whether err is xctrace's
+// missing-exportable-tables failure (see xctraceMissingTemplate).
+func isMissingExportableTables(err error) bool {
+	return err != nil && strings.Contains(err.Error(), xctraceMissingTemplate)
+}
 
 // cpuProfileXPath / netStatXPath target run 1 — the same run parseTOC selects.
 // If multi-run selection is ever added, all must change together.
@@ -252,6 +271,9 @@ func parseAnalyzeArgs(args []string) (string, analyzeOpts, int) {
 func analyzeTrace(ctx context.Context, trace string, opts analyzeOpts) (AnalyzeReport, error) {
 	tocBytes, err := exportTOC(ctx, trace)
 	if err != nil {
+		if isMissingExportableTables(err) {
+			return AnalyzeReport{}, errors.New(noExportableTablesMsg)
+		}
 		return AnalyzeReport{}, fmt.Errorf("export toc: %w", err)
 	}
 	toc, err := parseTOC(tocBytes)

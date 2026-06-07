@@ -289,6 +289,8 @@ The `cluster_key` is a mechanical, exact-signature grouping. It is conservative 
 
 **Standing note for `anr_suspension_false_positive`:** "This issue may represent background suspension, not a real main-thread block. Verify by checking whether the app was actively running when the hang was captured."
 
+**Standing note for `fixed_in_newer_build`:** "A version split is rollout-exposure-blind — most events sitting on the older build is the normal shape of an incomplete rollout, not proof the bug is fixed. Before closing, verify it actually stopped on the latest build: are there still events there, and is the per-user rate flat-at-zero or *rising* as adoption grows? A flag that fired only because the newest version has little exposure yet, while crashes climb on it, is a live bug — escalate, don't close. Confirm a code change actually touched the crashing path between the two versions."
+
 ## Resources
 
 **Skills**: testflight-triage, axiom-data (GRDB suspension / file-protection class), axiom-performance (skills/hang-diagnostics.md)

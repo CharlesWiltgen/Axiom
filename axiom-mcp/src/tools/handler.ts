@@ -1,6 +1,7 @@
 import type { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { Loader } from '../loader/types.js';
 import { Logger } from '../config.js';
+import { XcprofTools } from './xcprof.js';
 
 export interface McpTool {
   name: string;
@@ -13,7 +14,7 @@ export interface McpTool {
   annotations?: ToolAnnotations;
 }
 
-interface ToolResponse {
+export interface ToolResponse {
   [key: string]: unknown;
   content: Array<{ type: string; text: string }>;
 }
@@ -29,6 +30,7 @@ export class DynamicToolsHandler {
   constructor(
     private loader: Loader,
     private logger: Logger,
+    private xcprof?: XcprofTools,
   ) {}
 
   async listTools(): Promise<{ tools: McpTool[] }> {
@@ -158,6 +160,7 @@ export class DynamicToolsHandler {
             openWorldHint: false,
           },
         },
+        ...(this.xcprof?.listTools() ?? []),
       ],
     };
   }
@@ -175,6 +178,9 @@ export class DynamicToolsHandler {
       case 'axiom_get_agent':
         return this.handleGetAgent(args);
       default:
+        if (this.xcprof && (XcprofTools.toolNames as readonly string[]).includes(name)) {
+          return this.xcprof.callTool(name, args);
+        }
         throw new Error(`Unknown tool: ${name}`);
     }
   }

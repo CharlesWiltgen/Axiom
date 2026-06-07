@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-06-07T17:06:34.556Z",
+  "generatedAt": "2026-06-07T21:55:04.690Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -26007,7 +26007,7 @@
     "axiom-performance--trace-comparison": {
       "name": "axiom-performance--trace-comparison",
       "description": "`xcprof compare <baseline> <current>` diffs two `.trace` recordings into a regression/improvement view and gates CI on the result. It replaces the old \"export both traces and eyeball the XML\" workflow with function-level deltas and a non-zero exit code your pipeline can fail on.",
-      "content": "# Trace Comparison (Regression Detection)\n\n`xcprof compare <baseline> <current>` diffs two `.trace` recordings into a regression/improvement view and gates CI on the result. It replaces the old \"export both traces and eyeball the XML\" workflow with function-level deltas and a non-zero exit code your pipeline can fail on.\n\n## When to Use\n\n- Verifying a change didn't slow down a hot path (\"did this PR regress CPU?\").\n- Gating merges on performance in CI (fail the build when a function's CPU share jumps).\n- Confirming an optimization actually helped (the improvement list quantifies it).\n\nIt is **CPU-share regression detection**. For absolute \"is this fast enough\" thresholds on a single trace, use `xcprof analyze`; compare needs two traces.\n\n## The Two-Trace Workflow\n\nThe diff is only meaningful when **both recordings exercise the same workload** — drive the identical user flow (a UI test, a benchmark entry point, a scripted CLI run) both times, or the deltas measure workload differences, not code regressions.\n\n```bash\nexport XCPROF_TRACE_ROOT=\"$(mktemp -d)\"   # sandbox the output\n\n# 1. Baseline — build the BEFORE revision, record while exercising the hot path.\nxcprof record --preset cpu --attach MyApp --time-limit 15s --no-prompt \\\n  --output \"$XCPROF_TRACE_ROOT/baseline.trace\"\n\n# 2. Make the change (or check out the PR), rebuild, record the SAME flow.\nxcprof record --preset cpu --attach MyApp --time-limit 15s --no-prompt \\\n  --output \"$XCPROF_TRACE_ROOT/current.trace\"\n\n# 3. Compare.\nxcprof compare \"$XCPROF_TRACE_ROOT/baseline.trace\" \"$XCPROF_TRACE_ROOT/current.trace\" --human\n```\n\n## Reading the Output\n\nCompare emits compact JSON by default, `--human` for markdown, `--both` for markdown then JSON. Each delta carries:\n\n| Field | Meaning |\n|-------|---------|\n| `incl_pct_delta` | change in inclusive CPU-cycle share, in percentage points (the headline metric) |\n| `self_pct_delta` | change in self (leaf) share, percentage points — pinpoints the function whose own body got hotter |\n| `incl_ms_delta` / `self_ms_delta` | approximate wall-time shift (sample-share × window); informational |\n| `severity` | `\\|incl_pct_delta\\| × max(baseline,current inclusive ms)` — the \"% delta × absolute time\" rank; lists sort by it |\n| `kind` | `changed` (in both), `new` (current only), `gone` (baseline only) |\n\nA frame is a **regression** when its inclusive share rose by ≥ `--threshold-pct`, an **improvement** when it fell by ≥ that much; anything between is noise and dropped. `regressed: true` (and the CI exit code) fires when the regression list is non-empty.\n\nPercentage points — not raw cycles or ms — because two traces have different total work; only *share* is comparable across runs. A function rising 51%→85% regressed even if the traces ran for different durations.\n\n## CI Recipe\n\n`--fail-on-regression` turns a regression into a non-zero exit, so a pipeline step gates on it directly:\n\n```bash\n#!/usr/bin/env bash\nset -euo pipefail\nxcprof compare baseline.trace current.trace \\\n  --fail-on-regression --threshold-pct 5 --both\n# exits 3 if any function's inclusive CPU share rose ≥ 5 percentage points\n```\n\nGitHub Actions:\n\n```yaml\nname: Performance regression gate\non: pull_request\njobs:\n  perf:\n    runs-on: macos-15\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          fetch-depth: 0\n      # record-trace.sh: check out the given ref, build, launch, record into $1\n      - name: Record baseline\n        run: ./scripts/record-trace.sh \"${{ github.event.pull_request.base.sha }}\" baseline.trace\n      - name: Record current\n        run: ./scripts/record-trace.sh \"${{ github.sha }}\" current.trace\n      - name: Compare and gate\n        run: xcprof compare baseline.trace current.trace --fail-on-regression --threshold-pct 5 --both\n```\n\nStart the threshold loose (10–15pp) to catch only gross regressions, then tighten as the recording's workload becomes more deterministic. A flaky workload produces noisy deltas; a fixed UI test or benchmark target keeps the gate trustworthy.\n\n## Exit Codes\n\n| Exit | Meaning |\n|------|---------|\n| `0` | compared cleanly — no regression met the threshold, OR `--fail-on-regression` wasn't set |\n| `2` | usage/environment error (trace missing, bad args, export failed) |\n| `3` | a regression met `--threshold-pct` AND `--fail-on-regression` was set (the CI gate) |\n| `8` | output-write error (the diff itself succeeded) |\n\n`3` is distinct from `2` so an agent can tell \"the app got slower\" from \"the tool broke.\"\n\n## Caveats\n\n- **Symbolicate both traces.** Frames are matched by `(binary, function name)`. Raw-address frames (`0x…`) don't match across builds (ASLR), so they're excluded from the diff and counted in a note. Pass `--dsym <path>` (or rely on UUID auto-discovery) for symbol-level deltas on release builds.\n- **Top-frame cutoff.** Compare diffs each trace's top frames; a function absent from the other trace's top list is treated as `0%`. A frame just below the cutoff in one trace can therefore overstate its delta slightly. The severity rank and threshold keep trivial frames out of the gate.\n- **ms is approximate.** Percentage-point deltas are exact (cycle share); ms deltas are a sample-share estimate and shift with window length. Gate on `--threshold-pct`, not ms.\n- **Network deltas are totals only.** Per-connection matching across runs is unreliable (ephemeral ports, per-run serials), so only total rx/tx byte deltas are reported.\n\n## Resources\n\n**Tools**: `xcprof compare` (companion: `xcprof record`, `xcprof analyze`)\n\n**Skills**: xctrace-ref, performance-profiling, axiom-tools (skills/xcprof-ref.md)\n",
+      "content": "# Trace Comparison (Regression Detection)\n\n`xcprof compare <baseline> <current>` diffs two `.trace` recordings into a regression/improvement view and gates CI on the result. It replaces the old \"export both traces and eyeball the XML\" workflow with function-level deltas and a non-zero exit code your pipeline can fail on.\n\n## When to Use\n\n- Verifying a change didn't slow down a hot path (\"did this PR regress CPU?\").\n- Gating merges on performance in CI (fail the build when a function's CPU share jumps).\n- Confirming an optimization actually helped (the improvement list quantifies it).\n\nIt is **CPU-share regression detection**. For absolute \"is this fast enough\" thresholds on a single trace, use `xcprof analyze`; compare needs two traces.\n\n## The Two-Trace Workflow\n\nThe diff is only meaningful when **both recordings exercise the same workload** — drive the identical user flow (a UI test, a benchmark entry point, a scripted CLI run) both times, or the deltas measure workload differences, not code regressions.\n\n```bash\nexport XCPROF_TRACE_ROOT=\"$(mktemp -d)\"   # sandbox the output\n\n# 1. Baseline — build the BEFORE revision, record while exercising the hot path.\nxcprof record --preset cpu --attach MyApp --time-limit 15s --no-prompt \\\n  --output \"$XCPROF_TRACE_ROOT/baseline.trace\"\n\n# 2. Make the change (or check out the PR), rebuild, record the SAME flow.\nxcprof record --preset cpu --attach MyApp --time-limit 15s --no-prompt \\\n  --output \"$XCPROF_TRACE_ROOT/current.trace\"\n\n# 3. Compare.\nxcprof compare \"$XCPROF_TRACE_ROOT/baseline.trace\" \"$XCPROF_TRACE_ROOT/current.trace\" --human\n```\n\n## Reading the Output\n\nCompare emits compact JSON by default, `--human` for markdown, `--both` for markdown then JSON. Each delta carries:\n\n| Field | Meaning |\n|-------|---------|\n| `incl_pct_delta` | change in inclusive CPU-cycle share, in percentage points (the headline metric) |\n| `self_pct_delta` | change in self (leaf) share, percentage points — pinpoints the function whose own body got hotter |\n| `incl_ms_delta` / `self_ms_delta` | approximate wall-time shift (sample-share × window); informational |\n| `severity` | `\\|incl_pct_delta\\| × max(baseline,current inclusive ms)` — the \"% delta × absolute time\" rank; lists sort by it |\n| `kind` | `changed` (in both), `new` (current only), `gone` (baseline only) |\n\nA frame is a **regression** when its inclusive share rose by ≥ `--threshold-pct`, an **improvement** when it fell by ≥ that much; anything between is noise and dropped. `regressed: true` (and the CI exit code) fires when the regression list is non-empty.\n\nPercentage points — not raw cycles or ms — because two traces have different total work; only *share* is comparable across runs. A function rising 51%→85% regressed even if the traces ran for different durations.\n\n**But a share is relative to its trace's total — read the summary's baseline-vs-current totals first.** If the current trace's total CPU is higher, the run regressed regardless of any per-function share drop: a function can do *more absolute work while its share shrinks*, so it lands in the **improvement** list and gets dropped (`incl_pct_delta` is negative). When the totals diverge, the per-function view tells you *where the new work landed*, not *what got faster* — never read a falling share as an optimization until the totals match (re-record like-for-like). Concretely: `22% of 1.2s = 0.26s` → `17.5% of 2.05s = 0.36s` is a **36% slowdown** wearing an \"improvement\" label.\n\n## CI Recipe\n\n`--fail-on-regression` turns a regression into a non-zero exit, so a pipeline step gates on it directly:\n\n```bash\n#!/usr/bin/env bash\nset -euo pipefail\nxcprof compare baseline.trace current.trace \\\n  --fail-on-regression --threshold-pct 5 --both\n# exits 3 if any function's inclusive CPU share rose ≥ 5 percentage points\n```\n\nGitHub Actions:\n\n```yaml\nname: Performance regression gate\non: pull_request\njobs:\n  perf:\n    runs-on: macos-15\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          fetch-depth: 0\n      # record-trace.sh: check out the given ref, build, launch, record into $1\n      - name: Record baseline\n        run: ./scripts/record-trace.sh \"${{ github.event.pull_request.base.sha }}\" baseline.trace\n      - name: Record current\n        run: ./scripts/record-trace.sh \"${{ github.sha }}\" current.trace\n      - name: Compare and gate\n        run: xcprof compare baseline.trace current.trace --fail-on-regression --threshold-pct 5 --both\n```\n\nStart the threshold loose (10–15pp) to catch only gross regressions, then tighten as the recording's workload becomes more deterministic. A flaky workload produces noisy deltas; a fixed UI test or benchmark target keeps the gate trustworthy.\n\n## Exit Codes\n\n| Exit | Meaning |\n|------|---------|\n| `0` | compared cleanly — no regression met the threshold, OR `--fail-on-regression` wasn't set |\n| `2` | usage/environment error (trace missing, bad args, export failed) |\n| `3` | a regression met `--threshold-pct` AND `--fail-on-regression` was set (the CI gate) |\n| `8` | output-write error (the diff itself succeeded) |\n\n`3` is distinct from `2` so an agent can tell \"the app got slower\" from \"the tool broke.\"\n\n## Caveats\n\n- **Symbolicate both traces.** Frames are matched by `(binary, function name)`. Raw-address frames (`0x…`) don't match across builds (ASLR), so they're excluded from the diff and counted in a note. Pass `--dsym <path>` (or rely on UUID auto-discovery) for symbol-level deltas on release builds.\n- **Top-frame cutoff.** Compare diffs each trace's top frames; a function absent from the other trace's top list is treated as `0%`. A frame just below the cutoff in one trace can therefore overstate its delta slightly. The severity rank and threshold keep trivial frames out of the gate.\n- **ms is approximate.** Percentage-point deltas are exact (cycle share); ms deltas are a sample-share estimate and shift with window length. Gate on `--threshold-pct`, not ms.\n- **Network deltas are totals only.** Per-connection matching across runs is unreliable (ephemeral ports, per-run serials), so only total rx/tx byte deltas are reported.\n\n## Resources\n\n**Tools**: `xcprof compare` (companion: `xcprof record`, `xcprof analyze`)\n\n**Skills**: xctrace-ref, performance-profiling, axiom-tools (skills/xcprof-ref.md)\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -26062,42 +26062,42 @@
           "heading": "Reading the Output",
           "level": 2,
           "startLine": 31,
-          "endLine": 46,
-          "charCount": 1190
+          "endLine": 48,
+          "charCount": 1874
         },
         {
           "heading": "CI Recipe",
           "level": 2,
-          "startLine": 47,
-          "endLine": 55,
+          "startLine": 49,
+          "endLine": 57,
           "charCount": 259
         },
         {
           "heading": "exits 3 if any function's inclusive CPU share rose ≥ 5 percentage points",
           "level": 1,
-          "startLine": 56,
-          "endLine": 81,
+          "startLine": 58,
+          "endLine": 83,
           "charCount": 967
         },
         {
           "heading": "Exit Codes",
           "level": 2,
-          "startLine": 82,
-          "endLine": 92,
+          "startLine": 84,
+          "endLine": 94,
           "charCount": 469
         },
         {
           "heading": "Caveats",
           "level": 2,
-          "startLine": 93,
-          "endLine": 99,
+          "startLine": 95,
+          "endLine": 101,
           "charCount": 943
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 100,
-          "endLine": 105,
+          "startLine": 102,
+          "endLine": 107,
           "charCount": 173
         }
       ]
@@ -30642,7 +30642,7 @@
     "axiom-shipping--production-triage": {
       "name": "axiom-shipping--production-triage",
       "description": "Use this skill when you have a **corpus** of grouped production issues from an aggregator (Sentry, App Store Connect) and need to classify, cluster, and prioritize them. This is the corpus-level path — not for a single local crash file.",
-      "content": "# Production Crash & Hang Triage (Sentry / ASC)\n\nUse this skill when you have a **corpus** of grouped production issues from an aggregator (Sentry, App Store Connect) and need to classify, cluster, and prioritize them. This is the corpus-level path — not for a single local crash file.\n\n- **Single crash file** (.ips, MetricKit, .crash) → `axiom-shipping (skills/testflight-triage.md)` or `/axiom:analyze-crash`\n- **TestFlight triage via Xcode Organizer** → `axiom-shipping (skills/testflight-triage.md)`\n- **This skill** → Sentry unresolved issues list, ASC aggregated crash signatures, dozens-to-hundreds of grouped issues\n\n## The pipeline\n\n```\nSentry / ASC aggregator\n  │  (LLM fetch + normalize)\n  ▼\nNormalizedReport JSONL  ──(stdin)──►  xcsym triage  ──►  TriageResult JSON\n                                      • classify crashes + hangs\n                                      • apply noise rules\n                                      • mechanical clustering\n                                      • 0xdead10cc enrichment\n  ▼\ntriage-analyzer agent\n  • semantic family-merge (mechanical clusters → root-cause families)\n  • impact ranking\n  ▼\nranked triage report (flag-never-hide)\n```\n\nThe Go side (`xcsym triage`) is a network-free pure function. It reads NormalizedReport JSONL on stdin and writes a TriageResult JSON to stdout. The LLM owns all provider auth, fetch, normalization, and semantic merging.\n\n**The command:**\n\n```bash\n# File argument form\nxcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 corpus.jsonl\n\n# Stdin form (both work)\nxcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 < corpus.jsonl\n```\n\nAll three flags are optional. Omit any you don't need; threshold-based noise rules are silently disabled when the corresponding flag is absent.\n\nNo dSYMs required. No Xcode CLT symbolication. No network calls. Pass the JSONL, get a TriageResult.\n\n## Fetching from Sentry\n\n**Token:** Read from `SENTRY_AUTH_TOKEN` environment variable — never commit it, never log it, never include it in output.\n\n### List unresolved issues\n\n```\nGET https://sentry.io/api/0/projects/{org_slug}/{proj_slug}/issues/?query=is:unresolved&statsPeriod=90d&limit=25\nAuthorization: Bearer $SENTRY_AUTH_TOKEN\n```\n\nAdjust `statsPeriod` (e.g., `30d`, `7d`) and add `environment=production` when needed.\n\n### Cursor pagination — mandatory\n\nSentry paginates at ~25 issues per page using cursor-based links. An active app with dozens of unresolved issues will span many pages. Fetching only the first page and calling it a corpus is a correctness failure — it silently drops the majority of issues.\n\n**Algorithm:**\n\n1. Fetch the first page.\n2. Read the `Link:` response header. It contains two entries separated by `,`:\n   ```\n   <https://sentry.io/api/0/...?cursor=X>; rel=\"previous\"; results=\"false\",\n   <https://sentry.io/api/0/...?cursor=Y>; rel=\"next\"; results=\"true\"\n   ```\n3. If `rel=\"next\"` has `results=\"true\"`, extract its URL and fetch the next page. If `results=\"false\"`, the cursor is exhausted — stop.\n4. Accumulate results across all pages.\n5. **Always log the page count** when done: `\"Fetched N pages (M total issues)\"`. If you hit a cap you imposed (e.g., 20-page max), state it explicitly: `\"Cap hit at page 20 — corpus is partial; some issues not included.\"` A partial corpus is not an error, but it must be announced, never silent.\n\nCap example (for very large projects): stop at 20 pages and announce the cap. The user can re-run with tighter filters.\n\n### Fetch latest event per issue\n\nFor each issue, fetch its most recent event to get the stack frames:\n\n```\nGET https://sentry.io/api/0/issues/{issue_id}/events/latest/\nAuthorization: Bearer $SENTRY_AUTH_TOKEN\n```\n\nFrom the response, extract:\n\n| Sentry field | NormalizedReport field |\n|---|---|\n| `id` (issue) | `issue_id` |\n| `permalink` | `issue_url` |\n| `title` | `title` |\n| Issue type \"App Hanging\" / \"App Hang\" | `kind: \"hang\"` (else `\"crash\"`) |\n| `userCount` | `impact.users` |\n| `count` (events) | `impact.events` |\n| `firstSeen`, `lastSeen` | `impact.first_seen`, `impact.last_seen` |\n| `tags.release` (list) | `versions.affected`, `versions.min`, `versions.max` |\n| `tags.os.version` (list) | `os.versions`; `tags.os.name` → `os.platform` |\n| `entries[type=exception].values[0].type` | `exception.type` |\n| `entries[type=exception].values[0].mechanism.meta.signal.name` | `exception.signal` |\n| `entries[type=exception].values[0].mechanism.meta.mach_exception.exception_name` | `exception.mach_exception` |\n| `entries[type=threads].values` or `entries[type=exception].values[0].stacktrace` | `threads[]` |\n\n**Frames:** Sentry frames are **bottom-up** (outermost frame first). Reverse them to get top-down (crashed frame first), matching the NormalizedReport convention. For each frame: `module`/`package` → `image`, `function` → `symbol`, `inApp` → `in_app`.\n\n**`crashed_thread`:** Set to the index of the thread marked `crashed: true`. If ambiguous, use 0 (main thread). The adapter uses this to set `RawCrash.CrashedIdx` — every rule that inspects the crashed thread depends on it.\n\n## Fetching from App Store Connect\n\nUse `asc-mcp` tools when available:\n\n| Task | asc-mcp tool |\n|---|---|\n| List crash signatures for a build | `metrics_build_diagnostics` |\n| Download crash log detail | `metrics_get_diagnostic_logs` |\n\nASC crash aggregates sometimes lack individual-event frame data. When frames are unavailable, emit a **minimal NormalizedReport** with `frames_unavailable: true`:\n\n```json\n{ \"provider\": \"asc\", \"issue_id\": \"...\", \"title\": \"...\", \"kind\": \"crash\",\n  \"impact\": { \"users\": 12, \"events\": 30 }, \"frames_unavailable\": true,\n  \"exception\": { \"mach_exception\": \"0x8badf00d\" }, \"threads\": [] }\n```\n\nThe `triage` subcommand classifies minimal reports using exception codes only (reduced confidence) rather than skipping them. Document the reduced confidence in the triage report.\n\n## NormalizedReport shape\n\nOne JSON object per line (JSONL). Each line is one grouped issue.\n\n**Full example — hang (idle runloop):**\n\n```json\n{\n  \"provider\": \"sentry\",\n  \"issue_id\": \"APP-3V\",\n  \"issue_url\": \"https://sentry.io/organizations/acme/issues/APP-3V/\",\n  \"title\": \"CFRunLoopRunSpecific\",\n  \"kind\": \"hang\",\n  \"impact\": { \"users\": 68, \"events\": 412, \"first_seen\": \"2026-05-01\", \"last_seen\": \"2026-06-05\" },\n  \"versions\": { \"affected\": [\"2.1.0\", \"2.1.1\"], \"min\": \"2.1.0\", \"max\": \"2.1.1\" },\n  \"os\": { \"platform\": \"iOS\", \"versions\": [\"18.4\", \"26.0\"] },\n  \"crashed_thread\": 0,\n  \"threads\": [\n    {\n      \"index\": 0,\n      \"crashed\": true,\n      \"frames\": [\n        { \"image\": \"libsystem_kernel.dylib\", \"symbol\": \"mach_msg2_trap\", \"offset\": 8, \"in_app\": false },\n        { \"image\": \"CoreFoundation\", \"symbol\": \"CFRunLoopRun\", \"offset\": 1234, \"in_app\": false }\n      ]\n    }\n  ]\n}\n```\n\nHang events do not carry an `exception` or `termination` block — those fields are optional and omitted here. The `0xdead10cc` code (data-protection violation) belongs on `kind: \"crash\"` reports, not hangs.\n\n**Full example — crash (data-protection violation, 0xdead10cc):**\n\n```json\n{\n  \"provider\": \"sentry\",\n  \"issue_id\": \"APP-7B\",\n  \"issue_url\": \"https://sentry.io/organizations/acme/issues/APP-7B/\",\n  \"title\": \"GRDB.DatabaseError: disk I/O error\",\n  \"kind\": \"crash\",\n  \"impact\": { \"users\": 22, \"events\": 89, \"first_seen\": \"2026-05-10\", \"last_seen\": \"2026-06-04\" },\n  \"versions\": { \"affected\": [\"2.1.1\"], \"min\": \"2.1.1\", \"max\": \"2.1.1\" },\n  \"os\": { \"platform\": \"iOS\", \"versions\": [\"18.4\"] },\n  \"exception\": { \"mach_exception\": \"0xdead10cc\" },\n  \"termination\": { \"namespace\": \"RUNNINGBOARD\", \"code\": \"0xdead10cc\" },\n  \"crashed_thread\": 1,\n  \"threads\": [\n    {\n      \"index\": 0,\n      \"crashed\": false,\n      \"frames\": [\n        { \"image\": \"libsystem_kernel.dylib\", \"symbol\": \"mach_msg2_trap\", \"offset\": 8, \"in_app\": false }\n      ]\n    },\n    {\n      \"index\": 1,\n      \"crashed\": true,\n      \"frames\": [\n        { \"image\": \"GRDB\", \"symbol\": \"DatabaseQueue.write\", \"offset\": 44, \"in_app\": true },\n        { \"image\": \"MyApp\", \"symbol\": \"HistoryStore.flush\", \"offset\": 12, \"in_app\": true }\n      ]\n    }\n  ]\n}\n```\n\n**Minimal example (ASC, frames unavailable):**\n\n```json\n{ \"provider\": \"asc\", \"issue_id\": \"ASC-001\", \"kind\": \"crash\",\n  \"impact\": { \"users\": 12, \"events\": 30 }, \"frames_unavailable\": true,\n  \"exception\": { \"mach_exception\": \"0x8badf00d\" }, \"threads\": [] }\n```\n\n**Key points:**\n\n- `kind` is `\"crash\"` or `\"hang\"`. The `triage` subcommand accepts both; `xcsym crash` continues to reject hangs.\n- `crashed_thread` is the `index` value of the crashed thread — 0 for main thread. This is not an array position; the adapter resolves it.\n- Thread objects carry no `name` field. The main thread is identified by `index: 0`; Sentry thread names are not mapped.\n- `in_app` per frame is the primary app-vs-system signal. It comes from Sentry's `inApp`. Do not derive it from image-name substrings when the provider already supplies it.\n- `mach_exception` carries the hex code (`0xdead10cc`, `0x8badf00d`). The adapter normalizes it to lowercase `0x…` form before matching rules — uppercase input is handled automatically.\n- Frames are **top-down** in NormalizedReport (index 0 = top of stack, closest to the crash).\n\n## Reading the TriageResult\n\n`xcsym triage` emits a single compact JSON object to stdout:\n\n```json\n{\n  \"tool\": \"xcsym\", \"subcommand\": \"triage\", \"version\": \"...\",\n  \"summary\": { \"total\": 70, \"crashes\": 51, \"hangs\": 19, \"skipped\": 0,\n               \"clusters\": 11, \"flagged_noise\": 23, \"candidate_families\": 6 },\n  \"issues\": [...],\n  \"clusters\": [...],\n  \"errors\": [...]\n}\n```\n\n### Per-issue fields\n\n| Field | Meaning |\n|---|---|\n| `pattern_tag` | Crash/hang category from the rule engine (see table below) |\n| `pattern_confidence` | `high`, `heuristic`, or `low` — how certain the crash/hang rule engine is (`heuristic` = pattern matched but evidence is indirect) |\n| `pattern_rule_id` | The classification rule that fired (e.g., `R-swift-unwrap-01`, `H-idle-runloop-01`) |\n| `cluster_key` | Mechanical signature grouping this issue with similar ones |\n| `cluster_confidence` | `high` = top app frames; `low` = system-frame fallback (treat as a bag, not a cluster) |\n| `noise_flags` | Array of `{class, rule_id, confidence, reason}` — empty means real-bug candidate |\n| `enrichment` | Cross-skill pointers (e.g., axiom-data for 0xdead10cc + DB frames). **Omitted** when no enrichment applies — i.e. on most issues |\n| `top_frames` | Top 5 frames of the crashed thread, as `\"image symbol\"` strings. **Omitted** when the crashed thread has no frames — e.g. an ASC aggregate emitted with `frames_unavailable: true` and no `threads[]`. Don't expect it on every issue |\n\n`pattern_rule_id` and `noise_flags[].rule_id` are two separate fields at different nesting levels. `pattern_rule_id` (top-level on each issue) names the classification rule that matched the crash/hang pattern. Each element of `noise_flags[]` carries its own `rule_id` naming the noise rule that fired (e.g., `noise.anr_suspension.v1`). Do not conflate them.\n\n`pattern_confidence` and `noise_flags[].confidence` use **different vocabularies**. `pattern_confidence` values are `high`, `heuristic`, or `low` (crash/hang engine). `noise_flags[].confidence` values are `high`, `medium`, or `low` (noise engine — e.g., `single_os_eol` emits `medium`).\n\n### Noise-class table\n\n| class | Meaning | Confidence | Action |\n|---|---|---|---|\n| `anr_suspension_false_positive` | Idle-runloop hang — likely background suspension, not a real block | high | Demote; the #1 issue by users may be this non-bug |\n| `fixed_in_newer_build` | `versions.max` predates `--latest-version` — may already be fixed | high | Demote pending verification against the latest build |\n| `third_party_or_system_only` | Crashed thread is non-main and has zero `in_app` frames — may not be directly actionable | low | Demote cautiously; a third-party SDK can crash on a value your code passed it |\n| `single_os_eol` | All affected OS versions are below `--os-floor` | medium | Deprioritize for supported users |\n| `long_tail_low_impact` | `impact.users` is below `--min-users` | high | Rank low, not hidden |\n\n**`noise_flags: []`** means no noise rules fired → the issue is a real-bug candidate.\n\n### Hang-specific pattern tags\n\n| pattern_tag | Meaning |\n|---|---|\n| `anr_idle_runloop` | Main thread parked in run loop with no app work — consistent with background suspension |\n| `anr_main_thread_block` | Main thread in app code or a known blocking syscall — a real block |\n\nAn `anr_idle_runloop` issue is highly likely to carry `anr_suspension_false_positive` noise. When it doesn't (e.g., the main thread has a blocking syscall buried in the window), take it seriously.\n\n## Semantic family-merge\n\nThe `cluster_key` is a mechanical, exact-signature grouping. It is conservative by design: it never over-merges. The agent's job is to merge mechanical clusters that share a root cause and to split bags.\n\n**Merge strategy:**\n\n1. Read `cluster_key`, `cluster_confidence`, `pattern_tag`, and `top_frames` together for each cluster.\n2. Merge clusters when: same `pattern_tag` + overlapping `top_frames` + plausible shared root cause (e.g., two nil-unwrap clusters that differ only in call site).\n3. **Split `cluster_confidence: low` (marked `|sys:`) bags.** A system-frame fallback cluster lumps together unrelated issues under the same top syscall. Inspect individual `top_frames` and `pattern_tag` to split into real families. Do not present a `|sys:` cluster as a single coherent crash family.\n4. Seed merges with the full frame list in `top_frames`, not just `cluster_key`.\n\n## Flag-never-hide reporting rule\n\n**This rule is non-negotiable.** The final triage report must include every issue — noise-flagged or not.\n\n**Structure:**\n\n1. **Top real-bug families** — clusters with no noise flags, ranked by `total_users` descending. Include `pattern_tag`, root-cause hypothesis, enrichment pointers, and recommended next step.\n2. **Deprioritized as likely noise (review before closing)** — a dedicated section listing every noise-flagged issue with:\n   - Issue ID and title\n   - `noise_flags[].class` and `noise_flags[].reason`\n   - User/event impact (so the reader can judge independently)\n3. **Skipped (malformed or unclassifiable)** — `errors[]` from the TriageResult, if any.\n\n**Never omit a noise-flagged issue from the report.** Omission is the correctness failure this architecture is designed to prevent — the ExampleApp lesson was that the #1 issue by user count was an idle-runloop suspension false-positive. A tool that silently buried it would commit the same error inverted.\n\n**Standing note for `third_party_or_system_only`:** Always include this caveat when listing third-party-only issues as deprioritized: \"A third-party SDK can crash on a nil or invalid value passed by app code — zero app frames on the crashed thread does not rule out an app-side root cause. Check for app code on other threads or higher in the call chain before dismissing.\"\n\n**Standing note for `anr_suspension_false_positive`:** \"This issue may represent background suspension, not a real main-thread block. Verify by checking whether the app was actively running when the hang was captured.\"\n\n## Resources\n\n**Skills**: testflight-triage, axiom-data (GRDB suspension / file-protection class), axiom-performance (skills/hang-diagnostics.md)\n\n**Tools**: xcsym (triage subcommand — see axiom-tools skills/xcsym-ref.md)\n\n**Agents**: triage-analyzer\n",
+      "content": "# Production Crash & Hang Triage (Sentry / ASC)\n\nUse this skill when you have a **corpus** of grouped production issues from an aggregator (Sentry, App Store Connect) and need to classify, cluster, and prioritize them. This is the corpus-level path — not for a single local crash file.\n\n- **Single crash file** (.ips, MetricKit, .crash) → `axiom-shipping (skills/testflight-triage.md)` or `/axiom:analyze-crash`\n- **TestFlight triage via Xcode Organizer** → `axiom-shipping (skills/testflight-triage.md)`\n- **This skill** → Sentry unresolved issues list, ASC aggregated crash signatures, dozens-to-hundreds of grouped issues\n\n## The pipeline\n\n```\nSentry / ASC aggregator\n  │  (LLM fetch + normalize)\n  ▼\nNormalizedReport JSONL  ──(stdin)──►  xcsym triage  ──►  TriageResult JSON\n                                      • classify crashes + hangs\n                                      • apply noise rules\n                                      • mechanical clustering\n                                      • 0xdead10cc enrichment\n  ▼\ntriage-analyzer agent\n  • semantic family-merge (mechanical clusters → root-cause families)\n  • impact ranking\n  ▼\nranked triage report (flag-never-hide)\n```\n\nThe Go side (`xcsym triage`) is a network-free pure function. It reads NormalizedReport JSONL on stdin and writes a TriageResult JSON to stdout. The LLM owns all provider auth, fetch, normalization, and semantic merging.\n\n**The command:**\n\n```bash\n# File argument form\nxcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 corpus.jsonl\n\n# Stdin form (both work)\nxcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 < corpus.jsonl\n```\n\nAll three flags are optional. Omit any you don't need; threshold-based noise rules are silently disabled when the corresponding flag is absent.\n\nNo dSYMs required. No Xcode CLT symbolication. No network calls. Pass the JSONL, get a TriageResult.\n\n## Fetching from Sentry\n\n**Token:** Read from `SENTRY_AUTH_TOKEN` environment variable — never commit it, never log it, never include it in output.\n\n### List unresolved issues\n\n```\nGET https://sentry.io/api/0/projects/{org_slug}/{proj_slug}/issues/?query=is:unresolved&statsPeriod=90d&limit=25\nAuthorization: Bearer $SENTRY_AUTH_TOKEN\n```\n\nAdjust `statsPeriod` (e.g., `30d`, `7d`) and add `environment=production` when needed.\n\n### Cursor pagination — mandatory\n\nSentry paginates at ~25 issues per page using cursor-based links. An active app with dozens of unresolved issues will span many pages. Fetching only the first page and calling it a corpus is a correctness failure — it silently drops the majority of issues.\n\n**Algorithm:**\n\n1. Fetch the first page.\n2. Read the `Link:` response header. It contains two entries separated by `,`:\n   ```\n   <https://sentry.io/api/0/...?cursor=X>; rel=\"previous\"; results=\"false\",\n   <https://sentry.io/api/0/...?cursor=Y>; rel=\"next\"; results=\"true\"\n   ```\n3. If `rel=\"next\"` has `results=\"true\"`, extract its URL and fetch the next page. If `results=\"false\"`, the cursor is exhausted — stop.\n4. Accumulate results across all pages.\n5. **Always log the page count** when done: `\"Fetched N pages (M total issues)\"`. If you hit a cap you imposed (e.g., 20-page max), state it explicitly: `\"Cap hit at page 20 — corpus is partial; some issues not included.\"` A partial corpus is not an error, but it must be announced, never silent.\n\nCap example (for very large projects): stop at 20 pages and announce the cap. The user can re-run with tighter filters.\n\n### Fetch latest event per issue\n\nFor each issue, fetch its most recent event to get the stack frames:\n\n```\nGET https://sentry.io/api/0/issues/{issue_id}/events/latest/\nAuthorization: Bearer $SENTRY_AUTH_TOKEN\n```\n\nFrom the response, extract:\n\n| Sentry field | NormalizedReport field |\n|---|---|\n| `id` (issue) | `issue_id` |\n| `permalink` | `issue_url` |\n| `title` | `title` |\n| Issue type \"App Hanging\" / \"App Hang\" | `kind: \"hang\"` (else `\"crash\"`) |\n| `userCount` | `impact.users` |\n| `count` (events) | `impact.events` |\n| `firstSeen`, `lastSeen` | `impact.first_seen`, `impact.last_seen` |\n| `tags.release` (list) | `versions.affected`, `versions.min`, `versions.max` |\n| `tags.os.version` (list) | `os.versions`; `tags.os.name` → `os.platform` |\n| `entries[type=exception].values[0].type` | `exception.type` |\n| `entries[type=exception].values[0].mechanism.meta.signal.name` | `exception.signal` |\n| `entries[type=exception].values[0].mechanism.meta.mach_exception.exception_name` | `exception.mach_exception` |\n| `entries[type=threads].values` or `entries[type=exception].values[0].stacktrace` | `threads[]` |\n\n**Frames:** Sentry frames are **bottom-up** (outermost frame first). Reverse them to get top-down (crashed frame first), matching the NormalizedReport convention. For each frame: `module`/`package` → `image`, `function` → `symbol`, `inApp` → `in_app`.\n\n**`crashed_thread`:** Set to the index of the thread marked `crashed: true`. If ambiguous, use 0 (main thread). The adapter uses this to set `RawCrash.CrashedIdx` — every rule that inspects the crashed thread depends on it.\n\n## Fetching from App Store Connect\n\nUse `asc-mcp` tools when available:\n\n| Task | asc-mcp tool |\n|---|---|\n| List crash signatures for a build | `metrics_build_diagnostics` |\n| Download crash log detail | `metrics_get_diagnostic_logs` |\n\nASC crash aggregates sometimes lack individual-event frame data. When frames are unavailable, emit a **minimal NormalizedReport** with `frames_unavailable: true`:\n\n```json\n{ \"provider\": \"asc\", \"issue_id\": \"...\", \"title\": \"...\", \"kind\": \"crash\",\n  \"impact\": { \"users\": 12, \"events\": 30 }, \"frames_unavailable\": true,\n  \"exception\": { \"mach_exception\": \"0x8badf00d\" }, \"threads\": [] }\n```\n\nThe `triage` subcommand classifies minimal reports using exception codes only (reduced confidence) rather than skipping them. Document the reduced confidence in the triage report.\n\n## NormalizedReport shape\n\nOne JSON object per line (JSONL). Each line is one grouped issue.\n\n**Full example — hang (idle runloop):**\n\n```json\n{\n  \"provider\": \"sentry\",\n  \"issue_id\": \"APP-3V\",\n  \"issue_url\": \"https://sentry.io/organizations/acme/issues/APP-3V/\",\n  \"title\": \"CFRunLoopRunSpecific\",\n  \"kind\": \"hang\",\n  \"impact\": { \"users\": 68, \"events\": 412, \"first_seen\": \"2026-05-01\", \"last_seen\": \"2026-06-05\" },\n  \"versions\": { \"affected\": [\"2.1.0\", \"2.1.1\"], \"min\": \"2.1.0\", \"max\": \"2.1.1\" },\n  \"os\": { \"platform\": \"iOS\", \"versions\": [\"18.4\", \"26.0\"] },\n  \"crashed_thread\": 0,\n  \"threads\": [\n    {\n      \"index\": 0,\n      \"crashed\": true,\n      \"frames\": [\n        { \"image\": \"libsystem_kernel.dylib\", \"symbol\": \"mach_msg2_trap\", \"offset\": 8, \"in_app\": false },\n        { \"image\": \"CoreFoundation\", \"symbol\": \"CFRunLoopRun\", \"offset\": 1234, \"in_app\": false }\n      ]\n    }\n  ]\n}\n```\n\nHang events do not carry an `exception` or `termination` block — those fields are optional and omitted here. The `0xdead10cc` code (data-protection violation) belongs on `kind: \"crash\"` reports, not hangs.\n\n**Full example — crash (data-protection violation, 0xdead10cc):**\n\n```json\n{\n  \"provider\": \"sentry\",\n  \"issue_id\": \"APP-7B\",\n  \"issue_url\": \"https://sentry.io/organizations/acme/issues/APP-7B/\",\n  \"title\": \"GRDB.DatabaseError: disk I/O error\",\n  \"kind\": \"crash\",\n  \"impact\": { \"users\": 22, \"events\": 89, \"first_seen\": \"2026-05-10\", \"last_seen\": \"2026-06-04\" },\n  \"versions\": { \"affected\": [\"2.1.1\"], \"min\": \"2.1.1\", \"max\": \"2.1.1\" },\n  \"os\": { \"platform\": \"iOS\", \"versions\": [\"18.4\"] },\n  \"exception\": { \"mach_exception\": \"0xdead10cc\" },\n  \"termination\": { \"namespace\": \"RUNNINGBOARD\", \"code\": \"0xdead10cc\" },\n  \"crashed_thread\": 1,\n  \"threads\": [\n    {\n      \"index\": 0,\n      \"crashed\": false,\n      \"frames\": [\n        { \"image\": \"libsystem_kernel.dylib\", \"symbol\": \"mach_msg2_trap\", \"offset\": 8, \"in_app\": false }\n      ]\n    },\n    {\n      \"index\": 1,\n      \"crashed\": true,\n      \"frames\": [\n        { \"image\": \"GRDB\", \"symbol\": \"DatabaseQueue.write\", \"offset\": 44, \"in_app\": true },\n        { \"image\": \"MyApp\", \"symbol\": \"HistoryStore.flush\", \"offset\": 12, \"in_app\": true }\n      ]\n    }\n  ]\n}\n```\n\n**Minimal example (ASC, frames unavailable):**\n\n```json\n{ \"provider\": \"asc\", \"issue_id\": \"ASC-001\", \"kind\": \"crash\",\n  \"impact\": { \"users\": 12, \"events\": 30 }, \"frames_unavailable\": true,\n  \"exception\": { \"mach_exception\": \"0x8badf00d\" }, \"threads\": [] }\n```\n\n**Key points:**\n\n- `kind` is `\"crash\"` or `\"hang\"`. The `triage` subcommand accepts both; `xcsym crash` continues to reject hangs.\n- `crashed_thread` is the `index` value of the crashed thread — 0 for main thread. This is not an array position; the adapter resolves it.\n- Thread objects carry no `name` field. The main thread is identified by `index: 0`; Sentry thread names are not mapped.\n- `in_app` per frame is the primary app-vs-system signal. It comes from Sentry's `inApp`. Do not derive it from image-name substrings when the provider already supplies it.\n- `mach_exception` carries the hex code (`0xdead10cc`, `0x8badf00d`). The adapter normalizes it to lowercase `0x…` form before matching rules — uppercase input is handled automatically.\n- Frames are **top-down** in NormalizedReport (index 0 = top of stack, closest to the crash).\n\n## Reading the TriageResult\n\n`xcsym triage` emits a single compact JSON object to stdout:\n\n```json\n{\n  \"tool\": \"xcsym\", \"subcommand\": \"triage\", \"version\": \"...\",\n  \"summary\": { \"total\": 70, \"crashes\": 51, \"hangs\": 19, \"skipped\": 0,\n               \"clusters\": 11, \"flagged_noise\": 23, \"candidate_families\": 6 },\n  \"issues\": [...],\n  \"clusters\": [...],\n  \"errors\": [...]\n}\n```\n\n### Per-issue fields\n\n| Field | Meaning |\n|---|---|\n| `pattern_tag` | Crash/hang category from the rule engine (see table below) |\n| `pattern_confidence` | `high`, `heuristic`, or `low` — how certain the crash/hang rule engine is (`heuristic` = pattern matched but evidence is indirect) |\n| `pattern_rule_id` | The classification rule that fired (e.g., `R-swift-unwrap-01`, `H-idle-runloop-01`) |\n| `cluster_key` | Mechanical signature grouping this issue with similar ones |\n| `cluster_confidence` | `high` = top app frames; `low` = system-frame fallback (treat as a bag, not a cluster) |\n| `noise_flags` | Array of `{class, rule_id, confidence, reason}` — empty means real-bug candidate |\n| `enrichment` | Cross-skill pointers (e.g., axiom-data for 0xdead10cc + DB frames). **Omitted** when no enrichment applies — i.e. on most issues |\n| `top_frames` | Top 5 frames of the crashed thread, as `\"image symbol\"` strings. **Omitted** when the crashed thread has no frames — e.g. an ASC aggregate emitted with `frames_unavailable: true` and no `threads[]`. Don't expect it on every issue |\n\n`pattern_rule_id` and `noise_flags[].rule_id` are two separate fields at different nesting levels. `pattern_rule_id` (top-level on each issue) names the classification rule that matched the crash/hang pattern. Each element of `noise_flags[]` carries its own `rule_id` naming the noise rule that fired (e.g., `noise.anr_suspension.v1`). Do not conflate them.\n\n`pattern_confidence` and `noise_flags[].confidence` use **different vocabularies**. `pattern_confidence` values are `high`, `heuristic`, or `low` (crash/hang engine). `noise_flags[].confidence` values are `high`, `medium`, or `low` (noise engine — e.g., `single_os_eol` emits `medium`).\n\n### Noise-class table\n\n| class | Meaning | Confidence | Action |\n|---|---|---|---|\n| `anr_suspension_false_positive` | Idle-runloop hang — likely background suspension, not a real block | high | Demote; the #1 issue by users may be this non-bug |\n| `fixed_in_newer_build` | `versions.max` predates `--latest-version` — may already be fixed | high | Demote pending verification against the latest build |\n| `third_party_or_system_only` | Crashed thread is non-main and has zero `in_app` frames — may not be directly actionable | low | Demote cautiously; a third-party SDK can crash on a value your code passed it |\n| `single_os_eol` | All affected OS versions are below `--os-floor` | medium | Deprioritize for supported users |\n| `long_tail_low_impact` | `impact.users` is below `--min-users` | high | Rank low, not hidden |\n\n**`noise_flags: []`** means no noise rules fired → the issue is a real-bug candidate.\n\n### Hang-specific pattern tags\n\n| pattern_tag | Meaning |\n|---|---|\n| `anr_idle_runloop` | Main thread parked in run loop with no app work — consistent with background suspension |\n| `anr_main_thread_block` | Main thread in app code or a known blocking syscall — a real block |\n\nAn `anr_idle_runloop` issue is highly likely to carry `anr_suspension_false_positive` noise. When it doesn't (e.g., the main thread has a blocking syscall buried in the window), take it seriously.\n\n## Semantic family-merge\n\nThe `cluster_key` is a mechanical, exact-signature grouping. It is conservative by design: it never over-merges. The agent's job is to merge mechanical clusters that share a root cause and to split bags.\n\n**Merge strategy:**\n\n1. Read `cluster_key`, `cluster_confidence`, `pattern_tag`, and `top_frames` together for each cluster.\n2. Merge clusters when: same `pattern_tag` + overlapping `top_frames` + plausible shared root cause (e.g., two nil-unwrap clusters that differ only in call site).\n3. **Split `cluster_confidence: low` (marked `|sys:`) bags.** A system-frame fallback cluster lumps together unrelated issues under the same top syscall. Inspect individual `top_frames` and `pattern_tag` to split into real families. Do not present a `|sys:` cluster as a single coherent crash family.\n4. Seed merges with the full frame list in `top_frames`, not just `cluster_key`.\n\n## Flag-never-hide reporting rule\n\n**This rule is non-negotiable.** The final triage report must include every issue — noise-flagged or not.\n\n**Structure:**\n\n1. **Top real-bug families** — clusters with no noise flags, ranked by `total_users` descending. Include `pattern_tag`, root-cause hypothesis, enrichment pointers, and recommended next step.\n2. **Deprioritized as likely noise (review before closing)** — a dedicated section listing every noise-flagged issue with:\n   - Issue ID and title\n   - `noise_flags[].class` and `noise_flags[].reason`\n   - User/event impact (so the reader can judge independently)\n3. **Skipped (malformed or unclassifiable)** — `errors[]` from the TriageResult, if any.\n\n**Never omit a noise-flagged issue from the report.** Omission is the correctness failure this architecture is designed to prevent — the ExampleApp lesson was that the #1 issue by user count was an idle-runloop suspension false-positive. A tool that silently buried it would commit the same error inverted.\n\n**Standing note for `third_party_or_system_only`:** Always include this caveat when listing third-party-only issues as deprioritized: \"A third-party SDK can crash on a nil or invalid value passed by app code — zero app frames on the crashed thread does not rule out an app-side root cause. Check for app code on other threads or higher in the call chain before dismissing.\"\n\n**Standing note for `anr_suspension_false_positive`:** \"This issue may represent background suspension, not a real main-thread block. Verify by checking whether the app was actively running when the hang was captured.\"\n\n**Standing note for `fixed_in_newer_build`:** \"A version split is rollout-exposure-blind — most events sitting on the older build is the normal shape of an incomplete rollout, not proof the bug is fixed. Before closing, verify it actually stopped on the latest build: are there still events there, and is the per-user rate flat-at-zero or *rising* as adoption grows? A flag that fired only because the newest version has little exposure yet, while crashes climb on it, is a live bug — escalate, don't close. Confirm a code change actually touched the crashing path between the two versions.\"\n\n## Resources\n\n**Skills**: testflight-triage, axiom-data (GRDB suspension / file-protection class), axiom-performance (skills/hang-diagnostics.md)\n\n**Tools**: xcsym (triage subcommand — see axiom-tools skills/xcsym-ref.md)\n\n**Agents**: triage-analyzer\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -30718,14 +30718,14 @@
           "heading": "Flag-never-hide reporting rule",
           "level": 2,
           "startLine": 272,
-          "endLine": 290,
-          "charCount": 1600
+          "endLine": 292,
+          "charCount": 2193
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 291,
-          "endLine": 298,
+          "startLine": 293,
+          "endLine": 300,
           "charCount": 251
         }
       ]
@@ -36380,7 +36380,7 @@
     "axiom-tools--xcsym-ref": {
       "name": "axiom-tools--xcsym-ref",
       "description": "xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's legacy `.crash` text reports, and Xcode Organizer `.xccrashpoint` bundles end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.",
-      "content": "---\nname: xcsym-ref\ndescription: Use when symbolicating an .ips, MetricKit, legacy .crash text file, or .xccrashpoint bundle, diagnosing dSYM UUID mismatches, inventorying dSYMs, or anonymizing a crash for fixture use. Reference for the xcsym CLI that ships with Axiom.\nlicense: MIT\n---\n\n# xcsym Reference (iOS/macOS Crash Symbolication)\n\nxcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's legacy `.crash` text reports, and Xcode Organizer `.xccrashpoint` bundles end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.\n\n`.crash` text is the format Xcode Organizer exposes when a user chooses \"Show in Finder\" on a TestFlight crash. `.xccrashpoint` bundles nest `.crash` files under `Filters/Filter_<id>/Logs/` (with optional `LocallySymbolicated/` siblings). Point xcsym at either the bundle path or the inner `.crash` directly — bundle inputs are walked automatically: the Filter dir with the most recent modification time wins, and the raw `.crash` is preferred over `LocallySymbolicated/`.\n\n## Invocation\n\n`xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xcsym <subcommand>` — no prefix, no path lookup.\n\n## When to Use\n\n- **Triaging a new `.ips`** — full pipeline in one call, structured JSON out\n- **TestFlight crashes** — paired with `xcsym verify` to diagnose UUID mismatches\n- **MetricKit crashes** — write `MXCrashDiagnostic.jsonRepresentation()` to disk and run `crash`\n- **Explaining why a crash is unsymbolicated** — `verify` tells you per-image UUID/arch mismatch\n- **Inventorying local dSYMs** — `list-dsyms` enumerates archives + DerivedData\n- **Scrubbing a user's crash for a fixture** — `anonymize` preserves dSYM UUIDs (correlation keys) while scrubbing PII\n\n**Do not use `xcsym crash` for hangs.** `crash` rejects `.ips` files with `bug_type=298` (exit 1, `\"error\":\"hang_report\"` on stdout). Use `xcsym triage` with `kind: \"hang\"` in the NormalizedReport for hang classification, or see `axiom-performance (skills/hang-diagnostics.md)` for single-hang investigation.\n\n## Critical Best Practices\n\n**Start with `crash`.** It runs the full pipeline (parse → discover dSYMs → symbolicate → categorize → emit JSON). Only reach for `resolve`, `find-dsym`, or `verify` when `crash` surfaces a specific problem.\n\n**Read `pattern_tag` first.** It's the most compact signal about what kind of crash you're looking at. Map it to the agent's fix-guidance table before reading frames.\n\n**Trust exit codes.** Non-zero codes say *why* symbolication was incomplete — don't assume a crashed call means the tool failed.\n\n**Anonymize before committing a fixture.** The `anonymize` subcommand is format-aware (handles `.ips` v1/v2, MetricKit, and legacy `.crash` text) and intentionally preserves dSYM UUIDs so anonymized fixtures still symbolicate against your dSYMs.\n\n## Subcommands\n\n### crash — Full Pipeline\n\n```bash\nxcsym crash --format=summary <file>             # small tier (~2KB target, warns past 4KB)\nxcsym crash --format=standard <file>            # default (~12KB target, warns past 50KB)\nxcsym crash --format=full <file>                # all threads (warns past 100KB)\nxcsym crash --from-metrickit <file>             # force MetricKit (skip auto-detect)\nxcsym crash --dsym <path> <file>                # explicit dSYM for the main app\nxcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots\nxcsym crash --no-symbolicate <file>             # skip atos; keep raw frames\nxcsym crash --no-cache <file>                   # bypass UUID cache\nxcsym crash --no-spotlight <file>               # skip mdfind lookups\nxcsym crash --output <path> <file>              # write JSON to a file\nxcsym crash --human <file>                       # terse prose summary instead of JSON (for a person)\nxcsym crash - < crash.ips                       # read from stdin (for pasted content)\nxcsym crash crash.crash                         # legacy Apple text format (Organizer export)\nxcsym crash Foo.xccrashpoint                    # Xcode Organizer bundle (auto-walks to inner .crash)\nxcsym crash --filter 0.8.60-Any Foo.xccrashpoint  # bundle with multiple Filter_* dirs: pick the one whose name contains this substring (use a dash-bounded fragment to avoid matching \"1.0\" against \"11.0.0\")\nxcsym crash --prefer-locally-symbolicated Foo.xccrashpoint  # use Logs/LocallySymbolicated/*.crash instead of raw\n```\n\nAccepted inputs: `.ips` (v1 and v2 JSON), MetricKit `MXCrashDiagnostic` JSON, Apple's legacy `.crash` text format, and `.xccrashpoint` directory bundles. The file extension doesn't matter for non-bundle inputs — format is auto-detected from content. The `.xccrashpoint` suffix is matched case-insensitively (APFS/HFS+ are case-insensitive by default). For `.xccrashpoint` bundles, xcsym walks `Filters/Filter_*/Logs/` and picks one `.crash` file: the Filter dir with the most recent modification time (override with `--filter <substring>` — substring, not segment-anchored, so prefer dash-bounded fragments like `0.8.60-Any`), raw copy preferred over `LocallySymbolicated/` (override with `--prefer-locally-symbolicated` to keep Xcode's atos output instead of re-symbolicating). The original bundle path is surfaced in `input.bundle` so consumers can tell where the resolved `.crash` came from.\n\n**Unsupported input returns exit 2** with a structured JSON reject on stdout (`{\"error\":\"unsupported_format\", …}`) so agents can route on the error field instead of scraping stderr. See the Exit Codes section below.\n\n**Output is compact JSON by default** (single-line, token-lean for LLM consumers); every report subcommand (`crash`, `resolve`, `find-dsym`, `list-dsyms`, `verify`) takes `--human` for a terse prose rendering, and `… | jq .` gives indented JSON. `anonymize` is the exception — its output is a crash document in the `.ips` wire format (compact header line + pretty payload), not a report, so it has no `--human`.\n\n**Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.\n\n### verify — dSYM Match Diagnostics\n\n```bash\nxcsym verify <file>\nxcsym verify <file> --dsym <path>\nxcsym verify <file> --dsym-paths <a>:<b>\nxcsym verify <file> --no-cache\nxcsym verify <file> --no-spotlight\n```\n\nReports which images are matched, mismatched (UUID or arch), and missing. Use when `crash` exits non-zero to pinpoint *which* dSYM is wrong.\n\n### resolve — Single-Address Resolution\n\n```bash\nxcsym resolve --dsym <path> --load-addr <hex> <addr>...\nxcsym resolve --dsym /bin/ls --load-addr 0x100000000 0x10000aabb 0x10000bbcc\nxcsym resolve --dsym <path> --load-addr <hex> --arch arm64 <addr>...\n```\n\nHands raw addresses to `atos` against a specific dSYM. Useful for one-off address resolution outside a crash context.\n\n### find-dsym — Locate dSYM by UUID\n\n```bash\nxcsym find-dsym <uuid>\nxcsym find-dsym <uuid> --arch arm64\nxcsym find-dsym <uuid> --dsym-paths <a>:<b>\nxcsym find-dsym <uuid> --no-cache\nxcsym find-dsym <uuid> --no-spotlight\n```\n\nWalks the discovery chain: cache → explicit paths → Archives → DerivedData → `~/Downloads` → Xcode toolchain → system frameworks → Spotlight.\n\n### list-dsyms — Inventory\n\n```bash\nxcsym list-dsyms\nxcsym list-dsyms --source=archives      # only Archives\nxcsym list-dsyms --source=deriveddata   # only DerivedData\nxcsym list-dsyms --source=downloads\nxcsym list-dsyms --source=toolchain\nxcsym list-dsyms --source=frameworks\nxcsym list-dsyms --source=env\nxcsym list-dsyms --source=all           # default\nxcsym list-dsyms --dsym-paths <a>:<b>\n```\n\n### triage — Corpus Classification\n\n```bash\nxcsym triage < corpus.jsonl                                    # read NormalizedReport JSONL from stdin\nxcsym triage corpus.jsonl                                      # or from a file\nxcsym triage --latest-version 2.1.1 < corpus.jsonl            # flag issues older than this version\nxcsym triage --os-floor 18.0 < corpus.jsonl                   # flag issues below this OS floor\nxcsym triage --min-users 5 < corpus.jsonl                     # flag issues with fewer affected users\nxcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 < corpus.jsonl  # all thresholds\n```\n\nInput: one NormalizedReport JSON object per line (JSONL). Each report describes one grouped issue from Sentry or App Store Connect — `provider`, `issue_id`, `kind` (`crash` or `hang`), `impact`, `threads[]` with `frames[]` where each frame carries `in_app`. See `axiom-shipping (skills/production-triage.md)` for the full schema and provider fetch workflow.\n\nOutput: a single TriageResult JSON object to stdout with:\n- `summary` — total/crashes/hangs/skipped/clusters/flagged_noise/candidate_families\n- `issues[]` — per-issue `pattern_tag`, `pattern_confidence`, `pattern_rule_id`, `cluster_key`, `cluster_confidence`, `noise_flags[]`, `top_frames`\n- `clusters[]` — mechanical groupings by signature with `cluster_key`, `cluster_confidence`, `dominant_pattern_tag`, `issue_ids[]`, `total_users`, `total_events`\n- `errors[]` — malformed or unclassifiable reports (run still exits 0)\n\n**Network-free.** No symbolication, no dSYM discovery, no `atos`, no environment capture. Provider-symbolicated frames arrive via the NormalizedReport.\n\n**Accepts hangs.** Unlike `xcsym crash`, `triage` accepts `kind: \"hang\"` and classifies them with `anr_idle_runloop` / `anr_main_thread_block` tags. The `noise.anr_suspension.v1` rule automatically flags idle-runloop hangs as likely background suspension false-positives.\n\n**Exit codes:** 0 = success (including \"some reports skipped\" — see `errors[]`); 1 = usage error / unreadable stream / invalid flags; 8 = output write error. Never non-zero for \"found noise.\"\n\n### anonymize — Scrub PII for Fixtures\n\n```bash\nxcsym anonymize <file>                   # anonymized content to stdout (.ips, MetricKit, or .crash)\nxcsym anonymize --output <path> <file>   # write to file\nxcsym anonymize - < crash.ips            # read from stdin\n```\n\n**Scrubs:**\n- Bundle IDs across every spelling (`bundle_id`, `bundleID`, `bundleIdentifier`, `CFBundleIdentifier`, `codeSigningID`, `coalitionName`)\n- Process and app names (`procName`, `app_name`)\n- User paths (`/Users/<name>/` → `/Users/REDACTED/`)\n- `.app` names (word-boundary regex, so `com.apple.*` identifiers aren't mangled) and `.framework` names (anchored to end-of-string or `/`, so `com.framework.*` reverse-DNS segments aren't mangled)\n- IPv4 and IPv6 addresses\n- Device names and account IDs (`crashReporterKey`, `sessionID`, `incident_id`, `incident`, `deviceIdentifier`, `deviceUDID`, `userID`)\n- Binary names inside `usedImages[].name` and MetricKit `binaryName`\n- Foreign UUIDs in freeform strings (incident IDs, paths)\n- `.crash` header keys that always carry PII: `Process`, `Identifier`, `Parent Process`, `Coalition`, `Terminating Process`, `Hardware Model`, `AppVariant` — rewritten to deterministic placeholders while preserving column padding so a human can sanity-check the result\n\n**Preserves:**\n- dSYM UUIDs — `slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID` — so anonymized output still symbolicates against matching dSYMs\n- Thread names (`threads[].name`, e.g. `com.apple.main-thread`) — Apple infrastructure labels, not PII; keeping them preserves debug context\n- Library identifiers inside nested library structures (same rationale as thread names)\n- Structural fields categorize and symbolicate rules depend on (exception type, codes, subtype, thread state, frame offsets)\n\n## Output Schema\n\nTop-level JSON emitted by `crash`:\n\n```json\n{\n  \"tool\": \"xcsym\",\n  \"version\": \"0.1.0-dev\",\n  \"format\": \"standard\",\n  \"environment\": {\n    \"atos_version\": \"...\",\n    \"clt_version\": \"...\",\n    \"xcode_path\": \"/Applications/Xcode.app\"\n  },\n  \"input\": {\n    \"path\": \"testdata/crashes/ips_v2/swift_forced_unwrap.ips\",\n    \"format\": \"ips_json_v2\",  // one of: ips_json_v1 | ips_json_v2 | metrickit_json | apple_crash_text\n    \"bundle\": \"/path/to/Foo.xccrashpoint\"  // omitted unless input was a .xccrashpoint bundle\n  },\n  \"crash\": {\n    \"app\": { \"name\": \"...\", \"version\": \"...\", \"bundle_id\": \"...\" },\n    \"os\": { \"platform\": \"iOS\", \"version\": \"17.5\", \"is_simulator\": false },\n    \"arch\": \"arm64\",\n    \"exception\": { \"type\": \"EXC_BREAKPOINT\", \"codes\": \"0x1\", \"subtype\": \"...\", \"signal\": \"SIGTRAP\" },\n    \"termination\": { \"namespace\": \"SIGNAL\", \"code\": \"0x5\" },\n    \"pattern_tag\": \"swift_forced_unwrap\",\n    \"pattern_confidence\": \"high\",\n    \"pattern_rule_id\": \"R-swift-unwrap-01\",\n    \"pattern_reason\": \"exception.subtype matched '...unexpectedly found nil...'\",\n    \"crashed_thread\": { \"index\": 0, \"triggered\": true, \"frames\": [...] },\n    \"other_threads_top_frames\": [...],\n    \"all_threads\": [...]\n  },\n  \"images\": { \"matched\": [...], \"mismatched\": [...], \"missing\": [...] },\n  \"images_summary\": { \"matched_count\": 1, \"mismatched_count\": 0, \"missing_count\": 0 },\n  \"warnings\": [],\n  \"size_warning\": \"report size 54321 bytes exceeds 51200 bytes; consider --format=summary for triage\"\n}\n```\n\n### Tiers\n\n| Tier | Design target | Warns past | Contains |\n|---|---|---|---|\n| `summary` | ~2 KB | 4 KB | App, OS, exception, pattern_tag, crashed-thread top 3 frames, `images_summary` |\n| `standard` | ~12 KB | 50 KB | + full crashed thread, other threads' top frames, `images` |\n| `full` | n/a | 100 KB | + `all_threads` (every thread, every frame) |\n\nDesign targets are aspirational — small/typical crashes hit them. Real production crashes from framework-heavy apps regularly exceed them without indicating anything pathological (the `images` array dominates standard size: ~150–300 bytes per image × 45–150 images is typical). The warn threshold is what xcsym actually flags via `size_warning` in output.\n\n## Exit Codes\n\nExit codes are subcommand-specific. Usage errors, tool errors, timeouts, and output errors are shared across all subcommands. Symbolication-specific codes (2/3/4/7) vary in meaning between `crash` and `verify`.\n\n**Shared across all subcommands:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Success |\n| 1 | Usage error (bad flags, missing required args) |\n| 5 | Tool/discovery error (dwarfdump/atos failed, Spotlight failed, etc.) |\n| 6 | Command timeout |\n| 8 | Output write error (e.g., `--output` path unwritable) |\n\n**`crash` — main-image-centric:**\n\n| Code | Meaning | First thing to do |\n|---|---|---|\n| 0 | All images matched | — |\n| 2 | Input not found / unreadable / unsupported format OR main app dSYM missing | Check path exists; otherwise download the dSYM for the main UUID |\n| 3 | Main app UUID mismatch | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| 4 | Main app arch mismatch | User is on a different slice (arm64e vs arm64); use `find-dsym --arch` |\n| 7 | Main matched, some other images missing/mismatched | Partial success — frames in the main binary symbolicate, others won't |\n\n**`verify` — per-image-centric (note the 7 vs crash difference):**\n\n| Code | Meaning |\n|---|---|\n| 2 | Input not found / unreadable / unsupported format |\n| 3 | Any image has a UUID mismatch with an explicitly-overridden dSYM |\n| 4 | Any image has an arch-slice mismatch with its dSYM |\n| 7 | Any missing images (with or without matches — NOT \"main matched + others missing\") |\n\n**`find-dsym` — lookup-centric:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Match — dSYM located |\n| 2 | Miss — nothing found across every discovery source |\n\n**`list-dsyms`, `resolve`, `anonymize`:** success/failure only (0/1/5/6/8); no symbolication-specific codes.\n\nOn hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{\"tool\":\"xcsym\",\"error\":\"hang_report\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}`. Route the user to hang-diagnostics when you see `\"error\":\"hang_report\"`.\n\nOn unsupported input (anything that isn't `.ips`, MetricKit, Apple `.crash` text, or a `.xccrashpoint` bundle), `crash` exits 2 after writing `{\"tool\":\"xcsym\",\"error\":\"unsupported_format\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}` to stdout. The routing field names the accepted formats.\n\nA `.xccrashpoint` directory that exists but doesn't contain `Filters/Filter_*/Logs/*.crash` is a **distinct** error — `crash` exits 2 with `{\"error\":\"empty_bundle\",\"routing\":\"...\"}`. Agents should route the two cases separately: `unsupported_format` means the user gave xcsym the wrong file type; `empty_bundle` means the bundle is right but corrupt or stripped (re-export from Xcode Organizer).\n\nIf the resolver hits a real I/O error walking the bundle (permission denied, stale NFS handle, etc.), `crash` exits 5 (tool error) rather than mislabeling the bundle as empty.\n\n## Pattern Tag Catalog\n\nEvery `pattern_tag` xcsym can emit, with the rule that fires it:\n\n| pattern_tag | Rule ID | Confidence | Signal |\n|---|---|---|---|\n| `swift_forced_unwrap` | R-swift-unwrap-01 | high | Subtype contains \"unexpectedly found nil...\" |\n| `swift_concurrency_violation` | R-swift-conc-01 | high | `_swift_task_isCurrentExecutor` in subtype |\n| `swift_fatal_error` | R-swift-fatal-01 | high | Swift runtime failure + `swift_preconditionFailure` or `fatalError` sentinel frame |\n| `zombie_or_heap_corruption` | R-zombie-01 | heuristic | `_NSZombie_*` frame or poison-pattern address |\n| `stack_overflow` | R-stack-overflow-01 | heuristic | `KERN_PROTECTION_FAILURE` with fault within 1 page of SP |\n| `bad_memory_access` | R-bad-access-01 | high | `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS` |\n| `illegal_instruction` | R-illegal-inst-01 | high | `EXC_BAD_INSTRUCTION` |\n| `exc_guard` | R-exc-guard-01 | high | `EXC_GUARD` |\n| `objc_exception` | R-objc-exc-01 | high | `EXC_CRASH`/SIGABRT with `objc_exception_throw` frame |\n| `main_thread_checker_violation` | R-mtc-01 | high | `main_thread_checker.dylib` in crashed frames |\n| `abort` | R-abort-01 | high | SIGABRT with `abort`/`__abort_with_payload` frame |\n| `watchdog_termination` | R-watchdog-01 | high | Termination namespace FRONTBOARD/SPRINGBOARD/ASSERTIOND + code 0x8BADF00D |\n| `user_force_quit` | R-user-quit-01 | high | FRONTBOARD + 0xDEADFA11 |\n| `background_task_expired` | R-bg-expired-01 | high | code 0xBAADCA11 (any namespace) |\n| `data_protection_violation` | R-data-prot-01 | high | code 0xdead10cc (any namespace) |\n| `code_signing_killed` | R-code-sign-01 | high | code matches `0xc51bad0[0-9a-f]` (case-insensitive, any namespace) |\n| `jetsam_oom` | R-jetsam-01 | high | `EXC_RESOURCE` with `MEMORY` subtype OR `termination.reason` contains `per-process-limit` / `vm-pageshortage` |\n| `cpu_resource_fatal` | R-cpu-fatal-01 | high | `EXC_RESOURCE` CPU/WAKEUPS FATAL (excludes NON-FATAL) |\n| `swiftui_update_loop` | R-swiftui-loop-01 | low | ≥100 consecutive `AG::Graph::update_*` frames from the top |\n| `unclassified` | — | low | No rule matched — raw fields are in `pattern_reason` |\n\n## dSYM Discovery Order\n\nSource: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact order:\n\n1. **ExplicitByUUID** — per-image overrides the `crash` subcommand builds when the header lists a main-image UUID (before any other source, including cache)\n2. **Explicit paths** — `--dsym` direct override and `--dsym-paths` extra roots\n3. **UUID cache** — `~/Library/Caches/xcsym/uuid-index.json` (skip with `--no-cache`)\n4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)\n5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)\n6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`\n7. **Frameworks (cwd scan)** — walks the current working directory plus caller-supplied roots for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as \"no match\" and the chain continues.\n8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)\n9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)\n10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)\n\n`find-dsym` follows the same chain minus step 1 (no per-UUID explicit map). `list-dsyms --source=<name>` restricts scanning to a single root by name.\n\n## Troubleshooting\n\n| Symptom | Likely cause | Fix |\n|---|---|---|\n| Exit 2, \"main dSYM missing\" | No archive for that UUID on this machine | Download the archive from App Store Connect; or set `XCSYM_DSYM_PATHS` to its location |\n| Exit 3, main UUID mismatch | Crash came from a different build than the archive on disk | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| Exit 4, main arch mismatch | arm64 vs arm64e slice mismatch | Pass `--arch` to `find-dsym`; verify the archive contains the slice |\n| Exit 7, \"main matched, others missing\" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |\n| Exit 2 with `empty_bundle` on `.xccrashpoint` | Bundle has no `Filters/Filter_*/Logs/*.crash` (corrupt or stripped) | Pull a fresh export from Xcode Organizer; or point xcsym at a specific `.crash` inside the bundle |\n| Exit 5 on `.xccrashpoint` (tool error) | Permission denied / stale mount walking `Filters/` | Check mount health and `ls -la Foo.xccrashpoint/Filters` |\n| `.xccrashpoint` with multiple builds returns the wrong one | Default picks the Filter dir with the most recent modification time | Use `--filter <substring>` to select a specific build by version/platform — prefer dash-bounded fragments like `0.8.60-Any` |\n| `pattern_tag=\"unclassified\"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |\n| `size_warning` in output | Tier exceeded its warn threshold (4 KB summary / 50 KB standard / 100 KB full) | Switch to the next smaller tier — the warning text names it |\n| `{\"error\":\"hang_report\"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |\n\n## Resources\n\n**Skills**: axiom-tools (skills/xclog-ref.md), axiom-build (skills/lldb.md, skills/lldb-ref.md, skills/xcode-debugging.md), axiom-performance (skills/memory-debugging.md, skills/metrickit-ref.md, skills/hang-diagnostics.md), axiom-shipping (skills/testflight-triage.md, skills/production-triage.md, skills/app-store-diag.md, skills/app-store-submission.md)\n\n**Agents**: crash-analyzer (single crash file: xcsym crash + pattern_tag → fix guidance), triage-analyzer (corpus triage: fetch Sentry/ASC → xcsym triage → ranked report), simulator-tester (auto-runs xcsym on crashes during test runs), test-failure-analyzer + test-debugger (symbolicate test-generated `.ips` artifacts), memory-auditor (correlates jetsam/heap-corruption tags with leak patterns), concurrency-auditor (correlates `swift_concurrency_violation` with @MainActor gaps), energy-auditor (correlates CPU/watchdog/background terminations with energy anti-patterns)\n\n**Commands**: `/axiom:analyze-crash` (single crash), `/axiom:triage` (corpus triage)\n",
+      "content": "---\nname: xcsym-ref\ndescription: Use when symbolicating an .ips, MetricKit, legacy .crash text file, or .xccrashpoint bundle, diagnosing dSYM UUID mismatches, inventorying dSYMs, or anonymizing a crash for fixture use. Reference for the xcsym CLI that ships with Axiom.\nlicense: MIT\n---\n\n# xcsym Reference (iOS/macOS Crash Symbolication)\n\nxcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's legacy `.crash` text reports, and Xcode Organizer `.xccrashpoint` bundles end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.\n\n`.crash` text is the format Xcode Organizer exposes when a user chooses \"Show in Finder\" on a TestFlight crash. `.xccrashpoint` bundles nest `.crash` files under `Filters/Filter_<id>/Logs/` (with optional `LocallySymbolicated/` siblings). Point xcsym at either the bundle path or the inner `.crash` directly — bundle inputs are walked automatically: the Filter dir with the most recent modification time wins, and the raw `.crash` is preferred over `LocallySymbolicated/`.\n\n## Invocation\n\n`xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xcsym <subcommand>` — no prefix, no path lookup.\n\n## When to Use\n\n- **Triaging a new `.ips`** — full pipeline in one call, structured JSON out\n- **TestFlight crashes** — paired with `xcsym verify` to diagnose UUID mismatches\n- **MetricKit crashes** — write `MXCrashDiagnostic.jsonRepresentation()` to disk and run `crash`\n- **Explaining why a crash is unsymbolicated** — `verify` tells you per-image UUID/arch mismatch\n- **Inventorying local dSYMs** — `list-dsyms` enumerates archives + DerivedData\n- **Scrubbing a user's crash for a fixture** — `anonymize` preserves dSYM UUIDs (correlation keys) while scrubbing PII\n\n**Do not use `xcsym crash` for hangs.** `crash` rejects `.ips` files with `bug_type=298` (exit 1, `\"error\":\"hang_report\"` on stdout). Use `xcsym triage` with `kind: \"hang\"` in the NormalizedReport for hang classification, or see `axiom-performance (skills/hang-diagnostics.md)` for single-hang investigation.\n\n## Critical Best Practices\n\n**Start with `crash`.** It runs the full pipeline (parse → discover dSYMs → symbolicate → categorize → emit JSON). Only reach for `resolve`, `find-dsym`, or `verify` when `crash` surfaces a specific problem.\n\n**Read `pattern_tag` first.** It's the most compact signal about what kind of crash you're looking at. Map it to the agent's fix-guidance table before reading frames.\n\n**Trust exit codes.** Non-zero codes say *why* symbolication was incomplete — don't assume a crashed call means the tool failed.\n\n**Anonymize before committing a fixture.** The `anonymize` subcommand is format-aware (handles `.ips` v1/v2, MetricKit, and legacy `.crash` text) and intentionally preserves dSYM UUIDs so anonymized fixtures still symbolicate against your dSYMs.\n\n## Subcommands\n\n### crash — Full Pipeline\n\n```bash\nxcsym crash --format=summary <file>             # small tier (~2KB target, warns past 4KB)\nxcsym crash --format=standard <file>            # default (~12KB target, warns past 50KB)\nxcsym crash --format=full <file>                # all threads (warns past 100KB)\nxcsym crash --from-metrickit <file>             # force MetricKit (skip auto-detect)\nxcsym crash --dsym <path> <file>                # explicit dSYM for the main app\nxcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots\nxcsym crash --no-symbolicate <file>             # skip atos; keep raw frames\nxcsym crash --no-cache <file>                   # bypass UUID cache\nxcsym crash --no-spotlight <file>               # skip mdfind lookups\nxcsym crash --output <path> <file>              # write JSON to a file\nxcsym crash --human <file>                       # terse prose summary instead of JSON (for a person)\nxcsym crash - < crash.ips                       # read from stdin (for pasted content)\nxcsym crash crash.crash                         # legacy Apple text format (Organizer export)\nxcsym crash Foo.xccrashpoint                    # Xcode Organizer bundle (auto-walks to inner .crash)\nxcsym crash --filter 0.8.60-Any Foo.xccrashpoint  # bundle with multiple Filter_* dirs: pick the one whose name contains this substring (use a dash-bounded fragment to avoid matching \"1.0\" against \"11.0.0\")\nxcsym crash --prefer-locally-symbolicated Foo.xccrashpoint  # use Logs/LocallySymbolicated/*.crash instead of raw\n```\n\nAccepted inputs: `.ips` (v1 and v2 JSON), MetricKit `MXCrashDiagnostic` JSON, Apple's legacy `.crash` text format, and `.xccrashpoint` directory bundles. The file extension doesn't matter for non-bundle inputs — format is auto-detected from content. The `.xccrashpoint` suffix is matched case-insensitively (APFS/HFS+ are case-insensitive by default). For `.xccrashpoint` bundles, xcsym walks `Filters/Filter_*/Logs/` and picks one `.crash` file: the Filter dir with the most recent modification time (override with `--filter <substring>` — substring, not segment-anchored, so prefer dash-bounded fragments like `0.8.60-Any`), raw copy preferred over `LocallySymbolicated/` (override with `--prefer-locally-symbolicated` to keep Xcode's atos output instead of re-symbolicating). The original bundle path is surfaced in `input.bundle` so consumers can tell where the resolved `.crash` came from.\n\n**Unsupported input returns exit 2** with a structured JSON reject on stdout (`{\"error\":\"unsupported_format\", …}`) so agents can route on the error field instead of scraping stderr. See the Exit Codes section below.\n\n**Output is compact JSON by default** (single-line, token-lean for LLM consumers); every report subcommand (`crash`, `resolve`, `find-dsym`, `list-dsyms`, `verify`) takes `--human` for a terse prose rendering, and `… | jq .` gives indented JSON. `anonymize` is the exception — its output is a crash document in the `.ips` wire format (compact header line + pretty payload), not a report, so it has no `--human`.\n\n**Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.\n\n### verify — dSYM Match Diagnostics\n\n```bash\nxcsym verify <file>\nxcsym verify <file> --dsym <path>\nxcsym verify <file> --dsym-paths <a>:<b>\nxcsym verify <file> --no-cache\nxcsym verify <file> --no-spotlight\n```\n\nReports which images are matched, mismatched (UUID or arch), and missing. Use when `crash` exits non-zero to pinpoint *which* dSYM is wrong.\n\n### resolve — Single-Address Resolution\n\n```bash\nxcsym resolve --dsym <path> --load-addr <hex> <addr>...\nxcsym resolve --dsym /bin/ls --load-addr 0x100000000 0x10000aabb 0x10000bbcc\nxcsym resolve --dsym <path> --load-addr <hex> --arch arm64 <addr>...\n```\n\nHands raw addresses to `atos` against a specific dSYM. Useful for one-off address resolution outside a crash context.\n\n### find-dsym — Locate dSYM by UUID\n\n```bash\nxcsym find-dsym <uuid>\nxcsym find-dsym <uuid> --arch arm64\nxcsym find-dsym <uuid> --dsym-paths <a>:<b>\nxcsym find-dsym <uuid> --no-cache\nxcsym find-dsym <uuid> --no-spotlight\n```\n\nWalks the discovery chain: cache → explicit paths → Archives → DerivedData → `~/Downloads` → Xcode toolchain → system frameworks → Spotlight.\n\n### list-dsyms — Inventory\n\n```bash\nxcsym list-dsyms\nxcsym list-dsyms --source=archives      # only Archives\nxcsym list-dsyms --source=deriveddata   # only DerivedData\nxcsym list-dsyms --source=downloads\nxcsym list-dsyms --source=toolchain\nxcsym list-dsyms --source=frameworks\nxcsym list-dsyms --source=env\nxcsym list-dsyms --source=all           # default\nxcsym list-dsyms --dsym-paths <a>:<b>\n```\n\n### triage — Corpus Classification\n\n```bash\nxcsym triage < corpus.jsonl                                    # read NormalizedReport JSONL from stdin\nxcsym triage corpus.jsonl                                      # or from a file\nxcsym triage --latest-version 2.1.1 < corpus.jsonl            # flag issues older than this version\nxcsym triage --os-floor 18.0 < corpus.jsonl                   # flag issues below this OS floor\nxcsym triage --min-users 5 < corpus.jsonl                     # flag issues with fewer affected users\nxcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 < corpus.jsonl  # all thresholds\n```\n\nInput: one NormalizedReport JSON object per line (JSONL). Each report describes one grouped issue from Sentry or App Store Connect — `provider`, `issue_id`, `kind` (`crash` or `hang`), `impact`, `threads[]` with `frames[]` where each frame carries `in_app`. See `axiom-shipping (skills/production-triage.md)` for the full schema and provider fetch workflow.\n\nOutput: a single TriageResult JSON object to stdout with:\n- `summary` — total/crashes/hangs/skipped/clusters/flagged_noise/candidate_families\n- `issues[]` — per-issue `pattern_tag`, `pattern_confidence`, `pattern_rule_id`, `cluster_key`, `cluster_confidence`, `noise_flags[]`, `top_frames`\n- `clusters[]` — mechanical groupings by signature with `cluster_key`, `cluster_confidence`, `dominant_pattern_tag`, `issue_ids[]`, `total_users`, `total_events`\n- `errors[]` — malformed or unclassifiable reports (run still exits 0)\n\n**Network-free.** No symbolication, no dSYM discovery, no `atos`, no environment capture. Provider-symbolicated frames arrive via the NormalizedReport.\n\n**Accepts hangs.** Unlike `xcsym crash`, `triage` accepts `kind: \"hang\"` and classifies them with `anr_idle_runloop` / `anr_main_thread_block` tags. The `noise.anr_suspension.v1` rule automatically flags idle-runloop hangs as likely background suspension false-positives.\n\n**Exit codes:** 0 = success (including \"some reports skipped\" — see `errors[]`); 1 = usage error / unreadable stream / invalid flags; 8 = output write error. Never non-zero for \"found noise.\"\n\n### anonymize — Scrub PII for Fixtures\n\n```bash\nxcsym anonymize <file>                   # anonymized content to stdout (.ips, MetricKit, or .crash)\nxcsym anonymize --output <path> <file>   # write to file\nxcsym anonymize - < crash.ips            # read from stdin\n```\n\n**Scrubs:**\n- Bundle IDs across every spelling (`bundle_id`, `bundleID`, `bundleIdentifier`, `CFBundleIdentifier`, `codeSigningID`, `coalitionName`)\n- Process and app names (`procName`, `app_name`)\n- User paths (`/Users/<name>/` → `/Users/REDACTED/`)\n- `.app` names (word-boundary regex, so `com.apple.*` identifiers aren't mangled) and `.framework` names (anchored to end-of-string or `/`, so `com.framework.*` reverse-DNS segments aren't mangled)\n- IPv4 and IPv6 addresses\n- Device names and account IDs (`crashReporterKey`, `sessionID`, `incident_id`, `incident`, `deviceIdentifier`, `deviceUDID`, `userID`)\n- Binary names inside `usedImages[].name` and MetricKit `binaryName`\n- Foreign UUIDs in freeform strings (incident IDs, paths)\n- `.crash` header keys that always carry PII: `Process`, `Identifier`, `Parent Process`, `Coalition`, `Terminating Process`, `Hardware Model`, `AppVariant` — rewritten to deterministic placeholders while preserving column padding so a human can sanity-check the result\n\n**Preserves:**\n- dSYM UUIDs — `slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID` — so anonymized output still symbolicates against matching dSYMs\n- Thread names (`threads[].name`, e.g. `com.apple.main-thread`) — Apple infrastructure labels, not PII; keeping them preserves debug context\n- Library identifiers inside nested library structures (same rationale as thread names)\n- Structural fields categorize and symbolicate rules depend on (exception type, codes, subtype, thread state, frame offsets)\n\n## Output Schema\n\nTop-level JSON emitted by `crash`:\n\n```json\n{\n  \"tool\": \"xcsym\",\n  \"version\": \"0.1.0-dev\",\n  \"format\": \"standard\",\n  \"environment\": {\n    \"atos_version\": \"...\",\n    \"clt_version\": \"...\",\n    \"xcode_path\": \"/Applications/Xcode.app\"\n  },\n  \"input\": {\n    \"path\": \"testdata/crashes/ips_v2/swift_forced_unwrap.ips\",\n    \"format\": \"ips_json_v2\",  // one of: ips_json_v1 | ips_json_v2 | metrickit_json | apple_crash_text\n    \"bundle\": \"/path/to/Foo.xccrashpoint\"  // omitted unless input was a .xccrashpoint bundle\n  },\n  \"crash\": {\n    \"app\": { \"name\": \"...\", \"version\": \"...\", \"bundle_id\": \"...\" },\n    \"os\": { \"platform\": \"iOS\", \"version\": \"17.5\", \"is_simulator\": false },\n    \"arch\": \"arm64\",\n    \"exception\": { \"type\": \"EXC_BREAKPOINT\", \"codes\": \"0x1\", \"subtype\": \"...\", \"signal\": \"SIGTRAP\" },\n    \"termination\": { \"namespace\": \"SIGNAL\", \"code\": \"0x5\" },\n    \"pattern_tag\": \"swift_forced_unwrap\",\n    \"pattern_confidence\": \"high\",\n    \"pattern_rule_id\": \"R-swift-unwrap-01\",\n    \"pattern_reason\": \"exception.subtype matched '...unexpectedly found nil...'\",\n    \"crashed_thread\": { \"index\": 0, \"triggered\": true, \"frames\": [...] },\n    \"other_threads_top_frames\": [...],\n    \"all_threads\": [...]\n  },\n  \"images\": { \"matched\": [...], \"mismatched\": [...], \"missing\": [...] },\n  \"images_summary\": { \"matched_count\": 1, \"mismatched_count\": 0, \"missing_count\": 0 },\n  \"warnings\": [],\n  \"size_warning\": \"report size 54321 bytes exceeds 51200 bytes; consider --format=summary for triage\"\n}\n```\n\n### Tiers\n\n| Tier | Design target | Warns past | Contains |\n|---|---|---|---|\n| `summary` | ~2 KB | 4 KB | App, OS, exception, pattern_tag, crashed-thread top 3 frames, `images_summary` |\n| `standard` | ~12 KB | 50 KB | + full crashed thread, other threads' top frames, `images` |\n| `full` | n/a | 100 KB | + `all_threads` (every thread, every frame) |\n\nDesign targets are aspirational — small/typical crashes hit them. Real production crashes from framework-heavy apps regularly exceed them without indicating anything pathological (the `images` array dominates standard size: ~150–300 bytes per image × 45–150 images is typical). The warn threshold is what xcsym actually flags via `size_warning` in output.\n\n## Exit Codes\n\nExit codes are subcommand-specific. Usage errors, tool errors, timeouts, and output errors are shared across all subcommands. Symbolication-specific codes (2/3/4/7) vary in meaning between `crash` and `verify`.\n\n**Shared across all subcommands:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Success |\n| 1 | Usage error (bad flags, missing required args) |\n| 5 | Tool/discovery error (dwarfdump/atos failed, Spotlight failed, etc.) |\n| 6 | Command timeout |\n| 8 | Output write error (e.g., `--output` path unwritable) |\n\n**`crash` — main-image-centric:**\n\n| Code | Meaning | First thing to do |\n|---|---|---|\n| 0 | All images matched | — |\n| 2 | Input not found / unreadable / unsupported format OR main app dSYM missing | Check path exists; otherwise download the dSYM for the main UUID |\n| 3 | Main app UUID mismatch | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| 4 | Main app arch mismatch | User is on a different slice (arm64e vs arm64); use `find-dsym --arch` |\n| 7 | Main matched, some other images missing/mismatched | Partial success — frames in the main binary symbolicate, others won't |\n\n**`verify` — per-image-centric (note the 7 vs crash difference):**\n\n| Code | Meaning |\n|---|---|\n| 2 | Input not found / unreadable / unsupported format |\n| 3 | Any image has a UUID mismatch with an explicitly-overridden dSYM |\n| 4 | Any image has an arch-slice mismatch with its dSYM |\n| 7 | Any missing images (with or without matches — NOT \"main matched + others missing\") |\n\n**`find-dsym` — lookup-centric:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Match — dSYM located |\n| 2 | Miss — nothing found across every discovery source |\n\n**`list-dsyms`, `resolve`, `anonymize`:** success/failure only (0/1/5/6/8); no symbolication-specific codes.\n\nOn hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{\"tool\":\"xcsym\",\"error\":\"hang_report\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}`. Route the user to hang-diagnostics when you see `\"error\":\"hang_report\"`.\n\nOn unsupported input (anything that isn't `.ips`, MetricKit, Apple `.crash` text, or a `.xccrashpoint` bundle), `crash` exits 2 after writing `{\"tool\":\"xcsym\",\"error\":\"unsupported_format\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}` to stdout. The routing field names the accepted formats.\n\nA `.xccrashpoint` directory that exists but doesn't contain `Filters/Filter_*/Logs/*.crash` is a **distinct** error — `crash` exits 2 with `{\"error\":\"empty_bundle\",\"routing\":\"...\"}`. Agents should route the two cases separately: `unsupported_format` means the user gave xcsym the wrong file type; `empty_bundle` means the bundle is right but corrupt or stripped (re-export from Xcode Organizer).\n\nIf the resolver hits a real I/O error walking the bundle (permission denied, stale NFS handle, etc.), `crash` exits 5 (tool error) rather than mislabeling the bundle as empty.\n\n## Pattern Tag Catalog\n\nEvery `pattern_tag` xcsym can emit, with the rule that fires it:\n\n| pattern_tag | Rule ID | Confidence | Signal |\n|---|---|---|---|\n| `swift_forced_unwrap` | R-swift-unwrap-01 | high | Subtype contains \"unexpectedly found nil...\" |\n| `swift_concurrency_violation` | R-swift-conc-01 | high | `_swift_task_isCurrentExecutor` in subtype |\n| `swift_fatal_error` | R-swift-fatal-01 | high | Swift runtime failure + `_fatalError` / `_preconditionFailure` / `_assertionFailure` sentinel frame |\n| `zombie_or_heap_corruption` | R-zombie-01 | heuristic | `libgmalloc` / `NSZombie` image in the crashed thread |\n| `stack_overflow` | R-stack-overflow-01 | heuristic | `KERN_PROTECTION_FAILURE` with fault within 1 page of SP |\n| `bad_memory_access` | R-bad-access-01 | high | `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS` |\n| `illegal_instruction` | R-illegal-inst-01 | high | `EXC_BAD_INSTRUCTION` |\n| `exc_guard` | R-exc-guard-01 | high | `EXC_GUARD` |\n| `objc_exception` | R-objc-exc-01 | high | `EXC_CRASH`/SIGABRT with `objc_exception_throw` frame |\n| `main_thread_checker_violation` | R-mtc-01 | high | `main_thread_checker.dylib` in crashed frames |\n| `abort` | R-abort-01 | high | SIGABRT with `abort`/`__abort_with_payload` frame |\n| `watchdog_termination` | R-watchdog-01 | high | Termination namespace FRONTBOARD/SPRINGBOARD/ASSERTIOND + code 0x8BADF00D |\n| `user_force_quit` | R-user-quit-01 | high | FRONTBOARD + 0xDEADFA11 |\n| `background_task_expired` | R-bg-expired-01 | high | code 0xBAADCA11 (any namespace) |\n| `data_protection_violation` | R-data-prot-01 | high | code 0xdead10cc (any namespace) |\n| `code_signing_killed` | R-code-sign-01 | high | code matches `0xc51bad0[0-9a-f]` (case-insensitive, any namespace) |\n| `jetsam_oom` | R-jetsam-01 | high | `EXC_RESOURCE` with `MEMORY` subtype OR `termination.reason` contains `per-process-limit` / `vm-pageshortage` |\n| `cpu_resource_fatal` | R-cpu-fatal-01 | high | `EXC_RESOURCE` CPU/WAKEUPS FATAL (excludes NON-FATAL) |\n| `swiftui_update_loop` | R-swiftui-loop-01 | low | ≥100 consecutive `AG::Graph::update_*` frames from the top |\n| `unclassified` | — | low | No rule matched — raw fields are in `pattern_reason` |\n\n## dSYM Discovery Order\n\nSource: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact order:\n\n1. **ExplicitByUUID** — per-image overrides the `crash` subcommand builds when the header lists a main-image UUID (before any other source, including cache)\n2. **Explicit paths** — `--dsym` direct override and `--dsym-paths` extra roots\n3. **UUID cache** — `~/Library/Caches/xcsym/uuid-index.json` (skip with `--no-cache`)\n4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)\n5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)\n6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`\n7. **Frameworks (cwd scan)** — walks the current working directory plus caller-supplied roots for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as \"no match\" and the chain continues.\n8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)\n9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)\n10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)\n\n`find-dsym` follows the same chain minus step 1 (no per-UUID explicit map). `list-dsyms --source=<name>` restricts scanning to a single root by name.\n\n## Troubleshooting\n\n| Symptom | Likely cause | Fix |\n|---|---|---|\n| Exit 2, \"main dSYM missing\" | No archive for that UUID on this machine | Download the archive from App Store Connect; or set `XCSYM_DSYM_PATHS` to its location |\n| Exit 3, main UUID mismatch | Crash came from a different build than the archive on disk | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| Exit 4, main arch mismatch | arm64 vs arm64e slice mismatch | Pass `--arch` to `find-dsym`; verify the archive contains the slice |\n| Exit 7, \"main matched, others missing\" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |\n| Exit 2 with `empty_bundle` on `.xccrashpoint` | Bundle has no `Filters/Filter_*/Logs/*.crash` (corrupt or stripped) | Pull a fresh export from Xcode Organizer; or point xcsym at a specific `.crash` inside the bundle |\n| Exit 5 on `.xccrashpoint` (tool error) | Permission denied / stale mount walking `Filters/` | Check mount health and `ls -la Foo.xccrashpoint/Filters` |\n| `.xccrashpoint` with multiple builds returns the wrong one | Default picks the Filter dir with the most recent modification time | Use `--filter <substring>` to select a specific build by version/platform — prefer dash-bounded fragments like `0.8.60-Any` |\n| `pattern_tag=\"unclassified\"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |\n| `size_warning` in output | Tier exceeded its warn threshold (4 KB summary / 50 KB standard / 100 KB full) | Switch to the next smaller tier — the warning text names it |\n| `{\"error\":\"hang_report\"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |\n\n## Resources\n\n**Skills**: axiom-tools (skills/xclog-ref.md), axiom-build (skills/lldb.md, skills/lldb-ref.md, skills/xcode-debugging.md), axiom-performance (skills/memory-debugging.md, skills/metrickit-ref.md, skills/hang-diagnostics.md), axiom-shipping (skills/testflight-triage.md, skills/production-triage.md, skills/app-store-diag.md, skills/app-store-submission.md)\n\n**Agents**: crash-analyzer (single crash file: xcsym crash + pattern_tag → fix guidance), triage-analyzer (corpus triage: fetch Sentry/ASC → xcsym triage → ranked report), simulator-tester (auto-runs xcsym on crashes during test runs), test-failure-analyzer + test-debugger (symbolicate test-generated `.ips` artifacts), memory-auditor (correlates jetsam/heap-corruption tags with leak patterns), concurrency-auditor (correlates `swift_concurrency_violation` with @MainActor gaps), energy-auditor (correlates CPU/watchdog/background terminations with energy anti-patterns)\n\n**Commands**: `/axiom:analyze-crash` (single crash), `/axiom:triage` (corpus triage)\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -36450,7 +36450,7 @@
           "level": 2,
           "startLine": 266,
           "endLine": 292,
-          "charCount": 2176
+          "charCount": 2201
         },
         {
           "heading": "dSYM Discovery Order",
@@ -40198,7 +40198,7 @@
     "profile": {
       "name": "profile",
       "description": "Run automated performance profiling via xcprof (launches performance-profiler agent)",
-      "content": "\n# Profile Performance\n\nLaunches the **performance-profiler** agent to record and analyze performance traces using the `xcprof` CLI (record → analyze), no Instruments GUI required.\n\n## What It Does\n\nThe agent will:\n1. Detect available simulators and running apps\n2. Help you select what to profile\n3. Record a trace with `xcprof record` — preset-based, bounded by `--max-duration`, and gated (launch / system-wide capture require explicit opt-in)\n4. Analyze it with `xcprof analyze --json` — back-references resolved, system frames filtered, work attributed to user code\n5. Report findings with an honest per-family support matrix (so an unmeasured family is never reported as clean) and recommendations\n\n## Supported Instruments\n\n- **CPU Profiler** — Find hot functions and CPU bottlenecks\n- **Allocations** — Track memory usage and growth\n- **Leaks** — Detect memory leaks\n- **SwiftUI** — Analyze view body updates\n- **Swift Tasks/Actors** — Concurrency analysis\n\n> CPU / memory / network / energy round-trip through `xcprof analyze` today. SwiftUI and Swift Tasks/Actors are recorded alongside CPU Profiler, but their instrument-specific views currently require opening the trace in Instruments (`open <trace>`).\n\n## Prefer Natural Language?\n\nYou can also trigger this agent by saying:\n- \"Profile my app's CPU usage\"\n- \"Run Time Profiler on my app\"\n- \"Check for memory leaks\"\n- \"Profile my app's launch time\"\n- \"Run a headless performance trace\"\n"
+      "content": "\n# Profile Performance\n\nLaunches the **performance-profiler** agent to record and analyze performance traces using the `xcprof` CLI (record → analyze), no Instruments GUI required.\n\n## What It Does\n\nThe agent will:\n1. Detect available simulators and running apps\n2. Help you select what to profile\n3. Record a trace with `xcprof record` — preset-based, bounded by `--max-duration`, and gated (launch / system-wide capture require explicit opt-in)\n4. Analyze it with `xcprof analyze --json` — back-references resolved, system frames filtered, work attributed to user code\n5. Report findings with an honest per-family support matrix (so an unmeasured family is never reported as clean) and recommendations\n\n## Supported Instruments\n\n`xcprof analyze` produces structured findings for:\n\n- **CPU Profiler** — hot functions and CPU bottlenecks (`cpu` preset)\n- **Network Connections** — socket-level connection stats (`network` preset)\n\nThese are recorded but **not** parsed by `analyze` — open the trace in Instruments (`open <trace>`) for their views:\n\n- **Allocations / Leaks** — memory usage and growth (`analyze` reports them `not_exportable`)\n- **Power Profiler** — energy (on-device iOS; `not_exportable` on macOS)\n- **SwiftUI**, **Swift Tasks/Actors** — recorded alongside CPU Profiler\n\n## Prefer Natural Language?\n\nYou can also trigger this agent by saying:\n- \"Profile my app's CPU usage\"\n- \"Run Time Profiler on my app\"\n- \"Check for memory leaks\"\n- \"Profile my app's launch time\"\n- \"Run a headless performance trace\"\n"
     },
     "run-tests": {
       "name": "run-tests",
@@ -40363,7 +40363,7 @@
       "name": "crash-analyzer",
       "description": "Use this agent when the user has a crash log (.ips, MetricKit JSON, legacy .crash text, .xccrashpoint bundle, or pasted text) that needs analysis. Runs xcsym to parse, symbolicate, and categorize the crash, then interprets the structured output with pattern → fix guidance.\n\n<example>\nuser: \"Analyze this crash log\" [pastes crash report]\nassistant: [Launches crash-analyzer agent]\n</example>\n\n<example>\nuser: \"Here's a crash from TestFlight, what's wrong?\"\nassistant: [Launches crash-analyzer agent]\n</example>\n\n<example>\nuser: \"Parse this .ips file: ~/Library/Logs/DiagnosticReports/MyApp.ips\"\nassistant: [Launches crash-analyzer agent]\n</example>\n\n<example>\nuser: \"Why did my app crash? Here's the report...\"\nassistant: [Launches crash-analyzer agent]\n</example>\n\nExplicit command: Users can also invoke this agent directly with `/axiom:analyze-crash`\n",
       "model": "sonnet",
-      "content": "\n# Crash Analyzer Agent\n\nYou are an expert at interpreting iOS/macOS crash reports. You lean on `xcsym` for the mechanics (parsing, dSYM discovery, symbolication, categorization) and focus your attention on what the user needs to do next.\n\n## Core Principle\n\n**Understand the crash before writing any fix.** Running `xcsym crash` takes seconds and gives you every field you need. Do not hand-parse `.ips` JSON unless xcsym is unavailable.\n\n## Workflow\n\n1. Check for xcsym:\n\n```bash\ncommand -v xcsym\n```\n\nIf present, run:\n```bash\nxcsym crash <file> --format=standard\n```\n\nInterpret the JSON directly. The `pattern_tag` field tells you the crash category (see table below). The `images.missing` and `images.mismatched` arrays tell you about dSYM problems. Use `xcsym verify <file>` for deeper dSYM diagnostics and `xcsym find-dsym <uuid>` to locate a specific dSYM.\n\nThe exit code narrows the triage path:\n\n| Exit | Meaning | Next step |\n|---|---|---|\n| 0 | All images matched | Read `pattern_tag`; go straight to fix guidance |\n| 2 | Main dSYM missing (or input not found/unreadable) | Locate the archive or set `XCSYM_DSYM_PATHS` to where it lives |\n| 3 | Main UUID mismatch | Different build than the archive on disk — `xcsym find-dsym <uuid>` |\n| 4 | Main arch mismatch | Pass `--arch` to `find-dsym` (arm64 vs arm64e) |\n| 6 | Command timeout | Retry with `--no-spotlight`; if still timing out, atos is the bottleneck |\n| 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |\n\n**Flag placement.** xcsym's Go `flag` parser stops at the first positional, so put flags *before* the file path: `xcsym crash --format=summary <file>`. The reverse order exits 1 with a usage error.\n\n**Stdin.** Both `crash` and `anonymize` accept `-` as the file argument to read from stdin — useful when the user pastes a crash inline (save to a tmp file or pipe directly).\n\n**Hang rejection.** `crash` exits 1 and writes `{\"tool\":\"xcsym\",\"error\":\"hang_report\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}` to stdout when the input is a hang (`bug_type=298`). Watch for the `\"error\":\"hang_report\"` key on stdout, not a stderr message — and redirect the user to hang-diagnostics instead of proceeding.\n\nIf xcsym is NOT present (older Axiom install): fall back to legacy manual parsing. Note to user: \"xcsym not found — using legacy parsing.\" Read the `.ips` JSON, extract `exception.type`, `exception.subtype`, `termination.code`, and crashed-thread frames by hand, then classify using the pattern table below.\n\n## Pattern Tag → Fix Guidance\n\n`pattern_tag` in xcsym output maps directly to what the user should investigate first:\n\n| pattern_tag | What it means | First thing to check |\n|---|---|---|\n| `swift_forced_unwrap` | Force-unwrapped a `nil` Optional | Identify the `!` at the crash line; replace with `guard let` or `if let` |\n| `swift_fatal_error` | `fatalError()`/`precondition()`/`assert()` fired | Read Application Specific Info for the assertion message; verify the invariant the assertion guards |\n| `swift_concurrency_violation` | Wrong actor/executor or queue assertion (`_dispatch_assert_queue_fail`, `_swift_task_checkIsolatedSwift`) | Read `axiom-concurrency/skills/isolation-inheritance-diag.md` for the full diagnostic. Common roots: closures inheriting `@MainActor` passed to `context.perform`/Combine `.map`/`NotificationCenter.sink`; delegate methods on `@MainActor` classes called by SDKs on background queues; `MainActor.assumeIsolated` misused off-main |\n| `bad_memory_access` | Dereferenced invalid/deallocated memory | Identify the object whose lifetime is too short; check weak vs strong captures, delegate weak references |\n| `stack_overflow` | Hit thread stack guard page | Look for unbounded recursion in the crashed thread's frames |\n| `zombie_or_heap_corruption` | Access to freed object or heap corruption | Enable NSZombies/Guard Malloc; look for prematurely released objects |\n| `illegal_instruction` | CPU hit an invalid opcode | Usually Swift runtime trap — check for implicit `nil` unwrapping, unsafe casts |\n| `exc_guard` | Violated a guarded fd/resource | Common with SQLite across `open()`/`close()` pairs, or crossing process boundaries |\n| `objc_exception` | Uncaught NSException | Read Application Specific Info for the exception name and reason |\n| `abort` | `abort()` or `__abort_with_payload` | Check Application Specific Info for the payload reason; often a runtime contract violation |\n| `watchdog_termination` | Main thread blocked too long (0x8BADF00D) | Profile main thread; look for synchronous I/O, long loops, or deadlocks |\n| `user_force_quit` | User swiped the app closed (0xDEADFA11) | Not a bug — informational |\n| `background_task_expired` | UIApplication background task exceeded its window (0xBAADCA11) | Shorten background work or use `BGProcessingTask` / `BGAppRefreshTask` |\n| `data_protection_violation` | File accessed while device locked (0xdead10cc) | Use `.completeUntilFirstUserAuthentication` or equivalent data-protection class |\n| `code_signing_killed` | Binary rejected after launch (0xc51bad0X) | Check signing state, entitlement consistency, TestFlight/archive profile alignment |\n| `jetsam_oom` | System killed for memory pressure | Check memory high-water marks via Instruments; look for leaks, cache growth, image/media buffering |\n| `cpu_resource_fatal` | Exceeded CPU/wakeups budget | Profile for spin loops, excessive timer wakeups, background CPU work |\n| `main_thread_checker_violation` | UIKit/AppKit API called off main thread | Search for background-thread UI updates; wrap with `DispatchQueue.main.async` or `@MainActor` |\n| `swiftui_update_loop` | Runaway SwiftUI update graph | Look for `@State` toggles inside `body`, bindings that mutate state they depend on |\n| `unclassified` | No rule matched | Read the raw output and file a gap report — consider adding a new rule |\n\n## Output Format\n\n```markdown\n## Crash Analysis Report\n\n### Summary\n- **App**: [from crash.app.name] [crash.app.version]\n- **OS**: [crash.os.platform] [crash.os.version] [is_simulator?]\n- **Arch**: [crash.arch]\n- **Pattern**: [crash.pattern_tag] ([crash.pattern_confidence])\n\n### Exception\n- **Type**: [crash.exception.type] ([crash.exception.signal])\n- **Codes**: [crash.exception.codes]\n- **Subtype**: [crash.exception.subtype]\n- **Termination**: [crash.termination.namespace] [crash.termination.code]\n\n### Symbolication\n- [If exit=0: ✅ Fully symbolicated]\n- [If exit=2/3/4: ❌ Main binary dSYM issue — see below]\n- [If exit=7: ⚠️ Main app symbolicated; N images missing]\n\n### Crashed Thread (Thread [crashed_thread.index])\n```\n[top 5-10 frames with symbol + image]\n```\n\n### Analysis\n[Interpretation: what the pattern_tag means for THIS crash, given the frames]\n\n### Root Cause Hypothesis\n[Most likely cause based on pattern_tag + frame evidence]\n\n### Actionable Steps\n1. [Specific step from the pattern → fix guidance table]\n2. [Next step tailored to the crashed-thread frames]\n3. [Verification or regression-prevention step]\n\n### dSYM Issues (if any)\n[If images.missing non-empty: list missing UUIDs and suggest `xcsym find-dsym <uuid>` or setting `--dsym-paths`]\n[If images.mismatched non-empty: list mismatches with expected vs found UUID; suggest which archive to pull]\n```\n\n## Examples\n\n### Good workflow\n\nUser pastes a `.ips`. The agent:\n1. Saves it to a temp path.\n2. Runs `xcsym crash /tmp/crash.ips --format=standard`.\n3. Reads `pattern_tag` → `swift_forced_unwrap`.\n4. Reads the first frame of `crashed_thread` → `ContentView.body.getter`.\n5. Reports: \"Force-unwrap in `ContentView.body.getter` at line X. The pattern is consistent across all 3 frames. Fix: replace the `!` with `guard let` for the optional that becomes `nil`.\"\n\n### dSYM UUID mismatch (exit 3)\n\nExit code is 3. The agent:\n1. Runs `xcsym verify <file>` for the full per-image breakdown.\n2. Extracts the expected UUID from the output.\n3. Runs `xcsym find-dsym <uuid>` to see if a matching dSYM exists anywhere.\n4. Reports: \"Your archive's UUID doesn't match the crash. Either you shipped a different build, or the archive was rebuilt. Download the dSYM for UUID `…` from App Store Connect.\"\n\n### Main dSYM missing (exit 2)\n\nExit code is 2 and the crash parsed cleanly (no `\"error\":\"hang_report\"` on stdout). The agent:\n1. Reads `images.missing[0].uuid` from the JSON — this is the main app's UUID.\n2. Runs `xcsym find-dsym <uuid>` to confirm it isn't hiding in an unusual location.\n3. If `find-dsym` also exits 2: no dSYM exists anywhere discoverable.\n4. Reports: \"No dSYM found for main UUID `<uuid>`. Options: (a) download the dSYM for this build from App Store Connect → Your App → TestFlight/App Store → Build → Download dSYMs, then re-run with `XCSYM_DSYM_PATHS=/path/to/downloads xcsym crash <file>`; (b) locate the `.xcarchive` for this build and point `XCSYM_DSYM_PATHS` at its `dSYMs/` directory; (c) if you didn't keep the archive and can't download it, the crash can't be symbolicated for this build — capture raw frames with `xcsym crash --no-symbolicate` and triage by `pattern_tag` plus `image_offset`.\"\n\nDo NOT confuse exit 2 with exit 3:\n- Exit 2 = no dSYM at all\n- Exit 3 = a dSYM exists but its UUID doesn't match the crash\n\nChecking `images.missing` vs `images.mismatched` in the JSON disambiguates without re-reading the exit code.\n\n### Command timeout (exit 6)\n\nExit code is 6 after a long wait (typically >30s on default settings). The agent:\n1. First-line retry: `xcsym crash <file> --no-spotlight --format=standard`. Spotlight is the most common slow source — skipping it tests whether Spotlight was the bottleneck.\n2. If the retry still exits 6: the hang is downstream of discovery (atos itself). Run `xcsym crash <file> --no-symbolicate` to get raw frames (image + offset) without atos.\n3. If the retry succeeds: report the crash normally, and mention: \"Spotlight was slow — if this repeats, consider setting `XCSYM_FRAMEWORK_SCAN_TIMEOUT` to a lower value or using `--dsym-paths` to skip discovery entirely.\"\n4. Reports: \"xcsym timed out on [Spotlight / atos]. [Retry outcome]. [Actionable next step based on which retry succeeded.]\"\n\nExit 6 is environmental, not a bug in the crash file — don't ask the user for a different crash.\n\n## When to Escalate\n\nReport to user and stop if:\n- xcsym stdout contains `\"error\":\"hang_report\"` (exit 1) — the input is a hang, not a crash; redirect to hang-diagnostics skill for single-hang investigation, or `triage-analyzer` for corpus/aggregate hang analysis\n- Exit code is non-zero *and* the pattern tag is `unclassified` — the rule engine gave up; raw output is the best the tool can do\n- Crash file is truncated or unparseable — ask for a complete file\n- The user has **multiple grouped issues** from Sentry or App Store Connect (dozens of crashes, a corpus) rather than a single crash file — route to `triage-analyzer` agent or `/axiom:triage` instead; this agent handles one crash at a time\n\n## Related\n\n- `axiom-tools (skills/xcsym-ref.md)` — Full xcsym subcommand reference\n- `axiom-shipping (skills/testflight-triage.md)` — TestFlight-specific workflow (runs xcsym first)\n- `axiom-shipping (skills/production-triage.md)` — Sentry/ASC corpus triage (multiple grouped issues)\n- `triage-analyzer` agent — Corpus/aggregate crash and hang triage (Sentry, ASC) — use this when the user has many grouped issues, not a single crash file\n- `axiom-performance (skills/metrickit-ref.md)` — MetricKit pipeline documentation\n- `axiom-performance (skills/hang-diagnostics.md)` — For `bug_type=298` hangs (xcsym rejects these); for aggregate hang corpus use triage-analyzer\n- `axiom-performance (skills/memory-debugging.md)` — For `jetsam_oom` follow-up\n- `axiom-concurrency` — For `swift_concurrency_violation` and `main_thread_checker_violation` follow-up\n- `axiom-build (skills/xcode-debugging.md)` — For build/environment issues\n"
+      "content": "\n# Crash Analyzer Agent\n\nYou are an expert at interpreting iOS/macOS crash reports. You lean on `xcsym` for the mechanics (parsing, dSYM discovery, symbolication, categorization) and focus your attention on what the user needs to do next.\n\n## Core Principle\n\n**Understand the crash before writing any fix.** Running `xcsym crash` takes seconds and gives you every field you need. Do not hand-parse `.ips` JSON unless xcsym is unavailable.\n\n## Workflow\n\n1. Check for xcsym:\n\n```bash\ncommand -v xcsym\n```\n\nIf present, run:\n```bash\nxcsym crash <file> --format=standard\n```\n\nInterpret the JSON directly. The `pattern_tag` field tells you the crash category (see table below). The `images.missing` and `images.mismatched` arrays tell you about dSYM problems. Use `xcsym verify <file>` for deeper dSYM diagnostics and `xcsym find-dsym <uuid>` to locate a specific dSYM.\n\nThe exit code narrows the triage path:\n\n| Exit | Meaning | Next step |\n|---|---|---|\n| 0 | All images matched | Read `pattern_tag`; go straight to fix guidance |\n| 2 | Main dSYM missing (or input not found/unreadable) | Locate the archive or set `XCSYM_DSYM_PATHS` to where it lives |\n| 3 | Main UUID mismatch | Different build than the archive on disk — `xcsym find-dsym <uuid>` |\n| 4 | Main arch mismatch | Pass `--arch` to `find-dsym` (arm64 vs arm64e) |\n| 6 | Command timeout | Retry with `--no-spotlight`; if still timing out, atos is the bottleneck |\n| 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |\n\n**Flag placement.** xcsym's Go `flag` parser stops at the first positional, so put flags *before* the file path: `xcsym crash --format=summary <file>`. The reverse order exits 1 with a usage error.\n\n**Stdin.** Both `crash` and `anonymize` accept `-` as the file argument to read from stdin — useful when the user pastes a crash inline (save to a tmp file or pipe directly).\n\n**Hang rejection.** `crash` exits 1 and writes `{\"tool\":\"xcsym\",\"error\":\"hang_report\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}` to stdout when the input is a hang (`bug_type=298`). Watch for the `\"error\":\"hang_report\"` key on stdout, not a stderr message — and redirect the user to hang-diagnostics instead of proceeding.\n\nIf xcsym is NOT present (older Axiom install): fall back to legacy manual parsing. Note to user: \"xcsym not found — using legacy parsing.\" Read the `.ips` JSON, extract `exception.type`, `exception.subtype`, `termination.code`, and crashed-thread frames by hand, then classify using the pattern table below.\n\n## Pattern Tag → Fix Guidance\n\n`pattern_tag` in xcsym output maps directly to what the user should investigate first:\n\n| pattern_tag | What it means | First thing to check |\n|---|---|---|\n| `swift_forced_unwrap` | Force-unwrapped a `nil` Optional | Identify the `!` at the crash line; replace with `guard let` or `if let` |\n| `swift_fatal_error` | `fatalError()`/`precondition()`/`assert()` fired | Read Application Specific Info for the assertion message; verify the invariant the assertion guards |\n| `swift_concurrency_violation` | Wrong actor/executor or queue assertion (`_dispatch_assert_queue_fail`, `_swift_task_isCurrentExecutor`) | Read `axiom-concurrency/skills/isolation-inheritance-diag.md` for the full diagnostic. Common roots: closures inheriting `@MainActor` passed to `context.perform`/Combine `.map`/`NotificationCenter.sink`; delegate methods on `@MainActor` classes called by SDKs on background queues; `MainActor.assumeIsolated` misused off-main |\n| `bad_memory_access` | Dereferenced invalid/deallocated memory | Identify the object whose lifetime is too short; check weak vs strong captures, delegate weak references |\n| `stack_overflow` | Hit thread stack guard page | Look for unbounded recursion in the crashed thread's frames |\n| `zombie_or_heap_corruption` | Access to freed object or heap corruption | Enable NSZombies/Guard Malloc; look for prematurely released objects |\n| `illegal_instruction` | CPU hit an invalid opcode | Usually Swift runtime trap — check for implicit `nil` unwrapping, unsafe casts |\n| `exc_guard` | Violated a guarded fd/resource | Common with SQLite across `open()`/`close()` pairs, or crossing process boundaries |\n| `objc_exception` | Uncaught NSException | Read Application Specific Info for the exception name and reason |\n| `abort` | `abort()` or `__abort_with_payload` | Check Application Specific Info for the payload reason; often a runtime contract violation |\n| `watchdog_termination` | Main thread blocked too long (0x8BADF00D) | Profile main thread; look for synchronous I/O, long loops, or deadlocks |\n| `user_force_quit` | User swiped the app closed (0xDEADFA11) | Not a bug — informational |\n| `background_task_expired` | UIApplication background task exceeded its window (0xBAADCA11) | Shorten background work or use `BGProcessingTask` / `BGAppRefreshTask` |\n| `data_protection_violation` | File accessed while device locked (0xdead10cc) | Use `.completeUntilFirstUserAuthentication` or equivalent data-protection class |\n| `code_signing_killed` | Binary rejected after launch (0xc51bad0X) | Check signing state, entitlement consistency, TestFlight/archive profile alignment |\n| `jetsam_oom` | System killed for memory pressure | Check memory high-water marks via Instruments; look for leaks, cache growth, image/media buffering |\n| `cpu_resource_fatal` | Exceeded CPU/wakeups budget | Profile for spin loops, excessive timer wakeups, background CPU work |\n| `main_thread_checker_violation` | UIKit/AppKit API called off main thread | Search for background-thread UI updates; wrap with `DispatchQueue.main.async` or `@MainActor` |\n| `swiftui_update_loop` | Runaway SwiftUI update graph | Look for `@State` toggles inside `body`, bindings that mutate state they depend on |\n| `unclassified` | No rule matched | Read the raw output and file a gap report — consider adding a new rule |\n\n## Output Format\n\n```markdown\n## Crash Analysis Report\n\n### Summary\n- **App**: [from crash.app.name] [crash.app.version]\n- **OS**: [crash.os.platform] [crash.os.version] [is_simulator?]\n- **Arch**: [crash.arch]\n- **Pattern**: [crash.pattern_tag] ([crash.pattern_confidence])\n\n### Exception\n- **Type**: [crash.exception.type] ([crash.exception.signal])\n- **Codes**: [crash.exception.codes]\n- **Subtype**: [crash.exception.subtype]\n- **Termination**: [crash.termination.namespace] [crash.termination.code]\n\n### Symbolication\n- [If exit=0: ✅ Fully symbolicated]\n- [If exit=2/3/4: ❌ Main binary dSYM issue — see below]\n- [If exit=7: ⚠️ Main app symbolicated; N images missing]\n\n### Crashed Thread (Thread [crashed_thread.index])\n```\n[top 5-10 frames with symbol + image]\n```\n\n### Analysis\n[Interpretation: what the pattern_tag means for THIS crash, given the frames]\n\n### Root Cause Hypothesis\n[Most likely cause based on pattern_tag + frame evidence]\n\n### Actionable Steps\n1. [Specific step from the pattern → fix guidance table]\n2. [Next step tailored to the crashed-thread frames]\n3. [Verification or regression-prevention step]\n\n### dSYM Issues (if any)\n[If images.missing non-empty: list missing UUIDs and suggest `xcsym find-dsym <uuid>` or setting `--dsym-paths`]\n[If images.mismatched non-empty: list mismatches with expected vs found UUID; suggest which archive to pull]\n```\n\n## Examples\n\n### Good workflow\n\nUser pastes a `.ips`. The agent:\n1. Saves it to a temp path.\n2. Runs `xcsym crash /tmp/crash.ips --format=standard`.\n3. Reads `pattern_tag` → `swift_forced_unwrap`.\n4. Reads the first frame of `crashed_thread` → `ContentView.body.getter`.\n5. Reports: \"Force-unwrap in `ContentView.body.getter` at line X. The pattern is consistent across all 3 frames. Fix: replace the `!` with `guard let` for the optional that becomes `nil`.\"\n\n### dSYM UUID mismatch (exit 3)\n\nExit code is 3. The agent:\n1. Runs `xcsym verify <file>` for the full per-image breakdown.\n2. Extracts the expected UUID from the output.\n3. Runs `xcsym find-dsym <uuid>` to see if a matching dSYM exists anywhere.\n4. Reports: \"Your archive's UUID doesn't match the crash. Either you shipped a different build, or the archive was rebuilt. Download the dSYM for UUID `…` from App Store Connect.\"\n\n### Main dSYM missing (exit 2)\n\nExit code is 2 and the crash parsed cleanly (no `\"error\":\"hang_report\"` on stdout). The agent:\n1. Reads `images.missing[0].uuid` from the JSON — this is the main app's UUID.\n2. Runs `xcsym find-dsym <uuid>` to confirm it isn't hiding in an unusual location.\n3. If `find-dsym` also exits 2: no dSYM exists anywhere discoverable.\n4. Reports: \"No dSYM found for main UUID `<uuid>`. Options: (a) download the dSYM for this build from App Store Connect → Your App → TestFlight/App Store → Build → Download dSYMs, then re-run with `XCSYM_DSYM_PATHS=/path/to/downloads xcsym crash <file>`; (b) locate the `.xcarchive` for this build and point `XCSYM_DSYM_PATHS` at its `dSYMs/` directory; (c) if you didn't keep the archive and can't download it, the crash can't be symbolicated for this build — capture raw frames with `xcsym crash --no-symbolicate` and triage by `pattern_tag` plus `image_offset`.\"\n\nDo NOT confuse exit 2 with exit 3:\n- Exit 2 = no dSYM at all\n- Exit 3 = a dSYM exists but its UUID doesn't match the crash\n\nChecking `images.missing` vs `images.mismatched` in the JSON disambiguates without re-reading the exit code.\n\n### Command timeout (exit 6)\n\nExit code is 6 after a long wait (typically >30s on default settings). The agent:\n1. First-line retry: `xcsym crash <file> --no-spotlight --format=standard`. Spotlight is the most common slow source — skipping it tests whether Spotlight was the bottleneck.\n2. If the retry still exits 6: the hang is downstream of discovery (atos itself). Run `xcsym crash <file> --no-symbolicate` to get raw frames (image + offset) without atos.\n3. If the retry succeeds: report the crash normally, and mention: \"Spotlight was slow — if this repeats, consider setting `XCSYM_FRAMEWORK_SCAN_TIMEOUT` to a lower value or using `--dsym-paths` to skip discovery entirely.\"\n4. Reports: \"xcsym timed out on [Spotlight / atos]. [Retry outcome]. [Actionable next step based on which retry succeeded.]\"\n\nExit 6 is environmental, not a bug in the crash file — don't ask the user for a different crash.\n\n## When to Escalate\n\nReport to user and stop if:\n- xcsym stdout contains `\"error\":\"hang_report\"` (exit 1) — the input is a hang, not a crash; redirect to hang-diagnostics skill for single-hang investigation, or `triage-analyzer` for corpus/aggregate hang analysis\n- Exit code is non-zero *and* the pattern tag is `unclassified` — the rule engine gave up; raw output is the best the tool can do\n- Crash file is truncated or unparseable — ask for a complete file\n- The user has **multiple grouped issues** from Sentry or App Store Connect (dozens of crashes, a corpus) rather than a single crash file — route to `triage-analyzer` agent or `/axiom:triage` instead; this agent handles one crash at a time\n\n## Related\n\n- `axiom-tools (skills/xcsym-ref.md)` — Full xcsym subcommand reference\n- `axiom-shipping (skills/testflight-triage.md)` — TestFlight-specific workflow (runs xcsym first)\n- `axiom-shipping (skills/production-triage.md)` — Sentry/ASC corpus triage (multiple grouped issues)\n- `triage-analyzer` agent — Corpus/aggregate crash and hang triage (Sentry, ASC) — use this when the user has many grouped issues, not a single crash file\n- `axiom-performance (skills/metrickit-ref.md)` — MetricKit pipeline documentation\n- `axiom-performance (skills/hang-diagnostics.md)` — For `bug_type=298` hangs (xcsym rejects these); for aggregate hang corpus use triage-analyzer\n- `axiom-performance (skills/memory-debugging.md)` — For `jetsam_oom` follow-up\n- `axiom-concurrency` — For `swift_concurrency_violation` and `main_thread_checker_violation` follow-up\n- `axiom-build (skills/xcode-debugging.md)` — For build/environment issues\n"
     },
     "database-schema-auditor": {
       "name": "database-schema-auditor",
@@ -40515,7 +40515,7 @@
       "name": "performance-profiler",
       "description": "Use this agent when the user wants automated performance profiling, headless Instruments analysis, or CLI-based trace collection. Records traces with xcprof and turns them into structured, honest performance reports — no Instruments GUI required.\n\n<example>\nuser: \"Profile my app's CPU usage\"\nassistant: [Launches performance-profiler agent]\n</example>\n\n<example>\nuser: \"Run Time Profiler on my app\"\nassistant: [Launches performance-profiler agent]\n</example>\n\n<example>\nuser: \"Check for memory leaks without opening Instruments\"\nassistant: [Launches performance-profiler agent]\n</example>\n\n<example>\nuser: \"Profile my app's launch time\"\nassistant: [Launches performance-profiler agent]\n</example>\n\n<example>\nuser: \"Run a headless performance trace\"\nassistant: [Launches performance-profiler agent]\n</example>\n\nExplicit command: Users can also invoke this agent directly with `/axiom:profile`\n",
       "model": "sonnet",
-      "content": "\n# Performance Profiler Agent\n\nYou profile apps headlessly and turn the result into an honest, actionable report. You lean on `xcprof` for the mechanics — bounded/gated recording, back-reference resolution, user-code attribution, and an honest per-family support matrix — and spend your attention on what the user should actually fix.\n\n## Core Principle\n\n**Measure honestly, then attribute to user code.** `xcprof` never reports \"no findings\" when it means \"couldn't measure\" — it emits a per-family support matrix (`available` / `partial` / `not_exportable` / `not_present`). Read that matrix before you call anything clean. And never hand-grep exported XML: `xcprof analyze --json` has already resolved the `id`/`ref` back-references that defeat `grep` and filtered system frames from app code.\n\n## Prerequisites\n\n```bash\ncommand -v xcprof && xcprof doctor\n```\n\n`doctor` verifies `xcrun xctrace` and counts instruments/devices — exit `0` ready, `2` if xctrace is missing. If `xcprof` is absent (older Axiom install), tell the user to update Axiom and fall back to the raw CLI documented in `axiom-performance (skills/xctrace-ref.md)` — do **not** re-introduce a grep-the-XML pipeline.\n\nRecord into a session sandbox so traces are contained and the output gate is satisfied:\n\n```bash\nexport XCPROF_TRACE_ROOT=\"$(mktemp -d)\"\n```\n\n## Workflow\n\n### 1. Pick a target\n\nFind a booted simulator and a running app. Ask the user only when it's ambiguous.\n\n```bash\nxcrun simctl list devices booted -j | jq -r '.devices|to_entries[]|.value[]|\"\\(.name) (\\(.udid))\"'\nBOOTED=$(xcrun simctl list devices booted -j | jq -r '.devices|to_entries[]|.value[0].udid // empty' | head -1)\n[ -n \"$BOOTED\" ] && xcrun simctl spawn \"$BOOTED\" launchctl list 2>/dev/null | grep UIKitApplication | head -10\n```\n\n- App running in a booted sim → attach to it (the common case).\n- Multiple sims / no app named → ask which target.\n- Nothing booted → offer to profile a Mac app or boot a sim.\n\n### 2. Record\n\nMap the user's intent to a preset (or explicit instruments), then record. Recording is always bounded and gated.\n\n| User says | record invocation |\n|---|---|\n| CPU / slow / performance | `xcprof record --preset cpu --attach '<app>' --time-limit 10s` |\n| memory / allocations / leaks / retain cycle | `xcprof record --preset memory --attach '<app>' --time-limit 30s` |\n| network / API latency | `xcprof record --preset network --attach '<app>' --time-limit 20s` |\n| energy / battery | `xcprof record --preset energy --attach '<app>' --time-limit 30s` |\n| SwiftUI / view updates / body | `xcprof record --instrument 'SwiftUI' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s` |\n| concurrency / actors / tasks | `xcprof record --instrument 'Swift Tasks' --instrument 'Swift Actors' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s` |\n| \"find everything\" | `xcprof record --preset full --attach '<app>'` (macOS) · `--preset full-ios` (device) |\n\nTargets and their gates:\n\n- **Attach** (`--attach <pid|name>`) — the default; no gate.\n- **Launch from startup** — append `--allow-launch ... -- <app-path>` (the gate is required; tell the user you're launching a process). Add `--device \"$BOOTED\"` for a sim.\n- **System-wide** — `--all-processes --allow-all-processes`, only when there's no single target.\n- Pass `--no-prompt` (non-interactive), and add `--device \"$BOOTED\"` when profiling a sim.\n- When unsure, add `--dry-run` first to print the exact `xctrace` command without spawning anything.\n\n`record` emits JSON: the saved `trace` path, `instruments`, `target_mode`, effective `time_limit`, the full `command` echo, `ok`, and `notes`. **`ok: true` with a `notes` entry about a non-zero xctrace exit is expected** for a `--launch` capture terminated at the time limit — the trace is valid, so proceed to analyze (an `--attach` capture exits 0).\n\n### 3. Analyze\n\n```bash\nxcprof analyze \"<trace>\" --json\n```\n\nConsume the structured fields — do not grep:\n\n- `summary` — target, device, duration, recording mode.\n- `support[]` — per family `{family, status}`. **This is the honesty gate** (table below).\n- `user_frames[]` then `hot_frames[]` — `{name, binary, inclusive_pct, self_pct, inclusive_ms, self_ms}`. Lead with `user_frames` (app code); `hot_frames` includes system frames.\n- `main_thread` — the approximate main-thread stall signal.\n- `notes[]` — caveats to pass through (symbolication gaps, approximate stalls).\n\nTwo refinements:\n\n- **Hang window** — if a stall shows near t≈Xs, re-scope without re-recording: `xcprof analyze \"<trace>\" --start-ms <start> --end-ms <end> --json`.\n- **Stripped/release build** (`0x…` frame names) — pass `--dsym <path>`, or rely on UUID auto-discovery; unresolved frames stay raw and are flagged, never invented.\n\nFor instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), report the CPU portion from the JSON and tell the user to open the trace in Instruments for the instrument-specific view: `open \"<trace>\"`.\n\n#### Support status → what to report\n\n| status | meaning | how to report it |\n|---|---|---|\n| `available` | measured, results present | report the findings |\n| `partial` | schema present but parsing pending (or cpu table present with no samples) | report what parsed; name the gap |\n| `not_exportable` | schema absent from the export; the GUI may still show it | \"not measurable headlessly\" — suggest opening in Instruments |\n| `not_present` | the instrument wasn't in the recording | \"not measured\" — re-record with the right preset. **Never** call this clean |\n\n**If any family is `not_present` or `not_exportable`, name it explicitly in the report — do not omit it, and do not present the results as a complete clean bill of health.** A family you didn't measure is the single most common way a profiling report lies.\n\n### 4. Report\n\n```markdown\n## Performance Profile Results\n\n### Recording\n- Target / device / duration / recording mode (from `summary`)\n- Trace: `<path>`\n\n### Support matrix\n- One line per family with its status (and a note for anything not `available`)\n\n### Top user-code frames\n| Function | Binary | Inclusive % | Self % | ~ms |\n|----------|--------|-------------|--------|-----|\n| … | … | … | … | … |\n\n### Main thread\n- Approximate stall signal (with the \"approximate\" caveat from `notes`)\n\n### Recommendations\n1. Highest-impact fix, tied to a specific frame/family\n2. Next investigation step (e.g. re-scope a hang window, add `--dsym`)\n\n### Next steps\n- Open in Instruments for deeper / unparsed views: `open \"<trace>\"`\n```\n\n## Cleanup\n\n**Do not `rm -rf` trace directories** (CLAUDE.md S-3). Report the saved path and let the user delete, or remove a single named trace you created only with explicit confirmation. Recording into `XCPROF_TRACE_ROOT` keeps traces contained. (A safe, preview-first `xcprof cleanup` is a later xcprof phase.)\n\n## Comparison (before / after)\n\n`xcprof compare` is a later phase. For now, record a baseline and a current trace, `analyze --json` both, and compare `user_frames[].inclusive_ms` / `inclusive_pct` between the two by hand to spot regressions.\n\n## Error handling\n\n| Symptom | Cause | Fix |\n|---|---|---|\n| `doctor` exits 2 | xctrace missing | Install Xcode command-line tools |\n| record refused (exit 2) | a security gate wasn't passed | add `--allow-launch` / `--allow-all-processes`, or keep the capture under `XCPROF_TRACE_ROOT` |\n| `--time-limit` refused | exceeds `--max-duration` | raise `--max-duration` (it's the bound that keeps captures finite) |\n| record `ok:false`, no trace | attach target not found / device wrong | re-run target discovery; confirm the app is running |\n| every family `not_present` | wrong preset for the question | re-record with the matching preset |\n| frames are `0x…` | stripped build | pass `--dsym <path>` |\n\n## Tips for better profiles\n\n1. **Warm up** the slow path once before recording (avoid cold-cache noise).\n2. **Isolate** the operation — profile the slow action, not the whole app.\n3. **Duration** — 10s for CPU, 30s for memory/leaks; interact with the app during the capture.\n4. **Repeat** 2–3 times to confirm a pattern is consistent.\n\n## Related\n\n- `axiom-tools (skills/xcprof-ref.md)` — the `xcprof` CLI reference (record/analyze/doctor, presets, gates)\n- `axiom-performance (skills/xctrace-ref.md)` — raw `xctrace` CLI (fallback only)\n- `axiom-performance (skills/performance-profiling.md)` — manual Instruments decision trees\n- `axiom-performance (skills/hang-diagnostics.md)` — confirm main-thread hangs the CPU signal only flags\n- `axiom-swiftui` — SwiftUI-specific profiling\n"
+      "content": "\n# Performance Profiler Agent\n\nYou profile apps headlessly and turn the result into an honest, actionable report. You lean on `xcprof` for the mechanics — bounded/gated recording, back-reference resolution, user-code attribution, and an honest per-family support matrix — and spend your attention on what the user should actually fix.\n\n## Core Principle\n\n**Measure honestly, then attribute to user code.** `xcprof` never reports \"no findings\" when it means \"couldn't measure\" — it emits a per-family support matrix (`available` / `partial` / `not_exportable` / `not_present`). Read that matrix before you call anything clean. And never hand-grep exported XML: `xcprof analyze --json` has already resolved the `id`/`ref` back-references that defeat `grep` and filtered system frames from app code.\n\n## Prerequisites\n\n```bash\ncommand -v xcprof && xcprof doctor\n```\n\n`doctor` verifies `xcrun xctrace` and counts instruments/devices — exit `0` ready, `2` if xctrace is missing. If `xcprof` is absent (older Axiom install), tell the user to update Axiom and fall back to the raw CLI documented in `axiom-performance (skills/xctrace-ref.md)` — do **not** re-introduce a grep-the-XML pipeline.\n\nRecord into a session sandbox so traces are contained and the output gate is satisfied:\n\n```bash\nexport XCPROF_TRACE_ROOT=\"$(mktemp -d)\"\n```\n\n## Workflow\n\n### 1. Pick a target\n\nFind a booted simulator and a running app. Ask the user only when it's ambiguous.\n\n```bash\nxcrun simctl list devices booted -j | jq -r '.devices|to_entries[]|.value[]|\"\\(.name) (\\(.udid))\"'\nBOOTED=$(xcrun simctl list devices booted -j | jq -r '.devices|to_entries[]|.value[0].udid // empty' | head -1)\n[ -n \"$BOOTED\" ] && xcrun simctl spawn \"$BOOTED\" launchctl list 2>/dev/null | grep UIKitApplication | head -10\n```\n\n- App running in a booted sim → attach to it (the common case).\n- Multiple sims / no app named → ask which target.\n- Nothing booted → offer to profile a Mac app or boot a sim.\n\n### 2. Record\n\nMap the user's intent to a preset (or explicit instruments), then record. Recording is always bounded and gated.\n\n| User says | record invocation |\n|---|---|\n| CPU / slow / performance | `xcprof record --preset cpu --attach '<app>' --time-limit 10s` |\n| memory / allocations / leaks / retain cycle | `xcprof record --preset memory --attach '<app>' --time-limit 30s` |\n| network / API latency | `xcprof record --preset network --attach '<app>' --time-limit 20s` |\n| energy / battery | `xcprof record --preset energy --attach '<app>' --time-limit 30s` |\n| SwiftUI / view updates / body | `xcprof record --instrument 'SwiftUI' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s` |\n| concurrency / actors / tasks | `xcprof record --instrument 'Swift Tasks' --instrument 'Swift Actors' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s` |\n| \"find everything\" | `xcprof record --preset full --attach '<app>'` (macOS) · `--preset full-ios` (device) |\n\nTargets and their gates:\n\n- **Attach** (`--attach <pid|name>`) — the default; no gate.\n- **Launch from startup** — append `--allow-launch ... -- <app-path>` (the gate is required; tell the user you're launching a process). Add `--device \"$BOOTED\"` for a sim.\n- **System-wide** — `--all-processes --allow-all-processes`, only when there's no single target.\n- Pass `--no-prompt` (non-interactive), and add `--device \"$BOOTED\"` when profiling a sim.\n- When unsure, add `--dry-run` first to print the exact `xctrace` command without spawning anything.\n\n`record` emits JSON: the saved `trace` path, `instruments`, `target_mode`, effective `time_limit`, the full `command` echo, `ok`, and `notes`. **`ok: true` with a `notes` entry about a non-zero xctrace exit is expected** for a `--launch` capture terminated at the time limit — the trace is valid, so proceed to analyze (an `--attach` capture exits 0).\n\n### 3. Analyze\n\n```bash\nxcprof analyze \"<trace>\" --json\n```\n\nConsume the structured fields — do not grep:\n\n- `summary` — target, device, duration, recording mode.\n- `support[]` — per family `{family, status}`. **This is the honesty gate** (table below).\n- `user_frames[]` then `hot_frames[]` — `{name, binary, inclusive_pct, self_pct, inclusive_ms, self_ms}`. Lead with `user_frames` (app code); `hot_frames` includes system frames.\n- `main_thread` — the approximate main-thread stall signal.\n- `notes[]` — caveats to pass through (symbolication gaps, approximate stalls).\n\nTwo refinements:\n\n- **Hang window** — if a stall shows near t≈Xs, re-scope without re-recording: `xcprof analyze \"<trace>\" --start-ms <start> --end-ms <end> --json`.\n- **Stripped/release build** (`0x…` frame names) — pass `--dsym <path>`, or rely on UUID auto-discovery; unresolved frames stay raw and are flagged, never invented.\n\nFor instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), report the CPU portion from the JSON and tell the user to open the trace in Instruments for the instrument-specific view: `open \"<trace>\"`.\n\n#### Support status → what to report\n\n| status | meaning | how to report it |\n|---|---|---|\n| `available` | measured, results present | report the findings |\n| `partial` | schema present but parsing pending (or cpu table present with no samples) | report what parsed; name the gap |\n| `not_exportable` | schema absent from the export; the GUI may still show it | \"not measurable headlessly\" — suggest opening in Instruments |\n| `not_present` | the instrument wasn't in the recording | \"not measured\" — re-record with the right preset. **Never** call this clean |\n\n**If any family is `not_present` or `not_exportable`, name it explicitly in the report — do not omit it, and do not present the results as a complete clean bill of health.** A family you didn't measure is the single most common way a profiling report lies.\n\n### 4. Report\n\n```markdown\n## Performance Profile Results\n\n### Recording\n- Target / device / duration / recording mode (from `summary`)\n- Trace: `<path>`\n\n### Support matrix\n- One line per family with its status (and a note for anything not `available`)\n\n### Top user-code frames\n| Function | Binary | Inclusive % | Self % | ~ms |\n|----------|--------|-------------|--------|-----|\n| … | … | … | … | … |\n\n### Main thread\n- Approximate stall signal (with the \"approximate\" caveat from `notes`)\n\n### Recommendations\n1. Highest-impact fix, tied to a specific frame/family\n2. Next investigation step (e.g. re-scope a hang window, add `--dsym`)\n\n### Next steps\n- Open in Instruments for deeper / unparsed views: `open \"<trace>\"`\n```\n\n## Cleanup\n\n**Do not `rm -rf` trace directories** (CLAUDE.md S-3). Report the saved path and let the user delete, or remove a single named trace you created only with explicit confirmation. Recording into `XCPROF_TRACE_ROOT` keeps traces contained. (A safe, preview-first `xcprof cleanup` is a later xcprof phase.)\n\n## Comparison (before / after)\n\nUse `xcprof compare <baseline> <current> --json` to diff two traces. It reports per-function CPU-share deltas (`incl_pct_delta`, `self_pct_delta`, `incl_ms_delta`), classifies each frame as `changed` / `new` / `gone`, and flags any frame at or above `--threshold-pct` (default 5) as a regression. Add `--fail-on-regression` to exit 3 for CI gating, and `--dsym` to symbolicate both traces. Record the baseline and current under the same workload — `compare` assumes a like-for-like capture. See `/axiom:compare-traces` and `axiom-performance (skills/trace-comparison.md)`.\n\n## Error handling\n\n| Symptom | Cause | Fix |\n|---|---|---|\n| `doctor` exits 2 | xctrace missing | Install Xcode command-line tools |\n| record refused (exit 2) | a security gate wasn't passed | add `--allow-launch` / `--allow-all-processes`, or keep the capture under `XCPROF_TRACE_ROOT` |\n| `--time-limit` refused | exceeds `--max-duration` | raise `--max-duration` (it's the bound that keeps captures finite) |\n| record `ok:false`, no trace | attach target not found / device wrong | re-run target discovery; confirm the app is running |\n| every family `not_present` | wrong preset for the question | re-record with the matching preset |\n| frames are `0x…` | stripped build | pass `--dsym <path>` |\n\n## Tips for better profiles\n\n1. **Warm up** the slow path once before recording (avoid cold-cache noise).\n2. **Isolate** the operation — profile the slow action, not the whole app.\n3. **Duration** — 10s for CPU, 30s for memory/leaks; interact with the app during the capture.\n4. **Repeat** 2–3 times to confirm a pattern is consistent.\n\n## Related\n\n- `axiom-tools (skills/xcprof-ref.md)` — the `xcprof` CLI reference (record/analyze/compare/doctor, presets, gates)\n- `axiom-performance (skills/trace-comparison.md)` — the `xcprof compare` before/after regression workflow\n- `axiom-performance (skills/xctrace-ref.md)` — raw `xctrace` CLI (fallback only)\n- `axiom-performance (skills/performance-profiling.md)` — manual Instruments decision trees\n- `axiom-performance (skills/hang-diagnostics.md)` — confirm main-thread hangs the CPU signal only flags\n- `axiom-swiftui` — SwiftUI-specific profiling\n"
     },
     "screenshot-validator": {
       "name": "screenshot-validator",
@@ -42162,7 +42162,7 @@
           33,
           2,
           44,
-          326
+          361
         ],
         "169": [
           4,
@@ -42316,7 +42316,7 @@
           24,
           2,
           31,
-          598
+          629
         ],
         "191": [
           4,
@@ -42540,7 +42540,7 @@
           51,
           2,
           26,
-          850
+          851
         ],
         "223": [
           4,
@@ -42702,7 +42702,7 @@
         16.97142857142857,
         4.106122448979592,
         43.861224489795916,
-        625.7836734693882
+        626.0571428571427
       ],
       "storedFields": {
         "0": {
@@ -44322,7 +44322,7 @@
               "168": 2,
               "175": 1,
               "183": 1,
-              "190": 2,
+              "190": 3,
               "193": 5,
               "195": 4,
               "196": 1,
@@ -45863,6 +45863,7 @@
               "185": 2,
               "186": 1,
               "187": 1,
+              "190": 1,
               "191": 1,
               "199": 1,
               "202": 1,
@@ -50856,6 +50857,14 @@
           }
         ],
         [
+          "05s",
+          {
+            "4": {
+              "168": 1
+            }
+          }
+        ],
+        [
           "050s",
           {
             "4": {
@@ -54802,6 +54811,14 @@
           }
         ],
         [
+          "36s",
+          {
+            "4": {
+              "168": 1
+            }
+          }
+        ],
+        [
           "360",
           {
             "1": {
@@ -54846,6 +54863,7 @@
               "17": 2,
               "53": 2,
               "130": 5,
+              "168": 1,
               "183": 1
             }
           }
@@ -57410,7 +57428,7 @@
               "64": 1,
               "103": 1,
               "142": 1,
-              "168": 2,
+              "168": 3,
               "202": 1,
               "234": 1
             }
@@ -59242,6 +59260,7 @@
               "163": 1,
               "165": 1,
               "166": 5,
+              "190": 1,
               "219": 1
             }
           }
@@ -60322,6 +60341,7 @@
               "165": 1,
               "166": 3,
               "167": 1,
+              "168": 1,
               "172": 1,
               "175": 1,
               "182": 1,
@@ -67759,6 +67779,7 @@
               "143": 2,
               "147": 1,
               "161": 1,
+              "168": 1,
               "172": 1,
               "174": 1,
               "175": 1,
@@ -72745,6 +72766,7 @@
               "155": 9,
               "156": 1,
               "158": 1,
+              "168": 1,
               "169": 3,
               "174": 1,
               "175": 2,
@@ -73490,6 +73512,7 @@
               "9": 2,
               "11": 2,
               "12": 1,
+              "168": 1,
               "217": 1,
               "229": 1,
               "232": 1
@@ -73794,6 +73817,7 @@
               "149": 3,
               "150": 4,
               "151": 1,
+              "168": 1,
               "190": 1,
               "201": 1,
               "238": 1
@@ -73850,6 +73874,14 @@
           {
             "4": {
               "178": 1
+            }
+          }
+        ],
+        [
+          "26s",
+          {
+            "4": {
+              "168": 1
             }
           }
         ],
@@ -78642,7 +78674,7 @@
               "183": 1,
               "185": 1,
               "187": 1,
-              "190": 8,
+              "190": 10,
               "197": 2,
               "199": 2,
               "212": 5,
@@ -78829,7 +78861,8 @@
               "151": 1,
               "153": 1,
               "159": 1,
-              "185": 1
+              "185": 1,
+              "190": 1
             }
           }
         ],
@@ -85643,6 +85676,7 @@
               "91": 1,
               "127": 5,
               "128": 1,
+              "190": 2,
               "226": 2,
               "227": 1,
               "231": 1
@@ -87916,7 +87950,8 @@
               "57": 1,
               "61": 1,
               "64": 2,
-              "142": 1
+              "142": 1,
+              "190": 1
             }
           }
         ],
@@ -89200,7 +89235,7 @@
               "185": 3,
               "187": 8,
               "188": 1,
-              "190": 4,
+              "190": 6,
               "191": 1,
               "197": 1,
               "201": 3,
@@ -89580,7 +89615,7 @@
               "187": 12,
               "188": 40,
               "189": 2,
-              "190": 4,
+              "190": 7,
               "191": 20,
               "192": 5,
               "193": 2,
@@ -90095,6 +90130,7 @@
               "165": 9,
               "166": 2,
               "167": 2,
+              "168": 1,
               "171": 21,
               "173": 3,
               "174": 1,
@@ -93632,7 +93668,7 @@
               "165": 11,
               "166": 10,
               "167": 1,
-              "168": 10,
+              "168": 11,
               "169": 3,
               "170": 1,
               "197": 7,
@@ -95874,6 +95910,7 @@
               "180": 1,
               "185": 2,
               "187": 3,
+              "190": 1,
               "191": 1,
               "192": 1,
               "199": 2,
@@ -96080,7 +96117,7 @@
               "187": 12,
               "188": 6,
               "189": 1,
-              "190": 3,
+              "190": 4,
               "191": 9,
               "192": 4,
               "193": 1,
@@ -96343,6 +96380,7 @@
               "186": 1,
               "187": 2,
               "188": 2,
+              "190": 1,
               "191": 2,
               "193": 2,
               "195": 3,
@@ -97784,6 +97822,7 @@
               "184": 5,
               "186": 2,
               "188": 1,
+              "190": 1,
               "191": 1,
               "198": 1,
               "212": 1,
@@ -98616,7 +98655,7 @@
               "165": 5,
               "166": 15,
               "167": 1,
-              "168": 5,
+              "168": 6,
               "169": 11,
               "171": 9,
               "172": 4,
@@ -98817,7 +98856,8 @@
           "ris",
           {
             "4": {
-              "168": 1
+              "168": 1,
+              "190": 1
             }
           }
         ],
@@ -99647,7 +99687,8 @@
               "38": 1,
               "142": 3,
               "170": 13,
-              "188": 1
+              "188": 1,
+              "190": 2
             }
           }
         ],
@@ -102577,6 +102618,7 @@
               "129": 1,
               "150": 1,
               "165": 1,
+              "168": 1,
               "181": 1,
               "186": 2,
               "188": 1,
@@ -102621,7 +102663,7 @@
           {
             "4": {
               "6": 1,
-              "168": 2
+              "168": 3
             }
           }
         ],
@@ -105476,7 +105518,7 @@
               "164": 1,
               "165": 4,
               "166": 19,
-              "168": 12,
+              "168": 13,
               "169": 33,
               "175": 2,
               "185": 2,
@@ -106612,7 +106654,7 @@
               "163": 2,
               "165": 1,
               "166": 5,
-              "168": 1,
+              "168": 2,
               "169": 1,
               "170": 3,
               "171": 10,
@@ -107768,7 +107810,7 @@
               "164": 1,
               "166": 2,
               "167": 2,
-              "168": 1,
+              "168": 3,
               "170": 1,
               "172": 1,
               "175": 1,
@@ -108282,6 +108324,7 @@
               "151": 1,
               "156": 2,
               "157": 2,
+              "168": 1,
               "191": 1,
               "196": 1,
               "197": 2,
@@ -117219,7 +117262,7 @@
               "185": 23,
               "186": 34,
               "187": 13,
-              "190": 4,
+              "190": 5,
               "191": 21,
               "192": 16,
               "194": 1,
@@ -119157,6 +119200,7 @@
               "163": 1,
               "165": 1,
               "167": 1,
+              "168": 1,
               "172": 1,
               "176": 21,
               "177": 3,
@@ -121225,6 +121269,7 @@
               "164": 1,
               "166": 4,
               "167": 12,
+              "168": 1,
               "169": 1,
               "172": 2,
               "173": 3,
@@ -122108,7 +122153,7 @@
               "186": 1,
               "187": 1,
               "188": 3,
-              "190": 1,
+              "190": 2,
               "191": 5,
               "192": 2,
               "195": 2,
@@ -122326,7 +122371,7 @@
               "184": 4,
               "186": 5,
               "188": 22,
-              "190": 10,
+              "190": 11,
               "191": 3,
               "204": 1,
               "206": 3,
@@ -122449,7 +122494,7 @@
               "187": 9,
               "188": 26,
               "189": 2,
-              "190": 5,
+              "190": 7,
               "191": 10,
               "193": 3,
               "195": 1,
@@ -124881,7 +124926,7 @@
               "165": 15,
               "166": 8,
               "167": 6,
-              "168": 1,
+              "168": 2,
               "169": 2,
               "172": 4,
               "180": 2,
@@ -129212,6 +129257,7 @@
               "185": 2,
               "186": 1,
               "187": 2,
+              "190": 1,
               "197": 2,
               "199": 2,
               "209": 6,
@@ -129601,6 +129647,14 @@
           }
         ],
         [
+          "libgmalloc",
+          {
+            "4": {
+              "222": 1
+            }
+          }
+        ],
+        [
           "libexec",
           {
             "4": {
@@ -129949,6 +130003,7 @@
             "4": {
               "9": 1,
               "43": 1,
+              "190": 1,
               "233": 3
             }
           }
@@ -130148,7 +130203,7 @@
               "160": 1,
               "165": 2,
               "166": 3,
-              "168": 3,
+              "168": 4,
               "169": 12,
               "171": 27,
               "172": 20,
@@ -130815,6 +130870,7 @@
               "161": 1,
               "165": 2,
               "166": 2,
+              "168": 2,
               "169": 1,
               "185": 2,
               "191": 1,
@@ -131411,6 +131467,7 @@
               "160": 1,
               "161": 2,
               "167": 1,
+              "168": 1,
               "170": 4,
               "171": 72,
               "173": 12,
@@ -131844,7 +131901,7 @@
               "187": 3,
               "188": 2,
               "189": 1,
-              "190": 6,
+              "190": 7,
               "191": 1,
               "212": 2,
               "217": 1,
@@ -132181,7 +132238,8 @@
           "landed",
           {
             "4": {
-              "159": 1
+              "159": 1,
+              "168": 1
             }
           }
         ],
@@ -132266,6 +132324,7 @@
               "110": 1,
               "142": 1,
               "152": 1,
+              "168": 1,
               "235": 1
             }
           }
@@ -135916,7 +135975,7 @@
               "164": 27,
               "166": 21,
               "167": 63,
-              "168": 7,
+              "168": 10,
               "169": 4,
               "170": 6,
               "174": 4,
@@ -136343,6 +136402,7 @@
               "142": 1,
               "163": 5,
               "166": 1,
+              "190": 1,
               "200": 1,
               "225": 9,
               "236": 1
@@ -136397,7 +136457,7 @@
               "178": 2,
               "179": 4,
               "188": 3,
-              "190": 3,
+              "190": 4,
               "199": 6,
               "206": 1,
               "209": 1,
@@ -137899,7 +137959,7 @@
               "217": 13,
               "218": 5,
               "220": 1,
-              "222": 5,
+              "222": 6,
               "225": 6,
               "230": 1,
               "244": 1
@@ -138181,6 +138241,7 @@
               "162": 1,
               "166": 3,
               "167": 13,
+              "168": 1,
               "179": 1,
               "185": 2,
               "188": 1,
@@ -138364,6 +138425,7 @@
               "147": 1,
               "157": 1,
               "166": 1,
+              "168": 1,
               "178": 1,
               "185": 2,
               "188": 1,
@@ -140054,7 +140116,7 @@
               "211": 1,
               "212": 26,
               "221": 5,
-              "222": 7,
+              "222": 6,
               "224": 4,
               "226": 5,
               "227": 1,
@@ -142315,7 +142377,7 @@
               "32": 1,
               "79": 1,
               "107": 2,
-              "190": 3,
+              "190": 4,
               "229": 1
             }
           }
@@ -142644,6 +142706,7 @@
               "165": 3,
               "166": 8,
               "167": 10,
+              "168": 1,
               "169": 2,
               "171": 5,
               "172": 1,
@@ -144310,7 +144373,7 @@
               "177": 1,
               "185": 5,
               "187": 1,
-              "190": 2,
+              "190": 4,
               "191": 1,
               "192": 1,
               "193": 5,
@@ -144621,7 +144684,7 @@
           {
             "4": {
               "158": 1,
-              "168": 8,
+              "168": 9,
               "169": 1,
               "221": 4
             }
@@ -148559,7 +148622,7 @@
               "165": 9,
               "166": 2,
               "167": 3,
-              "168": 2,
+              "168": 4,
               "170": 23,
               "172": 10,
               "173": 5,
@@ -148576,7 +148639,7 @@
               "186": 27,
               "187": 1,
               "188": 3,
-              "190": 5,
+              "190": 6,
               "192": 3,
               "195": 2,
               "197": 2,
@@ -150862,14 +150925,6 @@
           {
             "4": {
               "159": 2
-            }
-          }
-        ],
-        [
-          "poison",
-          {
-            "4": {
-              "222": 1
             }
           }
         ],
@@ -154514,7 +154569,7 @@
               "185": 4,
               "187": 2,
               "188": 5,
-              "190": 1,
+              "190": 2,
               "191": 2,
               "192": 23,
               "193": 4,
@@ -155077,7 +155132,7 @@
               "218": 2,
               "219": 2,
               "220": 1,
-              "222": 19,
+              "222": 18,
               "224": 6,
               "225": 5,
               "228": 2,
@@ -157198,7 +157253,8 @@
               "155": 2,
               "166": 1,
               "180": 1,
-              "183": 1
+              "183": 1,
+              "190": 1
             }
           }
         ],
@@ -164035,7 +164091,7 @@
               "179": 1,
               "180": 2,
               "187": 2,
-              "190": 3,
+              "190": 4,
               "196": 4,
               "197": 1,
               "198": 4,
@@ -167648,7 +167704,7 @@
               "217": 6,
               "219": 2,
               "221": 3,
-              "222": 11,
+              "222": 12,
               "225": 9,
               "229": 1,
               "230": 2,
@@ -168017,6 +168073,7 @@
               "178": 2,
               "179": 2,
               "180": 1,
+              "190": 2,
               "191": 2,
               "192": 1,
               "194": 1,
@@ -170010,7 +170067,7 @@
               "165": 2,
               "166": 6,
               "167": 1,
-              "168": 26,
+              "168": 28,
               "169": 51,
               "179": 1,
               "184": 2,
@@ -172169,7 +172226,8 @@
             "4": {
               "35": 1,
               "36": 1,
-              "59": 2
+              "59": 2,
+              "190": 1
             }
           }
         ],
@@ -172889,7 +172947,7 @@
             "4": {
               "76": 1,
               "149": 1,
-              "168": 1
+              "168": 4
             }
           }
         ],
@@ -172946,7 +173004,7 @@
               "165": 1,
               "166": 17,
               "167": 3,
-              "168": 2,
+              "168": 4,
               "184": 1,
               "186": 3,
               "187": 1,
@@ -176050,6 +176108,7 @@
               "161": 1,
               "163": 1,
               "165": 1,
+              "168": 1,
               "173": 1,
               "185": 4,
               "191": 1,
@@ -179454,6 +179513,7 @@
               "163": 3,
               "165": 8,
               "167": 1,
+              "168": 1,
               "170": 1,
               "171": 1,
               "172": 5,
@@ -179840,6 +179900,7 @@
               "99": 1,
               "110": 1,
               "142": 1,
+              "168": 1,
               "188": 2
             }
           }
@@ -180826,6 +180887,7 @@
               "27": 1,
               "39": 1,
               "158": 1,
+              "190": 1,
               "191": 1,
               "226": 1,
               "240": 1
@@ -180848,7 +180910,7 @@
               "171": 1,
               "172": 1,
               "173": 1,
-              "190": 1,
+              "190": 2,
               "191": 1,
               "226": 3,
               "227": 2,
@@ -181011,7 +181073,7 @@
               "163": 2,
               "165": 3,
               "167": 4,
-              "168": 1,
+              "168": 2,
               "170": 7,
               "171": 7,
               "172": 1,
@@ -181422,6 +181484,7 @@
               "179": 2,
               "184": 1,
               "185": 1,
+              "190": 1,
               "196": 1,
               "197": 3,
               "200": 1,
@@ -182858,7 +182921,7 @@
               "172": 1,
               "185": 2,
               "188": 2,
-              "190": 2,
+              "190": 3,
               "191": 1,
               "196": 1,
               "197": 4,
@@ -183192,7 +183255,7 @@
               "165": 32,
               "166": 23,
               "167": 12,
-              "168": 3,
+              "168": 4,
               "169": 2,
               "170": 16,
               "171": 22,
@@ -183214,7 +183277,7 @@
               "187": 35,
               "188": 7,
               "189": 4,
-              "190": 18,
+              "190": 19,
               "191": 14,
               "192": 2,
               "193": 3,
@@ -186976,7 +187039,7 @@
               "121": 1,
               "143": 1,
               "161": 1,
-              "168": 1,
+              "168": 2,
               "195": 2,
               "197": 1,
               "200": 1,
@@ -187078,6 +187141,7 @@
               "157": 1,
               "160": 1,
               "166": 2,
+              "168": 1,
               "182": 1,
               "185": 1,
               "195": 21,
@@ -189061,6 +189125,7 @@
               "165": 14,
               "166": 8,
               "167": 3,
+              "168": 1,
               "170": 7,
               "171": 1,
               "172": 2,
@@ -189783,7 +189848,7 @@
               "186": 2,
               "187": 1,
               "188": 1,
-              "190": 2,
+              "190": 3,
               "191": 4,
               "192": 3,
               "193": 1,
@@ -191352,7 +191417,7 @@
               "114": 4,
               "115": 4,
               "117": 1,
-              "168": 8,
+              "168": 9,
               "196": 2,
               "198": 3,
               "203": 1,
@@ -198269,7 +198334,8 @@
           {
             "4": {
               "4": 2,
-              "100": 1
+              "100": 1,
+              "168": 1
             }
           }
         ],
@@ -203915,7 +203981,7 @@
               "165": 59,
               "166": 24,
               "167": 10,
-              "168": 2,
+              "168": 3,
               "169": 2,
               "170": 6,
               "171": 5,
@@ -206704,7 +206770,7 @@
           "incl",
           {
             "4": {
-              "168": 3,
+              "168": 4,
               "221": 1
             }
           }
@@ -207154,6 +207220,7 @@
               "185": 2,
               "186": 2,
               "187": 2,
+              "190": 1,
               "191": 1,
               "196": 1,
               "222": 1
@@ -211323,7 +211390,7 @@
               "212": 9,
               "213": 7,
               "217": 5,
-              "222": 9,
+              "222": 10,
               "224": 48,
               "226": 10,
               "227": 6,
@@ -211626,7 +211693,7 @@
               "162": 1,
               "166": 2,
               "167": 2,
-              "168": 3,
+              "168": 5,
               "180": 1,
               "184": 1,
               "186": 1,
@@ -214196,6 +214263,14 @@
           }
         ],
         [
+          "wear",
+          {
+            "4": {
+              "168": 1
+            }
+          }
+        ],
+        [
           "wearable",
           {
             "4": {
@@ -216320,13 +216395,14 @@
               "163": 1,
               "164": 1,
               "166": 4,
-              "168": 1,
+              "168": 2,
               "171": 3,
               "176": 12,
               "177": 3,
               "180": 1,
               "182": 1,
               "185": 2,
+              "190": 1,
               "191": 2,
               "196": 2,
               "197": 3,
@@ -216589,6 +216665,7 @@
               "165": 1,
               "166": 10,
               "167": 11,
+              "168": 1,
               "173": 2,
               "175": 3,
               "178": 2,
@@ -217050,7 +217127,7 @@
               "165": 8,
               "166": 23,
               "167": 25,
-              "168": 6,
+              "168": 7,
               "169": 2,
               "170": 5,
               "171": 2,
@@ -217303,6 +217380,7 @@
               "165": 7,
               "166": 17,
               "167": 5,
+              "168": 1,
               "170": 4,
               "171": 8,
               "173": 4,
@@ -219399,7 +219477,7 @@
               "165": 8,
               "166": 12,
               "167": 3,
-              "168": 1,
+              "168": 3,
               "171": 4,
               "173": 2,
               "175": 1,
@@ -219988,6 +220066,7 @@
               "157": 1,
               "158": 1,
               "170": 1,
+              "190": 1,
               "191": 1,
               "196": 1,
               "208": 1,
@@ -224587,7 +224666,7 @@
               "161": 4,
               "166": 1,
               "167": 14,
-              "168": 1,
+              "168": 2,
               "175": 1,
               "187": 1,
               "193": 3,
@@ -226278,7 +226357,7 @@
               "187": 9,
               "188": 5,
               "189": 1,
-              "190": 6,
+              "190": 7,
               "191": 4,
               "192": 5,
               "193": 13,
@@ -228467,7 +228546,7 @@
               "218": 20,
               "219": 21,
               "220": 2,
-              "222": 14,
+              "222": 13,
               "224": 21,
               "225": 35,
               "226": 18,
@@ -230250,7 +230329,8 @@
             "4": {
               "24": 1,
               "57": 1,
-              "165": 1
+              "165": 1,
+              "168": 1
             }
           }
         ],
@@ -232810,7 +232890,7 @@
               "159": 1,
               "162": 1,
               "167": 2,
-              "168": 4,
+              "168": 5,
               "171": 1,
               "173": 2,
               "175": 2,
@@ -235292,7 +235372,7 @@
               "160": 1,
               "178": 1,
               "182": 1,
-              "190": 3,
+              "190": 4,
               "196": 1,
               "197": 5,
               "199": 2,
@@ -236966,6 +237046,7 @@
           "shrinks",
           {
             "4": {
+              "168": 1,
               "204": 1,
               "224": 1
             }
@@ -237746,7 +237827,7 @@
               "177": 57,
               "179": 18,
               "188": 5,
-              "190": 1,
+              "190": 2,
               "195": 2,
               "196": 1,
               "197": 9,
@@ -238158,7 +238239,7 @@
               "160": 2,
               "164": 1,
               "167": 1,
-              "168": 10,
+              "168": 14,
               "169": 1,
               "170": 1,
               "173": 2,
@@ -245749,6 +245830,14 @@
           }
         ],
         [
+          "sitt",
+          {
+            "4": {
+              "190": 1
+            }
+          }
+        ],
+        [
           "sit",
           {
             "4": {
@@ -247847,6 +247936,7 @@
               "182": 2,
               "185": 3,
               "188": 1,
+              "190": 1,
               "191": 3,
               "193": 1,
               "194": 1,
@@ -249034,6 +249124,7 @@
               "161": 4,
               "163": 1,
               "171": 1,
+              "190": 1,
               "201": 2,
               "212": 1,
               "225": 3,
@@ -251165,7 +251256,7 @@
               "147": 1,
               "153": 1,
               "185": 1,
-              "190": 2,
+              "190": 3,
               "191": 1,
               "231": 1,
               "232": 9,
@@ -253209,6 +253300,7 @@
               "163": 4,
               "166": 1,
               "167": 2,
+              "168": 1,
               "169": 2,
               "185": 1,
               "187": 1,
@@ -256508,7 +256600,7 @@
               "164": 32,
               "166": 30,
               "167": 1,
-              "168": 7,
+              "168": 8,
               "169": 36,
               "184": 2,
               "191": 3,
@@ -258554,7 +258646,7 @@
               "190": 16,
               "191": 9,
               "217": 5,
-              "222": 5
+              "222": 6
             }
           }
         ],
@@ -258636,7 +258728,7 @@
               "184": 14,
               "185": 12,
               "187": 6,
-              "190": 2,
+              "190": 3,
               "191": 29,
               "192": 1,
               "193": 1,
@@ -258746,7 +258838,7 @@
               "186": 3,
               "187": 3,
               "188": 6,
-              "190": 26,
+              "190": 27,
               "191": 110,
               "194": 1,
               "199": 2,
@@ -260123,7 +260215,7 @@
               "161": 2,
               "162": 1,
               "167": 1,
-              "168": 9,
+              "168": 11,
               "169": 2,
               "170": 3,
               "171": 3,
@@ -260631,7 +260723,7 @@
               "142": 1,
               "165": 1,
               "167": 1,
-              "190": 1
+              "190": 2
             }
           }
         ],
@@ -260810,6 +260902,7 @@
               "167": 2,
               "176": 1,
               "187": 1,
+              "190": 1,
               "191": 1,
               "193": 5,
               "196": 1,
@@ -261831,7 +261924,8 @@
               "57": 3,
               "70": 1,
               "163": 2,
-              "166": 1
+              "166": 1,
+              "190": 1
             }
           }
         ],
@@ -263073,6 +263167,7 @@
               "185": 5,
               "186": 4,
               "187": 1,
+              "190": 1,
               "191": 1,
               "192": 2,
               "193": 2,
@@ -267805,7 +267900,7 @@
               "165": 3,
               "166": 2,
               "167": 10,
-              "168": 3,
+              "168": 4,
               "170": 4,
               "171": 1,
               "173": 7,
@@ -270055,7 +270150,7 @@
               "186": 7,
               "187": 5,
               "188": 3,
-              "190": 7,
+              "190": 8,
               "191": 16,
               "192": 6,
               "193": 2,
@@ -272706,6 +272801,14 @@
           }
         ],
         [
+          "concretely",
+          {
+            "4": {
+              "168": 1
+            }
+          }
+        ],
+        [
           "concrete",
           {
             "1": {
@@ -273931,6 +274034,7 @@
               "180": 1,
               "186": 3,
               "188": 1,
+              "190": 1,
               "191": 2,
               "197": 4,
               "213": 5,
@@ -286171,7 +286275,7 @@
               "163": 1,
               "164": 2,
               "167": 2,
-              "168": 2,
+              "168": 3,
               "170": 4,
               "171": 12,
               "172": 22,
@@ -289894,7 +289998,7 @@
               "185": 7,
               "186": 3,
               "187": 4,
-              "190": 2,
+              "190": 3,
               "191": 2,
               "193": 5,
               "194": 1,
@@ -290773,7 +290877,7 @@
               "165": 1,
               "166": 4,
               "167": 1,
-              "168": 1,
+              "168": 2,
               "174": 1,
               "176": 2,
               "179": 1,
@@ -296655,7 +296759,7 @@
               "151": 1,
               "157": 1,
               "160": 1,
-              "168": 2,
+              "168": 3,
               "186": 1,
               "196": 3,
               "197": 1,
@@ -305699,7 +305803,7 @@
               "165": 5,
               "166": 2,
               "167": 8,
-              "168": 1,
+              "168": 2,
               "170": 4,
               "171": 1,
               "172": 1,
@@ -306941,6 +307045,7 @@
               "180": 19,
               "191": 1,
               "216": 1,
+              "222": 1,
               "223": 1
             }
           }
@@ -308919,6 +309024,7 @@
               "53": 4,
               "112": 2,
               "180": 3,
+              "190": 1,
               "197": 4,
               "207": 1,
               "208": 1,
@@ -309798,7 +309904,7 @@
               "206": 1,
               "217": 3,
               "221": 2,
-              "222": 4,
+              "222": 3,
               "224": 6,
               "232": 2,
               "233": 6
@@ -310788,6 +310894,7 @@
               "179": 1,
               "183": 1,
               "185": 1,
+              "190": 2,
               "191": 1,
               "198": 1,
               "199": 1,
@@ -518957,7 +519064,55 @@
           "even",
           "if",
           "ran",
-          "durations"
+          "durations",
+          "but",
+          "relative",
+          "trace",
+          "summary",
+          "vs",
+          "totals",
+          "first",
+          "higher",
+          "run",
+          "regardless",
+          "any",
+          "per",
+          "drop",
+          "can",
+          "do",
+          "more",
+          "while",
+          "shrinks",
+          "so",
+          "lands",
+          "gets",
+          "negative",
+          "diverge",
+          "view",
+          "tells",
+          "where",
+          "landed",
+          "what",
+          "faster",
+          "never",
+          "fall",
+          "optimiza",
+          "until",
+          "match",
+          "re",
+          "record",
+          "like",
+          "concretely",
+          "22",
+          "2s",
+          "26s",
+          "17",
+          "05s",
+          "36s",
+          "36",
+          "slowdown",
+          "wear",
+          "label"
         ],
         "CI Recipe": [
           "ci",
@@ -548456,7 +548611,53 @@
           "actively",
           "runn",
           "hang",
-          "captured"
+          "captured",
+          "fixed",
+          "newer",
+          "build",
+          "version",
+          "split",
+          "rollout",
+          "exposure",
+          "blind",
+          "most",
+          "events",
+          "sitt",
+          "older",
+          "normal",
+          "shape",
+          "incomplete",
+          "proof",
+          "actually",
+          "stopped",
+          "latest",
+          "there",
+          "still",
+          "per",
+          "rate",
+          "flat",
+          "ris",
+          "adop",
+          "grows",
+          "fired",
+          "because",
+          "newest",
+          "little",
+          "yet",
+          "while",
+          "crashes",
+          "climb",
+          "live",
+          "escalate",
+          "don",
+          "close",
+          "confirm",
+          "change",
+          "touched",
+          "path",
+          "between",
+          "two",
+          "versions"
         ],
         "Resources": [
           "resources",
@@ -590554,15 +590755,18 @@
           "runtime",
           "failure",
           "precondi",
+          "asser",
           "sentinel",
           "frame",
           "zombie",
           "heap",
           "corrup",
           "heuristic",
+          "libgmalloc",
           "ns",
-          "poison",
-          "address",
+          "image",
+          "crashed",
+          "thread",
           "stack",
           "overflow",
           "kern",
@@ -590576,6 +590780,7 @@
           "access",
           "exc",
           "invalid",
+          "address",
           "illegal",
           "instruc",
           "inst",
@@ -590586,11 +590791,9 @@
           "sigabrt",
           "throw",
           "main",
-          "thread",
           "checker",
           "mtc",
           "dylib",
-          "crashed",
           "frames",
           "abort",
           "payload",
