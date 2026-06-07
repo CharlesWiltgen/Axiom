@@ -169,10 +169,7 @@ func countCandidateFamilies(issues []TriageIssue) int {
 	return len(seen)
 }
 
-// Temporary stubs for Phase E functions. DELETE each stub when the real
-// implementation lands in its phase.
+// Temporary stub for Phase E2. DELETE when detectEnrichment lands in triage_cluster.go.
 func detectEnrichment(r *NormalizedReport, raw *RawCrash, cat CategorizeResult) []Enrichment {
 	return nil
 }
-func clusterKey(raw *RawCrash, cat CategorizeResult) (string, string) { return cat.Tag, "low" }
-func buildClusters(issues []TriageIssue) []Cluster                    { return []Cluster{} }

@@ -1,0 +1,86 @@
+package main
+
+import (
+	"sort"
+	"strings"
+)
+
+const clusterSignatureFrames = 3
+
+// clusterKey returns a conservative mechanical cluster signature and a
+// confidence. It uses the top app (InApp) frames when present; with no app
+// frames it falls back to the top system frame and marks confidence "low" so
+// the agent treats the bucket as a bag to split, never a real cluster.
+func clusterKey(raw *RawCrash, cat CategorizeResult) (string, string) {
+	role := "crash"
+	if raw.Kind == "hang" {
+		role = "hang"
+	}
+	var crashed *Thread
+	if raw.CrashedIdx >= 0 && raw.CrashedIdx < len(raw.Threads) {
+		crashed = &raw.Threads[raw.CrashedIdx]
+	}
+	if crashed == nil {
+		return role + "|" + cat.Tag + "|", "low"
+	}
+	var appSig []string
+	for _, f := range crashed.Frames {
+		if f.InApp {
+			appSig = append(appSig, frameSig(f))
+			if len(appSig) == clusterSignatureFrames {
+				break
+			}
+		}
+	}
+	if len(appSig) > 0 {
+		return role + "|" + cat.Tag + "|" + strings.Join(appSig, ">"), "high"
+	}
+	// System fallback: top frame only, low confidence.
+	top := ""
+	if len(crashed.Frames) > 0 {
+		top = frameSig(crashed.Frames[0])
+	}
+	return role + "|" + cat.Tag + "|sys:" + top, "low"
+}
+
+func frameSig(f Frame) string {
+	if f.Symbol != "" {
+		return f.Symbol
+	}
+	return f.Image
+}
+
+// buildClusters groups issues by ClusterKey and aggregates impact. The
+// per-cluster confidence is recomputed as "low" if any member key carries the
+// system-fallback "|sys:" marker.
+func buildClusters(issues []TriageIssue) []Cluster {
+	idx := map[string]*Cluster{}
+	var order []string
+	for _, is := range issues {
+		c, ok := idx[is.ClusterKey]
+		if !ok {
+			// Use the confidence clusterKey computed for the issue, not a
+			// re-parse of the key string — a nil-crashed-thread key like
+			// "crash|unclassified|" is "low" without carrying a "|sys:" marker.
+			conf := is.ClusterConfidence
+			if conf == "" {
+				conf = "low"
+			}
+			c = &Cluster{ClusterKey: is.ClusterKey, ClusterConfidence: conf, DominantPatternTag: is.PatternTag}
+			idx[is.ClusterKey] = c
+			order = append(order, is.ClusterKey)
+		} else if is.ClusterConfidence == "low" {
+			c.ClusterConfidence = "low" // any low-confidence member downgrades the bag
+		}
+		c.IssueIDs = append(c.IssueIDs, is.IssueID)
+		c.TotalUsers += is.Impact.Users
+		c.TotalEvents += is.Impact.Events
+	}
+	out := make([]Cluster, 0, len(order))
+	for _, k := range order {
+		out = append(out, *idx[k])
+	}
+	// Stable, impact-desc ordering so the agent sees the biggest clusters first.
+	sort.SliceStable(out, func(i, j int) bool { return out[i].TotalUsers > out[j].TotalUsers })
+	return out
+}
