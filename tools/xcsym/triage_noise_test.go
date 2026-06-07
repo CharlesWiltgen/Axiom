@@ -86,3 +86,20 @@ func init() {
 			th: Thresholds{LatestVersion: "2.1.0"}, want: false},
 	)
 }
+
+func init() {
+	// Background-thread crash, no app frames → low-confidence noise.
+	bg := &RawCrash{Kind: "crash", CrashedIdx: 0, Threads: []Thread{
+		{Index: 3, Triggered: true, Frames: []Frame{{Image: "ThirdPartySDK", Symbol: "explode"}}},
+	}}
+	// Main-thread crash with no app frames → NOT flagged (more suspicious).
+	mainNoApp := &RawCrash{Kind: "crash", CrashedIdx: 0, Threads: []Thread{
+		{Index: 0, Triggered: true, Frames: []Frame{{Image: "ThirdPartySDK", Symbol: "explode"}}},
+	}}
+	noiseFixtures = append(noiseFixtures,
+		noiseCase{ruleID: "noise.third_party_only.v1", report: &NormalizedReport{IssueID: "bg", Kind: "crash"},
+			raw: bg, cat: CategorizeResult{Tag: "bad_memory_access"}, want: true},
+		noiseCase{ruleID: "noise.third_party_only.v1", report: &NormalizedReport{IssueID: "mainNoApp", Kind: "crash"},
+			raw: mainNoApp, cat: CategorizeResult{Tag: "bad_memory_access"}, want: false},
+	)
+}

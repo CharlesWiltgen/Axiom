@@ -89,3 +89,31 @@ func init() {
 		},
 	})
 }
+
+func init() {
+	noiseRules = append(noiseRules, NoiseRule{
+		ID: "noise.third_party_only.v1", Class: "third_party_or_system_only",
+		Match: func(r *NormalizedReport, raw *RawCrash, cat CategorizeResult, th Thresholds) (bool, string, string) {
+			if r.Kind != "crash" {
+				return false, "", ""
+			}
+			if raw.CrashedIdx < 0 || raw.CrashedIdx >= len(raw.Threads) {
+				return false, "", ""
+			}
+			crashed := raw.Threads[raw.CrashedIdx]
+			if crashed.Index == 0 { // main-thread no-app-frame crashes are more suspicious
+				return false, "", ""
+			}
+			for _, f := range crashed.Frames {
+				if f.InApp {
+					return false, "", ""
+				}
+			}
+			if len(crashed.Frames) == 0 {
+				return false, "", ""
+			}
+			return true, "low",
+				"crashed thread (non-main) has no app frames; not directly actionable in your code — but a third-party SDK can crash on a value app code passed it, so verify before dismissing"
+		},
+	})
+}
