@@ -30,6 +30,7 @@ import {
   checkSkillInvocations,
   findSkillNameCollisions,
 } from "./skill-invocations.ts";
+import { parsePorcelain, resolveStaleness } from "./staleness.ts";
 
 const root = path.resolve(import.meta.dirname!, "..");
 const pluginDir = path.join(root, ".claude-plugin/plugins/axiom");
@@ -51,6 +52,30 @@ function warn(check: string, msg: string): void {
 
 function heading(title: string): void {
   console.log(`\n── ${title} ──`);
+}
+
+// One `git status --porcelain` for the whole repo, parsed into the set of
+// dirty/untracked paths. Shared by the hybrid staleness checks (12b/12f) to
+// confirm whether a source file that's newer-by-mtime than a derived artifact
+// has ACTUALLY changed, vs. merely been rewritten by a git checkout/stash/
+// rebase. Returns gitAvailable=false (e.g. no .git) so callers fall back to the
+// conservative mtime verdict.
+function gitDirtySet(cwd: string): { gitAvailable: boolean; dirty: Set<string> } {
+  try {
+    // `-c core.quotepath=false` makes git emit non-ASCII paths as literal UTF-8
+    // instead of octal-escaped + quoted (its default). Without it, a dirty
+    // `café.md` would arrive as `caf\303\251.md`, never match path.relative()'s
+    // real UTF-8, get filtered out, and a genuinely-stale artifact would ship
+    // green. Paths with spaces are still quoted — parsePorcelain unquotes those.
+    const out = execSync("git -c core.quotepath=false status --porcelain", {
+      cwd,
+      stdio: "pipe",
+      encoding: "utf8",
+    });
+    return { gitAvailable: true, dirty: parsePorcelain(out) };
+  } catch {
+    return { gitAvailable: false, dirty: new Set<string>() };
+  }
 }
 
 interface Frontmatter {
@@ -747,12 +772,18 @@ if (staleRefCount === 0) {
 
 heading("12b. MCP Bundle Staleness");
 
+// Shared content-confirmation state for the hybrid staleness checks (12b/12f):
+// one git call, reused. mtime is a fast pre-filter, but git checkout/stash/
+// rebase rewrite files identically with fresh mtimes — so a source that's
+// "newer" than the artifact is only really stale if git also sees it changed.
+const gitStatus = gitDirtySet(root);
+
 const bundlePath = path.join(root, "axiom-mcp/dist/bundle.json");
 if (fs.existsSync(bundlePath)) {
   const bundleMtime = fs.statSync(bundlePath).mtimeMs;
 
-  // Find the newest skill, agent, or command file
-  let newestSource = 0;
+  // Collect source files whose mtime is newer than the built bundle.
+  const newerFiles: string[] = [];
   const sourceDirs = [
     path.join(pluginDir, "skills"),
     path.join(pluginDir, "agents"),
@@ -764,30 +795,38 @@ if (fs.existsSync(bundlePath)) {
       for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
         const full = path.join(d, entry.name);
         if (entry.isDirectory()) walk(full);
-        else if (entry.name.endsWith(".md")) {
-          const mtime = fs.statSync(full).mtimeMs;
-          if (mtime > newestSource) newestSource = mtime;
+        else if (entry.name.endsWith(".md") && fs.statSync(full).mtimeMs > bundleMtime) {
+          newerFiles.push(path.relative(root, full));
         }
       }
     };
     walk(dir);
   }
 
-  // Also check skill-annotations.json
+  // skill-annotations.json also feeds the bundle.
   const annotationsPath = path.join(root, "axiom-mcp/skill-annotations.json");
-  if (fs.existsSync(annotationsPath)) {
-    const annotMtime = fs.statSync(annotationsPath).mtimeMs;
-    if (annotMtime > newestSource) newestSource = annotMtime;
+  if (
+    fs.existsSync(annotationsPath) &&
+    fs.statSync(annotationsPath).mtimeMs > bundleMtime
+  ) {
+    newerFiles.push(path.relative(root, annotationsPath));
   }
 
-  if (newestSource > bundleMtime) {
-    const staleMinutes = Math.round((newestSource - bundleMtime) / 60000);
+  const dirtyFiles = newerFiles.filter((f) => gitStatus.dirty.has(f));
+  const verdict = resolveStaleness({
+    newerFiles,
+    dirtyFiles,
+    gitAvailable: gitStatus.gitAvailable,
+  });
+  if (verdict.stale) {
     error(
       "bundle-staleness",
-      `MCP bundle is ${staleMinutes}min older than newest source file. Run: cd axiom-mcp && pnpm run build:bundle`,
+      `MCP bundle is stale — ${verdict.reason}. Run: cd axiom-mcp && pnpm run build:bundle`,
     );
   } else {
-    console.log("  ✓ MCP bundle is up-to-date with source files");
+    console.log(
+      `  ✓ MCP bundle is up-to-date with source files${newerFiles.length ? ` (${verdict.reason})` : ""}`,
+    );
   }
 } else {
   warn("bundle-staleness", "MCP bundle not found at axiom-mcp/dist/bundle.json — build with: cd axiom-mcp && pnpm run build:bundle");
@@ -1053,8 +1092,9 @@ if (fs.existsSync(codexManifest)) {
   const codexMtime = fs.statSync(codexManifest).mtimeMs;
 
   // The Codex variant is rebuilt from skills + agents (npm run build:codex).
-  // Mirror 12b: if any source file is newer than the built variant, it is stale.
-  let newestCodexSource = 0;
+  // Same hybrid as 12b: collect sources newer-by-mtime, then confirm via git
+  // (reusing the shared gitStatus) before declaring real staleness.
+  const newerFiles: string[] = [];
   const codexSourceDirs = [
     path.join(pluginDir, "skills"),
     path.join(pluginDir, "agents"),
@@ -1065,23 +1105,29 @@ if (fs.existsSync(codexManifest)) {
       for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
         const full = path.join(d, entry.name);
         if (entry.isDirectory()) walk(full);
-        else if (entry.name.endsWith(".md")) {
-          const mtime = fs.statSync(full).mtimeMs;
-          if (mtime > newestCodexSource) newestCodexSource = mtime;
+        else if (entry.name.endsWith(".md") && fs.statSync(full).mtimeMs > codexMtime) {
+          newerFiles.push(path.relative(root, full));
         }
       }
     };
     walk(dir);
   }
 
-  if (newestCodexSource > codexMtime) {
-    const staleMinutes = Math.round((newestCodexSource - codexMtime) / 60000);
+  const dirtyFiles = newerFiles.filter((f) => gitStatus.dirty.has(f));
+  const verdict = resolveStaleness({
+    newerFiles,
+    dirtyFiles,
+    gitAvailable: gitStatus.gitAvailable,
+  });
+  if (verdict.stale) {
     error(
       "codex-staleness",
-      `Codex variant is ${staleMinutes}min older than newest source file. Run: npm run build:codex`,
+      `Codex variant is stale — ${verdict.reason}. Run: npm run build:codex`,
     );
   } else {
-    console.log("  ✓ Codex variant is up-to-date with source files");
+    console.log(
+      `  ✓ Codex variant is up-to-date with source files${newerFiles.length ? ` (${verdict.reason})` : ""}`,
+    );
   }
 } else {
   warn(
