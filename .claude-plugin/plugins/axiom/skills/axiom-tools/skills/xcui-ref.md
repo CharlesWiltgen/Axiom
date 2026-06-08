@@ -8,7 +8,7 @@ xcui makes iOS-simulator UI and accessibility testing scriptable for coding harn
 
 ## Prerequisite: run `xcui doctor`
 
-`xcui doctor` verifies AXe (the input/tree engine), Homebrew, Xcode, and a booted sim. If AXe is missing and brew is present, `xcui doctor --install` runs `brew install cameroncooke/axe/axe` (explicit/consented — never silent). Exit 0 = ready; exit 2 = AXe missing or no booted sim (see `problems`/`next_steps` in the JSON).
+`xcui doctor` verifies AXe (the input/tree engine), Homebrew, Xcode, and a booted sim. If AXe is missing and brew is present, `xcui doctor --install` runs `brew install cameroncooke/axe/axe` (explicit/consented — never silent). Exit 0 = ready; exit 2 = AXe missing or no booted sim (see `problems`/`next_steps` in the JSON). When several sims are booted, every verb targets the lowest UDID deterministically; `doctor` adds a `note` listing them, and `--udid <id>` (accepted by every verb, `doctor` included) targets a specific one.
 
 ## Subcommands
 
