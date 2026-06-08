@@ -526,6 +526,26 @@ Text("Label")
 
 ---
 
+## Known iOS 26 Limitations
+
+Documented platform behaviors with no reliable fix from user code as of iOS 26.0/26.1 — not implementation mistakes. Listed here so you don't burn time chasing fixes that don't exist.
+
+### SwiftUI TabView / nav bar floating pill stuck in wrong glass variant
+
+**Symptom**: The floating tab-bar or nav-bar pill renders in the darker scroll-edge variant on cold start, after a navigation pop-back, or after a tab switch — then snaps to the correct lighter variant only after a ~1pt physical scroll triggers an appearance-state transition. Most visible against bright, saturated backgrounds (e.g. a teal `#129487`); effectively imperceptible in dark mode.
+
+**Status**: Documented on iOS 26.0 (24A343); no reliable fix from user code as of iOS 26.0/26.1. The new SwiftUI floating pill resists both `.toolbarBackground` and `UIAppearance` overrides.
+
+**Workarounds** (tradeoffs, not fixes):
+- Match the launch-screen color to your app background — papers over the cold-start flash only; does nothing for the pop-back or tab-switch cases.
+- Set `UIDesignRequiresCompatibility=true` — forces the pre-Liquid-Glass appearance but disables Liquid Glass app-wide (heavy hammer; see the UIDesignRequiresCompatibility section under Backward Compatibility below).
+
+**Do not reach for `UITabBar.appearance()`**: `UITabBar.appearance().standardAppearance` was the iOS 15–25 escape hatch for forcing SwiftUI `TabView` bar appearance. On iOS 26's floating pill this bridge is unreliable — the new render path does not consistently honor the proxy — so it is a dead end here, not a workaround.
+
+See also `axiom-swiftui (skills/26-ref.md)` for the related `.toolbarBackground`-on-`TabView` no-op gotcha.
+
+---
+
 ## Migration from Previous Materials
 
 ### From UIBlurEffect / NSVisualEffectView
