@@ -1,5 +1,6 @@
 ---
 name: health-check
+exempt-from-routing: true
 description: |
   Use this agent when the user wants a comprehensive project-wide audit, full health check, or scan across all domains. Orchestrates multiple specialized auditors in parallel, deduplicates findings, and produces a unified report.
 
