@@ -11,6 +11,7 @@ type DoctorReport struct {
 	BootedUDID string   `json:"booted_udid,omitempty"`
 	Installed  bool     `json:"installed,omitempty"` // true if --install ran brew
 	OK         bool     `json:"ok"`
+	Note       string   `json:"note,omitempty"` // advisory (e.g. >1 sim booted); does not flip OK
 	Problems   []string `json:"problems,omitempty"`
 	NextSteps  []string `json:"next_steps,omitempty"`
 }

@@ -23,6 +23,7 @@ func runDoctor(out io.Writer, args []string) int {
 	fs.SetOutput(os.Stderr)
 	install := fs.Bool("install", false, "if AXe is missing and brew is present, install it via brew")
 	human := fs.Bool("human", false, "human-readable output instead of JSON")
+	udidFlag := fs.String("udid", "", "report this UDID instead of auto-resolving the booted sim")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -60,8 +61,12 @@ func runDoctor(out io.Writer, args []string) int {
 		}
 	}
 
-	if udid, err := resolveUDID(ctx, ""); err == nil {
+	if udid, booted, err := resolveBootedInfo(ctx, *udidFlag); err == nil {
 		rep.BootedUDID = udid
+		if len(booted) > 1 {
+			rep.Note = fmt.Sprintf("%d simulators booted (%s) — xcui targets %s; pass --udid to pick another", len(booted), strings.Join(booted, ", "), udid)
+			rep.NextSteps = append(rep.NextSteps, "pass --udid <udid> to target a specific simulator")
+		}
 	} else {
 		rep.Problems = append(rep.Problems, "no booted simulator")
 		rep.NextSteps = append(rep.NextSteps, "boot a simulator: xcrun simctl boot <device>")
@@ -72,6 +77,9 @@ func runDoctor(out io.Writer, args []string) int {
 
 	if *human {
 		fmt.Fprintf(out, "AXe: %s\nSim: %s\nOK: %v\n", orNone(rep.AxePath), orNone(rep.BootedUDID), rep.OK)
+		if rep.Note != "" {
+			fmt.Fprintf(out, "  note: %s\n", rep.Note)
+		}
 		for _, p := range rep.Problems {
 			fmt.Fprintf(out, "  problem: %s\n", p)
 		}

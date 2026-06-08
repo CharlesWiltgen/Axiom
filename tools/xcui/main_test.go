@@ -88,6 +88,36 @@ func TestPickBootedUDIDNoneBooted(t *testing.T) {
 	}
 }
 
+// With more than one sim booted the candidates must come back sorted, so the
+// pick is stable across runs (Go map iteration order is randomized — without
+// sorting, wait/assert could target a different sim each run).
+func TestBootedUDIDsSortedDeterministic(t *testing.T) {
+	const twoBooted = `{"devices":{
+	  "com.apple.CoreSimulator.SimRuntime.iOS-26-0":[
+	    {"udid":"ZZZZ","state":"Booted","name":"iPhone 17 Pro"},
+	    {"udid":"AAAA","state":"Booted","name":"iPhone 17"},
+	    {"udid":"MMMM","state":"Shutdown","name":"iPad"}
+	  ]}}`
+	got, err := bootedUDIDs([]byte(twoBooted))
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if !equalStrings(got, []string{"AAAA", "ZZZZ"}) {
+		t.Errorf("bootedUDIDs = %v, want [AAAA ZZZZ] (sorted)", got)
+	}
+}
+
+func TestBootedUDIDsNoneBooted(t *testing.T) {
+	none := `{"devices":{"r":[{"udid":"AAAA","state":"Shutdown","name":"x"}]}}`
+	got, err := bootedUDIDs([]byte(none))
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if len(got) != 0 {
+		t.Errorf("expected no booted sims, got %v", got)
+	}
+}
+
 func TestDoctorExitCode(t *testing.T) {
 	cases := []struct {
 		axe, sim bool
