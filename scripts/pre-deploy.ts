@@ -461,6 +461,40 @@ if (unreachableAgents === 0) {
   );
 }
 
+heading("10b. Cross-Suite Reference Validation");
+
+// check-cross-refs.js validates documentation cross-references across ALL skill
+// files: structured `axiom-<suite> (skills/X.md)` refs, bare sibling
+// `skills/X.md` paths, and bare axiom-* tokens. It complements section 10's
+// `/skill axiom-X` invocation check (a different ref format — both run), and is
+// the thorough sibling/child validator. It exits non-zero only on errors
+// (warnings are informational), so a clean tree passes.
+try {
+  const refOut = execSync("node scripts/check-cross-refs.js", {
+    cwd: root,
+    stdio: "pipe",
+    encoding: "utf8",
+  });
+  const summary =
+    refOut
+      .split("\n")
+      .map((l) => l.trim())
+      .find((l) => l.startsWith("✓")) ?? "all cross-references valid";
+  console.log(`  ✓ ${summary.replace(/^✓\s*/, "")}`);
+} catch (e: unknown) {
+  const err = e as Error & { status?: number; stderr?: string; stdout?: string };
+  const detail = (
+    err.stdout ||
+    err.stderr ||
+    err.message ||
+    `exit code ${err.status}`
+  ).trim();
+  error(
+    "cross-refs",
+    `check-cross-refs.js reported broken cross-references:\n${detail}`,
+  );
+}
+
 heading("11. Hook Scripts");
 
 try {
