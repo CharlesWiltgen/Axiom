@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
   ListResourcesRequestSchema,
@@ -65,8 +65,11 @@ async function main() {
   const xcprof = new XcprofTools({ binaryPath: resolveXcprofPath(config), logger });
   const toolsHandler = new DynamicToolsHandler(loader, logger, xcprof);
 
-  // Create MCP server
-  const server = new Server(
+  // Create MCP server. axiom-mcp serves tools/resources/prompts dynamically
+  // from a loader, so it registers low-level request handlers on the underlying
+  // Server (the SDK's documented "advanced use case") rather than McpServer's
+  // high-level registerTool/registerResource API.
+  const mcpServer = new McpServer(
     {
       name: 'axiom-mcp',
       version: pkg.version,
@@ -87,6 +90,7 @@ async function main() {
       ].join(' '),
     }
   );
+  const server = mcpServer.server;
 
   // Register resources handlers
   server.setRequestHandler(ListResourcesRequestSchema, async () => {
