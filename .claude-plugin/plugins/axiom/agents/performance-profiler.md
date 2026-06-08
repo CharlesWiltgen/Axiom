@@ -95,11 +95,13 @@ Map the user's intent to a preset (or explicit instruments), then record. Record
 
 Targets and their gates:
 
-- **Attach** (`--attach <pid|name>`) — the default; no gate.
-- **Launch from startup** — append `--allow-launch ... -- <app-path>` (the gate is required; tell the user you're launching a process). Add `--device "$BOOTED"` for a sim.
-- **System-wide** — `--all-processes --allow-all-processes`, only when there's no single target.
+- **Attach** (`--attach <pid|name>`) — the default; no gate. Prefer it whenever the app is already running.
+- **Launch from startup** — append `--allow-launch ... -- <app-path>` (add `--device "$BOOTED"` for a sim). `--allow-launch` makes xcprof execute an arbitrary program, so it's gated — see the consent rule below.
+- **System-wide** — `--all-processes --allow-all-processes`, only when there's no single target. `--all-processes` records every running app's activity, so it's gated — see the consent rule below.
 - Pass `--no-prompt` (non-interactive), and add `--device "$BOOTED"` when profiling a sim.
 - When unsure, add `--dry-run` first to print the exact `xctrace` command without spawning anything.
+
+**Consent gate (hard rule).** `--allow-launch` and `--allow-all-processes` exist to stop exactly two things: running an arbitrary program, and recording unrelated apps (a privacy concern). Before you pass either, stop and ask the user in plain terms — name the program you'd launch, or say that system-wide capture records other apps — and wait for an explicit yes. Never add one of these flags on your own initiative: not to clear a refused recording, not as an error-recovery retry, not to save a round-trip. If the user hasn't agreed, use `--attach` instead. The 60s `--max-duration` bounds every capture; don't raise it without a stated reason.
 
 `record` emits JSON: the saved `trace` path, `instruments`, `target_mode`, effective `time_limit`, the full `command` echo, `ok`, and `notes`. **`ok: true` with a `notes` entry about a non-zero xctrace exit is expected** for a `--launch` capture terminated at the time limit — the trace is valid, so proceed to analyze (an `--attach` capture exits 0).
 
@@ -176,8 +178,8 @@ Use `xcprof compare <baseline> <current> --json` to diff two traces. It reports 
 | Symptom | Cause | Fix |
 |---|---|---|
 | `doctor` exits 2 | xctrace missing | Install Xcode command-line tools |
-| record refused (exit 2) | a security gate wasn't passed | add `--allow-launch` / `--allow-all-processes`, or keep the capture under `XCPROF_TRACE_ROOT` |
-| `--time-limit` refused | exceeds `--max-duration` | raise `--max-duration` (it's the bound that keeps captures finite) |
+| record refused (exit 2) | a security gate wasn't passed | for launch / all-processes, **get the user's explicit consent first**, then add `--allow-launch` / `--allow-all-processes` (see the consent gate) — never bypass on your own; for an output-sandbox refusal, keep the capture under `XCPROF_TRACE_ROOT` |
+| `--time-limit` refused | exceeds `--max-duration` | raise `--max-duration` only if a longer capture is genuinely needed — it's the bound that keeps captures finite |
 | record `ok:false`, no trace | attach target not found / device wrong | re-run target discovery; confirm the app is running |
 | every family `not_present` | wrong preset for the question | re-record with the matching preset |
 | frames are `0x…` | stripped build | pass `--dsym <path>` |
