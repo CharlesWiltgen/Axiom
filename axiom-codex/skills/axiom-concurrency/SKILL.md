@@ -71,6 +71,7 @@ digraph concurrency {
 **concurrency vs axiom-performance**: When app freezes or feels slow:
 1. **Try concurrency FIRST** — Main thread blocking is the #1 cause of UI freezes. Check for synchronous work on @MainActor before profiling.
 2. **Only use axiom-performance** if concurrency fixes don't help — Profile after ruling out obvious blocking.
+3. **To pin a specific freeze to app code**, see the Hang Window Workflow in axiom-performance (skills/hang-diagnostics.md) — re-scope `xcprof analyze` to the hang window with `--start-ms/--end-ms --user-binary` to surface the app-owned frame on the main thread.
 
 **concurrency vs axiom-build**: When seeing Swift 6 concurrency errors:
 - **Use concurrency, NOT axiom-build** — Concurrency errors are CODE issues, not environment issues.
