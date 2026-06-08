@@ -159,7 +159,7 @@ func runDialogTap(out io.Writer, action string, args []string) int {
 	fs := flag.NewFlagSet("dialog "+action, flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	udidFlag := fs.String("udid", "", "target simulator UDID (default: booted)")
-	human := fs.Bool("human", false, "human-readable output")
+	human := fs.Bool("human", false, "human-readable output instead of JSON")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -202,7 +202,7 @@ func parsePregrantArgs(args []string) (bundle string, services []string, udid st
 	fs := flag.NewFlagSet("dialog pregrant", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	udidFlag := fs.String("udid", "", "target simulator UDID (default: booted)")
-	humanFlag := fs.Bool("human", false, "human-readable output")
+	humanFlag := fs.Bool("human", false, "human-readable output instead of JSON")
 	positionals, err := parseInterspersed(fs, args)
 	if err != nil {
 		return "", nil, "", false, 2
