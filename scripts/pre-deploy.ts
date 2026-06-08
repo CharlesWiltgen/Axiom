@@ -1152,6 +1152,56 @@ if (fs.existsSync(codexManifest)) {
   );
 }
 
+// ── 12g. Go Tool args.go Parity ──
+
+heading("12g. Go Tool args.go Parity");
+
+// The bundled Go tools are independent modules that can't share code, so each
+// carries a byte-identical copy of args.go (the parseInterspersed helper). A fix
+// applied to one copy can silently diverge — each module's own tests still pass
+// (axiom-h34h, companion to v9in). Discover the copies dynamically (a 5th tool is
+// auto-covered) and group by content: more than one group means drift. Mirrors
+// the manual `diff` documented in tools/README.md.
+const toolsRoot = path.join(root, "tools");
+const argsGoFiles = fs.existsSync(toolsRoot)
+  ? fs
+      .readdirSync(toolsRoot, { withFileTypes: true })
+      .filter((d: fs.Dirent) => d.isDirectory())
+      .map((d: fs.Dirent) => path.join(toolsRoot, d.name, "args.go"))
+      .filter((p: string) => fs.existsSync(p))
+  : [];
+
+if (argsGoFiles.length < 2) {
+  console.log(
+    `  ✓ args.go parity: ${argsGoFiles.length} cop${argsGoFiles.length === 1 ? "y" : "ies"} — nothing to compare`,
+  );
+} else {
+  const argsGoByContent = new Map<string, string[]>();
+  for (const p of argsGoFiles) {
+    // latin1 maps each byte 1:1 to a char (no lossy UTF-8 decode), so the
+    // comparison is genuinely byte-for-byte — matching the "byte-identical"
+    // contract even for hypothetical invalid-UTF-8 bytes.
+    const content = fs.readFileSync(p, "latin1");
+    const rel = path.relative(root, p);
+    const group = argsGoByContent.get(content);
+    if (group) group.push(rel);
+    else argsGoByContent.set(content, [rel]);
+  }
+  if (argsGoByContent.size === 1) {
+    console.log(
+      `  ✓ ${argsGoFiles.length} tools/*/args.go copies are byte-identical`,
+    );
+  } else {
+    const groups = [...argsGoByContent.values()];
+    error(
+      "args-parity",
+      `tools/*/args.go has diverged into ${groups.length} versions — the copies must stay ` +
+        `byte-identical (see tools/README.md). Versions: ` +
+        groups.map((g) => `[${g.join(", ")}]`).join(" ≠ "),
+    );
+  }
+}
+
 // ── Phase 1 Summary ──
 
 heading("Phase 1 Summary (Static)");
