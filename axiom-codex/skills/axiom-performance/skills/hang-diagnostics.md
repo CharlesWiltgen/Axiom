@@ -110,6 +110,7 @@ START: App hangs reported
 | **Field reports only** | Xcode Organizer | Aggregated hang diagnostics |
 | **Want in-app data** | MetricKit | MXHangDiagnostic with call stacks |
 | **Need precise timing** | System Trace | Nanosecond-level thread analysis |
+| **Re-scope a known hang to app code** | xcprof | Auto-flags candidate stalls; `--start-ms/--end-ms` window + `--user-binary` attribution (see Hang Window Workflow) |
 
 ## Time Profiler Workflow for Hangs
 
@@ -126,9 +127,9 @@ START: App hangs reported
 
 ## Hang Window Workflow
 
-`xcprof analyze` runs main-thread hang detection automatically on every invocation (not opt-in), so a first pass already tells you *that* a hang happened and roughly when. The actionable follow-up is to re-scope the analysis to the hang window and attribute the samples to your own code — so the final answer names an app-owned frame, not the deepest system symbol.
+`xcprof analyze` runs main-thread hang detection automatically on every invocation (not opt-in): the `## Main thread (approximate)` section reports the largest gap between consecutive main-thread samples (`max gap`) and a `candidate stalls` count — a strong signal that a hang occurred and how long the worst one was. It's *approximate* because cpu-profile only samples running threads, so a large gap is a candidate stall, not a confirmed one. The actionable follow-up is to re-scope to the hang window and attribute the samples to your own code.
 
-**Step 1 — Find the window.** Run `xcprof analyze <trace>` and read the detected hang's start offset and duration (e.g. a 5s hang starting at t=2.0s → window 2000–7000ms).
+**Step 1 — Bound the window.** xcprof reports the stall's *duration* (`max gap`), not its start time, so estimate the window from when you observed the freeze: a MetricKit hang report's timestamp, a user-visible stall, or the Instruments timeline (`--open`). Example: a ~5s freeze around the 2s mark → window ≈ 2000–7000ms.
 
 **Step 2 — Re-scope and attribute to app code.**
 
@@ -138,18 +139,28 @@ xcprof analyze MyApp.trace \
   --user-binary MyApp
 ```
 
-`--start-ms`/`--end-ms` restrict the sample set to the hang window; `--user-binary` (comma-separated names) marks those binaries as user code so the report surfaces **Top User-Code Frames** — the app-owned functions actually on the main thread during the freeze, instead of the deepest system frame.
+`--start-ms`/`--end-ms` restrict the sample set to that window (echoed back as a `scope:` line). The `## Top user-code frames` table is emitted on every run; `--user-binary` (comma-separated) just *sharpens* it — narrowing user-code attribution to the named binaries plus the recording target, so the table lists your app's functions instead of every non-system frame.
 
-**Expected output** (shape, not verbatim):
+**Expected output** (shape — real output is markdown sections + tables):
 
 ```
-Hang window: 2000–7000ms (5.0s, main thread)
-Top User-Code Frames:
-  62%  MyApp.ImageStore.thumbnail(for:)   ← synchronous decode on main
-  24%  MyApp.FeedView.body.getter
+## Summary
+- duration: 12.400s · mode: immediate · end: time-limit
+- scope: 2000–7000ms (812 samples in window)
+
+## Main thread (approximate)
+- samples: 812 · cpu share: 71.2% · max gap: 4980ms (threshold 250ms) · candidate stalls: 1
+
+## Top user-code frames
+| function | binary | self | inclusive |
+|---|---|---|---|
+| ImageStore.thumbnail(for:) | MyApp | 58.0% (~2900ms) | 62.0% (~3100ms) |
+| FeedView.body.getter | MyApp | 12.0% (~600ms) | 24.0% (~1200ms) |
 ```
 
-The answer is now "`ImageStore.thumbnail(for:)` decodes synchronously on the main thread" (→ move the decode off-main), rather than an opaque "time in `CGImageSourceCreateThumbnailAtIndex`."
+The answer is now "`ImageStore.thumbnail(for:)` runs ~2.9s on the main thread" (→ move the decode off-main), not an opaque deepest system frame.
+
+> Release builds without symbols attribute nothing ("none attributed"). Pass `--dsym <path>` (or rely on Spotlight UUID discovery) so frames resolve to names.
 
 ## System Trace Workflow for Blocked Hangs
 

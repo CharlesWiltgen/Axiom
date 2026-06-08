@@ -542,7 +542,7 @@ Documented platform behaviors with no reliable fix from user code as of iOS 26.0
 
 **Do not reach for `UITabBar.appearance()`**: `UITabBar.appearance().standardAppearance` was the iOS 15–25 escape hatch for forcing SwiftUI `TabView` bar appearance. On iOS 26's floating pill this bridge is unreliable — the new render path does not consistently honor the proxy — so it is a dead end here, not a workaround.
 
-See also `axiom-swiftui (skills/26-ref.md)` for the related `.toolbarBackground`-on-`TabView` no-op gotcha.
+Distinct (fixable) issue — don't conflate the two: `.toolbarBackground(_:for: .tabBar)` applied *at the TabView level* is a no-op; apply it on each Tab's content instead (see `axiom-swiftui (skills/26-ref.md)`). That placement fix controls the bar's background/color — it does **not** correct the wrong-glass-variant bug above, which no modifier fixes.
 
 ---
 
