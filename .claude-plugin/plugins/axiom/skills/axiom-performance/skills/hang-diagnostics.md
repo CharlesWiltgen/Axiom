@@ -124,6 +124,33 @@ START: App hangs reported
 - Unexpectedly deep call stacks
 - System calls that shouldn't be on main thread
 
+## Hang Window Workflow
+
+`xcprof analyze` runs main-thread hang detection automatically on every invocation (not opt-in), so a first pass already tells you *that* a hang happened and roughly when. The actionable follow-up is to re-scope the analysis to the hang window and attribute the samples to your own code — so the final answer names an app-owned frame, not the deepest system symbol.
+
+**Step 1 — Find the window.** Run `xcprof analyze <trace>` and read the detected hang's start offset and duration (e.g. a 5s hang starting at t=2.0s → window 2000–7000ms).
+
+**Step 2 — Re-scope and attribute to app code.**
+
+```sh
+xcprof analyze MyApp.trace \
+  --start-ms 2000 --end-ms 7000 \
+  --user-binary MyApp
+```
+
+`--start-ms`/`--end-ms` restrict the sample set to the hang window; `--user-binary` (comma-separated names) marks those binaries as user code so the report surfaces **Top User-Code Frames** — the app-owned functions actually on the main thread during the freeze, instead of the deepest system frame.
+
+**Expected output** (shape, not verbatim):
+
+```
+Hang window: 2000–7000ms (5.0s, main thread)
+Top User-Code Frames:
+  62%  MyApp.ImageStore.thumbnail(for:)   ← synchronous decode on main
+  24%  MyApp.FeedView.body.getter
+```
+
+The answer is now "`ImageStore.thumbnail(for:)` decodes synchronously on the main thread" (→ move the decode off-main), rather than an opaque "time in `CGImageSourceCreateThumbnailAtIndex`."
+
 ## System Trace Workflow for Blocked Hangs
 
 1. **Launch Instruments** → Select System Trace template
