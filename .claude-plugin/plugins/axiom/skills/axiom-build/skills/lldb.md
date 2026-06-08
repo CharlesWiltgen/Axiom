@@ -334,6 +334,17 @@ Shows all stored properties. This works because LLDB pauses the entire process â
 
 Modify values without rebuilding. Useful for testing theories.
 
+### Triggering Background Tasks (BGTaskScheduler)
+
+Background tasks never launch on their own in the simulator. With the app paused in the debugger, drive the handler by hand:
+
+```
+(lldb) e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"com.yourapp.refresh"]
+(lldb) e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateExpirationForTaskWithIdentifier:@"com.yourapp.refresh"]
+```
+
+Set a breakpoint in the task handler first, run the launch command, then `continue`. See axiom-integration (skills/background-processing.md) for the full app-refresh testing workflow.
+
 ### Referencing Previous Results
 
 LLDB assigns result variables (`$R0`, `$R1`, etc.):
@@ -626,4 +637,4 @@ After finding the issue:
 
 **Docs**: /xcode/stepping-through-code-and-inspecting-variables-to-isolate-bugs, /xcode/setting-breakpoints-to-pause-your-running-app, /xcode/diagnosing-memory-thread-and-crash-issues-early
 
-**Skills**: axiom-build (skills/lldb-ref.md), axiom-tools (skills/xcsym-ref.md), axiom-shipping (skills/testflight-triage.md), axiom-performance (skills/hang-diagnostics.md), axiom-performance (skills/memory-debugging.md), axiom-concurrency
+**Skills**: axiom-build (skills/lldb-ref.md), axiom-tools (skills/xcsym-ref.md), axiom-shipping (skills/testflight-triage.md), axiom-performance (skills/hang-diagnostics.md), axiom-performance (skills/memory-debugging.md), axiom-integration (skills/background-processing.md), axiom-concurrency

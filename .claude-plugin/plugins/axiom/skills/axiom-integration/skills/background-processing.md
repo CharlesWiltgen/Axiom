@@ -206,8 +206,8 @@ func application(_ application: UIApplication,
 func scheduleAppRefresh() {
     let request = BGAppRefreshTaskRequest(identifier: "com.yourapp.refresh")
 
-    // earliestBeginDate = MINIMUM delay, not exact time
-    // System may run hours later based on usage patterns
+    // earliestBeginDate = MINIMUM delay, not a deadline — the system may run
+    // the task hours later, or not at all (low usage, Low Power Mode, tight budgets)
     request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)  // At least 15 min
 
     do {
@@ -681,6 +681,17 @@ e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateExpirationForTask
 5. Resume — breakpoint should hit
 6. Test expiration with `_simulateExpirationForTaskWithIdentifier`
 
+### Confirm the request is actually queued
+
+Before simulating a launch, verify the request made it into the queue — if it didn't, `submit(_:)` threw or was never reached, and you'd be debugging a handler that can never fire:
+
+```swift
+let pending = await BGTaskScheduler.shared.pendingTaskRequests()
+print(pending.map(\.identifier))  // should contain your task identifier
+```
+
+`pendingTaskRequests()` is the modern async form; the older `getPendingTaskRequests { requests in … }` callback is equivalent.
+
 ### Testing Checklist
 
 - [ ] Task handler breakpoint hits when simulated?
@@ -749,7 +760,7 @@ case .restricted:
 - [ ] Scheduling on main queue or background queue (if performance sensitive)?
 - [ ] `earliestBeginDate` not too far in future (max ~1 week)?
 - [ ] Handling `submit()` errors?
-- [ ] Not scheduling duplicate tasks (check `getPendingTaskRequests`)?
+- [ ] Not scheduling duplicate tasks (check `pendingTaskRequests()`)?
 
 ### Handler Checklist
 
@@ -997,7 +1008,7 @@ subsystem:com.apple.backgroundtaskscheduler
 
 **Docs**: /backgroundtasks/bgtaskscheduler, /backgroundtasks/starting-and-terminating-tasks-during-development
 
-**Skills**: skills/background-processing-ref.md, skills/background-processing-diag.md, axiom-performance (skills/energy.md), skills/push-notifications.md
+**Skills**: skills/background-processing-ref.md, skills/background-processing-diag.md, axiom-performance (skills/energy.md), skills/push-notifications.md, axiom-build (skills/lldb.md)
 
 ---
 
