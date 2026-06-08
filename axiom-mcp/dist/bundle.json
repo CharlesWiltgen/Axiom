@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-06-08T01:53:48.057Z",
+  "generatedAt": "2026-06-08T02:43:40.621Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -36520,7 +36520,7 @@
     "axiom-tools--xcui-ref": {
       "name": "axiom-tools--xcui-ref",
       "description": "xcui makes iOS-simulator UI and accessibility testing scriptable for coding harnesses. It owns the test-harness semantics AXe and simctl lack — waiting, asserting, accessibility config, dialogs, computed VoiceOver — and delegates input (tap/type/swipe) to AXe, which injects real HID touch.",
-      "content": "# xcui Reference (Scriptable Simulator UI & Accessibility Testing)\n\nxcui makes iOS-simulator UI and accessibility testing scriptable for coding harnesses. It owns the test-harness semantics AXe and simctl lack — waiting, asserting, accessibility config, dialogs, computed VoiceOver — and delegates input (tap/type/swipe) to AXe, which injects real HID touch.\n\n## Invocation\n\n`xcui` is on PATH as a bare command (plugin `bin/` is auto-resolved). Run `xcui <subcommand>`.\n\n## Prerequisite: run `xcui doctor`\n\n`xcui doctor` verifies AXe (the input/tree engine), Homebrew, Xcode, and a booted sim. If AXe is missing and brew is present, `xcui doctor --install` runs `brew install cameroncooke/axe/axe` (explicit/consented — never silent). Exit 0 = ready; exit 2 = AXe missing or no booted sim (see `problems`/`next_steps` in the JSON).\n\n## Subcommands\n\n- `xcui wait --for-element <id> | --gone <id> | --idle [--timeout 10s] [--poll 250ms]` — poll the a11y tree until a condition holds. Replaces sleep/re-screenshot guesswork (CLI `waitForExistence`).\n- `xcui assert --id <id> [--label <s>] [--value <s>] [--trait <role>] [--single]` — assert on an element. `--single` checks the id resolves to exactly one element (e.g. \"hero announces as one element\").\n- `xcui a11y set --toggle <name> --value <on/off> [--app <bundle-id>]` — set an accessibility setting. Supported toggles (all verified against the simulator):\n  - `dynamic-type` — native `simctl ui content_size`; `--value` is a size (`large`, `accessibility-extra-large`, … up to `accessibility-extra-extra-extra-large`). Applies live; no relaunch.\n  - `increase-contrast` — native `simctl ui increase_contrast`; `--value` is `on`/`off`. Applies live; no relaunch.\n  - `reduce-motion` — `defaults write com.apple.Accessibility ReduceMotionEnabled`; needs relaunch, so pass `--app <bundle-id>` to have xcui terminate + relaunch the app.\n  - `reduce-transparency` — `defaults write com.apple.Accessibility ReduceTransparencyEnabled`; needs relaunch (pass `--app`).\n- `xcui a11y reset` — clear xcui-set overrides (delete the defaults keys, content_size → large, increase_contrast → disabled).\n- `xcui dialog accept | dismiss [--udid <udid>]` — find the frontmost system alert and tap the right button: `accept` prefers the most-permissive standard grant (`Allow While Using App` › `Allow Once` › `Allow` › `OK` › `Open`), `dismiss` prefers the decline (`Don't Allow` › `Cancel` › `Not Now`). A one-button alert is tapped for either intent. Matching is case- and apostrophe-insensitive (curly `’` = straight `'`). The tap delegates to `axe tap` (by id when present, else by label). Exit `0` handled, `1` no actionable alert.\n- `xcui dialog pregrant <bundle-id> <service>… [--udid <udid>]` — grant permissions ahead of time via `simctl privacy … grant`, so the dialog never appears. Services are `simctl privacy` names (`camera`, `photos`, `location`, `microphone`, `contacts`, …). Prefer this over `accept` when you control the test setup — no alert means nothing to race.\n- `xcui voiceover traverse [--udid <udid>]` — emit the **computed** VoiceOver announcement sequence: walk the a11y tree in focus order (top-to-bottom, leading-to-trailing) and render each focusable element as `label, value, trait` (plus `dimmed` when disabled). Output is a `sequence` JSON array.\n- `xcui voiceover assert --sequence <file> [--udid <udid>]` — compare the live announcement sequence to an expected one; the file may be a bare JSON string array **or** a saved `traverse` report (it round-trips). Reports every differing index (one entry per mismatched position, plus a length-mismatch note when counts differ); exit `1` on any mismatch.\n\n> **VoiceOver scope (honest framing):** `voiceover` renders the *computed* announcement from the accessibility tree — what VoiceOver would say, derived deterministically. It is **not** captured audio/TTS, which the simulator does not expose to scripting. Use it to catch missing labels, wrong trait phrasing, bad focus order, and unannounced state — not to verify the speech synthesizer itself.\n\n> **Not yet supported (a11y toggles):** the `voiceover`, `differentiate-without-color`, and `bold-text` *toggles* for `a11y set` had no confirmable simulator mechanism (no native `simctl ui` setter, and their candidate `defaults` keys are not populated/honored by iOS on the sim). They are intentionally omitted from v1 rather than shipped unverified. (This is distinct from the `xcui voiceover` command above, which reads the tree and needs no toggle.)\n\n## For input, use AXe directly\n\n```bash\naxe tap --id loginButton --udid <udid>     # real HID touch, not pointer-hover\naxe type \"user@example.com\" --udid <udid>\naxe describe-ui --udid <udid>              # raw a11y tree (xcui assert/wait parse this)\n```\n\n## Output & exit codes\n\nJSON by default (`tool`/`version` envelope); `--human` for prose. Exit: `0` pass · `1` assertion-fail/wait-timeout · `2` environment error · `8` output-write error.\n\n> **CLI gotcha:** Go's flag parser stops at the first positional, so always put flags after the subcommand and use the all-flag forms shown above (`assert --id …`, not `assert <id> …`).\n\n## Resources\n\n**Tools**: `axe` (AXe — `brew install cameroncooke/axe/axe`), `xcrun simctl`\n\n**Skills**: axiom-accessibility, axiom-testing\n\n**Agents**: simulator-tester (drives xcui live), accessibility-auditor (static a11y scan)\n",
+      "content": "# xcui Reference (Scriptable Simulator UI & Accessibility Testing)\n\nxcui makes iOS-simulator UI and accessibility testing scriptable for coding harnesses. It owns the test-harness semantics AXe and simctl lack — waiting, asserting, accessibility config, dialogs, computed VoiceOver — and delegates input (tap/type/swipe) to AXe, which injects real HID touch.\n\n## Invocation\n\n`xcui` is on PATH as a bare command (plugin `bin/` is auto-resolved). Run `xcui <subcommand>`.\n\n## Prerequisite: run `xcui doctor`\n\n`xcui doctor` verifies AXe (the input/tree engine), Homebrew, Xcode, and a booted sim. If AXe is missing and brew is present, `xcui doctor --install` runs `brew install cameroncooke/axe/axe` (explicit/consented — never silent). Exit 0 = ready; exit 2 = AXe missing or no booted sim (see `problems`/`next_steps` in the JSON). When several sims are booted, every verb targets the lowest UDID deterministically; `doctor` adds a `note` listing them, and `--udid <id>` (accepted by every verb, `doctor` included) targets a specific one.\n\n## Subcommands\n\n- `xcui wait --for-element <id> | --gone <id> | --idle [--timeout 10s] [--poll 250ms]` — poll the a11y tree until a condition holds. Replaces sleep/re-screenshot guesswork (CLI `waitForExistence`).\n- `xcui assert --id <id> [--label <s>] [--value <s>] [--trait <role>] [--single]` — assert on an element. `--single` checks the id resolves to exactly one element (e.g. \"hero announces as one element\").\n- `xcui a11y set --toggle <name> --value <on/off> [--app <bundle-id>]` — set an accessibility setting. Supported toggles (all verified against the simulator):\n  - `dynamic-type` — native `simctl ui content_size`; `--value` is a size (`large`, `accessibility-extra-large`, … up to `accessibility-extra-extra-extra-large`). Applies live; no relaunch.\n  - `increase-contrast` — native `simctl ui increase_contrast`; `--value` is `on`/`off`. Applies live; no relaunch.\n  - `reduce-motion` — `defaults write com.apple.Accessibility ReduceMotionEnabled`; needs relaunch, so pass `--app <bundle-id>` to have xcui terminate + relaunch the app.\n  - `reduce-transparency` — `defaults write com.apple.Accessibility ReduceTransparencyEnabled`; needs relaunch (pass `--app`).\n- `xcui a11y reset` — clear xcui-set overrides (delete the defaults keys, content_size → large, increase_contrast → disabled).\n- `xcui dialog accept | dismiss [--udid <udid>]` — find the frontmost system alert and tap the right button: `accept` prefers the most-permissive standard grant (`Allow While Using App` › `Allow Once` › `Allow` › `OK` › `Open`), `dismiss` prefers the decline (`Don't Allow` › `Cancel` › `Not Now`). A one-button alert is tapped for either intent. Matching is case- and apostrophe-insensitive (curly `’` = straight `'`). The tap delegates to `axe tap` (by id when present, else by label). Exit `0` handled, `1` no actionable alert.\n- `xcui dialog pregrant <bundle-id> <service>… [--udid <udid>]` — grant permissions ahead of time via `simctl privacy … grant`, so the dialog never appears. Services are `simctl privacy` names (`camera`, `photos`, `location`, `microphone`, `contacts`, …). Prefer this over `accept` when you control the test setup — no alert means nothing to race.\n- `xcui voiceover traverse [--udid <udid>]` — emit the **computed** VoiceOver announcement sequence: walk the a11y tree in focus order (top-to-bottom, leading-to-trailing) and render each focusable element as `label, value, trait` (plus `dimmed` when disabled). Output is a `sequence` JSON array.\n- `xcui voiceover assert --sequence <file> [--udid <udid>]` — compare the live announcement sequence to an expected one; the file may be a bare JSON string array **or** a saved `traverse` report (it round-trips). Reports every differing index (one entry per mismatched position, plus a length-mismatch note when counts differ); exit `1` on any mismatch.\n\n> **VoiceOver scope (honest framing):** `voiceover` renders the *computed* announcement from the accessibility tree — what VoiceOver would say, derived deterministically. It is **not** captured audio/TTS, which the simulator does not expose to scripting. Use it to catch missing labels, wrong trait phrasing, bad focus order, and unannounced state — not to verify the speech synthesizer itself.\n\n> **Not yet supported (a11y toggles):** the `voiceover`, `differentiate-without-color`, and `bold-text` *toggles* for `a11y set` had no confirmable simulator mechanism (no native `simctl ui` setter, and their candidate `defaults` keys are not populated/honored by iOS on the sim). They are intentionally omitted from v1 rather than shipped unverified. (This is distinct from the `xcui voiceover` command above, which reads the tree and needs no toggle.)\n\n## For input, use AXe directly\n\n```bash\naxe tap --id loginButton --udid <udid>     # real HID touch, not pointer-hover\naxe type \"user@example.com\" --udid <udid>\naxe describe-ui --udid <udid>              # raw a11y tree (xcui assert/wait parse this)\n```\n\n## Output & exit codes\n\nJSON by default (`tool`/`version` envelope); `--human` for prose. Exit: `0` pass · `1` assertion-fail/wait-timeout · `2` environment error · `8` output-write error.\n\n> **CLI gotcha:** Go's flag parser stops at the first positional, so always put flags after the subcommand and use the all-flag forms shown above (`assert --id …`, not `assert <id> …`).\n\n## Resources\n\n**Tools**: `axe` (AXe — `brew install cameroncooke/axe/axe`), `xcrun simctl`\n\n**Skills**: axiom-accessibility, axiom-testing\n\n**Agents**: simulator-tester (drives xcui live), accessibility-auditor (static a11y scan)\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -36548,7 +36548,7 @@
           "level": 2,
           "startLine": 8,
           "endLine": 11,
-          "charCount": 361
+          "charCount": 568
         },
         {
           "heading": "Subcommands",
@@ -42589,7 +42589,7 @@
           34,
           2,
           20,
-          347
+          358
         ],
         "224": [
           5,
@@ -42744,7 +42744,7 @@
         16.97142857142857,
         4.106122448979592,
         43.93877551020408,
-        627.9387755102039
+        627.9836734693876
       ],
       "storedFields": {
         "0": {
@@ -78610,7 +78610,7 @@
               "217": 1,
               "219": 1,
               "222": 6,
-              "223": 1,
+              "223": 3,
               "224": 2,
               "225": 4,
               "227": 2,
@@ -92316,7 +92316,7 @@
               "192": 19,
               "202": 5,
               "220": 3,
-              "223": 2,
+              "223": 3,
               "241": 3
             }
           }
@@ -114090,7 +114090,7 @@
               "217": 2,
               "220": 13,
               "222": 1,
-              "223": 14,
+              "223": 16,
               "241": 142
             }
           }
@@ -122851,7 +122851,8 @@
               "81": 2,
               "82": 1,
               "181": 1,
-              "182": 1
+              "182": 1,
+              "223": 2
             }
           }
         ],
@@ -128732,6 +128733,7 @@
               "141": 1,
               "148": 1,
               "159": 1,
+              "223": 1,
               "224": 1,
               "233": 1
             }
@@ -130572,6 +130574,7 @@
               "217": 6,
               "220": 13,
               "222": 14,
+              "223": 1,
               "224": 1,
               "228": 8,
               "229": 1,
@@ -168924,6 +168927,7 @@
               "217": 1,
               "221": 2,
               "222": 4,
+              "223": 1,
               "226": 1,
               "229": 1,
               "230": 1,
@@ -175546,6 +175550,7 @@
               "218": 2,
               "219": 1,
               "222": 1,
+              "223": 2,
               "227": 1,
               "237": 1,
               "240": 1
@@ -183355,7 +183360,7 @@
               "220": 2,
               "221": 1,
               "222": 1,
-              "223": 1,
+              "223": 2,
               "224": 2,
               "229": 1,
               "230": 1,
@@ -188876,7 +188881,7 @@
             },
             "4": {
               "221": 6,
-              "223": 3
+              "223": 5
             }
           }
         ],
@@ -192917,7 +192922,7 @@
           {
             "4": {
               "27": 1,
-              "223": 1
+              "223": 2
             }
           }
         ],
@@ -202975,7 +202980,7 @@
               "220": 18,
               "221": 1,
               "222": 12,
-              "223": 12,
+              "223": 13,
               "225": 3,
               "228": 2,
               "233": 3,
@@ -207469,7 +207474,8 @@
               "189": 2,
               "190": 1,
               "197": 1,
-              "199": 1
+              "199": 1,
+              "223": 1
             }
           }
         ],
@@ -217685,7 +217691,7 @@
               "220": 3,
               "221": 7,
               "222": 7,
-              "223": 4,
+              "223": 5,
               "224": 8,
               "225": 21,
               "226": 4,
@@ -227292,7 +227298,7 @@
               "220": 1,
               "221": 2,
               "222": 8,
-              "223": 5,
+              "223": 6,
               "224": 3,
               "225": 13,
               "226": 2,
@@ -237308,6 +237314,7 @@
               "218": 3,
               "219": 1,
               "222": 7,
+              "223": 1,
               "224": 3,
               "225": 1,
               "229": 4,
@@ -241786,7 +241793,8 @@
               "123": 2,
               "136": 1,
               "157": 1,
-              "182": 1
+              "182": 1,
+              "223": 1
             }
           }
         ],
@@ -247456,7 +247464,8 @@
           "sims",
           {
             "4": {
-              "20": 1
+              "20": 1,
+              "223": 1
             }
           }
         ],
@@ -310873,6 +310882,7 @@
               "211": 1,
               "212": 1,
               "214": 1,
+              "223": 1,
               "225": 1,
               "227": 1,
               "233": 4,
@@ -313575,7 +313585,8 @@
               "152": 1,
               "186": 1,
               "187": 2,
-              "222": 2
+              "222": 2,
+              "223": 1
             }
           }
         ],
@@ -592792,7 +592803,25 @@
           "problems",
           "next",
           "steps",
-          "json"
+          "json",
+          "when",
+          "several",
+          "sims",
+          "every",
+          "verb",
+          "targets",
+          "lowest",
+          "udid",
+          "deterministically",
+          "adds",
+          "note",
+          "list",
+          "them",
+          "id",
+          "accepted",
+          "included",
+          "specific",
+          "one"
         ],
         "Subcommands": [
           "subcommands",
