@@ -26,6 +26,10 @@ import {
   validateInlineReferences,
   validateAgentDescriptionParity,
 } from "./audit-parity.ts";
+import {
+  checkSkillInvocations,
+  findSkillNameCollisions,
+} from "./skill-invocations.ts";
 
 const root = path.resolve(import.meta.dirname!, "..");
 const pluginDir = path.join(root, ".claude-plugin/plugins/axiom");
@@ -183,6 +187,10 @@ if (claudeCode) {
 heading("5. Skill Integrity");
 
 const allSkillNames = new Set<string>();
+// Child sub-skill basename → path(s) it appears at. Keys are the child-skill
+// namespace (fed into the /skill resolver, §10); multi-value entries are
+// collisions (§5). Source of truth — supersedes a separate name Set.
+const childOccurrences = new Map<string, string[]>();
 let skillFilesChecked = 0;
 let skillContentCount = 0; // Content units: standalone SKILL.md + skills/*.md in skill suites
 
@@ -200,7 +208,15 @@ function checkSkillsIn(dir: string): void {
       // Count content units: suites count skills/, standalone count SKILL.md
       const refsDir = path.join(fullPath, "skills");
       if (fs.existsSync(refsDir) && fs.statSync(refsDir).isDirectory()) {
-        skillContentCount += fs.readdirSync(refsDir).filter((f: string) => f.endsWith(".md")).length;
+        const childMds = fs.readdirSync(refsDir).filter((f: string) => f.endsWith(".md"));
+        skillContentCount += childMds.length;
+        for (const f of childMds) {
+          const base = f.replace(/\.md$/, "");
+          const rel = path.relative(pluginDir, path.join(refsDir, f));
+          const seen = childOccurrences.get(base);
+          if (seen) seen.push(rel);
+          else childOccurrences.set(base, [rel]);
+        }
       } else {
         skillContentCount++;
       }
@@ -253,6 +269,34 @@ checkSkillsIn(path.join(pluginDir, "skills"));
 console.log(
   `  ✓ ${skillFilesChecked} skill files checked (frontmatter, duplicates, emptiness)`,
 );
+
+// Guard the /skill resolver's flat namespace (allSkillNames ∪ childOccurrences,
+// §10): a child basename in two suites, or one equal to a top-level skill name,
+// makes `/skill <name>` ambiguous about which file it reaches. Zero today; warn
+// (not error) so a future collision surfaces for a human without blocking
+// unrelated work (axiom-n7c4).
+const skillNameCollisions = findSkillNameCollisions({
+  topLevelNames: allSkillNames,
+  childOccurrences,
+});
+for (const c of skillNameCollisions) {
+  if (c.kind === "duplicate-child") {
+    warn(
+      "skill-namespace",
+      `Child sub-skill basename "${c.name}" appears in ${c.locations.length} suites (${c.locations.join(", ")}) — /skill ${c.name} is ambiguous`,
+    );
+  } else {
+    warn(
+      "skill-namespace",
+      `Child sub-skill "${c.name}" (${c.locations.join(", ")}) collides with the top-level skill "${c.name}" — /skill ${c.name} is ambiguous`,
+    );
+  }
+}
+if (skillNameCollisions.length === 0) {
+  console.log(
+    `  ✓ /skill namespace unambiguous (${childOccurrences.size} child basenames, none duplicated or shadowing a top-level skill)`,
+  );
+}
 
 heading("6. Agent Integrity");
 
@@ -398,35 +442,60 @@ if (fs.existsSync(metadataPath)) {
   }
 }
 
-heading("10. Router Cross-References");
+heading("10. Skill Invocation Cross-References");
 
+const routerSkillNames = (claudeCode?.skills || []).map((s) => s.name);
+
+// A `/skill <name>` invocation must resolve to a real skill — a top-level
+// router/standalone (allSkillNames) OR a child sub-skill (childOccurrences).
+// Scanning ALL skill bodies (routers + children), agents, and commands — not
+// just routers — and accepting both `/skill axiom-X` and `/skill axiom:X`
+// forms. The original ios-ml dead end (`/skill coreml` in a sub-skill, no
+// axiom- prefix) slipped through the old routers-only `/skill axiom-X` scan
+// (axiom-39fb). Resolution logic lives in scripts/skill-invocations.ts.
+const validSkillTargets = new Set<string>([
+  ...allSkillNames,
+  ...childOccurrences.keys(),
+]);
 let crossRefChecked = 0;
 let brokenRefs = 0;
 
-const routerSkillNames = (claudeCode?.skills || []).map((s) => s.name);
-for (const routerName of routerSkillNames) {
-  const routerPath = path.join(pluginDir, "skills", routerName, "SKILL.md");
-  if (!fs.existsSync(routerPath)) continue;
-
-  const content = fs.readFileSync(routerPath, "utf8");
-  const refs = content.matchAll(/\/skill (axiom-[\w-]+)/g);
-
-  for (const ref of refs) {
-    crossRefChecked++;
-    const targetName = ref[1];
-    if (!allSkillNames.has(targetName)) {
-      error(
-        "cross-ref",
-        `Router "${routerName}" references non-existent skill "${targetName}"`,
-      );
-      brokenRefs++;
+const invocationScanDirs = [
+  path.join(pluginDir, "skills"),
+  path.join(pluginDir, "agents"),
+  path.join(pluginDir, "commands"),
+];
+for (const dir of invocationScanDirs) {
+  if (!fs.existsSync(dir)) continue;
+  const walk = (d: string) => {
+    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+      const full = path.join(d, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (entry.name.endsWith(".md")) {
+        const invocations = checkSkillInvocations(
+          fs.readFileSync(full, "utf8"),
+          validSkillTargets,
+        );
+        for (const inv of invocations) {
+          crossRefChecked++;
+          if (!inv.resolved) {
+            error(
+              "cross-ref",
+              `${path.relative(pluginDir, full)}:${inv.line} invokes "/skill ${inv.raw}" but "${inv.name}" is not a known skill (router or child)`,
+            );
+            brokenRefs++;
+          }
+        }
+      }
     }
-  }
+  };
+  walk(dir);
 }
 
 if (brokenRefs === 0) {
   console.log(
-    `  ✓ ${crossRefChecked} cross-references validated across ${routerSkillNames.length} routers`,
+    `  ✓ ${crossRefChecked} /skill invocations validated across skills, agents, and commands`,
   );
 }
 
