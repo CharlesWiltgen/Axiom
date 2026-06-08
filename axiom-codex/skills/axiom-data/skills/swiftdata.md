@@ -630,6 +630,45 @@ final class Track {
 
 **Why** CloudKit only syncs to private zones, and network delays mean new records may not have all fields populated yet.
 
+#### Handling uniqueness without `.unique`
+
+When you genuinely need uniqueness with CloudKit — a settings singleton, or records keyed by a natural ID (a server `recordID`, ISBN, email) — enforce it in code. There are two cases, and they need different handling.
+
+**Records your own code inserts** (an import, a server fetch you control): use a **fetch-before-insert** upsert at the insert site.
+
+```swift
+func upsert(remoteID: String, in context: ModelContext) throws {
+    var descriptor = FetchDescriptor<Track>(
+        predicate: #Predicate { $0.remoteID == remoteID }
+    )
+    descriptor.fetchLimit = 1
+    if let existing = try context.fetch(descriptor).first {
+        existing.lastSeen = .now          // update in place — no duplicate
+    } else {
+        context.insert(Track(remoteID: remoteID))
+    }
+}
+```
+
+**Records CloudKit delivers via sync**: you get no insert hook to upsert at, and a fetch-before-insert *races in-flight sync* — the remote copy of a record may not have arrived locally yet, so the fetch misses and a duplicate slips in regardless. Don't dedup on every insert. Instead let sync settle, then run a **deduplication sweep** on a background `ModelContext` at a natural lull (app foreground, a debounced timer, or after your own refresh completes):
+
+```swift
+func deduplicate(in context: ModelContext) throws {
+    let all = try context.fetch(FetchDescriptor<Track>())
+    let groups = Dictionary(grouping: all, by: \.remoteID)
+    for (_, dupes) in groups where dupes.count > 1 {
+        // keep the earliest record, delete the rest
+        let keep = dupes.min { $0.createdAt < $1.createdAt }
+        for dupe in dupes where dupe !== keep {
+            context.delete(dupe)
+        }
+    }
+    try context.save()
+}
+```
+
+Run the sweep on a background context (not the main one), keyed by the natural ID, so it doesn't block the UI or fight active sync.
+
 **Relationship Constraint** All relationships must be optional
 ```swift
 @Model
