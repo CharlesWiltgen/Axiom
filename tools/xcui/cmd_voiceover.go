@@ -156,6 +156,7 @@ func runVoiceOverTraverse(out io.Writer, args []string) int {
 	fs := flag.NewFlagSet("voiceover traverse", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	udidFlag := fs.String("udid", "", "target simulator UDID (default: booted)")
+	human := fs.Bool("human", false, "human-readable output instead of JSON")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -172,6 +173,10 @@ func runVoiceOverTraverse(out io.Writer, args []string) int {
 	}
 	seq := announcementSequence(roots)
 	rep := VoiceOverReport{Tool: "xcui", Version: version, Action: "traverse", Count: len(seq), Sequence: seq}
+	if *human {
+		renderVoiceOverHuman(out, rep)
+		return 0
+	}
 	enc := json.NewEncoder(out)
 	if err := enc.Encode(rep); err != nil {
 		return 8
@@ -184,6 +189,7 @@ func runVoiceOverAssert(out io.Writer, args []string) int {
 	fs.SetOutput(os.Stderr)
 	seqFile := fs.String("sequence", "", "path to expected announcement JSON (required)")
 	udidFlag := fs.String("udid", "", "target simulator UDID (default: booted)")
+	human := fs.Bool("human", false, "human-readable output instead of JSON")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -219,9 +225,13 @@ func runVoiceOverAssert(out io.Writer, args []string) int {
 		Tool: "xcui", Version: version, Action: "assert",
 		Count: len(got), Sequence: got, Pass: len(failures) == 0, Failures: failures,
 	}
-	enc := json.NewEncoder(out)
-	if err := enc.Encode(rep); err != nil {
-		return 8
+	if *human {
+		renderVoiceOverHuman(out, rep)
+	} else {
+		enc := json.NewEncoder(out)
+		if err := enc.Encode(rep); err != nil {
+			return 8
+		}
 	}
 	if rep.Pass {
 		return 0

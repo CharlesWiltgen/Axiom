@@ -88,6 +88,7 @@ func runA11ySet(out io.Writer, args []string) int {
 	value := fs.String("value", "", "on|off, or a content_size for dynamic-type")
 	app := fs.String("app", "", "bundle id to relaunch so the setting takes effect")
 	udidFlag := fs.String("udid", "", "target simulator UDID (default: booted)")
+	human := fs.Bool("human", false, "human-readable output instead of JSON")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -152,6 +153,10 @@ func runA11ySet(out io.Writer, args []string) int {
 		rep.Note = "setting written but no --app given; relaunch the app for it to take effect"
 	}
 
+	if *human {
+		renderA11yHuman(out, rep)
+		return 0
+	}
 	enc := json.NewEncoder(out)
 	if err := enc.Encode(rep); err != nil {
 		fmt.Fprintf(os.Stderr, "a11y set: %v\n", err)
@@ -164,6 +169,7 @@ func runA11yReset(out io.Writer, args []string) int {
 	fs := flag.NewFlagSet("a11y reset", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	udidFlag := fs.String("udid", "", "target simulator UDID (default: booted)")
+	human := fs.Bool("human", false, "human-readable output instead of JSON")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -181,6 +187,10 @@ func runA11yReset(out io.Writer, args []string) int {
 	_, _ = ExecRun(ctx, 0, "xcrun", "simctl", "ui", udid, "content_size", "large")
 	_, _ = ExecRun(ctx, 0, "xcrun", "simctl", "ui", udid, "increase_contrast", "disabled")
 	rep := A11yReport{Tool: "xcui", Version: version, Applied: true, Note: "accessibility overrides cleared"}
+	if *human {
+		renderA11yHuman(out, rep)
+		return 0
+	}
 	enc := json.NewEncoder(out)
 	if err := enc.Encode(rep); err != nil {
 		return 8
