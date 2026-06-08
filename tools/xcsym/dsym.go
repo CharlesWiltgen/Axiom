@@ -17,10 +17,12 @@ var ErrNotFound = errors.New("dSYM not found")
 
 // DiscovererOptions configures dSYM discovery sources.
 //
-// SkipDefaults suppresses the defaulting behavior that fills ArchivesPaths,
-// DerivedDataPaths, DownloadsPaths, and ToolchainPaths from the user's home
-// directory / xcode-select. Tests use this to prevent real directories from
-// bleeding into fixture-driven test runs.
+// SkipDefaults suppresses every implicit search root: the home-directory
+// defaults filled here (ArchivesPaths, DerivedDataPaths, DownloadsPaths) plus
+// the lazily-resolved roots gated downstream — the xcode-select Toolchains dir
+// (findInToolchain) and the current working directory's framework scan
+// (findInFrameworks). Tests use this to prevent real directories from bleeding
+// into fixture-driven test runs.
 type DiscovererOptions struct {
 	// Explicit overrides every source for every UUID. Convenient for `verify`,
 	// but wrong for `crash` (which wants the override to apply to the main

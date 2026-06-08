@@ -39,7 +39,7 @@ func runVerify(out io.Writer, args []string) int {
 	dsymPaths := fs.String("dsym-paths", "", "extra dSYM search roots (colon-separated)")
 	noSpotlight := fs.Bool("no-spotlight", false, "skip Spotlight (mdfind) lookups")
 	noCache := fs.Bool("no-cache", false, "skip the persistent UUID cache")
-	noDefaults := fs.Bool("no-defaults", false, "skip default dSYM search roots (Archives, DerivedData, Downloads); only --dsym, --dsym-paths, $XCSYM_DSYM_PATHS apply")
+	noDefaults := fs.Bool("no-defaults", false, "skip default dSYM search roots (Archives, DerivedData, Downloads, Toolchains, Frameworks(cwd)); only --dsym, --dsym-paths, $XCSYM_DSYM_PATHS apply")
 	human := fs.Bool("human", false, "human-readable output instead of JSON")
 	positionals, err := parseInterspersed(fs, args)
 	if err != nil {

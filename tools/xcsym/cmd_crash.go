@@ -46,7 +46,7 @@ func runCrash(out io.Writer, args []string) int {
 	dsymPaths := fs.String("dsym-paths", "", "extra dSYM search roots (colon-separated)")
 	noSpotlight := fs.Bool("no-spotlight", false, "skip Spotlight (mdfind) lookups")
 	noCache := fs.Bool("no-cache", false, "skip the persistent UUID cache")
-	noDefaults := fs.Bool("no-defaults", false, "skip default dSYM search roots (Archives, DerivedData, Downloads); only --dsym, --dsym-paths, $XCSYM_DSYM_PATHS apply")
+	noDefaults := fs.Bool("no-defaults", false, "skip default dSYM search roots (Archives, DerivedData, Downloads, Toolchains, Frameworks(cwd)); only --dsym, --dsym-paths, $XCSYM_DSYM_PATHS apply")
 	noSymbolicate := fs.Bool("no-symbolicate", false, "skip atos calls; keep frames as parsed")
 	outputPath := fs.String("output", "", "write JSON to this path instead of stdout")
 	filterMatch := fs.String("filter", "", "for .xccrashpoint inputs: pick the Filter_* dir whose name contains this substring (default: most-recent-mtime)")
