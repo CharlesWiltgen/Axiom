@@ -91,7 +91,7 @@ Both recordings must exercise the **same workload** or the deltas measure worklo
 
 - **Frame cost is cycle share, not time.** The `%` is the exact share of total CPU cycles; the `ms` figure is an *approximate* wall-time from the frame's sample share × the analyzed window. Cycle-weight is cycles (the export's "Cycles" column), and cycles→time needs per-core frequency under DVFS that the trace doesn't carry — so ms is never derived from cycles.
 - **Main-thread stalls are approximate.** cpu-profile samples only running threads, so a large inter-sample gap is a *candidate* stall, not a confirmed hang — the Hangs instrument confirms (a later xcprof phase).
-- **Release builds show addresses.** Stripped binaries report raw `0x…` frame names. xcprof resolves them via `--dsym <path>` or auto-discovery by UUID through Spotlight; frames with no matching dSYM stay raw and are flagged (never invented). Fuller discovery sources (Archives/DerivedData walks, shared with xcsym) come with the engine-extraction epic (axiom-fo7k). Debug builds symbolicate natively, and Instruments may pre-symbolicate the export when it can find the dSYM at record time.
+- **Release builds show addresses.** Stripped binaries report raw `0x…` frame names. xcprof resolves them via `--dsym <path>` or auto-discovery by UUID through Spotlight; frames with no matching dSYM stay raw and are flagged (never invented). Fuller discovery sources (Archives/DerivedData walks, shared with xcsym) come with a later engine-extraction phase. Debug builds symbolicate natively, and Instruments may pre-symbolicate the export when it can find the dSYM at record time.
 - **Support matrix is honest about what xctrace can export.** `cpu` and `network` parse (`available` when data is present, `partial` when the table is present but empty). **memory** and macOS **energy** report `not_exportable`: Allocations/Leaks data lives in the trace's event store (no XML table — open it in Instruments.app), and Power Profiler is iOS/iPadOS-only and unsupported on macOS. A family genuinely absent from the recording is `not_present`. None of these ever reads as a silent "clean". (On-device iOS energy parsing is a future, device-verified addition.)
 
 ## Output & exit codes
@@ -100,7 +100,7 @@ Both recordings must exercise the **same workload** or the deltas measure worklo
 
 ## Scope
 
-Shipped: `doctor`, `analyze` (CPU `cpu-profile` family with `--dsym` symbolication — explicit path + Spotlight auto-discovery — plus the `network-connection-stat` socket family), `record` (presets + bounded duration + launch/all-processes/output security gates), and `compare` (function-level CPU-share regression detection with a `--fail-on-regression` CI gate). memory and macOS energy are `not_exportable` by design (data not surfaced by xctrace export). The shared dSYM/symbolication engine with fuller discovery (axiom-fo7k), on-device iOS energy parsing, and `cleanup` remain later phases.
+Shipped: `doctor`, `analyze` (CPU `cpu-profile` family with `--dsym` symbolication — explicit path + Spotlight auto-discovery — plus the `network-connection-stat` socket family), `record` (presets + bounded duration + launch/all-processes/output security gates), and `compare` (function-level CPU-share regression detection with a `--fail-on-regression` CI gate). memory and macOS energy are `not_exportable` by design (data not surfaced by xctrace export). The shared dSYM/symbolication engine with fuller discovery, on-device iOS energy parsing, and `cleanup` remain later phases.
 
 ## Resources
 

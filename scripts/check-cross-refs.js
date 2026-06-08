@@ -19,7 +19,12 @@ const filesystemSuites = new Set(
     .map(e => e.name)
 );
 const validSuites = new Set([...manifestSuites, ...filesystemSuites]);
-const unmanifested = [...filesystemSuites].filter(s => !manifestSuites.has(s));
+// axiom-tools is intentionally NOT in claude-code.json: it's the always-on
+// onboarding/tools suite injected via the session-start hook (not a routed
+// skill) and is deliberately excluded from the Codex variant. Sanction it as an
+// implicit suite so it isn't reported as an unmanifested surprise.
+const IMPLICIT_SUITES = new Set(['axiom-tools']);
+const unmanifested = [...filesystemSuites].filter(s => !manifestSuites.has(s) && !IMPLICIT_SUITES.has(s));
 
 const validChildren = new Map();
 const childToSuites = new Map();

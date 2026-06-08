@@ -92,7 +92,7 @@ App Clips can't use: App Intents, HealthKit, HomeKit, Contacts, EventKit, Core M
 
 ## Part 8 — App Clip + Live Activities
 
-An App Clip *can* show a Live Activity. It requires its own widget-extension target that contains **only** the Live Activity (no static/timeline widgets). This is a useful pattern for order/arrival status during an install-free flow — see `skills/live-activities.md` for the ActivityKit side.
+An App Clip *can* show a Live Activity. It requires its own widget-extension target that contains **only** the Live Activity (no static/timeline widgets). This is a useful pattern for order/arrival status during an install-free flow — see axiom-integration (skills/live-activities.md) for the ActivityKit side.
 
 ## Common Mistakes
 
@@ -110,4 +110,4 @@ An App Clip *can* show a Live Activity. It requires its own widget-extension tar
 
 **Docs**: /appclip, /appclip/creating-an-app-clip-with-xcode, /appclip/configuring-the-launch-experience-of-your-app-clip, /appclip/associating-your-app-clip-with-your-website, /appclip/sharing-data-between-your-app-clip-and-your-full-app, /appclip/choosing-the-right-functionality-for-your-app-clip
 
-**Skills**: skills/app-clips-ref.md, skills/app-store-submission.md (submitting with the parent app), skills/app-review-guidelines.md, skills/live-activities.md (App Clip Live Activities)
+**Skills**: skills/app-clips-ref.md, skills/app-store-submission.md (submitting with the parent app), skills/app-review-guidelines.md, axiom-integration (skills/live-activities.md — App Clip Live Activities)
