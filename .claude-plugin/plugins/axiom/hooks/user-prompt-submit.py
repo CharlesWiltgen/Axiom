@@ -35,8 +35,33 @@ prompt_lower = prompt[:2000].lower()
 
 matches = []
 
-# Negative gate: skip prompts with strong non-iOS signals
-non_ios = re.search(r'typescript|react(?!\s*native)|angular|vue\.js|django|flask|rails|node\.js|nodejs|npm |yarn |webpack|docker|kubernetes|python\b|java\b(?!script)|kotlin|android|flutter', prompt_lower)
+# Negative gate (recall-favoring — axiom-zfpv).
+#
+# On Claude Code this hook is one of TWO routing layers. The other is Claude Code's
+# own matcher over the claude-code.json skill descriptions — high-recall, with no
+# negative gate. This hook is the high-precision layer. The gate is deliberately
+# kept from being MORE aggressive than the description layer (which would make
+# hook-routing strictly worse than no hook — backwards): a non-iOS keyword only
+# suppresses routing when NO positive iOS signal is also present. So
+# "xcodebuild fails because of a Python script" or "port this Android layout to
+# SwiftUI" still routes — the iOS signal counterbalances the non-iOS keyword. A
+# pure non-iOS prompt (no iOS signal) stays gated. This is an intentional
+# precision-vs-recall trade; see TestMixedSignalRouting before tightening it.
+#
+# ios_signal is a CURATED high-confidence subset — intentionally NOT a mirror of
+# the per-router token lists below. Inclusion criterion: a token that is
+# unambiguously Apple-only (swift/swiftui/xcode/an Apple platform/uikit/xcrun/...)
+# OR whose only realistic misfire is a benign over-suggestion. Deliberately
+# EXCLUDED: tokens that also name common non-Apple things — bare "simulator"
+# (circuit/flight sim), "provisioning" (DevOps), "code sign" (Authenticode), "spm"
+# (neuroimaging / a Linux pkg mgr), "derived data". Accepted consequence (documented,
+# not accidental): a mixed prompt whose ONLY iOS signal is an excluded gated-rule
+# token (e.g. "code sign" + "python") stays gated here; on Claude Code the
+# description layer still routes it. When adding a new router token below, only add
+# it here too if it clears the inclusion criterion.
+non_ios_keyword = re.search(r'typescript|react(?!\s*native)|angular|vue\.js|django|flask|rails|node\.js|nodejs|npm |yarn |webpack|docker|kubernetes|python\b|java\b(?!script)|kotlin|android|flutter', prompt_lower)
+ios_signal = re.search(r'\bswift\b|swiftui|swiftdata|\bxcode|xcworkspace|xcodeproj|\bobjective-c\b|\bobjc\b|\bios\b|ipados|watchos|tvos|visionos|\biphone|\bipad|apple\s*(watch|tv)|vision\s*pro|uikit|appkit|cocoapod|swift\s*package|testflight|app\s*store\s*connect|provisioning\s*profile|\bxcrun\b|\blldb\b', prompt_lower)
+non_ios = bool(non_ios_keyword) and not ios_signal
 
 # Build/environment (highest priority)
 if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (crash|hang|won.t|not )|pod (install|update)|spm |swift package|linker (error|command)|module.{0,5}not found|derived data|code sign|provisioning|xcworkspace|xcodeproj|xcode (error|crash|hang|won.t)|build time|compile (error|slow|time)|lldb\b|breakpoint.{0,10}(set|conditional|symbolic)|thread\s*backtrace|\bpo\b.{0,10}(vs|variable|expression)|transport error|could not be established|\bcoredevice\b|dvtenablecoredevice|deploy(ing|ed)?.{0,30}(to\s+)?(device|watch|phone|ipad|simulator|hardware|real\s+device|physical\s+device)|connect.{0,10}(to.{0,10})?(watch|device|phone|ipad|simulator)|device.{0,10}(not.{0,10}(connect|found|recogn|appear)|won.t.{0,10}(connect|appear|show))|cannot find symbol|cannot find.{0,15}in scope|use of unresolved identifier|undefined (symbol|reference)|works? (fine )?(in|on) (the )?simulator.{0,40}(fail|crash|broken|wrong|black|empty|hang).{0,15}(on|in).{0,10}(real |physical )?device|(crash|fail|broken|wrong|black|empty|hang)\w*\s+only\s+on\s+.{0,15}device|only\s+(crash|fail|broken|hang)\w*\s+(on|in)\s+.{0,15}device|(real|physical)\s*device[- ]only|device[- ]only.{0,15}(crash|fail|broken)|after .{0,30}(updating|upgrading|installing) xcode', prompt_lower):
