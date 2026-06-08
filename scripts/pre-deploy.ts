@@ -25,6 +25,7 @@ import {
   parseInlineAuditReferences,
   validateInlineReferences,
   validateAgentDescriptionParity,
+  AGENT_FRONTMATTER_KEYS,
 } from "./audit-parity.ts";
 import {
   checkSkillInvocations,
@@ -333,6 +334,10 @@ const allAgentNames = new Set<string>();
 // (axiom-6jea). Co-locating the exemption with the agent beats a hardcoded set
 // that silently drifts as agents are added.
 const agentsExemptFromRouting = new Set<string>();
+// Every column-0 frontmatter key seen across agents — checked against
+// AGENT_FRONTMATTER_KEYS below so the allowlist that drives
+// parseAgentDescription's block-scalar terminator can't silently rot (axiom-2jf).
+const seenAgentKeys = new Set<string>();
 
 if (fs.existsSync(agentsDir)) {
   for (const file of fs.readdirSync(agentsDir)) {
@@ -368,6 +373,14 @@ if (fs.existsSync(agentsDir)) {
     if (fm?.["exempt-from-routing"] === "true") {
       agentsExemptFromRouting.add(agentName);
     }
+
+    const fmBlock = content.match(/^---\n([\s\S]*?)\n---/);
+    if (fmBlock) {
+      for (const line of fmBlock[1].split("\n")) {
+        const k = line.match(/^([a-zA-Z][\w-]*):/);
+        if (k) seenAgentKeys.add(k[1]);
+      }
+    }
   }
   console.log(
     `  ✓ ${agentFilesChecked} agent files checked` +
@@ -375,6 +388,15 @@ if (fs.existsSync(agentsDir)) {
         ? ` (${agentsExemptFromRouting.size} routing-exempt)`
         : ""),
   );
+
+  for (const k of seenAgentKeys) {
+    if (!AGENT_FRONTMATTER_KEYS.has(k)) {
+      warn(
+        "agent-schema",
+        `Agent frontmatter key "${k}" is not in AGENT_FRONTMATTER_KEYS (scripts/audit-parity.ts) — add it so parseAgentDescription terminates a description block at it instead of swallowing its value`,
+      );
+    }
+  }
 }
 
 heading("7. Command Integrity");
