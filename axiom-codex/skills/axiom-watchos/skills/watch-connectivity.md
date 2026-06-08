@@ -208,6 +208,8 @@ s.isReachable             // both apps active and reachable right now
 
 **Guard every send against the right precondition.** `transferUserInfo` works offline, but `sendMessage` fails if `isReachable == false`. Check `isComplicationEnabled` before spending one of the 50 daily complication transfers.
 
+**`isReachable` is a hint, not a delivery guarantee.** It can read `true` while a `sendMessage`/`sendMessageData` still fails or never arrives — don't gate sends on it as proof of delivery. Always pass the `errorHandler`, and for data that must arrive use the queued/background APIs (`transferUserInfo` / `updateApplicationContext` / `transferFile`). For genuine real-time, low-latency needs when both devices share a network, a direct HTTP/SSE channel is a known escape hatch around Watch Connectivity's reliability limits.
+
 ## App Group Required for Complication Updates
 
 Watch Connectivity hands the payload to the watchOS app, but WidgetKit reads from the widget's own process. Share a container:
@@ -242,6 +244,7 @@ Independent apps ship without an iPhone companion in some configurations — or 
 | Updating a widget without an App Group | Transfer arrives, but widget never shows new data | Enable App Groups on both targets; share via `UserDefaults(suiteName:)` or shared container file; call `WidgetCenter.shared.reloadTimelines(ofKind:)` |
 | Missing `sessionDidBecomeInactive` / `sessionDidDeactivate` on iOS | Second paired watch never receives data | Implement both on iOS; call `WCSession.default.activate()` in `sessionDidDeactivate` to reactivate |
 | Activating `WCSession` before assigning a delegate | Activation callback arrives before the delegate exists; events silently dropped | Assign the delegate, then activate — in that order |
+| Assuming `sendMessage`/`sendMessageData` errors fire at most once | Duplicate retries or duplicated side effects for a message that already succeeded | WC offers no exactly-once delivery and the error handler can fire more than once — tag each message with your own frame/message ID and dedupe (add an app-level ack when delivery must be confirmed) |
 | Overwriting `applicationContext` when ordered delivery is needed | Receiver misses events between wake intervals | Use `transferUserInfo` when every event matters, not `updateApplicationContext` |
 | Not deleting files after `transferFile` completes | Files accumulate on the sender's disk indefinitely | Remove the source file in `session(_:didFinish:error:)` |
 
