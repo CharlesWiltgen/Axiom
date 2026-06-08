@@ -295,6 +295,6 @@ The `cluster_key` is a mechanical, exact-signature grouping. It is conservative 
 
 **Skills**: testflight-triage, axiom-data (GRDB suspension / file-protection class), axiom-performance (skills/hang-diagnostics.md)
 
-**Tools**: xcsym (triage subcommand — see axiom-tools skills/xcsym-ref.md)
+**Tools**: xcsym (triage subcommand) — see axiom-tools (skills/xcsym-ref.md)
 
 **Agents**: triage-analyzer

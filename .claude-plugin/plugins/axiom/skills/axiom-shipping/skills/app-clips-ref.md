@@ -95,7 +95,7 @@ Capabilities an App Clip does **not** have:
 
 ## App Clip Live Activities
 
-An App Clip may present a Live Activity via its own widget-extension target that contains **only** the Live Activity (no static/timeline widgets). See `skills/live-activities.md`.
+An App Clip may present a Live Activity via its own widget-extension target that contains **only** the Live Activity (no static/timeline widgets). See axiom-integration (skills/live-activities.md).
 
 ## Resources
 
@@ -103,4 +103,4 @@ An App Clip may present a Live Activity via its own widget-extension target that
 
 **Docs**: /appclip, /appclip/creating-an-app-clip-with-xcode, /appclip/configuring-the-launch-experience-of-your-app-clip, /appclip/associating-your-app-clip-with-your-website, /appclip/sharing-data-between-your-app-clip-and-your-full-app
 
-**Skills**: skills/app-clips.md, skills/app-store-submission.md, skills/live-activities.md
+**Skills**: skills/app-clips.md, skills/app-store-submission.md, axiom-integration (skills/live-activities.md)
