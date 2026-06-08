@@ -1177,6 +1177,7 @@ Apps must support resizable windows on iPad.
 | Drag delete not working | Enable `.dragConfiguration(allowDelete: true)` AND observe `.onDragSessionUpdated` |
 | SliderTickContentForEach won't compile | Iterate over numeric values (`chapters.map(\.time)`), not custom structs — see Slider section |
 | Toolbar not morphing during navigation | Move `.toolbar {}` from NavigationStack to each view inside it — see Liquid Glass section |
+| `.toolbarBackground` on TabView ignored | Known buggy/no-op at the TabView level on iOS 26. Apply `toolbarBackground`/`toolbarBackgroundVisibility`/`toolbarColorScheme` for `.tabBar` on each Tab's content instead — see `axiom-design (skills/liquid-glass.md)` Known iOS 26 Limitations |
 
 ---
 
