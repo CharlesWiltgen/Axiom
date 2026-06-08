@@ -328,6 +328,11 @@ heading("6. Agent Integrity");
 const agentsDir = path.join(pluginDir, "agents");
 let agentFilesChecked = 0;
 const allAgentNames = new Set<string>();
+// Agents that opt out of the §10 "must be router-referenced" check via an
+// `exempt-from-routing: true` frontmatter field — collected here, used there
+// (axiom-6jea). Co-locating the exemption with the agent beats a hardcoded set
+// that silently drifts as agents are added.
+const agentsExemptFromRouting = new Set<string>();
 
 if (fs.existsSync(agentsDir)) {
   for (const file of fs.readdirSync(agentsDir)) {
@@ -357,8 +362,19 @@ if (fs.existsSync(agentsDir)) {
       error("agent-integrity", `Duplicate agent name: "${agentName}"`);
     }
     allAgentNames.add(agentName);
+
+    // Opt-in is the literal lowercase string `true` — anything else (yes/True/
+    // typo) fails safe by leaving the agent subject to the §10 discovery check.
+    if (fm?.["exempt-from-routing"] === "true") {
+      agentsExemptFromRouting.add(agentName);
+    }
   }
-  console.log(`  ✓ ${agentFilesChecked} agent files checked`);
+  console.log(
+    `  ✓ ${agentFilesChecked} agent files checked` +
+      (agentsExemptFromRouting.size
+        ? ` (${agentsExemptFromRouting.size} routing-exempt)`
+        : ""),
+  );
 }
 
 heading("7. Command Integrity");
@@ -524,8 +540,8 @@ if (brokenRefs === 0) {
   );
 }
 
-// Reverse check: every agent should be referenced by at least one router
-const agentsExemptFromRouting = new Set(["health-check"]);
+// Reverse check: every agent should be referenced by at least one router,
+// except those that declared `exempt-from-routing: true` (collected in §6).
 const allRouterContent = routerSkillNames
   .map((name) => {
     const p = path.join(pluginDir, "skills", name, "SKILL.md");
