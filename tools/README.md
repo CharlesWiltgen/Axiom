@@ -40,6 +40,8 @@ The helper is **duplicated** per module rather than shared, because each tool is
 cd tools && for t in xcsym xcui xcprof; do diff -q xclog/args.go $t/args.go; done
 ```
 
+This is enforced automatically: `pre-deploy.ts` §12g (run by `npm test` / CI) fails if the copies diverge.
+
 **Test:** every tool has at least one subcommand-level test proving `<cmd> <positional> --flag` and `<cmd> --flag <positional>` produce identical results. Add one when you add a subcommand.
 
 ### Token-lean output
