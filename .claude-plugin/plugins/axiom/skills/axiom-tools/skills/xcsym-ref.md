@@ -49,7 +49,7 @@ xcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots
 xcsym crash --no-symbolicate <file>             # skip atos; keep raw frames
 xcsym crash --no-cache <file>                   # bypass UUID cache
 xcsym crash --no-spotlight <file>               # skip mdfind lookups
-xcsym crash --no-defaults <file>                # skip Archives/DerivedData/Downloads/Toolchain walks (fast triage)
+xcsym crash --no-defaults <file>                # skip Archives/DerivedData/Downloads/Toolchain/Frameworks(cwd) walks (fast triage)
 xcsym crash --output <path> <file>              # write JSON to a file
 xcsym crash --human <file>                       # terse prose summary instead of JSON (for a person)
 xcsym crash - < crash.ips                       # read from stdin (for pasted content)
@@ -99,7 +99,7 @@ xcsym find-dsym <uuid> --no-cache
 xcsym find-dsym <uuid> --no-spotlight
 ```
 
-Walks the discovery chain: cache → explicit paths → Archives → DerivedData → `~/Downloads` → Xcode toolchain → system frameworks → Spotlight.
+Walks the same discovery chain as `crash` minus the per-UUID explicit map (step 1) — see "dSYM Discovery Order" below for the authoritative order.
 
 ### list-dsyms — Inventory
 
@@ -323,7 +323,7 @@ Source: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact or
 | `pattern_tag="unclassified"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |
 | `size_warning` in output | Tier exceeded its warn threshold (4 KB summary / 50 KB standard / 100 KB full) | Switch to the next smaller tier — the warning text names it |
 | `{"error":"hang_report"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |
-| `crash`/`verify` takes minutes on a long-lived dev machine | Per-image walks of a huge `~/Library/Developer/Xcode/DerivedData/**` (the `--no-cache`/`--no-spotlight` flags don't skip these) | Add `--no-defaults` to bypass all default search roots (Archives/DerivedData/Downloads/Toolchain) — symbolicates from `--dsym`/`--dsym-paths`/`XCSYM_DSYM_PATHS` only; images without those report Missing |
+| `crash`/`verify` takes minutes on a long-lived dev machine | Per-image walks of a huge `~/Library/Developer/Xcode/DerivedData/**` (the `--no-cache`/`--no-spotlight` flags don't skip these) | Add `--no-defaults` to bypass all default search roots (Archives/DerivedData/Downloads/Toolchain/Frameworks(cwd)) — symbolicates from `--dsym`/`--dsym-paths`/`XCSYM_DSYM_PATHS` only; images without those report Missing |
 
 ## Resources
 
