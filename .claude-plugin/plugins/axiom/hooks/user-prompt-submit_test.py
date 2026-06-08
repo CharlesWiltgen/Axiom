@@ -425,6 +425,67 @@ class TestNegativeRouting(unittest.TestCase):
         self.assertNotIn("axiom-build", skills)
 
 
+class TestMixedSignalRouting(unittest.TestCase):
+    """Mixed iOS + non-iOS prompts must still route the iOS skill.
+
+    Design decision (axiom-zfpv, 2026-06-08): the `non_ios` negative gate only
+    suppresses routing when NO positive iOS signal is also present. A prompt that
+    clearly names Swift / Xcode / an Apple platform still gets iOS help even when it
+    name-drops Android / Python / Django / etc. Each prompt below hits a
+    `non_ios`-GATED rule (build, generic UI, data, concurrency, performance,
+    networking) AND carries both a non-iOS keyword and an iOS signal — it must
+    route, not be silently gated. The last case guards that the gate still bites
+    when there is no iOS signal at all.
+    """
+
+    def test_build_with_python_keyword(self):
+        # "xcodebuild" is only matched by the non_ios-gated build rule.
+        self.assertIn("axiom-build", routed_skills(
+            "My xcodebuild fails because of a Python build phase script"))
+
+    def test_data_generic_with_django_keyword(self):
+        # "schema migration crashes" / "no such column" are gated data terms;
+        # "Xcode" is the iOS signal that must keep the gate open.
+        self.assertIn("axiom-data", routed_skills(
+            "My Xcode app's schema migration crashes with 'no such column' — "
+            "the backend is in Django"))
+
+    def test_networking_generic_with_nodejs_keyword(self):
+        self.assertIn("axiom-networking", routed_skills(
+            "My iOS app's API request to the Node.js backend times out"))
+
+    def test_performance_generic_with_kotlin_keyword(self):
+        self.assertIn("axiom-performance", routed_skills(
+            "My iPhone app's startup is slow; the analytics SDK is written in Kotlin"))
+
+    def test_concurrency_generic_with_django_keyword(self):
+        self.assertIn("axiom-concurrency", routed_skills(
+            "My Swift app freezes the UI during a large fetch from the Django API"))
+
+    def test_swiftui_generic_with_react_keyword(self):
+        # ".sheet" is a gated SwiftUI term; "Xcode" keeps the gate open despite "Django".
+        self.assertIn("axiom-swiftui", routed_skills(
+            "My .sheet won't dismiss in my Xcode app that also talks to a Django backend"))
+
+    def test_pure_non_ios_still_suppressed(self):
+        # The gate must still bite when NO iOS signal is present.
+        self.assertEqual(set(), routed_skills(
+            "How do I containerize my Django app with Docker and Kubernetes?"))
+
+    def test_spm_neuroimaging_in_python_stays_suppressed(self):
+        # "SPM" (Statistical Parametric Mapping) must NOT be read as Swift Package
+        # Manager — bare "spm" is excluded from ios_signal for exactly this reason.
+        self.assertEqual(set(), routed_skills(
+            "My SPM (Statistical Parametric Mapping) analysis in Python is slow "
+            "and the API request to the server keeps failing"))
+
+    def test_genuine_swift_package_still_routes(self):
+        # Dropping bare "spm" from ios_signal must not cost the genuine iOS case:
+        # "Swift Package" / "Xcode" still keep the gate open alongside a non-iOS keyword.
+        self.assertIn("axiom-build", routed_skills(
+            "My Swift Package fails to resolve in Xcode after I added a Python build step"))
+
+
 class TestManifestCoverage(unittest.TestCase):
     """Every router declared in claude-code.json must be reachable from the hook."""
 
