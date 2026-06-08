@@ -469,6 +469,50 @@ struct GardenApp: App {
 
 ---
 
+## SwiftUI on macOS -- Known Gaps and AppKit Escape Hatches
+
+SwiftUI on macOS still can't express several interactions Mac users expect, and each one forces a drop to AppKit. Knowing where the wall is -- and which bridge gets you past it -- saves you from fighting the framework. These gaps are durable as of the current SDK; re-check each release.
+
+#### Selected-but-not-focused rows
+
+A pure SwiftUI `List` styles selection correctly while focused but gives row views no hook for the *unfocused* state, so you can't dim the selection when the window stops being key. Only `List` inherits this `NSTableView` behavior -- outside `List` there's no hook at all.
+
+**Workaround**: build a custom list (`ScrollView` + `LazyVStack`, `.focusable()`/`.focused()`) and compute the selection appearance yourself. SwiftUI exposes no environment value for "is my window key," so bridge an `NSViewRepresentable` that reads the host `NSWindow` (observe `didBecomeKeyNotification`/`didResignKeyNotification`, or read `NSApp.isActive`) and drive the emphasized (accent) vs. unemphasized (gray) fill from that. (The standing feature request is for `List` to expose per-row `\.isSelected`/`\.isEmphasized` so none of this is needed.)
+
+#### Context-menu-open state
+
+There's no way to know a context menu is open for a given item outside of `List` -- only `List` inherits the `NSTableView` behavior that highlights the right-clicked row. In a custom container this is effectively impossible in pure SwiftUI.
+
+**Workaround**: use `List` when you need the right-click highlight, or wrap `NSMenu` + `NSTableView` in an `NSViewRepresentable` for full control of the open/highlight state.
+
+#### Drag-and-drop session visibility
+
+As the drag *source*, SwiftUI gives you no visibility into the live drag session unless you're also the drop target -- so you can't dim or hide the dragged items while the drag is in flight. This holds across all three SwiftUI drag-and-drop generations (`onDrag`/`onDrop` -> `Transferable` -> `DropSession`).
+
+**Workaround**: AppKit's `NSDraggingSource` reports session begin/move/end from the start. Bridge the draggable view through `NSViewRepresentable` to observe the session and update your own appearance.
+
+#### Arrow-key list navigation
+
+`.onMoveCommand` is `@available(iOS, unavailable)` -- the modifier doesn't exist on iOS at all (it won't compile there), even with a hardware keyboard attached to an iPad. A list that supports arrow-key navigation therefore needs separate code paths for macOS and iPadOS.
+
+**Workaround**: gate `.onMoveCommand` behind `#if os(macOS)` and supply an iPad-specific path (focus-driven movement or explicit shortcuts) where you need it.
+
+#### TextField swallows keyboard events
+
+A focused SwiftUI `TextField` consumes the arrow keys, so the classic Mac pattern of a search field with simultaneous arrow-key navigation of the results list below it is not possible in pure SwiftUI -- AppKit has done this for over a decade.
+
+**Workaround**: wrap an `NSSearchField`/`NSTextField` via `NSViewRepresentable` and forward `moveUp:`/`moveDown:` to your list's selection so the field keeps focus while the arrows drive the list.
+
+#### Window toolbar item placements
+
+Semantic toolbar placements (`.primaryAction`, `.secondaryAction`, `.navigation`) behave inconsistently across platforms and are hard to predict even on macOS, and a toolbar assembled from `.toolbar` modifiers scattered across a multi-pane view makes precise placement difficult.
+
+**Workaround**: keep toolbar construction in one place, verify placements per-platform, and drop to an `NSToolbar` (via the window's `NSToolbarDelegate`) when you need exact control over item order and overflow.
+
+When a gap forces AppKit, see `appkit-interop.md` for the `NSViewRepresentable`/`NSViewControllerRepresentable` bridging patterns; for the SwiftUI-side primitives (`List`, `Table`, drag-and-drop, focus) see axiom-swiftui.
+
+---
+
 ## Common Mistakes
 
 | Mistake | Symptom | Fix |
