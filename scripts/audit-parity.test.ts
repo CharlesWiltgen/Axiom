@@ -699,6 +699,45 @@ description: |
     const desc = parseAgentDescription(content);
     assert.equal(desc, "Line one.\nLine two.");
   });
+
+  it("does not truncate on flush-left example content (column-0 user:/assistant:)", () => {
+    // A future author who forgets to indent <example> bodies must not have the
+    // description silently truncated — only a real frontmatter key terminates
+    // the block, and user:/assistant: are not frontmatter keys (axiom-2jf).
+    const content = `---
+name: memory-auditor
+description: |
+  Use this agent when the user mentions memory leaks.
+
+<example>
+user: "Check my code"
+assistant: [runs the audit]
+</example>
+---
+`;
+    // Whole block captured — the flush-left example lines are kept verbatim,
+    // not truncated at `user:`/`assistant:`.
+    assert.equal(
+      parseAgentDescription(content),
+      'Use this agent when the user mentions memory leaks.\n\n<example>\nuser: "Check my code"\nassistant: [runs the audit]\n</example>',
+    );
+  });
+
+  it("terminates at a real frontmatter key, incl. mcp/hooks/exempt-from-routing", () => {
+    // Guards the allowlist completeness — these keys (used by real agents) must
+    // terminate the block, else their values would be swallowed into the
+    // description. The issue's originally-suggested allowlist omitted them.
+    const content = `---
+name: foo
+description: |
+  The description.
+exempt-from-routing: true
+mcp: some-server
+hooks: a-hook
+---
+`;
+    assert.equal(parseAgentDescription(content), "The description.");
+  });
 });
 
 describe("hasSubstantiveOverlap", () => {

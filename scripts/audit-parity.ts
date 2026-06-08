@@ -351,15 +351,26 @@ export function validateInlineReferences(
  * Returns the trimmed description text, or null if no frontmatter or no
  * description field is present.
  *
- * Convention dependency: the block-scalar terminator is "next line that
- * starts a top-level YAML key" (`/^[a-zA-Z][\w-]*:/`). Every Axiom agent
- * indents `<example>` body content (including `user:` / `assistant:`
- * lines) with at least 2 spaces, so those don't match the terminator.
- * If a future agent ships flush-left example content, the parser will
- * truncate the description silently — `hasSubstantiveOverlap` may still
- * pass on the truncated prefix, hiding rename drift. Keep example
- * content indented when authoring agent frontmatter.
+ * The `description: |` block scalar terminates only at a KNOWN top-level agent
+ * key (AGENT_FRONTMATTER_KEYS), not at any `key:`-shaped line. So flush-left
+ * `<example>` content (`user:` / `assistant:`) inside a description never
+ * silently truncates it (axiom-2jf — previously the terminator matched any
+ * `/^[a-zA-Z][\w-]*:/`, so a column-0 example line cut the description short and
+ * `hasSubstantiveOverlap` could still pass on the prefix, hiding rename drift).
  */
+export const AGENT_FRONTMATTER_KEYS = new Set([
+  "name",
+  "description",
+  "model",
+  "color",
+  "tools",
+  "skills",
+  "background",
+  "mcp",
+  "hooks",
+  "exempt-from-routing",
+]);
+
 export function parseAgentDescription(content: string): string | null {
   const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
   if (!fmMatch) return null;
@@ -374,9 +385,11 @@ export function parseAgentDescription(content: string): string | null {
     if (/^description:\s*\|\s*$/.test(fmLines[i])) {
       const body: string[] = [];
       for (let j = i + 1; j < fmLines.length; j++) {
-        // Stop at next top-level YAML key. An indented `user:` inside
-        // an example block won't match because of the leading space.
-        if (/^[a-zA-Z][\w-]*:/.test(fmLines[j])) break;
+        // Stop at the next KNOWN top-level agent key. A column-0 `user:` /
+        // `assistant:` from a flush-left <example> isn't a frontmatter key, so
+        // it stays in the description instead of truncating it (axiom-2jf).
+        const key = fmLines[j].match(/^([a-zA-Z][\w-]*):/);
+        if (key && AGENT_FRONTMATTER_KEYS.has(key[1])) break;
         body.push(fmLines[j]);
       }
       // Strip up to 2-space leading indent from each line — YAML
