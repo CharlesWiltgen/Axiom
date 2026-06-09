@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: Axiom 3
-  text: Skills and Agents for iOS Development
-  tagline: The best suite of battle-tested agents and skills for modern xOS development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more. Native for Claude Code, MCP for everything else.
+  text: Skills, Agents, and Tools for iOS Development
+  tagline: The best suite of battle-tested skills, agents, and tools for modern xOS development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more. Native for Claude Code, MCP for everything else.
   actions:
     - theme: brand
       text: Get Started
@@ -23,7 +23,7 @@ features:
   - title: 🔧 Fix Problems Fast
     details: Solve mysterious build failures, find memory leaks before users complain, prevent data races in Swift 6
   - title: 🧰 Bundled Developer Tools
-    details: xclog captures simulator console output as structured JSON; xcsym symbolicates .ips, MetricKit, legacy .crash text, and Xcode Organizer .xccrashpoint bundles with automatic dSYM discovery and pattern categorization
+    details: xclog captures simulator console output as structured JSON; xcsym symbolicates .ips, MetricKit, legacy .crash text, and Xcode Organizer .xccrashpoint bundles with automatic dSYM discovery and pattern categorization; xcui drives and validates simulator UI & accessibility; xcprof analyzes xctrace CPU/performance traces
   - title: 💾 Protect User Data
     details: Add database columns without losing data, prevent CloudKit sync failures, safely migrate from Realm
   - title: 📚 Copy-Paste Solutions
