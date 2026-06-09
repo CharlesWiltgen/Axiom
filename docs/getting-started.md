@@ -9,12 +9,12 @@ Welcome to Axiom! This guide helps you find the right skills for your iOS develo
 
 ## How Axiom Works
 
-Axiom provides skills, agents, and commands that enhance Claude's iOS development capabilities:
+Axiom provides skills, agents, and tools that enhance coding harnesses like Claude Code and Codex:
 
 - **Skills** — Domain knowledge Claude uses to help you
 - **Agents** — Autonomous tools that scan and analyze code
 - **Commands** — Explicit actions you can invoke
-- **Bundled tools** — `xclog` (simulator console capture) and `xcsym` (crash symbolication) ship as native binaries and are used automatically when the task calls for them
+- **Bundled tools** — `xclog` (simulator console capture), `xcsym` (crash symbolication), `xcui` (simulator UI & accessibility testing), and `xcprof` (CPU/performance profile analysis) ship as native binaries and are used automatically when the task calls for them
 
 **You don't need to memorize anything.** Just describe your problem — Claude will use the right skill automatically.
 

@@ -13,6 +13,8 @@ Axiom gives AI coding assistants deep Apple platform development expertise — t
 <!-- AXIOM_STATS_END -->
 - **xclog** — a built-in console capture tool that gives AI assistants access to simulator and device logs
 - **xcsym** — a built-in crash symbolication tool for `.ips`, MetricKit, and Apple's legacy `.crash` text crashes, with automatic dSYM discovery and pattern categorization
+- **xcui** — a built-in tool to drive and validate the simulator UI and accessibility (tap by accessibility ID, dump the accessibility tree, check VoiceOver and Dynamic Type)
+- **xcprof** — a built-in tool to record and analyze CPU/performance traces (xctrace) without opening Instruments
 
 Every discipline skill is TDD-tested against real developer pressure scenarios. [Learn more about quality](https://charleswiltgen.github.io/Axiom/start/quality).
 
