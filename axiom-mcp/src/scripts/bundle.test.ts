@@ -4,7 +4,26 @@ import type { BundleV2 } from '../loader/types.js';
 import { makeSkill, makeAgent } from '../test-helpers.js';
 import { mkdtemp, rm, mkdir, writeFile } from 'fs/promises';
 import { join } from 'path';
+import { fileURLToPath } from 'url';
 import { tmpdir } from 'os';
+import { MCP_TOOL_BINARIES } from '../tools/binaries.js';
+import { scanReferencedToolBinaries } from './binary-coverage.js';
+
+describe('MCP tool binary coverage', () => {
+  // The bundler copies exactly MCP_TOOL_BINARIES; assert that list matches the
+  // binaries the MCP tools actually resolve under bin/. The scan is shared with
+  // pre-deploy step 12h (binary-coverage.ts) so the two guards can't drift.
+  it('MCP_TOOL_BINARIES matches the bin/<name> refs in src/tools/*.ts', () => {
+    const toolsDir = fileURLToPath(new URL('../tools', import.meta.url));
+    const referenced = scanReferencedToolBinaries(toolsDir);
+    expect([...referenced].sort()).toEqual([...MCP_TOOL_BINARIES].sort());
+  });
+
+  it('MCP_TOOL_BINARIES is non-empty with no duplicates', () => {
+    expect(MCP_TOOL_BINARIES.length).toBeGreaterThan(0);
+    expect(new Set(MCP_TOOL_BINARIES).size).toBe(MCP_TOOL_BINARIES.length);
+  });
+});
 
 describe('computeBundleStats', () => {
   it('computes size breakdown from a bundle', () => {

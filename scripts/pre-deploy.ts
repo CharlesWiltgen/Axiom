@@ -13,6 +13,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
+import { scanReferencedToolBinaries } from "../axiom-mcp/src/scripts/binary-coverage.ts";
+import { MCP_TOOL_BINARIES } from "../axiom-mcp/src/tools/binaries.ts";
 import {
   parseFrontmatterAreas,
   parseBodyTable,
@@ -1224,6 +1226,35 @@ if (argsGoFiles.length < 2) {
   }
 }
 
+// ── 12h. MCP Tool Binary Coverage ──
+
+heading("12h. MCP Tool Binary Coverage");
+
+// The MCP bundler (axiom-mcp/src/scripts/bundle.ts) copies exactly the binaries
+// in MCP_TOOL_BINARIES. Independently of the bundle build (step 13) and the
+// vitest coverage test (step 12), verify (a) the list matches the bin/<name> the
+// MCP tools actually resolve, and (b) each listed binary is a committed file in
+// the plugin bin/. Imports the list directly and shares the scanner with the
+// vitest test (src/scripts/binary-coverage.ts) so nothing can drift. axiom-gtqk.
+const mcpToolsDir = path.join(root, "axiom-mcp/src/tools");
+const mcpListed = new Set<string>(MCP_TOOL_BINARIES);
+const mcpReferenced = scanReferencedToolBinaries(mcpToolsDir);
+const mcpMissingFromList = [...mcpReferenced].filter((b) => !mcpListed.has(b));
+const mcpUnusedInList = [...mcpListed].filter((b) => !mcpReferenced.has(b));
+const mcpMissingBinaries = [...mcpListed].filter((b) => !fs.existsSync(path.join(pluginDir, "bin", b)));
+if (mcpMissingFromList.length) {
+  error("mcp-binary-coverage", `tools resolve bin/<name> not in MCP_TOOL_BINARIES (bundler won't ship them): ${mcpMissingFromList.join(", ")}`);
+}
+if (mcpUnusedInList.length) {
+  error("mcp-binary-coverage", `MCP_TOOL_BINARIES lists binaries no tool references: ${mcpUnusedInList.join(", ")}`);
+}
+if (mcpMissingBinaries.length) {
+  error("mcp-binary-coverage", `MCP_TOOL_BINARIES entries missing from committed plugin bin/: ${mcpMissingBinaries.join(", ")}`);
+}
+if (!mcpMissingFromList.length && !mcpUnusedInList.length && !mcpMissingBinaries.length) {
+  console.log(`  ✓ MCP tool binaries consistent (${[...mcpListed].join(", ") || "none"}) — list ↔ tool refs ↔ plugin bin/`);
+}
+
 // ── Phase 1 Summary ──
 
 heading("Phase 1 Summary (Static)");
@@ -1425,11 +1456,12 @@ try {
   );
 }
 
-// Step 15: bundled Go tools (xcsym, xclog) ship as compiled binaries in
-// bin/. Their source lives in tools/<name>/ as independent Go modules.
+// Step 15: bundled Go tools (every tools/*/ Go module — currently xclog,
+// xcsym, xcui, xcprof) ship as compiled binaries in bin/. Their source lives
+// in tools/<name>/ as independent Go modules, discovered dynamically below.
 // A regression that breaks tests but still compiles would land in the
 // shipped binary without any other Phase 2 step catching it. axiom-y4z.
-heading("15. Go Tool Tests (xcsym + xclog)");
+heading("15. Go Tool Tests (all tools/* Go modules)");
 const goAvailable = (() => {
   try {
     execSync("go version", { stdio: "pipe" });

@@ -18,6 +18,7 @@ import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotati
 import type { BundleV2 } from '../loader/types.js';
 import { buildIndex, serializeIndex } from '../search/index.js';
 import { buildCatalog } from '../catalog/index.js';
+import { MCP_TOOL_BINARIES } from '../tools/binaries.js';
 
 async function loadAnnotations(): Promise<SkillAnnotations> {
   try {
@@ -184,24 +185,35 @@ export function computeBundleStats(bundle: BundleV2): BundleStats {
 }
 
 /**
- * Copy the bundled xcprof binary into dist/bin so the published npm package
- * (which only ships dist/) can run it for non-Claude-Code MCP clients. The
- * binary is a macOS universal binary; on other platforms the MCP tool reports
- * that xcprof is unavailable rather than failing here.
+ * Copy every MCP tool binary (see `MCP_TOOL_BINARIES`) from the plugin `bin/`
+ * into `dist/bin` so the published npm package (which ships only `dist/`) can
+ * run them for non-Claude-Code MCP clients.
+ *
+ * Hard-fails if a listed binary is missing: the binaries are committed in the
+ * plugin `bin/`, so absence is a real defect that must block the bundle rather
+ * than silently ship a package missing its tools. (Runtime platform support is
+ * the resolver's job — each tool reports itself unavailable on unsupported
+ * platforms; copying the committed file works on any build host.)
  */
-async function copyXcprofBinary(pluginPath: string, outputDir: string): Promise<void> {
-  const src = join(pluginPath, 'bin', 'xcprof');
+async function copyToolBinaries(pluginPath: string, outputDir: string): Promise<void> {
   const destDir = join(outputDir, 'bin');
-  const dest = join(destDir, 'xcprof');
-  try {
-    const info = await stat(src);
-    await mkdir(destDir, { recursive: true });
+  await mkdir(destDir, { recursive: true });
+  for (const name of MCP_TOOL_BINARIES) {
+    const src = join(pluginPath, 'bin', name);
+    const dest = join(destDir, name);
+    let info;
+    try {
+      info = await stat(src);
+    } catch (err) {
+      throw new Error(
+        `MCP tool binary '${name}' is missing at ${src} (${(err as Error).message}). ` +
+        `It is listed in MCP_TOOL_BINARIES and committed in the plugin bin/, so it must be ` +
+        `present before bundling — refusing to publish a package missing the axiom_${name}_* tools.`,
+      );
+    }
     await copyFile(src, dest);
     await chmod(dest, 0o755);
-    console.log(`Copied xcprof binary (${(info.size / 1024 / 1024).toFixed(1)} MB) to ${dest}`);
-  } catch (err) {
-    console.warn(`Warning: xcprof binary not copied from ${src}: ${(err as Error).message}. ` +
-      `The published package will not expose the axiom_xcprof_* MCP tools until it is rebuilt with the binary present.`);
+    console.log(`Copied ${name} binary (${(info.size / 1024 / 1024).toFixed(1)} MB) to ${dest}`);
   }
 }
 
@@ -251,7 +263,7 @@ async function main() {
     console.log(`  Total:        ${(bundleStats.totalBytes / 1024).toFixed(1)} KB`);
     console.log(`Stats written to: ${statsPath}`);
 
-    await copyXcprofBinary(pluginPath, outputDir);
+    await copyToolBinaries(pluginPath, outputDir);
 
   } catch (error) {
     console.error('Error generating bundle:', error);
