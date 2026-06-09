@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-06-08T22:06:12.208Z",
+  "generatedAt": "2026-06-09T18:00:00.399Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -19079,7 +19079,7 @@
     "axiom-macos--settings": {
       "name": "axiom-macos--settings",
       "description": "Use when:",
-      "content": "---\nname: macos-settings\ndescription: Use when adding a macOS Settings (Preferences) scene to a SwiftUI app — Settings scene declaration, TabView pane structure, sizing, SettingsLink, @AppStorage persistence, and iOS adjacency (opening system Settings).\nlicense: MIT\n---\n\n# macOS Settings Scene\n\n## When to Use This Skill\n\nUse when:\n- Adding the standard macOS Preferences window (the one ⌘, opens) to a SwiftUI app\n- Organizing preferences into tabbed panes\n- Sizing the Settings window correctly per macOS HIG\n- Using `SettingsLink` to open Settings programmatically from the app\n- Persisting preferences with `@AppStorage` / `UserDefaults`\n- Sharing one codebase across iOS and macOS where macOS needs a Settings scene\n- Implementing the iOS counterpart: opening the system Settings app for the current app's prefs\n\n#### Related Skills\n\n- Use `skills/windows.md` for WindowGroup, Window, MenuBarExtra, and other Scene types\n- Use `skills/menus-and-commands.md` for the Settings menu item placement, keyboard shortcuts\n- Use `skills/sandbox-and-file-access.md` for where preference defaults are stored under sandbox\n- Use axiom-swiftui (skills/architecture.md) for `@AppStorage` and overall state architecture\n\n## Red Flags — Anti-Patterns to Prevent\n\n| Symptom | Cause | Fix |\n|---|---|---|\n| Settings menu item missing from app menu | No `Settings { }` scene declared | Add a `Settings` scene to the App body (macOS only) |\n| iOS build fails: \"'Settings' is unavailable\" | `Settings { }` declared without `#if os(macOS)` | Wrap in `#if os(macOS)` for cross-platform apps |\n| Settings window opens at tiny size | No `.frame()` constraint | Set `.frame(width: 450, minHeight: 200)` (or per-tab if sizes differ) |\n| Layout cramped against window edge | Missing `.scenePadding()` | Add `.scenePadding()` to the root SettingsView |\n| Settings window resizable when it shouldn't be | macOS auto-allows resize when content is flexible | Set fixed `.frame(width:height:)` per tab (no min/max) |\n| Tab icons missing | Forgot `systemImage:` on `Tab` | Add SF Symbols to every tab — required by macOS HIG |\n| Tabs jump in size when switched | Each tab has different intrinsic content size | Set the same `.frame()` on every tab body, OR let tabs resize via `.frame(idealWidth:idealHeight:)` |\n| `SettingsLink` in iOS code | Used `SettingsLink` thinking it opens the iOS system Settings app | macOS-only — opens the app's own Settings scene. Use `UIApplication.openSettingsURLString` for iOS system Settings |\n| Settings UI shows no values | `@AppStorage` keys differ from where the rest of the app reads them | Centralize keys in a `PreferenceKey` enum; never hardcode strings twice |\n\n---\n\n## The Settings Scene\n\n`Settings` is a macOS-only `Scene` type (macOS 11+) that declares the standard Preferences window. SwiftUI wires up the Settings menu item and ⌘, keyboard shortcut automatically — you supply the content view.\n\n### Minimal declaration\n\n```swift\n@main\nstruct MyApp: App {\n    var body: some Scene {\n        WindowGroup {\n            ContentView()\n        }\n        #if os(macOS)\n        Settings {\n            SettingsView()\n        }\n        #endif\n    }\n}\n```\n\n**Why `#if os(macOS)`** `Settings` does not exist on iOS, iPadOS, watchOS, or tvOS. Without the conditional, cross-platform apps fail to compile on non-Mac targets.\n\n---\n\n## Pattern 1: Single-Pane Settings\n\nFor apps with few preferences (a handful of toggles, no logical grouping needed).\n\n```swift\nstruct SettingsView: View {\n    @AppStorage(\"showPreviews\") private var showPreviews = true\n    @AppStorage(\"autoSaveInterval\") private var autoSaveInterval = 30.0\n\n    var body: some View {\n        Form {\n            Toggle(\"Show previews on hover\", isOn: $showPreviews)\n            Stepper(\n                \"Auto-save every \\(Int(autoSaveInterval)) seconds\",\n                value: $autoSaveInterval,\n                in: 10...300,\n                step: 10\n            )\n        }\n        .formStyle(.grouped)\n        .scenePadding()\n        .frame(width: 450, height: 180)\n    }\n}\n```\n\n**Sizing rationale** Fixed `width: 450, height: 180`. macOS HIG: preferences windows are typically not user-resizable. A fixed frame produces a window that opens consistently and cannot be dragged to weird sizes. Choose the size that fits the content snugly.\n\n---\n\n## Pattern 2: Tabbed Settings (General + Advanced)\n\nThe standard pattern for any Settings UI with > ~5 preferences. Each tab is a focused subset.\n\n```swift\nstruct SettingsView: View {\n    var body: some View {\n        TabView {\n            GeneralSettings()\n                .tabItem { Label(\"General\", systemImage: \"gear\") }\n\n            AppearanceSettings()\n                .tabItem { Label(\"Appearance\", systemImage: \"paintbrush\") }\n\n            AdvancedSettings()\n                .tabItem { Label(\"Advanced\", systemImage: \"slider.horizontal.3\") }\n        }\n        .scenePadding()\n        .frame(width: 450, height: 280)\n    }\n}\n\nstruct GeneralSettings: View {\n    @AppStorage(\"openAtLogin\") private var openAtLogin = false\n    @AppStorage(\"showInDock\") private var showInDock = true\n\n    var body: some View {\n        Form {\n            Toggle(\"Open at login\", isOn: $openAtLogin)\n            Toggle(\"Show in Dock\", isOn: $showInDock)\n        }\n        .formStyle(.grouped)\n    }\n}\n```\n\n**Tab icon convention** Every tab must have a `systemImage:` (SF Symbol). macOS HIG mandates icons on preference tabs — text-only tabs look unfinished.\n\n**Frame placement** The frame goes on the `TabView`, not on each tab body. This locks the window to one size across all tabs. If different tabs need different sizes, see Pattern 4.\n\n---\n\n## Pattern 3: macOS-Only Settings in a Cross-Platform App\n\nA typical iOS+macOS app: most code is shared, Settings exists only on macOS.\n\n```swift\n@main\nstruct MyApp: App {\n    var body: some Scene {\n        WindowGroup {\n            ContentView()\n        }\n        #if os(macOS)\n        Settings {\n            SettingsView()\n        }\n        #endif\n    }\n}\n\n#if os(macOS)\nstruct SettingsView: View {\n    var body: some View {\n        TabView { ... }\n            .scenePadding()\n            .frame(width: 450, height: 280)\n    }\n}\n#endif\n```\n\n**Why wrap the View definition too** If `SettingsView` references macOS-only types (`Settings`, `SettingsLink`, certain modifiers), the file must be conditionally compiled. Otherwise the iOS build fails on the non-conditional view declaration.\n\n**iOS users still need preferences** — they go in the app's main UI (a sheet, a navigation route, a Settings tab in TabView), not in a `Settings { }` scene. See Pattern 6 for opening the iOS system Settings app.\n\n---\n\n## Pattern 4: Per-Tab Sizing\n\nWhen tabs have legitimately different content sizes, attach the frame to each tab body and let the window resize.\n\n```swift\nTabView {\n    GeneralSettings()\n        .frame(width: 450, height: 200)\n        .tabItem { Label(\"General\", systemImage: \"gear\") }\n\n    LongPreferenceList()\n        .frame(width: 450, height: 500)\n        .tabItem { Label(\"Library\", systemImage: \"books.vertical\") }\n}\n.scenePadding()\n```\n\n**Trade-off** Per-tab sizing means the window animates between sizes when the user switches tabs. Smooth on modern Macs but visible. If you want stable sizing, pick the largest needed size and pad shorter tabs.\n\n---\n\n## Pattern 5: SettingsLink (macOS)\n\n`SettingsLink` opens the app's own Settings scene from anywhere in the UI — useful for \"Open Settings\" buttons in onboarding, error states, or inline help.\n\n```swift\nstruct WelcomeView: View {\n    var body: some View {\n        VStack {\n            Text(\"Welcome to MyApp\")\n            Text(\"Configure your preferences to get started.\")\n\n            SettingsLink {\n                Label(\"Open Settings\", systemImage: \"gear\")\n            }\n            .buttonStyle(.borderedProminent)\n        }\n    }\n}\n```\n\n**Default label** `SettingsLink()` with no closure produces a system-styled \"Settings…\" button.\n\n**What it does NOT do** `SettingsLink` does not exist on iOS and does not open the iOS system Settings app. It is purely a shortcut to the app's own `Settings { }` scene (macOS only).\n\n**Programmatic alternative** `@Environment(\\.openSettings)` gives an `openSettings()` action you can call from a button handler — use it when you need a plain button rather than `SettingsLink`'s link semantics.\n\n---\n\n## Pattern 6: iOS Adjacency — Opening System Settings\n\nDifferent concept, often confused with `SettingsLink`. On iOS/iPadOS, your app cannot define a `Settings` scene, but you can deep-link to the **system Settings app** showing your app's bundled preferences.\n\n```swift\nimport UIKit\n\nstruct PermissionDeniedView: View {\n    @Environment(\\.openURL) private var openURL\n\n    var body: some View {\n        Button(\"Open Settings\") {\n            if let url = URL(string: UIApplication.openSettingsURLString) {\n                openURL(url)\n            }\n        }\n    }\n}\n```\n\n**Where this opens** The iOS Settings app, scrolled to the section for the current app. Useful for permission denial flows (\"camera access denied → user must enable in Settings\").\n\n**Two different macOS targets — do not conflate them.** \"Open settings\" means different things, and `SettingsLink` only covers one of them:\n\n| Goal | iOS | macOS |\n|---|---|---|\n| Open the app's own preferences | (no `Settings` scene — show in-app UI) | `SettingsLink` / `openSettings` |\n| Re-enable a denied **system permission** (camera, mic, location) | `UIApplication.openSettingsURLString` → System Settings | `x-apple.systempreferences:` deep link → System Settings |\n\n`SettingsLink` opens the app's *own* Settings window — it is **not** the macOS equivalent of iOS's `openSettingsURLString`. For a permission-denial flow on macOS, open System Settings directly:\n\n```swift\n// macOS: deep-link System Settings to the Camera privacy pane.\n// Swap the anchor for the permission: Privacy_Camera, Privacy_Microphone,\n// Privacy_LocationServices, etc.\nif let url = URL(string: \"x-apple.systempreferences:com.apple.preference.security?Privacy_Camera\") {\n    NSWorkspace.shared.open(url)\n}\n```\n\n**Cross-platform unification** A single `OpenSettingsButton` is only correct when \"settings\" means *the app's own preferences*:\n\n```swift\nstruct OpenSettingsButton: View {\n    var body: some View {\n        #if os(macOS)\n        SettingsLink { Label(\"Settings…\", systemImage: \"gear\") }   // app's prefs only\n        #else\n        OpenSystemSettingsButton()                                 // system Settings\n        #endif\n    }\n}\n```\n\nFor a permission-denial CTA, branch to the System Settings deep link on **both** platforms instead.\n\n---\n\n## Pattern 7: Persistence with @AppStorage\n\nThe standard SwiftUI way to persist preferences. Backed by `UserDefaults` under the hood.\n\n```swift\n// Centralize keys to avoid string drift\nenum PreferenceKey {\n    static let showPreviews = \"showPreviews\"\n    static let autoSaveInterval = \"autoSaveInterval\"\n    static let theme = \"theme\"\n}\n\nstruct GeneralSettings: View {\n    @AppStorage(PreferenceKey.showPreviews) private var showPreviews = true\n    @AppStorage(PreferenceKey.autoSaveInterval) private var autoSaveInterval = 30.0\n\n    var body: some View {\n        Form {\n            Toggle(\"Show previews\", isOn: $showPreviews)\n            Stepper(\"Auto-save: \\(Int(autoSaveInterval))s\", value: $autoSaveInterval, in: 10...300, step: 10)\n        }\n    }\n}\n\n// Other parts of the app read the same key\nstruct DocumentView: View {\n    @AppStorage(PreferenceKey.showPreviews) private var showPreviews = true\n    // ...\n}\n```\n\n**Why centralize keys** `@AppStorage(\"showPreviews\")` in two files with one typo'd as `\"showPreview\"` produces a silent split: the Settings UI updates one key, the rest of the app reads the other. Keys live in one enum.\n\n**Shared groups (App Group container)** If preferences need to sync across an app + extension (Widget, Share Extension), use `@AppStorage(_:store:)` with a shared `UserDefaults(suiteName:)`. See `skills/sandbox-and-file-access.md` for the App Group container setup.\n\n---\n\n## Anti-Patterns (DO NOT DO THIS)\n\n### ❌ Using `Settings` without `#if os(macOS)` in a cross-platform app\n\n```swift\n// Compiles on macOS, fails on iOS with \"'Settings' is unavailable\"\nvar body: some Scene {\n    WindowGroup { ContentView() }\n    Settings { SettingsView() }\n}\n```\n\n**Fix** Wrap in `#if os(macOS) ... #endif`.\n\n### ❌ Confusing `SettingsLink` with iOS system Settings\n\n```swift\n// On iOS this won't compile; on Mac Catalyst it opens the Mac-style Settings, not iOS Settings\nSettingsLink { Label(\"Settings\", systemImage: \"gear\") }\n```\n\n**Fix** `SettingsLink` is macOS-only and opens the app's own `Settings { }` scene. For the iOS system Settings app, use `UIApplication.openSettingsURLString` (Pattern 6).\n\n### ❌ Resizable Settings window for static content\n\n```swift\n// No frame → window resizes freely, looks weird\nSettingsView()\n```\n\n**Fix** Add `.frame(width:height:)` for fixed sizing, or `.frame(width: 450, minHeight: 200)` for vertical-only resize on long preference lists.\n\n### ❌ Tab labels without icons\n\n```swift\n// macOS HIG violation; tabs render text-only and look unfinished\n.tabItem { Text(\"General\") }\n```\n\n**Fix** `.tabItem { Label(\"General\", systemImage: \"gear\") }`. Pick SF Symbols that match the tab's category.\n\n### ❌ String-keyed @AppStorage scattered across files\n\n```swift\n// SettingsView.swift\n@AppStorage(\"show_previews\") private var showPreviews = true\n\n// DocumentView.swift\n@AppStorage(\"showPreviews\") private var showPreviews = true  // Typo — different key!\n```\n\n**Fix** Define keys in a central enum (Pattern 7).\n\n### ❌ Settings as a side door for app logic\n\n```swift\n// SettingsView containing business logic, network calls, side effects\nstruct SettingsView: View {\n    @State var users: [User] = []\n    var body: some View {\n        Form {\n            Button(\"Refresh users\") {\n                Task { users = try await fetchUsers() }\n            }\n        }\n    }\n}\n```\n\n**Fix** SettingsView is for displaying and toggling preferences. Business logic belongs in the app's main flow. If a setting triggers behavior, the behavior listens to the `@AppStorage` change elsewhere.\n\n---\n\n## Common Mistakes — Quick Reference\n\n| Symptom | Most Likely Cause |\n|---|---|\n| `'Settings' is unavailable` on iOS | Missing `#if os(macOS)` |\n| Settings menu item not in app menu | No `Settings { }` scene declared (or hidden by another scene's `commands`) |\n| Window opens too small | No `.frame()` on SettingsView root |\n| Window resizes weirdly | Frame uses `min` / `max` instead of fixed values |\n| Tab content cramped | Missing `.scenePadding()` |\n| Tabs render without icons | Used `Text` instead of `Label` for `.tabItem` |\n| ⌘, doesn't open Settings | App is sandboxed AND another window is keyWindow with conflicting shortcut |\n| `@AppStorage` doesn't sync to other view | Different key strings (typo) — use central enum |\n| `SettingsLink` causes iOS build failure | `SettingsLink` is macOS-only; needs `#if os(macOS)` |\n| Settings opens but is empty | View body has `if`/`switch` returning `EmptyView` for current state |\n\n---\n\n## Code Review Checklist\n\nBefore merging Settings code:\n\n- [ ] `Settings { }` is wrapped in `#if os(macOS)` (cross-platform apps)\n- [ ] `SettingsView` itself is wrapped in `#if os(macOS)` if it references macOS-only APIs\n- [ ] Root view has `.scenePadding()` AND a `.frame()` constraint\n- [ ] All `Tab` labels use `Label(\"Title\", systemImage: \"...\")` — never text-only\n- [ ] `@AppStorage` keys come from a central enum, not inline string literals\n- [ ] `SettingsLink` is wrapped in `#if os(macOS)` (it does not exist on iOS)\n- [ ] iOS code that opens system Settings uses `UIApplication.openSettingsURLString` via `@Environment(\\.openURL)` — not `SettingsLink`\n- [ ] No business logic / network calls / heavy state in SettingsView\n- [ ] Keys persisted via `@AppStorage` use App Group `UserDefaults(suiteName:)` if shared with extensions\n\n---\n\n## Resources\n\n**WWDC**: 2020-10119, 2022-10059, 2023-10148\n\n**Docs**: /swiftui/settings, /swiftui/settingslink, /swiftui/scene, /uikit/uiapplication/opensettingsurlstring, /swiftui/appstorage\n\n**Skills**: axiom-macos (skills/windows.md), axiom-macos (skills/menus-and-commands.md), axiom-macos (skills/sandbox-and-file-access.md), axiom-swiftui (skills/architecture.md)\n",
+      "content": "\n# macOS Settings Scene\n\n## When to Use This Skill\n\nUse when:\n- Adding the standard macOS Preferences window (the one ⌘, opens) to a SwiftUI app\n- Organizing preferences into tabbed panes\n- Sizing the Settings window correctly per macOS HIG\n- Using `SettingsLink` to open Settings programmatically from the app\n- Persisting preferences with `@AppStorage` / `UserDefaults`\n- Sharing one codebase across iOS and macOS where macOS needs a Settings scene\n- Implementing the iOS counterpart: opening the system Settings app for the current app's prefs\n\n#### Related Skills\n\n- Use `skills/windows.md` for WindowGroup, Window, MenuBarExtra, and other Scene types\n- Use `skills/menus-and-commands.md` for the Settings menu item placement, keyboard shortcuts\n- Use `skills/sandbox-and-file-access.md` for where preference defaults are stored under sandbox\n- Use axiom-swiftui (skills/architecture.md) for `@AppStorage` and overall state architecture\n\n## Red Flags — Anti-Patterns to Prevent\n\n| Symptom | Cause | Fix |\n|---|---|---|\n| Settings menu item missing from app menu | No `Settings { }` scene declared | Add a `Settings` scene to the App body (macOS only) |\n| iOS build fails: \"'Settings' is unavailable\" | `Settings { }` declared without `#if os(macOS)` | Wrap in `#if os(macOS)` for cross-platform apps |\n| Settings window opens at tiny size | No `.frame()` constraint | Set `.frame(width: 450, minHeight: 200)` (or per-tab if sizes differ) |\n| Layout cramped against window edge | Missing `.scenePadding()` | Add `.scenePadding()` to the root SettingsView |\n| Settings window resizable when it shouldn't be | macOS auto-allows resize when content is flexible | Set fixed `.frame(width:height:)` per tab (no min/max) |\n| Tab icons missing | Forgot `systemImage:` on `Tab` | Add SF Symbols to every tab — required by macOS HIG |\n| Tabs jump in size when switched | Each tab has different intrinsic content size | Set the same `.frame()` on every tab body, OR let tabs resize via `.frame(idealWidth:idealHeight:)` |\n| `SettingsLink` in iOS code | Used `SettingsLink` thinking it opens the iOS system Settings app | macOS-only — opens the app's own Settings scene. Use `UIApplication.openSettingsURLString` for iOS system Settings |\n| Settings UI shows no values | `@AppStorage` keys differ from where the rest of the app reads them | Centralize keys in a `PreferenceKey` enum; never hardcode strings twice |\n\n---\n\n## The Settings Scene\n\n`Settings` is a macOS-only `Scene` type (macOS 11+) that declares the standard Preferences window. SwiftUI wires up the Settings menu item and ⌘, keyboard shortcut automatically — you supply the content view.\n\n### Minimal declaration\n\n```swift\n@main\nstruct MyApp: App {\n    var body: some Scene {\n        WindowGroup {\n            ContentView()\n        }\n        #if os(macOS)\n        Settings {\n            SettingsView()\n        }\n        #endif\n    }\n}\n```\n\n**Why `#if os(macOS)`** `Settings` does not exist on iOS, iPadOS, watchOS, or tvOS. Without the conditional, cross-platform apps fail to compile on non-Mac targets.\n\n---\n\n## Pattern 1: Single-Pane Settings\n\nFor apps with few preferences (a handful of toggles, no logical grouping needed).\n\n```swift\nstruct SettingsView: View {\n    @AppStorage(\"showPreviews\") private var showPreviews = true\n    @AppStorage(\"autoSaveInterval\") private var autoSaveInterval = 30.0\n\n    var body: some View {\n        Form {\n            Toggle(\"Show previews on hover\", isOn: $showPreviews)\n            Stepper(\n                \"Auto-save every \\(Int(autoSaveInterval)) seconds\",\n                value: $autoSaveInterval,\n                in: 10...300,\n                step: 10\n            )\n        }\n        .formStyle(.grouped)\n        .scenePadding()\n        .frame(width: 450, height: 180)\n    }\n}\n```\n\n**Sizing rationale** Fixed `width: 450, height: 180`. macOS HIG: preferences windows are typically not user-resizable. A fixed frame produces a window that opens consistently and cannot be dragged to weird sizes. Choose the size that fits the content snugly.\n\n---\n\n## Pattern 2: Tabbed Settings (General + Advanced)\n\nThe standard pattern for any Settings UI with > ~5 preferences. Each tab is a focused subset.\n\n```swift\nstruct SettingsView: View {\n    var body: some View {\n        TabView {\n            GeneralSettings()\n                .tabItem { Label(\"General\", systemImage: \"gear\") }\n\n            AppearanceSettings()\n                .tabItem { Label(\"Appearance\", systemImage: \"paintbrush\") }\n\n            AdvancedSettings()\n                .tabItem { Label(\"Advanced\", systemImage: \"slider.horizontal.3\") }\n        }\n        .scenePadding()\n        .frame(width: 450, height: 280)\n    }\n}\n\nstruct GeneralSettings: View {\n    @AppStorage(\"openAtLogin\") private var openAtLogin = false\n    @AppStorage(\"showInDock\") private var showInDock = true\n\n    var body: some View {\n        Form {\n            Toggle(\"Open at login\", isOn: $openAtLogin)\n            Toggle(\"Show in Dock\", isOn: $showInDock)\n        }\n        .formStyle(.grouped)\n    }\n}\n```\n\n**Tab icon convention** Every tab must have a `systemImage:` (SF Symbol). macOS HIG mandates icons on preference tabs — text-only tabs look unfinished.\n\n**Frame placement** The frame goes on the `TabView`, not on each tab body. This locks the window to one size across all tabs. If different tabs need different sizes, see Pattern 4.\n\n---\n\n## Pattern 3: macOS-Only Settings in a Cross-Platform App\n\nA typical iOS+macOS app: most code is shared, Settings exists only on macOS.\n\n```swift\n@main\nstruct MyApp: App {\n    var body: some Scene {\n        WindowGroup {\n            ContentView()\n        }\n        #if os(macOS)\n        Settings {\n            SettingsView()\n        }\n        #endif\n    }\n}\n\n#if os(macOS)\nstruct SettingsView: View {\n    var body: some View {\n        TabView { ... }\n            .scenePadding()\n            .frame(width: 450, height: 280)\n    }\n}\n#endif\n```\n\n**Why wrap the View definition too** If `SettingsView` references macOS-only types (`Settings`, `SettingsLink`, certain modifiers), the file must be conditionally compiled. Otherwise the iOS build fails on the non-conditional view declaration.\n\n**iOS users still need preferences** — they go in the app's main UI (a sheet, a navigation route, a Settings tab in TabView), not in a `Settings { }` scene. See Pattern 6 for opening the iOS system Settings app.\n\n---\n\n## Pattern 4: Per-Tab Sizing\n\nWhen tabs have legitimately different content sizes, attach the frame to each tab body and let the window resize.\n\n```swift\nTabView {\n    GeneralSettings()\n        .frame(width: 450, height: 200)\n        .tabItem { Label(\"General\", systemImage: \"gear\") }\n\n    LongPreferenceList()\n        .frame(width: 450, height: 500)\n        .tabItem { Label(\"Library\", systemImage: \"books.vertical\") }\n}\n.scenePadding()\n```\n\n**Trade-off** Per-tab sizing means the window animates between sizes when the user switches tabs. Smooth on modern Macs but visible. If you want stable sizing, pick the largest needed size and pad shorter tabs.\n\n---\n\n## Pattern 5: SettingsLink (macOS)\n\n`SettingsLink` opens the app's own Settings scene from anywhere in the UI — useful for \"Open Settings\" buttons in onboarding, error states, or inline help.\n\n```swift\nstruct WelcomeView: View {\n    var body: some View {\n        VStack {\n            Text(\"Welcome to MyApp\")\n            Text(\"Configure your preferences to get started.\")\n\n            SettingsLink {\n                Label(\"Open Settings\", systemImage: \"gear\")\n            }\n            .buttonStyle(.borderedProminent)\n        }\n    }\n}\n```\n\n**Default label** `SettingsLink()` with no closure produces a system-styled \"Settings…\" button.\n\n**What it does NOT do** `SettingsLink` does not exist on iOS and does not open the iOS system Settings app. It is purely a shortcut to the app's own `Settings { }` scene (macOS only).\n\n**Programmatic alternative** `@Environment(\\.openSettings)` gives an `openSettings()` action you can call from a button handler — use it when you need a plain button rather than `SettingsLink`'s link semantics.\n\n---\n\n## Pattern 6: iOS Adjacency — Opening System Settings\n\nDifferent concept, often confused with `SettingsLink`. On iOS/iPadOS, your app cannot define a `Settings` scene, but you can deep-link to the **system Settings app** showing your app's bundled preferences.\n\n```swift\nimport UIKit\n\nstruct PermissionDeniedView: View {\n    @Environment(\\.openURL) private var openURL\n\n    var body: some View {\n        Button(\"Open Settings\") {\n            if let url = URL(string: UIApplication.openSettingsURLString) {\n                openURL(url)\n            }\n        }\n    }\n}\n```\n\n**Where this opens** The iOS Settings app, scrolled to the section for the current app. Useful for permission denial flows (\"camera access denied → user must enable in Settings\").\n\n**Two different macOS targets — do not conflate them.** \"Open settings\" means different things, and `SettingsLink` only covers one of them:\n\n| Goal | iOS | macOS |\n|---|---|---|\n| Open the app's own preferences | (no `Settings` scene — show in-app UI) | `SettingsLink` / `openSettings` |\n| Re-enable a denied **system permission** (camera, mic, location) | `UIApplication.openSettingsURLString` → System Settings | `x-apple.systempreferences:` deep link → System Settings |\n\n`SettingsLink` opens the app's *own* Settings window — it is **not** the macOS equivalent of iOS's `openSettingsURLString`. For a permission-denial flow on macOS, open System Settings directly:\n\n```swift\n// macOS: deep-link System Settings to the Camera privacy pane.\n// Swap the anchor for the permission: Privacy_Camera, Privacy_Microphone,\n// Privacy_LocationServices, etc.\nif let url = URL(string: \"x-apple.systempreferences:com.apple.preference.security?Privacy_Camera\") {\n    NSWorkspace.shared.open(url)\n}\n```\n\n**Cross-platform unification** A single `OpenSettingsButton` is only correct when \"settings\" means *the app's own preferences*:\n\n```swift\nstruct OpenSettingsButton: View {\n    var body: some View {\n        #if os(macOS)\n        SettingsLink { Label(\"Settings…\", systemImage: \"gear\") }   // app's prefs only\n        #else\n        OpenSystemSettingsButton()                                 // system Settings\n        #endif\n    }\n}\n```\n\nFor a permission-denial CTA, branch to the System Settings deep link on **both** platforms instead.\n\n---\n\n## Pattern 7: Persistence with @AppStorage\n\nThe standard SwiftUI way to persist preferences. Backed by `UserDefaults` under the hood.\n\n```swift\n// Centralize keys to avoid string drift\nenum PreferenceKey {\n    static let showPreviews = \"showPreviews\"\n    static let autoSaveInterval = \"autoSaveInterval\"\n    static let theme = \"theme\"\n}\n\nstruct GeneralSettings: View {\n    @AppStorage(PreferenceKey.showPreviews) private var showPreviews = true\n    @AppStorage(PreferenceKey.autoSaveInterval) private var autoSaveInterval = 30.0\n\n    var body: some View {\n        Form {\n            Toggle(\"Show previews\", isOn: $showPreviews)\n            Stepper(\"Auto-save: \\(Int(autoSaveInterval))s\", value: $autoSaveInterval, in: 10...300, step: 10)\n        }\n    }\n}\n\n// Other parts of the app read the same key\nstruct DocumentView: View {\n    @AppStorage(PreferenceKey.showPreviews) private var showPreviews = true\n    // ...\n}\n```\n\n**Why centralize keys** `@AppStorage(\"showPreviews\")` in two files with one typo'd as `\"showPreview\"` produces a silent split: the Settings UI updates one key, the rest of the app reads the other. Keys live in one enum.\n\n**Shared groups (App Group container)** If preferences need to sync across an app + extension (Widget, Share Extension), use `@AppStorage(_:store:)` with a shared `UserDefaults(suiteName:)`. See `skills/sandbox-and-file-access.md` for the App Group container setup.\n\n---\n\n## Anti-Patterns (DO NOT DO THIS)\n\n### ❌ Using `Settings` without `#if os(macOS)` in a cross-platform app\n\n```swift\n// Compiles on macOS, fails on iOS with \"'Settings' is unavailable\"\nvar body: some Scene {\n    WindowGroup { ContentView() }\n    Settings { SettingsView() }\n}\n```\n\n**Fix** Wrap in `#if os(macOS) ... #endif`.\n\n### ❌ Confusing `SettingsLink` with iOS system Settings\n\n```swift\n// On iOS this won't compile; on Mac Catalyst it opens the Mac-style Settings, not iOS Settings\nSettingsLink { Label(\"Settings\", systemImage: \"gear\") }\n```\n\n**Fix** `SettingsLink` is macOS-only and opens the app's own `Settings { }` scene. For the iOS system Settings app, use `UIApplication.openSettingsURLString` (Pattern 6).\n\n### ❌ Resizable Settings window for static content\n\n```swift\n// No frame → window resizes freely, looks weird\nSettingsView()\n```\n\n**Fix** Add `.frame(width:height:)` for fixed sizing, or `.frame(width: 450, minHeight: 200)` for vertical-only resize on long preference lists.\n\n### ❌ Tab labels without icons\n\n```swift\n// macOS HIG violation; tabs render text-only and look unfinished\n.tabItem { Text(\"General\") }\n```\n\n**Fix** `.tabItem { Label(\"General\", systemImage: \"gear\") }`. Pick SF Symbols that match the tab's category.\n\n### ❌ String-keyed @AppStorage scattered across files\n\n```swift\n// SettingsView.swift\n@AppStorage(\"show_previews\") private var showPreviews = true\n\n// DocumentView.swift\n@AppStorage(\"showPreviews\") private var showPreviews = true  // Typo — different key!\n```\n\n**Fix** Define keys in a central enum (Pattern 7).\n\n### ❌ Settings as a side door for app logic\n\n```swift\n// SettingsView containing business logic, network calls, side effects\nstruct SettingsView: View {\n    @State var users: [User] = []\n    var body: some View {\n        Form {\n            Button(\"Refresh users\") {\n                Task { users = try await fetchUsers() }\n            }\n        }\n    }\n}\n```\n\n**Fix** SettingsView is for displaying and toggling preferences. Business logic belongs in the app's main flow. If a setting triggers behavior, the behavior listens to the `@AppStorage` change elsewhere.\n\n---\n\n## Common Mistakes — Quick Reference\n\n| Symptom | Most Likely Cause |\n|---|---|\n| `'Settings' is unavailable` on iOS | Missing `#if os(macOS)` |\n| Settings menu item not in app menu | No `Settings { }` scene declared (or hidden by another scene's `commands`) |\n| Window opens too small | No `.frame()` on SettingsView root |\n| Window resizes weirdly | Frame uses `min` / `max` instead of fixed values |\n| Tab content cramped | Missing `.scenePadding()` |\n| Tabs render without icons | Used `Text` instead of `Label` for `.tabItem` |\n| ⌘, doesn't open Settings | App is sandboxed AND another window is keyWindow with conflicting shortcut |\n| `@AppStorage` doesn't sync to other view | Different key strings (typo) — use central enum |\n| `SettingsLink` causes iOS build failure | `SettingsLink` is macOS-only; needs `#if os(macOS)` |\n| Settings opens but is empty | View body has `if`/`switch` returning `EmptyView` for current state |\n\n---\n\n## Code Review Checklist\n\nBefore merging Settings code:\n\n- [ ] `Settings { }` is wrapped in `#if os(macOS)` (cross-platform apps)\n- [ ] `SettingsView` itself is wrapped in `#if os(macOS)` if it references macOS-only APIs\n- [ ] Root view has `.scenePadding()` AND a `.frame()` constraint\n- [ ] All `Tab` labels use `Label(\"Title\", systemImage: \"...\")` — never text-only\n- [ ] `@AppStorage` keys come from a central enum, not inline string literals\n- [ ] `SettingsLink` is wrapped in `#if os(macOS)` (it does not exist on iOS)\n- [ ] iOS code that opens system Settings uses `UIApplication.openSettingsURLString` via `@Environment(\\.openURL)` — not `SettingsLink`\n- [ ] No business logic / network calls / heavy state in SettingsView\n- [ ] Keys persisted via `@AppStorage` use App Group `UserDefaults(suiteName:)` if shared with extensions\n\n---\n\n## Resources\n\n**WWDC**: 2020-10119, 2022-10059, 2023-10148\n\n**Docs**: /swiftui/settings, /swiftui/settingslink, /swiftui/scene, /uikit/uiapplication/opensettingsurlstring, /swiftui/appstorage\n\n**Skills**: axiom-macos (skills/windows.md), axiom-macos (skills/menus-and-commands.md), axiom-macos (skills/sandbox-and-file-access.md), axiom-swiftui (skills/architecture.md)\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -19091,112 +19091,112 @@
           "heading": "_preamble",
           "level": 0,
           "startLine": 0,
-          "endLine": 5,
-          "charCount": 271
+          "endLine": 0,
+          "charCount": 0
         },
         {
           "heading": "macOS Settings Scene",
           "level": 1,
-          "startLine": 6,
-          "endLine": 7,
+          "startLine": 1,
+          "endLine": 2,
           "charCount": 23
         },
         {
           "heading": "When to Use This Skill",
           "level": 2,
-          "startLine": 8,
-          "endLine": 25,
+          "startLine": 3,
+          "endLine": 20,
           "charCount": 916
         },
         {
           "heading": "Red Flags — Anti-Patterns to Prevent",
           "level": 2,
-          "startLine": 26,
-          "endLine": 41,
+          "startLine": 21,
+          "endLine": 36,
           "charCount": 1470
         },
         {
           "heading": "The Settings Scene",
           "level": 2,
-          "startLine": 42,
-          "endLine": 67,
+          "startLine": 37,
+          "endLine": 62,
           "charCount": 654
         },
         {
           "heading": "Pattern 1: Single-Pane Settings",
           "level": 2,
-          "startLine": 68,
-          "endLine": 97,
+          "startLine": 63,
+          "endLine": 92,
           "charCount": 980
         },
         {
           "heading": "Pattern 2: Tabbed Settings (General + Advanced)",
           "level": 2,
-          "startLine": 98,
-          "endLine": 139,
+          "startLine": 93,
+          "endLine": 134,
           "charCount": 1330
         },
         {
           "heading": "Pattern 3: macOS-Only Settings in a Cross-Platform App",
           "level": 2,
-          "startLine": 140,
-          "endLine": 175,
+          "startLine": 135,
+          "endLine": 170,
           "charCount": 1005
         },
         {
           "heading": "Pattern 4: Per-Tab Sizing",
           "level": 2,
-          "startLine": 176,
-          "endLine": 196,
+          "startLine": 171,
+          "endLine": 191,
           "charCount": 659
         },
         {
           "heading": "Pattern 5: SettingsLink (macOS)",
           "level": 2,
-          "startLine": 197,
-          "endLine": 224,
+          "startLine": 192,
+          "endLine": 219,
           "charCount": 1040
         },
         {
           "heading": "Pattern 6: iOS Adjacency — Opening System Settings",
           "level": 2,
-          "startLine": 225,
-          "endLine": 282,
+          "startLine": 220,
+          "endLine": 277,
           "charCount": 2286
         },
         {
           "heading": "Pattern 7: Persistence with @AppStorage",
           "level": 2,
-          "startLine": 283,
-          "endLine": 319,
+          "startLine": 278,
+          "endLine": 314,
           "charCount": 1415
         },
         {
           "heading": "Anti-Patterns (DO NOT DO THIS)",
           "level": 2,
-          "startLine": 320,
-          "endLine": 392,
+          "startLine": 315,
+          "endLine": 387,
           "charCount": 2128
         },
         {
           "heading": "Common Mistakes — Quick Reference",
           "level": 2,
-          "startLine": 393,
-          "endLine": 409,
+          "startLine": 388,
+          "endLine": 404,
           "charCount": 939
         },
         {
           "heading": "Code Review Checklist",
           "level": 2,
-          "startLine": 410,
-          "endLine": 425,
+          "startLine": 405,
+          "endLine": 420,
           "charCount": 842
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 426,
-          "endLine": 433,
+          "startLine": 421,
+          "endLine": 428,
           "charCount": 370
         }
       ]
@@ -35104,7 +35104,7 @@
     "axiom-swiftui--toolbars": {
       "name": "axiom-swiftui--toolbars",
       "description": "Use when:",
-      "content": "---\nname: swiftui-toolbars\ndescription: Use when adding, customizing, or debugging SwiftUI toolbars on iOS or macOS — .toolbar modifier, ToolbarItem, ToolbarItemGroup, ToolbarSpacer, placements, customization, ToolbarRole.\nlicense: MIT\n---\n\n# SwiftUI Toolbars\n\n## When to Use This Skill\n\nUse when:\n- Adding action buttons to a navigation bar, bottom bar, or window toolbar\n- Choosing between `ToolbarItem`, `ToolbarItemGroup`, and `ToolbarSpacer`\n- Selecting the right `ToolbarItemPlacement` for an action\n- Building a customizable toolbar (user can rearrange items)\n- Setting toolbar visibility, background, or color scheme\n- Adopting iOS 26+ `ToolbarSpacer` for visual breaks\n- Migrating from deprecated `.navigationBarLeading` / `.navigationBarTrailing`\n- Debugging missing or misplaced toolbar items\n- Requesting code review of toolbar implementation before shipping\n\n#### Related Skills\n- Use `skills/nav.md` for the surrounding NavigationStack/NavigationSplitView the toolbar attaches to\n- Use axiom-macos (skills/windows.md) for `windowToolbarStyle` and window-toolbar interactions\n- Use axiom-macos (skills/menus-and-commands.md) for menu bar commands and keyboard shortcuts\n- Use axiom-design (skills/liquid-glass.md) for iOS 26 toolbar Liquid Glass styling\n\n## Example Prompts\n\n#### 1. \"How do I add a Save button to my navigation bar?\"\n→ The skill shows `.toolbar { ToolbarItem(placement: .primaryAction) { ... } }` and explains why `.primaryAction` is preferred over `.topBarTrailing` for cross-platform behavior.\n\n#### 2. \"My toolbar items aren't showing up.\"\n→ The skill covers the most common cause: `.toolbar` must be inside a navigation container (NavigationStack, NavigationSplitView, or sheet's nav). Standalone Views ignore `.toolbar`.\n\n#### 3. \"Should I use ToolbarItem or ToolbarItemGroup?\"\n→ Decision tree: ToolbarItemGroup for tightly-related actions sharing one placement; separate ToolbarItems when you want independent placements or per-item visibility logic.\n\n#### 4. \"How do I make my toolbar customizable so users can rearrange items?\"\n→ Pattern using `.toolbar(id: \"...\")` + `customizationBehavior` + `ToolbarSpacer(.flexible)` for iOS 26 / iPadOS 26 / macOS 26.\n\n#### 5. \"I'm getting a deprecation warning on .navigationBarLeading.\"\n→ Replace with `.topBarLeading` (iOS 14+, but renamed in later versions for cross-platform clarity). Same for `.navigationBarTrailing` → `.topBarTrailing`.\n\n---\n\n## Red Flags — Anti-Patterns to Prevent\n\n| Symptom | Cause | Fix |\n|---|---|---|\n| Toolbar items don't appear | `.toolbar` on a View not inside NavigationStack/SplitView | Move `.toolbar` to the navigation container's content, or wrap in `NavigationStack` |\n| Items appear in wrong order on iPad | Used `.navigationBarTrailing` (deprecated alias) | Use `.topBarTrailing` |\n| Customization sheet has nothing to customize | Used `.toolbar { }` instead of `.toolbar(id:)` | Switch to `.toolbar(id:)` and give each `ToolbarItem` an `id:` |\n| Spacer between items disappears when toolbar overflows | Used `Spacer()` instead of `ToolbarSpacer` | Use `ToolbarSpacer(.fixed)` or `ToolbarSpacer(.flexible)` (iOS 26+) |\n| Two `.primaryAction` items but only one shows | iOS HIG: one primary action per surface | Demote one to `.secondaryAction` or `.topBarTrailing` |\n| Toolbar items flicker when state changes | Conditional `if` inside `.toolbar` rebuilds the whole toolbar | Use `.disabled()` / `.opacity()` modifiers on stable items instead |\n| Bottom bar doesn't appear on iOS | `.bottomBar` requires `.toolbar(.visible, for: .bottomBar)` or items present | Verify visibility AND content; bottom bar hides when empty |\n| Toolbar background ignores custom material | Set `.background` on a child View | Use `.toolbarBackground(.regularMaterial, for: .navigationBar)` instead |\n| Search field shoved into a `ToolbarItem` (a `TextField` in the bar) | Search is not toolbar content | Use `.searchable` on the nav container — see Pattern 10 |\n| Customizable item looks broken in the Edit Toolbar sheet | Text-only or icon-only `Button` | Give every customizable item a `Label` (text + SF Symbol) — see Pattern 6 |\n\n---\n\n## Quick Decision Tree\n\n```dot\ndigraph toolbars {\n    start [shape=ellipse label=\"Need to add toolbar items\"];\n    inNav [shape=diamond label=\"Inside NavigationStack/SplitView?\"];\n    addNav [shape=box label=\"Wrap in NavigationStack first\"];\n    purpose [shape=diamond label=\"What kind of action?\"];\n    primary [shape=box label=\"ToolbarItem(.primaryAction)\"];\n    confirm [shape=box label=\"ToolbarItem(.confirmationAction)\"];\n    cancel [shape=box label=\"ToolbarItem(.cancellationAction)\"];\n    destructive [shape=box label=\"ToolbarItem(.destructiveAction)\"];\n    leading [shape=box label=\"ToolbarItem(.topBarLeading)\"];\n    trailing [shape=box label=\"ToolbarItem(.topBarTrailing)\"];\n    bottom [shape=box label=\"ToolbarItemGroup(.bottomBar)\"];\n    custom [shape=diamond label=\"User-customizable?\"];\n    customYes [shape=box label=\"toolbar(id:) + ToolbarItem(id:)\\n+ ToolbarSpacer for breaks\"];\n    \n    start -> inNav;\n    inNav -> addNav [label=\"no\"];\n    inNav -> purpose [label=\"yes\"];\n    purpose -> primary [label=\"main create/save action\"];\n    purpose -> confirm [label=\"confirm a sheet\"];\n    purpose -> cancel [label=\"cancel a sheet\"];\n    purpose -> destructive [label=\"delete/destroy\"];\n    purpose -> leading [label=\"back/menu (iOS top-left)\"];\n    purpose -> trailing [label=\"secondary action (iOS top-right)\"];\n    purpose -> bottom [label=\"3+ peer actions on iOS\"];\n    purpose -> custom;\n    custom -> customYes [label=\"yes (iOS 26+/macOS 26+)\"];\n}\n```\n\n---\n\n## Pattern 1: Basic Toolbar with Primary Action\n\nThe most common case — a single Save / Done / Add button.\n\n```swift\nNavigationStack {\n    Form {\n        TextField(\"Title\", text: $title)\n    }\n    .navigationTitle(\"New Task\")\n    .toolbar {\n        ToolbarItem(placement: .primaryAction) {\n            Button(\"Save\") { save() }\n                .disabled(title.isEmpty)\n        }\n    }\n}\n```\n\n**Why `.primaryAction`** Cross-platform — appears top-trailing on iOS, primary toolbar slot on macOS, principal area on watchOS. Avoids platform branching.\n\n---\n\n## Pattern 2: Confirmation / Cancellation in a Sheet\n\nStandard pair for modal sheets. iOS uses these placements specifically — they get bolded styling and the right keyboard hookups.\n\n```swift\n.sheet(isPresented: $showingEditor) {\n    NavigationStack {\n        EditorView(item: $editing)\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button(\"Cancel\") { showingEditor = false }\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    Button(\"Done\") {\n                        commit(editing)\n                        showingEditor = false\n                    }\n                    .disabled(!editing.isValid)\n                }\n            }\n    }\n}\n```\n\n**Gotcha** Don't use `.topBarLeading` / `.topBarTrailing` here — you lose the platform-correct emphasis (bolded \"Done\" on iOS, default-button styling on macOS).\n\n### HIG rules for sheet buttons\n\nApple's HIG codified the following rules for sheet button placement (updated 2026-03-24):\n\n| Rule | Why |\n|------|-----|\n| Always pair a confirmation button with Cancel or Back | A solo Done implies completing the task is the only way out — feels restrictive or misleading. |\n| Don't show Cancel, Done, and Back together | Too many dismiss/commit affordances confuse the exit path. Pick the pair the step needs. |\n| iOS / iPadOS: Cancel leading, Done trailing | `.cancellationAction` and `.confirmationAction` produce this automatically — don't override with `.topBarLeading` / `.topBarTrailing`. |\n| watchOS: prefer SF Symbols for action labels | Brief glance-and-tap interactions; text labels read poorly at watch sizes. |\n\n**Practical implication** The pattern above is already correct for iOS/iPadOS/macOS. The rule to internalize is *don't ship a sheet with only a Done button* — either add Cancel, or use a Back button if the sheet is mid-flow.\n\n---\n\n## Pattern 3: Multiple Independent Items (separate ToolbarItems)\n\nUse separate `ToolbarItem`s when each needs different placement or independent visibility logic.\n\n```swift\n.toolbar {\n    ToolbarItem(placement: .topBarLeading) {\n        Button { showFilters.toggle() } label: {\n            Label(\"Filter\", systemImage: \"line.3.horizontal.decrease.circle\")\n        }\n    }\n    ToolbarItem(placement: .principal) {\n        Picker(\"View\", selection: $sortMode) {\n            Text(\"Date\").tag(SortMode.date)\n            Text(\"Name\").tag(SortMode.name)\n        }\n        .pickerStyle(.segmented)\n    }\n    ToolbarItem(placement: .primaryAction) {\n        Button { create() } label: {\n            Image(systemName: \"plus\")\n        }\n    }\n}\n```\n\n---\n\n## Pattern 4: Grouped Items (ToolbarItemGroup)\n\nUse `ToolbarItemGroup` when 2+ items share placement AND should be treated as a unit (e.g., they appear/disappear together, share customization behavior).\n\n```swift\n.toolbar {\n    ToolbarItemGroup(placement: .bottomBar) {\n        Button { share() } label: { Image(systemName: \"square.and.arrow.up\") }\n        Spacer()\n        Button { archive() } label: { Image(systemName: \"archivebox\") }\n        Spacer()\n        Button { delete() } label: { Image(systemName: \"trash\") }\n            .tint(.red)\n    }\n}\n```\n\n**Note** Inside a `ToolbarItemGroup`, regular `Spacer()` works for layout. Outside the group (between separate ToolbarItems), use `ToolbarSpacer` instead — see Pattern 5.\n\n---\n\n## Pattern 5: Visual Breaks with ToolbarSpacer (iOS 26+ / macOS 26+)\n\n`ToolbarSpacer` creates visual gaps between separate `ToolbarItem`s and integrates with the customization system. Two variants: `.fixed` (consistent gap) and `.flexible` (expands).\n\n```swift\n.toolbar(id: \"main\") {\n    ToolbarItem(id: \"tag\", placement: .primaryAction) {\n        TagButton()\n    }\n    ToolbarSpacer(.fixed)\n    ToolbarItem(id: \"share\", placement: .primaryAction) {\n        ShareButton()\n    }\n    ToolbarSpacer(.flexible)\n    ToolbarItem(id: \"more\", placement: .primaryAction) {\n        MoreButton()\n    }\n}\n```\n\n**Why not regular Spacer** A `Spacer()` between separate `ToolbarItem`s is ignored — toolbar layout doesn't honor SwiftUI flex spacing the way an HStack does. `ToolbarSpacer` is the toolbar-aware equivalent and is also customizable (users can add/remove instances).\n\n**Pre-iOS 26 fallback** Group items into `ToolbarItemGroup` and use regular `Spacer()` inside the group.\n\n---\n\n## Pattern 6: Customizable Toolbars (`.toolbar(id:)`)\n\nLets users rearrange, add, and remove toolbar items via a customization sheet. Requires unique `id:` on the toolbar AND every item.\n\n```swift\n.toolbar(id: \"browser\") {\n    ToolbarItem(id: \"back\", placement: .navigation) {\n        Button { goBack() } label: { Image(systemName: \"chevron.left\") }\n    }\n    .customizationBehavior(.disabled)  // Always present, not removable\n    \n    ToolbarItem(id: \"share\", placement: .secondaryAction) {\n        ShareLink(item: currentURL)\n    }\n    \n    ToolbarItem(id: \"bookmarks\", placement: .secondaryAction) {\n        Button { showBookmarks() } label: { Image(systemName: \"book\") }\n    }\n    .defaultCustomization(.hidden)  // Available but hidden by default\n}\n```\n\n**Customization behaviors:**\n- `.default` — user can move, hide, show\n- `.disabled` — locked in place\n- `.reorderable` — can be moved but not hidden\n\n**Where customization appears**\n- iPadOS 16+ / macOS 13+: Edit Toolbar menu\n- iOS 26+: customization sheet via `.toolbarCustomizationBehavior` action\n\n**Give every customizable item a `Label` (text + SF Symbol), not a text-only or icon-only `Button`** — the customization sheet and overflow menu render the label, and a bare title or lone glyph reads as broken there.\n\n**Customization affordance is strongest on iPadOS / macOS.** On iPhone the system reordering UI is limited; if \"long-press to rearrange/hide\" is a hard iPhone requirement, drive a `ForEach` of toolbar items from a persisted order array instead of relying on `.toolbar(id:)` alone.\n\n---\n\n## Pattern 7: ToolbarRole for Three-Column Layouts\n\n`.toolbarRole(.editor)` reorganizes toolbar items for editor-style apps (Mail, Notes) — moves items into the document area's toolbar instead of the sidebar's.\n\n```swift\nNavigationSplitView {\n    SidebarView()\n} content: {\n    ListView()\n} detail: {\n    EditorView()\n        .toolbar { editorActions }\n        .toolbarRole(.editor)  // Items attach to detail column on iPad/Mac\n}\n```\n\nWithout `.toolbarRole(.editor)`, the items appear in the leftmost visible column — usually wrong for editor apps.\n\n---\n\n## Pattern 8: Visibility, Background, Color Scheme\n\nControl toolbar appearance per-bar. The `for:` parameter targets a specific bar (`.navigationBar`, `.bottomBar`, `.tabBar`).\n\n```swift\nContentView()\n    // Show or hide a bar\n    .toolbar(.visible, for: .bottomBar)\n    .toolbar(.hidden, for: .navigationBar)\n    \n    // Background material/color\n    .toolbarBackground(.regularMaterial, for: .navigationBar)\n    .toolbarBackground(.visible, for: .navigationBar)\n    \n    // Color scheme (e.g., dark toolbar on light app)\n    .toolbarColorScheme(.dark, for: .navigationBar)\n```\n\n**iOS 26 note** Liquid Glass changes how toolbar backgrounds render. See axiom-design (skills/liquid-glass.md) before customizing background materials in iOS 26+ apps.\n\n---\n\n## Pattern 9: macOS-Specific — windowToolbarStyle\n\nOn macOS, the toolbar attaches to a window. The window's toolbar style (`unified`, `expanded`, `unifiedCompact`) is set on the Scene, not the View.\n\n```swift\nWindowGroup {\n    ContentView()\n}\n.windowToolbarStyle(.unified)  // Title and toolbar inline (default for many apps)\n```\n\n**Style choices**\n- `.expanded` — title bar above toolbar (classic macOS look)\n- `.unified` — title and toolbar inline (most modern apps)\n- `.unifiedCompact` — compact inline toolbar\n\n**For full macOS toolbar/window integration** see axiom-macos (skills/windows.md), which covers Window vs WindowGroup, MenuBarExtra, and toolbar style choice rationale.\n\n---\n\n## Pattern 10: Search in the Toolbar\n\nA search field is **not** a `ToolbarItem` — never put a `TextField` (or a custom search box) into `.toolbar`. Use `.searchable`, which the system positions correctly relative to the nav bar / Liquid Glass and wires up for free.\n\n```swift\nNavigationStack {\n    List { /* … */ }\n        .navigationTitle(\"Articles\")\n        .searchable(text: $query, prompt: \"Search articles\")\n}\n```\n\n- **Default placement** Let the system decide — `.searchable(text:)` shows the field under the title on iOS and adapts per platform.\n- **Force it into the bar** `.searchable(text: $query, placement: .toolbar)` when you specifically want it in the toolbar region.\n- **iOS 26 collapsing search** `.searchToolbarBehavior(.minimize)` gives the search *button* that expands into a field — the modern bar pattern.\n- Like `.toolbar`, `.searchable` only works inside a navigation container (same prerequisite as Pattern 1's missing-`NavigationStack` trap).\n\nFor multi-token search, scopes, suggestions, and programmatic control, see axiom-swiftui (skills/search-ref.md) — that file owns the full `.searchable` story. For tab-bar and `NavigationSplitView` search placement, see skills/nav-ref.md. This pattern only covers the toolbar-placement decision.\n\n---\n\n## ToolbarItemPlacement Reference\n\nUse this table to pick the right placement. When in doubt, prefer semantic placements (`.primaryAction`, `.confirmationAction`) over positional ones (`.topBarTrailing`) — semantic placements adapt across platforms.\n\n| Placement | iOS | iPadOS | macOS | When to Use |\n|---|---|---|---|---|\n| `.automatic` | ✓ | ✓ | ✓ | Let SwiftUI decide based on context |\n| `.primaryAction` | top-trailing | top-trailing | toolbar | The single most important action (Save, Done, Add) |\n| `.secondaryAction` | overflow menu | overflow menu | toolbar | Less prominent actions; collapses on small screens |\n| `.confirmationAction` | top-trailing (bold) | top-trailing (bold) | default button | Sheet's confirm button — gets bold styling + Return key |\n| `.cancellationAction` | top-leading | top-leading | cancel button | Sheet's cancel button — gets Esc key |\n| `.destructiveAction` | varies | varies | red-tinted | Delete/destroy actions |\n| `.navigation` | back area | back area | navigation slot | Custom back/forward items |\n| `.topBarLeading` | top-leading | top-leading | leading | Filters, menus, drawers |\n| `.topBarTrailing` | top-trailing | top-trailing | trailing | Secondary actions when not using `.primaryAction` |\n| `.bottomBar` | bottom bar | bottom bar | n/a | iOS-style action bars (3+ peer actions) |\n| `.principal` | center of nav bar | center | center | Segmented controls, custom titles |\n| `.status` | n/a | n/a | status area | macOS status info (sync indicators, etc.) |\n| `.keyboard` | above keyboard | above keyboard | n/a | Input accessory items (API is macOS 12+, but no software keyboard there) |\n| `.bottomOrnament` | n/a | n/a | n/a (visionOS) | visionOS bottom ornament |\n\n**Deprecated** `.navigationBarLeading` → use `.topBarLeading`. `.navigationBarTrailing` → use `.topBarTrailing`. The renames give cross-platform clarity (no \"navigation bar\" on macOS).\n\n---\n\n## Anti-Patterns (DO NOT DO THIS)\n\n### ❌ Standalone view with `.toolbar`\n\n```swift\n// Toolbar items will silently disappear\nstruct DetailView: View {\n    var body: some View {\n        VStack { Text(\"Hello\") }\n            .toolbar {\n                ToolbarItem { Button(\"Save\") {} }\n            }\n    }\n}\n```\n\n**Why** Toolbar requires a navigation container (NavigationStack, NavigationSplitView, sheet's nav, or NavigationLink destination). Standalone views render the toolbar to nowhere.\n\n**Fix** Either wrap the view in a `NavigationStack` at the call site, or move the `.toolbar` to where the navigation container lives.\n\n### ❌ Conditional `.toolbar` content\n\n```swift\n.toolbar {\n    if isEditing {\n        ToolbarItem { Button(\"Done\") { isEditing = false } }\n    } else {\n        ToolbarItem { Button(\"Edit\") { isEditing = true } }\n    }\n}\n```\n\n**Why** Conditional toolbar items rebuild the entire toolbar on state change → flicker, animation glitches, dropped first responders.\n\n**Fix** Single stable item with conditional label/action:\n```swift\n.toolbar {\n    ToolbarItem(placement: .primaryAction) {\n        Button(isEditing ? \"Done\" : \"Edit\") { isEditing.toggle() }\n    }\n}\n```\n\n### ❌ Two primary actions\n\n```swift\n.toolbar {\n    ToolbarItem(placement: .primaryAction) { Button(\"Save\") {} }\n    ToolbarItem(placement: .primaryAction) { Button(\"Share\") {} }  // Wrong\n}\n```\n\n**Why** Apple HIG mandates one primary action per surface. SwiftUI may collapse the second into overflow on iOS, or lay them out unpredictably.\n\n**Fix** Demote secondary actions to `.secondaryAction`, `.topBarTrailing`, or move to a menu under the primary action.\n\n### ❌ Regular Spacer between separate ToolbarItems\n\n```swift\n.toolbar {\n    ToolbarItem { LeftButton() }\n    Spacer()  // Ignored — toolbar layout doesn't honor this\n    ToolbarItem { RightButton() }\n}\n```\n\n**Why** Toolbar layout is not an HStack. `Spacer()` outside a `ToolbarItemGroup` is invisible to the layout engine.\n\n**Fix iOS 26+** Use `ToolbarSpacer(.flexible)`. **Pre-iOS 26** Group both items in a `ToolbarItemGroup` (where Spacer works) or use placements to force separation.\n\n### ❌ Forgetting `.toolbar(id:)` for customization\n\n```swift\n// User opens \"Customize Toolbar...\" → empty sheet\n.toolbar {\n    ToolbarItem(id: \"share\") { ShareButton() }  // id: ignored without toolbar(id:)\n}\n```\n\n**Why** `id:` on individual `ToolbarItem`s only takes effect when the parent uses `.toolbar(id:)`. Otherwise customization is disabled entirely.\n\n**Fix** `.toolbar(id: \"main\") { ToolbarItem(id: \"share\") { ... } }`.\n\n---\n\n## Code Review Checklist\n\nBefore merging toolbar code:\n\n- [ ] All `.toolbar` modifiers are inside (or attached to) a navigation container\n- [ ] No deprecated `.navigationBarLeading` / `.navigationBarTrailing` (use `.topBarLeading` / `.topBarTrailing`)\n- [ ] Sheet confirm/cancel use `.confirmationAction` / `.cancellationAction` (not topBar placements)\n- [ ] At most one `.primaryAction` per surface\n- [ ] No conditional `if` inside `.toolbar` — use stable items with conditional label/action\n- [ ] If using `Spacer()` between toolbar items, it's inside a `ToolbarItemGroup` (or replaced with `ToolbarSpacer` on iOS 26+)\n- [ ] Customizable toolbars use `.toolbar(id:)` AND every `ToolbarItem` has an `id:`\n- [ ] Bottom bar items use `.bottomBar` placement (iOS only)\n- [ ] Editor-style three-column layouts use `.toolbarRole(.editor)`\n- [ ] iOS 26+ apps reviewed against axiom-design (skills/liquid-glass.md) for background-material changes\n- [ ] macOS apps set `windowToolbarStyle` on the Scene (see axiom-macos (skills/windows.md))\n\n---\n\n## Troubleshooting Quick Reference\n\n| Symptom | Most Likely Cause |\n|---|---|\n| Toolbar items invisible | Not inside navigation container |\n| Wrong order on iPad vs iPhone | Using deprecated `.navigationBar*` placements |\n| Customization sheet empty | Missing `.toolbar(id:)` on parent |\n| Items flicker on state change | Conditional `if` inside `.toolbar` |\n| Bottom bar empty | No items OR `.toolbar(.hidden, for: .bottomBar)` somewhere upstream |\n| Toolbar background ignores material | Set on a child View; use `.toolbarBackground(_:for:)` |\n| Items reorder unexpectedly on macOS | User customized — use `.customizationBehavior(.disabled)` to lock |\n| `ToolbarSpacer` not recognized | Targeting < iOS 26 / macOS 26 — use `ToolbarItemGroup` + Spacer fallback |\n\n---\n\n## Resources\n\n**WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219\n\n**Docs**: /swiftui/toolbar(content:), /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent\n\n**Skills**: axiom-swiftui (skills/nav.md), axiom-macos (skills/windows.md), axiom-macos (skills/menus-and-commands.md), axiom-design (skills/liquid-glass.md)\n",
+      "content": "\n# SwiftUI Toolbars\n\n## When to Use This Skill\n\nUse when:\n- Adding action buttons to a navigation bar, bottom bar, or window toolbar\n- Choosing between `ToolbarItem`, `ToolbarItemGroup`, and `ToolbarSpacer`\n- Selecting the right `ToolbarItemPlacement` for an action\n- Building a customizable toolbar (user can rearrange items)\n- Setting toolbar visibility, background, or color scheme\n- Adopting iOS 26+ `ToolbarSpacer` for visual breaks\n- Migrating from deprecated `.navigationBarLeading` / `.navigationBarTrailing`\n- Debugging missing or misplaced toolbar items\n- Requesting code review of toolbar implementation before shipping\n\n#### Related Skills\n- Use `skills/nav.md` for the surrounding NavigationStack/NavigationSplitView the toolbar attaches to\n- Use axiom-macos (skills/windows.md) for `windowToolbarStyle` and window-toolbar interactions\n- Use axiom-macos (skills/menus-and-commands.md) for menu bar commands and keyboard shortcuts\n- Use axiom-design (skills/liquid-glass.md) for iOS 26 toolbar Liquid Glass styling\n\n## Example Prompts\n\n#### 1. \"How do I add a Save button to my navigation bar?\"\n→ The skill shows `.toolbar { ToolbarItem(placement: .primaryAction) { ... } }` and explains why `.primaryAction` is preferred over `.topBarTrailing` for cross-platform behavior.\n\n#### 2. \"My toolbar items aren't showing up.\"\n→ The skill covers the most common cause: `.toolbar` must be inside a navigation container (NavigationStack, NavigationSplitView, or sheet's nav). Standalone Views ignore `.toolbar`.\n\n#### 3. \"Should I use ToolbarItem or ToolbarItemGroup?\"\n→ Decision tree: ToolbarItemGroup for tightly-related actions sharing one placement; separate ToolbarItems when you want independent placements or per-item visibility logic.\n\n#### 4. \"How do I make my toolbar customizable so users can rearrange items?\"\n→ Pattern using `.toolbar(id: \"...\")` + `customizationBehavior` + `ToolbarSpacer(.flexible)` for iOS 26 / iPadOS 26 / macOS 26.\n\n#### 5. \"I'm getting a deprecation warning on .navigationBarLeading.\"\n→ Replace with `.topBarLeading` (iOS 14+, but renamed in later versions for cross-platform clarity). Same for `.navigationBarTrailing` → `.topBarTrailing`.\n\n---\n\n## Red Flags — Anti-Patterns to Prevent\n\n| Symptom | Cause | Fix |\n|---|---|---|\n| Toolbar items don't appear | `.toolbar` on a View not inside NavigationStack/SplitView | Move `.toolbar` to the navigation container's content, or wrap in `NavigationStack` |\n| Items appear in wrong order on iPad | Used `.navigationBarTrailing` (deprecated alias) | Use `.topBarTrailing` |\n| Customization sheet has nothing to customize | Used `.toolbar { }` instead of `.toolbar(id:)` | Switch to `.toolbar(id:)` and give each `ToolbarItem` an `id:` |\n| Spacer between items disappears when toolbar overflows | Used `Spacer()` instead of `ToolbarSpacer` | Use `ToolbarSpacer(.fixed)` or `ToolbarSpacer(.flexible)` (iOS 26+) |\n| Two `.primaryAction` items but only one shows | iOS HIG: one primary action per surface | Demote one to `.secondaryAction` or `.topBarTrailing` |\n| Toolbar items flicker when state changes | Conditional `if` inside `.toolbar` rebuilds the whole toolbar | Use `.disabled()` / `.opacity()` modifiers on stable items instead |\n| Bottom bar doesn't appear on iOS | `.bottomBar` requires `.toolbar(.visible, for: .bottomBar)` or items present | Verify visibility AND content; bottom bar hides when empty |\n| Toolbar background ignores custom material | Set `.background` on a child View | Use `.toolbarBackground(.regularMaterial, for: .navigationBar)` instead |\n| Search field shoved into a `ToolbarItem` (a `TextField` in the bar) | Search is not toolbar content | Use `.searchable` on the nav container — see Pattern 10 |\n| Customizable item looks broken in the Edit Toolbar sheet | Text-only or icon-only `Button` | Give every customizable item a `Label` (text + SF Symbol) — see Pattern 6 |\n\n---\n\n## Quick Decision Tree\n\n```dot\ndigraph toolbars {\n    start [shape=ellipse label=\"Need to add toolbar items\"];\n    inNav [shape=diamond label=\"Inside NavigationStack/SplitView?\"];\n    addNav [shape=box label=\"Wrap in NavigationStack first\"];\n    purpose [shape=diamond label=\"What kind of action?\"];\n    primary [shape=box label=\"ToolbarItem(.primaryAction)\"];\n    confirm [shape=box label=\"ToolbarItem(.confirmationAction)\"];\n    cancel [shape=box label=\"ToolbarItem(.cancellationAction)\"];\n    destructive [shape=box label=\"ToolbarItem(.destructiveAction)\"];\n    leading [shape=box label=\"ToolbarItem(.topBarLeading)\"];\n    trailing [shape=box label=\"ToolbarItem(.topBarTrailing)\"];\n    bottom [shape=box label=\"ToolbarItemGroup(.bottomBar)\"];\n    custom [shape=diamond label=\"User-customizable?\"];\n    customYes [shape=box label=\"toolbar(id:) + ToolbarItem(id:)\\n+ ToolbarSpacer for breaks\"];\n    \n    start -> inNav;\n    inNav -> addNav [label=\"no\"];\n    inNav -> purpose [label=\"yes\"];\n    purpose -> primary [label=\"main create/save action\"];\n    purpose -> confirm [label=\"confirm a sheet\"];\n    purpose -> cancel [label=\"cancel a sheet\"];\n    purpose -> destructive [label=\"delete/destroy\"];\n    purpose -> leading [label=\"back/menu (iOS top-left)\"];\n    purpose -> trailing [label=\"secondary action (iOS top-right)\"];\n    purpose -> bottom [label=\"3+ peer actions on iOS\"];\n    purpose -> custom;\n    custom -> customYes [label=\"yes (iOS 26+/macOS 26+)\"];\n}\n```\n\n---\n\n## Pattern 1: Basic Toolbar with Primary Action\n\nThe most common case — a single Save / Done / Add button.\n\n```swift\nNavigationStack {\n    Form {\n        TextField(\"Title\", text: $title)\n    }\n    .navigationTitle(\"New Task\")\n    .toolbar {\n        ToolbarItem(placement: .primaryAction) {\n            Button(\"Save\") { save() }\n                .disabled(title.isEmpty)\n        }\n    }\n}\n```\n\n**Why `.primaryAction`** Cross-platform — appears top-trailing on iOS, primary toolbar slot on macOS, principal area on watchOS. Avoids platform branching.\n\n---\n\n## Pattern 2: Confirmation / Cancellation in a Sheet\n\nStandard pair for modal sheets. iOS uses these placements specifically — they get bolded styling and the right keyboard hookups.\n\n```swift\n.sheet(isPresented: $showingEditor) {\n    NavigationStack {\n        EditorView(item: $editing)\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button(\"Cancel\") { showingEditor = false }\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    Button(\"Done\") {\n                        commit(editing)\n                        showingEditor = false\n                    }\n                    .disabled(!editing.isValid)\n                }\n            }\n    }\n}\n```\n\n**Gotcha** Don't use `.topBarLeading` / `.topBarTrailing` here — you lose the platform-correct emphasis (bolded \"Done\" on iOS, default-button styling on macOS).\n\n### HIG rules for sheet buttons\n\nApple's HIG codified the following rules for sheet button placement (updated 2026-03-24):\n\n| Rule | Why |\n|------|-----|\n| Always pair a confirmation button with Cancel or Back | A solo Done implies completing the task is the only way out — feels restrictive or misleading. |\n| Don't show Cancel, Done, and Back together | Too many dismiss/commit affordances confuse the exit path. Pick the pair the step needs. |\n| iOS / iPadOS: Cancel leading, Done trailing | `.cancellationAction` and `.confirmationAction` produce this automatically — don't override with `.topBarLeading` / `.topBarTrailing`. |\n| watchOS: prefer SF Symbols for action labels | Brief glance-and-tap interactions; text labels read poorly at watch sizes. |\n\n**Practical implication** The pattern above is already correct for iOS/iPadOS/macOS. The rule to internalize is *don't ship a sheet with only a Done button* — either add Cancel, or use a Back button if the sheet is mid-flow.\n\n---\n\n## Pattern 3: Multiple Independent Items (separate ToolbarItems)\n\nUse separate `ToolbarItem`s when each needs different placement or independent visibility logic.\n\n```swift\n.toolbar {\n    ToolbarItem(placement: .topBarLeading) {\n        Button { showFilters.toggle() } label: {\n            Label(\"Filter\", systemImage: \"line.3.horizontal.decrease.circle\")\n        }\n    }\n    ToolbarItem(placement: .principal) {\n        Picker(\"View\", selection: $sortMode) {\n            Text(\"Date\").tag(SortMode.date)\n            Text(\"Name\").tag(SortMode.name)\n        }\n        .pickerStyle(.segmented)\n    }\n    ToolbarItem(placement: .primaryAction) {\n        Button { create() } label: {\n            Image(systemName: \"plus\")\n        }\n    }\n}\n```\n\n---\n\n## Pattern 4: Grouped Items (ToolbarItemGroup)\n\nUse `ToolbarItemGroup` when 2+ items share placement AND should be treated as a unit (e.g., they appear/disappear together, share customization behavior).\n\n```swift\n.toolbar {\n    ToolbarItemGroup(placement: .bottomBar) {\n        Button { share() } label: { Image(systemName: \"square.and.arrow.up\") }\n        Spacer()\n        Button { archive() } label: { Image(systemName: \"archivebox\") }\n        Spacer()\n        Button { delete() } label: { Image(systemName: \"trash\") }\n            .tint(.red)\n    }\n}\n```\n\n**Note** Inside a `ToolbarItemGroup`, regular `Spacer()` works for layout. Outside the group (between separate ToolbarItems), use `ToolbarSpacer` instead — see Pattern 5.\n\n---\n\n## Pattern 5: Visual Breaks with ToolbarSpacer (iOS 26+ / macOS 26+)\n\n`ToolbarSpacer` creates visual gaps between separate `ToolbarItem`s and integrates with the customization system. Two variants: `.fixed` (consistent gap) and `.flexible` (expands).\n\n```swift\n.toolbar(id: \"main\") {\n    ToolbarItem(id: \"tag\", placement: .primaryAction) {\n        TagButton()\n    }\n    ToolbarSpacer(.fixed)\n    ToolbarItem(id: \"share\", placement: .primaryAction) {\n        ShareButton()\n    }\n    ToolbarSpacer(.flexible)\n    ToolbarItem(id: \"more\", placement: .primaryAction) {\n        MoreButton()\n    }\n}\n```\n\n**Why not regular Spacer** A `Spacer()` between separate `ToolbarItem`s is ignored — toolbar layout doesn't honor SwiftUI flex spacing the way an HStack does. `ToolbarSpacer` is the toolbar-aware equivalent and is also customizable (users can add/remove instances).\n\n**Pre-iOS 26 fallback** Group items into `ToolbarItemGroup` and use regular `Spacer()` inside the group.\n\n---\n\n## Pattern 6: Customizable Toolbars (`.toolbar(id:)`)\n\nLets users rearrange, add, and remove toolbar items via a customization sheet. Requires unique `id:` on the toolbar AND every item.\n\n```swift\n.toolbar(id: \"browser\") {\n    ToolbarItem(id: \"back\", placement: .navigation) {\n        Button { goBack() } label: { Image(systemName: \"chevron.left\") }\n    }\n    .customizationBehavior(.disabled)  // Always present, not removable\n    \n    ToolbarItem(id: \"share\", placement: .secondaryAction) {\n        ShareLink(item: currentURL)\n    }\n    \n    ToolbarItem(id: \"bookmarks\", placement: .secondaryAction) {\n        Button { showBookmarks() } label: { Image(systemName: \"book\") }\n    }\n    .defaultCustomization(.hidden)  // Available but hidden by default\n}\n```\n\n**Customization behaviors:**\n- `.default` — user can move, hide, show\n- `.disabled` — locked in place\n- `.reorderable` — can be moved but not hidden\n\n**Where customization appears**\n- iPadOS 16+ / macOS 13+: Edit Toolbar menu\n- iOS 26+: customization sheet via `.toolbarCustomizationBehavior` action\n\n**Give every customizable item a `Label` (text + SF Symbol), not a text-only or icon-only `Button`** — the customization sheet and overflow menu render the label, and a bare title or lone glyph reads as broken there.\n\n**Customization affordance is strongest on iPadOS / macOS.** On iPhone the system reordering UI is limited; if \"long-press to rearrange/hide\" is a hard iPhone requirement, drive a `ForEach` of toolbar items from a persisted order array instead of relying on `.toolbar(id:)` alone.\n\n---\n\n## Pattern 7: ToolbarRole for Three-Column Layouts\n\n`.toolbarRole(.editor)` reorganizes toolbar items for editor-style apps (Mail, Notes) — moves items into the document area's toolbar instead of the sidebar's.\n\n```swift\nNavigationSplitView {\n    SidebarView()\n} content: {\n    ListView()\n} detail: {\n    EditorView()\n        .toolbar { editorActions }\n        .toolbarRole(.editor)  // Items attach to detail column on iPad/Mac\n}\n```\n\nWithout `.toolbarRole(.editor)`, the items appear in the leftmost visible column — usually wrong for editor apps.\n\n---\n\n## Pattern 8: Visibility, Background, Color Scheme\n\nControl toolbar appearance per-bar. The `for:` parameter targets a specific bar (`.navigationBar`, `.bottomBar`, `.tabBar`).\n\n```swift\nContentView()\n    // Show or hide a bar\n    .toolbar(.visible, for: .bottomBar)\n    .toolbar(.hidden, for: .navigationBar)\n    \n    // Background material/color\n    .toolbarBackground(.regularMaterial, for: .navigationBar)\n    .toolbarBackground(.visible, for: .navigationBar)\n    \n    // Color scheme (e.g., dark toolbar on light app)\n    .toolbarColorScheme(.dark, for: .navigationBar)\n```\n\n**iOS 26 note** Liquid Glass changes how toolbar backgrounds render. See axiom-design (skills/liquid-glass.md) before customizing background materials in iOS 26+ apps.\n\n---\n\n## Pattern 9: macOS-Specific — windowToolbarStyle\n\nOn macOS, the toolbar attaches to a window. The window's toolbar style (`unified`, `expanded`, `unifiedCompact`) is set on the Scene, not the View.\n\n```swift\nWindowGroup {\n    ContentView()\n}\n.windowToolbarStyle(.unified)  // Title and toolbar inline (default for many apps)\n```\n\n**Style choices**\n- `.expanded` — title bar above toolbar (classic macOS look)\n- `.unified` — title and toolbar inline (most modern apps)\n- `.unifiedCompact` — compact inline toolbar\n\n**For full macOS toolbar/window integration** see axiom-macos (skills/windows.md), which covers Window vs WindowGroup, MenuBarExtra, and toolbar style choice rationale.\n\n---\n\n## Pattern 10: Search in the Toolbar\n\nA search field is **not** a `ToolbarItem` — never put a `TextField` (or a custom search box) into `.toolbar`. Use `.searchable`, which the system positions correctly relative to the nav bar / Liquid Glass and wires up for free.\n\n```swift\nNavigationStack {\n    List { /* … */ }\n        .navigationTitle(\"Articles\")\n        .searchable(text: $query, prompt: \"Search articles\")\n}\n```\n\n- **Default placement** Let the system decide — `.searchable(text:)` shows the field under the title on iOS and adapts per platform.\n- **Force it into the bar** `.searchable(text: $query, placement: .toolbar)` when you specifically want it in the toolbar region.\n- **iOS 26 collapsing search** `.searchToolbarBehavior(.minimize)` gives the search *button* that expands into a field — the modern bar pattern.\n- Like `.toolbar`, `.searchable` only works inside a navigation container (same prerequisite as Pattern 1's missing-`NavigationStack` trap).\n\nFor multi-token search, scopes, suggestions, and programmatic control, see axiom-swiftui (skills/search-ref.md) — that file owns the full `.searchable` story. For tab-bar and `NavigationSplitView` search placement, see skills/nav-ref.md. This pattern only covers the toolbar-placement decision.\n\n---\n\n## ToolbarItemPlacement Reference\n\nUse this table to pick the right placement. When in doubt, prefer semantic placements (`.primaryAction`, `.confirmationAction`) over positional ones (`.topBarTrailing`) — semantic placements adapt across platforms.\n\n| Placement | iOS | iPadOS | macOS | When to Use |\n|---|---|---|---|---|\n| `.automatic` | ✓ | ✓ | ✓ | Let SwiftUI decide based on context |\n| `.primaryAction` | top-trailing | top-trailing | toolbar | The single most important action (Save, Done, Add) |\n| `.secondaryAction` | overflow menu | overflow menu | toolbar | Less prominent actions; collapses on small screens |\n| `.confirmationAction` | top-trailing (bold) | top-trailing (bold) | default button | Sheet's confirm button — gets bold styling + Return key |\n| `.cancellationAction` | top-leading | top-leading | cancel button | Sheet's cancel button — gets Esc key |\n| `.destructiveAction` | varies | varies | red-tinted | Delete/destroy actions |\n| `.navigation` | back area | back area | navigation slot | Custom back/forward items |\n| `.topBarLeading` | top-leading | top-leading | leading | Filters, menus, drawers |\n| `.topBarTrailing` | top-trailing | top-trailing | trailing | Secondary actions when not using `.primaryAction` |\n| `.bottomBar` | bottom bar | bottom bar | n/a | iOS-style action bars (3+ peer actions) |\n| `.principal` | center of nav bar | center | center | Segmented controls, custom titles |\n| `.status` | n/a | n/a | status area | macOS status info (sync indicators, etc.) |\n| `.keyboard` | above keyboard | above keyboard | n/a | Input accessory items (API is macOS 12+, but no software keyboard there) |\n| `.bottomOrnament` | n/a | n/a | n/a (visionOS) | visionOS bottom ornament |\n\n**Deprecated** `.navigationBarLeading` → use `.topBarLeading`. `.navigationBarTrailing` → use `.topBarTrailing`. The renames give cross-platform clarity (no \"navigation bar\" on macOS).\n\n---\n\n## Anti-Patterns (DO NOT DO THIS)\n\n### ❌ Standalone view with `.toolbar`\n\n```swift\n// Toolbar items will silently disappear\nstruct DetailView: View {\n    var body: some View {\n        VStack { Text(\"Hello\") }\n            .toolbar {\n                ToolbarItem { Button(\"Save\") {} }\n            }\n    }\n}\n```\n\n**Why** Toolbar requires a navigation container (NavigationStack, NavigationSplitView, sheet's nav, or NavigationLink destination). Standalone views render the toolbar to nowhere.\n\n**Fix** Either wrap the view in a `NavigationStack` at the call site, or move the `.toolbar` to where the navigation container lives.\n\n### ❌ Conditional `.toolbar` content\n\n```swift\n.toolbar {\n    if isEditing {\n        ToolbarItem { Button(\"Done\") { isEditing = false } }\n    } else {\n        ToolbarItem { Button(\"Edit\") { isEditing = true } }\n    }\n}\n```\n\n**Why** Conditional toolbar items rebuild the entire toolbar on state change → flicker, animation glitches, dropped first responders.\n\n**Fix** Single stable item with conditional label/action:\n```swift\n.toolbar {\n    ToolbarItem(placement: .primaryAction) {\n        Button(isEditing ? \"Done\" : \"Edit\") { isEditing.toggle() }\n    }\n}\n```\n\n### ❌ Two primary actions\n\n```swift\n.toolbar {\n    ToolbarItem(placement: .primaryAction) { Button(\"Save\") {} }\n    ToolbarItem(placement: .primaryAction) { Button(\"Share\") {} }  // Wrong\n}\n```\n\n**Why** Apple HIG mandates one primary action per surface. SwiftUI may collapse the second into overflow on iOS, or lay them out unpredictably.\n\n**Fix** Demote secondary actions to `.secondaryAction`, `.topBarTrailing`, or move to a menu under the primary action.\n\n### ❌ Regular Spacer between separate ToolbarItems\n\n```swift\n.toolbar {\n    ToolbarItem { LeftButton() }\n    Spacer()  // Ignored — toolbar layout doesn't honor this\n    ToolbarItem { RightButton() }\n}\n```\n\n**Why** Toolbar layout is not an HStack. `Spacer()` outside a `ToolbarItemGroup` is invisible to the layout engine.\n\n**Fix iOS 26+** Use `ToolbarSpacer(.flexible)`. **Pre-iOS 26** Group both items in a `ToolbarItemGroup` (where Spacer works) or use placements to force separation.\n\n### ❌ Forgetting `.toolbar(id:)` for customization\n\n```swift\n// User opens \"Customize Toolbar...\" → empty sheet\n.toolbar {\n    ToolbarItem(id: \"share\") { ShareButton() }  // id: ignored without toolbar(id:)\n}\n```\n\n**Why** `id:` on individual `ToolbarItem`s only takes effect when the parent uses `.toolbar(id:)`. Otherwise customization is disabled entirely.\n\n**Fix** `.toolbar(id: \"main\") { ToolbarItem(id: \"share\") { ... } }`.\n\n---\n\n## Code Review Checklist\n\nBefore merging toolbar code:\n\n- [ ] All `.toolbar` modifiers are inside (or attached to) a navigation container\n- [ ] No deprecated `.navigationBarLeading` / `.navigationBarTrailing` (use `.topBarLeading` / `.topBarTrailing`)\n- [ ] Sheet confirm/cancel use `.confirmationAction` / `.cancellationAction` (not topBar placements)\n- [ ] At most one `.primaryAction` per surface\n- [ ] No conditional `if` inside `.toolbar` — use stable items with conditional label/action\n- [ ] If using `Spacer()` between toolbar items, it's inside a `ToolbarItemGroup` (or replaced with `ToolbarSpacer` on iOS 26+)\n- [ ] Customizable toolbars use `.toolbar(id:)` AND every `ToolbarItem` has an `id:`\n- [ ] Bottom bar items use `.bottomBar` placement (iOS only)\n- [ ] Editor-style three-column layouts use `.toolbarRole(.editor)`\n- [ ] iOS 26+ apps reviewed against axiom-design (skills/liquid-glass.md) for background-material changes\n- [ ] macOS apps set `windowToolbarStyle` on the Scene (see axiom-macos (skills/windows.md))\n\n---\n\n## Troubleshooting Quick Reference\n\n| Symptom | Most Likely Cause |\n|---|---|\n| Toolbar items invisible | Not inside navigation container |\n| Wrong order on iPad vs iPhone | Using deprecated `.navigationBar*` placements |\n| Customization sheet empty | Missing `.toolbar(id:)` on parent |\n| Items flicker on state change | Conditional `if` inside `.toolbar` |\n| Bottom bar empty | No items OR `.toolbar(.hidden, for: .bottomBar)` somewhere upstream |\n| Toolbar background ignores material | Set on a child View; use `.toolbarBackground(_:for:)` |\n| Items reorder unexpectedly on macOS | User customized — use `.customizationBehavior(.disabled)` to lock |\n| `ToolbarSpacer` not recognized | Targeting < iOS 26 / macOS 26 — use `ToolbarItemGroup` + Spacer fallback |\n\n---\n\n## Resources\n\n**WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219\n\n**Docs**: /swiftui/toolbar(content:), /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent\n\n**Skills**: axiom-swiftui (skills/nav.md), axiom-macos (skills/windows.md), axiom-macos (skills/menus-and-commands.md), axiom-design (skills/liquid-glass.md)\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -35116,147 +35116,147 @@
           "heading": "_preamble",
           "level": 0,
           "startLine": 0,
-          "endLine": 5,
-          "charCount": 240
+          "endLine": 0,
+          "charCount": 0
         },
         {
           "heading": "SwiftUI Toolbars",
           "level": 1,
-          "startLine": 6,
-          "endLine": 7,
+          "startLine": 1,
+          "endLine": 2,
           "charCount": 19
         },
         {
           "heading": "When to Use This Skill",
           "level": 2,
-          "startLine": 8,
-          "endLine": 26,
+          "startLine": 3,
+          "endLine": 21,
           "charCount": 1006
         },
         {
           "heading": "Example Prompts",
           "level": 2,
-          "startLine": 27,
-          "endLine": 45,
+          "startLine": 22,
+          "endLine": 40,
           "charCount": 1158
         },
         {
           "heading": "Red Flags — Anti-Patterns to Prevent",
           "level": 2,
-          "startLine": 46,
-          "endLine": 62,
+          "startLine": 41,
+          "endLine": 57,
           "charCount": 1708
         },
         {
           "heading": "Quick Decision Tree",
           "level": 2,
-          "startLine": 63,
-          "endLine": 97,
+          "startLine": 58,
+          "endLine": 92,
           "charCount": 1476
         },
         {
           "heading": "Pattern 1: Basic Toolbar with Primary Action",
           "level": 2,
-          "startLine": 98,
-          "endLine": 120,
+          "startLine": 93,
+          "endLine": 115,
           "charCount": 553
         },
         {
           "heading": "Pattern 2: Confirmation / Cancellation in a Sheet",
           "level": 2,
-          "startLine": 121,
-          "endLine": 161,
+          "startLine": 116,
+          "endLine": 156,
           "charCount": 1905
         },
         {
           "heading": "Pattern 3: Multiple Independent Items (separate ToolbarItems)",
           "level": 2,
-          "startLine": 162,
-          "endLine": 189,
+          "startLine": 157,
+          "endLine": 184,
           "charCount": 744
         },
         {
           "heading": "Pattern 4: Grouped Items (ToolbarItemGroup)",
           "level": 2,
-          "startLine": 190,
-          "endLine": 210,
+          "startLine": 185,
+          "endLine": 205,
           "charCount": 734
         },
         {
           "heading": "Pattern 5: Visual Breaks with ToolbarSpacer (iOS 26+ / macOS 26+)",
           "level": 2,
-          "startLine": 211,
-          "endLine": 236,
+          "startLine": 206,
+          "endLine": 231,
           "charCount": 975
         },
         {
           "heading": "Pattern 6: Customizable Toolbars (`.toolbar(id:)`)",
           "level": 2,
-          "startLine": 237,
-          "endLine": 273,
+          "startLine": 232,
+          "endLine": 268,
           "charCount": 1565
         },
         {
           "heading": "Pattern 7: ToolbarRole for Three-Column Layouts",
           "level": 2,
-          "startLine": 274,
-          "endLine": 293,
+          "startLine": 269,
+          "endLine": 288,
           "charCount": 555
         },
         {
           "heading": "Pattern 8: Visibility, Background, Color Scheme",
           "level": 2,
-          "startLine": 294,
-          "endLine": 315,
+          "startLine": 289,
+          "endLine": 310,
           "charCount": 753
         },
         {
           "heading": "Pattern 9: macOS-Specific — windowToolbarStyle",
           "level": 2,
-          "startLine": 316,
-          "endLine": 335,
+          "startLine": 311,
+          "endLine": 330,
           "charCount": 689
         },
         {
           "heading": "Pattern 10: Search in the Toolbar",
           "level": 2,
-          "startLine": 336,
-          "endLine": 356,
+          "startLine": 331,
+          "endLine": 351,
           "charCount": 1270
         },
         {
           "heading": "ToolbarItemPlacement Reference",
           "level": 2,
-          "startLine": 357,
-          "endLine": 381,
+          "startLine": 352,
+          "endLine": 376,
           "charCount": 1912
         },
         {
           "heading": "Anti-Patterns (DO NOT DO THIS)",
           "level": 2,
-          "startLine": 382,
-          "endLine": 466,
+          "startLine": 377,
+          "endLine": 461,
           "charCount": 2570
         },
         {
           "heading": "Code Review Checklist",
           "level": 2,
-          "startLine": 467,
-          "endLine": 484,
+          "startLine": 462,
+          "endLine": 479,
           "charCount": 1039
         },
         {
           "heading": "Troubleshooting Quick Reference",
           "level": 2,
-          "startLine": 485,
-          "endLine": 499,
+          "startLine": 480,
+          "endLine": 494,
           "charCount": 769
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 500,
-          "endLine": 507,
+          "startLine": 495,
+          "endLine": 502,
           "charCount": 441
         }
       ]
@@ -36535,7 +36535,7 @@
     "axiom-tools--xcsym-ref": {
       "name": "axiom-tools--xcsym-ref",
       "description": "xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's legacy `.crash` text reports, and Xcode Organizer `.xccrashpoint` bundles end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.",
-      "content": "---\nname: xcsym-ref\ndescription: Use when symbolicating an .ips, MetricKit, legacy .crash text file, or .xccrashpoint bundle, diagnosing dSYM UUID mismatches, inventorying dSYMs, or anonymizing a crash for fixture use. Reference for the xcsym CLI that ships with Axiom.\nlicense: MIT\n---\n\n# xcsym Reference (iOS/macOS Crash Symbolication)\n\nxcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's legacy `.crash` text reports, and Xcode Organizer `.xccrashpoint` bundles end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.\n\n`.crash` text is the format Xcode Organizer exposes when a user chooses \"Show in Finder\" on a TestFlight crash. `.xccrashpoint` bundles nest `.crash` files under `Filters/Filter_<id>/Logs/` (with optional `LocallySymbolicated/` siblings). Point xcsym at either the bundle path or the inner `.crash` directly — bundle inputs are walked automatically: the Filter dir with the most recent modification time wins, and the raw `.crash` is preferred over `LocallySymbolicated/`.\n\n## Invocation\n\n`xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xcsym <subcommand>` — no prefix, no path lookup.\n\n## When to Use\n\n- **Triaging a new `.ips`** — full pipeline in one call, structured JSON out\n- **TestFlight crashes** — paired with `xcsym verify` to diagnose UUID mismatches\n- **MetricKit crashes** — write `MXCrashDiagnostic.jsonRepresentation()` to disk and run `crash`\n- **Explaining why a crash is unsymbolicated** — `verify` tells you per-image UUID/arch mismatch\n- **Inventorying local dSYMs** — `list-dsyms` enumerates archives + DerivedData\n- **Scrubbing a user's crash for a fixture** — `anonymize` preserves dSYM UUIDs (correlation keys) while scrubbing PII\n\n**Do not use `xcsym crash` for hangs.** `crash` rejects `.ips` files with `bug_type=298` (exit 1, `\"error\":\"hang_report\"` on stdout). Use `xcsym triage` with `kind: \"hang\"` in the NormalizedReport for hang classification, or see `axiom-performance (skills/hang-diagnostics.md)` for single-hang investigation.\n\n## Critical Best Practices\n\n**Start with `crash`.** It runs the full pipeline (parse → discover dSYMs → symbolicate → categorize → emit JSON). Only reach for `resolve`, `find-dsym`, or `verify` when `crash` surfaces a specific problem.\n\n**Read `pattern_tag` first.** It's the most compact signal about what kind of crash you're looking at. Map it to the agent's fix-guidance table before reading frames.\n\n**Trust exit codes.** Non-zero codes say *why* symbolication was incomplete — don't assume a crashed call means the tool failed.\n\n**Anonymize before committing a fixture.** The `anonymize` subcommand is format-aware (handles `.ips` v1/v2, MetricKit, and legacy `.crash` text) and intentionally preserves dSYM UUIDs so anonymized fixtures still symbolicate against your dSYMs.\n\n## Subcommands\n\n### crash — Full Pipeline\n\n```bash\nxcsym crash --format=summary <file>             # small tier (~2KB target, warns past 4KB)\nxcsym crash --format=standard <file>            # default (~12KB target, warns past 50KB)\nxcsym crash --format=full <file>                # all threads (warns past 100KB)\nxcsym crash --from-metrickit <file>             # force MetricKit (skip auto-detect)\nxcsym crash --dsym <path> <file>                # explicit dSYM for the main app\nxcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots\nxcsym crash --no-symbolicate <file>             # skip atos; keep raw frames\nxcsym crash --no-cache <file>                   # bypass UUID cache\nxcsym crash --no-spotlight <file>               # skip mdfind lookups\nxcsym crash --no-defaults <file>                # skip Archives/DerivedData/Downloads/Toolchain/Frameworks(cwd) walks (fast triage)\nxcsym crash --output <path> <file>              # write JSON to a file\nxcsym crash --human <file>                       # terse prose summary instead of JSON (for a person)\nxcsym crash - < crash.ips                       # read from stdin (for pasted content)\nxcsym crash crash.crash                         # legacy Apple text format (Organizer export)\nxcsym crash Foo.xccrashpoint                    # Xcode Organizer bundle (auto-walks to inner .crash)\nxcsym crash --filter 0.8.60-Any Foo.xccrashpoint  # bundle with multiple Filter_* dirs: pick the one whose name contains this substring (use a dash-bounded fragment to avoid matching \"1.0\" against \"11.0.0\")\nxcsym crash --prefer-locally-symbolicated Foo.xccrashpoint  # use Logs/LocallySymbolicated/*.crash instead of raw\n```\n\nAccepted inputs: `.ips` (v1 and v2 JSON), MetricKit `MXCrashDiagnostic` JSON, Apple's legacy `.crash` text format, and `.xccrashpoint` directory bundles. The file extension doesn't matter for non-bundle inputs — format is auto-detected from content. The `.xccrashpoint` suffix is matched case-insensitively (APFS/HFS+ are case-insensitive by default). For `.xccrashpoint` bundles, xcsym walks `Filters/Filter_*/Logs/` and picks one `.crash` file: the Filter dir with the most recent modification time (override with `--filter <substring>` — substring, not segment-anchored, so prefer dash-bounded fragments like `0.8.60-Any`), raw copy preferred over `LocallySymbolicated/` (override with `--prefer-locally-symbolicated` to keep Xcode's atos output instead of re-symbolicating). The original bundle path is surfaced in `input.bundle` so consumers can tell where the resolved `.crash` came from.\n\n**Unsupported input returns exit 2** with a structured JSON reject on stdout (`{\"error\":\"unsupported_format\", …}`) so agents can route on the error field instead of scraping stderr. See the Exit Codes section below.\n\n**Output is compact JSON by default** (single-line, token-lean for LLM consumers); every report subcommand (`crash`, `resolve`, `find-dsym`, `list-dsyms`, `verify`) takes `--human` for a terse prose rendering, and `… | jq .` gives indented JSON. `anonymize` is the exception — its output is a crash document in the `.ips` wire format (compact header line + pretty payload), not a report, so it has no `--human`.\n\n**Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.\n\n### verify — dSYM Match Diagnostics\n\n```bash\nxcsym verify <file>\nxcsym verify <file> --dsym <path>\nxcsym verify <file> --dsym-paths <a>:<b>\nxcsym verify <file> --no-cache\nxcsym verify <file> --no-spotlight\n```\n\nReports which images are matched, mismatched (UUID or arch), and missing. Use when `crash` exits non-zero to pinpoint *which* dSYM is wrong.\n\n### resolve — Single-Address Resolution\n\n```bash\nxcsym resolve --dsym <path> --load-addr <hex> <addr>...\nxcsym resolve --dsym /bin/ls --load-addr 0x100000000 0x10000aabb 0x10000bbcc\nxcsym resolve --dsym <path> --load-addr <hex> --arch arm64 <addr>...\n```\n\nHands raw addresses to `atos` against a specific dSYM. Useful for one-off address resolution outside a crash context.\n\n### find-dsym — Locate dSYM by UUID\n\n```bash\nxcsym find-dsym <uuid>\nxcsym find-dsym <uuid> --arch arm64\nxcsym find-dsym <uuid> --dsym-paths <a>:<b>\nxcsym find-dsym <uuid> --no-cache\nxcsym find-dsym <uuid> --no-spotlight\n```\n\nWalks the same discovery chain as `crash` minus the per-UUID explicit map (step 1) — see \"dSYM Discovery Order\" below for the authoritative order.\n\n### list-dsyms — Inventory\n\n```bash\nxcsym list-dsyms\nxcsym list-dsyms --source=archives      # only Archives\nxcsym list-dsyms --source=deriveddata   # only DerivedData\nxcsym list-dsyms --source=downloads\nxcsym list-dsyms --source=toolchain\nxcsym list-dsyms --source=frameworks\nxcsym list-dsyms --source=env\nxcsym list-dsyms --source=all           # default\nxcsym list-dsyms --dsym-paths <a>:<b>\n```\n\n### triage — Corpus Classification\n\n```bash\nxcsym triage < corpus.jsonl                                    # read NormalizedReport JSONL from stdin\nxcsym triage corpus.jsonl                                      # or from a file\nxcsym triage --latest-version 2.1.1 < corpus.jsonl            # flag issues older than this version\nxcsym triage --os-floor 18.0 < corpus.jsonl                   # flag issues below this OS floor\nxcsym triage --min-users 5 < corpus.jsonl                     # flag issues with fewer affected users\nxcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 < corpus.jsonl  # all thresholds\n```\n\nInput: one NormalizedReport JSON object per line (JSONL). Each report describes one grouped issue from Sentry or App Store Connect — `provider`, `issue_id`, `kind` (`crash` or `hang`), `impact`, `threads[]` with `frames[]` where each frame carries `in_app`. See `axiom-shipping (skills/production-triage.md)` for the full schema and provider fetch workflow.\n\nOutput: a single TriageResult JSON object to stdout with:\n- `summary` — total/crashes/hangs/skipped/clusters/flagged_noise/candidate_families\n- `issues[]` — per-issue `pattern_tag`, `pattern_confidence`, `pattern_rule_id`, `cluster_key`, `cluster_confidence`, `noise_flags[]`, `top_frames`\n- `clusters[]` — mechanical groupings by signature with `cluster_key`, `cluster_confidence`, `dominant_pattern_tag`, `issue_ids[]`, `total_users`, `total_events`\n- `errors[]` — malformed or unclassifiable reports (run still exits 0)\n\n**Network-free.** No symbolication, no dSYM discovery, no `atos`, no environment capture. Provider-symbolicated frames arrive via the NormalizedReport.\n\n**Accepts hangs.** Unlike `xcsym crash`, `triage` accepts `kind: \"hang\"` and classifies them with `anr_idle_runloop` / `anr_main_thread_block` tags. The `noise.anr_suspension.v1` rule automatically flags idle-runloop hangs as likely background suspension false-positives.\n\n**Exit codes:** 0 = success (including \"some reports skipped\" — see `errors[]`); 1 = usage error / unreadable stream / invalid flags; 8 = output write error. Never non-zero for \"found noise.\"\n\n### anonymize — Scrub PII for Fixtures\n\n```bash\nxcsym anonymize <file>                   # anonymized content to stdout (.ips, MetricKit, or .crash)\nxcsym anonymize --output <path> <file>   # write to file\nxcsym anonymize - < crash.ips            # read from stdin\n```\n\n**Scrubs:**\n- Bundle IDs across every spelling (`bundle_id`, `bundleID`, `bundleIdentifier`, `CFBundleIdentifier`, `codeSigningID`, `coalitionName`)\n- Process and app names (`procName`, `app_name`)\n- User paths (`/Users/<name>/` → `/Users/REDACTED/`)\n- `.app` names (word-boundary regex, so `com.apple.*` identifiers aren't mangled) and `.framework` names (anchored to end-of-string or `/`, so `com.framework.*` reverse-DNS segments aren't mangled)\n- IPv4 and IPv6 addresses\n- Device names and account IDs (`crashReporterKey`, `sessionID`, `incident_id`, `incident`, `deviceIdentifier`, `deviceUDID`, `userID`)\n- Binary names inside `usedImages[].name` and MetricKit `binaryName`\n- Foreign UUIDs in freeform strings (incident IDs, paths)\n- `.crash` header keys that always carry PII: `Process`, `Identifier`, `Parent Process`, `Coalition`, `Terminating Process`, `Hardware Model`, `AppVariant` — rewritten to deterministic placeholders while preserving column padding so a human can sanity-check the result\n\n**Preserves:**\n- dSYM UUIDs — `slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID` — so anonymized output still symbolicates against matching dSYMs\n- Thread names (`threads[].name`, e.g. `com.apple.main-thread`) — Apple infrastructure labels, not PII; keeping them preserves debug context\n- Library identifiers inside nested library structures (same rationale as thread names)\n- Structural fields categorize and symbolicate rules depend on (exception type, codes, subtype, thread state, frame offsets)\n\n## Output Schema\n\nTop-level JSON emitted by `crash`:\n\n```json\n{\n  \"tool\": \"xcsym\",\n  \"version\": \"0.1.0-dev\",\n  \"format\": \"standard\",\n  \"environment\": {\n    \"atos_version\": \"...\",\n    \"clt_version\": \"...\",\n    \"xcode_path\": \"/Applications/Xcode.app\"\n  },\n  \"input\": {\n    \"path\": \"testdata/crashes/ips_v2/swift_forced_unwrap.ips\",\n    \"format\": \"ips_json_v2\",  // one of: ips_json_v1 | ips_json_v2 | metrickit_json | apple_crash_text\n    \"bundle\": \"/path/to/Foo.xccrashpoint\"  // omitted unless input was a .xccrashpoint bundle\n  },\n  \"crash\": {\n    \"app\": { \"name\": \"...\", \"version\": \"...\", \"bundle_id\": \"...\" },\n    \"os\": { \"platform\": \"iOS\", \"version\": \"17.5\", \"is_simulator\": false },\n    \"arch\": \"arm64\",\n    \"exception\": { \"type\": \"EXC_BREAKPOINT\", \"codes\": \"0x1\", \"subtype\": \"...\", \"signal\": \"SIGTRAP\" },\n    \"termination\": { \"namespace\": \"SIGNAL\", \"code\": \"0x5\" },\n    \"pattern_tag\": \"swift_forced_unwrap\",\n    \"pattern_confidence\": \"high\",\n    \"pattern_rule_id\": \"R-swift-unwrap-01\",\n    \"pattern_reason\": \"exception.subtype matched '...unexpectedly found nil...'\",\n    \"crashed_thread\": { \"index\": 0, \"triggered\": true, \"frames\": [...] },\n    \"other_threads_top_frames\": [...],\n    \"all_threads\": [...]\n  },\n  \"images\": { \"matched\": [...], \"mismatched\": [...], \"missing\": [...] },\n  \"images_summary\": { \"matched_count\": 1, \"mismatched_count\": 0, \"missing_count\": 0 },\n  \"warnings\": [],\n  \"size_warning\": \"report size 54321 bytes exceeds 51200 bytes; consider --format=summary for triage\"\n}\n```\n\n### Tiers\n\n| Tier | Design target | Warns past | Contains |\n|---|---|---|---|\n| `summary` | ~2 KB | 4 KB | App, OS, exception, pattern_tag, crashed-thread top 3 frames, `images_summary` |\n| `standard` | ~12 KB | 50 KB | + full crashed thread, other threads' top frames, `images` |\n| `full` | n/a | 100 KB | + `all_threads` (every thread, every frame) |\n\nDesign targets are aspirational — small/typical crashes hit them. Real production crashes from framework-heavy apps regularly exceed them without indicating anything pathological (the `images` array dominates standard size: ~150–300 bytes per image × 45–150 images is typical). The warn threshold is what xcsym actually flags via `size_warning` in output.\n\n## Exit Codes\n\nExit codes are subcommand-specific. Usage errors, tool errors, timeouts, and output errors are shared across all subcommands. Symbolication-specific codes (2/3/4/7) vary in meaning between `crash` and `verify`.\n\n**Shared across all subcommands:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Success |\n| 1 | Usage error (bad flags, missing required args) |\n| 5 | Tool/discovery error (dwarfdump/atos failed, Spotlight failed, etc.) |\n| 6 | Command timeout |\n| 8 | Output write error (e.g., `--output` path unwritable) |\n\n**`crash` — main-image-centric:**\n\n| Code | Meaning | First thing to do |\n|---|---|---|\n| 0 | All images matched | — |\n| 2 | Input not found / unreadable / unsupported format OR main app dSYM missing | Check path exists; otherwise download the dSYM for the main UUID |\n| 3 | Main app UUID mismatch | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| 4 | Main app arch mismatch | User is on a different slice (arm64e vs arm64); use `find-dsym --arch` |\n| 7 | Main matched, some other images missing/mismatched | Partial success — frames in the main binary symbolicate, others won't |\n\n**`verify` — per-image-centric (note the 7 vs crash difference):**\n\n| Code | Meaning |\n|---|---|\n| 2 | Input not found / unreadable / unsupported format |\n| 3 | Any image has a UUID mismatch with an explicitly-overridden dSYM |\n| 4 | Any image has an arch-slice mismatch with its dSYM |\n| 7 | Any missing images (with or without matches — NOT \"main matched + others missing\") |\n\n**`find-dsym` — lookup-centric:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Match — dSYM located |\n| 2 | Miss — nothing found across every discovery source |\n\n**`list-dsyms`, `resolve`, `anonymize`:** success/failure only (0/1/5/6/8); no symbolication-specific codes.\n\nOn hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{\"tool\":\"xcsym\",\"error\":\"hang_report\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}`. Route the user to hang-diagnostics when you see `\"error\":\"hang_report\"`.\n\nOn unsupported input (anything that isn't `.ips`, MetricKit, Apple `.crash` text, or a `.xccrashpoint` bundle), `crash` exits 2 after writing `{\"tool\":\"xcsym\",\"error\":\"unsupported_format\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}` to stdout. The routing field names the accepted formats.\n\nA `.xccrashpoint` directory that exists but doesn't contain `Filters/Filter_*/Logs/*.crash` is a **distinct** error — `crash` exits 2 with `{\"error\":\"empty_bundle\",\"routing\":\"...\"}`. Agents should route the two cases separately: `unsupported_format` means the user gave xcsym the wrong file type; `empty_bundle` means the bundle is right but corrupt or stripped (re-export from Xcode Organizer).\n\nIf the resolver hits a real I/O error walking the bundle (permission denied, stale NFS handle, etc.), `crash` exits 5 (tool error) rather than mislabeling the bundle as empty.\n\n## Pattern Tag Catalog\n\nEvery `pattern_tag` xcsym can emit, with the rule that fires it:\n\n| pattern_tag | Rule ID | Confidence | Signal |\n|---|---|---|---|\n| `swift_forced_unwrap` | R-swift-unwrap-01 | high | Subtype contains \"unexpectedly found nil...\" |\n| `swift_concurrency_violation` | R-swift-conc-01 | high | `_swift_task_isCurrentExecutor` in subtype |\n| `swift_fatal_error` | R-swift-fatal-01 | high | Swift runtime failure + `_fatalError` / `_preconditionFailure` / `_assertionFailure` sentinel frame |\n| `zombie_or_heap_corruption` | R-zombie-01 | heuristic | `libgmalloc` / `NSZombie` image in the crashed thread |\n| `stack_overflow` | R-stack-overflow-01 | heuristic | `KERN_PROTECTION_FAILURE` with fault within 1 page of SP |\n| `bad_memory_access` | R-bad-access-01 | high | `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS` |\n| `illegal_instruction` | R-illegal-inst-01 | high | `EXC_BAD_INSTRUCTION` |\n| `exc_guard` | R-exc-guard-01 | high | `EXC_GUARD` |\n| `objc_exception` | R-objc-exc-01 | high | `EXC_CRASH`/SIGABRT with `objc_exception_throw` frame |\n| `main_thread_checker_violation` | R-mtc-01 | high | `main_thread_checker.dylib` in crashed frames |\n| `abort` | R-abort-01 | high | SIGABRT with `abort`/`__abort_with_payload` frame |\n| `watchdog_termination` | R-watchdog-01 | high | Termination namespace FRONTBOARD/SPRINGBOARD/ASSERTIOND + code 0x8BADF00D |\n| `user_force_quit` | R-user-quit-01 | high | FRONTBOARD + 0xDEADFA11 |\n| `background_task_expired` | R-bg-expired-01 | high | code 0xBAADCA11 (any namespace) |\n| `data_protection_violation` | R-data-prot-01 | high | code 0xdead10cc (any namespace) |\n| `code_signing_killed` | R-code-sign-01 | high | code matches `0xc51bad0[0-9a-f]` (case-insensitive, any namespace) |\n| `jetsam_oom` | R-jetsam-01 | high | `EXC_RESOURCE` with `MEMORY` subtype OR `termination.reason` contains `per-process-limit` / `vm-pageshortage` |\n| `cpu_resource_fatal` | R-cpu-fatal-01 | high | `EXC_RESOURCE` CPU/WAKEUPS FATAL (excludes NON-FATAL) |\n| `swiftui_update_loop` | R-swiftui-loop-01 | low | ≥100 consecutive `AG::Graph::update_*` frames from the top |\n| `unclassified` | — | low | No rule matched — raw fields are in `pattern_reason` |\n\n## dSYM Discovery Order\n\nSource: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact order:\n\n1. **ExplicitByUUID** — per-image overrides the `crash` subcommand builds when the header lists a main-image UUID (before any other source, including cache)\n2. **Explicit paths** — `--dsym` direct override and `--dsym-paths` extra roots\n3. **UUID cache** — `~/Library/Caches/xcsym/uuid-index.json` (skip with `--no-cache`)\n4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)\n5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)\n6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`\n7. **Frameworks (cwd scan)** — walks the current working directory plus caller-supplied roots for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as \"no match\" and the chain continues.\n8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)\n9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)\n10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)\n\n`find-dsym` follows the same chain minus step 1 (no per-UUID explicit map). `list-dsyms --source=<name>` restricts scanning to a single root by name.\n\n## Troubleshooting\n\n| Symptom | Likely cause | Fix |\n|---|---|---|\n| Exit 2, \"main dSYM missing\" | No archive for that UUID on this machine | Download the archive from App Store Connect; or set `XCSYM_DSYM_PATHS` to its location |\n| Exit 3, main UUID mismatch | Crash came from a different build than the archive on disk | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| Exit 4, main arch mismatch | arm64 vs arm64e slice mismatch | Pass `--arch` to `find-dsym`; verify the archive contains the slice |\n| Exit 7, \"main matched, others missing\" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |\n| Exit 2 with `empty_bundle` on `.xccrashpoint` | Bundle has no `Filters/Filter_*/Logs/*.crash` (corrupt or stripped) | Pull a fresh export from Xcode Organizer; or point xcsym at a specific `.crash` inside the bundle |\n| Exit 5 on `.xccrashpoint` (tool error) | Permission denied / stale mount walking `Filters/` | Check mount health and `ls -la Foo.xccrashpoint/Filters` |\n| `.xccrashpoint` with multiple builds returns the wrong one | Default picks the Filter dir with the most recent modification time | Use `--filter <substring>` to select a specific build by version/platform — prefer dash-bounded fragments like `0.8.60-Any` |\n| `pattern_tag=\"unclassified\"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |\n| `size_warning` in output | Tier exceeded its warn threshold (4 KB summary / 50 KB standard / 100 KB full) | Switch to the next smaller tier — the warning text names it |\n| `{\"error\":\"hang_report\"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |\n| `crash`/`verify` takes minutes on a long-lived dev machine | Per-image walks of a huge `~/Library/Developer/Xcode/DerivedData/**` (the `--no-cache`/`--no-spotlight` flags don't skip these) | Add `--no-defaults` to bypass all default search roots (Archives/DerivedData/Downloads/Toolchain/Frameworks(cwd)) — symbolicates from `--dsym`/`--dsym-paths`/`XCSYM_DSYM_PATHS` only; images without those report Missing |\n\n## Resources\n\n**Skills**: axiom-tools (skills/xclog-ref.md), axiom-build (skills/lldb.md, skills/lldb-ref.md, skills/xcode-debugging.md), axiom-performance (skills/memory-debugging.md, skills/metrickit-ref.md, skills/hang-diagnostics.md), axiom-shipping (skills/testflight-triage.md, skills/production-triage.md, skills/app-store-diag.md, skills/app-store-submission.md)\n\n**Agents**: crash-analyzer (single crash file: xcsym crash + pattern_tag → fix guidance), triage-analyzer (corpus triage: fetch Sentry/ASC → xcsym triage → ranked report), simulator-tester (auto-runs xcsym on crashes during test runs), test-failure-analyzer + test-debugger (symbolicate test-generated `.ips` artifacts), memory-auditor (correlates jetsam/heap-corruption tags with leak patterns), concurrency-auditor (correlates `swift_concurrency_violation` with @MainActor gaps), energy-auditor (correlates CPU/watchdog/background terminations with energy anti-patterns)\n\n**Commands**: `/axiom:analyze-crash` (single crash), `/axiom:triage` (corpus triage)\n",
+      "content": "\n# xcsym Reference (iOS/macOS Crash Symbolication)\n\nxcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's legacy `.crash` text reports, and Xcode Organizer `.xccrashpoint` bundles end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.\n\n`.crash` text is the format Xcode Organizer exposes when a user chooses \"Show in Finder\" on a TestFlight crash. `.xccrashpoint` bundles nest `.crash` files under `Filters/Filter_<id>/Logs/` (with optional `LocallySymbolicated/` siblings). Point xcsym at either the bundle path or the inner `.crash` directly — bundle inputs are walked automatically: the Filter dir with the most recent modification time wins, and the raw `.crash` is preferred over `LocallySymbolicated/`.\n\n## Invocation\n\n`xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xcsym <subcommand>` — no prefix, no path lookup.\n\n## When to Use\n\n- **Triaging a new `.ips`** — full pipeline in one call, structured JSON out\n- **TestFlight crashes** — paired with `xcsym verify` to diagnose UUID mismatches\n- **MetricKit crashes** — write `MXCrashDiagnostic.jsonRepresentation()` to disk and run `crash`\n- **Explaining why a crash is unsymbolicated** — `verify` tells you per-image UUID/arch mismatch\n- **Inventorying local dSYMs** — `list-dsyms` enumerates archives + DerivedData\n- **Scrubbing a user's crash for a fixture** — `anonymize` preserves dSYM UUIDs (correlation keys) while scrubbing PII\n\n**Do not use `xcsym crash` for hangs.** `crash` rejects `.ips` files with `bug_type=298` (exit 1, `\"error\":\"hang_report\"` on stdout). Use `xcsym triage` with `kind: \"hang\"` in the NormalizedReport for hang classification, or see `axiom-performance (skills/hang-diagnostics.md)` for single-hang investigation.\n\n## Critical Best Practices\n\n**Start with `crash`.** It runs the full pipeline (parse → discover dSYMs → symbolicate → categorize → emit JSON). Only reach for `resolve`, `find-dsym`, or `verify` when `crash` surfaces a specific problem.\n\n**Read `pattern_tag` first.** It's the most compact signal about what kind of crash you're looking at. Map it to the agent's fix-guidance table before reading frames.\n\n**Trust exit codes.** Non-zero codes say *why* symbolication was incomplete — don't assume a crashed call means the tool failed.\n\n**Anonymize before committing a fixture.** The `anonymize` subcommand is format-aware (handles `.ips` v1/v2, MetricKit, and legacy `.crash` text) and intentionally preserves dSYM UUIDs so anonymized fixtures still symbolicate against your dSYMs.\n\n## Subcommands\n\n### crash — Full Pipeline\n\n```bash\nxcsym crash --format=summary <file>             # small tier (~2KB target, warns past 4KB)\nxcsym crash --format=standard <file>            # default (~12KB target, warns past 50KB)\nxcsym crash --format=full <file>                # all threads (warns past 100KB)\nxcsym crash --from-metrickit <file>             # force MetricKit (skip auto-detect)\nxcsym crash --dsym <path> <file>                # explicit dSYM for the main app\nxcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots\nxcsym crash --no-symbolicate <file>             # skip atos; keep raw frames\nxcsym crash --no-cache <file>                   # bypass UUID cache\nxcsym crash --no-spotlight <file>               # skip mdfind lookups\nxcsym crash --no-defaults <file>                # skip Archives/DerivedData/Downloads/Toolchain/Frameworks(cwd) walks (fast triage)\nxcsym crash --output <path> <file>              # write JSON to a file\nxcsym crash --human <file>                       # terse prose summary instead of JSON (for a person)\nxcsym crash - < crash.ips                       # read from stdin (for pasted content)\nxcsym crash crash.crash                         # legacy Apple text format (Organizer export)\nxcsym crash Foo.xccrashpoint                    # Xcode Organizer bundle (auto-walks to inner .crash)\nxcsym crash --filter 0.8.60-Any Foo.xccrashpoint  # bundle with multiple Filter_* dirs: pick the one whose name contains this substring (use a dash-bounded fragment to avoid matching \"1.0\" against \"11.0.0\")\nxcsym crash --prefer-locally-symbolicated Foo.xccrashpoint  # use Logs/LocallySymbolicated/*.crash instead of raw\n```\n\nAccepted inputs: `.ips` (v1 and v2 JSON), MetricKit `MXCrashDiagnostic` JSON, Apple's legacy `.crash` text format, and `.xccrashpoint` directory bundles. The file extension doesn't matter for non-bundle inputs — format is auto-detected from content. The `.xccrashpoint` suffix is matched case-insensitively (APFS/HFS+ are case-insensitive by default). For `.xccrashpoint` bundles, xcsym walks `Filters/Filter_*/Logs/` and picks one `.crash` file: the Filter dir with the most recent modification time (override with `--filter <substring>` — substring, not segment-anchored, so prefer dash-bounded fragments like `0.8.60-Any`), raw copy preferred over `LocallySymbolicated/` (override with `--prefer-locally-symbolicated` to keep Xcode's atos output instead of re-symbolicating). The original bundle path is surfaced in `input.bundle` so consumers can tell where the resolved `.crash` came from.\n\n**Unsupported input returns exit 2** with a structured JSON reject on stdout (`{\"error\":\"unsupported_format\", …}`) so agents can route on the error field instead of scraping stderr. See the Exit Codes section below.\n\n**Output is compact JSON by default** (single-line, token-lean for LLM consumers); every report subcommand (`crash`, `resolve`, `find-dsym`, `list-dsyms`, `verify`) takes `--human` for a terse prose rendering, and `… | jq .` gives indented JSON. `anonymize` is the exception — its output is a crash document in the `.ips` wire format (compact header line + pretty payload), not a report, so it has no `--human`.\n\n**Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.\n\n### verify — dSYM Match Diagnostics\n\n```bash\nxcsym verify <file>\nxcsym verify <file> --dsym <path>\nxcsym verify <file> --dsym-paths <a>:<b>\nxcsym verify <file> --no-cache\nxcsym verify <file> --no-spotlight\n```\n\nReports which images are matched, mismatched (UUID or arch), and missing. Use when `crash` exits non-zero to pinpoint *which* dSYM is wrong.\n\n### resolve — Single-Address Resolution\n\n```bash\nxcsym resolve --dsym <path> --load-addr <hex> <addr>...\nxcsym resolve --dsym /bin/ls --load-addr 0x100000000 0x10000aabb 0x10000bbcc\nxcsym resolve --dsym <path> --load-addr <hex> --arch arm64 <addr>...\n```\n\nHands raw addresses to `atos` against a specific dSYM. Useful for one-off address resolution outside a crash context.\n\n### find-dsym — Locate dSYM by UUID\n\n```bash\nxcsym find-dsym <uuid>\nxcsym find-dsym <uuid> --arch arm64\nxcsym find-dsym <uuid> --dsym-paths <a>:<b>\nxcsym find-dsym <uuid> --no-cache\nxcsym find-dsym <uuid> --no-spotlight\n```\n\nWalks the same discovery chain as `crash` minus the per-UUID explicit map (step 1) — see \"dSYM Discovery Order\" below for the authoritative order.\n\n### list-dsyms — Inventory\n\n```bash\nxcsym list-dsyms\nxcsym list-dsyms --source=archives      # only Archives\nxcsym list-dsyms --source=deriveddata   # only DerivedData\nxcsym list-dsyms --source=downloads\nxcsym list-dsyms --source=toolchain\nxcsym list-dsyms --source=frameworks\nxcsym list-dsyms --source=env\nxcsym list-dsyms --source=all           # default\nxcsym list-dsyms --dsym-paths <a>:<b>\n```\n\n### triage — Corpus Classification\n\n```bash\nxcsym triage < corpus.jsonl                                    # read NormalizedReport JSONL from stdin\nxcsym triage corpus.jsonl                                      # or from a file\nxcsym triage --latest-version 2.1.1 < corpus.jsonl            # flag issues older than this version\nxcsym triage --os-floor 18.0 < corpus.jsonl                   # flag issues below this OS floor\nxcsym triage --min-users 5 < corpus.jsonl                     # flag issues with fewer affected users\nxcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 < corpus.jsonl  # all thresholds\n```\n\nInput: one NormalizedReport JSON object per line (JSONL). Each report describes one grouped issue from Sentry or App Store Connect — `provider`, `issue_id`, `kind` (`crash` or `hang`), `impact`, `threads[]` with `frames[]` where each frame carries `in_app`. See `axiom-shipping (skills/production-triage.md)` for the full schema and provider fetch workflow.\n\nOutput: a single TriageResult JSON object to stdout with:\n- `summary` — total/crashes/hangs/skipped/clusters/flagged_noise/candidate_families\n- `issues[]` — per-issue `pattern_tag`, `pattern_confidence`, `pattern_rule_id`, `cluster_key`, `cluster_confidence`, `noise_flags[]`, `top_frames`\n- `clusters[]` — mechanical groupings by signature with `cluster_key`, `cluster_confidence`, `dominant_pattern_tag`, `issue_ids[]`, `total_users`, `total_events`\n- `errors[]` — malformed or unclassifiable reports (run still exits 0)\n\n**Network-free.** No symbolication, no dSYM discovery, no `atos`, no environment capture. Provider-symbolicated frames arrive via the NormalizedReport.\n\n**Accepts hangs.** Unlike `xcsym crash`, `triage` accepts `kind: \"hang\"` and classifies them with `anr_idle_runloop` / `anr_main_thread_block` tags. The `noise.anr_suspension.v1` rule automatically flags idle-runloop hangs as likely background suspension false-positives.\n\n**Exit codes:** 0 = success (including \"some reports skipped\" — see `errors[]`); 1 = usage error / unreadable stream / invalid flags; 8 = output write error. Never non-zero for \"found noise.\"\n\n### anonymize — Scrub PII for Fixtures\n\n```bash\nxcsym anonymize <file>                   # anonymized content to stdout (.ips, MetricKit, or .crash)\nxcsym anonymize --output <path> <file>   # write to file\nxcsym anonymize - < crash.ips            # read from stdin\n```\n\n**Scrubs:**\n- Bundle IDs across every spelling (`bundle_id`, `bundleID`, `bundleIdentifier`, `CFBundleIdentifier`, `codeSigningID`, `coalitionName`)\n- Process and app names (`procName`, `app_name`)\n- User paths (`/Users/<name>/` → `/Users/REDACTED/`)\n- `.app` names (word-boundary regex, so `com.apple.*` identifiers aren't mangled) and `.framework` names (anchored to end-of-string or `/`, so `com.framework.*` reverse-DNS segments aren't mangled)\n- IPv4 and IPv6 addresses\n- Device names and account IDs (`crashReporterKey`, `sessionID`, `incident_id`, `incident`, `deviceIdentifier`, `deviceUDID`, `userID`)\n- Binary names inside `usedImages[].name` and MetricKit `binaryName`\n- Foreign UUIDs in freeform strings (incident IDs, paths)\n- `.crash` header keys that always carry PII: `Process`, `Identifier`, `Parent Process`, `Coalition`, `Terminating Process`, `Hardware Model`, `AppVariant` — rewritten to deterministic placeholders while preserving column padding so a human can sanity-check the result\n\n**Preserves:**\n- dSYM UUIDs — `slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID` — so anonymized output still symbolicates against matching dSYMs\n- Thread names (`threads[].name`, e.g. `com.apple.main-thread`) — Apple infrastructure labels, not PII; keeping them preserves debug context\n- Library identifiers inside nested library structures (same rationale as thread names)\n- Structural fields categorize and symbolicate rules depend on (exception type, codes, subtype, thread state, frame offsets)\n\n## Output Schema\n\nTop-level JSON emitted by `crash`:\n\n```json\n{\n  \"tool\": \"xcsym\",\n  \"version\": \"0.1.0-dev\",\n  \"format\": \"standard\",\n  \"environment\": {\n    \"atos_version\": \"...\",\n    \"clt_version\": \"...\",\n    \"xcode_path\": \"/Applications/Xcode.app\"\n  },\n  \"input\": {\n    \"path\": \"testdata/crashes/ips_v2/swift_forced_unwrap.ips\",\n    \"format\": \"ips_json_v2\",  // one of: ips_json_v1 | ips_json_v2 | metrickit_json | apple_crash_text\n    \"bundle\": \"/path/to/Foo.xccrashpoint\"  // omitted unless input was a .xccrashpoint bundle\n  },\n  \"crash\": {\n    \"app\": { \"name\": \"...\", \"version\": \"...\", \"bundle_id\": \"...\" },\n    \"os\": { \"platform\": \"iOS\", \"version\": \"17.5\", \"is_simulator\": false },\n    \"arch\": \"arm64\",\n    \"exception\": { \"type\": \"EXC_BREAKPOINT\", \"codes\": \"0x1\", \"subtype\": \"...\", \"signal\": \"SIGTRAP\" },\n    \"termination\": { \"namespace\": \"SIGNAL\", \"code\": \"0x5\" },\n    \"pattern_tag\": \"swift_forced_unwrap\",\n    \"pattern_confidence\": \"high\",\n    \"pattern_rule_id\": \"R-swift-unwrap-01\",\n    \"pattern_reason\": \"exception.subtype matched '...unexpectedly found nil...'\",\n    \"crashed_thread\": { \"index\": 0, \"triggered\": true, \"frames\": [...] },\n    \"other_threads_top_frames\": [...],\n    \"all_threads\": [...]\n  },\n  \"images\": { \"matched\": [...], \"mismatched\": [...], \"missing\": [...] },\n  \"images_summary\": { \"matched_count\": 1, \"mismatched_count\": 0, \"missing_count\": 0 },\n  \"warnings\": [],\n  \"size_warning\": \"report size 54321 bytes exceeds 51200 bytes; consider --format=summary for triage\"\n}\n```\n\n### Tiers\n\n| Tier | Design target | Warns past | Contains |\n|---|---|---|---|\n| `summary` | ~2 KB | 4 KB | App, OS, exception, pattern_tag, crashed-thread top 3 frames, `images_summary` |\n| `standard` | ~12 KB | 50 KB | + full crashed thread, other threads' top frames, `images` |\n| `full` | n/a | 100 KB | + `all_threads` (every thread, every frame) |\n\nDesign targets are aspirational — small/typical crashes hit them. Real production crashes from framework-heavy apps regularly exceed them without indicating anything pathological (the `images` array dominates standard size: ~150–300 bytes per image × 45–150 images is typical). The warn threshold is what xcsym actually flags via `size_warning` in output.\n\n## Exit Codes\n\nExit codes are subcommand-specific. Usage errors, tool errors, timeouts, and output errors are shared across all subcommands. Symbolication-specific codes (2/3/4/7) vary in meaning between `crash` and `verify`.\n\n**Shared across all subcommands:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Success |\n| 1 | Usage error (bad flags, missing required args) |\n| 5 | Tool/discovery error (dwarfdump/atos failed, Spotlight failed, etc.) |\n| 6 | Command timeout |\n| 8 | Output write error (e.g., `--output` path unwritable) |\n\n**`crash` — main-image-centric:**\n\n| Code | Meaning | First thing to do |\n|---|---|---|\n| 0 | All images matched | — |\n| 2 | Input not found / unreadable / unsupported format OR main app dSYM missing | Check path exists; otherwise download the dSYM for the main UUID |\n| 3 | Main app UUID mismatch | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| 4 | Main app arch mismatch | User is on a different slice (arm64e vs arm64); use `find-dsym --arch` |\n| 7 | Main matched, some other images missing/mismatched | Partial success — frames in the main binary symbolicate, others won't |\n\n**`verify` — per-image-centric (note the 7 vs crash difference):**\n\n| Code | Meaning |\n|---|---|\n| 2 | Input not found / unreadable / unsupported format |\n| 3 | Any image has a UUID mismatch with an explicitly-overridden dSYM |\n| 4 | Any image has an arch-slice mismatch with its dSYM |\n| 7 | Any missing images (with or without matches — NOT \"main matched + others missing\") |\n\n**`find-dsym` — lookup-centric:**\n\n| Code | Meaning |\n|---|---|\n| 0 | Match — dSYM located |\n| 2 | Miss — nothing found across every discovery source |\n\n**`list-dsyms`, `resolve`, `anonymize`:** success/failure only (0/1/5/6/8); no symbolication-specific codes.\n\nOn hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{\"tool\":\"xcsym\",\"error\":\"hang_report\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}`. Route the user to hang-diagnostics when you see `\"error\":\"hang_report\"`.\n\nOn unsupported input (anything that isn't `.ips`, MetricKit, Apple `.crash` text, or a `.xccrashpoint` bundle), `crash` exits 2 after writing `{\"tool\":\"xcsym\",\"error\":\"unsupported_format\",\"message\":\"...\",\"input\":\"...\",\"routing\":\"...\"}` to stdout. The routing field names the accepted formats.\n\nA `.xccrashpoint` directory that exists but doesn't contain `Filters/Filter_*/Logs/*.crash` is a **distinct** error — `crash` exits 2 with `{\"error\":\"empty_bundle\",\"routing\":\"...\"}`. Agents should route the two cases separately: `unsupported_format` means the user gave xcsym the wrong file type; `empty_bundle` means the bundle is right but corrupt or stripped (re-export from Xcode Organizer).\n\nIf the resolver hits a real I/O error walking the bundle (permission denied, stale NFS handle, etc.), `crash` exits 5 (tool error) rather than mislabeling the bundle as empty.\n\n## Pattern Tag Catalog\n\nEvery `pattern_tag` xcsym can emit, with the rule that fires it:\n\n| pattern_tag | Rule ID | Confidence | Signal |\n|---|---|---|---|\n| `swift_forced_unwrap` | R-swift-unwrap-01 | high | Subtype contains \"unexpectedly found nil...\" |\n| `swift_concurrency_violation` | R-swift-conc-01 | high | `_swift_task_isCurrentExecutor` in subtype |\n| `swift_fatal_error` | R-swift-fatal-01 | high | Swift runtime failure + `_fatalError` / `_preconditionFailure` / `_assertionFailure` sentinel frame |\n| `zombie_or_heap_corruption` | R-zombie-01 | heuristic | `libgmalloc` / `NSZombie` image in the crashed thread |\n| `stack_overflow` | R-stack-overflow-01 | heuristic | `KERN_PROTECTION_FAILURE` with fault within 1 page of SP |\n| `bad_memory_access` | R-bad-access-01 | high | `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS` |\n| `illegal_instruction` | R-illegal-inst-01 | high | `EXC_BAD_INSTRUCTION` |\n| `exc_guard` | R-exc-guard-01 | high | `EXC_GUARD` |\n| `objc_exception` | R-objc-exc-01 | high | `EXC_CRASH`/SIGABRT with `objc_exception_throw` frame |\n| `main_thread_checker_violation` | R-mtc-01 | high | `main_thread_checker.dylib` in crashed frames |\n| `abort` | R-abort-01 | high | SIGABRT with `abort`/`__abort_with_payload` frame |\n| `watchdog_termination` | R-watchdog-01 | high | Termination namespace FRONTBOARD/SPRINGBOARD/ASSERTIOND + code 0x8BADF00D |\n| `user_force_quit` | R-user-quit-01 | high | FRONTBOARD + 0xDEADFA11 |\n| `background_task_expired` | R-bg-expired-01 | high | code 0xBAADCA11 (any namespace) |\n| `data_protection_violation` | R-data-prot-01 | high | code 0xdead10cc (any namespace) |\n| `code_signing_killed` | R-code-sign-01 | high | code matches `0xc51bad0[0-9a-f]` (case-insensitive, any namespace) |\n| `jetsam_oom` | R-jetsam-01 | high | `EXC_RESOURCE` with `MEMORY` subtype OR `termination.reason` contains `per-process-limit` / `vm-pageshortage` |\n| `cpu_resource_fatal` | R-cpu-fatal-01 | high | `EXC_RESOURCE` CPU/WAKEUPS FATAL (excludes NON-FATAL) |\n| `swiftui_update_loop` | R-swiftui-loop-01 | low | ≥100 consecutive `AG::Graph::update_*` frames from the top |\n| `unclassified` | — | low | No rule matched — raw fields are in `pattern_reason` |\n\n## dSYM Discovery Order\n\nSource: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact order:\n\n1. **ExplicitByUUID** — per-image overrides the `crash` subcommand builds when the header lists a main-image UUID (before any other source, including cache)\n2. **Explicit paths** — `--dsym` direct override and `--dsym-paths` extra roots\n3. **UUID cache** — `~/Library/Caches/xcsym/uuid-index.json` (skip with `--no-cache`)\n4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)\n5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)\n6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`\n7. **Frameworks (cwd scan)** — walks the current working directory plus caller-supplied roots for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as \"no match\" and the chain continues.\n8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)\n9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)\n10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)\n\n`find-dsym` follows the same chain minus step 1 (no per-UUID explicit map). `list-dsyms --source=<name>` restricts scanning to a single root by name.\n\n## Troubleshooting\n\n| Symptom | Likely cause | Fix |\n|---|---|---|\n| Exit 2, \"main dSYM missing\" | No archive for that UUID on this machine | Download the archive from App Store Connect; or set `XCSYM_DSYM_PATHS` to its location |\n| Exit 3, main UUID mismatch | Crash came from a different build than the archive on disk | `xcsym find-dsym <uuid>` against the exact UUID from the crash |\n| Exit 4, main arch mismatch | arm64 vs arm64e slice mismatch | Pass `--arch` to `find-dsym`; verify the archive contains the slice |\n| Exit 7, \"main matched, others missing\" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |\n| Exit 2 with `empty_bundle` on `.xccrashpoint` | Bundle has no `Filters/Filter_*/Logs/*.crash` (corrupt or stripped) | Pull a fresh export from Xcode Organizer; or point xcsym at a specific `.crash` inside the bundle |\n| Exit 5 on `.xccrashpoint` (tool error) | Permission denied / stale mount walking `Filters/` | Check mount health and `ls -la Foo.xccrashpoint/Filters` |\n| `.xccrashpoint` with multiple builds returns the wrong one | Default picks the Filter dir with the most recent modification time | Use `--filter <substring>` to select a specific build by version/platform — prefer dash-bounded fragments like `0.8.60-Any` |\n| `pattern_tag=\"unclassified\"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |\n| `size_warning` in output | Tier exceeded its warn threshold (4 KB summary / 50 KB standard / 100 KB full) | Switch to the next smaller tier — the warning text names it |\n| `{\"error\":\"hang_report\"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |\n| `crash`/`verify` takes minutes on a long-lived dev machine | Per-image walks of a huge `~/Library/Developer/Xcode/DerivedData/**` (the `--no-cache`/`--no-spotlight` flags don't skip these) | Add `--no-defaults` to bypass all default search roots (Archives/DerivedData/Downloads/Toolchain/Frameworks(cwd)) — symbolicates from `--dsym`/`--dsym-paths`/`XCSYM_DSYM_PATHS` only; images without those report Missing |\n\n## Resources\n\n**Skills**: axiom-tools (skills/xclog-ref.md), axiom-build (skills/lldb.md, skills/lldb-ref.md, skills/xcode-debugging.md), axiom-performance (skills/memory-debugging.md, skills/metrickit-ref.md, skills/hang-diagnostics.md), axiom-shipping (skills/testflight-triage.md, skills/production-triage.md, skills/app-store-diag.md, skills/app-store-submission.md)\n\n**Agents**: crash-analyzer (single crash file: xcsym crash + pattern_tag → fix guidance), triage-analyzer (corpus triage: fetch Sentry/ASC → xcsym triage → ranked report), simulator-tester (auto-runs xcsym on crashes during test runs), test-failure-analyzer + test-debugger (symbolicate test-generated `.ips` artifacts), memory-auditor (correlates jetsam/heap-corruption tags with leak patterns), concurrency-auditor (correlates `swift_concurrency_violation` with @MainActor gaps), energy-auditor (correlates CPU/watchdog/background terminations with energy anti-patterns)\n\n**Commands**: `/axiom:analyze-crash` (single crash), `/axiom:triage` (corpus triage)\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -36548,84 +36548,84 @@
           "heading": "_preamble",
           "level": 0,
           "startLine": 0,
-          "endLine": 5,
-          "charCount": 287
+          "endLine": 0,
+          "charCount": 0
         },
         {
           "heading": "xcsym Reference (iOS/macOS Crash Symbolication)",
           "level": 1,
-          "startLine": 6,
-          "endLine": 11,
+          "startLine": 1,
+          "endLine": 6,
           "charCount": 961
         },
         {
           "heading": "Invocation",
           "level": 2,
-          "startLine": 12,
-          "endLine": 15,
+          "startLine": 7,
+          "endLine": 10,
           "charCount": 179
         },
         {
           "heading": "When to Use",
           "level": 2,
-          "startLine": 16,
-          "endLine": 26,
+          "startLine": 11,
+          "endLine": 21,
           "charCount": 878
         },
         {
           "heading": "Critical Best Practices",
           "level": 2,
-          "startLine": 27,
-          "endLine": 36,
+          "startLine": 22,
+          "endLine": 31,
           "charCount": 781
         },
         {
           "heading": "Subcommands",
           "level": 2,
-          "startLine": 37,
-          "endLine": 166,
+          "startLine": 32,
+          "endLine": 161,
           "charCount": 8819
         },
         {
           "heading": "Output Schema",
           "level": 2,
-          "startLine": 167,
-          "endLine": 216,
+          "startLine": 162,
+          "endLine": 211,
           "charCount": 2214
         },
         {
           "heading": "Exit Codes",
           "level": 2,
-          "startLine": 217,
-          "endLine": 266,
+          "startLine": 212,
+          "endLine": 261,
           "charCount": 2894
         },
         {
           "heading": "Pattern Tag Catalog",
           "level": 2,
-          "startLine": 267,
-          "endLine": 293,
+          "startLine": 262,
+          "endLine": 288,
           "charCount": 2201
         },
         {
           "heading": "dSYM Discovery Order",
           "level": 2,
-          "startLine": 294,
-          "endLine": 310,
+          "startLine": 289,
+          "endLine": 305,
           "charCount": 1499
         },
         {
           "heading": "Troubleshooting",
           "level": 2,
-          "startLine": 311,
-          "endLine": 326,
+          "startLine": 306,
+          "endLine": 321,
           "charCount": 2172
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 327,
-          "endLine": 334,
+          "startLine": 322,
+          "endLine": 329,
           "charCount": 1031
         }
       ]
@@ -42003,7 +42003,7 @@
           2,
           1,
           43,
-          500
+          496
         ],
         "124": [
           4,
@@ -42640,7 +42640,7 @@
           2,
           1,
           62,
-          626
+          622
         ],
         "215": [
           3,
@@ -42703,7 +42703,7 @@
           51,
           2,
           26,
-          861
+          854
         ],
         "224": [
           4,
@@ -42865,7 +42865,7 @@
         17.077235772357735,
         4.1016260162601625,
         43.88617886178864,
-        628.008130081301
+        627.9471544715444
       ],
       "storedFields": {
         "0": {
@@ -51745,7 +51745,7 @@
               "223": 1
             },
             "4": {
-              "223": 17
+              "223": 16
             }
           }
         ],
@@ -51934,7 +51934,7 @@
               "191": 9,
               "192": 6,
               "222": 2,
-              "223": 79
+              "223": 77
             }
           }
         ],
@@ -53929,7 +53929,7 @@
               "30": 1,
               "81": 2,
               "83": 9,
-              "123": 21,
+              "123": 20,
               "180": 2,
               "200": 7,
               "208": 1
@@ -59514,7 +59514,7 @@
               "210": 2,
               "211": 4,
               "213": 3,
-              "214": 20,
+              "214": 19,
               "215": 4,
               "226": 2,
               "234": 4,
@@ -61763,7 +61763,7 @@
               "219": 1,
               "220": 8,
               "221": 1,
-              "223": 10,
+              "223": 9,
               "225": 2,
               "226": 3,
               "227": 14,
@@ -89702,7 +89702,7 @@
               "219": 4,
               "221": 17,
               "222": 2,
-              "223": 25,
+              "223": 24,
               "224": 3,
               "236": 7,
               "238": 13,
@@ -100419,7 +100419,7 @@
               "208": 10,
               "209": 2,
               "212": 3,
-              "214": 6,
+              "214": 5,
               "224": 1,
               "240": 1
             }
@@ -111256,7 +111256,7 @@
               "220": 24,
               "221": 3,
               "222": 1,
-              "223": 2,
+              "223": 1,
               "224": 1,
               "225": 2,
               "226": 1,
@@ -111649,7 +111649,7 @@
               "214": 2,
               "220": 12,
               "222": 1,
-              "223": 4,
+              "223": 3,
               "228": 2,
               "230": 1,
               "231": 1,
@@ -114463,7 +114463,7 @@
               "211": 2,
               "216": 2,
               "222": 2,
-              "223": 30,
+              "223": 29,
               "229": 1,
               "234": 1,
               "244": 2
@@ -117400,7 +117400,7 @@
               "120": 22,
               "121": 1,
               "122": 6,
-              "123": 14,
+              "123": 13,
               "124": 21,
               "125": 13,
               "126": 5,
@@ -117491,7 +117491,7 @@
               "211": 18,
               "212": 5,
               "213": 13,
-              "214": 35,
+              "214": 34,
               "215": 17,
               "216": 8,
               "217": 8,
@@ -117500,7 +117500,7 @@
               "220": 3,
               "221": 10,
               "222": 2,
-              "223": 11,
+              "223": 9,
               "224": 3,
               "225": 18,
               "226": 26,
@@ -121341,7 +121341,7 @@
               "120": 2,
               "121": 1,
               "122": 6,
-              "123": 16,
+              "123": 15,
               "124": 16,
               "125": 4,
               "126": 3,
@@ -121419,7 +121419,7 @@
               "211": 13,
               "212": 6,
               "213": 72,
-              "214": 6,
+              "214": 5,
               "215": 15,
               "216": 2,
               "217": 12,
@@ -125676,7 +125676,7 @@
               "118": 15,
               "119": 31,
               "120": 5,
-              "123": 55,
+              "123": 54,
               "124": 51,
               "125": 23,
               "126": 5,
@@ -129454,11 +129454,8 @@
               "36": 1,
               "43": 1,
               "49": 1,
-              "123": 1,
               "154": 1,
-              "188": 2,
-              "214": 1,
-              "223": 1
+              "188": 2
             }
           }
         ],
@@ -131306,7 +131303,7 @@
               "110": 3,
               "111": 2,
               "114": 1,
-              "123": 28,
+              "123": 27,
               "126": 1,
               "129": 1,
               "130": 1,
@@ -134265,7 +134262,7 @@
               "210": 2,
               "215": 2,
               "216": 2,
-              "223": 5,
+              "223": 4,
               "226": 1,
               "229": 1,
               "232": 3,
@@ -144150,7 +144147,7 @@
               "217": 3,
               "218": 2,
               "221": 8,
-              "223": 30,
+              "223": 29,
               "224": 2,
               "226": 1,
               "228": 1,
@@ -145165,7 +145162,7 @@
           {
             "4": {
               "48": 1,
-              "223": 3
+              "223": 2
             }
           }
         ],
@@ -149227,7 +149224,7 @@
               "73": 1,
               "74": 2,
               "112": 1,
-              "123": 2,
+              "123": 1,
               "124": 1,
               "140": 1,
               "159": 1,
@@ -150880,7 +150877,7 @@
             "4": {
               "51": 1,
               "124": 3,
-              "214": 8,
+              "214": 7,
               "237": 1
             }
           }
@@ -153918,7 +153915,7 @@
               "123": 1
             },
             "4": {
-              "123": 3,
+              "123": 2,
               "124": 2,
               "159": 3,
               "162": 3,
@@ -163164,7 +163161,7 @@
               "101": 1,
               "103": 1,
               "119": 1,
-              "123": 16,
+              "123": 15,
               "124": 1,
               "125": 3,
               "161": 1,
@@ -174326,7 +174323,7 @@
               "124": 2,
               "198": 10,
               "208": 3,
-              "214": 6,
+              "214": 4,
               "219": 1
             }
           }
@@ -174359,7 +174356,7 @@
               "206": 1,
               "208": 13,
               "212": 16,
-              "214": 198,
+              "214": 193,
               "220": 1,
               "227": 5,
               "228": 2,
@@ -175784,7 +175781,7 @@
               "101": 1,
               "117": 2,
               "120": 1,
-              "123": 33,
+              "123": 32,
               "125": 3,
               "130": 2,
               "132": 13,
@@ -176749,7 +176746,7 @@
               "219": 28,
               "221": 4,
               "222": 2,
-              "223": 9,
+              "223": 8,
               "224": 1,
               "225": 2,
               "226": 6,
@@ -185044,7 +185041,7 @@
               "118": 10,
               "120": 1,
               "121": 2,
-              "123": 3,
+              "123": 2,
               "124": 10,
               "126": 4,
               "127": 3,
@@ -185118,7 +185115,7 @@
               "211": 4,
               "212": 22,
               "213": 9,
-              "214": 9,
+              "214": 8,
               "215": 9,
               "216": 4,
               "217": 7,
@@ -185127,7 +185124,7 @@
               "220": 4,
               "221": 5,
               "222": 4,
-              "223": 12,
+              "223": 11,
               "224": 1,
               "225": 3,
               "226": 8,
@@ -191781,7 +191778,7 @@
               "211": 5,
               "212": 1,
               "213": 5,
-              "214": 2,
+              "214": 1,
               "218": 6,
               "219": 1,
               "220": 27,
@@ -194237,7 +194234,7 @@
               "82": 1,
               "103": 5,
               "115": 1,
-              "123": 3,
+              "123": 2,
               "154": 1,
               "186": 1,
               "187": 5,
@@ -197219,7 +197216,6 @@
               "112": 7,
               "113": 4,
               "120": 1,
-              "123": 1,
               "128": 2,
               "129": 4,
               "130": 2,
@@ -197252,14 +197248,12 @@
               "196": 2,
               "200": 2,
               "207": 1,
-              "214": 1,
               "215": 1,
               "216": 1,
               "218": 4,
               "219": 3,
               "220": 1,
               "221": 2,
-              "223": 1,
               "225": 3,
               "231": 1,
               "232": 1,
@@ -198999,8 +198993,7 @@
               "185": 1,
               "192": 1,
               "202": 1,
-              "203": 2,
-              "223": 1
+              "203": 2
             }
           }
         ],
@@ -202677,7 +202670,7 @@
               "188": 1,
               "191": 1,
               "192": 5,
-              "223": 18
+              "223": 17
             }
           }
         ],
@@ -204269,7 +204262,7 @@
               "209": 17,
               "212": 4,
               "213": 20,
-              "214": 65,
+              "214": 63,
               "215": 1,
               "217": 1,
               "219": 9,
@@ -207109,7 +207102,7 @@
               "13": 1,
               "64": 1,
               "200": 6,
-              "223": 3
+              "223": 2
             }
           }
         ],
@@ -218359,7 +218352,7 @@
               "119": 11,
               "120": 9,
               "122": 3,
-              "123": 10,
+              "123": 9,
               "124": 17,
               "125": 8,
               "126": 5,
@@ -218447,7 +218440,7 @@
               "211": 13,
               "212": 15,
               "213": 23,
-              "214": 14,
+              "214": 13,
               "215": 5,
               "216": 5,
               "217": 1,
@@ -218455,7 +218448,7 @@
               "220": 2,
               "221": 3,
               "222": 7,
-              "223": 7,
+              "223": 6,
               "224": 5,
               "225": 8,
               "226": 21,
@@ -225767,7 +225760,7 @@
               "118": 1,
               "119": 4,
               "120": 16,
-              "123": 34,
+              "123": 33,
               "124": 5,
               "125": 25,
               "127": 4,
@@ -228429,7 +228422,7 @@
               "120": 8,
               "121": 10,
               "122": 20,
-              "123": 90,
+              "123": 88,
               "124": 38,
               "125": 14,
               "126": 16,
@@ -228514,7 +228507,7 @@
               "211": 4,
               "212": 45,
               "213": 30,
-              "214": 63,
+              "214": 61,
               "215": 7,
               "217": 1,
               "218": 11,
@@ -229585,7 +229578,7 @@
               "210": 7,
               "211": 7,
               "212": 5,
-              "214": 10,
+              "214": 9,
               "220": 16,
               "221": 1,
               "223": 2,
@@ -229851,7 +229844,7 @@
               "120": 15,
               "121": 12,
               "122": 6,
-              "123": 22,
+              "123": 21,
               "124": 35,
               "125": 25,
               "126": 25,
@@ -229925,7 +229918,7 @@
               "211": 38,
               "212": 31,
               "213": 77,
-              "214": 21,
+              "214": 20,
               "215": 65,
               "216": 27,
               "217": 16,
@@ -232311,7 +232304,7 @@
               "120": 4,
               "121": 3,
               "122": 5,
-              "123": 32,
+              "123": 31,
               "124": 10,
               "125": 5,
               "126": 2,
@@ -232504,7 +232497,7 @@
               "191": 1,
               "192": 3,
               "222": 1,
-              "223": 7
+              "223": 6
             }
           }
         ],
@@ -233026,7 +233019,7 @@
               "192": 15,
               "215": 2,
               "222": 5,
-              "223": 20
+              "223": 19
             }
           }
         ],
@@ -233108,7 +233101,7 @@
           {
             "4": {
               "165": 3,
-              "223": 2
+              "223": 1
             }
           }
         ],
@@ -235709,7 +235702,7 @@
               "116": 1,
               "118": 1,
               "119": 31,
-              "123": 30,
+              "123": 28,
               "124": 12,
               "125": 16,
               "131": 47,
@@ -237279,7 +237272,7 @@
               "205": 3,
               "206": 1,
               "208": 1,
-              "214": 31,
+              "214": 30,
               "225": 3
             }
           }
@@ -238864,7 +238857,6 @@
               "207": 1,
               "210": 1,
               "213": 1,
-              "223": 1,
               "226": 1,
               "230": 1,
               "233": 1,
@@ -246567,7 +246559,7 @@
               "118": 1,
               "119": 2,
               "120": 3,
-              "123": 137,
+              "123": 132,
               "124": 3,
               "125": 17,
               "127": 12,
@@ -247468,7 +247460,7 @@
               "52": 1,
               "55": 2,
               "117": 2,
-              "123": 7,
+              "123": 6,
               "132": 1,
               "150": 1,
               "198": 7,
@@ -250221,7 +250213,7 @@
               "106": 2,
               "108": 1,
               "120": 3,
-              "123": 21,
+              "123": 20,
               "124": 7,
               "128": 2,
               "134": 1,
@@ -251025,7 +251017,6 @@
               "102": 2,
               "103": 1,
               "104": 1,
-              "123": 1,
               "126": 1,
               "132": 1,
               "134": 1,
@@ -260408,7 +260399,7 @@
               "211": 2,
               "218": 26,
               "221": 10,
-              "223": 87,
+              "223": 85,
               "226": 7,
               "232": 3,
               "235": 3,
@@ -260992,7 +260983,7 @@
               "135": 1,
               "187": 1,
               "198": 1,
-              "214": 2
+              "214": 1
             }
           }
         ],
@@ -261116,7 +261107,7 @@
               "198": 4,
               "208": 13,
               "209": 1,
-              "214": 18,
+              "214": 17,
               "238": 3
             }
           }
@@ -263609,7 +263600,6 @@
               "173": 2,
               "187": 1,
               "222": 1,
-              "223": 1,
               "224": 2,
               "242": 1,
               "244": 1,
@@ -283366,7 +283356,7 @@
               "194": 2,
               "195": 1,
               "222": 9,
-              "223": 7,
+              "223": 6,
               "232": 2,
               "233": 1
             }
@@ -284407,10 +284397,7 @@
             "4": {
               "36": 1,
               "43": 1,
-              "118": 1,
-              "123": 1,
-              "214": 1,
-              "223": 1
+              "118": 1
             }
           }
         ],
@@ -285720,7 +285707,7 @@
               "172": 2,
               "178": 2,
               "179": 1,
-              "223": 3,
+              "223": 2,
               "232": 1
             }
           }
@@ -290043,7 +290030,7 @@
             "4": {
               "118": 1,
               "120": 2,
-              "123": 4,
+              "123": 3,
               "124": 1,
               "125": 1,
               "147": 1,
@@ -290302,7 +290289,7 @@
               "120": 10,
               "121": 10,
               "122": 14,
-              "123": 47,
+              "123": 46,
               "124": 32,
               "125": 8,
               "130": 1,
@@ -290348,7 +290335,7 @@
               "210": 2,
               "212": 8,
               "213": 10,
-              "214": 21,
+              "214": 20,
               "215": 1,
               "218": 3,
               "222": 4,
@@ -292991,7 +292978,6 @@
               "211": 17,
               "212": 4,
               "213": 1,
-              "214": 1,
               "236": 1,
               "237": 2
             }
@@ -295903,7 +295889,7 @@
               "192": 12,
               "205": 3,
               "215": 1,
-              "223": 10,
+              "223": 9,
               "240": 2
             }
           }
@@ -297693,7 +297679,7 @@
               "220": 62,
               "221": 13,
               "222": 2,
-              "223": 9,
+              "223": 8,
               "224": 2,
               "225": 3,
               "226": 7,
@@ -302816,7 +302802,7 @@
               "120": 54,
               "121": 2,
               "122": 7,
-              "123": 45,
+              "123": 44,
               "124": 24,
               "125": 24,
               "126": 2,
@@ -306636,14 +306622,6 @@
               "151": 1,
               "165": 1,
               "223": 3
-            }
-          }
-        ],
-        [
-          "anonymiz",
-          {
-            "4": {
-              "223": 1
             }
           }
         ],
@@ -311141,7 +311119,7 @@
               "123": 1
             },
             "4": {
-              "123": 2
+              "123": 1
             }
           }
         ],
@@ -312071,7 +312049,7 @@
               "120": 9,
               "121": 5,
               "122": 3,
-              "123": 6,
+              "123": 5,
               "124": 6,
               "125": 2,
               "126": 5,
@@ -312151,7 +312129,7 @@
               "211": 3,
               "212": 6,
               "213": 5,
-              "214": 11,
+              "214": 10,
               "215": 6,
               "216": 1,
               "217": 10,
@@ -462102,36 +462080,7 @@
       },
       "axiom-macos--settings": {
         "_preamble": [
-          "preamble",
-          "name",
-          "macos",
-          "settings",
-          "descrip",
-          "use",
-          "when",
-          "add",
-          "mac",
-          "os",
-          "preferences",
-          "scene",
-          "swift",
-          "ui",
-          "app",
-          "declara",
-          "tab",
-          "view",
-          "pane",
-          "structure",
-          "siz",
-          "link",
-          "@app",
-          "storage",
-          "persistence",
-          "adjacency",
-          "open",
-          "system",
-          "license",
-          "mit"
+          "preamble"
         ],
         "macOS Settings Scene": [
           "mac",
@@ -584583,30 +584532,7 @@
       },
       "axiom-swiftui--toolbars": {
         "_preamble": [
-          "preamble",
-          "name",
-          "swiftui",
-          "toolbars",
-          "descrip",
-          "use",
-          "when",
-          "add",
-          "customiz",
-          "debugg",
-          "swift",
-          "ui",
-          "os",
-          "mac",
-          "toolbar",
-          "modifier",
-          "item",
-          "group",
-          "spacer",
-          "placements",
-          "customiza",
-          "role",
-          "license",
-          "mit"
+          "preamble"
         ],
         "SwiftUI Toolbars": [
           "swift",
@@ -593449,38 +593375,7 @@
       },
       "axiom-tools--xcsym-ref": {
         "_preamble": [
-          "preamble",
-          "name",
-          "xcsym",
-          "ref",
-          "descrip",
-          "use",
-          "when",
-          "symbolicat",
-          "ips",
-          "metric",
-          "kit",
-          "legacy",
-          "crash",
-          "text",
-          "file",
-          "xccrashpoint",
-          "bundle",
-          "diagnos",
-          "sym",
-          "uuid",
-          "mismatches",
-          "inventory",
-          "sy",
-          "ms",
-          "anonymiz",
-          "fixture",
-          "reference",
-          "cli",
-          "ships",
-          "axiom",
-          "license",
-          "mit"
+          "preamble"
         ],
         "xcsym Reference (iOS/macOS Crash Symbolication)": [
           "xcsym",

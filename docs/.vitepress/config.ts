@@ -3,7 +3,7 @@ import { withMermaid } from 'vitepress-plugin-mermaid'
 
 export default withMermaid(defineConfig({
   title: 'Axiom',
-  description: 'Battle-tested Claude Code skills, autonomous agents, and references for Apple platform development',
+  description: 'Battle-tested Claude Code skills, autonomous agents, and tools for Apple platform development',
   base: '/Axiom/',
   srcExclude: [
     '**/public/plugins/**',
@@ -19,12 +19,12 @@ export default withMermaid(defineConfig({
   head: [
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Axiom — Claude Code Agents for iOS Development' }],
-    ['meta', { property: 'og:description', content: 'Battle-tested Claude Code agents, skills, and references for modern xOS development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more' }],
+    ['meta', { property: 'og:description', content: 'Battle-tested Claude Code skills, agents, and tools for modern xOS development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more' }],
     ['meta', { property: 'og:image', content: 'https://charleswiltgen.github.io/Axiom/og-image.png' }],
     ['meta', { property: 'og:url', content: 'https://charleswiltgen.github.io/Axiom/' }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { name: 'twitter:title', content: 'Axiom — Claude Code Agents for iOS Development' }],
-    ['meta', { name: 'twitter:description', content: 'Battle-tested Claude Code agents, skills, and references for modern xOS development' }],
+    ['meta', { name: 'twitter:description', content: 'Battle-tested Claude Code skills, agents, and tools for modern xOS development' }],
     ['meta', { name: 'twitter:image', content: 'https://charleswiltgen.github.io/Axiom/og-image.png' }],
   ],
 
@@ -700,7 +700,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v3.10.1'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v3.10.2'
     }
   }
 }))
