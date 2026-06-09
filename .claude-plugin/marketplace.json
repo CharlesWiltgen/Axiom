@@ -1,7 +1,7 @@
 {
   "name": "axiom-marketplace",
   "metadata": {
-    "description": "Battle-tested Claude Code agents, skills, and references for modern xOS development"
+    "description": "Battle-tested Claude Code skills, agents, and tools for modern xOS development"
   },
   "owner": {
     "name": "Charles Wiltgen",
@@ -10,9 +10,9 @@
   "plugins": [
     {
       "name": "axiom",
-      "version": "3.10.1",
+      "version": "3.10.2",
       "source": "./.claude-plugin/plugins/axiom",
-      "description": "Battle-tested Claude Code agents, skills, and references for modern xOS (iOS, iPadOS, macOS, watchOS, tvOS) development",
+      "description": "Battle-tested Claude Code skills, agents, and tools for modern xOS (iOS, iPadOS, macOS, watchOS, tvOS) development",
       "author": {
         "name": "Charles Wiltgen"
       }
