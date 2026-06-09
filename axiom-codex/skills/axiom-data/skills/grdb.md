@@ -86,6 +86,8 @@ let dbPool = try DatabasePool(path: dbPath)
 
 ## Record Types
 
+> A nested `Codable` property (array, dictionary, or struct) is stored as a JSON string automatically. For querying inside those columns (`JSONColumn`, `->>`, the `Database.json*` functions), JSONB, and indexing JSON fields, see `sql-json-ref.md`.
+
 ### Using Codable
 
 ```swift

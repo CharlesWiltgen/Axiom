@@ -590,6 +590,8 @@ let itemsJson = try Store.group(by: \.id)
 
 Options: `.groupConcat(distinct: true)`, `.groupConcat(order: { $0.asc() })`, `.jsonGroupArray(filter: $1.isActive)`, `jsonObject("key", $0.value)`.
 
+For storing a Codable value in a JSON column (`@Column(as: [T].JSONRepresentation.self)`), extracting fields, and indexing them, see `sql-json-ref.md`.
+
 ### Conditional Aggregation
 
 All aggregate functions accept a `filter:` parameter:

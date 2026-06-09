@@ -563,6 +563,7 @@ export default withMermaid(defineConfig({
             { text: 'iCloud Drive', link: '/reference/icloud-drive-ref' },
             { text: 'File Protection', link: '/reference/file-protection-ref' },
             { text: 'SQLite FTS5', link: '/reference/sqlite-fts-ref' },
+            { text: 'SQLite JSON', link: '/reference/sql-json-ref' },
             { text: 'SQLiteData', link: '/reference/sqlitedata-ref' },
             { text: 'Storage Management', link: '/reference/storage-management-ref' },
             { text: 'Realm Migration', link: '/reference/realm-migration-ref' }
