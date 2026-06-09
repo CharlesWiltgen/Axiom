@@ -1,8 +1,3 @@
----
-name: xcsym-ref
-description: Use when symbolicating an .ips, MetricKit, legacy .crash text file, or .xccrashpoint bundle, diagnosing dSYM UUID mismatches, inventorying dSYMs, or anonymizing a crash for fixture use. Reference for the xcsym CLI that ships with Axiom.
-license: MIT
----
 
 # xcsym Reference (iOS/macOS Crash Symbolication)
 

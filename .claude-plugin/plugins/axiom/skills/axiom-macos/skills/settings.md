@@ -1,8 +1,3 @@
----
-name: macos-settings
-description: Use when adding a macOS Settings (Preferences) scene to a SwiftUI app — Settings scene declaration, TabView pane structure, sizing, SettingsLink, @AppStorage persistence, and iOS adjacency (opening system Settings).
-license: MIT
----
 
 # macOS Settings Scene
 
