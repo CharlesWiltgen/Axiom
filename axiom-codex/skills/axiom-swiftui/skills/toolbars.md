@@ -1,8 +1,3 @@
----
-name: swiftui-toolbars
-description: Use when adding, customizing, or debugging SwiftUI toolbars on iOS or macOS — .toolbar modifier, ToolbarItem, ToolbarItemGroup, ToolbarSpacer, placements, customization, ToolbarRole.
-license: MIT
----
 
 # SwiftUI Toolbars
 
