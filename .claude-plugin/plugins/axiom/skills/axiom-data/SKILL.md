@@ -32,6 +32,7 @@ Use this skill when working with:
 | GRDB queries, ValueObservation, DatabaseMigrator | See `skills/grdb.md` |
 | GRDB performance, indexes, EXPLAIN QUERY PLAN, cursors | See `skills/grdb-performance.md` |
 | Full-text search (FTS5) in GRDB or SQLiteData | See `skills/sqlite-fts-ref.md` |
+| Storing or querying JSON inside a SQLite column (JSON1, JSONB) | See `skills/sql-json-ref.md` |
 | GRDB shared across app + widget/extension (App Group) | See `skills/grdb-app-groups.md` |
 | SQLiteData @Table, CRUD, SyncEngine | See `skills/sqlitedata.md` |
 | SQLiteData advanced patterns, CTEs, views | See `skills/sqlitedata-ref.md` |
