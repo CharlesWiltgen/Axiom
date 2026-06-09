@@ -19,8 +19,8 @@
  * detected: the convention is to pass the binary name as a literal at the bin/
  * site so coverage stays statically verifiable.
  */
-import { readdirSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const SEGMENT_PAIR = /['"`]bin['"`]\s*,\s*['"`]([a-z][\w-]*)['"`]/g;
 const PATH_LITERAL = /['"`](?:[^'"`]*\/)?bin\/([a-z][\w-]*)['"`]/g;
