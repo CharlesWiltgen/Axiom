@@ -15,9 +15,10 @@ license: MIT
 | Outdated Swift patterns (Date(), CGFloat, DateFormatter) | See `skills/swift-modern.md` |
 | Foundation modernization (FormatStyle, URL.documentsDirectory) | See `skills/swift-modern.md` |
 | Common Claude hallucinations in Swift code | See `skills/swift-modern.md` |
+| Swift 6.4 idioms — `anyAppleOS`, `weak let`, `~Sendable` (`OS27`) | See `skills/swift-modern.md` |
 | Noncopyable types (~Copyable) | See `skills/ownership-conventions.md` |
 | borrowing/consuming parameter ownership | See `skills/ownership-conventions.md` |
-| InlineArray, Span, value generics | See `skills/ownership-conventions.md` |
+| InlineArray, Span, value generics; Swift 6.4 `borrow`/`mutate` accessors (`OS27`) | See `skills/ownership-conventions.md` |
 | Reducing ARC overhead | See `skills/ownership-conventions.md` |
 | Drag and drop (.draggable, .dropDestination) | See `skills/transferable-ref.md` |
 | Copy/paste (.copyable, PasteButton) | See `skills/transferable-ref.md` |
@@ -83,7 +84,7 @@ digraph swift {
 - 12+ outdated patterns Claude defaults to (Date(), CGFloat, DateFormatter, DispatchQueue.main.async)
 - Foundation modernization (FormatStyle, URL.documentsDirectory, .replacing())
 - SwiftUI convenience APIs Claude misses (ContentUnavailableView.search, LabeledContent)
-- Swift 6.3 concurrency posture defaults
+- Swift 6.4 concurrency posture defaults
 - 9 common Claude hallucinations with corrections
 
 **Ownership & Noncopyable Types** (`skills/ownership-conventions.md`):

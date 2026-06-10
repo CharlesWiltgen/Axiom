@@ -24,6 +24,7 @@ Use this skill when:
 - "How do I test async code without flaky failures?"
 - "Should I use Swift Testing or XCTest?"
 - "How do I migrate from XCTest?"
+- "How do I record a non-fatal warning or cancel a test mid-run?" (iOS 27)
 
 ## What This Skill Provides
 

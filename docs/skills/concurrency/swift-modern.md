@@ -16,13 +16,15 @@ Use this skill when:
 - "Is there a more modern way to write this?"
 - "Why am I using DateFormatter when I could use FormatStyle?"
 - "Check if my Foundation usage is current"
+- "How do I write availability for all Apple platforms with anyAppleOS?" (iOS 27)
 
 ## What This Skill Provides
 
 - **Modern API replacements** — 11 common outdated patterns with modern equivalents and Swift version requirements
 - **Modern syntax** — Shorthand syntax, static member lookup, expression returns
 - **Foundation modernization** — URL APIs, date parsing, name formatting, sort patterns
-- **Claude hallucination corrections** — 5 specific patterns Claude generates incorrectly
+- **Swift 6.4 language features (iOS 27)** — `anyAppleOS` availability, `weak let`, `~Sendable`, the unhandled-`Task`-error warning
+- **Claude hallucination corrections** — patterns Claude generates incorrectly
 
 ## Philosophy
 

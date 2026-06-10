@@ -2,7 +2,7 @@
 # Swift 6 Concurrency Guide
 
 **Purpose**: Progressive journey from single-threaded to concurrent Swift code
-**Swift Version**: Swift 6.3 (strict concurrency by default). `@concurrent` requires the Swift 6.2+ toolchain (compile-time only) — it imposes NO deployment-target floor and back-deploys via the concurrency runtime (iOS 13+).
+**Swift Version**: Swift 6.4 (ships with Xcode 27; strict concurrency by default). `@concurrent` requires the Swift 6.2+ toolchain (compile-time only) — it imposes NO deployment-target floor and back-deploys via the concurrency runtime (iOS 13+).
 **iOS Version**: iOS 17+
 **Xcode**: Xcode 16+ (Xcode 26+ for `@concurrent`)
 
@@ -978,6 +978,38 @@ actor DatabaseQueryExecutor {
 
 ---
 
+## Structured Progress Reporting — `ProgressManager` (OS27)
+
+Foundation's `ProgressManager` (`OS27`) is the modern, `Sendable` replacement for `NSProgress`'s implicit current-progress tree. A parent hands each child operation a **consuming `Subprogress` token** for its slice of the total — the token is `~Copyable`, so it can't be duplicated or reused, which makes the progress tree explicit and race-free across async boundaries.
+
+```swift
+import Foundation
+
+func importLibrary() async throws {
+    let progress = ProgressManager(totalCount: 100)
+
+    let fileSlice = progress.subprogress(assigningCount: 60)   // hand out a slice
+    try await importFiles(reporting: fileSlice)
+
+    let indexSlice = progress.subprogress(assigningCount: 40)
+    try await rebuildIndex(reporting: indexSlice)
+}
+
+func importFiles(reporting subprogress: consuming Subprogress) async throws {
+    let progress = subprogress.start(totalCount: filePaths.count)   // child starts its own manager
+    for path in filePaths {
+        try await importOne(path)
+        progress.complete(count: 1)
+    }
+}
+```
+
+- `ProgressManager`/`ProgressReporter` are `Sendable`; observe read-only via `ProgressReporter` (`totalCount` / `completedCount`).
+- Bridge to legacy APIs with `progress.assign(count:to: someNSProgress)`.
+- The SwiftUI `OS27` document model reports read/write progress through this type — see `axiom-design (skills/app-composition.md)`.
+
+---
+
 ## Quick Decision Tree
 
 ```
@@ -1355,9 +1387,9 @@ You do **not** have to refactor everything into a "perfect" concurrency model be
 
 ## Resources
 
-**WWDC**: 2025-268, 2025-245, 2022-110351, 2021-10133
+**WWDC**: 2025-268, 2025-245, 2022-110351, 2021-10133, 2026-262
 
-**Docs**: /swift/adoptingswift6, /swift/sendable
+**Docs**: /swift/adoptingswift6, /swift/sendable, /foundation/progressmanager, /foundation/subprogress
 
 **Skills**: axiom-build (skills/lldb.md) (debug actor/task state in the debugger)
 
