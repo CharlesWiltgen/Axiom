@@ -69,6 +69,8 @@ What do you need to do?
 │  │  └─ ImageAnalysisOverlayView (macOS)
 │  ├─ Need custom pipeline / HDR / large images → Vision
 │  │  └─ VNGenerateForegroundInstanceMaskRequest
+│  ├─ User picks the object (tap/box/scribble), OS27 → GenerateIterativeSegmentationRequest
+│  │  └─ Tap-to-segment + refine; see vision-ref.md (Iterative Segmentation)
 │  └─ Need to EXCLUDE hands from object → Combine APIs
 │     └─ Subject mask + Hand pose + custom masking (see Pattern 1)
 │
@@ -158,6 +160,8 @@ Processing video frames? Use `VNSequenceRequestHandler` (maintains inter-frame s
 | VNDocumentCameraViewController | iOS 13+ |
 | VNDetectDocumentSegmentationRequest | iOS 15+ |
 | RecognizeDocumentsRequest | iOS 26+ |
+| GenerateIterativeSegmentationRequest (tap-to-segment) | `OS27` (not watchOS) |
+| Vision on watchOS (modern Swift subset; no text/pose requests) | `watchOS27` |
 
 ## Common Patterns
 
@@ -1062,8 +1066,8 @@ Before shipping Vision features:
 
 ## Resources
 
-**WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2023-111241, 2020-10653
+**WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2023-111241, 2020-10653, 2026-237
 
-**Docs**: /vision, /visionkit, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest
+**Docs**: /vision, /visionkit, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest, /vision/generateiterativesegmentationrequest
 
 **Skills**: skills/vision-ref.md, skills/vision-diag.md
