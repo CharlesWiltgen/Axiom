@@ -350,6 +350,63 @@ For multi-token search, scopes, suggestions, and programmatic control, see axiom
 
 ---
 
+## Pattern 11: Toolbar Overflow & Visibility Priority (OS27)
+
+The 27 release cycle adds explicit control over how toolbar items collapse into the overflow ("…") menu when space is tight. Three pieces work together — rank which items survive longest, pin items that must never collapse, and declare items that always live in the menu.
+
+### `.visibilityPriority(_:)` — rank which items overflow first — OS27 (macOS 26.1)
+
+When the toolbar runs out of room, items move into the overflow menu. Lower-priority items move first, keeping higher-priority items visible longer as the window shrinks.
+
+```swift
+.toolbar {
+    ToolbarItem(placement: .primaryAction) {
+        Button("Record") { record() }
+    }
+    .visibilityPriority(.high)        // stays in the bar longest
+
+    ToolbarItem(placement: .secondaryAction) {
+        Button("Filter") { filter() }
+    }
+    .visibilityPriority(.low)         // first to collapse into overflow
+}
+```
+
+`ToolbarItemVisibilityPriority` has three presets — `.automatic` (default; system decides), `.low`, `.high` — plus `init(lowerThan:)` / `init(higherThan:)` for custom rankings between them. Applies to `ToolbarContent` and `CustomizableToolbarContent`. macOS adopted this one early, at 26.1; everything else is 27.
+
+### `ToolbarOverflowMenu` — items that always live in the overflow menu — iOS27/visionOS27
+
+For actions you want *permanently* in the "…" menu regardless of available space, customization, or toolbar mode, declare them inside a `ToolbarOverflowMenu`:
+
+```swift
+.toolbar {
+    ToolbarOverflowMenu {
+        Button("Export…") { export() }
+        Button("Print…") { printDoc() }
+    }
+}
+```
+
+It places "actions that are always placed in the toolbar's overflow menu, regardless of the toolbar mode, platform, or customizability." On iOS and visionOS the content appears in the navigation bar's overflow menu rather than directly in the bar. macOS, tvOS, and watchOS don't have it — gate with `if #available(iOS 27, visionOS 27, *)`.
+
+### `.topBarPinnedTrailing` — a placement that resists overflow — iOS27/visionOS27
+
+A trailing placement that pins the item to the trailing edge so it resists collapsing into the overflow menu — it only relocates when search is active and there genuinely isn't room. Use it for the one critical control that must stay reachable (unlike `.topBarTrailing`, which can overflow under pressure).
+
+```swift
+.toolbar {
+    ToolbarItem(placement: .topBarPinnedTrailing) {
+        Button { startCall() } label: { Image(systemName: "phone") }
+    }
+}
+```
+
+iOS and visionOS only; on those, "top bar" is the navigation bar.
+
+**How the three fit together** Rank ordinary items with `.visibilityPriority`, reserve `.topBarPinnedTrailing` for the one control that must never leave the bar, and use `ToolbarOverflowMenu` for actions that belong in the menu from the start.
+
+---
+
 ## ToolbarItemPlacement Reference
 
 Use this table to pick the right placement. When in doubt, prefer semantic placements (`.primaryAction`, `.confirmationAction`) over positional ones (`.topBarTrailing`) — semantic placements adapt across platforms.
@@ -365,6 +422,7 @@ Use this table to pick the right placement. When in doubt, prefer semantic place
 | `.navigation` | back area | back area | navigation slot | Custom back/forward items |
 | `.topBarLeading` | top-leading | top-leading | leading | Filters, menus, drawers |
 | `.topBarTrailing` | top-trailing | top-trailing | trailing | Secondary actions when not using `.primaryAction` |
+| `.topBarPinnedTrailing` (iOS27/visionOS27) | top-trailing, pinned | top-trailing, pinned | n/a | The one critical trailing action that must resist overflow — see Pattern 11 |
 | `.bottomBar` | bottom bar | bottom bar | n/a | iOS-style action bars (3+ peer actions) |
 | `.principal` | center of nav bar | center | center | Segmented controls, custom titles |
 | `.status` | n/a | n/a | status area | macOS status info (sync indicators, etc.) |
@@ -475,6 +533,7 @@ Before merging toolbar code:
 - [ ] Editor-style three-column layouts use `.toolbarRole(.editor)`
 - [ ] iOS 26+ apps reviewed against axiom-design (skills/liquid-glass.md) for background-material changes
 - [ ] macOS apps set `windowToolbarStyle` on the Scene (see axiom-macos (skills/windows.md))
+- [ ] OS27: `ToolbarOverflowMenu` / `.topBarPinnedTrailing` usage gated with `if #available(iOS 27, visionOS 27, *)` (both are iOS/visionOS-only)
 
 ---
 
@@ -490,13 +549,14 @@ Before merging toolbar code:
 | Toolbar background ignores material | Set on a child View; use `.toolbarBackground(_:for:)` |
 | Items reorder unexpectedly on macOS | User customized — use `.customizationBehavior(.disabled)` to lock |
 | `ToolbarSpacer` not recognized | Targeting < iOS 26 / macOS 26 — use `ToolbarItemGroup` + Spacer fallback |
+| Item collapses into overflow too eagerly | Default/low visibility priority — raise with `.visibilityPriority(.high)` or `.topBarPinnedTrailing` (OS27, Pattern 11) |
 
 ---
 
 ## Resources
 
-**WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219
+**WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219, 2026-269
 
-**Docs**: /swiftui/toolbar(content:), /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent
+**Docs**: /swiftui/toolbar(content:), /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbaritemplacement/topbarpinnedtrailing, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent, /swiftui/toolbaroverflowmenu, /swiftui/toolbaritemvisibilitypriority
 
 **Skills**: axiom-swiftui (skills/nav.md), axiom-macos (skills/windows.md), axiom-macos (skills/menus-and-commands.md), axiom-design (skills/liquid-glass.md)

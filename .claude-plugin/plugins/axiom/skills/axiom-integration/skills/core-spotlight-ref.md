@@ -196,6 +196,16 @@ attributes.subject = "Meeting notes"
 
 ---
 
+### Semantic search attributes — SearchableItemAttribute (OS27)
+
+The 27 cycle adds on-device **semantic ("LLM") search** over Spotlight content. When you configure a Spotlight search **Source** (or **File Source**), you pass a set of `SearchableItemAttribute` values naming which fields the system should retrieve from matching items and hand to the model as additional ranking context. Pass none and only the item's unique identifier is returned.
+
+`SearchableItemAttribute` is a `RawRepresentable` typed key (`OS27` — iOS / macOS / visionOS, not tvOS / watchOS) that mirrors the `CSSearchableItemAttributeSet` fields you already index — `.title`, `.displayName`, `.alternateNames`, `.keywords`, `.contentDescription`, `.textContent`, `.contentType`, `.thumbnailURL`, plus container, document (`.pageCount`, `.fileSize`), and ranking (`.rankingHint`) attributes.
+
+**Index rich, accurate attributes first** (the `CSSearchableItemAttributeSet` patterns above) — semantic search is only as good as the indexed metadata it reads. See WWDC 2026-246.
+
+---
+
 ### Batch Indexing for Performance
 
 #### ❌ DON'T: Index items one at a time
@@ -889,9 +899,9 @@ struct OrderDetailView: View {
 
 ## Resources
 
-**WWDC**: 260, 2015-709
+**WWDC**: 260, 2015-709, 2026-246
 
-**Docs**: /corespotlight, /corespotlight/cssearchableitem, /foundation/nsuseractivity
+**Docs**: /corespotlight, /corespotlight/cssearchableitem, /corespotlight/searchableitemattribute, /foundation/nsuseractivity
 
 **Skills**: skills/app-intents-ref.md, skills/app-discoverability.md, skills/app-shortcuts-ref.md
 

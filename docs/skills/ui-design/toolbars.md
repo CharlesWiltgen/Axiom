@@ -31,6 +31,7 @@ Questions you can ask Claude that will draw from this skill:
 - "I'm getting a deprecation warning on `.navigationBarLeading`. What's the replacement?"
 - "Why does the spacer between my toolbar items disappear when the bar overflows?"
 - "What does Apple's HIG say about Cancel and Done buttons in a sheet?"
+- "How do I control which toolbar items collapse into the overflow menu? (iOS 27)"
 
 ## What This Skill Provides
 
@@ -50,6 +51,7 @@ Questions you can ask Claude that will draw from this skill:
 - `.toolbarRole(.editor)` for three-column NavigationSplitView layouts
 - Toolbar visibility, background material, and color scheme per bar
 - macOS `windowToolbarStyle` on the Scene (not the View)
+- Toolbar overflow & visibility priority — `ToolbarOverflowMenu`, `.visibilityPriority`, `.topBarPinnedTrailing` (iOS 27)
 
 ### HIG sheet button rules
 

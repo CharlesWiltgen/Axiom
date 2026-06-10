@@ -32,6 +32,7 @@ Questions you can ask Claude that will draw from this skill:
 - "Where should auth state live?"
 - "How do I handle app going to background?"
 - "When should I split my app into modules?"
+- "How do I build a document-based app with the new @Observable document model?" (iOS 27)
 
 ## What This Skill Provides
 

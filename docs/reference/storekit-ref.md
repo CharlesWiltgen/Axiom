@@ -32,6 +32,7 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I customize ProductView appearance?"
 - "What fields are new in iOS 18.4 for StoreKit?"
 - "How do I verify a transaction on my server?"
+- "What are subscription bundles and AppTransaction.all? (iOS 27)"
 
 ## What's Covered
 
@@ -65,6 +66,12 @@ Questions you can ask Claude that will draw from this reference:
 - Non-consumable (premium features)
 - Auto-renewable subscriptions
 - Non-renewing subscriptions
+- Subscription bundles — `.subscriptionBundle` / `.subscriptionSuite` (Advanced Commerce, iOS 27)
+
+### iOS 27 Additions
+- Advanced Commerce: subscription bundles + `Product.SubscriptionInfo.bundledSubscriptions`
+- `AppTransaction.all` (AppTransactions sequence) and `AppTransaction.storeType`
+- New error cases: `RefundRequestError.ineligible`, `StoreKitError.invalidPresentationContext`
 
 ### App Store Server APIs
 - Server notifications (V2)

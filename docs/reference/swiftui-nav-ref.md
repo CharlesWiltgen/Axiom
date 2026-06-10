@@ -34,6 +34,7 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I use Tab with sidebar on iPad?"
 - "What Liquid Glass APIs are available for navigation bars?"
 - "How does navigationDestination(item:) differ from navigationDestination(for:)?"
+- "How do I use the prominent tab role or a cross-fade navigation transition? (iOS 27)"
 
 ## What's Covered
 
@@ -70,6 +71,11 @@ Questions you can ask Claude that will draw from this reference:
 - sidebarAdaptable style
 - TabSection for grouping
 - Per-tab NavigationStack
+- Prominent tab role — `Tab(role: .prominent)` (iOS 27)
+
+### iOS 27 Additions
+- Prominent tab role (`Tab(role: .prominent)`)
+- Cross-fade navigation transition (`.navigationTransition(.crossFade)`, not macOS)
 
 ### Liquid Glass (iOS 26+)
 - Automatic glass navigation bars

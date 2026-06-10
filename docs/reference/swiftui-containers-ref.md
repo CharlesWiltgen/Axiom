@@ -19,6 +19,7 @@ This reference covers all SwiftUI container APIs:
 - **Outlines** — List with `children:`, OutlineGroup, DisclosureGroup
 - **Scroll Enhancements** — containerRelativeFrame, scrollTargetLayout, scrollPosition (iOS 17+), onScrollGeometryChange, onScrollVisibilityChange (iOS 18+)
 - **iOS 26 Performance** — 6x faster list loading, 16x faster updates, nested lazy stack optimization
+- **iOS 27 Additions** — `reorderable()` drag-to-reorder in any container, `swipeActionsContainer()` coordination, `asyncImageURLSession()`
 
 ## Quick Decision
 
