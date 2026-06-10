@@ -321,6 +321,7 @@ export default withMermaid(defineConfig({
             { text: 'Toolbars', link: '/skills/ui-design/toolbars' },
             { text: 'UIKit-SwiftUI Bridging', link: '/skills/ui-design/uikit-bridging' },
             { text: 'UIKit Animation Debugging', link: '/skills/ui-design/uikit-animation-debugging' },
+            { text: 'UIKit Modernization', link: '/skills/ui-design/uikit-modernization' },
             { text: 'UX Flow Audit', link: '/skills/ui-design/ux-flow-audit' }
           ]
         },
