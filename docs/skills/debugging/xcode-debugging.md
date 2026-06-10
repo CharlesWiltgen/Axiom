@@ -30,6 +30,8 @@ Questions you can ask Claude that will draw from this skill:
 - "I'm getting 'No such module' errors after updating SPM dependencies."
 - "Build sometimes succeeds, sometimes fails. Why?"
 - "I have 20 xcodebuild processes running. Is that normal?"
+- "What's Device Hub in Xcode 27, and how does it relate to simctl/devicectl?" (iOS 27)
+- "Xcode shows an inline issue before I build — is that a real build failure?" (iOS 27)
 
 ## What This Skill Provides
 

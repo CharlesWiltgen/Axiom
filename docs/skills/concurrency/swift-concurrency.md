@@ -32,6 +32,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I convert a delegate callback to async/await?"
 - "When do I need an actor vs just @MainActor?"
 - "My app compiles but crashes with data race. How do I debug?"
+- "How do I report progress from a long async operation with ProgressManager?" (iOS 27)
 
 ## What This Skill Provides
 

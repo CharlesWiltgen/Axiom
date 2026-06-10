@@ -630,6 +630,38 @@ Handle expected failures without noise:
 
 ---
 
+## Recording Issues — Severity & Cancellation (OS27)
+
+**Non-fatal warnings** — `Issue.record(_:severity:)` (`OS27`) records an issue that does **not** fail the test when `severity` is `.warning` (the default is `.error`). Flag something noteworthy without turning the run red:
+
+```swift
+@Test func importsLegacyFormat() throws {
+    let result = try importer.load(legacyFixture)
+    if result.usedFallbackParser {
+        Issue.record("Fell back to the legacy parser", severity: .warning)  // logged; test still passes
+    }
+    #expect(result.records.count == 42)
+}
+```
+
+`Issue.Severity` is `.warning` or `.error` (it's `Comparable`); an issue's `isFailure` is `false` for `.warning`. The old `Issue.record(_:sourceLocation:)` overload (no severity) is now **deprecated** — pass `severity:` explicitly.
+
+**Cancel a test mid-run** — `Test.cancel(_:)` (`OS27`) throws to stop the current test immediately (it returns `Never`). In a parameterized test, this cancels just the current argument's run when it genuinely can't proceed — reported as **cancelled**, not failed or skipped:
+
+```swift
+@Test(arguments: configs)
+func runs(_ config: Config) throws {
+    guard config.isSupportedHere else {
+        try Test.cancel("\(config.name) isn't supported on this device")
+    }
+    // … real test …
+}
+```
+
+Use cancellation only for "can't run here," not for assertions — a wrong result is still an `#expect` failure.
+
+---
+
 ## Migration from XCTest
 
 ### Comparison Table
@@ -658,6 +690,7 @@ Handle expected failures without noise:
 2. Migrate incrementally, one test file at a time
 3. Consolidate similar XCTests into parameterized Swift tests
 4. Single-test XCTestCase → global `@Test` function
+5. **Cross-framework assertions (`OS27`)** — the 27 toolchain lets you call `XCTAssert*` from inside a `@Test` function and `#expect`/`#require` from inside an `XCTestCase`, smoothing incremental migration. A cross-framework assertion is reported as a **warning** by default; opt into hard failures via an Xcode build setting. (WWDC 2026-262 — confirm the build-setting name against your Xcode 27.)
 
 ---
 
@@ -811,9 +844,9 @@ Run Script phases without defined inputs/outputs cause full rebuilds. Always spe
 
 ## Resources
 
-**WWDC**: 2024-10179, 2024-10195
+**WWDC**: 2024-10179, 2024-10195, 2026-262, 2026-267
 
-**Docs**: /testing, /testing/migratingfromxctest, /testing/testing-asynchronous-code, /testing/parallelization
+**Docs**: /testing, /testing/migratingfromxctest, /testing/testing-asynchronous-code, /testing/parallelization, /testing/issue/severity
 
 **GitHub**: pointfreeco/swift-concurrency-extras, pointfreeco/swift-clocks
 

@@ -47,13 +47,43 @@ Claude frequently generates outdated Swift patterns from its training data. This
 - **`LabeledContent` in Forms** (iOS 16+) provides consistent label alignment without manual HStack layout
 - **`confirmationDialog()` must attach to triggering UI** — Liquid Glass morphing animations depend on the source element
 
-## Swift 6.3 Concurrency Posture
+## Swift 6.4 Language Features (OS27)
 
-Write Swift 6.3-first code, not Swift 5-era code. These defaults apply to ALL new Swift code, not just when concurrency errors appear.
+Swift 6.4 ships with Xcode 27 (the toolchain also folds in the 6.3 work). Prefer these in new code:
+
+| Feature | Use | Replaces |
+|---------|-----|----------|
+| `@available(anyAppleOS 27, *)` / `#if os(anyAppleOS)` | One token for **all** Apple OSes | Verbose `@available(iOS 27, macOS 27, watchOS 27, tvOS 27, visionOS 27, *)` |
+| `weak let` | Immutable weak ref → the class can be `Sendable`, not `@unchecked Sendable` | `weak var` forcing `@unchecked Sendable` |
+| `class T: ~Sendable` | Explicitly suppress `Sendable` (subclasses can still add it back) | No prior syntax |
+| Second memberwise init | A struct mixing `internal` + `private` stored properties also gets an `internal` memberwise init usable from other files | Hand-written init |
+
+```swift
+// anyAppleOS — one availability token for the whole 27 cycle
+@available(anyAppleOS 27, *)
+func showStatus() { ... }
+
+@available(anyAppleOS 27, *)
+@available(tvOS, unavailable)              // still exclude specific platforms
+func launch() { ... }
+
+// weak let → Sendable without the escape hatch
+final class Spacecraft: Sendable {
+    weak let dockedAt: SpaceStation?
+}
+```
+
+**Caveat**: `anyAppleOS` requires the Swift 6.4 toolchain (Xcode 27+). For code that must build on older Xcode, keep the explicit per-platform `@available`. Either way, `@available(iOS 27, *)`-style gating remains the authoritative runtime check.
+
+## Swift 6.4 Concurrency Posture
+
+Write Swift 6.4-first code, not Swift 5-era code. These defaults apply to ALL new Swift code, not just when concurrency errors appear.
 
 | Default | Rationale |
 |---------|-----------|
-| Assume strict concurrency and MainActor default isolation for app/UI modules | Swift 6.3 language mode; Xcode 26+ default for new projects |
+| Assume strict concurrency and MainActor default isolation for app/UI modules | Default for new Xcode 27 app projects (approachable concurrency, Swift 6.2+) |
+| Handle errors thrown inside `Task { }` — don't silently ignore them | Swift 6.4 **warns** on an unhandled thrown error in a `Task`; handle in-task or save the task and check later |
+| `await` is allowed in `defer` blocks | Swift 6.4 removed the old restriction — clean up with async work directly in `defer` |
 | Prefer async/await over GCD, DispatchGroup, and callback pyramids | GCD is a bridge pattern for legacy APIs, not default architecture |
 | Async does not mean background — use `@concurrent` (Swift 6.2+) to force off-main | Async functions resume on the same actor they were called from |
 | Prefer structured concurrency (`async let`, `TaskGroup`) over unstructured `Task {}` | Structured tasks propagate cancellation and errors automatically |
@@ -78,7 +108,12 @@ These patterns appear frequently in Claude-generated code:
 7. **Returns explicitly in single-expression computed properties** — Omit `return`.
 8. **Spawns unstructured `Task {}` in loops** — Use `TaskGroup` for dynamic parallel work.
 9. **Adds `@unchecked Sendable` to silence warnings** — Convert to actor or proper Sendable type.
+10. **Writes the verbose 5-platform `@available(iOS 27, macOS 27, …)`** — On Swift 6.4 (Xcode 27), use `@available(anyAppleOS 27, *)`; add per-platform `unavailable` lines only for exclusions.
+11. **Uses `weak var` + `@unchecked Sendable`** — On Swift 6.4, `weak let` lets the class be plain `Sendable` with no escape hatch.
+12. **Ignores an error thrown in `Task { try … }`** — Swift 6.4 warns; handle it in the task (`do/catch`) or save the task and check the result later.
 
 ## Resources
+
+**WWDC**: 2026-262
 
 **Skills**: axiom-performance (skills/swift-performance.md), axiom-concurrency, axiom-swiftui

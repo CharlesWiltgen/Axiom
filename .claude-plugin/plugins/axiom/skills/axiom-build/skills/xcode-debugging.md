@@ -199,6 +199,8 @@ Test/build failing?
 | Tests hang | Check simctl list, reboot simulator |
 | Stale code executing | Delete Derived Data |
 
+**Predicted vs. built issues (`OS27`)**: Xcode 27 surfaces *predicted* issues inline **before** you build, rendered with a subtle, theme-blended style. They firm up into full-color warnings/errors when you build — or vanish if already resolved. A predicted issue is not yet a confirmed build failure: build (or check the build log) before treating an inline marker as real, so environment-first triage stays honest.
+
 ## Useful CLI Tools
 
 ```bash
@@ -252,6 +254,12 @@ xcrun devicectl device info processes --device <udid>
 ```
 
 **When to use**: Physical device debugging when the issue doesn't reproduce in Simulator — install, launch, and inspect from CLI.
+
+## Device Hub (OS27)
+
+Xcode 27 unifies simulators and physical devices in **Device Hub** (`OS27`). Launching your app opens it in a Device Hub window sized to the device, with quick actions (home, screenshot, rotate) and an accessibility **Inspector** (increase contrast, larger Dynamic Type, dark appearance) for evaluating the running app. The sidebar lists booted simulators and paired devices together, and a paired device can be driven from the Mac (on `macOS27` the iPhone Mirroring window is resizable).
+
+For **automation and diagnostics**, `simctl` (simulators) and `devicectl` (physical devices) remain the scriptable path — Device Hub is a GUI over the same operations, not a replacement. Reach for the CLI in scripts, CI, and headless verification (and the Axiom `xcui` tool for driving the simulator UI — see `axiom-tools (skills/xcui-ref.md)`).
 
 ## Crash Log Analysis
 
