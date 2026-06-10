@@ -85,13 +85,15 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 - Tool protocol integration
 - Streaming with PartiallyGenerated
 - Dynamic schemas
-- 26 WWDC code examples
+- Private Cloud Compute model + multimodal image input (`OS27`)
+- WWDC 2025 + 2026 code examples
 
 **API reference** → `skills/foundation-models-ref.md`
 - Complete API documentation
 - All @Generable examples
 - Tool protocol patterns
 - Streaming generation patterns
+- `OS27`: Private Cloud Compute, multimodal `Attachment`, `LanguageModel` protocol + capabilities, reasoning + token usage, Dynamic Profiles, built-in system tools
 
 **Diagnostics** → `skills/foundation-models-diag.md`
 - AI response blocked
