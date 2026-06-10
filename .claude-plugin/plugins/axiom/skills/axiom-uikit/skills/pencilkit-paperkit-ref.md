@@ -158,6 +158,71 @@ for stroke in drawing.strokes {
 
 `PKStrokePath` is sampled over time; index it (it conforms to `RandomAccessCollection`) or call `interpolatedPoints(in:by:)` (a range + a parametric stride) for even spacing.
 
+## Stroke identity, render state & slicing `OS27`
+
+```swift
+// PKStroke and PKStrokePath now conform to Identifiable — a stable UUID that
+// survives transforms, edits, and undo (iOS27/macOS27/visionOS27).
+let id: UUID = stroke.id
+
+stroke.renderGroupID         // UUID? — wet-ink compositing group (now controllable)
+stroke.renderState           // PKStroke.RenderState? (Sendable, Codable) — rendering control
+let part = stroke.substroke(range: 0.2...0.8)   // extract a sub-stroke by parametric range
+
+// PKStrokePath <-> CGPath (Bézier) round-trips losslessly — build a PKDrawing
+// from any Bézier canvas, then run recognition without a PKCanvasView.
+let cg: CGPath = path.bezierRepresentation
+let rebuilt = PKStrokePath(bezierPath: cg, creationDate: .now) { converted in
+    PKStrokePoint(/* size/opacity/force per control point */)
+}
+```
+
+Programmatic erasing slices one stroke into masked pieces (`iOS27`/`visionOS27`, **not macOS**):
+
+```swift
+var drawing = canvasView.drawing
+let eraserPath: PKStrokePath = …                                     // the path to slice along (a PKStrokePath, not a CGPath)
+drawing.erasePath(eraserPath, mask: nil, transform: .identity)        // mutating
+let sliced = drawing.erasingPath(eraserPath)                          // non-mutating copy
+```
+
+Slicing is expensive on complex drawings — do it off the main thread.
+
+---
+
+# Part 5b: Handwriting recognition — PKStrokeRecognizer `OS27`
+
+`PKStrokeRecognizer` is a Swift **actor** (all access is `await`) bringing on-device handwriting recognition to PencilKit (`iOS27`/`macOS27`/`visionOS27`). The model is offline, bundled with the OS, and runs on every 27-capable device. Also available through PaperKit.
+
+```swift
+import PencilKit
+
+let recognizer = PKStrokeRecognizer()          // or init(preferredLanguages:)
+await recognizer.updateDrawing(drawing)        // feed/refresh the strokes
+
+// 1. Best transcription (optionally scoped to a stroke subset):
+let text = await recognizer.recognizedText()                       // String?
+let part = await recognizer.recognizedText(strokeIDs: selectedIDs) // String?
+
+// 2. All candidates concatenated — index this for Spotlight:
+if let indexable = await recognizer.indexableContent { index(indexable) }
+
+// 3. Search — returns the bounds of each match (drives highlight / UIFindInteraction):
+for result in await recognizer.search("apple") {
+    highlight(result.bounds)        // result.strokes: Set<UUID>, result.bounds: CGRect
+}
+```
+
+| Member | Notes |
+|--------|-------|
+| `init(preferredLanguages: [Locale.Language]? = nil)` | 29 supported languages; Simulator does Latin-script only |
+| `static var supportedLanguages: Set<Locale.Language>` | query availability |
+| `static var recognitionVersion: Int` | store with indexed content; re-index when it changes |
+| `updateDrawing(_:) async` | feed/refresh the drawing before reading results |
+| `recognizedText(strokeIDs:) async -> String?` | best transcription; `strokeIDs` defaults to whole drawing |
+| `indexableContent: String?` | all candidates, for search indexing |
+| `search(_:fullWordsOnly:caseMatchingOnly:) async -> [SearchResult]` | `SearchResult { strokes: Set<UUID>; bounds: CGRect }` |
+
 ---
 
 # Part 6: Apple Pencil interactions
@@ -293,10 +358,57 @@ Use `FeatureSet.latest` to track new framework features automatically. For HDR, 
 
 ---
 
+# Part 10: PaperKit programmatic markup model `OS27`
+
+At 27 PaperKit "opens up" (`iOS27`/`macOS27`/`visionOS27`): you read and mutate every element on the canvas directly, not just append. The entry point is `PaperMarkup.subelements` — a read/write `MarkupOrderedSet`.
+
+```swift
+var markup = PaperMarkup(bounds: CGRect(origin: .zero, size: pageSize))
+var subelements = markup.subelements        // MarkupOrderedSet — ordered collection of all elements
+
+let shape = ShapeMarkup(configuration: configuration, frame: panelFrame)   // init(configuration:frame:rotation:)
+subelements.append(shape)
+markup.subelements = subelements            // write back (MarkupOrderedSet is a value type)
+markup.backgroundColor = UIColor.systemBackground.cgColor   // new: CGColor?
+```
+
+Every element conforms to **`Markup`** — common `frame`, `rotation`, and `allowedInteractions`:
+
+```swift
+// Lock a template element so users can't move/resize/delete/style it:
+guard var shape = element as? ShapeMarkup else { return }
+shape.allowedInteractions = .readOnly       // MarkupInteractions OptionSet
+shape.strokeColor = .label
+shape.fillColor = selectedColor.copy(alpha: 0.15)
+subelements.updateOrAppend(shape)           // replace in place by id
+```
+
+`MarkupInteractions` (OptionSet): `.move`, `.resize`, `.rotate`, `.delete`, `.style`, `.select`, `.all`, `.readOnly`. Concrete markups: `ShapeMarkup` (`init(configuration:frame:rotation:)`), `ImageMarkup` (non-failable `init(image: CGImage, frame:…)`, or a **failable** `init?(image: UIImage, frame:…)`), `LinkMarkup` (`init(url:frame:…)`), `LoupeMarkup`, and `PKStroke` (each Apple Pencil stroke is a markup element).
+
+## Adornments — interactive overlays (not persisted)
+
+`MarkupAdornment`s are visual overlays anchored to canvas coordinates that auto-track zoom and scroll. They are **not** part of the saved/printed/exported markup — use them for buttons, annotations, collaboration UI.
+
+```swift
+let adornment = MarkupAdornment(
+    anchor: .canvas(location: center),
+    imageConfiguration: .systemImage("photo.badge.plus")   // .systemImage(_:tint:size:alignmentAnchor:)
+)
+paperMarkupViewController.adornments = [adornment]
+
+// Route taps via the VC delegate:
+func paperMarkupViewController(_ vc: PaperMarkupViewController, didTapAdornmentWithID id: UUID) {
+    // e.g. present ImagePlaygroundViewController; on completion insert an ImageMarkup
+    // into markup.subelements (Image Playground integration).
+}
+```
+
+---
+
 ## Resources
 
-**WWDC**: 2019-221, 2020-10107, 2024-10214, 2025-285
+**WWDC**: 2019-221, 2020-10107, 2024-10214, 2025-285, 2026-203, 2026-372
 
-**Docs**: /pencilkit, /pencilkit/pkcanvasview, /pencilkit/pkdrawing, /pencilkit/pktoolpicker, /pencilkit/pktoolpickercustomitem, /pencilkit/pkstroke, /pencilkit/pkinkingtool, /uikit/uipencilinteraction, /uikit/uitouch/rollangle, /paperkit, /paperkit/papermarkup, /paperkit/papermarkupviewcontroller, /paperkit/featureset
+**Docs**: /pencilkit, /pencilkit/pkcanvasview, /pencilkit/pkdrawing, /pencilkit/pktoolpicker, /pencilkit/pktoolpickercustomitem, /pencilkit/pkstroke, /pencilkit/pkstrokerecognizer, /pencilkit/pkstrokepath, /pencilkit/pkinkingtool, /uikit/uipencilinteraction, /uikit/uitouch/rollangle, /paperkit, /paperkit/papermarkup, /paperkit/papermarkupviewcontroller, /paperkit/markup, /paperkit/markupadornment, /paperkit/featureset
 
 **Skills**: skills/pencilkit-paperkit.md, skills/uikit-bridging.md, axiom-data (drawing persistence), axiom-swiftui (canvas wrapping)

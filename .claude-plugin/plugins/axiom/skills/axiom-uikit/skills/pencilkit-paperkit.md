@@ -228,6 +228,22 @@ if #available(iOS 26, *) {
 
 PaperKit's `PaperMarkup` interoperates with PencilKit — `append(contentsOf:)` accepts a `PKDrawing`, so existing PencilKit content drops straight in.
 
+## Part 8 — Handwriting recognition & programmatic markup `OS27`
+
+Two big 27 additions (full signatures in `skills/pencilkit-paperkit-ref.md`):
+
+- **On-device handwriting recognition** — `PKStrokeRecognizer`, a Swift **actor** (all `await`). Feed it a `PKDrawing` (`updateDrawing`), then read `recognizedText()`, `indexableContent` (for Spotlight), or `search(_:)` (returns match bounds for highlighting). Offline, 29 languages, on every 27-capable device. Works without a `PKCanvasView` because `PKStrokePath` now round-trips to/from `CGPath` (Bézier).
+- **PaperKit opens up** — `PaperMarkup.subelements` (a read/write `MarkupOrderedSet`) lets you read and mutate every element. Each conforms to `Markup` (`frame`/`rotation`/`allowedInteractions`); lock template elements with `allowedInteractions = .readOnly`. `MarkupAdornment`s add interactive overlays that are **not** persisted.
+
+```swift
+@available(iOS 27, macOS 27, visionOS 27, *)
+func transcribe(_ drawing: PKDrawing) async -> String? {
+    let recognizer = PKStrokeRecognizer()
+    await recognizer.updateDrawing(drawing)
+    return await recognizer.recognizedText()
+}
+```
+
 ## Common Mistakes
 
 - Forgetting `becomeFirstResponder()` — the most common "the tool picker won't show" bug.
@@ -238,11 +254,14 @@ PaperKit's `PaperMarkup` interoperates with PencilKit — `append(contentsOf:)` 
 - Assuming barrel roll / squeeze exist — they are Apple Pencil Pro only; `rollAngle` is `0` otherwise.
 - Calling PaperKit without an availability gate — it is 26.0+ and will not compile against older SDK targets.
 - Skipping PaperKit forwards-compatibility — newer files fail to open with no fallback thumbnail.
+- Calling `PKStrokeRecognizer` synchronously (`OS27`) — it's an actor; every call is `await`, and you must `updateDrawing` before reading results.
+- Running stroke slicing (`erasePath`/`substroke`, `OS27`) on the main thread — it's expensive on complex drawings; do it off-main.
+- Persisting `MarkupAdornment`s (`OS27`) — they're overlay-only, never saved/printed/exported; store their state yourself.
 
 ## Resources
 
-**WWDC**: 2019-221, 2020-10107, 2024-10214, 2025-285
+**WWDC**: 2019-221, 2020-10107, 2024-10214, 2025-285, 2026-203, 2026-372
 
-**Docs**: /pencilkit, /pencilkit/pkcanvasview, /pencilkit/pktoolpicker, /pencilkit/pkdrawing, /pencilkit/pkstroke, /uikit/uipencilinteraction, /uikit/uitouch/rollangle, /paperkit, /paperkit/papermarkupviewcontroller, /paperkit/papermarkup
+**Docs**: /pencilkit, /pencilkit/pkcanvasview, /pencilkit/pktoolpicker, /pencilkit/pkdrawing, /pencilkit/pkstroke, /pencilkit/pkstrokerecognizer, /uikit/uipencilinteraction, /uikit/uitouch/rollangle, /paperkit, /paperkit/papermarkupviewcontroller, /paperkit/papermarkup, /paperkit/markupadornment
 
 **Skills**: skills/pencilkit-paperkit-ref.md, skills/uikit-bridging.md (UIViewRepresentable), axiom-data (persisting drawing data), axiom-swiftui (SwiftUI canvas wrapping)
