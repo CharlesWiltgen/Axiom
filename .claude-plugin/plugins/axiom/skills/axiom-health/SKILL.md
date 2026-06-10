@@ -17,8 +17,9 @@ license: MIT
 | `HKSampleQuery`, Swift Concurrency query APIs, `HKStatisticsCollectionQuery`, sample writes | See `skills/queries.md` |
 | Anchored queries, observer queries, `HKDeletedObject`, `background-delivery` entitlement | See `skills/sync-and-background.md` |
 | `HKWorkoutSession`, `HKLiveWorkoutBuilder`, recovery, multi-device, iOS/iPadOS/watchOS workout tracking | See `skills/workouts.md` |
+| Workout zones (heart-rate/power effort bands), live + retrospective `OS27` | See `skills/workouts.md` |
 | WorkoutKit custom/planned workouts, scheduling, swimming workouts, previewing | See `skills/workoutkit.md` |
-| State of Mind, Medications API, symptom logging, wellbeing APIs | See `skills/wellbeing-and-medications.md` |
+| State of Mind, Medications API, symptom logging, menopausal state, wellbeing APIs `OS27` | See `skills/wellbeing-and-medications.md` |
 | Health Records (FHIR), Mobility Health App, motion-based health | See `skills/clinical-and-mobility.md` |
 
 ## Cross-Suite Routes

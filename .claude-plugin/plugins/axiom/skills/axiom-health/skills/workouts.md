@@ -10,6 +10,7 @@ Use when:
 - Adopting iOS 26's new ability to originate workout sessions from iPhone (previously watch-only)
 - Implementing Always On support for workout views
 - Querying or reading historical `HKWorkout` and `HKWorkoutActivity` data
+- Reading or tracking **workout zones** — heart-rate / power / pace effort bands — live or retrospectively (`OS27`)
 
 #### Related Skills
 
@@ -37,6 +38,8 @@ This skill covers the first path — live sessions with sensor collection.
 | `HKLiveWorkoutBuilder`, `HKLiveWorkoutDataSource`, `HKLiveWorkoutBuilderDelegate` | **watchOS 5+; iOS 26+, iPadOS 26+** |
 | `HKWorkoutSession.startMirroringToCompanionDevice` | **watchOS 10+ only** |
 | `HKHealthStore.recoverActiveWorkoutSession` | **iOS 26+, iPadOS 26+, watchOS 5+** (unavailable on Mac Catalyst, macOS, visionOS) |
+| Workout zones — stored (`HKWorkoutZoneGroup`, `HKWorkout.zoneGroupsByType`) | **all platforms 27** (`anyAppleOS 27`) |
+| Workout zones — live (`HKLiveWorkoutZoneUpdate`, `didUpdateWorkoutZone`) | **iOS 27+, watchOS 27+** (not macOS/visionOS) |
 
 The critical new-in-2025 change: iPhone could *receive* a mirrored workout session since iOS 17, but iOS 26 is the first release where iPhone can **originate** a session and drive a local `HKLiveWorkoutBuilder`. Before iOS 26, iPhone workout tracking meant calling `HKWorkout(init:)` retrospectively — no live sensor collection.
 
@@ -187,6 +190,86 @@ source.disableCollection(for: HKQuantityType(.basalEnergyBurned))
 ```
 
 For multi-activity workouts, update the data source's `typesToCollect` when switching activities — swimming and cycling collect different types, and leaving stale types wastes sensor time.
+
+## Workout Zones `OS27`
+
+HealthKit models **workout zones** natively — the effort bands (heart-rate zones, cycling-power zones) that classify intensity during a workout. Before 27 you computed and stored time-in-zone yourself; now HealthKit tracks it live and attaches a retrospective breakdown to every finished `HKWorkout`.
+
+A breakdown is built from four `Sendable` value types. Stored zone data reads on every platform (`anyAppleOS 27`); only *live* tracking is `iOS27`/`watchOS27` (not macOS/visionOS):
+
+| Type | What it holds |
+|------|----------------|
+| `HKWorkoutZone` | One zone: `index` + optional `minimum`/`maximum` `HKQuantity` (the first zone is unbounded below, the last unbounded above, so one bound is nil) |
+| `HKWorkoutZoneConfiguration` | The zone set for one quantity type: `zones` (contiguous, non-overlapping, **3–9 zones**), `quantityType`, `source` (`.system`/`.user`/`.app`), `configurationType` (`.automatic`/`.manual`/`.custom`) |
+| `HKWorkoutZoneDuration` | Time in one zone: `zone` + `duration` |
+| `HKWorkoutZoneGroup` | A workout's full breakdown for one type: `configuration` + `zoneDurations` |
+
+### Retrospective zones on a finished workout
+
+`HKWorkout` and `HKWorkoutActivity` expose zone groups keyed by quantity type:
+
+```swift
+@available(anyAppleOS 27, *)
+func heartRateZones(_ workout: HKWorkout) {
+    guard let group = workout.zoneGroupsByType?[HKQuantityType(.heartRate)] else { return }
+    let zoneCount = group.configuration.zones.count
+    let durations = group.zoneDurations.map(\.duration)   // ordered by threshold
+    // ... drive a post-workout chart
+}
+```
+
+Use `HKWorkoutActivity.zoneGroup(for:)` for per-leg zones in a multi-activity (triathlon) workout.
+
+### Live zone changes
+
+Implement the new optional `HKLiveWorkoutBuilderDelegate` method. It fires **only when the current zone changes**, not on every sample:
+
+```swift
+@available(iOS 27, watchOS 27, *)
+func workoutBuilder(
+    _ builder: HKLiveWorkoutBuilder,
+    didUpdateWorkoutZone zoneUpdate: HKLiveWorkoutZoneUpdate
+) {
+    guard let group = zoneUpdate.zoneGroup else { return }
+    let currentIndex = zoneUpdate.currentZoneDuration?.zone.index
+    // zoneUpdate.previousZoneDuration and .lastSampleProcessedDate are also available
+}
+```
+
+### Preferred vs. custom zones
+
+Zones come from the user's Health settings (auto-calculated from age/resting HR or manually set, synced across devices). Read the resolved configuration first; only supply your own if none exists:
+
+```swift
+@available(iOS 27, watchOS 27, *)
+func configureZones(_ builder: HKLiveWorkoutBuilder) async throws {
+    let heartRate = HKQuantityType(.heartRate)
+
+    if try await builder.zoneConfiguration(for: heartRate) == nil {
+        let bpm = HKUnit.count().unitDivided(by: .minute())
+        let boundaries = defaultHeartRateZoneThresholds.map {
+            HKQuantity(unit: bpm, doubleValue: $0)
+        }
+        let config = try HKWorkoutZoneConfiguration(
+            quantityType: heartRate,
+            zoneBoundaries: boundaries
+        )
+        // MUST be set before beginCollection:
+        try await builder.setCustomZoneConfiguration(config, for: heartRate)
+    }
+
+    try await builder.beginCollection(at: Date())
+}
+```
+
+To read the user's preferred zones outside a builder (e.g. to preview them), use `HKHealthStore.preferredWorkoutZoneConfiguration(for:)`.
+
+**Custom-zone gotchas:**
+
+- **Set before `beginCollection`.** Calling `setCustomZoneConfiguration` after collection starts is too late for that workout.
+- **HealthKit does not persist custom zones.** They are scoped to a single workout — to reuse them, your app saves and re-applies them itself.
+- Supported quantity types are **heart rate** and **cycling power** (functional-threshold-power based; defaults to 6 zones).
+- **Time-in-zone isn't comparable across configurations.** A 5-zone and an 8-zone workout bucket effort differently — re-bucket raw samples if you need to compare across workouts.
 
 ## Recovery — Different Entry Points Per Platform
 
@@ -344,11 +427,14 @@ For per-activity statistics, iterate `workout.workoutActivities` — each `HKWor
 | Missing `workout-processing` background mode on watch | Session runs only while app is foreground. Add `WKBackgroundModes` → `workout-processing`. |
 | Hand-building an `HKWorkout(activityType:start:end:)` to "save" a live session | Those convenience initializers are deprecated (iOS 17 / watchOS 10) and produce an empty shell — no samples, route, or totals. Only the live builder's `endCollection` + `finishWorkout` persists collected data; for retrospective non-sensor logging use a non-live `HKWorkoutBuilder`. |
 | Writing retrospective workouts and also running live sessions for the same activity | You get duplicates. Choose one path per activity. |
+| Calling `setCustomZoneConfiguration` after `beginCollection` (`OS27`) | Too late — it won't apply to that workout. Set custom zones *before* `beginCollection(at:)`. |
+| Expecting HealthKit to remember your custom zones (`OS27`) | It doesn't persist app-set zones; they live for one workout. Save and re-apply them yourself. |
+| Comparing raw time-in-zone across workouts with different zone counts (`OS27`) | A 5-zone vs 8-zone configuration buckets effort differently. Re-bucket raw samples before comparing. |
 
 ## Resources
 
-**WWDC**: 2021-10009, 2022-10005, 2023-10023, 2025-322
+**WWDC**: 2021-10009, 2022-10005, 2023-10023, 2025-322, 2026-207
 
-**Docs**: /healthkit/workouts-and-activity-rings, /healthkit/running-workout-sessions, /healthkit/hkworkoutsession, /healthkit/hkliveworkoutbuilder, /healthkit/hkliveworkoutbuilderdelegate, /healthkit/hkliveworkoutdatasource, /healthkit/hkworkoutconfiguration, /healthkit/hkworkout, /healthkit/hkworkoutactivity, /healthkit/hkhealthstore/recoveractiveworkoutsession(completion:), /healthkit/build-a-workout-app-for-apple-watch, /healthkit/building-a-workout-app-for-iphone-and-ipad
+**Docs**: /healthkit/workouts-and-activity-rings, /healthkit/running-workout-sessions, /healthkit/hkworkoutsession, /healthkit/hkliveworkoutbuilder, /healthkit/hkliveworkoutbuilderdelegate, /healthkit/hkliveworkoutdatasource, /healthkit/hkworkoutconfiguration, /healthkit/hkworkout, /healthkit/hkworkoutactivity, /healthkit/hkhealthstore/recoveractiveworkoutsession(completion:), /healthkit/build-a-workout-app-for-apple-watch, /healthkit/building-a-workout-app-for-iphone-and-ipad, /healthkit/accessing-workout-zone-data, /healthkit/hkworkoutzonegroup, /healthkit/hkworkoutzoneconfiguration
 
 **Skills**: axiom-health (fundamentals, authorization-and-privacy, queries, workoutkit), axiom-watchos, axiom-concurrency
