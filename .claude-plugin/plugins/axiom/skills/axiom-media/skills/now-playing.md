@@ -33,6 +33,10 @@
 
 iOS 26 introduces **Liquid Glass visual design** for Lock Screen and Control Center Now Playing widgets. This is **automatic system behavior** — no code changes required. The patterns in this skill remain valid for iOS 26.
 
+### OS27 Note — the NowPlaying framework
+
+`OS27` adds a brand-new Swift-native **NowPlaying framework** (`import NowPlaying`) — an `@Observable`, command-declarative successor to the MediaPlayer C-style APIs (`MPNowPlayingInfoCenter` + `MPRemoteCommandCenter` + `MPNowPlayingSession`) that Patterns 1–8 teach. If you target iOS 27+ and are starting fresh, prefer it — see [NowPlaying Framework (Modern, Swift-Native)](#nowplaying-framework-modern-swift-native-os27). Apple's session positions it as the modern path but does **not** deprecate the MediaPlayer APIs, so Patterns 1–8 stay correct for apps supporting iOS &lt;27.
+
 ❌ **Do NOT use this skill for**:
 - Background audio configuration details (see AVFoundation skill)
 
@@ -112,7 +116,10 @@ if let info = MPNowPlayingInfoCenter.default().nowPlayingInfo {
 ## Decision Tree
 
 ```
-Now Playing not working?
+Starting fresh on iOS 27+ (OS27)?
+└─ Use the NowPlaying framework (jump to "NowPlaying Framework" section) — the patterns below are the MediaPlayer path for iOS <27
+
+Now Playing not working? (MediaPlayer path — MPNowPlayingInfoCenter / MPRemoteCommandCenter)
 ├─ Info never appears at all?
 │  ├─ AVAudioSession category .ambient or .mixWithOthers?
 │  │  └─ Pattern 1a (Wrong Category)
@@ -1175,11 +1182,89 @@ Prefer the async forms unless you're bridging callback-based code.
 
 ---
 
+## NowPlaying Framework (Modern, Swift-Native) `OS27`
+
+`import NowPlaying` is a new Swift framework that replaces the manual MediaPlayer dance — building an `MPNowPlayingInfoCenter.nowPlayingInfo` dictionary by hand and registering per-command handlers on `MPRemoteCommandCenter` (Patterns 1–4). Instead, your `@Observable` player model conforms to `MediaSessionRepresentable`, you hand it to a `MediaSession`, and the system **observes the model** — Lock Screen, Control Center, CarPlay, and the rest stay in sync automatically, with no manual refresh calls.
+
+Available on all platforms at 27 (`iOS 27, macOS 27, watchOS 27, tvOS 27, visionOS 27`). The local path below is universal; the remote/server-driven path is **iOS-only**.
+
+### Local playback (the common case)
+
+```swift
+import NowPlaying
+import Observation
+
+@Observable @MainActor
+final class PlayerModel: MediaSessionRepresentable {
+    let id = "main-player"
+    var nowPlaying: Track?
+    var isPlaying = false
+    var elapsed: TimeInterval = 0
+
+    // Strongly typed content — pick the type that fits (MusicContent, PodcastContent,
+    // MovieContent, TVShowContent, RadioContent, BookContent, HomeMediaContent, GenericContent).
+    var content: (any MediaContentRepresentable)? {
+        guard let track = nowPlaying else { return nil }
+        return MusicContent(
+            id: track.id,
+            songTitle: track.title,
+            artistName: track.artist,
+            albumName: track.album,
+            type: .audio,
+            duration: .finite(track.duration),      // or .live for streams — NOT ".continuous"
+            artwork: Artwork(id: track.id) { size in
+                try ArtworkRepresentation(data: await track.artworkData(for: size))
+            }
+        )
+    }
+
+    var playbackSnapshot: MediaPlaybackSnapshot? {
+        MediaPlaybackSnapshot(state: isPlaying ? .playing() : .paused, elapsedTime: elapsed)
+    }
+
+    // Declarative commands — each is an async-throwing closure the system invokes.
+    var commands: [MediaCommand] {
+        [
+            .play { [weak self] in self?.resume() },
+            .pause { [weak self] in self?.pause() },
+            .next { [weak self] in self?.skipNext() },
+            .previous { [weak self] in self?.skipPrevious() },
+            .seekToPosition { [weak self] position in self?.seek(to: position) },
+            .changeRepeatMode(current: .off) { [weak self] mode in self?.setRepeat(mode) },
+        ]
+    }
+}
+
+// Publish it. Retain the session for as long as the model is the active "now playing" source.
+@available(iOS 27, macOS 27, watchOS 27, tvOS 27, visionOS 27, *)
+let session = MediaSession(playerModel)   // observes the @Observable model; no manual updates
+```
+
+Key shapes (SDK-verified against the NowPlaying `-target arm64e-apple-ios27.0` interface):
+- **`MediaSessionRepresentable`** (`@MainActor`) requires exactly four members: `id`, `content`, `playbackSnapshot`, `commands`.
+- **`MediaPlaybackSnapshot(state:defaultPlaybackRate:elapsedTime:timestamp:)`** — `PlaybackState` is `.stopped`, `.playing(rate:)`, `.paused`, `.buffering`, `.interrupted`.
+- **`MediaDuration`** is `.live` or `.finite(TimeInterval)`. (The WWDC talk says "`.continuous`" — the SDK has no such case; use `.live`.)
+- **`MediaCommand`** factories: `.play`, `.pause`, `.stop`, `.togglePlayPause`, `.next`, `.previous`, `.skipForward(preferredIntervals:)`, `.skipBackward(preferredIntervals:)`, `.seekToPosition`, `.seekForward(beginAction:endAction:)`, `.seekBackward(…)`, `.changePlaybackRate(supported:)`, `.changeRepeatMode(current:supported:)`, `.changeShuffleMode(current:supported:)`, `.feedback(title:shortTitle:status:)`. Chain `.enabled(false)` to dim one.
+- **`Artwork(id:artworkProvider:)`** and **`AnimatedArtwork(id:supportedAspectRatios:preview:video:)`** — both lazy `async` providers keyed on a `CGSize`; the provider returns `ArtworkRepresentation(data:)` or `ArtworkRepresentation(cgImage:)` (both `throws`).
+- **`MediaSession`** is `@MainActor` and **unavailable in app extensions**; it exposes `isApplicationPrimary` / `requestToBecomeApplicationPrimary()` (and iOS-only `isSystemPrimary` / `requestToBecomeSystemPrimary()`).
+
+### Remote / server-driven playback (iOS-only)
+
+For apps that control playback happening on **another device** (a speaker, TV, or cast target), NowPlaying provides a push-driven app-extension model so the system surfaces stay live even when your app isn't running:
+
+- Your attributes type conforms to **`RemoteMediaSessionAttributes`** (Codable). Start/refresh with `RemoteMediaSession.start(attributes:)`, `.update(_:)`, `.end()`; enumerate with `.sessions()`. Push-to-start via `RemoteMediaSession.pushToStartToken` / `.pushToStartTokenUpdates`.
+- A **`RemoteMediaSessionExtension`** (an `ExtensionFoundation.AppExtension`) implements `func session(_ attributes:) async throws -> Session`, returning a `RemoteMediaSessionRepresentable` rebuilt from the pushed attributes; wire it with `RemoteMediaSessionExtensionConfiguration(extension: self)`.
+- The representable adds `var devices: [MediaDevice]` — each **`MediaDevice(id:name:type:capabilities:)`** advertises volume control via `.absoluteVolume(_:onChange:)` or `.relativeVolume(onIncrement:onDecrement:)`. (Note: `NowPlaying.MediaDevice` is distinct from the separate `MediaDevice.framework`.)
+
+### Relationship to the MediaPlayer patterns
+
+NowPlaying is the recommended path on 27. Apple's WWDC session does **not** deprecate `MPNowPlayingInfoCenter`, `MPRemoteCommandCenter`, or `MPNowPlayingSession` — so Patterns 1–8 remain correct for apps that support iOS &lt;27 or haven't migrated. The same eligibility rule still applies conceptually: publish content + handle at least one command + own an active, non-mixable audio session.
+
 ## Resources
 
-**WWDC**: 2022-110338, 2017-251, 2019-501
+**WWDC**: 2022-110338, 2017-251, 2019-501, 2026-312
 
-**Docs**: /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpremotecommandcenter, /mediaplayer/mpnowplayingsession, /mediaplayer/mpmediaitemanimatedartwork, /mediaplayer/providing-animated-artwork-for-media-items
+**Docs**: /nowplaying, /nowplaying/publishing-media-sessions, /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpremotecommandcenter, /mediaplayer/mpnowplayingsession, /mediaplayer/mpmediaitemanimatedartwork, /mediaplayer/providing-animated-artwork-for-media-items
 
 **Skills**: skills/avfoundation-ref.md, skills/now-playing-carplay.md, skills/now-playing-musickit.md
 
