@@ -114,6 +114,20 @@ if faceCount > 4 {
 
 **Fix**: Fallback to `VNGeneratePersonSegmentationRequest` (single mask for all people)
 
+### Request Fails on First Use (iOS 27+ Downloadable Assets)
+
+**Symptom**: `GenerateIterativeSegmentationRequest` (tap-to-segment) throws a resource error the first time it runs
+
+**Root cause**: The segmentation model is not on-device by default — first use requires a download
+
+**Fix**:
+
+```swift
+if case .notReady = await request.assetStatus {
+    try await request.downloadAssets()
+}
+```
+
 ## Performance Optimization
 
 ### Slow Processing
@@ -145,6 +159,7 @@ print("Request took \(elapsed * 1000)ms")
 | UI freezes | Thread check | Threading | 15 min |
 | Wrong position | Coordinate conversion | Coordinates | 20 min |
 | Missing people (>4) | Face count | Crowded scene | 30 min |
+| Fails on first use (iOS 27+) | `assetStatus` | Downloadable assets | 10 min |
 
 ## Resources
 

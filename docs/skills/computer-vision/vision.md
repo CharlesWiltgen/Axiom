@@ -40,6 +40,7 @@ What do you need to do?
 Isolate subject(s) from background?
 ├─ Need system UI → VisionKit (ImageAnalysisInteraction)
 ├─ Need custom pipeline/HDR → Vision (VNGenerateForegroundInstanceMaskRequest)
+├─ User picks the object (tap/box/scribble, iOS 27+) → GenerateIterativeSegmentationRequest
 └─ Need to EXCLUDE hands → Combine subject mask + hand pose
 
 Segment people?
@@ -171,6 +172,8 @@ present(scanner, animated: true) {
 | DataScannerViewController | iOS 16+ |
 | Document camera (VNDocumentCameraViewController) | iOS 13+ |
 | RecognizeDocumentsRequest (structured) | iOS 26+ |
+| Tap-to-segment (GenerateIterativeSegmentationRequest) | iOS 27+ (not watchOS) |
+| Vision on watchOS (modern Swift subset) | watchOS 27+ |
 
 ## Related Resources
 
@@ -187,6 +190,7 @@ present(scanner, animated: true) {
 - [WWDC22-10024: What's new in Vision](https://developer.apple.com/videos/play/wwdc2022/10024/)
 - [WWDC22-10025: Capture machine-readable codes and text](https://developer.apple.com/videos/play/wwdc2022/10025/)
 - [WWDC25-272: Read documents using the Vision framework](https://developer.apple.com/videos/play/wwdc2025/272/)
+- [WWDC26-237: What's new in image understanding](https://developer.apple.com/videos/play/wwdc2026/237/)
 
 ### Apple Documentation
 
