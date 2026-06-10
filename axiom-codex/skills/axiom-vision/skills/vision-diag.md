@@ -220,6 +220,8 @@ for face in faces {
 
 `ImageRequestHandler` still takes `orientation` in its initializer, so Step 0 applies to both APIs.
 
+On watchOS (`watchOS27`) the modern Swift API is the **only** Vision API — legacy `VN*` request classes don't exist there, and the request set is a subset (no text recognition, no pose). See vision-ref.md (Vision on watchOS) before debugging "missing API" errors on the watch.
+
 ## Diagnostic Patterns
 
 ### Pattern 1a: Request Failed (API Availability)
@@ -248,6 +250,8 @@ if #available(iOS 17.0, *) {
 ```
 
 **Prevention**: Check API availability in `skills/vision-ref.md` before implementing
+
+**Also check (`OS27`)**: downloadable-asset requests (`GenerateIterativeSegmentationRequest`) fail on first use until the model is downloaded — `VNErrorResourceUnavailable` / `VNErrorResourceCorrupted`. Check `await request.assetStatus` and call `try await request.downloadAssets()` before the first perform.
 
 **Time to fix**: 10 min
 
@@ -1048,7 +1052,7 @@ func scaled(_ point: CGPoint, to size: CGSize) -> CGPoint {
 
 ## Resources
 
-**WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2020-10653
+**WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2020-10653, 2026-237
 
 **Docs**: /vision, /vision/vnrecognizetextrequest, /visionkit
 

@@ -20,9 +20,11 @@ license: MIT
 | Audio, AVFoundation, spatial audio | See `skills/avfoundation-ref.md` |
 | Audio recognition, ShazamKit | See `skills/shazamkit.md` |
 | ShazamKit API reference | See `skills/shazamkit-ref.md` |
+| On-device music analysis (key, tempo, structure, loudness), MusicUnderstanding (`OS27`) | See `skills/music-understanding.md` |
 | Haptic feedback, Core Haptics | See `skills/haptics.md` |
 | Now Playing metadata, remote commands | See `skills/now-playing.md` |
 | Animated lock-screen artwork (iOS 26+) | See `skills/now-playing.md` Pattern 8 |
+| NowPlaying framework (`import NowPlaying`, Swift-native `MediaSession`, `OS27`) | See `skills/now-playing.md` (NowPlaying Framework section) |
 | CarPlay HIG, app categories, design rules, entitlements | See `skills/carplay-hig.md` |
 | CarPlay templates reference (all 12 templates, availability matrix, depth limits) | See `skills/carplay-templates-ref.md` |
 | CarPlay navigation reference (base view, route guidance, cluster/HUD, multitouch, voice prompts) | See `skills/carplay-navigation-ref.md` |
@@ -42,6 +44,7 @@ digraph media {
     what -> "skills/photo-library.md" [label="photo pickers\n/ library"];
     what -> "skills/avfoundation-ref.md" [label="audio / AVFoundation"];
     what -> "skills/shazamkit.md" [label="ShazamKit\n/ audio recognition"];
+    what -> "skills/music-understanding.md" [label="music analysis\n(key/tempo/structure)"];
     what -> "skills/haptics.md" [label="haptic feedback"];
     what -> "skills/now-playing.md" [label="Now Playing\n/ remote commands"];
     what -> "skills/carplay-hig.md" [label="CarPlay app design\n/ categories / entitlements"];
@@ -53,11 +56,12 @@ digraph media {
 2. Photo pickers / library? → `skills/photo-library.md`, `skills/photo-library-ref.md`
 3. Audio / AVFoundation? → `skills/avfoundation-ref.md`
 4. ShazamKit / audio recognition? → `skills/shazamkit.md`, `skills/shazamkit-ref.md`
-5. Haptics? → `skills/haptics.md`
-6. Now Playing / remote commands? → `skills/now-playing.md`, `skills/now-playing-carplay.md`, `skills/now-playing-musickit.md`
-7. CarPlay app design, category selection, entitlement request? → `skills/carplay-hig.md` (start here for any CarPlay work)
-8. DockKit motorized stands / gimbals, subject tracking, custom motor control? → `skills/dockkit.md`
-9. Want camera code audit? → Launch `camera-auditor` agent (detects deprecated APIs and architectural gaps: missing interruption handlers, runtime-error recovery, audio session deactivation, permission-denied UX, RotationCoordinator on iOS 17+; scores RELIABLE / FRAGILE / BROKEN)
+5. On-device music analysis (key, tempo, structure, pace, instruments, loudness)? → `skills/music-understanding.md` (`OS27`)
+6. Haptics? → `skills/haptics.md`
+7. Now Playing / remote commands? → `skills/now-playing.md`, `skills/now-playing-carplay.md`, `skills/now-playing-musickit.md`
+8. CarPlay app design, category selection, entitlement request? → `skills/carplay-hig.md` (start here for any CarPlay work)
+9. DockKit motorized stands / gimbals, subject tracking, custom motor control? → `skills/dockkit.md`
+10. Want camera code audit? → Launch `camera-auditor` agent (detects deprecated APIs and architectural gaps: missing interruption handlers, runtime-error recovery, audio session deactivation, permission-denied UX, RotationCoordinator on iOS 17+; scores RELIABLE / FRAGILE / BROKEN)
 
 ## Cross-Domain Routing
 
@@ -115,6 +119,9 @@ User: "Now Playing info doesn't appear on Lock Screen"
 
 User: "How do I identify songs with ShazamKit?"
 → Read: `skills/shazamkit.md`
+
+User: "How do I detect a song's tempo / key / beat grid on-device?" / "Analyze audio loudness or structure"
+→ Read: `skills/music-understanding.md`
 
 User: "Track a subject with a motorized stand" / "Control a DockKit gimbal"
 → Read: `skills/dockkit.md`
