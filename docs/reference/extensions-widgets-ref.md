@@ -32,6 +32,7 @@ Questions you can ask Claude that will draw from this reference:
 - "What are the differences between widget families on different platforms?"
 - "How do I set up App Groups correctly for both targets?"
 - "What's the complete ActivityAttributes implementation pattern?"
+- "How do I support extra-large widgets on the iPhone Home Screen? (iOS 27)"
 
 ## What's Covered
 
@@ -40,6 +41,7 @@ Questions you can ask Claude that will draw from this reference:
 - TimelineProvider: getTimeline, getSnapshot, placeholder
 - TimelineReloadPolicy: atEnd, after, never
 - Widget families: systemSmall/Medium/Large, accessory variants
+- Extra-large family on iPhone Home Screen + `systemExtraLargePortrait` (iOS 27)
 - WidgetCenter for reloads and configuration
 
 ### Interactive Widgets (iOS 17+)
@@ -54,6 +56,7 @@ Questions you can ask Claude that will draw from this reference:
 - 4KB content state limit
 - Push notification updates
 - ActivityKit request and update APIs
+- `isDynamicIslandLimitedInWidth` for narrow-island layout (iOS 27)
 
 ### Control Center Controls (iOS 18+)
 - Control protocol

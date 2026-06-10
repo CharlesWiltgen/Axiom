@@ -17,6 +17,7 @@ Complete reference for Core Spotlight framework and NSUserActivity—make app co
 - Delete indexed content
 - Debug Spotlight search not finding app content
 - Integrate NSUserActivity with App Intents (appEntityIdentifier)
+- Configure semantic / on-device LLM search over indexed content with `SearchableItemAttribute` (iOS 27)
 
 ## When to Use Each API
 

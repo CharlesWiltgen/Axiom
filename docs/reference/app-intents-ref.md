@@ -30,6 +30,7 @@ Questions you can ask Claude that will draw from this reference:
 - "Why isn't my intent showing up in Shortcuts?"
 - "How do I handle authentication in App Intents?"
 - "How do I index my intents for Spotlight search?"
+- "How do I adopt an app schema so Siri can drive my app? (iOS 27)"
 
 ## What's Covered
 
@@ -44,6 +45,8 @@ Questions you can ask Claude that will draw from this reference:
 - Disambiguation prompts
 - Confirmation dialogs
 - Error messages for voice
+- App Schemas — `@AppEntity`/`@AppIntent`/`@AppEnum(schema:)` macros + system schema domains (debuted iOS 18; domains expanded iOS 27: Calendar, Maps, Phone, Reminders, Notes, ImageGeneration, AppStore, Audio, Clock)
+- Xcode schema-completeness build errors with fix-its (iOS 27)
 
 ### Apple Intelligence
 - Smart suggestions

@@ -19,7 +19,7 @@ license: MIT
 | SF Symbols rendering modes, effects, animations | See `skills/sf-symbols.md` |
 | SF Symbols API signatures, UIKit equivalents, availability | See `skills/sf-symbols-ref.md` |
 | San Francisco fonts, text styles, Dynamic Type, tracking | See `skills/typography-ref.md` |
-| App entry points, auth flows, root view switching, scene lifecycle | See `skills/app-composition.md` |
+| App entry points, auth flows, root view switching, scene lifecycle, document-based apps | See `skills/app-composition.md` |
 | Apple Pay button / Wallet pass design / Tap to Pay button | See `axiom-payments` suite, plus `skills/hig.md` for cross-cutting HIG context |
 
 ## Decision Tree
@@ -131,6 +131,7 @@ digraph design {
 - Authentication state machine (login, onboarding, main)
 - Flicker-free root view switching
 - scenePhase lifecycle handling and state restoration
+- Document-based apps: the `OS27` `@Observable` document model (`ReadableDocument`/`WritableDocument`) + `DocumentGroup`
 
 ## Anti-Rationalization
 
