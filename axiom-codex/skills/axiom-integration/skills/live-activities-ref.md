@@ -162,6 +162,17 @@ Expanded sub-regions: `.leading`, `.trailing`, `.center`, `.bottom`. Modifiers o
 
 Design (WWDC 2023-10194): nest content concentrically inside the rounded shape (`Circle()` / `RoundedRectangle`, never sharp `Rectangle()`); use elastic springs (`.spring(response: 0.6, dampingFraction: 0.7)`), not linear animations.
 
+**Adapt to a narrow island — `\.isDynamicIslandLimitedInWidth` (`iOS27`)** A `Bool` `EnvironmentValue` (iPhone-only) that is `true` when the Dynamic Island renders with limited horizontal space — it applies to the `compactLeading`, `compactTrailing`, and `minimal` views (e.g. when another app's activity shares the island). Read it and trim content/spacing instead of letting the compact view clip:
+
+```swift
+struct CompactTrailing: View {
+    @Environment(\.isDynamicIslandLimitedInWidth) private var isNarrow
+    var body: some View {
+        Text(eta).font(isNarrow ? .caption2 : .caption)
+    }
+}
+```
+
 ---
 
 # Part 6: Push update payloads
@@ -234,8 +245,8 @@ AlarmKit renders alarms/timers *as* Live Activities. `AlarmPresentation` customi
 
 ## Resources
 
-**WWDC**: 2023-10184, 2023-10194, 2023-10185, 2024-10069, 2024-10068, 2025-230
+**WWDC**: 2023-10184, 2023-10194, 2023-10185, 2024-10069, 2024-10068, 2025-230, 2026-223
 
-**Docs**: /activitykit, /activitykit/activity, /activitykit/activityattributes, /activitykit/activitycontent, /activitykit/activityauthorizationinfo, /widgetkit/activityconfiguration, /widgetkit/dynamicisland
+**Docs**: /activitykit, /activitykit/activity, /activitykit/activityattributes, /activitykit/activitycontent, /activitykit/activityauthorizationinfo, /widgetkit/activityconfiguration, /widgetkit/dynamicisland, /swiftui/environmentvalues/isdynamicislandlimitedinwidth
 
 **Skills**: skills/live-activities.md, skills/extensions-widgets-ref.md (static/timeline widgets, Control Center), skills/push-notifications-ref.md (APNs payloads), skills/alarmkit-ref.md

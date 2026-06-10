@@ -3,11 +3,15 @@
 
 ## Overview
 
-The Foundation Models framework provides access to Apple's on-device Large Language Model (3 billion parameters, 2-bit quantized) with a Swift API. This reference covers every API, all WWDC 2025 code examples, and comprehensive implementation patterns.
+The Foundation Models framework provides access to Apple's on-device Large Language Model with a Swift API, and — new in the 27 cycle (`OS27`) — to a larger server-hosted model on Private Cloud Compute. This reference covers every API and the WWDC 2025 and 2026 code examples.
 
 ### Model Specifications
 
-3B parameter model, 2-bit quantized, 4096 token context (input + output combined). Optimized for on-device summarization, extraction, classification, and generation. NOT suited for world knowledge, complex reasoning, math, or translation. Runs entirely on-device — no network, no cost, no data leaves device.
+**On-device model.** A 3B-parameter, 2-bit-quantized LLM that runs entirely on-device — no network, no cost, no data leaves the device. Optimized for summarization, extraction, classification, and generation. NOT suited for world knowledge, complex reasoning, math, or translation.
+
+The 27-cycle on-device model was rebuilt (`OS27`): better at logic and tool calling, fewer guardrail false positives, and an **8,192-token** context window — double the original 4,096. Always read `SystemLanguageModel().contextSize` at runtime instead of hard-coding the limit.
+
+**Private Cloud Compute model (`OS27`, not tvOS).** For work the on-device model can't handle, `PrivateCloudComputeLanguageModel` runs a larger server-hosted model on Apple's Private Cloud Compute — a **32,000-token** context window plus multi-level reasoning, with the same privacy posture (no account, no API keys, no stored prompts). It carries an entitlement and is the first time Foundation Models reaches **watchOS** (`watchOS27`). See [Private Cloud Compute](#private-cloud-compute-os27).
 
 ---
 
@@ -71,6 +75,28 @@ let session = LanguageModelSession(
 ```
 
 #### From WWDC 286:18:39
+
+### Choosing a Model — `LanguageModel` Protocol (OS27)
+
+Every `LanguageModelSession` is backed by a type conforming to the `LanguageModel` protocol. `SystemLanguageModel` (on-device) and `PrivateCloudComputeLanguageModel` (server — see [Private Cloud Compute](#private-cloud-compute-os27)) both conform, and the session initializers are generic over `some LanguageModel`:
+
+```swift
+// On-device (default)
+let local = LanguageModelSession(model: SystemLanguageModel.default)
+
+// Larger server model on Private Cloud Compute
+let cloud = LanguageModelSession(model: PrivateCloudComputeLanguageModel())
+```
+
+Everything downstream — `respond(to:)`, `@Generable`, streaming, tools — is identical no matter which model backs the session. Query what a model supports before relying on a capability:
+
+```swift
+let caps = model.capabilities                  // LanguageModelCapabilities
+if caps.contains(.vision) { /* image input OK */ }
+// capabilities: .vision, .guidedGeneration, .reasoning, .toolCalling
+```
+
+Custom on-device models (via MLX or Core AI) and frontier server models (third-party Swift packages) conform to the same protocol — see [Ecosystem](#ecosystem-os27). `LanguageModelCapabilities` and the generalized initializers are `OS27` (not tvOS).
 
 ### Instructions vs Prompts
 
@@ -217,6 +243,8 @@ Button("Go!") {
 ### Overview
 
 `@Generable` enables structured output from the model using Swift types. The macro generates a schema at compile-time and uses **constrained decoding** to guarantee structural correctness.
+
+A `@Generable(name:description:)` overload (`OS27`) lets you give the generated schema an explicit name instead of inheriting the type name — useful when two `@Generable` types would otherwise collide in the prompt schema, or to keep a stable schema name across refactors.
 
 ### Basic Usage
 
@@ -1002,6 +1030,143 @@ func canAccept(_ instructions: Instructions, session: LanguageModelSession, next
 
 ---
 
+## Multimodal Image Input (OS27)
+
+The model can take **images** in a prompt when its `.vision` capability is present. `Attachment` is built with `@PromptBuilder` and conforms to `PromptRepresentable`, so it drops into any prompt builder alongside text:
+
+```swift
+import FoundationModels
+
+// Gate on the .vision capability; multimodal input is OS27 (not tvOS).
+guard model.capabilities.contains(.vision) else { /* fall back to text-only */ return }
+
+let response = try await session.respond {
+    "What landmark is in this photo, and what era is it from?"
+    Attachment(cgImage)                 // CGImage / CIImage / CVPixelBuffer
+    // or: Attachment(imageURL: fileURL)
+}
+```
+
+Image sources accepted (WWDC 241): `UIImage`/`NSImage`, `CGImage`, Core Image, CoreVideo pixel buffers, and file URLs — verified initializers are `Attachment(_ cgImage:orientation:)`, `Attachment(_ ciImage:orientation:)`, `Attachment(_ pixelBuffer:orientation:)`, and `Attachment(imageURL:orientation:)`. `.label("…")` annotates an attachment. Any size or aspect ratio works; larger images cost more tokens and latency. `Attachment` / `ImageAttachmentContent` are `OS27` (not tvOS).
+
+---
+
+## Private Cloud Compute (OS27)
+
+`PrivateCloudComputeLanguageModel` runs the larger, server-hosted Apple model — a **32,000-token** context window plus reasoning — on Private Cloud Compute, with the same privacy guarantees as on-device (no account, no API keys, no stored prompts). It is `OS27` (not tvOS) and is the first time Foundation Models reaches **watchOS** (`watchOS27`).
+
+```swift
+import FoundationModels
+
+let pcc = PrivateCloudComputeLanguageModel()      // requires the PCC entitlement
+
+switch pcc.availability {
+case .available:
+    let session = LanguageModelSession(model: pcc)
+    let response = try await session.respond(
+        to: "Summarize the key risks in this contract.",
+        contextOptions: ContextOptions(reasoningLevel: .deep)
+    )
+    print(response.content)
+case .unavailable(.deviceNotEligible):
+    break   // fall back to SystemLanguageModel or a server you control
+case .unavailable(.systemNotReady):
+    break   // try again later
+}
+```
+
+**Key points**:
+- **Requires the Private Cloud Compute entitlement.** Without it the model is unavailable.
+- `availability` → `.available` / `.unavailable(.deviceNotEligible | .systemNotReady)`; `isAvailable` is the Bool shortcut. `contextSize` is `async throws` (reports 32,000).
+- Quota: `pcc.quotaUsage` (`.status`, `.isLimitReached`, `.resetDate`, `.limitIncreaseSuggestion`). Handle `PrivateCloudComputeLanguageModel.Error`: `.networkFailure`, `.quotaLimitReached` (its payload carries `resetDate` + `limitIncreaseSuggestion`), `.serviceUnavailable`.
+- Pricing (WWDC 241): no developer cloud cost under 2M first-time downloads; users get daily PCC access, with higher limits for iCloud+ subscribers.
+- `supportedLanguages` / `supportsLocale(_:)` report language coverage, same as `SystemLanguageModel`.
+
+---
+
+## Reasoning & Token Usage (OS27)
+
+`ContextOptions` is a new argument on every `respond(...)` / `streamResponse(...)` overload. It carries a reasoning level and the per-call `includeSchemaInPrompt` flag:
+
+```swift
+let response = try await session.respond(
+    to: "Recommend a craft that doesn't require scissors.",
+    contextOptions: ContextOptions(reasoningLevel: .light)   // .light, .moderate, .deep, .custom("…")
+)
+
+// Token accounting — on the response, or cumulatively on the session
+print(response.usage.input.totalTokenCount)
+print(response.usage.input.cachedTokenCount)
+print(response.usage.output.totalTokenCount)
+print(response.usage.output.reasoningTokenCount)   // tokens spent reasoning
+print(session.usage.totalTokenCount)               // running total for the session
+```
+
+`ReasoningLevel` is `.light`, `.moderate`, `.deep`, or `.custom(String)`. Reasoning is most impactful with Private Cloud Compute, though the rebuilt on-device model also reasons better in 27. `ContextOptions` and `Usage` are `OS27` (not tvOS).
+
+---
+
+## Dynamic Profiles (OS27)
+
+`LanguageModelSession.DynamicProfile` is a declarative replacement for hand-rolled multi-session orchestration (rebuilding a session whenever the app's mode changes). A profile resolves to a single active `Profile` — instructions + tools + model/reasoning — and the framework transitions between branches while preserving conversation history:
+
+```swift
+struct CraftProfile: LanguageModelSession.DynamicProfile {
+    let states: CraftProjectStates
+    var body: some DynamicProfile {
+        switch states.mode {
+        case .analysis:
+            Profile {
+                Instructions { "You analyze craft project photos…" }
+                RecordImageAnalysisTool()
+                SwitchModeTool(states: states)
+            }
+        case .brainstorm:
+            Profile {
+                Instructions { "You brainstorm new project ideas…" }
+                BrainstormRecordTool()
+            }
+            .model(states.privateCloudCompute)   // swap the model per branch…
+            .reasoningLevel(.deep)               // …and the reasoning level, keeping history
+        }
+    }
+}
+
+let session = LanguageModelSession(profile: CraftProfile())
+```
+
+Built with `@DynamicProfileBuilder`; `if`/`switch` are backed by `ConditionalDynamicProfile`. Modifiers `.model(_:)` and `.reasoningLevel(_:)` reconfigure a branch without discarding the transcript. `OS27` (not tvOS).
+
+---
+
+## Built-in System Tools (OS27)
+
+The 27 cycle ships native `Tool`s through cross-import overlays — no custom implementation needed:
+
+```swift
+import FoundationModels
+import Vision                              // surfaces BarcodeReaderTool, OCRTool
+
+let session = LanguageModelSession(tools: [BarcodeReaderTool(), OCRTool()])
+```
+
+- **`BarcodeReaderTool`** — Vision-backed barcode/QR reading. `OS27` including `watchOS27` (not tvOS). Optional `init(name:description:)`.
+- **`OCRTool`** — Vision-backed text recognition. `OS27` except watchOS (not watchOS/tvOS).
+- **`SpotlightSearchTool`** — `import CoreSpotlight` + `FoundationModels`. Runs fully local **RAG** over your Spotlight-indexed content via `SearchSource` / `CoreSpotlightSource` / `FileSource` with a `Configuration` + `Guide`. `OS27` except watchOS (not watchOS/tvOS). For the indexing side, see axiom-integration (CoreSpotlight).
+
+---
+
+## Ecosystem (OS27)
+
+- The FoundationModels framework is going **open source** and runs anywhere Swift runs (including Linux).
+- The `LanguageModel` protocol lets a session be backed by custom on-device models via **MLX** (`MLXLanguageModel`) or **Core AI** (`CoreAILanguageModel`) — both open-source, running on the Neural Engine / Mac GPU — or by **frontier server models** from providers (Anthropic, Google) shipping conforming Swift packages. With third-party server models you own auth + per-token billing: use OAuth + Keychain, never embed keys.
+- **Evaluations** framework — measure feature quality/accuracy as you iterate on prompts (macOS tooling; not in the iOS SDK).
+- **`fm` CLI** (`macOS27`) — terminal access to the on-device and PCC models (`fm chat`), scriptable into shell pipelines.
+- **Foundation Models SDK for Python** (`apple_fm_sdk`) — the same on-device model from Python.
+- **Core AI** is a separate framework for authoring/compiling on-device models ahead of time; see `axiom-ai (skills/ios-ml.md)`. The custom-provider plumbing behind these (`LanguageModelExecutor`, `LanguageModelExecutorGenerationChannel`) is documented in WWDC 339.
+
+---
+
 ## Performance & Profiling
 
 ### Foundation Models Instrument
@@ -1138,6 +1303,18 @@ Playgrounds can also access types defined in your app (like @Generable structs).
 - **`DynamicGenerationSchema`** — Runtime schema definition with `GeneratedContent` output
 - **`GenerationError`** (9 cases) — `.exceededContextWindowSize`, `.guardrailViolation`, `.unsupportedLanguageOrLocale`, `.unsupportedGuide`, `.decodingFailure`, `.rateLimited`, `.concurrentRequests`, `.assetsUnavailable`, `.refusal(Refusal, Context)`. Tool failures: `ToolCallError` (`.tool`, `.underlyingError`).
 
+### OS27 additions
+
+- **`LanguageModel`** (protocol) — backs any session; `SystemLanguageModel` + `PrivateCloudComputeLanguageModel` conform. `var capabilities: LanguageModelCapabilities`. Session inits are generic over `model: some LanguageModel`.
+- **`LanguageModelCapabilities`** — `.contains(.vision | .guidedGeneration | .reasoning | .toolCalling)`
+- **`PrivateCloudComputeLanguageModel`** — `init()`, `availability` (`.available`/`.unavailable(.deviceNotEligible|.systemNotReady)`), `isAvailable`, `quotaUsage`, `contextSize` (async, 32 000), `Error` (`.networkFailure`/`.quotaLimitReached`/`.serviceUnavailable`). Entitlement-gated. Not tvOS.
+- **`Attachment<ImageAttachmentContent>`** — image prompt input: `init(_ cgImage:/ciImage:/pixelBuffer:orientation:)`, `init(imageURL:orientation:)`, `.label(_:)`. Not tvOS.
+- **`ContextOptions(includeSchemaInPrompt:reasoningLevel:)`** — param on `respond`/`streamResponse`; `ReasoningLevel` = `.light`/`.moderate`/`.deep`/`.custom(String)`.
+- **`session.usage` / `response.usage`** — `Usage` → `input.totalTokenCount`/`input.cachedTokenCount`, `output.totalTokenCount`/`output.reasoningTokenCount`, `totalTokenCount`.
+- **`LanguageModelSession.DynamicProfile`** — `Profile { Instructions {…}; <Tools> }`, `LanguageModelSession(profile:)`, modifiers `.model(_:)` / `.reasoningLevel(_:)`.
+- **`@Generable(name:description:)`** — explicit schema name overload.
+- **System tools** — `BarcodeReaderTool`, `OCRTool` (`import Vision`); `SpotlightSearchTool` (`import CoreSpotlight`) for local RAG.
+
 ---
 
 ## Migration Strategies
@@ -1145,7 +1322,8 @@ Playgrounds can also access types defined in your app (like @Generable structs).
 ### From Server LLMs
 
 - **Migrate when**: Privacy required, offline needed, per-request costs are a concern, and use case fits (summarization/extraction/classification)
-- **Stay on server when**: Need world knowledge, complex reasoning, or >4096 token context
+- **Reach for Private Cloud Compute** (`OS27`) when the on-device model's 8,192-token window or capabilities fall short but you still want Apple's privacy boundary — `PrivateCloudComputeLanguageModel` gives a 32,000-token window and reasoning without an API key or stored prompts
+- **Stay on a third-party server when**: Need broad world knowledge or context beyond what Private Cloud Compute offers — and accept that you own auth, billing, and the privacy trade-off
 
 ### From Manual JSON Parsing
 
@@ -1155,13 +1333,14 @@ Use `@Generable` with `respond(to:generating:)` instead of prompting for JSON an
 
 ## Resources
 
-**WWDC**: 286, 259, 301
+**WWDC**: 2025-286, 2025-259, 2025-301, 2026-241, 2026-242, 2026-319, 2026-339, 2026-324
+
+**Docs**: /foundationmodels, /foundationmodels/privatecloudcomputelanguagemodel, /foundationmodels/attachment, /CoreAI, /Evaluations
 
 **Skills**: axiom-ai (skills/foundation-models.md), axiom-ai (skills/foundation-models-diag.md)
 
 ---
 
-**Last Updated**: 2025-12-03
-**Version**: 1.0.0
+**Last Updated**: 2026-06-09
 **Skill Type**: Reference
-**Content**: All WWDC 2025 code examples included
+**Content**: WWDC 2025 + 2026 code examples; OS27 surface verified against the Xcode 27 SDK

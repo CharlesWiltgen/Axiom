@@ -277,6 +277,12 @@ Fixed-size, stack-allocated array using value generics. No heap allocation, no r
 
 The `let count: Int` is a **value generic** — the size is part of the type, checked at compile time. `InlineArray<3, Int>` and `InlineArray<4, Int>` are different types.
 
+On Swift 6.4 (Xcode 27) you can also write the type with the `[count of Element]` shorthand (`OS27`):
+
+```swift
+let rgb: [3 of Double] = [0.2, 0.4, 0.8]   // == InlineArray<3, Double>
+```
+
 ### When to Use InlineArray
 
 | Use InlineArray | Use Array |
@@ -416,6 +422,36 @@ let b: InlineArray<4, Int> = [1, 2, 3, 4]
 
 Currently limited to `Int` parameters. Enables stack-allocated, fixed-size abstractions where the compiler verifies size compatibility at compile time.
 
+## Swift 6.4 Additions (OS27)
+
+The 6.4 toolchain (Xcode 27) extends the ownership toolkit. These are verified against the Xcode 27.0 beta compiler:
+
+### `borrow` / `mutate` accessors
+
+Replace `get`/`set` to expose shared storage **without copying** — and to vend `~Copyable` values from a computed property:
+
+```swift
+var value: Value {
+    borrow { storage.pointee }     // read-only, no copy
+    mutate { &storage.pointee }    // exclusive in-place access
+}
+```
+
+### Noncopyable & nonescapable conformances
+
+`Equatable`, `Comparable`, and `Hashable` now work on `~Copyable` types (`Equatable`/`Comparable` also on `~Escapable`), and associated types may be `~Copyable` / `~Escapable`. You no longer have to make a unique-resource type copyable just to compare or hash it:
+
+```swift
+struct FileHandle: ~Copyable, Equatable {
+    let fd: Int32
+    static func == (a: borrowing FileHandle, b: borrowing FileHandle) -> Bool { a.fd == b.fd }
+}
+```
+
+### Not yet in the beta SDK
+
+WWDC 2026-262 also announced new stdlib containers for 6.4 — `UniqueArray` (`~Copyable` array), `UniqueBox`, `Ref`/`MutableRef` (a single-value `Span`), `Continuation` (compile-time single-resume), and `for`-loop iteration over a new `Iterable` protocol (borrows elements, batches via `Span`). **None of these are in the Xcode 27.0 beta-1 stdlib yet** (verified absent from `Swift.swiftinterface`) — treat them as forthcoming, not adoptable today. Re-check in a later beta.
+
 ## Decision Tree
 
 ```
@@ -441,7 +477,7 @@ Need explicit ownership?
 
 **Swift Evolution**: SE-0377, SE-0453 (Span), SE-0451 (InlineArray), SE-0452 (value generics)
 
-**WWDC**: 2024-10170, 2025-245, 2025-312
+**WWDC**: 2024-10170, 2025-245, 2025-312, 2026-262
 
 **Docs**: /swift/inlinearray, /swift/span
 

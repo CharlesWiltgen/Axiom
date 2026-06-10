@@ -30,6 +30,17 @@ StoreKit 2 is Apple's modern in-app purchase framework with async/await APIs, au
 - Examples: seasonal passes
 - MUST restore on new devices
 
+### iOS 27 Additions — Advanced Commerce & AppTransaction (OS27)
+
+New in the 27 cycle, all platforms (`@available(anyAppleOS 27, *)` on Swift 6.4 / Xcode 27):
+
+- **Subscription bundles** — two new `Product.ProductType` values, `.subscriptionBundle` and `.subscriptionSuite`, plus `Product.SubscriptionInfo.bundledSubscriptions: [BundledSubscription]` (non-empty only for a `.subscriptionBundle` product; each `BundledSubscription` carries `id` / `displayName` / `description` / `price`). Part of Advanced Commerce.
+- **`AppTransaction.all`** — an `AppTransaction.AppTransactions` async sequence yielding every `VerificationResult<AppTransaction>` for this app version, alongside the existing single `AppTransaction.shared`.
+- **`AppTransaction.storeType`** — `StoreType.consumer` / `.education` / `.enterprise`, distinguishing the storefront an install came through.
+- **New error cases** — `RefundRequestError.ineligible` and `StoreKitError.invalidPresentationContext`; handle both in existing `catch` blocks.
+
+This is a what's-new pointer — full Advanced Commerce adoption (server-side commerce, partner / redeem flows) is its own subject. See WWDC 2026-210.
+
 ### Key Improvements Over StoreKit 1
 
 - **Async/Await**: Modern concurrency instead of delegates/closures
@@ -1500,9 +1511,9 @@ let products = try await Product.products(for: productIDs)
 
 ## Resources
 
-**WWDC**: 2025-241, 2025-249, 2024-10061, 2024-10062, 2024-10110, 2023-10013, 2023-10140, 2022-10007, 2022-110404, 2021-10114
+**WWDC**: 2025-241, 2025-249, 2024-10061, 2024-10062, 2024-10110, 2023-10013, 2023-10140, 2022-10007, 2022-110404, 2021-10114, 2026-210
 
-**Docs**: /storekit
+**Docs**: /storekit, /storekit/product/subscriptioninfo/bundledsubscriptions, /storekit/apptransaction/all, /storekit/apptransaction/storetype
 
 **Skills**: skills/in-app-purchases.md
 

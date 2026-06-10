@@ -123,7 +123,10 @@ No user configuration needed? Use `StaticConfiguration`. Simple static options? 
 - **`systemSmall`** (~170×170, iOS 14+) — Single piece of info, icon
 - **`systemMedium`** (~360×170, iOS 14+) — Multiple data points, chart
 - **`systemLarge`** (~360×380, iOS 14+) — Detailed view, list
-- **`systemExtraLarge`** (~720×380, iOS 15+ iPad only) — Rich layouts, multiple views
+- **`systemExtraLarge`** (~720×380, iOS 15+) — Rich layouts, multiple views. iPad-only through iOS 26; the 27 cycle brings the landscape extra-large family to the **iPhone** Home Screen (a Home-Screen capability change, WWDC 2026-277, no API delta).
+- **`systemExtraLargePortrait`** `iOS27/macOS27` — portrait-oriented extra-large family (the genuine new API; visionOS already had it at 26). Declare it alongside `systemExtraLarge` so the system picks the orientation that fits the placement.
+
+> **OS27 gating** `systemExtraLargePortrait` doesn't exist before the 27 SDK, and the iPhone extra-large slot only renders on 27. Declare the families in `supportedFamilies` and gate the matching `switch` arm with `if #available(iOS 27, *)`.
 
 ### Accessory Families (Lock Screen, iOS 16+)
 - **`accessoryCircular`** (~48×48pt) — Circular complication, icon or gauge
@@ -684,7 +687,7 @@ visionOS supports all system families plus extra-large sizes:
 .supportedFamilies([
     .systemSmall, .systemMedium, .systemLarge,
     .systemExtraLarge,
-    .systemExtraLargePortrait  // visionOS-specific portrait orientation
+    .systemExtraLargePortrait  // portrait extra-large (visionOS 26+, iOS/macOS 27+)
 ])
 ```
 
@@ -993,9 +996,9 @@ let entries = (0..<100).map { offset in
 
 ## Resources
 
-**WWDC**: 2025-278, 2024-10157, 2024-10098, 2023-10028, 2022-10184, 2022-10185
+**WWDC**: 2025-278, 2024-10157, 2024-10098, 2023-10028, 2022-10184, 2022-10185, 2026-277
 
-**Docs**: /widgetkit, /appintents
+**Docs**: /widgetkit, /widgetkit/widgetfamily/systemextralargeportrait, /appintents
 
 **Skills**: skills/live-activities-ref.md (Live Activities & Dynamic Island), skills/app-intents-ref.md, axiom-concurrency, axiom-swiftui, skills/extensions-widgets.md
 
