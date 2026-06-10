@@ -5,7 +5,7 @@ description: First-time setup, client configuration, and connection troubleshoot
 
 # Xcode MCP Setup
 
-Discipline skill for connecting external AI clients (Claude Code, Cursor, Codex, VS Code, Gemini CLI) to Xcode's MCP server. Covers the Settings toggle, per-client configuration, the PID-based permission dialog, multi-Xcode targeting via `MCP_XCODE_PID`, and the schema-compliance workaround for strict clients.
+Discipline skill for connecting external AI clients (Claude Code, Cursor, Codex, VS Code, Gemini CLI) to Xcode's MCP server. Covers the Xcode 27 "Allow external agents to use Xcode tools" gate, per-client configuration, the PID-based permission dialog, the `run-agent` launch path, multi-Xcode targeting via `MCP_XCODE_PID`, and the schema-compliance workaround for strict clients.
 
 ## When to Use
 
@@ -26,6 +26,8 @@ Use this skill when:
 - "I have two Xcode windows open and MCP keeps hitting the wrong one"
 - "Why does Xcode show the permission dialog every time I restart Claude Code?"
 - "Where do I enable MCP in Xcode Settings?"
+- "How do I let Xcode launch Claude Code with my project's config?"
+- "How do I add a custom MCP server or plug-in to Xcode's agent?"
 
 ## What This Skill Provides
 
@@ -36,7 +38,8 @@ Use this skill when:
 - **Multi-Xcode targeting** — auto-detection fallback chain plus manual `MCP_XCODE_PID` and `MCP_XCODE_SESSION_ID` overrides
 - **Schema compliance workaround** — XcodeMCPWrapper proxy for strict clients that need `structuredContent`
 - **Troubleshooting decision tree** — connection failed, empty tools list, wrong project, repeated prompts, response rejected
-- **Xcode built-in assistant config** — separate config paths under `~/Library/Developer/Xcode/CodingAssistant/`
+- **Letting Xcode launch the agent** — `xcrun mcpbridge run-agent` starts an agent with Xcode's resolved config (auth, env, MCP tools); `run-agent skills export` (Xcode 27) dumps Xcode's built-in skill bundles to disk
+- **Extending Xcode's agent** — per-agent config folders (Claude, Codex, Gemini) for custom models, MCP servers, and skills, plus Agents → Permissions and Plug-ins
 
 ## Related
 
