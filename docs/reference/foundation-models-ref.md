@@ -29,6 +29,10 @@ Questions you can ask Claude that will draw from this reference:
 - "Which `SystemLanguageModel` use case do I pick for content tagging?"
 - "How do I handle a guardrail violation or an exceeded context window?"
 - "How do I check model availability before using it?"
+- "How do I use the larger Private Cloud Compute model for a bigger context window?" (iOS 27)
+- "How do I send an image into a Foundation Models prompt?" (iOS 27)
+- "How do I set a reasoning level and read token usage on a response?" (iOS 27)
+- "How do I use the built-in barcode, OCR, or Spotlight search tools?" (iOS 27)
 
 ## What's Covered
 
@@ -54,6 +58,15 @@ Questions you can ask Claude that will draw from this reference:
 ### Errors & Availability
 - `LanguageModelError` (`.contextSizeExceeded`, `.guardrailViolation`, `.rateLimited`, `.refusal`, `.unsupportedCapability`, …) and `LanguageModelSession.GenerationError`
 - `SystemLanguageModel.availability` before use
+
+### OS27 Additions (iOS 27)
+- `LanguageModel` protocol + `LanguageModelCapabilities` (`.vision`/`.guidedGeneration`/`.reasoning`/`.toolCalling`); generic `model: some LanguageModel` sessions
+- Private Cloud Compute: `PrivateCloudComputeLanguageModel` (availability, quota, 32K context, typed errors, entitlement; reaches watchOS 27)
+- Multimodal: `Attachment<ImageAttachmentContent>` image input in a prompt builder
+- Reasoning + usage: `ContextOptions(reasoningLevel:)`, `session.usage`/`response.usage`
+- Dynamic Profiles: `LanguageModelSession.DynamicProfile` / `Profile` / `init(profile:)`
+- Built-in system tools: `BarcodeReaderTool`, `OCRTool`, `SpotlightSearchTool` (local RAG)
+- `@Generable(name:)` explicit schema name
 
 ## Key Patterns
 

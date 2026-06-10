@@ -19,6 +19,8 @@ Use this skill when:
 - Defining @Generable output types
 - Building tools for the model
 - Streaming responses to UI
+- Using the Private Cloud Compute model or sending images into a prompt (iOS 27)
+- Setting reasoning levels, reading token usage, or using Dynamic Profiles (iOS 27)
 
 ## Anti-Patterns Prevented
 

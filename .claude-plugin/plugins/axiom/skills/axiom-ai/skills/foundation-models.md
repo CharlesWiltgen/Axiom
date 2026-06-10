@@ -126,7 +126,7 @@ Each `.unavailable` branch needs a tested fallback UI. Use the Xcode scheme's **
 ---
 
 ### ❌ Single Huge Prompt
-**Why it fails**: 4096 token context window (input + output). One massive prompt hits limit, gives poor results.
+**Why it fails**: The model has a fixed context window (input + output) — **8,192 tokens** in the 27 on-device model (`OS27`), 4,096 in the original. One massive prompt hits the limit and gives poor results. Read `SystemLanguageModel().contextSize` rather than assuming a number.
 
 **Example of wrong use**:
 ```swift
@@ -149,7 +149,7 @@ let prompt = """
 do {
     let response = try await session.respond(to: prompt)
 } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
-    // Multi-turn transcript grew beyond 4096 tokens
+    // Multi-turn transcript grew beyond the context window
     // → Condense transcript and create new session (see Pattern 5)
 } catch LanguageModelSession.GenerationError.guardrailViolation {
     // Content policy triggered
@@ -167,6 +167,28 @@ The remaining six cases (each also carries a `Context`):
 - `rateLimited` — too many requests; back off and retry
 - `concurrentRequests` — a request was issued while `session.isResponding == true`; serialize requests per session
 - `refusal(let refusal, _)` — model refused; the `Refusal` value carries the reason to surface or log
+
+---
+
+### ❌ Assuming Private Cloud Compute Is Always On (OS27)
+**Why it fails**: `PrivateCloudComputeLanguageModel` (`OS27`) is entitlement-gated, device-eligibility-gated, network-dependent, and quota-limited. Treating it like the on-device model — no availability check, no quota handling — ships a feature that silently fails for ineligible devices, offline users, or anyone who hits their daily limit.
+
+```swift
+let pcc = PrivateCloudComputeLanguageModel()
+guard pcc.isAvailable else { /* fall back to SystemLanguageModel */ return }
+do {
+    let response = try await LanguageModelSession(model: pcc).respond(to: prompt)
+} catch let error as PrivateCloudComputeLanguageModel.Error {
+    switch error {
+    case .quotaLimitReached(let info):     // info.resetDate / .limitIncreaseSuggestion
+        break  // tell the user when access resets; offer the on-device path
+    case .networkFailure, .serviceUnavailable:
+        break  // PCC needs the network — fall back or retry
+    }
+}
+```
+
+**Correct approach**: check `availability`/`isAvailable`, handle `.quotaLimitReached`/`.networkFailure`/`.serviceUnavailable`, and keep the on-device model as a fallback. PCC requires the Private Cloud Compute entitlement.
 
 ---
 
@@ -815,7 +837,7 @@ See `axiom-ai (skills/foundation-models-ref.md)` for `Tool` protocol reference, 
 
 ## Pattern 5: Context Management
 
-**Use when**: Multi-turn conversations that might exceed 4096 token limit.
+**Use when**: Multi-turn conversations that might exceed the model's context window.
 
 ### The Problem
 
@@ -828,17 +850,19 @@ for i in 1...100 {
 }
 ```
 
-**Context window**: read `SystemLanguageModel.default.contextSize` for the exact value. Current on-device base is 4096 tokens (input + output combined).
+**Context window**: always read `SystemLanguageModel().contextSize` at runtime. The rebuilt 27 on-device model reports **8,192 tokens** (input + output combined) — double the original 4,096 (`OS27`). Don't hard-code either number.
 
 **Exact sizing for Instructions** (iOS 26.4+): `try await SystemLanguageModel.default.tokenCount(for: instructions)`. Use this before composing a session so verbose instructions don't silently consume the budget.
 
 **Estimation fallback** for prompts, transcripts, and pre-26.4 targets: ~3 characters per token in English; more for PFIGSCJK languages. See `axiom-ai (skills/foundation-models-ref.md)` "Token Sizing and Context Size".
 
-**Rough calculation**:
-- 4096 tokens ≈ 12,000 characters
-- ≈ 2,000-3,000 words total
+**Rough calculation** (8,192-token on-device window):
+- 8,192 tokens ≈ 24,000 characters
+- ≈ 4,000-6,000 words total
 
 **Long conversation** or **verbose prompts/responses** → Exceed limit
+
+**Genuinely need more?** Escalating to `PrivateCloudComputeLanguageModel` (`OS27`) raises the window to **32,000 tokens** while staying inside Apple's privacy boundary — prefer it over a third-party server when the use case fits. See `axiom-ai (skills/foundation-models-ref.md)` "Private Cloud Compute".
 
 ### Handling Context Overflow
 
@@ -1284,20 +1308,21 @@ Before shipping Foundation Models features:
 
 ### Model Capability
 - [ ] **Not** using for world knowledge
-- [ ] **Not** using for complex reasoning
+- [ ] **Not** using the on-device model for complex reasoning (escalate to `PrivateCloudComputeLanguageModel` for that — `OS27`)
 - [ ] Use case is: summarization, extraction, classification, or generation
 - [ ] Have fallback if unavailable (show message, disable feature)
+- [ ] Image input gated on `model.capabilities.contains(.vision)` (`OS27`)
+- [ ] Private Cloud Compute paths check `availability` and handle quota/network errors (`OS27`)
 
 ---
 
 ## Resources
 
-**WWDC**: 286, 259, 301
+**WWDC**: 2025-286, 2025-259, 2025-301, 2026-241, 2026-242
 
 **Skills**: axiom-ai (skills/foundation-models-diag.md), axiom-ai (skills/foundation-models-ref.md)
 
 ---
 
-**Last Updated**: 2025-12-03
-**Version**: 1.0.0
-**Target**: iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+
+**Last Updated**: 2026-06-09
+**Target**: iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+; OS27 surface verified against the Xcode 27 SDK

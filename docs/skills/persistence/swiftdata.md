@@ -30,6 +30,9 @@ Questions you can ask Claude that will draw from this skill:
 - "We're migrating from Realm to SwiftData. What are the biggest code differences?"
 - "How do I handle CloudKit sync conflicts in my chat app?"
 - "Which properties should I add indexes to without slowing down writes?"
+- "How do I group @Query results into sections by a property?" (iOS 27)
+- "I'm using SwiftData in a UIKit controller — how do I observe results outside SwiftUI?" (iOS 27)
+- "How do I store a Codable type I don't own as a SwiftData attribute?" (iOS 27)
 
 ## What This Skill Provides
 

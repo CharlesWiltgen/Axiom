@@ -43,6 +43,7 @@ Questions you can ask Claude that will draw from this skill:
 - "What's MLTensor and when should I use it?"
 - "Add live transcription with SpeechAnalyzer to my app."
 - "My compressed model has bad accuracy. What went wrong?"
+- "How do I use Core AI to serve my own on-device model to Foundation Models?" (iOS 27)
 
 ## What This Skill Provides
 
