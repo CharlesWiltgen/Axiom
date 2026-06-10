@@ -233,6 +233,25 @@ let sample = HKCategorySample(
 try await store.save(sample)
 ```
 
+## Reproductive Health — Menopausal State `OS27`
+
+HealthKit adds a menopausal-state category (`HKCategoryTypeIdentifierMenopausalState`, all platforms 27) for cycle-tracking and reproductive-health apps. Like State of Mind and Medications, this is **sensitive** data — apply the same authorization care described at the top of this file and in `authorization-and-privacy.md`.
+
+```swift
+@available(anyAppleOS 27, *)
+func logMenopausalState(_ store: HKHealthStore) async throws {
+    let sample = HKCategorySample(
+        type: HKCategoryType(.menopausalState),
+        value: HKCategoryValueMenopausalState.perimenopause.rawValue,
+        start: .now,
+        end: .now
+    )
+    try await store.save(sample)
+}
+```
+
+The three values are `.menopause`, `.perimenopause`, and `.none`. `HKCategoryValueMenopausalState` conforms to `HKCategoryValuePredicateProviding`, so you can filter category queries by value directly. (Note: the `HKCategoryValueVaginalBleeding` category is **iOS 18**, not new in 27 — don't gate it on `OS27`.)
+
 ## Info.plist
 
 Both State of Mind and Medications require the same keys as any HealthKit feature:
@@ -259,6 +278,6 @@ Write purpose strings that honestly describe why the app needs mental-health or 
 
 **WWDC**: 2024-10109, 2025-321
 
-**Docs**: /healthkit/hkstateofmind, /healthkit/hkmedicationconcept, /healthkit/hkuserannotatedmedication, /healthkit/hkmedicationdoseevent, /healthkit/hkclinicalcoding, /healthkit/hkuserannotatedmedicationquerydescriptor, /healthkit/logging-symptoms-associated-with-a-medication, /healthkit/visualizing-healthkit-state-of-mind-in-visionos, /healthkitui/healthdataaccessrequest(store:sharetypes:readtypes:trigger:completion:)
+**Docs**: /healthkit/hkstateofmind, /healthkit/hkmedicationconcept, /healthkit/hkuserannotatedmedication, /healthkit/hkmedicationdoseevent, /healthkit/hkclinicalcoding, /healthkit/hkuserannotatedmedicationquerydescriptor, /healthkit/logging-symptoms-associated-with-a-medication, /healthkit/visualizing-healthkit-state-of-mind-in-visionos, /healthkit/recording-and-querying-menopausal-state, /healthkitui/healthdataaccessrequest(store:sharetypes:readtypes:trigger:completion:)
 
 **Skills**: axiom-health (fundamentals, authorization-and-privacy, queries, sync-and-background)

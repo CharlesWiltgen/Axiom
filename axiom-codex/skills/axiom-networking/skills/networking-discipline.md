@@ -10,6 +10,7 @@ Use when:
 - Supporting network transitions (WiFi ↔ cellular) gracefully
 - Adopting structured concurrency networking patterns (iOS 26+)
 - Implementing custom protocols over TLS/QUIC
+- Choosing between URLSession, Network.framework, and gRPC Swift for a service you control
 - Requesting code review of networking implementation before shipping
 
 #### Related Skills
@@ -211,6 +212,7 @@ Need networking?
 - Messaging (reliable, ordered) → TLS patterns (1a or 2a)
 - Mixed message types → TLV or Coder (1c or 1d)
 - Peer-to-peer → Discovery patterns (2d) + incoming (2c)
+- Typed RPC + streaming against a service you control → gRPC Swift (see "gRPC with Swift" below)
 
 ---
 
@@ -535,6 +537,61 @@ public func receiveWithCoder() async throws {
 - No JSON boilerplate: ~50 lines → ~10 lines
 - Type-safe: Compiler catches message structure changes
 - Automatic framing: Handles message boundaries
+
+---
+
+## gRPC with Swift
+
+For typed request/response APIs and streaming services, **gRPC Swift v2** — the Swift Server team's structured-concurrency rewrite shown at WWDC 2026 — is a first-class option alongside URLSession/REST and raw Network.framework. It generates a typed client (and server) from a `.proto` schema and runs over HTTP/2.
+
+gRPC is an **SPM package, not an OS-gated framework** — it back-deploys per its own `Package.swift` platform requirements and does **not** require iOS/macOS 27 (so no `OS27` marker). It is a 27-cycle *ecosystem* addition, not an SDK API.
+
+#### Choosing a layer
+
+| Need | Use |
+|------|-----|
+| REST/JSON against an existing HTTP API | URLSession |
+| Custom TCP/UDP/TLS/QUIC wire protocol, peer-to-peer, lowest latency | Network.framework / NetworkConnection |
+| Typed RPC + bidirectional streaming against a service you control | **gRPC Swift** |
+| An OpenAPI-described HTTP service | Swift OpenAPI Generator |
+
+#### Setup
+
+Add two package dependencies: **`grpc-swift-nio-transport`** (HTTP/2 networking on SwiftNIO) and **`grpc-swift-protobuf`** (the `GRPCProtobufGenerator` build plugin that compiles `.proto` files to Swift). At runtime you import **`GRPCCore`**, a transport such as **`GRPCNIOTransportHTTP2`**, and **`SwiftProtobuf`** for messages.
+
+#### Client — the common iOS case
+
+```swift
+import GRPCCore
+import GRPCNIOTransportHTTP2
+
+try await withGRPCClient(
+    transport: .http2NIOTS(
+        target: .dns(host: "api.example.com"),
+        transportSecurity: .tls
+    )
+) { client in
+    let service = SwiftKartService.Client(wrapping: client)   // generated from .proto
+    let response = try await service.listRaces(ListRacesRequest())
+    // ...
+}
+```
+
+`withGRPCClient` owns the connection for the closure's lifetime — don't let `client` escape it. Use `.plaintext` only for local development; ship `.tls`.
+
+#### Streaming
+
+gRPC supports four call shapes: unary, client-streaming, server-streaming, and bidirectional. A bidirectional handler reads an `RPCAsyncSequence<Request, any Error>` and writes to an `RPCWriter<Response>`; surface failures with `RPCError(code:message:)`.
+
+```swift
+try await service.followRace { requestStream in
+    for await update in localUpdates { try await requestStream.write(update) }
+} onResponse: { responseStream in
+    for try await message in responseStream.messages { render(message) }
+}
+```
+
+The server side (`GRPCServer(transport:services:)`, conforming a type to the generated `SwiftKartService.SimpleServiceProtocol`) is server-side-Swift territory — deploy it in a Linux container, not in the app. WWDC 2026-265 walks through the full server + Cloud Run path.
 
 ---
 
@@ -959,7 +1016,7 @@ Before shipping networking code, verify:
 
 ## Resources
 
-**WWDC**: 2018-715, 2025-250
+**WWDC**: 2018-715, 2025-250, 2026-265
 
 **Skills**: See `skills/networking-diag.md`, `skills/network-framework-ref.md`
 

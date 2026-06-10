@@ -1,6 +1,6 @@
 ---
 name: axiom-uikit
-description: Use when bridging UIKit and SwiftUI, debugging Auto Layout constraints, working with Combine, TextKit, or UIKit animations.
+description: Use when bridging UIKit and SwiftUI, modernizing UIKit apps (scene lifecycle, resizability), debugging Auto Layout, Combine, TextKit, PencilKit, or UIKit animations.
 license: MIT
 ---
 
@@ -24,12 +24,16 @@ license: MIT
 | Combine publishers, AnyCancellable lifecycle | See `skills/combine-patterns.md` |
 | @Published properties, Combine ↔ async/await | See `skills/combine-patterns.md` |
 | When to use Combine vs async/await | See `skills/combine-patterns.md` |
+| UIScene lifecycle required, resizable apps, size classes, tab sidebar `OS27` | See `skills/uikit-modernization.md` |
 | TextKit 2 architecture, NSTextLayoutManager | See `skills/textkit-ref.md` |
 | Writing Tools integration (iOS 26) | See `skills/textkit-ref.md` |
+| Viewport rendering surfaces, attachment reuse, collapsible text `OS27` | See `skills/textkit-ref.md` |
 | SwiftUI TextEditor, TextKit 1 migration | See `skills/textkit-ref.md` |
 | PencilKit canvas, PKToolPicker, drawing persistence | See `skills/pencilkit-paperkit.md` |
 | Apple Pencil Pro (squeeze, barrel roll, hover, haptics) | See `skills/pencilkit-paperkit.md` |
+| Handwriting recognition (PKStrokeRecognizer), stroke identity/slicing `OS27` | See `skills/pencilkit-paperkit-ref.md` |
 | PaperKit markup canvas (shapes, images, text + drawing) | See `skills/pencilkit-paperkit-ref.md` |
+| PaperKit programmatic markup model (subelements, adornments) `OS27` | See `skills/pencilkit-paperkit-ref.md` |
 
 ## Decision Tree
 
@@ -45,9 +49,11 @@ digraph uikit {
     what -> "skills/combine-patterns.md" [label="publishers, sinks,\n@Published,\nasync/await bridge"];
     what -> "skills/textkit-ref.md" [label="text layout,\nWriting Tools,\nTextKit migration"];
     what -> "skills/pencilkit-paperkit.md" [label="drawing canvas,\nApple Pencil,\nPaperKit markup"];
+    what -> "skills/uikit-modernization.md" [label="scene lifecycle (required 27),\nresizable apps,\nsize classes"];
 }
 ```
 
+0. Scene-lifecycle migration, "app won't launch on 27", resizability, size classes, tab sidebar? → `skills/uikit-modernization.md`
 1. UIViewRepresentable / UIViewControllerRepresentable / UIHostingController? → `skills/uikit-bridging.md`
 2. "Unable to simultaneously satisfy constraints" / layout bugs? → `skills/auto-layout-debugging.md`
 3. CAAnimation completion missing / spring physics wrong / animation jank? → `skills/uikit-animation-debugging.md`

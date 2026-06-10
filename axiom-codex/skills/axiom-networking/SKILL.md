@@ -15,6 +15,7 @@ license: MIT
 | URLSession with structured concurrency | See `skills/networking-discipline.md` |
 | Network.framework anti-patterns | See `skills/networking-discipline.md` |
 | Deprecated API migration | See `skills/networking-discipline.md` |
+| gRPC Swift — typed RPC, streaming, `.proto` codegen (WWDC 2026) | See `skills/networking-discipline.md` |
 | Pressure scenarios (reachability, sockets) | See `skills/networking-discipline.md` |
 | NetworkConnection (iOS 26+) API reference | See `skills/network-framework-ref.md` |
 | NWConnection (iOS 12-18) API reference | See `skills/network-framework-ref.md` |
@@ -51,10 +52,11 @@ digraph networking {
 3. NWConnection (iOS 12-18)? → `skills/networking-legacy.md`
 4. Migrating from sockets/URLSession? → `skills/networking-migration.md`
 5. Connection issues / debugging? → `skills/networking-diag.md`
-6. ATS / HTTP / App Store rejection for networking? → `skills/networking-diag.md` + networking-auditor
-7. Certificate pinning, signing API requests, encrypting payloads? → `/skill axiom-security`
-8. UIWebView or deprecated API rejection? → networking-auditor (Agent)
-9. Want deprecated API / anti-pattern scan? → networking-auditor (Agent)
+6. Typed RPC / streaming against a service you control? → gRPC Swift (`skills/networking-discipline.md`)
+7. ATS / HTTP / App Store rejection for networking? → `skills/networking-diag.md` + networking-auditor
+8. Certificate pinning, signing API requests, encrypting payloads? → `/skill axiom-security`
+9. UIWebView or deprecated API rejection? → networking-auditor (Agent)
+10. Want deprecated API / anti-pattern scan? → networking-auditor (Agent)
 
 #### Platform-specific networking
 - watchOS low-level-networking limits (TN3135) → See axiom-watchos (skills/background-and-networking.md)
