@@ -918,6 +918,54 @@ Multiple views into same content:
 
 All views share same indices.
 
+## Viewport Rendering Surfaces & Attachment Reuse `OS27`
+
+Before 27 you faced a hard choice: use a framework text view (`UITextView`/`NSTextView`/`TextEditor` — lots free, little rendering control) **or** build a custom view on a raw `NSTextLayoutManager` + viewport layout (total control, but you re-implement input, selection, accessibility, undo, dictation). At 27 you can customize **rendering and viewport from inside a framework text view** by subclassing it.
+
+#### Subclassable viewport delegate on framework text views
+
+A `UITextView` subclass can now override the three `NSTextViewportLayoutControllerDelegate` hooks directly and drive relayout:
+
+```swift
+final class CodeTextView: UITextView {
+    override func textViewportLayoutControllerWillLayout(_ c: NSTextViewportLayoutController) { … }
+    override func textViewportLayoutController(_ c: NSTextViewportLayoutController,
+        configureRenderingSurfaceFor fragment: NSTextLayoutFragment) { … }   // attach a surface per fragment
+    override func textViewportLayoutControllerDidLayout(_ c: NSTextViewportLayoutController) { … }
+
+    func relayout() {
+        textLayoutManager?.textViewportLayoutController.delegate?
+            .textViewportLayoutControllerReceivedSetNeedsLayout?(/* controller */)
+    }
+}
+```
+
+#### Rendering surfaces
+
+`NSTextViewportRenderingSurface` (new at 27) lets your `UIView`/layer render text fragments — exposing rendering customization previously locked inside framework text views. Cache surfaces per fragment keyed by `NSTextLayoutFragment` (which already conforms to the older `NSTextViewportRenderingSurfaceKey` protocol, iOS 18) using an `NSMapTable<NSTextLayoutFragment, MyView>`.
+
+#### Attachment view-provider reuse
+
+Inline interactive/animated attachments (Messages-style inline photos, stickers, animations) can recycle their views instead of rebuilding:
+
+```swift
+textView.registerTextAttachmentViewProviderReusePolicy(
+    [.onEditingInlineParagraphs],
+    forTextAttachmentViewProviderType: AnimatedAttachmentViewProvider.self)
+// Swift: textView.register([.onEditingInlineParagraphs], forTextAttachmentViewProviderType: …)
+```
+
+(`registerTextAttachmentViewProviderReusePolicy(_:forTextAttachmentViewProviderType:)` is `iOS27`/`tvOS27`/`visionOS27`, not watchOS.)
+
+#### Skip-layout / collapsible content
+
+Exclude collapsed paragraphs (e.g. collapsible recipe sections) from layout via `NSTextContentStorageDelegate`:
+
+```swift
+func textContentManager(_ m: NSTextContentManager, shouldEnumerate element: NSTextElement,
+    options: NSTextContentManager.EnumerationOptions) -> Bool { isVisible(element) }
+```
+
 ## Known Limitations & Gotchas
 
 ### Viewport Scroll Issues
@@ -950,6 +998,6 @@ Unsupported in TextKit 2:
 
 ## Resources
 
-**WWDC**: 2021-10061, 2022-10090, 2023-10058, 2024-10168, 2025-265, 2025-280
+**WWDC**: 2021-10061, 2022-10090, 2023-10058, 2024-10168, 2025-265, 2025-280, 2026-370
 
 **Docs**: /uikit/nstextlayoutmanager, /appkit/textkit/using_textkit_2_to_interact_with_text, /uikit/display-text-with-a-custom-layout, /swiftui/building-rich-swiftui-text-experiences, /foundation/attributedstring, /foundation/attributedstring/textalignment, /foundation/attributedstring/lineheight, /foundation/discontiguousattributedsubstring, /uikit/writing-tools, /appkit/enhancing-your-custom-text-engine-with-writing-tools

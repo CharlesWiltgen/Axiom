@@ -1,3 +1,3 @@
 interface:
   display_name: "UIKit"
-  short_description: "Bridging UIKit and SwiftUI, debugging Auto Layout constraints, working with Combine, TextKit, or UIKit animations."
+  short_description: "Bridging UIKit and SwiftUI, modernizing UIKit apps (scene lifecycle, resizability), debugging Auto Layout, Combine, T..."
