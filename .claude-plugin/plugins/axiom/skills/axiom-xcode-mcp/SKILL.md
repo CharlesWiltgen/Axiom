@@ -8,7 +8,7 @@ license: MIT
 
 **You MUST use this skill for ANY Xcode MCP interaction — setup, tool usage, workflow patterns, or troubleshooting.**
 
-Xcode 26.3 ships an MCP server (`xcrun mcpbridge`) that exposes 20 IDE tools to external AI clients. This skill suite covers setup, tool reference, workflow patterns, and troubleshooting.
+Xcode ships an MCP server (`xcrun mcpbridge`, available since Xcode 26.3) that exposes 20 IDE tools to external AI clients. Xcode 27 adds an explicit "Allow external agents to use Xcode tools" gate, the `run-agent` launch path, and an agent-extension model (custom MCP servers, skills, plug-ins). This skill suite covers setup, tool reference, workflow patterns, and troubleshooting.
 
 ## When to Use
 
@@ -32,6 +32,10 @@ Use this skill when:
 - Permission dialog confusion
 - Multi-Xcode targeting (`MCP_XCODE_PID`)
 - Schema compliance issues with strict clients
+- Giving external agents access to Xcode (Intelligence settings gate)
+- Launching an agent via Xcode config (`xcrun mcpbridge run-agent`)
+- Exporting Xcode's skill bundles (`run-agent skills export`)
+- Extending Xcode's agent (per-agent config files, MCP servers, plug-ins)
 
 **Read**: `skills/xcode-mcp-setup.md`
 
