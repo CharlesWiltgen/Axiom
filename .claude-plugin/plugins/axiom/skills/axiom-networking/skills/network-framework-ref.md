@@ -241,6 +241,21 @@ Most code never observes state directly — `send`/`receive` suspend until ready
 - **.failed** Unrecoverable error (server refused, TLS failed, timeout)
 - **.cancelled** Task cancelled or connection.cancel() called
 
+#### Path, viability & better-path monitoring
+
+Beyond `onStateUpdate`, `NetworkConnection` offers path-level monitors (all `@discardableResult`, returning `Self`):
+
+```swift
+connection
+    .onPathUpdate { connection, newPath in /* route changed */ }
+    .onViabilityUpdate { connection, viable in /* network up/down */ }
+    .onBetterPathUpdate { connection, better in if better { /* migrate */ } }
+```
+
+At iOS 26 these modifiers existed only on one-to-one connections. `OS27` extends them to **multiplexed** connections (`ApplicationProtocol: MultiplexProtocol`, e.g. QUIC) and to individual **QUIC streams** (`NetworkChannel where ApplicationProtocol == QUICStream`), so each stream can react to path changes independently.
+
+A related `OS27` framer addition: `NWProtocolFramer.Instance.prependApplicationProtocolIgnoringReady(options:)` prepends a protocol without waiting for the ready handshake.
+
 ---
 
 ### 4.3 Send/Receive Patterns
