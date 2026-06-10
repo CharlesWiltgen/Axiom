@@ -408,6 +408,7 @@ export default withMermaid(defineConfig({
             { text: 'Live Activities (ActivityKit)', link: '/skills/integration/live-activities' },
             { text: 'Localization', link: '/skills/integration/localization' },
             { text: 'MapKit', link: '/skills/integration/mapkit' },
+            { text: 'Music Understanding', link: '/skills/integration/music-understanding' },
             { text: 'Networking', link: '/skills/integration/networking' },
             { text: 'Networking (Legacy iOS 12-25)', link: '/skills/integration/networking-legacy' },
             { text: 'Now Playing', link: '/skills/integration/now-playing' },

@@ -8,7 +8,7 @@ apple_platforms: iOS 18+, iPadOS 18+, CarPlay
 
 # Now Playing Integration
 
-MediaPlayer framework patterns for Lock Screen and Control Center integration. Covers MPNowPlayingInfoCenter (manual) and MPNowPlayingSession (iOS 16+ automatic), plus CarPlay and MusicKit integration.
+MediaPlayer framework patterns for Lock Screen and Control Center integration. Covers MPNowPlayingInfoCenter (manual) and MPNowPlayingSession (iOS 16+ automatic), plus CarPlay and MusicKit integration. For iOS 27+, it also covers the new Swift-native **NowPlaying framework** (`import NowPlaying`), which replaces the manual dictionary/command dance with an `@Observable` `MediaSession`.
 
 ## When to Use This Skill
 
@@ -33,6 +33,7 @@ Questions you can ask Claude that will draw from this skill:
 - "Control Center shows 'Playing' when my app is actually paused. How do I sync them?"
 - "Apple Music takes over and my app loses Now Playing control."
 - "How do I add Now Playing support to my CarPlay audio app?"
+- "How do I adopt the new NowPlaying framework / MediaSession on iOS 27?"
 
 ## What This Skill Provides
 
@@ -84,6 +85,14 @@ Questions you can ask Claude that will draw from this skill:
 - Local file URL constraint for video assets
 - Album-stable `artworkID` to prevent re-downloads
 - Always pair with static `MPMediaItemPropertyArtwork` for iOS 18-25 + system fallback
+
+### NowPlaying Framework (iOS 27+)
+- `import NowPlaying` — Swift-native successor to the MediaPlayer dictionary/command APIs
+- Your `@Observable` model conforms to `MediaSessionRepresentable`; the system observes it (no manual refresh)
+- Strongly typed content (`MusicContent`, `PodcastContent`, `MovieContent`, …) instead of a string-keyed dictionary
+- Declarative `[MediaCommand]` with `async` closures instead of per-command `MPRemoteCommandCenter` targets
+- Remote/server-driven playback via a push-based `RemoteMediaSession` extension (iOS-only)
+- Does **not** deprecate the MediaPlayer APIs — Patterns 1–8 remain valid for iOS &lt;27
 
 ## Key Pattern
 
@@ -146,6 +155,6 @@ This page documents the `axiom-media` skill—MediaPlayer framework patterns Cla
 
 ## Resources
 
-**WWDC**: 2019-501, 2022-110338
+**WWDC**: 2019-501, 2022-110338, 2026-312
 
-**Docs**: /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpnowplayingsession, /mediaplayer/mpremotecommandcenter
+**Docs**: /nowplaying, /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpnowplayingsession, /mediaplayer/mpremotecommandcenter
