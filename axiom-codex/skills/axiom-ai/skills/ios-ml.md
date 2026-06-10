@@ -46,6 +46,10 @@ This page owns **deployment/runtime** and **speech**. The lifecycle stages have 
 - **Async prediction** — use the async `prediction(from:)`; for batches use the synchronous `predictions(fromBatch:)`.
 - Run inference **off the main thread**, and pre-warm: first load compiles/caches the model (`.mlmodelc`), so warm it before the user needs it. See `axiom-concurrency`.
 
+### Core AI — integrating custom models (OS27)
+
+**Core AI** (`OS27`) is a new framework for authoring, ahead-of-time compiling, and integrating custom on-device AI models, with model specialization and caching. Its open-source `CoreAILanguageModel` lets a custom model back a Foundation Models `LanguageModelSession` through the `LanguageModel` protocol — so you reuse the `respond` / `@Generable` / tools API with your own model. Division of labor: use Core ML (this page) to convert/compress the model; use Core AI to compile and serve it to Foundation Models. See axiom-ai (Foundation Models — Ecosystem) and `/CoreAI`.
+
 ### Common runtime failure modes
 
 - Slow first inference → on-device compile/caching cost; pre-warm the model before the user needs it.
@@ -73,6 +77,6 @@ For conversion-time failures (output divergence, `coremltools` import errors, un
 
 **WWDC**: 2024-10161, 2024-10159, 2025-277
 
-**Docs**: /coreml, /coreml/mlmodelconfiguration, /coreml/mltensor, /speech, /speech/speechanalyzer, /speech/speechtranscriber, /speech/sfspeechrecognizer — plus the `coremltools` guide (apple.github.io/coremltools) for conversion + `coremltools.optimize`
+**Docs**: /coreml, /coreml/mlmodelconfiguration, /coreml/mltensor, /CoreAI, /speech, /speech/speechanalyzer, /speech/speechtranscriber, /speech/sfspeechrecognizer — plus the `coremltools` guide (apple.github.io/coremltools) for conversion + `coremltools.optimize`
 
 **Skills**: coreml-conversion, coreml-compression, coreml-training (the Core ML lifecycle stages), axiom-ai (Foundation Models — Apple's built-in LLM), axiom-vision (computer vision), axiom-apple-docs (Apple API doc lookup), axiom-concurrency (off-main-thread inference)

@@ -1278,39 +1278,58 @@ With automations, your intents are now accessible from:
 
 ---
 
-## Assistant Schemas (Pre-built Intents)
+## App Schemas (System Schemas for Siri & Apple Intelligence)
 
-Apple provides pre-built schemas for common app categories:
+**App schemas** are predefined system understandings of common concepts — messages, contacts, photos, calendar events. When your `AppEntity` / `AppIntent` / `AppEnum` conforms to a schema, Siri and Apple Intelligence already know how to reason about it and drive it with natural language — you map the schema's parameters onto your app's logic; the system handles the language. Schemas are grouped into **domains** (messages, mail, photos, calendar, …); a domain is "a contract between your app and Siri" (WWDC 2026-240).
 
-### Books App Example
+> App schemas debuted in iOS 18 (then *assistant schemas*). The 27 cycle renames the macros, greatly expands the domains, and adds Xcode build-time tooling. The form below is current.
+
+### Adopting a schema
+
+Conform an entity or intent with the `schema:` form of the macro. Xcode autocompletes every available schema as `.<domain>.<schema>` (e.g. `.photos.asset`, `.messages.sendMessage`):
 
 ```swift
-import AppIntents
-import BooksIntents
+// Entity — adopt the photos `asset` schema so Siri understands what it represents
+@AppEntity(schema: .photos.asset)
+struct PhotoEntity: IndexedEntity {
+    var id: String
+    // …your existing properties…
+}
 
-struct OpenBookIntent: BooksOpenBookIntent {
-    @Parameter(title: "Book")
-    var target: BookEntity
+// Intent — adopt the messages `sendMessage` schema; map its params to your app
+@AppIntent(schema: .messages.sendMessage)
+struct SendMessageIntent {
+    @Parameter var recipient: ContactEntity
+    @Parameter var content: String
 
-    func perform() async throws -> some IntentResult {
-        await MainActor.run {
-            BookReader.shared.open(book: target)
-        }
-        return .result()
+    @MainActor func perform() async throws -> some IntentResult & ReturnsValue<MessageEntity> {
+        let sent = UnicornChat.shared.send(content, to: recipient)
+        return .result(value: sent)   // return the new entity to the system
     }
 }
 ```
 
-### Available Assistant Schemas
+`@AppEntity` / `@AppIntent` / `@AppEnum` replace the deprecated `@AssistantEntity` / `@AssistantIntent` / `@AssistantEnum` (the SDK marks the old names `deprecated, renamed:` to these). Adopt `IndexedEntity` so Siri resolves your content by *meaning* (semantic search over the Spotlight index), not just exact text — the recommended path for the best Siri experience; use `EntityStringQuery` when data is too large/remote/volatile to index.
 
-- **BooksIntents** — Navigate pages, open books, play audiobooks, search
-- **BrowserIntents** — Bookmark tabs, clear history, manage windows
-- **CameraIntents** — Capture modes, device switching, start/stop
-- **EmailIntents** — Draft management, reply, forward, archive
-- **PhotosIntents** — Album/asset management, editing, filtering
-- **PresentationsIntents** — Slide creation, media insertion, playback
-- **SpreadsheetsIntents** — Sheet management, content addition
-- **DocumentsIntents** — File management, page manipulation, search
+### Available domains
+
+| iOS 18 domains | Added in the 27 cycle `OS27` |
+|---|---|
+| Messages, Mail, Photos, Books, Browser, Camera, Presentation, Spreadsheet, WordProcessor, Reader, Whiteboard, Journal | Calendar, Clock, Maps, Phone, Reminders, Notes, Audio, ImageGeneration, AppStore |
+
+(VisualIntelligence arrived in the 26 cycle. Discover each domain's exact schemas via Xcode autocomplete on `.<domain>.`)
+
+### Xcode schema-completeness errors `OS27`
+
+Some Siri flows need more than one schema. Adopt `sendMessage` but not the related `draftMessage` and Xcode **fails the build** with a fix-it that generates a stub adoption of the missing schema — a design hint surfaced at compile time instead of failing silently at runtime (WWDC 2026-240). Fill in the stub: wire your entities, inject dependencies, and mark `perform()` `@MainActor` if it mutates UI.
+
+### Cross-app content (on-screen awareness + transfer)
+
+Siri requests often span apps ("email my wife this reply"). Annotate views with their entities (`userActivity` for one primary item; view-level annotations for lists) so Siri can resolve "this message", then adopt `Transferable` with an `IntentValueRepresentation` to export entities to other apps. On import, resolve to an existing entity with `IntentValueQuery`, or create a new one via `IntentValueRepresentation` importing.
+
+### Testing
+
+Validate intents in isolation with **AppIntentsTesting** (no Siri needed), then move through Shortcuts → Spotlight → Siri (WWDC 2026-295). See the Testing & Debugging section below.
 
 ---
 
@@ -1661,9 +1680,9 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 
 ## Resources
 
-**WWDC**: 2025-244, 2025-275, 2025-260
+**WWDC**: 2025-244, 2025-275, 2025-260, 2026-240, 2026-343, 2026-345, 2026-295
 
-**Docs**: /appintents, /appintents/appintent, /appintents/appentity, /Updates/AppIntents
+**Docs**: /appintents, /appintents/appintent, /appintents/appentity, /appintents/appschema, /appintents/adopting-app-intents-to-support-system-experiences, /appintents/apple-intelligence-and-siri-ai, /Updates/AppIntents
 
 **Skills**: skills/app-shortcuts-ref.md, skills/core-spotlight-ref.md, skills/app-discoverability.md
 

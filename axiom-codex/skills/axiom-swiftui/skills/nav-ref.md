@@ -714,6 +714,22 @@ Reserve `tabViewBottomAccessory` for cross-tab content (playback, status). For t
 | `.tabViewSearchActivation(_:)` | TabView | 26+ | Bind `.searchable` to the `.search` role tab (use `.searchTabSelection`) |
 | `.tabBarMinimizeBehavior(_:)` | TabView | 26+ | Auto-hide on scroll |
 | `.tabViewBottomAccessory(isEnabled:content:)` | TabView | 26.1+ | Dynamic content below tab bar |
+| `Tab(role: .prominent)` | — | 27+ | Prominent semantic tab role (OS27); joins `.search` |
+
+### 5.9 Prominent Tab Role — `.prominent` (OS27)
+
+The 27 cycle adds a second semantic `TabRole`, `.prominent`, alongside `.search`. Pass it to any `Tab(role:)` initializer:
+
+```swift
+TabView {
+    Tab("Home", systemImage: "house") { HomeView() }
+    Tab("Now Playing", systemImage: "play.circle", role: .prominent) {
+        NowPlayingView()
+    }
+}
+```
+
+`.prominent` marks a tab for elevated system treatment (`@available(anyAppleOS 27.0)` — all platforms). Apple's reference is currently terse ("the prominent role"); confirm the exact rendering against WWDC 2026-269 and the SDK before relying on a specific appearance. Like `.search`, it's a *role* you pass to `Tab(role:)`, not a style modifier.
 
 ---
 
@@ -794,6 +810,19 @@ iOS 26 automatically morphs toolbars during NavigationStack push/pop when each d
 **Key rule**: Attach `.toolbar {}` to individual views inside NavigationStack, not to NavigationStack itself. Otherwise there is nothing to morph between.
 
 See `skills/26-ref.md` skill for complete toolbar morphing API including DefaultToolbarItem, `toolbar(id:)` stable items, ToolbarSpacer patterns, and troubleshooting.
+
+### 6.7 Cross-Fade Navigation Transition — `.crossFade` (OS27)
+
+A new `NavigationTransition` that cross-fades between the appearing and disappearing views instead of sliding or zooming. Apply it the same way as `.zoom` (section 6.5):
+
+```swift
+.sheet(isPresented: $showDetail) {
+    DetailView()
+        .navigationTransition(.crossFade)
+}
+```
+
+`@available(anyAppleOS 27, *) @available(macOS, unavailable)` — `OS27` except macOS, where the transition is unavailable. (`anyAppleOS` requires the Swift 6.4 toolchain; see `axiom-swift (skills/swift-modern.md)`.) If you share view code with a Mac target, gate it with `if #available` or fall back to the default transition there.
 
 ---
 
@@ -972,9 +1001,9 @@ NavigationPath(codableRepresentation)  // For decoding
 
 ## Resources
 
-**WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323 (Build a SwiftUI app with the new design)
+**WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323 (Build a SwiftUI app with the new design), 2026-269
 
-**Docs**: /swiftui/tabrole/search, /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/view/tabviewsearchactivation(_:)
+**Docs**: /swiftui/tabrole/search, /swiftui/tabrole/prominent, /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/view/tabviewsearchactivation(_:), /swiftui/navigationtransition/crossfade
 
 **Skills**: skills/nav.md, skills/nav-diag.md, skills/26-ref.md, axiom-design (skills/liquid-glass.md), skills/search-ref.md
 

@@ -235,6 +235,30 @@ try modelContext.save()
 - `.deny` - Prevent deletion if relationship exists
 - `.noAction` - Leave relationship as-is (careful!)
 
+## Codable Attributes for Unowned Types (OS27)
+
+SwiftData builds its schema by inspecting a model's stored properties. A stored property whose type is a **class you don't own** (e.g. `MKMapItem.Identifier`) can't be inspected and crashes at launch:
+
+```
+Fatal error: Class property within Persisted Struct/Enum is not supported
+```
+
+If that type is `Codable`, mark the attribute `@Attribute(.codable)` (`OS27`) — SwiftData persists its encoded form instead of inferring a schema:
+
+```swift
+@Model
+final class Trip {
+    var name: String
+    @Attribute(.codable) var mapItemIdentifier: MKMapItem.Identifier?   // OS27
+}
+```
+
+**It's an escape hatch, not a default.** The stored blob is opaque to SwiftData, so a `.codable` attribute:
+- **can't** appear in a `#Predicate` (filtering), a `SortDescriptor` (sorting), or an index;
+- **won't** trigger a migration when its shape changes — you own keeping the type's `Codable` conformance forward/backward compatible.
+
+For types you *do* own, model them as `@Model` or supported value types so you keep filtering, sorting, and indexing. (`.codable` is the modern cousin of transformable attributes.)
+
 ## Class Inheritance
 
 SwiftData supports class inheritance for hierarchical models. Use when you have a clear IS-A relationship (e.g., `BusinessTrip` IS-A `Trip`) and need both broad queries (all trips) and type-specific queries.
@@ -419,6 +443,61 @@ struct TracksView: View {
 // Combined filter + sort
 @Query(filter: #Predicate<Track> { $0.duration > 180 }, sort: \.title) var longTracks: [Track]
 ```
+
+### Sectioned Queries (OS27)
+
+`@Query` gained a `sectionBy:` parameter (`OS27`, all platforms) that groups results without manual post-fetch grouping. The wrapped value stays a flat `[Element]` — sectioning is additive, reached through the **underscored wrapper** `_tracks.sections`:
+
+```swift
+struct TracksView: View {
+    // sectionBy takes a KeyPath to a String (or String?) on the model.
+    @Query(sort: \Track.title, sectionBy: \.genre)
+    private var tracks: [Track]
+
+    var body: some View {
+        List {
+            ForEach(_tracks.sections) { section in   // ResultsSectionCollection<Track, String>
+                Section(section.id) {                // section.id == the section key (the genre)
+                    ForEach(section) { track in      // each section IS a collection of its Tracks
+                        Text(track.title)
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+`_tracks.sections` is a `ResultsSectionCollection<Track, String>`; each element is a `ResultsSection<Track, String>` — `Identifiable` (`.id` == the section key) and a `RandomAccessCollection` of that section's models (`sectionNames`, `contains(sectionName:)`, `index(ofSectionNamed:)` are also available). Flat `tracks` keeps working, so adoption is incremental.
+
+## Observing Results Outside SwiftUI — `ResultsObserver` (OS27)
+
+`@Query` only works inside SwiftUI views. `ResultsObserver` (`OS27`, all platforms) is the programmatic equivalent — SwiftData's answer to `NSFetchedResultsController` — for UIKit/AppKit controllers, `@Observable` state objects, or non-UI code. It fetches with the same primitives as `@Query` (filter, sort, sectioning) and observes the store through Swift Observation.
+
+```swift
+@Observable @MainActor
+final class TrackListModel {
+    private let observer: ResultsObserver<Track, Never>   // Never == unsectioned
+    private var token: ObservationTracking.Token?          // retain or observation stops
+    var tracks: [Track] = []
+
+    init(modelContext: ModelContext) throws {
+        observer = try ResultsObserver<Track, Never>(
+            sortBy: [SortDescriptor(\.title)],
+            modelContext: modelContext
+        )
+        tracks = Array(observer.results)
+        token = withContinuousObservation(options: [.didSet]) { [weak self] _ in
+            guard let self else { return }
+            self.tracks = Array(self.observer.results)
+        }
+    }
+}
+```
+
+- Inits take a `modelContext:` **or** a `modelContainer:`, optional `filterBy:`/`sortBy:` (or a full `FetchDescriptor`), and — for the `SectionName == String` variant — a `sectionBy: KeyPath<Element, String>`; all `throws`.
+- Read `observer.results` (a `FetchResultsCollection`), or `observer.sections` when sectioned. For table/collection views, `element(at: IndexPath)` and `indexPath(for:)` map rows ↔ models.
+- `withContinuousObservation(options:apply:)` is a new `OS27` Observation API that re-fires on every change and returns an `ObservationTracking.Token` (`~Copyable`) you **must retain** — it supersedes manually re-arming `withObservationTracking`. Options: `.willSet`, `.didSet`, `.deinit`.
 
 ## ModelContext Operations
 
@@ -785,6 +864,33 @@ for transaction in transactions {
 try modelContext.deleteHistory(HistoryDescriptor<DefaultHistoryTransaction>())
 ```
 
+#### Observing History — `HistoryObserver` (OS27)
+
+`fetchHistory` is a pull. `HistoryObserver` (`OS27`, all platforms) is the push — an `@Observable` object whose `eventCounter` increments whenever new history transactions land, so a sync engine or an extension-aware app reacts without polling:
+
+```swift
+@Observable
+final class StoreSync {
+    private let observer: HistoryObserver
+    private var token: ObservationTracking.Token?
+
+    init(modelContainer: ModelContainer) throws {
+        // Filter to app-authored changes so you don't replay server-originated ones back.
+        observer = try HistoryObserver(authors: ["App"], modelContainer: modelContainer)
+        token = withContinuousObservation(options: [.didSet]) { [weak self] _ in
+            _ = self?.observer.eventCounter        // touch the observable to re-arm
+            self?.processNewTransactions()
+        }
+    }
+
+    private func processNewTransactions() {
+        // Pull the latest with modelContext.fetchHistory(...) and apply them.
+    }
+}
+```
+
+`HistoryObserver(historyTokens:observedModels:authors:modelContainer:)` (everything but `modelContainer` optional) `throws`. Scope it with `observedModels:` and `authors:`, observe `eventCounter`, then pull the actual changes with the existing `ModelContext.fetchHistory(_:)`.
+
 ## Performance Patterns
 
 ### Batch Fetching
@@ -1139,6 +1245,8 @@ modelContext.insert(track)
 
 ## Resources
 
-**Docs**: /swiftdata, /swiftdata/adopting-inheritance-in-swiftdata
+**WWDC**: 2026-274, 2026-275
+
+**Docs**: /swiftdata, /swiftdata/adopting-inheritance-in-swiftdata, /swiftdata/query, /swiftdata/resultssectioncollection
 
 **Skills**: skills/swiftdata-migration.md, skills/swiftdata-migration-diag.md, skills/database-migration.md, skills/sqlitedata.md, skills/grdb.md

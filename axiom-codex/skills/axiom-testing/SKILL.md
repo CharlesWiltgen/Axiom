@@ -16,6 +16,7 @@ license: MIT
 | Making tests run without simulator | See `skills/swift-testing.md` |
 | Parameterized tests, tags, traits | See `skills/swift-testing.md` |
 | Migrating from XCTest to Swift Testing | See `skills/swift-testing.md` |
+| Warning-severity issues / cancelling a test — `Issue.record(severity:)`, `Test.cancel` (`OS27`) | See `skills/swift-testing.md` |
 | Testing async/await functions | See `skills/testing-async.md` |
 | confirmation for callbacks | See `skills/testing-async.md` |
 | @MainActor tests, parallel execution | See `skills/testing-async.md` |

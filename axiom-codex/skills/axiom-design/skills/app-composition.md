@@ -796,6 +796,74 @@ struct DetailView: View {
 
 ---
 
+# Part 3b: Document-Based Apps — The OS27 Document Model
+
+`DocumentGroup` is the `Scene` for file-backed apps (it wires up File ▸ New/Open, the document browser, and autosave). The 27 cycle adds a **reference-type, `@Observable`, async document model** alongside the legacy value-type `FileDocument` — `OS27` (not watchOS/tvOS).
+
+## Why the new model
+
+| | Legacy `FileDocument` / `ReferenceFileDocument` | `ReadableDocument` / `WritableDocument` (`OS27`) |
+|--|--|--|
+| Type | `struct` (or `ObservableObject` class) | `@Observable` `class` (`AnyObject`) |
+| Read/write | synchronous `init(configuration:)` / `fileWrapper(...)` | `async` `read`/`write` with a `Foundation.Subprogress` for progress reporting |
+| State | whole-document value snapshot on every change | the document *is* your `@Observable` model — bind to it directly |
+| Concurrency | snapshot must be `Sendable` | snapshot crosses actors via `sending`; `apply`/`snapshot` run on `@MainActor` |
+
+Reach for the new model when documents are large or slow to load (async + progress), or when you want the document to be your `@Observable` source of truth instead of mirroring a value type into one. Keep `FileDocument` for small, simple value-type documents.
+
+## Pattern
+
+```swift
+import SwiftUI
+import UniformTypeIdentifiers
+
+@Observable
+final class MarkdownDocument: ReadableDocument, WritableDocument {
+    var text: String = ""
+
+    static let readableContentTypes: [UTType] = [.plainText]
+
+    // Decode off the main actor (build a snapshot)…
+    func reader(configuration: ReadConfiguration) -> FileWrapperDocumentReader<String> {
+        FileWrapperDocumentReader(configuration) { fileWrapper in
+            String(decoding: fileWrapper.regularFileContents ?? Data(), as: UTF8.self)
+        }
+    }
+    // …then apply it to the model on the main actor.
+    @MainActor func apply(snapshot: String, previous: String?) async throws {
+        text = snapshot
+    }
+
+    // Capture a snapshot on the main actor…
+    @MainActor func snapshot(contentType: UTType) async throws -> String { text }
+    // …then serialize it off the main actor.
+    func writer(configuration: WriteConfiguration) -> FileWrapperDocumentWriter<String> {
+        FileWrapperDocumentWriter(configuration) { snapshot in
+            FileWrapper(regularFileWithContents: Data(snapshot.utf8))
+        }
+    }
+}
+
+@main
+struct MarkdownApp: App {
+    var body: some Scene {
+        DocumentGroup(editor: { document in
+            TextEditor(text: Bindable(document).text)   // bind straight to the @Observable document
+        }, makeDocument: { configuration, context in
+            MarkdownDocument()
+        })
+    }
+}
+```
+
+**Key points**:
+- Two new `DocumentGroup` inits (both require `Document: Observable`): `init(viewer:makeReadableDocument:)` for read-only viewers and `init(allowCreating:editor:makeDocument:)` for editors. `makeDocument` receives a `URLDocumentConfiguration` (`fileURL`, `lastContentModificationDate`, `makeFileCoordinator()`, and `creationSource` on iOS/visionOS) and a `DocumentCreationContext`.
+- `FileWrapperDocumentReader`/`FileWrapperDocumentWriter` are the convenience path; conform to `DocumentReader`/`DocumentWriter` directly for custom I/O (e.g. streaming a package format) and report progress through the `Subprogress` parameter (the `OS27` `ProgressManager` system — see `axiom-concurrency (skills/swift-concurrency.md)`).
+- `apply(snapshot:previous:)` and `snapshot(contentType:)` run on `@MainActor` so they touch your model safely; the reader/writer bodies run off it.
+- `DocumentGroup` also surfaces in axiom-macos (skills/windows.md) for the Mac document-app shell (menus, `DocumentGroupLaunchScene`).
+
+---
+
 # Part 4: Feature Module Basics
 
 ## Core Principle
@@ -1427,6 +1495,7 @@ When incrementally adopting SwiftUI in a UIKit app:
 - [ ] Resources released on .background
 - [ ] SceneStorage used for tab selection / navigation state
 - [ ] Restored state validated before applying
+- [ ] Document apps (`OS27`): `@Observable` `ReadableDocument`/`WritableDocument`, async read/write reports progress, `apply`/`snapshot` on `@MainActor` (see Part 3b)
 
 ## Module Boundaries
 
@@ -1449,6 +1518,6 @@ When incrementally adopting SwiftUI in a UIKit app:
 
 **WWDC**: 2025-266, 2024-10150, 2023-10149, 2025-256, 2022-10054
 
-**Docs**: /swiftui/scenephase, /swiftui/scene, /swiftui/scenestorage, /swiftui/windowgroup, /observation/observable()
+**Docs**: /swiftui/scenephase, /swiftui/scene, /swiftui/scenestorage, /swiftui/windowgroup, /observation/observable(), /swiftui/documentgroup, /swiftui/readabledocument, /swiftui/writabledocument
 
-**Skills**: axiom-swiftui, axiom-concurrency
+**Skills**: axiom-swiftui, axiom-concurrency, axiom-macos (skills/windows.md — Mac document-app shell)
