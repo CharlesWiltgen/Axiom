@@ -104,7 +104,7 @@
     },
     {
       "name": "axiom-uikit",
-      "description": "Use when bridging UIKit and SwiftUI, debugging Auto Layout constraints, working with Combine, TextKit, or UIKit animations."
+      "description": "Use when bridging UIKit and SwiftUI, modernizing UIKit apps (scene lifecycle, resizability), debugging Auto Layout, Combine, TextKit, PencilKit, or UIKit animations."
     },
     {
       "name": "axiom-swift",
