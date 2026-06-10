@@ -1,7 +1,6 @@
-
 # Vision Framework API Reference
 
-Comprehensive reference for Vision framework computer vision: subject segmentation, hand/body pose detection, person detection, face analysis, text recognition (OCR), barcode detection, and document scanning.
+Comprehensive reference for Vision framework computer vision: subject segmentation, hand/body pose detection, person detection, face analysis, text recognition (OCR), barcode detection, document scanning, Visual Intelligence integration, and the 27-cycle additions (tap-to-segment, Vision on watchOS, Foundation Models tools).
 
 ## When to Use This Reference
 
@@ -16,6 +15,10 @@ Comprehensive reference for Vision framework computer vision: subject segmentati
 - **Building live scanners** with DataScannerViewController
 - **Scanning documents** with VNDocumentCameraViewController
 - **Extracting structured document data** with RecognizeDocumentsRequest (iOS 26+)
+- **Integrating with Visual Intelligence** — camera/screenshot search surfacing your app's content (iOS 26+, iPadOS27/macOS27)
+- **Tap-to-segment any object** with GenerateIterativeSegmentationRequest `OS27`
+- **Using Vision on watchOS** `watchOS27`
+- **Giving Foundation Models vision tools** (BarcodeReaderTool, OCRTool) `OS27`
 
 **Related skills**: See `skills/vision-framework.md` for decision trees and patterns, `skills/vision-diag.md` for troubleshooting
 
@@ -124,7 +127,7 @@ guard let observation = try await handler.perform(GenerateForegroundInstanceMask
 
 **allInstances**: `IndexSet` containing all foreground instance indices (excludes background 0)
 
-**allInstancesMask**: `PixelBufferObservation` holding the UInt8 label buffer (0 = background, 1+ = instance indices). Read a single label with `pixel(at:)` (takes a `NormalizedPoint`, returns `Float`) or scan the whole buffer with `withUnsafePointer(_:)`. It does not expose a `CVPixelBuffer` property.
+**allInstancesMask**: `PixelBufferObservation` holding the UInt8 label buffer (0 = background, 1+ = instance indices). Read a single label with `pixel(at:)` (takes a `NormalizedPoint`, returns `Float`) or scan the whole buffer — pre-27 via `withUnsafePointer(_:)`; on 27 via the new `pixelBuffer` property (`CVReadOnlyPixelBuffer`, `OS27`) and `pixelBuffer.withUnsafeBuffer`, which deprecates `withUnsafePointer`. There is no mutable `CVPixelBuffer` accessor.
 
 **instanceAtPoint(_:)**: Takes a `NormalizedPoint` and returns the `IndexSet` of instances at that point. iOS 18+ modern `InstanceMaskObservation` only. (For raw label lookup you can instead use `allInstancesMask.pixel(at:)` — see below.)
 
@@ -182,7 +185,7 @@ let croppedImage = try observation.generateMaskedImage(
 
 #### Instance Mask Hit Testing
 
-The simplest path is `instanceAtPoint(_:)`, which maps a `NormalizedPoint` straight to an `IndexSet`. To read the raw label yourself, the `allInstancesMask` (`PixelBufferObservation`) gives you `pixel(at:)` for a single point and `withUnsafePointer(_:)` for the whole buffer — there is no `CVPixelBuffer` accessor on the modern observation.
+The simplest path is `instanceAtPoint(_:)`, which maps a `NormalizedPoint` straight to an `IndexSet`. To read the raw label yourself, the `allInstancesMask` (`PixelBufferObservation`) gives you `pixel(at:)` for a single point; for whole-buffer scans use `withUnsafePointer(_:)` pre-27, or `pixelBuffer.withUnsafeBuffer` on 27 (`pixelBuffer` is the `OS27` read-only buffer accessor; `withUnsafePointer` is deprecated in 27 and renamed to it).
 
 ```swift
 let labelMask = observation.allInstancesMask  // PixelBufferObservation
@@ -194,7 +197,8 @@ let instances = label == 0
     ? observation.allInstances
     : IndexSet(integer: Int(label))
 
-// Whole buffer: scan all labels via the unsafe pointer
+// Whole buffer: scan all labels via the unsafe pointer (pre-27;
+// on 27 use labelMask.pixelBuffer.withUnsafeBuffer instead)
 labelMask.withUnsafePointer { raw in
     let first = raw.load(fromByteOffset: 0, as: UInt8.self)
     // ... iterate label bytes as needed
@@ -331,6 +335,56 @@ let person1Mask = try observation.generateScaledMask(
 - Segments up to 4 people
 - With >4 people: may miss people or combine them (typically background people)
 - Use `VNDetectFaceRectanglesRequest` to count faces if you need to handle crowded scenes
+
+## Iterative Segmentation (Tap-to-Segment) `OS27`
+
+`GenerateIterativeSegmentationRequest` segments **any object the user selects** — by tap, bounding box, or scribble/lasso — and refines the mask interactively. Modern Swift API; not available on watchOS. Apple ships a tap-to-segment sample app (WWDC 2026-237).
+
+### Seeding and Refining
+
+```swift
+let handler = ImageRequestHandler(image)
+let request = GenerateIterativeSegmentationRequest(seedPoint: point)  // NormalizedPoint
+let observation = try await handler.perform(request)  // PixelBufferObservation?
+let mask = observation?.pixelBuffer  // CVReadOnlyPixelBuffer (or try .cgImage)
+
+// Refine: include the plate, exclude the cup — then perform again
+try request.addIncludedPoint(platePoint)
+try request.addExcludedPoint(cupPoint)
+let refined = try await handler.perform(request)
+```
+
+Seed initializers (each takes an optional trailing `Revision` argument):
+
+| Initializer | Use for |
+|-------------|---------|
+| `init(seedPoint: NormalizedPoint)` | Simple objects — single tap |
+| `init(seedBox: NormalizedRect)` | Multiple or complex objects — drawn bounding box |
+| `init(seedScribbleBuffer: CVReadOnlyPixelBuffer)` | Lasso or scribble strokes drawn by the user |
+
+- `qualityLevel` — `.fast` / `.balanced` / `.accurate`
+- Result is `PixelBufferObservation?` — pixels in the mask belong to the selected object
+- Coordinates are normalized (0–1) with **lower-left origin** — the same conversion gotchas as every Vision request
+- Scribble/lasso strokes must be at least **1% of the image width** wide; thinner strokes degrade results
+
+### Model Download (DownloadableAssetsRequest)
+
+The segmentation model is not on-device by default — **first use requires a download**. `GenerateIterativeSegmentationRequest` is the first request conforming to the new `DownloadableAssetsRequest` protocol (`OS27`):
+
+```swift
+switch await request.assetStatus {  // DownloadableAssetsRequestStatus
+case .notReady:
+    try await request.downloadAssets()  // or downloadAssets(progress: consuming Subprogress)
+case .ready:
+    break
+case .error(let error):
+    throw error  // surface or retry the download
+@unknown default:
+    break
+}
+```
+
+Performing without the model downloaded fails; the legacy `VNError` domain adds `VNErrorResourceUnavailable` and `VNErrorResourceCorrupted` codes in 27 for asset failures. Check `assetStatus` before the first perform.
 
 ## Hand Pose Detection
 
@@ -1077,7 +1131,13 @@ Container.Text
 
 ## Visual Intelligence Integration
 
-Visual Intelligence is a **system-level feature** (iOS 26+) that lets users point their camera at real-world objects and find matching content across apps. This is distinct from the Vision framework (VNRequest-based image analysis) covered above. Vision analyzes images within your app; Visual Intelligence lets the system invoke your app when users search with the camera or screenshots.
+Visual Intelligence is a **system-level feature** (iOS 26+; expands to iPadOS27/macOS27) that lets users point their camera at real-world objects — or highlight a screenshot — and find matching content across apps. This is distinct from the Vision framework (VNRequest-based image analysis) covered above. Vision analyzes images within your app; Visual Intelligence lets the system invoke your app when users search with the camera or screenshots.
+
+The same `IntentValueQuery`, entities, and `OpenIntent` code works unchanged across iOS, iPadOS, and macOS. Platform differences worth handling:
+
+- **iOS** — primary entry point is the camera (physical objects: posters, products, artwork)
+- **iPad/Mac** — primary entry point is screenshots (digital media); make sure your search handles both kinds of content
+- **Mac** — the input pixel buffer can be much larger than on iPhone; consider resizing before analysis
 
 ### How It Works
 
@@ -1105,6 +1165,26 @@ The core object the system provides to describe what the user is looking at.
 | `pixelBuffer` | `CVReadOnlyPixelBuffer?` | Visual data of the detected item |
 
 Use labels for fast keyword matching against your content catalog. Use the pixel buffer for image-similarity search when labels are insufficient.
+
+### Matching by Image Similarity (Feature Prints)
+
+For visual matching against your own catalog, compare Vision feature prints. Pre-compute prints for catalog items (never at query time); at query time, convert the descriptor's pixel buffer to a `CGImage` and rank by distance:
+
+```swift
+import Vision
+import VideoToolbox
+
+var cgImage: CGImage?
+_ = pixelBuffer.withUnsafeBuffer {
+    VTCreateCGImageFromCVPixelBuffer($0, options: nil, imageOut: &cgImage)
+}
+guard let cgImage else { return [] }
+
+let queryPrint = try await GenerateImageFeaturePrintRequest().perform(on: cgImage)
+let distance = try queryPrint.distance(to: entry.featurePrint)  // pre-computed FeaturePrintObservation; smaller = more similar
+```
+
+Filter by a maximum distance, sort ascending, and cap the result count — return results fast and ranked. Returning an empty array is fine; the system handles the empty state.
 
 ### IntentValueQuery
 
@@ -1173,37 +1253,104 @@ var appLinkURL: URL? {
 }
 ```
 
-### "More Results" Intent
+### "More Results" — Continue Search in Your App
 
-For large result sets, provide a regular App Intent (surfaced via your `IntentValueQuery`/App Shortcuts) that opens your app's full search UI.
+Adopt the `semanticContentSearch` schema so the system's **More results** button lands users in your full in-app search, pre-populated from the captured context. The system provides the `semanticContent` property automatically — no `@Parameter` needed:
 
 ```swift
-struct ViewMoreLandmarksIntent: AppIntent {
-    static var title: LocalizedStringResource = "View More Landmarks"
+@AppIntent(schema: .visualIntelligence.semanticContentSearch)
+struct SemanticContentSearchIntent: AppIntent {
+    static let title: LocalizedStringResource = "Search in app"
+    static let openAppWhenRun: Bool = true
 
-    @Parameter(title: "Semantic Content")
     var semanticContent: SemanticContentDescriptor
 
     func perform() async throws -> some IntentResult {
-        // Open your app's search view with the semantic content
+        guard let pixelBuffer = semanticContent.pixelBuffer else { return .result() }
+        // Search, then navigate to your full search UI pre-populated with results
         return .result()
     }
 }
 ```
 
+Your in-app search can show far more than the Visual Intelligence results sheet — filters, categories, the full depth of your content.
+
+### System Store Integrations
+
+Image Search is your app providing results *to* Visual Intelligence. The reverse also works: Visual Intelligence actions write data to system stores your app may already read — making Visual Intelligence a new input source with zero Visual Intelligence code. New in the 27 cycle: adding to contacts, saving multiple calendar events, and medical-device logging (WWDC 2026-297).
+
+| Visual Intelligence captures | Your app reads it with |
+|------------------------------|------------------------|
+| Calendar events from posters/posts (multi-event saving `OS27`) | EventKit (`EKEventStore`) |
+| Contact info from business cards `OS27` | Contacts (`CNContactStore`) |
+| Medical-device readings (blood pressure monitors, glucose meters, scales) `OS27` | HealthKit (`HKHealthStore`) |
+
+Observe store-change notifications (e.g. `.EKEventStoreChanged`) so entries created by Visual Intelligence appear in your app without a manual refresh.
+
 ### Best Practices
 
-- **Return results quickly** — Visual Intelligence expects low-latency responses. Limit to 10-20 most relevant results
+- **Return results quickly** — Visual Intelligence expects low-latency responses. Limit to 10-20 most relevant results; returning an empty array is fine
 - **Prefer labels first** — Label matching is faster than pixel buffer analysis. Fall back to pixel buffer when labels are empty or insufficient
+- **Serve thumbnail-sized images** — the results sheet shows ~3 lines of text + a thumbnail in a two-column layout; a single result's image spans the full sheet width
+- **Reuse your existing `OpenIntent`** — if you already have one for the entity, Visual Intelligence uses it; don't write a separate one
+- **Keep `perform()` lightweight** — it runs as your app comes to the foreground; navigate first, defer heavy loading until the view appears
 - **Localize everything** — Display representations appear in the system UI. Use `LocalizedStringResource` for all user-facing text
-- **Include images** — Results with thumbnails are more recognizable in the Visual Intelligence overlay
 
 ### Testing
 
-1. Build and run on a physical device
+1. Build and run on a physical device (iPhone, iPad, or Mac)
 2. Activate Visual Intelligence camera or take a screenshot of relevant content
-3. Perform a visual search and verify your app's results appear
+3. Perform a visual search and verify your app's results appear (ordering among providers is decided by the system)
 4. Tap results to verify deep linking opens the correct content
+5. On Mac, test with large screenshots — input pixel buffers are bigger than iPhone's
+
+## Vision on watchOS `watchOS27`
+
+Vision arrives on watchOS in the 27 cycle — the framework does not exist in earlier watchOS SDKs. The watch gets the **modern Swift API only** (no legacy `VN*` request classes) and a subset of requests:
+
+| On watchOS 27 | NOT on watchOS |
+|---------------|----------------|
+| Face detection/landmarks/capture quality | Text recognition (`RecognizeTextRequest`, `RecognizeDocumentsRequest`, `DetectTextRectanglesRequest`) |
+| Image classification + animal recognition | All pose requests (body 2D/3D, hand, animal) |
+| Segmentation (foreground/person/person-instance) | Optical flow (`TrackOpticalFlowRequest`) |
+| Saliency (attention + objectness), feature prints | Iterative segmentation (tap-to-segment) |
+| Barcodes, contours, rectangles, horizon, document segmentation | |
+| Lens smudge, aesthetics scores, `CoreMLRequest` | |
+| Tracking (object/rectangle/trajectories/registration), `VideoProcessor` | |
+
+Canonical watch use case from WWDC 2026-237 — saliency-based cropping so small screens feature the subject prominently:
+
+```swift
+// Crop to the most prominent subject for a small watch screen
+let request = GenerateObjectnessBasedSaliencyImageRequest()
+let observation = try await request.perform(on: image)  // SaliencyImageObservation
+let crop = observation.salientObjects.first?.boundingBox  // NormalizedRect
+```
+
+`salientObjects` is `[RectangleObservation]` — take `.boundingBox` (or the quadrilateral corners) for the crop rect.
+
+## Vision Tools for Foundation Models `OS27`
+
+Vision ships two ready-made `FoundationModels.Tool` implementations via a cross-import overlay (`import Vision` + `import FoundationModels`) so the on-device LLM can call computer vision on attached images:
+
+| Tool | Purpose | Platforms |
+|------|---------|-----------|
+| `BarcodeReaderTool` | Barcode/QR reading — models can't read QR codes themselves | `OS27` (not tvOS) |
+| `OCRTool` | Fine or dense text recognition, 30+ languages | `OS27` (not watchOS/tvOS) |
+
+```swift
+import FoundationModels
+import Vision
+
+let session = LanguageModelSession(tools: [BarcodeReaderTool()])
+let response = try await session.respond(generating: EventInfo.self) {  // EventInfo: your @Generable struct
+    "Get the date, location, and website from this flyer"
+    Attachment(image)
+        .label("flyer")  // labels are how the model picks which image to pass to a tool
+}
+```
+
+Both tools accept optional `init(name:description:)` overrides. For image inputs, `ImageReference` tool arguments, and the rest of the Foundation Models surface, see axiom-ai `foundation-models-ref.md` (Built-in System Tools).
 
 ## API Quick Reference
 
@@ -1215,6 +1362,7 @@ struct ViewMoreLandmarksIntent: AppIntent {
 | `VNGeneratePersonInstanceMaskRequest` | iOS 17+ | Up to 4 people separately |
 | `VNGeneratePersonSegmentationRequest` | iOS 15+ | All people (single mask) |
 | `ImageAnalysisInteraction` (VisionKit) | iOS 16+ | UI for subject lifting |
+| `GenerateIterativeSegmentationRequest` | `OS27` (not watchOS) | Tap/box/scribble-seeded segmentation of any object |
 
 ### Pose Detection
 
@@ -1247,8 +1395,9 @@ struct ViewMoreLandmarksIntent: AppIntent {
 
 | API | Platform | Purpose |
 |-----|----------|---------|
-| `SemanticContentDescriptor` | iOS 26+ | Describes what the user is looking at (labels + pixel buffer) |
-| `IntentValueQuery` | iOS 26+ | Entry point for receiving visual search requests |
+| `SemanticContentDescriptor` | iOS 26+, iPadOS27/macOS27 | Describes what the user is looking at (labels + pixel buffer) |
+| `IntentValueQuery` | iOS 26+, iPadOS27/macOS27 | Entry point for receiving visual search requests |
+| `semanticContentSearch` schema | iOS 26+, iPadOS27/macOS27 | "More results" intent that continues search in your app |
 
 ### Observation Types
 
@@ -1265,11 +1414,13 @@ struct ViewMoreLandmarksIntent: AppIntent {
 | `VNBarcodeObservation` | Barcode detection |
 | `VNRectangleObservation` | Document segmentation |
 | `DocumentObservation` | Structured document (iOS 26+) |
+| `PixelBufferObservation` | Iterative segmentation mask (`OS27`); modern person segmentation |
+| `SaliencyImageObservation` | Saliency heat map + salient object rects (modern) |
 
 ## Resources
 
-**WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2023-111241, 2023-10048, 2020-10653, 2020-10043, 2020-10099
+**WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2023-111241, 2023-10048, 2020-10653, 2020-10043, 2020-10099, 2026-237, 2026-297
 
-**Docs**: /vision, /visionkit, /visualintelligence, /visualintelligence/semanticcontentdescriptor, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest
+**Docs**: /vision, /visionkit, /visualintelligence, /visualintelligence/semanticcontentdescriptor, /visualintelligence/integrating-your-app-with-visual-intelligence, /vision/generateiterativesegmentationrequest, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest
 
-**Skills**: skills/vision-framework.md, skills/vision-diag.md
+**Skills**: skills/vision-framework.md, skills/vision-diag.md, axiom-ai (skills/foundation-models-ref.md)

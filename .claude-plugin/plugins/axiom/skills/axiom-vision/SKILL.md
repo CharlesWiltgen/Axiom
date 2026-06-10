@@ -20,8 +20,11 @@ license: MIT
 | DataScannerViewController | See `skills/vision-framework.md` |
 | Structured document extraction (iOS 26+) | See `skills/vision-framework.md` |
 | Isolate object excluding hand | See `skills/vision-framework.md` |
+| Tap-to-segment any object `OS27` | See `skills/vision-ref.md` |
+| Vision on watchOS `watchOS27` | See `skills/vision-ref.md` |
+| Vision tools for Foundation Models (BarcodeReaderTool, OCRTool) `OS27` | See `skills/vision-ref.md` |
 | Vision framework API reference | See `skills/vision-ref.md` |
-| Visual Intelligence integration (iOS 26+) | See `skills/vision-ref.md` |
+| Visual Intelligence integration (iOS 26+, iPadOS27/macOS27) | See `skills/vision-ref.md` |
 | Subject not detected | See `skills/vision-diag.md` |
 | Hand/body pose missing landmarks | See `skills/vision-diag.md` |
 | Low confidence observations | See `skills/vision-diag.md` |
@@ -43,14 +46,16 @@ digraph vision {
     what -> "skills/vision-framework.md" [label="implement feature"];
     what -> "skills/vision-ref.md" [label="API reference"];
     what -> "skills/vision-ref.md" [label="Visual Intelligence"];
+    what -> "skills/vision-ref.md" [label="tap-to-segment / watchOS / FM tools (27)"];
     what -> "skills/vision-diag.md" [label="something broken"];
 }
 ```
 
 1. Implementing (pose, segmentation, OCR, barcodes, documents, live scanning)? → `skills/vision-framework.md`
-2. Visual Intelligence system integration (camera feature, iOS 26+)? → `skills/vision-ref.md` (Visual Intelligence section)
-3. Need API reference / code examples? → `skills/vision-ref.md`
-4. Debugging issues (detection failures, confidence, coordinates)? → `skills/vision-diag.md`
+2. Visual Intelligence system integration (camera/screenshot search; iOS 26+, iPadOS27/macOS27)? → `skills/vision-ref.md` (Visual Intelligence section)
+3. Tap-to-segment, Vision on watchOS, or Vision tools for Foundation Models (27 cycle)? → `skills/vision-ref.md`
+4. Need API reference / code examples? → `skills/vision-ref.md`
+5. Debugging issues (detection failures, confidence, coordinates)? → `skills/vision-diag.md`
 
 ## Critical Patterns
 
@@ -109,6 +114,12 @@ User: "Show me VNDetectHumanBodyPoseRequest examples"
 
 User: "How do I make my app work with Visual Intelligence?"
 → See `skills/vision-ref.md`
+
+User: "Let users tap an object in a photo to cut it out"
+→ See `skills/vision-ref.md` (Iterative Segmentation)
+
+User: "Can I use Vision in my watchOS app?"
+→ See `skills/vision-ref.md` (Vision on watchOS)
 
 User: "RecognizeDocumentsRequest API reference"
 → See `skills/vision-ref.md`
