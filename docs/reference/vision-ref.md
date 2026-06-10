@@ -54,10 +54,29 @@ Vision provides computer vision algorithms for still images and video. This refe
   - Real-world coordinates in meters
   - Supports depth data input
 
+### Iterative Segmentation (Tap-to-Segment)
+
+- **GenerateIterativeSegmentationRequest** (iOS 27+, not watchOS)
+  - Segment any object the user selects — by tap, box, or scribble/lasso
+  - Refine the mask with included/excluded points
+  - Requires a one-time model download (`downloadAssets` / `assetStatus`)
+
 ### Visual Intelligence
 
-- **Visual Intelligence system integration** (iOS 26+)
+- **Visual Intelligence system integration** (iOS 26+; iPadOS and macOS from the 27 releases)
   - System-level visual analysis integration
+  - System store integrations: events, contacts, and medical-device readings captured by Visual Intelligence reach your app via EventKit, Contacts, and HealthKit
+
+### Vision on watchOS
+
+- **Modern Swift Vision API on watchOS** (watchOS 27+)
+  - Subset: faces, classification, segmentation, saliency, barcodes, feature prints, tracking
+  - No text recognition or pose requests on the watch
+
+### Vision Tools for Foundation Models
+
+- **BarcodeReaderTool / OCRTool** (from the 27 releases; neither on tvOS, OCRTool also not on watchOS)
+  - Ready-made tools the on-device LLM can call on attached images
 
 ### Face Detection
 
@@ -135,6 +154,7 @@ let output = filter.outputImage
 | `VNGeneratePersonInstanceMaskRequest` | iOS 17+ | Up to 4 people separately |
 | `VNGeneratePersonSegmentationRequest` | iOS 15+ | All people (single mask) |
 | `ImageAnalysisInteraction` (VisionKit) | iOS 16+ | UI for subject lifting |
+| `GenerateIterativeSegmentationRequest` | iOS 27+ | Tap/box/scribble-seeded segmentation |
 
 ### Pose Detection APIs
 
@@ -184,6 +204,8 @@ let uiPoint = CGPoint(
 
 ### WWDC Sessions
 
+- [WWDC 2026 - Session 237: What's new in image understanding](https://developer.apple.com/videos/play/wwdc2026/237/)
+- [WWDC 2026 - Session 297: Best practices for integrating visual intelligence in your app](https://developer.apple.com/videos/play/wwdc2026/297/)
 - [WWDC 2023 - Session 10176: Lift subjects from images in your app](https://developer.apple.com/videos/play/wwdc2023/10176/)
 - [WWDC 2023 - Session 111241: 3D body pose and person segmentation](https://developer.apple.com/videos/play/wwdc2023/111241/)
 - [WWDC 2020 - Session 10653: Detect Body and Hand Pose with Vision](https://developer.apple.com/videos/play/wwdc2020/10653/)
