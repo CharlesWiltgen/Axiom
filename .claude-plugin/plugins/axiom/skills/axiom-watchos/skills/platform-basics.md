@@ -10,6 +10,7 @@ Use when:
 - Adding a `WKApplicationDelegate` to handle workouts, Now Playing, extended runtime, or remote notifications
 - Wiring a custom notification long-look with `WKUserNotificationHostingController`
 - Debugging types that behave differently on arm64 (`Float`, `Int`, pointer math)
+- Adding Apple Intelligence / Foundation Models (Private Cloud Compute only) to a watch app `OS27`
 
 #### Related Skills
 
@@ -21,6 +22,7 @@ Use when:
 - Use `modernization.md` for WatchKit → SwiftUI and ClockKit → WidgetKit migration
 - Use `axiom-shipping` for App Store Connect submission specifics beyond the watchOS SDK gate
 - Use `axiom-health` when the app records workouts with HealthKit; Smart Stack suggests workout apps from routine
+- Use `axiom-ai` for Foundation Models depth (sessions, @Generable, tools, PCC); this skill covers only watch scoping
 
 ## Core Principle
 
@@ -196,6 +198,42 @@ The Xcode template sets these; know what they mean when reviewing an existing pr
 
 `WKRunsIndependentlyOfCompanionApp = YES` + `WKWatchOnly = NO` is the "independent + companion" shape. `WKWatchOnly = YES` is the watch-only shape.
 
+## Apple Intelligence on watchOS `OS27`
+
+Foundation Models reaches watchOS in 27 — via Private Cloud Compute only. The on-device `SystemLanguageModel` is explicitly watch-unavailable; `LanguageModelSession` is `watchOS 27.0` and runs against `PrivateCloudComputeLanguageModel`. That makes every watch FM feature network-dependent: request the PCC entitlement, gate on availability, watch the quota, and design a non-AI fallback.
+
+```swift
+import FoundationModels
+
+let model = PrivateCloudComputeLanguageModel()
+
+switch model.availability {
+case .available:
+    let session = LanguageModelSession(model: model)
+    // prompt as usual — see axiom-ai for session patterns
+case .unavailable(let reason):
+    showNonAIFallback(reason)   // .deviceNotEligible or .systemNotReady
+                                // (network failures surface as request-time errors)
+}
+
+// Quota is real: PCC requests are budgeted per app
+let usage = model.quotaUsage    // .status, optional limitIncreaseSuggestion + resetDate
+let tokens = try? await model.contextSize   // async throwing; context window size
+```
+
+Watch-relevant facts (verified against the watchOS 27 SDK headers):
+
+| Fact | Detail |
+|---|---|
+| PCC only | `SystemLanguageModel` is `@available(watchOS, unavailable)` — there is no on-device text model on watch |
+| Entitlement | PCC is entitlement-gated — without the Private Cloud Compute entitlement the model reports unavailable (see axiom-ai) |
+| Quota | `quotaUsage.status` plus optional `limitIncreaseSuggestion` / `resetDate` |
+| Context | `contextSize` is an async throwing property; `supportedLanguages` / `supportsLocale(_:)` for locale gating |
+| Vision tools | `BarcodeReaderTool` is watchOS 27; `OCRTool` is watch-unavailable (`_Vision_FoundationModels` overlay) |
+| Beta caveats | Per the watchOS 27 beta release notes: PCC might not work in simulators (test on a physical device); `@Generable` on enums fails to compile for watchOS; `PrivateCloudComputeLanguageModel` is greedy-decoding-only |
+
+Full Foundation Models guidance (sessions, `@Generable`, tools, PCC depth) lives in axiom-ai (skills/foundation-models-ref.md), "Private Cloud Compute" section. This section covers only the watch-specific scoping.
+
 ## Common Mistakes
 
 | Mistake | Symptom | Fix |
@@ -211,8 +249,8 @@ The Xcode template sets these; know what they mean when reviewing an existing pr
 
 ## Resources
 
-**WWDC**: 2025-334, 2025-219, 2024-10205, 2023-10138, 2022-10133
+**WWDC**: 2025-334, 2025-219, 2024-10205, 2023-10138, 2022-10133, 2026-241
 
-**Docs**: /watchos-apps/building_a_watchos_app, /watchos-apps/setting-up-a-watchos-project, /watchos-apps/creating-independent-watchos-apps, /swiftui/app, /swiftui/scene, /swiftui/windowgroup, /watchkit/wkapplicationdelegate, /swiftui/wkapplicationdelegateadaptor, /swiftui/wknotificationscene, /watchkit/wkusernotificationhostingcontroller
+**Docs**: /watchos-apps/building_a_watchos_app, /watchos-apps/setting-up-a-watchos-project, /watchos-apps/creating-independent-watchos-apps, /swiftui/app, /swiftui/scene, /swiftui/windowgroup, /watchkit/wkapplicationdelegate, /swiftui/wkapplicationdelegateadaptor, /swiftui/wknotificationscene, /watchkit/wkusernotificationhostingcontroller, /foundationmodels/privatecloudcomputelanguagemodel
 
-**Skills**: axiom-watchos (design-for-watchos, watch-connectivity, background-and-networking, smart-stack-and-complications, controls-and-live-activities, modernization), axiom-shipping, axiom-health
+**Skills**: axiom-watchos (design-for-watchos, watch-connectivity, background-and-networking, smart-stack-and-complications, controls-and-live-activities, modernization), axiom-shipping, axiom-health, axiom-ai

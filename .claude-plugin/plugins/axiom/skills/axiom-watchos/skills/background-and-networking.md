@@ -4,7 +4,8 @@
 
 Use when:
 - Picking between SwiftUI `.backgroundTask(_:action:)` and a WatchKit app-delegate `handle(_:)` implementation
-- Scheduling app refresh with `scheduleBackgroundRefresh(withPreferredDate:userInfo:scheduledCompletion:)`
+- Scheduling app refresh — `BGTaskScheduler` on the 27 SDK, or legacy `scheduleBackgroundRefresh(withPreferredDate:userInfo:scheduledCompletion:)`
+- Migrating WatchKit background-refresh scheduling to BGTaskScheduler
 - Deciding between URLSession configurations (default, ephemeral, background) on a Watch target
 - Hitting `ENETDOWN` when starting `NWConnection` on watchOS (TN3135)
 - Handling `WKURLSessionRefreshBackgroundTask` or `WKWatchConnectivityRefreshBackgroundTask` wake-ups
@@ -44,9 +45,46 @@ If your app isn't in one of those lanes, route every byte through URLSession. Th
 
 Background sessions come with a cost: the system may delay or defer them based on resource conditions. For foreground work, default or ephemeral is faster and more predictable.
 
-## Background Refresh — The New Way (SwiftUI)
+## Background Scheduling Moves to BGTaskScheduler `OS27`
 
-`.backgroundTask(_:action:)` on the `App`'s scene is the preferred path. The system marks the task complete when the closure returns, and you only handle the task types you care about.
+The 27 SDK brings the BackgroundTasks framework to watchOS and deprecates WatchKit's scheduling methods. `WKApplication.scheduleBackgroundRefresh(withPreferredDate:userInfo:scheduledCompletion:)` (and the `WKExtension` variant) is deprecated with replacement `BGTaskScheduler.submitTaskRequest`; `scheduleSnapshotRefresh` is deprecated outright — "Snapshots may no longer be manually scheduled." SwiftUI's bare `.backgroundTask(.appRefresh)` (the `String?` userInfo form below) is deprecated in favor of the identifier form.
+
+SDK nuance: the headers annotate `BGTaskScheduler` and the core task types as `watchos(26.0)`, but the 26.5 SDK marked them watch-unavailable — building requires the Xcode 27 SDK; deployment back to watchOS 26 then works.
+
+```swift
+import BackgroundTasks
+
+// Schedule — one identifier per refresh flow (replaces userInfo dispatch)
+let request = BGAppRefreshTaskRequest(identifier: "com.example.weather-refresh")
+request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
+try await BGTaskScheduler.shared.submitTaskRequest(request)
+
+// Handle — identifier-based SwiftUI hooks
+.backgroundTask(.appRefresh("com.example.weather-refresh")) {
+    await fetchWeather()
+}
+.backgroundTask(.processingTask("com.example.maintenance")) {  // OS27
+    await runMaintenance()
+}
+```
+
+What changes, exactly:
+
+| Legacy (deprecated in 27) | Replacement |
+|---|---|
+| `WKApplication.scheduleBackgroundRefresh(withPreferredDate:userInfo:...)` | `BGAppRefreshTaskRequest(identifier:)` + `earliestBeginDate` + `submitTaskRequest` |
+| `userInfo` string dispatch in one handler | One identifier (and one `.backgroundTask` hook) per flow; identifiers must be listed in Info.plist `BGTaskSchedulerPermittedIdentifiers` |
+| Bare `.backgroundTask(.appRefresh)` receiving `String?` | `.backgroundTask(.appRefresh("identifier"))` |
+| `scheduleSnapshotRefresh` | Nothing — snapshots can no longer be manually scheduled |
+| `BGTaskScheduler.submit(_:)` (annotated watchOS 26) — deprecated in 27 "to capture all error conditions" | `submitTaskRequest(_:)` async (all BGTaskScheduler platforms) |
+
+Also available on watch via the 27 SDK: `BGProcessingTaskRequest` (longer maintenance work; the header allows 1 pending refresh + 10 pending processing tasks), `BGHealthResearchTaskRequest`, and — new at watchOS 27 — `BGContinuedProcessingTaskRequest` for user-visible continued work (no GPU resources on watch; not tvOS/visionOS). The new SwiftUI `.processingTask(_ identifier:)` hook is `OS27` (not macOS/visionOS).
+
+Delivery is unchanged: `handle(_:)` and the `WKRefreshBackgroundTask` types still exist for Watch Connectivity and URLSession wake-ups, and the budget realities below still apply.
+
+## Background Refresh — The Pre-27 SwiftUI Way
+
+`.backgroundTask(_:action:)` on the `App`'s scene is preferred over the delegate path below. The system marks the task complete when the closure returns, and you only handle the task types you care about. On 27, schedule with `BGTaskScheduler` and the identifier form above; the `WKApplication` scheduling and bare `.appRefresh` below are deprecated but keep working for existing apps.
 
 ```swift
 import SwiftUI
@@ -62,9 +100,9 @@ struct MyWatch_Watch_App: App {
 }
 ```
 
-### Distinguishing refresh flows by `userInfo`
+### Distinguishing refresh flows by `userInfo` (deprecated in 27)
 
-Schedule with a specific `userInfo` string, then branch on it inside the handler. `userInfo` must conform to both `NSSecureCoding` and `NSObjectProtocol`; a Swift `String` bridges cleanly via `NSString`:
+Schedule with a specific `userInfo` string, then branch on it inside the handler — on 27, use one `BGAppRefreshTaskRequest` identifier per flow instead. `userInfo` must conform to both `NSSecureCoding` and `NSObjectProtocol`; a Swift `String` bridges cleanly via `NSString`:
 
 ```swift
 // Scheduling
@@ -179,7 +217,7 @@ Apple is explicit about what gates background time:
 - **Low battery throttles.** Background tasks suspend when the battery is low even if your budget has room.
 - **Don't expect every task.** Design a fallback: the app must still update when the user foregrounds it.
 
-Call `scheduleBackgroundRefresh(withPreferredDate:...)` with a preferred date; expect the actual wake time to slip. Never promise the user a precise background-update schedule.
+Schedule with a preferred date (`earliestBeginDate` on a `BGAppRefreshTaskRequest`, or legacy `scheduleBackgroundRefresh(withPreferredDate:...)`); expect the actual wake time to slip. Never promise the user a precise background-update schedule.
 
 ## Fresh-Data Strategy
 
@@ -190,7 +228,7 @@ The briefing from `watch-connectivity.md` applies in reverse here — Watch Conn
 | Paired iPhone online | URLSession on the watch; system auto-routes through the iPhone via Bluetooth |
 | LTE watch, iPhone asleep or out of range | URLSession over known Wi-Fi or cellular |
 | CloudKit-backed data | `CKSubscription` + notifications (watchOS 6+) |
-| Live refresh needed on-device | `TimelineView` for date/time redraws, `.backgroundTask(.appRefresh)` for data |
+| Live refresh needed on-device | `TimelineView` for date/time redraws, a `.backgroundTask` app-refresh hook for data |
 | Instant update from iPhone | Opportunistic `WCSession.transferUserInfo` + `transferCurrentComplicationUserInfo` |
 | Widget refresh from server | APNs widget push updates (watchOS 26+, see `smart-stack-and-complications.md`) |
 
@@ -210,7 +248,7 @@ Avoid `Data(contentsOf: url)`, `String(contentsOf: url)`, and similar. Use `URLS
 |---|---|---|
 | `NWConnection` stays `.waiting(_:)` with `ENETDOWN` on device, works in simulator | Low-level networking blocked — TN3135 | Switch to URLSession; the simulator does not enforce the rule |
 | `EXC_CRASH (SIGKILL)` shortly after background wake | One or more `WKRefreshBackgroundTask`s never got `setTaskCompletedWithSnapshot(_:)` | Audit every branch in `handle(_:)`; for async work, complete after all delegate callbacks fire |
-| Background refresh never fires | No complication on active watch face; app not in Dock; low battery; high-priority user activity | Add a complication; confirm Settings → Passcode → Allow Background App Refresh; test with the device on charger |
+| Background refresh never fires | No complication on active watch face; app not in Dock; low battery; high-priority user activity; on 27, identifier missing from `BGTaskSchedulerPermittedIdentifiers` or request never submitted | Add a complication; confirm Settings → Passcode → Allow Background App Refresh; verify the Info.plist identifier list; test with the device on charger |
 | Download completes but data loss | `urlSession(_:downloadTask:didFinishDownloadingTo:)` didn't move the file before returning | Copy to a permanent location synchronously inside the delegate |
 | `NWPathMonitor` always `.unsatisfied` | Blocked path monitor on watchOS outside the three exceptions | Use `URLSession` error state instead of attempting to pre-check the path |
 
@@ -227,11 +265,14 @@ Avoid `Data(contentsOf: url)`, `String(contentsOf: url)`, and similar. Use `URLS
 | Not adding `expirationHandler` on long tasks | SIGKILL when the budget expires mid-task | Set `expirationHandler` (delegate path) or wrap in `withTaskCancellationHandler` (SwiftUI path) |
 | Using `URLSession.shared` for a background transfer | Download cancels when the app suspends | Use a dedicated `URLSession` with `URLSessionConfiguration.background(withIdentifier:)` |
 | Toggling Bluetooth/Wi-Fi from iPhone Control Center thinking it isolates the watch | Control Center disconnects but doesn't fully disable; tests unreliable | Toggle from iPhone Settings app for a real test |
+| Migrating to `BGTaskScheduler` but keeping one handler with `userInfo` dispatch `OS27` | Tasks fire but the dispatch string is gone — identifier form passes no payload | One identifier + one `.backgroundTask(.appRefresh("id"))` hook per flow; list each in `BGTaskSchedulerPermittedIdentifiers` |
+| Calling `BGTaskScheduler` in a project built with the 26.5 SDK | `'BGTaskScheduler' is unavailable in watchOS` compile error | The watch surface ships in the Xcode 27 SDK (annotated back to watchOS 26) — build with Xcode 27 |
+| Still scheduling snapshots on 27 | Deprecation warnings; no effect to rely on | Remove `scheduleSnapshotRefresh` — snapshots can no longer be manually scheduled |
 
 ## Resources
 
 **WWDC**: 2019-716 (audio streaming on watchOS 6)
 
-**Docs**: /technotes/tn3135-low-level-networking-on-watchos, /watchkit/using-background-tasks, /watchos-apps/making-background-requests, /watchos-apps/keeping-your-watchos-app-s-content-up-to-date, /swiftui/scene/backgroundtask(_:action:), /watchkit/wkapplication/schedulebackgroundrefresh(withpreferreddate:userinfo:scheduledcompletion:), /watchkit/wkrefreshbackgroundtask, /watchkit/wkurlsessionrefreshbackgroundtask, /foundation/urlsession, /foundation/urlsessionconfiguration/background(withidentifier:)
+**Docs**: /technotes/tn3135-low-level-networking-on-watchos, /watchkit/using-background-tasks, /watchos-apps/making-background-requests, /watchos-apps/keeping-your-watchos-app-s-content-up-to-date, /swiftui/scene/backgroundtask(_:action:), /backgroundtasks/bgtaskscheduler, /backgroundtasks/bgapprefreshtaskrequest, /watchkit/wkapplication/schedulebackgroundrefresh(withpreferreddate:userinfo:scheduledcompletion:), /watchkit/wkrefreshbackgroundtask, /watchkit/wkurlsessionrefreshbackgroundtask, /foundation/urlsession, /foundation/urlsessionconfiguration/background(withidentifier:)
 
 **Skills**: axiom-watchos (platform-basics, watch-connectivity, smart-stack-and-complications), axiom-networking, axiom-concurrency
