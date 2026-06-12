@@ -403,6 +403,8 @@ Entities not appearing on other devices
 | Systems not registered | 10-15 min | Call `registerSystem()` before scene load |
 | Physics across different anchors | 20-40 min | Put interacting entities under same anchor |
 | Calling generateCollisionShapes every frame | Performance degradation | Call once during setup |
+| Soft shadows not appearing despite `lightSize` `OS27` | 10-20 min | `Shadow.quality` must be `.medium` or `.high` — `.low` always renders hard shadows |
+| Treating `computePath` nil and empty alike `OS27` | 10-15 min | nil = no valid path exists; empty array = already at destination |
 
 ---
 
@@ -458,7 +460,7 @@ Q3: Is it an AR-related crash (camera, tracking)?
 
 ## Resources
 
-**WWDC**: 2019-603, 2019-605, 2023-10080, 2024-10103
+**WWDC**: 2019-603, 2019-605, 2023-10080, 2024-10103, 2026-279
 
 **Docs**: /realitykit, /realitykit/entity, /realitykit/collisioncomponent, /realitykit/physicsbodycomponent
 
