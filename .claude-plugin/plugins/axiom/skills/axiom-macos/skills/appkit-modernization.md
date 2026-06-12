@@ -189,6 +189,8 @@ SDK additions in the 27 AppKit headers (not covered in WWDC 2026-289):
 | `NSGestureRecognizer.isCancellableByScrollGesture` | Whether a scroll gesture can cancel this recognizer |
 | `NSPanGestureRecognizer.minimumNumberOfTouches` / `maximumNumberOfTouches` | Finger-count thresholds for pans |
 
+`WKWebView` (WebKit) hosts the same `NSRefreshController` through its own `refreshController` property on macOS 27 — first-class pull-to-refresh for web content, macOS-only (on iOS you wire it up yourself by attaching a `UIRefreshControl` to `WKWebView.scrollView`).
+
 ## Checklist
 
 - ☑ No `mouseDown` overrides where a dedicated API exists (selection, menus, dragging, text selection)
