@@ -472,6 +472,35 @@ if (allSame && versionValues.length > 0) {
   }
 }
 
+// docs/index.md hero name carries only the MAJOR (e.g. "Axiom 27"), tracking the
+// OS-cycle major. set-version.js does NOT maintain it, so it silently drifts —
+// it rode the entire 3.x line frozen at "Axiom 3". Enforce major-parity here. A
+// hero without a numeric suffix (branding intentionally dropped the number) is a
+// warning, not an error, so a future rebrand doesn't hard-fail the gate.
+const canonicalVersion = versions["claude-code.json"] ?? versionValues[0];
+const indexPath = path.join(root, "docs/index.md");
+if (canonicalVersion && fs.existsSync(indexPath)) {
+  const canonicalMajor = canonicalVersion.split(".")[0];
+  const heroMatch = fs
+    .readFileSync(indexPath, "utf8")
+    .match(/^\s*name:\s*["']?Axiom\s+(\d+)\b/m);
+  if (!heroMatch) {
+    warn(
+      "version",
+      `docs/index.md hero name is not in "Axiom <major>" form — skipping major-parity check (intentional rebrand?)`,
+    );
+  } else if (heroMatch[1] !== canonicalMajor) {
+    error(
+      "version",
+      `docs/index.md hero "Axiom ${heroMatch[1]}" does not match canonical major ${canonicalMajor} (version ${canonicalVersion}) — update the hero name in docs/index.md`,
+    );
+  } else {
+    console.log(
+      `  ✓ docs/index.md hero "Axiom ${canonicalMajor}" matches canonical major`,
+    );
+  }
+}
+
 heading("9. Metadata Accuracy");
 
 if (fs.existsSync(metadataPath)) {
