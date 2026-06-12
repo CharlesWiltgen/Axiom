@@ -790,6 +790,10 @@ struct InAppBrowser: View {
 - Access page properties (`title` is a non-optional `String`, `url` is `URL?`, `estimatedProgress`)
 - Observable — SwiftUI views update automatically
 
+#### Form-submission hook iOS27
+
+`WebPage.NavigationDeciding` gains `willSubmit(formInfo:) async` (default no-op), observing form submissions: `WebPage.FormInfo` carries `targetFrame` / `sourceFrame` (`FrameInfo`), `submissionURL`, `httpMethod`, and `formValues: [String: String]`. `WebPage.NavigationPreferences` adds `alternateRequest: URLRequest?` and `overrideReferrer: String?`. In the 27 beta 1 SDK these are iOS-only — the macOS/visionOS annotations are placeholder (`9999`) — re-check later betas before claiming them cross-platform.
+
 **tvOS**: WebView and WebPage are **not available on tvOS**. tvOS has no WKWebView at all. For web content parsing on tvOS, use JavaScriptCore. See `axiom-swift (skills/tvos.md)` for alternatives.
 
 ### Advanced WebKit Features
