@@ -17,6 +17,7 @@ license: MIT
 | Accuracy selection, background location | See `skills/core-location.md` |
 | CLLocationUpdate, CLMonitor, CLServiceSession APIs | See `skills/core-location-ref.md` |
 | Authorization API patterns, geofencing API | See `skills/core-location-ref.md` |
+| Compass heading, heading reference body (`headingBody`) | See `skills/core-location-ref.md` (Part 12) |
 | Location updates never arrive | See `skills/core-location-diag.md` |
 | Background location stops working | See `skills/core-location-diag.md` |
 | Authorization always denied, geofence failures | See `skills/core-location-diag.md` |
