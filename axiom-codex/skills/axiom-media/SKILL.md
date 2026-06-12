@@ -29,7 +29,7 @@ license: MIT
 | NowPlaying framework (`import NowPlaying`, Swift-native `MediaSession`, `OS27`) | See `skills/now-playing.md` (NowPlaying Framework section) |
 | CarPlay HIG, app categories, design rules, entitlements | See `skills/carplay-hig.md` |
 | CarPlay templates reference (all 12 templates, availability matrix, depth limits) | See `skills/carplay-templates-ref.md` |
-| CarPlay navigation reference (base view, route guidance, cluster/HUD, multitouch, voice prompts) | See `skills/carplay-navigation-ref.md` |
+| CarPlay navigation reference (base view, route guidance, cluster/HUD, multitouch, voice prompts, map panels + EV charging iOS 27) | See `skills/carplay-navigation-ref.md` |
 | CarPlay Now Playing template customization + sports mode | See `skills/now-playing-carplay.md` |
 | MusicKit Now Playing | See `skills/now-playing-musickit.md` |
 | DockKit motorized stands / gimbals, subject tracking, custom motor control | See `skills/dockkit.md` |

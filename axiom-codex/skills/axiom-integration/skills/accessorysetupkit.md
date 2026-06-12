@@ -123,6 +123,8 @@ func connect(to accessory: ASAccessory) {
 
 `central.scanForPeripherals` also works and returns **only** accessories paired with your app. `ASAccessory` exposes `displayName`, `state` (an `ASAccessory.AccessoryState`: `.unauthorized` / `.awaitingAuthorization` / `.authorized`), `descriptor`, `bluetoothIdentifier`, and `ssid`.
 
+Once connected, on iOS 27 you can **measure the distance** to the accessory with Bluetooth Channel Sounding — `CBCentralManager.supports(.channelSounding)`, then `peripheral.startChannelSoundingSession(_:)` for distance, or feed `peripheral.identifier` into a NearbyInteraction `NISession` for distance *and* direction. Needs an N1-chip iPhone and a foreground app. Full surface: Part 7 of `skills/accessorysetupkit-ref.md`.
+
 ## Part 4 — Accessories that need post-pairing setup
 
 Not every accessory is usable the instant the user taps the picker. A Wi-Fi accessory may need credentials; a bridged Bluetooth Classic accessory needs its transport identifier. These arrive in **`.awaitingAuthorization`**, not `.authorized` — you collect what you need in-app, then *finish* (or *fail*) the authorization.

@@ -323,7 +323,21 @@ let vacationPredicate = #Predicate<Trip> {
 @Query(filter: vacationPredicate) var vacationTrips: [Trip]
 ```
 
-### Polymorphic Relationships
+### Composing Compound Predicates Dynamically (`OS27`)
+
+`#Predicate` is resolved at compile time, so you can't build one from a runtime array (e.g. a user's checked filter options). Foundation's `Predicate(all:)` / `Predicate(any:)` (`OS27`, all platforms) fold a collection of subpredicates into one with AND / OR:
+
+```swift
+@available(anyAppleOS 27, *)
+func tripFilter(for tags: [String]) -> Predicate<Trip> {
+    let clauses = tags.map { tag in #Predicate<Trip> { $0.tags.contains(tag) } }
+    return Predicate(any: clauses)        // OR; use `all:` for AND
+}
+// ...
+@Query(filter: tripFilter(for: selectedTags)) var matching: [Trip]
+```
+
+Guard the empty-collection case: by the usual AND/OR identity an empty `all:` matches everything and an empty `any:` matches nothing, so "no filters selected" should be handled explicitly rather than fed in as `[]`. Before `OS27` the only option was nesting boolean operators inside a single compile-time `#Predicate`, which can't be assembled from a runtime array.
 
 Relationships typed to the base class can hold mixed subclass instances:
 
