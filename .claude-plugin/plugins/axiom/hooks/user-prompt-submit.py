@@ -129,7 +129,7 @@ if re.search(r'xctest|xcuitest|swift\s*testing|@test\b|@suite\b|#expect\b|ui\s*t
     matches.append("axiom-testing")
 
 # Integration
-if re.search(r'widgetkit|widgetcenter|reloadalltimelines|reloadtimelines|add.{0,10}widget|widget.{0,10}(timeline|entry|not updat|show|display)|widget.{0,30}(not updat|never updat|stale)|siri\b|storekit|in-app purchase|iap\b|subscription\s*group|eventkit|ekevents|reminder.{0,5}(access|permiss)|cncontact|app\s*intent|app\s*shortcut|spotlight.{0,5}(index|search)|spotlightsearchtool|localization|string\s*catalog|live\s*activit|control\s*center.{0,5}(widget|control)|push\s*notif|background\s*task|bgtask|timer.{0,5}(pattern|crash|dispatch)|accessorysetupkit|asaccessorysession|asdiscoverydescriptor|accessory\s*(setup|pairing|picker)|weatherkit|weatherservice|callkit|cxprovider|pushkit|pkpushregistry|voip\s*(push|call|app)|livecommunicationkit|conversationmanager|cxcalldirectory|caller\s*id|call\s*directory|livecalleridlookup|assetpack\w*|ba-package|ba-serve|nsbundleresourcerequest|storedownloaderextension|badownloaderextension|pricingterms|billingplantype|commitmentinfo|redeemoption|offercoderedemption|presentoffercoderedeemsheet', prompt_lower):
+if re.search(r'widgetkit|widgetcenter|reloadalltimelines|reloadtimelines|add.{0,10}widget|widget.{0,10}(timeline|entry|not updat|show|display)|widget.{0,30}(not updat|never updat|stale)|siri\b|storekit|in-app purchase|iap\b|subscription\s*group|eventkit|ekevents|reminder.{0,5}(access|permiss)|cncontact|app\s*intent|app\s*shortcut|spotlight.{0,5}(index|search)|spotlightsearchtool|localization|string\s*catalog|live\s*activit|control\s*center.{0,5}(widget|control)|push\s*notif|background\s*task|bgtask|timer.{0,5}(pattern|crash|dispatch)|accessorysetupkit|asaccessorysession|asdiscoverydescriptor|accessory\s*(setup|pairing|picker)|weatherkit|weatherservice|callkit|cxprovider|pushkit|pkpushregistry|voip\s*(push|call|app)|livecommunicationkit|conversationmanager|cxcalldirectory|caller\s*id|call\s*directory|livecalleridlookup|assetpack\w*|ba-package|ba-serve|nsbundleresourcerequest|storedownloaderextension|badownloaderextension|pricingterms|billingplantype|commitmentinfo|redeemoption|offercoderedemption|presentoffercoderedeemsheet|bluetooth\s*channel\s*sounding|channelsounding|startchannelsoundingsession|cbchannelsounding', prompt_lower):
     matches.append("axiom-integration")
 
 # Integration — generic asset/commerce phrases gated
@@ -140,7 +140,7 @@ if not non_ios and "axiom-integration" not in matches and re.search(r'background
     matches.append("axiom-integration")
 
 # Media
-if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker|capture)|core\s*haptics|haptic|now\s*playing|shazamkit|audio\s*recogni|avfoundation|carplay.{0,5}(audio|now)|musickit|camera.{0,5}(capture|preview|session|app|launch)|front\s*camera|center\s*stage|deferred\s*start|pro\s*video\s*storage|prores\b|smart\s*framing|dockkit|dockaccessory|dock\s*accessory|motorized.{0,12}(stand|dock)', prompt_lower):
+if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker|capture)|core\s*haptics|haptic|now\s*playing|shazamkit|audio\s*recogni|avfoundation|carplay.{0,12}(audio|now|map\s*panel|charging|mini\s*player|overlay)|cpmappanel|allowsminiplayer|cpchargingstation|musickit|camera.{0,5}(capture|preview|session|app|launch)|front\s*camera|center\s*stage|deferred\s*start|pro\s*video\s*storage|prores\b|smart\s*framing|dockkit|dockaccessory|dock\s*accessory|motorized.{0,12}(stand|dock)', prompt_lower):
     matches.append("axiom-media")
 
 # Accessibility
