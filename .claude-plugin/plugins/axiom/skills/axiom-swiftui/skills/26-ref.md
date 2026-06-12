@@ -919,6 +919,22 @@ Combine all modifiers (`.dragContainer`, `.dragConfiguration`, `.dragPreviewsFor
 
 Swift Charts supports three-dimensional plotting with `Chart3D`. Key components: `Chart3D` (container), `SurfacePlot` (continuous surfaces), `Chart3DPose` (camera control), `Chart3DSurfaceStyle` (surface appearance).
 
+#### Gotcha: conditional `ChartContent` crashes below a 27.0 deployment target
+
+This applies to **all** Swift Charts, not just `Chart3D`. With a minimum deployment target below 27.0, an `if`/`else` inside a `Chart { … }` closure triggers the warning "Conformance of `_ConditionalContent<TrueContent, FalseContent>` to `ChartContent` is only available in 27.0 or newer," and the app **can crash at runtime** when that content loads. Extract the conditional into a function or computed property annotated with `@ChartContentBuilder`:
+
+```swift
+@ChartContentBuilder
+func marks(for dp: DataPoint) -> some ChartContent {
+    if selectedMetric == "Rate" {
+        LineMark(x: .value("X", dp.index), y: .value("Y", dp.rate)).foregroundStyle(.blue)
+    } else {
+        LineMark(x: .value("X", dp.index), y: .value("Y", dp.signal))
+    }
+}
+// Chart(dataPoints, id: \.index) { marks(for: $0) }
+```
+
 ### Chart3D Container
 
 ```swift
