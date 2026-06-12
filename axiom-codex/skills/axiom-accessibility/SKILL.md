@@ -16,6 +16,7 @@ license: MIT
 | Dynamic Type scaling violations | See `skills/accessibility-diag.md` |
 | Dynamic Type on tvOS (Large Text, tvOS 27) | See `skills/accessibility-diag.md` |
 | Long-form reading apps (continuous reading, Speak Screen, text navigation) | See `skills/accessibility-diag.md` |
+| Captions & subtitle styling in video players (generated subtitles, style preview) | See `skills/accessibility-diag.md` |
 | Custom control technique choice (adjustable, passthrough, direct touch) | See `skills/accessibility-diag.md` |
 | Accessibility Nutrition Labels | See `skills/accessibility-diag.md` |
 | Color contrast (WCAG AA/AAA) | See `skills/accessibility-diag.md` |
@@ -54,6 +55,7 @@ digraph accessibility {
     what -> "skills/accessibility-diag.md" [label="Assistive Access"];
     what -> "skills/accessibility-diag.md" [label="custom control techniques"];
     what -> "skills/accessibility-diag.md" [label="continuous reading / text navigation"];
+    what -> "skills/accessibility-diag.md" [label="captions / subtitle styling"];
     what -> "skills/accessibility-diag.md" [label="App Store prep / Nutrition Labels"];
     what -> "skills/ux-flow-audit.md" [label="UX dead end/dismiss trap"];
     what -> "skills/ux-flow-audit.md" [label="missing states"];
@@ -126,6 +128,9 @@ User: "How do I prepare my tvOS app for Large Text?"
 → See `skills/accessibility-diag.md`
 
 User: "VoiceOver stops reading at the end of each page in my book app"
+→ See `skills/accessibility-diag.md`
+
+User: "How do I let users restyle subtitles or get generated captions in my video player?"
 → See `skills/accessibility-diag.md`
 
 User: "Check for UX dead ends and dismiss traps"

@@ -51,6 +51,10 @@ Diagnostic workflows for VoiceOver testing, Dynamic Type support, color contrast
 - Automatic page turns for read-all (Speak Screen, VoiceOver)
 - Custom text views via UITextInput
 
+#### Captions & Subtitle Styling (Video Playback)
+- Generated subtitles (iOS/macOS 27) — automatic on-device transcription/translation; your job is the subtitle-selection UI
+- Live subtitle style preview (iOS 26.4+) — `AVPlayerLayer`/`AVLegibleMediaOptionsMenuController`, `MACaptionAppearance` profiles
+
 #### Assistive Access
 - Assistive Access support (iOS 17+, cognitive disabilities)
 
@@ -83,6 +87,7 @@ Use this diagnostic when:
 - Adding new UI components or screens
 - Preparing a tvOS app for Large Text (tvOS 27)
 - Building a reading app (books, articles) that VoiceOver or Speak Screen stumbles through
+- Adding captions or subtitle styling to a video player (generated subtitles, live style preview)
 - Before major releases
 
 ## Diagnostic Workflow

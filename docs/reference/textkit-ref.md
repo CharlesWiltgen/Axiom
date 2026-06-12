@@ -1,11 +1,11 @@
 ---
 name: textkit-ref
-description: Reference — Complete TextKit 2 guide covering architecture, migration from TextKit 1, Writing Tools integration, and SwiftUI TextEditor with AttributedString through iOS 26
+description: Reference — Complete TextKit 2 guide covering architecture, migration from TextKit 1, Writing Tools integration, and SwiftUI TextEditor with AttributedString through iOS 27
 ---
 
 # TextKit 2 Reference
 
-This reference helps you work with Apple's TextKit 2 framework for custom text rendering, rich text editing, and Writing Tools integration. It covers architecture, migration from TextKit 1, and iOS 26+ features.
+This reference helps you work with Apple's TextKit 2 framework for custom text rendering, rich text editing, and Writing Tools integration. It covers architecture, migration from TextKit 1, and iOS 26–27 features.
 
 ## When to Use This Reference
 
@@ -15,6 +15,7 @@ Use this reference when you're:
 - Integrating Writing Tools (iOS 18+)
 - Working with SwiftUI TextEditor and AttributedString (iOS 26+)
 - Debugging text layout issues or unexpected fallbacks to TextKit 1
+- Customizing rendering surfaces or attachment view recycling from inside a UITextView subclass (iOS 27+)
 
 **Not sure if you need TextKit 2?** If you're using standard `Text`, `TextField`, or `UILabel`, you probably don't. TextKit 2 is for custom text rendering, syntax highlighting, or rich text editing beyond what built-in controls provide.
 
@@ -28,6 +29,8 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I integrate Writing Tools with my custom text editor?"
 - "How do I use AttributedString with SwiftUI TextEditor in iOS 26?"
 - "What's the difference between NSTextRange and NSRange?"
+- "How do I customize text fragment rendering inside a UITextView without losing input or accessibility?"
+- "How do I recycle inline attachment views in my text editor?"
 
 ## What's Covered
 
@@ -56,6 +59,12 @@ Questions you can ask Claude that will draw from this reference:
 - AttributedString text alignment and line height control
 - Programmatic selection replacement
 - DiscontiguousAttributedSubstring for non-contiguous selections
+
+### Viewport Rendering Surfaces & Attachment Reuse (iOS 27)
+- `NSTextViewportRenderingSurface` — render text fragments from a custom view without building a full custom text engine
+- Subclassable viewport delegate on framework text views — override `NSTextViewportLayoutControllerDelegate` hooks directly inside a `UITextView` subclass
+- `registerTextAttachmentViewProviderReusePolicy(_:forTextAttachmentViewProviderType:)` — recycle inline attachment views instead of rebuilding them
+- Collapsible content via `shouldEnumerate` — exclude collapsed paragraphs from layout using the `NSTextContentStorageDelegate`
 
 ## Documentation Scope
 
@@ -118,3 +127,4 @@ func textViewWritingToolsDidEnd(_ textView: UITextView) {
 - [WWDC 2021-10061](https://developer.apple.com/videos/play/wwdc2021/10061/) — Meet TextKit 2
 - [WWDC 2024-10168](https://developer.apple.com/videos/play/wwdc2024/10168/) — Get started with Writing Tools
 - [WWDC 2025-280](https://developer.apple.com/videos/play/wwdc2025/280/) — Cook up a rich text experience in SwiftUI
+- [WWDC 2026-370](https://developer.apple.com/videos/play/wwdc2026/370/) — Viewport rendering surfaces and attachment reuse in TextKit 2

@@ -17,7 +17,7 @@ Use this reference when:
 - Setting up physics body parameters
 - Looking up animation or audio API details
 - Checking platform availability for specific APIs
-- Browsing the 27-cycle additions (navigation mesh, LOD, soft shadows, splats, reverb)
+- Browsing the 27-cycle additions (navigation mesh, LOD, soft shadows, splats, reverb, cloth, ComputeGraph)
 
 ## Example Prompts
 
@@ -40,7 +40,7 @@ Use this reference when:
 - **Animation** -- Transform animation with timing functions, USD animation playback, AnimationPlaybackController
 - **Audio** -- AudioFileResource, SpatialAudioComponent, AmbientAudioComponent, ChannelAudioComponent, playback control
 - **RealityRenderer** -- Low-level Metal integration for rendering RealityKit content to Metal textures
-- **RealityKit 27 additions** -- Navigation mesh pathfinding, level of detail, soft shadows, projective textures, physical space lighting (visionOS/macOS), lightmaps, Gaussian splats (visionOS), custom reverb meshes, ARKit object tracking
+- **RealityKit 27 additions** -- Navigation mesh pathfinding, level of detail, soft shadows, projective textures, physical space lighting (visionOS/macOS), lightmaps, Gaussian splats (visionOS), custom reverb meshes, ARKit object tracking, cloth simulation (`ClothBodyComponent`, iOS/macOS/visionOS 27), ComputeGraph framework (programmatic node graphs)
 
 ## Documentation Scope
 

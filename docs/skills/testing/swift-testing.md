@@ -16,6 +16,7 @@ Use this skill when:
 - Testing async code reliably
 - Migrating from XCTest
 - Deciding between Swift Testing and XCTest
+- Issue severity and test cancellation (iOS 27)
 
 ## Example Prompts
 
@@ -27,6 +28,8 @@ Use this skill when:
 - "How do I record a non-fatal warning or cancel a test mid-run?" (iOS 27)
 
 ## What This Skill Provides
+
+- **Issue severity & test cancellation** (iOS 27) — `Issue.record(_:severity:)`, `Test.cancel`
 
 ### Basic Structure
 
@@ -89,8 +92,8 @@ func flavorWithoutNuts(_ flavor: IceCream) {
 
 ## Resources
 
-**WWDC**: 2024-10179 (Meet Swift Testing), 2024-10195 (Go further)
+**WWDC**: 2024-10179 (Meet Swift Testing), 2024-10195 (Go further), 2026-262, 2026-267
 
-**Docs**: /documentation/testing
+**Docs**: /documentation/testing, /testing/issue/severity
 
 **Point-Free**: swift-concurrency-extras, swift-clocks

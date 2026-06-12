@@ -1,6 +1,6 @@
 ---
 name: swiftui-containers-ref
-description: Reference — SwiftUI stacks, grids, outlines, and scroll enhancements through iOS 26
+description: Reference — SwiftUI stacks, grids, outlines, and scroll enhancements through iOS 27
 skill_type: reference
 version: 1.2.0
 ---
@@ -96,8 +96,8 @@ List(selection: $selection) {
 
 ## Resources
 
-**WWDC**: 2020-10031, 2022-10056, 2023-10148, 2024-10144, 2025-256
+**WWDC**: 2020-10031, 2022-10056, 2023-10148, 2024-10144, 2025-256, 2026-321
 
-**Docs**: /swiftui/lazyvstack, /swiftui/lazyvgrid, /swiftui/lazyhgrid, /swiftui/grid, /swiftui/outlinegroup, /swiftui/disclosuregroup
+**Docs**: /swiftui/lazyvstack, /swiftui/lazyvgrid, /swiftui/lazyhgrid, /swiftui/grid, /swiftui/outlinegroup, /swiftui/disclosuregroup, /swiftui/view/swipeactionscontainer(), /swiftui/view/asyncimageurlsession(_:), /swiftui/dynamicviewcontent/reorderable(), /swiftui/view/reordercontainer(for:move:), /swiftui/reordering-items-in-lists-stacks-grids-and-custom-layouts
 
 **Skills**: 

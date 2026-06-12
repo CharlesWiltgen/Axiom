@@ -10,7 +10,7 @@ Use when:
 - Adopting iOS 26's new ability to originate workout sessions from iPhone (previously watch-only)
 - Implementing Always On support for workout views
 - Querying or reading historical `HKWorkout` and `HKWorkoutActivity` data
-- Reading or tracking **workout zones** — heart-rate / power / pace effort bands — live or retrospectively (`OS27`)
+- Reading or tracking **workout zones** — heart-rate / cycling-power effort bands — live or retrospectively (`OS27`)
 
 #### Related Skills
 

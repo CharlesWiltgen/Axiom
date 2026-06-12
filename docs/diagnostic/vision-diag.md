@@ -128,6 +128,14 @@ if case .notReady = await request.assetStatus {
 }
 ```
 
+### Missing API on watchOS
+
+**Symptom**: Compiler error — `VNImageRequestHandler`, `VNDetectTextRectanglesRequest`, `VNDetectHumanBodyPoseRequest`, or other `VN*` types not found when building for watchOS 27+
+
+**Root cause**: On watchOS 27 the modern Swift Vision API is the only Vision API. Legacy `VN*` request classes do not exist on the watch, and the available request set is a subset — text recognition and pose requests are not available.
+
+**Fix**: Check `vision-ref.md` (Vision on watchOS section) for the supported subset before porting Vision code to watchOS. Use `#if os(watchOS)` guards to exclude unsupported requests or provide a fallback.
+
 ## Performance Optimization
 
 ### Slow Processing
@@ -160,6 +168,7 @@ print("Request took \(elapsed * 1000)ms")
 | Wrong position | Coordinate conversion | Coordinates | 20 min |
 | Missing people (>4) | Face count | Crowded scene | 30 min |
 | Fails on first use (iOS 27+) | `assetStatus` | Downloadable assets | 10 min |
+| API not found (watchOS 27+) | Only the modern Swift Vision subset exists on watch — no VN* classes, no text/pose | watchOS API subset | 5 min |
 
 ## Resources
 

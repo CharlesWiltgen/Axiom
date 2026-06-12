@@ -1,6 +1,6 @@
 ---
 name: swiftdata
-description: Use when working with SwiftData — @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ features, and Swift 6 concurrency with @MainActor — Apple's native persistence framework
+description: Use when working with SwiftData — @Model definitions, @Query in SwiftUI, @Relationship macros, ModelContext patterns, CloudKit integration, iOS 26+ and iOS 27 features (sectioned queries, ResultsObserver, HistoryObserver, dynamic compound predicates), and Swift 6 concurrency with @MainActor — Apple's native persistence framework
 ---
 
 # SwiftData
@@ -69,6 +69,13 @@ Questions you can ask Claude that will draw from this skill:
 - Dual-stack gradual migration
 - CloudKit sync migration from Realm Sync
 
+### iOS 27 Additions
+- `@Query(sectionBy:)` / `ResultsSectionCollection` — sectioned queries in SwiftUI
+- `ResultsObserver` — observing query results outside SwiftUI
+- `HistoryObserver` — push-based history observation
+- `@Attribute(.codable)` — Codable escape hatch for unowned value types
+- `Predicate(all:)` / `Predicate(any:)` — dynamic compound predicates
+
 ## Key Pattern
 
 ### Preventing N+1 Queries
@@ -104,6 +111,6 @@ This page documents the `axiom-data` skill—comprehensive SwiftData guidance Cl
 
 ## Resources
 
-**WWDC**: 2023-10187, 2023-10195, 2024-10137, 2025-10138
+**WWDC**: 2023-10187, 2023-10195, 2024-10137, 2025-10138, 2026-274, 2026-275
 
 **Docs**: /swiftdata, /swiftdata/model, /swiftdata/query

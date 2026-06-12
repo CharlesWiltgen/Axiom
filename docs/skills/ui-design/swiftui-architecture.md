@@ -3,7 +3,7 @@ name: swiftui-architecture
 description: Architecture patterns for SwiftUI — Apple patterns, MVVM, TCA, and Coordinator
 skill_type: discipline
 version: 1.0
-apple_platforms: iOS 26+
+apple_platforms: iOS 26+, iOS 27 (@State macro)
 ---
 
 # SwiftUI Architecture
@@ -30,6 +30,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I make my SwiftUI code testable?"
 - "Where should formatters and calculations go?"
 - "Which property wrapper do I use?"
+- "My @State property stopped compiling after upgrading to Xcode 27"
 
 ## What This Skill Provides
 
@@ -40,6 +41,7 @@ Questions you can ask Claude that will draw from this skill:
 - Synchronous UI updates for animations
 - `.task` modifier lifecycle (cancels on view destruction, not body re-evaluation; `.task(id:)` pitfalls)
 - Bridging actor state to SwiftUI via `@Observable` proxy layer
+- **@State is a macro** (Xcode 27) — three source-compat breaks: init-plus-declaration conflict, disabled synthesized memberwise init, no wrapper composition
 
 ### MVVM Pattern
 - When MVVM adds value (complex presentation logic)

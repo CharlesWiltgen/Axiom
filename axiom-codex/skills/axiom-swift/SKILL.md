@@ -85,7 +85,7 @@ digraph swift {
 - Foundation modernization (FormatStyle, URL.documentsDirectory, .replacing())
 - SwiftUI convenience APIs Claude misses (ContentUnavailableView.search, LabeledContent)
 - Swift 6.4 concurrency posture defaults
-- 9 common Claude hallucinations with corrections
+- 12 common Claude hallucinations with corrections
 
 **Ownership & Noncopyable Types** (`skills/ownership-conventions.md`):
 - borrowing/consuming parameter modifiers with 7 patterns

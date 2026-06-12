@@ -144,7 +144,7 @@ if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker|captur
     matches.append("axiom-media")
 
 # Accessibility
-if re.search(r'voiceover|accessibility.{0,10}(label|hint|trait|value|issue|audit|fix)|dynamic type|color contrast|wcag|a11y|accessib.{0,10}(element|identif|action)|speak\s*screen|spoken\s*content|accessibility\s*reader|larger\s*text\b|accessibility\s*nutrition|\bdirect\s*touch|activation\s*point', prompt_lower):
+if re.search(r'voiceover|accessibility.{0,10}(label|hint|trait|value|issue|audit|fix)|dynamic type|color contrast|wcag|a11y|accessib.{0,10}(element|identif|action)|speak\s*screen|spoken\s*content|accessibility\s*reader|larger\s*text\b|accessibility\s*nutrition|\bdirect\s*touch|activation\s*point|subtitle\s*styl|caption\s*styl|caption\s*preview|generated\s*subtitle', prompt_lower):
     matches.append("axiom-accessibility")
 
 # AI

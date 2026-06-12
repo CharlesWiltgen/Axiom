@@ -1,6 +1,6 @@
 ---
 name: wellbeing-and-medications
-description: Use when integrating State of Mind mood logging (iOS 18+) or the Medications API (iOS 26+) — valence aggregation, symptom logging, per-object authorization, and privacy-sensitive UI patterns.
+description: Use when integrating State of Mind mood logging (iOS 18+) or the Medications API (iOS 26+) — valence aggregation, symptom logging, per-object authorization, privacy-sensitive UI patterns, or menopausal-state category (iOS 27).
 ---
 
 # Wellbeing and Medications
@@ -15,6 +15,7 @@ Use this skill when you're:
 - Logging symptoms and associating them with medications client-side
 - Understanding the per-object authorization model unique to medications
 - Aggregating valence values correctly across a mix of unpleasant and pleasant days
+- Logging or querying menopausal state (`HKCategoryValueMenopausalState`) (iOS 27)
 
 ## Example Prompts
 
@@ -53,6 +54,9 @@ Questions you can ask Claude that will draw from this skill:
 - Purpose strings matter most here — App Review scrutinizes mental-health and medication data
 - Display valence as language or emoji, not raw `-1.0 to 1.0` numbers
 
+### Menopausal State (iOS 27)
+- **Menopausal State** (iOS 27) — `HKCategoryTypeIdentifierMenopausalState`, `HKCategoryValueMenopausalState` (`.menopause`, `.perimenopause`, `.none`)
+
 ## Key Pattern
 
 Averaging raw valence values misleads users because positive and negative days cancel. Shift to a positive range first:
@@ -83,6 +87,6 @@ This page documents the `wellbeing-and-medications` skill in the `axiom-health` 
 
 **WWDC**: 2024-10109, 2025-321
 
-**Docs**: /healthkit/hkstateofmind, /healthkit/hkmedicationconcept, /healthkit/hkuserannotatedmedication, /healthkit/hkmedicationdoseevent, /healthkit/hkclinicalcoding, /healthkit/hkuserannotatedmedicationquerydescriptor, /healthkit/logging-symptoms-associated-with-a-medication, /healthkit/visualizing-healthkit-state-of-mind-in-visionos
+**Docs**: /healthkit/hkstateofmind, /healthkit/hkmedicationconcept, /healthkit/hkuserannotatedmedication, /healthkit/hkmedicationdoseevent, /healthkit/hkclinicalcoding, /healthkit/hkuserannotatedmedicationquerydescriptor, /healthkit/logging-symptoms-associated-with-a-medication, /healthkit/visualizing-healthkit-state-of-mind-in-visionos, /healthkit/recording-and-querying-menopausal-state
 
 **Skills**: axiom-health, axiom-security

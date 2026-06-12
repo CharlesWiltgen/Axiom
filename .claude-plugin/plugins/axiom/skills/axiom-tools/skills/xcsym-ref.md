@@ -18,7 +18,7 @@ xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's lega
 - **Inventorying local dSYMs** — `list-dsyms` enumerates archives + DerivedData
 - **Scrubbing a user's crash for a fixture** — `anonymize` preserves dSYM UUIDs (correlation keys) while scrubbing PII
 
-**Building an in-app crash reporter?** That's the new-in-27 CrashReportExtension framework, not xcsym — see `axiom-performance (skills/metrickit-ref.md Part 10)`.
+**Building an in-app crash reporter?** That's the CrashReportExtension framework, not xcsym — see `axiom-performance (skills/metrickit-ref.md Part 10)`.
 
 **Do not use `xcsym crash` for hangs.** `crash` rejects `.ips` files with `bug_type=298` (exit 1, `"error":"hang_report"` on stdout). Use `xcsym triage` with `kind: "hang"` in the NormalizedReport for hang classification, or see `axiom-performance (skills/hang-diagnostics.md)` for single-hang investigation.
 

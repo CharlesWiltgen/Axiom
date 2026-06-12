@@ -30,7 +30,7 @@ Use this skill when:
 - Assertion flow for protecting individual API requests after initial attestation
 - Rollout strategy for gradual adoption with fallback for unsupported devices
 - Risk metrics and scoring approach for combining attestation with behavioral signals
-- macOS support (macOS 27+) and the 27-cycle tampering signals — authenticator-data extensions (launch validation category, bundle version) and the macOS key access control property
+- macOS support (macOS 27) and the 27-cycle tampering signals — authenticator-data extensions (launch validation category, bundle version) and the macOS key access control property
 - Fraud metric workflow: receipt redemption, refresh windows, and treating it as an investigation signal
 - DeviceCheck integration for per-device flags without user identity
 - Anti-patterns with fraud impact (client-only validation, skipping assertion after attest, hardcoded risk thresholds)

@@ -27,9 +27,10 @@ ML and AI sound interchangeable but route to different skills:
 | Running your own model on-device | This skill (CoreML) |
 | Using Apple's built-in on-device LLM | [Foundation Models](/skills/integration/foundation-models) |
 | Specializing the built-in LLM with a custom adapter | [Foundation Models Adapters](/skills/integration/foundation-models-adapters) |
+| Bringing an LLM-scale or transformer model on-device (iOS 27) | [Core AI](/skills/machine-learning/core-ai) |
 | Image analysis, pose detection, text recognition | axiom-vision skills |
 
-**Rule of thumb** — if you're converting, compressing, or deploying your own model, you want CoreML. If you're calling Apple's `LanguageModelSession`, you want Foundation Models.
+**Rule of thumb** — if you're converting, compressing, or deploying your own model, you want CoreML. If you're calling Apple's `LanguageModelSession`, you want Foundation Models. If you're bringing an LLM-scale or transformer model, use Core AI (iOS 27).
 
 ## Example Prompts
 
@@ -62,6 +63,7 @@ This skill routes to four specialized resources depending on your task:
 - [speech](/skills/machine-learning/speech) — SpeechAnalyzer and SpeechTranscriber patterns for live and file transcription
 - [foundation-models](/skills/integration/foundation-models) — use Apple's built-in on-device LLM instead of a custom model when the task fits
 - [foundation-models-adapters](/skills/integration/foundation-models-adapters) — train a custom adapter on Apple's base model instead of deploying a separate CoreML LLM
+- [core-ai](/skills/machine-learning/core-ai) — the 27-cycle path for LLM-scale and transformer models; Core ML is for classic models
 
 ## Resources
 

@@ -76,6 +76,7 @@ Questions you can ask Claude that will draw from this reference:
 - MXDiagnosticPayload for energy diagnostics
 - Production monitoring
 - Hang and crash correlation
+- MetricKit 27: `MetricManager` AsyncSequence streams replace `MXMetricManagerSubscriber` — see [metrickit-ref](/reference/metrickit-ref)
 
 ## Key Pattern
 

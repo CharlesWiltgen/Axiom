@@ -72,6 +72,6 @@ A pre-ship verification checklist covering file I/O, dispatch patterns, formatte
 
 ## Resources
 
-**WWDC**: 2021-10258, 2022-10082
+**WWDC**: 2021-10258, 2022-10082, 2026-268
 
 **Docs**: /xcode/analyzing-responsiveness-issues-in-your-shipping-app, /metrickit/mxhangdiagnostic

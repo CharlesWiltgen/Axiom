@@ -1,6 +1,6 @@
 ---
 name: networking
-description: Network.framework patterns for UDP/TCP with NWConnection (iOS 12-18) and NetworkConnection (iOS 26+) with structured concurrency
+description: Network.framework patterns for UDP/TCP with NWConnection (iOS 12-18) and NetworkConnection (iOS 26+) with structured concurrency; gRPC Swift v2 for typed RPC/streaming
 ---
 
 # Networking
@@ -16,6 +16,7 @@ Use this skill when you're:
 - Implementing service discovery with NWBrowser
 - Creating server listeners with NWListener
 - Adopting async/await patterns for networking (iOS 26+)
+- Choosing between URLSession, Network.framework, and gRPC Swift v2 for a service you control
 
 **Note:** For HTTP/REST APIs, use URLSession instead. This skill is for low-level socket connections.
 
@@ -30,6 +31,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I use the new NetworkConnection API in iOS 26?"
 - "My connection keeps failing on network transitions. How do I handle this?"
 - "How do I implement a server listener for incoming connections?"
+- "Should I use gRPC Swift or Network.framework for a streaming API?"
 
 ## What This Skill Provides
 
@@ -53,6 +55,11 @@ Questions you can ask Claude that will draw from this skill:
 - UDP datagrams with batching
 - TLV framing for message boundaries
 - Coder protocol for Codable objects
+
+### gRPC Swift v2
+- Typed RPC and bidirectional streaming over HTTP/2
+- SPM packages: `grpc-swift-nio-transport`, `grpc-swift-protobuf`; `.proto` codegen via the `GRPCProtobufGenerator` build plugin
+- A 27-cycle ecosystem addition (SPM-based, back-deploys — no OS version gate)
 
 ### Listening & Discovery
 - NWListener for incoming connections
@@ -123,6 +130,6 @@ This page documents the `axiom-networking` skill—Network.framework patterns Cl
 
 ## Resources
 
-**WWDC**: 2018-715, 2025-250
+**WWDC**: 2018-715, 2025-250, 2026-265
 
 **Docs**: /network, /network/nwconnection

@@ -353,6 +353,17 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertNotIn("axiom-accessibility", routed_skills(
             "Redirect touch events to the underlying view in UIKit"))
 
+    def test_accessibility_captions(self):
+        self.assertIn("axiom-accessibility", routed_skills(
+            "How do I add subtitle style preview to my video player?"))
+        self.assertIn("axiom-accessibility", routed_skills(
+            "Let users change caption styling while watching a video"))
+        self.assertIn("axiom-accessibility", routed_skills(
+            "How do generated subtitles work during AVPlayer playback?"))
+        # reversed order ("style the subtitle label") must not match subtitle\s*styl
+        self.assertNotIn("axiom-accessibility", routed_skills(
+            "How do I style the subtitle label in my table row?"))
+
     def test_games(self):
         self.assertIn("axiom-games", routed_skills(
             "My SpriteKit SKScene physics aren't working"))

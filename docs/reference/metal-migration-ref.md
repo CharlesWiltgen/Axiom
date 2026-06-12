@@ -16,6 +16,8 @@ Use this reference when:
 - Setting up MTKView or CAMetalLayer
 - Building render or compute pipelines
 - Using Apple's Metal Shader Converter for DirectX
+- Integrating MetalFX denoising or upscaling into a render pipeline
+- Using quantized `MTLTensor` types or TensorOps in shaders
 
 ## Example Prompts
 
@@ -25,6 +27,8 @@ Use this reference when:
 - "What does glDrawElements map to in Metal?"
 - "How do I set up a Metal compute shader?"
 - "What are the buffer storage modes in Metal?"
+- "How do I integrate MetalFX denoising into my path tracer?"
+- "What quantized `MTLTensorDataType` formats are available in the 27 SDKs?"
 
 ## What's Covered
 

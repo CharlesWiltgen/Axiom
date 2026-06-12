@@ -1,6 +1,6 @@
 # Vision Framework API Reference
 
-Comprehensive reference for Vision framework people-focused computer vision: subject segmentation, hand/body pose detection, person detection, and face analysis.
+Comprehensive reference for Vision framework computer vision: subject segmentation, hand/body pose detection, face analysis, OCR, barcode scanning, document scanning, and sensitive content analysis.
 
 ## Overview
 
@@ -86,6 +86,13 @@ Vision provides computer vision algorithms for still images and video. This refe
 - **VNDetectFaceLandmarksRequest** (iOS 11+)
   - Detailed facial landmarks
   - Pupil locations (Revision 3+)
+
+### Sensitive Content Analysis
+
+- **SCSensitivityAnalyzer** (iOS 17+, macOS 14+, visionOS 2+; not watchOS/tvOS)
+  - Detects nudity, gore, and violence in images and video
+  - Gated by the user's Sensitive Content Warning setting — check `analysisPolicy != .disabled` before analyzing; `.disabled` means the feature is off, not an error
+  - iOS 27: `detectedTypes` (`Set<SCSensitivityAnalysis.ContentType>`) adds per-category results (`.sexuallyExplicit`, `.goreOrViolence`); prior to iOS 27 only the boolean `isSensitive` is available
 
 ## Code Examples
 
@@ -174,6 +181,7 @@ let output = filter.outputImage
 | `VNHumanBodyPoseObservation` | Body pose (2D) |
 | `VNHumanBodyPose3DObservation` | Body pose (3D) |
 | `VNFaceObservation` | Face detection/landmarks |
+| `SCSensitivityAnalysis.detectedTypes` | Sensitive content analysis (iOS 27+) |
 
 ## Coordinate System
 

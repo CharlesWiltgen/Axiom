@@ -3,7 +3,7 @@ name: swiftui-nav-ref
 description: Comprehensive SwiftUI navigation API reference with NavigationStack, NavigationSplitView, and NavigationPath
 version: 1.0.0
 skill_type: reference
-apple_platforms: iOS 16+, iOS 18+ (Tab/Sidebar), iOS 26+ (Liquid Glass)
+apple_platforms: iOS 16+, iOS 18+ (Tab/Sidebar), iOS 26+ (Liquid Glass), iOS 27 (prominent tab, crossFade transition)
 ---
 
 # SwiftUI Navigation API Reference
@@ -162,6 +162,6 @@ This page documents the `axiom-swiftui-nav-ref` reference skill—comprehensive 
 
 ## Resources
 
-**WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323
+**WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323, 2026-269
 
-**Docs**: /swiftui/navigationstack, /swiftui/navigationsplitview, /swiftui/navigationpath
+**Docs**: /swiftui/navigationstack, /swiftui/navigationsplitview, /swiftui/navigationpath, /swiftui/tabrole/prominent, /swiftui/navigationtransition/crossfade
