@@ -30,6 +30,7 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I handle the 20-geofence limit?"
 - "What are the diagnostic properties on CLLocationUpdate?"
 - "How do I migrate from CLLocationManager delegates?"
+- "How do I migrate from `headingOrientation` to `headingBody`?"
 
 ## What's Covered
 

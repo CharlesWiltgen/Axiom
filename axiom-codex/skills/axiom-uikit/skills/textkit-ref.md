@@ -922,7 +922,7 @@ All views share same indices.
 
 Before 27 you faced a hard choice: use a framework text view (`UITextView`/`NSTextView`/`TextEditor` — lots free, little rendering control) **or** build a custom view on a raw `NSTextLayoutManager` + viewport layout (total control, but you re-implement input, selection, accessibility, undo, dictation). At 27 you can customize **rendering and viewport from inside a framework text view** by subclassing it.
 
-#### Subclassable viewport delegate on framework text views
+### Subclassable viewport delegate on framework text views
 
 A `UITextView` subclass can now override the three `NSTextViewportLayoutControllerDelegate` hooks directly and drive relayout:
 

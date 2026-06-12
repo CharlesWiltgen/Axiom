@@ -1,6 +1,6 @@
 ---
 name: workouts
-description: Use when building live workout tracking with HKWorkoutSession and HKLiveWorkoutBuilder — session state machine, end sequence, recovery after termination, multi-device mirroring, multi-activity workouts, iOS 26 iPhone origination, and Always On.
+description: Use when building live workout tracking with HKWorkoutSession and HKLiveWorkoutBuilder — session state machine, end sequence, recovery after termination, multi-device mirroring, multi-activity workouts, iOS 26 iPhone origination, Always On, and workout zones (iOS 27, watchOS 27).
 ---
 
 # HealthKit Workouts
@@ -16,6 +16,7 @@ Use this skill when you're:
 - Recovering an active workout after an app or process termination
 - Adopting iOS 26's new ability to originate sessions from iPhone (previously watch-only)
 - Supporting Always On display while a workout is running
+- Reading or tracking workout zones — heart-rate and cycling-power effort bands, live or retrospectively (iOS 27+, watchOS 27+)
 
 ## Example Prompts
 
@@ -52,6 +53,11 @@ Questions you can ask Claude that will draw from this skill:
 - 1 Hz maximum refresh rate when the watch is locked
 - `TimelineView` with `mode == .lowFrequency` branches for simplified views
 - `workout-processing` background mode requirement on watchOS
+
+### Workout Zones (iOS 27)
+- `HKWorkoutZoneGroup`, `HKWorkout.zoneGroupsByType` — retrospective breakdown attached to every finished workout
+- `HKLiveWorkoutZoneUpdate`, `didUpdateWorkoutZone` — live zone-change delegate callback
+- Preferred vs. custom zone configuration with `HKWorkoutZoneConfiguration`
 
 ## Key Pattern
 
@@ -93,8 +99,8 @@ This page documents the `workouts` skill in the `axiom-health` suite. The skill 
 
 ## Resources
 
-**WWDC**: 2021-10009, 2022-10005, 2023-10023, 2025-322
+**WWDC**: 2021-10009, 2022-10005, 2023-10023, 2025-322, 2026-207
 
-**Docs**: /healthkit/hkworkoutsession, /healthkit/hkliveworkoutbuilder, /healthkit/hkliveworkoutbuilderdelegate, /healthkit/hkliveworkoutdatasource, /healthkit/hkworkoutconfiguration, /healthkit/hkworkout, /healthkit/hkworkoutactivity, /healthkit/build-a-workout-app-for-apple-watch, /healthkit/building-a-workout-app-for-iphone-and-ipad
+**Docs**: /healthkit/hkworkoutsession, /healthkit/hkliveworkoutbuilder, /healthkit/hkliveworkoutbuilderdelegate, /healthkit/hkliveworkoutdatasource, /healthkit/hkworkoutconfiguration, /healthkit/hkworkout, /healthkit/hkworkoutactivity, /healthkit/build-a-workout-app-for-apple-watch, /healthkit/building-a-workout-app-for-iphone-and-ipad, /healthkit/accessing-workout-zone-data, /healthkit/hkworkoutzonegroup, /healthkit/hkworkoutzoneconfiguration
 
 **Skills**: axiom-health, axiom-watchos, axiom-concurrency, axiom-swiftui

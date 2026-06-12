@@ -21,6 +21,8 @@ Use this skill when you're:
 - Wiring Apple Pencil Pro features — double-tap, squeeze, barrel roll, hover pose, haptics
 - Adding a rich markup canvas (shapes / images / text + drawing) with PaperKit (26.0+)
 - Bridging any of the above into SwiftUI
+- Reading handwritten text with `PKStrokeRecognizer` (iOS 27+)
+- Programmatically reading or mutating PaperKit markup elements (iOS 27+)
 
 ## Example Prompts
 
@@ -30,6 +32,9 @@ Use this skill when you're:
 - "How do I handle Apple Pencil Pro barrel roll and squeeze?"
 - "How do I add a PaperKit markup canvas with shapes and text?"
 - "How do I wrap PKCanvasView in SwiftUI?"
+- "How do I recognize handwriting from a PencilKit drawing?"
+- "How do I lock PaperKit markup elements so users can't edit them?"
+- "How do I add an overlay button to a PaperKit canvas without persisting it?"
 
 ## Key Concepts
 
@@ -67,6 +72,9 @@ Double-tap is Apple Pencil 2nd gen; squeeze, barrel roll, and hover-with-roll ar
 | Leaving `drawingPolicy` at `.default` | Finger / Simulator drawing dead | Set `.anyInput` |
 | Gating a feature on squeeze | User may have remapped it | Keep squeeze optional |
 | PaperKit without an availability gate | Won't compile on older SDK targets | Wrap in `if #available(iOS 26, *)` |
+| `PKStrokeRecognizer` called synchronously (iOS 27+) | Recognition never returns | It's an actor; `await` every call and call `updateDrawing` first |
+| Stroke slicing (`erasePath`/`substroke`) on main thread (iOS 27+) | UI freeze on complex drawings | Run off-main |
+| Persisting `MarkupAdornment`s (iOS 27+) | Data lost on next open | Overlay-only; store state separately |
 
 ## Related
 
@@ -76,6 +84,6 @@ Double-tap is Apple Pencil 2nd gen; squeeze, barrel roll, and hover-with-roll ar
 
 ## Resources
 
-**WWDC**: 2019-221, 2020-10107, 2024-10214, 2025-285
+**WWDC**: 2019-221, 2020-10107, 2024-10214, 2025-285, 2026-203, 2026-372
 
 **Docs**: /pencilkit, /pencilkit/pkcanvasview, /pencilkit/pktoolpicker, /pencilkit/pkdrawing, /uikit/uipencilinteraction, /uikit/uitouch/rollangle, /paperkit, /paperkit/papermarkup

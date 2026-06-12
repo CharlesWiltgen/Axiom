@@ -980,7 +980,7 @@ actor DatabaseQueryExecutor {
 
 ## Structured Progress Reporting — `ProgressManager` (OS27)
 
-Foundation's `ProgressManager` (`OS27`) is the modern, `Sendable` replacement for `NSProgress`'s implicit current-progress tree. A parent hands each child operation a **consuming `Subprogress` token** for its slice of the total — the token is `~Copyable`, so it can't be duplicated or reused, which makes the progress tree explicit and race-free across async boundaries.
+Foundation's `ProgressManager` is the modern, `Sendable` replacement for `NSProgress`'s implicit current-progress tree. A parent hands each child operation a **consuming `Subprogress` token** for its slice of the total — the token is `~Copyable`, so it can't be duplicated or reused, which makes the progress tree explicit and race-free across async boundaries.
 
 ```swift
 import Foundation
@@ -1006,7 +1006,7 @@ func importFiles(reporting subprogress: consuming Subprogress) async throws {
 
 - **Observe progress, don't poll it.** `ProgressManager` and its read-only `ProgressReporter` are both `@Observable` (the Observation framework) and `Sendable`. Hand consumers the `ProgressReporter` and read its `fractionCompleted` / `completedCount` / `totalCount` / `isFinished` / `isIndeterminate`: inside a SwiftUI `body` they auto-track; elsewhere wrap reads in `withObservationTracking`. Unlike `NSProgress` there's no KVO — observation is the mechanism.
 - Bridge to legacy APIs with `progress.assign(count:to: someNSProgress)`.
-- The SwiftUI `OS27` document model reports read/write progress through this type — see `axiom-design (skills/app-composition.md)`.
+- The SwiftUI document model reports read/write progress through this type — see `axiom-design (skills/app-composition.md)`.
 
 ---
 

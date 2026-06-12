@@ -93,7 +93,7 @@ This page documents the `axiom-shipping` reference skill — complete API-level 
 
 ## Resources
 
-**WWDC**: 2022-10166, 2025-224, 2025-241, 2025-252, 2025-328, 2026-205, 2026-309, 2026-391
+**WWDC**: 2022-10166, 2025-224, 2025-241, 2025-252, 2025-328, 2026-205, 2026-210, 2026-309, 2026-391
 
 **Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details, /help/app-store-connect
 

@@ -104,6 +104,6 @@ The `.primaryAction` placement adapts across platforms — top-trailing on iOS a
 
 ## Resources
 
-**WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219
+**WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219, 2026-269
 
-**Docs**: /swiftui/toolbar, /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent
+**Docs**: /swiftui/toolbar, /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent, /swiftui/toolbaritemplacement/topbarpinnedtrailing, /swiftui/toolbaroverflowmenu, /swiftui/toolbaritemvisibilitypriority

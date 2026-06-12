@@ -11,10 +11,10 @@ Schema reference for `pass.json` and the PassKit consumer-side API (`PKPassLibra
 
 Use this reference when:
 - Authoring `pass.json` and looking up required and optional top-level keys
-- Choosing the correct pass style key (`boardingPass`, `eventTicket`, `coupon`, `storeCard`, `generic`) plus `preferredStyleSchemes: ["posterEventTicket"]` for iOS 18+
+- Choosing the correct pass style key (`boardingPass`, `eventTicket`, `coupon`, `storeCard`, `generic`) plus `preferredStyleSchemes: ["posterEventTicket"]` for iOS 18+, or `posterGeneric` (iOS 27) with a `generic`-alongside fallback
 - Looking up `PassFields` display behavior (which fields show on Apple Watch, which on the stacked Wallet view, which on the back)
 - Looking up `semantics` tag names for poster event tickets, boarding passes, store cards
-- Looking up `PKBarcodeFormat*` values for QR, PDF417, Aztec, Code128
+- Looking up `PKBarcodeFormat*` values for QR, PDF417, Aztec, Code128, and the four 1D types new in the 27 releases (EAN-13, Code 39, Codabar, ITF) with a legacy-format fallback
 - Wiring `PKPassLibrary` for consumer-side pass enumeration, threading constraints, and notifications
 - Looking up the five Apple-defined web service endpoint schemas
 - Packaging a `.pkpasses` multi-pass bundle
@@ -36,7 +36,7 @@ Questions developers ask that this reference answers:
 - **Top-level keys** — `formatVersion`, `passTypeIdentifier`, `serialNumber`, `teamIdentifier`, `organizationName`, `description`, plus optional `logoText`, color keys, `expirationDate`, `voided`, `relevantDate`, `locations`, `beacons`, `barcodes`, `nfc`, `webServiceURL`, `authenticationToken`, `associatedStoreIdentifiers`, `appLaunchURL`, `userInfo`, `sharingProhibited`, `suppressStripShine`, `preferredStyleSchemes`, `groupingIdentifier`, `semantics`
 - **Pass style keys** — `boardingPass` (with `transitType`), `eventTicket`, `coupon`, `storeCard`, `generic`; iOS 18+ `posterEventTicket` declared via `preferredStyleSchemes` (underlying style is still `eventTicket`); iOS 27 `posterGeneric` with the `generic`-alongside fallback
 - **`PKTransitType`** values for boarding passes
-- **PassFields** — `headerFields` (stacked Wallet view), `primaryFields`, `secondaryFields`, `auxiliaryFields` (Apple Watch surfaces these), `backFields` (tap pass info)
+- **PassFields** — `headerFields` (stacked Wallet view), `primaryFields`, `secondaryFields`, `auxiliaryFields` (Apple Watch surfaces these), `backFields` (tap pass info), `footerFields` (iOS 27, `posterGeneric` only — only the first entry renders)
 - **Field dictionary keys** — `key`, `label`, `value`, `attributedValue`, `changeMessage`, `dateStyle`, `timeStyle`, `currencyCode`, `numberStyle`, `textAlignment`, `isRelative`, `ignoresTimeZone`, `dataDetectorTypes`
 - **`PKDateStyle*`**, **`PKNumberStyle*`**, **`PKTextAlignment*`**, and **`PKDataDetectorType*`** value lists
 - **Semantic tags** — `eventName`, `eventStartDate`/`eventEndDate`, venue tags, `performerNames`, `seats`, sports `leftTeamName`/`rightTeamName`, airline `airlineCode`/`flightNumber`, boarding `departureGate`/`arrivalDate`, store-card `balance`/`totalPrice`

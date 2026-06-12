@@ -1,6 +1,6 @@
 ---
 name: app-composition
-description: App-level composition patterns for @main, authentication flows, and scene lifecycle
+description: App-level composition patterns for @main, authentication flows, scene lifecycle, and document-based apps
 skill_type: discipline
 version: 1.0
 apple_platforms: iOS 26+
@@ -20,6 +20,7 @@ Use this skill when you're:
 - Restoring app state after termination
 - Deciding when to split into feature modules
 - Coordinating between multiple windows (iPad, visionOS)
+- Building document-based apps with the `@Observable` document model (iOS 27)
 
 **Core principle:** Apps have discrete states. Model them with enums, not scattered booleans.
 
@@ -58,6 +59,9 @@ Questions you can ask Claude that will draw from this skill:
 - Decision tree for when to split
 - Feature module patterns
 - Dependency injection between modules
+
+### Document-Based Apps (iOS 27)
+- **Document-based apps** — `ReadableDocument`/`WritableDocument`, async `DocumentGroup` initializers, snapshot/apply on `@MainActor`
 
 ## Key Pattern
 

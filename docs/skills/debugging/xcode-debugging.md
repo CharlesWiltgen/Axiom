@@ -110,6 +110,6 @@ This page documents the `axiom-build` skill—environment-first diagnostics Clau
 
 ## Resources
 
-**WWDC**: 2021-10209, 2023-10164
+**WWDC**: 2021-10209, 2023-10164, 2026-258
 
 **Docs**: /xcode/debugging-and-testing

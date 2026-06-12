@@ -1,6 +1,6 @@
 ---
 name: xcode-mcp-setup
-description: First-time setup, client configuration, and connection troubleshooting for Xcode's built-in MCP server (`xcrun mcpbridge`)
+description: Setup, agent launch (`run-agent`), skills export, and agent extension for Xcode's built-in MCP server (`xcrun mcpbridge`). Covers the Xcode 27 external-agents gate, per-client config, the permission dialog, and connection troubleshooting.
 ---
 
 # Xcode MCP Setup

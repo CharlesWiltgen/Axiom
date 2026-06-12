@@ -1,6 +1,6 @@
 ---
 name: swiftui-26-ref
-description: iOS 26 SwiftUI features — Liquid Glass, @Animatable, WebView, rich text, 3D charts
+description: iOS 26 and iOS 27 SwiftUI features — Liquid Glass, @Animatable, WebView, rich text, 3D charts
 ---
 
 # SwiftUI 26 Reference
@@ -28,8 +28,10 @@ Questions you can ask Claude that will draw from this reference:
 - "What Liquid Glass APIs are available in iOS 26?"
 - "How do I use the @Animatable macro?"
 - "How do I embed web content with WebView in SwiftUI?"
+- "How do I intercept form submissions in a SwiftUI WebView?"
 - "How do I use TextEditor with AttributedString?"
 - "How do I create 3D charts in SwiftUI?"
+- "Why does my Chart crash with conditional if/else content?"
 - "What performance improvements does iOS 26 bring to SwiftUI?"
 - "How do I make toolbars morph during navigation transitions?"
 - "Why isn't my toolbar morphing when I push a new view?"
@@ -68,6 +70,7 @@ Questions you can ask Claude that will draw from this reference:
 - WebPage for custom HTML
 - Navigation and load status handling
 - JavaScript interaction
+- Form-submission hook (iOS 27) — `WebPage.FormInfo`, `willSubmit(formInfo:)`, `NavigationPreferences.alternateRequest`
 
 ### Rich Text Editing
 - TextEditor with AttributedString
@@ -81,6 +84,7 @@ Questions you can ask Claude that will draw from this reference:
 - Perspective options
 - Data visualization in 3D
 - Expanded 3D Charts (Chart3D, SurfacePlot, Chart3DPose, surface styling)
+- Conditional `ChartContent` crashes below an iOS 27 deployment target; extract into a `@ChartContentBuilder` function
 
 ### Scene Bridging
 - UIKit ↔ SwiftUI transitions

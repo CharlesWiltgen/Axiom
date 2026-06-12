@@ -56,6 +56,10 @@ Questions you can ask Claude that will draw from this skill:
 - Heap snapshot comparison before/after
 - Regression testing for leaks
 
+### MetricKit Memory Exception Diagnostics (iOS 27)
+- `DiagnosticReport` with `.memoryException` delivers the call stack at a memory-limit kill (iOS 27)
+- `.backgroundTermination`/`.foregroundTermination` metrics break out `memoryLimitTerminationCount`
+
 ## Key Pattern
 
 ### Closure Capture Fix
@@ -96,9 +100,10 @@ This page documents the `axiom-performance` skill—systematic leak diagnosis wo
 - [memory-auditor](/agents/memory-auditor) — Autonomous agent for codebase-wide leak detection
 - [performance-profiling](/skills/debugging/performance-profiling) — Broader profiling including CPU and energy
 - [swift-concurrency](/skills/concurrency/swift-concurrency) — Actor patterns that prevent some leak types
+- [metrickit-ref](/reference/metrickit-ref) — `DiagnosticReport.memoryException` and `MetricManager` setup for iOS 27 memory-kill diagnostics
 
 ## Resources
 
-**WWDC**: 2021-10180, 2022-10106, 2024-10173
+**WWDC**: 2021-10180, 2022-10106, 2024-10173, 2026-222
 
-**Docs**: /instruments, /xcode/debugging-and-testing
+**Docs**: /instruments, /xcode/debugging-and-testing, /metrickit/metricmanager

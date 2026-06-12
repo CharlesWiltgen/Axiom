@@ -17,6 +17,8 @@ Use when you're experiencing:
 - Material looks wrong (too dark, too bright, incorrect colors)
 - Physics bodies not colliding or passing through each other
 - Multiplayer entities not syncing across devices
+- Soft shadows not appearing despite setting `lightSize` (iOS 27)
+- Navigation `computePath` returning nil vs. empty array behaving identically (iOS 27)
 
 ## Example Prompts
 
@@ -54,6 +56,8 @@ Use when you're experiencing:
 | No lighting in non-AR scene | 10-20 min | Add `DirectionalLightComponent` |
 | Components/Systems not registered | 10-15 min | Call `registerComponent()` / `registerSystem()` at launch |
 | Physics across different anchors | 20-40 min | Put interacting entities under same anchor |
+| Soft shadows not appearing despite `lightSize` (iOS 27) | 10-20 min | `Shadow.quality` must be `.medium` or `.high` — `.low` always renders hard shadows |
+| `computePath` nil vs. empty array treated alike (iOS 27) | 10-15 min | nil = no valid path exists; empty array = already at destination |
 
 ## Related
 

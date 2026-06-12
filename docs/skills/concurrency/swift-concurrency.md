@@ -51,6 +51,7 @@ Single-Threaded → Asynchronous → Concurrent → Actors
 - **@concurrent** (Swift 6.2+) — Force background execution (explicit spelling for the pre-6.2 default behavior)
 - **Sendable** — Safe to pass between threads
 - **Actor** — Isolated mutable state
+- **ProgressManager / ProgressReporter** (OS27) — Sendable, @Observable structured async progress reporting; Subprogress provides ~Copyable child tokens
 
 ### Common Patterns
 - Async/await for network calls
@@ -65,7 +66,7 @@ Single-Threaded → Asynchronous → Concurrent → Actors
 - "Actor-isolated property cannot be mutated"
 - "Call to main actor-isolated function in synchronous context"
 
-### Xcode 26 Features
+### Xcode 26+ Features
 - Main Actor mode build settings
 - Approachable concurrency defaults
 - Isolated conformances
@@ -116,6 +117,6 @@ This page documents the `axiom-concurrency` (swift-concurrency reference) skill�
 
 ## Resources
 
-**WWDC**: 2025-268, 2024-10169, 2023-10164, 2022-10144
+**WWDC**: 2025-268, 2024-10169, 2023-10164, 2022-10144, 2026-262
 
-**Docs**: /swift/concurrency, /swift/sendable
+**Docs**: /swift/concurrency, /swift/sendable, /foundation/progressmanager, /foundation/subprogress

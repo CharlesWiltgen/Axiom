@@ -16,6 +16,7 @@ Use this reference when you need:
 - Coder protocol for Codable send/receive
 - NetworkListener and NetworkBrowser patterns
 - Migration from BSD sockets or URLSession
+- Path and viability monitoring with `onPathUpdate`/`onViabilityUpdate`/`onBetterPathUpdate` (iOS 27 extends these to QUIC streams)
 
 **For troubleshooting:** See [networking-diag](/diagnostic/networking-diag) for connection issues.
 
@@ -23,6 +24,7 @@ Use this reference when you need:
 
 Questions you can ask Claude that will draw from this reference:
 
+- "How do I monitor path changes on a QUIC connection in iOS 27?"
 - "How do I create a TLS connection with NWConnection?"
 - "How do I use NetworkConnection with async/await in iOS 26?"
 - "How do I implement TLV framing for message boundaries?"
@@ -45,6 +47,7 @@ Questions you can ask Claude that will draw from this reference:
 - TLV built-in framing
 - Coder protocol for Codable
 - State property observation
+- Path, viability & better-path monitoring (iOS 27: multiplexed/QUIC streams)
 
 ### Server Patterns
 - NWListener (iOS 12-18)

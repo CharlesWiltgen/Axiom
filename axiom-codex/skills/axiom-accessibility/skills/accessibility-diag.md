@@ -17,6 +17,7 @@ Systematic accessibility diagnosis and remediation for Apple platform apps. Cove
 - Supporting Reduce Motion (vestibular disorders)
 - Supporting Assistive Access (cognitive disabilities)
 - Making long-form reading apps work with VoiceOver continuous reading and Speak Screen
+- Adding captions to a video player — generated subtitles (new in the 27 releases) and live subtitle style preview (iOS 26.4+)
 - Preparing for App Store Review accessibility requirements and Accessibility Nutrition Labels
 - Responding to user complaints about accessibility
 
@@ -921,6 +922,79 @@ Adopt `UITextInput` on the view — implement the protocol in its entirety, incl
 
 ---
 
+## 10. Captions & Subtitle Styling (Video Playback)
+
+Two accessibility features for video players. **Generated subtitles** are automatic in the 27 cycle — your only job is to expose subtitle selection so users can reach them. **Subtitle style preview** shipped in iOS 26.4 and lets users restyle captions without leaving your app. Both come from WWDC 2026-256.
+
+### Generated Subtitles `OS27`
+
+When content lacks a subtitle language the viewer understands, the system creates subtitles live and on-device during video playback — *speech transcription* (English subtitles from English audio: iOS, macOS, tvOS, visionOS 27) and *language translation* (other languages from English subtitles: iOS, macOS 27). Authored subtitles are always preferred and left unchanged; generated tracks are marked with a sparkle and "Translated."
+
+**You implement nothing to turn this on** — it is automatic during playback for HTTP Live Streaming (live and on-demand) and file-based content. The one thing you must do is give users a way to *select* a subtitle track, or generated subtitles stay invisible to the people who need them most:
+
+- `AVPlayerViewController` (iOS) and `AVPlayerView` (macOS) provide full subtitle selection (and player controls) for free.
+- `AVLegibleMediaOptionsMenuController` adds subtitle-selection UI to an *existing* custom player (iOS/macOS/visionOS 26.4 — not tvOS).
+- Or build custom media-selection controls that match your player.
+
+#### Symptom: generated subtitles never appear for the user
+
+Almost always a missing or broken subtitle-selection UI. Verify the user can reach a Subtitles menu in your player; a custom player with no media-option selection gives generated tracks nowhere to surface.
+
+### Subtitle Style Preview (iOS 26.4+)
+
+Users have long been able to pick and customize caption styling (font, color, border) in Settings. The style preview lets them do it *live, inside your player, with a real preview* — far more accessible than sending them to Settings mid-video.
+
+`AVPlayerViewController`/`AVPlayerView` implement the whole preview for free. To add it to a custom player UI, use `AVLegibleMediaOptionsMenuController`. To drive it yourself from an `AVPlayerLayer`:
+
+```swift
+import AVFoundation
+import MediaAccessibility
+
+@available(iOS 26.4, macOS 26.4, tvOS 26.4, visionOS 26.4, *)
+final class SubtitleStyleController {
+    let playerLayer: AVPlayerLayer
+    var profileIDs: [String] = []
+    init(playerLayer: AVPlayerLayer) { self.playerLayer = playerLayer }
+
+    // Each system caption style has a MACaptionAppearance profile ID.
+    func loadStyleProfiles() {
+        profileIDs = MACaptionAppearanceCopyProfileIDs() as? [String] ?? []
+    }
+
+    // Preview a style live. New subtitles render in it; any active subtitles are
+    // auto-hidden so they don't interfere. text: nil shows localized placeholder
+    // text. position is an offset from the default location — pass a non-zero
+    // value to keep the preview clear of your playback controls (.zero = default).
+    func previewStyle(_ profileID: String, offset: CGPoint = .zero) {
+        playerLayer.setCaptionPreviewProfileID(profileID, position: offset, text: nil)
+    }
+
+    // ALWAYS stop the preview when the user is done — this removes the placeholder
+    // and restores the active subtitles.
+    func endPreview() {
+        playerLayer.stopShowingCaptionPreview()
+    }
+
+    // Commit the chosen style; it applies to all subtitles, system-wide.
+    func applyStyle(_ profileID: String) {
+        MACaptionAppearanceSetActiveProfileID(profileID as CFString)
+    }
+}
+```
+
+Rendering captions entirely yourself? `AVCaptionRenderer.captionPreview(forProfileID:extendedLanguageTag:renderSize:)` returns a styled `NSAttributedString` for a profile ID — but Apple warns it can block, so generate previews off the main thread.
+
+#### Common mistakes
+
+| Mistake | Result | Fix |
+|---------|--------|-----|
+| Custom player with no subtitle-selection UI | Generated subtitles (`OS27`) never reach users | Adopt `AVPlayerViewController`/`AVPlayerView`, or add `AVLegibleMediaOptionsMenuController` |
+| Forgetting `stopShowingCaptionPreview()` | The placeholder sticks and the real subtitles stay hidden | Always end the preview when selection finishes |
+| Calling `captionPreview(forProfileID:…)` on the main thread | UI hitch while it renders | Generate previews off-main |
+| Reaching for the menu controller on tvOS | `AVLegibleMediaOptionsMenuController` is unavailable there | Use `AVPlayerViewController`'s built-in subtitle UI on tvOS |
+
+---
+
 ## Accessibility Inspector Workflow
 
 ### 1. Launch Accessibility Inspector
@@ -1246,9 +1320,9 @@ After making fixes:
 
 ## Resources
 
-**WWDC**: 2026-219, 2026-220, 2026-221
+**WWDC**: 2026-219, 2026-220, 2026-221, 2026-256
 
-**Docs**: /accessibility/voiceover, /uikit/uifont/scaling_fonts_automatically, /uikit/uiaccessibilityreadingcontent, /swiftui/view/accessibilitylinkedgroup(id:in:)
+**Docs**: /accessibility/voiceover, /uikit/uifont/scaling_fonts_automatically, /uikit/uiaccessibilityreadingcontent, /swiftui/view/accessibilitylinkedgroup(id:in:), /avfoundation/avplayerlayer, /avkit/avlegiblemediaoptionsmenucontroller, /mediaaccessibility
 
 ---
 
