@@ -148,6 +148,32 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-performance", routed_skills(
             "How do I write an XCTApplicationLaunchMetric test?"))
 
+    def test_performance_metrickit(self):
+        self.assertIn("axiom-performance", routed_skills(
+            "How do I set up MetricKit in my app?"))
+        self.assertIn("axiom-performance", routed_skills(
+            "Migrate from MXMetricManager to the new MetricManager API"))
+        self.assertIn("axiom-performance", routed_skills(
+            "How do I parse MXMetricPayload and MXDiagnosticPayload?"))
+        self.assertIn("axiom-performance", routed_skills(
+            "How do I use the StateReporting framework for per-state metrics?"))
+        self.assertIn("axiom-performance", routed_skills(
+            "Can I attach a ReportableMetadata struct to my state transitions?"))
+        self.assertIn("axiom-performance", routed_skills(
+            "How does state reporting work with my app's metrics?"))
+
+    def test_performance_instruments27(self):
+        self.assertIn("axiom-performance", routed_skills(
+            "How do I use Top Functions in Instruments to find scattered overhead?"))
+        self.assertIn("axiom-performance", routed_skills(
+            "How do I verify my fix with a run comparison between two Instruments traces?"))
+        # Bare "top functions" without instruments/profiling context must NOT route
+        self.assertNotIn("axiom-performance", routed_skills(
+            "List the top functions in this Python file by line count"))
+        # Generic web state-reporting prose must NOT route
+        self.assertNotIn("axiom-performance", routed_skills(
+            "How should state reporting work in my React Redux store?"))
+
     def test_networking(self):
         self.assertIn("axiom-networking", routed_skills(
             "How do I use URLSession with async/await?"))
@@ -173,6 +199,14 @@ class TestPositiveRouting(unittest.TestCase):
             "How do I use AVCaptureSession for camera preview?"))
         self.assertIn("axiom-media", routed_skills(
             "How do I track a subject with a DockKit motorized stand?"))
+        self.assertIn("axiom-media", routed_skills(
+            "My camera app launches slowly — the preview takes forever to appear"))
+        self.assertIn("axiom-media", routed_skills(
+            "How do I support the Center Stage front camera in my iOS app?"))
+        self.assertIn("axiom-media", routed_skills(
+            "My ProRes recording drops frames"))
+        self.assertIn("axiom-media", routed_skills(
+            "Should I adopt deferred start for high resolution photo capture?"))
 
     def test_accessibility(self):
         self.assertIn("axiom-accessibility", routed_skills(
@@ -181,18 +215,178 @@ class TestPositiveRouting(unittest.TestCase):
     def test_ai(self):
         self.assertIn("axiom-ai", routed_skills(
             "How do I use Foundation Models with @Generable?"))
+        self.assertIn("axiom-ai", routed_skills(
+            "How do I check Private Cloud Compute quota usage?"))
+        # PCC on the watch routes to BOTH owning suites
+        self.assertIn("axiom-watchos", routed_skills(
+            "Private Cloud Compute quota handling on Apple Watch"))
 
     def test_vision(self):
         self.assertIn("axiom-vision", routed_skills(
             "How do I use Vision framework for text recognition?"))
 
+    def test_shipping_os27(self):
+        self.assertIn("axiom-shipping", routed_skills(
+            "How do I set up Retention Messaging for my subscription?"))
+        self.assertIn("axiom-shipping", routed_skills(
+            "Add a Product Page Header video for my app"))
+        self.assertIn("axiom-shipping", routed_skills(
+            "Submit creative assets through the Asset Library in App Store Connect"))
+        self.assertIn("axiom-shipping", routed_skills(
+            "Sell my subscription to organizations with volume pricing"))
+        self.assertIn("axiom-shipping", routed_skills(
+            "Pass the seat count into the StoreKit purchase request"))
+        # a Unity-style asset library prompt must not route to shipping
+        self.assertNotIn("axiom-shipping", routed_skills(
+            "Import models from the Unity asset library into my game"))
+        # seat-map app features must not route to shipping
+        self.assertNotIn("axiom-shipping", routed_skills(
+            "Build a seat assignment feature for my event booking app"))
+        self.assertNotIn("axiom-shipping", routed_skills(
+            "Export creative assets from Photoshop for the website redesign"))
+        # subscription group is an IAP concept — must reach integration
+        self.assertIn("axiom-integration", routed_skills(
+            "How should I structure my subscription group architecture?"))
+
+    def test_payments_os27(self):
+        self.assertIn("axiom-payments", routed_skills(
+            "How do I adopt the posterGeneric pass style?"))
+        self.assertIn("axiom-payments", routed_skills(
+            "Add featured actions to my Wallet pass"))
+        self.assertIn("axiom-payments", routed_skills(
+            "Render a Codabar barcode on my loyalty card"))
+        self.assertIn("axiom-payments", routed_skills(
+            "Use CustomerEngagementSession to pair with the customer's iPhone"))
+        self.assertIn("axiom-payments", routed_skills(
+            "Sign passes on Linux with the buildpass CLI"))
+        # generic "featured actions" without pass context must not route
+        self.assertNotIn("axiom-payments", routed_skills(
+            "Add featured actions to my app's home screen widget"))
+
+    def test_integration_os27(self):
+        self.assertIn("axiom-integration", routed_skills(
+            "How do I use SpotlightSearchTool with my LanguageModelSession?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Add a language tag to my asset pack manifest for localized delivery"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Convert my Steam depots with xcrun ba-package convert"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Merchandise the monthly subscription with a 12-month commitment"))
+        self.assertIn("axiom-integration", routed_skills(
+            "offerCodeRedemption now returns a verificationResult?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Let users redeem an offer code inside my app"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Migrate from On-Demand Resources to Background Assets"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Check PricingTerms for the billingPlanType before purchase"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Show retention messaging when users cancel their subscription"))
+        # SaaS billing-plan design without subscription/IAP context must not route
+        self.assertNotIn("axiom-integration", routed_skills(
+            "Design the billing plan comparison table for our SaaS pricing site in React"))
+        # web asset prompts must not route to integration
+        self.assertNotIn("axiom-integration", routed_skills(
+            "Preload the website's background assets with a webpack plugin"))
+        # marketing offer-code prompt without redemption context must not route
+        self.assertNotIn("axiom-integration", routed_skills(
+            "Write email copy announcing the offer code for our spring sale"))
+        # verifier-probed FP families (non-Apple game stacks, cloud, e-commerce, email marketing)
+        self.assertNotIn("axiom-integration", routed_skills(
+            "How do I structure asset packs for my Unreal Engine game on Steam Deck?"))
+        self.assertNotIn("axiom-integration", routed_skills(
+            "Move our VM images to on-demand resources in the cloud to cut costs"))
+        self.assertNotIn("axiom-integration", routed_skills(
+            "Add a retention message to our email drip campaign"))
+        self.assertNotIn("axiom-shipping", routed_skills(
+            "Add a retention message to our email drip campaign"))
+        self.assertNotIn("axiom-shipping", routed_skills(
+            "Set up volume pricing for our B2B SaaS plans"))
+        self.assertNotIn("axiom-integration", routed_skills(
+            "Customers redeem an offer code at checkout on our Shopify store"))
+
+    def test_location_os27(self):
+        self.assertIn("axiom-location", routed_skills(
+            "How do I reference compass heading to my map view with headingBody?"))
+        self.assertIn("axiom-location", routed_skills(
+            "headingOrientation is deprecated, what replaces it?"))
+        self.assertIn("axiom-location", routed_skills(
+            "Filter search results with MKPointOfInterestFilter to scenic views"))
+        # markdown/HTML "heading body" prose must not route to location
+        self.assertNotIn("axiom-location", routed_skills(
+            "Fix the heading body spacing in my markdown document"))
+        self.assertNotIn("axiom-location", routed_skills(
+            "Rotate the column heading orientation in my HTML table"))
+
+    def test_crash_reporter_extension(self):
+        self.assertIn("axiom-performance", routed_skills(
+            "How do I build a crash reporter extension with CrashReportExtension?"))
+        self.assertIn("axiom-performance", routed_skills(
+            "Symbolicate addresses from a CrashedProcess in my crash extension"))
+        self.assertIn("axiom-performance", routed_skills(
+            "How do I build a crash reporting extension for my iOS app?"))
+
+    def test_accessibility_os27(self):
+        self.assertIn("axiom-accessibility", routed_skills(
+            "Prepare my tvOS app for Larger Text"))
+        self.assertIn("axiom-accessibility", routed_skills(
+            "Speak Screen stops reading at the end of each page in my book app"))
+        self.assertIn("axiom-accessibility", routed_skills(
+            "How do I declare Accessibility Nutrition Labels?"))
+        self.assertIn("axiom-accessibility", routed_skills(
+            "Should my custom control use direct touch or custom actions?"))
+        # plain nutrition labels (privacy/food) must not route to accessibility
+        self.assertNotIn("axiom-accessibility", routed_skills(
+            "Add a nutrition label scanner to my recipe app"))
+        # "redirect touch events" must not match \bdirect\s*touch
+        self.assertNotIn("axiom-accessibility", routed_skills(
+            "Redirect touch events to the underlying view in UIKit"))
+
     def test_games(self):
         self.assertIn("axiom-games", routed_skills(
             "My SpriteKit SKScene physics aren't working"))
 
+    def test_game_input(self):
+        self.assertIn("axiom-games", routed_skills(
+            "Add touch controls with TCTouchController to my iPhone game"))
+        self.assertIn("axiom-games", routed_skills(
+            "I'm porting my game to iPhone and need touch controls"))
+        self.assertIn("axiom-games", routed_skills(
+            "My game controller isn't detected over Bluetooth"))
+        self.assertIn("axiom-games", routed_skills(
+            "Read thumbstick values from GCController extendedGamepad"))
+        self.assertIn("axiom-games", routed_skills(
+            "Let players remap the controller home button long press"))
+        self.assertIn("axiom-games", routed_skills(
+            "Track a spatial accessory with GCSpatialAccessory on visionOS"))
+        # bare "touch controls" without game context must not route to games
+        self.assertNotIn("axiom-games", routed_skills(
+            "Custom touch controls for my video player scrubber"))
+        self.assertNotIn("axiom-games", routed_skills(
+            "Improve touch controls in my drawing canvas app"))
+
     def test_graphics(self):
         self.assertIn("axiom-graphics", routed_skills(
             "How do I migrate from OpenGL to Metal shaders?"))
+
+    def test_graphics_os27(self):
+        self.assertIn("axiom-graphics", routed_skills(
+            "How do I open and edit a USD file in Swift with USDKit?"))
+        self.assertIn("axiom-graphics", routed_skills(
+            "How do I shrink my USDZ assets for delivery?"))
+        self.assertIn("axiom-graphics", routed_skills(
+            "Add a navigation mesh for NPC pathfinding"))
+        self.assertIn("axiom-graphics", routed_skills(
+            "Collect a metalperftrace overview of my game session"))
+        self.assertIn("axiom-graphics", routed_skills(
+            "Render gaussian splats on Vision Pro"))
+        self.assertIn("axiom-graphics", routed_skills(
+            "My RealityKit entity casts hard shadows despite lightSize"))
+        # currency mentions of USD must not route to graphics
+        self.assertNotIn("axiom-graphics", routed_skills(
+            "What's the USD price tier for my in-app purchase?"))
+        self.assertNotIn("axiom-graphics", routed_skills(
+            "Convert the checkout total to USD in my React storefront"))
 
     def test_shipping(self):
         self.assertIn("axiom-shipping", routed_skills(
@@ -206,6 +400,23 @@ class TestPositiveRouting(unittest.TestCase):
             "How do I build a Mac app with NSToolbar and sandboxing?"))
         self.assertIn("axiom-macos", routed_skills(
             "How do I capture a window with ScreenCaptureKit and SCStream?"))
+        self.assertIn("axiom-macos", routed_skills(
+            "How do I modernize my AppKit app's mouseDown handling?"))
+        self.assertIn("axiom-macos", routed_skills(
+            "My status item shows a custom window — how do I handle keyboard focus?"))
+        self.assertIn("axiom-macos", routed_skills(
+            "How do I make my view's corners concentric with the window?"))
+        self.assertIn("axiom-macos", routed_skills(
+            "Add a SwiftUI menu to the main menu with NSHostingMenu"))
+        # Concentric corners is cross-platform (UICornerConfiguration on iOS 26) —
+        # iOS-flavored prompts must NOT single-match axiom-macos
+        self.assertIn("axiom-design", routed_skills(
+            "How do I make concentric corners on my card view?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "How do I use cornerConfiguration to round my collection view cells on iOS 26?"))
+        # "status item" alone must not fire macos on iOS prompts
+        self.assertNotIn("axiom-macos", routed_skills(
+            "Show a connection status item in my iPhone app's nav bar"))
 
     def test_design(self):
         self.assertIn("axiom-design", routed_skills(
@@ -230,6 +441,14 @@ class TestPositiveRouting(unittest.TestCase):
     def test_security(self):
         self.assertIn("axiom-security", routed_skills(
             "How do I store credentials in Keychain with passkey auth?"))
+
+    def test_security_agentic(self):
+        self.assertIn("axiom-security", routed_skills(
+            "How do I protect my app's AI agent from prompt injection?"))
+
+    def test_security_agentic_lock_screen(self):
+        self.assertIn("axiom-security", routed_skills(
+            "Should my lock screen Siri intent require authentication?"))
 
     def test_apple_docs(self):
         self.assertIn("axiom-apple-docs", routed_skills(
