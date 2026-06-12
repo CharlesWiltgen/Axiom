@@ -13,7 +13,9 @@ license: MIT
 | Symptom / Task | Reference |
 |----------------|-----------|
 | Camera capture, AVCaptureSession | See `skills/camera-capture.md` |
+| Slow camera launch / deferred start (iOS 26+), ProRes recording via Pro Video Storage (`OS27`) | See `skills/camera-capture.md` Patterns 8-9 |
 | Camera API (RotationCoordinator, etc.) | See `skills/camera-capture-ref.md` |
+| Center Stage front camera (iPhone 17), dynamic aspect ratio, smart framing, 24/48 MP capture | See `skills/camera-capture-ref.md` |
 | Camera freezes, black preview, rotation | See `skills/camera-capture-diag.md` |
 | Photo pickers, library access | See `skills/photo-library.md` |
 | PHPicker, PhotosPicker API reference | See `skills/photo-library-ref.md` |
@@ -94,6 +96,7 @@ digraph media {
 | Thought | Reality |
 |---------|---------|
 | "Camera capture is just AVCaptureSession setup" | Camera has interruption handlers, rotation, and threading requirements. |
+| "Camera launch is fast enough if I startRunning() early" | Output initialization dominates launch; iOS 26 deferred start halves time-to-preview. |
 | "I'll add haptics with a simple API call" | Haptic design has patterns for each interaction type matching HIG. |
 | "ShazamKit is just SHSession + a delegate" | iOS 17+ has SHManagedSession which eliminates all AVAudioEngine boilerplate. |
 | "Now Playing info is just setting metadata" | Remote commands, artwork handling, and state sync have 15+ gotchas. |
@@ -104,6 +107,12 @@ digraph media {
 
 User: "How do I set up a camera preview?"
 → Read: `skills/camera-capture.md`
+
+User: "My camera app takes a second before preview appears"
+→ Read: `skills/camera-capture.md` (Pattern 8, deferred start)
+
+User: "Support the Center Stage front camera" / "Capture 48MP photos"
+→ Read: `skills/camera-capture-ref.md`
 
 User: "Camera freezes when I get a phone call"
 → Read: `skills/camera-capture-diag.md`

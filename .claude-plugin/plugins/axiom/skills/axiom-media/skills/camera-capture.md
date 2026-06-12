@@ -11,9 +11,12 @@ Use when you need to:
 - ☑ Record video with audio
 - ☑ Handle device rotation correctly (RotationCoordinator)
 - ☑ Make capture feel responsive (zero-shutter-lag)
+- ☑ Make camera launch fast — preview up in half the time (deferred start, iOS 26+)
 - ☑ Handle session interruptions (phone calls, multitasking)
 - ☑ Switch between front/back cameras
-- ☑ Configure capture quality and resolution
+- ☑ Configure capture quality and resolution (incl. 24/48 MP — see camera-capture-ref)
+- ☑ Support the Center Stage front camera (iPhone 17 — see camera-capture-ref)
+- ☑ Record high-data-rate video (ProRes) without dropped frames (Pro Video Storage `OS27`)
 
 ## Example Prompts
 
@@ -23,6 +26,10 @@ Use when you need to:
 "How do I make photo capture feel instant?"
 "Should I use deferred processing?"
 "My camera takes too long to capture"
+"My camera app launches slowly — the preview takes forever to appear"
+"How do I capture 48 megapixel photos?"
+"How do I support the Center Stage front camera?"
+"My ProRes recording drops frames"
 "How do I switch between front and back cameras?"
 "How do I record video with audio?"
 
@@ -31,6 +38,8 @@ Use when you need to:
 Signs you're making this harder than it needs to be:
 
 - ❌ Calling `startRunning()` on main thread (blocks UI for seconds)
+- ❌ Initializing every output before the first preview frame (slow launch — defer non-preview outputs on iOS 26+)
+- ❌ Creating non-critical UI (mode pickers, image wells) before preview renders
 - ❌ Using deprecated `videoOrientation` instead of RotationCoordinator (iOS 17+)
 - ❌ Not observing session interruptions (app freezes on phone call)
 - ❌ Creating new AVCaptureSession for each capture (expensive)
@@ -160,7 +169,7 @@ class CameraManager: NSObject {
             session.addOutput(photoOutput)
 
             // 4. Configure photo output
-            photoOutput.isHighResolutionCaptureEnabled = true
+            photoOutput.maxPhotoDimensions = camera.activeFormat.supportedMaxPhotoDimensions.last!
             photoOutput.maxPhotoQualityPrioritization = .quality
         }
     }
@@ -700,6 +709,79 @@ extension CameraManager: AVCaptureFileOutputRecordingDelegate {
 
 **Cost**: 45 min implementation
 
+### Pattern 8: Fast Camera Launch with Deferred Start (iOS 26+)
+
+**Use case**: Get the preview frame on screen as fast as possible — Apple measured launch cut roughly in half with deferred start (WWDC 2026-303). The single most important factor in a camera launch feeling fast is how quickly preview appears.
+
+**The launch sequence**: app launch → session configuration/start → **output initialization (the most expensive stage)** → preview streaming. Deferred start postpones output initialization until after preview is up.
+
+**Split your launch into two phases**:
+1. Critical for preview: session creation (off the main thread, in parallel with UI setup), camera input, the preview output, shutter button
+2. Everything else after preview renders: photo/movie outputs, mode pickers, image wells, preferences
+
+```swift
+// Automatic mode — system runs deferred start shortly after preview appears.
+// automaticallyRunsDeferredStart is true by default for apps linked against the iOS 26 SDK+.
+session.beginConfiguration()
+session.automaticallyRunsDeferredStart = true
+
+let previewLayer = AVCaptureVideoPreviewLayer(session: session)
+previewLayer.isDeferredStartEnabled = false   // the preview output must NOT be deferred
+
+let photoOutput = AVCapturePhotoOutput()
+guard session.canAddOutput(photoOutput) else { return }
+session.addOutput(photoOutput)
+photoOutput.isDeferredStartEnabled = true     // defer everything not needed for first frame
+
+session.setDeferredStartDelegate(deferredStartDelegate,
+                                 deferredStartDelegateCallbackQueue: sessionQueue)
+session.commitConfiguration()                 // ONE commit — multiple commits extend launch
+session.startRunning()                        // still on the session queue, never main thread
+```
+
+```swift
+class DeferredStartDelegate: NSObject, AVCaptureSessionDeferredStartDelegate {
+    func sessionWillRunDeferredStart(_ session: AVCaptureSession) {
+        // Before deferred output initialization — create background resources here
+    }
+    func sessionDidRunDeferredStart(_ session: AVCaptureSession) {
+        // All outputs initialized and ready to capture
+    }
+}
+```
+
+**Manual mode** — for apps that render preview with `AVCaptureVideoDataOutput` (automatic deferred start doesn't apply there) or need to finish their own startup work first. Check `isManualDeferredStartSupported`, set `automaticallyRunsDeferredStart = false`, keep `isDeferredStartEnabled = false` on the video data output, then call `runDeferredStartWhenNeeded()` once your first frame is presented — e.g. from a `CAMetalLayer` drawable's `addPresentedHandler`. Trigger snippet and full API table: camera-capture-ref "Deferred Start".
+
+**The catch**: deferring the photo output speeds up preview but the **time to first capture stays the same** — the output still has to initialize before a capture can begin. Pair deferred start with `isResponsiveCaptureEnabled = true` (Pattern 4b) so taps buffer while the photo output finishes initializing.
+
+**Cost**: 1 hour implementation; cuts perceived launch time ~2x
+
+### Pattern 9: Deterministic High-Data-Rate Recording `OS27`
+
+**Use case**: ProRes or other high-bandwidth recordings drop frames because file I/O is non-deterministic under load (competing writes, fragmentation, storage wear).
+
+**Pro Video Storage** is a shared, system-wide pool of pre-allocated storage; the user sizes it in Camera settings. Recordings write into the pre-allocated space, then move to your destination URL when capture finishes. Works with `AVCaptureMovieFileOutput` and `AVAssetWriter`. Not on visionOS/watchOS.
+
+```swift
+guard AVProVideoStorage.isSupported, let storage = AVProVideoStorage.shared else {
+    return // fall back to normal recording
+}
+guard storage.remainingCapacity > 0 else {   // 0 = unconfigured, -1 = read failure
+    storage.openSettings()                   // let the user allocate space
+    return
+}
+
+// movieOutput: the AVCaptureMovieFileOutput already added to the session (Pattern 7)
+guard movieOutput.isProVideoStorageSupported else { return }  // or setting the flag raises
+guard !storage.isBusy else { return }  // resizing/file ops in flight; capture would raise
+movieOutput.usesProVideoStorage = true
+movieOutput.startRecording(to: movieFileURL, recordingDelegate: delegate)
+```
+
+See camera-capture-ref "Session Cost and System Pressure" for the companion APIs (`hardwareCost`, `systemPressureState`) that keep long recordings sustainable.
+
+**Cost**: 30 min implementation
+
 ## Anti-Patterns
 
 ### Anti-Pattern 1: Session Work on Main Thread
@@ -856,6 +938,14 @@ Before shipping camera features:
 - ☑ Capture button shows immediate feedback
 - ☑ Deferred processing considered for maximum speed
 
+**Launch Performance** (iOS 26+):
+- ☑ Non-preview outputs have `isDeferredStartEnabled = true`
+- ☑ Session created off the main thread, in parallel with UI setup
+- ☑ Single `commitConfiguration()` during launch
+- ☑ Non-critical UI created after preview renders
+- ☑ Responsive capture enabled alongside deferred photo output (otherwise taps are rejected until the photo output finishes initializing)
+- ☑ Manual deferred start used when rendering preview via `AVCaptureVideoDataOutput`
+
 **Interruptions**:
 - ☑ Session interruption observer registered
 - ☑ UI feedback shown when interrupted
@@ -874,8 +964,8 @@ Before shipping camera features:
 
 ## Resources
 
-**WWDC**: 2021-10247, 2023-10105
+**WWDC**: 2021-10247, 2023-10105, 2026-303, 2026-304, 2026-341
 
-**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avcapturephotosettings, /avfoundation/avcapturephotooutputreadinesscoordinator
+**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avcapturephotosettings, /avfoundation/avcapturephotooutputreadinesscoordinator, /avfoundation/avprovideostorage
 
 **Skills**: skills/camera-capture-ref.md, skills/camera-capture-diag.md, skills/photo-library.md
