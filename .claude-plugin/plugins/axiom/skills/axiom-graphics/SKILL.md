@@ -166,7 +166,7 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 - RealityRenderer for custom Metal rendering of RealityKit content
 - Complete material property reference
 - RealityView gesture integration
-- RealityKit 27 additions: navigation mesh, LOD, soft shadows, Gaussian splats (visionOS), reverb meshes (Part 10)
+- RealityKit 27 additions: navigation mesh, LOD, soft shadows, Gaussian splats (visionOS), reverb meshes (Part 10), cloth simulation (`ClothBodyComponent`), ComputeGraph framework
 
 **usdkit** (USD authoring, 27 releases):
 - USDStage open/traverse/edit, references and composition

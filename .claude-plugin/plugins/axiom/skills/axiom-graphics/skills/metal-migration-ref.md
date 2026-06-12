@@ -696,7 +696,7 @@ using mxfp8_tensor = tensor<device metal_fp8_e4m3_format, dextents<int, 2>,
 | MetalFX reactive mask rename | `reactiveMaskTextureUsage` replaces deprecated `reactiveTextureUsage` |
 | MetalFX frame interpolation | `isDistortionTextureEnabled` + distortion texture/region, `requiresPrevColorTexture`, `worldToViewMatrix`/`viewToClipMatrix`; temporal scaler gains output-resolution and jittered motion-vector options |
 
-For CoreML-level model conversion, quantization, and deployment (including the 27-cycle Core AI tooling for PyTorch models with custom Metal kernels), see axiom-ai — this part covers only the Metal-side surface.
+For CoreML-level model conversion, quantization, and deployment (including the 27-cycle Core AI tooling for PyTorch models with custom Metal kernels — `TorchMetalKernel`, `coreai-torch`, the `.aimodel` runtime), see axiom-ai (skills/core-ai.md) — this part covers only the Metal-side surface.
 
 ## Resources
 
