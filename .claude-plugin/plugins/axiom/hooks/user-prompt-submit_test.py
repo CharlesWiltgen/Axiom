@@ -360,7 +360,16 @@ class TestPositiveRouting(unittest.TestCase):
             "Let users change caption styling while watching a video"))
         self.assertIn("axiom-accessibility", routed_skills(
             "How do generated subtitles work during AVPlayer playback?"))
-        # reversed order ("style the subtitle label") must not match subtitle\s*styl
+        # natural phrasings that miss a bare "subtitle styl" token: font/color intent,
+        # verb-first word order with video context, and Apple's "caption appearance" term
+        self.assertIn("axiom-accessibility", routed_skills(
+            "How do I change subtitle font and color?"))
+        self.assertIn("axiom-accessibility", routed_skills(
+            "How do I style subtitles in my video player?"))
+        self.assertIn("axiom-accessibility", routed_skills(
+            "Customize caption appearance on iOS 27"))
+        # reversed order ("style the subtitle label", no video/caption-styling context)
+        # must NOT match — it's a UIKit label named "subtitle", not media captions
         self.assertNotIn("axiom-accessibility", routed_skills(
             "How do I style the subtitle label in my table row?"))
 
