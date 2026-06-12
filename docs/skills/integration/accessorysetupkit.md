@@ -25,6 +25,7 @@ Use this skill when you're:
 - "How do I pair a Bluetooth accessory without the permission prompt?"
 - "Why is my AccessorySetupKit picker showing no devices?"
 - "How do I use AccessorySetupKit with CoreBluetooth?"
+- "How do I measure the distance to a paired accessory with Bluetooth Channel Sounding? (iOS 27)"
 - "How do I migrate my existing paired accessories to AccessorySetupKit?"
 - "What Info.plist keys does AccessorySetupKit need?"
 

@@ -1,6 +1,6 @@
 ---
 name: carplay-navigation-ref
-description: CarPlay turn-by-turn navigation reference — base view rules, route guidance lifecycle, map template, CarPlay Dashboard, instrument cluster, HUD metadata, voice prompts, multitouch (iOS 26+), and testing
+description: CarPlay turn-by-turn navigation reference — base view rules, route guidance lifecycle, map template, CarPlay Dashboard, instrument cluster, HUD metadata, voice prompts, multitouch (iOS 26+), map panels and EV charging (iOS 27), and testing
 ---
 
 # CarPlay Navigation Reference
@@ -31,6 +31,8 @@ Questions you can ask Claude that will draw from this reference:
 - "Which maneuver metadata appears in the instrument cluster vs the HUD?"
 - "How do I update trip estimates without spamming the system?"
 - "What multitouch gestures does `CPMapTemplate` deliver on iOS 26+?"
+- "How do I show a CarPlay map panel for route choices on iOS 27?"
+- "How do I surface an EV charging stop with `CPChargingStationConnection`?"
 - "How do I handle `mapTemplateDidCancelNavigation` when the car's native nav takes over?"
 
 ## What's Covered
@@ -48,6 +50,7 @@ Questions you can ask Claude that will draw from this reference:
 - **Instrument cluster and HUD metadata** — what content the cluster renders vs HUD, how maneuver metadata maps to each, and iOS 17.4+ HUD-specific patterns
 - **Voice prompts and audio** — mixing with the vehicle's audio without activating an unnecessary session
 - **Multitouch (iOS 26+)** — zoom (pinch, double-tap, two-finger double-tap), pitch (two-finger slide up/down), rotate (two-finger clockwise/counterclockwise), and the CarPlay Ultra implication that multitouch is always available
+- **Map panels and EV charging (iOS 27)** — `CPMapPanel` overlay panels pushed over `CPMapTemplate` via `showPanel`/`pushPanel` (built from trips, travel estimates, route choices, route details, charging connections, and waypoints), and `CPChargingStationConnection` (connector, voltage, power) for surfacing EV charging stops
 - **Testing matrix** — screen sizes from 748×456 to 1920×720, light/dark content style coverage, cluster configurations, CarPlay Simulator vs Xcode Simulator vs real-vehicle gaps
 
 ## Documentation Scope
