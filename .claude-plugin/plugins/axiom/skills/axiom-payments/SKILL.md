@@ -53,6 +53,9 @@ Use this skill when you encounter:
 | Tap to Pay entitlement stuck in "Submitted" | See `skills/tap-to-pay.md` |
 | Wallet passes (boarding, event ticket, coupon, loyalty, store card) | See `skills/wallet-passes.md` |
 | pass.json schema, semantic tags, barcodes, NFC payloads | See `skills/wallet-passes-ref.md` |
+| Poster generic style, featured actions, new barcode types `OS27` | See `skills/wallet-passes-ref.md` |
+| Pass Designer app, Pass Builder server package | See `skills/wallet-passes-ref.md` |
+| Customer engagement on a paired device (CustomerEngagementSession) `OS27` | See `skills/tap-to-pay-ref.md` |
 | Pass signing, manifest hashing, PKCS #7 | See `skills/wallet-passes.md` |
 | Pass updates not arriving (web service / APNs) | See `skills/wallet-passes.md` |
 | Orders in Wallet, signed order packages, fulfillment status | See `skills/wallet-orders.md` |

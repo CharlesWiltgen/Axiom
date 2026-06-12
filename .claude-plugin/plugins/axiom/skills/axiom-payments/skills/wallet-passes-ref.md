@@ -48,7 +48,7 @@ Schema reference for `pass.json` and the PassKit consumer-side API. For the disc
 
 ## Pass Style Keys (Mutually Exclusive)
 
-Exactly one of these top-level keys appears, carrying a `PassFields` dictionary:
+Exactly one of these top-level keys appears, carrying a `PassFields` dictionary — with one exception: `posterGeneric` may appear *alongside* `generic` as a deliberate fallback (below):
 
 | Style Key | Use |
 |-----------|-----|
@@ -57,7 +57,10 @@ Exactly one of these top-level keys appears, carrying a `PassFields` dictionary:
 | `coupon` | Promotional |
 | `storeCard` | Loyalty / balance |
 | `generic` | Catch-all |
+| `posterGeneric` `OS27` | Poster-style catch-all: background image, primary logo, header/primary fields, one footer field, optional barcode |
 | Plus iOS 18+ `posterEventTicket` declared via `preferredStyleSchemes` rather than a separate top-level key (the underlying style is still `eventTicket`) |
+
+**`posterGeneric` fallback (WWDC 2026-209)**: include the existing `generic` style key *alongside* `posterGeneric`, with relevant fields under each — devices on iOS 26 and earlier render the `generic` face, iOS 27 renders the poster.
 
 `boardingPass` additionally requires:
 ```json
@@ -83,6 +86,7 @@ Each style dictionary uses these field arrays:
 | `primaryFields` | Most prominent — large display |
 | `secondaryFields` | Below primary |
 | `auxiliaryFields` | Below secondary; smaller |
+| `footerFields` `OS27` | `posterGeneric` footer; if you include more than one, only the first is displayed |
 | `backFields` | Pass back side; tap pass info to view |
 
 Apple Watch displays `primaryFields`, `secondaryFields`, and `auxiliaryFields`, plus the footer image and barcode. Stacked iPhone view shows only `headerFields`.
@@ -164,8 +168,37 @@ Refer to `/walletpasses/passsemantics` (and per-tag pages) for the full enumerat
 | `PKBarcodeFormatPDF417` | 2D PDF417 |
 | `PKBarcodeFormatAztec` | 2D Aztec |
 | `PKBarcodeFormatCode128` | 1D Code128 |
+| `PKBarcodeFormatCodabar` `OS27` | 1D Codabar |
 
 Use the `barcodes` **array** (iOS 9+). The deprecated singular `barcode` key still exists for backward compatibility but doesn't render on iOS 9+. Always provide an array even if it has one element.
+
+iOS 27 adds four 1D barcode types: EAN-13, Code 39, Codabar (`PKBarcodeFormatCodabar` — the spelling shown in WWDC 2026-209; see /walletpasses for the other three format strings), and ITF. **Fallback**: devices on iOS 26 and earlier render *no barcode* if the array contains only new types — list barcodes in priority order with a legacy format (e.g. QR) last. When multiple formats aren't an option, surface the credential number in a `primaryField` or `headerField` and train front-line staff for manual entry, so an unscannable pass never blocks a customer:
+
+```json
+"barcodes": [
+    { "format": "PKBarcodeFormatCodabar", "message": "123456789", "messageEncoding": "iso-8859-1" },
+    { "format": "PKBarcodeFormatQR", "message": "123456789", "messageEncoding": "iso-8859-1" }
+]
+```
+
+## Featured Actions `OS27`
+
+The second-generation event ticket (iOS 18) exposed semantic-URL actions below the pass. iOS 27 generalizes this to **all** pass styles via the top-level `featuredActions` key — up to **two** actions per pass, provided in priority order; Wallet draws each below the pass with a colorful icon and localized call-to-action. Each action carries a unique identifier, an action type (the docs list the supported types), and a value such as a URL:
+
+```json
+"featuredActions": [
+    {
+        "identifier": "my-offer-id",
+        "type": "membershipBenefits",
+        "url": "www.example.com/offers"
+    }
+]
+```
+
+## Pass Authoring Tools (WWDC 2026)
+
+- **Pass Designer** — Mac app for WYSIWYG pass design (identity & signing, style, images, barcode/NFC, fields, semantics); produces `.pkpasstemplate` files.
+- **Pass Builder** — Swift-on-Server package (macOS + Linux) with `PassPackage`, `PassImage`, `Pass.Barcode`, `Pass.Action`, `PassCertificate`, `PassSigner.signPass`, plus a `buildpass` CLI; handles manifest, detached signature, and `.pkpass` packaging. Protobuf definitions of the pass package format are provided, and Java bindings can be generated via swift-java. SPM package, not OS-gated.
 
 ## NFC Payload
 
@@ -224,6 +257,8 @@ Consumer-side library — for iOS / iPadOS / macOS / Catalyst / visionOS / watch
 | `authorizationStatus(for:)` | Check current permission |
 
 **Threading:** `PKPassLibrary` is **not thread-safe**. Apple's guidance: confine each instance to a single thread (typically the main thread). Don't share an instance across threads.
+
+**Secure Element provisioning** `OS27` — `PKSecureElementPass.isProvisioningAvailable` (iOS/macOS/watchOS 27) is true when the pass is pre-provisioned and the issuer app can guide the user to complete provisioning; check it when `passActivationState` is `.deactivated`. (Issuer-app surface — Secure Element passes are otherwise out of this suite's merchant scope; listed for completeness.)
 
 ### Notifications
 
@@ -329,6 +364,6 @@ The pass-fetch endpoint (`GET /v1/passes/...`) supports conditional response hea
 
 **HIG**: /design/human-interface-guidelines/wallet (image specs, pass design, Apple Watch layout)
 
-**WWDC**: 2021-10092 (multipass downloads, auto-hide expired), 2024-10108 (poster event ticket, semantic tags, event guide)
+**WWDC**: 2021-10092 (multipass downloads, auto-hide expired), 2024-10108 (poster event ticket, semantic tags, event guide), 2026-209 (posterGeneric, new barcode types, featured actions, Pass Designer, Pass Builder)
 
 **Skills**: wallet-passes (discipline), wallet-orders (post-purchase tracking), tap-to-pay (NFC pass reading at point-of-sale), payments-diag (signing failure modes), apple-pay-ref (PassKit core API), axiom-design/hig (Wallet pass design)

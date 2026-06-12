@@ -71,6 +71,10 @@ request.currencyCode: String                          // ISO 4217 3-letter
 
 Use `PKPaymentRequest.availableNetworks()` to query device-supported networks at runtime instead of hard-coding.
 
+`unsupportedPrimaryAccountIdentifiers: [String]` `OS27` (iOS/macOS/watchOS/visionOS 27) — primary account identifiers excluded from funding the payment; per the header, for merchants who are also the card issuer, to prevent self-funding scenarios.
+
+**Bancomat naming flip-flop (Italy)**: the 26.5 SDK deprecates `.pagoBancomat` in favor of `.bancomat`; the 27 SDK reverses this — `.bancomat` is deprecated in favor of `.pagoBancomat`. Follow the SDK you build with.
+
 ## Summary Items
 
 Order in `paymentSummaryItems` matters: the **last** item is the line displayed next to "Pay" on the sheet, with its label being the customer-facing business name.
