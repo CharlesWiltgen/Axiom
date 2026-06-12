@@ -1417,10 +1417,40 @@ Both tools accept optional `init(name:description:)` overrides. For image inputs
 | `PixelBufferObservation` | Iterative segmentation mask (`OS27`); modern person segmentation |
 | `SaliencyImageObservation` | Saliency heat map + salient object rects (modern) |
 
+## Sensitive Content Analysis (`SensitiveContentAnalysis` framework)
+
+A **separate framework** from Vision (and VisionKit), but the same job family — `SensitiveContentAnalysis` (iOS 17+, macOS 14+, visionOS 2+; **not watchOS/tvOS**) flags nudity, gore, and violence in images and video. It runs only when the user has the system **Sensitive Content Warning** / **Communication Safety** setting on: check `analysisPolicy` first, and treat `.disabled` as "feature off," not an error.
+
+```swift
+import SensitiveContentAnalysis
+
+let analyzer = SCSensitivityAnalyzer()
+guard analyzer.analysisPolicy != .disabled else { return }   // user setting gates analysis
+
+let result = try await analyzer.analyzeImage(cgImage)         // -> SCSensitivityAnalysis
+if result.isSensitive {
+    if #available(iOS 27, macOS 27, visionOS 27, *) {
+        let kinds = result.detectedTypes                     // Set<SCSensitivityAnalysis.ContentType>
+        if kinds.contains(.goreOrViolence) { /* gore-specific UX */ }
+        if kinds.contains(.sexuallyExplicit) { /* explicit-specific UX */ }
+    }
+}
+```
+
+| Member | Availability | Notes |
+|--------|--------------|-------|
+| `SCSensitivityAnalyzer` | iOS 17+, macOS 14+, visionOS 2+ | `analyzeImage(_:)` / `analyzeImage(at:)`; video via `videoAnalysis(forFileAt:)` → `VideoAnalysisHandler.hasSensitiveContent()` |
+| `analysisPolicy` | iOS 17+ | `SCSensitivityAnalysisPolicy`: `.disabled` / `.simpleInterventions` / `.descriptiveInterventions` |
+| `SCSensitivityAnalysis.isSensitive` | iOS 17+ | Boolean — *any* sensitive content |
+| `SCSensitivityAnalysis.detectedTypes` | `OS27` (not watchOS/tvOS) | `Set<SCSensitivityAnalysis.ContentType>` — which categories |
+| `SCSensitivityAnalysis.ContentType` | `OS27` (not watchOS/tvOS) | `.sexuallyExplicit`, `.goreOrViolence` |
+
+**`OS27` upgrade — categorized results.** Before 27 you got only the boolean `isSensitive`. At 27 (`iOS27`/`macOS27`/`visionOS27`, not watchOS/tvOS) `detectedTypes` reports *which kind* of sensitive content was found, so you can branch handling (different messaging for gore vs. explicit). Guard it with `#available` and fall back to the boolean on earlier targets.
+
 ## Resources
 
 **WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2023-111241, 2023-10048, 2020-10653, 2020-10043, 2020-10099, 2026-237, 2026-297
 
-**Docs**: /vision, /visionkit, /visualintelligence, /visualintelligence/semanticcontentdescriptor, /visualintelligence/integrating-your-app-with-visual-intelligence, /vision/generateiterativesegmentationrequest, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest
+**Docs**: /vision, /visionkit, /visualintelligence, /visualintelligence/semanticcontentdescriptor, /visualintelligence/integrating-your-app-with-visual-intelligence, /vision/generateiterativesegmentationrequest, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest, /sensitivecontentanalysis
 
 **Skills**: skills/vision-framework.md, skills/vision-diag.md, axiom-ai (skills/foundation-models-ref.md)
