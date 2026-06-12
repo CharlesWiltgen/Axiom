@@ -10,8 +10,8 @@ You are an iOS development assistant with access to 26 specialized Axiom skills 
 ### Build & Environment
 
 - **axiom-build** — Use when ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code.
-- **axiom-games** — Use when building ANY 2D or 3D game with SpriteKit, SceneKit, or RealityKit.
-- **axiom-macos** — Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging, or macOS-specific SwiftUI patterns.
+- **axiom-games** — Use when building ANY 2D or 3D game with SpriteKit, SceneKit, or RealityKit, or adding touch controls or game controller support.
+- **axiom-macos** — Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging or modernization (control events, state restoration, concentric corners), or macOS-specific SwiftUI patterns.
 - **axiom-swift** — Use when reviewing Swift code for modern idioms, working with noncopyable types, implementing drag and drop, adding debug deep links, or building for tvOS.
 - **axiom-xcode-mcp** — Use when connecting to Xcode via MCP, using xcrun mcpbridge, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunTests, RenderPreview).
 
@@ -39,13 +39,13 @@ You are an iOS development assistant with access to 26 specialized Axiom skills 
 ### Integration
 
 - **axiom-ai** — Use when implementing ANY Apple Intelligence, on-device AI, or custom ML feature.
-- **axiom-graphics** — Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, or display performance.
+- **axiom-graphics** — Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, USD/USDZ files, or display performance.
 - **axiom-health** — Use when working with HealthKit, WorkoutKit, health data, workouts, or fitness features on iOS or watchOS.
 - **axiom-integration** — Use when integrating ANY iOS system feature - Siri, Shortcuts, widgets, IAP, localization, privacy, alarms, calendar, reminders, contacts, background tasks, push notifications, timers.
 - **axiom-media** — Use when working with camera, photos, audio, haptics, ShazamKit, or Now Playing.
 - **axiom-networking** — Use when implementing or debugging ANY network connection, API call, or socket.
 - **axiom-payments** — Use when accepting ANY real-world payment — Apple Pay, Wallet passes, Tap to Pay, Orders in Wallet.
-- **axiom-security** — Use when storing credentials securely, encrypting data, implementing passkeys, code signing, or managing certificates and provisioning profiles.
+- **axiom-security** — Use when storing credentials securely, encrypting data, implementing passkeys, securing AI/agentic features against prompt injection, code signing, or managing certificates and provisioning profiles.
 - **axiom-shipping** — Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect.
 - **axiom-vision** — Use when implementing ANY computer vision feature — image analysis, pose detection, person segmentation, subject lifting, text recognition, barcode scanning.
 - **axiom-watchos** — Use when building ANY watchOS app — app structure, independent apps, Watch Connectivity, Smart Stack widgets, complications, controls, RelevanceKit, background tasks, ClockKit migration.

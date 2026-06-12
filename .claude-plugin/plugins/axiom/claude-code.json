@@ -72,11 +72,11 @@
     },
     {
       "name": "axiom-graphics",
-      "description": "Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, or display performance. Covers Metal migration, shader conversion, RealityKit ECS, RealityView, variable refresh rate, ProMotion."
+      "description": "Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, USD/USDZ files, or display performance. Covers Metal migration, shader conversion, RealityKit ECS, RealityView, USDKit, ProMotion."
     },
     {
       "name": "axiom-games",
-      "description": "Use when building ANY 2D or 3D game with SpriteKit, SceneKit, or RealityKit. Covers scene graphs, ECS, physics, actions, game loops, rendering, SwiftUI integration."
+      "description": "Use when building ANY 2D or 3D game with SpriteKit, SceneKit, or RealityKit, or adding touch controls or game controller support. Covers scene graphs, ECS, physics, actions, game loops, rendering, TouchController, GCController."
     },
     {
       "name": "axiom-apple-docs",
@@ -92,7 +92,7 @@
     },
     {
       "name": "axiom-security",
-      "description": "Use when storing credentials securely, encrypting data, implementing passkeys, code signing, or managing certificates and provisioning profiles."
+      "description": "Use when storing credentials securely, encrypting data, implementing passkeys, securing AI/agentic features against prompt injection, code signing, or managing certificates and provisioning profiles."
     },
     {
       "name": "axiom-location",
@@ -112,7 +112,7 @@
     },
     {
       "name": "axiom-macos",
-      "description": "Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging, or macOS-specific SwiftUI patterns."
+      "description": "Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging or modernization (control events, state restoration, concentric corners), or macOS-specific SwiftUI patterns."
     },
     {
       "name": "axiom-watchos",
