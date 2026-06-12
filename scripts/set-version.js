@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
+import { VERSION_RE, VERSION_CORE } from './version-regex.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,9 +13,10 @@ const args = process.argv.slice(2);
 const tagFlag = args.includes('--tag');
 const version = args.find(a => !a.startsWith('-'));
 
-if (!version?.match(/^\d+\.\d+\.\d+$/)) {
-  console.error('❌ Usage: node set-version.js X.Y.Z [--tag]');
+if (!version?.match(VERSION_RE)) {
+  console.error('❌ Usage: node set-version.js X.Y.Z[-beta.N|-rc.N] [--tag]');
   console.error('   Example: node set-version.js 0.9.37');
+  console.error('   Example: node set-version.js 27.0.0-beta.1   (prerelease — beta/rc only)');
   console.error('   Example: node set-version.js 0.9.37 --tag   (also creates annotated git tag v0.9.37)');
   process.exit(1);
 }
@@ -332,7 +334,7 @@ try {
     throw new Error(`VitePress config not found: ${configPath}`);
   }
   let configContent = fs.readFileSync(configPath, 'utf8');
-  const versionRegex = /(copyright: '[^']*• v)(\d+\.\d+\.\d+)(')/;
+  const versionRegex = new RegExp(`(copyright: '[^']*• v)(${VERSION_CORE})(')`);
   if (!versionRegex.test(configContent)) {
     throw new Error('Version string not found in config.ts footer');
   }

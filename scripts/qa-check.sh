@@ -78,7 +78,7 @@ echo "🔢 Checking version consistency..."
 PLUGIN_VERSION=$(node -e "console.log(require('./.claude-plugin/plugins/axiom/claude-code.json').version)")
 MARKETPLACE_VERSION=$(node -e "console.log(require('./.claude-plugin/marketplace.json').plugins[0].version)")
 # VitePress version is in the footer copyright - extract from built site or config
-VITEPRESS_VERSION=$(grep -o "v[0-9]\+\.[0-9]\+\.[0-9]\+" docs/.vitepress/config.ts | head -1 | sed 's/v//' || echo "$PLUGIN_VERSION")
+VITEPRESS_VERSION=$(grep -oE "v[0-9]+\.[0-9]+\.[0-9]+(-(beta|rc)\.[0-9]+)?" docs/.vitepress/config.ts | head -1 | sed 's/v//' || echo "$PLUGIN_VERSION")
 
 echo "  Plugin:      $PLUGIN_VERSION"
 echo "  Marketplace: $MARKETPLACE_VERSION"
