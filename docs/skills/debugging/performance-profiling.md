@@ -32,6 +32,8 @@ Questions you can ask Claude that will draw from this skill:
 - "Time Profiler shows a hot spot but fixing it didn't help. What did I miss?"
 - "How do I add custom signposts to measure my own code paths?"
 - "How do I set up automated performance regression tests?"
+- "No single function is hot but the app still hangs — how do I find scattered overhead?"
+- "How do I compare two Instruments runs to verify my fix?"
 
 ## What This Skill Provides
 
@@ -86,6 +88,14 @@ flowchart TD
 - Performance baselines and tolerance in Xcode
 - Bridging signposts to automated tests with XCTOSSignpostMetric
 
+### Instruments 27 & Xcode 27 Organizer
+- Top Functions mode for scattered overhead (dynamic dispatch, retain/release, existentials)
+- Run Comparisons — before/after deltas across runs in one document
+- Inspector panel and System Trace blocked-thread (syscall) analysis
+- Swift executors instrument for main-actor congestion
+- Foundation Models instrument for agentic/LLM feature latency
+- Organizer: redesigned Overview, Storage and hitches metrics, Metric Goals, agentic Generate Recommendations
+
 ### Pressure Scenarios
 - Deadline pressure handling
 - Manager authority pressure
@@ -137,6 +147,6 @@ This page documents the `axiom-performance` skill—Instruments decision trees a
 
 ## Resources
 
-**WWDC**: 2023-10160, 2024-10217, 2025-308, 2025-312
+**WWDC**: 2023-10160, 2024-10217, 2025-308, 2025-312, 2026-258, 2026-268, 2026-243
 
 **Docs**: /instruments, /xcode/performance, /os/ossignposter, /xctest/performance-tests

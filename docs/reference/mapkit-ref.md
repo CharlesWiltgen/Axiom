@@ -27,7 +27,7 @@ Use this reference when:
 - Map content types (Marker, Annotation, UserAnnotation, shapes)
 - MKMapView lifecycle and delegate methods
 - Annotation customization and clustering
-- MKLocalSearch and MKLocalSearchCompleter
+- MKLocalSearch and MKLocalSearchCompleter (including the 11 point-of-interest categories new in the 27 releases)
 - MKDirections and MKRoute
 - Look Around (MKLookAroundScene, LookAroundPreview)
 - Overlays and renderers

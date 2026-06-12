@@ -17,7 +17,7 @@ Use this reference when:
 - Writing a `StoreDownloaderExtension` (Apple-hosted) or `BADownloaderExtension` (server-hosted)
 - Authoring a `Manifest.json` for `xcrun ba-package`
 - Setting up local testing with `xcrun ba-serve`
-- Integrating Background Assets with Foundation Models adapter delivery — `SystemLanguageModel.Adapter.isCompatible(_:)`, `.compatibleAdapterIdentifiers(name:)`, `.removeObsoleteAdapters()`
+- Integrating Background Assets with Foundation Models adapter delivery — `SystemLanguageModel.Adapter.compatibleAdapterIdentifiers(name:)`, `.removeObsoleteAdapters()` (deprecated 26.4 / obsoleted 27.0 in the 27 SDK)
 
 ## Example Prompts
 
@@ -43,9 +43,13 @@ Questions developers ask that this reference answers:
 - **Info.plist keys** — every public key with type, layer, and purpose; managed Apple-hosted minimal set, managed server-hosted minimal set, unmanaged legacy minimal set
 - **Manifest JSON schema** — `assetPackID`, `downloadPolicy`, `fileSelectors`, `platforms`; download policy shapes (`essential`, `prefetch`, `onDemand`) and their `installationEventTypes`
 - **Error types** — `ManagedBackgroundAssetsError`, `BAErrorCode`, `SystemLanguageModel.Adapter.AssetError` with diagnosis-and-response tables for each case
-- **Tooling** — `xcrun ba-package template / <manifest> -o / info / validate`; `xcrun ba-serve --host / url-override` with Developer Mode + root CA setup steps
+- **Localized asset packs (OS 27)** — `language` manifest tag, fallback chain, `AssetPack.language`, `resolvedLanguage`, `reconcilePreferredLanguages()`, localized file reads
+- **Manifest-based metadata (OS 27)** — `AssetPackManager.manifest`, `AssetPackManifest` lookups; `allAssetPacks` / `assetPack(withID:)` deprecations
+- **On-Demand Resources deprecation** — the 27 SDKs deprecate the `NSBundleResourceRequest` family in favor of Background Assets
+- **Tooling** — `xcrun ba-package template / <manifest> -o / info / validate / convert` (Steam depot conversion, Xcode 27); `xcrun ba-serve --host / url-override` with Developer Mode + root CA setup steps; the Xcode 27 auto-attached mock server
+- **Unity plug-ins** — the Background Assets and StoreKit Apple Unity plug-ins (WWDC 2026)
 - **Apple-hosted quotas** — 200 GB total, 100-pack max per app; "asset pack total" calculation rules with Apple's documented example; quota warning at 80%; upload paths (Transporter, altool, iTMSTransporter, App Store Connect REST API)
-- **Foundation Models adapter bridge** — `SystemLanguageModel.Adapter.isCompatible(_:)`, `compatibleAdapterIdentifiers(name:)`, `removeObsoleteAdapters()` with the canonical adapter-download extension pattern
+- **Foundation Models adapter bridge** — `SystemLanguageModel.Adapter.compatibleAdapterIdentifiers(name:)`, `removeObsoleteAdapters()` with the canonical adapter-download extension pattern (deprecated 26.4 / obsoleted 27.0 in the 27 SDK)
 - **Five complete patterns** — Apple-hosted managed pack lifecycle, stream-driven SwiftUI progress, Foundation Models adapter delivery (with `AssetPackManager` + `SystemLanguageModel.Adapter` composition), manifest authoring + local testing, custom server-hosted extension
 
 ## Documentation Scope

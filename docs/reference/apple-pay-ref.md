@@ -37,7 +37,7 @@ Questions developers ask that this reference answers:
 - **Delegate protocols** — `PKPaymentAuthorizationControllerDelegate` and the View Controller variant; the change-callback update types (`PKPaymentRequestShippingContactUpdate`, etc.) and 30-second response window
 - **Payment-request variants** — `PKRecurringPaymentRequest`, `PKAutomaticReloadPaymentRequest`, `PKDeferredPaymentRequest`, `multiTokenContexts: [PKPaymentTokenContext]`, `applePayLaterAvailability`; the mutual-exclusion rule
 - **Merchant info** — `merchantIdentifier`, `merchantCapabilities`, `merchantCategoryCode` (WWDC24, ISO 18245), `applicationData`
-- **Networks and capabilities** — `PKPaymentNetwork` cases per region, `PKPaymentRequest.availableNetworks()`, `supportedCountries`
+- **Networks and capabilities** — `PKPaymentNetwork` cases per region, `PKPaymentRequest.availableNetworks()`, `supportedCountries`, `unsupportedPrimaryAccountIdentifiers` (27 releases), the Bancomat naming flip-flop
 - **Summary items** — `PKPaymentSummaryItem` plus the recurring, deferred, automatic-reload, disbursement, and instant-funds-out variants
 - **Contact fields** — `PKContactField` cases; pre-population via `billingContact` and `shippingContact`; pre-auth redaction
 - **Shipping** — `PKShippingMethod`, `PKShippingType`, `PKShippingContactEditingMode`, `PKDateComponentsRange` (WWDC21) for delivery windows

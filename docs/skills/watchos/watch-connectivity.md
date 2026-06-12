@@ -40,7 +40,7 @@ Questions you can ask Claude that will draw from this skill:
 - Why you must complete after the session delegate settles, not inside `handle(_:)`
 
 ### Complication Updates from iPhone
-- 50-per-day rate limit on `transferCurrentComplicationUserInfo` and `remainingComplicationUserInfoTransfers`
+- 50-per-day rate limit on `transferCurrentComplicationUserInfo` and `remainingComplicationUserInfoTransfers` — plus the watchOS 27 fix that makes it work with WidgetKit complications
 - Why updating a widget requires an App Group between the watchOS app target and the widget target
 - Triggering `WidgetCenter.shared.reloadTimelines(ofKind:)` after receipt
 

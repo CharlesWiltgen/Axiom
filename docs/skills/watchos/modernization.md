@@ -38,7 +38,7 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Dual-Target Consolidation
 - Step-by-step Xcode workflow (Validate Settings, Upgrade to single-target, reassign interface controller classes)
-- What Xcode rewrites for you: `WKExtension` to `WKApplication`, delegate rename, Info.plist merging
+- What Xcode rewrites for you: `WKExtension` to `WKApplication`, delegate rename, Info.plist merging — and why it matters now: the 27 SDK formally deprecates `WKExtension`/`WKExtensionDelegate` for deployment targets of watchOS 9.2+
 - The watchOS 9.2 HealthKit inheritance minimum, and why dual-target must stay on watchOS 9.1 or earlier with HealthKit
 
 ### ClockKit to WidgetKit

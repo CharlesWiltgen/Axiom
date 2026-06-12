@@ -35,6 +35,7 @@ Questions you can ask Claude that will draw from this skill:
 - **A CI recipe** — a shell gate plus a GitHub Actions example using `--fail-on-regression`.
 - **Exit-code semantics** — `0` clean, `2` usage/environment error, `3` regression met the threshold under the gate, `8` output-write error.
 - **Honest caveats** — raw-address frames are excluded (ASLR), the top-frame cutoff, why ms is approximate, and that network deltas are totals only.
+- **The GUI alternative** — Instruments in Xcode 27 has built-in Run Comparisons for interactive before/after analysis; `xcprof compare` remains the headless/CI path.
 
 ## Documentation Scope
 

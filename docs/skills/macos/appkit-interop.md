@@ -17,6 +17,9 @@ Use this skill when you're:
 - Bridging drag-and-drop between SwiftUI's `Transferable` model and AppKit's `NSDraggingDestination`
 - Diagnosing responder chain or focus behavior that breaks when mixing frameworks
 - Optimizing SwiftUI cells inside `NSCollectionView` or `NSTableView` for scroll performance
+- Updating NSViews automatically from `@Observable` models (observation tracking — no SwiftUI required)
+- Reusing an existing `NSGestureRecognizer` in a SwiftUI view (`NSGestureRecognizerRepresentable`, macOS 26)
+- Building main-menu items in SwiftUI (`NSHostingMenu`) or adding SwiftUI scenes like `MenuBarExtra` and `Settings` to an AppKit app delegate (`NSHostingSceneRepresentation`, macOS 26)
 
 ## Example Prompts
 
@@ -27,6 +30,8 @@ Questions you can ask Claude that will draw from this skill:
 - "When should I drop from `.fileImporter` to `NSOpenPanel`?"
 - "My `.onCommand` modifier is silently ignored. What did I miss?"
 - "Why are my writes from the AppKit delegate not reaching the SwiftUI binding?"
+- "Can my NSView redraw automatically when my @Observable model changes?"
+- "How do I add a SwiftUI MenuBarExtra to my existing AppKit app?"
 
 ## What This Skill Provides
 
@@ -54,6 +59,11 @@ Questions you can ask Claude that will draw from this skill:
 - SwiftUI command modifiers — `.copyable`, `.cuttable`, `.pasteDestination`, `.onMoveCommand`, `.onExitCommand`, `.onCommand(#selector(...))`
 - The `.focusable()` requirement for command receivers
 - Full Keyboard Navigation testing (System Settings toggle on and off)
+
+### Incremental SwiftUI Adoption
+- Automatic observation tracking — AppKit redraws NSViews when `@Observable` properties accessed in draw/layout methods change; back-deploys to macOS 15
+- `NSGestureRecognizerRepresentable` (macOS 26) and `NSHostingMenu` (macOS 14.4) — existing gestures and SwiftUI-built menus across the boundary
+- `NSHostingSceneRepresentation` + `addSceneRepresentation` — `MenuBarExtra`/`Settings` scenes from an app delegate (macOS 26)
 
 ### Bridging Other AppKit APIs
 - NSToolbar for capabilities `.toolbar` doesn't cover (item validation, user customization, centered groups)
@@ -89,20 +99,21 @@ In `updateNSView`, always refresh `context.coordinator.parent = self` so coordin
 
 This page documents the `appkit-interop` skill in the `axiom-macos` suite. The skill file contains comprehensive guidance Claude uses when answering your questions about bridging SwiftUI and AppKit.
 
-**For UIKit-SwiftUI bridging** — Use [axiom-uikit](/skills/ui-design/) for the same `Representable` pattern with `UIView`/`UIViewController` types.
+**For UIKit-SwiftUI bridging** — Use [uikit-bridging](/skills/ui-design/uikit-bridging) for the same `Representable` pattern with `UIView`/`UIViewController` types.
 
 ## Related
 
+- [appkit-modernization](/skills/macos/appkit-modernization) — Modernizing the AppKit side itself (input, restoration, macOS 27 look)
 - [swiftui-differences](/skills/macos/swiftui-differences) — Drop to AppKit only when these macOS SwiftUI primitives don't cover the need
 - [windows](/skills/macos/windows) — `NSHostingController` is the right way to host SwiftUI inside an AppKit-managed window or sheet
 - [sandbox-and-file-access](/skills/macos/sandbox-and-file-access) — Reasons to drop from `.fileImporter` to `NSOpenPanel`
 - [menus-and-commands](/skills/macos/menus-and-commands) — Where SwiftUI's command modifiers meet AppKit's responder chain
-- [axiom-uikit](/skills/ui-design/) — Same representable pattern, UIKit edition
+- [uikit-bridging](/skills/ui-design/uikit-bridging) — Same representable pattern, UIKit edition
 
 ## Resources
 
-**WWDC**: 2022-10075
+**WWDC**: 2022-10075, 2026-272
 
-**Docs**: /swiftui/nsviewrepresentable, /swiftui/nsviewcontrollerrepresentable, /swiftui/nshostingcontroller, /swiftui/nshostingview, /appkit/nstoolbar, /appkit/nsopenpanel
+**Docs**: /swiftui/nsviewrepresentable, /swiftui/nsviewcontrollerrepresentable, /swiftui/nshostingcontroller, /swiftui/nshostingview, /swiftui/nshostingmenu, /swiftui/nsgesturerecognizerrepresentable, /swiftui/nshostingscenerepresentation, /appkit/nstoolbar, /appkit/nsopenpanel
 
 **Skills**: axiom-macos, swiftui-differences, windows, sandbox-and-file-access, menus-and-commands

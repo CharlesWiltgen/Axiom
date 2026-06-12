@@ -58,7 +58,7 @@ Time limits for key app transitions (launch ~20s, background ~5s, foreground ~10
 
 ### Field Diagnostics
 
-How to use Xcode Organizer hang reports and MetricKit's MXHangDiagnostic to diagnose hangs that only occur in production.
+How to use Xcode Organizer hang reports and MetricKit hang diagnostics (the typed `DiagnosticReport` stream on the 27 platforms, MXHangDiagnostic earlier) to diagnose hangs that only occur in production. Covers the Xcode 27 Organizer's hang-fix recommendations and calibrated hang-rate Metric Goals.
 
 ### Prevention Checklist
 

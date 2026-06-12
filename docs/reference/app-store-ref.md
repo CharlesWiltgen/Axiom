@@ -1,6 +1,6 @@
 ---
 name: app-store-ref
-description: Use when looking up ANY App Store metadata field, privacy manifest schema, age rating tier, export compliance decision, or WWDC25 submission change
+description: Use when looking up ANY App Store metadata field, privacy manifest schema, age rating tier, export compliance decision, or WWDC25/WWDC26 submission change
 skill_type: reference
 version: 1.0.0
 apple_platforms: iOS, iPadOS, tvOS, watchOS, visionOS
@@ -8,7 +8,7 @@ apple_platforms: iOS, iPadOS, tvOS, watchOS, visionOS
 
 # App Store Submission Reference
 
-Complete reference for every App Store submission requirement. Covers metadata fields, privacy manifest schema, App Review Guidelines, age ratings, export compliance, account requirements, monetization, EU compliance, build upload, and WWDC25 changes.
+Complete reference for every App Store submission requirement. Covers metadata fields, privacy manifest schema, App Review Guidelines, age ratings, export compliance, account requirements, monetization, EU compliance, build upload, and WWDC25/WWDC26 changes.
 
 ## When to Use This Reference
 
@@ -20,7 +20,7 @@ Use this reference when you need:
 - EU DSA trader status requirements
 - IAP submission pipeline and review flow
 - Build upload SDK requirements and processing details
-- WWDC25 submission changes (draft submissions, accessibility labels, tags)
+- WWDC25/WWDC26 submission changes (draft submissions, Asset Library, Retention Messaging, group subscriptions)
 
 **For pre-submission workflow:** See [App Store Submission](/skills/shipping/app-store-submission) for the pre-flight checklist and pressure scenarios.
 
@@ -38,6 +38,7 @@ Questions you can ask Claude that will draw from this reference:
 - "What's required for EU DSA trader status?"
 - "How does the IAP review pipeline work?"
 - "What changed for App Store submissions in WWDC25?"
+- "How do I set up Retention Messaging or a Product Page Header?"
 
 ## What's Covered
 
@@ -51,6 +52,7 @@ Questions you can ask Claude that will draw from this reference:
 - **Part 8: EU Compliance** — DSA trader status, trader requirements, alternative distribution
 - **Part 9: Build Upload** — Upload methods, build identifiers, SDK requirements, processing stages, TestFlight readiness checklist (90-day expiry, 10K external testers, 6 builds/24h limit, first external build needs full review)
 - **Part 10: WWDC25 Changes** — Draft submissions, reusable build numbers, accessibility nutrition labels, AI-generated tags, custom product page keywords, expanded offer codes
+- **Part 11: WWDC26 Changes** — Product Page Header and search-results visuals via the Asset Library (standalone review, real-time swaps), Retention Messaging in the subscription cancellation flow (including the real-time server API), group and volume subscription purchasing (ABM/ASM, volume pricing bands), enhanced IAP review submissions (grouped review items, reviewSubmissions API expansion)
 
 ## Key Pattern
 
@@ -91,7 +93,7 @@ This page documents the `axiom-shipping` reference skill — complete API-level 
 
 ## Resources
 
-**WWDC**: 2022-10166, 2025-224, 2025-241, 2025-252, 2025-328
+**WWDC**: 2022-10166, 2025-224, 2025-241, 2025-252, 2025-328, 2026-205, 2026-309, 2026-391
 
 **Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details, /help/app-store-connect
 

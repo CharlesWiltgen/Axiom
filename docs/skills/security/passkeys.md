@@ -31,6 +31,7 @@ Use this skill when:
 - Automatic upgrade workflows that convert password sign-ins to passkeys transparently
 - Migration strategy for apps with existing password-based accounts (phased rollout)
 - Associated domains configuration for the webcredentials service
+- Delivered verification codes for credential-provider apps (iOS 27+) — offering SMS one-time codes for AutoFill
 - Anti-patterns with user experience impact (forcing passkeys without fallback, skipping credential discovery)
 - Pressure scenarios for common shortcuts (skipping server-side validation, ignoring cross-platform users)
 

@@ -1,6 +1,6 @@
 ---
 name: camera-capture-diag
-description: Troubleshooting AVFoundation camera issues — black preview, frozen camera, wrong rotation, slow capture, session interruptions, permission problems
+description: Troubleshooting AVFoundation camera issues — black preview, frozen camera, wrong rotation, slow capture, session interruptions, permission problems, slow launch, dropped frames during recording
 ---
 
 # Camera Capture Diagnostics
@@ -20,6 +20,8 @@ Use when you're experiencing:
 - Preview or captured photo rotated 90 degrees wrong
 - Front camera photo doesn't match mirrored preview
 - Photo capture takes 2+ seconds
+- Camera launch is slow — preview takes a second or more to appear
+- ProRes or high-bitrate recording drops frames
 - "Camera in use by another app" errors
 - Camera stops working after prolonged use (thermal)
 - Crash on older iOS versions using iOS 17+ APIs
@@ -33,6 +35,8 @@ Use when you're experiencing:
 - "Why is the captured photo rotated wrong?"
 - "The front camera photo doesn't match the preview"
 - "Photo capture is really slow, takes 2+ seconds"
+- "My camera app launches slowly"
+- "My ProRes recording drops frames"
 - "Camera crashes on iOS 16 devices"
 - "User says camera permission is denied but they never saw a prompt"
 
@@ -63,7 +67,7 @@ Use when you're experiencing:
 
 ## Diagnostic Patterns
 
-This skill covers 15 diagnostic patterns:
+This skill covers 17 diagnostic patterns. Common symptoms and their fixes:
 
 | Symptom | Check First | Likely Fix |
 |---------|-------------|------------|
@@ -72,6 +76,8 @@ This skill covers 15 diagnostic patterns:
 | Freezes on call | Interruptions | Add interruption observer with UI feedback |
 | Wrong rotation | Rotation angle | Use RotationCoordinator (iOS 17+) |
 | Slow capture | Quality setting | Set photoQualityPrioritization to .speed or .balanced |
+| Slow launch | Launch-to-preview time | Adopt deferred start (iOS 26 and later) |
+| Recording drops frames | Hardware cost, system pressure | Lower format/frame rate; Pro Video Storage for ProRes (iOS 27) |
 | Denied access | Permissions | Show settings prompt |
 | Crash on old iOS | @available check | Guard iOS 17+ APIs |
 | Random stops | Thermal state | Reduce quality, show cooling message |
@@ -80,7 +86,7 @@ This skill covers 15 diagnostic patterns:
 
 ## Documentation Scope
 
-This is a **diagnostic skill** -- it enforces systematic troubleshooting workflows before diving into code. Each of the 15 patterns includes specific symptoms, diagnostic steps, and fixes with estimated time to resolve.
+This is a **diagnostic skill** -- it enforces systematic troubleshooting workflows before diving into code. Each of the 17 patterns includes specific symptoms, diagnostic steps, and fixes with estimated time to resolve.
 
 **For implementation patterns:** See [camera-capture](/skills/integration/camera-capture) for building camera features from scratch.
 
@@ -94,6 +100,6 @@ This is a **diagnostic skill** -- it enforces systematic troubleshooting workflo
 
 ## Resources
 
-**WWDC**: 2021-10247, 2023-10105
+**WWDC**: 2021-10247, 2023-10105, 2026-303
 
 **Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturesessionwasinterruptednotification

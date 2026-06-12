@@ -430,7 +430,8 @@ export default withMermaid(defineConfig({
             { text: 'Keychain', link: '/skills/security/keychain' },
             { text: 'CryptoKit', link: '/skills/security/cryptokit' },
             { text: 'Passkeys', link: '/skills/security/passkeys' },
-            { text: 'App Attest', link: '/skills/security/app-attest' }
+            { text: 'App Attest', link: '/skills/security/app-attest' },
+            { text: 'Agentic Security', link: '/skills/security/agentic-security' }
           ]
         },
         {
@@ -479,9 +480,11 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/skills/games/' },
             { text: 'SpriteKit', link: '/skills/games/spritekit' },
+            { text: 'Game Input', link: '/skills/games/game-input' },
             { text: 'Metal Migration', link: '/skills/games/metal-migration' },
             { text: 'RealityKit', link: '/skills/games/realitykit' },
-            { text: 'SceneKit', link: '/skills/games/scenekit' }
+            { text: 'SceneKit', link: '/skills/games/scenekit' },
+            { text: 'USDKit', link: '/skills/games/usdkit' }
           ]
         },
         {
@@ -503,6 +506,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/skills/macos/' },
             { text: 'AppKit Interop', link: '/skills/macos/appkit-interop' },
+            { text: 'AppKit Modernization', link: '/skills/macos/appkit-modernization' },
             { text: 'Direct Distribution', link: '/skills/macos/direct-distribution' },
             { text: 'Menus & Commands', link: '/skills/macos/menus-and-commands' },
             { text: 'Sandbox & File Access', link: '/skills/macos/sandbox-and-file-access' },
@@ -599,6 +603,7 @@ export default withMermaid(defineConfig({
             { text: 'Extensions & Widgets', link: '/reference/extensions-widgets-ref' },
             { text: 'Foundation Models', link: '/reference/foundation-models-ref' },
             { text: 'Foundation Models Custom Adapters', link: '/reference/foundation-models-adapters-ref' },
+            { text: 'Foundation Models Evaluations', link: '/reference/foundation-models-evaluations-ref' },
             { text: 'Haptics & Audio Feedback', link: '/reference/haptics' },
             { text: 'Localization Research & Consistency', link: '/reference/localization-research-ref' },
             { text: 'MapKit API', link: '/reference/mapkit-ref' },

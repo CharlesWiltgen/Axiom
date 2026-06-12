@@ -64,7 +64,11 @@ Questions you can ask Claude that will draw from this reference:
 - Private Cloud Compute: `PrivateCloudComputeLanguageModel` (availability, quota, 32K context, typed errors, entitlement; reaches watchOS 27)
 - Multimodal: `Attachment<ImageAttachmentContent>` image input in a prompt builder
 - Reasoning + usage: `ContextOptions(reasoningLevel:)`, `session.usage`/`response.usage`
-- Dynamic Profiles: `LanguageModelSession.DynamicProfile` / `Profile` / `init(profile:)`
+- Dynamic Profiles: `LanguageModelSession.DynamicProfile` / `Profile` / `init(profile:)`, full modifier surface + `@SessionProperty`
+- Dynamic Instructions: `DynamicInstructions` builder — re-derives instructions + tools per request (distinct from Dynamic Profiles)
+- Custom model providers: `LanguageModel` / `LanguageModelExecutor` back a session with your own model (MLX, Core AI, server)
+- `ImageReference` — `@Generable` tool argument that references an image already in the conversation
+- `LanguageModelError` replaces the now-deprecated `GenerationError`
 - Built-in system tools: `BarcodeReaderTool`, `OCRTool`, `SpotlightSearchTool` (local RAG)
 - `@Generable(name:)` explicit schema name
 

@@ -53,7 +53,7 @@ Three phases, mapped to the App Life Cycle timeline in Instruments:
 - `xctrace --template 'App Launch'` for headless/CI profiling
 - Xcode Organizer Launch Time and Launches panes
 - `XCTApplicationLaunchMetric` (XCTest regression gate)
-- `MXAppLaunchMetric` field histograms; App Store Connect "App Extended Launch Usage"
+- `MXAppLaunchMetric` field histograms; the MetricKit 27 typed launch metrics and `trackLaunchTask`; App Store Connect "App Extended Launch Usage"
 - A custom "app is interactive" signpost (Swift / Objective-C / SwiftUI variants)
 
 ### Fixes by phase

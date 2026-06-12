@@ -67,6 +67,10 @@ Questions you can ask Claude that will draw from this reference:
 - Significant location changes
 - Visit monitoring
 
+### Heading
+- Compass heading updates (CLHeading)
+- Heading reference body — `headingBody` replaces the deprecated `headingOrientation` (27 releases)
+
 ## Key Pattern
 
 ### iOS 17+ Location Updates
