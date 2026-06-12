@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "3.10.2",
+  "version": "27.0.0-beta.1",
   "description": "Battle-tested Claude Code skills, agents, and tools for modern xOS (iOS, iPadOS, macOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -84,7 +84,7 @@
     },
     {
       "name": "axiom-xcode-mcp",
-      "description": "Use when connecting to Xcode via MCP, using xcrun mcpbridge, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunTests, RenderPreview). Covers setup, tool reference, workflow patterns, troubleshooting."
+      "description": "Use when connecting to Xcode via MCP, using xcrun mcpbridge, launching agents from Xcode (run-agent), or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunTests, RenderPreview). Covers setup, tool reference, agent launch, troubleshooting."
     },
     {
       "name": "axiom-shipping",
