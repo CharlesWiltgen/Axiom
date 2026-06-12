@@ -230,6 +230,7 @@ Source: *Developer Guide* p.34, p.46. For the full navigation-app lifecycle (sta
 - `isAlbumArtistButtonEnabled` — shows a button that navigates to album/artist view in your app
 - `isUpNextButtonEnabled` — shows a button that displays upcoming tracks
 - `updateNowPlayingButtons([CPNowPlayingButton])` — custom playback buttons
+- `allowsMiniPlayer` (`iOS27`) — every app showing Now Playing gets the compact MiniPlayer automatically; set `false` to opt out and fall back to the nav-bar Now Playing icon instead
 
 **Common custom buttons**:
 - `CPNowPlayingPlaybackRateButton`
@@ -346,6 +347,10 @@ Source: *Developer Guide* p.23, p.26.
 
 **iOS version**: iOS 12+ for navigation; iOS 26.4+ for voice-based conversational.
 
+**iOS 27 additions** (`iOS27`):
+- `backgroundImage` — a background image behind the voice-control UI.
+- Present it as an **overlay** over another template (e.g. over `CPMapTemplate`) instead of full-screen, via `CPInterfaceController.showOverlayTemplate(_:animated:completion:)` / `hideOverlayTemplate(animated:completion:)`. (These overlay methods are general — any `CPTemplate` can be shown over the current one.)
+
 Source: *Developer Guide* p.24.
 
 ---
@@ -399,6 +404,7 @@ CarPlay signals light/dark via `contentStyle` on your scene. Observe `contentSty
 
 **WWDC:**
 
+- WWDC26-212 "Rev up your CarPlay app" — iOS 27 MiniPlayer (`allowsMiniPlayer`), Voice Control overlay + `backgroundImage`, overlay templates (`showOverlayTemplate`)
 - WWDC25-216 "Turbocharge your app for CarPlay" — iOS 26 list element styles, pinned elements, message item, voice control additions
 - WWDC22-10016 "Get more mileage out of your app with CarPlay" — iOS 16 template additions
 - WWDC20-10635 "Accelerate your app with CarPlay" — framework overview
