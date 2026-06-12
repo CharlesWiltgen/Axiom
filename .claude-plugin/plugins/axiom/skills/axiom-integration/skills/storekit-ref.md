@@ -5,7 +5,7 @@
 
 ## Overview
 
-StoreKit 2 is Apple's modern in-app purchase framework with async/await APIs, automatic receipt validation, and SwiftUI integration. This reference covers every API, iOS 18.4 enhancements, and comprehensive WWDC 2025 code examples.
+StoreKit 2 is Apple's modern in-app purchase framework with async/await APIs, automatic receipt validation, and SwiftUI integration. This reference covers every API, the iOS 18.4 and 26.4 additions, and the 27-cycle (WWDC 2026) changes.
 
 ### Product Types Supported
 
@@ -30,17 +30,6 @@ StoreKit 2 is Apple's modern in-app purchase framework with async/await APIs, au
 - Examples: seasonal passes
 - MUST restore on new devices
 
-### iOS 27 Additions — Advanced Commerce & AppTransaction (OS27)
-
-New in the 27 cycle, all platforms (`@available(anyAppleOS 27, *)` on Swift 6.4 / Xcode 27):
-
-- **Subscription bundles** — two new `Product.ProductType` values, `.subscriptionBundle` and `.subscriptionSuite`, plus `Product.SubscriptionInfo.bundledSubscriptions: [BundledSubscription]` (non-empty only for a `.subscriptionBundle` product; each `BundledSubscription` carries `id` / `displayName` / `description` / `price`). Part of Advanced Commerce.
-- **`AppTransaction.all`** — an `AppTransaction.AppTransactions` async sequence yielding every `VerificationResult<AppTransaction>` for this app version, alongside the existing single `AppTransaction.shared`.
-- **`AppTransaction.storeType`** — `StoreType.consumer` / `.education` / `.enterprise`, distinguishing the storefront an install came through.
-- **New error cases** — `RefundRequestError.ineligible` and `StoreKitError.invalidPresentationContext`; handle both in existing `catch` blocks.
-
-This is a what's-new pointer — full Advanced Commerce adoption (server-side commerce, partner / redeem flows) is its own subject. See WWDC 2026-210.
-
 ### Key Improvements Over StoreKit 1
 
 - **Async/Await**: Modern concurrency instead of delegates/closures
@@ -50,6 +39,34 @@ This is a what's-new pointer — full Advanced Commerce adoption (server-side co
 - **SwiftUI Views**: Pre-built purchase UIs (ProductView, SubscriptionStoreView)
 - **Server APIs**: App Store Server API and Server Notifications
 
+
+### Advanced Commerce & AppTransaction Additions OS27
+
+New in the 27 cycle — all platforms and `@available(anyAppleOS 27, *)` (Swift 6.4 / Xcode 27) unless a bullet notes otherwise:
+
+- **Subscription Bundles and Suites** — two new `Product.ProductType` values, `.subscriptionBundle` and `.subscriptionSuite`, plus `Product.SubscriptionInfo.bundledSubscriptions: [BundledSubscription]` (non-empty only for a `.subscriptionBundle` product; each `BundledSubscription` carries `id` / `displayName` / `description` / `price` / `displayPrice` / `isFamilyShareable` / `subscriptionGroupID` / `subscriptionGroupLevel` / `subscriptionGroupDisplayName`). A *Bundle* is a group of subscriptions that can be purchased individually but are sold together in a single purchase at a better price; a *Suite* is a group of subscriptions that exist only in the context of the Suite — not purchasable individually, typically serving a related set of apps. The API is testable in Xcode 27; Apple says more details on the program are coming later in 2026.
+- **Bundle transaction fields** (back-deployed in the 27 SDK): `Transaction.bundleProductID` / `bundleSubscriptionGroupID` / `bundleTransactionID` / `bundleOriginalTransactionID` / `previousOriginalTransactionID` (all optional), `Transaction.RevocationReason.upgradedToBundle`; `RenewalInfo.bundleProductID` / `bundleSubscriptionGroupID` / `bundleOriginalTransactionID` / `willUnbundle`, `RenewalInfo.ExpirationReason.unbundled`.
+- **Advanced Commerce partners** — `Transaction.AdvancedCommerceInfo.Partner` (`id`, `name: String?`) and `Item.Details.partners: [Partner]`.
+- **Offer code redemption rework** — redemption APIs now return the redeemed transaction and accept `RedeemOption` values; iOS / macCatalyst / macOS / visionOS 27 only (not tvOS / watchOS, unlike the rest of this list); see Offer Codes below.
+- **`AppTransaction.all`** — an `AppTransaction.AppTransactions` async sequence yielding every `VerificationResult<AppTransaction>` for this app version, alongside the existing single `AppTransaction.shared`.
+- **`AppTransaction.storeType`** — `StoreType.consumer` / `.education` / `.enterprise`, distinguishing the storefront an install came through. A back-deployed `storeTypeStringRepresentation` accessor covers pre-27 OSes and is deprecated at 27 in favor of `storeType`.
+- **New error cases** — `RefundRequestError.ineligible` and `StoreKitError.invalidPresentationContext`; handle both in existing `catch` blocks.
+
+This is a what's-new pointer — full Advanced Commerce adoption (server-side commerce, partner / redeem flows) is its own subject; WWDC 2026-210 covers the client-visible delta.
+
+### Group and Volume Subscription Purchasing (WWDC 2026)
+
+Subscriptions can now be sold to groups (a customer buys multiple seats and shares an invite link) and to organizations (volume purchasing via Apple Business Manager / Apple School Manager, seats assigned through device management). StoreKit-side facts from WWDC 2026-391:
+
+- **Requires StoreKit 2**; available for all auto-renewable subscriptions.
+- **On by default** for most new and existing StoreKit 2 subscriptions. If your subscription has Family Sharing enabled, group/organization sales are **opted out by default** so you control how the two options interact.
+- For group purchases, your own in-app UI triggers the StoreKit 2 purchase flow: get the number of seats requested from the customer and pass it into the StoreKit 2 purchase request. **No purchase-option symbol for the seat count ships in the Xcode 27 beta 1 SDK** — re-check later betas before writing code against this.
+- When seat assignments complete (either purchase type), **the App Store assigns a transaction for each member** — your existing `Transaction.updates` / entitlement flow grants access per member. Member transactions surface as `Transaction.OwnershipType.assigned` (`"ASSIGNED"`); seat revocations as `Transaction.revocationType == .assignmentRevocation` (`"ASSIGNMENT_REVOKE"`; `revocationType` is a 26.4 field); the storefront platform for managed distribution appears as `AppStore.Platform.managed`. All three ship back-deployed in the 27 SDK.
+- By default group purchases use Apple's included seat management (invite-link generation, acceptance tracking, seat lifecycle such as cancellations). Custom invitation flows will be powered by new App Store Server API endpoints (not yet named).
+- App Store Server API **Group management endpoints** let you query all the groups a customer is in and all the members in a group — supported for volume purchasing and for group purchases using the included seat management flows.
+
+ASC configuration (volume pricing bands, ASM-only restriction, availability) is covered in `axiom-shipping (skills/app-store-ref.md)` Part 11 — cross-reference, don't duplicate.
+
 ---
 
 ## When to Use This Reference
@@ -57,6 +74,7 @@ This is a what's-new pointer — full Advanced Commerce adoption (server-side co
 Use this reference when:
 - Implementing in-app purchases with StoreKit 2
 - Understanding new iOS 18.4 fields (appTransactionID, offerPeriod, etc.)
+- Adding commitment billing plans, subscription bundles/suites, or group/volume selling
 - Looking up specific API signatures and parameters
 - Planning subscription architecture
 - Debugging transaction issues
@@ -65,8 +83,8 @@ Use this reference when:
 
 **Related Skills**:
 - `skills/in-app-purchases.md` — Discipline skill with testing-first workflow, architecture patterns
-- (Future: `iap-auditor` agent for auditing existing IAP code)
-- (Future: `iap-implementation` agent for implementing IAP from scratch)
+- `iap-auditor` agent — audits existing IAP code
+- `iap-implementation` agent — implements IAP from scratch
 
 ---
 
@@ -132,6 +150,8 @@ case .autoRenewable:
     // Monthly/annual subscriptions
 case .nonRenewing:
     // Seasonal passes
+// OS27 also adds .subscriptionBundle / .subscriptionSuite — see the
+// Advanced Commerce additions in the Overview
 @unknown default:
     break
 }
@@ -365,19 +385,21 @@ transaction.appAccountToken // UUID set at purchase time (if provided)
 transaction.expirationDate // When subscription expires
 transaction.isUpgraded // true if user upgraded to higher tier
 transaction.revocationDate // Date of refund (nil if not refunded)
-transaction.revocationReason // .developerIssue or .other
+transaction.revocationReason // .developerIssue, .other, or .upgradedToBundle (27 SDK)
 ```
 
 **Offer Fields**:
 ```swift
 if let offer = transaction.offer {
-    offer.type // .introductory or .promotional or .code
+    offer.type // .introductory, .promotional, .code, .winBack (iOS 18+)
     offer.id // Offer identifier from App Store Connect
     offer.paymentMode // .freeTrial, .payAsYouGo, .payUpFront, .oneTime
 }
 ```
 
 #### From WWDC 2025-241:8:00
+
+Server-signed payloads can additionally carry `offerType: 5` (retention offer, WWDC 2026) — no client `OfferType` case exists for it in the 27 beta 1 SDK; see Retention Messaging API below.
 
 ### Current Entitlements
 
@@ -540,7 +562,7 @@ await transaction.finish()
 
 ### Overview
 
-`AppTransaction` represents the original app download. Available via `AppTransaction.shared`.
+`AppTransaction` represents the original app download. Available via `AppTransaction.shared`; OS27 adds `AppTransaction.all` and `storeType` — see the Advanced Commerce additions in the Overview.
 
 ### New Fields (iOS 18.4)
 
@@ -693,6 +715,7 @@ case .productUnavailable:
     // Product no longer available
 case .unknown:
     // Unknown reason
+// The 27 SDK also adds .unbundled — see the Advanced Commerce additions
 @unknown default:
     break
 }
@@ -819,6 +842,67 @@ status.state // .subscribed, .expired, etc.
 status.transaction // VerificationResult<Transaction>
 status.renewalInfo // VerificationResult<RenewalInfo>
 ```
+
+---
+
+## Monthly Subscriptions with a 12-Month Commitment (from 26.4)
+
+The 26.5 SDK introduced monthly subscriptions with a 12-month commitment: customers pay monthly for an annual subscription. Billing plans are added to new or existing one-year auto-renewable subscriptions in App Store Connect, with offers configurable per billing plan type (e.g. a free trial only on the commitment plan). Compile against the 26.5 SDK; customers can subscribe on devices running iOS / iPadOS / macOS / tvOS / visionOS 26.4. All the client API below is available from 26.4.
+
+### PricingTerms
+
+`Product.SubscriptionInfo.pricingTerms: [PricingTerms]` lists every available billing plan for a product. Every auto-renewable subscription carries at least one entry with the default `billingPlanType` of `.upFront`; a configured commitment plan adds a second entry with `.monthly` (which only applies to monthly subscriptions with a 12-month commitment).
+
+`PricingTerms` members: `billingPrice: Decimal`, `billingDisplayPrice: String`, `billingPeriod` (a `SubscriptionPeriod` typealias), `billingPlanType`, `commitmentInfo` (non-optional: `price` / `displayPrice` / `period`), `subscriptionOffers: [SubscriptionOffer]`, and a `subscript(offers:)` filtered by offer type. The session notes billing-plan metadata is only returned when available in the customer's storefront — expect the commitment entry to be absent in storefronts where the plan isn't offered.
+
+### Merchandising with StoreKit Views
+
+```swift
+SubscriptionStoreView(groupID: "pro_tier") {
+    // Custom marketing content
+}
+.preferredSubscriptionPricingTerms { _, subscriptionInfo in
+    subscriptionInfo.pricingTerms.first {
+        $0.billingPlanType == .monthly
+    }
+}
+```
+
+### Custom UI and Purchase
+
+```swift
+// Merchandise the monthly billing plan
+let product: Product // Already loaded via Product.products(for:)
+let pricingTerms = product.subscription?.pricingTerms
+    .first(where: { $0.billingPlanType == .monthly })
+if let pricingTerms {
+    let monthlyPrice = pricingTerms.billingDisplayPrice
+    let totalCommitmentPrice = pricingTerms.commitmentInfo.price
+    // Display both monthly and total commitment price to the customer
+}
+
+// Purchase with the billing plan purchase option
+// (use confirmIn: — the bare purchase(options:) overload is unavailable on visionOS)
+let scene: UIWindowScene // Current scene
+let result = try await product.purchase(confirmIn: scene, options: [.billingPlanType(.monthly)])
+// Verify, grant access, finish — as with any purchase
+```
+
+Before a customer subscribes to a commitment plan for the first time, the App Store automatically presents a one-time-per-Apple-Account disclosure sheet (number of payments required plus cancellation guidance). While the subscription is active, the system manage-subscriptions UI shows available plans, remaining payments, and when the commitment renews — present it with the existing `.manageSubscriptionsSheet(isPresented:subscriptionGroupID:)` SwiftUI modifier or UIKit `try await AppStore.showManageSubscriptions(in: scene)`.
+
+### Transaction and RenewalInfo Fields
+
+- `Transaction.billingPlanType: BillingPlanType?` — `.upFront` or `.monthly`
+- `Transaction.commitmentInfo: CommitmentInfo?` — `nil` for `.upFront`; for `.monthly` carries `billingPeriodNumber`, `totalBillingPeriods`, `expirationDate`, `price`. Always use the latest transaction for an accurate `expirationDate`.
+- `RenewalInfo.renewalBillingPlanType: BillingPlanType?` and `RenewalInfo.commitmentInfo` (`autoRenewPreference`, `renewalBillingPlanType`, `renewalDate`, `renewalPrice`, `willAutoRenew`) — describe the renewal after the current commitment ends. Both are optional; Apple documents the matching *server* fields as present only while the subscription is in a commitment, so expect `nil` outside one.
+
+### Server-Side JWS Fields
+
+Decoded `JWSTransaction` adds `billingPlanType` (`"MONTHLY"`) and a `commitmentInfo` object (`billingPeriodNumber`, `totalBillingPeriods`, `commitmentExpiresDate`, `commitmentPrice`). Decoded `JWSRenewalInfo` adds `renewalBillingPlanType` and a `commitmentInfo` object (`commitmentAutoRenewProductId`, `commitmentAutoRenewStatus`, `commitmentRenewalDate`, `commitmentRenewalPrice`, `commitmentRenewalBillingPlanType`, e.g. `"BILLED_UPFRONT"` — note the per-field server vocabularies differ: `billingPlanType` uses `"MONTHLY"`, the renewal field uses `"BILLED_UPFRONT"`; both verbatim from the session) — present only while in a commitment. App Store Server Notifications V2 continues to deliver lifecycle updates (such as monthly renewals) throughout the commitment.
+
+### Testing Billing Plans
+
+StoreKit Testing in Xcode 26.5 adds a Billing Plan picker to the StoreKit configuration file: select a one-year auto-renewable subscription, choose "Monthly with a 12-month commitment", configure per-plan pricing and offers, then verify `commitmentInfo` in the Transaction inspector.
 
 ---
 
@@ -1136,6 +1220,45 @@ func showOfferCodeSheet() {
 .offerCodeRedemption(isPresented: $showRedeemSheet)
 ```
 
+### Redemption Rework OS27
+
+The redemption APIs now return the redeemed transaction and accept a set of `RedeemOption` values configuring the redemption. On success you receive the transaction in the `verificationResult`; on failure, an error describing why. The pre-27 variants above are deprecated in 27 in favor of these. Testable in Xcode 27 on all applicable product types (consumable, non-consumable, auto-renewable, non-renewing).
+
+**SwiftUI** (iOS / macOS / macCatalyst / visionOS 27):
+```swift
+@State private var showRedeemSheet = false
+
+// ...
+.offerCodeRedemption(options: [], isPresented: $showRedeemSheet) { result in
+    switch result {
+    case .success(let verificationResult):
+        // VerificationResult<Transaction> — verify, grant access, finish
+        break
+    case .failure(let error):
+        // Handle error
+        break
+    }
+}
+```
+
+**UIKit / AppKit** (`async throws -> VerificationResult<Transaction>`):
+```swift
+let viewController: UIViewController // Presenting view controller
+let window: NSWindow                 // Presenting window (macOS)
+
+// iOS / macCatalyst / visionOS 27 — replaces presentOfferCodeRedeemSheet(in: scene)
+let result = try await AppStore.presentOfferCodeRedeemSheet(
+    from: viewController, options: []
+)
+
+// macOS 27 — replaces presentOfferCodeRedeemSheet(from: NSViewController)
+let result = try await AppStore.presentOfferCodeRedeemSheet(
+    from: window, options: []
+)
+```
+
+`RedeemOption` is `Equatable` / `Hashable` / `Sendable`, but **no public option values ship in the Xcode 27 beta 1 SDK** — pass `[]` (the UIKit/AppKit variants default it) and re-check later betas for concrete options. Not available on tvOS or watchOS.
+
 ### Payment Mode
 
 **New: .oneTime**:
@@ -1332,7 +1455,49 @@ PUT /inApps/v2/transactions/consumption/{transactionId}
 - `REFUND_PRORATED`: Partial refund - revoke proportional access
 - `FAMILY_REVOKE`: Family Sharing removed - revoke access
 
+Seat revocations from group/volume purchasing surface as `ASSIGNMENT_REVOKE` — see Group and Volume Subscription Purchasing.
+
 #### From WWDC 2025-249:20:17
+
+### Retention Messaging API (WWDC 2026)
+
+Retention messages appear in the subscription cancellation flow. The ASC-configuration side (views, message/image rules, retention offers, save-rate guidance) lives in `axiom-shipping (skills/app-store-ref.md)` Part 11; this is the server surface.
+
+**Retention offers in signed payloads** — redeeming a retention offer surfaces as a new `offerType` value of `5` in the signed transaction and renewal info, with the usual offer fields (`offerIdentifier`, `offerDiscountType`, `offerPeriod`) populated as expected. There is no corresponding `Transaction.OfferType` case in the Xcode 27 beta 1 SDK (`.winBack`, raw value 4, is the last named case) — match the raw value server-side.
+
+**Real-time Retention Messaging** — your server answers a server-to-server HTTP request from the App Store at cancellation time. Requires passing a sandbox performance test before production, and access is granted via an interest form. The Retention Messaging API lives at `https://api.storekit.apple.com/inApps/v1/messaging`:
+
+```
+// URL configuration
+PUT/GET/DELETE /realtime/url
+
+// Message configuration
+PUT/DELETE /message/{messageIdentifier}
+GET /message/list
+PUT/DELETE/GET /default/{productId}/{locale}
+
+// Image configuration
+PUT/DELETE /image/{imageIdentifier}
+GET /image/list
+
+// Performance testing — sandbox only
+POST /performanceTest
+GET /performanceTest/result/{requestId}
+```
+
+The App Store's real-time request carries `originalTransactionId`, `appAppleId`, `productId`, `userLocale`, `requestIdentifier`, `environment`, and `signedDate`. You respond in one of three formats:
+
+```json
+{ "message": { "messageIdentifier": "..." } }
+
+{ "alternateProduct": { "messageIdentifier": "...", "productId": "..." } }
+
+{ "promotionalOffer": { "messageIdentifier": "...", "promotionalOfferSignatureV2": "eyJhbGciOiJFUzI..." } }
+```
+
+- The `alternateProduct` (switch plan) response also accepts a `billingPlanType` field to offer a monthly-with-12-month-commitment plan as the switch target.
+- A signature is still required for promotional offers used in retention messages (`promotionalOfferSignatureV2` — the compact-JWS V2 signature; see App Store Server Library above).
+- If your server doesn't respond in time or the response is malformed, the App Store falls back to your ASC Retention Messaging preference (including eligible offers), then to default messaging configured with this API. Apple recommends configuring ASC Retention Messaging even when using the real-time variant.
 
 ---
 
@@ -1511,11 +1676,11 @@ let products = try await Product.products(for: productIDs)
 
 ## Resources
 
-**WWDC**: 2025-241, 2025-249, 2024-10061, 2024-10062, 2024-10110, 2023-10013, 2023-10140, 2022-10007, 2022-110404, 2021-10114, 2026-210
+**WWDC**: 2026-210, 2026-309, 2026-391, 2025-241, 2025-249, 2024-10061, 2024-10062, 2024-10110, 2023-10013, 2023-10140, 2022-10007, 2022-110404, 2021-10114
 
-**Docs**: /storekit, /storekit/product/subscriptioninfo/bundledsubscriptions, /storekit/apptransaction/all, /storekit/apptransaction/storetype
+**Docs**: /storekit, /storekit/product/subscriptioninfo/bundledsubscriptions, /storekit/product/subscriptioninfo/pricingterms, /storekit/apptransaction/all, /storekit/apptransaction/storetype
 
-**Skills**: skills/in-app-purchases.md
+**Skills**: skills/in-app-purchases.md, axiom-shipping (skills/app-store-ref.md)
 
 ---
 

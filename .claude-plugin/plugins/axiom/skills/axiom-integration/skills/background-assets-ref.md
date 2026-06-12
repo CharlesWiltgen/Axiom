@@ -7,14 +7,18 @@ The Background Assets framework (`BackgroundAssets`) delivers asset packs to app
 
 ### Two layers
 
-- **Managed asset packs** (iOS 26+ / iPadOS 26+ / macOS 26+ / tvOS 26+ / visionOS 26+): high-level `AssetPackManager` actor and download policies. Use `StoreDownloaderExtension` for Apple-hosted, `BADownloaderExtension` for server-hosted. The recommended path for new apps.
-- **Unmanaged legacy** (iOS 16+ / 15+ unmanaged): lower-level `BADownloadManager`, `BAURLDownload`, `BADownloaderExtension` with manual delegate logic. Use only when targeting OS versions below 26 or when you need download-level control the managed layer doesn't expose.
+- **Managed asset packs** (iOS 26+ / iPadOS 26+ / macOS 26+ / tvOS 26+ / visionOS 26+): high-level `AssetPackManager` actor and download policies. Use `StoreDownloaderExtension` for Apple-hosted, `ManagedDownloaderExtension` for managed server-hosted. The recommended path for new apps.
+- **Unmanaged legacy** (iOS 16.1+): lower-level `BADownloadManager`, `BAURLDownload`, `BADownloaderExtension` with manual delegate logic. Use only when targeting OS versions below 26 or when you need download-level control the managed layer doesn't expose.
 
 ### Distribution
 
 - All platforms except **watchOS** support Background Assets for App Store distribution
 - Asset pack archives use the `.aar` format
 - Transport is HTTPS-only — plain HTTP is not supported
+
+### On-Demand Resources is deprecated
+
+The entire On-Demand Resources surface (`NSBundleResourceRequest`, its preservation-priority methods, `NSBundleResourceRequestLowDiskSpaceNotification`, `NSBundleResourceRequestLoadingPriorityUrgent`) is deprecated in the 27 SDKs with the message "Use Background Assets instead." Treat Background Assets as the only supported asset-delivery channel going forward; migrate ODR tag-based apps to asset packs.
 
 ---
 
@@ -28,7 +32,7 @@ Use this reference when:
 - Writing a `StoreDownloaderExtension` or `BADownloaderExtension`
 - Authoring a `Manifest.json` for `xcrun ba-package`
 - Setting up local testing with `xcrun ba-serve`
-- Integrating Background Assets with Foundation Models adapter delivery
+- Integrating Background Assets with Foundation Models adapter delivery (26-era — see the Adapter Bridge status note)
 
 **Related Skills**:
 - `skills/background-assets.md` — Discipline skill with decision trees, when-not-to-use, pressure scenarios
@@ -52,12 +56,20 @@ let manager = AssetPackManager.shared
 
 ### Fetching asset pack metadata
 
-```swift
-// Single pack
-let assetPack = try await AssetPackManager.shared.assetPack(withID: "Tutorial")
+On OS 27, the manifest is the metadata entry point:
 
-// All packs declared for the app
-let packs = AssetPackManager.shared.allAssetPacks
+```swift
+// OS 27 — fetch the manifest, then look up packs on it
+let manifest = try await AssetPackManager.shared.manifest  // AssetPackManifest
+let packs = manifest.assetPacks                            // Set<AssetPack>
+let assetPack = manifest.assetPack(withID: "Tutorial")     // AssetPack?
+```
+
+On 26, fetch packs directly from the manager (both deprecated in 27 in favor of the manifest path):
+
+```swift
+let assetPack = try await AssetPackManager.shared.assetPack(withID: "Tutorial")
+let packs = try await AssetPackManager.shared.allAssetPacks
 ```
 
 ### Ensuring availability
@@ -66,14 +78,26 @@ let packs = AssetPackManager.shared.allAssetPacks
 // Block until the pack is locally available (downloads if needed)
 try await AssetPackManager.shared.ensureLocalAvailability(of: assetPack)
 
-// Force a fresh version check before returning
+// Force a fresh version check before returning (from 26.4)
 try await AssetPackManager.shared.ensureLocalAvailability(
     of: assetPack,
     requireLatestVersion: true
 )
 ```
 
-`ensureLocalAvailability(of:)` returns when the pack's state is `.downloaded` or `.upToDate`. Throws on download failure or unrecoverable state.
+`ensureLocalAvailability(of:)` returns when the pack's state is `.downloaded` or `.upToDate`. Throws on download failure or unrecoverable state. The older `of:`-only overload is deprecated from 26.4, renamed to `ensureLocalAvailability(of:requireLatestVersion:)`; since the new parameter defaults to `false`, existing `ensureLocalAvailability(of: pack)` call sites resolve to the new overload unchanged.
+
+#### Batch variant OS27
+
+```swift
+// Ensure several packs at once
+try await AssetPackManager.shared.ensureLocalAvailability(
+    of: [tutorialPack, texturesPack],
+    requireLatestVersions: false
+)
+```
+
+The `Set`-based overload throws `AssetPackManager.LocalAvailabilityError` when any pack fails, carrying `successes: Set<AssetPack>` and `failures: [AssetPack: any Error]` so you can retry only what failed.
 
 ### Status streaming
 
@@ -82,26 +106,26 @@ try await AssetPackManager.shared.ensureLocalAvailability(
 ```swift
 // All packs
 for await update in AssetPackManager.shared.statusUpdates {
-    // update is keyed by asset pack
+    // each update is a DownloadStatusUpdate carrying its AssetPack
 }
 
 // Specific pack
 let updates = AssetPackManager.shared.statusUpdates(forAssetPackWithID: "Tutorial")
 for await status in updates {
     switch status {
-    case .began(let pack):
+    case .began:
         // Download just started
         break
-    case .paused(let pack):
+    case .paused:
         // System paused (Low Power Mode, Background Activity off, network)
         break
-    case .downloading(let pack, let progress):
+    case .downloading(_, let progress):
         // Bind progress.fractionCompleted to a ProgressView
         break
-    case .finished(let pack):
+    case .finished:
         // Pack is now local — safe to consume
         break
-    case .failed(let pack, let error):
+    case .failed(_, let error):
         // Inspect error; show retry UI
         break
     @unknown default:
@@ -113,16 +137,20 @@ for await status in updates {
 ### Status queries
 
 ```swift
-// Synchronous status query
-let status = AssetPackManager.shared.status(ofAssetPackWithID: "Tutorial")
-let localStatus = AssetPackManager.shared.localStatus(ofAssetPackWithID: "Tutorial")
+// Local-only status (no server round-trip)
+let localStatus = await AssetPackManager.shared.localStatus(ofAssetPackWithID: "Tutorial")
 let isLocal = AssetPackManager.shared.assetPackIsAvailableLocally(withID: "Tutorial")
+// (nonisolated synchronous — no await needed)
 
-// Pack-relative comparison
-let cmp = AssetPackManager.shared.status(relativeTo: someAssetPack)
+// Status relative to a specific AssetPack instance (may contact the server)
+let status = try await AssetPackManager.shared.status(relativeTo: someAssetPack)
 ```
 
+`status(relativeTo:)`, `localStatus(ofAssetPackWithID:)`, and `assetPackIsAvailableLocally(withID:)` are all available from 26.4. The original `status(ofAssetPackWithID:)` is deprecated from 26.4 in favor of `status(relativeTo:)`. Only `assetPackIsAvailableLocally(withID:)` is synchronous; the other queries are `async`.
+
 ### Reading file contents
+
+All three file APIs (`contents`, `descriptor`, `url`) are `nonisolated` and synchronous — bare `try`, no `await`:
 
 ```swift
 // Read a file's bytes
@@ -137,8 +165,8 @@ let descriptor = try AssetPackManager.shared.descriptor(
     for: "Videos/Introduction.m4v",
     searchingInAssetPackWithID: "Tutorial"
 )
-defer { try descriptor.close() }
-// Read from descriptor.fileHandle as needed
+defer { try? descriptor.close() }  // errors can't propagate from defer
+// Read via FileHandle(fileDescriptor: descriptor.rawValue) or System read APIs
 
 // Resolve a URL for an opened pack
 let url = try AssetPackManager.shared.url(for: "Videos/Introduction.m4v")
@@ -148,6 +176,7 @@ let url = try AssetPackManager.shared.url(for: "Videos/Introduction.m4v")
 
 ```swift
 // Force a remote check for newer versions
+// (@discardableResult — returns (updatingIDs: Set<String>, removedIDs: Set<String>))
 try await AssetPackManager.shared.checkForUpdates()
 
 // Remove a pack to free storage (system does NOT auto-evict)
@@ -203,6 +232,54 @@ case .failed(AssetPack, Error)
 
 ---
 
+## Localized Asset Packs OS27
+
+Localized asset packs let the system deliver only the assets matching the user's preferred language (selected in Settings), instead of installing every language variant. Declare a `language` tag (BCP-47) in the asset pack manifest; the system identifies the user's language and downloads only matching packs.
+
+### Fallback chain
+
+When no pack matches the user-selected language exactly, the system falls back automatically:
+
+1. **Regional fallback** — another variant of the same base language (e.g. user selects English-UK, no en-GB pack exists → the en-US pack is used)
+2. **Primary app language** — if no similar regional variant exists at all (e.g. user selects Spanish, no Spanish pack and no regional variant → the app's primary language, English, is used)
+
+### Manifest declaration
+
+```json
+{
+    "assetPackID": "voice-english",
+    "downloadPolicy": { "onDemand": {} },
+    "language": "en-US",
+    "sourceRoot": ".",
+    "fileSelectors": [ {"file": "Audio/voice-en.m4a"} ],
+    "platforms": []
+}
+```
+
+Upload localized variants of your asset packs to App Store Connect to reduce per-device install size.
+
+### API surface
+
+| Need | API |
+|------|-----|
+| Pack's language | `AssetPack.language: Locale.Language?` (`nil` = not localized) |
+| Manifest's primary language | `AssetPackManifest.primaryLanguage: Locale.Language?` |
+| Manifest's available languages | `AssetPackManifest.availableLanguages: [Locale.Language]` |
+| Manifest's localized packs | `AssetPackManifest.localizedAssetPacks` / `.localizedAssetPacks(for:)` |
+| Manifest's resolved language (read-only) | `AssetPackManifest.resolvedLanguage: Locale.Language?` |
+| Resolved language (read/override) | `AssetPackManager.shared.resolvedLanguage: Locale.Language?` (get/set) |
+| Languages available locally | `AssetPackManager.shared.locallyAvailableLanguages` (`get async`) |
+| Reconcile downloads after change | `AssetPackManager.shared.reconcilePreferredLanguages() async throws` |
+| Read a localized file | `contents(at:asLocalizedFor:options:)`, `descriptor(for:asLocalizedFor:)`, `url(for:asLocalizedFor:)` |
+
+### Behavior notes
+
+- `resolvedLanguage` respects a language your app sets manually; set it to `nil` to revert to the user's system-wide preference. Setting it does **not** immediately download or remove packs — call `reconcilePreferredLanguages()` to reconcile.
+- `reconcilePreferredLanguages()` downloads missing localized packs, waits for those downloads, and removes unneeded ones. Don't use it if your app offers split-language functionality — handle reconciliation manually in that case.
+- If the user recently changed their preferred language, `resolvedLanguage` can be temporarily out of sync with the set of locally available packs.
+
+---
+
 ## StoreDownloaderExtension (Apple-hosted, recommended)
 
 ### Overview
@@ -237,7 +314,14 @@ public protocol StoreDownloaderExtension: ManagedDownloaderExtension {
 
 ### Foundation Models adapter pattern
 
+> 26-era pattern: the `SystemLanguageModel.Adapter` runtime is deprecated 26.4 / obsoleted 27.0 in the 27 SDK (see the Adapter Bridge status note).
+
 ```swift
+import BackgroundAssets
+import ExtensionFoundation
+import FoundationModels
+import StoreKit  // StoreDownloaderExtension is declared in StoreKit
+
 @main
 struct AdapterDownloaderExtension: StoreDownloaderExtension {
     func shouldDownload(_ assetPack: AssetPack) -> Bool {
@@ -245,13 +329,16 @@ struct AdapterDownloaderExtension: StoreDownloaderExtension {
         if !assetPack.id.hasPrefix("fmadapter-") {
             return true
         }
-        // For FM adapter packs, only download if compatible with current base model
-        return SystemLanguageModel.Adapter.isCompatible(assetPack)
+        // For FM adapter packs, only download variants the runtime reports
+        // compatible with the current base model
+        let compatible = SystemLanguageModel.Adapter
+            .compatibleAdapterIdentifiers(name: "MyAdapter")
+        return compatible.contains(assetPack.id)
     }
 }
 ```
 
-`SystemLanguageModel.Adapter.isCompatible(_:)` is a static method on the FM type that takes an `AssetPack` and returns `true` if the pack's adapter variant matches the device's current base-model version.
+No `AssetPack`-taking compatibility check exists in the public swiftinterface (a binary-only `isCompatible` symbol exists but doesn't compile from source) — gate by membership in `compatibleAdapterIdentifiers(name:)` or by pack-ID convention.
 
 ---
 
@@ -259,10 +346,12 @@ struct AdapterDownloaderExtension: StoreDownloaderExtension {
 
 ### Overview
 
-`BADownloaderExtension` is the legacy / server-hosted extension. Use it when:
-- Hosting `.aar` archives on your own CDN
+`BADownloaderExtension` is the unmanaged server-download extension protocol (iOS 16.1+). Use it when:
+- Hosting `.aar` archives on your own CDN with download-level control
 - Supporting OS versions below iOS 26
 - Needing custom download decisions beyond pack-ID filtering
+
+For **managed** server-hosted packs, adopt `ManagedDownloaderExtension` instead — it refines `BADownloaderExtension` and adds `shouldDownload(_:)` (`StoreDownloaderExtension` is its Apple-hosted refinement).
 
 ```swift
 import BackgroundAssets
@@ -270,35 +359,42 @@ import ExtensionFoundation
 
 @main
 struct DownloaderExtension: BADownloaderExtension {
-    func applicationDidInstall() async {
-        // Schedule essential / prefetch downloads
-    }
-
-    func applicationDidUpdate() async {
-        // Re-evaluate packs after app update
-    }
-
-    func extensionWillTerminate() async {
-        // Persist any pending state
-    }
-
-    func backgroundDownload(
-        _ failedDownload: BADownload,
-        failedWithError: any Error
-    ) async {
-        // Retry policy, logging
+    // The scheduling entry point: the system asks which downloads to start
+    // for an install / periodic / update content request.
+    func downloads(
+        for request: BAContentRequest,
+        manifestURL: URL,
+        extensionInfo: BAAppExtensionInfo
+    ) -> Set<BADownload> {
+        // Build BAURLDownload values for the packs this device needs
+        return []
     }
 
     func backgroundDownload(
         _ finishedDownload: BADownload,
-        finishedWithFileURL: URL
-    ) async {
+        finishedWithFileURL fileURL: URL
+    ) {
         // Move the file to your shared container
+    }
+
+    func backgroundDownload(
+        _ failedDownload: BADownload,
+        failedWithError error: any Error
+    ) {
+        // Retry policy, logging
+    }
+
+    // Optional: respond to auth challenges for protected CDNs
+    func backgroundDownload(
+        _ download: BADownload,
+        didReceive challenge: URLAuthenticationChallenge
+    ) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+        (.performDefaultHandling, nil)
     }
 }
 ```
 
-The extension runs in the system's `nsbackgroundassetsd` context, not your app process. Communication with the host app goes through the shared App Group declared in `BAAppGroupID`.
+Only the auth-challenge handler is `async`; the finished/failed handlers are synchronous. `extensionWillTerminate()` also exists on the protocol but is deprecated since iOS 16.4 ("will not be invoked in all applicable circumstances and should not be relied upon") — don't put required cleanup there. The extension runs in the system's `nsbackgroundassetsd` context, not your app process. Communication with the host app goes through the shared App Group declared in `BAAppGroupID`.
 
 ---
 
@@ -333,13 +429,14 @@ try manager.scheduleDownload(download)
 ### BAURLDownload
 
 ```swift
+// iOS 16.4+ (the essential/priority initializer); no default arguments
 public init(
     identifier: String,
     request: URLRequest,
     essential: Bool,
     fileSize: Int,
     applicationGroupIdentifier: String,
-    priority: BADownload.Priority = .default
+    priority: BADownload.Priority
 )
 ```
 
@@ -357,17 +454,16 @@ public enum State {
 
 ### BADownload.Priority
 
+A typed-extensible integer (`NS_TYPED_EXTENSIBLE_ENUM`) — imports as a struct with static constants, not an enum:
+
 ```swift
-public enum Priority {
-    case `default`
-    case max
-    case min
-}
+public struct Priority { /* RawRepresentable over Int */ }
+// BADownload.Priority.min, .default, .max
 ```
 
 ### BAContentRequest
 
-For periodic update checks, the framework distinguishes three request types:
+The framework distinguishes three content-request types, delivered to your extension's `downloads(for:manifestURL:extensionInfo:)` scheduling entry point:
 
 ```swift
 public enum BAContentRequest {
@@ -455,8 +551,10 @@ Asset packs are described by `Manifest.json` files packaged into `.aar` archives
 |-------|------|----------|---------|
 | `assetPackID` | String | Yes | Unique identifier for the asset pack |
 | `downloadPolicy` | Object | Yes | One of `essential`, `prefetch`, `onDemand` |
-| `fileSelectors` | Array | Yes | Files to include — each item has a `file` key (relative path) |
+| `fileSelectors` | Array | Yes | Files to include — each item has a `file` or `directory` key (relative path; `directory` is recursive) |
 | `platforms` | Array | Yes | Empty array = all platforms; or list specific platforms |
+| `sourceRoot` `OS27` | String | No | Relative path from the manifest's location to the root against which file selectors resolve |
+| `language` `OS27` | String | No | BCP-47 tag marking the pack as localized (see Localized Asset Packs above) |
 
 ### Download policy shapes
 
@@ -487,7 +585,7 @@ Asset packs are described by `Manifest.json` files packaged into `.aar` archives
 
 ### Platform constraints
 
-- Apple-Hosted Background Assets supports **CPU and GPU executables only** — macOS executables are excluded
+- Apple-Hosted asset packs must not contain macOS executable code (Apple's hosting rules exclude it)
 - Asset packs can contain any file type otherwise (images, audio, video, JSON, ML model files, `.fmadapter` packs)
 
 ---
@@ -497,9 +595,9 @@ Asset packs are described by `Manifest.json` files packaged into `.aar` archives
 ### ManagedBackgroundAssetsError
 
 ```swift
-public enum ManagedBackgroundAssetsError: Error {
-    case assetPackNotFound
-    case fileNotFound
+public enum ManagedBackgroundAssetsError: CustomStringConvertible, LocalizedError {
+    case assetPackNotFound(withID: String)
+    case fileNotFound(at: FilePath)
 }
 ```
 
@@ -536,7 +634,7 @@ public enum SystemLanguageModel.Adapter.AssetError: Error, LocalizedError, Senda
 }
 ```
 
-The `AssetError` cases each carry a `Context` value; check `errorDescription` for human-readable detail.
+The `AssetError` cases each carry a `Context` value; check `errorDescription` for human-readable detail. Like the rest of the adapter runtime, `AssetError` is deprecated from 26.4 in the 27 SDK.
 
 ---
 
@@ -544,7 +642,7 @@ The `AssetError` cases each carry a `Context` value; check `errorDescription` fo
 
 ### xcrun ba-package
 
-Authors and packages asset packs. Ships with Xcode 16+ on macOS; standalone Linux and Windows downloads are also available.
+Authors and packages asset packs. Ships with Xcode 26+ on macOS; standalone Linux and Windows downloads are also available.
 
 ```bash
 # Generate a manifest template
@@ -553,14 +651,28 @@ xcrun ba-package template -o Manifest.json
 # Package the manifest + referenced files into a .aar archive
 xcrun ba-package Manifest.json -o Tutorial.aar
 
-# Inspect an existing archive
-xcrun ba-package info Tutorial.aar
-
-# Validate a manifest without packaging
-xcrun ba-package validate Manifest.json
+# Evaluate a manifest without packaging (Xcode 27) — validates structure
+# and prints the file paths its selectors match
+xcrun ba-package evaluate Manifest.json
 ```
 
+A `download-manifest` subcommand additionally works with download manifests for self-hosted asset packs. (There is no archive-inspection subcommand.)
+
 The resulting `.aar` archive is what you upload to App Store Connect (Apple-hosted) or place on your CDN (server-hosted).
+
+#### Steam depot conversion (Xcode 27)
+
+The `convert` subcommand turns a Steam depot build script (`.vdf`) into an asset pack manifest:
+
+```bash
+# Convert a Steam depot to an asset pack manifest
+xcrun ba-package convert --asset-pack-id voice-english -l en-US --on-demand voice-english.vdf -o voice-english.json
+
+# Then package the generated manifest as usual
+xcrun ba-package voice-english.json -o voice-english.aar
+```
+
+Three arguments: the asset pack ID, the language ID (if applicable), and the desired download policy. The `convert` subcommand requires Xcode 27 on macOS; Apple says the same converter is coming soon to Linux and Windows.
 
 ### xcrun ba-serve
 
@@ -580,6 +692,30 @@ Setup on the test device:
 3. **Configure URL override** on iOS / iPadOS / tvOS / visionOS via Settings > Developer > Development Overrides
 
 `ba-serve` runs HTTPS only — plain HTTP requests are rejected.
+
+### Xcode 27 mock server
+
+When you run your project in Xcode 27, a Background Assets mock server automatically starts and attaches to the debug session to serve assets — no manual `ba-serve` setup for the simulator/debug loop. Select the folder containing your packaged asset packs in the scheme editor: Edit Scheme > Run, next to the StoreKit Configuration drop-down.
+
+### Unity plug-ins (Background Assets + StoreKit)
+
+Two Apple Unity plug-ins — **Background Assets** and **StoreKit** — joined the Apple Unity plug-in portfolio at WWDC 2026, alongside Apple's existing plug-ins on GitHub. Each exposes a C#-based Unity API bridging to the native framework. Build/package/test requirements: Xcode 27, Python 3, and Unity 2022 LTS or later (built with the same Python script as the other Apple Unity plug-ins).
+
+C# bridge shapes from the session (Background Assets side):
+
+```csharp
+using Apple.BackgroundAssets;
+
+AssetPackManifest manifest = await AssetPackManager.GetManifestAsync();
+AssetPack assetPack = manifest.GetAssetPack(assetPackId);
+await foreach (AssetPackManager.DownloadStatusUpdate statusUpdate
+               in AssetPackManager.DownloadStatusUpdatesAsync(assetPackId)) {
+    // Update download progress in UI
+}
+await AssetPackManager.EnsureLocalAvailabilityOfAssetPackAsync(assetPack);
+```
+
+For the StoreKit plug-in's C# surface (`Product.FetchProducts`, `product.Purchase()`, `Transaction.Updates`, `Transaction.GetCurrentEntitlements()`), see `skills/in-app-purchases.md`.
 
 ---
 
@@ -620,25 +756,7 @@ Asset packs upload **independently of app builds** via:
 
 The Foundation Models framework's adapter loading hooks directly into Background Assets. This section captures the cross-framework API surface.
 
-### SystemLanguageModel.Adapter.isCompatible(_:)
-
-```swift
-static func isCompatible(_ assetPack: AssetPack) -> Bool
-```
-
-Returns `true` if the asset pack's adapter variant matches the device's current base-model version. Use in `StoreDownloaderExtension.shouldDownload(_:)` to gate adapter downloads to compatible variants:
-
-```swift
-@main
-struct AdapterDownloader: StoreDownloaderExtension {
-    func shouldDownload(_ assetPack: AssetPack) -> Bool {
-        if assetPack.id.hasPrefix("fmadapter-") {
-            return SystemLanguageModel.Adapter.isCompatible(assetPack)
-        }
-        return true
-    }
-}
-```
+**Status (27 SDK)**: the custom-adapter runtime — `SystemLanguageModel.Adapter`, `SystemLanguageModel(adapter:guardrails:)`, and `compatibleAdapterIdentifiers(name:)` — is retroactively **deprecated from 26.4 and obsoleted at 27.0** in the 27 SDK (iOS / macOS / visionOS; no deprecation appears in the 26.5 SDK). Compile-verified: building with the 27 SDK for an iOS 27 deployment target fails ("'Adapter' was obsoleted in iOS 27.0"); deployment targets of 26.x still compile. Apple states no replacement in the beta 1 interface — treat adapter delivery as a 26-era surface and re-check later betas. The Background Assets delivery mechanics below are unaffected; only the FM-side consumption API is going away.
 
 ### SystemLanguageModel.Adapter.compatibleAdapterIdentifiers(name:)
 
@@ -676,6 +794,7 @@ final class TutorialAssetController {
     static let packID = "Tutorial"
 
     func ensureReady() async throws {
+        // 26 path; on OS 27 prefer: AssetPackManager.shared.manifest.assetPack(withID:)
         let pack = try await AssetPackManager.shared.assetPack(withID: Self.packID)
         try await AssetPackManager.shared.ensureLocalAvailability(of: pack)
     }
@@ -732,6 +851,8 @@ struct AssetDownloadView: View {
 
 ### Pattern 3: Foundation Models adapter delivery
 
+> 26-era pattern: the `SystemLanguageModel.Adapter` runtime is deprecated 26.4 / obsoleted 27.0 in the 27 SDK (see the Adapter Bridge status note). Compiles only for pre-27 deployment targets.
+
 ```swift
 import BackgroundAssets
 import FoundationModels
@@ -786,7 +907,7 @@ cat > Manifest.json <<EOF
     "assetPackID": "HighQualityTextures",
     "downloadPolicy": {"onDemand": {}},
     "fileSelectors": [
-        {"file": "Textures/*"}
+        {"directory": "Textures"}
     ],
     "platforms": []
 }
@@ -795,9 +916,8 @@ EOF
 # 3. Package
 xcrun ba-package Manifest.json -o HighQualityTextures.aar
 
-# 4. Validate
-xcrun ba-package info HighQualityTextures.aar
-xcrun ba-package validate Manifest.json
+# 4. Evaluate the manifest (Xcode 27)
+xcrun ba-package evaluate Manifest.json
 
 # 5. Serve locally for device testing
 xcrun ba-serve --host localhost HighQualityTextures.aar
@@ -811,7 +931,12 @@ import ExtensionFoundation
 
 @main
 struct CustomDownloaderExtension: BADownloaderExtension {
-    func applicationDidInstall() async {
+    func downloads(
+        for request: BAContentRequest,
+        manifestURL: URL,
+        extensionInfo: BAAppExtensionInfo
+    ) -> Set<BADownload> {
+        guard request == .install || request == .update else { return [] }
         let download = BAURLDownload(
             identifier: "tutorial",
             request: URLRequest(url: URL(string: "https://cdn.example.com/Tutorial.aar")!),
@@ -820,17 +945,13 @@ struct CustomDownloaderExtension: BADownloaderExtension {
             applicationGroupIdentifier: "group.com.example.app",
             priority: .default
         )
-        do {
-            try BADownloadManager.shared.scheduleDownload(download)
-        } catch {
-            // Log; system will retry per its scheduling policy
-        }
+        return [download]
     }
 
     func backgroundDownload(
         _ finishedDownload: BADownload,
         finishedWithFileURL fileURL: URL
-    ) async {
+    ) {
         // Move to shared container
         let sharedURL = FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: "group.com.example.app")!
@@ -841,7 +962,7 @@ struct CustomDownloaderExtension: BADownloaderExtension {
     func backgroundDownload(
         _ failedDownload: BADownload,
         failedWithError error: any Error
-    ) async {
+    ) {
         // Inspect error; system retries with backoff
     }
 }
@@ -851,28 +972,31 @@ struct CustomDownloaderExtension: BADownloaderExtension {
 
 ## API Quick Reference
 
-- **`AssetPackManager.shared`** — Actor. Methods: `assetPack(withID:)`, `allAssetPacks`, `ensureLocalAvailability(of:)`, `ensureLocalAvailability(of:requireLatestVersion:)`, `statusUpdates`, `statusUpdates(forAssetPackWithID:)`, `status(ofAssetPackWithID:)`, `localStatus(ofAssetPackWithID:)`, `status(relativeTo:)`, `assetPackIsAvailableLocally(withID:)`, `contents(at:searchingInAssetPackWithID:options:)`, `descriptor(for:searchingInAssetPackWithID:)`, `url(for:)`, `checkForUpdates()`, `remove(assetPackWithID:)`
-- **`AssetPack.Status`** — `OptionSet` flags (membership-test, don't switch): `downloadAvailable`, `downloading`, `downloaded`, `upToDate`, `outOfDate`, `obsolete`, `updateAvailable`; stream-only `DownloadStatusUpdate` enum cases: `began`, `paused`, `downloading(_:progress:)`, `finished`, `failed(_:error:)`
+- **`AssetPackManager.shared`** — Actor. Methods: `manifest` (27; replaces `assetPack(withID:)` + `allAssetPacks`, both deprecated 27), `ensureLocalAvailability(of:)` (deprecated 26.4), `ensureLocalAvailability(of:requireLatestVersion:)` (26.4), `ensureLocalAvailability(of:requireLatestVersions:)` (Set, 27), `statusUpdates`, `statusUpdates(forAssetPackWithID:)`, `localStatus(ofAssetPackWithID:)`, `status(relativeTo:)`, `assetPackIsAvailableLocally(withID:)`, `contents(at:searchingInAssetPackWithID:options:)`, `descriptor(for:searchingInAssetPackWithID:)`, `url(for:)`, localized variants `contents(at:asLocalizedFor:options:)` / `descriptor(for:asLocalizedFor:)` / `url(for:asLocalizedFor:)` (27), `resolvedLanguage` / `locallyAvailableLanguages` / `reconcilePreferredLanguages()` (27), `checkForUpdates()`, `remove(assetPackWithID:)`
+- **`AssetPackManifest`** — `assetPacks`, `assetPack(withID:)` (27), `primaryLanguage` / `availableLanguages` / `resolvedLanguage` / `localizedAssetPacks` / `localizedAssetPacks(for:)` (27)
+- **`AssetPack.language: Locale.Language?`** (27) — `nil` when the pack isn't localized
+- **`AssetPackManager.LocalAvailabilityError`** (27) — `successes: Set<AssetPack>`, `failures: [AssetPack: any Error]`
+- **`AssetPack.Status`** — `OptionSet` flags (membership-test, don't switch): `downloadAvailable`, `downloading`, `downloaded`, `upToDate`, `outOfDate`, `obsolete`, `updateAvailable`; stream-only `DownloadStatusUpdate` enum cases (unlabeled payloads): `began(AssetPack)`, `paused(AssetPack)`, `downloading(AssetPack, Progress)`, `finished(AssetPack)`, `failed(AssetPack, Error)`
 - **Extensions** — `StoreDownloaderExtension` (Apple-hosted), `BADownloaderExtension` (server-hosted), `ManagedDownloaderExtension` (parent)
 - **Unmanaged types** — `BADownloadManager`, `BAURLDownload`, `BADownload`, `BADownload.State`, `BADownload.Priority`, `BAContentRequest`
 - **Errors** — `ManagedBackgroundAssetsError.assetPackNotFound`, `.fileNotFound`; `BAErrorCode.downloadAlreadyScheduled`, `.downloadBackgroundActivityProhibited`, `.downloadWouldExceedAllowance`, `.sessionDownloadAllowanceExceeded`
 - **Info.plist** — `BAHasManagedAssetPacks`, `BAUsesAppleHosting`, `BAAppGroupID`, `BAManifestURL`, `BAEssentialMaxInstallSize`, `BAMaxInstallSize`, `BAInitialDownloadRestrictions`
-- **Tooling** — `xcrun ba-package template`, `xcrun ba-package <manifest> -o <archive>`, `xcrun ba-package info`, `xcrun ba-package validate`, `xcrun ba-serve --host <host> <archives...>`, `xcrun ba-serve url-override <url>`
-- **FM bridge** — `SystemLanguageModel.Adapter.isCompatible(_:)`, `.compatibleAdapterIdentifiers(name:)`, `.removeObsoleteAdapters()`
+- **Tooling** — `xcrun ba-package template`, `xcrun ba-package <manifest> -o <archive>`, `xcrun ba-package download-manifest` (self-hosted), `xcrun ba-package convert` (Steam `.vdf` → manifest, Xcode 27), `xcrun ba-package evaluate` (Xcode 27), `xcrun ba-serve --host <host> <archives...>`, `xcrun ba-serve url-override <url>`, Xcode 27 auto-attached mock server (scheme Run settings)
+- **FM bridge** — `SystemLanguageModel.Adapter.compatibleAdapterIdentifiers(name:)`, `.removeObsoleteAdapters()` (deprecated 26.4 / obsoleted 27.0 in the 27 SDK — see the Adapter Bridge status note)
 
 ---
 
 ## Resources
 
-**WWDC**: 2025-325
+**WWDC**: 2025-325, 2026-378
 
 **Docs**: /backgroundassets, /backgroundassets/creating-managed-asset-packs, /backgroundassets/testing-asset-packs-locally, /backgroundassets/downloading-apple-hosted-asset-packs, /help/app-store-connect/reference/app-uploads/apple-hosted-asset-pack-size-limits, /help/app-store-connect/manage-asset-packs/overview-of-apple-hosted-asset-packs
 
-**Skills**: skills/background-assets.md, skills/background-processing.md, axiom-ai (skills/foundation-models-adapters-ref.md)
+**Skills**: skills/background-assets.md, skills/background-processing.md, skills/in-app-purchases.md, axiom-ai (skills/foundation-models-adapters-ref.md)
 
 ---
 
-**Last Updated**: 2026-05-16
-**Platforms**: iOS 26+, iPadOS 26+, macOS 26+, tvOS 26+, visionOS 26+ (managed); iOS 15+ (unmanaged legacy)
+**Last Updated**: 2026-06-11
+**Platforms**: iOS 26+, iPadOS 26+, macOS 26+, tvOS 26+, visionOS 26+ (managed); iOS 16.1+ (unmanaged legacy)
 **Skill Type**: Reference
 **Content**: All public APIs, Info.plist keys, manifest schema, tooling commands, Foundation Models adapter bridge

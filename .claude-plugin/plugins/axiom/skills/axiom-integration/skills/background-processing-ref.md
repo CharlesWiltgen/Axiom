@@ -115,6 +115,16 @@ func applicationDidEnterBackground(_ application: UIApplication) {
 }
 ```
 
+#### Async submission OS27
+
+The 27 SDKs add an asynchronous submit and deprecate the synchronous `submit(_:)` ("Use submitTaskRequest:completionHandler: instead to capture all error conditions"):
+
+```swift
+try await BGTaskScheduler.shared.submitTaskRequest(request)
+```
+
+The same `BGTaskScheduler.Error` cases apply — including the 26-era `immediateRunIneligible` ("immediate run not eligible due to system conditions"), which Apple's header lists among the errors the new method reports. iOS / tvOS / watchOS 27. The completion handler may be invoked on an arbitrary queue after an arbitrary delay, and Apple's header says not to call `submitTaskRequest` itself from the main thread or performance-critical contexts.
+
 ### Handler
 
 ```swift
@@ -231,11 +241,11 @@ When `requiresExternalPower = true`, CPU Monitor (which normally terminates CPU-
 
 ---
 
-## Part 4: BGContinuedProcessingTask (iOS 26+)
+## Part 4: BGContinuedProcessingTask (iOS 26+, watchOS27)
 
 ### Purpose
 
-Continue **user-initiated work** after app backgrounds, with system UI showing progress. From WWDC 2025-227.
+Continue **user-initiated work** after app backgrounds, with system UI showing progress. From WWDC 2025-227. The 27 SDKs extend `BGContinuedProcessingTaskRequest` (with its `SubmissionStrategy` and `Resources`) to watchOS 27.
 
 **NOT for**: Automatic tasks, maintenance, syncing — user must explicitly initiate.
 
@@ -768,4 +778,4 @@ e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateExpirationForTask
 ---
 
 **Last Updated**: 2025-12-31
-**Platforms**: iOS 13+, iOS 26+ (BGContinuedProcessingTask)
+**Platforms**: iOS 13+, iOS 26+ (BGContinuedProcessingTask; watchOS 27 extends it to the watch)

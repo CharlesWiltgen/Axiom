@@ -439,6 +439,18 @@ struct UnlockVaultIntent: AppIntent {
 }
 ```
 
+`IntentAuthenticationPolicy` itself is iOS 16+, not a 27-cycle addition.
+
+### Schema-Adopting Intents: Inherited Policies and Risk-Based Confirmations OS27
+
+A schema-adopting intent becomes a tool in the Siri Toolbox — the *model* decides when to call it and generates its arguments, so prompt injection can attempt to invoke your intent without user intent. The App Intents system adds two guardrails (WWDC 2026-347):
+
+**Inherited authentication policy.** Schemas carry their own default `authenticationPolicy`, set internally based on each schema's sensitivity and the data it handles. Your intent is automatically assigned the schema's default — no code needed. You can still set the property explicitly, but **only to a stricter policy**: a weaker override produces a build error that reports the minimum allowed policy. Review your intents with lock-screen behavior in mind — Siri runs on the lock screen, so an attacker in physical possession of a locked device can attempt to invoke intents.
+
+**Risk-based contextual confirmations.** Schemas also carry internal risk metadata derived from side effects — deleting device state, exfiltrating data, and updating shared content are flagged risky. Before execution, the system combines that static metadata with dynamic system state to evaluate overall risk; high-risk invocations trigger an automatic user confirmation, and declining blocks execution entirely. Risk is subtle: even a seemingly harmless `createTimer` schema accepts a model-generated label string an attacker could poison and later read back via a list query — which is why the dynamic-state half of the evaluation exists and why low-stakes schemas still confirm in some contexts.
+
+The security-side treatment (threat modeling, lock-screen attack framing, label-poisoning subtleties, Foundation Models mitigations) lives in `axiom-security (skills/agentic-security.md)` — cross-reference rather than duplicate.
+
 ---
 
 ## Background vs Foreground Execution
@@ -1680,11 +1692,11 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 
 ## Resources
 
-**WWDC**: 2025-244, 2025-275, 2025-260, 2026-240, 2026-343, 2026-345, 2026-295
+**WWDC**: 2025-244, 2025-275, 2025-260, 2026-240, 2026-343, 2026-345, 2026-295, 2026-347
 
 **Docs**: /appintents, /appintents/appintent, /appintents/appentity, /appintents/appschema, /appintents/adopting-app-intents-to-support-system-experiences, /appintents/apple-intelligence-and-siri-ai, /Updates/AppIntents
 
-**Skills**: skills/app-shortcuts-ref.md, skills/core-spotlight-ref.md, skills/app-discoverability.md
+**Skills**: skills/app-shortcuts-ref.md, skills/core-spotlight-ref.md, skills/app-discoverability.md, axiom-security (skills/agentic-security.md)
 
 ---
 
