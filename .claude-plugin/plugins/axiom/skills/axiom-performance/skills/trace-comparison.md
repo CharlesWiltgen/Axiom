@@ -10,6 +10,8 @@
 
 It is **CPU-share regression detection**. For absolute "is this fast enough" thresholds on a single trace, use `xcprof analyze`; compare needs two traces.
 
+For interactive (GUI) comparison, Instruments in Xcode 27 has built-in **Run Comparisons** — filter both runs to the same `os_signpost` interval, pick a baseline run, and read per-function deltas as a call tree, flame graph, or Top Functions view (`axiom-performance (skills/performance-profiling.md)`). `xcprof compare` remains the headless/CI path.
+
 ## The Two-Trace Workflow
 
 The diff is only meaningful when **both recordings exercise the same workload** — drive the identical user flow (a UI test, a benchmark entry point, a scripted CLI run) both times, or the deltas measure workload differences, not code regressions.

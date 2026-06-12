@@ -785,6 +785,8 @@ class ThermalManager {
 
 ## Part 9: MetricKit Monitoring APIs
 
+The 27 cycle replaces this subscriber model with a Swift-first API (`MetricManager` + `AsyncSequence`, typed metrics incl. iOS-only background-time and pixel-luminance metrics) — see `axiom-performance (skills/metrickit-ref.md)` Part 1. The legacy setup below works on iOS 13–26.
+
 ### Basic Setup
 
 ```swift

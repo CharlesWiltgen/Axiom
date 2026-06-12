@@ -49,6 +49,12 @@ App Attest proves three things about each request:
 
 **Privacy design**: Anonymous. No hardware identifiers. Keys don't survive reinstall/migration/restore. Apple can't correlate across apps or users.
 
+## Platform Availability
+
+App Attest is supported on all Apple platforms — **including macOS starting with macOS27** (the `DCAppAttestService` API existed on macOS before, but the service was not supported). Support also varies by app type on a given platform: Action and SSO app extensions are supported, other extension types are not. Always gate on `isSupported`, and treat a `false` from a device that should support it as a fraud signal in your risk assessment.
+
+On macOS, App Attest configures each generated key with a policy requiring **Full Security mode** and **System Integrity Protection** (both Mac defaults); attestations surface that policy to your server (see the key access control row in "What the Attestation Carries" below). `DCErrorInvalidKey` can also mean the key access control policy couldn't be enforced on macOS.
+
 ## Key Generation
 
 ```swift
@@ -64,13 +70,13 @@ func generateAppAttestKey(for userId: String) async throws -> String {
     }
 
     let keyId = try await service.generateKey()
-    // Cache persistently — one key per user per device
-    UserDefaults.standard.set(keyId, forKey: "appAttestKeyId_\(userId)")
+    // Store in the Keychain — one key per user per device
+    try keychainStore(keyId, account: "appAttestKeyId_\(userId)")
     return keyId
 }
 ```
 
-**Key lifecycle**: One key per user per device. Cache `keyId` persistently (Keychain or UserDefaults). Keys don't survive reinstall, migration, or restore. App Clips share identity with full app. Generate new key on sign-out.
+**Key lifecycle**: One key per user per device (never shared across your user population). Store `keyId` in the **Keychain**. Keys survive app updates but not reinstall, migration, or restore (including iCloud backup restore); they're per-device and don't sync across a user's devices. App Clips share identity with full app. Generate new key on sign-out.
 
 ## Attestation Flow
 
@@ -133,6 +139,21 @@ func attestKey(userId: String) async throws {
 
 **Challenge requirements**: Server-generated, single-use, minimum 16 bytes, short-lived (expire after minutes, not hours).
 
+**Collection best practices** (WWDC 2026-201): your **server initiates** attestation (keeps you inside a safe requests-per-second bound); retry failures with **exponential backoff**, never hard-coded retry loops (uncontrolled spikes hit Apple's global rate limits); collect attestations **outside user flows** on a background task; and validate only on the server — a compromised app can't be trusted to validate itself.
+
+### What the Attestation Carries
+
+The attestation object has three sections — format, attestation statement (certificate chain + receipt), and authenticator data. Store the receipt server-side: it's your key to the fraud metric. The 27 cycle adds tampering signals:
+
+| Signal | Where | Detects |
+|--------|-------|---------|
+| Relying party ID (teamId.bundleId) | Leaf certificate | Re-signing with a different team's profile |
+| Key access control (ACL Blob OID) `macOS27` | Leaf certificate | Disabled Full Security mode / SIP on the Mac |
+| `extensions` — launch validation category `iOS27` | End of authenticator data (WebAuthn format) | App Store build running via an unexpected channel (e.g. TestFlight category) |
+| `extensions` — bundle version `iOS27` | End of authenticator data | Re-signed copy with a bundle version you never shipped |
+
+Monitor these for unexpected values and feed them into your per-user risk assessment. Example: a fraudster disables SIP, modifies your Mac app, and re-signs it — the attestation surfaces the SIP state via the key access control property, plus any modified team ID, launch category, or bundle version.
+
 ## Assertion Flow
 
 Assertions prove ongoing request integrity. No Apple server involvement — on-device only.
@@ -165,7 +186,9 @@ func assertRequest(payload: Data, userId: String) async throws -> Data {
 | Promotional claims (free trial) | UI configuration |
 | Reward redemptions | Search queries |
 
-**Performance**: Secure Enclave operations. Fast enough for individual actions, expensive on every request.
+**Performance**: Secure Enclave operations. Fast enough for individual actions, expensive on every request. Generate on demand at the point you need them — assertions are local-only (no Apple round-trip).
+
+On iOS27, assertion authenticator data carries the same appended `extensions` (launch validation category, bundle version) as attestations — handle them the same way server-side.
 
 ## Server-Side Validation
 
@@ -178,6 +201,10 @@ Your server does the actual trust verification. The app only generates cryptogra
 3. **App identity hash** — SHA256(teamId + "." + bundleId) must match your app
 4. **Counter** — Store initial value (assertions increment from here)
 5. **Key association** — Extract and store public key, associate with user account
+6. **Receipt** — Validate relying party ID, attested key, and challenge inside it; **store it** (needed for the fraud metric)
+7. **Extensions / key access control** — Check launch validation category and bundle version (`iOS27`), and the key access control property (`macOS27`) for unexpected values
+
+**Key rotation tolerance**: don't reject new attestations for an existing user outright, and don't immediately invalidate their previous keys — reinstalls and device restores legitimately rotate keys. Treat the per-user attestation map as a fraud signal alongside the fraud metric. If you do reject an attestation or assertion, degrade gracefully: limited access with heightened monitoring, not a hard block without a risk assessment.
 
 ### Assertion Validation (per sensitive request)
 
@@ -244,13 +271,13 @@ func markTrialClaimed() async throws {
 
 **2 bits, your rules**: Apple stores bits + timestamp. Semantics are yours (e.g., bit0=trial claimed, bit1=abuse flagged). Reset on your schedule. Shared across all apps from the same developer team — coordinate meaning across your portfolio.
 
-## Risk Metric Service
+## Fraud Metric (Risk Metric Service)
 
-After attestation, redeem the receipt with Apple to get risk metrics:
+After attestation, redeem the stored receipt with Apple to get the fraud metric — an **approximate count of unique attested keys associated with your app on a device over the past 30 days**. It catches broker devices: a compromised device that passes attestation and generates valid attestations on behalf of modified app instances running elsewhere.
 
-**Server-side**: POST receipt to `https://data.appattest.apple.com/v1/attestationData` (use `data-development.appattest.apple.com` for sandbox). Response includes approximate key count for the device.
+**Server-side**: POST the receipt to `https://data.appattest.apple.com/v1/attestationData` (use `data-development.appattest.apple.com` for sandbox). The response is a new receipt (signature + certificate chain + payload) containing the metric in the **risk metric** field — use this new receipt for subsequent fetches. The **not before** field is the earliest you can refresh; **expiration time** is when the receipt can no longer be refreshed.
 
-**How to use**: Most devices have 1-3 keys. High key counts signal an attacker creating many fake identities. Redeem periodically (Apple rate-limits), establish a baseline for your app, and combine with other fraud signals (velocity, behavioral analysis).
+**How to use**: Most devices have 1-3 keys. High counts signal an attacker creating many fake identities — but legitimate key rotation (reinstall, device restore) also contributes. Treat it as an **investigation signal, never an outright block**: monitor, baseline per app, and flag spikes, combined with other fraud signals (velocity, behavioral analysis, attestation extensions).
 
 ## Anti-Rationalization Table
 
@@ -314,6 +341,9 @@ Before shipping App Attest:
 - [ ] App identity hash (teamId + bundleId) verified
 - [ ] Counter stored and checked for strict increase
 - [ ] Public key associated with user account
+- [ ] Receipt stored for fraud-metric redemption
+- [ ] Extensions monitored — launch validation category + bundle version (`iOS27`); key access control property (`macOS27`)
+- [ ] New-key attestations for existing users tolerated (reinstall/restore rotation), old keys not invalidated immediately
 
 **Rollout**:
 - [ ] Server-controlled percentage (not client-side)
@@ -323,8 +353,8 @@ Before shipping App Attest:
 
 ## Resources
 
-**WWDC**: 2021-10244
+**WWDC**: 2021-10244, 2026-201
 
-**Docs**: /devicecheck, /devicecheck/establishing-your-app-s-integrity, /devicecheck/validating-apps-that-connect-to-your-server
+**Docs**: /devicecheck, /devicecheck/establishing-your-app-s-integrity, /devicecheck/validating-apps-that-connect-to-your-server, /devicecheck/assessing-fraud-risk
 
-**Skills**: axiom-security (skills/cryptokit.md)
+**Skills**: axiom-security (skills/cryptokit.md), skills/agentic-security.md

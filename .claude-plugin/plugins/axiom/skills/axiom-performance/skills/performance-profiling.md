@@ -58,12 +58,14 @@ App performance problem?
 
 ### Step 3: Which Instruments Tool?
 
-**Time Profiler** – Slowness, UI lag, CPU spikes
+**Time Profiler** – Slowness, UI lag, CPU spikes (Top Functions mode for scattered overhead, `OS27`)
 **Allocations** – Memory growth, memory pressure, object counts
 **Core Data** – Query performance, fetch times, fault fires
 **Energy Impact** – Battery drain, sustained power draw
 **Network Link Conditioner** – Connection-related slowness
 **System Trace** – Thread blocking, main thread blocking, scheduling
+**Swift executors** – Tasks congesting the main actor (`OS27`)
+**Foundation Models** – Agentic/LLM feature latency and token usage
 
 ---
 
@@ -541,6 +543,44 @@ Redesigning the schema is the LAST thing to try.
 - **Main thread gaps** – Empty spaces = main thread idle/blocked
 - **Core scheduling** – Which threads run when
 - **Lock contention** – Threads waiting for locks
+
+---
+
+## Instruments 27 & Xcode 27 Organizer `OS27`
+
+WWDC 2026-268's diagnostic flow: start with Time Profiler, then branch on what the CPU is doing during the slowdown. **CPU high** → code bottleneck (optimize or offload). **CPU busy but tasks contending** → execution contention (Swift executors instrument). **CPU idle** → the thread is blocked on a resource (System Trace + Inspector) — Time Profiler only sees active CPU cycles and is blind here.
+
+### Top Functions
+
+A new Time Profiler analysis mode (same segmented control as the flame graph). A flame graph distributes the cost of functions called from many places — runtime functions and helpers fracture into slivers across every calling branch. Top Functions discards the call hierarchy and merges every scattered node into one block, ranked by **self** weight; selecting a function shows a flame graph of all code paths that call it.
+
+Reach for it when no single call path is hot but the app still hangs — scattered overhead like dynamic dispatch, retain/release, safety checks, or existential unwrapping (`swift_project_boxed_opaque_existential` ranking first means `any Protocol` boxing is eating cycles; prefer concrete types, generics, or enums). WWDC 2026-258 sums it up: "expensive operations performed many times".
+
+### Run Comparisons
+
+Instruments can now compare profiling data across runs in a single document: filter both runs to the same `os_signpost` interval (this is what makes the comparison reliable), select the same track, click the compare button in the middle bar, and pick the baseline run. Deltas are computed per matched function — red = regression, green = improvement — viewable as call tree, flame graph, or Top Functions, with comparisons saved into the document. Expect renamed/new functions (e.g. after refactoring) to show as "regressions" alongside the removed originals — judge the net.
+
+For headless/CI regression gating, `xcprof compare` remains the path — see `axiom-performance (skills/trace-comparison.md)`.
+
+### Inspector Panel & System Trace Blocking
+
+The new Inspector panel (right side) surfaces details and actions for the current selection: pin a thread, set the inspection range, and — in System Trace — read a syscall's exact arguments (file descriptor, buffer, size) and its on-core vs off-core time split (opaque = running, translucent = blocked). A "20% CPU" hang usually means the main thread is *blocked*, not slow: 2026-268's demo found a synchronous 1.7 GB `data.write(to:options:)` on the main thread this way; the fix is moving the work off the main actor (`Task { @concurrent in … }`).
+
+### Swift Executors Instrument
+
+New in the Swift Concurrency template: visualizes the main actor, the global concurrent executor, and custom executors as tracks. Use it when hangs line up with tasks running *on the main actor* — the demo's `renderThumbnail` tasks inherited main-actor context from SwiftUI and competed with UI updates; `Task(name:)` labels make the offending tasks identifiable in the track. Cross-route to `axiom-concurrency` for the `@concurrent` fix patterns.
+
+### Foundation Models Instrument (agentic features)
+
+Profiling LLM/agentic features built on FoundationModels: the improved Foundation Models Instrument (Product > Profile > Foundation Models template) shows instructions/tool-set lifetimes, prompt-processing vs response-generation time, and a sessions → requests → inferences tree with token counts. Key metrics: Time to First Token (shorten prompts), Tokens per Second (benchmark/regression), Total Latency (stream partial results). Prompt/response logging is on only during the trace — keep trace files safe. Full FM-side guidance: `axiom-ai (skills/foundation-models-ref.md)`.
+
+### Xcode 27 Organizer
+
+Four additions (WWDC 2026-258):
+- **Redesigned Overview** — diagnostics and metrics on one screen, highest-impact issues first
+- **Storage metric** — your app's footprint broken into documents, data, and binary size (binary size affects cellular download and launch time); **hitches metric** — animation hitches beyond scrolling (SwiftUI, Liquid Glass), where the old scrolling-only metric missed choppy animations. MetricKit 27 reports the same storage and hitch dimensions in-app (`metrickit-ref` Part 1)
+- **Metric Goals** — last year's launch-time recommendations expanded to hang rate, disk writes, battery, storage, and hitches; calibrated against technically similar apps and your own historical baselines
+- **Generate Recommendations** — agentic guided analysis: the agent works through the diagnostic data with you to find the regression cause and propose fixes
 
 ---
 
@@ -1056,11 +1096,11 @@ See `axiom-performance (skills/metrickit-ref.md)` for comprehensive MetricKit in
 
 ## Resources
 
-**WWDC**: 2023-10160, 2024-10217, 2025-308, 2025-312
+**WWDC**: 2023-10160, 2024-10217, 2025-308, 2025-312, 2026-258, 2026-268, 2026-243
 
-**Docs**: /library/archive/documentation/cocoa/conceptual/coredataperformance, /library/archive/technotes/tn2224, /os/ossignposter, /xctest/xctestcase/measure
+**Docs**: /library/archive/documentation/cocoa/conceptual/coredataperformance, /library/archive/technotes/tn2224, /os/ossignposter, /xctest/xctestcase/measure, /xcode/analyzing-cpu-profiles-with-call-tree-views, /xcode/improving-your-app-s-performance
 
-**Skills**: axiom-performance (skills/memory-debugging.md), axiom-swiftui, axiom-concurrency, axiom-performance (skills/metrickit-ref.md)
+**Skills**: axiom-performance (skills/memory-debugging.md), axiom-performance (skills/trace-comparison.md), axiom-swiftui, axiom-concurrency, axiom-performance (skills/metrickit-ref.md), axiom-ai (skills/foundation-models-ref.md)
 
 ---
 
