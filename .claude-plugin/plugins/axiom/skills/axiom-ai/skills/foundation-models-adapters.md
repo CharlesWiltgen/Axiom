@@ -190,7 +190,7 @@ For `examples.generate` CLI usage, see `axiom-ai (skills/foundation-models-adapt
 
 ### Pattern 3: Runtime Lifecycle
 
-This lifecycle compiles only on a 26.x deployment target — the whole runtime is obsoleted at 27.0 (see status banner). Gate it behind a 26.x `#available` floor and keep the base-model fallback for any device that has reached 27.
+This lifecycle compiles only on a 26.x deployment target — the whole runtime is obsoleted at 27.0 (see status banner). Keep the deployment target below 27 so it compiles; at runtime, use `if #available` and a base-model fallback for any device that has reached 27.
 
 ```swift
 import FoundationModels
