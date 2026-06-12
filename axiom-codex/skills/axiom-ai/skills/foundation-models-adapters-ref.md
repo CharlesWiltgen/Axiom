@@ -343,7 +343,7 @@ Without the entitlement, the runtime `SystemLanguageModel.Adapter` initializers 
 
 ## Runtime API
 
-> The entire runtime API below is `deprecated: 26.4, obsoleted: 27.0` (iOS/iPadOS/macOS/visionOS; never on watchOS/tvOS). It compiles only when your deployment target is 26.x. Gate it behind `if #available` against a 26.x floor, and keep a base-model fallback for every device whose deployment target — or whose installed OS — has reached 27.
+> The entire runtime API below is `deprecated: 26.4, obsoleted: 27.0` (iOS/iPadOS/macOS/visionOS; never on watchOS/tvOS). It compiles only when your deployment target is 26.x — the compile gate is the deployment-target ceiling, not a runtime check. At runtime, use `if #available` and keep a base-model fallback for every device whose installed OS has reached 27.
 
 ### SystemLanguageModel.Adapter
 

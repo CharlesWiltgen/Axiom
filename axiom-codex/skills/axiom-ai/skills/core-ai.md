@@ -168,7 +168,7 @@ Same session API, your model underneath — guided generation, streaming, and st
 |---------|---------|
 | "Core AI replaces Core ML" | Core ML still owns classic models (`.mlpackage`, `MLModel`, `MLUpdateTask`). Core AI is the 27-cycle path for modern/LLM-scale models and deep customization. Both convert from PyTorch — see the boundary table. |
 | "`CoreAILanguageModel` is part of the Core AI framework" | It's in the **open-source `coreai-models` Swift package**, not the SDK. The system `CoreAI` framework has no `LanguageModel` type. Add the package as a dependency. |
-| "There's a `CoreAICompiler` / `CoreAICache` Swift API" | Those subframeworks are empty shells. AOT compilation is the `coreai-build` CLI; caching is `AIModelCache` in the runtime. |
+| "There's a `CoreAICompiler` / `CoreAICache` Swift API" | Those subframeworks expose no public Swift API — `import` gets you nothing. AOT compilation is the `coreai-build` CLI; caching is `AIModelCache` in the runtime. |
 | "Specialize the model when the user taps the feature" | First specialization of a large model can take a long time. Apple says keep it out of interactive flows — do it on a first-run screen / opt-in / after download, with progress UI. |
 | "Bundle the 1 GB model in the app" | That hits every user on every update, including non-users of the feature. Ship it via Background Assets on opt-in. |
 | "My decode loop is just slow, buy a bigger budget" | Transformer decode without a cache is O(n²) in sequence length. Add key/value **states** so they update in place — steady latency. |
