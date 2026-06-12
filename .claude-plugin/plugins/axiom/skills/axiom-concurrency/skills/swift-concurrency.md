@@ -1004,7 +1004,7 @@ func importFiles(reporting subprogress: consuming Subprogress) async throws {
 }
 ```
 
-- `ProgressManager`/`ProgressReporter` are `Sendable`; observe read-only via `ProgressReporter` (`totalCount` / `completedCount`).
+- **Observe progress, don't poll it.** `ProgressManager` and its read-only `ProgressReporter` are both `@Observable` (the Observation framework) and `Sendable`. Hand consumers the `ProgressReporter` and read its `fractionCompleted` / `completedCount` / `totalCount` / `isFinished` / `isIndeterminate`: inside a SwiftUI `body` they auto-track; elsewhere wrap reads in `withObservationTracking`. Unlike `NSProgress` there's no KVO — observation is the mechanism.
 - Bridge to legacy APIs with `progress.assign(count:to: someNSProgress)`.
 - The SwiftUI `OS27` document model reports read/write progress through this type — see `axiom-design (skills/app-composition.md)`.
 
