@@ -1,12 +1,12 @@
 ---
 name: axiom-security
-description: Use when storing credentials securely, encrypting data, implementing passkeys, code signing, or managing certificates and provisioning profiles.
+description: Use when storing credentials securely, encrypting data, implementing passkeys, securing AI/agentic features against prompt injection, code signing, or managing certificates and provisioning profiles.
 license: MIT
 ---
 
 # Security & Credentials
 
-**You MUST use this skill for ANY keychain, encryption, passkey, app integrity, file protection, or code signing work.**
+**You MUST use this skill for ANY keychain, encryption, passkey, app integrity, agentic/AI feature security, file protection, or code signing work.**
 
 ## Quick Reference
 
@@ -19,7 +19,9 @@ license: MIT
 | Encrypt data, sign payloads, key management | See `skills/cryptokit.md` |
 | Hash functions, HMAC, AES-GCM, ChaChaPoly, ECDSA, EdDSA, key agreement | See `skills/cryptokit-ref.md` |
 | Passkey sign-in, WebAuthn, ASAuthorizationController | See `skills/passkeys.md` |
-| App integrity verification, DCAppAttestService | See `skills/app-attest.md` |
+| One-time code AutoFill for credential providers `OS27` | See `skills/passkeys.md` (Delivered Verification Codes) |
+| App integrity verification, DCAppAttestService, fraud metric | See `skills/app-attest.md` |
+| Prompt injection, securing AI agents / agentic features, tool confirmation | See `skills/agentic-security.md` |
 | NSFileProtection levels, data protection at rest | See `skills/file-protection-ref.md` |
 | Certificate management, provisioning profiles, CI/CD signing | See `skills/code-signing.md` |
 | Certificate not found, profile mismatch, entitlement errors | See `skills/code-signing-diag.md` |
@@ -41,6 +43,7 @@ digraph security {
     what -> "skills/cryptokit-ref.md" [label="CryptoKit API\n(AES, ECDSA, HPKE,\npost-quantum)"];
     what -> "skills/passkeys.md" [label="passkey sign-in,\nreplace passwords"];
     what -> "skills/app-attest.md" [label="app integrity,\nfraud prevention"];
+    what -> "skills/agentic-security.md" [label="AI agent security,\nprompt injection"];
     what -> "skills/file-protection-ref.md" [label="file encryption,\nNSFileProtection"];
     what -> "skills/code-signing.md" [label="set up signing,\nprofiles, CI/CD"];
     what -> "skills/code-signing-diag.md" [label="signing errors,\nupload rejections"];
@@ -55,16 +58,17 @@ digraph security {
 2a. Need CryptoKit API details (AES-GCM, ECDSA, HPKE, post-quantum)? → `skills/cryptokit-ref.md`
 3. Implement passkey sign-in, replace passwords? → `skills/passkeys.md`
 4. Verify app integrity, prevent fraud? → `skills/app-attest.md`
-5. File encryption at rest, NSFileProtection levels? → `skills/file-protection-ref.md`
-6. Set up code signing, manage certificates, CI/CD? → `skills/code-signing.md`
-6a. Code signing error troubleshooting? → `skills/code-signing-diag.md`
-6b. Certificate CLI commands, profile inspection? → `skills/code-signing-ref.md`
-7. Build/upload failures after signing? → See axiom-build
-8. App Store submission prep? → `/skill axiom-shipping`
-9. Privacy manifests, tracking transparency? → See axiom-integration
-10. Data persistence (SwiftData, Core Data, storage strategy)? → `/skill axiom-data`
-11. TLS configuration, certificate pinning for network requests? → `/skill axiom-networking`
-12. Want automated security scan? → security-privacy-scanner (Agent)
+5. Securing an agentic/AI feature (prompt injection, tool confirmation, lock-screen intents)? → `skills/agentic-security.md`
+6. File encryption at rest, NSFileProtection levels? → `skills/file-protection-ref.md`
+7. Set up code signing, manage certificates, CI/CD? → `skills/code-signing.md`
+7a. Code signing error troubleshooting? → `skills/code-signing-diag.md`
+7b. Certificate CLI commands, profile inspection? → `skills/code-signing-ref.md`
+8. Build/upload failures after signing? → See axiom-build
+9. App Store submission prep? → `/skill axiom-shipping`
+10. Privacy manifests, tracking transparency? → See axiom-integration
+11. Data persistence (SwiftData, Core Data, storage strategy)? → `/skill axiom-data`
+12. TLS configuration, certificate pinning for network requests? → `/skill axiom-networking`
+13. Want automated security scan? → security-privacy-scanner (Agent)
 
 ## Conflict Resolution
 
@@ -137,9 +141,17 @@ digraph security {
 **App Attest** (`skills/app-attest.md`):
 - DCAppAttestService attestation and assertion flows
 - Server-side validation of attestation objects
+- macOS support + tampering signals (extensions, key access control) from the 27 cycle
+- Fraud metric as an investigation signal
 - DeviceCheck 2-bit per-device state
 - Gradual rollout strategies for large install bases
 - Handling unsupported devices gracefully
+
+**Agentic Security** (`skills/agentic-security.md`):
+- Threat modeling agentic features (indirect prompt injection, Lethal Trifecta)
+- Deterministic vs probabilistic mitigations (redaction, spotlighting, confirmation, unlock gating)
+- Foundation Models lifecycle modifiers (.onToolCall confirmation, .historyTransform)
+- App Intents authenticationPolicy and schema risk metadata
 
 **File Protection** (`skills/file-protection-ref.md`):
 - NSFileProtection levels (complete, completeUnlessOpen, afterFirstUnlock, none)
@@ -184,6 +196,7 @@ digraph security {
 | "App Attest is overkill for my app" | If your app has any server-verified purchase, promotion, or competitive feature, tampered clients will exploit it. `skills/app-attest.md` covers gradual rollout. |
 | "I'll use @unchecked Sendable on my crypto wrapper" | Hiding thread-safety issues from the compiler in security code is how data corruption happens. See axiom-concurrency for safe patterns. |
 | "kSecAttrAccessibleAlways is fine" | Deprecated since iOS 12. Items are accessible even when device is locked and unencrypted during backup. Use kSecAttrAccessibleAfterFirstUnlock at minimum. |
+| "Prompt injection won't hit our little AI feature" | Any external content reaching your model (a calendar invite, a feed post) is the attack surface, and the model picks the actions. `skills/agentic-security.md` has the threat model and the deterministic mitigations. |
 
 ## Example Invocations
 
@@ -207,6 +220,12 @@ User: "How do I add passkey sign-in to my app?"
 
 User: "How do I verify my app hasn't been tampered with?"
 → Read: `skills/app-attest.md`
+
+User: "How do I protect my app's AI agent from prompt injection?"
+→ Read: `skills/agentic-security.md`
+
+User: "Should my Siri intent work from the lock screen?"
+→ Read: `skills/agentic-security.md`
 
 User: "What NSFileProtection level should I use?"
 → Read: `skills/file-protection-ref.md`

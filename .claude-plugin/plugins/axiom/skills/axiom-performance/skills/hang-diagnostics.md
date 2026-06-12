@@ -392,9 +392,28 @@ The Organizer shows aggregated hang data from users who opted into sharing diagn
 - **System API at top**: You called blocking API on main thread
 - **pthread_mutex/semaphore**: Lock contention or explicit waiting
 
+The Xcode 27 Organizer goes further: the redesigned Overview pairs the hang-rate chart with the underlying diagnostics on one screen, Metric Goals calibrate an achievable hang-rate target against similar apps and your own baselines, and **Generate Recommendations** runs an agentic analysis over the diagnostic data to localize the hang and propose fixes. A new hitches metric also surfaces choppy animations beyond scrolling. See `axiom-performance (skills/performance-profiling.md)` for the Instruments-27 side (Swift executors instrument for main-actor congestion, Inspector for blocked-thread syscalls).
+
 ## MetricKit Hang Diagnostics
 
-Adopt MetricKit to receive hang diagnostics in your app:
+On the 27 cycle, hang diagnostics arrive as typed `DiagnosticReport` values (`OS27` — not watchOS/tvOS):
+
+```swift
+import MetricKit
+
+let manager = MetricManager()   // keep alive
+
+for await report in manager.diagnosticReports {
+    if case .hang(let hang) = report.result {
+        uploadHangDiagnostic(duration: hang.hangDuration,
+                             callStack: hang.callStackTree)
+    }
+}
+```
+
+`report.environment` includes the signpost intervals and reported app states active around the hang — see `axiom-performance (skills/metrickit-ref.md)` Part 1.
+
+On earlier releases, adopt the legacy subscriber:
 
 ```swift
 import MetricKit
@@ -426,7 +445,8 @@ class MetricsSubscriber: NSObject, MXMetricManagerSubscriber {
 **Key MXHangDiagnostic properties**:
 - `hangDuration`: How long the hang lasted
 - `callStackTree`: MXCallStackTree with frames
-- `signatureIdentifier`: For grouping similar hangs
+
+There is no built-in grouping identifier — derive your own signature from the symbolicated call stack to group similar hangs.
 
 ## Watchdog Terminations
 
@@ -514,7 +534,7 @@ Before shipping, verify:
 
 ## Resources
 
-**WWDC**: 2021-10258, 2022-10082
+**WWDC**: 2021-10258, 2022-10082, 2026-268
 
 **Docs**: /xcode/analyzing-responsiveness-issues-in-your-shipping-app, /metrickit/mxhangdiagnostic
 
