@@ -3,19 +3,21 @@
 
 ## Overview
 
-Systematic accessibility diagnosis and remediation for iOS/macOS apps. Covers the 7 most common accessibility issues that cause App Store rejections and user complaints.
+Systematic accessibility diagnosis and remediation for Apple platform apps. Covers the most common accessibility issues that cause App Store rejections and user complaints.
 
 **Core principle** Accessibility is not optional. iOS apps must support VoiceOver, Dynamic Type, and sufficient color contrast to pass App Store Review. Users with disabilities depend on these features.
 
 ## When to Use This Skill
 
 - Fixing VoiceOver navigation issues (missing labels, wrong element order)
-- Supporting Dynamic Type (text scaling for vision disabilities)
+- Supporting Dynamic Type (text scaling for vision disabilities), including tvOS Large Text
 - Meeting color contrast requirements (WCAG AA/AAA)
 - Fixing touch target size violations (< 44x44pt)
 - Adding keyboard navigation (iPadOS/macOS)
 - Supporting Reduce Motion (vestibular disorders)
-- Preparing for App Store Review accessibility requirements
+- Supporting Assistive Access (cognitive disabilities)
+- Making long-form reading apps work with VoiceOver continuous reading and Speak Screen
+- Preparing for App Store Review accessibility requirements and Accessibility Nutrition Labels
 - Responding to user complaints about accessibility
 
 ## The 7 Critical Accessibility Issues
@@ -214,17 +216,74 @@ var body: some View {
 }
 ```
 
+#### Dynamic Type Comes to tvOS `tvOS27`
+
+Large Text support arrives on tvOS 27, bringing system-wide text scaling to every app on the platform (WWDC 2026-221). Users enable it in Settings → Accessibility → Display → Text Size. Apps that hardcode sizes now break on Apple TV the same way they would on iPhone.
+
+Everything above applies unchanged — the APIs have existed on tvOS all along; what's new is that the system setting now drives them:
+- SwiftUI semantic styles and `Font.custom(_:size:relativeTo:)` scale automatically
+- UIKit needs `UIFont.preferredFont(forTextStyle:)` + `adjustsFontForContentSizeCategory = true`
+- Free the containers: flexible constraints (`maxWidth: .infinity`), no fixed frames
+
+tvOS shelf layouts need count adaptation, not just font scaling — six posters per row won't fit when titles grow:
+
+```swift
+struct MovieShelf: View {
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+  var body: some View {
+    ScrollView(.horizontal) {
+      LazyHStack(spacing: 40) {
+        ForEach(movies) { movie in
+          MovieCell(movie: movie)
+            .containerRelativeFrame(
+              .horizontal,
+              count: dynamicTypeSize.isAccessibilitySize ? 4 : 6,
+              spacing: 40)
+        }
+      }
+    }
+  }
+}
+```
+
+Card cells reflow image-beside-text to a vertical stack at accessibility sizes (same `AnyLayout` pattern as above). In UIKit, drive a `UIStackView` axis flip from the content size category and re-evaluate on trait changes:
+
+```swift
+final class CardCell: UICollectionViewCell {
+    let stack = UIStackView()
+
+    // Call ONCE after init — not on every dequeue, or handlers stack up
+    func setUpAdaptiveLayout() {
+        updateAxis()
+        registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) {
+            (cell: Self, _: UITraitCollection) in
+            cell.updateAxis()
+        }
+    }
+
+    private func updateAxis() {
+        stack.axis = traitCollection.preferredContentSizeCategory.isAccessibilityCategory
+            ? .vertical : .horizontal
+    }
+}
+```
+
+tvOS text sizes range from the Large default up through the accessibility categories, so plan for the same extremes as iPhone. For titles that still overflow at fewer columns, WWDC 2026-221 suggests a custom marquee strategy — gate the scrolling on Reduce Motion (Section 6). Test systematically with Large Text enabled, then declare Larger Text support in your app's Accessibility Nutrition Labels for tvOS in App Store Connect.
+
 #### Testing
 1. Xcode Preview: Environment override
    ```swift
-   .environment(\.sizeCategory, .accessibilityExtraExtraExtraLarge)
+   .environment(\.dynamicTypeSize, .accessibility3)
    ```
 
 2. Simulator: Settings → Accessibility → Display & Text Size → Larger Text → Drag to maximum
 
 3. Device: Settings → Accessibility → Display & Text Size → Larger Text
 
-4. Check: Does text remain readable? Does layout adapt? Is any text clipped?
+4. tvOS: Settings → Accessibility → Display → Text Size
+
+5. Check: Does text remain readable? Does layout adapt? Is any text clipped?
 
 ---
 
@@ -578,6 +637,39 @@ struct CustomSlider: View {
 }
 ```
 
+`accessibilityAdjustableAction` makes VoiceOver read the control as "adjustable" and wires single-finger swipe up/down — do NOT also reach for an `.adjustable` trait; SwiftUI's `AccessibilityTraits` has no such member (the adjustable action confers it).
+
+#### Pick the Right Interaction Technique for the Control
+
+One mechanism doesn't fit every custom control (WWDC 2026-220). Choose by shape of input, and always provide custom actions as the fallback — Switch Control and Voice Control users may not be able to perform passthrough or direct-touch gestures. (UIKit equivalents: the `.allowsDirectInteraction` trait plus `accessibilityDirectTouchOptions` (iOS 17+).)
+
+| Control shape | Technique | API |
+|---------------|-----------|-----|
+| Single-axis value (slider, stepper) | Adjustable action (swipe up/down) | `accessibilityAdjustableAction` |
+| Fine-grained one-shot drag | Passthrough gesture (double-tap-and-hold, ends on release) | `accessibilityActivationPoint` to anchor where touches land |
+| Multi-axis or named operations (2D pad) | Custom actions | `accessibilityAction(named:)` per direction |
+| Free-form repeated gestures (drawing, virtual pet) | Direct touch (persists until focus moves) | `accessibilityDirectTouch(options:)` |
+
+```swift
+// Passthrough: anchor the gesture at the control's live position,
+// not the default center
+CoffeeSlider(value: fillLevel)
+  .accessibilityActivationPoint(UnitPoint(x: 0.5, y: 1 - fillLevel))
+
+// 2D control: one named action per direction (adjustable covers only one axis)
+EqualizerPad()
+  .accessibilityAction(named: "Move up") { increaseY(by: 10) }
+  .accessibilityAction(named: "Move right") { increaseX(by: 10) }
+
+// Direct touch: raw touches go to the control, not VoiceOver.
+// .requiresActivation gates it behind a double-tap;
+// .silentOnTouch mutes VoiceOver for controls with their own audio
+GestureSurface()
+  .accessibilityDirectTouch(options: [.requiresActivation])
+```
+
+During a passthrough drag the value changes continuously, and posting an `AccessibilityNotification.Announcement` on every change makes VoiceOver stutter over itself. Announce only when the value actually changed AND at least 0.3 seconds have passed since the last announcement (WWDC 2026-220 uses exactly this gate).
+
 #### Missing State Announcements
 
 ```swift
@@ -616,8 +708,13 @@ VoiceOver has three distinct notifications. Using `.announcement` for new conten
 // ❌ WRONG - new results announced but focus stuck on the search field
 UIAccessibility.post(notification: .announcement, argument: "12 results found")
 
-// ✅ CORRECT - SwiftUI: announce a discrete event in priority order
+// ✅ CORRECT - SwiftUI: discrete event, focus unchanged
 AccessibilityNotification.Announcement("Saved").post()
+
+// ✅ CORRECT - SwiftUI: new content arrived, move focus to it
+// (@AccessibilityFocusState binding + LayoutChanged)
+resultsFocused = true
+AccessibilityNotification.LayoutChanged().post()
 
 // ✅ CORRECT - UIKit: new content arrived, move focus to it
 UIAccessibility.post(notification: .layoutChanged, argument: firstResultCell)
@@ -626,7 +723,13 @@ UIAccessibility.post(notification: .layoutChanged, argument: firstResultCell)
 UIAccessibility.post(notification: .screenChanged, argument: detailTitleLabel)
 ```
 
-For announcements that must not be interrupted, set priority. In SwiftUI use the `accessibilitySpeechAnnouncementPriority` view modifier around the `AccessibilityNotification.Announcement(_:).post()` call; in UIKit post an `NSAttributedString` carrying the `.accessibilitySpeechAnnouncementPriority` attribute (`.high` cannot be interrupted, `.low` is queued) so the message isn't dropped by VoiceOver's queue.
+For announcements that must not be interrupted, set priority on the announcement *string* — there is no view modifier for this. In SwiftUI set the `accessibilitySpeechAnnouncementPriority` `AttributedString` attribute and post that string; in UIKit post an `NSAttributedString` carrying the same attribute (`.high` cannot be interrupted, `.low` is queued) so the message isn't dropped by VoiceOver's queue.
+
+```swift
+var message = AttributedString("Connection lost")
+message.accessibilitySpeechAnnouncementPriority = .high
+AccessibilityNotification.Announcement(message).post()
+```
 
 ## 8. Assistive Access Support (Cognitive Disabilities)
 
@@ -732,6 +835,92 @@ NavigationStack {
 
 ---
 
+## 9. Continuous Reading & Text Navigation (Long-Form Reading Apps)
+
+**Problem** In reading apps (books, articles, scanned documents), VoiceOver text navigation stops dead at paragraph or page boundaries, and Speak Screen's read-all halts at the bottom of each page — users must swipe manually mid-chapter.
+
+Techniques from WWDC 2026-219. Properly structured text content also makes the system Accessibility Reader experience better (iOS 26).
+
+#### Symptom: VoiceOver can't move past the end of a paragraph
+
+Separate text elements read as islands. Link them so character/word/line navigation continues seamlessly across the gap.
+
+```swift
+// UIKit (iOS 18+): chain elements in both directions
+func configureNavigationElements() {
+    for (index, paragraph) in paragraphs.enumerated() {
+        if index + 1 < paragraphs.count {
+            paragraph.accessibilityNextTextNavigationElement = paragraphs[index + 1]
+        }
+        if index > 0 {
+            paragraph.accessibilityPreviousTextNavigationElement = paragraphs[index - 1]
+        }
+    }
+}
+```
+
+```swift
+// SwiftUI: link selectable text elements with a shared id + namespace
+struct PageView: View {
+    @Namespace private var pageNamespace
+    let paragraphs: [String]
+    let pageNumber: Int
+
+    var body: some View {
+        Text(paragraphs[0])
+            .textSelection(.enabled)
+            .accessibilityLinkedGroup(id: pageNumber, in: pageNamespace)
+        Text(paragraphs[1])
+            .textSelection(.enabled)
+            .accessibilityLinkedGroup(id: pageNumber, in: pageNamespace)
+    }
+}
+```
+
+The `accessibilityLinkedGroup(id:in:)` modifier itself long predates this — starting in iOS 27, linking selectable text elements this way gives VoiceOver continuous text navigation across them. UIKit also offers block variants (`accessibilityNextTextNavigationElementBlock`/`accessibilityPreviousTextNavigationElementBlock`, iOS 18+) for lazily resolved elements. On macOS, use AppKit's long-standing `accessibilitySharedTextUIElements` property (`NSAccessibility`), which backs the AX attribute `AXSharedTextUIElements`.
+
+#### Symptom: Read-all (Speak Screen / VoiceOver) stops at each page
+
+Mark the last element with `.causesPageTurn` and implement `accessibilityScroll` so assistive technologies advance pages themselves — the audiobook experience:
+
+```swift
+override func viewDidLoad() {
+    super.viewDidLoad()
+    lastParagraphView.accessibilityTraits.insert(.causesPageTurn)
+}
+
+override func accessibilityScroll(_ direction: UIAccessibilityScrollDirection) -> Bool {
+    moveToPage(direction)
+    UIAccessibility.post(notification: .pageScrolled,
+                         argument: "Page \(currentPage) of \(pageCount)")
+    return true
+}
+```
+
+#### Symptom: Editing actions buried for VoiceOver users
+
+Put contextual actions (highlight, save, bookmark) on the editor rotor with the edit category (iOS 18+):
+
+```swift
+override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
+    get {
+        let save = UIAccessibilityCustomAction(name: "Save Recommendation") { _ in
+            self.saveRecommendation()
+            return true
+        }
+        save.category = UIAccessibilityCustomAction.editCategory
+        return (super.accessibilityCustomActions ?? []) + [save]
+    }
+    set { }
+}
+```
+
+#### Symptom: Custom-rendered text (scanned pages, custom engines) is invisible to assistive tech
+
+Adopt `UITextInput` on the view — implement the protocol in its entirety, including tokenizer-driven granularity (`UITextInputStringTokenizer`) and `UITextInputDelegate` selection notifications, and VoiceOver and Speak Screen work without a UITextView. `UITextInteraction(for: .nonEditable)` is optional polish on top: it adds the system selection UI (handles, highlight), not the accessibility behavior.
+
+---
+
 ## Accessibility Inspector Workflow
 
 ### 1. Launch Accessibility Inspector
@@ -815,12 +1004,14 @@ Xcode → Open Developer Tool → Accessibility Inspector
 
 ### App Store Connect Metadata
 
+**Accessibility Nutrition Labels** — declare the accessibility features your app supports (VoiceOver, Larger Text, Sufficient Contrast, Reduced Motion, and more) on your App Store product page; users who need accessible apps look for them. Only declare what you've actually tested. Larger Text is declarable for tvOS apps once they support tvOS 27's Large Text setting (Section 2).
+
 When submitting:
-1. Accessibility → Select features your app supports:
+1. Accessibility → Select features your app supports (Nutrition Labels taxonomy):
    - ☑ VoiceOver
-   - ☑ Dynamic Type
-   - ☑ Increased Contrast
-   - ☑ Reduce Motion (if supported)
+   - ☑ Larger Text (Dynamic Type)
+   - ☑ Sufficient Contrast
+   - ☑ Reduced Motion
 
 2. Test Notes: Document accessibility testing
    ```
@@ -1050,15 +1241,14 @@ After making fixes:
 
 ```bash
 # Quick scan for new issues
-/axiom:audit-accessibility
-
-# Deep diagnosis for specific issues
-/skill axiom:accessibility-diag
+/axiom:audit accessibility
 ```
 
 ## Resources
 
-**Docs**: /accessibility/voiceover, /uikit/uifont/scaling_fonts_automatically
+**WWDC**: 2026-219, 2026-220, 2026-221
+
+**Docs**: /accessibility/voiceover, /uikit/uifont/scaling_fonts_automatically, /uikit/uiaccessibilityreadingcontent, /swiftui/view/accessibilitylinkedgroup(id:in:)
 
 ---
 

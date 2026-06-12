@@ -420,6 +420,20 @@ Button("Share More Contacts") {
 
 ---
 
+## CNContactSavedAutoFillDetailsController iOS27
+
+Manages visibility logic for "Saved AutoFill Details" on contact cards — whether saved AutoFill information should be shown for a contact (Apple's docs also list iPadOS / Mac Catalyst 27; the class is present and compiles in the visionOS 27 SDK as well). The 27 cycle's only ContactsUI addition; no WWDC session covers it.
+
+```swift
+let controller = CNContactSavedAutoFillDetailsController()
+controller.contact = contact  // CNContact?
+controller.checkShouldShowAutofill { shouldShow, error in
+    // shouldShow: NSNumber?, error: NSError?
+}
+```
+
+---
+
 # Part 10: ContactProvider Framework (iOS 18+)
 
 Enables apps to expose contacts to the system Contacts ecosystem from third-party sources.

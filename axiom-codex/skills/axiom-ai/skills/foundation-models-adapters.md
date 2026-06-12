@@ -1,6 +1,8 @@
 
 # Foundation Models Custom Adapters
 
+> **Status — custom adapters are a 26-cycle-only capability, obsoleted in 27.0.** The on-device custom-adapter runtime (`SystemLanguageModel.Adapter`, `SystemLanguageModel(adapter:)`, `init(name:)`/`init(fileURL:)`/`compile()`/`compatibleAdapterIdentifiers(name:)`/`removeObsoleteAdapters()`) is `deprecated: 26.4, obsoleted: 27.0` in the Xcode 27 SDK on iOS, iPadOS, macOS, and visionOS (never available on watchOS/tvOS). It does **not compile** when your deployment target is 27.0 or later (`'Adapter' was obsoleted in iOS 27.0`); it still builds when you deploy back to 26.x. The 27 SDK (beta 1) ships **no replacement** adapter API — Apple's direction for on-device specialization moves to Core AI (ahead-of-time model authoring) and bring-your-own-model custom providers (`LanguageModelExecutor`). **The decision below applies only when every deployment target you support is on the 26 line.** If any target is 27.0+, adapters are off the table: work the Approach Triage (rungs 1-4) or a custom provider instead.
+
 ## Overview
 
 Custom adapter training applies only after rungs 1-4 of the Approach Triage in `axiom-ai (skills/foundation-models.md)` have been exhausted (prompt engineering, `@Generable`/`@Guide`, tool calling, built-in content-tagging adapter). **Core principle**: adapters carry an ongoing maintenance contract — one adapter per supported base-model OS version, retrained per system-model release, re-evaluated against a locale-specific test set, re-shipped via Background Assets. Teams without budget for that cycle plan around rungs 1-4 instead.
@@ -94,7 +96,13 @@ Hardcoding a single asset pack ID (instead of using `compatibleAdapterIdentifier
 ```dot
 digraph adapter_decision {
     start [shape=ellipse label="Quality gap that prompt+tools didn't close?"];
+    target [shape=diamond label="Every deployment target on the 26 line?"];
+    obsoleted [shape=octagon label="27.0+ target: adapters obsoleted\nUse rungs 1-4 or a custom provider"];
     ladder [shape=diamond label="Rungs 1-4 worked with documented failures?"];
+
+    start -> target;
+    target -> obsoleted [label="no (any 27.0+ target)"];
+    target -> ladder [label="yes (26-only)"];
     back_to_ladder [shape=box label="Return to foundation-models.md\nApproach Triage"];
 
     budget [shape=diamond label="Year-2 retrain budget committed?"];
@@ -111,7 +119,6 @@ digraph adapter_decision {
     train [shape=box label="Train, evaluate (4 axes), export\nsee -ref.md"];
     deliver [shape=box label="Deliver via Background Assets onDemand\nsee axiom-integration"];
 
-    start -> ladder;
     ladder -> back_to_ladder [label="no"];
     ladder -> budget [label="yes"];
     budget -> no_budget [label="no"];
@@ -183,6 +190,8 @@ For `examples.generate` CLI usage, see `axiom-ai (skills/foundation-models-adapt
 
 ### Pattern 3: Runtime Lifecycle
 
+This lifecycle compiles only on a 26.x deployment target — the whole runtime is obsoleted at 27.0 (see status banner). Gate it behind a 26.x `#available` floor and keep the base-model fallback for any device that has reached 27.
+
 ```swift
 import FoundationModels
 import BackgroundAssets
@@ -238,7 +247,7 @@ Adapter-specific additions:
 |-----------|-------------|
 | First download of ~160 MB adapter pack | User-visible progress; not instant on cellular |
 | `compatibleAdapterIdentifiers(name:)` returns empty post-OS-upgrade | Graceful fallback to base model; surface "Using the standard model" only if quality difference is material |
-| Result quality | Wire `session.logFeedbackAttachment(sentiment:issues:desiredOutput:)` — pass `LanguageModelFeedback.Sentiment` (`.positive`/`.negative`) plus optional `LanguageModelFeedback.Issue` values (see `axiom-ai (skills/foundation-models-ref.md)`); thumbs-up/down feeds next retrain dataset |
+| Result quality | Wire `session.logFeedbackAttachment(sentiment:issues:desiredOutput:)` — pass `LanguageModelFeedback.Sentiment` (`.positive`/`.negative`/`.neutral`) plus optional `LanguageModelFeedback.Issue` values, each built as `Issue(category:explanation:)` over the 8-case `Issue.Category` (see `axiom-ai (skills/foundation-models-ref.md)`); the sentiment + issues feed the next retrain dataset |
 
 ---
 
@@ -393,7 +402,7 @@ Without per-locale eval, none of these are measurable until App Store reviews su
 - [ ] Retry as first-class affordance
 - [ ] `guardrailViolation` shows constructive next step
 - [ ] Adapter-not-available state degrades gracefully
-- [ ] `session.logFeedbackAttachment(sentiment:issues:desiredOutput:)` wired (thumbs-up/down via `LanguageModelFeedback.Sentiment`) for next-retrain dataset
+- [ ] `session.logFeedbackAttachment(sentiment:issues:desiredOutput:)` wired (`LanguageModelFeedback.Sentiment` + `Issue(category:explanation:)` values) for next-retrain dataset
 
 ---
 
@@ -424,6 +433,6 @@ Without per-locale eval, none of these are measurable until App Store reviews su
 
 ---
 
-**Last Updated**: 2026-05-16
-**Platforms**: iOS 26+, iPadOS 26+, macOS 26+, visionOS 26+ (deployment); macOS 14+ Apple silicon ≥32 GB or Linux GPU (training)
+**Last Updated**: 2026-06-11
+**Platforms**: iOS / iPadOS / macOS / visionOS **26.0–26.x only** (runtime deprecated 26.4, obsoleted 27.0; never watchOS/tvOS); macOS 14+ Apple silicon ≥32 GB or Linux GPU (training)
 **Skill Type**: Discipline

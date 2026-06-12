@@ -113,6 +113,8 @@ class JetsamMonitor: NSObject, MXMetricManagerSubscriber {
 }
 ```
 
+On `iOS27`, MetricKit adds a **memory exception diagnostic** — when the app (or an extension) is killed for exceeding its memory limit, a `DiagnosticReport` with `.memoryException` arrives carrying the call stack at termination, and the `.backgroundTermination`/`.foregroundTermination` metrics break out `memoryLimitTerminationCount`. See `axiom-performance (skills/metrickit-ref.md)` Part 1.
+
 ```
 App memory grows while in USE? → Memory leak (fix retention)
 App killed in BACKGROUND? → Jetsam (reduce bg memory)

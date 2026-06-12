@@ -626,16 +626,88 @@ descriptor.storageMode = .managed  // macOS
 descriptor.usage = [.shaderRead, .shaderWrite]
 ```
 
+## Part 6: Metal 4 ML and Neural Rendering
+
+Metal 4 (26 cycle) runs machine learning inside the render pipeline at three levels of control:
+
+| Level | API | Use for |
+|-------|-----|---------|
+| Platform-integrated | MetalFX upscaling + denoising | Path-traced viewports, temporal upscaling — black-box, optimized per Apple silicon generation |
+| Command-buffer | MTL4 machine learning command encoder + `MTLPackage` | Run a trained network (e.g. neural tone mapper) in the same command buffer as compute/render — no context switch |
+| In-shader | TensorOps (MetalPerformancePrimitives, MSL) | Tiny task-specific networks (MLPs) inline in a shader; supports online training; auto-uses the neural accelerator on M5/A19 Pro GPUs |
+
+### MetalFX Denoising Best Practices
+
+From Maxon's Redshift Live adoption (WWDC 2026-359):
+
+1. **Keep auxiliary inputs noise-free.** Diffuse albedo is the strongest denoising signal — make it as close as possible to a clean version of the final image. Build per-input debug views; validate with GPU capture.
+2. **Store what the viewer sees.** For mirrors and glass, write the reflected/refracted surface properties (albedo, normal, roughness) into the G-buffer — primary surface replacement, blended by the Fresnel term for transmission.
+3. **Get motion vectors right.** MetalFX expects dejittered motion vectors — subtract the jitter deltas of both frames or edges shimmer:
+
+```cpp
+// Camera-only motion vectors with jitter compensation (MSL)
+float4 clipCurrent = viewProjCurrent * float4(worldPos, 1.0);
+float2 ndcCurrent = clipCurrent.xy / clipCurrent.w;
+float4 clipPrevious = viewProjPrevious * float4(worldPos, 1.0);
+float2 ndcPrevious = clipPrevious.xy / clipPrevious.w;
+float2 motion = ndcPrevious - ndcCurrent;
+motion -= jitterPrevious - jitterCurrent;
+```
+
+For moving/deforming geometry, store previous-frame world positions (or skin twice). For genuinely unreliable motion (alpha-blended particles), use the reactive mask. Noise-free layers (sky, fog, volumetrics) can skip denoising via the transparency overlay or per-pixel denoiser strength mask (0 = none, 1 = full).
+
+### Quantized Tensors `OS27`
+
+`MTLTensor` gained int4/int8 quantized data types in a 26-cycle update; the 27 SDKs (iOS27/macOS27) add floating-point and 2-bit formats plus block-wise scale factors (MX formats):
+
+| `MTLTensorDataType` | Format |
+|---------------------|--------|
+| `.float8E4M3` / `.float8E5M2` | 8-bit float (4 or 5 exponent bits) |
+| `.float4E2M1` | 4-bit float |
+| `.int2` / `.uint2` | 2-bit integer |
+| `.float8UE8M0` | Scale-factor format for block-wise (MX) quantization |
+
+Scales attach as an auxiliary plane on the same tensor — `MTLTensorAuxiliaryPlaneDescriptor` (with `blockFactors`, e.g. one scale per 32×1 block) registered in an `MTLTensorAuxiliaryPlaneDescriptorMap` for `MTLTensorPlaneTypeScales`, assigned to `MTLTensorDescriptor.auxiliaryPlanes`. Note: Apple's session slide uses `MTLTensorDataTypeMetalFloat8E4M3` — the shipping header has no `Metal` infix (`MTLTensorDataTypeFloat8E4M3`). The new types carry extra alignment requirements; check the Metal docs.
+
+MSL side, declare the plane and tensor types, then TensorOps dequantizes automatically:
+
+```cpp
+#include <metal_tensor>
+using namespace metal;
+
+using scales_plane = tensor_blockwise<tensor_plane_scales,
+                                      device metal_fp8_ue8m0_format, 32, 1>;
+using mxfp8_tensor = tensor<device metal_fp8_e4m3_format, dextents<int, 2>,
+                            tensor_handle, scales_plane>;
+// tensor_inline instead of tensor_handle constructs the tensor on the
+// shader stack from raw buffer pointers (no host-side MTLTensor needed)
+```
+
+`matmul2d` accepts quantized tensors directly; to dequantize a custom format yourself, prefer cooperative tensors (register-distributed) over a threadgroup-memory round trip. In the 27 cycle a cooperative tensor can also feed a subsequent matmul as input (`is_compatible_as_left_input` / `get_left_input_cooperative_tensor`) — the FlashAttention pattern; on macOS 26 it had to be staged through threadgroup memory. Row reductions (`reduce_rows`) and `map_iterator` support fused SoftMax. Full reference: the Metal Performance Primitives programming guide.
+
+### Other 27 Metal Additions `OS27`
+
+| Addition | Notes |
+|----------|-------|
+| MSL 4.1 (`MTLLanguageVersion4_1`) | New shading-language revision |
+| `MTLDevice.makeTensor(descriptor:attachments:)` | Create a multi-plane tensor with per-plane buffer backing |
+| Tensor-plane copy operations | `MTL4ComputeCommandEncoder` / blit encoder gain per-plane tensor copies |
+| MetalFX content regions | `contentWidth/Height` (frame interpolator), `colorContentOffsetX/Y` (temporal scaler), plus depth/motion/reactive-mask/output/distortion offsets — all `API_UNAVAILABLE(visionos)` |
+| MetalFX reactive mask rename | `reactiveMaskTextureUsage` replaces deprecated `reactiveTextureUsage` |
+| MetalFX frame interpolation | `isDistortionTextureEnabled` + distortion texture/region, `requiresPrevColorTexture`, `worldToViewMatrix`/`viewToClipMatrix`; temporal scaler gains output-resolution and jittered motion-vector options |
+
+For CoreML-level model conversion, quantization, and deployment (including the 27-cycle Core AI tooling for PyTorch models with custom Metal kernels), see axiom-ai — this part covers only the Metal-side surface.
+
 ## Resources
 
-**WWDC**: 2016-00602, 2018-00604, 2019-00611
+**WWDC**: 2016-00602, 2018-00604, 2019-00611, 2026-359, 2026-330
 
-**Docs**: /metal/migrating-opengl-code-to-metal, /metal/shader-converter, /metalkit/mtkview
+**Docs**: /metal/migrating-opengl-code-to-metal, /metal/shader-converter, /metalkit/mtkview, /metalfx, /metalperformanceprimitives
 
-**Skills**: axiom-graphics (skills/metal-migration.md), axiom-graphics (skills/metal-migration-diag.md)
+**Skills**: axiom-graphics (skills/metal-migration.md), axiom-graphics (skills/metal-migration-diag.md), axiom-graphics (skills/display-performance.md)
 
 ---
 
-**Last Updated**: 2025-12-29
+**Last Updated**: 2026-06-10
 **Platforms**: iOS 12+, macOS 10.14+, tvOS 12+
 **Status**: Complete shader conversion and API mapping reference

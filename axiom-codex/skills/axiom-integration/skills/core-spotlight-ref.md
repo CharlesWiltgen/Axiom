@@ -13,6 +13,7 @@ Comprehensive guide to Core Spotlight framework and NSUserActivity for making ap
 
 Use this skill when:
 - Indexing app content (documents, notes, orders, messages) for Spotlight
+- Giving a `LanguageModelSession` grounded search over your app's index (`SpotlightSearchTool`)
 - Using NSUserActivity for Handoff or Siri predictions
 - Choosing between CSSearchableItem, IndexedEntity, and NSUserActivity
 - Implementing activity continuation from Spotlight results
@@ -196,16 +197,6 @@ attributes.subject = "Meeting notes"
 
 ---
 
-### Semantic search attributes — SearchableItemAttribute (OS27)
-
-The 27 cycle adds on-device **semantic ("LLM") search** over Spotlight content. When you configure a Spotlight search **Source** (or **File Source**), you pass a set of `SearchableItemAttribute` values naming which fields the system should retrieve from matching items and hand to the model as additional ranking context. Pass none and only the item's unique identifier is returned.
-
-`SearchableItemAttribute` is a `RawRepresentable` typed key (`OS27` — iOS / macOS / visionOS, not tvOS / watchOS) that mirrors the `CSSearchableItemAttributeSet` fields you already index — `.title`, `.displayName`, `.alternateNames`, `.keywords`, `.contentDescription`, `.textContent`, `.contentType`, `.thumbnailURL`, plus container, document (`.pageCount`, `.fileSize`), and ranking (`.rankingHint`) attributes.
-
-**Index rich, accurate attributes first** (the `CSSearchableItemAttributeSet` patterns above) — semantic search is only as good as the indexed metadata it reads. See WWDC 2026-246.
-
----
-
 ### Batch Indexing for Performance
 
 #### ❌ DON'T: Index items one at a time
@@ -325,6 +316,177 @@ item.associateAppEntity(orderEntity, priority: .default)
 
 ---
 
+### Semantic Search Attributes — SearchableItemAttribute OS27
+
+The 27 cycle adds on-device **semantic ("LLM") search** over Spotlight content, surfaced through `SpotlightSearchTool` (next section). Search sources carry `fetchAttributes: [SearchableItemAttribute]` naming which fields the system retrieves from matching items and hands to the model as context.
+
+`SearchableItemAttribute` is a `RawRepresentable` typed key (iOS / iPadOS / macOS / visionOS, not tvOS / watchOS) that mirrors the `CSSearchableItemAttributeSet` fields you already index — `.title`, `.displayName`, `.alternateNames`, `.keywords`, `.contentDescription`, `.textContent`, `.contentType`, `.thumbnailURL`, plus container, document (`.pageCount`, `.fileSize`), and ranking (`.rankingHint`) attributes.
+
+**Index rich, accurate attributes first** (the `CSSearchableItemAttributeSet` patterns above) — semantic search is only as good as the indexed metadata it reads. See WWDC 2026-246.
+
+---
+
+## SpotlightSearchTool — LLM Search OS27
+
+`SpotlightSearchTool` adopts the Foundation Models `Tool` protocol so a `LanguageModelSession` can directly search your app's Core Spotlight index for grounded, contextual response generation. Available on iOS, iPadOS, macOS, and visionOS (not tvOS / watchOS). It lives in the **cross-import overlay** — import both frameworks and the types appear:
+
+```swift
+import CoreSpotlight
+import FoundationModels
+
+// In one line, the tool is ready to search your app's Core Spotlight index
+let tool = SpotlightSearchTool()
+
+let session = LanguageModelSession(
+    tools: [tool],
+    instructions: "Answer questions about the user's hikes."
+)
+let response = try await session.respond(to: "What hikes have I gone on?")
+```
+
+**Prerequisite**: your app already donates searchable items to Core Spotlight (or indexed entities for Apple Intelligence). The model generates a query, Spotlight executes it and returns a description of the result set, and the model reasons over that output for its final response. For a given response the model may call the tool more than once.
+
+### Configuration and Sources
+
+```swift
+// Search file paths in your app's sandbox instead of the item index
+let fileTool = SpotlightSearchTool(
+    configuration: .init(sources: [.files])
+)
+```
+
+`SpotlightSearchTool.Configuration` carries `sources: [SearchSource]`, `guide: Guide?`, `contactResolver: (any ContactResolver)?`, and `customStages: [any CustomStage]`. `SearchSource` factories: `.coreSpotlight` / `.coreSpotlight(CoreSpotlightSource)` and `.files` / `.files(FileSource)`. `CoreSpotlightSource` takes a `searchableIndexDelegate` and `fetchAttributes: [SearchableItemAttribute]`; `FileSource` adds `scopes: [URL]`. Both carry `maximumResultCount: Int?`. The default configuration is `.init(sources: [.coreSpotlight])`.
+
+### Recovering Full Items via the Index Delegate
+
+Some indexed metadata (text content, HTML) is stored in a compact representation that's searchable but not recoverable in model-readable form. The tool recovers complete items through `CSSearchableIndexDelegate`'s `searchableItems(forIdentifiers:)` (the async import of the iOS 18.4 delegate method — not new in 27). This is also the right hook to attach extra attributes the model should reason about but that you don't donate for search:
+
+```swift
+class IndexDelegate: NSObject, CSSearchableIndexDelegate {
+    func searchableItems(forIdentifiers identifiers: [String]) async -> [CSSearchableItem] {
+        // store / makeSearchableItem(from:): your app's persistence and item mapping
+        let entries = await store.fetchEntries(ids: identifiers)
+        return entries.map { makeSearchableItem(from: $0) }
+    }
+    // ... existing reindex methods
+}
+```
+
+### Streaming Results for UI
+
+Session responses give you a concise description over the result set (assistant-style UI). For list-style display, read results from the tool itself — `searchResults` is an async sequence of `SearchReply` batches:
+
+```swift
+var currentToken: SpotlightSearchTool.SearchReply.QueryToken?
+
+for await reply in tool.searchResults {
+    if reply.queryToken != currentToken {
+        // New query — start a new display section
+        currentToken = reply.queryToken
+    }
+    switch reply.content {
+    case .items(let searchItems):
+        display(searchItems)
+    default:
+        break
+    }
+}
+```
+
+`SearchReply` carries `content`, an optional LLM-generated `label` describing the content, `queryToken` / `stageToken` (Hashable tokens — use `queryToken` to detect when the model issued a new query and the UI should refresh), and `status` (`.partial` / `.complete`). `Content` cases: `.items([CSSearchableItem])`, `.groupedItems([SearchableItemAttribute: [CSSearchableItem]])`, `.scoredItems([ScoredSearchableItem])`, `.count(SearchCount)`, `.table(SearchResultsTable)`, `.statistic(SearchStatistic)`, `.text(SearchTextResult)`.
+
+### Guidance Profiles
+
+The tool exposes its entire search-capability guidance to the model by default. Scope it for limited-context (especially on-device) models:
+
+```swift
+let profile = SpotlightSearchTool.GuidanceProfile(
+    textMatch: true,
+    dates: true,
+    people: false,
+    attributes: [.title, .completionDate]
+)
+let tool = SpotlightSearchTool(
+    configuration: .init(guide: .init(level: .dynamic(profile)))
+)
+
+// On-device models have smaller context — prefer focused guidance
+let focusedTool = SpotlightSearchTool(
+    configuration: .init(guide: .init(level: .focused(.items)))
+)
+```
+
+`Guide(level:format:)` — `GuidanceLevel` is `.complete` (default), `.focused(ContentDomain)`, or `.dynamic(GuidanceProfile)`; `FormatLevel` is `.structured` (default) or `.compact`. `GuidanceProfile` fields: `textMatch` / `similarityMatch` / `numericMatch` / `dates` / `people` / `contentType` (all `Bool?`) plus an exact `attributes` whitelist. `ContentDomain` values: `.audio`, `.calendar`, `.communications`, `.documents`, `.items`, `.visualMedia` — each with a configurable variant taking per-field attribute lists.
+
+### Reference Resolution (ContactResolver)
+
+For prompts that reference the user ("hikes I went on with my partner"), provide identity metadata the tool can match against the index:
+
+```swift
+struct MyContactResolver: ContactResolver {
+    func userIdentity() -> ResolvedContact {
+        var contact = ResolvedContact(displayName: "Jane Doe")
+        contact.emailAddresses = ["jane@example.com"]
+        contact.names = ["Jane", "JD"]
+        return contact
+    }
+}
+```
+
+`ResolvedContact` fields: `displayName`, `names`, `nameComponents: [PersonNameComponents]`, `emailAddresses`, `phoneNumbers`. Wire it through the configuration — `SpotlightSearchTool(configuration: .init(contactResolver: MyContactResolver()))` (the tool's `configuration` is a `let`; there is no settable property on the tool).
+
+### Custom Pipeline Stages
+
+For complex requests (counts, tables, averages over large result sets), the model can request a **pipeline search** — index queries plus computation stages — instead of tallying results in context. Apps register their own stages. `CustomStage` is `Generable`, so the model generates a stage instance on demand, with `@Guide` properties informing generation:
+
+```swift
+@Generable
+struct HappinessStage: CustomStage {
+    static let name = "happiness"
+    static let description = "Scores hikes by how happy the author was"
+    static let inputTypes: [SearchPipelineDataType] = [.items]
+    static let outputTypes: [SearchPipelineDataType] = [.scoredItems]
+
+    @Guide(description: "Minimum happiness score (0.0-1.0) to include in results")
+    var threshold: Double?
+
+    func execute(items: [CSSearchableItem]) async throws -> SearchPipelineData {
+        // score(for:): your sentiment/rating logic
+        let scored = items.compactMap { item -> ScoredSearchableItem? in
+            let value = score(for: item)
+            if let threshold, value < threshold { return nil }
+            return ScoredSearchableItem(item: item, score: value)
+        }
+        return SearchPipelineData(payload: .scoredItems(scored))
+    }
+}
+
+let tool = SpotlightSearchTool(
+    configuration: .init(customStages: [HappinessStage()])
+)
+```
+
+The protocol declares **typed `execute` overloads** — `execute(items:)`, `execute(scoredItems:)`, `execute(groupedItems:)`, `execute(count:)`, `execute(table:)`, `execute(statisticName:value:)`, `execute(text:)` — implement the ones matching your declared `inputTypes` (the session's slideware shows a single `execute(on:)` that does not exist in the SDK). `SearchPipelineData.Payload` mirrors the reply content cases; stage outputs can flow back to your UI as `searchResults` replies with LLM-generated labels.
+
+Deliberately not documented here: the overlay's public `UTTypeResolutionStrategy` / `UTTypeHierarchyStrategy` / `UTTypeResolutionResult` types and `CoreSpotlightSource.sourceOptions` (a `CSSearchQueryContext.SourceOptions` passthrough) — no session or doc coverage yet; revisit when Apple documents them.
+
+### Evaluating Responses
+
+The new Evaluations framework (`import Evaluations`) builds end-to-end suites for tool-calling quality — datasets adopting `ModelSampleProtocol`, `TrajectoryExpectation`/`ToolExpectation` for expected tool calls, sample-generation APIs to expand seed data, and Swift Testing runs asserting metrics like result coverage. That framework (plus the Model Provider APIs for choosing models beyond `SystemLanguageModel`) is `axiom-ai` territory — see `axiom-ai` for Foundation Models sessions, tools, and evaluation.
+
+---
+
+## Protection Classes OS27
+
+Spotlight indexes gain explicit data-protection visibility in 27 (iOS / iPadOS / macOS / visionOS):
+
+- `CSSearchableIndex.protectionClass: FileProtectionType` (read-only; ObjC `NSFileProtectionType`) — the protection class the index was created with
+- `CSSearchableIndexDescription` — a new `NSObject` describing an index, carrying an optional `protectionClass`
+- `CSSearchableIndexDelegate` gains the async `searchableItems(forIdentifiers:protectionClass:)` (ObjC `searchableItemsForIdentifiers:protectionClass:searchableItemsHandler:`) — the existing 18.4 variant documents itself as fetching with the *default* protection class
+
+---
+
+
 ## NSUserActivity
 
 ### Overview
@@ -422,7 +584,8 @@ class OrderDetailViewController: UIViewController {
 ```
 
 ```swift
-// SwiftUI pattern
+// SwiftUI pattern — use the .userActivity modifier; View has no userActivity
+// property to assign, and SwiftUI manages currency for you
 struct OrderDetailView: View {
     let order: Order
 
@@ -430,14 +593,9 @@ struct OrderDetailView: View {
         VStack {
             Text(order.coffeeName)
         }
-        .onAppear {
-            let activity = NSUserActivity(activityType: "com.app.viewOrder")
+        .userActivity("com.app.viewOrder") { activity in
             activity.title = order.coffeeName
             activity.isEligibleForSearch = true
-            activity.becomeCurrent()
-
-            // SwiftUI automatically manages userActivity
-            self.userActivity = activity
         }
     }
 }
@@ -456,8 +614,9 @@ func viewOrder(_ order: Order) {
     activity.isEligibleForSearch = true
     activity.isEligibleForPrediction = true
 
-    // Connect to App Intent entity
-    activity.appEntityIdentifier = order.id.uuidString
+    // Connect to App Intent entity (EntityIdentifier comes from AppIntents;
+    // OrderEntity is your AppEntity type — a raw String does not compile)
+    activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id.uuidString)
 
     // Now Spotlight can surface this as an entity suggestion
     activity.becomeCurrent()
@@ -482,7 +641,7 @@ func showEvent(_ event: Event) {
     activity.persistentIdentifier = event.id.uuidString
 
     // Spotlight suggests this event for intent parameters
-    activity.appEntityIdentifier = event.id.uuidString
+    activity.appEntityIdentifier = EntityIdentifier(for: EventEntity.self, identifier: event.id.uuidString)
 
     activity.becomeCurrent()
     userActivity = activity
@@ -751,21 +910,21 @@ func application(
         return false
     }
 
-    // Attempt to load content
-    if let item = try? await ItemService.shared.fetch(id: identifier) {
-        navigate(to: item)
-        return true
-    } else {
-        // Content deleted or unavailable
-        showAlert("This content is no longer available")
+    // The delegate method is synchronous — hop into a Task for async loading
+    Task { @MainActor in
+        if let item = try? await ItemService.shared.fetch(id: identifier) {
+            navigate(to: item)
+        } else {
+            // Content deleted or unavailable
+            showAlert("This content is no longer available")
 
-        // Delete activity from search
-        NSUserActivity.deleteSavedUserActivities(
-            withPersistentIdentifiers: [identifier]
-        )
-
-        return true  // Still handled
+            // Delete activity from search
+            NSUserActivity.deleteSavedUserActivities(
+                withPersistentIdentifiers: [identifier]
+            ) { }
+        }
     }
+    return true  // Handled (navigation completes asynchronously)
 }
 ```
 
@@ -835,7 +994,7 @@ class OrderManager {
         activity.persistentIdentifier = order.id.uuidString
 
         // Connect to App Intents
-        activity.appEntityIdentifier = order.id.uuidString
+        activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id.uuidString)
 
         // Rich metadata
         let attributes = CSSearchableItemAttributeSet(contentType: .item)
@@ -884,7 +1043,7 @@ struct OrderDetailView: View {
             activity.isEligibleForSearch = true
             activity.isEligibleForPrediction = true
             activity.persistentIdentifier = order.id.uuidString
-            activity.appEntityIdentifier = order.id.uuidString
+            activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id.uuidString)
 
             let attributes = CSSearchableItemAttributeSet(contentType: .item)
             attributes.title = order.coffeeName
@@ -899,11 +1058,11 @@ struct OrderDetailView: View {
 
 ## Resources
 
-**WWDC**: 260, 2015-709, 2026-246
+**WWDC**: 2025-260, 2015-709, 2026-246
 
-**Docs**: /corespotlight, /corespotlight/cssearchableitem, /corespotlight/searchableitemattribute, /foundation/nsuseractivity
+**Docs**: /corespotlight, /corespotlight/cssearchableitem, /corespotlight/searchableitemattribute, /corespotlight/spotlightsearchtool, /foundation/nsuseractivity
 
-**Skills**: skills/app-intents-ref.md, skills/app-discoverability.md, skills/app-shortcuts-ref.md
+**Skills**: skills/app-intents-ref.md, skills/app-discoverability.md, skills/app-shortcuts-ref.md, axiom-ai (Foundation Models, Evaluations)
 
 ---
 

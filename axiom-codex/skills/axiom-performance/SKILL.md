@@ -40,10 +40,11 @@ Use this router when:
 ### Performance Profiling
 
 **Performance profiling (GUI)** → See skills/performance-profiling.md
-- Time Profiler (CPU)
+- Time Profiler (CPU), incl. Top Functions mode for scattered overhead (`OS27`)
 - Allocations (memory growth)
 - Core Data profiling (N+1 queries)
 - Decision trees for tool selection
+- Instruments 27 Run Comparisons, Swift executors instrument, Foundation Models instrument; Xcode 27 Organizer (Storage/hitches metrics, Metric Goals, Generate Recommendations)
 
 **Automated profiling (CLI)** → See skills/xctrace-ref.md
 - Headless xctrace profiling
@@ -140,8 +141,10 @@ Use this router when:
 ### MetricKit Integration
 
 **MetricKit API reference** → See skills/metrickit-ref.md
-- MXMetricPayload parsing
-- MXDiagnosticPayload (crashes, hangs)
+- New Swift-first API (`OS27`): MetricManager AsyncSequence streams, typed MetricResult metrics (incl. Metal frame rate, storage), typed diagnostics with termination categories, launch-task tracking
+- Per-state metrics (StateReporting framework, `OS27`): split hitch/hang/memory metrics by tab, mode, or experiment
+- Crash reporter extensions (CrashReportExtension framework, `OS27`): process crashes at crash time with in-extension symbolication (Part 10)
+- MXMetricPayload / MXDiagnosticPayload parsing (legacy, iOS 13–26)
 - Field performance data collection
 - Integration with crash reporting
 
@@ -182,6 +185,9 @@ Use this router when:
 8. Battery drain (need API reference)? → energy-ref
 9. Battery drain (general)? → energy
 10. MetricKit setup/parsing? → metrickit-ref
+10a. Metrics split by app state (per-tab hitch rate, experiment arms) or StateReporting? → metrickit-ref (Part 1)
+10b. Profiling agentic/LLM features (Foundation Models instrument, token metrics)? → performance-profiling, then axiom-ai
+10c. Building a crash reporter extension (process crashes at crash time)? → metrickit-ref (Part 10)
 11. Profile with GUI (Instruments)? → performance-profiling
 12. Profile with CLI (xctrace)? → xctrace-ref
 13. Run automated profile now? → performance-profiler agent
@@ -222,6 +228,9 @@ Use this router when:
 | "I'll just use Timer.scheduledTimer, it's simpler" | Timer stops during scrolling (`.default` mode), retains its target (leak). timer-patterns has the decision tree. |
 | "DispatchSourceTimer crashed but it's intermittent, let's ship" | DispatchSourceTimer has 4 crash patterns that are ALL deterministic. timer-patterns diagnoses which one. |
 | "Claude already knows modern Swift" | Claude defaults to pre-5.5 patterns (Date(), CGFloat, filter().count). swift-modern has the correction table. |
+| "MetricKit is that old MX delegate API" | The 27 cycle rebuilt it: MetricManager AsyncSequence streams, typed metrics, per-state aggregation. metrickit-ref Part 1 has the new surface. |
+| "My field metrics are one blended average, can't tell which screen is slow" | StateReporting splits every metric by app state you define (per-tab, per-experiment). metrickit-ref Part 1. |
+| "No single function is hot, so the profile is useless" | Scattered overhead (dynamic dispatch, retain/release, existentials) hides in flame graphs. Top Functions mode merges it. performance-profiling. |
 
 ## Critical Patterns
 
@@ -306,6 +315,18 @@ User: "How do I set up MetricKit?"
 
 User: "How do I parse MXMetricPayload?"
 → See skills/metrickit-ref.md
+
+User: "How do I use the new MetricManager / migrate off MXMetricManager?"
+→ See skills/metrickit-ref.md (Part 1)
+
+User: "Can I get hitch metrics per tab or per experiment?"
+→ See skills/metrickit-ref.md (Part 1, StateReporting)
+
+User: "How do I profile my Foundation Models / agentic feature?"
+→ See skills/performance-profiling.md (Foundation Models instrument), then axiom-ai
+
+User: "How do I compare two Instruments runs to verify a fix?"
+→ See skills/performance-profiling.md (Run Comparisons) or skills/trace-comparison.md (CLI/CI)
 
 User: "Scan my code for memory leaks"
 → Invoke: `memory-auditor` agent

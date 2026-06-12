@@ -1,6 +1,6 @@
 ---
 name: axiom-graphics
-description: Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, or display performance. Covers Metal migration, shader conversion, RealityKit ECS, RealityView, variable refresh rate, ProMotion.
+description: Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, USD/USDZ files, or display performance. Covers Metal migration, shader conversion, RealityKit ECS, RealityView, USDKit, ProMotion.
 license: MIT
 ---
 
@@ -25,6 +25,9 @@ Use this router when:
 - Building AR experiences with RealityKit
 - Using RealityView or Model3D in SwiftUI
 - Spatial computing or visionOS 3D content
+- Reading, editing, or exporting USD/USDZ files in Swift (USDKit)
+- Adding ML to a render pipeline (MetalFX denoising, Metal tensors, neural rendering)
+- Profiling long game sessions (metalperftrace, look-back traces)
 
 ## Routing Logic
 
@@ -82,6 +85,15 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 - Gesture not responding, performance issues
 - Material problems, physics issues
 
+### USD Authoring (USDKit) `OS27`
+
+**USD file work in Swift** → See skills/usdkit.md
+- Open, traverse, edit USD stages and prims
+- References and composition
+- Accessibility metadata for 3D assets
+- USDZ export with mesh/texture compression
+- Rendering a USD stage in RealityKit (USDStageComponent)
+
 ## Decision Tree
 
 1. Translation layer vs native rewrite? → metal-migration
@@ -97,7 +109,11 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 11. RealityView or Model3D setup? → realitykit-ref
 12. 3D content not visible or not tracking? → realitykit-diag
 13. Custom Metal rendering of RealityKit content? → realitykit-ref (RealityRenderer)
-14. Building a 3D game? → Use axiom-games router instead
+14. Pathfinding, LOD, soft shadows, splats, reverb meshes? → realitykit-ref (Part 10)
+15. Read/edit/export a USD or USDZ file in Swift? → usdkit
+16. ML in the render pipeline (denoising, Metal tensors)? → metal-migration-ref (Part 6)
+17. Frame drops in long play sessions? → display-performance (Part 12)
+18. Building a 3D game? → Use axiom-games router instead
 
 ## Anti-Rationalization
 
@@ -109,6 +125,9 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 | "My app runs at 60fps, that's fine" | ProMotion devices support 120Hz. display-performance configures the correct frame rate. |
 | "I'll just use SceneKit for the 3D model" | SceneKit is soft-deprecated. RealityView and Model3D are the modern path. `skills/realitykit.md` covers SwiftUI integration. |
 | "I don't need ECS for one 3D model" | Model3D shows one model with zero ECS. RealityView scales to complex scenes. `skills/realitykit.md` shows both paths. |
+| "I'll parse the USD file myself / bundle OpenUSD" | USDKit is system-provided USD on the 27 releases. `skills/usdkit.md` covers stages, editing, and compressed export. |
+| "I'll write my own pathfinding over the scene graph" | RealityKit 27 ships navigation meshes with costs and off-mesh connections. `skills/realitykit-ref.md` Part 10. |
+| "The frame drop only happens after an hour of play, can't trace that" | The 27 releases record Metal metrics continuously — collect after the fact with metalperftrace. `skills/display-performance.md` Part 12. |
 
 ## Critical Patterns
 
@@ -147,6 +166,13 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 - RealityRenderer for custom Metal rendering of RealityKit content
 - Complete material property reference
 - RealityView gesture integration
+- RealityKit 27 additions: navigation mesh, LOD, soft shadows, Gaussian splats (visionOS), reverb meshes (Part 10)
+
+**usdkit** (USD authoring, 27 releases):
+- USDStage open/traverse/edit, references and composition
+- Accessibility metadata schema for 3D assets
+- Compressed USDZ export (AOM meshes + AVIF textures)
+- USDStageComponent / USDPlayer RealityKit bridge
 
 ## Example Invocations
 
@@ -194,3 +220,18 @@ User: "How do I use RealityRenderer with Metal?"
 
 User: "I need AR in my app"
 → See `skills/realitykit.md`
+
+User: "How do I read and edit a USD file in Swift?"
+→ See `skills/usdkit.md`
+
+User: "How do I shrink my USDZ assets for delivery?"
+→ See `skills/usdkit.md`
+
+User: "How do I add pathfinding to my RealityKit scene?"
+→ See `skills/realitykit-ref.md` (Part 10)
+
+User: "My game's frame rate drops after an hour of play"
+→ See `skills/display-performance.md` (Part 12)
+
+User: "How do I run a neural network inside my Metal shader?"
+→ See `skills/metal-migration-ref.md` (Part 6)

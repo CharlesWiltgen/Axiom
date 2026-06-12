@@ -479,6 +479,8 @@ Settings → Developer → Graphics HUD → Show Graphics HUD
 - Frame interval chart (last 120 frames)
 - Memory usage
 
+The HUD's configuration panel lets you enable/disable individual metrics or pick a preset, and in the 27 releases it can display your StateReporting domains (label, stable and volatile metadata) — see Part 12.
+
 ### Production Telemetry with MetricKit
 
 Monitor hitches in production:
@@ -615,12 +617,66 @@ class FrameDropMonitor {
 
 ---
 
+## Part 12: Long-Session Game Performance Tracing `OS27`
+
+Frame drops in long play sessions (thermal shifts, level changes, settings changes) escape desk profiling. In the 27 releases the system continuously records Metal performance and resource-usage metrics — aggregated plus optional per-frame CPU/GPU/FPS/memory — and keeps them for days, so you can collect a trace after the session ends (iOS27/macOS27).
+
+### Collecting Traces
+
+| Method | How |
+|--------|-----|
+| Instruments (at desk) | Game Performance Overview template — aggregated Metal metrics + Time Profiler CPU samples; launch or attach |
+| macOS look-back | `metalperftrace` CLI (macOS 27), no setup needed |
+| iOS look-back | One-time setup: Developer Mode → developer settings → Enable Performance Trace → Lookback Collection (choose window), then add the Performance Trace button to Control Center; tap after a session to collect; transfer the trace to a Mac |
+
+```bash
+# Collect the last 5 hours into an .atrc trace
+metalperftrace collect /tmp --last 5h
+
+# Or an explicit range
+metalperftrace collect /tmp --start 2026-04-01T09:41:00 --end 2026-04-01T12:41:00
+
+# Print an overview (memory, CPU time, disk I/O; per-layer FPS, frame time,
+# CPU begin-to-present, on-GPU time, drawable waits, shader compilation)
+metalperftrace overview /Data/MyGameTrace.atrc
+
+# Filter to one process; emit JSON for scripts/regression gates
+metalperftrace overview /Data/MyGameTrace.atrc --json
+```
+
+Traces also open in Instruments: metrics plot on a timeline, deviating ranges are highlighted, and selecting a range re-aggregates min/max/avg/stddev.
+
+### Contextualizing with StateReporting
+
+An FPS dip at minute 12 is unactionable without knowing what the game was doing. The StateReporting framework (all 27 platforms) lets you report domains — finite state machines like level, graphics settings, network status — with labeled states plus stable/volatile metadata. The API and semantics are documented in axiom-performance (skills/metrickit-ref.md) Part 1; game-side guidance:
+
+- Design domains to be conceptually orthogonal (level vs graphics vs network) — don't pack dimensions into one domain.
+- Transition at user-action cadence or slower. The system throttles high-frequency transitions and you lose data until the rate recovers.
+- Verify adoption live: the Metal Performance HUD can display each domain's label and metadata; Instruments graphs each domain as a Points of Interest track.
+
+`metalperftrace` integrates directly:
+
+```bash
+# List domains, transition counts, last known state + full transition history
+metalperftrace overview /Data/MyGameTrace.atrc --include-state-transitions
+
+# Aggregate metrics per state — e.g. average FPS while graphics was "High"
+metalperftrace overview /Data/MyGameTrace.atrc --aggregate \
+  --domain com.mygame.graphics --state-label "High"
+```
+
+### After Shipping
+
+MetricKit's 27-cycle Swift API reports Metal frame rate from player devices in daily metric reports — including frame rate grouped by your StateReporting states — plus memory-exception diagnostics when the game is killed for exceeding its memory limit. See axiom-performance (skills/metrickit-ref.md) Part 1 (`MetricResult.metalFrameRate`); don't re-implement collection here.
+
+---
+
 ## Resources
 
-**WWDC**: 2021-10147, 2018-612, 2022-10083, 2023-10123
+**WWDC**: 2021-10147, 2018-612, 2022-10083, 2023-10123, 2026-388
 
 **Tech Talks**: 10855, 10856, 10857 (Hitch deep dives)
 
 **Docs**: /quartzcore/cadisplaylink, /quartzcore/cametaldisplaylink, /quartzcore/optimizing-iphone-and-ipad-apps-to-support-promotion-displays, /xcode/understanding-hitches-in-your-app, /metal/mtldrawable/present(afterminimumduration:), /metrickit/mxanimationmetric
 
-**Skills**: axiom-performance (skills/energy.md), axiom-graphics, axiom-graphics (skills/metal-migration-ref.md), axiom-performance (skills/performance-profiling.md)
+**Skills**: axiom-performance (skills/energy.md), axiom-graphics, axiom-graphics (skills/metal-migration-ref.md), axiom-performance (skills/performance-profiling.md), axiom-performance (skills/metrickit-ref.md)

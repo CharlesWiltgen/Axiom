@@ -13,6 +13,7 @@ Use this reference when:
 - Setting up physics body parameters
 - Looking up animation or audio API details
 - Checking platform availability for specific APIs
+- Browsing the 27-cycle additions: navigation mesh, level of detail, soft shadows, projective textures, Gaussian splats, custom reverb (Part 10)
 
 ---
 
@@ -640,10 +641,188 @@ try renderer.updateAndRender(
 
 ---
 
+## Part 10: RealityKit 27 Additions `OS27`
+
+Everything in this part requires the 27 releases (macOS/iOS/iPadOS/tvOS/visionOS — RealityKit does not ship on watchOS). Platform-narrower APIs are tagged on the row or subsection.
+
+### New Components and Resources Catalog
+
+| Addition | Purpose |
+|----------|---------|
+| `NavigationMeshComponent` / `NavigationMeshResource` / `NavigationComponent` / `NavigationController` | Pathfinding over a navigation mesh (see below) |
+| `LevelOfDetailComponent` | Automatic mesh LOD switching (see below) |
+| `LightmapComponent` / `LightmapResource` | Baked lighting textures (see below) |
+| `SpotLightComponent.ProjectiveTexture` | Project a texture from a spotlight (see below) |
+| `SpotLightComponent.SurroundingsLight` / `PointLightComponent.SurroundingsLight` | Light the real surroundings (visionOS27/macOS27, see below) |
+| `GaussianSplatComponent` / `GaussianSplatResource` | Render 3D Gaussian splats (visionOS27, see below) |
+| `ReverbMeshResource` | Geometry for raytraced acoustic simulation (see below) |
+| `AudioPlaybackGroupController` | Coordinated, synchronized playback across multiple entities |
+| `BloomComponent` / `BloomOptionsComponent` / `BloomSettingsComponent` | HDR bloom post-processing |
+| `ToneMappingComponent` | Tone-mapping control |
+| `ClippingComponent` / `ClippingPrimitiveComponent` | Clip geometry against primitives, with feathered edges |
+| `PhysicallyBasedDecalComponent` | Project PBR decals onto geometry |
+| `OcclusionCullingComponent` | Skip rendering of occluded entities |
+| `RenderLayer` / `RenderLayerComponent` | Assign entities to render layers |
+| `LightingModel` (`LitLightingModel`, `UnlitLightingModel`, `HairLightingModel`) | Per-material lighting model selection, including an advanced hair shader |
+| `PhysicallyBasedMaterial` subsurface properties (`SubsurfaceWeight`, `SubsurfaceColor`, `SubsurfaceRadius`, `SubsurfaceRadiusScale`, `SubsurfaceScatterAnisotropy`) | Subsurface scattering for character rendering |
+| `PortalFactory` + `PortalMaterial` additions | Custom portal opacity and shape |
+| `MeshDeformer` protocol, `MeshDeformerComponent`, `MeshDeformationStack`, deformers (`BlendShapeDeformer`, `SkinningDeformer`, `OpenSubdivisionDeformer`, `RenormalizationDeformer`, `CalculateBoundingBoxDeformer`) | Composable mesh deformation pipeline |
+| `SkeletonResource`, `RetargetingConfiguration`, `IKRig` additions | Skeletal animation retargeting and IK |
+| `AnimationGraphResource` / `AnimationGraphComponent` | Animation graphs (author in Reality Composer Pro 3) |
+| `BehaviorTreeResource` / `BehaviorTreeComponent` / `BehaviorTreeAction` / `BehaviorTreeActionHandler` | Behavior trees for NPC logic (author in Reality Composer Pro 3) |
+| `DiffuseLightProbeGroupComponent` / `DiffuseLightProbeReceiverComponent` / `DiffuseProbeResource` | Baked diffuse light probes |
+| `ComputeGraphComponent` and related (`ComputeGraphResource`, `ComputeGraphOutputComponent`, `ComputeGraphRuntimeComponent`, `ComputeGraphViewpointComponent`) | Run Reality Composer Pro 3 compute node graphs (particles, simulations) at runtime |
+| `LowLevelDeviceResource` | Low-level GPU-resource-backed RealityKit resource |
+| `USDStageComponent` / `USDPlayer` | Render a USDKit stage directly — see axiom-graphics (skills/usdkit.md) |
+
+Advanced cloth simulation (cloth bodies, colliders, and materials) was announced at WWDC 2026-279 but its API is not present in the first 27 beta SDK — verify against your SDK before adopting.
+
+### Soft Shadows
+
+`lightSize` (diameter in meters) on `SpotLightComponent.Shadow` produces a penumbra (spotlights only — `DirectionalLightComponent.Shadow` did not gain these members). Quality must be `.medium` or `.high` — `.low` always renders hard shadows regardless of `lightSize`.
+
+```swift
+guard var shadow = hearthSpotlight.components[SpotLightComponent.Shadow.self] else { return }
+shadow.lightSize = 0.7   // diameter in meters; 0 = hard shadow (default)
+shadow.quality = .medium // .low produces hard shadows regardless of lightSize
+hearthSpotlight.components.set(shadow)
+```
+
+### Projective Textures
+
+Project a texture from a spotlight, like film in front of a flashlight (window patterns, animated caustics). Like soft shadows, the availability annotation lists visionOS/iOS/macCatalyst/macOS 27 without naming tvOS (tvOS is not marked unavailable).
+
+```swift
+let spotLightEntity = Entity()
+spotLightEntity.components.set(SpotLightComponent(
+    color: .white,   // white avoids tinting the projected texture
+    intensity: intensity,
+    innerAngleInDegrees: innerAngle,
+    outerAngleInDegrees: outerAngle,
+    attenuationRadius: attenuationRadius
+))
+spotLightEntity.components.set(SpotLightComponent.ProjectiveTexture(texture: projectiveTexture))
+```
+
+### Physical Space Lighting (visionOS27/macOS27)
+
+`SurroundingsLight` makes a virtual spot or point light illuminate the real surroundings via the scene-understanding mesh. It is explicitly unavailable on iOS. Spot and point lights only.
+
+```swift
+spotLightEntity.components.set(SpotLightComponent.SurroundingsLight())
+```
+
+### Lightmaps
+
+`LightmapResource` holds baked lighting; `LightmapComponent` applies it. `BakeType` cases: `.ambientOcclusion`, `.indirectDiffuseIrradiance`, `.indirectDiffuseSHL1Irradiance`, `.finalShadedColor`. Generate lightmaps with Reality Composer Pro 3's light baker rather than authoring textures by hand.
+
+### Navigation Mesh
+
+Three pieces: `NavigationMeshResource` (geometry, labeled areas, traversal costs, off-mesh connections — build in Swift or Reality Composer Pro 3) → `NavigationComponent` (holds the resource plus a filter for area costs and include/exclude flags) → `NavigationController` (computes paths).
+
+```swift
+extension Entity {
+    func navigate(from fromPosition: SIMD3<Float>, to toPosition: SIMD3<Float>) async {
+        guard let navigator = try? NavigationController(entity: self) else { return }
+        guard let result = await navigator.computePath(from: fromPosition, to: toPosition) else {
+            return  // nil: no valid path exists
+        }
+        if result.isEmpty { return }  // empty: already at destination
+        var finalPath: [SIMD3<Float>] = []
+        for node in result {
+            switch node.category {
+            case .meshPoint:
+                finalPath.append(node.position)
+            case .offMeshConnection:
+                break  // traverse ladder/bridge connection
+            @unknown default:
+                break
+            }
+        }
+    }
+}
+```
+
+`computePath(to:)` uses the entity's current position as the start. Both variants are async and return `[NavigationMeshResource.PathNode]?`. A synchronous request path also exists: `requestPath(to:)`/`requestPath(from:to:)` start the computation, then poll `pathfindStatus` and read `currentPath` (cancel with `stopPathfind()`).
+
+### Level of Detail
+
+`LevelOfDetailComponent.DetailLevel` is `[Entity]`. Three convenience switching strategies — by camera distance, by screen area, and `addByResolutionMetric(to:levels:boundingBox:)`:
+
+```swift
+let entity = Entity()
+
+// By camera distance — maxDistance per level, .infinity for the last
+LevelOfDetailComponent.addByCameraDistance(to: entity, levels: [
+    (entities: lod0, maxDistance: 1.0),  // highest detail
+    (entities: lod1, maxDistance: 5.0),
+    (entities: lod2, maxDistance: .infinity),
+])
+
+// By screen area — minArea as fraction of screen
+LevelOfDetailComponent.addByScreenArea(to: entity, levels: [
+    (entities: lod0, minArea: 0.2),
+    (entities: lod1, minArea: 0.1),
+    (entities: lod2, minArea: 0.01),
+])
+```
+
+### Gaussian Splats (visionOS27)
+
+Renders captured volumetric scenes as 3D Gaussians. No file format is assumed — you supply per-splat buffers (position, scale, rotation, opacity, spherical harmonics plus degree; degree 0 = view-independent color). In the first 27 beta the API is present only in the visionOS SDK. Each buffer parameter is a `GaussianSplatResource.BufferDescriptor` (`LowLevelBuffer` + `MTLAttributeFormat` + stride + offset); the degree is a `SphericalHarmonicDegree` enum value.
+
+```swift
+let buffers = try GaussianSplatResource.BufferResource(
+    count: splatCount,
+    position: positionBuffer,      // GaussianSplatResource.BufferDescriptor each
+    scale: scaleBuffer,
+    rotation: rotationBuffer,
+    opacity: opacityBuffer,
+    sphericalHarmonics: (sphericalHarmonicsBuffer, degree)
+)
+let splatResource = GaussianSplatResource(buffers)
+splatEntity.components.set(GaussianSplatComponent(splatResource))
+```
+
+### Custom Reverb Meshes
+
+Raytraced geometrical acoustics: model the room with a `ReverbMeshResource` (from mesh descriptors, a mesh resource, or the `.shoebox(size:)`, `.box(size:)`, and `.plane(width:depth:)` starters), pair it with audio materials, and attach via the existing `ReverbComponent`. Takes effect only in immersive spaces — in a shared space visionOS uses its room-sensed reverb instead.
+
+```swift
+let mesh: ReverbMeshResource = .shoebox(size: [5, 4, 6])  // width, height, depth in meters
+let reverb: Reverb = .simulated(mesh: mesh, materials: [.dryWall])
+entity.components.set(ReverbComponent(reverb: reverb))
+```
+
+Audio materials come from presets (`.dryWall`, `.carpet`, ...), by scaling a preset, or from scratch with 10-band absorption plus per-frequency scattering (RealityKit extrapolates unspecified frequencies):
+
+```swift
+let thickCarpet: Audio.Material = .carpet.scalingAbsorption { freq in 0.1 }
+
+// Absorption per center frequency:
+// 31.5Hz, 63, 125, 250, 500, 1k, 2k, 4k, 8k, 16kHz
+let absorption = Audio.Absorption(
+    [0.10, 0.15, 0.28, 0.20, 0.15, 0.10, 0.10, 0.07, 0.07, 0.05])
+let scattering = Audio.Scattering([500: 0.5, 1000: 0.6, 4000: 0.7])
+let bookshelf = Audio.Material(absorption: absorption, scattering: scattering)
+```
+
+### ARKit Object Tracking (iOS27)
+
+| API | Purpose |
+|-----|---------|
+| `ARWorldTrackingConfiguration.trackingObjects: Set<ARReferenceObject>` | Live object tracking (also on `ARGeoTrackingConfiguration`; not on the `ARConfiguration` base) |
+| `ARObjectAnchor.isTracked` | Whether the object is actively tracked |
+| `ARReferenceObject.usdzFile` | USDZ file backing a reference object |
+| `ARFrame.metadataObjects` | `AVMetadataObject`s detected in the frame (`API_UNAVAILABLE(visionos)`) |
+| `ARFaceTrackingConfiguration.environmentTexturingEnabled` | Environment texturing during face tracking |
+
+---
+
 ## Resources
 
-**WWDC**: 2019-603, 2019-605, 2021-10074, 2022-10074, 2023-10080, 2024-10103, 2024-10153
+**WWDC**: 2019-603, 2019-605, 2021-10074, 2022-10074, 2023-10080, 2024-10103, 2024-10153, 2026-279
 
 **Docs**: /realitykit, /realitykit/entity, /realitykit/component, /realitykit/system, /realitykit/realityview, /realitykit/model3d, /realitykit/modelentity, /realitykit/anchorentity, /realitykit/physicallybasedmaterial
 
-**Skills**: axiom-graphics (skills/realitykit.md), axiom-graphics (skills/realitykit-diag.md), axiom-graphics (skills/scenekit-ref.md)
+**Skills**: axiom-graphics (skills/realitykit.md), axiom-graphics (skills/realitykit-diag.md), axiom-graphics (skills/usdkit.md), axiom-graphics (skills/scenekit-ref.md)

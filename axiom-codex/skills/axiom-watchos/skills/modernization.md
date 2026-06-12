@@ -75,6 +75,8 @@ Xcode's tool performs the code-level swaps:
 
 - `WKExtension` → `WKApplication`
 - `WKExtensionDelegate` → `WKApplicationDelegate`
+
+This swap is no longer optional cleanup: the 27 SDK formally deprecates `WKExtension` and `WKExtensionDelegate` for apps with a minimum deployment target of watchOS 9.2 or later (watchOS 27 release notes; the headers carry `WK_DEPRECATED_WITH_REPLACEMENT(2.0, 9.2, "WKApplication")`). Background-refresh scheduling is also deprecated in 27 in favor of `BGTaskScheduler` — see axiom-watchos (skills/background-and-networking.md).
 - Merges Info.plist content (e.g., moves `CLKComplicationPrincipalClass` + `CLKComplicationSupportedFamilies` from the extension's plist to the app's)
 - Moves complication-controller code to the app target
 

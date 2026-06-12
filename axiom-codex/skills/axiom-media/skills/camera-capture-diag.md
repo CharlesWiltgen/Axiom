@@ -1,7 +1,7 @@
 
 # Camera Capture Diagnostics
 
-Systematic troubleshooting for AVFoundation camera issues: frozen preview, wrong rotation, slow capture, session interruptions, and permission problems.
+Systematic troubleshooting for AVFoundation camera issues: frozen preview, wrong rotation, slow capture, session interruptions, permission problems, slow launch, and dropped frames during recording.
 
 ## Overview
 
@@ -12,7 +12,7 @@ Systematic troubleshooting for AVFoundation camera issues: frozen preview, wrong
 4. **Permissions** (denied, not requested) - 15%
 5. **Configuration** (wrong preset, missing input/output) - 5%
 
-**Always check threading and session state BEFORE debugging capture logic.**
+**Always check threading and session state BEFORE debugging capture logic.** (For launch speed and recording sustainability, see Patterns 16-17.)
 
 ## Red Flags
 
@@ -28,6 +28,9 @@ Symptoms that indicate camera-specific issues:
 | Front camera photo not mirrored | This is correct! (preview mirrors, photo does not) |
 | "Camera in use by another app" | Another app has exclusive access |
 | Capture takes 2+ seconds | `photoQualityPrioritization` set to `.quality` |
+| Preview takes ~1s+ to appear at launch | All outputs initialize before first frame — no deferred start (iOS 26+) |
+| ProRes / high-bitrate recording drops frames | Non-deterministic file I/O or system pressure |
+| Session won't start, runtime error on start | `hardwareCost > 1.0` — configuration exceeds hardware budget |
 | Session won't start on iPad | Split View - camera unavailable |
 | Crash on older iOS | Using iOS 17+ APIs without availability check |
 
@@ -137,6 +140,12 @@ Camera not working as expected?
 ├─ Capture too slow?
 │  ├─ 2+ seconds delay → See Pattern 11 (quality prioritization)
 │  └─ Slight delay → See Pattern 12 (deferred processing)
+│
+├─ Launch too slow (preview late)?
+│  └─ See Pattern 16 (deferred start, iOS 26+)
+│
+├─ Recording drops frames / session unsustainable?
+│  └─ See Pattern 17 (hardware cost, system pressure, Pro Video Storage)
 │
 ├─ Permission issues?
 │  ├─ Status: notDetermined → See Pattern 13 (request permission)
@@ -526,6 +535,51 @@ if #available(iOS 17.0, *) {
 
 **Time to fix**: 20 min
 
+### Pattern 16: Slow Camera Launch (Preview Appears Late)
+
+**Symptom**: Noticeable blank preview after app launch; users miss the moment
+
+**Root causes** (in order of impact):
+1. All capture outputs initialize before the first preview frame (the most expensive launch stage)
+2. Session created synchronously on the main thread during UI setup
+3. Multiple `commitConfiguration()` calls during launch
+4. Non-critical UI (mode pickers, image wells) built before preview renders
+
+**Diagnostic**:
+```swift
+// Time the stages: app launch → session configured/started → outputs initialized → first frame
+let t0 = CACurrentMediaTime()
+// ...after first preview frame renders:
+print("Launch to preview: \(CACurrentMediaTime() - t0)s")
+// ~1s without deferred start is typical; deferred start roughly halves it (WWDC 2026-303)
+```
+
+**Fix** (iOS 26+): adopt deferred start — set `isDeferredStartEnabled = true` on every output not needed for preview, leave it `false` on the preview output, commit once, and pair with responsive capture so taps buffer while the photo output finishes initializing. Full pattern: camera-capture skill Pattern 8.
+
+**Time to fix**: 1 hour
+
+### Pattern 17: Recording Drops Frames / Unsustainable Session
+
+**Symptom**: High-data-rate recording (ProRes) stutters or drops frames; session stops after prolonged use
+
+**Diagnostic** (check in this order):
+```swift
+// 1. Configuration over hardware budget? (> 1.0 won't even start — runtime error)
+print("hardwareCost: \(session.hardwareCost)")          // iOS 16+
+// Multi-cam: also systemPressureCost (> 1.0 = will run, but not sustainably)
+
+// 2. System pressure rising during use?
+print("pressure: \(device.systemPressureState.level), factors: \(device.systemPressureState.factors)")
+// .systemStress factor (27 SDK) = ~30s from unexpected power-off — back off NOW
+```
+
+**Fixes**:
+1. `hardwareCost > 1.0` → lower format resolution, use binned formats, or set `AVCaptureDeviceInput.videoMinFrameDurationOverride` (cost assumes the format's max frame rate)
+2. Pressure rising → reduce frame rate, throttle GPU/Neural Engine work, minimize UI work
+3. ProRes file-write stutter on iOS 27 → adopt Pro Video Storage (pre-allocated, deterministic I/O) — camera-capture skill Pattern 9
+
+**Time to fix**: 30-60 min
+
 ## Quick Reference Table
 
 | Symptom | Check First | Likely Pattern |
@@ -535,6 +589,8 @@ if #available(iOS 17.0, *) {
 | Freezes on call | Step 4 (interruptions) | 5 |
 | Wrong rotation | Print rotation angle | 8 or 9 |
 | Slow capture | Print quality setting | 11 |
+| Slow launch | Time launch-to-preview | 16 |
+| Recording drops frames | hardwareCost + pressure state | 17 |
 | Denied access | Step 3 (permissions) | 14 |
 | Crash on old iOS | Check @available | 15 |
 
@@ -571,7 +627,7 @@ Before escalating camera issues:
 
 ## Resources
 
-**WWDC**: 2021-10247, 2023-10105
+**WWDC**: 2021-10247, 2023-10105, 2026-303
 
 **Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturesessionwasinterruptednotification
 

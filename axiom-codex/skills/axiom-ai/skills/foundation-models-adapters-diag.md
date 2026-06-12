@@ -1,6 +1,8 @@
 
 # Foundation Models Custom Adapter Diagnostics
 
+> **First diagnostic on a 27 build: the adapter runtime is obsoleted in 27.0.** If the failure is a compile error (`'Adapter' was obsoleted in iOS 27.0`, `'init(name:)' is unavailable`) or the adapter silently never loads on a 27 device, the cause is the obsoletion, not a bug — `SystemLanguageModel.Adapter` and friends are `deprecated: 26.4, obsoleted: 27.0` (iOS/iPadOS/macOS/visionOS) with no replacement in the 27 SDK. The runtime patterns below apply only to 26.x deployments. See `axiom-ai (skills/foundation-models-adapters.md)` for the 27 pivot.
+
 ## Overview
 
 Adapter-specific failure modes — distinct from base Foundation Models failures covered in `axiom-ai (skills/foundation-models-diag.md)`. **Core principle**: most adapter failures are toolkit setup mismatches, per-base-model-version compatibility breakage, or training-data schema gaps — not framework bugs. For decision discipline see `axiom-ai (skills/foundation-models-adapters.md)`; for the API and toolkit reference see `axiom-ai (skills/foundation-models-adapters-ref.md)`.

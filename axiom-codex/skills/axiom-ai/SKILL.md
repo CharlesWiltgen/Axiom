@@ -42,7 +42,7 @@ When developers say "I need to train / fine-tune / personalize a model," four di
 
 | Path | Trains | Output | Lifecycle | Routes to |
 |------|--------|--------|-----------|-----------|
-| **FM custom adapter** | Apple's frozen on-device 3B LLM (rank-32 LoRA) | `.fmadapter` package, ~160 MB | Build-time per OS version, delivered via Background Assets | `skills/foundation-models-adapters.md` (discipline) + `skills/foundation-models-adapters-ref.md` (toolkit + runtime) + `skills/foundation-models-adapters-diag.md` (failure modes); delivery via `axiom-integration (skills/background-assets.md)` |
+| **FM custom adapter** (26-cycle only — runtime obsoleted in 27.0) | Apple's frozen on-device 3B LLM (rank-32 LoRA) | `.fmadapter` package, ~160 MB | Build-time per OS version, delivered via Background Assets | `skills/foundation-models-adapters.md` (discipline) + `skills/foundation-models-adapters-ref.md` (toolkit + runtime) + `skills/foundation-models-adapters-diag.md` (failure modes); delivery via `axiom-integration (skills/background-assets.md)` |
 | **Core ML `MLUpdateTask`** | Your NN-spec model's fully-connected and convolutional layers | Updated `.mlmodelc` saved to disk | Runtime, per-user (on-device personalization) | `skills/coreml-training.md` |
 | **Create ML** | A new Core ML model from scratch / transfer learning | `.mlmodel` | Build-time, on Mac or iOS (per type) | `skills/coreml-training.md` |
 | **MLX LM** (`mlx_lm.lora`) | Open-source LLMs on Apple silicon | `adapters/adapters.safetensors` — NOT loadable by Foundation Models | Build-time; not an iOS distribution path | External — outside Axiom scope; treat as adjacent research tool |
@@ -66,6 +66,10 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 - @Generable output problems are Foundation Models-specific, NOT generic Codable issues
 - **Stay here** → foundation-models-diag handles structured output debugging
 - If developer also has general Codable/serialization questions → **also invoke axiom-data**
+
+**Foundation Models + security** (prompt injection, securing agent tools, confirmation gating):
+- Threat modeling and mitigations for agentic features (`.onToolCall` confirmation, `.historyTransform` spotlighting/redaction, lock-screen intent policy) → **axiom-security (skills/agentic-security.md)**
+- Stay here for the API surface itself (DynamicProfile, tools, sessions)
 
 ## Routing Logic
 
@@ -93,7 +97,7 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 - All @Generable examples
 - Tool protocol patterns
 - Streaming generation patterns
-- `OS27`: Private Cloud Compute, multimodal `Attachment`, `LanguageModel` protocol + capabilities, reasoning + token usage, Dynamic Profiles, built-in system tools
+- `OS27`: Private Cloud Compute, multimodal `Attachment` + `ImageReference` tool args, `LanguageModel` protocol + capabilities, reasoning + token usage, Dynamic Profiles (full modifier surface + `@SessionProperty`), Dynamic Instructions, custom model providers (`LanguageModelExecutor`), `LanguageModelError` migration, built-in system tools, improved Foundation Models Instrument
 
 **Diagnostics** → `skills/foundation-models-diag.md`
 - AI response blocked
@@ -107,6 +111,13 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 - False-positive triage (correct refusal vs over-restrictive)
 - Custom safety eval / red-team methodology
 - Adapter × guardrail interaction (safety erosion)
+
+**Measuring feature quality (Evaluations framework, `OS27`)** → `skills/foundation-models-evaluations-ref.md`
+- Building a regression suite for an AI feature (`Evaluation`, `Metric`, `Evaluator`, run via Swift Testing `.evaluates`)
+- Datasets (`ModelSample`/`ArrayLoader`) + synthesizing more (`makeSamples`/`SampleGenerator`)
+- Model-as-judge for open-ended output (`ModelJudgeEvaluator`, `ScoringScale`)
+- Agentic tool-call/trajectory evaluation (`ToolCallEvaluator`, `TrajectoryExpectation`)
+- Hill-climbing a prompt/instruction change against an optimization-target metric
 
 **Custom adapter training (after Approach Triage rungs 1-4)** → `skills/foundation-models-adapters.md`
 - Decision discipline (when adapter training is justified vs. rungs 1-4)
@@ -151,6 +162,7 @@ Scores: PRODUCTION-READY / NEEDS HARDENING / FRAGILE
 9. Implementing adapter loading, training pipeline, or runtime selection? → foundation-models-adapters + foundation-models-adapters-ref + axiom-integration (skills/background-assets.md) for delivery
 10. Debugging adapter-specific failures (compatibleAdapterNotFound, tool calls don't fire from adapter, accuracy regression after OS update)? → foundation-models-adapters-diag
 11. Want automated Foundation Models code scan? → foundation-models-auditor (Agent — detects 10 anti-patterns AND completeness gaps including prompt injection, frozen-enum discipline, transcript trimming, Cancel UX; scores PRODUCTION-READY / NEEDS HARDENING / FRAGILE)
+12. Measuring whether an AI feature improved/regressed, or building an eval/regression suite (incl. agentic tool-call eval)? → **foundation-models-evaluations-ref** (`OS27` Evaluations framework)
 
 ## Anti-Rationalization
 
@@ -164,6 +176,7 @@ Scores: PRODUCTION-READY / NEEDS HARDENING / FRAGILE
 | "We trained one adapter, ship it for all our users" | Each `.fmadapter` pins to one base-model version; one adapter does not cover a multi-OS install base. foundation-models-adapters covers per-OS variant strategy and `compatibleAdapterIdentifiers(name:)` runtime selection. |
 | "Skip locale-specific eval, our users are mostly English-speaking" | Apple's 2025 tech report groups eval as English-US / English-outside-US / PFIGSCJK. English-only eval against a multi-locale app ships invisible non-English regressions. foundation-models-adapters covers the four-axis eval requirement. |
 | "Just bundle the .fmadapter file in the app" | Apple's docs explicitly prohibit this. Adapters ship via Background Assets `onDemand` policy. axiom-integration (skills/background-assets.md) covers the delivery half. |
+| "We'll add a custom adapter for our iOS 27 app" | The custom-adapter runtime (`SystemLanguageModel.Adapter`) is obsoleted in 27.0 and does not compile on a 27 deployment target — no replacement in the 27 SDK. foundation-models-adapters covers the pivot: rungs 1-4 or a custom provider (`LanguageModelExecutor`). |
 
 ## External Resources
 
@@ -223,3 +236,6 @@ User: "What's the toolkit setup for adapter training?"
 
 User: "How do we ship a custom adapter to users?"
 → Read: `skills/foundation-models-adapters.md` (runtime lifecycle) + `axiom-integration (skills/background-assets.md)` (delivery)
+
+User: "How do I measure if my prompt change made the tagging feature better?" / "Write an eval suite for my AI feature"
+→ Read: `skills/foundation-models-evaluations-ref.md` (Evaluations framework — Metrics, Swift Testing `.evaluates`, model-as-judge, tool-call eval)

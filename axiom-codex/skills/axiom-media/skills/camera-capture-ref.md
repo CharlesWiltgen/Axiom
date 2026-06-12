@@ -97,6 +97,72 @@ session.isRunning      // true/false
 session.isInterrupted  // true during phone calls, etc.
 ```
 
+### Deferred Start (iOS 26+)
+
+Postpones output initialization until after the first preview frame, cutting launch time roughly in half (WWDC 2026-303). Not on visionOS/watchOS.
+
+```swift
+session.beginConfiguration()
+session.automaticallyRunsDeferredStart = true  // default true when linked against iOS 26 SDK+
+
+let previewLayer = AVCaptureVideoPreviewLayer(session: session)
+previewLayer.isDeferredStartEnabled = false    // preview must NOT be deferred
+
+let photoOutput = AVCapturePhotoOutput()
+session.addOutput(photoOutput)
+photoOutput.isDeferredStartEnabled = true      // defer everything not needed for first frame
+
+session.setDeferredStartDelegate(delegate, deferredStartDelegateCallbackQueue: sessionQueue)
+session.commitConfiguration()
+session.startRunning()
+```
+
+| API | Owner | Notes |
+|-----|-------|-------|
+| `isDeferredStartSupported` / `isDeferredStartEnabled` | `AVCaptureOutput`, `AVCaptureVideoPreviewLayer` | Set before `commitConfiguration()` — changing later forces a lengthy reconfiguration |
+| `automaticallyRunsDeferredStart` | `AVCaptureSession` | `true` = system picks the moment (shortly after preview appears). Setting `false` raises `NSInvalidArgumentException` if `isManualDeferredStartSupported` is `false` |
+| `isManualDeferredStartSupported` | `AVCaptureSession` | Check before opting into manual mode |
+| `runDeferredStartWhenNeeded()` | `AVCaptureSession` | Manual mode only (raises otherwise). Call after your first frame is presented; once per configuration commit |
+| `setDeferredStartDelegate(_:deferredStartDelegateCallbackQueue:)` | `AVCaptureSession` | Delegate gets `sessionWillRunDeferredStart(_:)` (create background resources here) and `sessionDidRunDeferredStart(_:)` (all outputs ready) |
+
+**Manual-mode trigger from a CAMetalLayer** — run deferred start after the first drawable is presented:
+
+```swift
+guard let drawable = layer.nextDrawable() else { return }
+if !firstFramePresented {
+    drawable.addPresentedHandler { _ in
+        captureSession.runDeferredStartWhenNeeded()
+    }
+    firstFramePresented = true
+}
+```
+
+### Session Cost and System Pressure
+
+```swift
+// After commitConfiguration(), before startRunning()
+session.hardwareCost          // target <= 1.0; > 1.0 = configuration can't run (iOS 16+)
+// Contributors: camera count, active formats (1080p vs 4K), format max frame rate
+// (cost assumes the format's max — set AVCaptureDeviceInput.videoMinFrameDurationOverride
+// to the reciprocal of the frame rate you actually use), binned formats
+
+// Multi-cam sessions also expose sustainability
+multiCamSession.systemPressureCost  // > 1.0 = unsustainable (AVCaptureMultiCamSession, iOS 13+)
+
+// Adapt at runtime: KVO the device's pressure state
+let obs = device.observe(\.systemPressureState, options: [.initial, .new]) { device, _ in
+    // Reduce frame rate, throttle GPU/ANE work, minimize UI work as pressure rises
+}
+```
+
+| `SystemPressureState.Factors` | Meaning |
+|-------------------------------|---------|
+| `.systemTemperature` | Whole system thermally elevated |
+| `.peakPower` | Power demand exceeds battery capability |
+| `.depthModuleTemperature` | Depth module hot — depth quality may degrade |
+| `.cameraTemperature` | Camera module hot |
+| `.systemStress` `OS27` | System is ~30 seconds from unexpected power-off |
+
 ### Session Notifications
 
 ```swift
@@ -254,6 +320,108 @@ case .denied, .restricted:
 }
 ```
 
+### Center Stage Front Camera (iOS 26+, iPhone 17 / iPhone Air / iPhone 17 Pro)
+
+The Center Stage front camera has a **square sensor** (any aspect ratio without rotating the phone) with a 95° field of view, exposed as the **front `.builtInUltraWideCamera`** (WWDC 2026-341). Three new iOS 26, iOS-only API families support it, alongside the existing Center Stage controls:
+
+#### Dynamic Aspect Ratio
+
+Crops your chosen aspect ratio out of the square sensor without rebuilding the session or interrupting preview.
+
+```swift
+let discovery = AVCaptureDevice.DiscoverySession(
+    deviceTypes: [.builtInUltraWideCamera], mediaType: .video, position: .front)
+guard let camera = discovery.devices.first else { return }
+
+// Find a format supporting the target ratio
+for format in camera.formats where format.supportedDynamicAspectRatios.contains(.ratio4x3) {
+    try camera.lockForConfiguration()
+    camera.activeFormat = format
+    camera.unlockForConfiguration()
+    break
+}
+
+try camera.lockForConfiguration()
+defer { camera.unlockForConfiguration() }
+let syncTime = try await camera.setDynamicAspectRatio(.ratio4x3)  // returns first-buffer timestamp
+```
+
+| API | Notes |
+|-----|-------|
+| `AVCaptureDevice.AspectRatio` | `.ratio1x1`, `.ratio16x9`, `.ratio9x16`, `.ratio4x3`, `.ratio3x4` |
+| `format.supportedDynamicAspectRatios` | Square formats only (1280–4032); the 4032 photo format supports only `.ratio3x4`/`.ratio4x3` |
+| `device.dynamicAspectRatio` | KVO-observable current ratio; `nil` when active format has none |
+| `device.dynamicDimensions` | KVO-observable output dimensions; `{0,0}` when unsupported |
+| `device.setDynamicAspectRatio(_:)` | Requires `lockForConfiguration()`; raises `NSInvalidArgumentException` for unsupported ratios. Timestamp is on the device clock — convert via `session.synchronizationClock` before comparing with video-data-output buffers |
+
+**Video recording**: QuickTime tracks require constant dimensions — `AVCaptureMovieFileOutput` recordings stop automatically when the ratio changes. With `AVCaptureVideoDataOutput` + `AVAssetWriter`, use the completion timestamp to end one recording and start the next.
+
+#### Smart Framing Monitor (Auto Zoom / Auto Rotate)
+
+Face/gaze-driven framing recommendations. Photo-capture oriented: recommendations only on the 4032 photo format.
+
+```swift
+for format in camera.formats where format.isSmartFramingSupported {
+    try camera.lockForConfiguration()
+    camera.activeFormat = format
+    camera.unlockForConfiguration()
+    break
+}
+
+guard let monitor = camera.smartFramingMonitor else { return }  // nil if unsupported
+try camera.lockForConfiguration()
+monitor.enabledFramings = monitor.supportedFramings  // default: empty — nothing recommended
+camera.unlockForConfiguration()
+
+observation = monitor.observe(\.recommendedFraming, options: [.new]) { monitor, _ in
+    guard let framing = monitor.recommendedFraming else { return }
+    Task {
+        try camera.lockForConfiguration()
+        defer { camera.unlockForConfiguration() }
+        // Apple recommends ratio first, then zoom, for a smooth preview transition
+        try await camera.setDynamicAspectRatio(framing.aspectRatio)
+        camera.videoZoomFactor = CGFloat(framing.zoomFactor)
+    }
+}
+
+try monitor.startMonitoring()   // before or after session.startRunning()
+// later: observation?.invalidate(); monitor.stopMonitoring()
+```
+
+`AVCaptureFraming` = `aspectRatio` + `zoomFactor` (Float). Set `enabledFramings` before running the session; you can change it any time while monitoring.
+
+#### Sensor Orientation Compensation
+
+Historically front sensors are mounted landscape-left; the Center Stage front camera is mounted **portrait**. `AVCapturePhotoOutput` compensates by default — photos are physically rotated and EXIF-updated to landscape-left, so existing rotation code keeps working. Applies to HEIC/JPEG/uncompressed processed photos only — **never Bayer RAW or ProRAW**.
+
+```swift
+photoOutput.isCameraSensorOrientationCompensationSupported  // iOS 26+, iOS-only
+// Disabling skips the rotation pass (best performance) — verify orientation stays correct
+photoOutput.isCameraSensorOrientationCompensationEnabled = false
+```
+
+#### Center Stage Toggle and Stabilization
+
+```swift
+// Center Stage (system video effect, per process). VoIP-background-mode apps get it for
+// free via Control Center; otherwise enable in-app:
+for format in camera.formats where format.isCenterStageSupported {
+    try camera.lockForConfiguration()
+    camera.activeFormat = format
+    camera.unlockForConfiguration()
+    break
+}
+AVCaptureDevice.centerStageControlMode = .cooperative  // or .app — set BEFORE enabling
+AVCaptureDevice.isCenterStageEnabled = true
+
+// Real-time low-latency stabilization for video calls (iOS 26+, off by default)
+connection.preferredVideoStabilizationMode = .lowLatency
+
+// Recording: .cinematicExtended / .cinematicExtendedEnhanced are face-aware on this camera
+```
+
+Bonus (iOS 26+, iOS-only): `device.nominalFocalLengthIn35mmFilm` — nominal 35mm-equivalent focal length (`0` for virtual/external devices).
+
 ---
 
 ## AVCaptureDevice.RotationCoordinator (iOS 17+)
@@ -365,6 +533,46 @@ photoOutput.isFastCapturePrioritizationEnabled
 // Deferred Processing - proxy + background processing
 photoOutput.isAutoDeferredPhotoDeliverySupported
 photoOutput.isAutoDeferredPhotoDeliveryEnabled
+```
+
+On iOS 27 (iPhone 16/17), the system also routes **balanced** fast captures through deferred processing, further shrinking shot-to-shot delay during rapid capture (WWDC 2026-304).
+
+### High-Resolution Capture (24/48 MP)
+
+Only the `.photo` session preset supports 24/48 MP. Resolution availability by quality prioritization (WWDC 2026-304):
+
+| Resolution | `.speed` | `.balanced` | `.quality` | Notes |
+|------------|----------|-------------|------------|-------|
+| 12 MP | ✓ | ✓ | ✓ | Single or fused |
+| 18 MP | | | ✓ | Center Stage front camera (iPhone 17) only; multi-frame fused |
+| 24 MP | | | ✓ | Multi-frame fused (12 MP HDR + 48 MP detail via Photonic Engine) |
+| 48 MP | | ✓ | ✓ | Single full-sensor frame |
+
+48 MP quad-sensor: iPhone 14 Pro+. 24 MP: iPhone 15+ (Camera-app default). 24/48 MP also on the telephoto (iPhone 16 Pro) and ultra-wide (iPhone 17) cameras. Deferred processing is what makes the multi-frame 18/24 MP resolutions practical — processing happens in the background without holding capture-session memory.
+
+```swift
+// 1. Configure the output for the largest dimensions you'll request (before commit —
+//    changing maxPhotoDimensions after commit triggers a lengthy reconfiguration)
+let dims = camera.activeFormat.supportedMaxPhotoDimensions  // [CMVideoDimensions], iOS 16+
+photoOutput.maxPhotoDimensions = dims.max { Int($0.width) * Int($0.height) < Int($1.width) * Int($1.height) }!
+photoOutput.maxPhotoQualityPrioritization = .quality
+
+// 2. Pre-allocate capture resources as soon as the user enters the mode —
+//    otherwise allocation happens at capture time and slows the first shot
+let prepareSettings = AVCapturePhotoSettings()
+prepareSettings.maxPhotoDimensions = photoOutput.maxPhotoDimensions
+prepareSettings.photoQualityPrioritization = .quality
+photoOutput.setPreparedPhotoSettingsArray([prepareSettings]) { prepared, error in /* ... */ }
+
+// 3. Capture with a NEW settings object matching the prepared configuration
+//    (prepared settings objects cannot be reused for capture)
+let settings = AVCapturePhotoSettings()
+settings.maxPhotoDimensions = photoOutput.maxPhotoDimensions  // request, not guarantee
+settings.photoQualityPrioritization = .quality
+photoOutput.capturePhoto(with: settings, delegate: self)
+
+// Actual dimensions + expected processing time arrive in the delegate's
+// AVCaptureResolvedPhotoSettings (photoProcessingTimeRange)
 ```
 
 ---
@@ -630,6 +838,32 @@ extension CameraManager: AVCaptureFileOutputRecordingDelegate {
 }
 ```
 
+### Pro Video Storage `OS27`
+
+Pre-allocated, system-wide storage for high-data-rate captures (e.g. ProRes) giving deterministic file-write performance — normal file I/O is non-deterministic under load (WWDC 2026-303). User controls capacity in Camera settings. Not on visionOS/watchOS.
+
+| API | Notes |
+|-----|-------|
+| `AVProVideoStorage.isSupported` | Class property — device + OS support |
+| `AVProVideoStorage.shared` | Nullable singleton |
+| `initialCapacity` / `remainingCapacity` | Bytes; `0` = unconfigured, `-1` = read failure. `initialCapacity` = user-allocated size; `remainingCapacity` decreases while recording |
+| `isBusy` | KVO-observable; resizing/file ops in flight — starting a capture while busy raises an exception |
+| `openSettings()` | Jump to the Settings allocation UI |
+| `AVCaptureMovieFileOutput.isProVideoStorageSupported` / `usesProVideoStorage` | Setting the flag while unsupported raises an exception. Recording writes to pre-allocated storage, then moves to your URL when capture finishes |
+| `AVAssetWriter.isProVideoStorageSupported` / `usesProVideoStorage` | Same pair for `AVCaptureVideoDataOutput`-based recording |
+
+Guided adoption flow: camera-capture.md Pattern 9.
+
+---
+
+## Other 27-Cycle Capture Additions `OS27`
+
+| API | What it is |
+|-----|------------|
+| `AVCaptureBroadcastVideoOutput` | Broadcast-quality video + ancillary data over the DisplayPort hardware interface (USB-C DP Alt Mode). Delegate reports dropped frames; `maxBufferedFrameCount` (default 0 = drop late frames) vs class `maxSupportedBufferedFrameCount`; `resetFrameBuffer()`; `droppedFrameReplacementPolicy` `.repeatPreviousFrame` (default) / `.blackFrame`; `videoSettings` reports the negotiated SMPTE ST 377 (MXF) format. Verify the format supports it via `AVCaptureDevice.Format.unsupportedCaptureOutputClasses` before adding. Not visionOS/watchOS |
+| `AVExternalStorageDevice.reasonsNotRecommendedForCaptureUse` | Typed reasons (`.encrypted`, `.unsupportedFileSystem`, `.slowWritingSpeed`, `.unknownWritingSpeed`) replacing the deprecated boolean `isNotRecommendedForCaptureUse` |
+| External-sync `AVError` cases (iOS only) | `.followExternalSyncFailed` (-11894), `.externalSyncDeviceFrequencyHigherThanSpecified` (-11895), `.externalSyncDeviceFrequencyLowerThanSpecified` (-11896) for the iOS 26 `AVExternalSyncDevice` frame-sync feature |
+
 ---
 
 ## AVCaptureVideoPreviewLayer
@@ -769,6 +1003,8 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
 
 ## Resources
 
-**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice, /avfoundation/avcapturephotosettings, /avfoundation/avcapturedevice/rotationcoordinator
+**WWDC**: 2023-10105, 2026-303, 2026-304, 2026-341
+
+**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice, /avfoundation/avcapturephotosettings, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avprovideostorage, /avfoundation/avcapturesmartframingmonitor
 
 **Skills**: skills/camera-capture.md, skills/camera-capture-diag.md

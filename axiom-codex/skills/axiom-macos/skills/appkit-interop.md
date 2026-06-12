@@ -6,6 +6,9 @@
 Use when:
 - Embedding an AppKit view or view controller inside SwiftUI (NSViewRepresentable, NSViewControllerRepresentable)
 - Hosting SwiftUI views inside an AppKit app (NSHostingController, NSHostingView)
+- Updating NSViews automatically from @Observable models (observation tracking — no SwiftUI required)
+- Adding an existing NSGestureRecognizer to a SwiftUI view (NSGestureRecognizerRepresentable)
+- Building main-menu items in SwiftUI (NSHostingMenu) or adding SwiftUI scenes — MenuBarExtra, Settings — to an AppKit app delegate (NSHostingSceneRepresentation)
 - Menu bar commands, copy/paste, or keyboard shortcuts fail across the SwiftUI/AppKit boundary
 - NSToolbar needs capabilities beyond SwiftUI's `.toolbar` modifier
 - File panels need options that `.fileImporter` doesn't expose
@@ -116,6 +119,38 @@ Mixing SwiftUI and AppKit?
 
 ---
 
+## Automatic Observation in AppKit (@Observable, No SwiftUI Required)
+
+AppKit observes `@Observable` properties accessed inside certain methods and redraws automatically — the first modernization step, before hosting any SwiftUI (WWDC 2026-272). No more manual `needsDisplay = true` fan-out when one model property affects several views:
+
+```swift
+@Observable @MainActor
+final class ColorModel {
+    var hue: Double = 0.6
+    var saturation: Double = 1.0
+    var brightness: Double = 1.0
+}
+
+class HueSliderCell: NSSliderCell {
+    var model: ColorModel!
+    override func drawKnob(_ knobRect: NSRect) {
+        // AppKit tracks every @Observable property accessed here and
+        // redraws this view when any of them change
+        let color = NSColor(hue: model.hue, saturation: model.saturation,
+                            brightness: model.brightness, alpha: 1)
+        // ... draw with color
+    }
+}
+```
+
+Observation-tracking methods: anything called as part of `NSView.draw(_:)` (incl. `NSCell` draw methods like `drawKnob`/`drawBar`), plus `updateConstraints()`, `layout()`, `updateLayer()`, and the `NSViewController` equivalents. UIKit's list is larger (extends to `UIButton`, `UICollectionViewCell`, …) — see axiom-uikit.
+
+**Availability**: on by default for apps built against the 2026 SDKs and later. Back-deploy to macOS 15 with the `NSObservationTrackingEnabled` Info.plist key (iOS 18: `UIObservationTrackingEnabled`).
+
+Adopting `@Observable` first also makes later SwiftUI adoption seamless — the same model drives `NSView` drawing and SwiftUI bodies.
+
+---
+
 ## SwiftUI to AppKit (NSViewRepresentable)
 
 Use when SwiftUI needs to host an AppKit view. This is the most common bridging direction.
@@ -175,6 +210,36 @@ struct ScriptEditorRepresentable: NSViewRepresentable {
 - **Refresh the coordinator**: Always update `context.coordinator.parent = self` (or equivalent) in `updateNSView` so bindings stay current.
 - **Environment propagation**: Read `context.environment` values (like `isEnabled`) in `updateNSView` and apply them to the AppKit view.
 - **Never set frame/bounds**: SwiftUI owns layout. Use `.frame()` on the SwiftUI side.
+
+---
+
+## AppKit Gestures in SwiftUI (NSGestureRecognizerRepresentable, macOS 26+)
+
+Bring an existing `NSGestureRecognizer` subclass to a SwiftUI view instead of rewriting it as a SwiftUI `Gesture` (WWDC 2026-272):
+
+```swift
+struct ForceClickReset: NSGestureRecognizerRepresentable {
+    var model: ColorModel
+
+    func makeNSGestureRecognizer(context: Context) -> ForceClickGestureRecognizer {
+        ForceClickGestureRecognizer()   // your existing recognizer subclass
+    }
+
+    func handleNSGestureRecognizerAction(_ recognizer: ForceClickGestureRecognizer,
+                                         context: Context) {
+        withAnimation {
+            model.saturation = 1
+            model.brightness = 1
+        }
+    }
+}
+
+// Attach like any SwiftUI gesture — composes with existing SwiftUI gestures
+HSBColorPicker(model: model)
+    .gesture(ForceClickReset(model: model))
+```
+
+The protocol is macOS-only at macOS 26; the UIKit counterpart `UIGestureRecognizerRepresentable` is covered in axiom-uikit.
 
 ---
 
@@ -246,15 +311,15 @@ class ShortcutItemView: NSCollectionViewItem {
 Use an `@Observable` model that both sides can access:
 
 ```swift
-@Observable
+@Observable @MainActor
 class SelectionModel {
     var selectedItem: SidebarItem = .allShortcuts
 }
 
-// AppKit side: observe changes
-let cancellable = selectionModel.$selectedItem.sink { newItem in
-    detailViewController.showPage(for: newItem)
-}
+// AppKit side: read the property inside an observation-tracking method
+// (draw/layout/updateLayer/updateConstraints — see "Automatic Observation in
+// AppKit" above) and AppKit re-invokes it on change. Outside those methods,
+// use withObservationTracking(_:onChange:).
 
 // SwiftUI side: bind directly
 struct SidebarView: View {
@@ -264,6 +329,8 @@ struct SidebarView: View {
     }
 }
 ```
+
+(`@Observable` models have no Combine `$property` publishers — that's `@Published`/`ObservableObject`. Observation tracking replaces the `.sink` dance.)
 
 ---
 
@@ -316,6 +383,54 @@ struct EditorView: View {
 - Test with System Settings > Keyboard > Full Keyboard Navigation both on and off
 - Use `@FocusState` and `.focused()` for programmatic focus control
 - Some controls are only focusable when Full Keyboard Navigation is enabled
+
+---
+
+## SwiftUI in the Main Menu (NSHostingMenu, macOS 14.4+)
+
+Build a menu's content as a SwiftUI `View` (Buttons with `.keyboardShortcut`, Dividers, palette-style Pickers) and attach it to the AppKit main menu:
+
+```swift
+let colorMenu = NSHostingMenu(rootView: ColorMenu(model: colorModel))
+colorMenu.title = "Color"     // NSHostingMenu IS an NSMenu — configure as usual
+
+let colorMenuItem = NSMenuItem()
+colorMenuItem.submenu = colorMenu
+mainMenu.addItem(colorMenuItem)
+```
+
+The rootView's `Button` actions, `withAnimation` updates, and `Picker(selection: Bindable(model).hue)` bindings all work as in any SwiftUI view. See `skills/menus-and-commands.md` for pure-SwiftUI menu construction.
+
+---
+
+## SwiftUI Scenes from AppKit (NSHostingSceneRepresentation, macOS 26+)
+
+Add complete SwiftUI scenes — `MenuBarExtra`, `Settings` — to an existing `NSApplicationDelegate` app without rewriting its lifecycle:
+
+```swift
+@MainActor
+class AppDelegate: NSObject, NSApplicationDelegate {
+    let model = AppModel()
+    var openSettingsAction: (() -> Void)?
+
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        let scenes = NSHostingSceneRepresentation {
+            LightMenuBarExtra(appModel: model)   // MenuBarExtra scene
+            LightSettings(appModel: model)       // Settings scene
+        }
+        NSApplication.shared.addSceneRepresentation(scenes)
+
+        // The representation exposes SwiftUI environment actions:
+        openSettingsAction = { scenes.environment.openSettings() }
+    }
+
+    @IBAction func openSettings(_ sender: Any?) {
+        openSettingsAction?()   // open the SwiftUI Settings window from an AppKit menu item
+    }
+}
+```
+
+Pair a `MenuBarExtra(isInserted:)` binding with a Settings `Toggle` so people can remove and re-add the menu bar item. A SwiftUI `MenuBarExtra` also handles the keyboard-navigation/session bookkeeping that raw `NSStatusItem` custom windows need (`skills/appkit-modernization.md`, expanded interface sessions).
 
 ---
 
@@ -416,8 +531,8 @@ When SwiftUI content needs to accept drops from AppKit views using legacy pasteb
 
 ## Resources
 
-**WWDC**: 2022-10075
+**WWDC**: 2022-10075, 2026-272
 
-**Docs**: /swiftui/nsviewrepresentable, /swiftui/nsviewcontrollerrepresentable, /swiftui/nshostingcontroller, /swiftui/nshostingview, /appkit/nstoolbar, /appkit/nsopenpanel
+**Docs**: /swiftui/nsviewrepresentable, /swiftui/nsviewcontrollerrepresentable, /swiftui/nshostingcontroller, /swiftui/nshostingview, /swiftui/nshostingmenu, /swiftui/nsgesturerecognizerrepresentable, /swiftui/nshostingscenerepresentation, /appkit/nstoolbar, /appkit/nsopenpanel, /appkit/updating-views-automatically-with-observation-tracking
 
-**Skills**: axiom-uikit, axiom-swiftui
+**Skills**: skills/appkit-modernization.md, axiom-uikit, axiom-swiftui

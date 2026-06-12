@@ -504,13 +504,15 @@ let response = try await search.start()
 
 for item in response.mapItems {
     // item.name — "Starbucks"
-    // item.placemark — MKPlacemark with address
-    // item.placemark.coordinate — CLLocationCoordinate2D
+    // item.location — CLLocation (placemark is deprecated since 26)
+    // item.address / item.addressRepresentations — structured address
     // item.phoneNumber — optional phone
     // item.url — optional website
     // item.pointOfInterestCategory — .cafe, .restaurant, etc.
 }
 ```
+
+The 27 SDKs add 11 `MKPointOfInterestCategory` values (all platforms): `.airportTerminal`, `.automotiveDealership`, `.commercialVehicleDealership`, `.informationBooth`, `.motorbikeDealership`, `.picnicArea`, `.rangerStation`, `.restArea`, `.scenicView`, `.ticketOffice`, `.visitorCenter` — usable in `MKPointOfInterestFilter` and returned in `pointOfInterestCategory`.
 
 ### Result Types
 
@@ -783,6 +785,7 @@ let isVisible = CGRect(origin: .zero, size: snapshot.image.size).contains(point)
 | MKGeocodingRequest | 26.0+ |
 | MKReverseGeocodingRequest | 26.0+ |
 | MKAddress | 26.0+ |
+| 11 new MKPointOfInterestCategory values (airportTerminal, scenicView, restArea, …) | 27.0+ |
 
 ---
 

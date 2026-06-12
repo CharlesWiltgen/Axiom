@@ -125,6 +125,7 @@ Field devices are noisy; an unstable baseline tells you nothing. Before you meas
 | Xcode Organizer — **Launches** pane | Longest functions during startup, with stack traces and a 14-day trend | — |
 | `XCTApplicationLaunchMetric` (XCTest) | Regression gate in CI — see snippet below | `axiom-testing` |
 | `MXAppLaunchMetric` (MetricKit) | Field histograms: `histogrammedTimeToFirstDraw`, `histogrammedOptimizedTimeToFirstDraw` (prewarmed), `histogrammedApplicationResumeTime`, `histogrammedExtendedLaunch`; `MXDiagnosticPayload.appLaunchDiagnostics` for slow-launch stacks | `metrickit-ref` |
+| MetricKit 27 launch family `OS27` | Typed field metrics `.timeToFirstDraw` / `.optimizedTimeToFirstDraw` / `.applicationResumeTime` / `.extendedLaunch`, the `.appLaunch` diagnostic with launch stacks, and `MetricManager.trackLaunchTask(id:)` to instrument named extended-launch work (`@MainActor`, sync/async overloads) | `metrickit-ref` Part 1 |
 | App Store Connect — "App Extended Launch Usage" report | Field extended-launch data (iOS 17.4+, daily) | — |
 | Custom **Points of Interest** signpost | Marking your own "app is interactive" boundary | `performance-profiling` |
 

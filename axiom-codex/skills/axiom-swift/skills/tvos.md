@@ -495,6 +495,8 @@ digitEntry.clearEntry(animated: true)
 
 tvOS text input is fundamentally different from iOS. Apple recommends minimizing text input in your UI.
 
+**Text display** — tvOS 27 brings system-wide Dynamic Type (Large Text). For adoption, layout adaptation, and Nutrition Labels, see axiom-accessibility (skills/accessibility-diag.md, "Dynamic Type Comes to tvOS").
+
 ### Three Approaches
 
 | Approach | Best For | Keyboard Style |
