@@ -12,6 +12,8 @@ Use when:
 
 #### Related Skills
 - Use `skills/windows.md` for WindowGroup, Window, UtilityWindow, and multi-window management
+- Use `skills/appkit-interop.md` to build menu content in SwiftUI and attach it to an AppKit main menu (NSHostingMenu)
+- Use `skills/appkit-modernization.md` for status items with custom windows (expanded interface sessions)
 - Use axiom-swiftui (skills/toolbars.md) for toolbar customization and toolbar items (cross-platform `.toolbar`, ToolbarItem, ToolbarSpacer)
 
 ---
@@ -247,6 +249,10 @@ WindowGroup(id: "detail", for: Item.ID.self) { $itemID in
 .commandsRemoved()  // No "New Window" in File menu for this group
 ```
 
+### AppKit Menu-Item Image Visibility `OS27`
+
+For AppKit-built menus: `NSMenuItem.preferredImageVisibility` (`NSMenuItem.ImageVisibility`: `.automatic` default / `.visible` / `.hidden`) declares whether an item's image should show. With `.automatic`, AppKit decides from the system configuration — and it may still override `.visible`.
+
 ---
 
 ## Context Menus
@@ -371,8 +377,8 @@ struct GardenCommands: Commands {
 
 **WWDC**: 2021-10062
 
-**Docs**: /swiftui/commandmenu, /swiftui/commandgroup, /swiftui/commandgroupplacement, /swiftui/focusedvalues, /swiftui/building-and-customizing-the-menu-bar-with-swiftui
+**Docs**: /swiftui/commandmenu, /swiftui/commandgroup, /swiftui/commandgroupplacement, /swiftui/focusedvalues, /swiftui/building-and-customizing-the-menu-bar-with-swiftui, /appkit/nsmenuitem
 
 **HIG**: The Menu Bar, Menus, Context Menus
 
-**Skills**: skills/windows.md
+**Skills**: skills/windows.md, skills/appkit-interop.md, skills/appkit-modernization.md

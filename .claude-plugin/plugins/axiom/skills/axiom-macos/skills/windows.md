@@ -10,11 +10,13 @@ Use when:
 - Building a multi-window macOS app from an iOS-first codebase
 - Customizing window toolbar style or removing default menu commands
 - Adding a menu bar extra (standalone utility or companion to main app)
+- Building a document-based Mac app (DocumentGroup shell, File menu integration)
 - Debugging windows that won't open, open duplicates, or lose state on relaunch
 
 #### Related Skills
 
 - Use `skills/menus-and-commands.md` for menu bar customization, keyboard shortcuts, CommandMenu, and CommandGroup
+- Use `skills/appkit-modernization.md` for AppKit-side window state restoration (NSWindowRestoration)
 - Use `axiom-swiftui` for SwiftUI view layout, navigation, and architecture within a window
 
 ## Red Flags — Anti-Patterns to Prevent
@@ -366,6 +368,26 @@ UtilityWindow automatically:
 
 Use `.commandsRemoved()` + `WindowVisibilityToggle` for custom menu placement.
 
+### Document-Based Apps (DocumentGroup)
+
+`DocumentGroup` gives a Mac document app its whole shell for free: File > New/Open/Save/Save As/Revert menu items, the title-bar document menu (rename, move, duplicate), window tabs, and per-document state restoration.
+
+```swift
+@main
+struct ScriptApp: App {
+    var body: some Scene {
+        DocumentGroup(newDocument: ScriptDocument()) { configuration in
+            EditorView(document: configuration.$document)
+        }
+        // Additional scenes (auxiliary Window, Settings) compose as usual
+    }
+}
+```
+
+- **Don't** set frame autosave names on document windows — AppKit/SwiftUI manage per-document restoration.
+- `DocumentGroupLaunchScene` (the customizable launch experience) is **iOS/iPadOS/visionOS only** — on the Mac, documents launch through the standard open panel and File menu; there is no launch scene to customize.
+- The reference-type document model — `@Observable` document classes via `ReadableDocument`/`WritableDocument` and the matching `DocumentGroup` initializers (`OS27`) — is documented in `axiom-design (skills/app-composition.md)` Part 3b; the scene-level wiring here is unchanged.
+
 ### Settings with Tabs
 
 ```swift
@@ -405,8 +427,8 @@ Settings {
 
 **WWDC**: 2022-10061, 2024-10149
 
-**Docs**: /swiftui/windowgroup, /swiftui/window, /swiftui/utilitywindow, /swiftui/menubarextra, /swiftui/settings, /swiftui/openwindowaction, /swiftui/dismisswindowaction, /swiftui/windowstyle, /swiftui/windowtoolbarstyle
+**Docs**: /swiftui/windowgroup, /swiftui/window, /swiftui/utilitywindow, /swiftui/menubarextra, /swiftui/settings, /swiftui/documentgroup, /swiftui/openwindowaction, /swiftui/dismisswindowaction, /swiftui/windowstyle, /swiftui/windowtoolbarstyle
 
 **HIG**: /windows, /designing-for-macos
 
-**Skills**: skills/menus-and-commands.md, axiom-swiftui
+**Skills**: skills/menus-and-commands.md, skills/appkit-modernization.md, axiom-swiftui

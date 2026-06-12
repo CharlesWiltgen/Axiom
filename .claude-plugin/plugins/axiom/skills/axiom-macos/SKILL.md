@@ -1,6 +1,6 @@
 ---
 name: axiom-macos
-description: Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging, or macOS-specific SwiftUI patterns.
+description: Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging or modernization (control events, state restoration, concentric corners), or macOS-specific SwiftUI patterns.
 license: MIT
 ---
 
@@ -12,12 +12,13 @@ license: MIT
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| Window management (WindowGroup, Window, MenuBarExtra) | See `skills/windows.md` |
+| Window management (WindowGroup, Window, MenuBarExtra, DocumentGroup) | See `skills/windows.md` |
 | Menu bar, commands, keyboard shortcuts | See `skills/menus-and-commands.md` |
 | Table, Inspector, NavigationSplitView, focus | See `skills/swiftui-differences.md` |
 | App Sandbox, file access, security-scoped bookmarks | See `skills/sandbox-and-file-access.md` |
 | Developer ID, notarization, Sparkle auto-updates | See `skills/direct-distribution.md` |
-| NSViewRepresentable, NSHostingController, AppKit bridging | See `skills/appkit-interop.md` |
+| NSViewRepresentable, NSHostingController, AppKit bridging, @Observable in AppKit, NSHostingMenu, SwiftUI scenes from AppKit | See `skills/appkit-interop.md` |
+| Modernizing AppKit: mouseDown replacement, control events, status-item sessions, state restoration, concentric corners, touch (`OS27`) | See `skills/appkit-modernization.md` |
 | Screen recording, sharing, or capture (ScreenCaptureKit) | See `skills/screencapturekit.md` |
 | SCStream / SCContentFilter / screenshots / file recording API | See `skills/screencapturekit-ref.md` |
 | Apple Pay on Mac / Catalyst | See `axiom-payments/skills/apple-pay.md` (Catalyst section) |
@@ -69,6 +70,7 @@ digraph macos {
     what -> "skills/sandbox-and-file-access.md" [label="sandbox/file access"];
     what -> "skills/direct-distribution.md" [label="distribution/notarization/updates"];
     what -> "skills/appkit-interop.md" [label="AppKit bridging"];
+    what -> "skills/appkit-modernization.md" [label="modernize AppKit\n(input/restoration/27 look)"];
     what -> "skills/screencapturekit.md" [label="screen capture/\nrecording/sharing"];
     what -> "axiom-swiftui" [label="cross-platform SwiftUI"];
     what -> "axiom-security" [label="Keychain/encryption"];
@@ -79,8 +81,8 @@ digraph macos {
 
 ## Resources
 
-**WWDC**: 2021-10062, 2022-10061, 2022-10075, 2023-10148, 2024-10149
+**WWDC**: 2021-10062, 2022-10061, 2022-10075, 2023-10148, 2024-10149, 2026-272, 2026-289
 
 **Docs**: /security/app-sandbox, /swiftui/windowgroup, /swiftui/table
 
-**Skills**: axiom-swiftui, axiom-security, axiom-concurrency
+**Skills**: axiom-swiftui, axiom-security, axiom-concurrency, axiom-uikit
