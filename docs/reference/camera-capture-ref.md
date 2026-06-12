@@ -17,6 +17,10 @@ Use this reference when:
 - Configuring AVCaptureMovieFileOutput for video recording
 - Setting up AVCaptureVideoPreviewLayer in SwiftUI or UIKit
 - Looking up device types, discovery sessions, or device configuration APIs
+- Adopting deferred start for fast camera launch (iOS 26 and later)
+- Supporting the Center Stage front camera — dynamic aspect ratio, smart framing, sensor orientation compensation (iPhone 17 lineup, iOS 26 and later)
+- Capturing 24/48 megapixel photos with prepared photo settings
+- Recording ProRes with Pro Video Storage (iOS 27)
 
 ## Example Prompts
 
@@ -29,17 +33,25 @@ Questions you can ask Claude that will draw from this reference:
 - "What are the responsive capture APIs in iOS 17+?"
 - "How do I set up AVCaptureVideoPreviewLayer in SwiftUI?"
 - "What are the session interruption reasons?"
+- "How does deferred start work?"
+- "How do I set the front camera's aspect ratio without rotating the phone?"
+- "What resolutions does each photo quality prioritization support?"
 
 ## What's Covered
 
 - AVCaptureSession presets, lifecycle, notifications, and interruption reasons
+- Deferred start APIs for fast launch (iOS 26 and later)
+- Session hardware cost and system pressure monitoring
 - AVCaptureDevice types, discovery sessions, configuration (focus, exposure, zoom, torch)
+- Center Stage front camera: dynamic aspect ratio, smart framing monitor, sensor orientation compensation, low-latency stabilization (iOS 26 and later, iPhone 17 lineup)
 - AVCaptureDevice.RotationCoordinator setup, properties, and KVO observation (iOS 17+)
 - AVCapturePhotoOutput configuration, responsive capture APIs, and deferred processing
+- High-resolution capture (24/48 MP) with prepared photo settings
 - AVCapturePhotoOutputReadinessCoordinator delegate and capture readiness states
 - AVCapturePhotoSettings formats (JPEG, HEIF, RAW), quality prioritization, flash, resolution
 - AVCapturePhotoCaptureDelegate callbacks including deferred proxy handling
 - AVCaptureMovieFileOutput recording, delegate, and state properties
+- Pro Video Storage for deterministic high-data-rate recording (iOS 27)
 - AVCaptureVideoPreviewLayer video gravity options and SwiftUI integration
 - Complete CameraManager pattern with @MainActor, async setup, and rotation
 
@@ -88,4 +100,6 @@ This page documents the `axiom-media` skill. It provides complete API documentat
 
 ## Resources
 
-**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice, /avfoundation/avcapturephotosettings, /avfoundation/avcapturedevice/rotationcoordinator
+**WWDC**: 2023-10105, 2026-303, 2026-304, 2026-341
+
+**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice, /avfoundation/avcapturephotosettings, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avprovideostorage, /avfoundation/avcapturesmartframingmonitor

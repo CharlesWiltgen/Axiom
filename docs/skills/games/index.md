@@ -14,8 +14,11 @@ flowchart LR
 
     subgraph skills_d["Skills"]
         spritekit["spritekit"]:::discipline
+        game_input["game-input"]:::discipline
         scenekit["scenekit"]:::discipline
         realitykit["realitykit"]:::discipline
+        metal_migration["metal-migration"]:::discipline
+        usdkit["usdkit"]:::discipline
     end
     axiom_games --> skills_d
 
@@ -46,17 +49,11 @@ Complete guide to building 2D games with SpriteKit. Covers the scene graph model
 
 - [SpriteKit](/skills/games/spritekit) — Architecture, patterns, anti-patterns, and code review checklist
 
-## Available Agents
+### Game Input
 
-- [spritekit-auditor](/agents/spritekit-auditor) — Scans SpriteKit code for physics bitmask issues, draw call waste, node accumulation, and action memory leaks
+Player input for games: on-screen touch controls with the TouchController framework (iOS/iPadOS), unified game controller handling through GCController, and the GameController additions new in the 27 releases (controller Home button settings, visionOS spatial accessories).
 
-## Available References
-
-- [SpriteKit API](/reference/spritekit-ref) — All 16 node types, physics body creation, complete action catalog, texture atlases, constraints, particles, SKRenderer
-
-## Available Diagnostics
-
-- [SpriteKit Diagnostics](/diagnostic/spritekit-diag) — Decision trees for contacts not firing, tunneling, frame drops, touch bugs, memory spikes, coordinate confusion, transition crashes
+- [Game Input](/skills/games/game-input) — Touch controller setup, control catalog, adaptive layouts, interaction patterns, controller additions
 
 ### SceneKit
 
@@ -78,11 +75,31 @@ Porting OpenGL/DirectX rendering to Metal:
 - [Metal Migration API](/reference/metal-migration-ref) — Shader translation, pipeline state objects
 - [Metal Migration Diagnostics](/diagnostic/metal-migration-diag) — Shader compilation, rendering artifacts
 
+### USDKit
+
+Working with USD/USDZ 3D scene files in Swift (new in the 27 releases): opening and traversing stages, editing prims and attributes, exporting compressed USDZ packages, and rendering stages directly in RealityKit.
+
+- [USDKit](/skills/games/usdkit) — Stages, traversal, editing, AccessibilityAPI schema, compressed export, USDStageComponent
+
+## Available Agents
+
+- [spritekit-auditor](/agents/spritekit-auditor) — Scans SpriteKit code for physics bitmask issues, draw call waste, node accumulation, and action memory leaks
+
+## Available References
+
+- [SpriteKit API](/reference/spritekit-ref) — All 16 node types, physics body creation, complete action catalog, texture atlases, constraints, particles, SKRenderer
+
+## Available Diagnostics
+
+- [SpriteKit Diagnostics](/diagnostic/spritekit-diag) — Decision trees for contacts not firing, tunneling, frame drops, touch bugs, memory spikes, coordinate confusion, transition crashes
+
 ## Example Prompts
 
 - "I'm building a SpriteKit game"
 - "My physics contacts aren't firing"
 - "Frame rate is dropping in my game"
+- "I'm porting my game to iPhone — how do I add touch controls?"
+- "How do I handle game controller input?"
 - "How do I set up SpriteKit with SwiftUI?"
 - "Objects pass through walls in my game"
 - "Audit my SpriteKit code for issues"

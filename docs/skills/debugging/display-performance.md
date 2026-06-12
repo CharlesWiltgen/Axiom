@@ -16,6 +16,7 @@ Use this skill when:
 - You're experiencing micro-stuttering despite good average FPS
 - You need to configure CAMetalDisplayLink for precise timing
 - You want to monitor animation hitches in production
+- A game's frame rate drops during long play sessions and you need look-back traces
 
 ## Example Prompts
 
@@ -34,6 +35,7 @@ Use this skill when:
 - Frame pacing APIs to eliminate micro-stuttering
 - Hitch mechanics (commit hitches vs render hitches)
 - Production telemetry with MetricKit
+- Long-session game tracing on the 27 releases (metalperftrace, look-back collection, StateReporting context)
 
 ## Related
 

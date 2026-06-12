@@ -18,6 +18,7 @@ Use this skill when:
 - Building multiplayer or shared AR experiences
 - Migrating from SceneKit to RealityKit
 - Targeting visionOS
+- Adding pathfinding, level of detail, or the other 27-cycle capabilities
 
 ## Example Prompts
 
@@ -71,6 +72,11 @@ Use this skill when:
 - Collision groups, filters, and events
 - Applying forces and velocities
 
+### RealityKit 27 at a Glance
+- Navigation meshes, LOD, soft shadows, lightmaps, Gaussian splats (visionOS), custom reverb meshes
+- Thermal adaptation pattern for heavy rendering features
+- Reality Composer Pro 3 as the authoring companion
+
 ### Anti-Patterns
 - UIKit-style thinking in ECS (subclassing entities)
 - Monolithic entities, frame-based updates without Systems
@@ -83,3 +89,4 @@ Use this skill when:
 - [RealityKit Diagnostics](/diagnostic/realitykit-diag) — Decision trees for invisible entities, anchor tracking, gesture failures, performance drops
 - [SceneKit](/skills/games/scenekit) — Legacy 3D framework with migration guidance to RealityKit
 - [SceneKit API Reference](/reference/scenekit-ref) — SceneKit API with RealityKit migration mapping
+- [USDKit](/skills/games/usdkit) — Reading, editing, and exporting the USD files your RealityKit scenes load

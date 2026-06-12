@@ -28,6 +28,7 @@ Complete reference for Core Spotlight framework and NSUserActivity—make app co
 | App Intents entity search | IndexedEntity |
 | Handoff between devices | NSUserActivity |
 | Background content indexing | CSSearchableItem batch |
+| LLM search over app content (OS 27) | SpotlightSearchTool |
 
 **Apple guidance:** Use NSUserActivity for user-initiated activities (screens currently visible), not as a general indexing mechanism. For comprehensive content indexing, use Core Spotlight's CSSearchableItem.
 
@@ -105,6 +106,10 @@ let item = CSSearchableItem(appEntity: orderEntity)
 - Automatic "Find" actions in Shortcuts
 - Direct entity results in Spotlight search
 - Automatic Siri suggestions based on app entities
+
+## SpotlightSearchTool (OS 27)
+
+`SpotlightSearchTool` (in the CoreSpotlight + FoundationModels cross-import overlay) lets a `LanguageModelSession` search your app's Core Spotlight index for grounded responses — with configurable sources, guidance profiles, contact resolution, custom pipeline stages, and streaming results for UI. The full API surface lives in the skill itself.
 
 ## Related Skills
 

@@ -1,6 +1,6 @@
 ---
 name: camera-capture
-description: AVCaptureSession camera preview, photo capture, video recording, RotationCoordinator, responsive capture pipeline, session interruptions, deferred processing
+description: AVCaptureSession camera preview, photo capture, video recording, RotationCoordinator, responsive capture pipeline, session interruptions, deferred processing, deferred start, Pro Video Storage
 ---
 
 # Camera Capture
@@ -15,6 +15,8 @@ Use this skill when you're:
 - Recording video with audio
 - Handling device rotation correctly with RotationCoordinator (iOS 17+)
 - Making capture feel instant (zero-shutter-lag, deferred processing)
+- Making camera launch fast with deferred start (iOS 26 and later)
+- Recording high-data-rate video (ProRes) with Pro Video Storage (iOS 27)
 - Handling session interruptions (phone calls, multitasking, thermal pressure)
 - Switching between front and back cameras
 
@@ -32,6 +34,8 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I switch between front and back cameras?"
 - "How do I record video with audio?"
 - "My camera takes too long to capture"
+- "My camera app launches slowly — the preview takes forever to appear"
+- "My ProRes recording drops frames"
 
 ## What This Skill Provides
 
@@ -51,6 +55,11 @@ Questions you can ask Claude that will draw from this skill:
 - Fast capture prioritization for burst-like shooting
 - Readiness coordinator for shutter button state management
 - Deferred processing with proxy images and background processing
+
+### Launch Performance and Pro Recording
+- Deferred start for fast launch — preview up in roughly half the time (iOS 26 and later)
+- Automatic vs manual deferred start, including the video-data-output preview case
+- Pro Video Storage for deterministic ProRes file writes (iOS 27)
 
 ### Rotation and Orientation
 - RotationCoordinator for automatic rotation tracking (replaces deprecated videoOrientation)
@@ -93,7 +102,7 @@ struct CameraPreview: UIViewRepresentable {
 
 ## Documentation Scope
 
-This page documents the `axiom-media` skill -- AVFoundation camera patterns Claude uses when helping you build custom camera features. The skill contains 7 core patterns with code examples, anti-patterns, a shipping checklist, and pressure scenarios.
+This page documents the `axiom-media` skill -- AVFoundation camera patterns Claude uses when helping you build custom camera features. The skill contains 9 core patterns with code examples, anti-patterns, a shipping checklist, and pressure scenarios.
 
 **For diagnostics:** See [camera-capture-diag](/diagnostic/camera-capture-diag) for troubleshooting black previews, frozen cameras, and rotation issues.
 
@@ -107,6 +116,6 @@ This page documents the `axiom-media` skill -- AVFoundation camera patterns Clau
 
 ## Resources
 
-**WWDC**: 2021-10247, 2023-10105
+**WWDC**: 2021-10247, 2023-10105, 2026-303
 
-**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice/rotationcoordinator
+**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avprovideostorage

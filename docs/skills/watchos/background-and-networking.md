@@ -11,7 +11,8 @@ Background refresh, URLSession on the watch, and the TN3135 rule that blocks low
 
 Use this skill when you're:
 - Picking between SwiftUI `.backgroundTask(_:action:)` and a WatchKit-style `handle(_:)` implementation
-- Scheduling app refresh with `scheduleBackgroundRefresh(withPreferredDate:userInfo:scheduledCompletion:)`
+- Scheduling app refresh — `BGTaskScheduler` on the 27 SDK, or legacy `scheduleBackgroundRefresh(withPreferredDate:userInfo:scheduledCompletion:)`
+- Migrating WatchKit background scheduling to `BGTaskScheduler` (the WatchKit methods are deprecated in the 27 releases)
 - Choosing between default, ephemeral, and background URLSession configurations on a Watch target
 - Hitting `ENETDOWN` when starting `NWConnection` on watchOS and wondering why it "works in the simulator"
 - Handling `WKURLSessionRefreshBackgroundTask` or `WKWatchConnectivityRefreshBackgroundTask` wake-ups
@@ -40,7 +41,7 @@ Questions you can ask Claude that will draw from this skill:
 - Avoiding `Data(contentsOf:)` and similar synchronous loaders that are unsupported on watchOS
 
 ### The New Way — SwiftUI `.backgroundTask`
-- Named `appRefresh` identifiers that pair with scheduled `userInfo` strings
+- Named `appRefresh` identifiers that pair with scheduled `userInfo` strings (deprecated in 27 — identifier-based `BGAppRefreshTaskRequest` scheduling replaces it)
 - Wrapping long work in `withTaskCancellationHandler` for clean cancellation before budget exhaustion
 
 ### The Delegate Path — `handle(_:)`

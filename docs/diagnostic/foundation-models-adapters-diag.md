@@ -7,6 +7,8 @@ description: Adapter-specific Foundation Models failure modes — compatibleAdap
 
 Systematic troubleshooting for adapter-specific Foundation Models failures — distinct from base-model failures covered in [Foundation Models Diagnostics](foundation-models-diag).
 
+> On a 27 build, the first thing to check is the obsoletion: the adapter runtime is deprecated 26.4 and **obsoleted in 27.0**, so a compile error (`'Adapter' was obsoleted in iOS 27.0`) or an adapter that never loads on a 27 device is the obsoletion, not a bug. The runtime diagnostics here apply to 26.x deployments.
+
 ## Symptoms This Diagnoses
 
 Use when you're experiencing any of these:

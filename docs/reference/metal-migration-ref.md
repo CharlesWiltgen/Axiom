@@ -38,6 +38,7 @@ Use this reference when:
 - **Complete setup examples** -- MTKView (recommended), CAMetalLayer (custom control), compute shader pipeline
 - **Buffer storage modes** -- Shared, private, managed (macOS) with use case guidance
 - **Buffer alignment** -- Critical float3/SIMD3 alignment rules for CPU-GPU shared structs
+- **Metal 4 ML and neural rendering** -- MetalFX denoising best practices, quantized Metal tensors and MX scale formats (27 cycle), TensorOps in-shader networks, MSL 4.1
 
 ## Documentation Scope
 

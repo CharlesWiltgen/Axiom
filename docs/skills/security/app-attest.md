@@ -20,6 +20,8 @@ Use this skill when:
 - "How do I use assertions to protect individual API calls?"
 - "What's the difference between App Attest and DeviceCheck?"
 - "How do I roll out App Attest without breaking existing users?"
+- "Can I use App Attest in my Mac app?"
+- "How do I detect a re-signed or TestFlight-relabeled copy of my app?"
 
 ## What This Skill Provides
 
@@ -28,6 +30,8 @@ Use this skill when:
 - Assertion flow for protecting individual API requests after initial attestation
 - Rollout strategy for gradual adoption with fallback for unsupported devices
 - Risk metrics and scoring approach for combining attestation with behavioral signals
+- macOS support (macOS 27+) and the 27-cycle tampering signals — authenticator-data extensions (launch validation category, bundle version) and the macOS key access control property
+- Fraud metric workflow: receipt redemption, refresh windows, and treating it as an investigation signal
 - DeviceCheck integration for per-device flags without user identity
 - Anti-patterns with fraud impact (client-only validation, skipping assertion after attest, hardcoded risk thresholds)
 - Pressure scenarios for common shortcuts (shipping without server validation, ignoring attestation failures)

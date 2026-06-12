@@ -7,6 +7,8 @@ description: Discipline for shipping app-specific custom adapters on top of Appl
 
 Discipline-enforcing skill for app-specific specialization of Apple's on-device Foundation Models via the Adapter Training Toolkit. Trains a rank-32 LoRA adapter, ships it via Background Assets, and loads it through the `SystemLanguageModel.Adapter` runtime API.
 
+> **The custom-adapter runtime is a 26-cycle-only capability.** In the Xcode 27 SDK, `SystemLanguageModel.Adapter` and the rest of the adapter runtime are deprecated in 26.4 and **obsoleted in 27.0** — they do not compile on a 27.0+ deployment target, and the 27 SDK ships no replacement. If any deployment target you support is 27.0 or later, adapters are off the table; the skill covers the pivot (rungs 1-4 or a custom model provider).
+
 ## When to Use
 
 Use this skill when:

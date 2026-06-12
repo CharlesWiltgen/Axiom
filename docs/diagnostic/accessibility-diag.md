@@ -28,6 +28,7 @@ Diagnostic workflows for VoiceOver testing, Dynamic Type support, color contrast
 - Missing `.minimumScaleFactor`
 - Text truncation issues
 - Horizontal scrolling required
+- tvOS Large Text adoption (system-wide Dynamic Type arrives in tvOS 27)
 
 #### Color Contrast
 - WCAG AA compliance (4.5:1 for text)
@@ -41,8 +42,20 @@ Diagnostic workflows for VoiceOver testing, Dynamic Type support, color contrast
 - Spacing between tappable elements
 - Gesture conflicts
 
+#### Custom Controls
+- Choosing the right interaction technique (adjustable actions, passthrough gestures, direct touch, custom actions)
+- Announcement throttling and priority
+
+#### Continuous Reading (Long-Form Reading Apps)
+- VoiceOver text navigation across paragraph and page boundaries
+- Automatic page turns for read-all (Speak Screen, VoiceOver)
+- Custom text views via UITextInput
+
 #### Assistive Access
 - Assistive Access support (iOS 17+, cognitive disabilities)
+
+#### App Store Connect
+- Accessibility Nutrition Labels (including Larger Text for tvOS apps)
 
 ### App Store Rejection Defense
 
@@ -64,10 +77,12 @@ Common rejection scenarios:
 
 Use this diagnostic when:
 - App Store rejected for accessibility (Guideline 2.5.2)
-- Preparing for App Store submission
+- Preparing for App Store submission or declaring Accessibility Nutrition Labels
 - Accessibility audit requested by legal/compliance
 - Users report VoiceOver issues
 - Adding new UI components or screens
+- Preparing a tvOS app for Large Text (tvOS 27)
+- Building a reading app (books, articles) that VoiceOver or Speak Screen stumbles through
 - Before major releases
 
 ## Diagnostic Workflow
@@ -158,4 +173,4 @@ This is a **diagnostic skill** — mandatory workflows with pressure defense sce
 
 ## Size
 
-19 KB - Diagnostic workflows with rejection defense
+44 KB - Diagnostic workflows with rejection defense

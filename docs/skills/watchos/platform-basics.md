@@ -16,6 +16,7 @@ Use this skill when you're:
 - Adopting `WKApplicationDelegate` to handle workouts, Now Playing, extended runtime, or remote notifications
 - Wiring a custom notification long-look with `WKNotificationScene` and `WKUserNotificationHostingController`
 - Auditing `Info.plist` keys like `WKRunsIndependentlyOfCompanionApp` and `WKWatchOnly`
+- Adding a Foundation Models / Private Cloud Compute feature to a watch app (27 releases)
 
 ## Example Prompts
 
@@ -48,6 +49,11 @@ Questions you can ask Claude that will draw from this skill:
 - The specific events SwiftUI doesn't expose (remote notification registration, workout recovery, extended runtime, Now Playing handoff)
 - How to wire `WKApplicationDelegate` with `@WKApplicationDelegateAdaptor`
 - Why an empty delegate "just in case" is an anti-pattern
+
+### Apple Intelligence on watchOS (27 releases)
+- Foundation Models via Private Cloud Compute only — no on-device text model on watch
+- Availability gating, quota usage, async context size, and non-AI fallback pattern
+- Beta caveats (no PCC in simulators, @Generable enum limitation on watch)
 
 ## Key Pattern
 

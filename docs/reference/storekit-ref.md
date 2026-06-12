@@ -53,7 +53,8 @@ Questions you can ask Claude that will draw from this reference:
 - RenewalInfo for upcoming renewals
 - SubscriptionStatus for current state
 - Grace period detection
-- Offer types (introductory, promotional, win-back)
+- Offer types (introductory, promotional, win-back, retention)
+- Monthly subscriptions with a 12-month commitment (PricingTerms, billing plans, from 26.4)
 
 ### StoreKit Views (iOS 17+)
 - ProductView for single products
@@ -69,15 +70,18 @@ Questions you can ask Claude that will draw from this reference:
 - Subscription bundles — `.subscriptionBundle` / `.subscriptionSuite` (Advanced Commerce, iOS 27)
 
 ### iOS 27 Additions
-- Advanced Commerce: subscription bundles + `Product.SubscriptionInfo.bundledSubscriptions`
+- Advanced Commerce: subscription bundles + `Product.SubscriptionInfo.bundledSubscriptions`, `Partner`
 - `AppTransaction.all` (AppTransactions sequence) and `AppTransaction.storeType`
+- Offer code redemption rework (`RedeemOption`, transaction-returning redeem sheets)
 - New error cases: `RefundRequestError.ineligible`, `StoreKitError.invalidPresentationContext`
+- Group and volume subscription purchasing (WWDC 2026, StoreKit 2 required)
 
 ### App Store Server APIs
 - Server notifications (V2)
 - Transaction history endpoint
 - Subscription status endpoint
 - Look up order ID
+- Retention Messaging API (real-time messages, offerType 5)
 
 ### iOS 18.4 Enhancements
 - appTransactionID field

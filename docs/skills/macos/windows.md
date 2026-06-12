@@ -17,6 +17,7 @@ Use this skill when you're:
 - Adding a data-driven detail WindowGroup that should only open programmatically
 - Customizing window toolbar style or removing default menu commands
 - Adding a menu bar extra (standalone utility or companion to a main app)
+- Building a document-based Mac app (DocumentGroup shell and File menu integration)
 - Debugging windows that won't open, open duplicates, or lose state on relaunch
 
 ## Example Prompts
@@ -33,8 +34,9 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Scene Type Selection
 - Decision tree across `WindowGroup`, `Window`, `UtilityWindow`, `MenuBarExtra`, `Settings`, and `DocumentGroup`
-- Platform availability matrix (macOS 11+, 13+, 15+; iPadOS/visionOS where supported)
+- Platform availability matrix (macOS, iOS/iPadOS, visionOS)
 - Why `Window` as the primary scene causes the app to quit when closed
+- The DocumentGroup shell — free File menu, document menu, tabs, and per-document restoration (and why `DocumentGroupLaunchScene` doesn't apply on the Mac)
 
 ### Window Lifecycle
 - `@Environment(\.openWindow)` and `@Environment(\.dismissWindow)`
@@ -43,7 +45,7 @@ Questions you can ask Claude that will draw from this skill:
 - `@Environment(\.openSettings)` for opening the Settings scene programmatically
 
 ### Default Size, Position, and Resizability
-- `.defaultSize`, `.defaultPosition`, `.defaultWindowPlacement` (macOS 14+)
+- `.defaultSize`, `.defaultPosition` (macOS 13+), `.defaultWindowPlacement` (macOS 15+)
 - Why `defaultSize` is ignored once the user has resized — and why that's correct
 - `.windowResizability(.automatic / .contentSize / .contentMinSize)`
 
@@ -90,6 +92,6 @@ This page documents the `windows` skill in the `axiom-macos` suite. The skill fi
 
 **WWDC**: 2022-10061, 2024-10149
 
-**Docs**: /swiftui/windowgroup, /swiftui/window, /swiftui/utilitywindow, /swiftui/menubarextra, /swiftui/settings, /swiftui/openwindowaction, /swiftui/dismisswindowaction, /swiftui/windowstyle, /swiftui/windowtoolbarstyle
+**Docs**: /swiftui/windowgroup, /swiftui/window, /swiftui/utilitywindow, /swiftui/menubarextra, /swiftui/settings, /swiftui/documentgroup, /swiftui/openwindowaction, /swiftui/dismisswindowaction, /swiftui/windowstyle, /swiftui/windowtoolbarstyle
 
 **Skills**: axiom-macos, menus-and-commands, settings, swiftui-differences

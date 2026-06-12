@@ -43,7 +43,8 @@ Questions developers ask that this reference answers:
 - **NFC pass reading** — combined-mode (pass + payment in one tap) and standalone-pass-only modes; cross-reference to the `pass.json` `nfc` block schema
 - **Read errors** — categories (cancellation, timeout, unsupported card, issuer decline, SCA required, reader not configured, entitlement missing) with recovery guidance; PSP SDKs wrap these in typed hierarchies
 - **Store and Forward mode** — `prepareStoreAndForward()`, `fetchPaymentCardReaderStore()`; PSP-supported, not Apple-supported, with chargeback risk
-- **`MobileDocumentReader`** (Tap to Present ID, WWDC23) — separate class on the same framework for reading driver's licenses and state IDs; out of scope for `axiom-payments` but cross-referenced here so developers searching ProximityReader land in the right place
+- **`MobileDocumentReader`** (Tap to Present ID, WWDC23) — separate class on the same framework for reading driver's licenses and state IDs; out of scope for `axiom-payments` but cross-referenced here so developers searching ProximityReader land in the right place — plus the ID-verification additions from the 27 releases (the `.name` element with `MobileDocumentHolderName`, `issuerIdentifiers`)
+- **`CustomerEngagementSession`** (27 releases) — merchant↔customer-device pairing for contact info, signups, payments, carts, and pass adds
 - **`ProximityReaderDiscovery`** — system-provided merchant tutorial UI, Apple-maintained and localized
 - **Pipeline state diagram** — the foreground → prepare → readyForTap → read → completed → re-prepare-on-foreground loop
 - **Threading model** — `Sendable` conformance, single-consumer `events` async stream

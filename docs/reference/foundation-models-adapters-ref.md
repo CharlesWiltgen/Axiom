@@ -13,7 +13,7 @@ Use this reference when:
 - Setting up the Foundation Models Adapter Training Toolkit Python environment (Python 3.11, Apple silicon Mac ≥32 GB or Linux GPU)
 - Authoring the training dataset JSONL (basic chat-turn schema or the tool-calling extension)
 - Looking up `examples.train_adapter`, `examples.train_draft_model`, `examples.generate`, or `export.export_fmadapter` CLI signatures and hyperparameters
-- Looking up `SystemLanguageModel.Adapter` initializers, instance methods (`compile()`), and static lifecycle methods (`removeObsoleteAdapters()`, `compatibleAdapterIdentifiers(name:)`, `isCompatible(_:)`)
+- Looking up `SystemLanguageModel.Adapter` initializers, instance methods (`compile()`), and static lifecycle methods (`removeObsoleteAdapters()`, `compatibleAdapterIdentifiers(name:)`)
 - Looking up `SystemLanguageModel.Adapter.AssetError` cases
 - Wiring an adapter into a `LanguageModelSession` and composing it with `SystemLanguageModel(adapter:guardrails:)`
 - Configuring the `com.apple.developer.foundation-model-adapter` deployment entitlement
@@ -44,7 +44,7 @@ Questions developers ask that this reference answers:
 - **Evaluation** — `examples.generate` CLI; the four-axis eval requirement (quantitative + human grading + larger-model grading + safety); locale-specific eval groupings (English-US, English-outside-US, PFIGSCJK: Portuguese, French, Italian, German, Spanish, Chinese-Simplified, Japanese, Korean)
 - **Export** — `export.export_fmadapter` with `--adapter-name` (underscore-only per runtime regex `/fmadapter-\w+-\w+/`), output `.fmadapter` package shape
 - **Entitlement flow** — `com.apple.developer.foundation-model-adapter` (Account Holder request via developer portal, deployment-only, not required for local training)
-- **Runtime API** — `SystemLanguageModel.Adapter` struct: `init(name:)`, `init(fileURL:)`, `compile() async throws`, `removeObsoleteAdapters() throws`, `compatibleAdapterIdentifiers(name:) -> [String]`, `isCompatible(_ assetPack: AssetPack) -> Bool`; composition via `SystemLanguageModel(adapter:)` / `SystemLanguageModel(adapter:guardrails:)`
+- **Runtime API** — `SystemLanguageModel.Adapter` struct: `init(name:)`, `init(fileURL:)`, `compile() async throws`, `removeObsoleteAdapters() throws`, `compatibleAdapterIdentifiers(name:) -> [String]`; composition via `SystemLanguageModel(adapter:)` / `SystemLanguageModel(adapter:guardrails:)` (the whole adapter runtime is deprecated 26.4 / obsoleted 27.0 in the 27 SDK)
 - **AssetError cases** — `.compatibleAdapterNotFound(_)`, `.invalidAdapterName(_)`, `.invalidAsset(_)` with `Context` payload and `errorDescription`
 - **Compatibility matrix** — per-base-model-version pinning; system-model OS to toolkit version mapping; per-OS variant strategy (`fmadapter-{name}-base26_0`, `fmadapter-{name}-base26_1`, etc.); install-base coverage decision table
 - **End-to-end pattern** — build-time CLI sequence (author dataset → train → train draft → eval → export → package for Background Assets) plus runtime Swift example wiring `removeObsoleteAdapters() → compatibleAdapterIdentifiers(name:) → ensureLocalAvailability → init(name:) → compile() → SystemLanguageModel(adapter:) → LanguageModelSession`

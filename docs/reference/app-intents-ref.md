@@ -45,6 +45,10 @@ Questions you can ask Claude that will draw from this reference:
 - Disambiguation prompts
 - Confirmation dialogs
 - Error messages for voice
+
+### Authentication & Security
+- IntentAuthenticationPolicy (iOS 16+)
+- Schema-inherited policies and risk-based confirmations (OS 27)
 - App Schemas — `@AppEntity`/`@AppIntent`/`@AppEnum(schema:)` macros + system schema domains (debuted iOS 18; domains expanded iOS 27: Calendar, Maps, Phone, Reminders, Notes, ImageGeneration, AppStore, Audio, Clock)
 - Xcode schema-completeness build errors with fix-its (iOS 27)
 
