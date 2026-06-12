@@ -14,6 +14,10 @@ license: MIT
 |----------------|-----------|
 | VoiceOver labels, hints, navigation | See `skills/accessibility-diag.md` |
 | Dynamic Type scaling violations | See `skills/accessibility-diag.md` |
+| Dynamic Type on tvOS (Large Text, tvOS 27) | See `skills/accessibility-diag.md` |
+| Long-form reading apps (continuous reading, Speak Screen, text navigation) | See `skills/accessibility-diag.md` |
+| Custom control technique choice (adjustable, passthrough, direct touch) | See `skills/accessibility-diag.md` |
+| Accessibility Nutrition Labels | See `skills/accessibility-diag.md` |
 | Color contrast (WCAG AA/AAA) | See `skills/accessibility-diag.md` |
 | Touch target sizes (< 44x44pt) | See `skills/accessibility-diag.md` |
 | Keyboard navigation (iPadOS/macOS) | See `skills/accessibility-diag.md` |
@@ -48,7 +52,9 @@ digraph accessibility {
     what -> "skills/accessibility-diag.md" [label="keyboard nav"];
     what -> "skills/accessibility-diag.md" [label="Reduce Motion"];
     what -> "skills/accessibility-diag.md" [label="Assistive Access"];
-    what -> "skills/accessibility-diag.md" [label="App Store prep"];
+    what -> "skills/accessibility-diag.md" [label="custom control techniques"];
+    what -> "skills/accessibility-diag.md" [label="continuous reading / text navigation"];
+    what -> "skills/accessibility-diag.md" [label="App Store prep / Nutrition Labels"];
     what -> "skills/ux-flow-audit.md" [label="UX dead end/dismiss trap"];
     what -> "skills/ux-flow-audit.md" [label="missing states"];
     what -> "skills/watchos-a11y.md" [label="watchOS VoiceOver / AssistiveTouch / Double Tap"];
@@ -56,12 +62,13 @@ digraph accessibility {
 }
 ```
 
-1. ANY VoiceOver, Dynamic Type, contrast, touch target, or WCAG issue → `skills/accessibility-diag.md`
+1. ANY VoiceOver, Dynamic Type (including tvOS Large Text), contrast, touch target, or WCAG issue → `skills/accessibility-diag.md`
 2. Assistive Access (cognitive disabilities, iOS 17+) → `skills/accessibility-diag.md`
-3. App Store accessibility rejection → `skills/accessibility-diag.md`
-4. UX dead ends, dismiss traps, buried CTAs, missing states → `skills/ux-flow-audit.md`
-5. watchOS-specific accessibility (rotor on Digital Crown, AssistiveTouch, Double Tap) → `skills/watchos-a11y.md`
-6. Want automated accessibility scan? → `accessibility-auditor` agent or `/axiom:audit accessibility`
+3. App Store accessibility rejection or Nutrition Labels → `skills/accessibility-diag.md`
+4. Reading app: VoiceOver stops at paragraphs/pages, Speak Screen halts → `skills/accessibility-diag.md`
+5. UX dead ends, dismiss traps, buried CTAs, missing states → `skills/ux-flow-audit.md`
+6. watchOS-specific accessibility (rotor on Digital Crown, AssistiveTouch, Double Tap) → `skills/watchos-a11y.md`
+7. Want automated accessibility scan? → `accessibility-auditor` agent or `/axiom:audit accessibility`
 
 ## Automated Scanning
 
@@ -113,6 +120,12 @@ User: "Scan my app for accessibility issues automatically"
 → Launch `accessibility-auditor` agent
 
 User: "How do I support Assistive Access?"
+→ See `skills/accessibility-diag.md`
+
+User: "How do I prepare my tvOS app for Large Text?"
+→ See `skills/accessibility-diag.md`
+
+User: "VoiceOver stops reading at the end of each page in my book app"
 → See `skills/accessibility-diag.md`
 
 User: "Check for UX dead ends and dismiss traps"
