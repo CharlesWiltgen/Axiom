@@ -90,6 +90,15 @@ Use this diagnostic when:
 - Adding captions or subtitle styling to a video player (generated subtitles, live style preview)
 - Before major releases
 
+## Example Prompts
+
+- "My app was rejected under Guideline 2.5.2 for accessibility — how do I fix it before resubmitting?"
+- "How do I test my app with VoiceOver before I submit to the App Store?"
+- "My layout breaks at the largest Dynamic Type size — how do I make it scale?"
+- "What contrast ratio do I need to pass WCAG AA and App Store review?"
+- "How do I add generated subtitles and subtitle styling to my video player accessibly?"
+- "What goes in the Accessibility Nutrition Labels, and how do I declare them?"
+
 ## Diagnostic Workflow
 
 ```

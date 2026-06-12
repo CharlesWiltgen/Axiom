@@ -7,6 +7,8 @@ description: Apple's Foundation Models Adapter Training Toolkit (Python) + Syste
 
 Complete reference for the Adapter Training Toolkit (Python 3.11, build-time) and the `SystemLanguageModel.Adapter` runtime API (Swift, on-device) for training and loading custom adapters on top of Apple's on-device Foundation Models.
 
+> **Status (27 SDK)** — the `SystemLanguageModel.Adapter` runtime is **deprecated 26.4 / obsoleted 27.0** (iOS/iPadOS/macOS/visionOS; never watchOS/tvOS) and does **not** compile on a 27.0+ deployment target, with no replacement in the 27 SDK. This reference stays accurate for 26.x deployments; if any target you support is 27+, see [Foundation Models Adapters](/skills/integration/foundation-models-adapters) for the pivot (custom providers / Core AI).
+
 ## When to Use This Reference
 
 Use this reference when:
