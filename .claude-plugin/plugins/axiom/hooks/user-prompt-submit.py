@@ -59,7 +59,7 @@ matches = []
 # token (e.g. "code sign" + "python") stays gated here; on Claude Code the
 # description layer still routes it. When adding a new router token below, only add
 # it here too if it clears the inclusion criterion.
-non_ios_keyword = re.search(r'typescript|react(?!\s*native)|angular|vue\.js|django|flask|rails|node\.js|nodejs|npm |yarn |webpack|docker|kubernetes|python\b|java\b(?!script)|kotlin|android|flutter', prompt_lower)
+non_ios_keyword = re.search(r'typescript|react(?!\s*native)|angular|vue\.js|django|flask|rails|node\.js|nodejs|npm |yarn |webpack|docker|kubernetes|python\b|java\b(?!script)|kotlin|android|flutter|unreal|godot|steam\s*deck|shopify|woocommerce|\bsaas\b', prompt_lower)
 ios_signal = re.search(r'\bswift\b|swiftui|swiftdata|\bxcode|xcworkspace|xcodeproj|\bobjective-c\b|\bobjc\b|\bios\b|ipados|watchos|tvos|visionos|\biphone|\bipad|apple\s*(watch|tv)|vision\s*pro|uikit|appkit|cocoapod|swift\s*package|testflight|app\s*store\s*connect|provisioning\s*profile|\bxcrun\b|\blldb\b', prompt_lower)
 non_ios = bool(non_ios_keyword) and not ios_signal
 
@@ -109,11 +109,11 @@ if not non_ios and "axiom-concurrency" not in matches and re.search(r'main threa
     matches.append("axiom-concurrency")
 
 # Performance
-if re.search(r'memory leak|retain cycle|instruments\b.{0,10}(profil|trace|template)|time profiler|allocations\b.{0,5}(instrument|tool|track)|app launch.{0,5}(time|perf|slow|template|instrument)|launch time|pre-?main\b|dyld\b|static initializer|first frame|extended launch|xctapplicationlaunchmetric|mxapplaunchmetric|\bcold launch\b|\bwarm launch\b|\b\d{1,3}\s*fps\b|drops?.{0,10}to.{0,5}\d+\s*fps|frame\s*rate.{0,15}(drop|low|stutter|janky|tank)|fps.{0,10}(drop|low|stutter|tank)', prompt_lower):
+if re.search(r'memory leak|retain cycle|instruments\b.{0,10}(profil|trace|template)|time profiler|allocations\b.{0,5}(instrument|tool|track)|app launch.{0,5}(time|perf|slow|template|instrument)|launch time|pre-?main\b|dyld\b|static initializer|first frame|extended launch|xctapplicationlaunchmetric|mxapplaunchmetric|\bcold launch\b|\bwarm launch\b|\b\d{1,3}\s*fps\b|drops?.{0,10}to.{0,5}\d+\s*fps|frame\s*rate.{0,15}(drop|low|stutter|janky|tank)|fps.{0,10}(drop|low|stutter|tank)|metrickit|mxmetric\w*|mxdiagnostic\w*|\bmetricmanager\b|statereporting|reportablemetadata|state reporter\b|per-?state metrics|crashreportextension|crash\s*report(er|ing)?\s*extension|crashedprocess|(top functions|run comparisons?).{0,40}(instruments?\b|profil|trace)|(instruments?\b|profil|trace).{0,40}(top functions|run comparisons?)', prompt_lower):
     matches.append("axiom-performance")
 
 # Performance — generic terms gated
-if not non_ios and "axiom-performance" not in matches and re.search(r'performance.{0,10}(slow|issue|bad|poor)|profil.{0,5}(app|cpu|memory)|battery drain|energy.{0,5}(issue|audit)|memory.{0,5}(grow|pressure|warning)|(slow|slug|sluggish).{0,15}(launch|startup)|launch.{0,15}(slow|sluggish|regress|too long)|startup.{0,5}(time|slow|perf)|slow.{0,20}(after|when).{0,5}(tapping|tap).{0,15}(push|notification)', prompt_lower):
+if not non_ios and "axiom-performance" not in matches and re.search(r'performance.{0,10}(slow|issue|bad|poor)|profil.{0,5}(app|cpu|memory)|battery drain|energy.{0,5}(issue|audit)|memory.{0,5}(grow|pressure|warning)|(slow|slug|sluggish).{0,15}(launch|startup)|launch.{0,15}(slow|sluggish|regress|too long)|startup.{0,5}(time|slow|perf)|slow.{0,20}(after|when).{0,5}(tapping|tap).{0,15}(push|notification)|state reporting\b', prompt_lower):
     matches.append("axiom-performance")
 
 # Networking
@@ -129,19 +129,26 @@ if re.search(r'xctest|xcuitest|swift\s*testing|@test\b|@suite\b|#expect\b|ui\s*t
     matches.append("axiom-testing")
 
 # Integration
-if re.search(r'widgetkit|widgetcenter|reloadalltimelines|reloadtimelines|add.{0,10}widget|widget.{0,10}(timeline|entry|not updat|show|display)|widget.{0,30}(not updat|never updat|stale)|siri\b|storekit|in-app purchase|iap\b|eventkit|ekevents|reminder.{0,5}(access|permiss)|cncontact|app\s*intent|app\s*shortcut|spotlight.{0,5}(index|search)|localization|string\s*catalog|live\s*activit|control\s*center.{0,5}(widget|control)|push\s*notif|background\s*task|bgtask|timer.{0,5}(pattern|crash|dispatch)|accessorysetupkit|asaccessorysession|asdiscoverydescriptor|accessory\s*(setup|pairing|picker)|weatherkit|weatherservice|callkit|cxprovider|pushkit|pkpushregistry|voip\s*(push|call|app)|livecommunicationkit|conversationmanager|cxcalldirectory|caller\s*id|call\s*directory|livecalleridlookup', prompt_lower):
+if re.search(r'widgetkit|widgetcenter|reloadalltimelines|reloadtimelines|add.{0,10}widget|widget.{0,10}(timeline|entry|not updat|show|display)|widget.{0,30}(not updat|never updat|stale)|siri\b|storekit|in-app purchase|iap\b|subscription\s*group|eventkit|ekevents|reminder.{0,5}(access|permiss)|cncontact|app\s*intent|app\s*shortcut|spotlight.{0,5}(index|search)|spotlightsearchtool|localization|string\s*catalog|live\s*activit|control\s*center.{0,5}(widget|control)|push\s*notif|background\s*task|bgtask|timer.{0,5}(pattern|crash|dispatch)|accessorysetupkit|asaccessorysession|asdiscoverydescriptor|accessory\s*(setup|pairing|picker)|weatherkit|weatherservice|callkit|cxprovider|pushkit|pkpushregistry|voip\s*(push|call|app)|livecommunicationkit|conversationmanager|cxcalldirectory|caller\s*id|call\s*directory|livecalleridlookup|assetpack\w*|ba-package|ba-serve|nsbundleresourcerequest|storedownloaderextension|badownloaderextension|pricingterms|billingplantype|commitmentinfo|redeemoption|offercoderedemption|presentoffercoderedeemsheet', prompt_lower):
+    matches.append("axiom-integration")
+
+# Integration — generic asset/commerce phrases gated
+# Spaced forms of the OS27 StoreKit/Background Assets vocabulary. Zero-space API
+# tokens live ungated above; these phrase forms also appear in web/marketing/SaaS
+# prompts, so they take the non_ios gate plus purchase/asset-context proximity.
+if not non_ios and "axiom-integration" not in matches and re.search(r'background\s*assets\b|asset\s*packs?\b|apple\s*unity\s*plug|on.?demand\s*resources?\b.{0,50}(deprecat|migrat|asset|tag|bundle|ios|xcode|app\s*store|background\s*assets)|(deprecat\w*|migrat\w*|odr)\b.{0,40}on.?demand\s*resources|retention\s*messag\w*.{0,60}(subscription|cancel|app\s*store|storekit)|(subscription|cancel\w*|storekit|app\s*store).{0,60}retention\s*messag|billing\s*plan.{0,40}(subscription|commitment|iap|in.app|storekit|app\s*store)|(subscription|commitment|iap|in.app|storekit|app\s*store).{0,40}billing\s*plan|(subscription|monthly|plan)s?\b.{0,40}12.?month\s*commitment|12.?month\s*commitment.{0,40}(subscription|monthly|plan)|offer\s*codes?\b.{0,40}(redeem|redemption|storekit|app\s*store|iap|in.app|sheet)|(redeem|redemption)\w*.{0,30}offer\s*codes?\b', prompt_lower):
     matches.append("axiom-integration")
 
 # Media
-if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker)|core\s*haptics|haptic|now\s*playing|shazamkit|audio\s*recogni|avfoundation|carplay.{0,5}(audio|now)|musickit|camera.{0,5}(capture|preview|session)|dockkit|dockaccessory|dock\s*accessory|motorized.{0,12}(stand|dock)', prompt_lower):
+if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker|capture)|core\s*haptics|haptic|now\s*playing|shazamkit|audio\s*recogni|avfoundation|carplay.{0,5}(audio|now)|musickit|camera.{0,5}(capture|preview|session|app|launch)|front\s*camera|center\s*stage|deferred\s*start|pro\s*video\s*storage|prores\b|smart\s*framing|dockkit|dockaccessory|dock\s*accessory|motorized.{0,12}(stand|dock)', prompt_lower):
     matches.append("axiom-media")
 
 # Accessibility
-if re.search(r'voiceover|accessibility.{0,10}(label|hint|trait|value|issue|audit|fix)|dynamic type|color contrast|wcag|a11y|accessib.{0,10}(element|identif|action)', prompt_lower):
+if re.search(r'voiceover|accessibility.{0,10}(label|hint|trait|value|issue|audit|fix)|dynamic type|color contrast|wcag|a11y|accessib.{0,10}(element|identif|action)|speak\s*screen|spoken\s*content|accessibility\s*reader|larger\s*text\b|accessibility\s*nutrition|\bdirect\s*touch|activation\s*point', prompt_lower):
     matches.append("axiom-accessibility")
 
 # AI
-if re.search(r'foundation models|apple intelligence|@generable\b|languagemodelsession|on-device.{0,5}(ai|model|ml)|@guide\b.{0,10}(generat|struct)', prompt_lower):
+if re.search(r'foundation models|apple intelligence|@generable\b|languagemodelsession|on-device.{0,5}(ai|model|ml)|@guide\b.{0,10}(generat|struct)|private\s*cloud\s*compute|privatecloudcompute', prompt_lower):
     matches.append("axiom-ai")
 
 # ML
@@ -153,21 +160,33 @@ if re.search(r'vision\s*framework|visionkit|vnrequest|vndetect|vnclassif|vnrecog
     matches.append("axiom-vision")
 
 # Games/Graphics
-if re.search(r'spritekit|scenekit|realitykit|skscene|skspritenode|skphysics|realityview|arview|game.{0,5}(loop|scene|physics)', prompt_lower):
+if re.search(r'spritekit|scenekit|realitykit|skscene|skspritenode|skphysics|realityview|arview|game.{0,5}(loop|scene|physics)|touchcontroller|tctouch|tcbutton|tcthumbstick|tccontrol|gccontroller|gcvirtualcontroller|gcspatialaccessory|extendedgamepad|gamecontroller', prompt_lower):
+    matches.append("axiom-games")
+
+# Games — generic input terms gated
+if not non_ios and "axiom-games" not in matches and re.search(r'game\s*controller|virtual\s*controller|\bgamepads?\b|spatial\s*accessor|controller.{0,12}home\s*button|touch\s*controls?\b.{0,40}(game|gaming|\bport(ed|ing)?\b|controller|thumbstick|joystick|on.?screen)|(game|gaming|\bport(ed|ing)?\b|controller|thumbstick|joystick|on.?screen).{0,40}touch\s*controls?\b', prompt_lower):
     matches.append("axiom-games")
 
 # Graphics (Metal/GPU — separate from games)
-if re.search(r'metal\b.{0,10}(shader|render|migrat|buffer|texture|pipeline)|opengl.{0,10}(migrat|metal|convert)|gpu.{0,10}(render|compute)|promoti|variable.{0,5}refresh.{0,5}rate', prompt_lower):
+if re.search(r'metal\b.{0,10}(shader|render|migrat|buffer|texture|pipeline)|opengl.{0,10}(migrat|metal|convert)|gpu.{0,10}(render|compute)|promoti|variable.{0,5}refresh.{0,5}rate|usdkit|usdz\b|gaussian\s*splat|metalperftrace|mtltensor|tensorops|metalfx|projective\s*texture|reverb\s*mesh|realitykit|realityview', prompt_lower):
+    matches.append("axiom-graphics")
+
+# Graphics — generic terms gated
+if not non_ios and "axiom-graphics" not in matches and re.search(r'nav(igation)?\s*mesh|neural\s*render|metal\s*tensor|\busd\b.{0,30}(file|stage|prim|layer|scene|asset|model|export|convert|composit)', prompt_lower):
     matches.append("axiom-graphics")
 
 # App Store / Shipping
-if re.search(r'app store.{0,10}(reject|review|submiss|connect|metadata)|testflight|privacy manifest|app review|export compliance|age rating|app.{0,5}(submit|upload|distribut)|app\s*clip', prompt_lower):
+if re.search(r'app store.{0,10}(reject|review|submiss|connect|metadata)|testflight|privacy manifest|app review|export compliance|age rating|app.{0,5}(submit|upload|distribut)|app\s*clip|asset\s*librar\w*.{0,40}(app\s*store|connect|review)|(app\s*store|connect).{0,40}asset\s*librar|creative\s*assets?.{0,60}(app\s*store|connect|submi|review)|(app\s*store|connect).{0,60}creative\s*assets?', prompt_lower):
+    matches.append("axiom-shipping")
+
+# Shipping — generic commerce terms gated
+if not non_ios and "axiom-shipping" not in matches and re.search(r'retention\s*messag\w*.{0,60}(subscription|cancel|app\s*store|storekit)|(subscription|cancel\w*|storekit|app\s*store).{0,60}retention\s*messag|product\s*page\s*header|volume\s*(purchas|pricing).{0,50}(subscription|seat|app\s*store|\basm\b|\babm\b|apple)|(subscription|seat\w*|app\s*store|\basm\b|\babm\b).{0,50}volume\s*(purchas|pricing)|group\s*purchas|(group|organization)s?\b.{0,20}subscription|subscription.{0,20}(group|organization)|(subscription|purchas\w*|storekit|app\s*store).{0,60}seat.{0,15}(count|pricing|assign)|seat.{0,15}(count|pricing|assign).{0,60}(subscription|purchas\w*|storekit|volume\s*pricing)', prompt_lower):
     matches.append("axiom-shipping")
 
 # macOS
 # Note: bare "macos"/"mac os" is intentionally NOT matched — it fires on host-OS
 # version mentions ("on macOS 26.3"). Require intent-qualifying terms instead.
-if re.search(r'mac\s*app(?:lication)?s?\b|macos.{0,15}(app|build|sandbox|develop|distribut|notariz|menubar|window|toolbar|sign)|appkit|screencapturekit|scstream\b|scshareablecontent|sccontentfilter|sccontentsharingpicker|scscreenshotmanager|screcordingoutput|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nsviewcontrollerrepresentable|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)', prompt_lower):
+if re.search(r'mac\s*app(?:lication)?s?\b|macos.{0,15}(app|build|sandbox|develop|distribut|notariz|menubar|window|toolbar|sign)|appkit|screencapturekit|scstream\b|scshareablecontent|sccontentfilter|sccontentsharingpicker|scscreenshotmanager|screcordingoutput|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nshostingmenu|nshostingscene|nsgesturerecognizerrepresentable|nsviewcontrollerrepresentable|nscontrol\b|nsstatusitem|status\s*items?\b.{0,40}(window|menu|keyboard|expand)|menu\s*bar.{0,15}status\s*item|nswindowrestoration|encoderestorablestate|nsrefreshcontroller|nstextselectionmanager|nsglasseffect|cornerconfiguration|concentric.{0,10}corner|corner.{0,12}concentric|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)', prompt_lower):
     matches.append("axiom-macos")
 
 # watchOS
@@ -180,15 +199,15 @@ if re.search(r'healthkit|hkworkout|hkliveworkout|workoutkit|hkquery|hkobserver|h
 
 # Real-world payments (Apple Pay / Wallet / Tap to Pay)
 # NOT in-app purchase / IAP — that belongs to axiom-integration
-if re.search(r'apple\s*pay|pkpayment|pkpaymentauthorization|passkit|\bpkpass\b|wallet\s*pass|tap\s*to\s*pay|orders?\s*in\s*wallet|merchant\s*(id|capabilit|identifier)|payment\s*(request|network|method)', prompt_lower):
+if re.search(r'apple\s*pay|pkpayment|pkpaymentauthorization|passkit|\bpkpass\b|wallet\s*pass|tap\s*to\s*pay|orders?\s*in\s*wallet|merchant\s*(id|capabilit|identifier)|payment\s*(request|network|method)|postergeneric|poster\s*generic|featuredactions|featured\s*actions?\b.{0,30}pass|pass\b.{0,30}featured\s*actions?|pass\s*designer|pkpasstemplate|\bbuildpass\b|customerengagement|codabar|pkbarcodeformat', prompt_lower):
     matches.append("axiom-payments")
 
 # Design
-if re.search(r'human interface|hig\b|liquid glass|glass\s*[-]?\s*effect\b|glasseffectcontainer|glasseffectlayer|sf symbol|symbol.{0,5}(effect|variablevalue|render)|typography.{0,10}(ios|swift|app)|design.{0,5}(system|pattern|token)|app.{0,5}(entry|launch|onboard)|authentication.{0,5}(flow|screen|ui)', prompt_lower):
+if re.search(r'human interface|hig\b|liquid glass|glass\s*[-]?\s*effect\b|glasseffectcontainer|glasseffectlayer|sf symbol|symbol.{0,5}(effect|variablevalue|render)|typography.{0,10}(ios|swift|app)|design.{0,5}(system|pattern|token)|app.{0,5}(entry|launch|onboard)|authentication.{0,5}(flow|screen|ui)|concentric.{0,10}(corner|rectangle)|corner.{0,12}concentric', prompt_lower):
     matches.append("axiom-design")
 
 # UIKit
-if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview|pencilkit|pkcanvasview|pktoolpicker|pkdrawing|apple\s*pencil|paperkit|papermarkup', prompt_lower):
+if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview|pencilkit|pkcanvasview|pktoolpicker|pkdrawing|apple\s*pencil|paperkit|papermarkup|uicornerconfiguration|cornerconfiguration|encoderestorablestate', prompt_lower):
     matches.append("axiom-uikit")
 
 # Swift language
@@ -196,11 +215,11 @@ if re.search(r'noncopyable|~copyable|consuming\s+func|borrowing\s+func|transfera
     matches.append("axiom-swift")
 
 # Location
-if re.search(r'core\s*location|cllocation|clmonitor|clgeocoder|mapkit|mkmap|mkannotation|mkdirection|geofenc|region\s*monitor|significant.{0,5}location|clauthorization|location.{0,5}(service|permiss|track|updat|manag|accura)', prompt_lower):
+if re.search(r'core\s*location|cllocation|clmonitor|clgeocoder|mapkit|mkmap|mkannotation|mkdirection|geofenc|region\s*monitor|significant.{0,5}location|clauthorization|location.{0,5}(service|permiss|track|updat|manag|accura)|clbodyidentifiable|heading(orientation|body)|(compass|magnetic)\s*heading|trueheading|pointofinterest(category|filter)', prompt_lower):
     matches.append("axiom-location")
 
 # Security
-if re.search(r'keychain|secitem|seckey|secaccess|passkey.{0,5}(implement|add|creat|auth)|code\s*sign|provisioning\s*profile|certificate.{0,10}(sign|identity|distribut)|encrypt.{0,10}(data|file|aes|chacha)|cryptokit|secureenclave|app\s*attest|dcappattest|devicecheck', prompt_lower):
+if re.search(r'keychain|secitem|seckey|secaccess|passkey.{0,5}(implement|add|creat|auth)|code\s*sign|provisioning\s*profile|certificate.{0,10}(sign|identity|distribut)|encrypt.{0,10}(data|file|aes|chacha)|cryptokit|secureenclave|app\s*attest|dcappattest|devicecheck|prompt\s*injection|secur.{0,25}(agentic|ai\s*agent|llm|ai\s*feature)|agentic.{0,25}(secur|risk|threat)|ontoolcall|historytransform|authenticationpolicy|lock.{0,3}screen.{0,20}(intent|siri)', prompt_lower):
     matches.append("axiom-security")
 
 # Apple docs (iOS version uncertainty, API lookups)
