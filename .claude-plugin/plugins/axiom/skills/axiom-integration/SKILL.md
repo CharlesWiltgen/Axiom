@@ -16,6 +16,7 @@ license: MIT
 | App Shortcuts, phrases, Spotlight | See `skills/app-shortcuts-ref.md` |
 | App discoverability strategy | See `skills/app-discoverability.md` |
 | Core Spotlight indexing | See `skills/core-spotlight-ref.md` |
+| LLM search over app content, SpotlightSearchTool | See `skills/core-spotlight-ref.md` |
 | Widgets, Control Center controls | See `skills/extensions-widgets.md` |
 | Widget API reference | See `skills/extensions-widgets-ref.md` |
 | Live Activities, Dynamic Island, push-to-start, broadcast | See `skills/live-activities.md` |
@@ -23,6 +24,8 @@ license: MIT
 | Apple Pay (physical goods, services, donations) | **Use `axiom-payments` instead** |
 | In-app purchases, subscriptions | See `skills/in-app-purchases.md` |
 | StoreKit 2 API reference | See `skills/storekit-ref.md` |
+| Commitment billing plans, subscription bundles/suites, group/volume subscriptions, retention offers, offer codes | See `skills/storekit-ref.md` |
+| In-game content (Unity plug-ins, asset packs + IAP) | See `skills/in-app-purchases.md`, `skills/background-assets.md` |
 | Calendar events, reminders (EventKit) | See `skills/eventkit.md` |
 | EventKit API reference | See `skills/eventkit-ref.md` |
 | Contacts, contact picker | See `skills/contacts.md` |
@@ -42,7 +45,8 @@ license: MIT
 | Background task debugging | See `skills/background-processing-diag.md` |
 | Background task API reference | See `skills/background-processing-ref.md` |
 | Background Assets (large content delivery, FM adapter shipping, Apple-hosted vs server-hosted) | See `skills/background-assets.md` |
-| Background Assets API reference | See `skills/background-assets-ref.md` |
+| Background Assets API reference (incl. localized asset packs, Steam conversion) | See `skills/background-assets-ref.md` |
+| On-Demand Resources migration (deprecated in 27) | See `skills/background-assets.md` |
 | Push notifications, APNs | See `skills/push-notifications.md` |
 | Push notification debugging | See `skills/push-notifications-diag.md` |
 | Push notification API reference | See `skills/push-notifications-ref.md` |
@@ -79,9 +83,11 @@ digraph integration {
 1. Siri / App Intents / entity queries? → `skills/app-intents-ref.md`
 2. App Shortcuts / phrases? → `skills/app-shortcuts-ref.md`
 3. App discoverability / Spotlight strategy? → `skills/app-discoverability.md`, `skills/core-spotlight-ref.md`
+3a. LLM search over your app's index (SpotlightSearchTool, LanguageModelSession tool-calling)? → `skills/core-spotlight-ref.md`
 4. Widgets / Control Center controls? → `skills/extensions-widgets.md`, `skills/extensions-widgets-ref.md`
 4a. Live Activities / Dynamic Island / push-to-start / broadcast? → `skills/live-activities.md`, `skills/live-activities-ref.md`
 5. In-app purchases / StoreKit? → `skills/in-app-purchases.md`, `skills/storekit-ref.md`
+5a. Subscription billing plans (12-month commitment), bundles/suites, group/volume purchasing, retention offers, offer-code redemption? → `skills/storekit-ref.md`
 6. Calendar / reminders / EventKit? → `skills/eventkit.md`, `skills/eventkit-ref.md`
 7. Contacts / contact picker? → `skills/contacts.md`, `skills/contacts-ref.md`
 8. Localization mechanics (String Catalogs, plurals, RTL)? → `skills/localization.md`
@@ -93,7 +99,7 @@ digraph integration {
 10c. VoIP calls / CallKit / VoIP push / caller ID / blocking? → `skills/callkit-livecommunicationkit.md`
 11. Timers? → `skills/timer-patterns.md`, `skills/timer-patterns-ref.md`
 12. Background tasks / BGTaskScheduler? → `skills/background-processing.md`, `skills/background-processing-diag.md`, `skills/background-processing-ref.md`
-12a. Large asset delivery (game packs, ML models, Foundation Models adapters)? → `skills/background-assets.md`, `skills/background-assets-ref.md`
+12a. Large asset delivery (game packs, localized asset packs, ML models, Foundation Models adapters, ODR migration)? → `skills/background-assets.md`, `skills/background-assets-ref.md`
 13. Push notifications? → `skills/push-notifications.md`, `skills/push-notifications-diag.md`, `skills/push-notifications-ref.md`
 14. Want IAP audit? → Launch `iap-auditor` agent
 15. Want full IAP implementation? → Launch `iap-implementation` agent
@@ -104,6 +110,10 @@ digraph integration {
 **Widget + data sync** (widget not showing updated data):
 - Widget timeline not refreshing → **stay here** (extensions-widgets)
 - SwiftData/Core Data not shared with extension → **also invoke axiom-data** (App Groups)
+
+**App Intents + security** (lock-screen intent risk, prompt injection via Siri):
+- Intent/schema API surface → **stay here** (app-intents-ref)
+- Threat modeling, authenticationPolicy gating, schema risk metadata → **also invoke axiom-security** (skills/agentic-security.md)
 
 **Live Activity + push notification**:
 - ActivityKit push token / broadcast setup → **stay here** (live-activities)
@@ -118,6 +128,10 @@ digraph integration {
 **Push + background processing** (silent push not triggering background work):
 - Push payload and delivery → **stay here** (push-notifications-diag)
 - BGTaskScheduler execution → **stay here** (background-processing)
+
+**In-game content** (StoreKit + Background Assets, Unity plug-ins):
+- Asset packs, IAP mechanics, payment sheet, mock server → **stay here** (background-assets, in-app-purchases)
+- Game input, rendering, game-side performance → **also invoke axiom-games / axiom-graphics**
 
 **Calendar/Contacts + data sync**:
 - EventKit/Contacts data issues → **stay here**
@@ -153,6 +167,7 @@ digraph integration {
 | "Push notifications are just a payload and a token" | Token lifecycle, Focus levels, service extension gotchas cause 80% of push bugs. |
 | "I'll just bundle the assets, it's simpler" | Bundling ≥10 MB inflates first-install size and pays the cost every update. Background Assets ships with App Store install-progress integration; FM adapters can't be bundled at all. See `skills/background-assets.md`. |
 | "I'll use URLSession for the asset download" | URLSession doesn't integrate with App Store install progress, charging-aware scheduling, or per-app quota — and can't reach Apple-hosted asset packs at all. Background Assets is the supported channel. |
+| "On-Demand Resources still works fine" | The entire `NSBundleResourceRequest` family is deprecated in the 27 SDKs ("Use Background Assets instead"). Migrate ODR tags to asset packs. See `skills/background-assets.md`. |
 | "Just request full Calendar access" | Most apps only need to add events — EventKitUI does that with zero permissions. |
 | "I'll request Bluetooth permission and scan for the accessory" | AccessorySetupKit (iOS 18+) pairs in one tap with no broad Bluetooth prompt and grants scoped BT+Wi-Fi access. See `skills/accessorysetupkit.md`. |
 | "I'll process the VoIP push, then report the call when ready" | iOS terminates your app and stops delivering VoIP pushes if a push doesn't report a call *before* completion. Report first, fetch after. See `skills/callkit-livecommunicationkit.md`. |
@@ -172,6 +187,15 @@ User: "My Live Activity won't update" / "How do I add a Dynamic Island?" / "Broa
 
 User: "Implement in-app purchases with StoreKit 2"
 → Read: `skills/in-app-purchases.md`
+
+User: "Offer a monthly plan with a 12-month commitment" / "Sell subscription seats to teams"
+→ Read: `skills/storekit-ref.md`
+
+User: "Deliver level packs only in the player's language" / "Convert my Steam depots to asset packs"
+→ Read: `skills/background-assets-ref.md`
+
+User: "Let the on-device model answer questions about my app's content"
+→ Read: `skills/core-spotlight-ref.md`
 
 User: "How do I implement push notifications?"
 → Read: `skills/push-notifications.md`

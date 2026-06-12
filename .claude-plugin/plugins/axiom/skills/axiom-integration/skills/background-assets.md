@@ -13,6 +13,8 @@ Background Assets delivers content too large for the app bundle — ML model var
 
 **Distribution**: "All platforms except watchOS" for App Store delivery.
 
+**On-Demand Resources is deprecated**: the `NSBundleResourceRequest` (ODR) family is deprecated in the 27 SDKs with the message "Use Background Assets instead" — migrate ODR tag-based delivery to asset packs.
+
 ---
 
 ## Example Prompts
@@ -79,9 +81,9 @@ Background Assets is optimized for content that's relatively stable across an ap
 | Hosting cost | Free (200 GB / 100-pack quota included) | Your CDN bill |
 | Asset upload | Transporter / `altool` / iTMSTransporter / App Store Connect REST API | Push to your server |
 | Update latency | Goes through App Store review | Whenever you push |
-| Per-platform availability | iOS 26+ only | iOS 16+ (managed) / iOS 15+ (unmanaged) |
+| Per-platform availability | iOS 26+ only | iOS 26+ (managed) / iOS 16.1+ (unmanaged legacy) |
 | App Review burden | Asset packs reviewed alongside app | App Review checks your manifest URL serves what you described |
-| Extension code | Minimal `StoreDownloaderExtension` (two-line boilerplate) | Custom `BADownloaderExtension` with download logic |
+| Extension code | Minimal `StoreDownloaderExtension` (two-line boilerplate) | `ManagedDownloaderExtension` (managed) or `BADownloaderExtension` (unmanaged legacy) |
 | Right for | Stable content versioned with app releases | Content that needs to ship between app releases, content tied to live server features |
 
 **Default recommendation**: Apple-hosted unless you have a specific reason for server-hosted. For Foundation Models adapters specifically, either works, but Apple-hosted lets you reuse the included 200 GB quota and avoid running your own CDN.
@@ -109,7 +111,7 @@ For **managed server-hosted**:
 <!-- No BAUsesAppleHosting; manifest URL configured via your extension -->
 ```
 
-For **legacy unmanaged** (iOS 16 / 15):
+For **legacy unmanaged** (iOS 16.1+):
 
 ```xml
 <key>BAManifestURL</key>
@@ -220,6 +222,8 @@ Apple's `StoreDownloaderExtension` handles every download mechanic for you — r
 
 ```swift
 // Ensure available before consuming
+// (26 path — on OS 27, AssetPackManager.shared.assetPack(withID:) is deprecated;
+//  use `try await AssetPackManager.shared.manifest` and look up packs on it)
 let assetPack = try await AssetPackManager.shared.assetPack(withID: "Tutorial")
 try await AssetPackManager.shared.ensureLocalAvailability(of: assetPack)
 
@@ -236,22 +240,22 @@ defer { try descriptor.close() }
 
 ### Pattern 2: Server-Hosted Managed Asset Pack
 
-**Use when**: You need to ship content updates between app releases, target OS versions before iOS 26, or have a CDN strategy in place.
+**Use when**: You need to ship content updates between app releases or have a CDN strategy in place. (Targeting OS versions before 26 means the unmanaged-legacy `BADownloaderExtension` path instead.)
 
 ```swift
 import BackgroundAssets
+import ExtensionFoundation
 
 @main
-struct DownloaderExtension: BADownloaderExtension {
+struct DownloaderExtension: ManagedDownloaderExtension {
     func shouldDownload(_ assetPack: AssetPack) -> Bool {
         // Custom logic: which packs do we actually want on this device?
         return true
     }
-
-    // Implement BADownloaderExtension delegate methods for download decisions,
-    // progress, completion, and error handling.
 }
 ```
+
+(`shouldDownload(_:)` is declared on `ManagedDownloaderExtension`; the lower-level `BADownloaderExtension` protocol — `downloads(for:manifestURL:extensionInfo:)` plus the finished/failed handlers — is the unmanaged-legacy surface. See `skills/background-assets-ref.md`.)
 
 Configure your manifest URL via the extension and host the `.aar` files yourself. Your server is responsible for serving the manifest with the same `assetPackID` and version your app expects; mismatches surface as `ManagedBackgroundAssetsError.assetPackNotFound`.
 
@@ -260,6 +264,8 @@ Configure your manifest URL via the extension and host the `.aar` files yourself
 ### Pattern 3: Foundation Models Adapter Delivery
 
 **Use when**: Shipping a custom `.fmadapter` package trained with Apple's Foundation Models Adapter Training Toolkit. For the training and runtime API, see `axiom-ai (skills/foundation-models-adapters.md)` and `axiom-ai (skills/foundation-models-adapters-ref.md)`.
+
+> **27 SDK status**: the `SystemLanguageModel.Adapter` runtime is retroactively deprecated from 26.4 and **obsoleted at 27.0** in the 27 SDK — this pattern compiles only for pre-27 deployment targets, and beta 1 names no replacement. The Background Assets delivery side is unaffected.
 
 ```swift
 import BackgroundAssets
@@ -332,6 +338,8 @@ Then on the test device:
 3. For iOS / iPadOS / tvOS / visionOS, configure the URL override under Settings > Developer > Development Overrides
 
 The mock server runs HTTPS only — plain HTTP is not supported by the framework.
+
+**Xcode 27 shortcut**: running your project in Xcode 27 automatically starts a Background Assets mock server attached to the debug session — pick the folder of packaged asset packs in Edit Scheme > Run, next to the StoreKit Configuration drop-down. Manual `ba-serve` remains the path for on-device testing outside a debug session.
 
 ---
 
@@ -415,7 +423,7 @@ The mock server runs HTTPS only — plain HTTP is not supported by the framework
 - [ ] `BAHasManagedAssetPacks` set in Info.plist?
 - [ ] `BAAppGroupID` matches an App Group both the app and the extension belong to?
 - [ ] For Apple-hosted: `BAUsesAppleHosting=YES`?
-- [ ] Extension is `StoreDownloaderExtension` (Apple-hosted) or `BADownloaderExtension` (server-hosted)?
+- [ ] Extension is `StoreDownloaderExtension` (Apple-hosted), `ManagedDownloaderExtension` (managed server-hosted), or `BADownloaderExtension` (unmanaged legacy)?
 - [ ] Asset pack `assetPackID` values match between manifest and app code?
 - [ ] Download policy matches actual need (`essential` / `prefetch` / `onDemand`)?
 
@@ -452,12 +460,13 @@ The mock server runs HTTPS only — plain HTTP is not supported by the framework
 
 | Need | API |
 |------|-----|
-| Fetch metadata | `AssetPackManager.shared.assetPack(withID:)` |
+| Fetch metadata | `AssetPackManager.shared.assetPack(withID:)` (deprecated 27 → `manifest.assetPack(withID:)`) |
 | Ensure available | `AssetPackManager.shared.ensureLocalAvailability(of:)` |
 | Stream status | `AssetPackManager.shared.statusUpdates(forAssetPackWithID:)` |
 | Read file | `AssetPackManager.shared.contents(at:searchingInAssetPackWithID:options:)` or `.descriptor(for:...)` |
 | Force update check | `AssetPackManager.shared.checkForUpdates()` |
 | Remove pack | `AssetPackManager.shared.remove(assetPackWithID:)` |
+| Localized packs `OS27` | `manifest` `language` tag, `resolvedLanguage`, `reconcilePreferredLanguages()`, `contents(at:asLocalizedFor:options:)` — see `skills/background-assets-ref.md` |
 
 ### Tooling
 
@@ -465,6 +474,7 @@ The mock server runs HTTPS only — plain HTTP is not supported by the framework
 |------|---------|
 | Generate manifest template | `xcrun ba-package template -o Manifest.json` |
 | Package into `.aar` | `xcrun ba-package Manifest.json -o Pack.aar` |
+| Convert Steam depot (Xcode 27) | `xcrun ba-package convert --asset-pack-id <id> -l <lang> --on-demand depot.vdf -o Manifest.json` |
 | Local HTTPS test server | `xcrun ba-serve --host localhost Pack.aar` |
 | Override base URL on device | `xcrun ba-serve url-override "https://..."` |
 
@@ -484,14 +494,14 @@ For full type signatures, all Info.plist keys, and the unmanaged (legacy) `BADow
 
 ## Resources
 
-**WWDC**: 2025-325
+**WWDC**: 2025-325, 2026-378
 
 **Docs**: /backgroundassets, /backgroundassets/creating-managed-asset-packs, /backgroundassets/testing-asset-packs-locally, /backgroundassets/downloading-apple-hosted-asset-packs, /help/app-store-connect/reference/app-uploads/apple-hosted-asset-pack-size-limits
 
-**Skills**: skills/background-assets-ref.md, skills/background-processing.md, axiom-ai (skills/foundation-models-adapters-ref.md)
+**Skills**: skills/background-assets-ref.md, skills/background-processing.md, skills/in-app-purchases.md, axiom-ai (skills/foundation-models-adapters-ref.md)
 
 ---
 
-**Last Updated**: 2026-05-16
-**Platforms**: iOS 26+, iPadOS 26+, macOS 26+, tvOS 26+, visionOS 26+ (managed); iOS 15+ (unmanaged legacy)
+**Last Updated**: 2026-06-11
+**Platforms**: iOS 26+, iPadOS 26+, macOS 26+, tvOS 26+, visionOS 26+ (managed); iOS 16.1+ (unmanaged legacy)
 **Status**: Phase A — discipline file; reference and TDD pressure-test pass to follow
