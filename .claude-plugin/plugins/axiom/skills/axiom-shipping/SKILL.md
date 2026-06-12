@@ -21,7 +21,7 @@ Use this skill when you encounter:
 - Account deletion or Sign in with Apple requirements
 - Build upload and processing issues
 - App Review appeals
-- WWDC25 App Store Connect changes
+- WWDC25/WWDC26 App Store Connect changes
 - First-time submission workflow
 
 ## Quick Reference
@@ -34,11 +34,14 @@ Use this skill when you encounter:
 | Encryption compliance | See `skills/app-store-submission.md` |
 | Accessibility Nutrition Labels | See `skills/app-store-submission.md` |
 | Metadata field requirements | See `skills/app-store-ref.md` |
+| Product Page Header, Asset Library, search visuals `OS27` | See `skills/app-store-ref.md` (Part 11) |
+| Retention Messaging (subscription cancellation flow) `OS27` | See `skills/app-store-ref.md` (Part 11) |
+| Group / volume subscription selling (ABM, ASM, volume pricing) `OS27` | See `skills/app-store-ref.md` (Part 11) |
 | Guideline number lookup | See `skills/app-store-ref.md` |
 | Privacy manifest schema | See `skills/app-store-ref.md` |
 | Age rating tiers | See `skills/app-store-ref.md` |
 | EU DSA compliance | See `skills/app-store-ref.md` |
-| WWDC25 ASC changes | See `skills/app-store-ref.md` |
+| WWDC25/WWDC26 ASC changes | See `skills/app-store-ref.md` |
 | App was rejected | See `skills/app-store-diag.md` |
 | Guideline 2.1/4.2/4.3 rejection | See `skills/app-store-diag.md` |
 | Writing an appeal | See `skills/app-store-diag.md` |
@@ -95,9 +98,9 @@ Use this skill when you encounter:
 - IAP submission metadata
 - EU DSA compliance details
 - Build upload methods
-- WWDC25 changes to App Store Connect
+- WWDC25 and WWDC26 changes to App Store Connect
 
-**Why app-store-ref**: 10-part reference covering every metadata field, guideline, and compliance requirement with exact specifications.
+**Why app-store-ref**: 11-part reference covering every metadata field, guideline, and compliance requirement with exact specifications.
 
 **Reference**: `skills/app-store-ref.md`
 
@@ -432,7 +435,7 @@ User: "How do I find crash data in App Store Connect?"
 User: "Where are my TestFlight crash reports in ASC?"
 → See `skills/app-store-connect-ref.md`
 
-User: "What's new in App Store Connect for 2025?"
+User: "What's new in App Store Connect this year?"
 → See `skills/app-store-ref.md`
 
 User: "I need to set up DSA trader status for the EU"

@@ -15,6 +15,7 @@ Complete reference for every App Store submission requirement:
 - **Part 8** — EU-specific compliance (DSA trader status)
 - **Part 9** — Build upload and processing
 - **Part 10** — WWDC25 changes (draft submissions, accessibility labels, tags)
+- **Part 11** — WWDC26 changes (Product Page Header + Asset Library, Retention Messaging, group/volume subscriptions, enhanced IAP submissions)
 
 ## When to Use This Skill
 
@@ -899,7 +900,7 @@ Certain features require entitlements configured in Xcode and provisioning profi
 
 ## Part 10: WWDC25 Changes
 
-### Draft Submissions (WWDC 2025-328)
+### Draft Submissions
 
 Group multiple items into a single draft submission:
 - App version + new IAPs + product page changes
@@ -991,6 +992,49 @@ Custom product pages allow different App Store presentations for different audie
 
 ---
 
+## Part 11: WWDC26 Changes `OS27`
+
+### Product Page Header and Search Results Visuals
+
+Two new App Store surfaces (WWDC 2026-205), available on iOS 27 and iPadOS 27 (the session names no other platforms):
+- **Product Page Header** — images or videos as the first visual element on your product page, expressing brand identity
+- **Custom Search Results visuals** — replace the default screenshot display in search
+
+Both draw from the new **Asset Library**, a centralized App Store Connect area managing screenshots, preview videos, in-app event media, and the new marketing images/videos — which ASC calls "creative assets". Two submission paths:
+1. The familiar version-page flow — now with a **Preview** function showing iPhone/iPad, orientations, and languages before submitting
+2. **Standalone Asset Library review** — submit creative assets *without a version update*
+
+Assets approved via either path can then be swapped onto the Product Page Header or Search Results in real time with no additional review.
+
+Creative assets compose with Custom Product Pages (deep-link-on-install), Product Page Optimization A/B tests, and Apple Ads placements. Upload and submission are automatable via the App Store Connect API; the Apple Ads Platform API ships open-source client libraries including Swift.
+
+### Retention Messaging
+
+A new App Store Connect / App Store Server API feature (WWDC 2026-309; the session states no OS gate) that shows your value-proposition message in the subscription **cancellation flow** — three views: message only, message + image, or message + offer. Message text is required; image and offer are optional, and an eligible offer takes the image's place. Apple cites average save-rate lifts of +1.4 points, up to +5.5 with promotional-offer messages, noting results vary across developers.
+
+- **Configuration**: a new area on the ASC Subscriptions page — named messages with localized text and live preview, Asset Library images, mapping to one or more subscriptions, and attachable **retention offers** (a new offer type appearing as `offerType: 5` in signed transaction/renewal info; the App Store auto-picks the best eligible offer). Also configurable via the App Store Connect API; fully testable in sandbox.
+- **Real-time Retention Messaging** (access via interest form): the App Store sends a server-to-server request (`originalTransactionId`, `productId`, `userLocale`, `requestIdentifier`, `environment`, `signedDate`, and more) and you respond with `message`, `alternateProduct` (switch-plan — exclusive to real-time), or `promotionalOffer` (with `promotionalOfferSignatureV2` — a signature is still required for promotional offers used in retention messages).
+- **Retention Messaging API** (`/inApps/v1/messaging` on the App Store Server API host): realtime-URL config, message/default/image management, and a sandbox-only `performanceTest` you must pass before production. Fallback chain: real-time response → ASC message → API default. Apple recommends configuring ASC Retention Messaging as a fallback even when using real-time.
+- Related: iOS 26.5 introduced monthly subscriptions with a 12-month commitment; the real-time API can offer that plan type as a switch plan (`billingPlanType`).
+
+### Group and Volume Subscription Purchasing
+
+Two new purchase paths for auto-renewable subscriptions (WWDC 2026-391; StoreKit 2 required; the session states no numeric OS availability):
+- **Group purchases** — in-app: a buyer purchases multiple seats and shares an invite link (small teams, social groups)
+- **Volume purchasing** — organizations buy via Apple Business Manager / Apple School Manager and assign seats through MDM, like app distribution
+
+ASC controls: on by default for most new and existing StoreKit 2 subscriptions, but **opted out by default if Family Sharing is enabled**; you can restrict selling to Apple School Manager only (education pricing) or disable group/org selling entirely while still selling to individuals. **Volume pricing**: up to 5 price bands with custom seat-quantity thresholds and per-seat prices. Seat lifecycle for group purchases (invite links, acceptance, cancellation) is system-managed by default, with each member getting their own transaction. Custom invitation flows are powered by new (unnamed in the session) App Store Server API endpoints; the separate **Group management endpoints** query a customer's groups and a group's members, and are supported for volume purchasing and group purchases that use the included seat-management flows. For the in-app purchase-request side (seat counts in StoreKit 2 purchases), see axiom-integration (skills/in-app-purchases.md, skills/storekit-ref.md).
+
+### Enhanced In-App Purchase Submissions
+
+App Store Connect unifies IAP review into the standard submission workflow (WWDC 2026-210):
+
+- Group multiple IAP products as review items into a **single App Review submission**, combinable with other review items — in-app events, custom product pages, and product page optimizations — with a centralized status view for all items.
+- Flow: from a product (or multi-selected products in the IAP list), use the **Add for Review** drop-down to attach to an in-draft submission.
+- App Store Connect API: **`reviewSubmissions` is expanding** to support In-App Purchase, subscription, and subscription-group resources, automating all review items through a single interface. The existing IAP, subscription, and subscription-group review resources **will be deprecated** in favor of `reviewSubmission` and `reviewSubmissionItems` — Apple says to start migrating now.
+
+---
+
 ## Expert Review Checklist
 
 For the comprehensive 9-section submission checklist, see `skills/expert-review-checklist.md`.
@@ -1038,7 +1082,7 @@ Authentication requires an API key from App Store Connect (Users and Access > In
 
 ## Resources
 
-**WWDC**: 2022-10166, 2025-224, 2025-241, 2025-252, 2025-328
+**WWDC**: 2022-10166, 2025-224, 2025-241, 2025-252, 2025-328, 2026-205, 2026-210, 2026-309, 2026-391
 
 **Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details, /help/app-store-connect
 
