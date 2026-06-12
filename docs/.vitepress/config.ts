@@ -472,6 +472,7 @@ export default withMermaid(defineConfig({
             { text: 'Overview', link: '/skills/machine-learning/' },
             { text: 'CoreML', link: '/skills/machine-learning/coreml' },
             { text: 'iOS ML (deployment overview)', link: '/skills/machine-learning/ios-ml' },
+            { text: 'Core AI', link: '/skills/machine-learning/core-ai' },
             { text: 'Speech', link: '/skills/machine-learning/speech' }
           ]
         },
