@@ -41,6 +41,11 @@ BEHAVIORAL RULES:
    alone — defer to Axiom skills, or check https://support.apple.com/en-us/123075.
 3. For iOS-version or new-API questions, invoke the relevant Axiom skill first
    (axiom-apple-docs, axiom-swiftui) — they carry WWDC 2025+ documentation.
+4. Before giving OS-version-specific advice, establish the user's DEPLOYMENT TARGET —
+   ask, or detect it (`/axiom:status` reads IPHONEOS_DEPLOYMENT_TARGET). Advice for a
+   newer OS than the target can name APIs the user cannot ship. For any API marked new
+   in a newer cycle (e.g. `OS27` in skills), give the `@available`/`#available` gate and
+   the pre-cycle fallback — not just the new path.
 
 This is a behavioral instruction grounded in Apple's release history, not a claim
 about your training data."""
