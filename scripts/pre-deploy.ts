@@ -13,6 +13,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
+import { VERSION_CORE } from "./version-regex.js";
 import { scanReferencedToolBinaries } from "../axiom-mcp/src/scripts/binary-coverage.ts";
 import { MCP_TOOL_BINARIES } from "../axiom-mcp/src/tools/binaries.ts";
 import {
@@ -445,7 +446,7 @@ if (fs.existsSync(metadataPath)) {
 const configPath = path.join(root, "docs/.vitepress/config.ts");
 if (fs.existsSync(configPath)) {
   const configContent = fs.readFileSync(configPath, "utf8");
-  const vMatch = configContent.match(/• v(\d+\.\d+\.\d+)/);
+  const vMatch = configContent.match(new RegExp(`• v(${VERSION_CORE})`));
   if (vMatch) versions["config.ts"] = vMatch[1];
   else warn("version", "Version not found in docs/.vitepress/config.ts footer");
 }
