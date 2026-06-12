@@ -207,6 +207,10 @@ class TestPositiveRouting(unittest.TestCase):
             "My ProRes recording drops frames"))
         self.assertIn("axiom-media", routed_skills(
             "Should I adopt deferred start for high resolution photo capture?"))
+        self.assertIn("axiom-media", routed_skills(
+            "How do I show a CarPlay map panel for route choices on iOS 27?"))
+        self.assertIn("axiom-media", routed_skills(
+            "Set allowsMiniPlayer to false on my CarPlay Now Playing template"))
 
     def test_accessibility(self):
         self.assertIn("axiom-accessibility", routed_skills(
@@ -282,6 +286,13 @@ class TestPositiveRouting(unittest.TestCase):
             "Check PricingTerms for the billingPlanType before purchase"))
         self.assertIn("axiom-integration", routed_skills(
             "Show retention messaging when users cancel their subscription"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Measure the distance to my paired accessory with Bluetooth Channel Sounding"))
+        self.assertIn("axiom-integration", routed_skills(
+            "How do I call startChannelSoundingSession on a CBPeripheral?"))
+        # audio "channel" prose must not trip the channel-sounding token
+        self.assertNotIn("axiom-integration", routed_skills(
+            "Mix the left and right channel sounding too quiet in my audio export"))
         # SaaS billing-plan design without subscription/IAP context must not route
         self.assertNotIn("axiom-integration", routed_skills(
             "Design the billing plan comparison table for our SaaS pricing site in React"))
