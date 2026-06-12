@@ -1,6 +1,8 @@
 
 # Foundation Models Custom Adapter Reference
 
+> **Status — the custom-adapter runtime is a 26-cycle-only capability, obsoleted in 27.0.** In the Xcode 27 SDK, `SystemLanguageModel.Adapter`, `SystemLanguageModel(adapter:)`, and the entire `init(name:)`/`init(fileURL:)`/`compile()`/`compatibleAdapterIdentifiers(name:)`/`removeObsoleteAdapters()` surface are annotated `deprecated: 26.4, obsoleted: 27.0` on iOS, iPadOS, macOS, and visionOS (never available on watchOS or tvOS). Code that uses them **does not compile when the deployment target is 27.0 or later** — the compiler reports `'Adapter' was obsoleted in iOS 27.0`. It still builds when you deploy back to 26.0–26.x. The 27 SDK (beta 1) ships **no replacement** adapter-loading API and no `renamed:`/`message:` migration hint; Apple's direction for on-device specialization is Core AI (ahead-of-time model authoring) and bring-your-own-model custom providers (`LanguageModelExecutor`, see `axiom-ai (skills/foundation-models-ref.md)`), neither of which is a drop-in replacement. **If any deployment target you support is 27.0 or later, custom adapters are off the table** — work the Approach Triage (rungs 1-4) in `axiom-ai (skills/foundation-models-adapters.md)` or a custom provider instead. Everything below remains accurate for 26-cycle deployments.
+
 ## Overview
 
 This reference documents the Foundation Models Adapter Training Toolkit (Python) and the runtime API (`SystemLanguageModel.Adapter`) for loading custom-trained adapters in Swift. For when-and-why decisions, see `axiom-ai (skills/foundation-models-adapters.md)`. For delivery API (`AssetPackManager`, `StoreDownloaderExtension`), see `axiom-integration (skills/background-assets-ref.md)` — this file owns training and runtime selection, the background-assets reference owns asset pack delivery.
@@ -12,7 +14,7 @@ This reference documents the Foundation Models Adapter Training Toolkit (Python)
 
 ### Toolkit version
 
-- **Current**: `26.0.0` (matches iOS / iPadOS / macOS / tvOS / visionOS 26)
+- **Current**: `26.0.0` (matches iOS / iPadOS / macOS / visionOS 26 — the platforms with the adapter runtime; never watchOS/tvOS)
 - **Cadence**: a new toolkit ships per system-model OS release; adapters trained against an older toolkit are not guaranteed compatible with a newer base model
 
 ---
@@ -26,7 +28,7 @@ Use this reference when:
 - Looking up `SystemLanguageModel.Adapter` method signatures
 - Looking up `SystemLanguageModel.Adapter.AssetError` cases
 - Wiring an adapter into a `LanguageModelSession`
-- Implementing the per-base-model lifecycle (`removeObsoleteAdapters()`, `compatibleAdapterIdentifiers(name:)`, `isCompatible(_:)`)
+- Implementing the per-base-model lifecycle (`removeObsoleteAdapters()`, `compatibleAdapterIdentifiers(name:)`) — 26-cycle deployments only
 - Configuring the `com.apple.developer.foundation-model-adapter` entitlement
 
 **Related skills**:
@@ -341,11 +343,14 @@ Without the entitlement, the runtime `SystemLanguageModel.Adapter` initializers 
 
 ## Runtime API
 
+> The entire runtime API below is `deprecated: 26.4, obsoleted: 27.0` (iOS/iPadOS/macOS/visionOS; never on watchOS/tvOS). It compiles only when your deployment target is 26.x. Gate it behind `if #available` against a 26.x floor, and keep a base-model fallback for every device whose deployment target — or whose installed OS — has reached 27.
+
 ### SystemLanguageModel.Adapter
 
 ```swift
 import FoundationModels
 
+// All members: @available(iOS/macOS/visionOS, deprecated: 26.4, obsoleted: 27.0)
 public struct SystemLanguageModel.Adapter {
     public var creatorDefinedMetadata: [String : Any] { get }
 
@@ -356,9 +361,10 @@ public struct SystemLanguageModel.Adapter {
 
     public static func removeObsoleteAdapters() throws
     public static func compatibleAdapterIdentifiers(name: String) -> [String]
-    public static func isCompatible(_ assetPack: AssetPack) -> Bool
 }
 ```
+
+There is no public `isCompatible(_:)` on `Adapter`. A symbol by that name exists in the `FoundationModels` binary (`.tbd`) but has never appeared in any textual `.swiftinterface`, so it does not compile from source — do not call it. To gate an adapter asset-pack download to compatible variants, match the pack identifier against `compatibleAdapterIdentifiers(name:)` instead (see `axiom-integration (skills/background-assets-ref.md)` "Foundation Models Adapter Bridge").
 
 ### init(name:)
 
@@ -391,7 +397,7 @@ try await adapter.compile()
 
 Compiles the adapter to the device-specific form. Called automatically on first use; can be invoked early to warm the cache. Subject to the same draft-model compilation rate limit (three per app per day on non-macOS).
 
-`@concurrent` per the function signature — safe to call from any actor.
+`@concurrent` per the function signature — runs off the calling actor's executor.
 
 ### removeObsoleteAdapters()
 
@@ -427,24 +433,18 @@ guard let preferredID = ids.first else {
 }
 ```
 
-### isCompatible(_:)
+### Gating adapter downloads to compatible variants
 
-```swift
-let isCompatible = SystemLanguageModel.Adapter.isCompatible(assetPack)
-```
-
-Returns `true` if an `AssetPack`'s adapter variant matches the device's current base-model version. Used inside `StoreDownloaderExtension.shouldDownload(_:)` to gate adapter downloads to compatible variants only:
-
-**Caution**: this symbol is present in the FoundationModels binary but absent from the public textual swiftinterface as of iOS 26.5, and it requires `import BackgroundAssets` (the `AssetPack` type comes from that module). Because it isn't in the textual interface, it may not be source-stable across releases. Where a compatibility check doesn't need an `AssetPack` in hand, prefer `compatibleAdapterIdentifiers(name:)`.
+To download only the adapter variants that match the device's current base-model version, match the asset-pack identifier against `compatibleAdapterIdentifiers(name:)` inside the download extension — there is no `isCompatible(AssetPack)` to call (see the Runtime API note above):
 
 ```swift
 @main
 struct AdapterDownloader: StoreDownloaderExtension {
     func shouldDownload(_ assetPack: AssetPack) -> Bool {
-        if assetPack.id.hasPrefix("fmadapter-") {
-            return SystemLanguageModel.Adapter.isCompatible(assetPack)
-        }
-        return true
+        guard assetPack.id.hasPrefix("fmadapter-") else { return true }
+        let compatible = SystemLanguageModel.Adapter
+            .compatibleAdapterIdentifiers(name: "my_summarizer")
+        return compatible.contains(assetPack.id)
     }
 }
 ```
@@ -476,6 +476,8 @@ For the broader error space (`ManagedBackgroundAssetsError`, `BAErrorCode`), see
 ---
 
 ## SystemLanguageModel Initializer for Adapters
+
+`SystemLanguageModel(adapter:)` / `SystemLanguageModel(adapter:guardrails:)` are themselves `obsoleted: 27.0` — 26-cycle deployments only (see the Runtime API note).
 
 ```swift
 let adapter = try SystemLanguageModel.Adapter(name: "my_summarizer")
@@ -642,11 +644,10 @@ import FoundationModels
 struct AdapterDownloader: StoreDownloaderExtension {
     func shouldDownload(_ assetPack: AssetPack) -> Bool {
         // For FM adapter packs, gate on compatibility with current base model.
-        if assetPack.id.hasPrefix("fmadapter-") {
-            return SystemLanguageModel.Adapter.isCompatible(assetPack)
-        }
-        // For non-adapter packs, allow the system to manage downloads.
-        return true
+        guard assetPack.id.hasPrefix("fmadapter-") else { return true }
+        let compatible = SystemLanguageModel.Adapter
+            .compatibleAdapterIdentifiers(name: "my_summarizer")
+        return compatible.contains(assetPack.id)
     }
 }
 ```
@@ -662,7 +663,8 @@ For server-hosted delivery (`BADownloaderExtension`), see `axiom-integration (sk
 - **Runtime types**: `SystemLanguageModel.Adapter` (struct), `SystemLanguageModel.Adapter.AssetError` (enum)
 - **Runtime initializers**: `init(name:)`, `init(fileURL:)`
 - **Runtime instance methods**: `compile() async throws`
-- **Runtime static methods**: `removeObsoleteAdapters() throws`, `compatibleAdapterIdentifiers(name:) -> [String]`, `isCompatible(_ assetPack: AssetPack) -> Bool`
+- **Runtime static methods**: `removeObsoleteAdapters() throws`, `compatibleAdapterIdentifiers(name:) -> [String]` (no public `isCompatible(_:)` — see Runtime API note)
+- **Runtime status**: whole runtime API `deprecated: 26.4, obsoleted: 27.0` (iOS/iPadOS/macOS/visionOS; never watchOS/tvOS) — 26-cycle deployments only, no 27 replacement
 - **Error cases**: `.compatibleAdapterNotFound(_)`, `.invalidAdapterName(_)`, `.invalidAsset(_)`
 - **Composition**: `SystemLanguageModel(adapter:)`, `SystemLanguageModel(adapter:guardrails:)`, `LanguageModelSession(model:)`
 - **Entitlement**: `com.apple.developer.foundation-model-adapter` (deployment only)
@@ -685,7 +687,7 @@ For server-hosted delivery (`BADownloaderExtension`), see `axiom-integration (sk
 
 ---
 
-**Last Updated**: 2026-05-16
+**Last Updated**: 2026-06-11
 **Toolkit Version**: 26.0.0
-**Platforms**: iOS 26+, iPadOS 26+, macOS 26+, visionOS 26+ (deployment); macOS 14+ Apple silicon ≥32 GB or Linux GPU (training)
+**Platforms**: iOS / iPadOS / macOS / visionOS **26.0–26.x only** (runtime deprecated 26.4, obsoleted 27.0; never watchOS/tvOS); macOS 14+ Apple silicon ≥32 GB or Linux GPU (training)
 **Skill Type**: Reference
