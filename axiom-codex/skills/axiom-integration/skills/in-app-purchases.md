@@ -5,9 +5,9 @@
 
 **Purpose**: Guide robust, testable in-app purchase implementation
 **StoreKit Version**: StoreKit 2
-**iOS Version**: iOS 15+ (iOS 18.4+ for latest features)
+**iOS Version**: iOS 15+ (26.4+ for commitment billing plans)
 **Xcode**: Xcode 13+ (Xcode 16+ recommended)
-**Context**: WWDC 2025-241, 2025-249, 2023-10013, 2021-10114
+**Context**: WWDC 2025-241, 2025-249, 2023-10013, 2021-10114, 2026-210, 2026-378
 
 ## When to Use This Skill
 
@@ -337,6 +337,8 @@ extension StoreManager {
 
 ## Step 3: Implement Purchase Flow
 
+> iOS 27 ships a redesigned system payment sheet that works in landscape — game players can unlock content and keep playing without rotating. The sheet presentation APIs below are unchanged.
+
 ### Purchase with UI Context (iOS 18.2+)
 
 ```swift
@@ -528,6 +530,8 @@ func isEntitled(to productID: String) async -> Bool {
 ---
 
 ## Step 6: Implement Subscription Management
+
+> Monthly subscriptions with a 12-month commitment (from 26.4: `PricingTerms`, `.billingPlanType(.monthly)` purchase option, `commitmentInfo`) and group/volume subscription purchasing (WWDC 2026, StoreKit 2 required) are covered in `skills/storekit-ref.md`.
 
 ### Track Subscription Status
 
@@ -879,10 +883,49 @@ rg "AppStore\.sync|Transaction\.all" --type swift
 
 ---
 
+## Unity Games (WWDC 2026)
+
+Apple ships a **StoreKit Unity plug-in** (alongside a Background Assets one) in the Apple Unity plug-in portfolio on GitHub — a C#-based Unity API bridging to native StoreKit. Requirements: Xcode 27, Python 3 (same build script as the other Apple Unity plug-ins), Unity 2022 LTS or later.
+
+The C# surface mirrors StoreKit 2's flows:
+
+```csharp
+using Apple.StoreKit;
+
+// Fetch and purchase
+var products = await Product.FetchProducts(new[] { "com.thecoast.capecod" });
+var result = await product.Purchase();
+if (result.Result == PurchaseResult.ResultEnum.Success
+    && result.TransactionVerification.IsVerified) {
+    // Unlock access to purchased content
+    result.TransactionVerification.SafePayload.Finish();
+}
+
+// Lifecycle listener (register at app startup)
+Transaction.Updates += OnUpdate;
+
+async void OnUpdate(VerificationResult<Transaction> result) {
+    if (!result.IsVerified) return;
+    var verifiedTransaction = result.SafePayload;
+    if (verifiedTransaction.ProductType == ProductType.ProductTypeEnum.Consumable) {
+        // Consumables aren't in CurrentEntitlements — handle inline,
+        // checking verifiedTransaction.RevocationDate before granting
+    } else {
+        // Non-consumables and subscriptions: re-read
+        // Transaction.GetCurrentEntitlements() as the source of truth
+    }
+    verifiedTransaction.Finish();
+}
+```
+
+The same discipline as native StoreKit 2 applies: verify, grant, then `Finish()`; `CurrentEntitlements` already filters refunded/revoked/expired states for non-consumables and subscriptions. For delivering the purchased content via asset packs, see `skills/background-assets.md` and the Background Assets Unity plug-in.
+
+---
+
 ## Resources
 
-**WWDC**: 2025-241, 2025-249, 2023-10013, 2021-10114
+**WWDC**: 2025-241, 2025-249, 2023-10013, 2021-10114, 2026-210, 2026-378
 
 **Docs**: /storekit, /appstoreserverapi
 
-**Skills**: skills/storekit-ref.md
+**Skills**: skills/storekit-ref.md, skills/background-assets.md

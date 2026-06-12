@@ -497,6 +497,8 @@ func setupControllers() {
 }
 ```
 
+For on-screen touch controls (TouchController framework), GCController input patterns, and the 27-cycle controller additions, see `skills/game-input.md`.
+
 ---
 
 ## 6. Performance

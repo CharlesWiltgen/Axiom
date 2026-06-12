@@ -144,6 +144,27 @@ class MobileDocumentReader: Sendable
 
 **Out of scope for axiom-payments** — listed here so developers searching ProximityReader land in the right place. Identity-verification UX (when / why / how) lives in `axiom-integration` if it lands anywhere.
 
+### ID Verification Additions `OS27`
+
+- New `.name` element on the mobile-document data, display, AND raw-data requests (driver's license, national ID card, photo ID) returning `MobileDocumentHolderName` (`name: String` + `components: PersonNameComponents` — components are derived from the full-name string when the document doesn't provide them separately). On the data responses, the old `nameComponents` is deprecated, renamed to `name`.
+- `issuerIdentifiers: [Data]` on the document request types — per the docs, the subject key identifiers of issuers the reader trusts (empty = any). The three raw-data requests gain it as a property plus an `init(retainedElements:nonRetainedElements:issuerIdentifiers:)` and a static factory. PassKit's `PKIdentityDocumentDescriptor` (in-app identity requests) has the same-named property — there described as X.509 authority key identifiers, with a **hard limit in the PassKit header: at most 1,000 identifiers of at most 64 bytes each, or the app terminates**. PassKit also gains the matching name element (`PKIdentityElement.name`, iOS 27; its header notes the mDL standard has no full-name field, hence the components-based type).
+
+These carry `visionOS 27` annotations in the iOS interface, but ProximityReader.framework does not ship in the visionOS 27 SDK — treat them as iOS 27 (PassKit's `issuerIdentifiers` IS on visionOS 27).
+
+## `CustomerEngagementSession` `OS27`
+
+New session class (iOS/iPadOS/macCatalyst 27; unavailable on macOS/tvOS/watchOS; its `@available` line also claims visionOS 27, but the framework is absent from the visionOS SDK) — per the docs, "the object you use to share and request customer information": merchants collect customer details, process payments, and update transaction status on a **paired customer device**. Capabilities listed in the docs: requesting contact info, signups with consent options, collecting addresses, processing payments, status displays, shopping carts, and adding Wallet passes.
+
+| Member | Purpose |
+|--------|---------|
+| `init(configuration:)` | `Configuration(currency:region:privacyPolicyURL:websiteURL:storeName:deviceName:passTypeIdentifiers:)` |
+| `open(using:)` / `close()` | Session lifecycle; token bridges from Tap to Pay via `CustomerEngagement.Token(using: PaymentCardReader.Token)` |
+| `events` | Async sequence of session events |
+| `customerConfiguration` | Connected peer details (`PeerClientType`, locale, version) |
+| `Error` | Rich enum: `.notSupported`, `.invalidCredential`, `.userDeclined`, `.paymentRequestFailed`, `.pairingFailed`, `.sessionBusy`, `.wifiDisabled`, … |
+
+No WWDC 2026 session covers this class at beta 1 — the API surface above is SDK- and doc-derived; verify flow details against /proximityreader/customerengagementsession as the docs fill in.
+
 ## ProximityReaderDiscovery
 
 System-provided merchant tutorial UI. Apple maintains the content and localizations.

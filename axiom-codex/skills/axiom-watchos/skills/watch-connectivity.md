@@ -121,7 +121,7 @@ if WCSession.default.isComplicationEnabled {
 let left = WCSession.default.remainingComplicationUserInfoTransfers  // check budget
 ```
 
-**Rate limit — 50 transfers per day per complication.** The receiver persists the payload (usually to shared `UserDefaults` via an App Group) and calls `WidgetCenter.shared.reloadTimelines(ofKind:)` so WidgetKit rebuilds the entries:
+**Rate limit — 50 transfers per day per complication.** Fixed in 27: the watchOS 27 release notes resolve "`transferCurrentComplicationUserInfo` does not work with complications built using WidgetKit on watchOS" (FB12819178) — on earlier releases this method did not work with WidgetKit complications. The receiver persists the payload (usually to shared `UserDefaults` via an App Group) and calls `WidgetCenter.shared.reloadTimelines(ofKind:)` so WidgetKit rebuilds the entries:
 
 ```swift
 WidgetCenter.shared.getCurrentConfigurations { result in

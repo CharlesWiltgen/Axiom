@@ -18,6 +18,8 @@ license: MIT
 | Controls on watch surfaces, Live Activities on watch | See `skills/controls-and-live-activities.md` |
 | Watch Connectivity (WCSession), paired-device data transfer, Family Setup | See `skills/watch-connectivity.md` |
 | Background tasks, freshness scheduling, TN3135 networking limits | See `skills/background-and-networking.md` |
+| BGTaskScheduler migration, deprecated WK background scheduling `OS27` | See `skills/background-and-networking.md` |
+| Foundation Models / Private Cloud Compute on the watch `OS27` | See `skills/platform-basics.md` |
 | WatchKit→SwiftUI migration, ClockKit→WidgetKit migration | See `skills/modernization.md` |
 
 ## Cross-Suite Routes
@@ -47,6 +49,11 @@ These topics overlap with watchOS development but live in separate suites:
 #### Concurrency
 - Swift 6 concurrency, actors, Sendable → See axiom-concurrency
 
+#### New-on-watch frameworks (27 releases)
+- Foundation Models depth (sessions, @Generable, tools, PCC) → See axiom-ai; watch scoping is in `skills/platform-basics.md`
+- Vision framework (new on watchOS 27) → See axiom-vision
+- NowPlaying / MusicUnderstanding (new on watchOS 27) → See axiom-media
+
 ## Conflict Resolution
 
 **axiom-watchos vs axiom-swiftui**: When building a watchOS SwiftUI app:
@@ -75,7 +82,8 @@ digraph watchos {
     what -> "skills/smart-stack-and-complications.md" [label="complications, Smart Stack, RelevanceKit"];
     what -> "skills/controls-and-live-activities.md" [label="controls, watch Live Activities"];
     what -> "skills/watch-connectivity.md" [label="WCSession, paired-device transfer"];
-    what -> "skills/background-and-networking.md" [label="background tasks, networking limits"];
+    what -> "skills/background-and-networking.md" [label="background tasks, BGTaskScheduler, networking limits"];
+    what -> "skills/platform-basics.md" [label="Foundation Models / PCC on watch"];
     what -> "skills/modernization.md" [label="WatchKit/ClockKit migration"];
     what -> "axiom-health" [label="workouts, HealthKit, WorkoutKit"];
     what -> "axiom-swiftui" [label="general SwiftUI patterns"];
@@ -90,4 +98,4 @@ digraph watchos {
 
 **Docs**: /watchos-apps/building-a-watchos-app, /watchos-apps/creating-independent-watchos-apps, /watchconnectivity, /widgetkit/creating-accessory-widgets-and-watch-complications, /widgetkit/converting-a-clockkit-app, /relevancekit, /technotes/tn3135-low-level-networking-on-watchos, /technotes/tn3157-updating-your-watchos-project-for-swiftui-and-widgetkit
 
-**Skills**: axiom-swiftui, axiom-design, axiom-accessibility, axiom-health, axiom-integration, axiom-concurrency
+**Skills**: axiom-swiftui, axiom-design, axiom-accessibility, axiom-health, axiom-integration, axiom-concurrency, axiom-ai, axiom-vision, axiom-media

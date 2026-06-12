@@ -715,6 +715,25 @@ if geocoder.isGeocoding {
 
 ---
 
+## Part 12: Heading
+
+Compass heading comes from `startUpdatingHeading()` / `CLHeading` (`trueHeading`, `magneticHeading`, `headingAccuracy`) on `CLLocationManager` — long-standing API, not available on tvOS/visionOS.
+
+### Heading Reference Body `OS27`
+
+`headingOrientation` (manually telling Core Location which device orientation to reference heading against) is deprecated in the 27 SDKs. Its replacement is `headingBody`: assign a body — any `CLBodyIdentifiable`; `UIView` is the built-in conformer (no AppKit type conforms on macOS; conform your own type there) — and heading calculation is referenced to it, with no manual orientation plumbing as the interface rotates:
+
+```swift
+@available(iOS 27, *) // also macOS 27 and watchOS 27; not tvOS/visionOS
+@MainActor
+func startHeading(manager: CLLocationManager, mapView: MKMapView) {
+    manager.headingBody = mapView   // reference heading to the map view
+    manager.startUpdatingHeading()
+}
+```
+
+---
+
 ## Troubleshooting Quick Reference
 
 | Symptom | Check |

@@ -955,7 +955,7 @@ textView.registerTextAttachmentViewProviderReusePolicy(
 // Swift: textView.register([.onEditingInlineParagraphs], forTextAttachmentViewProviderType: …)
 ```
 
-(`registerTextAttachmentViewProviderReusePolicy(_:forTextAttachmentViewProviderType:)` is `iOS27`/`tvOS27`/`visionOS27`, not watchOS.)
+(`registerTextAttachmentViewProviderReusePolicy(_:forTextAttachmentViewProviderType:)` is `iOS27`/`macOS27`/`tvOS27`/`visionOS27` — NSTextView gets it too — not watchOS.)
 
 #### Skip-layout / collapsible content
 

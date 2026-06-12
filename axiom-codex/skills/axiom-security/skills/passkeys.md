@@ -332,6 +332,28 @@ Users can sign in on a device that doesn't have their passkey by using their pho
 
 **Bluetooth required**: Both devices must have Bluetooth enabled. This is the proximity check that prevents remote phishing — the authenticating device must be physically near the requesting device.
 
+## Delivered Verification Codes `OS27`
+
+`ASDeliveredVerificationCodesManager` gives **credential-provider apps** (password managers) access to one-time verification codes delivered to the device, so they can offer them for AutoFill instead of making the user switch to Messages. Not watchOS/tvOS.
+
+```swift
+import AuthenticationServices
+
+let manager = ASDeliveredVerificationCodesManager()
+
+// Async sequence of incoming codes (default window 600 s)
+for try await code in try await manager.oneTimeCodes(preferredDuration: 600, anchor: window) {
+    // ASVerificationCode: id, code, timestamp, domain?, embeddedDomains
+    offerForAutoFill(code)
+}
+
+// Mark a code used so it stops being offered
+try await manager.consumeOneTimeCode(code)
+```
+
+- `ASVerificationCode` carries the `code` string, `timestamp`, optional `domain`, and `embeddedDomains` — match against the site/app being filled before offering
+- `VerificationError.Code`: `.failed`, `.userPermissionDenied`, and `.appIsNotEnabledCredentialProvider` — the app must be enabled as a credential provider in Settings before codes flow
+
 ## Migration Strategy
 
 ### Phase 1 — Add Passkey Support Alongside Passwords
@@ -451,6 +473,6 @@ Before shipping passkey authentication:
 
 **WWDC**: 2022-10092, 2024-10125
 
-**Docs**: /authenticationservices, /authenticationservices/public-private-key-authentication/supporting-passkeys
+**Docs**: /authenticationservices, /authenticationservices/public-private-key-authentication/supporting-passkeys, /authenticationservices/asdeliveredverificationcodesmanager
 
 **Skills**: axiom-security (skills/keychain.md)

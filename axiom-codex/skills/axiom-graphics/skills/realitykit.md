@@ -751,6 +751,30 @@ func update(context: SceneUpdateContext) {
 - `generateCollisionShapes(recursive: true)` is convenient but expensive
 - For static geometry, generate shapes once during setup
 
+### Level of Detail `OS27`
+
+For entities visible at varying distances, supply lower-detail meshes and let RealityKit switch automatically — by camera distance or screen area. See axiom-graphics (skills/realitykit-ref.md) Part 10 for the `LevelOfDetailComponent` API.
+
+### Thermal Adaptation
+
+Heavy RealityKit features (soft shadows, cloth, splats) can push the device into thermal throttling. Observe thermal state and degrade gracefully — more aggressive LOD thresholds, lower shadow quality:
+
+```swift
+let thermalToken = NotificationCenter.default.addObserver(of: ProcessInfo.self,
+                                                          for: .thermalStateDidChange) { _ in
+    switch ProcessInfo.processInfo.thermalState {
+    case .nominal, .fair:
+        break // stay the course
+    case .serious, .critical:
+        applyAggressiveLODThresholds()
+        lowerShadowQuality()
+    @unknown default:
+        break
+    }
+}
+// retain thermalToken for the observation's lifetime
+```
+
 ### Profiling
 
 Use Xcode's RealityKit debugger:
@@ -786,6 +810,26 @@ let service = try MultipeerConnectivityService(session: mcSession)
 - Only the **owner** of an entity can modify it
 - Request ownership before modifying shared entities
 - Non-Codable component data does not sync
+
+---
+
+## 13.5 RealityKit 27 at a Glance `OS27`
+
+The 27 releases are a major RealityKit cycle. Full API detail lives in axiom-graphics (skills/realitykit-ref.md) Part 10; headline capabilities:
+
+| Capability | Use for |
+|------------|---------|
+| Navigation mesh (`NavigationMeshResource` → `NavigationComponent` → `NavigationController`) | Player/NPC pathfinding with area costs and off-mesh connections |
+| Level of detail (`LevelOfDetailComponent`) | Automatic mesh LOD by camera distance or screen area |
+| Soft shadows (`SpotLightComponent.Shadow.lightSize` + `quality`) | Area-light penumbras on spotlight shadows |
+| Projective textures, physical space lighting | Light patterns; lighting the real room (surroundings light is visionOS/macOS only) |
+| Lightmaps (`LightmapComponent`) | Baked indirect lighting / AO — bake in Reality Composer Pro 3 |
+| Gaussian splats (visionOS) | Render real-world volumetric captures |
+| Custom reverb meshes | Raytraced acoustics in immersive spaces |
+| Decals, occlusion culling, bloom, tone mapping, clipping, render layers | Rendering control without custom Metal |
+| Mesh deformers, skeleton retargeting, animation graphs, behavior trees | Character pipelines — author graphs in Reality Composer Pro 3 |
+
+Reality Composer Pro 3 is the authoring companion for most of these (light baking, navmesh authoring, particle/character graphs that run at runtime via `ComputeGraphComponent`). For reading, editing, and exporting USD files in Swift, see the new USDKit framework — axiom-graphics (skills/usdkit.md).
 
 ---
 
@@ -929,8 +973,8 @@ struct GoodSystem: System {
 
 ## Resources
 
-**WWDC**: 2019-603, 2019-605, 2021-10074, 2022-10074, 2023-10080, 2023-10081, 2024-10103, 2024-10153
+**WWDC**: 2019-603, 2019-605, 2021-10074, 2022-10074, 2023-10080, 2023-10081, 2024-10103, 2024-10153, 2026-279
 
 **Docs**: /realitykit, /realitykit/entity, /realitykit/realityview, /realitykit/modelentity, /realitykit/anchorentity, /realitykit/component
 
-**Skills**: axiom-graphics (skills/realitykit-ref.md), axiom-graphics (skills/realitykit-diag.md), axiom-graphics (skills/scenekit.md), axiom-graphics (skills/scenekit-ref.md)
+**Skills**: axiom-graphics (skills/realitykit-ref.md), axiom-graphics (skills/realitykit-diag.md), axiom-graphics (skills/usdkit.md), axiom-graphics (skills/scenekit.md), axiom-graphics (skills/scenekit-ref.md)
