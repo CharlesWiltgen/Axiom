@@ -187,6 +187,37 @@ Displays up to 12 potential destinations. "The trip preview panel is typically t
 
 Displays potential routes for a trip. "Each route should have a clear description so people can choose their preferred route. For example, a summary and optional description for a route could be 'Via I-280 South' and 'Traffic is light.'" (p.36)
 
+### Map panels `iOS27`
+
+On iOS 27 navigation apps gain **map panels** — overlay panels you drive independently of the map, pushed onto a panel stack over `CPMapTemplate`. They generalize the trip-preview and route-choice panels above into a composable, scrollable UI built from sections of typed items. The older `showTripPreviews`/route-choice path above still works; map panels are the iOS 27 way to build richer, multi-section trip UI. iOS-only (unavailable tvOS/macOS/watchOS).
+
+```swift
+let section = CPMapPanelSection(title: "Routes", items: [
+    CPMapPanelItem(trip: trip) { item, done in /* selected */ done() },
+    CPMapPanelItem(routeChoice: choice) { item, done in done() },
+    CPMapPanelItem(routeDetails: [detail]) { item, done in done() },
+    CPMapPanelItem(chargingStationConnection: connection) { item, done in done() },
+    CPMapPanelItem(mapTemplateWaypoint: waypoint, image: nil) { item, done in done() },
+])
+let panel = CPMapPanel(
+    title: "Trip",
+    sections: [section],
+    buttonConfiguration: CPMapPanelButtonConfiguration(
+        primaryAction: goButton, symbolButton: nil, travelEstimates: nil))
+panel.delegate = self                            // CPMapPanel.Delegate: panelDidShow(_:) / panelDidHide(_:)
+
+mapTemplate.showPanel(panel) { success, error in }   // or pushPanel(_:completion:) onto the stack
+// mapTemplate.popPanel(completion:) / mapTemplate.hidePanel(completion:)
+```
+
+- `CPMapPanel` (a `CPPanel`) holds `sections` of `CPMapPanelSection`, each with `CPMapPanelItem`s, plus an optional `CPMapPanelButtonConfiguration` for the bottom action (e.g. "Go" / "End"), which can carry `travelEstimates` and a `symbolButton`.
+- `CPMapPanelItem` (a `CPPanelItem`) is built from a `CPTrip`, `CPTravelEstimates`, `CPRouteChoice`, an array of `CPRouteDetail`, a `CPChargingStationConnection`, a `CPMapTemplateWaypoint` (+ optional image), grid buttons (`init(gridButtons:)`), or a plain `CPListItem` — each (except the list item) taking a selection handler.
+- `CPMultiStopCardConfiguration` configures a multi-stop card within a panel.
+
+**EV charging** `iOS27` — `CPChargingStationConnection` describes a charger a vehicle can route to: a `connector` (`CPChargingStationConnectionConnector` — `.ccs1`/`.ccs2`/`.j1772`/`.chaDeMo`/`.mennekes`/`.gbtDC`/`.gbtAC`/`.nacsDC`/`.nacsAC`), a `voltage` (`Measurement<UnitElectricPotentialDifference>`), and a `power` (`Measurement<UnitPower>`). Surface it as a `CPMapPanelItem` so the driver can pick a charging stop; an EV vehicle can also propose one back through CarPlay's route-sharing flow (`CPMapTemplateDelegate.mapTemplateShouldProvideRouteSharing` + `CPTrip.routeSegmentsAvailableForRegion`, iOS 26.4+).
+
+Source: WWDC26-212; CarPlay SDK headers (iOS 27.0).
+
 ### Choose route and start guidance
 
 ```swift
@@ -521,6 +552,7 @@ In CarPlay Simulator, start an active navigation session, click **Navigation** t
 
 **WWDC:**
 
+- WWDC26-212 "Rev up your CarPlay app" — iOS 27 map panels (CPMapPanel/CPMapPanelItem/CPMapPanelSection), route details, EV charging connections
 - WWDC25-216 "Turbocharge your app for CarPlay" — iOS 26 multitouch, CarPlay Ultra
 - WWDC22-10016 "Get more mileage out of your app with CarPlay" — metadata in HUD (iOS 17.4)
 - WWDC20-10635 "Accelerate your app with CarPlay" — Dashboard (iOS 13.4); instrument cluster added later in iOS 16.4

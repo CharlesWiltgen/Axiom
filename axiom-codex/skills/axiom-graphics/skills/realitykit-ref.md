@@ -675,7 +675,35 @@ Everything in this part requires the 27 releases (macOS/iOS/iPadOS/tvOS/visionOS
 | `LowLevelDeviceResource` | Low-level GPU-resource-backed RealityKit resource |
 | `USDStageComponent` / `USDPlayer` | Render a USDKit stage directly — see axiom-graphics (skills/usdkit.md) |
 
-Advanced cloth simulation (cloth bodies, colliders, and materials) was announced at WWDC 2026-279 but its API is not present in the first 27 beta SDK — verify against your SDK before adopting.
+### Cloth Simulation (`OS27`, not watchOS/tvOS)
+
+RealityKit 27 ships GPU cloth in the `RealityFoundationCloth` implementation module — **`import RealityKit`** surfaces it (`iOS27`/`macOS27`/`visionOS27`). Build a cloth entity from three components:
+
+| Component | Role |
+|-----------|------|
+| `ClothBodyComponent` | The simulated cloth — `mesh` (`ClothMeshResource`), `mass`, per-vertex `motionTypes` (`ParticleMotionType.dynamic`/`.kinematic`), `externalForces`, `targetShapes`, `inflationConstraint`, `colliderBinding`, `materialNames` (`ClothBodyMaterial`) |
+| `ClothColliderComponent` | What the cloth collides with — `init(shape:)` from `ClothColliderShape` (sphere/box/rounded-box/capsule/plane/mesh, e.g. `ClothSphereShape`), plus `init(mesh:bias:)`; `collisionFilter`, `isCollisionResponseEnabled`, `ClothColliderMaterial` |
+| `ClothSimulationComponent` | World settings on the simulation root — `gravity`, `wind`, `dampingFactor` |
+
+Also: `ClothGrabComponent` (interactive grabbing), `ClothForceVolumeComponent` / `ClothQueryVolumeComponent`, per-vertex data via `PerClothVertexData<T>`, collision via `ClothCollisionGroupSet` / `ClothCollisionFilter`, and event streams `ClothSimulationEvents` / `ClothBodyEvents` / `ClothColliderEvents` / `ClothQueryVolumeEvents`.
+
+```swift
+import RealityKit
+
+@available(iOS 27, macOS 27, visionOS 27, *)
+func setUpCloth(simulationRoot: Entity, cloth: Entity) {
+    simulationRoot.components.set(ClothSimulationComponent())          // gravity / wind / damping
+    let collider = ClothColliderComponent(shape: .sphere(ClothSphereShape(radius: 0.1)))
+    cloth.components.set(collider)
+    // cloth also carries a ClothBodyComponent built from its ClothMeshResource
+}
+```
+
+**Beta caveat:** in the current 27 beta, importing `ComputeGraph` in the same file as `RealityKit` hides the cloth re-export (`error: cannot find 'ClothSphereShape' in scope`). Keep cloth code in a file that imports only `RealityKit`, or re-verify per beta.
+
+### ComputeGraph framework (`OS27`, not watchOS)
+
+The runtime `ComputeGraphComponent` family above *runs* compute node graphs; the new **`ComputeGraph`** framework (`import ComputeGraph`) is the programmatic, code-level way to *build and drive* one — the Swift counterpart to authoring a graph visually in Reality Composer Pro 3. Two core types: `ComputeNodeGraph` (the graph *description*) and `ComputeGraphSimulation` (the runtime — `simulationRate`, `advance(_:)`). Plus the node-description enums: `Topology` (`.point`/`.triangle`/`.quad`/`.octagon`/`.strip`/`.instances`), `BinaryOperation` / `UnaryOperation` / `StandardLibraryFunction` (node math), `AddressSpace`, `CoordinateSpace`, `ElementGrouping`, `Sorting`, `StripOrientation`, `ElementSpawnParameters`, `PortReference`. Available on iOS/macOS/visionOS/tvOS 27 (not watchOS). Most apps author graphs in RCP 3 and run them via `ComputeGraphComponent`; reach for the framework only when you need to generate or mutate graphs at build/runtime.
 
 ### Soft Shadows
 
@@ -823,6 +851,6 @@ let bookshelf = Audio.Material(absorption: absorption, scattering: scattering)
 
 **WWDC**: 2019-603, 2019-605, 2021-10074, 2022-10074, 2023-10080, 2024-10103, 2024-10153, 2026-279
 
-**Docs**: /realitykit, /realitykit/entity, /realitykit/component, /realitykit/system, /realitykit/realityview, /realitykit/model3d, /realitykit/modelentity, /realitykit/anchorentity, /realitykit/physicallybasedmaterial
+**Docs**: /realitykit, /realitykit/entity, /realitykit/component, /realitykit/system, /realitykit/realityview, /realitykit/model3d, /realitykit/modelentity, /realitykit/anchorentity, /realitykit/physicallybasedmaterial, /computegraph
 
 **Skills**: axiom-graphics (skills/realitykit.md), axiom-graphics (skills/realitykit-diag.md), axiom-graphics (skills/usdkit.md), axiom-graphics (skills/scenekit-ref.md)

@@ -25,7 +25,8 @@ Use this router when:
 | Developer Intent | Route To |
 |-----------------|----------|
 | On-device text generation (Apple Intelligence) | **Stay here** → Foundation Models skills |
-| Custom ML model deployment (PyTorch, TensorFlow) | **See skills/ios-ml.md** (hub) → conversion / compression / training files |
+| Custom ML model deployment (PyTorch, TensorFlow) — classic Core ML | **See skills/ios-ml.md** (hub) → conversion / compression / training files |
+| Custom **LLM-scale / transformer** model on-device (27-cycle) | **See skills/core-ai.md** → Core AI conversion, runtime, specialization |
 | Computer vision (image analysis, OCR, segmentation) | **/skill axiom-vision** → Vision framework |
 | Cloud API integration (OpenAI, generic HTTP) | **/skill axiom-networking** → URLSession patterns |
 | Cloud Claude integration (Anthropic SDK, Messages API, Claude Agent SDK) | **See `claude-api` skill** (external) → includes automated Opus 4.6 → 4.7 migration |
@@ -80,6 +81,10 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 - **Convert** a trained PyTorch/TF/Keras model → `skills/coreml-conversion.md` (`coremltools.convert`, ML Program vs NN-spec, parity validation)
 - **Compress** it → `skills/coreml-compression.md` (the PTQ-vs-QAT decision, palettization/quantization/pruning)
 - **Train from scratch / personalize on-device** → `skills/coreml-training.md` (Create ML; `MLUpdateTask` and its NN-spec-only limitation)
+
+### Core AI — the 27-cycle path for LLM-scale on-device models (`OS27`)
+
+`skills/core-ai.md` covers Core AI, the on-device inference framework that powers Apple Intelligence and is now open to your apps. Route here (not `skills/ios-ml.md`) when the model is LLM-scale / a transformer, or when the developer needs custom Metal kernels, multi-function assets, ahead-of-time compilation, KV-cache states, or the specialization/caching deployment model. Covers the Python toolchain (`coreai-torch`/`coreai-opt`), the Swift runtime (`import CoreAI` → `AIModel`/`InferenceFunction`/`NDArray`), specialization discipline, and the Foundation Models bridge (`CoreAILanguageModel` from the open-source `coreai-models` package — not a system-framework type).
 
 ### Foundation Models Work
 
@@ -151,7 +156,7 @@ Scores: PRODUCTION-READY / NEEDS HARDENING / FRAGILE
 
 ## Decision Tree
 
-1. Custom ML model / CoreML? → **skills/ios-ml.md** hub → convert (`coreml-conversion.md`), compress (`coreml-compression.md`), or train/personalize (`coreml-training.md`)
+1. Custom ML model / CoreML? → **skills/ios-ml.md** hub → convert (`coreml-conversion.md`), compress (`coreml-compression.md`), or train/personalize (`coreml-training.md`). LLM-scale / transformer / 27-cycle custom model? → **skills/core-ai.md** (Core AI)
 2. Computer vision / image analysis / OCR? → **/skill axiom-vision**
 3. Cloud AI API integration? → **/skill axiom-networking**
 4. Implementing Foundation Models / @Generable / Tool protocol? → foundation-models
@@ -223,7 +228,10 @@ User: "Review my Foundation Models code for issues"
 → Invoke: `foundation-models-auditor` agent
 
 User: "I want to run my PyTorch model on device"
-→ Read: `skills/ios-ml.md` (CoreML conversion, not Foundation Models)
+→ Read: `skills/ios-ml.md` (classic Core ML conversion, not Foundation Models)
+
+User: "I want to run my own LLM / SAM segmentation model on device" / "convert a PyTorch transformer with Core AI" / "my Core AI model stalls on first launch"
+→ Read: `skills/core-ai.md` (Core AI conversion, runtime, specialization & caching)
 
 User: "How do I train a custom adapter for our app's summarization?"
 → Read: `skills/foundation-models.md` (Approach Triage rungs 1-4 FIRST), then `skills/foundation-models-adapters.md` only if rung-1-4 failures are documented

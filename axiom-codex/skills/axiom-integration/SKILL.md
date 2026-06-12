@@ -35,6 +35,7 @@ license: MIT
 | Privacy manifests, permissions UX | See `skills/privacy-ux.md` |
 | Bluetooth/Wi-Fi accessory pairing (AccessorySetupKit, iOS 18+) | See `skills/accessorysetupkit.md` |
 | AccessorySetupKit API (descriptor fields, events, auth-settings flow) | See `skills/accessorysetupkit-ref.md` |
+| Measure distance/direction to a paired accessory (Bluetooth Channel Sounding, iOS 27) | See `skills/accessorysetupkit-ref.md` (Part 7) |
 | Weather data, forecasts, attribution (WeatherKit) | See `skills/weatherkit.md` |
 | VoIP calls, CallKit, VoIP push, caller ID/blocking | See `skills/callkit-livecommunicationkit.md` |
 | CallKit / LiveCommunicationKit / IdentityLookup API reference | See `skills/callkit-livecommunicationkit-ref.md` |

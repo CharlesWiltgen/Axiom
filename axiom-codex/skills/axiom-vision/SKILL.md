@@ -25,6 +25,7 @@ license: MIT
 | Vision tools for Foundation Models (BarcodeReaderTool, OCRTool) `OS27` | See `skills/vision-ref.md` |
 | Vision framework API reference | See `skills/vision-ref.md` |
 | Visual Intelligence integration (iOS 26+, iPadOS27/macOS27) | See `skills/vision-ref.md` |
+| Sensitive content classification (nudity/gore/violence), categorized via `detectedTypes` (`OS27`) | See `skills/vision-ref.md` |
 | Subject not detected | See `skills/vision-diag.md` |
 | Hand/body pose missing landmarks | See `skills/vision-diag.md` |
 | Low confidence observations | See `skills/vision-diag.md` |

@@ -208,6 +208,20 @@ struct DonutRow: View {
 }
 ```
 
+### `@State` is a macro now (Xcode 27) — three source-compat breaks
+
+Xcode 27 reimplements `@State` as a Swift **macro** so an initial-value expression (`@State private var model = Model()`) is evaluated once instead of on every view re-instantiation. The new behavior back-deploys to the iOS 17-aligned OSes and is mostly source-compatible — but three patterns that compiled under the property-wrapper `@State` no longer do:
+
+1. **Initial value at the declaration *and* an assignment in `init`.** The init assignment was always silently discarded; now it also fails to compile. Fix: drop the declaration's initial value when you assign in `init`.
+   ```swift
+   @State private var page: StickerPage              // no initial-value expression
+   init(title: String) { self.page = StickerPage(title: title); self.title = title }   // compiles
+   ```
+2. **The synthesized memberwise initializer is disabled** by the macro, so an extension calling `self.init(page:title:)` breaks. Fix: assign the members explicitly (`self.title = title; self.page = page`).
+3. **Composing `@State` with another property wrapper or macro is unsupported.**
+
+Also: generic-argument inference is slightly less flexible — write the `@State` type explicitly if inference fails. There's no availability gate (the change back-deploys); it's a build-time behavior of the Xcode 27 toolchain, so it bites the moment you build with the 27 SDK regardless of deployment target.
+
 ## @Observable Model Pattern
 
 Use `@Observable` for business logic that needs to trigger UI updates:

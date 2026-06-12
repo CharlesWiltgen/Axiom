@@ -24,7 +24,7 @@ Use this skill when working with:
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| SwiftData @Model, @Query, ModelContext, sectioned queries / ResultsObserver / @Attribute(.codable) (`OS27`) | See `skills/swiftdata.md` |
+| SwiftData @Model, @Query, ModelContext, sectioned queries / ResultsObserver / @Attribute(.codable) / dynamic compound predicates (`OS27`) | See `skills/swiftdata.md` |
 | SwiftData schema migration, VersionedSchema | See `skills/swiftdata-migration.md` |
 | SwiftData migration crashes, data loss | See `skills/swiftdata-migration-diag.md` |
 | Migrating from Realm to SwiftData | See `skills/realm-migration-ref.md` |

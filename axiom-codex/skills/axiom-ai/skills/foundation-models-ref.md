@@ -1294,7 +1294,7 @@ let session = LanguageModelSession(tools: [BarcodeReaderTool(), OCRTool()])
 - **Evaluations** framework — measure feature quality/accuracy as you iterate on prompts (macOS tooling; not in the iOS SDK).
 - **`fm` CLI** (`macOS27`) — terminal access to the on-device and PCC models (`fm chat`), scriptable into shell pipelines.
 - **Foundation Models SDK for Python** (`apple_fm_sdk`) — the same on-device model from Python.
-- **Core AI** is a separate framework for authoring/compiling on-device models ahead of time; see `axiom-ai (skills/ios-ml.md)`. The custom-provider plumbing behind MLX/Core AI/server models (`LanguageModel`, `LanguageModelExecutor`, `LanguageModelExecutorGenerationChannel`) is in the **Custom Model Providers (OS27)** section above.
+- **Core AI** is the 27-cycle on-device inference framework for authoring/compiling/running your own models (`AIModel`/`InferenceFunction`/`NDArray`, specialization & caching); `CoreAILanguageModel` is its open-source `coreai-models` Swift package, not a system-framework type. See `axiom-ai (skills/core-ai.md)`. The custom-provider plumbing behind MLX/Core AI/server models (`LanguageModel`, `LanguageModelExecutor`, `LanguageModelExecutorGenerationChannel`) is in the **Custom Model Providers (OS27)** section above.
 
 ---
 
