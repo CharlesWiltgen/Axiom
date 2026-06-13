@@ -291,6 +291,74 @@ describe('DynamicToolsHandler', () => {
       expect(text).toContain('Full skill content');
     });
 
+    it('returns the section index (not full text) for a large unscoped skill', async () => {
+      const big = 'x'.repeat(21000); // > the 20000-char section-first threshold
+      const skill = {
+        name: 'axiom-big',
+        skillType: 'discipline',
+        content: big,
+        related: [],
+        sections: [
+          { heading: 'Overview', level: 2, startLine: 1, endLine: 10, charCount: 500 },
+          { heading: 'Deep Dive', level: 2, startLine: 11, endLine: 600, charCount: 20500 },
+        ],
+      };
+      const loader = makeMockLoader({
+        getSkillSections: vi.fn().mockResolvedValue({ skill, content: big, sections: skill.sections }),
+      });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', { skills: [{ name: 'axiom-big' }] });
+      const text = result.content[0].text;
+
+      expect(text).toContain('axiom-big — Sections (large skill: 21000 chars > 20000 limit');
+      expect(text).toContain('| Deep Dive | 20500 |');
+      expect(text).toContain('full:true');
+      expect(text).not.toContain(big); // the 21 KB body is NOT dumped into context
+    });
+
+    it('returns full content for a large skill when full:true', async () => {
+      const big = 'y'.repeat(21000);
+      const skill = {
+        name: 'axiom-big',
+        skillType: 'discipline',
+        content: big,
+        related: [],
+        sections: [
+          { heading: 'Overview', level: 2, startLine: 1, endLine: 10, charCount: 500 },
+          { heading: 'Deep Dive', level: 2, startLine: 11, endLine: 600, charCount: 20500 },
+        ],
+      };
+      const loader = makeMockLoader({
+        getSkillSections: vi.fn().mockResolvedValue({ skill, content: big, sections: skill.sections }),
+      });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', { skills: [{ name: 'axiom-big', full: true }] });
+      const text = result.content[0].text;
+
+      expect(text).toContain('## axiom-big');
+      expect(text).not.toContain('— Sections');
+      expect(text).toContain(big); // full body delivered on explicit opt-in
+    });
+
+    it('still filters by sections for a large skill (the lean path)', async () => {
+      const loader = makeMockLoader({
+        getSkillSections: vi.fn().mockResolvedValue({
+          skill: { name: 'axiom-big', skillType: 'discipline', related: [] },
+          content: 'Just the Overview section',
+          sections: [{ heading: 'Overview', level: 2, startLine: 1, endLine: 10, charCount: 500 }],
+        }),
+      });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', { skills: [{ name: 'axiom-big', sections: ['Overview'] }] });
+      const text = result.content[0].text;
+
+      expect(text).toContain('axiom-big (filtered: Overview)');
+      expect(text).toContain('Just the Overview section');
+    });
+
     it('includes related skills when present', async () => {
       const loader = makeMockLoader({
         getSkillSections: vi.fn().mockResolvedValue({

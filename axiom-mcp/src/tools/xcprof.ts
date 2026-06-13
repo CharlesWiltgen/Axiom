@@ -1,12 +1,17 @@
-import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { platform } from 'node:os';
 import type { Config, Logger } from '../config.js';
-import type { McpTool, ToolResponse } from './handler.js';
-
-const MODULE_DIR = dirname(fileURLToPath(import.meta.url));
+import type { BinaryToolProvider, McpTool, ToolResponse } from './handler.js';
+import {
+  type BinaryExec,
+  type BinaryExecResult,
+  asStringArray,
+  isNonEmpty,
+  makeDefaultExec,
+  requireString,
+  resolveToolPath,
+  text,
+} from './binary-exec.js';
 
 // Default ceiling on a single xcprof invocation. analyze/compare/doctor finish
 // well within this; record bounds itself (--max-duration default 60s + a
@@ -15,30 +20,20 @@ const MODULE_DIR = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_TIMEOUT_MS = 300_000;
 const MAX_BUFFER = 64 * 1024 * 1024;
 
-export interface XcprofExecResult {
-  stdout: string;
-  stderr: string;
-  code: number;
-}
-
-/** Injectable for tests; production uses execFile against the resolved binary. */
-export type XcprofExec = (binaryPath: string, args: string[]) => Promise<XcprofExecResult>;
+// Re-exported aliases keep this file the home for xcprof's exec types (imported
+// by xcprof.test.ts) while the implementation lives in binary-exec.
+export type XcprofExecResult = BinaryExecResult;
+export type XcprofExec = BinaryExec;
 
 /**
  * Resolve the xcprof binary: explicit env override → dev plugin bin → the
- * binary bundled into dist/bin at publish time. The packaged path is relative
- * to this module (dist/tools/xcprof.js → dist/bin/xcprof).
+ * binary bundled into dist/bin at publish time.
  */
 export function resolveXcprofPath(
   config: Pick<Config, 'mode' | 'devSourcePath'>,
   env: NodeJS.ProcessEnv = process.env,
 ): string {
-  const override = env.AXIOM_XCPROF_PATH?.trim();
-  if (override) return override;
-  if (config.mode === 'development' && config.devSourcePath) {
-    return join(config.devSourcePath, 'bin', 'xcprof');
-  }
-  return join(MODULE_DIR, '..', 'bin', 'xcprof');
+  return resolveToolPath('xcprof', 'AXIOM_XCPROF_PATH', config, env);
 }
 
 function timeoutMs(env: NodeJS.ProcessEnv = process.env): number {
@@ -47,22 +42,7 @@ function timeoutMs(env: NodeJS.ProcessEnv = process.env): number {
 }
 
 function defaultExec(env: NodeJS.ProcessEnv = process.env): XcprofExec {
-  const timeout = timeoutMs(env);
-  return (binaryPath, args) =>
-    new Promise((resolve) => {
-      execFile(binaryPath, args, { timeout, maxBuffer: MAX_BUFFER }, (err, stdout, stderr) => {
-        // execFile sets err.code to the numeric exit status on a clean non-zero
-        // exit; a signal/timeout leaves it non-numeric. Either way we have the
-        // captured streams, so report them rather than throwing.
-        const rawCode = (err as NodeJS.ErrnoException | null)?.code;
-        const code = typeof rawCode === 'number' ? rawCode : err ? 1 : 0;
-        resolve({ stdout: stdout ?? '', stderr: stderr ?? '', code });
-      });
-    });
-}
-
-function text(body: string): ToolResponse {
-  return { content: [{ type: 'text', text: body }] };
+  return makeDefaultExec(timeoutMs(env), MAX_BUFFER);
 }
 
 const PRESETS = ['cpu', 'memory', 'network', 'energy', 'full', 'full-ios'];
@@ -73,7 +53,7 @@ const PRESETS = ['cpu', 'memory', 'network', 'energy', 'full', 'full-ios'];
  * side-effecting tool; its launch / all-processes modes stay gated behind
  * explicit allow flags the caller must set (mirroring the CLI's ADR-002 gates).
  */
-export class XcprofTools {
+export class XcprofTools implements BinaryToolProvider {
   private readonly binaryPath: string;
   private readonly exec: XcprofExec;
   private readonly logger?: Logger;
@@ -82,6 +62,10 @@ export class XcprofTools {
     this.binaryPath = opts.binaryPath;
     this.exec = opts.exec ?? defaultExec();
     this.logger = opts.logger;
+  }
+
+  handles(name: string): boolean {
+    return (XcprofTools.toolNames as readonly string[]).includes(name);
   }
 
   /** Tool names this handler owns, used by the parent handler to dispatch. */
@@ -273,20 +257,4 @@ export class XcprofTools {
     }
     return argv;
   }
-}
-
-function requireString(value: unknown, field: string): string {
-  if (typeof value !== 'string' || value.trim() === '') {
-    throw new Error(`Required parameter "${field}" must be a non-empty string`);
-  }
-  return value;
-}
-
-function isNonEmpty(value: unknown): value is string {
-  return typeof value === 'string' && value.trim() !== '';
-}
-
-function asStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((v): v is string => typeof v === 'string' && v.length > 0);
 }

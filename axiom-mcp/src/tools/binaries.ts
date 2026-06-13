@@ -7,11 +7,11 @@
  * references across `src/tools/*.ts`, so the bundler can never silently drift
  * from the tools that actually need a binary.
  *
- * Today only `xcprof` is exposed over MCP. `xclog`/`xcsym`/`xcui` are
- * Claude-Code-plugin tools without MCP wrappers, so they are intentionally NOT
- * bundled here — adding one means writing its MCP tool wrapper AND adding it to
- * this list (the coverage test will fail until both are done).
+ * `xcprof`, `xclog`, and `xcsym` are exposed over MCP. `xcui` is a Claude-Code-plugin
+ * tool that doesn't have an MCP wrapper yet (tracked in axiom-x72g), so it is
+ * intentionally NOT bundled here — adding one means writing its MCP tool wrapper
+ * AND adding it to this list (the coverage test will fail until both are done).
  */
-export const MCP_TOOL_BINARIES = ['xcprof'] as const;
+export const MCP_TOOL_BINARIES = ['xcprof', 'xclog', 'xcsym'] as const;
 
 export type McpToolBinary = (typeof MCP_TOOL_BINARIES)[number];
