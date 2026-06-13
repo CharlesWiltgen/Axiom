@@ -232,34 +232,55 @@ xcrun actool Assets.xcassets --compile /tmp/actool-out \
 
 - `xcsym crash <file>` — Structured crash symbolication with LLM-friendly JSON output. Use for any `.ips`, MetricKit, or legacy `.crash` text file. See `axiom-tools (skills/xcsym-ref.md)`.
 
-## Physical Device Management (devicectl)
+## Device Management (devicectl)
 
-`devicectl` is the modern CLI for physical device operations (replaces legacy `idevice*` tools).
+`devicectl` is the modern Core Device CLI (Xcode 15+, replaces legacy `idevice*` tools) for installing, launching, inspecting, and managing devices from the command line, with `--json-output` for CI.
+
+`xcrun devicectl list devices` returns a **unified inventory of physical devices *and* simulators**, distinguished by a `Reality` column (`physical` / `simulated`) — the CLI counterpart to Device Hub (below). This is *not* new in Xcode 27: the devicectl CLI is byte-identical between Xcode 26 and 27 (binary 629.3 in both, same 85 subcommands and flags). Xcode 27's one devicectl-related change is service-side — per the release notes, `simctl` and `devicectl` now support rebooting a simulator via `reboot`. For richer simulator-only control (status bar, push, privacy permissions, media), `simctl` stays primary; to drive the simulator UI / accessibility tree, use the Axiom `xcui` tool (`axiom-tools (skills/xcui-ref.md)`).
 
 ```bash
-# List connected devices
+# Unified inventory: physical + simulated (--json-output for CI)
 xcrun devicectl list devices
 
-# Install app on device
+# Install / launch / inspect a physical device by identifier
 xcrun devicectl device install app --device <udid> MyApp.app
-
-# Launch app on device
 xcrun devicectl device process launch --device <udid> com.your.bundleid
-
-# List installed apps
 xcrun devicectl device info apps --device <udid>
-
-# List running processes
 xcrun devicectl device info processes --device <udid>
 ```
 
-**When to use**: Physical device debugging when the issue doesn't reproduce in Simulator — install, launch, and inspect from CLI.
+**When to use**: CLI device operations when an issue doesn't reproduce in Simulator (install, launch, inspect) — and `list devices` as the single command that inventories devices and simulators together.
 
 ## Device Hub (OS27)
 
-Xcode 27 unifies simulators and physical devices in **Device Hub** (`OS27`). Launching your app opens it in a Device Hub window sized to the device, with quick actions (home, screenshot, rotate) and an accessibility **Inspector** (increase contrast, larger Dynamic Type, dark appearance) for evaluating the running app. The sidebar lists booted simulators and paired devices together, and a paired device can be driven from the Mac (on macOS27 the iPhone Mirroring window is resizable).
+Xcode 27 unifies simulators and physical devices in **Device Hub** — a standalone app that ships alongside Xcode and auto-launches when you build and run to a simulator (you don't need to open Xcode to use it). It offers the same toolset for simulators and physical devices, in a *compact* window (live screen plus a few essentials) that expands to a *full window* with canvas, sidebar inventory, and inspector. Bottom controls are contextual — home/screenshot/rotate on iPhone, play/pause and navigation on Apple TV, environment/camera on Vision Pro, side button and Digital Crown on Apple Watch.
 
-For **automation and diagnostics**, `simctl` (simulators) and `devicectl` (physical devices) remain the scriptable path — Device Hub is a GUI over the same operations, not a replacement. Reach for the CLI in scripts, CI, and headless verification (and the Axiom `xcui` tool for driving the simulator UI — see `axiom-tools (skills/xcui-ref.md)`).
+The **canvas** is a live, interactive screen (click, drag, scroll, trackpad gestures) for a device or simulator, with zoom, snap-to-1:1 physical size, *Resize mode* (transform app dimensions freely — see `axiom-uikit` for resizability), and *Capture keyboard* (routes Mac keystrokes to the device for key-command and hardware testing).
+
+### Inspector panels
+
+Five panels; two carry most of the debugging weight — Diagnostic reports (investigate) and Device settings (reproduce conditions).
+
+| Panel | Use |
+|---|---|
+| Device settings | Appearance and accessibility applied instantly — dark mode, increased contrast, larger Dynamic Type, simulated location, audio (no digging through Settings) |
+| Diagnostic reports | Start here when the app hangs or crashes — crashes, spins, and other logged diagnostics |
+| Info | Storage, model, serial number |
+| Apps | Install/uninstall; download and replace data containers |
+| Profiles | Configuration and provisioning profiles |
+
+### Reproduce a device-only bug on a simulator
+
+The canonical Device Hub workflow when a bug reproduces on a physical device but not locally:
+
+1. **Capture from the device** — *Pair Nearby Device* (wireless), install any needed configuration profile (e.g. a CoreLocation logging profile; reboot for privacy), reproduce the bug, then screenshot it, run a *sysdiagnose* for system-level diagnostics, and download the app's **data container**.
+2. **Match on the simulator** — select the matching model, replace your data container with the device's (Apps panel), then mirror the triggering config: rotation, simulated location, Dynamic Type size.
+
+Device-only bugs often need a *confluence* of conditions (e.g. landscape + a specific location + max text size, all at once); the inspector lets you reproduce every one of them in a single place.
+
+### Automation and CI
+
+`simctl` (simulators) and `devicectl` (devices — its `list devices` also inventories simulators via the `Reality` column) remain the scriptable path — Device Hub is a GUI over the same operations, not a replacement. `devicectl` lists devices, installs apps, changes settings (e.g. dark/light mode), and queries device info, with `--json-output` for clean integration into scripts and CI. Reach for the CLI in scripts, CI, and headless verification — and the Axiom `xcui` tool for driving the simulator UI (see `axiom-tools (skills/xcui-ref.md)`). On macOS27 the iPhone Mirroring window is resizable.
 
 ## Crash Log Analysis
 
