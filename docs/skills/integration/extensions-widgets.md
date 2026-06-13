@@ -111,7 +111,7 @@ struct WidgetView: View {
 
 ## Documentation Scope
 
-This page documents the `axiom-integration` skill—widget development patterns Claude uses when you're implementing Home Screen widgets or Control Center controls.
+This page documents the `axiom-integration` skill — widget development patterns Claude uses when you're implementing Home Screen widgets or Control Center controls.
 
 **For comprehensive API reference:** See [extensions-widgets-ref](/reference/extensions-widgets-ref) for complete API coverage, troubleshooting, and expert review checklist.
 
@@ -119,11 +119,11 @@ This page documents the `axiom-integration` skill—widget development patterns 
 
 ## Related
 
-- [live-activities](/skills/integration/live-activities) — Live Activities & Dynamic Island (extracted from this skill)
-- [extensions-widgets-ref](/reference/extensions-widgets-ref) — Complete API reference, troubleshooting, expert checklist
-- [app-intents-ref](/reference/app-intents-ref) — App Intents for interactive widgets
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Async patterns for data fetching
-- [swiftdata](/skills/persistence/swiftdata) — Using SwiftData with App Groups
+- [live-activities](/skills/integration/live-activities) – Live Activities & Dynamic Island (extracted from this skill)
+- [extensions-widgets-ref](/reference/extensions-widgets-ref) – Complete API reference, troubleshooting, expert checklist
+- [app-intents-ref](/reference/app-intents-ref) – App Intents for interactive widgets
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns for data fetching
+- [swiftdata](/skills/persistence/swiftdata) – Using SwiftData with App Groups
 
 ## Resources
 

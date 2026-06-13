@@ -69,10 +69,10 @@ The agent detects which auditors are relevant by scanning for framework imports,
 ## Output
 
 Results appear in two places:
-1. **Conversation** — Executive summary with top 5 critical findings + summary table
-2. **scratch/ directory** — Full detailed reports per auditor domain
+1. **Conversation** – Executive summary with top 5 critical findings + summary table
+2. **scratch/ directory** – Full detailed reports per auditor domain
 
 ## Related
 
-- [Audit Command](/commands/utility/audit) — Run individual auditors by domain
-- [Memory Auditor](/agents/memory-auditor) — One of the 26 individual auditors health-check orchestrates
+- [Audit Command](/commands/utility/audit) – Run individual auditors by domain
+- [Memory Auditor](/agents/memory-auditor) – One of the 26 individual auditors health-check orchestrates

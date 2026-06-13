@@ -19,15 +19,15 @@ Pulls grouped crash issues from Sentry or App Store Connect, classifies and clus
 
 ## What It Does
 
-1. **Pull grouped issues** — Fetches recent crash groups from Sentry (via API) or App Store Connect (via ASC MCP or manual export)
-2. **Classify crash families** — Maps each group to a crash pattern (null pointer, watchdog, Swift runtime error, OOM, etc.) using xcsym pattern tags where available
-3. **Filter suspension noise** — Identifies idle-runloop and background-termination events that the OS generates but which aren't true app crashes; flags them rather than hiding them so you can make the call
-4. **Cluster related groups** — Merges crash groups that share the same root cause but surface under different threads or stack variants
-5. **Rank by impact** — Orders the final list by affected-user count and session crash rate, and flags groups that appeared or worsened after the most recent build
-6. **Report** — Produces a ranked triage table: crash family, pattern, affected users, noise flag, and a suggested next step (investigate, monitor, or dismiss)
+1. **Pull grouped issues** – Fetches recent crash groups from Sentry (via API) or App Store Connect (via ASC MCP or manual export)
+2. **Classify crash families** – Maps each group to a crash pattern (null pointer, watchdog, Swift runtime error, OOM, etc.) using xcsym pattern tags where available
+3. **Filter suspension noise** – Identifies idle-runloop and background-termination events that the OS generates but which aren't true app crashes; flags them rather than hiding them so you can make the call
+4. **Cluster related groups** – Merges crash groups that share the same root cause but surface under different threads or stack variants
+5. **Rank by impact** – Orders the final list by affected-user count and session crash rate, and flags groups that appeared or worsened after the most recent build
+6. **Report** – Produces a ranked triage table: crash family, pattern, affected users, noise flag, and a suggested next step (investigate, monitor, or dismiss)
 
 ## Related
 
-- [crash-analyzer](/agents/crash-analyzer) — Use when you have a single `.ips` or `.crash` report; triage-analyzer works on aggregated groups, not individual files
-- [production-triage](/skills/debugging/production-triage) — The skill that provides Sentry/ASC fetch patterns, noise classification rules, and clustering heuristics
-- [xcsym Reference](/reference/xcsym-ref) — The crash symbolication tool whose `pattern_tag` output the agent uses to classify families
+- [crash-analyzer](/agents/crash-analyzer) – Use when you have a single `.ips` or `.crash` report; triage-analyzer works on aggregated groups, not individual files
+- [production-triage](/skills/debugging/production-triage) – The skill that provides Sentry/ASC fetch patterns, noise classification rules, and clustering heuristics
+- [xcsym Reference](/reference/xcsym-ref) – The crash symbolication tool whose `pattern_tag` output the agent uses to classify families

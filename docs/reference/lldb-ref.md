@@ -33,13 +33,13 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-- **Variable inspection** — `v` / `frame variable`, `p` / `expression`, `po`, format specifiers, flags (`-d run`, `-T`, `-R`, `-D N`)
-- **Breakpoints** — `breakpoint set` by file/line, name, regex, selector; conditional (`-c`), one-shot (`-o`), exception, symbolic
-- **Thread navigation** — `thread backtrace`, `thread list`, `thread select`, `frame select`, `thread info`
-- **Expression evaluation** — `expression`, result variables (`$R0`, `$R1`), modifying state, calling functions
-- **Process control** — `continue`, `thread step-over` / `step-in` / `step-out`, `process interrupt`
-- **Memory commands** — `memory read`, `memory find`, address formatting
-- **`.lldbinit` customization** — Command aliases, type summaries, settings, Python scripts
+- **Variable inspection** – `v` / `frame variable`, `p` / `expression`, `po`, format specifiers, flags (`-d run`, `-T`, `-R`, `-D N`)
+- **Breakpoints** – `breakpoint set` by file/line, name, regex, selector; conditional (`-c`), one-shot (`-o`), exception, symbolic
+- **Thread navigation** – `thread backtrace`, `thread list`, `thread select`, `frame select`, `thread info`
+- **Expression evaluation** – `expression`, result variables (`$R0`, `$R1`), modifying state, calling functions
+- **Process control** – `continue`, `thread step-over` / `step-in` / `step-out`, `process interrupt`
+- **Memory commands** – `memory read`, `memory find`, address formatting
+- **`.lldbinit` customization** – Command aliases, type summaries, settings, Python scripts
 
 ## Key Pattern
 
@@ -71,10 +71,10 @@ This page documents the `axiom-build` reference skill — the complete LLDB comm
 
 ## Related
 
-- [LLDB Debugging](/skills/debugging/lldb) — Debugging workflows, playbooks, and decision trees for when to use which LLDB commands
-- [Xcode Debugging](/skills/debugging/xcode-debugging) — Environment-first diagnostics for Xcode build and runtime issues
-- [Memory Debugging](/skills/debugging/memory-debugging) — Instruments-based leak diagnosis (complements LLDB for memory issues)
-- [Performance Profiling](/skills/debugging/performance-profiling) — Instruments workflows (LLDB inspects; Instruments measures)
+- [LLDB Debugging](/skills/debugging/lldb) – Debugging workflows, playbooks, and decision trees for when to use which LLDB commands
+- [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics for Xcode build and runtime issues
+- [Memory Debugging](/skills/debugging/memory-debugging) – Instruments-based leak diagnosis (complements LLDB for memory issues)
+- [Performance Profiling](/skills/debugging/performance-profiling) – Instruments workflows (LLDB inspects; Instruments measures)
 
 ## Resources
 

@@ -19,12 +19,12 @@ AI-powered visual inspection of App Store screenshots for compliance, quality, a
 ## What It Does
 
 ### Visual Content Analysis
-1. **Dimension validation** — Checks every screenshot against required App Store device sizes (exact pixel match required)
-2. **Placeholder detection** — Finds "Lorem ipsum", "TODO", "Sample", test data, and example emails
-3. **Debug artifact scanning** — Catches "STAGING" banners, FPS overlays, console output, Xcode debug indicators
-4. **Competitor reference check** — Flags other app names, brand logos, trademarked terms (Guidelines 2.3.1)
-5. **UI completeness** — Detects loading spinners, broken images, truncated text, empty states
-6. **Consistency review** — Checks for mixed themes, inconsistent device frames, orientation mismatches
+1. **Dimension validation** – Checks every screenshot against required App Store device sizes (exact pixel match required)
+2. **Placeholder detection** – Finds "Lorem ipsum", "TODO", "Sample", test data, and example emails
+3. **Debug artifact scanning** – Catches "STAGING" banners, FPS overlays, console output, Xcode debug indicators
+4. **Competitor reference check** – Flags other app names, brand logos, trademarked terms (Guidelines 2.3.1)
+5. **UI completeness** – Detects loading spinners, broken images, truncated text, empty states
+6. **Consistency review** – Checks for mixed themes, inconsistent device frames, orientation mismatches
 
 ### Device Coverage Tracking
 
@@ -65,7 +65,7 @@ Validates screenshots against all required App Store sizes:
 
 ## Related Tools
 
-- **`axiom-shipping` skill** — Pre-flight checklist for the full submission workflow
-- **`axiom-shipping` skill** — Metadata specs, guideline details, screenshot requirements
-- **`security-privacy-scanner` agent** — Code-level security and privacy compliance scanning
-- **`simulator-tester` agent** — Capture screenshots from the iOS Simulator
+- **`axiom-shipping` skill** – Pre-flight checklist for the full submission workflow
+- **`axiom-shipping` skill** – Metadata specs, guideline details, screenshot requirements
+- **`security-privacy-scanner` agent** – Code-level security and privacy compliance scanning
+- **`simulator-tester` agent** – Capture screenshots from the iOS Simulator

@@ -57,15 +57,15 @@ The skill includes a **Quick-Reference Crisis Card** for production triage — t
 
 ## Related
 
-- [Apple Pay](/skills/integration/apple-pay) — discipline for native flows; cert renewal staging, button vs mark, delegate response budget
-- [Apple Pay Reference](/reference/apple-pay-ref) — PassKit API surface
-- [Apple Pay on the Web](/skills/integration/apple-pay-web) — web discipline; the 30-second production-incident triage lives here
-- [Apple Pay on the Web Reference](/reference/apple-pay-web-ref) — `ApplePaySession` and Payment Request API surface
-- [Tap to Pay](/skills/integration/tap-to-pay) — entitlement workflow, PSP onboarding, prepare-on-foreground discipline
-- [Tap to Pay Reference](/reference/tap-to-pay-ref) — `ProximityReader` API surface
-- [Wallet Passes](/skills/integration/wallet-passes) — eight-step signing workflow plus the don't-roll-your-own recommendation
-- [Wallet Passes Reference](/reference/wallet-passes-ref) — `pass.json` schema and `PKPassLibrary`
-- [Wallet Orders](/skills/integration/wallet-orders) — Order Type ID Cert, three add-to-wallet paths, why subscriptions are not Orders
-- [Wallet Extensions Reference](/reference/wallet-extensions-ref) — issuer-side provisioning; shares the entitlement-stuck pattern
-- [Apple Pay vs IAP](/skills/integration/apple-pay-vs-iap) — root-cause skill for any rejection citing the rail boundary
-- [App Store Diagnostics](/diagnostic/app-store-diag) — appeal workflow for payment-related rejections that require formal response
+- [Apple Pay](/skills/integration/apple-pay) – discipline for native flows; cert renewal staging, button vs mark, delegate response budget
+- [Apple Pay Reference](/reference/apple-pay-ref) – PassKit API surface
+- [Apple Pay on the Web](/skills/integration/apple-pay-web) – web discipline; the 30-second production-incident triage lives here
+- [Apple Pay on the Web Reference](/reference/apple-pay-web-ref) – `ApplePaySession` and Payment Request API surface
+- [Tap to Pay](/skills/integration/tap-to-pay) – entitlement workflow, PSP onboarding, prepare-on-foreground discipline
+- [Tap to Pay Reference](/reference/tap-to-pay-ref) – `ProximityReader` API surface
+- [Wallet Passes](/skills/integration/wallet-passes) – eight-step signing workflow plus the don't-roll-your-own recommendation
+- [Wallet Passes Reference](/reference/wallet-passes-ref) – `pass.json` schema and `PKPassLibrary`
+- [Wallet Orders](/skills/integration/wallet-orders) – Order Type ID Cert, three add-to-wallet paths, why subscriptions are not Orders
+- [Wallet Extensions Reference](/reference/wallet-extensions-ref) – issuer-side provisioning; shares the entitlement-stuck pattern
+- [Apple Pay vs IAP](/skills/integration/apple-pay-vs-iap) – root-cause skill for any rejection citing the rail boundary
+- [App Store Diagnostics](/diagnostic/app-store-diag) – appeal workflow for payment-related rejections that require formal response

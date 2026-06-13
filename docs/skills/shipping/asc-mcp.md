@@ -26,13 +26,13 @@ Use this skill when:
 
 ## What This Skill Provides
 
-- **Setup guide** — Install via Mint, create API keys, configure Claude Code
-- **Worker filtering** — 3 presets (TestFlight, Release, Monetization) to reduce context overhead from 208 tools to 34-55
-- **5 workflow patterns** — Release pipeline, TestFlight distribution, review management, feedback triage, multi-company
-- **Key tool reference** — Top 20 most-used tools with parameters organized by category
-- **API constraints** — No emoji in metadata, version state requirements, JWT auto-refresh, rate limits
-- **Gotchas table** — Build processing delays, version conflicts, Beta App Review requirements
-- **Fallback guidance** — What to do when asc-mcp is not configured
+- **Setup guide** – Install via Mint, create API keys, configure Claude Code
+- **Worker filtering** – 3 presets (TestFlight, Release, Monetization) to reduce context overhead from 208 tools to 34-55
+- **5 workflow patterns** – Release pipeline, TestFlight distribution, review management, feedback triage, multi-company
+- **Key tool reference** – Top 20 most-used tools with parameters organized by category
+- **API constraints** – No emoji in metadata, version state requirements, JWT auto-refresh, rate limits
+- **Gotchas table** – Build processing delays, version conflicts, Beta App Review requirements
+- **Fallback guidance** – What to do when asc-mcp is not configured
 
 ## Requirements
 
@@ -43,7 +43,7 @@ Use this skill when:
 
 ## Related
 
-- [App Store Submission](/skills/shipping/app-store-submission) — Pre-flight checklist for preparing submissions — use this skill for the submission preparation workflow, asc-mcp for the programmatic execution
-- [App Store Connect Reference](/reference/app-store-connect-ref) — Manual ASC navigation for crash data and metrics — use when asc-mcp is not configured
-- [TestFlight Crash Triage](/skills/debugging/testflight-triage) — Xcode Organizer workflows for crash investigation — asc-mcp adds programmatic crash diagnostics access
-- [Xcode MCP Integration](/skills/xcode-mcp/) — Similar pattern for Xcode's built-in MCP tools — asc-mcp extends programmatic access to App Store Connect
+- [App Store Submission](/skills/shipping/app-store-submission) – Pre-flight checklist for preparing submissions — use this skill for the submission preparation workflow, asc-mcp for the programmatic execution
+- [App Store Connect Reference](/reference/app-store-connect-ref) – Manual ASC navigation for crash data and metrics — use when asc-mcp is not configured
+- [TestFlight Crash Triage](/skills/debugging/testflight-triage) – Xcode Organizer workflows for crash investigation — asc-mcp adds programmatic crash diagnostics access
+- [Xcode MCP Integration](/skills/xcode-mcp/) – Similar pattern for Xcode's built-in MCP tools — asc-mcp extends programmatic access to App Store Connect

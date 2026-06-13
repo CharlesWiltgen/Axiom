@@ -25,14 +25,14 @@ Scans Core Data code for safety violations, architectural gaps, and production r
 5. **Performance Issues** (LOW) — Missing fetchBatchSize, no faulting controls
 
 ### Completeness Checks
-6. **Missing merge policy** — Conflicts crash instead of resolving
-7. **Missing auto-merge from parent** — Stale UI after background saves
-8. **Singleton context abuse** — viewContext used for background work
-9. **Unsafe object passing** — NSManagedObject across threads instead of objectID
-10. **Missing delete rules** — Orphaned data or unexpected cascades
-11. **Save-per-insert pattern** — 100x slower than batch saves
-12. **Fetch-then-delete loops** — 100x slower than batch deletes
-13. **Fetching in view body** — Redundant queries on every render
+6. **Missing merge policy** – Conflicts crash instead of resolving
+7. **Missing auto-merge from parent** – Stale UI after background saves
+8. **Singleton context abuse** – viewContext used for background work
+9. **Unsafe object passing** – NSManagedObject across threads instead of objectID
+10. **Missing delete rules** – Orphaned data or unexpected cascades
+11. **Save-per-insert pattern** – 100x slower than batch saves
+12. **Fetch-then-delete loops** – 100x slower than batch deletes
+13. **Fetching in view body** – Redundant queries on every render
 
 ### Health Score
 Reports overall production readiness as **PRODUCTION READY**, **NEEDS HARDENING**, or **UNSAFE** with specific metrics.

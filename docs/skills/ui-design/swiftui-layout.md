@@ -33,22 +33,22 @@ Covers tool selection (ViewThatFits vs AnyLayout vs onGeometryChange), size clas
 
 ### Anti-Patterns Prevented
 
-- `UIDevice.current.orientation` — Reports device, not window
-- `UIScreen.main.bounds` — Wrong in multitasking
-- `UIDevice.current.userInterfaceIdiom == .pad` — iPad in 1/3 Split View is narrower than iPhone
+- `UIDevice.current.orientation` – Reports device, not window
+- `UIScreen.main.bounds` – Wrong in multitasking
+- `UIDevice.current.userInterfaceIdiom == .pad` – iPad in 1/3 Split View is narrower than iPhone
 - Unconstrained `GeometryReader` — Greedy sizing breaks siblings
 - Size class as orientation proxy — iPad is `.regular` in both orientations
 
 ## iOS 26 Changes
 
-- **Free-form window resizing** — Users can drag to resize windows anywhere
-- **`UIRequiresFullScreen` deprecated** — Apps must handle resizing
-- **Menu bar on iPad** — Via SwiftUI `.commands`
-- **NavigationSplitView auto-adapts** — Columns show/hide automatically
+- **Free-form window resizing** – Users can drag to resize windows anywhere
+- **`UIRequiresFullScreen` deprecated** – Apps must handle resizing
+- **Menu bar on iPad** – Via SwiftUI `.commands`
+- **NavigationSplitView auto-adapts** – Columns show/hide automatically
 
 ## Related Resources
 
-- [swiftui-layout-ref](/reference/swiftui-layout-ref) — Complete API reference
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — View update diagnostics
+- [swiftui-layout-ref](/reference/swiftui-layout-ref) – Complete API reference
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – View update diagnostics
 - [WWDC 2025: Elevate the design of your iPad app](https://developer.apple.com/videos/play/wwdc2025/208/)
 - [WWDC 2024: Get started with Dynamic Type](https://developer.apple.com/videos/play/wwdc2024/10074/)

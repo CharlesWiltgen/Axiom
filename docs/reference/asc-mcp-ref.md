@@ -43,9 +43,9 @@ This page documents the `axiom-shipping` skill — the workflow-focused guide Cl
 
 ## Related
 
-- [App Store Connect Reference](/reference/app-store-connect-ref) — Manual ASC navigation when MCP is not available
-- [TestFlight Crash Triage](/skills/debugging/testflight-triage) — Xcode Organizer crash workflows, complemented by asc-mcp's programmatic diagnostics
-- [Xcode MCP Integration](/skills/xcode-mcp/) — Similar MCP tool integration pattern for Xcode IDE tools
+- [App Store Connect Reference](/reference/app-store-connect-ref) – Manual ASC navigation when MCP is not available
+- [TestFlight Crash Triage](/skills/debugging/testflight-triage) – Xcode Organizer crash workflows, complemented by asc-mcp's programmatic diagnostics
+- [Xcode MCP Integration](/skills/xcode-mcp/) – Similar MCP tool integration pattern for Xcode IDE tools
 
 ## Resources
 

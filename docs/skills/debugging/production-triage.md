@@ -74,8 +74,8 @@ A well-formed triage report answers three questions for each crash family:
 
 App Store Connect and Sentry both surface background-task-expired and idle-runloop terminations as crashes. They look alarming but usually aren't:
 
-- **Background task expired** — App failed to call `endBackgroundTask()` before the OS killed it. Fix the background task, or flag as noise if it's a deliberate "fire and forget."
-- **Idle runloop termination** — App sat idle too long in the background. Not a code bug; the OS reclaimed resources. Dismiss unless your app is supposed to stay alive.
+- **Background task expired** – App failed to call `endBackgroundTask()` before the OS killed it. Fix the background task, or flag as noise if it's a deliberate "fire and forget."
+- **Idle runloop termination** – App sat idle too long in the background. Not a code bug; the OS reclaimed resources. Dismiss unless your app is supposed to stay alive.
 
 These two patterns account for a disproportionate share of "crash" noise in most dashboards.
 
@@ -87,9 +87,9 @@ The skill routes through the `axiom-performance` and `axiom-shipping` routers, s
 
 ## Related
 
-- [testflight-triage](/skills/debugging/testflight-triage) — Use this instead when your crashes come from the Xcode Organizer or TestFlight feedback; production-triage covers Sentry and ASC programmatic access
-- [axiom-data](/skills/persistence/grdb) — The `0xdead10cc` (file lock) crash pattern often traced to GRDB or SQLite; see GRDB for the fix
-- [xcsym Reference](/reference/xcsym-ref) — The Axiom crash symbolication tool whose `pattern_tag` values this skill uses to classify families
+- [testflight-triage](/skills/debugging/testflight-triage) – Use this instead when your crashes come from the Xcode Organizer or TestFlight feedback; production-triage covers Sentry and ASC programmatic access
+- [axiom-data](/skills/persistence/grdb) – The `0xdead10cc` (file lock) crash pattern often traced to GRDB or SQLite; see GRDB for the fix
+- [xcsym Reference](/reference/xcsym-ref) – The Axiom crash symbolication tool whose `pattern_tag` values this skill uses to classify families
 
 ## Resources
 

@@ -67,7 +67,7 @@ Without the user's TCC consent, `SCShareableContent` returns nothing. Handle the
 
 ## Related
 
-- [Sandbox & File Access](/skills/macos/sandbox-and-file-access) — TCC consent and entitlements for capture
+- [Sandbox & File Access](/skills/macos/sandbox-and-file-access) – TCC consent and entitlements for capture
 - For iOS screen recording (ReplayKit) and CMSampleBuffer handling, see the axiom-media suite
 - For serial queues and async sequences around the capture callback, see the axiom-concurrency suite
 

@@ -51,5 +51,5 @@ Use this skill when:
 
 ## Related
 
-- [RealityKit](/skills/games/realitykit) — Displaying and interacting with 3D content; use it (not USDKit) to simply show a USDZ model
-- [RealityKit API Reference](/reference/realitykit-ref) — Component catalog including the 27-cycle additions and Gaussian splat rendering
+- [RealityKit](/skills/games/realitykit) – Displaying and interacting with 3D content; use it (not USDKit) to simply show a USDZ model
+- [RealityKit API Reference](/reference/realitykit-ref) – Component catalog including the 27-cycle additions and Gaussian splat rendering

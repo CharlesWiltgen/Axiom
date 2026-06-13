@@ -130,9 +130,9 @@ let output = try await model.prediction(from: input)
 
 ## Related
 
-- [CoreML API Reference](/reference/coreml-ref) — detailed API docs when you need exact method signatures or parameter options
-- [CoreML Diagnostics](/diagnostic/coreml-diag) — troubleshooting when models fail to load, predictions are wrong, or performance is poor
-- [Foundation Models](/skills/integration/foundation-models) — use instead when you need Apple's built-in LLM rather than custom models
+- [CoreML API Reference](/reference/coreml-ref) – detailed API docs when you need exact method signatures or parameter options
+- [CoreML Diagnostics](/diagnostic/coreml-diag) – troubleshooting when models fail to load, predictions are wrong, or performance is poor
+- [Foundation Models](/skills/integration/foundation-models) – use instead when you need Apple's built-in LLM rather than custom models
 
 ### WWDC Sessions
 

@@ -138,7 +138,7 @@ WebView(url: URL(string: "https://example.com")!)
 
 ## Documentation Scope
 
-This page documents the `axiom-swiftui-26-ref` reference skill—complete API coverage Claude uses when you need specific iOS 26 SwiftUI APIs or feature details.
+This page documents the `axiom-swiftui-26-ref` reference skill — complete API coverage Claude uses when you need specific iOS 26 SwiftUI APIs or feature details.
 
 **For Liquid Glass adoption:** See [liquid-glass](/skills/ui-design/liquid-glass) for implementation workflows.
 
@@ -146,10 +146,10 @@ This page documents the `axiom-swiftui-26-ref` reference skill—complete API co
 
 ## Related
 
-- [liquid-glass](/skills/ui-design/liquid-glass) — Liquid Glass implementation patterns
-- [swiftui-performance](/skills/ui-design/swiftui-performance) — Performance optimization
-- [swiftui-animation-ref](/reference/swiftui-animation-ref) — Animation API reference
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — View update debugging
+- [liquid-glass](/skills/ui-design/liquid-glass) – Liquid Glass implementation patterns
+- [swiftui-performance](/skills/ui-design/swiftui-performance) – Performance optimization
+- [swiftui-animation-ref](/reference/swiftui-animation-ref) – Animation API reference
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – View update debugging
 
 ## Resources
 

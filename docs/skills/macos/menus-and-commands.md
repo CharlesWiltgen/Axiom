@@ -87,10 +87,10 @@ This page documents the `menus-and-commands` skill in the `axiom-macos` suite. T
 
 ## Related
 
-- [windows](/skills/macos/windows) — Commands modify scenes; this covers `WindowGroup`, `Window`, `UtilityWindow`, `MenuBarExtra`, `Settings`
-- [swiftui-differences](/skills/macos/swiftui-differences) — Where `focusedSceneValue` fits into the broader macOS focus model, including Table, Inspector, and toolbar commands
-- [settings](/skills/macos/settings) — Settings menu item placement and the ⌘, shortcut wiring
-- [swiftui-toolbars](/skills/ui-design/) — Cross-platform `.toolbar`, `ToolbarItem`, and `ToolbarSpacer` placement
+- [windows](/skills/macos/windows) – Commands modify scenes; this covers `WindowGroup`, `Window`, `UtilityWindow`, `MenuBarExtra`, `Settings`
+- [swiftui-differences](/skills/macos/swiftui-differences) – Where `focusedSceneValue` fits into the broader macOS focus model, including Table, Inspector, and toolbar commands
+- [settings](/skills/macos/settings) – Settings menu item placement and the ⌘, shortcut wiring
+- [swiftui-toolbars](/skills/ui-design/) – Cross-platform `.toolbar`, `ToolbarItem`, and `ToolbarSpacer` placement
 
 ## Resources
 

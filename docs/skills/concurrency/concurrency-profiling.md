@@ -71,9 +71,9 @@ SWIFT_CONCURRENCY_COOPERATIVE_THREAD_BOUNDS=1
 
 ## Related Skills
 
-- [Swift Concurrency](./swift-concurrency) — Concurrency patterns
-- [Synchronization](./synchronization) — Mutex vs actor decisions
-- [Performance Profiling](/skills/debugging/performance-profiling) — General profiling
+- [Swift Concurrency](./swift-concurrency) – Concurrency patterns
+- [Synchronization](./synchronization) – Mutex vs actor decisions
+- [Performance Profiling](/skills/debugging/performance-profiling) – General profiling
 
 ## Resources
 

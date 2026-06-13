@@ -40,7 +40,7 @@ This page documents the `axiom-security` discipline skill. The discipline skill 
 
 ## Related
 
-- [Keychain Diagnostics](/diagnostic/keychain-diag) — Troubleshoot specific SecItem error codes and lost-item scenarios
-- [Keychain Reference](/reference/keychain-ref) — SecItem function signatures, attribute constants, accessibility levels
-- [CryptoKit](/skills/security/cryptokit) — Encryption and signing for data that goes beyond credential storage
-- [File Protection Reference](/reference/file-protection-ref) — Data protection classes for files stored outside the keychain
+- [Keychain Diagnostics](/diagnostic/keychain-diag) – Troubleshoot specific SecItem error codes and lost-item scenarios
+- [Keychain Reference](/reference/keychain-ref) – SecItem function signatures, attribute constants, accessibility levels
+- [CryptoKit](/skills/security/cryptokit) – Encryption and signing for data that goes beyond credential storage
+- [File Protection Reference](/reference/file-protection-ref) – Data protection classes for files stored outside the keychain

@@ -66,7 +66,7 @@ It's not a replacement — it expands the model to watchOS 10.4+ and visionOS 1.
 
 ## Related
 
-- [Push Notifications](/skills/integration/push-notifications) — PushKit VoIP vs APNs delivery
+- [Push Notifications](/skills/integration/push-notifications) – PushKit VoIP vs APNs delivery
 - For the call audio session category (`.playAndRecord`), see the axiom-media suite
 - For LiveCommunicationKit on Apple Watch, see the axiom-watchos suite
 

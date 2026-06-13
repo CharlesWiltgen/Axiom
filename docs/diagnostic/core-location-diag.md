@@ -123,9 +123,9 @@ Use this diagnostic when:
 
 ## Related
 
-- [core-location](/skills/integration/core-location) — Implementation patterns and decision trees
-- [core-location-ref](/reference/core-location-ref) — Complete API reference
-- [energy-diag](/diagnostic/energy-diag) — Location as battery drain source
+- [core-location](/skills/integration/core-location) – Implementation patterns and decision trees
+- [core-location-ref](/reference/core-location-ref) – Complete API reference
+- [energy-diag](/diagnostic/energy-diag) – Location as battery drain source
 
 ## Documentation Scope
 

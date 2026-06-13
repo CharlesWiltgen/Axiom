@@ -69,8 +69,8 @@ App Clips can't use App Intents, HealthKit, Contacts, and other frameworks; get 
 
 ## Related
 
-- [App Store Submission](/skills/shipping/app-store-submission) — App Clips ship with the parent app
-- [App Review Guidelines](/skills/shipping/app-review-guidelines) — Review rules that apply to App Clips
+- [App Store Submission](/skills/shipping/app-store-submission) – App Clips ship with the parent app
+- [App Review Guidelines](/skills/shipping/app-review-guidelines) – Review rules that apply to App Clips
 - For App Clip Live Activities, see the axiom-integration suite (live-activities)
 
 ## Resources

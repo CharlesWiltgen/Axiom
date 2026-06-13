@@ -39,6 +39,6 @@ Use this skill when:
 
 ## Related
 
-- [energy](/skills/debugging/energy) — Use when frame rate issues are battery-related or you need power-aware rendering
-- [performance-profiling](/skills/debugging/performance-profiling) — Use for general Instruments profiling before diving into display-specific issues
-- [swiftui-performance](/skills/ui-design/swiftui-performance) — Use for SwiftUI view update performance, not Metal/CADisplayLink rendering
+- [energy](/skills/debugging/energy) – Use when frame rate issues are battery-related or you need power-aware rendering
+- [performance-profiling](/skills/debugging/performance-profiling) – Use for general Instruments profiling before diving into display-specific issues
+- [swiftui-performance](/skills/ui-design/swiftui-performance) – Use for SwiftUI view update performance, not Metal/CADisplayLink rendering

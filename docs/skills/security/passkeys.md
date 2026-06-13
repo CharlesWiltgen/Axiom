@@ -41,4 +41,4 @@ This page documents the `axiom-security` discipline skill. The discipline skill 
 
 ## Related
 
-- [Keychain](/skills/security/keychain) — Credentials stored in the keychain alongside passkeys; shared access group configuration applies to both
+- [Keychain](/skills/security/keychain) – Credentials stored in the keychain alongside passkeys; shared access group configuration applies to both

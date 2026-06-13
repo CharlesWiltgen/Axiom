@@ -61,7 +61,7 @@ Questions you can ask Claude that will draw from this skill:
 - Dependency injection between modules
 
 ### Document-Based Apps (iOS 27)
-- **Document-based apps** — `ReadableDocument`/`WritableDocument`, async `DocumentGroup` initializers, snapshot/apply on `@MainActor`
+- **Document-based apps** – `ReadableDocument`/`WritableDocument`, async `DocumentGroup` initializers, snapshot/apply on `@MainActor`
 
 ## Key Pattern
 
@@ -152,7 +152,7 @@ struct ContentView: View {
 
 ## Documentation Scope
 
-This page documents the `axiom-design` skill—app-level patterns Claude uses when you're structuring @main, managing authentication flows, or handling scene lifecycle.
+This page documents the `axiom-design` skill — app-level patterns Claude uses when you're structuring @main, managing authentication flows, or handling scene lifecycle.
 
 **For feature architecture:** See [swiftui-architecture](/skills/ui-design/swiftui-architecture) for MVVM, TCA, and property wrapper patterns.
 
@@ -160,9 +160,9 @@ This page documents the `axiom-design` skill—app-level patterns Claude uses wh
 
 ## Related
 
-- [swiftui-architecture](/skills/ui-design/swiftui-architecture) — Feature-level patterns (MVVM, TCA)
-- [swiftui-nav](/skills/ui-design/swiftui-nav) — Navigation patterns
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Async patterns for state management
+- [swiftui-architecture](/skills/ui-design/swiftui-architecture) – Feature-level patterns (MVVM, TCA)
+- [swiftui-nav](/skills/ui-design/swiftui-nav) – Navigation patterns
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns for state management
 
 ## Resources
 

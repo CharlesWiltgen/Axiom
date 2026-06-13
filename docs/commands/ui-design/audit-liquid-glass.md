@@ -58,9 +58,9 @@ Summary:
 
 ## Related
 
-- [liquid-glass](/skills/ui-design/liquid-glass) — Implementation patterns and adoption guidance
-- [swiftui-26-ref](/reference/swiftui-26-ref) — iOS 26 SwiftUI features including Liquid Glass APIs
-- [liquid-glass-auditor](/agents/liquid-glass-auditor) — Automated agent for deeper analysis
+- [liquid-glass](/skills/ui-design/liquid-glass) – Implementation patterns and adoption guidance
+- [swiftui-26-ref](/reference/swiftui-26-ref) – iOS 26 SwiftUI features including Liquid Glass APIs
+- [liquid-glass-auditor](/agents/liquid-glass-auditor) – Automated agent for deeper analysis
 
 ## Requirements
 

@@ -13,11 +13,11 @@ Comprehensive guide to implementing haptic feedback on iOS with Core Haptics and
 
 This reference covers haptic feedback implementation from simple patterns to advanced audio-haptic synchronization:
 
-- **Design Principles** — Causality, Harmony, Utility framework from WWDC 2021
-- **UIFeedbackGenerator** — Simple haptic feedback for common interactions (iOS 10+)
-- **Core Haptics** — Custom haptic patterns and audio-haptic synchronization (iOS 13+)
-- **AHAP Files** — Apple Haptic Audio Pattern JSON format
-- **Testing & Debugging** — Simulator limitations and device-specific behavior
+- **Design Principles** – Causality, Harmony, Utility framework from WWDC 2021
+- **UIFeedbackGenerator** – Simple haptic feedback for common interactions (iOS 10+)
+- **Core Haptics** – Custom haptic patterns and audio-haptic synchronization (iOS 13+)
+- **AHAP Files** – Apple Haptic Audio Pattern JSON format
+- **Testing & Debugging** – Simulator limitations and device-specific behavior
 
 ## System Requirements
 
@@ -173,13 +173,13 @@ engine?.resetHandler = {
 
 ## WWDC Sessions
 
-- [Practice audio haptic design (2021/10278)](https://developer.apple.com/videos/play/wwdc2021/10278/) — Causality-Harmony-Utility principles
-- [Introducing Core Haptics (2019/520)](https://developer.apple.com/videos/play/wwdc2019/520/) — CHHapticEngine architecture
-- [Expanding the Sensory Experience (2019/223)](https://developer.apple.com/videos/play/wwdc2019/223/) — Audio-haptic design
+- [Practice audio haptic design (2021/10278)](https://developer.apple.com/videos/play/wwdc2021/10278/) – Causality-Harmony-Utility principles
+- [Introducing Core Haptics (2019/520)](https://developer.apple.com/videos/play/wwdc2019/520/) – CHHapticEngine architecture
+- [Expanding the Sensory Experience (2019/223)](https://developer.apple.com/videos/play/wwdc2019/223/) – Audio-haptic design
 
 ## Related Skills
 
-- **haptics** — Complete reference with AHAP patterns, advanced Core Haptics, audio synchronization
+- **haptics** – Complete reference with AHAP patterns, advanced Core Haptics, audio synchronization
 
 ## Related Documentation
 

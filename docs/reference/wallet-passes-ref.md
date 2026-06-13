@@ -33,26 +33,26 @@ Questions developers ask that this reference answers:
 
 ## What's Covered
 
-- **Top-level keys** — `formatVersion`, `passTypeIdentifier`, `serialNumber`, `teamIdentifier`, `organizationName`, `description`, plus optional `logoText`, color keys, `expirationDate`, `voided`, `relevantDate`, `locations`, `beacons`, `barcodes`, `nfc`, `webServiceURL`, `authenticationToken`, `associatedStoreIdentifiers`, `appLaunchURL`, `userInfo`, `sharingProhibited`, `suppressStripShine`, `preferredStyleSchemes`, `groupingIdentifier`, `semantics`
-- **Pass style keys** — `boardingPass` (with `transitType`), `eventTicket`, `coupon`, `storeCard`, `generic`; iOS 18+ `posterEventTicket` declared via `preferredStyleSchemes` (underlying style is still `eventTicket`); iOS 27 `posterGeneric` with the `generic`-alongside fallback
+- **Top-level keys** – `formatVersion`, `passTypeIdentifier`, `serialNumber`, `teamIdentifier`, `organizationName`, `description`, plus optional `logoText`, color keys, `expirationDate`, `voided`, `relevantDate`, `locations`, `beacons`, `barcodes`, `nfc`, `webServiceURL`, `authenticationToken`, `associatedStoreIdentifiers`, `appLaunchURL`, `userInfo`, `sharingProhibited`, `suppressStripShine`, `preferredStyleSchemes`, `groupingIdentifier`, `semantics`
+- **Pass style keys** – `boardingPass` (with `transitType`), `eventTicket`, `coupon`, `storeCard`, `generic`; iOS 18+ `posterEventTicket` declared via `preferredStyleSchemes` (underlying style is still `eventTicket`); iOS 27 `posterGeneric` with the `generic`-alongside fallback
 - **`PKTransitType`** values for boarding passes
-- **PassFields** — `headerFields` (stacked Wallet view), `primaryFields`, `secondaryFields`, `auxiliaryFields` (Apple Watch surfaces these), `backFields` (tap pass info), `footerFields` (iOS 27, `posterGeneric` only — only the first entry renders)
-- **Field dictionary keys** — `key`, `label`, `value`, `attributedValue`, `changeMessage`, `dateStyle`, `timeStyle`, `currencyCode`, `numberStyle`, `textAlignment`, `isRelative`, `ignoresTimeZone`, `dataDetectorTypes`
+- **PassFields** – `headerFields` (stacked Wallet view), `primaryFields`, `secondaryFields`, `auxiliaryFields` (Apple Watch surfaces these), `backFields` (tap pass info), `footerFields` (iOS 27, `posterGeneric` only — only the first entry renders)
+- **Field dictionary keys** – `key`, `label`, `value`, `attributedValue`, `changeMessage`, `dateStyle`, `timeStyle`, `currencyCode`, `numberStyle`, `textAlignment`, `isRelative`, `ignoresTimeZone`, `dataDetectorTypes`
 - **`PKDateStyle*`**, **`PKNumberStyle*`**, **`PKTextAlignment*`**, and **`PKDataDetectorType*`** value lists
-- **Semantic tags** — `eventName`, `eventStartDate`/`eventEndDate`, venue tags, `performerNames`, `seats`, sports `leftTeamName`/`rightTeamName`, airline `airlineCode`/`flightNumber`, boarding `departureGate`/`arrivalDate`, store-card `balance`/`totalPrice`
-- **Barcodes array** — `PKBarcodeFormatQR`, `PKBarcodeFormatPDF417`, `PKBarcodeFormatAztec`, `PKBarcodeFormatCode128`; the deprecated singular `barcode` key; the four 1D types new in the 27 releases (EAN-13, Code 39, Codabar, ITF) with the legacy-format fallback technique
+- **Semantic tags** – `eventName`, `eventStartDate`/`eventEndDate`, venue tags, `performerNames`, `seats`, sports `leftTeamName`/`rightTeamName`, airline `airlineCode`/`flightNumber`, boarding `departureGate`/`arrivalDate`, store-card `balance`/`totalPrice`
+- **Barcodes array** – `PKBarcodeFormatQR`, `PKBarcodeFormatPDF417`, `PKBarcodeFormatAztec`, `PKBarcodeFormatCode128`; the deprecated singular `barcode` key; the four 1D types new in the 27 releases (EAN-13, Code 39, Codabar, ITF) with the legacy-format fallback technique
 - **Featured actions** (27 releases) — the top-level `featuredActions` key, up to two actions per pass
-- **Pass authoring tools** — Pass Designer (Mac app, `.pkpasstemplate`) and the Pass Builder Swift-on-Server package with the `buildpass` CLI
-- **NFC payload schema** — `nfc.message`, `nfc.encryptionPublicKey`, `nfc.requiresAuthentication`; requires NFC Pass Encoding entitlement
-- **Locations and beacons** — schema and 10-item caps
-- **`PKPassLibrary`** — instance methods, modern `PKPassType` cases (`.any`, `.barcode`, `.secureElement`; `.payment` was renamed), threading constraint (not thread-safe; main-thread confinement)
-- **`PKPassLibrary` notifications** — `PKPassLibraryDidChange`, `PKPassLibraryRemoteSecureElementPassesDidChange` (formerly `RemotePaymentPasses`)
-- **`PKAddPassesViewController`** — `init(pass:)` and `init(passes:)`, delegate
-- **Image filename and dimension reference** — `icon`, `logo`, `strip`, `background`, `thumbnail`, `footer` at `@2x` and `@3x`; which images each style requires; pointer to the HIG for exact pixel dimensions (numbers change; pin the doc)
-- **Localization** — `.lproj` directory layout, `pass.strings` UTF-16, system-formatted date/currency auto-localization
-- **Multipass bundles** — `.pkpasses` zip, MIME types (`application/vnd.apple.pkpass`, `application/vnd.apple.pkpasses`), 10-pass and 150 MB caps
-- **SwiftUI buttons** — `AddPassToWalletButton`, `AddOrderToWalletButton`, `VerifyIdentityWithWalletButton`
-- **Web service endpoint schemas** — five-endpoint pattern with request/response shapes, `Authorization: ApplePass <token>` header, conditional response headers for `GET /v1/passes/...`
+- **Pass authoring tools** – Pass Designer (Mac app, `.pkpasstemplate`) and the Pass Builder Swift-on-Server package with the `buildpass` CLI
+- **NFC payload schema** – `nfc.message`, `nfc.encryptionPublicKey`, `nfc.requiresAuthentication`; requires NFC Pass Encoding entitlement
+- **Locations and beacons** – schema and 10-item caps
+- **`PKPassLibrary`** – instance methods, modern `PKPassType` cases (`.any`, `.barcode`, `.secureElement`; `.payment` was renamed), threading constraint (not thread-safe; main-thread confinement)
+- **`PKPassLibrary` notifications** – `PKPassLibraryDidChange`, `PKPassLibraryRemoteSecureElementPassesDidChange` (formerly `RemotePaymentPasses`)
+- **`PKAddPassesViewController`** – `init(pass:)` and `init(passes:)`, delegate
+- **Image filename and dimension reference** – `icon`, `logo`, `strip`, `background`, `thumbnail`, `footer` at `@2x` and `@3x`; which images each style requires; pointer to the HIG for exact pixel dimensions (numbers change; pin the doc)
+- **Localization** – `.lproj` directory layout, `pass.strings` UTF-16, system-formatted date/currency auto-localization
+- **Multipass bundles** – `.pkpasses` zip, MIME types (`application/vnd.apple.pkpass`, `application/vnd.apple.pkpasses`), 10-pass and 150 MB caps
+- **SwiftUI buttons** – `AddPassToWalletButton`, `AddOrderToWalletButton`, `VerifyIdentityWithWalletButton`
+- **Web service endpoint schemas** – five-endpoint pattern with request/response shapes, `Authorization: ApplePass <token>` header, conditional response headers for `GET /v1/passes/...`
 
 ## Documentation Scope
 

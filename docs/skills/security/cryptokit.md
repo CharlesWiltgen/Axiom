@@ -41,5 +41,5 @@ This page documents the `axiom-security` discipline skill. The discipline skill 
 
 ## Related
 
-- [CryptoKit Reference](/reference/cryptokit-ref) — All algorithm families, type signatures, and API details
-- [Keychain](/skills/security/keychain) — Secure storage for keys and credentials that CryptoKit generates
+- [CryptoKit Reference](/reference/cryptokit-ref) – All algorithm families, type signatures, and API details
+- [Keychain](/skills/security/keychain) – Secure storage for keys and credentials that CryptoKit generates

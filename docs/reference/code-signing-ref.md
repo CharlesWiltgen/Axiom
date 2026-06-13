@@ -46,7 +46,7 @@ This page documents the `axiom-security` reference skill. The full CLI command r
 
 ## Related
 
-- [Code Signing](/skills/debugging/code-signing) — Workflows, decision trees, and anti-patterns
-- [Code Signing Diagnostics](/diagnostic/code-signing-diag) — Troubleshoot specific signing errors
-- [App Store Submission Reference](/reference/app-store-ref) — Metadata and submission requirements
-- [LLDB Command Reference](/reference/lldb-ref) — Another CLI reference for debugging
+- [Code Signing](/skills/debugging/code-signing) – Workflows, decision trees, and anti-patterns
+- [Code Signing Diagnostics](/diagnostic/code-signing-diag) – Troubleshoot specific signing errors
+- [App Store Submission Reference](/reference/app-store-ref) – Metadata and submission requirements
+- [LLDB Command Reference](/reference/lldb-ref) – Another CLI reference for debugging

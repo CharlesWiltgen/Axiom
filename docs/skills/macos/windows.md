@@ -83,10 +83,10 @@ This page documents the `windows` skill in the `axiom-macos` suite. The skill fi
 
 ## Related
 
-- [menus-and-commands](/skills/macos/menus-and-commands) — Once windows exist, this covers `CommandMenu`/`CommandGroup` and routing commands to the focused window
-- [settings](/skills/macos/settings) — The `Settings` scene is a special-purpose window covered in its own skill
-- [swiftui-differences](/skills/macos/swiftui-differences) — Multi-window state via `@SceneStorage` and the focus model that windows participate in
-- [appkit-interop](/skills/macos/appkit-interop) — When `NSHostingController` is the right way to host SwiftUI inside an AppKit window or modal
+- [menus-and-commands](/skills/macos/menus-and-commands) – Once windows exist, this covers `CommandMenu`/`CommandGroup` and routing commands to the focused window
+- [settings](/skills/macos/settings) – The `Settings` scene is a special-purpose window covered in its own skill
+- [swiftui-differences](/skills/macos/swiftui-differences) – Multi-window state via `@SceneStorage` and the focus model that windows participate in
+- [appkit-interop](/skills/macos/appkit-interop) – When `NSHostingController` is the right way to host SwiftUI inside an AppKit window or modal
 
 ## Resources
 

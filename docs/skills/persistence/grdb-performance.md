@@ -87,7 +87,7 @@ Questions you can ask Claude that will draw from this skill:
 ### Observation Cost
 - `ValueObservation` default scheduling (main-actor async)
 - `.immediate` scheduling — fast queries only
-- `DatabaseRegionObservation` — when transactions matter more than values
+- `DatabaseRegionObservation` – when transactions matter more than values
 
 ### SQLiteData Layer Note
 - How tuning transfers from GRDB to SQLiteData
@@ -159,12 +159,12 @@ For the GRDB primer (setup, record types, basic queries), see [grdb](/skills/per
 
 ## Related
 
-- [grdb](/skills/persistence/grdb) — primer for setup, record types, ValueObservation basics
-- [sqlite-fts-ref](/reference/sqlite-fts-ref) — full-text search shared by GRDB and SQLiteData
-- [grdb-app-groups](/skills/persistence/grdb-app-groups) — multi-process database sharing
-- [database-migration](/skills/persistence/database-migration) — migration safety, STRICT tables
-- [sqlitedata](/skills/persistence/sqlitedata) — when SQLiteData is a better fit than raw GRDB
-- [grdb-performance-auditor](/agents/grdb-performance-auditor) — automated scan for issues this skill teaches
+- [grdb](/skills/persistence/grdb) – primer for setup, record types, ValueObservation basics
+- [sqlite-fts-ref](/reference/sqlite-fts-ref) – full-text search shared by GRDB and SQLiteData
+- [grdb-app-groups](/skills/persistence/grdb-app-groups) – multi-process database sharing
+- [database-migration](/skills/persistence/database-migration) – migration safety, STRICT tables
+- [sqlitedata](/skills/persistence/sqlitedata) – when SQLiteData is a better fit than raw GRDB
+- [grdb-performance-auditor](/agents/grdb-performance-auditor) – automated scan for issues this skill teaches
 
 ## Resources
 

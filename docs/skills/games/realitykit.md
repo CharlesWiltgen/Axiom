@@ -85,8 +85,8 @@ Use this skill when:
 
 ## Related
 
-- [RealityKit API Reference](/reference/realitykit-ref) — Complete API tables for entities, components, systems, materials, animation, audio
-- [RealityKit Diagnostics](/diagnostic/realitykit-diag) — Decision trees for invisible entities, anchor tracking, gesture failures, performance drops
-- [SceneKit](/skills/games/scenekit) — Legacy 3D framework with migration guidance to RealityKit
-- [SceneKit API Reference](/reference/scenekit-ref) — SceneKit API with RealityKit migration mapping
-- [USDKit](/skills/games/usdkit) — Reading, editing, and exporting the USD files your RealityKit scenes load
+- [RealityKit API Reference](/reference/realitykit-ref) – Complete API tables for entities, components, systems, materials, animation, audio
+- [RealityKit Diagnostics](/diagnostic/realitykit-diag) – Decision trees for invisible entities, anchor tracking, gesture failures, performance drops
+- [SceneKit](/skills/games/scenekit) – Legacy 3D framework with migration guidance to RealityKit
+- [SceneKit API Reference](/reference/scenekit-ref) – SceneKit API with RealityKit migration mapping
+- [USDKit](/skills/games/usdkit) – Reading, editing, and exporting the USD files your RealityKit scenes load

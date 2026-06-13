@@ -34,11 +34,11 @@ Questions you can ask Claude that will draw from this skill:
 
 ### The 5 Leak Patterns (90% of Real Issues)
 
-1. **Closure Capture Leaks** — `self` captured strongly in escaping closures
-2. **Delegate Cycles** — Strong delegate references creating mutual retention
-3. **Timer Leaks** — Repeating timers holding strong references
-4. **NotificationCenter Leaks** — Observers not removed in deinit
-5. **Parent-Child Cycles** — Navigation or container relationships
+1. **Closure Capture Leaks** – `self` captured strongly in escaping closures
+2. **Delegate Cycles** – Strong delegate references creating mutual retention
+3. **Timer Leaks** – Repeating timers holding strong references
+4. **NotificationCenter Leaks** – Observers not removed in deinit
+5. **Parent-Child Cycles** – Navigation or container relationships
 
 ### Instruments Workflows
 - Allocations instrument setup and heap snapshots
@@ -90,17 +90,17 @@ deinit {
 
 ## Documentation Scope
 
-This page documents the `axiom-performance` skill—systematic leak diagnosis workflows Claude uses when helping you debug memory issues. The skill contains complete Instruments setup, pattern recognition, heap analysis techniques, and production crisis handling.
+This page documents the `axiom-performance` skill — systematic leak diagnosis workflows Claude uses when helping you debug memory issues. The skill contains complete Instruments setup, pattern recognition, heap analysis techniques, and production crisis handling.
 
 **For quick scanning:** Use [/axiom:audit-memory](/commands/debugging/audit-memory) to scan your codebase for the 6 most common leak patterns automatically.
 
 ## Related
 
-- [/axiom:audit-memory](/commands/debugging/audit-memory) — Quick automated scan for leak patterns in code
-- [memory-auditor](/agents/memory-auditor) — Autonomous agent for codebase-wide leak detection
-- [performance-profiling](/skills/debugging/performance-profiling) — Broader profiling including CPU and energy
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Actor patterns that prevent some leak types
-- [metrickit-ref](/reference/metrickit-ref) — `DiagnosticReport.memoryException` and `MetricManager` setup for iOS 27 memory-kill diagnostics
+- [/axiom:audit-memory](/commands/debugging/audit-memory) – Quick automated scan for leak patterns in code
+- [memory-auditor](/agents/memory-auditor) – Autonomous agent for codebase-wide leak detection
+- [performance-profiling](/skills/debugging/performance-profiling) – Broader profiling including CPU and energy
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Actor patterns that prevent some leak types
+- [metrickit-ref](/reference/metrickit-ref) – `DiagnosticReport.memoryException` and `MetricManager` setup for iOS 27 memory-kill diagnostics
 
 ## Resources
 

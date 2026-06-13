@@ -10,11 +10,11 @@ Parse and analyze iOS/macOS crash logs to identify root cause (launches the `cra
 
 ## What It Does
 
-1. **Parse crash report** — JSON .ips or text .crash format
-2. **Extract key fields** — Exception type, codes, crashed thread, frames
-3. **Check symbolication** — Identifies unsymbolicated frames
-4. **Categorize crash pattern** — Null pointer, Swift runtime, watchdog, jetsam, etc.
-5. **Generate analysis** — Actionable diagnostics with specific next steps
+1. **Parse crash report** – JSON .ips or text .crash format
+2. **Extract key fields** – Exception type, codes, crashed thread, frames
+3. **Check symbolication** – Identifies unsymbolicated frames
+4. **Categorize crash pattern** – Null pointer, Swift runtime, watchdog, jetsam, etc.
+5. **Generate analysis** – Actionable diagnostics with specific next steps
 
 ## When to Use
 
@@ -24,5 +24,5 @@ Parse and analyze iOS/macOS crash logs to identify root cause (launches the `cra
 
 ## Related
 
-- [crash-analyzer](/agents/crash-analyzer) — The agent behind this command
-- [testflight-triage](/skills/debugging/testflight-triage) — Crash investigation using Xcode Organizer
+- [crash-analyzer](/agents/crash-analyzer) – The agent behind this command
+- [testflight-triage](/skills/debugging/testflight-triage) – Crash investigation using Xcode Organizer

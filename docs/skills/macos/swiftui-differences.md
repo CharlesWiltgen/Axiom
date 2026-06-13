@@ -33,9 +33,9 @@ Questions you can ask Claude that will draw from this skill:
 ## What This Skill Provides
 
 ### The Three Mental-Model Shifts
-- **Multi-window** — Users open many windows; each has independent state. Use `@SceneStorage` for per-window persistence, not global singletons.
-- **Focus-driven** — Menu commands target the focused window. Use `focusedSceneValue` so commands work whenever the window is frontmost.
-- **Keyboard-first** — Every action must appear in the menu bar with a shortcut. Toolbar-only actions strand keyboard users.
+- **Multi-window** – Users open many windows; each has independent state. Use `@SceneStorage` for per-window persistence, not global singletons.
+- **Focus-driven** – Menu commands target the focused window. Use `focusedSceneValue` so commands work whenever the window is frontmost.
+- **Keyboard-first** – Every action must appear in the menu bar with a shortcut. Toolbar-only actions strand keyboard users.
 
 ### Table
 - When `Table` beats `List` — multiple sortable columns, headers, column reordering, column resizing
@@ -88,11 +88,11 @@ This page documents the `swiftui-differences` skill in the `axiom-macos` suite. 
 
 ## Related
 
-- [windows](/skills/macos/windows) — Per-window state and `@SceneStorage` make sense once you're running multiple windows
-- [menus-and-commands](/skills/macos/menus-and-commands) — The focus model used here is the foundation for command routing
-- [settings](/skills/macos/settings) — The Settings scene is one of the patterns mentioned here in more depth
-- [appkit-interop](/skills/macos/appkit-interop) — When SwiftUI lacks a capability (`NSToolbar` customization, `NSOpenPanel` options), bridge to AppKit
-- [swiftui-nav](/skills/ui-design/) — Cross-platform `NavigationSplitView` and `NavigationStack` fundamentals
+- [windows](/skills/macos/windows) – Per-window state and `@SceneStorage` make sense once you're running multiple windows
+- [menus-and-commands](/skills/macos/menus-and-commands) – The focus model used here is the foundation for command routing
+- [settings](/skills/macos/settings) – The Settings scene is one of the patterns mentioned here in more depth
+- [appkit-interop](/skills/macos/appkit-interop) – When SwiftUI lacks a capability (`NSToolbar` customization, `NSOpenPanel` options), bridge to AppKit
+- [swiftui-nav](/skills/ui-design/) – Cross-platform `NavigationSplitView` and `NavigationStack` fundamentals
 
 ## Resources
 

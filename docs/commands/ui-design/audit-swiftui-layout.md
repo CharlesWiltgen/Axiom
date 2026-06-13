@@ -13,13 +13,13 @@ Launches the **swiftui-layout-auditor** agent to flag layout patterns that look 
 
 ## What It Checks
 
-1. **GeometryReader misuse** — using `GeometryReader` where a layout container would suffice, or for sizing decisions that should respond to environment
-2. **Deprecated screen APIs** — `UIScreen.main.bounds` and other window-coordinate calls that fail in multi-window contexts
-3. **Hardcoded breakpoints** — magic-number widths instead of `horizontalSizeClass` or `ViewThatFits`
-4. **Identity loss** — conditional `HStack`/`VStack` swaps that destroy and recreate child views, losing animation continuity
-5. **Missing safe-area handling** — fixed insets that don't account for keyboard, Dynamic Island, or external displays
+1. **GeometryReader misuse** – using `GeometryReader` where a layout container would suffice, or for sizing decisions that should respond to environment
+2. **Deprecated screen APIs** – `UIScreen.main.bounds` and other window-coordinate calls that fail in multi-window contexts
+3. **Hardcoded breakpoints** – magic-number widths instead of `horizontalSizeClass` or `ViewThatFits`
+4. **Identity loss** – conditional `HStack`/`VStack` swaps that destroy and recreate child views, losing animation continuity
+5. **Missing safe-area handling** – fixed insets that don't account for keyboard, Dynamic Island, or external displays
 
 ## Related Agent
 
-- [swiftui-layout-auditor](/agents/swiftui-layout-auditor) — The agent that powers this command
-- [swiftui-layout-ref](/reference/swiftui-layout-ref) — SwiftUI layout reference
+- [swiftui-layout-auditor](/agents/swiftui-layout-auditor) – The agent that powers this command
+- [swiftui-layout-ref](/reference/swiftui-layout-ref) – SwiftUI layout reference

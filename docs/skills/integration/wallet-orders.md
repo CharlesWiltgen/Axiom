@@ -33,21 +33,21 @@ Real questions developers ask that this skill answers:
 
 ## What This Skill Provides
 
-- **Order vs Pass vs Receipt** — the boundary table and the rule that Orders model bounded fulfillment lifecycles, not reusable artifacts
+- **Order vs Pass vs Receipt** – the boundary table and the rule that Orders model bounded fulfillment lifecycles, not reusable artifacts
 - **Four-criteria test** for when to use Orders versus a Pass or a simple in-app push
-- **Setup** — Order Type ID creation, Order Type ID Certificate (separate from Pass Type ID Cert and Apple Pay Merchant Cert), five-endpoint server pattern, APNs with the Order Type ID Cert as topic
-- **Three add-to-wallet paths** — Apple Pay handoff via `PKPaymentOrderDetails` (preferred), `AddOrderToWalletButton` for non-Apple-Pay purchases, email attachment with `application/vnd.apple.finance.order` MIME type
-- **Order package structure** — required fields, signing chain (PKCS #7 detached plus WWDR plus S/MIME signing-time, same pattern as `.pkpass`)
-- **Status lifecycle** — `orderPlaced`, `processing`, `readyForPickup`, `pickedUp`, `shipped`, `onTheWay`, `outForDelivery`, `delivered`, `issue`, `cancelled`; `shippingType` (iOS 17+) for shipping/delivery/pickup rendering
-- **HIG discipline** — add orders with partial data; 300×300 solid-background line-item images; universal links for "Manage Order"; suppress in-app push when Wallet has the order
+- **Setup** – Order Type ID creation, Order Type ID Certificate (separate from Pass Type ID Cert and Apple Pay Merchant Cert), five-endpoint server pattern, APNs with the Order Type ID Cert as topic
+- **Three add-to-wallet paths** – Apple Pay handoff via `PKPaymentOrderDetails` (preferred), `AddOrderToWalletButton` for non-Apple-Pay purchases, email attachment with `application/vnd.apple.finance.order` MIME type
+- **Order package structure** – required fields, signing chain (PKCS #7 detached plus WWDR plus S/MIME signing-time, same pattern as `.pkpass`)
+- **Status lifecycle** – `orderPlaced`, `processing`, `readyForPickup`, `pickedUp`, `shipped`, `onTheWay`, `outForDelivery`, `delivered`, `issue`, `cancelled`; `shippingType` (iOS 17+) for shipping/delivery/pickup rendering
+- **HIG discipline** – add orders with partial data; 300×300 solid-background line-item images; universal links for "Manage Order"; suppress in-app push when Wallet has the order
 - **Maps integration** (iOS 17+) — real geo coordinates for pickup; the "time to leave for pickup" Siri Suggestion
-- **Why subscriptions are not Orders** — the system-surface misuse cost (Order-Tracking widget, Messages share preview, Maps Siri Suggestions, Wallet grouping algorithm, App Review)
-- **Canonical subscription-tracking surface** — StoreKit 2 `Product.SubscriptionInfo.Status`, ActivityKit for lock-screen countdowns, WidgetKit for renewal dates, App Store Server Notifications V2 — the pushback toolkit when someone proposes Wallet Orders for renewals
+- **Why subscriptions are not Orders** – the system-surface misuse cost (Order-Tracking widget, Messages share preview, Maps Siri Suggestions, Wallet grouping algorithm, App Review)
+- **Canonical subscription-tracking surface** – StoreKit 2 `Product.SubscriptionInfo.Status`, ActivityKit for lock-screen countdowns, WidgetKit for renewal dates, App Store Server Notifications V2 — the pushback toolkit when someone proposes Wallet Orders for renewals
 
 ## Related
 
-- [Apple Pay](/skills/integration/apple-pay) — the auth result from which `PKPaymentOrderDetails` is handed off
-- [Wallet Passes](/skills/integration/wallet-passes) — sibling Wallet surface; shares the PKCS #7 signing chain mechanics
-- [Wallet Passes Reference](/reference/wallet-passes-ref) — pass.json schema, image dimension table, web service endpoint schemas
-- [Payments Diagnostics](/diagnostic/payments-diag) — order-won't-add and order-updates-don't-arrive failure modes
-- [In-App Purchases](/skills/integration/in-app-purchases) — StoreKit 2 patterns that are the correct surface for subscription tracking
+- [Apple Pay](/skills/integration/apple-pay) – the auth result from which `PKPaymentOrderDetails` is handed off
+- [Wallet Passes](/skills/integration/wallet-passes) – sibling Wallet surface; shares the PKCS #7 signing chain mechanics
+- [Wallet Passes Reference](/reference/wallet-passes-ref) – pass.json schema, image dimension table, web service endpoint schemas
+- [Payments Diagnostics](/diagnostic/payments-diag) – order-won't-add and order-updates-don't-arrive failure modes
+- [In-App Purchases](/skills/integration/in-app-purchases) – StoreKit 2 patterns that are the correct surface for subscription tracking

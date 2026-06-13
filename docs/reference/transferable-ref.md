@@ -27,16 +27,16 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-- **TransferRepresentation decision tree** — Which representation to use for your data type
-- **CodableRepresentation** — For Codable models with optional custom encoders
-- **DataRepresentation** — For custom binary formats with import/export closures
-- **FileRepresentation** — For large on-disk files with sandbox lifecycle management
-- **ProxyRepresentation** — For fallback representations; declaration order matters
-- **ShareLink + SharePreview** — SwiftUI sharing with customizable previews
-- **Drag and drop** — `.draggable`, `.dropDestination`, custom previews
-- **Clipboard** — `.copyable`, `.pasteDestination`, `.cuttable`, `PasteButton`
-- **UTType declarations** — System types, custom types, Info.plist entries
-- **UIKit bridging** — NSItemProvider.loadTransferable, UIActivityViewController
+- **TransferRepresentation decision tree** – Which representation to use for your data type
+- **CodableRepresentation** – For Codable models with optional custom encoders
+- **DataRepresentation** – For custom binary formats with import/export closures
+- **FileRepresentation** – For large on-disk files with sandbox lifecycle management
+- **ProxyRepresentation** – For fallback representations; declaration order matters
+- **ShareLink + SharePreview** – SwiftUI sharing with customizable previews
+- **Drag and drop** – `.draggable`, `.dropDestination`, custom previews
+- **Clipboard** – `.copyable`, `.pasteDestination`, `.cuttable`, `PasteButton`
+- **UTType declarations** – System types, custom types, Info.plist entries
+- **UIKit bridging** – NSItemProvider.loadTransferable, UIActivityViewController
 
 ## Key Patterns
 
@@ -92,7 +92,7 @@ This page documents the `axiom-swift` skill. It covers the CoreTransferable fram
 
 ## Related
 
-- [photo-library-ref](./photo-library-ref) — PhotosPicker uses Transferable for image loading
-- [app-intents-ref](./app-intents-ref) — AppEntity + Transferable intersection for system sharing
-- [codable](/skills/persistence/codable) — Codable patterns that feed into CodableRepresentation
-- [swiftui-26-ref](./swiftui-26-ref) — iOS 26 drag and drop enhancements
+- [photo-library-ref](./photo-library-ref) – PhotosPicker uses Transferable for image loading
+- [app-intents-ref](./app-intents-ref) – AppEntity + Transferable intersection for system sharing
+- [codable](/skills/persistence/codable) – Codable patterns that feed into CodableRepresentation
+- [swiftui-26-ref](./swiftui-26-ref) – iOS 26 drag and drop enhancements

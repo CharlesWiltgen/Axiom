@@ -24,12 +24,12 @@ Use this reference when:
 
 ## What's Covered
 
-- **Subcommand reference** — `crash`, `resolve`, `find-dsym`, `list-dsyms`, `verify`, `anonymize`
-- **Output schema** — `CrashReport` structure with `pattern_tag`, `images`, `warnings`, and tier-aware sizing
-- **Exit code table** — 0 / 2 missing / 3 UUID mismatch / 4 arch mismatch / 7 partial match
-- **Pattern tag catalog** — 19 rules with tags like `swift_forced_unwrap`, `watchdog_termination`, `swift_concurrency_violation`
-- **dSYM discovery order** — cache → explicit → Archives → DerivedData → Downloads → toolchain → frameworks → Spotlight
-- **Troubleshooting** — common symptoms and which subcommand to reach for
+- **Subcommand reference** – `crash`, `resolve`, `find-dsym`, `list-dsyms`, `verify`, `anonymize`
+- **Output schema** – `CrashReport` structure with `pattern_tag`, `images`, `warnings`, and tier-aware sizing
+- **Exit code table** – 0 / 2 missing / 3 UUID mismatch / 4 arch mismatch / 7 partial match
+- **Pattern tag catalog** – 19 rules with tags like `swift_forced_unwrap`, `watchdog_termination`, `swift_concurrency_violation`
+- **dSYM discovery order** – cache → explicit → Archives → DerivedData → Downloads → toolchain → frameworks → Spotlight
+- **Troubleshooting** – common symptoms and which subcommand to reach for
 
 ## Documentation Scope
 
@@ -41,17 +41,17 @@ This page documents the `xcsym-ref` reference skill. For the end-to-end agent wo
 
 ## Key Concepts
 
-- **`crash` is the default entry point** — parses format, discovers dSYMs, runs `atos`, categorizes, emits JSON. Only reach for `resolve`/`find-dsym`/`verify` when it fails.
-- **Exit codes carry diagnosis** — non-zero codes name the reason symbolication was incomplete; don't treat them as "the tool failed"
-- **Format tiers protect context** — `summary` ≤2KB, `standard` ≤12KB, `full` emits `size_warning` past 100KB
-- **UUIDs are correlation keys** — `anonymize` preserves dSYM UUIDs so anonymized fixtures still symbolicate
-- **Auto-detection** — `.ips` (v1 and v2), MetricKit JSON, and Apple's legacy `.crash` text format are all detected without flags. `.xccrashpoint` directory bundles are walked into automatically (default: most-recent Filter, raw `.crash` not `LocallySymbolicated/`; override with `--filter` and `--prefer-locally-symbolicated`)
+- **`crash` is the default entry point** – parses format, discovers dSYMs, runs `atos`, categorizes, emits JSON. Only reach for `resolve`/`find-dsym`/`verify` when it fails.
+- **Exit codes carry diagnosis** – non-zero codes name the reason symbolication was incomplete; don't treat them as "the tool failed"
+- **Format tiers protect context** – `summary` ≤2KB, `standard` ≤12KB, `full` emits `size_warning` past 100KB
+- **UUIDs are correlation keys** – `anonymize` preserves dSYM UUIDs so anonymized fixtures still symbolicate
+- **Auto-detection** – `.ips` (v1 and v2), MetricKit JSON, and Apple's legacy `.crash` text format are all detected without flags. `.xccrashpoint` directory bundles are walked into automatically (default: most-recent Filter, raw `.crash` not `LocallySymbolicated/`; override with `--filter` and `--prefer-locally-symbolicated`)
 
 ## Related
 
-- [xclog](/skills/debugging/xclog) — captures live console logs; xcsym parses post-mortem crash files
-- [Xcode Debugging](/skills/debugging/xcode-debugging) — environment-first build diagnostics
-- [Hang Diagnostics](/skills/debugging/hang-diagnostics) — authoritative path for `.ips` hangs (`bug_type=298`)
-- [TestFlight Triage](/skills/debugging/testflight-triage) — user-crash workflow that runs xcsym first
-- [crash-analyzer](/agents/crash-analyzer) — agent that interprets xcsym output with pattern→fix guidance
-- [/axiom:analyze-crash](/commands/debugging/analyze-crash) — command wrapper that invokes crash-analyzer
+- [xclog](/skills/debugging/xclog) – captures live console logs; xcsym parses post-mortem crash files
+- [Xcode Debugging](/skills/debugging/xcode-debugging) – environment-first build diagnostics
+- [Hang Diagnostics](/skills/debugging/hang-diagnostics) – authoritative path for `.ips` hangs (`bug_type=298`)
+- [TestFlight Triage](/skills/debugging/testflight-triage) – user-crash workflow that runs xcsym first
+- [crash-analyzer](/agents/crash-analyzer) – agent that interprets xcsym output with pattern→fix guidance
+- [/axiom:analyze-crash](/commands/debugging/analyze-crash) – command wrapper that invokes crash-analyzer

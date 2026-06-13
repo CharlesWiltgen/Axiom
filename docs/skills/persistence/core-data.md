@@ -13,8 +13,8 @@ Core Data stack setup, concurrency patterns, relationship modeling, and migratio
 ## Key Features
 
 ### Core Data vs SwiftData Decision
-- **SwiftData (iOS 17+)** — New apps, simpler API, Swift-native
-- **Core Data** — iOS 16 and earlier, advanced features, existing codebases
+- **SwiftData (iOS 17+)** – New apps, simpler API, Swift-native
+- **Core Data** – iOS 16 and earlier, advanced features, existing codebases
 
 ### The Golden Rule
 **NEVER pass NSManagedObject across threads.** Pass objectID instead.
@@ -75,10 +75,10 @@ Task.detached {
 
 ## Related
 
-- **core-data-diag** — Debugging migrations, thread errors, N+1 queries
-- **swiftdata** — Modern alternative for iOS 17+
-- **database-migration** — Safe schema evolution patterns
-- **swift-concurrency** — Async/await patterns
+- **core-data-diag** – Debugging migrations, thread errors, N+1 queries
+- **swiftdata** – Modern alternative for iOS 17+
+- **database-migration** – Safe schema evolution patterns
+- **swift-concurrency** – Async/await patterns
 
 ## Resources
 

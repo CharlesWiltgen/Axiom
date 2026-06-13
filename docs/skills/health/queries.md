@@ -81,11 +81,11 @@ This page documents the `queries` skill in the `axiom-health` suite. The skill f
 
 ## Related
 
-- [fundamentals](/skills/health/fundamentals) — Prerequisite for the `HKObjectType` hierarchy and quantity-vs-category distinction
-- [authorization-and-privacy](/skills/health/authorization-and-privacy) — Empty query results can mean denied reads; authorization rules affect error handling here
-- [sync-and-background](/skills/health/sync-and-background) — Escalate here when one-shot reads aren't enough and you need delta tracking
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Swift 6 actor isolation patterns that affect descriptor result handling
-- [swiftui-architecture](/skills/ui-design/swiftui-architecture) — `@Observable` view model patterns for rendering `HKStatisticsCollection` results in charts
+- [fundamentals](/skills/health/fundamentals) – Prerequisite for the `HKObjectType` hierarchy and quantity-vs-category distinction
+- [authorization-and-privacy](/skills/health/authorization-and-privacy) – Empty query results can mean denied reads; authorization rules affect error handling here
+- [sync-and-background](/skills/health/sync-and-background) – Escalate here when one-shot reads aren't enough and you need delta tracking
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Swift 6 actor isolation patterns that affect descriptor result handling
+- [swiftui-architecture](/skills/ui-design/swiftui-architecture) – `@Observable` view model patterns for rendering `HKStatisticsCollection` results in charts
 
 ## Resources
 

@@ -33,18 +33,18 @@ Real questions developers ask that this skill answers:
 
 ## What This Skill Provides
 
-- **Channel decision** — when Background Assets is the right tool vs. app bundle, iCloud, URLSession, `BGProcessingTask`, or CloudKit assets
-- **Apple-hosted vs server-hosted decision** — cost / latency / quota / App Review tradeoffs between `StoreDownloaderExtension` (Apple-hosted, two-line boilerplate) and `BADownloaderExtension` (server-hosted, custom logic); 200 GB / 100-pack Apple-hosted quota
-- **Download policy cheatsheet** — `essential` (during install, counts toward App Store install progress), `prefetch` (starts during install, may continue after), `onDemand` (your code triggers via `ensureLocalAvailability(of:)`); Foundation Models adapters are always `onDemand`
-- **Info.plist setup** — managed Apple-hosted minimal set (`BAHasManagedAssetPacks=true` + `BAUsesAppleHosting=true` + `BAAppGroupID`), managed server-hosted, and legacy unmanaged variants
-- **Foundation Models adapter delivery pattern** — `compatibleAdapterIdentifiers(name:)` for variant selection, `AssetPackManager.shared.statusUpdates(forAssetPackWithID:)` streaming, `SystemLanguageModel.Adapter.removeObsoleteAdapters()` lifecycle, base-model fallback when no compatible variant is available
-- **Local testing** — `xcrun ba-package template` / `xcrun ba-package <manifest>` for authoring; `xcrun ba-serve` HTTPS mock server + Developer Mode + root CA install for testing without App Store Connect uploads
-- **Three pressure scenarios with pushback templates** — "just bundle the assets, it's simpler", "we'll just use URLSession in the background", "we'll ship one adapter for all users"
-- **Audit checklists** — setup, lifecycle, quota/size, production-readiness; including the 80% quota warning email handler assignment
+- **Channel decision** – when Background Assets is the right tool vs. app bundle, iCloud, URLSession, `BGProcessingTask`, or CloudKit assets
+- **Apple-hosted vs server-hosted decision** – cost / latency / quota / App Review tradeoffs between `StoreDownloaderExtension` (Apple-hosted, two-line boilerplate) and `BADownloaderExtension` (server-hosted, custom logic); 200 GB / 100-pack Apple-hosted quota
+- **Download policy cheatsheet** – `essential` (during install, counts toward App Store install progress), `prefetch` (starts during install, may continue after), `onDemand` (your code triggers via `ensureLocalAvailability(of:)`); Foundation Models adapters are always `onDemand`
+- **Info.plist setup** – managed Apple-hosted minimal set (`BAHasManagedAssetPacks=true` + `BAUsesAppleHosting=true` + `BAAppGroupID`), managed server-hosted, and legacy unmanaged variants
+- **Foundation Models adapter delivery pattern** – `compatibleAdapterIdentifiers(name:)` for variant selection, `AssetPackManager.shared.statusUpdates(forAssetPackWithID:)` streaming, `SystemLanguageModel.Adapter.removeObsoleteAdapters()` lifecycle, base-model fallback when no compatible variant is available
+- **Local testing** – `xcrun ba-package template` / `xcrun ba-package <manifest>` for authoring; `xcrun ba-serve` HTTPS mock server + Developer Mode + root CA install for testing without App Store Connect uploads
+- **Three pressure scenarios with pushback templates** – "just bundle the assets, it's simpler", "we'll just use URLSession in the background", "we'll ship one adapter for all users"
+- **Audit checklists** – setup, lifecycle, quota/size, production-readiness; including the 80% quota warning email handler assignment
 
 ## Related
 
-- [Background Assets Reference](/reference/background-assets-ref) — full `AssetPackManager` API surface, `StoreDownloaderExtension` / `BADownloaderExtension` protocol details, Info.plist keys reference, manifest schema, `xcrun ba-package` / `xcrun ba-serve` tooling, error types, Foundation Models adapter bridge APIs
-- [Background Processing](background-processing) — `BGProcessingTask` / `BGAppRefreshTask` for compute scheduled by the system; NOT for asset delivery
-- [Foundation Models Adapters](foundation-models-adapters) — the canonical consumer of Background Assets in axiom-ai; ~160 MB per pack, mandatory `onDemand`, per-OS variant strategy
-- [Foundation Models Adapters Reference](/reference/foundation-models-adapters-ref) — adapter runtime API consuming Background Assets
+- [Background Assets Reference](/reference/background-assets-ref) – full `AssetPackManager` API surface, `StoreDownloaderExtension` / `BADownloaderExtension` protocol details, Info.plist keys reference, manifest schema, `xcrun ba-package` / `xcrun ba-serve` tooling, error types, Foundation Models adapter bridge APIs
+- [Background Processing](background-processing) – `BGProcessingTask` / `BGAppRefreshTask` for compute scheduled by the system; NOT for asset delivery
+- [Foundation Models Adapters](foundation-models-adapters) – the canonical consumer of Background Assets in axiom-ai; ~160 MB per pack, mandatory `onDemand`, per-OS variant strategy
+- [Foundation Models Adapters Reference](/reference/foundation-models-adapters-ref) – adapter runtime API consuming Background Assets

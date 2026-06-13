@@ -31,20 +31,20 @@ Use this reference when:
 
 ## What's Covered
 
-- **Invocation** — `xclog` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically); no prefix or path lookup needed
-- **`list` subcommand** — discover installed apps, JSON-lines output (`bundle_id`, `name`, `version`)
-- **`launch` subcommand** — full capture (print + debugPrint + NSLog + os_log + Logger), simulator only, terminates any running instance of the target app
-- **`attach` subcommand** — monitor an already-running process via os_log only, simulator only, preserves app state but no `print()` capture
-- **`show` subcommand** — historical log search, simulator and physical device (uses `log collect` over USB for physical devices)
-- **JSON output schema** — `time`, `source` (`print`/`stderr`/`os_log`), `level` (`debug`/`default`/`info`/`error`/`fault`), `subsystem`, `category`, `process`, `pid`, `text`; fields omitted (not null) when not applicable
-- **Human-readable mode** — `--human` plus optional `--no-color`
-- **Options reference table** — `--device`, `--device-udid`, `--output`, `--filter`, `--subsystem`, `--max-lines`, `--timeout`, `--last`
-- **Coverage tables** — Swift API by mode (`print`, `debugPrint`, `NSLog`, `os_log`, `Logger`) and platform by command (simulator vs physical device)
-- **Preferences file** — `.axiom/preferences.yaml` schema with `simulator.device` / `deviceUDID` / `bundleId`, read/write protocol, `.gitignore` augmentation
-- **Filtering nuance** — `--filter` matches message text; level/JSON-field filtering needs `jq`
-- **Common subsystem patterns** — `com.apple.network`, `com.apple.coredata`, `com.apple.swiftui`, `com.apple.uikit`
-- **Error behavior** — common error messages and fixes
-- **Crash and silent-failure workflows** — end-to-end command sequences
+- **Invocation** – `xclog` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically); no prefix or path lookup needed
+- **`list` subcommand** – discover installed apps, JSON-lines output (`bundle_id`, `name`, `version`)
+- **`launch` subcommand** – full capture (print + debugPrint + NSLog + os_log + Logger), simulator only, terminates any running instance of the target app
+- **`attach` subcommand** – monitor an already-running process via os_log only, simulator only, preserves app state but no `print()` capture
+- **`show` subcommand** – historical log search, simulator and physical device (uses `log collect` over USB for physical devices)
+- **JSON output schema** – `time`, `source` (`print`/`stderr`/`os_log`), `level` (`debug`/`default`/`info`/`error`/`fault`), `subsystem`, `category`, `process`, `pid`, `text`; fields omitted (not null) when not applicable
+- **Human-readable mode** – `--human` plus optional `--no-color`
+- **Options reference table** – `--device`, `--device-udid`, `--output`, `--filter`, `--subsystem`, `--max-lines`, `--timeout`, `--last`
+- **Coverage tables** – Swift API by mode (`print`, `debugPrint`, `NSLog`, `os_log`, `Logger`) and platform by command (simulator vs physical device)
+- **Preferences file** – `.axiom/preferences.yaml` schema with `simulator.device` / `deviceUDID` / `bundleId`, read/write protocol, `.gitignore` augmentation
+- **Filtering nuance** – `--filter` matches message text; level/JSON-field filtering needs `jq`
+- **Common subsystem patterns** – `com.apple.network`, `com.apple.coredata`, `com.apple.swiftui`, `com.apple.uikit`
+- **Error behavior** – common error messages and fixes
+- **Crash and silent-failure workflows** – end-to-end command sequences
 
 ## Documentation Scope
 

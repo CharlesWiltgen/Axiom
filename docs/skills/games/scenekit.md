@@ -69,6 +69,6 @@ Use this skill when:
 
 ## Related
 
-- [SceneKit API Reference](/reference/scenekit-ref) — Complete SceneKit API with RealityKit migration mapping for every major concept
-- [RealityKit](/skills/games/realitykit) — Apple's recommended 3D framework with ECS architecture
-- [RealityKit API Reference](/reference/realitykit-ref) — RealityKit API for migration target reference
+- [SceneKit API Reference](/reference/scenekit-ref) – Complete SceneKit API with RealityKit migration mapping for every major concept
+- [RealityKit](/skills/games/realitykit) – Apple's recommended 3D framework with ECS architecture
+- [RealityKit API Reference](/reference/realitykit-ref) – RealityKit API for migration target reference

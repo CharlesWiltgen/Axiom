@@ -40,11 +40,11 @@ Speech-to-text with SpeechAnalyzer (iOS 26+) — live transcription from microph
 
 ## Available References
 
-- [CoreML API Reference](/reference/coreml-ref) — CoreML API reference, MLTensor, coremltools, state management
+- [CoreML API Reference](/reference/coreml-ref) – CoreML API reference, MLTensor, coremltools, state management
 
 ## Available Diagnostics
 
-- [CoreML Diagnostics](/diagnostic/coreml-diag) — Model load failures, slow inference, compression accuracy loss
+- [CoreML Diagnostics](/diagnostic/coreml-diag) – Model load failures, slow inference, compression accuracy loss
 
 ## Example Prompts
 

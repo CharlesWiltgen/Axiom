@@ -5,7 +5,7 @@ description: Reference — Core Spotlight and NSUserActivity guide for indexing 
 
 # Core Spotlight & NSUserActivity
 
-Complete reference for Core Spotlight framework and NSUserActivity—make app content discoverable in Spotlight search, enable Siri predictions, and support Handoff.
+Complete reference for Core Spotlight framework and NSUserActivity — make app content discoverable in Spotlight search, enable Siri predictions, and support Handoff.
 
 ## When to Use This Skill
 
@@ -113,6 +113,6 @@ let item = CSSearchableItem(appEntity: orderEntity)
 
 ## Related Skills
 
-- [app-intents-ref](/reference/app-intents-ref) — App Intents framework including IndexedEntity
-- [app-discoverability](/skills/integration/app-discoverability) — Strategic guide for making apps discoverable
-- [app-shortcuts-ref](/reference/app-shortcuts-ref) — App Shortcuts for instant availability
+- [app-intents-ref](/reference/app-intents-ref) – App Intents framework including IndexedEntity
+- [app-discoverability](/skills/integration/app-discoverability) – Strategic guide for making apps discoverable
+- [app-shortcuts-ref](/reference/app-shortcuts-ref) – App Shortcuts for instant availability

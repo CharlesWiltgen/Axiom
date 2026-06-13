@@ -17,14 +17,14 @@ Runs XCUITests, parses .xcresult bundles using xcresulttool, and provides struct
 
 ## What It Does
 
-1. **Discover test schemes** — Finds available test targets in the project
-2. **Run tests** — Executes xcodebuild test with proper configuration
-3. **Parse results** — Extracts structured data from .xcresult bundles
-4. **Report failures** — Shows failure messages, file:line locations, and screenshots
-5. **Export attachments** — Saves failure screenshots and logs for review
+1. **Discover test schemes** – Finds available test targets in the project
+2. **Run tests** – Executes xcodebuild test with proper configuration
+3. **Parse results** – Extracts structured data from .xcresult bundles
+4. **Report failures** – Shows failure messages, file:line locations, and screenshots
+5. **Export attachments** – Saves failure screenshots and logs for review
 
 ## Related
 
-- **swift-testing** — Modern Swift Testing framework patterns
-- **ui-testing** — XCUITest patterns and condition-based waiting
+- **swift-testing** – Modern Swift Testing framework patterns
+- **ui-testing** – XCUITest patterns and condition-based waiting
 - **test-debugger** agent — Closed-loop debugging that fixes failing tests

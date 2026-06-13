@@ -109,14 +109,14 @@ let font = metrics.scaledFont(for: UIFont(name: "Helvetica", size: 17)!)
 
 ## Documentation Scope
 
-This page documents the `axiom-design` reference skill—comprehensive typography coverage Claude uses when you need specific font details, text style sizes, or Dynamic Type patterns.
+This page documents the `axiom-design` reference skill — comprehensive typography coverage Claude uses when you need specific font details, text style sizes, or Dynamic Type patterns.
 
 **For quick decisions:** See [hig](/skills/ui-design/hig) for typography best practices.
 
 ## Related
 
-- [hig](/skills/ui-design/hig) — Typography best practices and weight recommendations
-- [hig-ref](/reference/hig-ref) — Complete HIG reference
+- [hig](/skills/ui-design/hig) – Typography best practices and weight recommendations
+- [hig-ref](/reference/hig-ref) – Complete HIG reference
 
 ## Resources
 

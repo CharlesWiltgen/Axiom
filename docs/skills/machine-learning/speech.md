@@ -136,8 +136,8 @@ for try await result in transcriber.results {
 
 ## Related
 
-- [CoreML](/skills/machine-learning/coreml) — deploy custom speech/audio ML models when SpeechAnalyzer doesn't meet your needs
-- [Foundation Models](/skills/integration/foundation-models) — generate summaries or titles from transcribed text using Apple Intelligence
+- [CoreML](/skills/machine-learning/coreml) – deploy custom speech/audio ML models when SpeechAnalyzer doesn't meet your needs
+- [Foundation Models](/skills/integration/foundation-models) – generate summaries or titles from transcribed text using Apple Intelligence
 
 ### WWDC Sessions
 

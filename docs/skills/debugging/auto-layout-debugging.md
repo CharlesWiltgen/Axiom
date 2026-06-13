@@ -109,14 +109,14 @@ widthConstraint.isActive = true
 
 ## Documentation Scope
 
-This page documents the `axiom-uikit` skill—systematic debugging workflows Claude uses when you encounter Auto Layout constraint conflicts in UIKit apps.
+This page documents the `axiom-uikit` skill — systematic debugging workflows Claude uses when you encounter Auto Layout constraint conflicts in UIKit apps.
 
 **For SwiftUI layout issues:** See [swiftui-debugging](/skills/ui-design/swiftui-debugging) for SwiftUI-specific layout debugging.
 
 ## Related
 
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — SwiftUI view update and layout issues
-- [xcode-debugging](/skills/debugging/xcode-debugging) — Environment diagnostics for general Xcode issues
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – SwiftUI view update and layout issues
+- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment diagnostics for general Xcode issues
 
 ## Resources
 

@@ -24,14 +24,14 @@ Choosing between CloudKit and iCloud Drive, implementing reliable offline-first 
 - Show sync state indicators (synced/pending/conflict/offline)
 
 ### Conflict Resolution Strategies
-1. **Last-Writer-Wins** — Simplest, accept server version
-2. **Merge** — Combine changes from both versions
-3. **User Choice** — Present conflict for critical data
+1. **Last-Writer-Wins** – Simplest, accept server version
+2. **Merge** – Combine changes from both versions
+3. **User Choice** – Present conflict for critical data
 
 ### Three Modern Approaches (CloudKit)
-1. **SwiftData + CloudKit** — Easiest, automatic, iOS 17+
-2. **CKSyncEngine** — Custom persistence, iOS 17+
-3. **Raw CloudKit APIs** — Maximum control
+1. **SwiftData + CloudKit** – Easiest, automatic, iOS 17+
+2. **CKSyncEngine** – Custom persistence, iOS 17+
+3. **Raw CloudKit APIs** – Maximum control
 
 ## Quick Reference
 
@@ -59,10 +59,10 @@ func fetch() async throws -> [Item] {
 
 ## Related
 
-- **cloudkit-ref** — Complete CloudKit API reference
-- **icloud-drive-ref** — File-based sync patterns
-- **cloud-sync-diag** — Debugging sync failures
-- **storage** — Choosing local storage location
+- **cloudkit-ref** – Complete CloudKit API reference
+- **icloud-drive-ref** – File-based sync patterns
+- **cloud-sync-diag** – Debugging sync failures
+- **storage** – Choosing local storage location
 
 ## Resources
 

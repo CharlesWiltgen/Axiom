@@ -84,11 +84,11 @@ This page documents the `platform-basics` skill in the `axiom-watchos` suite. Th
 
 ## Related
 
-- [design-for-watchos](/skills/watchos/design-for-watchos) — Once the project compiles, pick the right navigation primitive and design for Always On
-- [watch-connectivity](/skills/watchos/watch-connectivity) — Relevant when a companion iPhone app coordinates state with the watch
-- [background-and-networking](/skills/watchos/background-and-networking) — Covers `.backgroundTask(_:action:)`, URLSession background sessions, and TN3135 networking limits
-- [modernization](/skills/watchos/modernization) — Follow this when migrating an existing WatchKit + ClockKit app to SwiftUI + WidgetKit
-- [app-store-submission](/skills/shipping/app-store-submission) — Submission specifics beyond the watchOS-26-SDK gate
+- [design-for-watchos](/skills/watchos/design-for-watchos) – Once the project compiles, pick the right navigation primitive and design for Always On
+- [watch-connectivity](/skills/watchos/watch-connectivity) – Relevant when a companion iPhone app coordinates state with the watch
+- [background-and-networking](/skills/watchos/background-and-networking) – Covers `.backgroundTask(_:action:)`, URLSession background sessions, and TN3135 networking limits
+- [modernization](/skills/watchos/modernization) – Follow this when migrating an existing WatchKit + ClockKit app to SwiftUI + WidgetKit
+- [app-store-submission](/skills/shipping/app-store-submission) – Submission specifics beyond the watchOS-26-SDK gate
 
 ## Resources
 

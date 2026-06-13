@@ -42,10 +42,10 @@ This page documents the `axiom-concurrency` (swift-concurrency-ref reference) �
 
 ## Related
 
-- [Swift Concurrency](/skills/concurrency/swift-concurrency) — Progressive journey from single-threaded to concurrent code, decision trees, @concurrent and isolated conformances
-- [Synchronization](/skills/concurrency/synchronization) — Mutex, OSAllocatedUnfairLock, atomic types (when you need locks instead of actors)
-- [assumeIsolated](/skills/concurrency/assume-isolated) — Synchronous actor access patterns
-- [Concurrency Profiling](/skills/concurrency/concurrency-profiling) — Instruments workflows for async performance
+- [Swift Concurrency](/skills/concurrency/swift-concurrency) – Progressive journey from single-threaded to concurrent code, decision trees, @concurrent and isolated conformances
+- [Synchronization](/skills/concurrency/synchronization) – Mutex, OSAllocatedUnfairLock, atomic types (when you need locks instead of actors)
+- [assumeIsolated](/skills/concurrency/assume-isolated) – Synchronous actor access patterns
+- [Concurrency Profiling](/skills/concurrency/concurrency-profiling) – Instruments workflows for async performance
 
 ## Resources
 

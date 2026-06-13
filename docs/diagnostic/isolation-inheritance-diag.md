@@ -157,11 +157,11 @@ This page documents the `isolation-inheritance-diag` skill in the [axiom-concurr
 
 ## Related
 
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Core Swift 6 concurrency patterns (isolation rules, `@concurrent`)
-- [assume-isolated](/skills/concurrency/assume-isolated) — When `MainActor.assumeIsolated` is the right tool
-- [combine-patterns](/skills/concurrency/combine-patterns) — Combine schedulers and `.receive(on:)` placement
-- [core-data](/skills/persistence/core-data) — Core Data threading model and `context.perform` patterns
-- [crash-analyzer](/agents/crash-analyzer) — Automated symbolication that recognizes these signatures
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Core Swift 6 concurrency patterns (isolation rules, `@concurrent`)
+- [assume-isolated](/skills/concurrency/assume-isolated) – When `MainActor.assumeIsolated` is the right tool
+- [combine-patterns](/skills/concurrency/combine-patterns) – Combine schedulers and `.receive(on:)` placement
+- [core-data](/skills/persistence/core-data) – Core Data threading model and `context.perform` patterns
+- [crash-analyzer](/agents/crash-analyzer) – Automated symbolication that recognizes these signatures
 
 ## Resources
 

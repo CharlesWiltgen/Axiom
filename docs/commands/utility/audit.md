@@ -99,10 +99,10 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 
 ## Priority Levels
 
-1. **CRITICAL** — `core-data`, `swiftdata`, `database-schema`, `storage`, `icloud` (data corruption/loss risk)
-2. **HIGH** — `concurrency`, `memory`, `energy`, `networking`, `security`, `testing` (crashes, App Store rejection)
-3. **MEDIUM** — `swiftui-architecture`, `ux-flow`, `swiftui-performance`, `swiftui-layout`, `swift-performance`, `foundation-models` (architecture, performance, UX)
-4. **LOW** — `accessibility`, `liquid-glass`, `codable`, `modernization`, `camera`, `screenshots` (enhancement opportunities)
+1. **CRITICAL** – `core-data`, `swiftdata`, `database-schema`, `storage`, `icloud` (data corruption/loss risk)
+2. **HIGH** – `concurrency`, `memory`, `energy`, `networking`, `security`, `testing` (crashes, App Store rejection)
+3. **MEDIUM** – `swiftui-architecture`, `ux-flow`, `swiftui-performance`, `swiftui-layout`, `swift-performance`, `foundation-models` (architecture, performance, UX)
+4. **LOW** – `accessibility`, `liquid-glass`, `codable`, `modernization`, `camera`, `screenshots` (enhancement opportunities)
 
 ## Batch Patterns
 
@@ -133,5 +133,5 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 
 ## Related
 
-- [/axiom:status](/commands/utility/status) — Project environment health
-- [/axiom:ask](/commands/utility/ask) — Natural language entry point
+- [/axiom:status](/commands/utility/status) – Project environment health
+- [/axiom:ask](/commands/utility/ask) – Natural language entry point

@@ -21,17 +21,17 @@ Scans for legacy iOS patterns and provides migration paths to modern iOS 17/18+ 
 ## What It Does
 
 ### High Priority (Significant Benefits)
-- **ObservableObject to @Observable** — Better performance, simpler syntax
-- **@StateObject to @State** — Works with @Observable models
-- **@ObservedObject to plain property or @Bindable** — Simpler code
-- **@EnvironmentObject to @Environment** — Type-safe, works with @Observable
+- **ObservableObject to @Observable** – Better performance, simpler syntax
+- **@StateObject to @State** – Works with @Observable models
+- **@ObservedObject to plain property or @Bindable** – Simpler code
+- **@EnvironmentObject to @Environment** – Type-safe, works with @Observable
 
 ### Medium Priority (Code Quality)
-- **Deprecated onChange modifier** — Old `perform:` syntax to new two-parameter version
-- **Completion handlers to async/await** — Cleaner code, better error handling
+- **Deprecated onChange modifier** – Old `perform:` syntax to new two-parameter version
+- **Completion handlers to async/await** – Cleaner code, better error handling
 
 ### Low Priority (Minor Improvements)
-- **withAnimation closures** — Animation parameter style improvements
+- **withAnimation closures** – Animation parameter style improvements
 
 ## Example Output
 
@@ -55,5 +55,5 @@ Full migration requires iOS 17+
 
 ## Related
 
-- [swiftui-architecture](/skills/ui-design/swiftui-architecture) — Modern SwiftUI architecture patterns
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — async/await adoption patterns
+- [swiftui-architecture](/skills/ui-design/swiftui-architecture) – Modern SwiftUI architecture patterns
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – async/await adoption patterns

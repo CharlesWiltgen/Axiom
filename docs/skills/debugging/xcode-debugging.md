@@ -32,6 +32,7 @@ Questions you can ask Claude that will draw from this skill:
 - "I have 20 xcodebuild processes running. Is that normal?"
 - "What's Device Hub in Xcode 27, and how does it relate to simctl/devicectl?" (iOS 27)
 - "Xcode shows an inline issue before I build — is that a real build failure?" (iOS 27)
+- "A bug only reproduces on my physical device — how do I recreate it on a simulator with Device Hub?" (iOS 27)
 
 ## What This Skill Provides
 
@@ -96,17 +97,17 @@ rm -rf ~/Library/Caches/org.swift.swiftpm
 
 ## Documentation Scope
 
-This page documents the `axiom-build` skill—environment-first diagnostics Claude uses before investigating code issues. The skill contains complete command sequences, decision trees, and time-cost analysis.
+This page documents the `axiom-build` skill — environment-first diagnostics Claude uses before investigating code issues. The skill contains complete command sequences, decision trees, and time-cost analysis.
 
 **For build failures specifically:** Use [/axiom:fix-build](/commands/build/fix-build) for automated diagnosis and fixes.
 
 ## Related
 
-- [/axiom:fix-build](/commands/build/fix-build) — Automated build failure diagnosis
-- [build-fixer](/agents/build-fixer) — Autonomous agent that diagnoses and fixes build issues
-- [build-debugging](/skills/debugging/build-debugging) — Dependency resolution for CocoaPods/SPM
-- [testflight-triage](/skills/debugging/testflight-triage) — Use when issue is TestFlight crash, not build environment
-- [performance-profiling](/skills/debugging/performance-profiling) — When issue is performance, not environment
+- [/axiom:fix-build](/commands/build/fix-build) – Automated build failure diagnosis
+- [build-fixer](/agents/build-fixer) – Autonomous agent that diagnoses and fixes build issues
+- [build-debugging](/skills/debugging/build-debugging) – Dependency resolution for CocoaPods/SPM
+- [testflight-triage](/skills/debugging/testflight-triage) – Use when issue is TestFlight crash, not build environment
+- [performance-profiling](/skills/debugging/performance-profiling) – When issue is performance, not environment
 
 ## Resources
 

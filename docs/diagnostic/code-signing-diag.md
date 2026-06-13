@@ -28,10 +28,10 @@ Use when you're experiencing:
 
 The skill uses a 4-step mandatory diagnostic flow before any fix:
 
-1. **Check signing identities** — `security find-identity -v -p codesigning`
-2. **Decode provisioning profile** — `security cms -D -i embedded.mobileprovision`
-3. **Extract and compare entitlements** — three-way comparison (binary, profile, .entitlements file)
-4. **Verify certificate in profile** — SHA-1 hash match between keychain and profile
+1. **Check signing identities** – `security find-identity -v -p codesigning`
+2. **Decode provisioning profile** – `security cms -D -i embedded.mobileprovision`
+3. **Extract and compare entitlements** – three-way comparison (binary, profile, .entitlements file)
+4. **Verify certificate in profile** – SHA-1 hash match between keychain and profile
 
 Six decision trees then map specific errors to root causes: certificate not found, profile mismatch, ITMS upload errors, Keychain issues in CI, ambiguous identity, and entitlement mismatch.
 
@@ -44,7 +44,7 @@ This page documents the `axiom-security` diagnostic skill. The full decision tre
 
 ## Related
 
-- [Code Signing](/skills/debugging/code-signing) — Workflows, anti-patterns, and setup guidance
-- [Code Signing Reference](/reference/code-signing-ref) — CLI commands, error codes, fastlane match setup
-- [Xcode Debugging](/skills/debugging/xcode-debugging) — Environment-first diagnostics for build failures
-- [App Store Diagnostics](/diagnostic/app-store-diag) — Rejection troubleshooting (non-signing rejections)
+- [Code Signing](/skills/debugging/code-signing) – Workflows, anti-patterns, and setup guidance
+- [Code Signing Reference](/reference/code-signing-ref) – CLI commands, error codes, fastlane match setup
+- [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics for build failures
+- [App Store Diagnostics](/diagnostic/app-store-diag) – Rejection troubleshooting (non-signing rejections)

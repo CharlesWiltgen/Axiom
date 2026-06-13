@@ -78,7 +78,7 @@ Double-tap is Apple Pencil 2nd gen; squeeze, barrel roll, and hover-with-roll ar
 
 ## Related
 
-- [UIKit-SwiftUI Bridging](/skills/ui-design/uikit-bridging) — Wrapping `PKCanvasView` in `UIViewRepresentable`
+- [UIKit-SwiftUI Bridging](/skills/ui-design/uikit-bridging) – Wrapping `PKCanvasView` in `UIViewRepresentable`
 - For persisting the drawing blob in SwiftData/Core Data, see the axiom-data suite
 - For pure SwiftUI canvas wrapping patterns, see the axiom-swiftui suite
 

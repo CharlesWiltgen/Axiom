@@ -35,11 +35,11 @@ Subject segmentation, hand/body pose detection, text recognition (OCR), barcode/
 
 ## Available References
 
-- [Vision API Reference](/reference/vision-ref) — Complete Vision framework API reference with code examples
+- [Vision API Reference](/reference/vision-ref) – Complete Vision framework API reference with code examples
 
 ## Available Diagnostics
 
-- [Vision Diagnostics](/diagnostic/vision-diag) — Subject not detected, text not recognized, barcode issues, performance problems
+- [Vision Diagnostics](/diagnostic/vision-diag) – Subject not detected, text not recognized, barcode issues, performance problems
 
 ## Example Prompts
 

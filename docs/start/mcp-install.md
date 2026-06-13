@@ -17,7 +17,7 @@ The MCP server exposes Axiom's full catalog through the MCP protocol:
 
 ## Prerequisites
 
-- **Node.js 18+** — check with `node --version`
+- **Node.js 18+** – check with `node --version`
 
 That's it. No cloning, no building.
 
@@ -180,8 +180,8 @@ AXIOM_LOG_LEVEL=debug npx axiom-mcp 2>&1 | grep -i skill
 
 MCP uses stdin/stdout for communication. Common issues:
 
-- **Wrong config** — ensure `command` is `"npx"` and `args` is `["-y", "axiom-mcp"]`
-- **Other stdout writers** — make sure nothing else writes to stdout; logs go to stderr only
+- **Wrong config** – ensure `command` is `"npx"` and `args` is `["-y", "axiom-mcp"]`
+- **Other stdout writers** – make sure nothing else writes to stdout; logs go to stderr only
 
 Test the command from your config manually:
 ```bash
@@ -191,6 +191,6 @@ npx axiom-mcp
 
 ## What's Next
 
-- [View all skills →](/skills/) — Browse the complete skill catalog
-- [Agents overview →](/agents/) — See what autonomous agents can do
-- [Example Workflows →](/start/workflows) — Step-by-step guides for common tasks
+- [View all skills →](/skills/) – Browse the complete skill catalog
+- [Agents overview →](/agents/) – See what autonomous agents can do
+- [Example Workflows →](/start/workflows) – Step-by-step guides for common tasks

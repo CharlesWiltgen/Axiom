@@ -7,7 +7,7 @@ version: 1.3.0
 
 # SwiftUI Debugging
 
-Diagnostic decision trees for SwiftUI issues. Covers view update failures, preview crashes, layout problems, and view identity—with systematic diagnosis to avoid guessing under pressure.
+Diagnostic decision trees for SwiftUI issues. Covers view update failures, preview crashes, layout problems, and view identity — with systematic diagnosis to avoid guessing under pressure.
 
 ## When to Use This Skill
 
@@ -35,16 +35,16 @@ Questions you can ask Claude that will draw from this skill:
 ## What This Skill Provides
 
 ### View Not Updating Decision Tree
-- **Struct Mutation** — Direct mutation doesn't trigger updates; reassign the full value
-- **Lost Binding Identity** — Passing `.constant()` or recreating bindings breaks two-way connection
-- **Accidental View Recreation** — Conditionals destroy and recreate views, resetting @State
-- **Missing Observer Pattern** — @Observable vs ObservableObject usage
-- **@ViewBuilder Closure Re-Initialization** — Sheet or modal child views skip loading states when parent state changes cause closure re-evaluation
+- **Struct Mutation** – Direct mutation doesn't trigger updates; reassign the full value
+- **Lost Binding Identity** – Passing `.constant()` or recreating bindings breaks two-way connection
+- **Accidental View Recreation** – Conditionals destroy and recreate views, resetting @State
+- **Missing Observer Pattern** – @Observable vs ObservableObject usage
+- **@ViewBuilder Closure Re-Initialization** – Sheet or modal child views skip loading states when parent state changes cause closure re-evaluation
 
 ### Preview Crashes Decision Tree
-- **Missing Dependencies** — Views need @EnvironmentObject or environment values
-- **State Initialization Failures** — Array bounds, optional unwraps, invalid defaults
-- **Cache Corruption** — When code builds but preview fails
+- **Missing Dependencies** – Views need @EnvironmentObject or environment values
+- **State Initialization Failures** – Array bounds, optional unwraps, invalid defaults
+- **Cache Corruption** – When code builds but preview fails
 
 ### Layout Issues Quick Reference
 - ZStack ordering and zIndex
@@ -97,7 +97,7 @@ var body: some View {
 
 ## Documentation Scope
 
-This page documents the `axiom-swiftui-debugging` skill—diagnostic decision trees Claude uses when you encounter SwiftUI view update failures, preview crashes, or layout issues.
+This page documents the `axiom-swiftui-debugging` skill — diagnostic decision trees Claude uses when you encounter SwiftUI view update failures, preview crashes, or layout issues.
 
 **For performance profiling:** Use [swiftui-performance](/skills/ui-design/swiftui-performance) when the view updates but performance is slow.
 
@@ -105,10 +105,10 @@ This page documents the `axiom-swiftui-debugging` skill—diagnostic decision tr
 
 ## Related
 
-- [swiftui-performance](/skills/ui-design/swiftui-performance) — Performance profiling with SwiftUI Instrument
-- [swiftui-debugging-diag](/diagnostic/swiftui-debugging-diag) — Systematic diagnostic workflows for complex cases
-- [xcode-debugging](/skills/debugging/xcode-debugging) — Environment-first diagnostics for cache and build issues
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — @MainActor and async/await patterns for data updates
+- [swiftui-performance](/skills/ui-design/swiftui-performance) – Performance profiling with SwiftUI Instrument
+- [swiftui-debugging-diag](/diagnostic/swiftui-debugging-diag) – Systematic diagnostic workflows for complex cases
+- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics for cache and build issues
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – @MainActor and async/await patterns for data updates
 
 ## Resources
 

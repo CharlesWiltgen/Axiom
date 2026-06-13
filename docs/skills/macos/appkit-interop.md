@@ -103,12 +103,12 @@ This page documents the `appkit-interop` skill in the `axiom-macos` suite. The s
 
 ## Related
 
-- [appkit-modernization](/skills/macos/appkit-modernization) — Modernizing the AppKit side itself (input, restoration, macOS 27 look)
-- [swiftui-differences](/skills/macos/swiftui-differences) — Drop to AppKit only when these macOS SwiftUI primitives don't cover the need
-- [windows](/skills/macos/windows) — `NSHostingController` is the right way to host SwiftUI inside an AppKit-managed window or sheet
-- [sandbox-and-file-access](/skills/macos/sandbox-and-file-access) — Reasons to drop from `.fileImporter` to `NSOpenPanel`
-- [menus-and-commands](/skills/macos/menus-and-commands) — Where SwiftUI's command modifiers meet AppKit's responder chain
-- [uikit-bridging](/skills/ui-design/uikit-bridging) — Same representable pattern, UIKit edition
+- [appkit-modernization](/skills/macos/appkit-modernization) – Modernizing the AppKit side itself (input, restoration, macOS 27 look)
+- [swiftui-differences](/skills/macos/swiftui-differences) – Drop to AppKit only when these macOS SwiftUI primitives don't cover the need
+- [windows](/skills/macos/windows) – `NSHostingController` is the right way to host SwiftUI inside an AppKit-managed window or sheet
+- [sandbox-and-file-access](/skills/macos/sandbox-and-file-access) – Reasons to drop from `.fileImporter` to `NSOpenPanel`
+- [menus-and-commands](/skills/macos/menus-and-commands) – Where SwiftUI's command modifiers meet AppKit's responder chain
+- [uikit-bridging](/skills/ui-design/uikit-bridging) – Same representable pattern, UIKit edition
 
 ## Resources
 

@@ -33,12 +33,12 @@ Questions you can ask Claude that will draw from this skill:
 
 ## What This Skill Provides
 
-- **Rendering mode decision tree** — which of the 4 modes (Monochrome, Hierarchical, Palette, Multicolor) fits your design
-- **Effect selection guide** — 12+ effects mapped to UX purposes (tap feedback, loading, show/hide, symbol swap)
+- **Rendering mode decision tree** – which of the 4 modes (Monochrome, Hierarchical, Palette, Multicolor) fits your design
+- **Effect selection guide** – 12+ effects mapped to UX purposes (tap feedback, loading, show/hide, symbol swap)
 - **SF Symbols 7 Draw animations** (iOS 26+) — Draw On/Off, playback modes, Variable Draw, gradient rendering
-- **Custom symbol authoring** — Draw annotation with guide points in SF Symbols app
-- **Anti-patterns and troubleshooting** — wrong mode, effect not playing, weight mismatches, version checks
-- **Pressure scenarios** — pushing back on "just use PNGs" and "add animations later"
+- **Custom symbol authoring** – Draw annotation with guide points in SF Symbols app
+- **Anti-patterns and troubleshooting** – wrong mode, effect not playing, weight mismatches, version checks
+- **Pressure scenarios** – pushing back on "just use PNGs" and "add animations later"
 
 ## Key Pattern
 
@@ -70,10 +70,10 @@ This page documents the `axiom-design` skill — decision trees, effect selectio
 
 ## Related
 
-- [SF Symbols Reference](/reference/sf-symbols-ref) — Complete API reference for all rendering modes, effects, and UIKit equivalents
-- [SwiftUI Animation](/reference/swiftui-animation-ref) — General SwiftUI animation (non-symbol)
-- [HIG Reference](/reference/hig-ref) — Broader icon design guidelines
-- [Liquid Glass](/skills/ui-design/liquid-glass) — For Liquid Glass material design (complements symbol effects)
+- [SF Symbols Reference](/reference/sf-symbols-ref) – Complete API reference for all rendering modes, effects, and UIKit equivalents
+- [SwiftUI Animation](/reference/swiftui-animation-ref) – General SwiftUI animation (non-symbol)
+- [HIG Reference](/reference/hig-ref) – Broader icon design guidelines
+- [Liquid Glass](/skills/ui-design/liquid-glass) – For Liquid Glass material design (complements symbol effects)
 
 ## Resources
 

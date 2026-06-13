@@ -71,9 +71,9 @@ Questions you can ask Claude that will draw from this skill:
 
 ### iOS 27 Additions
 - `@Query(sectionBy:)` / `ResultsSectionCollection` — sectioned queries in SwiftUI
-- `ResultsObserver` — observing query results outside SwiftUI
-- `HistoryObserver` — push-based history observation
-- `@Attribute(.codable)` — Codable escape hatch for unowned value types
+- `ResultsObserver` – observing query results outside SwiftUI
+- `HistoryObserver` – push-based history observation
+- `@Attribute(.codable)` – Codable escape hatch for unowned value types
 - `Predicate(all:)` / `Predicate(any:)` — dynamic compound predicates
 
 ## Key Pattern
@@ -98,16 +98,16 @@ for track in tracks {
 
 ## Documentation Scope
 
-This page documents the `axiom-data` skill—comprehensive SwiftData guidance Claude uses when answering your questions. The skill contains detailed API patterns, code examples, CloudKit configuration, and migration workflows.
+This page documents the `axiom-data` skill — comprehensive SwiftData guidance Claude uses when answering your questions. The skill contains detailed API patterns, code examples, CloudKit configuration, and migration workflows.
 
 **For schema migrations:** Use [database-migration](/skills/persistence/database-migration) when adding or modifying database columns safely.
 
 ## Related
 
-- [database-migration](/skills/persistence/database-migration) — Safe schema evolution patterns for adding/modifying columns
-- [sqlitedata](/skills/persistence/sqlitedata) — Alternative using value types (structs) with CloudKit record sharing
-- [grdb](/skills/persistence/grdb) — Raw SQL queries when fine-grained control is needed
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — @MainActor and actor patterns for Swift 6
+- [database-migration](/skills/persistence/database-migration) – Safe schema evolution patterns for adding/modifying columns
+- [sqlitedata](/skills/persistence/sqlitedata) – Alternative using value types (structs) with CloudKit record sharing
+- [grdb](/skills/persistence/grdb) – Raw SQL queries when fine-grained control is needed
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – @MainActor and actor patterns for Swift 6
 
 ## Resources
 

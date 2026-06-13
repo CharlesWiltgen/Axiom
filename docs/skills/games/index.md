@@ -47,51 +47,51 @@ flowchart LR
 
 Complete guide to building 2D games with SpriteKit. Covers the scene graph model, physics engine (bitmask discipline, contact detection, body types), action system, game loop, performance optimization, and SwiftUI/Metal integration.
 
-- [SpriteKit](/skills/games/spritekit) — Architecture, patterns, anti-patterns, and code review checklist
+- [SpriteKit](/skills/games/spritekit) – Architecture, patterns, anti-patterns, and code review checklist
 
 ### Game Input
 
 Player input for games: on-screen touch controls with the TouchController framework (iOS/iPadOS), unified game controller handling through GCController, and the GameController additions new in the 27 releases (controller Home button settings, visionOS spatial accessories).
 
-- [Game Input](/skills/games/game-input) — Touch controller setup, control catalog, adaptive layouts, interaction patterns, controller additions
+- [Game Input](/skills/games/game-input) – Touch controller setup, control catalog, adaptive layouts, interaction patterns, controller additions
 
 ### SceneKit
 
 3D scene graph framework for rendering, animations, and physics:
-- [SceneKit](/skills/games/scenekit) — Scene graphs, materials, animations, SceneKit → RealityKit migration
-- [SceneKit API](/reference/scenekit-ref) — Complete SceneKit API reference and concept mapping
+- [SceneKit](/skills/games/scenekit) – Scene graphs, materials, animations, SceneKit → RealityKit migration
+- [SceneKit API](/reference/scenekit-ref) – Complete SceneKit API reference and concept mapping
 
 ### RealityKit
 
 Entity-Component-System framework for AR and 3D content:
-- [RealityKit](/skills/games/realitykit) — ECS architecture, entity-component patterns, RealityView
-- [RealityKit API](/reference/realitykit-ref) — Entity, Component, System, materials, animations
-- [RealityKit Diagnostics](/diagnostic/realitykit-diag) — Entity loading failures, physics issues, rendering problems
+- [RealityKit](/skills/games/realitykit) – ECS architecture, entity-component patterns, RealityView
+- [RealityKit API](/reference/realitykit-ref) – Entity, Component, System, materials, animations
+- [RealityKit Diagnostics](/diagnostic/realitykit-diag) – Entity loading failures, physics issues, rendering problems
 
 ### Metal Migration
 
 Porting OpenGL/DirectX rendering to Metal:
-- [Metal Migration](/skills/games/metal-migration) — Migration patterns, shader conversion, rendering pipeline
-- [Metal Migration API](/reference/metal-migration-ref) — Shader translation, pipeline state objects
-- [Metal Migration Diagnostics](/diagnostic/metal-migration-diag) — Shader compilation, rendering artifacts
+- [Metal Migration](/skills/games/metal-migration) – Migration patterns, shader conversion, rendering pipeline
+- [Metal Migration API](/reference/metal-migration-ref) – Shader translation, pipeline state objects
+- [Metal Migration Diagnostics](/diagnostic/metal-migration-diag) – Shader compilation, rendering artifacts
 
 ### USDKit
 
 Working with USD/USDZ 3D scene files in Swift (new in the 27 releases): opening and traversing stages, editing prims and attributes, exporting compressed USDZ packages, and rendering stages directly in RealityKit.
 
-- [USDKit](/skills/games/usdkit) — Stages, traversal, editing, AccessibilityAPI schema, compressed export, USDStageComponent
+- [USDKit](/skills/games/usdkit) – Stages, traversal, editing, AccessibilityAPI schema, compressed export, USDStageComponent
 
 ## Available Agents
 
-- [spritekit-auditor](/agents/spritekit-auditor) — Scans SpriteKit code for physics bitmask issues, draw call waste, node accumulation, and action memory leaks
+- [spritekit-auditor](/agents/spritekit-auditor) – Scans SpriteKit code for physics bitmask issues, draw call waste, node accumulation, and action memory leaks
 
 ## Available References
 
-- [SpriteKit API](/reference/spritekit-ref) — All 16 node types, physics body creation, complete action catalog, texture atlases, constraints, particles, SKRenderer
+- [SpriteKit API](/reference/spritekit-ref) – All 16 node types, physics body creation, complete action catalog, texture atlases, constraints, particles, SKRenderer
 
 ## Available Diagnostics
 
-- [SpriteKit Diagnostics](/diagnostic/spritekit-diag) — Decision trees for contacts not firing, tunneling, frame drops, touch bugs, memory spikes, coordinate confusion, transition crashes
+- [SpriteKit Diagnostics](/diagnostic/spritekit-diag) – Decision trees for contacts not firing, tunneling, frame drops, touch bugs, memory spikes, coordinate confusion, transition crashes
 
 ## Example Prompts
 

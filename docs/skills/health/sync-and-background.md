@@ -92,11 +92,11 @@ This page documents the `sync-and-background` skill in the `axiom-health` suite.
 
 ## Related
 
-- [fundamentals](/skills/health/fundamentals) — Prerequisite for `HKHealthStore` setup and the sample-type system
-- [authorization-and-privacy](/skills/health/authorization-and-privacy) — Background reads have authorization constraints documented there; read before any background workflow
-- [queries](/skills/health/queries) — Complementary skill for foreground one-shot reads; many anchored-query call sites share the same predicate patterns
-- [background-and-networking](/skills/watchos/background-and-networking) — Watch-specific background task budgets that apply when running this pattern on Apple Watch
-- [cloud-sync](/skills/persistence/cloud-sync) — Alternative sync mechanism for app-level data that isn't health data; compare trade-offs when designing a full sync stack
+- [fundamentals](/skills/health/fundamentals) – Prerequisite for `HKHealthStore` setup and the sample-type system
+- [authorization-and-privacy](/skills/health/authorization-and-privacy) – Background reads have authorization constraints documented there; read before any background workflow
+- [queries](/skills/health/queries) – Complementary skill for foreground one-shot reads; many anchored-query call sites share the same predicate patterns
+- [background-and-networking](/skills/watchos/background-and-networking) – Watch-specific background task budgets that apply when running this pattern on Apple Watch
+- [cloud-sync](/skills/persistence/cloud-sync) – Alternative sync mechanism for app-level data that isn't health data; compare trade-offs when designing a full sync stack
 
 ## Resources
 

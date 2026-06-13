@@ -109,15 +109,15 @@ flowchart TD
 
 ## Documentation Scope
 
-This page documents the `axiom-design` skill—quick HIG decision frameworks Claude uses when you're making design decisions or reviewing UI for compliance.
+This page documents the `axiom-design` skill — quick HIG decision frameworks Claude uses when you're making design decisions or reviewing UI for compliance.
 
 **For comprehensive reference:** See [hig-ref](/reference/hig-ref) for complete API coverage, code examples, and detailed guidelines.
 
 ## Related
 
-- [hig-ref](/reference/hig-ref) — Comprehensive HIG API reference
-- [liquid-glass](/skills/ui-design/liquid-glass) — iOS 26 Liquid Glass material design
-- [swiftui-layout](/skills/ui-design/swiftui-layout) — Adaptive layout patterns
+- [hig-ref](/reference/hig-ref) – Comprehensive HIG API reference
+- [liquid-glass](/skills/ui-design/liquid-glass) – iOS 26 Liquid Glass material design
+- [swiftui-layout](/skills/ui-design/swiftui-layout) – Adaptive layout patterns
 
 ## Resources
 

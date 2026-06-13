@@ -53,10 +53,10 @@ Before diving into code, ask yourself:
 - Common failures and fixes
 
 ### Common Crash Patterns
-- **EXC_BAD_ACCESS** — null pointer, deallocated object
-- **EXC_CRASH (SIGABRT)** — assertions, uncaught exceptions
-- **Watchdog (0x8badf00d)** — main thread blocked too long
-- **Jetsam** — memory pressure kill (no crash report)
+- **EXC_BAD_ACCESS** – null pointer, deallocated object
+- **EXC_CRASH (SIGABRT)** – assertions, uncaught exceptions
+- **Watchdog (0x8badf00d)** – main thread blocked too long
+- **Jetsam** – memory pressure kill (no crash report)
 
 ### Terminations Without Crash Reports
 - Terminations Organizer for non-crash kills
@@ -105,9 +105,9 @@ The skill routes through the `axiom-build` router, so asking about TestFlight cr
 
 ## Related
 
-- [xcode-debugging](/skills/debugging/xcode-debugging) — Use when the issue is build/environment, not a runtime crash
-- [memory-debugging](/skills/debugging/memory-debugging) — Use when crash pattern suggests memory leak (jetsam, progressive growth)
-- [performance-profiling](/skills/debugging/performance-profiling) — Use when crash is performance-related (watchdog timeout, high CPU)
+- [xcode-debugging](/skills/debugging/xcode-debugging) – Use when the issue is build/environment, not a runtime crash
+- [memory-debugging](/skills/debugging/memory-debugging) – Use when crash pattern suggests memory leak (jetsam, progressive growth)
+- [performance-profiling](/skills/debugging/performance-profiling) – Use when crash is performance-related (watchdog timeout, high CPU)
 
 ## Resources
 

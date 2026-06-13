@@ -33,21 +33,21 @@ Real questions developers ask that this skill answers:
 
 ## What This Skill Provides
 
-- **Why web setup is different** — the three web-only requirements that native doesn't need: Merchant Identity Certificate, domain registration plus verification, server-side merchant validation
-- **Pre-flight web checklist** — HTTPS plus TLS 1.2+, domain registered and verified, Merchant Identity Certificate exported and split into PEM crt and key, curl test against `apple-pay-gateway-cert.apple.com`, Apple IP allowlist on egress
-- **API choice** — Apple Pay JS (`ApplePaySession`) for Safari only, Payment Request API for cross-browser including third-party browsers on iOS 18+
-- **Button rendering** — JS SDK custom element (`<apple-pay-button>`) works on third-party browsers; CSS-implemented buttons don't. SDK 1.2.0+ required for scan-to-pay
-- **Capability detection** — `applePayCapabilities()` returns one of four `paymentCredentialStatus` values; the HIG/AUG rule that mandates pre-selection when `paymentCredentialsAvailable`
-- **Merchant validation flow** — server-only `POST /paymentSession` with two-way TLS, opaque session JSON passed through verbatim, single-use 5-minute expiry, sandbox vs production endpoint discipline
-- **Payment request construction** — decimal-precise string amounts (never JS Number), differences between Apple Pay JS and Payment Request API forms
-- **Variants** — `recurringPaymentRequest`, `automaticReloadPaymentRequest`, `deferredPaymentRequest`, web disbursements (WWDC24) with `supportsInstantFundsOut`
-- **Third-party browser scan-to-pay** — iOS 18 QR-handoff flow; requires SDK button at version 1.2.0+
-- **30-second production triage** — the curl-test-first incident-response sequence and named anti-actions (don't re-issue cert before curl, don't bounce servers as first move)
+- **Why web setup is different** – the three web-only requirements that native doesn't need: Merchant Identity Certificate, domain registration plus verification, server-side merchant validation
+- **Pre-flight web checklist** – HTTPS plus TLS 1.2+, domain registered and verified, Merchant Identity Certificate exported and split into PEM crt and key, curl test against `apple-pay-gateway-cert.apple.com`, Apple IP allowlist on egress
+- **API choice** – Apple Pay JS (`ApplePaySession`) for Safari only, Payment Request API for cross-browser including third-party browsers on iOS 18+
+- **Button rendering** – JS SDK custom element (`<apple-pay-button>`) works on third-party browsers; CSS-implemented buttons don't. SDK 1.2.0+ required for scan-to-pay
+- **Capability detection** – `applePayCapabilities()` returns one of four `paymentCredentialStatus` values; the HIG/AUG rule that mandates pre-selection when `paymentCredentialsAvailable`
+- **Merchant validation flow** – server-only `POST /paymentSession` with two-way TLS, opaque session JSON passed through verbatim, single-use 5-minute expiry, sandbox vs production endpoint discipline
+- **Payment request construction** – decimal-precise string amounts (never JS Number), differences between Apple Pay JS and Payment Request API forms
+- **Variants** – `recurringPaymentRequest`, `automaticReloadPaymentRequest`, `deferredPaymentRequest`, web disbursements (WWDC24) with `supportsInstantFundsOut`
+- **Third-party browser scan-to-pay** – iOS 18 QR-handoff flow; requires SDK button at version 1.2.0+
+- **30-second production triage** – the curl-test-first incident-response sequence and named anti-actions (don't re-issue cert before curl, don't bounce servers as first move)
 
 ## Related
 
-- [Apple Pay on the Web Reference](/reference/apple-pay-web-ref) — `ApplePaySession` and Payment Request API surface, event handlers, status codes, sequence diagrams
-- [Apple Pay](/skills/integration/apple-pay) — native counterpart; the merchant ID and Payment Processing Certificate are shared
-- [Apple Pay vs IAP](/skills/integration/apple-pay-vs-iap) — boundary plus the web Acceptable Use Guidelines (prohibited categories, parity, primary-option)
-- [Wallet Orders](/skills/integration/wallet-orders) — Track-with-Apple-Wallet button and post-purchase handoff
-- [Payments Diagnostics](/diagnostic/payments-diag) — merchant-validation failure modes, cert vs domain isolation
+- [Apple Pay on the Web Reference](/reference/apple-pay-web-ref) – `ApplePaySession` and Payment Request API surface, event handlers, status codes, sequence diagrams
+- [Apple Pay](/skills/integration/apple-pay) – native counterpart; the merchant ID and Payment Processing Certificate are shared
+- [Apple Pay vs IAP](/skills/integration/apple-pay-vs-iap) – boundary plus the web Acceptable Use Guidelines (prohibited categories, parity, primary-option)
+- [Wallet Orders](/skills/integration/wallet-orders) – Track-with-Apple-Wallet button and post-purchase handoff
+- [Payments Diagnostics](/diagnostic/payments-diag) – merchant-validation failure modes, cert vs domain isolation

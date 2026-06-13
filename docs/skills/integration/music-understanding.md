@@ -29,16 +29,16 @@ For **identifying** which song is playing (catalog matching), use [ShazamKit](/s
 
 ## What This Skill Provides
 
-- **`MusicUnderstandingSession`** — the `actor` entry point; create it from an `AVAsset` (`async throws`) or a custom audio provider
-- **`analyze()` vs `analyze(for:)`** — all six areas, or a targeted subset (unrequested results come back `nil`)
-- **Six result types** — `KeyResult` (tonic + major/minor), `RhythmResult` (beats/bars + BPM), `StructureResult` (sections/segments/phrases), `PaceResult` (perceived energy), `InstrumentActivityResult` (per-instrument presence + intensity), `LoudnessResult` (integrated/momentary/short-term LUFS + peak dB)
-- **`TimedValue` / `RangedValue`** — the standard time-association helpers
-- **Streaming loudness** — an `AsyncSequence` emitting as each 100 ms is analyzed
-- **Custom `AudioProvider`** — feed `AVReadOnlyAudioPCMBuffer`s from any `AsyncSequence`
-- **Codable export** — encode any `SessionResult` to JSON
+- **`MusicUnderstandingSession`** – the `actor` entry point; create it from an `AVAsset` (`async throws`) or a custom audio provider
+- **`analyze()` vs `analyze(for:)`** – all six areas, or a targeted subset (unrequested results come back `nil`)
+- **Six result types** – `KeyResult` (tonic + major/minor), `RhythmResult` (beats/bars + BPM), `StructureResult` (sections/segments/phrases), `PaceResult` (perceived energy), `InstrumentActivityResult` (per-instrument presence + intensity), `LoudnessResult` (integrated/momentary/short-term LUFS + peak dB)
+- **`TimedValue` / `RangedValue`** – the standard time-association helpers
+- **Streaming loudness** – an `AsyncSequence` emitting as each 100 ms is analyzed
+- **Custom `AudioProvider`** – feed `AVReadOnlyAudioPCMBuffer`s from any `AsyncSequence`
+- **Codable export** – encode any `SessionResult` to JSON
 
 ## Related
 
-- [ShazamKit](/skills/integration/shazamkit) — song *identification* (catalog matching), a different task from feature analysis
-- [Now Playing](/skills/integration/now-playing) — Lock Screen / Control Center playback metadata
-- [avfoundation-ref](/reference/avfoundation-ref) — AVAudioSession and the `AVAsset` inputs MusicUnderstanding consumes
+- [ShazamKit](/skills/integration/shazamkit) – song *identification* (catalog matching), a different task from feature analysis
+- [Now Playing](/skills/integration/now-playing) – Lock Screen / Control Center playback metadata
+- [avfoundation-ref](/reference/avfoundation-ref) – AVAudioSession and the `AVAsset` inputs MusicUnderstanding consumes

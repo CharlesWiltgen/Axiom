@@ -29,5 +29,5 @@ Use this skill when:
 
 ## Related
 
-- [App Attest](/skills/security/app-attest) — app integrity verification; complements agent security with client authenticity
-- [Foundation Models](/skills/integration/foundation-models) — the framework these mitigations attach to (DynamicProfile, tools)
+- [App Attest](/skills/security/app-attest) – app integrity verification; complements agent security with client authenticity
+- [Foundation Models](/skills/integration/foundation-models) – the framework these mitigations attach to (DynamicProfile, tools)

@@ -33,21 +33,21 @@ Real questions developers ask that this skill answers:
 
 ## What This Skill Provides
 
-- **Five-actor mental model** — customer, merchant app, merchant server, PSP, acquirer, network, issuer; clarifies who decrypts what and why the private key never belongs on the device
-- **Pre-flight checklist** — PSP confirmation, Apple Developer Program membership (Enterprise accounts cannot use Apple Pay), Merchant ID, Payment Processing Certificate (ECC 256, expires every 25 months), Xcode capability flow
-- **Cert renewal staging** — the two-stage "create but don't activate" workflow that prevents the cutover window where Apple's servers encrypt with one key but your PSP holds another
-- **Request-type decision** — when to use `PKRecurringPaymentRequest`, `PKAutomaticReloadPaymentRequest`, `PKDeferredPaymentRequest`, `multiTokenContexts`, `PKDisbursementRequest`; the merchant token (MPAN) continuity argument for using the dedicated types
-- **Delegate-callback discipline** — 30-second response budget per change handler, pre-auth redacted vs post-auth full contact data, error construction via `PKPaymentError` for field-specific feedback
-- **Apple Pay Mark vs Button** — the most common HIG violation in shipped apps; the Mark is signage and never tappable, the Button is API-provided and initiates payment
-- **Sandbox vs production discipline** — sandbox transactions decline pre-fulfillment by design; production needs production keys plus activated certs; test with real cards before launch
-- **Catalyst and macOS** — web security model applies, window requirement, merchant validation required even in-app, static merchant validation URL (legacy region-specific URLs were removed)
-- **visionOS and watchOS** — Optic ID modality on visionOS, `WKInterfacePaymentButton` plus no-shipping-picker constraint on watchOS
+- **Five-actor mental model** – customer, merchant app, merchant server, PSP, acquirer, network, issuer; clarifies who decrypts what and why the private key never belongs on the device
+- **Pre-flight checklist** – PSP confirmation, Apple Developer Program membership (Enterprise accounts cannot use Apple Pay), Merchant ID, Payment Processing Certificate (ECC 256, expires every 25 months), Xcode capability flow
+- **Cert renewal staging** – the two-stage "create but don't activate" workflow that prevents the cutover window where Apple's servers encrypt with one key but your PSP holds another
+- **Request-type decision** – when to use `PKRecurringPaymentRequest`, `PKAutomaticReloadPaymentRequest`, `PKDeferredPaymentRequest`, `multiTokenContexts`, `PKDisbursementRequest`; the merchant token (MPAN) continuity argument for using the dedicated types
+- **Delegate-callback discipline** – 30-second response budget per change handler, pre-auth redacted vs post-auth full contact data, error construction via `PKPaymentError` for field-specific feedback
+- **Apple Pay Mark vs Button** – the most common HIG violation in shipped apps; the Mark is signage and never tappable, the Button is API-provided and initiates payment
+- **Sandbox vs production discipline** – sandbox transactions decline pre-fulfillment by design; production needs production keys plus activated certs; test with real cards before launch
+- **Catalyst and macOS** – web security model applies, window requirement, merchant validation required even in-app, static merchant validation URL (legacy region-specific URLs were removed)
+- **visionOS and watchOS** – Optic ID modality on visionOS, `WKInterfacePaymentButton` plus no-shipping-picker constraint on watchOS
 
 ## Related
 
-- [Apple Pay Reference](/reference/apple-pay-ref) — PassKit API surface, payment-request variants, payment token format
-- [Apple Pay vs IAP](/skills/integration/apple-pay-vs-iap) — boundary decision; what to use for physical goods, services, donations, vs digital content
-- [Apple Pay on the Web](/skills/integration/apple-pay-web) — web counterpart; merchant identity certificate, domain verification, server-side merchant validation
-- [Wallet Orders](/skills/integration/wallet-orders) — post-purchase order tracking handoff via `PKPaymentOrderDetails`
-- [Payments Diagnostics](/diagnostic/payments-diag) — failure modes for no-sheet-appears, PSP decryption rejection, cert mismatch
-- [In-App Purchases](/skills/integration/in-app-purchases) — sibling rail for digital content and subscriptions consumed inside the app
+- [Apple Pay Reference](/reference/apple-pay-ref) – PassKit API surface, payment-request variants, payment token format
+- [Apple Pay vs IAP](/skills/integration/apple-pay-vs-iap) – boundary decision; what to use for physical goods, services, donations, vs digital content
+- [Apple Pay on the Web](/skills/integration/apple-pay-web) – web counterpart; merchant identity certificate, domain verification, server-side merchant validation
+- [Wallet Orders](/skills/integration/wallet-orders) – post-purchase order tracking handoff via `PKPaymentOrderDetails`
+- [Payments Diagnostics](/diagnostic/payments-diag) – failure modes for no-sheet-appears, PSP decryption rejection, cert mismatch
+- [In-App Purchases](/skills/integration/in-app-purchases) – sibling rail for digital content and subscriptions consumed inside the app

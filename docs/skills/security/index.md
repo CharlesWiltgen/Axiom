@@ -45,26 +45,26 @@ Questions you can ask Claude that will draw from these skills:
 
 ## Skills
 
-- **[Keychain](/skills/security/keychain)** — Secure credential storage with SecItem APIs, accessibility levels, access groups, biometric protection
+- **[Keychain](/skills/security/keychain)** – Secure credential storage with SecItem APIs, accessibility levels, access groups, biometric protection
   - *"How do I store a token so the app extension can read it but other apps can't?"*
   - *"Why does my keychain item disappear after the user restores from backup?"*
 
-- **[CryptoKit](/skills/security/cryptokit)** — Symmetric and asymmetric crypto, hashing, Secure Enclave keys, HPKE, post-quantum algorithms
+- **[CryptoKit](/skills/security/cryptokit)** – Symmetric and asymmetric crypto, hashing, Secure Enclave keys, HPKE, post-quantum algorithms
   - *"AES-GCM or ChaChaPoly — which one for at-rest file encryption?"*
   - *"How do I migrate my CommonCrypto AES code to CryptoKit?"*
 
-- **[Passkeys](/skills/security/passkeys)** — WebAuthn ceremony, AutoFill integration, password-to-passkey upgrades, cross-platform flows
+- **[Passkeys](/skills/security/passkeys)** – WebAuthn ceremony, AutoFill integration, password-to-passkey upgrades, cross-platform flows
   - *"What's the right `ASAuthorizationPlatformPublicKeyCredentialProvider` flow for sign-up?"*
   - *"How do I support passkeys *and* keep a password fallback for users on older devices?"*
 
-- **[App Attest](/skills/security/app-attest)** — DeviceCheck framework, server-side attestation validation, assertion lifecycle
+- **[App Attest](/skills/security/app-attest)** – DeviceCheck framework, server-side attestation validation, assertion lifecycle
   - *"How do I validate the attestation object on my server?"*
   - *"My App Attest rollout is breaking 5% of users on simulator builds — what's the right gate?"*
 
 ## Related
 
-- **[axiom-shipping](/skills/shipping/)** — App Store submission and privacy manifests; security frameworks have Required Reason API declarations that App Review enforces
-- **[axiom-integration](/skills/integration/privacy-ux)** — Privacy UX, permission prompts, and Privacy Manifests; pair with this suite when sensitive data is involved
-- **[axiom-macos](/skills/macos/sandbox-and-file-access)** — App Sandbox model and security-scoped bookmarks; pair with keychain access groups for sandboxed macOS apps
-- **[axiom-networking](/skills/integration/networking)** — URLSession authentication challenges and TLS pinning; CryptoKit is the right primitive for client-side signing of requests
-- **[axiom-data](/skills/persistence/)** — SwiftData, Core Data, GRDB; security applies when persisting credentials or encrypted blobs
+- **[axiom-shipping](/skills/shipping/)** – App Store submission and privacy manifests; security frameworks have Required Reason API declarations that App Review enforces
+- **[axiom-integration](/skills/integration/privacy-ux)** – Privacy UX, permission prompts, and Privacy Manifests; pair with this suite when sensitive data is involved
+- **[axiom-macos](/skills/macos/sandbox-and-file-access)** – App Sandbox model and security-scoped bookmarks; pair with keychain access groups for sandboxed macOS apps
+- **[axiom-networking](/skills/integration/networking)** – URLSession authentication challenges and TLS pinning; CryptoKit is the right primitive for client-side signing of requests
+- **[axiom-data](/skills/persistence/)** – SwiftData, Core Data, GRDB; security applies when persisting credentials or encrypted blobs

@@ -29,9 +29,9 @@ Start with the symptom you're seeing in the quick reference table, then follow t
 
 ## Related
 
-- [MapKit](/skills/integration/mapkit) — Anti-patterns and decision trees (prevents issues before they happen)
-- [MapKit Reference](/reference/mapkit-ref) — API reference for correct usage
-- [Core Location Diagnostics](/diagnostic/core-location-diag) — Location authorization troubleshooting
+- [MapKit](/skills/integration/mapkit) – Anti-patterns and decision trees (prevents issues before they happen)
+- [MapKit Reference](/reference/mapkit-ref) – API reference for correct usage
+- [Core Location Diagnostics](/diagnostic/core-location-diag) – Location authorization troubleshooting
 
 ## Resources
 

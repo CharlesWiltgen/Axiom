@@ -46,38 +46,38 @@ Questions you can ask Claude that will draw from these skills:
 
 ## Skills
 
-- **[Platform Basics](/skills/watchos/platform-basics)** — App structure, independent vs. companion, entry point, submission gates
+- **[Platform Basics](/skills/watchos/platform-basics)** – App structure, independent vs. companion, entry point, submission gates
   - *"Starting a new watchOS app — watch-only, companion, or independent?"*
   - *"What do I need to verify before submitting to the App Store in April 2026?"*
 
-- **[Design for watchOS](/skills/watchos/design-for-watchos)** — watchOS HIG, glanceable UX, navigation model
+- **[Design for watchOS](/skills/watchos/design-for-watchos)** – watchOS HIG, glanceable UX, navigation model
   - *"How should I structure navigation on the watch — NavigationStack or a TabView?"*
   - *"My watch screens feel cluttered. What does Apple recommend for glanceable UX?"*
 
-- **[Watch Connectivity](/skills/watchos/watch-connectivity)** — WCSession, paired-device data transfer, Family Setup
+- **[Watch Connectivity](/skills/watchos/watch-connectivity)** – WCSession, paired-device data transfer, Family Setup
   - *"How do I sync preferences between my iPhone and Apple Watch apps?"*
   - *"`transferUserInfo` vs. `updateApplicationContext` vs. `sendMessage` — which one do I use?"*
 
-- **[Background and Networking](/skills/watchos/background-and-networking)** — Background tasks, freshness scheduling, TN3135 networking limits
+- **[Background and Networking](/skills/watchos/background-and-networking)** – Background tasks, freshness scheduling, TN3135 networking limits
   - *"How do I refresh my watch app's data while it's on the wrist?"*
   - *"Why do my network requests on the watch hit limits the iPhone doesn't?"*
 
-- **[Smart Stack and Complications](/skills/watchos/smart-stack-and-complications)** — WidgetKit on the watch, RelevanceKit, ClockKit bridging
+- **[Smart Stack and Complications](/skills/watchos/smart-stack-and-complications)** – WidgetKit on the watch, RelevanceKit, ClockKit bridging
   - *"How do I make my complication show up in the Smart Stack at the right time?"*
   - *"My complication isn't updating — what's the right way to push new data?"*
 
-- **[Controls and Live Activities](/skills/watchos/controls-and-live-activities)** — Controls on watch surfaces, Live Activities on watch
+- **[Controls and Live Activities](/skills/watchos/controls-and-live-activities)** – Controls on watch surfaces, Live Activities on watch
   - *"How do I add a control to the watch's Smart Stack and Control Center?"*
   - *"My Live Activity shows on iPhone — how do I make it look right on the watch?"*
 
-- **[Modernization](/skills/watchos/modernization)** — WatchKit to SwiftUI, ClockKit to WidgetKit
+- **[Modernization](/skills/watchos/modernization)** – WatchKit to SwiftUI, ClockKit to WidgetKit
   - *"My app still uses a WatchKit Extension — what's the migration path?"*
   - *"How do I replace my ClockKit complication provider with WidgetKit?"*
 
 ## Related
 
-- **[axiom-health](/skills/health/)** — HealthKit sessions and WorkoutKit. Use when the watch app records workouts or reads health data
-- **[axiom-swiftui](/skills/ui-design/)** — General SwiftUI patterns (state, layout, animations) that apply across iOS, watchOS, and macOS
-- **[axiom-design](/skills/ui-design/hig)** — General Apple HIG, Liquid Glass, SF Symbols, typography
-- **[axiom-accessibility](/diagnostic/accessibility-diag)** — VoiceOver rotor, AssistiveTouch, Double Tap — the watch-specific accessibility surfaces
-- **[axiom-integration](/skills/integration/extensions-widgets)** — iOS-side widgets, core ActivityKit, and App Intents that a watch app may coordinate with
+- **[axiom-health](/skills/health/)** – HealthKit sessions and WorkoutKit. Use when the watch app records workouts or reads health data
+- **[axiom-swiftui](/skills/ui-design/)** – General SwiftUI patterns (state, layout, animations) that apply across iOS, watchOS, and macOS
+- **[axiom-design](/skills/ui-design/hig)** – General Apple HIG, Liquid Glass, SF Symbols, typography
+- **[axiom-accessibility](/diagnostic/accessibility-diag)** – VoiceOver rotor, AssistiveTouch, Double Tap — the watch-specific accessibility surfaces
+- **[axiom-integration](/skills/integration/extensions-widgets)** – iOS-side widgets, core ActivityKit, and App Intents that a watch app may coordinate with

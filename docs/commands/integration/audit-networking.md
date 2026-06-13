@@ -70,6 +70,6 @@ POSITIVE PATTERNS (found):
 
 ## Related
 
-- [networking](/skills/integration/networking) — Implementation patterns
-- [networking-diag](/diagnostic/networking-diag) — Connection troubleshooting
-- [network-framework-ref](/reference/network-framework-ref) — Complete API reference
+- [networking](/skills/integration/networking) – Implementation patterns
+- [networking-diag](/diagnostic/networking-diag) – Connection troubleshooting
+- [network-framework-ref](/reference/network-framework-ref) – Complete API reference

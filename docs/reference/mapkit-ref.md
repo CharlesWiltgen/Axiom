@@ -46,9 +46,9 @@ This page documents the `axiom-location` skill — the API reference Claude uses
 
 ## Related
 
-- [MapKit](/skills/integration/mapkit) — Decision trees, anti-patterns, and pressure scenarios
-- [MapKit Diagnostics](/diagnostic/mapkit-diag) — Troubleshooting annotations, region jumping, search failures
-- [Core Location Reference](/reference/core-location-ref) — Location API reference
+- [MapKit](/skills/integration/mapkit) – Decision trees, anti-patterns, and pressure scenarios
+- [MapKit Diagnostics](/diagnostic/mapkit-diag) – Troubleshooting annotations, region jumping, search failures
+- [Core Location Reference](/reference/core-location-ref) – Location API reference
 
 ## Resources
 

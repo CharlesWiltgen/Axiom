@@ -62,7 +62,7 @@ Questions you can ask Claude that will draw from this skill:
 - The iOS suspension watchdog and SQLite locks
 - `Configuration.observesSuspensionNotifications = true`
 - `Database.suspendNotification` / `resumeNotification` lifecycle posts
-- **Use `DidEnterBackground` not `WillResignActive`** — `.inactive` is transient
+- **Use `DidEnterBackground` not `WillResignActive`** – `.inactive` is transient
 - SwiftUI `scenePhase` wiring with `.inactive` as no-op
 - Catching `SQLITE_INTERRUPT` (9) and `SQLITE_ABORT` (4) at call sites
 
@@ -151,12 +151,12 @@ This page documents the `grdb-app-groups` skill — multi-process SQLite sharing
 
 ## Related
 
-- [grdb](/skills/persistence/grdb) — GRDB primer for setup and queries
-- [grdb-performance](/skills/persistence/grdb-performance) — performance discipline including `PRAGMA optimize` for shared DBs
-- [sqlite-fts-ref](/reference/sqlite-fts-ref) — cross-process FTS5 trigger caveats
-- [icloud-drive-ref](/reference/icloud-drive-ref) — iCloud Drive-based sharing (different model)
-- [storage](/reference/storage) — storage location semantics
-- [grdb-performance-auditor](/agents/grdb-performance-auditor) — detects journal mode mismatch and missing suspension defense for app-group DBs
+- [grdb](/skills/persistence/grdb) – GRDB primer for setup and queries
+- [grdb-performance](/skills/persistence/grdb-performance) – performance discipline including `PRAGMA optimize` for shared DBs
+- [sqlite-fts-ref](/reference/sqlite-fts-ref) – cross-process FTS5 trigger caveats
+- [icloud-drive-ref](/reference/icloud-drive-ref) – iCloud Drive-based sharing (different model)
+- [storage](/reference/storage) – storage location semantics
+- [grdb-performance-auditor](/agents/grdb-performance-auditor) – detects journal mode mismatch and missing suspension defense for app-group DBs
 
 ## Resources
 

@@ -74,9 +74,9 @@ Custom `CodingKeys`/encoder strategies serialize on-device but **silently fail t
 
 ## Related
 
-- [extensions-widgets](/skills/integration/extensions-widgets) — Static/timeline widgets and Control Center controls (shares the widget extension)
-- [push-notifications](/skills/integration/push-notifications) — APNs auth and payload mechanics for push/broadcast updates
-- [controls-and-live-activities](/skills/watchos/controls-and-live-activities) — The Apple Watch side of Live Activities
+- [extensions-widgets](/skills/integration/extensions-widgets) – Static/timeline widgets and Control Center controls (shares the widget extension)
+- [push-notifications](/skills/integration/push-notifications) – APNs auth and payload mechanics for push/broadcast updates
+- [controls-and-live-activities](/skills/watchos/controls-and-live-activities) – The Apple Watch side of Live Activities
 
 ## Resources
 

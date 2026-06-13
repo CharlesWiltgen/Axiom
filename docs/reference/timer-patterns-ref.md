@@ -37,9 +37,9 @@ This page documents the `axiom-integration` skill — the API reference Claude u
 
 ## Related
 
-- [Timer Safety Patterns](/skills/debugging/timer-patterns) — Decision trees, crash patterns, SafeDispatchTimer wrapper (use this for "which timer should I use?" questions)
-- [Energy Optimization](/skills/debugging/energy) — Timer as energy subsystem (tolerance, coalescing)
-- [Memory Debugging](/skills/debugging/memory-debugging) — Timer retain cycle as leak pattern
+- [Timer Safety Patterns](/skills/debugging/timer-patterns) – Decision trees, crash patterns, SafeDispatchTimer wrapper (use this for "which timer should I use?" questions)
+- [Energy Optimization](/skills/debugging/energy) – Timer as energy subsystem (tolerance, coalescing)
+- [Memory Debugging](/skills/debugging/memory-debugging) – Timer retain cycle as leak pattern
 
 ## Resources
 

@@ -6,14 +6,14 @@ Use Axiom's full skill catalog inside Xcode 26.3+ with Claude Agent or Codex via
 
 The same catalog available to other MCP clients:
 
-- **133 skills** — searchable iOS development guidance
-- **31 agents** — autonomous code scanning and fixing
-- **10 commands** — structured workflows
+- **133 skills** – searchable iOS development guidance
+- **31 agents** – autonomous code scanning and fixing
+- **10 commands** – structured workflows
 
 ## Prerequisites
 
 - **Xcode 26.3+** with Claude Agent or Codex enabled
-- **Node.js 18+** — check with `node --version`
+- **Node.js 18+** – check with `node --version`
 
 ## Claude Agent Setup
 
@@ -127,6 +127,6 @@ If the server starts and lists skills, the issue is in Xcode's MCP connection, n
 
 ## What's Next
 
-- [View all skills →](/skills/) — Browse the complete skill catalog
-- [MCP Server guide →](/start/mcp-install) — Setup for other MCP clients (VS Code, Claude Desktop, Cursor, Gemini CLI)
-- [Example Workflows →](/start/workflows) — Step-by-step guides for common tasks
+- [View all skills →](/skills/) – Browse the complete skill catalog
+- [MCP Server guide →](/start/mcp-install) – Setup for other MCP clients (VS Code, Claude Desktop, Cursor, Gemini CLI)
+- [Example Workflows →](/start/workflows) – Step-by-step guides for common tasks

@@ -131,7 +131,7 @@ open -a Instruments
 
 ## Documentation Scope
 
-This page documents the `axiom-performance` skill—Power Profiler workflows Claude uses when you're diagnosing battery drain in your iOS app.
+This page documents the `axiom-performance` skill — Power Profiler workflows Claude uses when you're diagnosing battery drain in your iOS app.
 
 **For symptom-based diagnosis:** See [energy-diag](/diagnostic/energy-diag) for decision trees starting from symptoms like "phone gets hot".
 
@@ -139,8 +139,8 @@ This page documents the `axiom-performance` skill—Power Profiler workflows Cla
 
 ## Related
 
-- [energy-diag](/diagnostic/energy-diag) — Symptom-based energy troubleshooting
-- [energy-ref](/reference/energy-ref) — Complete API reference with WWDC examples
+- [energy-diag](/diagnostic/energy-diag) – Symptom-based energy troubleshooting
+- [energy-ref](/reference/energy-ref) – Complete API reference with WWDC examples
 
 ## Resources
 

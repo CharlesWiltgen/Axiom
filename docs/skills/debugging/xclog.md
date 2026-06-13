@@ -23,10 +23,10 @@ Use this reference when:
 
 - **list / launch / attach / show** command reference with all flags
 - **JSON output schema** with level, subsystem, category, process, pid fields
-- **Crash diagnosis workflow** — list → launch with bounded capture → reproduce → filter errors
-- **Silent failure workflow** — subsystem-filtered capture
-- **Coverage table** — which Swift APIs are captured in each mode
-- **Error behavior** — common error messages and fixes
+- **Crash diagnosis workflow** – list → launch with bounded capture → reproduce → filter errors
+- **Silent failure workflow** – subsystem-filtered capture
+- **Coverage table** – which Swift APIs are captured in each mode
+- **Error behavior** – common error messages and fixes
 
 ## Key Concepts
 
@@ -39,7 +39,7 @@ Use this reference when:
 
 ## Related
 
-- [Xcode Debugging](/skills/debugging/xcode-debugging) — environment-first diagnostics (xclog is for runtime, xcode-debugging is for build-time)
-- [Performance Profiling](/skills/debugging/performance-profiling) — capture logs before profiling to understand what to measure
-- [LLDB Debugging](/skills/debugging/lldb) — xclog captures logs, LLDB inspects live state
-- [/axiom:console](/commands/debugging/console) — guided capture command
+- [Xcode Debugging](/skills/debugging/xcode-debugging) – environment-first diagnostics (xclog is for runtime, xcode-debugging is for build-time)
+- [Performance Profiling](/skills/debugging/performance-profiling) – capture logs before profiling to understand what to measure
+- [LLDB Debugging](/skills/debugging/lldb) – xclog captures logs, LLDB inspects live state
+- [/axiom:console](/commands/debugging/console) – guided capture command

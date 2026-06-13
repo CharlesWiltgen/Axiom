@@ -96,9 +96,9 @@ Shazam catalog matching **silently fails** without the ShazamKit App Service ena
 
 ## Related
 
-- [now-playing](/skills/integration/now-playing) — If playing matched songs via Now Playing / MusicKit
-- [camera-capture](/skills/integration/camera-capture) — If combining audio recognition with camera
-- [foundation-models](/skills/integration/foundation-models) — If using on-device AI alongside audio recognition
+- [now-playing](/skills/integration/now-playing) – If playing matched songs via Now Playing / MusicKit
+- [camera-capture](/skills/integration/camera-capture) – If combining audio recognition with camera
+- [foundation-models](/skills/integration/foundation-models) – If using on-device AI alongside audio recognition
 
 ## Resources
 

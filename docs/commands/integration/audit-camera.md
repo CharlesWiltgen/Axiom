@@ -13,13 +13,13 @@ Launches the **camera-auditor** agent to flag capture-pipeline patterns that wor
 
 ## What It Checks
 
-1. **Deprecated camera APIs** — `AVCaptureStillImageOutput`, legacy preset constants, removed delegate methods
-2. **Missing interruption handlers** — no observer for `AVCaptureSession.wasInterruptedNotification`, leading to dead sessions after a phone call
-3. **Threading violations** — session configuration off the dedicated session queue, causing crashes in `commitConfiguration()`
-4. **Permission anti-patterns** — capture started before authorization granted, or no fallback when denied
-5. **Photo/video output mismatches** — output type chosen at runtime in a way that prevents preset compatibility
+1. **Deprecated camera APIs** – `AVCaptureStillImageOutput`, legacy preset constants, removed delegate methods
+2. **Missing interruption handlers** – no observer for `AVCaptureSession.wasInterruptedNotification`, leading to dead sessions after a phone call
+3. **Threading violations** – session configuration off the dedicated session queue, causing crashes in `commitConfiguration()`
+4. **Permission anti-patterns** – capture started before authorization granted, or no fallback when denied
+5. **Photo/video output mismatches** – output type chosen at runtime in a way that prevents preset compatibility
 
 ## Related Agent
 
-- [camera-auditor](/agents/camera-auditor) — The agent that powers this command
-- [camera-capture-ref](/reference/camera-capture-ref) — Camera capture reference
+- [camera-auditor](/agents/camera-auditor) – The agent that powers this command
+- [camera-capture-ref](/reference/camera-capture-ref) – Camera capture reference

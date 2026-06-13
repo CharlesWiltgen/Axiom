@@ -38,22 +38,22 @@ Use this reference when you need:
 
 ## What's Covered
 
-- **EKEventStore** — initialization, `requestWriteOnlyAccessToEvents()` / `requestFullAccessToEvents()` / `requestFullAccessToReminders()` (iOS 17+), Info.plist keys (`NSCalendarsWriteOnlyAccessUsageDescription`, `NSCalendarsFullAccessUsageDescription`, `NSRemindersFullAccessUsageDescription`), `defaultCalendarForNewEvents`, `defaultCalendarForNewReminders()`, source enumeration
-- **Event operations** — `save(_:span:commit:)`, `remove(_:span:commit:)`, `commit()`, `reset()`, batch-save pattern
-- **Event fetching (synchronous)** — `predicateForEvents(withStart:end:calendars:)`, `events(matching:)` returns unsorted results, `compareStartDate(with:)` sort, run on background thread
-- **Reminder fetching (asynchronous)** — `predicateForReminders(in:)`, `fetchReminders(matching:completion:)` callback-style API, async-await bridging pattern
-- **Change notifications** — `.EKEventStoreChanged` notification, `refresh()` on stale objects
-- **EKEvent** — creation, `title`, `startDate`, `endDate`, `timeZone`, `location`, `notes`, `URL`, attendees, structured location, alarms, recurrence rules
-- **EKReminder** — creation, `dueDateComponents` (NOT `Date`), `completionDate`, `EKReminderPriority` raw values
-- **EKAlarm** — relative offset, absolute date, structured-location proximity (entering/leaving)
-- **EKRecurrenceRule** — `.daily`, `.weekly`, `.monthly`, `.yearly`; interval; end conditions (`EKRecurrenceEnd.occurrenceCount` or `.endDate`); `daysOfTheWeek`, `daysOfTheMonth`, `monthsOfTheYear`, `weeksOfTheYear`
-- **EKCalendar and EKSource** — `allowsContentModifications`, `cgColor`, `type`, `source`; `EKSource.sourceType` (`.local`, `.calDAV`, `.exchange`, `.subscribed`, `.mobileMe`, `.birthdays`)
-- **EventKitUI** — `EKEventEditViewController` (inherits from `UINavigationController` — do NOT embed), `EKEventViewController` (inherits from `UIViewController`), `EKCalendarChooser` (displayStyle constraints under write-only access)
-- **Virtual conference extension** — extension target setup, `EKVirtualConferenceProvider`, conference URL generation
-- **Siri Event Suggestions** — INReservation donation pattern (restaurant, flight, hotel, ticketed event); zero-permission event-in-Calendar-inbox flow
-- **Location-based reminders** — `EKStructuredLocation`, `EKAlarm.proximity`, geofencing radius
-- **EKErrorDomain codes** — `eventStoreNotAuthorized`, `noCalendar`, `noStartDate`, `noEndDate`, `datesInverted`, `calendarReadOnly`, `calendarIsImmutable`, `objectBelongsToDifferentStore`, `recurringReminderRequiresDueDate`, and others
-- **Platform availability matrix** — which APIs are available on iOS, macOS, watchOS, visionOS, and at which OS versions
+- **EKEventStore** – initialization, `requestWriteOnlyAccessToEvents()` / `requestFullAccessToEvents()` / `requestFullAccessToReminders()` (iOS 17+), Info.plist keys (`NSCalendarsWriteOnlyAccessUsageDescription`, `NSCalendarsFullAccessUsageDescription`, `NSRemindersFullAccessUsageDescription`), `defaultCalendarForNewEvents`, `defaultCalendarForNewReminders()`, source enumeration
+- **Event operations** – `save(_:span:commit:)`, `remove(_:span:commit:)`, `commit()`, `reset()`, batch-save pattern
+- **Event fetching (synchronous)** – `predicateForEvents(withStart:end:calendars:)`, `events(matching:)` returns unsorted results, `compareStartDate(with:)` sort, run on background thread
+- **Reminder fetching (asynchronous)** – `predicateForReminders(in:)`, `fetchReminders(matching:completion:)` callback-style API, async-await bridging pattern
+- **Change notifications** – `.EKEventStoreChanged` notification, `refresh()` on stale objects
+- **EKEvent** – creation, `title`, `startDate`, `endDate`, `timeZone`, `location`, `notes`, `URL`, attendees, structured location, alarms, recurrence rules
+- **EKReminder** – creation, `dueDateComponents` (NOT `Date`), `completionDate`, `EKReminderPriority` raw values
+- **EKAlarm** – relative offset, absolute date, structured-location proximity (entering/leaving)
+- **EKRecurrenceRule** – `.daily`, `.weekly`, `.monthly`, `.yearly`; interval; end conditions (`EKRecurrenceEnd.occurrenceCount` or `.endDate`); `daysOfTheWeek`, `daysOfTheMonth`, `monthsOfTheYear`, `weeksOfTheYear`
+- **EKCalendar and EKSource** – `allowsContentModifications`, `cgColor`, `type`, `source`; `EKSource.sourceType` (`.local`, `.calDAV`, `.exchange`, `.subscribed`, `.mobileMe`, `.birthdays`)
+- **EventKitUI** – `EKEventEditViewController` (inherits from `UINavigationController` — do NOT embed), `EKEventViewController` (inherits from `UIViewController`), `EKCalendarChooser` (displayStyle constraints under write-only access)
+- **Virtual conference extension** – extension target setup, `EKVirtualConferenceProvider`, conference URL generation
+- **Siri Event Suggestions** – INReservation donation pattern (restaurant, flight, hotel, ticketed event); zero-permission event-in-Calendar-inbox flow
+- **Location-based reminders** – `EKStructuredLocation`, `EKAlarm.proximity`, geofencing radius
+- **EKErrorDomain codes** – `eventStoreNotAuthorized`, `noCalendar`, `noStartDate`, `noEndDate`, `datesInverted`, `calendarReadOnly`, `calendarIsImmutable`, `objectBelongsToDifferentStore`, `recurringReminderRequiresDueDate`, and others
+- **Platform availability matrix** – which APIs are available on iOS, macOS, watchOS, visionOS, and at which OS versions
 
 ## Documentation Scope
 

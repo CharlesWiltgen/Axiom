@@ -73,11 +73,11 @@ This page documents the `controls-and-live-activities` skill in the `axiom-watch
 
 ## Related
 
-- [smart-stack-and-complications](/skills/watchos/smart-stack-and-complications) — Widget vs control vs Live Activity decision-making and RelevanceKit
-- [watch-connectivity](/skills/watchos/watch-connectivity) — Syncing control state with the paired iPhone when the watch authors the source of truth
-- [extensions-widgets](/skills/integration/extensions-widgets) — iOS-side ActivityKit setup and general App Intent patterns
-- [app-intents-ref](/reference/app-intents-ref) — App Intent protocol reference for the intents that back controls
-- [push-notifications](/skills/integration/push-notifications) — APNs token flow for pushing Live Activity updates that propagate to the watch
+- [smart-stack-and-complications](/skills/watchos/smart-stack-and-complications) – Widget vs control vs Live Activity decision-making and RelevanceKit
+- [watch-connectivity](/skills/watchos/watch-connectivity) – Syncing control state with the paired iPhone when the watch authors the source of truth
+- [extensions-widgets](/skills/integration/extensions-widgets) – iOS-side ActivityKit setup and general App Intent patterns
+- [app-intents-ref](/reference/app-intents-ref) – App Intent protocol reference for the intents that back controls
+- [push-notifications](/skills/integration/push-notifications) – APNs token flow for pushing Live Activity updates that propagate to the watch
 
 ## Resources
 

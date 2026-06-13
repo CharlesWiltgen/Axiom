@@ -37,19 +37,19 @@ Questions developers ask that this reference answers:
 
 ## What's Covered
 
-- **Toolkit setup** — Hardware requirements (32 GB Apple silicon Mac OR Linux GPU), Python 3.11 (3.12/3.13 break the `coremltools` pin in `export/`), Apple Developer Program gating, conda/venv environment, the **sealed** `export/` folder (modifying it breaks runtime compatibility)
-- **Dataset JSONL schema** — basic chat-turn `{"messages": [{"role": ..., "content": ...}]}` shape, and the tool-calling extension with required `id` / `type: "function"` / `function.name` / `function.arguments` fields on assistant turns
-- **Sample volume guidance** — Apple's explicit table (100-1,000 for basic, 5,000+ for complex; "quality over quantity")
-- **Training CLI** — `examples.train_adapter` with `--train-data`, `--eval-data`, `--epochs`, `--learning-rate`, `--batch-size`, `--checkpoint-dir`; LoRA rank-32 architecture (fixed by toolkit); target modules and trainable parameter ratio
-- **Checkpoint discipline** — retention conventions, run-config tagging, avoiding premature deletion
-- **Optional draft model** — `examples.train_draft_model` for speculative decoding; rate limit (3 compilations per app per day on non-macOS); caching implications
-- **Evaluation** — `examples.generate` CLI; the four-axis eval requirement (quantitative + human grading + larger-model grading + safety); locale-specific eval groupings (English-US, English-outside-US, PFIGSCJK: Portuguese, French, Italian, German, Spanish, Chinese-Simplified, Japanese, Korean)
-- **Export** — `export.export_fmadapter` with `--adapter-name` (underscore-only per runtime regex `/fmadapter-\w+-\w+/`), output `.fmadapter` package shape
-- **Entitlement flow** — `com.apple.developer.foundation-model-adapter` (Account Holder request via developer portal, deployment-only, not required for local training)
-- **Runtime API** — `SystemLanguageModel.Adapter` struct: `init(name:)`, `init(fileURL:)`, `compile() async throws`, `removeObsoleteAdapters() throws`, `compatibleAdapterIdentifiers(name:) -> [String]`; composition via `SystemLanguageModel(adapter:)` / `SystemLanguageModel(adapter:guardrails:)` (the whole adapter runtime is deprecated 26.4 / obsoleted 27.0 in the 27 SDK)
-- **AssetError cases** — `.compatibleAdapterNotFound(_)`, `.invalidAdapterName(_)`, `.invalidAsset(_)` with `Context` payload and `errorDescription`
-- **Compatibility matrix** — per-base-model-version pinning; system-model OS to toolkit version mapping; per-OS variant strategy (`fmadapter-{name}-base26_0`, `fmadapter-{name}-base26_1`, etc.); install-base coverage decision table
-- **End-to-end pattern** — build-time CLI sequence (author dataset → train → train draft → eval → export → package for Background Assets) plus runtime Swift example wiring `removeObsoleteAdapters() → compatibleAdapterIdentifiers(name:) → ensureLocalAvailability → init(name:) → compile() → SystemLanguageModel(adapter:) → LanguageModelSession`
+- **Toolkit setup** – Hardware requirements (32 GB Apple silicon Mac OR Linux GPU), Python 3.11 (3.12/3.13 break the `coremltools` pin in `export/`), Apple Developer Program gating, conda/venv environment, the **sealed** `export/` folder (modifying it breaks runtime compatibility)
+- **Dataset JSONL schema** – basic chat-turn `{"messages": [{"role": ..., "content": ...}]}` shape, and the tool-calling extension with required `id` / `type: "function"` / `function.name` / `function.arguments` fields on assistant turns
+- **Sample volume guidance** – Apple's explicit table (100-1,000 for basic, 5,000+ for complex; "quality over quantity")
+- **Training CLI** – `examples.train_adapter` with `--train-data`, `--eval-data`, `--epochs`, `--learning-rate`, `--batch-size`, `--checkpoint-dir`; LoRA rank-32 architecture (fixed by toolkit); target modules and trainable parameter ratio
+- **Checkpoint discipline** – retention conventions, run-config tagging, avoiding premature deletion
+- **Optional draft model** – `examples.train_draft_model` for speculative decoding; rate limit (3 compilations per app per day on non-macOS); caching implications
+- **Evaluation** – `examples.generate` CLI; the four-axis eval requirement (quantitative + human grading + larger-model grading + safety); locale-specific eval groupings (English-US, English-outside-US, PFIGSCJK: Portuguese, French, Italian, German, Spanish, Chinese-Simplified, Japanese, Korean)
+- **Export** – `export.export_fmadapter` with `--adapter-name` (underscore-only per runtime regex `/fmadapter-\w+-\w+/`), output `.fmadapter` package shape
+- **Entitlement flow** – `com.apple.developer.foundation-model-adapter` (Account Holder request via developer portal, deployment-only, not required for local training)
+- **Runtime API** – `SystemLanguageModel.Adapter` struct: `init(name:)`, `init(fileURL:)`, `compile() async throws`, `removeObsoleteAdapters() throws`, `compatibleAdapterIdentifiers(name:) -> [String]`; composition via `SystemLanguageModel(adapter:)` / `SystemLanguageModel(adapter:guardrails:)` (the whole adapter runtime is deprecated 26.4 / obsoleted 27.0 in the 27 SDK)
+- **AssetError cases** – `.compatibleAdapterNotFound(_)`, `.invalidAdapterName(_)`, `.invalidAsset(_)` with `Context` payload and `errorDescription`
+- **Compatibility matrix** – per-base-model-version pinning; system-model OS to toolkit version mapping; per-OS variant strategy (`fmadapter-{name}-base26_0`, `fmadapter-{name}-base26_1`, etc.); install-base coverage decision table
+- **End-to-end pattern** – build-time CLI sequence (author dataset → train → train draft → eval → export → package for Background Assets) plus runtime Swift example wiring `removeObsoleteAdapters() → compatibleAdapterIdentifiers(name:) → ensureLocalAvailability → init(name:) → compile() → SystemLanguageModel(adapter:) → LanguageModelSession`
 
 ## Documentation Scope
 

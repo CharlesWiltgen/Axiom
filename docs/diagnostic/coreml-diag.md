@@ -85,8 +85,8 @@ config = OpPalettizerConfig(
 
 ## Related
 
-- [CoreML Skill](/skills/machine-learning/coreml) — implementation patterns once you've diagnosed the issue
-- [CoreML API Reference](/reference/coreml-ref) — API details for the fixes suggested here
+- [CoreML Skill](/skills/machine-learning/coreml) – implementation patterns once you've diagnosed the issue
+- [CoreML API Reference](/reference/coreml-ref) – API details for the fixes suggested here
 
 ### Apple Documentation
 

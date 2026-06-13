@@ -127,7 +127,7 @@ func listenForTransactions() -> Task<Void, Never> {
 
 ## Documentation Scope
 
-This page documents the `axiom-integration` skill—StoreKit 2 implementation patterns Claude uses when you're adding purchase functionality to your app.
+This page documents the `axiom-integration` skill — StoreKit 2 implementation patterns Claude uses when you're adding purchase functionality to your app.
 
 **For comprehensive API reference:** See [storekit-ref](/reference/storekit-ref) for complete API coverage, edge cases, and server-side patterns.
 
@@ -135,9 +135,9 @@ This page documents the `axiom-integration` skill—StoreKit 2 implementation pa
 
 ## Related
 
-- [storekit-ref](/reference/storekit-ref) — Complete StoreKit 2 API reference
-- [iap-auditor](/agents/iap-auditor) — Automated scanning for IAP issues
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Async patterns for purchase flows
+- [storekit-ref](/reference/storekit-ref) – Complete StoreKit 2 API reference
+- [iap-auditor](/agents/iap-auditor) – Automated scanning for IAP issues
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns for purchase flows
 
 ## Resources
 

@@ -77,7 +77,7 @@ let navSession = CLServiceSession(
 
 ## Documentation Scope
 
-This page documents the `axiom-location` skill—implementation patterns and decision frameworks Claude uses when helping you design location features.
+This page documents the `axiom-location` skill — implementation patterns and decision frameworks Claude uses when helping you design location features.
 
 **For API reference:** See [core-location-ref](/reference/core-location-ref) for CLLocationUpdate, CLMonitor, CLServiceSession APIs.
 
@@ -85,9 +85,9 @@ This page documents the `axiom-location` skill—implementation patterns and dec
 
 ## Related
 
-- [core-location-ref](/reference/core-location-ref) — Complete API reference for modern Core Location
-- [core-location-diag](/diagnostic/core-location-diag) — Symptom-based troubleshooting
-- [energy](/skills/debugging/energy) — Location as battery subsystem
+- [core-location-ref](/reference/core-location-ref) – Complete API reference for modern Core Location
+- [core-location-diag](/diagnostic/core-location-diag) – Symptom-based troubleshooting
+- [energy](/skills/debugging/energy) – Location as battery subsystem
 
 ## Resources
 

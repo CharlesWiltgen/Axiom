@@ -46,10 +46,10 @@ This page documents the `axiom-networking` (networking-migration reference) -- m
 
 ## Related
 
-- [networking](/skills/integration/networking) — Modern networking patterns and architecture decisions
-- [networking-legacy](/skills/integration/networking-legacy) — NWConnection patterns for iOS 12-18
-- [network-framework-ref](/reference/network-framework-ref) — Complete Network.framework API reference
-- [networking-diag](/diagnostic/networking-diag) — Connection failure troubleshooting
+- [networking](/skills/integration/networking) – Modern networking patterns and architecture decisions
+- [networking-legacy](/skills/integration/networking-legacy) – NWConnection patterns for iOS 12-18
+- [network-framework-ref](/reference/network-framework-ref) – Complete Network.framework API reference
+- [networking-diag](/diagnostic/networking-diag) – Connection failure troubleshooting
 
 ## Resources
 

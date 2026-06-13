@@ -110,14 +110,14 @@ The four Axiom-bundled CLIs (`xclog`, `xcprof`, `xcsym`, `xcui`) have their own 
 
 All reference skills are reviewed against 4 criteria:
 
-1. **Accuracy** — Every claim cited to official sources, code tested
-2. **Completeness** — 80%+ coverage, edge cases documented, troubleshooting sections
-3. **Clarity** — Examples first, scannable structure, jargon defined
-4. **Practical Value** — Copy-paste ready, expert checklists, real-world impact
+1. **Accuracy** – Every claim cited to official sources, code tested
+2. **Completeness** – 80%+ coverage, edge cases documented, troubleshooting sections
+3. **Clarity** – Examples first, scannable structure, jargon defined
+4. **Practical Value** – Copy-paste ready, expert checklists, real-world impact
 
 ## Related Resources
 
-- [Diagnostic](/diagnostic/) — Systematic diagnostics with mandatory workflows
-- [Skills](/skills/) — Discipline-enforcing TDD-tested workflows
-- [Commands](/commands/) — Quick automated scans
+- [Diagnostic](/diagnostic/) – Systematic diagnostics with mandatory workflows
+- [Skills](/skills/) – Discipline-enforcing TDD-tested workflows
+- [Commands](/commands/) – Quick automated scans
 - [WWDC 2025 Sessions](https://developer.apple.com/videos/wwdc2025)

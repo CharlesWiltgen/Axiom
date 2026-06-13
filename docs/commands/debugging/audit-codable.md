@@ -11,18 +11,18 @@ Scan for Codable anti-patterns and JSON serialization issues that cause silent d
 ## What It Checks
 
 ### High-Severity Anti-Patterns
-- **Manual JSON string building** — Injection risk, escaping bugs, no type safety
-- **try? swallowing DecodingError** — Silent failures, data loss, debugging nightmares
-- **String interpolation in JSON** — Injection vulnerabilities, breaks on special characters
+- **Manual JSON string building** – Injection risk, escaping bugs, no type safety
+- **try? swallowing DecodingError** – Silent failures, data loss, debugging nightmares
+- **String interpolation in JSON** – Injection vulnerabilities, breaks on special characters
 
 ### Medium-Severity Issues
-- **JSONSerialization instead of Codable** — Legacy pattern, 3x more boilerplate, harder to maintain
-- **Date properties without explicit strategy** — Timezone bugs, intermittent failures
-- **DateFormatter without locale/timezone** — Locale-dependent parsing failures
-- **Optional properties to avoid decode errors** — Masks structural problems
+- **JSONSerialization instead of Codable** – Legacy pattern, 3x more boilerplate, harder to maintain
+- **Date properties without explicit strategy** – Timezone bugs, intermittent failures
+- **DateFormatter without locale/timezone** – Locale-dependent parsing failures
+- **Optional properties to avoid decode errors** – Masks structural problems
 
 ### Low-Severity Issues
-- **Missing error context in catch blocks** — No debugging information when decoding fails
+- **Missing error context in catch blocks** – No debugging information when decoding fails
 
 ## Example Output
 
@@ -91,14 +91,14 @@ Catch Codable anti-patterns early.
 
 ## Related Skills
 
-- **codable** — Comprehensive Codable patterns and anti-patterns guide
-- **swift-concurrency** — Codable + Sendable patterns for async code
-- **networking** — Network.framework Coder protocol
-- **swiftdata** — @Model Codable conformance for CloudKit
+- **codable** – Comprehensive Codable patterns and anti-patterns guide
+- **swift-concurrency** – Codable + Sendable patterns for async code
+- **networking** – Network.framework Coder protocol
+- **swiftdata** – @Model Codable conformance for CloudKit
 
 ## Related Agents
 
-- **codable-auditor** — Autonomous agent that runs this audit (can be triggered with natural language: "check my Codable code")
+- **codable-auditor** – Autonomous agent that runs this audit (can be triggered with natural language: "check my Codable code")
 
 ## Why This Command Matters
 

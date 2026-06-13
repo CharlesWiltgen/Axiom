@@ -18,13 +18,13 @@ Implements complete StoreKit 2 IAP solution following testing-first workflow wit
 
 ## What It Implements
 
-1. **StoreKit Configuration** — .storekit file for local testing
-2. **StoreManager** — Centralized purchase management
-3. **Transaction Listener** — Handles renewals, Family Sharing, offer codes
-4. **Transaction Verification** — Secure verification against fraud
-5. **Purchase Flows** — Buy, restore, subscription management
-6. **Unit Tests** — Comprehensive test coverage
-7. **Testing Instructions** — How to test before App Store submission
+1. **StoreKit Configuration** – .storekit file for local testing
+2. **StoreManager** – Centralized purchase management
+3. **Transaction Listener** – Handles renewals, Family Sharing, offer codes
+4. **Transaction Verification** – Secure verification against fraud
+5. **Purchase Flows** – Buy, restore, subscription management
+6. **Unit Tests** – Comprehensive test coverage
+7. **Testing Instructions** – How to test before App Store submission
 
 ## Implementation Phases
 

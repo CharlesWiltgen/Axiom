@@ -9,7 +9,7 @@ Systematic diagnostics for file storage issues — files disappearing, access er
 
 ## Overview
 
-90% of file storage problems stem from wrong storage location, misunderstood file protection levels, or missing backup exclusions—not iOS file system bugs.
+90% of file storage problems stem from wrong storage location, misunderstood file protection levels, or missing backup exclusions — not iOS file system bugs.
 
 ## Red Flags
 

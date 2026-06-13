@@ -71,10 +71,10 @@ This page documents the `workoutkit` skill in the `axiom-health` suite. The skil
 
 ## Related
 
-- [workouts](/skills/health/workouts) — Complementary live-tracking API for workouts that run inside your own app
-- [authorization-and-privacy](/skills/health/authorization-and-privacy) — HealthKit permissions the resulting `HKWorkout` will need; WorkoutKit scheduler authorization is separate
-- [queries](/skills/health/queries) — Reading the `HKWorkout` produced by the Workout app after a plan runs
-- [smart-stack-and-complications](/skills/watchos/smart-stack-and-complications) — Watch surfaces where scheduled workouts may be promoted
+- [workouts](/skills/health/workouts) – Complementary live-tracking API for workouts that run inside your own app
+- [authorization-and-privacy](/skills/health/authorization-and-privacy) – HealthKit permissions the resulting `HKWorkout` will need; WorkoutKit scheduler authorization is separate
+- [queries](/skills/health/queries) – Reading the `HKWorkout` produced by the Workout app after a plan runs
+- [smart-stack-and-complications](/skills/watchos/smart-stack-and-complications) – Watch surfaces where scheduled workouts may be promoted
 
 ## Resources
 

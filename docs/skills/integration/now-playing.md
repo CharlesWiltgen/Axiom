@@ -87,7 +87,7 @@ Questions you can ask Claude that will draw from this skill:
 - Always pair with static `MPMediaItemPropertyArtwork` for iOS 18-25 + system fallback
 
 ### NowPlaying Framework (iOS 27+)
-- `import NowPlaying` — Swift-native successor to the MediaPlayer dictionary/command APIs
+- `import NowPlaying` – Swift-native successor to the MediaPlayer dictionary/command APIs
 - Your `@Observable` model conforms to `MediaSessionRepresentable`; the system observes it (no manual refresh)
 - Strongly typed content (`MusicContent`, `PodcastContent`, `MovieContent`, …) instead of a string-keyed dictionary
 - Declarative `[MediaCommand]` with `async` closures instead of per-command `MPRemoteCommandCenter` targets
@@ -141,7 +141,7 @@ flowchart TD
 
 ## Documentation Scope
 
-This page documents the `axiom-media` skill—MediaPlayer framework patterns Claude uses when you're implementing or debugging Lock Screen and Control Center integration for audio/video apps.
+This page documents the `axiom-media` skill — MediaPlayer framework patterns Claude uses when you're implementing or debugging Lock Screen and Control Center integration for audio/video apps.
 
 **For AVAudioSession details:** See [avfoundation-ref](/reference/avfoundation-ref) for audio session configuration beyond Now Playing.
 
@@ -149,9 +149,9 @@ This page documents the `axiom-media` skill—MediaPlayer framework patterns Cla
 
 ## Related
 
-- [avfoundation-ref](/reference/avfoundation-ref) — AVAudioSession configuration, spatial audio, ASAF/APAC
-- [memory-debugging](/skills/debugging/memory-debugging) — Retain cycle diagnosis in closure-based command handlers
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — @MainActor patterns for async artwork loading
+- [avfoundation-ref](/reference/avfoundation-ref) – AVAudioSession configuration, spatial audio, ASAF/APAC
+- [memory-debugging](/skills/debugging/memory-debugging) – Retain cycle diagnosis in closure-based command handlers
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – @MainActor patterns for async artwork loading
 
 ## Resources
 

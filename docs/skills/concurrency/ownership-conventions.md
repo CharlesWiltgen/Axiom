@@ -77,8 +77,8 @@ struct FileHandle: ~Copyable {
 
 ## Related Skills
 
-- [Swift Performance](/skills/concurrency/swift-performance) — Value type optimization
-- [Swift Concurrency](./swift-concurrency) — Sendable types
+- [Swift Performance](/skills/concurrency/swift-performance) – Value type optimization
+- [Swift Concurrency](./swift-concurrency) – Sendable types
 
 ## Resources
 

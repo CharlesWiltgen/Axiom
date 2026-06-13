@@ -144,7 +144,7 @@ Text("Caption").font(.caption)          // 12pt
 
 ## Documentation Scope
 
-This page documents the `axiom-design` reference skill—comprehensive HIG coverage Claude uses when you need specific design values, color names, or implementation details.
+This page documents the `axiom-design` reference skill — comprehensive HIG coverage Claude uses when you need specific design values, color names, or implementation details.
 
 **For quick decisions:** See [hig](/skills/ui-design/hig) for decision frameworks and quick lookups.
 
@@ -152,9 +152,9 @@ This page documents the `axiom-design` reference skill—comprehensive HIG cover
 
 ## Related
 
-- [hig](/skills/ui-design/hig) — Quick decision frameworks
-- [liquid-glass](/skills/ui-design/liquid-glass) — iOS 26 Liquid Glass material design
-- [accessibility-auditor](/agents/accessibility-auditor) — Automated accessibility scanning
+- [hig](/skills/ui-design/hig) – Quick decision frameworks
+- [liquid-glass](/skills/ui-design/liquid-glass) – iOS 26 Liquid Glass material design
+- [accessibility-auditor](/agents/accessibility-auditor) – Automated accessibility scanning
 
 ## Resources
 

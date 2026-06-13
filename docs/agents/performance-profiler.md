@@ -17,11 +17,11 @@ Automated, headless performance profiling built on the `xcprof` CLI — records 
 
 ## What It Does
 
-1. **Check the environment** — `xcprof doctor` verifies xctrace; the agent records into a sandboxed `XCPROF_TRACE_ROOT`
-2. **Detect targets** — Finds booted simulators and running apps
-3. **Record** — `xcprof record` with a preset, bounded by `--max-duration` and gated (launch and system-wide capture require explicit opt-in)
-4. **Analyze** — `xcprof analyze --json` resolves back-references, filters system frames, and attributes work to user code
-5. **Report honestly** — Surfaces per-family status (`available` / `partial` / `not_exportable` / `not_present`) so an unmeasured family is never reported as clean
+1. **Check the environment** – `xcprof doctor` verifies xctrace; the agent records into a sandboxed `XCPROF_TRACE_ROOT`
+2. **Detect targets** – Finds booted simulators and running apps
+3. **Record** – `xcprof record` with a preset, bounded by `--max-duration` and gated (launch and system-wide capture require explicit opt-in)
+4. **Analyze** – `xcprof analyze --json` resolves back-references, filters system frames, and attributes work to user code
+5. **Report honestly** – Surfaces per-family status (`available` / `partial` / `not_exportable` / `not_present`) so an unmeasured family is never reported as clean
 
 ## Recording Presets
 
@@ -42,7 +42,7 @@ Unlike a grep-the-XML pipeline that returns empty when a family wasn't measured,
 
 ## Related
 
-- **xcprof-ref** — The `xcprof` CLI the agent drives (record/analyze/doctor, presets, security gates)
-- **performance-profiling** — Manual Instruments decision trees and workflows
-- **hang-diagnostics** — Confirm main-thread hangs the CPU signal only flags
-- **xctrace-ref** — Raw `xctrace` CLI (fallback reference)
+- **xcprof-ref** – The `xcprof` CLI the agent drives (record/analyze/doctor, presets, security gates)
+- **performance-profiling** – Manual Instruments decision trees and workflows
+- **hang-diagnostics** – Confirm main-thread hangs the CPU signal only flags
+- **xctrace-ref** – Raw `xctrace` CLI (fallback reference)

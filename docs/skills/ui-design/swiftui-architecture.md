@@ -147,7 +147,7 @@ flowchart TD
 
 ## Documentation Scope
 
-This page documents the `axiom-swiftui-architecture` skill—architecture patterns Claude uses when you're organizing SwiftUI code, extracting logic from views, or choosing between patterns.
+This page documents the `axiom-swiftui-architecture` skill — architecture patterns Claude uses when you're organizing SwiftUI code, extracting logic from views, or choosing between patterns.
 
 **For navigation:** See [swiftui-nav](/skills/ui-design/swiftui-nav) for NavigationStack and deep linking patterns.
 
@@ -155,9 +155,9 @@ This page documents the `axiom-swiftui-architecture` skill—architecture patter
 
 ## Related
 
-- [swiftui-nav](/skills/ui-design/swiftui-nav) — Navigation patterns (NavigationStack, deep linking)
-- [app-composition](/skills/ui-design/app-composition) — App-level patterns (@main, root switching)
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Async patterns for models
+- [swiftui-nav](/skills/ui-design/swiftui-nav) – Navigation patterns (NavigationStack, deep linking)
+- [app-composition](/skills/ui-design/app-composition) – App-level patterns (@main, root switching)
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns for models
 
 ## Resources
 

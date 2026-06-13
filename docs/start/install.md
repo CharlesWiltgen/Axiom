@@ -79,5 +79,5 @@ Axiom skills route automatically based on iOS-specific keywords in your question
 
 ## Also Available
 
-- **[MCP Server](/start/mcp-install)** — Use Axiom in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
-- **[Xcode Integration](/start/xcode-setup)** — Direct Xcode MCP bridge setup
+- **[MCP Server](/start/mcp-install)** – Use Axiom in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
+- **[Xcode Integration](/start/xcode-setup)** – Direct Xcode MCP bridge setup

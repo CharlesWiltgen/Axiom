@@ -100,7 +100,7 @@ enum MigrationPlan: SchemaMigrationPlan {
 
 ## Documentation Scope
 
-This page documents the `axiom-data` diagnostic skill—systematic troubleshooting Claude uses when SwiftData migrations fail.
+This page documents the `axiom-data` diagnostic skill — systematic troubleshooting Claude uses when SwiftData migrations fail.
 
 **For migration patterns:** See [swiftdata-migration](/skills/persistence/swiftdata-migration) for implementation guidance.
 
@@ -108,9 +108,9 @@ This page documents the `axiom-data` diagnostic skill—systematic troubleshooti
 
 ## Related
 
-- [swiftdata-migration](/skills/persistence/swiftdata-migration) — Custom migration patterns
-- [swiftdata](/skills/persistence/swiftdata) — SwiftData fundamentals
-- [database-migration](/skills/persistence/database-migration) — General migration safety
+- [swiftdata-migration](/skills/persistence/swiftdata-migration) – Custom migration patterns
+- [swiftdata](/skills/persistence/swiftdata) – SwiftData fundamentals
+- [database-migration](/skills/persistence/database-migration) – General migration safety
 
 ## Resources
 

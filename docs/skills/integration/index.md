@@ -52,10 +52,10 @@ flowchart LR
 ### [Foundation Models](./foundation-models)
 
 On-device AI with Apple's Foundation Models framework (iOS 26+):
-- **LanguageModelSession** — Text generation and conversations
-- **@Generable** — Structured output with Swift types
-- **Streaming** — Progressive response display
-- **Tool calling** — Extend model capabilities
+- **LanguageModelSession** – Text generation and conversations
+- **@Generable** – Structured output with Swift types
+- **Streaming** – Progressive response display
+- **Tool calling** – Extend model capabilities
 
 **When to use** Implementing on-device AI features, structured output, preventing context overflow
 
@@ -66,10 +66,10 @@ On-device AI with Apple's Foundation Models framework (iOS 26+):
 ### [Background Processing](./background-processing)
 
 BGTaskScheduler implementation and debugging:
-- **BGAppRefreshTask** — Keep content fresh (~30s)
-- **BGProcessingTask** — Maintenance work (overnight, charging)
-- **BGContinuedProcessingTask** — User-initiated continuation (iOS 26+)
-- **Debugging** — "Task never runs" decision trees, LLDB commands
+- **BGAppRefreshTask** – Keep content fresh (~30s)
+- **BGProcessingTask** – Maintenance work (overnight, charging)
+- **BGContinuedProcessingTask** – User-initiated continuation (iOS 26+)
+- **Debugging** – "Task never runs" decision trees, LLDB commands
 
 **When to use** Implementing background tasks, debugging execution issues, understanding scheduling factors
 
@@ -80,11 +80,11 @@ BGTaskScheduler implementation and debugging:
 ### [ShazamKit](./shazamkit)
 
 Audio recognition and custom audio matching:
-- **Song identification** — Recognize songs via Shazam catalog with SHManagedSession (iOS 17+)
-- **Custom catalogs** — Match against your own audio (podcasts, TV, lessons)
-- **Second-screen sync** — Timed media items for content synchronized to audio
-- **Library management** — SHLibrary for reading, adding, removing recognized songs
-- **Signature generation** — From AVAsset, audio buffers, or Shazam CLI at scale
+- **Song identification** – Recognize songs via Shazam catalog with SHManagedSession (iOS 17+)
+- **Custom catalogs** – Match against your own audio (podcasts, TV, lessons)
+- **Second-screen sync** – Timed media items for content synchronized to audio
+- **Library management** – SHLibrary for reading, adding, removing recognized songs
+- **Signature generation** – From AVAsset, audio buffers, or Shazam CLI at scale
 
 **When to use** Adding song recognition, building audio-synced experiences, creating custom audio catalogs, managing Shazam library
 
@@ -95,12 +95,12 @@ Audio recognition and custom audio matching:
 ### [Push Notifications](./push-notifications)
 
 Remote and local notification implementation for iOS:
-- **Permission flow** — Standard, provisional, contextual timing
-- **Token management** — APNs device token lifecycle, server sync
-- **Payload design** — Alert, silent, localized, custom data
-- **Rich notifications** — Service extensions, media attachments
-- **Communication notifications** — Avatars, Focus integration (iOS 15+)
-- **Live Activity push** — Push-start, push-update, push-end transport
+- **Permission flow** – Standard, provisional, contextual timing
+- **Token management** – APNs device token lifecycle, server sync
+- **Payload design** – Alert, silent, localized, custom data
+- **Rich notifications** – Service extensions, media attachments
+- **Communication notifications** – Avatars, Focus integration (iOS 15+)
+- **Live Activity push** – Push-start, push-update, push-end transport
 
 **When to use** Setting up APNs, designing notification payloads, implementing actionable or rich notifications, debugging delivery issues
 
@@ -111,10 +111,10 @@ Remote and local notification implementation for iOS:
 ### [Networking](./networking)
 
 Network.framework patterns for custom protocols:
-- **NWConnection** — iOS 12-18 completion-based API
-- **NetworkConnection** — iOS 26+ async/await API
-- **TLV Framing** — Message boundaries
-- **Service Discovery** — Bonjour and Wi-Fi Aware
+- **NWConnection** – iOS 12-18 completion-based API
+- **NetworkConnection** – iOS 26+ async/await API
+- **TLV Framing** – Message boundaries
+- **Service Discovery** – Bonjour and Wi-Fi Aware
 
 **When to use** UDP/TCP connections, peer-to-peer, custom protocols (NOT HTTP — use URLSession)
 
@@ -125,10 +125,10 @@ Network.framework patterns for custom protocols:
 ### [Core Location](./core-location)
 
 Implementation patterns for location services:
-- **Authorization Strategy** — When In Use vs Always, progressive upgrade
-- **Monitoring Approach** — CLLocationUpdate, CLMonitor, significant-change
-- **Background Location** — CLBackgroundActivitySession, relaunch recovery
-- **Geofencing** — 20-condition limit, radius requirements
+- **Authorization Strategy** – When In Use vs Always, progressive upgrade
+- **Monitoring Approach** – CLLocationUpdate, CLMonitor, significant-change
+- **Background Location** – CLBackgroundActivitySession, relaunch recovery
+- **Geofencing** – 20-condition limit, radius requirements
 
 **When to use** Implementing location features, choosing authorization strategy, debugging background location, geofencing
 
@@ -139,10 +139,10 @@ Implementation patterns for location services:
 ### [MapKit](./mapkit)
 
 Map implementation patterns for SwiftUI and UIKit:
-- **SwiftUI Map vs MKMapView** — Decision tree based on requirements
-- **Annotation Strategy** — Direct, clustering, or server-side by count
-- **Search & Directions** — MKLocalSearch, MKLocalSearchCompleter, MKDirections
-- **8 Anti-Patterns** — Common mistakes with time costs
+- **SwiftUI Map vs MKMapView** – Decision tree based on requirements
+- **Annotation Strategy** – Direct, clustering, or server-side by count
+- **Search & Directions** – MKLocalSearch, MKLocalSearchCompleter, MKDirections
+- **8 Anti-Patterns** – Common mistakes with time costs
 
 **When to use** Adding maps, implementing annotations, search, directions, debugging map issues
 
@@ -153,11 +153,11 @@ Map implementation patterns for SwiftUI and UIKit:
 ### [App Intents Integration](/reference/app-intents-ref)
 
 Comprehensive guide to the App Intents framework for exposing app functionality to:
-- **Siri & Apple Intelligence** — Voice commands and intelligent automation
-- **Shortcuts** — User-created workflows and automations
-- **Spotlight** — System-wide search integration
-- **Focus Filters** — Context-aware content filtering
-- **Widgets & Live Activities** — Dynamic system UI
+- **Siri & Apple Intelligence** – Voice commands and intelligent automation
+- **Shortcuts** – User-created workflows and automations
+- **Spotlight** – System-wide search integration
+- **Focus Filters** – Context-aware content filtering
+- **Widgets & Live Activities** – Dynamic system UI
 
 #### Key Features
 - Three building blocks: AppIntent, AppEntity, AppEnum
@@ -189,32 +189,32 @@ Direct access to Apple's official for-LLM markdown documentation bundled in Xcod
 ## Integration Categories
 
 ### System Services
-- **Siri & Voice Control** — Natural language command handling
-- **Apple Intelligence** — AI-powered automation and reasoning
-- **Shortcuts** — Custom workflow creation
-- **Spotlight** — System-wide search
-- **Background Processing** — BGTaskScheduler, background URLSession
+- **Siri & Voice Control** – Natural language command handling
+- **Apple Intelligence** – AI-powered automation and reasoning
+- **Shortcuts** – Custom workflow creation
+- **Spotlight** – System-wide search
+- **Background Processing** – BGTaskScheduler, background URLSession
 
 ### Context & Personalization
-- **Focus Filters** — Context-aware content filtering
-- **Live Activities** — Dynamic Lock Screen updates
-- **Widgets** — Home/Lock Screen content
+- **Focus Filters** – Context-aware content filtering
+- **Live Activities** – Dynamic Lock Screen updates
+- **Widgets** – Home/Lock Screen content
 
 ### Platform-Specific
-- **Action Button** — Apple Watch Ultra quick actions
-- **Mac Automations** — Automated workflows on macOS
-- **Spotlight on Mac** — Desktop search integration
+- **Action Button** – Apple Watch Ultra quick actions
+- **Mac Automations** – Automated workflows on macOS
+- **Spotlight on Mac** – Desktop search integration
 
 ---
 
 ## Getting Started
 
-1. **Define your app's capabilities** — What actions should users be able to perform?
-2. **Choose building blocks** — AppIntent for actions, AppEntity for content
-3. **Implement intents** — Create AppIntent conforming types
-4. **Test with Shortcuts** — Verify intent appears and executes correctly
-5. **Add to Siri** — Test voice command handling
-6. **Integrate with Apple Intelligence** — Enable AI-powered automation
+1. **Define your app's capabilities** – What actions should users be able to perform?
+2. **Choose building blocks** – AppIntent for actions, AppEntity for content
+3. **Implement intents** – Create AppIntent conforming types
+4. **Test with Shortcuts** – Verify intent appears and executes correctly
+5. **Add to Siri** – Test voice command handling
+6. **Integrate with Apple Intelligence** – Enable AI-powered automation
 
 ---
 
@@ -229,9 +229,9 @@ Methodology for researching Apple frameworks using WWDC transcripts and sosumi.a
 ### [Extensions & Widgets](./extensions-widgets)
 
 WidgetKit, Live Activities, Control Center widgets for iOS 14-18+:
-- **Standard widgets** — Timeline providers, intent configuration
-- **Interactive widgets** — iOS 17+ button/toggle support
-- **Live Activities** — Dynamic Island and Lock Screen
+- **Standard widgets** – Timeline providers, intent configuration
+- **Interactive widgets** – iOS 17+ button/toggle support
+- **Live Activities** – Dynamic Island and Lock Screen
 
 **When to use** Implementing widgets, Live Activities, Control Center widgets
 
@@ -242,9 +242,9 @@ WidgetKit, Live Activities, Control Center widgets for iOS 14-18+:
 ### [Camera Capture](./camera-capture)
 
 AVCaptureSession, photo/video recording, camera preview:
-- **Session configuration** — Inputs, outputs, presets
-- **Photo capture** — Still images, HDR, depth
-- **Video recording** — Movie file output, frame processing
+- **Session configuration** – Inputs, outputs, presets
+- **Photo capture** – Still images, HDR, depth
+- **Video recording** – Movie file output, frame processing
 
 **When to use** Adding camera features, capturing photos/video
 
@@ -253,9 +253,9 @@ AVCaptureSession, photo/video recording, camera preview:
 ### [Photo Library](./photo-library)
 
 PHPicker and PhotosPicker for photo selection:
-- **PHPickerViewController** — UIKit photo picker
-- **PhotosPicker** — SwiftUI photo picker (iOS 16+)
-- **PHAsset** — Photo library access and management
+- **PHPickerViewController** – UIKit photo picker
+- **PhotosPicker** – SwiftUI photo picker (iOS 16+)
+- **PHAsset** – Photo library access and management
 
 **When to use** Selecting photos from library, managing photo assets
 
@@ -264,9 +264,9 @@ PHPicker and PhotosPicker for photo selection:
 ### [Now Playing](./now-playing)
 
 MPNowPlayingInfoCenter for media apps:
-- **Info display** — Title, artist, artwork on Lock Screen
-- **Remote commands** — Play, pause, skip controls
-- **MPNowPlayingSession** — Automatic management (iOS 16+)
+- **Info display** – Title, artist, artwork on Lock Screen
+- **Remote commands** – Play, pause, skip controls
+- **MPNowPlayingSession** – Automatic management (iOS 16+)
 
 **When to use** Audio/video apps needing Lock Screen controls and Now Playing display
 
@@ -275,9 +275,9 @@ MPNowPlayingInfoCenter for media apps:
 ### [In-App Purchases](./in-app-purchases)
 
 StoreKit 2 implementation for consumables, subscriptions, and non-consumables:
-- **Product configuration** — Store setup, pricing
-- **Transaction handling** — Purchase flow, verification
-- **Subscription management** — Renewal, upgrade/downgrade
+- **Product configuration** – Store setup, pricing
+- **Transaction handling** – Purchase flow, verification
+- **Subscription management** – Renewal, upgrade/downgrade
 
 **When to use** Adding purchases, subscriptions, or restoring transactions
 

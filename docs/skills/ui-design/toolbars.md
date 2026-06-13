@@ -96,11 +96,11 @@ The `.primaryAction` placement adapts across platforms — top-trailing on iOS a
 
 ## Related
 
-- [swiftui-nav](/skills/ui-design/swiftui-nav) — `.toolbar` requires a navigation container; this skill covers the NavigationStack / NavigationSplitView it attaches to
-- [swiftui-architecture](/skills/ui-design/swiftui-architecture) — view composition patterns that affect where toolbar modifiers belong
-- [liquid-glass](/skills/ui-design/liquid-glass) — iOS 26 changes how toolbar backgrounds render; consult before customizing background materials
-- [windows](/skills/macos/windows) — macOS `windowToolbarStyle`, MenuBarExtra, and window-toolbar integration
-- [hig](/skills/ui-design/hig) — broader Human Interface Guidelines context for toolbar action prioritization
+- [swiftui-nav](/skills/ui-design/swiftui-nav) – `.toolbar` requires a navigation container; this skill covers the NavigationStack / NavigationSplitView it attaches to
+- [swiftui-architecture](/skills/ui-design/swiftui-architecture) – view composition patterns that affect where toolbar modifiers belong
+- [liquid-glass](/skills/ui-design/liquid-glass) – iOS 26 changes how toolbar backgrounds render; consult before customizing background materials
+- [windows](/skills/macos/windows) – macOS `windowToolbarStyle`, MenuBarExtra, and window-toolbar integration
+- [hig](/skills/ui-design/hig) – broader Human Interface Guidelines context for toolbar action prioritization
 
 ## Resources
 

@@ -73,10 +73,10 @@ This page documents the `fundamentals` skill in the `axiom-health` suite. The sk
 
 ## Related
 
-- [authorization-and-privacy](/skills/health/authorization-and-privacy) — Required follow-up before any read or write flow; covers the permission model built on top of these data types
-- [queries](/skills/health/queries) — How to actually read the quantity, category, and workout samples described here
-- [sync-and-background](/skills/health/sync-and-background) — Long-running query lifecycles referenced in the threading section
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — General Swift 6 actor isolation rules that apply to HealthKit completion handlers
+- [authorization-and-privacy](/skills/health/authorization-and-privacy) – Required follow-up before any read or write flow; covers the permission model built on top of these data types
+- [queries](/skills/health/queries) – How to actually read the quantity, category, and workout samples described here
+- [sync-and-background](/skills/health/sync-and-background) – Long-running query lifecycles referenced in the threading section
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – General Swift 6 actor isolation rules that apply to HealthKit completion handlers
 
 ## Resources
 

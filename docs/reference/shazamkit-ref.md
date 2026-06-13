@@ -36,21 +36,21 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-- **`SHManagedSession` (iOS 17+)** — initializer overloads (default catalog vs custom catalog), single-shot `result() async`, `Results` `AsyncSequence` for continuous matching, `prepare() async` for pre-recording, `cancel()` to stop, `state` Observable property with `.idle` / `.prerecording` / `.matching` cases, `Sendable` conformance as of iOS 18
-- **`SHSession` (iOS 15+)** — initializer overloads, `match(_:)` for complete signatures, `matchStreamingBuffer(_:at:)` for streaming audio (with the contiguous-audio validation), `delegate` for callback-based delivery, `Results` `AsyncSequence` (iOS 16+), audio format support differences between iOS 15-16 (specific PCM formats) and iOS 17+ (automatic conversion), multiple-match behavior on iOS 17+
-- **`SHSession.Result` (iOS 16+)** — `.match(SHMatch)` / `.noMatch(SHSignature)` / `.error(any Error, SHSignature)`
-- **`SHSessionDelegate`** — `session(_:didFind:)` and `session(_:didNotFindMatchFor:error:)` optional methods
-- **`SHMatch`** — `mediaItems` array of `SHMatchedMediaItem` and `querySignature`
-- **`SHMediaItem`** — properties dictionary keyed by `SHMediaItemProperty`, predefined keys (`.title`, `.subtitle`, `.artist`, `.artworkURL`, `.videoURL`, `.genres`, `.explicitContent`, `.isrc`, `.appleMusicID`, `.appleMusicURL`, `.webURL`, `.shazamID`, `.creationDate`), iOS 16+ timed content properties (`.timeRanges`, `.frequencySkewRanges`), custom property extension pattern, `fetch(shazamID:)` class method, `Identifiable` / `Sendable` conformances
-- **`SHMatchedMediaItem`** — match-only additions: `.matchOffset`, `.predictedCurrentMatchOffset` (auto-updating during streaming), `.frequencySkew`, `.confidence` (0.0 to 1.0)
-- **`SHMediaItemProperty`** — `RawRepresentable` struct for predefined and custom property keys, complete list of predefined keys, custom extension pattern
-- **`SHSignature`** — `duration`, `dataRepresentation` for storage/transmission, `init(dataRepresentation:)` throwing initializer, `slices(from:duration:stride:)` for segmenting
-- **`SHSignatureGenerator`** — `append(_:at:)` for `AVAudioPCMBuffer` chunks, `signature()` to finalize, the streaming-construction pattern
+- **`SHManagedSession` (iOS 17+)** – initializer overloads (default catalog vs custom catalog), single-shot `result() async`, `Results` `AsyncSequence` for continuous matching, `prepare() async` for pre-recording, `cancel()` to stop, `state` Observable property with `.idle` / `.prerecording` / `.matching` cases, `Sendable` conformance as of iOS 18
+- **`SHSession` (iOS 15+)** – initializer overloads, `match(_:)` for complete signatures, `matchStreamingBuffer(_:at:)` for streaming audio (with the contiguous-audio validation), `delegate` for callback-based delivery, `Results` `AsyncSequence` (iOS 16+), audio format support differences between iOS 15-16 (specific PCM formats) and iOS 17+ (automatic conversion), multiple-match behavior on iOS 17+
+- **`SHSession.Result` (iOS 16+)** – `.match(SHMatch)` / `.noMatch(SHSignature)` / `.error(any Error, SHSignature)`
+- **`SHSessionDelegate`** – `session(_:didFind:)` and `session(_:didNotFindMatchFor:error:)` optional methods
+- **`SHMatch`** – `mediaItems` array of `SHMatchedMediaItem` and `querySignature`
+- **`SHMediaItem`** – properties dictionary keyed by `SHMediaItemProperty`, predefined keys (`.title`, `.subtitle`, `.artist`, `.artworkURL`, `.videoURL`, `.genres`, `.explicitContent`, `.isrc`, `.appleMusicID`, `.appleMusicURL`, `.webURL`, `.shazamID`, `.creationDate`), iOS 16+ timed content properties (`.timeRanges`, `.frequencySkewRanges`), custom property extension pattern, `fetch(shazamID:)` class method, `Identifiable` / `Sendable` conformances
+- **`SHMatchedMediaItem`** – match-only additions: `.matchOffset`, `.predictedCurrentMatchOffset` (auto-updating during streaming), `.frequencySkew`, `.confidence` (0.0 to 1.0)
+- **`SHMediaItemProperty`** – `RawRepresentable` struct for predefined and custom property keys, complete list of predefined keys, custom extension pattern
+- **`SHSignature`** – `duration`, `dataRepresentation` for storage/transmission, `init(dataRepresentation:)` throwing initializer, `slices(from:duration:stride:)` for segmenting
+- **`SHSignatureGenerator`** – `append(_:at:)` for `AVAudioPCMBuffer` chunks, `signature()` to finalize, the streaming-construction pattern
 - **`SHCatalog`** and **`SHCustomCatalog`** — building catalogs in-memory, persisting to `.shazamcatalog` files, loading from URL or `Data`, the matching-many-references model
-- **`SHLibrary` (read-only) and `SHMediaLibrary` (additive)** — the user's Shazam library access split, why you must opt the user into writes
-- **`SHError` cases** — the framework's error vocabulary including the silent-failure cases that indicate provisioning problems (no ShazamKit App Service enabled)
-- **Audio format requirements** — what formats `SHSession` accepts on iOS 15-16 vs iOS 17+, format conversion responsibilities
-- **`shazam` CLI** — `shazam custom-catalog create`, `shazam custom-catalog add`, `shazam signature` subcommands for offline batch signature generation and catalog construction; how it integrates into a build pipeline
+- **`SHLibrary` (read-only) and `SHMediaLibrary` (additive)** – the user's Shazam library access split, why you must opt the user into writes
+- **`SHError` cases** – the framework's error vocabulary including the silent-failure cases that indicate provisioning problems (no ShazamKit App Service enabled)
+- **Audio format requirements** – what formats `SHSession` accepts on iOS 15-16 vs iOS 17+, format conversion responsibilities
+- **`shazam` CLI** – `shazam custom-catalog create`, `shazam custom-catalog add`, `shazam signature` subcommands for offline batch signature generation and catalog construction; how it integrates into a build pipeline
 
 ## Documentation Scope
 
@@ -65,8 +65,8 @@ This page documents the `shazamkit-ref` skill — the API reference half of the 
 **Primary sources (Apple):**
 
 - ShazamKit framework documentation — developer.apple.com/documentation/shazamkit
-- `SHManagedSession` — developer.apple.com/documentation/shazamkit/shmanagedsession
-- `SHSession` — developer.apple.com/documentation/shazamkit/shsession
-- `SHCustomCatalog` — developer.apple.com/documentation/shazamkit/shcustomcatalog
+- `SHManagedSession` – developer.apple.com/documentation/shazamkit/shmanagedsession
+- `SHSession` – developer.apple.com/documentation/shazamkit/shsession
+- `SHCustomCatalog` – developer.apple.com/documentation/shazamkit/shcustomcatalog
 
 **WWDC**: 2021-10044, 2021-10045, 2022-10028, 2023-10051

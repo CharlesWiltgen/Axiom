@@ -114,14 +114,14 @@ This page documents the `sql-json-ref` shared reference. JSON1/JSONB function na
 
 ## Related
 
-- [grdb](/skills/persistence/grdb) — GRDB record types; nested Codable is stored as JSON automatically
-- [grdb-performance](/skills/persistence/grdb-performance) — EXPLAIN QUERY PLAN confirms whether a JSON query hits an index
-- [sqlitedata](/skills/persistence/sqlitedata) — SQLiteData `@Table` and `@Column(as:)` patterns
-- [sqlitedata-ref](/reference/sqlitedata-ref) — SQLiteData advanced queries (JSON aggregation section)
-- [sqlite-fts-ref](/reference/sqlite-fts-ref) — when a searched JSON array should be FTS5 or a child table instead
-- [database-migration](/skills/persistence/database-migration) — safety rules for the reshape/backfill migrations above
-- [codable](/skills/persistence/codable) — wire-format Codable (encoding for network/files), distinct from column storage
-- [grdb-performance-auditor](/agents/grdb-performance-auditor) — automated scan that flags unindexed query patterns
+- [grdb](/skills/persistence/grdb) – GRDB record types; nested Codable is stored as JSON automatically
+- [grdb-performance](/skills/persistence/grdb-performance) – EXPLAIN QUERY PLAN confirms whether a JSON query hits an index
+- [sqlitedata](/skills/persistence/sqlitedata) – SQLiteData `@Table` and `@Column(as:)` patterns
+- [sqlitedata-ref](/reference/sqlitedata-ref) – SQLiteData advanced queries (JSON aggregation section)
+- [sqlite-fts-ref](/reference/sqlite-fts-ref) – when a searched JSON array should be FTS5 or a child table instead
+- [database-migration](/skills/persistence/database-migration) – safety rules for the reshape/backfill migrations above
+- [codable](/skills/persistence/codable) – wire-format Codable (encoding for network/files), distinct from column storage
+- [grdb-performance-auditor](/agents/grdb-performance-auditor) – automated scan that flags unindexed query patterns
 
 ## Resources
 

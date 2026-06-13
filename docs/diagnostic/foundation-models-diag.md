@@ -115,9 +115,9 @@ Use this diagnostic when:
 
 ## Related Resources
 
-- [foundation-models](/skills/integration/foundation-models) — Discipline-enforcing patterns
-- [foundation-models-ref](/reference/foundation-models-ref) — Complete API reference
-- [WWDC 2025/286](https://developer.apple.com/videos/play/wwdc2025/286/) — Introduction
+- [foundation-models](/skills/integration/foundation-models) – Discipline-enforcing patterns
+- [foundation-models-ref](/reference/foundation-models-ref) – Complete API reference
+- [WWDC 2025/286](https://developer.apple.com/videos/play/wwdc2025/286/) – Introduction
 
 ## Documentation Scope
 

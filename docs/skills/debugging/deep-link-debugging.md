@@ -115,15 +115,15 @@ xcrun simctl openurl booted "debug://profile?id=12345"
 
 ## Documentation Scope
 
-This page documents the `axiom-swift` skill—debug-only deep link patterns Claude uses for automated testing and simulator verification.
+This page documents the `axiom-swift` skill — debug-only deep link patterns Claude uses for automated testing and simulator verification.
 
 **For production deep links:** See [swiftui-nav](/skills/ui-design/swiftui-nav) for NavigationStack deep linking patterns.
 
 ## Related
 
-- [swiftui-nav](/skills/ui-design/swiftui-nav) — Production navigation and deep linking
-- [ui-testing](/skills/ui-design/ui-testing) — UI testing patterns
-- [simulator-tester](/agents/simulator-tester) — Automated simulator testing agent
+- [swiftui-nav](/skills/ui-design/swiftui-nav) – Production navigation and deep linking
+- [ui-testing](/skills/ui-design/ui-testing) – UI testing patterns
+- [simulator-tester](/agents/simulator-tester) – Automated simulator testing agent
 
 ## Resources
 

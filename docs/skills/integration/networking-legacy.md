@@ -50,10 +50,10 @@ Questions you can ask Claude that will draw from this skill:
 
 ## Related
 
-- [networking](/skills/integration/networking) — Network architecture decisions and modern patterns
-- [networking-migration](/reference/networking-migration) — Step-by-step migration guides from legacy to modern APIs
-- [network-framework-ref](/reference/network-framework-ref) — Complete Network.framework API reference including iOS 26+
-- [networking-diag](/diagnostic/networking-diag) — Connection failure troubleshooting
+- [networking](/skills/integration/networking) – Network architecture decisions and modern patterns
+- [networking-migration](/reference/networking-migration) – Step-by-step migration guides from legacy to modern APIs
+- [network-framework-ref](/reference/network-framework-ref) – Complete Network.framework API reference including iOS 26+
+- [networking-diag](/diagnostic/networking-diag) – Connection failure troubleshooting
 
 ## Resources
 

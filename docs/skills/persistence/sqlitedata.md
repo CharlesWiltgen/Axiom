@@ -123,7 +123,7 @@ Item.limit(10).offset(20)                  // Pagination
 
 ## Documentation Scope
 
-This page documents the `axiom-data` skill—SQLiteData patterns Claude uses when you're working with Point-Free's SQLite framework.
+This page documents the `axiom-data` skill — SQLiteData patterns Claude uses when you're working with Point-Free's SQLite framework.
 
 **For advanced patterns:** See [sqlitedata-ref](/reference/sqlitedata-ref) for CTEs, views, custom aggregates, schema composition, and TableAlias.
 
@@ -131,9 +131,9 @@ This page documents the `axiom-data` skill—SQLiteData patterns Claude uses whe
 
 ## Related
 
-- [sqlitedata-ref](/reference/sqlitedata-ref) — Advanced patterns: CTEs, views, aggregates, @Selection
-- [grdb](/skills/persistence/grdb) — Raw GRDB for complex queries
-- [database-migration](/skills/persistence/database-migration) — Safe schema evolution patterns
+- [sqlitedata-ref](/reference/sqlitedata-ref) – Advanced patterns: CTEs, views, aggregates, @Selection
+- [grdb](/skills/persistence/grdb) – Raw GRDB for complex queries
+- [database-migration](/skills/persistence/database-migration) – Safe schema evolution patterns
 
 ## Resources
 

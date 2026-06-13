@@ -42,4 +42,4 @@ This page documents the `axiom-security` discipline skill. The discipline skill 
 
 ## Related
 
-- [CryptoKit](/skills/security/cryptokit) — Cryptographic primitives used in attestation and assertion signature verification
+- [CryptoKit](/skills/security/cryptokit) – Cryptographic primitives used in attestation and assertion signature verification

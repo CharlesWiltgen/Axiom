@@ -19,16 +19,16 @@ Analyzes Package.swift and Package.resolved to diagnose and resolve Swift Packag
 ## What It Does
 
 ### Critical Issues
-- **Version range conflicts** — Two packages require incompatible versions of shared dependency
-- **Duplicate symbols** — Same library linked twice (static + dynamic, or two versions)
+- **Version range conflicts** – Two packages require incompatible versions of shared dependency
+- **Duplicate symbols** – Same library linked twice (static + dynamic, or two versions)
 
 ### High Priority
-- **Swift 6 language mode mismatch** — Package compiled with Swift 5 but client uses Swift 6
-- **Missing transitive dependency** — Stale or corrupted Package.resolved
+- **Swift 6 language mode mismatch** – Package compiled with Swift 5 but client uses Swift 6
+- **Missing transitive dependency** – Stale or corrupted Package.resolved
 
 ### Medium Priority
-- **Macro target build failure** — Swift macros need special Xcode permissions
-- **Platform version mismatch** — Package requires higher iOS/macOS version
+- **Macro target build failure** – Swift macros need special Xcode permissions
+- **Platform version mismatch** – Package requires higher iOS/macOS version
 
 ## Example Output
 
@@ -60,5 +60,5 @@ swift package resolve
 
 ## Related
 
-- [build-debugging](/skills/debugging/build-debugging) — Dependency resolution for CocoaPods and SPM
-- [build-fixer](/agents/build-fixer) — Environment-first Xcode diagnostics
+- [build-debugging](/skills/debugging/build-debugging) – Dependency resolution for CocoaPods and SPM
+- [build-fixer](/agents/build-fixer) – Environment-first Xcode diagnostics
