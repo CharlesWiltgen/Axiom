@@ -33,6 +33,7 @@ This router invokes specialized skills based on the specific issue:
 - Stale builds (old code still running)
 - Clean build differs from incremental build
 - Device Hub / predicted-vs-built issues in Xcode 27 (`OS27`)
+- Reproducing a device-only bug on a simulator (Device Hub) (`OS27`)
 
 **Why xcode-debugging first**: 90% of mysterious issues are environment, not code. Check this BEFORE debugging code.
 

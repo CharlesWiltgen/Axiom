@@ -896,6 +896,43 @@ Certain features require entitlements configured in Xcode and provisioning profi
 - Builds remain testable even after the app goes live on the App Store
 - Developer can manually expire builds before 90 days
 
+### Xcode Cloud (CI/CD)
+
+Xcode Cloud is Apple's CI/CD service built into Xcode — it builds and tests in the cloud in parallel across multiple devices and OS versions, then feeds distribution to TestFlight and the App Store. Builds run on **ephemeral VMs**: source is fetched only when a build starts and discarded afterward (never stored; Apple has no access to it).
+
+#### Onboarding
+
+| Step | Where |
+|---|---|
+| Start | Report navigator → Cloud tab → Get Started |
+| Team | Auto-matched to your Signing & Distribution settings |
+| Source | Onboarding assistant connects your repo (steps vary by provider) |
+| First build | Default workflow created; one click to run |
+
+Add a second app from the same workspace (e.g. a macOS target sharing a framework) via the Report navigator's More button → Create Workflow — there is no repeat repository-connection step once access is granted. The Cloud section then shows builds and workflows for every onboarded app.
+
+#### Distribution setup
+
+Two paths, both from the Cloud navigator (secondary-click the app):
+- **Set Up Distribution** — provide app name, Bundle ID, and SKU (with live "already taken" checks). Xcode Cloud creates the App Store Connect app record, verifies it, and registers the Bundle ID + SKU in the background, then auto-creates an internal-TestFlight distribution workflow.
+- **Manage Workflows → add an archive action** — the archive action is required to distribute to TestFlight; setup is offered inline.
+
+#### Webhooks
+
+Configure under Manage Webhooks (a name plus a publicly resolvable Payload URL). Xcode Cloud POSTs a build-info payload at each lifecycle stage — useful for dashboards and external automation:
+
+| Event | Fires when |
+|---|---|
+| Created | A build is created |
+| Started | The build starts running |
+| Completed | The build finishes |
+
+The webhook list shows delivery history per send, with a success indicator.
+
+#### Additional repositories
+
+For modular, multi-repo codebases (e.g. a shared framework split into its own repository), add it under Manage Repositories → Add with the Git remote URL. The primary repository stays at the top; additional repositories reuse existing remote authorization, so cloud builds resolve all dependencies.
+
 ---
 
 ## Part 10: WWDC25 Changes
@@ -1082,7 +1119,7 @@ Authentication requires an API key from App Store Connect (Users and Access > In
 
 ## Resources
 
-**WWDC**: 2022-10166, 2025-224, 2025-241, 2025-252, 2025-328, 2026-205, 2026-210, 2026-309, 2026-391
+**WWDC**: 2022-10166, 2025-224, 2025-241, 2025-252, 2025-328, 2026-205, 2026-210, 2026-261, 2026-309, 2026-391
 
 **Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details, /help/app-store-connect
 

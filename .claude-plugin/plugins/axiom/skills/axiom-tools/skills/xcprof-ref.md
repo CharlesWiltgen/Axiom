@@ -4,7 +4,21 @@ xcprof turns an Instruments `.trace` into a structured, token-lean report for LL
 
 ## Invocation
 
-`xcprof` is on PATH as a bare command (plugin `bin/` is auto-resolved). Run `xcprof <subcommand>`.
+xcprof has two front-ends over the same engine — use whichever your harness provides:
+
+- **Claude Code** — `xcprof` is on PATH as a bare command (plugin `bin/` is auto-resolved). Run `xcprof <subcommand>`. The examples below use this CLI syntax.
+- **MCP clients (Codex, Cursor, …)** — four wrapper tools (xcprof is currently the only Axiom bin tool exposed over MCP).
+
+| CLI subcommand | MCP tool | Required input |
+|---|---|---|
+| `xcprof doctor` | `axiom_xcprof_doctor` | — |
+| `xcprof analyze <trace>` | `axiom_xcprof_analyze` | `trace` |
+| `xcprof compare <baseline> <current>` | `axiom_xcprof_compare` | `baseline`, `current` |
+| `xcprof record` | `axiom_xcprof_record` | one target — `attach`, `launch`, or `allProcesses` |
+
+CLI flags map to camelCase MCP params: `--start-ms`→`startMs`, `--end-ms`→`endMs`, `--hang-threshold-ms`→`hangThresholdMs`, `--user-binary`→`userBinary`, `--fail-on-regression`→`failOnRegression`, `--threshold-pct`→`thresholdPct`, `--allow-launch`→`allowLaunch`, `--all-processes`→`allProcesses`, `--time-limit`→`timeLimit`, `--dry-run`→`dryRun`. The launch target `-- <cmd>` becomes a `launch: [...]` argv array.
+
+The MCP surface is a deliberate subset: no output-format flags (`--json`/`--both`/`--human` — the tool returns the CLI's output as text), no `--open` (headless), no `--no-prompt` (always non-interactive). `compare`'s regression verdict is returned in the response body rather than as exit code `3`, and off-macOS the tools return a clear unavailability message instead of exit `2`.
 
 ## Prerequisite: run `xcprof doctor`
 
