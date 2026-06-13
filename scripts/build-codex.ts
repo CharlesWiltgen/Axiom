@@ -12,18 +12,17 @@ const OUTPUT_DIR = path.join(root, 'axiom-codex');
 const OUTPUT_SKILLS = path.join(OUTPUT_DIR, 'skills');
 const OUTPUT_MANIFEST = path.join(OUTPUT_DIR, '.codex-plugin');
 
-// Router skills — Codex has native progressive disclosure, so these are unnecessary
+// Suites withheld from the Codex variant. This is a CURATED exclusion list, NOT
+// "all routers" — 23 router suites DO ship to Codex. Annotate each entry with why.
+//   - axiom-xcode-mcp removed 2026-06-13 (axiom-pkek): it documents the
+//     Apple-supported `codex mcp add xcode -- xcrun mcpbridge` wiring and a dedicated
+//     Codex setup path, so Codex is a first-class consumer — it now ships.
+//   - 6 stale pre-v3.0 axiom-ios-* names pruned the same day (axiom-u5c0): they
+//     matched no current suite, so they were dead cruft inflating the excluded count.
 const EXCLUDE_SKILLS = new Set([
-  'axiom-ios-build',
-  'axiom-ios-data',
-  'axiom-ios-performance',
-  'axiom-ios-ai',
-  'axiom-ios-ml',
-  'axiom-ios-graphics',
-  'axiom-apple-docs',
-  'axiom-xcode-mcp',
-  'axiom-shipping',
-  'axiom-tools', // Claude Code-specific discipline injection + onboarding
+  'axiom-apple-docs', // Xcode-bundled for-LLM doc routing — Codex fit not yet assessed
+  'axiom-shipping',   // App Store Connect submission workflow — Codex fit not yet assessed
+  'axiom-tools',      // Claude Code-specific discipline injection + onboarding
 ]);
 
 // Read version from Claude Code manifest
