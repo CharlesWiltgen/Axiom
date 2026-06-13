@@ -1,7 +1,7 @@
 import type { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { Loader } from '../loader/types.js';
+import type { SkillSection } from '../loader/parser.js';
 import { Logger } from '../config.js';
-import { XcprofTools } from './xcprof.js';
 
 export interface McpTool {
   name: string;
@@ -20,6 +20,18 @@ export interface ToolResponse {
 }
 
 /**
+ * A self-contained group of MCP tools backed by a bundled CLI binary
+ * (xcprof, xclog, …). The handler merges each provider's tools into the
+ * tool list and dispatches calls by `handles(name)`, so adding a new binary
+ * tool means implementing this interface and registering the instance in index.ts.
+ */
+export interface BinaryToolProvider {
+  listTools(): McpTool[];
+  callTool(name: string, args: Record<string, any>): Promise<ToolResponse>;
+  handles(name: string): boolean;
+}
+
+/**
  * Dynamic toolset handler implementing 4 tools:
  * - axiom_get_catalog: Structured taxonomy of skills by category
  * - axiom_search_skills: BM25 text search with ranked results
@@ -30,7 +42,7 @@ export class DynamicToolsHandler {
   constructor(
     private loader: Loader,
     private logger: Logger,
-    private xcprof?: XcprofTools,
+    private binaryTools: BinaryToolProvider[] = [],
   ) {}
 
   async listTools(): Promise<{ tools: McpTool[] }> {
@@ -38,17 +50,17 @@ export class DynamicToolsHandler {
       tools: [
         {
           name: 'axiom_get_catalog',
-          description: 'Get the Axiom skills catalog organized by category. Returns skill names, types, and descriptions grouped into categories like "UI & Design", "Data & Persistence", etc.',
+          description: 'Browse the Axiom skill catalog grouped by category (names by default; set includeDescriptions for blurbs). Start here to see what exists.',
           inputSchema: {
             type: 'object',
             properties: {
               category: {
                 type: 'string',
-                description: 'Filter to a specific category (e.g. "UI & Design"). Omit for all categories.',
+                description: 'Filter to one category (e.g. "UI & Design"); omit for all.',
               },
               includeDescriptions: {
                 type: 'boolean',
-                description: 'Include skill descriptions in output. Default false for compact listing.',
+                description: 'Include per-skill descriptions (default false, compact).',
               },
             },
           },
@@ -62,17 +74,17 @@ export class DynamicToolsHandler {
         },
         {
           name: 'axiom_search_skills',
-          description: 'Search Axiom skills by keyword query. Returns ranked results with matching section names. Use to find relevant skills for a topic like "data race", "SwiftUI navigation", or "memory leak".',
+          description: 'Keyword-search Axiom skills (BM25-ranked) with matching section names. Use to locate skills for a topic, e.g. "data race", "SwiftUI navigation".',
           inputSchema: {
             type: 'object',
             properties: {
               query: {
                 type: 'string',
-                description: 'Search query (e.g. "data race swift 6", "SwiftUI performance")',
+                description: 'Keywords, e.g. "data race swift 6".',
               },
               limit: {
                 type: 'number',
-                description: 'Maximum results to return. Default 10.',
+                description: 'Max results (default 10).',
               },
               skillType: {
                 type: 'string',
@@ -101,7 +113,7 @@ export class DynamicToolsHandler {
         },
         {
           name: 'axiom_read_skill',
-          description: 'Read skill content with optional section filtering. Supports reading specific sections to reduce token usage (~3 KB per section vs ~26 KB full skill). Can read multiple skills in one call.',
+          description: 'Read skill content, token-efficiently. An unscoped read of a large skill returns its section index (not the full text) so you can re-read only the sections you need (~3 KB/section vs ~26 KB full). Pass sections to filter, full:true to force the whole skill, or listSections for just the index. Up to 10 skills per call.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -110,23 +122,24 @@ export class DynamicToolsHandler {
                 items: {
                   type: 'object',
                   properties: {
-                    name: {
-                      type: 'string',
-                      description: 'Skill name (e.g. "axiom-concurrency")',
-                    },
+                    name: { type: 'string', description: 'Skill name, e.g. "axiom-concurrency".' },
                     sections: {
                       type: 'array',
                       items: { type: 'string' },
-                      description: 'Section headings to include (case-insensitive substring match). Omit for full content.',
+                      description: 'Section headings to include (case-insensitive substring). The token-lean path.',
+                    },
+                    full: {
+                      type: 'boolean',
+                      description: 'Force the entire skill even if large (default: large skills return their section index).',
                     },
                   },
                   required: ['name'],
                 },
-                description: 'Skills to read. Each can specify section filters.',
+                description: 'Skills to read; each may scope to sections.',
               },
               listSections: {
                 type: 'boolean',
-                description: 'If true, return only the section table of contents (heading + size) without content.',
+                description: 'Return only the section index (heading + size), no content.',
               },
             },
             required: ['skills'],
@@ -141,13 +154,13 @@ export class DynamicToolsHandler {
         },
         {
           name: 'axiom_get_agent',
-          description: 'Get agent instructions and metadata for an Axiom agent. Returns the agent\'s full prompt and configuration.',
+          description: 'Get an Axiom agent\'s full instructions and metadata (e.g. build-fixer, accessibility-auditor).',
           inputSchema: {
             type: 'object',
             properties: {
               agent: {
                 type: 'string',
-                description: 'Agent name (e.g. "build-fixer", "accessibility-auditor")',
+                description: 'Agent name, e.g. "build-fixer".',
               },
             },
             required: ['agent'],
@@ -160,7 +173,7 @@ export class DynamicToolsHandler {
             openWorldHint: false,
           },
         },
-        ...(this.xcprof?.listTools() ?? []),
+        ...this.binaryTools.flatMap((t) => t.listTools()),
       ],
     };
   }
@@ -177,11 +190,11 @@ export class DynamicToolsHandler {
         return this.handleReadSkill(args);
       case 'axiom_get_agent':
         return this.handleGetAgent(args);
-      default:
-        if (this.xcprof && (XcprofTools.toolNames as readonly string[]).includes(name)) {
-          return this.xcprof.callTool(name, args);
-        }
+      default: {
+        const provider = this.binaryTools.find((t) => t.handles(name));
+        if (provider) return provider.callTool(name, args);
         throw new Error(`Unknown tool: ${name}`);
+      }
     }
   }
 
@@ -289,38 +302,46 @@ export class DynamicToolsHandler {
           parts.push(`## ${skillReq.name}\nSkill not found.\n`);
           continue;
         }
-
         parts.push(`## ${skill.name} — Sections`);
-        parts.push(`Type: ${skill.skillType} | Total: ${skill.content.length} chars`);
+        parts.push(...sectionTocLines(skill.skillType, skill.content.length, skill.sections));
         parts.push('');
-        parts.push('| Section | Chars |');
-        parts.push('|---------|-------|');
-        for (const section of skill.sections) {
-          parts.push(`| ${section.heading} | ${section.charCount} |`);
-        }
-        parts.push('');
-      } else {
-        const result = await this.loader.getSkillSections(skillReq.name, skillReq.sections);
-        if (!result) {
-          parts.push(`## ${skillReq.name}\nSkill not found.\n`);
-          continue;
-        }
-
-        if (skillReq.sections && skillReq.sections.length > 0) {
-          parts.push(`## ${result.skill.name} (filtered: ${result.sections.map(s => s.heading).join(', ')})`);
-        } else {
-          parts.push(`## ${result.skill.name}`);
-        }
-        parts.push(`Type: ${result.skill.skillType} | ${result.content.length} chars`);
-        parts.push('');
-        parts.push(result.content);
-
-        if (result.skill.related && result.skill.related.length > 0) {
-          parts.push('');
-          parts.push(`**Related Skills**: ${result.skill.related.join(', ')}`);
-        }
-        parts.push('');
+        continue;
       }
+
+      const result = await this.loader.getSkillSections(skillReq.name, skillReq.sections);
+      if (!result) {
+        parts.push(`## ${skillReq.name}\nSkill not found.\n`);
+        continue;
+      }
+
+      const scoped = Array.isArray(skillReq.sections) && skillReq.sections.length > 0;
+      // Section-first default: an unscoped read of a large skill returns the
+      // section index instead of dumping the whole skill into context. The
+      // caller re-reads with `sections` (token-lean) or `full: true` to override.
+      // Only when there are ≥2 sections to choose from — otherwise the index
+      // would be empty/trivial and scoping buys nothing, so deliver it whole.
+      if (!scoped && skillReq.full !== true && result.content.length > fullReadLimit() && result.skill.sections.length > 1) {
+        parts.push(`## ${result.skill.name} — Sections (large skill: ${result.content.length} chars > ${fullReadLimit()} limit; index shown to save context)`);
+        parts.push(...sectionTocLines(result.skill.skillType, result.content.length, result.skill.sections));
+        parts.push('Re-read with sections:["…"] for specific sections, or full:true for the entire skill.');
+        parts.push('');
+        continue;
+      }
+
+      if (scoped) {
+        parts.push(`## ${result.skill.name} (filtered: ${result.sections.map(s => s.heading).join(', ')})`);
+      } else {
+        parts.push(`## ${result.skill.name}`);
+      }
+      parts.push(`Type: ${result.skill.skillType} | ${result.content.length} chars`);
+      parts.push('');
+      parts.push(result.content);
+
+      if (result.skill.related && result.skill.related.length > 0) {
+        parts.push('');
+        parts.push(`**Related Skills**: ${result.skill.related.join(', ')}`);
+      }
+      parts.push('');
     }
 
     return { content: [{ type: 'text', text: parts.join('\n') }] };
@@ -348,4 +369,29 @@ export class DynamicToolsHandler {
 
     return { content: [{ type: 'text', text: lines.join('\n') }] };
   }
+}
+
+/**
+ * Char ceiling above which an unscoped `axiom_read_skill` returns the section
+ * index instead of the full skill (the section-first default). Override via
+ * AXIOM_FULL_READ_LIMIT. Default 20000 (~5k tokens) targets the genuinely-large
+ * upper tail — the bundle median is ~19000 chars, so a typical skill still
+ * reads whole; only the big references trip section-first, where the saving is
+ * largest and a second round-trip to scope sections clearly pays off.
+ */
+function fullReadLimit(env: NodeJS.ProcessEnv = process.env): number {
+  const n = Number(env.AXIOM_FULL_READ_LIMIT);
+  return Number.isFinite(n) && n > 0 ? n : 20000;
+}
+
+/** Render a skill's section index (Type line + size table) as markdown lines. */
+function sectionTocLines(skillType: string, totalChars: number, sections: SkillSection[]): string[] {
+  const lines = [
+    `Type: ${skillType} | Total: ${totalChars} chars`,
+    '',
+    '| Section | Chars |',
+    '|---------|-------|',
+  ];
+  for (const s of sections) lines.push(`| ${s.heading} | ${s.charCount} |`);
+  return lines;
 }

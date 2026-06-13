@@ -19,6 +19,8 @@ import { ResourcesHandler } from './resources/handler.js';
 import { PromptsHandler } from './prompts/handler.js';
 import { DynamicToolsHandler } from './tools/handler.js';
 import { XcprofTools, resolveXcprofPath } from './tools/xcprof.js';
+import { XclogTools, resolveXclogPath } from './tools/xclog.js';
+import { XcsymTools, resolveXcsymPath } from './tools/xcsym.js';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
@@ -63,7 +65,9 @@ async function main() {
   const resourcesHandler = new ResourcesHandler(loader, logger);
   const promptsHandler = new PromptsHandler(loader, logger);
   const xcprof = new XcprofTools({ binaryPath: resolveXcprofPath(config), logger });
-  const toolsHandler = new DynamicToolsHandler(loader, logger, xcprof);
+  const xclog = new XclogTools({ binaryPath: resolveXclogPath(config), logger });
+  const xcsym = new XcsymTools({ binaryPath: resolveXcsymPath(config), logger });
+  const toolsHandler = new DynamicToolsHandler(loader, logger, [xcprof, xclog, xcsym]);
 
   // Create MCP server. axiom-mcp serves tools/resources/prompts dynamically
   // from a loader, so it registers low-level request handlers on the underlying
@@ -81,12 +85,10 @@ async function main() {
         tools: { listChanged: config.mode === 'development' },
       },
       instructions: [
-        'Axiom is a library of battle-tested skills, agents, and tools for modern Apple-platform development (iOS, iPadOS, macOS, watchOS, tvOS) — covering SwiftUI, Swift concurrency, data persistence, performance, accessibility, networking, Apple Intelligence, and more.',
-        'The skill tools (axiom_get_catalog, axiom_search_skills, axiom_read_skill, axiom_get_agent) are read-only documentation lookups.',
-        'Recommended workflow: axiom_get_catalog (browse categories) → axiom_search_skills (find by keyword) → axiom_read_skill (read full content).',
-        'Common triggers: build failures, memory leaks, data races, SwiftUI layout bugs, database migrations, concurrency errors, accessibility issues, energy optimization.',
-        'Use axiom_get_agent for autonomous agent instructions (build-fixer, accessibility-auditor, etc.).',
-        'The axiom_xcprof_* tools wrap the bundled xcprof profiler (macOS + Xcode only): doctor/analyze/compare are read-only; record captures a new trace and can attach to or launch processes — its launch and all-processes modes require explicit allow flags.',
+        'Axiom is a library of battle-tested skills, agents, and tools for modern Apple-platform development (iOS, iPadOS, macOS, watchOS, tvOS): SwiftUI, Swift concurrency, data, performance, accessibility, networking, Apple Intelligence, and more.',
+        'Recommended workflow: axiom_get_catalog (browse) → axiom_search_skills (find by keyword) → axiom_read_skill (read) → axiom_get_agent (autonomous agent instructions). All four are read-only lookups.',
+        'Read token-leanly: axiom_read_skill returns a large skill\'s section index by default — re-read with a sections filter (≈8× smaller) rather than full:true unless you need the whole skill.',
+        'The axiom_xcprof_*/xclog_*/xcsym_* tools wrap bundled macOS + Xcode CLIs (profiling, console capture, crash symbolication); each tool\'s own description carries its specifics.',
       ].join(' '),
     }
   );
