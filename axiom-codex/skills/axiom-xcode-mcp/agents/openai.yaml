@@ -1,0 +1,3 @@
+interface:
+  display_name: "Xcode MCP"
+  short_description: "Connecting to Xcode via MCP, using xcrun mcpbridge, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunT..."
