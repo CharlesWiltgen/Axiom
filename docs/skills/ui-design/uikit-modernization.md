@@ -33,6 +33,6 @@ Use this skill when:
 
 ## Related
 
-- [UIKit-SwiftUI Bridging](/skills/ui-design/uikit-bridging) — embedding SwiftUI in a modernized scene-based UIKit app
-- [App Composition](/skills/ui-design/app-composition) — app-level integration and UIKit → SwiftUI migration priority
-- [SwiftUI Layout](/skills/ui-design/swiftui-layout) — size-class-driven adaptive layout, the recommended replacement for idiom/orientation checks
+- [UIKit-SwiftUI Bridging](/skills/ui-design/uikit-bridging) – embedding SwiftUI in a modernized scene-based UIKit app
+- [App Composition](/skills/ui-design/app-composition) – app-level integration and UIKit → SwiftUI migration priority
+- [SwiftUI Layout](/skills/ui-design/swiftui-layout) – size-class-driven adaptive layout, the recommended replacement for idiom/orientation checks

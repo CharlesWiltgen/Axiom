@@ -76,10 +76,10 @@ This page documents the `watch-connectivity` skill in the `axiom-watchos` suite.
 
 ## Related
 
-- [platform-basics](/skills/watchos/platform-basics) — Covers `WKRunsIndependentlyOfCompanionApp` and the independent-app configuration that reshapes Watch Connectivity expectations
-- [background-and-networking](/skills/watchos/background-and-networking) — URLSession, background sessions, and TN3135 networking limits — the primary data path this skill builds on top of
-- [smart-stack-and-complications](/skills/watchos/smart-stack-and-complications) — Where the complication payload ends up after `transferCurrentComplicationUserInfo` arrives
-- [push-notifications](/skills/integration/push-notifications) — For widget push updates on watchOS 26+ that replace some Watch Connectivity flows
+- [platform-basics](/skills/watchos/platform-basics) – Covers `WKRunsIndependentlyOfCompanionApp` and the independent-app configuration that reshapes Watch Connectivity expectations
+- [background-and-networking](/skills/watchos/background-and-networking) – URLSession, background sessions, and TN3135 networking limits — the primary data path this skill builds on top of
+- [smart-stack-and-complications](/skills/watchos/smart-stack-and-complications) – Where the complication payload ends up after `transferCurrentComplicationUserInfo` arrives
+- [push-notifications](/skills/integration/push-notifications) – For widget push updates on watchOS 26+ that replace some Watch Connectivity flows
 
 ## Resources
 

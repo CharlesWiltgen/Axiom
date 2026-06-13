@@ -73,10 +73,10 @@ This page documents the `design-for-watchos` skill in the `axiom-watchos` suite.
 
 ## Related
 
-- [platform-basics](/skills/watchos/platform-basics) — Covers app structure, `WKSupportsAlwaysOnDisplay`, and delegate adoption
-- [swiftui-nav](/skills/ui-design/swiftui-nav) — Cross-platform `NavigationStack` and `NavigationSplitView` fundamentals the watchOS versions build on
-- [swiftui-layout](/skills/ui-design/swiftui-layout) — Adaptive layout primitives used inside watchOS views
-- [accessibility-diag](/diagnostic/accessibility-diag) — Use when auditing a watchOS screen for VoiceOver, Dynamic Type, and contrast; watchOS-specific rotor/AssistiveTouch/Double Tap guidance lives in the axiom-accessibility suite
+- [platform-basics](/skills/watchos/platform-basics) – Covers app structure, `WKSupportsAlwaysOnDisplay`, and delegate adoption
+- [swiftui-nav](/skills/ui-design/swiftui-nav) – Cross-platform `NavigationStack` and `NavigationSplitView` fundamentals the watchOS versions build on
+- [swiftui-layout](/skills/ui-design/swiftui-layout) – Adaptive layout primitives used inside watchOS views
+- [accessibility-diag](/diagnostic/accessibility-diag) – Use when auditing a watchOS screen for VoiceOver, Dynamic Type, and contrast; watchOS-specific rotor/AssistiveTouch/Double Tap guidance lives in the axiom-accessibility suite
 
 ## Resources
 

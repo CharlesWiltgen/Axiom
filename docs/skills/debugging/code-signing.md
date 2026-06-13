@@ -41,7 +41,7 @@ This page documents the `axiom-security` discipline skill.
 
 ## Related
 
-- [Code Signing Diagnostics](/diagnostic/code-signing-diag) — Troubleshoot specific signing errors with 6 decision trees
-- [Code Signing Reference](/reference/code-signing-ref) — CLI commands, Xcode build settings, error codes
-- [Xcode Debugging](/skills/debugging/xcode-debugging) — Environment-first diagnostics when signing errors accompany build failures
-- [App Store Submission](/skills/shipping/app-store-submission) — Pre-submission checklist including signing verification
+- [Code Signing Diagnostics](/diagnostic/code-signing-diag) – Troubleshoot specific signing errors with 6 decision trees
+- [Code Signing Reference](/reference/code-signing-ref) – CLI commands, Xcode build settings, error codes
+- [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics when signing errors accompany build failures
+- [App Store Submission](/skills/shipping/app-store-submission) – Pre-submission checklist including signing verification

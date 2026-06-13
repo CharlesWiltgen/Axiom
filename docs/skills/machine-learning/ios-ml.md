@@ -50,20 +50,20 @@ Questions you can ask Claude that will draw from this skill:
 
 This skill routes to four specialized resources depending on your task:
 
-- **CoreML implementation patterns** — model conversion, compression strategies, stateful models with KV-cache, multi-function models (LoRA adapters), MLTensor pipeline stitching, async concurrent prediction, compute unit selection
-- **CoreML API reference** — CoreML Tools Python API, MLModel lifecycle, MLTensor operations, MLComputeDevice availability, state management APIs, performance reports
-- **CoreML diagnostics** — load failures, slow inference, memory pressure, accuracy degradation after compression, compute unit problems
-- **Speech transcription** — SpeechAnalyzer setup (iOS 26+), SpeechTranscriber configuration, live vs file transcription, volatile vs finalized results, AssetInventory model management
+- **CoreML implementation patterns** – model conversion, compression strategies, stateful models with KV-cache, multi-function models (LoRA adapters), MLTensor pipeline stitching, async concurrent prediction, compute unit selection
+- **CoreML API reference** – CoreML Tools Python API, MLModel lifecycle, MLTensor operations, MLComputeDevice availability, state management APIs, performance reports
+- **CoreML diagnostics** – load failures, slow inference, memory pressure, accuracy degradation after compression, compute unit problems
+- **Speech transcription** – SpeechAnalyzer setup (iOS 26+), SpeechTranscriber configuration, live vs file transcription, volatile vs finalized results, AssetInventory model management
 
 ## Related
 
-- [coreml](/skills/machine-learning/coreml) — implementation patterns for model conversion, compression, and deployment
-- [coreml-ref](/reference/coreml-ref) — comprehensive CoreML API reference with method signatures
-- [coreml-diag](/diagnostic/coreml-diag) — troubleshooting when models fail to load, predict slowly, or lose accuracy after compression
-- [speech](/skills/machine-learning/speech) — SpeechAnalyzer and SpeechTranscriber patterns for live and file transcription
-- [foundation-models](/skills/integration/foundation-models) — use Apple's built-in on-device LLM instead of a custom model when the task fits
-- [foundation-models-adapters](/skills/integration/foundation-models-adapters) — train a custom adapter on Apple's base model instead of deploying a separate CoreML LLM
-- [core-ai](/skills/machine-learning/core-ai) — the 27-cycle path for LLM-scale and transformer models; Core ML is for classic models
+- [coreml](/skills/machine-learning/coreml) – implementation patterns for model conversion, compression, and deployment
+- [coreml-ref](/reference/coreml-ref) – comprehensive CoreML API reference with method signatures
+- [coreml-diag](/diagnostic/coreml-diag) – troubleshooting when models fail to load, predict slowly, or lose accuracy after compression
+- [speech](/skills/machine-learning/speech) – SpeechAnalyzer and SpeechTranscriber patterns for live and file transcription
+- [foundation-models](/skills/integration/foundation-models) – use Apple's built-in on-device LLM instead of a custom model when the task fits
+- [foundation-models-adapters](/skills/integration/foundation-models-adapters) – train a custom adapter on Apple's base model instead of deploying a separate CoreML LLM
+- [core-ai](/skills/machine-learning/core-ai) – the 27-cycle path for LLM-scale and transformer models; Core ML is for classic models
 
 ## Resources
 

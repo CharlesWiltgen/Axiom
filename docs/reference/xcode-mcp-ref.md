@@ -31,17 +31,17 @@ Use this reference when:
 
 ## What's Covered
 
-- **Discovery** — `XcodeListWindows` (the only tool with no `tabIdentifier`)
-- **File reads** — `XcodeRead` (cat -n format with `limit`/`offset`), `XcodeGlob`, `XcodeGrep` (ripgrep-like interface with `outputMode`, context flags, line numbers), `XcodeLS`
-- **File writes** — `XcodeWrite` (create/overwrite, auto-adds to project), `XcodeUpdate` (str_replace-style with `replaceAll`), `XcodeMakeDir`
-- **File destructive** — `XcodeRM` (Trash by default via `deleteFiles`), `XcodeMV` (move or copy, may break imports)
-- **Build** — `BuildProject` (returns `buildResult`, `elapsedTime`, structured `errors[]`), `GetBuildLog` (severity/pattern/glob filtering, returns `buildLogEntries[]` not raw text)
-- **Test** — `RunAllTests`, `RunSomeTests` (takes `{targetName, testIdentifier}[]`), `GetTestList` (returns `tests[]` with file paths, line numbers, tags)
-- **Diagnostics** — `XcodeListNavigatorIssues` (structured, deduplicated, includes `vitality` fresh/stale flag), `XcodeRefreshCodeIssuesInFile`
-- **Execution** — `ExecuteSnippet` (runs in the context of a specific Swift source file with access to its `fileprivate` declarations; not a REPL; Swift only)
-- **Preview** — `RenderPreview` (index-based selection via `previewDefinitionIndexInFile`, returns `previewSnapshotPath`)
-- **Search** — `DocumentationSearch` (local semantic search of Apple Developer Documentation, MLX-accelerated; not web search)
-- **Common parameter patterns** — `tabIdentifier` (18/20 tools), `filePath` vs `path` vs `directoryPath` vs `sourceFilePath`
+- **Discovery** – `XcodeListWindows` (the only tool with no `tabIdentifier`)
+- **File reads** – `XcodeRead` (cat -n format with `limit`/`offset`), `XcodeGlob`, `XcodeGrep` (ripgrep-like interface with `outputMode`, context flags, line numbers), `XcodeLS`
+- **File writes** – `XcodeWrite` (create/overwrite, auto-adds to project), `XcodeUpdate` (str_replace-style with `replaceAll`), `XcodeMakeDir`
+- **File destructive** – `XcodeRM` (Trash by default via `deleteFiles`), `XcodeMV` (move or copy, may break imports)
+- **Build** – `BuildProject` (returns `buildResult`, `elapsedTime`, structured `errors[]`), `GetBuildLog` (severity/pattern/glob filtering, returns `buildLogEntries[]` not raw text)
+- **Test** – `RunAllTests`, `RunSomeTests` (takes `{targetName, testIdentifier}[]`), `GetTestList` (returns `tests[]` with file paths, line numbers, tags)
+- **Diagnostics** – `XcodeListNavigatorIssues` (structured, deduplicated, includes `vitality` fresh/stale flag), `XcodeRefreshCodeIssuesInFile`
+- **Execution** – `ExecuteSnippet` (runs in the context of a specific Swift source file with access to its `fileprivate` declarations; not a REPL; Swift only)
+- **Preview** – `RenderPreview` (index-based selection via `previewDefinitionIndexInFile`, returns `previewSnapshotPath`)
+- **Search** – `DocumentationSearch` (local semantic search of Apple Developer Documentation, MLX-accelerated; not web search)
+- **Common parameter patterns** – `tabIdentifier` (18/20 tools), `filePath` vs `path` vs `directoryPath` vs `sourceFilePath`
 - **Quick-reference category table** mapping all 20 tools to their domain
 
 ## Documentation Scope

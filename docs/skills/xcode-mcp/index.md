@@ -46,11 +46,11 @@ Questions you can ask Claude that will draw from these skills:
 ## What This Skill Provides
 
 - **Setup guides** for 5 MCP clients (Claude Code, Cursor, Codex, VS Code, Gemini CLI)
-- **Workflow patterns** — iterative BuildFix loops, TestFix loops, preview verification
-- **All 20 tool references** — parameters, return schemas, and gotchas
-- **Window targeting** — tab identifier management and multi-Xcode support
-- **Troubleshooting** — permission dialogs, schema compliance, stale connections
-- **Conflict resolution** — when to use MCP tools vs `xcodebuild` vs standard file tools
+- **Workflow patterns** – iterative BuildFix loops, TestFix loops, preview verification
+- **All 20 tool references** – parameters, return schemas, and gotchas
+- **Window targeting** – tab identifier management and multi-Xcode support
+- **Troubleshooting** – permission dialogs, schema compliance, stale connections
+- **Conflict resolution** – when to use MCP tools vs `xcodebuild` vs standard file tools
 
 ## Skill Suite
 
@@ -86,6 +86,6 @@ This is a router skill with three specialized sub-skills:
 
 ## Related
 
-- [Xcode Debugging](/skills/debugging/xcode-debugging) — Environment-first diagnostics (Derived Data, zombie processes) — use when the issue is Xcode environment, not MCP
-- [Apple Documentation Access](/skills/integration/apple-docs) — Reads Xcode-bundled for-LLM guides — use for bundled docs, while `DocumentationSearch` MCP tool searches Apple's online corpus
-- [Build Debugging](/skills/debugging/build-debugging) — Dependency resolution for CocoaPods/SPM — use for traditional build debugging without MCP
+- [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics (Derived Data, zombie processes) — use when the issue is Xcode environment, not MCP
+- [Apple Documentation Access](/skills/integration/apple-docs) – Reads Xcode-bundled for-LLM guides — use for bundled docs, while `DocumentationSearch` MCP tool searches Apple's online corpus
+- [Build Debugging](/skills/debugging/build-debugging) – Dependency resolution for CocoaPods/SPM — use for traditional build debugging without MCP

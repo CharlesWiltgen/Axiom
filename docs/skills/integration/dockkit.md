@@ -75,8 +75,8 @@ The `trackingStates` async sequence exposes per-subject saliency rank, speaking 
 
 ## Related
 
-- [camera-capture](/skills/integration/camera-capture) — The underlying AVCaptureSession DockKit tracks against
-- [now-playing](/skills/integration/now-playing) — Other media-suite system integrations
+- [camera-capture](/skills/integration/camera-capture) – The underlying AVCaptureSession DockKit tracks against
+- [now-playing](/skills/integration/now-playing) – Other media-suite system integrations
 - For custom Vision / Core ML inference feeding observations, see the axiom-vision suite
 
 ## Resources

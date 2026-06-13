@@ -45,12 +45,12 @@ Single-Threaded → Asynchronous → Concurrent → Actors
 ```
 
 ### Core Concepts
-- **@MainActor** — Isolate to main thread (UI code)
-- **nonisolated** — Opt out of actor isolation
+- **@MainActor** – Isolate to main thread (UI code)
+- **nonisolated** – Opt out of actor isolation
 - **nonisolated(nonsending)** (Swift 6.2+) — New default for async functions; stays on caller's actor instead of switching to global executor
 - **@concurrent** (Swift 6.2+) — Force background execution (explicit spelling for the pre-6.2 default behavior)
-- **Sendable** — Safe to pass between threads
-- **Actor** — Isolated mutable state
+- **Sendable** – Safe to pass between threads
+- **Actor** – Isolated mutable state
 - **ProgressManager / ProgressReporter** (OS27) — Sendable, @Observable structured async progress reporting; Subprogress provides ~Copyable child tokens
 
 ### Common Patterns
@@ -104,16 +104,16 @@ class ImageLoader {
 
 ## Documentation Scope
 
-This page documents the `axiom-concurrency` (swift-concurrency reference) skill—comprehensive Swift 6 concurrency guidance Claude uses when answering your questions. The skill contains the complete progressive journey, 11 copy-paste patterns, error resolution guides, and decision trees.
+This page documents the `axiom-concurrency` (swift-concurrency reference) skill — comprehensive Swift 6 concurrency guidance Claude uses when answering your questions. The skill contains the complete progressive journey, 11 copy-paste patterns, error resolution guides, and decision trees.
 
 **For concurrency audits:** Use the [concurrency-auditor](/agents/concurrency-auditor) agent to scan for Swift 6 strict concurrency violations automatically.
 
 ## Related
 
-- [concurrency-auditor](/agents/concurrency-auditor) — Autonomous agent scanning for concurrency violations
-- [/axiom:audit-concurrency](/commands/concurrency/audit-concurrency) — Quick scan for unsafe patterns
-- [swift-performance](/skills/concurrency/swift-performance) — CPU and threading performance optimization
-- [swiftdata](/skills/persistence/swiftdata) — SwiftData's @MainActor requirements
+- [concurrency-auditor](/agents/concurrency-auditor) – Autonomous agent scanning for concurrency violations
+- [/axiom:audit-concurrency](/commands/concurrency/audit-concurrency) – Quick scan for unsafe patterns
+- [swift-performance](/skills/concurrency/swift-performance) – CPU and threading performance optimization
+- [swiftdata](/skills/persistence/swiftdata) – SwiftData's @MainActor requirements
 
 ## Resources
 

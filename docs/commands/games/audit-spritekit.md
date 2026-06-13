@@ -13,13 +13,13 @@ Launches the **spritekit-auditor** agent to find scene-graph and physics issues 
 
 ## What It Checks
 
-1. **Physics bitmask issues** — `categoryBitMask` and `contactTestBitMask` set in conflicting ways, causing missed collisions or false positives
-2. **Draw-call waste** — texture atlas misuse, unbatched sprite renders, redundant `SKShapeNode` allocations per frame
-3. **Node accumulation** — nodes added to the scene that are never removed, causing the tree to grow indefinitely
-4. **Action leaks** — `SKAction` sequences with retain cycles via closures, or repeating actions never cancelled
-5. **Coordinate confusion** — mixing scene/view/screen coordinate spaces, especially around `convertPoint(toView:)`
+1. **Physics bitmask issues** – `categoryBitMask` and `contactTestBitMask` set in conflicting ways, causing missed collisions or false positives
+2. **Draw-call waste** – texture atlas misuse, unbatched sprite renders, redundant `SKShapeNode` allocations per frame
+3. **Node accumulation** – nodes added to the scene that are never removed, causing the tree to grow indefinitely
+4. **Action leaks** – `SKAction` sequences with retain cycles via closures, or repeating actions never cancelled
+5. **Coordinate confusion** – mixing scene/view/screen coordinate spaces, especially around `convertPoint(toView:)`
 
 ## Related Agent
 
-- [spritekit-auditor](/agents/spritekit-auditor) — The agent that powers this command
-- [spritekit-ref](/reference/spritekit-ref) — SpriteKit API reference
+- [spritekit-auditor](/agents/spritekit-auditor) – The agent that powers this command
+- [spritekit-ref](/reference/spritekit-ref) – SpriteKit API reference

@@ -11,10 +11,10 @@ Welcome to Axiom! This guide helps you find the right skills for your iOS develo
 
 Axiom provides skills, agents, and tools that enhance coding harnesses like Claude Code and Codex:
 
-- **Skills** — Domain knowledge Claude uses to help you
-- **Agents** — Autonomous tools that scan and analyze code
-- **Commands** — Explicit actions you can invoke
-- **Bundled tools** — `xclog` (simulator console capture), `xcsym` (crash symbolication), `xcui` (simulator UI & accessibility testing), and `xcprof` (CPU/performance profile analysis) ship as native binaries and are used automatically when the task calls for them
+- **Skills** – Domain knowledge Claude uses to help you
+- **Agents** – Autonomous tools that scan and analyze code
+- **Commands** – Explicit actions you can invoke
+- **Bundled tools** – `xclog` (simulator console capture), `xcsym` (crash symbolication), `xcui` (simulator UI & accessibility testing), and `xcprof` (CPU/performance profile analysis) ship as native binaries and are used automatically when the task calls for them
 
 **You don't need to memorize anything.** Just describe your problem — Claude will use the right skill automatically.
 
@@ -55,38 +55,38 @@ Run audit commands:
 ## Finding Skills by Category
 
 ### Debugging & Performance
-- **xcode-debugging** — BUILD FAILED, simulator issues, environment diagnostics
-- **memory-debugging** — Memory growth, retain cycles, leak detection
-- **swiftui-debugging** — View update issues, preview crashes
-- **performance-profiling** — Instruments decision trees
+- **xcode-debugging** – BUILD FAILED, simulator issues, environment diagnostics
+- **memory-debugging** – Memory growth, retain cycles, leak detection
+- **swiftui-debugging** – View update issues, preview crashes
+- **performance-profiling** – Instruments decision trees
 
 ### UI & Design
-- **liquid-glass** — iOS 26 material design system
-- **swiftui-nav** — NavigationStack, deep linking, state restoration
-- **hig** — Human Interface Guidelines quick decisions
+- **liquid-glass** – iOS 26 material design system
+- **swiftui-nav** – NavigationStack, deep linking, state restoration
+- **hig** – Human Interface Guidelines quick decisions
 
 ### Data & Persistence
-- **swiftdata** — @Model, @Query, CloudKit integration
-- **database-migration** — Safe schema evolution
+- **swiftdata** – @Model, @Query, CloudKit integration
+- **database-migration** – Safe schema evolution
 
 ### Concurrency
-- **swift-concurrency** — Swift 6 strict concurrency, @MainActor, Sendable
+- **swift-concurrency** – Swift 6 strict concurrency, @MainActor, Sendable
 
 ### Networking
-- **networking** — Network.framework patterns, URLSession
+- **networking** – Network.framework patterns, URLSession
 
 ## Skill Naming
 
-- **No suffix** — Discipline skills with workflows (e.g., `axiom-design`)
-- **-diag suffix** — Diagnostic skills for troubleshooting (e.g., `axiom-swiftui-nav-diag`)
-- **-ref suffix** — Reference skills with comprehensive APIs (e.g., `axiom-integration`)
+- **No suffix** – Discipline skills with workflows (e.g., `axiom-design`)
+- **-diag suffix** – Diagnostic skills for troubleshooting (e.g., `axiom-swiftui-nav-diag`)
+- **-ref suffix** – Reference skills with comprehensive APIs (e.g., `axiom-integration`)
 
 ## Tips
 
-1. **Just describe your problem** — Claude will suggest the right skill
-2. **Run audits first** — Quick wins with automated scanning
-3. **Use diagnostic skills** — When troubleshooting specific issues
-4. **Check reference skills** — When implementing new features
+1. **Just describe your problem** – Claude will suggest the right skill
+2. **Run audits first** – Quick wins with automated scanning
+3. **Use diagnostic skills** – When troubleshooting specific issues
+4. **Check reference skills** – When implementing new features
 
 ## Example Prompts
 
@@ -100,5 +100,5 @@ Try these to see skills in action:
 
 ## Related
 
-- [/axiom:audit](/commands/utility/audit) — Smart audit command
-- [/axiom:status](/commands/utility/status) — Project environment health
+- [/axiom:audit](/commands/utility/audit) – Smart audit command
+- [/axiom:status](/commands/utility/status) – Project environment health

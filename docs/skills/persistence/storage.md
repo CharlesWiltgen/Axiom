@@ -49,11 +49,11 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Location decisions
 
-- **Documents** — user-created content, backed up, visible in Files app
-- **Application Support** — app-generated data that must persist, backed up, hidden
-- **Caches** — re-downloadable content, system can purge under pressure
-- **tmp** — temporary scratch space, system can purge anytime
-- **`isExcludedFromBackup`** — explicit backup control for large files
+- **Documents** – user-created content, backed up, visible in Files app
+- **Application Support** – app-generated data that must persist, backed up, hidden
+- **Caches** – re-downloadable content, system can purge under pressure
+- **tmp** – temporary scratch space, system can purge anytime
+- **`isExcludedFromBackup`** – explicit backup control for large files
 
 ### Cloud sync decisions
 
@@ -99,18 +99,18 @@ The two choices above use the same `FileManager` API. The lifecycle difference �
 
 ## Related
 
-- [swiftdata](/skills/persistence/swiftdata) — implementation details for `@Model`, `@Query`, and Swift 6 concurrency
-- [sqlitedata](/skills/persistence/sqlitedata) — value-type persistence with CloudKit record sharing
-- [grdb](/skills/persistence/grdb) — raw SQL, reactive queries, and complex database operations
-- [core-data](/skills/persistence/core-data) — when you're maintaining an existing Core Data app
-- [cloud-sync](/skills/persistence/cloud-sync) — CloudKit sync implementation with CKSyncEngine
-- [database-migration](/skills/persistence/database-migration) — safe schema evolution patterns
-- [codable](/skills/persistence/codable) — JSON and plist encoding for small structured data
-- [storage-diag](/diagnostic/storage-diag) — troubleshooting missing files, backup bloat, and protection-level failures
-- [storage-management-ref](/reference/storage-management-ref) — purge policies, disk space APIs, and quota management
-- [file-protection-ref](/reference/file-protection-ref) — `.completeFileProtection` and related encryption options
-- [icloud-drive-ref](/reference/icloud-drive-ref) — ubiquitous container patterns for file-based sync
-- [cloudkit-ref](/reference/cloudkit-ref) — CKSyncEngine and raw CloudKit API reference
+- [swiftdata](/skills/persistence/swiftdata) – implementation details for `@Model`, `@Query`, and Swift 6 concurrency
+- [sqlitedata](/skills/persistence/sqlitedata) – value-type persistence with CloudKit record sharing
+- [grdb](/skills/persistence/grdb) – raw SQL, reactive queries, and complex database operations
+- [core-data](/skills/persistence/core-data) – when you're maintaining an existing Core Data app
+- [cloud-sync](/skills/persistence/cloud-sync) – CloudKit sync implementation with CKSyncEngine
+- [database-migration](/skills/persistence/database-migration) – safe schema evolution patterns
+- [codable](/skills/persistence/codable) – JSON and plist encoding for small structured data
+- [storage-diag](/diagnostic/storage-diag) – troubleshooting missing files, backup bloat, and protection-level failures
+- [storage-management-ref](/reference/storage-management-ref) – purge policies, disk space APIs, and quota management
+- [file-protection-ref](/reference/file-protection-ref) – `.completeFileProtection` and related encryption options
+- [icloud-drive-ref](/reference/icloud-drive-ref) – ubiquitous container patterns for file-based sync
+- [cloudkit-ref](/reference/cloudkit-ref) – CKSyncEngine and raw CloudKit API reference
 
 ## Resources
 

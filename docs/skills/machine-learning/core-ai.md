@@ -44,18 +44,18 @@ Questions you can ask Claude that will draw from this skill:
 
 ## What This Skill Provides
 
-- **The deployment lifecycle** — convert (`coreai-torch`), optimize (`coreai-opt`), debug (Core AI Debugger), integrate (Swift `CoreAI` framework), deploy (specialization, caching, ahead-of-time compilation)
-- **The Swift runtime API** — `AIModel`, `InferenceFunction`, `NDArray` and its scalar types, KV-cache states, `AIModelAsset` inspection — all SDK-verified and compile-checked against Xcode 27
-- **Specialization & caching discipline** — why first-load is slow, why to keep it out of interactive flows, `AIModelCache` (including app-group sharing), and ahead-of-time compilation with `coreai-build`
-- **The Foundation Models bridge** — using `CoreAILanguageModel` (from the open-source `coreai-models` Swift package) to reuse `respond` / `@Generable` / streaming with your own model
-- **The developer tools** — Core AI Instruments, the Core AI debug gauge, and the standalone Core AI Debugger
+- **The deployment lifecycle** – convert (`coreai-torch`), optimize (`coreai-opt`), debug (Core AI Debugger), integrate (Swift `CoreAI` framework), deploy (specialization, caching, ahead-of-time compilation)
+- **The Swift runtime API** – `AIModel`, `InferenceFunction`, `NDArray` and its scalar types, KV-cache states, `AIModelAsset` inspection — all SDK-verified and compile-checked against Xcode 27
+- **Specialization & caching discipline** – why first-load is slow, why to keep it out of interactive flows, `AIModelCache` (including app-group sharing), and ahead-of-time compilation with `coreai-build`
+- **The Foundation Models bridge** – using `CoreAILanguageModel` (from the open-source `coreai-models` Swift package) to reuse `respond` / `@Generable` / streaming with your own model
+- **The developer tools** – Core AI Instruments, the Core AI debug gauge, and the standalone Core AI Debugger
 
 ## Related
 
-- [iOS ML](/skills/machine-learning/ios-ml) — classic Core ML conversion, compression, and deployment; the boundary with Core AI
-- [foundation-models-ref](/reference/foundation-models-ref) — the `LanguageModel` protocol and Ecosystem section that the Core AI bridge plugs into
-- [Metal Migration](/skills/games/metal-migration) — writing the custom Metal kernels (`TorchMetalKernel`, `MTLTensor`) that Core AI embeds in a model
-- [Background Assets](/skills/integration/background-assets) — delivering large models on demand instead of bundling them
+- [iOS ML](/skills/machine-learning/ios-ml) – classic Core ML conversion, compression, and deployment; the boundary with Core AI
+- [foundation-models-ref](/reference/foundation-models-ref) – the `LanguageModel` protocol and Ecosystem section that the Core AI bridge plugs into
+- [Metal Migration](/skills/games/metal-migration) – writing the custom Metal kernels (`TorchMetalKernel`, `MTLTensor`) that Core AI embeds in a model
+- [Background Assets](/skills/integration/background-assets) – delivering large models on demand instead of bundling them
 
 ## Resources
 

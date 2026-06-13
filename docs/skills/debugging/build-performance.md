@@ -24,9 +24,9 @@ Comprehensive build performance optimization with Build Timeline analysis, type 
 ## What This Skill Provides
 
 ### Build Timeline Analysis
-- **Critical Path Optimization** — Identify and shorten the longest chain of dependent tasks
-- **Timeline Visualization** — Interpret empty vertical space (idle cores), long horizontal bars (slow tasks)
-- **Parallelization Gaps** — Detect targets waiting unnecessarily
+- **Critical Path Optimization** – Identify and shorten the longest chain of dependent tasks
+- **Timeline Visualization** – Interpret empty vertical space (idle cores), long horizontal bars (slow tasks)
+- **Parallelization Gaps** – Detect targets waiting unnecessarily
 
 ### 10 Optimization Patterns
 
@@ -64,18 +64,18 @@ The build-optimizer agent scans build settings, scripts, and compiler flags, pro
 
 ## Workflow
 
-1. **Measure Baseline** — Clean build + incremental build times
-2. **Analyze Build Timeline** — Product → Perform Action → Build with Timing Summary
-3. **Identify Bottlenecks** — Compilation? Linking? Scripts? Module variants?
-4. **Apply ONE optimization** — Don't batch changes
-5. **Measure Improvement** — Compare against baseline
-6. **Verify in Build Timeline** — Visual confirmation
+1. **Measure Baseline** – Clean build + incremental build times
+2. **Analyze Build Timeline** – Product → Perform Action → Build with Timing Summary
+3. **Identify Bottlenecks** – Compilation? Linking? Scripts? Module variants?
+4. **Apply ONE optimization** – Don't batch changes
+5. **Measure Improvement** – Compare against baseline
+6. **Verify in Build Timeline** – Visual confirmation
 
 ## Related
 
-- **build-debugging** — Fixing broken builds (dependency conflicts, SPM issues)
-- **xcode-debugging** — Environment-first Xcode diagnostics (zombie processes, simulator)
-- `/axiom:optimize-build` — Automated scanning agent for quick wins
+- **build-debugging** – Fixing broken builds (dependency conflicts, SPM issues)
+- **xcode-debugging** – Environment-first Xcode diagnostics (zombie processes, simulator)
+- `/axiom:optimize-build` – Automated scanning agent for quick wins
 
 ## Resources
 

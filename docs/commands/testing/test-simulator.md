@@ -146,11 +146,11 @@ For just a quick screenshot without full testing capabilities:
 
 ## Related
 
-- **`/axiom:screenshot`** — Quick screenshot only
-- **`simulator-tester` agent** — Full documentation
-- **`axiom-swift` skill** — Add debug-only deep links
-- **`axiom-build` skill** — Environment-first debugging
-- **`axiom-swiftui-debugging` skill** — SwiftUI debugging with simulator verification
+- **`/axiom:screenshot`** – Quick screenshot only
+- **`simulator-tester` agent** – Full documentation
+- **`axiom-swift` skill** – Add debug-only deep links
+- **`axiom-build` skill** – Environment-first debugging
+- **`axiom-swiftui-debugging` skill** – SwiftUI debugging with simulator verification
 
 ## Real-World Impact
 

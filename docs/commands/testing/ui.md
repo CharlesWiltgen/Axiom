@@ -13,10 +13,10 @@ Drive and validate the iOS simulator UI and accessibility with `xcui` (plus AXe 
 Guides you through scriptable simulator UI and accessibility testing:
 
 1. **Preflights the environment** with `xcui doctor` — confirms AXe is installed (offers `xcui doctor --install` if missing) and a simulator is booted
-2. **Drives input via AXe** — `axe tap --id <id>` (real HID touch), `axe type`, `axe swipe`
-3. **Synchronizes with `xcui wait`** — `--for-element <id>` instead of sleeping or re-screenshotting
-4. **Asserts on the accessibility tree** — `xcui assert --id <id> --label "…" --trait button --single` (exit 1 on failure)
-5. **Sets accessibility state** — `xcui a11y set --toggle <name> --value on --app <bundle-id>`, then re-asserts
+2. **Drives input via AXe** – `axe tap --id <id>` (real HID touch), `axe type`, `axe swipe`
+3. **Synchronizes with `xcui wait`** – `--for-element <id>` instead of sleeping or re-screenshotting
+4. **Asserts on the accessibility tree** – `xcui assert --id <id> --label "…" --trait button --single` (exit 1 on failure)
+5. **Sets accessibility state** – `xcui a11y set --toggle <name> --value on --app <bundle-id>`, then re-asserts
 
 ## When to Use
 
@@ -34,7 +34,7 @@ Guides you through scriptable simulator UI and accessibility testing:
 
 ## Related
 
-- [xcui Reference](/reference/xcui-ref) — full tool documentation, subcommand flags, and the verified accessibility toggles
-- [simulator-tester](/agents/simulator-tester) — the agent that drives `xcui` live for test scenarios and accessibility validation
-- [AXe (Simulator Automation)](/reference/axe-ref) — the input/tree engine `xcui` builds on
-- [/axiom:test-simulator](/commands/testing/test-simulator) — scenario setup (location, push, deep links); `/axiom:ui` owns interaction, assertion, and accessibility config
+- [xcui Reference](/reference/xcui-ref) – full tool documentation, subcommand flags, and the verified accessibility toggles
+- [simulator-tester](/agents/simulator-tester) – the agent that drives `xcui` live for test scenarios and accessibility validation
+- [AXe (Simulator Automation)](/reference/axe-ref) – the input/tree engine `xcui` builds on
+- [/axiom:test-simulator](/commands/testing/test-simulator) – scenario setup (location, push, deep links); `/axiom:ui` owns interaction, assertion, and accessibility config

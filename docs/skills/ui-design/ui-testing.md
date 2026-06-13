@@ -119,7 +119,7 @@ flowchart TD
 
 ## Documentation Scope
 
-This page documents the `axiom-testing` (ui-testing reference) skill—reliable UI testing patterns Claude uses when you're writing or debugging XCTest UI tests. Covers condition-based waiting, Recording UI Automation (Xcode 26), accessibility-first testing, and multi-configuration testing.
+This page documents the `axiom-testing` (ui-testing reference) skill — reliable UI testing patterns Claude uses when you're writing or debugging XCTest UI tests. Covers condition-based waiting, Recording UI Automation (Xcode 26), accessibility-first testing, and multi-configuration testing.
 
 **For TDD workflow:** See the superpowers:test-driven-development skill for test-driven development methodology.
 
@@ -127,9 +127,9 @@ This page documents the `axiom-testing` (ui-testing reference) skill—reliable 
 
 ## Related
 
-- [swift-testing](/skills/testing/swift-testing) — Swift Testing framework patterns
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — @MainActor patterns for crash debugging
-- [xcode-debugging](/skills/debugging/xcode-debugging) — Environment diagnostics when tests fail due to Xcode issues
+- [swift-testing](/skills/testing/swift-testing) – Swift Testing framework patterns
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – @MainActor patterns for crash debugging
+- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment diagnostics when tests fail due to Xcode issues
 
 ## Resources
 

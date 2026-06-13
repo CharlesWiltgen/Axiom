@@ -76,8 +76,8 @@ mutex.withLock { $0 = result }
 
 ## Related Skills
 
-- [Swift Concurrency](./swift-concurrency) — Actor-based concurrency
-- [Concurrency Profiling](./concurrency-profiling) — Diagnose contention issues
+- [Swift Concurrency](./swift-concurrency) – Actor-based concurrency
+- [Concurrency Profiling](./concurrency-profiling) – Diagnose contention issues
 
 ## Resources
 

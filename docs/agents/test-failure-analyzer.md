@@ -19,19 +19,19 @@ Diagnoses WHY tests fail, especially intermittent/flaky failures in Swift Testin
 ## What It Does
 
 ### Critical (Will Cause Intermittent Failures)
-- **Missing `await confirmation`** — Async callback without proper waiting
-- **Missing `@MainActor`** — Data races when accessing UI types in Swift 6
+- **Missing `await confirmation`** – Async callback without proper waiting
+- **Missing `@MainActor`** – Data races when accessing UI types in Swift 6
 
 ### High Priority (Parallel Execution Failures)
-- **Shared mutable state** — `static var` in test suites causing race conditions
-- **Order-dependent tests** — Tests that only pass in specific order
+- **Shared mutable state** – `static var` in test suites causing race conditions
+- **Order-dependent tests** – Tests that only pass in specific order
 
 ### Medium Priority (Timing Issues)
-- **`Task.sleep` in assertions** — Arbitrary waits that fail in CI
-- **Missing `.serialized` trait** — Tests with shared resources run in parallel
+- **`Task.sleep` in assertions** – Arbitrary waits that fail in CI
+- **Missing `.serialized` trait** – Tests with shared resources run in parallel
 
 ### Low Priority (Edge Cases)
-- **Date comparisons** — Timezone/DST-dependent assertions
+- **Date comparisons** – Timezone/DST-dependent assertions
 
 ## Example Output
 
@@ -74,6 +74,6 @@ swift test --filter "TestName" --iterations 100
 
 ## Related
 
-- [testing-auditor](/agents/testing-auditor) — Broader test quality audit
-- [swift-testing](/skills/testing/swift-testing) — Swift Testing patterns and best practices
-- [testing-async](/skills/testing/testing-async) — Async testing patterns
+- [testing-auditor](/agents/testing-auditor) – Broader test quality audit
+- [swift-testing](/skills/testing/swift-testing) – Swift Testing patterns and best practices
+- [testing-async](/skills/testing/testing-async) – Async testing patterns

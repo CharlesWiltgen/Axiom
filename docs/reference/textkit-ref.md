@@ -61,14 +61,14 @@ Questions you can ask Claude that will draw from this reference:
 - DiscontiguousAttributedSubstring for non-contiguous selections
 
 ### Viewport Rendering Surfaces & Attachment Reuse (iOS 27)
-- `NSTextViewportRenderingSurface` — render text fragments from a custom view without building a full custom text engine
+- `NSTextViewportRenderingSurface` – render text fragments from a custom view without building a full custom text engine
 - Subclassable viewport delegate on framework text views — override `NSTextViewportLayoutControllerDelegate` hooks directly inside a `UITextView` subclass
-- `registerTextAttachmentViewProviderReusePolicy(_:forTextAttachmentViewProviderType:)` — recycle inline attachment views instead of rebuilding them
+- `registerTextAttachmentViewProviderReusePolicy(_:forTextAttachmentViewProviderType:)` – recycle inline attachment views instead of rebuilding them
 - Collapsible content via `shouldEnumerate` — exclude collapsed paragraphs from layout using the `NSTextContentStorageDelegate`
 
 ## Documentation Scope
 
-This page documents the `axiom-uikit` skill—a comprehensive reference Claude uses when answering TextKit 2 questions. The skill contains detailed API documentation, code examples, and migration patterns.
+This page documents the `axiom-uikit` skill — a comprehensive reference Claude uses when answering TextKit 2 questions. The skill contains detailed API documentation, code examples, and migration patterns.
 
 **For automated scanning:** Use the [textkit-auditor](/agents/textkit-auditor) agent to scan your codebase for TextKit 1 fallback triggers and migration opportunities.
 
@@ -116,15 +116,15 @@ func textViewWritingToolsDidEnd(_ textView: UITextView) {
 
 ## Known Limitations
 
-- **One-way fallback** — Accessing `.layoutManager` permanently switches to TextKit 1
-- **No glyph APIs** — Use NSTextLocation and layout fragments instead
-- **NSTextTable unsupported** — Use NSTextList or custom layouts
+- **One-way fallback** – Accessing `.layoutManager` permanently switches to TextKit 1
+- **No glyph APIs** – Use NSTextLocation and layout fragments instead
+- **NSTextTable unsupported** – Use NSTextList or custom layouts
 
 ## Related Resources
 
-- [textkit-auditor](/agents/textkit-auditor) — Autonomous agent that scans for TextKit 1 fallback triggers
-- [typography-ref](/reference/typography-ref) — Typography, Dynamic Type, and font handling reference
-- [WWDC 2021-10061](https://developer.apple.com/videos/play/wwdc2021/10061/) — Meet TextKit 2
-- [WWDC 2024-10168](https://developer.apple.com/videos/play/wwdc2024/10168/) — Get started with Writing Tools
-- [WWDC 2025-280](https://developer.apple.com/videos/play/wwdc2025/280/) — Cook up a rich text experience in SwiftUI
-- [WWDC 2026-370](https://developer.apple.com/videos/play/wwdc2026/370/) — Viewport rendering surfaces and attachment reuse in TextKit 2
+- [textkit-auditor](/agents/textkit-auditor) – Autonomous agent that scans for TextKit 1 fallback triggers
+- [typography-ref](/reference/typography-ref) – Typography, Dynamic Type, and font handling reference
+- [WWDC 2021-10061](https://developer.apple.com/videos/play/wwdc2021/10061/) – Meet TextKit 2
+- [WWDC 2024-10168](https://developer.apple.com/videos/play/wwdc2024/10168/) – Get started with Writing Tools
+- [WWDC 2025-280](https://developer.apple.com/videos/play/wwdc2025/280/) – Cook up a rich text experience in SwiftUI
+- [WWDC 2026-370](https://developer.apple.com/videos/play/wwdc2026/370/) – Viewport rendering surfaces and attachment reuse in TextKit 2

@@ -80,7 +80,7 @@ Use this skill when:
 
 ## Related
 
-- [SpriteKit API Reference](/reference/spritekit-ref) — Complete API tables for all node types, physics, actions, textures, and particles
-- [SpriteKit Diagnostics](/diagnostic/spritekit-diag) — Decision trees for 7 common SpriteKit symptoms
-- [spritekit-auditor](/agents/spritekit-auditor) — Automated scanning for SpriteKit anti-patterns
-- [Game Input](/skills/games/game-input) — On-screen touch controls and game controller handling for games (including SpriteKit)
+- [SpriteKit API Reference](/reference/spritekit-ref) – Complete API tables for all node types, physics, actions, textures, and particles
+- [SpriteKit Diagnostics](/diagnostic/spritekit-diag) – Decision trees for 7 common SpriteKit symptoms
+- [spritekit-auditor](/agents/spritekit-auditor) – Automated scanning for SpriteKit anti-patterns
+- [Game Input](/skills/games/game-input) – On-screen touch controls and game controller handling for games (including SpriteKit)

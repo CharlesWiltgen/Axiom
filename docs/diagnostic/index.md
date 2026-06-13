@@ -34,16 +34,16 @@ Systematic diagnostics for production issues with mandatory workflows and pressu
 
 Diagnostic skills are reviewed against 4 criteria plus mandatory workflows:
 
-1. **Accuracy** — Every claim cited to official sources, code tested
-2. **Completeness** — 80%+ coverage, edge cases documented, troubleshooting sections
-3. **Clarity** — Examples first, scannable structure, jargon defined
-4. **Practical Value** — Copy-paste ready, expert checklists, real-world impact
-5. **Mandatory Workflows** — Required diagnostic steps with pressure scenario defense
+1. **Accuracy** – Every claim cited to official sources, code tested
+2. **Completeness** – 80%+ coverage, edge cases documented, troubleshooting sections
+3. **Clarity** – Examples first, scannable structure, jargon defined
+4. **Practical Value** – Copy-paste ready, expert checklists, real-world impact
+5. **Mandatory Workflows** – Required diagnostic steps with pressure scenario defense
 
 Diagnostic skills add pressure scenario defense for production crisis situations.
 
 ## Related Resources
 
-- [Reference](/reference/) — Comprehensive API guides without workflows
-- [Skills](/skills/) — Discipline-enforcing TDD-tested workflows
-- [Commands](/commands/) — Quick automated scans
+- [Reference](/reference/) – Comprehensive API guides without workflows
+- [Skills](/skills/) – Discipline-enforcing TDD-tested workflows
+- [Commands](/commands/) – Quick automated scans

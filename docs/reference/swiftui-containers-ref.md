@@ -13,13 +13,13 @@ Comprehensive reference for SwiftUI container views: stacks, grids, outlines, an
 
 This reference covers all SwiftUI container APIs:
 
-- **Stacks** — VStack, HStack, ZStack, Spacer
-- **Lazy Stacks** — LazyVStack, LazyHStack with pinned headers
-- **Grids** — Grid (iOS 16+), LazyVGrid, LazyHGrid, GridItem sizing
-- **Outlines** — List with `children:`, OutlineGroup, DisclosureGroup
-- **Scroll Enhancements** — containerRelativeFrame, scrollTargetLayout, scrollPosition (iOS 17+), onScrollGeometryChange, onScrollVisibilityChange (iOS 18+)
-- **iOS 26 Performance** — 6x faster list loading, 16x faster updates, nested lazy stack optimization
-- **iOS 27 Additions** — `reorderable()` drag-to-reorder in any container, `swipeActionsContainer()` coordination, `asyncImageURLSession()`
+- **Stacks** – VStack, HStack, ZStack, Spacer
+- **Lazy Stacks** – LazyVStack, LazyHStack with pinned headers
+- **Grids** – Grid (iOS 16+), LazyVGrid, LazyHGrid, GridItem sizing
+- **Outlines** – List with `children:`, OutlineGroup, DisclosureGroup
+- **Scroll Enhancements** – containerRelativeFrame, scrollTargetLayout, scrollPosition (iOS 17+), onScrollGeometryChange, onScrollVisibilityChange (iOS 18+)
+- **iOS 26 Performance** – 6x faster list loading, 16x faster updates, nested lazy stack optimization
+- **iOS 27 Additions** – `reorderable()` drag-to-reorder in any container, `swipeActionsContainer()` coordination, `asyncImageURLSession()`
 
 ## Quick Decision
 

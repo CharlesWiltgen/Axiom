@@ -10,17 +10,17 @@ Scan your codebase for iCloud anti-patterns that cause sync failures, data confl
 ## What It Scans
 
 ### CRITICAL (Data Corruption Risk)
-- **Missing NSFileCoordinator** — Reading/writing iCloud Drive files without coordination causes race conditions with sync
-- **Unsafe file access** — Direct Data(contentsOf:) on iCloud URLs
+- **Missing NSFileCoordinator** – Reading/writing iCloud Drive files without coordination causes race conditions with sync
+- **Unsafe file access** – Direct Data(contentsOf:) on iCloud URLs
 
 ### HIGH (Sync Failures)
-- **Missing CloudKit error handling** — Operations without CKError handling (quotaExceeded, serverRecordChanged, notAuthenticated)
-- **Missing entitlement checks** — Accessing ubiquitous container without checking availability
-- **SwiftData + CloudKit anti-patterns** — Using @Attribute(.unique) with CloudKit sync
+- **Missing CloudKit error handling** – Operations without CKError handling (quotaExceeded, serverRecordChanged, notAuthenticated)
+- **Missing entitlement checks** – Accessing ubiquitous container without checking availability
+- **SwiftData + CloudKit anti-patterns** – Using @Attribute(.unique) with CloudKit sync
 
 ### MEDIUM (Data Loss Risk)
-- **Missing conflict resolution** — Not handling hasUnresolvedConflicts for iCloud Drive
-- **Legacy CloudKit APIs** — Using CKDatabase operations instead of CKSyncEngine (iOS 17+)
+- **Missing conflict resolution** – Not handling hasUnresolvedConflicts for iCloud Drive
+- **Legacy CloudKit APIs** – Using CKDatabase operations instead of CKSyncEngine (iOS 17+)
 
 ## Usage
 
@@ -53,12 +53,12 @@ Summary:
 ## CloudKit Errors to Handle
 
 All CloudKit operations should handle:
-- `.quotaExceeded` — User's iCloud storage full
-- `.networkUnavailable` — No internet connection
-- `.serverRecordChanged` — Conflict (concurrent modification)
-- `.notAuthenticated` — User signed out of iCloud
+- `.quotaExceeded` – User's iCloud storage full
+- `.networkUnavailable` – No internet connection
+- `.serverRecordChanged` – Conflict (concurrent modification)
+- `.notAuthenticated` – User signed out of iCloud
 
 ## Related
 
-- [cloud-sync-diag](/diagnostic/cloud-sync-diag) — Sync troubleshooting
-- [swiftdata](/skills/persistence/swiftdata) — SwiftData CloudKit integration
+- [cloud-sync-diag](/diagnostic/cloud-sync-diag) – Sync troubleshooting
+- [swiftdata](/skills/persistence/swiftdata) – SwiftData CloudKit integration

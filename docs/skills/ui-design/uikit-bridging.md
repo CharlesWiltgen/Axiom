@@ -43,6 +43,6 @@ Use this skill when:
 
 ## Related
 
-- [App Composition](/skills/ui-design/app-composition) — App-level integration strategy and migration priority for UIKit → SwiftUI adoption
-- [SwiftUI Animation](/reference/swiftui-animation-ref) — Advanced animation bridging patterns; this skill covers basic `context.transaction.animation` usage
-- [Camera Capture](/skills/integration/camera-capture) — Domain-specific UIViewRepresentable example for camera preview
+- [App Composition](/skills/ui-design/app-composition) – App-level integration strategy and migration priority for UIKit → SwiftUI adoption
+- [SwiftUI Animation](/reference/swiftui-animation-ref) – Advanced animation bridging patterns; this skill covers basic `context.transaction.animation` usage
+- [Camera Capture](/skills/integration/camera-capture) – Domain-specific UIViewRepresentable example for camera preview

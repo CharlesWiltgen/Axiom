@@ -30,5 +30,5 @@ You rarely call these directly — Axiom's skills and agents invoke them for you
 
 Axiom also documents the third-party and Apple CLIs the bundled tools build on:
 
-- [**AXe**](/reference/axe-ref) — simulator HID automation; `xcui` delegates input (`tap`/`type`/`swipe`) to it.
-- [**xctrace**](/reference/xctrace-ref) — Apple's Instruments CLI; `xcprof` wraps it for recording and export.
+- [**AXe**](/reference/axe-ref) – simulator HID automation; `xcui` delegates input (`tap`/`type`/`swipe`) to it.
+- [**xctrace**](/reference/xctrace-ref) – Apple's Instruments CLI; `xcprof` wraps it for recording and export.

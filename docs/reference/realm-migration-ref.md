@@ -108,9 +108,9 @@ Use this reference when:
 
 ## Related Skills
 
-- [swiftdata](/skills/persistence/swiftdata) — SwiftData implementation patterns
-- [database-migration](/skills/persistence/database-migration) — Safe schema evolution
-- [core-data-diag](/diagnostic/core-data-diag) — Core Data troubleshooting (if considering Core Data instead)
+- [swiftdata](/skills/persistence/swiftdata) – SwiftData implementation patterns
+- [database-migration](/skills/persistence/database-migration) – Safe schema evolution
+- [core-data-diag](/diagnostic/core-data-diag) – Core Data troubleshooting (if considering Core Data instead)
 
 ## Documentation Scope
 

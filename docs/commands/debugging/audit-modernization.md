@@ -13,12 +13,12 @@ Launches the **modernization-helper** agent to identify code still using older p
 
 ## What It Checks
 
-1. **ObservableObject → @Observable** — classes using the older protocol that should adopt the macro
-2. **@StateObject → @State** — `@StateObject` declarations on `@Observable` types (which require `@State`)
-3. **Deprecated APIs** — calls to deprecated SwiftUI/UIKit APIs flagged with the corresponding `@available` replacement
-4. **Combine → AsyncSequence** — `Publisher` chains that translate cleanly to `for await`
-5. **Async legacy bridges** — `withCheckedContinuation` calls where a modern async API now exists
+1. **ObservableObject → @Observable** – classes using the older protocol that should adopt the macro
+2. **@StateObject → @State** – `@StateObject` declarations on `@Observable` types (which require `@State`)
+3. **Deprecated APIs** – calls to deprecated SwiftUI/UIKit APIs flagged with the corresponding `@available` replacement
+4. **Combine → AsyncSequence** – `Publisher` chains that translate cleanly to `for await`
+5. **Async legacy bridges** – `withCheckedContinuation` calls where a modern async API now exists
 
 ## Related Agent
 
-- [modernization-helper](/agents/modernization-helper) — The agent that powers this command
+- [modernization-helper](/agents/modernization-helper) – The agent that powers this command

@@ -5,7 +5,7 @@ description: Reference — Complete App Shortcuts API guide for instant Siri/Spo
 
 # App Shortcuts
 
-Complete reference for App Shortcuts framework—pre-configured App Intents that work instantly after install.
+Complete reference for App Shortcuts framework — pre-configured App Intents that work instantly after install.
 
 ## When to Use This Skill
 
@@ -56,9 +56,9 @@ The system uses these exact phrases for Siri activation and Spotlight suggestion
 
 ### Discovery UI Components
 
-- **SiriTipView** — Show users the spoken phrase for a shortcut
-- **ShortcutsLink** — Link to your app's page in Shortcuts app
-- **ShortcutTileColor** — Brand your shortcuts with app colors
+- **SiriTipView** – Show users the spoken phrase for a shortcut
+- **ShortcutsLink** – Link to your app's page in Shortcuts app
+- **ShortcutTileColor** – Brand your shortcuts with app colors
 
 ## Where App Shortcuts Appear
 
@@ -76,6 +76,6 @@ All locations activate immediately after install.
 
 ## Related Skills
 
-- [app-intents-ref](/reference/app-intents-ref) — Complete App Intents implementation reference
-- [app-discoverability](/skills/integration/app-discoverability) — Strategic guide for making apps discoverable
-- [core-spotlight-ref](/reference/core-spotlight-ref) — Core Spotlight and NSUserActivity integration
+- [app-intents-ref](/reference/app-intents-ref) – Complete App Intents implementation reference
+- [app-discoverability](/skills/integration/app-discoverability) – Strategic guide for making apps discoverable
+- [core-spotlight-ref](/reference/core-spotlight-ref) – Core Spotlight and NSUserActivity integration

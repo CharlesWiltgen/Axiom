@@ -38,14 +38,14 @@ Questions you can ask Claude that will draw from this skill:
 
 ## What This Skill Provides
 
-- **Permission flow** — Standard vs provisional authorization, contextual timing
-- **Token management** — Device token lifecycle, server sync, sandbox vs production
-- **Notification types** — Alert, silent, communication, Time Sensitive, Critical with decision tree
-- **Payload design** — Content structure, localization, 4KB discipline
-- **Rich notifications** — Service extensions for media and E2E decryption
-- **Categories and actions** — Actionable notification types and delegate handling
-- **Live Activity push** — Push token observation, start/update/end flows
-- **Pressure scenarios** — Shipping under deadline, debugging token mismatch
+- **Permission flow** – Standard vs provisional authorization, contextual timing
+- **Token management** – Device token lifecycle, server sync, sandbox vs production
+- **Notification types** – Alert, silent, communication, Time Sensitive, Critical with decision tree
+- **Payload design** – Content structure, localization, 4KB discipline
+- **Rich notifications** – Service extensions for media and E2E decryption
+- **Categories and actions** – Actionable notification types and delegate handling
+- **Live Activity push** – Push token observation, start/update/end flows
+- **Pressure scenarios** – Shipping under deadline, debugging token mismatch
 
 ## Documentation Scope
 
@@ -56,7 +56,7 @@ This page documents the `axiom-integration` skill — push notification patterns
 
 ## Related
 
-- [push-notifications-diag](/diagnostic/push-notifications-diag) — Troubleshooting push delivery failures, token issues, sandbox/production mismatch
-- [push-notifications-ref](/reference/push-notifications-ref) — Complete APNs transport, payload format, and notification API reference
-- [extensions-widgets](/skills/integration/extensions-widgets) — Live Activity UI, widget timelines, Dynamic Island
-- [background-processing](/skills/integration/background-processing) — Background execution from silent push notifications
+- [push-notifications-diag](/diagnostic/push-notifications-diag) – Troubleshooting push delivery failures, token issues, sandbox/production mismatch
+- [push-notifications-ref](/reference/push-notifications-ref) – Complete APNs transport, payload format, and notification API reference
+- [extensions-widgets](/skills/integration/extensions-widgets) – Live Activity UI, widget timelines, Dynamic Island
+- [background-processing](/skills/integration/background-processing) – Background execution from silent push notifications

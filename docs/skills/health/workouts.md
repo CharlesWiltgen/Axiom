@@ -91,11 +91,11 @@ This page documents the `workouts` skill in the `axiom-health` suite. The skill 
 
 ## Related
 
-- [workoutkit](/skills/health/workoutkit) — Complementary API for planned/scheduled workouts that run in the Workout app instead of your own
-- [authorization-and-privacy](/skills/health/authorization-and-privacy) — Required read/write permissions for workouts and Info.plist purpose strings
-- [queries](/skills/health/queries) — Reading completed `HKWorkout` samples after the session ends
-- [platform-basics](/skills/watchos/platform-basics) — Watch-specific presentation concerns (Always On, Smart Stack, background modes)
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Actor isolation rules that apply to session and builder delegate callbacks
+- [workoutkit](/skills/health/workoutkit) – Complementary API for planned/scheduled workouts that run in the Workout app instead of your own
+- [authorization-and-privacy](/skills/health/authorization-and-privacy) – Required read/write permissions for workouts and Info.plist purpose strings
+- [queries](/skills/health/queries) – Reading completed `HKWorkout` samples after the session ends
+- [platform-basics](/skills/watchos/platform-basics) – Watch-specific presentation concerns (Always On, Smart Stack, background modes)
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Actor isolation rules that apply to session and builder delegate callbacks
 
 ## Resources
 

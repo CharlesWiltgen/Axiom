@@ -20,11 +20,11 @@ Use this skill when:
 
 ## What This Skill Provides
 
-- **Modern API replacements** — 11 common outdated patterns with modern equivalents and Swift version requirements
-- **Modern syntax** — Shorthand syntax, static member lookup, expression returns
-- **Foundation modernization** — URL APIs, date parsing, name formatting, sort patterns
-- **Swift 6.4 language features (iOS 27)** — `anyAppleOS` availability, `weak let`, `~Sendable`, the unhandled-`Task`-error warning
-- **Claude hallucination corrections** — patterns Claude generates incorrectly
+- **Modern API replacements** – 11 common outdated patterns with modern equivalents and Swift version requirements
+- **Modern syntax** – Shorthand syntax, static member lookup, expression returns
+- **Foundation modernization** – URL APIs, date parsing, name formatting, sort patterns
+- **Swift 6.4 language features (iOS 27)** – `anyAppleOS` availability, `weak let`, `~Sendable`, the unhandled-`Task`-error warning
+- **Claude hallucination corrections** – patterns Claude generates incorrectly
 
 ## Philosophy
 
@@ -34,6 +34,6 @@ This skill is intentionally small. It only covers patterns where Claude consiste
 
 ## Related
 
-- [Swift Performance](/skills/concurrency/swift-performance) — Low-level optimization (COW, ARC, generics) — different from idiom correctness
-- [Swift Concurrency](/skills/concurrency/swift-concurrency) — async/await, actors, Sendable patterns
-- [Modernization Helper](/agents/modernization-helper) — Agent that scans for SwiftUI-specific legacy patterns (ObservableObject → @Observable)
+- [Swift Performance](/skills/concurrency/swift-performance) – Low-level optimization (COW, ARC, generics) — different from idiom correctness
+- [Swift Concurrency](/skills/concurrency/swift-concurrency) – async/await, actors, Sendable patterns
+- [Modernization Helper](/agents/modernization-helper) – Agent that scans for SwiftUI-specific legacy patterns (ObservableObject → @Observable)

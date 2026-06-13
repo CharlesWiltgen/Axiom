@@ -77,8 +77,8 @@ extension MyClass: @preconcurrency SomeDelegate {
 
 ## Related Skills
 
-- [Swift Concurrency](./swift-concurrency) — Complete concurrency guide
-- [Swift Testing](/skills/testing/swift-testing) — Testing MainActor code
+- [Swift Concurrency](./swift-concurrency) – Complete concurrency guide
+- [Swift Testing](/skills/testing/swift-testing) – Testing MainActor code
 
 ## Resources
 

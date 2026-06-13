@@ -32,21 +32,21 @@ Real questions developers ask that this skill answers:
 
 ## What This Skill Provides
 
-- **Decision discipline** — the rules for when adapter training is justified vs. when rungs 1-4 of the Approach Triage will solve the problem at a fraction of the cost
-- **Maintenance-contract framing** — year-1 vs year-2 cost (initial 1-2 weeks, retrains per OS minor, four-axis eval per retrain, per-locale eval, Background Assets integration)
-- **Hardware and entitlements** — 32 GB Apple silicon Mac or Linux GPU; Python 3.11 (the `coremltools` pin breaks on 3.12/3.13); Apple Developer Program for toolkit; `com.apple.developer.foundation-model-adapter` entitlement for deployment
-- **Per-OS coverage strategy** — newest-OS-with-fallback vs per-OS variants; rejection of single-adapter-no-plan
-- **Dataset construction discipline** — sample volumes (100-1k basic, 5k+ complex); short consistent system messages; no verbose preambles
-- **Four-axis eval requirement** — quantitative, human grading, larger-model grading, safety; PFIGSCJK locale grouping (Portuguese, French, Italian, German, Spanish, Chinese-Simplified, Japanese, Korean)
-- **Runtime lifecycle** — `compatibleAdapterIdentifiers(name:)` for variant selection (never hardcode asset pack IDs), `removeObsoleteAdapters()` at launch, `checkForUpdates()` after OS upgrades, unconditional base-model fallback
-- **HIG-compliant UX** — AI involvement disclosure, retry as first-class affordance, constructive coaching on `guardrailViolation`, feedback collection via `LanguageModelFeedbackAttachment` for next-retrain dataset growth
-- **Pressure scenarios with pushback templates** — three canonical scenarios with model dialogue for pushing back on "train ASAP", "ship one adapter", "skip locale eval"
+- **Decision discipline** – the rules for when adapter training is justified vs. when rungs 1-4 of the Approach Triage will solve the problem at a fraction of the cost
+- **Maintenance-contract framing** – year-1 vs year-2 cost (initial 1-2 weeks, retrains per OS minor, four-axis eval per retrain, per-locale eval, Background Assets integration)
+- **Hardware and entitlements** – 32 GB Apple silicon Mac or Linux GPU; Python 3.11 (the `coremltools` pin breaks on 3.12/3.13); Apple Developer Program for toolkit; `com.apple.developer.foundation-model-adapter` entitlement for deployment
+- **Per-OS coverage strategy** – newest-OS-with-fallback vs per-OS variants; rejection of single-adapter-no-plan
+- **Dataset construction discipline** – sample volumes (100-1k basic, 5k+ complex); short consistent system messages; no verbose preambles
+- **Four-axis eval requirement** – quantitative, human grading, larger-model grading, safety; PFIGSCJK locale grouping (Portuguese, French, Italian, German, Spanish, Chinese-Simplified, Japanese, Korean)
+- **Runtime lifecycle** – `compatibleAdapterIdentifiers(name:)` for variant selection (never hardcode asset pack IDs), `removeObsoleteAdapters()` at launch, `checkForUpdates()` after OS upgrades, unconditional base-model fallback
+- **HIG-compliant UX** – AI involvement disclosure, retry as first-class affordance, constructive coaching on `guardrailViolation`, feedback collection via `LanguageModelFeedbackAttachment` for next-retrain dataset growth
+- **Pressure scenarios with pushback templates** – three canonical scenarios with model dialogue for pushing back on "train ASAP", "ship one adapter", "skip locale eval"
 
 ## Related
 
-- [Foundation Models](foundation-models) — base framework; work the Approach Triage (rungs 1-4) here before reaching for adapter training
-- [Foundation Models Adapters Reference](/reference/foundation-models-adapters-ref) — toolkit setup, dataset JSONL schema, training/eval/export CLIs, full `SystemLanguageModel.Adapter` API, `AssetError` cases, compatibility matrix, entitlement flow
-- [Foundation Models Adapters Diagnostics](/diagnostic/foundation-models-adapters-diag) — adapter-specific failure modes (`compatibleAdapterNotFound`, hyphen-name regex violation, tool calls silent from adapter, context-window over-consumption, accuracy drops after OS update, `coremltools.libmilstoragepython` missing)
-- [Background Assets](background-assets) — delivery half: Apple-hosted vs server-hosted asset packs, `xcrun ba-package`, the `onDemand` policy adapters require
+- [Foundation Models](foundation-models) – base framework; work the Approach Triage (rungs 1-4) here before reaching for adapter training
+- [Foundation Models Adapters Reference](/reference/foundation-models-adapters-ref) – toolkit setup, dataset JSONL schema, training/eval/export CLIs, full `SystemLanguageModel.Adapter` API, `AssetError` cases, compatibility matrix, entitlement flow
+- [Foundation Models Adapters Diagnostics](/diagnostic/foundation-models-adapters-diag) – adapter-specific failure modes (`compatibleAdapterNotFound`, hyphen-name regex violation, tool calls silent from adapter, context-window over-consumption, accuracy drops after OS update, `coremltools.libmilstoragepython` missing)
+- [Background Assets](background-assets) – delivery half: Apple-hosted vs server-hosted asset packs, `xcrun ba-package`, the `onDemand` policy adapters require
 - [Foundation Models](foundation-models) Approach Triage section — the deflection ladder developers should work through before deciding to train
-- [foundation-models-auditor agent](/agents/foundation-models-auditor) — automated scanning for Foundation Models anti-patterns
+- [foundation-models-auditor agent](/agents/foundation-models-auditor) – automated scanning for Foundation Models anti-patterns

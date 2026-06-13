@@ -31,18 +31,18 @@ Use this skill when:
 
 ## What This Skill Provides
 
-- **Prerequisites checklist** — Xcode 26.3+, MCP toggle in Settings > Intelligence, at least one open project
+- **Prerequisites checklist** – Xcode 26.3+, MCP toggle in Settings > Intelligence, at least one open project
 - **Per-client config** for Claude Code, Codex, Cursor, VS Code + GitHub Copilot, Gemini CLI
-- **Connection verification** — call `XcodeListWindows` to confirm bridge is alive
-- **Permission dialog model** — PID-based grants, why dialogs reappear, where they must be approved
-- **Multi-Xcode targeting** — auto-detection fallback chain plus manual `MCP_XCODE_PID` and `MCP_XCODE_SESSION_ID` overrides
-- **Schema compliance workaround** — XcodeMCPWrapper proxy for strict clients that need `structuredContent`
-- **Troubleshooting decision tree** — connection failed, empty tools list, wrong project, repeated prompts, response rejected
-- **Letting Xcode launch the agent** — `xcrun mcpbridge run-agent` starts an agent with Xcode's resolved config (auth, env, MCP tools); `run-agent skills export` (Xcode 27) dumps Xcode's built-in skill bundles to disk
-- **Extending Xcode's agent** — per-agent config folders (Claude, Codex, Gemini) for custom models, MCP servers, and skills, plus Agents → Permissions and Plug-ins
+- **Connection verification** – call `XcodeListWindows` to confirm bridge is alive
+- **Permission dialog model** – PID-based grants, why dialogs reappear, where they must be approved
+- **Multi-Xcode targeting** – auto-detection fallback chain plus manual `MCP_XCODE_PID` and `MCP_XCODE_SESSION_ID` overrides
+- **Schema compliance workaround** – XcodeMCPWrapper proxy for strict clients that need `structuredContent`
+- **Troubleshooting decision tree** – connection failed, empty tools list, wrong project, repeated prompts, response rejected
+- **Letting Xcode launch the agent** – `xcrun mcpbridge run-agent` starts an agent with Xcode's resolved config (auth, env, MCP tools); `run-agent skills export` (Xcode 27) dumps Xcode's built-in skill bundles to disk
+- **Extending Xcode's agent** – per-agent config folders (Claude, Codex, Gemini) for custom models, MCP servers, and skills, plus Agents → Permissions and Plug-ins
 
 ## Related
 
-- [Xcode MCP Tools](/skills/xcode-mcp/xcode-mcp-tools) — once setup works, this skill covers workflow patterns and tool gotchas
-- [Xcode MCP Reference](/reference/xcode-mcp-ref) — full parameter and return-shape reference for all 20 MCP tools
-- [Xcode Debugging](/skills/debugging/xcode-debugging) — environment diagnostics for problems that aren't MCP-related (Derived Data, zombie xcodebuild processes, simulators)
+- [Xcode MCP Tools](/skills/xcode-mcp/xcode-mcp-tools) – once setup works, this skill covers workflow patterns and tool gotchas
+- [Xcode MCP Reference](/reference/xcode-mcp-ref) – full parameter and return-shape reference for all 20 MCP tools
+- [Xcode Debugging](/skills/debugging/xcode-debugging) – environment diagnostics for problems that aren't MCP-related (Derived Data, zombie xcodebuild processes, simulators)

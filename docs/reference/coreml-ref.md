@@ -75,9 +75,9 @@ let hasNeuralEngine = MLModel.availableComputeDevices.contains {
 
 ## Related
 
-- [CoreML Skill](/skills/machine-learning/coreml) — decision trees and patterns for common workflows
-- [CoreML Diagnostics](/diagnostic/coreml-diag) — troubleshooting when things go wrong
-- [Foundation Models](/skills/integration/foundation-models) — Apple's built-in LLM when you don't need custom models
+- [CoreML Skill](/skills/machine-learning/coreml) – decision trees and patterns for common workflows
+- [CoreML Diagnostics](/diagnostic/coreml-diag) – troubleshooting when things go wrong
+- [Foundation Models](/skills/integration/foundation-models) – Apple's built-in LLM when you don't need custom models
 
 ### Apple Documentation
 

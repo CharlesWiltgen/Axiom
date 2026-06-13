@@ -36,11 +36,11 @@ Questions you can ask Claude that will draw from this skill:
 - **The 8 Universal Guidelines** quoted verbatim from the CarPlay Developer Guide — primary purpose, never direct to iPhone, all flows possible in CarPlay, relevant to driving, no gaming or social networking, no message content, templates as intended, SiriKit for voice
 - **Per-category design rules** for each of the 10 categories, including the no-lyrics rule for audio apps, the 10 navigation-specific rules, the refresh-rate caps for driving task apps, the QSR simplified-ordering rule, and the voice-only modality rule for conversational apps
 - **Anti-rationalization table** that pre-empts the dozen most common "I'll just…" thoughts that violate CarPlay rules, each paired with the specific rule and source
-- **Entitlement request flow** — what Apple reviews, why category fit is the most common rejection reason, and how to frame your description so the right reviewer signs off
+- **Entitlement request flow** – what Apple reviews, why category fit is the most common rejection reason, and how to frame your description so the right reviewer signs off
 - **Layout, color, icon, and per-template asset sizes** including the 120×120 and 180×180 icon sizes, the no-black-background rule, and the screen-resolution range (800×480 to 1920×720, plus portrait 900×1200)
-- **Error handling for iPhone-locked state** — why CarPlay typically runs with iPhone locked, what storage and Keychain access becomes unavailable, and how to surface errors in CarPlay rather than on the iPhone
-- **iOS 26 additions** — widgets in CarPlay (`.systemSmall` family, `.disfavoredLocations([.carPlay])` for unsuitable widgets), Live Activities (`.small` activity family), CarPlay Ultra and multitouch
-- **Notification rules** — which categories support notifications, the `.carPlay` authorization option, `allowInCarPlay` category option, and the no-message-body rule for communication apps
+- **Error handling for iPhone-locked state** – why CarPlay typically runs with iPhone locked, what storage and Keychain access becomes unavailable, and how to surface errors in CarPlay rather than on the iPhone
+- **iOS 26 additions** – widgets in CarPlay (`.systemSmall` family, `.disfavoredLocations([.carPlay])` for unsuitable widgets), Live Activities (`.small` activity family), CarPlay Ultra and multitouch
+- **Notification rules** – which categories support notifications, the `.carPlay` authorization option, `allowInCarPlay` category option, and the no-message-body rule for communication apps
 - **Expert review checklist** covering category fit, universal guidelines, layout and assets, error and locked-state behavior, and iOS 26 additions — run it before requesting the entitlement
 
 ## Key Pattern
@@ -59,11 +59,11 @@ Most CarPlay use happens with iPhone locked in a pocket or center console. Your 
 
 ## Related
 
-- [now-playing](/skills/integration/now-playing) — Core Now Playing patterns that CarPlay audio apps build on (this is the foundation; CarPlay-specific customization layers on top)
-- [now-playing-carplay](/reference/now-playing-carplay) — `CPNowPlayingTemplate` API mechanics, sports mode metadata, and the CarPlay-specific gotchas table for audio apps
-- [carplay-templates-ref](/reference/carplay-templates-ref) — Full reference for all 12 CarPlay templates, per-category availability matrix, and template depth limits
-- [carplay-navigation-ref](/reference/carplay-navigation-ref) — Navigation-specific reference (base view rules, route guidance lifecycle, instrument cluster, HUD metadata, multitouch on iOS 26+)
-- [push-notifications](/skills/integration/push-notifications) — Notification authorization including the `.carPlay` option and `allowInCarPlay` category configuration
+- [now-playing](/skills/integration/now-playing) – Core Now Playing patterns that CarPlay audio apps build on (this is the foundation; CarPlay-specific customization layers on top)
+- [now-playing-carplay](/reference/now-playing-carplay) – `CPNowPlayingTemplate` API mechanics, sports mode metadata, and the CarPlay-specific gotchas table for audio apps
+- [carplay-templates-ref](/reference/carplay-templates-ref) – Full reference for all 12 CarPlay templates, per-category availability matrix, and template depth limits
+- [carplay-navigation-ref](/reference/carplay-navigation-ref) – Navigation-specific reference (base view rules, route guidance lifecycle, instrument cluster, HUD metadata, multitouch on iOS 26+)
+- [push-notifications](/skills/integration/push-notifications) – Notification authorization including the `.carPlay` option and `allowInCarPlay` category configuration
 
 ## Resources
 

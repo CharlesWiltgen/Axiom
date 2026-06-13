@@ -30,12 +30,12 @@ Questions you can ask Claude that will draw from this skill:
 
 ## What This Skill Provides
 
-- **The two-trace workflow** — record a baseline, make the change, record the current trace exercising the *same* workload, then compare.
-- **Reading the deltas** — inclusive vs self share, severity ranking (% delta × absolute time), and the regression/improvement classification.
-- **A CI recipe** — a shell gate plus a GitHub Actions example using `--fail-on-regression`.
-- **Exit-code semantics** — `0` clean, `2` usage/environment error, `3` regression met the threshold under the gate, `8` output-write error.
-- **Honest caveats** — raw-address frames are excluded (ASLR), the top-frame cutoff, why ms is approximate, and that network deltas are totals only.
-- **The GUI alternative** — Instruments in Xcode 27 has built-in Run Comparisons for interactive before/after analysis; `xcprof compare` remains the headless/CI path.
+- **The two-trace workflow** – record a baseline, make the change, record the current trace exercising the *same* workload, then compare.
+- **Reading the deltas** – inclusive vs self share, severity ranking (% delta × absolute time), and the regression/improvement classification.
+- **A CI recipe** – a shell gate plus a GitHub Actions example using `--fail-on-regression`.
+- **Exit-code semantics** – `0` clean, `2` usage/environment error, `3` regression met the threshold under the gate, `8` output-write error.
+- **Honest caveats** – raw-address frames are excluded (ASLR), the top-frame cutoff, why ms is approximate, and that network deltas are totals only.
+- **The GUI alternative** – Instruments in Xcode 27 has built-in Run Comparisons for interactive before/after analysis; `xcprof compare` remains the headless/CI path.
 
 ## Documentation Scope
 
@@ -46,6 +46,6 @@ This page documents the `trace-comparison` skill in the `axiom-performance` suit
 
 ## Related
 
-- [/axiom:compare-traces](/commands/debugging/compare-traces) — The command that runs this comparison
-- [Performance Profiling](/skills/debugging/performance-profiling) — Choosing and reading Instruments tools
-- [performance-profiler](/agents/performance-profiler) — Records the traces you compare
+- [/axiom:compare-traces](/commands/debugging/compare-traces) – The command that runs this comparison
+- [Performance Profiling](/skills/debugging/performance-profiling) – Choosing and reading Instruments tools
+- [performance-profiler](/agents/performance-profiler) – Records the traces you compare

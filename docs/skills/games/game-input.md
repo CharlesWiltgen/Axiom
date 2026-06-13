@@ -48,6 +48,6 @@ Use this skill when:
 
 ## Related
 
-- [SpriteKit](/skills/games/spritekit) — Touch handling inside SpriteKit scenes; this skill covers on-screen controls and controllers
-- [Metal Migration](/skills/games/metal-migration) — Porting the rest of the game (rendering, shaders, Game Porting Toolkit)
-- [RealityKit](/skills/games/realitykit) — 3D and spatial games that consume the same controller input
+- [SpriteKit](/skills/games/spritekit) – Touch handling inside SpriteKit scenes; this skill covers on-screen controls and controllers
+- [Metal Migration](/skills/games/metal-migration) – Porting the rest of the game (rendering, shaders, Game Porting Toolkit)
+- [RealityKit](/skills/games/realitykit) – 3D and spatial games that consume the same controller input

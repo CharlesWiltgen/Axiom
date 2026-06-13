@@ -122,7 +122,7 @@ config.allowsCellularAccess = false
 
 ## Documentation Scope
 
-This page documents the `axiom-performance` reference skill—complete API coverage Claude uses when you need specific energy optimization APIs and patterns.
+This page documents the `axiom-performance` reference skill — complete API coverage Claude uses when you need specific energy optimization APIs and patterns.
 
 **For discipline patterns:** See [energy](/skills/debugging/energy) for Power Profiler workflows and decision trees.
 
@@ -130,8 +130,8 @@ This page documents the `axiom-performance` reference skill—complete API cover
 
 ## Related
 
-- [energy](/skills/debugging/energy) — Discipline skill with Power Profiler workflows
-- [energy-diag](/diagnostic/energy-diag) — Symptom-based troubleshooting
+- [energy](/skills/debugging/energy) – Discipline skill with Power Profiler workflows
+- [energy-diag](/diagnostic/energy-diag) – Symptom-based troubleshooting
 
 ## Resources
 

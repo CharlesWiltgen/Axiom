@@ -20,15 +20,15 @@ Automated simulator testing with visual verification for closed-loop debugging.
 ## What It Does
 
 ### Testing Capabilities
-1. **Screenshot capture** — Visual verification and debugging
-2. **Video recording** — Capture complex workflows
-3. **Location simulation** — Test GPS-based features
-4. **Push notifications** — Test notification handling without a server
-5. **Permission management** — Grant/revoke permissions programmatically
-6. **Deep link navigation** — Navigate to specific screens
-7. **App lifecycle** — Launch, terminate, install apps
-8. **Status bar override** — Clean screenshots for documentation
-9. **Log analysis** — Monitor console for crashes/errors
+1. **Screenshot capture** – Visual verification and debugging
+2. **Video recording** – Capture complex workflows
+3. **Location simulation** – Test GPS-based features
+4. **Push notifications** – Test notification handling without a server
+5. **Permission management** – Grant/revoke permissions programmatically
+6. **Deep link navigation** – Navigate to specific screens
+7. **App lifecycle** – Launch, terminate, install apps
+8. **Status bar override** – Clean screenshots for documentation
+9. **Log analysis** – Monitor console for crashes/errors
 
 ### Test Scenarios Fixed
 - Visual verification → Screenshot capture + Claude analysis
@@ -130,11 +130,11 @@ Automated simulator testing with visual verification for closed-loop debugging.
 
 ## Related Tools
 
-- **`/axiom:screenshot`** — Quick screenshot capture without full testing
-- **`axiom-swift` skill** — Add debug-only deep links for navigation
-- **`axiom-build` skill** — Environment-first debugging
-- **`axiom-swiftui-debugging` skill** — SwiftUI-specific debugging with simulator verification
-- **`axiom-performance` skill** — Memory leak detection with visual verification
+- **`/axiom:screenshot`** – Quick screenshot capture without full testing
+- **`axiom-swift` skill** – Add debug-only deep links for navigation
+- **`axiom-build` skill** – Environment-first debugging
+- **`axiom-swiftui-debugging` skill** – SwiftUI-specific debugging with simulator verification
+- **`axiom-performance` skill** – Memory leak detection with visual verification
 
 ## Real-World Impact
 

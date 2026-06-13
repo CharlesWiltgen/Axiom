@@ -54,10 +54,10 @@ This page documents the `appkit-modernization` skill in the `axiom-macos` suite.
 
 ## Related
 
-- [appkit-interop](/skills/macos/appkit-interop) — hosting SwiftUI in AppKit (observation tracking, NSHostingMenu, SwiftUI scenes from an app delegate)
-- [windows](/skills/macos/windows) — scene types, window lifecycle, and document apps
-- [menus-and-commands](/skills/macos/menus-and-commands) — menu bar and command patterns
-- [uikit-modernization](/skills/ui-design/uikit-modernization) — the UIKit sibling skill
+- [appkit-interop](/skills/macos/appkit-interop) – hosting SwiftUI in AppKit (observation tracking, NSHostingMenu, SwiftUI scenes from an app delegate)
+- [windows](/skills/macos/windows) – scene types, window lifecycle, and document apps
+- [menus-and-commands](/skills/macos/menus-and-commands) – menu bar and command patterns
+- [uikit-modernization](/skills/ui-design/uikit-modernization) – the UIKit sibling skill
 
 ## Resources
 

@@ -104,16 +104,16 @@ migrator.registerMigration("v4_migrate_age_to_int") { db in
 
 ## Documentation Scope
 
-This page documents the `axiom-data` skill—safe schema evolution patterns Claude uses when helping you plan and execute migrations. The skill contains complete patterns for SQLite, GRDB, SQLiteData, and SwiftData.
+This page documents the `axiom-data` skill — safe schema evolution patterns Claude uses when helping you plan and execute migrations. The skill contains complete patterns for SQLite, GRDB, SQLiteData, and SwiftData.
 
 **For persistence frameworks:** See [swiftdata](/skills/persistence/swiftdata), [grdb](/skills/persistence/grdb), or [sqlitedata](/skills/persistence/sqlitedata) for framework-specific guidance.
 
 ## Related
 
-- [swiftdata](/skills/persistence/swiftdata) — SwiftData patterns including schema versioning
-- [grdb](/skills/persistence/grdb) — GRDB DatabaseMigrator patterns
-- [sqlitedata](/skills/persistence/sqlitedata) — SQLiteData @Column and migration patterns
-- [xcode-debugging](/skills/debugging/xcode-debugging) — Environment diagnostics when migrations fail
+- [swiftdata](/skills/persistence/swiftdata) – SwiftData patterns including schema versioning
+- [grdb](/skills/persistence/grdb) – GRDB DatabaseMigrator patterns
+- [sqlitedata](/skills/persistence/sqlitedata) – SQLiteData @Column and migration patterns
+- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment diagnostics when migrations fail
 
 ## Resources
 

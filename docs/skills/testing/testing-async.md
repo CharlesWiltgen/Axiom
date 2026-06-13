@@ -97,8 +97,8 @@ await confirmation { confirm in
 
 ## Related Skills
 
-- [Swift Testing](./swift-testing) — Complete Swift Testing guide
-- [Swift Concurrency](/skills/concurrency/swift-concurrency) — Async/await patterns
+- [Swift Testing](./swift-testing) – Complete Swift Testing guide
+- [Swift Concurrency](/skills/concurrency/swift-concurrency) – Async/await patterns
 
 ## Resources
 

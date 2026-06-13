@@ -34,24 +34,24 @@ Real questions developers ask that this skill answers:
 
 ## What This Skill Provides
 
-- **Pass anatomy** — required contents of a `.pkpass` (pass.json, manifest.json, signature, icon variants); the fact that `.pkpass` is a renamed zip
-- **Pass Type Identifier plus Serial Number** — how `(passTypeIdentifier, serialNumber)` forms the unique key and how re-issuing with the same pair replaces the prior pass
-- **Pass style decision** — `boardingPass`, `eventTicket`, `coupon`, `storeCard`, `generic`; iOS 18 `posterEventTicket` opt-in via `preferredStyleSchemes`
-- **The signing workflow that breaks teams** — eight steps: Pass Type ID, CSR, certificate, WWDR Intermediate, manifest with SHA-1 hashes, PKCS #7 detached signature with S/MIME signing-time, zip-and-rename, simulator test; common failure modes for each
-- **The "don't roll your own" recommendation** — server-side libraries for Node, Ruby, Python, Go; most signing failures originate from scratch implementations
-- **Distribution channels** — `PKAddPassButton`, email attachment with `application/vnd.apple.pkpass`, web download, multi-pass `.pkpasses` bundles (10 passes max, 150 MB total)
-- **Web service for updates** — five Apple-defined endpoints, `ApplePass <authenticationToken>` auth, APNs flow with the Pass Type ID Cert as both signing and push identity, the discipline rule of only pushing for time-critical changes
-- **Lock-screen relevance** — `relevantDate`, `locations` (max 10), `beacons` (max 10); per-style relevance rules
-- **NFC payloads** — `nfc` object schema, separate entitlement requirement; cross-reference to Tap to Pay for the merchant-side read surface
-- **iOS 18 poster event ticket migration** — semantic tags, poster art, the NFC vs QR/barcode incompatibility
-- **Auto-hide expired passes** — `expirationDate`, `voided: true`, stale `relevantDate`
-- **Localization** — `.lproj` directories, `pass.strings` in UTF-16, system-formatted date and currency values
+- **Pass anatomy** – required contents of a `.pkpass` (pass.json, manifest.json, signature, icon variants); the fact that `.pkpass` is a renamed zip
+- **Pass Type Identifier plus Serial Number** – how `(passTypeIdentifier, serialNumber)` forms the unique key and how re-issuing with the same pair replaces the prior pass
+- **Pass style decision** – `boardingPass`, `eventTicket`, `coupon`, `storeCard`, `generic`; iOS 18 `posterEventTicket` opt-in via `preferredStyleSchemes`
+- **The signing workflow that breaks teams** – eight steps: Pass Type ID, CSR, certificate, WWDR Intermediate, manifest with SHA-1 hashes, PKCS #7 detached signature with S/MIME signing-time, zip-and-rename, simulator test; common failure modes for each
+- **The "don't roll your own" recommendation** – server-side libraries for Node, Ruby, Python, Go; most signing failures originate from scratch implementations
+- **Distribution channels** – `PKAddPassButton`, email attachment with `application/vnd.apple.pkpass`, web download, multi-pass `.pkpasses` bundles (10 passes max, 150 MB total)
+- **Web service for updates** – five Apple-defined endpoints, `ApplePass <authenticationToken>` auth, APNs flow with the Pass Type ID Cert as both signing and push identity, the discipline rule of only pushing for time-critical changes
+- **Lock-screen relevance** – `relevantDate`, `locations` (max 10), `beacons` (max 10); per-style relevance rules
+- **NFC payloads** – `nfc` object schema, separate entitlement requirement; cross-reference to Tap to Pay for the merchant-side read surface
+- **iOS 18 poster event ticket migration** – semantic tags, poster art, the NFC vs QR/barcode incompatibility
+- **Auto-hide expired passes** – `expirationDate`, `voided: true`, stale `relevantDate`
+- **Localization** – `.lproj` directories, `pass.strings` in UTF-16, system-formatted date and currency values
 
 ## Related
 
-- [Wallet Passes Reference](/reference/wallet-passes-ref) — `pass.json` schema, field dictionary keys, semantic tags, barcode formats, `PKPassLibrary`, image dimension table
-- [Wallet Orders](/skills/integration/wallet-orders) — sibling surface for post-purchase tracking; shares the PKCS #7 signing chain mechanics
-- [Tap to Pay](/skills/integration/tap-to-pay) — the merchant-side `ProximityReader` API that reads NFC loyalty passes at checkout
-- [Apple Pay](/skills/integration/apple-pay) — the auth result that can hand off a `PKPaymentOrderDetails` (orders) but does not produce passes directly
-- [Payments Diagnostics](/diagnostic/payments-diag) — the nine failure modes for "pass won't import" and the update-delivery failure tree
-- [Keychain Reference](/reference/keychain-ref) — generic cert export and `.p12` mechanics the Pass Type ID Cert plugs into
+- [Wallet Passes Reference](/reference/wallet-passes-ref) – `pass.json` schema, field dictionary keys, semantic tags, barcode formats, `PKPassLibrary`, image dimension table
+- [Wallet Orders](/skills/integration/wallet-orders) – sibling surface for post-purchase tracking; shares the PKCS #7 signing chain mechanics
+- [Tap to Pay](/skills/integration/tap-to-pay) – the merchant-side `ProximityReader` API that reads NFC loyalty passes at checkout
+- [Apple Pay](/skills/integration/apple-pay) – the auth result that can hand off a `PKPaymentOrderDetails` (orders) but does not produce passes directly
+- [Payments Diagnostics](/diagnostic/payments-diag) – the nine failure modes for "pass won't import" and the update-delivery failure tree
+- [Keychain Reference](/reference/keychain-ref) – generic cert export and `.p12` mechanics the Pass Type ID Cert plugs into

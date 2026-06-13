@@ -33,5 +33,5 @@ Guides you through capturing simulator console output:
 
 ## Related
 
-- [xclog Reference](/skills/debugging/xclog) — full tool documentation with JSON schema and workflows
-- [Xcode Debugging](/skills/debugging/xcode-debugging) — for build-time issues (xclog is for runtime)
+- [xclog Reference](/skills/debugging/xclog) – full tool documentation with JSON schema and workflows
+- [Xcode Debugging](/skills/debugging/xcode-debugging) – for build-time issues (xclog is for runtime)

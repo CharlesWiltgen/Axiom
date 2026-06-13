@@ -14,23 +14,23 @@ Complete guide to all SwiftUI layout APIs for building adaptive interfaces, base
 ## What This Reference Covers
 
 ### Container Selection
-- **ViewThatFits** — Automatic variant selection (iOS 16+)
-- **AnyLayout** — Type-erased animated layout switching (iOS 16+)
-- **Layout Protocol** — Custom layout algorithms (iOS 16+)
+- **ViewThatFits** – Automatic variant selection (iOS 16+)
+- **AnyLayout** – Type-erased animated layout switching (iOS 16+)
+- **Layout Protocol** – Custom layout algorithms (iOS 16+)
 
 ### Geometry Reading
-- **onGeometryChange** — Efficient geometry reading without layout side effects (iOS 16+ backported)
-- **GeometryReader** — Layout-phase geometry access (iOS 13+)
+- **onGeometryChange** – Efficient geometry reading without layout side effects (iOS 16+ backported)
+- **GeometryReader** – Layout-phase geometry access (iOS 13+)
 
 ### Trait-Based Adaptation
-- **Size Classes** — horizontalSizeClass, verticalSizeClass
-- **Dynamic Type** — dynamicTypeSize.isAccessibilitySize
-- **ScaledMetric** — Scaled dimensions for accessibility
+- **Size Classes** – horizontalSizeClass, verticalSizeClass
+- **Dynamic Type** – dynamicTypeSize.isAccessibilitySize
+- **ScaledMetric** – Scaled dimensions for accessibility
 
 ### iOS 26 Window APIs
-- **Window resize anchor** — Control resize animation origin
-- **Menu bar commands** — iPad menu bar via `.commands`
-- **NavigationSplitView** — Automatic column visibility
+- **Window resize anchor** – Control resize animation origin
+- **Menu bar commands** – iPad menu bar via `.commands`
+- **NavigationSplitView** – Automatic column visibility
 
 ## Key Patterns
 
@@ -74,6 +74,6 @@ layout { content }
 
 ## Related Resources
 
-- [swiftui-layout](/skills/ui-design/swiftui-layout) — Decision guidance and anti-patterns
+- [swiftui-layout](/skills/ui-design/swiftui-layout) – Decision guidance and anti-patterns
 - [Apple Documentation: Layout Protocol](https://developer.apple.com/documentation/swiftui/layout)
 - [Apple Documentation: ViewThatFits](https://developer.apple.com/documentation/swiftui/viewthatfits)

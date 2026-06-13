@@ -72,64 +72,64 @@ Commands output results with `file:line` references and link to relevant skills 
 ## Command Categories
 
 ### Utility
-- `/axiom:ask` — Natural language helper
-- `/axiom:audit` — Unified audit command (smart selector or direct area targeting)
-- `/axiom:health-check` — Run all relevant auditors in parallel with unified report
-- `/axiom:status` — Project health dashboard
+- `/axiom:ask` – Natural language helper
+- `/axiom:audit` – Unified audit command (smart selector or direct area targeting)
+- `/axiom:health-check` – Run all relevant auditors in parallel with unified report
+- `/axiom:status` – Project health dashboard
 
 ### Build & Environment
-- `/axiom:fix-build` — Automatic build failure diagnosis and fixes
-- `/axiom:optimize-build` — Build performance optimization
+- `/axiom:fix-build` – Automatic build failure diagnosis and fixes
+- `/axiom:optimize-build` – Build performance optimization
 
 ### Debugging
-- `/axiom:analyze-crash` — Parse and analyze crash logs
-- `/axiom:console` — Capture simulator console output (print + os_log) as structured JSON
-- `/axiom:profile` — Automated performance profiling via xctrace CLI
+- `/axiom:analyze-crash` – Parse and analyze crash logs
+- `/axiom:console` – Capture simulator console output (print + os_log) as structured JSON
+- `/axiom:profile` – Automated performance profiling via xctrace CLI
 
 ### Testing
-- `/axiom:run-tests` — Run XCUITests and parse results
-- `/axiom:screenshot` — Quick simulator screenshot
-- `/axiom:test-simulator` — Full simulator testing capabilities
+- `/axiom:run-tests` – Run XCUITests and parse results
+- `/axiom:screenshot` – Quick simulator screenshot
+- `/axiom:test-simulator` – Full simulator testing capabilities
 
 ## Audit Areas
 
 The `/axiom:audit` command supports these areas:
 
 ### UI & Design
-- `accessibility` — VoiceOver, Dynamic Type, WCAG compliance
-- `liquid-glass` — Liquid Glass adoption opportunities
-- `swiftui-architecture` — SwiftUI architecture and testability
-- `swiftui-layout` — GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints
-- `swiftui-nav` — Navigation architecture
-- `swiftui-performance` — SwiftUI performance anti-patterns
-- `textkit` — TextKit 1 vs 2 modernization
-- `ux-flow` — Dead ends, dismiss traps, missing states
+- `accessibility` – VoiceOver, Dynamic Type, WCAG compliance
+- `liquid-glass` – Liquid Glass adoption opportunities
+- `swiftui-architecture` – SwiftUI architecture and testability
+- `swiftui-layout` – GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints
+- `swiftui-nav` – Navigation architecture
+- `swiftui-performance` – SwiftUI performance anti-patterns
+- `textkit` – TextKit 1 vs 2 modernization
+- `ux-flow` – Dead ends, dismiss traps, missing states
 
 ### Code Quality
-- `codable` — JSON serialization anti-patterns
-- `concurrency` — Swift 6 strict concurrency
-- `energy` — Battery drain, timer abuse, polling
-- `memory` — Memory leak detection
+- `codable` – JSON serialization anti-patterns
+- `concurrency` – Swift 6 strict concurrency
+- `energy` – Battery drain, timer abuse, polling
+- `memory` – Memory leak detection
 - `security` / `privacy` — Hardcoded credentials, Privacy Manifests, ATS
-- `swift-performance` — ARC and allocation issues
-- `testing` — Flaky tests, missing assertions, Swift Testing migration
+- `swift-performance` – ARC and allocation issues
+- `testing` – Flaky tests, missing assertions, Swift Testing migration
 
 ### Persistence & Storage
-- `core-data` — Core Data safety and migrations
-- `database-schema` — Unsafe ALTER TABLE, DROP operations, migration safety
-- `icloud` — iCloud sync reliability
-- `storage` — File storage safety
-- `swiftdata` — SwiftData models, relationships, N+1 patterns
+- `core-data` – Core Data safety and migrations
+- `database-schema` – Unsafe ALTER TABLE, DROP operations, migration safety
+- `icloud` – iCloud sync reliability
+- `storage` – File storage safety
+- `swiftdata` – SwiftData models, relationships, N+1 patterns
 
 ### Integration
-- `camera` — Camera capture issues, deprecated APIs
-- `foundation-models` — Foundation Models availability, session lifecycle
-- `networking` — Deprecated networking APIs
-- `spritekit` — Physics bitmask issues, draw call waste
+- `camera` – Camera capture issues, deprecated APIs
+- `foundation-models` – Foundation Models availability, session lifecycle
+- `networking` – Deprecated networking APIs
+- `spritekit` – Physics bitmask issues, draw call waste
 
 ### Shipping
-- `screenshots` — App Store screenshot validation
-- `modernization` — Legacy pattern migration (ObservableObject → @Observable)
+- `screenshots` – App Store screenshot validation
+- `modernization` – Legacy pattern migration (ObservableObject → @Observable)
 
 ### Project-Wide
-- `all` — Run all relevant auditors via `/axiom:health-check`
+- `all` – Run all relevant auditors via `/axiom:health-check`

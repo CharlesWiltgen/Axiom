@@ -35,12 +35,12 @@ Questions you can ask Claude that will draw from this skill:
 
 ### 6 Playbooks for Common Debugging Scenarios
 
-1. **Crash Triage** — Read stop reasons, navigate the call stack, inspect crash context
-2. **Inspect State** — Choose the right command (`v` vs `p` vs `po`), dig into nested types, handle optionals and collections
-3. **When `po` Doesn't Work** — Swift struct workarounds, protocol-typed values, iterative dynamic type resolution
-4. **Breakpoint Strategy** — Conditional, symbolic, exception, and one-shot breakpoints
-5. **Expression Evaluation** — Test fixes at runtime, modify state, call functions without rebuilding
-6. **Thread Analysis** — Navigate threads, read backtraces, identify which thread caused the issue
+1. **Crash Triage** – Read stop reasons, navigate the call stack, inspect crash context
+2. **Inspect State** – Choose the right command (`v` vs `p` vs `po`), dig into nested types, handle optionals and collections
+3. **When `po` Doesn't Work** – Swift struct workarounds, protocol-typed values, iterative dynamic type resolution
+4. **Breakpoint Strategy** – Conditional, symbolic, exception, and one-shot breakpoints
+5. **Expression Evaluation** – Test fixes at runtime, modify state, call functions without rebuilding
+6. **Thread Analysis** – Navigate threads, read backtraces, identify which thread caused the issue
 
 ### Decision Trees
 
@@ -62,11 +62,11 @@ This page documents the `axiom-build` skill — the debugging workflow and decis
 
 ## Related
 
-- [LLDB Command Reference](/reference/lldb-ref) — Complete command reference organized by task (variables, breakpoints, threads, expressions, memory)
-- [Xcode Debugging](/skills/debugging/xcode-debugging) — Environment-first diagnostics for build failures and Xcode issues
-- [Memory Debugging](/skills/debugging/memory-debugging) — Instruments-based memory leak diagnosis (use when memory grows over time)
-- [Performance Profiling](/skills/debugging/performance-profiling) — Instruments workflows for CPU, memory, and energy (use when measuring trends)
-- [Hang Diagnostics](/skills/debugging/hang-diagnostics) — Diagnosis approach for frozen apps (may use LLDB for thread inspection)
+- [LLDB Command Reference](/reference/lldb-ref) – Complete command reference organized by task (variables, breakpoints, threads, expressions, memory)
+- [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics for build failures and Xcode issues
+- [Memory Debugging](/skills/debugging/memory-debugging) – Instruments-based memory leak diagnosis (use when memory grows over time)
+- [Performance Profiling](/skills/debugging/performance-profiling) – Instruments workflows for CPU, memory, and energy (use when measuring trends)
+- [Hang Diagnostics](/skills/debugging/hang-diagnostics) – Diagnosis approach for frozen apps (may use LLDB for thread inspection)
 
 ## Resources
 

@@ -102,9 +102,9 @@ This page documents the `localization-research-ref` skill in the `axiom-integrat
 
 ## Related
 
-- [localization](/skills/integration/localization) — String Catalog mechanics, SwiftUI/UIKit APIs, plurals, RTL, formatters
-- [Accessibility Diagnostics](/diagnostic/accessibility-diag) — VoiceOver labels and hints (the strings this reference helps translate)
-- [hig](/skills/ui-design/hig) — HIG terminology conventions
+- [localization](/skills/integration/localization) – String Catalog mechanics, SwiftUI/UIKit APIs, plurals, RTL, formatters
+- [Accessibility Diagnostics](/diagnostic/accessibility-diag) – VoiceOver labels and hints (the strings this reference helps translate)
+- [hig](/skills/ui-design/hig) – HIG terminology conventions
 
 ## Resources
 

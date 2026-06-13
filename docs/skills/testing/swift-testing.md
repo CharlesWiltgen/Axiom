@@ -87,8 +87,8 @@ func flavorWithoutNuts(_ flavor: IceCream) {
 
 ## Related
 
-- [ui-testing](/skills/ui-design/ui-testing) — UI testing with Recording UI Automation
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Async patterns for testing
+- [ui-testing](/skills/ui-design/ui-testing) – UI testing with Recording UI Automation
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns for testing
 
 ## Resources
 

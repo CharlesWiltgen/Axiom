@@ -39,20 +39,21 @@ Questions you can ask Claude that will draw from this reference:
 - "How does the IAP review pipeline work?"
 - "What changed for App Store submissions in WWDC25?"
 - "How do I set up Retention Messaging or a Product Page Header?"
+- "How do I onboard my app to Xcode Cloud and set up TestFlight distribution?"
 
 ## What's Covered
 
-- **Part 1: Metadata Fields** — Immutable fields warning (Bundle ID, Product ID, Subscription Duration), all required fields with character limits, complete screenshot pixel dimensions for all device sizes with fallback chains, App Preview codec specs (H.264/ProRes 422 HQ, 15-30s, 500MB), icon requirements, localization rules
-- **Part 2: Privacy Requirements** — Privacy manifest XML schema, Required Reason API categories with reason codes, Privacy Nutrition Labels, ATT, purpose strings, plus gotchas (custom values silently rejected by Xcode, IP address declaration, iOS 17 tracking domain blocking, web view collection)
-- **Part 3: App Review Guidelines** — Verified index (Feb 6 2026 revision) for all sections 1-5, top 10 rejection causes, zero-tolerance guidelines, sensitive app types requiring extra documentation
-- **Part 4: Age Rating System** — Five-tier ratings (4+/9+/13+/16+/18+), OS 26 adds 12+ and 17+, capability declarations, regional mapping, questionnaire topics
-- **Part 5: Export Compliance** — Three-tier encryption system (exempt/industry-standard/proprietary), decision tree, Info.plist keys, France-specific ANSSI requirements
-- **Part 6: Account Requirements** — Account deletion checklist, SIWA rules and exceptions, token revocation
-- **Part 7: Monetization** — IAP submission pipeline, subscription rules, loot box disclosure, external payment eligibility, subscription group architecture
-- **Part 8: EU Compliance** — DSA trader status, trader requirements, alternative distribution
-- **Part 9: Build Upload** — Upload methods, build identifiers, SDK requirements, processing stages, TestFlight readiness checklist (90-day expiry, 10K external testers, 6 builds/24h limit, first external build needs full review)
-- **Part 10: WWDC25 Changes** — Draft submissions, reusable build numbers, accessibility nutrition labels, AI-generated tags, custom product page keywords, expanded offer codes
-- **Part 11: WWDC26 Changes** — Product Page Header and search-results visuals via the Asset Library (standalone review, real-time swaps), Retention Messaging in the subscription cancellation flow (including the real-time server API), group and volume subscription purchasing (ABM/ASM, volume pricing bands), enhanced IAP review submissions (grouped review items, reviewSubmissions API expansion)
+- **Part 1: Metadata Fields** – Immutable fields warning (Bundle ID, Product ID, Subscription Duration), all required fields with character limits, complete screenshot pixel dimensions for all device sizes with fallback chains, App Preview codec specs (H.264/ProRes 422 HQ, 15-30s, 500MB), icon requirements, localization rules
+- **Part 2: Privacy Requirements** – Privacy manifest XML schema, Required Reason API categories with reason codes, Privacy Nutrition Labels, ATT, purpose strings, plus gotchas (custom values silently rejected by Xcode, IP address declaration, iOS 17 tracking domain blocking, web view collection)
+- **Part 3: App Review Guidelines** – Verified index (Feb 6 2026 revision) for all sections 1-5, top 10 rejection causes, zero-tolerance guidelines, sensitive app types requiring extra documentation
+- **Part 4: Age Rating System** – Five-tier ratings (4+/9+/13+/16+/18+), OS 26 adds 12+ and 17+, capability declarations, regional mapping, questionnaire topics
+- **Part 5: Export Compliance** – Three-tier encryption system (exempt/industry-standard/proprietary), decision tree, Info.plist keys, France-specific ANSSI requirements
+- **Part 6: Account Requirements** – Account deletion checklist, SIWA rules and exceptions, token revocation
+- **Part 7: Monetization** – IAP submission pipeline, subscription rules, loot box disclosure, external payment eligibility, subscription group architecture
+- **Part 8: EU Compliance** – DSA trader status, trader requirements, alternative distribution
+- **Part 9: Build Upload** – Upload methods, build identifiers, SDK requirements, processing stages, TestFlight readiness checklist (90-day expiry, 10K external testers, 6 builds/24h limit, first external build needs full review), Xcode Cloud CI/CD (onboarding, ephemeral-VM source handling, distribution setup, build webhooks, additional repositories)
+- **Part 10: WWDC25 Changes** – Draft submissions, reusable build numbers, accessibility nutrition labels, AI-generated tags, custom product page keywords, expanded offer codes
+- **Part 11: WWDC26 Changes** – Product Page Header and search-results visuals via the Asset Library (standalone review, real-time swaps), Retention Messaging in the subscription cancellation flow (including the real-time server API), group and volume subscription purchasing (ABM/ASM, volume pricing bands), enhanced IAP review submissions (grouped review items, reviewSubmissions API expansion)
 
 ## Key Pattern
 
@@ -85,11 +86,11 @@ This page documents the `axiom-shipping` reference skill — complete API-level 
 
 ## Related
 
-- [App Store Submission](/skills/shipping/app-store-submission) — Pre-flight checklist and submission workflow
-- [App Store Diagnostics](/diagnostic/app-store-diag) — Rejection diagnosis and remediation patterns
-- [StoreKit 2 Reference](/reference/storekit-ref) — IAP and subscription API details
-- [Privacy UX Patterns](/skills/integration/privacy-ux) — Privacy manifest implementation and ATT UX
-- [App Store Connect](/reference/app-store-connect-ref) — ASC navigation, crash data, metrics
+- [App Store Submission](/skills/shipping/app-store-submission) – Pre-flight checklist and submission workflow
+- [App Store Diagnostics](/diagnostic/app-store-diag) – Rejection diagnosis and remediation patterns
+- [StoreKit 2 Reference](/reference/storekit-ref) – IAP and subscription API details
+- [Privacy UX Patterns](/skills/integration/privacy-ux) – Privacy manifest implementation and ATT UX
+- [App Store Connect](/reference/app-store-connect-ref) – ASC navigation, crash data, metrics
 
 ## Resources
 

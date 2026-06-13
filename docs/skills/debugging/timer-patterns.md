@@ -29,9 +29,9 @@ Use this skill when:
 
 ## Related
 
-- [Timer Patterns Reference](/reference/timer-patterns-ref) — API reference for all timer APIs with lifecycle diagrams and platform availability
-- [Memory Debugging](/skills/debugging/memory-debugging) — Timer as Pattern 1 memory leak (Timer retains target)
-- [Energy Optimization](/skills/debugging/energy) — Timer tolerance and energy-efficient scheduling
+- [Timer Patterns Reference](/reference/timer-patterns-ref) – API reference for all timer APIs with lifecycle diagrams and platform availability
+- [Memory Debugging](/skills/debugging/memory-debugging) – Timer as Pattern 1 memory leak (Timer retains target)
+- [Energy Optimization](/skills/debugging/energy) – Timer tolerance and energy-efficient scheduling
 
 ## Resources
 

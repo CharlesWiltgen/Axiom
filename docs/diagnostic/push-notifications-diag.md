@@ -38,12 +38,12 @@ Questions you can ask Claude that will invoke this diagnostic:
 
 The diagnostic follows a systematic approach:
 
-1. **Token registration** — Verify entitlements, provisioning profile, APNs environment
-2. **Server-side delivery** — Check APNs response codes, token validity, certificate/JWT expiry
-3. **Device-side reception** — Confirm foreground/background delegate handling, notification settings
-4. **Payload validation** — Verify aps dictionary structure, content-available for silent push, size limits
-5. **Extension debugging** — Service extension not called, attachment download failures, 30s timeout
-6. **Environment mismatch** — Sandbox vs production tokens, certificate type, APNs endpoint
+1. **Token registration** – Verify entitlements, provisioning profile, APNs environment
+2. **Server-side delivery** – Check APNs response codes, token validity, certificate/JWT expiry
+3. **Device-side reception** – Confirm foreground/background delegate handling, notification settings
+4. **Payload validation** – Verify aps dictionary structure, content-available for silent push, size limits
+5. **Extension debugging** – Service extension not called, attachment download failures, 30s timeout
+6. **Environment mismatch** – Sandbox vs production tokens, certificate type, APNs endpoint
 
 ## Documentation Scope
 
@@ -54,10 +54,10 @@ This page documents the `push-notifications-diag` skill — diagnostic workflows
 
 ## Related
 
-- [push-notifications](/skills/integration/push-notifications) — Implementation patterns, permission flow, token management
-- [push-notifications-ref](/reference/push-notifications-ref) — APNs transport, payload format, notification API reference
-- [extensions-widgets](/skills/integration/extensions-widgets) — Live Activity UI, widget timelines, Dynamic Island
-- [networking-diag](/diagnostic/networking-diag) — Network connectivity issues that may affect push delivery
+- [push-notifications](/skills/integration/push-notifications) – Implementation patterns, permission flow, token management
+- [push-notifications-ref](/reference/push-notifications-ref) – APNs transport, payload format, notification API reference
+- [extensions-widgets](/skills/integration/extensions-widgets) – Live Activity UI, widget timelines, Dynamic Island
+- [networking-diag](/diagnostic/networking-diag) – Network connectivity issues that may affect push delivery
 
 ## Resources
 

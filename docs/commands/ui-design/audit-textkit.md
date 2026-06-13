@@ -13,13 +13,13 @@ Launches the **textkit-auditor** agent to detect issues that prevent Writing Too
 
 ## What It Checks
 
-1. **TextKit 1 Fallback Triggers** — Direct `.layoutManager` access that causes one-way fallback to TextKit 1
-2. **Deprecated Glyph APIs** — `numberOfGlyphs`, `glyphRange`, `glyphIndex` that break with complex scripts
-3. **NSRange with TextKit 2** — Using NSRange instead of NSTextRange/NSTextLocation
-4. **Missing Writing Tools Integration** — No `writingToolsBehavior` configuration (iOS 18+)
-5. **Missing State Awareness** — Text mutations without `isWritingToolsActive` checks
+1. **TextKit 1 Fallback Triggers** – Direct `.layoutManager` access that causes one-way fallback to TextKit 1
+2. **Deprecated Glyph APIs** – `numberOfGlyphs`, `glyphRange`, `glyphIndex` that break with complex scripts
+3. **NSRange with TextKit 2** – Using NSRange instead of NSTextRange/NSTextLocation
+4. **Missing Writing Tools Integration** – No `writingToolsBehavior` configuration (iOS 18+)
+5. **Missing State Awareness** – Text mutations without `isWritingToolsActive` checks
 
 ## Related Agent
 
-- [textkit-auditor](/agents/textkit-auditor) — The agent that powers this command
-- [textkit-ref](/reference/textkit-ref) — Complete TextKit 2 reference and migration guide
+- [textkit-auditor](/agents/textkit-auditor) – The agent that powers this command
+- [textkit-ref](/reference/textkit-ref) – Complete TextKit 2 reference and migration guide

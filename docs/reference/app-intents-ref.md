@@ -127,14 +127,14 @@ struct SongEntityQuery: EntityQuery {
 
 ## Documentation Scope
 
-This page documents the `axiom-integration` reference skill—complete API coverage Claude uses when you need specific App Intents APIs or integration patterns.
+This page documents the `axiom-integration` reference skill — complete API coverage Claude uses when you need specific App Intents APIs or integration patterns.
 
 **For troubleshooting:** Check Info.plist, rebuild app, wait 5-10 minutes for Shortcuts discovery.
 
 ## Related
 
-- [swiftui-26-ref](/reference/swiftui-26-ref) — iOS 26 SwiftUI features
-- [extensions-widgets](/skills/integration/extensions-widgets) — Widget development
+- [swiftui-26-ref](/reference/swiftui-26-ref) – iOS 26 SwiftUI features
+- [extensions-widgets](/skills/integration/extensions-widgets) – Widget development
 
 ## Resources
 

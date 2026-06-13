@@ -10,11 +10,11 @@ Scan your Swift codebase and Core Data models for the 5 most common Core Data is
 
 ## What This Command Checks
 
-1. **Schema Migration Safety** — Missing lightweight migration options, schema version mismatches
-2. **Thread-Confinement Violations** — NSManagedObject accessed from wrong threads
-3. **N+1 Query Patterns** — Relationship access in loops without prefetching
-4. **Production Risk Patterns** — Delete store patterns, missing migration testing
-5. **Performance Issues** — Missing batch sizes, no faulting controls
+1. **Schema Migration Safety** – Missing lightweight migration options, schema version mismatches
+2. **Thread-Confinement Violations** – NSManagedObject accessed from wrong threads
+3. **N+1 Query Patterns** – Relationship access in loops without prefetching
+4. **Production Risk Patterns** – Delete store patterns, missing migration testing
+5. **Performance Issues** – Missing batch sizes, no faulting controls
 
 ## When to Use
 
@@ -92,9 +92,9 @@ The command will:
 
 After running the audit:
 
-1. **Fix Critical issues immediately** — These cause production crashes
-2. **Review Medium issues** — Address before next release
-3. **Document Low issues** — Add to technical debt backlog
+1. **Fix Critical issues immediately** – These cause production crashes
+2. **Review Medium issues** – Address before next release
+3. **Document Low issues** – Add to technical debt backlog
 
 For detailed fix guidance, use the [core-data-diag](/diagnostic/core-data-diag) skill:
 

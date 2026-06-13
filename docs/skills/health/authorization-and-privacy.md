@@ -74,11 +74,11 @@ This page documents the `authorization-and-privacy` skill in the `axiom-health` 
 
 ## Related
 
-- [fundamentals](/skills/health/fundamentals) — Prerequisite for this skill; covers the data types you're requesting permission for
-- [queries](/skills/health/queries) — Describes how queries behave after authorization (including why empty results are valid)
-- [sync-and-background](/skills/health/sync-and-background) — Background reads have additional restrictions documented here
-- [privacy-ux](/skills/integration/privacy-ux) — Cross-framework guidance on purpose strings and privacy UX that applies to HealthKit purpose strings
-- [security-privacy-scanner](/agents/security-privacy-scanner) — Automated scan for privacy issues including missing HealthKit usage strings
+- [fundamentals](/skills/health/fundamentals) – Prerequisite for this skill; covers the data types you're requesting permission for
+- [queries](/skills/health/queries) – Describes how queries behave after authorization (including why empty results are valid)
+- [sync-and-background](/skills/health/sync-and-background) – Background reads have additional restrictions documented here
+- [privacy-ux](/skills/integration/privacy-ux) – Cross-framework guidance on purpose strings and privacy UX that applies to HealthKit purpose strings
+- [security-privacy-scanner](/agents/security-privacy-scanner) – Automated scan for privacy issues including missing HealthKit usage strings
 
 ## Resources
 

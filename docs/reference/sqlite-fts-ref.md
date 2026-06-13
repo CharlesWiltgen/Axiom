@@ -43,7 +43,7 @@ Questions you can ask Claude that will draw from this reference:
 ### Schema Patterns
 - Contentful (default), external-content, contentless
 - When to pick each shape
-- `t.synchronize(withTable:)` — the idiomatic GRDB API
+- `t.synchronize(withTable:)` – the idiomatic GRDB API
 
 ### Tokenizers
 - `unicode61` (default, multilingual, strips diacritics)
@@ -134,12 +134,12 @@ This page documents the `sqlite-fts-ref` shared reference. Tokenizer choice, Uni
 
 ## Related
 
-- [grdb](/skills/persistence/grdb) — GRDB record types and queries
-- [grdb-performance](/skills/persistence/grdb-performance) — EXPLAIN QUERY PLAN works on FTS5 MATCH queries
-- [sqlitedata](/skills/persistence/sqlitedata) — SQLiteData `@Table` patterns
-- [sqlitedata-ref](/reference/sqlitedata-ref) — SQLiteData advanced query patterns (FTS5 section)
-- [grdb-app-groups](/skills/persistence/grdb-app-groups) — cross-process FTS5 trigger caveats
-- [grdb-performance-auditor](/agents/grdb-performance-auditor) — automated scan that includes FTS5 anti-patterns
+- [grdb](/skills/persistence/grdb) – GRDB record types and queries
+- [grdb-performance](/skills/persistence/grdb-performance) – EXPLAIN QUERY PLAN works on FTS5 MATCH queries
+- [sqlitedata](/skills/persistence/sqlitedata) – SQLiteData `@Table` patterns
+- [sqlitedata-ref](/reference/sqlitedata-ref) – SQLiteData advanced query patterns (FTS5 section)
+- [grdb-app-groups](/skills/persistence/grdb-app-groups) – cross-process FTS5 trigger caveats
+- [grdb-performance-auditor](/agents/grdb-performance-auditor) – automated scan that includes FTS5 anti-patterns
 
 ## Resources
 

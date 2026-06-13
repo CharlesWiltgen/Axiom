@@ -19,9 +19,9 @@ Automatically diagnoses and fixes Xcode build failures using environment-first d
 ## What It Does
 
 ### Environment Diagnostics (Mandatory)
-1. **Zombie xcodebuild processes** — 10+ processes = stuck builds
-2. **Derived Data size** — >10GB = stale cache
-3. **Simulator state** — Stuck in Booting/Shutting Down
+1. **Zombie xcodebuild processes** – 10+ processes = stuck builds
+2. **Derived Data size** – >10GB = stale cache
+3. **Simulator state** – Stuck in Booting/Shutting Down
 
 ### Common Issues Fixed
 - Zombie processes → `killall xcodebuild`

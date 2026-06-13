@@ -13,13 +13,13 @@ Launches the **energy-auditor** agent to flag patterns that quietly burn battery
 
 ## What It Checks
 
-1. **Timer abuse** — high-frequency `Timer.scheduledTimer` calls and `RunLoop` polling
-2. **Polling instead of push** — repeated network fetches where a server-push or `URLSession` listener would suffice
-3. **Continuous location** — `startUpdatingLocation` without `stop`, or `desiredAccuracy` set higher than the use-case needs
-4. **Animation leaks** — running animations on hidden views, infinite repeats not cancelled in `viewWillDisappear`
-5. **Background mode misuse** — declared background modes that aren't actually needed for the feature
+1. **Timer abuse** – high-frequency `Timer.scheduledTimer` calls and `RunLoop` polling
+2. **Polling instead of push** – repeated network fetches where a server-push or `URLSession` listener would suffice
+3. **Continuous location** – `startUpdatingLocation` without `stop`, or `desiredAccuracy` set higher than the use-case needs
+4. **Animation leaks** – running animations on hidden views, infinite repeats not cancelled in `viewWillDisappear`
+5. **Background mode misuse** – declared background modes that aren't actually needed for the feature
 
 ## Related Agent
 
-- [energy-auditor](/agents/energy-auditor) — The agent that powers this command
-- [energy-ref](/reference/energy-ref) — Energy optimization reference
+- [energy-auditor](/agents/energy-auditor) – The agent that powers this command
+- [energy-ref](/reference/energy-ref) – Energy optimization reference

@@ -151,9 +151,9 @@ audioEngine.inputNode.installTap(...) { buffer, time in
 
 ## Related Resources
 
-- [networking](/skills/integration/networking) — Network.framework for streaming
-- [WWDC 2025/251](https://developer.apple.com/videos/play/wwdc2025/251/) — Enhance audio capabilities
-- [WWDC 2025/403](https://developer.apple.com/videos/play/wwdc2025/403/) — Apple Immersive Video and Spatial Audio
+- [networking](/skills/integration/networking) – Network.framework for streaming
+- [WWDC 2025/251](https://developer.apple.com/videos/play/wwdc2025/251/) – Enhance audio capabilities
+- [WWDC 2025/403](https://developer.apple.com/videos/play/wwdc2025/403/) – Apple Immersive Video and Spatial Audio
 
 ## Documentation Scope
 

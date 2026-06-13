@@ -88,14 +88,14 @@ https://sosumi.ai/documentation/widgetkit
 
 ## Documentation Scope
 
-This page documents the `axiom-apple-docs` skill—research techniques Claude uses when you need to investigate Apple frameworks, APIs, or WWDC sessions.
+This page documents the `axiom-apple-docs` skill — research techniques Claude uses when you need to investigate Apple frameworks, APIs, or WWDC sessions.
 
 **For writing skills from research:** See the superpowers:writing-skills skill for creating skills from documentation.
 
 ## Related
 
-- [extensions-widgets](/skills/integration/extensions-widgets) — Widget development patterns
-- [swiftui-26-ref](/reference/swiftui-26-ref) — iOS 26 SwiftUI features from WWDC 2025
+- [extensions-widgets](/skills/integration/extensions-widgets) – Widget development patterns
+- [swiftui-26-ref](/reference/swiftui-26-ref) – iOS 26 SwiftUI features from WWDC 2025
 
 ## Resources
 

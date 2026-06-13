@@ -67,10 +67,10 @@ This page documents the `modernization` skill in the `axiom-watchos` suite. The 
 
 ## Related
 
-- [smart-stack-and-complications](/skills/watchos/smart-stack-and-complications) — The destination architecture for ClockKit migration and RelevanceKit adoption
-- [controls-and-live-activities](/skills/watchos/controls-and-live-activities) — watchOS 26 control surfaces that didn't exist in legacy projects and are worth adopting post-migration
-- [swiftui-nav](/skills/ui-design/swiftui-nav) — `NavigationStack` replaces `NavigationView` once storyboards are gone
-- [app-store-submission](/skills/shipping/app-store-submission) — April 2026 watchOS 26 SDK submission gate requirements
+- [smart-stack-and-complications](/skills/watchos/smart-stack-and-complications) – The destination architecture for ClockKit migration and RelevanceKit adoption
+- [controls-and-live-activities](/skills/watchos/controls-and-live-activities) – watchOS 26 control surfaces that didn't exist in legacy projects and are worth adopting post-migration
+- [swiftui-nav](/skills/ui-design/swiftui-nav) – `NavigationStack` replaces `NavigationView` once storyboards are gone
+- [app-store-submission](/skills/shipping/app-store-submission) – April 2026 watchOS 26 SDK submission gate requirements
 
 ## Resources
 

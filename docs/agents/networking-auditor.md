@@ -32,14 +32,14 @@ Scans for deprecated networking APIs, anti-patterns, and architectural gaps that
 10. **Not Handling Waiting State** (LOW) — Poor UX
 
 ### Completeness Checks
-11. **Missing network transition handling** — WiFi-to-cellular failures
-12. **Missing TLS for sensitive data** — Security gaps
-13. **Poor error messages** — Cryptic errors for users
-14. **Missing connection cleanup** — Resource and battery leaks
-15. **Wrong framework for protocol** — URLSession vs Network.framework mismatch
-16. **Missing timeout handling** — Infinite spinners
-17. **Mixed API paradigms** — NWConnection + NetworkConnection inconsistency
-18. **Missing UDP batching** — Performance optimization gap
+11. **Missing network transition handling** – WiFi-to-cellular failures
+12. **Missing TLS for sensitive data** – Security gaps
+13. **Poor error messages** – Cryptic errors for users
+14. **Missing connection cleanup** – Resource and battery leaks
+15. **Wrong framework for protocol** – URLSession vs Network.framework mismatch
+16. **Missing timeout handling** – Infinite spinners
+17. **Mixed API paradigms** – NWConnection + NetworkConnection inconsistency
+18. **Missing UDP batching** – Performance optimization gap
 
 ### Health Score
 Reports overall networking health as **MODERN**, **NEEDS MIGRATION**, or **LEGACY** with specific metrics.

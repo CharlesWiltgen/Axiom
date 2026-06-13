@@ -81,7 +81,7 @@ For cascading updates:
 
 ## Documentation Scope
 
-This page documents the `axiom-swiftui-debugging-diag` diagnostic skill—advanced troubleshooting Claude uses when basic SwiftUI debugging doesn't resolve the issue.
+This page documents the `axiom-swiftui-debugging-diag` diagnostic skill — advanced troubleshooting Claude uses when basic SwiftUI debugging doesn't resolve the issue.
 
 **For basic troubleshooting:** See [swiftui-debugging](/skills/ui-design/swiftui-debugging) for common issues.
 
@@ -89,9 +89,9 @@ This page documents the `axiom-swiftui-debugging-diag` diagnostic skill—advanc
 
 ## Related
 
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — Basic view update troubleshooting
-- [swiftui-performance](/skills/ui-design/swiftui-performance) — Performance optimization with Instruments
-- [xcode-debugging](/skills/debugging/xcode-debugging) — Environment-first Xcode diagnostics
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – Basic view update troubleshooting
+- [swiftui-performance](/skills/ui-design/swiftui-performance) – Performance optimization with Instruments
+- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment-first Xcode diagnostics
 
 ## Resources
 

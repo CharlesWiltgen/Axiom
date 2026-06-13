@@ -111,7 +111,7 @@ didMigrate: { context in
 
 ## Documentation Scope
 
-This page documents the `axiom-data` skill—custom SwiftData migration patterns Claude uses when you need migrations beyond what lightweight migration handles.
+This page documents the `axiom-data` skill — custom SwiftData migration patterns Claude uses when you need migrations beyond what lightweight migration handles.
 
 **For SwiftData basics:** See [swiftdata](/skills/persistence/swiftdata) for @Model, @Query, and ModelContext patterns.
 
@@ -119,9 +119,9 @@ This page documents the `axiom-data` skill—custom SwiftData migration patterns
 
 ## Related
 
-- [swiftdata](/skills/persistence/swiftdata) — Core SwiftData patterns
-- [swiftdata-migration-diag](/diagnostic/swiftdata-migration-diag) — Migration failure diagnosis
-- [database-migration](/skills/persistence/database-migration) — General SQLite migration patterns
+- [swiftdata](/skills/persistence/swiftdata) – Core SwiftData patterns
+- [swiftdata-migration-diag](/diagnostic/swiftdata-migration-diag) – Migration failure diagnosis
+- [database-migration](/skills/persistence/database-migration) – General SQLite migration patterns
 
 ## Resources
 

@@ -10,11 +10,11 @@ Background execution is a privilege, not a right. iOS actively limits background
 
 ## Key Features
 
-- **7 Common Patterns** — BGAppRefreshTask, BGProcessingTask, BGContinuedProcessingTask (iOS 26), Background URLSession, beginBackgroundTask, Silent Push, SwiftUI backgroundTask modifier
-- **Debugging Decision Trees** — "Task never runs", "Task terminates early", "Works in dev not prod"
-- **The 7 Scheduling Factors** — Why iOS may not run your task
-- **Swift 6 Cancellation Integration** — withTaskCancellationHandler for expiration
-- **LLDB Testing Commands** — Force task execution during development
+- **7 Common Patterns** – BGAppRefreshTask, BGProcessingTask, BGContinuedProcessingTask (iOS 26), Background URLSession, beginBackgroundTask, Silent Push, SwiftUI backgroundTask modifier
+- **Debugging Decision Trees** – "Task never runs", "Task terminates early", "Works in dev not prod"
+- **The 7 Scheduling Factors** – Why iOS may not run your task
+- **Swift 6 Cancellation Integration** – withTaskCancellationHandler for expiration
+- **LLDB Testing Commands** – Force task execution during development
 
 ## When to Use
 
@@ -54,16 +54,16 @@ subsystem:com.apple.backgroundtaskscheduler
 
 ## Common Issues
 
-1. **Task never runs** — Check Info.plist identifier matches exactly (case-sensitive)
-2. **Registration fails** — Must register in didFinishLaunchingWithOptions before return
-3. **Works in dev, not prod** — Check Low Power Mode, Background App Refresh setting, app not swiped away
-4. **Missing setTaskCompleted** — Must call in ALL code paths including errors
+1. **Task never runs** – Check Info.plist identifier matches exactly (case-sensitive)
+2. **Registration fails** – Must register in didFinishLaunchingWithOptions before return
+3. **Works in dev, not prod** – Check Low Power Mode, Background App Refresh setting, app not swiped away
+4. **Missing setTaskCompleted** – Must call in ALL code paths including errors
 
 ## Related Skills
 
-- **background-processing-diag** — Symptom-based troubleshooting
-- **background-processing-ref** — Complete API reference
-- **energy** — Battery optimization patterns
+- **background-processing-diag** – Symptom-based troubleshooting
+- **background-processing-ref** – Complete API reference
+- **energy** – Battery optimization patterns
 
 ## Requirements
 

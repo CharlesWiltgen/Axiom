@@ -37,10 +37,10 @@ Questions you can ask Claude that will draw from this skill:
 - Automatic wiring of the Settings menu item and ⌘, keyboard shortcut
 
 ### Pane Patterns
-- **Single-pane** — fixed `.frame(width: 450, height: 180)` with `.scenePadding()` for small preference sets
-- **Tabbed** — `TabView` with `.tabItem { Label("...", systemImage: "...") }` for the standard pattern
-- **Per-tab sizing** — when tabs have legitimately different sizes, attach `.frame` per tab and let the window animate
-- **Cross-platform** — wrapping `SettingsView` definition in `#if os(macOS)` when it references macOS-only APIs
+- **Single-pane** – fixed `.frame(width: 450, height: 180)` with `.scenePadding()` for small preference sets
+- **Tabbed** – `TabView` with `.tabItem { Label("...", systemImage: "...") }` for the standard pattern
+- **Per-tab sizing** – when tabs have legitimately different sizes, attach `.frame` per tab and let the window animate
+- **Cross-platform** – wrapping `SettingsView` definition in `#if os(macOS)` when it references macOS-only APIs
 
 ### SettingsLink and openSettings
 - `SettingsLink` (macOS 14+) for opening the app's own Settings from any view
@@ -85,10 +85,10 @@ This page documents the `settings` skill in the `axiom-macos` suite. The skill f
 
 ## Related
 
-- [windows](/skills/macos/windows) — `Settings` is one scene type alongside `WindowGroup`, `Window`, `UtilityWindow`, and `MenuBarExtra`
-- [menus-and-commands](/skills/macos/menus-and-commands) — Settings menu item placement, the ⌘, shortcut, and `CommandGroup(replacing: .appSettings)`
-- [sandbox-and-file-access](/skills/macos/sandbox-and-file-access) — App Group container setup for sharing preferences with extensions
-- [swiftui-architecture](/skills/ui-design/) — `@AppStorage` and the broader SwiftUI state model across platforms
+- [windows](/skills/macos/windows) – `Settings` is one scene type alongside `WindowGroup`, `Window`, `UtilityWindow`, and `MenuBarExtra`
+- [menus-and-commands](/skills/macos/menus-and-commands) – Settings menu item placement, the ⌘, shortcut, and `CommandGroup(replacing: .appSettings)`
+- [sandbox-and-file-access](/skills/macos/sandbox-and-file-access) – App Group container setup for sharing preferences with extensions
+- [swiftui-architecture](/skills/ui-design/) – `@AppStorage` and the broader SwiftUI state model across platforms
 
 ## Resources
 

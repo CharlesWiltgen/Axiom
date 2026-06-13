@@ -147,6 +147,6 @@ try await database.share(record, with: share)
 
 ## Related Resources
 
-- [sqlitedata](/skills/persistence/sqlitedata) — SQLiteData patterns
-- [swiftdata](/skills/persistence/swiftdata) — SwiftData patterns
-- [database-migration](/skills/persistence/database-migration) — Safe schema evolution
+- [sqlitedata](/skills/persistence/sqlitedata) – SQLiteData patterns
+- [swiftdata](/skills/persistence/swiftdata) – SwiftData patterns
+- [database-migration](/skills/persistence/database-migration) – Safe schema evolution

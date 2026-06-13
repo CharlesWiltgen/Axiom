@@ -29,10 +29,10 @@ Use this skill when:
 
 All Objective-C block retain cycles fit into 4 patterns:
 
-1. **Block passed as parameter** — When method stores the block
-2. **Block assigned to property** — Requires cleanup in dealloc
-3. **Network callbacks** — Shared/singleton services retain callbacks
-4. **Timers and animations** — Timer retains block, block retains self
+1. **Block passed as parameter** – When method stores the block
+2. **Block assigned to property** – Requires cleanup in dealloc
+3. **Network callbacks** – Shared/singleton services retain callbacks
+4. **Timers and animations** – Timer retains block, block retains self
 
 ### Weak-Strong Pattern
 
@@ -64,8 +64,8 @@ __weak typeof(self) weakSelf = self;
 
 ## Related
 
-- [memory-debugging](/skills/debugging/memory-debugging) — General memory leak diagnosis with Instruments
-- [memory-auditor](/agents/memory-auditor) — Automated scan for leak patterns
+- [memory-debugging](/skills/debugging/memory-debugging) – General memory leak diagnosis with Instruments
+- [memory-auditor](/agents/memory-auditor) – Automated scan for leak patterns
 
 ## Resources
 

@@ -55,62 +55,62 @@ Agents are autonomous problem-solvers that:
 ## Agent Categories
 
 ### Project-Wide
-- **health-check** — Orchestrates multiple specialized auditors in parallel, deduplicates findings, and produces a unified project health report with executive summary
+- **health-check** – Orchestrates multiple specialized auditors in parallel, deduplicates findings, and produces a unified project health report with executive summary
 
 ### Build & Environment
-- **build-fixer** — Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics (zombie processes, Derived Data, simulator state, SPM cache)
-- **build-optimizer** — Scans for build performance optimizations (compilation mode, architecture settings, build phase scripts, type checking bottlenecks) with measurable time savings
-- **spm-conflict-resolver** — Analyzes Package.swift and Package.resolved to diagnose and resolve Swift Package Manager dependency conflicts
+- **build-fixer** – Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics (zombie processes, Derived Data, simulator state, SPM cache)
+- **build-optimizer** – Scans for build performance optimizations (compilation mode, architecture settings, build phase scripts, type checking bottlenecks) with measurable time savings
+- **spm-conflict-resolver** – Analyzes Package.swift and Package.resolved to diagnose and resolve Swift Package Manager dependency conflicts
 
 ### Code Quality
-- **accessibility-auditor** — Scans for accessibility violations and architectural issues (inaccessible flows, gesture-only paths, inconsistent label coverage, WCAG compliance)
-- **codable-auditor** — Detects Codable safety violations and semantic gaps (silent field drops, wrapper-hidden fallbacks, cross-file strategy drift, enum future-case crashes, CodingKeys mismatches) beyond the obvious anti-patterns
-- **concurrency-auditor** — Detects Swift 6 concurrency violations and architectural issues (missing isolation, incoherent strategies, incomplete cancellation, permanent escape hatches)
-- **energy-auditor** — Scans for energy anti-patterns and unnecessary background work (timers for inactive features, location when not on map, unused background modes, lifecycle asymmetries)
-- **memory-auditor** — Finds memory leak patterns and architectural issues (missing cleanup paths, unbounded collection growth, inconsistent resource lifecycle management)
-- **swift-performance-analyzer** — Detects Swift performance issues and context-dependent overhead (ARC in hot paths, copies in tight loops, actor hops in iteration, existential types in hot paths)
-- **textkit-auditor** — Scans for TextKit issues and architectural gaps (TextKit 1 fallback triggers, deprecated glyph APIs that break on complex scripts, missing Writing Tools configuration, missing `isWritingToolsActive` guards on programmatic mutations, SwiftUI wrappers dropping TextKit 2 properties, RTL-untested custom layout fragments)
+- **accessibility-auditor** – Scans for accessibility violations and architectural issues (inaccessible flows, gesture-only paths, inconsistent label coverage, WCAG compliance)
+- **codable-auditor** – Detects Codable safety violations and semantic gaps (silent field drops, wrapper-hidden fallbacks, cross-file strategy drift, enum future-case crashes, CodingKeys mismatches) beyond the obvious anti-patterns
+- **concurrency-auditor** – Detects Swift 6 concurrency violations and architectural issues (missing isolation, incoherent strategies, incomplete cancellation, permanent escape hatches)
+- **energy-auditor** – Scans for energy anti-patterns and unnecessary background work (timers for inactive features, location when not on map, unused background modes, lifecycle asymmetries)
+- **memory-auditor** – Finds memory leak patterns and architectural issues (missing cleanup paths, unbounded collection growth, inconsistent resource lifecycle management)
+- **swift-performance-analyzer** – Detects Swift performance issues and context-dependent overhead (ARC in hot paths, copies in tight loops, actor hops in iteration, existential types in hot paths)
+- **textkit-auditor** – Scans for TextKit issues and architectural gaps (TextKit 1 fallback triggers, deprecated glyph APIs that break on complex scripts, missing Writing Tools configuration, missing `isWritingToolsActive` guards on programmatic mutations, SwiftUI wrappers dropping TextKit 2 properties, RTL-untested custom layout fragments)
 
 ### UI & Design
-- **liquid-glass-auditor** — Identifies iOS 26+ Liquid Glass adoption opportunities and completeness gaps (glass effects, toolbar prominence, migration from old blur effects, Regular vs Clear variant discipline for media surfaces, glass-on-glass nesting, missing `if #available` gates, accessibility re-check after adoption, `.tabRole(.search)`); scores ADOPTED / PARTIAL / NOT ADOPTED
-- **swiftui-architecture-auditor** — Scans SwiftUI architecture and completeness (untestable logic in views, async boundary violations, inconsistent patterns, missing separation of concerns)
-- **swiftui-layout-auditor** — Scans SwiftUI layout for anti-patterns and adaptivity gaps (GeometryReader misuse, missing multitasking support, identity loss, near-edge fixed sizing)
-- **swiftui-performance-analyzer** — Detects SwiftUI performance issues and context-dependent problems (expensive operations amplified in scrolling cells, unnecessary rebuilds, missing lazy loading)
-- **swiftui-nav-auditor** — Scans SwiftUI navigation architecture and completeness (orphan destinations, deep link gaps, state restoration, type collisions, modal/stack conflicts)
-- **ux-flow-auditor** — Detects UX journey defects and incomplete flows (dead ends, dismiss traps, buried CTAs, missing states, unvalidated entry points, inaccessible paths)
+- **liquid-glass-auditor** – Identifies iOS 26+ Liquid Glass adoption opportunities and completeness gaps (glass effects, toolbar prominence, migration from old blur effects, Regular vs Clear variant discipline for media surfaces, glass-on-glass nesting, missing `if #available` gates, accessibility re-check after adoption, `.tabRole(.search)`); scores ADOPTED / PARTIAL / NOT ADOPTED
+- **swiftui-architecture-auditor** – Scans SwiftUI architecture and completeness (untestable logic in views, async boundary violations, inconsistent patterns, missing separation of concerns)
+- **swiftui-layout-auditor** – Scans SwiftUI layout for anti-patterns and adaptivity gaps (GeometryReader misuse, missing multitasking support, identity loss, near-edge fixed sizing)
+- **swiftui-performance-analyzer** – Detects SwiftUI performance issues and context-dependent problems (expensive operations amplified in scrolling cells, unnecessary rebuilds, missing lazy loading)
+- **swiftui-nav-auditor** – Scans SwiftUI navigation architecture and completeness (orphan destinations, deep link gaps, state restoration, type collisions, modal/stack conflicts)
+- **ux-flow-auditor** – Detects UX journey defects and incomplete flows (dead ends, dismiss traps, buried CTAs, missing states, unvalidated entry points, inaccessible paths)
 
 ### Persistence & Storage
-- **core-data-auditor** — Scans Core Data for safety violations and architectural gaps (missing migration options, thread-confinement errors, N+1 queries, singleton context abuse, missing merge policies)
-- **database-schema-auditor** — Scans database migration and schema code for safety violations and architectural gaps (unsafe ALTER TABLE, DROP operations, missing idempotency, FK constraints declared but not enforced, incomplete upgrade paths)
-- **icloud-auditor** — Scans for iCloud integration issues and architectural gaps (missing NSFileCoordinator, incomplete CKError matrix coverage, missing account-change observation, polling instead of CKSubscriptions, SwiftData + CloudKit unsupported features, missing fallback UX when iCloud is unavailable)
-- **storage-auditor** — Detects file storage mistakes and architectural gaps (files in wrong locations, missing backup exclusions, missing file protection, sensitive data in files instead of Keychain, missing App Group containers, unbounded cache growth, orphan files after entity deletion)
-- **swiftdata-auditor** — Scans SwiftData code for safety violations and architectural gaps (struct models, missing schema registration, array relationships without defaults, background context misuse, N+1 patterns, stale predicates, CloudKit conformance gaps)
+- **core-data-auditor** – Scans Core Data for safety violations and architectural gaps (missing migration options, thread-confinement errors, N+1 queries, singleton context abuse, missing merge policies)
+- **database-schema-auditor** – Scans database migration and schema code for safety violations and architectural gaps (unsafe ALTER TABLE, DROP operations, missing idempotency, FK constraints declared but not enforced, incomplete upgrade paths)
+- **icloud-auditor** – Scans for iCloud integration issues and architectural gaps (missing NSFileCoordinator, incomplete CKError matrix coverage, missing account-change observation, polling instead of CKSubscriptions, SwiftData + CloudKit unsupported features, missing fallback UX when iCloud is unavailable)
+- **storage-auditor** – Detects file storage mistakes and architectural gaps (files in wrong locations, missing backup exclusions, missing file protection, sensitive data in files instead of Keychain, missing App Group containers, unbounded cache growth, orphan files after entity deletion)
+- **swiftdata-auditor** – Scans SwiftData code for safety violations and architectural gaps (struct models, missing schema registration, array relationships without defaults, background context misuse, N+1 patterns, stale predicates, CloudKit conformance gaps)
 
 ### Integration
-- **camera-auditor** — Scans for camera/audio capture issues and architectural gaps (deprecated APIs, missing interruption handlers, main-thread session work, missing runtime-error recovery, concurrent session queues, stuck permission-denied UI, missing audio session deactivation, missing `RotationCoordinator` on iOS 17+, multi-cam without support guards)
-- **foundation-models-auditor** — Scans Foundation Models / Apple Intelligence code for anti-patterns and architectural gaps (missing availability checks, main-thread `respond()`, manual JSON parsing, missing specific error catches, prompt-injection risk, `@Generable` enums without `@frozen`, missing Cancel UX, missing transcript trimming, stale availability cache, partial-output validation gaps); scores PRODUCTION-READY / NEEDS HARDENING / FRAGILE
-- **networking-auditor** — Scans for deprecated networking APIs, anti-patterns, and completeness gaps (missing transition handling, TLS coverage, connection cleanup, framework selection)
-- **iap-auditor** — Audits IAP code for missing transaction.finish(), weak verification, missing Transaction.updates listener, missing restore, partial subscription state coverage, missing promoted-purchase handler (SK1), subscription status not observed mid-session, missing intro eligibility checks, subscription terms and loot box odds disclosure gaps, and compound rejection-risk combinations; scores IAP health READY/NEEDS WORK/NOT READY
-- **iap-implementation** — Implements complete StoreKit 2 IAP solution with testing-first workflow (.storekit configuration, centralized StoreManager, transaction handling, subscription management, restore purchases)
+- **camera-auditor** – Scans for camera/audio capture issues and architectural gaps (deprecated APIs, missing interruption handlers, main-thread session work, missing runtime-error recovery, concurrent session queues, stuck permission-denied UI, missing audio session deactivation, missing `RotationCoordinator` on iOS 17+, multi-cam without support guards)
+- **foundation-models-auditor** – Scans Foundation Models / Apple Intelligence code for anti-patterns and architectural gaps (missing availability checks, main-thread `respond()`, manual JSON parsing, missing specific error catches, prompt-injection risk, `@Generable` enums without `@frozen`, missing Cancel UX, missing transcript trimming, stale availability cache, partial-output validation gaps); scores PRODUCTION-READY / NEEDS HARDENING / FRAGILE
+- **networking-auditor** – Scans for deprecated networking APIs, anti-patterns, and completeness gaps (missing transition handling, TLS coverage, connection cleanup, framework selection)
+- **iap-auditor** – Audits IAP code for missing transaction.finish(), weak verification, missing Transaction.updates listener, missing restore, partial subscription state coverage, missing promoted-purchase handler (SK1), subscription status not observed mid-session, missing intro eligibility checks, subscription terms and loot box odds disclosure gaps, and compound rejection-risk combinations; scores IAP health READY/NEEDS WORK/NOT READY
+- **iap-implementation** – Implements complete StoreKit 2 IAP solution with testing-first workflow (.storekit configuration, centralized StoreManager, transaction handling, subscription management, restore purchases)
 
 ### Shipping
-- **screenshot-validator** — AI-powered visual inspection of App Store screenshots for dimension validation, placeholder text detection, debug artifact scanning, competitor references, and content completeness
-- **security-privacy-scanner** — Scans for hardcoded credentials, insecure token storage, Privacy Manifest coverage gaps (cross-referenced against Required Reason APIs actually used), ATS violations, missing ATT descriptions, missing usage descriptions, missing export compliance, weak Keychain ACLs, over-broad entitlements, and third-party SDK manifest gaps; scores security posture HARDENED/GAPS/VULNERABLE
+- **screenshot-validator** – AI-powered visual inspection of App Store screenshots for dimension validation, placeholder text detection, debug artifact scanning, competitor references, and content completeness
+- **security-privacy-scanner** – Scans for hardcoded credentials, insecure token storage, Privacy Manifest coverage gaps (cross-referenced against Required Reason APIs actually used), ATS violations, missing ATT descriptions, missing usage descriptions, missing export compliance, weak Keychain ACLs, over-broad entitlements, and third-party SDK manifest gaps; scores security posture HARDENED/GAPS/VULNERABLE
 
 ### Testing
-- **performance-profiler** — Automated performance profiling via xctrace CLI (CPU Profiler, Allocations, Leaks, SwiftUI, Swift Tasks)
-- **simulator-tester** — Automated simulator testing with visual verification (screenshots, video, location simulation, push notifications, permissions, deep links, log analysis) for closed-loop debugging
-- **test-debugger** — Closed-loop test debugging: analyzes failures, suggests fixes, re-runs tests until passing
-- **test-failure-analyzer** — Diagnoses flaky tests, race conditions, and tests that pass locally but fail in CI
-- **test-runner** — Runs XCUITests, parses .xcresult bundles, provides structured results with failure analysis
-- **testing-auditor** — Finds flaky patterns, identifies untested critical paths, checks speed improvements, and evaluates Swift Testing migration readiness
+- **performance-profiler** – Automated performance profiling via xctrace CLI (CPU Profiler, Allocations, Leaks, SwiftUI, Swift Tasks)
+- **simulator-tester** – Automated simulator testing with visual verification (screenshots, video, location simulation, push notifications, permissions, deep links, log analysis) for closed-loop debugging
+- **test-debugger** – Closed-loop test debugging: analyzes failures, suggests fixes, re-runs tests until passing
+- **test-failure-analyzer** – Diagnoses flaky tests, race conditions, and tests that pass locally but fail in CI
+- **test-runner** – Runs XCUITests, parses .xcresult bundles, provides structured results with failure analysis
+- **testing-auditor** – Finds flaky patterns, identifies untested critical paths, checks speed improvements, and evaluates Swift Testing migration readiness
 
 ### Games
-- **spritekit-auditor** — Scans SpriteKit code for anti-patterns and architectural gaps (physics bitmask issues, draw call waste, action memory leaks, leaked scenes from missing transition cleanup, runaway node accumulation, missing time-step clamping, HUD on scene root instead of camera, missing async texture preload)
+- **spritekit-auditor** – Scans SpriteKit code for anti-patterns and architectural gaps (physics bitmask issues, draw call waste, action memory leaks, leaked scenes from missing transition cleanup, runaway node accumulation, missing time-step clamping, HUD on scene root instead of camera, missing async texture preload)
 
 ### Misc
-- **crash-analyzer** — Parses crash reports (.ips, .crash), checks symbolication, categorizes by crash pattern, generates actionable diagnostics
-- **modernization-helper** — Scans for legacy patterns and provides migration paths to iOS 17/18 (ObservableObject to @Observable, etc.)
+- **crash-analyzer** – Parses crash reports (.ips, .crash), checks symbolication, categorizes by crash pattern, generates actionable diagnostics
+- **modernization-helper** – Scans for legacy patterns and provides migration paths to iOS 17/18 (ObservableObject to @Observable, etc.)
 
 ## Why Agents?
 

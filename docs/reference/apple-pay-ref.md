@@ -33,25 +33,25 @@ Questions developers ask that this reference answers:
 
 ## What's Covered
 
-- **Core classes** — `PKPaymentAuthorizationController` (preferred), `PKPaymentAuthorizationViewController`, `PKPaymentRequest`, `PKPayment`, `PKPaymentToken`, `PKContact`, `PKPaymentMethod`
-- **Delegate protocols** — `PKPaymentAuthorizationControllerDelegate` and the View Controller variant; the change-callback update types (`PKPaymentRequestShippingContactUpdate`, etc.) and 30-second response window
-- **Payment-request variants** — `PKRecurringPaymentRequest`, `PKAutomaticReloadPaymentRequest`, `PKDeferredPaymentRequest`, `multiTokenContexts: [PKPaymentTokenContext]`, `applePayLaterAvailability`; the mutual-exclusion rule
-- **Merchant info** — `merchantIdentifier`, `merchantCapabilities`, `merchantCategoryCode` (WWDC24, ISO 18245), `applicationData`
-- **Networks and capabilities** — `PKPaymentNetwork` cases per region, `PKPaymentRequest.availableNetworks()`, `supportedCountries`, `unsupportedPrimaryAccountIdentifiers` (27 releases), the Bancomat naming flip-flop
-- **Summary items** — `PKPaymentSummaryItem` plus the recurring, deferred, automatic-reload, disbursement, and instant-funds-out variants
-- **Contact fields** — `PKContactField` cases; pre-population via `billingContact` and `shippingContact`; pre-auth redaction
-- **Shipping** — `PKShippingMethod`, `PKShippingType`, `PKShippingContactEditingMode`, `PKDateComponentsRange` (WWDC21) for delivery windows
+- **Core classes** – `PKPaymentAuthorizationController` (preferred), `PKPaymentAuthorizationViewController`, `PKPaymentRequest`, `PKPayment`, `PKPaymentToken`, `PKContact`, `PKPaymentMethod`
+- **Delegate protocols** – `PKPaymentAuthorizationControllerDelegate` and the View Controller variant; the change-callback update types (`PKPaymentRequestShippingContactUpdate`, etc.) and 30-second response window
+- **Payment-request variants** – `PKRecurringPaymentRequest`, `PKAutomaticReloadPaymentRequest`, `PKDeferredPaymentRequest`, `multiTokenContexts: [PKPaymentTokenContext]`, `applePayLaterAvailability`; the mutual-exclusion rule
+- **Merchant info** – `merchantIdentifier`, `merchantCapabilities`, `merchantCategoryCode` (WWDC24, ISO 18245), `applicationData`
+- **Networks and capabilities** – `PKPaymentNetwork` cases per region, `PKPaymentRequest.availableNetworks()`, `supportedCountries`, `unsupportedPrimaryAccountIdentifiers` (27 releases), the Bancomat naming flip-flop
+- **Summary items** – `PKPaymentSummaryItem` plus the recurring, deferred, automatic-reload, disbursement, and instant-funds-out variants
+- **Contact fields** – `PKContactField` cases; pre-population via `billingContact` and `shippingContact`; pre-auth redaction
+- **Shipping** – `PKShippingMethod`, `PKShippingType`, `PKShippingContactEditingMode`, `PKDateComponentsRange` (WWDC21) for delivery windows
 - **Coupon codes** (WWDC21) — `supportsCouponCode`, `couponCode`, `paymentCouponCodeInvalidError`, `paymentCouponCodeExpiredError`
-- **Errors** — `PKPaymentError` construction helpers on `PKPaymentRequest` for field-specific feedback
+- **Errors** – `PKPaymentError` construction helpers on `PKPaymentRequest` for field-specific feedback
 - **SwiftUI buttons** (WWDC22, iOS 16+) — `PayWithApplePayButton`, `AddPassToWalletButton`, `AddOrderToWalletButton`, `VerifyIdentityWithWalletButton`; `PKPaymentButtonType` cases
-- **Payment token format** — JSON shape of `paymentData`, EC_v1 (AES-256-GCM) vs RSA_v1 (AES-128-GCM), 16-null-byte IV with no AAD, six-step verification and decryption sequence
-- **Decrypted payment-data shape** — `applicationPrimaryAccountNumber` (DPAN), `applicationExpirationDate`, `currencyCode`, `transactionAmount`, `paymentDataType`, multi-token `authenticationResponses`
-- **In-app sequence diagram** — the 17-step flow from button tap to result animation
+- **Payment token format** – JSON shape of `paymentData`, EC_v1 (AES-256-GCM) vs RSA_v1 (AES-128-GCM), 16-null-byte IV with no AAD, six-step verification and decryption sequence
+- **Decrypted payment-data shape** – `applicationPrimaryAccountNumber` (DPAN), `applicationExpirationDate`, `currencyCode`, `transactionAmount`, `paymentDataType`, multi-token `authenticationResponses`
+- **In-app sequence diagram** – the 17-step flow from button tap to result animation
 - **Apple Pay Later API** (WWDC23, US-only) — `PKPayLaterUtilities`, `PKPayLaterView`/`PayLaterView`, `applePayLaterAvailability`
-- **watchOS** — `WKInterfacePaymentButton`, no shipping picker, short summary items
-- **visionOS** — identical API surface, Optic ID modality
-- **Capability detection** — `canMakePayments()`, `canMakePayments(usingNetworks:)`, `canMakePayments(usingNetworks:capabilities:)`
-- **Deprecations to avoid** — `requiredShippingAddressFields`, `PKAddressField`, country-specific merchant validation URLs, `canMakePaymentsWithActiveCard()` (web)
+- **watchOS** – `WKInterfacePaymentButton`, no shipping picker, short summary items
+- **visionOS** – identical API surface, Optic ID modality
+- **Capability detection** – `canMakePayments()`, `canMakePayments(usingNetworks:)`, `canMakePayments(usingNetworks:capabilities:)`
+- **Deprecations to avoid** – `requiredShippingAddressFields`, `PKAddressField`, country-specific merchant validation URLs, `canMakePaymentsWithActiveCard()` (web)
 
 ## Documentation Scope
 

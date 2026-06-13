@@ -29,14 +29,14 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-- **Symbol display** — SwiftUI, UIKit, and AppKit configuration APIs
-- **Rendering modes** — All 4 modes with complete SwiftUI and UIKit signatures
-- **Symbol effects** — 12+ effects (Bounce through Draw On/Off) with options and protocols
-- **UIKit reference** — `addSymbolEffect()`, `removeSymbolEffect()`, `setSymbolImage()`, completion handlers
-- **Custom symbols** — Template structure, Draw annotation, weight interpolation
-- **Platform availability matrix** — iOS 13+ through iOS 26+, cross-platform
-- **Accessibility** — Labels, Reduce Motion, Bold Text, Dynamic Type
-- **Common patterns** — Notification badge, WiFi strength, play/pause, download progress
+- **Symbol display** – SwiftUI, UIKit, and AppKit configuration APIs
+- **Rendering modes** – All 4 modes with complete SwiftUI and UIKit signatures
+- **Symbol effects** – 12+ effects (Bounce through Draw On/Off) with options and protocols
+- **UIKit reference** – `addSymbolEffect()`, `removeSymbolEffect()`, `setSymbolImage()`, completion handlers
+- **Custom symbols** – Template structure, Draw annotation, weight interpolation
+- **Platform availability matrix** – iOS 13+ through iOS 26+, cross-platform
+- **Accessibility** – Labels, Reduce Motion, Bold Text, Dynamic Type
+- **Common patterns** – Notification badge, WiFi strength, play/pause, download progress
 
 ## Documentation Scope
 
@@ -46,10 +46,10 @@ This page documents the `axiom-design` skill — the comprehensive API reference
 
 ## Related
 
-- [SF Symbols](/skills/ui-design/sf-symbols) — Decision trees, anti-patterns, troubleshooting, pressure scenarios
-- [SwiftUI Animation](/reference/swiftui-animation-ref) — General animation reference (VectorArithmetic, @Animatable, springs)
-- [HIG Reference](/reference/hig-ref) — Icon and symbol design guidelines
-- [Typography](/reference/typography-ref) — SF Pro font that symbols are designed to match
+- [SF Symbols](/skills/ui-design/sf-symbols) – Decision trees, anti-patterns, troubleshooting, pressure scenarios
+- [SwiftUI Animation](/reference/swiftui-animation-ref) – General animation reference (VectorArithmetic, @Animatable, springs)
+- [HIG Reference](/reference/hig-ref) – Icon and symbol design guidelines
+- [Typography](/reference/typography-ref) – SF Pro font that symbols are designed to match
 
 ## Resources
 

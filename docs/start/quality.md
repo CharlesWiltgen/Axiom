@@ -59,8 +59,8 @@ Additional skills are continuously being validated. Skills without a badge are s
 
 Anyone can duplicate a list of iOS development tips. What they can't duplicate:
 
-- **Validated quality** — Each tested skill has been verified to prevent real mistakes under real pressure
-- **Continuous improvement** — When validation reveals a gap, we fix it and re-test
-- **Battle-tested patterns** — The difference between "this might work" and "this has been proven to work"
+- **Validated quality** – Each tested skill has been verified to prevent real mistakes under real pressure
+- **Continuous improvement** – When validation reveals a gap, we fix it and re-test
+- **Battle-tested patterns** – The difference between "this might work" and "this has been proven to work"
 
 The green validation badge is our quality guarantee. If a skill carries it, the guidance has been tested and holds up.

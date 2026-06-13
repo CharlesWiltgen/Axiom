@@ -155,9 +155,9 @@ Workaround: [if available]."
 
 ## Related Resources
 
-- [networking](/skills/integration/networking) — Network.framework patterns and anti-patterns
-- [network-framework-ref](/reference/network-framework-ref) — Complete API reference
-- [audit-networking](/commands/integration/audit-networking) — Automated scan for deprecated APIs
+- [networking](/skills/integration/networking) – Network.framework patterns and anti-patterns
+- [network-framework-ref](/reference/network-framework-ref) – Complete API reference
+- [audit-networking](/commands/integration/audit-networking) – Automated scan for deprecated APIs
 
 ## Documentation Scope
 

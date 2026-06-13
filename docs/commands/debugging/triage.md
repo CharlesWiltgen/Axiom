@@ -11,12 +11,12 @@ Pull, classify, and rank production crash issues from Sentry or App Store Connec
 
 ## What It Does
 
-1. **Fetch grouped issues** — Pulls recent crash groups from Sentry or App Store Connect
-2. **Classify crash families** — Maps each group to a `pattern_tag` (null pointer, Swift runtime, watchdog, etc.)
-3. **Filter suspension noise** — Identifies idle-runloop and OS background-termination false positives that aren't actionable
-4. **Cluster related groups** — Merges issues that share the same root cause across different stack variants
-5. **Rank by impact** — Orders by affected-user count and crash rate, flagging regressions
-6. **Generate triage report** — Ranked list with pattern, cluster, noise flag, and suggested next step
+1. **Fetch grouped issues** – Pulls recent crash groups from Sentry or App Store Connect
+2. **Classify crash families** – Maps each group to a `pattern_tag` (null pointer, Swift runtime, watchdog, etc.)
+3. **Filter suspension noise** – Identifies idle-runloop and OS background-termination false positives that aren't actionable
+4. **Cluster related groups** – Merges issues that share the same root cause across different stack variants
+5. **Rank by impact** – Orders by affected-user count and crash rate, flagging regressions
+6. **Generate triage report** – Ranked list with pattern, cluster, noise flag, and suggested next step
 
 ## When to Use
 
@@ -27,6 +27,6 @@ Pull, classify, and rank production crash issues from Sentry or App Store Connec
 
 ## Related
 
-- [triage-analyzer](/agents/triage-analyzer) — The agent behind this command
-- [production-triage](/skills/debugging/production-triage) — Skill with Sentry/ASC fetch patterns, clustering, and the suspension noise classifier
-- [/axiom:analyze-crash](/commands/debugging/analyze-crash) — Use this instead when you have a single crash log to investigate
+- [triage-analyzer](/agents/triage-analyzer) – The agent behind this command
+- [production-triage](/skills/debugging/production-triage) – Skill with Sentry/ASC fetch patterns, clustering, and the suspension noise classifier
+- [/axiom:analyze-crash](/commands/debugging/analyze-crash) – Use this instead when you have a single crash log to investigate

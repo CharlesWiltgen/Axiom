@@ -31,16 +31,16 @@ Use this skill when:
 ### The launch phase model
 
 Three phases, mapped to the App Life Cycle timeline in Instruments:
-- **Phase 1 — pre-main** — dyld loads frameworks, then static initializers run (C++ constructors, Objective-C `+load`, `__attribute__((constructor))`)
-- **Phase 2 — main → first frame** — `didFinishLaunchingWithOptions` / `scene(_:willConnectTo:)` / SwiftUI `App.init` and `App.body` / root `viewDidLoad` / first `View.body`
-- **Phase 3 — first frame → interactive** — the "extended launch": the post-first-frame tail where async data loads behind placeholders and the app must already be responsive
+- **Phase 1 — pre-main** – dyld loads frameworks, then static initializers run (C++ constructors, Objective-C `+load`, `__attribute__((constructor))`)
+- **Phase 2 — main → first frame** – `didFinishLaunchingWithOptions` / `scene(_:willConnectTo:)` / SwiftUI `App.init` and `App.body` / root `viewDidLoad` / first `View.body`
+- **Phase 3 — first frame → interactive** – the "extended launch": the post-first-frame tail where async data loads behind placeholders and the app must already be responsive
 
 ### Launch types and how to reproduce each
 
-- **Cold** — reboot, wait, launch
-- **Warm** — force-quit, wait, launch (Apple's recommended measurement — most consistent)
-- **Hot / resume** — background and return; *not a launch*, don't measure it as one
-- **Notification launch** — background, send a push, tap it
+- **Cold** – reboot, wait, launch
+- **Warm** – force-quit, wait, launch (Apple's recommended measurement — most consistent)
+- **Hot / resume** – background and return; *not a launch*, don't measure it as one
+- **Notification launch** – background, send a push, tap it
 
 ### Measurement hygiene and a no-Instruments triage path
 
@@ -58,9 +58,9 @@ Three phases, mapped to the App Life Cycle timeline in Instruments:
 
 ### Fixes by phase
 
-- **Pre-main** — consolidate/static-link frameworks, mergeable libraries, move `+load` work to `+initialize`, no `dlopen` on the launch path
-- **Main → first frame** — defer non-critical work out of the delegate / `App.init` / `viewDidLoad` / `View.body`, load only first-screen data, watch SwiftData/Core Data stack cost, fix priority inversions, flatten the first view hierarchy
-- **First frame → interactive** — placeholders + async load, signpost the tail, no speculative pre-warming
+- **Pre-main** – consolidate/static-link frameworks, mergeable libraries, move `+load` work to `+initialize`, no `dlopen` on the launch path
+- **Main → first frame** – defer non-critical work out of the delegate / `App.init` / `viewDidLoad` / `View.body`, load only first-screen data, watch SwiftData/Core Data stack cost, fix priority inversions, flatten the first view hierarchy
+- **First frame → interactive** – placeholders + async load, signpost the tail, no speculative pre-warming
 
 ### Push-notification launch
 
@@ -73,10 +73,10 @@ A table of the recurring ones: measuring in the Simulator or a Debug build, meas
 
 ## Related
 
-- [performance-profiling](/skills/debugging/performance-profiling) — Instruments mechanics; this skill points you at the App Launch template and tells you which phase to profile. Also covers headless `xctrace` and the MetricKit/`MXAppLaunchMetric` reference material this skill cross-links.
-- [hang-diagnostics](/skills/debugging/hang-diagnostics) — if launch reaches the first frame but the screen is frozen, switch to main-thread analysis here
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — moving heavy main-actor launch work off the critical path
-- [energy](/skills/debugging/energy) — battery-drain diagnosis (launch work and energy issues share root causes)
+- [performance-profiling](/skills/debugging/performance-profiling) – Instruments mechanics; this skill points you at the App Launch template and tells you which phase to profile. Also covers headless `xctrace` and the MetricKit/`MXAppLaunchMetric` reference material this skill cross-links.
+- [hang-diagnostics](/skills/debugging/hang-diagnostics) – if launch reaches the first frame but the screen is frozen, switch to main-thread analysis here
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – moving heavy main-actor launch work off the critical path
+- [energy](/skills/debugging/energy) – battery-drain diagnosis (launch work and energy issues share root causes)
 
 ## Resources
 

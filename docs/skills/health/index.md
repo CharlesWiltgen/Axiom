@@ -49,42 +49,42 @@ Questions you can ask Claude that will draw from these skills:
 
 ## Skills
 
-- **[Fundamentals](/skills/health/fundamentals)** — HealthKit framework model, `HKHealthStore`, sample vs. characteristic data
+- **[Fundamentals](/skills/health/fundamentals)** – HealthKit framework model, `HKHealthStore`, sample vs. characteristic data
   - *"What's the difference between a sample type and a characteristic type?"*
   - *"Where should `HKHealthStore` live in my app architecture?"*
 
-- **[Authorization and Privacy](/skills/health/authorization-and-privacy)** — Capability setup, `requestAuthorization`, purpose strings, read-asymmetry
+- **[Authorization and Privacy](/skills/health/authorization-and-privacy)** – Capability setup, `requestAuthorization`, purpose strings, read-asymmetry
   - *"What do I write in `NSHealthShareUsageDescription`?"*
   - *"Why can't I tell whether the user denied read access to a type?"*
 
-- **[Queries](/skills/health/queries)** — `HKSampleQuery`, Swift Concurrency query APIs, `HKStatisticsCollectionQuery`, sample writes
+- **[Queries](/skills/health/queries)** – `HKSampleQuery`, Swift Concurrency query APIs, `HKStatisticsCollectionQuery`, sample writes
   - *"How do I get the user's daily step count buckets for the last week?"*
   - *"What's the modern async/await way to query HealthKit?"*
 
-- **[Sync and Background](/skills/health/sync-and-background)** — Anchored queries, observer queries, `HKDeletedObject`, background delivery
+- **[Sync and Background](/skills/health/sync-and-background)** – Anchored queries, observer queries, `HKDeletedObject`, background delivery
   - *"How do I sync heart rate samples from HealthKit to my server, including deletions?"*
   - *"How do I enable the `background-delivery` entitlement and get woken up when new data arrives?"*
 
-- **[Workouts](/skills/health/workouts)** — `HKWorkoutSession`, `HKLiveWorkoutBuilder`, recovery, iOS/iPadOS/watchOS workout tracking
+- **[Workouts](/skills/health/workouts)** – `HKWorkoutSession`, `HKLiveWorkoutBuilder`, recovery, iOS/iPadOS/watchOS workout tracking
   - *"How do I start a running workout on the watch, and what session type should I use?"*
   - *"My workout crashes mid-run — how do I recover the session?"*
 
-- **[WorkoutKit](/skills/health/workoutkit)** — Custom/planned workouts, scheduling, swimming workouts, previewing
+- **[WorkoutKit](/skills/health/workoutkit)** – Custom/planned workouts, scheduling, swimming workouts, previewing
   - *"How do I build a multi-step interval workout and schedule it on the user's watch?"*
   - *"How do I preview a WorkoutKit workout before the user starts it?"*
 
-- **[Wellbeing and Medications](/skills/health/wellbeing-and-medications)** — State of Mind, Medications API, symptom logging
+- **[Wellbeing and Medications](/skills/health/wellbeing-and-medications)** – State of Mind, Medications API, symptom logging
   - *"How do I let the user log State of Mind from my app?"*
   - *"What does the Medications API let me read or write?"*
 
-- **[Clinical and Mobility](/skills/health/clinical-and-mobility)** — Health Records (FHIR), Mobility Health App, motion-based health
+- **[Clinical and Mobility](/skills/health/clinical-and-mobility)** – Health Records (FHIR), Mobility Health App, motion-based health
   - *"How do I read the user's lab results from Health Records?"*
   - *"What mobility metrics can I read, and what do they mean?"*
 
 ## Related
 
-- **[axiom-watchos](/skills/watchos/)** — Watch-specific workout presentation, Smart Stack placement, and Always On display
-- **[axiom-concurrency](/skills/concurrency/swift-concurrency)** — Swift 6 actor isolation and Sendable rules that apply to HealthKit query callbacks
-- **[axiom-swiftui](/skills/ui-design/)** — Charts rendering for health data and `@Observable` view models
-- **[axiom-data](/skills/persistence/)** — Cross-platform sync patterns (CloudKit, GRDB) for the parts of your app data that aren't in HealthKit
-- **[axiom-security](/agents/security-privacy-scanner)** — Keychain, encryption, data-protection entitlements for sensitive health-adjacent data
+- **[axiom-watchos](/skills/watchos/)** – Watch-specific workout presentation, Smart Stack placement, and Always On display
+- **[axiom-concurrency](/skills/concurrency/swift-concurrency)** – Swift 6 actor isolation and Sendable rules that apply to HealthKit query callbacks
+- **[axiom-swiftui](/skills/ui-design/)** – Charts rendering for health data and `@Observable` view models
+- **[axiom-data](/skills/persistence/)** – Cross-platform sync patterns (CloudKit, GRDB) for the parts of your app data that aren't in HealthKit
+- **[axiom-security](/agents/security-privacy-scanner)** – Keychain, encryption, data-protection entitlements for sensitive health-adjacent data

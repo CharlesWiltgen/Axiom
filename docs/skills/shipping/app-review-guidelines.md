@@ -30,15 +30,15 @@ Questions you can ask Claude that will draw from this skill:
 
 ## What This Skill Provides
 
-- **Section-by-section index** — Safety (1.x), Performance (2.x), Business (3.x), Design (4.x), and Legal (5.x), with topic summaries for each numbered guideline
-- **Zero-tolerance flags** — The four guidelines (1.1.4, 2.5.3, 4.1(b), 5.1.1(vi)) whose violation can mean immediate removal or Developer Program termination, called out separately so they don't get lost in the long list
-- **Top 10 rejection causes** — Ordered by frequency, anchored on Apple's published statistics where available; the canonical "if you only check ten things, check these"
-- **Sensitive app types** — Kids apps with third-party ads, medical hardware, third-party content/trademarks, gambling/VPN/real-money gaming, and regulated industries (banking, crypto, healthcare, air travel), with the extra documentation each requires
-- **Cross-references to payments** — Apple Pay, Wallet, and Tap to Pay guidance is split out to the `axiom-payments` suite; this skill points there for Section 3 questions involving physical-world payments
+- **Section-by-section index** – Safety (1.x), Performance (2.x), Business (3.x), Design (4.x), and Legal (5.x), with topic summaries for each numbered guideline
+- **Zero-tolerance flags** – The four guidelines (1.1.4, 2.5.3, 4.1(b), 5.1.1(vi)) whose violation can mean immediate removal or Developer Program termination, called out separately so they don't get lost in the long list
+- **Top 10 rejection causes** – Ordered by frequency, anchored on Apple's published statistics where available; the canonical "if you only check ten things, check these"
+- **Sensitive app types** – Kids apps with third-party ads, medical hardware, third-party content/trademarks, gambling/VPN/real-money gaming, and regulated industries (banking, crypto, healthcare, air travel), with the extra documentation each requires
+- **Cross-references to payments** – Apple Pay, Wallet, and Tap to Pay guidance is split out to the `axiom-payments` suite; this skill points there for Section 3 questions involving physical-world payments
 
 ## Related
 
-- [App Store Submission](./app-store-submission) — Pre-flight checklist that catches 90% of guideline violations before you submit
-- [App Store Diagnostics](/diagnostic/app-store-diag) — Use when a rejection has arrived; maps guideline numbers to root causes and fixes
-- [Expert Review Checklist](./expert-review-checklist) — 9-section verification list covering build, privacy, metadata, monetization, and EU compliance
-- [App Store Reference](/reference/app-store-ref) — Field-level metadata specs, privacy manifest schema, and age rating tiers
+- [App Store Submission](./app-store-submission) – Pre-flight checklist that catches 90% of guideline violations before you submit
+- [App Store Diagnostics](/diagnostic/app-store-diag) – Use when a rejection has arrived; maps guideline numbers to root causes and fixes
+- [Expert Review Checklist](./expert-review-checklist) – 9-section verification list covering build, privacy, metadata, monetization, and EU compliance
+- [App Store Reference](/reference/app-store-ref) – Field-level metadata specs, privacy manifest schema, and age rating tiers

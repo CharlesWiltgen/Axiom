@@ -60,7 +60,7 @@ The `NSAccessorySetupSupports` / `NSAccessorySetupBluetoothServices` / `...Compa
 ## Related
 
 - For CoreBluetooth / NetworkExtension communication after pairing, see the axiom-networking suite
-- [Privacy UX](/skills/integration/privacy-ux) — Permission-prompt patterns this flow avoids
+- [Privacy UX](/skills/integration/privacy-ux) – Permission-prompt patterns this flow avoids
 
 ## Resources
 

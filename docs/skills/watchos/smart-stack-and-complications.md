@@ -71,11 +71,11 @@ This page documents the `smart-stack-and-complications` skill in the `axiom-watc
 
 ## Related
 
-- [controls-and-live-activities](/skills/watchos/controls-and-live-activities) — Controls and Live Activities share Smart Stack real estate with widgets; the decision table helps pick the right surface
-- [watch-connectivity](/skills/watchos/watch-connectivity) — `transferCurrentComplicationUserInfo` as a wake-on-change signal, and the 50/day transfer budget that makes APNs preferable for high-frequency updates
-- [background-and-networking](/skills/watchos/background-and-networking) — Widget timeline refresh strategies within watchOS's networking and background constraints
-- [modernization](/skills/watchos/modernization) — Covers the partial-migration trap when ClockKit and WidgetKit coexist
-- [extensions-widgets](/skills/integration/extensions-widgets) — iOS-side widgets and general WidgetKit patterns shared with the watch
+- [controls-and-live-activities](/skills/watchos/controls-and-live-activities) – Controls and Live Activities share Smart Stack real estate with widgets; the decision table helps pick the right surface
+- [watch-connectivity](/skills/watchos/watch-connectivity) – `transferCurrentComplicationUserInfo` as a wake-on-change signal, and the 50/day transfer budget that makes APNs preferable for high-frequency updates
+- [background-and-networking](/skills/watchos/background-and-networking) – Widget timeline refresh strategies within watchOS's networking and background constraints
+- [modernization](/skills/watchos/modernization) – Covers the partial-migration trap when ClockKit and WidgetKit coexist
+- [extensions-widgets](/skills/integration/extensions-widgets) – iOS-side widgets and general WidgetKit patterns shared with the watch
 
 ## Resources
 

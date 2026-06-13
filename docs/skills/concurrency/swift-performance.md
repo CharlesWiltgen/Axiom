@@ -34,22 +34,22 @@ Use this skill when:
 
 From WWDC 2024-10217 — the organizing mental model for all optimizations:
 
-1. **Function Calls** — Static vs dynamic dispatch, generic specialization
-2. **Memory Allocation** — Stack vs heap, when each occurs
-3. **Memory Layout** — Contiguous vs pointer-chasing, cache lines
-4. **Value Copying** — COW triggers, defensive copies, ARC traffic
+1. **Function Calls** – Static vs dynamic dispatch, generic specialization
+2. **Memory Allocation** – Stack vs heap, when each occurs
+3. **Memory Layout** – Contiguous vs pointer-chasing, cache lines
+4. **Value Copying** – COW triggers, defensive copies, ARC traffic
 
 ### Core Topics
 
-1. **Noncopyable Types** — Swift 6 `~Copyable` for types that should never be copied
-2. **Copy-on-Write** — Use `isKnownUniquelyReferenced()`, `reserveCapacity()`, and avoid defensive copies
-3. **Value vs Reference** — Structs under 64 bytes are fast; larger need indirect storage
-4. **ARC Optimization** — `unowned` is ~2x faster than `weak`; closure capture costs (escaping vs non-escaping)
-5. **Generics** — Use `some` over `any` for static dispatch
-6. **Collection Performance** — `ContiguousArray` is ~15% faster than `Array`; InlineArray for fixed sizes
-7. **Concurrency** — Actor hops cost ~100μs; batch calls
-8. **Memory Layout** — Struct padding, exclusivity checks, cache-friendly data structures
-9. **Span Types** — Safe zero-copy memory access with OutputSpan for initialization
+1. **Noncopyable Types** – Swift 6 `~Copyable` for types that should never be copied
+2. **Copy-on-Write** – Use `isKnownUniquelyReferenced()`, `reserveCapacity()`, and avoid defensive copies
+3. **Value vs Reference** – Structs under 64 bytes are fast; larger need indirect storage
+4. **ARC Optimization** – `unowned` is ~2x faster than `weak`; closure capture costs (escaping vs non-escaping)
+5. **Generics** – Use `some` over `any` for static dispatch
+6. **Collection Performance** – `ContiguousArray` is ~15% faster than `Array`; InlineArray for fixed sizes
+7. **Concurrency** – Actor hops cost ~100μs; batch calls
+8. **Memory Layout** – Struct padding, exclusivity checks, cache-friendly data structures
+9. **Span Types** – Safe zero-copy memory access with OutputSpan for initialization
 
 ### Eliminate Copying
 
@@ -93,9 +93,9 @@ func render<S: Shape>(shapes: [S]) { ... }
 
 ## Related
 
-- [performance-profiling](/skills/debugging/performance-profiling) — Use this first to identify bottlenecks
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Correctness-focused concurrency
-- [swiftui-performance](/skills/ui-design/swiftui-performance) — SwiftUI-specific optimization
+- [performance-profiling](/skills/debugging/performance-profiling) – Use this first to identify bottlenecks
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Correctness-focused concurrency
+- [swiftui-performance](/skills/ui-design/swiftui-performance) – SwiftUI-specific optimization
 
 ## Resources
 

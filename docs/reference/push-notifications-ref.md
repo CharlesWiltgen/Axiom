@@ -60,10 +60,10 @@ This page documents the `push-notifications-ref` skill — the API reference Cla
 
 ## Related
 
-- [push-notifications](/skills/integration/push-notifications) — Implementation patterns, permission flow, token management
-- [push-notifications-diag](/diagnostic/push-notifications-diag) — Delivery failure diagnostics, token mismatch, sandbox/production issues
-- [extensions-widgets](/skills/integration/extensions-widgets) — Live Activity UI, widget timelines, Dynamic Island
-- [extensions-widgets-ref](/reference/extensions-widgets-ref) — WidgetKit and ActivityKit API reference
+- [push-notifications](/skills/integration/push-notifications) – Implementation patterns, permission flow, token management
+- [push-notifications-diag](/diagnostic/push-notifications-diag) – Delivery failure diagnostics, token mismatch, sandbox/production issues
+- [extensions-widgets](/skills/integration/extensions-widgets) – Live Activity UI, widget timelines, Dynamic Island
+- [extensions-widgets-ref](/reference/extensions-widgets-ref) – WidgetKit and ActivityKit API reference
 
 ## Resources
 

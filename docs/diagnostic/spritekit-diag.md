@@ -58,6 +58,6 @@ Use when you're experiencing:
 
 ## Related
 
-- [SpriteKit](/skills/games/spritekit) — Architecture patterns, anti-patterns, and code review checklist
-- [SpriteKit API Reference](/reference/spritekit-ref) — Complete API tables for all SpriteKit classes
-- [spritekit-auditor](/agents/spritekit-auditor) — Automated scanning for SpriteKit anti-patterns
+- [SpriteKit](/skills/games/spritekit) – Architecture patterns, anti-patterns, and code review checklist
+- [SpriteKit API Reference](/reference/spritekit-ref) – Complete API tables for all SpriteKit classes
+- [spritekit-auditor](/agents/spritekit-auditor) – Automated scanning for SpriteKit anti-patterns

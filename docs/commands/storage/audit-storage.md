@@ -186,6 +186,6 @@ After fixing issues:
 4. Verify file locations with Files app
 
 For comprehensive storage guidance:
-- `/skill axiom:storage` — Storage decision framework
-- `/skill axiom:file-protection-ref` — Encryption details
-- `/skill axiom:storage-management-ref` — Purging policies
+- `/skill axiom:storage` – Storage decision framework
+- `/skill axiom:file-protection-ref` – Encryption details
+- `/skill axiom:storage-management-ref` – Purging policies

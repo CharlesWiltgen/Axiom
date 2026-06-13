@@ -87,9 +87,9 @@ This page documents the `axiom-swiftui--previews-ref` skill — the API surface 
 
 ## Related
 
-- [swiftui-previews](/skills/ui-design/swiftui-previews) — Discipline for building good previews (five performance rules, environment setup, variant matrix)
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — Preview crash diagnosis (different problem from API usage)
-- [swiftui-layout-ref](/reference/swiftui-layout-ref) — Adaptive layout APIs you'll preview against
+- [swiftui-previews](/skills/ui-design/swiftui-previews) – Discipline for building good previews (five performance rules, environment setup, variant matrix)
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – Preview crash diagnosis (different problem from API usage)
+- [swiftui-layout-ref](/reference/swiftui-layout-ref) – Adaptive layout APIs you'll preview against
 
 ## Resources
 

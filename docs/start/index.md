@@ -6,11 +6,11 @@ Welcome to Axiom — battle-tested AI skills, agents, and tools for modern xOS (
 
 Axiom provides comprehensive Apple platform development workflows:
 
-- **98 discipline skills** — Mandatory workflows (18 TDD-tested using ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development))
-- **55 reference skills** — Comprehensive API guides with code examples
-- **22 diagnostic skills** — Systematic troubleshooting with decision trees
-- **12 commands** — Quick automated scans for common issues
-- **38 agents** — Autonomous code scanning and natural language automation
+- **98 discipline skills** – Mandatory workflows (18 TDD-tested using ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development))
+- **55 reference skills** – Comprehensive API guides with code examples
+- **22 diagnostic skills** – Systematic troubleshooting with decision trees
+- **12 commands** – Quick automated scans for common issues
+- **38 agents** – Autonomous code scanning and natural language automation
 
 #### Total: 175 skills + 12 commands + 38 agents
 
@@ -65,6 +65,6 @@ Axiom provides comprehensive Apple platform development workflows:
 
 ## What's Next?
 
-- [Install →](/start/install) — Install Axiom for Claude Code or Codex
-- [Example Workflows →](/start/workflows) — Step-by-step guides for common tasks
-- [View all skills →](/skills/) — Browse the complete skill catalog
+- [Install →](/start/install) – Install Axiom for Claude Code or Codex
+- [Example Workflows →](/start/workflows) – Step-by-step guides for common tasks
+- [View all skills →](/skills/) – Browse the complete skill catalog

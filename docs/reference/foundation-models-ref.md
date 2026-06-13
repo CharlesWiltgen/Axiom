@@ -37,7 +37,7 @@ Questions you can ask Claude that will draw from this reference:
 ## What's Covered
 
 ### LanguageModelSession
-- `SystemLanguageModel(useCase:guardrails:)` — `.general`, `.contentTagging`, …
+- `SystemLanguageModel(useCase:guardrails:)` – `.general`, `.contentTagging`, …
 - Text: `respond(to:)` → `Response<String>` (`.content`)
 - Structured: `respond(to:generating:)` → `Response<Content>` (`.content`)
 - Streaming: `streamResponse(to:generating:)` → `ResponseStream<Content>`
@@ -67,7 +67,7 @@ Questions you can ask Claude that will draw from this reference:
 - Dynamic Profiles: `LanguageModelSession.DynamicProfile` / `Profile` / `init(profile:)`, full modifier surface + `@SessionProperty`
 - Dynamic Instructions: `DynamicInstructions` builder — re-derives instructions + tools per request (distinct from Dynamic Profiles)
 - Custom model providers: `LanguageModel` / `LanguageModelExecutor` back a session with your own model (MLX, Core AI, server)
-- `ImageReference` — `@Generable` tool argument that references an image already in the conversation
+- `ImageReference` – `@Generable` tool argument that references an image already in the conversation
 - `LanguageModelError` replaces the now-deprecated `GenerationError`
 - Built-in system tools: `BarcodeReaderTool`, `OCRTool`, `SpotlightSearchTool` (local RAG)
 - `@Generable(name:)` explicit schema name
@@ -110,9 +110,9 @@ This page is the `foundation-models-ref` API map — names, signatures, and the 
 
 ## Related Resources
 
-- [foundation-models](/skills/integration/foundation-models) — discipline-enforcing skill with anti-patterns and the full code
-- [foundation-models-diag](/diagnostic/foundation-models-diag) — systematic troubleshooting under pressure
-- [foundation-models-adapters-ref](/reference/foundation-models-adapters-ref) — training and loading LoRA adapters
-- [WWDC 2025/286](https://developer.apple.com/videos/play/wwdc2025/286/) — Meet the Foundation Models framework
-- [WWDC 2025/259](https://developer.apple.com/videos/play/wwdc2025/259/) — Build intelligent apps with Apple Intelligence
-- [WWDC 2025/301](https://developer.apple.com/videos/play/wwdc2025/301/) — Deep dive into Foundation Models
+- [foundation-models](/skills/integration/foundation-models) – discipline-enforcing skill with anti-patterns and the full code
+- [foundation-models-diag](/diagnostic/foundation-models-diag) – systematic troubleshooting under pressure
+- [foundation-models-adapters-ref](/reference/foundation-models-adapters-ref) – training and loading LoRA adapters
+- [WWDC 2025/286](https://developer.apple.com/videos/play/wwdc2025/286/) – Meet the Foundation Models framework
+- [WWDC 2025/259](https://developer.apple.com/videos/play/wwdc2025/259/) – Build intelligent apps with Apple Intelligence
+- [WWDC 2025/301](https://developer.apple.com/videos/play/wwdc2025/301/) – Deep dive into Foundation Models

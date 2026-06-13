@@ -45,22 +45,22 @@ A view that can't be previewed in 5 lines is over-coupled. The fix is to refacto
 
 Loss-framed for impact. A 20-second preview compile hit 40 times a day costs ~55 hours/year per developer.
 
-1. **Isolate UI in a Swift Package** — Single biggest win. Move views to a local Swift Package with only `SwiftUI` and `Foundation` as deps. Preview compiles drop from 20+ to 2–3 seconds.
-2. **Use `PreviewModifier` for shared expensive setup** — Apple's official answer (Xcode 16+, iOS 18+, macOS 15+) for expensive shared state across previews via `makeSharedContext()`.
-3. **Pin the parent preview** — Canvas pin button locks the canvas to a meaningful preview while you edit children.
-4. **Disable auto-refresh for large views** — Editor → Canvas → Automatically Refresh Canvas off; trigger with ⌥⌘P.
-5. **Skip SDK init in preview builds** — Guard `FirebaseApp.configure()` and similar with `ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"]`.
+1. **Isolate UI in a Swift Package** – Single biggest win. Move views to a local Swift Package with only `SwiftUI` and `Foundation` as deps. Preview compiles drop from 20+ to 2–3 seconds.
+2. **Use `PreviewModifier` for shared expensive setup** – Apple's official answer (Xcode 16+, iOS 18+, macOS 15+) for expensive shared state across previews via `makeSharedContext()`.
+3. **Pin the parent preview** – Canvas pin button locks the canvas to a meaningful preview while you edit children.
+4. **Disable auto-refresh for large views** – Editor → Canvas → Automatically Refresh Canvas off; trigger with ⌥⌘P.
+5. **Skip SDK init in preview builds** – Guard `FirebaseApp.configure()` and similar with `ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"]`.
 
 ### Environment Setup Patterns
 
 Six patterns matched to use case:
 
-- **Pattern A** — Plain `.sample` data on the model for leaf views
-- **Pattern B** — `@Previewable @State` for inline state (Xcode 16+)
-- **Pattern C** — Single-preview `.environment()` injection
-- **Pattern D** — `PreviewModifier` for repeated expensive setup
-- **Pattern E** — SwiftData in-memory `ModelContainer`
-- **Pattern F** — Side-by-side composition with `Group` for semantic-state comparisons
+- **Pattern A** – Plain `.sample` data on the model for leaf views
+- **Pattern B** – `@Previewable @State` for inline state (Xcode 16+)
+- **Pattern C** – Single-preview `.environment()` injection
+- **Pattern D** – `PreviewModifier` for repeated expensive setup
+- **Pattern E** – SwiftData in-memory `ModelContainer`
+- **Pattern F** – Side-by-side composition with `Group` for semantic-state comparisons
 
 ### Variant Matrix Discipline
 
@@ -82,10 +82,10 @@ This page documents the `axiom-swiftui--previews` skill — discipline for *buil
 
 ## Related
 
-- [swiftui-previews-ref](/reference/swiftui-previews-ref) — Complete API reference for `#Preview`, `@Previewable`, `PreviewModifier`, traits, and canvas features
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — Diagnostic decision tree for preview crashes (different problem from slow previews)
-- [swiftui-performance](/skills/ui-design/swiftui-performance) — Runtime performance with the SwiftUI Instrument (not preview perf)
-- [swiftui-architecture](/skills/ui-design/swiftui-architecture) — The previewability principle is the same architectural discipline (views render, models coordinate)
+- [swiftui-previews-ref](/reference/swiftui-previews-ref) – Complete API reference for `#Preview`, `@Previewable`, `PreviewModifier`, traits, and canvas features
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – Diagnostic decision tree for preview crashes (different problem from slow previews)
+- [swiftui-performance](/skills/ui-design/swiftui-performance) – Runtime performance with the SwiftUI Instrument (not preview perf)
+- [swiftui-architecture](/skills/ui-design/swiftui-architecture) – The previewability principle is the same architectural discipline (views render, models coordinate)
 
 ## Resources
 

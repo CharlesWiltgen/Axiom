@@ -78,7 +78,7 @@ Scans command output for iOS-specific error patterns and suggests the right skil
 **Trigger**: After modifying `.swift` files
 
 Catches critical Swift issues as code is written:
-- **`@State var` without access control** — blocks the edit and requires fixing. Without an explicit access level (usually `private`), child views can create independent copies of the state, causing silent bugs.
+- **`@State var` without access control** – blocks the edit and requires fixing. Without an explicit access level (usually `private`), child views can create independent copies of the state, causing silent bugs.
 
 ---
 

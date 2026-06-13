@@ -118,22 +118,22 @@ All examples are:
 
 ## Related Skills
 
-- **swift-concurrency** — Codable types crossing actor boundaries need Sendable
-- **swiftdata** — @Model types use Codable for CloudKit sync
-- **networking** — Coder protocol wraps Codable for Network.framework
-- **app-intents-ref** — AppEnum parameters use Codable serialization
+- **swift-concurrency** – Codable types crossing actor boundaries need Sendable
+- **swiftdata** – @Model types use Codable for CloudKit sync
+- **networking** – Coder protocol wraps Codable for Network.framework
+- **app-intents-ref** – AppEnum parameters use Codable serialization
 
 ## Related Agents
 
-- **codable-auditor** — Scans for Codable anti-patterns and legacy code
+- **codable-auditor** – Scans for Codable anti-patterns and legacy code
 
 ## Key Takeaways
 
-1. **Prefer automatic synthesis** — Add `: Codable` when structure matches JSON
-2. **Use CodingKeys for simple mismatches** — Rename or exclude without manual code
-3. **Manual implementation for structural differences** — Nested containers, bridge types
-4. **Always set locale and timezone** — DateFormatter requires `en_US_POSIX` and explicit timezone
-5. **Never swallow errors with try?** — Handle DecodingError cases explicitly
-6. **Codable + Sendable** — Value types (structs/enums) are ideal for async networking
+1. **Prefer automatic synthesis** – Add `: Codable` when structure matches JSON
+2. **Use CodingKeys for simple mismatches** – Rename or exclude without manual code
+3. **Manual implementation for structural differences** – Nested containers, bridge types
+4. **Always set locale and timezone** – DateFormatter requires `en_US_POSIX` and explicit timezone
+5. **Never swallow errors with try?** – Handle DecodingError cases explicitly
+6. **Codable + Sendable** – Value types (structs/enums) are ideal for async networking
 
 **Core Principle**: Codable is Swift's universal serialization protocol. Master it once, use it everywhere (SwiftData, App Intents, URLSession, UserDefaults, CloudKit, WidgetKit).

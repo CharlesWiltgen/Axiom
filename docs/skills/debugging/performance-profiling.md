@@ -131,7 +131,7 @@ Example reading:
 
 ## Documentation Scope
 
-This page documents the `axiom-performance` skill—Instruments decision trees and workflows Claude uses when helping you profile performance issues. The skill contains complete tool tutorials, real-world examples, and pressure scenario handling.
+This page documents the `axiom-performance` skill — Instruments decision trees and workflows Claude uses when helping you profile performance issues. The skill contains complete tool tutorials, real-world examples, and pressure scenario handling.
 
 **For SwiftUI-specific profiling:** See [swiftui-performance](/skills/ui-design/swiftui-performance) for the new SwiftUI Instrument in Instruments 26.
 
@@ -139,11 +139,11 @@ This page documents the `axiom-performance` skill—Instruments decision trees a
 
 ## Related
 
-- [swiftui-performance](/skills/ui-design/swiftui-performance) — SwiftUI Instrument for view update analysis
-- [memory-debugging](/skills/debugging/memory-debugging) — Retain cycle and leak diagnosis
-- [xcode-debugging](/skills/debugging/xcode-debugging) — Environment-first diagnostics before profiling
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Background thread patterns for CPU work
-- [swift-performance](/skills/concurrency/swift-performance) — Language-level optimization after identifying bottlenecks
+- [swiftui-performance](/skills/ui-design/swiftui-performance) – SwiftUI Instrument for view update analysis
+- [memory-debugging](/skills/debugging/memory-debugging) – Retain cycle and leak diagnosis
+- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics before profiling
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Background thread patterns for CPU work
+- [swift-performance](/skills/concurrency/swift-performance) – Language-level optimization after identifying bottlenecks
 
 ## Resources
 

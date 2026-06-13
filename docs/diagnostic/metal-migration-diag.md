@@ -47,5 +47,5 @@ Use when you're experiencing:
 
 ## Related
 
-- [Metal Migration](/skills/games/metal-migration) — Migration strategy, phased planning, architecture differences, anti-patterns
-- [Metal Migration Reference](/reference/metal-migration-ref) — GLSL/HLSL to MSL conversion tables, API equivalents, setup code
+- [Metal Migration](/skills/games/metal-migration) – Migration strategy, phased planning, architecture differences, anti-patterns
+- [Metal Migration Reference](/reference/metal-migration-ref) – GLSL/HLSL to MSL conversion tables, API equivalents, setup code

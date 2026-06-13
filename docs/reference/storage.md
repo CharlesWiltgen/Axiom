@@ -35,19 +35,19 @@ Comprehensive decision framework integrating SwiftData (WWDC 2023), CKSyncEngine
 ### Cross-References
 
 **Database Skills**:
-- `axiom-data` — Modern persistence (iOS 17+)
-- `axiom-data` — Advanced SQLite control
-- `axiom-data` — Reactive queries, migrations
+- `axiom-data` – Modern persistence (iOS 17+)
+- `axiom-data` – Advanced SQLite control
+- `axiom-data` – Reactive queries, migrations
 
 **File Skills**:
-- `axiom-security` — Encryption, security
-- `axiom-data` — Purging, disk space
-- `axiom-data` — Debug file issues
+- `axiom-security` – Encryption, security
+- `axiom-data` – Purging, disk space
+- `axiom-data` – Debug file issues
 
 **Cloud Skills**:
-- `axiom-data` — Database sync
-- `axiom-data` — File sync
-- `axiom-data` — Debug sync issues
+- `axiom-data` – Database sync
+- `axiom-data` – File sync
+- `axiom-data` – Debug sync issues
 
 ## Common Patterns
 

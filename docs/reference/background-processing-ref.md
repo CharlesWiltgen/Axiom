@@ -55,10 +55,10 @@ This page documents the `axiom-integration` reference skill -- comprehensive API
 
 ## Related
 
-- [background-processing](/skills/integration/background-processing) — Patterns, decision trees, and implementation guidance
-- [background-processing-diag](/diagnostic/background-processing-diag) — Symptom-based troubleshooting
-- [energy](/skills/debugging/energy) — Battery optimization for background work
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Async/await and task cancellation patterns
+- [background-processing](/skills/integration/background-processing) – Patterns, decision trees, and implementation guidance
+- [background-processing-diag](/diagnostic/background-processing-diag) – Symptom-based troubleshooting
+- [energy](/skills/debugging/energy) – Battery optimization for background work
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async/await and task cancellation patterns
 
 ## Resources
 

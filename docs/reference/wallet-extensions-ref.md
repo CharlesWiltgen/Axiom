@@ -30,12 +30,12 @@ Questions developers ask that this reference answers:
 
 ## What's Covered
 
-- **Audience boundary** — Wallet Extensions are exclusive to apps that issue payment cards (banks, credit unions, card networks); not for merchant or non-issuer apps
-- **Availability** — iOS 14.0+, iPadOS 14.0+, Mac Catalyst 14.0+, visionOS 1.0+
-- **Two extensions per issuer app** — non-UI `PKIssuerProvisioningExtensionHandler` subclass (reports status, lists provisionable passes, generates `PKAddPaymentPassRequest`) and UI `PKIssuerProvisioningExtensionAuthorizationProviding` (typically a `UIViewController`) for re-authentication
-- **Apple-managed entitlements** — separate keys for NUI and UI extensions, requested via Apple Developer Support (not Xcode capabilities), granted case-by-case to verified card issuers; cannot test without the entitlement
-- **Sample code** — Apple's "Implementing Wallet Extensions" sample at `/passkit/implementing-wallet-extensions` (four-target project — containing app, UI extension, NUI extension, tests)
-- **Shared data model** — `PKAddPaymentPassRequest` plus nonce plus certificate chain is identical to in-app provisioning via `PKAddPaymentPassViewController`; the extension hosts the same flow inside Wallet's UI
+- **Audience boundary** – Wallet Extensions are exclusive to apps that issue payment cards (banks, credit unions, card networks); not for merchant or non-issuer apps
+- **Availability** – iOS 14.0+, iPadOS 14.0+, Mac Catalyst 14.0+, visionOS 1.0+
+- **Two extensions per issuer app** – non-UI `PKIssuerProvisioningExtensionHandler` subclass (reports status, lists provisionable passes, generates `PKAddPaymentPassRequest`) and UI `PKIssuerProvisioningExtensionAuthorizationProviding` (typically a `UIViewController`) for re-authentication
+- **Apple-managed entitlements** – separate keys for NUI and UI extensions, requested via Apple Developer Support (not Xcode capabilities), granted case-by-case to verified card issuers; cannot test without the entitlement
+- **Sample code** – Apple's "Implementing Wallet Extensions" sample at `/passkit/implementing-wallet-extensions` (four-target project — containing app, UI extension, NUI extension, tests)
+- **Shared data model** – `PKAddPaymentPassRequest` plus nonce plus certificate chain is identical to in-app provisioning via `PKAddPaymentPassViewController`; the extension hosts the same flow inside Wallet's UI
 
 ## Documentation Scope
 

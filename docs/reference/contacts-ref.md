@@ -37,21 +37,21 @@ Use this reference when you need:
 
 ## What's Covered
 
-- **CNContactStore** — `authorizationStatus(for:)`, `requestAccess(for:)`, `unifiedContact(withIdentifier:keysToFetch:)`, `unifiedContacts(matching:keysToFetch:)`, `unifiedMeContact(withKeysToFetch:)`, `enumerateContacts(with:)`, container and group access, `currentHistoryToken`, `.CNContactStoreDidChange` notification
-- **Built-in predicates** — `predicateForContacts(matchingName:)`, `predicateForContacts(matchingEmailAddress:)`, `predicateForContacts(matching:)` for phone numbers, `predicateForContacts(withIdentifiers:)`, in-group and in-container predicates
-- **CNContact key descriptors** — `CNContactGivenNameKey`, `CNContactFamilyNameKey`, `CNContactPhoneNumbersKey`, `CNContactEmailAddressesKey`, `CNContactPostalAddressesKey`, image keys; `CNContactFormatter.descriptorForRequiredKeys(for:)` for locale-correct name formatting
-- **CNMutableContact** — value construction (`CNLabeledValue`), removing fields by assigning empty arrays, thread-safety constraint
-- **CNSaveRequest** — `add(_:toContainerWithIdentifier:)`, `update(_:)`, `delete(_:)` for contacts; analogous group operations; transaction-author and shouldRefetchContacts properties
-- **CNContactFormatter** — styles (`.fullName`, `.phoneticFullName`, `.givenNameFamilyName`, etc.) and required-keys descriptor pattern
-- **CNContactVCardSerialization** — encoding/decoding vCard data
-- **ContactsUI controllers** — `CNContactPickerViewController` delegate, `CNContactViewController` modes (new/unknown/contact)
-- **Contact Access Button (iOS 18+)** — `ContactAccessButton(queryString:)` SwiftUI view, customization modifiers (`.contactAccessButtonCaption`, `.contactAccessButtonStyle`), security requirements for legibility and obstruction
-- **contactAccessPicker (iOS 18+)** — bulk contact selection under limited access
-- **CNContactSavedAutoFillDetailsController (iOS 27)** — Saved AutoFill Details visibility on contact cards
-- **ContactProvider framework (iOS 18+)** — architecture, `ContactProviderManager` for main-app enable/signal flow, `ContactProviderExtension` protocol, enumerator pattern, App Group requirement, ContactProvider errors
-- **Change history (TN3149)** — `CNChangeHistoryFetchRequest`, `CNChangeHistoryEventVisitor` protocol, the `DropEverything` → re-sync semantics, token persistence
-- **Error reference** — `CNError` codes (`communicationError`, `dataAccessError`, `authorizationDenied`, `recordDoesNotExist`, `vCardMalformed`, etc.)
-- **Platform availability matrix** — which APIs are available on iOS, macOS, watchOS, visionOS, and at which OS versions
+- **CNContactStore** – `authorizationStatus(for:)`, `requestAccess(for:)`, `unifiedContact(withIdentifier:keysToFetch:)`, `unifiedContacts(matching:keysToFetch:)`, `unifiedMeContact(withKeysToFetch:)`, `enumerateContacts(with:)`, container and group access, `currentHistoryToken`, `.CNContactStoreDidChange` notification
+- **Built-in predicates** – `predicateForContacts(matchingName:)`, `predicateForContacts(matchingEmailAddress:)`, `predicateForContacts(matching:)` for phone numbers, `predicateForContacts(withIdentifiers:)`, in-group and in-container predicates
+- **CNContact key descriptors** – `CNContactGivenNameKey`, `CNContactFamilyNameKey`, `CNContactPhoneNumbersKey`, `CNContactEmailAddressesKey`, `CNContactPostalAddressesKey`, image keys; `CNContactFormatter.descriptorForRequiredKeys(for:)` for locale-correct name formatting
+- **CNMutableContact** – value construction (`CNLabeledValue`), removing fields by assigning empty arrays, thread-safety constraint
+- **CNSaveRequest** – `add(_:toContainerWithIdentifier:)`, `update(_:)`, `delete(_:)` for contacts; analogous group operations; transaction-author and shouldRefetchContacts properties
+- **CNContactFormatter** – styles (`.fullName`, `.phoneticFullName`, `.givenNameFamilyName`, etc.) and required-keys descriptor pattern
+- **CNContactVCardSerialization** – encoding/decoding vCard data
+- **ContactsUI controllers** – `CNContactPickerViewController` delegate, `CNContactViewController` modes (new/unknown/contact)
+- **Contact Access Button (iOS 18+)** – `ContactAccessButton(queryString:)` SwiftUI view, customization modifiers (`.contactAccessButtonCaption`, `.contactAccessButtonStyle`), security requirements for legibility and obstruction
+- **contactAccessPicker (iOS 18+)** – bulk contact selection under limited access
+- **CNContactSavedAutoFillDetailsController (iOS 27)** – Saved AutoFill Details visibility on contact cards
+- **ContactProvider framework (iOS 18+)** – architecture, `ContactProviderManager` for main-app enable/signal flow, `ContactProviderExtension` protocol, enumerator pattern, App Group requirement, ContactProvider errors
+- **Change history (TN3149)** – `CNChangeHistoryFetchRequest`, `CNChangeHistoryEventVisitor` protocol, the `DropEverything` → re-sync semantics, token persistence
+- **Error reference** – `CNError` codes (`communicationError`, `dataAccessError`, `authorizationDenied`, `recordDoesNotExist`, `vCardMalformed`, etc.)
+- **Platform availability matrix** – which APIs are available on iOS, macOS, watchOS, visionOS, and at which OS versions
 
 ## Documentation Scope
 

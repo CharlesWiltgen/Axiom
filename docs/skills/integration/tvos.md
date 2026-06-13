@@ -28,6 +28,6 @@ Use this skill when:
 
 ## Related
 
-- [extensions-widgets](/skills/integration/extensions-widgets) — Widget and extension patterns (shared concepts)
-- [avfoundation-ref](/reference/avfoundation-ref) — Audio/video playback reference
-- [accessibility-diag](/diagnostic/accessibility-diag) — tvOS 27 Large Text (Dynamic Type) adoption and layout adaptation
+- [extensions-widgets](/skills/integration/extensions-widgets) – Widget and extension patterns (shared concepts)
+- [avfoundation-ref](/reference/avfoundation-ref) – Audio/video playback reference
+- [accessibility-diag](/diagnostic/accessibility-diag) – tvOS 27 Large Text (Dynamic Type) adoption and layout adaptation

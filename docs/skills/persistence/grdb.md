@@ -133,7 +133,7 @@ try migrator.migrate(dbQueue)
 
 ## Documentation Scope
 
-This page documents the `axiom-data` skill—raw GRDB patterns Claude uses when you need maximum SQL control beyond what SQLiteData provides.
+This page documents the `axiom-data` skill — raw GRDB patterns Claude uses when you need maximum SQL control beyond what SQLiteData provides.
 
 **For SQLiteData:** See [sqlitedata](/skills/persistence/sqlitedata) for type-safe @Table models with less boilerplate.
 
@@ -141,9 +141,9 @@ This page documents the `axiom-data` skill—raw GRDB patterns Claude uses when 
 
 ## Related
 
-- [sqlitedata](/skills/persistence/sqlitedata) — Type-safe SQLiteData with @Table models
-- [database-migration](/skills/persistence/database-migration) — Safe migration patterns
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Async patterns for database actors
+- [sqlitedata](/skills/persistence/sqlitedata) – Type-safe SQLiteData with @Table models
+- [database-migration](/skills/persistence/database-migration) – Safe migration patterns
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns for database actors
 
 ## Resources
 

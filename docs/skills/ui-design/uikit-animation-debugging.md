@@ -79,8 +79,8 @@ view.layer.speed = 0.1               // Slow down 10x for debugging
 
 ## Related
 
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) — SwiftUI animation issues
-- [performance-profiling](/skills/debugging/performance-profiling) — Animation performance
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – SwiftUI animation issues
+- [performance-profiling](/skills/debugging/performance-profiling) – Animation performance
 
 ## Resources
 

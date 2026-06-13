@@ -13,12 +13,12 @@ Launches the **build-optimizer** agent to identify build configuration and code 
 
 ## What It Checks
 
-1. **Slow type checking** — Swift expressions exceeding the type-checker's complexity threshold, often resolved by adding type annotations
-2. **Expensive build phases** — shell scripts running on every build that should be cached or moved to derived data
-3. **Suboptimal build settings** — debug optimization mismatches, missing module verification, redundant compilation
-4. **Parallelization opportunities** — serial dependencies that could fan out, framework-vs-static decisions
-5. **Whole-module vs incremental** — release/debug configs misconfigured for the build mode
+1. **Slow type checking** – Swift expressions exceeding the type-checker's complexity threshold, often resolved by adding type annotations
+2. **Expensive build phases** – shell scripts running on every build that should be cached or moved to derived data
+3. **Suboptimal build settings** – debug optimization mismatches, missing module verification, redundant compilation
+4. **Parallelization opportunities** – serial dependencies that could fan out, framework-vs-static decisions
+5. **Whole-module vs incremental** – release/debug configs misconfigured for the build mode
 
 ## Related Agent
 
-- [build-optimizer](/agents/build-optimizer) — The agent that powers this command
+- [build-optimizer](/agents/build-optimizer) – The agent that powers this command

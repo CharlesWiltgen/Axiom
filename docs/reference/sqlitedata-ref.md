@@ -80,7 +80,7 @@ struct Reminder: Identifiable {
 }
 ```
 
-**Note:** Flatten all groups in your CREATE TABLE—SQLite has no concept of grouped columns.
+**Note:** Flatten all groups in your CREATE TABLE — SQLite has no concept of grouped columns.
 
 ### Recursive CTE for Trees
 
@@ -101,10 +101,10 @@ This reference covers advanced SQLiteData patterns for experienced developers. F
 
 ## Related
 
-- [sqlitedata](/skills/persistence/sqlitedata) — Core patterns: CRUD, CloudKit, @Table basics
-- [grdb](/skills/persistence/grdb) — Raw GRDB when you need maximum SQL control
-- [database-migration](/skills/persistence/database-migration) — Safe schema evolution patterns
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Swift 6 concurrency for database actors
+- [sqlitedata](/skills/persistence/sqlitedata) – Core patterns: CRUD, CloudKit, @Table basics
+- [grdb](/skills/persistence/grdb) – Raw GRDB when you need maximum SQL control
+- [database-migration](/skills/persistence/database-migration) – Safe schema evolution patterns
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Swift 6 concurrency for database actors
 
 ## Resources
 

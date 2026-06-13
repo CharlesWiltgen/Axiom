@@ -68,9 +68,9 @@ Or invoke the simulator-tester agent with natural language:
 
 ## Related
 
-- **`/axiom:test-simulator`** — Full simulator testing with scenarios
-- **`simulator-tester` agent** — Automated testing with visual verification
-- **`axiom-swift` skill** — Add navigation for better screenshot targeting
+- **`/axiom:test-simulator`** – Full simulator testing with scenarios
+- **`simulator-tester` agent** – Automated testing with visual verification
+- **`axiom-swift` skill** – Add navigation for better screenshot targeting
 
 ## Example
 

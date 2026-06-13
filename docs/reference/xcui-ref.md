@@ -33,16 +33,16 @@ Use this reference when:
 
 ## What's Covered
 
-- **Invocation** — `xcui` is on PATH as a bare command (plugin `bin/` is auto-resolved); run `xcui <subcommand>`
-- **`doctor` subcommand** — verifies AXe, Homebrew, Xcode, and a booted simulator; `--install` runs `brew install cameroncooke/axe/axe` (explicit/consented, never silent); `--human` for prose. Auto-resolves the booted sim (deterministic when several are booted — it picks the lowest UDID and adds a `note` listing the others); `--udid <id>` reports a specific one
-- **`wait` subcommand** — `--for-element <id>`, `--gone <id>`, or `--idle`, with `--timeout` and `--poll`; polls the accessibility tree until the condition holds or the deadline passes (the headless equivalent of `waitForExistence`)
-- **`assert` subcommand** — `--id <id>` plus optional `--label`, `--value`, `--trait`, and `--single`; `--single` asserts the id resolves to exactly one element; `--trait` matches a bare word (`button`, `image`) against the AX role or type
-- **`a11y set` / `a11y reset`** — the four verified toggles and how each is applied (see table below); `--app <bundle-id>` triggers an app relaunch for the toggles that need it
-- **`dialog` subcommand** — `accept` / `dismiss` find the frontmost system alert and tap the correct standard button (permission grants, `OK`, `Cancel`); a one-button alert is tapped for either intent; matching is case- and apostrophe-insensitive. `pregrant <bundle-id> <service>…` grants permissions via `simctl privacy` so the dialog never appears. Exit `0` handled, `1` no actionable alert
-- **`voiceover` subcommand** — `traverse` walks the tree in focus order and emits the **computed** announcement sequence (`label, value, trait`, plus `dimmed` when disabled); `assert --sequence <file>` compares the live sequence to an expected one and reports every differing index (plus a length-mismatch note when counts differ). This is computed from the accessibility tree, **not** captured TTS audio (which the simulator does not expose) — use it to catch missing labels, wrong traits, and bad focus order
-- **Input via AXe** — `xcui` does not re-wrap `tap`/`type`/`swipe`/`touch`; call `axe` directly for real HID input, and `axe describe-ui` for the raw tree `xcui` parses
-- **Output envelope & exit codes** — single compact JSON object with `tool`/`version` first; every subcommand accepts `--human` for prose; exit `0` pass · `1` assertion-fail/wait-timeout · `2` environment error · `8` output-write error
-- **CLI grammar gotcha** — Go's flag parser stops at the first positional, so always use the all-flag forms (`assert --id …`, not `assert <id> …`)
+- **Invocation** – `xcui` is on PATH as a bare command (plugin `bin/` is auto-resolved); run `xcui <subcommand>`
+- **`doctor` subcommand** – verifies AXe, Homebrew, Xcode, and a booted simulator; `--install` runs `brew install cameroncooke/axe/axe` (explicit/consented, never silent); `--human` for prose. Auto-resolves the booted sim (deterministic when several are booted — it picks the lowest UDID and adds a `note` listing the others); `--udid <id>` reports a specific one
+- **`wait` subcommand** – `--for-element <id>`, `--gone <id>`, or `--idle`, with `--timeout` and `--poll`; polls the accessibility tree until the condition holds or the deadline passes (the headless equivalent of `waitForExistence`)
+- **`assert` subcommand** – `--id <id>` plus optional `--label`, `--value`, `--trait`, and `--single`; `--single` asserts the id resolves to exactly one element; `--trait` matches a bare word (`button`, `image`) against the AX role or type
+- **`a11y set` / `a11y reset`** – the four verified toggles and how each is applied (see table below); `--app <bundle-id>` triggers an app relaunch for the toggles that need it
+- **`dialog` subcommand** – `accept` / `dismiss` find the frontmost system alert and tap the correct standard button (permission grants, `OK`, `Cancel`); a one-button alert is tapped for either intent; matching is case- and apostrophe-insensitive. `pregrant <bundle-id> <service>…` grants permissions via `simctl privacy` so the dialog never appears. Exit `0` handled, `1` no actionable alert
+- **`voiceover` subcommand** – `traverse` walks the tree in focus order and emits the **computed** announcement sequence (`label, value, trait`, plus `dimmed` when disabled); `assert --sequence <file>` compares the live sequence to an expected one and reports every differing index (plus a length-mismatch note when counts differ). This is computed from the accessibility tree, **not** captured TTS audio (which the simulator does not expose) — use it to catch missing labels, wrong traits, and bad focus order
+- **Input via AXe** – `xcui` does not re-wrap `tap`/`type`/`swipe`/`touch`; call `axe` directly for real HID input, and `axe describe-ui` for the raw tree `xcui` parses
+- **Output envelope & exit codes** – single compact JSON object with `tool`/`version` first; every subcommand accepts `--human` for prose; exit `0` pass · `1` assertion-fail/wait-timeout · `2` environment error · `8` output-write error
+- **CLI grammar gotcha** – Go's flag parser stops at the first positional, so always use the all-flag forms (`assert --id …`, not `assert <id> …`)
 
 ## Accessibility Toggles
 

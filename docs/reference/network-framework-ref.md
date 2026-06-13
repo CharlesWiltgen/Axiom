@@ -111,9 +111,9 @@ This page documents the `axiom-networking` (network-framework-ref reference)—c
 
 ## Related
 
-- [networking](/skills/integration/networking) — Network architecture decisions
-- [networking-diag](/diagnostic/networking-diag) — Connection troubleshooting
-- [networking-auditor](/agents/networking-auditor) — Deprecated API scanning
+- [networking](/skills/integration/networking) – Network architecture decisions
+- [networking-diag](/diagnostic/networking-diag) – Connection troubleshooting
+- [networking-auditor](/agents/networking-auditor) – Deprecated API scanning
 
 ## Resources
 

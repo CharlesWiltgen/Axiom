@@ -13,12 +13,12 @@ Launches the **swiftdata-auditor** agent to catch the most common SwiftData mist
 
 ## What It Checks
 
-1. **@Model on struct** — `@Model` requires a `class`; structs compile but never persist
-2. **Missing VersionedSchema** — production schemas without versioning, blocking safe migrations
-3. **Relationship defaults** — `@Relationship` properties without explicit `deleteRule` or `inverse`, causing leaks or orphans
-4. **Migration timing** — schema changes shipped without a `MigrationPlan`, risking data loss on upgrade
-5. **N+1 query patterns** — fetching a parent then iterating to load children one-by-one
+1. **@Model on struct** – `@Model` requires a `class`; structs compile but never persist
+2. **Missing VersionedSchema** – production schemas without versioning, blocking safe migrations
+3. **Relationship defaults** – `@Relationship` properties without explicit `deleteRule` or `inverse`, causing leaks or orphans
+4. **Migration timing** – schema changes shipped without a `MigrationPlan`, risking data loss on upgrade
+5. **N+1 query patterns** – fetching a parent then iterating to load children one-by-one
 
 ## Related Agent
 
-- [swiftdata-auditor](/agents/swiftdata-auditor) — The agent that powers this command
+- [swiftdata-auditor](/agents/swiftdata-auditor) – The agent that powers this command

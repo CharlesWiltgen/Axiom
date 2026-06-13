@@ -86,10 +86,10 @@ This page documents the `background-and-networking` skill in the `axiom-watchos`
 
 ## Related
 
-- [platform-basics](/skills/watchos/platform-basics) — Covers the SwiftUI `.backgroundTask` hook in the `App` body and when to adopt a delegate
-- [watch-connectivity](/skills/watchos/watch-connectivity) — Pair with this skill when the background wake is a Watch Connectivity delivery rather than a URLSession finish
-- [background-processing](/skills/integration/background-processing) — iOS-side `BGTaskScheduler` patterns; this skill covers what's watchOS-specific
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — `withTaskCancellationHandler` and async cancellation semantics used inside `.backgroundTask` closures
+- [platform-basics](/skills/watchos/platform-basics) – Covers the SwiftUI `.backgroundTask` hook in the `App` body and when to adopt a delegate
+- [watch-connectivity](/skills/watchos/watch-connectivity) – Pair with this skill when the background wake is a Watch Connectivity delivery rather than a URLSession finish
+- [background-processing](/skills/integration/background-processing) – iOS-side `BGTaskScheduler` patterns; this skill covers what's watchOS-specific
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – `withTaskCancellationHandler` and async cancellation semantics used inside `.backgroundTask` closures
 
 ## Resources
 

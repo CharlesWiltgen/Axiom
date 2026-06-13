@@ -104,7 +104,7 @@ struct ContentView: View {
 
 ## Documentation Scope
 
-This page documents the `axiom-swiftui-nav` skill—navigation architecture guidance Claude uses when answering your questions. The skill contains decision trees, patterns, and pressure scenario handling.
+This page documents the `axiom-swiftui-nav` skill — navigation architecture guidance Claude uses when answering your questions. The skill contains decision trees, patterns, and pressure scenario handling.
 
 **For troubleshooting:** Use [swiftui-nav-diag](/diagnostic/swiftui-nav-diag) for systematic diagnosis of navigation failures.
 
@@ -112,10 +112,10 @@ This page documents the `axiom-swiftui-nav` skill—navigation architecture guid
 
 ## Related
 
-- [swiftui-nav-diag](/diagnostic/swiftui-nav-diag) — Systematic troubleshooting for navigation bugs
-- [swiftui-nav-ref](/reference/swiftui-nav-ref) — Comprehensive API reference with WWDC examples
-- [swiftui-nav-auditor](/agents/swiftui-nav-auditor) — Autonomous agent for navigation code review
-- [swiftui-layout](/skills/ui-design/swiftui-layout) — Adaptive layout patterns for navigation containers
+- [swiftui-nav-diag](/diagnostic/swiftui-nav-diag) – Systematic troubleshooting for navigation bugs
+- [swiftui-nav-ref](/reference/swiftui-nav-ref) – Comprehensive API reference with WWDC examples
+- [swiftui-nav-auditor](/agents/swiftui-nav-auditor) – Autonomous agent for navigation code review
+- [swiftui-layout](/skills/ui-design/swiftui-layout) – Adaptive layout patterns for navigation containers
 
 ## Resources
 

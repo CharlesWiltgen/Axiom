@@ -41,4 +41,4 @@ This page documents the `axiom-security` reference skill. It provides API-level 
 
 ## Related
 
-- [CryptoKit](/skills/security/cryptokit) — Discipline skill with algorithm decision trees, workflows, and migration guidance
+- [CryptoKit](/skills/security/cryptokit) – Discipline skill with algorithm decision trees, workflows, and migration guidance

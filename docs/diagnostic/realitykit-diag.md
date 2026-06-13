@@ -61,5 +61,5 @@ Use when you're experiencing:
 
 ## Related
 
-- [RealityKit](/skills/games/realitykit) — ECS architecture, SwiftUI integration, physics, materials, anti-patterns
-- [RealityKit API Reference](/reference/realitykit-ref) — Complete API tables for all RealityKit classes and components
+- [RealityKit](/skills/games/realitykit) – ECS architecture, SwiftUI integration, physics, materials, anti-patterns
+- [RealityKit API Reference](/reference/realitykit-ref) – Complete API tables for all RealityKit classes and components

@@ -92,7 +92,7 @@ ZStack {
 
 ## Documentation Scope
 
-This page documents the `axiom-design` skill—comprehensive Liquid Glass guidance Claude uses when answering your questions. The skill contains design principles, API patterns, expert review checklists, and pressure scenario handling.
+This page documents the `axiom-design` skill — comprehensive Liquid Glass guidance Claude uses when answering your questions. The skill contains design principles, API patterns, expert review checklists, and pressure scenario handling.
 
 **For automated scanning:** Use the [liquid-glass-auditor](/agents/liquid-glass-auditor) agent to scan your codebase for Liquid Glass adoption opportunities and migration from UIBlurEffect.
 
@@ -100,10 +100,10 @@ This page documents the `axiom-design` skill—comprehensive Liquid Glass guidan
 
 ## Related
 
-- [liquid-glass-auditor](/agents/liquid-glass-auditor) — Autonomous agent that scans for adoption opportunities
-- [liquid-glass-ref](/reference/liquid-glass-ref) — Comprehensive app-wide adoption guide
-- [swiftui-performance](/skills/ui-design/swiftui-performance) — Performance optimization when glass causes issues
-- [hig](/skills/ui-design/hig) — Human Interface Guidelines for design decisions
+- [liquid-glass-auditor](/agents/liquid-glass-auditor) – Autonomous agent that scans for adoption opportunities
+- [liquid-glass-ref](/reference/liquid-glass-ref) – Comprehensive app-wide adoption guide
+- [swiftui-performance](/skills/ui-design/swiftui-performance) – Performance optimization when glass causes issues
+- [hig](/skills/ui-design/hig) – Human Interface Guidelines for design decisions
 
 ## Resources
 

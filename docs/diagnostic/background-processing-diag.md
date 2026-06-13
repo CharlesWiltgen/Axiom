@@ -84,9 +84,9 @@ All affect whether iOS runs your task in production:
 
 ## Related
 
-- [background-processing](/skills/integration/background-processing) — Implementation patterns and decision trees
-- [background-processing-ref](/reference/background-processing-ref) — Complete API reference for all task types
-- [energy](/skills/debugging/energy) — Battery optimization for background work
+- [background-processing](/skills/integration/background-processing) – Implementation patterns and decision trees
+- [background-processing-ref](/reference/background-processing-ref) – Complete API reference for all task types
+- [energy](/skills/debugging/energy) – Battery optimization for background work
 
 ## Resources
 

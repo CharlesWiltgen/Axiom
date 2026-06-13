@@ -42,5 +42,5 @@ This page documents the `axiom-security` reference skill. It provides API-level 
 
 ## Related
 
-- [Keychain](/skills/security/keychain) — Discipline skill with workflows, anti-patterns, and decision guidance
-- [Keychain Diagnostics](/diagnostic/keychain-diag) — Error triage and root cause analysis for SecItem failures
+- [Keychain](/skills/security/keychain) – Discipline skill with workflows, anti-patterns, and decision guidance
+- [Keychain Diagnostics](/diagnostic/keychain-diag) – Error triage and root cause analysis for SecItem failures

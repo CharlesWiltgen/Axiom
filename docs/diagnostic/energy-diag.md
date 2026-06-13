@@ -88,7 +88,7 @@ Claude guides you through symptom-based diagnosis:
 
 ## Documentation Scope
 
-This page documents the `axiom-performance` diagnostic skill—symptom-based troubleshooting Claude uses when you report battery or energy issues.
+This page documents the `axiom-performance` diagnostic skill — symptom-based troubleshooting Claude uses when you report battery or energy issues.
 
 **For optimization patterns:** See [energy](/skills/debugging/energy) for Power Profiler workflows.
 
@@ -96,8 +96,8 @@ This page documents the `axiom-performance` diagnostic skill—symptom-based tro
 
 ## Related
 
-- [energy](/skills/debugging/energy) — Energy optimization patterns and workflows
-- [energy-ref](/reference/energy-ref) — Complete energy API reference
+- [energy](/skills/debugging/energy) – Energy optimization patterns and workflows
+- [energy-ref](/reference/energy-ref) – Complete energy API reference
 
 ## Resources
 

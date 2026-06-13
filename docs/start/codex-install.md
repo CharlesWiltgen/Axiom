@@ -6,15 +6,15 @@ Axiom is available as a native plugin for OpenAI Codex, bringing its iOS develop
 
 The Codex plugin includes 184 specialized skills covering:
 
-- **SwiftUI** — layout, navigation, animations, performance, architecture, debugging
-- **Data** — SwiftData, Core Data, GRDB, CloudKit, migrations, Codable
-- **Concurrency** — Swift 6, actors, Sendable, async/await, synchronization
-- **Performance** — memory leaks, profiling, energy, Instruments workflows
-- **Networking** — URLSession, Network.framework, connection diagnostics
-- **Build** — Xcode debugging, code signing, build optimization, SPM
-- **Integration** — StoreKit, widgets, push notifications, camera, contacts, haptics
-- **Apple Intelligence** — Foundation Models, on-device AI, CoreML
-- **Accessibility** — VoiceOver, Dynamic Type, WCAG compliance
+- **SwiftUI** – layout, navigation, animations, performance, architecture, debugging
+- **Data** – SwiftData, Core Data, GRDB, CloudKit, migrations, Codable
+- **Concurrency** – Swift 6, actors, Sendable, async/await, synchronization
+- **Performance** – memory leaks, profiling, energy, Instruments workflows
+- **Networking** – URLSession, Network.framework, connection diagnostics
+- **Build** – Xcode debugging, code signing, build optimization, SPM
+- **Integration** – StoreKit, widgets, push notifications, camera, contacts, haptics
+- **Apple Intelligence** – Foundation Models, on-device AI, CoreML
+- **Accessibility** – VoiceOver, Dynamic Type, WCAG compliance
 
 ## Prerequisites
 
@@ -126,6 +126,6 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 
 ## Also Available
 
-- **[Claude Code](/start/install)** — Full Axiom experience with 38 autonomous agents and 12 commands
-- **[MCP Server](/start/mcp-install)** — Skills in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
-- **[Xcode Integration](/start/xcode-setup)** — Direct Xcode MCP bridge for in-editor assistance
+- **[Claude Code](/start/install)** – Full Axiom experience with 38 autonomous agents and 12 commands
+- **[MCP Server](/start/mcp-install)** – Skills in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
+- **[Xcode Integration](/start/xcode-setup)** – Direct Xcode MCP bridge for in-editor assistance

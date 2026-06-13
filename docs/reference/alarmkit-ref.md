@@ -32,8 +32,8 @@ This page documents the `axiom-integration` skill — the API reference Claude u
 
 ## Related
 
-- [Extensions & Widgets Reference](/reference/extensions-widgets-ref) — Live Activities and Dynamic Island patterns
-- [SwiftUI 26 Reference](/reference/swiftui-26-ref) — iOS 26 SwiftUI features
+- [Extensions & Widgets Reference](/reference/extensions-widgets-ref) – Live Activities and Dynamic Island patterns
+- [SwiftUI 26 Reference](/reference/swiftui-26-ref) – iOS 26 SwiftUI features
 
 ## Resources
 

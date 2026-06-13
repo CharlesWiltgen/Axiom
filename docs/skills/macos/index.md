@@ -48,38 +48,38 @@ Questions you can ask Claude that will draw from these skills:
 
 ## Skills
 
-- **[Windows](/skills/macos/windows)** — Scene types, `openWindow`, default size, MenuBarExtra, UtilityWindow
+- **[Windows](/skills/macos/windows)** – Scene types, `openWindow`, default size, MenuBarExtra, UtilityWindow
   - *"WindowGroup vs Window vs UtilityWindow — which do I use?"*
   - *"How do I open a detail window from a context menu without adding a File menu item?"*
 
-- **[Menus and Commands](/skills/macos/menus-and-commands)** — Menu bar architecture, `CommandMenu`/`CommandGroup`, `focusedSceneValue`, context menus
+- **[Menus and Commands](/skills/macos/menus-and-commands)** – Menu bar architecture, `CommandMenu`/`CommandGroup`, `focusedSceneValue`, context menus
   - *"Why is my menu item always disabled even though the window is focused?"*
   - *"How do I add 'New Plant' before the standard 'New' group in the File menu?"*
 
-- **[SwiftUI Differences](/skills/macos/swiftui-differences)** — Table vs List, NavigationSplitView, Inspector, focus, toolbars, multi-window state
+- **[SwiftUI Differences](/skills/macos/swiftui-differences)** – Table vs List, NavigationSplitView, Inspector, focus, toolbars, multi-window state
   - *"My iPad-style sheet feels wrong on Mac. What's the macOS equivalent?"*
   - *"My table headers show sort indicators but the rows don't reorder. What did I miss?"*
 
-- **[Sandbox and File Access](/skills/macos/sandbox-and-file-access)** — App Sandbox model, fileImporter, security-scoped bookmarks, entitlements
+- **[Sandbox and File Access](/skills/macos/sandbox-and-file-access)** – App Sandbox model, fileImporter, security-scoped bookmarks, entitlements
   - *"My app loses file access after a few open/close cycles. What's leaking?"*
   - *"How do I keep access to a user-selected folder across app launches?"*
 
-- **[Settings](/skills/macos/settings)** — `Settings` scene, tabbed panes, sizing, `SettingsLink`, `@AppStorage`
+- **[Settings](/skills/macos/settings)** – `Settings` scene, tabbed panes, sizing, `SettingsLink`, `@AppStorage`
   - *"Where does the `.frame()` go on a tabbed Settings window?"*
   - *"How do I share one codebase across iOS and macOS where macOS needs a Settings scene?"*
 
-- **[Direct Distribution](/skills/macos/direct-distribution)** — Developer ID code signing, `notarytool`, stapling, packaging, Sparkle auto-updates
+- **[Direct Distribution](/skills/macos/direct-distribution)** – Developer ID code signing, `notarytool`, stapling, packaging, Sparkle auto-updates
   - *"My notarization keeps failing with 'signature does not include a secure timestamp.' How do I fix it?"*
   - *"What's the right order to sign an app with embedded frameworks and XPC services?"*
 
-- **[AppKit Interop](/skills/macos/appkit-interop)** — `NSViewRepresentable`, `NSHostingController`/`NSHostingView`, responder chain, NSToolbar bridging
+- **[AppKit Interop](/skills/macos/appkit-interop)** – `NSViewRepresentable`, `NSHostingController`/`NSHostingView`, responder chain, NSToolbar bridging
   - *"How do I host an `NSTextView` inside SwiftUI and keep bindings synced?"*
   - *"My SwiftUI cells inside `NSCollectionView` cause scroll jank. What's the right reuse pattern?"*
 
 ## Related
 
-- **[axiom-swiftui](/skills/ui-design/)** — Cross-platform SwiftUI patterns (state, layout, animations, navigation fundamentals) that the macOS-specific patterns build on
-- **[axiom-security](/skills/security/)** — Keychain, encryption, passkeys, and certificate management; pair with sandbox-and-file-access and direct-distribution
-- **[axiom-shipping](/skills/shipping/)** — App Store submission, rejections, privacy manifests; complements direct-distribution for App Store-bound macOS apps
-- **[axiom-uikit](/skills/ui-design/)** — UIKit-SwiftUI bridging; same `Representable` pattern as AppKit interop but with `UIView`/`UIViewController`
-- **[axiom-payments](/skills/integration/)** — Apple Pay on Mac and Catalyst payment patterns
+- **[axiom-swiftui](/skills/ui-design/)** – Cross-platform SwiftUI patterns (state, layout, animations, navigation fundamentals) that the macOS-specific patterns build on
+- **[axiom-security](/skills/security/)** – Keychain, encryption, passkeys, and certificate management; pair with sandbox-and-file-access and direct-distribution
+- **[axiom-shipping](/skills/shipping/)** – App Store submission, rejections, privacy manifests; complements direct-distribution for App Store-bound macOS apps
+- **[axiom-uikit](/skills/ui-design/)** – UIKit-SwiftUI bridging; same `Representable` pattern as AppKit interop but with `UIView`/`UIViewController`
+- **[axiom-payments](/skills/integration/)** – Apple Pay on Mac and Catalyst payment patterns

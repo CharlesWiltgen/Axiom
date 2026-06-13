@@ -27,16 +27,16 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-- **The searchable modifier** — Core API, placement options, column association in NavigationSplitView
-- **Search results** — `isSearching` environment, `dismissSearch` action, overlay pattern
-- **Search suggestions** — Suggestions closure, `.searchCompletion()` for auto-fill
-- **Search submission** — `onSubmit(of: .search)`, filter vs submit decision
+- **The searchable modifier** – Core API, placement options, column association in NavigationSplitView
+- **Search results** – `isSearching` environment, `dismissSearch` action, overlay pattern
+- **Search suggestions** – Suggestions closure, `.searchCompletion()` for auto-fill
+- **Search submission** – `onSubmit(of: .search)`, filter vs submit decision
 - **Search scopes** (iOS 16+) — Category picker with `SearchScopeActivation` control
 - **Search tokens** (iOS 16+) — Structured "pill" elements with suggested tokens (iOS 17+)
 - **Programmatic control** (iOS 18+) — `.searchFocused()` for activating/dismissing search
-- **Platform behavior** — How search adapts across iOS, macOS, watchOS, tvOS
-- **Common gotchas** — 6 documented pitfalls with before/after fixes
-- **API quick reference** — All modifiers, environment values, and types with iOS versions
+- **Platform behavior** – How search adapts across iOS, macOS, watchOS, tvOS
+- **Common gotchas** – 6 documented pitfalls with before/after fixes
+- **API quick reference** – All modifiers, environment values, and types with iOS versions
 
 ## Key Patterns
 
@@ -78,6 +78,6 @@ This page documents the `axiom-swiftui-search-ref` skill. It covers foundational
 
 ## Related
 
-- [swiftui-26-ref](./swiftui-26-ref) — iOS 26 search refinements that build on these foundational APIs
-- [swiftui-nav-ref](../reference/swiftui-nav-ref) — Navigation containers that render search fields
-- [swiftui-nav](/skills/ui-design/swiftui-nav) — Anti-patterns and pressure scenarios for navigation including search
+- [swiftui-26-ref](./swiftui-26-ref) – iOS 26 search refinements that build on these foundational APIs
+- [swiftui-nav-ref](../reference/swiftui-nav-ref) – Navigation containers that render search fields
+- [swiftui-nav](/skills/ui-design/swiftui-nav) – Anti-patterns and pressure scenarios for navigation including search

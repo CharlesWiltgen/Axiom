@@ -33,9 +33,9 @@ Use this skill when:
 
 ## Related
 
-- [MapKit Reference](/reference/mapkit-ref) — Complete API reference for SwiftUI Map, MKMapView, search, directions, Look Around
-- [MapKit Diagnostics](/diagnostic/mapkit-diag) — Symptom-based troubleshooting for annotations, region jumping, clustering, search failures
-- [Core Location](/skills/integration/core-location) — Location authorization and monitoring (MapKit implicitly requests authorization)
+- [MapKit Reference](/reference/mapkit-ref) – Complete API reference for SwiftUI Map, MKMapView, search, directions, Look Around
+- [MapKit Diagnostics](/diagnostic/mapkit-diag) – Symptom-based troubleshooting for annotations, region jumping, clustering, search failures
+- [Core Location](/skills/integration/core-location) – Location authorization and monitoring (MapKit implicitly requests authorization)
 
 ## Resources
 

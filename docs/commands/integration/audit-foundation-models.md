@@ -13,13 +13,13 @@ Launches the **foundation-models-auditor** agent to flag the most common mistake
 
 ## What It Checks
 
-1. **Missing availability checks** — `LanguageModelSession` use without `isAvailable` or device-capability gating
-2. **Main thread blocking** — synchronous model calls on `@MainActor`, freezing the UI during inference
-3. **Manual JSON parsing** — `JSONDecoder` against model output where `@Generable` would give compiler-checked structure
-4. **Missing error handling** — no recovery for `.guardrailViolation`, `.unsupportedLanguage`, `.assetsUnavailable`
-5. **Session lifecycle** — sessions created per-message instead of reused, or held across app states without checkpointing
+1. **Missing availability checks** – `LanguageModelSession` use without `isAvailable` or device-capability gating
+2. **Main thread blocking** – synchronous model calls on `@MainActor`, freezing the UI during inference
+3. **Manual JSON parsing** – `JSONDecoder` against model output where `@Generable` would give compiler-checked structure
+4. **Missing error handling** – no recovery for `.guardrailViolation`, `.unsupportedLanguage`, `.assetsUnavailable`
+5. **Session lifecycle** – sessions created per-message instead of reused, or held across app states without checkpointing
 
 ## Related Agent
 
-- [foundation-models-auditor](/agents/foundation-models-auditor) — The agent that powers this command
-- [foundation-models-ref](/reference/foundation-models-ref) — Foundation Models reference
+- [foundation-models-auditor](/agents/foundation-models-auditor) – The agent that powers this command
+- [foundation-models-ref](/reference/foundation-models-ref) – Foundation Models reference

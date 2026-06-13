@@ -31,18 +31,18 @@ Use this skill when:
 
 ## What This Skill Provides
 
-- **Window-targeting foundation** — `XcodeListWindows` first, cache the `tabIdentifier`, re-fetch only on failure or window change
-- **BuildFix loop** — `BuildProject` → `GetBuildLog` → `XcodeListNavigatorIssues` → `XcodeUpdate` → repeat (max 5 iterations); fall back to environment-first diagnostics when the same error survives 3 attempts
-- **TestFix loop** — `GetTestList` → `RunSomeTests` for fast iteration → `XcodeUpdate` → `RunAllTests` for final verification (saves minutes per cycle)
-- **PreviewVerify workflow** — `RenderPreview` with the `previewDefinitionIndexInFile` parameter, before/after comparison
-- **IssueTriage workflow** — Issue Navigator as canonical diagnostics source over grep-for-errors
-- **File-operation decision table** — when MCP file tools beat standard Read/Write/Grep (generated files, package products, build context)
-- **Destructive-operation rules** — confirm with user before `XcodeRM` or `XcodeMV`; understand Trash-by-default and import-breakage risks
-- **Anti-patterns table** — "I'll just use xcodebuild", "Skip tab identifier", "Run all tests every time", "Parse the build log for errors", "XcodeWrite to update a file"
-- **Tab-identifier staleness rules** — when identifiers become invalid (window closed, project closed, Xcode restarted)
+- **Window-targeting foundation** – `XcodeListWindows` first, cache the `tabIdentifier`, re-fetch only on failure or window change
+- **BuildFix loop** – `BuildProject` → `GetBuildLog` → `XcodeListNavigatorIssues` → `XcodeUpdate` → repeat (max 5 iterations); fall back to environment-first diagnostics when the same error survives 3 attempts
+- **TestFix loop** – `GetTestList` → `RunSomeTests` for fast iteration → `XcodeUpdate` → `RunAllTests` for final verification (saves minutes per cycle)
+- **PreviewVerify workflow** – `RenderPreview` with the `previewDefinitionIndexInFile` parameter, before/after comparison
+- **IssueTriage workflow** – Issue Navigator as canonical diagnostics source over grep-for-errors
+- **File-operation decision table** – when MCP file tools beat standard Read/Write/Grep (generated files, package products, build context)
+- **Destructive-operation rules** – confirm with user before `XcodeRM` or `XcodeMV`; understand Trash-by-default and import-breakage risks
+- **Anti-patterns table** – "I'll just use xcodebuild", "Skip tab identifier", "Run all tests every time", "Parse the build log for errors", "XcodeWrite to update a file"
+- **Tab-identifier staleness rules** – when identifiers become invalid (window closed, project closed, Xcode restarted)
 
 ## Related
 
-- [Xcode MCP Setup](/skills/xcode-mcp/xcode-mcp-setup) — get connected before applying these workflows
-- [Xcode MCP Reference](/reference/xcode-mcp-ref) — exact parameters and return shapes for every tool referenced here
-- [Xcode Debugging](/skills/debugging/xcode-debugging) — environment-first fallback when BuildFix can't make progress (zombie processes, stale Derived Data, simulator issues)
+- [Xcode MCP Setup](/skills/xcode-mcp/xcode-mcp-setup) – get connected before applying these workflows
+- [Xcode MCP Reference](/reference/xcode-mcp-ref) – exact parameters and return shapes for every tool referenced here
+- [Xcode Debugging](/skills/debugging/xcode-debugging) – environment-first fallback when BuildFix can't make progress (zombie processes, stale Derived Data, simulator issues)

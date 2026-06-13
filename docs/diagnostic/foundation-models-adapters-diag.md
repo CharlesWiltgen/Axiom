@@ -62,9 +62,9 @@ Each pattern walks through the **mandatory first steps**: capture `compatibleAda
 
 ## Related
 
-- [Foundation Models Adapters](/skills/integration/foundation-models-adapters) — discipline file with decision tree, maintenance contract, pressure scenarios, audit checklists
-- [Foundation Models Adapters Reference](/reference/foundation-models-adapters-ref) — toolkit CLIs, runtime API, compatibility matrix
-- [Foundation Models Diagnostics](foundation-models-diag) — base Foundation Models diagnostics (`@Generable` macro issues, context overflow, guardrails)
-- [Foundation Models](/skills/integration/foundation-models) — Approach Triage (rungs 1-4 before adapter training)
-- [Background Assets](/skills/integration/background-assets) — asset pack delivery, `BAErrorCode` patterns; the delivery half of the adapter workflow
-- [foundation-models-auditor agent](/agents/foundation-models-auditor) — automated scanning for Foundation Models anti-patterns
+- [Foundation Models Adapters](/skills/integration/foundation-models-adapters) – discipline file with decision tree, maintenance contract, pressure scenarios, audit checklists
+- [Foundation Models Adapters Reference](/reference/foundation-models-adapters-ref) – toolkit CLIs, runtime API, compatibility matrix
+- [Foundation Models Diagnostics](foundation-models-diag) – base Foundation Models diagnostics (`@Generable` macro issues, context overflow, guardrails)
+- [Foundation Models](/skills/integration/foundation-models) – Approach Triage (rungs 1-4 before adapter training)
+- [Background Assets](/skills/integration/background-assets) – asset pack delivery, `BAErrorCode` patterns; the delivery half of the adapter workflow
+- [foundation-models-auditor agent](/agents/foundation-models-auditor) – automated scanning for Foundation Models anti-patterns

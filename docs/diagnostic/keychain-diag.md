@@ -27,13 +27,13 @@ Use when you're experiencing:
 
 The skill walks through a structured triage process:
 
-1. **Identify the error code** — Maps OSStatus codes to human-readable causes
-2. **Check the query dictionary** — Validates required attributes and catches missing keys that cause silent failures
-3. **Verify environment** — Tests for Simulator limitations, background execution restrictions, and device-vs-Mac differences
-4. **Inspect access configuration** — Confirms accessibility level, access groups, and access control flags match the execution context
-5. **Test isolation** — Narrows root cause by simplifying the query to minimum required attributes
+1. **Identify the error code** – Maps OSStatus codes to human-readable causes
+2. **Check the query dictionary** – Validates required attributes and catches missing keys that cause silent failures
+3. **Verify environment** – Tests for Simulator limitations, background execution restrictions, and device-vs-Mac differences
+4. **Inspect access configuration** – Confirms accessibility level, access groups, and access control flags match the execution context
+5. **Test isolation** – Narrows root cause by simplifying the query to minimum required attributes
 
 ## Related
 
-- [Keychain](/skills/security/keychain) — Discipline skill for building correct keychain workflows from the start
-- [Keychain Reference](/reference/keychain-ref) — SecItem API details, attribute constants, and error code table
+- [Keychain](/skills/security/keychain) – Discipline skill for building correct keychain workflows from the start
+- [Keychain Reference](/reference/keychain-ref) – SecItem API details, attribute constants, and error code table

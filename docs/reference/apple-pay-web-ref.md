@@ -32,25 +32,25 @@ Questions developers ask that this reference answers:
 
 ## What's Covered
 
-- **API choice** — `ApplePaySession` (Safari only) vs `PaymentRequest` with method identifier `https://apple.com/apple-pay` (cross-browser including third-party browsers on iOS 18+ via SDK 1.2.0+)
-- **`ApplePaySession` constructor** — `new ApplePaySession(version, paymentRequest)`; the version-pinning rule
-- **Session lifecycle methods** — `begin`, `abort`, `completeMerchantValidation`, `completePayment`, `completePaymentMethodSelection`, `completeShippingContactSelection`, `completeShippingMethodSelection`, `completeCouponCodeChange`
-- **Apple Pay JS event handlers** — `onvalidatemerchant`, `onpaymentauthorized`, `onpaymentmethodselected`, `onshippingcontactselected`, `onshippingmethodselected`, `oncouponcodechanged`, `oncancel`
-- **Static methods** — `canMakePayments`, `canMakePaymentsWithActiveCard` (deprecated WWDC24), `openPaymentSetup`, `supportsVersion`
+- **API choice** – `ApplePaySession` (Safari only) vs `PaymentRequest` with method identifier `https://apple.com/apple-pay` (cross-browser including third-party browsers on iOS 18+ via SDK 1.2.0+)
+- **`ApplePaySession` constructor** – `new ApplePaySession(version, paymentRequest)`; the version-pinning rule
+- **Session lifecycle methods** – `begin`, `abort`, `completeMerchantValidation`, `completePayment`, `completePaymentMethodSelection`, `completeShippingContactSelection`, `completeShippingMethodSelection`, `completeCouponCodeChange`
+- **Apple Pay JS event handlers** – `onvalidatemerchant`, `onpaymentauthorized`, `onpaymentmethodselected`, `onshippingcontactselected`, `onshippingmethodselected`, `oncouponcodechanged`, `oncancel`
+- **Static methods** – `canMakePayments`, `canMakePaymentsWithActiveCard` (deprecated WWDC24), `openPaymentSetup`, `supportsVersion`
 - **Top-level `applePayCapabilities()`** (WWDC24) — the four `paymentCredentialStatus` values and how they drive show-primary, show-secondary, hide decisions
-- **`ApplePayPaymentRequest`** — every property: country/currency codes, capabilities, networks, total/line items, contact fields, billing/shipping contact pre-population, shipping methods/type, `applicationData`, coupon, all variant modifiers
-- **`ApplePayLineItem`** — string amounts only (never JS Number), `type: "final"` or `"pending"`
-- **Payment Request API form** — `methodData`, `details`, `options`, method `show()`/`abort()`/`canMakePayment()`, event mapping to Apple Pay JS analogs
+- **`ApplePayPaymentRequest`** – every property: country/currency codes, capabilities, networks, total/line items, contact fields, billing/shipping contact pre-population, shipping methods/type, `applicationData`, coupon, all variant modifiers
+- **`ApplePayLineItem`** – string amounts only (never JS Number), `type: "final"` or `"pending"`
+- **Payment Request API form** – `methodData`, `details`, `options`, method `show()`/`abort()`/`canMakePayment()`, event mapping to Apple Pay JS analogs
 - **Modifiers** (Payment Request API) — `recurringPaymentRequest`, `automaticReloadPaymentRequest`, `deferredPaymentRequest`, `multiTokenContexts`, `additionalLineItems` with `type: "disbursement"` for web disbursements (WWDC24)
-- **`ApplePayPayment` and `ApplePayPaymentToken`** — authorization result shape; `paymentData` identical to native `PKPaymentToken.paymentData`
-- **`ApplePayPaymentContact`** — full shape; pre-auth redacted vs post-auth full subset
-- **`ApplePayError`** — code list (`shippingContactInvalid`, `billingContactInvalid`, `addressUnserviceable`, `couponCodeInvalid`, `couponCodeExpired`, `unknown`), contact-field name list, and the preference for typed errors over numeric `STATUS_*` codes
-- **Status codes** — the `STATUS_*` constants table
+- **`ApplePayPayment` and `ApplePayPaymentToken`** – authorization result shape; `paymentData` identical to native `PKPaymentToken.paymentData`
+- **`ApplePayPaymentContact`** – full shape; pre-auth redacted vs post-auth full subset
+- **`ApplePayError`** – code list (`shippingContactInvalid`, `billingContactInvalid`, `addressUnserviceable`, `couponCodeInvalid`, `couponCodeExpired`, `unknown`), contact-field name list, and the preference for typed errors over numeric `STATUS_*` codes
+- **Status codes** – the `STATUS_*` constants table
 - **Apple Pay Later merchandising widget** (WWDC23) — `<apple-pay-later-merchandising>` custom element
 - **Track with Apple Wallet button** (WWDC23) — `<apple-pay-wallet-button>` for order tracking handoff
-- **Web sequence diagrams** — in-Safari direct flow (18 steps) and PSP-hosted page flow (5 steps)
-- **Maintaining your environment** — three things that expire (Payment Processing Cert at 25 months, Merchant Identity Cert, domain verification); the merchant ID itself never expires
-- **Capability detection decision tree** — dot diagram from `applePayCapabilities()` result to UI state
+- **Web sequence diagrams** – in-Safari direct flow (18 steps) and PSP-hosted page flow (5 steps)
+- **Maintaining your environment** – three things that expire (Payment Processing Cert at 25 months, Merchant Identity Cert, domain verification); the merchant ID itself never expires
+- **Capability detection decision tree** – dot diagram from `applePayCapabilities()` result to UI state
 
 ## Documentation Scope
 

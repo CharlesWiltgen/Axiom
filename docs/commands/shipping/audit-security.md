@@ -13,12 +13,12 @@ Launches the **security-privacy-scanner** agent to find credentials checked into
 
 ## What It Checks
 
-1. **API keys in code** — credential-shaped strings (npm, AWS, Anthropic, OpenAI, Bearer tokens) anywhere in tracked files
-2. **Insecure storage** — tokens or PII in `UserDefaults`/`@AppStorage` instead of the Keychain
-3. **Missing Privacy Manifests** — `PrivacyInfo.xcprivacy` not present for SDKs that require declarations
-4. **ATS violations** — `NSAllowsArbitraryLoads` or per-domain exceptions without justification
-5. **Logging sensitive data** — `print`/`os_log` calls that emit tokens, emails, or other PII to the system log
+1. **API keys in code** – credential-shaped strings (npm, AWS, Anthropic, OpenAI, Bearer tokens) anywhere in tracked files
+2. **Insecure storage** – tokens or PII in `UserDefaults`/`@AppStorage` instead of the Keychain
+3. **Missing Privacy Manifests** – `PrivacyInfo.xcprivacy` not present for SDKs that require declarations
+4. **ATS violations** – `NSAllowsArbitraryLoads` or per-domain exceptions without justification
+5. **Logging sensitive data** – `print`/`os_log` calls that emit tokens, emails, or other PII to the system log
 
 ## Related Agent
 
-- [security-privacy-scanner](/agents/security-privacy-scanner) — The agent that powers this command
+- [security-privacy-scanner](/agents/security-privacy-scanner) – The agent that powers this command

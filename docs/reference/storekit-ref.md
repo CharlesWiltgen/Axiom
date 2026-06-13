@@ -139,14 +139,14 @@ for status in statuses {
 
 ## Documentation Scope
 
-This page documents the `axiom-integration` reference skill—complete API coverage Claude uses when you need specific StoreKit 2 API details.
+This page documents the `axiom-integration` reference skill — complete API coverage Claude uses when you need specific StoreKit 2 API details.
 
 **For implementation patterns:** See [in-app-purchases](/skills/integration/in-app-purchases) for testing-first workflow and architecture patterns.
 
 ## Related
 
-- [in-app-purchases](/skills/integration/in-app-purchases) — Implementation patterns and testing workflow
-- [iap-auditor](/agents/iap-auditor) — Automated IAP code scanning
+- [in-app-purchases](/skills/integration/in-app-purchases) – Implementation patterns and testing workflow
+- [iap-auditor](/agents/iap-auditor) – Automated IAP code scanning
 
 ## Resources
 

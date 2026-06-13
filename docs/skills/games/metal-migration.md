@@ -57,5 +57,5 @@ Use this skill when:
 
 ## Related
 
-- [Metal Migration Reference](/reference/metal-migration-ref) — GLSL/HLSL to MSL conversion tables, API mappings, setup examples
-- [Metal Migration Diagnostics](/diagnostic/metal-migration-diag) — Decision trees for black screen, shader errors, wrong colors, performance regressions, GPU crashes
+- [Metal Migration Reference](/reference/metal-migration-ref) – GLSL/HLSL to MSL conversion tables, API mappings, setup examples
+- [Metal Migration Diagnostics](/diagnostic/metal-migration-diag) – Decision trees for black screen, shader errors, wrong colors, performance regressions, GPU crashes

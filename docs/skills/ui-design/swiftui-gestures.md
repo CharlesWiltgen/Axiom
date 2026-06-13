@@ -15,21 +15,21 @@ Comprehensive SwiftUI gesture patterns with composition, state management, and a
 ## Key Features
 
 ### Gesture Types
-- **TapGesture** — Single and multi-tap recognition
-- **DragGesture** — Pan and swipe interactions
-- **LongPressGesture** — Press and hold actions
-- **MagnificationGesture** — Pinch to zoom
-- **RotationGesture** — Two-finger rotation
+- **TapGesture** – Single and multi-tap recognition
+- **DragGesture** – Pan and swipe interactions
+- **LongPressGesture** – Press and hold actions
+- **MagnificationGesture** – Pinch to zoom
+- **RotationGesture** – Two-finger rotation
 
 ### Gesture Composition
-- **Simultaneously** — Multiple gestures at once (drag + pinch)
-- **Sequenced** — One after another (long press → drag)
-- **Exclusively** — Only one wins (double-tap OR single-tap)
+- **Simultaneously** – Multiple gestures at once (drag + pinch)
+- **Sequenced** – One after another (long press → drag)
+- **Exclusively** – Only one wins (double-tap OR single-tap)
 
 ### State Management
-- **GestureState** — Temporary state during gesture (auto-resets)
-- **State** — Permanent committed values
-- **Transaction** — Animation customization during gestures
+- **GestureState** – Temporary state during gesture (auto-resets)
+- **State** – Permanent committed values
+- **Transaction** – Animation customization during gestures
 
 ### Advanced Patterns
 - Custom gesture creation conforming to Gesture protocol
@@ -51,11 +51,11 @@ Comprehensive SwiftUI gesture patterns with composition, state management, and a
 
 ## Common Pitfalls
 
-1. **Using .onTapGesture instead of Button** — Prefer Button for standard tap actions
-2. **Forgetting GestureState auto-reset** — Use GestureState for temporary state
-3. **Gesture conflicts with ScrollView** — Use .simultaneousGesture appropriately
-4. **Missing accessibility** — Add VoiceOver and keyboard support
-5. **Wrong coordinate space** — Specify coordinateSpace for accurate locations
+1. **Using .onTapGesture instead of Button** – Prefer Button for standard tap actions
+2. **Forgetting GestureState auto-reset** – Use GestureState for temporary state
+3. **Gesture conflicts with ScrollView** – Use .simultaneousGesture appropriately
+4. **Missing accessibility** – Add VoiceOver and keyboard support
+5. **Wrong coordinate space** – Specify coordinateSpace for accurate locations
 
 ## Examples
 
@@ -123,9 +123,9 @@ Image("slider")
 
 ## Related Skills
 
-- **accessibility-diag** — Making gestures accessible with VoiceOver
-- **swiftui-performance** — Optimizing gesture performance
-- **ui-testing** — Testing gesture interactions
+- **accessibility-diag** – Making gestures accessible with VoiceOver
+- **swiftui-performance** – Optimizing gesture performance
+- **ui-testing** – Testing gesture interactions
 
 ## Resources
 

@@ -31,20 +31,20 @@ Questions you can ask Claude that will draw from this skill:
 
 ## What This Skill Provides
 
-- **Three assistive technologies overview** — Distinct input models and SwiftUI surface for VoiceOver, AssistiveTouch, and Double Tap; design assumes any combination may be enabled
-- **Three Dynamic Type rules** — Use a text style instead of `Font.system(size:)`; allow text to wrap (don't cap `lineLimit(1)`); switch to a vertical layout when `@Environment(\.sizeCategory) >= .extraExtraLarge`
-- **Complication and notification coverage** — Spoken-form labels for abbreviations, labels on complication images, override SF Symbol default labels, accessibility on dynamic notifications
-- **VoiceOver patterns** — Let `NavigationLink` combine row children, put context in the label (not just the value), add explicit `accessibilityLabel` to symbol-only buttons
-- **Custom adjustable control recipe** — Collapse multi-button steppers into one element with `accessibilityElement()` + `accessibilityLabel` + `accessibilityValue` + `accessibilityAdjustableAction`
-- **AssistiveTouch support** — Focusable-element rules (the "tappable VStack with non-interactive Text" trap), `accessibilityRespondsToUserInteraction(true)`, 44×44pt cursor frames via `contentShape`, action menu population from `accessibilityAction`
-- **Double Tap discipline** — Bind with `handGestureShortcut(.primaryAction)`, exactly one primary action per screen, Double Tap is an accelerator (never the only path)
-- **Testing checklist** — Eight concrete verification steps covering VoiceOver, Dynamic Type, custom controls, AssistiveTouch cursor, Double Tap, complications, and notifications
-- **Common mistakes table** — Eleven specific mistake-symptom-fix triples drawn from real watchOS audits
+- **Three assistive technologies overview** – Distinct input models and SwiftUI surface for VoiceOver, AssistiveTouch, and Double Tap; design assumes any combination may be enabled
+- **Three Dynamic Type rules** – Use a text style instead of `Font.system(size:)`; allow text to wrap (don't cap `lineLimit(1)`); switch to a vertical layout when `@Environment(\.sizeCategory) >= .extraExtraLarge`
+- **Complication and notification coverage** – Spoken-form labels for abbreviations, labels on complication images, override SF Symbol default labels, accessibility on dynamic notifications
+- **VoiceOver patterns** – Let `NavigationLink` combine row children, put context in the label (not just the value), add explicit `accessibilityLabel` to symbol-only buttons
+- **Custom adjustable control recipe** – Collapse multi-button steppers into one element with `accessibilityElement()` + `accessibilityLabel` + `accessibilityValue` + `accessibilityAdjustableAction`
+- **AssistiveTouch support** – Focusable-element rules (the "tappable VStack with non-interactive Text" trap), `accessibilityRespondsToUserInteraction(true)`, 44×44pt cursor frames via `contentShape`, action menu population from `accessibilityAction`
+- **Double Tap discipline** – Bind with `handGestureShortcut(.primaryAction)`, exactly one primary action per screen, Double Tap is an accelerator (never the only path)
+- **Testing checklist** – Eight concrete verification steps covering VoiceOver, Dynamic Type, custom controls, AssistiveTouch cursor, Double Tap, complications, and notifications
+- **Common mistakes table** – Eleven specific mistake-symptom-fix triples drawn from real watchOS audits
 
 ## Related
 
-- [axiom-accessibility](/diagnostic/accessibility-diag) — Cross-platform VoiceOver, Dynamic Type, contrast, and WCAG fundamentals; this skill adds the watchOS layer
-- [UX Flow Audit](/skills/ui-design/ux-flow-audit) — Accessibility Dead Ends category complements this skill from the flow-reachability angle
-- [Design for watchOS](./design-for-watchos) — watchOS 10 navigation model and Always-On design considerations
-- [Smart Stack and Complications](./smart-stack-and-complications) — Complication surfaces that need spoken-form accessibility labels
-- [Controls and Live Activities](./controls-and-live-activities) — Control surfaces and the Double Tap primary action binding
+- [axiom-accessibility](/diagnostic/accessibility-diag) – Cross-platform VoiceOver, Dynamic Type, contrast, and WCAG fundamentals; this skill adds the watchOS layer
+- [UX Flow Audit](/skills/ui-design/ux-flow-audit) – Accessibility Dead Ends category complements this skill from the flow-reachability angle
+- [Design for watchOS](./design-for-watchos) – watchOS 10 navigation model and Always-On design considerations
+- [Smart Stack and Complications](./smart-stack-and-complications) – Complication surfaces that need spoken-form accessibility labels
+- [Controls and Live Activities](./controls-and-live-activities) – Control surfaces and the Double Tap primary action binding

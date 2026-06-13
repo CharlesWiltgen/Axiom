@@ -115,7 +115,7 @@ connection.start(queue: .main)
 
 ## Documentation Scope
 
-This page documents the `axiom-networking` skill—Network.framework patterns Claude uses when helping you implement UDP/TCP connections. The skill contains complete connection patterns, TLS configuration, and migration guides from deprecated APIs.
+This page documents the `axiom-networking` skill — Network.framework patterns Claude uses when helping you implement UDP/TCP connections. The skill contains complete connection patterns, TLS configuration, and migration guides from deprecated APIs.
 
 **For diagnostics:** See [networking-diag](/diagnostic/networking-diag) for troubleshooting connection failures.
 
@@ -123,10 +123,10 @@ This page documents the `axiom-networking` skill—Network.framework patterns Cl
 
 ## Related
 
-- [networking-diag](/diagnostic/networking-diag) — Connection failure diagnosis and debugging
-- [network-framework-ref](/reference/network-framework-ref) — Complete API reference
-- [networking-auditor](/agents/networking-auditor) — Autonomous agent scanning for deprecated APIs
-- [swift-concurrency](/skills/concurrency/swift-concurrency) — Async/await patterns for iOS 26+
+- [networking-diag](/diagnostic/networking-diag) – Connection failure diagnosis and debugging
+- [network-framework-ref](/reference/network-framework-ref) – Complete API reference
+- [networking-auditor](/agents/networking-auditor) – Autonomous agent scanning for deprecated APIs
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async/await patterns for iOS 26+
 
 ## Resources
 
