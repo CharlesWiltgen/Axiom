@@ -1285,6 +1285,60 @@ if (!mcpMissingFromList.length && !mcpUnusedInList.length && !mcpMissingBinaries
   console.log(`  ✓ MCP tool binaries consistent (${[...mcpListed].join(", ") || "none"}) — list ↔ tool refs ↔ plugin bin/`);
 }
 
+// ── 12i. Docs Dash Convention ──
+
+heading("12i. Docs Dash Convention");
+
+// Enforce the codified docs dash rule (.claude/rules/documentation-style.md
+// §Dashes): a list-led inline-heading separator — a **bold** / [link] / `code`
+// head at the start of a bullet or numbered list item, immediately followed by
+// the separator — uses a spaced EN-dash " – ", NOT an EM-dash. Running prose keeps
+// the spaced EM-dash, so this anchored pattern only flags the separator position
+// and never touches prose. Same pattern as the one-time sweep, so once docs
+// conform the check stays at zero and only future drift trips it. docs/ only —
+// for-LLM skill files are exempt (not human reading material).
+// Matches inline links in the `[text](url)` form only — not reference links
+// (`[text][ref]`) or bare `[text]`. That's exhaustive for VitePress docs (which
+// use inline links); widen the alternation if reference-link heads ever appear.
+const dashSepPattern =
+  /^\s*(?:[-*]|\d+\.)\s+(?:\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\)|`[^`]+`)\s+—\s/;
+const dashViolations: string[] = [];
+function scanDocsDashes(dir: string): void {
+  if (!fs.existsSync(dir)) return;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      scanDocsDashes(full);
+    } else if (entry.name.endsWith(".md")) {
+      const lines = fs.readFileSync(full, "utf8").split("\n");
+      let inFence = false;
+      let inFrontmatter = false;
+      for (let i = 0; i < lines.length; i++) {
+        const trimmed = lines[i].trim();
+        if (i === 0 && trimmed === "---") { inFrontmatter = true; continue; }
+        if (inFrontmatter) { if (trimmed === "---") inFrontmatter = false; continue; }
+        if (trimmed.startsWith("```") || trimmed.startsWith("~~~")) { inFence = !inFence; continue; }
+        if (inFence) continue;
+        if (dashSepPattern.test(lines[i])) {
+          dashViolations.push(`${path.relative(root, full)}:${i + 1}`);
+        }
+      }
+    }
+  }
+}
+scanDocsDashes(path.join(root, "docs"));
+if (dashViolations.length === 0) {
+  console.log("  ✓ Docs use en-dash \" – \" for list-led inline-heading separators");
+} else {
+  const CAP = 25;
+  for (const v of dashViolations.slice(0, CAP)) {
+    error("docs-dash", `${v} uses em-dash on a list-led inline-heading separator — use en-dash " – " (.claude/rules/documentation-style.md §Dashes)`);
+  }
+  if (dashViolations.length > CAP) {
+    error("docs-dash", `…and ${dashViolations.length - CAP} more (${dashViolations.length} total) — see documentation-style.md §Dashes`);
+  }
+}
+
 // ── Phase 1 Summary ──
 
 heading("Phase 1 Summary (Static)");
@@ -1443,12 +1497,13 @@ try {
     // Count source top-level skill dirs with SKILL.md (matches what build-codex copies)
     const sourceSkillDirs = fs.readdirSync(path.join(pluginDir, "skills"), { withFileTypes: true })
       .filter((d: fs.Dirent) => d.isDirectory() && fs.existsSync(path.join(pluginDir, "skills", d.name, "SKILL.md")));
+    // Must mirror EXCLUDE_SKILLS in scripts/build-codex.ts (hand-synced; see axiom-altb
+    // for the planned shared-module extraction). NOTE: this count check is currently
+    // non-functional — Phase-2 error() calls are not gated, and codexSkillCount counts
+    // all codex dirs (router suites + 40 agent-skills) while expectedCount is router-suite
+    // math, so they never match. Tracked + to be fixed in axiom-altb.
     const CODEX_EXCLUDE = new Set([
-      'axiom-build', 'axiom-data',
-      'axiom-performance',
-      'axiom-ai',
-      'axiom-graphics',
-      'axiom-apple-docs', 'axiom-xcode-mcp', 'axiom-shipping', 'axiom-using-axiom',
+      'axiom-apple-docs', 'axiom-shipping', 'axiom-tools',
     ]);
     const excludedCount = sourceSkillDirs.filter((d: fs.Dirent) => CODEX_EXCLUDE.has(d.name)).length;
     const sourceTopLevel = sourceSkillDirs.length;
