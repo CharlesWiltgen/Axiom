@@ -139,5 +139,34 @@ class TestIsAppleProject(unittest.TestCase):
                 self.assertFalse(pd.is_apple_project(opened))
 
 
+class TestResolveContextDecision(unittest.TestCase):
+    def test_never_skips_even_in_apple_dir(self):
+        with tempfile.TemporaryDirectory() as d:
+            touch(os.path.join(d, "App.swift"))
+            self.assertFalse(pd.resolve_context_decision(d, "never"))
+
+    def test_always_injects_even_in_plain_dir(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertTrue(pd.resolve_context_decision(d, "always"))
+
+    def test_always_skips_detection_for_bad_path(self):
+        # always must short-circuit before any filesystem walk.
+        self.assertTrue(pd.resolve_context_decision("/no/such/path", "always"))
+
+    def test_unset_runs_detection(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertFalse(pd.resolve_context_decision(d, None))
+            touch(os.path.join(d, "App.swift"))
+            self.assertTrue(pd.resolve_context_decision(d, None))
+
+    def test_garbage_value_treated_as_auto(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertFalse(pd.resolve_context_decision(d, "  Banana "))
+
+    def test_case_and_whitespace_insensitive(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertFalse(pd.resolve_context_decision(d, "  NEVER "))
+
+
 if __name__ == "__main__":
     unittest.main()
