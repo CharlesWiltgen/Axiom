@@ -114,3 +114,17 @@ def is_apple_project(start: str) -> bool:
         return _downward_has_marker(scan_root)
     except Exception:
         return True  # fail-open: never misclassify an Apple project as non-Apple
+
+
+def resolve_context_decision(cwd: str, override: str | None) -> bool:
+    """Return True to inject Axiom context, False to skip.
+
+    AXIOM_SESSION_CONTEXT override: 'never' → skip; 'always' → inject (no scan);
+    anything else / unset → auto-detect. Lenient: unknown values mean auto.
+    """
+    o = (override or "").strip().lower()
+    if o == "never":
+        return False
+    if o == "always":
+        return True
+    return is_apple_project(cwd)
