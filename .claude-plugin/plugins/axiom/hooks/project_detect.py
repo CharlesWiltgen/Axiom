@@ -44,3 +44,36 @@ def _dir_has_marker(path: str) -> bool:
     except OSError:
         return False
     return False
+
+
+def _downward_has_marker(root: str) -> bool:
+    """BFS from `root` for an Apple marker.
+
+    Returns True if a marker is found OR the entry cap is hit before a verdict
+    (fail-open — an inconclusive scan must not read as "not Apple"). Returns
+    False only when the whole bounded, pruned tree is scanned with no marker.
+    Does not follow directory symlinks (cycle safety).
+    """
+    seen = 0
+    stack = [(root, 0)]
+    while stack:
+        path, depth = stack.pop()
+        try:
+            with os.scandir(path) as it:
+                for entry in it:
+                    seen += 1
+                    if seen > MAX_ENTRIES:
+                        return True  # inconclusive → fail-open
+                    name = entry.name
+                    if name in APPLE_MARKER_NAMES or name.endswith(APPLE_MARKER_SUFFIXES):
+                        return True
+                    if depth < DOWNWARD_MAX_DEPTH and name not in PRUNE_DIRS:
+                        try:
+                            is_dir = entry.is_dir(follow_symlinks=False)
+                        except OSError:
+                            is_dir = False
+                        if is_dir:
+                            stack.append((entry.path, depth + 1))
+        except OSError:
+            continue
+    return False
