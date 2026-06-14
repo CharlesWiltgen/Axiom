@@ -12,6 +12,9 @@ Coverage strategy:
 - Negative cases for known false-positive traps (host-OS mentions, non-iOS prompts)
 - The original watchOS-demo prompt that motivated the hook fix
 """
+
+from __future__ import annotations
+
 import json
 import os
 import re
@@ -870,6 +873,49 @@ class TestHookIsStandalonePython(unittest.TestCase):
             offenders, [],
             "These .sh hooks embed Python via a bash heredoc — fragile under "
             f"bash 3.2. Convert each to a standalone .py file: {offenders}"
+        )
+
+    def test_shipped_hooks_are_python_39_safe(self):
+        # macOS ships /usr/bin/python3 as 3.9, and hooks.json invokes hooks with
+        # bare `python3` — so a shipped hook that uses PEP 604 union annotations
+        # (`int | None`) crashes at def-eval time on a stock Mac (issue #40).
+        # Requiring `from __future__ import annotations` makes every annotation a
+        # lazy string, neutralizing that whole bug class on Python >= 3.7.
+        hooks_dir = os.path.dirname(HOOK)
+        missing = []
+        for fn in sorted(os.listdir(hooks_dir)):
+            if not fn.endswith(".py") or fn.endswith("_test.py"):
+                continue
+            with open(os.path.join(hooks_dir, fn)) as f:
+                content = f.read()
+            if "from __future__ import annotations" not in content:
+                missing.append(fn)
+        self.assertEqual(
+            missing, [],
+            "These shipped hooks lack `from __future__ import annotations`, so "
+            "PEP 604 union annotations would crash on macOS stock python3 (3.9), "
+            f"issue #40: {missing}"
+        )
+
+    def test_test_files_are_python_39_runnable(self):
+        # The hooks ship 3.9-safe (test above); this keeps the *test suite itself*
+        # runnable on Python 3.9 so every branch can be exercised on the stock-Mac
+        # interpreter (issue #40 follow-up). Test files use `int | None` helper
+        # annotations, so without the future import the suite can't even import
+        # under 3.9 — silently, since CI/devs run modern Python.
+        hooks_dir = os.path.dirname(HOOK)
+        missing = []
+        for fn in sorted(os.listdir(hooks_dir)):
+            if not fn.endswith("_test.py"):
+                continue
+            with open(os.path.join(hooks_dir, fn)) as f:
+                content = f.read()
+            if "from __future__ import annotations" not in content:
+                missing.append(fn)
+        self.assertEqual(
+            missing, [],
+            "These test files lack `from __future__ import annotations`, so the "
+            f"suite can't be run under Python 3.9 to validate hook behavior: {missing}"
         )
 
 

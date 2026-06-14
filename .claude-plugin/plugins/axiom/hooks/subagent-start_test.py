@@ -7,6 +7,9 @@ The hook is a standalone Python script: reads {"agent_type": "..."} on stdin,
 writes a JSON response on stdout. It injects Axiom skill awareness for agent
 types that benefit, and emits {} for skip-listed or known-non-iOS agent types.
 """
+
+from __future__ import annotations
+
 import json
 import os
 import subprocess

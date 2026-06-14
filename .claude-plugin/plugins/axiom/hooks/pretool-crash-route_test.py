@@ -7,6 +7,9 @@ Each test feeds a JSON payload on stdin (via subprocess) and inspects
 the hook's stdout. The hook never exits non-zero, so we assert stdout
 shape + content rather than exit code.
 """
+
+from __future__ import annotations
+
 import json
 import os
 import subprocess

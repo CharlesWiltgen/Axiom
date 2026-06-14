@@ -7,6 +7,9 @@ Each test feeds a JSON payload on stdin AND a CLAUDE_TOOL_OUTPUT env var
 (the actual command output) and inspects the hook's stdout. The hook
 never exits non-zero, so we assert on stdout shape + content.
 """
+
+from __future__ import annotations
+
 import json
 import os
 import subprocess
