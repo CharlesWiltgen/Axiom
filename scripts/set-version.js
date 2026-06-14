@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import { VERSION_RE, VERSION_CORE } from './version-regex.js';
+import { DOC_STAT_FILES, docStatValues, applyDocStats, checkMarkerSpec } from './doc-stats.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -429,6 +430,33 @@ try {
         content: newReadmeContent,
         label: 'README.md'
       });
+    }
+  }
+
+  // 8. Auto-maintain skill/agent/command counts embedded in human-facing docs
+  //    (docs/start/*.md, docs/agents/index.md, …) — the same drift class README
+  //    hit under axiom-wz9k, generalized. Each maintained number is wrapped in an
+  //    invisible <!--ax:KEY-->N<!--/ax--> marker; rewrite it from the live walk.
+  //    Parity is enforced by pre-deploy.ts (12j). Config: scripts/doc-stats.js.
+  const docValues = docStatValues(statsData);
+  for (const { file: relPath, markers: spec } of DOC_STAT_FILES) {
+    const docPath = path.join(root, relPath);
+    if (!fs.existsSync(docPath)) {
+      throw new Error(
+        `Doc-stat file not found: ${relPath} — fix the path in scripts/doc-stats.js (DOC_STAT_FILES).`
+      );
+    }
+    const original = fs.readFileSync(docPath, 'utf8');
+    const problems = checkMarkerSpec(original, spec);
+    if (problems.length) {
+      throw new Error(
+        `${relPath} doc-stat markers don't match their spec — ${problems.join('; ')}. ` +
+        `Restore the markers around its counts, or update its entry in scripts/doc-stats.js.`
+      );
+    }
+    const { content: rewritten } = applyDocStats(original, docValues);
+    if (rewritten !== original) {
+      updates.push({ path: docPath, content: rewritten, label: relPath });
     }
   }
 
