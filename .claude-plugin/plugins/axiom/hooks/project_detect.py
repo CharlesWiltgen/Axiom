@@ -21,11 +21,17 @@ import os
 APPLE_MARKER_SUFFIXES = (".xcodeproj", ".xcworkspace", ".swiftpm", ".playground", ".swift")
 APPLE_MARKER_NAMES = frozenset({"Podfile"})
 
-# Skipped in the downward scan — large, never an Apple marker source.
+# Skipped in the downward scan — large, never an Apple marker source. Pruning
+# these keeps the scan fast AND keeps a big tree from tripping the MAX_ENTRIES
+# fail-open (which would over-inject in exactly the non-Apple projects this gate
+# exists to keep quiet — e.g. a Unreal/Unity game project, GH #45's reporter).
 PRUNE_DIRS = frozenset({
     "node_modules", ".git", "build", ".build", "Pods", "DerivedData",
     "dist", "target", ".venv", "venv", "vendor", "Carthage", ".gradle",
     "__pycache__", "out",
+    # Game-engine build/cache dirs — large, never hold Apple source.
+    "Intermediate", "Binaries", "Saved", "DerivedDataCache",  # Unreal
+    "Library", "Temp", "Obj",                                 # Unity
 })
 
 UPWARD_MAX_LEVELS = 6   # ancestor cap when there is no .git root
