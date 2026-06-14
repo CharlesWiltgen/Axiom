@@ -14,6 +14,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { VERSION_CORE } from "./version-regex.js";
+import {
+  DOC_STAT_FILES,
+  docStatValues,
+  extractDocStats,
+  checkMarkerSpec,
+} from "./doc-stats.js";
 import { scanReferencedToolBinaries } from "../axiom-mcp/src/scripts/binary-coverage.ts";
 import { MCP_TOOL_BINARIES } from "../axiom-mcp/src/tools/binaries.ts";
 import {
@@ -1092,12 +1098,10 @@ if (!fs.existsSync(statsPath)) {
   error("readme-parity", `README.md not found — cannot verify stats parity`);
 } else {
   const stats = JSON.parse(fs.readFileSync(statsPath, "utf8"));
-  const expectedSkills =
-    (stats.disciplineSkills ?? 0) +
-    (stats.referenceSkills ?? 0) +
-    (stats.diagnosticSkills ?? 0);
-  const expectedAgents = stats.agents ?? 0;
-  const expectedCommands = stats.commands ?? 0;
+  const expected = docStatValues(stats);
+  const expectedSkills = expected.skills;
+  const expectedAgents = expected.agents;
+  const expectedCommands = expected.commands;
 
   const readme = fs.readFileSync(readmePath, "utf8");
   const beginIdx = readme.indexOf("<!-- AXIOM_STATS_BEGIN");
@@ -1336,6 +1340,65 @@ if (dashViolations.length === 0) {
   }
   if (dashViolations.length > CAP) {
     error("docs-dash", `…and ${dashViolations.length - CAP} more (${dashViolations.length} total) — see documentation-style.md §Dashes`);
+  }
+}
+
+// ── 12j. Doc Count-Marker Parity ──
+//
+// docs/ pages embed skill/agent/command counts in prose (install.md, index.md,
+// xcode-setup.md, …). They drifted for months (184 vs 254, 133 vs 254) because
+// set-version.js wrote stats.json/README but never touched these pages. They are
+// now auto-maintained via invisible <!--ax:KEY-->N<!--/ax--> markers
+// (scripts/doc-stats.js); this gate fails the release if any marker drifts from
+// stats.json. statsPath is the same module-level const declared in 12e.
+
+heading("12j. Doc Count-Marker Parity");
+
+if (!fs.existsSync(statsPath)) {
+  error("doc-stats-parity", `stats.json not found at ${statsPath} — cannot verify doc count parity`);
+} else {
+  const docStats = JSON.parse(fs.readFileSync(statsPath, "utf8"));
+  const expected = docStatValues(docStats);
+  let docDrift = false;
+  let markerCount = 0;
+
+  for (const { file: relPath, markers: spec } of DOC_STAT_FILES) {
+    const docPath = path.join(root, relPath);
+    if (!fs.existsSync(docPath)) {
+      error("doc-stats-parity", `${relPath} is listed in DOC_STAT_FILES but missing on disk — fix scripts/doc-stats.js`);
+      docDrift = true;
+      continue;
+    }
+    const content = fs.readFileSync(docPath, "utf8");
+
+    // Structural: the file must carry exactly its expected marker multiset —
+    // catches a single marker deleted during a reword, not just total removal.
+    const problems = checkMarkerSpec(content, spec);
+    if (problems.length) {
+      error(
+        "doc-stats-parity",
+        `${relPath} markers don't match spec — ${problems.join("; ")}. Restore them, or update scripts/doc-stats.js.`,
+      );
+      docDrift = true;
+      continue;
+    }
+
+    // Value: each marker's number must match the live stats.json.
+    for (const { key, value } of extractDocStats(content)) {
+      markerCount += 1;
+      const want = expected[key as keyof typeof expected];
+      if (value !== want) {
+        error(
+          "doc-stats-parity",
+          `${relPath} ${key} count drift: doc says ${value}, stats.json says ${want}. Run: node scripts/set-version.js <current-version>`,
+        );
+        docDrift = true;
+      }
+    }
+  }
+
+  if (!docDrift) {
+    console.log(`  ✓ ${markerCount} doc count markers across ${DOC_STAT_FILES.length} pages match stats.json`);
   }
 }
 
