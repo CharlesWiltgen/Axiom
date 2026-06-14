@@ -29,7 +29,7 @@ The Codex plugin includes 184 specialized skills covering:
 npx skills add CharlesWiltgen/Axiom -a codex -g
 ```
 
-This installs all 184 skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
+This installs all <!--ax:skills-->254<!--/ax--> skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
 
 To install for the current project only (omit `-g`):
 
@@ -126,6 +126,6 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 
 ## Also Available
 
-- **[Claude Code](/start/install)** – Full Axiom experience with 38 autonomous agents and 12 commands
+- **[Claude Code](/start/install)** – Full Axiom experience with <!--ax:agents-->40<!--/ax--> autonomous agents and <!--ax:commands-->15<!--/ax--> commands
 - **[MCP Server](/start/mcp-install)** – Skills in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
 - **[Xcode Integration](/start/xcode-setup)** – Direct Xcode MCP bridge for in-editor assistance

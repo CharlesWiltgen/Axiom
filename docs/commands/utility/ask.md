@@ -10,7 +10,7 @@ Ask a question about iOS/Swift development to get routed to the right Axiom skil
 
 ## What It Does
 - Analyzes your natural language question
-- Matches it to one of 50+ specialized Axiom skills or 16 agents
+- Matches it to one of 50+ specialized Axiom skills or <!--ax:agents-->40<!--/ax--> agents
 - Automatically invokes the matching tool for you
 - Falls back to `axiom-tools` skill if no clear match is found
 - Answers directly if the question is trivial
