@@ -6,11 +6,21 @@ import sys
 import os
 from datetime import datetime
 
+from project_detect import resolve_context_decision
+
 if len(sys.argv) < 2:
     print(json.dumps({"error": "Usage: session-start.py <plugin_root>"}), file=sys.stderr)
     sys.exit(1)
 
 plugin_root = sys.argv[1]
+
+# Project-type gate (GH #45): in non-Apple projects, skip the context injection
+# entirely (emit an empty SessionStart response). resolve_context_decision is
+# fail-open — it returns True (inject) on any detection error — so this can never
+# silently disable Axiom in a real Apple project. Override: AXIOM_SESSION_CONTEXT.
+if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
+    print(json.dumps({}))
+    sys.exit(0)
 
 # Read using-axiom content
 try:
