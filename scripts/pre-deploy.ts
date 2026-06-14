@@ -754,6 +754,7 @@ if (fs.existsSync(sessionStartSh)) {
       stdio: ["pipe", "pipe", "pipe"],
       timeout: 10000,
       cwd: root,
+      env: { ...process.env, AXIOM_SESSION_CONTEXT: "always" },
     }).toString();
     const parsed = JSON.parse(hookOutput);
     const ctx = parsed?.hookSpecificOutput?.additionalContext;
@@ -762,7 +763,19 @@ if (fs.existsSync(sessionStartSh)) {
     } else if (!ctx.includes("EXTREMELY_IMPORTANT")) {
       error("hooks", "session-start.sh output missing EXTREMELY_IMPORTANT wrapper");
     } else {
-      console.log("  ✓ session-start.sh produces valid JSON with expected structure");
+      // Gate (GH #45): AXIOM_SESSION_CONTEXT=never must suppress injection.
+      const skipOut = execSync(`bash "${sessionStartSh}"`, {
+        stdio: ["pipe", "pipe", "pipe"],
+        timeout: 10000,
+        cwd: root,
+        env: { ...process.env, AXIOM_SESSION_CONTEXT: "never" },
+      }).toString();
+      const skipCtx = JSON.parse(skipOut.trim() || "{}")?.hookSpecificOutput?.additionalContext;
+      if (skipCtx) {
+        error("hooks", "session-start.sh injected context despite AXIOM_SESSION_CONTEXT=never");
+      } else {
+        console.log("  ✓ session-start.sh injects (always) and skips (never) as gated");
+      }
     }
   } catch (e: unknown) {
     const err = e as { message?: string; stdout?: Buffer; stderr?: Buffer; killed?: boolean };
