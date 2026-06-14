@@ -1,6 +1,6 @@
 # Autonomous Agents
 
-Axiom includes 38 autonomous agents that automatically detect and diagnose common iOS development issues.
+Axiom includes <!--ax:agents-->40<!--/ax--> autonomous agents that automatically detect and diagnose common iOS development issues.
 
 ## What Are Agents?
 
