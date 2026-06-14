@@ -77,3 +77,40 @@ def _downward_has_marker(root: str) -> bool:
         except OSError:
             continue
     return False
+
+
+def is_apple_project(start: str) -> bool:
+    """True if `start` is inside, or contains, an Apple project.
+
+    Upward pass: scan each level for markers (catching ancestor markers when
+    opened in a subdir) and find the git root. Downward pass: bounded BFS from
+    the git root (repo-wide; finds an app in a sibling subdir), or from `start`
+    when there is no git root. Any exception, or a nonexistent/unreadable start
+    (e.g. a deleted cwd), → fail-open (True).
+    """
+    try:
+        cur = os.path.abspath(start)
+        if not os.path.isdir(cur):
+            return True  # nonexistent/unreadable start (deleted cwd, etc.) → fail-open
+        home = os.environ.get("HOME")
+        home = os.path.abspath(home) if home else None
+        scan_root = cur
+        levels = 0
+        while True:
+            if _dir_has_marker(cur):           # scan THIS level before stopping
+                return True
+            if os.path.exists(os.path.join(cur, ".git")):  # file (worktree) or dir
+                scan_root = cur                # repo root → scan repo-wide
+                break
+            parent = os.path.dirname(cur)
+            if parent == cur:
+                break                          # filesystem root
+            if home is not None and cur == home:
+                break                          # do not ascend past $HOME
+            levels += 1
+            if levels >= UPWARD_MAX_LEVELS:
+                break                          # no-git cap; scan_root stays = start
+            cur = parent
+        return _downward_has_marker(scan_root)
+    except Exception:
+        return True  # fail-open: never misclassify an Apple project as non-Apple
