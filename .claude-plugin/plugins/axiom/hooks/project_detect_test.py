@@ -62,6 +62,15 @@ class TestDownwardHasMarker(unittest.TestCase):
             touch(os.path.join(d, "node_modules", "dep", "vendored.swift"))
             self.assertFalse(pd._downward_has_marker(d))
 
+    def test_ignores_marker_inside_game_engine_dir(self):
+        # GH #45: Unreal/Unity build dirs are pruned, so a stray Swift file in
+        # one of them does not make a non-Apple game project read as Apple.
+        for prune_dir in ("Intermediate", "Binaries", "Saved", "DerivedDataCache",
+                          "Library", "Temp", "Obj"):
+            with tempfile.TemporaryDirectory() as d:
+                touch(os.path.join(d, prune_dir, "vendored.swift"))
+                self.assertFalse(pd._downward_has_marker(d), prune_dir)
+
     def test_ignores_marker_below_depth_cap(self):
         with tempfile.TemporaryDirectory() as d:
             deep = os.path.join(d, "a", "b", "c", "d", "e")  # depth 5 > cap 4
