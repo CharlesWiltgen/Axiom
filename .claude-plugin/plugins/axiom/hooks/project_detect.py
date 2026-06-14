@@ -21,7 +21,7 @@ import os
 APPLE_MARKER_SUFFIXES = (".xcodeproj", ".xcworkspace", ".swiftpm", ".playground", ".swift")
 APPLE_MARKER_NAMES = frozenset({"Podfile"})
 
-# Skipped in the downward BFS — large, never an Apple marker source.
+# Skipped in the downward scan — large, never an Apple marker source.
 PRUNE_DIRS = frozenset({
     "node_modules", ".git", "build", ".build", "Pods", "DerivedData",
     "dist", "target", ".venv", "venv", "vendor", "Carthage", ".gradle",
@@ -29,7 +29,7 @@ PRUNE_DIRS = frozenset({
 })
 
 UPWARD_MAX_LEVELS = 6   # ancestor cap when there is no .git root
-DOWNWARD_MAX_DEPTH = 4  # BFS depth below the scan root
+DOWNWARD_MAX_DEPTH = 4  # downward-scan depth below the scan root
 MAX_ENTRIES = 10000     # downward scan safety cap → fail-open on hit
 
 
@@ -47,7 +47,7 @@ def _dir_has_marker(path: str) -> bool:
 
 
 def _downward_has_marker(root: str) -> bool:
-    """BFS from `root` for an Apple marker.
+    """Bounded depth-first scan from `root` for an Apple marker.
 
     Returns True if a marker is found OR the entry cap is hit before a verdict
     (fail-open — an inconclusive scan must not read as "not Apple"). Returns
@@ -83,7 +83,7 @@ def is_apple_project(start: str) -> bool:
     """True if `start` is inside, or contains, an Apple project.
 
     Upward pass: scan each level for markers (catching ancestor markers when
-    opened in a subdir) and find the git root. Downward pass: bounded BFS from
+    opened in a subdir) and find the git root. Downward pass: bounded scan from
     the git root (repo-wide; finds an app in a sibling subdir), or from `start`
     when there is no git root. Any exception, or a nonexistent/unreadable start
     (e.g. a deleted cwd), → fail-open (True).
@@ -97,7 +97,12 @@ def is_apple_project(start: str) -> bool:
         scan_root = cur
         levels = 0
         while True:
-            if _dir_has_marker(cur):           # scan THIS level before stopping
+            # Marker scan is bounded to UPWARD_MAX_LEVELS ancestors (the no-git
+            # "opened in a subdir" case). The .git search below is deliberately
+            # NOT bounded by that cap — a git root is found however deep we were
+            # opened, so a real Apple repo opened many directories deep is never
+            # misread as non-Apple (the cap used to short-circuit this — GH #45).
+            if levels <= UPWARD_MAX_LEVELS and _dir_has_marker(cur):
                 return True
             if os.path.exists(os.path.join(cur, ".git")):  # file (worktree) or dir
                 scan_root = cur                # repo root → scan repo-wide
@@ -106,10 +111,8 @@ def is_apple_project(start: str) -> bool:
             if parent == cur:
                 break                          # filesystem root
             if home is not None and cur == home:
-                break                          # do not ascend past $HOME
+                break                          # do not ascend past $HOME (scanned above)
             levels += 1
-            if levels >= UPWARD_MAX_LEVELS:
-                break                          # no-git cap; scan_root stays = start
             cur = parent
         return _downward_has_marker(scan_root)
     except Exception:

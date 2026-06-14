@@ -46,6 +46,7 @@ class TestSessionStartGate(unittest.TestCase):
 
     def test_non_apple_dir_skips(self):
         with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".git"))  # bound the upward walk → hermetic
             with open(os.path.join(d, "index.js"), "w"):
                 pass
             self.assertFalse(has_context(run_in(d)))
