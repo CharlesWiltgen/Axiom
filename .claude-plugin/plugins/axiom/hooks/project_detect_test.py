@@ -138,6 +138,17 @@ class TestIsAppleProject(unittest.TestCase):
             with mock.patch.dict(os.environ, {"HOME": home}):
                 self.assertFalse(pd.is_apple_project(opened))
 
+    def test_deep_open_in_git_repo_with_root_marker(self):
+        # GH #45 regression: a real Apple git repo (marker + .git only at the
+        # root) opened many directories deep must still detect as Apple — the
+        # upward walk must reach the root .git even past UPWARD_MAX_LEVELS.
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".git"))
+            touch(os.path.join(d, "Package.swift"))
+            deep = os.path.join(d, "Tests", "A", "B", "C", "D", "E", "F")  # 7 levels deep
+            os.makedirs(deep)
+            self.assertTrue(pd.is_apple_project(deep))
+
 
 class TestResolveContextDecision(unittest.TestCase):
     def test_never_skips_even_in_apple_dir(self):
@@ -155,12 +166,14 @@ class TestResolveContextDecision(unittest.TestCase):
 
     def test_unset_runs_detection(self):
         with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".git"))  # bound the upward walk → hermetic
             self.assertFalse(pd.resolve_context_decision(d, None))
             touch(os.path.join(d, "App.swift"))
             self.assertTrue(pd.resolve_context_decision(d, None))
 
     def test_garbage_value_treated_as_auto(self):
         with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".git"))  # bound the upward walk → hermetic
             self.assertFalse(pd.resolve_context_decision(d, "  Banana "))
 
     def test_case_and_whitespace_insensitive(self):
