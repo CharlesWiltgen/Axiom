@@ -12,6 +12,9 @@ makes the logic directly lintable and testable.
 Reads a JSON payload on stdin (`{"prompt": "..."}`), writes a JSON response on
 stdout. Never exits non-zero — a hook failure must not block the prompt.
 """
+
+from __future__ import annotations
+
 import json
 import re
 import sys

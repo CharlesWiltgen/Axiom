@@ -30,6 +30,9 @@ Any other input shape (non-Read tool, missing file_path, non-crash
 path, malformed JSON) → empty stdout / exit 0. The hook never fails —
 a broken hook shouldn't block Read operations.
 """
+
+from __future__ import annotations
+
 import json
 import sys
 

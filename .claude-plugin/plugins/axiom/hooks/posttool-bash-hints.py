@@ -40,6 +40,9 @@ Output:
 
 Exit code: always 0.
 """
+
+from __future__ import annotations
+
 import json
 import os
 import re

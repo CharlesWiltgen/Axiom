@@ -11,6 +11,9 @@ body; plain .py avoids that and is directly lintable/testable.
 Reads a JSON payload on stdin, writes a JSON response on stdout. Never exits
 non-zero — a hook failure must not block subagent startup.
 """
+
+from __future__ import annotations
+
 import json
 import sys
 
