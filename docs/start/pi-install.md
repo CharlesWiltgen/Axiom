@@ -20,9 +20,7 @@ Pi keeps only the 27 router *descriptions* in context and loads each skill's ful
 
 ## Prerequisites
 
-- **Pi** ([install guide](https://pi.dev/docs/latest/)) — `npm install -g --ignore-scripts @earendil-works/pi-coding-agent`
-- **git** (for `pi install`) and **Node.js 18+** (for the `npx skills` alternative)
-- A configured model provider (e.g. `export ANTHROPIC_API_KEY=…`, or `/login` inside Pi)
+You already have Pi (this is a Pi install guide — if not, grab it at [pi.dev](https://pi.dev/)). The commands below also need **git** (for `pi install`) or **Node.js 18+** (for the `npx skills` alternative).
 
 ## Installation
 
