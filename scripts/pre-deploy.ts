@@ -1415,6 +1415,49 @@ if (!fs.existsSync(statsPath)) {
   }
 }
 
+// ── 12k. Pi Install Manifest ──
+
+// The root package.json `pi` manifest is what makes
+// `pi install git:github.com/CharlesWiltgen/Axiom` deliver both the skills
+// and the axiom-pi extension (pi.skills + pi.extensions). Nothing else
+// references those paths, so a moved skills dir or a renamed extension entry
+// would silently break the Pi install with no other check catching it.
+// Verify each declared path resolves on disk. axiom-aofx.
+heading("12k. Pi Install Manifest");
+{
+  // Existence-only by design: Pi resolves both file and directory entries for
+  // pi.skills/pi.extensions, so the guard is "the declared path resolves", not
+  // its kind. Loadability of the extension entry is covered by step 17's
+  // typecheck against the real Pi types.
+  let rootPkg: { pi?: { skills?: string[]; extensions?: string[] } } | undefined;
+  try {
+    rootPkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+  } catch (e: unknown) {
+    error("pi-manifest", `could not parse root package.json: ${(e as Error).message}`);
+  }
+  if (rootPkg) {
+    const pi = rootPkg.pi;
+    if (!pi || typeof pi !== "object") {
+      error("pi-manifest", "root package.json has no `pi` manifest — `pi install git:` won't deliver skills or the extension");
+    } else {
+      const declared: Array<[kind: string, relPath: string]> = [
+        ...(pi.skills ?? []).map((p) => ["pi.skills", p] as [string, string]),
+        ...(pi.extensions ?? []).map((p) => ["pi.extensions", p] as [string, string]),
+      ];
+      if (declared.length === 0) {
+        error("pi-manifest", "`pi` manifest declares no skills or extensions");
+      }
+      const missing = declared.filter(([, relPath]) => !fs.existsSync(path.join(root, relPath)));
+      for (const [kind, relPath] of missing) {
+        error("pi-manifest", `${kind} path does not resolve: ${relPath}`);
+      }
+      if (declared.length > 0 && missing.length === 0) {
+        console.log(`  ✓ Pi manifest paths resolve (${declared.map(([, p]) => p).join(", ")})`);
+      }
+    }
+  }
+}
+
 // ── Phase 1 Summary ──
 
 heading("Phase 1 Summary (Static)");
@@ -1707,13 +1750,50 @@ try {
   process.exit(1);
 }
 
+// Step 17: the axiom-pi Pi extension (commands + hooks) ships as source that
+// Pi runs directly. Its pure logic has a vitest suite and it typechecks against
+// the real @earendil-works/pi-coding-agent types — neither is exercised by the
+// MCP/Codex steps, so wire both into the gate here (parallels step 12 for MCP).
+// axiom-aofx.
+heading("17. axiom-pi Extension Tests");
+{
+  const axiomPiDir = path.join(root, "axiom-pi");
+  const fail = (check: string, label: string, output: string): never => {
+    const summary = output.match(/Tests\s+\d+.*|FAIL.*|error TS\d+.*|✗.*/gm);
+    // Fall back to a tail of raw output when no summary line matches (e.g. an
+    // `npm ci` failure), so the operator always gets a diagnostic, not a bare line.
+    const detail = summary ? summary.slice(0, 8).join("\n    ") : output.trim().slice(-300);
+    error(check, `axiom-pi ${label} failed${detail ? ":\n    " + detail : ""}`);
+    console.log(`\n✗ Phase 2 FAILED. Fix axiom-pi ${label} before deploying.`);
+    process.exit(1);
+  };
+  const run = (check: string, label: string, cmd: string, timeout: number): void => {
+    try {
+      execSync(cmd, { cwd: axiomPiDir, stdio: "pipe", timeout });
+    } catch (e: unknown) {
+      const err = e as { stdout?: Buffer; stderr?: Buffer };
+      fail(check, label, err.stdout?.toString() || err.stderr?.toString() || "");
+    }
+  };
+  // Install deps when absent so a fresh CI checkout can run them (a dev tree
+  // already has them, like the MCP step). The resulting axiom-pi/node_modules
+  // is intentional — it's gitignored. Install/test/typecheck are reported
+  // separately so a failure is attributed to the right phase, not lumped together.
+  if (!fs.existsSync(path.join(axiomPiDir, "node_modules"))) {
+    run("axiom-pi-install", "dependency install", "npm ci --ignore-scripts", 180000);
+  }
+  run("axiom-pi-tests", "tests", "npm test", 120000);
+  run("axiom-pi-typecheck", "typecheck", "npm run typecheck", 120000);
+  console.log("  ✓ axiom-pi tests pass + typecheck clean");
+}
+
 // ── Final Summary ──
 
 heading("Final Summary");
 console.log(
   `  Phase 1: ✓ Static validation (${skillFilesChecked} skills, ${agentFilesChecked} agents, ${commandFilesChecked} commands)`,
 );
-console.log("  Phase 2: ✓ Build validation (MCP tests + bundle + Codex + Go tools + VitePress)");
+console.log("  Phase 2: ✓ Build validation (MCP tests + bundle + Codex + Go tools + VitePress + axiom-pi)");
 
 if (totalWarnings > 0) {
   console.log(`\n  ${totalWarnings} warning(s) — review above`);
