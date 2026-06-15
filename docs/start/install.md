@@ -95,5 +95,7 @@ Set it in your shell profile or a project `.envrc`.
 
 ## Also Available
 
+- **[Codex Plugin](/start/codex-install)** – Native skills for the OpenAI Codex CLI, web app, and IDE extensions
+- **[Pi Coding Agent](/start/pi-install)** – Native skills for the Pi terminal coding agent
 - **[MCP Server](/start/mcp-install)** – Use Axiom in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
 - **[Xcode Integration](/start/xcode-setup)** – Direct Xcode MCP bridge setup

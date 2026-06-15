@@ -72,6 +72,7 @@ export default withMermaid(defineConfig({
             { text: 'Install', link: '/start/install' },
             { text: 'MCP Server', link: '/start/mcp-install' },
             { text: 'Codex Plugin', link: '/start/codex-install' },
+            { text: 'Pi Coding Agent', link: '/start/pi-install' },
             { text: 'Xcode Integration', link: '/start/xcode-setup' },
             { text: 'Example Workflows', link: '/start/workflows' },
             { text: 'Skill Map', link: '/start/skill-map' },
