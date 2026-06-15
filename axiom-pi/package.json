@@ -1,0 +1,51 @@
+{
+  "name": "axiom-pi",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Axiom extension for the Pi coding agent — /axiom-* commands and session/tool hooks for Apple-platform development",
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "pi",
+    "pi-agent",
+    "ios",
+    "swift",
+    "swiftui",
+    "xcode",
+    "axiom"
+  ],
+  "author": "Charles Wiltgen",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CharlesWiltgen/Axiom.git",
+    "directory": "axiom-pi"
+  },
+  "homepage": "https://charleswiltgen.github.io/Axiom/start/pi-install",
+  "bugs": {
+    "url": "https://github.com/CharlesWiltgen/Axiom/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.79.3",
+    "@types/node": "^25.9.3",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}
