@@ -34,6 +34,14 @@ Then search for "axiom" in the `/plugin` menu and install.
 
 See the [MCP setup guide](https://charleswiltgen.github.io/Axiom/start/mcp-install).
 
+### Pi (terminal coding agent)
+
+```
+pi install git:github.com/CharlesWiltgen/Axiom
+```
+
+One command installs the skills plus the `/axiom-*` commands and hooks. See the [Pi setup guide](https://charleswiltgen.github.io/Axiom/start/pi-install).
+
 ### Xcode (Claude Agent / Codex)
 
 See the [Xcode integration guide](https://charleswiltgen.github.io/Axiom/start/xcode-setup).
