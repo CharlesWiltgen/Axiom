@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: Axiom 27
-  text: Skills, Agents, and Tools for iOS Development
-  tagline: The best suite of battle-tested skills, agents, and tools for modern xOS development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more. Native for Claude Code, MCP for everything else.
+  text: Skills, Agents, and Tools for Apple OS Development
+  tagline: The best suite of battle-tested skills, agents, and tools for modern Apple OS development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more. Supports Claude Code, Codex, and all other popular coding harnesses.
   actions:
     - theme: brand
       text: Get Started
