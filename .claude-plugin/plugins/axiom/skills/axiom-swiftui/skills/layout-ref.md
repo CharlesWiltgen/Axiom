@@ -13,8 +13,8 @@ This reference covers all SwiftUI layout APIs for building adaptive interfaces:
 - **onGeometryChange** — Efficient geometry reading (iOS 16+ backported)
 - **GeometryReader** — Layout-phase geometry access (iOS 13+)
 - **Safe Area Padding** — .safeAreaPadding() vs .padding() (iOS 17+)
-- **Size Classes** — Trait-based adaptation
-- **iOS 26 Window APIs** — Free-form windows, menu bar, resize anchors
+- **Size Classes** — Coarse trait-context semantics (NOT a width sensor — see below)
+- **Window APIs** — Resizable windows everywhere, menu bar, resize anchors, live-resize signal
 
 ---
 
@@ -634,6 +634,20 @@ Color.blue
 
 Environment values indicating horizontal and vertical size characteristics.
 
+### Size Class Is Not a Width Sensor
+
+This is the single most misread layout fact of the 27 cycle. `horizontalSizeClass` expresses the **coarse semantics of the current trait environment**, not the window's width. It answers "does the system consider this a roomy or constrained context?" — not "how many points wide am I?"
+
+At iOS 27 Apple deliberately separated **host semantics** (idiom + size class) from **available geometry**. An iPhone app now runs in resizable windows — iPhone Mirroring on a Mac, and iPhone-only apps on iPad. In those windows the **idiom stays `.phone`** and `horizontalSizeClass` stays **`.compact` no matter how wide you drag the window**. A `.phone`-idiom app is no longer equivalent to a narrow-screen layout.
+
+| Decision | Driver | Why |
+|----------|--------|-----|
+| Should menus collapse, are system Tabs/Sidebars offered | `horizontalSizeClass` | This is what the trait reliably expresses |
+| "Switch to two columns past 700pt", "show side nav" | Geometry of the root/container view | Size class won't change with width on a `.phone` host |
+| Branch on device type | Neither — never `userInterfaceIdiom` | Idiom is host semantics, decoupled from layout space |
+
+Read your own breakpoints from geometry — `onGeometryChange` (above) or `containerRelativeFrame` (see `containers-ref.md`) — and reserve size class for system-container semantics. `UIScreen.main` / screen bounds are also unreliable here (your window is a fraction of the screen); see `axiom-uikit (skills/uikit-modernization.md)` for the UIKit side (`effectiveGeometry`, `isInteractivelyResizing`).
+
 ### Reading Size Classes
 
 ```swift
@@ -678,12 +692,16 @@ enum UserInterfaceSizeClass {
 | 33% Split View | `.compact` | `.regular` |
 | Slide Over | `.compact` | `.regular` |
 
+These tables describe an app running under its **native** idiom. They do **not** describe an iPhone app in a resizable window on a Mac (mirroring) or iPad: there the idiom stays `.phone` and `horizontalSizeClass` stays `.compact` at every width. Don't read the iPad table as "wide ⇒ `.regular`" for a `.phone`-idiom app.
+
 ### Overriding Size Classes
 
 ```swift
 content
     .environment(\.horizontalSizeClass, .compact)
 ```
+
+**This is not a strategy for making a wide iPhone window look like iPad.** Injecting `.regular` into a `.phone`-idiom subtree based on scene geometry flips every environment reader below it, and components do not respond consistently: `NavigationSplitView` may expand its sidebar, but `TabView(.sidebarAdaptable)` will **not** become an iPad-style sidebar from injected `.regular` alone. A wide iPhone window is still an adaptive iPhone presentation, not an iPad product interface. If you want a sidebar on a wide iPhone, drive your **own** layout from geometry (show a custom sidebar, hide the tab bar, keep tab switching in state) — see the anti-pattern in `layout.md`. Valid uses of the override are narrow and local (forcing a specific child into compact chrome, previews), not a global "fake iPad" switch.
 
 ---
 
@@ -736,7 +754,25 @@ Image(systemName: "star")
 
 ---
 
-## iOS 26 Window APIs
+## Window APIs
+
+By the 27 cycle every app is resizable — iPhone apps included (iPhone Mirroring on Mac, iPhone-only apps on iPad). Assume an arbitrary, changing scene size; don't assume a fixed aspect ratio or canvas. Express *preferences* (minimum size, content resizability), not absolute control. The UIKit-side scene migration (`UIScreen.main` → scene geometry, `UIRequiresFullScreen` → `sizeRestrictions`, scene-lifecycle mandate) lives in `axiom-uikit (skills/uikit-modernization.md)`.
+
+### onInteractiveResizeChange
+
+Distinguishes the *interactive resize gesture* from the settled final size, so you can drop expensive work (high frame-rate animation, live previews, heavy recomputation) while the user is dragging and restore it when they finish. iOS 26+, all platforms.
+
+```swift
+@State private var isResizing = false
+
+content
+    .onInteractiveResizeChange { resizing in   // (_ isResizing: Bool) -> Void
+        isResizing = resizing
+    }
+    // pause/throttle work while isResizing == true; settle on false
+```
+
+The UIKit equivalent is `UIWindowSceneGeometry.isInteractivelyResizing`. To read the final geometry itself, use `onGeometryChange` (above) — `onInteractiveResizeChange` reports only the in-progress/settled *state*, not the size.
 
 ### Window Resize Anchor
 
@@ -923,8 +959,8 @@ LazyVStack {
 
 ## Resources
 
-**WWDC**: 2025-208, 2024-10074, 2022-10056
+**WWDC**: 2025-208, 2024-10074, 2023-10057, 2022-10056, 2026-278
 
-**Docs**: /swiftui/layout, /swiftui/viewthatfits
+**Docs**: /swiftui/layout, /swiftui/viewthatfits, /swiftui/view/oninteractiveresizechange(_:), /technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key
 
-**Skills**: skills/layout.md, skills/debugging.md
+**Skills**: skills/layout.md, skills/debugging.md, axiom-uikit (skills/uikit-modernization.md)

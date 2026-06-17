@@ -19,6 +19,7 @@ Covers tool selection (ViewThatFits vs AnyLayout vs onGeometryChange), size clas
 - "Size classes aren't giving me what I need"
 - "Designer wants different layout for portrait vs landscape"
 - "Preparing app for iOS 26 window resizing"
+- "Should my iPhone app look like iPad in a wide window?" (iOS 27)
 
 ## Key Patterns
 
@@ -38,6 +39,7 @@ Covers tool selection (ViewThatFits vs AnyLayout vs onGeometryChange), size clas
 - `UIDevice.current.userInterfaceIdiom == .pad` – iPad in 1/3 Split View is narrower than iPhone
 - Unconstrained `GeometryReader` — Greedy sizing breaks siblings
 - Size class as orientation proxy — iPad is `.regular` in both orientations
+- Injecting `.regular` to fake iPad on a wide iPhone window — `.phone` idiom stays `.compact`; drive layout from geometry
 
 ## iOS 26 Changes
 

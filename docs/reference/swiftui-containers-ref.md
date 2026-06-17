@@ -7,7 +7,25 @@ version: 1.2.0
 
 # SwiftUI Containers Reference
 
-Comprehensive reference for SwiftUI container views: stacks, grids, outlines, and scroll enhancements from iOS 13 through iOS 26.
+Comprehensive reference for SwiftUI container views: stacks, grids, outlines, and scroll enhancements from iOS 13 through iOS 27.
+
+## When to Use This Reference
+
+Use this reference when you're:
+
+- Choosing the right container for a layout (stack vs lazy stack vs grid vs `List`)
+- Fixing a list or grid that scrolls slowly and needs lazy loading or the iOS 26 performance wins
+- Building hierarchical or outline UI (trees, sidebars, disclosure rows)
+- Adopting the iOS 27 container additions (drag-to-reorder, swipe-action coordination, or a per-subtree `AsyncImage` session)
+
+## Example Prompts
+
+Questions you can ask Claude that draw from this reference:
+
+- "Which container should I use for a 500-item scrolling list?"
+- "How do I build a photo grid that adapts its column count to screen width?"
+- "How do I add drag-to-reorder outside a `List` on iOS 27?"
+- "How do I coordinate swipe actions in a `ScrollView` + `LazyVStack`?"
 
 ## Overview
 
@@ -19,7 +37,15 @@ This reference covers all SwiftUI container APIs:
 - **Outlines** – List with `children:`, OutlineGroup, DisclosureGroup
 - **Scroll Enhancements** – containerRelativeFrame, scrollTargetLayout, scrollPosition (iOS 17+), onScrollGeometryChange, onScrollVisibilityChange (iOS 18+)
 - **iOS 26 Performance** – 6x faster list loading, 16x faster updates, nested lazy stack optimization
-- **iOS 27 Additions** – `reorderable()` drag-to-reorder in any container, `swipeActionsContainer()` coordination, `asyncImageURLSession()`
+- **iOS 27 Additions** – `reorderable()` drag-to-reorder in any container, `swipeActionsContainer()` coordination with the `onPresentationChanged` swipe callback, `asyncImageURLSession()`
+
+## Documentation Scope
+
+This page is a lookup surface for the `axiom-swiftui` skill's container reference (`skills/containers-ref.md`); the full patterns, code, and gotchas live in that skill, which Claude loads on demand.
+
+- For container performance problems (janky scrolling, excessive view updates), use the [swiftui-performance-analyzer](/agents/swiftui-performance-analyzer) agent
+- For adaptive layout that breaks across device sizes, see the [SwiftUI layout reference](/reference/swiftui-layout-ref)
+- For navigation containers (NavigationStack, NavigationSplitView), see the [SwiftUI navigation reference](/reference/swiftui-nav-ref)
 
 ## Quick Decision
 
