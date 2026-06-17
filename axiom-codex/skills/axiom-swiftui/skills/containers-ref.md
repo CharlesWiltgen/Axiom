@@ -257,7 +257,7 @@ ScrollView {
         }
     }
 }
-.asyncImageURLSession(imageSession)   // OS27 — all platforms; @available(anyAppleOS 27.0)
+.asyncImageURLSession(imageSession)   // all platforms; @available(anyAppleOS 27.0)
 ```
 
 ### Horizontal Carousel
@@ -598,7 +598,7 @@ That bounded scope is the whole point — it's why `.listRowSeparator(.hidden)` 
 
 ### swipeActionsContainer() — Coordinate Swipe Actions in Custom Containers (OS27)
 
-`List` coordinates swipe actions automatically — opening a row's actions while another row's are open, or scrolling, dismisses the first. Custom row layouts (`ScrollView` + `LazyVStack`, etc.) didn't get that for free. `.swipeActionsContainer()` adds it:
+`List` coordinates swipe actions automatically — opening a row's actions while another row's are open, or scrolling, dismisses the first. Custom row layouts (`ScrollView` + `LazyVStack`, custom `Layout`, etc.) didn't get that for free. `.swipeActionsContainer()` adds it:
 
 ```swift
 ScrollView {
@@ -612,7 +612,33 @@ ScrollView {
 .swipeActionsContainer()   // coordinates dismissal + mutual exclusion across rows
 ```
 
-It "coordinates swipe action dismissal and mutual exclusion across rows in a container" — only one row's actions open at a time, scrolling dismisses them, and tapping outside closes them. `OS27` (not tvOS). Don't add it to a `List` — that already coordinates, so the modifier is redundant there.
+It "coordinates swipe action dismissal and mutual exclusion across rows in a container" — only one row's actions open at a time, scrolling dismisses them, and tapping outside closes them. Don't add it to a `List` — that already coordinates, so the modifier is redundant there.
+
+#### React to reveal or hide
+
+The `swipeActions(…:onPresentationChanged:)` overload adds a `(Bool) -> Void` callback that fires when a row's actions are shown or hidden — drive haptics, log analytics, or sync an "open row" binding. `content` is the first trailing closure, `onPresentationChanged:` the second:
+
+```swift
+MessageRow(message)
+    .swipeActions {
+        Button("Archive") { archive(message) }
+    } onPresentationChanged: { isRevealed in
+        // isRevealed == true when this row's actions open, false when they close
+    }
+```
+
+#### Availability and fallback
+
+Both `swipeActionsContainer()` and the `onPresentationChanged:` overload are `@available(iOS 27, macOS 27, watchOS 27, visionOS 27, *)`, tvOS unavailable. Swipe actions outside `List` are new in 27, so gate and fall back to `List` (which coordinates on its own) or a custom drag (see `gestures.md`):
+
+```swift
+if #available(iOS 27, *) {
+    ScrollView { LazyVStack { rows } }
+        .swipeActionsContainer()
+} else {
+    List { rows }   // pre-27: List is the only built-in swipe-actions path
+}
+```
 
 ### reorderable() — Drag-to-Reorder in Any Container (OS27)
 
@@ -634,7 +660,7 @@ var body: some View {
 }
 ```
 
-`.reorderable()` marks the items draggable; `.reorderContainer(for:move:)` receives a `ReorderDifference` (the item IDs + destination positions) you apply to your data. The system animates the placeholder. Use `.reorderable(collectionID:)` + the `in collectionID:` overload of `reorderContainer` to move items *between* collections. `OS27` (not tvOS).
+`.reorderable()` marks the items draggable; `.reorderContainer(for:move:)` receives a `ReorderDifference` (the item IDs + destination positions) you apply to your data. The system animates the placeholder. Use `.reorderable(collectionID:)` + the `in collectionID:` overload of `reorderContainer` to move items *between* collections. (Not tvOS.)
 
 ### Anti-Patterns
 
