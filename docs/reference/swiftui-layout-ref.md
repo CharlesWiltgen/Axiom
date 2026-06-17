@@ -23,11 +23,13 @@ Complete guide to all SwiftUI layout APIs for building adaptive interfaces, base
 - **GeometryReader** – Layout-phase geometry access (iOS 13+)
 
 ### Trait-Based Adaptation
-- **Size Classes** – horizontalSizeClass, verticalSizeClass
+- **Size Classes** – horizontalSizeClass, verticalSizeClass (coarse trait semantics, not a width sensor)
 - **Dynamic Type** – dynamicTypeSize.isAccessibilitySize
 - **ScaledMetric** – Scaled dimensions for accessibility
 
-### iOS 26 Window APIs
+### Window APIs
+- **Resizable windows everywhere** – iPhone apps resize too (Mac mirroring, iPhone-only on iPad)
+- **onInteractiveResizeChange** – Throttle work during a live resize drag (iOS 26+)
 - **Window resize anchor** – Control resize animation origin
 - **Menu bar commands** – iPad menu bar via `.commands`
 - **NavigationSplitView** – Automatic column visibility
@@ -71,6 +73,8 @@ layout { content }
 | Slide Over | `.compact` | `.regular` |
 
 **Key insight:** Size class only goes `.compact` on iPad at ~33% width.
+
+This table describes an app under its **native** iPad idiom. An iPhone app in a resizable window — Mac mirroring, or iPhone-only on iPad — keeps the `.phone` idiom and stays `.compact` at every width. Size class will not flip to `.regular` no matter how wide the window gets, because iOS 27 decouples host semantics (idiom, size class) from available geometry. Drive your own width breakpoints from geometry (`onGeometryChange`) and reserve `horizontalSizeClass` for system-container semantics. See [swiftui-layout](/skills/ui-design/swiftui-layout) for the "don't inject `.regular` to fake iPad" anti-pattern.
 
 ## Related Resources
 

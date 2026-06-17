@@ -362,7 +362,7 @@ s.lineHeight = .loose
 ```swift
 // MIGRATION REQUIRED:
 // Remove deprecated property list key in iPadOS 26:
-// UIRequiresFullscreen (entire key deprecated, all values)
+// UIRequiresFullScreen (entire key deprecated, all values)
 
 // For split view navigation, system automatically shows/hides columns
 // based on available space during resize
@@ -1113,7 +1113,7 @@ Live Activities now appear on CarPlay displays for glanceable information while 
 
 #### ❌ Remove in iPadOS 26
 ```xml
-<key>UIRequiresFullscreen</key>
+<key>UIRequiresFullScreen</key>
 <!-- Entire property list key is deprecated (all values) -->
 ```
 
