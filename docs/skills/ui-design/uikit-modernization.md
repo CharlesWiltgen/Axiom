@@ -19,6 +19,7 @@ Use this skill when:
 - "How do I adopt the scene-based life cycle?"
 - "What replaces `UIScreen.main`?"
 - "How do I make my iPhone app resizable?"
+- "How do I set a minimum window size or lock orientation on iOS 27?"
 - "Should I use the interface idiom or size classes for layout?"
 - "How do I put a tab bar in a sidebar on iPhone? (iOS 27)"
 - "What's the View Annotations API for Siri?"

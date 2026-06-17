@@ -25,7 +25,7 @@ iPhone apps resize freely (iPhone Mirroring on Mac; an iPhone-only app on iPad).
 | `UIDevice.userInterfaceIdiom` for layout | **size classes** (`traitCollection.horizontalSizeClass`) |
 | `supportedInterfaceOrientations` for layout | size classes — orientation is only a *preference* at 27 and is ignored in resizable environments |
 
-`effectiveGeometry` (iOS 16) and the `windowScene(_:didUpdateEffectiveGeometry:)` delegate (iOS 26) are the adaptive-geometry APIs to adopt — they predate 27, but 27 is where ignoring them breaks. `UIRequiresFullscreen` is now honored on iPhone but only enables *discrete* resizing that snaps to orientation-honoring configurations (for games); it no longer fully opts out of resizing.
+`effectiveGeometry` (iOS 16) and the `windowScene(_:didUpdateEffectiveGeometry:)` delegate (iOS 26) are the adaptive-geometry APIs to adopt — they predate 27, but 27 is where ignoring them breaks. `UIRequiresFullScreen` is now honored on iPhone but only enables *discrete* resizing that snaps to orientation-honoring configurations (for games); it no longer fully opts out of resizing.
 
 ```swift
 override func layoutSubviews() {
@@ -39,6 +39,17 @@ func windowScene(_ windowScene: UIWindowScene,
     let bounds = windowScene.effectiveGeometry.coordinateSpace.bounds
 }
 ```
+
+#### Express preferences, not a fixed canvas
+
+You no longer own a fixed canvas — you express preferences the user and system honor.
+
+- **Minimum size** — the documented replacement for the old `UIRequiresFullScreen` opt-out (TN3192). Set it on the scene's `UISceneSizeRestrictions` so users can't shrink the window below a usable size:
+  ```swift
+  windowScene.sizeRestrictions?.minimumSize = CGSize(width: 400, height: 600)
+  ```
+- **Orientation lock** — a *preference*, not a guarantee, in resizable environments. Override `UIViewController.prefersInterfaceOrientationLocked` (returns `Bool`) and call `setNeedsUpdateOfPrefersInterfaceOrientationLocked()` when it changes; read the resolved state from `windowScene.effectiveGeometry.isInterfaceOrientationLocked` (iOS 26).
+- **Interactive vs settled resize** — `UIWindowSceneGeometry.isInteractivelyResizing` (iOS 26) is `true` while the user drags; throttle expensive work during the drag and settle when it clears. SwiftUI's equivalent is `.onInteractiveResizeChange(_:)` (see axiom-swiftui (skills/layout-ref.md)).
 
 ## New 27 additive APIs
 
@@ -65,6 +76,6 @@ Xcode 27 ships an app-modernization agent skill that rewrites `UIScreen.main` ca
 
 **WWDC**: 2025-243, 2026-278
 
-**Docs**: /uikit/app-and-environment, /uikit/uiscenedelegate, /uikit/uiwindowscene, /uikit/transitioning-to-the-uikit-scene-based-life-cycle, /uikit/uitabbarcontroller, /uikit/uitabbarcontrollersidebar, /uikit/uimenuelement
+**Docs**: /uikit/app-and-environment, /uikit/uiscenedelegate, /uikit/uiwindowscene, /uikit/uiscenesizerestrictions, /uikit/transitioning-to-the-uikit-scene-based-life-cycle, /uikit/uitabbarcontroller, /uikit/uitabbarcontrollersidebar, /uikit/uimenuelement, /technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key
 
 **Skills**: skills/uikit-bridging.md, axiom-xcode-mcp, axiom-swiftui (size-class-driven adaptive layout)
