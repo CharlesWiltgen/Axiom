@@ -347,6 +347,24 @@ var isLandscape: Bool {
 
 **Fix:** Calculate from actual geometry if you need aspect ratio.
 
+### ❌ Inject `.regular` to Fake iPad on a Wide iPhone
+
+```swift
+// ❌ WRONG: tries to make a wide iPhone window behave like iPad
+content
+    .environment(\.horizontalSizeClass, isWide ? .regular : .compact)
+```
+
+**Why it fails:** At 27 an iPhone app runs resizable (mirroring, iPhone-only on iPad) but stays `.phone` idiom and `.compact` no matter the width — idiom is decoupled from available space. Injecting `.regular` flips every environment reader in the subtree, and components don't respond consistently: `NavigationSplitView` may expand, but `TabView(.sidebarAdaptable)` will **not** become an iPad sidebar from injected `.regular` alone. A wide iPhone window is an adaptive iPhone presentation, not an iPad product interface.
+
+**Fix:** Drive your *own* layout from geometry. In a wide state, show a custom sidebar and hide the tab bar; keep tab switching in state. Reserve `horizontalSizeClass` for system-container semantics (are system Tabs/Sidebars offered, should menus collapse).
+
+```swift
+// ✅ Geometry decides YOUR breakpoint; size class stays semantic
+content
+    .onGeometryChange(for: Bool.self) { $0.size.width > 700 } action: { isWide = $0 }
+```
+
 ---
 
 ## Pressure Scenarios
@@ -375,10 +393,16 @@ var isLandscape: Bool {
 
 **Response:** "Apple deprecated full-screen-only in iOS 26. Even without active Split View support, the app can't break when resized. Space-based layout costs the same."
 
+### "The iPhone window is wide now — just force regular size class so it looks like iPad"
+
+**Temptation:** `.environment(\.horizontalSizeClass, .regular)` on the root.
+
+**Response:** "A `.phone`-idiom app stays `.compact` at any width by design, and injecting `.regular` doesn't make components agree — `TabView(.sidebarAdaptable)` won't become an iPad sidebar from it. I'll read the width with `onGeometryChange` and show a custom sidebar in the wide state, keeping size class for system semantics."
+
 ---
 
 ## Resources
 
-**WWDC**: 2025-208, 2024-10074, 2022-10056
+**WWDC**: 2025-208, 2024-10074, 2022-10056, 2026-278
 
-**Skills**: skills/layout-ref.md, skills/debugging.md, axiom-design (skills/liquid-glass.md)
+**Skills**: skills/layout-ref.md, skills/debugging.md, axiom-design (skills/liquid-glass.md), axiom-uikit (skills/uikit-modernization.md)
