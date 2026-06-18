@@ -110,6 +110,7 @@ export default withMermaid(defineConfig({
             { text: 'energy-auditor', link: '/agents/energy-auditor' },
             { text: 'memory-auditor', link: '/agents/memory-auditor' },
             { text: 'swift-performance-analyzer', link: '/agents/swift-performance-analyzer' },
+            { text: 'swift-simplifier', link: '/agents/swift-simplifier' },
             { text: 'textkit-auditor', link: '/agents/textkit-auditor' }
           ]
         },
@@ -218,6 +219,7 @@ export default withMermaid(defineConfig({
             { text: '/axiom:audit memory', link: '/commands/debugging/audit-memory' },
             { text: '/axiom:audit modernization', link: '/commands/debugging/audit-modernization' },
             { text: '/axiom:audit swift-performance', link: '/commands/debugging/audit-swift-performance' },
+            { text: '/axiom:audit swift-simplify', link: '/commands/debugging/audit-swift-simplify' },
             { text: '/axiom:compare-traces', link: '/commands/debugging/compare-traces' },
             { text: '/axiom:profile', link: '/commands/debugging/profile' }
           ]
@@ -715,7 +717,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.5'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.6'
     }
   }
 }))

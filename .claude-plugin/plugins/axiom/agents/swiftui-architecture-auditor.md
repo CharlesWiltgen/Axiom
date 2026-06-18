@@ -251,3 +251,4 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 For architecture patterns: `axiom-swiftui` skill (architecture)
 For performance issues: `swiftui-performance-analyzer` agent
 For navigation architecture: `swiftui-nav-auditor` agent
+For local Swift cleanups inside view bodies: `swift-simplifier` agent (it does local clarity; this auditor owns structural moves)

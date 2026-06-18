@@ -44,6 +44,7 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 | `memory` | Retain cycles, Timer/observer leaks, closure captures |
 | `modernization` | ObservableObject→@Observable, @StateObject→@State, deprecated APIs |
 | `swift-performance` | ARC issues, allocation patterns, generic specialization |
+| `swift-simplify` | Behavior-preserving Swift clarity — guard/optional cleanups, if/switch expressions, collection idioms, boilerplate |
 
 ### Testing
 | Area | What It Checks |
@@ -102,7 +103,7 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 1. **CRITICAL** – `core-data`, `swiftdata`, `database-schema`, `storage`, `icloud` (data corruption/loss risk)
 2. **HIGH** – `concurrency`, `memory`, `energy`, `networking`, `security`, `testing` (crashes, App Store rejection)
 3. **MEDIUM** – `swiftui-architecture`, `ux-flow`, `swiftui-performance`, `swiftui-layout`, `swift-performance`, `foundation-models` (architecture, performance, UX)
-4. **LOW** – `accessibility`, `liquid-glass`, `codable`, `modernization`, `camera`, `screenshots` (enhancement opportunities)
+4. **LOW** – `accessibility`, `liquid-glass`, `codable`, `modernization`, `camera`, `screenshots`, `swift-simplify` (enhancement opportunities)
 
 ## Batch Patterns
 

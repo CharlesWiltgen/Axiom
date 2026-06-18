@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: "area (optional) - Which audit to run: all, memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models, screenshots, ux-flow"
+argument: "area (optional) - Which audit to run: all, memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, swift-simplify, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models, screenshots, ux-flow"
 disable-model-invocation: true
 ---
 
@@ -23,6 +23,7 @@ If no area specified → analyze project and suggest relevant audits
 | swiftui-architecture | swiftui-architecture-auditor | Logic in view, MVVM/TCA patterns, boundary violations |
 | swiftui-nav | swiftui-nav-auditor | NavigationStack issues, path management, deep linking |
 | swift-performance | swift-performance-analyzer | ARC issues, allocation patterns, generic specialization |
+| swift-simplify | swift-simplifier | Behavior-preserving Swift simplifications — guard/optional cleanups, if/switch expressions, collection idioms, redundant boilerplate, dead availability guards |
 | core-data | core-data-auditor | Thread safety, schema migrations, N+1 queries |
 | networking | networking-auditor | Deprecated APIs (SCNetworkReachability), anti-patterns |
 | codable | codable-auditor | JSON serialization issues, Sendable violations |
@@ -93,6 +94,7 @@ When running multiple audits (either user-requested or from smart suggestions):
    - liquid-glass → iOS 26 adoption
    - codable → JSON best practices
    - modernization → Legacy API migration
+   - swift-simplify → Behavior-preserving Swift clarity simplifications
    - camera → Deprecated capture APIs
    - screenshots → App Store screenshot compliance
 
@@ -171,6 +173,7 @@ If no area argument:
 1. Analyze project structure:
    - Check for .xcodeproj/.xcworkspace → suggest build audit
    - Find SwiftUI files (*.swift with "import SwiftUI") → suggest swiftui-performance, swiftui-architecture
+   - Find Swift files → suggest swift-simplify audit
    - Find .xcdatamodeld → suggest core-data audit
    - Check deployment target in .xcodeproj → suggest modernization audit
    - Find CloudKit entitlements → suggest icloud audit

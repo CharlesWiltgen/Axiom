@@ -1,6 +1,6 @@
 # Autonomous Agents
 
-Axiom includes <!--ax:agents-->40<!--/ax--> autonomous agents that automatically detect and diagnose common iOS development issues.
+Axiom includes <!--ax:agents-->41<!--/ax--> autonomous agents that automatically detect and diagnose common iOS development issues.
 
 ## What Are Agents?
 
@@ -17,6 +17,7 @@ Agents are autonomous problem-solvers that:
 - "Check my code for accessibility issues" → **accessibility-auditor** triggers
 - "Scan for memory leaks" → **memory-auditor** triggers
 - "My SwiftUI app has janky scrolling" → **swiftui-performance-analyzer** triggers
+- "Simplify this Swift file" → **swift-simplifier** triggers
 - "Review for Swift 6 concurrency violations" → **concurrency-auditor** triggers
 - "Check Core Data safety" → **core-data-auditor** triggers
 - "Find Liquid Glass adoption opportunities" → **liquid-glass-auditor** triggers
@@ -69,6 +70,7 @@ Agents are autonomous problem-solvers that:
 - **energy-auditor** – Scans for energy anti-patterns and unnecessary background work (timers for inactive features, location when not on map, unused background modes, lifecycle asymmetries)
 - **memory-auditor** – Finds memory leak patterns and architectural issues (missing cleanup paths, unbounded collection growth, inconsistent resource lifecycle management)
 - **swift-performance-analyzer** – Detects Swift performance issues and context-dependent overhead (ARC in hot paths, copies in tight loops, actor hops in iteration, existential types in hot paths)
+- **swift-simplifier** – Reports behavior-preserving Swift simplifications (guard/optional cleanups, if/switch expressions, collection idioms, redundant boilerplate, dead availability guards), each tagged SAFE/PRECONDITION/ADVISORY
 - **textkit-auditor** – Scans for TextKit issues and architectural gaps (TextKit 1 fallback triggers, deprecated glyph APIs that break on complex scripts, missing Writing Tools configuration, missing `isWritingToolsActive` guards on programmatic mutations, SwiftUI wrappers dropping TextKit 2 properties, RTL-untested custom layout fragments)
 
 ### UI & Design
