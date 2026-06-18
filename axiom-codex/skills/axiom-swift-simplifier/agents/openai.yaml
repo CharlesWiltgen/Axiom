@@ -1,0 +1,3 @@
+interface:
+  display_name: "Swift Simplifier"
+  short_description: "The user wants to simplify Swift code, reduce boilerplate, or make Swift more readable and idiomatic without changing..."
