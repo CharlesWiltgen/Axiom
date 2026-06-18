@@ -126,7 +126,7 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 
 ## Also Available
 
-- **[Claude Code](/start/install)** – Full Axiom experience with <!--ax:agents-->40<!--/ax--> autonomous agents and <!--ax:commands-->15<!--/ax--> commands
+- **[Claude Code](/start/install)** – Full Axiom experience with <!--ax:agents-->41<!--/ax--> autonomous agents and <!--ax:commands-->15<!--/ax--> commands
 - **[Pi Coding Agent](/start/pi-install)** – Native skills for the Pi terminal coding agent
 - **[MCP Server](/start/mcp-install)** – Skills in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
 - **[Xcode Integration](/start/xcode-setup)** – Direct Xcode MCP bridge for in-editor assistance
