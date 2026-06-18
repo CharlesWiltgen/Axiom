@@ -289,3 +289,4 @@ For Instruments workflows: `axiom-performance (skills/swift-performance.md)` ski
 For SwiftUI-specific performance: `swiftui-performance-analyzer` agent
 For memory lifecycle issues: `axiom-performance (skills/memory-debugging.md)` skill
 For actor isolation patterns: `axiom-concurrency` skill
+For behavior-preserving clarity simplification: `swift-simplifier` agent (defer to it for clarity-only changes; this agent owns speed)

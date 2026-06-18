@@ -31,6 +31,7 @@ license: MIT
 | tvOS storage constraints (no Documents dir) | See `skills/tvos.md` |
 | tvOS text input, AVPlayer tuning | See `skills/tvos.md` |
 | TVUIKit components | See `skills/tvos.md` |
+| Simplify Swift for clarity (behavior-preserving cleanups) | `swift-simplifier` agent — `/axiom:audit swift-simplify` |
 
 ## Decision Tree
 
@@ -56,6 +57,7 @@ digraph swift {
 6. Swift concurrency (async/await, actors, Sendable) -> `/skill axiom-concurrency`
 7. Swift performance (COW, ARC, generics optimization) -> See axiom-performance (skills/swift-performance.md)
 8. Codable patterns (JSON, CodingKeys, enum serialization) -> See axiom-data (skills/codable.md)
+9. Simplify Swift for clarity (guard/optional cleanups, if/switch expressions, boilerplate)? -> `swift-simplifier` agent (`/axiom:audit swift-simplify`)
 
 ## Conflict Resolution
 
