@@ -59,7 +59,7 @@ Questions you can ask Claude that will draw from this skill:
 - Xcode Cloud integration
 
 ### Network Conditioning
-- No-sudo, automatable conditioning via an in-process `URLProtocol` harness (latency, low bitrate, packet loss, offline) — deterministic and CI-friendly, no GUI
+- No-sudo, automatable conditioning via an in-process `URLProtocol` harness (latency + jitter, low bitrate, flaky or hard request failures, offline) — deterministic by default, CI-friendly, no GUI
 - Network Link Conditioner / `dnctl` for whole-Mac OS-level conditioning, plus the on-device profile for real hardware
 - Optional toxiproxy proxy for conditioning traffic the app's `URLSession` doesn't own (gated — warns and points to install docs when it isn't installed)
 - Longer timeouts for slow networks; catch device + network combination failures
