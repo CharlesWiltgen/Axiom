@@ -761,21 +761,26 @@ Because conditioning is external, the **test code itself stays normal** — it j
 
 ### No-sudo, automatable conditioning (app-layer `URLProtocol`)
 
-Methods 1–4 condition the network *outside* the app (host kernel or a GUI). For **automated / CI / agent-driven** testing with **no sudo and no GUI**, condition *inside* the app: register a custom `URLProtocol` on the `URLSession` that returns a canned response with injected latency, a byte-rate cap (low bitrate), or a failure — deterministically.
+Methods 1–4 condition the network *outside* the app (host kernel or a GUI). For **automated / CI / agent-driven** testing with **no sudo and no GUI**, condition *inside* the app: register a custom `URLProtocol` on the `URLSession` that returns a canned response with injected latency (optional jitter), a byte-rate cap (low bitrate), and deterministic or probabilistic failures.
 
-Trade-off: app-layer sees only this app's `URLSession` traffic (not third-party SDKs or raw sockets) and needs a test hook — but no sudo, no host change, fully deterministic. **It's the right default for unit/integration tests.** Mocker (WeTransfer) and OHHTTPStubs wrap this if you'd rather not hand-roll it.
+Trade-off: app-layer sees only this app's `URLSession` traffic (not third-party SDKs or raw sockets) and needs a test hook — but no sudo, no host change, and deterministic by default (`jitter`/`failureRate` opt into controlled randomness). **It's the right default for unit/integration tests.**
+
+It models *application-observable* network behavior (how fast bytes arrive, whether a request fails) — not transport-layer packet loss, jitter shape, or retransmit dynamics, which sit below `URLProtocol`. For true packet-level fidelity, use the OS-level (`dnctl`) or toxiproxy paths. Mocker (WeTransfer) and OHHTTPStubs wrap this if you'd rather not hand-roll it.
 
 ```swift
 import Foundation
 import Synchronization
 
-/// Returns a canned response with injected conditions — latency, a byte-rate
-/// cap (low bitrate), or failure. Deterministic, no sudo, in-process.
+/// Returns a canned response with injected conditions — latency (+ jitter), a
+/// byte-rate cap (low bitrate), and hard or probabilistic failures. No sudo,
+/// in-process; deterministic unless jitter/failureRate are set.
 final class ThrottlingURLProtocol: URLProtocol {
     struct Conditions: Sendable {
         var latency: TimeInterval = 0       // seconds before first byte
-        var bytesPerSecond: Int? = nil      // nil = unlimited
-        var failure: URLError.Code? = nil   // non-nil = fail the request
+        var jitter: TimeInterval = 0        // ± random seconds added to latency
+        var bytesPerSecond: Int? = nil      // nil = unlimited (throughput cap)
+        var failure: URLError.Code? = nil   // failure code (default .networkConnectionLost when only a rate is set)
+        var failureRate: Double = 0         // 0...1 chance of failing this request; a failure code alone = always fail
         var body = Data()                   // canned response body (a whole, zero-based Data)
         var statusCode = 200
     }
@@ -793,10 +798,13 @@ final class ThrottlingURLProtocol: URLProtocol {
         }
         let c = Self.conditions.withLock { $0 }
 
-        if c.latency > 0 { Thread.sleep(forTimeInterval: c.latency) }   // off-main loading thread
+        let delay = c.latency + (c.jitter > 0 ? Double.random(in: -c.jitter...c.jitter) : 0)
+        if delay > 0 { Thread.sleep(forTimeInterval: delay) }   // off-main loading thread
 
-        if let code = c.failure {
-            client?.urlProtocol(self, didFailWithError: URLError(code)); return
+        // A failure code alone = always fail; a failureRate rolls per request (flaky).
+        let rate = c.failureRate > 0 ? c.failureRate : (c.failure != nil ? 1.0 : 0.0)
+        if rate > 0, Double.random(in: 0..<1) < rate {
+            client?.urlProtocol(self, didFailWithError: URLError(c.failure ?? .networkConnectionLost)); return
         }
 
         let response = HTTPURLResponse(url: url, statusCode: c.statusCode,
@@ -817,6 +825,17 @@ final class ThrottlingURLProtocol: URLProtocol {
         }
         client?.urlProtocolDidFinishLoading(self)
     }
+}
+```
+
+Named profiles (NLC quotes bits/s; this harness is bytes/s, so ÷8):
+```swift
+extension ThrottlingURLProtocol.Conditions {
+    static let edge    = Self(latency: 0.4, jitter: 0.1,  bytesPerSecond:    30_000)  // ~240 kbps
+    static let threeG  = Self(latency: 0.1, jitter: 0.05, bytesPerSecond:   200_000)  // ~1.6 Mbps
+    static let lte     = Self(latency: 0.05, bytesPerSecond: 6_250_000)               // ~50 Mbps
+    static let flaky   = Self(failureRate: 0.3)                                       // 30% of requests drop
+    static let offline = Self(failure: .notConnectedToInternet)
 }
 ```
 

@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-06-19T21:14:02.332Z",
+  "generatedAt": "2026-06-19T21:43:26.712Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -36799,7 +36799,7 @@
     "axiom-testing--ui-testing": {
       "name": "axiom-testing--ui-testing",
       "description": "Wait for conditions, not arbitrary timeouts. **Core principle** Flaky tests come from guessing how long operations take. Condition-based waiting eliminates race conditions.",
-      "content": "\n# UI Testing\n\n## Overview\n\nWait for conditions, not arbitrary timeouts. **Core principle** Flaky tests come from guessing how long operations take. Condition-based waiting eliminates race conditions.\n\n**NEW in WWDC 2025**: Recording UI Automation allows you to record interactions, replay across devices/languages, and review video recordings of test runs.\n\n## Example Prompts\n\nThese are real questions developers ask that this skill is designed to answer:\n\n#### 1. \"My UI tests pass locally on my Mac but fail in CI. How do I make them more reliable?\"\n→ The skill shows condition-based waiting patterns that work across devices/speeds, eliminating CI timing differences\n\n#### 2. \"My tests use sleep(2) and sleep(5) but they're still flaky. How do I replace arbitrary timeouts with real conditions?\"\n→ The skill demonstrates waitForExistence, XCTestExpectation, and polling patterns for data loads, network requests, and animations\n\n#### 3. \"I just recorded a test using Xcode 26's Recording UI Automation. How do I review the video and debug failures?\"\n→ The skill covers Video Debugging workflows to analyze recordings and find the exact step where tests fail\n\n#### 4. \"My test is failing on iPad but passing on iPhone. How do I write tests that work across all device sizes?\"\n→ The skill explains multi-factor testing strategies and device-independent predicates for robust cross-device testing\n\n#### 5. \"I want to write tests that are not flaky. What are the critical patterns I need to know?\"\n→ The skill provides condition-based waiting templates, accessibility-first patterns, and the decision tree for reliable test architecture\n\n---\n\n## Red Flags — Test Reliability Issues\n\nIf you see ANY of these, suspect timing issues:\n- Tests pass locally, fail in CI (timing differences)\n- Tests sometimes pass, sometimes fail (race conditions)\n- Tests use `sleep()` or `Thread.sleep()` (arbitrary delays)\n- Tests fail with \"UI element not found\" then pass on retry\n- Long test runs (waiting for worst-case scenarios)\n\n## Quick Decision Tree\n\n```\nTest failing?\n├─ Element not found?\n│  └─ Use waitForExistence(timeout:) not sleep()\n├─ Passes locally, fails CI?\n│  └─ Replace sleep() with condition polling\n├─ Animation causing issues?\n│  └─ Wait for animation completion, don't disable\n└─ Network request timing?\n   └─ Use XCTestExpectation or waitForExistence\n```\n\n## Core Pattern: Condition-Based Waiting\n\n**❌ WRONG (Arbitrary Timeout)**:\n```swift\nfunc testButtonAppears() {\n    app.buttons[\"Login\"].tap()\n    sleep(2)  // ❌ Guessing it takes 2 seconds\n    XCTAssertTrue(app.buttons[\"Dashboard\"].exists)\n}\n```\n\n**✅ CORRECT (Wait for Condition)**:\n```swift\nfunc testButtonAppears() {\n    app.buttons[\"Login\"].tap()\n    let dashboard = app.buttons[\"Dashboard\"]\n    XCTAssertTrue(dashboard.waitForExistence(timeout: 5))\n}\n```\n\n## Common UI Testing Patterns\n\n### Pattern 1: Waiting for Elements\n\n```swift\n// Wait for element to appear\nfunc waitForElement(_ element: XCUIElement, timeout: TimeInterval = 5) -> Bool {\n    return element.waitForExistence(timeout: timeout)\n}\n\n// Usage\nXCTAssertTrue(waitForElement(app.buttons[\"Submit\"]))\n```\n\n### Pattern 2: Waiting for Element to Disappear\n\n```swift\nfunc waitForElementToDisappear(_ element: XCUIElement, timeout: TimeInterval = 5) -> Bool {\n    let predicate = NSPredicate(format: \"exists == false\")\n    let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)\n    let result = XCTWaiter().wait(for: [expectation], timeout: timeout)\n    return result == .completed\n}\n\n// Usage\nXCTAssertTrue(waitForElementToDisappear(app.activityIndicators[\"Loading\"]))\n```\n\n### Pattern 3: Waiting for Specific State\n\n```swift\nfunc waitForButton(_ button: XCUIElement, toBeEnabled enabled: Bool, timeout: TimeInterval = 5) -> Bool {\n    let predicate = NSPredicate(format: \"isEnabled == %@\", NSNumber(value: enabled))\n    let expectation = XCTNSPredicateExpectation(predicate: predicate, object: button)\n    let result = XCTWaiter().wait(for: [expectation], timeout: timeout)\n    return result == .completed\n}\n\n// Usage\nlet submitButton = app.buttons[\"Submit\"]\nXCTAssertTrue(waitForButton(submitButton, toBeEnabled: true))\nsubmitButton.tap()\n```\n\n### Pattern 4: Accessibility Identifiers\n\n**Set in app**:\n```swift\nButton(\"Submit\") {\n    // action\n}\n.accessibilityIdentifier(\"submitButton\")\n```\n\n**Use in tests**:\n```swift\nfunc testSubmitButton() {\n    let submitButton = app.buttons[\"submitButton\"]  // Uses identifier, not label\n    XCTAssertTrue(submitButton.waitForExistence(timeout: 5))\n    submitButton.tap()\n}\n```\n\n**Why**: Accessibility identifiers don't change with localization, remain stable across UI updates.\n\n### Pattern 5: Network Request Delays\n\n```swift\nfunc testDataLoads() {\n    app.buttons[\"Refresh\"].tap()\n\n    // Wait for loading indicator to disappear\n    let loadingIndicator = app.activityIndicators[\"Loading\"]\n    XCTAssertTrue(waitForElementToDisappear(loadingIndicator, timeout: 10))\n\n    // Now verify data loaded\n    XCTAssertTrue(app.cells.count > 0)\n}\n```\n\n### Pattern 6: Animation Handling\n\n```swift\nfunc testAnimatedTransition() {\n    app.buttons[\"Next\"].tap()\n\n    // Wait for destination view to appear\n    let destinationView = app.otherElements[\"DestinationView\"]\n    XCTAssertTrue(destinationView.waitForExistence(timeout: 2))\n\n    // Do NOT add a fixed sleep to \"let the animation settle.\" XCUITest\n    // auto-waits for an element to become hittable before interacting, so the\n    // next action already waits for the right condition. If you must assert\n    // mid-transition, wait on a real post-animation element, never a delay.\n    let primaryButton = app.buttons[\"Primary\"]\n    XCTAssertTrue(primaryButton.waitForExistence(timeout: 2))\n}\n```\n\n## Testing Checklist\n\n### Before Writing Tests\n- [ ] Use accessibility identifiers for all interactive elements\n- [ ] Avoid hardcoded labels (use identifiers instead)\n- [ ] Plan for network delays and animations\n- [ ] Choose appropriate timeouts (2s UI, 10s network)\n\n### When Writing Tests\n- [ ] Use `waitForExistence()` not `sleep()`\n- [ ] Use predicates for complex conditions\n- [ ] Test both success and failure paths\n- [ ] Make tests independent (can run in any order)\n\n### After Writing Tests\n- [ ] Run tests 10 times locally (catch flakiness)\n- [ ] Run tests on slowest supported device\n- [ ] Run tests in CI environment\n- [ ] Check test duration (if >30s per test, optimize)\n\n## Xcode UI Testing Tips\n\n### Launch Arguments for Testing\n\n```swift\nfunc testExample() {\n    let app = XCUIApplication()\n    app.launchArguments = [\"UI-Testing\"]\n    app.launch()\n}\n```\n\nIn app code:\n```swift\nif ProcessInfo.processInfo.arguments.contains(\"UI-Testing\") {\n    // Use mock data, skip onboarding, etc.\n}\n```\n\n### Faster Test Execution\n\n```swift\noverride func setUpWithError() throws {\n    continueAfterFailure = false  // Stop on first failure\n}\n```\n\n### Debugging Failing Tests\n\n```swift\nfunc testExample() {\n    // Take screenshot on failure\n    addUIInterruptionMonitor(withDescription: \"Alert\") { alert in\n        alert.buttons[\"OK\"].tap()\n        return true\n    }\n\n    // Print element hierarchy\n    print(app.debugDescription)\n}\n```\n\n## Common Mistakes\n\n### ❌ Using sleep() for Everything\n```swift\nsleep(5)  // ❌ Wastes time if operation completes in 1s\n```\n\n### ❌ Not Handling Animations\n```swift\napp.buttons[\"Next\"].tap()\nXCTAssertTrue(app.buttons[\"Back\"].exists)  // ❌ May fail during animation\n```\n\n### ❌ Hardcoded Text Labels\n```swift\napp.buttons[\"Submit\"].tap()  // ❌ Breaks with localization\n```\n\n### ❌ Tests Depend on Each Other\n```swift\n// ❌ Test 2 assumes Test 1 ran first\nfunc test1_Login() { /* ... */ }\nfunc test2_ViewDashboard() { /* assumes logged in */ }\n```\n\n### ❌ No Timeout Strategy\n```swift\nelement.waitForExistence(timeout: 100)  // ❌ Too long\nelement.waitForExistence(timeout: 0.1)  // ❌ Too short\n```\n\n**Use appropriate timeouts**:\n- UI animations: 2-3 seconds\n- Network requests: 10 seconds\n- Complex operations: 30 seconds max\n\n## Real-World Impact\n\n**Before** (using sleep()):\n- Test suite: 15 minutes (waiting for worst-case)\n- Flaky tests: 20% failure rate\n- CI failures: 50% require retry\n\n**After** (condition-based waiting):\n- Test suite: 5 minutes (waits only as needed)\n- Flaky tests: <2% failure rate\n- CI failures: <5% require retry\n\n**Key insight** Tests finish faster AND are more reliable when waiting for actual conditions instead of guessing times.\n\n---\n\n## Recording UI Automation\n\n### Overview\n\n**NEW in Xcode 26**: Record, replay, and review UI automation tests with video recordings.\n\n**Three Phases**:\n1. **Record** — Capture interactions (taps, swipes, hardware button presses) as Swift code\n2. **Replay** — Run across multiple devices, languages, regions, orientations\n3. **Review** — Watch video recordings, analyze failures, view UI element overlays\n\n**Supported Platforms**: iOS, iPadOS, macOS, watchOS, tvOS, visionOS (Designed for iPad)\n\n### How UI Automation Works\n\n**Key Principles**:\n- UI automation interacts with your app **as a person does** using gestures and hardware events\n- Runs **completely independently** from your app (app models/data not directly accessible)\n- Uses **accessibility framework** as underlying technology\n- Tells OS which gestures to perform, then waits for completion **synchronously** one at a time\n\n**Actions include**:\n- Launching your app\n- Interacting with buttons and navigation\n- Setting system state (Dark Mode, localization, etc.)\n- Setting simulated location\n\n### Accessibility is the Foundation\n\n**Critical Understanding**: Accessibility provides information directly to UI automation.\n\nWhat accessibility sees:\n- Element types (button, text, image, etc.)\n- Labels (visible text)\n- Values (current state for checkboxes, etc.)\n- Frames (element positions)\n- **Identifiers** (accessibility identifiers — NOT localized)\n\n**Best Practice**: Great accessibility experience = great UI automation experience.\n\n### Preparing Your App for Recording\n\n#### Step 1: Add Accessibility Identifiers\n\n**SwiftUI**:\n```swift\nButton(\"Submit\") {\n    // action\n}\n.accessibilityIdentifier(\"submitButton\")\n\n// Make identifiers specific to instance\nList(landmarks) { landmark in\n    LandmarkRow(landmark)\n        .accessibilityIdentifier(\"landmark-\\(landmark.id)\")\n}\n```\n\n**UIKit**:\n```swift\nlet button = UIButton()\nbutton.accessibilityIdentifier = \"submitButton\"\n\n// Use index for table cells\ncell.accessibilityIdentifier = \"cell-\\(indexPath.row)\"\n```\n\n**Good identifiers are**:\n- ✅ Unique within entire app\n- ✅ Descriptive of element contents\n- ✅ Static (don't react to content changes)\n- ✅ Not localized (same across languages)\n\n**Why identifiers matter**:\n- Titles/descriptions may change, identifiers remain stable\n- Work across localized strings\n- Uniquely identify elements with dynamic content\n\n**Pro Tip**: Use Xcode coding assistant to add identifiers:\n```\nPrompt: \"Add accessibility identifiers to the relevant parts of this view\"\n```\n\n#### Step 2: Review Accessibility with Accessibility Inspector\n\n**Launch Accessibility Inspector**:\n- Xcode menu → Open Developer Tool → Accessibility Inspector\n- Or: Launch from Spotlight\n\n**Features**:\n1. **Element Inspector** — List accessibility values for any view\n2. **Property details** — Click property name for documentation\n3. **Platform support** — Works on all Apple platforms\n\n**What to check**:\n- Elements have labels\n- Interactive elements have types (button, not just text)\n- Values set for stateful elements (checkboxes, toggles)\n- Identifiers set for elements with dynamic/localized content\n\n#### Step 3: Add UI Testing Target\n\n1. Open project settings in Xcode\n2. Click \"+\" below targets list\n3. Select **UI Testing Bundle**\n4. Click Finish\n\n**Result**: New UI test folder with template tests added to project.\n\n### Recording Interactions\n\n#### Starting a Recording (Xcode 26)\n\n1. Open UI test source file\n2. **Popover appears** explaining how to start recording (first time only)\n3. Click **\"Start Recording\"** button in editor gutter\n4. Xcode builds and launches app in Simulator/device\n\n**During Recording**:\n- Interact with app normally (taps, swipes, text entry, etc.)\n- Code representing interactions appears in source editor in real-time\n- Recording updates as you type (e.g., text field entries)\n\n**Stopping Recording**:\n- Click **\"Stop Run\"** button in Xcode\n\n#### Example Recording Session\n\n```swift\nfunc testCreateAustralianCollection() {\n    let app = XCUIApplication()\n    app.launch()\n\n    // Tap \"Collections\" tab (recorded automatically)\n    app.tabBars.buttons[\"Collections\"].tap()\n\n    // Tap \"+\" to add new collection\n    app.navigationBars.buttons[\"Add\"].tap()\n\n    // Tap \"Edit\" button\n    app.buttons[\"Edit\"].tap()\n\n    // Type collection name\n    app.textFields.firstMatch.tap()\n    app.textFields.firstMatch.typeText(\"Max's Australian Adventure\")\n\n    // Tap \"Edit Landmarks\"\n    app.buttons[\"Edit Landmarks\"].tap()\n\n    // Add landmarks\n    app.tables.cells.containing(.staticText, identifier:\"Great Barrier Reef\").buttons[\"Add\"].tap()\n    app.tables.cells.containing(.staticText, identifier:\"Uluru\").buttons[\"Add\"].tap()\n\n    // Tap checkmark to save\n    app.navigationBars.buttons[\"Done\"].tap()\n}\n```\n\n#### Reviewing Recorded Code\n\nAfter recording, **review and adjust queries**:\n\n**Multiple Options**: Each line has dropdown showing alternative ways to address element.\n\n**Selection Recommendations**:\n1. **For localized strings** (text, button labels): Choose accessibility identifier if available\n2. **For deeply nested views**: Choose shortest query (stays resilient as app changes)\n3. **For dynamic content** (timestamps, temperature): Use generic query or identifier\n\n**Example**:\n```swift\n// Recorded options for text field:\napp.textFields[\"Collection Name\"]              // ❌ Breaks if label localizes\napp.textFields[\"collectionNameField\"]          // ✅ Uses identifier\napp.textFields.element(boundBy: 0)             // ✅ Position-based\napp.textFields.firstMatch                      // ✅ Generic, shortest\n```\n\n**Choose shortest, most stable query** for your needs.\n\n### Adding Validations\n\nAfter recording, **add assertions** to verify expected behavior:\n\n#### Wait for Existence\n\n```swift\n// Validate collection created\nlet collection = app.buttons[\"Max's Australian Adventure\"]\nXCTAssertTrue(collection.waitForExistence(timeout: 5))\n```\n\n#### Wait for Property Changes\n\n```swift\n// Wait for button to become enabled (first arg is a key path, not a literal)\nlet submitButton = app.buttons[\"Submit\"]\nXCTAssertTrue(submitButton.wait(for: \\.isEnabled, toEqual: true, timeout: 5))\n```\n\n#### Combine with XCTAssert\n\n```swift\n// Fail test if element doesn't appear\nlet landmark = app.staticTexts[\"Great Barrier Reef\"]\nXCTAssertTrue(landmark.waitForExistence(timeout: 5), \"Landmark should appear in collection\")\n```\n\n### Advanced Automation APIs\n\n#### Setup Device State\n\n```swift\nimport XCTest\nimport CoreLocation  // XCUILocation wraps CLLocation\n\nfinal class DeviceStateUITests: XCTestCase {\n    private let app = XCUIApplication()  // instance property, shared across tests\n\n    override func setUpWithError() throws {\n        // Device orientation\n        XCUIDevice.shared.orientation = .landscapeLeft\n\n        // Force appearance mode (UIKit reads this from launch arguments)\n        app.launchArguments += [\"-UIUserInterfaceStyle\", \"Dark\"]\n\n        app.launch()\n\n        // Simulate location — a settable property on the running device,\n        // NOT a launch argument. There is no `-SimulatedLocation` argument.\n        XCUIDevice.shared.location = XCUILocation(\n            location: CLLocation(latitude: 37.7749, longitude: -122.4194)\n        )\n    }\n}\n```\n\n#### Launch Arguments & Environment\n\n```swift\nfunc testWithMockData() {\n    let app = XCUIApplication()\n\n    // Pass arguments to app\n    app.launchArguments = [\"-UI-Testing\", \"-UseMockData\"]\n\n    // Set environment variables\n    app.launchEnvironment = [\"API_URL\": \"https://mock.api.com\"]\n\n    app.launch()\n}\n```\n\nIn app code:\n```swift\nif ProcessInfo.processInfo.arguments.contains(\"-UI-Testing\") {\n    // Use mock data, skip onboarding\n}\n```\n\n#### Custom URL Schemes\n\n```swift\n// Launch the target app to a specific URL (instance method, iOS 16.4+)\nlet app = XCUIApplication()\napp.openURL(URL(string: \"myapp://landmark/123\")!)\n\n// Open a URL with the system's default app, via XCUISystem on XCUIDevice\nXCUIDevice.shared.system.openURL(URL(string: \"https://example.com\")!)\n```\n\n#### Accessibility Audits in Tests\n\n```swift\nfunc testAccessibility() throws {\n    let app = XCUIApplication()\n    app.launch()\n\n    // Perform accessibility audit\n    try app.performAccessibilityAudit()\n}\n```\n\n### Test Plans for Multiple Configurations\n\n**Test Plans** let you:\n- Include/exclude individual tests\n- Set system settings (language, region, appearance)\n- Configure test properties (timeouts, repetitions, parallelization)\n- Associate with schemes for specific build settings\n\n#### Creating Test Plan\n\n1. Create new or use existing test plan\n2. Add/remove tests on first screen\n3. Switch to **Configurations** tab\n\n#### Adding Multiple Languages\n\n```\nConfigurations:\n├─ English\n├─ German (longer strings)\n├─ Arabic (right-to-left)\n└─ Hebrew (right-to-left)\n```\n\n**Each locale** = separate configuration in test plan.\n\n**Settings**:\n- Focused for specific locale\n- Shared across all configurations\n\n#### Video & Screenshot Capture\n\n**In Configurations tab**:\n- **Capture screenshots**: On/Off\n- **Capture video**: On/Off\n- **Keep media**: \"Only failures\" or \"On, and keep all\"\n\n**Defaults**: Videos/screenshots kept only for failing runs (for review).\n\n**\"On, and keep all\" use cases**:\n- Documentation\n- Tutorials\n- Marketing materials\n\n### Replaying Tests in Xcode Cloud\n\n**Xcode Cloud** = built-in service for:\n- Building app\n- Running tests\n- Uploading to App Store\n- All in cloud without using team devices\n\n**Workflow configuration**:\n- Same test plan used locally\n- Runs on multiple devices and configurations\n- Videos/results available in App Store Connect\n\n**Viewing Results**:\n- Xcode: Xcode Cloud section\n- App Store Connect: Xcode Cloud section\n- See build info, logs, failure descriptions, video recordings\n\n**Team Access**: Entire team can see run history and download results/videos.\n\n### Reviewing Test Results with Videos\n\n#### Accessing Test Report\n\n1. Click **Test** button in Xcode\n2. Double-click failing run to see video + description\n\n**Features**:\n- **Runs dropdown** — Switch between video recordings of different configurations (languages, devices)\n- **Save video** — Secondary click → Save\n- **Play/pause** — Video playback with UI interaction overlays\n- **Timeline dots** — UI interactions shown as dots on timeline\n- **Jump to failure** — Click failure diamond on timeline\n\n#### UI Element Overlay at Failure\n\n**At moment of failure**:\n- Click timeline failure point\n- **Overlay shows all UI elements** present on screen\n- Click any element to see code recommendations for addressing it\n- **Show All** — See alternative examples\n\n**Workflow**:\n1. Identify what was actually present (vs what test expected)\n2. Click element to get query code\n3. Secondary click → Copy code\n4. **View Source** → Go directly to test\n5. Paste corrected code\n\n**Example**:\n```swift\n// Test expected:\nlet button = app.buttons[\"Max's Australian Adventure\"]\n\n// But overlay shows it's actually text, not button:\nlet text = app.staticTexts[\"Max's Australian Adventure\"] // ✅ Correct\n```\n\n#### Running Test in Different Language\n\nClick test diamond → Select configuration (e.g., Arabic) → Watch automation run in right-to-left layout.\n\n**Validates**: Same automation works across languages/layouts.\n\n### Recording UI Automation Checklist\n\n#### Before Recording\n- [ ] Add accessibility identifiers to interactive elements\n- [ ] Review app with Accessibility Inspector\n- [ ] Add UI Testing Bundle target to project\n- [ ] Plan workflow to record (user journey)\n\n#### During Recording\n- [ ] Interact naturally with app\n- [ ] Record complete user journeys (not individual taps)\n- [ ] Check code generates as you interact\n- [ ] Stop recording when workflow complete\n\n#### After Recording\n- [ ] Review recorded code options (dropdown on each line)\n- [ ] Choose stable queries (identifiers > labels)\n- [ ] Add validations (waitForExistence, XCTAssert)\n- [ ] Add setup code (device state, launch arguments)\n- [ ] Run test to verify it passes\n\n#### Test Plan Configuration\n- [ ] Create/update test plan\n- [ ] Add multiple language configurations\n- [ ] Include right-to-left languages (Arabic, Hebrew)\n- [ ] Configure video/screenshot capture settings\n- [ ] Set appropriate timeouts for network tests\n\n#### Running & Reviewing\n- [ ] Run test locally across configurations\n- [ ] Review video recordings for failures\n- [ ] Use UI element overlay to debug failures\n- [ ] Run in Xcode Cloud for team visibility\n- [ ] Download and share videos if needed\n\n## Network Conditioning in Tests\n\n### Overview\n\nUI tests can pass on fast networks but fail on 3G/LTE. **Network Link Conditioner** simulates real-world network conditions to catch timing-sensitive crashes.\n\n**Critical scenarios**:\n- ❌ iPad Pro over Wi-Fi (fast) → pass\n- ❌ iPad Pro over 3G (slow) → crash\n- ✅ Test both to catch device-specific failures\n\n### How conditioning actually works\n\nNetwork Link Conditioner (NLC) is a **host-level macOS System Settings pane**. There is **no `XCUIApplication` launch argument, launch environment, or `simctl`/`devicectl` subcommand** that selects a profile — you enable conditioning *around* the test run, not from inside the test. Treat any `launchArguments`/`launchEnvironment` \"network profile\" switch as fiction; it is silently ignored.\n\n**Critical caveat** NLC throttles the **entire Mac**. The Simulator shares the host network stack, so it inherits whatever NLC is doing — but conditioning cannot be scoped to one simulator or one app. SSH, package fetches, and everything else are throttled too while it runs.\n\n```dot\ndigraph nlc {\n  \"Where do tests run?\" [shape=diamond];\n  \"Where do tests run?\" -> \"NLC pane or dnctl/pfctl\" [label=\"simulator (whole Mac)\"];\n  \"Where do tests run?\" -> \"Settings > Developer > NLC\" [label=\"physical device\"];\n  \"Where do tests run?\" -> \"RocketSim Network Speed Control\" [label=\"need sim-only isolation\"];\n}\n```\n\n**1. NLC pane (manual; simulator + host)** — install via *Xcode → Open Developer Tool → More Developer Tools* → download \"Additional Tools for Xcode\" → install the package from the **Hardware** folder. Then *System Settings → Network Link Conditioner*, pick a profile (3G, Edge, LTE, DSL, 100% Loss, High Latency DNS, Very Bad Network), Start, run tests, Stop.\n\n**2. `dnctl`/`pfctl` (scriptable; CI — what NLC drives under the hood)** — NLC is a GUI over BSD `dummynet`. For headless CI, drive it directly (needs `sudo`; conditions the whole host, same caveat):\n```bash\n# 3G-like: 1.6 Mbit/s, 150 ms latency, 1% packet loss\nsudo dnctl pipe 1 config bw 1600Kbit/s delay 150 plr 0.01\nprintf 'dummynet-anchor \"nlc\"\\nanchor \"nlc\"\\n' | sudo pfctl -f -\necho 'dummynet out proto tcp from any to any pipe 1' | sudo pfctl -a nlc -f -\nsudo pfctl -E\n\nxcodebuild test -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 16 Pro'\n\n# Teardown\nsudo pfctl -a nlc -F all && sudo pfctl -d && sudo dnctl -q flush\n```\n`pfctl -f -` replaces the **active** pf ruleset — fine on an ephemeral CI runner, but on a dev Mac that already runs pf, back up `/etc/pf.conf` first (and restore with `sudo pfctl -f /etc/pf.conf`).\n\n**3. Physical device** — *Settings → Developer → Network Link Conditioner* (the Developer menu appears once the device has connected to Xcode). Built in, no install, and it conditions only that device.\n\n**4. Simulator-only isolation** — to throttle just the Simulator without touching the rest of the Mac, RocketSim's Network Speed Control (third-party) scopes throttling to the Simulator app.\n\nBecause conditioning is external, the **test code itself stays normal** — it just needs realistic timeouts for the slow profile.\n\n### No-sudo, automatable conditioning (app-layer `URLProtocol`)\n\nMethods 1–4 condition the network *outside* the app (host kernel or a GUI). For **automated / CI / agent-driven** testing with **no sudo and no GUI**, condition *inside* the app: register a custom `URLProtocol` on the `URLSession` that returns a canned response with injected latency, a byte-rate cap (low bitrate), or a failure — deterministically.\n\nTrade-off: app-layer sees only this app's `URLSession` traffic (not third-party SDKs or raw sockets) and needs a test hook — but no sudo, no host change, fully deterministic. **It's the right default for unit/integration tests.** Mocker (WeTransfer) and OHHTTPStubs wrap this if you'd rather not hand-roll it.\n\n```swift\nimport Foundation\nimport Synchronization\n\n/// Returns a canned response with injected conditions — latency, a byte-rate\n/// cap (low bitrate), or failure. Deterministic, no sudo, in-process.\nfinal class ThrottlingURLProtocol: URLProtocol {\n    struct Conditions: Sendable {\n        var latency: TimeInterval = 0       // seconds before first byte\n        var bytesPerSecond: Int? = nil      // nil = unlimited\n        var failure: URLError.Code? = nil   // non-nil = fail the request\n        var body = Data()                   // canned response body (a whole, zero-based Data)\n        var statusCode = 200\n    }\n    // Set by the test before launch. startLoading runs off the main thread\n    // (an observed URLProtocol contract), so a lock keeps this Sendable-clean.\n    static let conditions = Mutex(Conditions())\n\n    override class func canInit(with request: URLRequest) -> Bool { true }\n    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }\n    override func stopLoading() {}\n\n    override func startLoading() {\n        guard let url = request.url else {\n            client?.urlProtocol(self, didFailWithError: URLError(.badURL)); return\n        }\n        let c = Self.conditions.withLock { $0 }\n\n        if c.latency > 0 { Thread.sleep(forTimeInterval: c.latency) }   // off-main loading thread\n\n        if let code = c.failure {\n            client?.urlProtocol(self, didFailWithError: URLError(code)); return\n        }\n\n        let response = HTTPURLResponse(url: url, statusCode: c.statusCode,\n                                       httpVersion: \"HTTP/1.1\", headerFields: nil)!\n        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)\n\n        if let rate = c.bytesPerSecond, rate > 0 {        // drip to simulate low bitrate\n            let chunk = max(rate / 10, 1)\n            var offset = 0\n            while offset < c.body.count {\n                let end = min(offset + chunk, c.body.count)\n                client?.urlProtocol(self, didLoad: Data(c.body[offset..<end]))\n                Thread.sleep(forTimeInterval: Double(end - offset) / Double(rate))\n                offset = end\n            }\n        } else {\n            client?.urlProtocol(self, didLoad: c.body)\n        }\n        client?.urlProtocolDidFinishLoading(self)\n    }\n}\n```\n\n**Unit / integration tests** — inject directly, no app hook:\n```swift\nlet config = URLSessionConfiguration.ephemeral\nconfig.protocolClasses = [ThrottlingURLProtocol.self]\nThrottlingURLProtocol.conditions.withLock {\n    $0 = .init(latency: 0.8, bytesPerSecond: 20_000, body: Data(#\"{\"ok\":true}\"#.utf8))\n}\nlet session = URLSession(configuration: config)   // inject into code under test\n```\n\n**UI tests** — the harness lives in the app process, so gate it behind a launch argument the app reads at startup (works when UI tests stub the backend for determinism). To throttle a UI test's *real* backend traffic instead, use the OS-level paths (1–2) or the proxy below.\n```swift\napp.launchArguments += [\"-NetworkProfile\", \"edge\"]; app.launch()   // in the test\n\n// app startup, test builds only:\nlet args = ProcessInfo.processInfo.arguments\nif let i = args.firstIndex(of: \"-NetworkProfile\"), i + 1 < args.count {\n    URLProtocol.registerClass(ThrottlingURLProtocol.self)\n    // map args[i+1] (\"edge\"/\"3g\"/\"loss\"/\"offline\") → Conditions, then set it:\n    ThrottlingURLProtocol.conditions.withLock { $0 = .init(latency: 0.4, bytesPerSecond: 30_000) }\n}\n```\n\n### Proxy-level conditioning (toxiproxy) — optional, not bundled\n\nWhen you must condition traffic the app's own `URLSession` doesn't own (third-party SDKs, raw sockets), or throttle a UI test's real backend, route it through [toxiproxy](https://github.com/Shopify/toxiproxy) — a TCP proxy whose \"toxics\" inject latency, bandwidth caps, and timeouts. **Axiom does not ship it; it is an optional dependency you install.** Skills/agents reaching for it MUST first check and, if absent, say the proxy path is unavailable and fall back to the `URLProtocol` harness above — never silently skip.\n\n```bash\nif command -v toxiproxy-server &> /dev/null && command -v toxiproxy-cli &> /dev/null; then\n  toxiproxy-server &                                              # control API on :8474\n  toxiproxy-cli create api --listen localhost:6443 --upstream api.example.com:443\n  toxiproxy-cli toxic add api -t latency   -a latency=400 -a jitter=100\n  toxiproxy-cli toxic add api -t bandwidth -a rate=30             # KB/s → low bitrate\nelse\n  echo \"toxiproxy NOT installed - proxy conditioning unavailable until you install it.\"\n  echo \"  Install: brew install toxiproxy\"\n  echo \"  Docs:    https://github.com/Shopify/toxiproxy  ·  https://formulae.brew.sh/formula/toxiproxy\"\n  echo \"  Fallback: the in-process URLProtocol harness above needs no install.\"\nfi\n```\n\n**HTTPS caveat** toxiproxy forwards raw TCP, so it throttles encrypted bytes without MITM — but the app must connect to the proxy's `host:port`, which fails default TLS validation against a real public host (cert is for `api.example.com`, you connected to `localhost`). Clean only when the app's base URL is configurable to point at the proxy (a test backend, or a test-only trust override). No sudo either way. For app-traffic-only testing, prefer the `URLProtocol` path — no proxy, no cert wrinkle.\n\n### Real-World Example: Photo Upload with Network Throttling\n\n**❌ Without Network Conditioning**:\n```swift\nfunc testPhotoUpload() {\n    app.buttons[\"Upload Photo\"].tap()\n\n    // Passes locally (fast network)\n    XCTAssertTrue(app.staticTexts[\"Upload complete\"].waitForExistence(timeout: 5))\n}\n// ✅ Passes locally, ❌ FAILS on 3G with timeout\n```\n\n**✅ With Network Conditioning**:\n```swift\nfunc testPhotoUploadOn3G() {\n    let app = XCUIApplication()\n    // Network Link Conditioner running (3G profile)\n    app.launch()\n\n    app.buttons[\"Upload Photo\"].tap()\n\n    // Increase timeout for 3G\n    XCTAssertTrue(app.staticTexts[\"Upload complete\"].waitForExistence(timeout: 30))\n\n    // Verify no crash occurred\n    XCTAssertFalse(app.alerts.element.exists, \"App should not crash on 3G\")\n}\n```\n\n**Key differences**:\n- Longer timeout (30s instead of 5s)\n- Check for crashes\n- Run on slowest expected network\n\n---\n\n## Multi-Factor Testing: Device Size + Network Speed\n\n### The Problem\n\nTests can pass on device A but fail on device B due to layout differences + network delays. **Multi-factor testing** catches these combinations.\n\n**Common failure patterns**:\n- ✅ iPhone 14 Pro (compact, fast network)\n- ❌ iPad Pro 12.9 (large, 3G network) → crashes\n- ✅ iPhone 15 (compact, LTE)\n- ❌ iPhone 12 (older GPU, 3G) → timeout\n\n### Running the same tests across devices\n\n**Device is not a test-plan setting** — you select it with `-destination` at `xcodebuild` time (or in the scheme). Run one test plan against several destinations to cover the device matrix. **Network is not a test-plan setting either** — condition it externally (NLC or `dnctl`, above) for the run.\n\nA test plan *configuration* varies launch arguments, environment variables, localization (language/region), simulated location, sanitizers, and code coverage — not device, not network.\n\n**Device matrix via destinations**:\n```bash\n# device names: xcrun simctl list devicetypes\nfor dest in \\\n  'platform=iOS Simulator,name=iPhone 16 Pro' \\\n  'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' ; do\n  xcodebuild test -scheme MyApp -testPlan UITests -destination \"$dest\"\ndone\n```\n\nPair this with NLC/`dnctl` started beforehand to add a slow-network dimension (⚠️ large device + slow network is where most failures surface).\n\n### Programmatic Device-Specific Testing\n\n```swift\nimport XCTest\nimport UIKit\n\nfinal class MultiFactorUITests: XCTestCase {\n    private let app = XCUIApplication()\n\n    private var deviceModel: String { UIDevice.current.model }\n\n    // Larger/slower devices need longer waits — scale the timeout, never sleep.\n    private var loadTimeout: TimeInterval {\n        switch deviceModel {\n        case \"iPad\" where UIScreen.main.bounds.width > 1000: return 30  // iPad Pro\n        case \"iPhone\": return 10\n        default: return 15\n        }\n    }\n\n    override func setUpWithError() throws {\n        continueAfterFailure = false\n        app.launch()\n    }\n\n    func testListLoadingAcrossDevices() {\n        app.buttons[\"Refresh\"].tap()\n\n        // Wait on a real condition with the device-scaled timeout. `count`\n        // alone is read eagerly and would race the load.\n        let firstCell = app.tables.cells.firstMatch\n        XCTAssertTrue(\n            firstCell.waitForExistence(timeout: loadTimeout),\n            \"List should load on \\(deviceModel)\"\n        )\n\n        // No crash dialog\n        XCTAssertFalse(app.alerts.element.exists)\n    }\n}\n```\n\n### Real-World Example: iPad Pro + 3G Crash\n\n**Scenario**: App works on iPhone 14, crashes on iPad Pro over 3G.\n\n**Why it crashes**:\n1. iPad Pro has larger layout (landscape)\n2. 3G network is slow (latency 100ms+)\n3. Images don't load in time, layout engine crashes\n4. Single-device testing misses this combo\n\n**Test that catches it**:\n```swift\nfunc testLargeLayoutOn3G() {\n    let app = XCUIApplication()\n    // Running with Network Link Conditioner on 3G profile\n    app.launch()\n\n    // iPad Pro: Large grid of images\n    app.buttons[\"Browse\"].tap()\n\n    // Wait longer for images on slow network\n    let firstImage = app.images[\"photoGrid-0\"]\n    XCTAssertTrue(\n        firstImage.waitForExistence(timeout: 20),\n        \"First image must load on slow network\"\n    )\n\n    // Verify grid loaded without crash\n    // matching(_:) takes an NSPredicate (matching(identifier:) takes a String)\n    let loadedCount = app.images.matching(NSPredicate(format: \"identifier BEGINSWITH 'photoGrid'\")).count\n    XCTAssertGreaterThan(loadedCount, 5, \"Multiple images should load on 3G\")\n\n    // No alerts (no crashes)\n    XCTAssertFalse(app.alerts.element.exists, \"App should not crash on large device + slow network\")\n}\n```\n\n### Running Multi-Factor Tests in CI\n\nA single `xcodebuild test` runs on **one** destination with **whatever network the host currently has**. To cover the matrix, loop destinations and condition the network around the loop:\n```yaml\n- name: Run tests across devices (3G-conditioned)\n  run: |\n    sudo dnctl pipe 1 config bw 1600Kbit/s delay 150 plr 0.01\n    printf 'dummynet-anchor \"nlc\"\\nanchor \"nlc\"\\n' | sudo pfctl -f -\n    echo 'dummynet out proto tcp from any to any pipe 1' | sudo pfctl -a nlc -f -\n    sudo pfctl -E\n    for dest in \\\n      'platform=iOS Simulator,name=iPhone 16 Pro' \\\n      'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' ; do\n      xcodebuild test -scheme MyApp -testPlan UITests -destination \"$dest\"\n    done\n    sudo pfctl -a nlc -F all && sudo pfctl -d && sudo dnctl -q flush\n```\n\n**Result**: Catch device-specific + slow-network crashes before App Store submission. Hosted CI that disallows `sudo` (e.g. Xcode Cloud) can't shape the network this way — condition on a physical device or drop the network dimension there.\n\n---\n\n## Debugging Crashes Revealed by UI Tests\n\n### Overview\n\nUI tests sometimes reveal crashes that don't happen in manual testing. **Key insight** Automated tests run faster, interact with app differently, and can expose concurrency/timing bugs.\n\n**When crashes happen**:\n- ❌ Manual testing: Can't reproduce (works when you run it)\n- ✅ UI Test: Crashes every time (automated repetition finds race condition)\n\n### Recognizing Test-Revealed Crashes\n\n**Signs in test output**:\n```\nFailing test: testPhotoUpload\nError: The app crashed while responding to a UI event\nApp died from an uncaught exception\nStack trace: [EXC_BAD_ACCESS in PhotoViewController]\n```\n\n**Video shows**: App visibly crashes (black screen, immediate termination).\n\n### Systematic Debugging Approach\n\n#### Step 1: Capture Crash Details\n\n**Enable detailed logging**:\n```swift\noverride func setUpWithError() throws {\n    let app = XCUIApplication()\n\n    // Enable all logging (configure via launchEnvironment before launch())\n    app.launchEnvironment = [\n        \"OS_ACTIVITY_MODE\": \"debug\",\n        \"DYLD_PRINT_STATISTICS\": \"1\"\n    ]\n\n    app.launch()\n}\n```\n\n#### Step 2: Reproduce Locally\n\n```swift\nfunc testReproduceCrash() {\n    let app = XCUIApplication()\n    app.launch()\n\n    // Run exact sequence that causes crash\n    app.buttons[\"Browse\"].tap()\n    app.buttons[\"Photo Album\"].tap()\n    app.buttons[\"Select All\"].tap()\n    app.buttons[\"Upload\"].tap()\n\n    // Should crash here\n    let uploadButton = app.buttons[\"Upload\"]\n    XCTAssertFalse(uploadButton.exists, \"App crashed (expected)\")\n\n    // Don't assert - just let it crash and read logs\n}\n```\n\n**Run test with Console logs visible**:\n- Xcode: View → Navigators → Show Console\n- Watch for exception messages\n\n#### Step 3: Analyze Crash Logs\n\n**Locations**:\n1. Xcode Console (real-time, less detail)\n2. `~/Library/Logs/DiagnosticReports/*.ips` (full crash reports on current macOS)\n3. Device Settings → Privacy & Security → Analytics & Improvements → Analytics Data\n\nFor parsing and symbolicating `.ips`/MetricKit/`.crash` reports, use Axiom's `xcsym` tool or the crash-analyzer agent instead of reading them by hand.\n\n**Look for**:\n- Thread that crashed\n- Exception type (EXC_BAD_ACCESS, EXC_CRASH, etc.)\n- Stack trace showing which method crashed\n\n**Example crash log**:\n```\nException Type: EXC_BAD_ACCESS (SIGSEGV)\nException Codes: KERN_INVALID_ADDRESS at 0x0000000000000000\nThread 0 Crashed:\n0  MyApp    0x0001a234 -[PhotoViewController reloadPhotos:] + 234\n1  MyApp    0x0001a123 -[PhotoViewController viewDidLoad] + 180\n```\n\n**This tells us**:\n- Crash in `PhotoViewController.reloadPhotos(_:)`\n- Likely null pointer dereference\n- Called from `viewDidLoad`\n\n#### Step 4: Connection to Swift Concurrency Issues\n\n**Most UI test crashes are concurrency bugs** (not specific to UI testing). Reference related skills:\n\n```swift\n// Common pattern: Race condition in async image loading\nclass PhotoViewController: UIViewController {\n    var photos: [Photo] = []\n\n    override func viewDidLoad() {\n        super.viewDidLoad()\n\n        // ❌ WRONG: Accessing photos array from multiple threads\n        Task {\n            let newPhotos = await fetchPhotos()\n            self.photos = newPhotos  // May crash if main thread access\n            reloadPhotos()  // ❌ Crash here\n        }\n    }\n}\n\n// ✅ CORRECT: UIViewController is already @MainActor-isolated, so a Task\n// started in viewDidLoad runs on the main actor and resumes there after the\n// await — no per-property @MainActor and no MainActor.run hop needed. The\n// original bug wasn't the assignment; it was doing UI work without that\n// guarantee.\nclass PhotoViewController: UIViewController {\n    var photos: [Photo] = []\n\n    override func viewDidLoad() {\n        super.viewDidLoad()\n\n        Task {\n            let newPhotos = await fetchPhotos()  // suspends, resumes on MainActor\n            self.photos = newPhotos\n            reloadPhotos()  // ✅ Safe — still on the main actor\n        }\n    }\n}\n```\n\n**For deep crash analysis**: See `axiom-concurrency` (swift-concurrency reference) for @MainActor patterns and `axiom-performance (skills/memory-debugging.md)` skill for thread-safety issues.\n\n#### Step 5: Add Crash-Prevention Tests\n\n**After fixing**:\n```swift\nfunc testPhotosLoadWithoutCrash() {\n    let app = XCUIApplication()\n    app.launch()\n\n    // Rapid fire interactions that previously caused crash\n    app.buttons[\"Browse\"].tap()\n    app.buttons[\"Photo Album\"].tap()\n\n    // Load should complete without crash\n    let photoGrid = app.otherElements[\"photoGrid\"]\n    XCTAssertTrue(photoGrid.waitForExistence(timeout: 10))\n\n    // No alerts (no crash dialogs)\n    XCTAssertFalse(app.alerts.element.exists)\n}\n```\n\n#### Step 6: Stress Test to Verify Fix\n\n```swift\nfunc testPhotosLoadUnderStress() {\n    let app = XCUIApplication()\n    app.launch()\n\n    // Repeat the crash-causing action multiple times\n    for iteration in 0..<10 {\n        app.buttons[\"Browse\"].tap()\n\n        // Wait for load\n        let grid = app.otherElements[\"photoGrid\"]\n        XCTAssertTrue(grid.waitForExistence(timeout: 10), \"Iteration \\(iteration)\")\n\n        // Go back\n        app.navigationBars.buttons[\"Back\"].tap()\n        app.buttons[\"Refresh\"].tap()\n    }\n\n    // Completed without crash — assert a real end state, not `true`\n    XCTAssertTrue(app.otherElements[\"photoGrid\"].exists, \"Grid should survive 10 navigation cycles\")\n    XCTAssertFalse(app.alerts.element.exists, \"No crash dialog after stress loop\")\n}\n```\n\n### Prevention Checklist\n\n#### Before releasing\n- [ ] Run UI tests on slowest network (3G)\n- [ ] Run on largest device (iPad Pro)\n- [ ] Run on oldest supported device (iPhone 12)\n- [ ] Record video of test runs (saves debugging time)\n- [ ] Check for crashes in logs\n- [ ] Run stress tests (10x repeated actions)\n- [ ] Verify UI-state mutations run on the main actor\n- [ ] Check for race conditions in async code\n\n---\n\n## Resources\n\n**WWDC**: 2025-344, 2024-10179, 2023-10269, 2023-10175, 2023-10035, 2022-110371\n\n**Docs**: /xctest, /xcuiautomation/recording-ui-automation-for-testing, /xctest/xctwaiter, /accessibility/delivering_an_exceptional_accessibility_experience, /accessibility/performing_accessibility_testing_for_your_app\n\n**Note**: This skill focuses on reliability patterns and Recording UI Automation. For TDD workflow, see superpowers:test-driven-development.\n\n---\n\n**History:** See git log for changes\n",
+      "content": "\n# UI Testing\n\n## Overview\n\nWait for conditions, not arbitrary timeouts. **Core principle** Flaky tests come from guessing how long operations take. Condition-based waiting eliminates race conditions.\n\n**NEW in WWDC 2025**: Recording UI Automation allows you to record interactions, replay across devices/languages, and review video recordings of test runs.\n\n## Example Prompts\n\nThese are real questions developers ask that this skill is designed to answer:\n\n#### 1. \"My UI tests pass locally on my Mac but fail in CI. How do I make them more reliable?\"\n→ The skill shows condition-based waiting patterns that work across devices/speeds, eliminating CI timing differences\n\n#### 2. \"My tests use sleep(2) and sleep(5) but they're still flaky. How do I replace arbitrary timeouts with real conditions?\"\n→ The skill demonstrates waitForExistence, XCTestExpectation, and polling patterns for data loads, network requests, and animations\n\n#### 3. \"I just recorded a test using Xcode 26's Recording UI Automation. How do I review the video and debug failures?\"\n→ The skill covers Video Debugging workflows to analyze recordings and find the exact step where tests fail\n\n#### 4. \"My test is failing on iPad but passing on iPhone. How do I write tests that work across all device sizes?\"\n→ The skill explains multi-factor testing strategies and device-independent predicates for robust cross-device testing\n\n#### 5. \"I want to write tests that are not flaky. What are the critical patterns I need to know?\"\n→ The skill provides condition-based waiting templates, accessibility-first patterns, and the decision tree for reliable test architecture\n\n---\n\n## Red Flags — Test Reliability Issues\n\nIf you see ANY of these, suspect timing issues:\n- Tests pass locally, fail in CI (timing differences)\n- Tests sometimes pass, sometimes fail (race conditions)\n- Tests use `sleep()` or `Thread.sleep()` (arbitrary delays)\n- Tests fail with \"UI element not found\" then pass on retry\n- Long test runs (waiting for worst-case scenarios)\n\n## Quick Decision Tree\n\n```\nTest failing?\n├─ Element not found?\n│  └─ Use waitForExistence(timeout:) not sleep()\n├─ Passes locally, fails CI?\n│  └─ Replace sleep() with condition polling\n├─ Animation causing issues?\n│  └─ Wait for animation completion, don't disable\n└─ Network request timing?\n   └─ Use XCTestExpectation or waitForExistence\n```\n\n## Core Pattern: Condition-Based Waiting\n\n**❌ WRONG (Arbitrary Timeout)**:\n```swift\nfunc testButtonAppears() {\n    app.buttons[\"Login\"].tap()\n    sleep(2)  // ❌ Guessing it takes 2 seconds\n    XCTAssertTrue(app.buttons[\"Dashboard\"].exists)\n}\n```\n\n**✅ CORRECT (Wait for Condition)**:\n```swift\nfunc testButtonAppears() {\n    app.buttons[\"Login\"].tap()\n    let dashboard = app.buttons[\"Dashboard\"]\n    XCTAssertTrue(dashboard.waitForExistence(timeout: 5))\n}\n```\n\n## Common UI Testing Patterns\n\n### Pattern 1: Waiting for Elements\n\n```swift\n// Wait for element to appear\nfunc waitForElement(_ element: XCUIElement, timeout: TimeInterval = 5) -> Bool {\n    return element.waitForExistence(timeout: timeout)\n}\n\n// Usage\nXCTAssertTrue(waitForElement(app.buttons[\"Submit\"]))\n```\n\n### Pattern 2: Waiting for Element to Disappear\n\n```swift\nfunc waitForElementToDisappear(_ element: XCUIElement, timeout: TimeInterval = 5) -> Bool {\n    let predicate = NSPredicate(format: \"exists == false\")\n    let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)\n    let result = XCTWaiter().wait(for: [expectation], timeout: timeout)\n    return result == .completed\n}\n\n// Usage\nXCTAssertTrue(waitForElementToDisappear(app.activityIndicators[\"Loading\"]))\n```\n\n### Pattern 3: Waiting for Specific State\n\n```swift\nfunc waitForButton(_ button: XCUIElement, toBeEnabled enabled: Bool, timeout: TimeInterval = 5) -> Bool {\n    let predicate = NSPredicate(format: \"isEnabled == %@\", NSNumber(value: enabled))\n    let expectation = XCTNSPredicateExpectation(predicate: predicate, object: button)\n    let result = XCTWaiter().wait(for: [expectation], timeout: timeout)\n    return result == .completed\n}\n\n// Usage\nlet submitButton = app.buttons[\"Submit\"]\nXCTAssertTrue(waitForButton(submitButton, toBeEnabled: true))\nsubmitButton.tap()\n```\n\n### Pattern 4: Accessibility Identifiers\n\n**Set in app**:\n```swift\nButton(\"Submit\") {\n    // action\n}\n.accessibilityIdentifier(\"submitButton\")\n```\n\n**Use in tests**:\n```swift\nfunc testSubmitButton() {\n    let submitButton = app.buttons[\"submitButton\"]  // Uses identifier, not label\n    XCTAssertTrue(submitButton.waitForExistence(timeout: 5))\n    submitButton.tap()\n}\n```\n\n**Why**: Accessibility identifiers don't change with localization, remain stable across UI updates.\n\n### Pattern 5: Network Request Delays\n\n```swift\nfunc testDataLoads() {\n    app.buttons[\"Refresh\"].tap()\n\n    // Wait for loading indicator to disappear\n    let loadingIndicator = app.activityIndicators[\"Loading\"]\n    XCTAssertTrue(waitForElementToDisappear(loadingIndicator, timeout: 10))\n\n    // Now verify data loaded\n    XCTAssertTrue(app.cells.count > 0)\n}\n```\n\n### Pattern 6: Animation Handling\n\n```swift\nfunc testAnimatedTransition() {\n    app.buttons[\"Next\"].tap()\n\n    // Wait for destination view to appear\n    let destinationView = app.otherElements[\"DestinationView\"]\n    XCTAssertTrue(destinationView.waitForExistence(timeout: 2))\n\n    // Do NOT add a fixed sleep to \"let the animation settle.\" XCUITest\n    // auto-waits for an element to become hittable before interacting, so the\n    // next action already waits for the right condition. If you must assert\n    // mid-transition, wait on a real post-animation element, never a delay.\n    let primaryButton = app.buttons[\"Primary\"]\n    XCTAssertTrue(primaryButton.waitForExistence(timeout: 2))\n}\n```\n\n## Testing Checklist\n\n### Before Writing Tests\n- [ ] Use accessibility identifiers for all interactive elements\n- [ ] Avoid hardcoded labels (use identifiers instead)\n- [ ] Plan for network delays and animations\n- [ ] Choose appropriate timeouts (2s UI, 10s network)\n\n### When Writing Tests\n- [ ] Use `waitForExistence()` not `sleep()`\n- [ ] Use predicates for complex conditions\n- [ ] Test both success and failure paths\n- [ ] Make tests independent (can run in any order)\n\n### After Writing Tests\n- [ ] Run tests 10 times locally (catch flakiness)\n- [ ] Run tests on slowest supported device\n- [ ] Run tests in CI environment\n- [ ] Check test duration (if >30s per test, optimize)\n\n## Xcode UI Testing Tips\n\n### Launch Arguments for Testing\n\n```swift\nfunc testExample() {\n    let app = XCUIApplication()\n    app.launchArguments = [\"UI-Testing\"]\n    app.launch()\n}\n```\n\nIn app code:\n```swift\nif ProcessInfo.processInfo.arguments.contains(\"UI-Testing\") {\n    // Use mock data, skip onboarding, etc.\n}\n```\n\n### Faster Test Execution\n\n```swift\noverride func setUpWithError() throws {\n    continueAfterFailure = false  // Stop on first failure\n}\n```\n\n### Debugging Failing Tests\n\n```swift\nfunc testExample() {\n    // Take screenshot on failure\n    addUIInterruptionMonitor(withDescription: \"Alert\") { alert in\n        alert.buttons[\"OK\"].tap()\n        return true\n    }\n\n    // Print element hierarchy\n    print(app.debugDescription)\n}\n```\n\n## Common Mistakes\n\n### ❌ Using sleep() for Everything\n```swift\nsleep(5)  // ❌ Wastes time if operation completes in 1s\n```\n\n### ❌ Not Handling Animations\n```swift\napp.buttons[\"Next\"].tap()\nXCTAssertTrue(app.buttons[\"Back\"].exists)  // ❌ May fail during animation\n```\n\n### ❌ Hardcoded Text Labels\n```swift\napp.buttons[\"Submit\"].tap()  // ❌ Breaks with localization\n```\n\n### ❌ Tests Depend on Each Other\n```swift\n// ❌ Test 2 assumes Test 1 ran first\nfunc test1_Login() { /* ... */ }\nfunc test2_ViewDashboard() { /* assumes logged in */ }\n```\n\n### ❌ No Timeout Strategy\n```swift\nelement.waitForExistence(timeout: 100)  // ❌ Too long\nelement.waitForExistence(timeout: 0.1)  // ❌ Too short\n```\n\n**Use appropriate timeouts**:\n- UI animations: 2-3 seconds\n- Network requests: 10 seconds\n- Complex operations: 30 seconds max\n\n## Real-World Impact\n\n**Before** (using sleep()):\n- Test suite: 15 minutes (waiting for worst-case)\n- Flaky tests: 20% failure rate\n- CI failures: 50% require retry\n\n**After** (condition-based waiting):\n- Test suite: 5 minutes (waits only as needed)\n- Flaky tests: <2% failure rate\n- CI failures: <5% require retry\n\n**Key insight** Tests finish faster AND are more reliable when waiting for actual conditions instead of guessing times.\n\n---\n\n## Recording UI Automation\n\n### Overview\n\n**NEW in Xcode 26**: Record, replay, and review UI automation tests with video recordings.\n\n**Three Phases**:\n1. **Record** — Capture interactions (taps, swipes, hardware button presses) as Swift code\n2. **Replay** — Run across multiple devices, languages, regions, orientations\n3. **Review** — Watch video recordings, analyze failures, view UI element overlays\n\n**Supported Platforms**: iOS, iPadOS, macOS, watchOS, tvOS, visionOS (Designed for iPad)\n\n### How UI Automation Works\n\n**Key Principles**:\n- UI automation interacts with your app **as a person does** using gestures and hardware events\n- Runs **completely independently** from your app (app models/data not directly accessible)\n- Uses **accessibility framework** as underlying technology\n- Tells OS which gestures to perform, then waits for completion **synchronously** one at a time\n\n**Actions include**:\n- Launching your app\n- Interacting with buttons and navigation\n- Setting system state (Dark Mode, localization, etc.)\n- Setting simulated location\n\n### Accessibility is the Foundation\n\n**Critical Understanding**: Accessibility provides information directly to UI automation.\n\nWhat accessibility sees:\n- Element types (button, text, image, etc.)\n- Labels (visible text)\n- Values (current state for checkboxes, etc.)\n- Frames (element positions)\n- **Identifiers** (accessibility identifiers — NOT localized)\n\n**Best Practice**: Great accessibility experience = great UI automation experience.\n\n### Preparing Your App for Recording\n\n#### Step 1: Add Accessibility Identifiers\n\n**SwiftUI**:\n```swift\nButton(\"Submit\") {\n    // action\n}\n.accessibilityIdentifier(\"submitButton\")\n\n// Make identifiers specific to instance\nList(landmarks) { landmark in\n    LandmarkRow(landmark)\n        .accessibilityIdentifier(\"landmark-\\(landmark.id)\")\n}\n```\n\n**UIKit**:\n```swift\nlet button = UIButton()\nbutton.accessibilityIdentifier = \"submitButton\"\n\n// Use index for table cells\ncell.accessibilityIdentifier = \"cell-\\(indexPath.row)\"\n```\n\n**Good identifiers are**:\n- ✅ Unique within entire app\n- ✅ Descriptive of element contents\n- ✅ Static (don't react to content changes)\n- ✅ Not localized (same across languages)\n\n**Why identifiers matter**:\n- Titles/descriptions may change, identifiers remain stable\n- Work across localized strings\n- Uniquely identify elements with dynamic content\n\n**Pro Tip**: Use Xcode coding assistant to add identifiers:\n```\nPrompt: \"Add accessibility identifiers to the relevant parts of this view\"\n```\n\n#### Step 2: Review Accessibility with Accessibility Inspector\n\n**Launch Accessibility Inspector**:\n- Xcode menu → Open Developer Tool → Accessibility Inspector\n- Or: Launch from Spotlight\n\n**Features**:\n1. **Element Inspector** — List accessibility values for any view\n2. **Property details** — Click property name for documentation\n3. **Platform support** — Works on all Apple platforms\n\n**What to check**:\n- Elements have labels\n- Interactive elements have types (button, not just text)\n- Values set for stateful elements (checkboxes, toggles)\n- Identifiers set for elements with dynamic/localized content\n\n#### Step 3: Add UI Testing Target\n\n1. Open project settings in Xcode\n2. Click \"+\" below targets list\n3. Select **UI Testing Bundle**\n4. Click Finish\n\n**Result**: New UI test folder with template tests added to project.\n\n### Recording Interactions\n\n#### Starting a Recording (Xcode 26)\n\n1. Open UI test source file\n2. **Popover appears** explaining how to start recording (first time only)\n3. Click **\"Start Recording\"** button in editor gutter\n4. Xcode builds and launches app in Simulator/device\n\n**During Recording**:\n- Interact with app normally (taps, swipes, text entry, etc.)\n- Code representing interactions appears in source editor in real-time\n- Recording updates as you type (e.g., text field entries)\n\n**Stopping Recording**:\n- Click **\"Stop Run\"** button in Xcode\n\n#### Example Recording Session\n\n```swift\nfunc testCreateAustralianCollection() {\n    let app = XCUIApplication()\n    app.launch()\n\n    // Tap \"Collections\" tab (recorded automatically)\n    app.tabBars.buttons[\"Collections\"].tap()\n\n    // Tap \"+\" to add new collection\n    app.navigationBars.buttons[\"Add\"].tap()\n\n    // Tap \"Edit\" button\n    app.buttons[\"Edit\"].tap()\n\n    // Type collection name\n    app.textFields.firstMatch.tap()\n    app.textFields.firstMatch.typeText(\"Max's Australian Adventure\")\n\n    // Tap \"Edit Landmarks\"\n    app.buttons[\"Edit Landmarks\"].tap()\n\n    // Add landmarks\n    app.tables.cells.containing(.staticText, identifier:\"Great Barrier Reef\").buttons[\"Add\"].tap()\n    app.tables.cells.containing(.staticText, identifier:\"Uluru\").buttons[\"Add\"].tap()\n\n    // Tap checkmark to save\n    app.navigationBars.buttons[\"Done\"].tap()\n}\n```\n\n#### Reviewing Recorded Code\n\nAfter recording, **review and adjust queries**:\n\n**Multiple Options**: Each line has dropdown showing alternative ways to address element.\n\n**Selection Recommendations**:\n1. **For localized strings** (text, button labels): Choose accessibility identifier if available\n2. **For deeply nested views**: Choose shortest query (stays resilient as app changes)\n3. **For dynamic content** (timestamps, temperature): Use generic query or identifier\n\n**Example**:\n```swift\n// Recorded options for text field:\napp.textFields[\"Collection Name\"]              // ❌ Breaks if label localizes\napp.textFields[\"collectionNameField\"]          // ✅ Uses identifier\napp.textFields.element(boundBy: 0)             // ✅ Position-based\napp.textFields.firstMatch                      // ✅ Generic, shortest\n```\n\n**Choose shortest, most stable query** for your needs.\n\n### Adding Validations\n\nAfter recording, **add assertions** to verify expected behavior:\n\n#### Wait for Existence\n\n```swift\n// Validate collection created\nlet collection = app.buttons[\"Max's Australian Adventure\"]\nXCTAssertTrue(collection.waitForExistence(timeout: 5))\n```\n\n#### Wait for Property Changes\n\n```swift\n// Wait for button to become enabled (first arg is a key path, not a literal)\nlet submitButton = app.buttons[\"Submit\"]\nXCTAssertTrue(submitButton.wait(for: \\.isEnabled, toEqual: true, timeout: 5))\n```\n\n#### Combine with XCTAssert\n\n```swift\n// Fail test if element doesn't appear\nlet landmark = app.staticTexts[\"Great Barrier Reef\"]\nXCTAssertTrue(landmark.waitForExistence(timeout: 5), \"Landmark should appear in collection\")\n```\n\n### Advanced Automation APIs\n\n#### Setup Device State\n\n```swift\nimport XCTest\nimport CoreLocation  // XCUILocation wraps CLLocation\n\nfinal class DeviceStateUITests: XCTestCase {\n    private let app = XCUIApplication()  // instance property, shared across tests\n\n    override func setUpWithError() throws {\n        // Device orientation\n        XCUIDevice.shared.orientation = .landscapeLeft\n\n        // Force appearance mode (UIKit reads this from launch arguments)\n        app.launchArguments += [\"-UIUserInterfaceStyle\", \"Dark\"]\n\n        app.launch()\n\n        // Simulate location — a settable property on the running device,\n        // NOT a launch argument. There is no `-SimulatedLocation` argument.\n        XCUIDevice.shared.location = XCUILocation(\n            location: CLLocation(latitude: 37.7749, longitude: -122.4194)\n        )\n    }\n}\n```\n\n#### Launch Arguments & Environment\n\n```swift\nfunc testWithMockData() {\n    let app = XCUIApplication()\n\n    // Pass arguments to app\n    app.launchArguments = [\"-UI-Testing\", \"-UseMockData\"]\n\n    // Set environment variables\n    app.launchEnvironment = [\"API_URL\": \"https://mock.api.com\"]\n\n    app.launch()\n}\n```\n\nIn app code:\n```swift\nif ProcessInfo.processInfo.arguments.contains(\"-UI-Testing\") {\n    // Use mock data, skip onboarding\n}\n```\n\n#### Custom URL Schemes\n\n```swift\n// Launch the target app to a specific URL (instance method, iOS 16.4+)\nlet app = XCUIApplication()\napp.openURL(URL(string: \"myapp://landmark/123\")!)\n\n// Open a URL with the system's default app, via XCUISystem on XCUIDevice\nXCUIDevice.shared.system.openURL(URL(string: \"https://example.com\")!)\n```\n\n#### Accessibility Audits in Tests\n\n```swift\nfunc testAccessibility() throws {\n    let app = XCUIApplication()\n    app.launch()\n\n    // Perform accessibility audit\n    try app.performAccessibilityAudit()\n}\n```\n\n### Test Plans for Multiple Configurations\n\n**Test Plans** let you:\n- Include/exclude individual tests\n- Set system settings (language, region, appearance)\n- Configure test properties (timeouts, repetitions, parallelization)\n- Associate with schemes for specific build settings\n\n#### Creating Test Plan\n\n1. Create new or use existing test plan\n2. Add/remove tests on first screen\n3. Switch to **Configurations** tab\n\n#### Adding Multiple Languages\n\n```\nConfigurations:\n├─ English\n├─ German (longer strings)\n├─ Arabic (right-to-left)\n└─ Hebrew (right-to-left)\n```\n\n**Each locale** = separate configuration in test plan.\n\n**Settings**:\n- Focused for specific locale\n- Shared across all configurations\n\n#### Video & Screenshot Capture\n\n**In Configurations tab**:\n- **Capture screenshots**: On/Off\n- **Capture video**: On/Off\n- **Keep media**: \"Only failures\" or \"On, and keep all\"\n\n**Defaults**: Videos/screenshots kept only for failing runs (for review).\n\n**\"On, and keep all\" use cases**:\n- Documentation\n- Tutorials\n- Marketing materials\n\n### Replaying Tests in Xcode Cloud\n\n**Xcode Cloud** = built-in service for:\n- Building app\n- Running tests\n- Uploading to App Store\n- All in cloud without using team devices\n\n**Workflow configuration**:\n- Same test plan used locally\n- Runs on multiple devices and configurations\n- Videos/results available in App Store Connect\n\n**Viewing Results**:\n- Xcode: Xcode Cloud section\n- App Store Connect: Xcode Cloud section\n- See build info, logs, failure descriptions, video recordings\n\n**Team Access**: Entire team can see run history and download results/videos.\n\n### Reviewing Test Results with Videos\n\n#### Accessing Test Report\n\n1. Click **Test** button in Xcode\n2. Double-click failing run to see video + description\n\n**Features**:\n- **Runs dropdown** — Switch between video recordings of different configurations (languages, devices)\n- **Save video** — Secondary click → Save\n- **Play/pause** — Video playback with UI interaction overlays\n- **Timeline dots** — UI interactions shown as dots on timeline\n- **Jump to failure** — Click failure diamond on timeline\n\n#### UI Element Overlay at Failure\n\n**At moment of failure**:\n- Click timeline failure point\n- **Overlay shows all UI elements** present on screen\n- Click any element to see code recommendations for addressing it\n- **Show All** — See alternative examples\n\n**Workflow**:\n1. Identify what was actually present (vs what test expected)\n2. Click element to get query code\n3. Secondary click → Copy code\n4. **View Source** → Go directly to test\n5. Paste corrected code\n\n**Example**:\n```swift\n// Test expected:\nlet button = app.buttons[\"Max's Australian Adventure\"]\n\n// But overlay shows it's actually text, not button:\nlet text = app.staticTexts[\"Max's Australian Adventure\"] // ✅ Correct\n```\n\n#### Running Test in Different Language\n\nClick test diamond → Select configuration (e.g., Arabic) → Watch automation run in right-to-left layout.\n\n**Validates**: Same automation works across languages/layouts.\n\n### Recording UI Automation Checklist\n\n#### Before Recording\n- [ ] Add accessibility identifiers to interactive elements\n- [ ] Review app with Accessibility Inspector\n- [ ] Add UI Testing Bundle target to project\n- [ ] Plan workflow to record (user journey)\n\n#### During Recording\n- [ ] Interact naturally with app\n- [ ] Record complete user journeys (not individual taps)\n- [ ] Check code generates as you interact\n- [ ] Stop recording when workflow complete\n\n#### After Recording\n- [ ] Review recorded code options (dropdown on each line)\n- [ ] Choose stable queries (identifiers > labels)\n- [ ] Add validations (waitForExistence, XCTAssert)\n- [ ] Add setup code (device state, launch arguments)\n- [ ] Run test to verify it passes\n\n#### Test Plan Configuration\n- [ ] Create/update test plan\n- [ ] Add multiple language configurations\n- [ ] Include right-to-left languages (Arabic, Hebrew)\n- [ ] Configure video/screenshot capture settings\n- [ ] Set appropriate timeouts for network tests\n\n#### Running & Reviewing\n- [ ] Run test locally across configurations\n- [ ] Review video recordings for failures\n- [ ] Use UI element overlay to debug failures\n- [ ] Run in Xcode Cloud for team visibility\n- [ ] Download and share videos if needed\n\n## Network Conditioning in Tests\n\n### Overview\n\nUI tests can pass on fast networks but fail on 3G/LTE. **Network Link Conditioner** simulates real-world network conditions to catch timing-sensitive crashes.\n\n**Critical scenarios**:\n- ❌ iPad Pro over Wi-Fi (fast) → pass\n- ❌ iPad Pro over 3G (slow) → crash\n- ✅ Test both to catch device-specific failures\n\n### How conditioning actually works\n\nNetwork Link Conditioner (NLC) is a **host-level macOS System Settings pane**. There is **no `XCUIApplication` launch argument, launch environment, or `simctl`/`devicectl` subcommand** that selects a profile — you enable conditioning *around* the test run, not from inside the test. Treat any `launchArguments`/`launchEnvironment` \"network profile\" switch as fiction; it is silently ignored.\n\n**Critical caveat** NLC throttles the **entire Mac**. The Simulator shares the host network stack, so it inherits whatever NLC is doing — but conditioning cannot be scoped to one simulator or one app. SSH, package fetches, and everything else are throttled too while it runs.\n\n```dot\ndigraph nlc {\n  \"Where do tests run?\" [shape=diamond];\n  \"Where do tests run?\" -> \"NLC pane or dnctl/pfctl\" [label=\"simulator (whole Mac)\"];\n  \"Where do tests run?\" -> \"Settings > Developer > NLC\" [label=\"physical device\"];\n  \"Where do tests run?\" -> \"RocketSim Network Speed Control\" [label=\"need sim-only isolation\"];\n}\n```\n\n**1. NLC pane (manual; simulator + host)** — install via *Xcode → Open Developer Tool → More Developer Tools* → download \"Additional Tools for Xcode\" → install the package from the **Hardware** folder. Then *System Settings → Network Link Conditioner*, pick a profile (3G, Edge, LTE, DSL, 100% Loss, High Latency DNS, Very Bad Network), Start, run tests, Stop.\n\n**2. `dnctl`/`pfctl` (scriptable; CI — what NLC drives under the hood)** — NLC is a GUI over BSD `dummynet`. For headless CI, drive it directly (needs `sudo`; conditions the whole host, same caveat):\n```bash\n# 3G-like: 1.6 Mbit/s, 150 ms latency, 1% packet loss\nsudo dnctl pipe 1 config bw 1600Kbit/s delay 150 plr 0.01\nprintf 'dummynet-anchor \"nlc\"\\nanchor \"nlc\"\\n' | sudo pfctl -f -\necho 'dummynet out proto tcp from any to any pipe 1' | sudo pfctl -a nlc -f -\nsudo pfctl -E\n\nxcodebuild test -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 16 Pro'\n\n# Teardown\nsudo pfctl -a nlc -F all && sudo pfctl -d && sudo dnctl -q flush\n```\n`pfctl -f -` replaces the **active** pf ruleset — fine on an ephemeral CI runner, but on a dev Mac that already runs pf, back up `/etc/pf.conf` first (and restore with `sudo pfctl -f /etc/pf.conf`).\n\n**3. Physical device** — *Settings → Developer → Network Link Conditioner* (the Developer menu appears once the device has connected to Xcode). Built in, no install, and it conditions only that device.\n\n**4. Simulator-only isolation** — to throttle just the Simulator without touching the rest of the Mac, RocketSim's Network Speed Control (third-party) scopes throttling to the Simulator app.\n\nBecause conditioning is external, the **test code itself stays normal** — it just needs realistic timeouts for the slow profile.\n\n### No-sudo, automatable conditioning (app-layer `URLProtocol`)\n\nMethods 1–4 condition the network *outside* the app (host kernel or a GUI). For **automated / CI / agent-driven** testing with **no sudo and no GUI**, condition *inside* the app: register a custom `URLProtocol` on the `URLSession` that returns a canned response with injected latency (optional jitter), a byte-rate cap (low bitrate), and deterministic or probabilistic failures.\n\nTrade-off: app-layer sees only this app's `URLSession` traffic (not third-party SDKs or raw sockets) and needs a test hook — but no sudo, no host change, and deterministic by default (`jitter`/`failureRate` opt into controlled randomness). **It's the right default for unit/integration tests.**\n\nIt models *application-observable* network behavior (how fast bytes arrive, whether a request fails) — not transport-layer packet loss, jitter shape, or retransmit dynamics, which sit below `URLProtocol`. For true packet-level fidelity, use the OS-level (`dnctl`) or toxiproxy paths. Mocker (WeTransfer) and OHHTTPStubs wrap this if you'd rather not hand-roll it.\n\n```swift\nimport Foundation\nimport Synchronization\n\n/// Returns a canned response with injected conditions — latency (+ jitter), a\n/// byte-rate cap (low bitrate), and hard or probabilistic failures. No sudo,\n/// in-process; deterministic unless jitter/failureRate are set.\nfinal class ThrottlingURLProtocol: URLProtocol {\n    struct Conditions: Sendable {\n        var latency: TimeInterval = 0       // seconds before first byte\n        var jitter: TimeInterval = 0        // ± random seconds added to latency\n        var bytesPerSecond: Int? = nil      // nil = unlimited (throughput cap)\n        var failure: URLError.Code? = nil   // failure code (default .networkConnectionLost when only a rate is set)\n        var failureRate: Double = 0         // 0...1 chance of failing this request; a failure code alone = always fail\n        var body = Data()                   // canned response body (a whole, zero-based Data)\n        var statusCode = 200\n    }\n    // Set by the test before launch. startLoading runs off the main thread\n    // (an observed URLProtocol contract), so a lock keeps this Sendable-clean.\n    static let conditions = Mutex(Conditions())\n\n    override class func canInit(with request: URLRequest) -> Bool { true }\n    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }\n    override func stopLoading() {}\n\n    override func startLoading() {\n        guard let url = request.url else {\n            client?.urlProtocol(self, didFailWithError: URLError(.badURL)); return\n        }\n        let c = Self.conditions.withLock { $0 }\n\n        let delay = c.latency + (c.jitter > 0 ? Double.random(in: -c.jitter...c.jitter) : 0)\n        if delay > 0 { Thread.sleep(forTimeInterval: delay) }   // off-main loading thread\n\n        // A failure code alone = always fail; a failureRate rolls per request (flaky).\n        let rate = c.failureRate > 0 ? c.failureRate : (c.failure != nil ? 1.0 : 0.0)\n        if rate > 0, Double.random(in: 0..<1) < rate {\n            client?.urlProtocol(self, didFailWithError: URLError(c.failure ?? .networkConnectionLost)); return\n        }\n\n        let response = HTTPURLResponse(url: url, statusCode: c.statusCode,\n                                       httpVersion: \"HTTP/1.1\", headerFields: nil)!\n        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)\n\n        if let rate = c.bytesPerSecond, rate > 0 {        // drip to simulate low bitrate\n            let chunk = max(rate / 10, 1)\n            var offset = 0\n            while offset < c.body.count {\n                let end = min(offset + chunk, c.body.count)\n                client?.urlProtocol(self, didLoad: Data(c.body[offset..<end]))\n                Thread.sleep(forTimeInterval: Double(end - offset) / Double(rate))\n                offset = end\n            }\n        } else {\n            client?.urlProtocol(self, didLoad: c.body)\n        }\n        client?.urlProtocolDidFinishLoading(self)\n    }\n}\n```\n\nNamed profiles (NLC quotes bits/s; this harness is bytes/s, so ÷8):\n```swift\nextension ThrottlingURLProtocol.Conditions {\n    static let edge    = Self(latency: 0.4, jitter: 0.1,  bytesPerSecond:    30_000)  // ~240 kbps\n    static let threeG  = Self(latency: 0.1, jitter: 0.05, bytesPerSecond:   200_000)  // ~1.6 Mbps\n    static let lte     = Self(latency: 0.05, bytesPerSecond: 6_250_000)               // ~50 Mbps\n    static let flaky   = Self(failureRate: 0.3)                                       // 30% of requests drop\n    static let offline = Self(failure: .notConnectedToInternet)\n}\n```\n\n**Unit / integration tests** — inject directly, no app hook:\n```swift\nlet config = URLSessionConfiguration.ephemeral\nconfig.protocolClasses = [ThrottlingURLProtocol.self]\nThrottlingURLProtocol.conditions.withLock {\n    $0 = .init(latency: 0.8, bytesPerSecond: 20_000, body: Data(#\"{\"ok\":true}\"#.utf8))\n}\nlet session = URLSession(configuration: config)   // inject into code under test\n```\n\n**UI tests** — the harness lives in the app process, so gate it behind a launch argument the app reads at startup (works when UI tests stub the backend for determinism). To throttle a UI test's *real* backend traffic instead, use the OS-level paths (1–2) or the proxy below.\n```swift\napp.launchArguments += [\"-NetworkProfile\", \"edge\"]; app.launch()   // in the test\n\n// app startup, test builds only:\nlet args = ProcessInfo.processInfo.arguments\nif let i = args.firstIndex(of: \"-NetworkProfile\"), i + 1 < args.count {\n    URLProtocol.registerClass(ThrottlingURLProtocol.self)\n    // map args[i+1] (\"edge\"/\"3g\"/\"loss\"/\"offline\") → Conditions, then set it:\n    ThrottlingURLProtocol.conditions.withLock { $0 = .init(latency: 0.4, bytesPerSecond: 30_000) }\n}\n```\n\n### Proxy-level conditioning (toxiproxy) — optional, not bundled\n\nWhen you must condition traffic the app's own `URLSession` doesn't own (third-party SDKs, raw sockets), or throttle a UI test's real backend, route it through [toxiproxy](https://github.com/Shopify/toxiproxy) — a TCP proxy whose \"toxics\" inject latency, bandwidth caps, and timeouts. **Axiom does not ship it; it is an optional dependency you install.** Skills/agents reaching for it MUST first check and, if absent, say the proxy path is unavailable and fall back to the `URLProtocol` harness above — never silently skip.\n\n```bash\nif command -v toxiproxy-server &> /dev/null && command -v toxiproxy-cli &> /dev/null; then\n  toxiproxy-server &                                              # control API on :8474\n  toxiproxy-cli create api --listen localhost:6443 --upstream api.example.com:443\n  toxiproxy-cli toxic add api -t latency   -a latency=400 -a jitter=100\n  toxiproxy-cli toxic add api -t bandwidth -a rate=30             # KB/s → low bitrate\nelse\n  echo \"toxiproxy NOT installed - proxy conditioning unavailable until you install it.\"\n  echo \"  Install: brew install toxiproxy\"\n  echo \"  Docs:    https://github.com/Shopify/toxiproxy  ·  https://formulae.brew.sh/formula/toxiproxy\"\n  echo \"  Fallback: the in-process URLProtocol harness above needs no install.\"\nfi\n```\n\n**HTTPS caveat** toxiproxy forwards raw TCP, so it throttles encrypted bytes without MITM — but the app must connect to the proxy's `host:port`, which fails default TLS validation against a real public host (cert is for `api.example.com`, you connected to `localhost`). Clean only when the app's base URL is configurable to point at the proxy (a test backend, or a test-only trust override). No sudo either way. For app-traffic-only testing, prefer the `URLProtocol` path — no proxy, no cert wrinkle.\n\n### Real-World Example: Photo Upload with Network Throttling\n\n**❌ Without Network Conditioning**:\n```swift\nfunc testPhotoUpload() {\n    app.buttons[\"Upload Photo\"].tap()\n\n    // Passes locally (fast network)\n    XCTAssertTrue(app.staticTexts[\"Upload complete\"].waitForExistence(timeout: 5))\n}\n// ✅ Passes locally, ❌ FAILS on 3G with timeout\n```\n\n**✅ With Network Conditioning**:\n```swift\nfunc testPhotoUploadOn3G() {\n    let app = XCUIApplication()\n    // Network Link Conditioner running (3G profile)\n    app.launch()\n\n    app.buttons[\"Upload Photo\"].tap()\n\n    // Increase timeout for 3G\n    XCTAssertTrue(app.staticTexts[\"Upload complete\"].waitForExistence(timeout: 30))\n\n    // Verify no crash occurred\n    XCTAssertFalse(app.alerts.element.exists, \"App should not crash on 3G\")\n}\n```\n\n**Key differences**:\n- Longer timeout (30s instead of 5s)\n- Check for crashes\n- Run on slowest expected network\n\n---\n\n## Multi-Factor Testing: Device Size + Network Speed\n\n### The Problem\n\nTests can pass on device A but fail on device B due to layout differences + network delays. **Multi-factor testing** catches these combinations.\n\n**Common failure patterns**:\n- ✅ iPhone 14 Pro (compact, fast network)\n- ❌ iPad Pro 12.9 (large, 3G network) → crashes\n- ✅ iPhone 15 (compact, LTE)\n- ❌ iPhone 12 (older GPU, 3G) → timeout\n\n### Running the same tests across devices\n\n**Device is not a test-plan setting** — you select it with `-destination` at `xcodebuild` time (or in the scheme). Run one test plan against several destinations to cover the device matrix. **Network is not a test-plan setting either** — condition it externally (NLC or `dnctl`, above) for the run.\n\nA test plan *configuration* varies launch arguments, environment variables, localization (language/region), simulated location, sanitizers, and code coverage — not device, not network.\n\n**Device matrix via destinations**:\n```bash\n# device names: xcrun simctl list devicetypes\nfor dest in \\\n  'platform=iOS Simulator,name=iPhone 16 Pro' \\\n  'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' ; do\n  xcodebuild test -scheme MyApp -testPlan UITests -destination \"$dest\"\ndone\n```\n\nPair this with NLC/`dnctl` started beforehand to add a slow-network dimension (⚠️ large device + slow network is where most failures surface).\n\n### Programmatic Device-Specific Testing\n\n```swift\nimport XCTest\nimport UIKit\n\nfinal class MultiFactorUITests: XCTestCase {\n    private let app = XCUIApplication()\n\n    private var deviceModel: String { UIDevice.current.model }\n\n    // Larger/slower devices need longer waits — scale the timeout, never sleep.\n    private var loadTimeout: TimeInterval {\n        switch deviceModel {\n        case \"iPad\" where UIScreen.main.bounds.width > 1000: return 30  // iPad Pro\n        case \"iPhone\": return 10\n        default: return 15\n        }\n    }\n\n    override func setUpWithError() throws {\n        continueAfterFailure = false\n        app.launch()\n    }\n\n    func testListLoadingAcrossDevices() {\n        app.buttons[\"Refresh\"].tap()\n\n        // Wait on a real condition with the device-scaled timeout. `count`\n        // alone is read eagerly and would race the load.\n        let firstCell = app.tables.cells.firstMatch\n        XCTAssertTrue(\n            firstCell.waitForExistence(timeout: loadTimeout),\n            \"List should load on \\(deviceModel)\"\n        )\n\n        // No crash dialog\n        XCTAssertFalse(app.alerts.element.exists)\n    }\n}\n```\n\n### Real-World Example: iPad Pro + 3G Crash\n\n**Scenario**: App works on iPhone 14, crashes on iPad Pro over 3G.\n\n**Why it crashes**:\n1. iPad Pro has larger layout (landscape)\n2. 3G network is slow (latency 100ms+)\n3. Images don't load in time, layout engine crashes\n4. Single-device testing misses this combo\n\n**Test that catches it**:\n```swift\nfunc testLargeLayoutOn3G() {\n    let app = XCUIApplication()\n    // Running with Network Link Conditioner on 3G profile\n    app.launch()\n\n    // iPad Pro: Large grid of images\n    app.buttons[\"Browse\"].tap()\n\n    // Wait longer for images on slow network\n    let firstImage = app.images[\"photoGrid-0\"]\n    XCTAssertTrue(\n        firstImage.waitForExistence(timeout: 20),\n        \"First image must load on slow network\"\n    )\n\n    // Verify grid loaded without crash\n    // matching(_:) takes an NSPredicate (matching(identifier:) takes a String)\n    let loadedCount = app.images.matching(NSPredicate(format: \"identifier BEGINSWITH 'photoGrid'\")).count\n    XCTAssertGreaterThan(loadedCount, 5, \"Multiple images should load on 3G\")\n\n    // No alerts (no crashes)\n    XCTAssertFalse(app.alerts.element.exists, \"App should not crash on large device + slow network\")\n}\n```\n\n### Running Multi-Factor Tests in CI\n\nA single `xcodebuild test` runs on **one** destination with **whatever network the host currently has**. To cover the matrix, loop destinations and condition the network around the loop:\n```yaml\n- name: Run tests across devices (3G-conditioned)\n  run: |\n    sudo dnctl pipe 1 config bw 1600Kbit/s delay 150 plr 0.01\n    printf 'dummynet-anchor \"nlc\"\\nanchor \"nlc\"\\n' | sudo pfctl -f -\n    echo 'dummynet out proto tcp from any to any pipe 1' | sudo pfctl -a nlc -f -\n    sudo pfctl -E\n    for dest in \\\n      'platform=iOS Simulator,name=iPhone 16 Pro' \\\n      'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' ; do\n      xcodebuild test -scheme MyApp -testPlan UITests -destination \"$dest\"\n    done\n    sudo pfctl -a nlc -F all && sudo pfctl -d && sudo dnctl -q flush\n```\n\n**Result**: Catch device-specific + slow-network crashes before App Store submission. Hosted CI that disallows `sudo` (e.g. Xcode Cloud) can't shape the network this way — condition on a physical device or drop the network dimension there.\n\n---\n\n## Debugging Crashes Revealed by UI Tests\n\n### Overview\n\nUI tests sometimes reveal crashes that don't happen in manual testing. **Key insight** Automated tests run faster, interact with app differently, and can expose concurrency/timing bugs.\n\n**When crashes happen**:\n- ❌ Manual testing: Can't reproduce (works when you run it)\n- ✅ UI Test: Crashes every time (automated repetition finds race condition)\n\n### Recognizing Test-Revealed Crashes\n\n**Signs in test output**:\n```\nFailing test: testPhotoUpload\nError: The app crashed while responding to a UI event\nApp died from an uncaught exception\nStack trace: [EXC_BAD_ACCESS in PhotoViewController]\n```\n\n**Video shows**: App visibly crashes (black screen, immediate termination).\n\n### Systematic Debugging Approach\n\n#### Step 1: Capture Crash Details\n\n**Enable detailed logging**:\n```swift\noverride func setUpWithError() throws {\n    let app = XCUIApplication()\n\n    // Enable all logging (configure via launchEnvironment before launch())\n    app.launchEnvironment = [\n        \"OS_ACTIVITY_MODE\": \"debug\",\n        \"DYLD_PRINT_STATISTICS\": \"1\"\n    ]\n\n    app.launch()\n}\n```\n\n#### Step 2: Reproduce Locally\n\n```swift\nfunc testReproduceCrash() {\n    let app = XCUIApplication()\n    app.launch()\n\n    // Run exact sequence that causes crash\n    app.buttons[\"Browse\"].tap()\n    app.buttons[\"Photo Album\"].tap()\n    app.buttons[\"Select All\"].tap()\n    app.buttons[\"Upload\"].tap()\n\n    // Should crash here\n    let uploadButton = app.buttons[\"Upload\"]\n    XCTAssertFalse(uploadButton.exists, \"App crashed (expected)\")\n\n    // Don't assert - just let it crash and read logs\n}\n```\n\n**Run test with Console logs visible**:\n- Xcode: View → Navigators → Show Console\n- Watch for exception messages\n\n#### Step 3: Analyze Crash Logs\n\n**Locations**:\n1. Xcode Console (real-time, less detail)\n2. `~/Library/Logs/DiagnosticReports/*.ips` (full crash reports on current macOS)\n3. Device Settings → Privacy & Security → Analytics & Improvements → Analytics Data\n\nFor parsing and symbolicating `.ips`/MetricKit/`.crash` reports, use Axiom's `xcsym` tool or the crash-analyzer agent instead of reading them by hand.\n\n**Look for**:\n- Thread that crashed\n- Exception type (EXC_BAD_ACCESS, EXC_CRASH, etc.)\n- Stack trace showing which method crashed\n\n**Example crash log**:\n```\nException Type: EXC_BAD_ACCESS (SIGSEGV)\nException Codes: KERN_INVALID_ADDRESS at 0x0000000000000000\nThread 0 Crashed:\n0  MyApp    0x0001a234 -[PhotoViewController reloadPhotos:] + 234\n1  MyApp    0x0001a123 -[PhotoViewController viewDidLoad] + 180\n```\n\n**This tells us**:\n- Crash in `PhotoViewController.reloadPhotos(_:)`\n- Likely null pointer dereference\n- Called from `viewDidLoad`\n\n#### Step 4: Connection to Swift Concurrency Issues\n\n**Most UI test crashes are concurrency bugs** (not specific to UI testing). Reference related skills:\n\n```swift\n// Common pattern: Race condition in async image loading\nclass PhotoViewController: UIViewController {\n    var photos: [Photo] = []\n\n    override func viewDidLoad() {\n        super.viewDidLoad()\n\n        // ❌ WRONG: Accessing photos array from multiple threads\n        Task {\n            let newPhotos = await fetchPhotos()\n            self.photos = newPhotos  // May crash if main thread access\n            reloadPhotos()  // ❌ Crash here\n        }\n    }\n}\n\n// ✅ CORRECT: UIViewController is already @MainActor-isolated, so a Task\n// started in viewDidLoad runs on the main actor and resumes there after the\n// await — no per-property @MainActor and no MainActor.run hop needed. The\n// original bug wasn't the assignment; it was doing UI work without that\n// guarantee.\nclass PhotoViewController: UIViewController {\n    var photos: [Photo] = []\n\n    override func viewDidLoad() {\n        super.viewDidLoad()\n\n        Task {\n            let newPhotos = await fetchPhotos()  // suspends, resumes on MainActor\n            self.photos = newPhotos\n            reloadPhotos()  // ✅ Safe — still on the main actor\n        }\n    }\n}\n```\n\n**For deep crash analysis**: See `axiom-concurrency` (swift-concurrency reference) for @MainActor patterns and `axiom-performance (skills/memory-debugging.md)` skill for thread-safety issues.\n\n#### Step 5: Add Crash-Prevention Tests\n\n**After fixing**:\n```swift\nfunc testPhotosLoadWithoutCrash() {\n    let app = XCUIApplication()\n    app.launch()\n\n    // Rapid fire interactions that previously caused crash\n    app.buttons[\"Browse\"].tap()\n    app.buttons[\"Photo Album\"].tap()\n\n    // Load should complete without crash\n    let photoGrid = app.otherElements[\"photoGrid\"]\n    XCTAssertTrue(photoGrid.waitForExistence(timeout: 10))\n\n    // No alerts (no crash dialogs)\n    XCTAssertFalse(app.alerts.element.exists)\n}\n```\n\n#### Step 6: Stress Test to Verify Fix\n\n```swift\nfunc testPhotosLoadUnderStress() {\n    let app = XCUIApplication()\n    app.launch()\n\n    // Repeat the crash-causing action multiple times\n    for iteration in 0..<10 {\n        app.buttons[\"Browse\"].tap()\n\n        // Wait for load\n        let grid = app.otherElements[\"photoGrid\"]\n        XCTAssertTrue(grid.waitForExistence(timeout: 10), \"Iteration \\(iteration)\")\n\n        // Go back\n        app.navigationBars.buttons[\"Back\"].tap()\n        app.buttons[\"Refresh\"].tap()\n    }\n\n    // Completed without crash — assert a real end state, not `true`\n    XCTAssertTrue(app.otherElements[\"photoGrid\"].exists, \"Grid should survive 10 navigation cycles\")\n    XCTAssertFalse(app.alerts.element.exists, \"No crash dialog after stress loop\")\n}\n```\n\n### Prevention Checklist\n\n#### Before releasing\n- [ ] Run UI tests on slowest network (3G)\n- [ ] Run on largest device (iPad Pro)\n- [ ] Run on oldest supported device (iPhone 12)\n- [ ] Record video of test runs (saves debugging time)\n- [ ] Check for crashes in logs\n- [ ] Run stress tests (10x repeated actions)\n- [ ] Verify UI-state mutations run on the main actor\n- [ ] Check for race conditions in async code\n\n---\n\n## Resources\n\n**WWDC**: 2025-344, 2024-10179, 2023-10269, 2023-10175, 2023-10035, 2022-110371\n\n**Docs**: /xctest, /xcuiautomation/recording-ui-automation-for-testing, /xctest/xctwaiter, /accessibility/delivering_an_exceptional_accessibility_experience, /accessibility/performing_accessibility_testing_for_your_app\n\n**Note**: This skill focuses on reliability patterns and Recording UI Automation. For TDD workflow, see superpowers:test-driven-development.\n\n---\n\n**History:** See git log for changes\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -36919,35 +36919,35 @@
           "heading": "Teardown",
           "level": 1,
           "startLine": 750,
-          "endLine": 901,
-          "charCount": 7775
+          "endLine": 920,
+          "charCount": 9398
         },
         {
           "heading": "Multi-Factor Testing: Device Size + Network Speed",
           "level": 2,
-          "startLine": 902,
-          "endLine": 921,
+          "startLine": 921,
+          "endLine": 940,
           "charCount": 978
         },
         {
           "heading": "device names: xcrun simctl list devicetypes",
           "level": 1,
-          "startLine": 922,
-          "endLine": 1032,
+          "startLine": 941,
+          "endLine": 1051,
           "charCount": 3819
         },
         {
           "heading": "Debugging Crashes Revealed by UI Tests",
           "level": 2,
-          "startLine": 1033,
-          "endLine": 1230,
+          "startLine": 1052,
+          "endLine": 1249,
           "charCount": 5908
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 1231,
-          "endLine": 1242,
+          "startLine": 1250,
+          "endLine": 1261,
           "charCount": 499
         }
       ],
@@ -44012,7 +44012,7 @@
           20,
           1,
           56,
-          1206
+          1234
         ],
         "226": [
           4,
@@ -44216,7 +44216,7 @@
         18.023622047244086,
         4.0354330708661434,
         44.6771653543307,
-        656.5905511811027
+        656.7007874015751
       ],
       "storedFields": {
         "0": {
@@ -47248,6 +47248,14 @@
           }
         ],
         [
+          "quotes",
+          {
+            "4": {
+              "225": 1
+            }
+          }
+        ],
+        [
           "quote",
           {
             "4": {
@@ -49640,7 +49648,7 @@
               "66": 4,
               "71": 2,
               "143": 3,
-              "225": 1,
+              "225": 12,
               "241": 1,
               "242": 1,
               "244": 1
@@ -51859,6 +51867,7 @@
               "206": 1,
               "214": 2,
               "215": 1,
+              "225": 2,
               "241": 1,
               "242": 1
             }
@@ -52096,7 +52105,7 @@
               "196": 1,
               "205": 1,
               "220": 1,
-              "225": 2
+              "225": 5
             }
           }
         ],
@@ -56543,7 +56552,7 @@
               "212": 2,
               "213": 2,
               "218": 2,
-              "225": 1,
+              "225": 2,
               "230": 2,
               "232": 3,
               "240": 3,
@@ -57816,7 +57825,7 @@
               "216": 3,
               "218": 4,
               "220": 4,
-              "225": 5,
+              "225": 7,
               "226": 1,
               "228": 1,
               "232": 5,
@@ -63669,7 +63678,8 @@
           {
             "4": {
               "131": 2,
-              "194": 2
+              "194": 2,
+              "225": 1
             }
           }
         ],
@@ -67541,7 +67551,7 @@
               "220": 7,
               "221": 5,
               "222": 1,
-              "225": 8,
+              "225": 9,
               "227": 3,
               "228": 1,
               "233": 6,
@@ -70001,7 +70011,7 @@
             "4": {
               "11": 1,
               "149": 1,
-              "225": 3,
+              "225": 4,
               "229": 1,
               "231": 1
             }
@@ -70234,6 +70244,7 @@
               "218": 4,
               "221": 1,
               "222": 1,
+              "225": 1,
               "229": 1,
               "236": 1,
               "240": 1,
@@ -80231,7 +80242,7 @@
               "220": 1,
               "221": 1,
               "222": 1,
-              "225": 3,
+              "225": 4,
               "237": 3,
               "238": 1,
               "240": 9,
@@ -86241,6 +86252,7 @@
               "217": 1,
               "218": 1,
               "222": 1,
+              "225": 1,
               "226": 3,
               "230": 2,
               "236": 2,
@@ -88897,7 +88909,7 @@
               "197": 1,
               "201": 7,
               "203": 2,
-              "225": 5,
+              "225": 10,
               "229": 2,
               "230": 3,
               "236": 1,
@@ -89663,7 +89675,8 @@
               "178": 5,
               "182": 1,
               "183": 1,
-              "186": 4
+              "186": 4,
+              "225": 1
             }
           }
         ],
@@ -97627,7 +97640,7 @@
               "215": 1,
               "218": 2,
               "219": 4,
-              "225": 2,
+              "225": 3,
               "227": 3,
               "229": 4,
               "230": 3,
@@ -98426,7 +98439,7 @@
               "220": 1,
               "221": 7,
               "222": 1,
-              "225": 1,
+              "225": 2,
               "226": 1,
               "228": 1,
               "233": 3,
@@ -101020,6 +101033,7 @@
               "217": 1,
               "220": 1,
               "222": 1,
+              "225": 4,
               "234": 1,
               "237": 1,
               "249": 1
@@ -101475,7 +101489,7 @@
               "206": 1,
               "212": 1,
               "220": 1,
-              "225": 9,
+              "225": 20,
               "233": 1,
               "237": 6,
               "241": 1,
@@ -102519,7 +102533,8 @@
             "4": {
               "38": 1,
               "44": 1,
-              "45": 1
+              "45": 1,
+              "225": 1
             }
           }
         ],
@@ -104013,7 +104028,7 @@
               "216": 1,
               "221": 1,
               "222": 1,
-              "225": 11,
+              "225": 13,
               "233": 8,
               "236": 1,
               "240": 117,
@@ -104104,7 +104119,7 @@
               "195": 1,
               "219": 1,
               "220": 1,
-              "225": 2,
+              "225": 3,
               "233": 2,
               "240": 4,
               "241": 2,
@@ -106470,7 +106485,8 @@
           "retransmit",
           {
             "4": {
-              "150": 2
+              "150": 2,
+              "225": 1
             }
           }
         ],
@@ -118334,7 +118350,7 @@
               "220": 1,
               "221": 1,
               "223": 5,
-              "225": 44,
+              "225": 46,
               "228": 1,
               "229": 1,
               "233": 5,
@@ -119860,7 +119876,7 @@
               "222": 18,
               "223": 8,
               "224": 8,
-              "225": 21,
+              "225": 22,
               "226": 5,
               "227": 3,
               "228": 10,
@@ -123898,6 +123914,7 @@
               "199": 1,
               "202": 1,
               "211": 1,
+              "225": 1,
               "228": 1,
               "229": 1,
               "230": 1,
@@ -125931,6 +125948,7 @@
               "69": 1,
               "148": 1,
               "150": 1,
+              "225": 1,
               "229": 1,
               "232": 1
             }
@@ -127548,7 +127566,7 @@
               "212": 1,
               "217": 3,
               "218": 1,
-              "225": 1,
+              "225": 2,
               "228": 6,
               "232": 2,
               "237": 2,
@@ -127607,7 +127625,8 @@
               "51": 2,
               "86": 3,
               "136": 2,
-              "173": 1
+              "173": 1,
+              "225": 1
             }
           }
         ],
@@ -128900,7 +128919,6 @@
               "199": 1,
               "207": 1,
               "209": 1,
-              "225": 1,
               "239": 1,
               "243": 2
             }
@@ -130583,7 +130601,7 @@
               "175": 1,
               "222": 4,
               "223": 1,
-              "225": 5
+              "225": 7
             }
           }
         ],
@@ -132205,7 +132223,7 @@
               "222": 4,
               "223": 1,
               "224": 2,
-              "225": 18,
+              "225": 20,
               "227": 1,
               "228": 3,
               "229": 6,
@@ -132296,7 +132314,7 @@
               "216": 3,
               "222": 2,
               "224": 1,
-              "225": 9,
+              "225": 11,
               "227": 3,
               "228": 1,
               "233": 2,
@@ -132410,7 +132428,7 @@
               "222": 7,
               "223": 1,
               "224": 1,
-              "225": 18,
+              "225": 28,
               "226": 5,
               "228": 1,
               "230": 6,
@@ -132515,7 +132533,7 @@
               "216": 8,
               "222": 4,
               "223": 1,
-              "225": 3,
+              "225": 4,
               "228": 1,
               "230": 1,
               "237": 1,
@@ -132829,7 +132847,7 @@
               "219": 1,
               "220": 10,
               "222": 4,
-              "225": 4,
+              "225": 5,
               "230": 1,
               "240": 7,
               "241": 8,
@@ -136837,7 +136855,7 @@
           }
         ],
         [
-          "fic",
+          "fidelity",
           {
             "4": {
               "225": 1
@@ -136849,6 +136867,14 @@
           {
             "4": {
               "188": 1
+            }
+          }
+        ],
+        [
+          "fic",
+          {
+            "4": {
+              "225": 1
             }
           }
         ],
@@ -142007,7 +142033,7 @@
               "222": 11,
               "223": 2,
               "224": 2,
-              "225": 16,
+              "225": 17,
               "226": 4,
               "227": 1,
               "228": 2,
@@ -143247,7 +143273,7 @@
               "133": 1,
               "150": 1,
               "195": 1,
-              "225": 7,
+              "225": 8,
               "237": 2,
               "248": 1,
               "249": 1
@@ -143490,7 +143516,8 @@
               "44": 2,
               "148": 2,
               "149": 1,
-              "150": 1
+              "150": 1,
+              "225": 1
             }
           }
         ],
@@ -144029,7 +144056,7 @@
               "221": 5,
               "222": 2,
               "224": 1,
-              "225": 1,
+              "225": 2,
               "226": 1,
               "233": 2,
               "235": 1,
@@ -146809,6 +146836,7 @@
               "148": 1,
               "149": 5,
               "150": 7,
+              "225": 1,
               "252": 2
             }
           }
@@ -148610,7 +148638,7 @@
               "222": 3,
               "223": 2,
               "224": 12,
-              "225": 27,
+              "225": 28,
               "226": 11,
               "227": 1,
               "229": 1,
@@ -148656,7 +148684,7 @@
           {
             "4": {
               "149": 1,
-              "225": 14
+              "225": 15
             }
           }
         ],
@@ -156728,7 +156756,7 @@
               "193": 2,
               "200": 1,
               "204": 1,
-              "225": 1,
+              "225": 2,
               "234": 1,
               "235": 1,
               "241": 3,
@@ -157373,6 +157401,7 @@
               "214": 4,
               "216": 1,
               "222": 1,
+              "225": 1,
               "233": 17,
               "234": 1,
               "235": 1,
@@ -160041,7 +160070,7 @@
               "215": 4,
               "217": 1,
               "223": 1,
-              "225": 2,
+              "225": 3,
               "227": 1,
               "230": 1,
               "232": 2,
@@ -160096,6 +160125,7 @@
               "180": 2,
               "217": 1,
               "222": 1,
+              "225": 1,
               "229": 1,
               "236": 3,
               "238": 1,
@@ -161372,7 +161402,7 @@
               "222": 6,
               "223": 1,
               "224": 1,
-              "225": 12,
+              "225": 13,
               "227": 1,
               "228": 13,
               "229": 7,
@@ -162356,7 +162386,7 @@
               "221": 76,
               "222": 7,
               "224": 1,
-              "225": 17,
+              "225": 18,
               "226": 4,
               "227": 18,
               "228": 19,
@@ -162737,7 +162767,7 @@
           "nlc",
           {
             "4": {
-              "225": 19
+              "225": 20
             }
           }
         ],
@@ -165407,7 +165437,7 @@
               "220": 2,
               "222": 8,
               "223": 1,
-              "225": 46,
+              "225": 49,
               "226": 2,
               "227": 14,
               "228": 6,
@@ -167219,7 +167249,6 @@
               "218": 1,
               "219": 1,
               "222": 1,
-              "225": 1,
               "229": 4,
               "230": 5,
               "234": 2,
@@ -168699,7 +168728,7 @@
               "221": 14,
               "222": 9,
               "223": 3,
-              "225": 32,
+              "225": 34,
               "227": 3,
               "228": 8,
               "229": 14,
@@ -169297,6 +169326,7 @@
               "218": 2,
               "219": 3,
               "222": 2,
+              "225": 1,
               "232": 1,
               "242": 1,
               "250": 1
@@ -170125,7 +170155,7 @@
           {
             "4": {
               "173": 2,
-              "225": 3,
+              "225": 4,
               "243": 2,
               "249": 2
             }
@@ -172947,6 +172977,7 @@
               "214": 16,
               "215": 1,
               "216": 4,
+              "225": 2,
               "238": 2
             }
           }
@@ -173016,7 +173047,7 @@
               "192": 1,
               "193": 1,
               "218": 1,
-              "225": 3,
+              "225": 4,
               "227": 2,
               "243": 2,
               "253": 1
@@ -175918,7 +175949,7 @@
               "219": 2,
               "220": 2,
               "222": 2,
-              "225": 3,
+              "225": 5,
               "228": 11,
               "229": 4,
               "230": 1,
@@ -177142,7 +177173,7 @@
               "222": 21,
               "223": 14,
               "224": 15,
-              "225": 54,
+              "225": 60,
               "226": 23,
               "232": 10,
               "233": 18,
@@ -177905,7 +177936,7 @@
               "173": 5,
               "176": 1,
               "178": 1,
-              "225": 13,
+              "225": 16,
               "242": 2,
               "243": 1,
               "249": 1
@@ -178514,7 +178545,7 @@
               "218": 2,
               "220": 1,
               "222": 1,
-              "225": 2,
+              "225": 3,
               "228": 1,
               "232": 1,
               "233": 1,
@@ -179512,7 +179543,7 @@
           "dnctl",
           {
             "4": {
-              "225": 8
+              "225": 9
             }
           }
         ],
@@ -179739,7 +179770,8 @@
           "dynamics",
           {
             "4": {
-              "70": 4
+              "70": 4,
+              "225": 1
             }
           }
         ],
@@ -182196,7 +182228,7 @@
               "208": 1,
               "212": 1,
               "217": 1,
-              "225": 1,
+              "225": 2,
               "235": 1,
               "239": 1,
               "241": 1,
@@ -182966,7 +182998,7 @@
               "216": 2,
               "217": 1,
               "218": 1,
-              "225": 3,
+              "225": 6,
               "234": 1,
               "235": 6,
               "241": 5,
@@ -187050,7 +187082,7 @@
               "209": 1,
               "210": 1,
               "220": 6,
-              "225": 3,
+              "225": 6,
               "233": 1,
               "243": 1,
               "250": 12
@@ -187994,7 +188026,6 @@
           {
             "4": {
               "29": 1,
-              "225": 1,
               "231": 2
             }
           }
@@ -188021,7 +188052,7 @@
               "214": 1,
               "222": 4,
               "223": 1,
-              "225": 2,
+              "225": 3,
               "230": 1
             }
           }
@@ -191028,7 +191059,7 @@
               "222": 9,
               "223": 5,
               "224": 3,
-              "225": 4,
+              "225": 6,
               "228": 4,
               "229": 11,
               "230": 7,
@@ -208056,7 +208087,7 @@
               "175": 1,
               "206": 5,
               "217": 2,
-              "225": 7,
+              "225": 8,
               "226": 4,
               "233": 1,
               "234": 1,
@@ -208597,7 +208628,8 @@
               "186": 7,
               "187": 4,
               "189": 1,
-              "190": 1
+              "190": 1,
+              "225": 1
             }
           }
         ],
@@ -209384,7 +209416,7 @@
               "221": 12,
               "222": 10,
               "224": 1,
-              "225": 1,
+              "225": 2,
               "229": 3,
               "230": 1,
               "232": 5,
@@ -212894,7 +212926,7 @@
               "221": 1,
               "222": 12,
               "223": 3,
-              "225": 10,
+              "225": 12,
               "226": 1,
               "233": 9,
               "234": 12,
@@ -218647,7 +218679,7 @@
               "221": 5,
               "222": 2,
               "224": 1,
-              "225": 3,
+              "225": 4,
               "227": 4,
               "229": 2,
               "230": 2,
@@ -218802,6 +218834,7 @@
               "210": 1,
               "218": 1,
               "220": 1,
+              "225": 1,
               "233": 1,
               "244": 2,
               "247": 2
@@ -219473,7 +219506,7 @@
               "222": 7,
               "223": 5,
               "224": 1,
-              "225": 8,
+              "225": 9,
               "227": 2,
               "228": 3,
               "229": 7,
@@ -227740,7 +227773,7 @@
               "221": 6,
               "222": 3,
               "223": 2,
-              "225": 6,
+              "225": 10,
               "228": 1,
               "229": 4,
               "230": 11,
@@ -231133,7 +231166,7 @@
               "150": 5,
               "152": 1,
               "174": 5,
-              "225": 1
+              "225": 3
             }
           }
         ],
@@ -232394,7 +232427,7 @@
               "206": 1,
               "207": 1,
               "214": 2,
-              "225": 2,
+              "225": 3,
               "230": 14,
               "236": 2,
               "246": 1,
@@ -236396,7 +236429,8 @@
               "177": 1
             },
             "4": {
-              "177": 7
+              "177": 7,
+              "225": 2
             }
           }
         ],
@@ -238144,7 +238178,7 @@
               "217": 9,
               "220": 1,
               "222": 1,
-              "225": 20,
+              "225": 22,
               "227": 1,
               "229": 1,
               "236": 2,
@@ -238357,7 +238391,8 @@
               "193": 3,
               "194": 1,
               "195": 1,
-              "203": 5
+              "203": 5,
+              "225": 1
             }
           }
         ],
@@ -243285,7 +243320,8 @@
           "mbps",
           {
             "4": {
-              "194": 2
+              "194": 2,
+              "225": 2
             }
           }
         ],
@@ -254005,7 +254041,7 @@
               "218": 7,
               "220": 7,
               "222": 6,
-              "225": 1,
+              "225": 2,
               "227": 4,
               "241": 2,
               "242": 10,
@@ -258286,7 +258322,7 @@
               "222": 67,
               "223": 27,
               "224": 16,
-              "225": 47,
+              "225": 48,
               "226": 20,
               "227": 21,
               "228": 2,
@@ -262928,7 +262964,7 @@
               "218": 3,
               "220": 1,
               "221": 2,
-              "225": 6,
+              "225": 7,
               "229": 7,
               "230": 11,
               "231": 3,
@@ -265927,7 +265963,7 @@
               "213": 3,
               "217": 1,
               "221": 13,
-              "225": 2,
+              "225": 3,
               "230": 1,
               "234": 12,
               "235": 1,
@@ -272327,7 +272363,7 @@
               "220": 8,
               "222": 8,
               "223": 2,
-              "225": 11,
+              "225": 16,
               "229": 1,
               "233": 33,
               "234": 2,
@@ -272747,7 +272783,7 @@
               "220": 2,
               "221": 1,
               "222": 1,
-              "225": 4,
+              "225": 7,
               "240": 1,
               "245": 2,
               "249": 1
@@ -272855,7 +272891,7 @@
               "222": 5,
               "223": 2,
               "224": 1,
-              "225": 5,
+              "225": 6,
               "230": 1,
               "232": 1,
               "237": 1,
@@ -273485,7 +273521,7 @@
               "222": 7,
               "223": 2,
               "224": 1,
-              "225": 12,
+              "225": 14,
               "226": 1,
               "230": 1,
               "231": 4,
@@ -274579,7 +274615,8 @@
           {
             "4": {
               "160": 1,
-              "193": 1
+              "193": 1,
+              "225": 1
             }
           }
         ],
@@ -283113,7 +283150,7 @@
               "220": 1,
               "222": 5,
               "224": 4,
-              "225": 8,
+              "225": 13,
               "226": 4,
               "231": 1,
               "234": 2,
@@ -296292,7 +296329,8 @@
               "158": 5,
               "205": 1,
               "209": 2,
-              "220": 1
+              "220": 1,
+              "225": 1
             }
           }
         ],
@@ -301241,7 +301279,7 @@
               "198": 4,
               "203": 2,
               "204": 1,
-              "225": 2,
+              "225": 3,
               "242": 1,
               "244": 1
             }
@@ -303253,7 +303291,7 @@
               "222": 12,
               "223": 3,
               "224": 13,
-              "225": 22,
+              "225": 23,
               "226": 3,
               "227": 4,
               "228": 2,
@@ -304281,7 +304319,7 @@
               "194": 1,
               "210": 1,
               "218": 1,
-              "225": 1,
+              "225": 3,
               "227": 2,
               "228": 1,
               "229": 4,
@@ -304422,7 +304460,7 @@
               "196": 1,
               "205": 2,
               "214": 1,
-              "225": 2,
+              "225": 3,
               "228": 3,
               "244": 1
             }
@@ -304768,7 +304806,7 @@
               "203": 1,
               "212": 1,
               "220": 1,
-              "225": 18,
+              "225": 19,
               "236": 1,
               "237": 1,
               "243": 3
@@ -309398,7 +309436,8 @@
               "178": 3,
               "194": 1,
               "216": 1,
-              "222": 1
+              "222": 1,
+              "225": 1
             }
           }
         ],
@@ -320186,6 +320225,7 @@
               "170": 1,
               "171": 5,
               "183": 2,
+              "225": 1,
               "230": 1,
               "249": 2
             }
@@ -323923,7 +323963,7 @@
               "214": 1,
               "222": 8,
               "224": 4,
-              "225": 14,
+              "225": 15,
               "226": 2,
               "228": 1,
               "236": 1,
@@ -329047,7 +329087,7 @@
               "212": 1,
               "213": 2,
               "221": 1,
-              "225": 1,
+              "225": 3,
               "233": 1,
               "238": 2,
               "247": 1
@@ -330188,6 +330228,7 @@
               "221": 5,
               "222": 1,
               "224": 4,
+              "225": 2,
               "226": 5,
               "227": 1,
               "228": 3,
@@ -331290,7 +331331,7 @@
               "210": 1,
               "214": 2,
               "216": 1,
-              "225": 1,
+              "225": 2,
               "232": 2,
               "234": 1,
               "236": 1,
@@ -630966,13 +631007,16 @@
           "response",
           "injected",
           "latency",
+          "optional",
+          "jitter",
           "byte",
           "rate",
           "cap",
           "low",
           "bitrate",
-          "failure",
-          "deterministically",
+          "deterministic",
+          "probabilistic",
+          "failures",
           "trade",
           "off",
           "sees",
@@ -630984,13 +631028,43 @@
           "sockets",
           "hook",
           "change",
-          "fully",
-          "deterministic",
-          "right",
           "default",
+          "failure",
+          "opt",
+          "into",
+          "controlled",
+          "random",
+          "right",
           "unit",
           "integra",
           "tests",
+          "models",
+          "applica",
+          "observable",
+          "behavior",
+          "how",
+          "fast",
+          "bytes",
+          "arrive",
+          "whether",
+          "request",
+          "fails",
+          "transport",
+          "packet",
+          "loss",
+          "shape",
+          "retransmit",
+          "dynamics",
+          "which",
+          "sit",
+          "below",
+          "true",
+          "level",
+          "fidelity",
+          "use",
+          "os",
+          "toxiproxy",
+          "paths",
           "mocker",
           "we",
           "transfer",
@@ -631005,7 +631079,10 @@
           "import",
           "founda",
           "synchroniza",
+          "hard",
           "process",
+          "unless",
+          "set",
           "final",
           "class",
           "struct",
@@ -631015,16 +631092,22 @@
           "interval",
           "seconds",
           "before",
-          "bytes",
+          "added",
           "per",
           "second",
           "int",
           "nil",
           "unlimited",
+          "throughput",
           "error",
-          "non",
+          "connec",
+          "lost",
+          "when",
+          "double",
+          "chance",
           "fail",
-          "request",
+          "alone",
+          "always",
           "body",
           "data",
           "whole",
@@ -631032,7 +631115,6 @@
           "based",
           "status",
           "200",
-          "set",
           "launch",
           "start",
           "load",
@@ -631052,7 +631134,6 @@
           "can",
           "init",
           "bool",
-          "true",
           "canonical",
           "stop",
           "guard",
@@ -631062,7 +631143,10 @@
           "did",
           "bad",
           "return",
+          "delay",
           "sleep",
+          "rolls",
+          "flaky",
           "httpurl",
           "http",
           "version",
@@ -631083,21 +631167,38 @@
           "count",
           "end",
           "min",
-          "double",
           "finish",
+          "named",
+          "profiles",
+          "quotes",
+          "bits",
+          "har",
+          "extension",
+          "edge",
+          "30",
+          "000",
+          "240",
+          "kbps",
+          "three",
+          "05",
+          "mbps",
+          "lte",
+          "250",
+          "50",
+          "requests",
+          "drop",
+          "offline",
+          "internet",
           "inject",
           "directly",
           "config",
           "configura",
           "classes",
           "20",
-          "000",
           "ok",
           "utf8",
-          "into",
           "under",
           "ui",
-          "har",
           "lives",
           "gate",
           "behind",
@@ -631105,32 +631206,20 @@
           "reads",
           "startup",
           "works",
-          "when",
           "stub",
           "backend",
           "determinism",
           "real",
           "instead",
-          "use",
-          "os",
-          "level",
-          "paths",
           "proxy",
-          "below",
           "arguments",
-          "edge",
           "builds",
           "args",
           "info",
           "index",
           "map",
           "3g",
-          "loss",
-          "offline",
           "then",
-          "30",
-          "toxiproxy",
-          "optional",
           "bundled",
           "must",
           "own",
@@ -631180,7 +631269,6 @@
           "toxic",
           "add",
           "400",
-          "jitter",
           "100",
           "kb",
           "echo",
@@ -631200,8 +631288,6 @@
           "mitm",
           "connect",
           "port",
-          "which",
-          "fails",
           "tls",
           "valida",
           "against",
@@ -631222,7 +631308,6 @@
           "tap",
           "passes",
           "locally",
-          "fast",
           "xct",
           "assert",
           "texts",
@@ -631232,7 +631317,6 @@
           "timeout",
           "on3g",
           "xcui",
-          "applica",
           "runn",
           "increase",
           "verify",
